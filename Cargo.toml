@@ -1,0 +1,55 @@
+[workspace]
+members = [
+    "contracts/api-types",
+    "contracts/config-schema",
+    "orchestrator-core",
+    "orchestratord",
+    "pool-managerd",
+    "worker-adapters/llamacpp-http",
+    "worker-adapters/vllm-http",
+    "worker-adapters/tgi-http",
+    "worker-adapters/triton",
+    "worker-adapters/mock",
+    "plugins/policy-host",
+    "plugins/policy-sdk",
+    "cli/consumer-tests",
+    "test-harness/e2e-haiku",
+    "test-harness/determinism-suite",
+    "test-harness/chaos",
+    "tools/spec-extract",
+    "tools/openapi-client",
+    "xtask"
+]
+
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = ["llama-orch contributors"]
+
+[workspace.dependencies]
+anyhow = "1"
+thiserror = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+schemars = { version = "0.8", features = ["either"] }
+axum = { version = "0.7", features = ["macros", "json"] }
+tokio = { version = "1", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+futures = "0.3"
+http = "1"
+hyper = { version = "1", features = ["http1", "http2", "server", "client"] }
+bytes = "1"
+uuid = { version = "1", features = ["serde", "v4"] }
+clap = { version = "4", features = ["derive"] }
+sha2 = "0.10"
+walkdir = "2"
+regex = "1"
+insta = { version = "1", features = ["yaml"] }
+proptest = "1"
+wiremock = "0.6"
+openapiv3 = "1"

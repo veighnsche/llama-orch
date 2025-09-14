@@ -1,0 +1,9 @@
+# OpenAPI control plane (placeholder)
+# Authoritative API to be defined per specs/orchestrator-spec.md
+openapi: "3.0.3"
+info:
+  title: Orchestrator Control Plane API (placeholder)
+  version: 0.0.0-pre
+paths: {}
+components: {}
+x-generated: false

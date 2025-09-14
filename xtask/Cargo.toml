@@ -1,0 +1,23 @@
+[package]
+name = "xtask"
+version = "0.0.0"
+edition = "2021"
+publish = false
+license = "MIT OR Apache-2.0"
+
+[[bin]]
+name = "xtask"
+path = "src/main.rs"
+
+autobenches = false
+
+autotests = false
+
+autodocs = false
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+walkdir = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }

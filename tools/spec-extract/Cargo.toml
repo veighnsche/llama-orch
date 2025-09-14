@@ -1,0 +1,17 @@
+[package]
+name = "tools-spec-extract"
+version = "0.0.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[[bin]]
+name = "spec-extract"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+regex = { workspace = true }
+walkdir = { workspace = true }
+serde_yaml = { workspace = true }
+serde_json = { workspace = true }
+serde = { workspace = true, features = ["derive"] }

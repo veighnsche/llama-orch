@@ -1,0 +1,202 @@
+openapi: 3.0.3
+info:
+  title: Orchestrator Data Plane API — OrchQueue v1
+  version: 1.0.0
+  description: |
+    Public queue-centric API for task admission and streaming results.
+    See specs/orchestrator-spec.md §6.2.
+servers:
+  - url: /
+paths:
+  /v1/tasks:
+    post:
+      operationId: createTask
+      summary: Enqueue a task
+      x-req-id:
+        - ORCH-2001
+        - ORCH-2008
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdmissionResponse'
+        '400':
+          description: Invalid params
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+        '429':
+          description: Queue full / backpressure
+          headers:
+            Retry-After:
+              schema: { type: string }
+            X-Backoff-Ms:
+              schema: { type: integer, format: int64 }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          x-req-id:
+            - ORCH-2007
+        '503': { description: Pool unavailable }
+        '500': { description: Internal error }
+
+  /v1/tasks/{id}/stream:
+    get:
+      operationId: streamTask
+      summary: Stream task events (SSE)
+      x-req-id:
+        - ORCH-2002
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: text/event-stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+  /v1/tasks/{id}/cancel:
+    post:
+      operationId: cancelTask
+      summary: Cancel a running or queued task
+      x-req-id:
+        - ORCH-2003
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: No Content }
+
+  /v1/sessions/{id}:
+    get:
+      operationId: getSession
+      summary: Get session info
+      x-req-id:
+        - ORCH-2004
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Session info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionInfo'
+    delete:
+      operationId: deleteSession
+      summary: Delete a session and evict KV
+      x-req-id:
+        - ORCH-2005
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204': { description: No Content }
+
+components:
+  schemas:
+    Engine:
+      type: string
+      description: Engine used by the worker/pool.
+      enum: [llamacpp, vllm, tgi, triton]
+      x-req-id: [ORCH-2008]
+
+    Workload:
+      type: string
+      enum: [completion, embedding, rerank]
+
+    DeterminismLevel:
+      type: string
+      enum: [strict, best_effort]
+
+    Priority:
+      type: string
+      enum: [interactive, batch]
+
+    KVHint:
+      type: string
+      enum: [reuse, cold]
+
+    TaskRequest:
+      type: object
+      required: [task_id, session_id, workload, model_ref, engine, ctx, priority, max_tokens, deadline_ms]
+      properties:
+        task_id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
+        workload: { $ref: '#/components/schemas/Workload' }
+        model_ref: { type: string }
+        engine: { $ref: '#/components/schemas/Engine' }
+        ctx: { type: integer, format: int32 }
+        priority: { $ref: '#/components/schemas/Priority' }
+        seed: { type: integer, format: int64 }
+        determinism: { $ref: '#/components/schemas/DeterminismLevel' }
+        sampler_profile_version: { type: string }
+        prompt: { type: string }
+        inputs: { type: array, items: { type: string } }
+        max_tokens: { type: integer, format: int32 }
+        deadline_ms: { type: integer, format: int64 }
+        expected_tokens: { type: integer, format: int32 }
+        kv_hint: { $ref: '#/components/schemas/KVHint' }
+
+    AdmissionResponse:
+      type: object
+      required: [task_id, queue_position, predicted_start_ms, backoff_ms]
+      properties:
+        task_id: { type: string, format: uuid }
+        queue_position: { type: integer, format: int32 }
+        predicted_start_ms: { type: integer, format: int64 }
+        backoff_ms: { type: integer, format: int64 }
+
+    ErrorKind:
+      type: string
+      enum:
+        - ADMISSION_REJECT
+        - QUEUE_FULL_DROP_LRU
+        - INVALID_PARAMS
+        - POOL_UNREADY
+        - POOL_UNAVAILABLE
+        - REPLICA_EXHAUSTED
+        - DECODE_TIMEOUT
+        - WORKER_RESET
+        - INTERNAL
+
+    ErrorEnvelope:
+      type: object
+      x-req-id: [ORCH-2006]
+      properties:
+        code: { $ref: '#/components/schemas/ErrorKind' }
+        message: { type: string }
+        engine: { $ref: '#/components/schemas/Engine' }
+
+    SessionInfo:
+      type: object
+      properties:
+        ttl_ms_remaining: { type: integer, format: int64 }
+        turns: { type: integer, format: int32 }
+        kv_bytes: { type: integer, format: int64 }
+        kv_warmth: { type: boolean }
+
+x-generated: true

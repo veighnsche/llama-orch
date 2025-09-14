@@ -1,0 +1,13 @@
+[package]
+name = "pool-managerd"
+version = "0.0.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[[bin]]
+name = "pool-managerd"
+path = "src/main.rs"
+
+[dependencies]
+tracing = { workspace = true }
+anyhow = { workspace = true }
