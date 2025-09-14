@@ -15,3 +15,5 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
+http = { workspace = true }
+contracts-api-types = { path = "../contracts/api-types" }

@@ -17,7 +17,6 @@ logs/
 *.log
 
 # Generated artifacts
-/contracts/schemas/config.schema.json
 
 # OS files
 .DS_Store

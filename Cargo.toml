@@ -53,3 +53,4 @@ insta = { version = "1", features = ["yaml"] }
 proptest = "1"
 wiremock = "0.6"
 openapiv3 = "1"
+jsonschema = "0.17"

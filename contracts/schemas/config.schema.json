@@ -1,0 +1,210 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Config",
+  "type": "object",
+  "required": [
+    "pools"
+  ],
+  "properties": {
+    "pools": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PoolConfig"
+      }
+    }
+  },
+  "definitions": {
+    "AdmissionConfig": {
+      "type": "object",
+      "properties": {
+        "priorities": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/PriorityClass"
+          }
+        }
+      }
+    },
+    "Engine": {
+      "type": "string",
+      "enum": [
+        "llamacpp",
+        "vllm",
+        "tgi",
+        "triton"
+      ]
+    },
+    "PoolConfig": {
+      "type": "object",
+      "required": [
+        "devices",
+        "engine",
+        "id",
+        "model"
+      ],
+      "properties": {
+        "admission": {
+          "default": {
+            "priorities": null
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/AdmissionConfig"
+            }
+          ]
+        },
+        "ctx": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          }
+        },
+        "engine": {
+          "$ref": "#/definitions/Engine"
+        },
+        "id": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "preload": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "quant": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "queue": {
+          "default": {
+            "capacity": null,
+            "full_policy": null
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/QueueConfig"
+            }
+          ]
+        },
+        "require_same_engine_version": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "sampler_profile_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tensor_split": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "number",
+            "format": "float"
+          }
+        },
+        "timeouts": {
+          "default": {
+            "idle_ms": null,
+            "wall_ms": null
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/Timeouts"
+            }
+          ]
+        }
+      }
+    },
+    "PriorityClass": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "queue_capacity": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "rate_limit_rps": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
+    "QueueConfig": {
+      "type": "object",
+      "properties": {
+        "capacity": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "full_policy": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Timeouts": {
+      "type": "object",
+      "properties": {
+        "idle_ms": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "wall_ms": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0.0
+        }
+      }
+    }
+  }
+}

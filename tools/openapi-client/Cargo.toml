@@ -13,3 +13,4 @@ reqwest = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
+contracts-api-types = { path = "../../contracts/api-types" }

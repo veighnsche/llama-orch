@@ -1,3 +1,6 @@
-//! Generated OpenAPI client (stub).
+//! OpenAPI client (pre-code). Methods return reqwest::RequestBuilder and do not execute calls.
 
-// Intentionally empty for pre-code scaffolding.
+#[allow(dead_code)]
+pub mod generated;
+
+pub use generated::*;

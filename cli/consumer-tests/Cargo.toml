@@ -21,3 +21,6 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 insta = { workspace = true }
 wiremock = { workspace = true }
+reqwest = { workspace = true }
+pact_consumer = "1"
+pact_models = "1"

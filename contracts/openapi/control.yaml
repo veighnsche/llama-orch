@@ -1,9 +1,112 @@
-# OpenAPI control plane (placeholder)
-# Authoritative API to be defined per specs/orchestrator-spec.md
-openapi: "3.0.3"
+openapi: 3.0.3
 info:
-  title: Orchestrator Control Plane API (placeholder)
-  version: 0.0.0-pre
-paths: {}
-components: {}
-x-generated: false
+  title: Orchestrator Control Plane API
+  version: 1.0.0
+  description: |
+    Control plane endpoints for pool drain/reload and health, and replica set snapshots.
+servers:
+  - url: /
+paths:
+  /v1/pools/{id}/drain:
+    post:
+      operationId: drainPool
+      summary: Initiate pool drain with deadline
+      x-req-id: [ORCH-2101]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DrainRequest'
+      responses:
+        '202': { description: Accepted }
+
+  /v1/pools/{id}/reload:
+    post:
+      operationId: reloadPool
+      summary: Reload a pool with a new model reference
+      x-req-id: [ORCH-2102]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReloadRequest'
+      responses:
+        '202': { description: Accepted }
+
+  /v1/pools/{id}/health:
+    get:
+      operationId: getPoolHealth
+      summary: Pool health and readiness
+      x-req-id: [ORCH-2103]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Health summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoolHealth'
+
+  /v1/replicasets:
+    get:
+      operationId: listReplicaSets
+      summary: List replica sets with load/SLO snapshots
+      x-req-id: [ORCH-2104]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReplicaSet'
+
+components:
+  schemas:
+    Engine:
+      type: string
+      enum: [llamacpp, vllm, tgi, triton]
+    DrainRequest:
+      type: object
+      required: [deadline_ms]
+      properties:
+        deadline_ms: { type: integer, format: int64 }
+    ReloadRequest:
+      type: object
+      required: [new_model_ref]
+      properties:
+        new_model_ref: { type: string }
+    PoolHealth:
+      type: object
+      properties:
+        live: { type: boolean }
+        ready: { type: boolean }
+        draining: { type: boolean }
+        metrics: { type: object, additionalProperties: true }
+    ReplicaSet:
+      type: object
+      required: [id, engine]
+      properties:
+        id: { type: string }
+        engine: { $ref: '#/components/schemas/Engine' }
+        load: { type: number, format: float }
+        slots_total: { type: integer, format: int32 }
+        slots_free: { type: integer, format: int32 }
+        slo: { type: object, additionalProperties: true }

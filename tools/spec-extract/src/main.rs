@@ -20,7 +20,9 @@ struct ReqEntry {
 }
 
 fn main() -> Result<()> {
-    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).ancestors().nth(2)
+    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .nth(2)
         .ok_or_else(|| anyhow!("failed to locate repo root"))?
         .to_path_buf();
     let spec_path = repo_root.join("specs/orchestrator-spec.md");
@@ -41,18 +43,30 @@ fn main() -> Result<()> {
             let id = m.as_str().to_string();
             // Determine normative level heuristically from the line.
             let lower = line.to_lowercase();
-            let level = if lower.contains("must") { "must" } else if lower.contains("should") { "should" } else if lower.contains("may") { "may" } else { "info" };
+            let level = if lower.contains("must") {
+                "must"
+            } else if lower.contains("should") {
+                "should"
+            } else if lower.contains("may") {
+                "may"
+            } else {
+                "info"
+            };
             // Title is the line trimmed to a reasonable length without the ID.
             let mut title = line.replace(&id, "");
             title = title.trim().trim_start_matches('*').trim().to_string();
-            if title.len() > 160 { title.truncate(160); }
+            if title.len() > 160 {
+                title.truncate(160);
+            }
             requirements.entry(id).or_insert(ReqEntry {
                 title,
                 section: current_section.clone(),
                 level: level.to_string(),
-                links: vec![format!("{}#{}", 
-                    "specs/orchestrator-spec.md", 
-                    anchor_from_section(&current_section))],
+                links: vec![format!(
+                    "{}#{}",
+                    "specs/orchestrator-spec.md",
+                    anchor_from_section(&current_section)
+                )],
             });
         }
     }
@@ -61,7 +75,8 @@ fn main() -> Result<()> {
         schema_version: 1,
         source: "specs/orchestrator-spec.md".into(),
         notes: if requirements.is_empty() {
-            "No ORCH-IDs found in spec; add stable ORCH-XXXX anchors to normative requirements.".into()
+            "No ORCH-IDs found in spec; add stable ORCH-XXXX anchors to normative requirements."
+                .into()
         } else {
             "Extracted from orchestrator-spec.md".into()
         },
@@ -94,7 +109,8 @@ fn anchor_from_section(section: &str) -> String {
     for ch in lower.chars() {
         if ch.is_ascii_alphanumeric() {
             s.push(ch);
-        } else if ch.is_whitespace() || ch == '/' || ch == '&' { // collapse common separators to '-'
+        } else if ch.is_whitespace() || ch == '/' || ch == '&' {
+            // collapse common separators to '-'
             s.push('-');
         } // else skip
     }
@@ -103,7 +119,10 @@ fn anchor_from_section(section: &str) -> String {
     let mut prev_dash = false;
     for ch in s.chars() {
         if ch == '-' {
-            if !prev_dash { collapsed.push('-'); prev_dash = true; }
+            if !prev_dash {
+                collapsed.push('-');
+                prev_dash = true;
+            }
         } else {
             collapsed.push(ch);
             prev_dash = false;
