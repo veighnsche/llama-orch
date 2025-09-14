@@ -1,0 +1,24 @@
+# Rust
+target
+/target/
+**/target/
+
+# Cargo
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Logs
+logs
+logs/
+*.log
+
+# Generated artifacts
+/contracts/schemas/config.schema.json
+
+# OS files
+.DS_Store
+Thumbs.db
