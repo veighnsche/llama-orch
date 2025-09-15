@@ -297,3 +297,61 @@ Types: metrics linter/tests; Tests: `test-harness/metrics-contract/`.
 # Notes
 
 - For each bullet above, ensure the corresponding `requirements/*.yaml` file links requirement → tests → code path. Keep this catalog synchronized via the regeneration loop.
+
+---
+
+## Cross‑Spec Interaction Tests (Combinatorial)
+
+This section lists prioritized pairwise and 3‑wise combinations derived from `.docs/spec-combination-matrix.md`. Each bullet maps to base requirement IDs; concrete scenarios should be created under `test-harness/bdd/` with names including the IDs.
+
+- Engine × Queue Full Policy
+  - Validate `reject | drop-lru | shed-low-priority` under each engine.
+  - IDs: ORCH-3005, OC-ADAPT-5001..5070
+
+- Engine × Determinism Context
+  - Same version yields identical streams; cross-version is non‑deterministic.
+  - IDs: ORCH-3045, ORCH-3047
+
+- Engine × Preemption
+  - soft across engines; hard only with `interruptible_decode` capability surfaced.
+  - IDs: ORCH-3085, ORCH-3086, ORCH-3087
+
+- Fairness × Quotas
+  - WFQ weights with/without per‑tenant quotas; observed share approximates weights.
+  - IDs: ORCH-3075, ORCH-3076, ORCH-3077
+
+- Deadlines × Preemption
+  - Feasible/infeasible handling together with soft/hard preemption; metrics exported.
+  - IDs: ORCH-3079, ORCH-3085, ORCH-3087
+
+- Lifecycle × Admission
+  - Deprecated blocks new sessions (MODEL_DEPRECATED); Retired unloads/archives.
+  - IDs: ORCH-3069..3073, ORCH-3093
+
+- Trust Policy × Ingest
+  - strict policy rejects unsigned/unverifiable artifacts with `UNTRUSTED_ARTIFACT`.
+  - IDs: ORCH-3060..3065, ORCH-3093
+
+- Placement × Device Masks
+  - Ready gating; no cross‑mask spillover; heterogeneous splits honor ratios.
+  - IDs: ORCH-3010, ORCH-3011, ORCH-3012, OC-POOL-3001..3021
+
+- SSE Started Fields × Backpressure/Admission
+  - `started` includes `queue_position` and `predicted_start_ms` while backpressure headers are present.
+  - IDs: ORCH-3029, OC-CTRL-2021, ORCH-2007, OC-CTRL-2011
+
+- Auth × Data Plane
+  - Missing API key is rejected according to security requirements.
+  - IDs: OC-CTRL-2040
+
+- 3‑wise: WFQ × EDF Deadlines × Preemption
+  - Ensure urgent tasks meet deadlines without starving others; export `admission_share`, `deadlines_met_ratio`, and preemption metrics.
+  - IDs: ORCH-3075, ORCH-3076, ORCH-3079, ORCH-3085, ORCH-3087
+
+- 3‑wise: Lifecycle (Deprecated/Retired) × Admission × Typed Errors
+  - Block new sessions; pools drain/unload; `model_state` gauge; `MODEL_DEPRECATED`.
+  - IDs: ORCH-3069..3073, ORCH-3093
+
+- 3‑wise: Trust strict × unsigned artifact × Control Plane ingest
+  - Ingest denial with verification metrics and error surfacing.
+  - IDs: ORCH-3060..3065, ORCH-3093

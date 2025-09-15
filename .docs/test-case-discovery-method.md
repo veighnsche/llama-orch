@@ -61,6 +61,42 @@ Scope: Figure out all test cases for the program directly from the specs in `.sp
 - Step C: Produce a human-readable catalog `.docs/spec-derived-test-catalog.md` that maps IDs → test stubs/locations and references to specs.
 - Step D: Keep the catalog diff-clean across regenerations and update it on spec changes via proposals.
 
+## Combinatorial coverage (cross-spec interactions)
+
+Why: Many defects emerge at the intersection of requirements spanning multiple specs (e.g., scheduling × deadlines × adapters). Exhaustive cross-product is infeasible; use t-wise (pairwise/3-wise) testing with constraints.
+
+How:
+
+- Identify factors and domains from specs (examples):
+  - Engine: `llamacpp | vllm | tgi | triton` (OC-ADAPT-5xxx)
+  - Queue full policy: `reject | drop-lru | shed-low-priority` (ORCH-3005)
+  - Fairness: `WFQ weights by tenant/priority` on/off; quotas on/off (ORCH-3075/3077)
+  - Deadlines: `feasible | infeasible` (ORCH-3079)
+  - Preemption: `off | soft | hard(capability)` (ORCH-3085/3086)
+  - Lifecycle: `Active | Deprecated | Retired` (ORCH-3069..3073)
+  - Artifact trust: `signed | unsigned` under `trust_policy=strict` (ORCH-3060..3065, 3093)
+  - Auth: `apikey-present | missing` (OC-CTRL-2040)
+  - Host/placement: `Ready | Unready`, `device mask respected` (OC-POOL-3001..3021)
+
+- Define constraints to prune invalid combos:
+  - Hard preemption only when adapter proves `interruptible_decode` (ORCH-3086).
+  - CPU-only hosts cannot serve inference (ORCH-1101).
+  - No cross-mask spillover (ORCH-3011/OC-POOL-3020).
+  - OpenAI-compatible endpoints are internal-only (OC-ADAPT-5002/5021).
+  - No determinism assumed across engine/model updates (ORCH-3047).
+
+- Generate a minimal pairwise set (IPOG/PICT or equivalent). Elevate to 3-wise for high-risk triads:
+  - (Fairness WFQ) × (Deadlines EDF) × (Preemption mode)
+  - (Lifecycle Deprecated/Retired) × (Data-plane admission) × (Typed errors MODEL_DEPRECATED)
+  - (Trust strict × unsigned artifact) × (Control plane ingest) × (UNTRUSTED_ARTIFACT)
+
+- Prioritize by impact/severity; tag each combo to requirement IDs and planned test artifacts.
+
+Artifacts:
+
+- Keep a living matrix at `.docs/spec-combination-matrix.md` listing factors, constraints, and the prioritized pairwise/3-wise set with links to tests.
+- Add a "Cross-Spec Interaction Tests" section to the catalog with the selected combos and their mappings.
+
 ## Deliverables
 
 - This method document.
