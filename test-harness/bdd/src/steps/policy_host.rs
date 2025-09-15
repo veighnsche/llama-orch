@@ -1,4 +1,4 @@
-use crate::steps_2::world::World;
+use crate::steps::world::World;
 use cucumber::{given, then};
 
 #[given(regex = r"^a policy host$")]

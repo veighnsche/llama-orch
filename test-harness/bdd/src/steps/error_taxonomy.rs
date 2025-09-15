@@ -1,4 +1,4 @@
-use crate::steps_2::world::World;
+use crate::steps::world::World;
 use cucumber::{then, when};
 
 #[when(regex = r"^I trigger INVALID_PARAMS$")]

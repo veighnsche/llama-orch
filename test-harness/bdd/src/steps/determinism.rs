@@ -1,4 +1,4 @@
-use crate::steps_2::world::World;
+use crate::steps::world::World;
 use cucumber::{given, then, when};
 
 #[given(regex = r"^two replicas pin engine_version sampler_profile_version and model_digest$")]

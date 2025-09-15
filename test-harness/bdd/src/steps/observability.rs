@@ -1,4 +1,4 @@
-use crate::steps_2::world::World;
+use crate::steps::world::World;
 use cucumber::{given, then};
 
 #[then(regex = r"^metrics conform to linter names and labels$")]
