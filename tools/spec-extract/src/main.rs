@@ -109,10 +109,22 @@ fn main() -> Result<()> {
     ));
     lines.push("## Index\n".to_string());
     for (id, req) in &index.requirements {
-        lines.push(format!(
-            "- {} — {} (section: {}, level: {})",
-            id, req.title, req.section, req.level
-        ));
+        let link = req
+            .links
+            .get(0)
+            .map(String::as_str)
+            .unwrap_or("");
+        if link.is_empty() {
+            lines.push(format!(
+                "- {} — {} (section: {}, level: {})",
+                id, req.title, req.section, req.level
+            ));
+        } else {
+            lines.push(format!(
+                "- {} — {} (section: {}, level: {}) — link: {}",
+                id, req.title, req.section, req.level, link
+            ));
+        }
     }
     let compliance = lines.join("\n");
     let comp_path = repo_root.join("COMPLIANCE.md");

@@ -25,7 +25,7 @@
 ## 1) Platform Assumptions
 
 * Hosts are **Linux, headless**, with NVIDIA drivers + CUDA runtime installed.
-* **Inference hosts MUST have NVIDIA GPUs**; CPU‑only or non‑NVIDIA hosts **MAY** run control plane components (Controller/Scheduler) but **MUST NOT** serve inference traffic.
+* **Inference hosts MUST have NVIDIA GPUs**; CPU‑only or non‑NVIDIA hosts **MAY** run control plane components (Controller/Scheduler) but **MUST NOT** serve inference traffic. [ORCH-1101]
 * Heterogeneous GPUs (e.g., different VRAM and SM counts) **ARE SUPPORTED**; see §3.4 and §3.6 for placement and split rules.
 * No OpenAI‑compatible public APIs are exposed by the orchestrator; those are internal to adapters. OrchQueue v1 is the sole public surface.
 
@@ -42,108 +42,108 @@
 
 ### 3.1 Process model & preloading
 
-* Workers **MUST** be one‑model/one‑device‑mask processes, pinned by config.
-* Pools **MUST** preload at `serve` start and delay `Ready` exposure until success.
-* Preload **MUST** fail fast if VRAM or host RAM headroom is insufficient; Pool remains **Unready** with a retry backoff.
+* Workers **MUST** be one‑model/one‑device‑mask processes, pinned by config. [ORCH-3001]
+* Pools **MUST** preload at `serve` start and delay `Ready` exposure until success. [ORCH-3002]
+* Preload **MUST** fail fast if VRAM or host RAM headroom is insufficient; Pool remains **Unready** with a retry backoff. [ORCH-3003]
 
 ### 3.2 Queues & admission under load
 
-* Each Pool **MUST** have a bounded FIFO queue.
-* Full queue policy **MUST** be one of: `reject`, `drop-lru` (oldest enqueued), or `shed-low-priority`.
-* Per‑client **rate limits** and **burst buckets** **SHOULD** be enforced before enqueue.
-* **Backpressure headers** **SHOULD** be returned to callers.
+* Each Pool **MUST** have a bounded FIFO queue. [ORCH-3004]
+* Full queue policy **MUST** be one of: `reject`, `drop-lru` (oldest enqueued), or `shed-low-priority`. [ORCH-3005]
+* Per‑client **rate limits** and **burst buckets** **SHOULD** be enforced before enqueue. [ORCH-3006]
+* **Backpressure headers** **SHOULD** be returned to callers. [ORCH-2007]
 
 ### 3.3 Replicas, placement, and affinity
 
-* Pools with identical `{engine, model, quant, ctx, engine_version, sampler_profile_version}` **MUST** be treated as a replica set.
-* Scheduler **MUST** place on the **least‑loaded Ready** replica, respecting device masks and node/zone anti‑affinity if configured.
-* **Session affinity** **SHOULD** keep a session on its last good replica for KV reuse; on failure, **MAY** fail over with `kv_warmth=false` surfaced to telemetry.
+* Pools with identical `{engine, model, quant, ctx, engine_version, sampler_profile_version}` **MUST** be treated as a replica set. [ORCH-3007]
+* Scheduler **MUST** place on the **least‑loaded Ready** replica, respecting device masks and node/zone anti‑affinity if configured. [ORCH-3008]
+* **Session affinity** **SHOULD** keep a session on its last good replica for KV reuse; on failure, **MAY** fail over with `kv_warmth=false` surfaced to telemetry. [ORCH-3009]
 
 ### 3.4 Placement, heterogeneity & readiness
 
-* A Job **MUST NOT** be dispatched until the Pool is `Ready`.
-* Placement **MUST** respect device masks; cross‑mask spillover **MUST NOT** occur.
-* **Heterogeneous multi‑GPU splits** (across GPUs of different VRAM/compute) **MUST** be **opt‑in** with explicit per‑GPU ratios (e.g., `tensor_split: [0.67, 0.33]`). Default is **no cross‑GPU split** unless the pool is declared homogeneous or split ratios are configured.
-* **NUMA/PCIe topology hints** **SHOULD** influence placement when available.
+* A Job **MUST NOT** be dispatched until the Pool is `Ready`. [ORCH-3010]
+* Placement **MUST** respect device masks; cross‑mask spillover **MUST NOT** occur. [ORCH-3011]
+* **Heterogeneous multi‑GPU splits** (across GPUs of different VRAM/compute) **MUST** be **opt‑in** with explicit per‑GPU ratios (e.g., `tensor_split: [0.67, 0.33]`). Default is **no cross‑GPU split** unless the pool is declared homogeneous or split ratios are configured. [ORCH-3012]
+* **NUMA/PCIe topology hints** **SHOULD** influence placement when available. [ORCH-3013]
 
 ### 3.5 Capacity, NVIDIA‑only & guardrails
 
-* Requested context length **MUST** be ≤ model limit; otherwise **reject before enqueue** (`HTTP 400`).
-* **Token budget** (prompt + generation) **MUST** be validated pre‑admission.
-* Watchdog **MUST** abort stuck Jobs with configurable **wall** and **idle** timeouts.
-* `cancel` **MUST** free the Worker slot and return a terminal state.
-* **CPU spillover is disallowed** for inference: on GPU/Pool outage, Controller **MUST** fail fast (`POOL_UNAVAILABLE`) with retry hints.
+* Requested context length **MUST** be ≤ model limit; otherwise **reject before enqueue** (`HTTP 400`). [ORCH-3014]
+* **Token budget** (prompt + generation) **MUST** be validated pre‑admission. [ORCH-3015]
+* Watchdog **MUST** abort stuck Jobs with configurable **wall** and **idle** timeouts. [ORCH-3016]
+* `cancel` **MUST** free the Worker slot and return a terminal state. [ORCH-3017]
+* **CPU spillover is disallowed** for inference: on GPU/Pool outage, Controller **MUST** fail fast (`POOL_UNAVAILABLE`) with retry hints. [ORCH-3018]
 
 ### 3.6 Batching & throughput (engine‑agnostic)
 
-* If an Engine supports **continuous batching**, Workers **SHOULD** expose total slot count and per‑slot state; the Scheduler **MUST** factor this into placement.
-* **Speculative decoding**/**prefix caching** **MAY** be enabled; admission control **MUST** account for memory impact.
+* If an Engine supports **continuous batching**, Workers **SHOULD** expose total slot count and per‑slot state; the Scheduler **MUST** factor this into placement. [ORCH-3019]
+* **Speculative decoding**/**prefix caching** **MAY** be enabled; admission control **MUST** account for memory impact. [ORCH-3020]
 
 ### 3.7 Sessions & KV (short‑lived)
 
-* Sessions are **short‑lived**; enforce TTL ≤ **10 minutes** and/or max **8 turns**.
-* KV cache residency **MUST** be bounded with LRU/LFU; expose pressure metrics.
-* **Cross‑Worker KV migration is disabled**; failover surfaces `kv_migrated=false`.
+* Sessions are **short‑lived**; enforce TTL ≤ **10 minutes** and/or max **8 turns**. [ORCH-3021]
+* KV cache residency **MUST** be bounded with LRU/LFU; expose pressure metrics. [ORCH-3022]
+* **Cross‑Worker KV migration is disabled**; failover surfaces `kv_migrated=false`. [ORCH-3023]
 
 ### 3.8 Cancellations, retries, idempotency
 
-* Each Job **MUST** carry a unique `job_id`.
-* Client retries **SHOULD** target retryable error classes only.
-* Cancellation **MUST** be race‑free (no post‑cancel tokens).
+* Each Job **MUST** carry a unique `job_id`. [ORCH-3024]
+* Client retries **SHOULD** target retryable error classes only. [ORCH-3025]
+* Cancellation **MUST** be race‑free (no post‑cancel tokens). [ORCH-3026]
 
 ### 3.9 Observability & telemetry
 
-* Logs **MUST** include: `job_id`, `session_id`, `client_id`, `engine`, `pool_id`, `replica_id`, `model_id`, `quant`, `ctx`, `tensor_split`, `engine_version`, `sampler_profile_version`, `kv_warmth`, `queue_time_ms`, `decode_time_ms`, `tokens_in/out`, `eviction_events`, `oom_events`, `driver_reset_events`.
-* Metrics **MUST** include: queue depth, reject/drop rates, p50/p95/p99 latency, GPU/VRAM/RAM utilization, KV pressure, preload outcomes, per‑priority SLO attainment. Metric labels **MUST** include `engine` and engine‑specific version labels (e.g., `engine_version`, `trtllm_version` where applicable). Counters MUST include: `tasks_enqueued_total`, `tasks_started_total`, `tasks_canceled_total`, `tasks_rejected_total{reason=...}`. Engine‑native `/metrics` **SHOULD** be enabled where available.
-* Admission logs and the `started` SSE event **MUST** include `queue_position` and `predicted_start_ms` when available.
+* Logs **MUST** include: `job_id`, `session_id`, `client_id`, `engine`, `pool_id`, `replica_id`, `model_id`, `quant`, `ctx`, `tensor_split`, `engine_version`, `sampler_profile_version`, `kv_warmth`, `queue_time_ms`, `decode_time_ms`, `tokens_in/out`, `eviction_events`, `oom_events`, `driver_reset_events`. [ORCH-3027]
+* Metrics **MUST** include: queue depth, reject/drop rates, p50/p95/p99 latency, GPU/VRAM/RAM utilization, KV pressure, preload outcomes, per‑priority SLO attainment. Metric labels **MUST** include `engine` and engine‑specific version labels (e.g., `engine_version`, `trtllm_version` where applicable). Counters MUST include: `tasks_enqueued_total`, `tasks_started_total`, `tasks_canceled_total`, `tasks_rejected_total{reason=...}`. Engine‑native `/metrics` **SHOULD** be enabled where available. [ORCH-3028]
+* Admission logs and the `started` SSE event **MUST** include `queue_position` and `predicted_start_ms` when available. [ORCH-3029]
 
 ### 3.10 Config & lifecycle
 
-* Config **MUST** be schema‑validated; unknown fields rejected (strict) or logged (compat).
-* **Hot‑reload** **MAY** be supported but **MUST** be atomic and revertible; rolling changes use drain+replace.
+* Config **MUST** be schema‑validated; unknown fields rejected (strict) or logged (compat). [ORCH-3030]
+* **Hot‑reload** **MAY** be supported but **MUST** be atomic and revertible; rolling changes use drain+replace. [ORCH-3031]
 
 ### 3.11 Rollouts & versioning
 
-* Workers **MUST** report `engine_version` and `model_digest` (or equivalent).
-* **Canaries** **SHOULD** be supported via labels/percent splits; **Rollbacks** **MUST** be one action.
+* Workers **MUST** report `engine_version` and `model_digest` (or equivalent). [ORCH-3032]
+* **Canaries** **SHOULD** be supported via labels/percent splits; **Rollbacks** **MUST** be one action. [ORCH-3033]
 
 ### 3.12 Security & tenancy
 
-* **AuthN/AuthZ** **MUST** gate control/data paths; API keys acceptable day‑1.
-* Per‑tenant quotas **MUST** bound concurrent Jobs and memory (KV + scratch).
-* Model artifacts **MUST** be checksummed and verified before load.
+* **AuthN/AuthZ** **MUST** gate control/data paths; API keys acceptable day‑1. [ORCH-3035]
+* Per‑tenant quotas **MUST** bound concurrent Jobs and memory (KV + scratch). [ORCH-3036]
+* Model artifacts **MUST** be checksummed and verified before load. [ORCH-3037]
 
 ### 3.13 Resilience & recovery
 
-* **Driver/CUDA errors** **MUST** transition the Pool to `Unready`, drain, and backoff‑restart.
-* Distinguish **VRAM OOM** vs **host OOM**; VRAM OOM **SHOULD** trigger capacity re‑estimation.
-* **Circuit breakers** **SHOULD** shed load on sustained SLO violations.
+* **Driver/CUDA errors** **MUST** transition the Pool to `Unready`, drain, and backoff‑restart. [ORCH-3038]
+* Distinguish **VRAM OOM** vs **host OOM**; VRAM OOM **SHOULD** trigger capacity re‑estimation. [ORCH-3039]
+* **Circuit breakers** **SHOULD** shed load on sustained SLO violations. [ORCH-3040]
 
 ### 3.14 Performance & SLOs
 
-* Per‑priority SLOs **MUST** be defined and measured continuously; alerts on breach.
+* Per‑priority SLOs **MUST** be defined and measured continuously; alerts on breach. [ORCH-3041]
 
 ### 3.15 Storage & integrity
 
-* Model storage **MUST** verify checksums; local caches **SHOULD** enforce quotas and eviction.
+* Model storage **MUST** verify checksums; local caches **SHOULD** enforce quotas and eviction. [ORCH-3042]
 
 ### 3.16 API contracts & determinism
 
-* Public APIs **MUST** be versioned.
-* **Deterministic outputs are the default.** Same `{prompt, parameters, seed, sampler_profile_version, engine_version, model_digest}` within a replica set **MUST** yield identical token streams. Determinism is asserted **per engine**; do not compare across engines or across differing engine versions.
-* Replica sets **MUST** pin `engine_version` and `sampler_profile_version`; replicas with differing values **MUST NOT** mix.
-* Determinism **MUST NOT** be assumed across engine/model updates.
-* The **SSE stream framing** (`started`, `token`, `metrics`, `end`, `error`) is part of the contract and MUST remain stable.
+* Public APIs **MUST** be versioned. [ORCH-3044]
+* **Deterministic outputs are the default.** Same `{prompt, parameters, seed, sampler_profile_version, engine_version, model_digest}` within a replica set **MUST** yield identical token streams. Determinism is asserted **per engine**; do not compare across engines or across differing engine versions. [ORCH-3045]
+* Replica sets **MUST** pin `engine_version` and `sampler_profile_version`; replicas with differing values **MUST NOT** mix. [ORCH-3046]
+* Determinism **MUST NOT** be assumed across engine/model updates. [ORCH-3047]
+* The **SSE stream framing** (`started`, `token`, `metrics`, `end`, `error`) is part of the contract and MUST remain stable. [ORCH-2002]
 
 ### 3.17 Extensibility (policy plugins)
 
-* Default plugin ABI **MUST** be **WASI** (pure, deterministic functions over explicit snapshots). Native in‑process trait **MAY** be offered as a high‑perf alternative.
+* Default plugin ABI **MUST** be **WASI** (pure, deterministic functions over explicit snapshots). Native in‑process trait **MAY** be offered as a high‑perf alternative. [ORCH-3048]
 
 ### 3.18 Testing & validation
 
-* Startup self‑tests **MUST** cover: preload, minimal decode, cancel, telemetry emission.
-* Determinism tests **MUST** verify byte‑exact streams across replicas with fixed seeds, run **per engine** with engine‑appropriate settings (e.g., llama.cpp with `--parallel 1` and `--no-cont-batching`; others in single‑slot/single‑request mode).
-* Chaos tests **SHOULD** be run for failover/idempotency; load tests **MUST** cover priority inversion.
+* Startup self‑tests **MUST** cover: preload, minimal decode, cancel, telemetry emission. [ORCH-3049]
+* Determinism tests **MUST** verify byte‑exact streams across replicas with fixed seeds, run **per engine** with engine‑appropriate settings (e.g., llama.cpp with `--parallel 1` and `--no-cont-batching`; others in single‑slot/single‑request mode). [ORCH-3050]
+* Chaos tests **SHOULD** be run for failover/idempotency; load tests **MUST** cover priority inversion. [ORCH-3051]
 
 ---
 
@@ -151,8 +151,8 @@
 
 * **Device masks** are explicit; **cross‑mask spillover is forbidden**.
 * **Default**: no cross‑GPU splits unless pool is homogeneous **or** explicit `tensor_split` ratios are set.
-* **Heterogeneous split policy**: when ratios are provided, **MUST** cap per‑GPU resident KV to avoid OOM on the smallest GPU; Scheduler **SHOULD** consider PCIe/NVLink and NUMA.
-* **Driver resets** and ECC (where applicable) **MUST** be surfaced distinctly; the Pool Manager **MUST** bound restart storms with backoff and circuit breakers.
+* **Heterogeneous split policy**: when ratios are provided, **MUST** cap per‑GPU resident KV to avoid OOM on the smallest GPU; Scheduler **SHOULD** consider PCIe/NVLink and NUMA. [ORCH-3052]
+* **Driver resets** and ECC (where applicable) **MUST** be surfaced distinctly; the Pool Manager **MUST** bound restart storms with backoff and circuit breakers. [ORCH-3053]
 
 ---
 
@@ -162,25 +162,25 @@
 
 * **Native**: `/health`, `/metrics` (when started with metrics), `/slots`, `/props`, `/completion`, `/tokenize`, `/detokenize`, `/embedding`.
 * **OpenAI‑compatible**: `/v1/chat/completions`, `/v1/completions`, `/v1/embeddings`.
-* **Adapter contract**: MUST support health, properties (slots/commit), completion (SSE), cancel, and metrics scrape. This mapping is internal; the public API is OrchQueue v1.
+* **Adapter contract**: MUST support health, properties (slots/commit), completion (SSE), cancel, and metrics scrape. This mapping is internal; the public API is OrchQueue v1. [ORCH-3054]
 
 ### 5.2 vLLM (OpenAI‑compatible server)
 
 * **OpenAI‑compatible**: `/v1/chat/completions`, `/v1/completions`, `/v1/embeddings`; API key support recommended.
-* **Adapter contract**: same as above; engine version string MUST be captured. The adapter may call vLLM’s OpenAI server internally; this is not exposed publicly.
+* **Adapter contract**: same as above; engine version string MUST be captured. The adapter may call vLLM’s OpenAI server internally; this is not exposed publicly. [ORCH-3055]
 
 ### 5.3 Hugging Face Text‑Generation‑Inference (TGI)
 
 * **Custom API**: `/generate` (sync/stream), `/health`, `/info`; **and** optional **OpenAI Messages API** for compatibility.
-* **Adapter contract**: MUST implement the TGI custom path (`/generate`, `/info`, etc.). If an OpenAI‑compatible path is enabled, it remains internal only.
+* **Adapter contract**: MUST implement the TGI custom path (`/generate`, `/info`, etc.). If an OpenAI‑compatible path is enabled, it remains internal only. [ORCH-3056]
 
 ### 5.4 NVIDIA Triton / TensorRT‑LLM
 
 * **Triton HTTP/GRPC**: model health/metadata/stats; infer via `/v2/models/{model}/infer` (HTTP) or corresponding gRPC; supports dynamic load/unload.
 * **OpenAI‑compatible frontends**: supported via `trtllm-serve` (TensorRT‑LLM) or Triton OpenAI‑compatible frontend; label as BETA where applicable.
-* **Adapter contract**: MUST support health/metadata, infer/streaming (if configured), and metrics. OpenAI‑compatible frontends are internal only.
+* **Adapter contract**: MUST support health/metadata, infer/streaming (if configured), and metrics. OpenAI‑compatible frontends are internal only. [ORCH-3057]
 
-> All adapters **MUST** normalize detokenization templates and sampler profiles to keep determinism stable within a replica set.
+> All adapters **MUST** normalize detokenization templates and sampler profiles to keep determinism stable within a replica set. [ORCH-3058]
 
 ---
 

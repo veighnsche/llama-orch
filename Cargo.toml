@@ -14,6 +14,7 @@ members = [
     "plugins/policy-sdk",
     "cli/consumer-tests",
     "test-harness/e2e-haiku",
+    "test-harness/metrics-contract",
     "test-harness/determinism-suite",
     "test-harness/chaos",
     "tools/spec-extract",

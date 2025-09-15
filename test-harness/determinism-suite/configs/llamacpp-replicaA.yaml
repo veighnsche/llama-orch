@@ -1,0 +1,8 @@
+# Determinism suite config skeleton for llama.cpp replica A
+# engine: llamacpp
+# model_ref: sha256:... or repo:...
+# flags:
+#   parallel: 1
+#   no_cont_batching: true
+#   sampler_profile_version: v1
+# device: 0

@@ -71,3 +71,73 @@ async fn pact_stub_happy_path() {
     assert!(admission.get("predicted_start_ms").is_some());
     assert!(admission.get("backoff_ms").is_some());
 }
+
+#[tokio::test]
+async fn pact_stub_sse_and_backpressure_headers() {
+    let server = MockServer::start().await;
+
+    // GET /v1/tasks/:id/stream → SSE transcript
+    Mock::given(method("GET"))
+        .and(path("/v1/tasks/11111111-1111-4111-8111-111111111111/stream"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .insert_header("content-type", "text/event-stream")
+                .set_body_string(
+                    "event: started\n\n\
+                     data: {\"queue_position\":3,\"predicted_start_ms\":420}\n\n\
+                     event: token\n\n\
+                     data: {\"t\":\"Hello\",\"i\":0}\n\n\
+                     event: end\n\n\
+                     data: {\"tokens_out\":1,\"decode_ms\":100}\n\n",
+                ),
+        )
+        .mount(&server)
+        .await;
+
+    // POST /v1/tasks → 429 with backpressure headers
+    Mock::given(method("POST"))
+        .and(path("/v1/tasks"))
+        .respond_with(
+            ResponseTemplate::new(429)
+                .insert_header("content-type", "application/json")
+                .insert_header("Retry-After", "1")
+                .insert_header("X-Backoff-Ms", "1000")
+                .set_body_json(json!({
+                    "code": "QUEUE_FULL_DROP_LRU",
+                    "message": "queue full",
+                    "engine": "llamacpp"
+                })),
+        )
+        .mount(&server)
+        .await;
+
+    let client = reqwest::Client::new();
+    let sse = client
+        .get(format!(
+            "{}/v1/tasks/11111111-1111-4111-8111-111111111111/stream",
+            server.uri()
+        ))
+        .header("Accept", "text/event-stream")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(sse.status(), 200);
+    let body = sse.text().await.unwrap();
+    // Basic shape checks for 3 events
+    assert!(body.contains("event: started"));
+    assert!(body.contains("event: token"));
+    assert!(body.contains("event: end"));
+
+    // Backpressure 429
+    let resp = client
+        .post(format!("{}/v1/tasks", server.uri()))
+        .json(&json!({"task_id":"x","session_id":"y"}))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), 429);
+    let retry_after = resp.headers().get("Retry-After").unwrap();
+    let backoff_ms = resp.headers().get("X-Backoff-Ms").unwrap();
+    assert_eq!(retry_after.to_str().unwrap(), "1");
+    assert_eq!(backoff_ms.to_str().unwrap(), "1000");
+}

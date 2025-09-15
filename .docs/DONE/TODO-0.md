@@ -40,7 +40,7 @@
   * Input: `specs/orchestrator-spec.md`.
   * Output: `requirements/index.yaml` mapping `ORCH-IDs → {title, section, must/should, links}`.
   * AC: Deterministic output; CI fails on uncommitted diffs.
-  * Proof: `cargo run -p tools-spec-extract` → wrote `requirements/index.yaml`; re-run → unchanged; `git diff --exit-code` → 0.
+  * Proof: `cargo run -p tools-spec-extract` → wrote `requirements/index.yaml` and `COMPLIANCE.md` with section links; re-run → unchanged; `git diff --exit-code` → 0.
 
 ---
 
@@ -58,7 +58,7 @@
   * Include typed errors: `ADMISSION_REJECT`, `QUEUE_FULL_DROP_LRU`, `INVALID_PARAMS`, `POOL_UNREADY`, `POOL_UNAVAILABLE`, `REPLICA_EXHAUSTED`, `DECODE_TIMEOUT`, `WORKER_RESET`, `INTERNAL`. Error envelopes MUST include the `engine` context where applicable.
   * Define an explicit `engine` enum used across Task/Pool and related types: `llamacpp | vllm | tgi | triton`.
   * AC: `oapi-codegen` runs clean.
-  * Proof: `cargo xtask regen-openapi` → validated specs; generated deterministic types/client; re-run → unchanged.
+  * Proof: `cargo xtask regen-openapi` → validated both `contracts/openapi/*.yaml`; generated deterministic types/client unchanged on re-run; diff clean.
 * [x] **Generate Rust API types & server stubs**
 
   * Target crates: `contracts/api-types` (shared types), `orchestratord` (server stubs), `tools/openapi-client` (client for tests).
@@ -90,18 +90,18 @@
 
   * Crate: `cli/consumer-tests`.
   * Target API: **OrchQueue v1** only — `POST /v1/tasks`, `GET /v1/tasks/:id/stream`, `POST /v1/tasks/:id/cancel`, session endpoints.
-  * AC: Pact interactions cover happy path + errors; pact JSON written to `contracts/pacts/`.
-  * Proof: `cargo test -p cli-consumer-tests` → ok; wrote `contracts/pacts/cli-consumer-orchestratord.json`.
+  * AC: Pact interactions cover happy path, SSE streaming placeholder, backpressure headers, and error matrix; pact JSON written to `contracts/pacts/`.
+  * Proof: `cargo test -p cli-consumer-tests -- --nocapture` → ok; wrote `contracts/pacts/cli-consumer-orchestratord.json` with SSE and header interactions.
 * [x] **Stub provider with wiremock‑rs**
 
   * Crate: `worker-adapters/mock` + a small `stub-server` binary (inside `cli/consumer-tests` or `test-harness`).
-  * AC: Stubs satisfy pact interactions; add **insta** snapshots of CLI transcripts.
-  * Proof: `cargo test -p cli-consumer-tests --test stub_wiremock` → ok; inline snapshot test `snapshot_transcript.rs` → ok.
+  * AC: Stubs satisfy pact interactions; add **insta** snapshots of admission, session info, and an SSE transcript.
+  * Proof: `cargo test -p cli-consumer-tests --test stub_wiremock -- --nocapture` → ok; inline snapshot tests in `snapshot_transcript.rs` → ok.
 * [x] **Provider verification tests**
 
   * Crate: `orchestratord`.
-  * AC: Loads pact files and verifies handler stubs (no real logic yet) match contract.
-  * Proof: `cargo test -p orchestratord --test provider_verify` → ok.
+  * AC: Loads pact files and verifies handler stubs (no real logic yet) match contract, including response shapes and header checks; negative coverage for unknown paths/statuses.
+  * Proof: `cargo test -p orchestratord --test provider_verify -- --nocapture` → ok (schema shape checks + Retry-After/X-Backoff-Ms assertions).
 
 ---
 
@@ -138,7 +138,7 @@
 
   * AC: Launch two logical replicas per engine (config files only). For llama.cpp set `--parallel 1`, `--no-cont-batching`; for other engines, run single‑slot/single‑request mode or equivalent to disable cross‑request batching.
   * Add test placeholders for 64 seeded prompts; write snapshot format for token streams; compare streams per engine.
-  * Proof: `test-harness/determinism-suite/seeds.txt` (64 lines); `cargo test -p test-harness-determinism-suite` → ok.
+  * Proof: `cargo test -p test-harness-determinism-suite -- --ignored` → helpers compiled; seeds guard (64) and placeholder byte-exact test passed; heavy tests remain ignored.
 * [x] **Session policy doc**
 
   * File: `docs/session-policy.md` summarizing TTL ≤ 10m, ≤ 8 turns, no KV migration; metrics to emit.
@@ -161,7 +161,7 @@
 
   * AC: Implements minute‑in‑words + 8‑char nonce; asserts ≥ 3 lines, substrings, and `/metrics` token delta > 0; fails on mock. Interact with the orchestrator via **OrchQueue v1** (`POST /v1/tasks`, then `GET /v1/tasks/:id/stream`). Prefer targeting a GPU worker over LAN; if GPU unreachable in CI, run CPU llama.cpp as a CI‑only fallback.
   * Enforce `TZ=Europe/Amsterdam` and `REQUIRE_REAL_LLAMA=1`.
-  * Proof: Placeholder test added and ignored; compiles.
+  * Proof: `cargo test -p test-harness-e2e-haiku -- --ignored` → ok; helpers compile; gated test skips without `REQUIRE_REAL_LLAMA=1`.
 
 ---
 
@@ -171,7 +171,7 @@
 
   * Jobs: `precommit`, `cdc_consumer`, `stub_flow`, `provider_verify`, `unit_props` (empty now), `determinism` (per engine), `e2e_haiku` (prefer GPU; CI‑only CPU fallback; drive via OrchQueue v1), `docs_compliance`.
   * AC: Pipeline runs through with stubs/skeletons (mark some as `continue-on-error` until code lands).
-  * Proof: `ci/pipelines.yml` created with jobs per spec.
+  * Proof: `ci/pipelines.yml` created with jobs per spec; added Rust cache; enforced `needs: [cdc_consumer, stub_flow]` before `provider_verify`.
 * [x] **Dashboards & alerts**
 
   * Add `ci/dashboards/*.json` (placeholders referencing metric names).
@@ -185,7 +185,7 @@
 
   * Tooling: extend `tools/spec-extract` to emit a coverage report linking `ORCH-ID → {openapi, tests, crates}`.
   * AC: `COMPLIANCE.md` builds and is linked from README.
-  * Proof: `cargo run -p tools-spec-extract` → wrote `COMPLIANCE.md` deterministically.
+  * Proof: `cargo run -p tools-spec-extract` → wrote `COMPLIANCE.md` deterministically with links to spec sections.
 * [x] **Linkcheck** for SPEC/Workflow
 
   * Add `ci/scripts/check_links.sh` to validate internal anchors.
@@ -200,9 +200,9 @@
 * [x] OpenAPI + Schema regenerate cleanly via `cargo xtask` (engine enum present across Job/Pool/types; schema includes engine/devices/tensor_split fields).
   * Proof: `cargo xtask regen-openapi && cargo xtask regen-schema` → unchanged on second run; `git diff --exit-code` → 0.
 * [x] Pact consumer tests target **OrchQueue v1** and produce pact files; provider verification passes against stubs.
-  * Proof: `cargo test -p cli-consumer-tests` → ok; pact JSON under `contracts/pacts/`; `cargo test -p orchestratord --test provider_verify` → ok.
+  * Proof: `cargo test -p cli-consumer-tests -- --nocapture` → ok; pact JSON under `contracts/pacts/` includes SSE/backpressure; `cargo test -p orchestratord --test provider_verify -- --nocapture` → ok.
 * [x] Wiremock stubs + insta snapshots approved.
-  * Proof: `cargo test -p cli-consumer-tests --test stub_wiremock` → ok; inline snapshot test → ok.
+  * Proof: `cargo test -p cli-consumer-tests --test stub_wiremock -- --nocapture` → ok; inline snapshot tests → ok.
 * [x] Determinism suite & Haiku harness compile and run via **OrchQueue v1** against a live NVIDIA GPU worker when available; CI‑only CPU fallback allowed (no orchestrator logic asserted yet beyond plumbing).
   * Proof: Placeholders compile; determinism seeds test → ok; haiku harness test ignored.
 * [x] CI pipeline green on stub flow; nightly jobs disabled or `continue-on-error` until logic lands.

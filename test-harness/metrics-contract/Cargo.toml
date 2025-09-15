@@ -1,21 +1,17 @@
 [package]
-name = "orchestrator-core"
+name = "test-harness-metrics-contract"
 version = "0.0.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [lib]
-name = "orchestrator_core"
+name = "test_harness_metrics_contract"
 path = "src/lib.rs"
 
 [dependencies]
 anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
-tracing = { workspace = true }
-futures = { workspace = true }
 serde_json = { workspace = true }
-contracts-api-types = { path = "../contracts/api-types" }
-thiserror = { workspace = true }
 
 [dev-dependencies]
-proptest = { workspace = true }
+serde_yaml = { workspace = true }
