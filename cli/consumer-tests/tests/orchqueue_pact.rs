@@ -43,7 +43,7 @@ fn pact_enqueue_accept_and_cancel_and_session_endpoints() {
                 },
                 "response": {
                     "status": 202,
-                    "headers": { "content-type": "application/json" },
+                    "headers": { "content-type": "application/json", "X-Correlation-Id": "corr-accept-1" },
                     "body": {
                         "task_id": "11111111-1111-4111-8111-111111111111",
                         "queue_position": 3,
@@ -55,21 +55,21 @@ fn pact_enqueue_accept_and_cancel_and_session_endpoints() {
             {
                 "description": "cancel task no content",
                 "request": { "method": "POST", "path": "/v1/tasks/11111111-1111-4111-8111-111111111111/cancel" },
-                "response": { "status": 204 }
+                "response": { "status": 204, "headers": { "X-Correlation-Id": "corr-cancel-1" } }
             },
             {
                 "description": "get session info",
                 "request": { "method": "GET", "path": "/v1/sessions/22222222-2222-4222-8222-222222222222" },
                 "response": {
                     "status": 200,
-                    "headers": { "content-type": "application/json" },
+                    "headers": { "content-type": "application/json", "X-Correlation-Id": "corr-session-1" },
                     "body": { "ttl_ms_remaining": 600000, "turns": 1, "kv_bytes": 0, "kv_warmth": false }
                 }
             },
             {
                 "description": "delete session",
                 "request": { "method": "DELETE", "path": "/v1/sessions/22222222-2222-4222-8222-222222222222" },
-                "response": { "status": 204 }
+                "response": { "status": 204, "headers": { "X-Correlation-Id": "corr-session-del-1" } }
             },
             {
                 "description": "stream task events (SSE placeholder)",
@@ -80,7 +80,7 @@ fn pact_enqueue_accept_and_cancel_and_session_endpoints() {
                 },
                 "response": {
                     "status": 200,
-                    "headers": { "content-type": "text/event-stream" },
+                    "headers": { "content-type": "text/event-stream", "X-Correlation-Id": "corr-sse-1" },
                     "body": "event: started\n\ndata: {\"queue_position\":3,\"predicted_start_ms\":420}\n\n\nevent: token\n\ndata: {\"t\":\"Hello\",\"i\":0}\n\n\nevent: end\n\ndata: {\"tokens_out\":1,\"decode_ms\":100}\n\n"
                 }
             },
@@ -104,8 +104,8 @@ fn pact_enqueue_accept_and_cancel_and_session_endpoints() {
                 },
                 "response": {
                     "status": 429,
-                    "headers": { "content-type": "application/json", "Retry-After": "1", "X-Backoff-Ms": "1000" },
-                    "body": { "code": "QUEUE_FULL_DROP_LRU", "message": "queue full", "engine": "llamacpp" }
+                    "headers": { "content-type": "application/json", "Retry-After": "1", "X-Backoff-Ms": "1000", "X-Correlation-Id": "corr-429-1" },
+                    "body": { "code": "QUEUE_FULL_DROP_LRU", "message": "queue full", "engine": "llamacpp", "retriable": true, "retry_after_ms": 1000, "policy_label": "drop-lru" }
                 }
             },
             {
@@ -128,8 +128,8 @@ fn pact_enqueue_accept_and_cancel_and_session_endpoints() {
                 },
                 "response": {
                     "status": 429,
-                    "headers": { "content-type": "application/json", "Retry-After": "2", "X-Backoff-Ms": "2000" },
-                    "body": { "code": "ADMISSION_REJECT", "message": "reject policy", "engine": "llamacpp" }
+                    "headers": { "content-type": "application/json", "Retry-After": "2", "X-Backoff-Ms": "2000", "X-Correlation-Id": "corr-429-2" },
+                    "body": { "code": "ADMISSION_REJECT", "message": "reject policy", "engine": "llamacpp", "retriable": true, "retry_after_ms": 2000, "policy_label": "reject" }
                 }
             },
             {
@@ -152,39 +152,39 @@ fn pact_enqueue_accept_and_cancel_and_session_endpoints() {
                 },
                 "response": {
                     "status": 400,
-                    "headers": { "content-type": "application/json" },
+                    "headers": { "content-type": "application/json", "X-Correlation-Id": "corr-400-1" },
                     "body": { "code": "INVALID_PARAMS", "message": "bad request", "engine": "llamacpp" }
                 }
             },
             {
                 "description": "pool unready",
                 "request": { "method": "POST", "path": "/v1/tasks", "headers": { "content-type": "application/json" }, "body": {"task_id": "99999999-9999-4999-8999-999999999999", "session_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "workload": "completion", "model_ref": "sha256:abc", "engine": "llamacpp", "ctx": 8192, "priority": "interactive", "max_tokens": 64, "deadline_ms": 30000 } },
-                "response": { "status": 503, "headers": { "content-type": "application/json" }, "body": { "code": "POOL_UNREADY", "message": "pool not ready", "engine": "llamacpp" } }
+                "response": { "status": 503, "headers": { "content-type": "application/json", "X-Correlation-Id": "corr-503-1" }, "body": { "code": "POOL_UNREADY", "message": "pool not ready", "engine": "llamacpp" } }
             },
             {
                 "description": "pool unavailable",
                 "request": { "method": "POST", "path": "/v1/tasks", "headers": { "content-type": "application/json" }, "body": {"task_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "session_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc", "workload": "completion", "model_ref": "sha256:abc", "engine": "llamacpp", "ctx": 8192, "priority": "interactive", "max_tokens": 64, "deadline_ms": 30000 } },
-                "response": { "status": 503, "headers": { "content-type": "application/json" }, "body": { "code": "POOL_UNAVAILABLE", "message": "unavailable", "engine": "llamacpp" } }
+                "response": { "status": 503, "headers": { "content-type": "application/json", "X-Correlation-Id": "corr-503-2" }, "body": { "code": "POOL_UNAVAILABLE", "message": "unavailable", "engine": "llamacpp" } }
             },
             {
                 "description": "replica exhausted",
                 "request": { "method": "POST", "path": "/v1/tasks", "headers": { "content-type": "application/json" }, "body": {"task_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd", "session_id": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", "workload": "completion", "model_ref": "sha256:abc", "engine": "llamacpp", "ctx": 8192, "priority": "interactive", "max_tokens": 64, "deadline_ms": 30000 } },
-                "response": { "status": 503, "headers": { "content-type": "application/json" }, "body": { "code": "REPLICA_EXHAUSTED", "message": "exhausted", "engine": "llamacpp" } }
+                "response": { "status": 503, "headers": { "content-type": "application/json", "X-Correlation-Id": "corr-503-3" }, "body": { "code": "REPLICA_EXHAUSTED", "message": "exhausted", "engine": "llamacpp" } }
             },
             {
                 "description": "decode timeout",
                 "request": { "method": "POST", "path": "/v1/tasks", "headers": { "content-type": "application/json" }, "body": {"task_id": "ffffffff-ffff-4fff-8fff-ffffffffffff", "session_id": "12121212-1212-4121-8121-121212121212", "workload": "completion", "model_ref": "sha256:abc", "engine": "llamacpp", "ctx": 8192, "priority": "interactive", "max_tokens": 64, "deadline_ms": 30000 } },
-                "response": { "status": 500, "headers": { "content-type": "application/json" }, "body": { "code": "DECODE_TIMEOUT", "message": "timeout", "engine": "llamacpp" } }
+                "response": { "status": 500, "headers": { "content-type": "application/json", "X-Correlation-Id": "corr-500-1" }, "body": { "code": "DECODE_TIMEOUT", "message": "timeout", "engine": "llamacpp" } }
             },
             {
                 "description": "worker reset",
                 "request": { "method": "POST", "path": "/v1/tasks", "headers": { "content-type": "application/json" }, "body": {"task_id": "13131313-1313-4131-8131-131313131313", "session_id": "14141414-1414-4141-8141-141414141414", "workload": "completion", "model_ref": "sha256:abc", "engine": "llamacpp", "ctx": 8192, "priority": "interactive", "max_tokens": 64, "deadline_ms": 30000 } },
-                "response": { "status": 500, "headers": { "content-type": "application/json" }, "body": { "code": "WORKER_RESET", "message": "reset", "engine": "llamacpp" } }
+                "response": { "status": 500, "headers": { "content-type": "application/json", "X-Correlation-Id": "corr-500-2" }, "body": { "code": "WORKER_RESET", "message": "reset", "engine": "llamacpp" } }
             },
             {
                 "description": "internal error",
                 "request": { "method": "POST", "path": "/v1/tasks", "headers": { "content-type": "application/json" }, "body": {"task_id": "15151515-1515-4151-8151-151515151515", "session_id": "16161616-1616-4161-8161-161616161616", "workload": "completion", "model_ref": "sha256:abc", "engine": "llamacpp", "ctx": 8192, "priority": "interactive", "max_tokens": 64, "deadline_ms": 30000 } },
-                "response": { "status": 500, "headers": { "content-type": "application/json" }, "body": { "code": "INTERNAL", "message": "internal", "engine": "llamacpp" } }
+                "response": { "status": 500, "headers": { "content-type": "application/json", "X-Correlation-Id": "corr-500-3" }, "body": { "code": "INTERNAL", "message": "internal", "engine": "llamacpp" } }
             }
         ]
     });

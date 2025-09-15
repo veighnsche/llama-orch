@@ -112,7 +112,7 @@ This document defines how an LLM developer must make decisions and contribute to
   - `TZ=Europe/Amsterdam` for E2E‑Haiku; `REQUIRE_REAL_LLAMA=1` to enforce a real Worker.
 
 - Definition of Done (per requirement)
-  - Contract coverage in OpenAPI/Schema; consumer pact exists; provider verification passes; unit/property tests cover edges; observability proves it (metrics/logs); `requirements/index.yaml` links req → tests → code.
+  - Contract coverage in OpenAPI/Schema; consumer pact exists; provider verification passes; unit/property tests cover edges; observability proves it (metrics/logs); `requirements/*.yaml` links req → tests → code.
 
 ## Non‑Goals and Anti‑Patterns
 

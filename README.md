@@ -3,6 +3,11 @@
 This repository contains the pre-code scaffolding for an LLM Orchestrator. Use the commands below
 to regenerate contracts, validate specs, and run tests.
 
+See also:
+
+- `README_LLM.md` — Decision rules and workflow for LLM developers
+- `.docs/workflow.md` — Stages and gates (SPEC→SHIP)
+
 ## Quickstart
 
 - Format check

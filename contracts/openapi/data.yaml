@@ -184,6 +184,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SessionInfo'
+              x-examples:
+                example:
+                  value: { ttl_ms_remaining: 600000, turns: 1, kv_bytes: 0, kv_warmth: false }
     delete:
       operationId: deleteSession
       summary: Delete a session and evict KV
@@ -195,7 +198,12 @@ paths:
           required: true
           schema: { type: string, format: uuid }
       responses:
-        '204': { description: No Content }
+        '204':
+          description: No Content
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
 
 components:
   schemas:

@@ -18,8 +18,21 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CatalogModel'
+            x-examples:
+              example:
+                value:
+                  id: "llama3-8b"
+                  digest: "sha256:deadbeef"
+                  source_url: "registry.example.com/llama3:8b"
+                  tags: ["latest", "prod"]
+                  trust_policy: { mode: strict, allowed_registries: ["registry.example.com"], require_signature: true, require_sbom: true }
       responses:
-        '201': { description: Created }
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogModel'
 
   /v1/catalog/models/{id}:
     get:
@@ -38,6 +51,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogModel'
+              x-examples:
+                example:
+                  value:
+                    id: "llama3-8b"
+                    digest: "sha256:deadbeef"
+                    source_url: "registry.example.com/llama3:8b"
+                    manifests: [ { digest: "sha256:deadbeef", size_bytes: 123456 } ]
+                    signatures: [ { signer: "Acme CI", algo: "cosign", verified: true, timestamp_ms: 1700000000000 } ]
+                    sbom: { uri: "https://sbom.example.com/llama3-8b.spdx.json", digest: "sha256:cafebabe" }
 
   /v1/catalog/models/{id}/verify:
     post:
@@ -50,7 +72,8 @@ paths:
           required: true
           schema: { type: string }
       responses:
-        '202': { description: Verification started }
+        '202':
+          description: Verification started
 
   /v1/catalog/models/{id}/state:
     post:
@@ -76,8 +99,12 @@ paths:
                 deadline_ms:
                   type: integer
                   format: int64
+            x-examples:
+              deprecate_with_drain:
+                value: { state: Deprecated, deadline_ms: 600000 }
       responses:
-        '202': { description: Accepted }
+        '202':
+          description: Accepted
   /v1/pools/{id}/drain:
     post:
       operationId: drainPool

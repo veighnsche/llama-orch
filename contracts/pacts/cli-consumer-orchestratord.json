@@ -34,6 +34,7 @@
           "task_id": "11111111-1111-4111-8111-111111111111"
         },
         "headers": {
+          "X-Correlation-Id": "corr-accept-1",
           "content-type": "application/json"
         },
         "status": 202
@@ -46,6 +47,9 @@
         "path": "/v1/tasks/11111111-1111-4111-8111-111111111111/cancel"
       },
       "response": {
+        "headers": {
+          "X-Correlation-Id": "corr-cancel-1"
+        },
         "status": 204
       }
     },
@@ -63,6 +67,7 @@
           "turns": 1
         },
         "headers": {
+          "X-Correlation-Id": "corr-session-1",
           "content-type": "application/json"
         },
         "status": 200
@@ -75,6 +80,9 @@
         "path": "/v1/sessions/22222222-2222-4222-8222-222222222222"
       },
       "response": {
+        "headers": {
+          "X-Correlation-Id": "corr-session-del-1"
+        },
         "status": 204
       }
     },
@@ -90,6 +98,7 @@
       "response": {
         "body": "event: started\n\ndata: {\"queue_position\":3,\"predicted_start_ms\":420}\n\n\nevent: token\n\ndata: {\"t\":\"Hello\",\"i\":0}\n\n\nevent: end\n\ndata: {\"tokens_out\":1,\"decode_ms\":100}\n\n",
         "headers": {
+          "X-Correlation-Id": "corr-sse-1",
           "content-type": "text/event-stream"
         },
         "status": 200
@@ -119,11 +128,15 @@
         "body": {
           "code": "QUEUE_FULL_DROP_LRU",
           "engine": "llamacpp",
-          "message": "queue full"
+          "message": "queue full",
+          "policy_label": "drop-lru",
+          "retriable": true,
+          "retry_after_ms": 1000
         },
         "headers": {
           "Retry-After": "1",
           "X-Backoff-Ms": "1000",
+          "X-Correlation-Id": "corr-429-1",
           "content-type": "application/json"
         },
         "status": 429
@@ -153,11 +166,15 @@
         "body": {
           "code": "ADMISSION_REJECT",
           "engine": "llamacpp",
-          "message": "reject policy"
+          "message": "reject policy",
+          "policy_label": "reject",
+          "retriable": true,
+          "retry_after_ms": 2000
         },
         "headers": {
           "Retry-After": "2",
           "X-Backoff-Ms": "2000",
+          "X-Correlation-Id": "corr-429-2",
           "content-type": "application/json"
         },
         "status": 429
@@ -190,6 +207,7 @@
           "message": "bad request"
         },
         "headers": {
+          "X-Correlation-Id": "corr-400-1",
           "content-type": "application/json"
         },
         "status": 400
@@ -222,6 +240,7 @@
           "message": "pool not ready"
         },
         "headers": {
+          "X-Correlation-Id": "corr-503-1",
           "content-type": "application/json"
         },
         "status": 503
@@ -254,6 +273,7 @@
           "message": "unavailable"
         },
         "headers": {
+          "X-Correlation-Id": "corr-503-2",
           "content-type": "application/json"
         },
         "status": 503
@@ -286,6 +306,7 @@
           "message": "exhausted"
         },
         "headers": {
+          "X-Correlation-Id": "corr-503-3",
           "content-type": "application/json"
         },
         "status": 503
@@ -318,6 +339,7 @@
           "message": "timeout"
         },
         "headers": {
+          "X-Correlation-Id": "corr-500-1",
           "content-type": "application/json"
         },
         "status": 500
@@ -350,6 +372,7 @@
           "message": "reset"
         },
         "headers": {
+          "X-Correlation-Id": "corr-500-2",
           "content-type": "application/json"
         },
         "status": 500
@@ -382,6 +405,7 @@
           "message": "internal"
         },
         "headers": {
+          "X-Correlation-Id": "corr-500-3",
           "content-type": "application/json"
         },
         "status": 500

@@ -173,6 +173,8 @@ fn provider_paths_match_pacts() {
                             .get("X-Backoff-Ms")
                             .and_then(|v| v.as_str())
                             .unwrap_or("");
+                        // Correlation id must be present
+                        assert!(hdrs.contains_key("X-Correlation-Id"), "missing X-Correlation-Id header on 429");
                         assert!(
                             retry.parse::<u64>().is_ok(),
                             "Retry-After must be seconds numeric string"
@@ -184,6 +186,16 @@ fn provider_paths_match_pacts() {
                     } else {
                         panic!("429 response missing headers");
                     }
+
+                    // Body should include policy_label advisory field
+                    if let Some(body) = interaction["response"]["body"].as_object() {
+                        assert!(body.contains_key("policy_label"), "429 body missing policy_label");
+                    }
+                }
+
+                // For other responses with headers, correlation id should be present
+                if let Some(hdrs) = interaction["response"]["headers"].as_object() {
+                    assert!(hdrs.contains_key("X-Correlation-Id"), "missing X-Correlation-Id header on response");
                 }
             }
         }

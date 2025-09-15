@@ -43,7 +43,6 @@ fn main() -> Result<()> {
     }
     spec_files.sort();
 
-    let orch_spec = specs_dir.join("orchestrator-spec.md");
     let mut compliance_sections: Vec<String> = Vec::new();
 
     let out_dir = repo_root.join("requirements");
@@ -68,11 +67,7 @@ fn main() -> Result<()> {
         let yaml = serde_yaml::to_string(&index)?;
         write_if_changed(&out_path, &yaml)?;
 
-        // Back-compat: also write index.yaml for orchestrator-spec
-        if spec_path == &orch_spec {
-            let idx_path = out_dir.join("index.yaml");
-            write_if_changed(&idx_path, &yaml)?;
-        }
+        // Removed back-compat index.yaml emission
 
         // Compliance section
         let mut lines = Vec::new();
