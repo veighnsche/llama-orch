@@ -10,6 +10,7 @@ Status: pre-code · Scope: OrchQueue v1 data plane & control plane
   - `pool_id`, `replica_id` (where applicable), `model_id` or `model_digest`
 - Metrics are contracts: names and label sets are stable. Changes are breaking.
 - Links to requirements use ORCH-IDs when available in SPEC (none assigned yet in current SPEC).
+- Exception: Admission-level counters (e.g., `tasks_rejected_total`) MAY omit `engine_version` to limit cardinality and because rejections can occur before engine assignment. This exception is normative and aligns with `ci/metrics.lint.json`.
 
 ## Counters
 
@@ -33,6 +34,7 @@ Status: pre-code · Scope: OrchQueue v1 data plane & control plane
   - labels: reason (ADMISSION_REJECT|QUEUE_FULL_DROP_LRU|INVALID_PARAMS|POOL_UNREADY|POOL_UNAVAILABLE|REPLICA_EXHAUSTED), engine
   - unit: 1
   - description: Number of rejected tasks with the typed reason.
+  - note: `engine_version` is intentionally omitted per Conventions exception (admission-level, pre-engine; cardinality control).
 
 ## Gauges
 

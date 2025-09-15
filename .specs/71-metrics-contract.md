@@ -16,4 +16,4 @@ Requirements are versioned as `OC-METRICS-7xxx`.
 ## 2) Traceability
 
 - Linter: [ci/metrics.lint.json](../ci/metrics.lint.json)
-- Tests: [test-harness/metrics-contract/tests/metrics_lint.rs](../test-harness/metrics-contract/tests/metrics_lint.rs)
+- Tests: to be created under `test-harness/metrics-contract/` (e.g., `tests/metrics_lint.rs`). For now, the linter (`ci/metrics.lint.json`) is authoritative.

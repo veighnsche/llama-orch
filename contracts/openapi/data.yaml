@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: |
     Public queue-centric API for task admission and streaming results.
-    See specs/orchestrator-spec.md §6.2.
+    See .specs/00_llama-orch.md §6.2.
 servers:
   - url: /
 paths:
@@ -58,6 +58,17 @@ paths:
       summary: Stream task events (SSE)
       x-req-id:
         - ORCH-2002
+      x-sse-events:
+        - name: started
+          schema: { $ref: '#/components/schemas/SSEStarted' }
+        - name: token
+          schema: { $ref: '#/components/schemas/SSEToken' }
+        - name: metrics
+          schema: { $ref: '#/components/schemas/SSEMetrics' }
+        - name: end
+          schema: { $ref: '#/components/schemas/SSEEnd' }
+        - name: error
+          schema: { $ref: '#/components/schemas/SSEError' }
       parameters:
         - name: id
           in: path
@@ -198,5 +209,44 @@ components:
         turns: { type: integer, format: int32 }
         kv_bytes: { type: integer, format: int64 }
         kv_warmth: { type: boolean }
+
+    SSEStarted:
+      type: object
+      required: [queue_position, predicted_start_ms]
+      properties:
+        queue_position: { type: integer, format: int32 }
+        predicted_start_ms: { type: integer, format: int64 }
+      example: { queue_position: 3, predicted_start_ms: 420 }
+
+    SSEToken:
+      type: object
+      required: [t, i]
+      properties:
+        t: { type: string, description: Token text }
+        i: { type: integer, format: int32, description: Incremental token index }
+      example: { t: "Hello", i: 0 }
+
+    SSEMetrics:
+      type: object
+      description: Engine/pool specific snapshot; fields may be added in a backward-compatible way.
+      additionalProperties: true
+      example: { kv_warmth: true, queue_depth: 2 }
+
+    SSEEnd:
+      type: object
+      required: [tokens_out, decode_ms]
+      properties:
+        tokens_out: { type: integer, format: int32 }
+        decode_ms: { type: integer, format: int64 }
+      example: { tokens_out: 64, decode_ms: 2300 }
+
+    SSEError:
+      type: object
+      required: [code, message]
+      properties:
+        code: { $ref: '#/components/schemas/ErrorKind' }
+        message: { type: string }
+        engine: { $ref: '#/components/schemas/Engine' }
+      example: { code: 'POOL_UNAVAILABLE', message: 'GPU outage', engine: 'vllm' }
 
 x-generated: true

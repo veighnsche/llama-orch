@@ -29,6 +29,18 @@ See: [contracts/openapi/control.yaml](../contracts/openapi/control.yaml), [orche
 - [OC-CTRL-2021] `started` MUST include `queue_position` and `predicted_start_ms` when available.
 - [OC-CTRL-2022] Event payloads MUST be well‑formed JSON; ordering MUST be per stream.
 
+### 3.1 Event payload fields (authoritative)
+
+- `started` → `{ queue_position: int, predicted_start_ms: int }`
+- `token` → `{ t: string, i: int }`  // token text and incremental index
+- `metrics` → `{ /* engine/pool specific snapshot; non-breaking additive */ }`
+- `end` → `{ tokens_out: int, decode_ms: int }`
+- `error` → `{ code: ErrorKind, message: string, engine?: Engine }`
+
+OpenAPI component schemas:
+- See `contracts/openapi/data.yaml` `components/schemas`:
+  `SSEStarted`, `SSEToken`, `SSEMetrics`, `SSEEnd`, `SSEError`.
+
 ## 4) Error Taxonomy
 
 - [OC-CTRL-2030] Errors MUST include a stable `code` field: `ADMISSION_REJECT`, `QUEUE_FULL_DROP_LRU`, `INVALID_PARAMS`, `POOL_UNREADY`, `POOL_UNAVAILABLE`, `REPLICA_EXHAUSTED`, `DECODE_TIMEOUT`, `WORKER_RESET`, `INTERNAL`.

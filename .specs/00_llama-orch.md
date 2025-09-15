@@ -51,7 +51,7 @@
 * Each Pool **MUST** have a bounded FIFO queue. [ORCH-3004]
 * Full queue policy **MUST** be one of: `reject`, `drop-lru` (oldest enqueued), or `shed-low-priority`. [ORCH-3005]
 * Per‑client **rate limits** and **burst buckets** **SHOULD** be enforced before enqueue. [ORCH-3006]
-* **Backpressure headers** **SHOULD** be returned to callers. [ORCH-2007]
+* **Backpressure headers** **MUST** be returned to callers. [ORCH-2007]
 
 ### 3.3 Replicas, placement, and affinity
 
@@ -81,7 +81,7 @@
 
 ### 3.7 Sessions & KV (short‑lived)
 
-* Sessions are **short‑lived**; enforce TTL ≤ **10 minutes** and/or max **8 turns**. [ORCH-3021]
+* Sessions are **short‑lived**; defaults **SHOULD** be TTL ≤ **10 minutes** and/or max **8 turns**, and **MUST** be configurable. Enforcement **MAY** be delegated to the Policy Host plugin (see §3.17 and `.specs/50-plugins-policy-host.md`). [ORCH-3021]
 * KV cache residency **MUST** be bounded with LRU/LFU; expose pressure metrics. [ORCH-3022]
 * **Cross‑Worker KV migration is disabled**; failover surfaces `kv_migrated=false`. [ORCH-3023]
 
@@ -94,7 +94,7 @@
 ### 3.9 Observability & telemetry
 
 * Logs **MUST** include: `job_id`, `session_id`, `client_id`, `engine`, `pool_id`, `replica_id`, `model_id`, `quant`, `ctx`, `tensor_split`, `engine_version`, `sampler_profile_version`, `kv_warmth`, `queue_time_ms`, `decode_time_ms`, `tokens_in/out`, `eviction_events`, `oom_events`, `driver_reset_events`. [ORCH-3027]
-* Metrics **MUST** include: queue depth, reject/drop rates, p50/p95/p99 latency, GPU/VRAM/RAM utilization, KV pressure, preload outcomes, per‑priority SLO attainment. Metric labels **MUST** include `engine` and engine‑specific version labels (e.g., `engine_version`, `trtllm_version` where applicable). Counters MUST include: `tasks_enqueued_total`, `tasks_started_total`, `tasks_canceled_total`, `tasks_rejected_total{reason=...}`. Engine‑native `/metrics` **SHOULD** be enabled where available. [ORCH-3028]
+* Metrics **MUST** include: queue depth, reject/drop rates, p50/p95/p99 latency, GPU/VRAM/RAM utilization, KV pressure, preload outcomes, per‑priority SLO attainment. Metric labels **MUST** include `engine`. Engine‑specific version labels (e.g., `engine_version`, `trtllm_version`) **SHOULD** be included for per‑engine/replica metrics. Admission‑level counters (e.g., `tasks_rejected_total`) **MAY** omit `engine_version`. Counters **MUST** include: `tasks_enqueued_total`, `tasks_started_total`, `tasks_canceled_total`, `tasks_rejected_total{reason=...}`. Engine‑native `/metrics` **SHOULD** be enabled where available. [ORCH-3028]
 * Admission logs and the `started` SSE event **MUST** include `queue_position` and `predicted_start_ms` when available. [ORCH-3029]
 
 ### 3.10 Config & lifecycle
@@ -229,7 +229,7 @@ Responses
 }
 ```
 
-`429` with Retry-After and X-Backoff-Ms when queue full (include policy: "reject" | "drop-lru" | "shed-low-priority" in JSON body).
+`429` with Retry-After and X-Backoff-Ms when queue full (**MUST** include the full policy label: "reject" | "drop-lru" | "shed-low-priority" in JSON body).
 `400` for invalid ctx/token budget; `401/403` for auth; typed errors listed below.
 
 `GET /v1/tasks/:id/stream` (SSE)
@@ -246,7 +246,7 @@ Typed errors (authoritative):  [ORCH-2006]
 `ADMISSION_REJECT`, `QUEUE_FULL_DROP_LRU`, `INVALID_PARAMS`, `POOL_UNREADY`, `POOL_UNAVAILABLE`, `REPLICA_EXHAUSTED`, `DECODE_TIMEOUT`, `WORKER_RESET`, `INTERNAL`.
 
 Backpressure headers:
-`Retry-After: <seconds>`, `X-Backoff-Ms: <ms>`, optional `X-Queue-Position`, `X-Queue-ETA-Ms`.
+`Retry-After: <seconds>`, `X-Backoff-Ms: <ms>`, optional `X-Queue-Position`, `X-Queue-ETA-Ms` (optional headers are non‑normative hints).
 
 Keep Control Plane endpoints as-is (drain, reload, health, replicasets).
  Error envelopes **MUST** include the `engine` context where applicable. [ORCH-2006]
@@ -346,7 +346,14 @@ pools:
 
 ---
 
-## 11) References (engine contracts)
+## 11) Traceability Map
+
+* ORCH‑2001/2002/2003/2004/2005/2006/2007 → OpenAPI operations/objects in `contracts/openapi/data.yaml` and OC‑CTRL counterparts in `.specs/20-orchestratord.md`.
+* ORCH‑3001..3058 → OC‑CORE (`.specs/10-orchestrator-core.md`), OC‑POOL (`.specs/30-pool-managerd.md`), OC‑ADAPT (`.specs/40-43-worker-adapters-*.md`), and Policy (`.specs/50-51-plugins-*.md`).
+* Metrics requirements (ORCH‑3027/3028) ↔ `.specs/metrics/otel-prom.md` and `ci/metrics.lint.json`.
+* Determinism suite (ORCH‑3045/3050/3051) ↔ `.specs/70-determinism-suite.md`.
+
+## 12) References (engine contracts)
 
 * llama.cpp server API (native + OpenAI‑compatible)
 * vLLM OpenAI‑compatible server (Completions/Chat/Embeddings)
