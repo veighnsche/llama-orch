@@ -145,6 +145,24 @@
 * Determinism tests **MUST** verify byte‑exact streams across replicas with fixed seeds, run **per engine** with engine‑appropriate settings (e.g., llama.cpp with `--parallel 1` and `--no-cont-batching`; others in single‑slot/single‑request mode). [ORCH-3050]
 * Chaos tests **SHOULD** be run for failover/idempotency; load tests **MUST** cover priority inversion. [ORCH-3051]
 
+### 3.19 Capabilities & discovery (client support)
+
+* The platform **MUST** expose capability information required for client scheduling and compatibility. This **MAY** be achieved by either enriching `GET /v1/replicasets` with per‑engine limits/flags (e.g., `ctx_max`, `rate_limits`, `supported_workloads`, `features`) or by providing a dedicated `GET /v1/capabilities` endpoint. [ORCH-3095]
+* Capability payloads **MUST** include an API version compatible with OpenAPI `info.version`, allowing clients to pin a compatible range. [ORCH-3096]
+
+### 3.20 Artifact registry (optional, recommended)
+
+* When enabled, the control plane **SHOULD** provide `POST /v1/artifacts` to persist structured artifacts (plans, summaries, diffs, traces) with content‑addressed IDs, tags, and lineage. Schemas **MUST** be in OpenAPI. [ORCH-3097]
+* Retrieval **SHOULD** be via `GET /v1/artifacts/{id}` with metadata and authorization. [ORCH-3098]
+
+### 3.21 Budgets & guardrails
+
+* Per‑session budgets (token/time/cost) **SHOULD** be supported and enforced at admission or scheduling time. Budget state **SHOULD** be surfaced via SSE `metrics` frames and/or response headers. [ORCH-3099]
+
+### 3.22 SSE metrics signals (for client planning)
+
+* `metrics` SSE frames **SHOULD** include non‑breaking, additive fields useful for client planning under load, such as `on_time_probability` (number), `queue_depth` (int), and `kv_warmth` (bool). [ORCH-3100]
+
 ---
 
 ## 4) NVIDIA Topology & Heterogeneity

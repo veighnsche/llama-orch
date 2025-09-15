@@ -16,6 +16,8 @@ Requirements are versioned as `OC-POLICY-SDK-4xxx`.
 ## 2) Safety
 
 - [OC-POLICY-SDK-4110] SDK MUST NOT perform network or filesystem I/O by default.
+- [OC-POLICY-SDK-4111] SDK SHOULD provide typed helpers for invoking host-exposed tools (e.g., `fetch`, `search`) that accept policy hints (allowed domains, max bytes) and propagate correlation IDs.
+- [OC-POLICY-SDK-4112] SDK MUST redact sensitive inputs/outputs according to configuration and provide hooks for additional user redaction.
 
 ## 3) Traceability
 

@@ -1,0 +1,24 @@
+[package]
+name = "llama-orch-cli"
+version = "0.1.0"
+edition = "2021"
+authors = ["llama-orch contributors"]
+license = "MIT OR Apache-2.0"
+description = "CLI frontend for contract design and verification against backend OpenAPI and Pact artifacts"
+publish = false
+
+# Produce a binary named `llama-orch`
+[[bin]]
+name = "llama-orch"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+openapiv3 = { workspace = true }
+
+# Optional deps we may enable later for HTTP, etc.
+# reqwest = { workspace = true }

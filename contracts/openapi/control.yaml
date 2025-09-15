@@ -12,6 +12,8 @@ paths:
       operationId: createCatalogModel
       summary: Ingest or create a catalog model entry
       x-req-id: [ORCH-3060]
+      parameters:
+        - $ref: '#/components/parameters/XCorrelationId'
       requestBody:
         required: true
         content:
@@ -29,6 +31,10 @@ paths:
       responses:
         '201':
           description: Created
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
           content:
             application/json:
               schema:
@@ -44,9 +50,14 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
       responses:
         '200':
           description: OK
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
           content:
             application/json:
               schema:
@@ -71,9 +82,14 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
       responses:
         '202':
           description: Verification started
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
 
   /v1/catalog/models/{id}/state:
     post:
@@ -85,6 +101,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
       requestBody:
         required: true
         content:
@@ -105,6 +122,10 @@ paths:
       responses:
         '202':
           description: Accepted
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
   /v1/pools/{id}/drain:
     post:
       operationId: drainPool
@@ -115,6 +136,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
       requestBody:
         required: true
         content:
@@ -122,7 +144,12 @@ paths:
             schema:
               $ref: '#/components/schemas/DrainRequest'
       responses:
-        '202': { description: Accepted }
+        '202':
+          description: Accepted
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
 
   /v1/pools/{id}/reload:
     post:
@@ -134,6 +161,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
       requestBody:
         required: true
         content:
@@ -141,7 +169,12 @@ paths:
             schema:
               $ref: '#/components/schemas/ReloadRequest'
       responses:
-        '202': { description: Accepted }
+        '202':
+          description: Accepted
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
 
   /v1/pools/{id}/health:
     get:
@@ -153,9 +186,14 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
       responses:
         '200':
           description: Health summary
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
           content:
             application/json:
               schema:
@@ -166,9 +204,15 @@ paths:
       operationId: listReplicaSets
       summary: List replica sets with load/SLO snapshots
       x-req-id: [ORCH-2104]
+      parameters:
+        - $ref: '#/components/parameters/XCorrelationId'
       responses:
         '200':
           description: OK
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
           content:
             application/json:
               schema:
@@ -176,11 +220,126 @@ paths:
                 items:
                   $ref: '#/components/schemas/ReplicaSet'
 
+  /v1/capabilities:
+    get:
+      operationId: getCapabilities
+      summary: Discover server capabilities and limits
+      x-req-id: [OC-CTRL-2060, OC-CTRL-2061]
+      parameters:
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '200':
+          description: Capability set
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Capabilities'
+
+  /v1/artifacts:
+    post:
+      operationId: createArtifact
+      summary: Store an artifact (plans, summaries, diffs, traces)
+      x-req-id: [OC-CTRL-2065]
+      parameters:
+        - $ref: '#/components/parameters/XCorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Artifact'
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactRef'
+
+  /v1/artifacts/{id}:
+    get:
+      operationId: getArtifact
+      summary: Fetch an artifact by ID
+      x-req-id: [OC-CTRL-2066]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artifact'
+
 components:
+  parameters:
+    XCorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+      description: Optional request correlation ID; echoed back in responses.
   schemas:
     Engine:
       type: string
       enum: [llamacpp, vllm, tgi, triton]
+    Workload:
+      type: string
+      enum: [completion, embedding, rerank]
+    Capabilities:
+      type: object
+      required: [api_version, engines]
+      properties:
+        api_version: { type: string, description: OpenAPI/contract version compatibility }
+        engines:
+          type: array
+          items:
+            type: object
+            required: [engine, ctx_max]
+            properties:
+              engine: { $ref: '#/components/schemas/Engine' }
+              ctx_max: { type: integer, format: int32 }
+              supported_workloads: { type: array, items: { $ref: '#/components/schemas/Workload' } }
+              rate_limits: { type: object, additionalProperties: true }
+              features: { type: object, additionalProperties: true }
+    ArtifactKind:
+      type: string
+      enum: [plan, summary, diff, trace, other]
+    ArtifactRef:
+      type: object
+      required: [id, kind]
+      properties:
+        id: { type: string }
+        kind: { $ref: '#/components/schemas/ArtifactKind' }
+        digest: { type: string }
+        created_ms: { type: integer, format: int64 }
+        tags: { type: array, items: { type: string } }
+    Artifact:
+      type: object
+      required: [kind, content]
+      properties:
+        kind: { $ref: '#/components/schemas/ArtifactKind' }
+        content: { type: object, additionalProperties: true }
+        tags: { type: array, items: { type: string } }
+        parent: { type: string, description: Optional parent artifact ID }
+        metadata: { type: object, additionalProperties: true }
     TrustPolicy:
       type: object
       properties:

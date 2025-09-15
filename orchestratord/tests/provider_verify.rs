@@ -1,5 +1,6 @@
 use openapiv3::{OpenAPI, Operation, ReferenceOr, StatusCode};
 use serde_json::Value;
+use serde_yaml as syaml;
 use std::{fs, path::PathBuf};
 
 fn repo_root() -> PathBuf {
@@ -8,6 +9,88 @@ fn repo_root() -> PathBuf {
         .nth(1)
         .unwrap()
         .to_path_buf()
+}
+
+#[test]
+fn control_capabilities_and_artifacts_contract() {
+    use openapiv3::ReferenceOr as R;
+    let root = repo_root();
+    let oapi_path = root.join("contracts/openapi/control.yaml");
+    let spec: OpenAPI = serde_yaml::from_str(&fs::read_to_string(&oapi_path).unwrap()).unwrap();
+
+    // GET /v1/capabilities -> 200
+    let item = match spec.paths.paths.get("/v1/capabilities").expect("path exists") {
+        R::Item(it) => it,
+        _ => panic!("unexpected ref"),
+    };
+    let op = item.get.as_ref().expect("GET op exists");
+    assert!(op
+        .responses
+        .responses
+        .keys()
+        .any(|c| matches!(c, StatusCode::Code(200))));
+
+    // Artifact registry
+    // POST /v1/artifacts -> 201
+    let item = match spec.paths.paths.get("/v1/artifacts").expect("path exists") {
+        R::Item(it) => it,
+        _ => panic!("unexpected ref"),
+    };
+    let op = item.post.as_ref().expect("POST op exists");
+    assert!(op
+        .responses
+        .responses
+        .keys()
+        .any(|c| matches!(c, StatusCode::Code(201))));
+    // GET /v1/artifacts/{id} -> 200
+    let item = match spec.paths.paths.get("/v1/artifacts/{id}").expect("path exists") {
+        R::Item(it) => it,
+        _ => panic!("unexpected ref"),
+    };
+    let op = item.get.as_ref().expect("GET op exists");
+    assert!(op
+        .responses
+        .responses
+        .keys()
+        .any(|c| matches!(c, StatusCode::Code(200))));
+
+    // Components include Capabilities schema
+    let raw: syaml::Value = syaml::from_str(&fs::read_to_string(&oapi_path).unwrap()).unwrap();
+    let caps = &raw["components"]["schemas"]["Capabilities"]; 
+    assert!(caps.is_mapping(), "Capabilities schema missing");
+}
+
+#[test]
+fn data_budgets_and_sse_metrics_contract() {
+    // Load data plane OpenAPI as raw YAML for simple key checks
+    let root = repo_root();
+    let oapi_path = root.join("contracts/openapi/data.yaml");
+    let raw: syaml::Value = syaml::from_str(&fs::read_to_string(&oapi_path).unwrap()).unwrap();
+
+    // Budget headers on POST /v1/tasks 202
+    let post202_headers = &raw["paths"]["/v1/tasks"]["post"]["responses"]["202"]["headers"];
+    assert!(post202_headers.get("X-Budget-Tokens-Remaining").is_some());
+    assert!(post202_headers.get("X-Budget-Time-Remaining-Ms").is_some());
+    assert!(post202_headers.get("X-Budget-Cost-Remaining").is_some());
+
+    // Budget headers on GET /v1/tasks/{id}/stream 200
+    let stream200_headers = &raw["paths"]["/v1/tasks/{id}/stream"]["get"]["responses"]["200"]["headers"];
+    assert!(stream200_headers.get("X-Budget-Tokens-Remaining").is_some());
+    assert!(stream200_headers.get("X-Budget-Time-Remaining-Ms").is_some());
+    assert!(stream200_headers.get("X-Budget-Cost-Remaining").is_some());
+
+    // SSEMetrics fields
+    let props = &raw["components"]["schemas"]["SSEMetrics"]["properties"];
+    for key in [
+        "on_time_probability",
+        "queue_depth",
+        "kv_warmth",
+        "tokens_budget_remaining",
+        "time_budget_remaining_ms",
+        "cost_budget_remaining",
+    ] {
+        assert!(props.get(key).is_some(), "SSEMetrics missing {}", key);
+    }
 }
 
 #[test]

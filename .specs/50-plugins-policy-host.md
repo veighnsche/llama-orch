@@ -22,6 +22,13 @@ Requirements are versioned as `OC-POLICY-4xxx`.
 
 - [OC-POLICY-4020] Host MUST log plugin id/version, decision outcome, and latency.
 
+## 4) Tooling Proxy: HTTP Fetch/Search (Client Docs Access)
+
+- [OC-POLICY-4030] The policy host SHOULD expose a mediated HTTP fetch/search tool to clients (e.g., CLI agents), enforcing allowlists/denylists of domains and MIME types.
+- [OC-POLICY-4031] The tool MUST redact secrets and PII as configured and MUST bound response size and rate.
+- [OC-POLICY-4032] The tool MUST emit audit logs that include request URL (redacted), policy decision, and byte counts.
+- [OC-POLICY-4033] The ABI for invoking tools MUST be stable and versioned; tool invocation SHOULD be deterministic with respect to inputs and policy snapshot.
+
 ## 4) Traceability
 
 - Code: [plugins/policy-host/src/lib.rs](../plugins/policy-host/src/lib.rs)

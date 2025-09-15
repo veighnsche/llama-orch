@@ -15,6 +15,8 @@ paths:
       x-req-id:
         - ORCH-2001
         - ORCH-2008
+      parameters:
+        - $ref: '#/components/parameters/XCorrelationId'
       requestBody:
         required: true
         content:
@@ -47,6 +49,15 @@ paths:
             X-Correlation-Id:
               description: Correlation ID for tracing
               schema: { type: string }
+            X-Budget-Tokens-Remaining:
+              description: Optional session tokens budget remaining
+              schema: { type: integer, format: int64 }
+            X-Budget-Time-Remaining-Ms:
+              description: Optional session time budget remaining (ms)
+              schema: { type: integer, format: int64 }
+            X-Budget-Cost-Remaining:
+              description: Optional session cost budget remaining (currency units)
+              schema: { type: number, format: float }
           content:
             application/json:
               schema:
@@ -68,8 +79,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
-        '401': { description: Unauthorized }
-        '403': { description: Forbidden }
+        '401':
+          description: Unauthorized
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
+        '403':
+          description: Forbidden
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
         '429':
           description: Queue full / backpressure
           headers:
@@ -83,7 +104,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorEnvelope'
+                $ref: '#/components/schemas/BackpressureErrorEnvelope'
               x-examples:
                 backpressure:
                   value:
@@ -95,8 +116,18 @@ paths:
                     policy_label: "drop-lru"
           x-req-id:
             - ORCH-2007
-        '503': { description: Pool unavailable }
-        '500': { description: Internal error }
+        '503':
+          description: Pool unavailable
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
+        '500':
+          description: Internal error
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
 
   /v1/tasks/{id}/stream:
     get:
@@ -120,6 +151,7 @@ paths:
           in: path
           required: true
           schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/XCorrelationId'
       responses:
         '200':
           description: text/event-stream
@@ -127,6 +159,15 @@ paths:
             X-Correlation-Id:
               description: Correlation ID for tracing
               schema: { type: string }
+            X-Budget-Tokens-Remaining:
+              description: Optional session tokens budget remaining at stream start
+              schema: { type: integer, format: int64 }
+            X-Budget-Time-Remaining-Ms:
+              description: Optional session time budget remaining (ms) at stream start
+              schema: { type: integer, format: int64 }
+            X-Budget-Cost-Remaining:
+              description: Optional session cost budget remaining at stream start
+              schema: { type: number, format: float }
           content:
             text/event-stream:
               schema:
@@ -154,6 +195,7 @@ paths:
           in: path
           required: true
           schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/XCorrelationId'
       responses:
         '204':
           description: No Content
@@ -173,6 +215,7 @@ paths:
           in: path
           required: true
           schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/XCorrelationId'
       responses:
         '200':
           description: Session info
@@ -197,6 +240,7 @@ paths:
           in: path
           required: true
           schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/XCorrelationId'
       responses:
         '204':
           description: No Content
@@ -206,6 +250,14 @@ paths:
               schema: { type: string }
 
 components:
+  parameters:
+    XCorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+      description: Optional request correlation ID; echoed back in responses.
   schemas:
     Engine:
       type: string
@@ -293,6 +345,9 @@ components:
         turns: { type: integer, format: int32 }
         kv_bytes: { type: integer, format: int64 }
         kv_warmth: { type: boolean }
+        tokens_budget_remaining: { type: integer, format: int64, description: Optional remaining tokens budget }
+        time_budget_remaining_ms: { type: integer, format: int64, description: Optional remaining time budget (ms) }
+        cost_budget_remaining: { type: number, format: float, description: Optional remaining cost budget }
 
     SSEStarted:
       type: object
@@ -315,8 +370,13 @@ components:
       description: Engine/pool specific snapshot; fields may be added in a backward-compatible way.
       properties:
         on_time_probability: { type: number, format: float, description: Probability of on-time completion given current load }
+        queue_depth: { type: integer, format: int32, description: Current queue size for serving pool/replica }
+        kv_warmth: { type: boolean, description: Whether KV is warm for the session }
+        tokens_budget_remaining: { type: integer, format: int64, description: Optional remaining tokens budget }
+        time_budget_remaining_ms: { type: integer, format: int64, description: Optional remaining time budget (ms) }
+        cost_budget_remaining: { type: number, format: float, description: Optional remaining cost budget }
       additionalProperties: true
-      example: { kv_warmth: true, queue_depth: 2 }
+      example: { on_time_probability: 0.82, queue_depth: 2, kv_warmth: true, tokens_budget_remaining: 12000 }
 
     SSEEnd:
       type: object
@@ -334,5 +394,11 @@ components:
         message: { type: string }
         engine: { $ref: '#/components/schemas/Engine' }
       example: { code: 'POOL_UNAVAILABLE', message: 'GPU outage', engine: 'vllm' }
+
+    BackpressureErrorEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/ErrorEnvelope'
+        - type: object
+          required: [policy_label]
 
 x-generated: true

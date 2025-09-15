@@ -55,9 +55,30 @@ OpenAPI component schemas:
 
 - [OC-CTRL-2050] Admission logs and `started` MUST include `queue_position` and `predicted_start_ms` when available.
 - [OC-CTRL-2051] Metrics MUST include queue depth, reject/drop rates, latency percentiles, and error counts by class.
+ - [OC-CTRL-2052] Responses that include headers SHOULD include `X-Correlation-Id` (except `204 No Content`) to enable client trace stitching.
 
 ## 7) Traceability
 
 - Code: [orchestratord/src/main.rs](../orchestratord/src/main.rs)
 - Tests: [orchestratord/tests/provider_verify.rs](../orchestratord/tests/provider_verify.rs)
 - Contracts: [contracts/openapi/data.yaml](../contracts/openapi/data.yaml), [contracts/openapi/control.yaml](../contracts/openapi/control.yaml)
+
+## 8) Capabilities & Discovery
+
+- [OC-CTRL-2060] The server MUST expose capability information required for client scheduling and compatibility. This MAY be achieved by either:
+  - Enriching `GET /v1/replicasets` with per-engine limits and flags (e.g., `ctx_max`, `rate_limits`, `supported_workloads`, `features`), or
+  - Providing a dedicated `GET /v1/capabilities` endpoint that returns engines, maximum context, supported workloads, rate limits, and feature flags. If provided, this endpoint MUST be versioned and documented in OpenAPI.
+- [OC-CTRL-2061] Capability payloads MUST include an API version field compatible with OpenAPI `info.version`, enabling the CLI to pin a compatible range.
+
+## 9) Artifact Registry (Optional, Recommended)
+
+- [OC-CTRL-2065] The server SHOULD provide `POST /v1/artifacts` to persist structured artifacts (plans, summaries, diffs, traces) with content-addressed IDs and tags. Request and response schemas MUST be defined in OpenAPI if implemented.
+- [OC-CTRL-2066] The server SHOULD provide `GET /v1/artifacts/{id}` to retrieve artifacts by ID, including metadata (tags, lineage, timestamps). Authorization MUST be enforced.
+
+## 10) Budgets & Guardrails
+
+- [OC-CTRL-2068] Per-session budgets (token/time/cost) SHOULD be supported and enforced at admission or scheduling time. When budgets are active, the server SHOULD surface budget state via SSE `metrics` frames and/or response headers.
+
+## 11) SSE Metrics – Scheduling Signals
+
+- [OC-CTRL-2023] The `metrics` SSE frames SHOULD include fields helpful for client-side planning under load, such as `on_time_probability` (number), `queue_depth` (int), and `kv_warmth` (bool). Fields MAY be engine/pool specific and are additive only.

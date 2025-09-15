@@ -17,3 +17,11 @@ Requirements are versioned as `OC-METRICS-7xxx`.
 
 - Linter: [ci/metrics.lint.json](../ci/metrics.lint.json)
 - Tests: to be created under `test-harness/metrics-contract/` (e.g., `tests/metrics_lint.rs`). For now, the linter (`ci/metrics.lint.json`) is authoritative.
+
+## 3) SSE Metrics Signals (Client Planning)
+
+- [OC-METRICS-7110] The `metrics` SSE event payloads SHOULD include additive fields helpful for client-side planning under load. Example fields (non-exhaustive, non-breaking if extended):
+  - `on_time_probability: number` — probability of on-time completion given current load.
+  - `queue_depth: integer` — current queue size for the serving pool/replica.
+  - `kv_warmth: boolean` — whether KV is warm for the session.
+- [OC-METRICS-7111] When per-session budgets (token/time/cost) are enabled, budget remaining SHOULD be surfaced either in `metrics` events or as response headers to allow clients to adapt.

@@ -30,6 +30,8 @@ See: ../orchestrator-core/src/lib.rs, ../orchestrator-core/tests/props_queue.rs
 - [OC-CORE-1020] Context length MUST be ≤ model limit; otherwise reject before enqueue.
 - [OC-CORE-1021] Token budget (prompt + generation) MUST be validated pre‑admission.
 - [OC-CORE-1022] Watchdog MUST abort stuck Jobs with configurable wall/idle timeouts.
+- [OC-CORE-1023] When per‑session budgets (token/time/cost) are configured, admission and/or scheduling MUST enforce remaining budget and reject infeasible requests with a typed error.
+- [OC-CORE-1024] Budget accounting SHOULD be surfaced to clients via SSE `metrics` frames and/or response headers.
 
 ## 4) Determinism
 
