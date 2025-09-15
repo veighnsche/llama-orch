@@ -18,9 +18,10 @@ This document defines how an LLM developer must make decisions and contribute to
   - Contract: update formal interfaces (e.g., `contracts/openapi/`, `contracts/config-schema/`, ABIs) to reflect the spec.
   - Tests: write proofs (unit/integration/property/CDC) that reference the requirement IDs.
   - Code: implement the behavior to satisfy the tests and spec.
+  - Discipline: do not work out of order. If a prerequisite (spec/contract/tests) is missing, stop and fulfill it before coding.
 
 - Always update the TODO tracker with progress
-  - After each meaningful change, update the current TODO tracker (e.g., `TODO.md` or the active TODO in `.docs/`). Keep it factual: what changed, where, and why.
+  - After each meaningful change, update the root `TODO.md`. Keep it factual: what changed, where, and why.
 
 - Finish what you start
   - Do not leave items half‑done. If blocked, explicitly note the blocker in the TODO and open a proposal/issue.
@@ -48,6 +49,19 @@ This document defines how an LLM developer must make decisions and contribute to
 5) Implement code. Keep diffs tight and focused.
 6) Update the TODO tracker with progress and links to proofs.
 
+## TODO.md Lifecycle and Discipline
+
+- If there is no `TODO.md` at the repository root:
+  - Read `.specs/` and `.docs/workflow.md` to determine the next actionable items in proper order.
+  - Create a root `TODO.md` and list those items in execution order.
+
+- Active tracker
+  - Keep the root `TODO.md` as the single active tracker. After each task, update it with what changed, where, why, and links to proofs (tests, CI logs, spec IDs).
+
+- Archiving when done
+  - When `TODO.md` is fully completed and reflects all work done, run the archive script (to be created): `bash ci/scripts/archive_todo.sh`.
+  - The script MUST move `TODO.md` to `.docs/DONE/TODO-[auto-increment].md` and optionally create a fresh empty root `TODO.md`.
+
 ## PR Checklist (run before merge)
 
 - Specs/Contracts
@@ -63,7 +77,7 @@ This document defines how an LLM developer must make decisions and contribute to
 - Hygiene
   - No BC shims or dead code left behind.
   - Commits and PR description reference relevant requirement IDs.
-  - TODO tracker updated with what changed.
+  - TODO tracker updated with what changed; if `TODO.md` is complete, run `ci/scripts/archive_todo.sh` to move it under `.docs/DONE/` with the next auto-incremented filename.
 
 ## Workflow alignment (SPEC→SHIP v2)
 
