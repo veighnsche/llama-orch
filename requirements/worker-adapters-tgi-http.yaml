@@ -1,16 +1,16 @@
 schema_version: 1
-source: .specs/worker-adapters-tgi-http.md
-notes: Extracted from .specs/worker-adapters-tgi-http.md
+source: .specs/42-worker-adapters-tgi-http.md
+notes: Extracted from .specs/42-worker-adapters-tgi-http.md
 requirements:
   OC-ADAPT-5040:
     title: '- [] Adapter MUST implement TGI custom endpoints (`/generate`, `/info`, `/health`) and optionally OpenAI‑compat internally; not public.'
     section: 1) API Mapping
     level: must
     links:
-    - .specs/worker-adapters-tgi-http.md#1-api-mapping
+    - .specs/42-worker-adapters-tgi-http.md#1-api-mapping
   OC-ADAPT-5050:
     title: '- [] Adapter MUST capture engine_version and model info as available.'
     section: 2) Determinism & Version Capture
     level: must
     links:
-    - .specs/worker-adapters-tgi-http.md#2-determinism-version-capture
+    - .specs/42-worker-adapters-tgi-http.md#2-determinism-version-capture

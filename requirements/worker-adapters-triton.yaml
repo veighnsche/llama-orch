@@ -1,16 +1,16 @@
 schema_version: 1
-source: .specs/worker-adapters-triton.md
-notes: Extracted from .specs/worker-adapters-triton.md
+source: .specs/43-worker-adapters-triton.md
+notes: Extracted from .specs/43-worker-adapters-triton.md
 requirements:
   OC-ADAPT-5060:
     title: '- [] Adapter MUST support Triton HTTP/GRPC infer, health/metadata/stats, and optional OpenAI‑compat frontends internally.'
     section: 1) API Mapping
     level: must
     links:
-    - .specs/worker-adapters-triton.md#1-api-mapping
+    - .specs/43-worker-adapters-triton.md#1-api-mapping
   OC-ADAPT-5070:
     title: '- [] Adapter MUST report engine_version/trtllm_version where applicable.'
     section: 2) Determinism & Version Capture
     level: must
     links:
-    - .specs/worker-adapters-triton.md#2-determinism-version-capture
+    - .specs/43-worker-adapters-triton.md#2-determinism-version-capture

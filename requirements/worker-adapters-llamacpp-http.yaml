@@ -1,28 +1,28 @@
 schema_version: 1
-source: .specs/worker-adapters-llamacpp-http.md
-notes: Extracted from .specs/worker-adapters-llamacpp-http.md
+source: .specs/40-worker-adapters-llamacpp-http.md
+notes: Extracted from .specs/40-worker-adapters-llamacpp-http.md
 requirements:
   OC-ADAPT-5001:
     title: '- [] Adapter MUST implement health, properties (slots/commit), completion (SSE), cancel, metrics scrape for llama.cpp native API.'
     section: 1) API Mapping
     level: must
     links:
-    - .specs/worker-adapters-llamacpp-http.md#1-api-mapping
+    - .specs/40-worker-adapters-llamacpp-http.md#1-api-mapping
   OC-ADAPT-5002:
     title: '- [] When using OpenAI‑compatible endpoints internally, they MUST NOT be exposed publicly.'
     section: 1) API Mapping
     level: must
     links:
-    - .specs/worker-adapters-llamacpp-http.md#1-api-mapping
+    - .specs/40-worker-adapters-llamacpp-http.md#1-api-mapping
   OC-ADAPT-5010:
     title: '- [] Adapter MUST normalize detokenization templates and sampler profiles for determinism within a replica set.'
     section: 2) Determinism & Version Capture
     level: must
     links:
-    - .specs/worker-adapters-llamacpp-http.md#2-determinism-version-capture
+    - .specs/40-worker-adapters-llamacpp-http.md#2-determinism-version-capture
   OC-ADAPT-5011:
     title: '- [] Adapter MUST capture and report engine_version and model_digest.'
     section: 2) Determinism & Version Capture
     level: must
     links:
-    - .specs/worker-adapters-llamacpp-http.md#2-determinism-version-capture
+    - .specs/40-worker-adapters-llamacpp-http.md#2-determinism-version-capture

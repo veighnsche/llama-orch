@@ -69,107 +69,107 @@ Total requirements: 66
 - ORCH-3057 — **Adapter contract**: MUST support health/metadata, infer/streaming (if configured), and metrics. OpenAI‑compatible frontends are internal only. [] (section: 5.4 NVIDIA Triton / TensorRT‑LLM, level: must) — link: .specs/00_llama-orch.md#54-nvidia-triton-tensorrtllm
 - ORCH-3058 — > All adapters **MUST** normalize detokenization templates and sampler profiles to keep determinism stable within a replica set. [] (section: 5.4 NVIDIA Triton / TensorRT‑LLM, level: must) — link: .specs/00_llama-orch.md#54-nvidia-triton-tensorrtllm
 
-### .specs/config-schema.md
-Total requirements: 3
-- OC-CONFIG-6001 — - [] Config MUST be strictly validated; unknown fields rejected (strict) or logged (compat) per mode. (section: 1) Validation, level: must) — link: .specs/config-schema.md#1-validation
-- OC-CONFIG-6002 — - [] Examples in tests MUST validate without errors. (section: 1) Validation, level: must) — link: .specs/config-schema.md#1-validation
-- OC-CONFIG-6010 — - [] Schema generation MUST be deterministic and idempotent across runs. (section: 2) Generation, level: must) — link: .specs/config-schema.md#2-generation
-
-### .specs/determinism-suite.md
-Total requirements: 3
-- OC-TEST-7001 — - [] Suite MUST verify byte‑exact token streams across replicas with fixed seeds. (section: 1) Semantics, level: must) — link: .specs/determinism-suite.md#1-semantics
-- OC-TEST-7002 — - [] Engine‑specific settings MUST be applied (e.g., single‑slot modes) for determinism. (section: 1) Semantics, level: must) — link: .specs/determinism-suite.md#1-semantics
-- OC-TEST-7003 — - [] Seeds corpus MUST contain at least 64 seeds and MUST be stable. (section: 1) Semantics, level: must) — link: .specs/determinism-suite.md#1-semantics
-
-### .specs/metrics-contract.md
-Total requirements: 2
-- OC-METRICS-7101 — - [] Metric names and required labels MUST conform to `ci/metrics.lint.json`. (section: 1) Names/Labels, level: must) — link: .specs/metrics-contract.md#1-names-labels
-- OC-METRICS-7102 — - [] Label cardinality budgets MUST be documented and enforced. (section: 1) Names/Labels, level: must) — link: .specs/metrics-contract.md#1-names-labels
-
-### .specs/orchestrator-core.md
+### .specs/10-orchestrator-core.md
 Total requirements: 17
-- OC-CORE-1001 — - [] Each Pool MUST expose a bounded FIFO queue per priority class. (section: 1) Queue & Admission, level: must) — link: .specs/orchestrator-core.md#1-queue-admission
-- OC-CORE-1002 — - [] Admission MUST reject when the queue is full according to configured policy (reject/drop-lru/shed-low-priority). (section: 1) Queue & Admission, level: must) — link: .specs/orchestrator-core.md#1-queue-admission
-- OC-CORE-1003 — - [] Enqueue MUST be O(1) amortized and MUST preserve request arrival order within the same priority. (section: 1) Queue & Admission, level: must) — link: .specs/orchestrator-core.md#1-queue-admission
-- OC-CORE-1004 — - [] Dequeue MUST prefer higher priority and MUST be fair within a priority class. (section: 1) Queue & Admission, level: must) — link: .specs/orchestrator-core.md#1-queue-admission
-- OC-CORE-1005 — - [] Cancellation MUST remove the task from the queue or mark the slot so it is not dispatched. (section: 1) Queue & Admission, level: must) — link: .specs/orchestrator-core.md#1-queue-admission
-- OC-CORE-1010 — - [] Scheduler MUST dispatch only to Ready replicas. (section: 2) Scheduling & Placement, level: must) — link: .specs/orchestrator-core.md#2-scheduling-placement
-- OC-CORE-1011 — - [] Placement MUST respect device masks; cross‑mask spillover MUST NOT occur. (section: 2) Scheduling & Placement, level: must) — link: .specs/orchestrator-core.md#2-scheduling-placement
-- OC-CORE-1012 — - [] Least‑loaded placement MUST be used across replicas of the same replica set. (section: 2) Scheduling & Placement, level: must) — link: .specs/orchestrator-core.md#2-scheduling-placement
-- OC-CORE-1013 — - [] Session affinity SHOULD keep a session on its last good replica when possible. (section: 2) Scheduling & Placement, level: should) — link: .specs/orchestrator-core.md#2-scheduling-placement
-- OC-CORE-1020 — - [] Context length MUST be ≤ model limit; otherwise reject before enqueue. (section: 3) Capacity & Guardrails, level: must) — link: .specs/orchestrator-core.md#3-capacity-guardrails
-- OC-CORE-1021 — - [] Token budget (prompt + generation) MUST be validated pre‑admission. (section: 3) Capacity & Guardrails, level: must) — link: .specs/orchestrator-core.md#3-capacity-guardrails
-- OC-CORE-1022 — - [] Watchdog MUST abort stuck Jobs with configurable wall/idle timeouts. (section: 3) Capacity & Guardrails, level: must) — link: .specs/orchestrator-core.md#3-capacity-guardrails
-- OC-CORE-1030 — - [] Within a replica set, identical {prompt, parameters, seed, sampler_profile_version, engine_version, model_digest} MUST yield identical token streams. (section: 4) Determinism, level: must) — link: .specs/orchestrator-core.md#4-determinism
-- OC-CORE-1031 — - [] Replica sets MUST pin engine_version and sampler_profile_version; mixed replicas MUST NOT share a set. (section: 4) Determinism, level: must) — link: .specs/orchestrator-core.md#4-determinism
-- OC-CORE-1032 — - [] Determinism MUST NOT be assumed across engine/model updates. (section: 4) Determinism, level: must) — link: .specs/orchestrator-core.md#4-determinism
-- OC-CORE-1040 — - [] Logs MUST include job_id, session_id, engine, pool_id, replica_id, model_id, quant, ctx, kv_warmth, queue_time_ms, decode_time_ms. (section: 5) Observability, level: must) — link: .specs/orchestrator-core.md#5-observability
-- OC-CORE-1041 — - [] Metrics MUST include queue depth, reject/drop rates, p50/p95/p99 latency, GPU/VRAM/RAM utilization, KV pressure, preload outcomes. (section: 5) Observability, level: must) — link: .specs/orchestrator-core.md#5-observability
+- OC-CORE-1001 — - [] Each Pool MUST expose a bounded FIFO queue per priority class. (section: 1) Queue & Admission, level: must) — link: .specs/10-orchestrator-core.md#1-queue-admission
+- OC-CORE-1002 — - [] Admission MUST reject when the queue is full according to configured policy (reject/drop-lru/shed-low-priority). (section: 1) Queue & Admission, level: must) — link: .specs/10-orchestrator-core.md#1-queue-admission
+- OC-CORE-1003 — - [] Enqueue MUST be O(1) amortized and MUST preserve request arrival order within the same priority. (section: 1) Queue & Admission, level: must) — link: .specs/10-orchestrator-core.md#1-queue-admission
+- OC-CORE-1004 — - [] Dequeue MUST prefer higher priority and MUST be fair within a priority class. (section: 1) Queue & Admission, level: must) — link: .specs/10-orchestrator-core.md#1-queue-admission
+- OC-CORE-1005 — - [] Cancellation MUST remove the task from the queue or mark the slot so it is not dispatched. (section: 1) Queue & Admission, level: must) — link: .specs/10-orchestrator-core.md#1-queue-admission
+- OC-CORE-1010 — - [] Scheduler MUST dispatch only to Ready replicas. (section: 2) Scheduling & Placement, level: must) — link: .specs/10-orchestrator-core.md#2-scheduling-placement
+- OC-CORE-1011 — - [] Placement MUST respect device masks; cross‑mask spillover MUST NOT occur. (section: 2) Scheduling & Placement, level: must) — link: .specs/10-orchestrator-core.md#2-scheduling-placement
+- OC-CORE-1012 — - [] Least‑loaded placement MUST be used across replicas of the same replica set. (section: 2) Scheduling & Placement, level: must) — link: .specs/10-orchestrator-core.md#2-scheduling-placement
+- OC-CORE-1013 — - [] Session affinity SHOULD keep a session on its last good replica when possible. (section: 2) Scheduling & Placement, level: should) — link: .specs/10-orchestrator-core.md#2-scheduling-placement
+- OC-CORE-1020 — - [] Context length MUST be ≤ model limit; otherwise reject before enqueue. (section: 3) Capacity & Guardrails, level: must) — link: .specs/10-orchestrator-core.md#3-capacity-guardrails
+- OC-CORE-1021 — - [] Token budget (prompt + generation) MUST be validated pre‑admission. (section: 3) Capacity & Guardrails, level: must) — link: .specs/10-orchestrator-core.md#3-capacity-guardrails
+- OC-CORE-1022 — - [] Watchdog MUST abort stuck Jobs with configurable wall/idle timeouts. (section: 3) Capacity & Guardrails, level: must) — link: .specs/10-orchestrator-core.md#3-capacity-guardrails
+- OC-CORE-1030 — - [] Within a replica set, identical {prompt, parameters, seed, sampler_profile_version, engine_version, model_digest} MUST yield identical token streams. (section: 4) Determinism, level: must) — link: .specs/10-orchestrator-core.md#4-determinism
+- OC-CORE-1031 — - [] Replica sets MUST pin engine_version and sampler_profile_version; mixed replicas MUST NOT share a set. (section: 4) Determinism, level: must) — link: .specs/10-orchestrator-core.md#4-determinism
+- OC-CORE-1032 — - [] Determinism MUST NOT be assumed across engine/model updates. (section: 4) Determinism, level: must) — link: .specs/10-orchestrator-core.md#4-determinism
+- OC-CORE-1040 — - [] Logs MUST include job_id, session_id, engine, pool_id, replica_id, model_id, quant, ctx, kv_warmth, queue_time_ms, decode_time_ms. (section: 5) Observability, level: must) — link: .specs/10-orchestrator-core.md#5-observability
+- OC-CORE-1041 — - [] Metrics MUST include queue depth, reject/drop rates, p50/p95/p99 latency, GPU/VRAM/RAM utilization, KV pressure, preload outcomes. (section: 5) Observability, level: must) — link: .specs/10-orchestrator-core.md#5-observability
 
-### .specs/orchestratord.md
+### .specs/20-orchestratord.md
 Total requirements: 16
-- OC-CTRL-2001 — - [] `GET /v1/pools/:id/health` MUST return liveness, readiness, draining, and metrics snapshot fields. (section: 1) Control Plane, level: must) — link: .specs/orchestratord.md#1-control-plane
-- OC-CTRL-2002 — - [] `POST /v1/pools/:id/drain` MUST accept a JSON body with `deadline_ms` and MUST begin draining. (section: 1) Control Plane, level: must) — link: .specs/orchestratord.md#1-control-plane
-- OC-CTRL-2003 — - [] `POST /v1/pools/:id/reload` MUST atomically switch model references or fail and roll back. (section: 1) Control Plane, level: must) — link: .specs/orchestratord.md#1-control-plane
-- OC-CTRL-2004 — - [] `GET /v1/replicasets` MUST enumerate replica sets with load/SLO snapshots. (section: 1) Control Plane, level: must) — link: .specs/orchestratord.md#1-control-plane
-- OC-CTRL-2010 — - [] `POST /v1/tasks` MUST perform admission checks (ctx, token budget) before enqueue. (section: 2) Data Plane — OrchQueue v1, level: must) — link: .specs/orchestratord.md#2-data-plane-orchqueue-v1
-- OC-CTRL-2011 — - [] On queue full, server MUST reply `429` and include `Retry-After` and `X-Backoff-Ms`. A JSON body MUST include the full policy label. (section: 2) Data Plane — OrchQueue v1, level: must) — link: .specs/orchestratord.md#2-data-plane-orchqueue-v1
-- OC-CTRL-2012 — - [] `POST /v1/tasks/:id/cancel` MUST be race‑free; no tokens may be emitted after cancel. (section: 2) Data Plane — OrchQueue v1, level: must) — link: .specs/orchestratord.md#2-data-plane-orchqueue-v1
-- OC-CTRL-2020 — - [] `GET /v1/tasks/:id/stream` MUST emit events `started`, `token`, `metrics`, `end`, `error`. (section: 3) SSE Framing, level: must) — link: .specs/orchestratord.md#3-sse-framing
-- OC-CTRL-2021 — - [] `started` MUST include `queue_position` and `predicted_start_ms` when available. (section: 3) SSE Framing, level: must) — link: .specs/orchestratord.md#3-sse-framing
-- OC-CTRL-2022 — - [] Event payloads MUST be well‑formed JSON; ordering MUST be per stream. (section: 3) SSE Framing, level: must) — link: .specs/orchestratord.md#3-sse-framing
-- OC-CTRL-2030 — - [] Errors MUST include a stable `code` field: `ADMISSION_REJECT`, `QUEUE_FULL_DROP_LRU`, `INVALID_PARAMS`, `POOL_UNREADY`, `POOL_UNAVAILABLE`, `REPLICA_EXHAUS (section: 4) Error Taxonomy, level: must) — link: .specs/orchestratord.md#4-error-taxonomy
-- OC-CTRL-2031 — - [] Errors SHOULD include the `engine` and `pool_id` when applicable. (section: 4) Error Taxonomy, level: should) — link: .specs/orchestratord.md#4-error-taxonomy
-- OC-CTRL-2040 — - [] Control and data plane MUST be gated by AuthN/AuthZ; API keys acceptable day‑1. (section: 5) Security, level: must) — link: .specs/orchestratord.md#5-security
-- OC-CTRL-2041 — - [] Logs MUST NOT leak secrets or API keys. (section: 5) Security, level: must) — link: .specs/orchestratord.md#5-security
-- OC-CTRL-2050 — - [] Admission logs and `started` MUST include `queue_position` and `predicted_start_ms` when available. (section: 6) Observability, level: must) — link: .specs/orchestratord.md#6-observability
-- OC-CTRL-2051 — - [] Metrics MUST include queue depth, reject/drop rates, latency percentiles, and error counts by class. (section: 6) Observability, level: must) — link: .specs/orchestratord.md#6-observability
+- OC-CTRL-2001 — - [] `GET /v1/pools/:id/health` MUST return liveness, readiness, draining, and metrics snapshot fields. (section: 1) Control Plane, level: must) — link: .specs/20-orchestratord.md#1-control-plane
+- OC-CTRL-2002 — - [] `POST /v1/pools/:id/drain` MUST accept a JSON body with `deadline_ms` and MUST begin draining. (section: 1) Control Plane, level: must) — link: .specs/20-orchestratord.md#1-control-plane
+- OC-CTRL-2003 — - [] `POST /v1/pools/:id/reload` MUST atomically switch model references or fail and roll back. (section: 1) Control Plane, level: must) — link: .specs/20-orchestratord.md#1-control-plane
+- OC-CTRL-2004 — - [] `GET /v1/replicasets` MUST enumerate replica sets with load/SLO snapshots. (section: 1) Control Plane, level: must) — link: .specs/20-orchestratord.md#1-control-plane
+- OC-CTRL-2010 — - [] `POST /v1/tasks` MUST perform admission checks (ctx, token budget) before enqueue. (section: 2) Data Plane — OrchQueue v1, level: must) — link: .specs/20-orchestratord.md#2-data-plane-orchqueue-v1
+- OC-CTRL-2011 — - [] On queue full, server MUST reply `429` and include `Retry-After` and `X-Backoff-Ms`. A JSON body MUST include the full policy label. (section: 2) Data Plane — OrchQueue v1, level: must) — link: .specs/20-orchestratord.md#2-data-plane-orchqueue-v1
+- OC-CTRL-2012 — - [] `POST /v1/tasks/:id/cancel` MUST be race‑free; no tokens may be emitted after cancel. (section: 2) Data Plane — OrchQueue v1, level: must) — link: .specs/20-orchestratord.md#2-data-plane-orchqueue-v1
+- OC-CTRL-2020 — - [] `GET /v1/tasks/:id/stream` MUST emit events `started`, `token`, `metrics`, `end`, `error`. (section: 3) SSE Framing, level: must) — link: .specs/20-orchestratord.md#3-sse-framing
+- OC-CTRL-2021 — - [] `started` MUST include `queue_position` and `predicted_start_ms` when available. (section: 3) SSE Framing, level: must) — link: .specs/20-orchestratord.md#3-sse-framing
+- OC-CTRL-2022 — - [] Event payloads MUST be well‑formed JSON; ordering MUST be per stream. (section: 3) SSE Framing, level: must) — link: .specs/20-orchestratord.md#3-sse-framing
+- OC-CTRL-2030 — - [] Errors MUST include a stable `code` field: `ADMISSION_REJECT`, `QUEUE_FULL_DROP_LRU`, `INVALID_PARAMS`, `POOL_UNREADY`, `POOL_UNAVAILABLE`, `REPLICA_EXHAUS (section: 4) Error Taxonomy, level: must) — link: .specs/20-orchestratord.md#4-error-taxonomy
+- OC-CTRL-2031 — - [] Errors SHOULD include the `engine` and `pool_id` when applicable. (section: 4) Error Taxonomy, level: should) — link: .specs/20-orchestratord.md#4-error-taxonomy
+- OC-CTRL-2040 — - [] Control and data plane MUST be gated by AuthN/AuthZ; API keys acceptable day‑1. (section: 5) Security, level: must) — link: .specs/20-orchestratord.md#5-security
+- OC-CTRL-2041 — - [] Logs MUST NOT leak secrets or API keys. (section: 5) Security, level: must) — link: .specs/20-orchestratord.md#5-security
+- OC-CTRL-2050 — - [] Admission logs and `started` MUST include `queue_position` and `predicted_start_ms` when available. (section: 6) Observability, level: must) — link: .specs/20-orchestratord.md#6-observability
+- OC-CTRL-2051 — - [] Metrics MUST include queue depth, reject/drop rates, latency percentiles, and error counts by class. (section: 6) Observability, level: must) — link: .specs/20-orchestratord.md#6-observability
 
-### .specs/plugins-policy-host.md
-Total requirements: 5
-- OC-POLICY-4001 — - [] Default plugin ABI MUST be WASI; functions MUST be pure/deterministic over explicit snapshots. (section: 1) ABI & Determinism, level: must) — link: .specs/plugins-policy-host.md#1-abi-determinism
-- OC-POLICY-4002 — - [] ABI versioning MUST be explicit; incompatible changes MUST bump MAJOR. (section: 1) ABI & Determinism, level: must) — link: .specs/plugins-policy-host.md#1-abi-determinism
-- OC-POLICY-4010 — - [] Plugins MUST run in a sandbox with no filesystem/network unless explicitly granted. (section: 2) Sandboxing & Safety, level: must) — link: .specs/plugins-policy-host.md#2-sandboxing-safety
-- OC-POLICY-4011 — - [] Host MUST bound CPU time/memory per invocation and abort on overuse. (section: 2) Sandboxing & Safety, level: must) — link: .specs/plugins-policy-host.md#2-sandboxing-safety
-- OC-POLICY-4020 — - [] Host MUST log plugin id/version, decision outcome, and latency. (section: 3) Telemetry, level: must) — link: .specs/plugins-policy-host.md#3-telemetry
-
-### .specs/plugins-policy-sdk.md
-Total requirements: 3
-- OC-POLICY-SDK-4101 — - [] Public SDK functions MUST be semver‑stable within a MAJOR. (section: 1) Stability & Compatibility, level: must) — link: .specs/plugins-policy-sdk.md#1-stability-compatibility
-- OC-POLICY-SDK-4102 — - [] Breaking changes MUST be accompanied by a migration note and version bump. (section: 1) Stability & Compatibility, level: must) — link: .specs/plugins-policy-sdk.md#1-stability-compatibility
-- OC-POLICY-SDK-4110 — - [] SDK MUST NOT perform network or filesystem I/O by default. (section: 2) Safety, level: must) — link: .specs/plugins-policy-sdk.md#2-safety
-
-### .specs/pool-managerd.md
+### .specs/30-pool-managerd.md
 Total requirements: 9
-- OC-POOL-3001 — - [] Workers MUST preload at `serve` start and MUST NOT expose Ready until success. (section: 1) Preload & Ready Lifecycle, level: must) — link: .specs/pool-managerd.md#1-preload-ready-lifecycle
-- OC-POOL-3002 — - [] Preload MUST fail fast if VRAM/host RAM insufficient; Pool remains Unready with retry backoff. (section: 1) Preload & Ready Lifecycle, level: must) — link: .specs/pool-managerd.md#1-preload-ready-lifecycle
-- OC-POOL-3003 — - [] Readiness endpoints MUST reflect preload state and last error cause. (section: 1) Preload & Ready Lifecycle, level: must) — link: .specs/pool-managerd.md#1-preload-ready-lifecycle
-- OC-POOL-3010 — - [] Driver/CUDA errors MUST transition Pool to Unready, drain, and backoff‑restart. (section: 2) Restart/Backoff & Guardrails, level: must) — link: .specs/pool-managerd.md#2-restart-backoff-guardrails
-- OC-POOL-3011 — - [] Restart storms MUST be bounded by exponential backoff and circuit breaker. (section: 2) Restart/Backoff & Guardrails, level: must) — link: .specs/pool-managerd.md#2-restart-backoff-guardrails
-- OC-POOL-3012 — - [] CPU inference spillover is disallowed; controller MUST fail fast. (section: 2) Restart/Backoff & Guardrails, level: must) — link: .specs/pool-managerd.md#2-restart-backoff-guardrails
-- OC-POOL-3020 — - [] Placement MUST respect device masks; no cross‑mask spillover. (section: 3) Device Masks & Placement Affinity, level: must) — link: .specs/pool-managerd.md#3-device-masks-placement-affinity
-- OC-POOL-3021 — - [] Heterogeneous split ratios MUST be explicit and capped for smallest GPU. (section: 3) Device Masks & Placement Affinity, level: must) — link: .specs/pool-managerd.md#3-device-masks-placement-affinity
-- OC-POOL-3030 — - [] Emit preload outcomes, VRAM/RAM utilization, driver_reset events, and restart counters. (section: 4) Observability, level: info) — link: .specs/pool-managerd.md#4-observability
+- OC-POOL-3001 — - [] Workers MUST preload at `serve` start and MUST NOT expose Ready until success. (section: 1) Preload & Ready Lifecycle, level: must) — link: .specs/30-pool-managerd.md#1-preload-ready-lifecycle
+- OC-POOL-3002 — - [] Preload MUST fail fast if VRAM/host RAM insufficient; Pool remains Unready with retry backoff. (section: 1) Preload & Ready Lifecycle, level: must) — link: .specs/30-pool-managerd.md#1-preload-ready-lifecycle
+- OC-POOL-3003 — - [] Readiness endpoints MUST reflect preload state and last error cause. (section: 1) Preload & Ready Lifecycle, level: must) — link: .specs/30-pool-managerd.md#1-preload-ready-lifecycle
+- OC-POOL-3010 — - [] Driver/CUDA errors MUST transition Pool to Unready, drain, and backoff‑restart. (section: 2) Restart/Backoff & Guardrails, level: must) — link: .specs/30-pool-managerd.md#2-restart-backoff-guardrails
+- OC-POOL-3011 — - [] Restart storms MUST be bounded by exponential backoff and circuit breaker. (section: 2) Restart/Backoff & Guardrails, level: must) — link: .specs/30-pool-managerd.md#2-restart-backoff-guardrails
+- OC-POOL-3012 — - [] CPU inference spillover is disallowed; controller MUST fail fast. (section: 2) Restart/Backoff & Guardrails, level: must) — link: .specs/30-pool-managerd.md#2-restart-backoff-guardrails
+- OC-POOL-3020 — - [] Placement MUST respect device masks; no cross‑mask spillover. (section: 3) Device Masks & Placement Affinity, level: must) — link: .specs/30-pool-managerd.md#3-device-masks-placement-affinity
+- OC-POOL-3021 — - [] Heterogeneous split ratios MUST be explicit and capped for smallest GPU. (section: 3) Device Masks & Placement Affinity, level: must) — link: .specs/30-pool-managerd.md#3-device-masks-placement-affinity
+- OC-POOL-3030 — - [] Emit preload outcomes, VRAM/RAM utilization, driver_reset events, and restart counters. (section: 4) Observability, level: info) — link: .specs/30-pool-managerd.md#4-observability
 
-### .specs/worker-adapters-llamacpp-http.md
+### .specs/40-worker-adapters-llamacpp-http.md
 Total requirements: 4
-- OC-ADAPT-5001 — - [] Adapter MUST implement health, properties (slots/commit), completion (SSE), cancel, metrics scrape for llama.cpp native API. (section: 1) API Mapping, level: must) — link: .specs/worker-adapters-llamacpp-http.md#1-api-mapping
-- OC-ADAPT-5002 — - [] When using OpenAI‑compatible endpoints internally, they MUST NOT be exposed publicly. (section: 1) API Mapping, level: must) — link: .specs/worker-adapters-llamacpp-http.md#1-api-mapping
-- OC-ADAPT-5010 — - [] Adapter MUST normalize detokenization templates and sampler profiles for determinism within a replica set. (section: 2) Determinism & Version Capture, level: must) — link: .specs/worker-adapters-llamacpp-http.md#2-determinism-version-capture
-- OC-ADAPT-5011 — - [] Adapter MUST capture and report engine_version and model_digest. (section: 2) Determinism & Version Capture, level: must) — link: .specs/worker-adapters-llamacpp-http.md#2-determinism-version-capture
+- OC-ADAPT-5001 — - [] Adapter MUST implement health, properties (slots/commit), completion (SSE), cancel, metrics scrape for llama.cpp native API. (section: 1) API Mapping, level: must) — link: .specs/40-worker-adapters-llamacpp-http.md#1-api-mapping
+- OC-ADAPT-5002 — - [] When using OpenAI‑compatible endpoints internally, they MUST NOT be exposed publicly. (section: 1) API Mapping, level: must) — link: .specs/40-worker-adapters-llamacpp-http.md#1-api-mapping
+- OC-ADAPT-5010 — - [] Adapter MUST normalize detokenization templates and sampler profiles for determinism within a replica set. (section: 2) Determinism & Version Capture, level: must) — link: .specs/40-worker-adapters-llamacpp-http.md#2-determinism-version-capture
+- OC-ADAPT-5011 — - [] Adapter MUST capture and report engine_version and model_digest. (section: 2) Determinism & Version Capture, level: must) — link: .specs/40-worker-adapters-llamacpp-http.md#2-determinism-version-capture
 
-### .specs/worker-adapters-tgi-http.md
-Total requirements: 2
-- OC-ADAPT-5040 — - [] Adapter MUST implement TGI custom endpoints (`/generate`, `/info`, `/health`) and optionally OpenAI‑compat internally; not public. (section: 1) API Mapping, level: must) — link: .specs/worker-adapters-tgi-http.md#1-api-mapping
-- OC-ADAPT-5050 — - [] Adapter MUST capture engine_version and model info as available. (section: 2) Determinism & Version Capture, level: must) — link: .specs/worker-adapters-tgi-http.md#2-determinism-version-capture
-
-### .specs/worker-adapters-triton.md
-Total requirements: 2
-- OC-ADAPT-5060 — - [] Adapter MUST support Triton HTTP/GRPC infer, health/metadata/stats, and optional OpenAI‑compat frontends internally. (section: 1) API Mapping, level: must) — link: .specs/worker-adapters-triton.md#1-api-mapping
-- OC-ADAPT-5070 — - [] Adapter MUST report engine_version/trtllm_version where applicable. (section: 2) Determinism & Version Capture, level: must) — link: .specs/worker-adapters-triton.md#2-determinism-version-capture
-
-### .specs/worker-adapters-vllm-http.md
+### .specs/41-worker-adapters-vllm-http.md
 Total requirements: 3
-- OC-ADAPT-5020 — - [] Adapter MUST implement health/properties/completion/cancel/metrics against vLLM OpenAI‑compatible server. (section: 1) API Mapping, level: must) — link: .specs/worker-adapters-vllm-http.md#1-api-mapping
-- OC-ADAPT-5021 — - [] OpenAI‑compatible endpoints MUST remain internal; public surface is OrchQueue v1. (section: 1) API Mapping, level: must) — link: .specs/worker-adapters-vllm-http.md#1-api-mapping
-- OC-ADAPT-5030 — - [] Adapter MUST report engine_version and sampler/profile versions as applicable. (section: 2) Determinism & Version Capture, level: must) — link: .specs/worker-adapters-vllm-http.md#2-determinism-version-capture
+- OC-ADAPT-5020 — - [] Adapter MUST implement health/properties/completion/cancel/metrics against vLLM OpenAI‑compatible server. (section: 1) API Mapping, level: must) — link: .specs/41-worker-adapters-vllm-http.md#1-api-mapping
+- OC-ADAPT-5021 — - [] OpenAI‑compatible endpoints MUST remain internal; public surface is OrchQueue v1. (section: 1) API Mapping, level: must) — link: .specs/41-worker-adapters-vllm-http.md#1-api-mapping
+- OC-ADAPT-5030 — - [] Adapter MUST report engine_version and sampler/profile versions as applicable. (section: 2) Determinism & Version Capture, level: must) — link: .specs/41-worker-adapters-vllm-http.md#2-determinism-version-capture
+
+### .specs/42-worker-adapters-tgi-http.md
+Total requirements: 2
+- OC-ADAPT-5040 — - [] Adapter MUST implement TGI custom endpoints (`/generate`, `/info`, `/health`) and optionally OpenAI‑compat internally; not public. (section: 1) API Mapping, level: must) — link: .specs/42-worker-adapters-tgi-http.md#1-api-mapping
+- OC-ADAPT-5050 — - [] Adapter MUST capture engine_version and model info as available. (section: 2) Determinism & Version Capture, level: must) — link: .specs/42-worker-adapters-tgi-http.md#2-determinism-version-capture
+
+### .specs/43-worker-adapters-triton.md
+Total requirements: 2
+- OC-ADAPT-5060 — - [] Adapter MUST support Triton HTTP/GRPC infer, health/metadata/stats, and optional OpenAI‑compat frontends internally. (section: 1) API Mapping, level: must) — link: .specs/43-worker-adapters-triton.md#1-api-mapping
+- OC-ADAPT-5070 — - [] Adapter MUST report engine_version/trtllm_version where applicable. (section: 2) Determinism & Version Capture, level: must) — link: .specs/43-worker-adapters-triton.md#2-determinism-version-capture
+
+### .specs/50-plugins-policy-host.md
+Total requirements: 5
+- OC-POLICY-4001 — - [] Default plugin ABI MUST be WASI; functions MUST be pure/deterministic over explicit snapshots. (section: 1) ABI & Determinism, level: must) — link: .specs/50-plugins-policy-host.md#1-abi-determinism
+- OC-POLICY-4002 — - [] ABI versioning MUST be explicit; incompatible changes MUST bump MAJOR. (section: 1) ABI & Determinism, level: must) — link: .specs/50-plugins-policy-host.md#1-abi-determinism
+- OC-POLICY-4010 — - [] Plugins MUST run in a sandbox with no filesystem/network unless explicitly granted. (section: 2) Sandboxing & Safety, level: must) — link: .specs/50-plugins-policy-host.md#2-sandboxing-safety
+- OC-POLICY-4011 — - [] Host MUST bound CPU time/memory per invocation and abort on overuse. (section: 2) Sandboxing & Safety, level: must) — link: .specs/50-plugins-policy-host.md#2-sandboxing-safety
+- OC-POLICY-4020 — - [] Host MUST log plugin id/version, decision outcome, and latency. (section: 3) Telemetry, level: must) — link: .specs/50-plugins-policy-host.md#3-telemetry
+
+### .specs/51-plugins-policy-sdk.md
+Total requirements: 3
+- OC-POLICY-SDK-4101 — - [] Public SDK functions MUST be semver‑stable within a MAJOR. (section: 1) Stability & Compatibility, level: must) — link: .specs/51-plugins-policy-sdk.md#1-stability-compatibility
+- OC-POLICY-SDK-4102 — - [] Breaking changes MUST be accompanied by a migration note and version bump. (section: 1) Stability & Compatibility, level: must) — link: .specs/51-plugins-policy-sdk.md#1-stability-compatibility
+- OC-POLICY-SDK-4110 — - [] SDK MUST NOT perform network or filesystem I/O by default. (section: 2) Safety, level: must) — link: .specs/51-plugins-policy-sdk.md#2-safety
+
+### .specs/60-config-schema.md
+Total requirements: 3
+- OC-CONFIG-6001 — - [] Config MUST be strictly validated; unknown fields rejected (strict) or logged (compat) per mode. (section: 1) Validation, level: must) — link: .specs/60-config-schema.md#1-validation
+- OC-CONFIG-6002 — - [] Examples in tests MUST validate without errors. (section: 1) Validation, level: must) — link: .specs/60-config-schema.md#1-validation
+- OC-CONFIG-6010 — - [] Schema generation MUST be deterministic and idempotent across runs. (section: 2) Generation, level: must) — link: .specs/60-config-schema.md#2-generation
+
+### .specs/70-determinism-suite.md
+Total requirements: 3
+- OC-TEST-7001 — - [] Suite MUST verify byte‑exact token streams across replicas with fixed seeds. (section: 1) Semantics, level: must) — link: .specs/70-determinism-suite.md#1-semantics
+- OC-TEST-7002 — - [] Engine‑specific settings MUST be applied (e.g., single‑slot modes) for determinism. (section: 1) Semantics, level: must) — link: .specs/70-determinism-suite.md#1-semantics
+- OC-TEST-7003 — - [] Seeds corpus MUST contain at least 64 seeds and MUST be stable. (section: 1) Semantics, level: must) — link: .specs/70-determinism-suite.md#1-semantics
+
+### .specs/71-metrics-contract.md
+Total requirements: 2
+- OC-METRICS-7101 — - [] Metric names and required labels MUST conform to `ci/metrics.lint.json`. (section: 1) Names/Labels, level: must) — link: .specs/71-metrics-contract.md#1-names-labels
+- OC-METRICS-7102 — - [] Label cardinality budgets MUST be documented and enforced. (section: 1) Names/Labels, level: must) — link: .specs/71-metrics-contract.md#1-names-labels

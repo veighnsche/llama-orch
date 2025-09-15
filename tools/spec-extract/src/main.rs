@@ -173,22 +173,35 @@ fn requirements_yaml_name(spec_file: &str) -> String {
         .file_stem()
         .and_then(|s| s.to_str())
         .unwrap_or("spec");
-    match stem {
-        "orchestrator-spec" => "index.yaml".to_string(),
-        "orchestrator-core" => "orchestrator-core.yaml".to_string(),
-        "orchestratord" => "orchestratord.yaml".to_string(),
-        "pool-managerd" => "pool-managerd.yaml".to_string(),
-        "plugins-policy-host" => "plugins-policy-host.yaml".to_string(),
-        "plugins-policy-sdk" => "plugins-policy-sdk.yaml".to_string(),
-        "config-schema" => "contracts-config-schema.yaml".to_string(),
-        "determinism-suite" => "test-harness-determinism-suite.yaml".to_string(),
-        "metrics-contract" => "test-harness-metrics-contract.yaml".to_string(),
-        "worker-adapters-llamacpp-http" => "worker-adapters-llamacpp-http.yaml".to_string(),
-        "worker-adapters-vllm-http" => "worker-adapters-vllm-http.yaml".to_string(),
-        "worker-adapters-tgi-http" => "worker-adapters-tgi-http.yaml".to_string(),
-        "worker-adapters-triton" => "worker-adapters-triton.yaml".to_string(),
-        other => format!("{}.yaml", other),
-    }
+
+    // If stem is prefixed with NN- keep original stem for fallback filename, but strip for matching
+    let (base_for_match, fallback_name) = if stem.len() > 3 && stem.as_bytes()[0].is_ascii_digit()
+        && stem.as_bytes()[1].is_ascii_digit() && stem.as_bytes()[2] == b'-'
+    {
+        (&stem[3..], stem)
+    } else {
+        (stem, stem)
+    };
+
+    let mapped = match base_for_match {
+        // historical name retained for back-compat (not used anymore)
+        "orchestrator-spec" => Some("index.yaml".to_string()),
+        "orchestrator-core" => Some("orchestrator-core.yaml".to_string()),
+        "orchestratord" => Some("orchestratord.yaml".to_string()),
+        "pool-managerd" => Some("pool-managerd.yaml".to_string()),
+        "plugins-policy-host" => Some("plugins-policy-host.yaml".to_string()),
+        "plugins-policy-sdk" => Some("plugins-policy-sdk.yaml".to_string()),
+        "config-schema" => Some("contracts-config-schema.yaml".to_string()),
+        "determinism-suite" => Some("test-harness-determinism-suite.yaml".to_string()),
+        "metrics-contract" => Some("test-harness-metrics-contract.yaml".to_string()),
+        "worker-adapters-llamacpp-http" => Some("worker-adapters-llamacpp-http.yaml".to_string()),
+        "worker-adapters-vllm-http" => Some("worker-adapters-vllm-http.yaml".to_string()),
+        "worker-adapters-tgi-http" => Some("worker-adapters-tgi-http.yaml".to_string()),
+        "worker-adapters-triton" => Some("worker-adapters-triton.yaml".to_string()),
+        _ => None,
+    };
+
+    mapped.unwrap_or_else(|| format!("{}.yaml", fallback_name))
 }
 
 fn path_relative(root: &Path, path: &Path) -> Option<String> {

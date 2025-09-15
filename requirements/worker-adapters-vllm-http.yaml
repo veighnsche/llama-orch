@@ -1,22 +1,22 @@
 schema_version: 1
-source: .specs/worker-adapters-vllm-http.md
-notes: Extracted from .specs/worker-adapters-vllm-http.md
+source: .specs/41-worker-adapters-vllm-http.md
+notes: Extracted from .specs/41-worker-adapters-vllm-http.md
 requirements:
   OC-ADAPT-5020:
     title: '- [] Adapter MUST implement health/properties/completion/cancel/metrics against vLLM OpenAI‑compatible server.'
     section: 1) API Mapping
     level: must
     links:
-    - .specs/worker-adapters-vllm-http.md#1-api-mapping
+    - .specs/41-worker-adapters-vllm-http.md#1-api-mapping
   OC-ADAPT-5021:
     title: '- [] OpenAI‑compatible endpoints MUST remain internal; public surface is OrchQueue v1.'
     section: 1) API Mapping
     level: must
     links:
-    - .specs/worker-adapters-vllm-http.md#1-api-mapping
+    - .specs/41-worker-adapters-vllm-http.md#1-api-mapping
   OC-ADAPT-5030:
     title: '- [] Adapter MUST report engine_version and sampler/profile versions as applicable.'
     section: 2) Determinism & Version Capture
     level: must
     links:
-    - .specs/worker-adapters-vllm-http.md#2-determinism-version-capture
+    - .specs/41-worker-adapters-vllm-http.md#2-determinism-version-capture

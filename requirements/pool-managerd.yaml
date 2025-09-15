@@ -1,58 +1,58 @@
 schema_version: 1
-source: .specs/pool-managerd.md
-notes: Extracted from .specs/pool-managerd.md
+source: .specs/30-pool-managerd.md
+notes: Extracted from .specs/30-pool-managerd.md
 requirements:
   OC-POOL-3001:
     title: '- [] Workers MUST preload at `serve` start and MUST NOT expose Ready until success.'
     section: 1) Preload & Ready Lifecycle
     level: must
     links:
-    - .specs/pool-managerd.md#1-preload-ready-lifecycle
+    - .specs/30-pool-managerd.md#1-preload-ready-lifecycle
   OC-POOL-3002:
     title: '- [] Preload MUST fail fast if VRAM/host RAM insufficient; Pool remains Unready with retry backoff.'
     section: 1) Preload & Ready Lifecycle
     level: must
     links:
-    - .specs/pool-managerd.md#1-preload-ready-lifecycle
+    - .specs/30-pool-managerd.md#1-preload-ready-lifecycle
   OC-POOL-3003:
     title: '- [] Readiness endpoints MUST reflect preload state and last error cause.'
     section: 1) Preload & Ready Lifecycle
     level: must
     links:
-    - .specs/pool-managerd.md#1-preload-ready-lifecycle
+    - .specs/30-pool-managerd.md#1-preload-ready-lifecycle
   OC-POOL-3010:
     title: '- [] Driver/CUDA errors MUST transition Pool to Unready, drain, and backoff‑restart.'
     section: 2) Restart/Backoff & Guardrails
     level: must
     links:
-    - .specs/pool-managerd.md#2-restart-backoff-guardrails
+    - .specs/30-pool-managerd.md#2-restart-backoff-guardrails
   OC-POOL-3011:
     title: '- [] Restart storms MUST be bounded by exponential backoff and circuit breaker.'
     section: 2) Restart/Backoff & Guardrails
     level: must
     links:
-    - .specs/pool-managerd.md#2-restart-backoff-guardrails
+    - .specs/30-pool-managerd.md#2-restart-backoff-guardrails
   OC-POOL-3012:
     title: '- [] CPU inference spillover is disallowed; controller MUST fail fast.'
     section: 2) Restart/Backoff & Guardrails
     level: must
     links:
-    - .specs/pool-managerd.md#2-restart-backoff-guardrails
+    - .specs/30-pool-managerd.md#2-restart-backoff-guardrails
   OC-POOL-3020:
     title: '- [] Placement MUST respect device masks; no cross‑mask spillover.'
     section: 3) Device Masks & Placement Affinity
     level: must
     links:
-    - .specs/pool-managerd.md#3-device-masks-placement-affinity
+    - .specs/30-pool-managerd.md#3-device-masks-placement-affinity
   OC-POOL-3021:
     title: '- [] Heterogeneous split ratios MUST be explicit and capped for smallest GPU.'
     section: 3) Device Masks & Placement Affinity
     level: must
     links:
-    - .specs/pool-managerd.md#3-device-masks-placement-affinity
+    - .specs/30-pool-managerd.md#3-device-masks-placement-affinity
   OC-POOL-3030:
     title: '- [] Emit preload outcomes, VRAM/RAM utilization, driver_reset events, and restart counters.'
     section: 4) Observability
     level: info
     links:
-    - .specs/pool-managerd.md#4-observability
+    - .specs/30-pool-managerd.md#4-observability
