@@ -1,0 +1,531 @@
+[
+  {
+    "path": "cli/consumer-tests",
+    "name": "cli-consumer-tests",
+    "kind": "bin",
+    "role": "test-harness",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3050",
+      "ORCH-3051"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [
+      "cli-consumer-tests"
+    ],
+    "features": [],
+    "tests": [
+      "orchqueue_pact",
+      "snapshot_transcript",
+      "snapshots",
+      "stub_wiremock"
+    ],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "contracts/api-types",
+    "name": "contracts-api-types",
+    "kind": "lib",
+    "role": "contracts",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3044",
+      "ORCH-3030"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [],
+    "features": [],
+    "tests": [],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "contracts/config-schema",
+    "name": "contracts-config-schema",
+    "kind": "lib",
+    "role": "contracts",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3044",
+      "ORCH-3030"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [
+      "contracts/config-schema/src/lib.rs"
+    ],
+    "binaries": [],
+    "features": [],
+    "tests": [
+      "validate_examples"
+    ],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "orchestrator-core",
+    "name": "orchestrator-core",
+    "kind": "lib",
+    "role": "core",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3004",
+      "ORCH-3005",
+      "ORCH-3008",
+      "ORCH-3010",
+      "ORCH-3011",
+      "ORCH-3016",
+      "ORCH-3017",
+      "ORCH-3027",
+      "ORCH-3028",
+      "ORCH-3044",
+      "ORCH-3045"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [],
+    "features": [],
+    "tests": [
+      "props_queue"
+    ],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "orchestratord",
+    "name": "orchestratord",
+    "kind": "bin",
+    "role": "core",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3004",
+      "ORCH-3005",
+      "ORCH-3008",
+      "ORCH-3010",
+      "ORCH-3011",
+      "ORCH-3016",
+      "ORCH-3017",
+      "ORCH-3027",
+      "ORCH-3028",
+      "ORCH-3044",
+      "ORCH-3045",
+      "ORCH-2002",
+      "ORCH-2101",
+      "ORCH-2102",
+      "ORCH-2103",
+      "ORCH-2104"
+    ],
+    "openapi_refs": [
+      "contracts/openapi/control.yaml",
+      "contracts/openapi/data.yaml"
+    ],
+    "schema_refs": [],
+    "binaries": [
+      "orchestratord"
+    ],
+    "features": [],
+    "tests": [
+      "provider_verify"
+    ],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "plugins/policy-host",
+    "name": "plugins-policy-host",
+    "kind": "lib",
+    "role": "plugin",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3048"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [],
+    "features": [],
+    "tests": [],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "plugins/policy-sdk",
+    "name": "plugins-policy-sdk",
+    "kind": "lib",
+    "role": "plugin",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3048"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [],
+    "features": [],
+    "tests": [],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "pool-managerd",
+    "name": "pool-managerd",
+    "kind": "bin",
+    "role": "core",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3004",
+      "ORCH-3005",
+      "ORCH-3008",
+      "ORCH-3010",
+      "ORCH-3011",
+      "ORCH-3016",
+      "ORCH-3017",
+      "ORCH-3027",
+      "ORCH-3028",
+      "ORCH-3044",
+      "ORCH-3045",
+      "ORCH-3038",
+      "ORCH-3002"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [
+      "pool-managerd"
+    ],
+    "features": [],
+    "tests": [],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "test-harness/bdd",
+    "name": "test-harness-bdd",
+    "kind": "lib",
+    "role": "test-harness",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3050",
+      "ORCH-3051"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [],
+    "features": [],
+    "tests": [
+      "bdd",
+      "features"
+    ],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "test-harness/chaos",
+    "name": "test-harness-chaos",
+    "kind": "bin",
+    "role": "test-harness",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3050",
+      "ORCH-3051"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [
+      "chaos",
+      "test-harness-chaos"
+    ],
+    "features": [],
+    "tests": [],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "test-harness/determinism-suite",
+    "name": "test-harness-determinism-suite",
+    "kind": "mixed",
+    "role": "test-harness",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3050",
+      "ORCH-3051"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [
+      "determinism-suite"
+    ],
+    "features": [],
+    "tests": [
+      "byte_exact",
+      "placeholder"
+    ],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "test-harness/e2e-haiku",
+    "name": "test-harness-e2e-haiku",
+    "kind": "mixed",
+    "role": "test-harness",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3050",
+      "ORCH-3051"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [
+      "e2e-haiku"
+    ],
+    "features": [],
+    "tests": [
+      "e2e_client",
+      "placeholder"
+    ],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "test-harness/metrics-contract",
+    "name": "test-harness-metrics-contract",
+    "kind": "lib",
+    "role": "test-harness",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3050",
+      "ORCH-3051"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [],
+    "features": [],
+    "tests": [
+      "metrics_lint"
+    ],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "tools/openapi-client",
+    "name": "tools-openapi-client",
+    "kind": "lib",
+    "role": "tool",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [],
+    "openapi_refs": [
+      "contracts/openapi/control.yaml",
+      "contracts/openapi/data.yaml"
+    ],
+    "schema_refs": [],
+    "binaries": [],
+    "features": [],
+    "tests": [
+      "trybuild",
+      "ui"
+    ],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "tools/readme-index",
+    "name": "tools-readme-index",
+    "kind": "bin",
+    "role": "tool",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [
+      "readme-index",
+      "tools-readme-index"
+    ],
+    "features": [],
+    "tests": [],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "tools/spec-extract",
+    "name": "tools-spec-extract",
+    "kind": "bin",
+    "role": "tool",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [
+      "spec-extract",
+      "tools-spec-extract"
+    ],
+    "features": [],
+    "tests": [],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "worker-adapters/llamacpp-http",
+    "name": "worker-adapters-llamacpp-http",
+    "kind": "lib",
+    "role": "adapter",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3054",
+      "ORCH-3055",
+      "ORCH-3056",
+      "ORCH-3057",
+      "ORCH-3058"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [],
+    "features": [],
+    "tests": [],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "worker-adapters/mock",
+    "name": "worker-adapters-mock",
+    "kind": "lib",
+    "role": "adapter",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3054",
+      "ORCH-3055",
+      "ORCH-3056",
+      "ORCH-3057",
+      "ORCH-3058"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [],
+    "features": [],
+    "tests": [],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "worker-adapters/tgi-http",
+    "name": "worker-adapters-tgi-http",
+    "kind": "lib",
+    "role": "adapter",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3054",
+      "ORCH-3055",
+      "ORCH-3056",
+      "ORCH-3057",
+      "ORCH-3058"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [],
+    "features": [],
+    "tests": [],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "worker-adapters/triton",
+    "name": "worker-adapters-triton",
+    "kind": "lib",
+    "role": "adapter",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3054",
+      "ORCH-3055",
+      "ORCH-3056",
+      "ORCH-3057",
+      "ORCH-3058"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [],
+    "features": [],
+    "tests": [],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "worker-adapters/vllm-http",
+    "name": "worker-adapters-vllm-http",
+    "kind": "lib",
+    "role": "adapter",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [
+      "ORCH-3054",
+      "ORCH-3055",
+      "ORCH-3056",
+      "ORCH-3057",
+      "ORCH-3058"
+    ],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [],
+    "features": [],
+    "tests": [],
+    "docs_paths": [
+      "README.md"
+    ]
+  },
+  {
+    "path": "xtask",
+    "name": "xtask",
+    "kind": "bin",
+    "role": "tool",
+    "description": "",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": [],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [
+      "xtask"
+    ],
+    "features": [],
+    "tests": [],
+    "docs_paths": [
+      "README.md"
+    ]
+  }
+]

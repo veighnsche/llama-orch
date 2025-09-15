@@ -1,12 +1,3 @@
-# SPEC→SHIP Workflow v2 (Contract‑First, Stub‑First, TDD)
-
-**Status:** Adoptable now · **Scope:** NVIDIA‑only inference (Linux, headless) and multi‑engine (llama.cpp, vLLM, TGI, Triton/TensorRT‑LLM); Orchestrator + pools/scheduler + CLI consumer
-**Conformance language:** RFC‑2119 (MUST/SHOULD/MAY)
-
-This file is the authoritative buildbook to take the Orchestrator SPEC to a shippable release with **TDD**, **contract‑first**, **stub‑first**, and **real‑model gates**. Changes to this document require PR + review.
-
----
-
 ## 0) Guiding Principles
 
 1. **Spec is law.** Requirements live in a single SPEC with stable IDs (`ORCH-XXXX`). All artifacts reference these IDs.
@@ -21,9 +12,9 @@ This file is the authoritative buildbook to take the Orchestrator SPEC to a ship
 
 ## 1) Repository Layout (workspace)
 
-```
+```bash
 / Cargo.toml                       # [workspace]
-/ specs/
+/.specs/
   orchestrator-spec.md             # RFC‑2119 with ORCH‑IDs
   metrics/otel-prom.md             # metric names, labels, units
 /contracts/
@@ -79,7 +70,7 @@ PROJECT_GUIDE.md                   # Newcomer on‑ramp
 * **Determinism defaults:** inject `seed = hash(job_id)` if omitted; pin `sampler_profile_version = "v1"`.
 * **Real model for CI:** **Qwen2.5‑0.5B‑Instruct (GGUF, Q4\_K\_M)** as **default**; **TinyLlama‑1.1B‑Chat (Q4\_K\_M)** as **fallback**; optional **SmolLM2‑1.7B‑Instruct** on nightly. Prefer targeting a GPU worker over LAN; if unavailable in CI, fall back to CPU locally.
 * **Replica determinism flags (per engine):** for llama.cpp run with **`--parallel 1`** and **`--no-cont-batching`**; for other engines, use single‑slot/single‑request mode or their documented equivalents to ensure byte‑exact tests; pin engine commit/version.
-* **Observability:** Prometheus + Grafana; JSON logs via `tracing`. Cardinality guards on labels. Metrics MUST include `engine` and engine‑specific version labels (e.g., `engine_version`, `trtllm_version`).
+* **Observability:** Prometheus + Grafana; JSON logs via `tracing`. Cardinality guards on labels. Metrics MUST include `engine` and engine‑specific version labels (e.g., `engine_version`, `trtllm_version`). See `.specs/metrics/otel-prom.md`.
 * **Auth:** API key (HMAC) day‑1; OIDC later. Quotas: concurrent jobs, tokens/min, KV‑MB.
 * **Policy plugins:** WASI (Rust first), pure deterministic function over snapshot, ≤ **1 ms** budget.
 * **CI:** Prefer a dev‑hosted NVIDIA GPU worker reachable over LAN from the runner. If cloud CI cannot reach a GPU, add a clearly marked CI‑only CPU carve‑out (temporary); production remains NVIDIA‑only.
@@ -88,7 +79,7 @@ PROJECT_GUIDE.md                   # Newcomer on‑ramp
 
 ## 3) Stage Flow (TDD)
 
-Note on heterogeneous GPUs: cross‑GPU splits are opt‑in and require explicit per‑GPU ratios; default is no cross‑GPU split. See the config example in `specs/orchestrator-spec.md` §8.
+Note on heterogeneous GPUs: cross‑GPU splits are opt‑in and require explicit per‑GPU ratios; default is no cross‑GPU split. See the config example in `.specs/orchestrator-spec.md` §8.
 
 ### Stage 0 — Contract Freeze (TDD seed)
 
@@ -122,7 +113,7 @@ Note on heterogeneous GPUs: cross‑GPU splits are opt‑in and require explicit
 
 ### Stage 5 — Observability & SLOs
 
-11. Implement metrics exactly per `specs/metrics/otel-prom.md` (names, units, labels). Labels MUST include `engine` and engine‑specific version labels (e.g., `engine_version`, `trtllm_version`). Add JSON logs with required fields (incl. `engine`, `seed`, `engine_version`, `sampler_profile_version`).
+11. Implement metrics exactly per `.specs/metrics/otel-prom.md` (names, units, labels). Labels MUST include `engine` and engine‑specific version labels (e.g., `engine_version`, `trtllm_version`). Add JSON logs with required fields (incl. `engine`, `seed`, `engine_version`, `sampler_profile_version`).
 12. Commit Grafana dashboards + alert rules under `/ci/dashboards`.
     **Gate:** Metrics linter + dashboard render pass in CI (sample data).
 
@@ -194,7 +185,7 @@ Note on heterogeneous GPUs: cross‑GPU splits are opt‑in and require explicit
 
 **Model cache step (example)**
 
-```
+```bash
 HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download \
   Qwen/Qwen2.5-0.5B-Instruct-GGUF qwen2.5-0.5b-instruct-q4_k_m.gguf \
   --local-dir ~/.cache/models --local-dir-use-symlinks False
@@ -202,7 +193,7 @@ HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download \
 
 **Server start (CPU)**
 
-```
+```bash
 llama-server \
   --model ~/.cache/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
   --host 127.0.0.1 --port 8080 \
@@ -211,7 +202,61 @@ llama-server \
 
 ---
 
-## 6) Backpressure, Policies, SLOs (defaults)
+## 6) Developer Loop & Quality Gates (Refined)
+
+Run these in order; second regen run must be diff‑clean.
+
+1. Formatting and lints
+
+```bash
+cargo fmt --all -- --check
+cargo clippy --all-targets --all-features -- -D warnings
+```
+
+2. Regenerators (deterministic)
+
+```bash
+cargo xtask regen-openapi
+cargo xtask regen-schema
+cargo run -p tools-spec-extract --quiet
+git diff --exit-code
+```
+
+3. Tests (workspace + suites)
+
+```bash
+cargo test --workspace --all-features -- --nocapture
+cargo test -p orchestratord --test provider_verify -- --nocapture
+cargo test -p cli-consumer-tests -- --nocapture
+cargo test -p tools-openapi-client -- --nocapture   # trybuild UI
+cargo test -p test-harness-bdd -- --nocapture       # BDD placeholders (0 undefined/ambiguous)
+```
+
+4. Docs link checker
+
+```bash
+bash ci/scripts/check_links.sh
+```
+
+5. Convenience wrappers
+
+```bash
+cargo xtask ci:haiku:cpu
+cargo xtask ci:determinism
+```
+
+See also: `README.md` (Quickstart) and `.specs/orchestrator-spec.md` (normative).
+
+# SPEC→SHIP Workflow v2 (Contract‑First, Stub‑First, TDD)
+
+**Status:** Adoptable now · **Scope:** NVIDIA‑only inference (Linux, headless) and multi‑engine (llama.cpp, vLLM, TGI, Triton/TensorRT‑LLM); Orchestrator + pools/scheduler + CLI consumer
+**Conformance language:** RFC‑2119 (MUST/SHOULD/MAY)
+
+This file is the authoritative buildbook to take the Orchestrator SPEC to a shippable release with **TDD**, **contract‑first**, **stub‑first**, and **real‑model gates**. Changes to this document require PR + review.
+
+---
+
+## 7) Backpressure, Policies, SLOs (defaults)
 
 * **Queue full policy:** `interactive = reject`, `batch = drop-lru`.
 * **Backpressure headers:** `429` + `Retry-After` (seconds) + `X-Backoff-Ms`.
@@ -219,14 +264,14 @@ llama-server \
 
 ---
 
-## 7) Security & Tenancy (day‑1)
+## 8) Security & Tenancy (day‑1)
 
 * **Auth:** API keys (HMAC). Future: OIDC/JWT.
 * **Quotas:** per‑tenant concurrent jobs, tokens/min, KV‑MB; reject before enqueue when exceeding.
 
 ---
 
-## 8) Definition of Done (per requirement)
+## 9) Definition of Done (per requirement)
 
 For each `ORCH-XXXX`:
 
@@ -234,14 +279,14 @@ For each `ORCH-XXXX`:
 
 ---
 
-## 9) Rollout & Rollback
+## 10) Rollout & Rollback
 
 * Canary via label selectors or % splits. Rollback **MUST** be one action.
 * Determinism note: new engine commit/version ⇒ **new replica set**; do not mix with old.
 
 ---
 
-## 10) Env Conventions
+## 11) Env Conventions
 
 * `TZ=Europe/Amsterdam` — enforced for E2E‑Haiku.
 * `REQUIRE_REAL_LLAMA=1` — E2E must use a real Worker (GPU preferred; CPU is CI‑only fallback).
@@ -250,7 +295,7 @@ For each `ORCH-XXXX`:
 
 ---
 
-## 11) Notes
+## 12) Notes
 
 * Keep SPEC IDs stable; deprecate with `-DEPR`, never reuse.
 * Treat metrics as contracts: changing names/labels is a breaking change.

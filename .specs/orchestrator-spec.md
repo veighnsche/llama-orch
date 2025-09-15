@@ -188,14 +188,14 @@
 
 ### 6.1 Control Plane
 
-* `POST /v1/pools/:id/drain` → { deadline\_ms }
-* `POST /v1/pools/:id/reload` → { new\_model\_ref }
-* `GET /v1/pools/:id/health` → { live, ready, draining, metrics }
-* `GET /v1/replicasets` → list with load/SLO snapshots
+* `POST /v1/pools/:id/drain` → { deadline\_ms } [ORCH-2101]
+* `POST /v1/pools/:id/reload` → { new\_model\_ref } [ORCH-2102]
+* `GET /v1/pools/:id/health` → { live, ready, draining, metrics } [ORCH-2103]
+* `GET /v1/replicasets` → list with load/SLO snapshots [ORCH-2104]
 
 ### 6.2 Data Plane — OrchQueue v1
 
-`POST /v1/tasks`
+`POST /v1/tasks` [ORCH-2001]
 
 ```json
 {
@@ -203,7 +203,7 @@
   "session_id": "uuid",
   "workload": "completion",         // "completion" | "embedding" | "rerank"
   "model_ref": "sha256:... or catalog name",
-  "engine": "llamacpp",             // "llamacpp" | "vllm" | "tgi" | "triton"
+  "engine": "llamacpp",             // "llamacpp" | "vllm" | "tgi" | "triton"  [ORCH-2008]
   "ctx": 8192,
   "priority": "interactive",        // or "batch"
   "seed": 123456789,                // if omitted, injected as hash(task_id)
@@ -242,14 +242,14 @@ Events: `started`, `token`({"t":"...","i":N}), `metrics` (periodic), `end`({"tok
 
 `DELETE /v1/sessions/:id` → force KV eviction
 
-Typed errors (authoritative):
+Typed errors (authoritative):  [ORCH-2006]
 `ADMISSION_REJECT`, `QUEUE_FULL_DROP_LRU`, `INVALID_PARAMS`, `POOL_UNREADY`, `POOL_UNAVAILABLE`, `REPLICA_EXHAUSTED`, `DECODE_TIMEOUT`, `WORKER_RESET`, `INTERNAL`.
 
 Backpressure headers:
 `Retry-After: <seconds>`, `X-Backoff-Ms: <ms>`, optional `X-Queue-Position`, `X-Queue-ETA-Ms`.
 
 Keep Control Plane endpoints as-is (drain, reload, health, replicasets).
- Error envelopes **MUST** include the `engine` context where applicable.
+ Error envelopes **MUST** include the `engine` context where applicable. [ORCH-2006]
 
 ---
 

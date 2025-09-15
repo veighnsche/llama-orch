@@ -20,6 +20,7 @@ members = [
     "test-harness/bdd",
     "tools/spec-extract",
     "tools/openapi-client",
+    "tools/readme-index",
     "xtask"
 ]
 
