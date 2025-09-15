@@ -1,6 +1,5 @@
 use regex::Regex;
 use test_harness_bdd::steps;
-use walkdir::WalkDir;
 use std::fs;
 use std::path::PathBuf;
 use walkdir::WalkDir;
