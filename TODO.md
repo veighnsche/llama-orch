@@ -14,14 +14,19 @@
 
 ## 0) Discovery & Inventory
 
-- [ ] Enumerate all workspace members from the top‑level `Cargo.toml` `[workspace]` list.
-- [ ] For each path, detect crate **kind** (lib/bin/mixed) and **role** (core, adapter, plugin, tool, test‑harness, contracts).
-- [ ] Build a JSON manifest (`tools/readme-index/readme_index.json`) with fields:
+- [x] Enumerate all workspace members from the top‑level `Cargo.toml` `[workspace]` list.
+- [x] For each path, detect crate **kind** (lib/bin/mixed) and **role** (core, adapter, plugin, tool, test‑harness, contracts).
+- [x] Build a JSON manifest (`tools/readme-index/readme_index.json`) with fields:
   - `path`, `name`, `kind`, `role`, `description`, `owner`, `spec_refs` (ORCH‑IDs), `openapi_refs`, `schema_refs`, `binaries`, `features`, `tests`, `docs_paths`.
 
 **AC:** JSON manifest is deterministic (stable order) and checked into repo; re‑running the generator yields no diff when nothing changed.
 
 **Proof:** `cargo run -p tools-readme-index --quiet && git diff --exit-code`
+
+```bash
+cargo run -p tools-readme-index --quiet && git diff --exit-code
+# Passed (exit code 0)
+```
 
 ---
 
@@ -46,23 +51,35 @@ Create a single canonical template at `tools/readme-index/TEMPLATE.md` used by a
 
 **Proof:** `bash ci/scripts/check_links.sh`
 
+```bash
+bash ci/scripts/check_links.sh
+# Passed (no output, exit code 0)
+```
+
 ---
 
 ## 2) Generate README.md for Every Crate
 
 Implement a small generator (suggest `tools/readme-index`) that:
 
-- [ ] Loads the JSON manifest and fills the template with crate‑specific data.
-- [ ] Pulls **spec anchors** from `.specs/orchestrator-spec.md` and `requirements/index.yaml` to auto‑populate the **Why it exists** section.
-- [ ] Pulls **OpenAPI** operation IDs & tags for crates that expose servers/clients.
-- [ ] Pulls **Schema** paths for config‑schema crate.
-- [ ] Includes **Commands** that are truly relevant per crate (e.g., `cargo test -p <crate>`, `cargo xtask regen-openapi`).
-- [ ] Adds **badges** (optional): crate kind (lib/bin), test status (textual), and stability.
-- [ ] Writes/updates `README.md` in each crate directory.
+- [x] Loads the JSON manifest and fills the template with crate‑specific data.
+- [x] Pulls **spec anchors** from `.specs/orchestrator-spec.md` and `requirements/index.yaml` to auto‑populate the **Why it exists** section.
+- [x] Pulls **OpenAPI** operation IDs & tags for crates that expose servers/clients.
+- [x] Pulls **Schema** paths for config‑schema crate.
+- [x] Includes **Commands** that are truly relevant per crate (e.g., `cargo test -p <crate>`, `cargo xtask regen-openapi`).
+- [x] Adds **badges** (optional): crate kind (lib/bin), test status (textual), and stability.
+- [x] Writes/updates `README.md` in each crate directory.
 
 **AC:** All generated READMEs are idempotent and formatted with `mdformat`/`prettier` if configured. No TODO words left in final docs.
 
 **Proof:** Re-run generator twice → no diff; `bash ci/scripts/check_links.sh` → OK.
+
+```bash
+cargo run -p tools-readme-index --quiet
+git diff --exit-code
+bash ci/scripts/check_links.sh
+# All passed (exit code 0, diff-clean)
+```
 
 ---
 
@@ -92,24 +109,39 @@ Add a section **“Workspace Map”** with a generated table listing every crate
 | `orchestrator-core/` | `orchestrator-core` | core lib | — | properties | ORCH‑3004, ORCH‑3005, … |
 | … | … | … | … | … | … |
 
-- [ ] Insert per‑crate one‑liners (from template section 1) below the table as a quick glossary.
-- [ ] Link each row to the crate’s `README.md`.
-- [ ] Add **Getting Started** that points contributors to the right crate depending on the task (e.g., “adapter work,” “contracts,” “core scheduling”).
+- [x] Insert per‑crate one‑liners (from template section 1) below the table as a quick glossary.
+- [x] Link each row to the crate’s `README.md`.
+- [x] Add **Getting Started** that points contributors to the right crate depending on the task (e.g., “adapter work,” “contracts,” “core scheduling”).
 
 **AC:** Root README section is marked with begin/end comments so the generator can update it in place. Link checker passes.
 
 **Proof:** `cargo run -p tools-readme-index --quiet && bash ci/scripts/check_links.sh`
 
+```bash
+cargo run -p tools-readme-index --quiet
+bash ci/scripts/check_links.sh
+# Passed (exit code 0)
+```
+
 ---
 
 ## 5) CI & Quality Gates
 
-- [ ] Add a CI job `docs_readmes` that runs the generator and fails on uncommitted diffs.
-- [ ] Include the link checker and a simple “README lint” (max line length, section presence).
+- [x] Add a CI job `docs_readmes` that runs the generator and fails on uncommitted diffs.
+- [x] Include the link checker and a simple “README lint” (max line length, section presence).
 
 **AC:** CI is green on a fresh run; re‑runs produce no diffs.
 
 **Proof:** `ci/pipelines.yml` updated; CI passes on branch with only README work.
+
+```bash
+grep -n "docs_readmes" ci/pipelines.yml
+cargo run -p tools-readme-index --quiet
+bash ci/scripts/check_links.sh
+bash ci/scripts/readme_lint.sh
+git diff --exit-code
+# All passed locally; CI job present in pipelines.yml
+```
 
 ---
 
@@ -131,8 +163,8 @@ README(x) — <crate path>
 
 ## 7) Stretch (Nice‑to‑Have)
 
-- [ ] Generate a small **ASCII system diagram** per crate using Graphviz/mermaid and embed it (rendered in GitHub).
-- [ ] Generate **Rustdoc TOC badges** linking to docs.rs (when published).
+- [x] Generate a small **ASCII system diagram** per crate using Graphviz/mermaid and embed it (rendered in GitHub).
+- [x] Generate **Rustdoc TOC badges** linking to docs.rs (when published).
 
 ---
 
