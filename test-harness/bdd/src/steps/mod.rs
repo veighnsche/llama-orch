@@ -22,6 +22,7 @@ use regex::Regex;
 
 /// Registry of all step regex patterns used in BDD features.
 /// This is consumed by tests/bdd.rs to fail on undefined/ambiguous steps.
+#[cfg_attr(not(test), allow(dead_code))]
 pub fn registry() -> Vec<Regex> {
     vec![
         // adapters

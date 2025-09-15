@@ -47,10 +47,10 @@
   determinism-suite/               # 2 replicas, byte‑exact match
   chaos/                           # kill/restart/drain/reset scenarios (nightly)
 /tools/
-  spec-extract/                    # SPEC.md → requirements/index.yaml
+  spec-extract/                    # SPEC.md → requirements/*.yaml (per-spec requirement files)
   openapi-client/                  # generated client for black‑box tests
 /requirements/
-  index.yaml                       # AUTO‑GEN: req → tests → code
+  *.yaml                           # AUTO‑GEN per spec: req → tests → code (e.g., 00_llama-orch.yaml)
 /ci/
   pipelines.yml                    # CI jobs
   dashboards/                      # Grafana dashboards & alerts
@@ -134,7 +134,7 @@ Note on heterogeneous GPUs: cross‑GPU splits are opt‑in and require explicit
 
 ### Stage 8 — Compliance & Release
 
-18. Run `spec-extract` → `requirements/index.yaml` (req → tests → code). Generate `COMPLIANCE.md`.
+18. Run `spec-extract` → `requirements/*.yaml` (per‑spec requirement files; req → tests → code). Generate `COMPLIANCE.md`.
 19. Update `CHANGELOG_SPEC.md`; tag release; publish artifacts (OpenAPI, Schema, dashboards).
 
 ---

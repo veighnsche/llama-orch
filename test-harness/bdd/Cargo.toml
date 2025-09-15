@@ -23,7 +23,3 @@ tempfile = "3"
 [[bin]]
 name = "bdd-runner"
 path = "src/main.rs"
-
-[[bin]]
-name = "bdd-generate-skeletons"
-path = "src/bin/bdd-generate-skeletons.rs"

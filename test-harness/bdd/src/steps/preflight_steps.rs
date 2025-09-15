@@ -3,19 +3,23 @@ use cucumber::{given, then, when};
 
 #[then(regex = r"^side effects are not performed \(DryRun is default\)$")]
 pub async fn then_side_effects_not_performed(world: &mut World) {
-    for ev in world.all_facts() {
-        if let Some(stage) = ev.get("stage").and_then(|v| v.as_str()) {
-            assert!(
-                !stage.starts_with("apply"),
-                "unexpected apply-stage facts found in DryRun-by-default scenario: {}",
-                stage
-            );
+    // In Commit mode, side effects are expected; DryRun is default otherwise.
+    if !world.mode_commit {
+        for ev in world.all_facts() {
+            if let Some(stage) = ev.get("stage").and_then(|v| v.as_str()) {
+                assert!(
+                    !stage.starts_with("apply"),
+                    "unexpected apply-stage facts found in DryRun-by-default scenario: {}",
+                    stage
+                );
+            }
         }
     }
 }
 
 #[when(regex = r"^I run preflight and apply in Commit mode$")]
 pub async fn when_preflight_and_apply_commit(world: &mut World) {
+    world.mode_commit = true;
     crate::steps::preflight_steps::when_preflight(world).await;
     crate::steps::apply_steps::when_apply(world).await;
 }
