@@ -20,6 +20,7 @@ pool-managerd (core)
 - ORCH-3038 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-3038)
 - ORCH-3002 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-3002)
 
+
 ## 3. Public API surface
 
 - Rust crate API (internal)
@@ -28,15 +29,24 @@ pool-managerd (core)
 
 - Part of the core orchestrator. Upstream: adapters, Downstream: workers.
 
+```mermaid
+flowchart LR
+  callers[Clients] --> orch[Orchestrator]
+  orch --> adapters[Worker Adapters]
+  adapters --> engines[Engines]
+```
+
 ## 5. Build & Test
 
 - Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
 -- -D warnings`
 - Tests for this crate: `cargo test -p pool-managerd -- --nocapture`
 
+
 ## 6. Contracts
 
 - None
+
 
 ## 7. Config & Env
 
@@ -50,6 +60,7 @@ pool-managerd (core)
 
 - Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
 - Rebuild docs: `cargo run -p tools-readme-index --quiet`
+
 
 ## 10. Status & Owners
 
@@ -66,8 +77,8 @@ pool-managerd (core)
 - Requirements: [requirements/index.yaml](../requirements/index.yaml)
 
 ### Additional Details
-
 - Preload/Ready lifecycle, NVIDIA-only guardrails, restart/backoff behavior.
+
 
 ## What this crate is not
 

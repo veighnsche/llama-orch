@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use openapiv3::{OpenAPI, ReferenceOr, PathItem, Operation};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::io::Write;
@@ -21,6 +22,50 @@ struct ManifestEntry {
     features: Vec<String>,
     tests: Vec<String>,
     docs_paths: Vec<String>,
+}
+
+fn openapi_summary(repo_root: &Path, refs: &[String]) -> String {
+    let mut tags: BTreeSet<String> = BTreeSet::new();
+    let mut op_ids: Vec<String> = Vec::new();
+    for rel in refs {
+        let abs = repo_root.join(rel);
+        let Ok(txt) = fs::read_to_string(&abs) else { continue; };
+        let Ok(doc) = serde_yaml::from_str::<OpenAPI>(&txt) else { continue; };
+        for (_p, item) in doc.paths.paths {
+            if let ReferenceOr::Item(pi) = item {
+                collect_ops(&pi.get, &mut tags, &mut op_ids);
+                collect_ops(&pi.put, &mut tags, &mut op_ids);
+                collect_ops(&pi.post, &mut tags, &mut op_ids);
+                collect_ops(&pi.delete, &mut tags, &mut op_ids);
+                collect_ops(&pi.options, &mut tags, &mut op_ids);
+                collect_ops(&pi.head, &mut tags, &mut op_ids);
+                collect_ops(&pi.patch, &mut tags, &mut op_ids);
+                collect_ops(&pi.trace, &mut tags, &mut op_ids);
+            }
+        }
+    }
+    op_ids.sort();
+    op_ids.dedup();
+    let mut out = String::new();
+    if !op_ids.is_empty() {
+        out.push_str(&format!("- OpenAPI operations: {}\n", op_ids.len()));
+        let sample: Vec<String> = op_ids.iter().take(5).cloned().collect();
+        if !sample.is_empty() {
+            out.push_str(&format!("  - examples: {}\n", sample.join(", ")));
+        }
+    }
+    if !tags.is_empty() {
+        let tags_list: Vec<String> = tags.into_iter().collect();
+        out.push_str(&format!("- OpenAPI tags: {}\n", tags_list.join(", ")));
+    }
+    out
+}
+
+fn collect_ops(op: &Option<Operation>, tags: &mut BTreeSet<String>, op_ids: &mut Vec<String>) {
+    if let Some(op) = op {
+        for t in &op.tags { tags.insert(t.clone()); }
+        if let Some(id) = &op.operation_id { op_ids.push(id.clone()); }
+    }
 }
 
 fn crate_specific_extras(crate_path: &str) -> String {
@@ -505,6 +550,10 @@ fn render_readme(repo_root: &Path, e: &ManifestEntry) -> Result<String> {
             let rel = rel_to_root.join(p);
             s.push_str(&format!("- OpenAPI: [{}]({})\n", p, rel.display()));
         }
+        let summary = openapi_summary(repo_root, &e.openapi_refs);
+        if !summary.is_empty() {
+            s.push_str(&summary);
+        }
         s
     } else {
         "- Rust crate API (internal)".to_string()
@@ -650,27 +699,22 @@ flowchart LR
         .into_owned();
 
     // Simple placeholder replacements
-    let replacements = [
-        ("{{name}}", &e.name),
-        ("{{one_liner}}", &one_liner),
-        ("{{purpose}}", &one_liner),
-        ("{{public_api}}", &public_api),
-        ("{{how_it_fits}}", &how_it_fits),
-        ("{{build_test}}", &build_test),
-        ("{{contracts}}", &contracts),
-        ("{{config_env}}", &config_env),
-        ("{{metrics_logs}}", &metrics_logs),
-        ("{{runbook}}", &runbook),
-        ("{{status}}", status),
-        ("{{owner}}", &e.owner),
-        ("{{changelog}}", &changelog),
-        ("{{footnotes}}", &footnotes),
-        ("{{not_section}}", &not_section),
-    ];
     let mut out = tmpl;
-    for (k, v) in replacements {
-        out = out.replace(k, v);
-    }
+    out = out.replace("{{name}}", &e.name);
+    out = out.replace("{{one_liner}}", &one_liner);
+    out = out.replace("{{purpose}}", &one_liner);
+    out = out.replace("{{public_api}}", &public_api);
+    out = out.replace("{{how_it_fits}}", &how_it_fits);
+    out = out.replace("{{build_test}}", &build_test);
+    out = out.replace("{{contracts}}", &contracts);
+    out = out.replace("{{config_env}}", &config_env);
+    out = out.replace("{{metrics_logs}}", &metrics_logs);
+    out = out.replace("{{runbook}}", &runbook);
+    out = out.replace("{{status}}", &status);
+    out = out.replace("{{owner}}", &e.owner);
+    out = out.replace("{{changelog}}", &changelog);
+    out = out.replace("{{footnotes}}", &footnotes);
+    out = out.replace("{{not_section}}", &not_section);
 
     Ok(wrap_to_100_cols(&out))
 }

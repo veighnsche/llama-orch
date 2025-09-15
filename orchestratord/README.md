@@ -23,14 +23,25 @@ orchestratord (core)
 - ORCH-2103 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-2103)
 - ORCH-2104 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-2104)
 
+
 ## 3. Public API surface
 
 - OpenAPI: [contracts/openapi/control.yaml](../contracts/openapi/control.yaml)
 - OpenAPI: [contracts/openapi/data.yaml](../contracts/openapi/data.yaml)
+- OpenAPI operations: 9
+  - examples: cancelTask, createTask, deleteSession, drainPool, getPoolHealth
+
 
 ## 4. How it fits
 
 - Part of the core orchestrator. Upstream: adapters, Downstream: workers.
+
+```mermaid
+flowchart LR
+  callers[Clients] --> orch[Orchestrator]
+  orch --> adapters[Worker Adapters]
+  adapters --> engines[Engines]
+```
 
 ## 5. Build & Test
 
@@ -39,11 +50,13 @@ orchestratord (core)
 - Tests for this crate: `cargo test -p orchestratord -- --nocapture`
 - Provider verify: `cargo test -p orchestratord --test provider_verify -- --nocapture`
 
+
 ## 6. Contracts
 
 - OpenAPI:
   - [contracts/openapi/control.yaml](../contracts/openapi/control.yaml)
   - [contracts/openapi/data.yaml](../contracts/openapi/data.yaml)
+
 
 ## 7. Config & Env
 
@@ -57,6 +70,7 @@ orchestratord (core)
 
 - Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
 - Rebuild docs: `cargo run -p tools-readme-index --quiet`
+
 
 ## 10. Status & Owners
 
@@ -73,9 +87,9 @@ orchestratord (core)
 - Requirements: [requirements/index.yaml](../requirements/index.yaml)
 
 ### Additional Details
-
 - Data/control plane routes, SSE framing details, backpressure headers, provider verify entry
 points.
+
 
 ## What this crate is not
 

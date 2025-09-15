@@ -12,6 +12,7 @@ worker-adapters-tgi-http (adapter)
 - ORCH-3057 — [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md#orch-3057)
 - ORCH-3058 — [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md#orch-3058)
 
+
 ## 3. Public API surface
 
 - Rust crate API (internal)
@@ -20,15 +21,23 @@ worker-adapters-tgi-http (adapter)
 
 - Maps engine-native APIs to the orchestrator worker contract.
 
+```mermaid
+flowchart LR
+  orch[Orchestrator] --> adapter[Adapter]
+  adapter --> engine[Engine API]
+```
+
 ## 5. Build & Test
 
 - Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
 -- -D warnings`
 - Tests for this crate: `cargo test -p worker-adapters-tgi-http -- --nocapture`
 
+
 ## 6. Contracts
 
 - None
+
 
 ## 7. Config & Env
 
@@ -42,6 +51,7 @@ worker-adapters-tgi-http (adapter)
 
 - Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
 - Rebuild docs: `cargo run -p tools-readme-index --quiet`
+
 
 ## 10. Status & Owners
 
@@ -58,9 +68,9 @@ worker-adapters-tgi-http (adapter)
 - Requirements: [requirements/index.yaml](../../requirements/index.yaml)
 
 ### Additional Details
-
 - Engine endpoint mapping tables (native/OpenAI-compat to adapter calls), determinism knobs,
 version capture.
+
 
 ## What this crate is not
 

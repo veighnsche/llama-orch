@@ -9,6 +9,7 @@ contracts-config-schema (contracts)
 - ORCH-3044 — [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md#orch-3044)
 - ORCH-3030 — [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md#orch-3030)
 
+
 ## 3. Public API surface
 
 - Rust crate API (internal)
@@ -16,6 +17,13 @@ contracts-config-schema (contracts)
 ## 4. How it fits
 
 - Houses public contracts and schemas.
+
+```mermaid
+flowchart LR
+  devs[Developers] --> contracts[Contracts]
+  contracts --> tools[Generators]
+  contracts --> crates[Crates]
+```
 
 ## 5. Build & Test
 
@@ -26,10 +34,12 @@ contracts-config-schema (contracts)
 - Regen Schema: `cargo xtask regen-schema`
 - Extract requirements: `cargo run -p tools-spec-extract --quiet`
 
+
 ## 6. Contracts
 
 - Schema:
   - [contracts/config-schema/src/lib.rs](../../contracts/config-schema/src/lib.rs)
+
 
 ## 7. Config & Env
 
@@ -43,6 +53,7 @@ contracts-config-schema (contracts)
 
 - Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
 - Rebuild docs: `cargo run -p tools-readme-index --quiet`
+
 
 ## 10. Status & Owners
 
@@ -59,8 +70,8 @@ contracts-config-schema (contracts)
 - Requirements: [requirements/index.yaml](../../requirements/index.yaml)
 
 ### Additional Details
-
 - How to regenerate types, schemas, and validate; pact files location and scope.
+
 
 ## What this crate is not
 

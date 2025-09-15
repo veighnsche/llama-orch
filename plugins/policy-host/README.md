@@ -8,6 +8,7 @@ plugins-policy-host (plugin)
 
 - ORCH-3048 — [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md#orch-3048)
 
+
 ## 3. Public API surface
 
 - Rust crate API (internal)
@@ -16,15 +17,22 @@ plugins-policy-host (plugin)
 
 - Policy extension via WASI ABI.
 
+```mermaid
+flowchart LR
+  orch[Orchestrator] --> plugins[Policy Plugins (WASI)]
+```
+
 ## 5. Build & Test
 
 - Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
 -- -D warnings`
 - Tests for this crate: `cargo test -p plugins-policy-host -- --nocapture`
 
+
 ## 6. Contracts
 
 - None
+
 
 ## 7. Config & Env
 
@@ -38,6 +46,7 @@ plugins-policy-host (plugin)
 
 - Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
 - Rebuild docs: `cargo run -p tools-readme-index --quiet`
+
 
 ## 10. Status & Owners
 
@@ -54,8 +63,8 @@ plugins-policy-host (plugin)
 - Requirements: [requirements/index.yaml](../../requirements/index.yaml)
 
 ### Additional Details
-
 - WASI policy ABI and SDK usage; example plugin pointers.
+
 
 ## What this crate is not
 

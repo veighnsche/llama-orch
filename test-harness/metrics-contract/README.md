@@ -9,6 +9,7 @@ test-harness-metrics-contract (test-harness)
 - ORCH-3050 — [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md#orch-3050)
 - ORCH-3051 — [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md#orch-3051)
 
+
 ## 3. Public API surface
 
 - Rust crate API (internal)
@@ -17,15 +18,23 @@ test-harness-metrics-contract (test-harness)
 
 - Provides test scaffolding for validation suites.
 
+```mermaid
+flowchart LR
+  crates[Crates] --> harness[Test Harness]
+  harness --> results[Reports]
+```
+
 ## 5. Build & Test
 
 - Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
 -- -D warnings`
 - Tests for this crate: `cargo test -p test-harness-metrics-contract -- --nocapture`
 
+
 ## 6. Contracts
 
 - None
+
 
 ## 7. Config & Env
 
@@ -39,6 +48,7 @@ test-harness-metrics-contract (test-harness)
 
 - Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
 - Rebuild docs: `cargo run -p tools-readme-index --quiet`
+
 
 ## 10. Status & Owners
 
@@ -55,8 +65,8 @@ test-harness-metrics-contract (test-harness)
 - Requirements: [requirements/index.yaml](../../requirements/index.yaml)
 
 ### Additional Details
-
 - Which tests are ignored vs required; how to run real-model Haiku; determinism suite scope.
+
 
 ## What this crate is not
 

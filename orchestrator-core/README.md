@@ -18,6 +18,7 @@ orchestrator-core (core)
 - ORCH-3044 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-3044)
 - ORCH-3045 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-3045)
 
+
 ## 3. Public API surface
 
 - Rust crate API (internal)
@@ -26,15 +27,24 @@ orchestrator-core (core)
 
 - Part of the core orchestrator. Upstream: adapters, Downstream: workers.
 
+```mermaid
+flowchart LR
+  callers[Clients] --> orch[Orchestrator]
+  orch --> adapters[Worker Adapters]
+  adapters --> engines[Engines]
+```
+
 ## 5. Build & Test
 
 - Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
 -- -D warnings`
 - Tests for this crate: `cargo test -p orchestrator-core -- --nocapture`
 
+
 ## 6. Contracts
 
 - None
+
 
 ## 7. Config & Env
 
@@ -48,6 +58,7 @@ orchestrator-core (core)
 
 - Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
 - Rebuild docs: `cargo run -p tools-readme-index --quiet`
+
 
 ## 10. Status & Owners
 
@@ -64,9 +75,9 @@ orchestrator-core (core)
 - Requirements: [requirements/index.yaml](../requirements/index.yaml)
 
 ### Additional Details
-
 - Queue invariants and property tests overview (fairness, capacity, rejection policies).
 - Capacity policies and bounded FIFO behavior.
+
 
 ## What this crate is not
 

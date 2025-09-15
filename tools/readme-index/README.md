@@ -10,6 +10,7 @@ tools-readme-index (tool)
   - [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md)
   - [requirements/index.yaml](../../requirements/index.yaml)
 
+
 ## 3. Public API surface
 
 - Rust crate API (internal)
@@ -18,15 +19,23 @@ tools-readme-index (tool)
 
 - Developer tooling supporting contracts and docs.
 
+```mermaid
+flowchart LR
+  devs[Developers] --> tool[Tool]
+  tool --> artifacts[Artifacts]
+```
+
 ## 5. Build & Test
 
 - Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
 -- -D warnings`
 - Tests for this crate: `cargo test -p tools-readme-index -- --nocapture`
 
+
 ## 6. Contracts
 
 - None
+
 
 ## 7. Config & Env
 
@@ -40,6 +49,7 @@ tools-readme-index (tool)
 
 - Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
 - Rebuild docs: `cargo run -p tools-readme-index --quiet`
+
 
 ## 10. Status & Owners
 
@@ -56,8 +66,8 @@ tools-readme-index (tool)
 - Requirements: [requirements/index.yaml](../../requirements/index.yaml)
 
 ### Additional Details
-
 - Responsibilities, inputs/outputs; how determinism and idempotent regeneration are enforced.
+
 
 ## What this crate is not
 
