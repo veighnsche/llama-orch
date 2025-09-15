@@ -21,3 +21,16 @@ pub async fn when_verify_catalog_model(world: &mut World) { world.push_fact("cat
 
 #[then(regex = r"^verification starts$")]
 pub async fn then_verification_starts(_world: &mut World) {}
+
+#[given(regex = r"^strict trust policy is enabled$")]
+pub async fn given_strict_trust_policy_enabled(world: &mut World) {
+    world.push_fact("catalog.trust.strict");
+}
+
+#[given(regex = r"^an unsigned catalog artifact$")]
+pub async fn given_unsigned_catalog_artifact(world: &mut World) {
+    world.push_fact("catalog.artifact.unsigned");
+}
+
+#[then(regex = r"^catalog ingestion fails with UNTRUSTED_ARTIFACT$")]
+pub async fn then_catalog_ingestion_fails_untrusted(_world: &mut World) {}

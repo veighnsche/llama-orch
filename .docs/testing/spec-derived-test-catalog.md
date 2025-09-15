@@ -294,7 +294,7 @@ Types: metrics linter/tests; Tests: `test-harness/metrics-contract/`.
 
 ---
 
-# Notes
+## Notes
 
 - For each bullet above, ensure the corresponding `requirements/*.yaml` file links requirement → tests → code path. Keep this catalog synchronized via the regeneration loop.
 
@@ -304,9 +304,8 @@ Types: metrics linter/tests; Tests: `test-harness/metrics-contract/`.
 
 This section lists prioritized pairwise and 3‑wise combinations derived from `.docs/spec-combination-matrix.md`. Each bullet maps to base requirement IDs; concrete scenarios should be created under `test-harness/bdd/` with names including the IDs.
 
-- Engine × Queue Full Policy
-  - Validate `reject | drop-lru | shed-low-priority` under each engine.
-  - IDs: ORCH-3005, OC-ADAPT-5001..5070
+- Validate `reject | drop-lru | shed-low-priority` under each engine.
+- IDs: ORCH-3005, OC-ADAPT-5001..5070
 
 - Engine × Determinism Context
   - Same version yields identical streams; cross-version is non‑deterministic.

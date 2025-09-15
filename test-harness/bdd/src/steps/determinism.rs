@@ -12,3 +12,8 @@ pub async fn then_token_streams_byte_exact(_world: &mut World) {}
 
 #[then(regex = r"^determinism is not assumed across engine or model updates$")]
 pub async fn then_no_cross_version_determinism_assumed(_world: &mut World) {}
+
+#[given(regex = r"^replicas across engine or model versions are used$")]
+pub async fn given_replicas_across_versions(world: &mut World) {
+    world.push_fact("det.cross_version");
+}

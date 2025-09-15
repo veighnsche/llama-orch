@@ -29,6 +29,21 @@ pub async fn then_started_includes_queue_eta(_world: &mut World) {}
 #[then(regex = r"^SSE event ordering is per stream$")]
 pub async fn then_sse_ordering_per_stream(_world: &mut World) {}
 
+#[given(regex = r"^queue full policy is reject$")]
+pub async fn given_queue_policy_reject(world: &mut World) {
+    world.push_fact("queue.policy.reject");
+}
+
+#[given(regex = r"^queue full policy is drop-lru$")]
+pub async fn given_queue_policy_drop_lru(world: &mut World) {
+    world.push_fact("queue.policy.drop_lru");
+}
+
+#[given(regex = r"^queue full policy is shed-low-priority$")]
+pub async fn given_queue_policy_shed_low_priority(world: &mut World) {
+    world.push_fact("queue.policy.shed_low_priority");
+}
+
 #[given(regex = r"^an OrchQueue API endpoint under load$")]
 pub async fn given_api_under_load(_world: &mut World) {}
 

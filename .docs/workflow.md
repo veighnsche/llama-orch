@@ -1,3 +1,5 @@
+# Workflow
+
 ## 0) Guiding Principles
 
 1. **Spec is law.** Requirements live in a single SPEC with stable IDs (`ORCH-XXXX`). All artifacts reference these IDs.
@@ -90,44 +92,44 @@ Note on heterogeneous GPUs: cross‑GPU splits are opt‑in and require explicit
 
 ### Stage 1 — Consumer‑Driven Tests (CLI) + Snapshots
 
-4. Write **Pact** tests in `/cli/consumer-tests` against **OrchQueue v1** endpoints: `POST /v1/tasks`, `GET /v1/tasks/:id/stream`, `POST /v1/tasks/:id/cancel`, session endpoints. Commit pact JSON under `/contracts/pacts/`.
-5. Run CLI against **wiremock‑rs** stubs that satisfy the pact. Capture CLI transcripts and JSON with **insta** snapshots.
+1. Write **Pact** tests in `/cli/consumer-tests` against **OrchQueue v1** endpoints: `POST /v1/tasks`, `GET /v1/tasks/:id/stream`, `POST /v1/tasks/:id/cancel`, session endpoints. Commit pact JSON under `/contracts/pacts/`.
+2. Run CLI against **wiremock‑rs** stubs that satisfy the pact. Capture CLI transcripts and JSON with **insta** snapshots.
    **Gate:** Pact tests + snapshots green before provider coding.
 
 ### Stage 2 — Provider Verification (orchestrator)
 
-6. Add **Pact provider verification** (orchestratord) that loads pact files and verifies real handlers.
-7. Implement minimal vertical slice to pass: admission → placement to one ready replica; determinism plumbing; fail‑fast errors + backpressure. Ensure all typed errors conform to contract and carry engine context where applicable.
+1. Add **Pact provider verification** (orchestratord) that loads pact files and verifies real handlers.
+2. Implement minimal vertical slice to pass: admission → placement to one ready replica; determinism plumbing; fail‑fast errors + backpressure. Ensure all typed errors conform to contract and carry engine context where applicable.
    **Gate:** Provider verification green.
 
 ### Stage 3 — Properties & Invariants (core)
 
-8. In `orchestrator-core`, add **proptest** suites for: FIFO invariants; priority fairness; `reject` vs `drop-lru` semantics; race‑free cancel.
+1. In `orchestrator-core`, add **proptest** suites for: FIFO invariants; priority fairness; `reject` vs `drop-lru` semantics; race‑free cancel.
    **Gate:** Property suites green.
 
 ### Stage 4 — Determinism Suite (replica set)
 
-9. Launch two identical replicas per engine (same `engine_version` & sampler profile). For llama.cpp, start with **`--parallel 1 --no-cont-batching`**; for other engines, use single‑slot or documented equivalents to disable cross‑request batching.
-10. Run **64 seeded prompts**; assert first‑32 tokens and full streams are **byte‑exact** for each engine.
+1. Launch two identical replicas per engine (same `engine_version` & sampler profile). For llama.cpp, start with **`--parallel 1 --no-cont-batching`**; for other engines, use single‑slot or documented equivalents to disable cross‑request batching.
+2. Run **64 seeded prompts**; assert first‑32 tokens and full streams are **byte‑exact** for each engine.
     **Gate:** Any divergence → CI red with token diff artifact.
 
 ### Stage 5 — Observability & SLOs
 
-11. Implement metrics exactly per `.specs/metrics/otel-prom.md` (names, units, labels). Labels MUST include `engine` and engine‑specific version labels (e.g., `engine_version`, `trtllm_version`). Add JSON logs with required fields (incl. `engine`, `seed`, `engine_version`, `sampler_profile_version`).
-12. Commit Grafana dashboards + alert rules under `/ci/dashboards`.
+1. Implement metrics exactly per `.specs/metrics/otel-prom.md` (names, units, labels). Labels MUST include `engine` and engine‑specific version labels (e.g., `engine_version`, `trtllm_version`). Add JSON logs with required fields (incl. `engine`, `seed`, `engine_version`, `sampler_profile_version`).
+2. Commit Grafana dashboards + alert rules under `/ci/dashboards`.
     **Gate:** Metrics linter + dashboard render pass in CI (sample data).
 
 ### Stage 6 — Real‑Model E2E (Haiku) — **MANDATORY**
 
-13. Prefer: point the test harness at a live NVIDIA GPU worker over LAN (your workstation), with metrics enabled — via the orchestrator’s **OrchQueue v1** APIs (`POST /v1/tasks`, then `GET /v1/tasks/:id/stream`). Fallback (CI‑only): boot **llama‑server** (CPU) with Qwen2.5‑0.5B‑Instruct GGUF and `--metrics` behind the orchestrator and still drive via OrchQueue v1.
-14. Run **Haiku** test: nonce (8 chars) + **minute‑in‑words**; assert ≥ 3 non‑empty lines; both substrings present; `/metrics` token delta > 0; engine/model visible. Interact only with `/v1/tasks` + stream; do not call engine endpoints directly.
-15. Enforce anti‑cheat: forbid `fixtures/haiku*`; repo scan for literals combining current minute words + nonce; `REQUIRE_REAL_LLAMA=1`.
+1. Prefer: point the test harness at a live NVIDIA GPU worker over LAN (your workstation), with metrics enabled — via the orchestrator’s **OrchQueue v1** APIs (`POST /v1/tasks`, then `GET /v1/tasks/:id/stream`). Fallback (CI‑only): boot **llama‑server** (CPU) with Qwen2.5‑0.5B‑Instruct GGUF and `--metrics` behind the orchestrator and still drive via OrchQueue v1.
+2. Run **Haiku** test: nonce (8 chars) + **minute‑in‑words**; assert ≥ 3 non‑empty lines; both substrings present; `/metrics` token delta > 0; engine/model visible. Interact only with `/v1/tasks` + stream; do not call engine endpoints directly.
+3. Enforce anti‑cheat: forbid `fixtures/haiku*`; repo scan for literals combining current minute words + nonce; `REQUIRE_REAL_LLAMA=1`.
     **Gate:** Pass within **≤ 30 s** (single retry if minute flips mid‑test).
 
 ### Stage 7 — Chaos & Load (nightly)
 
-16. Kill workers, inject driver resets/oom, hot‑reload configs; verify idempotency and bounded backoff restarts.
-17. 5–10 min load smoke; assert SLO budgets (TTFB p95, 64‑token p95) and no cardinality blow‑ups.
+1. Kill workers, inject driver resets/oom, hot‑reload configs; verify idempotency and bounded backoff restarts.
+2. 5–10 min load smoke; assert SLO budgets (TTFB p95, 64‑token p95) and no cardinality blow‑ups.
     **Gate:** Nightly only.
 
 ### Stage 8 — Compliance & Release
@@ -247,7 +249,7 @@ cargo xtask ci:determinism
 
 See also: `README.md` (Quickstart) and `.specs/orchestrator-spec.md` (normative).
 
-# SPEC→SHIP Workflow v2 (Contract‑First, Stub‑First, TDD)
+## SPEC→SHIP Workflow v2 (Contract‑First, Stub‑First, TDD)
 
 **Status:** Adoptable now · **Scope:** NVIDIA‑only inference (Linux, headless) and multi‑engine (llama.cpp, vLLM, TGI, Triton/TensorRT‑LLM); Orchestrator + pools/scheduler + CLI consumer
 **Conformance language:** RFC‑2119 (MUST/SHOULD/MAY)
