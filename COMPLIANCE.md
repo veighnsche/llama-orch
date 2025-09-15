@@ -1,6 +1,6 @@
 # COMPLIANCE — Requirements Coverage
 
-Source: specs/orchestrator-spec.md
+Source: .specs/orchestrator-spec.md
 Total requirements: 59
 
 ## Index

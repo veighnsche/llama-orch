@@ -78,7 +78,9 @@ async fn pact_stub_sse_and_backpressure_headers() {
 
     // GET /v1/tasks/:id/stream → SSE transcript
     Mock::given(method("GET"))
-        .and(path("/v1/tasks/11111111-1111-4111-8111-111111111111/stream"))
+        .and(path(
+            "/v1/tasks/11111111-1111-4111-8111-111111111111/stream",
+        ))
         .respond_with(
             ResponseTemplate::new(200)
                 .insert_header("content-type", "text/event-stream")

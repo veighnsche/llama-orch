@@ -45,21 +45,30 @@ pub async fn scrape_metrics(base: &str) -> Result<String> {
 }
 
 /// Very small Prom text parser to map counter/gauge names to a set of label keys seen.
-pub fn prom_parse_names_labels(prom_text: &str) -> std::collections::BTreeMap<String, std::collections::BTreeSet<String>> {
-    let mut out: std::collections::BTreeMap<String, std::collections::BTreeSet<String>> = Default::default();
+pub fn prom_parse_names_labels(
+    prom_text: &str,
+) -> std::collections::BTreeMap<String, std::collections::BTreeSet<String>> {
+    let mut out: std::collections::BTreeMap<String, std::collections::BTreeSet<String>> =
+        Default::default();
     for line in prom_text.lines() {
         let line = line.trim();
-        if line.is_empty() || line.starts_with('#') { continue; }
+        if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
         // metric_name{label="value",...} number
         if let Some((head, _rest)) = line.split_once(' ') {
             if let Some(start) = head.find('{') {
                 let name = &head[..start];
-                let labels = &head[start+1..head.len()-1];
+                let labels = &head[start + 1..head.len() - 1];
                 let mut keys: std::collections::BTreeSet<String> = Default::default();
                 for part in labels.split(',') {
-                    if let Some((k, _v)) = part.split_once('=') { keys.insert(k.to_string()); }
+                    if let Some((k, _v)) = part.split_once('=') {
+                        keys.insert(k.to_string());
+                    }
                 }
-                out.entry(name.to_string()).or_insert_with(Default::default).extend(keys);
+                out.entry(name.to_string())
+                    .or_insert_with(Default::default)
+                    .extend(keys);
             } else {
                 out.entry(head.to_string()).or_insert_with(Default::default);
             }

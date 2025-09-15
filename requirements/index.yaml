@@ -1,5 +1,5 @@
 schema_version: 1
-source: specs/orchestrator-spec.md
+source: .specs/orchestrator-spec.md
 notes: Extracted from orchestrator-spec.md
 requirements:
   ORCH-1101:

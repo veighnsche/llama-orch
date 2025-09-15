@@ -25,7 +25,7 @@ fn main() -> Result<()> {
         .nth(2)
         .ok_or_else(|| anyhow!("failed to locate repo root"))?
         .to_path_buf();
-    let spec_path = repo_root.join("specs/orchestrator-spec.md");
+    let spec_path = repo_root.join(".specs/orchestrator-spec.md");
     let spec = fs::read_to_string(&spec_path)
         .with_context(|| format!("reading {}", spec_path.display()))?;
 
@@ -64,7 +64,7 @@ fn main() -> Result<()> {
                 level: level.to_string(),
                 links: vec![format!(
                     "{}#{}",
-                    "specs/orchestrator-spec.md",
+                    ".specs/orchestrator-spec.md",
                     anchor_from_section(&current_section)
                 )],
             });
@@ -73,7 +73,7 @@ fn main() -> Result<()> {
 
     let index = RequirementIndex {
         schema_version: 1,
-        source: "specs/orchestrator-spec.md".into(),
+        source: ".specs/orchestrator-spec.md".into(),
         notes: if requirements.is_empty() {
             "No ORCH-IDs found in spec; add stable ORCH-XXXX anchors to normative requirements."
                 .into()
@@ -109,11 +109,7 @@ fn main() -> Result<()> {
     ));
     lines.push("## Index\n".to_string());
     for (id, req) in &index.requirements {
-        let link = req
-            .links
-            .get(0)
-            .map(String::as_str)
-            .unwrap_or("");
+        let link = req.links.first().map(String::as_str).unwrap_or("");
         if link.is_empty() {
             lines.push(format!(
                 "- {} — {} (section: {}, level: {})",

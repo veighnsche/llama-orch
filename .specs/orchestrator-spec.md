@@ -196,7 +196,8 @@
 ### 6.2 Data Plane — OrchQueue v1
 
 `POST /v1/tasks`
-```
+
+```json
 {
   "task_id": "uuid",
   "session_id": "uuid",
@@ -217,7 +218,8 @@
 ```
 
 Responses
-```
+
+```json
 202 Accepted:
 {
   "task_id": "uuid",

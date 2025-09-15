@@ -19,8 +19,13 @@ fn metrics_lint_placeholders_compile() {
     let mut names = BTreeSet::new();
     for m in req {
         let name = m["name"].as_str().unwrap();
-        assert!(names.insert(name.to_string()), "duplicate metric name {} in linter", name);
+        assert!(
+            names.insert(name.to_string()),
+            "duplicate metric name {} in linter",
+            name
+        );
     }
+}
 
 #[test]
 fn label_cardinality_budgets_are_reasonable() {
@@ -32,10 +37,11 @@ fn label_cardinality_budgets_are_reasonable() {
     let lint_path = root.join("ci/metrics.lint.json");
     let text = fs::read_to_string(&lint_path).expect("read metrics.lint.json");
     let v: serde_json::Value = serde_json::from_str(&text).expect("parse json");
-    let budgets = v["label_cardinality_budget"].as_object().expect("budget object");
+    let budgets = v["label_cardinality_budget"]
+        .as_object()
+        .expect("budget object");
     for (k, val) in budgets {
         let n = val.as_i64().unwrap_or(0);
         assert!(n > 0, "budget for {} must be positive, got {}", k, n);
     }
-}
 }

@@ -22,7 +22,11 @@ fn arb_priority() -> impl Strategy<Value = Priority> {
 
 fn arb_ops() -> impl Strategy<Value = Vec<Op>> {
     prop::collection::vec(
-        (0u32..1000u32, arb_priority(), prop_oneof![Just("enqueue"), Just("cancel")]),
+        (
+            0u32..1000u32,
+            arb_priority(),
+            prop_oneof![Just("enqueue"), Just("cancel")],
+        ),
         1..128,
     )
     .prop_map(|v| {
