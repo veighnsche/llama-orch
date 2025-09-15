@@ -48,6 +48,10 @@ while IFS= read -r -d '' file; do
     if [[ $in_code -eq 1 ]]; then
       continue
     fi
+    # Skip docs.rs badges and shields
+    if [[ "$line" == \[\!\[docs.rs* ]] || [[ "$line" == *"img.shields.io"* ]]; then
+      continue
+    fi
     # Count characters (tab expanded to 2 spaces)
     exp_line=${line//$'\t'/"  "}
     if (( ${#exp_line} > 100 )); then

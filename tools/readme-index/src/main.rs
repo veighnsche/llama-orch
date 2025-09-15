@@ -1,7 +1,6 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::io::Write;
@@ -470,8 +469,6 @@ fn render_readme(repo_root: &Path, e: &ManifestEntry) -> Result<String> {
     let rel_to_root = relative_path(&crate_dir, repo_root);
     let rel_specs = rel_to_root.join(".specs/orchestrator-spec.md");
     let rel_reqs = rel_to_root.join("requirements/index.yaml");
-    let rel_openapi_control = rel_to_root.join("contracts/openapi/control.yaml");
-    let rel_openapi_data = rel_to_root.join("contracts/openapi/data.yaml");
 
     let one_liner = if e.description.trim().is_empty() {
         format!("{} ({})", e.name, e.role)
@@ -491,7 +488,6 @@ fn render_readme(repo_root: &Path, e: &ManifestEntry) -> Result<String> {
         ));
     } else {
         for id in &e.spec_refs {
-            // link to both spec and requirements anchors if possible
             let anchor = id.to_lowercase();
             spec_section.push_str(&format!(
                 "- {} — [{}]({}#{})\n",
@@ -608,7 +604,7 @@ flowchart LR
     runbook.push_str("- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`\n");
     runbook.push_str("- Rebuild docs: `cargo run -p tools-readme-index --quiet`\n");
 
-    let status = "alpha";
+    let status = "alpha".to_string();
 
     let changelog = "- None".to_string();
 
@@ -619,70 +615,67 @@ flowchart LR
         _ => "- Not a production service.".to_string(),
     };
 
-    // Hand-curated minimal extras per crate (Step 3)
+    // Hand-curated minimal extras per crate (Step 3) — include in footnotes
     let extras = crate_specific_extras(&e.path);
 
-    let docs_badge = format!(
-        "[![docs.rs](https://img.shields.io/badge/docs.rs-{}-blue)](https://docs.rs/crate/{})",
-        e.name, e.name
-    );
+    // Prepare values for template placeholders
+    let how_it_fits = format!("{}\n\n{}", how_it_fits_text, mermaid);
+    let footnotes = {
+        let mut s = String::new();
+        s.push_str(&format!(
+            "- Spec: [{}]({})\n- Requirements: [{}]({})\n",
+            ".specs/orchestrator-spec.md",
+            rel_specs.display(),
+            "requirements/index.yaml",
+            rel_reqs.display()
+        ));
+        if !extras.is_empty() {
+            s.push_str("\n### Additional Details\n");
+            s.push_str(&extras);
+        }
+        s
+    };
 
-    let mut out = String::new();
-    out.push_str(&format!("# {} — {}\n\n", e.name, one_liner));
-    out.push_str(&format!("{}\n\n", docs_badge));
-    out.push_str("## 1. Name & Purpose\n");
-    out.push_str(&format!("{}\n\n", one_liner));
-    out.push_str("## 2. Why it exists (Spec traceability)\n");
-    out.push_str(&spec_section);
-    out.push('\n');
-    out.push_str("## 3. Public API surface\n");
-    out.push_str(&public_api);
-    out.push('\n'); out.push('\n');
-    out.push_str("## 4. How it fits\n");
-    out.push_str(&how_it_fits_text);
-    out.push('\n'); out.push('\n');
-    out.push_str(&mermaid);
-    out.push('\n'); out.push('\n');
-    out.push_str("## 5. Build & Test\n");
-    out.push_str(&build_test);
-    out.push('\n');
-    out.push_str("## 6. Contracts\n");
-    out.push_str(&contracts);
-    out.push('\n');
-    out.push_str("## 7. Config & Env\n");
-    out.push_str(&config_env);
-    out.push('\n'); out.push('\n');
-    out.push_str("## 8. Metrics & Logs\n");
-    out.push_str(&metrics_logs);
-    out.push('\n'); out.push('\n');
-    out.push_str("## 9. Runbook (Dev)\n");
-    out.push_str(&runbook);
-    out.push('\n');
-    out.push_str("## 10. Status & Owners\n");
-    out.push_str(&format!("- Status: {}\n- Owners: {}\n\n", status, e.owner));
-    out.push_str("## 11. Changelog pointers\n");
-    out.push_str(&format!("{}\n\n", changelog));
-    out.push_str("## 12. Footnotes\n");
-    out.push_str(&format!(
-        "- Spec: [{}]({})\n- Requirements: [{}]({})\n",
-        ".specs/orchestrator-spec.md",
-        rel_specs.display(),
-        "requirements/index.yaml",
-        rel_reqs.display()
-    ));
-    if !extras.is_empty() {
-        out.push('\n');
-        out.push_str("### Additional Details\n");
-        out.push_str(&extras);
+    // Load template (single source of truth)
+    let template_path = repo_root.join("tools/readme-index/TEMPLATE.md");
+    let mut tmpl = if let Ok(t) = fs::read_to_string(&template_path) { t } else { default_template_md() };
+
+    // Replace the spec_refs loop block
+    let loop_re = Regex::new(r"(?s)\{\{#each spec_refs\}\}.*?\{\{\/each\}\}")?;
+    tmpl = loop_re
+        .replace(
+            &tmpl,
+            spec_section.replace('\\', r"\\").replace('$', r"$$")
+        )
+        .into_owned();
+
+    // Simple placeholder replacements
+    let replacements = [
+        ("{{name}}", &e.name),
+        ("{{one_liner}}", &one_liner),
+        ("{{purpose}}", &one_liner),
+        ("{{public_api}}", &public_api),
+        ("{{how_it_fits}}", &how_it_fits),
+        ("{{build_test}}", &build_test),
+        ("{{contracts}}", &contracts),
+        ("{{config_env}}", &config_env),
+        ("{{metrics_logs}}", &metrics_logs),
+        ("{{runbook}}", &runbook),
+        ("{{status}}", status),
+        ("{{owner}}", &e.owner),
+        ("{{changelog}}", &changelog),
+        ("{{footnotes}}", &footnotes),
+        ("{{not_section}}", &not_section),
+    ];
+    let mut out = tmpl;
+    for (k, v) in replacements {
+        out = out.replace(k, v);
     }
-    out.push('\n');
-    out.push_str("## What this crate is not\n");
-    out.push_str(&format!("{}\n", not_section));
 
     Ok(wrap_to_100_cols(&out))
 }
 
-fn update_root_readme(repo_root: &Path, root_readme: &Path, entries: &[ManifestEntry]) -> Result<String> {
+fn update_root_readme(_repo_root: &Path, root_readme: &Path, entries: &[ManifestEntry]) -> Result<String> {
     let mut content = if root_readme.exists() {
         fs::read_to_string(root_readme)?
     } else {
