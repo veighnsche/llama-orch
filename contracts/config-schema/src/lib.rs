@@ -75,8 +75,10 @@ pub fn build_schema() -> RootSchema {
 /// Emit the schema to the given path deterministically (without timestamps).
 pub fn emit_schema_json(path: &std::path::Path) -> std::io::Result<()> {
     use std::fs;
+    use std::io::{self, Write};
     let schema = build_schema();
-    let json = serde_json::to_string_pretty(&schema).expect("schema serde");
+    let json =
+        serde_json::to_string_pretty(&schema).map_err(|e| std::io::Error::other(e.to_string()))?;
     // Write only if changed to keep mtime stable.
     let write_needed = match fs::read_to_string(path) {
         Ok(existing) => existing != json,
@@ -86,7 +88,36 @@ pub fn emit_schema_json(path: &std::path::Path) -> std::io::Result<()> {
         if let Some(dir) = path.parent() {
             fs::create_dir_all(dir)?;
         }
-        fs::write(path, json)?;
+        let dir = path.parent().unwrap();
+        let tmp = dir.join(format!(
+            ".{}.tmp",
+            path.file_name()
+                .and_then(|s| s.to_str())
+                .unwrap_or("schema")
+        ));
+        {
+            let mut f = fs::File::create(&tmp)?;
+            f.write_all(json.as_bytes())?;
+            f.sync_all()?;
+        }
+        match fs::rename(&tmp, path) {
+            Ok(_) => {}
+            Err(e) => {
+                let is_exdev = matches!(e.raw_os_error(), Some(code) if code == 18);
+                if is_exdev {
+                    let mut dest = fs::File::create(path)?;
+                    let mut src = fs::File::open(&tmp)?;
+                    io::copy(&mut src, &mut dest)?;
+                    dest.sync_all()?;
+                    let _ = fs::remove_file(&tmp);
+                } else {
+                    let _ = fs::remove_file(&tmp);
+                    return Err(e);
+                }
+            }
+        }
+        let dirf = fs::File::open(dir)?;
+        dirf.sync_all()?;
         println!("wrote {}", path.display());
     } else {
         println!("unchanged {}", path.display());

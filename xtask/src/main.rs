@@ -50,13 +50,11 @@ fn main() -> Result<()> {
 }
 
 fn repo_root() -> Result<PathBuf> {
-    Ok(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .ancestors()
-            .nth(1)
-            .ok_or_else(|| anyhow!("xtask: failed to locate repo root"))?
-            .to_path_buf(),
-    )
+    Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .nth(1)
+        .ok_or_else(|| anyhow!("xtask: failed to locate repo root"))?
+        .to_path_buf())
 }
 
 fn regen_openapi() -> Result<()> {

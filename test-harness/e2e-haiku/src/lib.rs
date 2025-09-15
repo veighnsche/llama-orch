@@ -66,9 +66,7 @@ pub fn prom_parse_names_labels(
                         keys.insert(k.to_string());
                     }
                 }
-                out.entry(name.to_string())
-                    .or_default()
-                    .extend(keys);
+                out.entry(name.to_string()).or_default().extend(keys);
             } else {
                 out.entry(head.to_string()).or_default();
             }

@@ -12,19 +12,32 @@ pub enum Engine {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum Workload { Completion, Embedding, Rerank }
+pub enum Workload {
+    Completion,
+    Embedding,
+    Rerank,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum DeterminismLevel { Strict, BestEffort }
+pub enum DeterminismLevel {
+    Strict,
+    BestEffort,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum Priority { Interactive, Batch }
+pub enum Priority {
+    Interactive,
+    Batch,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum KVHint { Reuse, Cold }
+pub enum KVHint {
+    Reuse,
+    Cold,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]

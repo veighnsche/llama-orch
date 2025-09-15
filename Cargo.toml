@@ -17,6 +17,7 @@ members = [
     "test-harness/metrics-contract",
     "test-harness/determinism-suite",
     "test-harness/chaos",
+    "test-harness/bdd",
     "tools/spec-extract",
     "tools/openapi-client",
     "xtask"

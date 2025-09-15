@@ -1,0 +1,10 @@
+[package]
+name = "test-harness-bdd"
+version = "0.0.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dev-dependencies]
+anyhow = { workspace = true }
+regex = { workspace = true }
+walkdir = { workspace = true }

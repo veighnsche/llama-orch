@@ -30,10 +30,9 @@ fn main() -> Result<()> {
         .with_context(|| format!("reading {}", spec_path.display()))?;
 
     // Extract ORCH IDs and nearest section headings.
-    let id_re = Regex::new(r"ORCH-[0-9]{3,5}")
-        .with_context(|| "compile ORCH id regex")?;
-    let section_re = Regex::new(r"^##+\s+(?P<name>.+)$")
-        .with_context(|| "compile section heading regex")?;
+    let id_re = Regex::new(r"ORCH-[0-9]{3,5}").with_context(|| "compile ORCH id regex")?;
+    let section_re =
+        Regex::new(r"^##+\s+(?P<name>.+)$").with_context(|| "compile section heading regex")?;
     let mut requirements: BTreeMap<String, ReqEntry> = BTreeMap::new();
 
     let mut current_section = String::new();

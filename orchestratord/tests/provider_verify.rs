@@ -11,6 +11,64 @@ fn repo_root() -> PathBuf {
 }
 
 #[test]
+fn control_openapi_sanity() {
+    use openapiv3::ReferenceOr as R;
+    let root = repo_root();
+    let oapi_path = root.join("contracts/openapi/control.yaml");
+    let spec: OpenAPI = serde_yaml::from_str(&fs::read_to_string(oapi_path).unwrap()).unwrap();
+    let paths = spec.paths;
+
+    let get_op = |template: &str, method: &str| -> &Operation {
+        let item = match paths.paths.get(template).expect("path exists") {
+            R::Item(it) => it,
+            _ => panic!("unexpected $ref in paths"),
+        };
+        match method {
+            "get" => item.get.as_ref().expect("GET op exists"),
+            "post" => item.post.as_ref().expect("POST op exists"),
+            other => panic!("unsupported method {}", other),
+        }
+    };
+
+    // POST /v1/pools/{id}/drain -> 202
+    let drain = get_op("/v1/pools/{id}/drain", "post");
+    assert!(drain
+        .responses
+        .responses
+        .keys()
+        .any(|c| matches!(c, StatusCode::Code(202))));
+
+    // POST /v1/pools/{id}/reload -> 202
+    let reload = get_op("/v1/pools/{id}/reload", "post");
+    assert!(reload
+        .responses
+        .responses
+        .keys()
+        .any(|c| matches!(c, StatusCode::Code(202))));
+
+    // GET /v1/pools/{id}/health -> 200
+    let health = get_op("/v1/pools/{id}/health", "get");
+    assert!(
+        health
+            .responses
+            .responses
+            .keys()
+            .any(|c| matches!(c, StatusCode::Code(200)))
+            || health.responses.default.is_some()
+    );
+
+    // GET /v1/replicasets -> 200
+    let reps = get_op("/v1/replicasets", "get");
+    assert!(
+        reps.responses
+            .responses
+            .keys()
+            .any(|c| matches!(c, StatusCode::Code(200)))
+            || reps.responses.default.is_some()
+    );
+}
+
+#[test]
 fn provider_paths_match_pacts() {
     let root = repo_root();
     let oapi_path = root.join("contracts/openapi/data.yaml");
