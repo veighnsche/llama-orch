@@ -1,0 +1,22 @@
+schema_version: 1
+source: .specs/determinism-suite.md
+notes: Extracted from .specs/determinism-suite.md
+requirements:
+  OC-TEST-7001:
+    title: '- [] Suite MUST verify byte‑exact token streams across replicas with fixed seeds.'
+    section: 1) Semantics
+    level: must
+    links:
+    - .specs/determinism-suite.md#1-semantics
+  OC-TEST-7002:
+    title: '- [] Engine‑specific settings MUST be applied (e.g., single‑slot modes) for determinism.'
+    section: 1) Semantics
+    level: must
+    links:
+    - .specs/determinism-suite.md#1-semantics
+  OC-TEST-7003:
+    title: '- [] Seeds corpus MUST contain at least 64 seeds and MUST be stable.'
+    section: 1) Semantics
+    level: must
+    links:
+    - .specs/determinism-suite.md#1-semantics

@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use regex::Regex;
 use serde::Serialize;
-use std::{collections::BTreeMap, fs, path::PathBuf};
+use std::{collections::BTreeMap, fs, path::{Path, PathBuf}};
 
 #[derive(Serialize)]
 struct RequirementIndex {
@@ -25,14 +25,84 @@ fn main() -> Result<()> {
         .nth(2)
         .ok_or_else(|| anyhow!("failed to locate repo root"))?
         .to_path_buf();
-    let spec_path = repo_root.join(".specs/orchestrator-spec.md");
-    let spec = fs::read_to_string(&spec_path)
-        .with_context(|| format!("reading {}", spec_path.display()))?;
 
-    // Extract ORCH IDs and nearest section headings.
-    let id_re = Regex::new(r"ORCH-[0-9]{3,5}").with_context(|| "compile ORCH id regex")?;
-    let section_re =
-        Regex::new(r"^##+\s+(?P<name>.+)$").with_context(|| "compile section heading regex")?;
+    let specs_dir = repo_root.join(".specs");
+    let mut spec_files: Vec<PathBuf> = Vec::new();
+    for entry in fs::read_dir(&specs_dir).with_context(|| format!("reading {}", specs_dir.display()))? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) == Some("md") {
+            spec_files.push(path);
+        }
+    }
+    spec_files.sort();
+
+    let orch_spec = specs_dir.join("orchestrator-spec.md");
+    let mut compliance_sections: Vec<String> = Vec::new();
+
+    let out_dir = repo_root.join("requirements");
+    fs::create_dir_all(&out_dir).context("creating requirements/ directory")?;
+
+    for spec_path in &spec_files {
+        let spec_rel = path_relative(&repo_root, spec_path).unwrap_or_else(|| spec_path.display().to_string());
+        let spec_txt = fs::read_to_string(spec_path)
+            .with_context(|| format!("reading {}", spec_path.display()))?;
+
+        let index = extract_from_spec(&spec_rel, &spec_txt)?;
+
+        // Determine output file name
+        let out_name = requirements_yaml_name(spec_path.file_name().and_then(|s| s.to_str()).unwrap_or("spec.yaml"));
+        let out_path = out_dir.join(out_name);
+        let yaml = serde_yaml::to_string(&index)?;
+        write_if_changed(&out_path, &yaml)?;
+
+        // Back-compat: also write index.yaml for orchestrator-spec
+        if spec_path == &orch_spec {
+            let idx_path = out_dir.join("index.yaml");
+            write_if_changed(&idx_path, &yaml)?;
+        }
+
+        // Compliance section
+        let mut lines = Vec::new();
+        lines.push(format!("### {}", spec_rel));
+        lines.push(format!("Total requirements: {}", index.requirements.len()));
+        for (id, req) in &index.requirements {
+            let link = req.links.first().map(String::as_str).unwrap_or("");
+            if link.is_empty() {
+                lines.push(format!(
+                    "- {} — {} (section: {}, level: {})",
+                    id, req.title, req.section, req.level
+                ));
+            } else {
+                lines.push(format!(
+                    "- {} — {} (section: {}, level: {}) — link: {}",
+                    id, req.title, req.section, req.level, link
+                ));
+            }
+        }
+        compliance_sections.push(lines.join("\n"));
+    }
+
+    // Emit aggregated COMPLIANCE.md deterministically
+    let mut comp_lines = Vec::new();
+    comp_lines.push("# COMPLIANCE — Requirements Coverage".to_string());
+    comp_lines.push("".to_string());
+    for sect in compliance_sections {
+        comp_lines.push(sect);
+        comp_lines.push("".to_string());
+    }
+    let comp_path = repo_root.join("COMPLIANCE.md");
+    let compliance = comp_lines.join("\n");
+    write_if_changed(&comp_path, &compliance)?;
+
+    Ok(())
+}
+
+fn extract_from_spec(spec_rel: &str, spec: &str) -> Result<RequirementIndex> {
+    // Support both ORCH-##### and OC-AREA-#### style identifiers
+    let id_orch = Regex::new(r"ORCH-[0-9]{3,5}").with_context(|| "compile ORCH id regex")?;
+    let id_oc = Regex::new(r"OC-[A-Z0-9-]+-[0-9]{3,5}").with_context(|| "compile OC id regex")?;
+    let section_re = Regex::new(r"^##+\s+(?P<name>.+)$").with_context(|| "compile section heading regex")?;
     let mut requirements: BTreeMap<String, ReqEntry> = BTreeMap::new();
 
     let mut current_section = String::new();
@@ -40,9 +110,8 @@ fn main() -> Result<()> {
         if let Some(cap) = section_re.captures(line) {
             current_section = cap["name"].trim().to_string();
         }
-        for m in id_re.find_iter(line) {
+        for m in id_orch.find_iter(line).chain(id_oc.find_iter(line)) {
             let id = m.as_str().to_string();
-            // Determine normative level heuristically from the line.
             let lower = line.to_lowercase();
             let level = if lower.contains("must") {
                 "must"
@@ -53,89 +122,68 @@ fn main() -> Result<()> {
             } else {
                 "info"
             };
-            // Title is the line trimmed to a reasonable length without the ID.
             let mut title = line.replace(&id, "");
             title = title.trim().trim_start_matches('*').trim().to_string();
-            if title.len() > 160 {
-                title.truncate(160);
-            }
+            if title.len() > 160 { title.truncate(160); }
             requirements.entry(id).or_insert(ReqEntry {
                 title,
                 section: current_section.clone(),
                 level: level.to_string(),
-                links: vec![format!(
-                    "{}#{}",
-                    ".specs/orchestrator-spec.md",
-                    anchor_from_section(&current_section)
-                )],
+                links: vec![format!("{}#{}", spec_rel, anchor_from_section(&current_section))],
             });
         }
     }
 
-    let index = RequirementIndex {
+    let notes = if requirements.is_empty() {
+        "No requirement IDs found; add stable IDs like ORCH-XXXX or OC-AREA-XXXX to normative requirements.".into()
+    } else {
+        format!("Extracted from {}", spec_rel)
+    };
+
+    Ok(RequirementIndex {
         schema_version: 1,
-        source: ".specs/orchestrator-spec.md".into(),
-        notes: if requirements.is_empty() {
-            "No ORCH-IDs found in spec; add stable ORCH-XXXX anchors to normative requirements."
-                .into()
-        } else {
-            "Extracted from orchestrator-spec.md".into()
-        },
+        source: spec_rel.into(),
+        notes,
         requirements,
-    };
+    })
+}
 
-    let out_dir = repo_root.join("requirements");
-    fs::create_dir_all(&out_dir).context("creating requirements/ directory")?;
-    let out_path = out_dir.join("index.yaml");
-    let yaml = serde_yaml::to_string(&index)?;
-    // Write deterministically (no timestamps), overwrite if unchanged to keep mtime stable where possible.
-    let write_needed = match fs::read_to_string(&out_path) {
-        Ok(existing) => existing != yaml,
-        Err(_) => true,
-    };
-    if write_needed {
-        fs::write(&out_path, yaml).with_context(|| format!("writing {}", out_path.display()))?;
-        println!("wrote {}", out_path.display());
+fn requirements_yaml_name(spec_file: &str) -> String {
+    // Map spec filenames to requirement yaml names (derived from crate package names)
+    let stem = Path::new(spec_file).file_stem().and_then(|s| s.to_str()).unwrap_or("spec");
+    match stem {
+        "orchestrator-spec" => "index.yaml".to_string(),
+        "orchestrator-core" => "orchestrator-core.yaml".to_string(),
+        "orchestratord" => "orchestratord.yaml".to_string(),
+        "pool-managerd" => "pool-managerd.yaml".to_string(),
+        "plugins-policy-host" => "plugins-policy-host.yaml".to_string(),
+        "plugins-policy-sdk" => "plugins-policy-sdk.yaml".to_string(),
+        "config-schema" => "contracts-config-schema.yaml".to_string(),
+        "determinism-suite" => "test-harness-determinism-suite.yaml".to_string(),
+        "metrics-contract" => "test-harness-metrics-contract.yaml".to_string(),
+        "worker-adapters-llamacpp-http" => "worker-adapters-llamacpp-http.yaml".to_string(),
+        "worker-adapters-vllm-http" => "worker-adapters-vllm-http.yaml".to_string(),
+        "worker-adapters-tgi-http" => "worker-adapters-tgi-http.yaml".to_string(),
+        "worker-adapters-triton" => "worker-adapters-triton.yaml".to_string(),
+        other => format!("{}.yaml", other),
+    }
+}
+
+fn path_relative(root: &Path, path: &Path) -> Option<String> {
+    let root = root.canonicalize().ok()?;
+    let path = path.canonicalize().ok()?;
+    path.strip_prefix(&root).ok().map(|p| p.to_string_lossy().to_string())
+}
+
+fn write_if_changed(path: &Path, contents: &str) -> Result<()> {
+    let need = match fs::read_to_string(path) { Ok(old) => old != contents, Err(_) => true };
+    if need {
+        if let Some(parent) = path.parent() { fs::create_dir_all(parent)?; }
+        fs::write(path, contents).with_context(|| format!("writing {}", path.display()))?;
+        println!("wrote {}", path.display());
     } else {
-        println!("unchanged {}", out_path.display());
+        println!("unchanged {}", path.display());
     }
-
-    // Emit COMPLIANCE.md summary deterministically
-    let mut lines = Vec::new();
-    lines.push("# COMPLIANCE — Requirements Coverage\n".to_string());
-    lines.push(format!("Source: {}", index.source));
-    lines.push(format!(
-        "Total requirements: {}\n",
-        index.requirements.len()
-    ));
-    lines.push("## Index\n".to_string());
-    for (id, req) in &index.requirements {
-        let link = req.links.first().map(String::as_str).unwrap_or("");
-        if link.is_empty() {
-            lines.push(format!(
-                "- {} — {} (section: {}, level: {})",
-                id, req.title, req.section, req.level
-            ));
-        } else {
-            lines.push(format!(
-                "- {} — {} (section: {}, level: {}) — link: {}",
-                id, req.title, req.section, req.level, link
-            ));
-        }
-    }
-    let compliance = lines.join("\n");
-    let comp_path = repo_root.join("COMPLIANCE.md");
-    let comp_needed = match fs::read_to_string(&comp_path) {
-        Ok(existing) => existing != compliance,
-        Err(_) => true,
-    };
-    if comp_needed {
-        fs::write(&comp_path, compliance)?;
-        println!("wrote {}", comp_path.display());
-    } else {
-        println!("unchanged {}", comp_path.display());
-    }
-
     Ok(())
 }
 

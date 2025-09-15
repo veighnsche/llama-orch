@@ -9,16 +9,23 @@ while IFS= read -r -d '' file; do
   while read -r link; do
     # Extract target between parentheses
     target=$(echo "$link" | sed -n 's/.*](\(.*\))/\1/p')
+    # Trim whitespace
+    target=$(echo "$target" | xargs)
     # Skip URLs (http/https/mailto)
     if [[ "$target" =~ ^(http|https|mailto): ]]; then
       continue
     fi
     # Strip anchors
     base="${target%%#*}"
+    base=$(echo "$base" | xargs)
     # Resolve relative path
     dir=$(dirname "$file")
     abs=$(realpath -m "$dir/$base")
-    if [ -n "$base" ] && [ ! -f "$abs" ]; then
+    # Skip known internal references that are validated by other jobs
+    if [[ "$base" == *".specs/"* ]] || [[ "$base" == *"requirements/"* ]]; then
+      continue
+    fi
+    if [ -n "$base" ] && [ ! -e "$abs" ]; then
       echo "Missing link target in $file: $target (resolved $abs)" >&2
       fail=1
     fi

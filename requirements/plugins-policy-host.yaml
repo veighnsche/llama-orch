@@ -1,0 +1,34 @@
+schema_version: 1
+source: .specs/plugins-policy-host.md
+notes: Extracted from .specs/plugins-policy-host.md
+requirements:
+  OC-POLICY-4001:
+    title: '- [] Default plugin ABI MUST be WASI; functions MUST be pure/deterministic over explicit snapshots.'
+    section: 1) ABI & Determinism
+    level: must
+    links:
+    - .specs/plugins-policy-host.md#1-abi-determinism
+  OC-POLICY-4002:
+    title: '- [] ABI versioning MUST be explicit; incompatible changes MUST bump MAJOR.'
+    section: 1) ABI & Determinism
+    level: must
+    links:
+    - .specs/plugins-policy-host.md#1-abi-determinism
+  OC-POLICY-4010:
+    title: '- [] Plugins MUST run in a sandbox with no filesystem/network unless explicitly granted.'
+    section: 2) Sandboxing & Safety
+    level: must
+    links:
+    - .specs/plugins-policy-host.md#2-sandboxing-safety
+  OC-POLICY-4011:
+    title: '- [] Host MUST bound CPU time/memory per invocation and abort on overuse.'
+    section: 2) Sandboxing & Safety
+    level: must
+    links:
+    - .specs/plugins-policy-host.md#2-sandboxing-safety
+  OC-POLICY-4020:
+    title: '- [] Host MUST log plugin id/version, decision outcome, and latency.'
+    section: 3) Telemetry
+    level: must
+    links:
+    - .specs/plugins-policy-host.md#3-telemetry

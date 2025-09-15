@@ -8,7 +8,7 @@ tools-openapi-client (tool)
 
 - See spec and requirements for details.
   - [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md)
-  - [requirements/index.yaml](../../requirements/index.yaml)
+  - [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
 
 
 ## 3. Public API surface
@@ -69,7 +69,7 @@ flowchart LR
 ## 12. Footnotes
 
 - Spec: [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md)
-- Requirements: [requirements/index.yaml](../../requirements/index.yaml)
+- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
 
 ### Additional Details
 - Responsibilities, inputs/outputs; how determinism and idempotent regeneration are enforced.

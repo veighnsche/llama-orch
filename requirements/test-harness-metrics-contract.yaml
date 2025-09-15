@@ -1,0 +1,16 @@
+schema_version: 1
+source: .specs/metrics-contract.md
+notes: Extracted from .specs/metrics-contract.md
+requirements:
+  OC-METRICS-7101:
+    title: '- [] Metric names and required labels MUST conform to `ci/metrics.lint.json`.'
+    section: 1) Names/Labels
+    level: must
+    links:
+    - .specs/metrics-contract.md#1-names-labels
+  OC-METRICS-7102:
+    title: '- [] Label cardinality budgets MUST be documented and enforced.'
+    section: 1) Names/Labels
+    level: must
+    links:
+    - .specs/metrics-contract.md#1-names-labels

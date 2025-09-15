@@ -1,0 +1,106 @@
+schema_version: 1
+source: .specs/orchestrator-core.md
+notes: Extracted from .specs/orchestrator-core.md
+requirements:
+  OC-CORE-1001:
+    title: '- [] Each Pool MUST expose a bounded FIFO queue per priority class.'
+    section: 1) Queue & Admission
+    level: must
+    links:
+    - .specs/orchestrator-core.md#1-queue-admission
+  OC-CORE-1002:
+    title: '- [] Admission MUST reject when the queue is full according to configured policy (reject/drop-lru/shed-low-priority).'
+    section: 1) Queue & Admission
+    level: must
+    links:
+    - .specs/orchestrator-core.md#1-queue-admission
+  OC-CORE-1003:
+    title: '- [] Enqueue MUST be O(1) amortized and MUST preserve request arrival order within the same priority.'
+    section: 1) Queue & Admission
+    level: must
+    links:
+    - .specs/orchestrator-core.md#1-queue-admission
+  OC-CORE-1004:
+    title: '- [] Dequeue MUST prefer higher priority and MUST be fair within a priority class.'
+    section: 1) Queue & Admission
+    level: must
+    links:
+    - .specs/orchestrator-core.md#1-queue-admission
+  OC-CORE-1005:
+    title: '- [] Cancellation MUST remove the task from the queue or mark the slot so it is not dispatched.'
+    section: 1) Queue & Admission
+    level: must
+    links:
+    - .specs/orchestrator-core.md#1-queue-admission
+  OC-CORE-1010:
+    title: '- [] Scheduler MUST dispatch only to Ready replicas.'
+    section: 2) Scheduling & Placement
+    level: must
+    links:
+    - .specs/orchestrator-core.md#2-scheduling-placement
+  OC-CORE-1011:
+    title: '- [] Placement MUST respect device masks; cross‑mask spillover MUST NOT occur.'
+    section: 2) Scheduling & Placement
+    level: must
+    links:
+    - .specs/orchestrator-core.md#2-scheduling-placement
+  OC-CORE-1012:
+    title: '- [] Least‑loaded placement MUST be used across replicas of the same replica set.'
+    section: 2) Scheduling & Placement
+    level: must
+    links:
+    - .specs/orchestrator-core.md#2-scheduling-placement
+  OC-CORE-1013:
+    title: '- [] Session affinity SHOULD keep a session on its last good replica when possible.'
+    section: 2) Scheduling & Placement
+    level: should
+    links:
+    - .specs/orchestrator-core.md#2-scheduling-placement
+  OC-CORE-1020:
+    title: '- [] Context length MUST be ≤ model limit; otherwise reject before enqueue.'
+    section: 3) Capacity & Guardrails
+    level: must
+    links:
+    - .specs/orchestrator-core.md#3-capacity-guardrails
+  OC-CORE-1021:
+    title: '- [] Token budget (prompt + generation) MUST be validated pre‑admission.'
+    section: 3) Capacity & Guardrails
+    level: must
+    links:
+    - .specs/orchestrator-core.md#3-capacity-guardrails
+  OC-CORE-1022:
+    title: '- [] Watchdog MUST abort stuck Jobs with configurable wall/idle timeouts.'
+    section: 3) Capacity & Guardrails
+    level: must
+    links:
+    - .specs/orchestrator-core.md#3-capacity-guardrails
+  OC-CORE-1030:
+    title: '- [] Within a replica set, identical {prompt, parameters, seed, sampler_profile_version, engine_version, model_digest} MUST yield identical token streams.'
+    section: 4) Determinism
+    level: must
+    links:
+    - .specs/orchestrator-core.md#4-determinism
+  OC-CORE-1031:
+    title: '- [] Replica sets MUST pin engine_version and sampler_profile_version; mixed replicas MUST NOT share a set.'
+    section: 4) Determinism
+    level: must
+    links:
+    - .specs/orchestrator-core.md#4-determinism
+  OC-CORE-1032:
+    title: '- [] Determinism MUST NOT be assumed across engine/model updates.'
+    section: 4) Determinism
+    level: must
+    links:
+    - .specs/orchestrator-core.md#4-determinism
+  OC-CORE-1040:
+    title: '- [] Logs MUST include job_id, session_id, engine, pool_id, replica_id, model_id, quant, ctx, kv_warmth, queue_time_ms, decode_time_ms.'
+    section: 5) Observability
+    level: must
+    links:
+    - .specs/orchestrator-core.md#5-observability
+  OC-CORE-1041:
+    title: '- [] Metrics MUST include queue depth, reject/drop rates, p50/p95/p99 latency, GPU/VRAM/RAM utilization, KV pressure, preload outcomes.'
+    section: 5) Observability
+    level: must
+    links:
+    - .specs/orchestrator-core.md#5-observability

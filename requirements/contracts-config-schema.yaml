@@ -1,0 +1,22 @@
+schema_version: 1
+source: .specs/config-schema.md
+notes: Extracted from .specs/config-schema.md
+requirements:
+  OC-CONFIG-6001:
+    title: '- [] Config MUST be strictly validated; unknown fields rejected (strict) or logged (compat) per mode.'
+    section: 1) Validation
+    level: must
+    links:
+    - .specs/config-schema.md#1-validation
+  OC-CONFIG-6002:
+    title: '- [] Examples in tests MUST validate without errors.'
+    section: 1) Validation
+    level: must
+    links:
+    - .specs/config-schema.md#1-validation
+  OC-CONFIG-6010:
+    title: '- [] Schema generation MUST be deterministic and idempotent across runs.'
+    section: 2) Generation
+    level: must
+    links:
+    - .specs/config-schema.md#2-generation

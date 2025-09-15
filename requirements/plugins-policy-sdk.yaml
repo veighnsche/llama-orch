@@ -1,0 +1,22 @@
+schema_version: 1
+source: .specs/plugins-policy-sdk.md
+notes: Extracted from .specs/plugins-policy-sdk.md
+requirements:
+  OC-POLICY-SDK-4101:
+    title: '- [] Public SDK functions MUST be semver‑stable within a MAJOR.'
+    section: 1) Stability & Compatibility
+    level: must
+    links:
+    - .specs/plugins-policy-sdk.md#1-stability-compatibility
+  OC-POLICY-SDK-4102:
+    title: '- [] Breaking changes MUST be accompanied by a migration note and version bump.'
+    section: 1) Stability & Compatibility
+    level: must
+    links:
+    - .specs/plugins-policy-sdk.md#1-stability-compatibility
+  OC-POLICY-SDK-4110:
+    title: '- [] SDK MUST NOT perform network or filesystem I/O by default.'
+    section: 2) Safety
+    level: must
+    links:
+    - .specs/plugins-policy-sdk.md#2-safety

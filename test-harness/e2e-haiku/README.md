@@ -62,7 +62,7 @@ flowchart LR
 ## 12. Footnotes
 
 - Spec: [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md)
-- Requirements: [requirements/index.yaml](../../requirements/index.yaml)
+- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
 
 ### Additional Details
 - Which tests are ignored vs required; how to run real-model Haiku; determinism suite scope.

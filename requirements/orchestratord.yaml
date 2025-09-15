@@ -1,0 +1,100 @@
+schema_version: 1
+source: .specs/orchestratord.md
+notes: Extracted from .specs/orchestratord.md
+requirements:
+  OC-CTRL-2001:
+    title: '- [] `GET /v1/pools/:id/health` MUST return liveness, readiness, draining, and metrics snapshot fields.'
+    section: 1) Control Plane
+    level: must
+    links:
+    - .specs/orchestratord.md#1-control-plane
+  OC-CTRL-2002:
+    title: '- [] `POST /v1/pools/:id/drain` MUST accept a JSON body with `deadline_ms` and MUST begin draining.'
+    section: 1) Control Plane
+    level: must
+    links:
+    - .specs/orchestratord.md#1-control-plane
+  OC-CTRL-2003:
+    title: '- [] `POST /v1/pools/:id/reload` MUST atomically switch model references or fail and roll back.'
+    section: 1) Control Plane
+    level: must
+    links:
+    - .specs/orchestratord.md#1-control-plane
+  OC-CTRL-2004:
+    title: '- [] `GET /v1/replicasets` MUST enumerate replica sets with load/SLO snapshots.'
+    section: 1) Control Plane
+    level: must
+    links:
+    - .specs/orchestratord.md#1-control-plane
+  OC-CTRL-2010:
+    title: '- [] `POST /v1/tasks` MUST perform admission checks (ctx, token budget) before enqueue.'
+    section: 2) Data Plane — OrchQueue v1
+    level: must
+    links:
+    - .specs/orchestratord.md#2-data-plane-orchqueue-v1
+  OC-CTRL-2011:
+    title: '- [] On queue full, server MUST reply `429` and include `Retry-After` and `X-Backoff-Ms`. A JSON body MUST include the full policy label.'
+    section: 2) Data Plane — OrchQueue v1
+    level: must
+    links:
+    - .specs/orchestratord.md#2-data-plane-orchqueue-v1
+  OC-CTRL-2012:
+    title: '- [] `POST /v1/tasks/:id/cancel` MUST be race‑free; no tokens may be emitted after cancel.'
+    section: 2) Data Plane — OrchQueue v1
+    level: must
+    links:
+    - .specs/orchestratord.md#2-data-plane-orchqueue-v1
+  OC-CTRL-2020:
+    title: '- [] `GET /v1/tasks/:id/stream` MUST emit events `started`, `token`, `metrics`, `end`, `error`.'
+    section: 3) SSE Framing
+    level: must
+    links:
+    - .specs/orchestratord.md#3-sse-framing
+  OC-CTRL-2021:
+    title: '- [] `started` MUST include `queue_position` and `predicted_start_ms` when available.'
+    section: 3) SSE Framing
+    level: must
+    links:
+    - .specs/orchestratord.md#3-sse-framing
+  OC-CTRL-2022:
+    title: '- [] Event payloads MUST be well‑formed JSON; ordering MUST be per stream.'
+    section: 3) SSE Framing
+    level: must
+    links:
+    - .specs/orchestratord.md#3-sse-framing
+  OC-CTRL-2030:
+    title: '- [] Errors MUST include a stable `code` field: `ADMISSION_REJECT`, `QUEUE_FULL_DROP_LRU`, `INVALID_PARAMS`, `POOL_UNREADY`, `POOL_UNAVAILABLE`, `REPLICA_EXHAUS'
+    section: 4) Error Taxonomy
+    level: must
+    links:
+    - .specs/orchestratord.md#4-error-taxonomy
+  OC-CTRL-2031:
+    title: '- [] Errors SHOULD include the `engine` and `pool_id` when applicable.'
+    section: 4) Error Taxonomy
+    level: should
+    links:
+    - .specs/orchestratord.md#4-error-taxonomy
+  OC-CTRL-2040:
+    title: '- [] Control and data plane MUST be gated by AuthN/AuthZ; API keys acceptable day‑1.'
+    section: 5) Security
+    level: must
+    links:
+    - .specs/orchestratord.md#5-security
+  OC-CTRL-2041:
+    title: '- [] Logs MUST NOT leak secrets or API keys.'
+    section: 5) Security
+    level: must
+    links:
+    - .specs/orchestratord.md#5-security
+  OC-CTRL-2050:
+    title: '- [] Admission logs and `started` MUST include `queue_position` and `predicted_start_ms` when available.'
+    section: 6) Observability
+    level: must
+    links:
+    - .specs/orchestratord.md#6-observability
+  OC-CTRL-2051:
+    title: '- [] Metrics MUST include queue depth, reject/drop rates, latency percentiles, and error counts by class.'
+    section: 6) Observability
+    level: must
+    links:
+    - .specs/orchestratord.md#6-observability

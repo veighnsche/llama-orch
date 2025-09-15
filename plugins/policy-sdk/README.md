@@ -60,7 +60,7 @@ flowchart LR
 ## 12. Footnotes
 
 - Spec: [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md)
-- Requirements: [requirements/index.yaml](../../requirements/index.yaml)
+- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
 
 ### Additional Details
 - WASI policy ABI and SDK usage; example plugin pointers.
