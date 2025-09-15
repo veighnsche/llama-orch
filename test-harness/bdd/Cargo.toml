@@ -4,7 +4,9 @@ version = "0.0.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
+[dependencies]
+regex = { workspace = true }
+
 [dev-dependencies]
 anyhow = { workspace = true }
-regex = { workspace = true }
 walkdir = { workspace = true }
