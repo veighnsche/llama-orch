@@ -26,7 +26,8 @@ impl Client {
     }
 
     pub fn cancel_task(&self, id: &str) -> reqwest::RequestBuilder {
-        self.http.post(format!("{}/v1/tasks/{}/cancel", self.base, id))
+        self.http
+            .post(format!("{}/v1/tasks/{}/cancel", self.base, id))
     }
 
     pub fn get_session(&self, id: &str) -> reqwest::RequestBuilder {
@@ -34,6 +35,7 @@ impl Client {
     }
 
     pub fn delete_session(&self, id: &str) -> reqwest::RequestBuilder {
-        self.http.delete(format!("{}/v1/sessions/{}", self.base, id))
+        self.http
+            .delete(format!("{}/v1/sessions/{}", self.base, id))
     }
 }
