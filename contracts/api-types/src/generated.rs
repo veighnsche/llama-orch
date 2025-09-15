@@ -29,15 +29,15 @@ pub enum KVHint { Reuse, Cold }
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ErrorKind {
-    ADMISSION_REJECT,
-    QUEUE_FULL_DROP_LRU,
-    INVALID_PARAMS,
-    POOL_UNREADY,
-    POOL_UNAVAILABLE,
-    REPLICA_EXHAUSTED,
-    DECODE_TIMEOUT,
-    WORKER_RESET,
-    INTERNAL,
+    AdmissionReject,
+    QueueFullDropLru,
+    InvalidParams,
+    PoolUnready,
+    PoolUnavailable,
+    ReplicaExhausted,
+    DecodeTimeout,
+    WorkerReset,
+    Internal,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

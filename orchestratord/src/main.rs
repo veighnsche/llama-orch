@@ -1,7 +1,8 @@
 use axum::{
     extract::{Path, State},
+    response::Response,
     routing::{get, post},
-    Json, Router, response::Response,
+    Json, Router,
 };
 use contracts_api_types as api;
 

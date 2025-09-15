@@ -1,0 +1,119 @@
+{
+  "consumer": {
+    "name": "cli-consumer"
+  },
+  "interactions": [
+    {
+      "description": "enqueue task accepted",
+      "request": {
+        "body": {
+          "ctx": 8192,
+          "deadline_ms": 30000,
+          "engine": "llamacpp",
+          "max_tokens": 64,
+          "model_ref": "sha256:abc",
+          "priority": "interactive",
+          "session_id": "22222222-2222-4222-8222-222222222222",
+          "task_id": "11111111-1111-4111-8111-111111111111",
+          "workload": "completion"
+        },
+        "headers": {
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "path": "/v1/tasks"
+      },
+      "response": {
+        "body": {
+          "backoff_ms": 0,
+          "predicted_start_ms": 420,
+          "queue_position": 3,
+          "task_id": "11111111-1111-4111-8111-111111111111"
+        },
+        "headers": {
+          "content-type": "application/json"
+        },
+        "status": 202
+      }
+    },
+    {
+      "description": "cancel task no content",
+      "request": {
+        "method": "POST",
+        "path": "/v1/tasks/11111111-1111-4111-8111-111111111111/cancel"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "description": "get session info",
+      "request": {
+        "method": "GET",
+        "path": "/v1/sessions/22222222-2222-4222-8222-222222222222"
+      },
+      "response": {
+        "body": {
+          "kv_bytes": 0,
+          "kv_warmth": false,
+          "ttl_ms_remaining": 600000,
+          "turns": 1
+        },
+        "headers": {
+          "content-type": "application/json"
+        },
+        "status": 200
+      }
+    },
+    {
+      "description": "delete session",
+      "request": {
+        "method": "DELETE",
+        "path": "/v1/sessions/22222222-2222-4222-8222-222222222222"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "description": "enqueue task queue full",
+      "request": {
+        "body": {
+          "ctx": 8192,
+          "deadline_ms": 30000,
+          "engine": "llamacpp",
+          "max_tokens": 64,
+          "model_ref": "sha256:abc",
+          "priority": "batch",
+          "session_id": "44444444-4444-4444-8444-444444444444",
+          "task_id": "33333333-3333-4333-8333-333333333333",
+          "workload": "completion"
+        },
+        "headers": {
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "path": "/v1/tasks"
+      },
+      "response": {
+        "body": {
+          "code": "QUEUE_FULL_DROP_LRU",
+          "engine": "llamacpp",
+          "message": "queue full"
+        },
+        "headers": {
+          "Retry-After": "1",
+          "X-Backoff-Ms": "1000",
+          "content-type": "application/json"
+        },
+        "status": 429
+      }
+    }
+  ],
+  "pactSpecification": {
+    "version": "3.0.0"
+  },
+  "provider": {
+    "name": "orchestratord"
+  }
+}

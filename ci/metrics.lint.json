@@ -1,0 +1,57 @@
+{
+  "required_metrics": [
+    {
+      "name": "tasks_enqueued_total",
+      "type": "counter",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id", "priority"]
+    },
+    {
+      "name": "tasks_started_total",
+      "type": "counter",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id", "priority"]
+    },
+    {
+      "name": "tasks_canceled_total",
+      "type": "counter",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id", "reason"]
+    },
+    {
+      "name": "tasks_rejected_total",
+      "type": "counter",
+      "labels": ["engine", "reason"]
+    },
+    {
+      "name": "queue_depth",
+      "type": "gauge",
+      "labels": ["engine", "engine_version", "pool_id", "priority"]
+    },
+    {
+      "name": "latency_first_token_ms",
+      "type": "histogram",
+      "labels": ["engine", "engine_version", "pool_id", "priority"]
+    },
+    {
+      "name": "latency_decode_ms",
+      "type": "histogram",
+      "labels": ["engine", "engine_version", "pool_id", "priority"]
+    },
+    {
+      "name": "tokens_in_total",
+      "type": "counter",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id"]
+    },
+    {
+      "name": "tokens_out_total",
+      "type": "counter",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id"]
+    }
+  ],
+  "label_cardinality_budget": {
+    "engine": 4,
+    "engine_version": 64,
+    "pool_id": 256,
+    "replica_id": 1024,
+    "priority": 8,
+    "reason": 16
+  }
+}

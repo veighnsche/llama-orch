@@ -99,6 +99,34 @@ fn main() -> Result<()> {
         println!("unchanged {}", out_path.display());
     }
 
+    // Emit COMPLIANCE.md summary deterministically
+    let mut lines = Vec::new();
+    lines.push("# COMPLIANCE — Requirements Coverage\n".to_string());
+    lines.push(format!("Source: {}", index.source));
+    lines.push(format!(
+        "Total requirements: {}\n",
+        index.requirements.len()
+    ));
+    lines.push("## Index\n".to_string());
+    for (id, req) in &index.requirements {
+        lines.push(format!(
+            "- {} — {} (section: {}, level: {})",
+            id, req.title, req.section, req.level
+        ));
+    }
+    let compliance = lines.join("\n");
+    let comp_path = repo_root.join("COMPLIANCE.md");
+    let comp_needed = match fs::read_to_string(&comp_path) {
+        Ok(existing) => existing != compliance,
+        Err(_) => true,
+    };
+    if comp_needed {
+        fs::write(&comp_path, compliance)?;
+        println!("wrote {}", comp_path.display());
+    } else {
+        println!("unchanged {}", comp_path.display());
+    }
+
     Ok(())
 }
 

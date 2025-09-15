@@ -46,7 +46,7 @@
 
 ## 2) Contracts (OpenAPI‑First) & Types
 
-* [ ] **Author OpenAPI contracts** (no handlers yet)
+* [x] **Author OpenAPI contracts** (no handlers yet)
 
   * Files: `contracts/openapi/control.yaml`, `contracts/openapi/data.yaml`.
   * Must embed `x-req-id` fields referencing `ORCH-…` IDs as per spec.
@@ -58,25 +58,29 @@
   * Include typed errors: `ADMISSION_REJECT`, `QUEUE_FULL_DROP_LRU`, `INVALID_PARAMS`, `POOL_UNREADY`, `POOL_UNAVAILABLE`, `REPLICA_EXHAUSTED`, `DECODE_TIMEOUT`, `WORKER_RESET`, `INTERNAL`. Error envelopes MUST include the `engine` context where applicable.
   * Define an explicit `engine` enum used across Task/Pool and related types: `llamacpp | vllm | tgi | triton`.
   * AC: `oapi-codegen` runs clean.
-* [ ] **Generate Rust API types & server stubs**
+  * Proof: `cargo xtask regen-openapi` → validated specs; generated deterministic types/client; re-run → unchanged.
+* [x] **Generate Rust API types & server stubs**
 
   * Target crates: `contracts/api-types` (shared types), `orchestratord` (server stubs), `tools/openapi-client` (client for tests).
   * AC: Build succeeds; no `todo!()` except in handlers.
-* [ ] **Config Schema (code‑first)**
+  * Proof: `cargo build --workspace` OK; `cargo clippy -D warnings` OK; handlers use `unimplemented!()` only.
+* [x] **Config Schema (code‑first)**
 
   * Create `contracts/config-schema` Rust types and emit `contracts/schemas/config.schema.json` via `schemars`.
   * Include fields: `engine` (enum), `devices` (GPU indices), optional `tensor_split` (per‑GPU ratios), and `require_same_engine_version`.
   * AC: Schema validates basic examples; CI enforces regen diffs.
+  * Proof: `cargo xtask regen-schema` → wrote then unchanged; `cargo test -p contracts-config-schema` → 1 test passed.
 
 ---
 
 ## 3) Metrics Contract
 
-* [ ] **Write metrics contract** in `specs/metrics/otel-prom.md`
+* [x] **Write metrics contract** in `specs/metrics/otel-prom.md`
 
   * Include names, types, units, labels (with cardinality budgets), and `ORCH-IDs` links.
   * Labels MUST include `engine` and engine‑specific version labels (e.g., `engine_version`, `trtllm_version`).
   * AC: Add a metrics linter config in `ci/metrics.lint.json`.
+  * Proof: Created `specs/metrics/otel-prom.md` + `ci/metrics.lint.json`.
 
 ---
 

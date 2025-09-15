@@ -17,3 +17,9 @@ anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 http = { workspace = true }
 contracts-api-types = { path = "../contracts/api-types" }
+regex = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+openapiv3 = { workspace = true }
+serde_yaml = { workspace = true }

@@ -12,3 +12,7 @@ path = "src/lib.rs"
 anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 tracing = { workspace = true }
+futures = { workspace = true }
+serde_json = { workspace = true }
+contracts-api-types = { path = "../contracts/api-types" }
+thiserror = { workspace = true }

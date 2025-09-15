@@ -1,4 +1,4 @@
-use contracts_config_schema::{build_schema, Config, Engine, PoolConfig, QueueConfig};
+use contracts_config_schema::build_schema;
 use jsonschema::{Draft, JSONSchema};
 use serde_json::json;
 
@@ -31,7 +31,9 @@ fn example_config_validates() {
 
     let result = compiled.validate(&cfg);
     if let Err(errors) = result {
-        for e in errors { eprintln!("schema error: {}", e); }
+        for e in errors {
+            eprintln!("schema error: {}", e);
+        }
         panic!("example config failed schema validation");
     }
 }

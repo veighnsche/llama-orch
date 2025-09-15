@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  precommit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: fmt
+        run: cargo fmt --all -- --check
+      - name: clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: regen-openapi
+        run: cargo xtask regen-openapi
+      - name: regen-schema
+        run: cargo xtask regen-schema
+      - name: spec-extract
+        run: cargo run -p tools-spec-extract --quiet
+      - name: diff-check
+        run: git diff --exit-code
+
+  cdc_consumer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: pact consumer tests
+        run: cargo test -p cli-consumer-tests -- --nocapture
+
+  stub_flow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: wiremock stubs
+        run: cargo test -p cli-consumer-tests --test stub_wiremock -- --nocapture
+
+  provider_verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: provider verify
+        run: cargo test -p orchestratord --test provider_verify -- --nocapture
+
+  unit_props:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: unit & property placeholders
+        run: cargo test --workspace --all-features -- --nocapture
+
+  determinism:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: determinism suite placeholders
+        run: cargo test -p test-harness-determinism-suite -- --nocapture
+
+  e2e_haiku:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: e2e haiku harness shell
+        run: cargo test -p test-harness-e2e-haiku -- --nocapture
+
+  docs_compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: spec extract
+        run: cargo run -p tools-spec-extract --quiet
+      - name: linkcheck
+        run: bash ci/scripts/check_links.sh

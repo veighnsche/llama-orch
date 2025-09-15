@@ -1,5 +1,4 @@
 // Deterministic template for a minimal client over OrchQueue v1.
-use anyhow::Result;
 use contracts_api_types as api;
 
 #[derive(Clone)]
