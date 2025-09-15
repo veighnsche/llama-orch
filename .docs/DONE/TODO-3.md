@@ -184,4 +184,3 @@ README(x) — <crate path>
 - `bash ci/scripts/check_links.sh`
 - `cargo fmt --all -- --check && cargo clippy --all-targets --all-features -- -D warnings`
 - `cargo test --workspace --all-features -- --nocapture`
-
