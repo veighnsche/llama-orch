@@ -10,6 +10,7 @@ enum Priority {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct Op {
     kind: &'static str, // "enqueue" | "cancel"
     id: u32,

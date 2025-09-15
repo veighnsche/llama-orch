@@ -67,10 +67,10 @@ pub fn prom_parse_names_labels(
                     }
                 }
                 out.entry(name.to_string())
-                    .or_insert_with(Default::default)
+                    .or_default()
                     .extend(keys);
             } else {
-                out.entry(head.to_string()).or_insert_with(Default::default);
+                out.entry(head.to_string()).or_default();
             }
         }
     }

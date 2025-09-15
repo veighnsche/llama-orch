@@ -7,352 +7,352 @@ requirements:
     section: 1) Platform Assumptions
     level: must
     links:
-    - specs/orchestrator-spec.md#1-platform-assumptions
+    - .specs/orchestrator-spec.md#1-platform-assumptions
   ORCH-2002:
     title: The **SSE stream framing** (`started`, `token`, `metrics`, `end`, `error`) is part of the contract and MUST remain stable. []
     section: 3.16 API contracts & determinism
     level: must
     links:
-    - specs/orchestrator-spec.md#316-api-contracts-determinism
+    - .specs/orchestrator-spec.md#316-api-contracts-determinism
   ORCH-2007:
     title: '**Backpressure headers** **SHOULD** be returned to callers. []'
     section: 3.2 Queues & admission under load
     level: should
     links:
-    - specs/orchestrator-spec.md#32-queues-admission-under-load
+    - .specs/orchestrator-spec.md#32-queues-admission-under-load
   ORCH-3001:
     title: Workers **MUST** be one‑model/one‑device‑mask processes, pinned by config. []
     section: 3.1 Process model & preloading
     level: must
     links:
-    - specs/orchestrator-spec.md#31-process-model-preloading
+    - .specs/orchestrator-spec.md#31-process-model-preloading
   ORCH-3002:
     title: Pools **MUST** preload at `serve` start and delay `Ready` exposure until success. []
     section: 3.1 Process model & preloading
     level: must
     links:
-    - specs/orchestrator-spec.md#31-process-model-preloading
+    - .specs/orchestrator-spec.md#31-process-model-preloading
   ORCH-3003:
     title: Preload **MUST** fail fast if VRAM or host RAM headroom is insufficient; Pool remains **Unready** with a retry backoff. []
     section: 3.1 Process model & preloading
     level: must
     links:
-    - specs/orchestrator-spec.md#31-process-model-preloading
+    - .specs/orchestrator-spec.md#31-process-model-preloading
   ORCH-3004:
     title: Each Pool **MUST** have a bounded FIFO queue. []
     section: 3.2 Queues & admission under load
     level: must
     links:
-    - specs/orchestrator-spec.md#32-queues-admission-under-load
+    - .specs/orchestrator-spec.md#32-queues-admission-under-load
   ORCH-3005:
     title: 'Full queue policy **MUST** be one of: `reject`, `drop-lru` (oldest enqueued), or `shed-low-priority`. []'
     section: 3.2 Queues & admission under load
     level: must
     links:
-    - specs/orchestrator-spec.md#32-queues-admission-under-load
+    - .specs/orchestrator-spec.md#32-queues-admission-under-load
   ORCH-3006:
     title: Per‑client **rate limits** and **burst buckets** **SHOULD** be enforced before enqueue. []
     section: 3.2 Queues & admission under load
     level: should
     links:
-    - specs/orchestrator-spec.md#32-queues-admission-under-load
+    - .specs/orchestrator-spec.md#32-queues-admission-under-load
   ORCH-3007:
     title: Pools with identical `{engine, model, quant, ctx, engine_version, sampler_profile_version}` **MUST** be treated as a replica set. []
     section: 3.3 Replicas, placement, and affinity
     level: must
     links:
-    - specs/orchestrator-spec.md#33-replicas-placement-and-affinity
+    - .specs/orchestrator-spec.md#33-replicas-placement-and-affinity
   ORCH-3008:
     title: Scheduler **MUST** place on the **least‑loaded Ready** replica, respecting device masks and node/zone anti‑affinity if configured. []
     section: 3.3 Replicas, placement, and affinity
     level: must
     links:
-    - specs/orchestrator-spec.md#33-replicas-placement-and-affinity
+    - .specs/orchestrator-spec.md#33-replicas-placement-and-affinity
   ORCH-3009:
     title: '**Session affinity** **SHOULD** keep a session on its last good replica for KV reuse; on failure, **MAY** fail over with `kv_warmth=false` surfaced to telemetry'
     section: 3.3 Replicas, placement, and affinity
     level: should
     links:
-    - specs/orchestrator-spec.md#33-replicas-placement-and-affinity
+    - .specs/orchestrator-spec.md#33-replicas-placement-and-affinity
   ORCH-3010:
     title: A Job **MUST NOT** be dispatched until the Pool is `Ready`. []
     section: 3.4 Placement, heterogeneity & readiness
     level: must
     links:
-    - specs/orchestrator-spec.md#34-placement-heterogeneity-readiness
+    - .specs/orchestrator-spec.md#34-placement-heterogeneity-readiness
   ORCH-3011:
     title: Placement **MUST** respect device masks; cross‑mask spillover **MUST NOT** occur. []
     section: 3.4 Placement, heterogeneity & readiness
     level: must
     links:
-    - specs/orchestrator-spec.md#34-placement-heterogeneity-readiness
+    - .specs/orchestrator-spec.md#34-placement-heterogeneity-readiness
   ORCH-3012:
     title: '**Heterogeneous multi‑GPU splits** (across GPUs of different VRAM/compute) **MUST** be **opt‑in** with explicit per‑GPU ratios (e.g., `tensor_split: [0.67'
     section: 3.4 Placement, heterogeneity & readiness
     level: must
     links:
-    - specs/orchestrator-spec.md#34-placement-heterogeneity-readiness
+    - .specs/orchestrator-spec.md#34-placement-heterogeneity-readiness
   ORCH-3013:
     title: '**NUMA/PCIe topology hints** **SHOULD** influence placement when available. []'
     section: 3.4 Placement, heterogeneity & readiness
     level: should
     links:
-    - specs/orchestrator-spec.md#34-placement-heterogeneity-readiness
+    - .specs/orchestrator-spec.md#34-placement-heterogeneity-readiness
   ORCH-3014:
     title: Requested context length **MUST** be ≤ model limit; otherwise **reject before enqueue** (`HTTP 400`). []
     section: 3.5 Capacity, NVIDIA‑only & guardrails
     level: must
     links:
-    - specs/orchestrator-spec.md#35-capacity-nvidiaonly-guardrails
+    - .specs/orchestrator-spec.md#35-capacity-nvidiaonly-guardrails
   ORCH-3015:
     title: '**Token budget** (prompt + generation) **MUST** be validated pre‑admission. []'
     section: 3.5 Capacity, NVIDIA‑only & guardrails
     level: must
     links:
-    - specs/orchestrator-spec.md#35-capacity-nvidiaonly-guardrails
+    - .specs/orchestrator-spec.md#35-capacity-nvidiaonly-guardrails
   ORCH-3016:
     title: Watchdog **MUST** abort stuck Jobs with configurable **wall** and **idle** timeouts. []
     section: 3.5 Capacity, NVIDIA‑only & guardrails
     level: must
     links:
-    - specs/orchestrator-spec.md#35-capacity-nvidiaonly-guardrails
+    - .specs/orchestrator-spec.md#35-capacity-nvidiaonly-guardrails
   ORCH-3017:
     title: '`cancel` **MUST** free the Worker slot and return a terminal state. []'
     section: 3.5 Capacity, NVIDIA‑only & guardrails
     level: must
     links:
-    - specs/orchestrator-spec.md#35-capacity-nvidiaonly-guardrails
+    - .specs/orchestrator-spec.md#35-capacity-nvidiaonly-guardrails
   ORCH-3018:
     title: '**CPU spillover is disallowed** for inference: on GPU/Pool outage, Controller **MUST** fail fast (`POOL_UNAVAILABLE`) with retry hints. []'
     section: 3.5 Capacity, NVIDIA‑only & guardrails
     level: must
     links:
-    - specs/orchestrator-spec.md#35-capacity-nvidiaonly-guardrails
+    - .specs/orchestrator-spec.md#35-capacity-nvidiaonly-guardrails
   ORCH-3019:
     title: If an Engine supports **continuous batching**, Workers **SHOULD** expose total slot count and per‑slot state; the Scheduler **MUST** factor this into placemen
     section: 3.6 Batching & throughput (engine‑agnostic)
     level: must
     links:
-    - specs/orchestrator-spec.md#36-batching-throughput-engineagnostic
+    - .specs/orchestrator-spec.md#36-batching-throughput-engineagnostic
   ORCH-3020:
     title: '**Speculative decoding**/**prefix caching** **MAY** be enabled; admission control **MUST** account for memory impact. []'
     section: 3.6 Batching & throughput (engine‑agnostic)
     level: must
     links:
-    - specs/orchestrator-spec.md#36-batching-throughput-engineagnostic
+    - .specs/orchestrator-spec.md#36-batching-throughput-engineagnostic
   ORCH-3021:
     title: Sessions are **short‑lived**; enforce TTL ≤ **10 minutes** and/or max **8 turns**. []
     section: 3.7 Sessions & KV (short‑lived)
     level: info
     links:
-    - specs/orchestrator-spec.md#37-sessions-kv-shortlived
+    - .specs/orchestrator-spec.md#37-sessions-kv-shortlived
   ORCH-3022:
     title: KV cache residency **MUST** be bounded with LRU/LFU; expose pressure metrics. []
     section: 3.7 Sessions & KV (short‑lived)
     level: must
     links:
-    - specs/orchestrator-spec.md#37-sessions-kv-shortlived
+    - .specs/orchestrator-spec.md#37-sessions-kv-shortlived
   ORCH-3023:
     title: '**Cross‑Worker KV migration is disabled**; failover surfaces `kv_migrated=false`. []'
     section: 3.7 Sessions & KV (short‑lived)
     level: info
     links:
-    - specs/orchestrator-spec.md#37-sessions-kv-shortlived
+    - .specs/orchestrator-spec.md#37-sessions-kv-shortlived
   ORCH-3024:
     title: Each Job **MUST** carry a unique `job_id`. []
     section: 3.8 Cancellations, retries, idempotency
     level: must
     links:
-    - specs/orchestrator-spec.md#38-cancellations-retries-idempotency
+    - .specs/orchestrator-spec.md#38-cancellations-retries-idempotency
   ORCH-3025:
     title: Client retries **SHOULD** target retryable error classes only. []
     section: 3.8 Cancellations, retries, idempotency
     level: should
     links:
-    - specs/orchestrator-spec.md#38-cancellations-retries-idempotency
+    - .specs/orchestrator-spec.md#38-cancellations-retries-idempotency
   ORCH-3026:
     title: Cancellation **MUST** be race‑free (no post‑cancel tokens). []
     section: 3.8 Cancellations, retries, idempotency
     level: must
     links:
-    - specs/orchestrator-spec.md#38-cancellations-retries-idempotency
+    - .specs/orchestrator-spec.md#38-cancellations-retries-idempotency
   ORCH-3027:
     title: 'Logs **MUST** include: `job_id`, `session_id`, `client_id`, `engine`, `pool_id`, `replica_id`, `model_id`, `quant`, `ctx`, `tensor_split`, `engine_version`, `sa'
     section: 3.9 Observability & telemetry
     level: must
     links:
-    - specs/orchestrator-spec.md#39-observability-telemetry
+    - .specs/orchestrator-spec.md#39-observability-telemetry
   ORCH-3028:
     title: 'Metrics **MUST** include: queue depth, reject/drop rates, p50/p95/p99 latency, GPU/VRAM/RAM utilization, KV pressure, preload outcomes, per‑priority SLO attai'
     section: 3.9 Observability & telemetry
     level: must
     links:
-    - specs/orchestrator-spec.md#39-observability-telemetry
+    - .specs/orchestrator-spec.md#39-observability-telemetry
   ORCH-3029:
     title: Admission logs and the `started` SSE event **MUST** include `queue_position` and `predicted_start_ms` when available. []
     section: 3.9 Observability & telemetry
     level: must
     links:
-    - specs/orchestrator-spec.md#39-observability-telemetry
+    - .specs/orchestrator-spec.md#39-observability-telemetry
   ORCH-3030:
     title: Config **MUST** be schema‑validated; unknown fields rejected (strict) or logged (compat). []
     section: 3.10 Config & lifecycle
     level: must
     links:
-    - specs/orchestrator-spec.md#310-config-lifecycle
+    - .specs/orchestrator-spec.md#310-config-lifecycle
   ORCH-3031:
     title: '**Hot‑reload** **MAY** be supported but **MUST** be atomic and revertible; rolling changes use drain+replace. []'
     section: 3.10 Config & lifecycle
     level: must
     links:
-    - specs/orchestrator-spec.md#310-config-lifecycle
+    - .specs/orchestrator-spec.md#310-config-lifecycle
   ORCH-3032:
     title: Workers **MUST** report `engine_version` and `model_digest` (or equivalent). []
     section: 3.11 Rollouts & versioning
     level: must
     links:
-    - specs/orchestrator-spec.md#311-rollouts-versioning
+    - .specs/orchestrator-spec.md#311-rollouts-versioning
   ORCH-3033:
     title: '**Canaries** **SHOULD** be supported via labels/percent splits; **Rollbacks** **MUST** be one action. []'
     section: 3.11 Rollouts & versioning
     level: must
     links:
-    - specs/orchestrator-spec.md#311-rollouts-versioning
+    - .specs/orchestrator-spec.md#311-rollouts-versioning
   ORCH-3035:
     title: '**AuthN/AuthZ** **MUST** gate control/data paths; API keys acceptable day‑1. []'
     section: 3.12 Security & tenancy
     level: must
     links:
-    - specs/orchestrator-spec.md#312-security-tenancy
+    - .specs/orchestrator-spec.md#312-security-tenancy
   ORCH-3036:
     title: Per‑tenant quotas **MUST** bound concurrent Jobs and memory (KV + scratch). []
     section: 3.12 Security & tenancy
     level: must
     links:
-    - specs/orchestrator-spec.md#312-security-tenancy
+    - .specs/orchestrator-spec.md#312-security-tenancy
   ORCH-3037:
     title: Model artifacts **MUST** be checksummed and verified before load. []
     section: 3.12 Security & tenancy
     level: must
     links:
-    - specs/orchestrator-spec.md#312-security-tenancy
+    - .specs/orchestrator-spec.md#312-security-tenancy
   ORCH-3038:
     title: '**Driver/CUDA errors** **MUST** transition the Pool to `Unready`, drain, and backoff‑restart. []'
     section: 3.13 Resilience & recovery
     level: must
     links:
-    - specs/orchestrator-spec.md#313-resilience-recovery
+    - .specs/orchestrator-spec.md#313-resilience-recovery
   ORCH-3039:
     title: Distinguish **VRAM OOM** vs **host OOM**; VRAM OOM **SHOULD** trigger capacity re‑estimation. []
     section: 3.13 Resilience & recovery
     level: should
     links:
-    - specs/orchestrator-spec.md#313-resilience-recovery
+    - .specs/orchestrator-spec.md#313-resilience-recovery
   ORCH-3040:
     title: '**Circuit breakers** **SHOULD** shed load on sustained SLO violations. []'
     section: 3.13 Resilience & recovery
     level: should
     links:
-    - specs/orchestrator-spec.md#313-resilience-recovery
+    - .specs/orchestrator-spec.md#313-resilience-recovery
   ORCH-3041:
     title: Per‑priority SLOs **MUST** be defined and measured continuously; alerts on breach. []
     section: 3.14 Performance & SLOs
     level: must
     links:
-    - specs/orchestrator-spec.md#314-performance-slos
+    - .specs/orchestrator-spec.md#314-performance-slos
   ORCH-3042:
     title: Model storage **MUST** verify checksums; local caches **SHOULD** enforce quotas and eviction. []
     section: 3.15 Storage & integrity
     level: must
     links:
-    - specs/orchestrator-spec.md#315-storage-integrity
+    - .specs/orchestrator-spec.md#315-storage-integrity
   ORCH-3044:
     title: Public APIs **MUST** be versioned. []
     section: 3.16 API contracts & determinism
     level: must
     links:
-    - specs/orchestrator-spec.md#316-api-contracts-determinism
+    - .specs/orchestrator-spec.md#316-api-contracts-determinism
   ORCH-3045:
     title: '**Deterministic outputs are the default.** Same `{prompt, parameters, seed, sampler_profile_version, engine_version, model_digest}` within a replica set **MUST*'
     section: 3.16 API contracts & determinism
     level: must
     links:
-    - specs/orchestrator-spec.md#316-api-contracts-determinism
+    - .specs/orchestrator-spec.md#316-api-contracts-determinism
   ORCH-3046:
     title: Replica sets **MUST** pin `engine_version` and `sampler_profile_version`; replicas with differing values **MUST NOT** mix. []
     section: 3.16 API contracts & determinism
     level: must
     links:
-    - specs/orchestrator-spec.md#316-api-contracts-determinism
+    - .specs/orchestrator-spec.md#316-api-contracts-determinism
   ORCH-3047:
     title: Determinism **MUST NOT** be assumed across engine/model updates. []
     section: 3.16 API contracts & determinism
     level: must
     links:
-    - specs/orchestrator-spec.md#316-api-contracts-determinism
+    - .specs/orchestrator-spec.md#316-api-contracts-determinism
   ORCH-3048:
     title: Default plugin ABI **MUST** be **WASI** (pure, deterministic functions over explicit snapshots). Native in‑process trait **MAY** be offered as a high‑perf a
     section: 3.17 Extensibility (policy plugins)
     level: must
     links:
-    - specs/orchestrator-spec.md#317-extensibility-policy-plugins
+    - .specs/orchestrator-spec.md#317-extensibility-policy-plugins
   ORCH-3049:
     title: 'Startup self‑tests **MUST** cover: preload, minimal decode, cancel, telemetry emission. []'
     section: 3.18 Testing & validation
     level: must
     links:
-    - specs/orchestrator-spec.md#318-testing-validation
+    - .specs/orchestrator-spec.md#318-testing-validation
   ORCH-3050:
     title: 'Determinism tests **MUST** verify byte‑exact streams across replicas with fixed seeds, run **per engine** with engine‑appropriate settings (e.g., llama.cpp '
     section: 3.18 Testing & validation
     level: must
     links:
-    - specs/orchestrator-spec.md#318-testing-validation
+    - .specs/orchestrator-spec.md#318-testing-validation
   ORCH-3051:
     title: Chaos tests **SHOULD** be run for failover/idempotency; load tests **MUST** cover priority inversion. []
     section: 3.18 Testing & validation
     level: must
     links:
-    - specs/orchestrator-spec.md#318-testing-validation
+    - .specs/orchestrator-spec.md#318-testing-validation
   ORCH-3052:
     title: '**Heterogeneous split policy**: when ratios are provided, **MUST** cap per‑GPU resident KV to avoid OOM on the smallest GPU; Scheduler **SHOULD** consider PCI'
     section: 4) NVIDIA Topology & Heterogeneity
     level: must
     links:
-    - specs/orchestrator-spec.md#4-nvidia-topology-heterogeneity
+    - .specs/orchestrator-spec.md#4-nvidia-topology-heterogeneity
   ORCH-3053:
     title: '**Driver resets** and ECC (where applicable) **MUST** be surfaced distinctly; the Pool Manager **MUST** bound restart storms with backoff and circuit breakers. '
     section: 4) NVIDIA Topology & Heterogeneity
     level: must
     links:
-    - specs/orchestrator-spec.md#4-nvidia-topology-heterogeneity
+    - .specs/orchestrator-spec.md#4-nvidia-topology-heterogeneity
   ORCH-3054:
     title: '**Adapter contract**: MUST support health, properties (slots/commit), completion (SSE), cancel, and metrics scrape. This mapping is internal; the public API is '
     section: 5.1 llama.cpp server (HTTP)
     level: must
     links:
-    - specs/orchestrator-spec.md#51-llamacpp-server-http
+    - .specs/orchestrator-spec.md#51-llamacpp-server-http
   ORCH-3055:
     title: '**Adapter contract**: same as above; engine version string MUST be captured. The adapter may call vLLM’s OpenAI server internally; this is not exposed publicl'
     section: 5.2 vLLM (OpenAI‑compatible server)
     level: must
     links:
-    - specs/orchestrator-spec.md#52-vllm-openaicompatible-server
+    - .specs/orchestrator-spec.md#52-vllm-openaicompatible-server
   ORCH-3056:
     title: '**Adapter contract**: MUST implement the TGI custom path (`/generate`, `/info`, etc.). If an OpenAI‑compatible path is enabled, it remains internal only. []'
     section: 5.3 Hugging Face Text‑Generation‑Inference (TGI)
     level: must
     links:
-    - specs/orchestrator-spec.md#53-hugging-face-textgenerationinference-tgi
+    - .specs/orchestrator-spec.md#53-hugging-face-textgenerationinference-tgi
   ORCH-3057:
     title: '**Adapter contract**: MUST support health/metadata, infer/streaming (if configured), and metrics. OpenAI‑compatible frontends are internal only. []'
     section: 5.4 NVIDIA Triton / TensorRT‑LLM
     level: must
     links:
-    - specs/orchestrator-spec.md#54-nvidia-triton-tensorrtllm
+    - .specs/orchestrator-spec.md#54-nvidia-triton-tensorrtllm
   ORCH-3058:
     title: '> All adapters **MUST** normalize detokenization templates and sampler profiles to keep determinism stable within a replica set. []'
     section: 5.4 NVIDIA Triton / TensorRT‑LLM
     level: must
     links:
-    - specs/orchestrator-spec.md#54-nvidia-triton-tensorrtllm
+    - .specs/orchestrator-spec.md#54-nvidia-triton-tensorrtllm
