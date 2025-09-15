@@ -6,8 +6,8 @@ test-harness-e2e-haiku (test-harness)
 
 ## 2. Why it exists (Spec traceability)
 
-- ORCH-3050 — [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md#orch-3050)
-- ORCH-3051 — [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md#orch-3051)
+- ORCH-3050 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3050)
+- ORCH-3051 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3051)
 
 
 ## 3. Public API surface
@@ -61,7 +61,7 @@ flowchart LR
 
 ## 12. Footnotes
 
-- Spec: [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md)
+- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
 - Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
 
 ### Additional Details

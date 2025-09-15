@@ -6,11 +6,11 @@ worker-adapters-triton (adapter)
 
 ## 2. Why it exists (Spec traceability)
 
-- ORCH-3054 — [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md#orch-3054)
-- ORCH-3055 — [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md#orch-3055)
-- ORCH-3056 — [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md#orch-3056)
-- ORCH-3057 — [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md#orch-3057)
-- ORCH-3058 — [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md#orch-3058)
+- ORCH-3054 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3054)
+- ORCH-3055 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3055)
+- ORCH-3056 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3056)
+- ORCH-3057 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3057)
+- ORCH-3058 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3058)
 
 
 ## 3. Public API surface
@@ -64,7 +64,7 @@ flowchart LR
 
 ## 12. Footnotes
 
-- Spec: [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md)
+- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
 - Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
 
 ### Additional Details

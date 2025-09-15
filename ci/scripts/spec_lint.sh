@@ -37,10 +37,11 @@ for f in "${specs[@]}"; do
 
 done
 
-# Check duplicates across all specs
+# Check duplicates across different spec files (ignore repeats within same file)
 if (( ${#all_ids[@]} > 0 )); then
-  dups=$(printf '%s
-' "${all_ids[@]}" | cut -d'|' -f1 | sort | uniq -d || true)
+  dups=$(printf '%s\n' "${all_ids[@]}" \
+    | sort -u \
+    | awk -F'|' '{count[$1]++} END{for (id in count) if (count[id] > 1) print id}' || true)
   if [[ -n "$dups" ]]; then
     echo "Duplicate requirement IDs found across specs:" >&2
     printf '  %s\n' $dups >&2

@@ -574,7 +574,7 @@ fn wrap_line(line: &str, width: usize) -> String {
 fn render_readme(repo_root: &Path, e: &ManifestEntry) -> Result<String> {
     let crate_dir = repo_root.join(&e.path);
     let rel_to_root = relative_path(&crate_dir, repo_root);
-    let rel_specs = rel_to_root.join(".specs/orchestrator-spec.md");
+    let rel_specs = rel_to_root.join(".specs/00_llama-orch.md");
     let rel_reqs = rel_to_root.join("requirements/00_llama-orch.yaml");
 
     let one_liner = if e.description.trim().is_empty() {
@@ -588,7 +588,7 @@ fn render_readme(repo_root: &Path, e: &ManifestEntry) -> Result<String> {
         spec_section.push_str("- See spec and requirements for details.\n");
         spec_section.push_str(&format!(
             "  - [{}]({})\n  - [{}]({})\n",
-            ".specs/orchestrator-spec.md",
+            ".specs/00_llama-orch.md",
             rel_specs.display(),
             "requirements/00_llama-orch.yaml",
             rel_reqs.display()
@@ -599,7 +599,7 @@ fn render_readme(repo_root: &Path, e: &ManifestEntry) -> Result<String> {
             spec_section.push_str(&format!(
                 "- {} — [{}]({}#{})\n",
                 id,
-                ".specs/orchestrator-spec.md",
+                ".specs/00_llama-orch.md",
                 rel_specs.display(),
                 anchor
             ));
@@ -755,7 +755,7 @@ let footnotes = {
     let mut s = String::new();
     s.push_str(&format!(
         "- Spec: [{}]({})\n- Requirements: [{}]({})\n",
-        ".specs/orchestrator-spec.md",
+        ".specs/00_llama-orch.md",
         rel_specs.display(),
         "requirements/00_llama-orch.yaml",
         rel_reqs.display()

@@ -7,7 +7,7 @@ tools-openapi-client (tool)
 ## 2. Why it exists (Spec traceability)
 
 - See spec and requirements for details.
-  - [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md)
+  - [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
   - [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
 
 
@@ -68,7 +68,7 @@ flowchart LR
 
 ## 12. Footnotes
 
-- Spec: [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md)
+- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
 - Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
 
 ### Additional Details

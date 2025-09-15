@@ -6,22 +6,22 @@ orchestratord (core)
 
 ## 2. Why it exists (Spec traceability)
 
-- ORCH-3004 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-3004)
-- ORCH-3005 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-3005)
-- ORCH-3008 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-3008)
-- ORCH-3010 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-3010)
-- ORCH-3011 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-3011)
-- ORCH-3016 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-3016)
-- ORCH-3017 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-3017)
-- ORCH-3027 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-3027)
-- ORCH-3028 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-3028)
-- ORCH-3044 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-3044)
-- ORCH-3045 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-3045)
-- ORCH-2002 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-2002)
-- ORCH-2101 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-2101)
-- ORCH-2102 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-2102)
-- ORCH-2103 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-2103)
-- ORCH-2104 — [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md#orch-2104)
+- ORCH-3004 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3004)
+- ORCH-3005 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3005)
+- ORCH-3008 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3008)
+- ORCH-3010 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3010)
+- ORCH-3011 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3011)
+- ORCH-3016 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3016)
+- ORCH-3017 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3017)
+- ORCH-3027 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3027)
+- ORCH-3028 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3028)
+- ORCH-3044 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3044)
+- ORCH-3045 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3045)
+- ORCH-2002 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-2002)
+- ORCH-2101 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-2101)
+- ORCH-2102 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-2102)
+- ORCH-2103 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-2103)
+- ORCH-2104 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-2104)
 
 
 ## 3. Public API surface
@@ -83,7 +83,7 @@ flowchart LR
 
 ## 12. Footnotes
 
-- Spec: [.specs/orchestrator-spec.md](../.specs/orchestrator-spec.md)
+- Spec: [.specs/00_llama-orch.md](../.specs/00_llama-orch.md)
 - Requirements: [requirements/00_llama-orch.yaml](../requirements/00_llama-orch.yaml)
 
 ### Additional Details

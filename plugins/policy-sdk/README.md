@@ -6,7 +6,7 @@ plugins-policy-sdk (plugin)
 
 ## 2. Why it exists (Spec traceability)
 
-- ORCH-3048 — [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md#orch-3048)
+- ORCH-3048 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3048)
 
 
 ## 3. Public API surface
@@ -59,7 +59,7 @@ flowchart LR
 
 ## 12. Footnotes
 
-- Spec: [.specs/orchestrator-spec.md](../../.specs/orchestrator-spec.md)
+- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
 - Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
 
 ### Additional Details
