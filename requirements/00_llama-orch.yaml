@@ -27,9 +27,9 @@ requirements:
     links:
     - .specs/00_llama-orch.md#62-data-plane-orchqueue-v1
   ORCH-2007:
-    title: '**Backpressure headers** **SHOULD** be returned to callers. []'
+    title: '**Backpressure headers** **MUST** be returned to callers. []'
     section: 3.2 Queues & admission under load
-    level: should
+    level: must
     links:
     - .specs/00_llama-orch.md#32-queues-admission-under-load
   ORCH-2008:
@@ -183,9 +183,9 @@ requirements:
     links:
     - .specs/00_llama-orch.md#36-batching-throughput-engineagnostic
   ORCH-3021:
-    title: Sessions are **short‑lived**; enforce TTL ≤ **10 minutes** and/or max **8 turns**. []
+    title: Sessions are **short‑lived**; defaults **SHOULD** be TTL ≤ **10 minutes** and/or max **8 turns**, and **MUST** be configurable. Enforcement **MAY** be deleg
     section: 3.7 Sessions & KV (short‑lived)
-    level: info
+    level: must
     links:
     - .specs/00_llama-orch.md#37-sessions-kv-shortlived
   ORCH-3022:

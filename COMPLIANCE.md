@@ -6,7 +6,7 @@ Total requirements: 66
 - ORCH-2001 — `POST /v1/tasks` [] (section: 6.2 Data Plane — OrchQueue v1, level: info) — link: .specs/00_llama-orch.md#62-data-plane-orchqueue-v1
 - ORCH-2002 — The **SSE stream framing** (`started`, `token`, `metrics`, `end`, `error`) is part of the contract and MUST remain stable. [] (section: 3.16 API contracts & determinism, level: must) — link: .specs/00_llama-orch.md#316-api-contracts-determinism
 - ORCH-2006 — Typed errors (authoritative):  [] (section: 6.2 Data Plane — OrchQueue v1, level: info) — link: .specs/00_llama-orch.md#62-data-plane-orchqueue-v1
-- ORCH-2007 — **Backpressure headers** **SHOULD** be returned to callers. [] (section: 3.2 Queues & admission under load, level: should) — link: .specs/00_llama-orch.md#32-queues-admission-under-load
+- ORCH-2007 — **Backpressure headers** **MUST** be returned to callers. [] (section: 3.2 Queues & admission under load, level: must) — link: .specs/00_llama-orch.md#32-queues-admission-under-load
 - ORCH-2008 — "engine": "llamacpp",             // "llamacpp" | "vllm" | "tgi" | "triton"  [] (section: 6.2 Data Plane — OrchQueue v1, level: info) — link: .specs/00_llama-orch.md#62-data-plane-orchqueue-v1
 - ORCH-2101 — `POST /v1/pools/:id/drain` → { deadline\_ms } [] (section: 6.1 Control Plane, level: info) — link: .specs/00_llama-orch.md#61-control-plane
 - ORCH-2102 — `POST /v1/pools/:id/reload` → { new\_model\_ref } [] (section: 6.1 Control Plane, level: info) — link: .specs/00_llama-orch.md#61-control-plane
@@ -32,7 +32,7 @@ Total requirements: 66
 - ORCH-3018 — **CPU spillover is disallowed** for inference: on GPU/Pool outage, Controller **MUST** fail fast (`POOL_UNAVAILABLE`) with retry hints. [] (section: 3.5 Capacity, NVIDIA‑only & guardrails, level: must) — link: .specs/00_llama-orch.md#35-capacity-nvidiaonly-guardrails
 - ORCH-3019 — If an Engine supports **continuous batching**, Workers **SHOULD** expose total slot count and per‑slot state; the Scheduler **MUST** factor this into placemen (section: 3.6 Batching & throughput (engine‑agnostic), level: must) — link: .specs/00_llama-orch.md#36-batching-throughput-engineagnostic
 - ORCH-3020 — **Speculative decoding**/**prefix caching** **MAY** be enabled; admission control **MUST** account for memory impact. [] (section: 3.6 Batching & throughput (engine‑agnostic), level: must) — link: .specs/00_llama-orch.md#36-batching-throughput-engineagnostic
-- ORCH-3021 — Sessions are **short‑lived**; enforce TTL ≤ **10 minutes** and/or max **8 turns**. [] (section: 3.7 Sessions & KV (short‑lived), level: info) — link: .specs/00_llama-orch.md#37-sessions-kv-shortlived
+- ORCH-3021 — Sessions are **short‑lived**; defaults **SHOULD** be TTL ≤ **10 minutes** and/or max **8 turns**, and **MUST** be configurable. Enforcement **MAY** be deleg (section: 3.7 Sessions & KV (short‑lived), level: must) — link: .specs/00_llama-orch.md#37-sessions-kv-shortlived
 - ORCH-3022 — KV cache residency **MUST** be bounded with LRU/LFU; expose pressure metrics. [] (section: 3.7 Sessions & KV (short‑lived), level: must) — link: .specs/00_llama-orch.md#37-sessions-kv-shortlived
 - ORCH-3023 — **Cross‑Worker KV migration is disabled**; failover surfaces `kv_migrated=false`. [] (section: 3.7 Sessions & KV (short‑lived), level: info) — link: .specs/00_llama-orch.md#37-sessions-kv-shortlived
 - ORCH-3024 — Each Job **MUST** carry a unique `job_id`. [] (section: 3.8 Cancellations, retries, idempotency, level: must) — link: .specs/00_llama-orch.md#38-cancellations-retries-idempotency

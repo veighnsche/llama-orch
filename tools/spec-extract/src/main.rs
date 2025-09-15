@@ -175,8 +175,10 @@ fn requirements_yaml_name(spec_file: &str) -> String {
         .unwrap_or("spec");
 
     // If stem is prefixed with NN- keep original stem for fallback filename, but strip for matching
-    let (base_for_match, fallback_name) = if stem.len() > 3 && stem.as_bytes()[0].is_ascii_digit()
-        && stem.as_bytes()[1].is_ascii_digit() && stem.as_bytes()[2] == b'-'
+    let (base_for_match, fallback_name) = if stem.len() > 3
+        && stem.as_bytes()[0].is_ascii_digit()
+        && stem.as_bytes()[1].is_ascii_digit()
+        && stem.as_bytes()[2] == b'-'
     {
         (&stem[3..], stem)
     } else {
@@ -184,8 +186,6 @@ fn requirements_yaml_name(spec_file: &str) -> String {
     };
 
     let mapped = match base_for_match {
-        // historical name retained for back-compat (not used anymore)
-        "orchestrator-spec" => Some("index.yaml".to_string()),
         "orchestrator-core" => Some("orchestrator-core.yaml".to_string()),
         "orchestratord" => Some("orchestratord.yaml".to_string()),
         "pool-managerd" => Some("pool-managerd.yaml".to_string()),
