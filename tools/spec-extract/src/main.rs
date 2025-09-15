@@ -1,7 +1,11 @@
 use anyhow::{anyhow, Context, Result};
 use regex::Regex;
 use serde::Serialize;
-use std::{collections::BTreeMap, fs, path::{Path, PathBuf}};
+use std::{
+    collections::BTreeMap,
+    fs,
+    path::{Path, PathBuf},
+};
 
 #[derive(Serialize)]
 struct RequirementIndex {
@@ -28,7 +32,9 @@ fn main() -> Result<()> {
 
     let specs_dir = repo_root.join(".specs");
     let mut spec_files: Vec<PathBuf> = Vec::new();
-    for entry in fs::read_dir(&specs_dir).with_context(|| format!("reading {}", specs_dir.display()))? {
+    for entry in
+        fs::read_dir(&specs_dir).with_context(|| format!("reading {}", specs_dir.display()))?
+    {
         let entry = entry?;
         let path = entry.path();
         if path.extension().and_then(|s| s.to_str()) == Some("md") {
@@ -44,14 +50,20 @@ fn main() -> Result<()> {
     fs::create_dir_all(&out_dir).context("creating requirements/ directory")?;
 
     for spec_path in &spec_files {
-        let spec_rel = path_relative(&repo_root, spec_path).unwrap_or_else(|| spec_path.display().to_string());
+        let spec_rel =
+            path_relative(&repo_root, spec_path).unwrap_or_else(|| spec_path.display().to_string());
         let spec_txt = fs::read_to_string(spec_path)
             .with_context(|| format!("reading {}", spec_path.display()))?;
 
         let index = extract_from_spec(&spec_rel, &spec_txt)?;
 
         // Determine output file name
-        let out_name = requirements_yaml_name(spec_path.file_name().and_then(|s| s.to_str()).unwrap_or("spec.yaml"));
+        let out_name = requirements_yaml_name(
+            spec_path
+                .file_name()
+                .and_then(|s| s.to_str())
+                .unwrap_or("spec.yaml"),
+        );
         let out_path = out_dir.join(out_name);
         let yaml = serde_yaml::to_string(&index)?;
         write_if_changed(&out_path, &yaml)?;
@@ -102,7 +114,8 @@ fn extract_from_spec(spec_rel: &str, spec: &str) -> Result<RequirementIndex> {
     // Support both ORCH-##### and OC-AREA-#### style identifiers
     let id_orch = Regex::new(r"ORCH-[0-9]{3,5}").with_context(|| "compile ORCH id regex")?;
     let id_oc = Regex::new(r"OC-[A-Z0-9-]+-[0-9]{3,5}").with_context(|| "compile OC id regex")?;
-    let section_re = Regex::new(r"^##+\s+(?P<name>.+)$").with_context(|| "compile section heading regex")?;
+    let section_re =
+        Regex::new(r"^##+\s+(?P<name>.+)$").with_context(|| "compile section heading regex")?;
     let mut requirements: BTreeMap<String, ReqEntry> = BTreeMap::new();
 
     let mut current_section = String::new();
@@ -124,12 +137,18 @@ fn extract_from_spec(spec_rel: &str, spec: &str) -> Result<RequirementIndex> {
             };
             let mut title = line.replace(&id, "");
             title = title.trim().trim_start_matches('*').trim().to_string();
-            if title.len() > 160 { title.truncate(160); }
+            if title.len() > 160 {
+                title.truncate(160);
+            }
             requirements.entry(id).or_insert(ReqEntry {
                 title,
                 section: current_section.clone(),
                 level: level.to_string(),
-                links: vec![format!("{}#{}", spec_rel, anchor_from_section(&current_section))],
+                links: vec![format!(
+                    "{}#{}",
+                    spec_rel,
+                    anchor_from_section(&current_section)
+                )],
             });
         }
     }
@@ -150,7 +169,10 @@ fn extract_from_spec(spec_rel: &str, spec: &str) -> Result<RequirementIndex> {
 
 fn requirements_yaml_name(spec_file: &str) -> String {
     // Map spec filenames to requirement yaml names (derived from crate package names)
-    let stem = Path::new(spec_file).file_stem().and_then(|s| s.to_str()).unwrap_or("spec");
+    let stem = Path::new(spec_file)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("spec");
     match stem {
         "orchestrator-spec" => "index.yaml".to_string(),
         "orchestrator-core" => "orchestrator-core.yaml".to_string(),
@@ -172,13 +194,20 @@ fn requirements_yaml_name(spec_file: &str) -> String {
 fn path_relative(root: &Path, path: &Path) -> Option<String> {
     let root = root.canonicalize().ok()?;
     let path = path.canonicalize().ok()?;
-    path.strip_prefix(&root).ok().map(|p| p.to_string_lossy().to_string())
+    path.strip_prefix(&root)
+        .ok()
+        .map(|p| p.to_string_lossy().to_string())
 }
 
 fn write_if_changed(path: &Path, contents: &str) -> Result<()> {
-    let need = match fs::read_to_string(path) { Ok(old) => old != contents, Err(_) => true };
+    let need = match fs::read_to_string(path) {
+        Ok(old) => old != contents,
+        Err(_) => true,
+    };
     if need {
-        if let Some(parent) = path.parent() { fs::create_dir_all(parent)?; }
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
         fs::write(path, contents).with_context(|| format!("writing {}", path.display()))?;
         println!("wrote {}", path.display());
     } else {

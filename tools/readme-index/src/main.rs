@@ -749,23 +749,23 @@ flowchart LR
     // Hand-curated minimal extras per crate (Step 3) — include in footnotes
     let extras = crate_specific_extras(&e.path);
 
-// Prepare values for template placeholders
-let how_it_fits = format!("{}\n\n{}", how_it_fits_text, mermaid);
-let footnotes = {
-    let mut s = String::new();
-    s.push_str(&format!(
-        "- Spec: [{}]({})\n- Requirements: [{}]({})\n",
-        ".specs/00_llama-orch.md",
-        rel_specs.display(),
-        "requirements/00_llama-orch.yaml",
-        rel_reqs.display()
-    ));
-    if !extras.is_empty() {
-        s.push_str("\n### Additional Details\n");
-        s.push_str(&extras);
-    }
-    s
-};
+    // Prepare values for template placeholders
+    let how_it_fits = format!("{}\n\n{}", how_it_fits_text, mermaid);
+    let footnotes = {
+        let mut s = String::new();
+        s.push_str(&format!(
+            "- Spec: [{}]({})\n- Requirements: [{}]({})\n",
+            ".specs/00_llama-orch.md",
+            rel_specs.display(),
+            "requirements/00_llama-orch.yaml",
+            rel_reqs.display()
+        ));
+        if !extras.is_empty() {
+            s.push_str("\n### Additional Details\n");
+            s.push_str(&extras);
+        }
+        s
+    };
 
     // Load template (single source of truth)
     let template_path = repo_root.join("tools/readme-index/TEMPLATE.md");
