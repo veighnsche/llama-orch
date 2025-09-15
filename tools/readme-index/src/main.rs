@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
+use openapiv3::{OpenAPI, Operation, ReferenceOr};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use openapiv3::{OpenAPI, ReferenceOr, Operation};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::io::Write;
@@ -11,8 +11,8 @@ use std::path::{Component, Path, PathBuf};
 struct ManifestEntry {
     path: String,
     name: String,
-    kind: String,      // lib | bin | mixed
-    role: String,      // core | adapter | plugin | tool | test-harness | contracts
+    kind: String, // lib | bin | mixed
+    role: String, // core | adapter | plugin | tool | test-harness | contracts
     description: String,
     owner: String,
     spec_refs: Vec<String>,
@@ -40,8 +40,12 @@ fn openapi_summary(repo_root: &Path, refs: &[String]) -> String {
     let mut op_ids: Vec<String> = Vec::new();
     for rel in refs {
         let abs = repo_root.join(rel);
-        let Ok(txt) = fs::read_to_string(&abs) else { continue; };
-        let Ok(doc) = serde_yaml::from_str::<OpenAPI>(&txt) else { continue; };
+        let Ok(txt) = fs::read_to_string(&abs) else {
+            continue;
+        };
+        let Ok(doc) = serde_yaml::from_str::<OpenAPI>(&txt) else {
+            continue;
+        };
         for (_p, item) in doc.paths.paths {
             if let ReferenceOr::Item(pi) = item {
                 collect_ops(&pi.get, &mut tags, &mut op_ids);
@@ -74,8 +78,12 @@ fn openapi_summary(repo_root: &Path, refs: &[String]) -> String {
 
 fn collect_ops(op: &Option<Operation>, tags: &mut BTreeSet<String>, op_ids: &mut Vec<String>) {
     if let Some(op) = op {
-        for t in &op.tags { tags.insert(t.clone()); }
-        if let Some(id) = &op.operation_id { op_ids.push(id.clone()); }
+        for t in &op.tags {
+            tags.insert(t.clone());
+        }
+        if let Some(id) = &op.operation_id {
+            op_ids.push(id.clone());
+        }
     }
 }
 
@@ -87,7 +95,8 @@ fn crate_specific_extras(crate_path: &str) -> String {
         return "- Data/control plane routes, SSE framing details, backpressure headers, provider verify entry points.\n".to_string();
     }
     if crate_path.starts_with("pool-managerd") {
-        return "- Preload/Ready lifecycle, NVIDIA-only guardrails, restart/backoff behavior.\n".to_string();
+        return "- Preload/Ready lifecycle, NVIDIA-only guardrails, restart/backoff behavior.\n"
+            .to_string();
     }
     if crate_path.starts_with("worker-adapters/") {
         return "- Engine endpoint mapping tables (native/OpenAI-compat to adapter calls), determinism knobs, version capture.\n".to_string();
@@ -179,8 +188,8 @@ fn read_workspace_members(repo_root: &Path) -> Result<Vec<String>> {
     let cargo_toml_path = repo_root.join("Cargo.toml");
     let txt = fs::read_to_string(&cargo_toml_path)
         .with_context(|| format!("reading {}", cargo_toml_path.display()))?;
-    let parsed: RootWorkspaceToml = toml::from_str(&txt)
-        .with_context(|| format!("parsing {}", cargo_toml_path.display()))?;
+    let parsed: RootWorkspaceToml =
+        toml::from_str(&txt).with_context(|| format!("parsing {}", cargo_toml_path.display()))?;
     Ok(parsed.workspace.members)
 }
 
@@ -188,8 +197,8 @@ fn build_manifest_entry(repo_root: &Path, crate_dir: &Path) -> Result<ManifestEn
     let cargo_toml_path = crate_dir.join("Cargo.toml");
     let txt = fs::read_to_string(&cargo_toml_path)
         .with_context(|| format!("reading {}", cargo_toml_path.display()))?;
-    let parsed: CrateToml = toml::from_str(&txt)
-        .with_context(|| format!("parsing {}", cargo_toml_path.display()))?;
+    let parsed: CrateToml =
+        toml::from_str(&txt).with_context(|| format!("parsing {}", cargo_toml_path.display()))?;
 
     let has_lib = parsed.lib.is_some();
     let has_bin_table = parsed.bin.as_ref().map(|v| !v.is_empty()).unwrap_or(false);
@@ -242,7 +251,10 @@ fn build_manifest_entry(repo_root: &Path, crate_dir: &Path) -> Result<ManifestEn
 
     let openapi_refs = detect_openapi_refs(repo_root, crate_dir);
     let schema_refs = detect_schema_refs(repo_root, crate_dir);
-    let spec_refs = suggest_spec_refs(&role, crate_dir.file_name().and_then(|s| s.to_str()).unwrap_or(""));
+    let spec_refs = suggest_spec_refs(
+        &role,
+        crate_dir.file_name().and_then(|s| s.to_str()).unwrap_or(""),
+    );
 
     Ok(ManifestEntry {
         path: path_relative_to(repo_root, crate_dir)?,
@@ -262,7 +274,8 @@ fn build_manifest_entry(repo_root: &Path, crate_dir: &Path) -> Result<ManifestEn
 }
 
 fn detect_role(repo_root: &Path, crate_dir: &Path) -> String {
-    let rel = path_relative_to(repo_root, crate_dir).unwrap_or_else(|_| crate_dir.display().to_string());
+    let rel =
+        path_relative_to(repo_root, crate_dir).unwrap_or_else(|_| crate_dir.display().to_string());
     if rel.starts_with("orchestrator-core") {
         return "core".to_string();
     }
@@ -313,7 +326,9 @@ fn read_codeowners_default(repo_root: &Path) -> Result<String> {
     let txt = fs::read_to_string(&p)?;
     for line in txt.lines() {
         let line = line.trim();
-        if line.starts_with('#') || line.is_empty() { continue; }
+        if line.starts_with('#') || line.is_empty() {
+            continue;
+        }
         // Simple pattern: "* @owner"
         if line.starts_with('*') {
             let parts: Vec<&str> = line.split_whitespace().collect();
@@ -355,10 +370,23 @@ fn suggest_spec_refs(role: &str, crate_name: &str) -> Vec<String> {
     let mut v = Vec::new();
     match role {
         "core" => {
-            v.extend([
-                "ORCH-3004", "ORCH-3005", "ORCH-3008", "ORCH-3010", "ORCH-3011", "ORCH-3016",
-                "ORCH-3017", "ORCH-3027", "ORCH-3028", "ORCH-3044", "ORCH-3045",
-            ].iter().map(|s| s.to_string()));
+            v.extend(
+                [
+                    "ORCH-3004",
+                    "ORCH-3005",
+                    "ORCH-3008",
+                    "ORCH-3010",
+                    "ORCH-3011",
+                    "ORCH-3016",
+                    "ORCH-3017",
+                    "ORCH-3027",
+                    "ORCH-3028",
+                    "ORCH-3044",
+                    "ORCH-3045",
+                ]
+                .iter()
+                .map(|s| s.to_string()),
+            );
             if crate_name.contains("orchestratord") {
                 v.push("ORCH-2002".to_string());
                 v.push("ORCH-2101".to_string());
@@ -372,9 +400,17 @@ fn suggest_spec_refs(role: &str, crate_name: &str) -> Vec<String> {
             }
         }
         "adapter" => {
-            v.extend([
-                "ORCH-3054", "ORCH-3055", "ORCH-3056", "ORCH-3057", "ORCH-3058",
-            ].iter().map(|s| s.to_string()));
+            v.extend(
+                [
+                    "ORCH-3054",
+                    "ORCH-3055",
+                    "ORCH-3056",
+                    "ORCH-3057",
+                    "ORCH-3058",
+                ]
+                .iter()
+                .map(|s| s.to_string()),
+            );
         }
         "contracts" => {
             v.extend(["ORCH-3044", "ORCH-3030"].iter().map(|s| s.to_string()));
@@ -400,14 +436,23 @@ fn path_relative_to<'a>(base: &'a Path, path: &'a Path) -> Result<String> {
 fn relative_path(from: &Path, to: &Path) -> PathBuf {
     let from_components: Vec<&str> = from
         .components()
-        .filter_map(|c| match c { Component::Normal(s) => s.to_str(), _ => None })
+        .filter_map(|c| match c {
+            Component::Normal(s) => s.to_str(),
+            _ => None,
+        })
         .collect();
     let to_components: Vec<&str> = to
         .components()
-        .filter_map(|c| match c { Component::Normal(s) => s.to_str(), _ => None })
+        .filter_map(|c| match c {
+            Component::Normal(s) => s.to_str(),
+            _ => None,
+        })
         .collect();
     let mut i = 0usize;
-    while i < from_components.len() && i < to_components.len() && from_components[i] == to_components[i] {
+    while i < from_components.len()
+        && i < to_components.len()
+        && from_components[i] == to_components[i]
+    {
         i += 1;
     }
     let mut rel = PathBuf::new();
@@ -427,7 +472,9 @@ fn write_if_changed(path: &Path, content: &str) -> Result<()> {
             return Ok(());
         }
     }
-    if let Some(parent) = path.parent() { fs::create_dir_all(parent)?; }
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)?;
+    }
     let mut f = fs::File::create(path)?;
     f.write_all(new_bytes)?;
     Ok(())
@@ -510,11 +557,15 @@ fn wrap_line(line: &str, width: usize) -> String {
             while back > cur && chars[back - 1] != ' ' {
                 back -= 1;
             }
-            if back > cur { end = back; }
+            if back > cur {
+                end = back;
+            }
         }
         let seg: String = chars[cur..end].iter().collect();
         out.push_str(seg.trim_end());
-        if end < chars.len() { out.push('\n'); }
+        if end < chars.len() {
+            out.push('\n');
+        }
         cur = if end == cur { end + 1 } else { end };
     }
     out
@@ -571,7 +622,9 @@ fn render_readme(repo_root: &Path, e: &ManifestEntry) -> Result<String> {
     };
 
     let how_it_fits_text = match e.role.as_str() {
-        "core" => "- Part of the core orchestrator. Upstream: adapters, Downstream: workers.".to_string(),
+        "core" => {
+            "- Part of the core orchestrator. Upstream: adapters, Downstream: workers.".to_string()
+        }
         "adapter" => "- Maps engine-native APIs to the orchestrator worker contract.".to_string(),
         "plugin" => "- Policy extension via WASI ABI.".to_string(),
         "contracts" => "- Houses public contracts and schemas.".to_string(),
@@ -585,42 +638,52 @@ flowchart LR
   callers[Clients] --> orch[Orchestrator]
   orch --> adapters[Worker Adapters]
   adapters --> engines[Engines]
-```"#.to_string(),
+```"#
+            .to_string(),
         "adapter" => r#"```mermaid
 flowchart LR
   orch[Orchestrator] --> adapter[Adapter]
   adapter --> engine[Engine API]
-```"#.to_string(),
+```"#
+            .to_string(),
         "contracts" => r#"```mermaid
 flowchart LR
   devs[Developers] --> contracts[Contracts]
   contracts --> tools[Generators]
   contracts --> crates[Crates]
-```"#.to_string(),
+```"#
+            .to_string(),
         "plugin" => r#"```mermaid
 flowchart LR
   orch[Orchestrator] --> plugins[Policy Plugins (WASI)]
-```"#.to_string(),
+```"#
+            .to_string(),
         "test-harness" => r#"```mermaid
 flowchart LR
   crates[Crates] --> harness[Test Harness]
   harness --> results[Reports]
-```"#.to_string(),
+```"#
+            .to_string(),
         _ => r#"```mermaid
 flowchart LR
   devs[Developers] --> tool[Tool]
   tool --> artifacts[Artifacts]
-```"#.to_string(),
+```"#
+            .to_string(),
     };
 
     let mut build_test = String::new();
-    build_test.push_str(&format!("- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features -- -D warnings`\n"));
-    build_test.push_str(&format!("- Tests for this crate: `cargo test -p {} -- --nocapture`\n", e.name));
+    build_test.push_str("- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features -- -D warnings`\n");
+    build_test.push_str(&format!(
+        "- Tests for this crate: `cargo test -p {} -- --nocapture`\n",
+        e.name
+    ));
     if e.path.starts_with("orchestratord") {
         build_test.push_str("- Provider verify: `cargo test -p orchestratord --test provider_verify -- --nocapture`\n");
     }
     if e.path.starts_with("cli/consumer-tests") {
-        build_test.push_str("- CDC consumer tests: `cargo test -p cli-consumer-tests -- --nocapture`\n");
+        build_test
+            .push_str("- CDC consumer tests: `cargo test -p cli-consumer-tests -- --nocapture`\n");
     }
     if e.path.starts_with("contracts/") {
         build_test.push_str("- Regen OpenAPI: `cargo xtask regen-openapi`\n");
@@ -645,23 +708,31 @@ flowchart LR
             contracts.push_str(&format!("  - [{}]({})\n", p, rel.display()));
         }
     }
-    if contracts.is_empty() { contracts.push_str("- None\n"); }
+    if contracts.is_empty() {
+        contracts.push_str("- None\n");
+    }
 
     let config_env = match e.role.as_str() {
-        "core" => "- See deployment configs and environment variables used by the daemons.".to_string(),
+        "core" => {
+            "- See deployment configs and environment variables used by the daemons.".to_string()
+        }
         "adapter" => "- Engine connection endpoints and credentials where applicable.".to_string(),
         "contracts" => "- Schema-focused crate; no runtime env.".to_string(),
         _ => "- Not applicable.".to_string(),
     };
 
     let metrics_logs = match e.role.as_str() {
-        "core" => "- Emits queue depth, latency percentiles, and engine/version labels.".to_string(),
+        "core" => {
+            "- Emits queue depth, latency percentiles, and engine/version labels.".to_string()
+        }
         "adapter" => "- Emits adapter health and request metrics per engine.".to_string(),
         _ => "- Minimal logs.".to_string(),
     };
 
     let mut runbook = String::new();
-    runbook.push_str("- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`\n");
+    runbook.push_str(
+        "- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`\n",
+    );
     runbook.push_str("- Rebuild docs: `cargo run -p tools-readme-index --quiet`\n");
 
     let status = "alpha".to_string();
@@ -698,15 +769,16 @@ flowchart LR
 
     // Load template (single source of truth)
     let template_path = repo_root.join("tools/readme-index/TEMPLATE.md");
-    let mut tmpl = if let Ok(t) = fs::read_to_string(&template_path) { t } else { default_template_md() };
+    let mut tmpl = if let Ok(t) = fs::read_to_string(&template_path) {
+        t
+    } else {
+        default_template_md()
+    };
 
     // Replace the spec_refs loop block
     let loop_re = Regex::new(r"(?s)\{\{#each spec_refs\}\}.*?\{\{\/each\}\}")?;
     tmpl = loop_re
-        .replace(
-            &tmpl,
-            spec_section.replace('\\', r"\\").replace('$', r"$$")
-        )
+        .replace(&tmpl, spec_section.replace('\\', r"\\").replace('$', r"$$"))
         .into_owned();
 
     // Simple placeholder replacements
@@ -730,7 +802,11 @@ flowchart LR
     Ok(wrap_to_100_cols(&out))
 }
 
-fn update_root_readme(_repo_root: &Path, root_readme: &Path, entries: &[ManifestEntry]) -> Result<String> {
+fn update_root_readme(
+    _repo_root: &Path,
+    root_readme: &Path,
+    entries: &[ManifestEntry],
+) -> Result<String> {
     let mut content = if root_readme.exists() {
         fs::read_to_string(root_readme)?
     } else {
@@ -759,8 +835,16 @@ fn update_root_readme(_repo_root: &Path, root_readme: &Path, entries: &[Manifest
         } else {
             "—".to_string()
         };
-        let tests = if e.tests.is_empty() { "—".to_string() } else { e.tests.join(", ") };
-        let spec = if e.spec_refs.is_empty() { "—".to_string() } else { e.spec_refs.join(", ") };
+        let tests = if e.tests.is_empty() {
+            "—".to_string()
+        } else {
+            e.tests.join(", ")
+        };
+        let spec = if e.spec_refs.is_empty() {
+            "—".to_string()
+        } else {
+            e.spec_refs.join(", ")
+        };
         table.push_str(&format!(
             "| {} | `{}` | {} | {} | {} | {} |\n",
             path_link, e.name, e.role, api, tests, spec
@@ -799,8 +883,10 @@ fn update_root_readme(_repo_root: &Path, root_readme: &Path, entries: &[Manifest
         content = re.replace(&content, table.as_str()).into_owned();
     } else {
         // Append at end with spacing
-        if !content.ends_with('\n') { content.push('\n'); }
-        content.push_str("\n");
+        if !content.ends_with('\n') {
+            content.push('\n');
+        }
+        content.push('\n');
         content.push_str(&table);
     }
 
