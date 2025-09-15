@@ -3,10 +3,11 @@ name = "tools-readme-index"
 version = "0.0.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
+autobins = false
 
 [[bin]]
 name = "readme-index"
-path = "src/main.rs"
+path = "src/bin.rs"
 
 authors = ["llama-orch contributors"]
 

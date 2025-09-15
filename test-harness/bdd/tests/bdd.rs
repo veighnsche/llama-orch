@@ -1,6 +1,9 @@
 use regex::Regex;
+use test_harness_bdd::steps;
+use walkdir::WalkDir;
 use std::fs;
 use std::path::PathBuf;
+use walkdir::WalkDir;
 
 fn feature_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/features")
@@ -11,28 +14,27 @@ fn features_have_no_undefined_or_ambiguous_steps() {
     let dir = feature_dir();
     assert!(dir.exists(), "features dir missing: {}", dir.display());
 
-    // Define step regexes (add more over time)
-    let steps: Vec<Regex> = vec![
-        Regex::new(r"^noop$").unwrap(),
-        Regex::new(r"^nothing happens$").unwrap(),
-        Regex::new(r"^it passes$").unwrap(),
-    ];
+    // Define step regexes (add more over time via registry)
+    let steps: Vec<Regex> = steps::registry();
 
-    for entry in fs::read_dir(&dir).unwrap() {
-        let entry = entry.unwrap();
-        if entry.file_type().unwrap().is_file() {
-            let text = fs::read_to_string(entry.path()).unwrap();
+    for entry in WalkDir::new(&dir).into_iter().filter_map(Result::ok) {
+        if entry.file_type().is_file() && entry.path().extension().and_then(|s| s.to_str()) == Some("feature") {
+            let path = entry.into_path();
+            let text = fs::read_to_string(&path).unwrap();
             for line in text.lines() {
                 let line = line.trim();
                 if line.starts_with("Given ") {
                     let s = line.trim_start_matches("Given ").trim();
-                    check_step(s, &steps, &entry.path());
+                    check_step(s, &steps, &path);
                 } else if line.starts_with("When ") {
                     let s = line.trim_start_matches("When ").trim();
-                    check_step(s, &steps, &entry.path());
+                    check_step(s, &steps, &path);
                 } else if line.starts_with("Then ") {
                     let s = line.trim_start_matches("Then ").trim();
-                    check_step(s, &steps, &entry.path());
+                    check_step(s, &steps, &path);
+                } else if line.starts_with("And ") {
+                    let s = line.trim_start_matches("And ").trim();
+                    check_step(s, &steps, &path);
                 }
             }
         }
