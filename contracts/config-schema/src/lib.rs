@@ -23,11 +23,34 @@ pub struct PriorityClass {
     pub name: String, // interactive | batch
     pub queue_capacity: Option<u32>,
     pub rate_limit_rps: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub weight: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct AdmissionConfig {
     pub priorities: Option<Vec<PriorityClass>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fairness: Option<FairnessConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+pub struct FairnessConfig {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<String>, // "wfq" (weighted fair queuing)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tenants: Option<Vec<TenantConfig>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+pub struct TenantConfig {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub weight: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_concurrent: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rps: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
@@ -58,13 +81,55 @@ pub struct PoolConfig {
     pub queue: QueueConfig,
     #[serde(default)]
     pub admission: AdmissionConfig,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preemption: Option<PreemptionConfig>,
     #[serde(default)]
     pub timeouts: Timeouts,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+pub struct PreemptionConfig {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode: Option<String>, // "soft" | "hard" | "disabled"
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hard_requirements: Option<HardPreemptionRequirements>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+pub struct HardPreemptionRequirements {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub engine_capability: Option<String>, // "interruptible_decode"
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_preemptions_per_min: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protect_priorities: Option<Vec<String>>, // e.g., ["interactive"]
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct Config {
+    #[serde(default)]
+    pub catalog: CatalogConfig,
     pub pools: Vec<PoolConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+pub struct CatalogConfig {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trust_policy: Option<TrustPolicyConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+pub struct TrustPolicyConfig {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode: Option<String>, // "strict" | "permissive"
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub allowed_registries: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub require_signature: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub require_sbom: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ca_roots: Option<Vec<String>>,
 }
 
 /// Build the JSON Schema for the top-level `Config` type.

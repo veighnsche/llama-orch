@@ -18,7 +18,7 @@ References
 
 Basic
 
-```
+```bash
 vllm serve <model> \
   --host 0.0.0.0 --port 8000
 ```
@@ -27,6 +27,21 @@ Notes
 
 - The server exposes OpenAI‑compatible APIs and a Prometheus‑compatible `/metrics` endpoint.
 - Use `--tensor-parallel-size`, device selection, and other capacity flags per your host and model.
+
+## Capabilities required by orchestrator
+
+- Multi‑GPU
+  - Supported via tensor parallelism with `--tensor-parallel-size` on a single node; distributed setups are possible via Ray/other launchers depending on version.
+- Streaming SSE
+  - OpenAI‑compatible `chat/completions` and `completions` support `stream=true`, which yields server‑sent events; map to orchestrator SSE framing (`started`, `token`, `metrics`, `end`, `error`).
+- Cancellation
+  - Cancel by closing the HTTP stream from the client; the adapter should ensure the worker frees resources and the slot is returned.
+- Metrics
+  - `/metrics` exposes Prometheus metrics. Adapter must attach orchestrator labels: `engine`, `engine_version`, `pool_id`, `replica_id`, `model_id` when forwarding.
+- Determinism & Version Pinning
+  - Treat vLLM determinism as best‑effort (per official docs). Prefer greedy decoding (`temperature=0`, `top_p=1`) and minimize concurrency during determinism tests. Pin engine version and model artifacts across replicas.
+- Embeddings
+  - `/v1/embeddings` is available; expose only if enabled and covered by policy.
 
 ## Endpoints to use (OpenAI‑compatible)
 

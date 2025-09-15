@@ -26,6 +26,12 @@ This document defines how an LLM developer must make decisions and contribute to
 - Finish what you start
   - Do not leave items half‑done. If blocked, explicitly note the blocker in the TODO and open a proposal/issue.
 
+- Investigations are written down, not chatted
+  - When tasked to investigate, write your findings in a committed `*.md` file (location at your discretion where it makes sense: near the component or under `.docs/`). You do not need to paste findings in chat—prefer durable, reviewable write‑ups.
+
+- Tests follow the testing rules and proof bundle
+  - When dealing with any tests, first read `.docs/testing/` for the applicable rules. Treat the “proof bundle” in `VIBE_CHECK.md` as mandatory: produce testing artifacts (logs, pact files, snapshots, metrics dumps) as specified.
+
 ## Traceability and Quality Gates
 
 - Requirement IDs everywhere
@@ -120,3 +126,5 @@ This document defines how an LLM developer must make decisions and contribute to
 - Prefer smaller, well‑scoped proposals and PRs.
 - Ask the spec for guidance; if it’s silent, propose the minimum change to make it explicit.
 - Choose clarity and determinism over compatibility until v1.0.0.
+
+;; with love, Vince :) ;;

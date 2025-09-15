@@ -6,6 +6,14 @@
     "pools"
   ],
   "properties": {
+    "catalog": {
+      "default": {},
+      "allOf": [
+        {
+          "$ref": "#/definitions/CatalogConfig"
+        }
+      ]
+    },
     "pools": {
       "type": "array",
       "items": {
@@ -17,6 +25,16 @@
     "AdmissionConfig": {
       "type": "object",
       "properties": {
+        "fairness": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/FairnessConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "priorities": {
           "type": [
             "array",
@@ -28,6 +46,21 @@
         }
       }
     },
+    "CatalogConfig": {
+      "type": "object",
+      "properties": {
+        "trust_policy": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TrustPolicyConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
     "Engine": {
       "type": "string",
       "enum": [
@@ -36,6 +69,54 @@
         "tgi",
         "triton"
       ]
+    },
+    "FairnessConfig": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tenants": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/TenantConfig"
+          }
+        }
+      }
+    },
+    "HardPreemptionRequirements": {
+      "type": "object",
+      "properties": {
+        "engine_capability": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "max_preemptions_per_min": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "protect_priorities": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     },
     "PoolConfig": {
       "type": "object",
@@ -80,6 +161,16 @@
         },
         "model": {
           "type": "string"
+        },
+        "preemption": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PreemptionConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "preload": {
           "type": [
@@ -139,6 +230,27 @@
         }
       }
     },
+    "PreemptionConfig": {
+      "type": "object",
+      "properties": {
+        "hard_requirements": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/HardPreemptionRequirements"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
     "PriorityClass": {
       "type": "object",
       "required": [
@@ -157,6 +269,14 @@
           "minimum": 0.0
         },
         "rate_limit_rps": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "weight": {
           "type": [
             "integer",
             "null"
@@ -185,6 +305,41 @@
         }
       }
     },
+    "TenantConfig": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "max_concurrent": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "rps": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "weight": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
     "Timeouts": {
       "type": "object",
       "properties": {
@@ -203,6 +358,47 @@
           ],
           "format": "uint64",
           "minimum": 0.0
+        }
+      }
+    },
+    "TrustPolicyConfig": {
+      "type": "object",
+      "properties": {
+        "allowed_registries": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "ca_roots": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "mode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "require_sbom": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "require_signature": {
+          "type": [
+            "boolean",
+            "null"
+          ]
         }
       }
     }

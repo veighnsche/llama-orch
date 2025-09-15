@@ -66,3 +66,16 @@ TensorRT‑LLM `trtllm-serve`
   - OpenAI frontend / `trtllm-serve`: use `/v1/chat/completions` or `/v1/completions` with SSE.
 - Cancel: for HTTP streaming, close the client stream; ensure backend frees resources/sequence.
 - Version: surface Triton server version and TRT‑LLM backend version (visible in logs or model metadata); attach to `engine_version`.
+
+## Capabilities required by orchestrator
+
+- Multi‑GPU
+  - Triton supports multiple GPUs via model `instance_group` settings; pin device masks explicitly. TensorRT‑LLM enables tensor/pipeline parallelism; for `trtllm-serve`, use the appropriate parallelism flags (e.g., TP/PP) per docs.
+- Streaming SSE
+  - Native Triton HTTP/gRPC `infer` is request/response. Streaming token output is available via the OpenAI‑compatible frontend (Beta) or `trtllm-serve`, which supports SSE on `/v1/chat/completions` and `/v1/completions`. Map to orchestrator SSE framing (`started`, `token`, `metrics`, `end`, `error`).
+- Cancellation
+  - For SSE streams (OpenAI frontend/`trtllm-serve`), cancel by closing the client stream; ensure sequence/resources are freed. For native Triton, implement timeouts/cancel semantics via client and server settings.
+- Metrics
+  - Triton exposes Prometheus `/metrics` (port 8002 by default). Adapter must attach orchestrator labels (`engine`, `engine_version`, `pool_id`, `replica_id`, `model_id`), and include `trtllm_version` where applicable.
+- Determinism & Version Pinning
+  - Prefer greedy decoding (temperature 0, top‑p 1) and single instance per GPU during determinism tests; minimize/disable dynamic batching. Pin Triton and TRT‑LLM versions and model artifacts across replicas.

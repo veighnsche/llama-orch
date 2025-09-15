@@ -12,7 +12,6 @@ worker-adapters-tgi-http (adapter)
 - ORCH-3057 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3057)
 - ORCH-3058 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3058)
 
-
 ## 3. Public API surface
 
 - Rust crate API (internal)
@@ -33,11 +32,9 @@ flowchart LR
 -- -D warnings`
 - Tests for this crate: `cargo test -p worker-adapters-tgi-http -- --nocapture`
 
-
 ## 6. Contracts
 
 - None
-
 
 ## 7. Config & Env
 
@@ -51,7 +48,6 @@ flowchart LR
 
 - Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
 - Rebuild docs: `cargo run -p tools-readme-index --quiet`
-
 
 ## 10. Status & Owners
 
@@ -68,9 +64,9 @@ flowchart LR
 - Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
 
 ### Additional Details
+
 - Engine endpoint mapping tables (native/OpenAI-compat to adapter calls), determinism knobs,
 version capture.
-
 
 ## What this crate is not
 

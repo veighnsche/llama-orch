@@ -21,15 +21,49 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/TaskRequest'
+            x-examples:
+              good:
+                value:
+                  task_id: "00000000-0000-0000-0000-000000000001"
+                  session_id: "11111111-1111-1111-1111-111111111111"
+                  workload: completion
+                  model_ref: "repo:NousResearch/Meta-Llama-3-8B-Instruct"
+                  engine: llamacpp
+                  ctx: 8192
+                  priority: interactive
+                  seed: 123456789
+                  determinism: strict
+                  sampler_profile_version: "v1"
+                  prompt: "Hello"
+                  max_tokens: 64
+                  deadline_ms: 30000
+              bad_invalid_params:
+                value:
+                  task_id: "not-a-uuid"
       responses:
         '202':
           description: Accepted
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdmissionResponse'
+              x-examples:
+                accepted:
+                  value:
+                    task_id: "00000000-0000-0000-0000-000000000001"
+                    queue_position: 3
+                    predicted_start_ms: 420
+                    backoff_ms: 0
         '400':
           description: Invalid params
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
           content:
             application/json:
               schema:
@@ -43,10 +77,22 @@ paths:
               schema: { type: string }
             X-Backoff-Ms:
               schema: { type: integer, format: int64 }
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+              x-examples:
+                backpressure:
+                  value:
+                    code: "QUEUE_FULL_DROP_LRU"
+                    message: "Queue saturated; try later"
+                    engine: "vllm"
+                    retriable: true
+                    retry_after_ms: 1500
+                    policy_label: "drop-lru"
           x-req-id:
             - ORCH-2007
         '503': { description: Pool unavailable }
@@ -77,10 +123,25 @@ paths:
       responses:
         '200':
           description: text/event-stream
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
           content:
             text/event-stream:
               schema:
                 type: string
+          x-examples:
+            sse_frames:
+              value: |
+                event: started
+                data: {"queue_position":3,"predicted_start_ms":420}
+
+                event: token
+                data: {"t":"Hello","i":0}
+
+                event: end
+                data: {"tokens_out":64,"decode_ms":2300}
 
   /v1/tasks/{id}/cancel:
     post:
@@ -94,7 +155,12 @@ paths:
           required: true
           schema: { type: string, format: uuid }
       responses:
-        '204': { description: No Content }
+        '204':
+          description: No Content
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
 
   /v1/sessions/{id}:
     get:
@@ -110,6 +176,10 @@ paths:
       responses:
         '200':
           description: Session info
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
           content:
             application/json:
               schema:
@@ -193,6 +263,9 @@ components:
         - DECODE_TIMEOUT
         - WORKER_RESET
         - INTERNAL
+        - DEADLINE_UNMET
+        - MODEL_DEPRECATED
+        - UNTRUSTED_ARTIFACT
 
     ErrorEnvelope:
       type: object
@@ -201,6 +274,9 @@ components:
         code: { $ref: '#/components/schemas/ErrorKind' }
         message: { type: string }
         engine: { $ref: '#/components/schemas/Engine' }
+        retriable: { type: boolean }
+        retry_after_ms: { type: integer, format: int64 }
+        policy_label: { type: string }
 
     SessionInfo:
       type: object
@@ -229,6 +305,8 @@ components:
     SSEMetrics:
       type: object
       description: Engine/pool specific snapshot; fields may be added in a backward-compatible way.
+      properties:
+        on_time_probability: { type: number, format: float, description: Probability of on-time completion given current load }
       additionalProperties: true
       example: { kv_warmth: true, queue_depth: 2 }
 

@@ -7,6 +7,77 @@ info:
 servers:
   - url: /
 paths:
+  /v1/catalog/models:
+    post:
+      operationId: createCatalogModel
+      summary: Ingest or create a catalog model entry
+      x-req-id: [ORCH-3060]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogModel'
+      responses:
+        '201': { description: Created }
+
+  /v1/catalog/models/{id}:
+    get:
+      operationId: getCatalogModel
+      summary: Get catalog model manifest, digests, signatures, and SBOM reference
+      x-req-id: [ORCH-3060]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogModel'
+
+  /v1/catalog/models/{id}/verify:
+    post:
+      operationId: verifyCatalogModel
+      summary: Trigger signature/attestation verification for a catalog entry
+      x-req-id: [ORCH-3061]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '202': { description: Verification started }
+
+  /v1/catalog/models/{id}/state:
+    post:
+      operationId: setCatalogModelState
+      summary: Set model lifecycle state
+      x-req-id: [ORCH-3072]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [state]
+              properties:
+                state:
+                  type: string
+                  enum: [Draft, Active, Canary, Deprecated, Retired]
+                deadline_ms:
+                  type: integer
+                  format: int64
+      responses:
+        '202': { description: Accepted }
   /v1/pools/{id}/drain:
     post:
       operationId: drainPool
@@ -83,6 +154,43 @@ components:
     Engine:
       type: string
       enum: [llamacpp, vllm, tgi, triton]
+    TrustPolicy:
+      type: object
+      properties:
+        mode: { type: string, enum: [strict, permissive] }
+        allowed_registries: { type: array, items: { type: string } }
+        require_signature: { type: boolean }
+        require_sbom: { type: boolean }
+        ca_roots: { type: array, items: { type: string } }
+    SignatureMeta:
+      type: object
+      properties:
+        signer: { type: string }
+        algo: { type: string }
+        verified: { type: boolean }
+        timestamp_ms: { type: integer, format: int64 }
+    SBOMRef:
+      type: object
+      properties:
+        uri: { type: string }
+        digest: { type: string }
+    Manifest:
+      type: object
+      properties:
+        digest: { type: string }
+        size_bytes: { type: integer, format: int64 }
+    CatalogModel:
+      type: object
+      required: [id, digest]
+      properties:
+        id: { type: string }
+        digest: { type: string }
+        source_url: { type: string }
+        tags: { type: array, items: { type: string } }
+        manifests: { type: array, items: { $ref: '#/components/schemas/Manifest' } }
+        signatures: { type: array, items: { $ref: '#/components/schemas/SignatureMeta' } }
+        sbom: { $ref: '#/components/schemas/SBOMRef' }
+        trust_policy: { $ref: '#/components/schemas/TrustPolicy' }
     DrainRequest:
       type: object
       required: [deadline_ms]

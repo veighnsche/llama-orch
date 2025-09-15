@@ -336,6 +336,35 @@ pools:
 * [ ] Graceful shutdown
 * [ ] Determinism suite across replicas
 
+### v3.2 — Catalog/Lifecycle & Advanced Scheduling
+
+* [ ] Catalog & Trust policy implemented
+  * [ ] Deterministic tag→digest resolution recorded
+  * [ ] Strict policy rejects unsigned/unverifiable artifacts
+  * [ ] Verification events logged and exported (catalog_verifications_total)
+  * [ ] SBOM/manifests retained in catalog entries
+* [ ] Lifecycle states enforced
+  * [ ] Deprecated blocks new sessions (unless override); pools drain
+  * [ ] Retired unloads and archives
+  * [ ] model_state gauge exposed
+  * [ ] MODEL_DEPRECATED error returned when applicable
+* [ ] WFQ fairness and quotas
+  * [ ] Admission fairness configured (weights per priority/tenant)
+  * [ ] admission_share gauge exported
+  * [ ] Quotas (max_concurrent, rps) enforced per tenant
+* [ ] EDF deadline handling
+  * [ ] deadline_ms honored; infeasible rejected (DEADLINE_UNMET)
+  * [ ] ETA‑aware eviction policy documented
+  * [ ] deadlines_met_ratio gauge exported
+  * [ ] on_time_probability surfaced via SSE metrics
+* [ ] Preemption semantics
+  * [ ] Soft preemption preferred for waiting items
+  * [ ] Hard preemption gated on adapter capability (interruptible_decode)
+  * [ ] preemptions_total and resumptions_total exported
+  * [ ] preempted=true and resumable state surfaced when supported
+* [ ] Telemetry/log fields updated
+  * [ ] tenant_id, priority, weight, deadline_ms, on_time_probability, preempted present
+
 ---
 
 ## 10) Assumptions & Non‑Goals
@@ -352,6 +381,11 @@ pools:
 * ORCH‑3001..3058 → OC‑CORE (`.specs/10-orchestrator-core.md`), OC‑POOL (`.specs/30-pool-managerd.md`), OC‑ADAPT (`.specs/40-43-worker-adapters-*.md`), and Policy (`.specs/50-51-plugins-*.md`).
 * Metrics requirements (ORCH‑3027/3028) ↔ `.specs/metrics/otel-prom.md` and `ci/metrics.lint.json`.
 * Determinism suite (ORCH‑3045/3050/3051) ↔ `.specs/70-determinism-suite.md`.
+* v3.2 additions
+  * Catalog & Trust (ORCH‑3060..3066; tests ORCH‑3067..3068) ↔ Control Plane OpenAPI (`/v1/catalog/*`), config schema (catalog policy), and metrics (`catalog_verifications_total`).
+  * Lifecycle States (ORCH‑3069..3074) ↔ Control Plane state transition endpoint; data-plane typed error `MODEL_DEPRECATED`; metrics `model_state`.
+  * Advanced Scheduling (WFQ/EDF/Preemption) (ORCH‑3075..3092) ↔ Scheduler (OC‑CORE), config schema (admission fairness, tenants, preemption), data-plane SSE metrics (`on_time_probability`), metrics (`admission_share`, `deadlines_met_ratio`, `preemptions_total`, `resumptions_total`).
+  * Glue (ORCH‑3093..3094) ↔ Data-plane typed errors and telemetry/log fields.
 
 ## 12) References (engine contracts)
 
@@ -360,3 +394,58 @@ pools:
 * Hugging Face Text‑Generation‑Inference (custom API + OpenAI Messages API)
 * NVIDIA Triton Inference Server (HTTP/GRPC) and OpenAI‑compatible frontend
 * TensorRT‑LLM `trtllm-serve` (OpenAI‑compatible)
+
+---
+
+## 12) v3.2 Addendum — Model Catalog/Lifecycle & Advanced Scheduling
+
+### 12.1 Catalog & Trust
+
+* Controller/Pool Manager **MUST** maintain a model catalog with provenance (manifest digest, source URL, version), signature/attestation metadata, and SBOM/manifests retention. [ORCH‑3060]
+* Under `strict` trust policy, unsigned or unverifiable artifacts **MUST** be rejected at ingest or load time. [ORCH‑3061]
+* Tag inputs **MUST** be resolved to immutable digests deterministically before rollout; Controller **MUST** record the resolved digest. [ORCH‑3062]
+* Trust policy **MUST** specify allowed registries and CA roots; mirrors **MAY** be configured. [ORCH‑3063]
+* Verification events **MUST** be logged and exported as metrics. [ORCH‑3064]
+* SBOM/manifests **MUST** be retained alongside the catalog entry. [ORCH‑3065]
+* Tests: strict policy **MUST** reject unsigned; tag→digest resolution **MUST** be deterministic. [ORCH‑3067][ORCH‑3068]
+
+### 12.2 Lifecycle States
+
+* Cataloged models **MUST** have lifecycle states: `Draft → Active → Canary → Deprecated → Retired`. [ORCH‑3069]
+* `Deprecated` **MUST** block new sessions unless `override=true`; Pools **MUST** drain on deprecation; `Retired` **MUST** unload and archive. [ORCH‑3070]
+* SLOs for `Deprecated` **MUST** be frozen (no tighter SLOs applied). [ORCH‑3071]
+* Control plane **MUST** expose a state transition op with optional drain deadline. [ORCH‑3072]
+* Telemetry **MUST** export `model_state{model_id,state}` gauge; typed error `MODEL_DEPRECATED` **MUST** be returned when blocking. [ORCH‑3073]
+
+### 12.3 Advanced Scheduling
+
+WFQ & Hierarchical Fairness
+* Admission **MUST** support Weighted Fair Queuing across priority tiers; per‑tenant weights and quotas **MAY** be configured. [ORCH‑3075]
+* Observed share **SHOULD** approximate configured weights over an EWMA window; export `admission_share{tenant,priority}`. [ORCH‑3076]
+* Quotas (`max_concurrent`, `rps`) **MUST** be enforceable per tenant. [ORCH‑3077]
+
+Deadline‑aware (EDF) with Feasibility
+* Admission **MUST** honor `deadline_ms`; infeasible requests **MUST** be rejected with `DEADLINE_UNMET`. [ORCH‑3079]
+* Scheduler **SHOULD** be ETA‑aware for eviction policies under persistent overload. [ORCH‑3080]
+* Telemetry **MUST** include `deadlines_met_ratio{priority}` and per‑job `on_time_probability` exposed via SSE metrics/event stream. [ORCH‑3081]
+
+Preemption
+* Soft preemption **SHOULD** prefer canceling/evicting waiting lower‑priority items to admit urgent work. [ORCH‑3085]
+* Hard preemption **MAY** be enabled only when the engine/adapter proves `interruptible_decode`; preempted jobs **MUST** surface `preempted=true` and any resumable state. [ORCH‑3086]
+* Metrics **MUST** include `preemptions_total{mode,engine}` and `resumptions_total{engine}`. [ORCH‑3087]
+
+Placement Integration
+* Placement **MUST** combine least‑loaded with per‑replica slot state, WFQ, and EDF considerations; topology hints **SHOULD** influence ties. [ORCH‑3091]
+
+### 12.4 Glue
+
+* Typed errors **MUST** include: `DEADLINE_UNMET`, `MODEL_DEPRECATED`, `UNTRUSTED_ARTIFACT`. [ORCH‑3093]
+* Telemetry/logs **MUST** include structured fields: `tenant_id`, `priority`, `weight`, `deadline_ms`, `on_time_probability`, `preempted`. [ORCH‑3094]
+
+### 12.5 Defaults
+
+* `catalog.trust_policy = strict` with signatures and SBOM required.
+* Admission fairness default: `wfq`; `interactive.weight=8`, `batch.weight=1`.
+* Eviction default: ETA‑aware over LRU.
+* Preemption default: `soft`; `hard` only when adapter capability proven.
+* Deadline overlay enabled; infeasible requests rejected.

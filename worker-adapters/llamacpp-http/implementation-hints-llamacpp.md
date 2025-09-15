@@ -18,7 +18,7 @@ References
 
 CPU (CI fallback)
 
-```
+```bash
 llama-server \
   --model ~/.cache/models/qwen2.5-0.5b-instruct-q4_k_m.gguf \
   --host 127.0.0.1 --port 8080 \
@@ -32,6 +32,23 @@ Notes
 
 - `--metrics` is required to expose `/metrics`.
 - `--parallel 1` and `--no-cont-batching` reduce cross‑request effects for determinism.
+
+## Capabilities required by orchestrator
+
+- Multi‑GPU
+  - Supported when built with GPU backends (CUDA/HIP/Vulkan). Distribute work across multiple GPUs using the server's supported multi‑GPU options (e.g., per‑GPU tensor split). Consult the server README and build flags for your backend and version.
+- Streaming SSE
+  - `/completion` supports streaming when `stream=true`. Surface `token` deltas promptly; map to orchestrator SSE framing (`started`, `token`, `metrics`, `end`, `error`).
+- Cancellation
+  - Cancel by closing the client stream/socket; ensure the worker frees the slot immediately.
+- Metrics
+  - `/metrics` exposes Prometheus metrics. Adapter must attach orchestrator labels: `engine`, `engine_version`, `pool_id`, `replica_id`, `model_id`.
+- Slot/Properties
+  - `/slots` and `/props` expose slot count and runtime properties. Use for placement hints and observability.
+- Determinism & Version Pinning
+  - Prefer greedy decoding (temperature 0, no sampling). Pin engine commit/version and sampler profile version per replica set.
+- Embeddings and Rerank
+  - `/embedding` and `/reranking` are available in recent versions; expose only if enabled in deployment.
 
 ## Endpoints to use
 

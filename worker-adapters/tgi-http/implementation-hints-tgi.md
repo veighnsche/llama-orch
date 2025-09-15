@@ -56,3 +56,16 @@ Adapter should attach orchestrator labels (`engine`, `engine_version`, `pool_id`
 - Completion: prefer the streaming endpoint for low TTFB; surface token deltas to metrics.
 - Cancel: close the client stream; ensure worker frees resources.
 - Version: derive `engine_version` from container tag or `/info` where present; pin in deployment metadata.
+
+## Capabilities required by orchestrator
+
+- Multi‑GPU
+  - Supported via tensor parallelism (sharding). Use the container flag `--num-shard` (or env `NUM_SHARD`) to split the model across multiple GPUs on a single node. Verify model support for tensor parallelism in TGI.
+- Streaming SSE
+  - Use `/generate_stream` for streaming tokens. Map events to the orchestrator’s SSE framing (`started`, `token`, `metrics`, `end`, `error`).
+- Cancellation
+  - Cancel by closing the client stream (SSE or websocket depending on version). Ensure the worker frees resources promptly.
+- Metrics
+  - `/metrics` provides Prometheus metrics. Adapter must attach orchestrator labels (`engine`, `engine_version`, `pool_id`, `replica_id`, `model_id`).
+- Determinism & Version Pinning
+  - Prefer greedy decoding (`do_sample=false`, `temperature=0`, `top_p=1`). Reduce concurrency during determinism tests. Pin engine version and model artifacts across replicas.
