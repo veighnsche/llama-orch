@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use openapiv3::{OpenAPI, ReferenceOr, PathItem, Operation};
+use openapiv3::{OpenAPI, ReferenceOr, Operation};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::io::Write;
@@ -22,6 +22,17 @@ struct ManifestEntry {
     features: Vec<String>,
     tests: Vec<String>,
     docs_paths: Vec<String>,
+}
+
+fn trim_trailing_blank_lines(s: &str) -> String {
+    // Remove any trailing blank lines and ensure a single trailing newline
+    let mut lines: Vec<&str> = s.split('\n').collect();
+    while matches!(lines.last(), Some(l) if l.trim().is_empty()) {
+        lines.pop();
+    }
+    let mut out = lines.join("\n");
+    out.push('\n');
+    out
 }
 
 fn openapi_summary(repo_root: &Path, refs: &[String]) -> String {
@@ -779,7 +790,7 @@ fn update_root_readme(_repo_root: &Path, root_readme: &Path, entries: &[Manifest
 
     // Replace or insert between markers
     let re = Regex::new(&format!(
-        r"(?s){}.*?{}",
+        r"(?s){}.*?{}(?:\r?\n)?",
         regex::escape(begin),
         regex::escape(end)
     ))?;
@@ -792,6 +803,8 @@ fn update_root_readme(_repo_root: &Path, root_readme: &Path, entries: &[Manifest
         content.push_str("\n");
         content.push_str(&table);
     }
+
+    let content = trim_trailing_blank_lines(&content);
 
     Ok(wrap_to_100_cols(&content))
 }
