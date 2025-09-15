@@ -5,7 +5,7 @@ Feature: Apply Commit mode
 
   Scenario: Preflight then Apply in Commit mode
     When I run preflight and apply in Commit mode
-    Then side effects are not performed (DryRun is default)
+    Then apply completes successfully
 
   Scenario: Preflight detects a critical violation and blocks apply
     Given a critical compatibility violation is detected in preflight

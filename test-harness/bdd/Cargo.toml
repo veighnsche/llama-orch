@@ -15,10 +15,15 @@ serde_json = "1"
 anyhow = { workspace = true }
 async-trait = "0.1"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+walkdir = { workspace = true }
+tempfile = "3"
 
 [dev-dependencies]
-walkdir = { workspace = true }
 
 [[bin]]
 name = "bdd-runner"
 path = "src/main.rs"
+
+[[bin]]
+name = "bdd-generate-skeletons"
+path = "src/bin/bdd-generate-skeletons.rs"
