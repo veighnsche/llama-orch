@@ -178,6 +178,10 @@ Overall project progress: 33% (Stages 0–5 of 18 complete)
   Detailed 4‑week execution summary and prior progress logs are archived under `.docs/DONE/` (see the latest e.g. `.docs/DONE/TODO-9.md`). Read these to understand exactly what has been completed, with dates and file references.
   For expected code layout at release, see `.plan/code-distribution.md`.
 
+  Snapshot notes (brief; see `TODO.md` for live next actions):
+  - BDD harness wired; step registry check green (no undefined/ambiguous steps)
+  - Spec traceability references present (all catalog IDs referenced by features)
+
 ### Global TODO to v1.0.0 (High‑Level)
 
 - [x] Spec discipline and planning artifacts (`.specs/`, `.plan/`, `.docs/` test catalog)

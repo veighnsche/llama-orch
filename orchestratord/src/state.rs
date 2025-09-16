@@ -4,9 +4,17 @@ use orchestrator_core::queue::Policy;
 
 use crate::admission::{MetricLabels, QueueWithMetrics};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AppState {
     pub queue: Arc<Mutex<QueueWithMetrics>>,
+    pub model_state: Arc<Mutex<ModelState>>,
+}
+
+#[derive(Clone, Debug)]
+pub enum ModelState {
+    Draft,
+    Deprecated { deadline_ms: i64 },
+    Retired,
 }
 
 pub fn default_state() -> AppState {
@@ -20,5 +28,6 @@ pub fn default_state() -> AppState {
     let queue = QueueWithMetrics::new(1024, Policy::DropLru, labels);
     AppState {
         queue: Arc::new(Mutex::new(queue)),
+        model_state: Arc::new(Mutex::new(ModelState::Draft)),
     }
 }

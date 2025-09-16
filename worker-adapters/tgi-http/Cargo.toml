@@ -2,7 +2,7 @@
 name = "worker-adapters-tgi-http"
 version = "0.0.0"
 edition = "2021"
-license = "MIT OR Apache-2.0"
+license = "GPL-3.0-or-later"
 
 [lib]
 name = "worker_adapters_tgi_http"
@@ -15,3 +15,4 @@ anyhow = { workspace = true }
 futures = { workspace = true }
 worker-adapters-adapter-api = { path = "../adapter-api" }
 contracts-api-types = { path = "../../contracts/api-types" }
+serde_json = { workspace = true }

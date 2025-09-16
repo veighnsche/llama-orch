@@ -2,7 +2,7 @@
 name = "test-harness-bdd"
 version = "0.0.0"
 edition = "2021"
-license = "MIT OR Apache-2.0"
+license = "GPL-3.0-or-later"
 
 [features]
 default = ["bdd-cucumber"]
@@ -17,6 +17,17 @@ async-trait = "0.1"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 walkdir = { workspace = true }
 tempfile = "3"
+orchestratord = { path = "../../orchestratord" }
+contracts-api-types = { path = "../../contracts/api-types" }
+axum = { workspace = true }
+http = { workspace = true }
+hyper = { workspace = true }
+tower = { version = "0.4", features = ["util"] }
+futures = { workspace = true }
+worker-adapters-llamacpp-http = { path = "../../worker-adapters/llamacpp-http" }
+worker-adapters-vllm-http = { path = "../../worker-adapters/vllm-http" }
+worker-adapters-tgi-http = { path = "../../worker-adapters/tgi-http" }
+worker-adapters-triton = { path = "../../worker-adapters/triton" }
 
 [dev-dependencies]
 

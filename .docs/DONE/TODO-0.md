@@ -17,7 +17,7 @@
   * Proof: `cargo build --workspace` → Finished dev; `cargo test --workspace` → ok (stubs only).
 * [x] **Add repo meta**
 
-  * AC: `.editorconfig`, `.gitignore`, `CODEOWNERS`, `LICENSE` (MIT OR Apache‑2.0 or dual), `SECURITY.md`, `CONTRIBUTING.md`, `docs/PROJECT_GUIDE.md`.
+  * AC: `.editorconfig`, `.gitignore`, `CODEOWNERS`, `LICENSE` (GPL-3.0-or-later), `SECURITY.md`, `CONTRIBUTING.md`, `docs/PROJECT_GUIDE.md`.
   * Proof: Files created; `git status -s` shows tracked/unstaged where applicable.
 * [x] **Set up `xtask` CLI** for multi‑file ops
 

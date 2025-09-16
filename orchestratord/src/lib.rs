@@ -27,6 +27,8 @@ pub fn build_app() -> Router<state::AppState> {
         .route("/v1/pools/:id/reload", post(http::handlers::reload_pool))
         .route("/v1/pools/:id/health", get(http::handlers::get_pool_health))
         .route("/v1/replicasets", get(http::handlers::list_replicasets))
+        // Lifecycle control (planning)
+        .route("/v1/models/state", post(http::handlers::set_model_state))
         // Observability
         .route("/metrics", get(http::handlers::metrics_endpoint))
         .with_state(state)

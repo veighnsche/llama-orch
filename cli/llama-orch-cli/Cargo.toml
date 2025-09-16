@@ -3,7 +3,7 @@ name = "llama-orch-cli"
 version = "0.1.0"
 edition = "2021"
 authors = ["llama-orch contributors"]
-license = "MIT OR Apache-2.0"
+license = "GPL-3.0-or-later"
 description = "CLI frontend for contract design and verification against backend OpenAPI and Pact artifacts"
 publish = false
 
