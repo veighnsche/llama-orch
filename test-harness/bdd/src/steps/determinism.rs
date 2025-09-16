@@ -1,9 +1,9 @@
 use crate::steps::world::World;
+use contracts_api_types as api;
 use cucumber::{given, then, when};
 use futures::StreamExt;
-use worker_adapters_llamacpp_http::LlamaCppHttpAdapter;
-use contracts_api_types as api;
 use worker_adapters_adapter_api::WorkerAdapter;
+use worker_adapters_llamacpp_http::LlamaCppHttpAdapter;
 
 #[given(regex = r"^two replicas pin engine_version sampler_profile_version and model_digest$")]
 pub async fn given_two_replicas_pinned_versions_artifacts(world: &mut World) {
@@ -42,8 +42,12 @@ pub async fn then_token_streams_byte_exact(_world: &mut World) {
     let mut s2 = a2.submit(req).expect("submit ok");
     let mut ev1 = Vec::new();
     let mut ev2 = Vec::new();
-    while let Some(e) = s1.next().await { ev1.push(format!("{:?}", e.unwrap())); }
-    while let Some(e) = s2.next().await { ev2.push(format!("{:?}", e.unwrap())); }
+    while let Some(e) = s1.next().await {
+        ev1.push(format!("{:?}", e.unwrap()));
+    }
+    while let Some(e) = s2.next().await {
+        ev2.push(format!("{:?}", e.unwrap()));
+    }
     assert_eq!(ev1, ev2, "token streams differ across replicas");
 }
 

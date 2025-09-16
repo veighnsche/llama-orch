@@ -1,9 +1,8 @@
 use once_cell::sync::Lazy;
 use prometheus::{
-    register_gauge_vec_with_registry,
-    register_histogram_vec_with_registry, Encoder, HistogramOpts, HistogramVec, IntCounterVec,
-    IntGaugeVec, Opts, Registry, TextEncoder, GaugeVec,
-    register_int_counter_vec_with_registry, register_int_gauge_vec_with_registry,
+    register_gauge_vec_with_registry, register_histogram_vec_with_registry,
+    register_int_counter_vec_with_registry, register_int_gauge_vec_with_registry, Encoder,
+    GaugeVec, HistogramOpts, HistogramVec, IntCounterVec, IntGaugeVec, Opts, Registry, TextEncoder,
 };
 
 pub static REGISTRY: Lazy<Registry> = Lazy::new(Registry::new);

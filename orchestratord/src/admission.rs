@@ -18,11 +18,18 @@ pub struct QueueWithMetrics {
 
 impl QueueWithMetrics {
     pub fn new(capacity: usize, policy: Policy, labels: MetricLabels) -> Self {
-        Self { inner: InMemoryQueue::with_capacity_policy(capacity, policy), labels }
+        Self {
+            inner: InMemoryQueue::with_capacity_policy(capacity, policy),
+            labels,
+        }
     }
 
-    pub fn inner(&self) -> &InMemoryQueue { &self.inner }
-    pub fn inner_mut(&mut self) -> &mut InMemoryQueue { &mut self.inner }
+    pub fn inner(&self) -> &InMemoryQueue {
+        &self.inner
+    }
+    pub fn inner_mut(&mut self) -> &mut InMemoryQueue {
+        &mut self.inner
+    }
 
     fn priority_str(prio: Priority) -> &'static str {
         match prio {

@@ -51,6 +51,9 @@ pub enum ErrorKind {
     DecodeTimeout,
     WorkerReset,
     Internal,
+    DeadlineUnmet,
+    ModelDeprecated,
+    UntrustedArtifact,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -95,6 +98,12 @@ pub struct ErrorEnvelope {
     pub message: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub engine: Option<Engine>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub retriable: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub retry_after_ms: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_label: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -107,4 +116,10 @@ pub struct SessionInfo {
     pub kv_bytes: Option<i64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub kv_warmth: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tokens_budget_remaining: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub time_budget_remaining_ms: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cost_budget_remaining: Option<f64>,
 }

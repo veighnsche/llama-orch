@@ -1,10 +1,11 @@
 use axum::body::{to_bytes, Body};
-use axum::response::IntoResponse;
-use serde_json::json;
 use axum::extract::State;
+use axum::response::IntoResponse;
 use contracts_api_types as api;
+use serde_json::json;
 
 use orchestratord::http::handlers;
+use http::header::HeaderName;
 
 #[derive(Debug, cucumber::World)]
 pub struct World {
@@ -60,60 +61,94 @@ impl World {
             headers.insert("X-API-Key", key.parse().unwrap());
         }
         for (k, v) in self.extra_headers.drain(..) {
-            headers.insert(k, v.parse().unwrap());
+            let name = HeaderName::from_bytes(k.as_bytes()).unwrap();
+            headers.insert(name, v.parse().unwrap());
         }
 
         // Dispatch to handlers by path
         let resp = match (method, path) {
             (http::Method::POST, "/v1/tasks") => {
-                let body: api::TaskRequest = serde_json::from_value(
-                    body_json.unwrap_or_else(|| json!({}))
-                )?;
+                let body: api::TaskRequest =
+                    serde_json::from_value(body_json.unwrap_or_else(|| json!({})))?;
                 handlers::create_task(headers, State(self.state.clone()), axum::Json(body)).await
             }
             (http::Method::GET, p) if p.starts_with("/v1/tasks/") && p.ends_with("/stream") => {
-                let id = p.trim_start_matches("/v1/tasks/")
+                let id = p
+                    .trim_start_matches("/v1/tasks/")
                     .trim_end_matches("/stream")
-                    .trim_matches('/').to_string();
-                handlers::stream_task(headers, State(self.state.clone()), axum::extract::Path(id)).await
+                    .trim_matches('/')
+                    .to_string();
+                handlers::stream_task(headers, State(self.state.clone()), axum::extract::Path(id))
+                    .await
             }
             (http::Method::POST, p) if p.starts_with("/v1/tasks/") && p.ends_with("/cancel") => {
-                let id = p.trim_start_matches("/v1/tasks/")
+                let id = p
+                    .trim_start_matches("/v1/tasks/")
                     .trim_end_matches("/cancel")
-                    .trim_matches('/').to_string();
-                handlers::cancel_task(headers, State(self.state.clone()), axum::extract::Path(id)).await
+                    .trim_matches('/')
+                    .to_string();
+                handlers::cancel_task(headers, State(self.state.clone()), axum::extract::Path(id))
+                    .await
             }
             (http::Method::GET, p) if p.starts_with("/v1/sessions/") => {
                 let id = p.trim_start_matches("/v1/sessions/").to_string();
-                handlers::get_session(headers, State(self.state.clone()), axum::extract::Path(id)).await
+                handlers::get_session(headers, State(self.state.clone()), axum::extract::Path(id))
+                    .await
             }
             (http::Method::DELETE, p) if p.starts_with("/v1/sessions/") => {
                 let id = p.trim_start_matches("/v1/sessions/").to_string();
-                handlers::delete_session(headers, State(self.state.clone()), axum::extract::Path(id)).await
+                handlers::delete_session(
+                    headers,
+                    State(self.state.clone()),
+                    axum::extract::Path(id),
+                )
+                .await
             }
             (http::Method::GET, p) if p.starts_with("/v1/pools/") && p.ends_with("/health") => {
-                let id = p.trim_start_matches("/v1/pools/")
+                let id = p
+                    .trim_start_matches("/v1/pools/")
                     .trim_end_matches("/health")
-                    .trim_matches('/').to_string();
-                handlers::get_pool_health(headers, State(self.state.clone()), axum::extract::Path(id)).await
+                    .trim_matches('/')
+                    .to_string();
+                handlers::get_pool_health(
+                    headers,
+                    State(self.state.clone()),
+                    axum::extract::Path(id),
+                )
+                .await
             }
             (http::Method::POST, p) if p.starts_with("/v1/pools/") && p.ends_with("/drain") => {
-                let _id = p.trim_start_matches("/v1/pools/")
+                let _id = p
+                    .trim_start_matches("/v1/pools/")
                     .trim_end_matches("/drain")
-                    .trim_matches('/').to_string();
-                let body: api::control::DrainRequest = serde_json::from_value(
-                    body_json.unwrap_or_else(|| json!({"deadline_ms": 0}))
-                )?;
-                handlers::drain_pool(headers, State(self.state.clone()), axum::extract::Path(_id), axum::Json(body)).await
+                    .trim_matches('/')
+                    .to_string();
+                let body: api::control::DrainRequest =
+                    serde_json::from_value(body_json.unwrap_or_else(|| json!({"deadline_ms": 0})))?;
+                handlers::drain_pool(
+                    headers,
+                    State(self.state.clone()),
+                    axum::extract::Path(_id),
+                    axum::Json(body),
+                )
+                .await
             }
             (http::Method::POST, p) if p.starts_with("/v1/pools/") && p.ends_with("/reload") => {
-                let _id = p.trim_start_matches("/v1/pools/")
+                let _id = p
+                    .trim_start_matches("/v1/pools/")
                     .trim_end_matches("/reload")
-                    .trim_matches('/').to_string();
+                    .trim_matches('/')
+                    .to_string();
                 let body: api::control::ReloadRequest = serde_json::from_value(
-                    body_json.unwrap_or_else(|| json!({"new_model_ref":""}))
+                    body_json.unwrap_or_else(|| json!({"new_model_ref":""})),
                 )?;
-                handlers::reload_pool(headers, State(self.state.clone()), axum::extract::Path(_id), axum::Json(body)).await
+                handlers::reload_pool(
+                    headers,
+                    State(self.state.clone()),
+                    axum::extract::Path(_id),
+                    axum::Json(body),
+                )
+                .await
             }
             (http::Method::GET, "/v1/replicasets") => {
                 handlers::list_replicasets(headers, State(self.state.clone())).await
@@ -124,7 +159,9 @@ impl World {
 
         let status = resp.status();
         let headers_out = resp.headers().clone();
-        let body_bytes = to_bytes(resp.into_body(), 1_048_576).await.unwrap_or_default();
+        let body_bytes = to_bytes(resp.into_body(), 1_048_576)
+            .await
+            .unwrap_or_default();
         let body_str = String::from_utf8(body_bytes.to_vec()).unwrap_or_default();
 
         self.corr_id = headers_out

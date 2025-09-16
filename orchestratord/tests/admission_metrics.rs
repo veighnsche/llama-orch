@@ -10,10 +10,17 @@ fn labels(pool: &str, replica: &str) -> admission::MetricLabels {
     }
 }
 
-fn contains_metric_line(text: &str, metric: &str, label_snips: &[(&str, &str)], value_suffix: &str) -> bool {
+fn contains_metric_line(
+    text: &str,
+    metric: &str,
+    label_snips: &[(&str, &str)],
+    value_suffix: &str,
+) -> bool {
     for line in text.lines() {
         if line.starts_with(metric) {
-            if label_snips.iter().all(|(k, v)| line.contains(&format!("{}=\"{}\"", k, v)))
+            if label_snips
+                .iter()
+                .all(|(k, v)| line.contains(&format!("{}=\"{}\"", k, v)))
                 && line.trim_end().ends_with(value_suffix)
             {
                 return true;
@@ -44,7 +51,11 @@ fn enqueue_emits_enqueued_and_depth() {
     assert!(contains_metric_line(
         &text,
         "queue_depth",
-        &[("engine", "llamacpp"), ("pool_id", "pool-test"), ("priority", "interactive")],
+        &[
+            ("engine", "llamacpp"),
+            ("pool_id", "pool-test"),
+            ("priority", "interactive")
+        ],
         " 1",
     ));
 }

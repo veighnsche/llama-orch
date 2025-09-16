@@ -43,7 +43,7 @@ schemars = { version = "0.8", features = ["either"] }
 axum = { version = "0.7", features = ["macros", "json"] }
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter", "json"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 futures = "0.3"
 http = "1"

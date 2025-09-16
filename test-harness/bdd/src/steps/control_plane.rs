@@ -12,7 +12,9 @@ pub async fn given_pool_id(_world: &mut World) {}
 #[when(regex = r"^I request pool health$")]
 pub async fn when_request_pool_health(world: &mut World) {
     world.push_fact("cp.health");
-    let _ = world.http_call(Method::GET, "/v1/pools/pool0/health", None).await;
+    let _ = world
+        .http_call(Method::GET, "/v1/pools/pool0/health", None)
+        .await;
 }
 
 #[then(regex = r"^I receive 200 with liveness readiness draining and metrics$")]

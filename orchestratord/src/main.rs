@@ -1,6 +1,10 @@
 use axum::Router;
 
 fn main() {
+    // Initialize structured logging (JSON). In tests, double init is ignored by tracing-subscriber.
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .try_init();
     // Build the router using the library entrypoint. Do not start the server in pre-code phase.
     let app: Router<orchestratord::state::AppState> = orchestratord::build_app();
     // Avoid unused warning in pre-code phase

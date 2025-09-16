@@ -29,9 +29,14 @@ pub async fn then_deadline_unmet_error(world: &mut World) {
 #[then(regex = r"^SSE metrics include on_time_probability$")]
 pub async fn then_sse_metrics_include_on_time_probability(world: &mut World) {
     // Start a stream
-    let _ = world.http_call(Method::GET, "/v1/tasks/t-0/stream", None).await;
+    let _ = world
+        .http_call(Method::GET, "/v1/tasks/t-0/stream", None)
+        .await;
     let body = world.last_body.as_ref().expect("sse body");
-    assert!(body.contains("on_time_probability"), "missing on_time_probability in SSE metrics frame");
+    assert!(
+        body.contains("on_time_probability"),
+        "missing on_time_probability in SSE metrics frame"
+    );
 }
 
 #[given(regex = r"^soft preemption is enabled$")]

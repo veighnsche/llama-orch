@@ -31,11 +31,7 @@ pub fn build_429_headers(_backoff: Backoff) -> HeaderMap {
     let mut headers = HeaderMap::new();
     headers.insert(
         "Retry-After",
-        _backoff
-            .retry_after_seconds
-            .to_string()
-            .parse()
-            .unwrap(),
+        _backoff.retry_after_seconds.to_string().parse().unwrap(),
     );
     headers.insert(
         "X-Backoff-Ms",

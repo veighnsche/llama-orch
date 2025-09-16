@@ -1,12 +1,12 @@
 use crate::steps::world::World;
+use contracts_api_types as api;
 use cucumber::{given, then};
 use futures::StreamExt;
+use worker_adapters_adapter_api::WorkerAdapter;
 use worker_adapters_llamacpp_http::LlamaCppHttpAdapter;
-use worker_adapters_vllm_http::VllmHttpAdapter;
 use worker_adapters_tgi_http::TgiHttpAdapter;
 use worker_adapters_triton::TritonAdapter;
-use contracts_api_types as api;
-use worker_adapters_adapter_api::WorkerAdapter;
+use worker_adapters_vllm_http::VllmHttpAdapter;
 
 #[given(regex = r"^a worker adapter for llama\\.cpp$|^a worker adapter for llamacpp$")]
 pub async fn given_adapter_llamacpp(world: &mut World) {
@@ -38,10 +38,12 @@ pub async fn then_adapter_implements_llamacpp_endpoints(_world: &mut World) {
         expected_tokens: None,
         kv_hint: None,
     };
-    let mut stream = worker_adapters_adapter_api::WorkerAdapter::submit(&a, req).expect("submit ok");
+    let mut stream =
+        worker_adapters_adapter_api::WorkerAdapter::submit(&a, req).expect("submit ok");
     let _first = stream.next().await;
     worker_adapters_adapter_api::WorkerAdapter::cancel(&a, "t").expect("cancel ok");
-    let _v = worker_adapters_adapter_api::WorkerAdapter::engine_version(&a).expect("engine_version ok");
+    let _v =
+        worker_adapters_adapter_api::WorkerAdapter::engine_version(&a).expect("engine_version ok");
 }
 
 #[then(regex = r"^OpenAI-compatible endpoints are internal only$")]
@@ -83,7 +85,8 @@ pub async fn then_adapter_implements_vllm_endpoints(_world: &mut World) {
     let mut s = worker_adapters_adapter_api::WorkerAdapter::submit(&a, req).expect("submit ok");
     let _ = s.next().await;
     worker_adapters_adapter_api::WorkerAdapter::cancel(&a, "t").expect("cancel ok");
-    let _ = worker_adapters_adapter_api::WorkerAdapter::engine_version(&a).expect("engine_version ok");
+    let _ =
+        worker_adapters_adapter_api::WorkerAdapter::engine_version(&a).expect("engine_version ok");
 }
 
 #[given(regex = r"^a worker adapter for tgi$")]
@@ -117,7 +120,8 @@ pub async fn then_adapter_implements_tgi_endpoints(_world: &mut World) {
     let mut s = worker_adapters_adapter_api::WorkerAdapter::submit(&a, req).expect("submit ok");
     let _ = s.next().await;
     worker_adapters_adapter_api::WorkerAdapter::cancel(&a, "t").expect("cancel ok");
-    let _ = worker_adapters_adapter_api::WorkerAdapter::engine_version(&a).expect("engine_version ok");
+    let _ =
+        worker_adapters_adapter_api::WorkerAdapter::engine_version(&a).expect("engine_version ok");
 }
 
 #[given(regex = r"^a worker adapter for triton$")]
@@ -151,5 +155,6 @@ pub async fn then_adapter_implements_triton_endpoints(_world: &mut World) {
     let mut s = worker_adapters_adapter_api::WorkerAdapter::submit(&a, req).expect("submit ok");
     let _ = s.next().await;
     worker_adapters_adapter_api::WorkerAdapter::cancel(&a, "t").expect("cancel ok");
-    let _ = worker_adapters_adapter_api::WorkerAdapter::engine_version(&a).expect("engine_version ok");
+    let _ =
+        worker_adapters_adapter_api::WorkerAdapter::engine_version(&a).expect("engine_version ok");
 }

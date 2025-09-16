@@ -15,11 +15,15 @@ pub async fn when_create_catalog_model(world: &mut World) {
     let mut signed = true;
     for ev in world.all_facts() {
         if let Some(stage) = ev.get("stage").and_then(|v| v.as_str()) {
-            if stage == "catalog.artifact.unsigned" { signed = false; }
+            if stage == "catalog.artifact.unsigned" {
+                signed = false;
+            }
         }
     }
     let body = json!({ "id": "model0", "signed": signed });
-    let _ = world.http_call(Method::POST, "/v1/catalog", Some(body)).await;
+    let _ = world
+        .http_call(Method::POST, "/v1/catalog", Some(body))
+        .await;
 }
 
 #[then(regex = r"^the model is created$")]
@@ -30,7 +34,9 @@ pub async fn then_catalog_model_created(world: &mut World) {
 #[when(regex = r"^I get the catalog model$")]
 pub async fn when_get_catalog_model(world: &mut World) {
     world.push_fact("catalog.get");
-    let _ = world.http_call(Method::GET, "/v1/catalog/model0", None).await;
+    let _ = world
+        .http_call(Method::GET, "/v1/catalog/model0", None)
+        .await;
 }
 
 #[then(regex = r"^the manifest signatures and sbom are present$")]
@@ -43,7 +49,9 @@ pub async fn then_manifest_signatures_sbom_present(world: &mut World) {
 #[when(regex = r"^I verify the catalog model$")]
 pub async fn when_verify_catalog_model(world: &mut World) {
     world.push_fact("catalog.verify");
-    let _ = world.http_call(Method::POST, "/v1/catalog/model0/verify", None).await;
+    let _ = world
+        .http_call(Method::POST, "/v1/catalog/model0/verify", None)
+        .await;
 }
 
 #[then(regex = r"^verification starts$")]
@@ -54,7 +62,9 @@ pub async fn then_verification_starts(world: &mut World) {
 #[given(regex = r"^strict trust policy is enabled$")]
 pub async fn given_strict_trust_policy_enabled(world: &mut World) {
     world.push_fact("catalog.trust.strict");
-    world.extra_headers.push(("X-Trust-Policy".into(), "strict".into()));
+    world
+        .extra_headers
+        .push(("X-Trust-Policy".into(), "strict".into()));
 }
 
 #[given(regex = r"^an unsigned catalog artifact$")]

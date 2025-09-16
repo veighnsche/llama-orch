@@ -46,7 +46,10 @@ pub async fn when_trigger_pool_unavailable(world: &mut World) {
 
 #[then(regex = r"^I receive 503 with correlation id and error envelope code POOL_UNAVAILABLE$")]
 pub async fn then_503_corr_pool_unavailable(world: &mut World) {
-    assert_eq!(world.last_status, Some(http::StatusCode::SERVICE_UNAVAILABLE));
+    assert_eq!(
+        world.last_status,
+        Some(http::StatusCode::SERVICE_UNAVAILABLE)
+    );
     assert!(world.corr_id.is_some());
     let v: serde_json::Value = serde_json::from_str(world.last_body.as_ref().unwrap()).unwrap();
     assert_eq!(v["code"], "POOL_UNAVAILABLE");
@@ -72,7 +75,10 @@ pub async fn when_trigger_internal_error(world: &mut World) {
 
 #[then(regex = r"^I receive 500 with correlation id and error envelope code INTERNAL$")]
 pub async fn then_500_corr_internal(world: &mut World) {
-    assert_eq!(world.last_status, Some(http::StatusCode::INTERNAL_SERVER_ERROR));
+    assert_eq!(
+        world.last_status,
+        Some(http::StatusCode::INTERNAL_SERVER_ERROR)
+    );
     assert!(world.corr_id.is_some());
     let v: serde_json::Value = serde_json::from_str(world.last_body.as_ref().unwrap()).unwrap();
     assert_eq!(v["code"], "INTERNAL");

@@ -54,7 +54,11 @@ pub async fn then_sse_started_token_end(world: &mut World) {
 #[then(regex = r"^I receive SSE metrics frames$")]
 pub async fn then_sse_metrics_frames(world: &mut World) {
     let body = world.last_body.as_ref().expect("expected SSE body");
-    assert!(body.contains("event: metrics"), "missing metrics event in SSE: {}", body);
+    assert!(
+        body.contains("event: metrics"),
+        "missing metrics event in SSE: {}",
+        body
+    );
 }
 
 #[then(regex = r"^started includes queue_position and predicted_start_ms$")]
@@ -62,15 +66,22 @@ pub async fn then_started_includes_queue_eta(world: &mut World) {
     let body = world.last_body.as_ref().expect("expected SSE body");
     let start_idx = body.find("event: started").expect("no started event");
     let data_prefix = "data: ";
-    let data_line = body[start_idx..]
-        .lines()
-        .nth(1)
-        .unwrap_or("");
-    assert!(data_line.starts_with(data_prefix), "no data line after started: {}", data_line);
+    let data_line = body[start_idx..].lines().nth(1).unwrap_or("");
+    assert!(
+        data_line.starts_with(data_prefix),
+        "no data line after started: {}",
+        data_line
+    );
     let json_str = data_line.trim_start_matches(data_prefix).trim();
     let v: serde_json::Value = serde_json::from_str(json_str).expect("parse started data json");
-    assert!(v.get("queue_position").is_some(), "started missing queue_position");
-    assert!(v.get("predicted_start_ms").is_some(), "started missing predicted_start_ms");
+    assert!(
+        v.get("queue_position").is_some(),
+        "started missing queue_position"
+    );
+    assert!(
+        v.get("predicted_start_ms").is_some(),
+        "started missing predicted_start_ms"
+    );
 }
 
 #[then(regex = r"^SSE event ordering is per stream$")]

@@ -11,7 +11,9 @@ pub async fn when_set_state_deprecated_with_deadline(world: &mut World) {
         "deadline_ms": 60000,
         "model_id": "model0"
     });
-    let _ = world.http_call(Method::POST, "/v1/models/state", Some(body)).await;
+    let _ = world
+        .http_call(Method::POST, "/v1/models/state", Some(body))
+        .await;
 }
 
 #[then(regex = r"^new sessions are blocked with MODEL_DEPRECATED$")]
@@ -41,21 +43,37 @@ pub async fn when_set_state_retired(world: &mut World) {
         "state": "Retired",
         "model_id": "model0"
     });
-    let _ = world.http_call(Method::POST, "/v1/models/state", Some(body)).await;
+    let _ = world
+        .http_call(Method::POST, "/v1/models/state", Some(body))
+        .await;
 }
 
 #[then(regex = r"^pools unload and archives retained$")]
 pub async fn then_pools_unload_archives_retained(world: &mut World) {
     let logs = world.state.logs.lock().unwrap();
-    let line = logs.iter().rev().find(|l| l.contains("\"event\":\"retire\""))
+    let line = logs
+        .iter()
+        .rev()
+        .find(|l| l.contains("\"event\":\"retire\""))
         .expect("no retire log event found");
-    assert!(line.contains("\"pools_unloaded\":true"), "retire log missing pools_unloaded: {}", line);
-    assert!(line.contains("\"archives_retained\":true"), "retire log missing archives_retained: {}", line);
+    assert!(
+        line.contains("\"pools_unloaded\":true"),
+        "retire log missing pools_unloaded: {}",
+        line
+    );
+    assert!(
+        line.contains("\"archives_retained\":true"),
+        "retire log missing archives_retained: {}",
+        line
+    );
 }
 
 #[then(regex = r"^model_state gauge is exported$")]
 pub async fn then_model_state_gauge_exported(world: &mut World) {
     let _ = world.http_call(Method::GET, "/metrics", None).await;
     let text = world.last_body.as_ref().expect("metrics text");
-    assert!(text.contains("# TYPE model_state "), "model_state gauge not exported");
+    assert!(
+        text.contains("# TYPE model_state "),
+        "model_state gauge not exported"
+    );
 }
