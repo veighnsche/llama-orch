@@ -2,7 +2,9 @@ use crate::steps::world::World;
 use cucumber::{given, then};
 
 #[given(regex = r"^a policy SDK$")]
-pub async fn given_policy_sdk(world: &mut World) { world.push_fact("policy.sdk"); }
+pub async fn given_policy_sdk(world: &mut World) {
+    world.push_fact("policy.sdk");
+}
 
 #[then(regex = r"^public SDK functions are semver-stable within a MAJOR$")]
 pub async fn then_sdk_semver_stable_within_major(_world: &mut World) {}

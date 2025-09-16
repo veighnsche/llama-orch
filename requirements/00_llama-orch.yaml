@@ -398,3 +398,39 @@ requirements:
     level: must
     links:
     - .specs/00_llama-orch.md#54-nvidia-triton-tensorrtllm
+  ORCH-3095:
+    title: The platform **MUST** expose capability information required for client scheduling and compatibility. This **MAY** be achieved by either enriching `GET /v1/repl
+    section: 3.19 Capabilities & discovery (client support)
+    level: must
+    links:
+    - .specs/00_llama-orch.md#319-capabilities-discovery-client-support
+  ORCH-3096:
+    title: Capability payloads **MUST** include an API version compatible with OpenAPI `info.version`, allowing clients to pin a compatible range. []
+    section: 3.19 Capabilities & discovery (client support)
+    level: must
+    links:
+    - .specs/00_llama-orch.md#319-capabilities-discovery-client-support
+  ORCH-3097:
+    title: When enabled, the control plane **SHOULD** provide `POST /v1/artifacts` to persist structured artifacts (plans, summaries, diffs, traces) with content‑address
+    section: 3.20 Artifact registry (optional, recommended)
+    level: must
+    links:
+    - .specs/00_llama-orch.md#320-artifact-registry-optional-recommended
+  ORCH-3098:
+    title: Retrieval **SHOULD** be via `GET /v1/artifacts/{id}` with metadata and authorization. []
+    section: 3.20 Artifact registry (optional, recommended)
+    level: should
+    links:
+    - .specs/00_llama-orch.md#320-artifact-registry-optional-recommended
+  ORCH-3099:
+    title: Per‑session budgets (token/time/cost) **SHOULD** be supported and enforced at admission or scheduling time. Budget state **SHOULD** be surfaced via SSE `metri
+    section: 3.21 Budgets & guardrails
+    level: should
+    links:
+    - .specs/00_llama-orch.md#321-budgets-guardrails
+  ORCH-3100:
+    title: '`metrics` SSE frames **SHOULD** include non‑breaking, additive fields useful for client planning under load, such as `on_time_probability` (number), `queue_de'
+    section: 3.22 SSE metrics signals (for client planning)
+    level: should
+    links:
+    - .specs/00_llama-orch.md#322-sse-metrics-signals-for-client-planning

@@ -15,6 +15,9 @@ async fn main() {
         root.join("tests/features")
     };
 
+    // Touch the registry so clippy doesn't flag it as dead code; tests consume it separately.
+    let _ = steps::registry();
+
     World::cucumber()
         .fail_on_skipped()
         .run_and_exit(features)

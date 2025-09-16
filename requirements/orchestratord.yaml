@@ -62,6 +62,12 @@ requirements:
     level: must
     links:
     - .specs/20-orchestratord.md#3-sse-framing
+  OC-CTRL-2023:
+    title: '- [] The `metrics` SSE frames SHOULD include fields helpful for client-side planning under load, such as `on_time_probability` (number), `queue_depth` (int), an'
+    section: 11) SSE Metrics – Scheduling Signals
+    level: should
+    links:
+    - .specs/20-orchestratord.md#11-sse-metrics-scheduling-signals
   OC-CTRL-2030:
     title: '- [] Errors MUST include a stable `code` field: `ADMISSION_REJECT`, `QUEUE_FULL_DROP_LRU`, `INVALID_PARAMS`, `POOL_UNREADY`, `POOL_UNAVAILABLE`, `REPLICA_EXHAUS'
     section: 4) Error Taxonomy
@@ -98,3 +104,39 @@ requirements:
     level: must
     links:
     - .specs/20-orchestratord.md#6-observability
+  OC-CTRL-2052:
+    title: '- [] Responses that include headers SHOULD include `X-Correlation-Id` (except `204 No Content`) to enable client trace stitching.'
+    section: 6) Observability
+    level: should
+    links:
+    - .specs/20-orchestratord.md#6-observability
+  OC-CTRL-2060:
+    title: '- [] The server MUST expose capability information required for client scheduling and compatibility. This MAY be achieved by either:'
+    section: 8) Capabilities & Discovery
+    level: must
+    links:
+    - .specs/20-orchestratord.md#8-capabilities-discovery
+  OC-CTRL-2061:
+    title: '- [] Capability payloads MUST include an API version field compatible with OpenAPI `info.version`, enabling the CLI to pin a compatible range.'
+    section: 8) Capabilities & Discovery
+    level: must
+    links:
+    - .specs/20-orchestratord.md#8-capabilities-discovery
+  OC-CTRL-2065:
+    title: '- [] The server SHOULD provide `POST /v1/artifacts` to persist structured artifacts (plans, summaries, diffs, traces) with content-addressed IDs and tags. Reque'
+    section: 9) Artifact Registry (Optional, Recommended)
+    level: must
+    links:
+    - .specs/20-orchestratord.md#9-artifact-registry-optional-recommended
+  OC-CTRL-2066:
+    title: '- [] The server SHOULD provide `GET /v1/artifacts/{id}` to retrieve artifacts by ID, including metadata (tags, lineage, timestamps). Authorization MUST be enfor'
+    section: 9) Artifact Registry (Optional, Recommended)
+    level: must
+    links:
+    - .specs/20-orchestratord.md#9-artifact-registry-optional-recommended
+  OC-CTRL-2068:
+    title: '- [] Per-session budgets (token/time/cost) SHOULD be supported and enforced at admission or scheduling time. When budgets are active, the server SHOULD surface '
+    section: 10) Budgets & Guardrails
+    level: should
+    links:
+    - .specs/20-orchestratord.md#10-budgets-guardrails

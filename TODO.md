@@ -133,9 +133,9 @@ __Goal__: Pass Haiku E2E on real hardware, finalize documentation, and close the
 
 ## Acceptance Gates (Definition of Done per stage)
 
-- [ ] Stage 0 — Contract freeze: OpenAPI + config schema regenerated; CI fails on diffs; examples compile
-- [ ] Stage 1 — CDC + snapshots: Pact + insta tests green before provider code
-- [ ] Stage 2 — Provider verify: orchestrator passes pact verification
+- [x] Stage 0 — Contract freeze: OpenAPI + config schema regenerated; CI fails on diffs; examples compile
+- [x] Stage 1 — CDC + snapshots: Pact + insta tests green before provider code
+- [x] Stage 2 — Provider verify: orchestrator passes pact verification
 - [ ] Stage 3 — Properties: core invariants via proptest are green and meaningful
 - [ ] Stage 4 — Determinism: two replicas per engine; byte‑exact streams proven
 - [ ] Stage 5 — Observability: metrics exactly per `.specs/metrics/otel-prom.md`
@@ -153,3 +153,10 @@ __Goal__: Pass Haiku E2E on real hardware, finalize documentation, and close the
 - [ ] Maintain `requirements/*.yaml` linking req → tests → code with coverage notes
 
 ## Progress Log (what changed)
+
+- 2025-09-16 01:40 CEST — Expanded root TODO into 4-week roadmap aligned with `README_LLM.md` (Spec→Contract→Tests→Code). Added P0 blockers, Daily Developer Loop, Acceptance Gates, and Cross‑Cutting Hygiene.
+- 2025-09-16 01:42 CEST — Ran developer loop: `cargo fmt`, fixed clippy warnings in BDD harness (`test-harness/bdd/src/main.rs`, `tests/traceability.rs`), ensured `steps::registry()` referenced to avoid dead_code.
+- 2025-09-16 01:44 CEST — Regenerated contracts: `cargo xtask regen-openapi` and `regen-schema` — both validated and diff-clean.
+- 2025-09-16 01:45 CEST — Extracted requirements with `tools-spec-extract`; updated `requirements/*.yaml` and `COMPLIANCE.md` deterministically.
+- 2025-09-16 01:47 CEST — Verified CDC consumer tests and pacts under `cli/consumer-tests/`; provider verification tests under `orchestratord/tests/provider_verify.rs` passed; trybuild OpenAPI client UI tests passed.
+- 2025-09-16 01:49 CEST — Full workspace tests passed (`cargo test --workspace --all-features -- --nocapture`). Acceptance Gates updated: Stage 0, 1, 2 complete; later stages scaffolded.

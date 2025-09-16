@@ -19,7 +19,12 @@ fn control_capabilities_and_artifacts_contract() {
     let spec: OpenAPI = serde_yaml::from_str(&fs::read_to_string(&oapi_path).unwrap()).unwrap();
 
     // GET /v1/capabilities -> 200
-    let item = match spec.paths.paths.get("/v1/capabilities").expect("path exists") {
+    let item = match spec
+        .paths
+        .paths
+        .get("/v1/capabilities")
+        .expect("path exists")
+    {
         R::Item(it) => it,
         _ => panic!("unexpected ref"),
     };
@@ -43,7 +48,12 @@ fn control_capabilities_and_artifacts_contract() {
         .keys()
         .any(|c| matches!(c, StatusCode::Code(201))));
     // GET /v1/artifacts/{id} -> 200
-    let item = match spec.paths.paths.get("/v1/artifacts/{id}").expect("path exists") {
+    let item = match spec
+        .paths
+        .paths
+        .get("/v1/artifacts/{id}")
+        .expect("path exists")
+    {
         R::Item(it) => it,
         _ => panic!("unexpected ref"),
     };
@@ -56,7 +66,7 @@ fn control_capabilities_and_artifacts_contract() {
 
     // Components include Capabilities schema
     let raw: syaml::Value = syaml::from_str(&fs::read_to_string(&oapi_path).unwrap()).unwrap();
-    let caps = &raw["components"]["schemas"]["Capabilities"]; 
+    let caps = &raw["components"]["schemas"]["Capabilities"];
     assert!(caps.is_mapping(), "Capabilities schema missing");
 }
 
@@ -74,9 +84,12 @@ fn data_budgets_and_sse_metrics_contract() {
     assert!(post202_headers.get("X-Budget-Cost-Remaining").is_some());
 
     // Budget headers on GET /v1/tasks/{id}/stream 200
-    let stream200_headers = &raw["paths"]["/v1/tasks/{id}/stream"]["get"]["responses"]["200"]["headers"];
+    let stream200_headers =
+        &raw["paths"]["/v1/tasks/{id}/stream"]["get"]["responses"]["200"]["headers"];
     assert!(stream200_headers.get("X-Budget-Tokens-Remaining").is_some());
-    assert!(stream200_headers.get("X-Budget-Time-Remaining-Ms").is_some());
+    assert!(stream200_headers
+        .get("X-Budget-Time-Remaining-Ms")
+        .is_some());
     assert!(stream200_headers.get("X-Budget-Cost-Remaining").is_some());
 
     // SSEMetrics fields
@@ -257,7 +270,10 @@ fn provider_paths_match_pacts() {
                             .and_then(|v| v.as_str())
                             .unwrap_or("");
                         // Correlation id must be present
-                        assert!(hdrs.contains_key("X-Correlation-Id"), "missing X-Correlation-Id header on 429");
+                        assert!(
+                            hdrs.contains_key("X-Correlation-Id"),
+                            "missing X-Correlation-Id header on 429"
+                        );
                         assert!(
                             retry.parse::<u64>().is_ok(),
                             "Retry-After must be seconds numeric string"
@@ -272,13 +288,19 @@ fn provider_paths_match_pacts() {
 
                     // Body should include policy_label advisory field
                     if let Some(body) = interaction["response"]["body"].as_object() {
-                        assert!(body.contains_key("policy_label"), "429 body missing policy_label");
+                        assert!(
+                            body.contains_key("policy_label"),
+                            "429 body missing policy_label"
+                        );
                     }
                 }
 
                 // For other responses with headers, correlation id should be present
                 if let Some(hdrs) = interaction["response"]["headers"].as_object() {
-                    assert!(hdrs.contains_key("X-Correlation-Id"), "missing X-Correlation-Id header on response");
+                    assert!(
+                        hdrs.contains_key("X-Correlation-Id"),
+                        "missing X-Correlation-Id header on response"
+                    );
                 }
             }
         }

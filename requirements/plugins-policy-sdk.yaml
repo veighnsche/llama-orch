@@ -20,3 +20,15 @@ requirements:
     level: must
     links:
     - .specs/51-plugins-policy-sdk.md#2-safety
+  OC-POLICY-SDK-4111:
+    title: '- [] SDK SHOULD provide typed helpers for invoking host-exposed tools (e.g., `fetch`, `search`) that accept policy hints (allowed domains, max bytes) and propag'
+    section: 2) Safety
+    level: should
+    links:
+    - .specs/51-plugins-policy-sdk.md#2-safety
+  OC-POLICY-SDK-4112:
+    title: '- [] SDK MUST redact sensitive inputs/outputs according to configuration and provide hooks for additional user redaction.'
+    section: 2) Safety
+    level: must
+    links:
+    - .specs/51-plugins-policy-sdk.md#2-safety

@@ -1,7 +1,7 @@
 # COMPLIANCE — Requirements Coverage
 
 ### .specs/00_llama-orch.md
-Total requirements: 66
+Total requirements: 72
 - ORCH-1101 — **Inference hosts MUST have NVIDIA GPUs**; CPU‑only or non‑NVIDIA hosts **MAY** run control plane components (Controller/Scheduler) but **MUST NOT** serve i (section: 1) Platform Assumptions, level: must) — link: .specs/00_llama-orch.md#1-platform-assumptions
 - ORCH-2001 — `POST /v1/tasks` [] (section: 6.2 Data Plane — OrchQueue v1, level: info) — link: .specs/00_llama-orch.md#62-data-plane-orchqueue-v1
 - ORCH-2002 — The **SSE stream framing** (`started`, `token`, `metrics`, `end`, `error`) is part of the contract and MUST remain stable. [] (section: 3.16 API contracts & determinism, level: must) — link: .specs/00_llama-orch.md#316-api-contracts-determinism
@@ -68,9 +68,15 @@ Total requirements: 66
 - ORCH-3056 — **Adapter contract**: MUST implement the TGI custom path (`/generate`, `/info`, etc.). If an OpenAI‑compatible path is enabled, it remains internal only. [] (section: 5.3 Hugging Face Text‑Generation‑Inference (TGI), level: must) — link: .specs/00_llama-orch.md#53-hugging-face-textgenerationinference-tgi
 - ORCH-3057 — **Adapter contract**: MUST support health/metadata, infer/streaming (if configured), and metrics. OpenAI‑compatible frontends are internal only. [] (section: 5.4 NVIDIA Triton / TensorRT‑LLM, level: must) — link: .specs/00_llama-orch.md#54-nvidia-triton-tensorrtllm
 - ORCH-3058 — > All adapters **MUST** normalize detokenization templates and sampler profiles to keep determinism stable within a replica set. [] (section: 5.4 NVIDIA Triton / TensorRT‑LLM, level: must) — link: .specs/00_llama-orch.md#54-nvidia-triton-tensorrtllm
+- ORCH-3095 — The platform **MUST** expose capability information required for client scheduling and compatibility. This **MAY** be achieved by either enriching `GET /v1/repl (section: 3.19 Capabilities & discovery (client support), level: must) — link: .specs/00_llama-orch.md#319-capabilities-discovery-client-support
+- ORCH-3096 — Capability payloads **MUST** include an API version compatible with OpenAPI `info.version`, allowing clients to pin a compatible range. [] (section: 3.19 Capabilities & discovery (client support), level: must) — link: .specs/00_llama-orch.md#319-capabilities-discovery-client-support
+- ORCH-3097 — When enabled, the control plane **SHOULD** provide `POST /v1/artifacts` to persist structured artifacts (plans, summaries, diffs, traces) with content‑address (section: 3.20 Artifact registry (optional, recommended), level: must) — link: .specs/00_llama-orch.md#320-artifact-registry-optional-recommended
+- ORCH-3098 — Retrieval **SHOULD** be via `GET /v1/artifacts/{id}` with metadata and authorization. [] (section: 3.20 Artifact registry (optional, recommended), level: should) — link: .specs/00_llama-orch.md#320-artifact-registry-optional-recommended
+- ORCH-3099 — Per‑session budgets (token/time/cost) **SHOULD** be supported and enforced at admission or scheduling time. Budget state **SHOULD** be surfaced via SSE `metri (section: 3.21 Budgets & guardrails, level: should) — link: .specs/00_llama-orch.md#321-budgets-guardrails
+- ORCH-3100 — `metrics` SSE frames **SHOULD** include non‑breaking, additive fields useful for client planning under load, such as `on_time_probability` (number), `queue_de (section: 3.22 SSE metrics signals (for client planning), level: should) — link: .specs/00_llama-orch.md#322-sse-metrics-signals-for-client-planning
 
 ### .specs/10-orchestrator-core.md
-Total requirements: 17
+Total requirements: 19
 - OC-CORE-1001 — - [] Each Pool MUST expose a bounded FIFO queue per priority class. (section: 1) Queue & Admission, level: must) — link: .specs/10-orchestrator-core.md#1-queue-admission
 - OC-CORE-1002 — - [] Admission MUST reject when the queue is full according to configured policy (reject/drop-lru/shed-low-priority). (section: 1) Queue & Admission, level: must) — link: .specs/10-orchestrator-core.md#1-queue-admission
 - OC-CORE-1003 — - [] Enqueue MUST be O(1) amortized and MUST preserve request arrival order within the same priority. (section: 1) Queue & Admission, level: must) — link: .specs/10-orchestrator-core.md#1-queue-admission
@@ -83,6 +89,8 @@ Total requirements: 17
 - OC-CORE-1020 — - [] Context length MUST be ≤ model limit; otherwise reject before enqueue. (section: 3) Capacity & Guardrails, level: must) — link: .specs/10-orchestrator-core.md#3-capacity-guardrails
 - OC-CORE-1021 — - [] Token budget (prompt + generation) MUST be validated pre‑admission. (section: 3) Capacity & Guardrails, level: must) — link: .specs/10-orchestrator-core.md#3-capacity-guardrails
 - OC-CORE-1022 — - [] Watchdog MUST abort stuck Jobs with configurable wall/idle timeouts. (section: 3) Capacity & Guardrails, level: must) — link: .specs/10-orchestrator-core.md#3-capacity-guardrails
+- OC-CORE-1023 — - [] When per‑session budgets (token/time/cost) are configured, admission and/or scheduling MUST enforce remaining budget and reject infeasible requests with  (section: 3) Capacity & Guardrails, level: must) — link: .specs/10-orchestrator-core.md#3-capacity-guardrails
+- OC-CORE-1024 — - [] Budget accounting SHOULD be surfaced to clients via SSE `metrics` frames and/or response headers. (section: 3) Capacity & Guardrails, level: should) — link: .specs/10-orchestrator-core.md#3-capacity-guardrails
 - OC-CORE-1030 — - [] Within a replica set, identical {prompt, parameters, seed, sampler_profile_version, engine_version, model_digest} MUST yield identical token streams. (section: 4) Determinism, level: must) — link: .specs/10-orchestrator-core.md#4-determinism
 - OC-CORE-1031 — - [] Replica sets MUST pin engine_version and sampler_profile_version; mixed replicas MUST NOT share a set. (section: 4) Determinism, level: must) — link: .specs/10-orchestrator-core.md#4-determinism
 - OC-CORE-1032 — - [] Determinism MUST NOT be assumed across engine/model updates. (section: 4) Determinism, level: must) — link: .specs/10-orchestrator-core.md#4-determinism
@@ -90,7 +98,7 @@ Total requirements: 17
 - OC-CORE-1041 — - [] Metrics MUST include queue depth, reject/drop rates, p50/p95/p99 latency, GPU/VRAM/RAM utilization, KV pressure, preload outcomes. (section: 5) Observability, level: must) — link: .specs/10-orchestrator-core.md#5-observability
 
 ### .specs/20-orchestratord.md
-Total requirements: 16
+Total requirements: 23
 - OC-CTRL-2001 — - [] `GET /v1/pools/:id/health` MUST return liveness, readiness, draining, and metrics snapshot fields. (section: 1) Control Plane, level: must) — link: .specs/20-orchestratord.md#1-control-plane
 - OC-CTRL-2002 — - [] `POST /v1/pools/:id/drain` MUST accept a JSON body with `deadline_ms` and MUST begin draining. (section: 1) Control Plane, level: must) — link: .specs/20-orchestratord.md#1-control-plane
 - OC-CTRL-2003 — - [] `POST /v1/pools/:id/reload` MUST atomically switch model references or fail and roll back. (section: 1) Control Plane, level: must) — link: .specs/20-orchestratord.md#1-control-plane
@@ -101,12 +109,19 @@ Total requirements: 16
 - OC-CTRL-2020 — - [] `GET /v1/tasks/:id/stream` MUST emit events `started`, `token`, `metrics`, `end`, `error`. (section: 3) SSE Framing, level: must) — link: .specs/20-orchestratord.md#3-sse-framing
 - OC-CTRL-2021 — - [] `started` MUST include `queue_position` and `predicted_start_ms` when available. (section: 3) SSE Framing, level: must) — link: .specs/20-orchestratord.md#3-sse-framing
 - OC-CTRL-2022 — - [] Event payloads MUST be well‑formed JSON; ordering MUST be per stream. (section: 3) SSE Framing, level: must) — link: .specs/20-orchestratord.md#3-sse-framing
+- OC-CTRL-2023 — - [] The `metrics` SSE frames SHOULD include fields helpful for client-side planning under load, such as `on_time_probability` (number), `queue_depth` (int), an (section: 11) SSE Metrics – Scheduling Signals, level: should) — link: .specs/20-orchestratord.md#11-sse-metrics-scheduling-signals
 - OC-CTRL-2030 — - [] Errors MUST include a stable `code` field: `ADMISSION_REJECT`, `QUEUE_FULL_DROP_LRU`, `INVALID_PARAMS`, `POOL_UNREADY`, `POOL_UNAVAILABLE`, `REPLICA_EXHAUS (section: 4) Error Taxonomy, level: must) — link: .specs/20-orchestratord.md#4-error-taxonomy
 - OC-CTRL-2031 — - [] Errors SHOULD include the `engine` and `pool_id` when applicable. (section: 4) Error Taxonomy, level: should) — link: .specs/20-orchestratord.md#4-error-taxonomy
 - OC-CTRL-2040 — - [] Control and data plane MUST be gated by AuthN/AuthZ; API keys acceptable day‑1. (section: 5) Security, level: must) — link: .specs/20-orchestratord.md#5-security
 - OC-CTRL-2041 — - [] Logs MUST NOT leak secrets or API keys. (section: 5) Security, level: must) — link: .specs/20-orchestratord.md#5-security
 - OC-CTRL-2050 — - [] Admission logs and `started` MUST include `queue_position` and `predicted_start_ms` when available. (section: 6) Observability, level: must) — link: .specs/20-orchestratord.md#6-observability
 - OC-CTRL-2051 — - [] Metrics MUST include queue depth, reject/drop rates, latency percentiles, and error counts by class. (section: 6) Observability, level: must) — link: .specs/20-orchestratord.md#6-observability
+- OC-CTRL-2052 — - [] Responses that include headers SHOULD include `X-Correlation-Id` (except `204 No Content`) to enable client trace stitching. (section: 6) Observability, level: should) — link: .specs/20-orchestratord.md#6-observability
+- OC-CTRL-2060 — - [] The server MUST expose capability information required for client scheduling and compatibility. This MAY be achieved by either: (section: 8) Capabilities & Discovery, level: must) — link: .specs/20-orchestratord.md#8-capabilities-discovery
+- OC-CTRL-2061 — - [] Capability payloads MUST include an API version field compatible with OpenAPI `info.version`, enabling the CLI to pin a compatible range. (section: 8) Capabilities & Discovery, level: must) — link: .specs/20-orchestratord.md#8-capabilities-discovery
+- OC-CTRL-2065 — - [] The server SHOULD provide `POST /v1/artifacts` to persist structured artifacts (plans, summaries, diffs, traces) with content-addressed IDs and tags. Reque (section: 9) Artifact Registry (Optional, Recommended), level: must) — link: .specs/20-orchestratord.md#9-artifact-registry-optional-recommended
+- OC-CTRL-2066 — - [] The server SHOULD provide `GET /v1/artifacts/{id}` to retrieve artifacts by ID, including metadata (tags, lineage, timestamps). Authorization MUST be enfor (section: 9) Artifact Registry (Optional, Recommended), level: must) — link: .specs/20-orchestratord.md#9-artifact-registry-optional-recommended
+- OC-CTRL-2068 — - [] Per-session budgets (token/time/cost) SHOULD be supported and enforced at admission or scheduling time. When budgets are active, the server SHOULD surface  (section: 10) Budgets & Guardrails, level: should) — link: .specs/20-orchestratord.md#10-budgets-guardrails
 
 ### .specs/30-pool-managerd.md
 Total requirements: 9
@@ -144,18 +159,24 @@ Total requirements: 2
 - OC-ADAPT-5070 — - [] Adapter MUST report engine_version/trtllm_version where applicable. (section: 2) Determinism & Version Capture, level: must) — link: .specs/43-worker-adapters-triton.md#2-determinism-version-capture
 
 ### .specs/50-plugins-policy-host.md
-Total requirements: 5
+Total requirements: 9
 - OC-POLICY-4001 — - [] Default plugin ABI MUST be WASI; functions MUST be pure/deterministic over explicit snapshots. (section: 1) ABI & Determinism, level: must) — link: .specs/50-plugins-policy-host.md#1-abi-determinism
 - OC-POLICY-4002 — - [] ABI versioning MUST be explicit; incompatible changes MUST bump MAJOR. (section: 1) ABI & Determinism, level: must) — link: .specs/50-plugins-policy-host.md#1-abi-determinism
 - OC-POLICY-4010 — - [] Plugins MUST run in a sandbox with no filesystem/network unless explicitly granted. (section: 2) Sandboxing & Safety, level: must) — link: .specs/50-plugins-policy-host.md#2-sandboxing-safety
 - OC-POLICY-4011 — - [] Host MUST bound CPU time/memory per invocation and abort on overuse. (section: 2) Sandboxing & Safety, level: must) — link: .specs/50-plugins-policy-host.md#2-sandboxing-safety
 - OC-POLICY-4020 — - [] Host MUST log plugin id/version, decision outcome, and latency. (section: 3) Telemetry, level: must) — link: .specs/50-plugins-policy-host.md#3-telemetry
+- OC-POLICY-4030 — - [] The policy host SHOULD expose a mediated HTTP fetch/search tool to clients (e.g., CLI agents), enforcing allowlists/denylists of domains and MIME types. (section: 4) Tooling Proxy: HTTP Fetch/Search (Client Docs Access), level: should) — link: .specs/50-plugins-policy-host.md#4-tooling-proxy-http-fetch-search-client-docs-access
+- OC-POLICY-4031 — - [] The tool MUST redact secrets and PII as configured and MUST bound response size and rate. (section: 4) Tooling Proxy: HTTP Fetch/Search (Client Docs Access), level: must) — link: .specs/50-plugins-policy-host.md#4-tooling-proxy-http-fetch-search-client-docs-access
+- OC-POLICY-4032 — - [] The tool MUST emit audit logs that include request URL (redacted), policy decision, and byte counts. (section: 4) Tooling Proxy: HTTP Fetch/Search (Client Docs Access), level: must) — link: .specs/50-plugins-policy-host.md#4-tooling-proxy-http-fetch-search-client-docs-access
+- OC-POLICY-4033 — - [] The ABI for invoking tools MUST be stable and versioned; tool invocation SHOULD be deterministic with respect to inputs and policy snapshot. (section: 4) Tooling Proxy: HTTP Fetch/Search (Client Docs Access), level: must) — link: .specs/50-plugins-policy-host.md#4-tooling-proxy-http-fetch-search-client-docs-access
 
 ### .specs/51-plugins-policy-sdk.md
-Total requirements: 3
+Total requirements: 5
 - OC-POLICY-SDK-4101 — - [] Public SDK functions MUST be semver‑stable within a MAJOR. (section: 1) Stability & Compatibility, level: must) — link: .specs/51-plugins-policy-sdk.md#1-stability-compatibility
 - OC-POLICY-SDK-4102 — - [] Breaking changes MUST be accompanied by a migration note and version bump. (section: 1) Stability & Compatibility, level: must) — link: .specs/51-plugins-policy-sdk.md#1-stability-compatibility
 - OC-POLICY-SDK-4110 — - [] SDK MUST NOT perform network or filesystem I/O by default. (section: 2) Safety, level: must) — link: .specs/51-plugins-policy-sdk.md#2-safety
+- OC-POLICY-SDK-4111 — - [] SDK SHOULD provide typed helpers for invoking host-exposed tools (e.g., `fetch`, `search`) that accept policy hints (allowed domains, max bytes) and propag (section: 2) Safety, level: should) — link: .specs/51-plugins-policy-sdk.md#2-safety
+- OC-POLICY-SDK-4112 — - [] SDK MUST redact sensitive inputs/outputs according to configuration and provide hooks for additional user redaction. (section: 2) Safety, level: must) — link: .specs/51-plugins-policy-sdk.md#2-safety
 
 ### .specs/60-config-schema.md
 Total requirements: 3
@@ -170,6 +191,8 @@ Total requirements: 3
 - OC-TEST-7003 — - [] Seeds corpus MUST contain at least 64 seeds and MUST be stable. (section: 1) Semantics, level: must) — link: .specs/70-determinism-suite.md#1-semantics
 
 ### .specs/71-metrics-contract.md
-Total requirements: 2
+Total requirements: 4
 - OC-METRICS-7101 — - [] Metric names and required labels MUST conform to `ci/metrics.lint.json`. (section: 1) Names/Labels, level: must) — link: .specs/71-metrics-contract.md#1-names-labels
 - OC-METRICS-7102 — - [] Label cardinality budgets MUST be documented and enforced. (section: 1) Names/Labels, level: must) — link: .specs/71-metrics-contract.md#1-names-labels
+- OC-METRICS-7110 — - [] The `metrics` SSE event payloads SHOULD include additive fields helpful for client-side planning under load. Example fields (non-exhaustive, non-breaking i (section: 3) SSE Metrics Signals (Client Planning), level: should) — link: .specs/71-metrics-contract.md#3-sse-metrics-signals-client-planning
+- OC-METRICS-7111 — - [] When per-session budgets (token/time/cost) are enabled, budget remaining SHOULD be surfaced either in `metrics` events or as response headers to allow clie (section: 3) SSE Metrics Signals (Client Planning), level: should) — link: .specs/71-metrics-contract.md#3-sse-metrics-signals-client-planning
