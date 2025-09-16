@@ -1,90 +1,108 @@
-# llama-orch (pre-code) — Developer Quickstart
+# llama-orch — Orchestrator for LLMs
 
-This repository contains the pre-code scaffolding for an LLM Orchestrator. Use the commands below
-to regenerate contracts, validate specs, and run tests.
+llama-orch is an in-progress LLM Orchestrator. The codebase follows a strict Spec → Contract → Tests → Code workflow and ships features behind quality gates. We are currently building out Stage 6 (Admission → Dispatch → SSE) with contracts, tests, and an executable vertical slice.
 
 See also:
 
-- `README_LLM.md` — Decision rules and workflow for LLM developers
-- `.docs/workflow.md` — Stages and gates (SPEC→SHIP)
+- `README_LLM.md` — decision rules and workflow for contributors
+- `.specs/` — normative specs and metrics contracts
+- `.docs/` — project docs, archived TODO logs under `.docs/DONE/`
 
-## Quickstart
+## Current status
 
-- Format check
+- Stage progress (see `README_LLM.md`):
+  - Stage 0–5 complete (contracts, CDC, provider verify, properties, observability)
+  - Stage 6 (Admission → Dispatch → SSE) in progress
+- What’s implemented right now:
+  - HTTP routes modularized under `orchestratord/src/http/`
+  - Data-plane admission accepts tasks, enqueues with metrics, and spawns a background dispatch to a WorkerAdapter (mock) that emits an SSE transcript: `started` → `token` → `metrics` → `end`
+  - SSE stream served from in-memory transcript with correlation and budget headers
+  - Metrics registry per `.specs/metrics/otel-prom.md` with sample families and streaming side-effects (first-token, decode duration, tokens in/out)
+  - Control/catalog routes aligned to OpenAPI; `/metrics` endpoint available
+  - JSON structured logging via `tracing-subscriber`
+
+Note: The `orchestratord` binary builds the router but does not start a network server yet; tests and harnesses call handlers in-process.
+
+## Architecture overview
+
+- `contracts/` — single source of truth for OpenAPI (data + control) and config schema
+- `orchestrator-core/` — queue and invariants; used by the orchestrator with metrics wrapper
+- `orchestratord/` — HTTP handlers, state, metrics, placement, and binary entrypoint
+  - `http/` modules: `auth.rs`, `data.rs`, `catalog.rs`, `control.rs`, `observability.rs`
+  - `metrics.rs` Prometheus vectors/histograms; `/metrics` endpoint
+  - `state.rs` app state and registries; `placement.rs` minimal adapter chooser
+- `worker-adapters/` — adapter API + engines (mock now; llamacpp/vllm/tgi/triton scaffolds)
+- `test-harness/` — BDD, determinism suite, chaos, E2E Haiku scaffolding
+- `tools/` — generators and utilities: OpenAPI client, spec extract, README indexer
+- `ci/` — pipelines and linters (metrics, links)
+
+## API surface (contracts first)
+
+- Data plane (OrchQueue v1): `contracts/openapi/data.yaml`
+  - `POST /v1/tasks` → 202 Accepted with `AdmissionResponse`
+  - `GET /v1/tasks/{id}/stream` → `text/event-stream` frames: `started`, `token` (`{t,i}`), `metrics`, `end`
+  - `POST /v1/tasks/{id}/cancel`
+  - `GET|DELETE /v1/sessions/{id}`
+- Control plane: `contracts/openapi/control.yaml`
+  - `GET /v1/capabilities`, `GET /v1/pools/{id}/health`, `POST /v1/pools/{id}/{drain|reload}`
+  - Catalog: `POST /v1/catalog/models`, `GET /v1/catalog/models/{id}`, `POST /v1/catalog/models/{id}/verify`, `POST /v1/catalog/models/{id}/state`
+- Observability: `GET /metrics` (Prometheus text)
+
+## Metrics (implemented/registered)
+
+- Counters: `tasks_enqueued_total`, `tasks_started_total`, `tasks_canceled_total`, `tasks_rejected_total` (omit `engine_version` per spec), `admission_backpressure_events_total`, `tokens_in_total`, `tokens_out_total`, `catalog_verifications_total`, `preemptions_total`, `resumptions_total`
+- Gauges: `queue_depth`, `model_state`, `kv_cache_usage_ratio`, `gpu_utilization`, `vram_used_bytes`, `admission_share`, `deadlines_met_ratio`
+- Histograms: `latency_first_token_ms`, `latency_decode_ms`
+
+SSE streaming side-effects update first-token latency, decode latency, and token counters. See `orchestratord/src/metrics.rs`.
+
+## Developer quickstart
+
+- Format and lint
 
 ```bash
 cargo fmt --all -- --check
-```
-
-- Lints (warnings are errors)
-
-```bash
 cargo clippy --all-targets --all-features -- -D warnings
 ```
 
-- Regenerate contracts and requirements
+- Regenerate contracts and requirements (deterministic)
 
 ```bash
-cargo regen       # alias for: xtask regen (openapi + schema + spec-extract)
+cargo xtask regen-openapi
+cargo xtask regen-schema
+cargo run -p tools-spec-extract --quiet && git diff --exit-code
 ```
 
-- Tests (workspace)
+- Run all workspace tests
 
 ```bash
 cargo test --workspace --all-features -- --nocapture
 ```
 
-- Provider verification tests
+- Provider verification and BDD harness
 
 ```bash
 cargo test -p orchestratord --test provider_verify -- --nocapture
-```
-
-- Consumer/CDC tests
-
-```bash
-cargo test -p cli-consumer-tests -- --nocapture
-```
-
-- Trybuild UI tests (compile-time checks)
-
-```bash
-cargo test -p tools-openapi-client -- --nocapture
-```
-
-- BDD harness (placeholder, ensures 0 undefined/ambiguous steps)
-
-```bash
 cargo test -p test-harness-bdd -- --nocapture
-```
-
-- Docs link checker
-
-```bash
-bash ci/scripts/check_links.sh
 ```
 
 - Full developer loop (fmt, clippy, regen, tests, linkcheck)
 
 ```bash
-cargo dev        # alias for: xtask dev:loop
+cargo xtask dev:loop
 ```
 
-- Generate/refresh READMEs from the indexer
+## Contributing & PR discipline
 
-```bash
-cargo docs-index # alias for: run -p tools-readme-index --
-```
+- Pre‑1.0.0: no backwards compatibility; remove dead code early
+- Work order: Spec → Contract → Tests → Code; update `.specs/` and contracts before implementation
+- Reference requirement IDs in commits, code, and tests (e.g., `ORCH-2001`)
+- Keep the root `TODO.md` updated after each change; archive via `ci/scripts/archive_todo.sh` when complete
+- JSON structured logs via `tracing`; redact secrets; see `.specs/metrics/otel-prom.md`
 
-## Notes for Stage 6 Vertical Slice (coming soon)
+## License
 
-Once the Stage 6 Admission→Dispatch vertical is implemented, the Quickstart will include examples for:
-
-- `POST /v1/tasks` (202 with queue position)
-- `GET /v1/tasks/:id/stream` (SSE framing)
-- `POST /v1/tasks/:id/cancel`
-
-Until then, handlers remain stubs; metrics endpoint `/metrics` is available for liveness/contract checks.
+GPL-3.0-or-later. See `LICENSE`.
 
 <!-- BEGIN WORKSPACE MAP (AUTO-GENERATED) -->
 ## Workspace Map

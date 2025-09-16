@@ -5,7 +5,7 @@ This is the single active TODO tracker for the repository. Maintain execution or
 ## P0 — Blockers (in order)
 
 - [ ] Stage 6 vertical slice (Admission → Dispatch → SSE) — Spec: ORCH-2001/2002/2003, OC-CTRL-2010/2012, OC-CORE-1001..1005
-  - [ ] Implement enqueue into `QueueWithMetrics`
+  - [x] Implement enqueue into `QueueWithMetrics`
   - [x] Minimal placement hook and dispatch via a `WorkerAdapter`
   - [x] Map adapter stream to contract SSE events (`started|token|metrics|end`) with budget headers
   - [x] Metrics side-effects for first token and end
@@ -84,6 +84,12 @@ This is the single active TODO tracker for the repository. Maintain execution or
     - `create_task()` now spawns a background dispatch that builds an SSE transcript from adapter events (started → token → metrics → end), stored in-memory and served by `stream_task()`.
     - Added metrics side-effects for first token latency and end decode latency using `metrics::record_stream_started/ended`.
     - Adjusted BDD harness to avoid header trait mismatch and invalid Debug formatting; all workspace tests pass.
+
+- 2025-09-16 — Stage 6: enqueue path and 429 mapping
+  - Wired HTTP admission to `QueueWithMetrics::enqueue(...)`; map `QueueFullReject` to 429 with `Retry-After` and `X-Backoff-Ms` headers and advisory fields (`policy_label`, `retriable`, `retry_after_ms`).
+  - Metrics: increment `tasks_enqueued_total`, update `queue_depth`; on reject record `admission_backpressure_events_total` and `tasks_rejected_total`.
+  - Files: `orchestratord/src/http/data.rs`.
+  - Spec: ORCH-2001 (admission), ORCH-2007 (429 backpressure), OC-CORE-1001..1002 (queue invariants).
 
 ---
 

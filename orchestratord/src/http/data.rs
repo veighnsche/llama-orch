@@ -4,6 +4,8 @@ use http::{header::CONTENT_TYPE, HeaderMap};
 use tracing::info;
 use std::time::Instant;
 use futures::StreamExt;
+use orchestrator_core::queue::Priority as CorePriority;
+use orchestrator_core::queue::EnqueueError;
 
 use crate::{backpressure, metrics, placement, state::{AppState, ModelState}};
 use super::auth::require_api_key;
@@ -112,6 +114,42 @@ pub async fn create_task(headers: HeaderMap, state: State<AppState>, body: Json<
             "message": "deadline unmet",
         });
         return (http::StatusCode::BAD_REQUEST, h, Json(err)).into_response();
+    }
+
+    // ORCH-2001: admission acceptance; OC-CORE-1001..1002: bounded queue policies; ORCH-2007: 429 backpressure mapping; README_LLM-1001: traceability requirement.
+    // Stage 6: enqueue into QueueWithMetrics (contract-first) and map reject policy to 429.
+    {
+        let prio = match body.priority {
+            api::Priority::Interactive => CorePriority::Interactive,
+            api::Priority::Batch => CorePriority::Batch,
+        };
+        let id_u32: u32 = {
+            // Derive a deterministic u32 from the UUID by taking the first 8 hex digits.
+            let hex: String = body
+                .task_id
+                .chars()
+                .filter(|c| c.is_ascii_hexdigit())
+                .take(8)
+                .collect();
+            u32::from_str_radix(&hex, 16).unwrap_or(0)
+        };
+        let mut q = state.queue.lock().unwrap();
+        if let Err(EnqueueError::QueueFullReject) = q.enqueue(id_u32, prio) {
+            let backoff = backpressure::Backoff { retry_after_seconds: 1, x_backoff_ms: 1000 };
+            let mut headers = backpressure::build_429_headers(backoff);
+            headers.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+            let policy = backpressure::compute_policy_label(());
+            let extras = backpressure::build_429_body(policy);
+            let body = serde_json::json!({
+                "code": "ADMISSION_REJECT",
+                "engine": body.engine,
+                "message": "Queue full (reject)",
+                "policy_label": extras.get("policy_label").cloned().unwrap_or(serde_json::json!("reject")),
+                "retriable": extras.get("retriable").cloned().unwrap_or(serde_json::json!(true)),
+                "retry_after_ms": extras.get("retry_after_ms").cloned().unwrap_or(serde_json::json!(1000)),
+            });
+            return (http::StatusCode::TOO_MANY_REQUESTS, headers, Json(body)).into_response();
+        }
     }
 
     let mut headers = HeaderMap::new();
