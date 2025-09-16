@@ -1,2 +1,8 @@
 [alias]
 xtask = "run -p xtask --"
+dev = "xtask dev:loop"
+regen = "xtask regen"
+pact-verify = "xtask pact:verify"
+det = "xtask ci:determinism"
+haiku-cpu = "xtask ci:haiku:cpu"
+docs-index = "run -p tools-readme-index --"

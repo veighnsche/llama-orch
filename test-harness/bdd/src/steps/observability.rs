@@ -8,7 +8,9 @@ pub async fn then_metrics_conform_names_labels(_world: &mut World) {}
 pub async fn then_label_cardinality_budgets_enforced(_world: &mut World) {}
 
 #[given(regex = r"^started event and admission logs$")]
-pub async fn given_started_event_and_admission_logs(world: &mut World) { world.push_fact("obs.logs_started"); }
+pub async fn given_started_event_and_admission_logs(world: &mut World) {
+    world.push_fact("obs.logs_started");
+}
 
 #[then(regex = r"^include queue_position and predicted_start_ms$")]
 pub async fn then_logs_include_queue_pos_eta(_world: &mut World) {}

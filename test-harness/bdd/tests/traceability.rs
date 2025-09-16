@@ -19,8 +19,13 @@ fn spec_md_paths() -> Vec<PathBuf> {
     let mut out = Vec::new();
     let dir = repo_root().join(".specs");
     if dir.exists() {
-        for entry in walkdir::WalkDir::new(&dir).into_iter().filter_map(Result::ok) {
-            if entry.file_type().is_file() && entry.path().extension().and_then(|s| s.to_str()) == Some("md") {
+        for entry in walkdir::WalkDir::new(&dir)
+            .into_iter()
+            .filter_map(Result::ok)
+        {
+            if entry.file_type().is_file()
+                && entry.path().extension().and_then(|s| s.to_str()) == Some("md")
+            {
                 out.push(entry.into_path());
             }
         }
@@ -41,7 +46,11 @@ fn parse_ids_from_text(text: &str) -> HashSet<String> {
         let prefix = &cap[1];
         let start: u32 = cap[2].parse().unwrap_or(0);
         let end: u32 = cap[3].parse().unwrap_or(0);
-        if start > 0 && end >= start { for n in start..=end { ids.insert(format!("{}-{}", prefix, n)); } }
+        if start > 0 && end >= start {
+            for n in start..=end {
+                ids.insert(format!("{}-{}", prefix, n));
+            }
+        }
     }
 
     // Single IDs like ORCH-3045, OC-POOL-3001
@@ -77,8 +86,13 @@ fn collect_catalog_ids() -> HashSet<String> {
 fn collect_feature_ids() -> HashSet<String> {
     let mut found = HashSet::new();
     let dir = feature_dir();
-    for entry in walkdir::WalkDir::new(&dir).into_iter().filter_map(Result::ok) {
-        if entry.file_type().is_file() && entry.path().extension().and_then(|s| s.to_str()) == Some("feature") {
+    for entry in walkdir::WalkDir::new(&dir)
+        .into_iter()
+        .filter_map(Result::ok)
+    {
+        if entry.file_type().is_file()
+            && entry.path().extension().and_then(|s| s.to_str()) == Some("feature")
+        {
             if let Ok(text) = fs::read_to_string(entry.path()) {
                 // Only scan lines that declare traceability comment but also collect any IDs appearing anywhere
                 let ids = parse_ids_from_text(&text);
@@ -99,10 +113,7 @@ fn catalog_requirements_are_referenced_by_features() {
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
             .collect();
-        catalog = catalog
-            .into_iter()
-            .filter(|id| keep.iter().any(|p| id.starts_with(p)))
-            .collect();
+        catalog.retain(|id| keep.iter().any(|p| id.starts_with(p)));
     }
     let referenced = collect_feature_ids();
 
@@ -111,18 +122,32 @@ fn catalog_requirements_are_referenced_by_features() {
 
     let missing: Vec<_> = catalog.difference(&referenced).cloned().collect();
     if missing.is_empty() {
-        eprintln!("Traceability: all catalog IDs are referenced by features (at least once). Total: {}", catalog.len());
+        eprintln!(
+            "Traceability: all catalog IDs are referenced by features (at least once). Total: {}",
+            catalog.len()
+        );
         return;
     }
 
-    eprintln!("Traceability: missing {} IDs not referenced by any .feature file:", missing.len());
+    eprintln!(
+        "Traceability: missing {} IDs not referenced by any .feature file:",
+        missing.len()
+    );
     let mut sorted = missing;
     sorted.sort();
-    for id in &sorted { eprintln!(" - {}", id); }
+    for id in &sorted {
+        eprintln!(" - {}", id);
+    }
 
     // Only fail in strict mode to keep scaffolding green by default
-    let strict = std::env::var("LLORCH_TRACEABILITY_STRICT").ok().filter(|v| v == "1").is_some();
+    let strict = std::env::var("LLORCH_TRACEABILITY_STRICT")
+        .ok()
+        .filter(|v| v == "1")
+        .is_some();
     if strict {
-        panic!("traceability missing {} IDs; set LLORCH_TRACEABILITY_STRICT=0 to disable failing", sorted.len());
+        panic!(
+            "traceability missing {} IDs; set LLORCH_TRACEABILITY_STRICT=0 to disable failing",
+            sorted.len()
+        );
     }
 }

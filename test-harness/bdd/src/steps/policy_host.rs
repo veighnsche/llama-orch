@@ -2,7 +2,9 @@ use crate::steps::world::World;
 use cucumber::{given, then};
 
 #[given(regex = r"^a policy host$")]
-pub async fn given_policy_host(world: &mut World) { world.push_fact("policy.host"); }
+pub async fn given_policy_host(world: &mut World) {
+    world.push_fact("policy.host");
+}
 
 #[then(regex = r"^the default plugin ABI is WASI$")]
 pub async fn then_default_abi_wasi(_world: &mut World) {}

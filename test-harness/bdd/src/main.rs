@@ -1,7 +1,7 @@
 mod steps;
 
-use steps::world::World;
-use cucumber::World as _; // bring trait into scope for World::cucumber()
+use cucumber::World as _;
+use steps::world::World; // bring trait into scope for World::cucumber()
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() {
@@ -10,10 +10,17 @@ async fn main() {
     let features_env = std::env::var("LLORCH_BDD_FEATURE_PATH").ok();
     let features = if let Some(p) = features_env {
         let pb = std::path::PathBuf::from(p);
-        if pb.is_absolute() { pb } else { root.join(pb) }
+        if pb.is_absolute() {
+            pb
+        } else {
+            root.join(pb)
+        }
     } else {
         root.join("tests/features")
     };
+
+    // Touch the registry so clippy doesn't flag it as dead code; tests consume it separately.
+    let _ = steps::registry();
 
     World::cucumber()
         .fail_on_skipped()

@@ -23,3 +23,8 @@ Scope: metric names/labels/units; label budgets; dashboards; linters.
 ## Backlog (initial)
 
 - Implement emission hooks; budget checks; dashboards for queue depth, latency, errors, fairness, deadlines, preemption.
+
+## Proposal (Accepted)
+
+- Align with product stages: Stage 5 observability implemented now (admission counters/gauges + /metrics); Stage 13 dashboards & alerts to be delivered; Stage 14 startup self‑tests cover telemetry emission.
+- DX: keep metric registration/encoders within `orchestratord/src/metrics.rs` (or future `orch-services`), with names/labels centralized; enforce linter parity with `.specs/metrics/otel-prom.md` and `ci/metrics.lint.json`. Dashboards live under `ci/dashboards/` and render in CI with sample data.

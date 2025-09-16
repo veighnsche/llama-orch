@@ -1,7 +1,7 @@
 use regex::Regex;
-use test_harness_bdd::steps;
 use std::fs;
 use std::path::PathBuf;
+use test_harness_bdd::steps;
 use walkdir::WalkDir;
 
 fn feature_dir() -> PathBuf {
@@ -17,7 +17,9 @@ fn features_have_no_undefined_or_ambiguous_steps() {
     let steps: Vec<Regex> = steps::registry();
 
     for entry in WalkDir::new(&dir).into_iter().filter_map(Result::ok) {
-        if entry.file_type().is_file() && entry.path().extension().and_then(|s| s.to_str()) == Some("feature") {
+        if entry.file_type().is_file()
+            && entry.path().extension().and_then(|s| s.to_str()) == Some("feature")
+        {
             let path = entry.into_path();
             let text = fs::read_to_string(&path).unwrap();
             for line in text.lines() {

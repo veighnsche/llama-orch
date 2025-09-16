@@ -13,5 +13,5 @@ serde = { workspace = true, features = ["derive"] }
 reqwest = { workspace = true }
 anyhow = { workspace = true }
 futures = { workspace = true }
-orchestrator-core = { path = "../../orchestrator-core" }
+worker-adapters-adapter-api = { path = "../adapter-api" }
 contracts-api-types = { path = "../../contracts/api-types" }

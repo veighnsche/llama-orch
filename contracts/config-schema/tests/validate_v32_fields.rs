@@ -55,7 +55,9 @@ fn v32_fields_validate() {
 
     let result = compiled.validate(&cfg);
     if let Err(errors) = result {
-        for e in errors { eprintln!("schema error: {}", e); }
+        for e in errors {
+            eprintln!("schema error: {}", e);
+        }
         panic!("v3.2 example config failed schema validation");
     }
 }

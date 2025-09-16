@@ -1,7 +1,7 @@
 use crate::openapi_utils::openapi_summary;
 use crate::path_utils::relative_path;
-use crate::workspace::crate_specific_extras;
 use crate::types::ManifestEntry;
+use crate::workspace::crate_specific_extras;
 use regex::Regex;
 use std::fs;
 use std::path::Path;

@@ -61,3 +61,19 @@ Scope: NVIDIA-only inference, queues/admission, replicas/placement, sessions/KV,
 ## Notes
 
 - BDD runner: `test-harness/bdd` binary `bdd-runner`; set `LLORCH_BDD_FEATURE_PATH` to target `tests/features` subtrees.
+
+## Proposal (Accepted)
+
+- Promote product work into explicit stages 6–17 as defined in `README_LLM.md` and `.docs/workflow.md`:
+  - 6 Admission→Dispatch, 7 Pool Manager Readiness, 8 Adapters Conformance, 9 Scheduling & Fairness,
+    10 Capabilities, 11 Config & Quotas, 12 BDD Journeys, 13 Dashboards & Alerts, 14 Startup Self‑Tests,
+    15 Real‑Model E2E (Haiku, anti‑cheat), 16 Chaos & Load (nightly), 17 Compliance & Release.
+- Adopt DX Modularization Blueprint:
+  - Future crates when stable: `orch-domain`, `orch-services`, `orch-api`; shared `worker-adapters/adapter-api`.
+  - Pool manager optional: `pool-domain`, `pool-services`, `pool-api`.
+  - Clear dependency rules: `api`→`services`→`domain`; orchestrator consumes `adapter-api` only.
+- Integration: component plans updated to reflect these stages and DX layering:
+  - Orchestratord: `.plan/20_orchestratord.md` — product stages + DX modularization rollout.
+  - Pool manager: `.plan/30_pool_managerd.md` — readiness and lifecycle + DX plan.
+  - Adapters: `.plan/40_worker_adapters.md` — `adapter-api` + engine conformance.
+  - Core, Metrics, Determinism, Config, Policy plans updated accordingly.

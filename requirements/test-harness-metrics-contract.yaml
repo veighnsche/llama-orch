@@ -14,3 +14,15 @@ requirements:
     level: must
     links:
     - .specs/71-metrics-contract.md#1-names-labels
+  OC-METRICS-7110:
+    title: '- [] The `metrics` SSE event payloads SHOULD include additive fields helpful for client-side planning under load. Example fields (non-exhaustive, non-breaking i'
+    section: 3) SSE Metrics Signals (Client Planning)
+    level: should
+    links:
+    - .specs/71-metrics-contract.md#3-sse-metrics-signals-client-planning
+  OC-METRICS-7111:
+    title: '- [] When per-session budgets (token/time/cost) are enabled, budget remaining SHOULD be surfaced either in `metrics` events or as response headers to allow clie'
+    section: 3) SSE Metrics Signals (Client Planning)
+    level: should
+    links:
+    - .specs/71-metrics-contract.md#3-sse-metrics-signals-client-planning

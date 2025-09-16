@@ -33,6 +33,43 @@ References:
 - `.docs/workflow.md` (Stage 0–8)
 - `.docs/testing/test-case-discovery-method.md`, `.docs/testing/spec-derived-test-catalog.md`
 
+## 2.1) DX & Modularization Blueprint (planning)
+
+Purpose: make developer experience first-class. Encode how we split crates to reduce compile/test churn, enable parallel ownership, and keep boundaries clean.
+
+Workspace layering (future-proof):
+
+- Domain libs (no HTTP): `orch-domain`, `pool-domain` — types, error envelopes, SSE frames, policy labels.
+- Service libs: `orch-services`, `pool-services` — admission, placement, SSE, backpressure, registries, drain/reload.
+- API libs: `orch-api`, `pool-api` — Axum routers/handlers; map HTTP ↔ domain.
+- Adapter contract: `worker-adapters/adapter-api` — trait + helpers; engines implement this only.
+- Binaries: `orchestratord`, `pool-managerd` — thin wiring, tracing, metrics endpoint.
+
+Dependency rules:
+
+- `api` → `services` → `domain`; `services` → `adapter-api`, `orchestrator-core`.
+- Orchestrator depends on `adapter-api` only; never import engine crates directly.
+- No cross‑layer cycles; prefer `pub(crate)` surfaces and small trait‑based APIs.
+
+Extraction triggers (when to split):
+
+- Handler changes trigger large rebuilds or slow tests.
+- Multiple teams working in parallel on adapters and handlers.
+- LOC in `orchestratord/` approaches >6–7k or crate compile time exceeds budget.
+
+Rollout (after Stage 6 vertical stabilizes):
+
+1) Enforce module boundaries inside crates mirroring the layering; keep integration tests in bin crates to avoid rebuilding libs on test edits.
+2) Extract `orch-domain` and `adapter-api` first (lowest coupling risk), then `orch-services`, and finally `orch-api`.
+3) For pool manager: extract `pool-domain` first, then `pool-services` if needed.
+
+Compile‑time ergonomics:
+
+- Feature flags to build with `mock` adapter only by default during inner loops; enable engines via features.
+- Keep generated code (OpenAPI client/types) in their own crates to avoid touching app crates.
+- Avoid proc‑macro heavy dependencies on hot paths; prefer plain derive and small helpers.
+- CI uses incremental workflows: run unit/property fast path before integration/E2E.
+
 ## 3) Phased Plan (Stages and Gates)
 
 The following stages mirror `.docs/workflow.md` (§3) and add component-specific deliverables and ownership.
@@ -97,15 +134,81 @@ Deliverables:
 Gates:
 - Metrics linter green (`ci/metrics.lint.json`), dashboard render checks pass.
 
-### Stage 6 — Real-Model E2E (Haiku)
+### Stage 6 — Admission → Dispatch vertical (product)
 
 Deliverables:
 
-- E2E test in `test-harness/e2e-haiku/` driving only OrchQueue v1.
+- `POST /v1/tasks` enqueues via core queue (`QueueWithMetrics`) and returns 202 with `task_id`, `correlation_id`.
+- Placement selects a single Ready replica; `GET /v1/tasks/:id/stream` streams SSE (`started|token|metrics|end|error`).
+- `POST /v1/tasks/:id/cancel` cancels queued/active tasks; determinism flags per engine; readiness gating.
 Gates:
-- Pass within budget; metrics token delta observed; engine/model visible; anti-cheat checks.
+- Provider verify green for POST/GET/cancel; SSE events well-formed; metrics side-effects observed.
 
-### Stage 7 — Chaos & Load (nightly)
+### Stage 7 — Pool manager readiness
+
+Deliverables:
+
+- Replica registry (heartbeat/health/readiness), drain/reload, leases; surface `engine_version`/`model_digest`.
+- Control-plane: `POST /v1/pools/:id/{drain,reload}`, `GET /v1/pools/:id/health`, `GET /v1/replicasets`.
+Gates:
+- Only Ready replicas advertised; pin `engine_version` and `sampler_profile_version`; do not mix.
+
+### Stage 8 — Worker adapters conformance
+
+Deliverables:
+
+- Adapters: mock, llamacpp-http, vllm-http, tgi-http, triton. SSE framing/backpressure/timeouts/typed errors.
+- Metrics emission per contract: tokens in/out, latencies, labels {engine,engine_version,pool_id,replica_id,priority}.
+Gates:
+- Adapter integration tests pass; determinism normalization per engine; version labels present.
+
+### Stage 9 — Scheduling & fairness
+
+Deliverables:
+
+- Finalize policy; wire `admission_share` and `deadlines_met_ratio`; tune backpressure.
+Gates:
+- Fairness property unignored and green; end-to-end fairness behavior validated.
+
+### Stage 10 — Capability discovery
+
+Deliverables:
+
+- `GET /v1/replicasets` or `GET /v1/capabilities` with API version, `ctx_max`, features, limits; snapshots + provider verify.
+
+### Stage 11 — Config & quotas
+
+Deliverables:
+
+- Engine/worker examples; quotas (concurrent jobs, tokens/min, KV-MB); env conventions enforced.
+
+### Stage 12 — BDD coverage (journeys)
+
+Deliverables:
+
+- Features for admission, cancel, backpressure, fairness bounds, determinism toggles; zero undefined/ambiguous.
+
+### Stage 13 — Dashboards & alerts
+
+Deliverables:
+
+- Panels (queue_depth, rejections, latencies, tokens) + alert budgets in `/ci/dashboards`; CI render check.
+
+### Stage 14 — Startup self-tests
+
+Deliverables:
+
+- Preload, minimal decode, cancel, telemetry; fail fast on violation.
+
+### Stage 15 — Real-Model E2E (Haiku) — anti-cheat gate
+
+Deliverables:
+
+- E2E test in `test-harness/e2e-haiku/` driving only OrchQueue v1; minute+nonce; metrics token delta > 0; engine/model visible.
+Gates:
+- Pass within time budget; anti-cheat enforced (real Worker, no fixtures, repo scan, REQUIRE_REAL_LLAMA=1).
+
+### Stage 16 — Chaos & Load (nightly)
 
 Deliverables:
 
@@ -113,12 +216,11 @@ Deliverables:
 Gates:
 - Nightly-only pass.
 
-### Stage 8 — Compliance & Release
+### Stage 17 — Compliance & Release
 
 Deliverables:
 
-- `tools/spec-extract` → `requirements/*.yaml` refreshed; `COMPLIANCE.md` generated.
-- `CHANGELOG_SPEC.md` updated; artifacts published.
+- `tools/spec-extract` → `requirements/*.yaml` refreshed; `COMPLIANCE.md` generated; `CHANGELOG_SPEC.md` updated; artifacts published.
 Gates:
 - Spec-extract diff-clean; linkcheck green; workspace fmt/lint/tests green.
 

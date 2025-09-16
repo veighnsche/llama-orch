@@ -74,6 +74,18 @@ requirements:
     level: must
     links:
     - .specs/10-orchestrator-core.md#3-capacity-guardrails
+  OC-CORE-1023:
+    title: '- [] When per‑session budgets (token/time/cost) are configured, admission and/or scheduling MUST enforce remaining budget and reject infeasible requests with '
+    section: 3) Capacity & Guardrails
+    level: must
+    links:
+    - .specs/10-orchestrator-core.md#3-capacity-guardrails
+  OC-CORE-1024:
+    title: '- [] Budget accounting SHOULD be surfaced to clients via SSE `metrics` frames and/or response headers.'
+    section: 3) Capacity & Guardrails
+    level: should
+    links:
+    - .specs/10-orchestrator-core.md#3-capacity-guardrails
   OC-CORE-1030:
     title: '- [] Within a replica set, identical {prompt, parameters, seed, sampler_profile_version, engine_version, model_digest} MUST yield identical token streams.'
     section: 4) Determinism

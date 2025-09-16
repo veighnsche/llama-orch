@@ -252,7 +252,8 @@ pub fn crate_specific_extras(crate_path: &str) -> String {
         return "- Data/control plane routes, SSE framing details, backpressure headers, provider verify entry points.\n".to_string();
     }
     if crate_path.starts_with("pool-managerd") {
-        return "- Preload/Ready lifecycle, NVIDIA-only guardrails, restart/backoff behavior.\n".to_string();
+        return "- Preload/Ready lifecycle, NVIDIA-only guardrails, restart/backoff behavior.\n"
+            .to_string();
     }
     if crate_path.starts_with("worker-adapters/") {
         return "- Engine endpoint mapping tables (native/OpenAI-compat to adapter calls), determinism knobs, version capture.\n".to_string();

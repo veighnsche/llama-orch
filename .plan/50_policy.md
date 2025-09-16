@@ -25,3 +25,13 @@ Scope: WASI ABI host/SDK, deterministic pure functions, sandboxing/time/memory b
 - WASI runtime integration and capability guards.
 - SDK function signatures and error model.
 - Telemetry hooks and configs.
+
+## Proposal (Accepted)
+
+- Align with product stages:
+  - Stage 9 (scheduling hooks) MAY consume policy decisions via a deterministic WASI call (optional in v0.1).
+  - Stage 11 (config & quotas) provides policy configuration; Stage 12 (BDD) covers policy selection flows.
+- DX layering:
+  - Keep `plugins/policy-host` and `plugins/policy-sdk` independent of HTTP; surface pure domain types (consider reusing `orch-domain` types once extracted).
+  - Enforce sandbox/time/memory limits; default deny network/filesystem.
+  - Provide small, stable SDK surface with explicit ABI versioning and deterministic semantics.

@@ -57,7 +57,69 @@
 COMPLIANCE.md                      # AUTO‑GEN: req coverage
 CHANGELOG_SPEC.md                  # Spec deltas
 PROJECT_GUIDE.md                   # Newcomer on‑ramp
-```
+
+---
+
+## Product Plan (Epics, MVP, Journeys)
+
+This section makes the PRODUCT explicit: what we are shipping, for whom, and how it maps to stages/specs.
+
+### Personas
+
+- Platform Engineer (runs orchestrator + workers; needs reliability, metrics, knobs)
+- ML Engineer (submits prompts; needs deterministic streams, cancel, budgets)
+- SRE (cares about SLOs, dashboards, alerts; anti‑cheat integrity)
+
+### MVP Definition (what v0.1 must ship)
+
+- Single‑tenant orchestrator exposing OrchQueue v1 APIs:
+  - `POST /v1/tasks`, `GET /v1/tasks/:id/stream`, `POST /v1/tasks/:id/cancel`
+  - Minimal sessions: `GET/DELETE /v1/sessions/:id`
+- One real engine (llama.cpp) via adapter, deterministic SSE (`started|token|metrics|end|error`)
+- Admission (bounded queue) + basic placement to one ready replica
+- Core metrics per `.specs/metrics/otel-prom.md` + `/metrics` endpoint + dashboards
+- CLI quickstart + Haiku anti‑cheat E2E passing on a real worker
+
+### User Journeys (end‑to‑end)
+
+1) Submit → Stream → Cancel
+   - Create a task, stream tokens deterministically, cancel on demand; observe tokens/latency metrics
+2) Scale a pool
+   - Start pool‑managerd for llama.cpp, see replicas Ready, submit tasks, drain/reload without downtime
+3) Observe & debug
+   - Watch Grafana panels (queue_depth, rejections, latencies, tokens); enforce budgets; check logs
+   See also:
+   - `.plan/72_bdd_harness.md` (journeys)
+   - `.plan/73_e2e_haiku.md` (anti‑cheat E2E)
+   - `.plan/80_cli.md` (CLI UX)
+   - `.plan/90_tools.md` (tools and xtask)
+
+### Epics (map to stages)
+
+- Epic A — Admission & Dispatch (Stage 6)
+  - Queue → scheduler/placement → adapter submit; readiness gating; version pinning; engine flags
+- Epic B — Pool Manager (Stage 7)
+  - Replica registry, heartbeats, drain/reload, leases; propagate `engine_version`/`model_digest`
+- Epic C — Adapters (Stage 8)
+  - llama.cpp first; then vLLM, TGI, Triton; SSE, backpressure, errors; metrics adherence
+- Epic D — Scheduling & Fairness (Stage 9)
+  - Priority fairness; `admission_share`, `deadlines_met_ratio` gauges; tests
+- Epic E — Capabilities (Stage 10)
+  - `GET /v1/replicasets` or `/v1/capabilities`; provider verify + snapshots
+- Epic F — Config & Quotas (Stage 11)
+  - Engine/worker examples; quotas; env conventions
+- Epic G — BDD Coverage (Stage 12)
+  - Feature tests for journeys; no undefined/ambiguous steps
+- Epic H — Observability Dashboards (Stage 13)
+  - Grafana panels + alert budgets; CI render checks
+- Epic I — Startup Self‑Tests (Stage 14)
+  - Preload, minimal decode, cancel, telemetry
+- Epic J — Real‑Model E2E (Stage 15)
+  - Haiku anti‑cheat; metrics delta; ≤ 30 s
+- Epic K — Chaos & Load (Stage 16)
+- Epic L — Compliance & Release (Stage 17)
+
+Each Epic has acceptance criteria in the Stage Flow below; link test artifacts in `.docs/DONE/` per milestone.
 
 ---
 
@@ -119,23 +181,76 @@ Note on heterogeneous GPUs: cross‑GPU splits are opt‑in and require explicit
 2. Commit Grafana dashboards + alert rules under `/ci/dashboards`.
     **Gate:** Metrics linter + dashboard render pass in CI (sample data).
 
-### Stage 6 — Real‑Model E2E (Haiku) — **MANDATORY**
+### Stage 6 — Admission → Dispatch vertical (product)
 
-1. Prefer: point the test harness at a live NVIDIA GPU worker over LAN (your workstation), with metrics enabled — via the orchestrator’s **OrchQueue v1** APIs (`POST /v1/tasks`, then `GET /v1/tasks/:id/stream`). Fallback (CI‑only): boot **llama‑server** (CPU) with Qwen2.5‑0.5B‑Instruct GGUF and `--metrics` behind the orchestrator and still drive via OrchQueue v1.
-2. Run **Haiku** test: nonce (8 chars) + **minute‑in‑words**; assert ≥ 3 non‑empty lines; both substrings present; `/metrics` token delta > 0; engine/model visible. Interact only with `/v1/tasks` + stream; do not call engine endpoints directly.
-3. Enforce anti‑cheat: forbid `fixtures/haiku*`; repo scan for literals combining current minute words + nonce; `REQUIRE_REAL_LLAMA=1`.
-    **Gate:** Pass within **≤ 30 s** (single retry if minute flips mid‑test).
+1. Deliverables:
+   - `POST /v1/tasks` enqueues via core queue (`QueueWithMetrics`) and returns 202 with `task_id`, `correlation_id`.
+   - Placement selects a single Ready replica; `GET /v1/tasks/:id/stream` streams SSE (`started|token|metrics|end|error`).
+   - `POST /v1/tasks/:id/cancel` cancels queued/active tasks; determinism flags per engine; readiness gating.
+   **Gate:** Provider verify green for POST/GET/cancel; SSE events well-formed; metrics side-effects observed.
 
-### Stage 7 — Chaos & Load (nightly)
+### Stage 7 — Pool manager readiness
 
-1. Kill workers, inject driver resets/oom, hot‑reload configs; verify idempotency and bounded backoff restarts.
-2. 5–10 min load smoke; assert SLO budgets (TTFB p95, 64‑token p95) and no cardinality blow‑ups.
-    **Gate:** Nightly only.
+1. Deliverables:
+   - Replica registry (heartbeat/health/readiness), drain/reload, leases; surface `engine_version`/`model_digest`.
+   - Control-plane: `POST /v1/pools/:id/{drain,reload}`, `GET /v1/pools/:id/health`, `GET /v1/replicasets`.
+   **Gate:** Only Ready replicas advertised; pin `engine_version` and `sampler_profile_version`; do not mix.
 
-### Stage 8 — Compliance & Release
+### Stage 8 — Worker adapters conformance
 
-18. Run `spec-extract` → `requirements/*.yaml` (per‑spec requirement files; req → tests → code). Generate `COMPLIANCE.md`.
-19. Update `CHANGELOG_SPEC.md`; tag release; publish artifacts (OpenAPI, Schema, dashboards).
+1. Deliverables:
+   - Adapters: mock, llamacpp-http, vllm-http, tgi-http, triton. SSE framing/backpressure/timeouts/typed errors.
+   - Metrics emission per contract: tokens in/out, latencies, labels {engine,engine_version,pool_id,replica_id,priority}.
+   **Gate:** Adapter integration tests pass; determinism normalization per engine; version labels present.
+
+### Stage 9 — Scheduling & fairness
+
+1. Deliverables:
+   - Finalize policy; wire `admission_share` and `deadlines_met_ratio`; tune backpressure.
+   **Gate:** Fairness property unignored and green; end-to-end fairness behavior validated.
+
+### Stage 10 — Capability discovery
+
+1. Deliverables:
+   - `GET /v1/replicasets` or `GET /v1/capabilities` with API version, `ctx_max`, features, limits; snapshots + provider verify.
+
+### Stage 11 — Config & quotas
+
+1. Deliverables:
+   - Engine/worker examples; quotas (concurrent jobs, tokens/min, KV-MB); env conventions enforced.
+
+### Stage 12 — BDD coverage (journeys)
+
+1. Deliverables:
+   - Features for admission, cancel, backpressure, fairness bounds, determinism toggles; zero undefined/ambiguous.
+
+### Stage 13 — Dashboards & alerts
+
+1. Deliverables:
+   - Panels (queue_depth, rejections, latencies, tokens) + alert budgets in `/ci/dashboards`; CI render check.
+
+### Stage 14 — Startup self-tests
+
+1. Deliverables:
+   - Preload, minimal decode, cancel, telemetry; fail fast on violation.
+
+### Stage 15 — Real-Model E2E (Haiku) — anti-cheat gate
+
+1. Deliverables:
+   - E2E test in `test-harness/e2e-haiku/` driving only OrchQueue v1; minute+nonce; metrics token delta > 0; engine/model visible.
+   **Gate:** Pass within time budget; anti-cheat enforced (real Worker, no fixtures, repo scan, REQUIRE_REAL_LLAMA=1).
+
+### Stage 16 — Chaos & Load (nightly)
+
+1. Deliverables:
+   - `test-harness/chaos/` scenarios (kill/restart/drain/reset) and short load SLO checks.
+   **Gate:** Nightly-only pass.
+
+### Stage 17 — Compliance & Release
+
+1. Deliverables:
+   - `tools/spec-extract` → `requirements/*.yaml` refreshed; `COMPLIANCE.md` generated; `CHANGELOG_SPEC.md` updated; artifacts published.
+   **Gate:** Spec-extract diff-clean; linkcheck green; workspace fmt/lint/tests green.
 
 ---
 

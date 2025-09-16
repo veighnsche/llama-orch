@@ -26,6 +26,21 @@
       "labels": ["engine", "engine_version", "pool_id", "priority"]
     },
     {
+      "name": "kv_cache_usage_ratio",
+      "type": "gauge",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id"]
+    },
+    {
+      "name": "gpu_utilization",
+      "type": "gauge",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id", "device"]
+    },
+    {
+      "name": "vram_used_bytes",
+      "type": "gauge",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id", "device"]
+    },
+    {
       "name": "latency_first_token_ms",
       "type": "histogram",
       "labels": ["engine", "engine_version", "pool_id", "priority"]
@@ -46,6 +61,11 @@
       "labels": ["engine", "engine_version", "pool_id", "replica_id"]
     }
     ,
+    {
+      "name": "admission_backpressure_events_total",
+      "type": "counter",
+      "labels": ["engine", "policy"]
+    },
     {
       "name": "catalog_verifications_total",
       "type": "counter",

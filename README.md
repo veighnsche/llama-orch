@@ -25,9 +25,7 @@ cargo clippy --all-targets --all-features -- -D warnings
 - Regenerate contracts and requirements
 
 ```bash
-cargo xtask regen-openapi
-cargo xtask regen-schema
-cargo run -p tools-spec-extract --quiet
+cargo regen       # alias for: xtask regen (openapi + schema + spec-extract)
 ```
 
 - Tests (workspace)
@@ -65,6 +63,28 @@ cargo test -p test-harness-bdd -- --nocapture
 ```bash
 bash ci/scripts/check_links.sh
 ```
+
+- Full developer loop (fmt, clippy, regen, tests, linkcheck)
+
+```bash
+cargo dev        # alias for: xtask dev:loop
+```
+
+- Generate/refresh READMEs from the indexer
+
+```bash
+cargo docs-index # alias for: run -p tools-readme-index --
+```
+
+## Notes for Stage 6 Vertical Slice (coming soon)
+
+Once the Stage 6 Admission→Dispatch vertical is implemented, the Quickstart will include examples for:
+
+- `POST /v1/tasks` (202 with queue position)
+- `GET /v1/tasks/:id/stream` (SSE framing)
+- `POST /v1/tasks/:id/cancel`
+
+Until then, handlers remain stubs; metrics endpoint `/metrics` is available for liveness/contract checks.
 
 <!-- BEGIN WORKSPACE MAP (AUTO-GENERATED) -->
 ## Workspace Map
