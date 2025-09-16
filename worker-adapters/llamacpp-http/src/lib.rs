@@ -2,7 +2,7 @@
 
 use contracts_api_types as api;
 use worker_adapters_adapter_api::{
-    TokenEvent, TokenStream, WorkerAdapter, WorkerError, WorkerHealth, WorkerProps,
+    TokenStream, WorkerAdapter, WorkerError, WorkerHealth, WorkerProps,
 };
 
 #[derive(Debug, Clone)]
