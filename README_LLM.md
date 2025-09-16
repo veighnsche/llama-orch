@@ -145,6 +145,13 @@ This document defines how an LLM developer must make decisions and contribute to
 - Ask the spec for guidance; if it’s silent, propose the minimum change to make it explicit.
 - Choose clarity and determinism over compatibility until v1.0.0.
 
+## Branching Policy (pre‑v1.0.0)
+
+- Trunk‑based development: develop directly on `master`.
+- Avoid feature branches before v1.0.0; keep changes small and incremental.
+- Commit messages must reference relevant requirement IDs and be descriptive (what changed, where, why).
+- Use PRs for review when useful, but do not gate on long‑lived branches.
+
 ## Quick Status for LLMs (Progress & Global TODO)
 
 Overall project progress: 33% (Stages 0–5 of 18 complete)
