@@ -93,3 +93,38 @@ pub fn prom_tokens_out_delta(prev: &str, curr: &str) -> i64 {
     }
     parse_total(curr, "tokens_out_total") - parse_total(prev, "tokens_out_total")
 }
+
+/// Enforce environment gating for real-model runs.
+/// REQUIRE_REAL_LLAMA=1 must be set, and a time zone is recommended per README.
+pub fn require_real_llama_env() -> Result<()> {
+    use std::env;
+    match env::var("REQUIRE_REAL_LLAMA").ok().as_deref() {
+        Some("1") => {}
+        _ => anyhow::bail!("REQUIRE_REAL_LLAMA=1 not set (gate real worker runs)"),
+    }
+    // Optional: advise on TZ for deterministic Haiku minute nonce
+    let _ = env::var("TZ").unwrap_or_else(|_| "".into());
+    Ok(())
+}
+
+/// Anti-cheat: perform a lightweight scan for suspicious hard-coded haiku content.
+/// This does not replace the full normative workflow but serves as a local helper.
+pub fn anti_cheat_scan_repo(root: &std::path::Path) -> Result<()> {
+    use walkdir::WalkDir;
+    for entry in WalkDir::new(root).into_iter().filter_map(Result::ok) {
+        if entry.file_type().is_file() {
+            let path = entry.path();
+            if let Ok(text) = std::fs::read_to_string(path) {
+                if text.contains("Write a haiku about GPUs")
+                    && path.extension().map(|e| e == "rs").unwrap_or(false)
+                {
+                    // Allowed in harness/test generation, but flag if under non-test sources
+                    if !path.to_string_lossy().contains("test") {
+                        anyhow::bail!("Potential hard-coded haiku content in {:?}", path);
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}

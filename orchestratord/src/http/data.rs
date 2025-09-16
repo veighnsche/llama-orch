@@ -1,17 +1,29 @@
-use axum::{extract::{Path, State}, response::{IntoResponse, Response}, Json};
+use axum::{
+    extract::{Path, State},
+    response::{IntoResponse, Response},
+    Json,
+};
 use contracts_api_types as api;
-use http::{header::CONTENT_TYPE, HeaderMap};
-use tracing::info;
-use std::time::Instant;
 use futures::StreamExt;
-use orchestrator_core::queue::Priority as CorePriority;
+use http::{header::CONTENT_TYPE, HeaderMap};
 use orchestrator_core::queue::EnqueueError;
+use orchestrator_core::queue::Priority as CorePriority;
+use std::time::Instant;
+use tracing::info;
+use worker_adapters_adapter_api::WorkerError as AdapterErr;
 
-use crate::{backpressure, metrics, placement, state::{AppState, ModelState}};
 use super::auth::require_api_key;
+use crate::{
+    backpressure, metrics, placement,
+    state::{AppState, ModelState},
+};
 
 // Data plane — OrchQueue v1
-pub async fn create_task(headers: HeaderMap, state: State<AppState>, body: Json<api::TaskRequest>) -> Response {
+pub async fn create_task(
+    headers: HeaderMap,
+    state: State<AppState>,
+    body: Json<api::TaskRequest>,
+) -> Response {
     if let Err(code) = require_api_key(&headers) {
         return (code, HeaderMap::new()).into_response();
     }
@@ -45,7 +57,10 @@ pub async fn create_task(headers: HeaderMap, state: State<AppState>, body: Json<
     // Minimal placeholder: accept admission and return a basic envelope + correlation id
     // Sentinel: if expected_tokens is extremely high, simulate queue full and return 429
     if body.expected_tokens.unwrap_or(0) >= 1_000_000 {
-        let backoff = backpressure::Backoff { retry_after_seconds: 1, x_backoff_ms: 1000 };
+        let backoff = backpressure::Backoff {
+            retry_after_seconds: 1,
+            x_backoff_ms: 1000,
+        };
         let mut headers = backpressure::build_429_headers(backoff);
         headers.insert("X-Correlation-Id", "corr-0".parse().unwrap());
         let policy = backpressure::compute_policy_label(());
@@ -135,7 +150,10 @@ pub async fn create_task(headers: HeaderMap, state: State<AppState>, body: Json<
         };
         let mut q = state.queue.lock().unwrap();
         if let Err(EnqueueError::QueueFullReject) = q.enqueue(id_u32, prio) {
-            let backoff = backpressure::Backoff { retry_after_seconds: 1, x_backoff_ms: 1000 };
+            let backoff = backpressure::Backoff {
+                retry_after_seconds: 1,
+                x_backoff_ms: 1000,
+            };
             let mut headers = backpressure::build_429_headers(backoff);
             headers.insert("X-Correlation-Id", "corr-0".parse().unwrap());
             let policy = backpressure::compute_policy_label(());
@@ -174,6 +192,7 @@ pub async fn create_task(headers: HeaderMap, state: State<AppState>, body: Json<
     // Structured log for started/admission (no secrets)
     info!(
         event = "admission_started",
+        job_id = %resp.task_id,
         task_id = %resp.task_id,
         session_id = %body.session_id,
         engine = ?body.engine,
@@ -209,7 +228,7 @@ pub async fn create_task(headers: HeaderMap, state: State<AppState>, body: Json<
             transcript.push_str(&started_frame);
             let mut emitted_metrics = false;
             let t0 = Instant::now();
-            match adapter.submit(req) {
+            match adapter.submit(req.clone()) {
                 Ok(mut stream) => {
                     let mut first_token_ms: Option<u128> = None;
                     let mut tokens_out: u64 = 0;
@@ -239,14 +258,21 @@ pub async fn create_task(headers: HeaderMap, state: State<AppState>, body: Json<
                                                 ms as u64,
                                                 0,
                                             );
+                                            // Fairness placeholders (Week 4):
+                                            crate::metrics::ADMISSION_SHARE
+                                                .with_label_values(&["t0", "interactive"]) // TODO: real tenant
+                                                .set(1.0);
+                                            crate::metrics::DEADLINES_MET_RATIO
+                                                .with_label_values(&["interactive"]) // placeholder
+                                                .set(1.0);
                                         }
                                         tokens_out += 1;
                                     }
                                     "end" => {
                                         transcript.push_str("event: end\n");
                                         transcript.push_str(&format!("data: {}\n\n", te.data));
-                                        let decode_ms = t0.elapsed().as_millis()
-                                            - first_token_ms.unwrap_or(0);
+                                        let decode_ms =
+                                            t0.elapsed().as_millis() - first_token_ms.unwrap_or(0);
                                         crate::metrics::record_stream_ended(
                                             "llamacpp",
                                             "v0",
@@ -256,12 +282,49 @@ pub async fn create_task(headers: HeaderMap, state: State<AppState>, body: Json<
                                             decode_ms as u64,
                                             tokens_out,
                                         );
+                                        tracing::info!(
+                                            event = "stream_ended",
+                                            job_id = %req.task_id,
+                                            engine = ?req.engine,
+                                            tokens_out = tokens_out,
+                                            decode_ms = decode_ms as u64,
+                                            "stream finished"
+                                        );
                                     }
                                     _ => {}
                                 }
                             }
-                            Err(_) => {
-                                // Map to an error SSE frame if desired in future
+                            Err(e) => {
+                                // Map adapter errors to contract SSE error frames
+                                let (code, message) = match e {
+                                    AdapterErr::DeadlineUnmet => {
+                                        ("DEADLINE_UNMET", "deadline unmet")
+                                    }
+                                    AdapterErr::PoolUnavailable => {
+                                        ("POOL_UNAVAILABLE", "pool unavailable")
+                                    }
+                                    AdapterErr::DecodeTimeout => {
+                                        ("DECODE_TIMEOUT", "decode timeout")
+                                    }
+                                    AdapterErr::WorkerReset => ("WORKER_RESET", "worker reset"),
+                                    AdapterErr::Internal(ref msg) => ("INTERNAL", msg.as_str()),
+                                    AdapterErr::Adapter(ref msg) => ("INTERNAL", msg.as_str()),
+                                };
+                                let err = serde_json::json!({
+                                    "code": code,
+                                    "message": message,
+                                    "engine": req.engine,
+                                });
+                                transcript.push_str("event: error\n");
+                                transcript.push_str(&format!("data: {}\n\n", err));
+                                tracing::info!(
+                                    event = "stream_error",
+                                    job_id = %req.task_id,
+                                    engine = ?req.engine,
+                                    code = code,
+                                    message = %message,
+                                    "stream error mapped"
+                                );
                                 break;
                             }
                         }
@@ -271,13 +334,19 @@ pub async fn create_task(headers: HeaderMap, state: State<AppState>, body: Json<
                     // Adapter submit failed; leave transcript with started+metrics only for now
                 }
             }
-            if let Ok(mut map) = sse_store.lock() { map.insert(task_id, transcript); }
+            if let Ok(mut map) = sse_store.lock() {
+                map.insert(task_id, transcript);
+            }
         });
     }
     (http::StatusCode::ACCEPTED, headers, Json(resp)).into_response()
 }
 
-pub async fn stream_task(headers: HeaderMap, state: State<AppState>, Path(id): Path<String>) -> Response {
+pub async fn stream_task(
+    headers: HeaderMap,
+    state: State<AppState>,
+    Path(id): Path<String>,
+) -> Response {
     if let Err(code) = require_api_key(&headers) {
         return (code, HeaderMap::new()).into_response();
     }
@@ -305,7 +374,11 @@ pub async fn stream_task(headers: HeaderMap, state: State<AppState>, Path(id): P
     (headers, body).into_response()
 }
 
-pub async fn cancel_task(headers: HeaderMap, _state: State<AppState>, _path: Path<String>) -> Response {
+pub async fn cancel_task(
+    headers: HeaderMap,
+    _state: State<AppState>,
+    _path: Path<String>,
+) -> Response {
     if let Err(code) = require_api_key(&headers) {
         return (code, HeaderMap::new()).into_response();
     }
@@ -314,7 +387,11 @@ pub async fn cancel_task(headers: HeaderMap, _state: State<AppState>, _path: Pat
     (http::StatusCode::NO_CONTENT, headers).into_response()
 }
 
-pub async fn get_session(headers: HeaderMap, _state: State<AppState>, _path: Path<String>) -> Response {
+pub async fn get_session(
+    headers: HeaderMap,
+    _state: State<AppState>,
+    _path: Path<String>,
+) -> Response {
     if let Err(code) = require_api_key(&headers) {
         return (code, HeaderMap::new()).into_response();
     }
@@ -327,11 +404,16 @@ pub async fn get_session(headers: HeaderMap, _state: State<AppState>, _path: Pat
         time_budget_remaining_ms: None,
         cost_budget_remaining: None,
     };
-    let mut h = HeaderMap::new(); h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+    let mut h = HeaderMap::new();
+    h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
     (http::StatusCode::OK, h, Json(info)).into_response()
 }
 
-pub async fn delete_session(headers: HeaderMap, _state: State<AppState>, _path: Path<String>) -> Response {
+pub async fn delete_session(
+    headers: HeaderMap,
+    _state: State<AppState>,
+    _path: Path<String>,
+) -> Response {
     if let Err(code) = require_api_key(&headers) {
         return (code, HeaderMap::new()).into_response();
     }

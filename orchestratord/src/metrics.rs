@@ -284,7 +284,7 @@ pub fn record_stream_started(
         .observe(first_token_ms as f64);
     TOKENS_IN_TOTAL
         .with_label_values(&[engine, engine_version, pool_id, replica_id])
-        .inc_by(tokens_in as u64);
+        .inc_by(tokens_in);
 }
 
 pub fn record_stream_ended(
@@ -301,7 +301,7 @@ pub fn record_stream_ended(
         .observe(decode_ms as f64);
     TOKENS_OUT_TOTAL
         .with_label_values(&[engine, engine_version, pool_id, replica_id])
-        .inc_by(tokens_out as u64);
+        .inc_by(tokens_out);
 }
 
 fn ensure_samples() {

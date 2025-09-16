@@ -2,7 +2,6 @@ use crate::steps::world::World;
 use contracts_api_types as api;
 use cucumber::{given, then};
 use futures::StreamExt;
-use worker_adapters_adapter_api::WorkerAdapter;
 use worker_adapters_llamacpp_http::LlamaCppHttpAdapter;
 use worker_adapters_tgi_http::TgiHttpAdapter;
 use worker_adapters_triton::TritonAdapter;

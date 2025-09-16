@@ -21,7 +21,10 @@ pub async fn then_schema_validation_passes(_world: &mut World) {
             { "id":"pool0", "engine":"llamacpp", "model":"model0", "devices":[0] }
         ]
     });
-    assert!(compiled.is_valid(&cfg), "expected schema to validate example");
+    assert!(
+        compiled.is_valid(&cfg),
+        "expected schema to validate example"
+    );
 }
 
 #[given(regex = r"^strict mode with unknown field$")]

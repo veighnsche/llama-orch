@@ -25,6 +25,16 @@ pub struct TokenEvent {
 
 #[derive(Debug, Error)]
 pub enum WorkerError {
+    #[error("deadline unmet")]
+    DeadlineUnmet,
+    #[error("pool unavailable")]
+    PoolUnavailable,
+    #[error("decode timeout")]
+    DecodeTimeout,
+    #[error("worker reset")]
+    WorkerReset,
+    #[error("internal: {0}")]
+    Internal(String),
     #[error("adapter error: {0}")]
     Adapter(String),
 }

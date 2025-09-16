@@ -24,7 +24,10 @@ pub fn build_app() -> Router<state::AppState> {
         .route("/v1/tasks", post(http::data::create_task))
         .route("/v1/tasks/:id/stream", get(http::data::stream_task))
         .route("/v1/tasks/:id/cancel", post(http::data::cancel_task))
-        .route("/v1/sessions/:id", get(http::data::get_session).delete(http::data::delete_session))
+        .route(
+            "/v1/sessions/:id",
+            get(http::data::get_session).delete(http::data::delete_session),
+        )
         // Control plane
         .route("/v1/pools/:id/drain", post(http::control::drain_pool))
         .route("/v1/pools/:id/reload", post(http::control::reload_pool))

@@ -1,6 +1,6 @@
-use http::{header::CONTENT_TYPE, HeaderMap};
 use crate::metrics;
 use axum::response::{IntoResponse, Response};
+use http::{header::CONTENT_TYPE, HeaderMap};
 
 pub async fn metrics_endpoint() -> Response {
     let body = metrics::gather_metrics_text();
