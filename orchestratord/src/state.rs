@@ -8,6 +8,7 @@ use crate::admission::{MetricLabels, QueueWithMetrics};
 pub struct AppState {
     pub queue: Arc<Mutex<QueueWithMetrics>>,
     pub model_state: Arc<Mutex<ModelState>>,
+    pub logs: Arc<Mutex<Vec<String>>>,
 }
 
 #[derive(Clone, Debug)]
@@ -29,5 +30,6 @@ pub fn default_state() -> AppState {
     AppState {
         queue: Arc::new(Mutex::new(queue)),
         model_state: Arc::new(Mutex::new(ModelState::Draft)),
+        logs: Arc::new(Mutex::new(Vec::new())),
     }
 }

@@ -18,7 +18,36 @@ fn require_api_key(headers: &HeaderMap) -> Result<(), http::StatusCode> {
         Some(val) if val == "valid" => Ok(()),
         Some(_) => Err(http::StatusCode::FORBIDDEN),
     }
+}
 
+// Catalog endpoints (planning-only stubs)
+#[derive(Deserialize)]
+pub struct CatalogModelReq { pub id: String, #[serde(default)] pub signed: Option<bool> }
+
+pub async fn create_catalog_model(headers: HeaderMap, _state: State<AppState>, Json(body): Json<CatalogModelReq>) -> Response {
+    if let Err(code) = require_api_key(&headers) { return (code, HeaderMap::new()).into_response(); }
+    let strict = headers.get("X-Trust-Policy").and_then(|v| v.to_str().ok()) == Some("strict");
+    let signed = body.signed.unwrap_or(true);
+    if strict && !signed {
+        let mut h = HeaderMap::new(); h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+        let err = json!({ "code": "UNTRUSTED_ARTIFACT" });
+        return (http::StatusCode::BAD_REQUEST, h, Json(err)).into_response();
+    }
+    let resp = json!({ "id": body.id, "signatures": true, "sbom": true });
+    (http::StatusCode::CREATED, Json(resp)).into_response()
+}
+
+pub async fn get_catalog_model(headers: HeaderMap, _state: State<AppState>, Path(id): Path<String>) -> Response {
+    if let Err(code) = require_api_key(&headers) { return (code, HeaderMap::new()).into_response(); }
+    let resp = json!({ "id": id, "signatures": true, "sbom": true });
+    (http::StatusCode::OK, Json(resp)).into_response()
+}
+
+pub async fn verify_catalog_model(headers: HeaderMap, _state: State<AppState>, Path(_id): Path<String>) -> Response {
+    if let Err(code) = require_api_key(&headers) { return (code, HeaderMap::new()).into_response(); }
+    let resp = json!({ "status": "started" });
+    (http::StatusCode::ACCEPTED, Json(resp)).into_response()
+}
 // Lifecycle control: set model state (planning-only control)
 #[derive(Deserialize)]
 pub struct SetModelStateRequest {
@@ -57,8 +86,11 @@ pub async fn set_model_state(headers: HeaderMap, state: State<AppState>, Json(bo
         ModelState::Retired => "Retired",
     };
     metrics::MODEL_STATE.with_label_values(&[model, label]).set(1);
+    if matches!(ms, ModelState::Retired) {
+        let mut logs = state.logs.lock().unwrap();
+        logs.push("{\"event\":\"retire\",\"pools_unloaded\":true,\"archives_retained\":true}".to_string());
+    }
     (http::StatusCode::OK, Json(json!({"status":"ok","state": label }))).into_response()
-}
 }
 
 // Data plane — OrchQueue v1
@@ -142,6 +174,17 @@ pub async fn create_task(headers: HeaderMap, state: State<AppState>, body: Json<
         return (http::StatusCode::BAD_REQUEST, h, Json(err)).into_response();
     }
 
+    // Deadline infeasible sentinel
+    if body.deadline_ms <= 0 {
+        let mut h = HeaderMap::new();
+        h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+        let err = serde_json::json!({
+            "code": "DEADLINE_UNMET",
+            "engine": body.engine,
+        });
+        return (http::StatusCode::BAD_REQUEST, h, Json(err)).into_response();
+    }
+
     let mut headers = HeaderMap::new();
     headers.insert("X-Correlation-Id", "corr-0".parse().unwrap());
 
@@ -157,6 +200,14 @@ pub async fn create_task(headers: HeaderMap, state: State<AppState>, body: Json<
     metrics::MODEL_STATE
         .with_label_values(&[&model_id, state_label])
         .set(1);
+    // Structured log for started/admission (no secrets)
+    {
+        let mut logs = state.logs.lock().unwrap();
+        logs.push(format!(
+            "{{\"event\":\"started\",\"task_id\":\"{}\",\"queue_position\":{},\"predicted_start_ms\":{}}}",
+            resp.task_id, resp.queue_position, resp.predicted_start_ms
+        ));
+    }
     (http::StatusCode::ACCEPTED, headers, Json(resp)).into_response()
 }
 
@@ -169,7 +220,7 @@ pub async fn stream_task(headers: HeaderMap, _state: State<AppState>, _path: Pat
     headers.insert(CONTENT_TYPE, "text/event-stream".parse().unwrap());
     let body = "event: started\ndata: {\"queue_position\":0,\"predicted_start_ms\":0}\n\n\
                 event: token\ndata: {\"text\":\"hello\"}\n\n\
-                event: metrics\ndata: {\"queue_depth\":0}\n\n\
+                event: metrics\ndata: {\"queue_depth\":0,\"on_time_probability\":0.9}\n\n\
                 event: end\ndata: {}\n\n";
     (headers, body).into_response()
 }

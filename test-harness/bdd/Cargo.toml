@@ -28,6 +28,9 @@ worker-adapters-llamacpp-http = { path = "../../worker-adapters/llamacpp-http" }
 worker-adapters-vllm-http = { path = "../../worker-adapters/vllm-http" }
 worker-adapters-tgi-http = { path = "../../worker-adapters/tgi-http" }
 worker-adapters-triton = { path = "../../worker-adapters/triton" }
+jsonschema = { workspace = true }
+contracts-config-schema = { path = "../../contracts/config-schema" }
+worker-adapters-adapter-api = { path = "../../worker-adapters/adapter-api" }
 
 [dev-dependencies]
 

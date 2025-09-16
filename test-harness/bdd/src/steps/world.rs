@@ -17,6 +17,7 @@ pub struct World {
     pub corr_id: Option<String>,
     pub task_id: Option<String>,
     pub api_key: Option<String>,
+    pub extra_headers: Vec<(String, String)>,
 }
 
 impl Default for World {
@@ -31,6 +32,7 @@ impl Default for World {
             corr_id: None,
             task_id: None,
             api_key: Some("valid".to_string()),
+            extra_headers: Vec::new(),
         }
     }
 }
@@ -56,6 +58,9 @@ impl World {
         let mut headers = http::HeaderMap::new();
         if let Some(key) = &self.api_key {
             headers.insert("X-API-Key", key.parse().unwrap());
+        }
+        for (k, v) in self.extra_headers.drain(..) {
+            headers.insert(k, v.parse().unwrap());
         }
 
         // Dispatch to handlers by path

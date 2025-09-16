@@ -45,7 +45,13 @@ pub async fn when_set_state_retired(world: &mut World) {
 }
 
 #[then(regex = r"^pools unload and archives retained$")]
-pub async fn then_pools_unload_archives_retained(_world: &mut World) {}
+pub async fn then_pools_unload_archives_retained(world: &mut World) {
+    let logs = world.state.logs.lock().unwrap();
+    let line = logs.iter().rev().find(|l| l.contains("\"event\":\"retire\""))
+        .expect("no retire log event found");
+    assert!(line.contains("\"pools_unloaded\":true"), "retire log missing pools_unloaded: {}", line);
+    assert!(line.contains("\"archives_retained\":true"), "retire log missing archives_retained: {}", line);
+}
 
 #[then(regex = r"^model_state gauge is exported$")]
 pub async fn then_model_state_gauge_exported(world: &mut World) {

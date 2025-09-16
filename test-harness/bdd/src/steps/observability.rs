@@ -30,10 +30,22 @@ pub async fn given_started_event_and_admission_logs(world: &mut World) {
 }
 
 #[then(regex = r"^include queue_position and predicted_start_ms$")]
-pub async fn then_logs_include_queue_pos_eta(_world: &mut World) {}
+pub async fn then_logs_include_queue_pos_eta(world: &mut World) {
+    let logs = world.state.logs.lock().unwrap();
+    let line = logs.last().expect("no logs recorded");
+    assert!(line.contains("\"queue_position\":"), "missing queue_position in logs: {}", line);
+    assert!(line.contains("\"predicted_start_ms\":"), "missing predicted_start_ms in logs: {}", line);
+}
 
 #[then(regex = r"^logs do not contain secrets or API keys$")]
-pub async fn then_logs_do_not_contain_secrets_or_api_keys(_world: &mut World) {}
+pub async fn then_logs_do_not_contain_secrets_or_api_keys(world: &mut World) {
+    let logs = world.state.logs.lock().unwrap();
+    for line in logs.iter() {
+        assert!(!line.to_lowercase().contains("secret"), "log leaks secret: {}", line);
+        assert!(!line.contains("X-API-Key"), "log leaks api key: {}", line);
+        assert!(!line.to_lowercase().contains("api_key"), "log leaks api_key: {}", line);
+    }
+}
 
 // Placeholders used by skeleton features and basic.feature
 #[given(regex = r"^noop$")]
