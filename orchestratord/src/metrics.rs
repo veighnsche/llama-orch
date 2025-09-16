@@ -267,6 +267,44 @@ pub fn gather_metrics_text() -> String {
     String::from_utf8(buf).unwrap_or_default()
 }
 
+// Streaming emissions helpers (to be called by data-plane streaming once implemented)
+pub fn record_stream_started(
+    engine: &str,
+    engine_version: &str,
+    pool_id: &str,
+    replica_id: &str,
+    priority: &str,
+    first_token_ms: u64,
+    tokens_in: u64,
+) {
+    TASKS_STARTED_TOTAL
+        .with_label_values(&[engine, engine_version, pool_id, replica_id, priority])
+        .inc();
+    LATENCY_FIRST_TOKEN_MS
+        .with_label_values(&[engine, engine_version, pool_id, priority])
+        .observe(first_token_ms as f64);
+    TOKENS_IN_TOTAL
+        .with_label_values(&[engine, engine_version, pool_id, replica_id])
+        .inc_by(tokens_in as u64);
+}
+
+pub fn record_stream_ended(
+    engine: &str,
+    engine_version: &str,
+    pool_id: &str,
+    replica_id: &str,
+    priority: &str,
+    decode_ms: u64,
+    tokens_out: u64,
+) {
+    LATENCY_DECODE_MS
+        .with_label_values(&[engine, engine_version, pool_id, priority])
+        .observe(decode_ms as f64);
+    TOKENS_OUT_TOTAL
+        .with_label_values(&[engine, engine_version, pool_id, replica_id])
+        .inc_by(tokens_out as u64);
+}
+
 fn ensure_samples() {
     // Use a single placeholder label set to instantiate one child per vector.
     let eng = "llamacpp";

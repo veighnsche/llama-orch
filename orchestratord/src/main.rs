@@ -1,4 +1,5 @@
 mod metrics;
+mod admission;
 
 use axum::{
     extract::{Path, State},
@@ -9,8 +10,11 @@ use axum::{
 use contracts_api_types as api;
 use http::{header::CONTENT_TYPE, HeaderMap};
 
-#[derive(Clone, Default)]
-struct AppState;
+#[derive(Clone)]
+struct AppState {
+    // Admission queue with metrics wiring; not used by stub handlers yet
+    queue: std::sync::Arc<std::sync::Mutex<admission::QueueWithMetrics>>,
+}
 
 // Data plane — OrchQueue v1
 async fn create_task(_state: State<AppState>, _body: Json<api::TaskRequest>) -> Response {
@@ -61,7 +65,21 @@ async fn list_replicasets(_state: State<AppState>) -> Response {
 
 fn main() {
     // Build the router with all routes wired. Do not start the server in pre-code phase.
-    let state = AppState;
+    // Initialize default labels for a placeholder pool/replica
+    let labels = admission::MetricLabels {
+        engine: "llamacpp".to_string(),
+        engine_version: "v0".to_string(),
+        pool_id: "pool0".to_string(),
+        replica_id: "r0".to_string(),
+    };
+    let queue = admission::QueueWithMetrics::new(
+        1024,
+        orchestrator_core::queue::Policy::DropLru,
+        labels,
+    );
+    let state = AppState {
+        queue: std::sync::Arc::new(std::sync::Mutex::new(queue)),
+    };
     let app: Router<AppState> = Router::new()
         // Data plane
         .route("/v1/tasks", post(create_task))

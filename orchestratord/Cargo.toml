@@ -17,6 +17,7 @@ anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 http = { workspace = true }
 contracts-api-types = { path = "../contracts/api-types" }
+orchestrator-core = { path = "../orchestrator-core" }
 regex = { workspace = true }
 serde_json = { workspace = true }
 prometheus = "0.13"

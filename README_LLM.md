@@ -99,7 +99,25 @@ This document defines how an LLM developer must make decisions and contribute to
   - Stage 3 — Properties: core invariants via proptest.
   - Stage 4 — Determinism: two replicas per engine; byte‑exact streams.
   - Stage 5 — Observability: metrics exactly per `.specs/metrics/otel-prom.md`.
-  - Stage 6 — Real‑model E2E (Haiku): pass within budget; metrics delta observed.
+  - Stage 6 — Admission → Dispatch vertical: queue → scheduler/placement → WorkerAdapter `submit()` (single ready replica); health/readiness gating; pin `engine_version` & `sampler_profile_version`; engine determinism flags
+  - Stage 7 — Pool manager readiness: worker registry, heartbeat/health/readiness, drain/reload, leases; propagate `engine_version`/`model_digest`
+  - Stage 8 — Worker adapters conformance: SSE framing, backpressure, timeouts/retries, typed errors; metrics emission per contract; engines: mock, llamacpp-http, vllm-http, tgi-http, triton
+  - Stage 9 — Scheduling & fairness: finalize policy; unignore fairness property; wire `admission_share` & `deadlines_met_ratio` gauges; tune backpressure
+  - Stage 10 — Capability discovery: `GET /v1/replicasets` or `GET /v1/capabilities` with API version, `ctx_max`, features, limits; provider verify + snapshots
+  - Stage 11 — Config & quotas: examples per engine/worker; enforce quotas; env conventions (`REQUIRE_REAL_LLAMA=1`, TZ)
+  - Stage 12 — BDD coverage: admission happy path, cancel, backpressure, fairness bounds, determinism toggles; zero undefined/ambiguous steps; proof artifacts
+  - Stage 13 — Dashboards & alerts: Grafana panels (depth, rejections, latencies, tokens); alert budgets; CI render check
+  - Stage 14 — Startup self‑tests: preload, minimal decode, cancel, telemetry emission
+  - Stage 15 — Real‑model E2E (Haiku): pass within budget; metrics delta observed (anti‑cheat gate)
+  - Stage 16 — Chaos & Load (nightly): failure injections and load SLO budgets
+  - Stage 17 — Compliance & Release: requirements extract, COMPLIANCE.md, CHANGELOG_SPEC.md, tag & artifacts
+
+  Anti‑cheat note (Haiku E2E): This test is the anti‑cheat gate. See `.docs/workflow.md` §4 “Haiku Test (Normative Protocol)” (Anti‑cheat). Explicit criteria:
+  - MUST run against a real Worker (GPU preferred; CPU allowed only as a clearly marked CI fallback);
+  - Forbid fixtures (no `fixtures/haiku*`), and disallow hardcoded haiku content anywhere in source;
+  - Scan the repo for lines containing both the current minute words and the test nonce;
+  - Fail if a mock/stub engine is detected or if `/metrics` is absent;
+  - Require `REQUIRE_REAL_LLAMA=1` during the test run.
 
 - Developer loop (deterministic)
   - `cargo fmt --all -- --check && cargo clippy --all-targets --all-features -- -D warnings`
@@ -126,5 +144,63 @@ This document defines how an LLM developer must make decisions and contribute to
 - Prefer smaller, well‑scoped proposals and PRs.
 - Ask the spec for guidance; if it’s silent, propose the minimum change to make it explicit.
 - Choose clarity and determinism over compatibility until v1.0.0.
+
+## Quick Status for LLMs (Progress & Global TODO)
+
+Overall project progress: 33% (Stages 0–5 of 18 complete)
+
+- [x] Stage 0 — Contract freeze: OpenAPI + config schema regenerated; CI fails on diffs
+- [x] Stage 1 — CDC + snapshots: Pact + insta green before provider code
+- [x] Stage 2 — Provider verify: orchestrator passes pact verification
+- [x] Stage 3 — Properties: core invariants via proptest
+- [x] Stage 4 — Determinism: two replicas per engine; byte‑exact streams
+- [x] Stage 5 — Observability: metrics exactly per `.specs/metrics/otel-prom.md` (linter parity, /metrics endpoint, admission emissions wired)
+- [ ] Stage 6 — Admission → Dispatch vertical
+- [ ] Stage 7 — Pool manager readiness
+- [ ] Stage 8 — Worker adapters conformance
+- [ ] Stage 9 — Scheduling & fairness
+- [ ] Stage 10 — Capability discovery
+- [ ] Stage 11 — Config & quotas
+- [ ] Stage 12 — BDD coverage
+- [ ] Stage 13 — Dashboards & alerts
+- [ ] Stage 14 — Startup self‑tests
+- [ ] Stage 15 — Real‑model E2E (Haiku)
+- [ ] Stage 16 — Chaos & Load (nightly)
+- [ ] Stage 17 — Compliance & Release
+
+Detailed 4‑week execution summary and prior progress logs are archived under `.docs/DONE/` (see the latest e.g. `.docs/DONE/TODO-9.md`). Read these to understand exactly what has been completed, with dates and file references.
+
+### Global TODO to v1.0.0 (High‑Level)
+
+- [x] Spec discipline and planning artifacts (`.specs/`, `.plan/`, `.docs/` test catalog)
+- [x] Contracts regenerated and frozen (OpenAPI, Config Schema)
+- [x] CDC consumer tests and provider verification green
+- [x] Core queue invariants proven (bounded, full policies, FIFO)
+- [x] Determinism suite (byte‑exact per engine/version + seeds) green
+- [x] Observability metrics: linter/spec alignment, /metrics endpoint, admission emissions (enqueue/cancel/backpressure)
+- [ ] Scheduling fairness properties (priority fairness) — finalize and unignore test
+- [ ] Pool manager scaffolding and replica lifecycle wiring
+- [ ] Worker adapters conformance suite (mock + llamacpp-http + vllm-http + tgi-http + triton)
+- [ ] Policy host + SDK minimal flow and CDC tests
+- [ ] E2E Haiku on real worker (GPU) — success within SLO budget with metrics deltas captured
+- [ ] CI hardening (dashboards, alerts, budgets) and release hygiene (SECURITY.md, license checks)
+- [ ] Documentation pass (component READMEs, capabilities docs) and versioned release notes
+
+Tip for LLMs: Start by scanning `.docs/DONE/` for the most recent archived TODO to get detailed, dated changes; then use the sections below to navigate the codebase.
+
+## Project Structure (Navigation Map)
+
+- `.specs/` — Normative specs and proposals; includes `metrics/otel-prom.md` and core specs
+- `.plan/` — Per‑spec execution plans (00..71) aligned with README_LLM workflow
+- `.docs/` — Docs; see `DONE/` for archived TODOs and detailed progress logs
+- `contracts/` — API types, config schema, OpenAPI, and pact artifacts
+- `orchestrator-core/` — Core library (queue, traits); property tests under `tests/`
+- `orchestratord/` — Orchestrator binary; routes, admission metrics, `/metrics` endpoint
+- `pool-managerd/` — Pool manager daemon (scaffolding)
+- `worker-adapters/` — Engine adapters (mock, llamacpp-http, vllm-http, tgi-http, triton)
+- `plugins/` — Policy host and SDK crates
+- `test-harness/` — BDD, determinism suite, chaos, E2E Haiku harness
+- `tools/` — Spec extraction, OpenAPI client, README indexer
+- `ci/` — Pipelines, scripts, metrics linter config
 
 ;; with love, Vince :) ;;

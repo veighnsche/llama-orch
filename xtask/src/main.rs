@@ -14,14 +14,41 @@ struct Xtask {
     cmd: Cmd,
 }
 
+fn regen_all() -> Result<()> {
+    regen_openapi()?;
+    regen_schema()?;
+    spec_extract()?;
+    println!("regen: OK");
+    Ok(())
+}
+
+fn docs_index() -> Result<()> {
+    let status = Command::new("cargo")
+        .arg("run")
+        .arg("-p")
+        .arg("tools-readme-index")
+        .arg("--quiet")
+        .status()
+        .context("running tools-readme-index")?;
+    if !status.success() {
+        return Err(anyhow!("docs:index failed"));
+    }
+    println!("docs:index OK");
+    Ok(())
+}
+
 #[derive(Subcommand)]
 enum Cmd {
     #[command(name = "regen-openapi")]
     RegenOpenapi,
     #[command(name = "regen-schema")]
     RegenSchema,
+    #[command(name = "regen")]
+    Regen,
     #[command(name = "spec-extract")]
     SpecExtract,
+    #[command(name = "dev:loop")]
+    DevLoop,
     #[command(name = "ci:haiku:gpu")]
     CiHaikuGpu,
     #[command(name = "ci:haiku:cpu")]
@@ -32,6 +59,8 @@ enum Cmd {
     PactVerify,
     #[command(name = "pact:publish")]
     PactPublish,
+    #[command(name = "docs:index")]
+    DocsIndex,
 }
 
 fn main() -> Result<()> {
@@ -39,12 +68,15 @@ fn main() -> Result<()> {
     match xt.cmd {
         Cmd::RegenOpenapi => regen_openapi()?,
         Cmd::RegenSchema => regen_schema()?,
-        Cmd::SpecExtract => println!("xtask: spec-extract (stub)"),
+        Cmd::Regen => regen_all()?,
+        Cmd::SpecExtract => spec_extract()?,
+        Cmd::DevLoop => dev_loop()?,
         Cmd::CiHaikuGpu => println!("xtask: ci:haiku:gpu (stub)"),
         Cmd::CiHaikuCpu => ci_haiku_cpu()?,
         Cmd::CiDeterminism => ci_determinism()?,
-        Cmd::PactVerify => println!("xtask: pact:verify (stub)"),
+        Cmd::PactVerify => pact_verify()?,
         Cmd::PactPublish => println!("xtask: pact:publish (stub)"),
+        Cmd::DocsIndex => docs_index()?,
     }
     Ok(())
 }
@@ -89,6 +121,21 @@ fn regen_schema() -> Result<()> {
     contracts_config_schema::emit_schema_json(&out)
         .map_err(|e| anyhow!("emit schema failed: {e}"))?;
     println!("regen-schema: OK");
+    Ok(())
+}
+
+fn spec_extract() -> Result<()> {
+    let status = Command::new("cargo")
+        .arg("run")
+        .arg("-p")
+        .arg("tools-spec-extract")
+        .arg("--quiet")
+        .status()
+        .context("running tools-spec-extract")?;
+    if !status.success() {
+        return Err(anyhow!("spec-extract failed"));
+    }
+    println!("spec-extract: OK");
     Ok(())
 }
 
@@ -186,5 +233,81 @@ fn ci_determinism() -> Result<()> {
         return Err(anyhow!("ci:determinism failed"));
     }
     println!("ci:determinism OK");
+    Ok(())
+}
+
+fn pact_verify() -> Result<()> {
+    let status = Command::new("cargo")
+        .arg("test")
+        .arg("-p")
+        .arg("orchestratord")
+        .arg("--test")
+        .arg("provider_verify")
+        .arg("--")
+        .arg("--nocapture")
+        .status()
+        .context("running pact provider verification")?;
+    if !status.success() {
+        return Err(anyhow!("pact:verify failed"));
+    }
+    println!("pact:verify OK");
+    Ok(())
+}
+
+fn dev_loop() -> Result<()> {
+    // 1) Formatting
+    let status = Command::new("cargo")
+        .arg("fmt")
+        .arg("--all")
+        .arg("--")
+        .arg("--check")
+        .status()
+        .context("running cargo fmt")?;
+    if !status.success() {
+        return Err(anyhow!("fmt failed"));
+    }
+
+    // 2) Clippy
+    let status = Command::new("cargo")
+        .arg("clippy")
+        .arg("--all-targets")
+        .arg("--all-features")
+        .arg("--")
+        .arg("-D")
+        .arg("warnings")
+        .status()
+        .context("running cargo clippy")?;
+    if !status.success() {
+        return Err(anyhow!("clippy failed"));
+    }
+
+    // 3) Regenerators
+    regen_openapi()?;
+    regen_schema()?;
+    spec_extract()?;
+
+    // 4) Tests (workspace)
+    let status = Command::new("cargo")
+        .arg("test")
+        .arg("--workspace")
+        .arg("--all-features")
+        .arg("--")
+        .arg("--nocapture")
+        .status()
+        .context("running workspace tests")?;
+    if !status.success() {
+        return Err(anyhow!("workspace tests failed"));
+    }
+
+    // 5) Link checker
+    let status = Command::new("bash")
+        .arg("ci/scripts/check_links.sh")
+        .status()
+        .context("running link checker")?;
+    if !status.success() {
+        return Err(anyhow!("link check failed"));
+    }
+
+    println!("dev:loop OK");
     Ok(())
 }
