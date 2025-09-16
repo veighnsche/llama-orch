@@ -7,6 +7,8 @@
 //! - OC-CORE-1030 (determinism invariants)
 //! - OC-CORE-1040, OC-CORE-1041 (observability fields)
 
+pub mod queue;
+
 use contracts_api_types as api;
 use futures::stream::BoxStream;
 use serde::{Deserialize, Serialize};

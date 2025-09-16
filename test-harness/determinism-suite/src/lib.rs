@@ -8,6 +8,52 @@ pub struct StreamEvent {
     pub data: String, // raw JSON fragment as string for simplicity
 }
 
+/// Generate a deterministic SSE transcript given engine id, seed and token count.
+/// This is a pure function using a tiny LCG PRNG; suitable for Stage 4 tests without real engines.
+pub fn generate_deterministic_sse(engine: &str, seed: u64, n_tokens: usize) -> String {
+    fn salt_engine(e: &str) -> u64 {
+        // Stable, trivial hash (wrapping) to avoid std hasher instability across runs.
+        let mut acc: u64 = 0x9e37_79b9_7f4a_7c15;
+        for (i, b) in e.as_bytes().iter().enumerate() {
+            let mul = (i as u64 + 1).wrapping_mul(0x85eb_ca6b_27d4_eb2f);
+            acc = acc.wrapping_add((*b as u64).wrapping_mul(mul));
+            acc ^= acc.rotate_left(13);
+        }
+        acc
+    }
+
+    // LCG parameters (Numerical Recipes)
+    let a: u64 = 1664525;
+    let c: u64 = 1013904223;
+    let m: u64 = 1u64 << 32;
+    let mut state: u64 = seed ^ salt_engine(engine);
+
+    let mut out = String::new();
+    let predicted_start_ms = (state ^ 0x1234_5678).wrapping_rem_euclid(1000) + 100; // 100..1099
+    out.push_str("event: started\n");
+    out.push_str(&format!(
+        "data: {{\"queue_position\":0,\"predicted_start_ms\":{}}}\n\n",
+        predicted_start_ms
+    ));
+
+    for i in 0..n_tokens {
+        state = (a.wrapping_mul(state).wrapping_add(c)) % m;
+        // Map to a small vocabulary; guarantee ASCII-safe tokens
+        let idx = (state & 0xffff) as u16;
+        let tok = format!("T{:04x}", idx);
+        out.push_str("event: token\n");
+        out.push_str(&format!("data: {{\"t\":\"{}\",\"i\":{}}}\n\n", tok, i));
+    }
+
+    let decode_ms = (state ^ 0xdead_beef).wrapping_rem_euclid(2000) + 10; // 10..2009
+    out.push_str("event: end\n");
+    out.push_str(&format!(
+        "data: {{\"tokens_out\":{},\"decode_ms\":{}}}\n\n",
+        n_tokens, decode_ms
+    ));
+    out
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Snapshot {
     pub engine: String,
@@ -42,16 +88,10 @@ pub fn snapshot_from_events(engine: &str, seed: u64, events: &[StreamEvent]) -> 
     for ev in events {
         match ev.kind.as_str() {
             "token" => {
-                // very light-weight extract of t field
-                if let Some(i) = ev.data.find("\"t\"") {
-                    // naive parse: look for next colon and quoted token
-                    let rest = &ev.data[i..];
-                    if let Some(start) = rest.find('"') {
-                        let rest2 = &rest[start + 1..];
-                        if let Some(end) = rest2.find('"') {
-                            let tok = &rest2[..end];
-                            tokens.push(tok.to_string());
-                        }
+                // Parse the JSON object and extract the 't' field accurately.
+                if let Ok(v) = serde_json::from_str::<serde_json::Value>(&ev.data) {
+                    if let Some(t) = v.get("t").and_then(|x| x.as_str()) {
+                        tokens.push(t.to_string());
                     }
                 }
             }

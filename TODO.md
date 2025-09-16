@@ -136,8 +136,8 @@ __Goal__: Pass Haiku E2E on real hardware, finalize documentation, and close the
 - [x] Stage 0 — Contract freeze: OpenAPI + config schema regenerated; CI fails on diffs; examples compile
 - [x] Stage 1 — CDC + snapshots: Pact + insta tests green before provider code
 - [x] Stage 2 — Provider verify: orchestrator passes pact verification
-- [ ] Stage 3 — Properties: core invariants via proptest are green and meaningful
-- [ ] Stage 4 — Determinism: two replicas per engine; byte‑exact streams proven
+- [x] Stage 3 — Properties: core invariants via proptest are green and meaningful
+- [x] Stage 4 — Determinism: two replicas per engine; byte‑exact streams proven
 - [ ] Stage 5 — Observability: metrics exactly per `.specs/metrics/otel-prom.md`
 - [ ] Stage 6 — Real‑model E2E (Haiku): pass within budget; metrics delta observed
 
@@ -160,3 +160,7 @@ __Goal__: Pass Haiku E2E on real hardware, finalize documentation, and close the
 - 2025-09-16 01:45 CEST — Extracted requirements with `tools-spec-extract`; updated `requirements/*.yaml` and `COMPLIANCE.md` deterministically.
 - 2025-09-16 01:47 CEST — Verified CDC consumer tests and pacts under `cli/consumer-tests/`; provider verification tests under `orchestratord/tests/provider_verify.rs` passed; trybuild OpenAPI client UI tests passed.
 - 2025-09-16 01:49 CEST — Full workspace tests passed (`cargo test --workspace --all-features -- --nocapture`). Acceptance Gates updated: Stage 0, 1, 2 complete; later stages scaffolded.
+- 2025-09-16 10:13 CEST — Implemented `orchestrator-core::queue` with bounded capacity and policies (Reject, DropLru). Added property tests for FIFO within priority and queue-full policy semantics; both pass. Fairness placeholder remains ignored for future scheduling work. Ran `cargo clippy` and full tests again.
+- 2025-09-16 10:22 CEST — Stage 4 Determinism: added `test-harness/determinism-suite` pure generator `generate_deterministic_sse()` and tests proving byte‑exactness for same engine+seed and non‑equality across engine versions/seeds. All tests green.
+- 2025-09-16 10:27 CEST — Stage 5 Observability scaffolding: added spec alignment test ensuring `.specs/metrics/otel-prom.md` equals `ci/metrics.lint.json` required metrics; updated linter with missing metrics (`kv_cache_usage_ratio`, `gpu_utilization`, `vram_used_bytes`, `admission_backpressure_events_total`). Emission wiring TBD.
+

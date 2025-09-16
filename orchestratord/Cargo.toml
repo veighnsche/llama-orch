@@ -19,6 +19,8 @@ http = { workspace = true }
 contracts-api-types = { path = "../contracts/api-types" }
 regex = { workspace = true }
 serde_json = { workspace = true }
+prometheus = "0.13"
+once_cell = "1"
 
 [dev-dependencies]
 openapiv3 = { workspace = true }
