@@ -76,38 +76,67 @@ pub async fn set_model_state(
 
 pub async fn drain_pool(
     headers: HeaderMap,
-    _state: State<AppState>,
-    _path: Path<String>,
-    _body: Json<api::control::DrainRequest>,
+    state: State<AppState>,
+    Path(id): Path<String>,
+    Json(body): Json<api::control::DrainRequest>,
 ) -> Response {
     if let Err(code) = require_api_key(&headers) {
         return (code, HeaderMap::new()).into_response();
     }
+    {
+        // Flip draining flag in in-memory pool snapshot for visibility and mark unready in registry
+        if let Ok(mut pools) = state.pools.lock() {
+            if let Some(p) = pools.get_mut(&id) {
+                p.draining = true;
+            }
+        }
+        if let Ok(mut pm) = state.pool_manager.lock() {
+            pm.set_health(&id, pool_managerd::health::HealthStatus { live: true, ready: false });
+        }
+        // Metrics: record drain event and readiness 0
+        crate::metrics::DRAIN_EVENTS_TOTAL
+            .with_label_values(&[&id, "api_request"])
+            .inc();
+        crate::metrics::POOL_READY.with_label_values(&[&id]).set(0);
+    }
     let mut h = HeaderMap::new();
     h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
-    let body = json!({"status": "draining"});
-    (http::StatusCode::ACCEPTED, h, Json(body)).into_response()
+    let resp = json!({"status": "draining", "deadline_ms": body.deadline_ms});
+    (http::StatusCode::ACCEPTED, h, Json(resp)).into_response()
 }
 
 pub async fn reload_pool(
     headers: HeaderMap,
-    _state: State<AppState>,
-    _path: Path<String>,
-    _body: Json<api::control::ReloadRequest>,
+    state: State<AppState>,
+    Path(id): Path<String>,
+    Json(body): Json<api::control::ReloadRequest>,
 ) -> Response {
     if let Err(code) = require_api_key(&headers) {
         return (code, HeaderMap::new()).into_response();
     }
-    if _body.new_model_ref == "bad" {
+    if body.new_model_ref == "bad" {
         let mut h = HeaderMap::new();
         h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
         let body = json!({"status": "rollback"});
         return (http::StatusCode::CONFLICT, h, Json(body)).into_response();
     }
+    {
+        // Clear draining and mark ready in registry; also bump version hint
+        if let Ok(mut pools) = state.pools.lock() {
+            if let Some(p) = pools.get_mut(&id) {
+                p.draining = false;
+            }
+        }
+        if let Ok(mut pm) = state.pool_manager.lock() {
+            pm.set_health(&id, pool_managerd::health::HealthStatus { live: true, ready: true });
+            pm.set_version(&id, format!("{}:reloaded", body.new_model_ref));
+        }
+        crate::metrics::POOL_READY.with_label_values(&[&id]).set(1);
+    }
     let mut h = HeaderMap::new();
     h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
     let body = json!({"status": "reloaded"});
-    (http::StatusCode::ACCEPTED, h, Json(body)).into_response()
+    (http::StatusCode::OK, h, Json(body)).into_response()
 }
 
 pub async fn get_pool_health(
@@ -120,12 +149,14 @@ pub async fn get_pool_health(
     }
     let mut h = HeaderMap::new();
     h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
-    let (live, ready) = {
+    let (live, ready, last_error) = {
         let pm = state.pool_manager.lock().unwrap();
         let s = pm.get_health(&id);
+        let e = pm.get_last_error(&id);
         (
             s.as_ref().map(|x| x.live).unwrap_or(false),
             s.as_ref().map(|x| x.ready).unwrap_or(false),
+            e,
         )
     };
     let metrics_val = {
@@ -144,6 +175,7 @@ pub async fn get_pool_health(
         "ready": ready,
         "draining": draining,
         "metrics": metrics_val,
+        "last_error": last_error,
     });
     (http::StatusCode::OK, h, Json(body)).into_response()
 }

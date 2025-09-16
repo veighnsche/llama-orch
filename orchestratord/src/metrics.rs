@@ -214,6 +214,34 @@ pub static DEADLINES_MET_RATIO: Lazy<GaugeVec> = Lazy::new(|| {
     .expect("register deadlines_met_ratio")
 });
 
+// Pool readiness and leases
+pub static POOL_READY: Lazy<IntGaugeVec> = Lazy::new(|| {
+    register_int_gauge_vec_with_registry!(
+        Opts::new("pool_ready", "Pool readiness gauge (1 ready, 0 unready)."),
+        &["pool_id"],
+        &*REGISTRY
+    )
+    .expect("register pool_ready")
+});
+
+pub static ACTIVE_LEASES: Lazy<IntGaugeVec> = Lazy::new(|| {
+    register_int_gauge_vec_with_registry!(
+        Opts::new("active_leases", "Active leases per pool."),
+        &["pool_id"],
+        &*REGISTRY
+    )
+    .expect("register active_leases")
+});
+
+pub static DRAIN_EVENTS_TOTAL: Lazy<IntCounterVec> = Lazy::new(|| {
+    register_int_counter_vec_with_registry!(
+        Opts::new("drain_events_total", "Drain lifecycle events."),
+        &["pool_id", "reason"],
+        &*REGISTRY
+    )
+    .expect("register drain_events_total")
+});
+
 // Histograms
 pub static LATENCY_FIRST_TOKEN_MS: Lazy<HistogramVec> = Lazy::new(|| {
     register_histogram_vec_with_registry!(

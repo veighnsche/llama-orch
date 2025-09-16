@@ -216,6 +216,17 @@ pub async fn create_task(
 
     // Stage 6 vertical slice: dispatch to adapter and build SSE transcript in the background
     if let Some(adapter) = placement::choose_adapter(&state, &body.engine) {
+        // Stage 7: allocate a lease for pool0 before dispatch; update gauge
+        let pool_id = "pool0".to_string();
+        {
+            if let Ok(mut pm) = state.pool_manager.lock() {
+                let leases = pm.allocate_lease(&pool_id);
+                crate::metrics::ACTIVE_LEASES
+                    .with_label_values(&[&pool_id])
+                    .set(leases as i64);
+            }
+        }
+        let pm_arc = state.pool_manager.clone();
         let sse_store = state.sse.clone();
         let req = (*body).clone();
         let task_id = resp.task_id.clone();
@@ -336,6 +347,13 @@ pub async fn create_task(
             }
             if let Ok(mut map) = sse_store.lock() {
                 map.insert(task_id, transcript);
+            }
+            // Release lease and update gauge at end of streaming
+            if let Ok(mut pm) = pm_arc.lock() {
+                let leases = pm.release_lease(&pool_id);
+                crate::metrics::ACTIVE_LEASES
+                    .with_label_values(&[&pool_id])
+                    .set(leases as i64);
             }
         });
     }

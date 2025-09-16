@@ -31,6 +31,7 @@ worker-adapters-triton = { path = "../../worker-adapters/triton" }
 jsonschema = { workspace = true }
 contracts-config-schema = { path = "../../contracts/config-schema" }
 worker-adapters-adapter-api = { path = "../../worker-adapters/adapter-api" }
+pool-managerd = { path = "../../pool-managerd" }
 
 [dev-dependencies]
 

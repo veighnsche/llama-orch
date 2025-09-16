@@ -17,14 +17,13 @@ fn contains_metric_line(
     value_suffix: &str,
 ) -> bool {
     for line in text.lines() {
-        if line.starts_with(metric) {
-            if label_snips
+        if line.starts_with(metric)
+            && label_snips
                 .iter()
                 .all(|(k, v)| line.contains(&format!("{}=\"{}\"", k, v)))
-                && line.trim_end().ends_with(value_suffix)
-            {
-                return true;
-            }
+            && line.trim_end().ends_with(value_suffix)
+        {
+            return true;
         }
     }
     false

@@ -1,3 +1,7 @@
 {"run_id":"1758050018-296168591","line":60,"new":{"module_name":"snapshot_capabilities","snapshot_name":"inline_snapshot_replicasets","metadata":{"source":"cli/consumer-tests/tests/snapshot_capabilities.rs","assertion_line":60,"expression":"sets"},"snapshot":"- engine: llamacpp\n  id: pool0-llamacpp\n  load: 0\n  slo: {}\n  slots_free: 1\n  slots_total: 1\n- engine: vllm\n  id: pool0-vllm\n  load: 0\n  slo: {}\n  slots_free: 1\n  slots_total: 1"},"old":{"module_name":"snapshot_capabilities","metadata":{},"snapshot":"---\n- engine: llamacpp\n  id: pool0-llamacpp\n  load: 0.0\n  slots_free: 1\n  slots_total: 1\n  slo: {}\n- engine: vllm\n  id: pool0-vllm\n  load: 0.0\n  slots_free: 1\n  slots_total: 1\n  slo: {}"}}
 {"run_id":"1758050190-895919412","line":60,"new":null,"old":null}
 {"run_id":"1758050190-895919412","line":14,"new":null,"old":null}
+{"run_id":"1758054324-927191010","line":14,"new":null,"old":null}
+{"run_id":"1758054324-927191010","line":60,"new":null,"old":null}
+{"run_id":"1758055375-505234271","line":60,"new":null,"old":null}
+{"run_id":"1758055375-505234271","line":14,"new":null,"old":null}

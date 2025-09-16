@@ -49,7 +49,7 @@ pub async fn then_validation_rejects_unknown_fields(_world: &mut World) {
     let mut rejected = false;
     if let Some(obj) = cfg.as_object() {
         for k in obj.keys() {
-            if !props.get(k).is_some() {
+            if props.get(k).is_none() {
                 rejected = true;
                 break;
             }
