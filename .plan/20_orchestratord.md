@@ -89,8 +89,8 @@ Alignment with README_LLM (Product Stages)
 
 - Handlers for control plane: drain/reload/health/replicasets.
 - Data plane: createTask, stream SSE, cancel; correlation ID echo.
-    - Typed errors with codes and retry hints; backpressure headers/bodies.
-    - Auth middleware (API key) and logging filters.
+  - Typed errors with codes and retry hints; backpressure headers/bodies.
+  - Auth middleware (API key) and logging filters.
 
 Next slice (Stage 6 focus): implement POST /v1/tasks → enqueue + 202, GET stream SSE via mock adapter first (llama.cpp next), POST cancel, and update provider verify accordingly.
 
@@ -135,3 +135,9 @@ Ergonomics:
 
 - Public APIs on `orch-services` should be small, trait‑driven, returning `Result<DomainType, ErrorEnvelope>`.
 - Prefer `pub(crate)` defaults; export only handler constructors from `orch-api`.
+
+## Proposal (Accepted)
+
+- Adopt product stages 6–15 for orchestrator (handlers, vertical slice, readiness, adapters conformance, fairness, capabilities, quotas, BDD, dashboards, startup self‑tests, Haiku E2E).
+- Adopt DX modularization layering: `orch-domain` → `orch-services` → `orch-api` → thin `orchestratord` bin.
+- Enforce module boundaries now; extract crates post Stage 6 stabilization per rollout plan.

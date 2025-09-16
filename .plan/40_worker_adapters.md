@@ -66,3 +66,9 @@ Rollout plan:
 2) Stage 8.1: Port `llamacpp-http`; validate SSE, backpressure, errors, metrics.
 3) Stage 8.2: Port remaining engines; factor any new shared logic back into `adapter-api`.
 4) Guardrails: deny `pub` by default (`pub(crate)`), expose a minimal surface; unit tests live in `adapter-api` for helpers.
+
+## Proposal (Accepted)
+
+- Adopt shared `worker-adapters/adapter-api` crate providing the trait + shared helpers. Orchestrator depends only on this trait.
+- Migrate adapters in order: mock → llama.cpp → vLLM → TGI → Triton, pushing common logic into `adapter-api`.
+- Keep engines isolated; enforce typed errors and SSE contract; ensure determinism normalization.

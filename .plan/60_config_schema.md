@@ -25,3 +25,8 @@ Scope: strict validation, deterministic/idempotent schema generation.
 
 - Define schemas for pools, engines, quotas, tenants, preemption.
 - Strict vs compat mode behavior and logging.
+
+## Proposal (Accepted)
+
+- Align with product Stage 11 — Config & quotas. Provide examples for engines/workers, quotas (concurrent jobs, tokens/min, KV‑MB), determinism flags per engine, and environment conventions.
+- DX principles: keep schema generation deterministic; isolate config types in `contracts/config-schema/` so app crates do not rebuild on schema edits; validate examples in tests.

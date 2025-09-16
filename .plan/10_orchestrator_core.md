@@ -73,3 +73,8 @@ Rollout (after Stage 9 stabilizes):
 1) Enforce module boundaries and public surface (`pub(crate)` by default).
 2) Add micro-benchmarks for queue ops and scheduler decisions.
 3) If compile times or coupling become problematic, extract `core-queue` first (lowest risk).
+
+## Proposal (Accepted)
+
+- Align with product stages: Stage 6 (placement hooks consumption by orchestrator), Stage 9 (scheduling & fairness gauges) — core provides stable APIs and invariants proven by properties.
+- Adopt DX modularization intent: keep core free of HTTP/adapter deps; expose small trait-driven surfaces; plan future splits when scheduling complexity warrants.

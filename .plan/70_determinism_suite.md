@@ -22,3 +22,8 @@ Scope: byte-exact replica streams per engine with fixed seeds and engine-appropr
 ## Backlog (initial)
 
 - Engine launcher helpers; token diff tooling; snapshot fixtures for debugging.
+
+## Proposal (Accepted)
+
+- Aligns with product Stage 4 and feeds Stage 6 (vertical slice) and Stage 8 (adapter conformance): suite provides fixtures/settings that adapters must honor for byte-exactness.
+- DX: keep suite independent of orchestrator/adapters; provide helpers for engine settings (single-slot modes), deterministic seeds, and token diff artifacts for quick debugging.

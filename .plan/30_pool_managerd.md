@@ -77,3 +77,9 @@ Rollout:
 1) Stage 7.1: enforce in-crate modules mirroring above; `pub(crate)` by default.
 2) Extract `pool-domain` first if compile times grow; services next when endpoints stabilize.
 3) Keep integration tests in `pool-managerd/tests` to minimize rebuild churn.
+
+## Proposal (Accepted)
+
+- Adopt product Stage 7 readiness for pool manager: replica registry, drain/reload, leases, health/readiness, version labels.
+- Adopt DX layering plan: `pool-domain` → `pool-services` → `pool-api` → thin `pool-managerd` bin; enforce module boundaries now and extract crates if churn/compile-time warrants.
+- Expose readiness via `GET /v1/replicasets` for orchestrator; keep orchestrator decoupled from pool internals.
