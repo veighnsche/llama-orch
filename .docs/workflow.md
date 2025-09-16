@@ -88,6 +88,11 @@ This section makes the PRODUCT explicit: what we are shipping, for whom, and how
    - Start pool‑managerd for llama.cpp, see replicas Ready, submit tasks, drain/reload without downtime
 3) Observe & debug
    - Watch Grafana panels (queue_depth, rejections, latencies, tokens); enforce budgets; check logs
+   See also:
+   - `.plan/72_bdd_harness.md` (journeys)
+   - `.plan/73_e2e_haiku.md` (anti‑cheat E2E)
+   - `.plan/80_cli.md` (CLI UX)
+   - `.plan/90_tools.md` (tools and xtask)
 
 ### Epics (map to stages)
 

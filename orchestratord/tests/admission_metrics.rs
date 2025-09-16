@@ -1,10 +1,5 @@
 use orchestrator_core::queue::{Policy, Priority};
-
-// Since `orchestratord` is a bin crate, include the modules directly from src using #[path]
-#[path = "../src/metrics.rs"]
-mod metrics;
-#[path = "../src/admission.rs"]
-mod admission;
+use orchestratord::{admission, metrics};
 
 fn labels(pool: &str, replica: &str) -> admission::MetricLabels {
     admission::MetricLabels {

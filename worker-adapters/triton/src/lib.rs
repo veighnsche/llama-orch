@@ -1,7 +1,9 @@
 //! Triton/TensorRT-LLM adapter (stub-only, no network calls).
 
 use contracts_api_types as api;
-use orchestrator_core::{TokenStream, WorkerAdapter, WorkerError, WorkerHealth, WorkerProps};
+use worker_adapters_adapter_api::{
+    TokenEvent, TokenStream, WorkerAdapter, WorkerError, WorkerHealth, WorkerProps,
+};
 
 #[derive(Debug, Clone)]
 pub struct TritonAdapter {

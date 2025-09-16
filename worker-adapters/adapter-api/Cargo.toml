@@ -1,17 +1,19 @@
 [package]
-name = "worker-adapters-vllm-http"
+name = "worker-adapters-adapter-api"
 version = "0.0.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [lib]
-name = "worker_adapters_vllm_http"
+name = "worker_adapters_adapter_api"
 path = "src/lib.rs"
 
+authors = ["llama-orch contributors"]
+
 [dependencies]
-serde = { workspace = true, features = ["derive"] }
-reqwest = { workspace = true }
 anyhow = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 futures = { workspace = true }
-worker-adapters-adapter-api = { path = "../adapter-api" }
 contracts-api-types = { path = "../../contracts/api-types" }
+thiserror = { workspace = true }

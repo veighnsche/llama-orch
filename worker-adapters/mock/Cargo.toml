@@ -11,5 +11,5 @@ path = "src/lib.rs"
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
 anyhow = { workspace = true }
-orchestrator-core = { path = "../../orchestrator-core" }
+worker-adapters-adapter-api = { path = "../adapter-api" }
 contracts-api-types = { path = "../../contracts/api-types" }
