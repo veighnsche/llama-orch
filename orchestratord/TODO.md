@@ -9,7 +9,7 @@ Methodology:
 - Spec → Contract → Tests → Code (no code without spec/contract alignment).
 
 -------------------------------------------------------------------------------
-WEEK 1 — Local BDD harness + App scaffolding
+WEEK 1 — Local BDD harness + App scaffolding (NEXT)
 -------------------------------------------------------------------------------
 
 1) BDD/Gherkin separation (root → local harness)
@@ -71,12 +71,14 @@ Notes:
 - We move features with `git mv` so history follows; we copy steps to avoid breaking the root harness. We can later extract shared steps into a small crate if needed.
 - After copying, update local steps to import v2 modules directly (no legacy `http::handlers`).
 
+Status: Partially done (local BDD harness exists, step-registry lints green). App scaffolding is next.
+
 2) Local Gherkin installation and wiring
 - Add cucumber/cucumber‑rust as dev‑dependency in `orchestratord/bdd` (or in `orchestratord` if using dev‑tests module).
 - Provide `cargo` aliases/doc snippets to run local BDD (`cargo test -p orchestratord-bdd` or `cargo test -p orchestratord --tests -- --ignored` for cucumber mode).
 - Update CI plan (follow‑up) to run local harness in addition to root harness.
 
-3) App scaffold (no business logic yet)
+3) App scaffold (no business logic yet) — DO NOW
 - Create app layer: `app/{bootstrap.rs, router.rs, middleware.rs}`.
 - Create api layer files with function stubs and route definitions matching OpenAPI.
 - Define ports traits in `ports/*` and minimal in‑memory infra shims for `Clock` and `ArtifactStore`.
@@ -90,7 +92,7 @@ Definition of Done (W1)
 - App and API stubs compile; unit tests for middleware/auth green.
 
 -------------------------------------------------------------------------------
-WEEK 2 — Capabilities, Sessions, Control‑Health
+WEEK 2 — Capabilities, Sessions, Control‑Health (DONE)
 -------------------------------------------------------------------------------
 
 1) Capabilities
@@ -107,12 +109,16 @@ WEEK 2 — Capabilities, Sessions, Control‑Health
 - Wire `GET /v1/pools/:id/health`.
 - BDD: control health scenario returns `live, ready, draining, metrics` JSON.
 
-Definition of DoN (W2)
+Status: Done
+- Added `GET /v1/capabilities` (static snapshot).
+- Implemented `GET/DELETE /v1/sessions/:id` (introspection only).
+- Implemented `GET /v1/pools/:id/health` using `PoolRegistry`.
+Definition of Done (W2)
 - BDD scenarios for capabilities and pool health pass locally.
 - Session introspection endpoints pass unit tests.
 
 -------------------------------------------------------------------------------
-WEEK 3 — Admission, SSE, Cancel, Backpressure
+WEEK 3 — Admission, SSE, Cancel, Backpressure (DONE)
 -------------------------------------------------------------------------------
 
 1) Admission
@@ -130,12 +136,16 @@ WEEK 3 — Admission, SSE, Cancel, Backpressure
 - 429 on queue policy triggers with headers `Retry-After`, `X-Backoff-Ms` and error envelope with `policy_label`.
 - BDD: backpressure scenarios pass.
 
+Status: Done
+- Implemented admission wrapper with metrics and basic ETA/position stubs.
+- Implemented SSE streaming (ordered events) and cancel.
+- Added 429 backpressure with headers and taxonomy envelope.
 Definition of Done (W3)
 - Data plane BDD scenarios (admission, SSE, cancel, 429) pass.
 - Provider verify happy‑path statuses align with OpenAPI.
 
 -------------------------------------------------------------------------------
-WEEK 4 — Artifacts, Drain/Reload, Metrics, Error Mapping
+WEEK 4 — Artifacts, Drain/Reload, Metrics, Error Mapping (DONE)
 -------------------------------------------------------------------------------
 
 1) Artifacts
@@ -152,6 +162,10 @@ WEEK 4 — Artifacts, Drain/Reload, Metrics, Error Mapping
 - `infra/metrics.rs` registry and required series. `ci/metrics.lint.json` passes.
 - Centralize `domain/error.rs` mapping for all codes per spec.
 
+Status: Done
+- Implemented `POST /v1/artifacts`, `GET /v1/artifacts/:id` in-memory.
+- Added control drain/reload stubs; conflict sentinel for reload.
+- Metrics endpoint returns Prometheus text; metrics registry in place.
 Definition of Done (W4)
 - All BDD scenarios for capabilities, control, data, artifacts pass locally.
 - Metrics linters pass; provider verify tests pass.

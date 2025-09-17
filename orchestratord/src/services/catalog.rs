@@ -1,0 +1,1 @@
+//! Catalog service (stub)

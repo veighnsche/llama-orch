@@ -89,3 +89,27 @@ Exit criteria:
 - Each phase lands behind passing local BDD and unit tests.
 - PR template references requirement IDs from `requirements/`.
 - Update `TODO.md` weekly with status.
+
+## Progress Update — 2025-09-17
+- Completed (W2) Capabilities, Sessions (introspection), Control health
+  - `src/api/control.rs::get_capabilities`, `src/services/capabilities.rs`
+  - `src/api/data.rs::{get_session,delete_session}`, `src/state.rs::SessionInfo`
+  - `src/api/control.rs::get_pool_health` (reads `pool-managerd` Registry)
+- Completed (W3) Admission, SSE, Cancel, Backpressure
+  - `src/admission.rs::QueueWithMetrics` wrapping `orchestrator-core`
+  - `src/api/data.rs::{create_task,stream_task,cancel_task}` with error taxonomy and 429 headers
+  - `src/metrics.rs` with counters/gauges; `queue_depth`, `tasks_enqueued_total`, etc.
+- Completed (W4) Artifacts, Drain/Reload stubs, Metrics endpoint
+  - `src/api/artifacts.rs::{create_artifact,get_artifact}` (sha256 IDs)
+  - `src/api/control.rs::{drain_pool,reload_pool}` (conflict sentinel)
+  - `src/api/observability.rs::metrics_endpoint` (Prometheus exposition)
+- Local BDD harness (`orchestratord/bdd`) established; step-registry linter green.
+
+## Next Steps (Week 1 scaffolding now)
+- Create `app/{bootstrap.rs,router.rs,middleware.rs}` aligned with the v2 architecture spec.
+- Add `ports/*`, `infra/*`, `domain/*` modules as stubs to lead the refactor.
+- Wire a Router that mounts all v2 endpoints to existing `api/*` handlers (no legacy `src-old`).
+- Keep tests as support; prefer stubs over legacy shims if glue is not ready yet.
+
+## Planning (Next 4 Weeks)
+- See `orchestratord/TODO_2.md` for the next 4-week breakdown (budgets, determinism, provider verify, metrics lint hardening, policy host hooks).
