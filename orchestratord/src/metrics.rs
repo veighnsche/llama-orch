@@ -294,7 +294,6 @@ pub fn gather_metrics_text() -> String {
     String::from_utf8(buf).unwrap_or_default()
 }
 
-// Streaming emissions helpers (to be called by data-plane streaming once implemented)
 pub fn record_stream_started(
     engine: &str,
     engine_version: &str,
@@ -368,4 +367,20 @@ fn ensure_samples() {
     let _ = DEADLINES_MET_RATIO.with_label_values(&[prio]);
     let _ = LATENCY_FIRST_TOKEN_MS.with_label_values(&[eng, engv, pool, prio]);
     let _ = LATENCY_DECODE_MS.with_label_values(&[eng, engv, pool, prio]);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ORCH-METRICS-0001: exporter includes core counters and gauges
+    #[test]
+    fn test_orch_metrics_0001_gather_contains_core_names() {
+        let text = gather_metrics_text();
+        assert!(
+            text.contains("# TYPE tasks_enqueued_total "),
+            "missing tasks_enqueued_total"
+        );
+        assert!(text.contains("# TYPE queue_depth "), "missing queue_depth");
+    }
 }

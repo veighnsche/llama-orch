@@ -91,7 +91,13 @@ pub async fn drain_pool(
             }
         }
         if let Ok(mut pm) = state.pool_manager.lock() {
-            pm.set_health(&id, pool_managerd::health::HealthStatus { live: true, ready: false });
+            pm.set_health(
+                &id,
+                pool_managerd::health::HealthStatus {
+                    live: true,
+                    ready: false,
+                },
+            );
         }
         // Metrics: record drain event and readiness 0
         crate::metrics::DRAIN_EVENTS_TOTAL
@@ -128,7 +134,13 @@ pub async fn reload_pool(
             }
         }
         if let Ok(mut pm) = state.pool_manager.lock() {
-            pm.set_health(&id, pool_managerd::health::HealthStatus { live: true, ready: true });
+            pm.set_health(
+                &id,
+                pool_managerd::health::HealthStatus {
+                    live: true,
+                    ready: true,
+                },
+            );
             pm.set_version(&id, format!("{}:reloaded", body.new_model_ref));
         }
         crate::metrics::POOL_READY.with_label_values(&[&id]).set(1);
@@ -229,4 +241,77 @@ pub async fn get_capabilities(headers: HeaderMap, _state: State<AppState>) -> Re
         ]
     });
     (http::StatusCode::OK, h, Json(body)).into_response()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::body::to_bytes;
+    use axum::extract::Path;
+    use contracts_api_types as api;
+
+    fn ok_headers() -> HeaderMap {
+        let mut h = HeaderMap::new();
+        h.insert("X-API-Key", "valid".parse().unwrap());
+        h
+    }
+
+    // ORCH-2006: drain(202) → reload(200) toggles readiness
+    #[tokio::test]
+    async fn test_orch_2006_drain_then_reload_toggles_readiness() {
+        let state = crate::state::default_state();
+        let headers = ok_headers();
+
+        // Drain the pool
+        let resp = drain_pool(
+            headers.clone(),
+            State(state.clone()),
+            Path("pool0".to_string()),
+            Json(api::control::DrainRequest { deadline_ms: 0 }),
+        )
+        .await;
+        assert_eq!(resp.status(), http::StatusCode::ACCEPTED);
+
+        // After drain, registry ready should be false
+        let reg = state.pool_manager.lock().unwrap();
+        let h = reg.get_health("pool0").expect("health");
+        assert!(h.live);
+        assert!(!h.ready);
+        drop(reg);
+
+        // Reload with a good model ref
+        let resp = reload_pool(
+            headers.clone(),
+            State(state.clone()),
+            Path("pool0".to_string()),
+            Json(api::control::ReloadRequest {
+                new_model_ref: "m:v0".to_string(),
+            }),
+        )
+        .await;
+        assert_eq!(resp.status(), http::StatusCode::OK);
+
+        // After reload, registry ready should be true
+        let reg = state.pool_manager.lock().unwrap();
+        let h = reg.get_health("pool0").expect("health");
+        assert!(h.live);
+        assert!(h.ready);
+    }
+
+    // ORCH-2003: get_pool_health includes last_error when set
+    #[tokio::test]
+    async fn test_orch_2003_health_includes_last_error() {
+        let state = crate::state::default_state();
+        {
+            let mut reg = state.pool_manager.lock().unwrap();
+            reg.set_last_error("pool0", "preload failure");
+        }
+        let resp = get_pool_health(ok_headers(), State(state.clone()), Path("pool0".into())).await;
+        assert_eq!(resp.status(), http::StatusCode::OK);
+        let body = to_bytes(resp.into_body(), 1024 * 1024)
+            .await
+            .expect("read body");
+        let v: serde_json::Value = serde_json::from_slice(&body).expect("json");
+        assert_eq!(v["last_error"].as_str(), Some("preload failure"));
+    }
 }

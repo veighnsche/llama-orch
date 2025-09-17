@@ -1,0 +1,49 @@
+# Source Map of Rust Files (excluding tests/benches/target)
+
+## pool-managerd/src/
+- backoff.rs
+- devicemasks.rs
+- drain.rs
+- health.rs
+- hetero_split.rs
+- leases.rs
+- lib.rs
+- main.rs
+- preload.rs
+- registry.rs
+
+## orchestrator-core/src/
+- lib.rs
+- queue.rs
+
+## orchestratord/src/
+- admission.rs
+- backpressure.rs
+- domain.rs
+- errors.rs
+- http/auth.rs
+- http/catalog.rs
+- http/control.rs
+- http/data.rs
+- http/handlers.rs
+- http/mod.rs
+- http/observability.rs
+- lib.rs
+- main.rs
+- metrics.rs
+- placement.rs
+- services.rs
+- sse.rs
+- state.rs
+
+## worker-adapters/*/src/
+- adapter-api/src/lib.rs
+- llamacpp-http/src/lib.rs
+- mock/src/lib.rs
+- tgi-http/src/lib.rs
+- triton/src/lib.rs
+- vllm-http/src/lib.rs
+
+## plugins/*/src/
+- policy-host/src/lib.rs
+- policy-sdk/src/lib.rs

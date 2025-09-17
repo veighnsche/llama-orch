@@ -1,0 +1,96 @@
+# Behaviors Map (grep-derived)
+
+Scope: Rust sources only. Collected requirement IDs, invariant markers, and SAFETY markers to support traceability for in-file behavior tests.
+
+---
+
+## Requirement IDs in Rust code
+
+- tools/readme-index/src/workspace.rs
+  192: "ORCH-3004"
+  193: "ORCH-3005"
+  194: "ORCH-3008"
+  195: "ORCH-3010"
+  196: "ORCH-3011"
+  197: "ORCH-3016"
+  198: "ORCH-3017"
+  199: "ORCH-3027"
+  200: "ORCH-3028"
+  201: "ORCH-3044"
+  202: "ORCH-3045"
+  208: "ORCH-2002"
+  209: "ORCH-2101"
+  210: "ORCH-2102"
+  211: "ORCH-2103"
+  212: "ORCH-2104"
+  215: "ORCH-3038"
+  216: "ORCH-3002"
+  222: "ORCH-3054"
+  223: "ORCH-3055"
+  224: "ORCH-3056"
+  225: "ORCH-3057"
+  226: "ORCH-3058"
+  233: ["ORCH-3044", "ORCH-3030"]
+  236: ["ORCH-3050", "ORCH-3051"]
+  239: ["ORCH-3048"]
+
+- test-harness/determinism-suite/tests/byte_exact.rs
+  9: // OC-CORE-1030: Determinism invariants — same engine version and same seed should yield byte-exact streams.
+  26: // OC-CORE-1030: Determinism is not assumed across engine versions.
+  38: // OC-CORE-1030: Different seeds should change the stream tokens for a fixed engine.
+
+- test-harness/bdd/tests/traceability.rs
+  43: // Expand ranges like ORCH-3060..3065 or OC-CTRL-2050..2051
+  56: // Single IDs like ORCH-3045, OC-POOL-3001
+
+- pool-managerd/src/registry.rs
+  157: // OC-POOL-3001: registry stores and returns health readiness
+  185: // OC-POOL-3007: lease counters never go negative
+
+- orchestrator-core/src/queue.rs
+  3: //! - OC-CORE-1001: Bounded queues and admission behavior
+  4: //! - OC-CORE-1002: Queue full policies (reject, drop-lru)
+  5: //! - OC-CORE-1004: FIFO within the same priority class
+  104: // OC-CORE-1001, OC-CORE-1002: bounded queues and reject policy on full
+  114: // OC-CORE-1002: drop-lru prefers oldest batch item
+  128: // OC-CORE-1004: FIFO within the same priority class
+
+- orchestrator-core/src/lib.rs
+  5: //! - OC-CORE-1001, OC-CORE-1002, OC-CORE-1004 (queue & admission invariants)
+  6: //! - OC-CORE-1010, OC-CORE-1011, OC-CORE-1012 (placement & readiness)
+  7: //! - OC-CORE-1030 (determinism invariants)
+  8: //! - OC-CORE-1040, OC-CORE-1041 (observability fields)
+
+- orchestratord/src/metrics.rs
+  376: // ORCH-METRICS-0001: exporter includes core counters and gauges
+
+- orchestratord/src/backpressure.rs
+  18: // ORCH-2007: 429 headers and advisory body shape
+
+- orchestratord/src/http/auth.rs
+  16: // ORCH-AUTH-0001: require X-API-Key, accept only "valid" in planning stub
+
+- orchestratord/src/http/data.rs
+  134: // ORCH-2001: admission acceptance; OC-CORE-1001..1002: bounded queue policies; ORCH-2007: 429 backpressure mapping; README_LLM-1001: traceability requirement.
+
+---
+
+## Invariant markers in Rust code
+
+- tools/readme-index/src/workspace.rs
+  249: - Queue invariants and property tests overview (fairness, capacity, rejection policies).
+
+- orchestrator-core/tests/props_queue.rs
+  1: //! Property-based test scaffolds for queue invariants.
+
+- orchestrator-core/src/queue.rs
+  1: //! Simple in-memory queue to support core invariants property tests.
+
+- orchestrator-core/src/lib.rs
+  2: //! Queueing, scheduling hooks, and core invariants. No HTTP or adapter traits here.
+
+---
+
+## SAFETY markers in Rust code
+
+- No matches found for "SAFETY:" in Rust sources.

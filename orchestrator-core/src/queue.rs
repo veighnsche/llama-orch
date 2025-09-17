@@ -96,3 +96,41 @@ impl InMemoryQueue {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // OC-CORE-1001, OC-CORE-1002: bounded queues and reject policy on full
+    #[test]
+    fn test_oc_core_1001_reject_when_full() {
+        let mut q = InMemoryQueue::with_capacity_policy(1, Policy::Reject);
+        assert!(q.enqueue(1, Priority::Interactive).is_ok());
+        let err = q.enqueue(2, Priority::Interactive).unwrap_err();
+        assert_eq!(err, EnqueueError::QueueFullReject);
+        assert_eq!(q.len(), 1);
+    }
+
+    // OC-CORE-1002: drop-lru prefers oldest batch item
+    #[test]
+    fn test_oc_core_1002_drop_lru_prefers_batch() {
+        let mut q = InMemoryQueue::with_capacity_policy(2, Policy::DropLru);
+        // Oldest batch first, then an interactive
+        assert!(q.enqueue(1, Priority::Batch).is_ok());
+        assert!(q.enqueue(2, Priority::Interactive).is_ok());
+        // Now full; enqueue another interactive should drop oldest batch (id=1)
+        assert!(q.enqueue(3, Priority::Interactive).is_ok());
+        assert_eq!(q.snapshot_priority(Priority::Batch), Vec::<u32>::new());
+        assert_eq!(q.snapshot_priority(Priority::Interactive), vec![2, 3]);
+        assert_eq!(q.len(), 2);
+    }
+
+    // OC-CORE-1004: FIFO within the same priority class
+    #[test]
+    fn test_oc_core_1004_fifo_within_class() {
+        let mut q = InMemoryQueue::with_capacity_policy(3, Policy::Reject);
+        assert!(q.enqueue(10, Priority::Interactive).is_ok());
+        assert!(q.enqueue(11, Priority::Interactive).is_ok());
+        assert_eq!(q.snapshot_priority(Priority::Interactive), vec![10, 11]);
+    }
+}

@@ -11,6 +11,27 @@ pub enum PolicyLabel {
     ShedLowPriority,
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ORCH-2007: 429 headers and advisory body shape
+    #[test]
+    fn test_orch_2007_headers_and_body() {
+        let h = build_429_headers(Backoff {
+            retry_after_seconds: 3,
+            x_backoff_ms: 2500,
+        });
+        assert_eq!(h.get("Retry-After").unwrap(), "3");
+        assert_eq!(h.get("X-Backoff-Ms").unwrap(), "2500");
+
+        let v = build_429_body(compute_policy_label(()));
+        assert_eq!(v["policy_label"], "reject");
+        assert!(v["retriable"].as_bool().unwrap());
+        assert!(v["retry_after_ms"].as_i64().unwrap() >= 0);
+    }
+}
+
 /// Computed backoff to surface via headers.
 #[derive(Debug, Clone, Copy)]
 pub struct Backoff {

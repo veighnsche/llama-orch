@@ -113,7 +113,10 @@ impl Registry {
     pub fn allocate_lease(&mut self, pool_id: impl Into<String>) -> i32 {
         let id = pool_id.into();
         let entry = self.pools.entry(id).or_insert(PoolEntry {
-            health: HealthStatus { live: false, ready: false },
+            health: HealthStatus {
+                live: false,
+                ready: false,
+            },
             last_heartbeat_ms: None,
             version: None,
             last_error: None,
@@ -126,7 +129,10 @@ impl Registry {
     pub fn release_lease(&mut self, pool_id: impl Into<String>) -> i32 {
         let id = pool_id.into();
         let entry = self.pools.entry(id).or_insert(PoolEntry {
-            health: HealthStatus { live: false, ready: false },
+            health: HealthStatus {
+                live: false,
+                ready: false,
+            },
             last_heartbeat_ms: None,
             version: None,
             last_error: None,
@@ -141,5 +147,52 @@ impl Registry {
             .get(pool_id)
             .map(|e| e.active_leases)
             .unwrap_or(0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // OC-POOL-3001: registry stores and returns health readiness
+    #[test]
+    fn test_oc_pool_3001_health_and_meta() {
+        let mut r = Registry::new();
+        r.set_health(
+            "pool0",
+            HealthStatus {
+                live: true,
+                ready: false,
+            },
+        );
+        let h = r.get_health("pool0").expect("health");
+        assert!(h.live);
+        assert!(!h.ready);
+
+        r.set_last_error("pool0", "preload failure");
+        assert_eq!(
+            r.get_last_error("pool0").as_deref(),
+            Some("preload failure")
+        );
+
+        r.set_version("pool0", "v1");
+        assert_eq!(r.get_version("pool0").as_deref(), Some("v1"));
+
+        r.set_heartbeat("pool0", 1234);
+        assert_eq!(r.get_heartbeat("pool0"), Some(1234));
+    }
+
+    // OC-POOL-3007: lease counters never go negative
+    #[test]
+    fn test_oc_pool_3007_leases_never_negative() {
+        let mut r = Registry::new();
+        assert_eq!(r.get_active_leases("pool0"), 0);
+        assert_eq!(r.release_lease("pool0"), 0);
+        assert_eq!(r.allocate_lease("pool0"), 1);
+        assert_eq!(r.allocate_lease("pool0"), 2);
+        assert_eq!(r.get_active_leases("pool0"), 2);
+        assert_eq!(r.release_lease("pool0"), 1);
+        assert_eq!(r.release_lease("pool0"), 0);
+        assert_eq!(r.release_lease("pool0"), 0);
     }
 }
