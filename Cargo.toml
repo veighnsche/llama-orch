@@ -20,6 +20,7 @@ members = [
     "test-harness/determinism-suite",
     "test-harness/chaos",
     "test-harness/bdd",
+    "orchestratord/bdd",
     "tools/spec-extract",
     "tools/openapi-client",
     "tools/readme-index",

@@ -5,13 +5,13 @@ use contracts_api_types as api;
 use serde_json::json;
 
 use http::header::HeaderName;
-use orchestratord::http::{control, data, observability};
+use orchestratord::state::AppState;
 
 #[derive(Debug, cucumber::World)]
 pub struct World {
     facts: Vec<serde_json::Value>,
     pub mode_commit: bool,
-    pub state: orchestratord::state::AppState,
+    pub state: AppState,
     pub last_status: Option<http::StatusCode>,
     pub last_headers: Option<http::HeaderMap>,
     pub last_body: Option<String>,
@@ -26,7 +26,7 @@ impl Default for World {
         Self {
             facts: Vec::new(),
             mode_commit: false,
-            state: orchestratord::state::default_state(),
+            state: orchestratord::state::AppState::new(),
             last_status: None,
             last_headers: None,
             last_body: None,
@@ -65,12 +65,17 @@ impl World {
             headers.insert(name, v.parse().unwrap());
         }
 
-        // Dispatch to handlers by path
+        // Dispatch to handlers by path (call into refactored api modules)
         let resp = match (method, path) {
             (http::Method::POST, "/v1/tasks") => {
                 let body: api::TaskRequest =
                     serde_json::from_value(body_json.unwrap_or_else(|| json!({})))?;
-                data::create_task(headers, State(self.state.clone()), axum::Json(body)).await
+                orchestratord::api::data::create_task(
+                    headers,
+                    State(self.state.clone()),
+                    axum::Json(body),
+                )
+                .await
             }
             (http::Method::GET, p) if p.starts_with("/v1/tasks/") && p.ends_with("/stream") => {
                 let id = p
@@ -78,8 +83,12 @@ impl World {
                     .trim_end_matches("/stream")
                     .trim_matches('/')
                     .to_string();
-                data::stream_task(headers, State(self.state.clone()), axum::extract::Path(id))
-                    .await
+                orchestratord::api::data::stream_task(
+                    headers,
+                    State(self.state.clone()),
+                    axum::extract::Path(id),
+                )
+                .await
             }
             (http::Method::POST, p) if p.starts_with("/v1/tasks/") && p.ends_with("/cancel") => {
                 let id = p
@@ -87,17 +96,25 @@ impl World {
                     .trim_end_matches("/cancel")
                     .trim_matches('/')
                     .to_string();
-                data::cancel_task(headers, State(self.state.clone()), axum::extract::Path(id))
-                    .await
+                orchestratord::api::data::cancel_task(
+                    headers,
+                    State(self.state.clone()),
+                    axum::extract::Path(id),
+                )
+                .await
             }
             (http::Method::GET, p) if p.starts_with("/v1/sessions/") => {
                 let id = p.trim_start_matches("/v1/sessions/").to_string();
-                data::get_session(headers, State(self.state.clone()), axum::extract::Path(id))
-                    .await
+                orchestratord::api::data::get_session(
+                    headers,
+                    State(self.state.clone()),
+                    axum::extract::Path(id),
+                )
+                .await
             }
             (http::Method::DELETE, p) if p.starts_with("/v1/sessions/") => {
                 let id = p.trim_start_matches("/v1/sessions/").to_string();
-                data::delete_session(
+                orchestratord::api::data::delete_session(
                     headers,
                     State(self.state.clone()),
                     axum::extract::Path(id),
@@ -110,7 +127,7 @@ impl World {
                     .trim_end_matches("/health")
                     .trim_matches('/')
                     .to_string();
-                control::get_pool_health(
+                orchestratord::api::control::get_pool_health(
                     headers,
                     State(self.state.clone()),
                     axum::extract::Path(id),
@@ -125,7 +142,7 @@ impl World {
                     .to_string();
                 let body: api::control::DrainRequest =
                     serde_json::from_value(body_json.unwrap_or_else(|| json!({"deadline_ms": 0})))?;
-                control::drain_pool(
+                orchestratord::api::control::drain_pool(
                     headers,
                     State(self.state.clone()),
                     axum::extract::Path(_id),
@@ -142,7 +159,7 @@ impl World {
                 let body: api::control::ReloadRequest = serde_json::from_value(
                     body_json.unwrap_or_else(|| json!({"new_model_ref":""})),
                 )?;
-                control::reload_pool(
+                orchestratord::api::control::reload_pool(
                     headers,
                     State(self.state.clone()),
                     axum::extract::Path(_id),
@@ -151,9 +168,9 @@ impl World {
                 .await
             }
             (http::Method::GET, "/v1/capabilities") => {
-                control::get_capabilities(headers, State(self.state.clone())).await
+                orchestratord::api::control::get_capabilities(headers, State(self.state.clone())).await
             }
-            (http::Method::GET, "/metrics") => observability::metrics_endpoint().await,
+            (http::Method::GET, "/metrics") => orchestratord::api::observability::metrics_endpoint().await,
             _ => (http::StatusCode::NOT_FOUND, Body::empty()).into_response(),
         };
 

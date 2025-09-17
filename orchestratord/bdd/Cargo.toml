@@ -1,0 +1,29 @@
+[package]
+name = "orchestratord-bdd"
+version = "0.0.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[features]
+default = ["bdd-cucumber"]
+bdd-cucumber = []
+
+[dependencies]
+regex = { workspace = true }
+cucumber = { version = "0.20", features = ["macros"] }
+serde_json = "1"
+anyhow = { workspace = true }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+walkdir = { workspace = true }
+orchestratord = { path = ".." }
+contracts-api-types = { path = "../../contracts/api-types" }
+axum = { workspace = true }
+http = { workspace = true }
+hyper = { workspace = true }
+futures = { workspace = true }
+
+[dev-dependencies]
+
+[[bin]]
+name = "bdd-runner"
+path = "src/main.rs"

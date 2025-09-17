@@ -5,7 +5,7 @@ use contracts_api_types as api;
 use serde_json::json;
 
 use http::header::HeaderName;
-use orchestratord::http::{control, data, observability};
+use orchestratord::api::{control, data, observability};
 
 #[derive(Debug, cucumber::World)]
 pub struct World {
@@ -26,7 +26,7 @@ impl Default for World {
         Self {
             facts: Vec::new(),
             mode_commit: false,
-            state: orchestratord::state::default_state(),
+            state: orchestratord::state::AppState::new(),
             last_status: None,
             last_headers: None,
             last_body: None,
