@@ -1,71 +1,88 @@
-# Home Profile Specification (Personal / Single-Workstation)
+# Home Profile Specification v2.1 (Personal / Single-Workstation)
 
-Purpose: A reduced, practical profile for home labs and single workstations with one or more mixed NVIDIA GPUs. This profile removes enterprise/cluster features while preserving a simple, robust local serving stack.
+Purpose: Deliver a practical, single-host profile that stays compatible with the CLI requirements in `cli/llama-orch-cli/feature-requirements.md` while still trimming cluster-only features. Version 2.1 aligns the spec with the reference environment described in `.docs/HOME_PROFILE_TARGET.md` (dev box running the CLI, workstation hosting `llama-orch` with RTX 3090 + 3060 GPUs).
 
-This is a reductive rewrite of the production SPEC. No new features are added; only removals and simplifications are made.
+Home Profile v2.1 remains a reductive rewrite of the production SPEC. Any additions below are reinstated because the CLI marks them as MUST (or high-value SHOULD) requirements. Where we still diverge from production we call it out explicitly.
 
 ---
 
 ## 1. Scope and Constraints
 
-- MUST target a single host (no cluster orchestration).
-- MUST run with mixed GPU generations and VRAM capacities.
-- MUST prefer simple, local defaults and minimal configuration.
-- MUST prioritize reliability over throughput optimization features.
+- MUST target a single host (no multi-node orchestration).
+- MUST support mixed NVIDIA GPUs and VRAM capacities.
+- MUST default to local-only operation with minimal external dependencies.
+- SHOULD prioritize deterministic behaviour and debuggability over throughput tuning.
+- MUST stay interoperable with the CLI’s Spec→Contract→Tests→Code loop.
+- SHOULD validate end-to-end behaviour against the reference workstation/CLI pairing documented in `.docs/HOME_PROFILE_TARGET.md`.
 
 ---
 
-## 2. Security and Access
+## 2. Identity, Security, and Policy
 
-- MUST bind all HTTP endpoints to 127.0.0.1 by default.
-- MUST require a single API token (static) for control and data endpoints.
-- SHOULD allow configuring the token via environment variable or config file.
-- MUST NOT implement tenant policies, RBAC, or multi‑tenancy isolation.
-
----
-
-## 3. Admission and Scheduling
-
-- MUST implement a bounded admission queue with two priorities only: `interactive`, `batch`.
-- MUST support FIFO within a priority class and one full policy (Reject or Drop‑LRU; implementation‑chosen).
-- MUST NOT implement fairness/WFQ, tenant quotas, deadlines (EDF), preemption, or resumable jobs.
+- MUST bind HTTP services to `127.0.0.1` by default; MAY expose additional interfaces via explicit configuration (e.g., for the dev-box→workstation tunnel).
+- MUST support a single API token for developer usage; MAY optionally support mTLS/OIDC, but NOT required for HOME.
+- MUST accept `X-Correlation-Id` and echo it in all responses (FR-OB-001).
+- MUST provide policy hooks for outbound tooling (HTTP fetch/search) even if default policies are permissive (FR-TL-002).
+- MUST NOT implement tenant isolation or quota enforcement.
 
 ---
 
-## 4. Model Lifecycle
+## 3. Data Plane — Task Admission & Streaming
 
-- MUST reduce lifecycle states to `Active` and `Retired`.
-- MUST NOT use `Draft`, `Deprecated`, `Canary`, or percent rollouts.
-- SHOULD support reload of a model atomically; MUST support rollback if reload fails.
-- MUST NOT support pool drains or canaries.
-
----
-
-## 5. Trust and Artifacts
-
-- MAY allow unsigned models and artifacts by default (no mandatory signature/SBOM enforcement).
-- SHOULD log warnings when validation artifacts are missing rather than reject.
-- MUST NOT expose an artifact registry API in the control plane.
+- MUST keep OrchQueue v1 endpoints:
+  - POST `/v1/tasks` accepts fields required by FR-DP-001 (`task_id`, `session_id`, `workload`, `model_ref`, `engine`, `ctx`, `priority`, `seed`, `determinism`, `sampler_profile_version`, `prompt|inputs`, `max_tokens`, `deadline_ms`, optional `kv_hint`).
+  - Response MUST include admission metadata when available (`queue_position`, `predicted_start_ms`) per FR-DP-005 (SHOULD) — MAY fall back to `null` if estimates are unavailable.
+  - GET `/v1/tasks/{id}/stream` emits SSE frames: `started`, repeated `token`, periodic `metrics`, `end`, `error` (FR-DP-002, FR-OB-003).
+- MUST continue to support two priorities (`interactive`, `batch`) and a bounded queue (retains earlier simplification).
+- MUST keep FIFO ordering within a priority; MAY choose Reject or Drop-LRU policy but MUST document the behaviour.
+- MUST support deterministic execution flags (`seed`, `determinism`) and honour them (FR-DE-001).
 
 ---
 
-## 6. APIs (HTTP)
+## 4. Sessions, KV Reuse, and Budgets
 
-- MUST provide OrchQueue v1 data plane:
-  - POST `/v1/tasks` to admit a task (202 on accept; 400/429/500/503 on error).
-  - GET `/v1/tasks/{id}/stream` to stream SSE events: `started`, `token` (repeating), `end`.
-- MUST provide a minimal control plane:
-  - POST `/v1/pools/{id}/reload` to hot‑reload a model for the pool.
-  - GET `/health` for a simple health check.
-- MUST NOT expose drain endpoints, artifact registry endpoints, or CDC harnesses.
-- MUST NOT emit a correlation ID header.
-- MUST NOT include `policy_label` in 429 bodies.
+- SHOULD expose `GET /v1/sessions/{id}` and `DELETE /v1/sessions/{id}` for KV reuse/cleanup (FR-DP-004).
+- SHOULD support per-session token/time budgets with advisory enforcement or logging (FR-MA-002). Hard enforcement MAY be deferred but MUST be documented if absent.
+- MAY omit multi-tenant budgeting/grants; keep scope to single user workflows.
 
 ---
 
-## 7. Metrics and Observability
+## 5. Control Plane — Catalog & Pools
 
-- MUST expose a Prometheus `/metrics` with these required series:
+- MUST retain the model catalog endpoints (FR-CP-001):
+  - `POST /v1/catalog/models`
+  - `POST /v1/catalog/models/{id}/verify`
+  - `POST /v1/catalog/models/{id}/state`
+- MUST keep pool lifecycle endpoints (FR-CP-002):
+  - `POST /v1/pools/{id}/drain`
+  - `POST /v1/pools/{id}/reload`
+  - `GET /v1/pools/{id}/health`
+- MUST support control plane auth using the same token; MUST emit `X-Correlation-Id`.
+- MUST keep lifecycle states `Active`, `Retired`; MAY expose additional state transitions if required for CLI compatibility but default to two states.
+
+---
+
+## 6. Discovery & Versioning
+
+- MUST expose capability discovery (FR-DV-001) via either:
+  - `GET /v1/replicasets` enriched with engine versions, max context, rate limits, estimated concurrency, **or**
+  - `GET /v1/capabilities` providing the same data.
+- MUST signal API versions in OpenAPI `info.version` (FR-DV-002).
+- SHOULD document supported sampler profiles and determinism guarantees alongside capability discovery.
+
+---
+
+## 7. Artifact Registry and Lineage
+
+- SHOULD provide `/v1/artifacts` (create + fetch) so the CLI can persist plans, diffs, and traces (FR-AR-001).
+- MUST allow unsigned artifacts by default but SHOULD log verification gaps.
+- MUST keep artifacts local (e.g., filesystem or sqlite) — no distributed registry requirement.
+
+---
+
+## 8. Observability & Telemetry
+
+- MUST keep Prometheus `/metrics` endpoint with at least:
   - `queue_depth{engine,engine_version,pool_id,priority}`
   - `tasks_enqueued_total{engine,engine_version,pool_id,replica_id,priority}`
   - `tasks_rejected_total{engine,reason}`
@@ -73,55 +90,59 @@ This is a reductive rewrite of the production SPEC. No new features are added; o
   - `tokens_out_total{engine,engine_version,pool_id,replica_id}`
   - `gpu_utilization{engine,engine_version,pool_id,replica_id,device}`
   - `vram_used_bytes{engine,engine_version,pool_id,replica_id,device}`
-- SHOULD include a simple model lifecycle gauge if used (`model_state{model_id,state}` with only `Active|Retired`).
-- MUST NOT include advanced/enterprise metrics:
-  - percentile latencies (p95/p99 labels), deadline ratios, tenant admission share, preempt/resume counters.
+- SHOULD expose `model_state{model_id,state}` with values `Active|Retired`.
+- MAY include additional per-request or latency metrics if inexpensive; percentile histograms remain OPTIONAL.
+- MUST emit correlation IDs (`X-Correlation-Id`) and MUST NOT drop them in Home profile responses.
+- MUST keep SSE `metrics` frames in the task stream (FR-OB-003).
+- SHOULD log warnings instead of hard failures for missing SBOM/signature data.
 
 ---
 
-## 8. Placement
+## 9. Errors & Backpressure
 
-- MUST place work on the least‑loaded GPU based on a simple heuristic (e.g., free VRAM or slot count).
-- MUST NOT require NUMA/PCIe topology hints or tensor splitting.
-
----
-
-## 9. Error Taxonomy (Data Plane)
-
-- MUST keep the existing error envelope shape `{code, message, engine}`.
-- MUST use 429 with `Retry-After` and `X-Backoff-Ms` headers on backpressure.
-- MUST NOT include `policy_label` advisory field in 429 bodies.
+- MUST keep the canonical error envelope `{code, message, engine, correlation_id?}`.
+- MUST return HTTP `429` with `Retry-After` (seconds) and `X-Backoff-Ms` headers plus `policy_label` advisory fields (FR-DP-003, FR-ER-002).
+- SHOULD document retry/backoff guidance aligned with these headers.
 
 ---
 
-## 10. Dropped or Simplified Items (from Production SPEC)
+## 10. Placement, Concurrency & Performance
 
-- Multi‑tenancy, RBAC, quotas — removed.
-- Fairness (WFQ), deadlines (EDF), preemption, resumable jobs — removed.
-- Lifecycle: only `Active|Retired`; drop `Draft|Deprecated|Canary`.
-- Trust/SBOM/signatures — optional; enforcement removed.
-- Advanced metrics — drop deadline ratios, tenant breakdowns, preempt/resume counters, p95/p99.
-- APIs — keep OrchQueue v1 and `/health`. Drop drain, artifact registry, CDC. Remove correlation IDs and 429 policy labels.
-- Ops — keep `reload` (+rollback). Drop drains, canaries, percent rollouts, cluster HA.
-- Placement — keep least‑loaded only. Drop NUMA/PCIe hints, tensor splitting.
-- Security — local only (127.0.0.1), single API token.
+- MUST schedule using a simple least-loaded GPU heuristic (free VRAM/slots) that fits single-host deployments.
+- MUST derive safe concurrency from capacity data exposed in capability discovery (FR-MA-001, FR-PF-001).
+- SHOULD surface `predicted_start_ms` where possible (FR-PF-002).
+- MUST NOT require NUMA-aware placement or tensor parallelism; validation must cover mixed-GPU (RTX 3090 + 3060) scheduling.
 
 ---
 
-## 11. Notes for Implementers (Spec→Contracts→Tests→Code)
+## 11. Differences vs Production Profile
+
+- Retained reductions:
+  - Multi-tenancy, RBAC, complex quota systems remain out of scope.
+  - Fairness scheduling (WFQ), preemption, resumable jobs, deadline scheduling remain removed.
+  - Distributed artifact registry, HA control plane, CDC pipelines remain out of scope.
+- Restored items (relative to v1) because the CLI marks them as MUST/SHOULD:
+  - Model catalog and pool drain endpoints.
+  - Artifact registry (SHOULD), capability discovery, health endpoints.
+  - Correlation IDs, SSE `metrics` frames, `policy_label` in 429 responses.
+  - Admission metadata (`queue_position`, `predicted_start_ms`) when available.
+
+---
+
+## 12. Notes for Implementers (Spec→Contracts→Tests→Code)
 
 - Contracts:
-  - Remove `/v1/artifacts*` and `/v1/pools/{id}/drain` paths from `contracts/openapi/control.yaml`.
-  - Remove correlation ID headers and `policy_label` fields from OpenAPI examples for data plane.
-  - Keep only required metrics in `ci/metrics.lint.json` (remove `admission_share`, `deadlines_met_ratio`, `preemptions_total`, `resumptions_total`).
-  - Simplify `contracts/config-schema` to drop fairness and preemption structures; keep two priorities only.
+  - Ensure `contracts/openapi/*` retains catalog, drain, artifacts, capability discovery, and correlation ID fields.
+  - Update examples to include `policy_label`, SSE `metrics`, admission metadata, and determinism parameters.
+  - Keep `ci/metrics.lint.json` aligned with the metric list above; optional histograms remain suppressed.
 - Code:
-  - Remove `X-Correlation-Id` usage; remove 429 `policy_label` from `orchestratord/src/http/data.rs`.
-  - Remove drains in `orchestratord/src/http/control.rs`; keep `reload` and `/health`.
-  - Reduce lifecycle to `Active|Retired` in `orchestratord/src/state.rs` and metrics label values.
-  - Delete advanced metrics in `orchestratord/src/metrics.rs` and their uses.
+  - Guarantee `X-Correlation-Id` echoing and backpressure headers.
+  - Honour determinism knobs and restore SSE `metrics` emission.
+  - Keep catalog, drain, and artifact handlers minimal yet functional.
+  - Continue to default bind addresses to loopback and enforce simple token auth.
 - Tests:
-  - Update provider tests to match reduced OpenAPI (no drain, no artifacts, no correlation IDs, no policy_label in 429).
-  - Update metrics tests and lint expectations to the reduced set.
+  - Provider verification and Pact fixtures must reflect the reinstated surfaces.
+  - BDD scenarios should cover catalog interactions, drains, SSE `metrics`, and artifact flows.
+  - Determinism, queue metadata, and policy enforcement require explicit tests.
 
-This Home Profile supersedes production‑only requirements for local deployments.
+Home Profile v2.1 supersedes the initial reduction. Use this document as the reference when trimming code paths; do not remove items listed as required for CLI compatibility.
