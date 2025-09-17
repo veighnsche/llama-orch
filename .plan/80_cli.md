@@ -1,30 +1,22 @@
-# CLI — Implementation Plan (Developer UX / Consumer)
+# CLI Plan — Home Profile
 
-Scope: Command-line client for submit/stream/cancel, configuration, and quickstart flows. Supports CDC consumer tests and developer workflows.
+## Goals
+- Provide a CLI that can submit tasks, watch SSE output, manage sessions, and inspect catalog/artifacts.
+- Use CLI as the primary consumer for pact tests.
 
-## Stages and Deliverables
+## Features
+1. **Config Management**: load API token and endpoint, print effective settings.
+2. **Task Submission**: stream tokens with live metadata (queue position, budgets).
+3. **Session Tools**: list, inspect, delete sessions; show remaining budgets.
+4. **Catalog Commands**: upload model metadata, trigger verify, flip state Active↔Retired.
+5. **Artifacts**: upload plan snapshot, fetch by ID, list recent uploads.
+6. **Diagnostics**: fetch `/v1/capabilities`, `/v1/pools/{id}/health`, `/metrics` snippet.
 
-- Stage 1 — CDC Consumer usage
-  - CLI drives pact interactions for enqueue, stream, cancel, sessions; emits snapshots for examples.
+## Testing
+- Pact tests in `cli/consumer-tests/tests/orchqueue_pact.rs` kept in sync with OpenAPI.
+- Integration tests hitting `orchestratord` stub or mock server.
+- Snapshot tests for CLI output (insta).
 
-- Stage 6 — Product Journeys
-  - Commands: `submit`, `stream`, `cancel`, optional `session` operations; correlation-id echo and pretty SSE rendering.
-  - Config: server URL, auth, engine hints; environment overrides.
-
-- Stage 11 — Config & Quotas
-  - Validate config files; display effective quotas and budget warnings.
-
-## Tests
-
-- CLI snapshot tests under `cli/llama-orch-cli/tests/` (insta where applicable).
-- Integration tests against orchestrator stub and live dev server.
-
-## Acceptance Criteria
-
-- Commands work end-to-end against OrchQueue v1; helpful error messages and retry hints.
-- Snapshots are stable; CDC examples are easily reproducible.
-
-## Backlog (initial)
-
-- Progress bars and token-rate indicators for streams.
-- Auth helpers and default profile management.
+## Backlog
+- Helper command to establish SSH tunnel automatically.
+- Friendly output for artifact diff rendering.

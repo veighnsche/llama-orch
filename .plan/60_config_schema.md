@@ -1,32 +1,23 @@
-# Config Schema — Implementation Plan (OC-CONFIG-6xxx)
+# Config Schema Plan — Home Profile
 
-Spec: `.specs/60-config-schema.md`
-Scope: strict validation, deterministic/idempotent schema generation.
+## Objectives
+- Encode all home profile settings in `contracts/config-schema/src/lib.rs` with clear defaults.
+- Generate deterministic `contracts/schemas/config.schema.json` via `cargo xtask regen-schema`.
 
-## Stages and Deliverables
+## Required Fields
+- Pools: id, engine, model, devices, optional `tensor_split`, preload flag.
+- Queue: capacity, full policy (`reject`|`drop-lru`).
+- Sessions: TTL, turn limit, optional budgets.
+- Artifacts: storage path, retention options, size limits.
+- Tooling policy: enable/disable, plugin path.
+- Network: bind address (default loopback), optional advertised address for dev box.
 
-- Stage 0 — Schema Generation
-  - Implement/extend Rust config types in `contracts/config-schema/`.
-  - Emit `config.schema.json` via `schemars`.
+## Tasks
+1. Audit existing schema for legacy multi-tenant/fairness/preemption fields and deprecate them.
+2. Document defaults in `.docs/HOME_PROFILE.md` and provide sample config under `examples/home-profile/` (to be created).
+3. Add schema tests validating example files (`cargo test -p contracts-config-schema`).
+4. Update regeneration instructions in `.docs/PROJECT_GUIDE.md` if paths change.
 
-- Stage 5 — Tests
-  - Validate example configs in tests; unknown fields rejected (strict) or logged (compat mode).
-
-## Tests
-
-- `contracts/config-schema/tests/validate_examples.rs` and related tests.
-- BDD config features: `test-harness/bdd/tests/features/config/`.
-
-## Acceptance Criteria
-
-- OC-CONFIG IDs mapped to tests; regen diff-clean; examples validate.
-
-## Backlog (initial)
-
-- Define schemas for pools, engines, quotas, tenants, preemption.
-- Strict vs compat mode behavior and logging.
-
-## Proposal (Accepted)
-
-- Align with product Stage 11 — Config & quotas. Provide examples for engines/workers, quotas (concurrent jobs, tokens/min, KV‑MB), determinism flags per engine, and environment conventions.
-- DX principles: keep schema generation deterministic; isolate config types in `contracts/config-schema/` so app crates do not rebuild on schema edits; validate examples in tests.
+## Risks
+- Ensure schema remains backwards-compatible with any existing home experiments (document migrations if needed).
+- Keep regeneration deterministic to avoid noise in PRs.

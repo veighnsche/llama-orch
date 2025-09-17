@@ -114,27 +114,6 @@ pub static CATALOG_VERIFICATIONS_TOTAL: Lazy<IntCounterVec> = Lazy::new(|| {
     .expect("register catalog_verifications_total")
 });
 
-pub static PREEMPTIONS_TOTAL: Lazy<IntCounterVec> = Lazy::new(|| {
-    register_int_counter_vec_with_registry!(
-        Opts::new("preemptions_total", "Number of preemption events."),
-        &["mode", "engine"],
-        &*REGISTRY
-    )
-    .expect("register preemptions_total")
-});
-
-pub static RESUMPTIONS_TOTAL: Lazy<IntCounterVec> = Lazy::new(|| {
-    register_int_counter_vec_with_registry!(
-        Opts::new(
-            "resumptions_total",
-            "Number of resumed jobs after preemption."
-        ),
-        &["engine"],
-        &*REGISTRY
-    )
-    .expect("register resumptions_total")
-});
-
 // Gauges
 pub static QUEUE_DEPTH: Lazy<IntGaugeVec> = Lazy::new(|| {
     register_int_gauge_vec_with_registry!(
@@ -191,27 +170,6 @@ pub static VRAM_USED_BYTES: Lazy<IntGaugeVec> = Lazy::new(|| {
         &*REGISTRY
     )
     .expect("register vram_used_bytes")
-});
-
-pub static ADMISSION_SHARE: Lazy<GaugeVec> = Lazy::new(|| {
-    register_gauge_vec_with_registry!(
-        Opts::new(
-            "admission_share",
-            "EWMA of observed admission share for fairness."
-        ),
-        &["tenant", "priority"],
-        &*REGISTRY
-    )
-    .expect("register admission_share")
-});
-
-pub static DEADLINES_MET_RATIO: Lazy<GaugeVec> = Lazy::new(|| {
-    register_gauge_vec_with_registry!(
-        Opts::new("deadlines_met_ratio", "Ratio of jobs meeting deadlines."),
-        &["priority"],
-        &*REGISTRY
-    )
-    .expect("register deadlines_met_ratio")
 });
 
 // Pool readiness and leases
@@ -274,15 +232,11 @@ pub fn gather_metrics_text() -> String {
     let _ = &*TOKENS_IN_TOTAL;
     let _ = &*TOKENS_OUT_TOTAL;
     let _ = &*CATALOG_VERIFICATIONS_TOTAL;
-    let _ = &*PREEMPTIONS_TOTAL;
-    let _ = &*RESUMPTIONS_TOTAL;
     let _ = &*QUEUE_DEPTH;
     let _ = &*MODEL_STATE;
     let _ = &*KV_CACHE_USAGE_RATIO;
     let _ = &*GPU_UTILIZATION;
     let _ = &*VRAM_USED_BYTES;
-    let _ = &*ADMISSION_SHARE;
-    let _ = &*DEADLINES_MET_RATIO;
     let _ = &*LATENCY_FIRST_TOKEN_MS;
     let _ = &*LATENCY_DECODE_MS;
 
@@ -343,9 +297,7 @@ fn ensure_samples() {
     let result = "pass";
     let device = "0";
     let model = "model0";
-    let state = "Draft";
-    let tenant = "t0";
-    let mode = "soft";
+    let state = "Active";
 
     let _ = TASKS_ENQUEUED_TOTAL.with_label_values(&[eng, engv, pool, rep, prio]);
     let _ = TASKS_STARTED_TOTAL.with_label_values(&[eng, engv, pool, rep, prio]);
@@ -355,16 +307,12 @@ fn ensure_samples() {
     let _ = TOKENS_IN_TOTAL.with_label_values(&[eng, engv, pool, rep]);
     let _ = TOKENS_OUT_TOTAL.with_label_values(&[eng, engv, pool, rep]);
     let _ = CATALOG_VERIFICATIONS_TOTAL.with_label_values(&[result, reason, eng]);
-    let _ = PREEMPTIONS_TOTAL.with_label_values(&[mode, eng]);
-    let _ = RESUMPTIONS_TOTAL.with_label_values(&[eng]);
 
     let _ = QUEUE_DEPTH.with_label_values(&[eng, engv, pool, prio]);
     let _ = MODEL_STATE.with_label_values(&[model, state]);
     let _ = KV_CACHE_USAGE_RATIO.with_label_values(&[eng, engv, pool, rep]);
     let _ = GPU_UTILIZATION.with_label_values(&[eng, engv, pool, rep, device]);
     let _ = VRAM_USED_BYTES.with_label_values(&[eng, engv, pool, rep, device]);
-    let _ = ADMISSION_SHARE.with_label_values(&[tenant, prio]);
-    let _ = DEADLINES_MET_RATIO.with_label_values(&[prio]);
     let _ = LATENCY_FIRST_TOKEN_MS.with_label_values(&[eng, engv, pool, prio]);
     let _ = LATENCY_DECODE_MS.with_label_values(&[eng, engv, pool, prio]);
 }

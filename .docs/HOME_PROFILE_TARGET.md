@@ -1,33 +1,34 @@
-# Home Profile Reference Environment
+# Home Lab Reference Environment
 
-This document captures the concrete home-lab deployment that we treat as the primary validation target for the Home Profile specification.
+We validate every release of the home profile against the setup described below. If a change fails here, it is not ready to ship.
 
 ## Hardware
 
-- **Workstation (llama-orch host)**
+- **Workstation (orchestrator host)**
   - NVIDIA GeForce RTX 3090 (24 GB VRAM)
   - NVIDIA GeForce RTX 3060 (12 GB VRAM)
-  - Mixed-generation GPUs are expected to operate concurrently under the same host scheduler.
-- **Dev Box (CLI and tooling)**
-  - Runs `llama-orch-cli` and associated automation (auto coder agents).
-  - Connects to the workstation over the LAN or an SSH tunnel when remote access is needed.
+  - NVMe SSD for model/artifact storage (≥ 1 TB suggested)
+- **Developer Box (CLI + tools)**
+  - Runs `llama-orch-cli`, pact/BDD suites, and automation agents.
+  - Network access to the workstation via LAN or SSH tunnel.
 
-## Topology
+## Topology & Configuration
 
-- The workstation runs the `llama-orch` services and hosts all models/artifacts.
-- The dev box uses the CLI to submit workloads to the workstation.
-- Default configuration assumes loopback binding on the workstation; remote access is achieved via an SSH tunnel or explicit bind override when necessary.
+- Orchestrator services, adapters, and artifact storage run on the workstation.
+- Default bind address is `127.0.0.1`; remote control is achieved through an SSH tunnel (`ssh -L` or `ssh -R`) or an explicit bind override guarded by firewall rules.
+- The developer box exports `LLORCH_API_TOKEN` and points the CLI to `http://127.0.0.1:port` locally (tunnel) or `http://workstation:port` when on the same LAN.
 
-## Workload Goals
+## Workload Model
 
-- Primary workload is an auto-coder/agent loop that demands deterministic sampling and fast turnaround for multi-file edits.
-- Streaming responses with `metrics` frames, correlation IDs, and backpressure headers are required to keep the CLI’s orchestration loop informed.
-- Artifact storage is used for plan snapshots, diffs, and traces during iteration.
+- Target use case: multiple auto-coder agents running concurrently, editing large repositories, and queueing work onto both GPUs.
+- Determinism is mandatory for reproducible diffs; every orchestration loop relies on SSE `metrics` frames, streaming tokens, and backpressure headers.
+- Artifact registry stores plan snapshots, diffs, traces, and evaluation notes locally on the workstation.
 
-## Constraints & Testing Notes
+## Validation Expectations
 
-- All validation for Home Profile v2.1 must run successfully against this hardware pairing before broader release.
-- GPU scheduling must gracefully handle asymmetric VRAM sizes without manual per-model pinning.
-- Any optional features (e.g., policy enforcement hooks, budgets) should be exercised in this environment to ensure sane defaults.
+- Mixed-VRAM scheduling (24 GB + 12 GB) MUST function without manual per-model pinning.
+- Pool drain/reload, catalog updates, and artifact uploads MUST succeed end-to-end in this environment.
+- Optional features (tooling policy hook, session budgets) SHOULD be toggled at least once per release to verify sane defaults.
+- All smoke/BDD/determinism suites MUST run against this setup before a release tag is cut.
 
-This setup represents our best-effort testing equipment for the Home Profile; other home-lab deployments should remain compatible but are considered out-of-scope for mandatory validation.
+Other home labs are free to deviate (different GPUs, storage, or network layout), but support commitments and release gates reference this environment.

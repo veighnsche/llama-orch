@@ -1,5 +1,5 @@
 Feature: Deadlines and SSE metrics
-  # Traceability: ORCH-3079..3081, ORCH-3029
+  # Traceability: ORCH-2001, ORCH-3029, ORCH-3100
   Scenario: Infeasible deadlines rejected
     Given a task with infeasible deadline
     When I enqueue a completion task with valid payload

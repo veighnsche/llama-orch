@@ -50,8 +50,8 @@ Note: The `orchestratord` binary builds the router but does not start a network 
 
 ## Metrics (implemented/registered)
 
-- Counters: `tasks_enqueued_total`, `tasks_started_total`, `tasks_canceled_total`, `tasks_rejected_total` (omit `engine_version` per spec), `admission_backpressure_events_total`, `tokens_in_total`, `tokens_out_total`, `catalog_verifications_total`, `preemptions_total`, `resumptions_total`
-- Gauges: `queue_depth`, `model_state`, `kv_cache_usage_ratio`, `gpu_utilization`, `vram_used_bytes`, `admission_share`, `deadlines_met_ratio`
+- Counters: `tasks_enqueued_total`, `tasks_started_total`, `tasks_canceled_total`, `tasks_rejected_total`, `admission_backpressure_events_total`, `tokens_in_total`, `tokens_out_total`, `catalog_verifications_total`
+- Gauges: `queue_depth`, `model_state` (Active|Retired), `kv_cache_usage_ratio`, `gpu_utilization`, `vram_used_bytes`
 - Histograms: `latency_first_token_ms`, `latency_decode_ms`
 
 SSE streaming side-effects update first-token latency, decode latency, and token counters. See `orchestratord/src/metrics.rs`.

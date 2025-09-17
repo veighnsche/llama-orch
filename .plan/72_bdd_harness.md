@@ -1,30 +1,27 @@
-# BDD Harness — Implementation Plan (Test Journeys)
+# BDD Harness Plan — Home Profile
 
-Scope: End-to-end feature coverage for user journeys across data/control plane, SSE framing, backpressure, fairness, determinism toggles. Uses `test-harness/bdd` binary `bdd-runner` with `LLORCH_BDD_FEATURE_PATH`.
+## Scope
+Exercise end-to-end user journeys for the home profile using `test-harness/bdd`.
 
-## Stages and Deliverables
+## Feature Groups
+- **Admission & Streaming**: enqueue, stream SSE (`started|token|metrics|end|error`), cancel.
+- **Sessions & Budgets**: TTL expiry, manual eviction, advisory budgets, budget exhaustion.
+- **Catalog & Reloads**: upload model (unsigned warning), drain, reload success/rollback, health endpoint.
+- **Artifacts**: store/retrieve plan snapshot via `/v1/artifacts`.
+- **Placement**: mixed-GPU execution (RTX 3090 + 3060), queue metadata, predicted start.
+- **Capability Discovery**: CLI reads limits from `/v1/replicasets` or `/v1/capabilities`.
+- **Tooling Policy**: outbound HTTP request allowed/denied via policy hook.
 
-- Stage 12 — BDD Coverage (Journeys)
-  - Features under `test-harness/bdd/tests/features/`:
-    - `data_plane/`: submit → stream → cancel, backpressure behavior.
-    - `control_plane/`: drain/reload/health, replica visibility.
-    - `scheduling/`: priority fairness bounds, starvation guards.
-    - `sse/`: event order (`started|token|metrics|end|error`), well-formed payloads.
-    - `determinism/`: toggles and pinning (engine_version, sampler_profile_version).
-  - Step library with reusable world/state; proof artifacts (logs, snapshots) emitted per run.
+## Test Harness Notes
+- Runner: `test-harness/bdd` binary (`cargo test -p test-harness-bdd`).
+- Step definitions live under `test-harness/bdd/src/steps/`.
+- Keep feature files tagged with requirement IDs (`ORCH-`, `HME-`).
 
-## Tests
+## Backlog
+- Add mixed-GPU scenario once placement heuristic is implemented.
+- Add tooling policy scenario once hook is wired.
+- Add reference smoke wrapper to run critical features against physical workstation before release.
 
-- Execute via `cargo run -p test-harness-bdd --bin bdd-runner --quiet`.
-- Targeted runs using `LLORCH_BDD_FEATURE_PATH`.
-
-## Acceptance Criteria
-
-- Zero undefined/ambiguous steps.
-- Feature sets for the journeys above pass against orchestrator + adapters.
-- Artifacts (snapshots/logs) stored deterministically; link from `.docs/DONE/`.
-
-## Backlog (initial)
-
-- Step library modules for SSE parsing, metrics scrape assertions, and fairness checks.
-- World hooks for orchestrator lifecycle (start/stop) and pool manager interactions.
+## Deliverables
+- Zero undefined/ambiguous steps (`cargo test -p test-harness-bdd -- --nocapture`).
+- Updated snapshots/log archives stored alongside features when behaviour changes.

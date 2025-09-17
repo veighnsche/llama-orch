@@ -1,98 +1,44 @@
-# Llama-Orch SPEC — Home Profile v2.1
+# Home Profile Overlay — Single-Host (ORCH-HOME)
 
-Profile: HOME (Personal / Single-Workstation)
-
-Home Profile v2.1 keeps the single-host scope, restores the features the CLI marks as MUST/SHOULD in `cli/llama-orch-cli/feature-requirements.md`, and anchors validation to the reference environment in `.docs/HOME_PROFILE_TARGET.md` (CLI on a dev box, `llama-orch` on a mixed-GPU workstation).
+This overlay refines the core orchestrator spec for the home lab scenario. It does not compare to any “enterprise” edition; it simply states what the home profile requires on top of `.specs/00_llama-orch.md`.
 
 ---
 
-## 1. Security & Identity
+## H1. Deployment Envelope
 
-- MUST bind services to `127.0.0.1` unless overridden.
-- MUST accept and echo `X-Correlation-Id` on all HTTP responses.
-- MUST authenticate control and data planes with a shared API token; MAY add stronger auth (mTLS/OIDC) but not required.
-- MUST provide outbound tool policy hooks (allow/deny lists) even if defaults are permissive.
-- MUST NOT implement tenant isolation, RBAC, or quota enforcement.
-- SHOULD document how to expose the API to a remote dev box (e.g., SSH tunnel or explicit bind) without weakening defaults.
+- [HME-001] Orchestrator, pool manager, adapters, and artifact storage MUST run on the same workstation.
+- [HME-002] Remote access MUST default to loopback with opt-in LAN exposure guarded by firewall or SSH tunnel.
+- [HME-003] Configuration MUST live in a single YAML/TOML file plus environment variables for sensitive values (API token paths, optional tunnels).
 
-## 2. Admission & Scheduling
+## H2. GPUs & Scheduling
 
-- MUST keep a bounded queue with two priorities: `interactive`, `batch`.
-- MUST preserve FIFO within a priority.
-- MUST implement a documented full policy (Reject or Drop-LRU).
-- MUST accept all FR-DP-001 fields on `POST /v1/tasks`.
-- SHOULD include `queue_position` and `predicted_start_ms` in admission responses (nullable when unknown).
-- MUST honour determinism knobs (`seed`, `determinism`, `sampler_profile_version`).
+- [HME-010] Mixed GPUs (24 GB + 12 GB reference) MUST participate simultaneously; scheduling MUST prefer the GPU with the most free VRAM.
+- [HME-011] Pools MAY pin specific device masks but defaults MUST use all available devices.
+- [HME-012] Concurrency hints returned via capability discovery MUST reflect the mixed-GPU capacity used in the reference environment.
 
-## 3. Task Streaming
+## H3. CLI Integration
 
-- `GET /v1/tasks/{id}/stream` MUST emit `started`, repeated `token`, periodic `metrics`, `end`, `error` SSE frames.
-- MUST carry `X-Correlation-Id` and budget headers if budgets are enforced.
-- MAY coalesce `metrics` frames for efficiency but MUST surface queue depth and token counters.
+- [HME-020] The CLI MUST obtain queue metadata (`queue_position`, `predicted_start_ms`, budgets) for every accepted task.
+- [HME-021] SSE `metrics` frames MUST include at least `queue_depth` and `on_time_probability` so the CLI can coordinate multiple agents.
+- [HME-022] Artifact registry MUST store plan snapshots, diffs, traces locally and return download URLs reachable from the developer box (HTTP over tunnel or LAN).
 
-## 4. Sessions & Budgets
+## H4. Developer Experience
 
-- SHOULD expose `GET/DELETE /v1/sessions/{id}` for KV reuse and eviction.
-- SHOULD support per-session token/time budgets with at least advisory enforcement/logging.
-- MUST NOT rely on multi-tenant session isolation.
+- [HME-030] Logs MUST be tail-friendly (JSON Lines) and group by `X-Correlation-Id`.
+- [HME-031] Config reloads MUST complete in under 10 seconds for catalog swaps on the reference workstation.
+- [HME-032] Errors presented to the CLI MUST include actionable messages (e.g., `QUEUE_FULL_DROP_LRU`, `POOL_UNAVAILABLE`) with retry guidance.
 
-## 5. Control Plane
+## H5. Validation Gates
 
-- MUST keep model catalog endpoints: `POST /v1/catalog/models`, `POST /v1/catalog/models/{id}/verify`, `POST /v1/catalog/models/{id}/state`.
-- MUST keep pool endpoints: `POST /v1/pools/{id}/drain`, `POST /v1/pools/{id}/reload`, `GET /v1/pools/{id}/health`.
-- MUST support model states `Active` and `Retired`; MAY optionally expose additional states but default workflow uses two.
+- [HME-040] Every release MUST pass the reference environment smoke test described in `.docs/HOME_PROFILE_TARGET.md`.
+- [HME-041] Determinism suite MUST run on both GPUs concurrently and report latency statistics per device.
+- [HME-042] BDD features MUST cover catalog flows, artifact uploads, session eviction, cancel, and backpressure.
 
-## 6. Discovery & Versioning
+## H6. Nice-to-Have (Optional)
 
-- MUST expose capability discovery via enriched `GET /v1/replicasets` or `GET /v1/capabilities` with engine versions, capacity, max context, rate limits.
-- MUST publish API versions in OpenAPI documents (`info.version`).
-- SHOULD surface supported sampler profiles and determinism guarantees.
+- [HME-050] Simple web status page MAY expose queue depth, GPU utilisation, and recent tasks for the workstation operator.
+- [HME-051] Optional backup/restore scripts SHOULD be documented for artifact and catalog directories.
 
-## 7. Artifacts
+---
 
-- SHOULD expose `/v1/artifacts` create/fetch APIs for CLI plan storage.
-- MAY allow unsigned artifacts but MUST log trust gaps.
-- MUST keep artifact storage local to the home deployment.
-
-## 8. Observability & Metrics
-
-- MUST expose Prometheus with at least:
-  - `queue_depth{engine,engine_version,pool_id,priority}`
-  - `tasks_enqueued_total{engine,engine_version,pool_id,replica_id,priority}`
-  - `tasks_rejected_total{engine,reason}`
-  - `tokens_in_total{engine,engine_version,pool_id,replica_id}`
-  - `tokens_out_total{engine,engine_version,pool_id,replica_id}`
-  - `gpu_utilization{engine,engine_version,pool_id,replica_id,device}`
-  - `vram_used_bytes{engine,engine_version,pool_id,replica_id,device}`
-- SHOULD expose `model_state{model_id,state}` with states limited to `Active|Retired`.
-- MAY omit percentile histograms and tenant/fairness gauges.
-- MUST log warnings instead of failing when SBOM/signature data is missing.
-
-## 9. Errors & Backpressure
-
-- MUST keep error envelope `{code, message, engine, correlation_id?}`.
-- MUST send HTTP 429 with `Retry-After`, `X-Backoff-Ms`, and `policy_label` in the body.
-- SHOULD document retry guidance consistent with headers.
-
-## 10. Placement & Performance
-
-- MUST schedule on least-loaded GPU (free VRAM/slots heuristic) without requiring NUMA/tensor hints.
-- MUST publish capacity so the CLI can derive safe concurrency (FR-MA-001).
-- SHOULD provide `predicted_start_ms` estimates (FR-PF-002).
-- MUST validate placement against mixed RTX 3090 (24 GB) and RTX 3060 (12 GB) cards.
-
-## 11. Differences vs Production
-
-- Removed: multi-tenant quotas, fairness (WFQ), preemption, resumable jobs, distributed control plane.
-- Retained (relative to v1 reduction): catalog, drain, artifacts, capability discovery, correlation IDs, SSE metrics frames, `policy_label`, admission metadata.
-
-## 12. Spec→Contracts→Tests→Code Alignment
-
-- Contracts must include catalog, drain, artifacts, capability discovery, SSE `metrics`, correlation IDs, `policy_label`, determinism fields, and admission metadata.
-- Config schema keeps two priorities but MUST retain determinism/session/budget fields consumed by the CLI.
-- Metrics lint MUST match the metric list above; optional series remain optional.
-- Provider tests and Pacts MUST cover the reinstated endpoints and headers.
-- Code must echo `X-Correlation-Id`, honour determinism, implement catalog/drain/artifact flows, and bind to loopback by default.
-- Validation suites SHOULD exercise the reference deployment described in `.docs/HOME_PROFILE_TARGET.md` before release.
-
-Conformance to Home Profile v2.1 supersedes the initial HOME profile reduction. Do not remove surfaces marked as MUST/SHOULD for CLI compatibility.
+Requirement IDs prefixed `HME-` are local to the home overlay and complement the ORCH-3xxx series. Update `requirements/00_home_profile.yaml` after modifying this document.

@@ -59,7 +59,7 @@ Status: pre-code · Scope: OrchQueue v1 data plane & control plane
   - unit: bytes
   - description: VRAM used by the worker process(es).
 
-## v3.2 Metrics (Catalog/Lifecycle + Advanced Scheduling)
+## Optional Metrics
 
 - catalog_verifications_total
   - type: counter
@@ -69,33 +69,9 @@ Status: pre-code · Scope: OrchQueue v1 data plane & control plane
 
 - model_state
   - type: gauge
-  - labels: model_id, state (Draft|Active|Canary|Deprecated|Retired)
+  - labels: model_id, state (Active|Retired)
   - unit: 1
   - description: Current lifecycle state per model.
-
-- admission_share
-  - type: gauge
-  - labels: tenant, priority
-  - unit: ratio
-  - description: EWMA of observed admission share for fairness verification.
-
-- deadlines_met_ratio
-  - type: gauge
-  - labels: priority
-  - unit: ratio
-  - description: Ratio of jobs meeting deadlines over a rolling window.
-
-- preemptions_total
-  - type: counter
-  - labels: mode (soft|hard), engine
-  - unit: 1
-  - description: Number of preemption events.
-
-- resumptions_total
-  - type: counter
-  - labels: engine
-  - unit: 1
-  - description: Number of resumed jobs after preemption.
 
 ## Summaries/Histograms
 

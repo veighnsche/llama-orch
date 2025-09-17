@@ -85,6 +85,7 @@ This is the single active TODO tracker for the repository. Maintain execution or
   - Implementation: trim fairness/preemption/tensor_split from `contracts/config-schema`, add fields for budgets, determinism, API key, bind address, artifact storage path, capability overrides.
   - Files: `contracts/config-schema/src/lib.rs`, generated schema artifacts, docs under `.docs/`.
   - Acceptance: `cargo xtask regen-schema` succeeds; examples validate; config matches spec requirements.
+  - Progress: fairness/preemption structures removed; schema regenerated with new example. Budgets/determinism fields still TODO.
 - Auth token configuration
   - Implementation: load API token (and optional mTLS/OIDC) from config/env; update auth middleware + docs.
   - Files: `orchestratord/src/http/auth.rs`, config schema, CLI docs.
@@ -95,6 +96,7 @@ This is the single active TODO tracker for the repository. Maintain execution or
   - Implementation: keep required gauges/counters, remove fairness/preemption metrics from HOME build or guard behind feature flags; update `ci/metrics.lint.json` and docs.
   - Files: `orchestratord/src/metrics.rs`, `ci/metrics.lint.json`, `.specs/metrics/otel-prom.md`.
   - Acceptance: linter matches new set; `/metrics` exposes required series only.
+  - Progress: fairness/preemption metrics removed from code and linter; docs/spec already updated.
 - GPU + NVML integration
   - Implementation: scrape NVML for utilization/VRAM per device, wire into metrics + SSE `metrics` frame.
   - Files: `orchestratord/src/metrics.rs`, new telemetry module, placement.

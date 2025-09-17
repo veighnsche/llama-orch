@@ -59,8 +59,7 @@
       "name": "tokens_out_total",
       "type": "counter",
       "labels": ["engine", "engine_version", "pool_id", "replica_id"]
-    }
-    ,
+    },
     {
       "name": "admission_backpressure_events_total",
       "type": "counter",
@@ -75,26 +74,6 @@
       "name": "model_state",
       "type": "gauge",
       "labels": ["model_id", "state"]
-    },
-    {
-      "name": "admission_share",
-      "type": "gauge",
-      "labels": ["tenant", "priority"]
-    },
-    {
-      "name": "deadlines_met_ratio",
-      "type": "gauge",
-      "labels": ["priority"]
-    },
-    {
-      "name": "preemptions_total",
-      "type": "counter",
-      "labels": ["mode", "engine"]
-    },
-    {
-      "name": "resumptions_total",
-      "type": "counter",
-      "labels": ["engine"]
     }
   ],
   "label_cardinality_budget": {
@@ -104,10 +83,8 @@
     "replica_id": 1024,
     "priority": 8,
     "reason": 16,
-    "tenant": 256,
     "result": 4,
     "state": 8,
-    "mode": 4,
     "model_id": 1024
   }
 }

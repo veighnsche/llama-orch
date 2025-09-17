@@ -8,7 +8,6 @@ use serde_json::json;
 pub enum PolicyLabel {
     Reject,
     DropLru,
-    ShedLowPriority,
 }
 
 #[cfg(test)]
@@ -68,7 +67,6 @@ pub fn build_429_body(_policy: PolicyLabel) -> serde_json::Value {
     let label = match _policy {
         PolicyLabel::Reject => "reject",
         PolicyLabel::DropLru => "drop-lru",
-        PolicyLabel::ShedLowPriority => "shed-low-priority",
     };
     json!({
         "policy_label": label,

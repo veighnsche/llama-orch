@@ -74,12 +74,13 @@ Conventions:
 - test-harness/bdd/tests/features/orchestrator_core/watchdog_timeouts.feature
   - Placeholder in current code; no direct handler; covered by future policy hooks.
 
-## Scheduling (fairness, deadlines)
+## Placement & Queue Estimates
 
-- test-harness/bdd/tests/features/scheduling/*.feature
+- test-harness/bdd/tests/features/scheduling/*.feature (to be rewritten for mixed-GPU scenarios)
   - Components:
-    - `orchestratord/src/placement.rs` (policy stubs)
-    - `orchestratord/src/metrics.rs` (ADMISSION_SHARE, DEADLINES_MET_RATIO)
+    - `orchestratord/src/placement.rs` (least-loaded heuristic, queue estimates)
+    - `orchestratord/src/http/data.rs:create_task` (queue position / predicted start)
+    - `orchestratord/src/metrics.rs` (queue depth gauges)
 
 ## Security
 

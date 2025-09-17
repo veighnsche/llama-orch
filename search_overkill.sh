@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Home Profile reduction helper — locate/deprecate enterprise features before manual edits.
-# NOTE: This script is non-destructive by default. It uses grep to surface matches.
-#       Suggested sed -i lines are provided commented-out for you to apply intentionally.
+# Home profile audit helper — surface legacy enterprise terminology for cleanup.
+# NOTE: This script is non-destructive by default. It uses grep to surface matches
+#       so you can address them deliberately.
 
 set -euo pipefail
 
@@ -17,9 +17,8 @@ rgx() {
     "$@"
 }
 
-# --- Multi-tenancy / RBAC / quotas ------------------------------------------------------------
-# Locate references to multi-tenancy, tenants, RBAC, and quotas across docs/spec/code.
-echo "[scan] multi-tenancy / RBAC / quotas"
+# --- Legacy multi-tenancy / RBAC / quotas ------------------------------------------------------
+echo "[scan] legacy multi-tenancy / RBAC / quotas"
 rgx -E "multi-tenant|multi tenancy|tenancy|tenant|RBAC|quota" -- . || true
 
 # Example (commented): remove tenant admission share metric from metrics.lint.json
@@ -27,7 +26,7 @@ rgx -E "multi-tenant|multi tenancy|tenancy|tenant|RBAC|quota" -- . || true
 
 # --- Fairness (WFQ), deadlines (EDF), preemption, resumable jobs -------------------------------
 echo "[scan] fairness / deadlines / preemption / resumable jobs"
-rgx -E "fairness|WFQ|deadline|EDF|preempt|resum(e|ption)|resumptions_total|preemptions_total|DEADLINE_UNMET" -- . || true
+rgx -E "fairness|WFQ|deadline|EDF|preempt|resum(e|ption)|resumptions_total|preemptions_total" -- . || true
 
 # Example (commented): drop fairness/preemption config structs from config schema
 # sed -i '/struct FairnessConfig/,/}/d' contracts/config-schema/src/lib.rs
@@ -43,22 +42,16 @@ rgx -E '\\bDraft\\b|\\bDeprecated\\b|\\bCanary\\b|percent rollout|rollout' -- . 
 
 # --- Trust / SBOM / signatures -----------------------------------------------------------------
 echo "[scan] trust & SBOM/signatures enforcement"
-rgx -E "SBOM|signature|signatures|trust[_ -]?policy|require_signature|require_sbom|artifact registry|artifacts" -- . || true
+rgx -E "SBOM|signature|signatures|trust[_ -]?policy|require_signature|require_sbom" -- . || true
 
 # Example (commented): make trust policy optional-only in config schema
 # sed -i '/TrustPolicyConfig/,/}/d' contracts/config-schema/src/lib.rs
 
-# --- Advanced metrics to drop ------------------------------------------------------------------
-echo "[scan] advanced metrics (admission_share, deadlines_met_ratio, preemptions/resumptions, latency histograms)"
-rgx -E "admission_share|deadlines_met_ratio|preemptions_total|resumptions_total|latency_first_token_ms|latency_decode_ms" -- . || true
+# --- Legacy metrics ----------------------------------------------------------------------------
+echo "[scan] legacy metrics (admission_share, deadlines_met_ratio, preemptions/resumptions)"
+rgx -E "admission_share|deadlines_met_ratio|preemptions_total|resumptions_total" -- . || true
 
-# Example (commented): remove metrics from registry and linter
-# sed -i '/ADMISSION_SHARE/,+3d' orchestratord/src/metrics.rs
-# sed -i '/DEADLINES_MET_RATIO/,+3d' orchestratord/src/metrics.rs
-# sed -i '/preemptions_total/,+5d' ci/metrics.lint.json
-# sed -i '/resumptions_total/,+5d' ci/metrics.lint.json
-# sed -i '/latency_first_token_ms/,+5d' ci/metrics.lint.json
-# sed -i '/latency_decode_ms/,+5d' ci/metrics.lint.json
+# (There should be no matches; keep scans to catch regressions.)
 
 # --- APIs: correlation IDs, policy_label in 429, artifacts, drains, CDC ------------------------
 echo "[scan] correlation IDs header (X-Correlation-Id)"

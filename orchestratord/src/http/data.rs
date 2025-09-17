@@ -269,13 +269,6 @@ pub async fn create_task(
                                                 ms as u64,
                                                 0,
                                             );
-                                            // Fairness placeholders (Week 4):
-                                            crate::metrics::ADMISSION_SHARE
-                                                .with_label_values(&["t0", "interactive"]) // TODO: real tenant
-                                                .set(1.0);
-                                            crate::metrics::DEADLINES_MET_RATIO
-                                                .with_label_values(&["interactive"]) // placeholder
-                                                .set(1.0);
                                         }
                                         tokens_out += 1;
                                     }

@@ -75,7 +75,7 @@ flowchart LR
 - Requirements: [requirements/00_llama-orch.yaml](../requirements/00_llama-orch.yaml)
 
 ### Additional Details
-- Queue invariants and property tests overview (fairness, capacity, rejection policies).
+- Queue invariants and property tests overview (capacity, rejection policies, session affinity helpers).
 - Capacity policies and bounded FIFO behavior.
 
 

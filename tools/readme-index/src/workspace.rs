@@ -246,7 +246,7 @@ pub fn suggest_spec_refs(role: &str, crate_name: &str) -> Vec<String> {
 /// Hand-curated minimal extras per crate (Step 3) — include in footnotes
 pub fn crate_specific_extras(crate_path: &str) -> String {
     if crate_path.starts_with("orchestrator-core") {
-        return "- Queue invariants and property tests overview (fairness, capacity, rejection policies).\n- Capacity policies and bounded FIFO behavior.\n".to_string();
+        return "- Queue invariants and property tests (capacity, rejection policies, session affinity helpers).\n- Capacity policies and bounded FIFO behavior.\n".to_string();
     }
     if crate_path.starts_with("orchestratord") {
         return "- Data/control plane routes, SSE framing details, backpressure headers, provider verify entry points.\n".to_string();

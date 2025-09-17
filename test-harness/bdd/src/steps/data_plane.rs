@@ -104,11 +104,6 @@ pub async fn given_queue_policy_drop_lru(world: &mut World) {
     world.push_fact("queue.policy.drop_lru");
 }
 
-#[given(regex = r"^queue full policy is shed-low-priority$")]
-pub async fn given_queue_policy_shed_low_priority(world: &mut World) {
-    world.push_fact("queue.policy.shed_low_priority");
-}
-
 #[given(regex = r"^an OrchQueue API endpoint under load$")]
 pub async fn given_api_under_load(_world: &mut World) {}
 

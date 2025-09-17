@@ -1,78 +1,19 @@
-# Spec Combination Matrix — Pairwise and 3‑wise Coverage
+# Spec Combination Matrix — Home Profile
 
-Status: v2025-09-15
-Source of Truth: `.specs/*.md` (IDs). See method: `.docs/test-case-discovery-method.md`.
+This matrix captures the major feature combinations we test explicitly. Use it to identify missing coverage when specs change.
 
-## Factors (with domains and references)
+| Area | Scenario | Specs / IDs | Tests |
+|------|----------|-------------|-------|
+| Admission | Single agent, empty queue | ORCH-3004..3006, ORCH-3029 | `test-harness/bdd/tests/features/data_plane/admission_queue.feature` |
+| Admission | Queue saturation → 429 | ORCH-2007, ORCH-3005, ORCH-3006 | `test-harness/bdd/tests/features/data_plane/backpressure.feature`, provider verify 429 cases |
+| Sessions | TTL expiry & eviction | ORCH-3021, ORCH-3023, HME-030 | `test-harness/bdd/tests/features/data_plane/sessions.feature` |
+| SSE | Deterministic stream, metrics frame | ORCH-2002, ORCH-3100 | `test-harness/bdd/tests/features/data_plane/sse_stream.feature`, determinism suite |
+| Catalog | Upload unsigned model (warn) | ORCH-3037 | `test-harness/bdd/tests/features/control_plane/catalog.feature` |
+| Drain/Reload | Drain → reload success & rollback | ORCH-3031, ORCH-3038 | `test-harness/bdd/tests/features/control_plane/pool_drain_reload.feature` |
+| Capability | CLI derives concurrency hints | ORCH-3095, ORCH-3096, HME-012 | `test-harness/bdd/tests/features/control_plane/capabilities.feature` |
+| Artifacts | Store/retrieve plan | ORCH-3097, ORCH-3098, HME-022 | `test-harness/bdd/tests/features/control_plane/artifacts.feature` |
+| Budgets | Token/time budget rejection | ORCH-3099, ORCH-2068 | `test-harness/bdd/tests/features/data_plane/budgets.feature` |
+| Placement | Mixed GPU load balancing | ORCH-3012, HME-010 | `test-harness/bdd/tests/features/data_plane/mixed_gpu.feature` (todo) |
+| Tooling Policy | Blocked outbound request | ORCH-3080 | `test-harness/bdd/tests/features/tooling/policy.feature` (todo) |
 
-- Engine (OC-ADAPT): `llamacpp | vllm | tgi | triton` → OC-ADAPT-5001..5070
-- Queue Full Policy: `reject | drop-lru | shed-low-priority` → ORCH-3005
-- Fairness: `wfq_on/off` → ORCH-3075; Observed share → ORCH-3076
-- Quotas: `quotas_on/off` → ORCH-3077
-- Deadlines: `feasible | infeasible` → ORCH-3079
-- Preemption: `off | soft | hard(capability)` → ORCH-3085/3086, metrics ORCH-3087
-- Lifecycle: `Active | Deprecated | Retired` → ORCH-3069..3073
-- Trust Policy: `strict_signed | strict_unsigned` → ORCH-3060..3065, ORCH-3093
-- Auth: `apikey_present | apikey_missing` → OC-CTRL-2040
-- Host/Placement: `Ready | Unready`, `mask_respected` → ORCH-3010/3011, OC-POOL-3001..3021
-- SSE Started Fields: `present | missing` → ORCH-3029, OC-CTRL-2021
-- Determinism Context: `same_version | cross_version` → ORCH-3045/3047
-
-## Constraints (prune invalid or undefined states)
-
-- Hard preemption only when adapter proves `interruptible_decode` → ORCH-3086
-- CPU‑only hosts cannot serve inference → ORCH-1101
-- No cross‑mask spillover → ORCH-3011, OC-POOL-3020
-- OpenAI‑compatible endpoints are internal only → OC-ADAPT-5002/5021
-- No determinism guarantee across engine/model updates → ORCH-3047
-- Deprecated blocks new sessions unless `override=true`; Retired unloads → ORCH-3070
-
-## Pairwise selection (prioritized set)
-
-- (Engine × Queue Full Policy)
-  - Validate reject/drop-lru/shed policies against each engine. IDs: ORCH-3005, OC-ADAPT-5xxx.
-- (Engine × Determinism Context)
-  - Same version strict determinism, and cross-version nondeterminism expectation. IDs: ORCH-3045/3047.
-- (Engine × Preemption)
-  - soft across all engines; hard only where capability proven. IDs: ORCH-3085/3086.
-- (Fairness × Quotas)
-  - WFQ active with and without quotas; observe share and enforcement. IDs: ORCH-3075/3076/3077.
-- (Deadlines × Preemption)
-  - Feasible vs infeasible with soft/hard preemption behaviors and metrics. IDs: ORCH-3079/3085/3087.
-- (Lifecycle × Data Plane Admission)
-  - Deprecated blocks new sessions; Retired unloads; MODEL_DEPRECATED error. IDs: ORCH-3069..3073, ORCH-3093.
-- (Trust Policy × Control Plane Ingest)
-  - strict_unsigned rejects with UNTRUSTED_ARTIFACT error. IDs: ORCH-3060..3065, ORCH-3093.
-- (Placement × Device Masks)
-  - Ready only after preload; no spillover across masks. IDs: ORCH-3010/3011, OC-POOL-3001..3021.
-- (SSE Started Fields × Backpressure/Admission)
-  - started includes queue_position and predicted_start_ms. IDs: ORCH-3029, OC-CTRL-2021.
-- (Auth × Data Plane)
-  - apikey_missing rejected per security requirements. IDs: OC-CTRL-2040.
-
-## 3‑wise high‑risk triads
-
-- (WFQ Fairness × Deadlines EDF × Preemption)
-  - Ensure urgent tasks meet deadlines without starving others; metrics exported. IDs: ORCH-3075/3076/3079/3085/3087.
-- (Lifecycle Deprecated/Retired × Admission × Typed Errors)
-  - New sessions blocked with MODEL_DEPRECATED; pools drain/unload; model_state gauge. IDs: ORCH-3069..3073, ORCH-3093.
-- (Trust strict × unsigned artifact × Control Plane ingest)
-  - Ingest/load refusal with UNTRUSTED_ARTIFACT and verification metrics. IDs: ORCH-3060..3065, ORCH-3093.
-- (Engine Capability × Hard Preemption × SSE/Error surfacing)
-  - Hard preemption only when interruptible_decode; preempted flag and resumable state surfaced. IDs: ORCH-3086/3087.
-- (Heterogeneous Split × Placement × Device Masks)
-  - Explicit ratios honored; no cross‑mask spillover. IDs: ORCH-3011/3012, OC-POOL-3021.
-
-## Proposed test artifacts per combo
-
-- BDD Scenarios: `test-harness/bdd/`
-  - Scheduling: WFQ, quotas, deadlines, preemption, session affinity, SSE fields.
-  - Lifecycle: Deprecated/Retired transitions and effects.
-  - Catalog/Trust: strict policy acceptance/rejection cases.
-- Provider/CDC: `orchestratord/tests/provider_verify.rs`, OpenAPI artifacts.
-- Property Tests: `orchestrator-core/tests/props_queue.rs` (fairness and placement invariants).
-- Metrics Contract: `test-harness/metrics-contract/` with `ci/metrics.lint.json`.
-
-## Traceability
-
-Each combo references the base requirement IDs. Link combo → concrete test case names in `.docs/spec-derived-test-catalog.md` under "Cross‑Spec Interaction Tests".
+“todo” rows signal combinations we still need to codify. Update matrix rows alongside new tests.

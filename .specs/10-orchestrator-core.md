@@ -6,14 +6,14 @@ Conformance language: RFC‑2119 (MUST/SHOULD/MAY)
 
 ## 0) Scope & Versioning
 
-This SPEC covers the core scheduling, queueing, fairness and determinism invariants implemented by `orchestrator-core`. Requirements are versioned as `OC-CORE-1xxx`.
+This SPEC covers the core queueing, placement, and determinism invariants implemented by `orchestrator-core`. Requirements are versioned as `OC-CORE-1xxx`.
 
 ## 1) Queue & Admission
 
 - [OC-CORE-1001] Each Pool MUST expose a bounded FIFO queue per priority class.
 - [OC-CORE-1002] Admission MUST reject when the queue is full according to configured policy (reject/drop-lru/shed-low-priority).
 - [OC-CORE-1003] Enqueue MUST be O(1) amortized and MUST preserve request arrival order within the same priority.
-- [OC-CORE-1004] Dequeue MUST prefer higher priority and MUST be fair within a priority class.
+- [OC-CORE-1004] Dequeue MUST prefer higher priority and MUST respect FIFO order within a priority class.
 - [OC-CORE-1005] Cancellation MUST remove the task from the queue or mark the slot so it is not dispatched.
 
 See: ../orchestrator-core/src/lib.rs, ../orchestrator-core/tests/props_queue.rs
@@ -42,7 +42,7 @@ See: ../orchestrator-core/src/lib.rs, ../orchestrator-core/tests/props_queue.rs
 ## 5) Observability
 
 - [OC-CORE-1040] Logs MUST include job_id, session_id, engine, pool_id, replica_id, model_id, quant, ctx, kv_warmth, queue_time_ms, decode_time_ms.
-- [OC-CORE-1041] Metrics MUST include queue depth, reject/drop rates, p50/p95/p99 latency, GPU/VRAM/RAM utilization, KV pressure, preload outcomes.
+- [OC-CORE-1041] Metrics MUST include queue depth, reject/drop counts, first-token/decode latency, GPU/VRAM utilization, KV pressure, preload outcomes.
 
 ## 6) Traceability Map
 

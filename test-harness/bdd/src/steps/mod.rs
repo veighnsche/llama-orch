@@ -86,7 +86,6 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^SSE event ordering is per stream$").unwrap(),
         Regex::new(r"^queue full policy is reject$").unwrap(),
         Regex::new(r"^queue full policy is drop-lru$").unwrap(),
-        Regex::new(r"^queue full policy is shed-low-priority$").unwrap(),
         Regex::new(r"^an OrchQueue API endpoint under load$").unwrap(),
         Regex::new(r"^I enqueue a task beyond capacity$").unwrap(),
         Regex::new(r"^I receive 429 with headers Retry-After and X-Backoff-Ms and correlation id$")
@@ -100,17 +99,10 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^I receive session info with ttl_ms_remaining turns kv_bytes kv_warmth$")
             .unwrap(),
         Regex::new(r"^I delete the session$").unwrap(),
-        // deadlines & preemption
+        // deadlines & SSE metrics
         Regex::new(r"^a task with infeasible deadline$").unwrap(),
         Regex::new(r"^I receive error code DEADLINE_UNMET$").unwrap(),
         Regex::new(r"^SSE metrics include on_time_probability$").unwrap(),
-        Regex::new(r"^soft preemption is enabled$").unwrap(),
-        Regex::new(r"^under persistent overload$").unwrap(),
-        Regex::new(r"^lower priority items are preempted first$").unwrap(),
-        Regex::new(r"^preemptions_total and resumptions_total metrics are exported$").unwrap(),
-        Regex::new(r"^hard preemption is enabled and adapter proves interruptible_decode$")
-            .unwrap(),
-        Regex::new(r"^preempted flag and resumable state are surfaced$").unwrap(),
         // determinism
         Regex::new(r"^two replicas pin engine_version sampler_profile_version and model_digest$")
             .unwrap(),
@@ -174,11 +166,6 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^I run the engine with default policy$").unwrap(),
         Regex::new(r"^when preflight runs$").unwrap(),
         // scheduling
-        Regex::new(r"^WFQ weights are configured for tenants and priorities$").unwrap(),
-        Regex::new(r"^load arrives across tenants and priorities$").unwrap(),
-        Regex::new(r"^observed share approximates configured weights$").unwrap(),
-        Regex::new(r"^quotas are configured per tenant$").unwrap(),
-        Regex::new(r"^requests beyond quota are rejected$").unwrap(),
         Regex::new(r"^session affinity keeps a session on its last good replica$").unwrap(),
         // security
         Regex::new(r"^no API key is provided$").unwrap(),
