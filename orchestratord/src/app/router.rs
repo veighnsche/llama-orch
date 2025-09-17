@@ -1,5 +1,6 @@
-use axum::{routing::{get, post, delete}, Router};
+use axum::{routing::{get, post, delete}, Router, middleware};
 use crate::{api, state::AppState};
+use super::middleware::{api_key_layer, correlation_id_layer};
 
 pub fn build_router(state: AppState) -> Router {
     Router::new()
@@ -21,5 +22,8 @@ pub fn build_router(state: AppState) -> Router {
         .route("/v1/artifacts/:id", get(api::artifacts::get_artifact))
         // Observability
         .route("/metrics", get(api::observability::metrics_endpoint))
+        // Layers (order: correlation id, then auth)
+        .layer(middleware::from_fn(correlation_id_layer))
+        .layer(middleware::from_fn(api_key_layer))
         .with_state(state)
 }

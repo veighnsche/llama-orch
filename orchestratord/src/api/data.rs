@@ -2,131 +2,56 @@ use axum::{extract::State, response::IntoResponse, Json};
 use http::{HeaderMap, StatusCode};
 use serde_json::json;
 
-use crate::state::AppState;
+use crate::{services, state::AppState};
 use contracts_api_types as api;
-
-use super::types::{correlation_id_from, require_api_key};
+use crate::domain::error::OrchestratorError as ErrO;
 
 pub async fn get_session(
-    headers: HeaderMap,
     state: State<AppState>,
     axum::extract::Path(id): axum::extract::Path<String>,
-) -> axum::response::Response {
-    if let Err(code) = require_api_key(&headers) {
-        return (code, HeaderMap::new()).into_response();
-    }
-    let mut out = HeaderMap::new();
-    let corr = correlation_id_from(&headers);
-    out.insert("X-Correlation-Id", corr.parse().unwrap());
-
-    let mut guard = state.sessions.lock().unwrap();
-    let entry = guard.entry(id).or_insert_with(|| crate::state::SessionInfo {
-        ttl_ms_remaining: 600_000,
-        turns: 1,
-        kv_bytes: 0,
-        kv_warmth: false,
-    });
-
+) -> Result<impl IntoResponse, ErrO> {
+    let svc = services::session::SessionService::new(state.sessions.clone(), std::sync::Arc::new(crate::infra::clock::SystemClock::default()));
+    let entry = svc.get_or_create(&id);
     let body = json!({
         "ttl_ms_remaining": entry.ttl_ms_remaining,
         "turns": entry.turns,
         "kv_bytes": entry.kv_bytes,
         "kv_warmth": entry.kv_warmth,
+        "tokens_budget_remaining": entry.tokens_budget_remaining,
+        "time_budget_remaining_ms": entry.time_budget_remaining_ms,
+        "cost_budget_remaining": entry.cost_budget_remaining,
     });
-    (StatusCode::OK, out, Json(body)).into_response()
+    Ok((StatusCode::OK, Json(body)))
 }
 
 pub async fn delete_session(
-    headers: HeaderMap,
     state: State<AppState>,
     axum::extract::Path(id): axum::extract::Path<String>,
-) -> axum::response::Response {
-    if let Err(code) = require_api_key(&headers) {
-        return (code, HeaderMap::new()).into_response();
-    }
-    let mut out = HeaderMap::new();
-    let corr = correlation_id_from(&headers);
-    out.insert("X-Correlation-Id", corr.parse().unwrap());
-
-    let mut guard = state.sessions.lock().unwrap();
-    guard.remove(&id);
-    (StatusCode::NO_CONTENT, out).into_response()
+) -> Result<impl IntoResponse, ErrO> {
+    let svc = services::session::SessionService::new(state.sessions.clone(), std::sync::Arc::new(crate::infra::clock::SystemClock::default()));
+    svc.delete(&id);
+    Ok((StatusCode::NO_CONTENT))
 }
 
 pub async fn create_task(
-    headers: HeaderMap,
     state: State<AppState>,
     Json(body): Json<api::TaskRequest>,
-) -> axum::response::Response {
-    if let Err(code) = require_api_key(&headers) {
-        return (code, HeaderMap::new()).into_response();
-    }
-    let mut out = HeaderMap::new();
-    let corr = correlation_id_from(&headers);
-    out.insert("X-Correlation-Id", corr.parse().unwrap());
-
+) -> Result<impl IntoResponse, ErrO> {
     // Error taxonomy sentinels
     if body.ctx < 0 {
-        let env = api::ErrorEnvelope {
-            code: api::ErrorKind::InvalidParams,
-            message: Some("ctx must be >= 0".into()),
-            engine: Some(body.engine),
-            retriable: None,
-            retry_after_ms: None,
-            policy_label: None,
-        };
-        return (StatusCode::BAD_REQUEST, out, Json(env)).into_response();
+        return Err(ErrO::InvalidParams("ctx must be >= 0".into()));
     }
     if body.deadline_ms <= 0 {
-        let env = api::ErrorEnvelope {
-            code: api::ErrorKind::DeadlineUnmet,
-            message: Some("deadline_ms must be > 0".into()),
-            engine: Some(body.engine),
-            retriable: None,
-            retry_after_ms: None,
-            policy_label: None,
-        };
-        return (StatusCode::BAD_REQUEST, out, Json(env)).into_response();
+        return Err(ErrO::DeadlineUnmet);
     }
     if body.model_ref == "pool-unavailable" {
-        let env = api::ErrorEnvelope {
-            code: api::ErrorKind::PoolUnavailable,
-            message: Some("pool unavailable".into()),
-            engine: Some(body.engine),
-            retriable: Some(true),
-            retry_after_ms: Some(1000),
-            policy_label: Some("retry".into()),
-        };
-        return (StatusCode::SERVICE_UNAVAILABLE, out, Json(env)).into_response();
+        return Err(ErrO::PoolUnavailable);
     }
     if body.prompt.as_deref() == Some("cause-internal") {
-        let env = api::ErrorEnvelope {
-            code: api::ErrorKind::Internal,
-            message: Some("internal error".into()),
-            engine: Some(body.engine),
-            retriable: None,
-            retry_after_ms: None,
-            policy_label: None,
-        };
-        return (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            out,
-            Json(env),
-        )
-            .into_response();
+        return Err(ErrO::Internal);
     }
     if body.expected_tokens.unwrap_or(0) >= 1_000_000 {
-        out.insert("Retry-After", "1".parse().unwrap());
-        out.insert("X-Backoff-Ms", "1000".parse().unwrap());
-        let env = api::ErrorEnvelope {
-            code: api::ErrorKind::AdmissionReject,
-            message: Some("queue full policies applied".into()),
-            engine: Some(body.engine),
-            retriable: Some(true),
-            retry_after_ms: Some(1000),
-            policy_label: Some("reject".into()),
-        };
-        return (StatusCode::TOO_MANY_REQUESTS, out, Json(env)).into_response();
+        return Err(ErrO::AdmissionReject { policy_label: "reject".into(), retry_after_ms: Some(1000) });
     }
 
     // Success path (stub ETA/position)
@@ -144,51 +69,27 @@ pub async fn create_task(
         admission.queue_position, admission.predicted_start_ms
     ));
 
-    (StatusCode::ACCEPTED, out, Json(admission)).into_response()
+    Ok((StatusCode::ACCEPTED, Json(admission)))
 }
 
 pub async fn stream_task(
-    headers: HeaderMap,
-    _state: State<AppState>,
-    axum::extract::Path(_id): axum::extract::Path<String>,
-) -> axum::response::Response {
-    if let Err(code) = require_api_key(&headers) {
-        return (code, HeaderMap::new()).into_response();
-    }
-    let mut out = HeaderMap::new();
-    let corr = correlation_id_from(&headers);
-    out.insert("X-Correlation-Id", corr.parse().unwrap());
-    out.insert("Content-Type", "text/event-stream".parse().unwrap());
-
-    let sse = [
-        "event: started",
-        &format!("data: {{\"queue_position\":{},\"predicted_start_ms\":{}}}", 3, 420),
-        "",
-        "event: token",
-        "data: {\"t\":\"Hello\",\"i\":0}",
-        "",
-        "event: metrics",
-        "data: {\"queue_depth\":1,\"on_time_probability\":0.99,\"kv_warmth\":false,\"tokens_budget_remaining\":0,\"time_budget_remaining_ms\":600000,\"cost_budget_remaining\":0.0}",
-        "",
-        "event: end",
-        "data: {\"tokens_out\":1,\"decode_ms\":5}",
-        "",
-    ]
-    .join("\n");
-
-    (StatusCode::OK, out, sse).into_response()
+    state: State<AppState>,
+    axum::extract::Path(id): axum::extract::Path<String>,
+) -> Result<impl IntoResponse, ErrO> {
+    let mut headers = HeaderMap::new();
+    headers.insert("Content-Type", "text/event-stream".parse().unwrap());
+    let sse = services::streaming::render_sse_for_task(&*state, id).await;
+    Ok((StatusCode::OK, headers, sse))
 }
 
 pub async fn cancel_task(
-    headers: HeaderMap,
-    _state: State<AppState>,
+    state: State<AppState>,
     axum::extract::Path(_id): axum::extract::Path<String>,
-) -> axum::response::Response {
-    if let Err(code) = require_api_key(&headers) {
-        return (code, HeaderMap::new()).into_response();
-    }
-    let mut out = HeaderMap::new();
-    let corr = correlation_id_from(&headers);
-    out.insert("X-Correlation-Id", corr.parse().unwrap());
-    (StatusCode::NO_CONTENT, out).into_response()
+) -> Result<impl IntoResponse, ErrO> {
+    // Record cancellation metric
+    crate::metrics::inc_counter("tasks_canceled_total", &[("engine","llamacpp"),("engine_version","v0"),("pool_id","default"),("replica_id","r0"),("reason","client")]);
+    // In a full impl, signal cancel token to streaming service
+    let mut lg = state.logs.lock().unwrap();
+    lg.push("{\"canceled\":true}".to_string());
+    Ok((StatusCode::NO_CONTENT))
 }

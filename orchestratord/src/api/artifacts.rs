@@ -1,23 +1,19 @@
 use axum::{extract::State, response::IntoResponse, Json};
-use http::{HeaderMap, StatusCode};
+use http::StatusCode;
 use serde_json::json;
 
 use crate::state::AppState;
+use crate::domain::error::OrchestratorError as ErrO;
 
 use super::types::{correlation_id_from, require_api_key};
 
 pub async fn create_artifact(
-    headers: HeaderMap,
     state: State<AppState>,
     Json(doc): Json<serde_json::Value>,
-) -> axum::response::Response {
-    if let Err(code) = require_api_key(&headers) {
-        return (code, HeaderMap::new()).into_response();
+) -> Result<impl IntoResponse, ErrO> {
+    if let Err(code) = require_api_key(&state.headers) {
+        return Err(code);
     }
-    let mut out = HeaderMap::new();
-    let corr = correlation_id_from(&headers);
-    out.insert("X-Correlation-Id", corr.parse().unwrap());
-
     let id = format!("sha256:{}", sha256::digest(doc.to_string()));
     {
         let mut guard = state.artifacts.lock().unwrap();
@@ -27,26 +23,21 @@ pub async fn create_artifact(
         "id": id,
         "kind": "doc",
     });
-    (StatusCode::CREATED, out, Json(body)).into_response()
+    Ok((StatusCode::CREATED, Json(body)))
 }
 
 pub async fn get_artifact(
-    headers: HeaderMap,
     state: State<AppState>,
     axum::extract::Path(id): axum::extract::Path<String>,
-) -> axum::response::Response {
-    if let Err(code) = require_api_key(&headers) {
-        return (code, HeaderMap::new()).into_response();
+) -> Result<impl IntoResponse, ErrO> {
+    if let Err(code) = require_api_key(&state.headers) {
+        return Err(code);
     }
-    let mut out = HeaderMap::new();
-    let corr = correlation_id_from(&headers);
-    out.insert("X-Correlation-Id", corr.parse().unwrap());
-
     let guard = state.artifacts.lock().unwrap();
     if let Some(doc) = guard.get(&id) {
-        return (StatusCode::OK, out, Json(doc.clone())).into_response();
+        return Ok((StatusCode::OK, Json(doc.clone())));
     }
-    (StatusCode::NOT_FOUND, out).into_response()
+    Ok((StatusCode::NOT_FOUND))
 }
 
 mod sha256 {

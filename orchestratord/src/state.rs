@@ -8,6 +8,7 @@ pub struct AppState {
     pub sessions: Arc<Mutex<HashMap<String, SessionInfo>>>,
     pub artifacts: Arc<Mutex<HashMap<String, serde_json::Value>>>,
     pub pool_manager: Arc<Mutex<PoolRegistry>>,
+    pub draining_pools: Arc<Mutex<HashMap<String, bool>>>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -16,6 +17,9 @@ pub struct SessionInfo {
     pub turns: i32,
     pub kv_bytes: i64,
     pub kv_warmth: bool,
+    pub tokens_budget_remaining: i64,
+    pub time_budget_remaining_ms: i64,
+    pub cost_budget_remaining: f64,
 }
 
 impl AppState {
@@ -25,6 +29,7 @@ impl AppState {
             sessions: Arc::new(Mutex::new(HashMap::new())),
             artifacts: Arc::new(Mutex::new(HashMap::new())),
             pool_manager: Arc::new(Mutex::new(PoolRegistry::new())),
+            draining_pools: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 }
