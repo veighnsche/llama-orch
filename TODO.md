@@ -23,6 +23,12 @@ This is the single active TODO tracker for the repository. Maintain execution or
   - Files:
     - `contracts/openapi/control.yaml` → delete all `/v1/artifacts*` paths/schemas
   - Acceptance: provider verify does not find artifact endpoints.
+- Remove catalog endpoints + strict trust enforcement
+  - Files:
+    - `contracts/openapi/control.yaml` → delete `/v1/catalog/*` for Home profile
+    - `orchestratord/src/lib.rs`, `orchestratord/src/http/catalog.rs` → drop catalog routes/handlers and `X-Trust-Policy` gating
+    - Tests: provider verify, pact interactions, BDD steps referencing catalog/trust policy headers
+  - Acceptance: Home profile exposes only data plane + `/v1/pools/{id}/reload` + `/health`; trust policy becomes documentation-only advisory.
 - Remove correlation IDs (X-Correlation-Id)
   - Files:
     - `contracts/openapi/data.yaml`, `contracts/openapi/control.yaml` → drop from examples
@@ -39,9 +45,15 @@ This is the single active TODO tracker for the repository. Maintain execution or
   - Files:
     - `contracts/openapi/data.yaml` → remove `metrics` SSE frame from examples/spec
     - `orchestratord/src/http/data.rs` → stop emitting `metrics` SSE frames
-    - Tests: `orchestratord/tests/snapshot_transcript.rs` and any provider checks asserting `metrics` events
+    - Tests: `orchestratord/tests/provider_verify.rs` SSE checks; `test-harness/bdd/tests/features/sse/`
   - Acceptance: SSE includes only `started`, repeated `token`, and `end`; tests/snapshots updated.
-- Optional: collapse control plane to only reload + health
+- Remove session budget headers (X-Budget-*)
+  - Files:
+    - `contracts/openapi/data.yaml` → drop budget headers/examples on POST + SSE responses
+    - `orchestratord/src/http/data.rs` → stop setting the headers
+    - Tests: provider verify assertions and pact fixtures
+  - Acceptance: Home profile emits only required HTTP headers; tests updated.
+- Collapse control plane to only reload + health
   - Files:
     - Remove `/v1/replicasets`, `/v1/capabilities` from OpenAPI and handlers (`orchestratord/src/http/control.rs`)
     - Tests: snapshot tests referencing these endpoints
