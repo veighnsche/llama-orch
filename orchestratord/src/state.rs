@@ -7,6 +7,7 @@ use worker_adapters_adapter_api::WorkerAdapter;
 use orchestrator_core::queue::Policy;
 
 use crate::admission::{MetricLabels, QueueWithMetrics};
+use crate::session::Session;
 use pool_managerd::health::HealthStatus as PoolHealthStatus;
 use pool_managerd::registry::Registry as PoolRegistry;
 
@@ -18,13 +19,15 @@ pub struct AppState {
     pub pools: Arc<Mutex<HashMap<String, PoolHealth>>>,
     pub pool_manager: Arc<Mutex<PoolRegistry>>,
     pub adapters: Arc<Mutex<HashMap<String, Arc<dyn WorkerAdapter>>>>,
+    pub sessions: Arc<Mutex<HashMap<String, Session>>>,
+    pub tasks: Arc<Mutex<HashMap<String, String>>>,
+    pub artifacts: Arc<Mutex<HashMap<String, serde_json::Value>>>,
     pub sse: Arc<Mutex<HashMap<String, String>>>,
 }
 
 #[derive(Clone, Debug)]
 pub enum ModelState {
-    Draft,
-    Deprecated { deadline_ms: i64 },
+    Active,
     Retired,
 }
 
@@ -47,7 +50,7 @@ pub fn default_state() -> AppState {
     let queue = QueueWithMetrics::new(1024, Policy::DropLru, labels);
     AppState {
         queue: Arc::new(Mutex::new(queue)),
-        model_state: Arc::new(Mutex::new(ModelState::Draft)),
+        model_state: Arc::new(Mutex::new(ModelState::Active)),
         logs: Arc::new(Mutex::new(Vec::new())),
         pools: {
             let mut m = HashMap::new();
@@ -83,6 +86,9 @@ pub fn default_state() -> AppState {
             m.insert("triton".to_string(), mock);
             Arc::new(Mutex::new(m))
         },
+        sessions: Arc::new(Mutex::new(HashMap::new())),
+        tasks: Arc::new(Mutex::new(HashMap::new())),
+        artifacts: Arc::new(Mutex::new(HashMap::new())),
         sse: Arc::new(Mutex::new(HashMap::new())),
     }
 }

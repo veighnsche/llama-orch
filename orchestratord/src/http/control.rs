@@ -6,6 +6,7 @@ use axum::{
 use http::HeaderMap;
 use serde_json::json;
 use tracing::info;
+use uuid::Uuid;
 
 use super::auth::require_api_key;
 use crate::{
@@ -19,7 +20,7 @@ fn correlation_id_from(headers: &HeaderMap) -> String {
         .get("X-Correlation-Id")
         .and_then(|v| v.to_str().ok())
         .map(|s| s.to_string())
-        .unwrap_or_else(|| "corr-0".to_string())
+        .unwrap_or_else(|| Uuid::new_v4().to_string())
 }
 
 #[derive(serde::Deserialize)]
@@ -38,12 +39,10 @@ pub async fn set_model_state(
     if let Err(code) = require_api_key(&headers) {
         return (code, HeaderMap::new()).into_response();
     }
+    // tests moved to #[cfg(test)] module at bottom
     let req_corr = correlation_id_from(&headers);
     let ms = match body.state.as_str() {
-        "Draft" => ModelState::Draft,
-        "Deprecated" => ModelState::Deprecated {
-            deadline_ms: body.deadline_ms.unwrap_or(0),
-        },
+        "Active" => ModelState::Active,
         "Retired" => ModelState::Retired,
         other => {
             return (
@@ -59,8 +58,7 @@ pub async fn set_model_state(
     }
     let model = id.as_str();
     let label = match ms {
-        ModelState::Draft => "Draft",
-        ModelState::Deprecated { .. } => "Deprecated",
+        ModelState::Active => "Active",
         ModelState::Retired => "Retired",
     };
     metrics::MODEL_STATE
@@ -235,7 +233,10 @@ pub async fn list_replicasets(headers: HeaderMap, _state: State<AppState>) -> Re
         }
     }
     let body = json!(sets);
-    (http::StatusCode::OK, h, Json(body)).into_response()
+    // Mark old discovery path as deprecated in favor of /v1/capabilities
+    let mut h2 = h.clone();
+    h2.insert("Deprecation", "true".parse().unwrap());
+    (http::StatusCode::OK, h2, Json(body)).into_response()
 }
 
 pub async fn get_capabilities(headers: HeaderMap, _state: State<AppState>) -> Response {

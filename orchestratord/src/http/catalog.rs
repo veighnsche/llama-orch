@@ -8,13 +8,14 @@ use axum::{
 use http::HeaderMap;
 use serde::Deserialize;
 use serde_json::json;
+use uuid::Uuid;
 
 fn correlation_id_from(headers: &HeaderMap) -> String {
     headers
         .get("X-Correlation-Id")
         .and_then(|v| v.to_str().ok())
         .map(|s| s.to_string())
-        .unwrap_or_else(|| "corr-0".to_string())
+        .unwrap_or_else(|| Uuid::new_v4().to_string())
 }
 
 #[derive(Deserialize)]

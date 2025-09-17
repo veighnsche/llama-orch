@@ -8,6 +8,7 @@ pub mod http;
 pub mod placement;
 pub mod services;
 pub mod sse;
+pub mod session;
 pub mod state;
 
 use axum::{
@@ -34,6 +35,9 @@ pub fn build_app() -> Router<state::AppState> {
         .route("/v1/pools/:id/health", get(http::control::get_pool_health))
         .route("/v1/replicasets", get(http::control::list_replicasets))
         .route("/v1/capabilities", get(http::control::get_capabilities))
+        // Artifacts
+        .route("/v1/artifacts", post(http::artifacts::create_artifact))
+        .route("/v1/artifacts/:id", get(http::artifacts::get_artifact))
         // Catalog (planning)
         .route(
             "/v1/catalog/models",

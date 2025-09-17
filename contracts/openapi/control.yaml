@@ -112,13 +112,13 @@ paths:
               properties:
                 state:
                   type: string
-                  enum: [Draft, Active, Canary, Deprecated, Retired]
+                  enum: [Active, Retired]
                 deadline_ms:
                   type: integer
                   format: int64
             x-examples:
               deprecate_with_drain:
-                value: { state: Deprecated, deadline_ms: 600000 }
+                value: { state: Retired, deadline_ms: 600000 }
       responses:
         '202':
           description: Accepted
@@ -201,6 +201,7 @@ paths:
 
   /v1/replicasets:
     get:
+      deprecated: true
       operationId: listReplicaSets
       summary: List replica sets with load/SLO snapshots
       x-req-id: [ORCH-2104]
