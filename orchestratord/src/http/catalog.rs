@@ -9,6 +9,14 @@ use http::HeaderMap;
 use serde::Deserialize;
 use serde_json::json;
 
+fn correlation_id_from(headers: &HeaderMap) -> String {
+    headers
+        .get("X-Correlation-Id")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| "corr-0".to_string())
+}
+
 #[derive(Deserialize)]
 pub struct CatalogModelReq {
     pub id: String,
@@ -28,13 +36,15 @@ pub async fn create_catalog_model(
     let signed = body.signed.unwrap_or(true);
     if strict && !signed {
         let mut h = HeaderMap::new();
-        h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+        let req_corr = correlation_id_from(&headers);
+        h.insert("X-Correlation-Id", req_corr.parse().unwrap());
         let err = json!({ "code": "UNTRUSTED_ARTIFACT" });
         return (http::StatusCode::BAD_REQUEST, h, Json(err)).into_response();
     }
     let resp = json!({ "id": body.id, "signatures": true, "sbom": true });
     let mut h = HeaderMap::new();
-    h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+    let req_corr = correlation_id_from(&headers);
+    h.insert("X-Correlation-Id", req_corr.parse().unwrap());
     (http::StatusCode::CREATED, h, Json(resp)).into_response()
 }
 
@@ -48,7 +58,8 @@ pub async fn get_catalog_model(
     }
     let resp = json!({ "id": id, "signatures": true, "sbom": true });
     let mut h = HeaderMap::new();
-    h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+    let req_corr = correlation_id_from(&headers);
+    h.insert("X-Correlation-Id", req_corr.parse().unwrap());
     (http::StatusCode::OK, h, Json(resp)).into_response()
 }
 
@@ -62,6 +73,7 @@ pub async fn verify_catalog_model(
     }
     let resp = json!({ "status": "started" });
     let mut h = HeaderMap::new();
-    h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+    let req_corr = correlation_id_from(&headers);
+    h.insert("X-Correlation-Id", req_corr.parse().unwrap());
     (http::StatusCode::ACCEPTED, h, Json(resp)).into_response()
 }

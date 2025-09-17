@@ -181,6 +181,9 @@ paths:
                 event: token
                 data: {"t":"Hello","i":0}
 
+                event: metrics
+                data: {"queue_depth":2,"on_time_probability":0.82,"kv_warmth":true,"tokens_budget_remaining":12000,"time_budget_remaining_ms":45000,"cost_budget_remaining":0}
+
                 event: end
                 data: {"tokens_out":64,"decode_ms":2300}
 

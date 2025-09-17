@@ -9,7 +9,7 @@ requirements:
     links:
     - .specs/10-orchestrator-core.md#1-queue-admission
   OC-CORE-1002:
-    title: '- [] Admission MUST reject when the queue is full according to configured policy (reject/drop-lru).'
+    title: '- [] Admission MUST reject when the queue is full according to configured policy (reject/drop-lru/shed-low-priority).'
     section: 1) Queue & Admission
     level: must
     links:
@@ -21,7 +21,7 @@ requirements:
     links:
     - .specs/10-orchestrator-core.md#1-queue-admission
   OC-CORE-1004:
-    title: '- [] Dequeue MUST prefer higher priority and preserve FIFO order within a priority class.'
+    title: '- [] Dequeue MUST prefer higher priority and MUST respect FIFO order within a priority class.'
     section: 1) Queue & Admission
     level: must
     links:
@@ -111,7 +111,7 @@ requirements:
     links:
     - .specs/10-orchestrator-core.md#5-observability
   OC-CORE-1041:
-    title: '- [] Metrics MUST include queue depth, reject/drop rates, p50/p95/p99 latency, GPU/VRAM/RAM utilization, KV pressure, preload outcomes.'
+    title: '- [] Metrics MUST include queue depth, reject/drop counts, first-token/decode latency, GPU/VRAM utilization, KV pressure, preload outcomes.'
     section: 5) Observability
     level: must
     links:

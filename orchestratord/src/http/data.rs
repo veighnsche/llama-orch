@@ -18,6 +18,23 @@ use crate::{
     state::{AppState, ModelState},
 };
 
+fn correlation_id_from(headers: &HeaderMap) -> String {
+    headers
+        .get("X-Correlation-Id")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| "corr-0".to_string())
+}
+
+fn task_id_to_u32(task_id: &str) -> u32 {
+    let hex: String = task_id
+        .chars()
+        .filter(|c| c.is_ascii_hexdigit())
+        .take(8)
+        .collect();
+    u32::from_str_radix(&hex, 16).unwrap_or(0)
+}
+
 // Data plane — OrchQueue v1
 pub async fn create_task(
     headers: HeaderMap,
@@ -27,6 +44,7 @@ pub async fn create_task(
     if let Err(code) = require_api_key(&headers) {
         return (code, HeaderMap::new()).into_response();
     }
+    let req_corr = correlation_id_from(&headers);
     // Lifecycle gating
     {
         let ms = state.model_state.lock().unwrap().clone();
@@ -34,7 +52,7 @@ pub async fn create_task(
             ModelState::Draft => {}
             ModelState::Deprecated { .. } => {
                 let mut h = HeaderMap::new();
-                h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+                h.insert("X-Correlation-Id", req_corr.parse().unwrap());
                 let err = serde_json::json!({
                     "code": "MODEL_DEPRECATED",
                     "engine": body.engine,
@@ -44,7 +62,7 @@ pub async fn create_task(
             }
             ModelState::Retired => {
                 let mut h = HeaderMap::new();
-                h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+                h.insert("X-Correlation-Id", req_corr.parse().unwrap());
                 let err = serde_json::json!({
                     "code": "POOL_UNAVAILABLE",
                     "engine": body.engine,
@@ -61,10 +79,24 @@ pub async fn create_task(
             retry_after_seconds: 1,
             x_backoff_ms: 1000,
         };
-        let mut headers = backpressure::build_429_headers(backoff);
-        headers.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+        let mut resp_headers = backpressure::build_429_headers(backoff);
+        resp_headers.insert("X-Correlation-Id", req_corr.parse().unwrap());
         let policy = backpressure::compute_policy_label(());
-        let extras = backpressure::build_429_body(policy);
+        let extras = backpressure::build_429_body(policy.clone());
+        // Increment backpressure counter
+        let engine_label = match body.engine {
+            api::Engine::Llamacpp => "llamacpp",
+            api::Engine::Vllm => "vllm",
+            api::Engine::Tgi => "tgi",
+            api::Engine::Triton => "triton",
+        };
+        let policy_label = match policy {
+            backpressure::PolicyLabel::Reject => "reject",
+            backpressure::PolicyLabel::DropLru => "drop-lru",
+        };
+        metrics::ADMISSION_BACKPRESSURE_EVENTS_TOTAL
+            .with_label_values(&[engine_label, policy_label])
+            .inc();
         let body = serde_json::json!({
             "code": "QUEUE_FULL_DROP_LRU",
             "engine": body.engine,
@@ -73,13 +105,18 @@ pub async fn create_task(
             "retriable": extras.get("retriable").cloned().unwrap_or(serde_json::json!(true)),
             "retry_after_ms": extras.get("retry_after_ms").cloned().unwrap_or(serde_json::json!(1000)),
         });
-        return (http::StatusCode::TOO_MANY_REQUESTS, headers, Json(body)).into_response();
+        return (
+            http::StatusCode::TOO_MANY_REQUESTS,
+            resp_headers,
+            Json(body),
+        )
+            .into_response();
     }
 
     // Error taxonomy sentinels
     if body.ctx < 0 {
         let mut h = HeaderMap::new();
-        h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+        h.insert("X-Correlation-Id", req_corr.parse().unwrap());
         let err = serde_json::json!({
             "code": "INVALID_PARAMS",
             "engine": body.engine,
@@ -89,7 +126,7 @@ pub async fn create_task(
     }
     if body.model_ref == "pool-unavailable" {
         let mut h = HeaderMap::new();
-        h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+        h.insert("X-Correlation-Id", req_corr.parse().unwrap());
         let err = serde_json::json!({
             "code": "POOL_UNAVAILABLE",
             "engine": body.engine,
@@ -99,7 +136,7 @@ pub async fn create_task(
     }
     if matches!(&body.prompt, Some(p) if p == "cause-internal") {
         let mut h = HeaderMap::new();
-        h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+        h.insert("X-Correlation-Id", req_corr.parse().unwrap());
         let err = serde_json::json!({
             "code": "INTERNAL",
             "engine": body.engine,
@@ -111,7 +148,7 @@ pub async fn create_task(
     // Guardrails: context length and token budget (reject before enqueue)
     if body.ctx > 32768 || body.max_tokens > 50000 {
         let mut h = HeaderMap::new();
-        h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+        h.insert("X-Correlation-Id", req_corr.parse().unwrap());
         let err = serde_json::json!({
             "code": "INVALID_PARAMS",
             "engine": body.engine,
@@ -122,7 +159,7 @@ pub async fn create_task(
     // Deadline infeasible sentinel
     if body.deadline_ms <= 0 {
         let mut h = HeaderMap::new();
-        h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+        h.insert("X-Correlation-Id", req_corr.parse().unwrap());
         let err = serde_json::json!({
             "code": "DEADLINE_UNMET",
             "engine": body.engine,
@@ -133,6 +170,8 @@ pub async fn create_task(
 
     // ORCH-2001: admission acceptance; OC-CORE-1001..1002: bounded queue policies; ORCH-2007: 429 backpressure mapping; README_LLM-1001: traceability requirement.
     // Stage 6: enqueue into QueueWithMetrics (contract-first) and map reject policy to 429.
+    let mut queue_position_est: usize = 0;
+    let mut predicted_start_ms_est: u64 = 0;
     {
         let prio = match body.priority {
             api::Priority::Interactive => CorePriority::Interactive,
@@ -154,10 +193,23 @@ pub async fn create_task(
                 retry_after_seconds: 1,
                 x_backoff_ms: 1000,
             };
-            let mut headers = backpressure::build_429_headers(backoff);
-            headers.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+            let mut resp_headers = backpressure::build_429_headers(backoff);
+            resp_headers.insert("X-Correlation-Id", req_corr.parse().unwrap());
             let policy = backpressure::compute_policy_label(());
-            let extras = backpressure::build_429_body(policy);
+            let extras = backpressure::build_429_body(policy.clone());
+            let engine_label = match body.engine {
+                api::Engine::Llamacpp => "llamacpp",
+                api::Engine::Vllm => "vllm",
+                api::Engine::Tgi => "tgi",
+                api::Engine::Triton => "triton",
+            };
+            let policy_label = match policy {
+                backpressure::PolicyLabel::Reject => "reject",
+                backpressure::PolicyLabel::DropLru => "drop-lru",
+            };
+            metrics::ADMISSION_BACKPRESSURE_EVENTS_TOTAL
+                .with_label_values(&[engine_label, policy_label])
+                .inc();
             let body = serde_json::json!({
                 "code": "ADMISSION_REJECT",
                 "engine": body.engine,
@@ -166,21 +218,31 @@ pub async fn create_task(
                 "retriable": extras.get("retriable").cloned().unwrap_or(serde_json::json!(true)),
                 "retry_after_ms": extras.get("retry_after_ms").cloned().unwrap_or(serde_json::json!(1000)),
             });
-            return (http::StatusCode::TOO_MANY_REQUESTS, headers, Json(body)).into_response();
+            return (
+                http::StatusCode::TOO_MANY_REQUESTS,
+                resp_headers,
+                Json(body),
+            )
+                .into_response();
         }
+        // Compute queue position as number of items ahead in combined queue (best-effort)
+        let len_now = q.inner().len();
+        queue_position_est = len_now.saturating_sub(1);
+        // Naive ETA heuristic: 100ms per item ahead
+        predicted_start_ms_est = (queue_position_est as u64) * 100;
     }
 
-    let mut headers = HeaderMap::new();
-    headers.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+    let mut resp_headers = HeaderMap::new();
+    resp_headers.insert("X-Correlation-Id", req_corr.parse().unwrap());
     // Optional budget headers per contract (stub values)
-    headers.insert("X-Budget-Tokens-Remaining", "0".parse().unwrap());
-    headers.insert("X-Budget-Time-Remaining-Ms", "0".parse().unwrap());
-    headers.insert("X-Budget-Cost-Remaining", "0".parse().unwrap());
+    resp_headers.insert("X-Budget-Tokens-Remaining", "0".parse().unwrap());
+    resp_headers.insert("X-Budget-Time-Remaining-Ms", "0".parse().unwrap());
+    resp_headers.insert("X-Budget-Cost-Remaining", "0".parse().unwrap());
 
     let resp = api::AdmissionResponse {
         task_id: body.task_id.clone(),
-        queue_position: 0,
-        predicted_start_ms: 0,
+        queue_position: queue_position_est as i32,
+        predicted_start_ms: predicted_start_ms_est as i32,
         backoff_ms: 0,
     };
     // Record model_state gauge (Draft by default) for visibility
@@ -254,7 +316,7 @@ pub async fn create_task(
                                             // Emit metrics after first token
                                             transcript.push_str(
                                                 "event: metrics\n\
-                                                 data: {\"queue_depth\":0,\"on_time_probability\":0.9}\n\n",
+                                                 data: {\"queue_depth\":0,\"on_time_probability\":0.9,\"kv_warmth\":false,\"tokens_budget_remaining\":0,\"time_budget_remaining_ms\":0,\"cost_budget_remaining\":0}\n\n",
                                             );
                                             emitted_metrics = true;
                                             let ms = t0.elapsed().as_millis();
@@ -350,7 +412,7 @@ pub async fn create_task(
             }
         });
     }
-    (http::StatusCode::ACCEPTED, headers, Json(resp)).into_response()
+    (http::StatusCode::ACCEPTED, resp_headers, Json(resp)).into_response()
 }
 
 pub async fn stream_task(
@@ -362,16 +424,17 @@ pub async fn stream_task(
         return (code, HeaderMap::new()).into_response();
     }
     // Minimal SSE stub stream sufficient for BDD ordering assertions
-    let mut headers = HeaderMap::new();
-    headers.insert(CONTENT_TYPE, "text/event-stream".parse().unwrap());
-    headers.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+    let mut resp_headers = HeaderMap::new();
+    resp_headers.insert(CONTENT_TYPE, "text/event-stream".parse().unwrap());
+    let req_corr = correlation_id_from(&headers);
+    resp_headers.insert("X-Correlation-Id", req_corr.parse().unwrap());
     // Optional budget headers at stream start (stub values)
-    headers.insert("X-Budget-Tokens-Remaining", "0".parse().unwrap());
-    headers.insert("X-Budget-Time-Remaining-Ms", "0".parse().unwrap());
-    headers.insert("X-Budget-Cost-Remaining", "0".parse().unwrap());
+    resp_headers.insert("X-Budget-Tokens-Remaining", "0".parse().unwrap());
+    resp_headers.insert("X-Budget-Time-Remaining-Ms", "0".parse().unwrap());
+    resp_headers.insert("X-Budget-Cost-Remaining", "0".parse().unwrap());
     if let Ok(map) = state.sse.lock() {
         if let Some(transcript) = map.get(&id) {
-            return (headers, transcript.clone()).into_response();
+            return (resp_headers, transcript.clone()).into_response();
         }
     }
     let body = "event: started\n\
@@ -379,23 +442,29 @@ pub async fn stream_task(
                 event: token\n\
                 data: {\"t\":\"hello\",\"i\":0}\n\n\
                 event: metrics\n\
-                data: {\"queue_depth\":0,\"on_time_probability\":0.9}\n\n\
+                data: {\"queue_depth\":0,\"on_time_probability\":0.9,\"kv_warmth\":false,\"tokens_budget_remaining\":0,\"time_budget_remaining_ms\":0,\"cost_budget_remaining\":0}\n\n\
                 event: end\n\
                 data: {\"tokens_out\":1,\"decode_ms\":0}\n\n";
-    (headers, body).into_response()
+    (resp_headers, body).into_response()
 }
 
 pub async fn cancel_task(
     headers: HeaderMap,
-    _state: State<AppState>,
-    _path: Path<String>,
+    state: State<AppState>,
+    Path(task_id): Path<String>,
 ) -> Response {
     if let Err(code) = require_api_key(&headers) {
         return (code, HeaderMap::new()).into_response();
     }
-    let mut headers = HeaderMap::new();
-    headers.insert("X-Correlation-Id", "corr-0".parse().unwrap());
-    (http::StatusCode::NO_CONTENT, headers).into_response()
+    // Best-effort: derive the same u32 used for enqueue and cancel from the queue
+    let id = task_id_to_u32(&task_id);
+    if let Ok(mut q) = state.queue.lock() {
+        let _ = q.cancel(id, "api_request");
+    }
+    let mut h = HeaderMap::new();
+    let req_corr = correlation_id_from(&headers);
+    h.insert("X-Correlation-Id", req_corr.parse().unwrap());
+    (http::StatusCode::NO_CONTENT, h).into_response()
 }
 
 pub async fn get_session(
@@ -416,7 +485,8 @@ pub async fn get_session(
         cost_budget_remaining: None,
     };
     let mut h = HeaderMap::new();
-    h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+    let req_corr = correlation_id_from(&headers);
+    h.insert("X-Correlation-Id", req_corr.parse().unwrap());
     (http::StatusCode::OK, h, Json(info)).into_response()
 }
 
@@ -429,7 +499,8 @@ pub async fn delete_session(
         return (code, HeaderMap::new()).into_response();
     }
     let mut h = HeaderMap::new();
-    h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+    let req_corr = correlation_id_from(&headers);
+    h.insert("X-Correlation-Id", req_corr.parse().unwrap());
     (http::StatusCode::NO_CONTENT, h).into_response()
 }
 

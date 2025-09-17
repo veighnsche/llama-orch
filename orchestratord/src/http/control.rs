@@ -14,6 +14,14 @@ use crate::{
 };
 use contracts_api_types as api;
 
+fn correlation_id_from(headers: &HeaderMap) -> String {
+    headers
+        .get("X-Correlation-Id")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| "corr-0".to_string())
+}
+
 #[derive(serde::Deserialize)]
 pub struct SetModelStateRequest {
     pub state: String,
@@ -30,6 +38,7 @@ pub async fn set_model_state(
     if let Err(code) = require_api_key(&headers) {
         return (code, HeaderMap::new()).into_response();
     }
+    let req_corr = correlation_id_from(&headers);
     let ms = match body.state.as_str() {
         "Draft" => ModelState::Draft,
         "Deprecated" => ModelState::Deprecated {
@@ -65,7 +74,7 @@ pub async fn set_model_state(
         );
     }
     let mut h = HeaderMap::new();
-    h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+    h.insert("X-Correlation-Id", req_corr.parse().unwrap());
     (
         http::StatusCode::ACCEPTED,
         h,
@@ -83,6 +92,7 @@ pub async fn drain_pool(
     if let Err(code) = require_api_key(&headers) {
         return (code, HeaderMap::new()).into_response();
     }
+    let req_corr = correlation_id_from(&headers);
     {
         // Flip draining flag in in-memory pool snapshot for visibility and mark unready in registry
         if let Ok(mut pools) = state.pools.lock() {
@@ -106,7 +116,7 @@ pub async fn drain_pool(
         crate::metrics::POOL_READY.with_label_values(&[&id]).set(0);
     }
     let mut h = HeaderMap::new();
-    h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+    h.insert("X-Correlation-Id", req_corr.parse().unwrap());
     let resp = json!({"status": "draining", "deadline_ms": body.deadline_ms});
     (http::StatusCode::ACCEPTED, h, Json(resp)).into_response()
 }
@@ -120,9 +130,10 @@ pub async fn reload_pool(
     if let Err(code) = require_api_key(&headers) {
         return (code, HeaderMap::new()).into_response();
     }
+    let req_corr = correlation_id_from(&headers);
     if body.new_model_ref == "bad" {
         let mut h = HeaderMap::new();
-        h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+        h.insert("X-Correlation-Id", req_corr.parse().unwrap());
         let body = json!({"status": "rollback"});
         return (http::StatusCode::CONFLICT, h, Json(body)).into_response();
     }
@@ -146,7 +157,7 @@ pub async fn reload_pool(
         crate::metrics::POOL_READY.with_label_values(&[&id]).set(1);
     }
     let mut h = HeaderMap::new();
-    h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+    h.insert("X-Correlation-Id", req_corr.parse().unwrap());
     let body = json!({"status": "reloaded"});
     (http::StatusCode::OK, h, Json(body)).into_response()
 }
@@ -160,7 +171,8 @@ pub async fn get_pool_health(
         return (code, HeaderMap::new()).into_response();
     }
     let mut h = HeaderMap::new();
-    h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+    let req_corr = correlation_id_from(&headers);
+    h.insert("X-Correlation-Id", req_corr.parse().unwrap());
     let (live, ready, last_error) = {
         let pm = state.pool_manager.lock().unwrap();
         let s = pm.get_health(&id);
@@ -197,7 +209,8 @@ pub async fn list_replicasets(headers: HeaderMap, _state: State<AppState>) -> Re
         return (code, HeaderMap::new()).into_response();
     }
     let mut h = HeaderMap::new();
-    h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+    let req_corr = correlation_id_from(&headers);
+    h.insert("X-Correlation-Id", req_corr.parse().unwrap());
     // Enrich payload using adapters registry as a proxy for available engines
     let mut sets = vec![];
     if let Ok(map) = _state.adapters.lock() {
@@ -230,7 +243,8 @@ pub async fn get_capabilities(headers: HeaderMap, _state: State<AppState>) -> Re
         return (code, HeaderMap::new()).into_response();
     }
     let mut h = HeaderMap::new();
-    h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+    let req_corr = correlation_id_from(&headers);
+    h.insert("X-Correlation-Id", req_corr.parse().unwrap());
     let body = json!({
         "api_version": "1.0.0",
         "engines": [
