@@ -21,7 +21,7 @@ requirements:
     links:
     - .specs/20-orchestratord.md#1-control-plane
   OC-CTRL-2004:
-    title: '- [] `GET /v1/replicasets` MUST enumerate replica sets with load/SLO snapshots.'
+    title: '- [] Discovery MUST use `GET /v1/capabilities`; `/v1/replicasets` is removed pre‑1.0 and MUST NOT be served.'
     section: 1) Control Plane
     level: must
     links:
@@ -111,7 +111,7 @@ requirements:
     links:
     - .specs/20-orchestratord.md#6-observability
   OC-CTRL-2060:
-    title: '- [] The server MUST expose capability information required for client scheduling and compatibility. This MAY be achieved by either:'
+    title: '- [] The server MUST expose capability information via `GET /v1/capabilities` covering engines, ctx_max, declared concurrency, rate limits, features.'
     section: 8) Capabilities & Discovery
     level: must
     links:

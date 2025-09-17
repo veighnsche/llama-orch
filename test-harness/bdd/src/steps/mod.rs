@@ -73,8 +73,8 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^I request pool reload with new model_ref$").unwrap(),
         Regex::new(r"^reload succeeds and is atomic$").unwrap(),
         Regex::new(r"^reload fails and rolls back atomically$").unwrap(),
-        Regex::new(r"^I request replicasets$").unwrap(),
-        Regex::new(r"^I receive a list of replica sets with load and SLO snapshots$").unwrap(),
+        Regex::new(r"^I request capabilities$").unwrap(),
+        Regex::new(r"^I receive capabilities with engines and API version$").unwrap(),
         // data_plane & SSE & sessions
         Regex::new(r"^an OrchQueue API endpoint$").unwrap(),
         Regex::new(r"^I enqueue a completion task with valid payload$").unwrap(),

@@ -65,13 +65,22 @@ pub async fn then_reload_fails_rollback_atomic(world: &mut World) {
     assert_eq!(world.last_status, Some(http::StatusCode::CONFLICT));
 }
 
-#[when(regex = r"^I request replicasets$")]
-pub async fn when_request_replicasets(world: &mut World) {
-    world.push_fact("cp.replicasets");
-    let _ = world.http_call(Method::GET, "/v1/replicasets", None).await;
+#[when(regex = r"^I request capabilities$")]
+pub async fn when_request_capabilities(world: &mut World) {
+    world.push_fact("cp.capabilities");
+    let _ = world
+        .http_call(http::Method::GET, "/v1/capabilities", None)
+        .await;
 }
 
-#[then(regex = r"^I receive a list of replica sets with load and SLO snapshots$")]
-pub async fn then_replicasets_list_with_load_slo(world: &mut World) {
+#[then(regex = r"^I receive capabilities with engines and API version$")]
+pub async fn then_capabilities_with_engines_and_version(world: &mut World) {
     assert_eq!(world.last_status, Some(http::StatusCode::OK));
+    let body = world
+        .last_body
+        .as_ref()
+        .expect("expected capabilities body");
+    let v: Value = serde_json::from_str(body).expect("parse capabilities");
+    assert!(v.get("api_version").and_then(|x| x.as_str()).is_some());
+    assert!(v.get("engines").and_then(|x| x.as_array()).is_some());
 }

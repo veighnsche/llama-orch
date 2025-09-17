@@ -153,15 +153,7 @@ fn control_openapi_sanity() {
             || health.responses.default.is_some()
     );
 
-    // GET /v1/replicasets -> 200
-    let reps = get_op("/v1/replicasets", "get");
-    assert!(
-        reps.responses
-            .responses
-            .keys()
-            .any(|c| matches!(c, StatusCode::Code(200)))
-            || reps.responses.default.is_some()
-    );
+    // Legacy /v1/replicasets removed pre-1.0; discovery is via /v1/capabilities only.
 }
 
 #[test]

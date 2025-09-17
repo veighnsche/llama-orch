@@ -35,6 +35,8 @@ Data plane:
 - `GET  /v1/sessions/:id` — session introspection (TTL, turns, KV metadata, budgets)
 - `DELETE /v1/sessions/:id` — delete session
 
+- Cancel semantics: MUST be race-free; no tokens may be emitted after cancel (planned propagation of cancel to adapters)
+
 Artifacts:
 - `POST /v1/artifacts` — create document; content-addressed by SHA-256; returns 201 and `id`
 - `GET  /v1/artifacts/:id` — fetch document; 404 if not found
@@ -42,7 +44,7 @@ Artifacts:
 Capability discovery:
 - `GET /v1/capabilities` — single source of truth; includes `api_version` and engine capability snapshot. Shape:
   - `{"api_version":"1.0.0","engines":[{"engine":"llamacpp","ctx_max":32768,"supported_workloads":["completion","embedding","rerank"],"rate_limits":{},"features":{}}, ... for vllm, tgi, triton]}`
-- `GET /v1/replicasets` — deprecated; response includes `Deprecation: true` (continue returning minimal sets derived from adapter registry during deprecation window)
+- `GET /v1/replicasets` — REMOVED pre‑1.0; MUST NOT be served (no backwards-compatibility shims)
 
 Control plane:
 - `POST /v1/pools/:id/drain` — mark draining; readiness 0
@@ -84,6 +86,7 @@ Transcript persistence:
 - In-memory registry keyed by `session_id`
 - Tracks TTL, turns, `kv_bytes`, `kv_warmth`, and budgets: `tokens/time/cost`
 - `kv_warmth` toggles to true on first token of a stream
+- Defaults: TTL 600_000 ms; max turns 8 (enforcement to be wired into admission)
 - Budget updates:
   - On stream end: spend `tokens_out`, spend time `decode_ms`, and spend cost using placeholder cost model `$0.000002 * tokens_out`
 - Eviction:
@@ -109,7 +112,9 @@ Transcript persistence:
 
 ## 9. Capability Discovery
 - Primary: `/v1/capabilities` with `api_version` and engine feature snapshot
-- `/v1/replicasets` is deprecated with header `Deprecation: true`; to be removed after consumers migrate
+- `/v1/replicasets` is REMOVED pre‑1.0 and MUST NOT be served
+
+- Capability payload SHOULD include declared concurrency per engine/pool (e.g., `"concurrency": <int>`) to aid client scheduling
 
 Placement behavior:
 - Minimal adapter selection by requested `engine`
@@ -153,7 +158,7 @@ Cross-crate:
 - Optional: OpenTelemetry exporter settings — TODO
 
 ## 14. Error Taxonomy
-- `ADMISSION_REJECT`, `QUEUE_FULL_DROP_LRU`, `INVALID_PARAMS`, `POOL_UNAVAILABLE`, `DEADLINE_UNMET`
+- `ADMISSION_REJECT`, `QUEUE_FULL_DROP_LRU`, `INVALID_PARAMS`, `POOL_UNREADY`, `POOL_UNAVAILABLE`, `REPLICA_EXHAUSTED`, `DEADLINE_UNMET`
 - HTTP status mappings: 400 for invalid params/deadline; 429 for backpressure; 409 for conflict on reload; 404 for missing artifacts; 202/200 for success paths
 
 Sentinel behaviors (planning stubs, current implementation):
@@ -175,6 +180,7 @@ Sentinel behaviors (planning stubs, current implementation):
 - `/metrics` returns Prometheus text; linter compliance with `ci/metrics.lint.json`
 - Correlation ID is included on `/metrics` responses (server-generated)
 - Structured logs include correlation IDs and admission/stream events
+- Log fields SHOULD include `engine_version` and `sampler_profile_version` when available
 - Key series emitted include (non-exhaustive):
   - Counters: `tasks_enqueued_total`, `tasks_started_total`, `tasks_canceled_total{reason}`, `tasks_rejected_total{reason}`, `admission_backpressure_events_total{policy}`
   - Gauges: `queue_depth{engine,engine_version,pool_id,priority}`, `model_state{model_id,state}`, `active_leases{pool_id}`, `pool_ready{pool_id}`, `kv_cache_usage_ratio{...}`, `gpu_utilization{...}`, `vram_used_bytes{...}`
@@ -208,7 +214,7 @@ orchestratord/
 ## 19. Roadmap / TODOs (crate-specific)
 - Unify capability discovery: prefer `/v1/capabilities`; remove `/v1/replicasets` in code/tests after deprecation window
 - Admission estimates: incorporate active leases and throughput in predicted start calculations
-- Determinism enforcement via adapters; expand determinism tests
+- Determinism enforcement via adapters: propagate `seed` to adapters and ensure single-slot/deterministic mode per engine; expand determinism tests
 - Session store: expiry/eviction rigor and cost model; persist across restarts
 - Artifact registry: persistent filesystem store; retention/GC; access limits
 - Catalog: persistence layer and trust warnings; CRUD tests

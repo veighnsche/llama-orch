@@ -5,12 +5,14 @@ This is the single active TODO tracker for the repository. Maintain execution or
 ## P0 — Home Profile v2.1 Compliance (Remaining)
 
 ### Contracts — OpenAPI (control)
-- [ ] Unify capability discovery on `GET /v1/capabilities`; fully deprecate `/v1/replicasets` in code/tests/docs.
+- [ ] Discovery MUST use `GET /v1/capabilities`; remove `/v1/replicasets` from OpenAPI, code, tests, and docs (no back-compat pre‑1.0).
 
 ### Implementation — Data Plane & Sessions
 - [ ] Admission estimates: incorporate active leases/concurrency (and later GPU throughput) for `queue_position` and `predicted_start_ms`.
 - [ ] Determinism: honor `seed`/`determinism` end-to-end through adapters; expand determinism tests.
 - [ ] Session store: eviction/expiry policy and precise cost budget integration; persist budgets across restarts.
+- [ ] Cancel semantics: propagate cancel to running streams/adapters; assert no tokens after cancel (race-free) and add tests.
+- [ ] Enforce session max turns (default 8) at admission; expose in session info responses.
 
 ### Implementation — Control Plane & Catalog
 - [ ] Catalog persistence: local storage (sqlite/JSON) for manifests/signatures/SBOM; permissive trust warnings.
@@ -24,6 +26,7 @@ This is the single active TODO tracker for the repository. Maintain execution or
 - [ ] Capability snapshot: derive from active pools/adapters with ctx limits/concurrency/rate limits; include API version.
 - [ ] Least-loaded GPU scheduling (3090/3060) with NVML telemetry.
 - [ ] Concurrency + lease accounting, exposed in metrics and capabilities.
+- [ ] Remove `/v1/replicasets` route and handler; update router, tests, requirements.
 
 ### Worker Runtime & Adapters
 - [ ] Replace mock adapter with real engine clients for llamacpp, vLLM, TGI, Triton; wire configs.
@@ -36,6 +39,7 @@ This is the single active TODO tracker for the repository. Maintain execution or
 ### Observability & Metrics
 - [ ] GPU + NVML integration for metrics and SSE `metrics` frames.
 - [ ] Logging/tracing: structured logs for placement decisions; optional OpenTelemetry exporters.
+- [ ] Add `engine_version` and `sampler_profile_version` to admission/stream logs per spec.
 
 ### Security & Tool Policy Hooks
 - [ ] HTTP tooling guardrails (allow-list, secret redaction) with config and tests.
@@ -73,3 +77,11 @@ This is the single active TODO tracker for the repository. Maintain execution or
 
 ## Progress Log (append entries here)
 
+- 2025-09-17: Removed back-compat endpoints and shims per README_LLM golden rule
+  - Specs: `.specs/20-orchestratord.md` now mandates `GET /v1/capabilities`; marks `/v1/replicasets` REMOVED pre‑1.0.
+  - Crate Spec: `orchestratord/.specs/00_orchestratord.md` updated to state replicasets is removed; capability payload guidance extended.
+  - OpenAPI: `contracts/openapi/control.yaml` path `/v1/replicasets` removed; description updated.
+  - Router/Handlers: removed `/v1/replicasets` route from `orchestratord/src/lib.rs`; deleted `list_replicasets` handler from `orchestratord/src/http/control.rs`.
+  - Tests/BDD: updated provider verify, BDD steps and feature to use `/v1/capabilities`; security step now targets capabilities for auth checks.
+  - Harness: removed use of `orchestratord::http::handlers` shim; dispatches to concrete modules.
+  - Requirements: updated `requirements/orchestratord.yaml` to reflect capabilities-only discovery.

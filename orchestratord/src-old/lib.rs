@@ -33,7 +33,6 @@ pub fn build_app() -> Router<state::AppState> {
         .route("/v1/pools/:id/drain", post(http::control::drain_pool))
         .route("/v1/pools/:id/reload", post(http::control::reload_pool))
         .route("/v1/pools/:id/health", get(http::control::get_pool_health))
-        .route("/v1/replicasets", get(http::control::list_replicasets))
         .route("/v1/capabilities", get(http::control::get_capabilities))
         // Artifacts
         .route("/v1/artifacts", post(http::artifacts::create_artifact))

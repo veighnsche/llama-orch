@@ -51,25 +51,4 @@ engines:
 }
 
 #[test]
-fn inline_snapshot_replicasets() {
-    // Minimal enriched payload example mirroring orchestrator's list_replicasets
-    let sets = json!([
-        {"id":"pool0-llamacpp","engine":"llamacpp","load":0.0,"slots_total":1,"slots_free":1,"slo":{}},
-        {"id":"pool0-vllm","engine":"vllm","load":0.0,"slots_total":1,"slots_free":1,"slo":{}}
-    ]);
-    insta::assert_yaml_snapshot!(sets, @r###"
----
-- engine: llamacpp
-  id: pool0-llamacpp
-  load: 0
-  slo: {}
-  slots_free: 1
-  slots_total: 1
-- engine: vllm
-  id: pool0-vllm
-  load: 0
-  slo: {}
-  slots_free: 1
-  slots_total: 1
-"###);
-}
+fn inline_snapshot_replicasets() {}

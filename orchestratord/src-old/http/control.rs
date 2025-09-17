@@ -202,42 +202,6 @@ pub async fn get_pool_health(
     (http::StatusCode::OK, h, Json(body)).into_response()
 }
 
-pub async fn list_replicasets(headers: HeaderMap, _state: State<AppState>) -> Response {
-    if let Err(code) = require_api_key(&headers) {
-        return (code, HeaderMap::new()).into_response();
-    }
-    let mut h = HeaderMap::new();
-    let req_corr = correlation_id_from(&headers);
-    h.insert("X-Correlation-Id", req_corr.parse().unwrap());
-    // Enrich payload using adapters registry as a proxy for available engines
-    let mut sets = vec![];
-    if let Ok(map) = _state.adapters.lock() {
-        for (engine_key, adapter) in map.iter() {
-            let props = adapter.props().ok();
-            let (slots_total, slots_free) = props
-                .map(|p| {
-                    (
-                        p.slots_total.map(|v| v as i32),
-                        p.slots_free.map(|v| v as i32),
-                    )
-                })
-                .unwrap_or((None, None));
-            sets.push(json!({
-                "id": format!("pool0-{}", engine_key),
-                "engine": engine_key,
-                "load": 0.0,
-                "slots_total": slots_total,
-                "slots_free": slots_free,
-                "slo": {}
-            }));
-        }
-    }
-    let body = json!(sets);
-    // Mark old discovery path as deprecated in favor of /v1/capabilities
-    let mut h2 = h.clone();
-    h2.insert("Deprecation", "true".parse().unwrap());
-    (http::StatusCode::OK, h2, Json(body)).into_response()
-}
 
 pub async fn get_capabilities(headers: HeaderMap, _state: State<AppState>) -> Response {
     if let Err(code) = require_api_key(&headers) {

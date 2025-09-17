@@ -3,7 +3,7 @@ info:
   title: Orchestrator Control Plane API
   version: 1.0.0
   description: |
-    Control plane endpoints for pool drain/reload and health, and replica set snapshots.
+    Control plane endpoints for pool drain/reload and health, and capability discovery.
 servers:
   - url: /
 paths:
@@ -199,27 +199,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/PoolHealth'
 
-  /v1/replicasets:
-    get:
-      deprecated: true
-      operationId: listReplicaSets
-      summary: List replica sets with load/SLO snapshots
-      x-req-id: [ORCH-2104]
-      parameters:
-        - $ref: '#/components/parameters/XCorrelationId'
-      responses:
-        '200':
-          description: OK
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ReplicaSet'
 
   /v1/capabilities:
     get:

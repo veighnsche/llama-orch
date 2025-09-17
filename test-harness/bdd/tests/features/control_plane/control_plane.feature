@@ -24,7 +24,7 @@ Feature: Control Plane endpoints
     When I request pool reload with new model_ref
     Then reload fails and rolls back atomically
 
-  Scenario: List replica sets
+  Scenario: Capabilities are exposed
     Given a Control Plane API endpoint
-    When I request replicasets
-    Then I receive a list of replica sets with load and SLO snapshots
+    When I request capabilities
+    Then I receive capabilities with engines and API version

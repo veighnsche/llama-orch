@@ -13,7 +13,7 @@ This SPEC defines the public control and data plane behavior of `orchestratord`,
 - [OC-CTRL-2001] `GET /v1/pools/:id/health` MUST return liveness, readiness, draining, and metrics snapshot fields.
 - [OC-CTRL-2002] `POST /v1/pools/:id/drain` MUST accept a JSON body with `deadline_ms` and MUST begin draining.
 - [OC-CTRL-2003] `POST /v1/pools/:id/reload` MUST atomically switch model references or fail and roll back.
-- [OC-CTRL-2004] `GET /v1/replicasets` MUST enumerate replica sets with load/SLO snapshots.
+- [OC-CTRL-2004] Discovery MUST use `GET /v1/capabilities`. `GET /v1/replicasets` is REMOVED pre‑1.0 and MUST NOT be served.
 
 See: [contracts/openapi/control.yaml](../contracts/openapi/control.yaml), [orchestratord/src/main.rs](../orchestratord/src/main.rs), [orchestratord/tests/provider_verify.rs](../orchestratord/tests/provider_verify.rs)
 
@@ -65,10 +65,9 @@ OpenAPI component schemas:
 
 ## 8) Capabilities & Discovery
 
-- [OC-CTRL-2060] The server MUST expose capability information required for client scheduling and compatibility. This MAY be achieved by either:
-  - Enriching `GET /v1/replicasets` with per-engine limits and flags (e.g., `ctx_max`, `rate_limits`, `supported_workloads`, `features`), or
-  - Providing a dedicated `GET /v1/capabilities` endpoint that returns engines, maximum context, supported workloads, rate limits, and feature flags. If provided, this endpoint MUST be versioned and documented in OpenAPI.
+- [OC-CTRL-2060] The server MUST expose a dedicated `GET /v1/capabilities` endpoint that returns engines, maximum context (`ctx_max`), declared concurrency, supported workloads, rate limits, and feature flags. This endpoint MUST be versioned and documented in OpenAPI.
 - [OC-CTRL-2061] Capability payloads MUST include an API version field compatible with OpenAPI `info.version`, enabling the CLI to pin a compatible range.
+- [OC-CTRL-2062] `GET /v1/replicasets` is REMOVED pre‑1.0 and MUST NOT be served.
 
 ## 9) Artifact Registry (Optional, Recommended)
 
