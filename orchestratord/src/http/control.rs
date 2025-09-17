@@ -273,11 +273,12 @@ mod tests {
         assert_eq!(resp.status(), http::StatusCode::ACCEPTED);
 
         // After drain, registry ready should be false
-        let reg = state.pool_manager.lock().unwrap();
-        let h = reg.get_health("pool0").expect("health");
-        assert!(h.live);
-        assert!(!h.ready);
-        drop(reg);
+        {
+            let reg = state.pool_manager.lock().unwrap();
+            let h = reg.get_health("pool0").expect("health");
+            assert!(h.live);
+            assert!(!h.ready);
+        }
 
         // Reload with a good model ref
         let resp = reload_pool(

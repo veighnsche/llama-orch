@@ -1,5 +1,8 @@
 # COMPLIANCE — Requirements Coverage
 
+### .specs/00_home_profile.md
+Total requirements: 0
+
 ### .specs/00_llama-orch.md
 Total requirements: 72
 - ORCH-1101 — **Inference hosts MUST have NVIDIA GPUs**; CPU‑only or non‑NVIDIA hosts **MAY** run control plane components (Controller/Scheduler) but **MUST NOT** serve i (section: 1) Platform Assumptions, level: must) — link: .specs/00_llama-orch.md#1-platform-assumptions
