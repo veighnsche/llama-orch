@@ -23,6 +23,54 @@ WEEK 1 — Local BDD harness + App scaffolding
 - Replace usages of legacy `orchestratord::http::handlers` shim with direct `api/*` modules per v2 design.
 - Ensure local harness compiles and step lint passes.
 
+Concrete commands (bash) — move features, copy glue (non-destructive):
+
+```bash
+# Create local harness dirs
+mkdir -p orchestratord/bdd/tests/features/{control_plane,data_plane,security,sse}
+
+# Move orchestratord-specific Gherkin features from root harness
+git mv test-harness/bdd/tests/features/control_plane/control_plane.feature \
+       orchestratord/bdd/tests/features/control_plane/
+
+git mv test-harness/bdd/tests/features/data_plane/backpressure_429.feature \
+       orchestratord/bdd/tests/features/data_plane/
+git mv test-harness/bdd/tests/features/data_plane/cancel.feature \
+       orchestratord/bdd/tests/features/data_plane/
+git mv test-harness/bdd/tests/features/data_plane/enqueue_stream.feature \
+       orchestratord/bdd/tests/features/data_plane/
+git mv test-harness/bdd/tests/features/data_plane/error_taxonomy.feature \
+       orchestratord/bdd/tests/features/data_plane/
+git mv test-harness/bdd/tests/features/data_plane/sessions.feature \
+       orchestratord/bdd/tests/features/data_plane/
+
+git mv test-harness/bdd/tests/features/security/security.feature \
+       orchestratord/bdd/tests/features/security/
+
+git mv test-harness/bdd/tests/features/sse/deadlines_sse_metrics.feature \
+       orchestratord/bdd/tests/features/sse/
+git mv test-harness/bdd/tests/features/sse/sse_details.feature \
+       orchestratord/bdd/tests/features/sse/
+git mv test-harness/bdd/tests/features/sse/sse_started_with_backpressure.feature \
+       orchestratord/bdd/tests/features/sse/
+
+# Copy only the step glue needed by these features (keep root harness working)
+mkdir -p orchestratord/bdd/src/steps
+cp test-harness/bdd/src/steps/world.rs orchestratord/bdd/src/steps/
+cp test-harness/bdd/src/steps/control_plane.rs orchestratord/bdd/src/steps/
+cp test-harness/bdd/src/steps/data_plane.rs orchestratord/bdd/src/steps/
+cp test-harness/bdd/src/steps/security.rs orchestratord/bdd/src/steps/
+cp test-harness/bdd/src/steps/deadlines_preemption.rs orchestratord/bdd/src/steps/
+cp test-harness/bdd/src/steps/observability.rs orchestratord/bdd/src/steps/
+cp test-harness/bdd/src/steps/error_taxonomy.rs orchestratord/bdd/src/steps/
+
+git add orchestratord/bdd/tests/features orchestratord/bdd/src/steps
+```
+
+Notes:
+- We move features with `git mv` so history follows; we copy steps to avoid breaking the root harness. We can later extract shared steps into a small crate if needed.
+- After copying, update local steps to import v2 modules directly (no legacy `http::handlers`).
+
 2) Local Gherkin installation and wiring
 - Add cucumber/cucumber‑rust as dev‑dependency in `orchestratord/bdd` (or in `orchestratord` if using dev‑tests module).
 - Provide `cargo` aliases/doc snippets to run local BDD (`cargo test -p orchestratord-bdd` or `cargo test -p orchestratord --tests -- --ignored` for cucumber mode).
