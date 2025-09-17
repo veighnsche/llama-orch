@@ -383,4 +383,67 @@ mod tests {
         );
         assert!(text.contains("# TYPE queue_depth "), "missing queue_depth");
     }
+
+    // ORCH-METRICS-0001: record_stream_* helpers populate counters/histograms for given label set
+    #[test]
+    fn test_orch_metrics_0001_record_helpers_emit_samples() {
+        let eng = "testeng";
+        let engv = "v1";
+        let pool = "poolX";
+        let rep = "rX";
+        let prio = "interactive";
+
+        // Act: record start and end with specific values
+        record_stream_started(eng, engv, pool, rep, prio, 5, 3);
+        record_stream_ended(eng, engv, pool, rep, prio, 7, 4);
+
+        let text = gather_metrics_text();
+
+        // Assert counters increased for our label set
+        let started_line = format!(
+            "tasks_started_total{{engine=\"{}\",engine_version=\"{}\",pool_id=\"{}\",replica_id=\"{}\",priority=\"{}\"}} 1",
+            eng, engv, pool, rep, prio
+        );
+        assert!(
+            text.contains(&started_line),
+            "missing tasks_started_total sample: {}",
+            started_line
+        );
+
+        let tin_line = format!(
+            "tokens_in_total{{engine=\"{}\",engine_version=\"{}\",pool_id=\"{}\",replica_id=\"{}\"}} 3",
+            eng, engv, pool, rep
+        );
+        assert!(text.contains(&tin_line), "missing tokens_in_total: {}", tin_line);
+
+        let tout_line = format!(
+            "tokens_out_total{{engine=\"{}\",engine_version=\"{}\",pool_id=\"{}\",replica_id=\"{}\"}} 4",
+            eng, engv, pool, rep
+        );
+        assert!(
+            text.contains(&tout_line),
+            "missing tokens_out_total: {}",
+            tout_line
+        );
+
+        // Histograms: check _count lines for our label set
+        let h1 = format!(
+            "latency_first_token_ms_count{{engine=\"{}\",engine_version=\"{}\",pool_id=\"{}\",priority=\"{}\"}} 1",
+            eng, engv, pool, prio
+        );
+        assert!(
+            text.contains(&h1),
+            "missing latency_first_token_ms_count: {}",
+            h1
+        );
+        let h2 = format!(
+            "latency_decode_ms_count{{engine=\"{}\",engine_version=\"{}\",pool_id=\"{}\",priority=\"{}\"}} 1",
+            eng, engv, pool, prio
+        );
+        assert!(
+            text.contains(&h2),
+            "missing latency_decode_ms_count: {}",
+            h2
+        );
+    }
 }

@@ -435,7 +435,114 @@ pub async fn delete_session(
     if let Err(code) = require_api_key(&headers) {
         return (code, HeaderMap::new()).into_response();
     }
-    let mut headers = HeaderMap::new();
-    headers.insert("X-Correlation-Id", "corr-0".parse().unwrap());
-    (http::StatusCode::NO_CONTENT, headers).into_response()
+    let mut h = HeaderMap::new();
+    h.insert("X-Correlation-Id", "corr-0".parse().unwrap());
+    (http::StatusCode::NO_CONTENT, h).into_response()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::body::to_bytes;
+
+    fn ok_headers() -> HeaderMap {
+        let mut h = HeaderMap::new();
+        h.insert("X-API-Key", "valid".parse().unwrap());
+        h
+    }
+
+    fn base_req() -> api::TaskRequest {
+        api::TaskRequest {
+            task_id: "aaaaaaaa-0000-0000-0000-000000000000".to_string(),
+            session_id: "s1".to_string(),
+            workload: api::Workload::Completion,
+            model_ref: "m:v0".to_string(),
+            engine: api::Engine::Llamacpp,
+            ctx: 0,
+            priority: api::Priority::Interactive,
+            seed: None,
+            determinism: None,
+            sampler_profile_version: None,
+            prompt: Some("hi".into()),
+            inputs: None,
+            max_tokens: 5,
+            deadline_ms: 1,
+            expected_tokens: Some(0),
+            kv_hint: None,
+        }
+    }
+
+    // ORCH-2001: INVALID_PARAMS guardrail when ctx < 0
+    #[tokio::test]
+    async fn test_orch_2001_invalid_params_ctx_negative() {
+        let state = crate::state::default_state();
+        let mut req = base_req();
+        req.ctx = -1;
+        let resp = create_task(ok_headers(), State(state), Json(req)).await;
+        assert_eq!(resp.status(), http::StatusCode::BAD_REQUEST);
+        let body = to_bytes(resp.into_body(), 1024 * 1024).await.unwrap();
+        let v: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(v["code"], "INVALID_PARAMS");
+        assert_eq!(v["engine"], "llamacpp");
+    }
+
+    // ORCH-2001: DEADLINE_UNMET when deadline_ms <= 0
+    #[tokio::test]
+    async fn test_orch_2001_deadline_unmet() {
+        let state = crate::state::default_state();
+        let mut req = base_req();
+        req.deadline_ms = 0;
+        let resp = create_task(ok_headers(), State(state), Json(req)).await;
+        assert_eq!(resp.status(), http::StatusCode::BAD_REQUEST);
+        let body = to_bytes(resp.into_body(), 1024 * 1024).await.unwrap();
+        let v: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(v["code"], "DEADLINE_UNMET");
+    }
+
+    // ORCH-2007: Large expected_tokens sentinel returns 429 with advisory headers/body
+    #[tokio::test]
+    async fn test_orch_2007_large_expected_tokens_triggers_429() {
+        let state = crate::state::default_state();
+        let mut req = base_req();
+        req.expected_tokens = Some(1_000_000);
+        let resp = create_task(ok_headers(), State(state), Json(req)).await;
+        assert_eq!(resp.status(), http::StatusCode::TOO_MANY_REQUESTS);
+        let headers = resp.headers().clone();
+        assert_eq!(headers.get("Retry-After").unwrap(), "1");
+        assert_eq!(headers.get("X-Backoff-Ms").unwrap(), "1000");
+        assert!(headers.get("X-Correlation-Id").is_some());
+        let body = to_bytes(resp.into_body(), 1024 * 1024).await.unwrap();
+        let v: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(v["code"], "QUEUE_FULL_DROP_LRU");
+        assert_eq!(v["policy_label"], "reject");
+        assert!(v["retriable"].as_bool().unwrap());
+        assert_eq!(v["retry_after_ms"].as_i64().unwrap(), 1000);
+    }
+
+    // OC-CORE-1001/1002, ORCH-2001: Queue full reject path maps to 429 ADMISSION_REJECT
+    #[tokio::test]
+    async fn test_orch_2001_admission_reject_on_full_queue() {
+        let state = crate::state::default_state();
+        {
+            // Reconfigure queue to capacity 0 with Reject policy to force immediate reject
+            let mut guard = state.queue.lock().unwrap();
+            *guard = crate::admission::QueueWithMetrics::new(
+                0,
+                orchestrator_core::queue::Policy::Reject,
+                crate::admission::MetricLabels {
+                    engine: "llamacpp".into(),
+                    engine_version: "v0".into(),
+                    pool_id: "pool0".into(),
+                    replica_id: "r0".into(),
+                },
+            );
+        }
+        let req = base_req();
+        let resp = create_task(ok_headers(), State(state), Json(req)).await;
+        assert_eq!(resp.status(), http::StatusCode::TOO_MANY_REQUESTS);
+        let body = to_bytes(resp.into_body(), 1024 * 1024).await.unwrap();
+        let v: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(v["code"], "ADMISSION_REJECT");
+        assert!(v["retriable"].as_bool().unwrap());
+    }
 }
