@@ -50,8 +50,12 @@ pub async fn create_task(
     if body.prompt.as_deref() == Some("cause-internal") {
         return Err(ErrO::Internal);
     }
-    if body.expected_tokens.unwrap_or(0) >= 1_000_000 {
-        return Err(ErrO::AdmissionReject { policy_label: "reject".into(), retry_after_ms: Some(1000) });
+    if let Some(exp) = body.expected_tokens {
+        if exp >= 2_000_000 {
+            return Err(ErrO::QueueFullDropLru { retry_after_ms: Some(1000) });
+        } else if exp >= 1_000_000 {
+            return Err(ErrO::AdmissionReject { policy_label: "reject".into(), retry_after_ms: Some(1000) });
+        }
     }
 
     // Success path (stub ETA/position)

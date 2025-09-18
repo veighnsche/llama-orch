@@ -5,6 +5,7 @@ pub enum OrchestratorError {
     #[error("pool unavailable")] PoolUnavailable,
     #[error("internal error")] Internal,
     #[error("admission rejected: {policy_label}")] AdmissionReject { policy_label: String, retry_after_ms: Option<i64> },
+    #[error("queue full drop-lru")] QueueFullDropLru { retry_after_ms: Option<i64> },
 }
 
 impl OrchestratorError {
@@ -13,7 +14,7 @@ impl OrchestratorError {
             Self::InvalidParams(_) | Self::DeadlineUnmet => http::StatusCode::BAD_REQUEST,
             Self::PoolUnavailable => http::StatusCode::SERVICE_UNAVAILABLE,
             Self::Internal => http::StatusCode::INTERNAL_SERVER_ERROR,
-            Self::AdmissionReject { .. } => http::StatusCode::TOO_MANY_REQUESTS,
+            Self::AdmissionReject { .. } | Self::QueueFullDropLru { .. } => http::StatusCode::TOO_MANY_REQUESTS,
         }
     }
 }
@@ -69,6 +70,20 @@ impl axum::response::IntoResponse for OrchestratorError {
                     Some(true),
                     *retry_after_ms,
                     Some(policy_label.clone()),
+                    engine_val.clone(),
+                )
+            }
+            OrchestratorError::QueueFullDropLru { retry_after_ms } => {
+                if let Some(ms) = retry_after_ms {
+                    headers.insert("Retry-After", http::HeaderValue::from_str(&format!("{}", (ms/1000).max(1))).unwrap());
+                    headers.insert("X-Backoff-Ms", http::HeaderValue::from_str(&format!("{}", ms)).unwrap());
+                }
+                (
+                    api::ErrorKind::QueueFullDropLru,
+                    Some("queue full policies applied".to_string()),
+                    Some(true),
+                    *retry_after_ms,
+                    Some("drop-lru".to_string()),
                     engine_val.clone(),
                 )
             }
