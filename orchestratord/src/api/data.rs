@@ -69,7 +69,15 @@ pub async fn create_task(
         admission.queue_position, admission.predicted_start_ms
     ));
 
-    Ok((StatusCode::ACCEPTED, Json(admission)))
+    // Budget headers based on session info (best-effort)
+    let svc = services::session::SessionService::new(state.sessions.clone(), std::sync::Arc::new(crate::infra::clock::SystemClock::default()));
+    let sess = svc.get_or_create(&body.session_id);
+    let mut headers = HeaderMap::new();
+    headers.insert("X-Budget-Tokens-Remaining", sess.tokens_budget_remaining.to_string().parse().unwrap());
+    headers.insert("X-Budget-Time-Remaining-Ms", sess.time_budget_remaining_ms.to_string().parse().unwrap());
+    headers.insert("X-Budget-Cost-Remaining", format!("{}", sess.cost_budget_remaining).parse().unwrap());
+
+    Ok((StatusCode::ACCEPTED, headers, Json(admission)))
 }
 
 pub async fn stream_task(
@@ -78,6 +86,10 @@ pub async fn stream_task(
 ) -> Result<impl IntoResponse, ErrO> {
     let mut headers = HeaderMap::new();
     headers.insert("Content-Type", "text/event-stream".parse().unwrap());
+    // Seed budget headers (unknown session at this layer); consider mapping task->session later
+    headers.insert("X-Budget-Tokens-Remaining", "0".parse().unwrap());
+    headers.insert("X-Budget-Time-Remaining-Ms", "0".parse().unwrap());
+    headers.insert("X-Budget-Cost-Remaining", "0".parse().unwrap());
     let sse = services::streaming::render_sse_for_task(&*state, id).await;
     Ok((StatusCode::OK, headers, sse))
 }

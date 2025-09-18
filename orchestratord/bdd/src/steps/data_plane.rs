@@ -6,6 +6,51 @@ use serde_json::json;
 #[given(regex = r"^an OrchQueue API endpoint$")]
 pub async fn given_api_endpoint(_world: &mut World) {}
 
+#[then(regex = r"^budget headers are present$")]
+pub async fn then_budget_headers_present(world: &mut World) {
+    let headers = world
+        .last_headers
+        .as_ref()
+        .expect("expected headers on last response");
+    for k in [
+        "X-Budget-Tokens-Remaining",
+        "X-Budget-Time-Remaining-Ms",
+        "X-Budget-Cost-Remaining",
+    ] {
+        assert!(headers.get(k).is_some(), "missing header {}", k);
+    }
+}
+
+#[then(regex = r"^SSE transcript artifact exists with events started token metrics end$")]
+pub async fn then_sse_transcript_artifact_exists(world: &mut World) {
+    let guard = world.state.artifacts.lock().unwrap();
+    let mut found = false;
+    for (_id, doc) in guard.iter() {
+        if let Some(events) = doc.get("events").and_then(|e| e.as_array()) {
+            let mut got_started = false;
+            let mut got_token = false;
+            let mut got_metrics = false;
+            let mut got_end = false;
+            for ev in events {
+                if let Some(t) = ev.get("type").and_then(|t| t.as_str()) {
+                    match t {
+                        "started" => got_started = true,
+                        "token" => got_token = true,
+                        "metrics" => got_metrics = true,
+                        "end" => got_end = true,
+                        _ => {}
+                    }
+                }
+            }
+            if got_started && got_token && got_metrics && got_end {
+                found = true;
+                break;
+            }
+        }
+    }
+    assert!(found, "expected persisted SSE transcript artifact with all events");
+}
+
 #[when(regex = r"^I enqueue a completion task with valid payload$")]
 pub async fn when_enqueue_valid_completion(world: &mut World) {
     world.push_fact("enqueue.valid");

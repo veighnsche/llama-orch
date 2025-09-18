@@ -2,23 +2,17 @@
 
 ## 1. Name & Purpose
 
-pool-managerd (core)
+`pool-managerd` provides a lightweight registry for pool/replica lifecycle state that other daemons consult (e.g., `orchestratord`). It tracks liveness/readiness, version, last error, heartbeats, and an active lease count used for simple placement decisions. A stub binary is provided; the crate is primarily a library at this stage.
 
 ## 2. Why it exists (Spec traceability)
 
-- ORCH-3004 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3004)
-- ORCH-3005 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3005)
-- ORCH-3008 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3008)
-- ORCH-3010 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3010)
-- ORCH-3011 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3011)
-- ORCH-3016 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3016)
-- ORCH-3017 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3017)
-- ORCH-3027 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3027)
-- ORCH-3028 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3028)
-- ORCH-3044 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3044)
-- ORCH-3045 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3045)
-- ORCH-3038 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3038)
-- ORCH-3002 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3002)
+Traceability follows the leading workspace specs:
+
+- Core orchestrator spec: [.specs/00_llama-orch.md](../.specs/00_llama-orch.md)
+  - Pool readiness/liveness and lifecycle: ORCH-3010, ORCH-3011, ORCH-3038
+  - Observability fields consumed by callers: ORCH-3027, ORCH-3028
+  - Control plane interactions (drain/reload/health) consumed by `orchestratord`
+- Home profile overlay: [.specs/00_home_profile.md](../.specs/00_home_profile.md) — single-host assumptions, fast reloads.
 
 
 ## 3. Public API surface
@@ -35,6 +29,23 @@ flowchart LR
   orch --> adapters[Worker Adapters]
   adapters --> engines[Engines]
 ```
+
+#### Detailed behavior (High / Mid / Low)
+
+- High-level
+  - In-process registry that stores per-pool health, last error, version, heartbeats, and active lease counters. Used by API handlers to answer `/v1/pools/:id/health` and to influence placement decisions.
+
+- Mid-level
+  - Types: `health::HealthStatus { live, ready }`, `registry::Registry` with a `HashMap<String, PoolEntry>`.
+  - PoolEntry fields: `health`, `last_heartbeat_ms`, `version`, `last_error`, `active_leases`.
+  - Library-first: `src/main.rs` is a stub binary printing a message.
+
+- Low-level (from `src/registry.rs`, `src/health.rs`)
+  - Health: `set_health(pool_id, HealthStatus)` / `get_health(pool_id) -> Option<HealthStatus>`.
+  - Errors: `set_last_error(pool_id, err)` / `get_last_error(pool_id) -> Option<String>`.
+  - Version: `set_version(pool_id, v)` / `get_version(pool_id) -> Option<String>`.
+  - Heartbeats: `set_heartbeat(pool_id, ms)` / `get_heartbeat(pool_id) -> Option<i64>`.
+  - Leases: `allocate_lease(pool_id) -> i32`, `release_lease(pool_id) -> i32`, `get_active_leases(pool_id) -> i32` (never negative).
 
 ## 5. Build & Test
 
@@ -73,7 +84,9 @@ flowchart LR
 
 ## 12. Footnotes
 
-- Spec: [.specs/00_llama-orch.md](../.specs/00_llama-orch.md)
+- Specs:
+  - Core: [.specs/00_llama-orch.md](../.specs/00_llama-orch.md)
+  - Home overlay: [.specs/00_home_profile.md](../.specs/00_home_profile.md)
 - Requirements: [requirements/00_llama-orch.yaml](../requirements/00_llama-orch.yaml)
 
 ### Additional Details

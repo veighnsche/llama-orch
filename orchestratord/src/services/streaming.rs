@@ -47,13 +47,9 @@ pub async fn render_sse_for_task(state: &AppState, _id: String) -> String {
         ("end", end.clone()),
     ];
 
-    // Persist transcript as artifact
+    // Persist transcript as artifact via configured store (and keep compat map updated)
     let transcript = json!({"events": events.iter().map(|(t, d)| json!({"type": t, "data": d})).collect::<Vec<_>>(),});
-    let id = format!("sha256:{}", sha256::digest(transcript.to_string()));
-    {
-        let mut guard = state.artifacts.lock().unwrap();
-        guard.insert(id, transcript);
-    }
+    let _ = crate::services::artifacts::put(state, transcript);
 
     // Build SSE text
     let sse = [
@@ -71,14 +67,4 @@ pub async fn render_sse_for_task(state: &AppState, _id: String) -> String {
         "".to_string(),
     ].join("\n");
     sse
-}
-
-mod sha256 {
-    use sha2::{Digest, Sha256};
-    pub fn digest(s: String) -> String {
-        let mut hasher = Sha256::new();
-        hasher.update(s.as_bytes());
-        let bytes = hasher.finalize();
-        hex::encode(bytes)
-    }
 }

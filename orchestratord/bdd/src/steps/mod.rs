@@ -33,6 +33,8 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^I receive SSE metrics frames$").unwrap(),
         Regex::new(r"^started includes queue_position and predicted_start_ms$").unwrap(),
         Regex::new(r"^SSE event ordering is per stream$").unwrap(),
+        Regex::new(r"^budget headers are present$").unwrap(),
+        Regex::new(r"^SSE transcript artifact exists with events started token metrics end$").unwrap(),
         Regex::new(r"^queue full policy is reject$").unwrap(),
         Regex::new(r"^queue full policy is drop-lru$").unwrap(),
         Regex::new(r"^an OrchQueue API endpoint under load$").unwrap(),

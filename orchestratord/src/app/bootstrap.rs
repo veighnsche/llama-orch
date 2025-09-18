@@ -14,5 +14,14 @@ pub fn init_observability() {
 }
 
 pub fn start_server() {
-    // TO DO: implement start_server function
+    // Synchronous wrapper that spins up Tokio runtime and serves the app
+    let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
+    rt.block_on(async move {
+        init_observability();
+        let app = build_app();
+        let addr = std::env::var("ORCHD_ADDR").unwrap_or_else(|_| "0.0.0.0:8080".to_string());
+        let listener = tokio::net::TcpListener::bind(&addr).await.expect("bind ORCHD_ADDR");
+        eprintln!("orchestratord listening on {}", addr);
+        axum::serve(listener, app).await.unwrap();
+    });
 }

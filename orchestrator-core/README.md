@@ -2,21 +2,18 @@
 
 ## 1. Name & Purpose
 
-orchestrator-core (core)
+`orchestrator-core` provides core orchestration primitives used by daemons. It focuses on queueing/admission policies and invariants (bounded FIFO with priorities, full-queue behavior), with property-style tests. No HTTP or adapter IO lives here.
 
 ## 2. Why it exists (Spec traceability)
 
-- ORCH-3004 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3004)
-- ORCH-3005 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3005)
-- ORCH-3008 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3008)
-- ORCH-3010 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3010)
-- ORCH-3011 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3011)
-- ORCH-3016 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3016)
-- ORCH-3017 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3017)
-- ORCH-3027 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3027)
-- ORCH-3028 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3028)
-- ORCH-3044 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3044)
-- ORCH-3045 — [.specs/00_llama-orch.md](../.specs/00_llama-orch.md#orch-3045)
+Traceability follows the leading workspace specs:
+
+- Core orchestrator spec: [.specs/00_llama-orch.md](../.specs/00_llama-orch.md)
+  - Admission & bounded queues: ORCH-3004, ORCH-3005
+  - FIFO within priority class: ORCH-3008
+  - Placement/readiness hooks (informative for this crate): ORCH-3010, ORCH-3011
+  - Observability fields (consumers emit metrics): ORCH-3027, ORCH-3028
+- Home profile overlay: [.specs/00_home_profile.md](../.specs/00_home_profile.md) — informs defaults around queue depth and developer experience in the single-host profile.
 
 
 ## 3. Public API surface
@@ -33,6 +30,22 @@ flowchart LR
   orch --> adapters[Worker Adapters]
   adapters --> engines[Engines]
 ```
+
+#### Detailed behavior (High / Mid / Low)
+
+- High-level
+  - In-memory, bounded queue with two priorities: `Interactive` and `Batch`.
+  - Full-queue behavior via policy enum: `Reject` or `DropLru`.
+
+- Mid-level
+  - Types: `Priority`, `Policy`, `InMemoryQueue` with separate deques per priority.
+  - Core ops: `enqueue(id, prio)`, `cancel(id)`, `snapshot_priority(prio)`, `len()`, `capacity()`.
+  - Tests in `src/queue.rs` assert key invariants: boundedness + reject, drop-lru preference, FIFO within class.
+
+- Low-level (from `src/queue.rs`)
+  - `enqueue`: if `len >= capacity` and policy is `Reject`, returns `EnqueueError::QueueFullReject`.
+  - `enqueue` with `DropLru`: drops oldest Batch first, else oldest Interactive, then pushes new item into the requested priority.
+  - `cancel`: removes the first occurrence of `id` from either priority queue and returns `true` if removed.
 
 ## 5. Build & Test
 
@@ -71,7 +84,9 @@ flowchart LR
 
 ## 12. Footnotes
 
-- Spec: [.specs/00_llama-orch.md](../.specs/00_llama-orch.md)
+- Specs:
+  - Core: [.specs/00_llama-orch.md](../.specs/00_llama-orch.md)
+  - Home overlay: [.specs/00_home_profile.md](../.specs/00_home_profile.md)
 - Requirements: [requirements/00_llama-orch.yaml](../requirements/00_llama-orch.yaml)
 
 ### Additional Details
