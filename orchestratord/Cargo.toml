@@ -69,3 +69,5 @@ hex = "0.4"
 [dev-dependencies]
 openapiv3 = { workspace = true }
 serde_yaml = { workspace = true }
+tower = { version = "0.5", features = ["util"] }
+tempfile = "3"

@@ -184,6 +184,25 @@ flowchart TB
   S_Admission --> I_Metrics
 ```
 
+Notes for Component map
+
+- Purpose
+  - Show the end-to-end request path through middleware, router, API handlers, services, ports, and infra. Establish shared mental model for contributors.
+- Code anchors
+  - `app/middleware.rs`, `app/router.rs`
+  - `api/{data.rs,control.rs,artifacts.rs,observability.rs}`
+  - `services/{session.rs,streaming.rs,artifacts.rs,capabilities.rs,control.rs}`
+  - `ports/{adapters.rs,pool.rs,clock.rs,storage.rs}`, `infra/{clock.rs,storage/*,metrics.rs}`
+  - External: `pool-managerd::registry::Registry`
+- Behavior summary
+  - Router directs requests to the proper API module, which invokes services. Services use ports to reach infra and external registries. Metrics are emitted at key points.
+- Maturity tier: Silver
+  - Rationale: Components exist and are wired; adapters and pool control are partially stubbed.
+- Next steps
+  - Wire real adapter clients, expand pool control operations, add integration tests across ports/infra.
+- Related tests/docs
+  - `.specs/10_orchestratord_v2_architecture.md`, `ci/metrics.lint.json`
+
 #### Mermaid: Task enqueue flow (POST /v1/tasks)
 
 ```mermaid
@@ -206,6 +225,22 @@ sequenceDiagram
   A-->>RES: 202 AdmissionResponse + X-Budget-* headers
   RES-->>C: queue_position=3, predicted_start_ms=420
 ```
+
+Notes for Task enqueue flow
+
+- Purpose
+  - Document validations, session bootstrap, and response contract for `POST /v1/tasks`.
+- Code anchors
+  - `api/data.rs::create_task`
+  - `services/session.rs`, `domain/error.rs`, `metrics.rs`
+- Behavior summary
+  - Validate sentinels; ensure session exists; emit `tasks_enqueued_total`; return 202 with budget headers and predicted start info.
+- Maturity tier: Silver
+  - Rationale: Flow implemented with sentinel checks and headers; admission queue integration is partial.
+- Next steps
+  - Integrate queue policies from `admission.rs` to compute realistic `queue_position`/ETA; add property tests for edge cases.
+- Related tests/docs
+  - `orchestratord/tests/domain_error_mapping.rs`, `bdd/tests/features/data_plane/budgets.feature`
 
 #### Mermaid: SSE streaming flow (GET /v1/tasks/:id/stream)
 
@@ -230,6 +265,21 @@ sequenceDiagram
   STR->>MET: observe latency_decode_ms, inc tokens_out_total
 ```
 
+Notes for SSE streaming flow
+
+- Purpose
+  - Explain deterministic SSE emission and transcript persistence for consumers and test harnesses.
+- Code anchors
+  - `api/data.rs::stream_task`, `services/streaming.rs`, `services/artifacts.rs`, `metrics.rs`
+- Behavior summary
+  - Begin stream after auth; emit `started` → `token` → `metrics` (optional) → `end`; persist transcript; emit latency and token counters.
+- Maturity tier: Silver
+  - Rationale: Deterministic path and transcript write exist; multi-token and adapter-driven streams are not yet plumbed.
+- Next steps
+  - Support real adapter streams, multi-token sequences, and backpressure-aware pacing; add BDD tests for transcript schema.
+- Related tests/docs
+  - `.specs/00_llama-orch.md` (SSE framing), `ci/metrics.lint.json`
+
 #### Mermaid: Cancel semantics (POST /v1/tasks/:id/cancel)
 
 ```mermaid
@@ -248,6 +298,21 @@ sequenceDiagram
   Note right of A: Current stub logs cancellation\nFuture: propagate cancel token to StreamingService
   A-->>C: 204 No Content
 ```
+
+Notes for Cancel semantics
+
+- Purpose
+  - Capture expected cancel behavior and current limitations to guide implementation.
+- Code anchors
+  - `api/data.rs::cancel_task`, `metrics.rs`, planned: `services/streaming.rs` cancel hook
+- Behavior summary
+  - Accept cancel requests; increment `tasks_canceled_total{reason="client"}`; future: signal streaming to stop token emission.
+- Maturity tier: Bronze
+  - Rationale: No cancel propagation yet; only logging and metrics.
+- Next steps
+  - Introduce cancel tokens to streaming; add race-free BDD scenario to ensure no tokens after cancel.
+- Related tests/docs
+  - `TESTING_CHECKLIST.md` (Cancel semantics section)
 
 #### Mermaid: Pools control plane (GET health, POST drain/reload)
 
@@ -278,6 +343,22 @@ sequenceDiagram
   end
 ```
 
+Notes for Pools control plane
+
+- Purpose
+  - Describe health readout and maintenance actions (drain, reload) for pools.
+- Code anchors
+  - `api/control.rs::{get_pool_health, drain_pool, reload_pool}`
+  - `pool-managerd::registry::Registry`, `metrics.rs`
+- Behavior summary
+  - Health aggregates registry info; drain flips an in-memory flag; reload updates `model_state` gauge or returns 409 on sentinel input.
+- Maturity tier: Bronze
+  - Rationale: Simplified logic and sentinel-only error; lacks real pool orchestration.
+- Next steps
+  - Integrate with pool lifecycle (preload/ready), surface per-replica metrics, handle retries and backoff.
+- Related tests/docs
+  - `pool-managerd/src/registry.rs` unit tests; `.specs/10_orchestratord_v2_architecture.md`
+
 #### Mermaid: Capabilities snapshot (GET /v1/capabilities)
 
 ```mermaid
@@ -294,6 +375,21 @@ sequenceDiagram
   CTRL-->>C: 200 JSON
 ```
 
+Notes for Capabilities snapshot
+
+- Purpose
+  - Provide a single source of truth for engines and API version to drive CLI/dev-tools.
+- Code anchors
+  - `api/control.rs::get_capabilities`, `services/capabilities.rs`
+- Behavior summary
+  - Returns `api_version` and a static list of engines (llamacpp, vllm, tgi, triton) for now.
+- Maturity tier: Silver
+  - Rationale: Implemented but static; no runtime discovery yet.
+- Next steps
+  - Discover adapters dynamically; include engine versions and capabilities per pool.
+- Related tests/docs
+  - `.specs/00_llama-orch.md` (capabilities), CLI expectations in `cli/llama-orch-cli/DEV_TOOL_SPEC.md`
+
 #### Mermaid: Session lifecycle (TTL/turns) — state diagram
 
 ```mermaid
@@ -306,6 +402,21 @@ stateDiagram-v2
   Live --> Evicted: delete_session()
   Evicted --> Live: get_or_create(session_id)
 ```
+
+Notes for Session lifecycle
+
+- Purpose
+  - Clarify how sessions are created, updated per turn, and evicted by TTL.
+- Code anchors
+  - `services/session.rs`, `ports/clock.rs`, `infra/clock.rs`
+- Behavior summary
+  - Sessions are created lazily; on activity, TTL ticks down using a clock; eviction occurs at zero TTL or on explicit delete.
+- Maturity tier: Silver
+  - Rationale: Core functions exist; needs more telemetry and enforcement integration with budgets.
+- Next steps
+  - Emit eviction metrics, enforce budgets at admission, add property tests for TTL edge cases.
+- Related tests/docs
+  - `TESTING_CHECKLIST.md` (Budgets), `.specs/00_home_profile.md` (single-host defaults)
 
 #### Mermaid: Metrics surfaces
 
@@ -334,6 +445,20 @@ flowchart LR
   H2 --> G
 ```
 
+Notes for Metrics surfaces
+
+- Purpose
+  - Summarize where metrics are emitted and how they flow into the `/metrics` endpoint.
+- Code anchors
+  - `metrics.rs`, `api/observability.rs`
+- Behavior summary
+  - Counters/gauges/histograms are updated by API/services; `/metrics` exports Prometheus text.
+- Maturity tier: Silver
+  - Rationale: Surfaces exist and linted; histogram tuning and labels may evolve.
+- Next steps
+  - Validate against `ci/metrics.lint.json`, add exemplar metrics, document label cardinality limits.
+- Related tests/docs
+  - `ci/metrics.lint.json`, `TESTING_CHECKLIST.md` (Observability)
 
 #### Mermaid: AppState, services, and stores (class diagram)
 
@@ -402,6 +527,21 @@ classDiagram
   AppState --> ArtifactStore
 ```
 
+Notes for AppState/services/stores
+
+- Purpose
+  - Show the main state container and store abstractions used by services.
+- Code anchors
+  - `state.rs`, `services/session.rs`, `infra/storage/{inmem.rs,fs.rs}`, `ports/storage.rs`, `infra/clock.rs`
+- Behavior summary
+  - `AppState` aggregates session map, artifact store, and pool registry; services mutate/query via traits and concrete impls.
+- Maturity tier: Silver
+  - Rationale: In-memory and fs stores exist; pluggability present; logging is basic.
+- Next steps
+  - Add store selection via config, structured logs for state transitions, and backends beyond fs.
+- Related tests/docs
+  - `.specs/10_orchestratord_v2_architecture.md`
+
 #### Mermaid: Error mapping and backpressure headers
 
 ```mermaid
@@ -431,6 +571,20 @@ sequenceDiagram
   Note over E: Body: ErrorEnvelope (code: AdmissionReject, retriable: true, policy_label: reject, retry_after_ms: 1000)
 ```
 
+Notes for Error mapping and backpressure
+
+- Purpose
+  - Make explicit how domain errors map to HTTP status, headers, and error envelopes.
+- Code anchors
+  - `domain/error.rs`, `api/data.rs::create_task`
+- Behavior summary
+  - Sentinel inputs produce deterministic error codes; backpressure includes `Retry-After` and `X-Backoff-Ms` headers.
+- Maturity tier: Gold
+  - Rationale: Mapping is implemented, covered by tests, and aligns with contracts.
+- Next steps
+  - Expand error taxonomy, ensure consistency across all endpoints, add provider verification.
+- Related tests/docs
+  - `orchestratord/tests/domain_error_mapping.rs`, OpenAPI in `contracts/openapi/*.yaml`
 
 ## 5. Build & Test
 

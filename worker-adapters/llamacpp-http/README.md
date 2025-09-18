@@ -28,6 +28,22 @@ flowchart LR
   adapter --> engine[Engine API]
 ```
 
+Notes for Adapter flow
+
+- Purpose
+  - Show this crate’s role translating orchestrator requests into engine-native calls via a common adapter trait.
+- Code anchors
+  - `src/lib.rs` (implements `WorkerAdapter` for LlamaCppHttpAdapter)
+  - Interfaces from `worker_adapters_adapter_api` (`WorkerAdapter`, `TokenEvent`, `TokenStream`, `WorkerHealth`, `WorkerProps`)
+- Behavior summary
+  - Current stub returns health/props and a deterministic token stream (`started` → `token` → `end`) without network IO.
+- Maturity tier: Bronze
+  - Rationale: Stubbed logic; no HTTP calls; suitable for vertical-slice tests only.
+- Next steps
+  - Implement HTTP requests to llama.cpp endpoints; stream tokens and metrics; surface timeouts/retries; add contract tests.
+- Related tests/docs
+  - Workspace specs in `.specs/00_llama-orch.md` (adapter responsibilities), `.specs/00_home_profile.md` (single-host assumptions)
+
 #### Detailed behavior (High / Mid / Low)
 
 - High-level
