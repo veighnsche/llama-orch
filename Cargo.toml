@@ -24,6 +24,7 @@ members = [
     "tools/spec-extract",
     "tools/openapi-client",
     "tools/readme-index",
+    "provisioners/engine-provisioner",
     "xtask"
 ]
 

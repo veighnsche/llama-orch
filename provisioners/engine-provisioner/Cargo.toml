@@ -1,0 +1,24 @@
+[package]
+name = "provisioners-engine-provisioner"
+version = "0.0.0"
+edition = "2021"
+publish = false
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "provisioners_engine_provisioner"
+path = "src/lib.rs"
+
+autobenches = false
+
+autotests = false
+
+autodocs = false
+
+[dependencies]
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+tracing = { workspace = true }
+contracts-config-schema = { path = "../../contracts/config-schema" }
+which = "6"

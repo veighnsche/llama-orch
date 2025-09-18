@@ -1,0 +1,30 @@
+pools:
+  - id: local-llamacpp-gpu
+    engine: llamacpp
+    model: qwen2.5-0.5b-instruct-q4_k_m.gguf
+    devices: [0]
+    provisioning:
+      mode: source
+      source:
+        repo: https://github.com/ggml-org/llama.cpp.git
+        ref: 703f9e3
+        submodules: true
+        build:
+          cmake_flags:
+            - -DCMAKE_BUILD_TYPE=Release
+            - -DLLAMA_BUILD_SERVER=ON
+            - -DLLAMA_CUBLAS=ON
+            - -DCMAKE_CUDA_ARCHITECTURES=86
+      model:
+        ref: hf:Qwen/Qwen2.5-0.5B-Instruct-GGUF/qwen2.5-0.5b-instruct-q4_k_m.gguf
+        # checksum: sha256:...
+      ports: [8080]
+      env: {}
+      flags:
+        - --metrics
+        - --no-webui
+        - --parallel
+        - "1"
+        - --no-cont-batching
+        - --ngl
+        - "99"

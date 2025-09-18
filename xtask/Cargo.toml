@@ -23,3 +23,4 @@ serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 openapiv3 = { workspace = true }
 contracts-config-schema = { path = "../contracts/config-schema" }
+provisioners-engine-provisioner = { path = "../provisioners/engine-provisioner" }

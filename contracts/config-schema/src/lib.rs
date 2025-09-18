@@ -12,6 +12,131 @@ pub enum Engine {
     Triton,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum ProvisioningMode {
+    External,
+    Source,
+    Container,
+    Package,
+    Binary,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+pub struct SourceBuildConfig {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cmake_flags: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub generator: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cache_dir: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+pub struct SourceConfig {
+    /// Git URL for the engine source (e.g., https://github.com/ggml-org/llama.cpp.git)
+    pub repo: String,
+    /// Tag/branch/commit SHA
+    pub r#ref: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub submodules: Option<bool>,
+    #[serde(default)]
+    pub build: SourceBuildConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+pub struct BinaryConfig {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub checksum: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub install_dir: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+pub struct PackageConfig {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub repo: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+pub struct ContainerConfig {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tag: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+pub struct ModelConfig {
+    /// Model reference (e.g., HF repo/file, local path, or digest)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub r#ref: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cache_dir: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub checksum: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+pub struct ProvisioningConfig {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode: Option<ProvisioningMode>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub allow_package_installs: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub allow_binary_downloads: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<SourceConfig>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub container: Option<ContainerConfig>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub package: Option<PackageConfig>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub binary: Option<BinaryConfig>,
+    #[serde(default)]
+    pub model: ModelConfig,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ports: Option<Vec<u16>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub env: Option<std::collections::BTreeMap<String, String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub flags: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct PoolConfig {
+    pub id: String,
+    pub engine: Engine,
+    pub model: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quant: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ctx: Option<u32>,
+    pub devices: Vec<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tensor_split: Option<Vec<f32>>, // ratios
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preload: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub require_same_engine_version: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sampler_profile_version: Option<String>,
+    #[serde(default)]
+    pub provisioning: ProvisioningConfig,
+    #[serde(default)]
+    pub queue: QueueConfig,
+    #[serde(default)]
+    pub admission: AdmissionConfig,
+    #[serde(default)]
+    pub timeouts: Timeouts,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct QueueConfig {
     pub capacity: Option<u32>,
@@ -36,32 +161,6 @@ pub struct AdmissionConfig {
 pub struct Timeouts {
     pub wall_ms: Option<u64>,
     pub idle_ms: Option<u64>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-pub struct PoolConfig {
-    pub id: String,
-    pub engine: Engine,
-    pub model: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub quant: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub ctx: Option<u32>,
-    pub devices: Vec<u32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub tensor_split: Option<Vec<f32>>, // ratios
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub preload: Option<bool>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub require_same_engine_version: Option<bool>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub sampler_profile_version: Option<String>,
-    #[serde(default)]
-    pub queue: QueueConfig,
-    #[serde(default)]
-    pub admission: AdmissionConfig,
-    #[serde(default)]
-    pub timeouts: Timeouts,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]

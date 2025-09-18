@@ -14,6 +14,65 @@ struct Xtask {
     cmd: Cmd,
 }
 
+fn engine_up(config_path: PathBuf, pool_filter: Option<String>) -> Result<()> {
+    use provisioners_engine_provisioner::{EngineProvisioner, SourceProvisioner};
+    let root = repo_root()?;
+    let path = if config_path.is_relative() { root.join(config_path) } else { config_path };
+    let bytes = std::fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
+    let cfg: contracts_config_schema::Config = serde_yaml::from_slice(&bytes)
+        .with_context(|| format!("parsing {}", path.display()))?;
+    let prov = SourceProvisioner::new();
+    let pools: Vec<_> = match pool_filter {
+        Some(id) => cfg
+            .pools
+            .into_iter()
+            .filter(|p| p.id == id)
+            .collect(),
+        None => cfg.pools,
+    };
+    if pools.is_empty() {
+        println!("no pools matched");
+        return Ok(());
+    }
+    for p in pools.iter() {
+        println!("provisioning pool: {} (engine={:?})", p.id, p.engine);
+        prov.ensure(p)?;
+    }
+    println!("engine:up complete");
+    Ok(())
+}
+
+fn engine_plan(config_path: PathBuf, pool_filter: Option<String>) -> Result<()> {
+    use provisioners_engine_provisioner::{EngineProvisioner, SourceProvisioner};
+    let root = repo_root()?;
+    let path = if config_path.is_relative() { root.join(config_path) } else { config_path };
+    let bytes = std::fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
+    let cfg: contracts_config_schema::Config = serde_yaml::from_slice(&bytes)
+        .with_context(|| format!("parsing {}", path.display()))?;
+    let prov = SourceProvisioner::new();
+    let pools: Vec<_> = match pool_filter {
+        Some(id) => cfg
+            .pools
+            .iter()
+            .filter(|p| p.id == id)
+            .collect(),
+        None => cfg.pools.iter().collect(),
+    };
+    if pools.is_empty() {
+        println!("no pools matched");
+        return Ok(());
+    }
+    for p in pools {
+        let plan = prov.plan(p)?;
+        println!("# plan for pool: {}", plan.pool_id);
+        for (i, step) in plan.steps.iter().enumerate() {
+            println!("{:02}. {} — {}", i + 1, step.kind, step.detail);
+        }
+        println!();
+    }
+    Ok(())
+}
+
 fn regen_all() -> Result<()> {
     regen_openapi()?;
     regen_schema()?;
@@ -61,6 +120,24 @@ enum Cmd {
     PactPublish,
     #[command(name = "docs:index")]
     DocsIndex,
+    #[command(name = "engine:plan")]
+    EnginePlan {
+        /// Path to config YAML
+        #[arg(long, default_value = "requirements/llamacpp-3090-source.yaml")]
+        config: PathBuf,
+        /// Optional pool id to plan for (defaults to all)
+        #[arg(long)]
+        pool: Option<String>,
+    },
+    #[command(name = "engine:up")]
+    EngineUp {
+        /// Path to config YAML
+        #[arg(long, default_value = "requirements/llamacpp-3090-source.yaml")]
+        config: PathBuf,
+        /// Optional pool id to provision (defaults to all)
+        #[arg(long)]
+        pool: Option<String>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -77,6 +154,8 @@ fn main() -> Result<()> {
         Cmd::PactVerify => pact_verify()?,
         Cmd::PactPublish => println!("xtask: pact:publish (stub)"),
         Cmd::DocsIndex => docs_index()?,
+        Cmd::EnginePlan { config, pool } => engine_plan(config, pool)?,
+        Cmd::EngineUp { config, pool } => engine_up(config, pool)?,
     }
     Ok(())
 }
