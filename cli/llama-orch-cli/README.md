@@ -20,6 +20,19 @@ Planned Dev Tool surface (backed by `DEV_TOOL_SPEC.md`):
 - `llama-orch loop run --agents auto` — Run multi‑agent loop with budgets, saturating GPUs via backend pools.
 - `llama-orch status` — Show pool capacity, queue predictions, agent progress.
 
+### Detailed behavior (High / Mid / Low)
+
+- High-level
+  - A developer-facing CLI intended to drive and validate the Spec → Contract → Tests → Code loop against a running llama‑orch backend.
+  - Current implementation is a stub; it prints guidance and exits successfully.
+
+- Mid-level
+  - Main binary: `src/main.rs` prints a static multiline string with pointers to `feature-requirements.md` and `DEV_TOOL_SPEC.md`.
+  - No subcommands, arguments, or network calls are implemented yet.
+
+- Low-level (from `src/main.rs`)
+  - `fn main()` uses `println!` to emit the stub message and exits.
+
 ## Install/Build
 
 Within the repository workspace:
@@ -29,6 +42,18 @@ cargo build -p llama-orch-cli
 ```
 
 The binary name is `llama-orch`.
+
+### Running locally
+
+```sh
+cargo run -p llama-orch-cli
+```
+
+Expected output is the stub help text pointing to `feature-requirements.md` and `DEV_TOOL_SPEC.md`.
+
+### Config & Env
+
+- None yet. Future versions will read configuration for backend endpoints and credentials, and surface flags per the Dev Tool spec.
 
 ## Notes
 
