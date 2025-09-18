@@ -2,10 +2,12 @@
 //! These are now functional layers applied in the router.
 
 use axum::{
-    http::{HeaderMap, HeaderValue, Request, StatusCode},
+    body::Body,
+    http::{HeaderMap, HeaderValue, Request},
     middleware::Next,
     response::Response,
 };
+use http::StatusCode;
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
@@ -20,9 +22,9 @@ impl Default for MiddlewareConfig {
 }
 
 /// Correlation-Id middleware: echo incoming header or generate a UUID.
-pub async fn correlation_id_layer<B>(
-    mut req: Request<B>,
-    next: Next<B>,
+pub async fn correlation_id_layer(
+    mut req: Request<Body>,
+    next: Next,
 ) -> Result<Response, StatusCode> {
     let corr = extract_or_generate_correlation_id(req.headers());
     // Attach to request extensions so handlers/services can use it if needed
@@ -42,7 +44,7 @@ fn extract_or_generate_correlation_id(headers: &HeaderMap) -> String {
 }
 
 /// API key middleware: enforce `X-API-Key: valid` on all routes except `/metrics`.
-pub async fn api_key_layer<B>(req: Request<B>, next: Next<B>) -> Result<Response, StatusCode> {
+pub async fn api_key_layer(req: Request<Body>, next: Next) -> Result<Response, StatusCode> {
     if !should_require_api_key(req.uri().path()) {
         return Ok(next.run(req).await);
     }

@@ -30,7 +30,7 @@ pub async fn delete_session(
 ) -> Result<impl IntoResponse, ErrO> {
     let svc = services::session::SessionService::new(state.sessions.clone(), std::sync::Arc::new(crate::infra::clock::SystemClock::default()));
     svc.delete(&id);
-    Ok((StatusCode::NO_CONTENT))
+    Ok(StatusCode::NO_CONTENT)
 }
 
 pub async fn create_task(
@@ -91,5 +91,5 @@ pub async fn cancel_task(
     // In a full impl, signal cancel token to streaming service
     let mut lg = state.logs.lock().unwrap();
     lg.push("{\"canceled\":true}".to_string());
-    Ok((StatusCode::NO_CONTENT))
+    Ok(StatusCode::NO_CONTENT)
 }

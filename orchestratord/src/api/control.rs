@@ -44,7 +44,7 @@ pub async fn drain_pool(
 ) -> Result<impl IntoResponse, ErrO> {
     let mut d = state.draining_pools.lock().unwrap();
     d.insert(id, true);
-    Ok((StatusCode::ACCEPTED))
+    Ok(StatusCode::ACCEPTED)
 }
 
 pub async fn reload_pool(
@@ -53,7 +53,7 @@ pub async fn reload_pool(
     Json(body): Json<contracts_api_types::control::ReloadRequest>,
 ) -> Result<impl IntoResponse, ErrO> {
     if body.new_model_ref == "bad" {
-        return Ok((StatusCode::CONFLICT));
+        return Ok(StatusCode::CONFLICT);
     }
     // Update model state metric (simplified)
     crate::metrics::set_gauge(
@@ -61,5 +61,5 @@ pub async fn reload_pool(
         &[("model_id", body.new_model_ref.as_str()), ("state","loaded")],
         1,
     );
-    Ok((StatusCode::OK))
+    Ok(StatusCode::OK)
 }

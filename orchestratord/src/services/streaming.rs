@@ -41,8 +41,8 @@ pub async fn render_sse_for_task(state: &AppState, _id: String) -> String {
     );
 
     let events = vec![
-        ("started", started),
-        ("token", token0),
+        ("started", started.clone()),
+        ("token", token0.clone()),
         ("metrics", metrics_ev.clone()),
         ("end", end.clone()),
     ];

@@ -1,11 +1,9 @@
 use axum::body::{to_bytes, Body};
-use axum::extract::State;
-use axum::response::IntoResponse;
-use contracts_api_types as api;
 use serde_json::json;
 
 use http::header::HeaderName;
 use orchestratord::state::AppState;
+use tower::util::ServiceExt; // for Router::oneshot
 
 #[derive(Debug, cucumber::World)]
 pub struct World {
@@ -55,124 +53,33 @@ impl World {
         path: &str,
         body_json: Option<serde_json::Value>,
     ) -> anyhow::Result<()> {
-        // Build request headers
-        let mut headers = http::HeaderMap::new();
-        if let Some(key) = &self.api_key {
-            headers.insert("X-API-Key", key.parse().unwrap());
-        }
-        for (k, v) in self.extra_headers.drain(..) {
-            let name = HeaderName::from_bytes(k.as_bytes()).unwrap();
-            headers.insert(name, v.parse().unwrap());
+        // Build the router with the world's state so we exercise real middleware
+        let app = orchestratord::app::router::build_router(self.state.clone());
+
+        // Construct request
+        let mut req_builder = http::Request::builder().method(method.clone()).uri(path);
+        {
+            let headers = req_builder.headers_mut().expect("headers mut");
+            if let Some(key) = &self.api_key {
+                headers.insert("X-API-Key", key.parse().unwrap());
+            }
+            for (k, v) in self.extra_headers.drain(..) {
+                let name = HeaderName::from_bytes(k.as_bytes()).unwrap();
+                headers.insert(name, v.parse().unwrap());
+            }
+            if body_json.is_some() {
+                headers.insert(http::header::CONTENT_TYPE, "application/json".parse().unwrap());
+            }
         }
 
-        // Dispatch to handlers by path (call into refactored api modules)
-        let resp = match (method, path) {
-            (http::Method::POST, "/v1/tasks") => {
-                let body: api::TaskRequest =
-                    serde_json::from_value(body_json.unwrap_or_else(|| json!({})))?;
-                orchestratord::api::data::create_task(
-                    headers,
-                    State(self.state.clone()),
-                    axum::Json(body),
-                )
-                .await
-            }
-            (http::Method::GET, p) if p.starts_with("/v1/tasks/") && p.ends_with("/stream") => {
-                let id = p
-                    .trim_start_matches("/v1/tasks/")
-                    .trim_end_matches("/stream")
-                    .trim_matches('/')
-                    .to_string();
-                orchestratord::api::data::stream_task(
-                    headers,
-                    State(self.state.clone()),
-                    axum::extract::Path(id),
-                )
-                .await
-            }
-            (http::Method::POST, p) if p.starts_with("/v1/tasks/") && p.ends_with("/cancel") => {
-                let id = p
-                    .trim_start_matches("/v1/tasks/")
-                    .trim_end_matches("/cancel")
-                    .trim_matches('/')
-                    .to_string();
-                orchestratord::api::data::cancel_task(
-                    headers,
-                    State(self.state.clone()),
-                    axum::extract::Path(id),
-                )
-                .await
-            }
-            (http::Method::GET, p) if p.starts_with("/v1/sessions/") => {
-                let id = p.trim_start_matches("/v1/sessions/").to_string();
-                orchestratord::api::data::get_session(
-                    headers,
-                    State(self.state.clone()),
-                    axum::extract::Path(id),
-                )
-                .await
-            }
-            (http::Method::DELETE, p) if p.starts_with("/v1/sessions/") => {
-                let id = p.trim_start_matches("/v1/sessions/").to_string();
-                orchestratord::api::data::delete_session(
-                    headers,
-                    State(self.state.clone()),
-                    axum::extract::Path(id),
-                )
-                .await
-            }
-            (http::Method::GET, p) if p.starts_with("/v1/pools/") && p.ends_with("/health") => {
-                let id = p
-                    .trim_start_matches("/v1/pools/")
-                    .trim_end_matches("/health")
-                    .trim_matches('/')
-                    .to_string();
-                orchestratord::api::control::get_pool_health(
-                    headers,
-                    State(self.state.clone()),
-                    axum::extract::Path(id),
-                )
-                .await
-            }
-            (http::Method::POST, p) if p.starts_with("/v1/pools/") && p.ends_with("/drain") => {
-                let _id = p
-                    .trim_start_matches("/v1/pools/")
-                    .trim_end_matches("/drain")
-                    .trim_matches('/')
-                    .to_string();
-                let body: api::control::DrainRequest =
-                    serde_json::from_value(body_json.unwrap_or_else(|| json!({"deadline_ms": 0})))?;
-                orchestratord::api::control::drain_pool(
-                    headers,
-                    State(self.state.clone()),
-                    axum::extract::Path(_id),
-                    axum::Json(body),
-                )
-                .await
-            }
-            (http::Method::POST, p) if p.starts_with("/v1/pools/") && p.ends_with("/reload") => {
-                let _id = p
-                    .trim_start_matches("/v1/pools/")
-                    .trim_end_matches("/reload")
-                    .trim_matches('/')
-                    .to_string();
-                let body: api::control::ReloadRequest = serde_json::from_value(
-                    body_json.unwrap_or_else(|| json!({"new_model_ref":""})),
-                )?;
-                orchestratord::api::control::reload_pool(
-                    headers,
-                    State(self.state.clone()),
-                    axum::extract::Path(_id),
-                    axum::Json(body),
-                )
-                .await
-            }
-            (http::Method::GET, "/v1/capabilities") => {
-                orchestratord::api::control::get_capabilities(headers, State(self.state.clone())).await
-            }
-            (http::Method::GET, "/metrics") => orchestratord::api::observability::metrics_endpoint().await,
-            _ => (http::StatusCode::NOT_FOUND, Body::empty()).into_response(),
+        let body = match body_json {
+            Some(v) => Body::from(v.to_string()),
+            None => Body::empty(),
         };
+        let req: http::Request<Body> = req_builder.body(body).unwrap();
+
+        // Execute request against the app router
+        let resp = app.oneshot(req).await?;
 
         let status = resp.status();
         let headers_out = resp.headers().clone();

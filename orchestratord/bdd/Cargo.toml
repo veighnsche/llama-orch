@@ -21,6 +21,7 @@ axum = { workspace = true }
 http = { workspace = true }
 hyper = { workspace = true }
 futures = { workspace = true }
+tower = "0.5"
 
 [dev-dependencies]
 
