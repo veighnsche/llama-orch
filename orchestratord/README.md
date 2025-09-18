@@ -135,36 +135,36 @@ See: [v2 architecture proposal](./.specs/10_orchestratord_v2_architecture.md) fo
 ```mermaid
 flowchart TB
   subgraph App [Axum App]
-    MW1[Middleware: Correlation-Id (app/middleware.rs)] --> MW2[Middleware: API Key (app/middleware.rs)]
-    MW2 --> Router[Router (app/router.rs)]
-    Router --> API_Data[api/data.rs]
-    Router --> API_Control[api/control.rs]
-    Router --> API_Artifacts[api/artifacts.rs]
-    Router --> API_Obs[api/observability.rs]
+    MW1[Correlation ID] --> MW2[API Key]
+    MW2 --> Router[Router]
+    Router --> API_Data[Data API]
+    Router --> API_Control[Control API]
+    Router --> API_Artifacts[Artifacts API]
+    Router --> API_Obs[Observability API]
   end
 
   subgraph Services
-    S_Admission[services::admission]
-    S_Streaming[services::streaming]
-    S_Session[services::session]
-    S_Artifacts[services::artifacts]
-    S_Cap[services::capabilities]
-    S_Control[services::control]
+    S_Admission[Admission]
+    S_Streaming[Streaming]
+    S_Session[Session]
+    S_Artifacts[Artifacts]
+    S_Cap[Capabilities]
+    S_Control[Control]
   end
 
   subgraph Ports
-    P_Adapters[ports::adapters]
-    P_Pool[ports::pool]
-    P_Clock[ports::clock]
-    P_Storage[ports::storage]
+    P_Adapters[Adapters]
+    P_Pool[Pool]
+    P_Clock[Clock]
+    P_Storage[Storage]
   end
 
   subgraph Infra
-    I_Clock[infra::clock::SystemClock]
-    I_StoreInMem[infra::storage::inmem]
-    I_StoreFs[infra::storage::fs]
-    I_Metrics[crate metrics]
-    Ext_PoolMgr[pool-managerd::registry::Registry]
+    I_Clock[System Clock]
+    I_StoreInMem[In-Memory Store]
+    I_StoreFs[Filesystem Store]
+    I_Metrics[Metrics]
+    Ext_PoolMgr[Pool Manager]
   end
 
   API_Data --> S_Session
@@ -322,7 +322,7 @@ flowchart LR
     E6[stream end] --> C6[tokens_out_total]
   end
   subgraph Metrics
-    G[gather_metrics_text()] --> T[Prometheus v0.0.4 text]
+    G[gather_metrics_text] --> T[Prometheus text]
   end
   C1 --> G
   C2 --> G
@@ -426,8 +426,9 @@ sequenceDiagram
   C->>A: expected_tokens >= 1_000_000
   A->>E: AdmissionReject(policy_label="reject", retry_after_ms=1000)
   E-->>C: 429
-  Note right of E: Headers: Retry-After=1; X-Backoff-Ms=1000
-  Note over E: Body: ErrorEnvelope(code=AdmissionReject, retriable=true, policy_label="reject", retry_after_ms=1000)
+  Note right of E: Headers: Retry-After 1, X-Backoff-Ms 1000
+
+  Note over E: Body: ErrorEnvelope (code: AdmissionReject, retriable: true, policy_label: reject, retry_after_ms: 1000)
 ```
 
 
