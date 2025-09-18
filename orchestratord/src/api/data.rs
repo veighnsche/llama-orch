@@ -100,12 +100,13 @@ pub async fn stream_task(
 
 pub async fn cancel_task(
     state: State<AppState>,
-    axum::extract::Path(_id): axum::extract::Path<String>,
+    axum::extract::Path(id): axum::extract::Path<String>,
 ) -> Result<impl IntoResponse, ErrO> {
     // Record cancellation metric
     crate::metrics::inc_counter("tasks_canceled_total", &[("engine","llamacpp"),("engine_version","v0"),("pool_id","default"),("replica_id","r0"),("reason","client")]);
-    // In a full impl, signal cancel token to streaming service
+    // Signal cancel to streaming service via shared state
+    if let Ok(mut guard) = state.cancellations.lock() { guard.insert(id.clone()); }
     let mut lg = state.logs.lock().unwrap();
-    lg.push("{\"canceled\":true}".to_string());
+    lg.push(format!("{{\"canceled\":true,\"task_id\":\"{}\"}}", id));
     Ok(StatusCode::NO_CONTENT)
 }

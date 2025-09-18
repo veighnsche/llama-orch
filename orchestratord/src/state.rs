@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 use pool_managerd::registry::Registry as PoolRegistry;
 use crate::ports::storage::ArtifactStore;
@@ -11,6 +11,7 @@ pub struct AppState {
     pub pool_manager: Arc<Mutex<PoolRegistry>>,
     pub draining_pools: Arc<Mutex<HashMap<String, bool>>>,
     pub artifact_store: Arc<dyn ArtifactStore>,
+    pub cancellations: Arc<Mutex<HashSet<String>>>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -33,6 +34,7 @@ impl AppState {
             pool_manager: Arc::new(Mutex::new(PoolRegistry::new())),
             draining_pools: Arc::new(Mutex::new(HashMap::new())),
             artifact_store: Arc::new(crate::infra::storage::inmem::InMemStore::default()),
+            cancellations: Arc::new(Mutex::new(HashSet::new())),
         }
     }
 }

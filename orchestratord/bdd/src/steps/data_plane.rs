@@ -2,9 +2,25 @@ use crate::steps::world::World;
 use cucumber::{given, then, when};
 use http::Method;
 use serde_json::json;
+use axum::body::{to_bytes, Body};
+use http::Request;
+use tower::util::ServiceExt as _;
+use tokio::time::{sleep, Duration};
 
 #[given(regex = r"^an OrchQueue API endpoint$")]
 pub async fn given_api_endpoint(_world: &mut World) {}
+
+#[then(regex = r"^no further token events are emitted$")]
+pub async fn then_no_further_token_events(world: &mut World) {
+    let body = world.last_body.as_ref().expect("expected SSE body");
+    let count = body.matches("event: token").count();
+    assert_eq!(count, 1, "expected exactly one token event, got {}: {}", count, body);
+    assert!(
+        !body.contains("event: metrics"),
+        "expected no metrics event after cancel: {}",
+        body
+    );
+}
 
 // Aliases to support scenarios that use And/Then with the same text
 #[then(regex = r"^I enqueue a completion task with valid payload$")]
@@ -318,4 +334,49 @@ pub async fn when_delete_session(world: &mut World) {
 #[then(regex = r"^I delete the session$")]
 pub async fn then_delete_session(world: &mut World) {
     when_delete_session(world).await;
+}
+
+#[when(regex = r"^I stream task events while canceling mid-stream$")]
+pub async fn when_stream_while_cancel_mid(world: &mut World) {
+    world.push_fact("sse.cancel.mid");
+    let id = world.task_id.clone().unwrap_or_else(|| "t-0".into());
+
+    // Build app router with shared state
+    let app = orchestratord::app::router::build_router(world.state.clone());
+
+    // Spawn a cancel request after a short delay so it lands between tokens
+    let cancel_app = app.clone();
+    let cancel_key = world.api_key.clone();
+    let cancel_path = format!("/v1/tasks/{}/cancel", id.clone());
+    tokio::spawn(async move {
+        sleep(Duration::from_millis(10)).await;
+        let mut req = Request::builder().method(http::Method::POST).uri(cancel_path);
+        if let Some(key) = cancel_key {
+            req = req.header("X-API-Key", key);
+        }
+        let req = req.body(Body::empty()).unwrap();
+        let _ = cancel_app.oneshot(req).await;
+    });
+
+    // Now start the stream request
+    let stream_path = format!("/v1/tasks/{}/stream", id);
+    let mut req = Request::builder().method(http::Method::GET).uri(stream_path);
+    if let Some(key) = &world.api_key {
+        req = req.header("X-API-Key", key);
+    }
+    let req = req.body(Body::empty()).unwrap();
+    let resp = app.oneshot(req).await.expect("stream oneshot resp");
+
+    let status = resp.status();
+    let headers_out = resp.headers().clone();
+    let body_bytes = to_bytes(resp.into_body(), 1_048_576).await.unwrap_or_default();
+    let body_str = String::from_utf8(body_bytes.to_vec()).unwrap_or_default();
+
+    world.corr_id = headers_out
+        .get("X-Correlation-Id")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string());
+    world.last_status = Some(status);
+    world.last_headers = Some(headers_out);
+    world.last_body = Some(body_str);
 }
