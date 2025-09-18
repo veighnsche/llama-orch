@@ -5,6 +5,7 @@ pools:
     devices: [0]
     provisioning:
       mode: source
+      allow_package_installs: true
       source:
         repo: https://github.com/ggml-org/llama.cpp.git
         ref: 703f9e3
@@ -13,7 +14,7 @@ pools:
           cmake_flags:
             - -DCMAKE_BUILD_TYPE=Release
             - -DLLAMA_BUILD_SERVER=ON
-            - -DLLAMA_CUBLAS=ON
+            - -DGGML_CUDA=ON
             - -DCMAKE_CUDA_ARCHITECTURES=86
       model:
         ref: hf:Qwen/Qwen2.5-0.5B-Instruct-GGUF/qwen2.5-0.5b-instruct-q4_k_m.gguf
@@ -26,5 +27,5 @@ pools:
         - --parallel
         - "1"
         - --no-cont-batching
-        - --ngl
+        - --n-gpu-layers
         - "99"

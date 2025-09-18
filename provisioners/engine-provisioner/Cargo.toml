@@ -22,3 +22,6 @@ serde = { workspace = true, features = ["derive"] }
 tracing = { workspace = true }
 contracts-config-schema = { path = "../../contracts/config-schema" }
 which = "6"
+
+[dev-dependencies]
+serde_yaml = { workspace = true }
