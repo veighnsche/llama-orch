@@ -134,37 +134,37 @@ See: [v2 architecture proposal](./.specs/10_orchestratord_v2_architecture.md) fo
 
 ```mermaid
 flowchart TB
-  subgraph App["Axum App"]
-    MW1["Middleware: Correlation-Id\n(app/middleware.rs)"] --> MW2["Middleware: API Key\n(app/middleware.rs)"]
-    MW2 --> Router["Router\n(app/router.rs)"]
-    Router -->|POST /v1/tasks\nGET/POST /v1/tasks/:id| API_Data["api/data.rs"]
-    Router -->|GET/POST /v1/pools/:id\nGET /v1/capabilities| API_Control["api/control.rs"]
-    Router -->|POST/GET /v1/artifacts| API_Artifacts["api/artifacts.rs"]
-    Router -->|GET /metrics| API_Obs["api/observability.rs"]
+  subgraph App [Axum App]
+    MW1[Middleware: Correlation-Id (app/middleware.rs)] --> MW2[Middleware: API Key (app/middleware.rs)]
+    MW2 --> Router[Router (app/router.rs)]
+    Router --> API_Data[api/data.rs]
+    Router --> API_Control[api/control.rs]
+    Router --> API_Artifacts[api/artifacts.rs]
+    Router --> API_Obs[api/observability.rs]
   end
 
   subgraph Services
-    S_Admission["services::admission\n(queue policies via orchestrator-core)"]
-    S_Streaming["services::streaming\n(SSE orchestration + transcript)"]
-    S_Session["services::session\n(TTL/turns/budgets)"]
-    S_Artifacts["services::artifacts\n(put/get)"]
-    S_Cap["services::capabilities\n(snapshot)"]
-    S_Control["services::control\n(stub)"]
+    S_Admission[services::admission]
+    S_Streaming[services::streaming]
+    S_Session[services::session]
+    S_Artifacts[services::artifacts]
+    S_Cap[services::capabilities]
+    S_Control[services::control]
   end
 
   subgraph Ports
-    P_Adapters["ports::adapters"]
-    P_Pool["ports::pool"]
-    P_Clock["ports::clock"]
-    P_Storage["ports::storage"]
+    P_Adapters[ports::adapters]
+    P_Pool[ports::pool]
+    P_Clock[ports::clock]
+    P_Storage[ports::storage]
   end
 
   subgraph Infra
-    I_Clock["infra::clock::SystemClock"]
-    I_StoreInMem["infra::storage::inmem\n(default store)"]
-    I_StoreFs["infra::storage::fs\n(ORCH_ARTIFACTS_FS_ROOT)"]
-    I_Metrics["metrics (crate-local)"]
-    Ext_PoolMgr["pool-managerd::registry::Registry"]
+    I_Clock[infra::clock::SystemClock]
+    I_StoreInMem[infra::storage::inmem]
+    I_StoreFs[infra::storage::fs]
+    I_Metrics[crate metrics]
+    Ext_PoolMgr[pool-managerd::registry::Registry]
   end
 
   API_Data --> S_Session
@@ -177,7 +177,7 @@ flowchart TB
 
   S_Session --> P_Clock --> I_Clock
   S_Artifacts --> P_Storage --> I_StoreInMem
-  P_Storage -.optional fs.-> I_StoreFs
+  P_Storage -.-> I_StoreFs
   S_Control --> P_Pool --> Ext_PoolMgr
 
   S_Streaming --> I_Metrics
@@ -189,9 +189,9 @@ flowchart TB
 ```mermaid
 sequenceDiagram
   participant C as Client
-  participant M as Middleware<br/>(corr-id, api key)
+  participant M as Middleware (auth+corr-id)
   participant R as Router
-  participant A as API:data.rs::create_task
+  participant A as create_task (api/data.rs)
   participant S as SessionService
   participant MET as Metrics
   participant RES as Response
@@ -199,11 +199,11 @@ sequenceDiagram
   C->>M: POST /v1/tasks {TaskRequest}
   M->>R: forward (with/without X-Correlation-Id)
   R->>A: create_task(body)
-  Note over A: Sentinel checks:<br/>ctx<0 → 400<br/>deadline≤0 → 400<br/>model_ref=pool-unavailable → 503<br/>prompt=cause-internal → 500<br/>expected_tokens≥1e6 → 429 with backoff
+  Note over A: Sentinel checks:\nctx<0 -> 400\ndeadline<=0 -> 400\nmodel_ref=pool-unavailable -> 503\nprompt=cause-internal -> 500\nexpected_tokens>=1e6 -> 429
   A->>S: get_or_create(session_id)
-  S-->>A: SessionInfo { budgets }
-  A->>MET: inc tasks_enqueued_total (labels)
-  A-->>RES: 202 AdmissionResponse<br/>+ X-Budget-* headers
+  S-->>A: SessionInfo {budgets}
+  A->>MET: inc tasks_enqueued_total
+  A-->>RES: 202 AdmissionResponse + X-Budget-* headers
   RES-->>C: queue_position=3, predicted_start_ms=420
 ```
 
@@ -214,7 +214,7 @@ sequenceDiagram
   participant C as Client
   participant M as Middleware
   participant R as Router
-  participant A as API:data.rs::stream_task
+  participant A as stream_task (api/data.rs)
   participant STR as StreamingService
   participant ART as ArtifactService
   participant MET as Metrics
@@ -223,11 +223,11 @@ sequenceDiagram
   M->>R: forward (adds X-Correlation-Id if missing)
   R->>A: stream_task(id)
   A->>STR: render_sse_for_task(id)
-  STR->>MET: inc tasks_started_total; observe latency_first_token_ms
-  STR-->>A: SSE text with events
-  Note over STR,ART: On end event → persist transcript via artifacts::put
+  STR->>MET: inc tasks_started_total, observe latency_first_token_ms
+  STR->>A: SSE text with events
+  Note over STR,ART: On end event -> persist transcript via artifacts.put
   A-->>C: 200 text/event-stream
-  MET<<--STR: observe latency_decode_ms; inc tokens_out_total
+  STR->>MET: observe latency_decode_ms, inc tokens_out_total
 ```
 
 #### Mermaid: Cancel semantics (POST /v1/tasks/:id/cancel)
@@ -237,7 +237,7 @@ sequenceDiagram
   participant C as Client
   participant M as Middleware
   participant R as Router
-  participant A as API:data.rs::cancel_task
+  participant A as cancel_task (api/data.rs)
   participant MET as Metrics
   participant STR as StreamingService
 
@@ -245,7 +245,7 @@ sequenceDiagram
   M->>R: forward
   R->>A: cancel_task(id)
   A->>MET: inc tasks_canceled_total{reason="client"}
-  Note right of A: Current stub logs cancellation;<br/>future: propagate cancel token to StreamingService
+  Note right of A: Current stub logs cancellation\nFuture: propagate cancel token to StreamingService
   A-->>C: 204 No Content
 ```
 
@@ -315,14 +315,23 @@ flowchart LR
     E1[create_task] --> C1[tasks_enqueued_total]
     E2[streaming start] --> C2[tasks_started_total]
     E3[cancel_task] --> C3[tasks_canceled_total]
-    E4[admission policy] --> C4[tasks_rejected_total]\nC5[admission_backpressure_events_total]
-    E5[decode] --> H1[latency_first_token_ms]\nH2[latency_decode_ms]
+    E4[admission policy] --> C4[tasks_rejected_total]
+    E4 --> C5[admission_backpressure_events_total]
+    E5[decode] --> H1[latency_first_token_ms]
+    E5 --> H2[latency_decode_ms]
     E6[stream end] --> C6[tokens_out_total]
   end
-  subgraph /metrics
+  subgraph Metrics
     G[gather_metrics_text()] --> T[Prometheus v0.0.4 text]
   end
-  C1 & C2 & C3 & C4 & C5 & C6 & H1 & H2 --> G
+  C1 --> G
+  C2 --> G
+  C3 --> G
+  C4 --> G
+  C5 --> G
+  C6 --> G
+  H1 --> G
+  H2 --> G
 ```
 
 
@@ -349,7 +358,7 @@ classDiagram
     cost_budget_remaining: f64
   }
 
-  class SessionService~C: Clock~ {
+  class SessionService {
     +get_or_create(id) SessionInfo
     +delete(id)
     +tick(id, now_ms) Option~SessionInfo~
@@ -384,15 +393,13 @@ classDiagram
     DeadlineUnmet
     PoolUnavailable
     Internal
-    AdmissionReject{policy_label,retry_after_ms}
+    AdmissionReject(policy_label, retry_after_ms)
   }
 
   AppState o--> SessionInfo
   SessionService --> SessionInfo
   SessionService --> SystemClock
   AppState --> ArtifactStore
-  InMemStore ..> SystemClock : (indirect)
-  OrchestratorError ..> "IntoResponse -> ErrorEnvelope" : mapping
 ```
 
 #### Mermaid: Error mapping and backpressure headers
@@ -400,34 +407,27 @@ classDiagram
 ```mermaid
 sequenceDiagram
   participant C as Client
-  participant A as API:data.rs::create_task
-  participant E as domain::error::OrchestratorError
+  participant A as create_task (api/data.rs)
+  participant E as OrchestratorError
 
   Note over C: Examples that trigger errors
   C->>A: ctx = -1
-  A-->>C: 400 {code: InvalidParams, message}
+  A-->>C: 400 code=InvalidParams
 
   C->>A: deadline_ms = 0
-  A-->>C: 400 {code: DeadlineUnmet, message}
+  A-->>C: 400 code=DeadlineUnmet
 
   C->>A: model_ref = "pool-unavailable"
-  A-->>C: 503 {code: PoolUnavailable, retriable: true, retry_after_ms: 1000}
+  A-->>C: 503 code=PoolUnavailable retriable=true retry_after_ms=1000
 
   C->>A: prompt = "cause-internal"
-  A-->>C: 500 {code: Internal}
+  A-->>C: 500 code=Internal
 
   C->>A: expected_tokens >= 1_000_000
-  A->>E: AdmissionReject{policy_label:"reject", retry_after_ms:1000}
+  A->>E: AdmissionReject(policy_label="reject", retry_after_ms=1000)
   E-->>C: 429
-  Note right of E: Headers:
-    Retry-After: 1
-    X-Backoff-Ms: 1000
-  Note over E: Body: ErrorEnvelope {
-    code: AdmissionReject,
-    retriable: true,
-    policy_label: "reject",
-    retry_after_ms: 1000
-  }
+  Note right of E: Headers: Retry-After=1; X-Backoff-Ms=1000
+  Note over E: Body: ErrorEnvelope(code=AdmissionReject, retriable=true, policy_label="reject", retry_after_ms=1000)
 ```
 
 

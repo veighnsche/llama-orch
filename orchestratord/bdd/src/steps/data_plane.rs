@@ -70,6 +70,39 @@ pub async fn when_enqueue_valid_completion(world: &mut World) {
     let _ = world.http_call(Method::POST, "/v1/tasks", Some(body)).await;
 }
 
+#[when(regex = r"^I enqueue a task way beyond capacity$")]
+pub async fn when_enqueue_way_beyond_capacity(world: &mut World) {
+    world.push_fact("enqueue.way_beyond_capacity");
+    let body = json!({
+        "task_id": "t-over2",
+        "session_id": "s-0",
+        "workload": "completion",
+        "model_ref": "model0",
+        "engine": "llamacpp",
+        "ctx": 0,
+        "priority": "interactive",
+        "max_tokens": 1,
+        "deadline_ms": 1000,
+        // Sentinel to trigger drop-lru 429 in handler glue
+        "expected_tokens": 2000000
+    });
+    let _ = world.http_call(Method::POST, "/v1/tasks", Some(body)).await;
+}
+
+#[then(regex = r"^error envelope code is ADMISSION_REJECT$")]
+pub async fn then_error_code_is_admission_reject(world: &mut World) {
+    let body = world.last_body.as_ref().expect("expected body");
+    let v: serde_json::Value = serde_json::from_str(body).expect("parse body");
+    assert_eq!(v["code"], "ADMISSION_REJECT");
+}
+
+#[then(regex = r"^error envelope code is QUEUE_FULL_DROP_LRU$")]
+pub async fn then_error_code_is_drop_lru(world: &mut World) {
+    let body = world.last_body.as_ref().expect("expected body");
+    let v: serde_json::Value = serde_json::from_str(body).expect("parse body");
+    assert_eq!(v["code"], "QUEUE_FULL_DROP_LRU");
+}
+
 #[then(regex = r"^I receive 202 Accepted with correlation id$")]
 pub async fn then_accepted_with_corr(world: &mut World) {
     assert_eq!(world.last_status, Some(http::StatusCode::ACCEPTED));
