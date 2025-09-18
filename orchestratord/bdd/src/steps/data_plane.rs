@@ -6,6 +6,17 @@ use serde_json::json;
 #[given(regex = r"^an OrchQueue API endpoint$")]
 pub async fn given_api_endpoint(_world: &mut World) {}
 
+// Aliases to support scenarios that use And/Then with the same text
+#[then(regex = r"^I enqueue a completion task with valid payload$")]
+pub async fn then_enqueue_valid_completion(world: &mut World) {
+    when_enqueue_valid_completion(world).await;
+}
+
+#[given(regex = r"^I enqueue a completion task with valid payload$")]
+pub async fn given_enqueue_valid_completion(world: &mut World) {
+    when_enqueue_valid_completion(world).await;
+}
+
 #[then(regex = r"^budget headers are present$")]
 pub async fn then_budget_headers_present(world: &mut World) {
     let headers = world
@@ -107,6 +118,16 @@ pub async fn then_error_code_is_drop_lru(world: &mut World) {
 pub async fn then_accepted_with_corr(world: &mut World) {
     assert_eq!(world.last_status, Some(http::StatusCode::ACCEPTED));
     assert!(world.corr_id.is_some(), "missing X-Correlation-Id header");
+}
+
+#[given(regex = r"^I receive 202 Accepted with correlation id$")]
+pub async fn given_accepted_with_corr(world: &mut World) {
+    then_accepted_with_corr(world).await;
+}
+
+#[when(regex = r"^I receive 202 Accepted with correlation id$")]
+pub async fn when_accepted_with_corr(world: &mut World) {
+    then_accepted_with_corr(world).await;
 }
 
 #[when(regex = r"^I stream task events$")]

@@ -14,6 +14,21 @@ async fn invalid_params_maps_to_400_with_code() {
 }
 
 #[tokio::test]
+async fn drop_lru_sets_retry_headers_and_code() {
+    let err = ErrO::QueueFullDropLru { retry_after_ms: Some(2000) };
+    let resp = err.into_response();
+    assert_eq!(resp.status(), StatusCode::TOO_MANY_REQUESTS);
+    let headers = resp.headers().clone();
+    assert_eq!(headers.get("Retry-After").unwrap(), "2");
+    assert_eq!(headers.get("X-Backoff-Ms").unwrap(), "2000");
+    let body = to_bytes(resp.into_body(), 1024).await.unwrap();
+    let v: serde_json::Value = serde_json::from_slice(&body).unwrap();
+    assert_eq!(v["code"], "QUEUE_FULL_DROP_LRU");
+    assert_eq!(v["policy_label"], "drop-lru");
+    assert_eq!(v["retry_after_ms"], 2000);
+}
+
+#[tokio::test]
 async fn deadline_unmet_maps_to_400_with_code() {
     let err = ErrO::DeadlineUnmet;
     let resp = err.into_response();

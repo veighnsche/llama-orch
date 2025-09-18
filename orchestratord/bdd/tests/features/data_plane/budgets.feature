@@ -10,6 +10,6 @@ Feature: Budget headers
   Scenario: Stream returns budget headers
     Given an OrchQueue API endpoint
     And I enqueue a completion task with valid payload
-    And I receive 202 Accepted with correlation id
+    Then I receive 202 Accepted with correlation id
     When I stream task events
     Then budget headers are present

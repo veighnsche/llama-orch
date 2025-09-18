@@ -1,9 +1,9 @@
-use axum::{Router, routing::get};
+use axum::Router;
 use axum::body::Body;
 use http::Request;
 use orchestratord::app::router::build_router;
 use orchestratord::state::AppState;
-use tower::util::ServiceExt; // for Router::oneshot
+use tower::util::ServiceExt as _; // for Router::oneshot
 
 #[tokio::test]
 async fn capabilities_requires_api_key_and_sets_corr_id() {
