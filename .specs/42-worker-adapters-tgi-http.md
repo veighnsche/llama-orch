@@ -19,3 +19,9 @@ Requirements are versioned as `OC-ADAPT-5xxx`.
 ## 3) Traceability
 
 - Code: [worker-adapters/tgi-http/src/lib.rs](../worker-adapters/tgi-http/src/lib.rs)
+
+## Refinement Opportunities
+
+- Clarify mapping between TGI sampling parameters and OrchQueue v1 to avoid divergence (e.g., top‑k, top‑p differences).
+- Capture engine_version and container image digests for better provenance (when using containers).
+- Provide adapter‑level examples for `/generate` streaming and cancel, including SSE payloads.

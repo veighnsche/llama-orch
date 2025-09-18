@@ -20,7 +20,7 @@ See: [contracts/openapi/control.yaml](../contracts/openapi/control.yaml), [orche
 ## 2) Data Plane — OrchQueue v1
 
 - [OC-CTRL-2010] `POST /v1/tasks` MUST perform admission checks (ctx, token budget) before enqueue.
-- [OC-CTRL-2011] On queue full, server MUST reply `429` and include `Retry-After` and `X-Backoff-Ms`. A JSON body MUST include the full policy label.
+- [OC-CTRL-2011] On queue full, server MUST reply `429` and include `Retry-After` and `X-Backoff-Ms`. The JSON body MUST include `policy_label`, `retriable`, and `retry_after_ms` (advisory) to guide clients.
 - [OC-CTRL-2012] `POST /v1/tasks/:id/cancel` MUST be race‑free; no tokens may be emitted after cancel.
 
 ## 3) SSE Framing
@@ -45,6 +45,7 @@ OpenAPI component schemas:
 
 - [OC-CTRL-2030] Errors MUST include a stable `code` field: `ADMISSION_REJECT`, `QUEUE_FULL_DROP_LRU`, `INVALID_PARAMS`, `POOL_UNREADY`, `POOL_UNAVAILABLE`, `REPLICA_EXHAUSTED`, `DECODE_TIMEOUT`, `WORKER_RESET`, `INTERNAL`.
 - [OC-CTRL-2031] Errors SHOULD include the `engine` and `pool_id` when applicable.
+- [OC-CTRL-2032] Error envelopes SHOULD include advisory fields when available: `retriable: boolean` and `retry_after_ms: int64`. These fields are optional and non‑breaking and SHOULD be populated for backpressure and transient errors.
 
 ## 5) Security
 
@@ -55,13 +56,12 @@ OpenAPI component schemas:
 
 - [OC-CTRL-2050] Admission logs and `started` MUST include `queue_position` and `predicted_start_ms` when available.
 - [OC-CTRL-2051] Metrics MUST include queue depth, reject/drop rates, latency percentiles, and error counts by class.
- - [OC-CTRL-2052] Responses that include headers SHOULD include `X-Correlation-Id` (except `204 No Content`) to enable client trace stitching.
+- [OC-CTRL-2052] Correlation ID: If a request includes `X-Correlation-Id`, the server MUST echo the same value in all responses and streaming (SSE) responses. If absent, the server MUST generate a UUIDv4 and include it. All non‑`204 No Content` responses MUST include this header.
 
 ## 7) Traceability
 
 - Code: [orchestratord/src/main.rs](../orchestratord/src/main.rs)
 - Tests: [orchestratord/tests/provider_verify.rs](../orchestratord/tests/provider_verify.rs)
-- Contracts: [contracts/openapi/data.yaml](../contracts/openapi/data.yaml), [contracts/openapi/control.yaml](../contracts/openapi/control.yaml)
 
 ## 8) Capabilities & Discovery
 
@@ -81,3 +81,15 @@ OpenAPI component schemas:
 ## 11) SSE Metrics – Scheduling Signals
 
 - [OC-CTRL-2023] The `metrics` SSE frames SHOULD include fields helpful for client-side planning under load, such as `on_time_probability` (number), `queue_depth` (int), and `kv_warmth` (bool). Fields MAY be engine/pool specific and are additive only.
+
+## 12) OpenAPI Examples & Annotations
+
+- [OC-CTRL-2067] Data‑plane endpoints in `contracts/openapi/data.yaml` (enqueue, stream/SSE frames, cancel, sessions) MUST include `x-examples` demonstrating typical requests and responses.
+- [OC-CTRL-2069] Control‑plane endpoints SHOULD include `x-examples` for drain, reload, and capabilities.
+
+## Refinement Opportunities
+
+- Define an SSE heartbeat/keepalive event for long queues while ensuring compatibility with current parsers.
+- Provide canonical `x-examples` for mixed‑GPU scenarios including `queue_position` and `predicted_start_ms` evolution.
+- Explore exposing correlation ID inside SSE `started` payload (as redundant metadata) vs. header‑only.
+- Consider an `X-Backoff-Policy` header to carry a stable `policy_label` alongside JSON for simpler CDC.

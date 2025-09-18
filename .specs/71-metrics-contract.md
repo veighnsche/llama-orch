@@ -25,3 +25,9 @@ Requirements are versioned as `OC-METRICS-7xxx`.
   - `queue_depth: integer` — current queue size for the serving pool/replica.
   - `kv_warmth: boolean` — whether KV is warm for the session.
 - [OC-METRICS-7111] When per-session budgets (token/time/cost) are enabled, budget remaining SHOULD be surfaced either in `metrics` events or as response headers to allow clients to adapt.
+
+## Refinement Opportunities
+
+- Define canonical bucket boundaries for `latency_first_token_ms` and `latency_decode_ms` for home profile reference hardware.
+- Consider a stable schema for `metrics` SSE payloads to ease SDK evolution while allowing additive fields.
+- Provide a compact, cardinality-aware label set for admission-level counters that preserves utility.

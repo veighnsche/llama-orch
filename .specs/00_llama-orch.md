@@ -41,7 +41,7 @@ This specification is the single source of truth for llama-orch in a home lab. I
 ### 2.3 Placement & Scheduling
 
 * Scheduler MUST only dispatch to Ready replicas and respect explicit device masks. (ORCH-3010 & ORCH-3011)
-* Default placement heuristic MUST prefer the GPU with the most free VRAM or available slots; heuristics MAY be extended but MUST remain deterministic. (ORCH-3012)
+* Default placement heuristic MUST use least-loaded selection with VRAM awareness: prefer the GPU with the most free VRAM, then fewest active slots; tie-break deterministically (e.g., by `replica_id`). (ORCH-3012)
 * Session affinity SHOULD keep a session on its previous replica when possible; failovers MUST surface `kv_warmth=false`. (ORCH-3009)
 
 ### 2.4 Sessions & Budgets
@@ -62,6 +62,9 @@ This specification is the single source of truth for llama-orch in a home lab. I
 ### 2.6 Catalog, Artifacts & Reloads
 
 * Catalog APIs MUST persist model metadata locally and allow verification flows that warn (rather than fail) when signatures/SBOMs are missing. (ORCH-3037)
+* Catalog storage layout MUST be documented. Filesystem directories are the default; a sqlite-backed index MAY be used. Both MUST preserve identical verification semantics and lifecycle behavior. (ORCH-3037)
+* Lifecycle states are limited to `Active` and `Retired`; legacy `Draft`/`Canary` states are removed. Catalog state transitions MUST update pool readiness and related metrics consistently. (ORCH-3031, ORCH-3037)
+* When checksums/digests are provided, verification MUST be performed and MUST fail pre‑admission on mismatch; otherwise verification MAY proceed with warnings. (ORCH-3037, ORCH-3097)
 * Pool drain/reload MUST be atomic and reversible: reload success toggles Ready, failure rolls back. (ORCH-3031 & ORCH-3038)
 * Artifact registry SHOULD expose `POST /v1/artifacts` + `GET /v1/artifacts/{id}` for plans/diffs/traces stored on local disk. (ORCH-3097 & ORCH-3098)
 
@@ -79,7 +82,7 @@ This specification is the single source of truth for llama-orch in a home lab. I
 
 ### 2.9 Capability Discovery
 
-* The API MUST expose capability information (either via enriched `GET /v1/replicasets` or `GET /v1/capabilities`) covering engine versions, max context, supported workloads, and declared concurrency. (ORCH-3095)
+* The API MUST expose capability information via `GET /v1/capabilities` covering engine versions, max context, supported workloads, and declared concurrency. `GET /v1/replicasets` is removed pre‑1.0 and MUST NOT be served. (ORCH-3095)
 * Capability payloads MUST include an API version compatible with OpenAPI `info.version`. (ORCH-3096)
 
 ### 2.10 Resilience & Recovery
@@ -87,6 +90,43 @@ This specification is the single source of truth for llama-orch in a home lab. I
 * Driver or CUDA errors MUST mark pools Unready, trigger drains, and restart with exponential backoff. (ORCH-3038)
 * VRAM OOM MUST be distinguished from host OOM; VRAM OOM SHOULD trigger capacity re-estimation. (ORCH-3039)
 * Circuit breakers SHOULD shed load if SLOs are breached persistently. (ORCH-3040)
+
+---
+
+### 2.11 Model Selection & Auto-Fetch Policy
+
+* The data-plane `TaskRequest.model_ref` selects the desired model artifact. (ORCH-3090)
+* Supported schemes (engine-dependent) MUST include:
+  * `hf:org/repo/path/to/file.gguf` — single GGUF file for llama.cpp.
+  * `hf:org/repo` — full Transformers repo (config/tokenizer/safetensors) for vLLM/TGI.
+  * `file:/abs/path` or `relative/path` — local file or directory (no download).
+  * `https://…` — remote file/archive; engine-specific handling MAY download/extract.
+  * `s3://bucket/key` — object storage (primarily Triton model repos).
+  * `oci://registry/repo:tag` — OCI/NGC artifact (primarily Triton).
+* If referenced artifacts are not present locally, the system SHOULD auto-fetch into its model cache when provisioning policy allows; otherwise it MUST reply with an advisory error (e.g., 503 `POOL_UNREADY`) rather than hang. (ORCH-3091)
+* Auto-fetch MUST be governed by a deployment policy that can disable outbound network/tooling or require explicit allowlists. (ORCH-3080)
+* Home profile (Arch/CachyOS) MAY offer opt-in package installs for required tooling (e.g., `python-huggingface-hub`) via `pacman`/AUR when `allow_package_installs=true`. (ORCH-3092)
+* Pool preload MUST succeed only after the model is present and verified when checksums are provided; Ready MUST only be advertised post-preload. (ORCH-3002)
+
+---
+
+### 2.12 Engine Provisioning & Preflight
+
+* The program provisions and manages engines automatically per pool; operators SHOULD NOT be required to pre-install or manually launch engines. (ORCH-3200)
+* Provisioning modes (mirrors `contracts/config-schema`): (ORCH-3201)
+  * `external` — orchestrator attaches to an already-running engine (no provisioning performed).
+  * `source` — fetch from VCS and build (e.g., llama.cpp via git + cmake + make).
+  * `container` — prefer container images for engines like vLLM/TGI/Triton.
+  * `package` — install via system package manager when available.
+  * `binary` — download/extract prebuilt binaries to an install dir.
+* Preflight MUST check required tools and environment for the selected mode and either: (a) provision missing tools when policy allows, or (b) fail fast with actionable guidance. (ORCH-3202)
+  * Typical tools: `git`, `cmake`, `make`, `gcc`; engine-specific: `nvcc` (CUDA), `huggingface-cli` (HF), `aws` (S3), `oras` (OCI). (ORCH-3203)
+* Home profile Arch/CachyOS: when `allow_package_installs=true`, the system MAY install missing tools via `pacman`/AUR non-interactively when possible; otherwise it MUST instruct the operator. (ORCH-3204)
+* Cache & install locations: (ORCH-3205)
+  * Engine build/cache dir defaults to `~/.cache/llama-orch/<engine>` unless overridden by config.
+  * Models cache defaults to `~/.cache/models` unless overridden by config.
+* Outbound network/tooling MUST be policy-gated (same policy hook as §2.7 Security & Policy). Operators MUST be able to disable downloads globally. (ORCH-3206)
+* Provisioning MUST produce a deterministic plan (steps) and logs suitable for inclusion in artifacts; a pool MUST only transition to Ready after successful engine provisioning and model preload. (ORCH-3207)
 
 ---
 
@@ -122,6 +162,15 @@ This specification is the single source of truth for llama-orch in a home lab. I
 * Spec changes MUST follow `.docs/PROCESS.md`. (ORCH-3030)
 * Config schema is normative; unknown fields SHOULD be rejected unless explicitly marked experimental. (ORCH-3030)
 * TODO tracker updates are mandatory after spec/contract/test/code changes. (ORCH-3044)
+
+
+## Refinement Opportunities
+
+* Placement heuristic research: incorporate measured decode time and KV pressure into "predicted_start_ms" modeling while preserving determinism.
+* Catalog verification: optional signature/SBOM validation paths and caching policies for offline operation.
+* Lifecycle flows: introduce `Retired` grace periods and background unload policies per engine.
+* Auto-fetch policy: richer allowlisting (domains, protocols) and operator prompts in TTY to approve first‑time sources.
+* Provisioning UX: smarter preflight on Arch/CachyOS (pacman/AUR) vs. source builds; improve failure messages with copy‑pasteable fixes.
 
 ---
 

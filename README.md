@@ -36,6 +36,76 @@ Note: The `orchestratord` binary builds the router but does not start a network 
 - `tools/` — generators and utilities: OpenAPI client, spec extract, README indexer
 - `ci/` — pipelines and linters (metrics, links)
 
+### Crate wiring (Mermaid)
+
+```mermaid
+graph LR
+  subgraph Contracts
+    contracts_openapi["contracts/openapi/* (data.yaml, control.yaml)"]
+    contracts_schema["contracts/config-schema (Rust types, schema)"]
+    contracts_types["contracts/api-types"]
+  end
+
+  subgraph Core
+    orch_core["orchestrator-core (queue, invariants)"]
+    pool_mgr["pool-managerd (preload, readiness, backoff)"]
+  end
+
+  subgraph Orchestrator
+    orchd["orchestratord (HTTP handlers, SSE, placement)"]
+  end
+
+  subgraph Adapters
+    adapt_llama["worker-adapters/llamacpp-http"]
+    adapt_vllm["worker-adapters/vllm-http"]
+    adapt_tgi["worker-adapters/tgi-http"]
+    adapt_triton["worker-adapters/triton"]
+    adapt_mock["worker-adapters/mock"]
+  end
+
+  subgraph Plugins
+    policy_host["plugins/policy-host"]
+    policy_sdk["plugins/policy-sdk"]
+  end
+
+  subgraph TestHarness
+    th_bdd["test-harness/bdd"]
+    th_det["test-harness/determinism-suite"]
+    th_chaos["test-harness/chaos"]
+    th_haiku["test-harness/e2e-haiku"]
+    th_metrics["test-harness/metrics-contract"]
+  end
+
+  subgraph Tools
+    tool_client["tools/openapi-client"]
+    tool_spec["tools/spec-extract"]
+    tool_readme["tools/readme-index"]
+  end
+
+  %% wiring
+  orchd -->|uses| orch_core
+  orchd -->|serves OpenAPI from| contracts_openapi
+  orchd -->|validates config via| contracts_schema
+  orchd -->|policy hooks| policy_host
+  policy_sdk --> policy_host
+  orch_core -->|placement/dispatch| adapt_mock
+  orch_core --> adapt_llama
+  orch_core --> adapt_vllm
+  orch_core --> adapt_tgi
+  orch_core --> adapt_triton
+  pool_mgr --> adapt_llama
+  pool_mgr --> adapt_vllm
+  pool_mgr --> adapt_tgi
+  pool_mgr --> adapt_triton
+  th_bdd --> orchd
+  th_det --> orchd
+  th_chaos --> orchd
+  th_haiku --> orchd
+  th_metrics --> orchd
+  tool_client --> contracts_openapi
+  tool_spec -->|extracts from| contracts_openapi
+```
+
 ## API surface (contracts first)
 
 - Data plane (OrchQueue v1): `contracts/openapi/data.yaml`
@@ -47,6 +117,31 @@ Note: The `orchestratord` binary builds the router but does not start a network 
   - `GET /v1/capabilities`, `GET /v1/pools/{id}/health`, `POST /v1/pools/{id}/{drain|reload}`
   - Catalog: `POST /v1/catalog/models`, `GET /v1/catalog/models/{id}`, `POST /v1/catalog/models/{id}/verify`, `POST /v1/catalog/models/{id}/state`
 - Observability: `GET /metrics` (Prometheus text)
+
+### Request lifecycle (OrchQueue v1)
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Client
+  participant Orchestratord as orchestratord
+  participant Core as orchestrator-core
+  participant Adapter
+  participant Engine
+  participant Prom as Prometheus
+
+  Client->>Orchestratord: POST /v1/tasks (enqueue)
+  Orchestratord->>Core: Admission checks (ctx, budgets)
+  Core-->>Orchestratord: Accepted (job_id) or 429 with policy_label
+  Orchestratord-->>Client: 202 AdmissionResponse
+  Client->>Orchestratord: GET /v1/tasks/{id}/stream
+  Orchestratord->>Core: Dispatch when slot available
+  Core->>Adapter: start(job)
+  Adapter->>Engine: generate()
+  Adapter-->>Orchestratord: SSE frames (started/token/metrics/end)
+  Orchestratord-->>Client: SSE stream
+  Orchestratord->>Prom: counters/gauges/histograms
+```
 
 ## Metrics (implemented/registered)
 

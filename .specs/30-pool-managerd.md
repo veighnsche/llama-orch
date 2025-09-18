@@ -33,3 +33,9 @@ Requirements are versioned as `OC-POOL-3xxx`.
 
 - Code: [pool-managerd/src/main.rs](../pool-managerd/src/main.rs)
 - Tests: (to be created) `pool-managerd/tests/`
+
+## Refinement Opportunities
+
+- Managed engine mode: define how `pool-managerd` supervises engine processes (spawn, health probes, restart/backoff) when provisioning mode is `source|container|package|binary`.
+- Preload diagnostics: enrich readiness with last preload error cause and suggested fixes (e.g., insufficient VRAM, missing CUDA), including actionable hints for Arch/CachyOS.
+- Backoff policy tuning: add configurable caps for restart storms and per-error-class backoff multipliers.

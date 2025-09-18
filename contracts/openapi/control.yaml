@@ -366,7 +366,20 @@ components:
       type: object
       required: [new_model_ref]
       properties:
-        new_model_ref: { type: string }
+        new_model_ref:
+          type: string
+          description: |
+            New model reference for the pool. Uses the same schemes as data-plane `TaskRequest.model_ref`:
+
+            - hf:org/repo/path/to/file.gguf — Single-file GGUF (llama.cpp).
+            - hf:org/repo — Full Transformers repo (vLLM/TGI).
+            - file:/abs/path or relative/path — Local file/dir (no download).
+            - https://… — Remote file/archive.
+            - s3://bucket/key — Object storage path (primarily Triton).
+            - oci://registry/repo:tag — OCI/NGC artifact (primarily Triton).
+
+            If the artifact is not present locally and policy allows, the system may auto-fetch into its model cache
+            before flipping the pool back to Ready.
     PoolHealth:
       type: object
       properties:

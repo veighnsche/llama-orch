@@ -22,7 +22,7 @@ See: ../orchestrator-core/src/lib.rs, ../orchestrator-core/tests/props_queue.rs
 
 - [OC-CORE-1010] Scheduler MUST dispatch only to Ready replicas.
 - [OC-CORE-1011] Placement MUST respect device masks; cross‑mask spillover MUST NOT occur.
-- [OC-CORE-1012] Least‑loaded placement MUST be used across replicas of the same replica set.
+- [OC-CORE-1012] Placement MUST use least‑loaded selection with VRAM awareness across replicas of the same replica set: prefer the replica with the most free VRAM, then fewest active slots; tie‑break deterministically (e.g., by `replica_id`).
 - [OC-CORE-1013] Session affinity SHOULD keep a session on its last good replica when possible.
 
 ## 3) Capacity & Guardrails
@@ -53,3 +53,9 @@ See: ../orchestrator-core/src/lib.rs, ../orchestrator-core/tests/props_queue.rs
 
 - Property tests (to be created/enabled): ../orchestrator-core/tests/props_queue.rs
 - Metrics contract: ../ci/metrics.lint.json, ../test-harness/metrics-contract/tests/metrics_lint.rs
+
+## Refinement Opportunities
+
+- Incorporate predicted decode time and KV pressure into scheduling signals while preserving determinism.
+- Expose scheduler decision reasons in trace logs to aid performance tuning.
+- Explore per-pool weighting or simple admission throttles tied to GPU class (e.g., 3090 vs 3060) while keeping deterministic tie‑breakers.

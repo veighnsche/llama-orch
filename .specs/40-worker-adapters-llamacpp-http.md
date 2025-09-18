@@ -21,3 +21,9 @@ Requirements are versioned as `OC-ADAPT-5xxx`.
 ## 3) Traceability
 
 - Code: [worker-adapters/llamacpp-http/src/lib.rs](../worker-adapters/llamacpp-http/src/lib.rs)
+
+## Refinement Opportunities
+
+- Normalize prompt/response templates across common llama.cpp models to reduce detokenization drift.
+- Capture and surface build flags (e.g., `LLAMA_CUBLAS`, `LLAMA_VULKAN`) as part of `engine_version` metadata for better determinism audits.
+- Provide adapter‑level `x-examples` (in OpenAPI client docs) for typical llama.cpp interactions and SSE token streams.

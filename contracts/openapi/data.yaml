@@ -29,7 +29,7 @@ paths:
                   task_id: "00000000-0000-0000-0000-000000000001"
                   session_id: "11111111-1111-1111-1111-111111111111"
                   workload: completion
-                  model_ref: "repo:NousResearch/Meta-Llama-3-8B-Instruct"
+                  model_ref: "hf:Qwen/Qwen2.5-0.5B-Instruct-GGUF/qwen2.5-0.5b-instruct-q4_k_m.gguf"
                   engine: llamacpp
                   ctx: 8192
                   priority: interactive
@@ -291,7 +291,24 @@ components:
         task_id: { type: string, format: uuid }
         session_id: { type: string, format: uuid }
         workload: { $ref: '#/components/schemas/Workload' }
-        model_ref: { type: string }
+        model_ref:
+          type: string
+          description: |
+            Model reference selecting the weights to use. Supported schemes (engine-dependent):
+
+            - hf:org/repo/path/to/file.gguf — Single-file GGUF for llama.cpp. If the file is missing in the model cache,
+              the system may download it before serving the request, subject to provisioning policy.
+            - hf:org/repo — Full Transformers repository (config/tokenizer/safetensors) for engines like vLLM and TGI.
+              The system may prefetch the repo into the model cache and use the local path.
+            - file:/abs/path or relative/path — Use a local file or directory directly; no download occurs.
+            - https://... — Remote file or archive; engine-specific handling may fetch and cache on first use.
+            - s3://bucket/key — Object storage path (primarily Triton model repos); may be fetched to cache.
+            - oci://registry/repo:tag — OCI/NGC artifact reference (primarily Triton); may be pulled into a local cache.
+
+            Behavior: If the referenced model artifact(s) are not available locally, and the server's provisioning policy
+            permits auto-fetch, the system will attempt to fetch/copy them into its model cache and then serve the task.
+            If auto-fetch is disabled or the pool is not yet ready with the requested artifact, the server may respond with
+            an advisory error (e.g., 503 POOL_UNREADY) or backpressure guidance.
         engine: { $ref: '#/components/schemas/Engine' }
         ctx: { type: integer, format: int32 }
         priority: { $ref: '#/components/schemas/Priority' }

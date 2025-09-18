@@ -20,3 +20,9 @@ Requirements are versioned as `OC-ADAPT-5xxx`.
 ## 3) Traceability
 
 - Code: [worker-adapters/vllm-http/src/lib.rs](../worker-adapters/vllm-http/src/lib.rs)
+
+## Refinement Opportunities
+
+- Clarify handling of OpenAI-compatible sampling params vs. OrchQueue v1 schema to avoid silent drift.
+- Capture engine build/runtime flags (e.g., CUDA version) in `engine_version` metadata when available.
+- Provide adapter‑level examples for streaming tokens and cancel semantics under vLLM server quirks.

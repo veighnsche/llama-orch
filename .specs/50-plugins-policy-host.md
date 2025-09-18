@@ -33,3 +33,9 @@ Requirements are versioned as `OC-POLICY-4xxx`.
 
 - Code: [plugins/policy-host/src/lib.rs](../plugins/policy-host/src/lib.rs)
 - SDK: [plugins/policy-sdk/src/lib.rs](../plugins/policy-sdk/src/lib.rs)
+
+## Refinement Opportunities
+
+- Extend tool proxy to include `hf.hub_download` with digest verification and domain allowlists for safer model/doc retrieval.
+- Add correlation ID propagation across all tool calls and surface in host logs for end‑to‑end tracing.
+- Define a minimal deterministic caching layer for HTTP GETs to improve offline workflows while keeping auditability.

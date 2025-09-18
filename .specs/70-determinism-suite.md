@@ -18,3 +18,9 @@ Requirements are versioned as `OC-TEST-7xxx`.
 
 - Code: [test-harness/determinism-suite/src/lib.rs](../test-harness/determinism-suite/src/lib.rs)
 - Tests: [test-harness/determinism-suite/tests/byte_exact.rs](../test-harness/determinism-suite/tests/byte_exact.rs)
+
+## Refinement Opportunities
+
+- Expand corpus to include mixed‑GPU device masks and verify determinism with explicit `tensor_split` where engines support it.
+- Add negative tests demonstrating expected non‑determinism across engine/model updates to document guardrails.
+- Emit per‑replica diagnostics (sampler profile, build flags) to aid root cause when drift is detected.

@@ -108,3 +108,10 @@ Status: pre-code · Scope: OrchQueue v1 data plane & control plane
 
 - All metrics above must be present in code emission sites (no runtime logic here).
 - Labels must include `engine` and engine-specific version labels as described.
+
+## Refinement Opportunities
+
+- Define canonical histogram buckets for `latency_first_token_ms` and `latency_decode_ms` aligned to the home profile reference hardware.
+- Expand backpressure metrics to include a stable `policy_label` dimension and examples for `reject|drop-lru` cases.
+- Document recommended cardinality budgets per label set and provide guidance when to omit `engine_version` (beyond the admission exception) to stay within budgets.
+- Add mapping examples from SSE `metrics` payload fields (e.g., `queue_depth`, `on_time_probability`) to Prometheus series where appropriate, or clarify that SSE-only fields are not exported as metrics.

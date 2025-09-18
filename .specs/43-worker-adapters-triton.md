@@ -19,3 +19,9 @@ Requirements are versioned as `OC-ADAPT-5xxx`.
 ## 3) Traceability
 
 - Code: [worker-adapters/triton/src/lib.rs](../worker-adapters/triton/src/lib.rs)
+
+## Refinement Opportunities
+
+- Document mapping of Triton model repository layouts (local dir, `s3://`, `oci://`) to `model_ref` schemes and adapter behavior.
+- Capture `trtllm_version` and engine container image digest for provenance when running in containers.
+- Provide adapter‑level examples for gRPC vs HTTP infer, including streaming tokens (if applicable) and cancel semantics.

@@ -41,4 +41,13 @@ This overlay refines the core orchestrator spec for the home lab scenario. It do
 
 ---
 
+## Refinement Opportunities
+
+- Add a first‑run guided setup that checks GPU drivers, CUDA, and provisioner prerequisites with copy‑pasteable fixes (Arch/CachyOS via pacman/AUR).
+- Provide a one‑command `orchctl up` path that provisions llama.cpp from source and fetches a small model for a 60‑second smoke.
+- Offer an optional lightweight web panel that surfaces `queue_depth`, `on_time_probability`, and recent tasks with cancel.
+- Document LAN exposure patterns (SSH tunnel, reverse proxy with auth) tailored to the home profile.
+
+---
+
 Requirement IDs prefixed `HME-` are local to the home overlay and complement the ORCH-3xxx series. Update `requirements/00_home_profile.yaml` after modifying this document.

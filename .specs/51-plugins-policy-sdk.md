@@ -22,3 +22,9 @@ Requirements are versioned as `OC-POLICY-SDK-4xxx`.
 ## 3) Traceability
 
 - Code: [plugins/policy-sdk/src/lib.rs](../plugins/policy-sdk/src/lib.rs)
+
+## Refinement Opportunities
+
+- Provide typed helpers for correlation ID propagation and tool proxy hints (allowed domains, max bytes), aligned with `orchestratord` correlation ID spec.
+- Add example plugins illustrating deterministic tool usage and redaction hooks.
+- Consider a schema/IDL for tool invocation requests/responses to stabilize CDC for plugin authors.
