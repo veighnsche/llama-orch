@@ -38,8 +38,13 @@ Note: The `orchestratord` binary builds the router but does not start a network 
 
 ### Crate wiring (Mermaid)
 
+This section shows how components collaborate and where boundaries are enforced. New contributors should skim the diagrams and the short explanations below. The golden rule: per‑crate behavior is tested inside each crate; outer harnesses exercise only cross‑crate flows via the orchestrator HTTP API.
+
+#### Component map (who depends on whom)
+
 ```mermaid
 graph LR
+  %% Contracts are the source of truth
   subgraph Contracts
     contracts_openapi["contracts/openapi/* (data.yaml, control.yaml)"]
     contracts_schema["contracts/config-schema (Rust types, schema)"]
@@ -47,29 +52,32 @@ graph LR
   end
 
   subgraph Core
-    orch_core["orchestrator-core (queue, invariants)"]
-    pool_mgr["pool-managerd (preload, readiness, backoff)"]
+    orch_core["orchestrator-core (queues, placement logic)"]
+    pool_mgr["pool-managerd (preload → supervise → readiness)"]
   end
 
   subgraph Orchestrator
-    orchd["orchestratord (HTTP handlers, SSE, placement)"]
+    orchd["orchestratord (HTTP, SSE, admission, placement)"]
   end
 
   subgraph Adapters
-    adapt_llama["worker-adapters/llamacpp-http"]
-    adapt_vllm["worker-adapters/vllm-http"]
-    adapt_tgi["worker-adapters/tgi-http"]
-    adapt_triton["worker-adapters/triton"]
-    adapt_mock["worker-adapters/mock"]
+    adapter_api["worker-adapters/adapter-api (trait)"]
+    adapt_llama["llamacpp-http"]
+    adapt_vllm["vllm-http"]
+    adapt_tgi["tgi-http"]
+    adapt_triton["triton"]
+    adapt_openai["openai-http"]
+    adapt_mock["mock (dev)"]
   end
 
+  subgraph Provisioners
+    engine_prov["engine-provisioner (prepare engines)"]
+    model_prov["model-provisioner (ensure models)"]
+  end
 
-  subgraph TestHarness
-    th_bdd["test-harness/bdd"]
-    th_det["test-harness/determinism-suite"]
-    th_chaos["test-harness/chaos"]
-    th_haiku["test-harness/e2e-haiku"]
-    th_metrics["test-harness/metrics-contract"]
+  subgraph Catalog
+    catalog_core["catalog-core (entries, resolve, verify)"]
+    model_cache["~/.cache/models (configurable)"]
   end
 
   subgraph Tools
@@ -78,42 +86,85 @@ graph LR
     tool_readme["tools/readme-index"]
   end
 
-  subgraph Catalog
-    catalog_core["catalog-core (model catalog, resolve/verify/cache)"]
-    model_cache["~/.cache/models (configurable)"]
+  subgraph TestHarness
+    th_bdd["test-harness/bdd (integration)"]
+    th_det["test-harness/determinism-suite"]
+    th_chaos["test-harness/chaos"]
+    th_haiku["test-harness/e2e-haiku"]
+    th_metrics["test-harness/metrics-contract"]
   end
 
-  subgraph Provisioners
-    engine_prov["provisioners/engine-provisioner"]
-    model_prov["provisioners/model-provisioner"]
-  end
-
-  %% wiring
-  orchd -->|uses| orch_core
-  orchd -->|serves OpenAPI from| contracts_openapi
+  %% Orchestrator uses core + adapters; serves contracts
+  orchd -->|placement & admission| orch_core
+  orchd -->|serves| contracts_openapi
   orchd -->|validates config via| contracts_schema
-  orch_core -->|placement/dispatch| adapt_mock
-  orch_core --> adapt_llama
-  orch_core --> adapt_vllm
-  orch_core --> adapt_tgi
-  orch_core --> adapt_triton
-  pool_mgr --> adapt_llama
-  pool_mgr --> adapt_vllm
-  pool_mgr --> adapt_tgi
-  pool_mgr --> adapt_triton
-  orchd -->|catalog| catalog_core
-  pool_mgr -->|catalog| catalog_core
-  model_prov -->|resolve/verify| catalog_core
-  engine_prov -->|depends on models| model_prov
+  orchd -->|uses trait| adapter_api
+
+  %% Adapters are plugged under orchestrator (not core)
+  orchd --> adapt_mock
+  orchd --> adapt_llama
+  orchd --> adapt_vllm
+  orchd --> adapt_tgi
+  orchd --> adapt_triton
+  orchd --> adapt_openai
+
+  %% Manager prepares engines; publishes readiness to orchestrator
+  pool_mgr -->|ensure| engine_prov
+  engine_prov -->|needs| model_prov
+  model_prov -->|register/update| catalog_core
   catalog_core -->|stores| model_cache
-  th_bdd --> orchd
-  th_det --> orchd
-  th_chaos --> orchd
-  th_haiku --> orchd
-  th_metrics --> orchd
+  orchd -->|catalog CRUD| catalog_core
+
+  %% Outer harnesses only hit the HTTP boundary
+  th_bdd -->|HTTP/SSE| orchd
+  th_det -->|HTTP/SSE| orchd
+  th_chaos -->|HTTP/SSE| orchd
+  th_haiku -->|HTTP/SSE| orchd
+  th_metrics -->|HTTP/metrics| orchd
+
   tool_client --> contracts_openapi
   tool_spec -->|extracts from| contracts_openapi
 ```
+
+Notes
+- Orchestrator depends on `orchestrator-core` and the adapter trait crate; adapters are bound at runtime per pool/replica.
+- `pool-managerd` owns engine lifecycle. It uses provisioners to stage models/engines and flips readiness after health checks. Orchestrator reads that state for placement.
+- Catalog writes happen via `model-provisioner`; orchestrator interacts with catalog via HTTP endpoints.
+- Outer harnesses talk only to `orchestratord`—they never call inner crates directly.
+
+#### Control-plane: preload → readiness → reload
+
+```mermaid
+flowchart LR
+  orchd[orchestratord] -- drain/reload APIs --> pool_mgr[pool-managerd]
+  pool_mgr -- ensure_present(model) --> model_prov
+  model_prov -- put(entry) --> catalog_core
+  pool_mgr -- ensure(engine) --> engine_prov
+  engine_prov -- spawn & health --> pool_mgr
+  pool_mgr -- ready=true/false --> orchd
+```
+
+Explanation
+- A reload request triggers a preload: stage model via `model-provisioner` (which registers in `catalog-core`), then prepare/start the engine via `engine-provisioner`.
+- `pool-managerd` flips `ready=true` only after both succeed and health checks pass. Orchestrator reflects readiness in `/v1/pools/{id}/health` and uses it for placement.
+
+#### Data-plane: admission → placement → stream
+
+```mermaid
+flowchart LR
+  client[Client] -->|POST /v1/tasks| orchd
+  orchd -->|admission & queue| orch_core
+  orch_core -->|PlacementDecision| orchd
+  orchd -->|submit(job)| adapter[WorkerAdapter]
+  adapter -->|engine-native API| engine[Engine]
+  adapter -->|SSE frames| orchd
+  orchd -->|text/event-stream| client
+```
+
+Explanation
+- Orchestrator performs admission, consults core for placement, then dispatches to the selected adapter instance.
+- Adapters map engine-native APIs to `started → token* → end` (with optional `metrics`) and propagate errors via taxonomy.
+- Metrics/log fields are emitted at orchestrator boundaries as per `.specs/metrics/otel-prom.md` and `README_LLM.md`.
 
 ## API surface (contracts first)
 
