@@ -11,6 +11,7 @@ Date: 2025-09-19
   - Data plane: `contracts/openapi/data.yaml` (admission → SSE streaming, cancel).
 - Error envelope and correlation
   - All responses include structured error bodies on failure and SHOULD echo `X-Correlation-Id` when provided.
+  - Auth error envelopes (Minimal Auth seam): 40101 `MISSING_TOKEN`, 40102 `BAD_TOKEN`, 40301 `NON_LOOPBACK_WITHOUT_TOKEN`.
 - SSE/streaming behavior
   - `metrics` and `token` events, `started`/`end` framing, cancel propagation.
 - Observability
@@ -52,6 +53,10 @@ Date: 2025-09-19
 
 - Provider verification against OpenAPI.
 - Unit/integration tests for error mapping, headers, and SSE framing; BDD integration for cross‑crate flows.
+
+## Test Ownership
+
+- Crate-local tests OWN error mapping, headers, and SSE framing specifics. Cross-crate integration flows (admission→stream/cancel, drain/reload) are covered by the root BDD harness; see `/.specs/72-bdd-harness.md`.
 
 ## Refinement Opportunities
 

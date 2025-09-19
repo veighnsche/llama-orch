@@ -59,6 +59,14 @@ Layered architecture with clear seams:
 - Domain:
   - `domain::sse` (events, typed frames), `domain::error` (typed errors and HTTP mapping), `domain::ids`.
 
+### 3.1 SSE Emitter Design (normative per root spec)
+
+- Transport preference: enable HTTP/2 where supported for SSE; gracefully fallback to HTTP/1.1 (no behavior change). Compression is typically disabled for small token frames.
+- Buffered writer: the SSE encoder MUST use a buffered writer and avoid per-token heap allocations on the hot path.
+- Optional micro-batch: a bounded, disabled-by-default coalescing mode MAY group tokens within a small latency budget to reduce syscalls; ordering remains `started → token* → end` with optional `metrics` interleaves.
+- CPU budget: keep encoder CPU usage small and predictable; avoid allocations and JSON re-serialization per token; prefer pre-encoded slices where feasible.
+- Narration hooks: emit short, human-readable narration strings alongside structured logs at key events (admission, placement, stream start/end, cancel) per `/.specs/00_llama-orch.md §2.8.1`.
+
 ## 4. Proposed Crate Structure
 ```
 orchestratord/

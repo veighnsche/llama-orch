@@ -20,6 +20,12 @@ pub fn start_server() {
         init_observability();
         let app = build_app();
         let addr = std::env::var("ORCHD_ADDR").unwrap_or_else(|_| "0.0.0.0:8080".to_string());
+        if let Err(e) = crate::app::auth_min::enforce_startup_bind_policy(&addr) {
+            eprintln!("orchestratord startup refused: {}", e);
+            std::process::exit(1);
+        }
+        // Narration breadcrumb for startup
+        observability_narration_core::human("orchestratord", "start", &addr, "listening");
         let listener = tokio::net::TcpListener::bind(&addr).await.expect("bind ORCHD_ADDR");
         eprintln!("orchestratord listening on {}", addr);
         axum::serve(listener, app).await.unwrap();

@@ -1,6 +1,6 @@
 # Proposal: Adapter Host (in‑process) and Shared HTTP Util for Adapters
 
-Status: Approved
+Status: Accepted
 Owner: @llama-orch-maintainers
 Date: 2025‑09‑19
 

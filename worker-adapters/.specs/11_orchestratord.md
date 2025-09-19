@@ -11,6 +11,10 @@ Date: 2025-09-19
 - Enforce admission/backpressure; propagate cancel; surface queue position and predicted_start_ms in SSE.
 - Map adapter errors/taxonomy to HTTP error envelopes with `X-Correlation-Id`.
 
+### Auth seam
+
+- When Minimal Auth is configured, clients MUST attach `Authorization: Bearer <token>` on calls from adapters (or the Adapter Host facade) to orchestrator endpoints. Loopback exceptions MAY apply per `/.specs/11_min_auth_hooks.md`.
+
 ## Expectations on adapters
 - Implement `WorkerAdapter` (health/props/submit/cancel/engine_version) and map engine‑specific errors to `WorkerError`.
 - Stream `started` → `token*` → `end` (optional `metrics`) respecting timeouts; redact secrets.

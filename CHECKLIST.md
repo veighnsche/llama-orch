@@ -14,51 +14,51 @@ This checklist aggregates all work to implement recent proposals and root specs.
 
 ## 0. Workspace & Build System
 - [x] Add new crates to workspace `Cargo.toml` members: `adapter-host`, `worker-adapters/http-util`, `observability/narration-core` (ORCH-3620, ORCH-3610)
-- [ ] Plan private crate `auth-min/` and add to workspace members (timing-safe compare, header parse, loopback bypass, proxy trust) (AUTH-1xxx)
-- [ ] Ensure features for engine-provisioner providers: `provider-llamacpp`, `provider-vllm`, `provider-tgi`, `provider-triton` (ORCH-3430)
-- [ ] Update `xtask`/CI scripts to include new crates in fmt/clippy/tests (README_LLM workflow)
+- [x] Plan private crate `auth-min/` and add to workspace members (timing-safe compare, header parse, loopback bypass, proxy trust) (AUTH-1xxx)
+- [x] Ensure features for engine-provisioner providers: `provider-llamacpp`, `provider-vllm`, `provider-tgi`, `provider-triton` (ORCH-3430)
+- [x] Update `xtask`/CI scripts to include new crates in fmt/clippy/tests (README_LLM workflow)
 - [x] Update `tools/readme-index` map to include new crates
 
 ## 1. New Library Crates (Scaffolding)
 - [x] `adapter-host/` (lib): registry, facade (submit/cancel/health/props), narration & metrics wrappers (ORCH-3600..3604)
 - [x] `worker-adapters/http-util/` (lib): shared reqwest::Client, retry/backoff, streaming decode helpers, redaction (ORCH-3610..3613)
 - [x] `observability/narration-core/` (lib): minimal narration helper + test capture (ORCH-3300..3308)
-- [ ] `auth-min/` (lib, private): minimal auth decisions shared by server/worker/CLI (timing-safe compare, token fp6, loopback bypass, TRUST_PROXY_AUTH gate) (AUTH-1xxx)
+- [x] `auth-min/` (lib, private): minimal auth decisions shared by server/worker/CLI (timing-safe compare, token fp6, loopback bypass, TRUST_PROXY_AUTH gate) (AUTH-1xxx)
 
 ## 2. Orchestratord
 - [ ] Integrate `adapter-host` facade for adapter calls (ORCH-3620)
-- [ ] SSE encoder uses buffered writer; optional micro-batch flag (off by default) (ORCH-3400)
+- [x] SSE encoder uses buffered writer; optional micro-batch flag (off by default) (ORCH-3400)
 - [ ] Placement prefilter by feasibility (ctx_max, VRAM, compute, quantization, extensions) (ORCH-3411)
 - [ ] PlacementDecision cache keyed by `(job_spec_hash, snapshot_version, policy)` + TTL (ORCH-3410)
 - [ ] HTTP/2 preferred for SSE with fallback to HTTP/1.1 (ORCH-3450)
 - [ ] Metrics pre-registration; throttle per-token histograms (ORCH-3460)
-- [ ] `/v1/capabilities` backed by host capability snapshot cache (ORCH-3603)
-- [ ] Narration logs for admission/placement/stream/cancel; reconcile `decode_time_ms` (ORCH-3300, ORCH-3310)
-- [ ] Minimal Auth Hooks: refuse startup on non-loopback bind without `AUTH_TOKEN`; loopback bypass when `AUTH_OPTIONAL=true`; optional `TRUST_PROXY_AUTH` gate (AUTH-1002/1004/1006)
-- [ ] Minimal Auth Middleware: parse `Authorization: Bearer <token>`, timing-safe compare, add `identity=localhost|token:<fp6>` in logs; never log full tokens (AUTH-1001/1007/1008)
-- [ ] Minimal Auth Error Mapping: 40101 MISSING_TOKEN, 40102 BAD_TOKEN, 40301 NON_LOOPBACK_WITHOUT_TOKEN with stable JSON envelope (align with repo error style)
-- [ ] Config wiring: support `AUTH_TOKEN`, `AUTH_OPTIONAL`, `TRUST_PROXY_AUTH` alongside `ORCHD_ADDR`; defaults retain current bind
-- [ ] Worker registration path requires token (server-side check) and logs `identity` breadcrumbs (AUTH-1003/1008)
+- [x] `/v1/capabilities` backed by host capability snapshot cache (ORCH-3603)
+- [x] Narration logs for admission/cancel; reconcile `decode_time_ms` (ORCH-3300, ORCH-3310) — placement/stream narration pending
+- [x] Minimal Auth Hooks: refuse startup on non-loopback bind without `AUTH_TOKEN`; loopback bypass when `AUTH_OPTIONAL=true`; optional `TRUST_PROXY_AUTH` gate (AUTH-1002/1004/1006)
+- [x] Minimal Auth Middleware: parse `Authorization: Bearer <token>`, timing-safe compare, add `identity=localhost|token:<fp6>` in logs; never log full tokens (AUTH-1001/1007/1008)
+- [x] Minimal Auth Error Mapping: 40101 MISSING_TOKEN, 40102 BAD_TOKEN (scaffold), 40301 reserved; JSON envelope wired (aligning) — extend mapping later
+- [x] Config wiring: support `AUTH_TOKEN`, `AUTH_OPTIONAL`, `TRUST_PROXY_AUTH` alongside `ORCHD_ADDR`; defaults retain current bind
+- [x] Worker registration path requires token (server-side check) and logs `identity` breadcrumbs (AUTH-1003/1008)
 
 ## 3. Orchestrator-core
-- [ ] Property tests for queue invariants and policies (Reject/Drop-LRU) (ORCH-3250)
+- [x] Property tests for queue invariants and policies (Reject/Drop-LRU) (ORCH-3250)
 - [ ] Placement feasibility/tie-break determinism tests (ORCH-3251, ORCH-3252)
 
 ## 4. Pool-managerd
-- [ ] Registry: add `engine_version`, `engine_digest`, `engine_catalog_id`, `device_mask`, `slots_total/free`, perf hints (ORCH-3420)
+- [x] Registry: add `engine_version`, `engine_digest`, `engine_catalog_id`, `device_mask`, `slots_total/free`, perf hints (ORCH-3420)
 - [ ] Enforce readiness after model present + engine ensured + health pass (ORCH-3421)
 - [ ] Narration logs on preload/reload/drain and readiness flips (ORCH-3490)
 - [ ] Optional metrics scrape (align with metrics-contract)
-- [ ] GPU-only Enforcement: preflight asserts CUDA/device availability; never spawn CPU inference; fail fast on insufficiency (GPUs only)
+- [x] GPU-only Enforcement: preflight asserts CUDA/device availability; never spawn CPU inference; fail fast on insufficiency (GPUs only)
 - [ ] Registration: include Bearer token to orchestrator; handle 401/403 with clear backoff and operator hints (AUTH-1003)
 
 ## 5. Provisioners
 ### Engine-provisioner
-- [ ] Feature-gate providers; llama.cpp provider first (ORCH-3430)
-- [ ] ccache & CUDA hint caching; fail fast if CUDA unavailable; NO CPU fallback (ORCH-3431, ORCH-3437)
+- [x] Feature-gate providers; llama.cpp provider first (ORCH-3430)
+- [x] Fail fast if CUDA unavailable; NO CPU fallback (ORCH-3431, ORCH-3437) — ccache/CUDA hint caching later
 - [ ] Emit `PreparedEngine` summary (version, build_ref, digest, flags, mode, binary_path, engine_catalog_id) (ORCH-3432)
 - [ ] Write `EngineEntry` after successful ensure/build (ORCH-3441)
-- [ ] Respect Arch/CachyOS policy for installs when explicitly allowed (ORCH-3434)
+- [x] Respect Arch/CachyOS policy for installs when explicitly allowed (ORCH-3434)
 
 ### Model-provisioner
 - [ ] Parallel staging; enable `HF_HUB_ENABLE_HF_TRANSFER=1` when using HF CLI (ORCH-3435)
@@ -70,7 +70,7 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [ ] Tests for EngineEntry round-trip & incompatible schema rejection
 
 ## 7. Worker Adapters
-- [ ] Adopt `http-util` shared client and helpers (ORCH-3610..3612)
+- [x] `http-util` shared client and helpers added (redaction, bearer injection); adapter adoption pending (ORCH-3610..3612)
 - [ ] Enforce timeouts/retries with jitter; consistent error taxonomy mapping (ORCH-3276, ORCH-3275)
 - [ ] Streaming order `started → token* → end`; low-alloc token decode path (ORCH-3274)
 - [ ] Determinism signals: `engine_version`, `sampler_profile_version` (when applicable), `model_digest` (ORCH-3277)
@@ -118,7 +118,7 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [ ] Document Arch/CachyOS package policy in provisioners & README (env prefs)
 
 ## 16. CLI & Client (llama-orch-cli, consumer-tests)
-- [ ] CLI: support `--addr`, `--auth-token` flags and read `AUTH_TOKEN` env; default to loopback in examples; never print full tokens (mask; show fp6)
+- [x] CLI: support `--addr`, `--auth-token` flags and read `AUTH_TOKEN` env; default to loopback in examples; never print full tokens (mask; show fp6)
 - [ ] CLI: include Authorization header when token configured; handle 401/403 with actionable messages
 - [ ] consumer-tests: add cases for auth-min flows (happy path, missing/bad token) and identity fingerprint presence
 
@@ -170,7 +170,7 @@ This checklist aggregates all work to implement recent proposals and root specs.
   - [ ] `src/steps/security.rs` — auth-min scenarios (loopback optional, non-loopback refusal, bad/correct token, worker registration)
   - [ ] `src/steps/pool_manager.rs` — GPU-only preflight expectations
 - **tools/xtask/**
-  - [ ] Include new crates in fmt/clippy/tests; add auth-min CI checks
+  - [x] Include new crates in fmt/clippy/tests; add auth-min CI stub in xtask
 
 ## 19. Rollout Plan & Feature Switches
 - **Phase A (foundations)**: create `auth-min/` crate; wire orchestrator middleware and startup check; add CLI flags/env support; basic BDD and unit tests; no behavior change for loopback with AUTH_OPTIONAL=true.

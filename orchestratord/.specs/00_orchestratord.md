@@ -57,13 +57,15 @@ Observability:
 - `GET /metrics` — Prometheus text format; server-generated `X-Correlation-Id`
 
 ## 4. Headers & Auth
-- API key: `X-API-Key` must be present (all endpoints)
-- Planning stub accepts only `X-API-Key: valid` (to be replaced by real auth)
-- Correlation ID: echo `X-Correlation-Id` if provided, otherwise generate UUID v4 and include in response
-- Backpressure: on 429, include `Retry-After` (s) and `X-Backoff-Ms` (ms)
-- Budget headers: `X-Budget-Tokens-Remaining`, `X-Budget-Time-Remaining-Ms`, `X-Budget-Cost-Remaining`
-- Deprecation: `Deprecation: true` on `/v1/replicasets`
-- Catalog trust: `X-Trust-Policy: strict` enforces signatures; with `signed: false` yields `400 {"code":"UNTRUSTED_ARTIFACT"}`
+- Minimal Auth seam (spec-only): prefer `Authorization: Bearer <token>` per `/.specs/11_min_auth_hooks.md`.
+  - Identity breadcrumbs in logs: `identity=localhost` for loopback, or `identity=token:<fp6>` (never log full token).
+  - Startup refusal when bound to non-loopback without `AUTH_TOKEN` (see config schema seam).
+- Current implementation note: historical `X-API-Key` scaffolding may exist in code/tests; this MUST be replaced by the Bearer seam in future work. Specs and contracts reference the Bearer seam going forward.
+- Correlation ID: echo `X-Correlation-Id` if provided, otherwise generate UUID v4 and include in response.
+- Backpressure: on 429, include `Retry-After` (s) and `X-Backoff-Ms` (ms).
+- Budget headers: `X-Budget-Tokens-Remaining`, `X-Budget-Time-Remaining-Ms`, `X-Budget-Cost-Remaining`.
+- Deprecation: `Deprecation: true` on `/v1/replicasets`.
+- Catalog trust: `X-Trust-Policy: strict` enforces signatures; with `signed: false` yields `400 {"code":"UNTRUSTED_ARTIFACT"}`.
 
 ## 5. SSE Streaming Protocol
 Response headers:

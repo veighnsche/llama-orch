@@ -13,6 +13,12 @@ Requirements are versioned as `OC-ADAPT-5xxx`.
 - [OC-ADAPT-5020] Adapter MUST implement health/properties/completion/cancel/metrics against vLLM OpenAI‑compatible server.
 - [OC-ADAPT-5021] OpenAI‑compatible endpoints MUST remain internal; public surface is OrchQueue v1.
 
+## 1A) References & Cross-Cutting
+
+- This adapter SHOULD use `worker-adapters/http-util` for HTTP client construction, retries (capped + jitter), HTTP/2 keep‑alive, and header redaction.
+- Integration with orchestrator uses the in‑process facade described in `adapter-host/.specs/00_adapter_host.md`.
+- Streaming MUST preserve `started → token* → end` ordering per `/.specs/35-worker-adapters.md`; apply redaction to logs consistently.
+
 ## 2) Determinism & Version Capture
 
 - [OC-ADAPT-5030] Adapter MUST report engine_version and sampler/profile versions as applicable.

@@ -1,6 +1,6 @@
 # Proposal: Human‑Readable Narration in Logs (Repo‑Wide)
 
-**Status:** Approved
+**Status:** Accepted
 **Owner:** @llama-orch-maintainers
 **Date:** 2025‑09‑19
 

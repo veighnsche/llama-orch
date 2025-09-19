@@ -29,12 +29,18 @@ See: [contracts/openapi/control.yaml](../contracts/openapi/control.yaml), [orche
 - [OC-CTRL-2021] `started` MUST include `queue_position` and `predicted_start_ms` when available.
 - [OC-CTRL-2022] Event payloads MUST be well‑formed JSON; ordering MUST be per stream.
 
-### 3.1 Event payload fields (authoritative)
+### 3.1 Transport & Performance (normative)
+
+- [OC-CTRL-2025] The server SHOULD enable HTTP/2 for SSE where supported and MUST gracefully fallback to HTTP/1.1 when negotiation fails. Compression SHOULD be disabled for small token frames and MAY be enabled for large frames.
+- [OC-CTRL-2026] The SSE encoder MUST use a buffered writer and avoid per‑token heap allocations on the hot path. An optional micro‑batch mode MAY coalesce tokens within a small latency budget; it is DISABLED by default and MUST be bounded.
+- [OC-CTRL-2027] Event ordering MUST remain `started → token* → end` (with optional `metrics` frames interleaved). Heartbeat/keepalive events, if added, MUST remain compatible with existing parsers.
+
+### 3.2 Event payload fields (authoritative)
 
 - `started` → `{ queue_position: int, predicted_start_ms: int }`
 - `token` → `{ t: string, i: int }`  // token text and incremental index
 - `metrics` → `{ /* engine/pool specific snapshot; non-breaking additive */ }`
-- `end` → `{ tokens_out: int, decode_ms: int }`
+- `end` → `{ tokens_out: int, decode_ms: int }`  // canonical name is `decode_time_ms` in root spec; implementations MAY include both during migration
 - `error` → `{ code: ErrorKind, message: string, engine?: Engine }`
 
 OpenAPI component schemas:
@@ -56,7 +62,11 @@ OpenAPI component schemas:
 
 - [OC-CTRL-2050] Admission logs and `started` MUST include `queue_position` and `predicted_start_ms` when available.
 - [OC-CTRL-2051] Metrics MUST include queue depth, reject/drop rates, latency percentiles, and error counts by class.
-- [OC-CTRL-2052] Correlation ID: If a request includes `X-Correlation-Id`, the server MUST echo the same value in all responses and streaming (SSE) responses. If absent, the server MUST generate a UUIDv4 and include it. All non‑`204 No Content` responses MUST include this header.
+- [OC-CTRL-2052] Correlation ID: If a request includes `X-Correlation-Id`, the server MUST echo the same value in all responses and streaming (SSE) responses. If absent, the server MUST generate a UUIDv4 and include it. All non‑`204 No Content` responses MUST include this header. Narration and structured logs SHOULD include the correlation ID field.
+
+### 6.1 Narration Hooks (repo‑wide cross‑reference)
+
+- Hooks SHOULD emit short, human‑readable narration alongside structured fields at key points (admission, placement, stream start/end, cancel) per `/.specs/00_llama-orch.md §2.8.1`.
 
 ## 7) Traceability
 

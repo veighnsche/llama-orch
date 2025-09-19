@@ -132,46 +132,11 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
                     .arg(format!("-DCMAKE_CUDA_HOST_COMPILER={}", cc.display()));
                 for f in &mapped_flags { cfgcmd_hc.arg(f); }
                 let st_hc = cfgcmd_hc.status().context("cmake configure (host-compiler)")?;
-                if st_hc.success() {
-                    // proceed with build
-                } else {
-                    // Final fallback: CPU-only
-                    eprintln!("warning: CUDA configure still failing; retrying with CPU-only (-DGGML_CUDA=OFF)");
-                    gpu_enabled = false;
-                    let mut cfgcmd2 = Command::new("cmake");
-                    cfgcmd2
-                        .current_dir(&src_dir)
-                        .args(["-S", ".", "-B"]).arg(build_dir.to_string_lossy().to_string())
-                        .arg("-DCMAKE_BUILD_TYPE=Release")
-                        .arg("-DLLAMA_BUILD_SERVER=ON")
-                        .arg("-U").arg("LLAMA_CUBLAS")
-                        .arg("-DGGML_CUDA=OFF");
-                    // Keep other user flags except any GGML_CUDA/LLAMA_CUBLAS
-                    for f in &mapped_flags {
-                        if !(f.contains("GGML_CUDA") || f.contains("LLAMA_CUBLAS")) {
-                            cfgcmd2.arg(f);
-                        }
-                    }
-                    let status2 = cfgcmd2.status().context("cmake configure (cpu)")?;
-                    if !status2.success() {
-                        return Err(anyhow!("cmake configure failed"));
-                    }
+                if !st_hc.success() {
+                    return Err(anyhow!("CUDA configure failed even with host compiler hint; GPU-only enforcement"));
                 }
             } else {
-                // No compatible host compiler found: CPU-only fallback immediately
-                eprintln!("warning: no gcc-13/clang found; retrying with CPU-only (-DGGML_CUDA=OFF)");
-                gpu_enabled = false;
-                let mut cfgcmd2 = Command::new("cmake");
-                cfgcmd2
-                    .current_dir(&src_dir)
-                    .args(["-S", ".", "-B"]).arg(build_dir.to_string_lossy().to_string())
-                    .arg("-DCMAKE_BUILD_TYPE=Release")
-                    .arg("-DLLAMA_BUILD_SERVER=ON")
-                    .arg("-U").arg("LLAMA_CUBLAS")
-                    .arg("-DGGML_CUDA=OFF");
-                for f in &mapped_flags { if !(f.contains("GGML_CUDA") || f.contains("LLAMA_CUBLAS")) { cfgcmd2.arg(f); } }
-                let status2 = cfgcmd2.status().context("cmake configure (cpu)")?;
-                if !status2.success() { return Err(anyhow!("cmake configure failed")); }
+                return Err(anyhow!("CUDA configure failed and no compatible host compiler found; GPU-only enforcement"));
             }
         } else if !status.success() {
             return Err(anyhow!("cmake configure failed"));

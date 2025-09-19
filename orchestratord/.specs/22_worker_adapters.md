@@ -16,6 +16,12 @@ Date: 2025-09-19
 - Stream `started` → `token*` → `end` frames (and optional `metrics`), mapping determinism/log fields.
 - Redact secrets and respect network egress/timeouts.
 
+### Shared utilities & facade
+
+- HTTP-based adapters MUST use `worker-adapters/http-util` for client construction, retries with capped jitter, HTTP/2 keep-alive, and header redaction.
+- Integration inside `orchestratord` SHOULD go through the in-process Adapter Host facade (`adapter-host/.specs/00_adapter_host.md`) for bind/rebind, submit/cancel routing, and consistent narration/metrics wrappers.
+- When orchestrator Minimal Auth is configured, clients MUST attach `Authorization: Bearer <token>` on calls from adapters/host to orchestrator endpoints (control/health), honoring loopback exceptions per `/.specs/11_min_auth_hooks.md`.
+
 ## Expectations on orchestratord
 - Enforce admission/backpressure and dispatch to Ready adapters only.
 - Surface queue position and predicted_start_ms; propagate cancel to adapters.

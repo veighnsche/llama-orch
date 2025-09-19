@@ -19,6 +19,14 @@ Date: 2025-09-19
   - `EngineEntry` read/write support under a separate engine index file managed by `FsCatalog` helpers (atomic writes, schema versioning).
   - Helper types and functions to persist and retrieve engine metadata (engine, version, build_ref, digest, artifacts, created_ms).
 
+### Read-Only Helper Requirements (normative)
+
+- The crate MUST provide read-only helpers to avoid redundant staging work across callers:
+  - `exists(id|ref) -> bool` — returns true if a model with the given catalog id or reference is present locally.
+  - `locate(ModelRef) -> Option<ResolvedModel>` — returns normalized local paths and identifiers without performing fetch/stage.
+- Callers (e.g., model/engine provisioners) SHOULD consult these helpers before attempting network or filesystem staging.
+- These helpers MUST perform no writes and MUST honor catalog schema/versioning rules.
+
 ## Consumed Contracts (Expectations on Others)
 
 - Callers OWN network fetching policy and MUST NOT expect this crate to perform network I/O.
@@ -66,6 +74,5 @@ Date: 2025-09-19
 ## Refinement Opportunities
 
 - Content-addressable storage with GC and eviction reports.
-- `exists(id|ref)` and `locate(ModelRef)` helpers.
 - Trust state (verified/warned/unverified) recorded on entries.
 - Cross-index queries and tooling to correlate `EngineEntry` with `CatalogEntry` for reproducible runs and proof bundles.

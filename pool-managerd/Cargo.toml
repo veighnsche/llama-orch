@@ -11,3 +11,5 @@ path = "src/main.rs"
 [dependencies]
 tracing = { workspace = true }
 anyhow = { workspace = true }
+serde_json = { workspace = true }
+which = "6"

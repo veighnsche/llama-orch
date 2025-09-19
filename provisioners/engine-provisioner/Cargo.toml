@@ -5,6 +5,13 @@ edition = "2021"
 publish = false
 license = "GPL-3.0-or-later"
 
+[features]
+default = ["provider-llamacpp"]
+provider-llamacpp = []
+provider-vllm = []
+provider-tgi = []
+provider-triton = []
+
 [lib]
 name = "provisioners_engine_provisioner"
 path = "src/lib.rs"

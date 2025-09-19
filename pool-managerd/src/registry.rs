@@ -19,6 +19,13 @@ pub struct PoolEntry {
     pub version: Option<String>,
     pub last_error: Option<String>,
     pub active_leases: i32,
+    pub engine_version: Option<String>,
+    pub engine_digest: Option<String>,
+    pub engine_catalog_id: Option<String>,
+    pub device_mask: Option<String>,
+    pub slots_total: Option<i32>,
+    pub slots_free: Option<i32>,
+    pub perf_hints: Option<serde_json::Value>,
 }
 
 impl Registry {
@@ -39,6 +46,13 @@ impl Registry {
             version: None,
             last_error: None,
             active_leases: 0,
+            engine_version: None,
+            engine_digest: None,
+            engine_catalog_id: None,
+            device_mask: None,
+            slots_total: None,
+            slots_free: None,
+            perf_hints: None,
         });
         entry.health = health;
     }
@@ -58,6 +72,13 @@ impl Registry {
             version: None,
             last_error: None,
             active_leases: 0,
+            engine_version: None,
+            engine_digest: None,
+            engine_catalog_id: None,
+            device_mask: None,
+            slots_total: None,
+            slots_free: None,
+            perf_hints: None,
         });
         entry.last_error = Some(err.into());
     }
@@ -79,6 +100,13 @@ impl Registry {
             version: None,
             last_error: None,
             active_leases: 0,
+            engine_version: None,
+            engine_digest: None,
+            engine_catalog_id: None,
+            device_mask: None,
+            slots_total: None,
+            slots_free: None,
+            perf_hints: None,
         });
         entry.last_heartbeat_ms = Some(ms);
     }
@@ -100,6 +128,13 @@ impl Registry {
             version: None,
             last_error: None,
             active_leases: 0,
+            engine_version: None,
+            engine_digest: None,
+            engine_catalog_id: None,
+            device_mask: None,
+            slots_total: None,
+            slots_free: None,
+            perf_hints: None,
         });
         entry.version = Some(v.into());
     }
@@ -121,6 +156,13 @@ impl Registry {
             version: None,
             last_error: None,
             active_leases: 0,
+            engine_version: None,
+            engine_digest: None,
+            engine_catalog_id: None,
+            device_mask: None,
+            slots_total: None,
+            slots_free: None,
+            perf_hints: None,
         });
         entry.active_leases = entry.active_leases.saturating_add(1);
         entry.active_leases
@@ -137,6 +179,13 @@ impl Registry {
             version: None,
             last_error: None,
             active_leases: 0,
+            engine_version: None,
+            engine_digest: None,
+            engine_catalog_id: None,
+            device_mask: None,
+            slots_total: None,
+            slots_free: None,
+            perf_hints: None,
         });
         entry.active_leases = (entry.active_leases - 1).max(0);
         entry.active_leases

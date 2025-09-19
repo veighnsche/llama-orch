@@ -23,6 +23,14 @@ Out of scope:
 - Default store `FsCatalog` (JSON index files under a root path).
 - Data types: `CatalogEntry` (models), `Digest`, `ModelRef`.
 
+### Read-Only Helper Requirements (normative)
+
+- The API MUST provide read-only helpers to avoid redundant staging work:
+  - `exists(id|ref) -> bool` — returns true if a model with the given catalog id or reference is present locally.
+  - `locate(ModelRef) -> Option<ResolvedModel>` — returns normalized local paths and identifiers without performing fetch/stage.
+- Callers (e.g., model/engine provisioners) SHOULD consult these helpers before attempting network or filesystem staging.
+- These helpers MUST perform no writes and MUST honor catalog schema/versioning rules.
+
 ## Consumed Contracts (summary)
 
 - Used by `model-provisioner` to record/update model entries.
@@ -52,6 +60,5 @@ Out of scope:
 
 ## Refinement Opportunities
 
-- Read-only helpers (`exists`, `locate`) to avoid redundant staging.
 - Content-addressed storage and GC for large model sets.
 - EngineEntry support extracted into a separate storage file while sharing helpers.

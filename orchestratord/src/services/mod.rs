@@ -4,3 +4,4 @@ pub mod session;
 pub mod streaming;
 pub mod artifacts;
 pub mod catalog;
+pub mod placement;

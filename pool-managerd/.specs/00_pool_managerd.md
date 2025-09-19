@@ -41,6 +41,10 @@ Out of scope:
 - Registry API as per [ORCH-3503]. Unknown pools are created on first setter call with defaults.
 - Preload path interacts with `model-provisioner` and `engine-provisioner`; errors MUST be recorded via `set_last_error`.
 
+### Auth seam (when orchestrator Minimal Auth is configured)
+
+- Calls from `pool-managerd` to orchestrator control/health endpoints MUST attach `Authorization: Bearer <token>`. Loopback exceptions MAY apply per `/.specs/11_min_auth_hooks.md`.
+
 ## 4) Observability
 
 - Suggested fields in logs: `pool_id`, `engine`, `engine_version`, `device_mask`, `model_id`, `restart_count`, `backoff_ms`, `last_error`.

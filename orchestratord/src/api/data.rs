@@ -72,6 +72,8 @@ pub async fn create_task(
         "{{\"queue_position\":{},\"predicted_start_ms\":{}}}",
         admission.queue_position, admission.predicted_start_ms
     ));
+    // Narration breadcrumb
+    observability_narration_core::human("orchestratord", "admission", &body.session_id, format!("task={} queued pos={}", body.task_id, admission.queue_position));
 
     // Budget headers based on session info (best-effort)
     let svc = services::session::SessionService::new(state.sessions.clone(), std::sync::Arc::new(crate::infra::clock::SystemClock::default()));
@@ -108,5 +110,6 @@ pub async fn cancel_task(
     if let Ok(mut guard) = state.cancellations.lock() { guard.insert(id.clone()); }
     let mut lg = state.logs.lock().unwrap();
     lg.push(format!("{{\"canceled\":true,\"task_id\":\"{}\"}}", id));
+    observability_narration_core::human("orchestratord", "cancel", &id, "client requested cancel");
     Ok(StatusCode::NO_CONTENT)
 }

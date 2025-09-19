@@ -14,7 +14,7 @@ Date: 2025-09-19
 ## Expectations on engine-provisioner
 - Respect `PoolConfig.provisioning` (source/container mode, allow_package_installs, ports, flags) and return typed errors with remediation hints.
 - Delegate model staging to `model-provisioner` and use `ResolvedModel.local_path`.
-- Normalize runtime flags and enforce CPU/GPU consistency (e.g., `--n-gpu-layers 0` on CPU-only paths).
+- Normalize runtime flags; enforce GPU-only behavior with fail-fast diagnostics when CUDA/GPU is unavailable (no CPU fallback).
 
 ## Data Flow
 - Preload/reload: `ensure_present(model)` → `ensure(engine)` → health checks (manager) → `ready=true`.

@@ -19,6 +19,7 @@ members = [
     "worker-adapters/http-util",
     "adapter-host",
     "observability/narration-core",
+    "auth-min",
     "cli/consumer-tests",
     "cli/llama-orch-cli",
     "test-harness/e2e-haiku",

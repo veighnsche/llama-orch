@@ -1,6 +1,7 @@
 use axum::{routing::{get, post, delete}, Router, middleware};
 use crate::{api, state::AppState};
 use super::middleware::{api_key_layer, correlation_id_layer};
+use super::auth_min::bearer_identity_layer;
 
 pub fn build_router(state: AppState) -> Router {
     Router::new()
@@ -10,6 +11,8 @@ pub fn build_router(state: AppState) -> Router {
         .route("/v1/pools/:id/health", get(api::control::get_pool_health))
         .route("/v1/pools/:id/drain", post(api::control::drain_pool))
         .route("/v1/pools/:id/reload", post(api::control::reload_pool))
+        // Worker registration
+        .route("/v1/workers/register", post(api::control::register_worker))
         // Catalog
         .route("/v1/catalog/models", post(api::catalog::create_model))
         .route("/v1/catalog/models/:id", get(api::catalog::get_model))
@@ -30,6 +33,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/metrics", get(api::observability::metrics_endpoint))
         // Layers (order: correlation id, then auth)
         .layer(middleware::from_fn(correlation_id_layer))
+        .layer(middleware::from_fn(bearer_identity_layer))
         .layer(middleware::from_fn(api_key_layer))
         .with_state(state)
 }

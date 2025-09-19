@@ -19,6 +19,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 openapiv3 = { workspace = true }
+auth-min = { path = "../../auth-min" }
 
 # Optional deps we may enable later for HTTP, etc.
 # reqwest = { workspace = true }

@@ -9,12 +9,14 @@ This overlay refines the core orchestrator spec for the home lab scenario. It do
 - [HME-001] Orchestrator, pool manager, adapters, and artifact storage MUST run on the same workstation.
 - [HME-002] Remote access MUST default to loopback with opt-in LAN exposure guarded by firewall or SSH tunnel.
 - [HME-003] Configuration MUST live in a single YAML/TOML file plus environment variables for sensitive values (API token paths, optional tunnels).
+- [HME-004] Minimal Auth seam: when exposing beyond loopback, configure `AUTH_TOKEN` and related keys per `/.specs/11_min_auth_hooks.md`. `AUTH_OPTIONAL=true` only affects loopback requests; non-loopback sources MUST present Bearer token.
 
 ## H2. GPUs & Scheduling
 
 - [HME-010] Mixed GPUs (24 GB + 12 GB reference) MUST participate simultaneously; scheduling MUST prefer the GPU with the most free VRAM.
 - [HME-011] Pools MAY pin specific device masks but defaults MUST use all available devices.
 - [HME-012] Concurrency hints returned via capability discovery MUST reflect the mixed-GPU capacity used in the reference environment.
+- [HME-013] GPU-only policy: inference MUST run on NVIDIA GPUs only. Components MUST NOT fallback to CPU; when GPU/CUDA is unavailable, fail fast with actionable diagnostics.
 
 ## H3. CLI Integration
 

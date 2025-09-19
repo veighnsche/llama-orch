@@ -34,6 +34,15 @@ Out of scope:
 - [ADAPT‑3004] Metrics and logs MUST follow `.specs/metrics/otel-prom.md` and README_LLM fields (job_id, session_id, engine, engine_version, pool_id, replica_id, queue_position, predicted_start_ms, tokens_in, tokens_out, decode_time_ms).
 - [ADAPT‑3005] Adapters MUST time‑bound network requests and SHOULD retry idempotent operations with caps and jitter.
 
+### Cross‑Cutting Norms (HTTP‑based adapters)
+
+- Adapters MUST use the shared HTTP utilities in `worker-adapters/http-util` for:
+  - Client construction with consistent timeouts and connection reuse (HTTP/2 where supported).
+  - Capped, jittered retries for idempotent requests.
+  - Streaming decode helpers that preserve `started → token* → end` ordering and minimize allocations.
+  - Redaction of sensitive headers (`Authorization`, tokens) in logs and error messages.
+- Error taxonomy mapping MUST be consistent across adapters; helpers in `http-util` SHOULD be used where available.
+
 ## 2) Data Types & Semantics
 
 - `WorkerHealth { live, ready }` — Ready implies the adapter can accept a `submit`.

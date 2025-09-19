@@ -71,6 +71,7 @@ This specification is the single source of truth for llama-orch in a home lab. I
 ### 2.7 Security & Policy
 
 * Home profile: there is no AuthN/AuthZ on the control/data planes; they are open locally. Future profiles MAY add auth behind features. (ORCH-3035)
+* Minimal Auth seam (spec-only): when adopting Minimal Auth Hooks, behavior MUST align with `/.specs/11_min_auth_hooks.md` (AUTH-1001..AUTH-1008): optional loopback bypass, Bearer token on non-loopback binds, timing-safe comparisons, and identity breadcrumbs in logs. This document does not change current defaults; it references the seam for future adoption.
 * Logs MUST NOT leak secrets or tokens (e.g., upstream adapter API keys). Redaction remains mandatory. (ORCH-3037)
 * A lightweight policy hook MUST exist so outbound HTTP tooling can be allowed/denied per deployment. (ORCH-3080)
 
@@ -79,6 +80,14 @@ This specification is the single source of truth for llama-orch in a home lab. I
 * Logs MUST include `job_id`, `session_id`, `engine`, `engine_version`, `pool_id`, `replica_id`, `queue_position`, `predicted_start_ms`, `tokens_in`, `tokens_out`, `decode_time_ms`. (ORCH-3027)
 * Minimum Prometheus metrics: queue depth, tasks enqueued/started/canceled/rejected, tokens in/out, GPU util, VRAM used, optional KV cache ratio. (ORCH-3028)
 * SSE `metrics` frames SHOULD include additive JSON (`queue_depth`, `on_time_probability`, `kv_warmth`, remaining budgets). (ORCH-3100)
+
+#### 2.8.1 Human‑Readable Narration (ORCH-33xx)
+* [ORCH-3300] Significant events/spans SHOULD attach a short narration string alongside structured fields under a consistent key (e.g., `human`).
+* [ORCH-3302] Narration MUST NOT include secrets or PII; redaction helpers MUST be used by emitters.
+* [ORCH-3303] Narration MUST work with both pretty console and JSON outputs; JSON remains the default in CI.
+* [ORCH-3310] Canonicalize `decode_time_ms` as the field name; where `decode_ms` exists, implementations MUST preserve compatibility during migration.
+* Proof bundles SHOULD include narration coverage excerpts and, for streams, SSE transcripts with correlation IDs.
+* Emission points (normative, when events occur): admission decision, placement decision, stream start, stream end, cancel path. Emitters SHOULD include `identity` per Minimal Auth Hooks when available.
 
 ### 2.9 Capability Discovery
 
@@ -127,6 +136,7 @@ This specification is the single source of truth for llama-orch in a home lab. I
   * Models cache defaults to `~/.cache/models` unless overridden by config.
 * Outbound network/tooling MUST be policy-gated (same policy hook as §2.7 Security & Policy). Operators MUST be able to disable downloads globally. (ORCH-3206)
 * Provisioning MUST produce a deterministic plan (steps) and logs suitable for inclusion in artifacts; a pool MUST only transition to Ready after successful engine provisioning and model preload. (ORCH-3207)
+* GPU-only policy: inference MUST run on NVIDIA GPUs only. Provisioning and runtime MUST NOT fallback to CPU; when GPU/CUDA is unavailable, components MUST fail fast with actionable diagnostics. (ORCH-1102)
 
 ---
 

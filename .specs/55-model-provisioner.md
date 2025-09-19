@@ -24,6 +24,7 @@ Out of scope: engine preparation/runtime flags, placement.
 
 ## Key Flows
 
+0) Fast-path: call `catalog-core::{exists(id|ref), locate(ModelRef)}` to avoid redundant staging when artifacts are already present.
 1) Parse model ref.
 2) Ensure local presence (file-only by default; optional `hf:` via CLI shell-out when available).
 3) Register/update `CatalogEntry` with `lifecycle=Active`.
@@ -45,5 +46,4 @@ Out of scope: engine preparation/runtime flags, placement.
 ## Refinement Opportunities
 
 - Pluggable network fetchers (`hf/http/s3/oci`) behind features.
-- `exists(id|ref)` and `locate(ModelRef)` fast-paths to skip staging.
 - Parallel fetch of multi-file repos with integrity checks.

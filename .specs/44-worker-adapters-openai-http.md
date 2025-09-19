@@ -18,6 +18,12 @@ This adapter integrates OpenAI-compatible HTTP endpoints with the `WorkerAdapter
 - [OC-ADAPT-OAI-6002] Adapter MUST bound request timeouts and implement capped, jittered retries for idempotent calls.
 - [OC-ADAPT-OAI-6003] Adapter MUST NOT expose OpenAI endpoints publicly; all calls are internal.
 
+## 1A) References & Cross-Cutting
+
+- This adapter SHOULD use `worker-adapters/http-util` for HTTP client construction, retries (capped + jitter), HTTP/2 keep‑alive, and header redaction.
+- Integration with orchestrator uses the in‑process facade described in `adapter-host/.specs/00_adapter_host.md`.
+- Streaming MUST preserve `started → token* → end` ordering per `/.specs/35-worker-adapters.md`; apply redaction to logs consistently.
+
 ## 2) Determinism & Version Capture
 
 - [OC-ADAPT-OAI-6010] Adapter MUST capture and report `engine_version` (model/version string from OpenAI) and SHOULD include `model_digest` if provided by the upstream API or via config.

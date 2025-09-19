@@ -46,6 +46,10 @@ Date: 2025-09-19
 - Unit/property tests in this crate for queue invariants and tie‑breakers.
 - Cross‑crate interactions covered by BDD at the root harness.
 
+## Test Ownership
+
+- Crate-local tests OWN queue semantics, placement tie-breakers, and feasibility predicate behavior. Cross-crate flows (admission→stream/cancel via HTTP) are exercised only in the root BDD harness; see `/.specs/72-bdd-harness.md`.
+
 ## Refinement Opportunities
 
 - Add explicit `IncompatibleReason` taxonomy for `NoCapacity`.

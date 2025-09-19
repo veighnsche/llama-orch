@@ -47,6 +47,10 @@ Date: 2025-09-19
 - Per-adapter unit/behavior tests for mapping and retries.
 - Root BDD covers cross-crate flows only.
 
+## Test Ownership
+
+- Adapter crates OWN unit/behavior tests for mapping, retries with caps/jitter, error taxonomy, and secret redaction. Cross-crate flows (admission→stream/cancel over HTTP) are validated by the root BDD harness; see `/.specs/72-bdd-harness.md`.
+
 ## Refinement Opportunities
 
 - Shared HTTP/retry/stream decode utility crate to reduce duplication across adapters.

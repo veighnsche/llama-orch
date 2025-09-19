@@ -24,3 +24,4 @@ bytes = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 once_cell = { workspace = true }
+auth-min = { path = "../../auth-min" }

@@ -12,6 +12,12 @@ Requirements are versioned as `OC-ADAPT-5xxx`.
 
 - [OC-ADAPT-5060] Adapter MUST support Triton HTTP/GRPC infer, health/metadata/stats, and optional OpenAI‑compat frontends internally.
 
+## 1A) References & Cross-Cutting
+
+- This adapter SHOULD use `worker-adapters/http-util` for HTTP client setup, retries (capped + jitter), HTTP/2 keep‑alive, and header redaction where HTTP applies; for gRPC, analogous retry/timeouts SHOULD be applied.
+- Integration with orchestrator uses the in‑process facade described in `adapter-host/.specs/00_adapter_host.md`.
+- Streaming MUST preserve `started → token* → end` ordering per `/.specs/35-worker-adapters.md` when streaming is provided; apply redaction to logs consistently.
+
 ## 2) Determinism & Version Capture
 
 - [OC-ADAPT-5070] Adapter MUST report engine_version/trtllm_version where applicable.

@@ -26,6 +26,15 @@ Requirements are versioned as `OC-METRICS-7xxx`.
   - `kv_warmth: boolean` — whether KV is warm for the session.
 - [OC-METRICS-7111] When per-session budgets (token/time/cost) are enabled, budget remaining SHOULD be surfaced either in `metrics` events or as response headers to allow clients to adapt.
 
+## 4) Recommended Histogram Buckets (Home Profile)
+
+- The following non-normative but recommended bucket boundaries SHOULD be used for latency histograms on home profile reference hardware, to aid comparability across crates:
+  - `latency_first_token_ms`: [50, 100, 150, 200, 300, 500, 750, 1000, 1500, 2000, 3000]
+  - `latency_decode_ms`: [250, 500, 1000, 1500, 2000, 3000, 4000, 6000, 8000, 12000]
+- Implementations MAY adjust buckets for other profiles, but SHOULD document the chosen set alongside emitted metrics.
+
+Note: Buckets are intentionally coarse to keep series cardinality low while still being informative for SLO tracking.
+
 ## Refinement Opportunities
 
 - Define canonical bucket boundaries for `latency_first_token_ms` and `latency_decode_ms` for home profile reference hardware.

@@ -13,6 +13,12 @@ Requirements are versioned as `OC-ADAPT-5xxx`.
 - [OC-ADAPT-5001] Adapter MUST implement health, properties (slots/commit), completion (SSE), cancel, metrics scrape for llama.cpp native API.
 - [OC-ADAPT-5002] When using OpenAI‑compatible endpoints internally, they MUST NOT be exposed publicly.
 
+## 1A) References & Cross-Cutting
+
+- This adapter SHOULD use the shared HTTP client utilities in `worker-adapters/http-util` for consistent timeouts, retries (capped + jitter), HTTP/2 keep‑alive, and header redaction.
+- Integration with orchestrator uses the in‑process facade described in `adapter-host/.specs/00_adapter_host.md`.
+- Streaming MUST preserve `started → token* → end` ordering as per `/.specs/35-worker-adapters.md`; redaction rules apply to all logs.
+
 ## 2) Determinism & Version Capture
 
 - [OC-ADAPT-5010] Adapter MUST normalize detokenization templates and sampler profiles for determinism within a replica set.

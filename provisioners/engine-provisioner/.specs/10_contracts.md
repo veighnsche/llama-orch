@@ -10,7 +10,7 @@ Date: 2025-09-19
   - Trait `EngineProvisioner` with `plan(&PoolConfig) -> Plan` and `ensure(&PoolConfig) -> Result<()>`.
   - Function `provider_for(&PoolConfig) -> Box<dyn EngineProvisioner>`.
 - Llama.cpp source provider
-  - Ensures repo/ref is cloned, builds `llama-server` with CMake, maps deprecated flags, detects CUDA and falls back to CPU when needed, and spawns the server with normalized flags.
+  - Ensures repo/ref is cloned, builds `llama-server` with CMake, maps deprecated flags, detects CUDA and FAILS FAST with actionable diagnostics when unavailable (no CPU fallback), and spawns the server with normalized flags.
 - Preflight tooling
   - Detects required tools; optionally installs via pacman when `allow_package_installs=true` and on Arch-like systems.
 
@@ -39,7 +39,7 @@ Date: 2025-09-19
 
 ## Observability
 
-- Providers log key steps (`git`, `cmake`, CUDA hints, flag normalization) and CPU/GPU fallback decisions.
+- Providers log key steps (`git`, `cmake`, CUDA hints, flag normalization) and MUST surface clear diagnostics when CUDA/GPU is unavailable (fail-fast; no CPU fallback).
 
 ## Security & Policy
 
@@ -47,7 +47,11 @@ Date: 2025-09-19
 
 ## Testing Expectations
 
-- Unit/integration: plan generation, preflight detection, CUDA→CPU fallback, flag normalization.
+- Unit/integration: plan generation, preflight detection, flag normalization, and fail-fast diagnostics when CUDA/GPU is unavailable.
+
+## Test Ownership
+
+- Crate-local tests cover provider planning, flag normalization, and preflight/diagnostics. Cross-crate flows (admission→reload→readiness) are covered in the root BDD harness; see `/.specs/72-bdd-harness.md`.
 
 ## Refinement Opportunities
 

@@ -67,6 +67,9 @@ uuid = { workspace = true, optional = true }
 chrono = { version = "0.4", default-features = false, features = ["clock"], optional = true }
 sha2 = { workspace = true, optional = true }
 hex = "0.4"
+auth-min = { path = "../auth-min" }
+observability-narration-core = { path = "../observability/narration-core" }
+adapter-host = { path = "../adapter-host" }
 
 [dev-dependencies]
 openapiv3 = { workspace = true }

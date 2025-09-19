@@ -33,6 +33,20 @@ Requirements are versioned as `OC-CONFIG-6xxx`.
 - Code: [contracts/config-schema/src/lib.rs](../contracts/config-schema/src/lib.rs)
 - Tests: [contracts/config-schema/tests/validate_examples.rs](../contracts/config-schema/tests/validate_examples.rs)
 
+## 5) Auth & Binding (Minimal Auth Hooks seam)
+
+- [OC-CONFIG-6030] The schema MUST expose configuration keys for the Minimal Auth seam (spec-only; no runtime defaults change):
+  - `BIND_ADDR` (aka `ORCHD_ADDR`) — listen address; default preserves current behavior (e.g., `0.0.0.0:8080`).
+  - `AUTH_TOKEN` — shared secret for Bearer authentication; required when `BIND_ADDR` is non-loopback.
+  - `AUTH_OPTIONAL` (bool; default `false`) — when `true`, loopback requests MAY skip auth.
+  - `TRUST_PROXY_AUTH` (bool; default `false`) — when `true`, the server MAY trust upstream `Authorization` injected by a reverse proxy. Risks MUST be documented.
+- [OC-CONFIG-6031] The schema examples MUST include `x-examples` illustrating typical configurations:
+  - Loopback dev (no token; `AUTH_OPTIONAL=true`).
+  - LAN exposure (non-loopback bind; `AUTH_TOKEN` required).
+  - Reverse proxy posture (`TRUST_PROXY_AUTH=true` with proxy notes).
+- [OC-CONFIG-6032] Validation MUST fail when `BIND_ADDR` is non-loopback and `AUTH_TOKEN` is unset.
+- [OC-CONFIG-6033] When `AUTH_OPTIONAL=true`, requests from loopback MAY skip auth but all others MUST present Bearer token.
+
 ## Refinement Opportunities
 
 - Add schema `x-examples` illustrating each provisioning mode across engines.

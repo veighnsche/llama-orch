@@ -35,6 +35,9 @@ Out of scope:
 - [ORCH‑3405] Determinism: consumers MUST be able to emit logs with fields `{seed, sampler_profile_version, engine_version, model_digest}` and MUST NOT change replica mid‑stream unless requested.
 - [ORCH‑3406] Observability: consumers SHOULD emit counters for `tasks_enqueued_total`, `tasks_started_total`, `tasks_canceled_total`, `tasks_rejected_total`, a gauge for `queue_depth`, and optional histograms for `admission_latency_ms`.
 
+Note on canonical types:
+- `ModelRequirements` is defined canonically at `/.specs/10-orchestrator-core.md §2A`. Callers (e.g., `orchestratord`) derive these requirements from catalog + adapter metadata and pass them into core for feasibility checks. Core treats them as opaque inputs and MUST NOT access the catalog directly.
+
 ## 2) Data Types & Semantics (planning)
 
 ```rust

@@ -25,6 +25,42 @@ See: ../orchestrator-core/src/lib.rs, ../orchestrator-core/tests/props_queue.rs
 - [OC-CORE-1012] Placement MUST use least‑loaded selection with VRAM awareness across replicas of the same replica set: prefer the replica with the most free VRAM, then fewest active slots; tie‑break deterministically (e.g., by `replica_id`).
 - [OC-CORE-1013] Session affinity SHOULD keep a session on its last good replica when possible.
 
+### 2A) Data Types — Canonical (authoritative)
+
+`ModelRequirements` (canonical; referenced from wiring specs):
+
+```
+ModelRequirements {
+  model_id: string,            // catalog id or ref-derived id
+  model_digest: Option<string>,// content digest when available
+  ctx_max: int,                // maximum context length supported by the model artifacts
+  quant: Option<string>,       // normalized quantization tag (e.g., Q4_K_M), if applicable
+  streaming: bool,             // supports token streaming
+  extensions: Vec<string>,     // e.g., "speculative_decode", "mmproj"
+}
+```
+
+- [OC-CORE-1014] `ModelRequirements` MUST be derivable from catalog metadata plus adapter/engine capability metadata. Missing fields (e.g., `quant`) MAY remain `None` if not observable; callers MUST NOT guess.
+- [OC-CORE-1015] `ctx_max` MUST be the effective user-visible limit considering tokenizer/template overhead.
+
+`PlacementInput` (scheduler view of a replica):
+
+```
+PlacementInput {
+  replica_id: string,
+  pool_id: string,
+  engine: string,
+  engine_version: string,
+  free_vram_mb: int,
+  active_slots: int,
+  ctx_max_supported: int,
+  features: Vec<string>, // extensions/features enabled on this replica
+}
+```
+
+- [OC-CORE-1016] Feasibility MUST require `ctx_max_supported >= ModelRequirements.ctx_max` and feature subset satisfaction (when `extensions` are required). Engine/model mismatches MUST be rejected pre-dispatch.
+- [OC-CORE-1017] Deterministic tie-break mapping: selection ordering MUST be defined as a tuple sort `(free_vram_mb desc, active_slots asc, replica_id asc)`.
+
 ## 3) Capacity & Guardrails
 
 - [OC-CORE-1020] Context length MUST be ≤ model limit; otherwise reject before enqueue.

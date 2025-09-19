@@ -17,58 +17,58 @@ Legend:
 
 ## 1) Root `.specs/` edits
 
-- [ ] `/.specs/00_llama-orch.md`
-  - [ ] Add Observability/Narration (ORCH‑33xx): emission points (admission, placement, stream, cancel), redaction, proof bundle expectations
-  - [ ] Security & Policy: reference `/.specs/11_min_auth_hooks.md` (AUTH‑1001..1008) and loopback posture
-  - [ ] Affirm GPU-only policy (no CPU inference paths) and engine auto‑provisioning alignment in §2.12
-- [ ] `/.specs/10-orchestrator-core.md`
-  - [ ] Introduce canonical `ModelRequirements` in Data Types
-  - [ ] Define derivation rules from catalog + adapter metadata
-  - [ ] Clarify placement feasibility inputs and tie‑break determinism mapping into `PlacementInput`
-- [ ] `/.specs/20-orchestratord.md`
-  - [ ] Make HTTP/2 for SSE (fallback to HTTP/1.1) normative
-  - [ ] Buffered SSE emitter and optional micro‑batch flag (default off; bounded) normative
-  - [ ] Keep `started → token* → end` ordering; heartbeat optional and compatible
-  - [ ] Add narration hooks and correlation ID propagation references
-  - [ ] Remove overlapping items from Refinements after promotion
-- [ ] `/.specs/25-catalog-core.md`
-  - [ ] Promote `exists(id|ref)` and `locate(ModelRef)` to Requirements and cross‑link crate contracts
-- [ ] `/.specs/30-pool-managerd.md`
-  - [ ] Verify “CPU inference spillover is disallowed” is present and consistent with GPU‑only policy
-- [ ] `/.specs/35-worker-adapters.md`
-  - [ ] Promote shared HTTP util usage across HTTP adapters (timeouts, retries w/ jitter, error taxonomy mapping, redaction)
-  - [ ] Require deterministic, low‑alloc streaming decode path
-  - [ ] Reference `adapter-host` and `worker-adapters/http-util`
-- [ ] `/.specs/40-worker-adapters-llamacpp-http.md`
-  - [ ] Reference `worker-adapters/http-util` + Adapter Host; confirm streaming order & redaction expectations
-- [ ] `/.specs/41-worker-adapters-vllm-http.md`
-  - [ ] Reference `worker-adapters/http-util` + Adapter Host; confirm streaming order & redaction expectations
-- [ ] `/.specs/42-worker-adapters-tgi-http.md`
-  - [ ] Reference `worker-adapters/http-util` + Adapter Host; confirm streaming order & redaction expectations
-- [ ] `/.specs/43-worker-adapters-triton.md`
-  - [ ] Reference `worker-adapters/http-util` + Adapter Host; confirm streaming order & redaction expectations
-- [ ] `/.specs/44-worker-adapters-openai-http.md`
-  - [ ] Reference `worker-adapters/http-util` + Adapter Host; confirm streaming order & redaction expectations
-- [ ] `/.specs/50-engine-provisioner.md`
-  - [ ] Keep GPU‑only language explicit (“fail fast if CUDA/GPU unavailable; no CPU fallback”)
-  - [ ] Ensure PreparedEngine summary requirement reflected (engine name/version, build ref, digest, flags, mode, binary path)
-- [ ] `/.specs/55-model-provisioner.md`
-  - [ ] Reference catalog helpers `exists(id|ref)` and `locate(ModelRef)` as normative fast‑paths
-- [ ] `/.specs/56-engine-catalog.md`
-  - [ ] Confirm no conflicts; reference EngineEntry usage if needed (informative)
-- [ ] `/.specs/60-config-schema.md`
-  - [ ] Add AUTH keys: `BIND_ADDR`/`ORCHD_ADDR`, `AUTH_TOKEN`, `AUTH_OPTIONAL`, `TRUST_PROXY_AUTH`
-  - [ ] Add `x-examples` for typical auth configurations (loopback optional, non‑loopback required)
-- [ ] `/.specs/70-determinism-suite.md`
-  - [ ] Clarify boundaries and keep determinism focus unchanged
+- [x] `/.specs/00_llama-orch.md`
+  - [x] Add Observability/Narration (ORCH‑33xx): emission points (admission, placement, stream, cancel), redaction, proof bundle expectations
+  - [x] Security & Policy: reference `/.specs/11_min_auth_hooks.md` (AUTH‑1001..1008) and loopback posture
+  - [x] Affirm GPU-only policy (no CPU inference paths) and engine auto‑provisioning alignment in §2.12
+- [x] `/.specs/10-orchestrator-core.md`
+  - [x] Introduce canonical `ModelRequirements` in Data Types
+  - [x] Define derivation rules from catalog + adapter metadata
+  - [x] Clarify placement feasibility inputs and tie‑break determinism mapping into `PlacementInput`
+- [x] `/.specs/20-orchestratord.md`
+  - [x] Make HTTP/2 for SSE (fallback to HTTP/1.1) normative
+  - [x] Buffered SSE emitter and optional micro‑batch flag (default off; bounded) normative
+  - [x] Keep `started → token* → end` ordering; heartbeat optional and compatible
+  - [x] Add narration hooks and correlation ID propagation references
+  - [x] Remove overlapping items from Refinements after promotion
+- [x] `/.specs/25-catalog-core.md`
+  - [x] Promote `exists(id|ref)` and `locate(ModelRef)` to Requirements and cross‑link crate contracts
+- [x] `/.specs/30-pool-managerd.md`
+  - [x] Verify “CPU inference spillover is disallowed” is present and consistent with GPU‑only policy
+- [x] `/.specs/35-worker-adapters.md`
+  - [x] Promote shared HTTP util usage across HTTP adapters (timeouts, retries w/ jitter, error taxonomy mapping, redaction)
+  - [x] Require deterministic, low‑alloc streaming decode path
+  - [x] Reference `adapter-host` and `worker-adapters/http-util`
+- [x] `/.specs/40-worker-adapters-llamacpp-http.md`
+  - [x] Reference `worker-adapters/http-util` + Adapter Host; confirm streaming order & redaction expectations
+- [x] `/.specs/41-worker-adapters-vllm-http.md`
+  - [x] Reference `worker-adapters/http-util` + Adapter Host; confirm streaming order & redaction expectations
+- [x] `/.specs/42-worker-adapters-tgi-http.md`
+  - [x] Reference `worker-adapters/http-util` + Adapter Host; confirm streaming order & redaction expectations
+- [x] `/.specs/43-worker-adapters-triton.md`
+  - [x] Reference `worker-adapters/http-util` + Adapter Host; confirm streaming order & redaction expectations
+- [x] `/.specs/44-worker-adapters-openai-http.md`
+  - [x] Reference `worker-adapters/http-util` + Adapter Host; confirm streaming order & redaction expectations
+- [x] `/.specs/50-engine-provisioner.md`
+  - [x] Keep GPU‑only language explicit (“fail fast if CUDA/GPU unavailable; no CPU fallback”)
+  - [x] Ensure PreparedEngine summary requirement reflected (engine name/version, build ref, digest, flags, mode, binary path)
+- [x] `/.specs/55-model-provisioner.md`
+  - [x] Reference catalog helpers `exists(id|ref)` and `locate(ModelRef)` as normative fast‑paths
+- [x] `/.specs/56-engine-catalog.md`
+  - [x] Confirm no conflicts; reference EngineEntry usage if needed (informative)
+- [x] `/.specs/60-config-schema.md`
+  - [x] Add AUTH keys: `BIND_ADDR`/`ORCHD_ADDR`, `AUTH_TOKEN`, `AUTH_OPTIONAL`, `TRUST_PROXY_AUTH`
+  - [x] Add `x-examples` for typical auth configurations (loopback optional, non‑loopback required)
+- [x] `/.specs/70-determinism-suite.md`
+  - [x] Clarify boundaries and keep determinism focus unchanged
 - [ ] `/.specs/71-metrics-contract.md` & `/.specs/metrics/otel-prom.md`
   - [ ] If latency bucket guidance for SSE is needed, propose updates here first (optional)
-- [ ] `/.specs/72-bdd-harness.md`
-  - [ ] Clarify test ownership & scope (crate‑local vs cross‑crate)
-  - [ ] Include positive/negative Minimal Auth scenarios in BDD outline
-- [ ] `/.specs/00_home_profile.md`
-  - [ ] Cross‑link `/.specs/11_min_auth_hooks.md`; recommend loopback posture & optional token for LAN
-  - [ ] Confirm GPU‑only stance (no CPU inference) remains consistent
+- [x] `/.specs/72-bdd-harness.md`
+  - [x] Clarify test ownership & scope (crate‑local vs cross‑crate)
+  - [x] Include positive/negative Minimal Auth scenarios in BDD outline
+- [x] `/.specs/00_home_profile.md`
+  - [x] Cross‑link `/.specs/11_min_auth_hooks.md`; recommend loopback posture & optional token for LAN
+  - [x] Confirm GPU‑only stance (no CPU inference) remains consistent
 
 ## 2) Crate `.specs/` edits
 

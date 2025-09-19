@@ -23,9 +23,12 @@ This root spec complements the central in-repo adapter spec found at `worker-ada
 ## Cross-Cutting Requirements
 
 - Determinism: replicate `engine_version`, `model_digest`, and sampler profile (when applicable) so streams are reproducible per replica.
-- Timeouts/retries: adapters enforce request bounds and backoff with jitter.
-- Error taxonomy: map engine errors to `WorkerError` and preserve cause via logs.
-- Streaming: preserve `started → token* → end` ordering; `metrics` frames optional.
+- Shared HTTP util (normative for HTTP-based adapters):
+  - Adapters MUST use `worker-adapters/http-util` for constructing HTTP clients with consistent timeouts, retries with capped jitter, connection reuse (HTTP/2 keep-alive), and redaction of sensitive headers.
+  - Error taxonomy from upstream MUST be mapped to `WorkerError` consistently using the shared helpers.
+- Streaming decode path (normative):
+  - Streaming MUST preserve `started → token* → end` ordering; `metrics` frames optional and additive.
+  - Implementations SHOULD use a low-allocation hot path for token events (avoid per-token heap allocations where possible) and MUST remain deterministic with respect to ordering and token boundary handling.
 
 ## Per-Adapter Supplements
 
@@ -42,6 +45,10 @@ This root spec complements the central in-repo adapter spec found at `worker-ada
 
 ## Refinement Opportunities
 
-- Shared HTTP client/retry helper crate for adapters.
 - Optional thin “token” hot-path type to reduce per-event allocations.
 - Capability schema for ctx_max/workloads/features across adapters.
+
+## References
+
+- See `adapter-host/.specs/00_adapter_host.md` for the in-process facade used by orchestrator integration.
+- See `worker-adapters/http-util/.specs/00_http_util.md` for shared HTTP client and retry/backoff/redaction requirements.

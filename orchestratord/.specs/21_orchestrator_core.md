@@ -9,11 +9,13 @@ Date: 2025-09-19
 ## Expectations on orchestrator-core
 - Provide queue/admission façade (bounded FIFO with policies) and data shapes for placement: `PlacementInput`, `PoolSnapshot`, `JobSpec`, `PlacementDecision`.
 - Placement policy: feasibility (model/engine/device) first, then scoring with deterministic tie-breakers.
+- Model requirements: treat `ModelRequirements` (canonical at `/.specs/10-orchestrator-core.md §2A`) as opaque inputs derived by `orchestratord` from catalog + adapter metadata.
 
 ## Expectations on orchestratord
 - Convert HTTP inputs (TaskRequest) into `JobSpec` and assemble `PlacementInput` from pool snapshots.
 - Enforce admission/backpressure policy; return 429 with retry-after when applicable.
 - Surface queue position and predicted_start_ms in `started`/`metrics` frames.
+ - Derive `ModelRequirements` (catalog + adapter capabilities) and pass to core for feasibility.
 
 ## Data Flow
 - Admission: HTTP POST `/v1/tasks` → build `JobSpec` → `place()` → choose pool/adapter → stream via SSE.

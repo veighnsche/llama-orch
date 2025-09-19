@@ -3,6 +3,8 @@
 use serde_json::json;
 use crate::state::AppState;
 use tokio::time::{sleep, Duration};
+use std::io::Write;
+use std::io::BufWriter;
 
 /// Render a simple deterministic SSE for a task id and persist transcript to artifacts.
 pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
@@ -29,7 +31,7 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
         "time_budget_remaining_ms": 600000,
         "cost_budget_remaining": 0.0
     });
-    let end = json!({"tokens_out": 1, "decode_ms": 5});
+    let end = json!({"tokens_out": 1, "decode_time_ms": 5});
 
     // Decode latency sample and tokens_out
     crate::metrics::observe_histogram(
@@ -83,14 +85,37 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
     // Clear cancellation flag for this task id to avoid leakage
     if let Ok(mut guard) = state.cancellations.lock() { let _ = guard.remove(&id); }
 
-    // Build SSE text from events vector
-    let mut lines = Vec::with_capacity(events.len() * 3);
-    for (ty, data) in &events {
-        lines.push(format!("event: {}", ty));
-        lines.push(format!("data: {}", data));
-        lines.push("".to_string());
+    // Optional micro-batch: if enabled, merge consecutive token events.
+    if std::env::var("ORCHD_SSE_MICROBATCH").map(|v| v == "1" || v.eq_ignore_ascii_case("true")).unwrap_or(false) {
+        let mut batched: Vec<(&str, serde_json::Value)> = Vec::new();
+        let mut token_buf: Vec<serde_json::Value> = Vec::new();
+        for (ty, data) in events.into_iter() {
+            if ty == "token" {
+                token_buf.push(data);
+                continue;
+            }
+            if !token_buf.is_empty() {
+                batched.push(("token", json!({"batch": token_buf}))); // low-alloc merge representation
+                token_buf = Vec::new();
+            }
+            batched.push((ty, data));
+        }
+        if !token_buf.is_empty() {
+            batched.push(("token", json!({"batch": token_buf})));
+        }
+        events = batched;
     }
-    // Ensure terminal newline
-    let sse = lines.join("\n");
-    sse
+
+    // Build SSE text from events vector using a buffered writer
+    let mut buf = Vec::with_capacity(events.len() * 24);
+    {
+        let mut bw = BufWriter::new(&mut buf);
+        for (ty, data) in &events {
+            let _ = writeln!(&mut bw, "event: {}", ty);
+            let _ = writeln!(&mut bw, "data: {}", data);
+            let _ = writeln!(&mut bw);
+        }
+        let _ = bw.flush();
+    }
+    String::from_utf8(buf).unwrap_or_default()
 }

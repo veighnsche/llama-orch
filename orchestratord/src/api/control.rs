@@ -1,12 +1,23 @@
 use axum::{extract::State, response::IntoResponse, Json};
-use http::StatusCode;
+use http::{HeaderMap, StatusCode};
 use serde_json::json;
+use std::sync::Arc;
 
 use crate::state::AppState;
 use crate::domain::error::OrchestratorError as ErrO;
 
-pub async fn get_capabilities(_state: State<AppState>) -> Result<impl IntoResponse, ErrO> {
-    let body = crate::services::capabilities::snapshot();
+pub async fn get_capabilities(state: State<AppState>) -> Result<impl IntoResponse, ErrO> {
+    // Serve from cache if present; otherwise compute and store.
+    let body = {
+        let mut guard = state.capabilities_cache.lock().unwrap();
+        if let Some(cached) = guard.as_ref() {
+            cached.clone()
+        } else {
+            let snap = crate::services::capabilities::snapshot();
+            *guard = Some(snap.clone());
+            snap
+        }
+    };
     Ok((StatusCode::OK, Json(body)))
 }
 
@@ -62,4 +73,53 @@ pub async fn reload_pool(
         1,
     );
     Ok(StatusCode::OK)
+}
+
+/// Worker registration requires a valid Bearer token.
+#[derive(serde::Deserialize)]
+pub struct RegisterWorkerBody { pub pool_id: Option<String>, pub replica_id: Option<String> }
+
+pub async fn register_worker(
+    state: State<AppState>,
+    headers: HeaderMap,
+    body: Option<Json<RegisterWorkerBody>>,
+) -> Result<impl IntoResponse, ErrO> {
+    let expected = std::env::var("AUTH_TOKEN").ok();
+    let auth = headers
+        .get(http::header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok());
+    let token_opt = auth_min::parse_bearer(auth);
+
+    // Missing token
+    let token = match token_opt {
+        None => {
+            let env = json!({ "code": 40101, "message": "MISSING_TOKEN" });
+            return Ok((StatusCode::UNAUTHORIZED, Json(env)));
+        }
+        Some(t) => t,
+    };
+
+    // Compare using timing safe equality when expected provided
+    if let Some(exp) = expected {
+        if !auth_min::timing_safe_eq(exp.as_bytes(), token.as_bytes()) {
+            let env = json!({ "code": 40102, "message": "BAD_TOKEN" });
+            return Ok((StatusCode::UNAUTHORIZED, Json(env)));
+        }
+    }
+
+    // Record identity breadcrumb
+    let id = format!("token:{}", auth_min::token_fp6(&token));
+    let mut lg = state.logs.lock().unwrap();
+    lg.push(format!("{{\"identity\":\"{}\",\"event\":\"worker_register\"}}", id));
+
+    // For scaffolding: bind a mock adapter for the provided pool
+    let pool_id = body.as_ref().and_then(|b| b.pool_id.clone()).unwrap_or_else(|| "default".to_string());
+    let replica_id = body.as_ref().and_then(|b| b.replica_id.clone()).unwrap_or_else(|| "r0".to_string());
+    #[cfg(feature = "mock-adapters")]
+    {
+        let mock = worker_adapters_mock::MockAdapter::default();
+        state.adapter_host.bind(pool_id.clone(), replica_id.clone(), Arc::new(mock));
+    }
+
+    Ok((StatusCode::OK, Json(json!({"ok": true, "identity": id, "pool_id": pool_id, "replica_id": replica_id}))))
 }
