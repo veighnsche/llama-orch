@@ -1,20 +1,12 @@
 pub mod adapters;
-pub mod apply_steps;
 pub mod catalog;
-pub mod config;
 pub mod control_plane;
-pub mod core_guardrails;
 pub mod data_plane;
 pub mod deadlines_preemption;
-pub mod determinism;
 pub mod error_taxonomy;
 pub mod lifecycle;
 pub mod observability;
-pub mod policy_host;
-pub mod policy_sdk;
 pub mod pool_manager;
-pub mod preflight_steps;
-pub mod scheduling;
 pub mod security;
 pub mod world;
 
@@ -40,10 +32,7 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^the adapter implements TGI custom API and metrics$").unwrap(),
         Regex::new(r"^a worker adapter for triton$").unwrap(),
         Regex::new(r"^the adapter implements infer/streaming and metrics$").unwrap(),
-        // apply_steps
-        Regex::new(r"^when apply runs$").unwrap(),
-        Regex::new(r"^target filesystem is unsupported$").unwrap(),
-        Regex::new(r"^apply completes successfully$").unwrap(),
+        
         // catalog
         Regex::new(r"^a catalog model payload$").unwrap(),
         Regex::new(r"^I create a catalog model$").unwrap(),
@@ -56,13 +45,7 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^strict trust policy is enabled$").unwrap(),
         Regex::new(r"^an unsigned catalog artifact$").unwrap(),
         Regex::new(r"^catalog ingestion fails with UNTRUSTED_ARTIFACT$").unwrap(),
-        // config
-        Regex::new(r"^a valid example config$").unwrap(),
-        Regex::new(r"^schema validation passes$").unwrap(),
-        Regex::new(r"^strict mode with unknown field$").unwrap(),
-        Regex::new(r"^validation rejects unknown fields$").unwrap(),
-        Regex::new(r"^schema is generated twice$").unwrap(),
-        Regex::new(r"^outputs are identical$").unwrap(),
+        
         // control_plane
         Regex::new(r"^a Control Plane API endpoint$").unwrap(),
         Regex::new(r"^a pool id$").unwrap(),
@@ -96,20 +79,12 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^I receive 204 No Content with correlation id$").unwrap(),
         Regex::new(r"^a session id$").unwrap(),
         Regex::new(r"^I query the session$").unwrap(),
-        Regex::new(r"^I receive session info with ttl_ms_remaining turns kv_bytes kv_warmth$")
-            .unwrap(),
-        Regex::new(r"^I delete the session$").unwrap(),
+        Regex::new(r"^I receive session info with ttl_ms_remaining turns kv_bytes kv_warmth$").unwrap(),
         // deadlines & SSE metrics
         Regex::new(r"^a task with infeasible deadline$").unwrap(),
         Regex::new(r"^I receive error code DEADLINE_UNMET$").unwrap(),
         Regex::new(r"^SSE metrics include on_time_probability$").unwrap(),
-        // determinism
-        Regex::new(r"^two replicas pin engine_version sampler_profile_version and model_digest$")
-            .unwrap(),
-        Regex::new(r"^same prompt parameters and seed are used$").unwrap(),
-        Regex::new(r"^token streams are byte-exact across replicas$").unwrap(),
-        Regex::new(r"^determinism is not assumed across engine or model updates$").unwrap(),
-        Regex::new(r"^replicas across engine or model versions are used$").unwrap(),
+        
         // error taxonomy
         Regex::new(r"^I trigger INVALID_PARAMS$").unwrap(),
         Regex::new(r"^I receive 400 with correlation id and error envelope code INVALID_PARAMS$")
@@ -137,18 +112,7 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^noop$").unwrap(),
         Regex::new(r"^nothing happens$").unwrap(),
         Regex::new(r"^it passes$").unwrap(),
-        // policy host/sdk
-        Regex::new(r"^a policy host$").unwrap(),
-        Regex::new(r"^the default plugin ABI is WASI$").unwrap(),
-        Regex::new(r"^functions are pure and deterministic over explicit snapshots$").unwrap(),
-        Regex::new(r"^ABI versioning is explicit and bumps MAJOR on breaking changes$").unwrap(),
-        Regex::new(r"^plugins run in a sandbox with no filesystem or network by default$").unwrap(),
-        Regex::new(r"^host bounds CPU time and memory per invocation$").unwrap(),
-        Regex::new(r"^host logs plugin id version decision and latency$").unwrap(),
-        Regex::new(r"^a policy SDK$").unwrap(),
-        Regex::new(r"^public SDK functions are semver-stable within a MAJOR$").unwrap(),
-        Regex::new(r"^breaking changes include a migration note and version bump$").unwrap(),
-        Regex::new(r"^SDK performs no network or filesystem I/O by default$").unwrap(),
+        
         // pool manager
         Regex::new(r"^pool is Unready due to preload failure$").unwrap(),
         Regex::new(r"^pool readiness is false and last error cause is present$").unwrap(),
@@ -159,25 +123,14 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^placement respects device masks; no cross-mask spillover occurs$").unwrap(),
         Regex::new(r"^heterogeneous split ratios are configured$").unwrap(),
         Regex::new(r"^per-GPU resident KV is capped for smallest GPU$").unwrap(),
-        // preflight
-        Regex::new(r"^side effects are not performed \(DryRun is default\)$").unwrap(),
-        Regex::new(r"^I run preflight and apply in Commit mode$").unwrap(),
-        Regex::new(r"^a critical compatibility violation is detected in preflight$").unwrap(),
-        Regex::new(r"^I run the engine with default policy$").unwrap(),
-        Regex::new(r"^when preflight runs$").unwrap(),
-        // scheduling
-        Regex::new(r"^session affinity keeps a session on its last good replica$").unwrap(),
+        
+        
         // security
         Regex::new(r"^no API key is provided$").unwrap(),
         Regex::new(r"^I receive 401 Unauthorized$").unwrap(),
         Regex::new(r"^an invalid API key is provided$").unwrap(),
         Regex::new(r"^I receive 403 Forbidden$").unwrap(),
-        // core_guardrails
-        Regex::new(r"^a task with context length beyond model limit$").unwrap(),
-        Regex::new(r"^a task with token budget exceeding configured limit$").unwrap(),
-        Regex::new(r"^the request is rejected before enqueue$").unwrap(),
-        Regex::new(r"^a running task exceeding watchdog thresholds$").unwrap(),
-        Regex::new(r"^the watchdog aborts the task$").unwrap(),
+        
     ]
 }
 

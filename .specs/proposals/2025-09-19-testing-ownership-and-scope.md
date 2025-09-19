@@ -90,3 +90,56 @@ IDs use the ORCH‑32xx range (testing ownership and scope).
 - Add a `make test-fast` profile that runs crate tests + minimal BDD.
 - Provide a template for per‑crate test sections (README: High/Mid/Low behavior + test pointers).
 - Tag BDD scenarios by feature (`@admission`, `@catalog`, `@reload`) to support selective runs in CI.
+
+## 9) Per‑Crate Hardening Requirements
+
+IDs use ORCH‑325x (hardening) to complement ownership rules above. These are expectations for each crate’s own tests. The outer harnesses MUST NOT duplicate these beyond integration relevance.
+
+### orchestrator-core
+- [ORCH‑3250] Property tests MUST cover queue invariants (boundedness, FIFO within priority) and policy behavior (Reject, Drop‑LRU) including edge saturation.
+- [ORCH‑3251] Placement tests MUST cover feasibility predicate edges (ctx length, VRAM, compute capability, quantization/extensions) and deterministic tie‑break ordering.
+- [ORCH‑3252] Determinism expectations: core MUST be pure logic (no wall‑clock, no threads); tests SHOULD verify determinism for identical inputs.
+- [ORCH‑3253] Metrics/logging: where wrappers exist in core, tests SHOULD ensure label sets align with `.specs/metrics/otel-prom.md` (names only; full scrape is a harness concern).
+
+### orchestratord
+- [ORCH‑3254] Error envelope mapping MUST be tested per OpenAPI: HTTP code ↔ envelope code ↔ retriable bits; correlation ID echoing.
+- [ORCH‑3255] SSE framing MUST be validated at unit/integration granularity (started/token/metrics/end ordering, headers), with adapters mocked.
+- [ORCH‑3256] Timeouts and backpressure: admission 429 and Retry‑After headers MUST be unit tested; request timeouts SHOULD be simulated with adapter mocks.
+- [ORCH‑3257] Security: auth middleware tests for 401/403 paths; ensure secrets never printed in logs (redaction hooks).
+
+### pool-managerd
+- [ORCH‑3258] Registry tests MUST prove non‑negative lease accounting, heartbeat updates, last_error recording, and version propagation.
+- [ORCH‑3259] Readiness gating tests MUST assert `ready=true` only after model present + engine ensured + health passes (provisioners/health mocked).
+- [ORCH‑3260] Draining/reload tests MUST enforce refusal of new leases and deadline handling; restart backoff boundedness MUST be covered.
+- [ORCH‑3261] Optional device mask/VRAM/compute capability fields SHOULD be validated for schema/consistency.
+
+### catalog-core
+- [ORCH‑3262] Index round‑trip and schema versioning MUST be tested, including graceful rejection on incompatible versions.
+- [ORCH‑3263] Delete semantics MUST ensure index consistency even on artifact delete failures.
+- [ORCH‑3264] `ModelRef::parse` MUST be tested for `hf:`, `file:`, relative, and generic URL inputs.
+- [ORCH‑3265] Digest helpers and verification routing SHOULD be covered.
+
+### model-provisioner
+- [ORCH‑3266] Ensure‑present flows MUST be tested for file‑only default and catalog registration (`LifecycleState::Active`), including id normalization.
+- [ORCH‑3267] When digest is provided, verification outcome MUST be surfaced (pass/fail/warn) to callers; tests SHOULD cover both.
+- [ORCH‑3268] Optional `hf:` shell‑out path MUST return instructive errors when tooling is absent; tests SHOULD be feature‑gated where invoking CLI is possible.
+
+### engine-provisioner
+- [ORCH‑3269] Plan/ensure MUST be tested for llama.cpp source mode: CMake flag mapping (LLAMA_CUBLAS → GGML_CUDA), CUDA discovery hints, host‑compiler fallback, CPU‑only fallback.
+- [ORCH‑3270] Model staging delegation MUST be tested (uses model‑provisioner; no direct catalog writes).
+- [ORCH‑3271] Runtime flag normalization MUST be tested for CPU/GPU consistency (e.g., enforce `--n-gpu-layers 0` on CPU‑only).
+- [ORCH‑3272] Security policy: package installation behavior MUST be gated by config and distro; Arch/pacman path unit‑tested (mocked).
+
+### worker-adapters (per engine)
+- [ORCH‑3273] Trait conformance tests MUST cover health(), props(), submit()/cancel(), engine_version().
+- [ORCH‑3274] Streaming tests MUST verify `started → token* → end` ordering; metrics frames optional; token event structure validated.
+- [ORCH‑3275] Error taxonomy mapping MUST be tested, including deadlines, pool unavailability, decode timeout, worker reset, adapter/internal errors.
+- [ORCH‑3276] Timeouts/retries MUST be enforced with caps/jitter; tests SHOULD simulate network timeouts and partial streams.
+- [ORCH‑3277] Determinism signals: `started` (or logs) SHOULD include engine_version, and where applicable sampler_profile_version and model_digest; tests check presence and propagation.
+- [ORCH‑3278] Security: ensure API keys/tokens are redacted from logs and headers in error paths.
+
+### test-harnesses (outer)
+- [ORCH‑3279] BDD harness MUST restrict scenarios to cross‑crate integration; step inventory MUST fail unknown or ambiguous steps.
+- [ORCH‑3280] Determinism suite MUST use a curated seed corpus and record engine/sampler versions; byte‑exact assertions are required.
+- [ORCH‑3281] E2E haiku MUST run under explicit gating (e.g., `REQUIRE_REAL_LLAMA=1`), publish SSE transcripts in proof bundles, and clean resources.
+- [ORCH‑3282] Metrics‑contract MUST lint names/labels per spec and report cardinality issues; generation of linter configs MAY be automated later.
