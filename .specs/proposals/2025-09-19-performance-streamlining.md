@@ -1,6 +1,6 @@
 # Proposal: Performance Streamlining Across Crate Boundaries (Repo‑Wide)
 
-Status: Draft
+Status: Approved
 Owner: @llama-orch-maintainers
 Date: 2025‑09‑19
 

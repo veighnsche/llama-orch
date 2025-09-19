@@ -1,6 +1,6 @@
 # Proposal: Testing Ownership & Scope — Per‑Crate Behavior, BDD for Cross‑Crate Integration
 
-Status: Draft
+Status: Approved
 Owner: @llama-orch-maintainers
 Date: 2025‑09‑19
 

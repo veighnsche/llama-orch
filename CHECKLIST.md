@@ -14,6 +14,7 @@ This checklist aggregates all work to implement recent proposals and root specs.
 
 ## 0. Workspace & Build System
 - [x] Add new crates to workspace `Cargo.toml` members: `adapter-host`, `worker-adapters/http-util`, `observability/narration-core` (ORCH-3620, ORCH-3610)
+- [ ] Plan private crate `auth-min/` and add to workspace members (timing-safe compare, header parse, loopback bypass, proxy trust) (AUTH-1xxx)
 - [ ] Ensure features for engine-provisioner providers: `provider-llamacpp`, `provider-vllm`, `provider-tgi`, `provider-triton` (ORCH-3430)
 - [ ] Update `xtask`/CI scripts to include new crates in fmt/clippy/tests (README_LLM workflow)
 - [x] Update `tools/readme-index` map to include new crates
@@ -22,6 +23,7 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [x] `adapter-host/` (lib): registry, facade (submit/cancel/health/props), narration & metrics wrappers (ORCH-3600..3604)
 - [x] `worker-adapters/http-util/` (lib): shared reqwest::Client, retry/backoff, streaming decode helpers, redaction (ORCH-3610..3613)
 - [x] `observability/narration-core/` (lib): minimal narration helper + test capture (ORCH-3300..3308)
+- [ ] `auth-min/` (lib, private): minimal auth decisions shared by server/worker/CLI (timing-safe compare, token fp6, loopback bypass, TRUST_PROXY_AUTH gate) (AUTH-1xxx)
 
 ## 2. Orchestratord
 - [ ] Integrate `adapter-host` facade for adapter calls (ORCH-3620)
@@ -32,6 +34,11 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [ ] Metrics pre-registration; throttle per-token histograms (ORCH-3460)
 - [ ] `/v1/capabilities` backed by host capability snapshot cache (ORCH-3603)
 - [ ] Narration logs for admission/placement/stream/cancel; reconcile `decode_time_ms` (ORCH-3300, ORCH-3310)
+- [ ] Minimal Auth Hooks: refuse startup on non-loopback bind without `AUTH_TOKEN`; loopback bypass when `AUTH_OPTIONAL=true`; optional `TRUST_PROXY_AUTH` gate (AUTH-1002/1004/1006)
+- [ ] Minimal Auth Middleware: parse `Authorization: Bearer <token>`, timing-safe compare, add `identity=localhost|token:<fp6>` in logs; never log full tokens (AUTH-1001/1007/1008)
+- [ ] Minimal Auth Error Mapping: 40101 MISSING_TOKEN, 40102 BAD_TOKEN, 40301 NON_LOOPBACK_WITHOUT_TOKEN with stable JSON envelope (align with repo error style)
+- [ ] Config wiring: support `AUTH_TOKEN`, `AUTH_OPTIONAL`, `TRUST_PROXY_AUTH` alongside `ORCHD_ADDR`; defaults retain current bind
+- [ ] Worker registration path requires token (server-side check) and logs `identity` breadcrumbs (AUTH-1003/1008)
 
 ## 3. Orchestrator-core
 - [ ] Property tests for queue invariants and policies (Reject/Drop-LRU) (ORCH-3250)
@@ -42,11 +49,13 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [ ] Enforce readiness after model present + engine ensured + health pass (ORCH-3421)
 - [ ] Narration logs on preload/reload/drain and readiness flips (ORCH-3490)
 - [ ] Optional metrics scrape (align with metrics-contract)
+- [ ] GPU-only Enforcement: preflight asserts CUDA/device availability; never spawn CPU inference; fail fast on insufficiency (GPUs only)
+- [ ] Registration: include Bearer token to orchestrator; handle 401/403 with clear backoff and operator hints (AUTH-1003)
 
 ## 5. Provisioners
 ### Engine-provisioner
 - [ ] Feature-gate providers; llama.cpp provider first (ORCH-3430)
-- [ ] ccache & CUDA hint caching; CPU-only fallback on repeated failures (ORCH-3431, ORCH-3433)
+- [ ] ccache & CUDA hint caching; fail fast if CUDA unavailable; NO CPU fallback (ORCH-3431, ORCH-3437)
 - [ ] Emit `PreparedEngine` summary (version, build_ref, digest, flags, mode, binary_path, engine_catalog_id) (ORCH-3432)
 - [ ] Write `EngineEntry` after successful ensure/build (ORCH-3441)
 - [ ] Respect Arch/CachyOS policy for installs when explicitly allowed (ORCH-3434)
@@ -66,6 +75,7 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [ ] Streaming order `started → token* → end`; low-alloc token decode path (ORCH-3274)
 - [ ] Determinism signals: `engine_version`, `sampler_profile_version` (when applicable), `model_digest` (ORCH-3277)
 - [ ] Redact secrets in logs (ORCH-3278, ORCH-3613)
+- [ ] Worker to orchestrator: include Bearer token when configured; handle 401/403 with actionable errors (AUTH-1003)
 - [ ] Update adapter READMEs with High/Mid/Low behavior and links to specs (doc_style)
 
 ## 8. Test Harnesses
@@ -74,32 +84,57 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [ ] E2E Haiku: REQUIRE_REAL_LLAMA gating; SSE transcripts; cleanup (ORCH-3281)
 - [ ] Chaos: fault inject at adapters and pool-managerd supervision hooks (as designed)
 - [ ] Metrics-contract: orchestrator scrape; optional pool-managerd scrape; linter green (ORCH-3282)
+- [ ] BDD auth-min scenarios: loopback + AUTH_OPTIONAL=true (allow), loopback + AUTH_OPTIONAL=false (401), non-loopback w/o token (startup refusal), wrong token (401), correct token (200 + identity), worker registration w/o token (401)
 
 ## 9. Contracts & Metrics
 - [ ] OpenAPI/data & control unchanged; align provider verify with envelope mapping (ORCH-3254)
 - [ ] Metrics contract: names/labels in `.specs/metrics/otel-prom.md` + `ci/metrics.lint.json` (ORCH-3460)
 - [ ] Add ETag/If-Modified-Since and cursors to catalog endpoints (ORCH-3470)
+- [ ] Error taxonomy: ensure new auth error codes (40101/40102/40301) are wired to provider verify tests and snapshots
 
 ## 10. CI & Tooling
 - [ ] Add SSE emitter micro-bench; adapter streaming throughput tests (ORCH-6: CI benches)
 - [ ] Expand CI matrix to run crate-local tests, BDD subset, determinism smoke, metrics lint (ORCH-3210..3213)
 - [ ] Narration coverage stat in BDD (informational first) (ORCH-3307)
 - [ ] Update `cargo xtask dev:loop` to include regen + new crates (README_LLM)
+- [ ] Add auth-min check in CI: orchestrator refuses non-loopback w/o token; basic auth middleware unit tests
+
+## 10.1 Verification Commands (run locally before PR)
+- [ ] Format/lint: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features -- -D warnings`
+- [ ] Workspace tests: `cargo test --workspace --all-features -- --nocapture`
+- [ ] Orchestrator provider verify: `cargo test -p orchestratord --test provider_verify -- --nocapture`
+- [ ] BDD smoke: `cargo test -p test-harness-bdd -- --nocapture`
+- [ ] Determinism suite: `cargo test -p test-harness-determinism-suite`
+- [ ] Metrics lints: `cargo test -p test-harness-metrics-contract` (or `ci/scripts` linter)
 
 ## 11. Observability & Narration
 - [ ] Add narration-core; integrate in orchestrator submit/cancel and placement (ORCH-3300..3306)
-- [ ] Provisioners & pool-managerd adopt narration for preflight/build/fallback/spawn/readiness (ORCH-3490)
+- [ ] Provisioners & pool-managerd adopt narration for preflight/build/fail-fast/spawn/readiness (ORCH-3490)
 - [ ] Redaction helpers applied to secrets; reconcile `decode_time_ms` naming (ORCH-3310)
 
 ## 12. Docs & READMEs
 - [ ] Propagate High/Mid/Low behavior sections across crate READMEs (doc_style)
 - [x] README wiring diagrams reflect adapter-host + http-util + capability cache (keep up to date)
-- [ ] Ensure each `.specs/*` doc contains a "Refinement Opportunities" section (prefs)
 - [ ] Document Arch/CachyOS package policy in provisioners & README (env prefs)
+
+## 16. CLI & Client (llama-orch-cli, consumer-tests)
+- [ ] CLI: support `--addr`, `--auth-token` flags and read `AUTH_TOKEN` env; default to loopback in examples; never print full tokens (mask; show fp6)
+- [ ] CLI: include Authorization header when token configured; handle 401/403 with actionable messages
+- [ ] consumer-tests: add cases for auth-min flows (happy path, missing/bad token) and identity fingerprint presence
+
+## 17. Runtime Config Surfaces (Alignment)
+- [ ] Normalize env/config across crates: `ORCHD_ADDR`, `AUTH_TOKEN`, `AUTH_OPTIONAL`, `TRUST_PROXY_AUTH`
+- [ ] Precedence rules: CLI flag > env > config file; document in crate READMEs (runtime-facing only)
+- [ ] Ensure secrets redaction in logs for all crates that may log env/config
 
 ## 13. Security & Policy
 - [ ] No secrets in logs; redact API keys (adapters) by default (ORCH-3613)
 - [ ] System package manager policy: Arch/CachyOS pacman/AUR when allowed (ORCH-3434)
+
+## 13.1 Arch/CachyOS Ops (Runtime-facing tasks)
+- [ ] Provisioners: when `allow_package_installs=true`, prefer pacman/AUR; otherwise emit actionable guidance with exact pacman/AUR commands
+- [ ] Document in provisioners README the pacman/AUR commands (runtime docs only; not spec) and environment hints for CUDA toolchain
+- [ ] Ensure CI readme mentions Arch/CachyOS prerequisites (driver/CUDA) and how to skip installs when offline
 
 ## 14. Proof Bundles & Artifacts
 - [ ] Include EngineEntry snapshots, PreparedEngine metadata, SSE transcripts, determinism outputs, and metrics lints per `.docs/testing/` guidance
@@ -109,3 +144,36 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [ ] Tests: per-crate hardening in place; outer harnesses remain integration-only (ORCH-325x)
 - [ ] Narration: emitted across key flows; coverage stat present; `decode_time_ms` consistent (ORCH-33xx)
 - [ ] Engine catalog: EngineEntry created and referenced; registry fields surfaced and logged (ORCH-3440/3441)
+- [ ] GPU-only: no code path performs CPU inference; CUDA/device checks fail fast with clear diagnostics
+- [ ] Minimal Auth: startup refusal on non-loopback without token; loopback bypass honored with `AUTH_OPTIONAL=true`; correct token passes; logs carry `identity` without leaking full tokens
+
+## 18. Scaffold Targets by Crate (File/Module-Level TODOs)
+- **orchestratord/**
+  - [ ] `src/app/auth_min.rs` — minimal auth middleware (header parse, timing-safe compare, identity breadcrumb)
+  - [ ] `src/app/bootstrap.rs` — startup check: refuse non-loopback without `AUTH_TOKEN`
+  - [ ] `src/app/router.rs` — wire middleware; ensure worker registration path checks token
+  - [ ] `src/api/data.rs` SSE buffering; `services/streaming.rs` micro-batch flag
+  - [ ] `src/state.rs` capability snapshot cache plumbing
+- **pool-managerd/**
+  - [ ] `src/preflight.rs` — CUDA/device checks (GPU-only gate)
+  - [ ] `src/registry.rs` — add engine fields; token on registration
+  - [ ] `src/observability.rs` — narration additions (fail-fast diagnostics)
+- **provisioners/engine-provisioner/**
+  - [ ] `src/providers/llamacpp/*.rs` — remove CPU fallback paths; add fail-fast diagnostics
+  - [ ] `src/plan.rs` — prepared engine metadata; engine catalog ID return
+- **worker-adapters/**
+  - [ ] `http-util/` — helper to inject `Authorization` header when configured (opt-in)
+  - [ ] Each adapter (`llamacpp-http`, `vllm-http`, `tgi-http`, `triton`, `openai-http`) — honor header injection and redact secrets in logs
+- **cli/llama-orch-cli/**
+  - [ ] `src/main.rs` — `--addr`, `--auth-token`; env read; identity masking (fp6 in logs)
+- **test-harness/bdd/**
+  - [ ] `src/steps/security.rs` — auth-min scenarios (loopback optional, non-loopback refusal, bad/correct token, worker registration)
+  - [ ] `src/steps/pool_manager.rs` — GPU-only preflight expectations
+- **tools/xtask/**
+  - [ ] Include new crates in fmt/clippy/tests; add auth-min CI checks
+
+## 19. Rollout Plan & Feature Switches
+- **Phase A (foundations)**: create `auth-min/` crate; wire orchestrator middleware and startup check; add CLI flags/env support; basic BDD and unit tests; no behavior change for loopback with AUTH_OPTIONAL=true.
+- **Phase B (GPU-only)**: enforce CUDA/device checks in pool-managerd; remove CPU fallback in engine-provisioner providers; update adapters to assume GPU-only.
+- **Phase C (performance)**: SSE buffering/micro-batch, placement prefilter/cache, metrics throttling; adopt http-util across adapters.
+- **Feature toggles**: expose `AUTH_OPTIONAL` and `TRUST_PROXY_AUTH`; keep binding default unchanged for now; GPU-only has no off-switch.
