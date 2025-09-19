@@ -126,7 +126,7 @@ graph LR
   th_haiku -->|HTTP/SSE| orchd
   th_haiku -->|readiness| pool_mgr
   th_metrics -->|scrape| orchd
-  th_metrics -->|scrape (optional)| pool_mgr
+  th_metrics -.-> pool_mgr
 
   tool_client --> contracts_openapi
   tool_spec -->|extracts from| contracts_openapi
@@ -161,7 +161,7 @@ flowchart LR
   client[Client] -->|POST /v1/tasks| orchd
   orchd -->|admission & queue| orch_core
   orch_core -->|PlacementDecision| orchd
-  orchd -->|submit(job)| adapter[WorkerAdapter]
+  orchd -->|submit job| adapter[WorkerAdapter]
   adapter -->|engine-native API| engine[Engine]
   adapter -->|SSE frames| orchd
   orchd -->|text/event-stream| client
