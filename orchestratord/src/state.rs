@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 use pool_managerd::registry::Registry as PoolRegistry;
 use crate::ports::storage::ArtifactStore;
 use adapter_host::AdapterHost;
+use crate::services::placement::PlacementCache;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -15,6 +16,7 @@ pub struct AppState {
     pub cancellations: Arc<Mutex<HashSet<String>>>,
     pub adapter_host: Arc<AdapterHost>,
     pub capabilities_cache: Arc<Mutex<Option<serde_json::Value>>>,
+    pub placement_cache: Arc<Mutex<PlacementCache>>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -40,6 +42,7 @@ impl AppState {
             cancellations: Arc::new(Mutex::new(HashSet::new())),
             adapter_host: Arc::new(AdapterHost::new()),
             capabilities_cache: Arc::new(Mutex::new(None)),
+            placement_cache: Arc::new(Mutex::new(PlacementCache::with_ttl(10_000))),
         }
     }
 }
