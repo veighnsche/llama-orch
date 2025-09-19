@@ -115,12 +115,18 @@ graph LR
   catalog_core -->|stores| model_cache
   orchd -->|catalog CRUD| catalog_core
 
-  %% Outer harnesses only hit the HTTP boundary
+  %% Harness connections (integration only, but may bind multiple crates)
   th_bdd -->|HTTP/SSE| orchd
   th_det -->|HTTP/SSE| orchd
+  th_det -->|trait| adapter_api
   th_chaos -->|HTTP/SSE| orchd
+  th_chaos -->|fault inject| adapt_mock
+  th_chaos -->|fault inject| adapt_llama
+  th_chaos -->|supervision hooks| pool_mgr
   th_haiku -->|HTTP/SSE| orchd
-  th_metrics -->|HTTP/metrics| orchd
+  th_haiku -->|readiness| pool_mgr
+  th_metrics -->|scrape| orchd
+  th_metrics -->|scrape (optional)| pool_mgr
 
   tool_client --> contracts_openapi
   tool_spec -->|extracts from| contracts_openapi
@@ -130,7 +136,7 @@ Notes
 - Orchestrator depends on `orchestrator-core` and the adapter trait crate; adapters are bound at runtime per pool/replica.
 - `pool-managerd` owns engine lifecycle. It uses provisioners to stage models/engines and flips readiness after health checks. Orchestrator reads that state for placement.
 - Catalog writes happen via `model-provisioner`; orchestrator interacts with catalog via HTTP endpoints.
-- Outer harnesses talk only to `orchestratord`—they never call inner crates directly.
+- Harnesses are integration-only but not confined to a single crate: while BDD primarily exercises the HTTP boundary, determinism may bind adapters via the trait, chaos may inject faults at adapters or manager, and haiku can observe readiness directly from the manager. None of the harnesses perform per-crate unit tests.
 
 #### Control-plane: preload → readiness → reload
 
