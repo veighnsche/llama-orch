@@ -13,6 +13,9 @@ static GAUGES: Lazy<Mutex<HashMap<String, HashMap<LabelsKey, i64>>>> =
 static HISTOGRAMS: Lazy<Mutex<HashMap<String, HashMap<LabelsKey, Histogram>>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
+// Throttle counters for noisy metrics (e.g., per token)
+static THROTTLE: Lazy<Mutex<HashMap<String, u64>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+
 #[derive(Clone, Debug)]
 struct Histogram {
     buckets: Vec<f64>,
@@ -60,6 +63,32 @@ pub fn observe_histogram(name: &str, labels: &[(&str, &str)], value_ms: f64) {
     hist.count += 1;
     for (i, b) in hist.buckets.iter().enumerate() {
         if value_ms <= *b { hist.counts[i] += 1; }
+    }
+}
+
+/// Observe every N samples to reduce cardinality load.
+pub fn observe_histogram_throttled(name: &str, labels: &[(&str, &str)], value_ms: f64, every_n: u64) {
+    let key = format!("{}|{}", name, labels_to_key(labels).0);
+    let mut t = THROTTLE.lock().unwrap();
+    let cnt = t.entry(key).or_insert(0);
+    *cnt += 1;
+    if *cnt % every_n == 0 { observe_histogram(name, labels, value_ms); }
+}
+
+/// Pre-register common metrics with zero values for consistent exposition.
+pub fn pre_register() {
+    // counters
+    for name in [
+        "tasks_enqueued_total","tasks_started_total","tasks_canceled_total","tasks_rejected_total",
+        "tokens_in_total","tokens_out_total","admission_backpressure_events_total","catalog_verifications_total",
+    ] { let _ = { let mut c = COUNTERS.lock().unwrap(); c.entry(name.to_string()).or_default(); }; }
+    // gauges
+    for name in ["queue_depth","kv_cache_usage_ratio","gpu_utilization","vram_used_bytes","model_state"] {
+        let _ = { let mut g = GAUGES.lock().unwrap(); g.entry(name.to_string()).or_default(); };
+    }
+    // histograms
+    for name in ["latency_first_token_ms","latency_decode_ms"] {
+        let _ = { let mut h = HISTOGRAMS.lock().unwrap(); h.entry(name.to_string()).or_default(); };
     }
 }
 

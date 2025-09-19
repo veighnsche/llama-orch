@@ -204,6 +204,8 @@ enum Cmd {
     CiHaikuCpu,
     #[command(name = "ci:determinism")]
     CiDeterminism,
+    #[command(name = "ci:auth")]
+    CiAuth,
     #[command(name = "pact:verify")]
     PactVerify,
     #[command(name = "pact:publish")]
@@ -259,6 +261,7 @@ fn main() -> Result<()> {
         Cmd::CiHaikuGpu => println!("xtask: ci:haiku:gpu (stub)"),
         Cmd::CiHaikuCpu => ci_haiku_cpu()?,
         Cmd::CiDeterminism => ci_determinism()?,
+        Cmd::CiAuth => ci_auth_min()?,
         Cmd::PactVerify => pact_verify()?,
         Cmd::PactPublish => println!("xtask: pact:publish (stub)"),
         Cmd::DocsIndex => docs_index()?,

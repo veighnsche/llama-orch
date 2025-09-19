@@ -51,6 +51,10 @@ Date: 2025-09-19
 - Unit: registry round-trip and lease accounting.
 - Integration: preload gates readiness; drain/reload; backoff supervision with stubs.
 
+## Test Ownership
+
+- Crate-local tests OWN registry behavior, readiness gating, and supervision/backoff logic. Cross-crate flows (admission→stream/cancel over HTTP) are validated by the root BDD harness; see `/.specs/72-bdd-harness.md`.
+
 ## Refinement Opportunities
 
 - Publish capacity/VRAM and perf hints for placement; bounded cardinality.

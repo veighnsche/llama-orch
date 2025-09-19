@@ -26,6 +26,11 @@ Out of scope:
 - Focus on golden-path and critical error-path scenarios spanning multiple crates.
 - Avoid duplicating crate-scoped tests.
 
+## Minimal Auth Scenarios
+
+- Positive (loopback dev posture): when `AUTH_OPTIONAL=true` and requests originate from loopback, data/control endpoints succeed without `Authorization` and identity breadcrumbs log as `identity=localhost`.
+- Negative (non-loopback without token): when bound to non-loopback and `AUTH_TOKEN` is required, requests without `Authorization: Bearer` MUST receive `401/403` auth errors with correlation IDs; logs MUST include `identity=token:<fp6>` when a token is presented (never full token).
+
 ## Refinement Opportunities
 
 - Add synthetic backpressure tests with configurable queue capacity.

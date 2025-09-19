@@ -1,7 +1,7 @@
 mod steps;
 
 use cucumber::World as _;
-use steps::world::World;
+use steps::world::BddWorld;
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() {
@@ -14,7 +14,7 @@ async fn main() {
         root.join("tests/features")
     };
 
-    World::cucumber()
+    BddWorld::cucumber()
         .run_and_exit(features)
         .await;
 }

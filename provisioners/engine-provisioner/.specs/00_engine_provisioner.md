@@ -44,7 +44,7 @@ Out of scope:
 - [ORCH‑3606] Security:
   - The provider MUST avoid privilege escalation; package installs MUST use the system package manager and only when explicitly allowed.
   - Secrets MUST NOT be written to disk; environment hints are ephemeral.
- - [ORCH‑3607] PreparedEngine summary:
+ - PreparedEngine summary:
   - The provider MUST emit a PreparedEngine summary including at least: `engine` (name), `engine_version`, `build_ref?`, `engine_digest?`, `provisioning_mode` (source|container|package|binary|external), normalized runtime `flags`, and the resolved `binary_path` or container `image_ref`.
 
 ## 2) Data Types & Semantics

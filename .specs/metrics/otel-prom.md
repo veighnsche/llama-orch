@@ -96,6 +96,10 @@ Status: pre-code · Scope: OrchQueue v1 data plane & control plane
   - unit: tokens
   - description: Total output tokens generated.
 
+Bucket guidance
+
+- Recommended histogram bucket boundaries for SSE-related latencies are maintained in `/.specs/71-metrics-contract.md` (§4). Implementations SHOULD follow those or document profile-specific alternatives.
+
 ## Backpressure
 
 - admission_backpressure_events_total

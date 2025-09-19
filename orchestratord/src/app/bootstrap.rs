@@ -18,6 +18,7 @@ pub fn start_server() {
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
     rt.block_on(async move {
         init_observability();
+        crate::metrics::pre_register();
         let app = build_app();
         let addr = std::env::var("ORCHD_ADDR").unwrap_or_else(|_| "0.0.0.0:8080".to_string());
         if let Err(e) = crate::app::auth_min::enforce_startup_bind_policy(&addr) {
@@ -26,6 +27,9 @@ pub fn start_server() {
         }
         // Narration breadcrumb for startup
         observability_narration_core::human("orchestratord", "start", &addr, "listening");
+        if std::env::var("ORCHD_PREFER_H2").map(|v| v == "1" || v.eq_ignore_ascii_case("true")).unwrap_or(false) {
+            observability_narration_core::human("orchestratord", "http2", &addr, "preference set (h2/h2c when available)");
+        }
         let listener = tokio::net::TcpListener::bind(&addr).await.expect("bind ORCHD_ADDR");
         eprintln!("orchestratord listening on {}", addr);
         axum::serve(listener, app).await.unwrap();

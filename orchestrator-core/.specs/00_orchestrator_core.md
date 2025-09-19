@@ -18,22 +18,22 @@ Out of scope:
 
 ## 1) Normative Requirements (RFC‑2119)
 
-- [ORCH‑3400] The crate MUST expose queue types with the following semantics:
+- The crate MUST expose queue types with the following semantics:
   - Priorities: `Interactive`, `Batch`.
   - Policies: `Reject`, `DropLru`.
   - FIFO MUST hold within a priority class.
   - With `Reject`, enqueues on full MUST fail with a typed error.
   - With `DropLru`, the oldest `Batch` item SHOULD be dropped first; if none, drop oldest across priorities.
-- [ORCH‑3401] The queue API MUST include `enqueue(id, prio)`, `cancel(id)`, `len()`, `capacity()`, and a read‑only snapshot of each priority.
-- [ORCH‑3402] `cancel(id)` MUST remove the first occurrence across priorities, returning whether removal occurred.
-- [ORCH‑3403] The crate MUST NOT perform network I/O or spawn processes.
-- [ORCH‑3404] Placement policy (planning): the crate MUST define data shapes for input and output and SHOULD provide a reference implementation:
+- The queue API MUST include `enqueue(id, prio)`, `cancel(id)`, `len()`, `capacity()`, and a read‑only snapshot of each priority.
+- `cancel(id)` MUST remove the first occurrence across priorities, returning whether removal occurred.
+- The crate MUST NOT perform network I/O or spawn processes.
+- Placement policy (planning): the crate MUST define data shapes for input and output and SHOULD provide a reference implementation:
   - `PlacementInput { pools: Vec<PoolSnapshot>, job: JobSpec }`.
   - Feasibility MUST be checked first via a compatibility predicate (engine/model/device), rejecting pools that fail min VRAM, compute capability, quantization, or required extensions.
   - Primary scoring SHOULD minimize `predicted_end_ms = admission_latency + first_token_ms + decode_ms(tokens_out, perf_tokens_per_s)`.
   - Tie‑breakers MUST apply only when primary scores are equal, in this order: KV/session affinity; least loaded; highest residual VRAM (`vram_free − est_kv_bytes`); higher `perf_tokens_per_s`; stable lexicographic `pool_id`.
-- [ORCH‑3405] Determinism: consumers MUST be able to emit logs with fields `{seed, sampler_profile_version, engine_version, model_digest}` and MUST NOT change replica mid‑stream unless requested.
-- [ORCH‑3406] Observability: consumers SHOULD emit counters for `tasks_enqueued_total`, `tasks_started_total`, `tasks_canceled_total`, `tasks_rejected_total`, a gauge for `queue_depth`, and optional histograms for `admission_latency_ms`.
+- Determinism: consumers MUST be able to emit logs with fields `{seed, sampler_profile_version, engine_version, model_digest}` and MUST NOT change replica mid‑stream unless requested.
+- Observability: consumers SHOULD emit counters for `tasks_enqueued_total`, `tasks_started_total`, `tasks_canceled_total`, `tasks_rejected_total`, a gauge for `queue_depth`, and optional histograms for `admission_latency_ms`.
 
 Note on canonical types:
 - `ModelRequirements` is defined canonically at `/.specs/10-orchestrator-core.md §2A`. Callers (e.g., `orchestratord`) derive these requirements from catalog + adapter metadata and pass them into core for feasibility checks. Core treats them as opaque inputs and MUST NOT access the catalog directly.

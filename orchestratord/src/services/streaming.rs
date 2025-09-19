@@ -5,9 +5,30 @@ use crate::state::AppState;
 use tokio::time::{sleep, Duration};
 use std::io::Write;
 use std::io::BufWriter;
+use futures::StreamExt;
+use worker_adapters_adapter_api as adapter_api;
 
 /// Render a simple deterministic SSE for a task id and persist transcript to artifacts.
 pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
+    // Try adapter-host first (if a worker is registered). Fallback to deterministic SSE.
+    if let Ok(mut s) = try_dispatch_via_adapter(state, &id) {
+        let mut events: Vec<(String, serde_json::Value)> = Vec::new();
+        loop {
+            // Early cancel
+            if let Ok(guard) = state.cancellations.lock() {
+                if guard.contains(&id) { events.push(("end".into(), json!({"canceled":true}))); break; }
+            }
+            match s.next().await {
+                Some(Ok(e)) => {
+                    events.push((e.kind.clone(), e.data.clone()));
+                    if e.kind == "end" { break; }
+                }
+                Some(Err(_)) => { events.push(("error".into(), json!({"message":"adapter error"}))); break; }
+                None => break,
+            }
+        }
+        return build_sse_from_events(state, &id, events);
+    }
     // Emit metrics: tasks started
     crate::metrics::inc_counter(
         "tasks_started_total",
@@ -79,12 +100,6 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
         }
     }
 
-    // Persist transcript as artifact via configured store (and keep compat map updated)
-    let transcript = json!({"events": events.iter().map(|(t, d)| json!({"type": t, "data": d})).collect::<Vec<_>>(),});
-    let _ = crate::services::artifacts::put(state, transcript);
-    // Clear cancellation flag for this task id to avoid leakage
-    if let Ok(mut guard) = state.cancellations.lock() { let _ = guard.remove(&id); }
-
     // Optional micro-batch: if enabled, merge consecutive token events.
     if std::env::var("ORCHD_SSE_MICROBATCH").map(|v| v == "1" || v.eq_ignore_ascii_case("true")).unwrap_or(false) {
         let mut batched: Vec<(&str, serde_json::Value)> = Vec::new();
@@ -106,12 +121,47 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
         events = batched;
     }
 
-    // Build SSE text from events vector using a buffered writer
+    build_and_persist_sse(state, &id, events)
+}
+
+fn try_dispatch_via_adapter(state: &AppState, id: &str) -> anyhow::Result<adapter_api::TokenStream> {
+    // Construct a minimal TaskRequest
+    let req = contracts_api_types::TaskRequest {
+        task_id: id.to_string(),
+        session_id: format!("sess-{}", id),
+        workload: contracts_api_types::Workload::Completion,
+        model_ref: "m:stub".into(),
+        engine: contracts_api_types::Engine::Llamacpp,
+        ctx: 1,
+        priority: contracts_api_types::Priority::Interactive,
+        seed: None,
+        determinism: None,
+        sampler_profile_version: None,
+        prompt: Some("hi".into()),
+        inputs: None,
+        max_tokens: 8,
+        deadline_ms: 1000,
+        expected_tokens: Some(1),
+        kv_hint: None,
+    };
+    state.adapter_host.submit("default", req)
+}
+
+fn build_sse_from_events(state: &AppState, id: &str, mut events: Vec<(String, serde_json::Value)>) -> String {
+    // Persist transcript as artifact via configured store (and keep compat map updated)
+    let transcript = json!({"events": events.iter().map(|(t, d)| json!({"type": t, "data": d})).collect::<Vec<_>>(),});
+    let _ = crate::services::artifacts::put(state, transcript);
+    // Clear cancellation flag for this task id to avoid leakage
+    if let Ok(mut guard) = state.cancellations.lock() { let _ = guard.remove(id); }
+    build_and_persist_sse(state, id, events)
+}
+
+fn build_and_persist_sse(_state: &AppState, _id: &str, events: Vec<(impl AsRef<str>, serde_json::Value)>) -> String {
     let mut buf = Vec::with_capacity(events.len() * 24);
     {
         let mut bw = BufWriter::new(&mut buf);
         for (ty, data) in &events {
-            let _ = writeln!(&mut bw, "event: {}", ty);
+            let _ = writeln!(&mut bw, "event: {}", ty.as_ref());
             let _ = writeln!(&mut bw, "data: {}", data);
             let _ = writeln!(&mut bw);
         }
