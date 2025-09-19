@@ -28,7 +28,7 @@ Note: The `orchestratord` binary builds the router but does not start a network 
 - `contracts/` — single source of truth for OpenAPI (data + control) and config schema
 - `orchestrator-core/` — queue and invariants; used by the orchestrator with metrics wrapper
 - `orchestratord/` — HTTP handlers, state, metrics, placement, and binary entrypoint
-  - `http/` modules: `auth.rs`, `data.rs`, `catalog.rs`, `control.rs`, `observability.rs`
+  - `http/` modules: `data.rs`, `catalog.rs`, `control.rs`, `observability.rs`
   - `metrics.rs` Prometheus vectors/histograms; `/metrics` endpoint
   - `state.rs` app state and registries; `placement.rs` minimal adapter chooser
 - `worker-adapters/` — adapter API + engines (mock now; llamacpp/vllm/tgi/triton scaffolds)
@@ -60,6 +60,10 @@ graph LR
     orchd["orchestratord (HTTP, SSE, admission, placement)"]
   end
 
+  subgraph AdapterHost
+    adapter_host["adapter-host (in-process registry & facade)"]
+  end
+
   subgraph Adapters
     adapter_api["worker-adapters/adapter-api (trait)"]
     adapt_llama["llamacpp-http"]
@@ -68,6 +72,10 @@ graph LR
     adapt_triton["triton"]
     adapt_openai["openai-http"]
     adapt_mock["mock (dev)"]
+  end
+
+  subgraph AdapterShared
+    http_util["worker-adapters/http-util (shared HTTP client)"]
   end
 
   subgraph Provisioners
@@ -98,15 +106,23 @@ graph LR
   orchd -->|placement & admission| orch_core
   orchd -->|serves| contracts_openapi
   orchd -->|validates config via| contracts_schema
-  orchd -->|uses trait| adapter_api
+  orchd --> adapter_host
+  adapter_host -->|uses trait| adapter_api
 
   %% Adapters are plugged under orchestrator (not core)
-  orchd --> adapt_mock
-  orchd --> adapt_llama
-  orchd --> adapt_vllm
-  orchd --> adapt_tgi
-  orchd --> adapt_triton
-  orchd --> adapt_openai
+  adapter_host --> adapt_mock
+  adapter_host --> adapt_llama
+  adapter_host --> adapt_vllm
+  adapter_host --> adapt_tgi
+  adapter_host --> adapt_triton
+  adapter_host --> adapt_openai
+
+  %% Shared HTTP util consumed by adapters
+  http_util --> adapt_llama
+  http_util --> adapt_vllm
+  http_util --> adapt_tgi
+  http_util --> adapt_triton
+  http_util --> adapt_openai
 
   %% Manager prepares engines; publishes readiness to orchestrator
   pool_mgr -->|ensure| engine_prov

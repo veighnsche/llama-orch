@@ -9,7 +9,7 @@ This specification is the single source of truth for llama-orch in a home lab. I
 ## 0. Scope & Goals
 
 * Provide deterministic, observable orchestration of NVIDIA-backed LLM workers on a single workstation with one or more GPUs. (ORCH-3000)
-* Keep configuration lightweight: filesystem storage, single API token, no clustered control plane. (ORCH-3002)
+* Keep configuration lightweight: filesystem storage, no clustered control plane. (ORCH-3002)
 * Optimise for multi-agent developer workflows: low queue latency, clear feedback, reliable catalog/artifact handling. (ORCH-3003)
 
 ---
@@ -70,8 +70,8 @@ This specification is the single source of truth for llama-orch in a home lab. I
 
 ### 2.7 Security & Policy
 
-* Control and data planes MUST be gated by a shared API token; optional mTLS/OIDC MAY be added later. (ORCH-3035)
-* Logs MUST NOT leak secrets or tokens. (ORCH-3037)
+* Home profile: there is no AuthN/AuthZ on the control/data planes; they are open locally. Future profiles MAY add auth behind features. (ORCH-3035)
+* Logs MUST NOT leak secrets or tokens (e.g., upstream adapter API keys). Redaction remains mandatory. (ORCH-3037)
 * A lightweight policy hook MUST exist so outbound HTTP tooling can be allowed/denied per deployment. (ORCH-3080)
 
 ### 2.8 Observability

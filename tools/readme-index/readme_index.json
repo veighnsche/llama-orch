@@ -528,4 +528,52 @@
       "README.md"
     ]
   }
+  ,
+  {
+    "path": "adapter-host",
+    "name": "adapter-host",
+    "kind": "lib",
+    "role": "core",
+    "description": "In-process adapter registry and facade (submit/cancel/health/props).",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": ["ORCH-3600", "ORCH-3601", "ORCH-3602", "ORCH-3603", "ORCH-3604"],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [],
+    "features": [],
+    "tests": [],
+    "docs_paths": ["README.md"]
+  }
+  ,
+  {
+    "path": "worker-adapters/http-util",
+    "name": "worker-adapters-http-util",
+    "kind": "lib",
+    "role": "adapter",
+    "description": "Shared reqwest client, retry/backoff, streaming decode helpers.",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": ["ORCH-3610", "ORCH-3611", "ORCH-3612", "ORCH-3613"],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [],
+    "features": [],
+    "tests": [],
+    "docs_paths": ["README.md"]
+  }
+  ,
+  {
+    "path": "observability/narration-core",
+    "name": "observability-narration-core",
+    "kind": "lib",
+    "role": "lib",
+    "description": "Shared human narration logging helper.",
+    "owner": "@llama-orch-maintainers",
+    "spec_refs": ["ORCH-3300", "ORCH-3304", "ORCH-3306"],
+    "openapi_refs": [],
+    "schema_refs": [],
+    "binaries": [],
+    "features": [],
+    "tests": [],
+    "docs_paths": ["README.md"]
+  }
 ]

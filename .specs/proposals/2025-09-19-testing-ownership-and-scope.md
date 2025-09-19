@@ -105,7 +105,7 @@ IDs use ORCH‑325x (hardening) to complement ownership rules above. These are e
 - [ORCH‑3254] Error envelope mapping MUST be tested per OpenAPI: HTTP code ↔ envelope code ↔ retriable bits; correlation ID echoing.
 - [ORCH‑3255] SSE framing MUST be validated at unit/integration granularity (started/token/metrics/end ordering, headers), with adapters mocked.
 - [ORCH‑3256] Timeouts and backpressure: admission 429 and Retry‑After headers MUST be unit tested; request timeouts SHOULD be simulated with adapter mocks.
-- [ORCH‑3257] Security: auth middleware tests for 401/403 paths; ensure secrets never printed in logs (redaction hooks).
+- [ORCH‑3257] Security (home‑profile): there is no AuthN/AuthZ; do not add 401/403 auth tests. Logs MUST NOT include secrets or API keys (redaction hooks remain required).
 
 ### pool-managerd
 - [ORCH‑3258] Registry tests MUST prove non‑negative lease accounting, heartbeat updates, last_error recording, and version propagation.

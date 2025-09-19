@@ -26,12 +26,12 @@ Out of scope: model staging (delegated to `model-provisioner`), placement, HTTP 
 
 1) Preflight tools and environment (Arch pacman optional path when allowed).
 2) Plan: clone/pull, configure/build (CMake flags normalization), or pull container image.
-3) Ensure: produce `llama-server` (or engine) binary, discover/configure CUDA if applicable, fallback CPU-only as needed.
+3) Ensure: produce `llama-server` (or engine) binary, discover/configure CUDA, and fail fast if GPU/CUDA is unavailable (GPU-only; no CPU fallback).
 4) Spawn: return running process (or prepared artifact) with normalized flags.
 
 ## Observability & Determinism
 
-- Narration logs for preflight, build, CUDA fallback, spawn, version.
+- Narration logs for preflight, build, CUDA diagnostics and fail-fast, spawn, version.
 - Emit `engine_version` and `engine_digest` for registry and proof bundles.
 
 ## Security
@@ -40,7 +40,7 @@ Out of scope: model staging (delegated to `model-provisioner`), placement, HTTP 
 
 ## Testing & Proof Bundles
 
-- Unit/integration: plan generation, preflight detection, CUDA→CPU fallback, flag normalization.
+- Unit/integration: plan generation, preflight detection, CUDA diagnostics and fail-fast behavior, flag normalization.
 - Proof bundles: CMake configure/build logs, spawn command line (redacted), PreparedEngine metadata.
 
 ## Refinement Opportunities

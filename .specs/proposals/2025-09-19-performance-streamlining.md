@@ -41,7 +41,8 @@ IDs use ORCH‑34xx (performance streamlining).
 - [ORCH‑3430] Providers MUST be feature‑gated (e.g., `provider-llamacpp`, `provider-vllm`, `provider-tgi`, `provider-triton`) to reduce builds.
 - [ORCH‑3431] Llama.cpp source provider SHOULD support ccache/host compiler hints and persist CUDA toolchain discovery to avoid repeated probing.
 - [ORCH‑3432] Ensure flows MUST emit a `PreparedEngine` summary (engine name/version, build ref, digest, build flags, compute mode, binary path) consumable by pool‑managerd and logs.
-- [ORCH‑3433] On repeated CUDA configure failures, providers MUST fallback to CPU‑only without reprobing in the same run; state MAY be persisted to a cache dir for subsequent runs.
+- [ORCH‑3433] Providers MUST NOT fallback to CPU‑only. GPU is required; failures MUST be surfaced immediately with clear diagnostics and hints.
+- [ORCH‑3437] GPU‑only policy: provisioning MUST validate CUDA/device availability up front and fail fast if insufficient; no CPU inference paths are allowed.
 - [ORCH‑3434] Package installation (when explicitly allowed) MUST prefer system package managers; on Arch/CachyOS use `pacman`/AUR as appropriate.
 
 ### Model‑provisioner (staging)

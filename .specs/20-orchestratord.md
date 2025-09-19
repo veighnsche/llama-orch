@@ -49,8 +49,8 @@ OpenAPI component schemas:
 
 ## 5) Security
 
-- [OC-CTRL-2040] Control and data plane MUST be gated by AuthN/AuthZ; API keys acceptable day‑1.
-- [OC-CTRL-2041] Logs MUST NOT leak secrets or API keys.
+- [OC-CTRL-2040] There is no AuthN/AuthZ in the home‑profile. Control and data plane are open locally. (Future profiles MAY introduce AuthN/AuthZ behind features.)
+- [OC-CTRL-2041] Logs MUST NOT leak secrets or API keys (e.g., adapter upstream tokens). Redaction remains mandatory.
 
 ## 6) Observability
 
@@ -72,7 +72,7 @@ OpenAPI component schemas:
 ## 9) Artifact Registry (Optional, Recommended)
 
 - [OC-CTRL-2065] The server SHOULD provide `POST /v1/artifacts` to persist structured artifacts (plans, summaries, diffs, traces) with content-addressed IDs and tags. Request and response schemas MUST be defined in OpenAPI if implemented.
-- [OC-CTRL-2066] The server SHOULD provide `GET /v1/artifacts/{id}` to retrieve artifacts by ID, including metadata (tags, lineage, timestamps). Authorization MUST be enforced.
+- [OC-CTRL-2066] The server SHOULD provide `GET /v1/artifacts/{id}` to retrieve artifacts by ID, including metadata (tags, lineage, timestamps). In the home‑profile, no authorization is enforced; future profiles MAY add AuthZ.
 
 ## 10) Budgets & Guardrails
 

@@ -1,0 +1,19 @@
+[package]
+name = "observability-narration-core"
+version = "0.0.0"
+edition = "2021"
+publish = false
+license = "GPL-3.0-or-later"
+authors = ["llama-orch contributors"]
+
+[lib]
+name = "observability_narration_core"
+path = "src/lib.rs"
+
+autobenches = false
+autotests = false
+autodocs = false
+
+[dependencies]
+tracing = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
