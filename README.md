@@ -82,6 +82,15 @@ graph LR
     tool_readme["tools/readme-index"]
   end
 
+  subgraph Catalog
+    catalog_core["catalog-core (model catalog, resolve/verify/cache)"]
+    model_cache["~/.cache/models (configurable)"]
+  end
+
+  subgraph Provisioners
+    engine_prov["provisioners/engine-provisioner"]
+  end
+
   %% wiring
   orchd -->|uses| orch_core
   orchd -->|serves OpenAPI from| contracts_openapi
@@ -97,6 +106,10 @@ graph LR
   pool_mgr --> adapt_vllm
   pool_mgr --> adapt_tgi
   pool_mgr --> adapt_triton
+  orchd -->|catalog| catalog_core
+  pool_mgr -->|catalog| catalog_core
+  engine_prov -->|resolve/verify| catalog_core
+  catalog_core -->|stores| model_cache
   th_bdd --> orchd
   th_det --> orchd
   th_chaos --> orchd

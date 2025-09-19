@@ -5,6 +5,7 @@ members = [
     "orchestrator-core",
     "orchestratord",
     "pool-managerd",
+    "catalog-core",
     "worker-adapters/adapter-api",
     "worker-adapters/llamacpp-http",
     "worker-adapters/vllm-http",
