@@ -15,7 +15,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
+// time utilities used in tests only
 use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, CatalogError>;
@@ -142,6 +142,7 @@ pub trait CatalogStore: Send + Sync {
     fn put(&self, entry: &CatalogEntry) -> Result<()>;
     fn set_state(&self, id: &str, state: LifecycleState) -> Result<()>;
     fn list(&self) -> Result<Vec<CatalogEntry>>;
+    fn delete(&self, id: &str) -> Result<bool>;
 }
 
 /// Filesystem catalog: maintains a simple JSON index mapping id -> entry.
@@ -208,6 +209,25 @@ impl CatalogStore for FsCatalog {
         let map = self.read_index()?;
         Ok(map.values().cloned().collect())
     }
+
+    fn delete(&self, id: &str) -> Result<bool> {
+        let mut map = self.read_index()?;
+        if let Some(entry) = map.remove(id) {
+            // try to remove local artifact
+            let p = entry.local_path;
+            if p.exists() {
+                if p.is_file() {
+                    let _ = fs::remove_file(&p);
+                } else {
+                    let _ = fs::remove_dir_all(&p);
+                }
+            }
+            self.write_index(&map)?;
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
 }
 
 /// Fetcher abstraction for ensuring artifacts are present locally.
@@ -265,6 +285,7 @@ pub fn default_model_cache_dir() -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
     fn parse_model_refs() {

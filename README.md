@@ -89,6 +89,7 @@ graph LR
 
   subgraph Provisioners
     engine_prov["provisioners/engine-provisioner"]
+    model_prov["provisioners/model-provisioner"]
   end
 
   %% wiring
@@ -108,7 +109,8 @@ graph LR
   pool_mgr --> adapt_triton
   orchd -->|catalog| catalog_core
   pool_mgr -->|catalog| catalog_core
-  engine_prov -->|resolve/verify| catalog_core
+  model_prov -->|resolve/verify| catalog_core
+  engine_prov -->|depends on models| model_prov
   catalog_core -->|stores| model_cache
   th_bdd --> orchd
   th_det --> orchd

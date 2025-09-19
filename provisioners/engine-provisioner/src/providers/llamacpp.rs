@@ -184,25 +184,14 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
         let server_bin = build_dir.join("bin").join("llama-server");
         if !server_bin.exists() { return Err(anyhow!("llama-server not found at {}", server_bin.display())); }
 
-        // Ensure model is present
+        // Ensure model is present via model-provisioner
         let model_ref = prov.model.r#ref.clone().ok_or_else(|| anyhow!("provisioning.model.ref required"))?;
         let model_cache_dir = prov.model.cache_dir.clone().unwrap_or_else(|| default_models_cache().to_string_lossy().to_string());
-        let model_path = crate::util::resolve_model_path(&model_ref, std::path::Path::new(&model_cache_dir));
-        if !model_path.exists() {
-            if model_ref.starts_with("hf:") {
-                if which::which("huggingface-cli").is_ok() {
-                    let (repo, file) = crate::util::parse_hf_ref(&model_ref).ok_or_else(|| anyhow!("invalid hf ref: {model_ref}"))?;
-                    let mut c = Command::new("huggingface-cli");
-                    c.env("HF_HUB_ENABLE_HF_TRANSFER", "1");
-                    c.arg("download").arg(&repo).arg(&file).arg("--local-dir").arg(&model_cache_dir).arg("--local-dir-use-symlinks").arg("False");
-                    c.status().context("huggingface-cli download")?.success().then_some(()).ok_or_else(|| anyhow!("model download failed"))?;
-                } else {
-                    return Err(anyhow!("model file not found at {} and huggingface-cli is missing", model_path.display()));
-                }
-            } else {
-                return Err(anyhow!("model file not found at {} (ref: {})", model_path.display(), model_ref));
-            }
-        }
+        let mp = model_provisioner::ModelProvisioner::file_only(PathBuf::from(&model_cache_dir))
+            .context("init model-provisioner")?;
+        let resolved = mp.ensure_present_str(&model_ref, None)
+            .with_context(|| format!("ensuring model present for ref {}", model_ref))?;
+        let model_path = resolved.local_path;
 
         // Spawn server process
         let pid_dir = default_run_dir();

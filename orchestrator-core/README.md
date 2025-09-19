@@ -47,6 +47,18 @@ flowchart LR
   - `enqueue` with `DropLru`: drops oldest Batch first, else oldest Interactive, then pushes new item into the requested priority.
   - `cancel`: removes the first occurrence of `id` from either priority queue and returns `true` if removed.
 
+### Placement overview (planning)
+
+Placement is implemented outside this crate, but `orchestrator-core` defines the policy and data shapes it expects. Primary scoring compares `predicted_end_ms` (admission latency + first token + decode). If scores tie, apply tie-breakers in order:
+
+1) Session/KV affinity — prefer pools with warm KV for the session.
+2) Least loaded — fewer active leases / higher `slots_free`.
+3) Highest residual VRAM headroom — `(vram_free_bytes − est_kv_bytes_for_job)`.
+4) Higher steady-state throughput — prefer higher `perf_tokens_per_s`.
+5) Stable lexicographic fallback — `pool_id` (or stable UUID) for determinism.
+
+Inputs are provided by `pool-managerd` snapshots (e.g., `slots_free`, `vram_free_bytes`, `perf_tokens_per_s`, KV warmth) and model requirements (min VRAM, quantization, compute capability).
+
 ## 5. Build & Test
 
 - Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features

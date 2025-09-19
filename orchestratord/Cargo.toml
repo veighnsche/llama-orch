@@ -53,6 +53,8 @@ serde = { workspace = true, features = ["derive"] }
 http = { workspace = true, optional = true }
 contracts-api-types = { path = "../contracts/api-types" }
 orchestrator-core = { path = "../orchestrator-core" }
+catalog-core = { path = "../catalog-core" }
+model-provisioner = { path = "../provisioners/model-provisioner" }
 regex = { workspace = true }
 serde_json = { workspace = true }
 prometheus = { version = "0.13", optional = true }

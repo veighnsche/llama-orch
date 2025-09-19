@@ -39,6 +39,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogModel'
+              x-examples:
+                created:
+                  value:
+                    id: "llama3-8b"
+                    digest: "sha256:deadbeef"
+                    source_url: "registry.example.com/llama3:8b"
+                    manifests: [ { digest: "sha256:deadbeef", size_bytes: 123456 } ]
+                    signatures: [ { signer: "Acme CI", algo: "cosign", verified: true, timestamp_ms: 1700000000000 } ]
+                    sbom: { uri: "https://sbom.example.com/llama3-8b.spdx.json", digest: "sha256:cafebabe" }
 
   /v1/catalog/models/{id}:
     get:
@@ -71,6 +80,25 @@ paths:
                     manifests: [ { digest: "sha256:deadbeef", size_bytes: 123456 } ]
                     signatures: [ { signer: "Acme CI", algo: "cosign", verified: true, timestamp_ms: 1700000000000 } ]
                     sbom: { uri: "https://sbom.example.com/llama3-8b.spdx.json", digest: "sha256:cafebabe" }
+    delete:
+      operationId: deleteCatalogModel
+      summary: Delete a catalog model and its local cached artifacts
+      x-req-id: [ORCH-3062]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '204':
+          description: No Content
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
+        '404':
+          description: Not Found
 
   /v1/catalog/models/{id}/verify:
     post:
@@ -90,6 +118,14 @@ paths:
             X-Correlation-Id:
               description: Correlation ID for tracing
               schema: { type: string }
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+              x-examples:
+                started:
+                  value: { status: "started" }
 
   /v1/catalog/models/{id}/state:
     post:
@@ -126,6 +162,14 @@ paths:
             X-Correlation-Id:
               description: Correlation ID for tracing
               schema: { type: string }
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+              x-examples:
+                accepted:
+                  value: { status: "accepted" }
   /v1/pools/{id}/drain:
     post:
       operationId: drainPool

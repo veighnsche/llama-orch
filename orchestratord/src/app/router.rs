@@ -10,6 +10,12 @@ pub fn build_router(state: AppState) -> Router {
         .route("/v1/pools/:id/health", get(api::control::get_pool_health))
         .route("/v1/pools/:id/drain", post(api::control::drain_pool))
         .route("/v1/pools/:id/reload", post(api::control::reload_pool))
+        // Catalog
+        .route("/v1/catalog/models", post(api::catalog::create_model))
+        .route("/v1/catalog/models/:id", get(api::catalog::get_model))
+        .route("/v1/catalog/models/:id", delete(api::catalog::delete_model))
+        .route("/v1/catalog/models/:id/verify", post(api::catalog::verify_model))
+        .route("/v1/catalog/models/:id/state", post(api::catalog::set_model_state))
         // Data
         .route("/v1/tasks", post(api::data::create_task))
         .route("/v1/tasks/:id/stream", get(api::data::stream_task))

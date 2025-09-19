@@ -1,0 +1,16 @@
+[package]
+name = "model-provisioner"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+authors = ["llama-orch contributors"]
+description = "Model provisioner: orchestrates resolve/verify/cache via catalog-core"
+
+[dependencies]
+anyhow = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+catalog-core = { path = "../../catalog-core" }
+which = "6"
+
+[lib]
+path = "src/lib.rs"
