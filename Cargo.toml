@@ -15,6 +15,7 @@ members = [
     "worker-adapters/tgi-http",
     "worker-adapters/triton",
     "worker-adapters/mock",
+    "worker-adapters/openai-http",
     "cli/consumer-tests",
     "cli/llama-orch-cli",
     "test-harness/e2e-haiku",
