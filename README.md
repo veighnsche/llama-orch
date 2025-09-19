@@ -63,10 +63,6 @@ graph LR
     adapt_mock["worker-adapters/mock"]
   end
 
-  subgraph Plugins
-    policy_host["plugins/policy-host"]
-    policy_sdk["plugins/policy-sdk"]
-  end
 
   subgraph TestHarness
     th_bdd["test-harness/bdd"]
@@ -96,8 +92,6 @@ graph LR
   orchd -->|uses| orch_core
   orchd -->|serves OpenAPI from| contracts_openapi
   orchd -->|validates config via| contracts_schema
-  orchd -->|policy hooks| policy_host
-  policy_sdk --> policy_host
   orch_core -->|placement/dispatch| adapt_mock
   orch_core --> adapt_llama
   orch_core --> adapt_vllm

@@ -1,82 +1,96 @@
-# Orchestratord Crate Audit – TODO and Final Status
+# orchestratord — Single TODO (Spec‑first tracker)
 
-Status: GREEN (all tests passing) – 2025-09-18 10:26 CEST
+Status: active
+Last updated: 2025-09-19
 
-This file captures the comprehensive audit of the `orchestratord` crate, findings mapped to specs, the executed test coverage (unit, provider verification, BDD), security and observability checks, and the final readiness assessment.
+Keep this the single source of truth for pending work in the `orchestratord` crate. Follow the workspace guidelines: Spec → Contract → Tests → Code. Any user‑visible behavior change must update specs/contracts and ship with tests.
 
-## Summary
-- All orchestratord tests pass:
-  - Unit/integration: 3/3 passing in `tests/`.
-  - Provider verification: 5/5 passing in `tests/provider_verify.rs` against OpenAPI contracts.
-  - BDD features: 10 features, 18 scenarios, 73 steps – 100% passing via `orchestratord-bdd` runner.
-- API router wiring matches spec. No legacy endpoints present.
-- Security middleware enforced (X-API-Key) and correlation-id propagated.
-- Observability endpoints and key metrics present; SSE flow emits expected frames and metrics.
-- Error taxonomy responses match spec, including advisory backpressure headers.
+## 0) Scope & References
+- Specs
+  - `orchestratord/.specs/00_orchestratord.md`
+  - `orchestratord/.specs/10_orchestratord_v2_architecture.md`
+  - Workspace: `.specs/00_llama-orch.md`, `.specs/00_home_profile.md`
+- Contracts: `contracts/openapi/{control.yaml,data.yaml}`
+- Metrics contract: `ci/metrics.lint.json`
+- Tests to run: `cargo test -p orchestratord -- --nocapture`
 
-## Spec Traceability Checklist
-- [x] Data Plane endpoints (`/v1/tasks`, `/v1/tasks/:id/stream`, `/v1/tasks/:id/cancel`)
-- [x] Session endpoints (`/v1/sessions/:id` GET/DELETE)
-- [x] Artifacts endpoints (`/v1/artifacts` POST, `/v1/artifacts/:id` GET)
-- [x] Control Plane endpoints (`/v1/capabilities`, `/v1/pools/:id/health`, `/v1/pools/:id/drain`, `/v1/pools/:id/reload`)
-- [x] Observability endpoint (`/metrics`), Prometheus exposition text
-- [x] SSE protocol events and ordering: `started`, `token`, `metrics`, `end`
-- [x] Error taxonomy with envelopes and HTTP mapping (INVALID_PARAMS, DEADLINE_UNMET, POOL_UNAVAILABLE, INTERNAL, ADMISSION_REJECT)
-- [x] Backpressure advisory with `Retry-After` (seconds) and `X-Backoff-Ms` headers
-- [x] Security: `X-API-Key` required (except `/metrics`), `X-Correlation-Id` echoed or generated
-- [x] Removal of legacy endpoints (e.g., `/v1/replicasets`) – verified absent in router
+## 1) App Layer
+- [ ] `src/app/bootstrap.rs`: graceful shutdown (SIGINT/SIGTERM) and draining semantics.
+- [ ] Inject constructed state (AdapterRegistry, ArtifactStore, PoolRegistry, config) in a single bootstrap path.
+- [ ] Startup logs with version, enabled features, and metrics endpoint.
+- [ ] `src/app/router.rs`: add a unit test that asserts mounted routes match OpenAPI (no extras).
+- [ ] `src/app/middleware.rs`: make API‑key policy configurable; add rate limits and body size limits; ensure `X-Correlation-Id` on every response (including errors).
 
-## Code Wiring and Structure
-- API Layer: `src/api/`
-  - Data: `api/data.rs` implements task enqueue, cancel, stream, session ops
-  - Control: `api/control.rs` implements capabilities, pool health/drain/reload
-  - Artifacts: `api/artifacts.rs` with content-addressed ids
-  - Observability: `api/observability.rs` for Prometheus metrics
-- App Layer: `app/router.rs` mounts all endpoints; layered with middleware `correlation_id_layer` then `api_key_layer`
-- Services: SSE streaming and session management in `src/services/`
-- Admission: `src/admission.rs` wraps `orchestrator_core` queue with metrics
-- Domain: `domain/error.rs` maps errors to envelopes and status
-- Ports/Infra: Artifacts store in-memory; pool manager health via `pool_managerd` registry
+## 2) API Layer
+- [ ] `src/api/data.rs`: integrate `admission::QueueWithMetrics` for enqueue; compute real `queue_position`, ETA, and backoff headers.
+- [ ] Budget headers: derive from session/budget policy; remove sentinel shortcuts.
+- [ ] Streaming: wire to `ports::adapters::AdapterClient` with async token stream and cancel propagation; migrate to proper SSE/chunked streaming.
+- [ ] Logging: add structured logs with correlation IDs for enqueue/start/end/error.
+- [ ] `src/api/control.rs`: atomic drain/reload via `PoolRegistry` with deadlines/rollback; health to include real queue/replica metrics and `last_error`.
+- [ ] `src/api/artifacts.rs`: depend on `ports::storage::ArtifactStore`; enforce content limits; add ETag/If‑None‑Match where useful.
+- [ ] `src/api/observability.rs`: gather from real registry; include build info; optionally add `/healthz` and `/readyz`.
 
-## Security and Compliance
-- [x] Auth enforced via `X-API-Key` (BDD covers 401/403)
-- [x] Correlation id in all responses (middleware ensures `X-Correlation-Id`)
-- [x] No secret/API key leaks in logs (BDD assertions on logs)
-- [x] No legacy shims; explicit removal of `/v1/replicasets`
+## 3) Services
+- [ ] `services/session.rs`: replace fixed tick with last_seen bookkeeping; enforce tokens/time/cost budgets; emit session metrics (evictions, counts).
+- [ ] `services/streaming.rs`: record tokens_in/out and latency from the real adapter stream; ensure ordering and include admission context in `started`.
+- [ ] `services/capabilities.rs`: build snapshot dynamically from `AdapterRegistry`/`PoolRegistry` (ctx_max, workloads, concurrency, versions).
+- [ ] `services/artifacts.rs`: façade over `ArtifactStore` with indexing hooks for transcripts and search.
+- [ ] `services/control.rs`, `services/catalog.rs`: implement orchestration and trust hooks; keep API thin.
 
-## Observability
-- [x] `/metrics` endpoint exposes required series; label schema matches contract
-- [x] Task lifecycle metrics incremented (enqueue, start, cancel, reject)
-- [x] Histograms observed for first-token and decode latency
-- [x] SSE stream frames include metrics (e.g., `on_time_probability`)
+## 4) Ports & Infra
+- [ ] `ports/adapters.rs`: expand workloads (completion/embedding/rerank), properties, and async streaming API with backpressure + cancellation.
+- [ ] `ports/pool.rs`: add replicas/load/health metrics, timeouts, adapter discovery per pool, model mapping, and drain progress.
+- [ ] `ports/storage.rs`: streaming/attachment interfaces and metadata.
+- [ ] `infra/storage/fs.rs`: CAS layout, atomic writes, checksum verification, GC/quotas, robust errors.
+- [ ] `infra/metrics.rs`: Prometheus/OTel exporter (feature‑gated) replacing the local shim.
+- [ ] `infra/clock.rs`: test clock with drift controls.
 
-## Testing
-- Unit/Integration tests:
-  - `tests/admission_metrics.rs`: enqueue, backpressure (reject/drop-lru), depth
-- Provider verification:
-  - `tests/provider_verify.rs`: path/status conformance to OpenAPI; required headers present; artifacts and capabilities validated
-- BDD suite (`orchestratord-bdd`):
-  - Features: control plane, data plane (enqueue/stream/cancel/sessions), security, SSE details, deadlines/backpressure
-  - Runner wired to real `Router` to exercise middleware
+## 5) Admission & Metrics
+- [ ] `admission.rs`: integrate budgeting (tokens/time/cost) and priority queues; emit backpressure metrics with taxonomy labels.
+- [ ] `metrics.rs`: replace shim with exporter‑backed registry; enforce label cardinality budgets; unit tests for labels.
 
-## Changes Made During Audit
-- Updated BDD world to drive requests through Axum `Router` so middleware is exercised; added `tower` dependency.
-- Fixed error envelope to include `engine` when applicable to satisfy BDD expectations.
-- Added step aliases and artifact fallback logic to ensure SSE “started” fields can be validated even after subsequent calls.
-- Cleaned minor warnings in `api/control.rs` and `api/data.rs` (removed redundant parentheses), and unused imports.
+## 6) Domain & State
+- [ ] `domain/error.rs`: populate `engine` dynamically from selected adapter/pool; finalize correlation‑id policy (headers vs body).
+- [ ] `domain/sse.rs`: align event payloads + serializer helpers to adapter outputs.
+- [ ] `domain/ids.rs`: parsing/validation from paths/headers.
+- [ ] `state.rs`: use `RwLock` where read‑heavy; add background TTL eviction and drain progression.
 
-## Readiness Assessment
-The `orchestratord` crate is GREEN and ready per spec and tests.
+## 7) Binary/Lib Surface
+- [ ] `main.rs`: graceful shutdown, env/config for listen addr/auth/features; startup banner; run with defaults.
+- [ ] `lib.rs`: re‑export public API intentionally; crate‑level docs linking `.specs/` and OpenAPI.
 
-## How to Reproduce Locally
-- Run unit and provider tests
-  - `cargo test -p orchestratord -- --nocapture`
-- Run BDD features
-  - `cargo run -p orchestratord-bdd --bin bdd-runner`
+## 8) Cross‑Cutting
+- [ ] Remove all sentinel shortcuts (e.g., `prompt == "cause-internal"`); replace with real orchestration.
+- [ ] Guarantee `X-Correlation-Id` present on all responses (incl. errors) via middleware.
+- [ ] Rate limiting and body limits per spec/UX goals.
+- [ ] Metrics parity with `ci/metrics.lint.json`; add missing series and labels.
+- [ ] Verify OpenAPI coverage for all paths/fields with provider tests.
 
-## Future Enhancements (Non-blocking)
-- Filesystem-backed `ArtifactStore` implementation (`infra/storage/fs.rs`) beyond stub.
-- Expand pool control integration beyond stubs (atomic reload semantics end-to-end).
-- Rate limiting and request-size limits per spec budgets.
-- Extended observability: saturation SLOs, finer-grained GPU metrics.
-- Authentication hardening and configurable API keys/issuers.
+## 9) Testing & Quality Gates
+- [ ] Unit tests per API/Service module.
+- [ ] Provider verification (`tests/provider_verify.rs`) kept green after any contract change.
+- [ ] Local BDD features for data/control/SSE/security kept green.
+- [ ] Determinism suite for mock adapter; document real engine gaps.
+- [ ] Metrics lint passes; add tests for label budgets.
+
+## 10) Documentation
+- [ ] Keep `orchestratord/README.md` High/Mid/Low sections code‑grounded and current.
+- [ ] Propagate High/Mid/Low behavior docs across related crates’ READMEs.
+- [ ] Add “Refinement Opportunities” sections to `./.specs/*.md` with actionable follow‑ups.
+
+## 11) Milestones (reference)
+- Phase 1: Scaffolding/middleware/tests
+- Phase 2: Capabilities/session/health
+- Phase 3: Admission/SSE/cancel/backpressure
+- Phase 4: Artifacts + transcript capture
+- Phase 5: Drain/reload/error mapping/metrics
+- Phase 6: Determinism/budgets/hardening
+
+## 12) Verification Commands
+```
+cargo fmt --all -- --check
+cargo clippy --all-targets --all-features -- -D warnings
+cargo test --workspace --all-features -- --nocapture
+# Provider verify (focused)
+cargo test -p orchestratord --test provider_verify -- --nocapture
+```
