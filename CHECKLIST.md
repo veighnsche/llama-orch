@@ -9,8 +9,10 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - Performance streamlining: `.specs/proposals/2025-09-19-performance-streamlining.md` (ORCH-34xx)
 - Human narration logging: `.specs/proposals/2025-09-19-human-narration-logging.md` (ORCH-33xx)
 - Adapter host + HTTP util: `.specs/proposals/2025-09-19-adapter-host-and-http-util.md` (ORCH-36xx)
+- Token streaming & cancel robustness: `.specs/proposals/2025-09-19-token-streaming-and-cancel-robustness.md`
 - Engine/Model Provisioners & Engine Catalog: `.specs/50-engine-provisioner.md`, `.specs/55-model-provisioner.md`, `.specs/56-engine-catalog.md`
 - Catalog-core EngineEntry promotion: `catalog-core/.specs/10_contracts.md`
+- Spec alignment plan: `SPEC_CHANGES_NEEDED.md`
 
 ## 0. Workspace & Build System
 - [x] Add new crates to workspace `Cargo.toml` members: `adapter-host`, `worker-adapters/http-util`, `observability/narration-core` (ORCH-3620, ORCH-3610)
@@ -26,10 +28,17 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [x] `auth-min/` (lib, private): minimal auth decisions shared by server/worker/CLI (timing-safe compare, token fp6, loopback bypass, TRUST_PROXY_AUTH gate) (AUTH-1xxx)
 
 ## 2. Orchestratord
-- [ ] Integrate `adapter-host` facade for adapter calls (ORCH-3620)
+- [x] Integrate `adapter-host` facade for adapter calls (ORCH-3620)
 - [x] SSE encoder uses buffered writer; optional micro-batch flag (off by default) (ORCH-3400)
+- [ ] Per-task CancellationToken end-to-end (admission → dispatch → SSE) (see `.specs/proposals/2025-09-19-token-streaming-and-cancel-robustness.md`)
+- [ ] Cancel-on-disconnect for SSE (proposal ref: token streaming & cancel robustness)
+- [ ] Bounded backpressure in streaming service (proposal ref)
+- [ ] Optional SSE heartbeats; surface micro-batching flag in docs (proposal ref)
+- [ ] Adapter streaming decode adoption path via adapter-host (proposal ref)
 - [ ] Placement prefilter by feasibility (ctx_max, VRAM, compute, quantization, extensions) (ORCH-3411)
-- [ ] PlacementDecision cache keyed by `(job_spec_hash, snapshot_version, policy)` + TTL (ORCH-3410)
+- [x] PlacementDecision cache keyed by `(job_spec_hash, snapshot_version, policy)` + TTL (ORCH-3410)
+- [ ] API override to pin model/engine to specific GPU/pool (placement override) (see placement preferences)
+- [ ] Auto-provision engines at startup/first-use via engine-provisioner; conform to Arch/CachyOS package policy in UX/docs
 - [ ] HTTP/2 preferred for SSE with fallback to HTTP/1.1 (ORCH-3450)
 - [ ] Metrics pre-registration; throttle per-token histograms (ORCH-3460)
 - [x] `/v1/capabilities` backed by host capability snapshot cache (ORCH-3603)
@@ -80,6 +89,7 @@ This checklist aggregates all work to implement recent proposals and root specs.
 
 ## 8. Test Harnesses
 - [ ] BDD: ensure only cross-crate scenarios; step registry rejects unknown/ambiguous (ORCH-3279)
+- [x] BDD harness builds: World derives compile under cucumber via manual Debug redaction (no `AppState: Debug` requirement)
 - [ ] Determinism suite: seed corpus, record engine_version/engine_digest; byte-exact streams (ORCH-3280)
 - [ ] E2E Haiku: REQUIRE_REAL_LLAMA gating; SSE transcripts; cleanup (ORCH-3281)
 - [ ] Chaos: fault inject at adapters and pool-managerd supervision hooks (as designed)
@@ -103,7 +113,7 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [ ] Format/lint: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features -- -D warnings`
 - [ ] Workspace tests: `cargo test --workspace --all-features -- --nocapture`
 - [ ] Orchestrator provider verify: `cargo test -p orchestratord --test provider_verify -- --nocapture`
-- [ ] BDD smoke: `cargo test -p test-harness-bdd -- --nocapture`
+- [ ] BDD smoke: `cargo test -p test-harness-bdd --test bdd -- --nocapture`
 - [ ] Determinism suite: `cargo test -p test-harness-determinism-suite`
 - [ ] Metrics lints: `cargo test -p test-harness-metrics-contract` (or `ci/scripts` linter)
 

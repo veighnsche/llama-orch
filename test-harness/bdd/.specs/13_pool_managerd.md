@@ -7,7 +7,7 @@ Date: 2025-09-19
 - Validates readiness transitions and drain/reload effects via orchestrator control plane.
 
 ## Expectations
-- Health summaries reflect manager registry state; draining blocks new placements.
+- Health summaries reflect manager registry state; draining blocks new placements. Minimal Auth is not exercised directly here; coverage occurs through orchestrator control endpoints.
 
 ## Refinement Opportunities
 - Synthetic failure injection for preload/restart/backoff paths.

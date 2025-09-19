@@ -6,8 +6,9 @@ use serde_json::json;
 
 use http::header::HeaderName;
 use orchestratord::api::{control, data, observability};
+use std::fmt;
 
-#[derive(Debug, cucumber::World)]
+#[derive(cucumber::World)]
 pub struct World {
     facts: Vec<serde_json::Value>,
     pub mode_commit: bool,
@@ -19,6 +20,21 @@ pub struct World {
     pub task_id: Option<String>,
     pub api_key: Option<String>,
     pub extra_headers: Vec<(String, String)>,
+}
+
+impl fmt::Debug for World {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("World")
+            .field("facts_len", &self.facts.len())
+            .field("mode_commit", &self.mode_commit)
+            .field("last_status", &self.last_status)
+            .field("corr_id", &self.corr_id)
+            .field("task_id", &self.task_id)
+            .field("api_key_present", &self.api_key.as_ref().map(|_| true).unwrap_or(false))
+            .field("extra_headers_len", &self.extra_headers.len())
+            .field("state", &"<AppState redacted>")
+            .finish()
+    }
 }
 
 impl Default for World {

@@ -9,7 +9,7 @@ Date: 2025-09-19
 
 ## Expectations on engine-provisioner
 - Produce consistent engine runtime behavior so that upstream components can rely on stable capacity and versions.
-- Provide clear errors and diagnostics when CUDA/GPU is unavailable; there is no CPU-only fallback.
+- Provide clear errors and diagnostics when CUDA/GPU is unavailable; GPU is required for inference and failures must be surfaced promptly.
 
 ## Expectations on orchestrator-core
 - Treat engine readiness/capacity as inputs only; do not attempt to manipulate engines.

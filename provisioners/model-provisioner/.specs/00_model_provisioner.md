@@ -35,7 +35,7 @@ Out of scope:
 ## 3) Interfaces & Contracts
 
 - Stability: The two ensure APIs are stable within the repo pre‑1.0; changing semantics requires spec update and call site changes.
-- Integration: `engine-provisioner` and `pool-managerd` call `ensure_present*` before starting engines or flipping Ready.
+- Integration: `engine-provisioner` and `pool-managerd` call `ensure_present*` before starting engines or flipping Ready. Callers SHOULD first consult `catalog-core` read-only helpers `exists(id|ref)` and `locate(ModelRef)` to avoid redundant staging, as promoted in `/.specs/25-catalog-core.md`.
 
 ## 4) Observability
 

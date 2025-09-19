@@ -12,7 +12,7 @@ In scope:
 - Planning (`Plan`, `PlanStep`) of provisioning actions for a pool.
 - Engine‑specific ensure flows (e.g., llama.cpp source build) using CMake/git.
 - Optional host package installs (Arch/CachyOS via pacman) when explicitly allowed.
-- Normalizing engine runtime flags; GPU capability detection and diagnostics (no CPU fallback).
+- Normalizing engine runtime flags; GPU capability detection and diagnostics.
 - Spawning the engine process.
 
 Out of scope:
@@ -21,27 +21,27 @@ Out of scope:
 
 ## 1) Normative Requirements (RFC‑2119)
 
-- [ORCH‑3600] The crate MUST expose a trait `EngineProvisioner`:
+- The crate MUST expose a trait `EngineProvisioner`:
   - `fn plan(&self, pool: cfg::PoolConfig) -> Result<Plan>` returns a high‑level plan (`PlanStep { kind, detail }`).
   - `fn ensure(&self, pool: cfg::PoolConfig) -> Result<()>` executes the steps to prepare and start the engine.
-- [ORCH‑3601] The function `provider_for(pool)` MUST return a provider matching `pool.engine` and MUST error on unknown engines.
-- [ORCH‑3602] Llama.cpp (source mode):
+- The function `provider_for(pool)` MUST return a provider matching `pool.engine` and MUST error on unknown engines.
+- Llama.cpp (source mode):
   - The provider MUST clone the configured repo/ref if missing and MUST run CMake with `-DLLAMA_BUILD_SERVER=ON` into a dedicated build dir.
   - Deprecated flags `LLAMA_CUBLAS*` MUST be mapped to `GGML_CUDA=ON`; cached CMake entries MUST be invalidated if needed.
   - If CUDA is requested but `nvcc` is unavailable, the provider SHOULD attempt to discover a CUDA root and set `CUDAToolkit_ROOT` hints.
-  - If CMake configure fails with CUDA, the provider MUST fail fast with actionable diagnostics. The system MUST NOT fallback to CPU-only.
+  - If CMake configure fails with CUDA, the provider MUST fail fast with actionable diagnostics. GPU is required; do not proceed without it.
   - The resulting `llama-server` binary MUST exist before starting.
-- [ORCH‑3603] Preflight tooling:
+- Preflight tooling:
   - The provider MUST detect missing tools (git, cmake, make, gcc, optional `nvcc`).
   - The provider MUST NOT install packages unless `provisioning.allow_package_installs == true`.
   - When installs are allowed, the provider MUST restrict automatic installs to Arch‑like systems with `pacman`; other distros MUST return an instructive error.
   - If model ref scheme is `hf:` and `huggingface-cli` is missing, the provider MAY include it in the pacman install set when installs are allowed; otherwise MUST return an instructive error.
-- [ORCH‑3604] Model artifacts:
+- Model artifacts:
   - The provider MUST delegate model staging to `model-provisioner::ModelProvisioner::ensure_present*` with the configured cache dir or default model cache dir.
-- [ORCH‑3605] Runtime flags & spawning:
+- Runtime flags & spawning:
   - The provider MUST normalize llama.cpp flags, mapping legacy `--ngl/-ngl/--gpu-layers` to `--n-gpu-layers`.
   - The provider MUST pass `--model <path>`, host, and port; it SHOULD write a PID file under a default run directory.
-- [ORCH‑3606] Security:
+- Security:
   - The provider MUST avoid privilege escalation; package installs MUST use the system package manager and only when explicitly allowed.
   - Secrets MUST NOT be written to disk; environment hints are ephemeral.
  - PreparedEngine summary:
@@ -60,7 +60,7 @@ Out of scope:
 
 ## 4) Observability
 
-- Providers SHOULD log key steps (`git`, `cmake`, CUDA hints, flag normalization) and MUST surface clear diagnostics when CUDA/GPU is unavailable (fail-fast path; no CPU fallback).
+- Providers SHOULD log key steps (`git`, `cmake`, CUDA hints, flag normalization) and MUST surface clear diagnostics when CUDA/GPU is unavailable (fail fast; GPU is required).
 - Suggested metrics (emitted by daemons): build duration, restart counts, readiness transitions.
 
 ## 5) Security

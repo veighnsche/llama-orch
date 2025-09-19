@@ -8,7 +8,7 @@ Date: 2025-09-19
 - `pool-managerd` calls `engine-provisioner::EngineProvisioner::ensure` during preload; `orchestratord` exposes control flows (drain/reload) that cause `pool-managerd` to act.
 
 ## Expectations on engine-provisioner
-- Prepare engines according to `PoolConfig`; expose clear errors and diagnostics when CUDA/GPU is unavailable. There is no CPU-only fallback.
+- Prepare engines according to `PoolConfig`; expose clear errors and diagnostics when CUDA/GPU is unavailable. GPU is required; failures must be surfaced promptly (fail fast).
 
 ## Expectations on orchestrator-core (via callers)
 - Treat engine readiness and capacity as inputs from `pool-managerd`/`orchestratord` snapshots; do not attempt to start/stop engines.

@@ -26,7 +26,7 @@ Out of scope: model staging (delegated to `model-provisioner`), placement, HTTP 
 
 1) Preflight tools and environment (Arch pacman optional path when allowed).
 2) Plan: clone/pull, configure/build (CMake flags normalization), or pull container image.
-3) Ensure: produce `llama-server` (or engine) binary, discover/configure CUDA, and fail fast if GPU/CUDA is unavailable (GPU-only; no CPU fallback).
+3) Ensure: produce `llama-server` (or engine) binary, discover/configure CUDA, and fail fast if GPU/CUDA is unavailable. GPU is required.
 4) Spawn: return running process (or prepared artifact) with normalized flags.
 
 ## Observability & Determinism

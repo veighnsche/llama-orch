@@ -147,7 +147,7 @@ fn try_dispatch_via_adapter(state: &AppState, id: &str) -> anyhow::Result<adapte
     state.adapter_host.submit("default", req)
 }
 
-fn build_sse_from_events(state: &AppState, id: &str, mut events: Vec<(String, serde_json::Value)>) -> String {
+fn build_sse_from_events(state: &AppState, id: &str, events: Vec<(String, serde_json::Value)>) -> String {
     // Persist transcript as artifact via configured store (and keep compat map updated)
     let transcript = json!({"events": events.iter().map(|(t, d)| json!({"type": t, "data": d})).collect::<Vec<_>>(),});
     let _ = crate::services::artifacts::put(state, transcript);

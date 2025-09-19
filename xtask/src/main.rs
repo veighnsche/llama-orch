@@ -14,6 +14,20 @@ struct Xtask {
     cmd: Cmd,
 }
 
+fn ci_auth_min() -> Result<()> {
+    // Minimal self-check for auth-min crate
+    let ok1 = auth_min::parse_bearer(Some("Bearer abc")) == Some("abc".to_string());
+    let ok2 = !auth_min::timing_safe_eq(b"a", b"b");
+    let fp = auth_min::token_fp6("secret");
+    let ok3 = fp.len() == 6 && fp.chars().all(|c| c.is_ascii_alphanumeric());
+    if ok1 && ok2 && ok3 {
+        println!("ci:auth OK (fp6=****{})", fp);
+        Ok(())
+    } else {
+        Err(anyhow!("ci:auth failed"))
+    }
+}
+
 fn engine_status(config_path: PathBuf, pool_filter: Option<String>) -> Result<()> {
     let root = repo_root()?;
     let path = if config_path.is_relative() { root.join(config_path) } else { config_path };

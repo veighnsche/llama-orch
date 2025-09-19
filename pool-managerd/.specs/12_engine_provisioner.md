@@ -9,7 +9,7 @@ Date: 2025-09-19
 ## Expectations on engine-provisioner
 - Accept `PoolConfig` (engine, provisioning, ports, flags) and perform `ensure()` to build/spawn the engine.
 - Delegate model staging to `model-provisioner`; do not flip readiness or supervise runtime.
-- Log key steps (plan, git/cmake, CUDA hints) and CPU/GPU fallback decisions; return typed errors.
+- Log key steps (plan, git/cmake, CUDA diagnostics) and GPU-required fail-fast outcomes; return typed errors.
 - Honor `allow_package_installs` strictly (Arch pacman-only); otherwise return remediation guidance.
 
 ## Expectations on pool-managerd

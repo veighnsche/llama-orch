@@ -123,3 +123,14 @@ fn demo() -> anyhow::Result<()> {
 
 - Status: alpha
 - Owners: @llama-orch-maintainers
+
+## Detailed behavior (High / Mid / Low)
+
+- High-level
+  - Provides `ModelRef` parsing, a `CatalogStore` trait with a default `FsCatalog` implementation, and helpers like `verify_digest` and `default_model_cache_dir()`. It does not perform network fetches or spawn processes; provisioners own those.
+
+- Mid-level
+  - Entries persisted by `FsCatalog` include `id`, `local_path`, `lifecycle`, and optional `digest/last_verified_ms`. Read-only helpers `exists(id|ref)` and `locate(ModelRef)` are promoted to normative behavior to avoid redundant staging in callers.
+
+- Low-level
+  - Index writes are atomic (temp file + atomic rename). Paths are normalized and must remain under the catalog root. `delete(id)` removes the index entry and best-effort deletes artifacts without corrupting the index.

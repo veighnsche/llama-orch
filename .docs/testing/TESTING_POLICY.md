@@ -25,6 +25,7 @@ This project treats tests as the contract. Follow these rules whenever you add o
   - BDD transcripts (`test-harness/bdd` logs)
   - Metrics dumps from `/metrics`
   - Determinism diffs when failures occur
+  - SSE transcripts (with and without micro-batching) and narration coverage excerpts
 - Store or link artifacts in PR descriptions or issue trackers; do not rely on ephemeral console logs.
 
 ## Release Gates

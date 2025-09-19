@@ -48,6 +48,10 @@ Date: 2025-09-19
 
 - Unit/integration: file staging, id normalization, catalog registration/update; gated tests for `hf:` shell‑out when CLI exists.
 
+## Test Ownership
+
+- Crate-local tests OWN staging, id normalization, and catalog interactions through `catalog-core`. Cross-crate flows are validated by the root BDD harness; see `/.specs/72-bdd-harness.md`.
+
 ## Refinement Opportunities
 
 - Feature-gated network fetchers (`hf/http/s3/oci`).

@@ -136,7 +136,7 @@ This specification is the single source of truth for llama-orch in a home lab. I
   * Models cache defaults to `~/.cache/models` unless overridden by config.
 * Outbound network/tooling MUST be policy-gated (same policy hook as §2.7 Security & Policy). Operators MUST be able to disable downloads globally. (ORCH-3206)
 * Provisioning MUST produce a deterministic plan (steps) and logs suitable for inclusion in artifacts; a pool MUST only transition to Ready after successful engine provisioning and model preload. (ORCH-3207)
-* GPU-only policy: inference MUST run on NVIDIA GPUs only. Provisioning and runtime MUST NOT fallback to CPU; when GPU/CUDA is unavailable, components MUST fail fast with actionable diagnostics. (ORCH-1102)
+* GPU-only policy: inference MUST run on NVIDIA GPUs only. Provisioning and runtime MUST NOT use CPU for inference; when GPU/CUDA is unavailable, components MUST fail fast with actionable diagnostics. (ORCH-1102)
 
 ---
 

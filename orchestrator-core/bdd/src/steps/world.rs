@@ -1,4 +1,2 @@
-use cucumber::World as CucumberWorld;
-
-#[derive(Debug, Default, CucumberWorld)]
+#[derive(Debug, Default, cucumber::World)]
 pub struct BddWorld {}

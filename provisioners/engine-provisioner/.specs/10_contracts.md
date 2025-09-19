@@ -10,7 +10,7 @@ Date: 2025-09-19
   - Trait `EngineProvisioner` with `plan(&PoolConfig) -> Plan` and `ensure(&PoolConfig) -> Result<()>`.
   - Function `provider_for(&PoolConfig) -> Box<dyn EngineProvisioner>`.
 - Llama.cpp source provider
-  - Ensures repo/ref is cloned, builds `llama-server` with CMake, maps deprecated flags, detects CUDA and FAILS FAST with actionable diagnostics when unavailable (no CPU fallback), and spawns the server with normalized flags.
+  - Ensures repo/ref is cloned, builds `llama-server` with CMake, maps deprecated flags, detects CUDA and FAILS FAST with actionable diagnostics when unavailable, and spawns the server with normalized flags.
 - Preflight tooling
   - Detects required tools; optionally installs via pacman when `allow_package_installs=true` and on Arch-like systems.
 
@@ -39,7 +39,7 @@ Date: 2025-09-19
 
 ## Observability
 
-- Providers log key steps (`git`, `cmake`, CUDA hints, flag normalization) and MUST surface clear diagnostics when CUDA/GPU is unavailable (fail-fast; no CPU fallback).
+- Providers log key steps (`git`, `cmake`, CUDA hints, flag normalization) and MUST surface clear diagnostics when CUDA/GPU is unavailable (fail-fast; GPU required).
 
 ## Security & Policy
 

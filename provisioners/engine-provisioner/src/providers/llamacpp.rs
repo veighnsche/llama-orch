@@ -85,7 +85,7 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
         cfgcmd.arg("-U").arg("LLAMA_CUBLAS");
         // If CUDA is requested but nvcc is not discoverable, provide CUDAToolkit_ROOT and PATH hints
         let wants_cuda_env = mapped_flags.iter().any(|f| f.contains("GGML_CUDA=ON"));
-        let mut gpu_enabled = wants_cuda_env;
+        let gpu_enabled = wants_cuda_env;
         if wants_cuda_env && which::which("nvcc").is_err() {
             if let Some(root) = discover_cuda_root() {
                 let root_s = root.to_string_lossy().to_string();
