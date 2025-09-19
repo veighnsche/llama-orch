@@ -1,0 +1,329 @@
+spec_mechanics:
+  proposal_dir: ".specs/proposals"
+  naming_rules: "Files named as YYYY-MM-DD-<slug>.md. Each includes Status, Owner, Date and sections (Motivation, Scope, Normative Requirements with ORCH-IDs, Layer Responsibilities, Mapping, CI & Tooling, Migration Plan, Acceptance Criteria, and Refinement Opportunities)."
+  approvals: "Spec-first workflow; proposals live under .specs/proposals with ORCH-IDs; PRs are gated by CI and PR Checklist. No explicit approver list defined; Owner header indicates maintainers. Acceptance governed by meeting Acceptance Criteria and CI green."
+  gates: "cargo fmt --all -- --check; cargo clippy --all-targets --all-features -- -D warnings; cargo xtask regen-openapi; cargo xtask regen-schema; cargo run -p tools-spec-extract --quiet; cargo test --workspace --all-features -- --nocapture; linkcheck (ci/scripts/check_links.sh); pact provider verify; BDD; determinism (optional)."
+workspace:
+  crates:
+    - name: contracts-api-types
+      path: contracts/api-types
+      kind: lib
+      bins: []
+      role: OpenAPI-derived and handcrafted data-plane types
+    - name: contracts-config-schema
+      path: contracts/config-schema
+      kind: lib
+      bins: []
+      role: Config schema model and emit helpers
+    - name: orchestrator-core
+      path: orchestrator-core
+      kind: lib
+      bins: []
+      role: Core primitives and invariants (e.g., in-memory queue)
+    - name: orchestratord
+      path: orchestratord
+      kind: both
+      bins: [orchestratord]
+      role: HTTP service (Axum) for admission→SSE, metrics, middleware, and domain wiring
+    - name: pool-managerd
+      path: pool-managerd
+      kind: both
+      bins: [pool-managerd]
+      role: Pool/replica registry and lifecycle planning stubs
+    - name: catalog-core
+      path: catalog-core
+      kind: lib
+      bins: []
+      role: Model catalog resolve/verify/cache
+    - name: provisioners-engine-provisioner
+      path: provisioners/engine-provisioner
+      kind: lib
+      bins: []
+      role: Engine bring-up (e.g., llama.cpp build/run), tool preflight, model fetch orchestration
+    - name: model-provisioner
+      path: provisioners/model-provisioner
+      kind: lib
+      bins: []
+      role: Ensures models are present (file-only flow)
+    - name: worker-adapters-adapter-api
+      path: worker-adapters/adapter-api
+      kind: lib
+      bins: []
+      role: Shared adapter traits and types
+    - name: worker-adapters-llamacpp-http
+      path: worker-adapters/llamacpp-http
+      kind: lib
+      bins: []
+      role: HTTP adapter for llama.cpp workers
+    - name: worker-adapters-vllm-http
+      path: worker-adapters/vllm-http
+      kind: lib
+      bins: []
+      role: HTTP adapter for vLLM workers
+    - name: worker-adapters-tgi-http
+      path: worker-adapters/tgi-http
+      kind: lib
+      bins: []
+      role: HTTP adapter for TGI workers
+    - name: worker-adapters-triton
+      path: worker-adapters/triton
+      kind: lib
+      bins: []
+      role: HTTP adapter for Triton workers
+    - name: worker-adapters-mock
+      path: worker-adapters/mock
+      kind: lib
+      bins: []
+      role: Mock adapter for dev/BDD
+    - name: cli-consumer-tests
+      path: cli/consumer-tests
+      kind: bin
+      bins: [cli-consumer-tests]
+      role: Pact consumer and stub tests driver
+    - name: llama-orch-cli
+      path: cli/llama-orch-cli
+      kind: bin
+      bins: [llama-orch]
+      role: CLI frontend for contract design/verification
+    - name: test-harness-e2e-haiku
+      path: test-harness/e2e-haiku
+      kind: bin
+      bins: [e2e-haiku]
+      role: E2E haiku harness
+    - name: test-harness-metrics-contract
+      path: test-harness/metrics-contract
+      kind: lib
+      bins: []
+      role: Metrics contract helpers
+    - name: test-harness-determinism-suite
+      path: test-harness/determinism-suite
+      kind: bin
+      bins: [determinism-suite]
+      role: Determinism suite runner
+    - name: test-harness-chaos
+      path: test-harness/chaos
+      kind: bin
+      bins: [chaos]
+      role: Chaos harness (planning)
+    - name: test-harness-bdd
+      path: test-harness/bdd
+      kind: bin
+      bins: [bdd-runner]
+      role: BDD harness for cross-crate flows
+    - name: orchestratord-bdd
+      path: orchestratord/bdd
+      kind: bin
+      bins: [bdd-runner]
+      role: Orchestratord-specific BDD steps and runner
+    - name: tools-spec-extract
+      path: tools/spec-extract
+      kind: bin
+      bins: [spec-extract]
+      role: Spec extraction tool
+    - name: tools-openapi-client
+      path: tools/openapi-client
+      kind: lib
+      bins: []
+      role: Generated OpenAPI client library
+    - name: tools-readme-index
+      path: tools/readme-index
+      kind: bin
+      bins: [readme-index]
+      role: README indexing tool
+    - name: xtask
+      path: xtask
+      kind: bin
+      bins: [xtask]
+      role: Workspace utility (regen, docs, pact verify, engine plan/up/down/status)
+logging:
+  libs:
+    - name: tracing
+      version: "0.1"
+    - name: tracing-subscriber
+      version: "0.3"
+    - name: prometheus
+      version: "0.13"
+  init_points:
+    - crate: orchestratord
+      file: orchestratord/src/app/bootstrap.rs
+      symbol: init_observability
+      format_modes: [json]
+  field_taxonomy:
+    common_fields: [job_id, session_id, engine, engine_version, pool_id, replica_id, queue_position, predicted_start_ms, tokens_in, tokens_out, decode_time_ms]
+  format_controls:
+    env_vars: [RUST_LOG]
+    flags: []
+    features: [orchestratord:metrics]
+inventory:
+  per_crate:
+    - crate: contracts-api-types
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: contracts-config-schema
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: orchestrator-core
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: orchestratord
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples:
+        - file: orchestratord/src/api/data.rs
+          line: 69
+          macro: ad-hoc
+          summary: push JSON string with queue_position and predicted_start_ms to in-memory state.logs
+        - file: orchestratord/src/app/bootstrap.rs
+          line: 9
+          macro: init
+          summary: init tracing_subscriber with EnvFilter and JSON formatter
+    - crate: pool-managerd
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: catalog-core
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: provisioners-engine-provisioner
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples:
+        - file: provisioners/engine-provisioner/src/providers/llamacpp.rs
+          line: 139
+          macro: eprintln!
+          summary: CUDA configure fallback warning; retries with CPU-only
+        - file: provisioners/engine-provisioner/src/providers/llamacpp.rs
+          line: 213
+          macro: println!
+          summary: spawned llama-server pid=<id> (pool=<pool_id>)
+    - crate: model-provisioner
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: worker-adapters-adapter-api
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: worker-adapters-llamacpp-http
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: worker-adapters-vllm-http
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: worker-adapters-tgi-http
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: worker-adapters-triton
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: worker-adapters-mock
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: cli-consumer-tests
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: llama-orch-cli
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: test-harness-bdd
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: orchestratord-bdd
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: test-harness-determinism-suite
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: test-harness-chaos
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: test-harness-e2e-haiku
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: test-harness-metrics-contract
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: tools-spec-extract
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: tools-openapi-client
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: tools-readme-index
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples: []
+    - crate: xtask
+      counts: {info: 0, warn: 0, error: 0, debug: 0, trace: 0, span: 0, instrument: 0}
+      examples:
+        - file: xtask/src/main.rs
+          line: 301
+          macro: println!
+          summary: reports success of regen-openapi (typical stdout pattern across xtask)
+flows:
+  - name: Admission → SSE → Metrics → Artifact
+    steps:
+      - file: orchestratord/src/api/data.rs
+        line: 36
+        symbol: create_task
+        note: push admission ETA log (queue_position, predicted_start_ms) to state.logs
+      - file: orchestratord/src/api/data.rs
+        line: 87
+        symbol: stream_task
+        note: sets SSE headers and delegates to streaming service
+      - file: orchestratord/src/services/streaming.rs
+        line: 8
+        symbol: render_sse_for_task
+        note: increments counters and histograms; assembles SSE events and persists transcript
+  - name: Cancellation path
+    steps:
+      - file: orchestratord/src/api/data.rs
+        line: 101
+        symbol: cancel_task
+        note: inc tasks_canceled_total; set cancellation flag; append cancellation log to state.logs
+      - file: orchestratord/src/services/streaming.rs
+        line: 52
+        symbol: render_sse_for_task
+        note: checks cancellation windows to end early and skip later metrics
+  - name: Provisioner bring-up fallback
+    steps:
+      - file: provisioners/engine-provisioner/src/providers/llamacpp.rs
+        line: 115
+        symbol: LlamaCppSourceProvisioner::ensure (configure)
+        note: on CUDA config failure emits warning and retries with CPU-only
+      - file: provisioners/engine-provisioner/src/providers/llamacpp.rs
+        line: 211
+        symbol: LlamaCppSourceProvisioner::ensure (spawn)
+        note: prints spawned llama-server pid with pool id
+  - name: Admission backpressure and queue depth
+    steps:
+      - file: orchestratord/src/admission.rs
+        line: 43
+        symbol: QueueWithMetrics::enqueue
+        note: emits admission_backpressure_events_total and tasks_rejected_total; updates queue_depth gauge
+otel:
+  enabled: false
+  setup_points: []
+  exporters: []
+  attributes: []
+tests_ci:
+  log_assertions:
+    - path: orchestratord/bdd/src/steps/observability.rs
+      kind: integration
+    - path: cli/consumer-tests/tests/snapshot_transcript.rs
+      kind: snapshot
+  ci_env: []
+candidates:
+  options:
+    - type: new_crate
+      at: observability (new workspace crate)
+      pros: [Shared narration API and taxonomy, central init helpers, future OTEL integration, reusable across crates]
+      cons: [Cross-crate wiring required, must keep deps light]
+    - type: existing_module
+      at: orchestratord/src/infra (e.g., logging.rs)
+      pros: [Fastest adoption for main service, minimal blast radius]
+      cons: [Not shared, duplicates appear in other crates]
+    - type: other
+      at: hybrid (new crate + thin per-binary init)
+      pros: [Shared taxonomy with small adapters; easy pretty/json selection]
+      cons: [Slightly more upfront design; tests relying on state.logs need adapters]
+risks:
+  - BDD tests rely on state.logs vector; replacing with tracing requires capture/adapters
+  - SSE path is performance-sensitive; avoid expensive string formatting in hot loop
+  - Shared crate must be dependency-light to be usable by tools and provisioners
+  - Field name mismatch today (decode_ms vs decode_time_ms) must be aligned to README requirement
+  - Introducing OTEL/exporters later changes runtime deps; should be feature-gated
