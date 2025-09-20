@@ -20,3 +20,75 @@ requirements:
     level: must
     links:
     - .specs/60-config-schema.md#2-generation
+  OC-CONFIG-6020:
+    title: '- [] The schema MUST define engine provisioning modes under `engine`/`pool` configuration: `provisioning.mode: external|source|container|package|binary`.'
+    section: 3) Engine Provisioning & Model Fetcher Fields
+    level: must
+    links:
+    - .specs/60-config-schema.md#3-engine-provisioning-model-fetcher-fields
+  OC-CONFIG-6021:
+    title: '- [] The schema MUST support engine identification/version pinning: `engine.id` (llamacpp|vllm|tgi|triton), `engine.version` (string), and engine‑specific ver'
+    section: 3) Engine Provisioning & Model Fetcher Fields
+    level: must
+    links:
+    - .specs/60-config-schema.md#3-engine-provisioning-model-fetcher-fields
+  OC-CONFIG-6022:
+    title: '- [] Source mode fields MUST include `engine.source.git.repo` (URL), `engine.source.git.ref` (tag/branch/sha), `engine.source.submodules: bool`, and build field'
+    section: 3) Engine Provisioning & Model Fetcher Fields
+    level: must
+    links:
+    - .specs/60-config-schema.md#3-engine-provisioning-model-fetcher-fields
+  OC-CONFIG-6023:
+    title: '- [] Container mode fields MUST include `engine.container.image` and `engine.container.tag`.'
+    section: 3) Engine Provisioning & Model Fetcher Fields
+    level: must
+    links:
+    - .specs/60-config-schema.md#3-engine-provisioning-model-fetcher-fields
+  OC-CONFIG-6024:
+    title: '- [] Package mode fields MUST include `engine.package.name` and MUST honor deployment policy `allow_package_installs: bool`.'
+    section: 3) Engine Provisioning & Model Fetcher Fields
+    level: must
+    links:
+    - .specs/60-config-schema.md#3-engine-provisioning-model-fetcher-fields
+  OC-CONFIG-6025:
+    title: '- [] Binary mode fields MUST include `engine.binary.url` and `engine.binary.checksum` (required) and MUST honor `allow_binary_downloads: bool`.'
+    section: 3) Engine Provisioning & Model Fetcher Fields
+    level: must
+    links:
+    - .specs/60-config-schema.md#3-engine-provisioning-model-fetcher-fields
+  OC-CONFIG-6026:
+    title: '- [] Model fetcher fields MUST include `model.ref` (HF path, local path, URL, S3/OCI), `model.cache_dir`, and optional verification digests.'
+    section: 3) Engine Provisioning & Model Fetcher Fields
+    level: must
+    links:
+    - .specs/60-config-schema.md#3-engine-provisioning-model-fetcher-fields
+  OC-CONFIG-6027:
+    title: '- [] Arch/CachyOS deployments MAY set `allow_package_installs: bool` to enable pacman/AUR usage by provisioners.'
+    section: 3) Engine Provisioning & Model Fetcher Fields
+    level: may
+    links:
+    - .specs/60-config-schema.md#3-engine-provisioning-model-fetcher-fields
+  OC-CONFIG-6030:
+    title: '- [] The schema MUST expose configuration keys for the Minimal Auth seam (spec-only; no runtime defaults change):'
+    section: 5) Auth & Binding (Minimal Auth Hooks seam)
+    level: must
+    links:
+    - .specs/60-config-schema.md#5-auth-binding-minimal-auth-hooks-seam
+  OC-CONFIG-6031:
+    title: '- [] The schema examples MUST include `x-examples` illustrating typical configurations:'
+    section: 5) Auth & Binding (Minimal Auth Hooks seam)
+    level: must
+    links:
+    - .specs/60-config-schema.md#5-auth-binding-minimal-auth-hooks-seam
+  OC-CONFIG-6032:
+    title: '- [] Validation MUST fail when `BIND_ADDR` is non-loopback and `AUTH_TOKEN` is unset.'
+    section: 5) Auth & Binding (Minimal Auth Hooks seam)
+    level: must
+    links:
+    - .specs/60-config-schema.md#5-auth-binding-minimal-auth-hooks-seam
+  OC-CONFIG-6033:
+    title: '- [] When `AUTH_OPTIONAL=true`, requests from loopback MAY skip auth but all others MUST present Bearer token.'
+    section: 5) Auth & Binding (Minimal Auth Hooks seam)
+    level: must
+    links:
+    - .specs/60-config-schema.md#5-auth-binding-minimal-auth-hooks-seam

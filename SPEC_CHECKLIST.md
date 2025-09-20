@@ -15,6 +15,11 @@ Legend:
   - [X] `/.specs/proposals/2025-09-19-testing-ownership-and-scope.md`
 - [X] Set `/.specs/11_min_auth_hooks.md` to “Status: Accepted” (spec seam; no runtime change yet)
 
+- [ ] Set additional proposals to Accepted
+  - [ ] `/.specs/proposals/2025-09-19-centralized-placement-and-priority-policy.md`
+  - [ ] `/.specs/proposals/2025-09-19-home-profile-provisioning-and-lan-client.md`
+  - [ ] `/.specs/proposals/2025-09-19-token-streaming-and-cancel-robustness.md`
+
 ## 1) Root `.specs/` edits
 
 - [x] `/.specs/00_llama-orch.md`
@@ -70,6 +75,21 @@ Legend:
   - [x] Cross‑link `/.specs/11_min_auth_hooks.md`; recommend loopback posture & optional token for LAN
   - [x] Confirm GPU‑only stance (no CPU inference) remains consistent
 
+- [ ] `/.specs/10-orchestrator-core.md`
+  - [ ] Add `JobSpec.placement` semantics; centralize tie‑breaker mapping; reference `policy::decide` entry‑point (placement policy)
+- [ ] `/.specs/20-orchestratord.md`
+  - [ ] Delegate placement to `orchestrator-core::policy::decide`; add `DecisionLog` observability; cancel‑on‑disconnect; bounded backpressure; heartbeat optional; narration frames policy (no per‑token logs)
+- [ ] `/.specs/metrics/otel-prom.md`
+  - [ ] Add `placement_decisions_total{outcome, pinned, fallback}` and `placement_candidates_considered` names/labels; optional `predicted_end_ms` histogram; SSE backpressure counters guidance
+- [ ] `/.specs/25-catalog-core.md`
+  - [ ] Add Engine Catalog module (separate `engines.json` index) alongside model catalog; atomic reads/writes and helper reuse
+- [ ] `/.specs/50-engine-provisioner.md`
+  - [ ] Container provider requirements (Podman preferred, Docker fallback), digest pinning, NVIDIA toolkit preflight; `PreparedEngine` includes `engine_catalog_id`
+- [ ] `/.specs/30-pool-managerd.md`
+  - [ ] Container supervision norms (prefer rootless Podman); readiness includes container health; registration with Bearer (when configured)
+- [ ] `/.specs/60-config-schema.md`
+  - [ ] Add `provisioning.container.digest` and LAN bind examples including auth
+
 ## 2) Crate `.specs/` edits
 
 ### Per-crate documentation deliverables (runtime crates only)
@@ -95,6 +115,7 @@ Legend:
 ### orchestrator-core/.specs/
  - [x] `00_orchestrator_core.md`
   - [x] Reference canonical `ModelRequirements` (root) and how core consumes it
+  - [ ] Define `policy::decide(PlacementInput) -> PlacementDecision` entry‑point and data shapes (`PlacementOverrides`); determinism note
  - [x] `10_contracts.md`
   - [x] Add “Test Ownership” note (crate‑local vs BDD cross‑crate)
  - [x] `11_pool_managerd.md`
@@ -112,6 +133,7 @@ Legend:
 ### orchestratord/.specs/
  - [x] `00_orchestratord.md`
   - [x] Document Bearer seam & identity breadcrumbs; reference Minimal Auth Hooks
+  - [ ] Pass‑through overrides (`TaskRequest.placement`) and DecisionLog logging; placement metrics
  - [x] `10_orchestratord_v2_architecture.md`
   - [x] Document HTTP/2 preference, buffered SSE emitter, micro‑batch flag, CPU budget expectations, narration hooks
  - [x] `20_contracts.md`
@@ -141,6 +163,7 @@ Legend:
  - [x] `00_pool_managerd.md`
   - [x] Attach `Authorization: Bearer` on registration/health calls to orchestrator when configured
   - [x] Keep GPU‑only readiness expectations
+  - [ ] Standardize snapshot fields (VRAM totals/free, compute capability, device_mask, draining) and freshness policy
  - [x] `10_contracts.md`
   - [x] Add Test Ownership note
  - [x] `11_model_provisioner.md`, `12_engine_provisioner.md`, `13_orchestrator_core.md`, `14_catalog_core.md`
@@ -175,6 +198,7 @@ Legend:
 ### worker-adapters/.specs/
  - [x] `00_worker_adapters.md`
   - [x] Promote shared HTTP util norms
+  - [ ] Optionally note surfacing perf hints (first_token_ms, perf_tokens_per_s) via props/health when available
  - [x] `10_contracts.md`
   - [x] Add Test Ownership note
  - [x] `11_orchestratord.md`
@@ -224,6 +248,8 @@ Legend:
 - [x] `adapter-host/.specs/00_adapter_host.md` (registry/facade, narration/metrics wrappers, correlation)
 - [x] `worker-adapters/http-util/.specs/00_http_util.md` (shared HTTP client, retries/backoff/HTTP2, streaming decode helpers, redaction)
 
+- [ ] `container-runtime/.specs/00_container_runtime.md` (detect/pull/run/stop; Podman preferred, Docker fallback; NVIDIA toolkit preflight; redaction policy)
+
 ## 4) Clean-up: GPU-only (remove CPU fallback mentions)
 
 - [x] Search & scrub CPU fallback language across specs
@@ -243,6 +269,7 @@ Legend:
 
 - [ ] Update `.docs/testing/` to reference narration coverage and SSE micro‑batch proof artifacts
 - [ ] Ensure proof bundles include SSE transcripts, narration coverage excerpts, determinism outputs, metrics lints, EngineEntry snapshots
+- [ ] Include placement DecisionLog snapshots/metrics excerpts and container preflight logs; capabilities snapshots include per‑pool `engine_version`
 - [ ] Run verification locally:
   - [ ] `cargo fmt --all -- --check`
   - [ ] `cargo clippy --all-targets --all-features -- -D warnings`
@@ -256,6 +283,11 @@ Legend:
 
 - [ ] Propagate High/Mid/Low behavior sections across crate READMEs (code‑grounded) after specs settle
 - [ ] SECURITY.md: update text to reflect Minimal Auth Hooks acceptance (still documentation‑only seam)
+
+## 8) Contracts (OpenAPI + api-types)
+
+- [ ] `contracts/openapi/data.yaml`: add `PlacementMode`, `PlacementOverrides`, and optional `TaskRequest.placement`; update examples
+- [ ] `contracts/api-types`: mirror strong types and defaults; update tests and regen artifacts
 
 ---
 

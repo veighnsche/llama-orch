@@ -1,6 +1,6 @@
 # Proposal: Home‑Profile Engine Provisioning Defaults, Container Provider, and LAN Client Mode
 
-Status: Draft
+Status: Accepted
 Owner: @llama-orch-maintainers
 Date: 2025-09-19
 

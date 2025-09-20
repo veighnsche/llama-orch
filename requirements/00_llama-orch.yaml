@@ -45,7 +45,7 @@ requirements:
     links:
     - .specs/00_llama-orch.md#21-process-model-preload
   ORCH-3002:
-    title: 'Keep configuration lightweight: filesystem storage, single API token, no clustered control plane. ()'
+    title: 'Keep configuration lightweight: filesystem storage, no clustered control plane. ()'
     section: 0. Scope & Goals
     level: info
     links:
@@ -93,7 +93,7 @@ requirements:
     links:
     - .specs/00_llama-orch.md#23-placement-scheduling
   ORCH-3012:
-    title: Default placement heuristic MUST prefer the GPU with the most free VRAM or available slots; heuristics MAY be extended but MUST remain deterministic. ()
+    title: 'Default placement heuristic MUST use least-loaded selection with VRAM awareness: prefer the GPU with the most free VRAM, then fewest active slots; tie-break det'
     section: 2.3 Placement & Scheduling
     level: must
     links:
@@ -159,15 +159,15 @@ requirements:
     links:
     - .specs/00_llama-orch.md#6-documentation-process
   ORCH-3031:
-    title: 'Pool drain/reload MUST be atomic and reversible: reload success toggles Ready, failure rolls back. ( & ORCH-3038)'
+    title: Lifecycle states are limited to `Active` and `Retired`; legacy `Draft`/`Canary` states are removed. Catalog state transitions MUST update pool readiness and rel
     section: 2.6 Catalog, Artifacts & Reloads
     level: must
     links:
     - .specs/00_llama-orch.md#26-catalog-artifacts-reloads
   ORCH-3035:
-    title: Control and data planes MUST be gated by a shared API token; optional mTLS/OIDC MAY be added later. ()
+    title: 'Home profile: there is no AuthN/AuthZ on the control/data planes; they are open locally. Future profiles MAY add auth behind features. ()'
     section: 2.7 Security & Policy
-    level: must
+    level: may
     links:
     - .specs/00_llama-orch.md#27-security-policy
   ORCH-3037:
@@ -278,8 +278,26 @@ requirements:
     level: must
     links:
     - .specs/00_llama-orch.md#27-security-policy
+  ORCH-3090:
+    title: The data-plane `TaskRequest.model_ref` selects the desired model artifact. ()
+    section: 2.11 Model Selection & Auto-Fetch Policy
+    level: info
+    links:
+    - .specs/00_llama-orch.md#211-model-selection-autofetch-policy
+  ORCH-3091:
+    title: If referenced artifacts are not present locally, the system SHOULD auto-fetch into its model cache when provisioning policy allows; otherwise it MUST reply with
+    section: 2.11 Model Selection & Auto-Fetch Policy
+    level: must
+    links:
+    - .specs/00_llama-orch.md#211-model-selection-autofetch-policy
+  ORCH-3092:
+    title: Home profile (Arch/CachyOS) MAY offer opt-in package installs for required tooling (e.g., `python-huggingface-hub`) via `pacman`/AUR when `allow_package_install
+    section: 2.11 Model Selection & Auto-Fetch Policy
+    level: may
+    links:
+    - .specs/00_llama-orch.md#211-model-selection-autofetch-policy
   ORCH-3095:
-    title: The API MUST expose capability information (either via enriched `GET /v1/replicasets` or `GET /v1/capabilities`) covering engine versions, max context, supporte
+    title: The API MUST expose capability information via `GET /v1/capabilities` covering engine versions, max context, supported workloads, and declared concurrency. `GET
     section: 2.9 Capability Discovery
     level: must
     links:
@@ -291,9 +309,9 @@ requirements:
     links:
     - .specs/00_llama-orch.md#29-capability-discovery
   ORCH-3097:
-    title: Artifact registry SHOULD expose `POST /v1/artifacts` + `GET /v1/artifacts/{id}` for plans/diffs/traces stored on local disk. ( & ORCH-3098)
+    title: When checksums/digests are provided, verification MUST be performed and MUST fail pre‑admission on mismatch; otherwise verification MAY proceed with warnings.
     section: 2.6 Catalog, Artifacts & Reloads
-    level: should
+    level: must
     links:
     - .specs/00_llama-orch.md#26-catalog-artifacts-reloads
   ORCH-3098:
@@ -314,3 +332,75 @@ requirements:
     level: should
     links:
     - .specs/00_llama-orch.md#28-observability
+  ORCH-3200:
+    title: The program provisions and manages engines automatically per pool; operators SHOULD NOT be required to pre-install or manually launch engines. ()
+    section: 2.12 Engine Provisioning & Preflight
+    level: should
+    links:
+    - .specs/00_llama-orch.md#212-engine-provisioning-preflight
+  ORCH-3201:
+    title: 'Provisioning modes (mirrors `contracts/config-schema`): ()'
+    section: 2.12 Engine Provisioning & Preflight
+    level: info
+    links:
+    - .specs/00_llama-orch.md#212-engine-provisioning-preflight
+  ORCH-3202:
+    title: 'Preflight MUST check required tools and environment for the selected mode and either: (a) provision missing tools when policy allows, or (b) fail fast with acti'
+    section: 2.12 Engine Provisioning & Preflight
+    level: must
+    links:
+    - .specs/00_llama-orch.md#212-engine-provisioning-preflight
+  ORCH-3203:
+    title: 'Typical tools: `git`, `cmake`, `make`, `gcc`; engine-specific: `nvcc` (CUDA), `huggingface-cli` (HF), `aws` (S3), `oras` (OCI). ()'
+    section: 2.12 Engine Provisioning & Preflight
+    level: info
+    links:
+    - .specs/00_llama-orch.md#212-engine-provisioning-preflight
+  ORCH-3204:
+    title: 'Home profile Arch/CachyOS: when `allow_package_installs=true`, the system MAY install missing tools via `pacman`/AUR non-interactively when possible; otherwise '
+    section: 2.12 Engine Provisioning & Preflight
+    level: must
+    links:
+    - .specs/00_llama-orch.md#212-engine-provisioning-preflight
+  ORCH-3205:
+    title: 'Cache & install locations: ()'
+    section: 2.12 Engine Provisioning & Preflight
+    level: info
+    links:
+    - .specs/00_llama-orch.md#212-engine-provisioning-preflight
+  ORCH-3206:
+    title: Outbound network/tooling MUST be policy-gated (same policy hook as §2.7 Security & Policy). Operators MUST be able to disable downloads globally. ()
+    section: 2.12 Engine Provisioning & Preflight
+    level: must
+    links:
+    - .specs/00_llama-orch.md#212-engine-provisioning-preflight
+  ORCH-3207:
+    title: Provisioning MUST produce a deterministic plan (steps) and logs suitable for inclusion in artifacts; a pool MUST only transition to Ready after successful engin
+    section: 2.12 Engine Provisioning & Preflight
+    level: must
+    links:
+    - .specs/00_llama-orch.md#212-engine-provisioning-preflight
+  ORCH-3300:
+    title: '[] Significant events/spans SHOULD attach a short narration string alongside structured fields under a consistent key (e.g., `human`).'
+    section: 2.8.1 Human‑Readable Narration (ORCH-33xx)
+    level: should
+    links:
+    - .specs/00_llama-orch.md#281-humanreadable-narration-orch33xx
+  ORCH-3302:
+    title: '[] Narration MUST NOT include secrets or PII; redaction helpers MUST be used by emitters.'
+    section: 2.8.1 Human‑Readable Narration (ORCH-33xx)
+    level: must
+    links:
+    - .specs/00_llama-orch.md#281-humanreadable-narration-orch33xx
+  ORCH-3303:
+    title: '[] Narration MUST work with both pretty console and JSON outputs; JSON remains the default in CI.'
+    section: 2.8.1 Human‑Readable Narration (ORCH-33xx)
+    level: must
+    links:
+    - .specs/00_llama-orch.md#281-humanreadable-narration-orch33xx
+  ORCH-3310:
+    title: '[] Canonicalize `decode_time_ms` as the field name; where `decode_ms` exists, implementations MUST preserve compatibility during migration.'
+    section: 2.8.1 Human‑Readable Narration (ORCH-33xx)
+    level: must
+    links:
+    - .specs/00_llama-orch.md#281-humanreadable-narration-orch33xx

@@ -30,8 +30,13 @@ fn ci_auth_min() -> Result<()> {
 
 fn engine_status(config_path: PathBuf, pool_filter: Option<String>) -> Result<()> {
     let root = repo_root()?;
-    let path = if config_path.is_relative() { root.join(config_path) } else { config_path };
-    let bytes = std::fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
+    let path = if config_path.is_relative() {
+        root.join(config_path)
+    } else {
+        config_path
+    };
+    let bytes = std::fs::read(&path)
+        .with_context(|| format!("reading {}", path.display()))?;
     let cfg: contracts_config_schema::Config = serde_yaml::from_slice(&bytes)
         .with_context(|| format!("parsing {}", path.display()))?;
     let pools: Vec<_> = match pool_filter {
@@ -66,8 +71,13 @@ fn engine_status(config_path: PathBuf, pool_filter: Option<String>) -> Result<()
 
 fn engine_down(config_path: PathBuf, pool_filter: Option<String>) -> Result<()> {
     let root = repo_root()?;
-    let path = if config_path.is_relative() { root.join(config_path) } else { config_path };
-    let bytes = std::fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
+    let path = if config_path.is_relative() {
+        root.join(config_path)
+    } else {
+        config_path
+    };
+    let bytes = std::fs::read(&path)
+        .with_context(|| format!("reading {}", path.display()))?;
     let cfg: contracts_config_schema::Config = serde_yaml::from_slice(&bytes)
         .with_context(|| format!("parsing {}", path.display()))?;
     let pools: Vec<_> = match pool_filter {
@@ -114,15 +124,25 @@ fn http_health_probe(host: &str, port: u16) -> std::io::Result<bool> {
 }
 
 fn pid_file_path(pool_id: &str) -> PathBuf {
-    let home = std::env::var_os("HOME").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."));
-    home.join(".cache").join("llama-orch").join("run").join(format!("{}.pid", pool_id))
+    let home = std::env::var_os("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("."));
+    home.join(".cache")
+        .join("llama-orch")
+        .join("run")
+        .join(format!("{}.pid", pool_id))
 }
 
 fn engine_up(config_path: PathBuf, pool_filter: Option<String>) -> Result<()> {
     use provisioners_engine_provisioner::{provider_for, EngineProvisioner};
     let root = repo_root()?;
-    let path = if config_path.is_relative() { root.join(config_path) } else { config_path };
-    let bytes = std::fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
+    let path = if config_path.is_relative() {
+        root.join(config_path)
+    } else {
+        config_path
+    };
+    let bytes = std::fs::read(&path)
+        .with_context(|| format!("reading {}", path.display()))?;
     let cfg: contracts_config_schema::Config = serde_yaml::from_slice(&bytes)
         .with_context(|| format!("parsing {}", path.display()))?;
     let pools: Vec<_> = match pool_filter {
@@ -149,8 +169,13 @@ fn engine_up(config_path: PathBuf, pool_filter: Option<String>) -> Result<()> {
 fn engine_plan(config_path: PathBuf, pool_filter: Option<String>) -> Result<()> {
     use provisioners_engine_provisioner::{provider_for, EngineProvisioner};
     let root = repo_root()?;
-    let path = if config_path.is_relative() { root.join(config_path) } else { config_path };
-    let bytes = std::fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
+    let path = if config_path.is_relative() {
+        root.join(config_path)
+    } else {
+        config_path
+    };
+    let bytes = std::fs::read(&path)
+        .with_context(|| format!("reading {}", path.display()))?;
     let cfg: contracts_config_schema::Config = serde_yaml::from_slice(&bytes)
         .with_context(|| format!("parsing {}", path.display()))?;
     let pools: Vec<_> = match pool_filter {

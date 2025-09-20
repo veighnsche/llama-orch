@@ -20,12 +20,15 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [x] Ensure features for engine-provisioner providers: `provider-llamacpp`, `provider-vllm`, `provider-tgi`, `provider-triton` (ORCH-3430)
 - [x] Update `xtask`/CI scripts to include new crates in fmt/clippy/tests (README_LLM workflow)
 - [x] Update `tools/readme-index` map to include new crates
+- [ ] Add new crate to workspace members: `container-runtime` (root-level crate)
+- [ ] Update `xtask`/CI to include `container-runtime` in fmt/clippy/tests
 
 ## 1. New Library Crates (Scaffolding)
 - [x] `adapter-host/` (lib): registry, facade (submit/cancel/health/props), narration & metrics wrappers (ORCH-3600..3604)
 - [x] `worker-adapters/http-util/` (lib): shared reqwest::Client, retry/backoff, streaming decode helpers, redaction (ORCH-3610..3613)
 - [x] `observability/narration-core/` (lib): minimal narration helper + test capture (ORCH-3300..3308)
 - [x] `auth-min/` (lib, private): minimal auth decisions shared by server/worker/CLI (timing-safe compare, token fp6, loopback bypass, TRUST_PROXY_AUTH gate) (AUTH-1xxx)
+- [ ] `container-runtime/` (lib): detect Podman (preferred) → Docker (fallback), NVIDIA toolkit preflight, pull-by-digest, run/stop with device masks and port mapping; feature-gated backends
 
 ## 2. Orchestratord
 - [x] Integrate `adapter-host` facade for adapter calls (ORCH-3620)
@@ -34,14 +37,20 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [ ] Cancel-on-disconnect for SSE (proposal ref: token streaming & cancel robustness)
 - [ ] Bounded backpressure in streaming service (proposal ref)
 - [ ] Optional SSE heartbeats; surface micro-batching flag in docs (proposal ref)
+- [ ] Narration co-streaming policy: emit `narration` frames at start/cancel/end by default; NEVER per-token; optional periodic cadence (proposal ref)
 - [ ] Adapter streaming decode adoption path via adapter-host (proposal ref)
 - [ ] Placement prefilter by feasibility (ctx_max, VRAM, compute, quantization, extensions) (ORCH-3411)
 - [x] PlacementDecision cache keyed by `(job_spec_hash, snapshot_version, policy)` + TTL (ORCH-3410)
+- [ ] Route all placement decisions through `orchestrator-core::policy::decide` (ORCH-3960)
+- [ ] Enforce auth/policy gates on `TaskRequest.placement`; pass sanitized overrides into core (ORCH-3961)
+- [ ] Log `DecisionLog { filters_applied[], tie_breakers_applied[], pinned, fallback_used, candidates_considered }` and emit placement metrics (ORCH-3962)
 - [ ] API override to pin model/engine to specific GPU/pool (placement override) (see placement preferences)
 - [ ] Auto-provision engines at startup/first-use via engine-provisioner; conform to Arch/CachyOS package policy in UX/docs
 - [ ] HTTP/2 preferred for SSE with fallback to HTTP/1.1 (ORCH-3450)
+- [ ] SSE headers on live stream: `Cache-Control: no-cache`, `Connection: keep-alive`, `X-Accel-Buffering: no` (advisory) (proposal ref)
 - [ ] Metrics pre-registration; throttle per-token histograms (ORCH-3460)
 - [x] `/v1/capabilities` backed by host capability snapshot cache (ORCH-3603)
+- [ ] `/v1/capabilities` includes `engine_version` per pool (capabilities enrichment)
 - [x] Narration logs for admission/cancel; reconcile `decode_time_ms` (ORCH-3300, ORCH-3310) — placement/stream narration pending
 - [x] Minimal Auth Hooks: refuse startup on non-loopback bind without `AUTH_TOKEN`; loopback bypass when `AUTH_OPTIONAL=true`; optional `TRUST_PROXY_AUTH` gate (AUTH-1002/1004/1006)
 - [x] Minimal Auth Middleware: parse `Authorization: Bearer <token>`, timing-safe compare, add `identity=localhost|token:<fp6>` in logs; never log full tokens (AUTH-1001/1007/1008)
@@ -59,6 +68,8 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [ ] Narration logs on preload/reload/drain and readiness flips (ORCH-3490)
 - [ ] Optional metrics scrape (align with metrics-contract)
 - [x] GPU-only Enforcement: preflight asserts CUDA/device availability; never spawn CPU inference; fail fast on insufficiency (GPUs only)
+- [ ] Use `container-runtime` to start/stop engines in container mode; prefer rootless Podman, fallback Docker
+- [ ] Health checks cover container-based engines before flipping `ready=true`
 - [ ] Registration: include Bearer token to orchestrator; handle 401/403 with clear backoff and operator hints (AUTH-1003)
 
 ## 5. Provisioners
@@ -68,6 +79,8 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [ ] Emit `PreparedEngine` summary (version, build_ref, digest, flags, mode, binary_path, engine_catalog_id) (ORCH-3432)
 - [ ] Write `EngineEntry` after successful ensure/build (ORCH-3441)
 - [x] Respect Arch/CachyOS policy for installs when explicitly allowed (ORCH-3434)
+- [ ] Implement container provider using `container-runtime` with NVIDIA toolkit preflight and digest pinning (home-profile)
+- [ ] `PreparedEngine` includes identity metadata (engine_version, digest, image) and `engine_catalog_id` when available (home-profile)
 
 ### Model-provisioner
 - [ ] Parallel staging; enable `HF_HUB_ENABLE_HF_TRANSFER=1` when using HF CLI (ORCH-3435)
@@ -89,6 +102,7 @@ This checklist aggregates all work to implement recent proposals and root specs.
 
 ## 8. Test Harnesses
 - [ ] BDD: ensure only cross-crate scenarios; step registry rejects unknown/ambiguous (ORCH-3279)
+- [ ] BDD: scenarios for placement overrides (pin/prefer/avoid/mask with/without fallback) and priority dispatch
 - [x] BDD harness builds: World derives compile under cucumber via manual Debug redaction (no `AppState: Debug` requirement)
 - [ ] Determinism suite: seed corpus, record engine_version/engine_digest; byte-exact streams (ORCH-3280)
 - [ ] E2E Haiku: REQUIRE_REAL_LLAMA gating; SSE transcripts; cleanup (ORCH-3281)
@@ -97,8 +111,9 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [ ] BDD auth-min scenarios: loopback + AUTH_OPTIONAL=true (allow), loopback + AUTH_OPTIONAL=false (401), non-loopback w/o token (startup refusal), wrong token (401), correct token (200 + identity), worker registration w/o token (401)
 
 ## 9. Contracts & Metrics
-- [ ] OpenAPI/data & control unchanged; align provider verify with envelope mapping (ORCH-3254)
+- [ ] OpenAPI: add `PlacementMode`/`PlacementOverrides` and optional `TaskRequest.placement`; mirror in `contracts/api-types`; run regen tasks (ORCH-3980)
 - [ ] Metrics contract: names/labels in `.specs/metrics/otel-prom.md` + `ci/metrics.lint.json` (ORCH-3460)
+- [ ] Add placement metrics: `placement_decisions_total{outcome, pinned, fallback}` and `placement_candidates_considered`; optional `predicted_end_ms` histogram; ensure `ci/metrics.lint.json` passes
 - [ ] Add ETag/If-Modified-Since and cursors to catalog endpoints (ORCH-3470)
 - [ ] Error taxonomy: ensure new auth error codes (40101/40102/40301) are wired to provider verify tests and snapshots
 
@@ -158,11 +173,14 @@ This checklist aggregates all work to implement recent proposals and root specs.
 - [ ] Minimal Auth: startup refusal on non-loopback without token; loopback bypass honored with `AUTH_OPTIONAL=true`; correct token passes; logs carry `identity` without leaking full tokens
 
 ## 18. Scaffold Targets by Crate (File/Module-Level TODOs)
+- **orchestrator-core/**
+  - [ ] `src/policy.rs` — implement `decide`; helpers for feasibility, overrides, scoring/tie-breaks; unit/property tests
 - **orchestratord/**
   - [ ] `src/app/auth_min.rs` — minimal auth middleware (header parse, timing-safe compare, identity breadcrumb)
   - [ ] `src/app/bootstrap.rs` — startup check: refuse non-loopback without `AUTH_TOKEN`
   - [ ] `src/app/router.rs` — wire middleware; ensure worker registration path checks token
   - [ ] `src/api/data.rs` SSE buffering; `services/streaming.rs` micro-batch flag
+  - [ ] Admission/placement: call `orchestrator-core::policy::decide`; map `TaskRequest.placement` → `JobSpec.placement`; log DecisionLog; emit placement metrics
   - [ ] `src/state.rs` capability snapshot cache plumbing
 - **pool-managerd/**
   - [ ] `src/preflight.rs` — CUDA/device checks (GPU-only gate)

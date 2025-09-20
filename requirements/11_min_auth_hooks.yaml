@@ -1,0 +1,4 @@
+schema_version: 1
+source: .specs/11_min_auth_hooks.md
+notes: No requirement IDs found; add stable IDs like ORCH-XXXX or OC-AREA-XXXX to normative requirements.
+requirements: {}

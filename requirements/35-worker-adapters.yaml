@@ -1,0 +1,4 @@
+schema_version: 1
+source: .specs/35-worker-adapters.md
+notes: No requirement IDs found; add stable IDs like ORCH-XXXX or OC-AREA-XXXX to normative requirements.
+requirements: {}

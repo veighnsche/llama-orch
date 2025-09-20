@@ -284,6 +284,20 @@ components:
       type: string
       enum: [reuse, cold]
 
+    PlacementMode:
+      type: string
+      enum: [pin, prefer, auto]
+
+    PlacementOverrides:
+      type: object
+      properties:
+        mode: { $ref: '#/components/schemas/PlacementMode' }
+        pin_pool_id: { type: string }
+        prefer_pools: { type: array, items: { type: string } }
+        avoid_pools: { type: array, items: { type: string } }
+        require_device_mask: { type: string }
+        allow_fallback: { type: boolean, default: true }
+
     TaskRequest:
       type: object
       required: [task_id, session_id, workload, model_ref, engine, ctx, priority, max_tokens, deadline_ms]
@@ -321,6 +335,7 @@ components:
         deadline_ms: { type: integer, format: int64 }
         expected_tokens: { type: integer, format: int32 }
         kv_hint: { $ref: '#/components/schemas/KVHint' }
+        placement: { $ref: '#/components/schemas/PlacementOverrides' }
 
     AdmissionResponse:
       type: object

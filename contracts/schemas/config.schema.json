@@ -36,6 +36,29 @@
         }
       }
     },
+    "BinaryConfig": {
+      "type": "object",
+      "properties": {
+        "checksum": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "install_dir": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
     "CatalogConfig": {
       "type": "object",
       "properties": {
@@ -51,6 +74,23 @@
         }
       }
     },
+    "ContainerConfig": {
+      "type": "object",
+      "properties": {
+        "image": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tag": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
     "Engine": {
       "type": "string",
       "enum": [
@@ -59,6 +99,53 @@
         "tgi",
         "triton"
       ]
+    },
+    "ModelConfig": {
+      "type": "object",
+      "properties": {
+        "cache_dir": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "checksum": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ref": {
+          "description": "Model reference (e.g., HF repo/file, local path, or digest)",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "PackageConfig": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "repo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
     },
     "PoolConfig": {
       "type": "object",
@@ -108,6 +195,16 @@
           "type": [
             "boolean",
             "null"
+          ]
+        },
+        "provisioning": {
+          "default": {
+            "model": {}
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/ProvisioningConfig"
+            }
           ]
         },
         "quant": {
@@ -197,6 +294,120 @@
         }
       }
     },
+    "ProvisioningConfig": {
+      "type": "object",
+      "properties": {
+        "allow_binary_downloads": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "allow_package_installs": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "binary": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BinaryConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "container": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ContainerConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "env": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "flags": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ProvisioningMode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model": {
+          "default": {},
+          "allOf": [
+            {
+              "$ref": "#/definitions/ModelConfig"
+            }
+          ]
+        },
+        "package": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PackageConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ports": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "integer",
+            "format": "uint16",
+            "minimum": 0.0
+          }
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SourceConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ProvisioningMode": {
+      "type": "string",
+      "enum": [
+        "external",
+        "source",
+        "container",
+        "package",
+        "binary"
+      ]
+    },
     "QueueConfig": {
       "type": "object",
       "properties": {
@@ -211,6 +422,63 @@
         "full_policy": {
           "type": [
             "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "SourceBuildConfig": {
+      "type": "object",
+      "properties": {
+        "cache_dir": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cmake_flags": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "generator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "SourceConfig": {
+      "type": "object",
+      "required": [
+        "ref",
+        "repo"
+      ],
+      "properties": {
+        "build": {
+          "default": {},
+          "allOf": [
+            {
+              "$ref": "#/definitions/SourceBuildConfig"
+            }
+          ]
+        },
+        "ref": {
+          "description": "Tag/branch/commit SHA",
+          "type": "string"
+        },
+        "repo": {
+          "description": "Git URL for the engine source (e.g., https://github.com/ggml-org/llama.cpp.git)",
+          "type": "string"
+        },
+        "submodules": {
+          "type": [
+            "boolean",
             "null"
           ]
         }

@@ -1,6 +1,6 @@
 # Token Streaming and Cancellation Robustness — Draft
 
-Status: Draft
+Status: Accepted
 Owner: @llama-orch-maintainers
 Date: 2025-09-19
 

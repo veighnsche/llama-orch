@@ -1,6 +1,6 @@
 # Proposal: Centralized Placement, Priority, and Consumer Overrides Policy
 
-Status: Draft
+Status: Accepted
 Owner: @llama-orch-maintainers
 Date: 2025-09-19
 

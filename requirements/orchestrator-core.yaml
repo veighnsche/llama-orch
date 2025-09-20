@@ -45,7 +45,7 @@ requirements:
     links:
     - .specs/10-orchestrator-core.md#2-scheduling-placement
   OC-CORE-1012:
-    title: '- [] Least‑loaded placement MUST be used across replicas of the same replica set.'
+    title: '- [] Placement MUST use least‑loaded selection with VRAM awareness across replicas of the same replica set: prefer the replica with the most free VRAM, then f'
     section: 2) Scheduling & Placement
     level: must
     links:
@@ -56,6 +56,30 @@ requirements:
     level: should
     links:
     - .specs/10-orchestrator-core.md#2-scheduling-placement
+  OC-CORE-1014:
+    title: '- [] `ModelRequirements` MUST be derivable from catalog metadata plus adapter/engine capability metadata. Missing fields (e.g., `quant`) MAY remain `None` if no'
+    section: 2A) Data Types — Canonical (authoritative)
+    level: must
+    links:
+    - .specs/10-orchestrator-core.md#2a-data-types-canonical-authoritative
+  OC-CORE-1015:
+    title: '- [] `ctx_max` MUST be the effective user-visible limit considering tokenizer/template overhead.'
+    section: 2A) Data Types — Canonical (authoritative)
+    level: must
+    links:
+    - .specs/10-orchestrator-core.md#2a-data-types-canonical-authoritative
+  OC-CORE-1016:
+    title: '- [] Feasibility MUST require `ctx_max_supported >= ModelRequirements.ctx_max` and feature subset satisfaction (when `extensions` are required). Engine/model mi'
+    section: 2A) Data Types — Canonical (authoritative)
+    level: must
+    links:
+    - .specs/10-orchestrator-core.md#2a-data-types-canonical-authoritative
+  OC-CORE-1017:
+    title: '- [] Deterministic tie-break mapping: selection ordering MUST be defined as a tuple sort `(free_vram_mb desc, active_slots asc, replica_id asc)`.'
+    section: 2A) Data Types — Canonical (authoritative)
+    level: must
+    links:
+    - .specs/10-orchestrator-core.md#2a-data-types-canonical-authoritative
   OC-CORE-1020:
     title: '- [] Context length MUST be ≤ model limit; otherwise reject before enqueue.'
     section: 3) Capacity & Guardrails

@@ -74,6 +74,16 @@
       "name": "model_state",
       "type": "gauge",
       "labels": ["model_id", "state"]
+    },
+    {
+      "name": "placement_decisions_total",
+      "type": "counter",
+      "labels": ["outcome", "pinned", "fallback"]
+    },
+    {
+      "name": "placement_candidates_considered",
+      "type": "gauge",
+      "labels": []
     }
   ],
   "label_cardinality_budget": {
@@ -85,6 +95,9 @@
     "reason": 16,
     "result": 4,
     "state": 8,
-    "model_id": 1024
+    "model_id": 1024,
+    "outcome": 4,
+    "pinned": 2,
+    "fallback": 2
   }
 }

@@ -1,5 +1,6 @@
 // Deterministic template for generated API types matching contracts/openapi/data.yaml
 use serde::{Deserialize, Serialize};
+fn default_true() -> bool { true }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -37,6 +38,30 @@ pub enum Priority {
 pub enum KVHint {
     Reuse,
     Cold,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum PlacementMode {
+    Pin,
+    Prefer,
+    Auto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PlacementOverrides {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode: Option<PlacementMode>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pin_pool_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub prefer_pools: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub avoid_pools: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub require_device_mask: Option<String>,
+    #[serde(default = "default_true")]
+    pub allow_fallback: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -81,6 +106,8 @@ pub struct TaskRequest {
     pub expected_tokens: Option<i32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub kv_hint: Option<KVHint>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub placement: Option<PlacementOverrides>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

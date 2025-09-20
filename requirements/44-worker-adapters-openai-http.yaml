@@ -1,0 +1,64 @@
+schema_version: 1
+source: .specs/44-worker-adapters-openai-http.md
+notes: Extracted from .specs/44-worker-adapters-openai-http.md
+requirements:
+  OC-ADAPT-OAI-6000:
+    title: '- [] Adapter MUST implement `health`, `props`, `submit`, `cancel`, `engine_version` per `worker-adapters/adapter-api`.'
+    section: 1) API Mapping
+    level: must
+    links:
+    - .specs/44-worker-adapters-openai-http.md#1-api-mapping
+  OC-ADAPT-OAI-6001:
+    title: '- [] `submit(TaskRequest)` MUST map to OpenAI Chat/Completions or Responses API with streaming enabled and MUST translate token deltas to `token` events.'
+    section: 1) API Mapping
+    level: must
+    links:
+    - .specs/44-worker-adapters-openai-http.md#1-api-mapping
+  OC-ADAPT-OAI-6002:
+    title: '- [] Adapter MUST bound request timeouts and implement capped, jittered retries for idempotent calls.'
+    section: 1) API Mapping
+    level: must
+    links:
+    - .specs/44-worker-adapters-openai-http.md#1-api-mapping
+  OC-ADAPT-OAI-6003:
+    title: '- [] Adapter MUST NOT expose OpenAI endpoints publicly; all calls are internal.'
+    section: 1) API Mapping
+    level: must
+    links:
+    - .specs/44-worker-adapters-openai-http.md#1-api-mapping
+  OC-ADAPT-OAI-6010:
+    title: '- [] Adapter MUST capture and report `engine_version` (model/version string from OpenAI) and SHOULD include `model_digest` if provided by the upstream API or vi'
+    section: 2) Determinism & Version Capture
+    level: must
+    links:
+    - .specs/44-worker-adapters-openai-http.md#2-determinism-version-capture
+  OC-ADAPT-OAI-6011:
+    title: '- [] Streams MUST preserve ordering (`started → token* → end`), and token boundaries SHOULD follow the upstream delta semantics.'
+    section: 2) Determinism & Version Capture
+    level: must
+    links:
+    - .specs/44-worker-adapters-openai-http.md#2-determinism-version-capture
+  OC-ADAPT-OAI-6020:
+    title: '- [] API keys MUST be redacted from logs and error messages; headers MUST not be logged at error level.'
+    section: 3) Security & Policy
+    level: must
+    links:
+    - .specs/44-worker-adapters-openai-http.md#3-security-policy
+  OC-ADAPT-OAI-6021:
+    title: '- [] Network egress MUST be limited by policy; TLS verification MUST be on; proxies (if any) MUST be explicitly configured.'
+    section: 3) Security & Policy
+    level: must
+    links:
+    - .specs/44-worker-adapters-openai-http.md#3-security-policy
+  OC-ADAPT-OAI-6030:
+    title: '- [] Adapter SHOULD log retry/backoff details and map upstream error codes to `WorkerError`.'
+    section: 4) Observability
+    level: should
+    links:
+    - .specs/44-worker-adapters-openai-http.md#4-observability
+  OC-ADAPT-OAI-6031:
+    title: '- [] Latency and token counts SHOULD be captured; logs MUST include standard fields from `README_LLM.md`.'
+    section: 4) Observability
+    level: must
+    links:
+    - .specs/44-worker-adapters-openai-http.md#4-observability
