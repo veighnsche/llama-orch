@@ -30,7 +30,10 @@ impl fmt::Debug for World {
             .field("last_status", &self.last_status)
             .field("corr_id", &self.corr_id)
             .field("task_id", &self.task_id)
-            .field("api_key_present", &self.api_key.as_ref().map(|_| true).unwrap_or(false))
+            .field(
+                "api_key_present",
+                &self.api_key.as_ref().map(|_| true).unwrap_or(false),
+            )
             .field("extra_headers_len", &self.extra_headers.len())
             .field("state", &"<AppState redacted>")
             .finish()
@@ -86,7 +89,9 @@ impl World {
             (http::Method::POST, "/v1/tasks") => {
                 let body: api::TaskRequest =
                     serde_json::from_value(body_json.unwrap_or_else(|| json!({})))?;
-                data::create_task(State(self.state.clone()), axum::Json(body)).await.into_response()
+                data::create_task(State(self.state.clone()), axum::Json(body))
+                    .await
+                    .into_response()
             }
             (http::Method::GET, p) if p.starts_with("/v1/tasks/") && p.ends_with("/stream") => {
                 let id = p
@@ -116,12 +121,9 @@ impl World {
             }
             (http::Method::DELETE, p) if p.starts_with("/v1/sessions/") => {
                 let id = p.trim_start_matches("/v1/sessions/").to_string();
-                data::delete_session(
-                    State(self.state.clone()),
-                    axum::extract::Path(id),
-                )
-                .await
-                .into_response()
+                data::delete_session(State(self.state.clone()), axum::extract::Path(id))
+                    .await
+                    .into_response()
             }
             (http::Method::GET, p) if p.starts_with("/v1/pools/") && p.ends_with("/health") => {
                 let id = p
@@ -129,12 +131,9 @@ impl World {
                     .trim_end_matches("/health")
                     .trim_matches('/')
                     .to_string();
-                control::get_pool_health(
-                    State(self.state.clone()),
-                    axum::extract::Path(id),
-                )
-                .await
-                .into_response()
+                control::get_pool_health(State(self.state.clone()), axum::extract::Path(id))
+                    .await
+                    .into_response()
             }
             (http::Method::POST, p) if p.starts_with("/v1/pools/") && p.ends_with("/drain") => {
                 let _id = p
@@ -170,7 +169,9 @@ impl World {
                 .into_response()
             }
             (http::Method::GET, "/v1/capabilities") => {
-                control::get_capabilities(State(self.state.clone())).await.into_response()
+                control::get_capabilities(State(self.state.clone()))
+                    .await
+                    .into_response()
             }
             (http::Method::GET, "/metrics") => observability::metrics_endpoint().await,
             _ => (http::StatusCode::NOT_FOUND, Body::empty()).into_response(),

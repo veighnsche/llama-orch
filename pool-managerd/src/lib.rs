@@ -7,6 +7,6 @@ pub mod drain;
 pub mod health;
 pub mod hetero_split;
 pub mod leases;
+pub mod preflight;
 pub mod preload;
 pub mod registry;
-pub mod preflight;

@@ -36,13 +36,15 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^SSE event ordering is per stream$").unwrap(),
         Regex::new(r"^no further token events are emitted$").unwrap(),
         Regex::new(r"^budget headers are present$").unwrap(),
-        Regex::new(r"^SSE transcript artifact exists with events started token metrics end$").unwrap(),
+        Regex::new(r"^SSE transcript artifact exists with events started token metrics end$")
+            .unwrap(),
         Regex::new(r"^queue full policy is reject$").unwrap(),
         Regex::new(r"^queue full policy is drop-lru$").unwrap(),
         Regex::new(r"^an OrchQueue API endpoint under load$").unwrap(),
         Regex::new(r"^I enqueue a task beyond capacity$").unwrap(),
         Regex::new(r"^I enqueue a task way beyond capacity$").unwrap(),
-        Regex::new(r"^I receive 429 with headers Retry-After and X-Backoff-Ms and correlation id$").unwrap(),
+        Regex::new(r"^I receive 429 with headers Retry-After and X-Backoff-Ms and correlation id$")
+            .unwrap(),
         Regex::new(r"^the error body includes policy_label retriable and retry_after_ms$").unwrap(),
         Regex::new(r"^error envelope code is ADMISSION_REJECT$").unwrap(),
         Regex::new(r"^error envelope code is QUEUE_FULL_DROP_LRU$").unwrap(),
@@ -51,7 +53,8 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^I receive 204 No Content with correlation id$").unwrap(),
         Regex::new(r"^a session id$").unwrap(),
         Regex::new(r"^I query the session$").unwrap(),
-        Regex::new(r"^I receive session info with ttl_ms_remaining turns kv_bytes kv_warmth$").unwrap(),
+        Regex::new(r"^I receive session info with ttl_ms_remaining turns kv_bytes kv_warmth$")
+            .unwrap(),
         Regex::new(r"^I delete the session$").unwrap(),
         // deadlines & SSE metrics
         Regex::new(r"^a task with infeasible deadline$").unwrap(),
@@ -59,11 +62,14 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^SSE metrics include on_time_probability$").unwrap(),
         // error taxonomy
         Regex::new(r"^I trigger INVALID_PARAMS$").unwrap(),
-        Regex::new(r"^I receive 400 with correlation id and error envelope code INVALID_PARAMS$").unwrap(),
+        Regex::new(r"^I receive 400 with correlation id and error envelope code INVALID_PARAMS$")
+            .unwrap(),
         Regex::new(r"^I trigger POOL_UNAVAILABLE$").unwrap(),
-        Regex::new(r"^I receive 503 with correlation id and error envelope code POOL_UNAVAILABLE$").unwrap(),
+        Regex::new(r"^I receive 503 with correlation id and error envelope code POOL_UNAVAILABLE$")
+            .unwrap(),
         Regex::new(r"^I trigger INTERNAL error$").unwrap(),
-        Regex::new(r"^I receive 500 with correlation id and error envelope code INTERNAL$").unwrap(),
+        Regex::new(r"^I receive 500 with correlation id and error envelope code INTERNAL$")
+            .unwrap(),
         Regex::new(r"^error envelope includes engine when applicable$").unwrap(),
         // observability placeholders
         Regex::new(r"^metrics conform to linter names and labels$").unwrap(),

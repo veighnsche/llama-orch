@@ -2,8 +2,8 @@ use axum::{extract::State, response::IntoResponse, Json};
 use http::StatusCode;
 use serde_json::json;
 
-use crate::state::AppState;
 use crate::domain::error::OrchestratorError as ErrO;
+use crate::state::AppState;
 
 pub async fn create_artifact(
     state: State<AppState>,
@@ -28,4 +28,3 @@ pub async fn get_artifact(
     let resp = StatusCode::NOT_FOUND.into_response();
     Ok(resp)
 }
-

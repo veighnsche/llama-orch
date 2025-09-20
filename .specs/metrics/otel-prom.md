@@ -36,6 +36,12 @@ Status: pre-code · Scope: OrchQueue v1 data plane & control plane
   - description: Number of rejected tasks with the typed reason.
   - note: `engine_version` is intentionally omitted per Conventions exception (admission-level, pre-engine; cardinality control).
 
+- placement_decisions_total
+  - type: counter
+  - labels: outcome (assigned|no_capacity), pinned (true|false), fallback (true|false)
+  - unit: 1
+  - description: Count of placement decisions and their outcomes.
+
 ## Gauges
 
 - queue_depth
@@ -58,6 +64,12 @@ Status: pre-code · Scope: OrchQueue v1 data plane & control plane
   - labels: engine, engine_version, pool_id, replica_id, device
   - unit: bytes
   - description: VRAM used by the worker process(es).
+
+- placement_candidates_considered
+  - type: gauge
+  - labels: (none)
+  - unit: 1
+  - description: Number of candidate pools considered for the last decision.
 
 ## Optional Metrics
 

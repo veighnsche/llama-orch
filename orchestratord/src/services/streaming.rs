@@ -1,11 +1,11 @@
 //! Streaming service
 
-use serde_json::json;
 use crate::state::AppState;
-use tokio::time::{sleep, Duration};
-use std::io::Write;
-use std::io::BufWriter;
 use futures::StreamExt;
+use serde_json::json;
+use std::io::BufWriter;
+use std::io::Write;
+use tokio::time::{sleep, Duration};
 use worker_adapters_adapter_api as adapter_api;
 
 /// Render a simple deterministic SSE for a task id and persist transcript to artifacts.
@@ -16,14 +16,22 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
         loop {
             // Early cancel
             if let Ok(guard) = state.cancellations.lock() {
-                if guard.contains(&id) { events.push(("end".into(), json!({"canceled":true}))); break; }
+                if guard.contains(&id) {
+                    events.push(("end".into(), json!({"canceled":true})));
+                    break;
+                }
             }
             match s.next().await {
                 Some(Ok(e)) => {
                     events.push((e.kind.clone(), e.data.clone()));
-                    if e.kind == "end" { break; }
+                    if e.kind == "end" {
+                        break;
+                    }
                 }
-                Some(Err(_)) => { events.push(("error".into(), json!({"message":"adapter error"}))); break; }
+                Some(Err(_)) => {
+                    events.push(("error".into(), json!({"message":"adapter error"})));
+                    break;
+                }
                 None => break,
             }
         }
@@ -32,12 +40,23 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
     // Emit metrics: tasks started
     crate::metrics::inc_counter(
         "tasks_started_total",
-        &[("engine","llamacpp"),("engine_version","v0"),("pool_id","default"),("replica_id","r0"),("priority","interactive")]
+        &[
+            ("engine", "llamacpp"),
+            ("engine_version", "v0"),
+            ("pool_id", "default"),
+            ("replica_id", "r0"),
+            ("priority", "interactive"),
+        ],
     );
     // First token latency
     crate::metrics::observe_histogram(
         "latency_first_token_ms",
-        &[("engine","llamacpp"),("engine_version","v0"),("pool_id","default"),("priority","interactive")],
+        &[
+            ("engine", "llamacpp"),
+            ("engine_version", "v0"),
+            ("pool_id", "default"),
+            ("priority", "interactive"),
+        ],
         42.0,
     );
 
@@ -57,19 +76,33 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
     // Decode latency sample and tokens_out
     crate::metrics::observe_histogram(
         "latency_decode_ms",
-        &[("engine","llamacpp"),("engine_version","v0"),("pool_id","default"),("priority","interactive")],
+        &[
+            ("engine", "llamacpp"),
+            ("engine_version", "v0"),
+            ("pool_id", "default"),
+            ("priority", "interactive"),
+        ],
         5.0,
     );
     crate::metrics::inc_counter(
         "tokens_out_total",
-        &[("engine","llamacpp"),("engine_version","v0"),("pool_id","default"),("replica_id","r0")]
+        &[
+            ("engine", "llamacpp"),
+            ("engine_version", "v0"),
+            ("pool_id", "default"),
+            ("replica_id", "r0"),
+        ],
     );
 
     // Build events with potential early termination on cancel
     let mut events: Vec<(&str, serde_json::Value)> = vec![("started", started.clone())];
 
     let is_canceled = |st: &AppState, id: &str| -> bool {
-        if let Ok(guard) = st.cancellations.lock() { guard.contains(id) } else { false }
+        if let Ok(guard) = st.cancellations.lock() {
+            guard.contains(id)
+        } else {
+            false
+        }
     };
 
     // Check cancel before first token
@@ -101,7 +134,10 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
     }
 
     // Optional micro-batch: if enabled, merge consecutive token events.
-    if std::env::var("ORCHD_SSE_MICROBATCH").map(|v| v == "1" || v.eq_ignore_ascii_case("true")).unwrap_or(false) {
+    if std::env::var("ORCHD_SSE_MICROBATCH")
+        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+        .unwrap_or(false)
+    {
         let mut batched: Vec<(&str, serde_json::Value)> = Vec::new();
         let mut token_buf: Vec<serde_json::Value> = Vec::new();
         for (ty, data) in events.into_iter() {
@@ -124,7 +160,10 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
     build_and_persist_sse(state, &id, events)
 }
 
-fn try_dispatch_via_adapter(state: &AppState, id: &str) -> anyhow::Result<adapter_api::TokenStream> {
+fn try_dispatch_via_adapter(
+    state: &AppState,
+    id: &str,
+) -> anyhow::Result<adapter_api::TokenStream> {
     // Construct a minimal TaskRequest
     let req = contracts_api_types::TaskRequest {
         task_id: id.to_string(),
@@ -147,16 +186,26 @@ fn try_dispatch_via_adapter(state: &AppState, id: &str) -> anyhow::Result<adapte
     state.adapter_host.submit("default", req)
 }
 
-fn build_sse_from_events(state: &AppState, id: &str, events: Vec<(String, serde_json::Value)>) -> String {
+fn build_sse_from_events(
+    state: &AppState,
+    id: &str,
+    events: Vec<(String, serde_json::Value)>,
+) -> String {
     // Persist transcript as artifact via configured store (and keep compat map updated)
     let transcript = json!({"events": events.iter().map(|(t, d)| json!({"type": t, "data": d})).collect::<Vec<_>>(),});
     let _ = crate::services::artifacts::put(state, transcript);
     // Clear cancellation flag for this task id to avoid leakage
-    if let Ok(mut guard) = state.cancellations.lock() { let _ = guard.remove(id); }
+    if let Ok(mut guard) = state.cancellations.lock() {
+        let _ = guard.remove(id);
+    }
     build_and_persist_sse(state, id, events)
 }
 
-fn build_and_persist_sse(_state: &AppState, _id: &str, events: Vec<(impl AsRef<str>, serde_json::Value)>) -> String {
+fn build_and_persist_sse(
+    _state: &AppState,
+    _id: &str,
+    events: Vec<(impl AsRef<str>, serde_json::Value)>,
+) -> String {
     let mut buf = Vec::with_capacity(events.len() * 24);
     {
         let mut bw = BufWriter::new(&mut buf);

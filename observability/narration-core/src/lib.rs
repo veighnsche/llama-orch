@@ -1,5 +1,6 @@
 //! observability-narration-core — shared, lightweight narration helper.
 
+#[allow(unused_imports)]
 use tracing::field::display;
 use tracing::{event, Level};
 

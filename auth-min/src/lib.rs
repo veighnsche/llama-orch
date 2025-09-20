@@ -11,7 +11,9 @@ use sha2::{Digest, Sha256};
 
 /// Constant-time comparison to mitigate timing leaks.
 pub fn timing_safe_eq(a: &[u8], b: &[u8]) -> bool {
-    if a.len() != b.len() { return false; }
+    if a.len() != b.len() {
+        return false;
+    }
     let mut diff: u8 = 0;
     for i in 0..a.len() {
         diff |= a[i] ^ b[i];
@@ -34,7 +36,9 @@ pub fn parse_bearer(header_val: Option<&str>) -> Option<String> {
     let s = s.trim();
     if let Some(rest) = s.strip_prefix("Bearer ") {
         let t = rest.trim();
-        if !t.is_empty() { return Some(t.to_string()); }
+        if !t.is_empty() {
+            return Some(t.to_string());
+        }
     }
     None
 }
@@ -50,5 +54,7 @@ pub fn is_loopback_addr(addr: &str) -> bool {
 
 /// Gate flag for trusting proxy-provided auth headers.
 pub fn trust_proxy_auth() -> bool {
-    std::env::var("TRUST_PROXY_AUTH").map(|v| v == "1" || v.eq_ignore_ascii_case("true")).unwrap_or(false)
+    std::env::var("TRUST_PROXY_AUTH")
+        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+        .unwrap_or(false)
 }

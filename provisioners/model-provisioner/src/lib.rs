@@ -7,7 +7,10 @@
 //! - Return ResolvedModel with canonical local path for engine-provisioner and pool-managerd.
 
 use anyhow::Result;
-use catalog_core::{CatalogEntry, CatalogStore, Digest, FileFetcher, FsCatalog, LifecycleState, ModelFetcher, ModelRef, ResolvedModel};
+use catalog_core::{
+    CatalogEntry, CatalogStore, Digest, FileFetcher, FsCatalog, LifecycleState, ModelFetcher,
+    ModelRef, ResolvedModel,
+};
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -34,12 +37,20 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
     /// - Parses `model_ref` string to a ModelRef.
     /// - Uses the fetcher to ensure local presence.
     /// - Records/updates the catalog entry to Active unless specified otherwise.
-    pub fn ensure_present_str(&self, model_ref: &str, expected_digest: Option<Digest>) -> Result<ResolvedModel> {
+    pub fn ensure_present_str(
+        &self,
+        model_ref: &str,
+        expected_digest: Option<Digest>,
+    ) -> Result<ResolvedModel> {
         let mr = ModelRef::parse(model_ref)?;
         self.ensure_present(&mr, expected_digest)
     }
 
-    pub fn ensure_present(&self, mr: &ModelRef, expected_digest: Option<Digest>) -> Result<ResolvedModel> {
+    pub fn ensure_present(
+        &self,
+        mr: &ModelRef,
+        expected_digest: Option<Digest>,
+    ) -> Result<ResolvedModel> {
         // Try primary fetcher first (file/relative). If unsupported, handle select schemes inline.
         let resolved = match self.fetcher.ensure_present(mr) {
             Ok(r) => r,
@@ -57,14 +68,34 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
                         let mut c = Command::new("huggingface-cli");
                         c.env("HF_HUB_ENABLE_HF_TRANSFER", "1");
                         c.arg("download").arg(&repo_spec);
-                        if let Some(p) = path { c.arg(p); }
-                        c.arg("--local-dir").arg(&cache_dir).arg("--local-dir-use-symlinks").arg("False");
+                        if let Some(p) = path {
+                            c.arg(p);
+                        }
+                        c.arg("--local-dir")
+                            .arg(&cache_dir)
+                            .arg("--local-dir-use-symlinks")
+                            .arg("False");
                         let st = c.status()?;
                         if !st.success() {
-                            return Err(anyhow::anyhow!("huggingface-cli download failed for {}", repo_spec));
+                            return Err(anyhow::anyhow!(
+                                "huggingface-cli download failed for {}",
+                                repo_spec
+                            ));
                         }
-                        let local_path = if let Some(p) = path { cache_dir.join(p) } else { cache_dir.join(repo_spec.replace('/', "_")) };
-                        ResolvedModel { id: format!("hf:{}/{}{}", org, repo, path.as_ref().map(|p| format!("/{}", p)).unwrap_or_default()), local_path }
+                        let local_path = if let Some(p) = path {
+                            cache_dir.join(p)
+                        } else {
+                            cache_dir.join(repo_spec.replace('/', "_"))
+                        };
+                        ResolvedModel {
+                            id: format!(
+                                "hf:{}/{}{}",
+                                org,
+                                repo,
+                                path.as_ref().map(|p| format!("/{}", p)).unwrap_or_default()
+                            ),
+                            local_path,
+                        }
                     }
                     _ => return Err(e.into()),
                 }

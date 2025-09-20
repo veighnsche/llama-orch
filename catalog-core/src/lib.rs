@@ -44,8 +44,8 @@ pub enum LifecycleState {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Digest {
-    pub algo: String,   // e.g., "sha256"
-    pub value: String,  // lowercase hex
+    pub algo: String,  // e.g., "sha256"
+    pub value: String, // lowercase hex
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -78,13 +78,22 @@ pub struct VerificationOutcome {
 
 impl VerificationOutcome {
     pub fn pass() -> Self {
-        Self { kind: VerificationOutcomeKind::Pass, reason: None }
+        Self {
+            kind: VerificationOutcomeKind::Pass,
+            reason: None,
+        }
     }
     pub fn warn(reason: impl Into<String>) -> Self {
-        Self { kind: VerificationOutcomeKind::Warn, reason: Some(reason.into()) }
+        Self {
+            kind: VerificationOutcomeKind::Warn,
+            reason: Some(reason.into()),
+        }
     }
     pub fn fail(reason: impl Into<String>) -> Self {
-        Self { kind: VerificationOutcomeKind::Fail, reason: Some(reason.into()) }
+        Self {
+            kind: VerificationOutcomeKind::Fail,
+            reason: Some(reason.into()),
+        }
     }
 }
 
@@ -92,7 +101,11 @@ impl VerificationOutcome {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ModelRef {
     /// hf:org/repo/path.gguf (llama.cpp) or hf:org/repo (vLLM/TGI)
-    Hf { org: String, repo: String, path: Option<String> },
+    Hf {
+        org: String,
+        repo: String,
+        path: Option<String>,
+    },
     /// file:/abs/path or a relative path treated as local
     File { path: PathBuf },
     /// Generic URL schemes: https, s3, oci, etc.
@@ -110,26 +123,36 @@ impl ModelRef {
                 .next()
                 .ok_or_else(|| CatalogError::InvalidRef(s.to_string()))?;
             let path = parts.next().map(|p| p.trim_start_matches('/').to_string());
-            return Ok(ModelRef::Hf { org: org.to_string(), repo: repo.to_string(), path });
+            return Ok(ModelRef::Hf {
+                org: org.to_string(),
+                repo: repo.to_string(),
+                path,
+            });
         }
         if let Some(p) = s.strip_prefix("file:") {
-            return Ok(ModelRef::File { path: PathBuf::from(p) });
+            return Ok(ModelRef::File {
+                path: PathBuf::from(p),
+            });
         }
-        if s.starts_with("http://") || s.starts_with("https://") || s.starts_with("s3://") || s.starts_with("oci://") {
+        if s.starts_with("http://")
+            || s.starts_with("https://")
+            || s.starts_with("s3://")
+            || s.starts_with("oci://")
+        {
             return Ok(ModelRef::Url { url: s.to_string() });
         }
         // Fallback: treat as local file path
-        Ok(ModelRef::File { path: PathBuf::from(s) })
+        Ok(ModelRef::File {
+            path: PathBuf::from(s),
+        })
     }
 
     pub fn id_hint(&self) -> String {
         match self {
-            ModelRef::Hf { org, repo, path } => {
-                match path {
-                    Some(p) => format!("hf:{org}/{repo}/{p}"),
-                    None => format!("hf:{org}/{repo}"),
-                }
-            }
+            ModelRef::Hf { org, repo, path } => match path {
+                Some(p) => format!("hf:{org}/{repo}/{p}"),
+                None => format!("hf:{org}/{repo}"),
+            },
             ModelRef::File { path } => format!("file:{}", path.display()),
             ModelRef::Url { url } => url.clone(),
         }
@@ -147,6 +170,7 @@ pub trait CatalogStore: Send + Sync {
 
 /// Filesystem catalog: maintains a simple JSON index mapping id -> entry.
 pub struct FsCatalog {
+    #[allow(dead_code)]
     root: PathBuf,
     index_path: PathBuf,
 }
@@ -254,7 +278,9 @@ impl ModelFetcher for FileFetcher {
                 Ok(ResolvedModel { id, local_path: p })
             }
             ModelRef::Hf { .. } => Err(CatalogError::NotImplemented("hf fetcher not wired yet")),
-            ModelRef::Url { url: _ } => Err(CatalogError::NotImplemented("generic URL fetcher not wired yet")),
+            ModelRef::Url { url: _ } => Err(CatalogError::NotImplemented(
+                "generic URL fetcher not wired yet",
+            )),
         }
     }
 }
@@ -272,13 +298,17 @@ pub fn verify_digest(actual: Option<&Digest>, expected: Option<&Digest>) -> Veri
             }
         }
         (None, Some(_)) => VerificationOutcome::fail("missing actual digest for verification"),
-        (_, None) => VerificationOutcome::warn("no expected digest provided; proceeding with warnings"),
+        (_, None) => {
+            VerificationOutcome::warn("no expected digest provided; proceeding with warnings")
+        }
     }
 }
 
 /// Default model cache path (~/.cache/models) used by higher layers when none is configured.
 pub fn default_model_cache_dir() -> PathBuf {
-    let home = std::env::var_os("HOME").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."));
+    let home = std::env::var_os("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("."));
     home.join(".cache").join("models")
 }
 
@@ -289,11 +319,24 @@ mod tests {
 
     #[test]
     fn parse_model_refs() {
-        assert!(matches!(ModelRef::parse("hf:org/repo").unwrap(), ModelRef::Hf{ org, repo, path } if org=="org" && repo=="repo" && path.is_none()));
-        assert!(matches!(ModelRef::parse("hf:org/repo/file.gguf").unwrap(), ModelRef::Hf{ org, repo, path: Some(p) } if org=="org" && repo=="repo" && p=="file.gguf"));
-        assert!(matches!(ModelRef::parse("file:/abs/path").unwrap(), ModelRef::File{ .. }));
-        assert!(matches!(ModelRef::parse("relative/path").unwrap(), ModelRef::File{ .. }));
-        assert!(matches!(ModelRef::parse("https://example.com/x").unwrap(), ModelRef::Url{ .. }));
+        assert!(
+            matches!(ModelRef::parse("hf:org/repo").unwrap(), ModelRef::Hf{ org, repo, path } if org=="org" && repo=="repo" && path.is_none())
+        );
+        assert!(
+            matches!(ModelRef::parse("hf:org/repo/file.gguf").unwrap(), ModelRef::Hf{ org, repo, path: Some(p) } if org=="org" && repo=="repo" && p=="file.gguf")
+        );
+        assert!(matches!(
+            ModelRef::parse("file:/abs/path").unwrap(),
+            ModelRef::File { .. }
+        ));
+        assert!(matches!(
+            ModelRef::parse("relative/path").unwrap(),
+            ModelRef::File { .. }
+        ));
+        assert!(matches!(
+            ModelRef::parse("https://example.com/x").unwrap(),
+            ModelRef::Url { .. }
+        ));
     }
 
     #[test]
@@ -305,7 +348,12 @@ mod tests {
             local_path: tmp.path().join("model.bin"),
             lifecycle: LifecycleState::Active,
             digest: None,
-            last_verified_ms: Some(SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64),
+            last_verified_ms: Some(
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_millis() as u64,
+            ),
         };
         cat.put(&entry).unwrap();
         let got = cat.get("id1").unwrap().unwrap();

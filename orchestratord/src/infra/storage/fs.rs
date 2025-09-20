@@ -28,7 +28,8 @@ impl FsStore {
 
 impl Default for FsStore {
     fn default() -> Self {
-        let root = std::env::var("ORCH_ARTIFACTS_FS_ROOT").unwrap_or_else(|_| "/tmp/llorch-artifacts".to_string());
+        let root = std::env::var("ORCH_ARTIFACTS_FS_ROOT")
+            .unwrap_or_else(|_| "/tmp/llorch-artifacts".to_string());
         FsStore::new(root).expect("create fs store root")
     }
 }
@@ -38,7 +39,9 @@ impl ArtifactStore for FsStore {
         let s = doc.to_string();
         let id = format!("sha256:{}", sha256::digest(s.clone()));
         let path = self.path_for(&id);
-        if let Some(parent) = path.parent() { create_dir_all(parent)?; }
+        if let Some(parent) = path.parent() {
+            create_dir_all(parent)?;
+        }
         let mut f = File::create(&path)?;
         f.write_all(s.as_bytes())?;
         Ok(id)
@@ -46,7 +49,9 @@ impl ArtifactStore for FsStore {
 
     fn get(&self, id: &ArtifactId) -> anyhow::Result<Option<Artifact>> {
         let path = self.path_for(id);
-        if !path.exists() { return Ok(None); }
+        if !path.exists() {
+            return Ok(None);
+        }
         let mut f = File::open(&path)?;
         let mut buf = String::new();
         f.read_to_string(&mut buf)?;

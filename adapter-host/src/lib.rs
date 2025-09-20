@@ -1,9 +1,9 @@
 //! adapter-host — in-process registry and facade for WorkerAdapter implementations.
 
+use contracts_api_types as types;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use worker_adapters_adapter_api as api;
-use contracts_api_types as types;
 
 pub type PoolId = String;
 pub type ReplicaId = String;
@@ -14,10 +14,15 @@ pub struct AdapterHost {
 }
 
 impl AdapterHost {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     pub fn bind(&self, pool: PoolId, replica: ReplicaId, adapter: Arc<dyn api::WorkerAdapter>) {
-        self.registry.write().unwrap().insert((pool, replica), adapter);
+        self.registry
+            .write()
+            .unwrap()
+            .insert((pool, replica), adapter);
     }
 
     pub fn submit(&self, pool: &str, req: types::TaskRequest) -> anyhow::Result<api::TokenStream> {
@@ -35,7 +40,9 @@ impl AdapterHost {
     pub fn cancel(&self, pool: &str, task_id: &str) -> anyhow::Result<()> {
         let guard = self.registry.read().unwrap();
         if let Some((_, adapter)) = guard.iter().find(|((p, _), _)| p == pool) {
-            adapter.cancel(task_id).map_err(|e| anyhow::anyhow!(e.to_string()))
+            adapter
+                .cancel(task_id)
+                .map_err(|e| anyhow::anyhow!(e.to_string()))
         } else {
             Err(anyhow::anyhow!("no adapter bound for pool"))
         }

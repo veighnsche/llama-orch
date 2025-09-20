@@ -17,7 +17,9 @@ pub struct MiddlewareConfig {
 
 impl Default for MiddlewareConfig {
     fn default() -> Self {
-        Self { require_api_key: true }
+        Self {
+            require_api_key: true,
+        }
     }
 }
 

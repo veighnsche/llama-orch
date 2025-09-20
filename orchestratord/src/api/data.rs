@@ -2,15 +2,18 @@ use axum::{extract::State, response::IntoResponse, Json};
 use http::{HeaderMap, StatusCode};
 use serde_json::json;
 
+use crate::domain::error::OrchestratorError as ErrO;
 use crate::{services, state::AppState};
 use contracts_api_types as api;
-use crate::domain::error::OrchestratorError as ErrO;
 
 pub async fn get_session(
     state: State<AppState>,
     axum::extract::Path(id): axum::extract::Path<String>,
 ) -> Result<impl IntoResponse, ErrO> {
-    let svc = services::session::SessionService::new(state.sessions.clone(), std::sync::Arc::new(crate::infra::clock::SystemClock::default()));
+    let svc = services::session::SessionService::new(
+        state.sessions.clone(),
+        std::sync::Arc::new(crate::infra::clock::SystemClock::default()),
+    );
     let entry = svc.get_or_create(&id);
     let body = json!({
         "ttl_ms_remaining": entry.ttl_ms_remaining,
@@ -28,7 +31,10 @@ pub async fn delete_session(
     state: State<AppState>,
     axum::extract::Path(id): axum::extract::Path<String>,
 ) -> Result<impl IntoResponse, ErrO> {
-    let svc = services::session::SessionService::new(state.sessions.clone(), std::sync::Arc::new(crate::infra::clock::SystemClock::default()));
+    let svc = services::session::SessionService::new(
+        state.sessions.clone(),
+        std::sync::Arc::new(crate::infra::clock::SystemClock::default()),
+    );
     svc.delete(&id);
     Ok(StatusCode::NO_CONTENT)
 }
@@ -52,9 +58,14 @@ pub async fn create_task(
     }
     if let Some(exp) = body.expected_tokens {
         if exp >= 2_000_000 {
-            return Err(ErrO::QueueFullDropLru { retry_after_ms: Some(1000) });
+            return Err(ErrO::QueueFullDropLru {
+                retry_after_ms: Some(1000),
+            });
         } else if exp >= 1_000_000 {
-            return Err(ErrO::AdmissionReject { policy_label: "reject".into(), retry_after_ms: Some(1000) });
+            return Err(ErrO::AdmissionReject {
+                policy_label: "reject".into(),
+                retry_after_ms: Some(1000),
+            });
         }
     }
 
@@ -73,15 +84,35 @@ pub async fn create_task(
         admission.queue_position, admission.predicted_start_ms
     ));
     // Narration breadcrumb
-    observability_narration_core::human("orchestratord", "admission", &body.session_id, format!("task={} queued pos={}", body.task_id, admission.queue_position));
+    observability_narration_core::human(
+        "orchestratord",
+        "admission",
+        &body.session_id,
+        format!(
+            "task={} queued pos={}",
+            body.task_id, admission.queue_position
+        ),
+    );
 
     // Budget headers based on session info (best-effort)
-    let svc = services::session::SessionService::new(state.sessions.clone(), std::sync::Arc::new(crate::infra::clock::SystemClock::default()));
+    let svc = services::session::SessionService::new(
+        state.sessions.clone(),
+        std::sync::Arc::new(crate::infra::clock::SystemClock::default()),
+    );
     let sess = svc.get_or_create(&body.session_id);
     let mut headers = HeaderMap::new();
-    headers.insert("X-Budget-Tokens-Remaining", sess.tokens_budget_remaining.to_string().parse().unwrap());
-    headers.insert("X-Budget-Time-Remaining-Ms", sess.time_budget_remaining_ms.to_string().parse().unwrap());
-    headers.insert("X-Budget-Cost-Remaining", format!("{}", sess.cost_budget_remaining).parse().unwrap());
+    headers.insert(
+        "X-Budget-Tokens-Remaining",
+        sess.tokens_budget_remaining.to_string().parse().unwrap(),
+    );
+    headers.insert(
+        "X-Budget-Time-Remaining-Ms",
+        sess.time_budget_remaining_ms.to_string().parse().unwrap(),
+    );
+    headers.insert(
+        "X-Budget-Cost-Remaining",
+        format!("{}", sess.cost_budget_remaining).parse().unwrap(),
+    );
 
     Ok((StatusCode::ACCEPTED, headers, Json(admission)))
 }
@@ -105,9 +136,20 @@ pub async fn cancel_task(
     axum::extract::Path(id): axum::extract::Path<String>,
 ) -> Result<impl IntoResponse, ErrO> {
     // Record cancellation metric
-    crate::metrics::inc_counter("tasks_canceled_total", &[("engine","llamacpp"),("engine_version","v0"),("pool_id","default"),("replica_id","r0"),("reason","client")]);
+    crate::metrics::inc_counter(
+        "tasks_canceled_total",
+        &[
+            ("engine", "llamacpp"),
+            ("engine_version", "v0"),
+            ("pool_id", "default"),
+            ("replica_id", "r0"),
+            ("reason", "client"),
+        ],
+    );
     // Signal cancel to streaming service via shared state
-    if let Ok(mut guard) = state.cancellations.lock() { guard.insert(id.clone()); }
+    if let Ok(mut guard) = state.cancellations.lock() {
+        guard.insert(id.clone());
+    }
     let mut lg = state.logs.lock().unwrap();
     lg.push(format!("{{\"canceled\":true,\"task_id\":\"{}\"}}", id));
     observability_narration_core::human("orchestratord", "cancel", &id, "client requested cancel");

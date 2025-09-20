@@ -3,8 +3,8 @@ use serde_json::json;
 
 use http::header::HeaderName;
 use orchestratord::state::AppState;
-use tower::util::ServiceExt; // for Router::oneshot
 use std::fmt;
+use tower::util::ServiceExt; // for Router::oneshot
 
 #[derive(cucumber::World)]
 pub struct World {
@@ -28,7 +28,10 @@ impl fmt::Debug for World {
             .field("last_status", &self.last_status)
             .field("corr_id", &self.corr_id)
             .field("task_id", &self.task_id)
-            .field("api_key_present", &self.api_key.as_ref().map(|_| true).unwrap_or(false))
+            .field(
+                "api_key_present",
+                &self.api_key.as_ref().map(|_| true).unwrap_or(false),
+            )
             .field("extra_headers_len", &self.extra_headers.len())
             .field("state", &"<AppState redacted>")
             .finish()
@@ -84,7 +87,10 @@ impl World {
                 headers.insert(name, v.parse().unwrap());
             }
             if body_json.is_some() {
-                headers.insert(http::header::CONTENT_TYPE, "application/json".parse().unwrap());
+                headers.insert(
+                    http::header::CONTENT_TYPE,
+                    "application/json".parse().unwrap(),
+                );
             }
         }
 

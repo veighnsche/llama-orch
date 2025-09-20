@@ -9,12 +9,14 @@ async fn main() {
     let features_env = std::env::var("LLORCH_BDD_FEATURE_PATH").ok();
     let features = if let Some(p) = features_env {
         let pb = std::path::PathBuf::from(p);
-        if pb.is_absolute() { pb } else { root.join(pb) }
+        if pb.is_absolute() {
+            pb
+        } else {
+            root.join(pb)
+        }
     } else {
         root.join("tests/features")
     };
 
-    World::cucumber()
-        .run_and_exit(features)
-        .await;
+    World::cucumber().run_and_exit(features).await;
 }

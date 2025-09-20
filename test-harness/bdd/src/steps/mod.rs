@@ -32,7 +32,6 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^the adapter implements TGI custom API and metrics$").unwrap(),
         Regex::new(r"^a worker adapter for triton$").unwrap(),
         Regex::new(r"^the adapter implements infer/streaming and metrics$").unwrap(),
-        
         // catalog
         Regex::new(r"^a catalog model payload$").unwrap(),
         Regex::new(r"^I create a catalog model$").unwrap(),
@@ -45,7 +44,6 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^strict trust policy is enabled$").unwrap(),
         Regex::new(r"^an unsigned catalog artifact$").unwrap(),
         Regex::new(r"^catalog ingestion fails with UNTRUSTED_ARTIFACT$").unwrap(),
-        
         // control_plane
         Regex::new(r"^a Control Plane API endpoint$").unwrap(),
         Regex::new(r"^a pool id$").unwrap(),
@@ -79,12 +77,12 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^I receive 204 No Content with correlation id$").unwrap(),
         Regex::new(r"^a session id$").unwrap(),
         Regex::new(r"^I query the session$").unwrap(),
-        Regex::new(r"^I receive session info with ttl_ms_remaining turns kv_bytes kv_warmth$").unwrap(),
+        Regex::new(r"^I receive session info with ttl_ms_remaining turns kv_bytes kv_warmth$")
+            .unwrap(),
         // deadlines & SSE metrics
         Regex::new(r"^a task with infeasible deadline$").unwrap(),
         Regex::new(r"^I receive error code DEADLINE_UNMET$").unwrap(),
         Regex::new(r"^SSE metrics include on_time_probability$").unwrap(),
-        
         // error taxonomy
         Regex::new(r"^I trigger INVALID_PARAMS$").unwrap(),
         Regex::new(r"^I receive 400 with correlation id and error envelope code INVALID_PARAMS$")
@@ -112,7 +110,6 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^noop$").unwrap(),
         Regex::new(r"^nothing happens$").unwrap(),
         Regex::new(r"^it passes$").unwrap(),
-        
         // pool manager
         Regex::new(r"^pool is Unready due to preload failure$").unwrap(),
         Regex::new(r"^pool readiness is false and last error cause is present$").unwrap(),
@@ -123,14 +120,11 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^placement respects device masks; no cross-mask spillover occurs$").unwrap(),
         Regex::new(r"^heterogeneous split ratios are configured$").unwrap(),
         Regex::new(r"^per-GPU resident KV is capped for smallest GPU$").unwrap(),
-        
-        
         // security
         Regex::new(r"^no API key is provided$").unwrap(),
         Regex::new(r"^I receive 401 Unauthorized$").unwrap(),
         Regex::new(r"^an invalid API key is provided$").unwrap(),
         Regex::new(r"^I receive 403 Forbidden$").unwrap(),
-        
     ]
 }
 

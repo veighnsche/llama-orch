@@ -1,10 +1,13 @@
-use axum::{extract::{Path, State}, Json};
+use axum::{
+    extract::{Path, State},
+    Json,
+};
+use catalog_core::{CatalogStore, Digest, FsCatalog, LifecycleState};
 use http::StatusCode;
 use serde_json::json;
-use catalog_core::{CatalogStore, FsCatalog, LifecycleState, Digest};
 
-use crate::state::AppState;
 use crate::domain::error::OrchestratorError as ErrO;
+use crate::state::AppState;
 
 fn open_catalog() -> anyhow::Result<FsCatalog> {
     let root = catalog_core::default_model_cache_dir();
@@ -15,12 +18,28 @@ pub async fn create_model(
     _state: State<AppState>,
     Json(body): Json<serde_json::Value>,
 ) -> Result<(StatusCode, Json<serde_json::Value>), ErrO> {
-    let id = body.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
+    let id = body
+        .get("id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
     if id.is_empty() {
-        return Ok((StatusCode::BAD_REQUEST, Json(json!({"error":"id required"}))));
+        return Ok((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error":"id required"})),
+        ));
     }
-    let digest = body.get("digest").and_then(|v| v.as_str()).map(|s| s.to_string());
-    let digest_parsed = digest.as_ref().and_then(|s| s.split_once(":")).map(|(algo, val)| Digest { algo: algo.to_string(), value: val.to_string() });
+    let digest = body
+        .get("digest")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+    let digest_parsed = digest
+        .as_ref()
+        .and_then(|s| s.split_once(":"))
+        .map(|(algo, val)| Digest {
+            algo: algo.to_string(),
+            value: val.to_string(),
+        });
 
     let cat = open_catalog().map_err(|_e| ErrO::Internal)?;
     // Use a placeholder local path keyed by id; actual path will be set when provisioners ensure models.
@@ -67,7 +86,12 @@ pub async fn verify_model(
 ) -> Result<StatusCode, ErrO> {
     let cat = open_catalog().map_err(|_e| ErrO::Internal)?;
     if let Some(mut entry) = cat.get(&id).map_err(|_e| ErrO::Internal)? {
-        entry.last_verified_ms = Some(std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64);
+        entry.last_verified_ms = Some(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis() as u64,
+        );
         cat.put(&entry).map_err(|_e| ErrO::Internal)?;
         Ok(StatusCode::ACCEPTED)
     } else {
@@ -76,14 +100,21 @@ pub async fn verify_model(
 }
 
 #[derive(serde::Deserialize)]
-pub struct SetStateRequest { pub state: String, pub deadline_ms: Option<i64> }
+pub struct SetStateRequest {
+    pub state: String,
+    pub deadline_ms: Option<i64>,
+}
 
 pub async fn set_model_state(
     _state: State<AppState>,
     Path(id): Path<String>,
     Json(req): Json<SetStateRequest>,
 ) -> Result<StatusCode, ErrO> {
-    let state = match req.state.as_str() { "Active" => LifecycleState::Active, "Retired" => LifecycleState::Retired, _ => LifecycleState::Active };
+    let state = match req.state.as_str() {
+        "Active" => LifecycleState::Active,
+        "Retired" => LifecycleState::Retired,
+        _ => LifecycleState::Active,
+    };
     let cat = open_catalog().map_err(|_e| ErrO::Internal)?;
     cat.set_state(&id, state).map_err(|_e| ErrO::Internal)?;
     Ok(StatusCode::ACCEPTED)
@@ -95,5 +126,9 @@ pub async fn delete_model(
 ) -> Result<StatusCode, ErrO> {
     let cat = open_catalog().map_err(|_e| ErrO::Internal)?;
     let deleted = cat.delete(&id).map_err(|_e| ErrO::Internal)?;
-    if deleted { Ok(StatusCode::NO_CONTENT) } else { Ok(StatusCode::NOT_FOUND) }
+    if deleted {
+        Ok(StatusCode::NO_CONTENT)
+    } else {
+        Ok(StatusCode::NOT_FOUND)
+    }
 }

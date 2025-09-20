@@ -1,9 +1,9 @@
-pub mod api;
-pub mod state;
 pub mod admission;
-pub mod metrics;
+pub mod api;
 pub mod app;
-pub mod services;
-pub mod ports;
-pub mod infra;
 pub mod domain;
+pub mod infra;
+pub mod metrics;
+pub mod ports;
+pub mod services;
+pub mod state;

@@ -6,7 +6,10 @@ pub struct PoolHealth {
 }
 
 #[derive(Debug, Clone)]
-pub enum ReloadOutcome { Replaced, Conflict }
+pub enum ReloadOutcome {
+    Replaced,
+    Conflict,
+}
 
 pub trait PoolRegistry: Send + Sync {
     fn health(&self, pool_id: &str) -> anyhow::Result<PoolHealth>;

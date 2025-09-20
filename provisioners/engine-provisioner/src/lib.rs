@@ -5,19 +5,27 @@ pub use contracts_config_schema as cfg;
 pub mod plan;
 pub mod util;
 pub mod providers {
-    #[cfg(feature = "provider-llamacpp")] pub mod llamacpp;
-    #[cfg(feature = "provider-vllm")] pub mod vllm;
-    #[cfg(feature = "provider-tgi")] pub mod tgi;
-    #[cfg(feature = "provider-triton")] pub mod triton;
+    #[cfg(feature = "provider-llamacpp")]
+    pub mod llamacpp;
+    #[cfg(feature = "provider-tgi")]
+    pub mod tgi;
+    #[cfg(feature = "provider-triton")]
+    pub mod triton;
+    #[cfg(feature = "provider-vllm")]
+    pub mod vllm;
 }
 
 use anyhow::Result;
 
 pub use plan::{Plan, PlanStep};
-#[cfg(feature = "provider-llamacpp")] pub use providers::llamacpp::LlamaCppSourceProvisioner;
-#[cfg(feature = "provider-vllm")] pub use providers::vllm::VllmProvisioner;
-#[cfg(feature = "provider-tgi")] pub use providers::tgi::TgiProvisioner;
-#[cfg(feature = "provider-triton")] pub use providers::triton::TritonProvisioner;
+#[cfg(feature = "provider-llamacpp")]
+pub use providers::llamacpp::LlamaCppSourceProvisioner;
+#[cfg(feature = "provider-tgi")]
+pub use providers::tgi::TgiProvisioner;
+#[cfg(feature = "provider-triton")]
+pub use providers::triton::TritonProvisioner;
+#[cfg(feature = "provider-vllm")]
+pub use providers::vllm::VllmProvisioner;
 
 pub trait EngineProvisioner {
     fn plan(&self, pool: &cfg::PoolConfig) -> Result<Plan>;
@@ -31,21 +39,44 @@ pub trait EngineProvisioner {
 pub fn provider_for(pool: &cfg::PoolConfig) -> Result<Box<dyn EngineProvisioner>> {
     match pool.engine {
         cfg::Engine::Llamacpp => {
-            #[cfg(feature = "provider-llamacpp")] { return Ok(Box::new(LlamaCppSourceProvisioner::new())); }
-            #[cfg(not(feature = "provider-llamacpp"))] { return Err(anyhow::anyhow!("provider-llamacpp feature not enabled")); }
+            #[cfg(feature = "provider-llamacpp")]
+            {
+                Ok(Box::new(LlamaCppSourceProvisioner::new()))
+            }
+            #[cfg(not(feature = "provider-llamacpp"))]
+            {
+                Err(anyhow::anyhow!("provider-llamacpp feature not enabled"))
+            }
         }
         cfg::Engine::Vllm => {
-            #[cfg(feature = "provider-vllm")] { return Ok(Box::new(VllmProvisioner::new())); }
-            #[cfg(not(feature = "provider-vllm"))] { return Err(anyhow::anyhow!("provider-vllm feature not enabled")); }
+            #[cfg(feature = "provider-vllm")]
+            {
+                Ok(Box::new(VllmProvisioner::new()))
+            }
+            #[cfg(not(feature = "provider-vllm"))]
+            {
+                Err(anyhow::anyhow!("provider-vllm feature not enabled"))
+            }
         }
         cfg::Engine::Tgi => {
-            #[cfg(feature = "provider-tgi")] { return Ok(Box::new(TgiProvisioner::new())); }
-            #[cfg(not(feature = "provider-tgi"))] { return Err(anyhow::anyhow!("provider-tgi feature not enabled")); }
+            #[cfg(feature = "provider-tgi")]
+            {
+                Ok(Box::new(TgiProvisioner::new()))
+            }
+            #[cfg(not(feature = "provider-tgi"))]
+            {
+                Err(anyhow::anyhow!("provider-tgi feature not enabled"))
+            }
         }
         cfg::Engine::Triton => {
-            #[cfg(feature = "provider-triton")] { return Ok(Box::new(TritonProvisioner::new())); }
-            #[cfg(not(feature = "provider-triton"))] { return Err(anyhow::anyhow!("provider-triton feature not enabled")); }
+            #[cfg(feature = "provider-triton")]
+            {
+                Ok(Box::new(TritonProvisioner::new()))
+            }
+            #[cfg(not(feature = "provider-triton"))]
+            {
+                Err(anyhow::anyhow!("provider-triton feature not enabled"))
+            }
         }
     }
 }
-

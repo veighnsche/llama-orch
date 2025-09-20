@@ -1,9 +1,9 @@
+use crate::ports::storage::ArtifactStore;
+use crate::services::placement::PlacementCache;
+use adapter_host::AdapterHost;
+use pool_managerd::registry::Registry as PoolRegistry;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
-use pool_managerd::registry::Registry as PoolRegistry;
-use crate::ports::storage::ArtifactStore;
-use adapter_host::AdapterHost;
-use crate::services::placement::PlacementCache;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -48,5 +48,7 @@ impl AppState {
 }
 
 impl Default for AppState {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

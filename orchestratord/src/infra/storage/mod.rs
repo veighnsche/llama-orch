@@ -1,2 +1,2 @@
-pub mod inmem;
 pub mod fs;
+pub mod inmem;

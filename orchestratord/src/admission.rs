@@ -46,22 +46,34 @@ impl QueueWithMetrics {
                 Policy::Reject => {
                     metrics::inc_counter(
                         "admission_backpressure_events_total",
-                        &[("engine", self.labels.engine.as_str()), ("policy", "reject")],
+                        &[
+                            ("engine", self.labels.engine.as_str()),
+                            ("policy", "reject"),
+                        ],
                     );
                     metrics::inc_counter(
                         "tasks_rejected_total",
-                        &[("engine", self.labels.engine.as_str()), ("reason", "ADMISSION_REJECT")],
+                        &[
+                            ("engine", self.labels.engine.as_str()),
+                            ("reason", "ADMISSION_REJECT"),
+                        ],
                     );
                     // Do not enqueue
                 }
                 Policy::DropLru => {
                     metrics::inc_counter(
                         "admission_backpressure_events_total",
-                        &[("engine", self.labels.engine.as_str()), ("policy", "drop-lru")],
+                        &[
+                            ("engine", self.labels.engine.as_str()),
+                            ("policy", "drop-lru"),
+                        ],
                     );
                     metrics::inc_counter(
                         "tasks_rejected_total",
-                        &[("engine", self.labels.engine.as_str()), ("reason", "QUEUE_FULL_DROP_LRU")],
+                        &[
+                            ("engine", self.labels.engine.as_str()),
+                            ("reason", "QUEUE_FULL_DROP_LRU"),
+                        ],
                     );
                     // Let inner queue apply policy by enqueuing; LRU will be dropped internally
                     let _ = self.inner.enqueue(1, priority);

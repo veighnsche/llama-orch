@@ -42,7 +42,10 @@ async fn sse_event_order_and_transcript_persisted() {
             }
         }
     }
-    assert!(found, "expected persisted SSE transcript artifact with all events");
+    assert!(
+        found,
+        "expected persisted SSE transcript artifact with all events"
+    );
 }
 
 #[tokio::test]
@@ -54,8 +57,16 @@ async fn cancel_before_first_token_yields_no_tokens() {
     // Expect started then end, no token or metrics
     assert!(sse.contains("event: started"));
     assert!(sse.contains("event: end"));
-    assert!(!sse.contains("event: token"), "unexpected token event: {}", sse);
-    assert!(!sse.contains("event: metrics"), "unexpected metrics event: {}", sse);
+    assert!(
+        !sse.contains("event: token"),
+        "unexpected token event: {}",
+        sse
+    );
+    assert!(
+        !sse.contains("event: metrics"),
+        "unexpected metrics event: {}",
+        sse
+    );
 }
 
 #[tokio::test]
@@ -69,8 +80,16 @@ async fn cancel_between_tokens_yields_single_token_and_no_metrics() {
     });
     let sse = render_sse_for_task(&state, "t-b".to_string()).await;
     let token_count = sse.matches("event: token").count();
-    assert_eq!(token_count, 1, "expected exactly one token, got {}: {}", token_count, sse);
-    assert!(!sse.contains("event: metrics"), "unexpected metrics event: {}", sse);
+    assert_eq!(
+        token_count, 1,
+        "expected exactly one token, got {}: {}",
+        token_count, sse
+    );
+    assert!(
+        !sse.contains("event: metrics"),
+        "unexpected metrics event: {}",
+        sse
+    );
 }
 
 #[tokio::test]
@@ -85,5 +104,9 @@ async fn cancel_before_metrics_after_two_tokens_yields_no_metrics() {
     let sse = render_sse_for_task(&state, "t-c".to_string()).await;
     let token_count = sse.matches("event: token").count();
     assert_eq!(token_count, 2, "expected two tokens before cancel: {}", sse);
-    assert!(!sse.contains("event: metrics"), "unexpected metrics event: {}", sse);
+    assert!(
+        !sse.contains("event: metrics"),
+        "unexpected metrics event: {}",
+        sse
+    );
 }

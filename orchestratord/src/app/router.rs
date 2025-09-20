@@ -1,7 +1,11 @@
-use axum::{routing::{get, post, delete}, Router, middleware};
-use crate::{api, state::AppState};
-use super::middleware::{api_key_layer, correlation_id_layer};
 use super::auth_min::bearer_identity_layer;
+use super::middleware::{api_key_layer, correlation_id_layer};
+use crate::{api, state::AppState};
+use axum::{
+    middleware,
+    routing::{delete, get, post},
+    Router,
+};
 
 pub fn build_router(state: AppState) -> Router {
     Router::new()
@@ -17,8 +21,14 @@ pub fn build_router(state: AppState) -> Router {
         .route("/v1/catalog/models", post(api::catalog::create_model))
         .route("/v1/catalog/models/:id", get(api::catalog::get_model))
         .route("/v1/catalog/models/:id", delete(api::catalog::delete_model))
-        .route("/v1/catalog/models/:id/verify", post(api::catalog::verify_model))
-        .route("/v1/catalog/models/:id/state", post(api::catalog::set_model_state))
+        .route(
+            "/v1/catalog/models/:id/verify",
+            post(api::catalog::verify_model),
+        )
+        .route(
+            "/v1/catalog/models/:id/state",
+            post(api::catalog::set_model_state),
+        )
         // Data
         .route("/v1/tasks", post(api::data::create_task))
         .route("/v1/tasks/:id/stream", get(api::data::stream_task))

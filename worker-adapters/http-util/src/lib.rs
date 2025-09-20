@@ -1,9 +1,9 @@
 //! worker-adapters/http-util — shared HTTP client and streaming helpers for adapters.
 
-use std::time::Duration;
-use reqwest::Client;
-use once_cell::sync::Lazy;
 use http::header::AUTHORIZATION;
+use once_cell::sync::Lazy;
+use reqwest::Client;
+use std::time::Duration;
 
 static DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 
@@ -17,11 +17,15 @@ static CLIENT: Lazy<Client> = Lazy::new(|| {
         .expect("http client")
 });
 
-pub fn client() -> &'static Client { &CLIENT }
+pub fn client() -> &'static Client {
+    &CLIENT
+}
 
 /// Return an Authorization header value if AUTH_TOKEN is configured.
 pub fn bearer_header_from_env() -> Option<String> {
-    std::env::var("AUTH_TOKEN").ok().map(|t| format!("Bearer {}", t))
+    std::env::var("AUTH_TOKEN")
+        .ok()
+        .map(|t| format!("Bearer {}", t))
 }
 
 /// Apply Authorization header if available from env to a RequestBuilder.
@@ -42,13 +46,15 @@ pub fn redact_secrets(s: &str) -> String {
     let bytes = s.as_bytes();
     let mut i = 0usize;
     while i + pat.len() <= bytes.len() {
-        if &s[i..i+pat.len()] == pat {
+        if &s[i..i + pat.len()] == pat {
             // Emit up to pattern
             out.push_str(&s[last..i]);
             // Extract token until whitespace or end
             let mut j = i + pat.len();
-            while j < s.len() && !s.as_bytes()[j].is_ascii_whitespace() { j += 1; }
-            let token = &s[i+pat.len()..j];
+            while j < s.len() && !s.as_bytes()[j].is_ascii_whitespace() {
+                j += 1;
+            }
+            let token = &s[i + pat.len()..j];
             let fp6 = auth_min::token_fp6(token);
             out.push_str("Authorization: Bearer ****");
             out.push_str(&fp6);

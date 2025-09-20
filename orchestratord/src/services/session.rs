@@ -38,7 +38,10 @@ impl<C: Clock + 'static> SessionService<C> {
         if let Some(s) = guard.get_mut(id) {
             // For now decrement fixed 100ms per tick; replace with last_seen bookkeeping later.
             s.ttl_ms_remaining = (s.ttl_ms_remaining - 100).max(0);
-            if s.ttl_ms_remaining <= 0 { guard.remove(id); return None; }
+            if s.ttl_ms_remaining <= 0 {
+                guard.remove(id);
+                return None;
+            }
             return Some(s.clone());
         }
         None
@@ -52,7 +55,10 @@ impl<C: Clock + 'static> SessionService<C> {
     /// Increment turns accounting (called when a task is accepted for a session)
     pub fn note_turn(&self, id: &str) -> Option<SessionInfo> {
         let mut guard = self.sessions.lock().unwrap();
-        if let Some(s) = guard.get_mut(id) { s.turns += 1; return Some(s.clone()); }
+        if let Some(s) = guard.get_mut(id) {
+            s.turns += 1;
+            return Some(s.clone());
+        }
         None
     }
 }

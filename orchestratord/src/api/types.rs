@@ -5,7 +5,11 @@ pub fn require_api_key(headers: &HeaderMap) -> Result<(), StatusCode> {
         None => Err(StatusCode::UNAUTHORIZED),
         Some(v) => {
             let s = v.to_str().unwrap_or("");
-            if s == "valid" { Ok(()) } else { Err(StatusCode::FORBIDDEN) }
+            if s == "valid" {
+                Ok(())
+            } else {
+                Err(StatusCode::FORBIDDEN)
+            }
         }
     }
 }

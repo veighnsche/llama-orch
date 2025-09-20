@@ -1,5 +1,5 @@
-use orchestratord::infra::storage::inmem::InMemStore;
 use orchestratord::infra::storage::fs::FsStore;
+use orchestratord::infra::storage::inmem::InMemStore;
 use orchestratord::ports::storage::ArtifactStore;
 
 #[test]

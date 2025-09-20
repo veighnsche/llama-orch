@@ -3,8 +3,8 @@ use http::{HeaderMap, StatusCode};
 use serde_json::json;
 use std::sync::Arc;
 
-use crate::state::AppState;
 use crate::domain::error::OrchestratorError as ErrO;
+use crate::state::AppState;
 
 pub async fn get_capabilities(state: State<AppState>) -> Result<impl IntoResponse, ErrO> {
     // Serve from cache if present; otherwise compute and store.
@@ -27,10 +27,12 @@ pub async fn get_pool_health(
 ) -> Result<impl IntoResponse, ErrO> {
     let (live, ready, last_error) = {
         let reg = state.pool_manager.lock().expect("pool_manager lock");
-        let h = reg.get_health(&id).unwrap_or(pool_managerd::health::HealthStatus {
-            live: true,
-            ready: true,
-        });
+        let h = reg
+            .get_health(&id)
+            .unwrap_or(pool_managerd::health::HealthStatus {
+                live: true,
+                ready: true,
+            });
         let e = reg.get_last_error(&id);
         (h.live, h.ready, e)
     };
@@ -69,7 +71,10 @@ pub async fn reload_pool(
     // Update model state metric (simplified)
     crate::metrics::set_gauge(
         "model_state",
-        &[("model_id", body.new_model_ref.as_str()), ("state","loaded")],
+        &[
+            ("model_id", body.new_model_ref.as_str()),
+            ("state", "loaded"),
+        ],
         1,
     );
     Ok(StatusCode::OK)
@@ -77,7 +82,10 @@ pub async fn reload_pool(
 
 /// Worker registration requires a valid Bearer token.
 #[derive(serde::Deserialize)]
-pub struct RegisterWorkerBody { pub pool_id: Option<String>, pub replica_id: Option<String> }
+pub struct RegisterWorkerBody {
+    pub pool_id: Option<String>,
+    pub replica_id: Option<String>,
+}
 
 pub async fn register_worker(
     state: State<AppState>,
@@ -110,16 +118,30 @@ pub async fn register_worker(
     // Record identity breadcrumb
     let id = format!("token:{}", auth_min::token_fp6(&token));
     let mut lg = state.logs.lock().unwrap();
-    lg.push(format!("{{\"identity\":\"{}\",\"event\":\"worker_register\"}}", id));
+    lg.push(format!(
+        "{{\"identity\":\"{}\",\"event\":\"worker_register\"}}",
+        id
+    ));
 
     // For scaffolding: bind a mock adapter for the provided pool
-    let pool_id = body.as_ref().and_then(|b| b.pool_id.clone()).unwrap_or_else(|| "default".to_string());
-    let replica_id = body.as_ref().and_then(|b| b.replica_id.clone()).unwrap_or_else(|| "r0".to_string());
+    let pool_id = body
+        .as_ref()
+        .and_then(|b| b.pool_id.clone())
+        .unwrap_or_else(|| "default".to_string());
+    let replica_id = body
+        .as_ref()
+        .and_then(|b| b.replica_id.clone())
+        .unwrap_or_else(|| "r0".to_string());
     #[cfg(feature = "mock-adapters")]
     {
         let mock = worker_adapters_mock::MockAdapter::default();
-        state.adapter_host.bind(pool_id.clone(), replica_id.clone(), Arc::new(mock));
+        state
+            .adapter_host
+            .bind(pool_id.clone(), replica_id.clone(), Arc::new(mock));
     }
 
-    Ok((StatusCode::OK, Json(json!({"ok": true, "identity": id, "pool_id": pool_id, "replica_id": replica_id}))))
+    Ok((
+        StatusCode::OK,
+        Json(json!({"ok": true, "identity": id, "pool_id": pool_id, "replica_id": replica_id})),
+    ))
 }

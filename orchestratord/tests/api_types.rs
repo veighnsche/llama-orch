@@ -1,5 +1,5 @@
 use http::HeaderMap;
-use orchestratord::api::types::{require_api_key, correlation_id_from};
+use orchestratord::api::types::{correlation_id_from, require_api_key};
 
 #[test]
 fn require_api_key_missing_is_401() {

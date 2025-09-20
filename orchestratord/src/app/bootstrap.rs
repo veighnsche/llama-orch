@@ -1,5 +1,5 @@
-use axum::Router;
 use crate::{app::router::build_router, state::AppState};
+use axum::Router;
 
 pub fn build_app() -> Router {
     let state = AppState::new();
@@ -8,8 +8,7 @@ pub fn build_app() -> Router {
 
 pub fn init_observability() {
     use tracing_subscriber::{fmt, EnvFilter};
-    let filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("info"));
+    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
     let _ = fmt().with_env_filter(filter).json().try_init();
 }
 
@@ -27,10 +26,20 @@ pub fn start_server() {
         }
         // Narration breadcrumb for startup
         observability_narration_core::human("orchestratord", "start", &addr, "listening");
-        if std::env::var("ORCHD_PREFER_H2").map(|v| v == "1" || v.eq_ignore_ascii_case("true")).unwrap_or(false) {
-            observability_narration_core::human("orchestratord", "http2", &addr, "preference set (h2/h2c when available)");
+        if std::env::var("ORCHD_PREFER_H2")
+            .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+            .unwrap_or(false)
+        {
+            observability_narration_core::human(
+                "orchestratord",
+                "http2",
+                &addr,
+                "preference set (h2/h2c when available)",
+            );
         }
-        let listener = tokio::net::TcpListener::bind(&addr).await.expect("bind ORCHD_ADDR");
+        let listener = tokio::net::TcpListener::bind(&addr)
+            .await
+            .expect("bind ORCHD_ADDR");
         eprintln!("orchestratord listening on {}", addr);
         axum::serve(listener, app).await.unwrap();
     });

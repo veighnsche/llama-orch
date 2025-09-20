@@ -12,13 +12,16 @@ use http::{HeaderMap, StatusCode};
 
 #[derive(Clone)]
 pub struct Identity {
-    pub breadcrumb: String,   // e.g., "token:abc123" or "localhost"
-    pub auth_ok: bool,        // result of timing-safe compare when applicable
+    pub breadcrumb: String, // e.g., "token:abc123" or "localhost"
+    pub auth_ok: bool,      // result of timing-safe compare when applicable
 }
 
 /// Attach `identity` information to request extensions for later logging.
 /// Does not enforce by default; enforcement may be added per-route later.
-pub async fn bearer_identity_layer(mut req: Request<Body>, next: Next) -> Result<Response, StatusCode> {
+pub async fn bearer_identity_layer(
+    mut req: Request<Body>,
+    next: Next,
+) -> Result<Response, StatusCode> {
     let headers = req.headers().clone();
     if let Some(id) = identity_from_headers(&headers) {
         req.extensions_mut().insert(id);
@@ -28,16 +31,24 @@ pub async fn bearer_identity_layer(mut req: Request<Body>, next: Next) -> Result
 
 /// Compute an identity breadcrumb from headers and env configuration.
 fn identity_from_headers(headers: &HeaderMap) -> Option<Identity> {
-    let auth = headers.get(http::header::AUTHORIZATION).and_then(|v| v.to_str().ok());
+    let auth = headers
+        .get(http::header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok());
     if let Some(token) = auth_min::parse_bearer(auth) {
         let fp = auth_min::token_fp6(&token);
         let expected = std::env::var("AUTH_TOKEN").ok();
         let ok = expected
             .map(|e| auth_min::timing_safe_eq(e.as_bytes(), token.as_bytes()))
             .unwrap_or(false);
-        return Some(Identity { breadcrumb: format!("token:{}", fp), auth_ok: ok });
+        return Some(Identity {
+            breadcrumb: format!("token:{}", fp),
+            auth_ok: ok,
+        });
     }
-    Some(Identity { breadcrumb: "localhost".to_string(), auth_ok: true })
+    Some(Identity {
+        breadcrumb: "localhost".to_string(),
+        auth_ok: true,
+    })
 }
 
 /// Startup guard: refuse to bind a non-loopback address without AUTH_TOKEN set.

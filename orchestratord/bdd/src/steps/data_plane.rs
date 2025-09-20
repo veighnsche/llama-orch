@@ -1,11 +1,11 @@
 use crate::steps::world::World;
+use axum::body::{to_bytes, Body};
 use cucumber::{given, then, when};
 use http::Method;
-use serde_json::json;
-use axum::body::{to_bytes, Body};
 use http::Request;
-use tower::util::ServiceExt as _;
+use serde_json::json;
 use tokio::time::{sleep, Duration};
+use tower::util::ServiceExt as _;
 
 #[given(regex = r"^an OrchQueue API endpoint$")]
 pub async fn given_api_endpoint(_world: &mut World) {}
@@ -14,7 +14,11 @@ pub async fn given_api_endpoint(_world: &mut World) {}
 pub async fn then_no_further_token_events(world: &mut World) {
     let body = world.last_body.as_ref().expect("expected SSE body");
     let count = body.matches("event: token").count();
-    assert_eq!(count, 1, "expected exactly one token event, got {}: {}", count, body);
+    assert_eq!(
+        count, 1,
+        "expected exactly one token event, got {}: {}",
+        count, body
+    );
     assert!(
         !body.contains("event: metrics"),
         "expected no metrics event after cancel: {}",
@@ -75,7 +79,10 @@ pub async fn then_sse_transcript_artifact_exists(world: &mut World) {
             }
         }
     }
-    assert!(found, "expected persisted SSE transcript artifact with all events");
+    assert!(
+        found,
+        "expected persisted SSE transcript artifact with all events"
+    );
 }
 
 #[when(regex = r"^I enqueue a completion task with valid payload$")]
@@ -195,9 +202,16 @@ pub async fn then_started_includes_queue_eta(world: &mut World) {
                 data_line
             );
             let json_str = data_line.trim_start_matches(data_prefix).trim();
-            let v: serde_json::Value = serde_json::from_str(json_str).expect("parse started data json");
-            assert!(v.get("queue_position").is_some(), "started missing queue_position");
-            assert!(v.get("predicted_start_ms").is_some(), "started missing predicted_start_ms");
+            let v: serde_json::Value =
+                serde_json::from_str(json_str).expect("parse started data json");
+            assert!(
+                v.get("queue_position").is_some(),
+                "started missing queue_position"
+            );
+            assert!(
+                v.get("predicted_start_ms").is_some(),
+                "started missing predicted_start_ms"
+            );
             return;
         }
     }
@@ -220,7 +234,9 @@ pub async fn then_started_includes_queue_eta(world: &mut World) {
                 }
             }
         }
-        if found { break; }
+        if found {
+            break;
+        }
     }
     assert!(found, "no started event");
 }
@@ -350,7 +366,9 @@ pub async fn when_stream_while_cancel_mid(world: &mut World) {
     let cancel_path = format!("/v1/tasks/{}/cancel", id.clone());
     tokio::spawn(async move {
         sleep(Duration::from_millis(10)).await;
-        let mut req = Request::builder().method(http::Method::POST).uri(cancel_path);
+        let mut req = Request::builder()
+            .method(http::Method::POST)
+            .uri(cancel_path);
         if let Some(key) = cancel_key {
             req = req.header("X-API-Key", key);
         }
@@ -360,7 +378,9 @@ pub async fn when_stream_while_cancel_mid(world: &mut World) {
 
     // Now start the stream request
     let stream_path = format!("/v1/tasks/{}/stream", id);
-    let mut req = Request::builder().method(http::Method::GET).uri(stream_path);
+    let mut req = Request::builder()
+        .method(http::Method::GET)
+        .uri(stream_path);
     if let Some(key) = &world.api_key {
         req = req.header("X-API-Key", key);
     }
@@ -369,7 +389,9 @@ pub async fn when_stream_while_cancel_mid(world: &mut World) {
 
     let status = resp.status();
     let headers_out = resp.headers().clone();
-    let body_bytes = to_bytes(resp.into_body(), 1_048_576).await.unwrap_or_default();
+    let body_bytes = to_bytes(resp.into_body(), 1_048_576)
+        .await
+        .unwrap_or_default();
     let body_str = String::from_utf8(body_bytes.to_vec()).unwrap_or_default();
 
     world.corr_id = headers_out

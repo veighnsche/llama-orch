@@ -53,7 +53,11 @@ fn llama_cpp_source_smoke() -> anyhow::Result<()> {
         }
         thread::sleep(Duration::from_secs(2));
     }
-    assert!(healthy, "llama-server did not become healthy on port {}", port);
+    assert!(
+        healthy,
+        "llama-server did not become healthy on port {}",
+        port
+    );
 
     // Tear down: kill via pid file
     let pid_path = util::default_run_dir().join(format!("{}.pid", pool.id));
