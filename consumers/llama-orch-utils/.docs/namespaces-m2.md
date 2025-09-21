@@ -121,3 +121,36 @@ Async model
   - top_p: default 1.0; clamp to [0.0, 1.0]
   - max_tokens: default 1024
   - seed: passthrough (no default)
+
+## Phase A summary (DRAFT)
+
+| Namespace | Function | Status | Notes | Tests (file) |
+|-----------|----------|--------|-------|--------------|
+| fs | readFile | ✅ Implemented (DRAFT) | text=UTF-8 lossy; binary=bytes; order preserved | `src/fs/file_reader/tests.rs` |
+| fs | writeFile | ✅ Implemented (DRAFT) | overwrite; create_dirs optional | `src/fs/file_writer/tests.rs` |
+| prompt | message | ✅ Implemented (DRAFT) | sources text|lines|file; per-call dedent; errors via io::Result | `src/prompt/message/tests.rs` |
+| prompt | thread | ✅ Implemented (DRAFT) | ordered composition; per-item dedent; file errors propagate | `src/prompt/thread/tests.rs` |
+| model | define | ✅ Implemented (DRAFT) | pure ModelRef; no I/O | `src/model/define/tests.rs` |
+| params | define | ✅ Implemented (DRAFT) | defaults/clamps (see rules above) | `src/params/define/tests.rs` |
+| llm | invoke | ⛔ UNIMPLEMENTED (DRAFT) | returns typed Unimplemented error with message: `unimplemented: llm.invoke requires SDK wiring` | `src/llm/invoke/tests.rs` |
+| orch | response_extractor | ✅ Implemented (DRAFT) | choices[0].text → first non-empty → ""; no trim/aggregation | `src/orch/response_extractor/tests.rs` |
+
+### Drift guard (crate-side)
+The compile-only drift guard at `src/tests_draft_surface.rs` imports all public applet symbols and asserts signatures via typed pointers. Any rename or removal will fail `cargo test`.
+
+### How to validate Phase A
+
+```
+cargo test -q -p llama-orch-utils -- --nocapture
+```
+
+### Next phase preview (DRAFT, do not execute yet)
+- Phase B: TS generation via `ts-types` feature and lib exporter → write `npm-build/index.d.ts`; add tracked `npm-build` assets (`package.json`, `index.js`, `api.d.ts`).
+- Phase C: Bun consumer points to `file:../../llama-orch-utils/npm-build`; `bun install`; `bunx tsc --noEmit`.
+- Phase D: After consumer proof, flip DRAFT → LOCKED; add CI drift guards for TS + docs.
+
+### Phase B status (DRAFT)
+- B1: `ts-types` Cargo feature present.
+- B2: `export_ts_types()` added behind `--features ts-types`; writes `npm-build/index.d.ts` and appends API declarations; not executed yet.
+- B3: `npm-build/` folder created and gitignored (no files generated yet).
+- B4r: removed `.npm/` templates; exporter now programmatically generates `npm-build/{index.d.ts, index.js, package.json}` (DRAFT). Not executed yet.
