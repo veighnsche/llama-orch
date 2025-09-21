@@ -2,3 +2,6 @@
 
 mod file_writer;
 pub use file_writer::*;
+
+#[cfg(test)]
+mod tests;

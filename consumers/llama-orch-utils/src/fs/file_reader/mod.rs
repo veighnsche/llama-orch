@@ -2,3 +2,6 @@
 
 mod file_reader;
 pub use file_reader::*;
+
+#[cfg(test)]
+mod tests;

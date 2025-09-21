@@ -7,3 +7,4 @@ pub mod model;
 pub mod params;
 pub mod llm;
 pub mod orch;
+pub mod error;

@@ -2,3 +2,6 @@
 
 mod define;
 pub use define::*;
+
+#[cfg(test)]
+mod tests;

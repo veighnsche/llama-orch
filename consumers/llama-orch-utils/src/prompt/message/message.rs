@@ -32,8 +32,8 @@ pub fn run(input: MessageIn) -> io::Result<Message> {
         Source::Text(s) => s,
         Source::Lines(lines) => lines.join("\n"),
         Source::File(path) => {
-            let data = fs::read_to_string(Path::new(&path))?;
-            data
+            let bytes = fs::read(Path::new(&path))?;
+            String::from_utf8_lossy(&bytes).to_string()
         }
     };
     let content = if input.dedent { dedent(&raw) } else { raw };

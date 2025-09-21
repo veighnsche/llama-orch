@@ -24,3 +24,6 @@ path = "src/lib.rs"
 name = "ts_export"
 path = "src/bin/ts_export.rs"
 required-features = ["ts-types"]
+
+[dev-dependencies]
+tempfile = "3"

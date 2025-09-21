@@ -63,7 +63,7 @@ This section records the single public entry function per applet and the intende
 | prompt.thread               | `prompt::thread::run`                                  | `pub fn run(input: ThreadIn) -> std::io::Result<ThreadOut>` |
 | model.define                | `model::define::run`                                   | `pub fn run(model_id: String, engine_id: Option<String>, pool_hint: Option<String>) -> ModelRef` |
 | params.define               | `params::define::run`                                  | `pub fn run(p: Params) -> Params` |
-| llm.invoke                  | `llm::invoke::run`                                     | `pub fn run(client: &OrchestratorClient, input: InvokeIn) -> anyhow::Result<InvokeOut>` |
+| llm.invoke                  | `llm::invoke::run`                                     | `pub fn run(client: &OrchestratorClient, input: InvokeIn) -> Result<InvokeOut, llama_orch_utils::error::Error>` |
 | orch.response_extractor     | `orch::response_extractor::run`                        | `pub fn run(result: &InvokeResult) -> String` |
 
 Mapping notes:
@@ -82,7 +82,7 @@ This section records the public function signatures (DRAFT), their error types, 
 | prompt.thread           | `prompt::thread::run`                          | `pub fn run(input: ThreadIn) -> std::io::Result<ThreadOut>`                       | `std::io::Error`             | Sync      |
 | model.define            | `model::define::run`                           | `pub fn run(model_id: String, engine_id: Option<String>, pool_hint: Option<String>) -> ModelRef` | (infallible for M2)          | Sync      |
 | params.define           | `params::define::run`                          | `pub fn run(p: Params) -> Params`                                                 | (infallible for M2)          | Sync      |
-| llm.invoke              | `llm::invoke::run`                             | `pub fn run(client: &OrchestratorClient, input: InvokeIn) -> anyhow::Result<InvokeOut>` | `anyhow::Error` (see below) | Sync      |
+| llm.invoke              | `llm::invoke::run`                             | `pub fn run(client: &OrchestratorClient, input: InvokeIn) -> Result<InvokeOut, llama_orch_utils::error::Error>` | `llama_orch_utils::error::Error` | Sync      |
 | orch.response_extractor | `orch::response_extractor::run`                | `pub fn run(result: &InvokeResult) -> String`                                     | (infallible for M2)          | Sync      |
 
 Notes on error model
@@ -94,9 +94,9 @@ Notes on error model
 - `orch::response_extractor::run(&InvokeResult) -> String` is infallible best-effort text extraction. Plan-only: could become `io::Result<String>` without behavior change if uniformity is required.
 
 llm.invoke UNIMPLEMENTED (DRAFT)
-- Current status (M2): returns `anyhow::Result<InvokeOut>` and uses `anyhow::bail!("unimplemented: OrchestratorClient non-streaming invoke not yet wired")`.
-- Exact message string (DRAFT for M2): `"unimplemented: OrchestratorClient non-streaming invoke not yet wired"` (subject to change until SDK wiring is decided).
-- Plan-only for post-M2: introduce a crate error type (e.g., `llama_orch_utils::error::Error::Unimplemented`) and return `Result<_, Error>` instead of `anyhow::Result<_>`, preserving this message.
+- Current status (M2): returns `Result<InvokeOut, llama_orch_utils::error::Error>` and immediately returns the typed variant below (no SDK calls).
+- Variant path (DRAFT): `llama_orch_utils::error::Error::Unimplemented`.
+- Exact message string (DRAFT for M2): `"unimplemented: llm.invoke requires SDK wiring"` (subject to change until SDK wiring is decided).
 
 ## Transition to LOCKED
 These DRAFT names, types, and signatures will be promoted to **LOCKED** only after:
@@ -108,3 +108,16 @@ At that point a separate commit will change this document’s status to **LOCKED
 Async model
 - All applets listed are synchronous for M2 (no `async fn`).
 - Future streaming support (e.g., `llm.invoke`) can be added behind a new function or return type without breaking these M2 sync boundaries.
+
+## Phase A status (DRAFT)
+- llm.invoke: ⛔ UNIMPLEMENTED — returns typed `Unimplemented` error with message: `unimplemented: llm.invoke requires SDK wiring` (DRAFT).
+- No `panic!/unwrap/expect` on public applet paths policy is in effect (DRAFT).
+- fs.readFile: ✅ Implemented (DRAFT) — as_text=true decodes using `encoding.unwrap_or("utf-8")` with UTF-8 lossy fallback; as_text=false returns raw bytes. Order preserved.
+- prompt.message: ✅ Implemented (DRAFT) — sources: text|lines|file; dedent removes common leading whitespace; file read is UTF-8 lossy; errors via io::Result.
+- prompt.thread: ✅ Implemented (DRAFT) — composes ordered messages from items; sources text|lines|file; per-item dedent; errors via io::Result (missing-file propagates).
+- model.define: ✅ Implemented (DRAFT) — constructs ModelRef deterministically (no I/O, no SDK); no validation beyond struct construction.
+- params.define: ✅ Implemented (DRAFT) — normalization/clamping rules:
+  - temperature: default 0.7; clamp to [0.0, 2.0]
+  - top_p: default 1.0; clamp to [0.0, 1.0]
+  - max_tokens: default 1024
+  - seed: passthrough (no default)

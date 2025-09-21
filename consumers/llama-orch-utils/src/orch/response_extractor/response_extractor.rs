@@ -8,8 +8,10 @@ pub fn run(result: &InvokeResult) -> String {
             return first.text.clone();
         }
     }
-    // Rule 2: (placeholder) if there were content arrays, join them here.
-    // For M2 placeholder InvokeResult we only have `text`.
+    // Rule 2: first non-empty choice text anywhere in the list
+    if let Some(found) = result.choices.iter().find(|c| !c.text.is_empty()) {
+        return found.text.clone();
+    }
 
     // Rule 3: best-effort fallback
     String::new()

@@ -2,3 +2,6 @@
 
 mod message;
 pub use message::*;
+
+#[cfg(test)]
+mod tests;

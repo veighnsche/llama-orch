@@ -2,3 +2,6 @@
 
 mod thread;
 pub use thread::*;
+
+#[cfg(test)]
+mod tests;

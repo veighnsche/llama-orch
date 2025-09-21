@@ -1,5 +1,4 @@
 // Placeholder module for applet llm/invoke.
-use anyhow::{bail, Result};
 use llama_orch_sdk::client::OrchestratorClient;
 use serde::{Deserialize, Serialize};
 
@@ -43,8 +42,7 @@ pub struct InvokeIn {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InvokeOut { pub result: InvokeResult }
 
-pub fn run(_client: &OrchestratorClient, _input: InvokeIn) -> Result<InvokeOut> {
-    // M2 placeholder: SDK networking not implemented yet.
-    // Return a deterministic stub so downstream stages can be exercised.
-    bail!("unimplemented: OrchestratorClient non-streaming invoke not yet wired")
+pub fn run(_client: &OrchestratorClient, _input: InvokeIn) -> Result<InvokeOut, crate::error::Error> {
+    // M2 DRAFT: SDK wiring not implemented; return a typed Unimplemented error (no panic).
+    Err(crate::error::Error::Unimplemented { message: "unimplemented: llm.invoke requires SDK wiring".to_string() })
 }
