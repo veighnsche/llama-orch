@@ -1,0 +1,15 @@
+[package]
+name = "llama-orch-utils"
+version = "0.0.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://example.com/llama-orch"
+description = "Utils applets for composing Blueprint pipelines for llama-orch (M2)."
+
+[dependencies]
+anyhow = "1"
+llama-orch-sdk = { path = "../llama-orch-sdk" }
+
+[lib]
+name = "llama_orch_utils"
+path = "src/lib.rs"
