@@ -2,6 +2,29 @@
 
 This document captures concrete edits needed to align all specs under `.specs/` across the workspace and to migrate all approved proposals under `/.specs/proposals/` into the normative specs. It follows the repo’s Spec-First workflow and testing guidelines.
 
+## Progress Update (2025-09-20)
+
+- Integrated into `/.specs/20-orchestratord.md`:
+  - Uniform SSE `event:error` semantics (termination, HTTP status behavior),
+  - Capabilities completeness (engine/versions/ctx/max_tokens_out/concurrency/supported_workloads),
+  - Optional `output_mode` hint,
+  - Job artifacts guidance (including failure records),
+  - Optional CORS/preflight posture,
+  - Optional Pin Override (`TaskRequest.pool_id`) routing with deterministic error handling.
+- Added Pin Override to `/.specs/10-orchestrator-core.md` (scheduling semantics).
+- Expanded crate specs:
+  - `orchestrator-core/.specs/36_DETERMINISM.md` (determinism invariants, reason taxonomy, tests),
+  - `provisioners/engine-provisioner/.specs/{31_UNIT.md,32_PROPERTY.md}` (Arch/CachyOS policy, GPU-only, idempotency, jitter bounds),
+  - `worker-adapters/.specs/33_INTEGRATION.md` (streaming/cancel/error taxonomy/http-util adoption),
+  - `adapter-host/.specs/00_adapter_host.md` (normative API, narration, metrics),
+  - `worker-adapters/http-util/.specs/{00_http_util.md,33_INTEGRATION.md,40_ERROR_MESSAGING.md}` (algorithms, tests, taxonomy mapping, redaction),
+  - `catalog-core/.specs/{30_TESTING.md,31_UNIT.md,33_INTEGRATION.md}` (normative testing matrices and crash-safety scenarios).
+- Proposals marked Accepted:
+  - `/.specs/proposals/2025-09-20-orch-spec-change-close-home-profile-gaps.md` (now Accepted),
+  - `batch_1/*` proposals already reflect Accepted status (narration, performance, adapter host + http util, testing ownership).
+
+Next targets: per-adapter root specs `/.specs/40..44` cross-reference http-util; pool-managerd refinements; observability/narration-core base spec if missing; update README High/Mid/Low across crates (outside SPEC scope).
+
 ## Scope of audit
 
 - Root specs inventoried under `/.specs/` including metrics and proposals.

@@ -25,6 +25,11 @@ See: ../orchestrator-core/src/lib.rs, ../orchestrator-core/tests/props_queue.rs
 - [OC-CORE-1012] Placement MUST use least‑loaded selection with VRAM awareness across replicas of the same replica set: prefer the replica with the most free VRAM, then fewest active slots; tie‑break deterministically (e.g., by `replica_id`).
 - [OC-CORE-1013] Session affinity SHOULD keep a session on its last good replica when possible.
 
+### 2A) Pin Override (optional feature)
+
+- [OC-CORE-1018] When a `TaskRequest` includes a valid pin override (e.g., `pool_id`), and policy allows pinning, the scheduler MUST route the request to the specified pool and skip normal candidate selection across other pools.
+- [OC-CORE-1019] If the specified pool is not Ready or the override is invalid (unknown pool, policy disabled), admission MUST return a deterministic typed error (e.g., `INVALID_PARAMS` or `POOL_UNREADY`), and MUST NOT silently fall back to automatic placement.
+
 ### 2A) Data Types — Canonical (authoritative)
 
 `ModelRequirements` (canonical; referenced from wiring specs):

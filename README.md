@@ -190,6 +190,7 @@ Explanation
 
 ## API surface (contracts first)
 
+- See [CONSUMER_CAPABILITIES.md](CONSUMER_CAPABILITIES.md) for the exhaustive consumer-facing capabilities guide.
 - Data plane (OrchQueue v1): `contracts/openapi/data.yaml`
   - `POST /v1/tasks` → 202 Accepted with `AdmissionResponse`
   - `GET /v1/tasks/{id}/stream` → `text/event-stream` frames: `started`, `token` (`{t,i}`), `metrics`, `end`
