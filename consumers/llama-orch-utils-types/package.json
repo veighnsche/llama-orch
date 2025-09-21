@@ -1,9 +1,0 @@
-{
-  "name": "@llama-orch/utils-types",
-  "version": "0.0.1",
-  "description": "TypeScript declarations generated from llama-orch-utils public types",
-  "types": "index.d.ts",
-  "files": ["index.d.ts"],
-  "license": "MIT",
-  "private": false
-}
