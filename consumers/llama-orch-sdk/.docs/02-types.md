@@ -6,6 +6,8 @@ Source of truth: `contracts/openapi/{control.yaml,data.yaml}`
 
 Only fields that are (a) required by OpenAPI and (b) referenced by Utils are included.
 
+Note: Single-source in Rust → WASM. TypeScript `.d.ts` are generated via wasm-bindgen/tsify; no parallel TS type definitions are maintained.
+
 ## Core enums
 
 - `Engine`: `"llamacpp" | "vllm" | "tgi" | "triton"` (OpenAPI `components.schemas.Engine`)

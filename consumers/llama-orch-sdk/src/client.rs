@@ -50,7 +50,7 @@ impl OrchestratorClient {
     pub async fn stream_task(
         &self,
         _task_id: &str,
-    ) -> Result<impl futures_core::Stream<Item = SSEEvent>, String> {
+    ) -> Result<std::pin::Pin<Box<dyn futures_core::Stream<Item = SSEEvent> + 'static>>, String> {
         Err("unimplemented".to_string())
     }
 

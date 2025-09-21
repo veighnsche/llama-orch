@@ -14,6 +14,12 @@ SDK exists to enable Utils. Utils owns applet logic, file I/O wrappers, prompt t
 
 Relationship: Utils > SDK > Orchestrator.
 
+## Single-Source Policy
+
+- Single source of truth is Rust.
+- WASM for npm is produced from the Rust crate (via `wasm-pack`).
+- No parallel hand-written TypeScript implementation; TS consumers use the generated `.d.ts` and JS glue from wasm-bindgen/tsify.
+
 ## In Scope (MVP)
 - Types for capabilities, catalog models, sessions, tasks/admission, SSE events, and error envelopes.
 - Typed client methods for:
@@ -33,6 +39,10 @@ Relationship: Utils > SDK > Orchestrator.
 - HTTP JSON per OpenAPI definitions in `contracts/openapi/{control.yaml,data.yaml}`.
 - Streaming via Server-Sent Events (SSE) for `GET /v1/tasks/{id}/stream` with events: `started`, `token`, `metrics`, `end`, `error`.
 
+Feature flags and targets:
+- `native` feature: reqwest + tokio (to be implemented later)
+- `wasm` feature: wasm-bindgen + tsify (types) and fetch via web-sys/gloo-net
+
 ## Configuration
 - `baseURL` (default `http://127.0.0.1:8080/`).
 - `apiKey` (optional header `X-API-Key` when enabled by deployment).
@@ -45,7 +55,7 @@ Relationship: Utils > SDK > Orchestrator.
 
 ## Cross-language Targeting
 - Rust-native crate is primary.
-- WASM/TS: thin wrapper over the same shapes (no additional surface).
+- WASM/TS: generated bindings via wasm-bindgen; TS typings via `.d.ts` (tsify). No parallel TS implementation.
 
 ## Determinism & Placement Notes (for consumers)
 - Determinism defaults to strict when the engine supports it; pass `seed`, `sampler_profile_version` via `TaskRequest`.

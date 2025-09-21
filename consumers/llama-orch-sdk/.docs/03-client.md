@@ -6,6 +6,8 @@ Updated: 2025-09-21
 The SDK provides a minimal typed client over the orchestrator HTTP + SSE APIs.
 Only methods backed by OpenAPI are included. All methods return Promises (TS) or Results (Rust) and reject/err with `ErrorEnvelope`-mapped errors.
 
+Note: Single-source in Rust → WASM. TypeScript consumers import from the generated wasm-bindgen package under `consumers/llama-orch-sdk/ts/pkg` (build via `wasm-pack`). No parallel TS implementation is maintained.
+
 ## Configuration
 
 - `baseURL?: string` (default `http://127.0.0.1:8080/`)
