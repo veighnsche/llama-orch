@@ -7,7 +7,7 @@
     "@types/bun": "latest"
   },
   "dependencies": {
-    "@llama-orch/utils-types": "file:../../llama-orch-utils-types"
+    "@llama-orch/utils": "file:../../llama-orch-utils"
   },
   "peerDependencies": {
     "typescript": "^5"
