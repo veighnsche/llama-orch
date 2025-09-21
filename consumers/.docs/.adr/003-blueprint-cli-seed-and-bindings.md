@@ -2,14 +2,14 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
 We’re standardizing what a newly initialized **Blueprint** (ADR-002) contains and how the **init CLI** generates **compile-time capability bindings** for TS/JS/Rust.
 Key principles:
 
-* **Types live in the library** (`llama-orch-toolkit`) and are versioned with it.
+* **Types live in the SDK** (`llama-orch-sdk`) and are versioned with it.
 * **Generated files are pure data snapshots** (no type definitions), importing the library’s types.
 * Snapshot is **static at generation time** (user re-runs CLI to refresh).
 * Engines ≠ models: **engines** list backends and supported workloads; **models** are concrete runnable model entries (no `ctx_max` field in our fixed types).
@@ -22,17 +22,18 @@ Key principles:
   * `Spec.md` (seed context)
   * `process.yml` (starter process)
   * Language binding(s): `capabilities.d.ts` + `capabilities.ts` (TS), or `capabilities.js` (JS), or `capabilities.rs` (Rust)
-* The CLI **MUST** call the server to obtain:
+* The CLI **MUST** call the server **via the SDK** to obtain:
 
   * **Capabilities snapshot** (engines + workloads, etc.)
   * **Model catalog snapshot** (model IDs, digests, states)
   * **Pool snapshot** (pool IDs, GPU names)
 * Generated bindings **MUST**:
 
-  * Import **types from the toolkit library** (no duplicated type defs).
+  * Import **types from the SDK library** (no duplicated type defs).
   * Contain **only constants/data** that conform to those types.
   * Exclude live/volatile fields (queue depth, wait times, etc.).
-* If the toolkit library evolves its types, **regeneration MUST be required** for Blueprints to compile (intentionally fail-fast for drift).
+* **Utils** **MAY** consume the generated bindings to provide compile-time checks and helpers for Blueprints.
+* If the SDK evolves its types, **regeneration MUST be required** for Blueprints to compile (intentionally fail-fast for drift).
 
 ## Consequences
 
@@ -47,27 +48,14 @@ Key principles:
 
 ## Preview of Generated Files
 
-> **Note:** The following **do not define types**. They import the fixed types you placed in the library:
->
-> ```rust
-> pub struct EngineCapability { pub id: &'static str, pub workloads: &'static [&'static str] }
-> pub struct ModelInfo { pub id: &'static str, pub digest: &'static str, pub state: &'static str }
-> pub struct PoolInfo { pub id: &'static str, pub gpus: &'static [&'static str] }
-> pub struct Capabilities {
->   pub engines: &'static [EngineCapability],
->   pub models:  &'static [ModelInfo],
->   pub pools:   &'static [PoolInfo],
-> }
-> ```
->
-> (Exact module path shown below in imports.)
+> **Note:** Generated files **do not define types**. They import fixed types from `llama-orch-sdk`. See exact module paths in the imports below.
 
 ### TypeScript — `capabilities.d.ts`
 
 ```ts
 // generated file — do not edit
-// Types are imported from the toolkit library (WASM/npm package).
-import type { Capabilities } from "@llama-orch/toolkit/capabilities";
+// Types are imported from the SDK library (WASM/npm package).
+import type { Capabilities } from "@llama-orch/sdk/capabilities";
 
 export declare const CAPABILITIES: Capabilities;
 ```
@@ -81,7 +69,7 @@ import type {
   EngineCapability,
   ModelInfo,
   PoolInfo,
-} from "@llama-orch/toolkit/capabilities";
+} from "@llama-orch/sdk/capabilities";
 
 const ENGINES: EngineCapability[] = [
   { id: "llamacpp", workloads: ["completion","embedding","rerank"] },
@@ -131,7 +119,7 @@ export const CAPABILITIES = {
 
 ```rust
 // generated file — do not edit
-use llama_orch_toolkit::capabilities::{
+use llama_orch_sdk::capabilities::{
     Capabilities, EngineCapability, ModelInfo, PoolInfo,
 };
 
@@ -148,12 +136,11 @@ pub const CAPABILITIES: Capabilities = Capabilities {
         PoolInfo { id: "default", gpus: &["A100-80GB","A100-80GB"] },
     ],
 };
-```
 
 ## Seed Files (created by CLI)
 
 * `Spec.md` — user-authored context & requirements.
-* `process.yml` — starter process referencing toolkit applets.
+* `process.yml` — starter process referencing **Utils** applets.
 * Language binding(s) as above in `generated/` (or similar) directory.
 * Optional: `.blueprint/manifest.json` with API responses hashed for provenance.
 
@@ -163,9 +150,9 @@ The CLI run **SHOULD** emit a small proof bundle:
 
 * Request/response snapshots for discovery endpoints,
 * Hashes of generated files,
-* Generation timestamp and toolkit version.
+* Generation timestamp and SDK version.
 
 ## References
 
 * ADR-002 “Blueprints” (naming & scope).
-* Toolkit library capability types (single source of truth).
+* SDK capability types (single source of truth).

@@ -1,3 +1,10 @@
+## How to consume llama-orch
+
+- Prefer **Utils** (`llama-orch-utils`) for end-to-end pipelines: applets, determinism helpers, proof bundles, and guardrails.
+- Use the **SDK** (`llama-orch-sdk`) for low-level, typed access to HTTP/SSE and error envelopes; no applet or prompt logic lives here.
+- Use the **CLI** (`llama-orch-cli`) to bootstrap and generate static capability/model/pool snapshots and language bindings; generated files import SDK types.
+- The **Orchestrator** (`orchestratord`) API and OpenAPI contracts are the ground truth. The SDK mirrors them; Utils must not bypass the SDK.
+
 # llama-orch — Consumer Capabilities and API Guide
 
 This document is the consumer-facing, exhaustive guide to what llama-orch provides today: API contracts, behaviors, and capabilities you can rely on as a client. It consolidates the normative OpenAPI contracts under `contracts/openapi/` and the currently implemented HTTP/SSE routes in `orchestratord/`.

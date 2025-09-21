@@ -16,21 +16,20 @@ Key forces:
 
 ## Decision (RFC-2119)
 
-* The library **MUST** be implemented as a Rust crate located at:
-  `/home/vince/Projects/llama-orch/consumers/llama-orch-toolkit`.
-* The crate **MUST** be publishable to **crates.io** and expose a stable, semver’d public API.
-* The crate **MUST** provide a **WASM build** consumable via **npm** (package name TBA), suitable for Node and modern browsers.
-* The library **MUST** organize capabilities into **namespaces** (e.g., `spec.*`, `plan.*`, `scaffold.*`, `code.*`, `tests.*`, `ci.*`, `provenance.*`), each containing **applets** (small, composable units).
-* Each **applet** **MUST** implement a common **Applet trait/contract** with:
-
+* Replace the single "toolkit" with three artifacts under `consumers/`:
+  * `llama-orch-sdk/` (**SDK**) — typed clients/models for llama-orch HTTP + SSE.
+  * `llama-orch-utils/` (**Utils**) — Blueprint-oriented applets and Runner.
+  * `llama-orch-cli/` (**CLI**) — capability codegen and Blueprint initialization.
+* **SDK** **MUST** own all llama-orch transport: HTTP and SSE clients, typed requests/responses, streaming envelopes, and error types. It **MUST** be publishable to **crates.io** and **SHOULD** provide a **WASM build** consumable via **npm** (browser/Node).
+* **Utils** **MUST** organize capabilities into **namespaces** (e.g., `spec.*`, `plan.*`, `scaffold.*`, `code.*`, `tests.*`, `ci.*`, `provenance.*`), each containing **applets** (small, composable units). The **Runner API** **MUST** execute declarative **processes** (linear or small DAG) referencing applets by `namespace.applet`, with `needs:` dependencies, retries, timeouts, and budgets. Utils **MUST** call llama-orch **only via the SDK**.
+* Each **applet** in Utils **MUST** implement a common **Applet trait/contract** with:
   * declared **input/output schemas**,
-  * a pure **`execute()`** entry using provided handles (ModelClient, SafeFs, ArtifactSink),
+  * a pure **`execute()`** entry using provided handles (ModelClient via SDK, SafeFs, ArtifactSink),
   * **side-effects only** through provided handles (no raw FS/VCS/network).
-* The **Runner API** **MUST** execute declarative **processes** (linear or small DAG) referencing applets by `namespace.applet`, with `needs:` dependencies, retries, timeouts, and budgets.
-* The toolkit **MUST** integrate with llama-orch via an adapter, using tasks/streaming, sessions, artifacts, placement, and determinism controls.
+* **CLI** **MUST** use the **SDK** to discover capabilities and catalogs and **MUST** generate static bindings (TS/JS/Rust) for Blueprints. **CLI** **MUST** target native-only.
+* Build targets: **SDK** and **Utils** **SHOULD** build for native and `wasm32-unknown-unknown` where feasible; **CLI** is native-only.
 * All steps **MUST** emit **artifact trails** (inputs, prompts, params, outputs, diffs) and compile a **proof bundle** manifest at run end.
-* The library **SHOULD** remain backend-agnostic at the public surface (allow alternate adapters), while the default adapter targets llama-orch.
-* The library **MUST NOT** write outside a configured safe project root; all writes **MUST** be atomic with diffs captured.
+* Filesystem guardrails: For **M1**, follow ADR-004’s exception and ADR-005 governance — write applets **MUST** write exactly where instructed (no guardrails); later milestones **MAY** add opt-in guardrails. This ADR does not impose a blanket library-wide restriction.
 * RFC-2119 keywords in this ADR **MUST** be interpreted per RFC-2119.
 
 ## Consequences
@@ -62,7 +61,6 @@ Key forces:
 ## Artifacts / Proof Bundle Links
 
 * To be produced with the first end-to-end demo run:
-
   * `proof-bundle/manifest.json`
   * `events/run.jsonl` (tokens/metrics/decisions)
   * `diffs/` for filesystem mutations
@@ -70,6 +68,13 @@ Key forces:
 
 ## References
 
+* ADR-004 (Applet Ground Rules) — Filesystem side-effects and M1 exception.
+* ADR-005 (Milestone Governance) — Guardrails policy and milestone control.
+* ADR-006 (Library Split) — Defines SDK/Utils/CLI layering.
 * Llama-orch capabilities (tasks, sessions, artifacts, placement, determinism).
 * Internal spec drafts for Applet trait, Runner API, Process schema (to be authored next).
 * RFC-2119 (“Key words for use in RFCs to Indicate Requirement Levels”).
+
+## Changelog
+
+- 2025-09-21 — Amended by ADR-006: replace single toolkit with SDK/Utils/CLI; HTTP/SSE owned by SDK; SDK & Utils target native+wasm; CLI native-only; filesystem guardrails aligned with ADR-004/ADR-005 (M1 exception).

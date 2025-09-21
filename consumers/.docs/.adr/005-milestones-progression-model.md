@@ -74,6 +74,7 @@ Every `SPEC/milestones/Mx.md` **MUST** contain exactly these sections (no extras
 
 * ADR-002 (Blueprints)
 * ADR-004 (Applet Ground Rules)
+* ADR-006 (Library Split) — SDK/Utils/CLI layering; context for M1 filesystem guardrails relaxation referenced by ADR-004.
 
 ---
 

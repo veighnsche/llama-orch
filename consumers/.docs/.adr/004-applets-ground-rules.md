@@ -45,7 +45,7 @@ We need crisp, enforceable rules so applets are **small, composable tools** that
 ### 6) Side-Effects & Filesystem
 
 * Only applets whose purpose is **writing** **MAY** write to disk. All other applets **MUST NOT** write.
-* **M1 exception (per project scope):** the file-writing applet **MUST** write exactly where instructed, **with NO guardrails**. Later milestones may add opt-in guardrails.
+* **M1 exception (per ADR-005 governance):** the file-writing applet **MUST** write exactly where instructed, **with NO guardrails**. Later milestones may add **opt-in** guardrails, subject to milestone acceptance.
 * Applets that read files **MUST** accept **one or many** explicit paths/globs and return content + stable identifiers (e.g., hashes). They **MUST NOT** infer locations.
 * Any applet that claims to “merge” content **MUST** describe the merge strategy deterministically and return the merged value as data; it **MUST NOT** write unless it is a writer.
 
@@ -66,7 +66,7 @@ We need crisp, enforceable rules so applets are **small, composable tools** that
 
 ### 10) Security & Side Channels
 
-* Applets **MUST NOT** shell out or perform arbitrary network calls; all llama-orch communication **MUST** go through the approved client.
+* Applets **MUST NOT** shell out or perform arbitrary network calls; all llama-orch communication **MUST** go through the approved client (**`llama-orch-sdk`**). Applets implemented in **`llama-orch-utils`** **MUST NOT** bypass the SDK.
 * Paths **MUST** be treated as data; no path traversal, no implicit expansion except for explicitly supported syntaxes documented in the schema (e.g., `file:~/…` when explicitly allowed).
 
 ### 11) Versioning & Compatibility
@@ -93,4 +93,6 @@ We need crisp, enforceable rules so applets are **small, composable tools** that
 ## References
 
 * ADR-002 (Blueprints), ADR-003 (Blueprint init CLI expectations).
+* ADR-005 (Milestone Governance) — M1 guardrails exception and future guardrails policy.
+* ADR-006 (Library Split) — Approved client naming and dependency direction.
 * Project determinism & artifact-first principles.

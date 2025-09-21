@@ -14,6 +14,15 @@ This specification is the single source of truth for llama-orch in a home lab. I
 
 ---
 
+## Layering across repo (normative note)
+
+- **API ground truth:** The orchestrator’s OpenAPI/specs are authoritative for client behavior. The **SDK** mirrors these contracts with typed models and transport only.
+- **Utils independence:** **Utils** (applets, determinism, proof bundles) is the consumer programming layer and **MUST NOT** bypass the SDK for network calls to the orchestrator.
+- **CLI bootstrap:** The **CLI** consumes the SDK to generate bindings and static snapshots for developers/Blueprints.
+- See `consumers/.docs/.adr/006-library-split.md` for layering and dependency direction.
+
+---
+
 ## 1. Platform Assumptions
 
 * Hosts are Linux, headless, with NVIDIA drivers + CUDA runtime installed. (ORCH-1101)

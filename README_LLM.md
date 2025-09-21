@@ -14,6 +14,13 @@ This document defines how contributors (human or LLM) work in this repository. I
 6. **Investigations are documented.** Commit findings under `.docs/` (or near the component) rather than relying on chat.
 7. **Proof bundle required.** Follow `.docs/testing/` guidance when producing logs, pact files, snapshots, metrics.
 
+### Layering & Priorities (Repo-wide)
+
+- **Utils** (`llama-orch-utils`) is the crown jewel programming model (applets, determinism, proof-bundles, guardrails) and drives what the SDK must expose.
+- **SDK** (`llama-orch-sdk`) exists to support Utils — types, clients, schema validation, simple transport. No applet/guardrail/prompt logic. Keep surface minimal and stable.
+- **Orchestrator** (`orchestratord`) is the service layer whose OpenAPI/specs are the API ground truth the SDK mirrors. It does not dictate Utils logic.
+- **CLI** (`llama-orch-cli`) consumes the SDK to bootstrap and generate bindings/snapshots for developers and Blueprints.
+
 ---
 
 ## Workflow Snapshot

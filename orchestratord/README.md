@@ -53,6 +53,10 @@ HTTP endpoints implemented by this crate (see OpenAPI for authoritative shapes):
 
 - Part of the core orchestrator. Upstream: adapters, Downstream: workers.
 
+Layering note:
+
+- **Orchestrator** is the service layer. Its OpenAPI/specs are the ground truth for what clients can rely on. The **SDK** mirrors these contracts and exposes typed models and transport only. **Utils** (applets, determinism, proof bundles) drives what the SDK needs to expose but does not couple directly to internal orchestrator modules. The **CLI** consumes the SDK to bootstrap and generate developer‑friendly bindings/snapshots.
+
 ```mermaid
 flowchart LR
   callers[Clients] --> orch[Orchestrator]

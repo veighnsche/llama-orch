@@ -1,3 +1,7 @@
+### Layering note (informative)
+
+- **Service role:** Orchestrator defines the API ground truth via OpenAPI/specs. The **SDK** mirrors these contracts with typed models and transport only. **Utils** (applets, determinism, proof bundles) drives what the SDK needs but does not couple to orchestrator internals. The **CLI** uses the SDK to bootstrap and generate bindings/snapshots. See `consumers/.docs/.adr/006-library-split.md`.
+
 # Orchestratord Crate Specification (Standalone)
 
 Status: draft

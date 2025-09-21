@@ -25,6 +25,15 @@ Note: The `orchestratord` binary builds the router but does not start a network 
 
 ## Architecture overview
 
+### Layering & Hierarchy (Repo-wide)
+
+- **Utils (`llama-orch-utils`)** — The crown jewel. Applets, determinism helpers, proof-bundle logic, guardrails. Drives what the SDK must expose.
+- **SDK (`llama-orch-sdk`)** — Exists to support Utils. Types, clients, schema validation, simple transport. No applet logic, no guardrails, no prompt logic. Minimal, stable surface.
+- **Orchestrator (`orchestratord`)** — Service layer. Its API and OpenAPI/specs define the ground truth that the SDK must expose. Does not dictate Utils logic directly.
+- **CLI (`llama-orch-cli`)** — Least important. Bootstraps/generated bindings and dev workflows. Consumes SDK; produces artifacts that help humans and Utils.
+
+See: `consumers/.docs/.adr/006-library-split.md` and related ADRs (001–005) for full layering and dependency direction.
+
 - `contracts/` — single source of truth for OpenAPI (data + control) and config schema
 - `orchestrator-core/` — queue and invariants; used by the orchestrator with metrics wrapper
 - `orchestratord/` — HTTP handlers, state, metrics, placement, and binary entrypoint
