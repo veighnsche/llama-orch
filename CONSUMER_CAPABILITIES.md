@@ -19,6 +19,12 @@ If you observe any discrepancy between code and this guide, treat the OpenAPI co
 - Pre-1.0.0: no backwards-compatibility guarantees. Breaking changes may occur as we iterate. Always consult `GET /v1/capabilities` for `api_version` and feature discovery.
 - Contracts are spec-first. When behavior evolves, OpenAPI specs update before runtime code.
 
+## Operational Expectations
+
+- GPU required; no CPU fallback. If no GPU capacity is available, the server will fail fast (e.g., `503 POOL_UNAVAILABLE`) or apply backpressure.
+- Automatic provisioning: the program is responsible for preparing engines (e.g., llama.cpp, vLLM, TGI, Triton) and ensuring models per policy. Clients do not have to provision engines or models directly; enqueue requests may be accepted and streamed once the serving pool becomes ready.
+- Single-host orchestration focus in current alpha. Multi-host or distributed scheduling may evolve later.
+
 ## Base URL, Authentication, and Headers
 
 - Base URL: determined by the orchestrator process; typical local default is `http://127.0.0.1:8080/` when running `orchestratord`.
@@ -156,6 +162,7 @@ Contracts: `contracts/openapi/control.yaml`
   - Body (optional): `{ "pool_id": "default", "replica_id": "r0" }`
   - Response: `200` `{ ok: true, identity: "token:<fp>", pool_id, replica_id }`
   - Purpose: scaffolding to bind a worker adapter to a pool/replica during development.
+  - Note: this endpoint is not yet part of the published OpenAPI contracts and is subject to change.
 
 ## Error Taxonomy & HTTP Mapping
 
