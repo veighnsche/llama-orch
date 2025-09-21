@@ -21,3 +21,6 @@ logs/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Javascript
+/node_modules/

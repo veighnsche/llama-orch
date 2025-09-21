@@ -2,22 +2,26 @@
 use std::fs;
 use std::io;
 use std::path::Path;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Source {
     Text(String),
     Lines(Vec<String>),
     File(String),
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MessageIn {
     pub role: String,
     pub source: Source,
     pub dedent: bool,
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Message {
     pub role: String,
     pub content: String,

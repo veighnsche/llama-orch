@@ -1,0 +1,15 @@
+{
+  "name": "m002-bun",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "@llama-orch/utils-types": "file:../../llama-orch-utils-types"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

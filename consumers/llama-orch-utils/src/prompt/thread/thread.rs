@@ -1,21 +1,25 @@
 // Placeholder module for applet prompt/thread.
 use std::io;
 
-use super::message::{self, Message, Source};
+use crate::prompt::message::{self, Message, Source};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreadItem {
     pub role: String,
     pub source: Source,
     pub dedent: bool,
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreadIn {
     pub items: Vec<ThreadItem>,
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreadOut {
     pub messages: Vec<Message>,
 }

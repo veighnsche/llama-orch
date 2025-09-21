@@ -1,5 +1,9 @@
 // Placeholder module for applet params/define.
-#[derive(Debug, Clone, Default)]
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "ts-types")]
+use ts_rs::TS;
+#[cfg_attr(feature = "ts-types", derive(TS))]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Params {
     pub temperature: Option<f32>,
     pub top_p: Option<f32>,

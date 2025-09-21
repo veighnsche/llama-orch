@@ -2,22 +2,26 @@
 use std::fs;
 use std::io;
 use std::path::Path;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReadRequest {
     pub paths: Vec<String>,
     pub as_text: bool,
     pub encoding: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileBlob {
     pub path: String,
     pub content: Option<String>,
     pub bytes: Option<Vec<u8>>,
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReadResponse {
     pub files: Vec<FileBlob>,
 }

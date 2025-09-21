@@ -1,39 +1,46 @@
 // Placeholder module for applet llm/invoke.
 use anyhow::{bail, Result};
 use llama_orch_sdk::client::OrchestratorClient;
+use serde::{Deserialize, Serialize};
 
 use crate::model::define::ModelRef;
 use crate::params::define::Params;
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SdkMsg {
     pub role: String,
     pub content: String,
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Choice { pub text: String }
 
-#[derive(Debug, Clone, Default)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Usage {
     pub prompt_tokens: Option<i32>,
     pub completion_tokens: Option<i32>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct InvokeResult {
     pub choices: Vec<Choice>,
     pub usage: Option<Usage>,
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InvokeIn {
     pub messages: Vec<SdkMsg>,
     pub model: ModelRef,
     pub params: Params,
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InvokeOut { pub result: InvokeResult }
 
 pub fn run(_client: &OrchestratorClient, _input: InvokeIn) -> Result<InvokeOut> {

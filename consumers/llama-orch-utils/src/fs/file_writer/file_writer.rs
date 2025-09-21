@@ -2,15 +2,18 @@
 use std::fs;
 use std::io;
 use std::path::Path;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WriteIn {
     pub path: String,
     pub text: String,
     pub create_dirs: bool,
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WriteOut {
     pub path: String,
     pub bytes_written: usize,

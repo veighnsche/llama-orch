@@ -1,5 +1,9 @@
 // Placeholder module for applet model/define.
-#[derive(Debug, Clone)]
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "ts-types")]
+use ts_rs::TS;
+#[cfg_attr(feature = "ts-types", derive(TS))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelRef {
     pub model_id: String,
     pub engine_id: Option<String>,

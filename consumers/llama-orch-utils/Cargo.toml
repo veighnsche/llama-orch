@@ -6,10 +6,21 @@ license = "Apache-2.0"
 repository = "https://example.com/llama-orch"
 description = "Utils applets for composing Blueprint pipelines for llama-orch (M2)."
 
+[features]
+# When enabled, derive TypeScript bindings using ts-rs and expose a binary to export declarations.
+ts-types = ["dep:ts-rs"]
+
 [dependencies]
 anyhow = "1"
 llama-orch-sdk = { path = "../llama-orch-sdk" }
+serde = { workspace = true }
+ts-rs = { version = "10", optional = true }
 
 [lib]
 name = "llama_orch_utils"
 path = "src/lib.rs"
+
+[[bin]]
+name = "ts_export"
+path = "src/bin/ts_export.rs"
+required-features = ["ts-types"]
