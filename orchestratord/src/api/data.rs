@@ -89,8 +89,8 @@ pub async fn create_task(
         "admission",
         &body.session_id,
         format!(
-            "task={} queued pos={}",
-            body.task_id, admission.queue_position
+            "Accepted request; queued at position {} (ETA {} ms)",
+            admission.queue_position, admission.predicted_start_ms
         ),
     );
 

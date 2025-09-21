@@ -72,6 +72,7 @@ See `.docs/testing/spec-derived-test-catalog.md` for requirement/test mappings.
 - Metrics contract in `.specs/metrics/otel-prom.md`; linter config `ci/metrics.lint.json` must match.
 - Minimum metrics: queue depth, tasks counters, tokens in/out, GPU & VRAM gauges, optional model_state (Active|Retired).
 - Logs must include `job_id`, `session_id`, `engine`, `engine_version`, `pool_id`, `replica_id`, `queue_position`, `predicted_start_ms`, `tokens_in`, `tokens_out`, `decode_time_ms`.
+- Narrative logging: the `human` field MUST be natural-language and MUST NOT primarily consist of opaque identifiers (UUIDs, hashes). Keep raw identifiers in structured fields (e.g., `job_id`, `session_id`, `pool_id`). Prefer descriptive phrasing (e.g., "Asked the pool-managerd about the status of pool 'default'").
 
 ---
 

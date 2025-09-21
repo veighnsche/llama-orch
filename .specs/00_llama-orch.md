@@ -86,6 +86,7 @@ This specification is the single source of truth for llama-orch in a home lab. I
 * [ORCH-3302] Narration MUST NOT include secrets or PII; redaction helpers MUST be used by emitters.
 * [ORCH-3303] Narration MUST work with both pretty console and JSON outputs; JSON remains the default in CI.
 * [ORCH-3310] Canonicalize `decode_time_ms` as the field name; where `decode_ms` exists, implementations MUST preserve compatibility during migration.
+* [ORCH-3312] The `human` narration text MUST be natural‑language and human‑friendly. It MUST NOT primarily consist of opaque identifiers (UUIDs, hashes). Keep raw identifiers in structured fields (e.g., `job_id`, `session_id`, `pool_id`); use descriptive phrasing in `human` (e.g., "Asked the pool‑managerd about the status of pool 'default'").
 * Proof bundles SHOULD include narration coverage excerpts and, for streams, SSE transcripts with correlation IDs.
 * Emission points (normative, when events occur): admission decision, placement decision, stream start, stream end, cancel path. Emitters SHOULD include `identity` per Minimal Auth Hooks when available.
 

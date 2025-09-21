@@ -63,6 +63,7 @@ IDs use the ORCH‑33xx range (narration & logging).
 * \[ORCH‑3309] OTEL export of the narration field MAY be added behind a feature flag in the future.
 * \[ORCH‑3310] The spec MUST reconcile the `decode_ms` vs `decode_time_ms` naming: the canonical field name is `decode_time_ms` (per `README_LLM.md`). Implementations MUST maintain backward compatibility during migration (e.g., include both fields transiently or map internally) and MUST update tests/specs accordingly in follow‑up work.
 * \[ORCH‑3311] `orchestratord` MUST continue to emit JSON logs as today; pretty mode is optional and off by default.
+* \[ORCH‑3312] The `human` narration text MUST be natural‑language and human‑friendly. It MUST NOT primarily consist of opaque identifiers (UUIDs, hashes). Raw identifiers MUST remain in structured fields (e.g., `job_id`, `session_id`). Prefer descriptive phrasing, e.g., "Asked the pool‑managerd about the status of pool 'default'", "Accepted request; queued at position 3 (ETA 420 ms) on pool 'default'".
 
 ## 5) Chosen Design & Wiring (Hybrid)
 

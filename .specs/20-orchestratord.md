@@ -78,6 +78,7 @@ OpenAPI component schemas:
 ### 6.1 Narration Hooks (repo‑wide cross‑reference)
 
 - Hooks SHOULD emit short, human‑readable narration alongside structured fields at key points (admission, placement, stream start/end, cancel) per `/.specs/00_llama-orch.md §2.8.1`.
+- Narration text (`human`) MUST be natural‑language and MUST NOT primarily consist of opaque identifiers (UUIDs, hashes). Raw identifiers MUST remain in structured fields (e.g., `job_id`, `session_id`, `pool_id`). Prefer descriptive phrasing (e.g., "Asked the pool‑managerd about the status of pool 'default'").
 
 ## 7) Traceability
 

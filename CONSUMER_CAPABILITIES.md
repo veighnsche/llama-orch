@@ -211,6 +211,45 @@ Use overrides sparingly; they may reduce global efficiency.
 - Logs: JSON lines with correlation. Common fields: `job_id`, `session_id`, `engine`, `engine_version`, `pool_id`, `replica_id`, `queue_position`, `predicted_start_ms`, `tokens_in`, `tokens_out`, `decode_time_ms`.
 - SSE `metrics` frames: additive JSON surface for near-real-time client UX state.
 
+### Narrative logging (human field)
+
+- Purpose: provide a short, human-readable storyline alongside structured JSON logs so humans can skim flows without losing machine-readability.
+- Shape: narration events attach the following fields (see `observability/narration-core/src/lib.rs::human()`):
+  - `actor` — emitter (e.g., `"orchestratord"`).
+  - `action` — verb or phase (e.g., `"admission"`, `"cancel"`, `"start"`).
+  - `target` — primary subject/context (e.g., session ID, address, task ID).
+  - `human` — short English sentence (≤ ~100 chars) describing intent/outcome.
+- Where emitted today:
+  - Startup and HTTP/2 preference notes (see `orchestratord/src/app/bootstrap.rs`).
+  - Task admission (enqueue) breadcrumbs (see `orchestratord/src/api/data.rs::create_task`).
+  - Task cancel requests (see `orchestratord/src/api/data.rs::cancel_task`).
+  - Additional touchpoints (placement, stream start/end) are planned per `.specs/proposals/2025-09-19-human-narration-logging.md`.
+- Output format: logs are emitted via `tracing_subscriber` in JSON by default (`init_observability()`); pretty console mode is planned but not required for consumers. Control verbosity with `RUST_LOG`.
+- Security & style: narration MUST be natural language (human-friendly) and MUST NOT consist primarily of opaque IDs; do not include secrets/PII; keep present tense, subject‑verb‑object; taxonomy complements structured fields (`README_LLM.md`). Keep raw IDs in structured fields (e.g., `job_id`, `session_id`) rather than in `human`.
+- Example JSON log (illustrative):
+
+  ```json
+  {
+    "timestamp": "2025-09-21T11:20:31.000Z",
+    "level": "INFO",
+    "actor": "orchestratord",
+    "action": "admission",
+    "target": "pool:default",
+    "human": "Accepted request; queued at position 3 (ETA 420 ms) on pool 'default'",
+    "job_id": "00000000-0000-0000-0000-000000000001",
+    "session_id": "11111111-1111-1111-1111-111111111111",
+    "engine": "llamacpp",
+    "pool_id": "default",
+    "queue_position": 3,
+    "predicted_start_ms": 420,
+    "x_correlation_id": "11111111-1111-4111-8111-111111111111"
+  }
+  ```
+- Consumer guidance:
+  - Treat `human` as additive context; rely on structured fields for automation.
+  - Filter JSON logs on `actor`, `action`, and `target` to follow a story; correlate with HTTP via `X-Correlation-Id` headers.
+  - Expect future adoption across more events; the presence of the `human` field is repo-wide policy per the accepted proposal.
+
 ## Determinism & Reproducibility
 
 - Deterministic default paths for SSE emission in dev mode; transcripts are persisted as artifacts for replay/validation.

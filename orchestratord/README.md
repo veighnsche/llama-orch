@@ -651,6 +651,7 @@ Notes for Error mapping and backpressure
   - Gauges: `queue_depth{engine,engine_version,pool_id,priority}`, `active_leases{pool_id}`, `pool_ready{pool_id}`, `kv_cache_usage_ratio{...}`
   - Histograms: `latency_first_token_ms{...}`, `latency_decode_ms{...}`
 - Logs are JSON Lines with correlation IDs; fields include `job_id`, `session_id`, `engine`, versions, pool/replica IDs, queue position, predicted start, tokens in/out, and decode timings.
+- Narration (`human` field) MUST be natural-language and MUST NOT primarily consist of opaque IDs (UUIDs, hashes). Keep raw identifiers in structured fields (e.g., `job_id`, `session_id`, `pool_id`). Prefer descriptive phrasing, e.g., "Asked the pool-managerd about the status of pool 'default'", "Accepted request; queued at position 3 (ETA 420 ms) on pool 'default'".
 - SSE `metrics` frames include additive JSON (`queue_depth`, `on_time_probability`, `kv_warmth`, and remaining budgets) per spec.
 
 ## 9. Runbook (Dev)
