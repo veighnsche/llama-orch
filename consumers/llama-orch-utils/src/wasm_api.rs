@@ -86,65 +86,6 @@ pub extern "C" fn invoke_json(req_ptr: *const u8, req_len: usize) -> u64 {
         Some(x) => x,
         None => return leak_exact(b"{\"error\":\"invalid_request\",\"message\":\"missing input\"}").0,
     };
-
-    match op {
-        // fs.read_file_json
-        "fs_read_file_json" => {
-            let req: ReadRequest = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-            let resp: ReadResponse = match crate::fs::file_reader::run(req) {
-                Ok(v) => v,
-                Err(e) => return leak_exact(format!("{{\"error\":\"fs_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0,
-            };
-            match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
-        }
-        // fs.write_file_json
-        "fs_write_file_json" => {
-            let req: WriteIn = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-            let resp: WriteOut = match crate::fs::file_writer::run(req) {
-                Ok(v) => v,
-                Err(e) => return leak_exact(format!("{{\"error\":\"fs_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0,
-            };
-            match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
-        }
-        // prompt.message_json
-        "prompt_message_json" => {
-            let req: MessageIn = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-            let resp: Message = match crate::prompt::message::run(req) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"io_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-            match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
-        }
-        // prompt.thread_json
-        "prompt_thread_json" => {
-            let req: ThreadIn = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-            let resp: ThreadOut = match crate::prompt::thread::run(req) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"io_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-            match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
-        }
-        // model.define_json
-        "model_define_json" => {
-            let req: ModelDefineIn = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-            let resp: ModelRef = crate::model::define::run(req.model_id, req.engine_id, req.pool_hint);
-            match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
-        }
-        // params.define_json
-        "params_define_json" => {
-            let req: Params = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-            let resp: Params = crate::params::define::run(req);
-            match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
-        }
-        // llm.invoke_json
-        "llm_invoke_json" => {
-            let req: InvokeIn = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-            let client = llama_orch_sdk::client::OrchestratorClient::default();
-            match crate::llm::invoke::run(&client, req) {
-                Ok(v) => match serde_json::to_vec(&v) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 },
-                Err(e) => leak_exact(format!("{{\"error\":\"unimplemented\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0,
-            }
-        }
-        // orch.response_extractor_json
-        "orch_response_extractor_json" => {
-            let req: InvokeResult = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-            let s = crate::orch::response_extractor::run(&req);
-            match serde_json::to_vec(&s) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
-        }
-        _ => leak_exact(b"{\"error\":\"invalid_request\",\"message\":\"unknown op\"}").0,
-    }
+    let bytes = crate::manifest::dispatch(op, input.clone());
+    leak_exact(&bytes).0
 }

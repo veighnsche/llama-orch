@@ -1,5 +1,15 @@
 use serde::Serialize;
 use std::collections::BTreeMap;
+use serde_json::Value;
+
+// Bring applet types in scope for parsing/serialization
+use crate::fs::file_reader::{ReadRequest, ReadResponse, FileBlob};
+use crate::fs::file_writer::{WriteIn, WriteOut};
+use crate::prompt::message::{MessageIn, Message};
+use crate::prompt::thread::{ThreadIn, ThreadOut};
+use crate::model::define::{ModelRef, ModelDefineIn};
+use crate::params::define::Params;
+use crate::llm::invoke::{InvokeIn, InvokeOut, InvokeResult, SdkMsg, Choice, Usage};
 
 #[derive(Serialize)]
 pub struct MethodInfo {
