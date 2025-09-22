@@ -28,7 +28,7 @@ members = [
     "test-harness/bdd",
     "consumers/llama-orch-sdk",
     "consumers/llama-orch-utils",
-    "consumers/llama-orch-utils-node",
+    "consumers/llama-orch-utils-napi",
     "tools/spec-extract",
     "tools/openapi-client",
     "tools/readme-index",

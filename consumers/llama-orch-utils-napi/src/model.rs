@@ -36,7 +36,13 @@ mod tests {
         let core = llama_orch_utils::model::define::run("m2".into(), Some("llamacpp".into()), Some("pool-a".into()));
         let napi_ref: ModelRefNapi = core.into();
         assert_eq!(napi_ref.model_id, "m2");
-        assert_eq!(napi_ref.engine_id.as_deref(), Some("llamacpp"));
-        assert_eq!(napi_ref.pool_hint.as_deref(), Some("pool-a"));
+        match &napi_ref.engine_id {
+            Some(Either::A(s)) => assert_eq!(s, "llamacpp"),
+            other => panic!("unexpected engine_id variant: {:?}", other),
+        }
+        match &napi_ref.pool_hint {
+            Some(Either::A(s)) => assert_eq!(s, "pool-a"),
+            other => panic!("unexpected pool_hint variant: {:?}", other),
+        }
     }
 }

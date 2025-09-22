@@ -88,4 +88,33 @@ mod tests {
     fn probe_returns_expected_string() {
         assert_eq!(probe(), "llama-orch-utils-node-ok");
     }
+
+    // Compile-time signature drift guard: if any export's signature changes,
+    // this test will fail to compile when running `cargo test`.
+    #[test]
+    fn napi_signature_guard() {
+        // fs namespace
+        let _rf: fn(fs::ReadRequestNapi) -> napi::Result<fs::ReadResponseNapi> = read_file;
+
+        // prompt namespace
+        let _pm: fn(prompt::MessageInNapi) -> napi::Result<prompt::MessageNapi> = message;
+        let _pt: fn(prompt::ThreadInNapi) -> napi::Result<prompt::ThreadOutNapi> = thread;
+
+        // model namespace
+        let _md: fn(String, Option<String>, Option<String>) -> napi::Result<model::ModelRefNapi> = model_define;
+
+        // params namespace
+        let _pd: fn(params::ParamsNapi) -> napi::Result<params::ParamsNapi> = params_define;
+
+        // orch namespace
+        let _ore: fn(orch::InvokeResultNapi) -> napi::Result<String> = response_extractor;
+
+        // llm namespace
+        let _llmi: fn(llm::InvokeInNapi) -> napi::Result<llm::InvokeOutNapi> = invoke;
+
+        // probe (root)
+        let _p: fn() -> String = probe;
+
+        let _ = (_rf, _pm, _pt, _md, _pd, _ore, _llmi, _p);
+    }
 }

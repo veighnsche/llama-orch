@@ -10,12 +10,12 @@ license = "Apache-2.0"
 crate-type = ["cdylib"]
 
 [dependencies]
-napi = ">=2"
-napi-derive = ">=2"
+napi = "3"
+napi-derive = "3"
 llama-orch-utils = { path = "../llama-orch-utils" }
 
 [build-dependencies]
-napi-build = ">=2"
+napi-build = "3"
 
 [dev-dependencies]
 tempfile = "3"

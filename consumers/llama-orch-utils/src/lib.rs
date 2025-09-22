@@ -9,6 +9,10 @@ pub mod llm;
 pub mod orch;
 pub mod error;
 
+// WASI/WASM minimal FFI surface (JSON-in/JSON-out) for Node/Bun loader
+#[cfg(target_arch = "wasm32")]
+pub mod wasm_api;
+
 #[cfg(feature = "ts-types")]
 pub fn export_ts_types() -> std::io::Result<()> {
     use std::env;
@@ -71,7 +75,8 @@ pub fn export_ts_types() -> std::io::Result<()> {
 
     // Append ambient API declarations that reference the Rust-emitted types
     buf.push_str("// Ambient API declarations (M2 DRAFT)\n");
-    buf.push_str("export declare const fs: { readFile(input: ReadRequest): ReadResponse; writeFile(input: WriteIn): WriteOut; };\n");
+    // fs.readFile supports an overload: (path: string)
+    buf.push_str("export declare const fs: { readFile(input: ReadRequest): ReadResponse; readFile(path: string): ReadResponse; writeFile(input: WriteIn): WriteOut; };\n");
     buf.push_str("export declare const prompt: { message(input: MessageIn): Message; thread(input: ThreadIn): ThreadOut; };\n");
     buf.push_str("export declare const model: { define(model_id: string, engine_id?: string | null, pool_hint?: string | null): ModelRef; };\n");
     buf.push_str("export declare const params: { define(p: Params): Params; };\n");

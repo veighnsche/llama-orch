@@ -53,13 +53,13 @@ mod tests {
         let tp = out.top_p.unwrap();
         assert!((tp - 1.0).abs() < 1e-9);
         assert_eq!(out.max_tokens, Some(1024));
-        assert_eq!(out.seed, None);
+        assert!(out.seed.is_none());
     }
 
     #[test]
     fn boundary_values_are_normalized() {
         // temperature clamps to [0.0, 2.0]; top_p clamps to [0.0, 1.0]
-        let params = ParamsNapi { temperature: Some(10.0), top_p: Some(-1.0), max_tokens: Some(-50), seed: Some(-3) };
+        let params = ParamsNapi { temperature: Some(10.0), top_p: Some(-1.0), max_tokens: Some(-50), seed: Some(Either::A(-3)) };
         let core_in: llama_orch_utils::params::define::Params = params.into();
         let core_out = llama_orch_utils::params::define::run(core_in);
         let out: ParamsNapi = core_out.into();
@@ -69,6 +69,10 @@ mod tests {
         assert!((tp - 0.0).abs() < 1e-9);
         // our conversion makes negatives -> 0 before core; core keeps provided 0
         assert_eq!(out.max_tokens, Some(0));
-        assert_eq!(out.seed, Some(0));
+        match &out.seed {
+            Some(Either::A(v)) => assert_eq!(*v, 0),
+            Some(Either::B(_)) => panic!("unexpected null seed in output"),
+            None => panic!("unexpected None seed in output"),
+        }
     }
 }
