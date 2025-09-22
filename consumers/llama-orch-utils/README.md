@@ -20,7 +20,7 @@ By default, the loader preopens the current working directory (cwd) as `/`. You 
 Example:
 
 ```bash
-WASI_PREOPEN=/data/logs,/var/tmp node -e "import('./index.js').then(m => console.log(m.fs.readFile('README.md')));"
+WASI_PREOPEN=/data/logs,/var/tmp node -e "import('./index.js').then(m => console.log(m.fs_read_file_json({ paths: ['README.md'], as_text: true, encoding: 'utf-8' })));"
 ```
 
 ### API surface (flat 1:1 function exports)
