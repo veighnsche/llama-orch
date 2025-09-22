@@ -1,0 +1,18 @@
+# Rust / cargo
+/target/
+
+# Node / npm
+npm/
+node_modules/
+*.node
+.turbo/
+index.js
+index.cjs
+index.d.ts
+esm.d.ts
+
+# Bundler outputs
+/dist/
+
+# OS junk
+.DS_Store

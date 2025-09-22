@@ -1,0 +1,21 @@
+[package]
+name = "llama-orch-utils-node"
+version = "0.0.0"
+edition = "2021"
+publish = false
+build = "build.rs"
+license = "Apache-2.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = ">=2"
+napi-derive = ">=2"
+llama-orch-utils = { path = "../llama-orch-utils" }
+
+[build-dependencies]
+napi-build = ">=2"
+
+[dev-dependencies]
+tempfile = "3"
