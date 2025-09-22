@@ -4,7 +4,7 @@
 
 Objective: Track the **current intended** runtime/TS namespaces and function names for M2 without changing code. This document records the mapping from intended runtime names to the current Rust module tree and notes any minimal alignment actions (plan-only). **All content is DRAFT until explicitly marked LOCKED later.**
 
-Namespaces: `{ fs, prompt, model, params, llm, orch }`
+Namespaces (runtime API groups): `{ fs, prompt, model, params, llm, orch }`
 
 Intended functions:
 - fs.readFile, fs.writeFile
@@ -28,7 +28,7 @@ Intended functions:
 | orch      | orch.response_extractor | `src/orch/response_extractor/response_extractor.rs` (fn `run`) | Aligned          | None.                   |
 
 Notes:
-- The only mismatches are naming for `fs.readFile`/`fs.writeFile` vs the current Rust folders `file_reader`/`file_writer`. To avoid churn in Rust, we will introduce TypeScript-level aliases (e.g., export `readFile` that calls into the `file_reader` applet) when we add the runtime package. No behavior or signatures change.
+- Rust stays organized by applet modules (e.g., `fs::file_reader`, `fs::file_writer`). The runtime package exposes a grouped API (`fs`, `prompt`, etc.) via a minimal WASI loader. No behavior or signatures change.
 - All other namespaces and applets already align with intended names.
 
 ## Current DRAFT names for M2
@@ -67,7 +67,7 @@ This section records the single public entry function per applet and the intende
 | orch.response_extractor     | `orch::response_extractor::run`                        | `pub fn run(result: &InvokeResult) -> String` |
 
 Mapping notes:
-- The TS-facing names are DRAFT per Step 1. Rust functions remain named `run` within their applet modules; TS aliases will provide `fs.readFile`/`fs.writeFile` as needed without renaming Rust.
+- The TS-facing names are DRAFT per Step 1. Rust functions remain named `run` within their applet modules. The WASI runtime binds flat exported wasm symbols to the grouped API (`fs.readFile`, `fs.writeFile`, etc.).
 - All parameters and return types are the public I/O types confirmed in Step 2, or references thereto.
 
 ## Step 3 — Signatures + Error/Async model (DRAFT)
@@ -145,26 +145,18 @@ cargo test -q -p llama-orch-utils -- --nocapture
 ```
 
 ### Next phase preview (DRAFT, do not execute yet)
-- Phase B: TS generation via `ts-types` feature and lib exporter → write `npm-build/index.d.ts`; add tracked `npm-build` assets (`package.json`, `index.js`, `api.d.ts`).
-- Phase C: Bun consumer points to `file:../../llama-orch-utils/npm-build`; `bun install`; `bunx tsc --noEmit`.
+- Phase B: Generate TypeScript declarations via `ts-rs` into `npm-build/types.d.ts`.
+- Phase C: Compose the distributable `index.d.ts` by merging the generated types with the grouped API declarations.
 - Phase D: After consumer proof, flip DRAFT → LOCKED; add CI drift guards for TS + docs.
 
 ### Phase B status (DRAFT)
 - B1: `ts-types` Cargo feature present.
-- B2: `export_ts_types()` added behind `--features ts-types`; writes `npm-build/index.d.ts` and appends API declarations; not executed yet.
-- B3: `npm-build/` folder created and gitignored (no files generated yet).
-- B4r: removed `.npm/` templates; exporter now programmatically generates `npm-build/{index.d.ts, index.js, package.json}` (DRAFT). Not executed yet.
+- B2: `export_ts_types()` added behind `--features ts-types`; writes `npm-build/types.d.ts` containing type declarations only.
+- B3: `npm-build/` folder created and gitignored (no tracked files).
+- B4: `index.d.ts` is composed by a script that merges `npm-build/types.d.ts` with the grouped API declarations (sync functions, and the `fs.readFile(path: string)` overload).
 
-## Phase N status (DRAFT)
-- N1: Bindings crate scaffolded with napi-rs at `consumers/llama-orch-utils-node/`; core crate untouched; exposes `probe()` for toolchain validation. Built with `cargo build -q -p llama-orch-utils-node --release`.
-- N2: `fs.readFile` exported via napi-rs — sync function `fs.readFile(input: ReadRequest) -> ReadResponse`; input/output shapes mirror core types via object wrappers; errors mapped to `napi::Error(Status::GenericFailure, "fs.readFile failed: …")`; Rust-side unit tests validate mapping & determinism; no panics on public paths.
-- N3: `prompt.message` and `prompt.thread` exported via napi-rs — sync functions `prompt.message(input: MessageIn) -> Message` and `prompt.thread(input: ThreadIn) -> ThreadOut`; `Source` represented in N-API as a discriminated object `{ kind: "Text"|"Lines"|"File", text?: string, lines?: string[], path?: string }` which converts to the core enum; errors mapped to `napi::Error(Status::GenericFailure, "prompt.message failed: …"/"prompt.thread failed: …")`; Rust-side unit tests validate conversions and determinism; no panics on public paths.
-- N4: napi-rs exports added — `model.define(model_id, engine_id?, pool_hint?) -> ModelRef`, `params.define(p: Params) -> Params` (core enforces defaults/clamps), and `orch.response_extractor(result: InvokeResult) -> string` (deterministic choice rules). Conversions are pure and total; conversion failures would map via `napi::Error(Status::GenericFailure, "…")` (not expected for current shapes). Rust-side unit tests added for each wrapper; no panics on public paths.
-- N5: `llm.invoke` exported in bindings but returns a typed napi error with message: "unimplemented: llm.invoke requires SDK wiring". No panics. No SDK calls. Shapes are present for parity only.
-- N5 (Path B): Node smoke test for `llm.invoke`. Packaging scaffold added to `consumers/llama-orch-utils-node/` (local only). Built via `@napi-rs/cli` (`npm run build`). Smoke script `.smoke/llm_invoke.mjs` calls `llm.invoke` and verifies it throws the exact message: `unimplemented: llm.invoke requires SDK wiring`. Rust unit tests do not call napi exports; Node-level smoke covers the behavior. No publishing; artifacts are gitignored.
-
-- N6: ESM facade exported (`esm.js`); CJS via `index.cjs`. Exports the namespaced runtime surface `{ fs.readFile, prompt.{message,thread}, model.define, params.define, llm.invoke, orch.response_extractor }` and default aggregates the same. Node smokes added and passing: `.smoke/fs_read_file.mjs`, `.smoke/prompt_message.mjs`, `.smoke/llm_invoke.mjs`.
-
-- N7: napi-rs generates `index.d.ts` (untracked via .gitignore); package exposes `"types": "./index.d.ts"`. Added a local TS smoke under `consumers/llama-orch-utils-node/ts-smoke/` that imports from `../esm.js` and type-checks calls to `fs.readFile`, `prompt.message`, `model.define`, `params.define`, `orch.response_extractor`, and `llm.invoke` (with nullables). `pnpm run smoke:types` compiles clean with `tsc --noEmit`.
-
-- N8: CI-ready and drift-guarded. Added a single local verification command `pnpm run check` that runs build, Rust drift guard, and all smokes: `pnpm run build && pnpm run drift:rust && pnpm run smoke:fs && pnpm run smoke:prompt && pnpm run smoke:llm && pnpm run smoke:types`. A postbuild guard (`.scripts/postbuild-guard.mjs`) hard-fails if `index.d.ts` is missing after napi build. A compile-only drift guard in `src/lib.rs` references all exported N-API signatures so renames or shape changes fail `cargo test` immediately. No tracked .d.ts artifacts.
+## Phase W (WASI) status (DRAFT)
+- W1: Runtime package is WASI-based under `consumers/llama-orch-utils/` with `dist/llama_orch_utils.wasm` and a minimal loader `index.js`.
+- W2: Loader groups flat wasm exports into `{ fs, prompt, model, params, llm, orch }`. No TS/JS namespaces are required at the Rust level. API is synchronous and deterministic.
+- W3: fs.readFile includes a string overload in JS: `readFile(path: string)` normalizes to `{ paths: [path], as_text: true, encoding: "utf-8" }`.
+- W4: Node and Bun smokes verify the M2 set. WASI preopens cwd by default; extra preopens via `WASI_PREOPEN=/abs1,/abs2` mounted to `/mnt0`, `/mnt1`, … inside WASI.

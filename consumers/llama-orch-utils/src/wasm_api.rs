@@ -7,7 +7,7 @@
 #![allow(clippy::missing_safety_doc)]
 
 use core::mem;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 // Reuse core types
 use crate::fs::file_reader::{ReadRequest, ReadResponse};
@@ -16,7 +16,7 @@ use crate::prompt::message::{MessageIn, Message};
 use crate::prompt::thread::{ThreadIn, ThreadOut};
 use crate::model::define::ModelRef;
 use crate::params::define::Params;
-use crate::llm::invoke::{InvokeIn, InvokeOut, InvokeResult};
+use crate::llm::invoke::{InvokeIn, InvokeResult};
 
 #[no_mangle]
 pub extern "C" fn alloc(size: usize) -> *mut u8 {
@@ -120,7 +120,7 @@ pub extern "C" fn fs_write_file_json(req_ptr: *const u8, req_len: usize) -> u64 
 }
 
 #[no_mangle]
-pub extern "C" fn free(ptr: *mut u8, capacity: usize) {
+pub extern "C" fn dealloc(ptr: *mut u8, capacity: usize) {
     // SAFETY: The pointer must have been allocated by `alloc` with the same capacity.
     if ptr.is_null() || capacity == 0 {
         return;

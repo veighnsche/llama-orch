@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { promises as fsp } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,7 +25,34 @@ function run(cmd, args, opts = {}) {
 
 (async () => {
   try {
-    await run('cargo', ['build', '--release', '--target', TARGET, '-p', CRATE]);
+    // Prefer rustup-run cargo if available to honor repo-local toolchain/targets
+    let cmd = 'cargo';
+    let args = ['build', '--release', '--target', TARGET, '-p', CRATE];
+    try {
+      let haveRustup = false;
+      let rustupCmd = 'rustup';
+      let probe = spawnSync(rustupCmd, ['--version'], { stdio: 'ignore' });
+      if (probe.status !== 0) {
+        // try ~/.cargo/bin/rustup
+        const home = process.env.HOME || process.env.USERPROFILE;
+        if (home) {
+          const candidate = `${home}/.cargo/bin/rustup`;
+          probe = spawnSync(candidate, ['--version'], { stdio: 'ignore' });
+          if (probe.status === 0) {
+            rustupCmd = candidate;
+            haveRustup = true;
+          }
+        }
+      } else {
+        haveRustup = true;
+      }
+      if (haveRustup) {
+        cmd = rustupCmd;
+        args = ['run', 'stable', 'cargo', ...args];
+      }
+    } catch {}
+
+    await run(cmd, args);
     await fsp.mkdir(OUT_DIR, { recursive: true });
     await fsp.copyFile(BUILD_ARTIFACT, OUT_PATH);
     console.log(`Copied ${BUILD_ARTIFACT} -> ${OUT_PATH}`);

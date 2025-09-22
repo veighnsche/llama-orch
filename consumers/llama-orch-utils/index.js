@@ -49,12 +49,20 @@ async function init() {
 
   const bytes = await fsp.readFile(wasmPath);
   const module = await WebAssembly.compile(bytes);
-  const instance = await WebAssembly.instantiate(module, wasi.getImportObject());
+
+  // Provide shared memory to satisfy --import-memory/--shared-memory
+  const memory = new WebAssembly.Memory({ initial: 256, maximum: 16384, shared: true });
+  // Get WASI imports from API, then merge env.memory
+  const wasiImports = (typeof wasi.getImportObject === 'function')
+    ? wasi.getImportObject()
+    : (wasi && wasi.wasiImport ? { wasi_snapshot_preview1: wasi.wasiImport } : {});
+  const importObject = { env: { memory }, ...wasiImports };
+
+  const instance = await WebAssembly.instantiate(module, importObject);
   if (typeof wasi.initialize === 'function') wasi.initialize(instance);
-  else if (typeof wasi.start === 'function') wasi.start(instance);
 
   _exports = instance.exports;
-  _memory = _exports.memory;
+  _memory = (instance.exports && instance.exports.memory) ? instance.exports.memory : memory;
 }
 
 function ensureInitSyncGuard() {
@@ -77,7 +85,12 @@ function decode(ret64) {
   const view = new Uint8Array(_memory.buffer, ptr, len);
   const out = Buffer.from(view).toString('utf8');
   // free buffer (capacity == len by construction)
-  _exports.free(ptr, len);
+  if (typeof _exports.dealloc === 'function') {
+    _exports.dealloc(ptr, len);
+  } else if (typeof _exports.free === 'function') {
+    // fallback for older builds
+    _exports.free(ptr, len);
+  }
   const parsed = JSON.parse(out);
   if (parsed && typeof parsed === 'object' && parsed.error) {
     const msg = typeof parsed.message === 'string' ? parsed.message : JSON.stringify(parsed.message);
