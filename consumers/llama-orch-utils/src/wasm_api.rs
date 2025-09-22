@@ -14,7 +14,7 @@ use crate::fs::file_reader::{ReadRequest, ReadResponse};
 use crate::fs::file_writer::{WriteIn, WriteOut};
 use crate::prompt::message::{MessageIn, Message};
 use crate::prompt::thread::{ThreadIn, ThreadOut};
-use crate::model::define::ModelRef;
+use crate::model::define::{ModelRef, ModelDefineIn};
 use crate::params::define::Params;
 use crate::llm::invoke::{InvokeIn, InvokeResult};
 
@@ -25,98 +25,6 @@ pub extern "C" fn alloc(size: usize) -> *mut u8 {
     let ptr = buf.as_mut_ptr();
     mem::forget(buf);
     ptr
-}
-
-// ---------- prompt.message ----------
-#[no_mangle]
-pub extern "C" fn prompt_message_json(req_ptr: *const u8, req_len: usize) -> u64 {
-    let req_bytes = unsafe { core::slice::from_raw_parts(req_ptr, req_len) };
-    let req: MessageIn = match serde_json::from_slice(req_bytes) {
-        Ok(v) => v,
-        Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0,
-    };
-    let resp: Message = match crate::prompt::message::run(req) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"io_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-    match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
-}
-
-// ---------- prompt.thread ----------
-#[no_mangle]
-pub extern "C" fn prompt_thread_json(req_ptr: *const u8, req_len: usize) -> u64 {
-    let req_bytes = unsafe { core::slice::from_raw_parts(req_ptr, req_len) };
-    let req: ThreadIn = match serde_json::from_slice(req_bytes) {
-        Ok(v) => v,
-        Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0,
-    };
-    let resp: ThreadOut = match crate::prompt::thread::run(req) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"io_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-    match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
-}
-
-// ---------- model.define ----------
-#[derive(Deserialize)]
-struct ModelDefineIn { model_id: String, engine_id: Option<String>, pool_hint: Option<String> }
-
-#[no_mangle]
-pub extern "C" fn model_define_json(req_ptr: *const u8, req_len: usize) -> u64 {
-    let req_bytes = unsafe { core::slice::from_raw_parts(req_ptr, req_len) };
-    let req: ModelDefineIn = match serde_json::from_slice(req_bytes) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-    let resp: ModelRef = crate::model::define::run(req.model_id, req.engine_id, req.pool_hint);
-    match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
-}
-
-// ---------- params.define ----------
-#[no_mangle]
-pub extern "C" fn params_define_json(req_ptr: *const u8, req_len: usize) -> u64 {
-    let req_bytes = unsafe { core::slice::from_raw_parts(req_ptr, req_len) };
-    let req: Params = match serde_json::from_slice(req_bytes) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-    let resp: Params = crate::params::define::run(req);
-    match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
-}
-
-// ---------- llm.invoke ----------
-#[no_mangle]
-pub extern "C" fn llm_invoke_json(req_ptr: *const u8, req_len: usize) -> u64 {
-    let req_bytes = unsafe { core::slice::from_raw_parts(req_ptr, req_len) };
-    let req: InvokeIn = match serde_json::from_slice(req_bytes) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-    let client = llama_orch_sdk::client::OrchestratorClient::default();
-    match crate::llm::invoke::run(&client, req) {
-        Ok(v) => match serde_json::to_vec(&v) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 },
-        Err(e) => leak_exact(format!("{{\"error\":\"unimplemented\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0,
-    }
-}
-
-// ---------- orch.response_extractor ----------
-#[no_mangle]
-pub extern "C" fn orch_response_extractor_json(req_ptr: *const u8, req_len: usize) -> u64 {
-    let req_bytes = unsafe { core::slice::from_raw_parts(req_ptr, req_len) };
-    let req: InvokeResult = match serde_json::from_slice(req_bytes) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
-    let s = crate::orch::response_extractor::run(&req);
-    // Return as JSON string value
-    match serde_json::to_vec(&s) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
-}
-
-#[no_mangle]
-pub extern "C" fn fs_write_file_json(req_ptr: *const u8, req_len: usize) -> u64 {
-    let req_bytes = unsafe { core::slice::from_raw_parts(req_ptr, req_len) };
-    let req: WriteIn = match serde_json::from_slice(req_bytes) {
-        Ok(v) => v,
-        Err(e) => {
-            let msg = format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap());
-            return leak_exact(msg.as_bytes()).0;
-        }
-    };
-
-    let resp: WriteOut = match crate::fs::file_writer::run(req) {
-        Ok(v) => v,
-        Err(e) => {
-            let msg = format!("{{\"error\":\"fs_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap());
-            return leak_exact(msg.as_bytes()).0;
-        }
-    };
-
-    match serde_json::to_vec(&resp) {
-        Ok(v) => leak_exact(&v).0,
-        Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0,
-    }
 }
 
 #[no_mangle]
@@ -146,28 +54,97 @@ fn leak_exact(bytes: &[u8]) -> (u64, *mut u8, usize) {
     (pack_ptr_len(ptr, len), ptr, len)
 }
 
+// ---- unified manifest + dispatcher ----
+use crate::manifest::make_manifest;
+
 #[no_mangle]
-pub extern "C" fn fs_read_file_json(req_ptr: *const u8, req_len: usize) -> u64 {
-    // SAFETY: The memory is provided by the host; just read a slice for JSON.
-    let req_bytes = unsafe { core::slice::from_raw_parts(req_ptr, req_len) };
-    let req: ReadRequest = match serde_json::from_slice(req_bytes) {
-        Ok(v) => v,
-        Err(e) => {
-            let msg = format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap());
-            return leak_exact(msg.as_bytes()).0;
-        }
-    };
-
-    let resp: ReadResponse = match crate::fs::file_reader::run(req) {
-        Ok(v) => v,
-        Err(e) => {
-            let msg = format!("{{\"error\":\"fs_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap());
-            return leak_exact(msg.as_bytes()).0;
-        }
-    };
-
-    match serde_json::to_vec(&resp) {
+pub extern "C" fn manifest_json(_req_ptr: *const u8, _req_len: usize) -> u64 {
+    match serde_json::to_vec(&make_manifest()) {
         Ok(v) => leak_exact(&v).0,
         Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0,
+    }
+}
+
+#[derive(Deserialize)]
+struct InvokeReq<T> { op: String, input: T }
+
+// ModelDefineIn provided by crate::model::define
+
+#[no_mangle]
+pub extern "C" fn invoke_json(req_ptr: *const u8, req_len: usize) -> u64 {
+    let req_bytes = unsafe { core::slice::from_raw_parts(req_ptr, req_len) };
+    // First, parse to get the op string; we'll re-parse input per op with the right type.
+    let v: serde_json::Value = match serde_json::from_slice(req_bytes) {
+        Ok(v) => v,
+        Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0,
+    };
+    let op = match v.get("op").and_then(|x| x.as_str()) {
+        Some(s) => s,
+        None => return leak_exact(b"{\"error\":\"invalid_request\",\"message\":\"missing op\"}").0,
+    };
+    let input = match v.get("input") {
+        Some(x) => x,
+        None => return leak_exact(b"{\"error\":\"invalid_request\",\"message\":\"missing input\"}").0,
+    };
+
+    match op {
+        // fs.read_file_json
+        "fs_read_file_json" => {
+            let req: ReadRequest = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
+            let resp: ReadResponse = match crate::fs::file_reader::run(req) {
+                Ok(v) => v,
+                Err(e) => return leak_exact(format!("{{\"error\":\"fs_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0,
+            };
+            match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
+        }
+        // fs.write_file_json
+        "fs_write_file_json" => {
+            let req: WriteIn = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
+            let resp: WriteOut = match crate::fs::file_writer::run(req) {
+                Ok(v) => v,
+                Err(e) => return leak_exact(format!("{{\"error\":\"fs_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0,
+            };
+            match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
+        }
+        // prompt.message_json
+        "prompt_message_json" => {
+            let req: MessageIn = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
+            let resp: Message = match crate::prompt::message::run(req) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"io_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
+            match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
+        }
+        // prompt.thread_json
+        "prompt_thread_json" => {
+            let req: ThreadIn = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
+            let resp: ThreadOut = match crate::prompt::thread::run(req) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"io_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
+            match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
+        }
+        // model.define_json
+        "model_define_json" => {
+            let req: ModelDefineIn = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
+            let resp: ModelRef = crate::model::define::run(req.model_id, req.engine_id, req.pool_hint);
+            match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
+        }
+        // params.define_json
+        "params_define_json" => {
+            let req: Params = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
+            let resp: Params = crate::params::define::run(req);
+            match serde_json::to_vec(&resp) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
+        }
+        // llm.invoke_json
+        "llm_invoke_json" => {
+            let req: InvokeIn = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
+            let client = llama_orch_sdk::client::OrchestratorClient::default();
+            match crate::llm::invoke::run(&client, req) {
+                Ok(v) => match serde_json::to_vec(&v) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 },
+                Err(e) => leak_exact(format!("{{\"error\":\"unimplemented\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0,
+            }
+        }
+        // orch.response_extractor_json
+        "orch_response_extractor_json" => {
+            let req: InvokeResult = match serde_json::from_value(input.clone()) { Ok(v) => v, Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 };
+            let s = crate::orch::response_extractor::run(&req);
+            match serde_json::to_vec(&s) { Ok(v) => leak_exact(&v).0, Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0 }
+        }
+        _ => leak_exact(b"{\"error\":\"invalid_request\",\"message\":\"unknown op\"}").0,
     }
 }

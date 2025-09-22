@@ -5,6 +5,7 @@ M2 applets library for composing Blueprint pipelines in the llama-orch ecosystem
 ## WASI package (Node + Bun)
 
 This directory also ships a WASI-based npm package that exposes the applets via a portable `.wasm` artifact and a minimal loader `index.js`.
+The loader constructs a single default-exported API object from a Rust-provided manifest and routes all calls through a unified `invoke_json` dispatcher.
 
 - Runtime requirements:
   - Node >= 20 (built-in `node:wasi`) or Bun with WASI support.
@@ -20,44 +21,35 @@ By default, the loader preopens the current working directory (cwd) as `/`. You 
 Example:
 
 ```bash
-WASI_PREOPEN=/data/logs,/var/tmp node -e "import('./index.js').then(m => console.log(m.fs_read_file_json({ paths: ['README.md'], as_text: true, encoding: 'utf-8' })));"
+WASI_PREOPEN=/data/logs,/var/tmp node -e "import('./index.js').then(m => console.log(m.default.fs.read_file_json({ paths: ['README.md'], as_text: true, encoding: 'utf-8' })));"
 ```
 
-### API surface (flat 1:1 function exports)
+### API surface (default-exported grouped object)
 
 ```ts
-import {
-  fs_read_file_json,
-  fs_write_file_json,
-  prompt_message_json,
-  prompt_thread_json,
-  model_define_json,
-  params_define_json,
-  llm_invoke_json,
-  orch_response_extractor_json,
-} from '@llama-orch/utils';
+import utils from '@llama-orch/utils';
 
 // fs
-const r1 = fs_read_file_json({ paths: ['README.md'], as_text: true, encoding: 'utf-8' });
-const r2 = fs_read_file_json({ paths: ['README.md'], as_text: false, encoding: null });
+const r1 = utils.fs.read_file_json({ paths: ['README.md'], as_text: true, encoding: 'utf-8' });
+const r2 = utils.fs.read_file_json({ paths: ['README.md'], as_text: false, encoding: null });
 
 // prompt
-const m1 = prompt_message_json({ role: 'user', source: { Text: 'hello' }, dedent: false });
-const t1 = prompt_thread_json({ items: [
+const m1 = utils.prompt.message_json({ role: 'user', source: { Text: 'hello' }, dedent: false });
+const t1 = utils.prompt.thread_json({ items: [
   { role: 'system', source: { Text: 'a' }, dedent: false },
   { role: 'user', source: { Lines: ['b', 'c'] }, dedent: true },
 ]});
 
 // model / params
-const mr = model_define_json({ model_id: 'm1', engine_id: null, pool_hint: 'pool-a' });
-const pr = params_define_json({ temperature: 0.7, top_p: 1.0, max_tokens: 100, seed: null });
+const mr = utils.model.define_json({ model_id: 'm1', engine_id: null, pool_hint: 'pool-a' });
+const pr = utils.params.define_json({ temperature: 0.7, top_p: 1.0, max_tokens: 100, seed: null });
 
 // llm (unimplemented in M2; throws typed error)
-try { llm_invoke_json({ messages: [{ role: 'user', content: 'hi' }], model: mr, params: pr }); }
+try { utils.llm.invoke_json({ messages: [{ role: 'user', content: 'hi' }], model: mr, params: pr }); }
 catch (e) { /* expected */ }
 
 // orch
-const s = orch_response_extractor_json({ choices: [{ text: 'ok' }], usage: null });
+const s = utils.orch.response_extractor_json({ choices: [{ text: 'ok' }], usage: null });
 ```
 
 ### Build

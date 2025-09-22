@@ -1,11 +1,12 @@
-import { fs_read_file_json } from '@llama-orch/utils';
+import utils from '@llama-orch/utils';
 
 // Use a path relative to cwd. The WASI loader preopens cwd as '/'.
 const seedPath = './.llama-orch/seed.md';
 
-// Call flat function export with canonical request shape.
-const res = fs_read_file_json({ paths: [seedPath], as_text: true, encoding: 'utf-8' });
-if (!res.files.length || res.files[0].content == null) {
+// Call grouped default export with canonical request shape.
+const res = utils.fs.readFile({ paths: [seedPath], as_text: true, encoding: 'utf-8' });
+const first = res.files[0];
+if (!first || first.content == null) {
   throw new Error(`Failed to read ${seedPath}`);
 }
-console.log(res.files[0].content);
+console.log(first.content);

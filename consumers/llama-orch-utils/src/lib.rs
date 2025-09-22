@@ -8,6 +8,7 @@ pub mod params;
 pub mod llm;
 pub mod orch;
 pub mod error;
+pub mod manifest;
 
 // WASI/WASM minimal FFI surface (JSON-in/JSON-out) for Node/Bun loader
 #[cfg(target_arch = "wasm32")]
@@ -26,13 +27,14 @@ pub fn export_ts_types() -> std::io::Result<()> {
     use crate::fs::file_writer::{WriteIn, WriteOut};
     use crate::prompt::message::{Message, MessageIn, Source};
     use crate::prompt::thread::{ThreadIn, ThreadItem, ThreadOut};
-    use crate::model::define::ModelRef;
+    use crate::model::define::{ModelRef, ModelDefineIn};
     use crate::params::define::Params;
     use crate::llm::invoke::{Choice, InvokeIn, InvokeOut, InvokeResult, SdkMsg, Usage};
 
     let root = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string()));
     let out_dir = root.join("npm-build");
     let out_file = out_dir.join("types.d.ts");
+    let manifest_file = out_dir.join("manifest.json");
     fs::create_dir_all(&out_dir)?;
 
     let mut buf = String::new();
@@ -64,6 +66,7 @@ pub fn export_ts_types() -> std::io::Result<()> {
     append::<ThreadOut>(&mut buf);
 
     append::<ModelRef>(&mut buf);
+    append::<ModelDefineIn>(&mut buf);
     append::<Params>(&mut buf);
 
     append::<SdkMsg>(&mut buf);
@@ -73,9 +76,15 @@ pub fn export_ts_types() -> std::io::Result<()> {
     append::<InvokeIn>(&mut buf);
     append::<InvokeOut>(&mut buf);
 
-    // Write index.d.ts (overwrite)
+    // Write types.d.ts (overwrite)
     let mut f = fs::File::create(&out_file)?;
     f.write_all(buf.as_bytes())?;
+
+    // Write manifest.json from Rust source of truth
+    let manifest_json = crate::manifest::manifest_json_string()
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+    let mut mf = fs::File::create(&manifest_file)?;
+    mf.write_all(manifest_json.as_bytes())?;
 
     Ok(())
 }

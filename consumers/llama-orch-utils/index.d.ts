@@ -42,18 +42,31 @@ export type InvokeOut = { result: InvokeResult, };
 
 
 
-// Flat 1:1 function exports
-export declare function fs_read_file_json(input: ReadRequest): ReadResponse;
-export declare function fs_write_file_json(input: WriteIn): WriteOut;
-
-export declare function prompt_message_json(input: MessageIn): Message;
-export declare function prompt_thread_json(input: ThreadIn): ThreadOut;
-
 export type ModelDefineIn = { model_id: string, engine_id: string | null, pool_hint: string | null };
-export declare function model_define_json(input: ModelDefineIn): ModelRef;
 
-export declare function params_define_json(p: Params): Params;
+// Default-exported API object (categories -> methods), routed via invoke_json.
+export type Api = {
+  fs: {
+    readFile(input: ReadRequest): ReadResponse;
+    writeFile(input: WriteIn): WriteOut;
+  };
+  prompt: {
+    message(input: MessageIn): Message;
+    thread(input: ThreadIn): ThreadOut;
+  };
+  model: {
+    define(input: ModelDefineIn): ModelRef;
+  };
+  params: {
+    define(p: Params): Params;
+  };
+  llm: {
+    invoke(input: InvokeIn): InvokeOut;
+  };
+  orch: {
+    responseExtractor(result: InvokeResult): string;
+  };
+};
 
-export declare function llm_invoke_json(input: InvokeIn): InvokeOut;
-
-export declare function orch_response_extractor_json(result: InvokeResult): string;
+declare const _default: Api;
+export default _default;

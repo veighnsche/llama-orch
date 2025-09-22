@@ -145,12 +145,17 @@ function callJson(funcName, inputObj) {
 
 await init();
 
-// Flat 1:1 exports (no grouped shim, no overloads)
-export const fs_read_file_json = (input) => callJson('fs_read_file_json', input);
-export const fs_write_file_json = (input) => callJson('fs_write_file_json', input);
-export const prompt_message_json = (input) => callJson('prompt_message_json', input);
-export const prompt_thread_json = (input) => callJson('prompt_thread_json', input);
-export const model_define_json = (input) => callJson('model_define_json', input);
-export const params_define_json = (input) => callJson('params_define_json', input);
-export const llm_invoke_json = (input) => callJson('llm_invoke_json', input);
-export const orch_response_extractor_json = (input) => callJson('orch_response_extractor_json', input);
+function bind(op) { return (input) => callJson('invoke_json', { op, input }); }
+
+const manifest = callJson('manifest_json', {});
+const api = {};
+for (const [category, info] of Object.entries(manifest || {})) {
+  const methods = info && typeof info === 'object' ? info.methods || {} : {};
+  api[category] = {};
+  for (const [name, meta] of Object.entries(methods)) {
+    if (!meta || typeof meta !== 'object' || typeof meta.op !== 'string') continue;
+    api[category][name] = bind(meta.op);
+  }
+}
+
+export default api;
