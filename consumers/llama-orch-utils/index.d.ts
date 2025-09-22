@@ -42,32 +42,18 @@ export type InvokeOut = { result: InvokeResult, };
 
 
 
-export declare const fs: {
-  readFile(input: ReadRequest): ReadResponse;
-  readFile(path: string): ReadResponse;
-  writeFile(input: WriteIn): WriteOut;
-};
+// Flat 1:1 function exports
+export declare function fs_read_file_json(input: ReadRequest): ReadResponse;
+export declare function fs_write_file_json(input: WriteIn): WriteOut;
 
-export declare const prompt: {
-  message(input: MessageIn): Message;
-  thread(input: ThreadIn): ThreadOut;
-};
+export declare function prompt_message_json(input: MessageIn): Message;
+export declare function prompt_thread_json(input: ThreadIn): ThreadOut;
 
-export declare const model: {
-  define(model_id: string, engine_id?: string | null, pool_hint?: string | null): ModelRef;
-};
+export type ModelDefineIn = { model_id: string, engine_id: string | null, pool_hint: string | null };
+export declare function model_define_json(input: ModelDefineIn): ModelRef;
 
-export declare const params: {
-  define(p: Params): Params;
-};
+export declare function params_define_json(p: Params): Params;
 
-export declare const llm: {
-  invoke(input: InvokeIn): InvokeOut;
-};
+export declare function llm_invoke_json(input: InvokeIn): InvokeOut;
 
-export declare const orch: {
-  response_extractor(result: InvokeResult): string;
-};
-
-declare const _default: { fs: typeof fs; prompt: typeof prompt; model: typeof model; params: typeof params; llm: typeof llm; orch: typeof orch };
-export default _default;
+export declare function orch_response_extractor_json(result: InvokeResult): string;

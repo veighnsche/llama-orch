@@ -4,7 +4,7 @@
 
 Objective: Track the **current intended** runtime/TS namespaces and function names for M2 without changing code. This document records the mapping from intended runtime names to the current Rust module tree and notes any minimal alignment actions (plan-only). **All content is DRAFT until explicitly marked LOCKED later.**
 
-Namespaces (runtime API groups): `{ fs, prompt, model, params, llm, orch }`
+Namespaces (runtime API groups): `{ fs, prompt, model, params, llm, orch }` (DRAFT historical)
 
 Intended functions:
 - fs.readFile, fs.writeFile
@@ -28,8 +28,9 @@ Intended functions:
 | orch      | orch.response_extractor | `src/orch/response_extractor/response_extractor.rs` (fn `run`) | Aligned          | None.                   |
 
 Notes:
-- Rust stays organized by applet modules (e.g., `fs::file_reader`, `fs::file_writer`). The runtime package exposes a grouped API (`fs`, `prompt`, etc.) via a minimal WASI loader. No behavior or signatures change.
-- All other namespaces and applets already align with intended names.
+- Rust stays organized by applet modules (e.g., `fs::file_reader`, `fs::file_writer`).
+- JS/TS surface now exports flat 1:1 functions matching wasm symbols (e.g., `fs_read_file_json`, `prompt_message_json`, ...). The previous grouped API (`{ fs, prompt, model, params, llm, orch }`) has been dropped to eliminate the shim layer.
+- All other namespaces and applets maintain the same behavior; only the JS export shape changed.
 
 ## Current DRAFT names for M2
 We propose the following runtime/TS surface for M2 (DRAFT): `fs.readFile`, `fs.writeFile`, `prompt.message`, `prompt.thread`, `model.define`, `params.define`, `llm.invoke`, and `orch.response_extractor`. These names may change during implementation and consumer validation. The Rust module tree remains as-is; minimal TypeScript aliases will be added for `fs.readFile` and `fs.writeFile` only. No code changes are required at this step; this file serves as the source of truth to prevent naming drift.
@@ -157,6 +158,11 @@ cargo test -q -p llama-orch-utils -- --nocapture
 
 ## Phase W (WASI) status (DRAFT)
 - W1: Runtime package is WASI-based under `consumers/llama-orch-utils/` with `dist/llama_orch_utils.wasm` and a minimal loader `index.js`.
-- W2: Loader groups flat wasm exports into `{ fs, prompt, model, params, llm, orch }`. No TS/JS namespaces are required at the Rust level. API is synchronous and deterministic.
-- W3: fs.readFile includes a string overload in JS: `readFile(path: string)` normalizes to `{ paths: [path], as_text: true, encoding: "utf-8" }`.
+- W2: Loader exports flat 1:1 wasm functions; grouped namespaces have been removed. API remains synchronous and deterministic.
+- W3: The previous `fs.readFile(path: string)` JS overload has been removed. Use the canonical request shape: `{ paths: [path], as_text: true, encoding: "utf-8" }`.
 - W4: Node and Bun smokes verify the M2 set. WASI preopens cwd by default; extra preopens via `WASI_PREOPEN=/abs1,/abs2` mounted to `/mnt0`, `/mnt1`, … inside WASI.
+
+## Refinement Opportunities
+- Provide a small optional binder utility in TS (e.g., `bind(name) => (input) => callJson(name, input)`) for users who prefer local grouping without shipping a global shim.
+- Consider generating flat function names from Rust modules automatically in the DTS composition step to avoid drift.
+- Update any downstream examples and docs still referring to grouped namespaces.

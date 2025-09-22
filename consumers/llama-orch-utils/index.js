@@ -145,40 +145,12 @@ function callJson(funcName, inputObj) {
 
 await init();
 
-export const fs = {
-  readFile(inputOrPath) {
-    if (typeof inputOrPath === 'string') {
-      return callJson('fs_read_file_json', { paths: [inputOrPath], as_text: true, encoding: 'utf-8' });
-    }
-    return callJson('fs_read_file_json', inputOrPath);
-  },
-  writeFile(input) {
-    return callJson('fs_write_file_json', input);
-  },
-};
-
-export const prompt = {
-  message(input) { return callJson('prompt_message_json', input); },
-  thread(input) { return callJson('prompt_thread_json', input); },
-};
-
-export const model = {
-  define(model_id, engine_id, pool_hint) {
-    return callJson('model_define_json', { model_id, engine_id: engine_id ?? null, pool_hint: pool_hint ?? null });
-  },
-};
-
-export const params = {
-  define(p) { return callJson('params_define_json', p); },
-};
-
-export const llm = {
-  invoke(input) { return callJson('llm_invoke_json', input); },
-};
-
-export const orch = {
-  responseExtractor(result) { return callJson('orch_response_extractor_json', result); },
-};
-
-const _default = { fs, prompt, model, params, llm, orch };
-export default _default;
+// Flat 1:1 exports (no grouped shim, no overloads)
+export const fs_read_file_json = (input) => callJson('fs_read_file_json', input);
+export const fs_write_file_json = (input) => callJson('fs_write_file_json', input);
+export const prompt_message_json = (input) => callJson('prompt_message_json', input);
+export const prompt_thread_json = (input) => callJson('prompt_thread_json', input);
+export const model_define_json = (input) => callJson('model_define_json', input);
+export const params_define_json = (input) => callJson('params_define_json', input);
+export const llm_invoke_json = (input) => callJson('llm_invoke_json', input);
+export const orch_response_extractor_json = (input) => callJson('orch_response_extractor_json', input);
