@@ -22,5 +22,9 @@ name = "llama_orch_utils"
 path = "src/lib.rs"
 crate-type = ["rlib", "cdylib"]
 
+[[bin]]
+name = "export-ts"
+path = "src/bin/export_ts.rs"
+
 [dev-dependencies]
 tempfile = "3"
