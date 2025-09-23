@@ -25,5 +25,18 @@
    - [2.6 Doelstellingen](2_5_6_marketingmix_en_doelen.md)  
      - 2.6.1 Jouw missie  
      - 2.6.2 Jouw visie  
+   - [2.7 USP’s, Roadmap en KPI’s](2_7_usps_roadmap_en_kpi.md)  
+   - [2.8 Acquisitie & Partners](2_8_acquisitie_en_partners.md)  
+   - [2.9 Risicoanalyse & Mitigatie](2_9_risicoanalyse_en_mitigatie.md)  
+   - [2.10 Advertentieplan](2_10_advertentieplan.md)  
 
-3. [Het Financieel Plan](3_financieel_plan.md)
+3. Het Financieel Plan  
+   - [3.0 Samenvatting & kernindicatoren](3_financieel_plan.md)  
+   - [3.1 Investerings- en financieringsbegroting](3_financieel_plan.md)  
+   - [3.3 Exploitatie, break-even en opex](3_financieel_plan.md)  
+   - [3.4 Liquiditeitsbegroting](3_financieel_plan.md)  
+   - [3.5 Scenarioanalyse & zekerheden](3_financieel_plan.md)  
+   - [3.9 Privébegroting (samenvatting)](3_financieel_plan.md)  
+   - [3.10 12-maanden liquiditeit (overzicht)](3_1b_12mnd_liquiditeit.md)  
+
+4. [Bijlagen & Bewijsstukken](4_bijlagen_en_bewijs.md)

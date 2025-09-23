@@ -50,7 +50,7 @@ Eindverantwoordelijkheid voor kwaliteit en service, direct klantcontact en kunne
 
 **Belangrijke accenten:**
 - Doelen 12–24 maanden: 6–10 implementaties; 10–15 SLA-klanten; MRR €3k–€8k; klanttevredenheid ≥ 8/10; ≥ 2 referentiecases.
-- Risicobeheersing: cashbuffer 3 maanden; leninglast ~€626 p/m ingecalculeerd; gefaseerde investeringen; btw‑reservering; kwartaalcontrole door boekhouder.
+- Risicobeheersing: cashbuffer 3 maanden; leninglast ~€ 731 p/m ingecalculeerd; gefaseerde investeringen; btw‑reservering; kwartaalcontrole door boekhouder.
 - Netwerk & ondersteuning: freelancers voor GPU/DevOps, partners (bureaus/SIs), vaste boekhouder; jurist voor AV en SLA.
 - Commercieel: focus op privacy‑gevoelige sectoren; propositie fixed‑price implementaties + SLA‑bundels; leads via website/LinkedIn/partners.
 - Kwaliteit: documentatie, tests, incident‑reviews en roadmap; open‑source transparantie bouwt vertrouwen op.
@@ -90,7 +90,8 @@ Doel: terugbetaling structureel borgen en voorspelbaar maken.
 - Automatische incasso: maandlast lening wordt ingesteld als automatische afschrijving op zakelijke rekening.  
 - Buffer & discipline: vaste btw‑reservering (21%) en maandelijkse cashbuffer (≥ 3 maanden vaste lasten incl. leninglast).  
 - Privébegroting: privéopnames afgestemd op exploitatie; prioriteit aan bedrijfscontinuïteit en aflossing.  
-  Beleidsplafond jaar 1: maximaal € 1.250 per maand aan privéopnames, te verhogen pas na ≥ 6 maanden DSCR ≥ 1,5×.
+  Richtbedrag jaar 1: € 2.000 per maand aan privéopnames (vaste lasten).  
+  Guardrail: bij DSCR < 1,2× tijdelijk temporiseren (bijv. naar € 1.200) of extra omzet genereren (freelance/POC) om aflossing te waarborgen.
 - Administratie: kwartaalcontrole door boekhouder; voortgangsrapporten (omzet, marge, liquiditeit) per kwartaal.  
 - Fallback‑plan: bij omzetdip direct variabele kosten terugschroeven; tijdelijke inzet als freelance developer (marktconform tarief) om aflossing te waarborgen.
 
@@ -99,3 +100,29 @@ Bijlagen (op verzoek Qredits):
 - Jaaropgave(n) / meest recente IB‑aangifte  
 - BKR‑overzicht  
 - Kopie AV/SLA‑voorbeeld en lopende/verwachte opdrachten (indien beschikbaar)
+
+---
+
+## Visuals — Persoonlijke sterktes & borging
+
+```mermaid
+mindmap
+  root((Ondernemer))
+    Sterktes
+      Analytisch/Pragmatisch
+      Full‑stack + AI integratie
+      Kwaliteit/Procesdiscipline
+    Verbeteracties
+      Timeboxing & WIP‑limieten
+      Salesritme (wekelijkse outreach)
+      Capaciteit via freelancers
+    Borging
+      BTW‑reservering/Buffer ≥3m
+      Auto‑incasso lening
+      DSCR‑guardrail privé
+```
+
+Toelichting
+- Doel: laat kernkwaliteiten én disciplinemaatregelen in één beeld zien.
+- Leeswijzer: rechts staan de concrete borgingen van terugbetaling.
+- Wat dit aantoont: professionaliteit en financieel gedrag dat aflossing prioriteert.

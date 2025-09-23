@@ -35,7 +35,7 @@ Publieke AI-API’s bieden snelle start maar met datalocatie/lock-in. Managed pl
 Sterk: snelle onboarding, merkbekendheid, schaalbaarheid. Zwak: hogere TCO bij intensief gebruik, minder controle over data, afhankelijkheid van derden, beperkte on-prem opties, weinig deterministische token-streaming en minder transparantie in kosten/observability.
 
 **4. Hoe ga jij je van je concurrenten onderscheiden?**  
-Differentiatie: open-source kern (`llama-orch`) met spec-first contracten; on-premise/EU-first; deterministische en robuuste token-streaming; automatische engine→GPU-plaatsing met expliciete overrides; duidelijke SLA en monitoring; transparante kostenstructuur en eigenaarschap bij de klant.
+Differentiatie: open-source kern (`llama-orch`) met spec-first contracten; on-premise/EU-first; deterministische en robuuste token-streaming; automatische engine→GPU-plaatsing met expliciete overrides; duidelijke SLA en monitoring; transparante kostenstructuur en eigenaarschap bij de klant. Acquisitie‑versnelling via B2B inhuur (retainer) en partnerco‑selling.
 
 ---
 
@@ -52,6 +52,33 @@ Vul de tabel in en beschrijf je aanpak.
 
 **Aanpak per kwadrant**  
 - Sterktes benutten: inzetten op open-source geloofwaardigheid, snelle PoC’s en meetbare resultaten bij eerste klanten.  
-- Zwaktes verbeteren: sales-/marketingritme professionaliseren; inzet van freelancers/partners op pieken.  
+- Zwaktes verbeteren: sales-/marketingritme professionaliseren; inzet van freelancers/partners op pieken; B2B acquisitie‑retainer voor voorspelbare pipeline.  
 - Kansen realiseren: partnerprogramma opzetten; sectoruse-cases uitwerken; SLA-pakketten productiseren.  
 - Bedreigingen mitigeren: technologische roadmap bijhouden; kostenbewaking en buffer; differentiatie vasthouden (EU/on-prem, transparantie).
+
+---
+
+## Visuals — SWOT in één oogopslag
+
+```mermaid
+mindmap
+  root((SWOT))
+    Sterktes
+      Open‑source kern
+      On‑prem/EU‑first
+      Snelle implementatie
+    Zwaktes
+      Klein team
+      Acquisitie in opbouw
+    Kansen
+      Regulering → on‑prem
+      Partnerco‑selling
+    Bedreigingen
+      Grote platforms
+      GPU/prijsdruk
+```
+
+Toelichting
+- Doel: compact overzicht van SWOT zonder de tabel te lezen.
+- Leeswijzer: elke tak vat de kern samen; details staan in de tabel.
+- Wat dit aantoont: focus op sterke differentiators en realistische mitigaties van zwaktes/bedreigingen.

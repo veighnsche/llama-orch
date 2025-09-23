@@ -1,0 +1,95 @@
+# Draft finance input (indicatief) — bron voor Excel/MD
+
+meta:
+  bedrijf: Veighnsche (handelsnaam)
+  datum: 2025-01-01
+  valuta: EUR
+  btw_tarief_pct: 21
+  btw_aangifte: per_kwartaal
+
+investeringen:
+  - categorie: hardware
+    omschrijving: GPU-ontwikkelserver (RTX 4090, 64GB, NVMe)
+    bedrag: 4500
+  - categorie: hardware
+    omschrijving: Netwerk/UPS/backup
+    bedrag: 800
+  - categorie: ontwikkeling
+    omschrijving: Productisering (docs, tests, automatisering)
+    bedrag: 8000
+  - categorie: observability
+    omschrijving: Monitoring/observability-inrichting
+    bedrag: 1200
+  - categorie: marketing
+    omschrijving: Branding/website/materialen
+    bedrag: 3000
+  - categorie: acquisitie
+    omschrijving: B2B acquisitie-retainer (6×1200)
+    bedrag: 7200
+  - categorie: werkkapitaal
+    omschrijving: Buffer (3–4 maanden vaste lasten)
+    bedrag: 6000
+
+financiering:
+  eigen_inbreng: 700
+  lening:
+    bedrag: 30000
+    rente_pct: 8
+    looptijd_maanden: 48
+
+exploitatie:
+  sla_prijs_per_klant_pm: 450
+  # Ramp van SLA-klanten en projectspreiding (indicatief)
+  maanden:
+    - maand: 1
+      sla_klanten: 3
+      omzet_projecten: 0
+    - maand: 2
+      sla_klanten: 4
+      omzet_projecten: 6000
+    - maand: 3
+      sla_klanten: 5
+      omzet_projecten: 6000
+    - maand: 4
+      sla_klanten: 6
+      omzet_projecten: 0
+    - maand: 5
+      sla_klanten: 7
+      omzet_projecten: 6000
+    - maand: 6
+      sla_klanten: 8
+      omzet_projecten: 0
+    - maand: 7
+      sla_klanten: 9
+      omzet_projecten: 6000
+    - maand: 8
+      sla_klanten: 10
+      omzet_projecten: 0
+    - maand: 9
+      sla_klanten: 11
+      omzet_projecten: 6000
+    - maand: 10
+      sla_klanten: 11
+      omzet_projecten: 0
+    - maand: 11
+      sla_klanten: 11
+      omzet_projecten: 6000
+    - maand: 12
+      sla_klanten: 11
+      omzet_projecten: 0
+
+opex_pm:
+  tools_hosting: 100
+  verzekeringen_admin_overig: 215
+  marketing_sales: 330
+  energie_en_klein_materiaal: 150
+  inhuur_variabel_gemiddeld: 400
+
+lening_pm:
+  annuiteit_48mnd_indicatief: 731
+
+privé:
+  opname_pm: 2000
+  beleid:
+    drempel_dscr_temporiseren: 1.2
+    tijdelijk_verlagen_naar_pm: 1200

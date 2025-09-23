@@ -25,7 +25,7 @@
 # 2.2 Jouw idee
 
 **1. Wat ga je doen?**  
-Ik lever kant-en-klare, geoptimaliseerde AI-servers en eigen software om open-source AI in productie te brengen. Eerste product is `llama-orch`: een open-source orkestrator die GPU-resources beheert, modellen plaatst en veilige, deterministische token-streaming via SSE levert. Klanten krijgen een compleet pakket: hardwareselectie/plaatsing, installatie, configuratie, monitoring en support.
+Ik lever kant-en-klare, geoptimaliseerde AI‑server templates en implementaties, met een minimalistische, controleerbare orkestratielaag (`llama‑orch`) om open‑source AI veilig in productie te brengen. `llama‑orch` vormt bewust een dunne laag tussen organisatie en open‑source componenten om privacy, veiligheid en determinisme te borgen (SSE‑streaming, cancel, observability). Klanten krijgen een compleet pakket: hardwareselectie/plaatsing, geharde server templates, installatie, configuratie, monitoring en support.
 
 **2. Waarom ga je het doen en waarom wordt jouw idee een groot succes?**  
 De open-source softwaremarkt kent veel hoogwaardige AI-software. Veel klanten willen dit gebruiken maar kunnen geen (GPU)server opzetten of beheren. Er is duidelijke vraag naar on-premise en EU-compliant oplossingen (privacy, latency, kostenbeheersing, geen vendor lock-in). Door een turnkey aanbod (server + `llama-orch` + beheer) verlaag ik de drempel en verkort ik time-to-value. Succesfactoren: sterke groei van generatieve AI, toenemende voorkeur voor open-source, en mijn technische breedte (frontend/backend/infra) om snel betrouwbare implementaties te leveren.
@@ -59,6 +59,45 @@ Gefaseerde aanpak: (1) productiseren van `llama-orch` met duidelijke contracten 
 **Compliance & privacy (EU/AVG‑first):**
 - Datalokatie EU, geen ongeautoriseerde data‑export; logging conform afspraak (minimaal, doelgebonden).
 - Verwerkersovereenkomst en heldere SLA/AV; ondersteuning bij DPIA en security‑checks.
+
+**USP‑overzicht (samengevat):** EU/AVG‑first, open‑source kern, deterministische SSE, slimme plaatsing, sterke observability, snelle implementatie en voorspelbare SLA‑bundels.
+
+**Voortgang tot nu toe (2 weken werk):**
+- Eerste werkende kern van `llama‑orch` met routes, SSE‑plumbing en spec‑first workflow.  
+- Documentatie en testharnas aanwezig; duidelijke roadmap en TODO‑tracker.  
+- Dit verkort de benodigde doorlooptijd tot eerste betaalde implementaties: doel eerste 1–2 klanten binnen 60–90 dagen.
+
+**Transparantie & licentie**
+- Radicale transparantie: publicatie van plannen (ondernemers/financieel) als MDX op de website, met automatische PDF‑downloads.  
+- Roadmap, changelog en incident‑reviews zijn publiek; status/KPI’s getoond op de site.  
+- Softwarelicentie: GPL (bij voorkeur GPLv3); broncode publiek, wijzigingen worden gedeeld. Diensten (implementatie/SLA) verlenen kwaliteit en support bovenop de open‑source kern.
+
+---
+
+## Visuals — Propositie & onboarding
+
+```mermaid
+flowchart LR
+  A[Server Templates] --> B[Implementatie 2–4 weken]
+  B --> C[`llama‑orch` (dunne laag)]
+  C --> D[SLA Beheer]
+  style C fill:#eef2ff,stroke:#3730a3
+```
+
+```mermaid
+flowchart LR
+  I[Intake] --> S[Security/IT‑scan]
+  S --> T[Templates + Observability]
+  T --> O[Orchestratie (SSE/Determinisme)]
+  O --> E[Engines/Modellen]
+  E --> A[Acceptatie KPI’s]
+  A --> G[Go‑live + SLA]
+```
+
+Toelichting
+- Doel: condenseert aanbod en onboardingstappen in twee simpele schema’s.
+- Leeswijzer: eerst Templates → Implementatie → dunne laag → SLA; en intake → acceptatie → beheer.
+- Wat dit aantoont: productized delivery en controleerbare softwarelaag voor veiligheid/AVG/determinisme.
 
 ---
 

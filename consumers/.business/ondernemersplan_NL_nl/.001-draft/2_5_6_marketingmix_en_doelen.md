@@ -9,7 +9,11 @@ Met de marketingmix bepaal je jouw marketingstrategie. Deze bestaat uit vijf ond
 **Beschrijf jouw product of dienst.**  
 
 1. [ ] Fysiek product – beschrijf samenstelling, afmetingen, functie, verpakking, merknaam, service, garantie  
-2. [x] Dienst – Turnkey AI-implementatie en beheerd platform (merk: "llama-orch"); inclusief installatie, configuratie, monitoring, updates en SLA-garantie.  
+2. [x] Dienst – Server Templates + Implementatie + Beheer (merk: "llama-orch" als dunne orkestratielaag).  
+   - Server Templates: gestandaardiseerde, geharde GPU‑serverimages en configuraties (OS‑profielen, drivers, runtimes) met provisioning‑scripts en observability out‑of‑the‑box.  
+   - Implementatie: plaatsing van modellen/engines, beveiliging (least‑privilege), logging/metrics, testen en overdracht documentatie.  
+   - Beheer (SLA): monitoring, updates/patching, incidentrespons en maandrapportages.  
+   - Dunne softwarelaag: `llama‑orch` als minimalistische, controleerbare laag tussen organisatie en open‑source componenten om veiligheid, privacy en determinisme te borgen (SSE‑streaming, cancel, observability).  
 
 **Toegevoegde waarde voor klanten:**  
 Snel en veilig open-source AI in productie zonder eigen MLOps-team. Volledige controle over data (on-prem/EU), voorspelbare kosten, en professionele ondersteuning met meetbare betrouwbaarheid (robuste SSE-streaming, observability en SLA).
@@ -18,7 +22,7 @@ Snel en veilig open-source AI in productie zonder eigen MLOps-team. Volledige co
 Klanten willen hoogwaardige open-source AI gebruiken maar missen GPU-kennis en infrastructuur. Ik neem de complexiteit van provisioning, modelplaatsing, monitoring en schaalbaarheid weg met een kant-en-klaar, beheerd platform.
 
 **Wat maakt jouw aanbod beter/unieker dan dat van concurrenten?**  
-Open-source kern met spec-first contracten, deterministische token-streaming, automatische engine→GPU-plaatsing met expliciete overrides, en EU/AVG-first implementatie. Transparante kosten en eigenaarschap bij de klant.
+Open-source kern met spec-first contracten, deterministische token-streaming, automatische engine→GPU-plaatsing met expliciete overrides, en EU/AVG-first implementatie. Transparante kosten en eigenaarschap bij de klant. De server templates + implementatie verkorten time‑to‑value en reduceren risico’s (security/compliance) aantoonbaar.
 
 **SLA-pakketten (omvang en service):**  
 - Essential (€ 350 p/m): monitoring, maandelijkse updates, kantooruren support, R/T 8/24 uur.  
@@ -60,7 +64,8 @@ SEO op relevante zoektermen (on-prem AI, open-source LLM, GPU-inferentie), techn
 Demo’s, proof-of-concepts, referentie-implementaties en meetbare benchmarks. Publicatie van klantcases met concrete KPI’s (latency, uptime, kostenbesparing).
 
 **4. Welke media zet je in en hoe? Waarom?**  
-LinkedIn (beslissers), GitHub (ontwikkelaars), nieuwsbrief (updates en cases), relevante events/meetups (netwerk). Mix bereikt zowel business- als techniekpubliek en ondersteunt vertrouwen.
+LinkedIn (beslissers), GitHub (ontwikkelaars), nieuwsbrief (updates en cases), relevante events/meetups (netwerk). Mix bereikt zowel business- als techniekpubliek en ondersteunt vertrouwen.  
+Inhuur B2B‑acquisitie (retainer) voor gestructureerde outreach, kwalificatie en afspraak‑setting met duidelijke KPI’s.
 
 ---
 
@@ -110,3 +115,32 @@ Continue productverbetering en documentatie, investeren in observability/veiligh
 - NPS/Klanttevredenheid: ≥ 8/10
 
 Funnelsturing: wekelijkse outreach‑cadans, partnerco‑selling, demo/POC binnen 10 werkdagen, en strakke opvolging via CRM.
+
+---
+
+## Visuals — Funnel en kwartaalritme
+
+```mermaid
+flowchart LR
+  A[Impressions] -->|CTR 1.5–2.5%| B(Visits)
+  B -->|Leads 3–6%| C{Leads}
+  C -->|SQL 35–45%| D[Qualified]
+  D -->|Meetings 70–80%| E[Meetings]
+  E -->|Offers 60–70%| F[Offers]
+  F -->|Win 35–45%| G[Won]
+  style G fill:#bbf7d0,stroke:#14532d
+```
+
+```mermaid
+timeline
+  title Kwartaalritme (Targets)
+  Q1 : 3 SLA · ≥ 6 offertes : 1–3 implementaties
+  Q2 : 5 SLA · ≥ 6 offertes : 1–3 implementaties
+  Q3 : 7 SLA · ≥ 6 offertes : 1–3 implementaties
+  Q4 : 9–11 SLA · ≥ 6 offertes : 1–3 implementaties
+```
+
+Toelichting
+- Doel: toon conversiestappen en kwartaalgroei die MRR opbouwt.
+- Leeswijzer: percentages zijn bandbreedtes; targets per kwartaal sluiten op budget/DSCR.
+- Wat dit aantoont: voorspelbare commerciële executie met duidelijke stuurpunten.
