@@ -7,7 +7,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
 const typesPath = resolve(root, 'npm-build', 'types.d.ts');
 const manifestPath = resolve(root, 'npm-build', 'manifest.json');
-const outPath = resolve(root, 'index.d.ts');
+const outDir = resolve(root, 'dist');
+const outPath = resolve(outDir, 'index.d.ts');
 
 (async () => {
   try {
@@ -36,6 +37,7 @@ const outPath = resolve(root, 'index.d.ts');
     apiDecl += '};\n\n';
     apiDecl += 'declare const _default: Api;\nexport default _default;\n';
 
+    await fsp.mkdir(outDir, { recursive: true });
     await fsp.writeFile(outPath, header + '\n\n' + types + '\n' + apiDecl);
     console.log('Wrote', outPath);
   } catch (err) {

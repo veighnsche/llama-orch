@@ -1,6 +1,6 @@
 // Bun smoke test for @llama-orch/utils (WASM)
 // Run with: bun ./.smoke/bun.ts
-import utils from '../index.js';
+import utils from '../dist/index.js';
 
 function assert(cond: any, msg?: string) { if (!cond) throw new Error(msg || 'assertion failed'); }
 

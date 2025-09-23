@@ -1,0 +1,23 @@
+{
+  "name": "m002-pnpm",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "tsx index.ts",
+    "dev": "tsx watch index.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.1",
+    "@types/node": "^20"
+  },
+  "dependencies": {
+    "@llama-orch/utils": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

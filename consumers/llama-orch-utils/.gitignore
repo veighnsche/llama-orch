@@ -1,2 +1,4 @@
 npm-build/
 node_modules/
+
+dist/

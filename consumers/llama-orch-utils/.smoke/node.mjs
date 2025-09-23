@@ -1,5 +1,5 @@
 // Node smoke test for @llama-orch/utils (WASM)
-import utils from '../index.js';
+import utils from '../dist/index.js';
 
 function assert(cond, msg) { if (!cond) throw new Error(msg || 'assertion failed'); }
 
