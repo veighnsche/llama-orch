@@ -105,6 +105,10 @@ img { max-width: 100%; display: block; }
 .bullets { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .bullets li::before { content: "•"; color: var(--accent); margin-right: 8px; }
 
+/* Steps */
+.steps { list-style: decimal; padding-left: 1.25rem; margin: 0; display: grid; gap: 6px; }
+.steps li { padding-left: 2px; }
+
 /* Tiers */
 .tiers { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
 .tier { background: #101421; border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
@@ -119,6 +123,9 @@ img { max-width: 100%; display: block; }
 .lead-form input[type="checkbox"] { transform: translateY(1px); }
 .lead-form .consent { color: var(--muted); font-size: .9rem; margin: 10px 0 0; display: flex; gap: 8px; align-items: flex-start; }
 #form-status { display: block; margin-top: 10px; min-height: 1.2em; }
+#form-status.ok { color: var(--ok); }
+#form-status.err { color: var(--err); }
+#form-status.info { color: var(--muted); }
 
 /* Footer */
 .site-footer { border-top: 1px solid var(--border); padding: 28px 0; background: #0b0c10; }
