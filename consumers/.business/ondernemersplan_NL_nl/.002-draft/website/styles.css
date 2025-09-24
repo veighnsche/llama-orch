@@ -109,6 +109,30 @@ img { max-width: 100%; display: block; }
 .steps { list-style: decimal; padding-left: 1.25rem; margin: 0; display: grid; gap: 6px; }
 .steps li { padding-left: 2px; }
 
+/* Legal section — unique styling */
+#legal {
+  position: relative;
+  background: radial-gradient(900px 320px at 15% 0%, rgba(16,185,129,.10), transparent 60%),
+              radial-gradient(700px 260px at 90% 80%, rgba(16,185,129,.06), transparent 70%),
+              #0c1116;
+  border-top: 1px solid rgba(16,185,129,.15);
+  border-bottom: 1px solid rgba(16,185,129,.12);
+}
+#legal h2 {
+  display: inline-block;
+  padding-bottom: 6px;
+  border-bottom: 2px solid rgba(16,185,129,.55); /* uses green accent (maps to --ok) */
+}
+#legal .bullets li::before { color: var(--ok); }
+#legal .muted { color: #b8f3d0; }
+#legal .btn.btn-secondary {
+  border-color: rgba(16,185,129,.45);
+  box-shadow: 0 0 0 3px rgba(16,185,129,.10) inset;
+}
+#legal .btn.btn-secondary:hover {
+  background: rgba(16,185,129,.14);
+}
+
 /* Tiers */
 .tiers { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
 .tier { background: #101421; border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
