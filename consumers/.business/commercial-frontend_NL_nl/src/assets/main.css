@@ -1,0 +1,8 @@
+@import './base.css';
+
+/* Minimal app container */
+#app {
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 1rem;
+}
