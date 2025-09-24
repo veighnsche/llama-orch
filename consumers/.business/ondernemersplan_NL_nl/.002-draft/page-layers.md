@@ -122,3 +122,72 @@ Catch all the “what if” traffic and reassure funders.
 * **Service pages** = SEO optimized (token pricing, GPU pricing).
 * **Proof pages** = for IT & compliance buyers.
 * **Docs subdomain** = clearly separate (technical only).
+
+---
+
+# 📑 Page Estimate in Mesh Model
+
+### Layer 0 — Front Page
+
+* **1 page** (universal hub, widest net).
+
+### Layer 1 — Big Category Groups
+
+Think of these as **broad umbrellas** (each spans multiple audiences).
+
+* Example groups:
+
+  * *Makers* (Hobbyists + Agencies)
+  * *Operators* (IT Teams + Compliance)
+  * *Backers* (Small Biz + Funders)
+* **≈ 3–4 pages**
+
+### Layer 2 — Smaller Overlaps
+
+Split the umbrellas into **smaller mixed groups**.
+
+* Examples:
+
+  * Makers → Hobbyists + Agencies (fast prototyping)
+  * Operators → IT + Compliance (Private Tap)
+  * Backers → Funders + IT (ROI evidence)
+  * Small Biz + Agencies (toolkit projects)
+* **≈ 5–7 pages**
+
+### Layer 3 — Narrowed Bundles
+
+Each smaller group starts looking **more audience-specific**, with light cross-links.
+
+* Examples:
+
+  * Deep dive on OSS/Public Tap (Hobbyists, but Agencies reference it).
+  * Private Tap pricing/ops (IT, but Compliance references governance).
+  * Reseller/partner flows (Agencies, with Small Biz case study cross-link).
+  * Business model docs (Funders, with IT revenue proof).
+* **≈ 6–8 pages**
+
+### Layer 4 — Endpoints (Unique Pages)
+
+Each **audience has its own final page** (cryptic in naming, but audience-specific in content).
+
+* Hobbyists → Docs portal.
+* IT → SLA/Contract pack.
+* Agencies → Reseller agreements.
+* Compliance → Governance pack.
+* Small Biz → Toolkit proposal template.
+* Funders → Financial model pack.
+* **≈ 6 pages**
+
+---
+
+# 🔢 Total Marketing Pages
+
+* L0: 1
+* L1: \~3–4
+* L2: \~5–7
+* L3: \~6–8
+* L4: 6
+
+**≈ 21–26 marketing pages** (instead of 33+ with strict category splits).
+
+* **Docs portal (separate)** = 1

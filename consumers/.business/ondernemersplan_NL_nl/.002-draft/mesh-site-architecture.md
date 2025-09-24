@@ -82,125 +82,93 @@ By **Layer 4**, each audience has self-routed into their own funnel without bein
 
 ```
 
-# Mesh Site Architecture (Mermaid)
-
-> Each category (audience) has 4 abstraction layers.  
-> L1 = widest + most cross-links → L4 = deepest + audience-specific (Dev = docs, etc.).
-
-## High-level mesh (front page routes into 6 categories at Layer 1)
+# Mesh Site Diagram
 
 ```mermaid
 flowchart TB
-  subgraph L0["Layer 0 · Front Page (Everyone)"]
-    FP["Front Page<br/>Hero · USP · OSS · Public Tap · Private Tap"]
+
+  %% Layer 0
+  L0["Front Page · Broad USP + OSS + Public Tap + Private Tap"]:::layer0
+
+  %% Layer 1 — Big Groups
+  subgraph L1["Layer 1 · Big Category Groups (broad, cooperative)"]
+    MAKERS["Makers · Hobbyists + Agencies"]:::layer1
+    OPERATORS["Operators · IT Teams + Compliance"]:::layer1
+    BACKERS["Backers · Small Biz + Funders"]:::layer1
   end
 
-  subgraph L1["Layer 1 · Broad & Cooperative (Width > Depth)"]
-    D1["Hobbyists & Developers · L1"]
-    IT1["IT Teams · L1"]
-    A1["Agencies & Consultancies · L1"]
-    C1["Compliance-sensitive Orgs · L1"]
-    SB1["Small Business · L1"]
-    F1["Investors/Funders · L1"]
+  L0 --> MAKERS
+  L0 --> OPERATORS
+  L0 --> BACKERS
+
+  %% Layer 2 — Smaller Overlap Groups
+  subgraph L2["Layer 2 · Smaller Overlaps (narrower coalitions)"]
+    M1["Fast Prototypers · Hobbyists + Agencies"]:::layer2
+    O1["Infra Managers · IT + Compliance"]:::layer2
+    B1["ROI Seekers · IT + Funders"]:::layer2
+    B2["Custom Builders · Small Biz + Agencies"]:::layer2
   end
 
-  FP --> D1 & IT1 & A1 & C1 & SB1 & F1
+  MAKERS --> M1
+  OPERATORS --> O1
+  BACKERS --> B1
+  BACKERS --> B2
+  OPERATORS --> B1
 
-  %% Cross-links at Layer 1 (wide mesh)
-  D1 --- IT1
-  IT1 --- A1
-  A1 --- C1
-  C1 --- F1
-  SB1 --- IT1
-  D1 --- A1
+  %% Layer 3 — Narrow Bundles
+  subgraph L3["Layer 3 · Narrow Bundles (mostly audience-specific, light cross-links)"]
+    DEV_DEEP["OSS / Public Tap Deep Dive"]:::layer3
+    IT_DEEP["Private Tap Pricing & Ops"]:::layer3
+    AGENCY_DEEP["Reseller / Partner Kits"]:::layer3
+    COMPLIANCE_DEEP["Audit & Governance Bundles"]:::layer3
+    FUNDING_DEEP["Business Model & Competitors"]:::layer3
+    SMB_DEEP["Toolkit Case Studies"]:::layer3
+  end
+
+  M1 --> DEV_DEEP
+  M1 --> AGENCY_DEEP
+  O1 --> IT_DEEP
+  O1 --> COMPLIANCE_DEEP
+  B1 --> FUNDING_DEEP
+  B2 --> SMB_DEEP
+  AGENCY_DEEP -.-> SMB_DEEP
+  IT_DEEP -.-> FUNDING_DEEP
+  COMPLIANCE_DEEP -.-> IT_DEEP
+
+  %% Layer 4 — Unique Endpoints
+  subgraph L4["Layer 4 · Final Specialized Pages (audience endpoints)"]
+    DEV_DOCS["Developers · Docs Portal"]:::layer4
+    IT_SLA["IT Teams · SLA / Contract Pack"]:::layer4
+    AGENCY_PARTNER["Agencies · Reseller Agreements"]:::layer4
+    COMPLIANCE_PACK["Compliance · Governance Pack"]:::layer4
+    SMB_PROPOSAL["Small Biz · Toolkit Proposal Template"]:::layer4
+    FUNDERS_FIN["Funders · Financial Model"]:::layer4
+  end
+
+  DEV_DEEP --> DEV_DOCS
+  IT_DEEP --> IT_SLA
+  AGENCY_DEEP --> AGENCY_PARTNER
+  COMPLIANCE_DEEP --> COMPLIANCE_PACK
+  SMB_DEEP --> SMB_PROPOSAL
+  FUNDING_DEEP --> FUNDERS_FIN
+
+  %% Styles
+  classDef layer0 fill:#fdf6e3,stroke:#657b83,stroke-width:2px;
+  classDef layer1 fill:#eee8d5,stroke:#586e75;
+  classDef layer2 fill:#93a1a1,stroke:#073642,color:#fff;
+  classDef layer3 fill:#268bd2,stroke:#002b36,color:#fff;
+  classDef layer4 fill:#2aa198,stroke:#002b36,color:#fff;
 ````
 
-## Per-category depth (each has its own 4 layers, with tapering cross-links)
-
-```mermaid
-flowchart LR
-  %% DEVELOPERS
-  subgraph DEV["Hobbyists & Developers"]
-    D1["L1: Dev overview (OSS + Public Tap)"] --> D2["L2: Dev landing (quickstart, examples)"]
-    D2 --> D3["L3: Deep dev (patterns, pipelines)"]
-    D3 --> D4["L4: Docs portal (sdk/utils/orch) @ docs.brand.com"]
-    %% Dev cross links (taper)
-    D1 -.-> IT1["IT Teams · L1"]
-    D2 -.-> IT2["IT Teams · L2 (Private Tap intro)"]
-    D3 -.-> PR1["Proof Library · L3"]
-  end
-
-  %% IT TEAMS
-  subgraph IT["IT Teams (SMEs)"]
-    I1["L1: IT overview (why private tap)"] --> I2["L2: Use-cases & models"]
-    I2 --> I3["L3: Pricing, SLA, metrics"]
-    I3 --> I4["L4: Contracting pack (SLA, SLOs)"]
-    I1 -.-> A1["Agencies · L1"]
-    I2 -.-> C2["Compliance · L2 (governance refs)"]
-    I3 -.-> PR1
-  end
-
-  %% AGENCIES
-  subgraph AG["Agencies & Consultancies"]
-    A1A["L1: Agencies overview (resell flow)"] --> A2["L2: Start on Public Tap → upgrade"]
-    A2 --> A3["L3: White-label, partner kits"]
-    A3 --> A4["L4: Reseller terms & margins"]
-    A1A -.-> I2
-    A2 -.-> D2
-  end
-
-  %% COMPLIANCE
-  subgraph COM["Compliance-sensitive Orgs"]
-    C1A["L1: Compliance overview (private LLM need)"] --> C2A["L2: Controls & deployment options"]
-    C2A --> C3["L3: Audit bundle, logs, docs"]
-    C3 --> C4["L4: Governance pack (AI Act alignment)"]
-    C1A -.-> I1
-    C2A -.-> PR1
-  end
-
-  %% SMALL BUSINESS
-  subgraph SMB["Small Business (Custom Toolkit · Extra)"]
-    S1["L1: What we build (examples)"] --> S2["L2: Eligibility (fits the toolkit?)"]
-    S2 --> S3["L3: Case studies, scope"]
-    S3 --> S4["L4: Proposal template & pricing signals"]
-    S1 -.-> A1
-    S2 -.-> I2
-  end
-
-  %% FUNDERS
-  subgraph FUN["Investors / Funders"]
-    F1A["L1: Business overview"] --> F2["L2: Revenue model (Public/Private)"]
-    F2 --> F3["L3: Competitors & USP"]
-    F3 --> F4["L4: Financials pack (unit economics)"]
-    F1A -.-> I3
-    F2 -.-> PR1
-  end
-
-  %% SHARED PROOF/RESOURCES
-  subgraph SHARED["Shared Trust Content"]
-    PR1["Proof Library · L3 (metrics, logs, SSE transcripts)"]
-    CS1["Case Studies · L3"]
-    USP["USP · L3"]
-    COMP["Competitors · L3"]
-  end
-
-  %% Some shared references
-  I3 --- PR1
-  A3 --- CS1
-  F3 --- COMP
-  C3 --- PR1
 ```
 
-## Legend
+---
 
-- **Layer 1**: Broad, cross-link heavy pages that explain cooperation between audiences.
-- **Layer 2**: Audience landing pages—still wide, but starting depth.
-- **Layer 3**: Deep audience content; only light cross-references to shared proof pages.
-- **Layer 4**: Final audience funnels:
+# 🔑 How to read it
+- **Front Page (L0):** one universal entry point.  
+- **Layer 1:** broad umbrellas (Makers, Operators, Backers).  
+- **Layer 2:** smaller overlap coalitions.  
+- **Layer 3:** narrowed bundles (deep dives).  
+- **Layer 4:** final audience endpoints (unique, jargon-heavy, no more overlaps).  
 
-  - Dev → Docs portal (`docs.brand.com`)
-  - IT → SLA/contract pack
-  - Agencies → partner/reseller kit
-  - Compliance → governance pack
-  - Small Biz → proposal template
-  - Funders → financials pack
+---

@@ -109,3 +109,61 @@ The marketing site must clearly segment:
 
 Each audience gets its own **deeper dive page** linked from the front-page overview.  
 Technical documentation will live at `docs.[brandname].com`, not on the marketing site.
+
+## Audience Layers & Overlaps
+
+Each target audience category develops across **four abstraction layers**.  
+
+- **Layer 1:** Broad and cooperative — audiences overlap widely; categories are aware of each other and share concerns.  
+- **Layer 2:** Semi-broad — smaller overlapping groups with stronger common ground; categories begin to show distinct preferences.  
+- **Layer 3:** Deep — categories are mostly distinct, but still reference each other where workflows cross.  
+- **Layer 4:** Specialized — categories stand fully apart, each with unique needs and jargon.  
+
+---
+
+### Layer 1 · Broad Cooperation
+
+Overlaps: wide, almost everyone shares some common ground.  
+
+- Hobbyists, IT Teams, Agencies → all care about *trying tools quickly* (OSS + Public Tap).  
+- IT Teams, Compliance, Funders → all care about *predictability and governance*.  
+- Agencies, Small Business → both care about *fast prototypes that can be shown to clients*.  
+- Everyone overlaps on *the idea of plumbing as infrastructure*.  
+
+---
+
+### Layer 2 · Smaller Overlapping Groups
+
+Overlaps shrink, groups have more in common with each other than with the whole.  
+
+- **Hobbyists + Agencies:** Quick prototyping, Public Tap is their shared entry point.  
+- **IT Teams + Compliance:** Private Tap as their shared solution (control + governance).  
+- **Small Business + Agencies:** Toolkit development as a shared interest.  
+- **IT Teams + Funders:** Both want evidence of ROI, predictable costs, pricing clarity.  
+
+---
+
+### Layer 3 · Deep but with Incidental Cross-Refs
+
+Categories focus on their own needs, but acknowledge incidental links.  
+
+- Hobbyists → start disappearing into OSS/docs, but sometimes referenced by Agencies for prototypes.  
+- IT Teams → deep in Private Tap pricing & ops, but occasionally reference Compliance governance.  
+- Compliance → focused on logs/docs bundles, with light cross-links to IT Teams for infra context.  
+- Agencies → deep in reseller flows, but lightly link to Small Business case studies.  
+- Funders → deep in competitor/USP analysis, occasionally referencing IT Teams revenue impact.  
+
+---
+
+### Layer 4 · Fully Specialized
+
+Each category becomes independent.  
+
+- **Hobbyists:** End up in docs portal (sdk/utils/orchestrator).  
+- **IT Teams:** SLA packs, uptime guarantees, monitoring dashboards.  
+- **Agencies:** Reseller terms, partner kits, white-label options.  
+- **Compliance:** AI Act alignment packs, audit reports.  
+- **Small Businesses:** Custom toolkit proposals and case studies.  
+- **Funders:** Financial models, competitor docs, revenue streams.  
+
+At this stage, audiences no longer overlap — each has its own endpoint.
