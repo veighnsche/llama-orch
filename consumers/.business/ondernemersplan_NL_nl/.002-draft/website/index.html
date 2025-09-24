@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Open‑source AI op eigen servers — llama‑orch</title>
+  <meta name="description" content="Server Templates + Implementatie in 2–4 weken + Beheerde SLA. EU/AVG‑first, deterministisch en meetbaar." />
+  <link rel="stylesheet" href="./styles.css" />
+  <script defer src="./main.js"></script>
+</head>
+<body data-form-endpoint="" data-mail-to="">
+  <a class="skip-link" href="#main">Ga naar hoofdinhoud</a>
+
+  <header class="site-header" role="banner">
+    <div class="container header-inner">
+      <a class="brand" href="#home">llama‑orch</a>
+      <nav class="top-nav" aria-label="Hoofd navigatie">
+        <a href="#home" aria-current="page">Home</a>
+        <a href="#poc">POC</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#contact" class="btn btn-primary">Plan een call</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <section id="home" class="section hero">
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <h1>Open‑source AI op eigen servers. Veilig. Snel. Meetbaar.</h1>
+          <p class="sub">Geharde Server Templates + Implementatie in 2–4 weken + Beheerde SLA. <span class="nowrap">llama‑orch</span> borgt privacy, veiligheid en determinisme.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="#contact">Plan een call</a>
+            <a class="btn btn-secondary" href="#contact">Vraag POC aan</a>
+          </div>
+        </div>
+        <ul class="kpis" aria-label="Kern KPI's">
+          <li><span class="kpi">≤ 300 ms</span><span class="kpi-label">Median latency</span></li>
+          <li><span class="kpi">≥ 99,5%</span><span class="kpi-label">Uptime</span></li>
+          <li><span class="kpi">Deterministisch</span><span class="kpi-label">SSE + cancel</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="value-title">
+      <div class="container">
+        <h2 id="value-title">Waarom wij</h2>
+        <ul class="cards">
+          <li class="card"><h3>EU/AVG‑first</h3><p>Datasoevereiniteit, DPIA‑ondersteuning en audit‑logging.</p></li>
+          <li class="card"><h3>Geen lock‑in</h3><p>Open‑source componenten, eigenaarschap bij u.</p></li>
+          <li class="card"><h3>Meetbaar</h3><p>Latency/uptime en kosten per 1K tokens inzichtelijk.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="poc" class="section alt" aria-labelledby="poc-title">
+      <div class="container">
+        <h2 id="poc-title">POC in 10 werkdagen</h2>
+        <ul class="bullets">
+          <li>Geharde templates + configuratie</li>
+          <li>1–2 modellen/engines + observability</li>
+          <li>KPI‑meting (latency/uptime/determinisme)</li>
+        </ul>
+        <a class="btn btn-secondary" href="#contact">Vraag POC aan</a>
+      </div>
+    </section>
+
+    <section id="pricing" class="section" aria-labelledby="pricing-title">
+      <div class="container">
+        <h2 id="pricing-title">Pricing & SLA</h2>
+        <ul class="tiers">
+          <li class="tier"><h3>Essential</h3><p class="price">€ 350 / m</p><p>Monitoring · updates · R/T 8/24u</p></li>
+          <li class="tier highlight"><h3>Advanced</h3><p class="price">€ 600 / m</p><p>Observability · 2‑wk updates · R/T 4/12u</p></li>
+          <li class="tier"><h3>Enterprise</h3><p class="price">€ 900 / m</p><p>Weekly updates · on‑call optioneel · R/T 2/6u</p></li>
+        </ul>
+        <p class="muted">Implementatie: € 4.5k – € 9.5k (2–4 weken, scope‑afhankelijk).</p>
+      </div>
+    </section>
+
+    <section id="contact" class="section alt" aria-labelledby="contact-title">
+      <div class="container">
+        <h2 id="contact-title">Blijf op de hoogte — ontvang updates</h2>
+        <p class="muted">Laat uw e‑mail achter voor de checklist, updates of een terugbelverzoek. Geen spam.</p>
+        <form id="lead-form" class="lead-form">
+          <label for="email">E‑mail</label>
+          <div class="row">
+            <input id="email" name="email" type="email" placeholder="u@bedrijf.nl" required />
+            <button type="submit" class="btn btn-primary">Verstuur</button>
+          </div>
+          <p class="consent"><input id="consent" type="checkbox" required /> <label for="consent">Ik ga akkoord met verwerking van mijn e‑mail volgens het privacybeleid.</label></p>
+          <output id="form-status" role="status" aria-live="polite"></output>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="container footer-inner">
+      <p>© 2025 llama‑orch • <a href="#">Privacy</a> • <a href="#">Cookies</a> • <a href="#">AV</a></p>
+    </div>
+  </footer>
+</body>
+</html>
