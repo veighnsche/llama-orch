@@ -82,11 +82,6 @@ By **Layer 4**, each audience has self-routed into their own funnel without bein
 
 ```
 
-Love that. Here’s a clean Mermaid diagram you can drop straight into a `.md` file. I’d name the file **`site-architecture-mesh.mmd.md`** so it’s obvious it contains Mermaid.
-
----
-
-````markdown
 # Mesh Site Architecture (Mermaid)
 
 > Each category (audience) has 4 abstraction layers.  
