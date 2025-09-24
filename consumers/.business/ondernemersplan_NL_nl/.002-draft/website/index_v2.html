@@ -16,13 +16,17 @@
       <a class="brand" href="#home">llama‑orch</a>
       <nav class="nav" aria-label="Hoofd navigatie">
         <a href="#home" aria-current="page">Home</a>
+        <a href="#value">Value</a>
+        <a href="#steps">Steps</a>
         <a href="#pricing">Pricing</a>
+        <a href="#checklists">Checklists</a>
         <a class="btn btn--pri" href="#contact">Plan een call</a>
       </nav>
     </div>
   </header>
 
   <main id="main" tabindex="-1">
+    <!-- HERO -->
     <section id="home" class="sec hero" aria-labelledby="home-title">
       <div class="container hero__in">
         <div class="hero__copy">
@@ -37,66 +41,75 @@
         </ul>
       </div>
     </section>
+    <div class="sep" aria-hidden="true"></div>
 
-    <section class="sec" aria-labelledby="value-title">
+    <!-- VALUE -->
+    <section id="value" class="sec value" aria-labelledby="value-title">
       <div class="container">
         <h2 id="value-title">Waarom wij</h2>
-        <ul class="grid cards" role="list">
-          <li class="card"><h3>EU/AVG‑first</h3><p>Datasoevereiniteit, DPIA‑ondersteuning, audit‑logging.</p></li>
+        <ul class="cards">
+          <li class="card"><h3>EU/AVG‑first</h3><p>Datasoevereiniteit en audit‑logging.</p></li>
           <li class="card"><h3>Geen lock‑in</h3><p>Open‑source componenten, eigenaarschap bij u.</p></li>
           <li class="card"><h3>Meetbaar</h3><p>Latency/uptime en kosten per 1K tokens inzichtelijk.</p></li>
         </ul>
       </div>
     </section>
+    <div class="sep" aria-hidden="true"></div>
 
-    <section class="sec alt" aria-labelledby="steps-title">
+    <!-- STEPS -->
+    <section id="steps" class="sec steps" aria-labelledby="steps-title">
       <div class="container">
         <h2 id="steps-title">Van intake naar go‑live</h2>
-        <ol class="steps" role="list">
+        <ol>
           <li>Discovery & technische scan</li>
-          <li>Templates plaatsen (OS/drivers/runtimes/observability)</li>
-          <li>llama‑orch configureren (SSE, determinisme, policies)</li>
-          <li>Modellen/engines deployen + testen</li>
-          <li>Acceptatie met KPI’s</li>
-          <li>Go‑live + beheer</li>
+          <li>Templates plaatsen + observability</li>
+          <li>llama‑orch configureren → testen → acceptatie → go‑live</li>
         </ol>
       </div>
     </section>
+    <div class="sep" aria-hidden="true"></div>
 
-    <section id="pricing" class="sec" aria-labelledby="pricing-title">
+    <!-- PRICING (compact) -->
+    <section id="pricing" class="sec pricing" aria-labelledby="pricing-title">
       <div class="container">
         <h2 id="pricing-title">Pricing & SLA</h2>
-        <ul class="grid tiers" role="list">
-          <li class="card tier"><h3>Essential</h3><p class="price">€ 350 <span>/ m</span></p><ul class="feat"><li>Monitoring</li><li>Maandelijkse updates</li><li>Support kantooruren</li><li>R/T 8/24u</li></ul><a class="btn btn--ghost" href="#contact">Start</a></li>
-          <li class="card tier hi" aria-label="Populair"><h3>Advanced</h3><p class="price">€ 600 <span>/ m</span></p><ul class="feat"><li>Uitgebreide observability</li><li>2‑wk updates</li><li>R/T 4/12u</li><li>Rapportage KPI’s</li></ul><a class="btn btn--pri" href="#contact">Kies Advanced</a></li>
-          <li class="card tier"><h3>Enterprise</h3><p class="price">€ 900 <span>/ m</span></p><ul class="feat"><li>Weekly updates</li><li>Optionele on‑call</li><li>R/T 2/6u</li><li>Maatwerk rapportage</li></ul><a class="btn btn--ghost" href="#contact">Contact</a></li>
+        <ul class="tiers">
+          <li class="tier"><h3>Essential</h3><p class="price">€ 350 / m</p></li>
+          <li class="tier tier--hi"><h3>Advanced</h3><p class="price">€ 600 / m</p></li>
+          <li class="tier"><h3>Enterprise</h3><p class="price">€ 900 / m</p></li>
         </ul>
-        <p class="muted">Implementatie: € 4.5k – € 9.5k (2–4 weken, scope‑afhankelijk).</p>
       </div>
     </section>
+    <div class="sep" aria-hidden="true"></div>
 
-    <section id="contact" class="sec alt" aria-labelledby="contact-title">
+    <!-- CHECKLISTS (placeholder links) -->
+    <section id="checklists" class="sec checklists" aria-labelledby="checklists-title">
+      <div class="container">
+        <h2 id="checklists-title">Checklists</h2>
+        <ul class="bullets">
+          <li><a href="#" rel="nofollow">DPIA‑checklist (PDF)</a></li>
+          <li><a href="#" rel="nofollow">On‑Prem Readiness (PDF)</a></li>
+        </ul>
+      </div>
+    </section>
+    <div class="sep" aria-hidden="true"></div>
+
+    <!-- CONTACT -->
+    <section id="contact" class="sec contact" aria-labelledby="contact-title">
       <div class="container">
         <h2 id="contact-title">Blijf op de hoogte — ontvang updates</h2>
-        <p class="muted">Laat uw e‑mail achter voor updates of een terugbelverzoek. Geen spam.</p>
         <form id="lead-form" class="lead-form">
           <label for="email">E‑mail</label>
           <div class="row">
             <input id="email" name="email" type="email" placeholder="u@bedrijf.nl" required />
             <button type="submit" class="btn btn--pri">Verstuur</button>
           </div>
-          <p class="muted"><input id="consent" type="checkbox" required /> <label for="consent">Ik ga akkoord met verwerking van mijn e‑mail volgens het privacybeleid.</label></p>
+          <p class="consent"><input id="consent" type="checkbox" required /> <label for="consent">Ik ga akkoord met verwerking van mijn e‑mail volgens het privacybeleid.</label></p>
           <output id="form-status" role="status" aria-live="polite"></output>
         </form>
-        <noscript><p class="muted">JavaScript is uitgeschakeld. Stuur ons uw e‑mail via uw e‑mailprogramma.</p></noscript>
+        <noscript><p class="muted">JavaScript is uitgeschakeld. Gebruik uw e‑mailprogramma om ons uw contactgegevens te sturen.</p></noscript>
       </div>
     </section>
   </main>
-
-  <footer class="ft" role="contentinfo">
-    <div class="container ft__in">
-      <p>© 2025 llama‑orch • <a href="#">Privacy</a> • <a href="#">Cookies</a> • <a href="#">AV</a></p>
-    </div>
-  </footer>
 </body>
 </html>
