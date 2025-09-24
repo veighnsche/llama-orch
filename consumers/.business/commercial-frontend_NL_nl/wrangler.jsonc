@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "dark-moon-7401",
+	"name": "orchyra-commercial-frontend-nl",
 	"compatibility_date": "2025-09-24",
 	"main": "server/index.ts",
 	"assets": {
