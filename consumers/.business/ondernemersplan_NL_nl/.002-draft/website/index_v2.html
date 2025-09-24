@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>llama‑orch — Open‑source AI op eigen servers</title>
+  <meta name="description" content="Server Templates + Implementatie in 2–4 weken + Beheerde SLA. EU/AVG‑first, deterministisch en meetbaar." />
+  <link rel="stylesheet" href="./styles_v2.css" />
+  <script defer src="./main.js"></script>
+</head>
+<body data-form-endpoint="" data-mail-to="">
+  <a class="skip" href="#main">Ga naar hoofdinhoud</a>
+
+  <header class="hdr" role="banner">
+    <div class="container hdr__in">
+      <a class="brand" href="#home">llama‑orch</a>
+      <nav class="nav" aria-label="Hoofd navigatie">
+        <a href="#home" aria-current="page">Home</a>
+        <a href="#pricing">Pricing</a>
+        <a class="btn btn--pri" href="#contact">Plan een call</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <section id="home" class="sec hero" aria-labelledby="home-title">
+      <div class="container hero__in">
+        <div class="hero__copy">
+          <h1 id="home-title">Open‑source AI op eigen servers. Veilig. Snel. Meetbaar.</h1>
+          <p class="lead">Geharde Server Templates + Implementatie in 2–4 weken + Beheerde SLA. <span class="nowrap">llama‑orch</span> borgt privacy, veiligheid en determinisme.</p>
+          <p class="act"><a class="btn btn--pri" href="#contact">Plan een call</a> <a class="btn btn--sec" href="#pricing">Bekijk prijzen</a></p>
+        </div>
+        <ul class="kpi" aria-label="Kern KPI's">
+          <li><span class="kpi__v">≤ 300 ms</span><span class="kpi__l">Median latency</span></li>
+          <li><span class="kpi__v">≥ 99,5%</span><span class="kpi__l">Uptime</span></li>
+          <li><span class="kpi__v">Deterministisch</span><span class="kpi__l">SSE + cancel</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="sec" aria-labelledby="value-title">
+      <div class="container">
+        <h2 id="value-title">Waarom wij</h2>
+        <ul class="grid cards" role="list">
+          <li class="card"><h3>EU/AVG‑first</h3><p>Datasoevereiniteit, DPIA‑ondersteuning, audit‑logging.</p></li>
+          <li class="card"><h3>Geen lock‑in</h3><p>Open‑source componenten, eigenaarschap bij u.</p></li>
+          <li class="card"><h3>Meetbaar</h3><p>Latency/uptime en kosten per 1K tokens inzichtelijk.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="sec alt" aria-labelledby="steps-title">
+      <div class="container">
+        <h2 id="steps-title">Van intake naar go‑live</h2>
+        <ol class="steps" role="list">
+          <li>Discovery & technische scan</li>
+          <li>Templates plaatsen (OS/drivers/runtimes/observability)</li>
+          <li>llama‑orch configureren (SSE, determinisme, policies)</li>
+          <li>Modellen/engines deployen + testen</li>
+          <li>Acceptatie met KPI’s</li>
+          <li>Go‑live + beheer</li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="pricing" class="sec" aria-labelledby="pricing-title">
+      <div class="container">
+        <h2 id="pricing-title">Pricing & SLA</h2>
+        <ul class="grid tiers" role="list">
+          <li class="card tier"><h3>Essential</h3><p class="price">€ 350 <span>/ m</span></p><ul class="feat"><li>Monitoring</li><li>Maandelijkse updates</li><li>Support kantooruren</li><li>R/T 8/24u</li></ul><a class="btn btn--ghost" href="#contact">Start</a></li>
+          <li class="card tier hi" aria-label="Populair"><h3>Advanced</h3><p class="price">€ 600 <span>/ m</span></p><ul class="feat"><li>Uitgebreide observability</li><li>2‑wk updates</li><li>R/T 4/12u</li><li>Rapportage KPI’s</li></ul><a class="btn btn--pri" href="#contact">Kies Advanced</a></li>
+          <li class="card tier"><h3>Enterprise</h3><p class="price">€ 900 <span>/ m</span></p><ul class="feat"><li>Weekly updates</li><li>Optionele on‑call</li><li>R/T 2/6u</li><li>Maatwerk rapportage</li></ul><a class="btn btn--ghost" href="#contact">Contact</a></li>
+        </ul>
+        <p class="muted">Implementatie: € 4.5k – € 9.5k (2–4 weken, scope‑afhankelijk).</p>
+      </div>
+    </section>
+
+    <section id="contact" class="sec alt" aria-labelledby="contact-title">
+      <div class="container">
+        <h2 id="contact-title">Blijf op de hoogte — ontvang updates</h2>
+        <p class="muted">Laat uw e‑mail achter voor updates of een terugbelverzoek. Geen spam.</p>
+        <form id="lead-form" class="lead-form">
+          <label for="email">E‑mail</label>
+          <div class="row">
+            <input id="email" name="email" type="email" placeholder="u@bedrijf.nl" required />
+            <button type="submit" class="btn btn--pri">Verstuur</button>
+          </div>
+          <p class="muted"><input id="consent" type="checkbox" required /> <label for="consent">Ik ga akkoord met verwerking van mijn e‑mail volgens het privacybeleid.</label></p>
+          <output id="form-status" role="status" aria-live="polite"></output>
+        </form>
+        <noscript><p class="muted">JavaScript is uitgeschakeld. Stuur ons uw e‑mail via uw e‑mailprogramma.</p></noscript>
+      </div>
+    </section>
+  </main>
+
+  <footer class="ft" role="contentinfo">
+    <div class="container ft__in">
+      <p>© 2025 llama‑orch • <a href="#">Privacy</a> • <a href="#">Cookies</a> • <a href="#">AV</a></p>
+    </div>
+  </footer>
+</body>
+</html>
