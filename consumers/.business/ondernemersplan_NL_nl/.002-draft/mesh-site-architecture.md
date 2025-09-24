@@ -158,17 +158,12 @@ flowchart TB
   classDef layer2 fill:#93a1a1,stroke:#073642,color:#fff;
   classDef layer3 fill:#268bd2,stroke:#002b36,color:#fff;
   classDef layer4 fill:#2aa198,stroke:#002b36,color:#fff;
-````
-
 ```
 
----
-
 # 🔑 How to read it
+
 - **Front Page (L0):** one universal entry point.  
 - **Layer 1:** broad umbrellas (Makers, Operators, Backers).  
 - **Layer 2:** smaller overlap coalitions.  
 - **Layer 3:** narrowed bundles (deep dives).  
 - **Layer 4:** final audience endpoints (unique, jargon-heavy, no more overlaps).  
-
----
