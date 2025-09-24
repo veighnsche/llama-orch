@@ -7,6 +7,18 @@ Brand: Orchyra · Tagline: Private LLM Hosting in the Netherlands
 
 ---
 
+## Progress Snapshot
+
+- [x] Phase 1 — Layout Shell & Navigation (layout, nav/footer, meta composable, routes)
+- [x] Phase 2 — Home (Front Page) Skeleton (hero, sections, JSON-LD, SEO)
+- [x] Pages scaffolded (static content): Public Tap, Private Tap, Pricing, Proof, FAQs, About, Contact/Legal
+- [x] SEO per route using `useMeta` (Home has JSON-LD)
+- [x] i18n infrastructure (EN/NL) + Language Switcher; applied to NavBar, Footer, Home, Public Tap
+- [ ] i18n applied to remaining pages (Pricing, Proof, FAQs, About, Contact/Legal)
+- [ ] Favicon replacement/removal
+- [ ] Images (hero and others) not added yet (placeholders only)
+- [ ] QA (type-check/build pass, manual link pass)
+
 ## Phase 0 — Pre‑flight (Current State Validation)
 
 - [ ] **Repository hygiene**

@@ -17,7 +17,8 @@
 	},
 	"dependencies": {
 		"vue": "^3.5.18",
-		"vue-router": "^4.5.1"
+		"vue-router": "^4.5.1",
+		"vue-i18n": "^9.14.0"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.13.4",
