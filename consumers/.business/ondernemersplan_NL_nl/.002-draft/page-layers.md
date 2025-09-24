@@ -1,5 +1,7 @@
 # Marketing Site Plan
 
+> Status: Future proposal — not implemented in Draft 2 (see `index.md` §C).
+
 ## Layer 0 — Root (Front Page)
 
 **Purpose:** A single entry that works for *all* audiences.

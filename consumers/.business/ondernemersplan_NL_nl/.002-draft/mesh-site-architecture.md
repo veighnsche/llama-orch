@@ -1,5 +1,7 @@
 # Mesh Site Architecture
 
+> Status: Future proposal — not implemented in Draft 2 (see `index.md` §C).
+
 ## Purpose
 
 This document defines the website’s architecture as a **mesh** rather than a tree.  

@@ -141,7 +141,8 @@ The goal is to provide a broad palette of consistent design directions.
 - ✅ Use cyan/teal/purple for electrical highlights.  
 - ✅ Make diagrams neat enough for customer-facing admiration.  
 - ✅ Consider a mascot that embodies friendliness without losing seriousness.  
-- ❌ Don’t show literal human plumbers.  
+- ✅ Vector/cartoon mascots are acceptable; keep it serious and minimal; see `moodboard.md` → “Mascot (optional).”  
+- ❌ Don’t use photos of real human plumbers.  
 - ❌ Don’t lean on photoreal textures (steel, copper).  
 - ❌ Don’t mimic startup SaaS minimalism or corporate gloss.  
 

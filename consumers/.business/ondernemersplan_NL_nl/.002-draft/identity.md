@@ -64,7 +64,8 @@ It is exhaustive and self-contained so that any automated system (IDE AI, websit
 
 - **Level 1 — Shared Agentic API (Curated Models)**  
   - Client can test a selection of curated, stable open-source AI models.  
-  - Pay-as-you-go metered API.  
+  - Prepaid credits; non-refundable; 12-month validity.  
+  - Usage decrements balance; service pauses at 0; balance visible via dashboard/API.  
   - Integrates neatly with Vince’s toolkit.  
   - Entry-level paid option for experimentation without infra setup.  
 

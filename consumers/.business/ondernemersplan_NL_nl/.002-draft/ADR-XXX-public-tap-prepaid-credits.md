@@ -6,7 +6,7 @@ DRAFT
 
 ## Context
 
-The **Public Tap** is the shared, metered API offering on top of curated OSS AI models.  
+The **Public Tap** is the shared API offering on top of curated OSS AI models, billed via prepaid credits (non-refundable, 12-month validity).  
 As a solo operator, cash flow predictability and billing simplicity are critical.  
 Traditional postpaid, metered billing (per token, invoiced monthly) introduces risks:
 

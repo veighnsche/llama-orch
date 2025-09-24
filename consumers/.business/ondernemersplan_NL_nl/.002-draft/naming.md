@@ -42,13 +42,15 @@ Secondary SEO terms to support in copy:
 
 ---
 
-## Recommended Pairing (Brand + SEO Tagline)
+## Recommended Pairing (Historical — superseded by "Picked")
+
+Note: This section captures an earlier recommendation. The current brand choice is in the "Picked" section below. The example hero reflects the picked brand.
 
 - **Brand:** *Vinch*  
 - **Tagline:** *Private LLM Hosting in the Netherlands*  
 
-**Example front-page hero:**  
-> **Vinch**  
+**Example front-page hero (current):**  
+> **Orchyra**  
 > Private LLM Hosting in the Netherlands  
 > Managed GPU inference · Open-source infrastructure · Agentic API  
 

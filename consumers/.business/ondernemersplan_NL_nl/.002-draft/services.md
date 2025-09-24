@@ -5,7 +5,7 @@
 I offer three main things as an independent AI plumber:  
 
 1. **Open Source Plumbing (OSS)** – the foundation.  
-2. **Public Tap** – shared, metered API access.  
+2. **Public Tap** – shared API with prepaid credits (non-refundable, 12-month validity).  
 3. **Private Tap** – dedicated, custom API boxes.  
 
 And one **extra option**:  
@@ -35,8 +35,8 @@ And one **extra option**:
 ## 1) Public Tap (Shared Agentic API)
 
 - **What it is:**  
-  - A shared, metered API connected to a curated set of stable OSS AI models.  
-  - Pay-as-you-go pricing.  
+  - A shared API on curated, stable OSS AI models, billed via prepaid credits (non-refundable, 12-month validity).  
+  - Prepaid credits; usage decrements balance; service pauses at 0; balance visible via dashboard/API.  
   - Fully compatible with the toolkit and SDK for quick testing.  
 
 - **Who it’s for:**  

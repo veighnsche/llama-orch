@@ -19,6 +19,9 @@ AI plumbing, OSS LLM toolkit, dedicated AI API, prepaid AI credits, Hugging Face
 **H1**
 AI plumbing, done right.
 
+**H2**
+Private LLM Hosting in the Netherlands
+
 **Subline**
 Open-source tools, a prepaid Public Tap to test fast, and a Private Tap for your own dedicated GPUs. EU-friendly, transparent, and proof-first.
 
@@ -203,7 +206,8 @@ Talk to Vince
 {
   "@context": "https://schema.org",
   "@type": "ProfessionalService",
-  "name": "AI Plumbing by Vince",
+  "name": "Orchyra",
+  "alternateName": "AI Plumbing by Vince",
   "description": "Open-source LLM orchestration, prepaid Public Tap, and dedicated Private Taps on EU GPUs.",
   "areaServed": "NL, EU",
   "url": "https://your-domain.example",
@@ -232,7 +236,7 @@ Talk to Vince
 
 1. **Hero** — `hero_pipes.webp` (alt = prompt above)
 2. **Problem→Solution panel** — split image: messy vs fixed pipelines
-3. **Public Tap** — “metered tap” icon; simple grid of curated models
+3. **Public Tap** — “prepaid credits” tap icon; simple grid of curated models
 4. **Private Tap** — dedicated pipe into a building; GPU options row
 5. **Proof section** — screenshots of Grafana/Prometheus and a green-stamped diagram
 6. **About Vince** — small portrait or simplified icon/mascot
