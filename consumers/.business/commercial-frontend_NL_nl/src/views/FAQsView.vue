@@ -1,54 +1,55 @@
 <script setup lang="ts">
 import { useMeta } from '@/composables/useMeta'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+
+const { t, tm, locale } = useI18n()
+const route = useRoute()
 
 useMeta({
-  title: 'FAQs | Orchyra',
-  description: 'Answers about pricing, OSS models, prepaid credits, serving efficiency, and EU AI Act alignment.',
-  keywords: ['faq', 'pricing', 'credits', 'models', 'EU AI Act', 'vLLM'],
+  title: () => `${t('faqs.h1')} | Orchyra`,
+  description: () => t('seoDesc.faqs'),
+  keywords: () => tm('seo.faqs') as string[],
+  canonical: () => `${window.location.origin}${route.fullPath}`,
+  alternates: () => {
+    const href = `${window.location.origin}${route.fullPath}`
+    return [
+      { hrefLang: 'nl', href },
+      { hrefLang: 'en', href },
+      { hrefLang: 'x-default', href },
+    ]
+  },
+  watchSources: [() => locale.value, () => route.fullPath],
 })
 </script>
 
 <template>
   <main class="page">
-    <h1>Frequently Asked Questions</h1>
+    <h1>{{ $t('faqs.h1') }}</h1>
 
     <section>
-      <h2>Is this cheaper than OpenAI?</h2>
-      <p>
-        No. If you want the absolute lowest token price, use OpenAI. If you want transparency, EU-friendly deployments,
-        model choice, and dedicated GPUs, consider a Private Tap. For testing, start with the Public Tap.
-      </p>
+      <h2>{{ $t('faqs.q1') }}</h2>
+      <p>{{ $t('faqs.a1') }}</p>
     </section>
 
     <section>
-      <h2>Can I bring any OSS model?</h2>
-      <p>
-        Yes, for Private Taps you can choose models from Hugging Face or other sources; VRAM is validated during setup.
-      </p>
+      <h2>{{ $t('faqs.q2') }}</h2>
+      <p>{{ $t('faqs.a2') }}</p>
     </section>
 
     <section>
-      <h2>How do prepaid credits work?</h2>
-      <p>
-        You buy a pack, receive a token balance, and consume until zero. Credits are non-refundable and valid for 12
-        months. Your balance is always visible via dashboard/API (descriptive).
-      </p>
+      <h2>{{ $t('faqs.q3') }}</h2>
+      <p>{{ $t('faqs.a3') }}</p>
     </section>
 
     <section>
-      <h2>What makes your serving stack efficient?</h2>
-      <p>
-        We use open-source, high-throughput serving engines (e.g., vLLM with PagedAttention and continuous batching)
-        and expose metrics for real SLOs.
-      </p>
+      <h2>{{ $t('faqs.q4') }}</h2>
+      <p>{{ $t('faqs.a4') }}</p>
     </section>
 
     <section>
-      <h2>Are you EU AI Act ready?</h2>
-      <p>
-        We operate with the Act's documentation and transparency spirit in mind (risk-aware, logged, documented
-        deployments). The artifacts (logs, metrics, SSE transcripts) support your internal governance.
-      </p>
+      <h2>{{ $t('faqs.q5') }}</h2>
+      <p>{{ $t('faqs.a5') }}</p>
     </section>
   </main>
 </template>

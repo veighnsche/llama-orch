@@ -1,49 +1,54 @@
 <script setup lang="ts">
 import { useMeta } from '@/composables/useMeta'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+
+const { t, tm, locale } = useI18n()
+const route = useRoute()
 
 useMeta({
-  title: 'Private LLM Hosting on Dedicated GPUs | Orchyra',
-  description:
-    'Your own AI API on dedicated GPUs with OSS models, observability, and optional OpenAI-compatible gateway. Marketing page only.',
-  keywords: [
-    'private LLM hosting',
-    'dedicated GPUs',
-    'open-source models',
-    'SLA',
-    'EU AI Act',
-  ],
+  title: () => `${t('privateTap.h1')} | Orchyra`,
+  description: () => t('seoDesc.privateTap'),
+  keywords: () => tm('seo.privateTap') as string[],
+  canonical: () => `${window.location.origin}${route.fullPath}`,
+  alternates: () => {
+    const href = `${window.location.origin}${route.fullPath}`
+    return [
+      { hrefLang: 'nl', href },
+      { hrefLang: 'en', href },
+      { hrefLang: 'x-default', href },
+    ]
+  },
+  watchSources: [() => locale.value, () => route.fullPath],
 })
 </script>
 
 <template>
   <main class="page">
-    <h1>Private Tap — Dedicated GPUs</h1>
+    <h1>{{ $t('privateTap.h1') }}</h1>
 
     <section>
-      <h2>What it is</h2>
-      <p>
-        A dedicated, isolated agentic API box provisioned per client. Any OSS model (e.g., Hugging Face), with
-        GPU scaling options and an optional OpenAI-compatible gateway for drop-in usage.
-      </p>
+      <h2>{{ $t('privateTap.what') }}</h2>
+      <p>{{ $t('privateTap.whatP') }}</p>
     </section>
 
     <section>
-      <h2>Value</h2>
+      <h2>{{ $t('privateTap.value') }}</h2>
       <ul>
-        <li>Privacy & control with your own endpoint and quotas</li>
-        <li>Observability with metrics and logs for real SLOs</li>
-        <li>High-throughput serving (e.g., vLLM) engineered for production</li>
+        <li>{{ $t('privateTap.bVal1') }}</li>
+        <li>{{ $t('privateTap.bVal2') }}</li>
+        <li>{{ $t('privateTap.bVal3') }}</li>
       </ul>
     </section>
 
     <section>
-      <h2>Draft pricing (snapshot)</h2>
+      <h2>{{ $t('privateTap.pricing') }}</h2>
       <ul>
-        <li>A100 80GB — €1.80 / GPU-hour + €250 / month base fee</li>
-        <li>H100 80GB — €3.80 / GPU-hour + €400 / month base fee</li>
-        <li>Scale 1×/2×/4×/8× GPUs</li>
+        <li>{{ $t('privateTap.bPrice1') }}</li>
+        <li>{{ $t('privateTap.bPrice2') }}</li>
+        <li>{{ $t('privateTap.bPrice3') }}</li>
       </ul>
-      <p class="note">Draft — examples based on public provider rates; subject to change.</p>
+      <p class="note">{{ $t('privateTap.note') }}</p>
     </section>
   </main>
 </template>

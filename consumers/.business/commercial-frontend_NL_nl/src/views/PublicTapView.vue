@@ -1,13 +1,25 @@
 <script setup lang="ts">
 import { useMeta } from '@/composables/useMeta'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 
-const { t } = useI18n()
+const { t, tm, locale } = useI18n()
+const route = useRoute()
 
 useMeta({
-  title: `${t('publicTap.h1')} | Orchyra`,
-  description: t('publicTap.whatP'),
-  keywords: ['public tap', 'prepaid credits', 'agentic API', 'open-source models', 'private LLM hosting'],
+  title: () => `${t('publicTap.h1')} | Orchyra`,
+  description: () => t('seoDesc.publicTap'),
+  keywords: () => tm('seo.publicTap') as string[],
+  canonical: () => `${window.location.origin}${route.fullPath}`,
+  alternates: () => {
+    const href = `${window.location.origin}${route.fullPath}`
+    return [
+      { hrefLang: 'nl', href },
+      { hrefLang: 'en', href },
+      { hrefLang: 'x-default', href },
+    ]
+  },
+  watchSources: [() => locale.value, () => route.fullPath],
 })
 </script>
 

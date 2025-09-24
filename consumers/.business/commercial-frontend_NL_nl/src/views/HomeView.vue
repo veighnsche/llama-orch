@@ -1,52 +1,53 @@
 <script setup lang="ts">
 import { useMeta } from '@/composables/useMeta'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+const { t, tm, locale } = useI18n()
+const route = useRoute()
 
 useMeta({
-  title: `Orchyra — ${t('home.hero.h2')}`,
-  description: t('home.hero.sub'),
-  keywords: [
-    'private LLM hosting',
-    'managed GPU inference',
-    'agentic API',
-    'open-source LLM orchestration',
-    'EU AI Act readiness',
-    'data residency EU',
-    'vLLM serving',
-  ],
+  title: () => `Orchyra — ${t('home.hero.h2')}`,
+  description: () => t('seoDesc.home'),
+  keywords: () => tm('seo.home') as string[],
   jsonLdId: 'ld-json-home',
-  jsonLd: {
+  jsonLd: () => ({
     '@context': 'https://schema.org',
     '@type': 'ProfessionalService',
     name: 'Orchyra',
-    alternateName: 'AI Plumbing by Vince',
-    description:
-      'Open-source LLM orchestration, prepaid Public Tap, and dedicated Private Taps on EU GPUs.',
+    alternateName: t('home.hero.h2'),
+    description: t('home.hero.sub'),
     areaServed: 'NL, EU',
     url: 'https://example.com',
     sameAs: ['https://github.com/your-org'],
     offers: [
       {
         '@type': 'Offer',
-        name: 'Public Tap (prepaid credits)',
+        name: t('publicTap.h1'),
         priceCurrency: 'EUR',
         price: '50',
-        description:
-          'Starter pack; prepaid, non-refundable credits for shared agentic API (12-month validity).',
+        description: t('publicTap.whatP'),
       },
       {
         '@type': 'Offer',
-        name: 'Private Tap (A100 80GB)',
+        name: t('privateTap.h1'),
         priceCurrency: 'EUR',
         price: '1.80',
-        unitText: 'per GPU-hour',
+        unitText: t('a11y.perGpuHour'),
         priceValidUntil: '2026-12-31',
       },
     ],
+  }),
+  canonical: () => `${window.location.origin}${route.fullPath}`,
+  alternates: () => {
+    const href = `${window.location.origin}${route.fullPath}`
+    return [
+      { hrefLang: 'nl', href },
+      { hrefLang: 'en', href },
+      { hrefLang: 'x-default', href },
+    ]
   },
+  watchSources: [() => locale.value, () => route.fullPath],
 })
 </script>
 

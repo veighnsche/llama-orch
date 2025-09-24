@@ -2,7 +2,7 @@
   <footer class="footer">
     <div class="footer-inner">
       <p class="brand">{{ $t('footer.brandLine') }}</p>
-      <nav class="links" aria-label="Footer">
+      <nav class="links" :aria-label="$t('a11y.footerNav')">
         <ul>
           <li><RouterLink to="/about">{{ $t('footer.about') }}</RouterLink></li>
           <li><RouterLink to="/proof">{{ $t('footer.proof') }}</RouterLink></li>

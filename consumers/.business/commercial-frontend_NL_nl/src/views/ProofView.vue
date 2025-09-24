@@ -1,34 +1,48 @@
 <script setup lang="ts">
 import { useMeta } from '@/composables/useMeta'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+
+const { t, tm, locale } = useI18n()
+const route = useRoute()
 
 useMeta({
-  title: 'Proof — Logs, Metrics, SSE | Orchyra',
-  description:
-    'Proof-first operations with logs, Prometheus metrics, SSE transcripts, and version pinning. Static placeholders; marketing page only.',
-  keywords: ['proof', 'prometheus', 'sse', 'metrics', 'observability'],
+  title: () => `${t('proof.h1')} | Orchyra`,
+  description: () => t('seoDesc.proof'),
+  keywords: () => tm('seo.proof') as string[],
+  canonical: () => `${window.location.origin}${route.fullPath}`,
+  alternates: () => {
+    const href = `${window.location.origin}${route.fullPath}`
+    return [
+      { hrefLang: 'nl', href },
+      { hrefLang: 'en', href },
+      { hrefLang: 'x-default', href },
+    ]
+  },
+  watchSources: [() => locale.value, () => route.fullPath],
 })
 </script>
 
 <template>
   <main class="page">
-    <h1>Proof — Logs, Metrics, SSE</h1>
+    <h1>{{ $t('proof.h1') }}</h1>
 
     <section>
-      <h2>Artifacts (described)</h2>
+      <h2>{{ $t('proof.artifacts') }}</h2>
       <ul>
-        <li>Deployment report with SSE transcripts and performance metrics</li>
-        <li>Prometheus dashboard snapshots and alert thresholds</li>
-        <li>Version pinning and roll-back plan</li>
-        <li>Documentation bundle aligned with EU AI Act transparency spirit</li>
+        <li>{{ $t('proof.b1') }}</li>
+        <li>{{ $t('proof.b2') }}</li>
+        <li>{{ $t('proof.b3') }}</li>
+        <li>{{ $t('proof.b4') }}</li>
       </ul>
-      <p class="microcopy">This is infrastructure—like water or electricity. You shouldn’t have to “trust” it. You should see it.</p>
+      <p class="microcopy">{{ $t('proof.microcopy') }}</p>
     </section>
 
     <section>
-      <h2>Coming visuals</h2>
+      <h2>{{ $t('proof.visuals') }}</h2>
       <ul>
-        <li>Grafana/Prometheus screenshots</li>
-        <li>Pipeline diagram with “certified” stamp</li>
+        <li>{{ $t('proof.v1') }}</li>
+        <li>{{ $t('proof.v2') }}</li>
       </ul>
     </section>
   </main>

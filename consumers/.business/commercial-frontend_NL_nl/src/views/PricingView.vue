@@ -1,43 +1,51 @@
 <script setup lang="ts">
 import { useMeta } from '@/composables/useMeta'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+
+const { t, tm, locale } = useI18n()
+const route = useRoute()
 
 useMeta({
-  title: 'Pricing — Credits & GPU-hour | Orchyra',
-  description:
-    'Draft pricing snapshots for Public Tap credit packs and Private Tap GPU-hour rates. Marketing page only.',
-  keywords: [
-    'pricing',
-    'prepaid credits',
-    'GPU-hour',
-    'A100',
-    'H100',
-  ],
+  title: () => `${t('pricing.h1')} | Orchyra`,
+  description: () => t('seoDesc.pricing'),
+  keywords: () => tm('seo.pricing') as string[],
+  canonical: () => `${window.location.origin}${route.fullPath}`,
+  alternates: () => {
+    const href = `${window.location.origin}${route.fullPath}`
+    return [
+      { hrefLang: 'nl', href },
+      { hrefLang: 'en', href },
+      { hrefLang: 'x-default', href },
+    ]
+  },
+  watchSources: [() => locale.value, () => route.fullPath],
 })
 </script>
 
 <template>
   <main class="page">
-    <h1>Pricing (Draft)</h1>
+    <h1>{{ $t('pricing.h1') }}</h1>
 
     <section>
-      <h2>Public Tap — Credits</h2>
+      <h2>{{ $t('pricing.credits') }}</h2>
       <ul>
-        <li>Baseline: €1.20 per 1M tokens (input + output combined)</li>
-        <li>Starter: €50 → ~41M tokens</li>
-        <li>Builder: €200 → ~166M tokens</li>
-        <li>Pro: €500 → ~416M tokens</li>
+        <li>{{ $t('publicTap.bPrice1') }}</li>
+        <li>{{ $t('publicTap.bPrice2') }}</li>
+        <li>{{ $t('publicTap.bPrice3') }}</li>
+        <li>{{ $t('publicTap.bPrice4') }}</li>
       </ul>
-      <p class="note">Draft — subject to change after benchmarking.</p>
+      <p class="note">{{ $t('pricing.note1') }}</p>
     </section>
 
     <section>
-      <h2>Private Tap — GPU-hour</h2>
+      <h2>{{ $t('pricing.gpu') }}</h2>
       <ul>
-        <li>A100 80GB — €1.80 / GPU-hour + €250 / month base fee</li>
-        <li>H100 80GB — €3.80 / GPU-hour + €400 / month base fee</li>
-        <li>Scaling: 1× / 2× / 4× / 8× GPUs</li>
+        <li>{{ $t('privateTap.bPrice1') }}</li>
+        <li>{{ $t('privateTap.bPrice2') }}</li>
+        <li>{{ $t('privateTap.bPrice3') }}</li>
       </ul>
-      <p class="note">Draft — provider rates vary; examples only.</p>
+      <p class="note">{{ $t('pricing.note2') }}</p>
     </section>
   </main>
 </template>

@@ -1,6 +1,6 @@
 <template>
   <header class="nav">
-    <nav class="nav-inner" aria-label="Primary">
+    <nav class="nav-inner" :aria-label="$t('a11y.navPrimary')">
       <RouterLink class="brand" to="/">Orchyra</RouterLink>
       <ul class="links">
         <li><RouterLink to="/public-tap">{{ $t('nav.publicTap') }}</RouterLink></li>
