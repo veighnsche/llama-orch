@@ -1,0 +1,24 @@
+{
+    "cucumber.features": [
+        "test-harness/bdd/tests/features/",
+        "test-harness/bdd/tests/features/adapters",
+        "test-harness/bdd/tests/features/apply",
+        "test-harness/bdd/tests/features/catalog",
+        "test-harness/bdd/tests/features/config",
+        "test-harness/bdd/tests/features/control_plane",
+        "test-harness/bdd/tests/features/data_plane",
+        "test-harness/bdd/tests/features/determinism",
+        "test-harness/bdd/tests/features/lifecycle",
+        "test-harness/bdd/tests/features/observability",
+        "test-harness/bdd/tests/features/orchestrator_core",
+        "test-harness/bdd/tests/features/policy",
+        "test-harness/bdd/tests/features/pool_manager",
+        "test-harness/bdd/tests/features/preflight",
+        "test-harness/bdd/tests/features/scheduling",
+        "test-harness/bdd/tests/features/security",
+        "test-harness/bdd/tests/features/sse"
+    ],
+    "cucumber.glue": [
+        "test-harness/bdd/src/steps"
+    ]
+}

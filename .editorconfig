@@ -10,3 +10,19 @@ indent_size = 4
 
 [*.md]
 trim_trailing_whitespace = false
+
+# JS/TS/Vue use 2 spaces
+[*.js]
+indent_size = 2
+
+[*.ts]
+indent_size = 2
+
+[*.jsx]
+indent_size = 2
+
+[*.tsx]
+indent_size = 2
+
+[*.vue]
+indent_size = 2

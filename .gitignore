@@ -7,7 +7,6 @@ target
 Cargo.lock
 
 # IDE
-.vscode/
 .idea/
 *.iml
 
