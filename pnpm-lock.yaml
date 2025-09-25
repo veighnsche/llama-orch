@@ -6,11 +6,42 @@ settings:
 
 importers:
 
-  consumers/.business/commercial-frontend:
+  consumers/.examples/M002-pnpm:
+    dependencies:
+      '@llama-orch/utils':
+        specifier: workspace:*
+        version: link:../../llama-orch-utils
+      typescript:
+        specifier: ^5
+        version: 5.9.2
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.17
+      tsx:
+        specifier: ^4.19.1
+        version: 4.20.5
+
+  consumers/llama-orch-sdk/ts:
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.2
+
+  consumers/llama-orch-utils:
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.17
+      typescript:
+        specifier: ^5
+        version: 5.9.2
+
+  frontend/binaries/commercial-frontend:
     dependencies:
       orchyra-storybook:
         specifier: workspace:*
-        version: link:../../storybook
+        version: link:../../libraries/storybook
       vue:
         specifier: ^3.5.18
         version: 3.5.22(typescript@5.8.3)
@@ -76,38 +107,7 @@ importers:
         specifier: ^4.39.0
         version: 4.40.1
 
-  consumers/.examples/M002-pnpm:
-    dependencies:
-      '@llama-orch/utils':
-        specifier: workspace:*
-        version: link:../../llama-orch-utils
-      typescript:
-        specifier: ^5
-        version: 5.9.2
-    devDependencies:
-      '@types/node':
-        specifier: ^20
-        version: 20.19.17
-      tsx:
-        specifier: ^4.19.1
-        version: 4.20.5
-
-  consumers/llama-orch-sdk/ts:
-    devDependencies:
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.2
-
-  consumers/llama-orch-utils:
-    devDependencies:
-      '@types/node':
-        specifier: ^20
-        version: 20.19.17
-      typescript:
-        specifier: ^5
-        version: 5.9.2
-
-  consumers/storybook:
+  frontend/libraries/storybook:
     devDependencies:
       '@eslint/js':
         specifier: ^9.14.0
