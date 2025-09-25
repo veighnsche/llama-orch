@@ -3,6 +3,7 @@ import { useMeta } from '@/composables/useMeta'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
+
 const { t, tm, locale } = useI18n()
 const route = useRoute()
 

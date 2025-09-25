@@ -36,6 +36,9 @@ importers:
       npm-run-all2:
         specifier: ^8.0.4
         version: 8.0.4
+      orchyra-storybook:
+        specifier: workspace:*
+        version: link:../../storybook
       typescript:
         specifier: ~5.8.0
         version: 5.8.3
