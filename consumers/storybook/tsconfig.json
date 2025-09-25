@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+      "target": "es2017",
+      "module": "esnext",
+      "lib": ["esnext"],
+      "moduleResolution": "nodenext",
+      "esModuleInterop": true,
+      "strict": true,
+      "strictNullChecks": true,
+      "resolveJsonModule": true,
+      "jsx": "preserve"
+    },
+    "include": [
+      "env.d.ts",
+      "histoire.setup.ts",
+      "stories/**/*.ts",
+      "stories/**/*.vue",
+      "*.ts"
+    ]
+}

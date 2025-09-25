@@ -76,7 +76,7 @@
 import { ref, watch } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
-import Button from 'orchyra-storybook/stories/button/index.vue'
+import Button from 'orchyra-storybook/stories/button.vue'
 
 const open = ref(false)
 const route = useRoute()
