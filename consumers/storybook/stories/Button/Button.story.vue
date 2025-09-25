@@ -1,35 +1,35 @@
 <script setup lang="ts">
-import { reactive, computed } from 'vue'
-import Button from './Button.vue'
+  import { reactive, computed } from 'vue'
+  import Button from './Button.vue'
 
-type AsType = 'button' | 'a' | 'router-link' | undefined
+  type AsType = 'button' | 'a' | 'router-link' | undefined
 
-const state = reactive({
-  label: 'Click me',
-  as: 'button' as AsType,
-  to: '/about' as string,
-  href: 'https://example.com',
-  type: 'button' as 'button' | 'submit' | 'reset',
-  variant: 'primary' as 'primary' | 'ghost' | 'link',
-  size: 'md' as 'sm' | 'md' | 'lg',
-  iconOnly: false,
-  disabled: false,
-  block: false,
-})
+  const state = reactive({
+    label: 'Click me',
+    as: 'button' as AsType,
+    to: '/about' as string,
+    href: 'https://example.com',
+    type: 'button' as 'button' | 'submit' | 'reset',
+    variant: 'primary' as 'primary' | 'ghost' | 'link',
+    size: 'md' as 'sm' | 'md' | 'lg',
+    iconOnly: false,
+    disabled: false,
+    block: false,
+  })
 
-const effectiveContent = computed(() => (state.iconOnly ? '★' : state.label))
+  const effectiveContent = computed(() => (state.iconOnly ? '★' : state.label))
 
-const propsForButton = computed(() => ({
-  as: state.as,
-  to: state.as === 'router-link' ? state.to : undefined,
-  href: state.as === 'a' ? state.href : undefined,
-  type: state.as === 'button' || !state.as ? state.type : undefined,
-  variant: state.variant,
-  size: state.size,
-  iconOnly: state.iconOnly,
-  disabled: state.disabled,
-  block: state.block,
-}))
+  const propsForButton = computed(() => ({
+    as: state.as,
+    to: state.as === 'router-link' ? state.to : undefined,
+    href: state.as === 'a' ? state.href : undefined,
+    type: state.as === 'button' || !state.as ? state.type : undefined,
+    variant: state.variant,
+    size: state.size,
+    iconOnly: state.iconOnly,
+    disabled: state.disabled,
+    block: state.block,
+  }))
 </script>
 
 <template>

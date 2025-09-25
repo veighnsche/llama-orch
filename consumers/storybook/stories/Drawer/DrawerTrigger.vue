@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import { inject, useAttrs } from 'vue'
-import type { DrawerContext } from './Drawer.vue'
+  import { inject, useAttrs } from 'vue'
+  import type { DrawerContext } from './Drawer.vue'
 
-const props = withDefaults(
-  defineProps<{
-    as?: string | object
-    ariaControls?: string
-  }>(),
-  {
-    as: 'button',
-    ariaControls: undefined,
-  },
-)
+  const props = withDefaults(
+    defineProps<{
+      as?: string | object
+      ariaControls?: string
+    }>(),
+    {
+      as: 'button',
+      ariaControls: undefined,
+    },
+  )
 
-const attrs = useAttrs()
-const ctx = inject<DrawerContext>('drawer-ctx')
+  const attrs = useAttrs()
+  const ctx = inject<DrawerContext>('drawer-ctx')
 
-function onClick(e: MouseEvent) {
-  e.stopPropagation()
-  ctx?.toggle()
-}
+  function onClick(e: MouseEvent) {
+    e.stopPropagation()
+    ctx?.toggle()
+  }
 </script>
 
 <template>

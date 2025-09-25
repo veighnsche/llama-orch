@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
-import Badge from './Badge.vue'
+  import { reactive } from 'vue'
+  import Badge from './Badge.vue'
 
-const state = reactive({
-  label: 'Badge',
-  variant: 'default' as 'default' | 'green' | 'cyan' | 'slate' | 'purple',
-  size: 'md' as 'sm' | 'md',
-  showIcon: true,
-})
+  const state = reactive({
+    label: 'Badge',
+    variant: 'default' as 'default' | 'green' | 'cyan' | 'slate' | 'purple',
+    size: 'md' as 'sm' | 'md',
+    showIcon: true,
+  })
 </script>
 
 <template>

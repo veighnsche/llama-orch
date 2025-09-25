@@ -14,7 +14,13 @@
 <template>
   <ul class="links" role="menubar">
     <li v-for="(item, idx) in items" :key="idx" role="none">
-      <component :is="item.to ? RouterLink : 'a'" role="menuitem" :to="item.to" :href="item.href" :aria-label="item.ariaLabel || item.label">
+      <component
+        :is="item.to ? RouterLink : 'a'"
+        role="menuitem"
+        :to="item.to"
+        :href="item.href"
+        :aria-label="item.ariaLabel || item.label"
+      >
         {{ item.label }}
       </component>
     </li>
@@ -51,6 +57,8 @@
 
   /* desktop: show links */
   @media (min-width: 920px) {
-    .links { display: inline-flex; }
+    .links {
+      display: inline-flex;
+    }
   }
 </style>

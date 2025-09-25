@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { reactive, computed } from 'vue'
-import Brand from './Brand.vue'
+  import { reactive, computed } from 'vue'
+  import Brand from './Brand.vue'
 
-const state = reactive({
-  label: 'Orchyra',
-  showGlyph: true,
-  to: '/',
-  href: ''
-})
+  const state = reactive({
+    label: 'Orchyra',
+    showGlyph: true,
+    to: '/',
+    href: '',
+  })
 
-const brand = computed(() => ({
-  label: state.label,
-  to: state.href ? undefined : (state.to || '/'),
-  href: state.href || undefined,
-  ariaLabel: `${state.label} — home`,
-  showGlyph: state.showGlyph,
-}))
+  const brand = computed(() => ({
+    label: state.label,
+    to: state.href ? undefined : state.to || '/',
+    href: state.href || undefined,
+    ariaLabel: `${state.label} — home`,
+    showGlyph: state.showGlyph,
+  }))
 </script>
 
 <template>

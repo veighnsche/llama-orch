@@ -18,7 +18,7 @@
 
 <style scoped>
   :root {
-    --nav-h: 44px; /* mobile default */
+    --nav-h: 56px; /* mobile/default height; larger than icon-only sm button (32px) */
   }
 
   .nav {
@@ -39,6 +39,7 @@
     align-items: center;
     column-gap: 1.25rem;
     padding-block: 0;
+    height: var(--nav-h); /* enforce fixed height on all breakpoints */
   }
 
   .right {
@@ -58,7 +59,7 @@
   /* Desktop fixed height + center alignment */
   @media (min-width: 920px) {
     :root {
-      --nav-h: 56px;
+      --nav-h: 64px; /* give desktop a bit more breathing room */
     }
     .nav-inner {
       height: var(--nav-h);
