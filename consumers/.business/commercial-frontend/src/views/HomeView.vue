@@ -29,128 +29,128 @@ const abs = (p: string) => (siteUrl && p.startsWith('/') ? siteUrl + p : p)
 // Localized paths for hreflang (assumes /nl and /en routing; tweak if you use i18n routing differently)
 const currentPath = route.fullPath
 const altFor = (lang: string) =>
-    siteUrl
-        ? `${siteUrl}/${lang}${currentPath.startsWith('/') ? currentPath : `/${currentPath}`}`
-        : currentPath
+  siteUrl
+    ? `${siteUrl}/${lang}${currentPath.startsWith('/') ? currentPath : `/${currentPath}`}`
+    : currentPath
 
 useMeta({
-    title: () => `Orchyra — ${t('home.hero.h2')}`,
-    description: () => t('seoDesc.home'),
-    keywords: () => (tm('seo.home') as string[]) ?? [],
-    canonical: () => (siteUrl ? `${siteUrl}${currentPath}` : currentPath),
-    alternates: () => [
-        { hrefLang: 'nl', href: altFor('nl') },
-        { hrefLang: 'en', href: altFor('en') },
-        { hrefLang: 'x-default', href: siteUrl ? `${siteUrl}${currentPath}` : currentPath },
-    ],
-    jsonLdId: 'ld-json-home',
-    jsonLd: () => {
-        const offers = [
-            {
-                '@type': 'Offer',
-                name: t('publicTap.h1'),
-                url: abs('/public-tap'),
-                availability: 'https://schema.org/InStock',
-                priceSpecification: {
-                    '@type': 'PriceSpecification',
-                    priceCurrency: 'EUR',
-                    price: '50',
-                },
-                description: t('publicTap.whatP'),
-            },
-            {
-                '@type': 'Offer',
-                name: t('privateTap.h1'),
-                url: abs('/private-tap'),
-                availability: 'https://schema.org/PreOrder',
-                priceSpecification: {
-                    '@type': 'UnitPriceSpecification',
-                    priceCurrency: 'EUR',
-                    price: '1.80',
-                    unitCode: 'HUR', // per UNECE Rec 20 — per GPU hour
-                },
-                priceValidUntil: '2026-12-31',
-                description: t('privateTap.whatP') ?? undefined,
-            },
-        ]
+  title: () => `Orchyra — ${t('home.hero.h2')}`,
+  description: () => t('seoDesc.home'),
+  keywords: () => (tm('seo.home') as string[]) ?? [],
+  canonical: () => (siteUrl ? `${siteUrl}${currentPath}` : currentPath),
+  alternates: () => [
+    { hrefLang: 'nl', href: altFor('nl') },
+    { hrefLang: 'en', href: altFor('en') },
+    { hrefLang: 'x-default', href: siteUrl ? `${siteUrl}${currentPath}` : currentPath },
+  ],
+  jsonLdId: 'ld-json-home',
+  jsonLd: () => {
+    const offers = [
+      {
+        '@type': 'Offer',
+        name: t('publicTap.h1'),
+        url: abs('/public-tap'),
+        availability: 'https://schema.org/InStock',
+        priceSpecification: {
+          '@type': 'PriceSpecification',
+          priceCurrency: 'EUR',
+          price: '50',
+        },
+        description: t('publicTap.whatP'),
+      },
+      {
+        '@type': 'Offer',
+        name: t('privateTap.h1'),
+        url: abs('/private-tap'),
+        availability: 'https://schema.org/PreOrder',
+        priceSpecification: {
+          '@type': 'UnitPriceSpecification',
+          priceCurrency: 'EUR',
+          price: '1.80',
+          unitCode: 'HUR', // per UNECE Rec 20 — per GPU hour
+        },
+        priceValidUntil: '2026-12-31',
+        description: t('privateTap.whatP') ?? undefined,
+      },
+    ]
 
-        const data: Record<string, unknown> = {
-            '@context': 'https://schema.org',
-            '@type': 'ProfessionalService',
-            name: 'Orchyra',
-            alternateName: t('home.hero.h2'),
-            description: t('home.hero.sub'),
-            url: siteUrl || undefined,
-            inLanguage: locale.value,
-            image: abs('/assets/hero_pipes.png'),
-            areaServed: [
-                { '@type': 'Place', name: 'Netherlands' },
-                { '@type': 'Place', name: 'European Union' },
-            ],
-            serviceType: 'AI plumbing (Agentic API design, deployment, and certification)',
-            brand: { '@type': 'Brand', name: 'Orchyra' },
-            offers,
-            sameAs: githubUrl && /^https?:\/\//.test(githubUrl) ? [githubUrl] : undefined,
-            // Add a stable @id for dedup in SERP
-            '@id': siteUrl ? `${siteUrl}#orchyra-service` : undefined,
-        }
-        return data
-    },
-    watchSources: [() => locale.value, () => route.fullPath],
+    const data: Record<string, unknown> = {
+      '@context': 'https://schema.org',
+      '@type': 'ProfessionalService',
+      name: 'Orchyra',
+      alternateName: t('home.hero.h2'),
+      description: t('home.hero.sub'),
+      url: siteUrl || undefined,
+      inLanguage: locale.value,
+      image: abs('/assets/hero_pipes.png'),
+      areaServed: [
+        { '@type': 'Place', name: 'Netherlands' },
+        { '@type': 'Place', name: 'European Union' },
+      ],
+      serviceType: 'AI plumbing (Agentic API design, deployment, and certification)',
+      brand: { '@type': 'Brand', name: 'Orchyra' },
+      offers,
+      sameAs: githubUrl && /^https?:\/\//.test(githubUrl) ? [githubUrl] : undefined,
+      // Add a stable @id for dedup in SERP
+      '@id': siteUrl ? `${siteUrl}#orchyra-service` : undefined,
+    }
+    return data
+  },
+  watchSources: [() => locale.value, () => route.fullPath],
 })
 </script>
 
 <template>
-    <main id="main" class="home">
-        <Hero />
-        <WhyPlumbing />
-        <!-- Lazy chunks render naturally when reached; optional <Suspense> if you want placeholders -->
-        <ThreeTools />
-        <PublicTap />
-        <PrivateTap />
-        <Proof />
-        <Audience />
-        <More />
-    </main>
+  <main id="main" class="home">
+    <Hero />
+    <WhyPlumbing />
+    <!-- Lazy chunks render naturally when reached; optional <Suspense> if you want placeholders -->
+    <ThreeTools />
+    <PublicTap />
+    <PrivateTap />
+    <Proof />
+    <Audience />
+    <More />
+  </main>
 </template>
 
 <style scoped>
 /* page layout baseline */
 .home section {
-    max-width: 1120px; /* zelfde breedte als nav/hero */
-    margin-left: auto;
-    margin-right: auto;
-    padding: 2rem 1rem; /* ademruimte links/rechts */
+  max-width: 1120px; /* zelfde breedte als nav/hero */
+  margin-left: auto;
+  margin-right: auto;
+  padding: 2rem 1rem; /* ademruimte links/rechts */
 }
 
 /* meer adem tussen secties */
 .home section + section {
-    margin-top: 2.5rem;
-    border-top: 1px solid var(--surface-muted); /* optioneel scheiding */
-    padding-top: 2.5rem;
+  margin-top: 2.5rem;
+  border-top: 1px solid var(--surface-muted); /* optioneel scheiding */
+  padding-top: 2.5rem;
 }
 
 /* headings consistenter */
 .home section h2,
 .home section h3 {
-    font-weight: 800;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: var(--text);
+  font-weight: 800;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--text);
 }
 
 .home section.fullbleed {
-    max-width: none;
-    margin: 0;
-    padding: 3rem 0;
-    background: var(--surface); /* licht contrast */
+  max-width: none;
+  margin: 0;
+  padding: 3rem 0;
+  background: var(--surface); /* licht contrast */
 }
 
 /* fullbleed if needed */
 .home section.fullbleed {
-    max-width: none;
-    margin: 0;
-    padding: 3rem 0;
-    background: var(--surface); /* licht contrast */
+  max-width: none;
+  margin: 0;
+  padding: 3rem 0;
+  background: var(--surface); /* licht contrast */
 }
 </style>

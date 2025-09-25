@@ -6,19 +6,19 @@ const { t } = useI18n()
 </script>
 
 <template>
-    <section class="more">
-        <RouterLink to="/faqs">
-            {{ t('home.more.faqs') }}
-        </RouterLink>
-        ·
-        <RouterLink to="/about">
-            {{ t('home.more.about') }}
-        </RouterLink>
-    </section>
+  <section class="more">
+    <RouterLink to="/faqs">
+      {{ t('home.more.faqs') }}
+    </RouterLink>
+    ·
+    <RouterLink to="/about">
+      {{ t('home.more.about') }}
+    </RouterLink>
+  </section>
 </template>
 
 <style scoped>
 section {
-    margin: 1.25rem 0;
+  margin: 1.25rem 0;
 }
 </style>

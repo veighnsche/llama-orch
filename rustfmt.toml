@@ -1,0 +1,7 @@
+hard_tabs = false
+# Ensure 4-space indentation across Rust code
+tab_spaces = 4
+edition = "2021"
+newline_style = "Unix"
+max_width = 100
+use_small_heuristics = "Max"
