@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
+  import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+  const { t } = useI18n()
 </script>
 
 <template>
@@ -17,10 +17,10 @@ const { t } = useI18n()
 </template>
 
 <style scoped>
-section {
-  margin: 1.25rem 0;
-}
-ul {
-  padding-left: 1.1rem;
-}
+  section {
+    margin: 1.25rem 0;
+  }
+  ul {
+    padding-left: 1.1rem;
+  }
 </style>

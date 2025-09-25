@@ -4,7 +4,10 @@
       <p class="brand">
         {{ $t('footer.brandLine') }}
       </p>
-      <nav class="links" :aria-label="$t('a11y.footerNav')">
+      <nav
+        class="links"
+        :aria-label="$t('a11y.footerNav')"
+      >
         <ul>
           <li>
             <RouterLink to="/about">
@@ -34,32 +37,32 @@
 </template>
 
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+  import { RouterLink } from 'vue-router'
 </script>
 
 <style scoped>
-.footer {
-  border-top: 1px solid var(--surface-muted);
-  padding: 1rem 0;
-}
-.footer-inner {
-  display: grid;
-  gap: 0.5rem;
-}
-.brand {
-  font-weight: 600;
-}
-.links ul {
-  display: flex;
-  gap: 1rem;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.links a {
-  text-decoration: none;
-}
-.microcopy {
-  color: var(--muted);
-}
+  .footer {
+    border-top: 1px solid var(--surface-muted);
+    padding: 1rem 0;
+  }
+  .footer-inner {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .brand {
+    font-weight: 600;
+  }
+  .links ul {
+    display: flex;
+    gap: 1rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .links a {
+    text-decoration: none;
+  }
+  .microcopy {
+    color: var(--muted);
+  }
 </style>

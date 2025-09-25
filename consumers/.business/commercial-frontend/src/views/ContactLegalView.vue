@@ -1,30 +1,30 @@
 <script setup lang="ts">
-import { useMeta } from '@/composables/useMeta'
-import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+  import { useMeta } from '@/composables/useMeta'
+  import { useI18n } from 'vue-i18n'
+  import { useRoute } from 'vue-router'
 
-const { t, tm, locale } = useI18n()
-const route = useRoute()
+  const { t, tm, locale } = useI18n()
+  const route = useRoute()
 
-const email = import.meta.env.VITE_CONTACT_EMAIL || 'info@example.com'
-const linkedin = import.meta.env.VITE_LINKEDIN_URL || '#'
-const github = import.meta.env.VITE_GITHUB_URL || '#'
+  const email = import.meta.env.VITE_CONTACT_EMAIL || 'info@example.com'
+  const linkedin = import.meta.env.VITE_LINKEDIN_URL || '#'
+  const github = import.meta.env.VITE_GITHUB_URL || '#'
 
-useMeta({
-  title: () => t('seoTitle.contact'),
-  description: () => t('seoDesc.contact'),
-  keywords: () => tm('seo.contact') as string[],
-  canonical: () => `${window.location.origin}${route.fullPath}`,
-  alternates: () => {
-    const href = `${window.location.origin}${route.fullPath}`
-    return [
-      { hrefLang: 'nl', href },
-      { hrefLang: 'en', href },
-      { hrefLang: 'x-default', href },
-    ]
-  },
-  watchSources: [() => locale.value, () => route.fullPath],
-})
+  useMeta({
+    title: () => t('seoTitle.contact'),
+    description: () => t('seoDesc.contact'),
+    keywords: () => tm('seo.contact') as string[],
+    canonical: () => `${window.location.origin}${route.fullPath}`,
+    alternates: () => {
+      const href = `${window.location.origin}${route.fullPath}`
+      return [
+        { hrefLang: 'nl', href },
+        { hrefLang: 'en', href },
+        { hrefLang: 'x-default', href },
+      ]
+    },
+    watchSources: [() => locale.value, () => route.fullPath],
+  })
 </script>
 
 <template>
@@ -39,11 +39,17 @@ useMeta({
         </li>
         <li>
           {{ $t('contact.linkedin') }}:
-          <a :href="linkedin" rel="nofollow noopener">{{ linkedin }}</a>
+          <a
+            :href="linkedin"
+            rel="nofollow noopener"
+          >{{ linkedin }}</a>
         </li>
         <li>
           {{ $t('contact.github') }}:
-          <a :href="github" rel="nofollow noopener">{{ github }}</a>
+          <a
+            :href="github"
+            rel="nofollow noopener"
+          >{{ github }}</a>
         </li>
       </ul>
     </section>
@@ -70,11 +76,11 @@ useMeta({
 </template>
 
 <style scoped>
-.page {
-  display: grid;
-  gap: 1rem;
-}
-.note {
-  color: var(--muted);
-}
+  .page {
+    display: grid;
+    gap: 1rem;
+  }
+  .note {
+    color: var(--muted);
+  }
 </style>

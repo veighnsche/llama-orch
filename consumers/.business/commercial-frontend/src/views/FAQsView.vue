@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { useMeta } from '@/composables/useMeta'
-import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+  import { useMeta } from '@/composables/useMeta'
+  import { useI18n } from 'vue-i18n'
+  import { useRoute } from 'vue-router'
 
-const { t, tm, locale } = useI18n()
-const route = useRoute()
+  const { t, tm, locale } = useI18n()
+  const route = useRoute()
 
-useMeta({
-  title: () => t('seoTitle.faqs'),
-  description: () => t('seoDesc.faqs'),
-  keywords: () => tm('seo.faqs') as string[],
-  canonical: () => `${window.location.origin}${route.fullPath}`,
-  alternates: () => {
-    const href = `${window.location.origin}${route.fullPath}`
-    return [
-      { hrefLang: 'nl', href },
-      { hrefLang: 'en', href },
-      { hrefLang: 'x-default', href },
-    ]
-  },
-  watchSources: [() => locale.value, () => route.fullPath],
-})
+  useMeta({
+    title: () => t('seoTitle.faqs'),
+    description: () => t('seoDesc.faqs'),
+    keywords: () => tm('seo.faqs') as string[],
+    canonical: () => `${window.location.origin}${route.fullPath}`,
+    alternates: () => {
+      const href = `${window.location.origin}${route.fullPath}`
+      return [
+        { hrefLang: 'nl', href },
+        { hrefLang: 'en', href },
+        { hrefLang: 'x-default', href },
+      ]
+    },
+    watchSources: [() => locale.value, () => route.fullPath],
+  })
 </script>
 
 <template>
@@ -55,8 +55,8 @@ useMeta({
 </template>
 
 <style scoped>
-.page {
-  display: grid;
-  gap: 1rem;
-}
+  .page {
+    display: grid;
+    gap: 1rem;
+  }
 </style>

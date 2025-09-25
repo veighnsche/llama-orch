@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
-import { useI18n } from 'vue-i18n'
+  import { RouterLink } from 'vue-router'
+  import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+  const { t } = useI18n()
 </script>
 
 <template>
@@ -18,7 +18,7 @@ const { t } = useI18n()
 </template>
 
 <style scoped>
-section {
-  margin: 1.25rem 0;
-}
+  section {
+    margin: 1.25rem 0;
+  }
 </style>
