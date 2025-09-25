@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
       "target": "es2017",
-      "module": "esnext",
-      "lib": ["esnext"],
+      "module": "nodenext",
+      "lib": ["esnext", "dom", "dom.iterable"],
       "moduleResolution": "nodenext",
       "esModuleInterop": true,
       "strict": true,

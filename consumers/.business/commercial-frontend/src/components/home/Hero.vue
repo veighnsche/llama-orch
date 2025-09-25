@@ -3,7 +3,7 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 import Button from 'orchyra-storybook/stories/button.vue'
-import Badge from '@/components/ui/Badge.vue'
+import Badge from 'orchyra-storybook/stories/badge.vue'
 </script>
 
 <template>

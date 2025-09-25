@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink, type RouteLocationRaw } from 'vue-router'
+import { useAttrs } from 'vue'
 
 const props = withDefaults(defineProps<{
   as?: 'button' | 'a' | 'router-link'
@@ -22,19 +23,44 @@ const props = withDefaults(defineProps<{
   block: false,
 })
 
+const attrsFromUser = useAttrs()
+
 const isRouter = computed(() => props.as === 'router-link' || !!props.to)
 const isAnchor = computed(() => props.as === 'a' || (!!props.href && !isRouter.value))
 
 const tag = computed(() => (isRouter.value ? RouterLink : isAnchor.value ? 'a' : 'button'))
 
+// Merge user attrs with our controlled attrs. Our controlled attrs take precedence.
 const attrs = computed(() => {
-  const a: Record<string, unknown> = {}
-  if (isRouter.value) a.to = props.to
-  else if (isAnchor.value) a.href = props.href
-  else {
+  const a: Record<string, unknown> = { ...attrsFromUser }
+
+  if (isRouter.value) {
+    a.to = props.to
+    // prevent navigating when "disabled"
+    if (props.disabled) {
+      a['aria-disabled'] = 'true'
+      a.tabindex = -1
+    }
+  } else if (isAnchor.value) {
+    a.href = props.href
+    // Safe external targets
+    if (a.target === '_blank') {
+      const existingRel = (a.rel as string | undefined) || ''
+      // Ensure noopener noreferrer present
+      const relSet = new Set(existingRel.split(' ').filter(Boolean))
+      relSet.add('noopener'); relSet.add('noreferrer')
+      a.rel = Array.from(relSet).join(' ')
+    }
+    if (props.disabled) {
+      // anchor elements don't support disabled
+      a['aria-disabled'] = 'true'
+      a.tabindex = -1
+    }
+  } else {
     a.type = props.type
     a.disabled = props.disabled
   }
+
   return a
 })
 
@@ -51,12 +77,24 @@ const classes = computed(() => {
     `ui-btn--${props.size}`,
     props.iconOnly ? 'ui-btn--icon' : null,
     props.block ? 'ui-btn--block' : null,
+    props.disabled ? 'is-disabled' : null,
   ]
 })
+
+// Block clicks / navigation when "disabled" on non-button tags.
+function onClick(e: MouseEvent) {
+  if (!props.disabled) return
+  // For router-link / anchor, stop navigation if disabled
+  if (isRouter.value || isAnchor.value) {
+    e.preventDefault()
+    e.stopImmediatePropagation?.()
+    e.stopPropagation()
+  }
+}
 </script>
 
 <template>
-  <component :is="tag" v-bind="attrs" :class="classes">
+  <component :is="tag" v-bind="attrs" :class="classes" @click="onClick">
     <slot />
   </component>
 </template>
@@ -78,9 +116,18 @@ const classes = computed(() => {
   cursor: pointer;
   transition: transform .06s ease, box-shadow .06s ease, border-color .2s ease, background .2s ease, filter .2s ease;
 }
+
 .ui-btn:hover { transform: translateY(-1px); }
 .ui-btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
-.ui-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+/* Disabled (works for both <button disabled> and links using .is-disabled) */
+.ui-btn:disabled,
+.ui-btn.is-disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  transform: none;
+  pointer-events: none; /* avoid accidental hover/active for non-button */
+}
 
 /* variants */
 .ui-btn--primary {

@@ -41,7 +41,7 @@
       <!-- Right side: language + CTA -->
       <div class="right">
         <LanguageSwitcher />
-        <Button as="router-link" to="/service-menu" variant="primary">
+        <Button as="router-link" to="/service-menu" variant="primary" size="sm">
           {{ $t('nav.serviceMenu', 'Service menu') }}
         </Button>
       </div>
@@ -62,7 +62,7 @@
           </ul>
           <div class="drawer-ops">
             <LanguageSwitcher />
-            <Button class="wide" as="router-link" @click="open=false" to="/service-menu" variant="primary" size="sm">
+            <Button as="router-link" @click="open=false" to="/service-menu" variant="primary">
               {{ $t('nav.serviceMenu', 'Service menu') }}
             </Button>
           </div>

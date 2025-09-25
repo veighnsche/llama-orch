@@ -7,6 +7,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
+      "@ui/badge": ["orchyra-storybook/stories/badge.vue"]
     },
     "moduleResolution": "Bundler"
   }
