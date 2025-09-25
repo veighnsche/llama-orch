@@ -2,5 +2,5 @@ packages:
   - consumers/llama-orch-utils
   - consumers/.examples/*
   - consumers/llama-orch-sdk/ts
-  - consumers/.business/commercial-frontend
-  - consumers/storybook
+  - frontend/binaries/commercial-frontend
+  - frontend/libraries/storybook
