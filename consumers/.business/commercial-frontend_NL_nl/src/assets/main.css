@@ -1,4 +1,6 @@
+@import '../styles/tokens.css';
 @import './base.css';
+@import '../styles/blueprint.css';
 
 /* Minimal app container */
 #app {

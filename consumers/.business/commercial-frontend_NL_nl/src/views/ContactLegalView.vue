@@ -6,8 +6,12 @@ import { useRoute } from 'vue-router'
 const { t, tm, locale } = useI18n()
 const route = useRoute()
 
+const email = import.meta.env.VITE_CONTACT_EMAIL || 'info@example.com'
+const linkedin = import.meta.env.VITE_LINKEDIN_URL || '#'
+const github = import.meta.env.VITE_GITHUB_URL || '#'
+
 useMeta({
-  title: () => `${t('contact.h1')} | Orchyra`,
+  title: () => t('seoTitle.contact'),
   description: () => t('seoDesc.contact'),
   keywords: () => tm('seo.contact') as string[],
   canonical: () => `${window.location.origin}${route.fullPath}`,
@@ -30,9 +34,9 @@ useMeta({
     <section>
       <h2>{{ $t('contact.contact') }}</h2>
       <ul>
-        <li>{{ $t('contact.email') }}: <a href="mailto:info@example.com">info@example.com</a></li>
-        <li>{{ $t('contact.linkedin') }}: <a href="#" rel="nofollow noopener">{{ $t('a11y.addLink') }}</a></li>
-        <li>{{ $t('contact.github') }}: <a href="#" rel="nofollow noopener">{{ $t('a11y.addLink') }}</a></li>
+        <li>{{ $t('contact.email') }}: <a :href="`mailto:${email}`">{{ email }}</a></li>
+        <li>{{ $t('contact.linkedin') }}: <a :href="linkedin" rel="nofollow noopener">{{ linkedin }}</a></li>
+        <li>{{ $t('contact.github') }}: <a :href="github" rel="nofollow noopener">{{ github }}</a></li>
       </ul>
     </section>
 

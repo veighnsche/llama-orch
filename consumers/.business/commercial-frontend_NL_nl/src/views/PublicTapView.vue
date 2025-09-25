@@ -7,7 +7,7 @@ const { t, tm, locale } = useI18n()
 const route = useRoute()
 
 useMeta({
-  title: () => `${t('publicTap.h1')} | Orchyra`,
+  title: () => t('seoTitle.publicTap'),
   description: () => t('seoDesc.publicTap'),
   keywords: () => tm('seo.publicTap') as string[],
   canonical: () => `${window.location.origin}${route.fullPath}`,

@@ -7,7 +7,7 @@ const { t, tm, locale } = useI18n()
 const route = useRoute()
 
 useMeta({
-  title: () => `${t('proof.h1')} | Orchyra`,
+  title: () => t('seoTitle.proof'),
   description: () => t('seoDesc.proof'),
   keywords: () => tm('seo.proof') as string[],
   canonical: () => `${window.location.origin}${route.fullPath}`,

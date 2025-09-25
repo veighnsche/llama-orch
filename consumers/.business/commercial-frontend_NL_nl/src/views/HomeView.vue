@@ -6,38 +6,47 @@ import { useI18n } from 'vue-i18n'
 const { t, tm, locale } = useI18n()
 const route = useRoute()
 
+// Configure production URLs via Vite env; fall back to current origin/placeholders
+const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin
+const githubUrl = import.meta.env.VITE_GITHUB_URL || ''
+
 useMeta({
   title: () => `Orchyra — ${t('home.hero.h2')}`,
   description: () => t('seoDesc.home'),
   keywords: () => tm('seo.home') as string[],
   jsonLdId: 'ld-json-home',
-  jsonLd: () => ({
-    '@context': 'https://schema.org',
-    '@type': 'ProfessionalService',
-    name: 'Orchyra',
-    alternateName: t('home.hero.h2'),
-    description: t('home.hero.sub'),
-    areaServed: 'NL, EU',
-    url: 'https://example.com',
-    sameAs: ['https://github.com/your-org'],
-    offers: [
-      {
-        '@type': 'Offer',
-        name: t('publicTap.h1'),
-        priceCurrency: 'EUR',
-        price: '50',
-        description: t('publicTap.whatP'),
-      },
-      {
-        '@type': 'Offer',
-        name: t('privateTap.h1'),
-        priceCurrency: 'EUR',
-        price: '1.80',
-        unitText: t('a11y.perGpuHour'),
-        priceValidUntil: '2026-12-31',
-      },
-    ],
-  }),
+  jsonLd: () => {
+    const data: Record<string, unknown> = {
+      '@context': 'https://schema.org',
+      '@type': 'ProfessionalService',
+      name: 'Orchyra',
+      alternateName: t('home.hero.h2'),
+      description: t('home.hero.sub'),
+      areaServed: 'NL, EU',
+      url: siteUrl,
+      offers: [
+        {
+          '@type': 'Offer',
+          name: t('publicTap.h1'),
+          priceCurrency: 'EUR',
+          price: '50',
+          description: t('publicTap.whatP'),
+        },
+        {
+          '@type': 'Offer',
+          name: t('privateTap.h1'),
+          priceCurrency: 'EUR',
+          price: '1.80',
+          unitText: t('a11y.perGpuHour'),
+          priceValidUntil: '2026-12-31',
+        },
+      ],
+    }
+    if (githubUrl && /^https?:\/\//.test(githubUrl)) {
+      ;(data as any).sameAs = [githubUrl]
+    }
+    return data
+  },
   canonical: () => `${window.location.origin}${route.fullPath}`,
   alternates: () => {
     const href = `${window.location.origin}${route.fullPath}`
@@ -66,6 +75,17 @@ useMeta({
         <li>{{ $t('home.hero.trust2') }}</li>
         <li>{{ $t('home.hero.trust3') }}</li>
       </ul>
+      <figure class="hero-media">
+        <!-- Image placeholder — place your generated image at public/assets/hero_pipes.png -->
+        <img
+          src="/assets/hero_pipes.png"
+          width="1440"
+          height="560"
+          alt="flat vector blueprint diagram of clean data pipes feeding a dedicated tap, subtle cyan/teal accents, sturdy industrial lines, customer-facing, no text"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </figure>
     </section>
 
     <section class="why">
@@ -138,6 +158,16 @@ useMeta({
   display: grid;
   gap: 0.5rem;
   margin-bottom: 1.25rem;
+}
+.hero-media {
+  margin: 0.5rem 0 0 0;
+}
+.hero-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  border-radius: 6px;
 }
 .tag {
   font-weight: 600;

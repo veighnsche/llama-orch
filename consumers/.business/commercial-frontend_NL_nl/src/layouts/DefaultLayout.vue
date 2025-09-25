@@ -1,7 +1,7 @@
 <template>
   <div class="layout">
     <NavBar />
-    <main class="content">
+    <main class="content bp-grid">
       <RouterView />
     </main>
     <SiteFooter />

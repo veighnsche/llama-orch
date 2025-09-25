@@ -20,46 +20,46 @@ Brand: Orchyra · Tagline: Private LLM Hosting in the Netherlands
 - [x] Localized SEO keywords per route (EN/NL)
 - [x] Localized SEO descriptions per route (≤155 chars)
 - [x] Canonical link and hreflang alternates per route
-- [ ] Favicon replacement/removal
+- [x] Favicon replacement/removal
 - [ ] Images (hero and others) not added yet (placeholders only)
 - [ ] QA (type-check/build pass, manual link pass)
 
 ## Phase 0 — Pre‑flight (Current State Validation)
 
-- [ ] **Repository hygiene**
+- [x] **Repository hygiene**
   - [x] No Vue/Vite template placeholders left in `src/` and `public/` (logo, welcome components, etc.)
   - [x] `server/index.ts` returns 404 for everything (neutral worker)
-- [ ] **Package and worker names**
+- [x] **Package and worker names**
   - [x] `package.json` → name: `orchyra-commercial-frontend-nl`
   - [x] `wrangler.jsonc` → name: `orchyra-commercial-frontend-nl`
-- [ ] **Workspace**
+- [x] **Workspace**
   - [x] `pnpm-workspace.yaml` includes `consumers/.business/commercial-frontend_NL_nl`
 - [x] **Baseline commands**
   - [x] `pnpm install`
   - [x] `pnpm run type-check` passes
   - [x] `pnpm run build` completes
   
-- [ ] **HTML baseline**
+- [x] **HTML baseline**
   - [x] `index.html` → `<html lang="nl">`, `<title>Orchyra</title>`
-  - [ ] `public/favicon.ico` removed or replaced; `<link rel="icon">` matches
+  - [x] `public/favicon.ico` removed or replaced; `<link rel="icon">` matches
 
 ---
 
 ## Phase 1 — Layout Shell & Navigation
 
-- [ ] **Create layout**
-  - [ ] `src/layouts/DefaultLayout.vue` (header, footer, page slot)
-  - [ ] `src/components/NavBar.vue` (Home, Public Tap, Private Tap, Pricing, Proof, FAQs, About, Contact/Legal)
-  - [ ] `src/components/SiteFooter.vue` (contact links, legal microcopy)
-- [ ] **Meta management**
-  - [ ] `src/composables/useMeta.ts` (set title, description, keywords; optional JSON-LD injector)
-  - [ ] Acceptance (i18n): Meta `title`/`description` update on locale change via `watchSources`
-- [ ] **Router**
-  - [ ] Add static routes: `/`, `/public-tap`, `/private-tap`, `/pricing`, `/proof`, `/faqs`, `/about`, `/contact`
-- [ ] **Acceptance**
-  - [ ] Each route renders minimal content without placeholders or console errors
-  - [ ] All visible nav/footer text localized via `$t(...)`
-  - [ ] Nav and footer `aria-label`s localized
+- [x] **Create layout**
+  - [x] `src/layouts/DefaultLayout.vue` (header, footer, page slot)
+  - [x] `src/components/NavBar.vue` (Home, Public Tap, Private Tap, Pricing, Proof, FAQs, About, Contact/Legal)
+  - [x] `src/components/SiteFooter.vue` (contact links, legal microcopy)
+- [x] **Meta management**
+  - [x] `src/composables/useMeta.ts` (set title, description, keywords; optional JSON-LD injector)
+  - [x] Acceptance (i18n): Meta `title`/`description` update on locale change via `watchSources`
+- [x] **Router**
+  - [x] Add static routes: `/`, `/public-tap`, `/private-tap`, `/pricing`, `/proof`, `/faqs`, `/about`, `/contact`
+- [x] **Acceptance**
+  - [x] Each route renders minimal content without placeholders or console errors
+  - [x] All visible nav/footer text localized via `$t(...)`
+  - [x] Nav and footer `aria-label`s localized
 
 ---
 
@@ -68,41 +68,41 @@ Brand: Orchyra · Tagline: Private LLM Hosting in the Netherlands
 Source: `front-page.md`
 
 - [ ] **Hero**
-  - [ ] H1: “AI plumbing, done right.”
-  - [ ] H2 (tagline): “Private LLM Hosting in the Netherlands”
-  - [ ] Subline from front-page copy
-  - [ ] Primary CTA: “Start with the Public Tap” (link to `/public-tap`)
-  - [ ] Secondary CTA: “Get a Private Tap quote” (link to `/private-tap`)
-  - [ ] Trust badges: “Open-source toolkit • EU data-friendly • Proof-first logs”
-  - [ ] Hero image asset plan:
-    - [ ] File: `hero_pipes.webp`
-    - [ ] Alt: “flat vector blueprint diagram of clean data pipes feeding a dedicated tap, subtle cyan/teal accents, sturdy industrial lines, customer-facing, no text”
-- [ ] **Sections**
-  - [ ] Why businesses need AI plumbing (with bullets and citations references)
-  - [ ] Three things, one toolbox (OSS, Public Tap, Private Tap)
-  - [ ] Public Tap overview
-  - [ ] Private Tap overview
-  - [ ] Proof, not promises (describe artifacts)
-  - [ ] Who it’s for (audience bullets)
-  - [ ] FAQs preview (link to `/faqs`)
-  - [ ] About preview (link to `/about`)
-- [ ] **JSON-LD**
-  - [ ] Inject Schema.org `ProfessionalService` JSON-LD in `<head>` for Home only (use example in `front-page.md`)
-  - [ ] Fields to populate:
-    - [ ] `name`: "Orchyra"
-    - [ ] `alternateName`: "Private LLM Hosting in the Netherlands" (localized)
-    - [ ] `description`: "Open-source LLM orchestration, prepaid Public Tap, and dedicated Private Taps on EU GPUs."
-    - [ ] `areaServed`: "NL, EU"
-    - [ ] `url`: production URL (TODO)
-    - [ ] `sameAs`: [GitHub/org URL] (TODO)
-    - [ ] `offers`:
-      - [ ] Public Tap (prepaid credits) — `priceCurrency: EUR`, `price: "50"`, description
-      - [ ] Private Tap (A100 80GB) — `priceCurrency: EUR`, `price: "1.80"`, `unitText` localized (e.g., "$t('a11y.perGpuHour')"), `priceValidUntil`
-- [ ] **SEO**
-  - [ ] Title: “Orchyra — Private LLM Hosting in the Netherlands”
-  - [ ] Meta description: “Independent AI plumber. Open-source toolkit, prepaid Public Tap, and dedicated Private Tap on EU GPUs. Proof-first, robust, and transparent.”
-  - [ ] Keywords (primary): private LLM hosting; managed GPU inference; agentic API; open-source LLM orchestration; EU AI Act readiness; data residency EU; vLLM serving
-  - [ ] Keywords (secondary): AI plumbing; OSS LLM toolkit; dedicated AI API; prepaid AI credits; Hugging Face models; GPU autoscaling; Prometheus metrics
+  - [x] H1: “AI plumbing, done right.”
+  - [x] H2 (tagline): “Private LLM Hosting in the Netherlands”
+  - [x] Subline from front-page copy
+  - [x] Primary CTA: “Start with the Public Tap” (link to `/public-tap`)
+  - [x] Secondary CTA: “Get a Private Tap quote” (link to `/private-tap`)
+  - [x] Trust badges: “Open-source toolkit • EU data-friendly • Proof-first logs”
+  - [x] Hero image asset plan:
+    - [x] File: `hero_pipes.png`
+    - [x] Alt: “flat vector blueprint diagram of clean data pipes feeding a dedicated tap, subtle cyan/teal accents, sturdy industrial lines, customer-facing, no text”
+- [x] **Sections**
+  - [x] Why businesses need AI plumbing (with bullets and citations references)
+  - [x] Three things, one toolbox (OSS, Public Tap, Private Tap)
+  - [x] Public Tap overview
+  - [x] Private Tap overview
+  - [x] Proof, not promises (describe artifacts)
+  - [x] Who it’s for (audience bullets)
+  - [x] FAQs preview (link to `/faqs`)
+  - [x] About preview (link to `/about`)
+- [x] **JSON-LD**
+  - [x] Inject Schema.org `ProfessionalService` JSON-LD in `<head>` for Home only (use example in `front-page.md`)
+  - [x] Fields to populate:
+    - [x] `name`: "Orchyra"
+    - [x] `alternateName`: "Private LLM Hosting in the Netherlands" (localized)
+    - [x] `description`: "Open-source LLM orchestration, prepaid Public Tap, and dedicated Private Taps on EU GPUs."
+    - [x] `areaServed`: "NL, EU"
+    - [x] `url`: production URL (env-configurable)
+    - [x] `sameAs`: [GitHub/org URL] (env-configurable)
+    - [x] `offers`:
+      - [x] Public Tap (prepaid credits) — `priceCurrency: EUR`, `price: "50"`, description
+      - [x] Private Tap (A100 80GB) — `priceCurrency: EUR`, `price: "1.80"`, `unitText` localized (e.g., "$t('a11y.perGpuHour')"), `priceValidUntil`
+- [x] **SEO**
+  - [x] Title: “Orchyra — Private LLM Hosting in the Netherlands”
+  - [x] Meta description: “Independent AI plumber. Open-source toolkit, prepaid Public Tap, and dedicated Private Tap on EU GPUs. Proof-first, robust, and transparent.”
+  - [x] Keywords (primary): private LLM hosting; managed GPU inference; agentic API; open-source LLM orchestration; EU AI Act readiness; data residency EU; vLLM serving
+  - [x] Keywords (secondary): AI plumbing; OSS LLM toolkit; dedicated AI API; prepaid AI credits; Hugging Face models; GPU autoscaling; Prometheus metrics
 
 ---
 
@@ -110,22 +110,22 @@ Source: `front-page.md`
 
 Sources: `services.md`, `ADR-XXX-public-tap-prepaid-credits.md`, `ADR-XXX-public-tap-pricing.md`
 
-- [ ] **Content**
-  - [ ] What it is (shared API on curated OSS models)
-  - [ ] For whom (developers, agencies, IT)
-  - [ ] Why it matters (predictability, quick start)
-  - [ ] Prepaid credits (non-refundable, 12-month validity)
-  - [ ] Balance visibility note (dashboard/API — descriptive only)
-- [ ] **Pricing note**
-  - [ ] Baseline: €1.20 per 1M tokens (input+output combined) — “Draft”
-  - [ ] Packs — “Draft”
-    - [ ] Starter: €50 → ~41M tokens
-    - [ ] Builder: €200 → ~166M tokens
-    - [ ] Pro: €500 → ~416M tokens
-  - [ ] Copy: clearly state 12-month validity and non-refundable terms
-- [ ] **SEO**
-  - [ ] Title: “Public Tap — Prepaid Credits | Orchyra”
-  - [ ] Description: short summary; add keywords per `.002-draft`
+- [x] **Content**
+  - [x] What it is (shared API on curated OSS models)
+  - [x] For whom (developers, agencies, IT)
+  - [x] Why it matters (predictability, quick start)
+  - [x] Prepaid credits (non-refundable, 12-month validity)
+  - [x] Balance visibility note (dashboard/API — descriptive only)
+- [x] **Pricing note**
+  - [x] Baseline: €1.20 per 1M tokens (input+output combined) — “Draft”
+  - [x] Packs — “Draft”
+    - [x] Starter: €50 → ~41M tokens
+    - [x] Builder: €200 → ~166M tokens
+    - [x] Pro: €500 → ~416M tokens
+  - [x] Copy: clearly state 12-month validity and non-refundable terms
+- [x] **SEO**
+  - [x] Title: “Public Tap — Prepaid Credits | Orchyra”
+  - [x] Description: short summary; add keywords per `.002-draft`
 
 ---
 
@@ -133,17 +133,17 @@ Sources: `services.md`, `ADR-XXX-public-tap-prepaid-credits.md`, `ADR-XXX-public
 
 Sources: `services.md`, `front-page.md`
 
-- [ ] **Content**
-  - [ ] Dedicated API, any OSS model, GPU scale options (1×/2×/4×/8×)
-  - [ ] Optional OpenAI-compatible gateway
-  - [ ] Value props (privacy, control, logs/metrics)
-- [ ] **Pricing snapshot**
-  - [ ] A100 80GB — €1.80 / GPU-hour + €250 / month base fee — “Draft”
-  - [ ] H100 80GB — €3.80 / GPU-hour + €400 / month base fee — “Draft”
-  - [ ] Note: Subject to provider rates; scaling 1×/2×/4×/8× GPUs
-- [ ] **SEO**
-  - [ ] Title: “Private LLM Hosting on Dedicated GPUs | Orchyra”
-  - [ ] Description: enterprise-friendly, transparent, EU-first
+- [x] **Content**
+  - [x] Dedicated API, any OSS model, GPU scale options (1×/2×/4×/8×)
+  - [x] Optional OpenAI-compatible gateway
+  - [x] Value props (privacy, control, logs/metrics)
+- [x] **Pricing snapshot**
+  - [x] A100 80GB — €1.80 / GPU-hour + €250 / month base fee — “Draft”
+  - [x] H100 80GB — €3.80 / GPU-hour + €400 / month base fee — “Draft”
+  - [x] Note: Subject to provider rates; scaling 1×/2×/4×/8× GPUs
+- [x] **SEO**
+  - [x] Title: “Private LLM Hosting on Dedicated GPUs | Orchyra”
+  - [x] Description: enterprise-friendly, transparent, EU-first
 
 ---
 
@@ -151,16 +151,16 @@ Sources: `services.md`, `front-page.md`
 
 Sources: `ADR-XXX-public-tap-pricing.md`, `front-page.md`
 
-- [ ] **Credit packs** (Starter/Builder/Pro, token estimates) marked “Draft”
-- [ ] **GPU-hour snapshot** (A100/H100) marked “Draft”
-- [ ] **SEO** Title: “Pricing — Credits & GPU-hour | Orchyra”
+- [x] **Credit packs** (Starter/Builder/Pro, token estimates) marked “Draft”
+- [x] **GPU-hour snapshot** (A100/H100) marked “Draft”
+- [x] **SEO** Title: “Pricing — Credits & GPU-hour | Orchyra”
   
 Details to include (from ADR + front-page):
 
-- [ ] Baseline: €1.20 per 1M tokens (input+output combined) — “Draft”
-- [ ] Packs — “Draft”: Starter €50 ≈ 41M; Builder €200 ≈ 166M; Pro €500 ≈ 416M
-- [ ] GPU-hour — “Draft”: A100 80GB €1.80/h + €250/mo; H100 80GB €3.80/h + €400/mo
-- [ ] Copy: Subject to provider rates; snapshots illustrative
+- [x] Baseline: €1.20 per 1M tokens (input+output combined) — “Draft”
+- [x] Packs — “Draft”: Starter €50 ≈ 41M; Builder €200 ≈ 166M; Pro €500 ≈ 416M
+- [x] GPU-hour — “Draft”: A100 80GB €1.80/h + €250/mo; H100 80GB €3.80/h + €400/mo
+- [x] Copy: Subject to provider rates; snapshots illustrative
 
 ---
 
@@ -168,17 +168,17 @@ Details to include (from ADR + front-page):
 
 Source: `front-page.md`
 
-- [ ] **Explain proof-first** (logs, SSE transcripts, Prometheus, version pinning)
-- [ ] **Placeholders** for screenshots/diagrams (no live data, just descriptive text)
-- [ ] **SEO** Title: “Proof — Logs, Metrics, SSE | Orchyra”
+- [x] **Explain proof-first** (logs, SSE transcripts, Prometheus, version pinning)
+- [x] **Placeholders** for screenshots/diagrams (no live data, just descriptive text)
+- [x] **SEO** Title: “Proof — Logs, Metrics, SSE | Orchyra”
   
 Artifacts to list (static description):
 
-- [ ] Deployment report with SSE transcripts; throughput & latency metrics
-- [ ] Prometheus dashboard snapshots and alert thresholds
-- [ ] Version pinning and roll-back plan
-- [ ] Documentation bundle aligned with EU AI Act transparency ethos
-- [ ] Microcopy: “This is infrastructure—like water or electricity. You shouldn’t have to ‘trust’ it. You should see it.”
+- [x] Deployment report with SSE transcripts; throughput & latency metrics
+- [x] Prometheus dashboard snapshots and alert thresholds
+- [x] Version pinning and roll-back plan
+- [x] Documentation bundle aligned with EU AI Act transparency ethos
+- [x] Microcopy: “This is infrastructure—like water or electricity. You shouldn’t have to ‘trust’ it. You should see it.”
 
 ---
 
@@ -186,16 +186,16 @@ Artifacts to list (static description):
 
 Source: `front-page.md`
 
-- [ ] **Common Q&A** (pricing vs OpenAI, OSS model choice, credits, serving efficiency, EU AI Act doc spirit)
-- [ ] **SEO** Title: “FAQs | Orchyra”
+- [x] **Common Q&A** (pricing vs OpenAI, OSS model choice, credits, serving efficiency, EU AI Act doc spirit)
+- [x] **SEO** Title: “FAQs | Orchyra”
   
 Include answers to:
 
-- [ ] Is this cheaper than OpenAI? → No; value = transparency, EU-friendly, dedicated GPUs
-- [ ] Can I bring any OSS model? → Yes (Private Tap), validate VRAM
-- [ ] How do prepaid credits work? → Packs, non-refundable, 12-month validity, balance visible
-- [ ] What makes serving efficient? → High-throughput engines (e.g., vLLM), metrics exposed
-- [ ] Are you EU AI Act ready? → We operate with documentation/transparency spirit; artifacts help governance
+- [x] Is this cheaper than OpenAI? → No; value = transparency, EU-friendly, dedicated GPUs
+- [x] Can I bring any OSS model? → Yes (Private Tap), validate VRAM
+- [x] How do prepaid credits work? → Packs, non-refundable, 12-month validity, balance visible
+- [x] What makes serving efficient? → High-throughput engines (e.g., vLLM), metrics exposed
+- [x] Are you EU AI Act ready? → We operate with documentation/transparency spirit; artifacts help governance
 
 ---
 
@@ -203,10 +203,10 @@ Include answers to:
 
 Sources: `identity.md`, `USP.md`, `brand.md`
 
-- [ ] **Vince identity** (independent tradesman, OSS, proof-first)
-- [ ] **USP pillars** (OSS transparency, proof-first ops, independent identity, prepaid simplicity)
-- [ ] **SEO** Title: “About | Orchyra”
-  - [ ] CTA: “Talk to Vince” → link to Contact
+- [x] **Vince identity** (independent tradesman, OSS, proof-first)
+- [x] **USP pillars** (OSS transparency, proof-first ops, independent identity, prepaid simplicity)
+- [x] **SEO** Title: “About | Orchyra”
+  - [x] CTA: “Talk to Vince” → link to Contact
 
 ---
 
@@ -214,12 +214,12 @@ Sources: `identity.md`, `USP.md`, `brand.md`
 
 Sources: `front-page.md`, `ADR-XXX-public-tap-prepaid-credits.md`
 
-- [ ] **Contact** (email, LinkedIn, GitHub)
-- [ ] **Legal microcopy**
-  - [ ] Public Tap Terms: prepaid, non-refundable, 12-month validity
-  - [ ] Data & logs availability to customers
-- [ ] **SEO** Title: “Contact & Legal | Orchyra”
-  - [ ] Use footer microcopy: “Public Tap Terms: prepaid, non-refundable, 12-month validity”
+- [x] **Contact** (email, LinkedIn, GitHub)
+- [x] **Legal microcopy**
+  - [x] Public Tap Terms: prepaid, non-refundable, 12-month validity
+  - [x] Data & logs availability to customers
+- [x] **SEO** Title: “Contact & Legal | Orchyra”
+  - [x] Use footer microcopy: “Public Tap Terms: prepaid, non-refundable, 12-month validity”
 
 ---
 
@@ -227,12 +227,12 @@ Sources: `front-page.md`, `ADR-XXX-public-tap-prepaid-credits.md`
 
 Sources: `brand.md`, `moodboard.md`, `moodboard-extended.md`
 
-- [ ] **CSS tokens** in `src/assets/base.css`
-  - [ ] Neutrals (background/text) and accents (cyan `#22d3ee`, teal `#2dd4bf`, purple `#7c5cff`)
-  - [ ] Typography: system-ui/Inter/IBM Plex Sans/Source Sans (robust sans)
-- [ ] **Favicon**
-  - [ ] Replace/remove default `public/favicon.ico`
-  - [ ] Ensure `<link rel="icon">` matches chosen asset or is removed
+- [x] **CSS tokens** in `src/assets/base.css`
+  - [x] Neutrals (background/text) and accents (cyan `#22d3ee`, teal `#2dd4bf`, purple `#7c5cff`)
+  - [x] Typography: system-ui/Inter/IBM Plex Sans/Source Sans (robust sans)
+- [x] **Favicon**
+  - [x] Replace/remove default `public/favicon.ico`
+  - [x] Ensure `<link rel="icon">` matches chosen asset or is removed
   
 - [ ] **Imagery style (from moodboard)**
   - [ ] Pipes & plumbing as flat vector/line-art; blueprint grids
@@ -244,21 +244,21 @@ Sources: `brand.md`, `moodboard.md`, `moodboard-extended.md`
 
 ## Phase 11 — SEO Pass (All Pages)
 
-- [ ] **Per-route meta** via `useMeta.ts`
-  - [ ] Title (unique, brand-suffixed)
-  - [ ] Meta description (≤155 chars) — localized per route (EN/NL)
-  - [ ] Keywords (primary + secondary from `.002-draft`) — localized per route (EN/NL)
-  - [ ] Locale reactivity: meta updates when language changes (use `watchSources` on `locale`)
-  - [ ] Canonical link tag present and correct per route
-  - [ ] hreflang alternates present for `en`, `nl`, and `x-default`
-- [ ] **Home JSON-LD** present and valid (copy adapted from `front-page.md`)
-  - [ ] Locale reactivity: JSON-LD updates when language changes
+- [x] **Per-route meta** via `useMeta.ts`
+  - [x] Title (unique, brand-suffixed)
+  - [x] Meta description (≤155 chars) — localized per route (EN/NL)
+  - [x] Keywords (primary + secondary from `.002-draft`) — localized per route (EN/NL)
+  - [x] Locale reactivity: meta updates when language changes (use `watchSources` on `locale`)
+  - [x] Canonical link tag present and correct per route
+  - [x] hreflang alternates present for `en`, `nl`, and `x-default`
+- [x] **Home JSON-LD** present and valid (copy adapted from `front-page.md`)
+  - [x] Locale reactivity: JSON-LD updates when language changes
 
 ---
 
 ## Images Checklist (from `front-page.md`)
 
-- [ ] Hero — `hero_pipes.webp` (alt per spec)
+- [x] Hero — `hero_pipes.png` (alt per spec)
 - [ ] Problem→Solution panel — split image: messy vs fixed pipelines
 - [ ] Public Tap — prepaid credits icon; curated models grid
 - [ ] Private Tap — dedicated pipe into a building; GPU options row
@@ -291,7 +291,7 @@ Sources: `ondernemersplan_NL_nl/.002-draft/brand.md`, `moodboard.md`, `moodboard
 - [ ] **Imagery Style**
   - [ ] Vector/line-art pipes, valves, gauges; workshop tools icons
   - [ ] No photoreal steel/copper textures; no abstract AI brains
-  - [ ] Hero: `hero_pipes.webp` per `front-page.md` (blueprint diagram; cyan/teal accents)
+  - [ ] Hero: `hero_pipes.png` per `front-page.md` (blueprint diagram; cyan/teal accents)
   - [ ] Acceptance: at least 1 blueprint diagram + 1 “proof” visual (e.g., dashboard snapshot)
 
 - [ ] **Tone of Voice**
@@ -310,7 +310,7 @@ Sources: `ondernemersplan_NL_nl/.002-draft/brand.md`, `moodboard.md`, `moodboard
   - [ ] Acceptance: axe/lighthouse a11y checks show no critical issues
 
 - [ ] **Performance & Assets**
-  - [ ] Compress images (WebP), responsive sizes; lazy-load below the fold
+  - [ ] Compress images (PNG), responsive sizes; lazy-load below the fold
   - [ ] Preload primary font; avoid CLS; favicon replaced with brand-consistent icon
   - [ ] Acceptance: Lighthouse Performance ≥ 90 on Home (desktop) with images in place
 

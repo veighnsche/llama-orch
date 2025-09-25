@@ -1,0 +1,49 @@
+:root {
+  /* Base neutrals */
+  --bg-offwhite: #f5f5f5;
+  --bg-gray: #e0e0e0;
+  --ink-slate: #2c2f35;
+
+  /* Accents (electrical feel) */
+  --acc-cyan: #22d3ee;
+  --acc-teal: #2dd4bf;
+  --acc-purple: #7c5cff;
+
+  /* Utility */
+  --ok-green: #22c55e;
+  --err-red: #ef4444;
+
+  /* Derived tokens */
+  --surface: var(--bg-offwhite);
+  --surface-alt: #ffffff;
+  --text: var(--ink-slate);
+  --muted: #5b616b;
+  --ring: color-mix(in srgb, var(--acc-cyan) 60%, var(--acc-purple));
+}
+
+/* Global application of tokens */
+html,
+body {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+/* Links & focus states */
+a {
+  color: var(--acc-purple);
+}
+
+a:hover {
+  color: var(--acc-cyan);
+}
+
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
