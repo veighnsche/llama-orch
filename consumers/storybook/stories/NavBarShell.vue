@@ -64,5 +64,9 @@
       height: var(--nav-h);
       align-items: center;
     }
+    /* Hide any menu toggle inside the shell on desktop */
+    .nav-inner :deep(.menu-toggle) {
+      display: none;
+    }
   }
 </style>

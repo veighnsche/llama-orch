@@ -26,9 +26,11 @@ const brand = computed(() => ({
   showGlyph: state.showGlyph,
 }))
 
-// Separate open states for each variant to avoid interference
+// Separate open states and ids for each variant to avoid interference
 const openPlayground = ref(false)
 const openComposable = ref(false)
+const drawerIdPlayground = 'nav-drawer-playground'
+const drawerIdComposable = 'nav-drawer-composable'
 const route = useRoute()
 watch(
   () => route.fullPath,
@@ -42,13 +44,13 @@ watch(
 <template>
   <Story title="UI/Navbar" :layout="{ type: 'single', iframe: false }">
     <Variant title="Playground">
-      <div>
+      <div style="max-width: 420px; border: 1px solid var(--surface-muted); border-radius: var(--radius-md); overflow: hidden;">
         <NavBarShell :nav-aria-label="state.navLabel">
           <template #brand>
             <Brand :brand="brand" />
           </template>
           <template #toggle>
-            <MenuToggle :open="openPlayground" @toggle="openPlayground = !openPlayground" />
+            <MenuToggle :open="openPlayground" :aria-controls="drawerIdPlayground" @toggle="openPlayground = !openPlayground" />
           </template>
           <template #links>
             <NavLinks :items="state.links" />
@@ -57,7 +59,7 @@ watch(
             <Button as="router-link" :to="'/contact'" size="sm" variant="primary">Contact us</Button>
           </template>
           <template #drawer>
-            <Drawer :open="openPlayground" :items="state.links" @close="openPlayground = false">
+            <Drawer :id="drawerIdPlayground" :open="openPlayground" :items="state.links" :hide-on-desktop="false" @close="openPlayground = false">
               <template #ops>
                 <Button as="router-link" :to="'/contact'" variant="primary">Contact us</Button>
               </template>
@@ -81,13 +83,13 @@ watch(
           <Brand :brand="{ label: 'Brand', to: '/' }" />
         </template>
         <template #toggle>
-          <MenuToggle :open="openComposable" @toggle="openComposable = !openComposable" />
+          <MenuToggle :open="openComposable" :aria-controls="drawerIdComposable" @toggle="openComposable = !openComposable" />
         </template>
         <template #links>
           <NavLinks :items="[{ label: 'Docs', href: 'https://example.com' }, { label: 'About', to: '/about' }]" />
         </template>
         <template #drawer>
-          <Drawer :open="openComposable" :items="[{ label: 'Docs', href: 'https://example.com' }, { label: 'About', to: '/about' }]" @close="openComposable = false" />
+          <Drawer :id="drawerIdComposable" :open="openComposable" :items="[{ label: 'Docs', href: 'https://example.com' }, { label: 'About', to: '/about' }]" :hide-on-desktop="false" @close="openComposable = false" />
         </template>
       </NavBarShell>
     </Variant>
@@ -98,7 +100,7 @@ watch(
           <Brand :brand="brand" />
         </template>
         <template #toggle>
-          <MenuToggle :open="openComposable" @toggle="openComposable = !openComposable" />
+          <MenuToggle :open="openComposable" :aria-controls="drawerIdComposable" @toggle="openComposable = !openComposable" />
         </template>
         <template #links>
           <NavLinks :items="state.links" />
@@ -107,7 +109,7 @@ watch(
           <Button as="router-link" :to="'/contact'" size="sm" variant="primary">Contact us</Button>
         </template>
         <template #drawer>
-          <Drawer :open="openComposable" :items="state.links" @close="openComposable = false">
+          <Drawer :id="drawerIdComposable" :open="openComposable" :items="state.links" :hide-on-desktop="false" @close="openComposable = false">
             <template #ops>
               <Button as="router-link" :to="'/contact'" variant="primary">Contact us</Button>
             </template>

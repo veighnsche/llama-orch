@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
   import { RouterLink, type RouteLocationRaw } from 'vue-router'
   type NavItem = {
     label: string
@@ -6,21 +7,126 @@
     href?: string
     ariaLabel?: string
   }
-  const props = defineProps<{ open: boolean; items: NavItem[] }>()
-  const emit = defineEmits<{ close: [] }>()
+  const props = withDefaults(
+    defineProps<{
+      id?: string
+      open: boolean
+      items?: NavItem[]
+      hideOnDesktop?: boolean
+      /* Accessibility */
+      ariaRole?: 'dialog' | 'menu' | 'navigation'
+      ariaModal?: boolean
+      label?: string
+      labelledBy?: string
+      /* Behavior */
+      closeOnEsc?: boolean
+      lockScroll?: boolean
+    }>(),
+    {
+      hideOnDesktop: true,
+      ariaRole: 'dialog',
+      ariaModal: true,
+      closeOnEsc: true,
+      lockScroll: true,
+      items: () => [],
+    },
+  )
+  const emit = defineEmits<{ close: []; 'update:open': [value: boolean] }>()
+
+  const panelEl = ref<HTMLElement | null>(null)
+  let prevFocused: Element | null = null
+
+  function doClose() {
+    emit('close')
+    emit('update:open', false)
+  }
+
+  function onKeydown(e: KeyboardEvent) {
+    if (props.closeOnEsc && e.key === 'Escape') {
+      e.preventDefault()
+      doClose()
+    }
+  }
+
+  function lockScrollOnBody(lock: boolean) {
+    if (!props.lockScroll) return
+    const body = document?.body
+    if (!body) return
+    if (lock) {
+      body.style.overflow = 'hidden'
+    } else {
+      body.style.overflow = ''
+    }
+  }
+
+  async function focusFirstFocusable() {
+    await nextTick()
+    const root = panelEl.value
+    if (!root) return
+    const focusable = root.querySelector<HTMLElement>(
+      'a,button,textarea,input,select,[tabindex]:not([tabindex="-1"])',
+    )
+    ;(focusable || root).focus()
+  }
+
+  watch(
+    () => props.open,
+    async (isOpen) => {
+      if (isOpen) {
+        prevFocused = document.activeElement
+        document.addEventListener('keydown', onKeydown)
+        lockScrollOnBody(true)
+        await focusFirstFocusable()
+      } else {
+        document.removeEventListener('keydown', onKeydown)
+        lockScrollOnBody(false)
+        // restore focus
+        ;(prevFocused as HTMLElement | null)?.focus?.()
+      }
+    },
+    { immediate: true },
+  )
+
+  onMounted(() => {
+    if (props.open) {
+      document.addEventListener('keydown', onKeydown)
+      lockScrollOnBody(true)
+    }
+  })
+  onBeforeUnmount(() => {
+    document.removeEventListener('keydown', onKeydown)
+    lockScrollOnBody(false)
+  })
 </script>
 
 <template>
   <transition name="fade">
-    <div v-if="props.open" class="drawer" @click.self="emit('close')">
-      <div class="drawer-panel">
-        <ul class="drawer-links">
-          <li v-for="(item, idx) in props.items" :key="idx">
-            <component :is="item.to ? RouterLink : 'a'" :to="item.to" :href="item.href" @click="emit('close')">
-              {{ item.label }}
-            </component>
-          </li>
-        </ul>
+    <div
+      v-if="props.open"
+      class="drawer"
+      :id="props.id"
+      :class="{ 'drawer--desktop-hidden': props.hideOnDesktop }"
+      @click.self="doClose()"
+    >
+      <div
+        class="drawer-panel"
+        :role="props.ariaRole"
+        :aria-modal="String(props.ariaModal)"
+        :aria-labelledby="props.labelledBy"
+        :aria-label="props.label"
+        tabindex="-1"
+        ref="panelEl"
+      >
+        <template v-if="props.items && props.items.length">
+          <ul class="drawer-links">
+            <li v-for="(item, idx) in props.items" :key="idx">
+              <component :is="item.to ? RouterLink : 'a'" :to="item.to" :href="item.href" @click="doClose()">
+                {{ item.label }}
+              </component>
+            </li>
+          </ul>
+        </template>
+        <slot />
         <div class="drawer-ops">
           <slot name="ops" />
         </div>
@@ -34,6 +140,7 @@
     position: fixed;
     inset: 0;
     background: color-mix(in srgb, var(--text) 42%, transparent);
+    z-index: 1000;
     display: block;
   }
   .drawer-panel {
@@ -73,9 +180,9 @@
     gap: 0.5rem;
   }
 
-  /* show only on small; desktop drawer always hidden by shell layout */
+  /* Optionally hide on desktop when class present */
   @media (min-width: 920px) {
-    .drawer { display: none !important; }
+    .drawer--desktop-hidden { display: none !important; }
   }
 
   .fade-enter-active,
