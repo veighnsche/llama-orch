@@ -3,10 +3,11 @@ import { reactive, computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import NavBarShell from './NavBarShell.vue'
 import Brand from './Brand.vue'
-import MenuToggle from './MenuToggle.vue'
 import NavLinks from './NavLinks.vue'
-import Drawer from './Drawer.vue'
 import Button from './Button.vue'
+import Drawer from './Drawer.vue'
+import DrawerTrigger from './DrawerTrigger.vue'
+import DrawerPanel from './DrawerPanel.vue'
 
 const state = reactive({
   brandLabel: 'Orchyra',
@@ -34,27 +35,36 @@ watch(() => route.fullPath, () => (open.value = false))
 <template>
   <Story title="UI/NavBarShell" :layout="{ type: 'single', iframe: false }">
     <Variant title="Playground">
-      <NavBarShell :nav-aria-label="state.navLabel">
-        <template #brand>
-          <Brand :brand="brand" />
-        </template>
-        <template #toggle>
-          <MenuToggle :open="open" @toggle="open = !open" />
-        </template>
-        <template #links>
-          <NavLinks :items="state.items" />
-        </template>
-        <template #right>
-          <Button as="router-link" :to="'/contact'" size="sm" variant="primary">Contact us</Button>
-        </template>
-        <template #drawer>
-          <Drawer :open="open" :items="state.items" @close="open = false">
-            <template #ops>
-              <Button as="router-link" :to="'/contact'" variant="primary">Contact us</Button>
-            </template>
-          </Drawer>
-        </template>
-      </NavBarShell>
+      <Drawer v-model="open" :hide-on-desktop="true">
+        <NavBarShell :nav-aria-label="state.navLabel">
+          <template #brand>
+            <Brand :brand="brand" />
+          </template>
+          <template #toggle>
+            <DrawerTrigger :as="Button" variant="ghost" size="sm" iconOnly>
+              <svg v-if="!open" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <svg v-else viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </DrawerTrigger>
+          </template>
+          <template #links>
+            <NavLinks :items="state.items" />
+          </template>
+          <template #right>
+            <Button as="router-link" :to="'/contact'" size="sm" variant="primary">Contact us</Button>
+          </template>
+          <template #drawer>
+            <DrawerPanel :items="state.items">
+              <template #ops>
+                <Button as="router-link" :to="'/contact'" variant="primary">Contact us</Button>
+              </template>
+            </DrawerPanel>
+          </template>
+        </NavBarShell>
+      </Drawer>
     </Variant>
 
     <template #controls>

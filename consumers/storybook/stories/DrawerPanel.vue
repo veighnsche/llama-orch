@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { inject, onMounted, onBeforeUnmount } from 'vue'
+import { inject, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 import { RouterLink, type RouteLocationRaw } from 'vue-router'
-import type { DrawerContext } from './DrawerRoot.vue'
+import type { DrawerContext } from './Drawer.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -12,19 +12,65 @@ const props = withDefaults(
 
 const ctx = inject<DrawerContext>('drawer-ctx')
 
+const panelEl = ref<HTMLElement | null>(null)
+let prevFocused: Element | null = null
+
+function lockScrollOnBody(lock: boolean) {
+  if (!ctx?.options.lockScroll) return
+  const body = document?.body
+  if (!body) return
+  if (lock) {
+    body.style.overflow = 'hidden'
+  } else {
+    body.style.overflow = ''
+  }
+}
+
 function onKeydown(e: KeyboardEvent) {
+  if (!ctx?.options.closeOnEsc) return
   if (e.key === 'Escape') {
     e.preventDefault()
     ctx?.setOpen(false)
   }
 }
 
+async function focusFirstFocusable() {
+  await nextTick()
+  const root = panelEl.value
+  if (!root) return
+  const focusable = root.querySelector<HTMLElement>(
+    'a,button,textarea,input,select,[tabindex]:not([tabindex="-1"])',
+  )
+  ;(focusable || root).focus()
+}
+
+watch(
+  () => ctx?.open,
+  async (isOpen) => {
+    if (isOpen) {
+      prevFocused = document.activeElement
+      document.addEventListener('keydown', onKeydown)
+      lockScrollOnBody(true)
+      await focusFirstFocusable()
+    } else {
+      document.removeEventListener('keydown', onKeydown)
+      lockScrollOnBody(false)
+      ;(prevFocused as HTMLElement | null)?.focus?.()
+    }
+  },
+  { immediate: true },
+)
+
 onMounted(() => {
-  document.addEventListener('keydown', onKeydown)
+  if (ctx?.open) {
+    document.addEventListener('keydown', onKeydown)
+    lockScrollOnBody(true)
+  }
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKeydown)
+  lockScrollOnBody(false)
 })
 </script>
 
@@ -44,6 +90,7 @@ onBeforeUnmount(() => {
         :aria-labelledby="ctx?.options.labelledBy"
         :aria-label="ctx?.options.label"
         tabindex="-1"
+        ref="panelEl"
       >
         <template v-if="props.items && props.items.length">
           <ul class="drawer-links">

@@ -4,9 +4,10 @@ import { useRoute } from 'vue-router'
 import Button from './Button.vue'
 import NavBarShell from './NavBarShell.vue'
 import Brand from './Brand.vue'
-import MenuToggle from './MenuToggle.vue'
 import NavLinks from './NavLinks.vue'
 import Drawer from './Drawer.vue'
+import DrawerTrigger from './DrawerTrigger.vue'
+import DrawerPanel from './DrawerPanel.vue'
 
 const state = reactive({
   brandLabel: 'Orchyra',
@@ -45,27 +46,36 @@ watch(
   <Story title="UI/Navbar" :layout="{ type: 'single', iframe: false }">
     <Variant title="Playground">
       <div style="max-width: 420px; border: 1px solid var(--surface-muted); border-radius: var(--radius-md); overflow: hidden;">
-        <NavBarShell :nav-aria-label="state.navLabel">
-          <template #brand>
-            <Brand :brand="brand" />
-          </template>
-          <template #toggle>
-            <MenuToggle :open="openPlayground" :aria-controls="drawerIdPlayground" @toggle="openPlayground = !openPlayground" />
-          </template>
-          <template #links>
-            <NavLinks :items="state.links" />
-          </template>
-          <template #right>
-            <Button as="router-link" :to="'/contact'" size="sm" variant="primary">Contact us</Button>
-          </template>
-          <template #drawer>
-            <Drawer :id="drawerIdPlayground" :open="openPlayground" :items="state.links" :hide-on-desktop="false" @close="openPlayground = false">
-              <template #ops>
-                <Button as="router-link" :to="'/contact'" variant="primary">Contact us</Button>
-              </template>
-            </Drawer>
-          </template>
-        </NavBarShell>
+        <Drawer v-model="openPlayground" :id="drawerIdPlayground" :hide-on-desktop="false">
+          <NavBarShell :nav-aria-label="state.navLabel">
+            <template #brand>
+              <Brand :brand="brand" />
+            </template>
+            <template #toggle>
+              <DrawerTrigger class="menu-toggle" :as="Button" variant="ghost" size="sm" iconOnly :aria-controls="drawerIdPlayground">
+                <svg v-if="!openPlayground" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <svg v-else viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+              </DrawerTrigger>
+            </template>
+            <template #links>
+              <NavLinks :items="state.links" />
+            </template>
+            <template #right>
+              <Button as="router-link" :to="'/contact'" size="sm" variant="primary">Contact us</Button>
+            </template>
+            <template #drawer>
+              <DrawerPanel :items="state.links">
+                <template #ops>
+                  <Button as="router-link" :to="'/contact'" variant="primary">Contact us</Button>
+                </template>
+              </DrawerPanel>
+            </template>
+          </NavBarShell>
+        </Drawer>
       </div>
     </Variant>
 
@@ -78,44 +88,62 @@ watch(
     </Variant>
 
     <Variant title="With external links">
-      <NavBarShell :nav-aria-label="state.navLabel">
-        <template #brand>
-          <Brand :brand="{ label: 'Brand', to: '/' }" />
-        </template>
-        <template #toggle>
-          <MenuToggle :open="openComposable" :aria-controls="drawerIdComposable" @toggle="openComposable = !openComposable" />
-        </template>
-        <template #links>
-          <NavLinks :items="[{ label: 'Docs', href: 'https://example.com' }, { label: 'About', to: '/about' }]" />
-        </template>
-        <template #drawer>
-          <Drawer :id="drawerIdComposable" :open="openComposable" :items="[{ label: 'Docs', href: 'https://example.com' }, { label: 'About', to: '/about' }]" :hide-on-desktop="false" @close="openComposable = false" />
-        </template>
-      </NavBarShell>
+      <Drawer v-model="openComposable" :id="drawerIdComposable" :hide-on-desktop="false">
+        <NavBarShell :nav-aria-label="state.navLabel">
+          <template #brand>
+            <Brand :brand="{ label: 'Brand', to: '/' }" />
+          </template>
+          <template #toggle>
+            <DrawerTrigger class="menu-toggle" :as="Button" variant="ghost" size="sm" iconOnly :aria-controls="drawerIdComposable">
+              <svg v-if="!openComposable" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <svg v-else viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </DrawerTrigger>
+          </template>
+          <template #links>
+            <NavLinks :items="[{ label: 'Docs', href: 'https://example.com' }, { label: 'About', to: '/about' }]" />
+          </template>
+          <template #drawer>
+            <DrawerPanel :items="[{ label: 'Docs', href: 'https://example.com' }, { label: 'About', to: '/about' }]" />
+          </template>
+        </NavBarShell>
+      </Drawer>
     </Variant>
 
     <Variant title="Composable (shell + parts)">
-      <NavBarShell :nav-aria-label="state.navLabel">
-        <template #brand>
-          <Brand :brand="brand" />
-        </template>
-        <template #toggle>
-          <MenuToggle :open="openComposable" :aria-controls="drawerIdComposable" @toggle="openComposable = !openComposable" />
-        </template>
-        <template #links>
-          <NavLinks :items="state.links" />
-        </template>
-        <template #right>
-          <Button as="router-link" :to="'/contact'" size="sm" variant="primary">Contact us</Button>
-        </template>
-        <template #drawer>
-          <Drawer :id="drawerIdComposable" :open="openComposable" :items="state.links" :hide-on-desktop="false" @close="openComposable = false">
-            <template #ops>
-              <Button as="router-link" :to="'/contact'" variant="primary">Contact us</Button>
-            </template>
-          </Drawer>
-        </template>
-      </NavBarShell>
+      <Drawer v-model="openComposable" :id="drawerIdComposable" :hide-on-desktop="false">
+        <NavBarShell :nav-aria-label="state.navLabel">
+          <template #brand>
+            <Brand :brand="brand" />
+          </template>
+          <template #toggle>
+            <DrawerTrigger :as="Button" variant="ghost" size="sm" iconOnly :aria-controls="drawerIdComposable">
+              <svg v-if="!openComposable" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <svg v-else viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </DrawerTrigger>
+          </template>
+          <template #links>
+            <NavLinks :items="state.links" />
+          </template>
+          <template #right>
+            <Button as="router-link" :to="'/contact'" size="sm" variant="primary">Contact us</Button>
+          </template>
+          <template #drawer>
+            <DrawerPanel :items="state.links">
+              <template #ops>
+                <Button as="router-link" :to="'/contact'" variant="primary">Contact us</Button>
+              </template>
+            </DrawerPanel>
+          </template>
+        </NavBarShell>
+      </Drawer>
     </Variant>
 
     <template #controls>

@@ -13,6 +13,8 @@ export type DrawerContext = {
     ariaModal: boolean
     label?: string
     labelledBy?: string
+    closeOnEsc: boolean
+    lockScroll: boolean
   }
 }
 
@@ -25,11 +27,15 @@ const props = withDefaults(
     ariaModal?: boolean
     label?: string
     labelledBy?: string
+    closeOnEsc?: boolean
+    lockScroll?: boolean
   }>(),
   {
     hideOnDesktop: true,
     ariaRole: 'dialog',
     ariaModal: true,
+    closeOnEsc: true,
+    lockScroll: true,
   },
 )
 
@@ -67,6 +73,8 @@ provide('drawer-ctx', {
       ariaModal: !!props.ariaModal,
       label: props.label,
       labelledBy: props.labelledBy,
+      closeOnEsc: !!props.closeOnEsc,
+      lockScroll: !!props.lockScroll,
     }
   },
 } as DrawerContext)

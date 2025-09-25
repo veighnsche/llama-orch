@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, useAttrs } from 'vue'
-import type { DrawerContext } from './DrawerRoot.vue'
+import type { DrawerContext } from './Drawer.vue'
 
 const props = withDefaults(
   defineProps<{
