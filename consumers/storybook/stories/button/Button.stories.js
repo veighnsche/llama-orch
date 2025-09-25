@@ -8,7 +8,7 @@ export default {
     label: { control: 'text' },
     variant: { control: { type: 'select' }, options: ['primary', 'ghost', 'link'] },
     size: { control: { type: 'select' }, options: ['sm', 'md', 'lg'] },
-    as: { control: { type: 'select' }, options: ['button', 'a'] },
+    as: { control: { type: 'select' }, options: ['button', 'a', 'router-link'] },
     href: { control: 'text' },
     disabled: { control: 'boolean' },
     block: { control: 'boolean' },
@@ -28,11 +28,3 @@ export default {
 }
 
 export const Primary = {}
-
-export const Ghost = { args: { variant: 'ghost' } }
-
-export const Link = { args: { variant: 'link', as: 'a', href: '#' } }
-
-export const Small = { args: { size: 'sm' } }
-
-export const Large = { args: { size: 'lg' } }
