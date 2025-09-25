@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { reactive, computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import Button from './Button.vue'
+import Button from './Button/Button.vue'
 import NavBarShell from './NavBarShell.vue'
-import Brand from './Brand.vue'
+import Brand from './Brand/Brand.vue'
 import NavLinks from './NavLinks.vue'
 import Drawer from './Drawer.vue'
 import DrawerTrigger from './DrawerTrigger.vue'
@@ -43,21 +43,45 @@ watch(
 </script>
 
 <template>
-  <Story title="UI/Navbar" :layout="{ type: 'single', iframe: false }">
+  <Story title="Composite/Navbar" :layout="{ type: 'single', iframe: false }">
     <Variant title="Playground">
-      <div style="max-width: 420px; border: 1px solid var(--surface-muted); border-radius: var(--radius-md); overflow: hidden;">
+      <div
+        style="
+          max-width: 420px;
+          border: 1px solid var(--surface-muted);
+          border-radius: var(--radius-md);
+          overflow: hidden;
+        "
+      >
         <Drawer v-model="openPlayground" :id="drawerIdPlayground" :hide-on-desktop="false">
           <NavBarShell :nav-aria-label="state.navLabel">
             <template #brand>
               <Brand :brand="brand" />
             </template>
             <template #toggle>
-              <DrawerTrigger class="menu-toggle" :as="Button" variant="ghost" size="sm" iconOnly :aria-controls="drawerIdPlayground">
+              <DrawerTrigger
+                class="menu-toggle"
+                :as="Button"
+                variant="ghost"
+                size="sm"
+                iconOnly
+                :aria-controls="drawerIdPlayground"
+              >
                 <svg v-if="!openPlayground" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                  <path
+                    d="M4 7h16M4 12h16M4 17h16"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
                 </svg>
                 <svg v-else viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                  <path
+                    d="M6 6l12 12M18 6l-12 12"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
                 </svg>
               </DrawerTrigger>
             </template>
@@ -65,7 +89,9 @@ watch(
               <NavLinks :items="state.links" />
             </template>
             <template #right>
-              <Button as="router-link" :to="'/contact'" size="sm" variant="primary">Contact us</Button>
+              <Button as="router-link" :to="'/contact'" size="sm" variant="primary"
+                >Contact us</Button
+              >
             </template>
             <template #drawer>
               <DrawerPanel :items="state.links">
@@ -94,20 +120,47 @@ watch(
             <Brand :brand="{ label: 'Brand', to: '/' }" />
           </template>
           <template #toggle>
-            <DrawerTrigger class="menu-toggle" :as="Button" variant="ghost" size="sm" iconOnly :aria-controls="drawerIdComposable">
+            <DrawerTrigger
+              class="menu-toggle"
+              :as="Button"
+              variant="ghost"
+              size="sm"
+              iconOnly
+              :aria-controls="drawerIdComposable"
+            >
               <svg v-if="!openComposable" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path
+                  d="M4 7h16M4 12h16M4 17h16"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
               </svg>
               <svg v-else viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path
+                  d="M6 6l12 12M18 6l-12 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
               </svg>
             </DrawerTrigger>
           </template>
           <template #links>
-            <NavLinks :items="[{ label: 'Docs', href: 'https://example.com' }, { label: 'About', to: '/about' }]" />
+            <NavLinks
+              :items="[
+                { label: 'Docs', href: 'https://example.com' },
+                { label: 'About', to: '/about' },
+              ]"
+            />
           </template>
           <template #drawer>
-            <DrawerPanel :items="[{ label: 'Docs', href: 'https://example.com' }, { label: 'About', to: '/about' }]" />
+            <DrawerPanel
+              :items="[
+                { label: 'Docs', href: 'https://example.com' },
+                { label: 'About', to: '/about' },
+              ]"
+            />
           </template>
         </NavBarShell>
       </Drawer>
@@ -120,12 +173,28 @@ watch(
             <Brand :brand="brand" />
           </template>
           <template #toggle>
-            <DrawerTrigger :as="Button" variant="ghost" size="sm" iconOnly :aria-controls="drawerIdComposable">
+            <DrawerTrigger
+              :as="Button"
+              variant="ghost"
+              size="sm"
+              iconOnly
+              :aria-controls="drawerIdComposable"
+            >
               <svg v-if="!openComposable" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path
+                  d="M4 7h16M4 12h16M4 17h16"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
               </svg>
               <svg v-else viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path
+                  d="M6 6l12 12M18 6l-12 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
               </svg>
             </DrawerTrigger>
           </template>
@@ -133,7 +202,9 @@ watch(
             <NavLinks :items="state.links" />
           </template>
           <template #right>
-            <Button as="router-link" :to="'/contact'" size="sm" variant="primary">Contact us</Button>
+            <Button as="router-link" :to="'/contact'" size="sm" variant="primary"
+              >Contact us</Button
+            >
           </template>
           <template #drawer>
             <DrawerPanel :items="state.links">
