@@ -2,7 +2,7 @@
   import { useI18n } from 'vue-i18n'
   const { t } = useI18n()
   import Button from 'orchyra-storybook/stories/button.vue'
-  import Badge from '@ui/badge'
+  import Badge from 'orchyra-storybook/stories/badge.vue'
 </script>
 
 <template>
