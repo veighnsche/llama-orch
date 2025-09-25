@@ -1,4 +1,4 @@
-@import '../styles/tokens.css';
+@import 'orchyra-storybook/styles/tokens.css';
 @import './base.css';
 @import '../styles/blueprint.css';
 

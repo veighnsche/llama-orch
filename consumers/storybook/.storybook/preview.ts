@@ -1,4 +1,6 @@
 import type { Preview } from '@storybook/vue3-vite';
+import '../styles/tokens.css';
+import '@commercial/styles/blueprint.css';
 
 const preview: Preview = {
   parameters: {
