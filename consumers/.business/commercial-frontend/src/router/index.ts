@@ -9,49 +9,49 @@ import AboutView from '@/views/AboutView.vue'
 import ContactLegalView from '@/views/ContactLegalView.vue'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeView,
-    },
-    {
-      path: '/public-tap',
-      name: 'public-tap',
-      component: PublicTapView,
-    },
-    {
-      path: '/private-tap',
-      name: 'private-tap',
-      component: PrivateTapView,
-    },
-    {
-      path: '/pricing',
-      name: 'pricing',
-      component: PricingView,
-    },
-    {
-      path: '/proof',
-      name: 'proof',
-      component: ProofView,
-    },
-    {
-      path: '/faqs',
-      name: 'faqs',
-      component: FAQsView,
-    },
-    {
-      path: '/about',
-      name: 'about',
-      component: AboutView,
-    },
-    {
-      path: '/contact',
-      name: 'contact',
-      component: ContactLegalView,
-    },
-  ],
+    history: createWebHistory(import.meta.env.BASE_URL),
+    routes: [
+        {
+            path: '/',
+            name: 'home',
+            component: HomeView,
+        },
+        {
+            path: '/public-tap',
+            name: 'public-tap',
+            component: PublicTapView,
+        },
+        {
+            path: '/private-tap',
+            name: 'private-tap',
+            component: PrivateTapView,
+        },
+        {
+            path: '/pricing',
+            name: 'pricing',
+            component: PricingView,
+        },
+        {
+            path: '/proof',
+            name: 'proof',
+            component: ProofView,
+        },
+        {
+            path: '/faqs',
+            name: 'faqs',
+            component: FAQsView,
+        },
+        {
+            path: '/about',
+            name: 'about',
+            component: AboutView,
+        },
+        {
+            path: '/contact',
+            name: 'contact',
+            component: ContactLegalView,
+        },
+    ],
 })
 
 export default router

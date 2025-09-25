@@ -1,11 +1,11 @@
 <template>
-  <div class="layout">
-    <NavBar />
-    <main class="content bp-grid">
-      <RouterView />
-    </main>
-    <SiteFooter />
-  </div>
+    <div class="layout">
+        <NavBar />
+        <main class="content bp-grid">
+            <RouterView />
+        </main>
+        <SiteFooter />
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -16,12 +16,12 @@ import SiteFooter from '@/components/SiteFooter.vue'
 
 <style scoped>
 .layout {
-  display: flex;
-  min-height: 100vh;
-  flex-direction: column;
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
 }
 .content {
-  flex: 1 1 auto;
-  padding: 1rem 0;
+    flex: 1 1 auto;
+    padding: 1rem 0;
 }
 </style>

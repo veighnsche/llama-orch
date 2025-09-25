@@ -1,20 +1,14 @@
 {
     "compilerOptions": {
-      "target": "es2017",
-      "module": "nodenext",
-      "lib": ["esnext", "dom", "dom.iterable"],
-      "moduleResolution": "nodenext",
-      "esModuleInterop": true,
-      "strict": true,
-      "strictNullChecks": true,
-      "resolveJsonModule": true,
-      "jsx": "preserve"
+        "target": "es2017",
+        "module": "nodenext",
+        "lib": ["esnext", "dom", "dom.iterable"],
+        "moduleResolution": "nodenext",
+        "esModuleInterop": true,
+        "strict": true,
+        "strictNullChecks": true,
+        "resolveJsonModule": true,
+        "jsx": "preserve"
     },
-    "include": [
-      "env.d.ts",
-      "histoire.setup.ts",
-      "stories/**/*.ts",
-      "stories/**/*.vue",
-      "*.ts"
-    ]
+    "include": ["env.d.ts", "histoire.setup.ts", "stories/**/*.ts", "stories/**/*.vue", "*.ts"]
 }

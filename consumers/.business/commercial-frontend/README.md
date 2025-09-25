@@ -10,12 +10,12 @@ Status: scaffold stub with all Vue/Vite placeholders removed. Ready for branded 
 ## What’s in here
 
 - Minimal Vue app stub at this folder root
-  - Placeholders removed
-  - `index.html` set to lang="nl" and title "Orchyra"
-  - `src/App.vue` only renders `<RouterView />`
-  - `src/router/index.ts` has only the home route
-  - `server/index.ts` returns 404 for all routes (no demo JSON)
-  - Neutral base styles in `src/assets/`
+    - Placeholders removed
+    - `index.html` set to lang="nl" and title "Orchyra"
+    - `src/App.vue` only renders `<RouterView />`
+    - `src/router/index.ts` has only the home route
+    - `server/index.ts` returns 404 for all routes (no demo JSON)
+    - Neutral base styles in `src/assets/`
 
 ## Develop
 
@@ -71,15 +71,15 @@ SEO/Schema
 Key docs driving copy and structure are under:
 
 - `consumers/.business/ondernemersplan_NL_nl/.002-draft/`
-  - `front-page.md` — hero/sections/CTAs + JSON-LD example
-  - `naming.md` — brand picked (Orchyra) and tagline
-  - `USP.md` — four USP pillars
-  - `services.md` — OSS / Public Tap / Private Tap (+ extra toolkit dev)
-  - `ADR-XXX-public-tap-pricing.md` — draft pricing model/credit packs
-  - `ADR-XXX-public-tap-prepaid-credits.md` — non-refundable credits policy
-  - `competitors.md` — competitor map and lessons
-  - `target-audiences.md`, `page-layers.md`, `mesh-site-architecture.md` — IA/routing plan
-  - `brand.md`, `moodboard.md`, `moodboard-extended.md` — tone, visuals, palette
+    - `front-page.md` — hero/sections/CTAs + JSON-LD example
+    - `naming.md` — brand picked (Orchyra) and tagline
+    - `USP.md` — four USP pillars
+    - `services.md` — OSS / Public Tap / Private Tap (+ extra toolkit dev)
+    - `ADR-XXX-public-tap-pricing.md` — draft pricing model/credit packs
+    - `ADR-XXX-public-tap-prepaid-credits.md` — non-refundable credits policy
+    - `competitors.md` — competitor map and lessons
+    - `target-audiences.md`, `page-layers.md`, `mesh-site-architecture.md` — IA/routing plan
+    - `brand.md`, `moodboard.md`, `moodboard-extended.md` — tone, visuals, palette
 
 ## Next steps
 
