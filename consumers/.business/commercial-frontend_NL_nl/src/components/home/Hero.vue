@@ -2,56 +2,81 @@
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
+import Button from '@/components/ui/Button.vue'
+import Badge from '@/components/ui/Badge.vue'
 </script>
 
 <template>
   <section class="hero" aria-labelledby="hero-title">
     <div class="container">
-      <!-- Left: copy -->
       <div class="copy">
         <p class="eyebrow">{{ t('home.hero.eyebrow', 'AI plumbing, done right') }}</p>
-        <h1 id="hero-title" class="title">{{ t('home.hero.h1') }}</h1>
-        <p class="sub">{{ t('home.hero.sub') }}</p>
+
+        <h1 id="hero-title" class="title">
+          {{ t('home.hero.h1', 'Robust AI, without the leaks.') }}
+        </h1>
+
+        <p class="sub">
+          {{ t('home.hero.sub',
+            "I install and certify agentic AI pipelines. Proofs, logs, and documentation included. EU data, no lock-in.") }}
+        </p>
 
         <div class="ctas" role="group" aria-label="primary actions">
-          <RouterLink class="cta primary" to="/service-menu">
+          <Button as="router-link" to="/service-menu" variant="primary">
             {{ t('home.hero.ctaMenu', 'View service menu') }}
-          </RouterLink>
-          <RouterLink class="cta ghost" to="/proofs">
+          </Button>
+          <Button as="router-link" to="/proofs" variant="ghost">
             {{ t('home.hero.ctaProofs', 'Inspect proofs') }}
-          </RouterLink>
+          </Button>
+          <div class="inline-links" aria-label="quick links">
+            <RouterLink to="/public-tap">{{ t('home.hero.quickPublic', 'Public Tap') }}</RouterLink>
+            <span aria-hidden="true">·</span>
+            <RouterLink to="/private-tap">{{ t('home.hero.quickPrivate', 'Private Tap') }}</RouterLink>
+          </div>
         </div>
 
-        <!-- Proof badges (replaces trusted-by) -->
         <ul class="badges" aria-label="proofs and certifications">
-          <li class="badge">
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3 3h4v4l3 3-3 3v4h-4l-3 3-3-3H5v-4l-3-3 3-3V5h4l3-3z" fill="currentColor" opacity=".12"/><path d="M12 4.5l2.1 2.1h2.95V9.55L19.5 11.7l-2.45 2.15V16.8H14.1L12 18.9l-2.1-2.1H6.95v-3L4.5 11.7 6.95 9.55V6.6H9.9L12 4.5z" fill="currentColor"/></svg>
-            <span>{{ t('home.hero.badge.oss', 'Open source') }}</span>
+          <li>
+            <Badge variant="green">
+              <template #icon>
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2" fill="currentColor" opacity=".12"/><path d="M7 8h10M7 12h6M14.5 12l3.5 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </template>
+              {{ t('home.hero.badge.proofs', 'Proof-driven') }}
+            </Badge>
           </li>
-          <li class="badge">
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="currentColor" opacity=".12"/><path d="M8 12l2 2 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>{{ t('home.hero.badge.gpl', 'GPL licensed') }}</span>
+          <li>
+            <Badge variant="cyan">
+              <template #icon>
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="currentColor" opacity=".12"/><path d="M8 12l2 2 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </template>
+              {{ t('home.hero.badge.eu', 'EU data') }}
+            </Badge>
           </li>
-          <li class="badge">
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2" fill="currentColor" opacity=".12"/><path d="M7 8h10M7 12h6M7 16h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            <span>{{ t('home.hero.badge.proofs', 'Proof-driven') }}</span>
+          <li>
+            <Badge variant="slate">
+              <template #icon>
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3 3h4v4l3 3-3 3v4h-4l-3 3-3-3H5v-4l-3-3 3-3V5h4l3-3z" fill="currentColor" opacity=".12"/><path d="M12 4.5l2.1 2.1h3V9.6l2.4 2.1-2.4 2.1v3.1h-3L12 19.4l-2.1-2.1H6.9v-3.1L4.5 11.7l2.4-2.1V6.6h3L12 4.5z" fill="currentColor"/></svg>
+              </template>
+              {{ t('home.hero.badge.oss', 'Open source') }}
+            </Badge>
           </li>
-          <li class="badge">
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l7 4v6c0 5-7 10-7 10S5 17 5 12V6l7-4z" fill="currentColor" opacity=".12"/><path d="M12 22s7-5 7-10V6l-7-4-7 4v6c0 5 7 10 7 10z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2" fill="currentColor"/></svg>
-            <span>{{ t('home.hero.badge.local', 'Local first') }}</span>
+          <li>
+            <Badge variant="purple">
+              <template #icon>
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l7 4v6c0 5-7 10-7 10S5 17 5 12V6l7-4z" fill="currentColor" opacity=".12"/><circle cx="12" cy="10" r="2" fill="currentColor"/></svg>
+              </template>
+              {{ t('home.hero.badge.local', 'Local first') }}
+            </Badge>
           </li>
         </ul>
       </div>
 
-      <!-- Right: media -->
       <figure class="hero-media">
         <img
           src="/assets/hero_pipes.png"
-          width="1440"
-          height="560"
-          alt="Blueprint-style diagram of clean data pipes feeding a dedicated tap; industrial, cyan/teal accents."
-          loading="eager"
-          fetchpriority="high"
+          width="1440" height="560"
+          alt="Blueprint diagram of clean data pipes feeding a dedicated tap; cyan/teal industrial accents."
+          loading="eager" fetchpriority="high"
         />
       </figure>
     </div>
@@ -59,129 +84,41 @@ const { t } = useI18n()
 </template>
 
 <style scoped>
-:root {
-  --hero-bg: radial-gradient(1200px 600px at 20% -10%, #e0f2fe 0%, transparent 60%),
-              radial-gradient(800px 400px at 120% 50%, #ccfbf1 0%, transparent 55%);
-  --ink: #0f172a;         /* slate-900 */
-  --muted: #475569;       /* slate-600 */
-  --brand: #0ea5e9;       /* cyan-500 */
-  --ring: rgba(14,165,233,.35);
-  --border: #e5e7eb;      /* gray-200 */
-  --chip: #f1f5f9;        /* slate-100 */
+:root{
+  --hero-bg: radial-gradient(1100px 520px at 18% -8%, #e0f2fe 0%, transparent 60%),
+             radial-gradient(760px 360px at 115% 45%, #ccfbf1 0%, transparent 55%);
+  --ink:#0f172a; --muted:#475569; --brand:#0ea5e9; --ring:rgba(14,165,233,.35);
+  --border:#e5e7eb; --chip:#f1f5f9;
+}
+.hero{ background:var(--hero-bg); padding:clamp(2rem,4vw,3.5rem) 1rem; }
+.container{
+  max-width:1120px; margin:0 auto; display:grid; align-items:center; gap:2rem;
+  grid-template-columns: 1fr; /* mobile */
+}
+@media (min-width:920px){ .container{ grid-template-columns: 1.1fr 1fr; } }
+
+.copy{ max-width:640px; }
+.eyebrow{
+  display:inline-block; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--brand); background:rgba(14,165,233,.08); border:1px solid rgba(14,165,233,.2);
+  padding:.25rem .6rem; border-radius:999px; margin:0 0 .75rem;
+}
+.title{
+  color:var(--ink); line-height:1.05; font-weight:900; letter-spacing:-.02em;
+  font-size:clamp(2.1rem,4.8vw,3.5rem); margin:0 0 .6rem;
+}
+.sub{ color:var(--muted); font-size:clamp(1rem,1.35vw,1.125rem); margin:0 0 1rem; }
+
+.ctas{ display:flex; flex-wrap:wrap; gap:.75rem; margin:1rem 0 1rem; align-items:center; }
+
+.inline-links{ display:flex; gap:.5rem; margin-left:.25rem; }
+.inline-links a{ color:#334155; text-decoration:none; font-weight:600; }
+.inline-links a:hover{ text-decoration:underline; }
+
+.badges{
+  display:flex; flex-wrap:wrap; gap:.5rem .75rem; list-style:none; padding:0; margin:.25rem 0 0 0;
 }
 
-.hero {
-  background: var(--hero-bg);
-  padding: clamp(2rem, 4vw, 3.5rem) 1rem;
-}
-
-.container {
-  max-width: 1120px;
-  margin: 0 auto;
-  display: grid;
-  align-items: center;
-  gap: 2rem;
-}
-
-.copy { max-width: 640px; }
-
-.eyebrow {
-  display: inline-block;
-  font-weight: 700;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  color: var(--brand);
-  background: rgba(14,165,233,.08);
-  border: 1px solid rgba(14,165,233,.2);
-  padding: .25rem .6rem;
-  border-radius: 999px;
-  margin-bottom: .75rem;
-}
-
-.title {
-  color: var(--ink);
-  line-height: 1.05;
-  font-weight: 900;
-  font-size: clamp(2rem, 4.5vw, 3.25rem);
-  letter-spacing: -.02em;
-  margin: 0 0 .6rem 0;
-}
-
-.sub {
-  color: var(--muted);
-  font-size: clamp(1rem, 1.35vw, 1.125rem);
-  margin: 0 0 1rem 0;
-}
-
-.ctas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .75rem;
-  margin: 1rem 0 1.25rem 0;
-}
-
-.cta {
-  text-decoration: none;
-  padding: .65rem .95rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  font-weight: 700;
-  outline: none;
-  transition: transform .06s ease, box-shadow .06s ease, border-color .2s ease, background .2s ease;
-}
-
-.cta:focus-visible { box-shadow: 0 0 0 4px var(--ring); }
-
-.cta.primary {
-  background: var(--brand);
-  color: #fff;
-  border-color: var(--brand);
-}
-.cta.primary:hover { transform: translateY(-1px); }
-
-.cta.ghost {
-  background: #fff;
-  color: var(--ink);
-}
-.cta.ghost:hover { border-color: #cbd5e1; transform: translateY(-1px); }
-
-.badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .5rem .75rem;
-  list-style: none;
-  padding: 0;
-  margin: .25rem 0 0 0;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  padding: .35rem .55rem;
-  background: var(--chip);
-  border: 1px solid #e2e8f0; /* slate-200 */
-  border-radius: 999px;
-  color: #0f172a;
-  font-size: .9rem;
-  font-weight: 600;
-}
-
-.badge svg { color: #0ea5e9; }
-
-.hero-media {
-  margin: 0;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 12px 32px rgba(2, 6, 23, 0.12);
-}
-.hero-media img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-@media (min-width: 920px) {
-  .container { grid-template-columns: 1.1fr 1fr; }
-}
+.hero-media{ margin:0; border-radius:12px; overflow:hidden; box-shadow:0 12px 32px rgba(2,6,23,.12); }
+.hero-media img{ display:block; width:100%; height:auto; }
 </style>

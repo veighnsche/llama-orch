@@ -41,9 +41,9 @@
       <!-- Right side: language + CTA -->
       <div class="right">
         <LanguageSwitcher />
-        <RouterLink class="cta" to="/service-menu">
+        <Button as="router-link" to="/service-menu" variant="primary">
           {{ $t('nav.serviceMenu', 'Service menu') }}
-        </RouterLink>
+        </Button>
       </div>
     </nav>
 
@@ -62,9 +62,9 @@
           </ul>
           <div class="drawer-ops">
             <LanguageSwitcher />
-            <RouterLink class="cta wide" @click="open=false" to="/service-menu">
+            <Button class="wide" as="router-link" @click="open=false" to="/service-menu" variant="primary">
               {{ $t('nav.serviceMenu', 'Service menu') }}
-            </RouterLink>
+            </Button>
           </div>
         </div>
       </div>
@@ -76,6 +76,7 @@
 import { ref, watch } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
+import Button from '@/components/ui/Button.vue'
 
 const open = ref(false)
 const route = useRoute()
@@ -184,17 +185,8 @@ watch(() => route.fullPath, () => { open.value = false })
   align-items: center;
   gap: .6rem;
 }
-.cta {
-  text-decoration: none;
-  padding: .5rem .75rem;
-  border-radius: 10px;
-  font-weight: 700;
-  color: #fff;
-  background: #0ea5e9;
-  border: 1px solid #0ea5e9;
-}
-.cta:hover { filter: brightness(1.05); }
-.cta:focus-visible { box-shadow: 0 0 0 4px rgba(14,165,233,.35); }
+/* drawer button stretch */
+.drawer-ops :deep(.ui-btn.wide) { flex: 1; text-align: center; }
 
 /* ---- mobile toggle ---- */
 .menu-toggle {
@@ -251,7 +243,7 @@ watch(() => route.fullPath, () => { open.value = false })
   align-items: center;
   gap: .5rem;
 }
-.cta.wide { flex: 1; text-align: center; }
+/* handled above via :deep(.ui-btn.wide) */
 
 /* ---- transitions ---- */
 .fade-enter-active, .fade-leave-active { transition: opacity .12s ease; }
@@ -265,7 +257,7 @@ watch(() => route.fullPath, () => { open.value = false })
 }
 @media (max-width: 919.98px) {
   .drawer { display: block; }
-  .right .cta { display: none; } /* keep topbar tight on small screens; CTA moves into drawer */
+  .right :deep(.ui-btn) { display: none; } /* keep topbar tight on small screens; CTA moves into drawer */
 }
 @media (prefers-color-scheme: dark) {
   .nav {
@@ -276,7 +268,7 @@ watch(() => route.fullPath, () => { open.value = false })
   .brand-mark { color: #7dd3fc; }
   .links a { color: #cbd5e1; }
   .links a:hover { background: #0f172a; }
-  .right .cta { border-color: #0891b2; background: #0891b2; }
+  /* Button inherits dark variables; no override needed */
   .menu-toggle { background: #0b1220; border-color: #0b1b2e; color: #e5f1ff; }
   .drawer { background: rgba(2,6,23,.6); }
   .drawer-panel { background: #0b1220; border-color: #0b1b2e; }

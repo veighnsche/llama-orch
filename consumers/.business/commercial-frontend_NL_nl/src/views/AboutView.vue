@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useMeta } from '@/composables/useMeta'
 import { useI18n } from 'vue-i18n'
-import { useRoute, RouterLink } from 'vue-router'
+import { useRoute } from 'vue-router'
+import Button from '@/components/ui/Button.vue'
 
 const { t, tm, locale } = useI18n()
 const route = useRoute()
@@ -48,19 +49,11 @@ useMeta({
     </section>
 
     <section>
-      <RouterLink class="cta primary" to="/contact">{{ $t('about.cta') }}</RouterLink>
+      <Button as="router-link" to="/contact" variant="primary">{{ $t('about.cta') }}</Button>
     </section>
   </main>
 </template>
 
 <style scoped>
 .page { display: grid; gap: 1rem; }
-.cta.primary {
-  text-decoration: none;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--acc-cyan);
-  border-radius: 6px;
-  background: var(--acc-cyan);
-  color: white;
-}
 </style>

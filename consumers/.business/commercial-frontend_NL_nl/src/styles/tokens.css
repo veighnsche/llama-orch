@@ -1,40 +1,64 @@
 :root {
-  /* Base neutrals */
-  --bg-offwhite: #f5f5f5;
-  --bg-gray: #e0e0e0;
-  --ink-slate: #2c2f35;
+  /* === Base neutrals === */
+  --bg-offwhite: #f9fafb; /* slightly lighter for cleaner contrast */
+  --bg-gray: #e5e7eb;     /* tailwind gray-200 equivalent */
+  --ink-slate: #1f2937;   /* deeper slate for stronger contrast */
 
-  /* Accents (electrical feel) */
-  --acc-cyan: #22d3ee;
-  --acc-teal: #2dd4bf;
-  --acc-purple: #7c5cff;
+  /* === Accents (electrical feel) === */
+  --acc-cyan: #06b6d4;    /* cyan-500 (more contrast than 22d3ee) */
+  --acc-teal: #14b8a6;    /* teal-500 */
+  --acc-purple: #7c3aed;  /* violet-600, more robust for text/links */
 
-  /* Utility */
-  --ok-green: #22c55e;
-  --err-red: #ef4444;
+  /* === Utility colors === */
+  --ok-green: #16a34a;    /* green-600 */
+  --err-red: #dc2626;     /* red-600 */
+  --warn-amber: #d97706;  /* optional warning state */
 
-  /* Derived tokens */
+  /* === Derived tokens === */
   --surface: var(--bg-offwhite);
   --surface-alt: #ffffff;
+  --surface-muted: var(--bg-gray);
   --text: var(--ink-slate);
-  --muted: #5b616b;
-  --ring: color-mix(in srgb, var(--acc-cyan) 60%, var(--acc-purple));
+  --muted: #6b7280;        /* consistent muted gray */
+  --ring: color-mix(in srgb, var(--acc-cyan) 65%, var(--acc-purple) 35%);
+  --link: var(--acc-purple);
+  --link-hover: var(--acc-cyan);
+
+  /* === Typography scale === */
+  --font-base: 16px;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* === Radii & shadows === */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md: 0 2px 6px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 20px rgba(0,0,0,.1);
 }
 
-/* Global application of tokens */
+/* === Global application === */
 html,
 body {
   background-color: var(--surface);
   color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--font-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Links & focus states */
+/* === Links & focus states === */
 a {
-  color: var(--acc-purple);
+  color: var(--link);
+  text-decoration: none;
+  transition: color .15s ease;
 }
 
 a:hover {
-  color: var(--acc-cyan);
+  color: var(--link-hover);
+  text-decoration: underline;
 }
 
 a:focus-visible,
@@ -44,6 +68,14 @@ select:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
   outline: 2px solid var(--ring);
-  outline-offset: 2px;
-  border-radius: 3px;
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
 }
+
+/* === Utility classes (optional) === */
+.text-muted { color: var(--muted); }
+.bg-surface { background-color: var(--surface); }
+.bg-alt { background-color: var(--surface-alt); }
+.bg-muted { background-color: var(--surface-muted); }
+.rounded { border-radius: var(--radius-md); }
+.shadow { box-shadow: var(--shadow-md); }

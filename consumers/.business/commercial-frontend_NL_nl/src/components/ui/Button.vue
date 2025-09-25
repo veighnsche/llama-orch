@@ -1,0 +1,131 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { RouterLink, type RouteLocationRaw } from 'vue-router'
+
+const props = withDefaults(defineProps<{
+  as?: 'button' | 'a' | 'router-link'
+  to?: RouteLocationRaw
+  href?: string
+  type?: 'button' | 'submit' | 'reset'
+  variant?: 'primary' | 'ghost' | 'link'
+  size?: 'sm' | 'md' | 'lg'
+  iconOnly?: boolean
+  disabled?: boolean
+  block?: boolean
+}>(), {
+  as: undefined,
+  type: 'button',
+  variant: 'primary',
+  size: 'md',
+  iconOnly: false,
+  disabled: false,
+  block: false,
+})
+
+const isRouter = computed(() => props.as === 'router-link' || !!props.to)
+const isAnchor = computed(() => props.as === 'a' || (!!props.href && !isRouter.value))
+
+const tag = computed(() => (isRouter.value ? RouterLink : isAnchor.value ? 'a' : 'button'))
+
+const attrs = computed(() => {
+  const a: Record<string, unknown> = {}
+  if (isRouter.value) a.to = props.to
+  else if (isAnchor.value) a.href = props.href
+  else {
+    a.type = props.type
+    a.disabled = props.disabled
+  }
+  return a
+})
+
+const classes = computed(() => {
+  const variantClass = props.variant === 'primary'
+    ? 'ui-btn--primary'
+    : props.variant === 'ghost'
+    ? 'ui-btn--ghost'
+    : 'ui-btn--link'
+
+  return [
+    'ui-btn',
+    variantClass,
+    `ui-btn--${props.size}`,
+    props.iconOnly ? 'ui-btn--icon' : null,
+    props.block ? 'ui-btn--block' : null,
+  ]
+})
+</script>
+
+<template>
+  <component :is="tag" v-bind="attrs" :class="classes">
+    <slot />
+  </component>
+</template>
+
+<style scoped>
+.ui-btn {
+  -webkit-tap-highlight-color: transparent;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  border-radius: 10px;
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: #ffffff;
+  color: var(--text, #0f172a);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .06s ease, box-shadow .06s ease, border-color .2s ease, background .2s ease, filter .2s ease;
+}
+.ui-btn:hover { transform: translateY(-1px); }
+.ui-btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.ui-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+/* variants */
+.ui-btn--primary {
+  background: var(--acc-cyan);
+  border-color: var(--acc-cyan);
+  color: #ffffff;
+}
+.ui-btn--primary:hover { filter: brightness(1.05); }
+
+.ui-btn--ghost {
+  background: var(--surface-alt, #ffffff);
+  border-color: var(--color-border, #e5e7eb);
+  color: var(--text, #0f172a);
+}
+
+.ui-btn--link {
+  background: transparent;
+  border-color: transparent;
+  color: var(--acc-purple);
+}
+.ui-btn--link:hover {
+  text-decoration: underline;
+  transform: none;
+}
+
+/* layout helpers */
+.ui-btn--block { width: 100%; display: inline-flex; }
+
+/* sizes */
+.ui-btn--sm { padding: .35rem .6rem; font-size: .9rem; }
+.ui-btn--md { padding: .55rem .8rem; font-size: 1rem; }
+.ui-btn--lg { padding: .7rem 1rem; font-size: 1.05rem; }
+
+/* icon-only adjustments */
+.ui-btn--icon { gap: 0; padding: 0; width: 38px; height: 38px; }
+.ui-btn--icon.ui-btn--sm { width: 32px; height: 32px; }
+.ui-btn--icon.ui-btn--md { width: 38px; height: 38px; }
+.ui-btn--icon.ui-btn--lg { width: 44px; height: 44px; }
+
+@media (prefers-color-scheme: dark) {
+  .ui-btn--ghost {
+    background: #0b1220;
+    border-color: #0b1b2e;
+    color: #e5f1ff;
+  }
+  .ui-btn--link { color: var(--acc-cyan); }
+}
+</style>
