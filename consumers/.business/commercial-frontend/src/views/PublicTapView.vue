@@ -76,5 +76,5 @@ useMeta({
   display: grid;
   gap: 1rem;
 }
-.note { color: #6b7280; }
+.note { color: var(--muted); }
 </style>

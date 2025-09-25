@@ -1,0 +1,148 @@
+/* ============================
+   Blueprint grid utilities
+   ============================ */
+
+/* Base tokens (override per section if needed) */
+:root {
+  --bp-grid-size: 32px;              /* cell size */
+  --bp-grid-line: 1px;               /* line thickness */
+  --bp-grid-alpha: 0.12;             /* line opacity */
+  --bp-grid-color: rgba(31,41,55,var(--bp-grid-alpha)); /* slate-800 @ 12% */
+  --bp-grid-bg: var(--surface);      /* background base */
+}
+
+/* Subtle blueprint grid */
+.bp-grid {
+  background-color: var(--bp-grid-bg);
+  background-image:
+    linear-gradient(to right, var(--bp-grid-color) var(--bp-grid-line), transparent var(--bp-grid-line)),
+    linear-gradient(to bottom, var(--bp-grid-color) var(--bp-grid-line), transparent var(--bp-grid-line));
+  background-size: var(--bp-grid-size) var(--bp-grid-size);
+  background-position: 0 0;
+}
+
+/* Denser grid variant */
+.bp-grid.dense {
+  --bp-grid-size: 16px;
+  --bp-grid-alpha: 0.10;
+}
+
+/* Dot intersections (overlay dots at grid corners) */
+.bp-grid.dots {
+  background-image:
+    radial-gradient(circle at 0 0, var(--bp-grid-color) 1px, transparent 1px),
+    linear-gradient(to right, var(--bp-grid-color) var(--bp-grid-line), transparent var(--bp-grid-line)),
+    linear-gradient(to bottom, var(--bp-grid-color) var(--bp-grid-line), transparent var(--bp-grid-line));
+  background-size:
+    var(--bp-grid-size) var(--bp-grid-size),
+    var(--bp-grid-size) var(--bp-grid-size),
+    var(--bp-grid-size) var(--bp-grid-size);
+}
+
+/* Edge fade so the grid doesn’t fight content edges */
+.bp-grid.edge-fade {
+  position: relative;
+  isolation: isolate;
+}
+.bp-grid.edge-fade::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(255,255,255,.75), transparent 60%),
+    radial-gradient(120% 60% at 50% 110%, rgba(255,255,255,.75), transparent 60%);
+  mix-blend-mode: lighten; /* keeps lines subtle on light bg */
+  z-index: 0;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bp-grid-bg: #0b1220;
+    --bp-grid-color: rgba(148,163,184,0.14); /* slate-400 @ 14% */
+  }
+  .bp-grid.edge-fade::after {
+    background:
+      radial-gradient(120% 60% at 50% -10%, rgba(0,0,0,.55), transparent 60%),
+      radial-gradient(120% 60% at 50% 110%, rgba(0,0,0,.55), transparent 60%);
+    mix-blend-mode: normal;
+  }
+}
+
+/* ============================
+   Cards – sturdy / boxed look
+   ============================ */
+
+:root{
+  --card-bg: var(--surface-alt);
+  --card-border: color-mix(in srgb, #1f2937 12%, transparent); /* slate-800 @12% */
+  --card-radius: 10px;
+  --card-shadow-sm: 0 1px 2px rgba(0,0,0,.06);
+  --card-shadow-md: 0 6px 18px rgba(2,6,23,.08);
+  --ring: color-mix(in srgb, var(--acc-cyan) 65%, var(--acc-purple) 35%);
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow-sm);
+}
+
+/* Section card spacing */
+.card.section {
+  padding: 1rem 1.25rem;
+  margin-block: 1rem;
+}
+
+/* Interactive card (buttons, links, clickable rows) */
+.card.interactive {
+  transition: transform .06s ease, box-shadow .12s ease, border-color .12s ease;
+  cursor: pointer;
+}
+.card.interactive:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--card-shadow-md);
+  border-color: color-mix(in srgb, #1f2937 20%, transparent);
+}
+.card.interactive:focus-within {
+  outline: 0; /* we render a ring instead */
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--ring) 60%, transparent),
+    var(--card-shadow-md);
+}
+
+/* Card header/footer helpers */
+.card .card-head {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .75rem 1rem;
+  border-bottom: 1px solid color-mix(in srgb, #1f2937 10%, transparent);
+}
+.card .card-foot {
+  padding: .75rem 1rem;
+  border-top: 1px solid color-mix(in srgb, #1f2937 10%, transparent);
+}
+
+/* Compact variant for grids */
+.card.compact { padding: .75rem .9rem; }
+
+/* Split layout inside cards */
+.card.split {
+  display: grid; gap: .75rem;
+}
+@media (min-width: 920px) {
+  .card.split { grid-template-columns: 1fr 1fr; }
+}
+
+/* Dark mode for cards */
+@media (prefers-color-scheme: dark) {
+  :root{
+    --card-bg: #0b1220;
+    --card-border: #0b1b2e;
+  }
+  .card { box-shadow: 0 1px 2px rgba(0,0,0,.35); }
+  .card.interactive:hover {
+    border-color: #13324a;
+    box-shadow: 0 8px 22px rgba(2,6,23,.45);
+  }
+}

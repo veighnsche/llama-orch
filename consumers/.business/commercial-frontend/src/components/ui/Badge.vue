@@ -25,10 +25,10 @@ const props = withDefaults(defineProps<{
   align-items: center;
   gap: .4rem;
   padding: .35rem .55rem;
-  border-radius: 999px;
-  border: 1px solid var(--badge-border, #e2e8f0);
-  background: var(--badge-bg, #f1f5f9);
-  color: var(--badge-fg, #0f172a);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--badge-border, var(--surface-muted));
+  background: var(--badge-bg, var(--surface));
+  color: var(--badge-fg, var(--text));
   font-size: .9rem;
   font-weight: 600;
 }
@@ -36,42 +36,42 @@ const props = withDefaults(defineProps<{
 
 /* default variant uses neutral chip */
 .ui-badge--default {
-  --badge-border: #e2e8f0;
-  --badge-bg: #eef2f7;
-  --badge-fg: #0f172a;
+  --badge-border: var(--surface-muted);
+  --badge-bg: var(--surface);
+  --badge-fg: var(--text);
 }
 
 /* Variant color tokens */
-.ui-badge--green { --badge-color: var(--ok-green, #22c55e); }
-.ui-badge--cyan  { --badge-color: var(--acc-cyan,  #22d3ee); }
-.ui-badge--slate { --badge-color: #64748b; }
-.ui-badge--purple{ --badge-color: var(--acc-purple, #7c5cff); }
+.ui-badge--green { --badge-color: var(--ok-green); }
+.ui-badge--cyan  { --badge-color: var(--acc-cyan); }
+.ui-badge--slate { --badge-color: var(--muted); }
+.ui-badge--purple{ --badge-color: var(--acc-purple); }
 
 /* Use color-mix to derive contrasting chip background */
 .ui-badge--green,
 .ui-badge--cyan,
 .ui-badge--slate,
 .ui-badge--purple {
-  --badge-border: color-mix(in srgb, var(--badge-color) 42%, #ffffff);
-  --badge-bg:     color-mix(in srgb, var(--badge-color) 18%, #ffffff);
-  --badge-fg:     #0f172a;
+  --badge-border: color-mix(in srgb, var(--badge-color) 42%, var(--surface-alt));
+  --badge-bg:     color-mix(in srgb, var(--badge-color) 18%, var(--surface-alt));
+  --badge-fg:     var(--text);
 }
 .ui-badge__icon { display: inline-grid; place-items: center; color: var(--badge-color); }
 .ui-badge__icon :where(svg) { width: 18px; height: 18px; }
 
 @media (prefers-color-scheme: dark) {
   .ui-badge--default {
-    --badge-border: #0b1b2e;
-    --badge-bg: #0f172a;
-    --badge-fg: #e5f1ff;
+    --badge-border: var(--surface-muted);
+    --badge-bg: var(--surface);
+    --badge-fg: var(--text);
   }
   .ui-badge--green,
   .ui-badge--cyan,
   .ui-badge--slate,
   .ui-badge--purple {
-    --badge-border: color-mix(in srgb, var(--badge-color) 36%, #0b1220);
-    --badge-bg:     color-mix(in srgb, var(--badge-color) 20%, #0b1220);
-    --badge-fg:     #e5f1ff;
+    --badge-border: color-mix(in srgb, var(--badge-color) 36%, var(--surface));
+    --badge-bg:     color-mix(in srgb, var(--badge-color) 20%, var(--surface));
+    --badge-fg:     var(--text);
   }
 }
 </style>

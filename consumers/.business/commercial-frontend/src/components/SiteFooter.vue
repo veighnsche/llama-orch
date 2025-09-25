@@ -21,7 +21,7 @@ import { RouterLink } from 'vue-router'
 
 <style scoped>
 .footer {
-  border-top: 1px solid var(--color-border, #e5e7eb);
+  border-top: 1px solid var(--surface-muted);
   padding: 1rem 0;
 }
 .footer-inner {
@@ -42,6 +42,6 @@ import { RouterLink } from 'vue-router'
   text-decoration: none;
 }
 .microcopy {
-  color: #6b7280;
+  color: var(--muted);
 }
 </style>

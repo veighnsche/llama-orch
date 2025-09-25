@@ -69,10 +69,10 @@ const classes = computed(() => {
   align-items: center;
   justify-content: center;
   gap: .4rem;
-  border-radius: 10px;
-  border: 1px solid var(--color-border, #e5e7eb);
-  background: #ffffff;
-  color: var(--text, #0f172a);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--surface-muted);
+  background: var(--surface-alt);
+  color: var(--text);
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
@@ -86,14 +86,14 @@ const classes = computed(() => {
 .ui-btn--primary {
   background: var(--acc-cyan);
   border-color: var(--acc-cyan);
-  color: #ffffff;
+  color: var(--surface-alt);
 }
 .ui-btn--primary:hover { filter: brightness(1.05); }
 
 .ui-btn--ghost {
-  background: var(--surface-alt, #ffffff);
-  border-color: var(--color-border, #e5e7eb);
-  color: var(--text, #0f172a);
+  background: var(--surface-alt);
+  border-color: var(--surface-muted);
+  color: var(--text);
 }
 
 .ui-btn--link {
@@ -122,9 +122,9 @@ const classes = computed(() => {
 
 @media (prefers-color-scheme: dark) {
   .ui-btn--ghost {
-    background: #0b1220;
-    border-color: #0b1b2e;
-    color: #e5f1ff;
+    background: var(--surface);
+    border-color: var(--surface-muted);
+    color: var(--text);
   }
   .ui-btn--link { color: var(--acc-cyan); }
 }

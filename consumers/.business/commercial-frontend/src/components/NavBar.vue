@@ -62,7 +62,7 @@
           </ul>
           <div class="drawer-ops">
             <LanguageSwitcher />
-            <Button class="wide" as="router-link" @click="open=false" to="/service-menu" variant="primary">
+            <Button class="wide" as="router-link" @click="open=false" to="/service-menu" variant="primary" size="sm">
               {{ $t('nav.serviceMenu', 'Service menu') }}
             </Button>
           </div>
@@ -94,8 +94,8 @@ watch(() => route.fullPath, () => { open.value = false })
   top: 0;
   z-index: 50;
   backdrop-filter: saturate(140%) blur(6px);
-  background: color-mix(in srgb, var(--nav-bg, #ffffff) 88%, transparent);
-  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--surface-muted);
 }
 .nav-inner {
   max-width: 1120px;
@@ -117,20 +117,18 @@ watch(() => route.fullPath, () => { open.value = false })
   gap: .55rem;
   padding: 0 .5rem;              /* horizontal padding = better hitbox */
   height: var(--nav-h);          /* matches link height */
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   text-decoration: none;
-  color: #eef2f7;                /* wordmark color on dark bar */
+  color: var(--text);            /* from tokens */
   font-weight: 800;
   letter-spacing: .2px;
-  background: rgba(15, 23, 42, .28);     /* subtle pill so it reads as one unit */
-  border: 1px solid rgba(148, 163, 184, .18);
 }
-.brand:hover { background: rgba(15, 23, 42, .38); }
+.brand:hover { text-decoration: none; }
 
 .brand-mark {
   width: 1.25rem;            /* ~20px; scales with font if you prefer: 1em */
   height: 1.25rem;
-  color: #0ea5e9;            /* accent for the mark; inherits in dark mode override */
+  color: var(--acc-cyan);    /* accent for the mark */
   flex: 0 0 auto;
   translate: 0 .5px;         /* tiny baseline nudge for optical alignment */
 }
@@ -141,21 +139,17 @@ watch(() => route.fullPath, () => { open.value = false })
   height: 28px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
-  background: #0b1b2e;           /* deep slate */
-  border: 1px solid #13324a;     /* blueprint edge */
-  color: #7dd3fc;                /* cyan accent drives the svg via currentColor */
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid var(--surface-muted);
+  color: var(--acc-cyan);        /* cyan accent drives the svg via currentColor */
 }
 .brand-glyph svg { width: 18px; height: 18px; } /* inner padding = visual comfort */
 
 .brand-word { font-size: 1.06rem; }
 
 /* dark mode fine-tune if you keep a dark bar */
-@media (prefers-color-scheme: dark) {
-  .brand { color: #e5f1ff; background: rgba(11, 18, 32, .5); border-color: #0b1b2e; }
-  .brand-glyph { background: #0b1220; border-color: #0b1b2e; color: #7dd3fc; }
-  .links a { color: #cbd5e1; }
-}
+/* Dark mode relies on token overrides in tokens.css; no extra rules needed here. */
 
 /* ---- desktop links ---- */
 .links {
@@ -172,12 +166,12 @@ watch(() => route.fullPath, () => { open.value = false })
   align-items: center;
   height: var(--nav-h);
   padding: 0 .5rem;
-  border-radius: 10px;
-  color: #cbd5e1;
+  border-radius: var(--radius-lg);
+  color: var(--muted);
   font-weight: 600;
   text-decoration: none;
 }
-.links a:hover { background: rgba(148, 163, 184, .12); }
+.links a:hover { background: var(--surface); }
 
 /* ---- right cluster ---- */
 .right {
@@ -191,33 +185,33 @@ watch(() => route.fullPath, () => { open.value = false })
 /* ---- mobile toggle ---- */
 .menu-toggle {
   appearance: none;
-  border: 1px solid var(--color-border, #e5e7eb);
-  background: #ffffff;
-  border-radius: 10px;
+  border: 1px solid var(--surface-muted);
+  background: var(--surface-alt);
+  border-radius: var(--radius-lg);
   padding: .4rem .5rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 38px;
   height: 38px;
-  color: #0f172a;
+  color: var(--text);
 }
-.menu-toggle:focus-visible { box-shadow: 0 0 0 4px rgba(14,165,233,.35); }
+.menu-toggle:focus-visible { outline: 4px solid var(--ring); outline-offset: 2px; }
 .menu-toggle svg { width: 22px; height: 22px; }
 
 /* ---- drawer (mobile) ---- */
 .drawer {
   position: fixed;
   inset: 0;
-  background: rgba(2,6,23,.42);
+  background: color-mix(in srgb, var(--text) 42%, transparent);
   display: none;
 }
 .drawer-panel {
   margin: .5rem;
-  border-radius: 14px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 20px 40px rgba(2,6,23,.18);
+  border-radius: var(--radius-xl);
+  background: var(--surface-alt);
+  border: 1px solid var(--surface-muted);
+  box-shadow: var(--shadow-lg);
   padding: .75rem;
 }
 .drawer-links {
@@ -230,13 +224,13 @@ watch(() => route.fullPath, () => { open.value = false })
 .drawer-links a {
   display: block;
   padding: .6rem .6rem;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   text-decoration: none;
-  color: #0f172a;
+  color: var(--text);
   font-weight: 600;
 }
-.drawer-links a:hover { background: #f8fafc; }
-.drawer-links :global(.router-link-active) { background: #eef2f7; }
+.drawer-links a:hover { background: var(--surface); }
+.drawer-links :global(.router-link-active) { background: var(--surface); }
 .drawer-ops {
   margin-top: .5rem;
   display: flex;
@@ -259,23 +253,7 @@ watch(() => route.fullPath, () => { open.value = false })
   .drawer { display: block; }
   .right :deep(.ui-btn) { display: none; } /* keep topbar tight on small screens; CTA moves into drawer */
 }
-@media (prefers-color-scheme: dark) {
-  .nav {
-    background: color-mix(in srgb, #0b1220 78%, transparent);
-    border-bottom-color: #0b1b2e;
-  }
-  .brand { color: #e5f1ff; }
-  .brand-mark { color: #7dd3fc; }
-  .links a { color: #cbd5e1; }
-  .links a:hover { background: #0f172a; }
-  /* Button inherits dark variables; no override needed */
-  .menu-toggle { background: #0b1220; border-color: #0b1b2e; color: #e5f1ff; }
-  .drawer { background: rgba(2,6,23,.6); }
-  .drawer-panel { background: #0b1220; border-color: #0b1b2e; }
-  .drawer-links a { color: #e5f1ff; }
-  .drawer-links a:hover { background: #0f172a; }
-  .drawer-links :global(.router-link-active) { background: #0f172a; }
-}
+/* Dark mode token overrides cover the drawer and panel as well. */
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
   clip: rect(0,0,0,0); white-space: nowrap; border: 0;

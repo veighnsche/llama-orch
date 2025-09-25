@@ -79,24 +79,24 @@ import Badge from '@/components/ui/Badge.vue'
 .why { margin: 1.75rem 0; }
 .why-head { margin-bottom: .75rem; }
 #why-title { margin: 0 0 .25rem 0; }
-.why-intro { color: #334155; margin: 0; }
+.why-intro { color: var(--muted); margin: 0; }
 
 .why-grid {
   display: grid;
   gap: 1rem;
 }
 .panel {
-  border: 1px solid var(--color-border, #cbd5e1);
-  border-radius: 10px;
+  border: 1px solid var(--surface-muted);
+  border-radius: var(--radius-lg);
   padding: .9rem;
-  background: #ffffff;
+  background: var(--surface-alt);
 }
 .eyebrow {
   font-size: .9rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .04em;
-  color: #0ea5e9;
+  color: var(--acc-cyan);
   margin: 0 0 .4rem 0;
 }
 .list {
@@ -106,11 +106,11 @@ import Badge from '@/components/ui/Badge.vue'
   display: grid;
   gap: .35rem;
 }
-.list li { display: flex; align-items: start; gap: .5rem; color: #0f172a; }
+.list li { display: flex; align-items: start; gap: .5rem; color: var(--text); }
 .dot {
-  width: .5rem; height: .5rem; border-radius: 999px; background: #94a3b8; margin-top: .4rem;
+  width: .5rem; height: .5rem; border-radius: var(--radius-pill); background: var(--muted); margin-top: .4rem;
 }
-.check { color: #059669; font-weight: 800; margin-top: .05rem; }
+.check { color: var(--ok-green); font-weight: 800; margin-top: .05rem; }
 
 .badges { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
 
@@ -120,10 +120,10 @@ import Badge from '@/components/ui/Badge.vue'
   .why-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (prefers-color-scheme: dark) {
-  .why-intro { color: #cbd5e1; }
-  .panel { background: #0b1220; border-color: #0b1b2e; }
-  .list li { color: #e5f1ff; }
-  .dot { background: #64748b; }
+  .why-intro { color: var(--muted); }
+  .panel { background: var(--surface); border-color: var(--surface-muted); }
+  .list li { color: var(--text); }
+  .dot { background: var(--muted); }
   /* Badges now use ui/Badge.vue which handles dark mode */
   /* Button component has dark styles built-in; no overrides needed here */
 }

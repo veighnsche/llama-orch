@@ -7,9 +7,9 @@ const { t, tm, locale } = useI18n()
 const route = useRoute()
 
 useMeta({
-  title: () => t('seoTitle.pricing'),
-  description: () => t('seoDesc.pricing'),
-  keywords: () => tm('seo.pricing') as string[],
+  title: () => t('seoTitle.privateTap'),
+  description: () => t('seoDesc.privateTap'),
+  keywords: () => tm('seo.privateTap') as string[],
   canonical: () => `${window.location.origin}${route.fullPath}`,
   alternates: () => {
     const href = `${window.location.origin}${route.fullPath}`
@@ -25,32 +25,35 @@ useMeta({
 
 <template>
   <main class="page">
-    <h1>{{ $t('pricing.h1') }}</h1>
+    <h1>{{ $t('privateTap.h1') }}</h1>
 
     <section>
-      <h2>{{ $t('pricing.credits') }}</h2>
-      <ul>
-        <li>{{ $t('publicTap.bPrice1') }}</li>
-        <li>{{ $t('publicTap.bPrice2') }}</li>
-        <li>{{ $t('publicTap.bPrice3') }}</li>
-        <li>{{ $t('publicTap.bPrice4') }}</li>
-      </ul>
-      <p class="note">{{ $t('pricing.note1') }}</p>
+      <h2>{{ $t('privateTap.what') }}</h2>
+      <p>{{ $t('privateTap.whatP') }}</p>
     </section>
 
     <section>
-      <h2>{{ $t('pricing.gpu') }}</h2>
+      <h2>{{ $t('privateTap.value') }}</h2>
+      <ul>
+        <li>{{ $t('privateTap.bVal1') }}</li>
+        <li>{{ $t('privateTap.bVal2') }}</li>
+        <li>{{ $t('privateTap.bVal3') }}</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>{{ $t('privateTap.pricing') }}</h2>
       <ul>
         <li>{{ $t('privateTap.bPrice1') }}</li>
         <li>{{ $t('privateTap.bPrice2') }}</li>
         <li>{{ $t('privateTap.bPrice3') }}</li>
       </ul>
-      <p class="note">{{ $t('pricing.note2') }}</p>
+      <p class="note">{{ $t('privateTap.note') }}</p>
     </section>
   </main>
 </template>
 
 <style scoped>
 .page { display: grid; gap: 1rem; }
-.note { color: #6b7280; }
+.note { color: var(--muted); }
 </style>

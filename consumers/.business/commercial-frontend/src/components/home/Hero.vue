@@ -85,10 +85,10 @@ import Badge from '@/components/ui/Badge.vue'
 
 <style scoped>
 :root{
-  --hero-bg: radial-gradient(1100px 520px at 18% -8%, #e0f2fe 0%, transparent 60%),
-             radial-gradient(760px 360px at 115% 45%, #ccfbf1 0%, transparent 55%);
-  --ink:#0f172a; --muted:#475569; --brand:#0ea5e9; --ring:rgba(14,165,233,.35);
-  --border:#e5e7eb; --chip:#f1f5f9;
+  --hero-bg: radial-gradient(1100px 520px at 18% -8%, color-mix(in srgb, var(--acc-cyan) 25%, var(--surface-alt)) 0%, transparent 60%),
+             radial-gradient(760px 360px at 115% 45%, color-mix(in srgb, var(--acc-teal) 20%, var(--surface-alt)) 0%, transparent 55%);
+  --ink: var(--text);
+  --brand: var(--acc-cyan);
 }
 .hero{ background:var(--hero-bg); padding:clamp(2rem,4vw,3.5rem) 1rem; }
 .container{
@@ -100,7 +100,7 @@ import Badge from '@/components/ui/Badge.vue'
 .copy{ max-width:640px; }
 .eyebrow{
   display:inline-block; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
-  color:var(--brand); background:rgba(14,165,233,.08); border:1px solid rgba(14,165,233,.2);
+  color:var(--brand); background: color-mix(in srgb, var(--acc-cyan) 8%, transparent); border:1px solid color-mix(in srgb, var(--acc-cyan) 20%, transparent);
   padding:.25rem .6rem; border-radius:999px; margin:0 0 .75rem;
 }
 .title{
@@ -112,13 +112,13 @@ import Badge from '@/components/ui/Badge.vue'
 .ctas{ display:flex; flex-wrap:wrap; gap:.75rem; margin:1rem 0 1rem; align-items:center; }
 
 .inline-links{ display:flex; gap:.5rem; margin-left:.25rem; }
-.inline-links a{ color:#334155; text-decoration:none; font-weight:600; }
+.inline-links a{ color: var(--muted); text-decoration:none; font-weight:600; }
 .inline-links a:hover{ text-decoration:underline; }
 
 .badges{
   display:flex; flex-wrap:wrap; gap:.5rem .75rem; list-style:none; padding:0; margin:.25rem 0 0 0;
 }
 
-.hero-media{ margin:0; border-radius:12px; overflow:hidden; box-shadow:0 12px 32px rgba(2,6,23,.12); }
+.hero-media{ margin:0; border-radius:12px; overflow:hidden; box-shadow: var(--shadow-lg); }
 .hero-media img{ display:block; width:100%; height:auto; }
 </style>

@@ -121,7 +121,7 @@ useMeta({
 /* meer adem tussen secties */
 .home section + section {
   margin-top: 2.5rem;
-  border-top: 1px solid #e5e7eb; /* optioneel scheiding */
+  border-top: 1px solid var(--surface-muted); /* optioneel scheiding */
   padding-top: 2.5rem;
 }
 
@@ -131,14 +131,14 @@ useMeta({
   font-weight: 800;
   font-size: 1.5rem;
   margin-bottom: 1rem;
-  color: #0f172a;
+  color: var(--text);
 }
 
 .home section.fullbleed {
   max-width: none;
   margin: 0;
   padding: 3rem 0;
-  background: #f8fafc; /* licht contrast */
+  background: var(--surface); /* licht contrast */
 }
 
 /* fullbleed if needed */
@@ -146,7 +146,7 @@ useMeta({
   max-width: none;
   margin: 0;
   padding: 3rem 0;
-  background: #f8fafc; /* licht contrast */
+  background: var(--surface); /* licht contrast */
 }
 
 </style>

@@ -2,4 +2,4 @@ packages:
   - consumers/llama-orch-utils
   - consumers/.examples/*
   - consumers/llama-orch-sdk/ts
-  - consumers/.business/commercial-frontend_NL_nl
+  - consumers/.business/commercial-frontend

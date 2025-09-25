@@ -50,5 +50,5 @@ useMeta({
 
 <style scoped>
 .page { display: grid; gap: 1rem; }
-.microcopy { color: #374151; }
+.microcopy { color: var(--muted); }
 </style>
