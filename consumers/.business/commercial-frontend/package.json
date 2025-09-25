@@ -18,7 +18,8 @@
 	"dependencies": {
 		"vue": "^3.5.18",
 		"vue-router": "^4.5.1",
-		"vue-i18n": "^9.14.0"
+		"vue-i18n": "^9.14.0",
+		"orchyra-storybook": "workspace:*"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.13.4",
@@ -31,7 +32,6 @@
 		"vite": "^7.0.6",
 		"vite-plugin-vue-devtools": "^8.0.0",
 		"vue-tsc": "^3.0.4",
-		"wrangler": "^4.39.0",
-		"orchyra-storybook": "workspace:*"
+		"wrangler": "^4.39.0"
 	}
 }
