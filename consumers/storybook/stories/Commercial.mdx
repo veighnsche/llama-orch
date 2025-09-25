@@ -1,0 +1,173 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Commercial/Overview" />
+
+<div className="sb-container">
+  <div className='sb-section-title'>
+    # Commercial Website Design Overview
+
+    This document outlines how we will design and document the commercial part of the website for the Orchyra brand. It consolidates brand, IA, services, audiences, and proof-first operations, and points to draft source documents and current Vue components.
+  </div>
+
+  <div className="sb-section">
+    <div className="sb-section-item">
+      <h4 className="sb-section-item-heading">Brand & Tagline</h4>
+      <p className="sb-section-item-paragraph">
+        <strong>Brand:</strong> Orchyra<br/>
+        <strong>Tagline:</strong> Private LLM Hosting in the Netherlands
+      </p>
+      <p>
+        Tone: practical, proof-driven, local, independent. Visuals: pipes, valves, gauges, blueprints. Colors: industrial neutrals with cyan/teal/purple accents. See <em>Commercial/Brand</em> and <em>Commercial/Identity</em> pages in the sidebar.
+      </p>
+    </div>
+
+    <div className="sb-section-item">
+      <h4 className="sb-section-item-heading">Services (Simple Model)</h4>
+      <p className="sb-section-item-paragraph">
+        1) Open-Source Plumbing (foundation) • 2) Public Tap (prepaid, shared) • 3) Private Tap (dedicated). Extra: Custom Toolkit Development.
+      </p>
+      <p>
+        The marketing site routes visitors into the right offer quickly. See <em>Commercial/Services</em>.
+      </p>
+    </div>
+
+    <div className="sb-section-item">
+      <h4 className="sb-section-item-heading">Information Architecture</h4>
+      <p className="sb-section-item-paragraph">
+        Mesh-based IA across 4 layers: Broad → Semi-broad → Deep (light cross-refs) → Fully specialized endpoints.
+      </p>
+      <p>
+        Audiences: Hobbyists/Developers, IT Teams, Agencies, Compliance, Small Business, Funders. See <em>Commercial/Target Audiences</em>, <em>Commercial/Site Architecture</em>, and <em>Commercial/Page Layers</em>.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div className="sb-container">
+  <div className='sb-section-title'>
+    # Proof-First Operations
+
+    The promise is backed by logs, metrics, and documentation. Marketing pages link to a proof library and example bundles (SSE transcripts, Prometheus dashboards, version-pinned configs).
+  </div>
+  <div className="sb-section">
+    <div className="sb-section-item">
+      <h4 className="sb-section-item-heading">What we show</h4>
+      <ul>
+        <li>Deployment report with SSE transcripts and latency/throughput.</li>
+        <li>Prometheus/Grafana snapshots and alert thresholds.</li>
+        <li>Version pinning and rollback plan.</li>
+        <li>Documentation bundle aligned to EU AI Act transparency ethos.</li>
+      </ul>
+      <p>See <em>Commercial/Front Page</em> → “Proof, not promises.”</p>
+    </div>
+    <div className="sb-section-item">
+      <h4 className="sb-section-item-heading">Positioning</h4>
+      <p>We are not the cheapest; we are the most transparent and controllable. Public Tap for testing, Private Tap for production-grade privacy and control.</p>
+    </div>
+  </div>
+</div>
+
+<div className="sb-container">
+  <div className='sb-section-title'>
+    # Component Inventory (what exists today)
+  </div>
+  <div className="sb-section">
+    <div className="sb-section-item">
+      <h4 className="sb-section-item-heading">Views</h4>
+      <ul>
+        <li>`consumers/.business/commercial-frontend/src/views/HomeView.vue`</li>
+        <li>`consumers/.business/commercial-frontend/src/views/PublicTapView.vue`</li>
+        <li>`consumers/.business/commercial-frontend/src/views/PrivateTapView.vue`</li>
+        <li>`consumers/.business/commercial-frontend/src/views/ProofView.vue`</li>
+        <li>`consumers/.business/commercial-frontend/src/views/FAQsView.vue`</li>
+        <li>`consumers/.business/commercial-frontend/src/views/AboutView.vue`</li>
+        <li>`consumers/.business/commercial-frontend/src/views/ContactLegalView.vue`</li>
+        <li>`consumers/.business/commercial-frontend/src/views/PricingView.vue`</li>
+      </ul>
+    </div>
+    <div className="sb-section-item">
+      <h4 className="sb-section-item-heading">Home components</h4>
+      <ul>
+        <li>`components/home/Hero.vue`</li>
+        <li>`components/home/WhyPlumbing.vue`</li>
+        <li>`components/home/ThreeTools.vue`</li>
+        <li>`components/home/PublicTap.vue`</li>
+        <li>`components/home/PrivateTap.vue`</li>
+        <li>`components/home/Proof.vue`</li>
+        <li>`components/home/Audience.vue`</li>
+        <li>`components/home/More.vue`</li>
+      </ul>
+      <p>These map directly to sections described in <em>Commercial/Front Page</em>.</p>
+    </div>
+  </div>
+</div>
+
+<div className="sb-container">
+  <div className='sb-section-title'>
+    # Document Map (this Storybook section)
+  </div>
+  <div className="sb-section">
+    <div className="sb-section-item">
+      <ul>
+        <li>Commercial/Brand</li>
+        <li>Commercial/Identity</li>
+        <li>Commercial/USP</li>
+        <li>Commercial/Services</li>
+        <li>Commercial/Target Audiences</li>
+        <li>Commercial/Site Architecture</li>
+        <li>Commercial/Page Layers</li>
+        <li>Commercial/Front Page</li>
+        <li>Commercial/Competitors</li>
+      </ul>
+      <p>Use the left navigation to open each page.</p>
+    </div>
+    <div className="sb-section-item">
+      <h4 className="sb-section-item-heading">Source References</h4>
+      <ul>
+        <li>`consumers/.business/ondernemersplan_NL_nl/.002-draft/brand.md`</li>
+        <li>`consumers/.business/ondernemersplan_NL_nl/.002-draft/identity.md`</li>
+        <li>`consumers/.business/ondernemersplan_NL_nl/.002-draft/USP.md`</li>
+        <li>`consumers/.business/ondernemersplan_NL_nl/.002-draft/services.md`</li>
+        <li>`consumers/.business/ondernemersplan_NL_nl/.002-draft/target-audiences.md`</li>
+        <li>`consumers/.business/ondernemersplan_NL_nl/.002-draft/mesh-site-architecture.md`</li>
+        <li>`consumers/.business/ondernemersplan_NL_nl/.002-draft/page-layers.md`</li>
+        <li>`consumers/.business/ondernemersplan_NL_nl/.002-draft/front-page.md`</li>
+        <li>`consumers/.business/ondernemersplan_NL_nl/.002-draft/competitors.md`</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div className="sb-container">
+  <div className='sb-section-title'>
+    # Next Steps (Storybook integration)
+  </div>
+  <div className="sb-section">
+    <div className="sb-section-item">
+      <ul>
+        <li>Vite alias `@commercial` → `consumers/.business/commercial-frontend/src` for importing Vue components into stories.</li>
+        <li>Load global CSS (tokens.css, blueprint.css) via Storybook preview.</li>
+        <li>Use memory-history `vue-router` for router-bound stories.</li>
+        <li>Add stories that render the `Home` sections with real content.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<style>
+  {`
+  .sb-container {
+    margin-bottom: 48px;
+  }
+  .sb-section { width: 100%; display: flex; flex-direction: row; gap: 20px; }
+  img { object-fit: cover; }
+  .sb-section-title { margin-bottom: 32px; }
+  .sb-section a:not(h1 a, h2 a, h3 a) { font-size: 14px; }
+  .sb-section-item, .sb-grid-item { flex: 1; display: flex; flex-direction: column; }
+  .sb-section-item-heading { padding-top: 20px !important; padding-bottom: 5px !important; margin: 0 !important; }
+  .sb-section-item-paragraph { margin: 0; padding-bottom: 10px; }
+  @media screen and (max-width: 600px) {
+    .sb-section { flex-direction: column; }
+  }
+  `}
+</style>

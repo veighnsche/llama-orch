@@ -24,3 +24,6 @@ Thumbs.db
 
 # Javascript
 /node_modules/
+
+*storybook.log
+storybook-static
