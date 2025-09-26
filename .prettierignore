@@ -1,0 +1,20 @@
+# Build and caches
+node_modules
+pnpm-lock.yaml
+bun.lockb
+.DS_Store
+
+# Output
+**/dist
+**/coverage
+**/.histoire
+**/.vite
+**/public
+**/storybook-static
+
+# Rust
+**/target
+
+# Generated artifacts
+contracts/pacts
+ci/dashboards

@@ -9,6 +9,28 @@ const nl = {
     about: 'Over',
     contact: 'Contact',
   },
+  toolkit: {
+    h1: 'Toolkit — SDK, Utils & Deterministische Applets',
+    what: 'Wat het is',
+    whatP:
+      'Een praktische toolkit voor TS/JS/Rust (Python/Mojo binnenkort) met deterministische applets. Gebruik het om interne AI-tools te bouwen en te controleren die op de agentic API draaien.',
+    lang: 'Talen',
+    bLang1: 'TypeScript / JavaScript',
+    bLang2: 'Rust',
+    bLang3: 'Python & Mojo (binnenkort)',
+    applets: 'Meegeleverde applets (voorbeelden)',
+    bApp1: 'Helpers voor codebase-onderhoud',
+    bApp2: 'Code review-assistent',
+    bApp3: 'Samenvatter AI (docs, tickets, chats)',
+    bApp4: 'Document‑QA en retrieval',
+    bApp5: 'Interne chat- & automatiseringsbots',
+    control: 'Controle',
+    bCtl1: 'Deterministische applets met voorspelbaar gedrag',
+    bCtl2: 'Jouw policies, quotas en approvals',
+    bCtl3: 'Werkt met OpenAI-adapter waar nodig',
+    cta: 'Bekijk Toolkit‑docs',
+    note: 'Open‑source kern; bouw je eigen applets of breid de mijne uit.',
+  },
   footer: {
     brandLine: 'Orchyra — Public & Private AI Taps (NL/EU)',
     about: 'Over',
@@ -37,8 +59,9 @@ const nl = {
     desc: 'Agentische AI-API’s met een volledige toolkit. Prepaid Public Tap en beheerde Private Taps op EU-GPU’s. Proof-first en open source.',
   },
   seoTitle: {
-    publicTap: 'Public Tap — Prepaid credits | Orchyra',
-    privateTap: 'Private LLM-hosting op dedicated GPU’s | Orchyra',
+    publicTap: 'Public Tap — Prepaid agentic API | Orchyra',
+    privateTap: 'Private Tap — Beheerde dedicated GPU’s | Orchyra',
+    toolkit: 'Toolkit — SDK, Utils & Deterministische Applets | Orchyra',
     pricing: 'Prijzen — Credits & GPU-uur | Orchyra',
     proof: 'Bewijs — Logs, Metrics, SSE | Orchyra',
     faqs: 'Veelgestelde vragen | Orchyra',
@@ -48,27 +71,22 @@ const nl = {
   seo: {
     home: [
       'private LLM-hosting',
-      'beheerde GPU-inferentie',
+      'publieke LLM-API',
       'agentic API',
-      'open-source LLM-orchestratie',
-      'EU AI Act gereedheid',
-      'dataresidentie EU',
+      'OpenAI-compatibele gateway',
+      'AI-toolkit',
+      'deterministische applets',
+      'EU-dataresidentie',
+      'proof-first operaties',
       'vLLM-serving',
-      // secundair
-      'AI-API’s',
-      'OSS LLM-toolkit',
-      'dedicated AI-API',
-      'prepaid AI-credits',
-      'Hugging Face-modellen',
-      'GPU-autoscaling',
-      'Prometheus-metrics',
+      'beheerde GPU’s',
     ],
     publicTap: [
-      'public API',
+      'public tap',
       'prepaid credits',
       'agentic API',
+      'OpenAI-adapter',
       'open-source modellen',
-      'private LLM-hosting',
     ],
     privateTap: [
       'private LLM-hosting',
@@ -76,6 +94,16 @@ const nl = {
       'open-source modellen',
       'SLA',
       'EU AI Act',
+      'OpenAI-compatibel',
+    ],
+    toolkit: [
+      'AI-toolkit',
+      'SDK',
+      'utils',
+      'ts/js/rs',
+      'deterministische applets',
+      'code review ai',
+      'samenvatter ai',
     ],
     pricing: ['prijzen', 'prepaid credits', 'GPU-uur', 'A100', 'H100'],
     proof: ['bewijs', 'prometheus', 'sse', 'metrics', 'observability'],
@@ -89,6 +117,8 @@ const nl = {
       'Gedeelde agentic API op gecureerde OSS-modellen. Snel starten met prepaid credits; duidelijke voorwaarden en zichtbaarheid. Conceptprijzen.',
     privateTap:
       'Dedicated AI-API op je eigen GPU’s. Privacy, controle, metrics en optionele OpenAI-compatibele gateway. Conceptprijssnapshots.',
+    toolkit:
+      'Toolkit voor TS/JS/Rust (Python/Mojo binnenkort): SDK, utils en deterministische applets om interne AI-tools te bouwen.',
     pricing:
       'Conceptprijzen voor Public Tap-credits en Private Tap GPU-uur. Onder voorbehoud van benchmarking.',
     proof:
@@ -101,12 +131,13 @@ const nl = {
   },
   home: {
     hero: {
-      eyebrow: 'Private LLM-hosting in Nederland',
-      h1: 'Ik bouw private AI-systemen voor uw bedrijf.',
-      sub: 'Ontwerp, deployment en support. Inclusief bewijs, logs en documentatie. EU-data, open source, geen lock-in.',
+      eyebrow: 'Public & Private AI Taps (NL/EU)',
+      h1: 'Ik lever open, beheerde AI‑API’s voor uw bedrijf.',
+      sub:
+        'Start met de Public Tap en mijn agentic SDK. Gebruik de OpenAI-adapter wanneer nodig. Upgrade naar een beheerde Private Tap op dedicated GPU’s — inclusief bewijs, logs en documentatie.',
       ctaMenu: 'Service-menu bekijken',
       ctaProofs: 'Bewijs inzien',
-      quickPublic: 'Publieke demo',
+      quickPublic: 'Probeer Public Tap',
       quickPrivate: 'Privé demo',
       badge: {
         proofs: 'Bewijs-gedreven',
@@ -117,7 +148,8 @@ const nl = {
     },
     why: {
       title: 'Waarom standaardisatie van AI-API’s nodig is',
-      intro: 'EU-waardige AI met governance: auditbare stromen, EU-datalokatie en geen lock-in.',
+      intro:
+        'Betrouwbare agentische AI vraagt om duidelijke API’s, bewijs en controle — geen nieuwe black box.',
       problemsTitle: 'Wat er misgaat zonder',
       outcomesTitle: 'Wat u wél nodig heeft',
       b1: 'Shadow AI: ad-hoc prompts en datakopieën buiten goedgekeurde systemen.',
@@ -137,20 +169,20 @@ const nl = {
       oss: 'Open source',
     },
     three: {
-      title: 'Drie dingen, één toolbox',
-      i1: 'Open-source fundament: orchestrator, SDK, utils — inspecteerbaar en forkbaar.',
-      i2: 'Public Tap (prepaid): gedeelde agentic API op gecureerde OSS-modellen.',
-      i3: 'Private Tap (dedicated): je eigen endpoint op je eigen GPU’s.',
+      title: 'Drie onderdelen, één platform',
+      i1: 'Toolkit: SDK, utils en deterministische applets voor IT-teams',
+      i2: 'Public Tap: prepaid agentic API, start binnen minuten',
+      i3: 'Private Tap: je eigen beheerde endpoint op dedicated GPU’s',
     },
     public: {
       title: 'Public Tap — snel testen, vooraf betalen',
       p1: 'Koop credits, koppel je SDK en zie resultaat. Geen facturen, geen verrassingen — gewoon een schone testbank voor OSS-modellen.',
-      b1: 'Gecureerde modelset (stabiele OSS)',
-      b2: 'SSE-streaming en logs',
+      b1: 'Werkt met SDK + utils en OpenAI-adapter',
+      b2: 'Gecureerde OSS-modellen, SSE-streaming en logs',
       b3: 'Prepaid credits: €50 / €200 / €500 pakketten (baseline €1,20 per 1M tokens) — Concept',
     },
     private: {
-      title: 'Private Tap — je eigen AI-API, op dedicated GPU’s',
+      title: 'Private Tap — beheerd, op je eigen GPU’s',
       p1: 'Als privacy, controle of performance belangrijk is, is een dedicated tap simpelweg veiliger. Wij leveren GPU’s, deployen je modellen en beheren de API-laag, upgrades, observability en guardrails.',
       b1: 'A100 80GB — €1,80 / GPU-uur + €250 / maand basisfee — Concept',
       b2: 'H100 80GB — €3,80 / GPU-uur + €400 / maand basisfee — Concept',
@@ -175,10 +207,10 @@ const nl = {
     },
   },
   publicTap: {
-    h1: 'Public Tap — Prepaid Credits',
+    h1: 'Public Tap — Prepaid agentic API',
     what: 'Wat het is',
     whatP:
-      'Een gedeelde agentic API op gecureerde, stabiele open-source modellen voor snelle tests en demo’s. Prepaid credits; gebruik verlaagt je saldo; service pauzeert bij 0; saldo zichtbaar via dashboard/API (beschrijvend).',
+      'Een gedeelde API op gecureerde open-source modellen voor snelle tests en demo’s. Werkt met de SDK, utils en de OpenAI-adapter. Prepaid credits; gebruik verlaagt je saldo; service pauzeert bij 0; saldo zichtbaar via dashboard/API.',
     who: 'Voor wie',
     why: 'Waarom het telt',
     terms: 'Voorwaarden',
@@ -198,7 +230,7 @@ const nl = {
     note: 'Concept — cijfers worden herzien na providerbenchmarking.',
   },
   privateTap: {
-    h1: 'Private Tap — Dedicated GPU’s',
+    h1: 'Private Tap — Beheerde dedicated GPU’s',
     what: 'Wat het is',
     whatP:
       'Een dedicated, geïsoleerde agentic API-box per klant. Elke OSS-model (bijv. Hugging Face), met GPU-schaal en een optionele OpenAI-compatibele gateway.',

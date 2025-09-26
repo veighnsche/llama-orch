@@ -7,12 +7,4 @@ module.exports = {
   printWidth: 100,
   vueIndentScriptAndStyle: true,
   plugins: [],
-  overrides: [
-    {
-      files: ['**/*.css', '**/*.scss', '**/*.less'],
-      options: {
-        tabWidth: 4,
-      },
-    },
-  ],
 }

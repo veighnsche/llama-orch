@@ -1,21 +1,26 @@
+// en_2.ts — Positioning: Public & Private AI Taps + Toolkit (no plumbing metaphor)
+
 const en = {
   nav: {
     publicTap: 'Public Tap',
     privateTap: 'Private Tap',
+    toolkit: 'Toolkit',
     pricing: 'Pricing',
     proof: 'Proof',
     faqs: 'FAQs',
     about: 'About',
     contact: 'Contact',
   },
+
   footer: {
-    brandLine: 'Orchyra — Private LLM Hosting in the Netherlands',
+    brandLine: 'Orchyra — Public & Private AI Taps (NL/EU)',
     about: 'About',
     proof: 'Proof',
     pricing: 'Pricing',
     contactLegal: 'Contact & Legal',
     microcopy: 'Public Tap Terms: prepaid, non-refundable, 12-month validity',
   },
+
   a11y: {
     language: 'Language',
     navPrimary: 'Primary',
@@ -23,6 +28,7 @@ const en = {
     addLink: '(add link)',
     perGpuHour: 'per GPU-hour',
   },
+
   devbar: {
     aria: 'Developer shortcuts',
     label: 'Developer',
@@ -30,74 +36,96 @@ const en = {
     api: 'API Reference',
     github: 'GitHub',
   },
+
   jsonld: {
-    desc: 'Open-source LLM orchestration, prepaid Public Tap, and dedicated Private Taps on EU GPUs.',
+    desc: 'Agentic AI APIs with a full toolkit. Prepaid Public Tap and managed Private Taps on EU GPUs. Proof-driven and open source.',
   },
+
   seoTitle: {
-    publicTap: 'Public Tap — Prepaid Credits | Orchyra',
-    privateTap: 'Private LLM Hosting on Dedicated GPUs | Orchyra',
+    publicTap: 'Public Tap — Prepaid Agentic API | Orchyra',
+    privateTap: 'Private Tap — Managed Dedicated GPUs | Orchyra',
+    toolkit: 'Toolkit — SDK, Utils & Deterministic Applets | Orchyra',
     pricing: 'Pricing — Credits & GPU-hour | Orchyra',
     proof: 'Proof — Logs, Metrics, SSE | Orchyra',
     faqs: 'FAQs | Orchyra',
     about: 'About | Orchyra',
     contact: 'Contact & Legal | Orchyra',
   },
+
   seo: {
     home: [
       'private LLM hosting',
-      'managed GPU inference',
+      'public LLM API',
       'agentic API',
-      'open-source LLM orchestration',
-      'EU AI Act readiness',
-      'data residency EU',
+      'OpenAI-compatible gateway',
+      'AI toolkit',
+      'deterministic applets',
+      'EU data residency',
+      'proof-driven operations',
       'vLLM serving',
-      // secondary
-      'AI plumbing',
-      'OSS LLM toolkit',
-      'dedicated AI API',
-      'prepaid AI credits',
-      'Hugging Face models',
-      'GPU autoscaling',
-      'Prometheus metrics',
+      'managed GPUs',
     ],
     publicTap: [
       'public tap',
       'prepaid credits',
       'agentic API',
+      'OpenAI adapter',
       'open-source models',
-      'private LLM hosting',
     ],
-    privateTap: ['private LLM hosting', 'dedicated GPUs', 'open-source models', 'SLA', 'EU AI Act'],
+    privateTap: [
+      'private LLM hosting',
+      'dedicated GPUs',
+      'managed inference',
+      'SLA',
+      'EU AI Act',
+      'OpenAI-compatible',
+    ],
+    toolkit: [
+      'AI toolkit',
+      'SDK',
+      'utils',
+      'ts/js/rs',
+      'deterministic applets',
+      'code review ai',
+      'summarizer ai',
+    ],
     pricing: ['pricing', 'prepaid credits', 'GPU-hour', 'A100', 'H100'],
     proof: ['proof', 'prometheus', 'sse', 'metrics', 'observability'],
     faqs: ['faq', 'pricing', 'credits', 'models', 'EU AI Act', 'vLLM'],
-    about: ['about', 'independent', 'OSS', 'proof-first', 'AI plumbing'],
+    about: ['about', 'independent', 'OSS', 'proof-first'],
     contact: ['contact', 'legal', 'terms', 'credits'],
   },
+
   seoDesc: {
-    home: 'Independent AI plumber. Open-source toolkit, prepaid Public Tap, and dedicated Private Tap on EU GPUs. Proof-first, transparent, EU-friendly.',
+    home:
+      'Agentic AI APIs with a full toolkit. Start on the Public Tap, move to a managed Private Tap on EU GPUs. Proofs, logs, and docs included.',
     publicTap:
-      'Shared agentic API on curated OSS models. Start fast with prepaid credits; clear terms and visibility. Draft pricing.',
+      'Shared agentic API with prepaid credits. Works with the SDK, utils, and the OpenAI adapter. Start fast.',
     privateTap:
-      'Dedicated AI API on your own GPUs. Privacy, control, metrics, and optional OpenAI-compatible gateway. Draft pricing snapshots.',
+      'Your own managed AI API on dedicated GPUs. EU-friendly, observable, and OpenAI-compatible.',
+    toolkit:
+      'Toolkit for TS/JS/Rust (Python/Mojo soon): SDK, utils, and deterministic applets to build internal AI tools.',
     pricing:
       'Draft pricing for Public Tap credits and Private Tap GPU-hour snapshots. Subject to change after benchmarking.',
     proof:
-      'Proof-first: deployment report, metrics, SSE transcripts, and documentation aligned with EU AI Act transparency.',
-    faqs: 'Answers on pricing vs OpenAI, model choice, credits, serving efficiency, and EU AI Act readiness.',
+      'Proof-first operations: deployment reports, metrics, SSE transcripts, and documentation you can audit.',
+    faqs:
+      'Answers on pricing vs OpenAI, model choice, credits, serving efficiency, and EU AI Act posture.',
     about:
-      'About Orchyra: independent AI plumber focused on OSS transparency and proof-first operations.',
+      'Independent EU-based provider of agentic AI APIs and a practical toolkit. Proof-driven and open source.',
     contact:
       'Contact & Legal for Orchyra. Email, LinkedIn, GitHub. Public Tap terms and data/logs availability.',
   },
+
   home: {
     hero: {
-      eyebrow: 'Private LLM Hosting in the Netherlands',
-      h1: 'I build private AI systems for your business.',
-      sub: 'Design, deployment, and support. Proofs, logs, and documentation included. EU data, open source, no lock-in.',
+      eyebrow: 'Public & Private AI Taps (NL/EU)',
+      h1: 'I provide open, managed AI APIs for your business.',
+      sub:
+        'Start with the Public Tap and my agentic SDK. Use the OpenAI adapter when needed. Upgrade to a managed Private Tap on dedicated GPUs — proofs, logs, and documentation included.',
       ctaMenu: 'View service menu',
       ctaProofs: 'Inspect proofs',
-      quickPublic: 'Public demo',
+      quickPublic: 'Try Public Tap',
       quickPrivate: 'Private demo',
       badge: {
         proofs: 'Proof-driven',
@@ -106,81 +134,103 @@ const en = {
         local: 'Local first',
       },
     },
+
     why: {
-      title: 'Why companies need AI plumbing',
+      title: 'Why standardize your AI APIs',
       intro:
-        'EU-grade AI that respects governance: auditable flows, EU data residency, and no lock-in.',
-      problemsTitle: 'What goes wrong without it',
-      outcomesTitle: 'What you need instead',
-      b1: 'Shadow AI: ad-hoc prompts and data copies outside approved systems.',
-      b2: 'No audit trail: hard to show who ran what when (KYC/AML implications).',
-      b3: 'Model/host lock-in: can’t switch providers or reproduce results later.',
-      b4: 'PII drift: GDPR risk from logs and cached artifacts across tools.',
-      o1: 'Reproducible runs with signed logs and job IDs you can reference.',
-      o2: 'Data stays in the EU; PII paths and retention are controlled by policy.',
-      o3: 'Open, swappable models with a stable, OpenAI-compatible gateway.',
-      o4: 'Operational guardrails: rate-limits, quotas, approval flows (four-eyes).',
+        'Reliable agentic AI needs clear APIs, evidence, and control — not another black box.',
+      problemsTitle: 'Without standards, teams hit walls',
+      outcomesTitle: 'What you get instead',
+      b1: 'Shadow AI and duplicate data flows across tools',
+      b2: 'No audit trail: unclear who ran what and when',
+      b3: 'Lock-in to models or hosts you can’t swap',
+      b4: 'GDPR risk from unmanaged logs and caches',
+      o1: 'Reproducible runs with signed logs and job IDs',
+      o2: 'EU data residency and policy-controlled retention',
+      o3: 'OpenAI-compatible gateway with swappable models',
+      o4: 'Operational guardrails: quotas, approvals, rate limits',
       ctaProof: 'Inspect proofs',
       ctaMenu: 'View service menu',
     },
+
     badge: {
       audit: 'Auditable',
       gdpr: 'GDPR/EU data',
       oss: 'Open source',
     },
+
     three: {
-      title: 'Three things, one toolbox',
-      i1: 'Open-source foundation: orchestrator, SDK, utils — inspectable and forkable.',
-      i2: 'Public Tap (prepaid): shared agentic API on curated OSS models.',
-      i3: 'Private Tap (dedicated): your own endpoint on your own GPUs.',
+      title: 'Three pieces, one platform',
+      i1: 'Toolkit: SDK, utils, and deterministic applets for IT teams',
+      i2: 'Public Tap: prepaid agentic API, start in minutes',
+      i3: 'Private Tap: your own managed endpoint on dedicated GPUs',
     },
+
     public: {
       title: 'Public Tap — test fast, pay upfront',
-      p1: 'Buy credits, point your SDK, and see results. No invoices, no surprises — just a clean test bench for OSS models.',
-      b1: 'Curated model set (stable OSS)',
-      b2: 'SSE streaming and logs',
+      p1: 'Buy credits, point your SDK, and ship demos. No invoices, no surprises.',
+      b1: 'Works with SDK + utils and OpenAI adapter',
+      b2: 'Curated OSS models, SSE streaming, and logs',
       b3: 'Prepaid credits: €50 / €200 / €500 packs (baseline €1.20 per 1M tokens) — Draft',
     },
+
     private: {
-      title: 'Private Tap — your own AI API, on dedicated GPUs',
-      p1: 'When privacy, control, or performance matter, a dedicated tap is simply safer. We provision GPUs, deploy your models, and operate the plumbing: orchestration, upgrades, observability, guardrails.',
+      title: 'Private Tap — managed, on your own GPUs',
+      p1:
+        'When privacy, control, or performance matter, get a dedicated API surface. I provision GPUs, deploy your models, and operate the stack.',
       b1: 'A100 80GB — €1.80 / GPU-hour + €250 / month base fee — Draft',
       b2: 'H100 80GB — €3.80 / GPU-hour + €400 / month base fee — Draft',
-      b3: 'Scale 1×/2×/4×/8× GPUs; optional OpenAI-compatible gateway',
+      b3: 'Scale 1×/2×/4×/8×; optional OpenAI-compatible gateway',
     },
+
+    toolkit: {
+      title: 'Toolkit — build the AI tools you need',
+      p1:
+        'For TS/JS/Rust (Python/Mojo coming soon). Deterministic applets you control, running on my agentic API.',
+      b1: 'Codebase maintenance helpers',
+      b2: 'Code review assistant',
+      b3: 'Summarizer AI and document QA',
+      b4: 'Internal chat & automation applets',
+      note: 'You control the tools — I provide the API and proofs.',
+      cta: 'Explore the Toolkit',
+    },
+
     proof: {
-      title: 'We prove it works — before you rely on it',
-      b1: 'Deployment report with SSE transcripts, throughput & latency metrics',
-      b2: 'Prometheus dashboard snapshots and alert thresholds',
-      b3: 'Version pinning and roll-back plan',
-      b4: 'Documentation bundle aligned with EU AI Act transparency ethos',
+      title: 'Proof you can audit',
+      b1: 'Deployment report with SSE transcripts and performance metrics',
+      b2: 'Prometheus dashboards and alert thresholds',
+      b3: 'Version pinning and rollback plan',
+      b4: 'Documentation bundle aligned with EU transparency expectations',
     },
+
     audience: {
       title: 'Designed for IT teams and agencies — usable by anyone',
-      b1: 'IT teams: private API and model choice without hiring a platform team',
-      b2: 'Agencies: start on Public Tap, upgrade to Private Tap for clients',
-      b3: 'Compliance-sensitive orgs: private LLMs and logs for audits',
+      b1: 'IT: private endpoints without hiring a platform team',
+      b2: 'Agencies: start on Public Tap, upgrade to Private',
+      b3: 'Compliance-sensitive orgs: logs and artifacts for audits',
     },
+
     more: {
       faqs: 'Read the FAQs',
       about: 'About Vince',
     },
   },
+
   publicTap: {
-    h1: 'Public Tap — Prepaid Credits',
+    h1: 'Public Tap — Prepaid Agentic API',
     what: 'What it is',
     whatP:
-      'A shared agentic API on curated, stable open-source models for quick testing and demos. Prepaid credits; usage decrements balance; service pauses at 0; balance visible via dashboard/API (descriptive).',
+      'A shared API on curated open-source models for fast experiments and demos. Works with the SDK, utils, and OpenAI adapter.',
     who: "Who it's for",
     why: 'Why it matters',
     terms: 'Terms',
     pricing: 'Draft pricing',
     bWho1: 'Developers and startups testing ideas',
     bWho2: 'Agencies building demos and POCs',
-    bWho3: 'IT teams evaluating AI plumbing before committing to infra',
+    bWho3: 'IT teams evaluating APIs and SDK fit',
     bWhy1: 'Predictable costs with prepaid credits',
-    bWhy2: 'Low barrier to entry; fast start',
-    bWhy3: 'Aligned with OSS transparency',
+    bWhy2: 'Low-friction onboarding; start in minutes',
+    bWhy3: 'Aligned with open-source transparency',
     bTerms1: 'Credits are non-refundable',
     bTerms2: '12-month validity',
     bPrice1: 'Baseline: €1.20 per 1M tokens (input + output combined)',
@@ -189,11 +239,12 @@ const en = {
     bPrice4: 'Pro: €500 → ~416M tokens',
     note: 'Draft — numbers subject to revision after provider benchmarking.',
   },
+
   privateTap: {
-    h1: 'Private Tap — Dedicated GPUs',
+    h1: 'Private Tap — Managed Dedicated GPUs',
     what: 'What it is',
     whatP:
-      'A dedicated, isolated agentic API box provisioned per client. Any OSS model (e.g., Hugging Face), with GPU scaling options and an optional OpenAI-compatible gateway for drop-in usage.',
+      'Your own isolated agentic API box, provisioned on dedicated GPUs. Bring any OSS model (e.g., from Hugging Face). Optional OpenAI-compatible gateway.',
     value: 'Value',
     bVal1: 'Privacy & control with your own endpoint and quotas',
     bVal2: 'Observability with metrics and logs for real SLOs',
@@ -204,54 +255,87 @@ const en = {
     bPrice3: 'Scale 1×/2×/4×/8× GPUs',
     note: 'Draft — examples based on public provider rates; subject to change.',
   },
+
+  toolkit: {
+    h1: 'Toolkit — SDK, Utils & Deterministic Applets',
+    what: 'What it is',
+    whatP:
+      'A practical toolkit for TS/JS/Rust (Python/Mojo soon) with deterministic applets. Use it to build and control internal AI tools that run on the agentic API.',
+    lang: 'Languages',
+    bLang1: 'TypeScript / JavaScript',
+    bLang2: 'Rust',
+    bLang3: 'Python & Mojo (coming soon)',
+    applets: 'Included applets (examples)',
+    bApp1: 'Codebase maintenance helpers',
+    bApp2: 'Code review assistant',
+    bApp3: 'Summarizer AI (docs, tickets, chats)',
+    bApp4: 'Document QA and retrieval',
+    bApp5: 'Internal chat & automation bots',
+    control: 'Control',
+    bCtl1: 'Deterministic applets with predictable behavior',
+    bCtl2: 'Your policies, quotas, and approvals',
+    bCtl3: 'Works with OpenAI adapter when needed',
+    cta: 'View Toolkit docs',
+    note: 'Open source core; build your own applets or extend mine.',
+  },
+
   pricing: {
     h1: 'Pricing (Draft)',
     credits: 'Public Tap — Credits',
     gpu: 'Private Tap — GPU-hour',
     note1: 'Draft — subject to change after benchmarking.',
-    note2: 'Draft — provider rates vary; examples only.',
+    note2: 'Provider rates vary by region and availability.',
   },
+
   proof: {
     h1: 'Proof — Logs, Metrics, SSE',
-    artifacts: 'Artifacts (described)',
+    artifacts: 'Artifacts',
     b1: 'Deployment report with SSE transcripts and performance metrics',
     b2: 'Prometheus dashboard snapshots and alert thresholds',
-    b3: 'Version pinning and roll-back plan',
-    b4: 'Documentation bundle aligned with EU AI Act transparency spirit',
+    b3: 'Version pinning and rollback plan',
+    b4: 'Documentation bundle for internal governance',
     visuals: 'Coming visuals',
     v1: 'Grafana/Prometheus screenshots',
     v2: 'Pipeline diagram with “certified” stamp',
     microcopy:
-      'This is infrastructure—like water or electricity. You shouldn’t have to “trust” it. You should see it.',
+      'This is infrastructure. You shouldn’t have to trust it — you should see it.',
   },
+
   faqs: {
     h1: 'Frequently Asked Questions',
     q1: 'Is this cheaper than OpenAI?',
-    a1: 'No. If you want the absolute lowest token price, use OpenAI. If you want transparency, EU-friendly deployments, model choice, and dedicated GPUs, consider a Private Tap. For testing, start with the Public Tap.',
+    a1:
+      'No. If minimum token price is your only goal, use OpenAI. If you want transparency, EU-friendly deployments, model choice, and dedicated GPUs, consider a Private Tap. For testing, start with the Public Tap.',
     q2: 'Can I bring any OSS model?',
-    a2: 'Yes, for Private Taps you can choose models from Hugging Face or other sources; VRAM is validated during setup.',
+    a2:
+      'Yes. For Private Taps you can choose models from Hugging Face or other sources; VRAM is validated during setup.',
     q3: 'How do prepaid credits work?',
-    a3: 'You buy a pack, receive a token balance, and consume until zero. Credits are non-refundable and valid for 12 months. Your balance is always visible via dashboard/API (descriptive).',
+    a3:
+      'Buy a pack, receive a token balance, and consume until zero. Credits are non-refundable and valid for 12 months. Your balance is visible via dashboard/API.',
     q4: 'What makes your serving stack efficient?',
-    a4: 'We use open-source, high-throughput serving engines (e.g., vLLM with PagedAttention and continuous batching) and expose metrics for real SLOs.',
+    a4:
+      'We use high-throughput serving engines (e.g., vLLM with PagedAttention and continuous batching) and expose metrics for real SLOs.',
     q5: 'Are you EU AI Act ready?',
-    a5: "We operate with the Act's documentation and transparency spirit in mind (risk-aware, logged, documented deployments). The artifacts (logs, metrics, SSE transcripts) support your internal governance.",
+    a5:
+      "We operate with the Act’s transparency spirit: logged, documented deployments and artifacts that support your internal governance.",
   },
+
   about: {
     h1: 'About Orchyra',
     identity: 'Identity',
     identityP:
-      'Orchyra is led by an independent tradesman — your AI plumber. The focus is on robust engineering, transparent tooling, and proof-first operations so teams can run agentic AI as reliably as water or electricity.',
-    usp: 'USP pillars',
-    usp1: 'Open-source plumbing — orchestrator, SDK, and utils under GPL.',
-    usp2: 'Proof-first operations — logs, Prometheus metrics, SSE transcripts, version pinning.',
-    usp3: 'Independent, local — personal, accountable, practical.',
-    usp4: 'Prepaid simplicity — predictable costs via credits and GPU-hour packs.',
+      'Independent, EU-based provider of agentic AI APIs and a practical toolkit. Focused on robust engineering and proof-first operations.',
+    usp: 'What makes us different',
+    usp1: 'Open source core — orchestrator, SDK, and utils',
+    usp2: 'Proof-first operations — logs, metrics, SSE transcripts, version pinning',
+    usp3: 'Independent & local — personal, accountable, practical',
+    usp4: 'Simple commercial model — credits and GPU-hour packs',
     approach: 'Approach',
     approachP:
-      'The trade is “AI plumbing” — installing and maintaining pipelines, applying observability and guardrails, and delivering documentation bundles that align with the EU AI Act’s transparency spirit.',
+      'Standardized APIs, observable operations, and a toolkit of deterministic applets your team controls.',
     cta: 'Talk to Vince',
   },
+
   contact: {
     h1: 'Contact & Legal',
     contact: 'Contact',
@@ -265,7 +349,7 @@ const en = {
     note: 'Legal copy to be finalized; this page is informational only.',
     dataLogs: 'Data & Logs',
     dataLogsP:
-      'Deployment reports, metrics, and relevant logs are made available to customers as part of the proof-first approach.',
+      'Deployment reports, metrics, and relevant logs are available to customers as part of the proof-first approach.',
   },
 }
 
