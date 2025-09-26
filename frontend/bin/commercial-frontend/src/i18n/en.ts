@@ -97,8 +97,7 @@ const en = {
   },
 
   seoDesc: {
-    home:
-      'Agentic AI APIs with a full toolkit. Start on the Public Tap, move to a managed Private Tap on EU GPUs. Proofs, logs, and docs included.',
+    home: 'Agentic AI APIs with a full toolkit. Start on the Public Tap, move to a managed Private Tap on EU GPUs. Proofs, logs, and docs included.',
     publicTap:
       'Shared agentic API with prepaid credits. Works with the SDK, utils, and the OpenAI adapter. Start fast.',
     privateTap:
@@ -109,8 +108,7 @@ const en = {
       'Draft pricing for Public Tap credits and Private Tap GPU-hour snapshots. Subject to change after benchmarking.',
     proof:
       'Proof-first operations: deployment reports, metrics, SSE transcripts, and documentation you can audit.',
-    faqs:
-      'Answers on pricing vs OpenAI, model choice, credits, serving efficiency, and EU AI Act posture.',
+    faqs: 'Answers on pricing vs OpenAI, model choice, credits, serving efficiency, and EU AI Act posture.',
     about:
       'Independent EU-based provider of agentic AI APIs and a practical toolkit. Proof-driven and open source.',
     contact:
@@ -119,26 +117,24 @@ const en = {
 
   home: {
     hero: {
-      eyebrow: 'Public & Private AI Taps (NL/EU)',
-      h1: 'I provide open, managed AI APIs for your business.',
-      sub:
-        'Start with the Public Tap and my agentic SDK. Use the OpenAI adapter when needed. Upgrade to a managed Private Tap on dedicated GPUs — proofs, logs, and documentation included.',
-      ctaMenu: 'View service menu',
-      ctaProofs: 'Inspect proofs',
-      quickPublic: 'Try Public Tap',
-      quickPrivate: 'Private demo',
+      eyebrow: 'Reliable EU-Based AI APIs',
+      h1: 'Transparent, compliant AI infrastructure you can trust.',
+      sub: 'Start small with prepaid Public APIs, then grow into your own Private endpoint on dedicated GPUs. Every step is proof-driven, auditable, and cost-predictable — so your business can adopt AI with confidence.',
+      ctaMenu: 'Explore service plans',
+      ctaProofs: 'See operational proofs',
+      quickPublic: 'Try Public API',
+      quickPrivate: 'Request Private demo',
       badge: {
         proofs: 'Proof-driven',
-        eu: 'EU data',
+        eu: 'EU-compliant',
+        predictable: 'Predictable costs',
         oss: 'Open source',
-        local: 'Local first',
       },
     },
 
     why: {
       title: 'Why standardize your AI APIs',
-      intro:
-        'Reliable agentic AI needs clear APIs, evidence, and control — not another black box.',
+      intro: 'Reliable agentic AI needs clear APIs, evidence, and control — not another black box.',
       problemsTitle: 'Without standards, teams hit walls',
       outcomesTitle: 'What you get instead',
       b1: 'Shadow AI and duplicate data flows across tools',
@@ -176,8 +172,7 @@ const en = {
 
     private: {
       title: 'Private Tap — managed, on your own GPUs',
-      p1:
-        'When privacy, control, or performance matter, get a dedicated API surface. I provision GPUs, deploy your models, and operate the stack.',
+      p1: 'When privacy, control, or performance matter, get a dedicated API surface. I provision GPUs, deploy your models, and operate the stack.',
       b1: 'A100 80GB — €1.80 / GPU-hour + €250 / month base fee — Draft',
       b2: 'H100 80GB — €3.80 / GPU-hour + €400 / month base fee — Draft',
       b3: 'Scale 1×/2×/4×/8×; optional OpenAI-compatible gateway',
@@ -185,8 +180,7 @@ const en = {
 
     toolkit: {
       title: 'Toolkit — build the AI tools you need',
-      p1:
-        'For TS/JS/Rust (Python/Mojo coming soon). Deterministic applets you control, running on my agentic API.',
+      p1: 'For TS/JS/Rust (Python/Mojo coming soon). Deterministic applets you control, running on my agentic API.',
       b1: 'Codebase maintenance helpers',
       b2: 'Code review assistant',
       b3: 'Summarizer AI and document QA',
@@ -297,27 +291,21 @@ const en = {
     visuals: 'Coming visuals',
     v1: 'Grafana/Prometheus screenshots',
     v2: 'Pipeline diagram with “certified” stamp',
-    microcopy:
-      'This is infrastructure. You shouldn’t have to trust it — you should see it.',
+    microcopy: 'This is infrastructure. You shouldn’t have to trust it — you should see it.',
   },
 
   faqs: {
     h1: 'Frequently Asked Questions',
     q1: 'Is this cheaper than OpenAI?',
-    a1:
-      'No. If minimum token price is your only goal, use OpenAI. If you want transparency, EU-friendly deployments, model choice, and dedicated GPUs, consider a Private Tap. For testing, start with the Public Tap.',
+    a1: 'No. If minimum token price is your only goal, use OpenAI. If you want transparency, EU-friendly deployments, model choice, and dedicated GPUs, consider a Private Tap. For testing, start with the Public Tap.',
     q2: 'Can I bring any OSS model?',
-    a2:
-      'Yes. For Private Taps you can choose models from Hugging Face or other sources; VRAM is validated during setup.',
+    a2: 'Yes. For Private Taps you can choose models from Hugging Face or other sources; VRAM is validated during setup.',
     q3: 'How do prepaid credits work?',
-    a3:
-      'Buy a pack, receive a token balance, and consume until zero. Credits are non-refundable and valid for 12 months. Your balance is visible via dashboard/API.',
+    a3: 'Buy a pack, receive a token balance, and consume until zero. Credits are non-refundable and valid for 12 months. Your balance is visible via dashboard/API.',
     q4: 'What makes your serving stack efficient?',
-    a4:
-      'We use high-throughput serving engines (e.g., vLLM with PagedAttention and continuous batching) and expose metrics for real SLOs.',
+    a4: 'We use high-throughput serving engines (e.g., vLLM with PagedAttention and continuous batching) and expose metrics for real SLOs.',
     q5: 'Are you EU AI Act ready?',
-    a5:
-      "We operate with the Act’s transparency spirit: logged, documented deployments and artifacts that support your internal governance.",
+    a5: 'We operate with the Act’s transparency spirit: logged, documented deployments and artifacts that support your internal governance.',
   },
 
   about: {

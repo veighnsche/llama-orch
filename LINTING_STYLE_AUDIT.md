@@ -4,17 +4,20 @@ This audit captures the current ESLint/Prettier/Editor/VSCode configuration acro
 
 ## Sources of Truth
 
-- Prettier: `prettier.config.cjs` at repo root → forwards to `frontend/libs/frontend-tooling/prettier.config.cjs`.
+- Prettier: Per-workspace via the package.json `prettier` field pointing to `orchyra-frontend-tooling/prettier.config.cjs`.
 - ESLint: Shared flat config in `frontend/libs/frontend-tooling/eslint.config.js` (consumed by projects).
 - Editor/VSCode: Workspace settings in `.vscode/settings.json`.
 - EditorConfig: `.editorconfig` at repo root.
+- Ignores: `.prettierignore` and `.eslintignore` at repo root (added).
 
 ## Inventory (by path)
 
-- `prettier.config.cjs` (root): forwards to shared tooling config so editors/CLIs at the repo root resolve a single config.
+- package.json `prettier` (per workspace):
+  - `frontend/bin/commercial-frontend/package.json` → `"prettier": "orchyra-frontend-tooling/prettier.config.cjs"`
+  - `frontend/libs/storybook/package.json` → `"prettier": "orchyra-frontend-tooling/prettier.config.cjs"`
 - `frontend/libs/frontend-tooling/prettier.config.cjs`: the canonical shared Prettier settings.
   - Key options: `semi: false`, `singleQuote: true`, `trailingComma: 'all'`, `arrowParens: 'always'`, `printWidth: 100`, `vueIndentScriptAndStyle: true`.
-  - Overrides: `{ files: ['**/*.css','**/*.scss','**/*.less'], options: { tabWidth: 4 } }`.
+  - Overrides: (none) — indentation for stylesheets is governed by `.editorconfig`.
 - `frontend/libs/frontend-tooling/eslint.config.js`: shared ESLint flat config for Vue + TS.
   - Includes `@eslint/js` recommended, `eslint-plugin-vue` flat recommended, `typescript-eslint` recommended.
   - Adds `eslint-config-prettier` as the last item to disable any rules that conflict with Prettier formatting.
@@ -33,15 +36,14 @@ This audit captures the current ESLint/Prettier/Editor/VSCode configuration acro
 
 ## Duplications & Potential Contradictions
 
-1. Consumer-level Prettier configs:
-   - `frontend/bin/commercial-frontend/prettier.config.cjs`
-   - `frontend/libs/storybook/prettier.config.cjs`
-   - Status: These re-export the shared config and will work now that exports are fixed, but they shadow the root config due to Prettier’s nearest-config resolution. This creates duplication and a risk of drift. It also contradicts the repo rule to keep config out of consuming libs/binaries.
+1. Consumer-level Prettier configs: REMOVED ✅
+   - Deleted files:
+     - `frontend/bin/commercial-frontend/prettier.config.cjs`
+     - `frontend/libs/storybook/prettier.config.cjs`
+   - Status: Single source of truth at root; no shadowing.
 
-2. CSS/SCSS/LESS indentation defined in two places:
-   - Prettier overrides in `frontend/libs/frontend-tooling/prettier.config.cjs` set `tabWidth: 4` for CSS/SCSS/LESS.
-   - `.editorconfig` also sets `indent_size = 4` for these file types.
-   - Status: Not a behavior conflict (values match), but duplication. Prettier is explicitly configured to read `.editorconfig` in `.vscode/settings.json` (`prettier.useEditorConfig: true`), so the overrides are redundant.
+2. CSS/SCSS/LESS indentation defined in two places: RESOLVED ✅
+   - Removed Prettier overrides; `.editorconfig` remains the single authority.
 
 3. ESLint vs Prettier formatting authority:
    - `.vscode/settings.json` sets `eslint.format.enable: false` and Prettier as default formatter for JS-family and stylesheets.
@@ -55,15 +57,9 @@ This audit captures the current ESLint/Prettier/Editor/VSCode configuration acro
 
 ## Recommendations
 
-- Remove consumer-level Prettier config files to enforce a single source of truth:
-  - Delete:
-    - `frontend/bin/commercial-frontend/prettier.config.cjs`
-    - `frontend/libs/storybook/prettier.config.cjs`
-  - Rationale: Ensures Prettier uses the root config, avoids shadowing and drift, and meets the policy of no configs in consumers.
+- Keep consumer-level Prettier config files removed (enforced single source of truth at root).
 
-- De-duplicate indentation rules for stylesheets by relying on `.editorconfig` only:
-  - Option A (recommended for simplicity): Remove the CSS/SCSS/LESS overrides from `frontend/libs/frontend-tooling/prettier.config.cjs`. Prettier will respect `.editorconfig` because `.vscode/settings.json` enables `prettier.useEditorConfig`.
-  - Option B: Keep the overrides and also keep `.editorconfig` entries. This is harmless but redundant. If kept, document the redundancy here.
+- Rely on `.editorconfig` for indentation rules (CSS/SCSS/LESS overrides removed from Prettier config).
 
 - Keep ESLint→Prettier alignment as-is:
   - Continue to include `eslint-config-prettier` as the last item in the shared ESLint flat config.
@@ -71,23 +67,30 @@ This audit captures the current ESLint/Prettier/Editor/VSCode configuration acro
 
 ## Proposed Commands
 
-Run from repo root to remove consumer-level Prettier configs:
+Prettier CLI should be invoked from each package (the monorepo root has no package.json). Examples:
 
 ```bash
-rm frontend/bin/commercial-frontend/prettier.config.cjs \
-   frontend/libs/storybook/prettier.config.cjs
+# Commercial frontend
+pnpm --dir frontend/bin/commercial-frontend prettier --write .
+pnpm --dir frontend/bin/commercial-frontend eslint . --fix
+pnpm --dir frontend/bin/commercial-frontend prettier --check .
+
+# Storybook library
+pnpm --dir frontend/libs/storybook prettier --write .
+pnpm --dir frontend/libs/storybook eslint . --fix
+pnpm --dir frontend/libs/storybook prettier --check .
 ```
 
-Optional: If you accept Recommendation A (remove redundant stylesheet overrides), I will open a PR/commit to update `frontend/libs/frontend-tooling/prettier.config.cjs` accordingly.
+Optional: Add a top-level convenience script runner later if a root `package.json` is introduced.
 
 ## Current Alignment Status
 
 - Prettier single source of truth: ✅ (root forwards to tooling)
 - ESLint formatting: ✅ disabled where it could conflict (via config and VS Code)
 - Editor tab sizing and Prettier: ✅ consistent via `.editorconfig` and Prettier options
-- Duplications: ⚠️ consumer Prettier configs present; stylesheet indent rules duplicated (but consistent)
+- Duplications: ✅ none (consumer configs removed; stylesheet overrides removed)
 
 ## Next Steps
 
-1) Approve deletion of consumer-level Prettier configs (command above).
-2) Choose Option A or B for stylesheet indentation duplication and I will implement.
+1) Use the package-local commands above to verify no flip-flops: format → lint:fix → format:check.
+2) If desired, we can add lint-staged pre-commit hooks later to enforce both locally.

@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { useI18n } from 'vue-i18n'
   const { t } = useI18n()
-  import { Button, Badge } from '../../../../../libs/storybook/stories'
+  import { Button, Badge } from 'orchyra-storybook/stories'
 </script>
 
 <template>

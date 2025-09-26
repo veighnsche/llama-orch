@@ -2,7 +2,7 @@
   import { useMeta } from '@/composables/useMeta'
   import { useI18n } from 'vue-i18n'
   import { useRoute } from 'vue-router'
-  import { Button } from '../../../../libs/storybook/stories'
+  import { Button } from 'orchyra-storybook/stories'
 
   const { t, tm, locale } = useI18n()
   const route = useRoute()

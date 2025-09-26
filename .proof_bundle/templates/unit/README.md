@@ -1,0 +1,62 @@
+# Unit Test Proof Bundle Template
+
+Required generated artifacts (crate-local by default)
+
+- retry_timeline.jsonl — if retry logic exists; one JSON per line with { test_id, seed, policy { base_ms, multiplier, cap_ms }, attempt, delay_ms }
+- redacted_errors.* — snapshots proving secret scrubbing
+- seeds.txt — RNG seeds used
+- test_report.md — brief summary with pass/fail counts and pointers to files
+
+Notes
+
+- No secrets. Redact headers and tokens.
+- Prefer deterministic seeds via env (e.g., HTTP_UTIL_TEST_SEED).
+
+Path layout
+
+- <crate>/.proof_bundle/unit/<run_id>/
+- run_id should be `YYYYMMDD-HHMMSS-<git_sha8>` or set `LLORCH_RUN_ID`.
+
+Environment
+
+- LLORCH_RUN_ID — optional, groups artifacts per run
+- LLORCH_PROOF_DIR — optional, overrides base bundle dir (defaults to `<crate>/.proof_bundle`)
+
+Formats
+
+- Streams use NDJSON (`.ndjson`/`.jsonl`), one JSON per line
+- Configs use JSON; summaries use Markdown
+
+Example (Rust)
+
+```rust
+use std::fs::{create_dir_all, File};
+use std::io::Write;
+use std::path::PathBuf;
+
+fn proof_root() -> PathBuf {
+    let base = std::env::var("LLORCH_PROOF_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(".proof_bundle"));
+    let run_id = std::env::var("LLORCH_RUN_ID").unwrap_or_else(|_| {
+        let ts = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        format!("{}", ts)
+    });
+    base.join("unit").join(run_id)
+}
+
+#[test]
+fn writes_report_and_seeds() {
+    let root = proof_root();
+    create_dir_all(&root).unwrap();
+    std::fs::write(root.join("seeds.txt"), "seed=42\n").unwrap();
+    std::fs::write(root.join("test_report.md"), "# Unit run\nOK\n").unwrap();
+}
+```
+
+Links
+
+- See `.docs/testing/types/unit.md` and `.docs/testing/TEST_TYPES_GUIDE.md`.

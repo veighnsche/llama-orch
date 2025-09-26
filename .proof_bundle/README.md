@@ -1,0 +1,30 @@
+# Proof Bundles — Monorepo Standard
+
+Every test type must emit a crate-local proof bundle capturing artifacts sufficient to review the behavior without rerunning the test.
+
+## Location
+- `<crate>/.proof_bundle/<type>/<run_id>/...`
+- `run_id` should be `YYYYMMDD-HHMMSS-<git_sha8>` or provided via env `LLORCH_RUN_ID`.
+- Override base directory with `LLORCH_PROOF_DIR` when running out-of-tree harnesses.
+
+## Redaction
+- Do not commit secrets. Provide parallel `*_redacted.*` artifacts.
+- If redaction is not possible, replace with structured summaries and links (internal only) in `test_report.md`.
+
+## Formats
+- Streams: NDJSON/JSONL; Configs: JSON; Summaries: Markdown; Timings: CSV.
+- Always include `test_report.md` summarizing pass/fail, specs covered, and pointers.
+
+## Seeds and determinism
+- Record all RNG seeds in `seeds.txt` when applicable.
+
+## Per-type checklists
+- See `.proof_bundle/templates/*/README.md` for required files.
+- See `.docs/testing/TEST_TYPES_GUIDE.md` and `.docs/testing/types/*.md` for guidance.
+
+## PR expectations
+- Attach or link to proof bundle contents in PRs that change behavior.
+- Include determinism diffs or SSE transcripts where relevant.
+
+## Retention
+- Keep bundles small and redacted. Clean stale run directories as needed pre-1.0.

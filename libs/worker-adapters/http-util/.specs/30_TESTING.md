@@ -38,6 +38,17 @@ Date: 2025-09-19
 - Deterministic jitter: tests SHOULD accept a seed (e.g., feature flag or env `HTTP_UTIL_TEST_SEED`) to fix RNG for expectations.
 - CI: use a local stub (e.g., wiremock) to avoid external calls; no network dependency.
 
+## Proof Bundle Outputs (MUST)
+
+Tests MUST generate auditor artifacts under `libs/worker-adapters/http-util/.proof_bundle/`:
+
+- `metadata.json` and `ci_manifest.json` — build and CI context (filled by CI harness)
+- `retry_timeline.jsonl` — retry schedule events with `test_id`, policy, and seed (HTU-UNIT-3102, HTU-INT-3302)
+- `streaming_transcript.ndjson` — sample streaming events (started/token/metrics?/end) (HTU-INT-3303)
+- `redacted_errors.*` — snapshots of secret-scrubbed errors (HTU-UNIT-3103, HTU-INT-3304)
+- `seeds.txt` — seeds used for deterministic jitter in this run
+- `test_report.md` — brief summary, pointers to artifacts, pass/fail tallies
+
 ## Traceability
 
 - Contracts: `./00_http_util.md`

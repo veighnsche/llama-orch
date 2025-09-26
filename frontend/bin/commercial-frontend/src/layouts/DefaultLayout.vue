@@ -54,7 +54,7 @@
   import { RouterView } from 'vue-router'
   import { computed, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
-  import { NavbarShell, Brand, NavLinks, Drawer, DrawerTrigger, DrawerPanel, Button } from '../../../../libs/storybook/stories'
+  import { NavbarShell, Brand, NavLinks, Drawer, DrawerTrigger, DrawerPanel, Button } from 'orchyra-storybook/stories'
   import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
   import SiteFooter from '@/components/SiteFooter.vue'
 

@@ -131,19 +131,18 @@ const nl = {
   },
   home: {
     hero: {
-      eyebrow: 'Public & Private AI Taps (NL/EU)',
-      h1: 'Ik lever open, beheerde AI‑API’s voor uw bedrijf.',
-      sub:
-        'Start met de Public Tap en mijn agentic SDK. Gebruik de OpenAI-adapter wanneer nodig. Upgrade naar een beheerde Private Tap op dedicated GPU’s — inclusief bewijs, logs en documentatie.',
-      ctaMenu: 'Service-menu bekijken',
-      ctaProofs: 'Bewijs inzien',
-      quickPublic: 'Probeer Public Tap',
-      quickPrivate: 'Privé demo',
+      eyebrow: 'Betrouwbare EU-gebaseerde AI-API’s',
+      h1: 'Transparante, conforme AI-infrastructuur die u kunt vertrouwen.',
+      sub: 'Begin klein met voorafbetaalde Public API’s en groei door naar uw eigen Private endpoint op dedicated GPU’s. Elke stap is bewijs-gedreven, controleerbaar en kost-voorspelbaar — zodat uw bedrijf AI met vertrouwen kan inzetten.',
+      ctaMenu: 'Bekijk service-plannen',
+      ctaProofs: 'Bekijk operationeel bewijs',
+      quickPublic: 'Probeer Public API',
+      quickPrivate: 'Vraag Private demo aan',
       badge: {
         proofs: 'Bewijs-gedreven',
-        eu: 'EU-data',
+        eu: 'EU-conform',
+        predictable: 'Voorspelbare kosten',
         oss: 'Open source',
-        local: 'Local first',
       },
     },
     why: {
@@ -261,8 +260,7 @@ const nl = {
     visuals: 'Komende visuals',
     v1: 'Grafana/Prometheus-screenshots',
     v2: 'Architectuurdiagram met “gecertificeerd”-stempel',
-    microcopy:
-      'Dit is infrastructuur. Je zou het niet hoeven geloven; je moet het kunnen zien.',
+    microcopy: 'Dit is infrastructuur. Je zou het niet hoeven geloven; je moet het kunnen zien.',
   },
   faqs: {
     h1: 'Veelgestelde vragen',

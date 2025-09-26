@@ -34,6 +34,14 @@ Date: 2025-09-19
 - Determinism: set `HTTP_UTIL_TEST_SEED` to stabilize jitter expectations.
 - No skipped tests in committed code; follow `/.docs/testing/TESTING_POLICY.md`.
 
+## Proof Bundle Outputs (MUST)
+
+Unit tests MUST generate the following artifacts under `libs/worker-adapters/http-util/.proof_bundle/`:
+
+- `retry_timeline.jsonl` — events from HTU-UNIT-3102 (policy, attempt, delay_ms, seed)
+- `redacted_errors.*` — snapshots from HTU-UNIT-3103 proving secret scrubbing
+- `seeds.txt` — the RNG seed(s) used for deterministic jitter
+
 ## Traceability
 
 - Consumed by `worker-adapters/*` crates for streaming and retries

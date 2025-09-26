@@ -54,11 +54,15 @@ Validate client construction, retry/backoff (jitter bounds), HTTP/2 keep‑alive
 - Run: `cargo test -p worker-adapters-http-util -- --nocapture`
 - CI: local stub server (wiremock) with scenarios for 429/5xx/timeouts and streaming.
 
-### Proof Bundle Artifacts
+## Proof Bundle Outputs (MUST)
 
-- Retry timeline logs with seed disclosure
-- Streaming transcript samples (started/token*/metrics?/end)
-- Redacted error log snapshots (no secrets)
+Integration tests MUST generate artifacts under `libs/worker-adapters/http-util/.proof_bundle/`:
+
+- `retry_timeline.jsonl` — events for HTU-INT-3302 (attempt, delay_ms) with policy and seed disclosed
+- `streaming_transcript.ndjson` — events for HTU-INT-3303 (started/token/metrics?/end)
+- `redacted_errors.*` — snapshots for HTU-INT-3304 proving secret redaction
+- `seeds.txt` — seed(s) used for deterministic jitter
+- `test_report.md` — brief summary and pointers to the generated files
 
 ## Refinement Opportunities
 

@@ -1,0 +1,76 @@
+# Unit Tests — Guide and Proof Bundle
+
+## What
+
+Fast, isolated tests for functions and modules. No network, no filesystem outside temp dirs, no external processes.
+
+## Where
+
+- Within each crate under `src/` and `tests/`.
+- Proof bundles: `<crate>/.proof_bundle/unit/<run_id>/`.
+
+## When
+
+- New algorithmic logic, invariants, error handling, retry policies.
+- Regression coverage for past bugs.
+
+## Artifacts (see template)
+
+- `retry_timeline.jsonl` — `{ test_id, seed, policy { base_ms, multiplier, cap_ms }, attempt, delay_ms }`
+- `redacted_errors.*` — snapshots proving secret scrubbing
+- `seeds.txt` — RNG seeds used
+- `test_report.md` — pass/fail, pointers
+
+## File formats
+
+- `*.jsonl` or `*.ndjson` for event streams; one JSON per line.
+- Redact sensitive fields; mirror unredacted content only locally.
+
+## Recommended recipe (Rust)
+
+```rust
+use std::fs::{create_dir_all, File};
+use std::io::Write;
+use std::path::PathBuf;
+
+fn proof_root() -> PathBuf {
+    let base = std::env::var("LLORCH_PROOF_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(".proof_bundle"));
+    let run_id = std::env::var("LLORCH_RUN_ID").unwrap_or_else(|_| {
+        let ts = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        format!("{}", ts)
+    });
+    base.join("unit").join(run_id)
+}
+
+#[test]
+fn emits_retry_timeline() {
+    let root = proof_root();
+    create_dir_all(&root).unwrap();
+    let mut f = File::create(root.join("retry_timeline.jsonl")).unwrap();
+    let rec = serde_json::json!({
+        "test_id": "policy_basic",
+        "seed": 42,
+        "policy": {"base_ms": 50, "multiplier": 2.0, "cap_ms": 2000},
+        "attempt": 1,
+        "delay_ms": 50
+    });
+    writeln!(f, "{}", rec).unwrap();
+}
+```
+
+- Set `LLORCH_RUN_ID` in your test runner to group artifacts. Otherwise epoch seconds are used.
+
+## Do/Don’t
+
+- Do mock time and RNG when possible.
+- Don’t perform network calls or long sleeps.
+
+## Links
+
+- Template: `.proof_bundle/templates/unit/README.md`
+- Index: `.docs/testing/TEST_TYPES_GUIDE.md`
