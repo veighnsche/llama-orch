@@ -1,4 +1,4 @@
-use cucumber::{when, then};
+use cucumber::{then, when};
 use std::fs;
 use std::io::{BufRead, BufReader, Read};
 

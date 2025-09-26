@@ -1,5 +1,5 @@
-pub mod test_type;
 pub mod name;
+pub mod test_type;
 
-pub use test_type::TestType;
 pub use name::sanitize_name;
+pub use test_type::TestType;

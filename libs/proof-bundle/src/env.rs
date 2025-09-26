@@ -27,16 +27,14 @@ pub fn resolve_run_id() -> String {
 }
 
 fn epoch_seconds() -> String {
-    let secs = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
+    let secs = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs();
     format!("{}", secs)
 }
 
 fn resolve_sha8() -> Option<String> {
     // Prefer explicit envs often set by CI
-    let cand = env::var("GIT_SHA").ok()
+    let cand = env::var("GIT_SHA")
+        .ok()
         .or_else(|| env::var("CI_COMMIT_SHA").ok())
         .or_else(|| env::var("GITHUB_SHA").ok());
     cand.map(|s| s.chars().take(8).collect())

@@ -51,7 +51,12 @@ pub async fn bundle_root_under_world_proof_dir(world: &mut BddWorld) {
     let pb = world.get_pb().expect("bundle in world");
     let root = pb.root();
     let expected_base = world.ensure_root().join(".proof_bundle");
-    assert!(root.starts_with(&expected_base), "{} should start with {}", root.display(), expected_base.display());
+    assert!(
+        root.starts_with(&expected_base),
+        "{} should start with {}",
+        root.display(),
+        expected_base.display()
+    );
 }
 
 #[given(regex = r#"^I set env overrides with run id \"([^\"]+)\"$"#)]

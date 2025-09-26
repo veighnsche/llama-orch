@@ -38,7 +38,12 @@ pub async fn when_write_json_with_meta(world: &mut BddWorld, base: String, json_
 }
 
 #[then(regex = r#"^json file \"([^\"]+)\" has field \"([^\"]+)\" equals \"([^\"]*)\"$"#)]
-pub async fn then_json_field_equals(world: &mut BddWorld, name: String, field: String, expected: String) {
+pub async fn then_json_field_equals(
+    world: &mut BddWorld,
+    name: String,
+    field: String,
+    expected: String,
+) {
     let pb = world.get_pb().expect("bundle in world");
     let p = pb.root().join(name);
     let f = fs::File::open(&p).expect("open file");

@@ -20,7 +20,10 @@ impl BddWorld {
         std::env::set_var("LLORCH_RUN_ID", run_id);
     }
 
-    pub fn open_bundle(&mut self, tt: proof_bundle::TestType) -> anyhow::Result<proof_bundle::ProofBundle> {
+    pub fn open_bundle(
+        &mut self,
+        tt: proof_bundle::TestType,
+    ) -> anyhow::Result<proof_bundle::ProofBundle> {
         self.selected_type = Some(tt);
         let pb = proof_bundle::ProofBundle::for_type(tt)?;
         self.bundle_root = Some(pb.root().to_path_buf());
@@ -28,9 +31,8 @@ impl BddWorld {
     }
 
     pub fn get_pb(&self) -> anyhow::Result<proof_bundle::ProofBundle> {
-        let tt = self
-            .selected_type
-            .ok_or_else(|| anyhow::anyhow!("no selected test type in world"))?;
+        let tt =
+            self.selected_type.ok_or_else(|| anyhow::anyhow!("no selected test type in world"))?;
         let pb = proof_bundle::ProofBundle::for_type(tt)?;
         Ok(pb)
     }
