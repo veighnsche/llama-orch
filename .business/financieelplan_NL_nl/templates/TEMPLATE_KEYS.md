@@ -33,7 +33,7 @@ start_maand | var | yes |
 total_financiering | var | yes | 
 total_investering | var | yes | 
 vat_period | var | yes | BTW-afdrachtfrequentie (maand/kwartaal).
-veiligheidsmarge_pct | var | yes | afstand van basisomzet tot BE.
+veiligheidsmarge_pct | var | yes | 
 
 ## 10_investering_financiering.md.tpl
 
@@ -109,7 +109,7 @@ resultaat_worst | var | yes |
 stress_result_avg | var | yes | 
 stress_verdict | var | yes | 
 stress_verlies_maanden | var | yes | 
-veiligheidsmarge_pct | var | yes | afstand van basisomzet tot BE.
+veiligheidsmarge_pct | var | yes | 
 verlies_maanden | var | yes | 
 verlies_verdict | var | yes | 
 
@@ -162,29 +162,29 @@ Placeholder | Kind | Required | Description
 ---|---|---|---
 cac_eur | var | yes | 
 eenheden_pm | var | yes | 
-marge_basis | var | yes | 
-marge_min10 | var | yes | 
+marge_basis | var | yes | expanded from wildcard
+marge_min10 | var | yes | expanded from wildcard
 marge_per_eenheid | var | yes | 
-marge_plus10 | var | yes | 
+marge_plus10 | var | yes | expanded from wildcard
 marge_pm | var | yes | 
 marge_pricevol1 | var | yes | 
-marge_pricevol2 | var | yes | 
+marge_pricevol2 | var | yes | expanded from pair shorthand
 naam | var | yes | 
 omzet_basis | var | yes | 
-omzet_min10 | var | yes | 
-omzet_plus10 | var | yes | 
+omzet_min10 | var | yes | expanded from wildcard
+omzet_plus10 | var | yes | expanded from wildcard
 omzet_pm | var | yes | 
 omzet_pricevol1 | var | yes | 
-omzet_pricevol2 | var | yes | 
+omzet_pricevol2 | var | yes | expanded from pair shorthand
 payback_maanden | var | yes | maanden tot cumulatieve cash ≥ 0.
 prijs | var | yes | 
 prijs_basis | var | yes | 
 prijs_min10 | var | yes | 
 prijs_per_eenheid | var | yes | 
 prijs_plus10 | var | yes | 
-runway_basis | var | yes | 
-runway_min10 | var | yes | 
-runway_plus10 | var | yes | 
+runway_basis | var | yes | expanded from wildcard
+runway_min10 | var | yes | expanded from wildcard
+runway_plus10 | var | yes | expanded from wildcard
 volume_basis | var | yes | 
 volume_min10 | var | yes | 
 volume_plus15 | var | yes | 
@@ -205,7 +205,7 @@ omzet_basis | var | yes |
 prijs_per_eenheid | var | yes | 
 variabele_kosten_per_eenheid | var | yes | 
 vaste_kosten_pm | var | yes | 
-veiligheidsmarge_pct | var | yes | afstand van basisomzet tot BE.
+veiligheidsmarge_pct | var | yes | 
 
 ## 80_unit_economics.md.tpl
 
@@ -214,23 +214,23 @@ Placeholder | Kind | Required | Description
 breakeven_eenheden_pm | var | yes | 
 cac_eur | var | yes | 
 contrib_basis | var | yes | 
-contrib_min10 | var | yes | 
-contrib_plus10 | var | yes | 
+contrib_min10 | var | yes | explicitly included common key
+contrib_plus10 | var | yes | explicitly included common key
 contribution_margin | var | yes | marge na variabele saleskosten/CAC.
-dekking_pct | var | yes | 
+dekking_pct | var | yes | explicitly included common key
 eenheden_pm | var | yes | 
-ltv_cac_pricemin10 | var | yes | 
+ltv_cac_pricemin10 | var | yes | explicitly included common key
 ltv_cac_ratio | var | yes | 
-ltv_cac_varplus10 | var | yes | 
+ltv_cac_varplus10 | var | yes | explicitly included common key
 ltv_eur | var | yes | 
-marge_basis | var | yes | 
-marge_min10 | var | yes | 
+marge_basis | var | yes | expanded from wildcard
+marge_min10 | var | yes | expanded from wildcard
 marge_pct | var | yes | 
-marge_pct_basis | var | yes | 
-marge_pct_min10 | var | yes | 
-marge_pct_plus10 | var | yes | 
+marge_pct_basis | var | yes | explicitly included common key
+marge_pct_min10 | var | yes | explicitly included common key
+marge_pct_plus10 | var | yes | explicitly included common key
 marge_per_eenheid | var | yes | 
-marge_plus10 | var | yes | 
+marge_plus10 | var | yes | expanded from wildcard
 marge_pricemin10 | var | yes | 
 marge_varplus10 | var | yes | 
 payback_maanden | var | yes | maanden tot cumulatieve cash ≥ 0.
@@ -238,7 +238,7 @@ prijs_basis | var | yes |
 prijs_min10 | var | yes | 
 prijs_per_eenheid | var | yes | 
 prijs_plus10 | var | yes | 
-var_basis | var | yes | 
+var_basis | var | yes | explicitly included common key
 variabele_kosten_per_eenheid | var | yes | 
 vaste_kosten_pm | var | yes | 
 
@@ -253,9 +253,9 @@ kas_begin | var | yes |
 kas_na_stress_dso | var | yes | 
 kas_na_stress_omzet | var | yes | 
 kas_na_stress_opex | var | yes | 
-stress_dso_plus30 | var | yes | 
-stress_omzet_min30 | var | yes | 
-stress_opex_plus20 | var | yes | 
+stress_dso_plus30 | var | yes | explicitly included common key
+stress_omzet_min30 | var | yes | explicitly included common key
+stress_opex_plus20 | var | yes | explicitly included common key
 voorraad | var | yes | 
 werkkapitaal_totaal | var | yes | netto WC behoefte.
 

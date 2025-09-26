@@ -50,7 +50,7 @@ const V_T_OBJ_RE = /v-t\s*=\s*\{[^}]*?path\s*:\s*(["'])([^"']+)\1[^}]*?\}/g
 
 // useI18n variable assignment e.g., const i18n = useI18n()
 const USE_I18N_VAR_RE = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*useI18n\s*\(/g
-// useI18n destructured e.g., const { t, n } = useI18n()
+// useI18n destructured e.g., const { t, n } = useI18n() or const { t: translate } = useI18n()
 const USE_I18N_DESTRUCT_RE = /\b(?:const|let|var)\s*\{([^}]+)\}\s*=\s*useI18n\s*\(/g
 
 function lineOf(text, index) {
@@ -96,6 +96,8 @@ function extractFromContent(content) {
   // Discover variable names assigned from useI18n()
   const i18nVarNames = new Set()
   let destructured = new Set()
+  let destructuredLocalT = new Set()   // local names that refer to t()
+  let destructuredLocalTc = new Set()  // local names that refer to tc()
   USE_I18N_VAR_RE.lastIndex = 0
   let v
   while ((v = USE_I18N_VAR_RE.exec(content)) !== null) {
@@ -106,9 +108,23 @@ function extractFromContent(content) {
   let dv
   while ((dv = USE_I18N_DESTRUCT_RE.exec(content)) !== null) {
     const inside = dv[1]
-    for (const name of inside.split(',')) {
-      const n = name.split(':')[0].trim()
-      if (n) destructured.add(n)
+    for (const raw of inside.split(',')) {
+      const seg = raw.trim()
+      if (!seg) continue
+      const parts = seg.split(':').map((s) => s.trim())
+      if (parts.length === 1) {
+        const n = parts[0]
+        if (n) {
+          destructured.add(n)
+          if (n === 't') destructuredLocalT.add('t')
+          if (n === 'tc') destructuredLocalTc.add('tc')
+        }
+      } else {
+        const [prop, local] = parts
+        if (prop) destructured.add(prop)
+        if (prop === 't' && local) destructuredLocalT.add(local)
+        if (prop === 'tc' && local) destructuredLocalTc.add(local)
+      }
     }
   }
 
@@ -139,6 +155,47 @@ function extractFromContent(content) {
   let d
   while ((d = I18N_DYNAMIC_CALL_RE.exec(content)) !== null) {
     warnings.push({ type: 'dynamic_call', line: lineOf(content, d.index), snippet: content.slice(d.index, d.index + 100) })
+  }
+
+  // Alias bare calls from destructured local names, e.g. translate('key') for { t: translate }
+  const buildNameAlt = (set) => Array.from(set).map((n) => n.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')
+  if (destructuredLocalT.size > 0) {
+    const alt = buildNameAlt(destructuredLocalT)
+    const ALIAS_T_CALL_RE = new RegExp(`\\b(?:${alt})\\(\\s*(["'`])([^"'`]+)\\1\\s*(?:,\\s*(["'`])([\\s\\S]*?)\\3\\s*)?\\)`, 'g')
+    const ALIAS_T_DYNAMIC_RE = new RegExp(`\\b(?:${alt})\\(\\s*(?!["'`]))`, 'g')
+    let am
+    while ((am = ALIAS_T_CALL_RE.exec(content)) !== null) {
+      const key = am[2]
+      const defaultStr = typeof am[4] === 'string' ? am[4] : ''
+      entries.push({ key, defaultStr })
+      const delim = am[1]
+      if (delim === '`' && key.includes('${')) {
+        warnings.push({ type: 'dynamic_template_literal', line: lineOf(content, am.index), snippet: content.slice(am.index, am.index + 100) })
+      }
+    }
+    let ad
+    while ((ad = ALIAS_T_DYNAMIC_RE.exec(content)) !== null) {
+      warnings.push({ type: 'dynamic_call', line: lineOf(content, ad.index), snippet: content.slice(ad.index, ad.index + 100) })
+    }
+  }
+  if (destructuredLocalTc.size > 0) {
+    const alt = buildNameAlt(destructuredLocalTc)
+    const ALIAS_TC_CALL_RE = new RegExp(`\\b(?:${alt})\\(\\s*(["'`])([^"'`]+)\\1\\s*(?:,\\s*(["'`])([\\s\\S]*?)\\3\\s*)?\\)`, 'g')
+    const ALIAS_TC_DYNAMIC_RE = new RegExp(`\\b(?:${alt})\\(\\s*(?!["'`]))`, 'g')
+    let am
+    while ((am = ALIAS_TC_CALL_RE.exec(content)) !== null) {
+      const key = am[2]
+      const defaultStr = typeof am[4] === 'string' ? am[4] : ''
+      entries.push({ key, defaultStr })
+      const delim = am[1]
+      if (delim === '`' && key.includes('${')) {
+        warnings.push({ type: 'dynamic_template_literal', line: lineOf(content, am.index), snippet: content.slice(am.index, am.index + 100) })
+      }
+    }
+    let ad
+    while ((ad = ALIAS_TC_DYNAMIC_RE.exec(content)) !== null) {
+      warnings.push({ type: 'dynamic_call', line: lineOf(content, ad.index), snippet: content.slice(ad.index, ad.index + 100) })
+    }
   }
 
   // i18nVar.t()/tc() calls using discovered variable names

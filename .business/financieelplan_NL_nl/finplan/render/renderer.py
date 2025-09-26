@@ -6,7 +6,9 @@ from typing import Dict, Any, List, Set, Tuple
 
 # --- Whitelist parsing from placeholders.md ---
 
-_BACKTICK_ITEM = re.compile(r"\*\s+`([a-zA-Z0-9_]+)`\s+—\s+(.*)")
+_BULLET = re.compile(r"^\s*\*\s+")
+_BACKTICKS_ALL = re.compile(r"`([^`]+)`")
+_BACKTICK_DESC = re.compile(r"\*\s+`[a-zA-Z0-9_]+`\s*(?:—|-)\s*(.*)")
 _VAR = re.compile(r"{{\s*([#/])?\s*([a-zA-Z0-9_]+)\s*}}")
 
 
@@ -18,14 +20,78 @@ def parse_whitelist(md_path: Path) -> Tuple[Set[str], Dict[str, str]]:
     wl: Set[str] = set()
     desc: Dict[str, str] = {}
     for line in text.splitlines():
-        m = _BACKTICK_ITEM.search(line)
-        if m:
-            key = m.group(1).strip()
-            wl.add(key)
-            desc.setdefault(key, m.group(2).strip())
-    # Common section names that may not appear as bullets explicitly
-    for section in ("leningen", "omzetstromen", "indicatieve_heffing_jaar"):
+        if not _BULLET.search(line):
+            continue
+        chunks = _BACKTICKS_ALL.findall(line)
+        if not chunks:
+            continue
+        md = _BACKTICK_DESC.search(line)
+        desc_val = md.group(1).strip() if md else ""
+        for chunk in chunks:
+            for key in re.split(r"\s*/\s*", chunk):
+                key = key.strip()
+                if not key or not re.match(r"^[a-zA-Z0-9_\*]+$", key):
+                    continue
+                wl.add(key)
+                desc.setdefault(key, desc_val)
+    # Common section/variable names that may not appear as bullets explicitly
+    for section in (
+        "leningen",
+        "omzetstromen",
+        "indicatieve_heffing_jaar",
+        "in",
+        "mapping",
+        "out",
+        # widely used simple vars sometimes omitted from the list
+        "start_maand",
+    ):
         wl.add(section)
+
+    # Expand shorthand/wildcards commonly used in placeholders.md text
+    expansions = {
+        # price sensitivity
+        "omzet_*": ["omzet_min10", "omzet_basis", "omzet_plus10"],
+        "marge_*": ["marge_min10", "marge_basis", "marge_plus10"],
+        "runway_*": ["runway_min10", "runway_basis", "runway_plus10"],
+        "prijs_*": ["prijs_min10", "prijs_basis", "prijs_plus10"],
+        "contrib_*": ["contrib_min10", "contrib_basis", "contrib_plus10"],
+        "marge_pct_*": ["marge_pct_min10", "marge_pct_basis", "marge_pct_plus10"],
+        "ltv_cac_*": ["ltv_cac_pricemin10", "ltv_cac_ratio", "ltv_cac_varplus10"],
+    }
+    for wildcard, keys in expansions.items():
+        if wildcard in text:
+            for k in keys:
+                wl.add(k)
+                desc.setdefault(k, "expanded from wildcard")
+
+    # Numeric pair shorthand like `omzet_pricevol1/2` and `marge_pricevol1/2`
+    for prefix in ("omzet_pricevol", "marge_pricevol"):
+        if prefix in text:
+            for n in ("1", "2"):
+                k = f"{prefix}{n}"
+                wl.add(k)
+                desc.setdefault(k, "expanded from pair shorthand")
+
+    # Explicit multi-token backticks often formatted with slashes
+    explicit_tokens = [
+        # pricing elasticities and volumes
+        "volume_plus15", "volume_min10", "volume_basis",
+        # stress shorthands appearing in templates
+        "stress_omzet_min30", "stress_dso_plus30", "stress_opex_plus20",
+        # misc singletons used in templates
+        "var_basis", "marge_pricemin10", "marge_varplus10", "dekking_pct",
+        # explicit price sensitivity tokens
+        "prijs_min10", "prijs_basis", "prijs_plus10",
+        # explicit contrib tokens
+        "contrib_min10", "contrib_basis", "contrib_plus10",
+        # explicit LTV/CAC stress tokens
+        "ltv_cac_pricemin10", "ltv_cac_varplus10",
+        # explicit margin pct tokens
+        "marge_pct_min10", "marge_pct_basis", "marge_pct_plus10",
+    ]
+    for k in explicit_tokens:
+        wl.add(k)
+        desc.setdefault(k, "explicitly included common key")
     return wl, desc
 
 

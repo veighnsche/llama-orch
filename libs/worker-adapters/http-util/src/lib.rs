@@ -1,6 +1,4 @@
 //! worker-adapters/http-util — shared HTTP client and streaming helpers for adapters.
-
-use http::header::AUTHORIZATION;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use reqwest::Client;
@@ -69,14 +67,16 @@ pub fn make_client(cfg: &HttpClientConfig) -> anyhow::Result<Client> {
 
 /// Return an Authorization header value if AUTH_TOKEN is configured.
 pub fn bearer_header_from_env() -> Option<String> {
-    std::env::var("AUTH_TOKEN").ok().map(|t| format!("Bearer {}", t))
+    // Return the raw token; the caller decides header format
+    std::env::var("AUTH_TOKEN").ok()
 }
 
 /// Apply Authorization header if available from env to a RequestBuilder.
 pub fn with_bearer_if_configured(rb: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
-    if let Some(v) = bearer_header_from_env() {
-        // Use string name to avoid cross-crate HeaderName type mismatch surprises
-        rb.header("Authorization", v)
+    if let Some(token) = bearer_header_from_env() {
+        let rb = rb.bearer_auth(&token);
+        let val = format!("Bearer {}", token);
+        rb.header(reqwest::header::AUTHORIZATION, val)
     } else {
         rb
     }

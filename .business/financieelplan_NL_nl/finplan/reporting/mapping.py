@@ -127,6 +127,8 @@ def build_template_context(model: Dict[str, Any]) -> Dict[str, Any]:
         'inv_pct_eigen': _pct(eigen_inbreng, total_invest if total_invest > 0 else D('1')),
         'inv_pct_schuld': _pct(debt_total, total_invest if total_invest > 0 else D('1')),
         'leningen': leningen_ctx,
+        # For Qredits "Kernpunten": totale gemiddelde maandlast (rente + aflossing)
+        'termijn_bedrag': fmt_money(model.get('avg_debt_service', ZERO)),
         # Liquiditeit
         'kas_begin': fmt_money(model['cash_begin'][first_month] if first_month else ZERO),
         'kas_negatief_count': kas_negatief_count,
@@ -216,6 +218,9 @@ def build_template_context(model: Dict[str, Any]) -> Dict[str, Any]:
         'marge_pct_min10': _pct((prijs_basis * D('0.90') - var_eh).quantize(CENT), (prijs_basis * D('0.90')) if prijs_basis > 0 else D('1')),
         'marge_pct_plus10': _pct((prijs_basis * D('1.10') - var_eh).quantize(CENT), (prijs_basis * D('1.10')) if prijs_basis > 0 else D('1')),
         'contribution_margin': fmt_money(marge_eh),
+        # Per-unit margins for unit economics stress
+        'marge_pricemin10': fmt_money(((prijs_basis * D('0.90')) - var_eh).quantize(CENT)),
+        'marge_varplus10': fmt_money((prijs_basis - (var_eh * D('1.10'))).quantize(CENT)),
         'contrib_basis': fmt_money((marge_eh * vol_avg).quantize(CENT)),
         'contrib_min10': fmt_money((((prijs_basis * D('0.90') - var_eh) * vol_avg).quantize(CENT))),
         'contrib_plus10': fmt_money((((prijs_basis * D('1.10') - var_eh) * vol_avg).quantize(CENT))),

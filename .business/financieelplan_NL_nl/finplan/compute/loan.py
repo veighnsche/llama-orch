@@ -25,13 +25,13 @@ def build_amortization(loans: List[Dict[str, Any]], ym_list: List[str]) -> Tuple
     principal_pm: Dict[str, D] = {ym: ZERO for ym in ym_list}
 
     for ln in loans or []:
-        P = D(str(ln['hoofdsom']))
+        P = D(str(ln.get('hoofdsom', 0)))
         if P < 0:
             raise ValueError('lening.hoofdsom mag niet negatief zijn')
-        r_year = D(str(ln['rente_nominaal_jr_pct'])) / D('100')
+        r_year = D(str(ln.get('rente_nominaal_jr', ln.get('rente_nominaal_jr_pct', 0)))) / D('100')
         r = (r_year / D('12'))
         r = r.quantize(D('0.0000001'))
-        N = int(ln['looptijd_mnd'])
+        N = int(ln.get('looptijd_mnd', 0) or 0)
         grace = int(ln.get('grace_mnd', 0) or 0)
         only_interest = bool(ln.get('alleen_rente_in_grace', False))
         verstrekker = ln.get('verstrekker', 'Onbekend')
