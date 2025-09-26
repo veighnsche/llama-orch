@@ -96,3 +96,62 @@ pub async fn then_same_client(world: &mut World) {
     let b = world.task_id.as_ref().expect("ptr2");
     assert_eq!(a, b, "different client instances: {} vs {}", a, b);
 }
+
+// Retries (HTU-1002)
+#[given(regex = r"^a transient upstream that returns 503 then succeeds$")]
+pub async fn given_transient_upstream_503_succeeds(_world: &mut World) {
+    // Setup would configure a stub server; placeholder for now.
+}
+
+#[when(regex = r"^I invoke with_retries around an idempotent request$")]
+pub async fn when_invoke_with_retries(_world: &mut World) {
+    // Pending implementation in http-util per spec HTU-1002
+    todo!("pending http-util::with_retries implementation");
+}
+
+#[then(regex = r"^attempts follow default policy base 100ms multiplier 2\.0 cap 2s max attempts 4$")]
+pub async fn then_attempts_follow_default_policy(_world: &mut World) {
+    // Pending: verify attempt timing against policy and recorded seed
+    todo!("pending http-util::with_retries verification");
+}
+
+#[given(regex = r"^an upstream that returns 400 Bad Request$")]
+pub async fn given_upstream_400(_world: &mut World) {}
+
+#[then(regex = r"^no retry occurs$")]
+pub async fn then_no_retry_occurs(_world: &mut World) {
+    todo!("pending http-util::with_retries non-retriable behavior");
+}
+
+// Streaming decode (HTU-1003)
+#[given(regex = r"^a body stream with started token token metrics end$")]
+pub async fn given_body_stream_started_token_metrics_end(world: &mut World) {
+    // Provide a minimal SSE-like body transcript to decode later
+    let body = "event: started\n\
+data: {\"ts\":1}\n\
+\n\
+event: token\n\
+data: {\"i\":0,\"t\":\"Hello\"}\n\
+\n\
+event: token\n\
+data: {\"i\":1,\"t\":\"!\"}\n\
+\n\
+event: metrics\n\
+data: {\"decode_time_ms\":5}\n\
+\n\
+event: end\n\
+data: {}\n".to_string();
+    world.last_body = Some(body);
+}
+
+#[when(regex = r"^I decode with stream_decode$")]
+pub async fn when_decode_with_stream_decode(_world: &mut World) {
+    // Pending implementation in http-util per spec HTU-1003
+    todo!("pending http-util::stream_decode implementation");
+}
+
+#[then(regex = r"^ordering is preserved and token indices are strictly increasing$")]
+pub async fn then_ordering_preserved_and_token_indices_increasing(_world: &mut World) {
+    // Pending verification once decode is implemented
+    todo!("pending verification of ordering and indices");
+}

@@ -35,6 +35,7 @@ pool-managerd = { path = "../../libs/pool-managerd" }
 worker-adapters-http-util = { path = "../../libs/worker-adapters/http-util" }
 reqwest = { workspace = true }
 once_cell = { workspace = true }
+auth-min = { path = "../../libs/auth-min" }
 
 [dev-dependencies]
 

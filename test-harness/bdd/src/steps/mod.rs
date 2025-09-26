@@ -9,6 +9,7 @@ pub mod observability;
 pub mod pool_manager;
 pub mod security;
 pub mod world;
+pub mod http_util;
 
 use regex::Regex;
 
@@ -125,6 +126,28 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^I receive 401 Unauthorized$").unwrap(),
         Regex::new(r"^an invalid API key is provided$").unwrap(),
         Regex::new(r"^I receive 403 Forbidden$").unwrap(),
+        // http-util
+        Regex::new(r"^no special http-util configuration$").unwrap(),
+        Regex::new(r"^a log line with Authorization Bearer token \"([^\"]+)\"$").unwrap(),
+        Regex::new(r"^I apply http-util redaction$").unwrap(),
+        Regex::new(r"^the output masks the token and includes its fp6$").unwrap(),
+        Regex::new(r"^the output does not contain the raw token$").unwrap(),
+        Regex::new(r"^AUTH_TOKEN is set to \"([^\"]+)\"$").unwrap(),
+        Regex::new(r"^AUTH_TOKEN is unset$").unwrap(),
+        Regex::new(r"^I apply with_bearer_if_configured to a GET request$").unwrap(),
+        Regex::new(r"^the request has Authorization header \"([^\"]+)\"$").unwrap(),
+        Regex::new(r"^the request has no Authorization header$").unwrap(),
+        Regex::new(r"^I get the http-util client twice$").unwrap(),
+        Regex::new(r"^both references point to the same client$").unwrap(),
+        // http-util retries and streaming (spec placeholders)
+        Regex::new(r"^a transient upstream that returns 503 then succeeds$").unwrap(),
+        Regex::new(r"^I invoke with_retries around an idempotent request$").unwrap(),
+        Regex::new(r"^attempts follow default policy base 100ms multiplier 2\.0 cap 2s max attempts 4$").unwrap(),
+        Regex::new(r"^an upstream that returns 400 Bad Request$").unwrap(),
+        Regex::new(r"^no retry occurs$").unwrap(),
+        Regex::new(r"^a body stream with started token token metrics end$").unwrap(),
+        Regex::new(r"^I decode with stream_decode$").unwrap(),
+        Regex::new(r"^ordering is preserved and token indices are strictly increasing$").unwrap(),
     ]
 }
 
