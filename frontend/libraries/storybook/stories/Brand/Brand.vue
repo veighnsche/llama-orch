@@ -46,9 +46,7 @@
   .brand {
     display: inline-flex;
     align-items: center;
-    gap: 0.55rem;
-    padding: 0 0.5rem;
-    height: var(--nav-h);
+    padding: 0 1rem;
     border-radius: var(--radius-lg);
     text-decoration: none;
     color: var(--text);

@@ -17,11 +17,8 @@
 </template>
 
 <style scoped>
-  :root {
-    --nav-h: 56px; /* mobile/default height; larger than icon-only sm button (32px) */
-  }
-
   .nav {
+    --nav-h: 56px; /* mobile/default height; larger than icon-only sm button (32px) */
     position: sticky;
     top: 0;
     z-index: 50;
@@ -30,7 +27,7 @@
     border-bottom: 1px solid var(--surface-muted);
   }
   .nav-inner {
-    max-width: 1120px;
+    max-width: 1440px;
     margin: 0 auto;
     padding: 0.6rem 1rem;
     display: grid;
@@ -45,7 +42,7 @@
   .right {
     display: inline-flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.6rem; /* keep default tight spacing; switcher adds its own margin */
     justify-self: end;
   }
 
@@ -58,7 +55,7 @@
 
   /* Desktop fixed height + center alignment */
   @media (min-width: 920px) {
-    :root {
+    .nav {
       --nav-h: 64px; /* give desktop a bit more breathing room */
     }
     .nav-inner {

@@ -75,6 +75,10 @@
     place-items: center;
     color: var(--badge-color);
   }
+  /* Hide icon wrapper when slot has no content so we don't reserve the flex gap */
+  .ui-badge__icon:empty {
+    display: none;
+  }
   .ui-badge__icon :where(svg) {
     width: 18px;
     height: 18px;

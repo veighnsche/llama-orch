@@ -31,7 +31,7 @@
   .links {
     display: none; /* mobile-first: hidden */
     align-items: center;
-    gap: 1rem;
+    gap: 0.1rem;
     list-style: none;
     margin: 0;
     padding: 0;
@@ -42,8 +42,8 @@
   .links :global(a.router-link-exact-active) {
     display: inline-flex;
     align-items: center;
-    height: var(--nav-h);
-    padding: 0 0.5rem;
+    height: 2.5em;
+    padding: 0 1rem;
     border-radius: var(--radius-lg);
     color: var(--muted);
     font-weight: 600;

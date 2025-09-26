@@ -1,10 +1,24 @@
 <template>
-  <div class="lang-switcher">
-    <label class="sr-only" for="lang">{{ $t('a11y.language') }}</label>
-    <select id="lang" :value="locale" :aria-label="$t('a11y.language')" @change="onChange($event)">
-      <option value="nl">NL</option>
-      <option value="en">EN</option>
-    </select>
+  <div class="lang-switcher" role="group" :aria-label="$t('a11y.language')">
+    <button
+      type="button"
+      class="lang-btn"
+      :class="{ active: locale === 'nl' }"
+      :aria-pressed="locale === 'nl'"
+      @click="setLang('nl')"
+    >
+      NL
+    </button>
+    <span class="sep" aria-hidden="true">|</span>
+    <button
+      type="button"
+      class="lang-btn"
+      :class="{ active: locale === 'en' }"
+      :aria-pressed="locale === 'en'"
+      @click="setLang('en')"
+    >
+      EN
+    </button>
   </div>
 </template>
 
@@ -18,9 +32,7 @@
     document.documentElement.setAttribute('lang', l)
   }
 
-  function onChange(e: Event) {
-    const target = e.target as HTMLSelectElement
-    const next = target.value
+  function setLang(next: 'nl' | 'en') {
     locale.value = next
     localStorage.setItem('orchyra_locale', next)
     applyHtmlLang(next)
@@ -39,8 +51,29 @@
 </script>
 
 <style scoped>
-  .lang-switcher select {
-    padding: 0.25rem 0.5rem;
+  .lang-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-inline-end: 1.5rem; /* create space before the CTA button */
+  }
+  .lang-btn {
+    appearance: none;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .lang-btn.active {
+    text-decoration: underline;
+    font-weight: 600;
+  }
+  .sep {
+    padding: 0 0.25rem;
   }
   .sr-only {
     position: absolute;
