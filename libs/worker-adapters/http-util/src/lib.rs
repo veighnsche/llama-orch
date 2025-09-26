@@ -75,7 +75,8 @@ pub fn bearer_header_from_env() -> Option<String> {
 /// Apply Authorization header if available from env to a RequestBuilder.
 pub fn with_bearer_if_configured(rb: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
     if let Some(v) = bearer_header_from_env() {
-        rb.header(AUTHORIZATION, v)
+        // Use string name to avoid cross-crate HeaderName type mismatch surprises
+        rb.header("Authorization", v)
     } else {
         rb
     }
@@ -174,6 +175,8 @@ where
     F: FnMut(u32) -> Fut,
     Fut: std::future::Future<Output = Result<T, RetryError>>,
 {
+    // Ensure timeline is per-call isolated to avoid accumulation across multiple invocations
+    RETRY_TIMELINE_MS.lock().unwrap().clear();
     // RNG: seed when provided for deterministic tests
     let mut rng = if let Some(seed) = policy.seed {
         let r = rand::rngs::StdRng::seed_from_u64(seed);

@@ -38,3 +38,6 @@ storybook-static
 # Cloudflare Wrangler local vars
 **/.dev.vars
 !**/.dev.vars.example
+
+# Python
+__pycache__

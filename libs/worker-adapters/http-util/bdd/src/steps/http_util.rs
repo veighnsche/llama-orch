@@ -22,7 +22,7 @@ fn record_event<E: Into<serde_json::Value>>(label: &str, event: E) {
 }
 
 // X-API-Key redaction
-#[given(regex = r"^a log line with X-API-Key \"([^\"]+)\"$")]
+#[given(regex = r#"^a log line with X-API-Key "([^"]+)"$"#)]
 pub async fn given_log_line_with_x_api_key(world: &mut BddWorld, key: String) {
     let line = format!("WARN: upstream header X-API-Key: {}", key);
     world.api_key = Some(key.clone());
@@ -45,7 +45,7 @@ pub async fn then_output_masks_x_api_key(world: &mut BddWorld) {
 pub async fn given_no_special_config(_world: &mut BddWorld) {}
 
 // Redaction
-#[given(regex = r"^a log line with Authorization Bearer token \"([^\"]+)\"$")]
+#[given(regex = r#"^a log line with Authorization Bearer token "([^"]+)"$"#)]
 pub async fn given_log_line_with_token(world: &mut BddWorld, token: String) {
     let line = format!("INFO: Authorization: Bearer {} used for request", token);
     world.task_id = Some(token); // reuse task_id to store token for assertion
@@ -88,7 +88,7 @@ pub async fn then_output_not_contains_raw_token(world: &mut BddWorld) {
 }
 
 // Bearer injection
-#[given(regex = r"^AUTH_TOKEN is set to \"([^\"]+)\"$")]
+#[given(regex = r#"^AUTH_TOKEN is set to "([^"]+)"$"#)]
 pub async fn given_auth_token_set(_world: &mut BddWorld, token: String) {
     std::env::set_var("AUTH_TOKEN", token);
     record_event("given.auth_token_set", json!({"set": true}));
@@ -109,7 +109,7 @@ pub async fn when_apply_with_bearer(world: &mut BddWorld) {
     record_event("when.apply_with_bearer", json!({"has_auth": world.last_headers.as_ref().unwrap().get(AUTHORIZATION).is_some()}));
 }
 
-#[then(regex = r"^the request has Authorization header \"([^\"]+)\"$")]
+#[then(regex = r#"^the request has Authorization header "([^"]+)"$"#)]
 pub async fn then_request_has_auth_header(world: &mut BddWorld, expected: String) {
     let headers = world.last_headers.as_ref().expect("expected headers");
     let got = headers
