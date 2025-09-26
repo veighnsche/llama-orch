@@ -38,16 +38,8 @@ pub fn update_root_readme(
         } else {
             "—".to_string()
         };
-        let tests = if e.tests.is_empty() {
-            "—".to_string()
-        } else {
-            e.tests.join(", ")
-        };
-        let spec = if e.spec_refs.is_empty() {
-            "—".to_string()
-        } else {
-            e.spec_refs.join(", ")
-        };
+        let tests = if e.tests.is_empty() { "—".to_string() } else { e.tests.join(", ") };
+        let spec = if e.spec_refs.is_empty() { "—".to_string() } else { e.spec_refs.join(", ") };
         table.push_str(&format!(
             "| {} | `{}` | {} | {} | {} | {} |\n",
             path_link, e.name, e.role, api, tests, spec
@@ -67,19 +59,16 @@ pub fn update_root_readme(
     }
 
     table.push_str("\n### Getting Started\n\n");
-    table.push_str("- Adapter work: see `worker-adapters/*` crates.\n");
+    table.push_str("- Adapter work: see `libs/worker-adapters/*` crates.\n");
     table.push_str("- Contracts: see `contracts/*`.\n");
-    table.push_str("- Core scheduling: see `orchestrator-core/` and `orchestratord/`.\n");
+    table.push_str("- Core scheduling: see `libs/orchestrator-core/` and `bin/orchestratord/`.\n");
 
     table.push('\n');
     table.push_str(end);
     table.push('\n');
 
-    let re = Regex::new(&format!(
-        r"(?s){}.*?{}(?:\r?\n)?",
-        regex::escape(begin),
-        regex::escape(end)
-    ))?;
+    let re =
+        Regex::new(&format!(r"(?s){}.*?{}(?:\r?\n)?", regex::escape(begin), regex::escape(end)))?;
 
     if re.is_match(&content) {
         content = re.replace(&content, table.as_str()).into_owned();

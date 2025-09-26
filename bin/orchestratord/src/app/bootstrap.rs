@@ -37,9 +37,7 @@ pub fn start_server() {
                 "preference set (h2/h2c when available)",
             );
         }
-        let listener = tokio::net::TcpListener::bind(&addr)
-            .await
-            .expect("bind ORCHD_ADDR");
+        let listener = tokio::net::TcpListener::bind(&addr).await.expect("bind ORCHD_ADDR");
         eprintln!("orchestratord listening on {}", addr);
         axum::serve(listener, app).await.unwrap();
     });

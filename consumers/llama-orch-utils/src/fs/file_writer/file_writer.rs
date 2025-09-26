@@ -1,8 +1,8 @@
 // Placeholder module for applet fs/file_writer.
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io;
 use std::path::Path;
-use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
 #[derive(Debug, Clone, Serialize, Deserialize)]

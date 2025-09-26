@@ -31,24 +31,16 @@ pub async fn bearer_identity_layer(
 
 /// Compute an identity breadcrumb from headers and env configuration.
 fn identity_from_headers(headers: &HeaderMap) -> Option<Identity> {
-    let auth = headers
-        .get(http::header::AUTHORIZATION)
-        .and_then(|v| v.to_str().ok());
+    let auth = headers.get(http::header::AUTHORIZATION).and_then(|v| v.to_str().ok());
     if let Some(token) = auth_min::parse_bearer(auth) {
         let fp = auth_min::token_fp6(&token);
         let expected = std::env::var("AUTH_TOKEN").ok();
         let ok = expected
             .map(|e| auth_min::timing_safe_eq(e.as_bytes(), token.as_bytes()))
             .unwrap_or(false);
-        return Some(Identity {
-            breadcrumb: format!("token:{}", fp),
-            auth_ok: ok,
-        });
+        return Some(Identity { breadcrumb: format!("token:{}", fp), auth_ok: ok });
     }
-    Some(Identity {
-        breadcrumb: "localhost".to_string(),
-        auth_ok: true,
-    })
+    Some(Identity { breadcrumb: "localhost".to_string(), auth_ok: true })
 }
 
 /// Startup guard: refuse to bind a non-loopback address without AUTH_TOKEN set.

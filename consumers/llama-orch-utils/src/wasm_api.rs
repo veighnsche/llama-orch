@@ -12,11 +12,11 @@ use serde::Deserialize;
 // Reuse core types
 use crate::fs::file_reader::{ReadRequest, ReadResponse};
 use crate::fs::file_writer::{WriteIn, WriteOut};
-use crate::prompt::message::{MessageIn, Message};
-use crate::prompt::thread::{ThreadIn, ThreadOut};
-use crate::model::define::{ModelRef, ModelDefineIn};
-use crate::params::define::Params;
 use crate::llm::invoke::{InvokeIn, InvokeResult};
+use crate::model::define::{ModelDefineIn, ModelRef};
+use crate::params::define::Params;
+use crate::prompt::message::{Message, MessageIn};
+use crate::prompt::thread::{ThreadIn, ThreadOut};
 
 #[no_mangle]
 pub extern "C" fn alloc(size: usize) -> *mut u8 {
@@ -61,12 +61,24 @@ use crate::manifest::make_manifest;
 pub extern "C" fn manifest_json(_req_ptr: *const u8, _req_len: usize) -> u64 {
     match serde_json::to_vec(&make_manifest()) {
         Ok(v) => leak_exact(&v).0,
-        Err(e) => leak_exact(format!("{{\"error\":\"serialize_error\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0,
+        Err(e) => {
+            leak_exact(
+                format!(
+                    "{{\"error\":\"serialize_error\",\"message\":{}}}",
+                    serde_json::to_string(&e.to_string()).unwrap()
+                )
+                .as_bytes(),
+            )
+            .0
+        }
     }
 }
 
 #[derive(Deserialize)]
-struct InvokeReq<T> { op: String, input: T }
+struct InvokeReq<T> {
+    op: String,
+    input: T,
+}
 
 // ModelDefineIn provided by crate::model::define
 
@@ -76,7 +88,16 @@ pub extern "C" fn invoke_json(req_ptr: *const u8, req_len: usize) -> u64 {
     // First, parse to get the op string; we'll re-parse input per op with the right type.
     let v: serde_json::Value = match serde_json::from_slice(req_bytes) {
         Ok(v) => v,
-        Err(e) => return leak_exact(format!("{{\"error\":\"invalid_request\",\"message\":{}}}", serde_json::to_string(&e.to_string()).unwrap()).as_bytes()).0,
+        Err(e) => {
+            return leak_exact(
+                format!(
+                    "{{\"error\":\"invalid_request\",\"message\":{}}}",
+                    serde_json::to_string(&e.to_string()).unwrap()
+                )
+                .as_bytes(),
+            )
+            .0
+        }
     };
     let op = match v.get("op").and_then(|x| x.as_str()) {
         Some(s) => s,
@@ -84,7 +105,9 @@ pub extern "C" fn invoke_json(req_ptr: *const u8, req_len: usize) -> u64 {
     };
     let input = match v.get("input") {
         Some(x) => x,
-        None => return leak_exact(b"{\"error\":\"invalid_request\",\"message\":\"missing input\"}").0,
+        None => {
+            return leak_exact(b"{\"error\":\"invalid_request\",\"message\":\"missing input\"}").0
+        }
     };
     let bytes = crate::manifest::dispatch(op, input.clone());
     leak_exact(&bytes).0

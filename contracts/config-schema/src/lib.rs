@@ -214,9 +214,7 @@ pub fn emit_schema_json(path: &std::path::Path) -> std::io::Result<()> {
         let dir = path.parent().unwrap();
         let tmp = dir.join(format!(
             ".{}.tmp",
-            path.file_name()
-                .and_then(|s| s.to_str())
-                .unwrap_or("schema")
+            path.file_name().and_then(|s| s.to_str()).unwrap_or("schema")
         ));
         {
             let mut f = fs::File::create(&tmp)?;

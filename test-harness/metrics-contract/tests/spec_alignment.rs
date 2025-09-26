@@ -2,11 +2,7 @@ use std::collections::BTreeSet;
 use std::fs;
 
 fn repo_root() -> std::path::PathBuf {
-    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .ancestors()
-        .nth(2)
-        .unwrap()
-        .to_path_buf()
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).ancestors().nth(2).unwrap().to_path_buf()
 }
 
 fn parse_spec_metric_names(spec_text: &str) -> BTreeSet<String> {
@@ -55,11 +51,7 @@ fn spec_metrics_are_in_linter_config() {
 
     // Every metric enumerated in the SPEC must appear in the linter config
     for n in &spec_names {
-        assert!(
-            lint_names.contains(n),
-            "metric {} from SPEC missing in linter config",
-            n
-        );
+        assert!(lint_names.contains(n), "metric {} from SPEC missing in linter config", n);
     }
 }
 
@@ -71,9 +63,7 @@ fn tasks_rejected_total_labels_match_spec_exception() {
     let lint_json: serde_json::Value =
         serde_json::from_str(&lint_text).expect("parse metrics.lint.json");
 
-    let req = lint_json["required_metrics"]
-        .as_array()
-        .expect("required_metrics array");
+    let req = lint_json["required_metrics"].as_array().expect("required_metrics array");
     let mut found = false;
     for m in req {
         if m["name"].as_str() == Some("tasks_rejected_total") {
@@ -91,8 +81,5 @@ fn tasks_rejected_total_labels_match_spec_exception() {
             );
         }
     }
-    assert!(
-        found,
-        "tasks_rejected_total must be present in linter config"
-    );
+    assert!(found, "tasks_rejected_total must be present in linter config");
 }

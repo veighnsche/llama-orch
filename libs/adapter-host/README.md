@@ -1,37 +1,73 @@
-# adapter-host — In-Process Adapter Registry & Facade
+# adapter-host — adapter-host (adapter)
 
-Status: Draft
-Owner: @llama-orch-maintainers
+## 1. Name & Purpose
 
-Purpose
-- Registry keyed by `(pool_id, replica_id) -> Box<dyn WorkerAdapter>`.
-- Facade: `submit(pool, TaskRequest)`, `cancel(pool, task_id)`, `health`, `props`.
-- Centralize retries/backoff, timeouts, basic circuit breaker, cancellation routing.
-- Capability snapshot cache for `/v1/capabilities`.
-- Human narration wrappers (actor=adapter-host, action=submit|cancel, target=engine).
+adapter-host (adapter)
 
-Links
-- Trait: `worker-adapters/adapter-api`
-- Spec: `.specs/proposals/2025-09-19-adapter-host-and-http-util.md` (ORCH-36xx)
+## 2. Why it exists (Spec traceability)
 
-Detailed behavior (High / Mid / Low)
+- ORCH-3054 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3054)
+- ORCH-3055 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3055)
+- ORCH-3056 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3056)
+- ORCH-3057 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3057)
+- ORCH-3058 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3058)
 
-- High-level
-  - Exposes an in-process facade over engine adapters for `orchestratord`, hiding per-adapter client setup and providing a stable API: `health`, `props`, `submit`, `cancel`, `engine_version`.
-  - Maintains a thread-safe registry keyed by `(pool_id, replica_id)` and supports rebinding during drain/reload.
 
-- Mid-level
-  - Wraps adapter calls with narration and metrics; emits fields per `README_LLM.md` and metrics per `.specs/metrics/otel-prom.md`.
-  - Propagates `Authorization: Bearer` to orchestrator endpoints when configured; redacts secrets in logs.
-  - Applies bounded retries with jitter for idempotent operations; enforces per-request timeouts; routes cancellation promptly.
-  - Caches capability snapshots per adapter to serve `/v1/capabilities` quickly while respecting TTLs.
+## 3. Public API surface
 
-- Low-level
-  - Registry updates are lock-scoped and minimize contention; adapters are stored behind `Arc<dyn WorkerAdapter + Send + Sync>`.
-  - Correlation IDs are threaded through all calls; errors are normalized to the shared `WorkerError` taxonomy for consistent envelopes.
-  - Cancel paths prefer in-flight cancellation signaling over connection teardown, and guarantee no tokens after cancel.
+- Rust crate API (internal)
 
-Refinement Opportunities
-- Add circuit breaker and capability cache.
-- Metrics around retries and breaker trips.
-- Integration shims into `orchestratord` endpoints.
+## 4. How it fits
+
+- Maps engine-native APIs to the orchestrator worker contract.
+
+```mermaid
+flowchart LR
+  orch[Orchestrator] --> adapter[Adapter]
+  adapter --> engine[Engine API]
+```
+
+## 5. Build & Test
+
+- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
+-- -D warnings`
+- Tests for this crate: `cargo test -p adapter-host -- --nocapture`
+
+
+## 6. Contracts
+
+- None
+
+
+## 7. Config & Env
+
+- Engine connection endpoints and credentials where applicable.
+
+## 8. Metrics & Logs
+
+- Emits adapter health and request metrics per engine.
+
+## 9. Runbook (Dev)
+
+- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
+- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+
+
+## 10. Status & Owners
+
+- Status: alpha
+- Owners: @llama-orch-maintainers
+
+## 11. Changelog pointers
+
+- None
+
+## 12. Footnotes
+
+- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
+- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+
+
+## What this crate is not
+
+- Not a public API; do not expose engine endpoints directly.

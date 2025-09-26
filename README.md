@@ -1,6 +1,8 @@
 # llama-orch — Orchestrator for LLMs
 
-llama-orch is an in-progress LLM Orchestrator. The codebase follows a strict Spec → Contract → Tests → Code workflow and ships features behind quality gates. We are currently building out Stage 6 (Admission → Dispatch → SSE) with contracts, tests, and an executable vertical slice.
+llama-orch is an in-progress LLM Orchestrator. The codebase follows a strict Spec → Contract →
+Tests → Code workflow and ships features behind quality gates. We are currently building out Stage
+6 (Admission → Dispatch → SSE) with contracts, tests, and an executable vertical slice.
 
 See also:
 
@@ -15,24 +17,32 @@ See also:
   - Stage 6 (Admission → Dispatch → SSE) in progress
 - What’s implemented right now:
   - HTTP routes modularized under `orchestratord/src/http/`
-  - Data-plane admission accepts tasks, enqueues with metrics, and spawns a background dispatch to a WorkerAdapter (mock) that emits an SSE transcript: `started` → `token` → `metrics` → `end`
+  - Data-plane admission accepts tasks, enqueues with metrics, and spawns a background dispatch to
+a WorkerAdapter (mock) that emits an SSE transcript: `started` → `token` → `metrics` → `end`
   - SSE stream served from in-memory transcript with correlation and budget headers
-  - Metrics registry per `.specs/metrics/otel-prom.md` with sample families and streaming side-effects (first-token, decode duration, tokens in/out)
+  - Metrics registry per `.specs/metrics/otel-prom.md` with sample families and streaming
+side-effects (first-token, decode duration, tokens in/out)
   - Control/catalog routes aligned to OpenAPI; `/metrics` endpoint available
   - JSON structured logging via `tracing-subscriber`
 
-Note: The `orchestratord` binary builds the router but does not start a network server yet; tests and harnesses call handlers in-process.
+Note: The `orchestratord` binary builds the router but does not start a network server yet; tests
+and harnesses call handlers in-process.
 
 ## Architecture overview
 
 ### Layering & Hierarchy (Repo-wide)
 
-- **Utils (`llama-orch-utils`)** — The crown jewel. Applets, determinism helpers, proof-bundle logic, guardrails. Drives what the SDK must expose.
-- **SDK (`llama-orch-sdk`)** — Exists to support Utils. Types, clients, schema validation, simple transport. No applet logic, no guardrails, no prompt logic. Minimal, stable surface.
-- **Orchestrator (`orchestratord`)** — Service layer. Its API and OpenAPI/specs define the ground truth that the SDK must expose. Does not dictate Utils logic directly.
-- **CLI (`llama-orch-cli`)** — Least important. Bootstraps/generated bindings and dev workflows. Consumes SDK; produces artifacts that help humans and Utils.
+- **Utils (`llama-orch-utils`)** — The crown jewel. Applets, determinism helpers, proof-bundle
+logic, guardrails. Drives what the SDK must expose.
+- **SDK (`llama-orch-sdk`)** — Exists to support Utils. Types, clients, schema validation, simple
+transport. No applet logic, no guardrails, no prompt logic. Minimal, stable surface.
+- **Orchestrator (`orchestratord`)** — Service layer. Its API and OpenAPI/specs define the ground
+truth that the SDK must expose. Does not dictate Utils logic directly.
+- **CLI (`llama-orch-cli`)** — Least important. Bootstraps/generated bindings and dev workflows.
+Consumes SDK; produces artifacts that help humans and Utils.
 
-See: `consumers/.docs/.adr/006-library-split.md` and related ADRs (001–005) for full layering and dependency direction.
+See: `consumers/.docs/.adr/006-library-split.md` and related ADRs (001–005) for full layering and
+dependency direction.
 
 - `contracts/` — single source of truth for OpenAPI (data + control) and config schema
 - `orchestrator-core/` — queue and invariants; used by the orchestrator with metrics wrapper
@@ -47,7 +57,10 @@ See: `consumers/.docs/.adr/006-library-split.md` and related ADRs (001–005) fo
 
 ### Crate wiring (Mermaid)
 
-This section shows how components collaborate and where boundaries are enforced. New contributors should skim the diagrams and the short explanations below. The golden rule: per‑crate behavior is tested inside each crate; outer harnesses exercise only cross‑crate flows via the orchestrator HTTP API.
+This section shows how components collaborate and where boundaries are enforced. New contributors
+should skim the diagrams and the short explanations below. The golden rule: per‑crate behavior is
+tested inside each crate; outer harnesses exercise only cross‑crate flows via the orchestrator HTTP
+API.
 
 #### Component map (who depends on whom)
 
@@ -158,10 +171,16 @@ graph LR
 ```
 
 Notes
-- Orchestrator depends on `orchestrator-core` and the adapter trait crate; adapters are bound at runtime per pool/replica.
-- `pool-managerd` owns engine lifecycle. It uses provisioners to stage models/engines and flips readiness after health checks. Orchestrator reads that state for placement.
-- Catalog writes happen via `model-provisioner`; orchestrator interacts with catalog via HTTP endpoints.
-- Harnesses are integration-only but not confined to a single crate: while BDD primarily exercises the HTTP boundary, determinism may bind adapters via the trait, chaos may inject faults at adapters or manager, and haiku can observe readiness directly from the manager. None of the harnesses perform per-crate unit tests.
+- Orchestrator depends on `orchestrator-core` and the adapter trait crate; adapters are bound at
+runtime per pool/replica.
+- `pool-managerd` owns engine lifecycle. It uses provisioners to stage models/engines and flips
+readiness after health checks. Orchestrator reads that state for placement.
+- Catalog writes happen via `model-provisioner`; orchestrator interacts with catalog via HTTP
+endpoints.
+- Harnesses are integration-only but not confined to a single crate: while BDD primarily exercises
+the HTTP boundary, determinism may bind adapters via the trait, chaos may inject faults at adapters
+or manager, and haiku can observe readiness directly from the manager. None of the harnesses
+perform per-crate unit tests.
 
 #### Control-plane: preload → readiness → reload
 
@@ -176,8 +195,10 @@ flowchart LR
 ```
 
 Explanation
-- A reload request triggers a preload: stage model via `model-provisioner` (which registers in `catalog-core`), then prepare/start the engine via `engine-provisioner`.
-- `pool-managerd` flips `ready=true` only after both succeed and health checks pass. Orchestrator reflects readiness in `/v1/pools/{id}/health` and uses it for placement.
+- A reload request triggers a preload: stage model via `model-provisioner` (which registers in
+`catalog-core`), then prepare/start the engine via `engine-provisioner`.
+- `pool-managerd` flips `ready=true` only after both succeed and health checks pass. Orchestrator
+reflects readiness in `/v1/pools/{id}/health` and uses it for placement.
 
 #### Data-plane: admission → placement → stream
 
@@ -193,21 +214,27 @@ flowchart LR
 ```
 
 Explanation
-- Orchestrator performs admission, consults core for placement, then dispatches to the selected adapter instance.
-- Adapters map engine-native APIs to `started → token* → end` (with optional `metrics`) and propagate errors via taxonomy.
-- Metrics/log fields are emitted at orchestrator boundaries as per `.specs/metrics/otel-prom.md` and `README_LLM.md`.
+- Orchestrator performs admission, consults core for placement, then dispatches to the selected
+adapter instance.
+- Adapters map engine-native APIs to `started → token* → end` (with optional `metrics`) and
+propagate errors via taxonomy.
+- Metrics/log fields are emitted at orchestrator boundaries as per `.specs/metrics/otel-prom.md`
+and `README_LLM.md`.
 
 ## API surface (contracts first)
 
-- See [CONSUMER_CAPABILITIES.md](CONSUMER_CAPABILITIES.md) for the exhaustive consumer-facing capabilities guide.
+- See [CONSUMER_CAPABILITIES.md](CONSUMER_CAPABILITIES.md) for the exhaustive consumer-facing
+capabilities guide.
 - Data plane (OrchQueue v1): `contracts/openapi/data.yaml`
   - `POST /v1/tasks` → 202 Accepted with `AdmissionResponse`
-  - `GET /v1/tasks/{id}/stream` → `text/event-stream` frames: `started`, `token` (`{t,i}`), `metrics`, `end`
+  - `GET /v1/tasks/{id}/stream` → `text/event-stream` frames: `started`, `token` (`{t,i}`),
+`metrics`, `end`
   - `POST /v1/tasks/{id}/cancel`
   - `GET|DELETE /v1/sessions/{id}`
 - Control plane: `contracts/openapi/control.yaml`
   - `GET /v1/capabilities`, `GET /v1/pools/{id}/health`, `POST /v1/pools/{id}/{drain|reload}`
-  - Catalog: `POST /v1/catalog/models`, `GET /v1/catalog/models/{id}`, `POST /v1/catalog/models/{id}/verify`, `POST /v1/catalog/models/{id}/state`
+  - Catalog: `POST /v1/catalog/models`, `GET /v1/catalog/models/{id}`, `POST
+/v1/catalog/models/{id}/verify`, `POST /v1/catalog/models/{id}/state`
 - Observability: `GET /metrics` (Prometheus text)
 
 ### Request lifecycle (OrchQueue v1)
@@ -237,11 +264,15 @@ sequenceDiagram
 
 ## Metrics (implemented/registered)
 
-- Counters: `tasks_enqueued_total`, `tasks_started_total`, `tasks_canceled_total`, `tasks_rejected_total`, `admission_backpressure_events_total`, `tokens_in_total`, `tokens_out_total`, `catalog_verifications_total`
-- Gauges: `queue_depth`, `model_state` (Active|Retired), `kv_cache_usage_ratio`, `gpu_utilization`, `vram_used_bytes`
+- Counters: `tasks_enqueued_total`, `tasks_started_total`, `tasks_canceled_total`,
+`tasks_rejected_total`, `admission_backpressure_events_total`, `tokens_in_total`,
+`tokens_out_total`, `catalog_verifications_total`
+- Gauges: `queue_depth`, `model_state` (Active|Retired), `kv_cache_usage_ratio`, `gpu_utilization`,
+`vram_used_bytes`
 - Histograms: `latency_first_token_ms`, `latency_decode_ms`
 
-SSE streaming side-effects update first-token latency, decode latency, and token counters. See `orchestratord/src/metrics.rs`.
+SSE streaming side-effects update first-token latency, decode latency, and token counters. See
+`orchestratord/src/metrics.rs`.
 
 ## Developer quickstart
 
@@ -284,7 +315,8 @@ cargo xtask dev:loop
 - Pre‑1.0.0: no backwards compatibility; remove dead code early
 - Work order: Spec → Contract → Tests → Code; update `.specs/` and contracts before implementation
 - Reference requirement IDs in commits, code, and tests (e.g., `ORCH-2001`)
-- Keep the root `TODO.md` updated after each change; archive via `ci/scripts/archive_todo.sh` when complete
+- Keep the root `TODO.md` updated after each change; archive via `ci/scripts/archive_todo.sh` when
+complete
 - JSON structured logs via `tracing`; redact secrets; see `.specs/metrics/otel-prom.md`
 
 ## License
@@ -296,27 +328,76 @@ GPL-3.0-or-later. See `LICENSE`.
 
 | Path | Crate | Role | Key APIs/Contracts | Tests | Spec Refs |
 |------|------|------|---------------------|-------|-----------|
-| [`cli/consumer-tests/`](cli/consumer-tests/README.md) | `cli-consumer-tests` | test-harness | — |
-orchqueue_pact, snapshot_transcript, snapshots, stub_wiremock | ORCH-3050, ORCH-3051 |
+| [`bin/orchestratord/`](bin/orchestratord/README.md) | `orchestratord` | core | OpenAPI |
+admission_metrics, api_types, domain_error_mapping, middleware, provider_verify, session_service,
+storage, streaming | ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017,
+ORCH-3027, ORCH-3028, ORCH-3044, ORCH-3045, ORCH-2002, ORCH-2101, ORCH-2102, ORCH-2103, ORCH-2104 |
+| [`bin/orchestratord/bdd/`](bin/orchestratord/bdd/README.md) | `orchestratord-bdd` | core |
+OpenAPI | bdd, features, steps | ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016,
+ORCH-3017, ORCH-3027, ORCH-3028, ORCH-3044, ORCH-3045 |
+| [`consumers/llama-orch-sdk/`](consumers/llama-orch-sdk/README.md) | `llama-orch-sdk` | tool | — |
+— | — |
+| [`consumers/llama-orch-utils/`](consumers/llama-orch-utils/README.md) | `llama-orch-utils` | tool
+| — | — | — |
 | [`contracts/api-types/`](contracts/api-types/README.md) | `contracts-api-types` | contracts | — |
 — | ORCH-3044, ORCH-3030 |
 | [`contracts/config-schema/`](contracts/config-schema/README.md) | `contracts-config-schema` |
-contracts | Schema | validate_examples | ORCH-3044, ORCH-3030 |
-| [`orchestrator-core/`](orchestrator-core/README.md) | `orchestrator-core` | core | — |
+contracts | Schema | validate_examples, validate_v32_fields | ORCH-3044, ORCH-3030 |
+| [`libs/adapter-host/`](libs/adapter-host/README.md) | `adapter-host` | adapter | — | — |
+ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057, ORCH-3058 |
+| [`libs/auth-min/`](libs/auth-min/README.md) | `auth-min` | tool | — | — | — |
+| [`libs/catalog-core/`](libs/catalog-core/README.md) | `catalog-core` | core | — | — | ORCH-3004,
+ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017, ORCH-3027, ORCH-3028, ORCH-3044,
+ORCH-3045 |
+| [`libs/catalog-core/bdd/`](libs/catalog-core/bdd/README.md) | `catalog-core-bdd` | core | — |
+features | ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017, ORCH-3027,
+ORCH-3028, ORCH-3044, ORCH-3045 |
+| [`libs/observability/narration-core/`](libs/observability/narration-core/README.md) |
+`observability-narration-core` | tool | — | — | — |
+| [`libs/orchestrator-core/`](libs/orchestrator-core/README.md) | `orchestrator-core` | core | — |
 props_queue | ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017,
 ORCH-3027, ORCH-3028, ORCH-3044, ORCH-3045 |
-| [`orchestratord/`](orchestratord/README.md) | `orchestratord` | core | OpenAPI | provider_verify
-| ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017, ORCH-3027,
-ORCH-3028, ORCH-3044, ORCH-3045, ORCH-2002, ORCH-2101, ORCH-2102, ORCH-2103, ORCH-2104 |
-| [`plugins/policy-host/`](plugins/policy-host/README.md) | `plugins-policy-host` | plugin | — | —
-| ORCH-3048 |
-| [`plugins/policy-sdk/`](plugins/policy-sdk/README.md) | `plugins-policy-sdk` | plugin | — | — |
-ORCH-3048 |
-| [`pool-managerd/`](pool-managerd/README.md) | `pool-managerd` | core | — | — | ORCH-3004,
-ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017, ORCH-3027, ORCH-3028, ORCH-3044,
-ORCH-3045, ORCH-3038, ORCH-3002 |
+| [`libs/orchestrator-core/bdd/`](libs/orchestrator-core/bdd/README.md) | `orchestrator-core-bdd` |
+core | — | features | ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017,
+ORCH-3027, ORCH-3028, ORCH-3044, ORCH-3045 |
+| [`libs/pool-managerd/`](libs/pool-managerd/README.md) | `pool-managerd` | core | — | — |
+ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017, ORCH-3027, ORCH-3028,
+ORCH-3044, ORCH-3045, ORCH-3038, ORCH-3002 |
+| [`libs/pool-managerd/bdd/`](libs/pool-managerd/bdd/README.md) | `pool-managerd-bdd` | core | — |
+features | ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017, ORCH-3027,
+ORCH-3028, ORCH-3044, ORCH-3045 |
+| [`libs/provisioners/engine-provisioner/`](libs/provisioners/engine-provisioner/README.md) |
+`provisioners-engine-provisioner` | tool | — | llamacpp_smoke | — |
+| [`libs/provisioners/engine-provisioner/bdd/`](libs/provisioners/engine-provisioner/bdd/README.md)
+| `engine-provisioner-bdd` | tool | — | features | — |
+| [`libs/provisioners/model-provisioner/`](libs/provisioners/model-provisioner/README.md) |
+`model-provisioner` | tool | — | — | — |
+| [`libs/provisioners/model-provisioner/bdd/`](libs/provisioners/model-provisioner/bdd/README.md) |
+`model-provisioner-bdd` | tool | — | features | — |
+| [`libs/worker-adapters/adapter-api/`](libs/worker-adapters/adapter-api/README.md) |
+`worker-adapters-adapter-api` | adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057,
+ORCH-3058 |
+| [`libs/worker-adapters/http-util/`](libs/worker-adapters/http-util/README.md) |
+`worker-adapters-http-util` | adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057,
+ORCH-3058 |
+| [`libs/worker-adapters/llamacpp-http/`](libs/worker-adapters/llamacpp-http/README.md) |
+`worker-adapters-llamacpp-http` | adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057,
+ORCH-3058 |
+| [`libs/worker-adapters/mock/`](libs/worker-adapters/mock/README.md) | `worker-adapters-mock` |
+adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057, ORCH-3058 |
+| [`libs/worker-adapters/openai-http/`](libs/worker-adapters/openai-http/README.md) |
+`worker-adapters-openai-http` | adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057,
+ORCH-3058 |
+| [`libs/worker-adapters/tgi-http/`](libs/worker-adapters/tgi-http/README.md) |
+`worker-adapters-tgi-http` | adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057,
+ORCH-3058 |
+| [`libs/worker-adapters/triton/`](libs/worker-adapters/triton/README.md) |
+`worker-adapters-triton` | adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057, ORCH-3058 |
+| [`libs/worker-adapters/vllm-http/`](libs/worker-adapters/vllm-http/README.md) |
+`worker-adapters-vllm-http` | adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057,
+ORCH-3058 |
 | [`test-harness/bdd/`](test-harness/bdd/README.md) | `test-harness-bdd` | test-harness | — | bdd,
-features | ORCH-3050, ORCH-3051 |
+features, traceability | ORCH-3050, ORCH-3051 |
 | [`test-harness/chaos/`](test-harness/chaos/README.md) | `test-harness-chaos` | test-harness | — |
 — | ORCH-3050, ORCH-3051 |
 | [`test-harness/determinism-suite/`](test-harness/determinism-suite/README.md) |
@@ -325,34 +406,43 @@ ORCH-3051 |
 | [`test-harness/e2e-haiku/`](test-harness/e2e-haiku/README.md) | `test-harness-e2e-haiku` |
 test-harness | — | e2e_client, placeholder | ORCH-3050, ORCH-3051 |
 | [`test-harness/metrics-contract/`](test-harness/metrics-contract/README.md) |
-`test-harness-metrics-contract` | test-harness | — | metrics_lint | ORCH-3050, ORCH-3051 |
+`test-harness-metrics-contract` | test-harness | — | metrics_lint, spec_alignment | ORCH-3050,
+ORCH-3051 |
 | [`tools/openapi-client/`](tools/openapi-client/README.md) | `tools-openapi-client` | tool |
 OpenAPI | trybuild, ui | — |
 | [`tools/readme-index/`](tools/readme-index/README.md) | `tools-readme-index` | tool | — | — | — |
 | [`tools/spec-extract/`](tools/spec-extract/README.md) | `tools-spec-extract` | tool | — | — | — |
-| [`worker-adapters/llamacpp-http/`](worker-adapters/llamacpp-http/README.md) |
-`worker-adapters-llamacpp-http` | adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057,
-ORCH-3058 |
-| [`worker-adapters/mock/`](worker-adapters/mock/README.md) | `worker-adapters-mock` | adapter | —
-| — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057, ORCH-3058 |
-| [`worker-adapters/tgi-http/`](worker-adapters/tgi-http/README.md) | `worker-adapters-tgi-http` |
-adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057, ORCH-3058 |
-| [`worker-adapters/triton/`](worker-adapters/triton/README.md) | `worker-adapters-triton` |
-adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057, ORCH-3058 |
-| [`worker-adapters/vllm-http/`](worker-adapters/vllm-http/README.md) | `worker-adapters-vllm-http`
-| adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057, ORCH-3058 |
 | [`xtask/`](xtask/README.md) | `xtask` | tool | — | — | — |
 
 ### Glossary
 
-- `cli-consumer-tests` — cli-consumer-tests (test-harness)
+- `orchestratord` — orchestratord (core)
+- `orchestratord-bdd` — orchestratord-bdd (core)
+- `llama-orch-sdk` — Single-source SDK for llama-orch (Rust core, optional WASM for npm)
+- `llama-orch-utils` — Utils applets for composing Blueprint pipelines for llama-orch (M2).
 - `contracts-api-types` — contracts-api-types (contracts)
 - `contracts-config-schema` — contracts-config-schema (contracts)
+- `adapter-host` — adapter-host (adapter)
+- `auth-min` — auth-min (tool)
+- `catalog-core` — Model catalog: resolve/verify/cache and lifecycle for llama-orch
+- `catalog-core-bdd` — catalog-core-bdd (core)
+- `observability-narration-core` — observability-narration-core (tool)
 - `orchestrator-core` — orchestrator-core (core)
-- `orchestratord` — orchestratord (core)
-- `plugins-policy-host` — plugins-policy-host (plugin)
-- `plugins-policy-sdk` — plugins-policy-sdk (plugin)
+- `orchestrator-core-bdd` — orchestrator-core-bdd (core)
 - `pool-managerd` — pool-managerd (core)
+- `pool-managerd-bdd` — pool-managerd-bdd (core)
+- `provisioners-engine-provisioner` — provisioners-engine-provisioner (tool)
+- `engine-provisioner-bdd` — engine-provisioner-bdd (tool)
+- `model-provisioner` — Model provisioner: orchestrates resolve/verify/cache via catalog-core
+- `model-provisioner-bdd` — model-provisioner-bdd (tool)
+- `worker-adapters-adapter-api` — worker-adapters-adapter-api (adapter)
+- `worker-adapters-http-util` — worker-adapters-http-util (adapter)
+- `worker-adapters-llamacpp-http` — worker-adapters-llamacpp-http (adapter)
+- `worker-adapters-mock` — worker-adapters-mock (adapter)
+- `worker-adapters-openai-http` — worker-adapters-openai-http (adapter)
+- `worker-adapters-tgi-http` — worker-adapters-tgi-http (adapter)
+- `worker-adapters-triton` — worker-adapters-triton (adapter)
+- `worker-adapters-vllm-http` — worker-adapters-vllm-http (adapter)
 - `test-harness-bdd` — test-harness-bdd (test-harness)
 - `test-harness-chaos` — test-harness-chaos (test-harness)
 - `test-harness-determinism-suite` — test-harness-determinism-suite (test-harness)
@@ -361,17 +451,12 @@ adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057, ORCH-3058 |
 - `tools-openapi-client` — tools-openapi-client (tool)
 - `tools-readme-index` — tools-readme-index (tool)
 - `tools-spec-extract` — tools-spec-extract (tool)
-- `worker-adapters-llamacpp-http` — worker-adapters-llamacpp-http (adapter)
-- `worker-adapters-mock` — worker-adapters-mock (adapter)
-- `worker-adapters-tgi-http` — worker-adapters-tgi-http (adapter)
-- `worker-adapters-triton` — worker-adapters-triton (adapter)
-- `worker-adapters-vllm-http` — worker-adapters-vllm-http (adapter)
 - `xtask` — xtask (tool)
 
 ### Getting Started
 
-- Adapter work: see `worker-adapters/*` crates.
+- Adapter work: see `libs/worker-adapters/*` crates.
 - Contracts: see `contracts/*`.
-- Core scheduling: see `orchestrator-core/` and `orchestratord/`.
+- Core scheduling: see `libs/orchestrator-core/` and `bin/orchestratord/`.
 
 <!-- END WORKSPACE MAP (AUTO-GENERATED) -->

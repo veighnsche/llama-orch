@@ -48,7 +48,10 @@ pub enum DeterminismLevel {
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
-pub enum KVHint { Reuse, Cold }
+pub enum KVHint {
+    Reuse,
+    Cold,
+}
 
 #[cfg_attr(feature = "wasm", derive(Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
@@ -87,18 +90,27 @@ pub struct ModelInfo {
 #[cfg_attr(feature = "wasm", derive(Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ModelState { Active, Retired }
+pub enum ModelState {
+    Active,
+    Retired,
+}
 
 #[cfg_attr(feature = "wasm", derive(Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct PoolInfo { pub id: String }
+pub struct PoolInfo {
+    pub id: String,
+}
 
 #[cfg_attr(feature = "wasm", derive(Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
-pub enum PlacementMode { Pin, Prefer, Auto }
+pub enum PlacementMode {
+    Pin,
+    Prefer,
+    Auto,
+}
 
 #[cfg_attr(feature = "wasm", derive(Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
@@ -192,12 +204,18 @@ pub struct ErrorEnvelope {
 #[cfg_attr(feature = "wasm", derive(Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct SSEStarted { pub queue_position: i32, pub predicted_start_ms: i64 }
+pub struct SSEStarted {
+    pub queue_position: i32,
+    pub predicted_start_ms: i64,
+}
 
 #[cfg_attr(feature = "wasm", derive(Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct SSEToken { pub t: String, pub i: i32 }
+pub struct SSEToken {
+    pub t: String,
+    pub i: i32,
+}
 
 #[cfg_attr(feature = "wasm", derive(Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
@@ -214,12 +232,19 @@ pub struct SSEMetrics {
 #[cfg_attr(feature = "wasm", derive(Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct SSEEnd { pub tokens_out: i32, pub decode_ms: i64 }
+pub struct SSEEnd {
+    pub tokens_out: i32,
+    pub decode_ms: i64,
+}
 
 #[cfg_attr(feature = "wasm", derive(Tsify))]
 #[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct SSEError { pub code: ErrorKind, pub message: String, pub engine: Option<Engine> }
+pub struct SSEError {
+    pub code: ErrorKind,
+    pub message: String,
+    pub engine: Option<Engine>,
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum SSEEvent {

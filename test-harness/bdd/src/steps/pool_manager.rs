@@ -7,13 +7,7 @@ pub async fn given_pool_unready_due_to_preload_failure(world: &mut World) {
     world.push_fact("pool.preload_fail");
     // Also set in-memory registry to reflect Unready with last_error so Then can assert real state
     if let Ok(mut reg) = world.state.pool_manager.lock() {
-        reg.set_health(
-            "pool0",
-            HealthStatus {
-                live: true,
-                ready: false,
-            },
-        );
+        reg.set_health("pool0", HealthStatus { live: true, ready: false });
         reg.set_last_error("pool0", "preload failure");
     }
 }
@@ -35,13 +29,7 @@ pub async fn then_pool_readiness_false_last_error_present(world: &mut World) {
 pub async fn given_driver_error_occurs(world: &mut World) {
     world.push_fact("pool.driver_error");
     if let Ok(mut reg) = world.state.pool_manager.lock() {
-        reg.set_health(
-            "pool0",
-            HealthStatus {
-                live: true,
-                ready: false,
-            },
-        );
+        reg.set_health("pool0", HealthStatus { live: true, ready: false });
         reg.set_last_error("pool0", "driver error");
     }
 }

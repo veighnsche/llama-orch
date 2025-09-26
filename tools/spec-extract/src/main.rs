@@ -58,10 +58,7 @@ fn main() -> Result<()> {
 
         // Determine output file name
         let out_name = requirements_yaml_name(
-            spec_path
-                .file_name()
-                .and_then(|s| s.to_str())
-                .unwrap_or("spec.yaml"),
+            spec_path.file_name().and_then(|s| s.to_str()).unwrap_or("spec.yaml"),
         );
         let out_path = out_dir.join(out_name);
         let yaml = serde_yaml::to_string(&index)?;
@@ -139,11 +136,7 @@ fn extract_from_spec(spec_rel: &str, spec: &str) -> Result<RequirementIndex> {
                 title,
                 section: current_section.clone(),
                 level: level.to_string(),
-                links: vec![format!(
-                    "{}#{}",
-                    spec_rel,
-                    anchor_from_section(&current_section)
-                )],
+                links: vec![format!("{}#{}", spec_rel, anchor_from_section(&current_section))],
             });
         }
     }
@@ -154,20 +147,12 @@ fn extract_from_spec(spec_rel: &str, spec: &str) -> Result<RequirementIndex> {
         format!("Extracted from {}", spec_rel)
     };
 
-    Ok(RequirementIndex {
-        schema_version: 1,
-        source: spec_rel.into(),
-        notes,
-        requirements,
-    })
+    Ok(RequirementIndex { schema_version: 1, source: spec_rel.into(), notes, requirements })
 }
 
 fn requirements_yaml_name(spec_file: &str) -> String {
     // Map spec filenames to requirement yaml names (derived from crate package names)
-    let stem = Path::new(spec_file)
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("spec");
+    let stem = Path::new(spec_file).file_stem().and_then(|s| s.to_str()).unwrap_or("spec");
 
     // If stem is prefixed with NN- keep original stem for fallback filename, but strip for matching
     let (base_for_match, fallback_name) = if stem.len() > 3
@@ -202,9 +187,7 @@ fn requirements_yaml_name(spec_file: &str) -> String {
 fn path_relative(root: &Path, path: &Path) -> Option<String> {
     let root = root.canonicalize().ok()?;
     let path = path.canonicalize().ok()?;
-    path.strip_prefix(&root)
-        .ok()
-        .map(|p| p.to_string_lossy().to_string())
+    path.strip_prefix(&root).ok().map(|p| p.to_string_lossy().to_string())
 }
 
 fn write_if_changed(path: &Path, contents: &str) -> Result<()> {

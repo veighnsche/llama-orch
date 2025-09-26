@@ -36,12 +36,7 @@ fn llama_cpp_source_smoke() -> anyhow::Result<()> {
     let prov = provider_for(pool)?;
     prov.ensure(pool)?;
 
-    let port = pool
-        .provisioning
-        .ports
-        .as_ref()
-        .and_then(|v| v.get(0).cloned())
-        .unwrap_or(8080);
+    let port = pool.provisioning.ports.as_ref().and_then(|v| v.get(0).cloned()).unwrap_or(8080);
 
     // Poll /health up to 2 minutes
     let deadline = Instant::now() + Duration::from_secs(120);
@@ -53,11 +48,7 @@ fn llama_cpp_source_smoke() -> anyhow::Result<()> {
         }
         thread::sleep(Duration::from_secs(2));
     }
-    assert!(
-        healthy,
-        "llama-server did not become healthy on port {}",
-        port
-    );
+    assert!(healthy, "llama-server did not become healthy on port {}", port);
 
     // Tear down: kill via pid file
     let pid_path = util::default_run_dir().join(format!("{}.pid", pool.id));
@@ -73,10 +64,7 @@ fn llama_cpp_source_smoke() -> anyhow::Result<()> {
 fn http_health_probe(host: &str, port: u16) -> std::io::Result<bool> {
     let addr = format!("{}:{}", host, port);
     let mut stream = TcpStream::connect(addr)?;
-    let req = format!(
-        "GET /health HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n",
-        host
-    );
+    let req = format!("GET /health HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n", host);
     stream.write_all(req.as_bytes())?;
     let mut buf = String::new();
     stream.read_to_string(&mut buf)?;

@@ -9,7 +9,11 @@ fn reads_single_file_text_utf8() {
     let file_path = dir.path().join("a.txt");
     fs::write(&file_path, "hello κόσμε").expect("write");
 
-    let req = ReadRequest { paths: vec![file_path.to_string_lossy().into_owned()], as_text: true, encoding: None };
+    let req = ReadRequest {
+        paths: vec![file_path.to_string_lossy().into_owned()],
+        as_text: true,
+        encoding: None,
+    };
     let resp = run(req).expect("run ok");
     assert_eq!(resp.files.len(), 1);
     let f = &resp.files[0];
@@ -45,7 +49,11 @@ fn reads_binary_when_as_text_false() {
     let mut f = fs::File::create(&file_path).expect("create");
     f.write_all(&bytes).expect("write");
 
-    let req = ReadRequest { paths: vec![file_path.to_string_lossy().into_owned()], as_text: false, encoding: None };
+    let req = ReadRequest {
+        paths: vec![file_path.to_string_lossy().into_owned()],
+        as_text: false,
+        encoding: None,
+    };
     let resp = run(req).expect("run ok");
     assert_eq!(resp.files.len(), 1);
     let b = resp.files[0].bytes.as_ref().expect("bytes");
@@ -58,7 +66,11 @@ fn reads_binary_when_as_text_false() {
 fn errors_on_missing_file() {
     let dir = tempdir().expect("tempdir");
     let missing = dir.path().join("missing.txt");
-    let req = ReadRequest { paths: vec![missing.to_string_lossy().into_owned()], as_text: true, encoding: None };
+    let req = ReadRequest {
+        paths: vec![missing.to_string_lossy().into_owned()],
+        as_text: true,
+        encoding: None,
+    };
     let err = run(req).err().expect("expected error");
     // io::ErrorKind should be NotFound
     assert_eq!(err.kind(), std::io::ErrorKind::NotFound);

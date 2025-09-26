@@ -47,10 +47,7 @@ pub fn generate_deterministic_sse(engine: &str, seed: u64, n_tokens: usize) -> S
 
     let decode_ms = (state ^ 0xdead_beef).wrapping_rem_euclid(2000) + 10; // 10..2009
     out.push_str("event: end\n");
-    out.push_str(&format!(
-        "data: {{\"tokens_out\":{},\"decode_ms\":{}}}\n\n",
-        n_tokens, decode_ms
-    ));
+    out.push_str(&format!("data: {{\"tokens_out\":{},\"decode_ms\":{}}}\n\n", n_tokens, decode_ms));
     out
 }
 

@@ -20,10 +20,7 @@ impl Default for TgiProvisioner {
 
 impl EngineProvisioner for TgiProvisioner {
     fn plan(&self, pool: &cfg::PoolConfig) -> Result<Plan> {
-        let mut plan = Plan {
-            pool_id: pool.id.clone(),
-            steps: Vec::new(),
-        };
+        let mut plan = Plan { pool_id: pool.id.clone(), steps: Vec::new() };
         plan.steps.push(PlanStep {
             kind: "todo".into(),
             detail: "TGI provisioning plan not implemented; prefer container mode".into(),
@@ -32,8 +29,6 @@ impl EngineProvisioner for TgiProvisioner {
     }
 
     fn ensure(&self, _pool: &cfg::PoolConfig) -> Result<()> {
-        Err(anyhow!(
-            "TGI provisioner not implemented yet; prefer container mode"
-        ))
+        Err(anyhow!("TGI provisioner not implemented yet; prefer container mode"))
     }
 }

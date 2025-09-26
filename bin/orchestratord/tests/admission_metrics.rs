@@ -18,9 +18,7 @@ fn contains_metric_line(
 ) -> bool {
     for line in text.lines() {
         if line.starts_with(metric)
-            && label_snips
-                .iter()
-                .all(|(k, v)| line.contains(&format!("{}=\"{}\"", k, v)))
+            && label_snips.iter().all(|(k, v)| line.contains(&format!("{}=\"{}\"", k, v)))
             && line.trim_end().ends_with(value_suffix)
         {
             return true;
@@ -50,11 +48,7 @@ fn enqueue_emits_enqueued_and_depth() {
     assert!(contains_metric_line(
         &text,
         "queue_depth",
-        &[
-            ("engine", "llamacpp"),
-            ("pool_id", "pool-test"),
-            ("priority", "interactive")
-        ],
+        &[("engine", "llamacpp"), ("pool_id", "pool-test"), ("priority", "interactive")],
         " 1",
     ));
 }

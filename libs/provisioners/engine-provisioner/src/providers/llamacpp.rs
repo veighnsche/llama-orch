@@ -19,10 +19,7 @@ impl LlamaCppSourceProvisioner {
 
 impl EngineProvisioner for LlamaCppSourceProvisioner {
     fn plan(&self, pool: &cfg::PoolConfig) -> Result<Plan> {
-        let mut plan = Plan {
-            pool_id: pool.id.clone(),
-            steps: Vec::new(),
-        };
+        let mut plan = Plan { pool_id: pool.id.clone(), steps: Vec::new() };
         let prov = &pool.provisioning;
         plan.steps.push(PlanStep {
             kind: "preflight-tools".into(),
@@ -40,17 +37,12 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
                     src.build.cmake_flags, src.build.generator, src.build.cache_dir
                 ),
             });
-            plan.steps.push(PlanStep {
-                kind: "cmake-build".into(),
-                detail: "build llama-server".into(),
-            });
+            plan.steps
+                .push(PlanStep { kind: "cmake-build".into(), detail: "build llama-server".into() });
         }
         plan.steps.push(PlanStep {
             kind: "model-fetch".into(),
-            detail: format!(
-                "ref={:?} cache_dir={:?}",
-                prov.model.r#ref, prov.model.cache_dir
-            ),
+            detail: format!("ref={:?} cache_dir={:?}", prov.model.r#ref, prov.model.cache_dir),
         });
         plan.steps.push(PlanStep {
             kind: "run".into(),
@@ -122,10 +114,8 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
         let orig_flags = src.build.cmake_flags.clone().unwrap_or_default();
         let has_old = orig_flags.iter().any(|f| f.contains("LLAMA_CUBLAS"));
         let has_new = orig_flags.iter().any(|f| f.contains("GGML_CUDA"));
-        let mut mapped_flags: Vec<String> = orig_flags
-            .into_iter()
-            .filter(|f| !f.contains("LLAMA_CUBLAS"))
-            .collect();
+        let mut mapped_flags: Vec<String> =
+            orig_flags.into_iter().filter(|f| !f.contains("LLAMA_CUBLAS")).collect();
         if has_old && !has_new {
             mapped_flags.push("-DGGML_CUDA=ON".to_string());
         }
@@ -197,9 +187,7 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
                 for f in &mapped_flags {
                     cfgcmd_hc.arg(f);
                 }
-                let st_hc = cfgcmd_hc
-                    .status()
-                    .context("cmake configure (host-compiler)")?;
+                let st_hc = cfgcmd_hc.status().context("cmake configure (host-compiler)")?;
                 if !st_hc.success() {
                     return Err(anyhow!(
                         "CUDA configure failed even with host compiler hint; GPU-only enforcement"
@@ -224,18 +212,12 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
 
         let server_bin = build_dir.join("bin").join("llama-server");
         if !server_bin.exists() {
-            return Err(anyhow!(
-                "llama-server not found at {}",
-                server_bin.display()
-            ));
+            return Err(anyhow!("llama-server not found at {}", server_bin.display()));
         }
 
         // Ensure model is present via model-provisioner
-        let model_ref = prov
-            .model
-            .r#ref
-            .clone()
-            .ok_or_else(|| anyhow!("provisioning.model.ref required"))?;
+        let model_ref =
+            prov.model.r#ref.clone().ok_or_else(|| anyhow!("provisioning.model.ref required"))?;
         let model_cache_dir = prov
             .model
             .cache_dir
@@ -254,16 +236,8 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
         let pid_file = pid_dir.join(format!("{}.pid", pool.id));
 
         let mut cmdline = Command::new(server_bin);
-        cmdline
-            .arg("--model")
-            .arg(&model_path)
-            .arg("--host")
-            .arg("127.0.0.1");
-        let port = prov
-            .ports
-            .as_ref()
-            .and_then(|v| v.first().copied())
-            .unwrap_or(8080);
+        cmdline.arg("--model").arg(&model_path).arg("--host").arg("127.0.0.1");
+        let port = prov.ports.as_ref().and_then(|v| v.first().copied()).unwrap_or(8080);
         cmdline.arg("--port").arg(port.to_string());
         // Normalize legacy flags and CPU/GPU expectations
         if let Some(flags) = &prov.flags {
@@ -285,26 +259,15 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
 fn preflight_tools(prov: &cfg::ProvisioningConfig, src: &cfg::SourceConfig) -> Result<()> {
     // Check required commands
     let mut packages: std::collections::BTreeSet<&str> = std::collections::BTreeSet::new();
-    for (bin, pkg) in [
-        ("git", "git"),
-        ("cmake", "cmake"),
-        ("make", "make"),
-        ("gcc", "gcc"),
-    ] {
+    for (bin, pkg) in [("git", "git"), ("cmake", "cmake"), ("make", "make"), ("gcc", "gcc")] {
         if which::which(bin).is_err() {
             packages.insert(pkg);
         }
     }
     // CUDA if requested
-    let wants_cuda = src
-        .build
-        .cmake_flags
-        .as_ref()
-        .is_some_and(|flags| {
-            flags
-                .iter()
-                .any(|f| f.contains("LLAMA_CUBLAS=ON") || f.contains("GGML_CUDA=ON"))
-        });
+    let wants_cuda = src.build.cmake_flags.as_ref().is_some_and(|flags| {
+        flags.iter().any(|f| f.contains("LLAMA_CUBLAS=ON") || f.contains("GGML_CUDA=ON"))
+    });
     if wants_cuda && which::which("nvcc").is_err() {
         packages.insert("cuda");
     }
@@ -316,11 +279,7 @@ fn preflight_tools(prov: &cfg::ProvisioningConfig, src: &cfg::SourceConfig) -> R
         }
     }
     // HF CLI if model via hf:
-    let wants_hf = prov
-        .model
-        .r#ref
-        .as_deref()
-        .is_some_and(|r| r.starts_with("hf:"));
+    let wants_hf = prov.model.r#ref.as_deref().is_some_and(|r| r.starts_with("hf:"));
     if wants_hf && which::which("huggingface-cli").is_err() {
         packages.insert("python-huggingface-hub");
     }
@@ -404,9 +363,7 @@ fn is_root_user() -> bool {
 
 fn find_compat_host_compiler() -> Option<(std::path::PathBuf, std::path::PathBuf)> {
     // Prefer gcc-13 if present, otherwise clang
-    let gcc13 = which::which("gcc-13")
-        .or_else(|_| which::which("gcc13"))
-        .ok();
+    let gcc13 = which::which("gcc-13").or_else(|_| which::which("gcc13")).ok();
     if let Some(cc) = gcc13 {
         // Try to locate matching g++-13
         let cxx = which::which("g++-13")
@@ -481,10 +438,7 @@ fn normalize_llamacpp_flags(flags: &[String], gpu_enabled: bool) -> Vec<String> 
 fn discover_cuda_root() -> Option<std::path::PathBuf> {
     // If nvcc is in PATH, derive root from it
     if let Ok(nvcc) = which::which("nvcc") {
-        return nvcc
-            .parent()
-            .and_then(|p| p.parent())
-            .map(|p| p.to_path_buf());
+        return nvcc.parent().and_then(|p| p.parent()).map(|p| p.to_path_buf());
     }
     // Common fixed roots
     for root in ["/opt/cuda", "/usr/local/cuda"] {

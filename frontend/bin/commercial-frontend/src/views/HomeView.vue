@@ -5,6 +5,7 @@
   import { useI18n } from 'vue-i18n'
 
   // Above-the-fold: keep eager
+  import DevUtilityBar from '@/components/DevUtilityBar.vue'
   import Hero from '@/components/home/Hero.vue'
   import WhyPlumbing from '@/components/home/WhyPlumbing.vue'
 
@@ -102,6 +103,7 @@
 
 <template>
   <main id="main" class="home">
+    <DevUtilityBar />
     <Hero />
     <WhyPlumbing />
     <!-- Lazy chunks render naturally when reached; optional <Suspense> if you want placeholders -->

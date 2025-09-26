@@ -30,10 +30,7 @@ impl fmt::Debug for World {
             .field("last_status", &self.last_status)
             .field("corr_id", &self.corr_id)
             .field("task_id", &self.task_id)
-            .field(
-                "api_key_present",
-                &self.api_key.as_ref().map(|_| true).unwrap_or(false),
-            )
+            .field("api_key_present", &self.api_key.as_ref().map(|_| true).unwrap_or(false))
             .field("extra_headers_len", &self.extra_headers.len())
             .field("state", &"<AppState redacted>")
             .finish()
@@ -89,9 +86,7 @@ impl World {
             (http::Method::POST, "/v1/tasks") => {
                 let body: api::TaskRequest =
                     serde_json::from_value(body_json.unwrap_or_else(|| json!({})))?;
-                data::create_task(State(self.state.clone()), axum::Json(body))
-                    .await
-                    .into_response()
+                data::create_task(State(self.state.clone()), axum::Json(body)).await.into_response()
             }
             (http::Method::GET, p) if p.starts_with("/v1/tasks/") && p.ends_with("/stream") => {
                 let id = p
@@ -169,9 +164,7 @@ impl World {
                 .into_response()
             }
             (http::Method::GET, "/v1/capabilities") => {
-                control::get_capabilities(State(self.state.clone()))
-                    .await
-                    .into_response()
+                control::get_capabilities(State(self.state.clone())).await.into_response()
             }
             (http::Method::GET, "/metrics") => observability::metrics_endpoint().await,
             _ => (http::StatusCode::NOT_FOUND, Body::empty()).into_response(),
@@ -179,9 +172,7 @@ impl World {
 
         let status = resp.status();
         let headers_out = resp.headers().clone();
-        let body_bytes = to_bytes(resp.into_body(), 1_048_576)
-            .await
-            .unwrap_or_default();
+        let body_bytes = to_bytes(resp.into_body(), 1_048_576).await.unwrap_or_default();
         let body_str = String::from_utf8(body_bytes.to_vec()).unwrap_or_default();
 
         self.corr_id = headers_out

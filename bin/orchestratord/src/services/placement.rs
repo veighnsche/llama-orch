@@ -24,10 +24,7 @@ pub struct PlacementCache {
 
 impl PlacementCache {
     pub fn with_ttl(ttl_ms: u64) -> Self {
-        Self {
-            ttl: Duration::from_millis(ttl_ms),
-            map: HashMap::new(),
-        }
+        Self { ttl: Duration::from_millis(ttl_ms), map: HashMap::new() }
     }
     pub fn get(&mut self, k: &PlacementKey) -> Option<PlacementDecision> {
         if let Some((v, t0)) = self.map.get(k) {
@@ -44,8 +41,5 @@ impl PlacementCache {
 
 /// Very minimal feasibility prefilter (scaffold): always route to "default" pool.
 pub fn prefilter_route_default() -> PlacementDecision {
-    PlacementDecision {
-        pool_id: "default".into(),
-        replica_id: None,
-    }
+    PlacementDecision { pool_id: "default".into(), replica_id: None }
 }

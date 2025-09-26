@@ -29,10 +29,7 @@ fn different_engine_versions_not_byte_exact() {
     let seed = 42u64;
     let s1 = generate_deterministic_sse("llamacpp:v1.0.0", seed, 32);
     let s2 = generate_deterministic_sse("llamacpp:v1.0.1", seed, 32);
-    assert_ne!(
-        s1, s2,
-        "engine version change should alter stream determinism domain"
-    );
+    assert_ne!(s1, s2, "engine version change should alter stream determinism domain");
 }
 
 // OC-CORE-1030: Different seeds should change the stream tokens for a fixed engine.

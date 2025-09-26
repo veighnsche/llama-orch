@@ -1,46 +1,71 @@
-# observability-narration-core — Shared Narration Helper
+# observability-narration-core — observability-narration-core (tool)
 
-Status: Draft
-Owner: @llama-orch-maintainers
+## 1. Name & Purpose
 
-Purpose
-- Provide a tiny, dependency-light helper to attach a `human` narration string alongside structured tracing fields.
-- Unify narration across `orchestratord`, provisioners, adapters, and manager.
+observability-narration-core (tool)
 
-Spec Links
-- `.specs/proposals/2025-09-19-human-narration-logging.md` (ORCH-33xx)
+## 2. Why it exists (Spec traceability)
 
-Detailed behavior (High / Mid / Low)
+- See spec and requirements for details.
+  - [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
+  - [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
 
-- High-level
-  - Offers a small facade to emit human-readable narration strings co-located with structured fields.
-  - Keeps a consistent taxonomy of fields across crates (see `README_LLM.md`).
 
-- Mid-level
-  - Provides helpers for common emission points: admission, placement, stream start/end, cancel.
-  - Redaction utilities ensure secrets are never present in narration; integrates with error taxonomy.
-  - Optional capture adapter enables tests/BDD to assert narration presence and content.
+## 3. Public API surface
 
-- Low-level
-  - Minimal dependencies to remain usable by CLIs and provisioners; integrates with `tracing` when available.
-  - Outputs are structured-first; narration string is an adjunct field (e.g., `human`).
+- Rust crate API (internal)
 
-## Style Guide — Human-Friendly Narration
+## 4. How it fits
 
-- MUST be natural language and human-friendly. Do not dump opaque identifiers into `human`.
-- Keep raw IDs (UUIDs, hashes) in structured fields such as `job_id`, `session_id`, etc.
-- Use present tense, subject–verb–object, ≤ ~100 characters.
-- MUST NOT include secrets or PII; use redaction helpers when in doubt.
-- Prefer descriptive subjects (e.g., pool or model labels) to opaque IDs.
+- Developer tooling supporting contracts and docs.
 
-Examples
+```mermaid
+flowchart LR
+  devs[Developers] --> tool[Tool]
+  tool --> artifacts[Artifacts]
+```
 
-- Good: "Asked pool-managerd for readiness of pool 'default'"
-- Good: "Accepted request; queued at position 3 (ETA 420 ms) on pool 'default'"
-- Good: "Canceled streaming upon client request"
-- Bad:  "task=00000000-0000-0000-0000-000000000001 queued pos=3"
-- Bad:  "pool=3f4b6e readied" (opaque ID with no context)
+## 5. Build & Test
 
-Refinement Opportunities
-- Add test capture adapter for BDD assertions.
-- Add redaction helpers and taxonomy constants.
+- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
+-- -D warnings`
+- Tests for this crate: `cargo test -p observability-narration-core -- --nocapture`
+
+
+## 6. Contracts
+
+- None
+
+
+## 7. Config & Env
+
+- Not applicable.
+
+## 8. Metrics & Logs
+
+- Minimal logs.
+
+## 9. Runbook (Dev)
+
+- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
+- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+
+
+## 10. Status & Owners
+
+- Status: alpha
+- Owners: @llama-orch-maintainers
+
+## 11. Changelog pointers
+
+- None
+
+## 12. Footnotes
+
+- Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
+- Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+
+
+## What this crate is not
+
+- Not a production service.

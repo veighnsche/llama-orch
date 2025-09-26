@@ -19,10 +19,7 @@ fn spec_md_paths() -> Vec<PathBuf> {
     let mut out = Vec::new();
     let dir = repo_root().join(".specs");
     if dir.exists() {
-        for entry in walkdir::WalkDir::new(&dir)
-            .into_iter()
-            .filter_map(Result::ok)
-        {
+        for entry in walkdir::WalkDir::new(&dir).into_iter().filter_map(Result::ok) {
             if entry.file_type().is_file()
                 && entry.path().extension().and_then(|s| s.to_str()) == Some("md")
             {
@@ -86,10 +83,7 @@ fn collect_catalog_ids() -> HashSet<String> {
 fn collect_feature_ids() -> HashSet<String> {
     let mut found = HashSet::new();
     let dir = feature_dir();
-    for entry in walkdir::WalkDir::new(&dir)
-        .into_iter()
-        .filter_map(Result::ok)
-    {
+    for entry in walkdir::WalkDir::new(&dir).into_iter().filter_map(Result::ok) {
         if entry.file_type().is_file()
             && entry.path().extension().and_then(|s| s.to_str()) == Some("feature")
         {
@@ -108,11 +102,8 @@ fn catalog_requirements_are_referenced_by_features() {
     let mut catalog = collect_catalog_ids();
     // Optional domain filter, e.g. "ORCH,OC-CTRL"
     if let Ok(domains) = std::env::var("LLORCH_TRACEABILITY_DOMAIN") {
-        let keep: HashSet<String> = domains
-            .split(',')
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .collect();
+        let keep: HashSet<String> =
+            domains.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
         catalog.retain(|id| keep.iter().any(|p| id.starts_with(p)));
     }
     let referenced = collect_feature_ids();
@@ -129,10 +120,7 @@ fn catalog_requirements_are_referenced_by_features() {
         return;
     }
 
-    eprintln!(
-        "Traceability: missing {} IDs not referenced by any .feature file:",
-        missing.len()
-    );
+    eprintln!("Traceability: missing {} IDs not referenced by any .feature file:", missing.len());
     let mut sorted = missing;
     sorted.sort();
     for id in &sorted {
@@ -140,10 +128,7 @@ fn catalog_requirements_are_referenced_by_features() {
     }
 
     // Only fail in strict mode to keep scaffolding green by default
-    let strict = std::env::var("LLORCH_TRACEABILITY_STRICT")
-        .ok()
-        .filter(|v| v == "1")
-        .is_some();
+    let strict = std::env::var("LLORCH_TRACEABILITY_STRICT").ok().filter(|v| v == "1").is_some();
     if strict {
         panic!(
             "traceability missing {} IDs; set LLORCH_TRACEABILITY_STRICT=0 to disable failing",

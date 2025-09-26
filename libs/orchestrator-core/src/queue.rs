@@ -34,12 +34,7 @@ pub struct InMemoryQueue {
 
 impl InMemoryQueue {
     pub fn with_capacity_policy(capacity: usize, policy: Policy) -> Self {
-        Self {
-            interactive: VecDeque::new(),
-            batch: VecDeque::new(),
-            capacity,
-            policy,
-        }
+        Self { interactive: VecDeque::new(), batch: VecDeque::new(), capacity, policy }
     }
 
     pub fn len(&self) -> usize {

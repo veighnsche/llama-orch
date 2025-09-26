@@ -28,10 +28,7 @@ impl fmt::Debug for World {
             .field("last_status", &self.last_status)
             .field("corr_id", &self.corr_id)
             .field("task_id", &self.task_id)
-            .field(
-                "api_key_present",
-                &self.api_key.as_ref().map(|_| true).unwrap_or(false),
-            )
+            .field("api_key_present", &self.api_key.as_ref().map(|_| true).unwrap_or(false))
             .field("extra_headers_len", &self.extra_headers.len())
             .field("state", &"<AppState redacted>")
             .finish()
@@ -87,10 +84,7 @@ impl World {
                 headers.insert(name, v.parse().unwrap());
             }
             if body_json.is_some() {
-                headers.insert(
-                    http::header::CONTENT_TYPE,
-                    "application/json".parse().unwrap(),
-                );
+                headers.insert(http::header::CONTENT_TYPE, "application/json".parse().unwrap());
             }
         }
 
@@ -105,9 +99,7 @@ impl World {
 
         let status = resp.status();
         let headers_out = resp.headers().clone();
-        let body_bytes = to_bytes(resp.into_body(), 1_048_576)
-            .await
-            .unwrap_or_default();
+        let body_bytes = to_bytes(resp.into_body(), 1_048_576).await.unwrap_or_default();
         let body_str = String::from_utf8(body_bytes.to_vec()).unwrap_or_default();
 
         self.corr_id = headers_out

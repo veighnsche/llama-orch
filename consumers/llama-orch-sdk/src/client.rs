@@ -1,9 +1,7 @@
 // Design-phase stub client — signatures only; all methods unimplemented.
 // Mirrors consumers/llama-orch-sdk/.docs/03-client.md
 
-use crate::types::{
-    AdmissionResponse, EngineCapability, SSEEvent, SessionInfo, TaskRequest,
-};
+use crate::types::{AdmissionResponse, EngineCapability, SSEEvent, SessionInfo, TaskRequest};
 
 #[derive(Debug, Clone)]
 pub struct ClientOptions {
@@ -21,11 +19,7 @@ pub struct OrchestratorClient {
 
 impl Default for OrchestratorClient {
     fn default() -> Self {
-        Self::new(ClientOptions {
-            base_url: None,
-            api_key: None,
-            timeout_ms: None,
-        })
+        Self::new(ClientOptions { base_url: None, api_key: None, timeout_ms: None })
     }
 }
 
@@ -50,7 +44,8 @@ impl OrchestratorClient {
     pub async fn stream_task(
         &self,
         _task_id: &str,
-    ) -> Result<std::pin::Pin<Box<dyn futures_core::Stream<Item = SSEEvent> + 'static>>, String> {
+    ) -> Result<std::pin::Pin<Box<dyn futures_core::Stream<Item = SSEEvent> + 'static>>, String>
+    {
         Err("unimplemented".to_string())
     }
 

@@ -2,18 +2,21 @@
 
 ## 1. Name & Purpose
 
-`orchestrator-core` provides core orchestration primitives used by daemons. It focuses on queueing/admission policies and invariants (bounded FIFO with priorities, full-queue behavior), with property-style tests. No HTTP or adapter IO lives here.
+orchestrator-core (core)
 
 ## 2. Why it exists (Spec traceability)
 
-Traceability follows the leading workspace specs:
-
-- Core orchestrator spec: [.specs/00_llama-orch.md](../.specs/00_llama-orch.md)
-  - Admission & bounded queues: ORCH-3004, ORCH-3005
-  - FIFO within priority class: ORCH-3008
-  - Placement/readiness hooks (informative for this crate): ORCH-3010, ORCH-3011
-  - Observability fields (consumers emit metrics): ORCH-3027, ORCH-3028
-- Home profile overlay: [.specs/00_home_profile.md](../.specs/00_home_profile.md) — informs defaults around queue depth and developer experience in the single-host profile.
+- ORCH-3004 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3004)
+- ORCH-3005 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3005)
+- ORCH-3008 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3008)
+- ORCH-3010 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3010)
+- ORCH-3011 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3011)
+- ORCH-3016 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3016)
+- ORCH-3017 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3017)
+- ORCH-3027 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3027)
+- ORCH-3028 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3028)
+- ORCH-3044 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3044)
+- ORCH-3045 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3045)
 
 
 ## 3. Public API surface
@@ -30,34 +33,6 @@ flowchart LR
   orch --> adapters[Worker Adapters]
   adapters --> engines[Engines]
 ```
-
-#### Detailed behavior (High / Mid / Low)
-
-- High-level
-  - In-memory, bounded queue with two priorities: `Interactive` and `Batch`.
-  - Full-queue behavior via policy enum: `Reject` or `DropLru`.
-
-- Mid-level
-  - Types: `Priority`, `Policy`, `InMemoryQueue` with separate deques per priority.
-  - Core ops: `enqueue(id, prio)`, `cancel(id)`, `snapshot_priority(prio)`, `len()`, `capacity()`.
-  - Tests in `src/queue.rs` assert key invariants: boundedness + reject, drop-lru preference, FIFO within class.
-
-- Low-level (from `src/queue.rs`)
-  - `enqueue`: if `len >= capacity` and policy is `Reject`, returns `EnqueueError::QueueFullReject`.
-  - `enqueue` with `DropLru`: drops oldest Batch first, else oldest Interactive, then pushes new item into the requested priority.
-  - `cancel`: removes the first occurrence of `id` from either priority queue and returns `true` if removed.
-
-### Placement overview (planning)
-
-Placement is implemented outside this crate, but `orchestrator-core` defines the policy and data shapes it expects. Primary scoring compares `predicted_end_ms` (admission latency + first token + decode). If scores tie, apply tie-breakers in order:
-
-1) Session/KV affinity — prefer pools with warm KV for the session.
-2) Least loaded — fewer active leases / higher `slots_free`.
-3) Highest residual VRAM headroom — `(vram_free_bytes − est_kv_bytes_for_job)`.
-4) Higher steady-state throughput — prefer higher `perf_tokens_per_s`.
-5) Stable lexicographic fallback — `pool_id` (or stable UUID) for determinism.
-
-Inputs are provided by `pool-managerd` snapshots (e.g., `slots_free`, `vram_free_bytes`, `perf_tokens_per_s`, KV warmth) and model requirements (min VRAM, quantization, compute capability).
 
 ## 5. Build & Test
 
@@ -96,13 +71,11 @@ Inputs are provided by `pool-managerd` snapshots (e.g., `slots_free`, `vram_free
 
 ## 12. Footnotes
 
-- Specs:
-  - Core: [.specs/00_llama-orch.md](../.specs/00_llama-orch.md)
-  - Home overlay: [.specs/00_home_profile.md](../.specs/00_home_profile.md)
-- Requirements: [requirements/00_llama-orch.yaml](../requirements/00_llama-orch.yaml)
+- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
+- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
 
 ### Additional Details
-- Queue invariants and property tests overview (capacity, rejection policies, session affinity helpers).
+- Queue invariants and property tests (capacity, rejection policies, session affinity helpers).
 - Capacity policies and bounded FIFO behavior.
 
 

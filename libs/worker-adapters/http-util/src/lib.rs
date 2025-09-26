@@ -23,9 +23,7 @@ pub fn client() -> &'static Client {
 
 /// Return an Authorization header value if AUTH_TOKEN is configured.
 pub fn bearer_header_from_env() -> Option<String> {
-    std::env::var("AUTH_TOKEN")
-        .ok()
-        .map(|t| format!("Bearer {}", t))
+    std::env::var("AUTH_TOKEN").ok().map(|t| format!("Bearer {}", t))
 }
 
 /// Apply Authorization header if available from env to a RequestBuilder.

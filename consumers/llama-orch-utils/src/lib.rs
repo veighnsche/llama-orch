@@ -1,14 +1,14 @@
 //! llama-orch-utils: M2 applets library for Blueprint pipelines.
 //! This crate hosts applets under `src/[namespace]/[applet]/`.
 
-pub mod fs;
-pub mod prompt;
-pub mod model;
-pub mod params;
-pub mod llm;
-pub mod orch;
 pub mod error;
+pub mod fs;
+pub mod llm;
 pub mod manifest;
+pub mod model;
+pub mod orch;
+pub mod params;
+pub mod prompt;
 
 // WASI/WASM minimal FFI surface (JSON-in/JSON-out) for Node/Bun loader
 #[cfg(target_arch = "wasm32")]

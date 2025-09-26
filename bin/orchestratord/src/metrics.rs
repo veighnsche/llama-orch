@@ -107,13 +107,9 @@ pub fn pre_register() {
         };
     }
     // gauges
-    for name in [
-        "queue_depth",
-        "kv_cache_usage_ratio",
-        "gpu_utilization",
-        "vram_used_bytes",
-        "model_state",
-    ] {
+    for name in
+        ["queue_depth", "kv_cache_usage_ratio", "gpu_utilization", "vram_used_bytes", "model_state"]
+    {
         let _ = {
             let mut g = GAUGES.lock().unwrap();
             g.entry(name.to_string()).or_default();
@@ -166,16 +162,10 @@ pub fn gather_metrics_text() -> String {
             let mut cum = 0u64;
             for (i, b) in hist.buckets.iter().enumerate() {
                 cum += hist.counts[i];
-                out.push_str(&format!(
-                    "{}_bucket{{{},le=\"{}\"}} {}\n",
-                    name, labels.0, b, cum
-                ));
+                out.push_str(&format!("{}_bucket{{{},le=\"{}\"}} {}\n", name, labels.0, b, cum));
             }
             // +Inf bucket
-            out.push_str(&format!(
-                "{}_bucket{{{},le=\"+Inf\"}} {}\n",
-                name, labels.0, hist.count
-            ));
+            out.push_str(&format!("{}_bucket{{{},le=\"+Inf\"}} {}\n", name, labels.0, hist.count));
             out.push_str(&format!("{}_sum{{{}}} {}\n", name, labels.0, hist.sum));
             out.push_str(&format!("{}_count{{{}}} {}\n", name, labels.0, hist.count));
         }

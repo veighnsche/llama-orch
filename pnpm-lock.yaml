@@ -37,11 +37,11 @@ importers:
         specifier: ^5
         version: 5.9.2
 
-  frontend/binaries/commercial-frontend:
+  frontend/bin/commercial-frontend:
     dependencies:
       orchyra-storybook:
         specifier: workspace:*
-        version: link:../../libraries/storybook
+        version: link:../../libs/storybook
       vue:
         specifier: ^3.5.18
         version: 3.5.22(typescript@5.8.3)
@@ -84,7 +84,7 @@ importers:
         version: 8.0.4
       orchyra-frontend-tooling:
         specifier: workspace:*
-        version: link:../../libraries/frontend-tooling
+        version: link:../../libs/frontend-tooling
       prettier:
         specifier: ^3.3.3
         version: 3.6.2
@@ -110,7 +110,7 @@ importers:
         specifier: ^4.39.0
         version: 4.40.1
 
-  frontend/libraries/frontend-tooling:
+  frontend/libs/frontend-tooling:
     dependencies:
       '@eslint/js':
         specifier: ^9.14.0
@@ -137,7 +137,7 @@ importers:
         specifier: ^9.4.3
         version: 9.4.3(eslint@9.36.0(jiti@2.6.0))
 
-  frontend/libraries/storybook:
+  frontend/libs/storybook:
     devDependencies:
       '@eslint/js':
         specifier: ^9.14.0

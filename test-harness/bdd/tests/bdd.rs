@@ -49,17 +49,6 @@ fn check_step(step: &str, steps: &[Regex], file: &std::path::Path) {
             matches += 1;
         }
     }
-    assert!(
-        matches > 0,
-        "undefined step '{}' in {}",
-        step,
-        file.display()
-    );
-    assert!(
-        matches == 1,
-        "ambiguous step '{}' in {} ({} matches)",
-        step,
-        file.display(),
-        matches
-    );
+    assert!(matches > 0, "undefined step '{}' in {}", step, file.display());
+    assert!(matches == 1, "ambiguous step '{}' in {} ({} matches)", step, file.display(), matches);
 }

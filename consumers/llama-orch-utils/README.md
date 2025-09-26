@@ -1,64 +1,71 @@
-# llama-orch-utils
+# llama-orch-utils — Utils applets for composing Blueprint pipelines for llama-orch (M2).
 
-M2 applets library for composing Blueprint pipelines in the llama-orch ecosystem. This crate hosts applets under `src/[namespace]/[applet]/` and is independent of SDK internals.
+## 1. Name & Purpose
 
-## WASI package (Node + Bun)
+Utils applets for composing Blueprint pipelines for llama-orch (M2).
 
-This directory also ships a WASI-based npm package that exposes the applets via a portable `.wasm` artifact and a minimal loader `index.js`.
-The loader constructs a single default-exported API object from a Rust-provided manifest and routes all calls through a unified `invoke_json` dispatcher.
+## 2. Why it exists (Spec traceability)
 
-- Runtime requirements:
-  - Node >= 20 (built-in `node:wasi`) or Bun with WASI support.
-  - The `.wasm` is built for `wasm32-wasip1-threads`.
-- Build requirements:
-  - Rust target `wasm32-wasip1-threads` installed.
-  - `pnpm` (or `npm`) to run scripts.
+- See spec and requirements for details.
+  - [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
+  - [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
 
-### Preopened directories
 
-By default, the loader preopens the current working directory (cwd) as `/`. You can add additional preopens by setting `WASI_PREOPEN` to a comma-separated list of absolute host paths, which will be mounted at `/mnt0`, `/mnt1`, ... inside WASI.
+## 3. Public API surface
 
-Example:
+- Rust crate API (internal)
 
-```bash
-WASI_PREOPEN=/data/logs,/var/tmp node -e "import('./index.js').then(m => console.log(m.default.fs.read_file_json({ paths: ['README.md'], as_text: true, encoding: 'utf-8' })));"
+## 4. How it fits
+
+- Developer tooling supporting contracts and docs.
+
+```mermaid
+flowchart LR
+  devs[Developers] --> tool[Tool]
+  tool --> artifacts[Artifacts]
 ```
 
-### API surface (default-exported grouped object)
+## 5. Build & Test
 
-```ts
-import utils from '@llama-orch/utils';
+- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
+-- -D warnings`
+- Tests for this crate: `cargo test -p llama-orch-utils -- --nocapture`
 
-// fs
-const r1 = utils.fs.read_file_json({ paths: ['README.md'], as_text: true, encoding: 'utf-8' });
-const r2 = utils.fs.read_file_json({ paths: ['README.md'], as_text: false, encoding: null });
 
-// prompt
-const m1 = utils.prompt.message_json({ role: 'user', source: { Text: 'hello' }, dedent: false });
-const t1 = utils.prompt.thread_json({ items: [
-  { role: 'system', source: { Text: 'a' }, dedent: false },
-  { role: 'user', source: { Lines: ['b', 'c'] }, dedent: true },
-]});
+## 6. Contracts
 
-// model / params
-const mr = utils.model.define_json({ model_id: 'm1', engine_id: null, pool_hint: 'pool-a' });
-const pr = utils.params.define_json({ temperature: 0.7, top_p: 1.0, max_tokens: 100, seed: null });
+- None
 
-// llm (unimplemented in M2; throws typed error)
-try { utils.llm.invoke_json({ messages: [{ role: 'user', content: 'hi' }], model: mr, params: pr }); }
-catch (e) { /* expected */ }
 
-// orch
-const s = utils.orch.response_extractor_json({ choices: [{ text: 'ok' }], usage: null });
-```
+## 7. Config & Env
 
-### Build
+- Not applicable.
 
-```bash
-pnpm i
-pnpm run build         # builds dist/llama_orch_utils.wasm + index.d.ts
-pnpm run smoke:node    # Node smoke
-pnpm run smoke:bun     # Bun smoke
-```
+## 8. Metrics & Logs
 
-If the WASM target is missing, install it (e.g., via `rustup target add wasm32-wasip1-threads`).
+- Minimal logs.
+
+## 9. Runbook (Dev)
+
+- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
+- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+
+
+## 10. Status & Owners
+
+- Status: alpha
+- Owners: @llama-orch-maintainers
+
+## 11. Changelog pointers
+
+- None
+
+## 12. Footnotes
+
+- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
+- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+
+
+## What this crate is not
+
+- Not a production service.

@@ -9,7 +9,10 @@ fn returns_first_choice_text_when_present() {
 
 #[test]
 fn returns_first_nonempty_choice_text_when_first_is_empty() {
-    let res = InvokeResult { choices: vec![Choice { text: "".into() }, Choice { text: "hi".into() }], usage: None };
+    let res = InvokeResult {
+        choices: vec![Choice { text: "".into() }, Choice { text: "hi".into() }],
+        usage: None,
+    };
     assert_eq!(run(&res), "hi");
 }
 

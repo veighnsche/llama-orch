@@ -13,24 +13,11 @@ pub struct AdapterStream; // placeholder
 
 #[derive(Debug, Clone)]
 pub enum StreamItem {
-    Started {
-        queue_position: i32,
-        predicted_start_ms: i64,
-    },
-    Token {
-        t: String,
-        i: i32,
-    },
-    Metrics {
-        json: serde_json::Value,
-    },
-    End {
-        tokens_out: i32,
-        decode_ms: i32,
-    },
-    Error {
-        message: String,
-    },
+    Started { queue_position: i32, predicted_start_ms: i64 },
+    Token { t: String, i: i32 },
+    Metrics { json: serde_json::Value },
+    End { tokens_out: i32, decode_ms: i32 },
+    Error { message: String },
 }
 
 pub trait AdapterClient: Send + Sync {

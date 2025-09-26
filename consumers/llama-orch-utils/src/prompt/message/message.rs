@@ -1,8 +1,8 @@
 // Placeholder module for applet prompt/message.
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io;
 use std::path::Path;
-use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,9 +45,15 @@ fn dedent(s: &str) -> String {
     let lines: Vec<&str> = s.lines().collect();
     let mut min_ws: Option<usize> = None;
     for &line in &lines {
-        if line.trim().is_empty() { continue; }
-        let count = line.chars().take_while(|c| c.is_whitespace() && *c != '\n' && *c != '\r').count();
-        min_ws = Some(match min_ws { Some(m) => m.min(count), None => count });
+        if line.trim().is_empty() {
+            continue;
+        }
+        let count =
+            line.chars().take_while(|c| c.is_whitespace() && *c != '\n' && *c != '\r').count();
+        min_ws = Some(match min_ws {
+            Some(m) => m.min(count),
+            None => count,
+        });
     }
     let n = min_ws.unwrap_or(0);
     lines
@@ -56,7 +62,9 @@ fn dedent(s: &str) -> String {
             let mut chs = line.chars();
             let mut trimmed = String::new();
             for (i, c) in chs.by_ref().enumerate() {
-                if i < n && c.is_whitespace() && c != '\n' && c != '\r' { continue; }
+                if i < n && c.is_whitespace() && c != '\n' && c != '\r' {
+                    continue;
+                }
                 trimmed.push(c);
                 break;
             }

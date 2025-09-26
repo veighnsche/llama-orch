@@ -50,13 +50,10 @@ fn tick_evicts_when_ttl_reaches_zero() {
         Arc::new(orchestratord::infra::clock::SystemClock::default()),
     );
     // Seed custom TTL small enough to evict in one tick
-    sessions.lock().unwrap().insert(
-        "s-4".into(),
-        SessionInfo {
-            ttl_ms_remaining: 50,
-            ..Default::default()
-        },
-    );
+    sessions
+        .lock()
+        .unwrap()
+        .insert("s-4".into(), SessionInfo { ttl_ms_remaining: 50, ..Default::default() });
     let r = svc.tick("s-4", None);
     assert!(r.is_none());
     assert!(!sessions.lock().unwrap().contains_key("s-4"));

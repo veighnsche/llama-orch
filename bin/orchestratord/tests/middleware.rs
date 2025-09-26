@@ -45,11 +45,8 @@ async fn metrics_is_public_and_has_corr_id() {
     let app: Router = build_router(AppState::new());
 
     // /metrics should be accessible without API key and include correlation id
-    let req = Request::builder()
-        .method(http::Method::GET)
-        .uri("/metrics")
-        .body(Body::empty())
-        .unwrap();
+    let req =
+        Request::builder().method(http::Method::GET).uri("/metrics").body(Body::empty()).unwrap();
     let resp = app.clone().oneshot(req).await.unwrap();
     assert_eq!(resp.status(), http::StatusCode::OK);
     assert!(resp.headers().get("X-Correlation-Id").is_some());

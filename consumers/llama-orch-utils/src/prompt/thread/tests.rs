@@ -1,15 +1,23 @@
 use super::*;
 use crate::prompt::message::Source;
-use tempfile::tempdir;
 use std::fs;
+use tempfile::tempdir;
 
 #[test]
 fn composes_multiple_items_in_order() {
     let input = ThreadIn {
         items: vec![
             ThreadItem { role: "system".into(), source: Source::Text("s1".into()), dedent: false },
-            ThreadItem { role: "user".into(), source: Source::Lines(vec!["a".into(), "b".into()]), dedent: false },
-            ThreadItem { role: "assistant".into(), source: Source::Text("ok".into()), dedent: false },
+            ThreadItem {
+                role: "user".into(),
+                source: Source::Lines(vec!["a".into(), "b".into()]),
+                dedent: false,
+            },
+            ThreadItem {
+                role: "assistant".into(),
+                source: Source::Text("ok".into()),
+                dedent: false,
+            },
         ],
     };
     let out = run(input).expect("run ok");
@@ -30,9 +38,17 @@ fn supports_mixed_sources() {
 
     let input = ThreadIn {
         items: vec![
-            ThreadItem { role: "system".into(), source: Source::File(file_path.to_string_lossy().into_owned()), dedent: false },
+            ThreadItem {
+                role: "system".into(),
+                source: Source::File(file_path.to_string_lossy().into_owned()),
+                dedent: false,
+            },
             ThreadItem { role: "user".into(), source: Source::Text("Q".into()), dedent: false },
-            ThreadItem { role: "assistant".into(), source: Source::Lines(vec!["x".into(), "y".into()]), dedent: false },
+            ThreadItem {
+                role: "assistant".into(),
+                source: Source::Lines(vec!["x".into(), "y".into()]),
+                dedent: false,
+            },
         ],
     };
     let out = run(input).expect("run ok");
@@ -45,8 +61,16 @@ fn supports_mixed_sources() {
 fn applies_dedent_per_item() {
     let input = ThreadIn {
         items: vec![
-            ThreadItem { role: "system".into(), source: Source::Text("    one\n      two".into()), dedent: true },
-            ThreadItem { role: "user".into(), source: Source::Lines(vec!["    a".into(), "    b".into()]), dedent: true },
+            ThreadItem {
+                role: "system".into(),
+                source: Source::Text("    one\n      two".into()),
+                dedent: true,
+            },
+            ThreadItem {
+                role: "user".into(),
+                source: Source::Lines(vec!["    a".into(), "    b".into()]),
+                dedent: true,
+            },
         ],
     };
     let out = run(input).expect("run ok");
@@ -57,11 +81,12 @@ fn applies_dedent_per_item() {
 #[test]
 fn propagates_error_from_missing_file() {
     let input = ThreadIn {
-        items: vec![
-            ThreadItem { role: "system".into(), source: Source::File("/nonexistent/definitely.txt".into()), dedent: false },
-        ],
+        items: vec![ThreadItem {
+            role: "system".into(),
+            source: Source::File("/nonexistent/definitely.txt".into()),
+            dedent: false,
+        }],
     };
     let err = run(input).err().expect("expected error");
     assert_eq!(err.kind(), std::io::ErrorKind::NotFound);
 }
-

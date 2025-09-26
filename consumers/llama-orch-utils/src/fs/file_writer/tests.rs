@@ -8,7 +8,11 @@ fn writes_new_file() {
     let dir = tempdir().expect("tempdir");
     let target = dir.path().join("new.txt");
 
-    let input = WriteIn { path: target.to_string_lossy().into_owned(), text: "hello".into(), create_dirs: false };
+    let input = WriteIn {
+        path: target.to_string_lossy().into_owned(),
+        text: "hello".into(),
+        create_dirs: false,
+    };
     let out = run(input).expect("run ok");
     assert_eq!(out.path, target.to_string_lossy());
     assert_eq!(out.bytes_written, "hello".as_bytes().len());
@@ -25,7 +29,11 @@ fn overwrites_existing_file() {
     fs::write(&target, "AAA").expect("seed");
 
     let text = "BBBCC";
-    let input = WriteIn { path: target.to_string_lossy().into_owned(), text: text.into(), create_dirs: false };
+    let input = WriteIn {
+        path: target.to_string_lossy().into_owned(),
+        text: text.into(),
+        create_dirs: false,
+    };
     let out = run(input).expect("run ok");
     assert_eq!(out.bytes_written, text.as_bytes().len());
 
@@ -37,7 +45,11 @@ fn overwrites_existing_file() {
 fn creates_parent_dirs_when_requested() {
     let dir = tempdir().expect("tempdir");
     let target = dir.path().join("a/b/c.txt");
-    let input = WriteIn { path: target.to_string_lossy().into_owned(), text: "data".into(), create_dirs: true };
+    let input = WriteIn {
+        path: target.to_string_lossy().into_owned(),
+        text: "data".into(),
+        create_dirs: true,
+    };
     let out = run(input).expect("run ok");
     assert_eq!(out.bytes_written, 4);
     assert!(target.exists());
@@ -49,7 +61,11 @@ fn creates_parent_dirs_when_requested() {
 fn errors_on_invalid_path_when_dirs_missing() {
     let dir = tempdir().expect("tempdir");
     let target = dir.path().join("no/parents/here.txt");
-    let input = WriteIn { path: target.to_string_lossy().into_owned(), text: "x".into(), create_dirs: false };
+    let input = WriteIn {
+        path: target.to_string_lossy().into_owned(),
+        text: "x".into(),
+        create_dirs: false,
+    };
     let err = run(input).err().expect("expected error");
     assert_eq!(err.kind(), std::io::ErrorKind::NotFound);
 }

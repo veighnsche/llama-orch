@@ -78,22 +78,13 @@ pub struct VerificationOutcome {
 
 impl VerificationOutcome {
     pub fn pass() -> Self {
-        Self {
-            kind: VerificationOutcomeKind::Pass,
-            reason: None,
-        }
+        Self { kind: VerificationOutcomeKind::Pass, reason: None }
     }
     pub fn warn(reason: impl Into<String>) -> Self {
-        Self {
-            kind: VerificationOutcomeKind::Warn,
-            reason: Some(reason.into()),
-        }
+        Self { kind: VerificationOutcomeKind::Warn, reason: Some(reason.into()) }
     }
     pub fn fail(reason: impl Into<String>) -> Self {
-        Self {
-            kind: VerificationOutcomeKind::Fail,
-            reason: Some(reason.into()),
-        }
+        Self { kind: VerificationOutcomeKind::Fail, reason: Some(reason.into()) }
     }
 }
 
@@ -101,11 +92,7 @@ impl VerificationOutcome {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ModelRef {
     /// hf:org/repo/path.gguf (llama.cpp) or hf:org/repo (vLLM/TGI)
-    Hf {
-        org: String,
-        repo: String,
-        path: Option<String>,
-    },
+    Hf { org: String, repo: String, path: Option<String> },
     /// file:/abs/path or a relative path treated as local
     File { path: PathBuf },
     /// Generic URL schemes: https, s3, oci, etc.
@@ -116,23 +103,13 @@ impl ModelRef {
     pub fn parse(s: &str) -> Result<Self> {
         if let Some(rest) = s.strip_prefix("hf:") {
             let mut parts = rest.splitn(3, '/');
-            let org = parts
-                .next()
-                .ok_or_else(|| CatalogError::InvalidRef(s.to_string()))?;
-            let repo = parts
-                .next()
-                .ok_or_else(|| CatalogError::InvalidRef(s.to_string()))?;
+            let org = parts.next().ok_or_else(|| CatalogError::InvalidRef(s.to_string()))?;
+            let repo = parts.next().ok_or_else(|| CatalogError::InvalidRef(s.to_string()))?;
             let path = parts.next().map(|p| p.trim_start_matches('/').to_string());
-            return Ok(ModelRef::Hf {
-                org: org.to_string(),
-                repo: repo.to_string(),
-                path,
-            });
+            return Ok(ModelRef::Hf { org: org.to_string(), repo: repo.to_string(), path });
         }
         if let Some(p) = s.strip_prefix("file:") {
-            return Ok(ModelRef::File {
-                path: PathBuf::from(p),
-            });
+            return Ok(ModelRef::File { path: PathBuf::from(p) });
         }
         if s.starts_with("http://")
             || s.starts_with("https://")
@@ -142,9 +119,7 @@ impl ModelRef {
             return Ok(ModelRef::Url { url: s.to_string() });
         }
         // Fallback: treat as local file path
-        Ok(ModelRef::File {
-            path: PathBuf::from(s),
-        })
+        Ok(ModelRef::File { path: PathBuf::from(s) })
     }
 
     pub fn id_hint(&self) -> String {
@@ -192,11 +167,8 @@ impl FsCatalog {
         let mut f = fs::File::open(&self.index_path)?;
         let mut buf = String::new();
         f.read_to_string(&mut buf)?;
-        let map: BTreeMap<String, CatalogEntry> = if buf.trim().is_empty() {
-            BTreeMap::new()
-        } else {
-            serde_json::from_str(&buf)?
-        };
+        let map: BTreeMap<String, CatalogEntry> =
+            if buf.trim().is_empty() { BTreeMap::new() } else { serde_json::from_str(&buf)? };
         Ok(map)
     }
 
@@ -278,9 +250,9 @@ impl ModelFetcher for FileFetcher {
                 Ok(ResolvedModel { id, local_path: p })
             }
             ModelRef::Hf { .. } => Err(CatalogError::NotImplemented("hf fetcher not wired yet")),
-            ModelRef::Url { url: _ } => Err(CatalogError::NotImplemented(
-                "generic URL fetcher not wired yet",
-            )),
+            ModelRef::Url { url: _ } => {
+                Err(CatalogError::NotImplemented("generic URL fetcher not wired yet"))
+            }
         }
     }
 }
@@ -306,9 +278,7 @@ pub fn verify_digest(actual: Option<&Digest>, expected: Option<&Digest>) -> Veri
 
 /// Default model cache path (~/.cache/models) used by higher layers when none is configured.
 pub fn default_model_cache_dir() -> PathBuf {
-    let home = std::env::var_os("HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("."));
+    let home = std::env::var_os("HOME").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."));
     home.join(".cache").join("models")
 }
 
@@ -325,18 +295,9 @@ mod tests {
         assert!(
             matches!(ModelRef::parse("hf:org/repo/file.gguf").unwrap(), ModelRef::Hf{ org, repo, path: Some(p) } if org=="org" && repo=="repo" && p=="file.gguf")
         );
-        assert!(matches!(
-            ModelRef::parse("file:/abs/path").unwrap(),
-            ModelRef::File { .. }
-        ));
-        assert!(matches!(
-            ModelRef::parse("relative/path").unwrap(),
-            ModelRef::File { .. }
-        ));
-        assert!(matches!(
-            ModelRef::parse("https://example.com/x").unwrap(),
-            ModelRef::Url { .. }
-        ));
+        assert!(matches!(ModelRef::parse("file:/abs/path").unwrap(), ModelRef::File { .. }));
+        assert!(matches!(ModelRef::parse("relative/path").unwrap(), ModelRef::File { .. }));
+        assert!(matches!(ModelRef::parse("https://example.com/x").unwrap(), ModelRef::Url { .. }));
     }
 
     #[test]
@@ -349,10 +310,7 @@ mod tests {
             lifecycle: LifecycleState::Active,
             digest: None,
             last_verified_ms: Some(
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_millis() as u64,
+                SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64,
             ),
         };
         cat.put(&entry).unwrap();

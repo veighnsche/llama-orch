@@ -19,8 +19,5 @@ async fn main() {
         root.join("tests/features")
     };
 
-    World::cucumber()
-        .fail_on_skipped()
-        .run_and_exit(features)
-        .await;
+    World::cucumber().fail_on_skipped().run_and_exit(features).await;
 }

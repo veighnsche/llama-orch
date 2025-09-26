@@ -3,23 +3,17 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub fn default_cache_dir(engine: &str) -> PathBuf {
-    let home = std::env::var_os("HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("."));
+    let home = std::env::var_os("HOME").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."));
     home.join(".cache").join("llama-orch").join(engine)
 }
 
 pub fn default_models_cache() -> PathBuf {
-    let home = std::env::var_os("HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("."));
+    let home = std::env::var_os("HOME").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."));
     home.join(".cache").join("models")
 }
 
 pub fn default_run_dir() -> PathBuf {
-    let home = std::env::var_os("HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("."));
+    let home = std::env::var_os("HOME").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."));
     home.join(".cache").join("llama-orch").join("run")
 }
 

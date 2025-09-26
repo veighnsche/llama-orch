@@ -4,11 +4,7 @@ use serde_yaml as syaml;
 use std::{fs, path::PathBuf};
 
 fn repo_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .ancestors()
-        .nth(1)
-        .unwrap()
-        .to_path_buf()
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).ancestors().nth(1).unwrap().to_path_buf()
 }
 
 #[test]
@@ -19,21 +15,12 @@ fn control_capabilities_and_artifacts_contract() {
     let spec: OpenAPI = serde_yaml::from_str(&fs::read_to_string(&oapi_path).unwrap()).unwrap();
 
     // GET /v1/capabilities -> 200
-    let item = match spec
-        .paths
-        .paths
-        .get("/v1/capabilities")
-        .expect("path exists")
-    {
+    let item = match spec.paths.paths.get("/v1/capabilities").expect("path exists") {
         R::Item(it) => it,
         _ => panic!("unexpected ref"),
     };
     let op = item.get.as_ref().expect("GET op exists");
-    assert!(op
-        .responses
-        .responses
-        .keys()
-        .any(|c| matches!(c, StatusCode::Code(200))));
+    assert!(op.responses.responses.keys().any(|c| matches!(c, StatusCode::Code(200))));
 
     // Artifact registry
     // POST /v1/artifacts -> 201
@@ -42,27 +29,14 @@ fn control_capabilities_and_artifacts_contract() {
         _ => panic!("unexpected ref"),
     };
     let op = item.post.as_ref().expect("POST op exists");
-    assert!(op
-        .responses
-        .responses
-        .keys()
-        .any(|c| matches!(c, StatusCode::Code(201))));
+    assert!(op.responses.responses.keys().any(|c| matches!(c, StatusCode::Code(201))));
     // GET /v1/artifacts/{id} -> 200
-    let item = match spec
-        .paths
-        .paths
-        .get("/v1/artifacts/{id}")
-        .expect("path exists")
-    {
+    let item = match spec.paths.paths.get("/v1/artifacts/{id}").expect("path exists") {
         R::Item(it) => it,
         _ => panic!("unexpected ref"),
     };
     let op = item.get.as_ref().expect("GET op exists");
-    assert!(op
-        .responses
-        .responses
-        .keys()
-        .any(|c| matches!(c, StatusCode::Code(200))));
+    assert!(op.responses.responses.keys().any(|c| matches!(c, StatusCode::Code(200))));
 
     // Components include Capabilities schema
     let raw: syaml::Value = syaml::from_str(&fs::read_to_string(&oapi_path).unwrap()).unwrap();
@@ -87,9 +61,7 @@ fn data_budgets_and_sse_metrics_contract() {
     let stream200_headers =
         &raw["paths"]["/v1/tasks/{id}/stream"]["get"]["responses"]["200"]["headers"];
     assert!(stream200_headers.get("X-Budget-Tokens-Remaining").is_some());
-    assert!(stream200_headers
-        .get("X-Budget-Time-Remaining-Ms")
-        .is_some());
+    assert!(stream200_headers.get("X-Budget-Time-Remaining-Ms").is_some());
     assert!(stream200_headers.get("X-Budget-Cost-Remaining").is_some());
 
     // SSEMetrics fields
@@ -128,28 +100,16 @@ fn control_openapi_sanity() {
 
     // POST /v1/pools/{id}/drain -> 202
     let drain = get_op("/v1/pools/{id}/drain", "post");
-    assert!(drain
-        .responses
-        .responses
-        .keys()
-        .any(|c| matches!(c, StatusCode::Code(202))));
+    assert!(drain.responses.responses.keys().any(|c| matches!(c, StatusCode::Code(202))));
 
     // POST /v1/pools/{id}/reload -> 202
     let reload = get_op("/v1/pools/{id}/reload", "post");
-    assert!(reload
-        .responses
-        .responses
-        .keys()
-        .any(|c| matches!(c, StatusCode::Code(202))));
+    assert!(reload.responses.responses.keys().any(|c| matches!(c, StatusCode::Code(202))));
 
     // GET /v1/pools/{id}/health -> 200
     let health = get_op("/v1/pools/{id}/health", "get");
     assert!(
-        health
-            .responses
-            .responses
-            .keys()
-            .any(|c| matches!(c, StatusCode::Code(200)))
+        health.responses.responses.keys().any(|c| matches!(c, StatusCode::Code(200)))
             || health.responses.default.is_some()
     );
 
@@ -176,10 +136,7 @@ fn provider_paths_match_pacts() {
                 serde_json::from_str(&fs::read_to_string(entry.path()).unwrap()).unwrap();
             let interactions = pact["interactions"].as_array().cloned().unwrap_or_default();
             for interaction in interactions {
-                let method = interaction["request"]["method"]
-                    .as_str()
-                    .unwrap_or("")
-                    .to_lowercase();
+                let method = interaction["request"]["method"].as_str().unwrap_or("").to_lowercase();
                 let path = interaction["request"]["path"].as_str().unwrap_or("");
                 let status = interaction["response"]["status"].as_u64().unwrap_or(0) as u16;
 
@@ -253,14 +210,9 @@ fn provider_paths_match_pacts() {
                 // Header checks for backpressure on 429
                 if status == 429 {
                     if let Some(hdrs) = interaction["response"]["headers"].as_object() {
-                        let retry = hdrs
-                            .get("Retry-After")
-                            .and_then(|v| v.as_str())
-                            .unwrap_or("");
-                        let backoff = hdrs
-                            .get("X-Backoff-Ms")
-                            .and_then(|v| v.as_str())
-                            .unwrap_or("");
+                        let retry = hdrs.get("Retry-After").and_then(|v| v.as_str()).unwrap_or("");
+                        let backoff =
+                            hdrs.get("X-Backoff-Ms").and_then(|v| v.as_str()).unwrap_or("");
                         // Correlation id must be present
                         assert!(
                             hdrs.contains_key("X-Correlation-Id"),
@@ -280,10 +232,7 @@ fn provider_paths_match_pacts() {
 
                     // Body should include policy_label advisory field
                     if let Some(body) = interaction["response"]["body"].as_object() {
-                        assert!(
-                            body.contains_key("policy_label"),
-                            "429 body missing policy_label"
-                        );
+                        assert!(body.contains_key("policy_label"), "429 body missing policy_label");
                     }
                 }
 
@@ -311,17 +260,11 @@ fn validate_response_shape(
     }
     match (method, template, status) {
         ("post", "/v1/tasks", 202) => {
-            let body = interaction["response"]["body"]
-                .as_object()
-                .expect("202 body must be JSON object");
+            let body =
+                interaction["response"]["body"].as_object().expect("202 body must be JSON object");
             assert!(has_keys(
                 body,
-                &[
-                    "task_id",
-                    "queue_position",
-                    "predicted_start_ms",
-                    "backoff_ms"
-                ]
+                &["task_id", "queue_position", "predicted_start_ms", "backoff_ms"]
             ));
         }
         ("post", "/v1/tasks", 400 | 429 | 500 | 503) => {
@@ -334,28 +277,19 @@ fn validate_response_shape(
             let body = interaction["response"]["body"]
                 .as_object()
                 .expect("session body must be JSON object");
-            assert!(has_keys(
-                body,
-                &["ttl_ms_remaining", "turns", "kv_bytes", "kv_warmth"]
-            ));
+            assert!(has_keys(body, &["ttl_ms_remaining", "turns", "kv_bytes", "kv_warmth"]));
         }
         ("delete", "/v1/sessions/{id}", 204) => {
             assert!(
                 interaction["response"]["body"].is_null()
                     || interaction["response"]["body"].is_object()
-                        && interaction["response"]["body"]
-                            .as_object()
-                            .unwrap()
-                            .is_empty(),
+                        && interaction["response"]["body"].as_object().unwrap().is_empty(),
                 "204 should have no body"
             );
         }
         ("get", "/v1/tasks/{id}/stream", 200) => {
             // SSE responses are strings
-            assert!(
-                interaction["response"]["body"].is_string(),
-                "SSE transcript should be string"
-            );
+            assert!(interaction["response"]["body"].is_string(), "SSE transcript should be string");
         }
         _ => {
             // Best-effort: nothing to validate
@@ -400,10 +334,7 @@ fn rejects_unknown_paths_or_statuses() {
             break;
         }
     }
-    assert!(
-        !found,
-        "unknown path should not be matched by any OpenAPI path"
-    );
+    assert!(!found, "unknown path should not be matched by any OpenAPI path");
 
     // Known path but unknown status
     // Pick /v1/tasks POST, status 418
@@ -413,13 +344,6 @@ fn rejects_unknown_paths_or_statuses() {
         _ => panic!("unexpected ref"),
     };
     let op = item.post.as_ref().expect("post op exists");
-    let has_418 = op
-        .responses
-        .responses
-        .keys()
-        .any(|code| matches!(code, StatusCode::Code(418)));
-    assert!(
-        !has_418,
-        "teapot status must not be declared for POST /v1/tasks"
-    );
+    let has_418 = op.responses.responses.keys().any(|code| matches!(code, StatusCode::Code(418)));
+    assert!(!has_418, "teapot status must not be declared for POST /v1/tasks");
 }

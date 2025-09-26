@@ -14,16 +14,8 @@ pub async fn given_api_endpoint(_world: &mut World) {}
 pub async fn then_no_further_token_events(world: &mut World) {
     let body = world.last_body.as_ref().expect("expected SSE body");
     let count = body.matches("event: token").count();
-    assert_eq!(
-        count, 1,
-        "expected exactly one token event, got {}: {}",
-        count, body
-    );
-    assert!(
-        !body.contains("event: metrics"),
-        "expected no metrics event after cancel: {}",
-        body
-    );
+    assert_eq!(count, 1, "expected exactly one token event, got {}: {}", count, body);
+    assert!(!body.contains("event: metrics"), "expected no metrics event after cancel: {}", body);
 }
 
 // Aliases to support scenarios that use And/Then with the same text
@@ -39,15 +31,9 @@ pub async fn given_enqueue_valid_completion(world: &mut World) {
 
 #[then(regex = r"^budget headers are present$")]
 pub async fn then_budget_headers_present(world: &mut World) {
-    let headers = world
-        .last_headers
-        .as_ref()
-        .expect("expected headers on last response");
-    for k in [
-        "X-Budget-Tokens-Remaining",
-        "X-Budget-Time-Remaining-Ms",
-        "X-Budget-Cost-Remaining",
-    ] {
+    let headers = world.last_headers.as_ref().expect("expected headers on last response");
+    for k in ["X-Budget-Tokens-Remaining", "X-Budget-Time-Remaining-Ms", "X-Budget-Cost-Remaining"]
+    {
         assert!(headers.get(k).is_some(), "missing header {}", k);
     }
 }
@@ -79,10 +65,7 @@ pub async fn then_sse_transcript_artifact_exists(world: &mut World) {
             }
         }
     }
-    assert!(
-        found,
-        "expected persisted SSE transcript artifact with all events"
-    );
+    assert!(found, "expected persisted SSE transcript artifact with all events");
 }
 
 #[when(regex = r"^I enqueue a completion task with valid payload$")]
@@ -169,10 +152,7 @@ pub async fn then_stream_events(world: &mut World) {
 
 #[then(regex = r"^I receive SSE events started, token, end$")]
 pub async fn then_sse_started_token_end(world: &mut World) {
-    let body = world
-        .last_body
-        .as_ref()
-        .expect("expected SSE body from previous call");
+    let body = world.last_body.as_ref().expect("expected SSE body from previous call");
     let a = body.find("event: started").unwrap_or(usize::MAX);
     let b = body.find("event: token").unwrap_or(usize::MAX);
     let c = body.find("event: end").unwrap_or(usize::MAX);
@@ -182,11 +162,7 @@ pub async fn then_sse_started_token_end(world: &mut World) {
 #[then(regex = r"^I receive SSE metrics frames$")]
 pub async fn then_sse_metrics_frames(world: &mut World) {
     let body = world.last_body.as_ref().expect("expected SSE body");
-    assert!(
-        body.contains("event: metrics"),
-        "missing metrics event in SSE: {}",
-        body
-    );
+    assert!(body.contains("event: metrics"), "missing metrics event in SSE: {}", body);
 }
 
 #[then(regex = r"^started includes queue_position and predicted_start_ms$")]
@@ -204,14 +180,8 @@ pub async fn then_started_includes_queue_eta(world: &mut World) {
             let json_str = data_line.trim_start_matches(data_prefix).trim();
             let v: serde_json::Value =
                 serde_json::from_str(json_str).expect("parse started data json");
-            assert!(
-                v.get("queue_position").is_some(),
-                "started missing queue_position"
-            );
-            assert!(
-                v.get("predicted_start_ms").is_some(),
-                "started missing predicted_start_ms"
-            );
+            assert!(v.get("queue_position").is_some(), "started missing queue_position");
+            assert!(v.get("predicted_start_ms").is_some(), "started missing predicted_start_ms");
             return;
         }
     }
@@ -366,9 +336,7 @@ pub async fn when_stream_while_cancel_mid(world: &mut World) {
     let cancel_path = format!("/v1/tasks/{}/cancel", id.clone());
     tokio::spawn(async move {
         sleep(Duration::from_millis(10)).await;
-        let mut req = Request::builder()
-            .method(http::Method::POST)
-            .uri(cancel_path);
+        let mut req = Request::builder().method(http::Method::POST).uri(cancel_path);
         if let Some(key) = cancel_key {
             req = req.header("X-API-Key", key);
         }
@@ -378,9 +346,7 @@ pub async fn when_stream_while_cancel_mid(world: &mut World) {
 
     // Now start the stream request
     let stream_path = format!("/v1/tasks/{}/stream", id);
-    let mut req = Request::builder()
-        .method(http::Method::GET)
-        .uri(stream_path);
+    let mut req = Request::builder().method(http::Method::GET).uri(stream_path);
     if let Some(key) = &world.api_key {
         req = req.header("X-API-Key", key);
     }
@@ -389,15 +355,11 @@ pub async fn when_stream_while_cancel_mid(world: &mut World) {
 
     let status = resp.status();
     let headers_out = resp.headers().clone();
-    let body_bytes = to_bytes(resp.into_body(), 1_048_576)
-        .await
-        .unwrap_or_default();
+    let body_bytes = to_bytes(resp.into_body(), 1_048_576).await.unwrap_or_default();
     let body_str = String::from_utf8(body_bytes.to_vec()).unwrap_or_default();
 
-    world.corr_id = headers_out
-        .get("X-Correlation-Id")
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.to_string());
+    world.corr_id =
+        headers_out.get("X-Correlation-Id").and_then(|v| v.to_str().ok()).map(|s| s.to_string());
     world.last_status = Some(status);
     world.last_headers = Some(headers_out);
     world.last_body = Some(body_str);

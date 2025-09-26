@@ -14,7 +14,9 @@ pub struct SdkMsg {
 
 #[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Choice { pub text: String }
+pub struct Choice {
+    pub text: String,
+}
 
 #[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -40,9 +42,16 @@ pub struct InvokeIn {
 
 #[cfg_attr(feature = "ts-types", derive(ts_rs::TS))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct InvokeOut { pub result: InvokeResult }
+pub struct InvokeOut {
+    pub result: InvokeResult,
+}
 
-pub fn run(_client: &OrchestratorClient, _input: InvokeIn) -> Result<InvokeOut, crate::error::Error> {
+pub fn run(
+    _client: &OrchestratorClient,
+    _input: InvokeIn,
+) -> Result<InvokeOut, crate::error::Error> {
     // M2 DRAFT: SDK wiring not implemented; return a typed Unimplemented error (no panic).
-    Err(crate::error::Error::Unimplemented { message: "unimplemented: llm.invoke requires SDK wiring".to_string() })
+    Err(crate::error::Error::Unimplemented {
+        message: "unimplemented: llm.invoke requires SDK wiring".to_string(),
+    })
 }

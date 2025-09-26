@@ -19,7 +19,13 @@ pub fn run(p: Params) -> Params {
     // - seed: passthrough (no default)
 
     fn clamp_f32(x: f32, lo: f32, hi: f32) -> f32 {
-        if x < lo { lo } else if x > hi { hi } else { x }
+        if x < lo {
+            lo
+        } else if x > hi {
+            hi
+        } else {
+            x
+        }
     }
 
     let temperature = clamp_f32(p.temperature.unwrap_or(0.7), 0.0, 2.0);

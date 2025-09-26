@@ -9,10 +9,7 @@ pub enum OrchestratorError {
     #[error("internal error")]
     Internal,
     #[error("admission rejected: {policy_label}")]
-    AdmissionReject {
-        policy_label: String,
-        retry_after_ms: Option<i64>,
-    },
+    AdmissionReject { policy_label: String, retry_after_ms: Option<i64> },
     #[error("queue full drop-lru")]
     QueueFullDropLru { retry_after_ms: Option<i64> },
 }
@@ -70,10 +67,7 @@ impl axum::response::IntoResponse for OrchestratorError {
                 None,
                 engine_val.clone(),
             ),
-            OrchestratorError::AdmissionReject {
-                policy_label,
-                retry_after_ms,
-            } => {
+            OrchestratorError::AdmissionReject { policy_label, retry_after_ms } => {
                 if let Some(ms) = retry_after_ms {
                     headers.insert(
                         "Retry-After",
@@ -114,14 +108,8 @@ impl axum::response::IntoResponse for OrchestratorError {
                 )
             }
         };
-        let env = api::ErrorEnvelope {
-            code,
-            message,
-            engine,
-            retriable,
-            retry_after_ms,
-            policy_label,
-        };
+        let env =
+            api::ErrorEnvelope { code, message, engine, retriable, retry_after_ms, policy_label };
         axum::response::IntoResponse::into_response((status, headers, axum::Json(env)))
     }
 }

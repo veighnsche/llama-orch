@@ -22,8 +22,5 @@ async fn main() {
     // Touch the registry so clippy doesn't flag it as dead code; tests consume it separately.
     let _ = steps::registry();
 
-    World::cucumber()
-        .fail_on_skipped()
-        .run_and_exit(features)
-        .await;
+    World::cucumber().fail_on_skipped().run_and_exit(features).await;
 }

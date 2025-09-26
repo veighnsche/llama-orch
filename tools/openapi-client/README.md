@@ -15,8 +15,8 @@ tools-openapi-client (tool)
 
 - OpenAPI: [contracts/openapi/control.yaml](../../contracts/openapi/control.yaml)
 - OpenAPI: [contracts/openapi/data.yaml](../../contracts/openapi/data.yaml)
-- OpenAPI operations: 9
-  - examples: cancelTask, createTask, deleteSession, drainPool, getPoolHealth
+- OpenAPI operations: 16
+  - examples: cancelTask, createArtifact, createCatalogModel, createTask, deleteCatalogModel
 
 
 ## 4. How it fits

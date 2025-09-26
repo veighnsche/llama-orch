@@ -14,4 +14,4 @@ impl Display for Error {
     }
 }
 
-impl StdError for Error {} 
+impl StdError for Error {}

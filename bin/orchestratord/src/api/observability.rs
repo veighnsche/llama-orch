@@ -5,14 +5,8 @@ use crate::metrics;
 
 pub async fn metrics_endpoint() -> axum::response::Response {
     let mut headers = HeaderMap::new();
-    headers.insert(
-        "X-Correlation-Id",
-        "11111111-1111-4111-8111-111111111111".parse().unwrap(),
-    );
-    headers.insert(
-        http::header::CONTENT_TYPE,
-        "text/plain; version=0.0.4".parse().unwrap(),
-    );
+    headers.insert("X-Correlation-Id", "11111111-1111-4111-8111-111111111111".parse().unwrap());
+    headers.insert(http::header::CONTENT_TYPE, "text/plain; version=0.0.4".parse().unwrap());
 
     // Seed series to satisfy lints (minimal values)
     metrics::set_gauge(

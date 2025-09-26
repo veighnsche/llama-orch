@@ -15,9 +15,7 @@ async fn invalid_params_maps_to_400_with_code() {
 
 #[tokio::test]
 async fn drop_lru_sets_retry_headers_and_code() {
-    let err = ErrO::QueueFullDropLru {
-        retry_after_ms: Some(2000),
-    };
+    let err = ErrO::QueueFullDropLru { retry_after_ms: Some(2000) };
     let resp = err.into_response();
     assert_eq!(resp.status(), StatusCode::TOO_MANY_REQUESTS);
     let headers = resp.headers().clone();
@@ -62,10 +60,7 @@ async fn internal_maps_to_500_with_code() {
 
 #[tokio::test]
 async fn admission_reject_sets_retry_headers() {
-    let err = ErrO::AdmissionReject {
-        policy_label: "reject".into(),
-        retry_after_ms: Some(1000),
-    };
+    let err = ErrO::AdmissionReject { policy_label: "reject".into(), retry_after_ms: Some(1000) };
     let resp = err.into_response();
     assert_eq!(resp.status(), StatusCode::TOO_MANY_REQUESTS);
     let headers = resp.headers().clone();

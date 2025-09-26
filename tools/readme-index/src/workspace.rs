@@ -47,11 +47,7 @@ pub fn build_manifest_entry(repo_root: &Path, crate_dir: &Path) -> Result<Manife
     let mut binaries: BTreeSet<String> = BTreeSet::new();
     if let Some(bin) = &parsed.bin {
         for _b in bin {
-            if let Some(name) = _b
-                .get("name")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string())
-            {
+            if let Some(name) = _b.get("name").and_then(|v| v.as_str()).map(|s| s.to_string()) {
                 binaries.insert(name);
             }
         }
@@ -69,10 +65,8 @@ pub fn build_manifest_entry(repo_root: &Path, crate_dir: &Path) -> Result<Manife
 
     let openapi_refs = detect_openapi_refs(repo_root, crate_dir);
     let schema_refs = detect_schema_refs(repo_root, crate_dir);
-    let spec_refs = suggest_spec_refs(
-        &role,
-        crate_dir.file_name().and_then(|s| s.to_str()).unwrap_or(""),
-    );
+    let spec_refs =
+        suggest_spec_refs(&role, crate_dir.file_name().and_then(|s| s.to_str()).unwrap_or(""));
 
     Ok(ManifestEntry {
         path: path_relative_to(repo_root, crate_dir)?,
@@ -94,27 +88,47 @@ pub fn build_manifest_entry(repo_root: &Path, crate_dir: &Path) -> Result<Manife
 pub fn detect_role(repo_root: &Path, crate_dir: &Path) -> String {
     let rel =
         path_relative_to(repo_root, crate_dir).unwrap_or_else(|_| crate_dir.display().to_string());
-    if rel.starts_with("orchestrator-core") {
+    // Core crates
+    if rel.starts_with("libs/orchestrator-core") || rel.starts_with("orchestrator-core") {
         return "core".to_string();
     }
-    if rel.starts_with("orchestratord") || rel.starts_with("pool-managerd") {
+    if rel.starts_with("bin/orchestratord") || rel.starts_with("orchestratord") {
         return "core".to_string();
     }
-    if rel.starts_with("worker-adapters/") {
+    if rel.starts_with("libs/pool-managerd") || rel.starts_with("pool-managerd") {
+        return "core".to_string();
+    }
+    if rel.starts_with("libs/catalog-core") || rel.starts_with("catalog-core") {
+        return "core".to_string();
+    }
+
+    // Adapters and related libs
+    if rel.starts_with("libs/worker-adapters/") || rel.starts_with("worker-adapters/") {
         return "adapter".to_string();
     }
-    if rel.starts_with("plugins/") {
+    if rel.starts_with("libs/adapter-host") || rel.starts_with("adapter-host") {
+        return "adapter".to_string();
+    }
+    if rel.starts_with("libs/plugins/") || rel.starts_with("plugins/") {
         return "plugin".to_string();
     }
+
+    // Contracts
     if rel.starts_with("contracts/") {
         return "contracts".to_string();
     }
+
+    // Test harness and CLI
     if rel.starts_with("test-harness/") || rel.starts_with("cli/") {
         return "test-harness".to_string();
     }
+
+    // Tooling
     if rel.starts_with("tools/") || rel.starts_with("xtask") {
         return "tool".to_string();
     }
+
+    // Default
     "tool".to_string()
 }
 
@@ -160,7 +174,10 @@ pub fn read_codeowners_default(repo_root: &Path) -> Result<String> {
 pub fn detect_openapi_refs(repo_root: &Path, crate_dir: &Path) -> Vec<String> {
     let rel = path_relative_to(repo_root, crate_dir).unwrap_or_default();
     let mut refs = Vec::new();
-    if rel.starts_with("tools/openapi-client") || rel.starts_with("orchestratord") {
+    if rel.starts_with("tools/openapi-client")
+        || rel.starts_with("bin/orchestratord")
+        || rel.starts_with("orchestratord")
+    {
         if repo_root.join("contracts/openapi/control.yaml").exists() {
             refs.push("contracts/openapi/control.yaml".to_string());
         }
@@ -218,15 +235,9 @@ pub fn suggest_spec_refs(role: &str, crate_name: &str) -> Vec<String> {
         }
         "adapter" => {
             v.extend(
-                [
-                    "ORCH-3054",
-                    "ORCH-3055",
-                    "ORCH-3056",
-                    "ORCH-3057",
-                    "ORCH-3058",
-                ]
-                .iter()
-                .map(|s| s.to_string()),
+                ["ORCH-3054", "ORCH-3055", "ORCH-3056", "ORCH-3057", "ORCH-3058"]
+                    .iter()
+                    .map(|s| s.to_string()),
             );
         }
         "contracts" => {
@@ -245,23 +256,26 @@ pub fn suggest_spec_refs(role: &str, crate_name: &str) -> Vec<String> {
 
 /// Hand-curated minimal extras per crate (Step 3) — include in footnotes
 pub fn crate_specific_extras(crate_path: &str) -> String {
-    if crate_path.starts_with("orchestrator-core") {
+    if crate_path.starts_with("libs/orchestrator-core")
+        || crate_path.starts_with("orchestrator-core")
+    {
         return "- Queue invariants and property tests (capacity, rejection policies, session affinity helpers).\n- Capacity policies and bounded FIFO behavior.\n".to_string();
     }
-    if crate_path.starts_with("orchestratord") {
+    if crate_path.starts_with("bin/orchestratord") || crate_path.starts_with("orchestratord") {
         return "- Data/control plane routes, SSE framing details, backpressure headers, provider verify entry points.\n".to_string();
     }
-    if crate_path.starts_with("pool-managerd") {
+    if crate_path.starts_with("libs/pool-managerd") || crate_path.starts_with("pool-managerd") {
         return "- Preload/Ready lifecycle, NVIDIA-only guardrails, restart/backoff behavior.\n"
             .to_string();
     }
-    if crate_path.starts_with("worker-adapters/") {
+    if crate_path.starts_with("libs/worker-adapters/") || crate_path.starts_with("worker-adapters/")
+    {
         return "- Engine endpoint mapping tables (native/OpenAI-compat to adapter calls), determinism knobs, version capture.\n".to_string();
     }
     if crate_path.starts_with("contracts/") {
         return "- How to regenerate types, schemas, and validate; pact files location and scope.\n".to_string();
     }
-    if crate_path.starts_with("plugins/") {
+    if crate_path.starts_with("libs/plugins/") || crate_path.starts_with("plugins/") {
         return "- WASI policy ABI and SDK usage; example plugin pointers.\n".to_string();
     }
     if crate_path.starts_with("test-harness/") {

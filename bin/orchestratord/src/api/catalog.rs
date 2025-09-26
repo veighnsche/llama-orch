@@ -18,28 +18,15 @@ pub async fn create_model(
     _state: State<AppState>,
     Json(body): Json<serde_json::Value>,
 ) -> Result<(StatusCode, Json<serde_json::Value>), ErrO> {
-    let id = body
-        .get("id")
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
+    let id = body.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
     if id.is_empty() {
-        return Ok((
-            StatusCode::BAD_REQUEST,
-            Json(json!({"error":"id required"})),
-        ));
+        return Ok((StatusCode::BAD_REQUEST, Json(json!({"error":"id required"}))));
     }
-    let digest = body
-        .get("digest")
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string());
+    let digest = body.get("digest").and_then(|v| v.as_str()).map(|s| s.to_string());
     let digest_parsed = digest
         .as_ref()
         .and_then(|s| s.split_once(":"))
-        .map(|(algo, val)| Digest {
-            algo: algo.to_string(),
-            value: val.to_string(),
-        });
+        .map(|(algo, val)| Digest { algo: algo.to_string(), value: val.to_string() });
 
     let cat = open_catalog().map_err(|_e| ErrO::Internal)?;
     // Use a placeholder local path keyed by id; actual path will be set when provisioners ensure models.
@@ -87,10 +74,8 @@ pub async fn verify_model(
     let cat = open_catalog().map_err(|_e| ErrO::Internal)?;
     if let Some(mut entry) = cat.get(&id).map_err(|_e| ErrO::Internal)? {
         entry.last_verified_ms = Some(
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_millis() as u64,
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis()
+                as u64,
         );
         cat.put(&entry).map_err(|_e| ErrO::Internal)?;
         Ok(StatusCode::ACCEPTED)

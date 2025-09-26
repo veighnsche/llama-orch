@@ -195,11 +195,9 @@ flowchart LR
 
     let mut build_test = String::new();
     build_test.push_str("- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features -- -D warnings`\n");
-    build_test.push_str(&format!(
-        "- Tests for this crate: `cargo test -p {} -- --nocapture`\n",
-        e.name
-    ));
-    if e.path.starts_with("orchestratord") {
+    build_test
+        .push_str(&format!("- Tests for this crate: `cargo test -p {} -- --nocapture`\n", e.name));
+    if e.path.starts_with("bin/orchestratord") || e.path.starts_with("orchestratord") {
         build_test.push_str("- Provider verify: `cargo test -p orchestratord --test provider_verify -- --nocapture`\n");
     }
     if e.path.starts_with("cli/consumer-tests") {
@@ -286,16 +284,12 @@ flowchart LR
     };
 
     let template_path = repo_root.join("tools/readme-index/TEMPLATE.md");
-    let mut tmpl = if let Ok(t) = fs::read_to_string(&template_path) {
-        t
-    } else {
-        default_template_md()
-    };
+    let mut tmpl =
+        if let Ok(t) = fs::read_to_string(&template_path) { t } else { default_template_md() };
 
     let loop_re = Regex::new(r"(?s)\{\{#each spec_refs\}\}.*?\{\{\/each\}\}")?;
-    tmpl = loop_re
-        .replace(&tmpl, spec_section.replace('\\', r"\\").replace('$', r"$$"))
-        .into_owned();
+    tmpl =
+        loop_re.replace(&tmpl, spec_section.replace('\\', r"\\").replace('$', r"$$")).into_owned();
 
     let mut out = tmpl;
     out = out.replace("{{name}}", &e.name);

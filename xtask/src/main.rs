@@ -30,11 +30,7 @@ fn ci_auth_min() -> Result<()> {
 
 fn engine_status(config_path: PathBuf, pool_filter: Option<String>) -> Result<()> {
     let root = repo_root()?;
-    let path = if config_path.is_relative() {
-        root.join(config_path)
-    } else {
-        config_path
-    };
+    let path = if config_path.is_relative() { root.join(config_path) } else { config_path };
     let bytes = std::fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
     let cfg: contracts_config_schema::Config =
         serde_yaml::from_slice(&bytes).with_context(|| format!("parsing {}", path.display()))?;
@@ -47,12 +43,7 @@ fn engine_status(config_path: PathBuf, pool_filter: Option<String>) -> Result<()
         return Ok(());
     }
     for p in pools {
-        let port = p
-            .provisioning
-            .ports
-            .as_ref()
-            .and_then(|v| v.get(0).cloned())
-            .unwrap_or(8080);
+        let port = p.provisioning.ports.as_ref().and_then(|v| v.get(0).cloned()).unwrap_or(8080);
         let ok = http_health_probe("127.0.0.1", port).unwrap_or(false);
         let pid_path = pid_file_path(&p.id);
         let pid = std::fs::read_to_string(&pid_path).ok();
@@ -70,11 +61,7 @@ fn engine_status(config_path: PathBuf, pool_filter: Option<String>) -> Result<()
 
 fn engine_down(config_path: PathBuf, pool_filter: Option<String>) -> Result<()> {
     let root = repo_root()?;
-    let path = if config_path.is_relative() {
-        root.join(config_path)
-    } else {
-        config_path
-    };
+    let path = if config_path.is_relative() { root.join(config_path) } else { config_path };
     let bytes = std::fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
     let cfg: contracts_config_schema::Config =
         serde_yaml::from_slice(&bytes).with_context(|| format!("parsing {}", path.display()))?;
@@ -111,10 +98,7 @@ fn http_health_probe(host: &str, port: u16) -> std::io::Result<bool> {
     use std::net::TcpStream;
     let addr = format!("{}:{}", host, port);
     let mut stream = TcpStream::connect(addr)?;
-    let req = format!(
-        "GET /health HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n",
-        host
-    );
+    let req = format!("GET /health HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n", host);
     stream.write_all(req.as_bytes())?;
     let mut buf = String::new();
     stream.read_to_string(&mut buf)?;
@@ -122,23 +106,14 @@ fn http_health_probe(host: &str, port: u16) -> std::io::Result<bool> {
 }
 
 fn pid_file_path(pool_id: &str) -> PathBuf {
-    let home = std::env::var_os("HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("."));
-    home.join(".cache")
-        .join("llama-orch")
-        .join("run")
-        .join(format!("{}.pid", pool_id))
+    let home = std::env::var_os("HOME").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."));
+    home.join(".cache").join("llama-orch").join("run").join(format!("{}.pid", pool_id))
 }
 
 fn engine_up(config_path: PathBuf, pool_filter: Option<String>) -> Result<()> {
     use provisioners_engine_provisioner::provider_for;
     let root = repo_root()?;
-    let path = if config_path.is_relative() {
-        root.join(config_path)
-    } else {
-        config_path
-    };
+    let path = if config_path.is_relative() { root.join(config_path) } else { config_path };
     let bytes = std::fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
     let cfg: contracts_config_schema::Config =
         serde_yaml::from_slice(&bytes).with_context(|| format!("parsing {}", path.display()))?;
@@ -162,11 +137,7 @@ fn engine_up(config_path: PathBuf, pool_filter: Option<String>) -> Result<()> {
 fn engine_plan(config_path: PathBuf, pool_filter: Option<String>) -> Result<()> {
     use provisioners_engine_provisioner::provider_for;
     let root = repo_root()?;
-    let path = if config_path.is_relative() {
-        root.join(config_path)
-    } else {
-        config_path
-    };
+    let path = if config_path.is_relative() { root.join(config_path) } else { config_path };
     let bytes = std::fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
     let cfg: contracts_config_schema::Config =
         serde_yaml::from_slice(&bytes).with_context(|| format!("parsing {}", path.display()))?;
@@ -380,14 +351,10 @@ mod templates {
 }
 
 fn atomic_write(path: &Path, data: &[u8]) -> Result<()> {
-    let dir = path
-        .parent()
-        .ok_or_else(|| anyhow!("no parent directory for {}", path.display()))?;
+    let dir = path.parent().ok_or_else(|| anyhow!("no parent directory for {}", path.display()))?;
     fs::create_dir_all(dir)?;
-    let tmp_path = dir.join(format!(
-        ".{}.tmp",
-        path.file_name().and_then(|s| s.to_str()).unwrap_or("file")
-    ));
+    let tmp_path =
+        dir.join(format!(".{}.tmp", path.file_name().and_then(|s| s.to_str()).unwrap_or("file")));
 
     // Write to temp file
     {

@@ -20,7 +20,12 @@ fn clamps_values_to_bounds() {
     assert_eq!(out1.max_tokens, Some(0));
 
     // Above maximums
-    let p2 = Params { temperature: Some(9.9), top_p: Some(9.9), max_tokens: Some(1_000_000), seed: None };
+    let p2 = Params {
+        temperature: Some(9.9),
+        top_p: Some(9.9),
+        max_tokens: Some(1_000_000),
+        seed: None,
+    };
     let out2 = run(p2);
     assert_eq!(out2.temperature, Some(2.0));
     assert_eq!(out2.top_p, Some(1.0));
@@ -29,7 +34,8 @@ fn clamps_values_to_bounds() {
 
 #[test]
 fn passes_through_valid_explicit_values() {
-    let p = Params { temperature: Some(1.1), top_p: Some(0.95), max_tokens: Some(256), seed: Some(42) };
+    let p =
+        Params { temperature: Some(1.1), top_p: Some(0.95), max_tokens: Some(256), seed: Some(42) };
     let out = run(p.clone());
     assert_eq!(out.temperature, Some(1.1));
     assert_eq!(out.top_p, Some(0.95));

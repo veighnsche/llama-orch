@@ -29,10 +29,7 @@ pub async fn get_pool_health(
         let reg = state.pool_manager.lock().expect("pool_manager lock");
         let h = reg
             .get_health(&id)
-            .unwrap_or(pool_managerd::health::HealthStatus {
-                live: true,
-                ready: true,
-            });
+            .unwrap_or(pool_managerd::health::HealthStatus { live: true, ready: true });
         let e = reg.get_last_error(&id);
         (h.live, h.ready, e)
     };
@@ -71,10 +68,7 @@ pub async fn reload_pool(
     // Update model state metric (simplified)
     crate::metrics::set_gauge(
         "model_state",
-        &[
-            ("model_id", body.new_model_ref.as_str()),
-            ("state", "loaded"),
-        ],
+        &[("model_id", body.new_model_ref.as_str()), ("state", "loaded")],
         1,
     );
     Ok(StatusCode::OK)
@@ -93,9 +87,7 @@ pub async fn register_worker(
     body: Option<Json<RegisterWorkerBody>>,
 ) -> Result<impl IntoResponse, ErrO> {
     let expected = std::env::var("AUTH_TOKEN").ok();
-    let auth = headers
-        .get(http::header::AUTHORIZATION)
-        .and_then(|v| v.to_str().ok());
+    let auth = headers.get(http::header::AUTHORIZATION).and_then(|v| v.to_str().ok());
     let token_opt = auth_min::parse_bearer(auth);
 
     // Missing token
@@ -118,26 +110,17 @@ pub async fn register_worker(
     // Record identity breadcrumb
     let id = format!("token:{}", auth_min::token_fp6(&token));
     let mut lg = state.logs.lock().unwrap();
-    lg.push(format!(
-        "{{\"identity\":\"{}\",\"event\":\"worker_register\"}}",
-        id
-    ));
+    lg.push(format!("{{\"identity\":\"{}\",\"event\":\"worker_register\"}}", id));
 
     // For scaffolding: bind a mock adapter for the provided pool
-    let pool_id = body
-        .as_ref()
-        .and_then(|b| b.pool_id.clone())
-        .unwrap_or_else(|| "default".to_string());
-    let replica_id = body
-        .as_ref()
-        .and_then(|b| b.replica_id.clone())
-        .unwrap_or_else(|| "r0".to_string());
+    let pool_id =
+        body.as_ref().and_then(|b| b.pool_id.clone()).unwrap_or_else(|| "default".to_string());
+    let replica_id =
+        body.as_ref().and_then(|b| b.replica_id.clone()).unwrap_or_else(|| "r0".to_string());
     #[cfg(feature = "mock-adapters")]
     {
         let mock = worker_adapters_mock::MockAdapter::default();
-        state
-            .adapter_host
-            .bind(pool_id.clone(), replica_id.clone(), Arc::new(mock));
+        state.adapter_host.bind(pool_id.clone(), replica_id.clone(), Arc::new(mock));
     }
 
     Ok((
