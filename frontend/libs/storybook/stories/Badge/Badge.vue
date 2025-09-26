@@ -84,16 +84,37 @@
     height: 18px;
   }
 
+  /* Manual dark override */
+  .dark .ui-badge--default,
+  :root[data-theme='dark'] .ui-badge--default {
+    --badge-border: var(--surface-muted);
+    --badge-bg: var(--surface);
+    --badge-fg: var(--text);
+  }
+  .dark .ui-badge--green,
+  .dark .ui-badge--cyan,
+  .dark .ui-badge--slate,
+  .dark .ui-badge--purple,
+  :root[data-theme='dark'] .ui-badge--green,
+  :root[data-theme='dark'] .ui-badge--cyan,
+  :root[data-theme='dark'] .ui-badge--slate,
+  :root[data-theme='dark'] .ui-badge--purple {
+    --badge-border: color-mix(in srgb, var(--badge-color) 36%, var(--surface));
+    --badge-bg: color-mix(in srgb, var(--badge-color) 20%, var(--surface));
+    --badge-fg: var(--text);
+  }
+
+  /* System fallback when no manual override */
   @media (prefers-color-scheme: dark) {
-    .ui-badge--default {
+    :root:not([data-theme]) .ui-badge--default {
       --badge-border: var(--surface-muted);
       --badge-bg: var(--surface);
       --badge-fg: var(--text);
     }
-    .ui-badge--green,
-    .ui-badge--cyan,
-    .ui-badge--slate,
-    .ui-badge--purple {
+    :root:not([data-theme]) .ui-badge--green,
+    :root:not([data-theme]) .ui-badge--cyan,
+    :root:not([data-theme]) .ui-badge--slate,
+    :root:not([data-theme]) .ui-badge--purple {
       --badge-border: color-mix(in srgb, var(--badge-color) 36%, var(--surface));
       --badge-bg: color-mix(in srgb, var(--badge-color) 20%, var(--surface));
       --badge-fg: var(--text);

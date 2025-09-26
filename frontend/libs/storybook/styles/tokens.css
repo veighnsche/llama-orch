@@ -1,4 +1,6 @@
 :root {
+    /* Inform the UA we support both schemes; explicit classes/attrs will pin it */
+    color-scheme: light dark;
     /* === Base neutrals (light) === */
     --bg-offwhite: #f9fafb;
     --bg-gray: #e5e7eb;
@@ -40,17 +42,54 @@
     --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* === Dark mode overrides === */
+/* === Dark mode overrides (manual: class or attribute) === */
+:root[data-theme='dark'],
+.dark {
+    color-scheme: dark;
+    /* Base neutrals (dark) */
+    --bg-offwhite: #0b1220;
+    --bg-gray: #1e293b;
+    --ink-slate: #e5e7eb;
+
+    /* Utility colors (dark-friendly variants) */
+    --ok-green: #22c55e;
+    --err-red: #ef4444;
+    --warn-amber: #f59e0b;
+
+    /* Derived tokens */
+    --surface: var(--bg-offwhite);
+    --surface-alt: #0f172a;
+    --surface-muted: #1e293b;
+    --text: var(--ink-slate);
+    --muted: #94a3b8;
+    --ring: color-mix(in srgb, var(--acc-cyan) 60%, var(--acc-purple) 40%);
+    --link: var(--acc-cyan);
+    --link-hover: var(--acc-purple);
+
+    /* Shadows in dark mode should be softer/transparent */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
+    --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.65);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.7);
+}
+
+/* === Optional: Force Light (manual) === */
+:root[data-theme='light'],
+.light {
+    color-scheme: light;
+    /* No overrides required: :root already defines the light palette.
+       This selector exists to win over any inherited `.dark` parent. */
+}
+
+/* === System fallback (no manual override present) === */
 @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme]) {
+        color-scheme: dark;
         /* Base neutrals (dark) */
         --bg-offwhite: #0b1220;
         --bg-gray: #1e293b;
         --ink-slate: #e5e7eb;
 
-        /* Accents can stay the same (they pop on dark) */
-
-        /* Utility colors (dark-friendly variants if needed) */
+        /* Utility colors (dark-friendly variants) */
         --ok-green: #22c55e;
         --err-red: #ef4444;
         --warn-amber: #f59e0b;

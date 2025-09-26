@@ -8,4 +8,12 @@ export default defineConfig({
     plugins: [vue()],
   },
   setupFile: './histoire.setup.ts',
+  theme: {
+    // Let Histoire manage a toolbar toggle: 'light' | 'dark' | 'auto' (system)
+    defaultColorScheme: 'auto',
+    // Apply this class to the story preview when in dark mode
+    darkClass: 'dark',
+    // Persist user selection across reloads
+    storeColorScheme: true,
+  },
 })

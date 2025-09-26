@@ -36,6 +36,7 @@ worker-adapters-http-util = { path = "../../libs/worker-adapters/http-util" }
 reqwest = { workspace = true }
 once_cell = { workspace = true }
 auth-min = { path = "../../libs/auth-min" }
+proof-bundle = { path = "../../libs/proof-bundle" }
 
 [dev-dependencies]
 

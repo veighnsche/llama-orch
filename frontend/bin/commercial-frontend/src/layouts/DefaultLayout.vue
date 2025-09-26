@@ -27,6 +27,7 @@
         </template>
         <template #right>
           <LanguageSwitcher />
+          <ThemeSwitcher />
           <Button as="router-link" to="/service-menu" variant="primary" size="sm">
             {{ $t('nav.serviceMenu', 'Service menu') }}
           </Button>
@@ -35,6 +36,7 @@
           <DrawerPanel :items="links">
             <template #ops>
               <LanguageSwitcher />
+              <ThemeSwitcher />
               <Button as="router-link" to="/service-menu" variant="primary">
                 {{ $t('nav.serviceMenu', 'Service menu') }}
               </Button>
@@ -56,6 +58,7 @@
   import { useI18n } from 'vue-i18n'
   import { NavbarShell, Brand, NavLinks, Drawer, DrawerTrigger, DrawerPanel, Button } from 'orchyra-storybook/stories'
   import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
+  import ThemeSwitcher from '@/components/ThemeSwitcher.vue'
   import SiteFooter from '@/components/SiteFooter.vue'
 
   const { t } = useI18n()

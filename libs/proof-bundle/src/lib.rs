@@ -4,15 +4,15 @@
 //! - Override base with `LLORCH_PROOF_DIR`
 //! - Override run_id with `LLORCH_RUN_ID`
 //! - Recommended run_id format: `YYYYMMDD-HHMMSS-<git_sha8>` (fallbacks supported)
-mod env;
-mod proof_bundle;
-mod seeds;
-mod test_type;
-mod util;
+pub mod types;
+pub mod env;
+pub mod util;
+pub mod policy;
+pub mod writers;
+pub mod fs;
 
-pub use crate::proof_bundle::ProofBundle;
-pub use crate::seeds::SeedsRecorder;
-pub use crate::test_type::TestType;
+pub use crate::fs::{ProofBundle, SeedsRecorder};
+pub use crate::types::TestType;
 
 // Types and helpers are defined in their own modules and re-exported above.
 

@@ -89,6 +89,7 @@ def build_liquidity(
     dso_days: int,
     dpo_days: int,
     vat_payment: Dict[str, D],
+    invest_items: List[Dict[str, Any]] | None = None,
 ) -> Tuple[Dict[str, D], Dict[str, D], Dict[str, D], Dict[str, D], Dict[str, D], Dict[str, D], D, str]:
     cash_begin: Dict[str, D] = {}
     cash_end: Dict[str, D] = {}
@@ -103,13 +104,20 @@ def build_liquidity(
 
     opex_cash: Dict[str, D] = {ym: opex_total[ym] for ym in ym_list}
 
+    # CAPEX payments at start months
+    capex_out: Dict[str, D] = {ym: ZERO for ym in ym_list}
+    for it in (invest_items or []):
+        ym = str(it.get('start_maand'))
+        if ym in capex_out:
+            capex_out[ym] += D(str(it.get('bedrag', 0)))
+
     prev_end = ZERO
     lowest_cash = None
     lowest_cash_month = None
     for ym in ym_list:
         cash_begin[ym] = prev_end
         inflow = cash_in_revenue[ym] + inflow_other[ym]
-        outflow = cash_out_cogs[ym] + opex_cash[ym] + vat_payment[ym] + interest[ym] + principal[ym]
+        outflow = cash_out_cogs[ym] + opex_cash[ym] + vat_payment[ym] + interest[ym] + principal[ym] + capex_out[ym]
         end = (cash_begin[ym] + inflow - outflow).quantize(CENT)
         cash_end[ym] = end
         prev_end = end

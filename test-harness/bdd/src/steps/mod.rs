@@ -132,6 +132,8 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^I apply http-util redaction$").unwrap(),
         Regex::new(r"^the output masks the token and includes its fp6$").unwrap(),
         Regex::new(r"^the output does not contain the raw token$").unwrap(),
+        Regex::new(r"^a log line with X-API-Key \"([^\"]+)\"$").unwrap(),
+        Regex::new(r"^the output masks X-API-Key and includes its fp6$").unwrap(),
         Regex::new(r"^AUTH_TOKEN is set to \"([^\"]+)\"$").unwrap(),
         Regex::new(r"^AUTH_TOKEN is unset$").unwrap(),
         Regex::new(r"^I apply with_bearer_if_configured to a GET request$").unwrap(),
@@ -148,6 +150,11 @@ pub fn registry() -> Vec<Regex> {
         Regex::new(r"^a body stream with started token token metrics end$").unwrap(),
         Regex::new(r"^I decode with stream_decode$").unwrap(),
         Regex::new(r"^ordering is preserved and token indices are strictly increasing$").unwrap(),
+        // http-util client defaults (placeholders)
+        Regex::new(r"^I inspect http-util client defaults$").unwrap(),
+        Regex::new(r"^connect timeout is approximately 5s and request timeout approximately 30s$").unwrap(),
+        Regex::new(r"^TLS verification is ON by default$").unwrap(),
+        Regex::new(r"^HTTP/2 keep-alive is enabled when server supports ALPN$").unwrap(),
     ]
 }
 

@@ -210,13 +210,26 @@
     height: 44px;
   }
 
+  /* Manual dark override */
+  .dark .ui-btn--ghost,
+  :root[data-theme='dark'] .ui-btn--ghost {
+    background: var(--surface);
+    border-color: var(--surface-muted);
+    color: var(--text);
+  }
+  .dark .ui-btn--link,
+  :root[data-theme='dark'] .ui-btn--link {
+    color: var(--acc-cyan);
+  }
+
+  /* System fallback when no manual override is present */
   @media (prefers-color-scheme: dark) {
-    .ui-btn--ghost {
+    :root:not([data-theme]) .ui-btn--ghost {
       background: var(--surface);
       border-color: var(--surface-muted);
       color: var(--text);
     }
-    .ui-btn--link {
+    :root:not([data-theme]) .ui-btn--link {
       color: var(--acc-cyan);
     }
   }

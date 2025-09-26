@@ -23,6 +23,9 @@ from core.io_ import load_input, write_reports
 from core.engine import compute_model
 from core.scan import scan_roots
 from core.money import money as fmt_money, D
+from core.schema import validate_and_default
+from core.mapping import build_template_context
+from core.renderer import parse_whitelist, render_template, check_templates, generate_template_keys_md, RenderError
 
 
 def cmd_scan(args: argparse.Namespace) -> None:
@@ -38,15 +41,31 @@ def cmd_run(args: argparse.Namespace) -> None:
     out_dir = Path(args.out).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    cfg = load_input(in_path)
-    months = int(args.months)
+    cfg_raw = load_input(in_path)
+    cfg_norm, months_list = validate_and_default(cfg_raw, int(args.months))
+    months = len(months_list)
     if months <= 0:
         raise SystemExit('--months moet > 0 zijn')
     scenario = args.scenario
     vat_period = args.vat_period
 
-    model = compute_model(cfg, months, scenario, vat_period)
+    model = compute_model(cfg_norm, months, scenario, vat_period)
     write_reports(out_dir, model)
+
+    # Render templates with whitelist
+    templates_dir = Path(__file__).resolve().parent / 'templates'
+    placeholders_md = templates_dir / 'placeholders' / 'placeholders.md'
+    whitelist, _desc = parse_whitelist(placeholders_md)
+    context = build_template_context(model)
+    for tpl in sorted(templates_dir.glob('*.md.tpl')):
+        tpl_text = tpl.read_text(encoding='utf-8')
+        try:
+            rendered = render_template(tpl_text, context, whitelist)
+        except RenderError as e:
+            print(f"Template render error in {tpl.name}: {e}", file=sys.stderr)
+            raise SystemExit(1)
+        out_path = out_dir / tpl.name.replace('.md.tpl', '.md')
+        out_path.write_text(rendered, encoding='utf-8')
 
     # één-scherm samenvatting
     cov = model['coverage']
@@ -57,6 +76,40 @@ def cmd_run(args: argparse.Namespace) -> None:
     print(f"Gem. schuldendienst: {fmt_money(model['avg_debt_service'])}")
     print(f"Maandlast-dekking: {cov_str}")
     print(f"Scenario: {scenario}, BTW-periode: {vat_period}")
+
+
+def cmd_list_keys(args: argparse.Namespace) -> None:
+    templates_dir = Path(__file__).resolve().parent / 'templates'
+    placeholders_md = templates_dir / 'placeholders' / 'placeholders.md'
+    whitelist, _ = parse_whitelist(placeholders_md)
+    for k in sorted(whitelist):
+        print(k)
+
+
+def cmd_check_templates(args: argparse.Namespace) -> None:
+    templates_dir = Path(__file__).resolve().parent / 'templates'
+    placeholders_md = templates_dir / 'placeholders' / 'placeholders.md'
+    whitelist, _ = parse_whitelist(placeholders_md)
+    issues = check_templates(templates_dir, whitelist)
+    # Always regenerate TEMPLATE_KEYS.md for devs
+    generate_template_keys_md(templates_dir, placeholders_md, templates_dir / 'TEMPLATE_KEYS.md')
+    if issues:
+        print('Unknown placeholders found in templates:')
+        for path, unknown in issues:
+            rel = Path(path).relative_to(templates_dir)
+            print(f"- {rel}: {', '.join(unknown)}")
+        raise SystemExit(1)
+    print('Templates OK: all placeholders are whitelisted.')
+
+
+def cmd_validate(args: argparse.Namespace) -> None:
+    in_path = Path(args.input).resolve()
+    cfg_raw = load_input(in_path)
+    cfg_norm, months_list = validate_and_default(cfg_raw, int(args.months) if args.months else 0)
+    print('Validation OK:')
+    print(f"- start_maand: {cfg_norm.get('bedrijf', {}).get('start_maand')}")
+    print(f"- horizon_maanden: {len(months_list)}")
+    print(f"- streams: {len(cfg_norm.get('omzetstromen', []) or [])}")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -75,6 +128,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument('--scenario', choices=['base', 'best', 'worst'], default='base')
     p_run.add_argument('--vat-period', choices=['monthly', 'quarterly'], default='monthly')
     p_run.set_defaults(func=cmd_run)
+
+    p_keys = sub.add_parser('list-keys', help='List all whitelisted template placeholders')
+    p_keys.set_defaults(func=cmd_list_keys)
+
+    p_chk = sub.add_parser('check-templates', help='Check templates against whitelist and generate TEMPLATE_KEYS.md')
+    p_chk.set_defaults(func=cmd_check_templates)
+
+    p_val = sub.add_parser('validate', help='Validate input schema and print applied defaults')
+    p_val.add_argument('input', help='Input file .yml|.yaml|.json')
+    p_val.add_argument('--months', type=int, default=0, help='Optional override for horizon')
+    p_val.set_defaults(func=cmd_validate)
 
     return p
 

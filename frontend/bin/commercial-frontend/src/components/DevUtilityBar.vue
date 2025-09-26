@@ -128,8 +128,14 @@
   .devbar.compact .links {
     gap: 0.4rem;
   }
+  /* Manual dark override */
+  :root[data-theme='dark'] .devbar,
+  .dark .devbar {
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+  }
+  /* System fallback when no manual override */
   @media (prefers-color-scheme: dark) {
-    .devbar {
+    :root:not([data-theme]) .devbar {
       background: color-mix(in srgb, var(--surface) 85%, transparent);
     }
   }

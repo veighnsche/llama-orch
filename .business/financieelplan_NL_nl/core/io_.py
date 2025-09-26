@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from .money import D, CENT, money as fmt_money, pct_from_ratio as fmt_pct
+from .loan import annuity_payment
 
 # Optional YAML support; runtime must not require it.
 try:  # pragma: no cover
@@ -42,7 +43,9 @@ def write_text(path: Path, text: str) -> None:
 
 def load_input(path: Path) -> Dict[str, Any]:
     text = path.read_text(encoding='utf-8')
-    if path.suffix.lower() in ('.yml', '.yaml') and yaml is not None:
+    if path.suffix.lower() in ('.yml', '.yaml'):
+        if yaml is None:
+            raise ValueError('YAML input requires PyYAML to be installed; use JSON or install pyyaml')
         data = yaml.safe_load(text)
     else:
         data = json.loads(text)
@@ -137,22 +140,29 @@ def write_reports(out_dir: Path, model: Dict[str, Any]) -> None:
     from .money import D, CENT
     ensure_dir(out_dir)
 
-    # 00_overview.md
-    write_text(out_dir / '00_overview.md', overview_md(model))
-
-    # 10_investering_financiering.md + CSVs
-    write_text(out_dir / '10_investering_financiering.md', inv_fin_md(model))
+    # 10_investering_financiering.csv + investering.csv
     inv_rows = [[it['omschrijving'], f"{it['levensduur_mnd']}", f"{it['start_maand']}", f"{D(str(it['afschrijving_pm'])).quantize(CENT)}", f"{D(str(it['bedrag'])).quantize(CENT)}"] for it in model['invest_items']]
     write_csv(out_dir / '10_investering.csv', ['omschrijving','levensduur_mnd','start_maand','afschrijving_pm','bedrag'], inv_rows)
-    fin_rows = []
     fin = model['config'].get('financiering', {})
-    fin_rows.append(['eigen_inbreng', f"{model['eigen_inbreng'].quantize(CENT)}"])
+    fin_rows = []
     for ln in fin.get('leningen', []) or []:
-        fin_rows.append([ln.get('verstrekker','Onbekend'), f"{D(str(ln['hoofdsom'])).quantize(CENT)}", f"{ln.get('rente_nominaal_jr_pct')}%", ln.get('looptijd_mnd'), ln.get('grace_mnd',0)])
-    write_csv(out_dir / '10_financiering.csv', ['bron','bedrag','rente_nominaal_jr_pct','looptijd_mnd','grace_mnd'], fin_rows)
+        hoofdsom = D(str(ln.get('hoofdsom', 0))).quantize(CENT)
+        jr_pct = D(str(ln.get('rente_nominaal_jr', ln.get('rente_nominaal_jr_pct', 0))))
+        looptijd = int(ln.get('looptijd_mnd', 0) or 0)
+        grace = int(ln.get('grace_mnd', 0) or 0)
+        r = (jr_pct / D('100')) / D('12')
+        term = annuity_payment(hoofdsom, r, max(0, looptijd - grace)) if looptijd > 0 else D('0')
+        fin_rows.append([
+            ln.get('verstrekker', 'Onbekend'),
+            f"{hoofdsom}",
+            f"{jr_pct}",
+            looptijd,
+            grace,
+            f"{term}",
+        ])
+    write_csv(out_dir / '10_financiering.csv', ['verstrekker','hoofdsom','rente_nominaal_jr_pct','looptijd_mnd','grace_mnd','termijn_bedrag'], fin_rows)
 
-    # 20_liquiditeit.md + CSV
-    write_text(out_dir / '20_liquiditeit.md', liquiditeit_md())
+    # 20_liquiditeit_monthly.csv
     liq_rows = []
     for ym in model['months']:
         liq_rows.append([
@@ -169,10 +179,9 @@ def write_reports(out_dir: Path, model: Dict[str, Any]) -> None:
         ])
     write_csv(out_dir / '20_liquiditeit_monthly.csv', ['maand','begin_kas','in_omzet','in_overig','uit_cogs','uit_opex','uit_btw','uit_rente','uit_aflossing','eind_kas'], liq_rows)
 
-    # 30_exploitatie.md + CSV
-    write_text(out_dir / '30_exploitatie.md', exploitatie_md())
+    # 30_exploitatie.csv
     opex_keys = sorted(list(model.get('opex_lines', {}).keys()))
-    exp_header = ['maand','omzet','cogs','marge'] + [f"opex_{k}" for k in opex_keys] + ['opex_totaal','afschrijving','rente','resultaat_vb']
+    exp_header = ['maand','omzet','cogs','marge'] + [f"opex_{k}" for k in opex_keys] + ['opex_totaal','afschrijving','rente','ebitda','resultaat_vb']
     exp_rows = []
     for ym in model['months']:
         row = [
@@ -183,27 +192,37 @@ def write_reports(out_dir: Path, model: Dict[str, Any]) -> None:
         ]
         for k in opex_keys:
             row.append(f"{model['opex_lines'][k][ym].quantize(CENT)}")
+        ebitda = (model['revenue'][ym]-model['cogs'][ym]-model['opex_total'][ym]).quantize(CENT)
         row.extend([
             f"{model['opex_total'][ym].quantize(CENT)}",
             f"{model['depreciation'][ym].quantize(CENT)}",
             f"{model['interest'][ym].quantize(CENT)}",
-            f"{(model['revenue'][ym]-model['cogs'][ym]-model['opex_total'][ym]-model['depreciation'][ym]-model['interest'][ym]).quantize(CENT)}",
+            f"{ebitda}",
+            f"{(ebitda-model['depreciation'][ym]-model['interest'][ym]).quantize(CENT)}",
         ])
         exp_rows.append(row)
     write_csv(out_dir / '30_exploitatie.csv', exp_header, exp_rows)
 
-    # 40_qredits_maandlasten.md + amortisatie.csv
-    write_text(out_dir / '40_qredits_maandlasten.md', qredits_md())
+    # 40_amortisatie.csv
     amort = model['amort_rows']
     write_csv(out_dir / '40_amortisatie.csv', ['maand','verstrekker','rente_pm','aflossing_pm','restschuld'], [
         [r['maand'], r['verstrekker'], f"{D(str(r['rente_pm'])).quantize(CENT)}", f"{D(str(r['aflossing_pm'])).quantize(CENT)}", f"{D(str(r['restschuld'])).quantize(CENT)}"] for r in amort
     ])
 
-    # 50_belastingen.md + tax.csv (indicatief)
-    write_text(out_dir / '50_belastingen.md', tax_md(model))
-    bel = model['config'].get('belastingen', {})
-    tax_rows = [[model['config'].get('belastingen', {}).get('regime','IB'), bel.get('btw_pct',21), bel.get('btw_model','omzet_enkel'), bel.get('kor', False), bel.get('btw_vrij', False)]]
-    write_csv(out_dir / '50_tax.csv', ['regime','btw_pct','btw_model','kor','btw_vrij'], tax_rows)
+    # 50_tax.csv (indicatief)
+    bel = model['config'].get('belastingen', {}) or {}
+    btw_cfg = model['config'].get('btw', {}) or {}
+    regime = bel.get('regime', model['config'].get('bedrijf', {}).get('rechtsvorm', 'IB'))
+    tax_rows = [[
+        regime,
+        btw_cfg.get('btw_pct', 21),
+        btw_cfg.get('model', 'omzet_enkel'),
+        btw_cfg.get('kor', False),
+        btw_cfg.get('btw_vrij', False),
+        bel.get('mkb_vrijstelling_pct', 0),
+        0,  # belastingdruk_pct placeholder until tax model
+        0,  # indicatieve_heffing_jaar placeholder
+    ]]
+    write_csv(out_dir / '50_tax.csv', ['regime','btw_pct','btw_model','kor','btw_vrij','mkb_vrijstelling_pct','belastingdruk_pct','indicatieve_heffing_jaar'], tax_rows)
 
-    # zz_schema.md
-    write_text(out_dir / 'zz_schema.md', schema_md())
+    # No additional Markdown outputs here; Markdown is rendered from templates in CLI
