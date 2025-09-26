@@ -4,10 +4,7 @@
       <p class="brand">
         {{ $t('footer.brandLine') }}
       </p>
-      <nav
-        class="links"
-        :aria-label="$t('a11y.footerNav')"
-      >
+      <nav class="links" :aria-label="$t('a11y.footerNav')">
         <ul>
           <li>
             <RouterLink to="/about">

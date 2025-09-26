@@ -2,25 +2,18 @@
   import { RouterLink } from 'vue-router'
   import { useI18n } from 'vue-i18n'
   const { t } = useI18n()
-  import Button from 'orchyra-storybook/stories/button.vue'
-  import Badge from 'orchyra-storybook/stories/badge.vue'
+  import { Button, Badge } from 'orchyra-storybook/stories'
 </script>
 
 <template>
-  <section
-    class="hero"
-    aria-labelledby="hero-title"
-  >
+  <section class="hero" aria-labelledby="hero-title">
     <div class="container">
       <div class="copy">
         <p class="eyebrow">
           {{ t('home.hero.eyebrow', 'AI plumbing, done right') }}
         </p>
 
-        <h1
-          id="hero-title"
-          class="title"
-        >
+        <h1 id="hero-title" class="title">
           {{ t('home.hero.h1', 'Robust AI, without the leaks.') }}
         </h1>
 
@@ -33,29 +26,14 @@
           }}
         </p>
 
-        <div
-          class="ctas"
-          role="group"
-          aria-label="primary actions"
-        >
-          <Button
-            as="router-link"
-            to="/service-menu"
-            variant="primary"
-          >
+        <div class="ctas" role="group" aria-label="primary actions">
+          <Button as="router-link" to="/service-menu" variant="primary">
             {{ t('home.hero.ctaMenu', 'View service menu') }}
           </Button>
-          <Button
-            as="router-link"
-            to="/proofs"
-            variant="ghost"
-          >
+          <Button as="router-link" to="/proofs" variant="ghost">
             {{ t('home.hero.ctaProofs', 'Inspect proofs') }}
           </Button>
-          <div
-            class="inline-links"
-            aria-label="quick links"
-          >
+          <div class="inline-links" aria-label="quick links">
             <RouterLink to="/public-tap">
               {{ t('home.hero.quickPublic', 'Public Tap') }}
             </RouterLink>
@@ -66,19 +44,11 @@
           </div>
         </div>
 
-        <ul
-          class="badges"
-          aria-label="proofs and certifications"
-        >
+        <ul class="badges" aria-label="proofs and certifications">
           <li>
             <Badge variant="green">
               <template #icon>
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
                   <rect
                     x="3"
                     y="4"
@@ -102,19 +72,8 @@
           <li>
             <Badge variant="cyan">
               <template #icon>
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="9"
-                    fill="currentColor"
-                    opacity=".12"
-                  />
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" fill="currentColor" opacity=".12" />
                   <path
                     d="M8 12l2 2 6-6"
                     fill="none"
@@ -130,12 +89,7 @@
           <li>
             <Badge variant="slate">
               <template #icon>
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
                   <path
                     d="M12 2l3 3h4v4l3 3-3 3v4h-4l-3 3-3-3H5v-4l-3-3 3-3V5h4l3-3z"
                     fill="currentColor"
@@ -153,23 +107,13 @@
           <li>
             <Badge variant="purple">
               <template #icon>
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
                   <path
                     d="M12 2l7 4v6c0 5-7 10-7 10S5 17 5 12V6l7-4z"
                     fill="currentColor"
                     opacity=".12"
                   />
-                  <circle
-                    cx="12"
-                    cy="10"
-                    r="2"
-                    fill="currentColor"
-                  />
+                  <circle cx="12" cy="10" r="2" fill="currentColor" />
                 </svg>
               </template>
               {{ t('home.hero.badge.local', 'Local first') }}
@@ -186,7 +130,7 @@
           alt="Blueprint diagram of clean data pipes feeding a dedicated tap; cyan/teal industrial accents."
           loading="eager"
           fetchpriority="high"
-        >
+        />
       </figure>
     </div>
   </section>

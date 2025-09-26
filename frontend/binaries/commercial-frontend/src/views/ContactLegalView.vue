@@ -39,17 +39,11 @@
         </li>
         <li>
           {{ $t('contact.linkedin') }}:
-          <a
-            :href="linkedin"
-            rel="nofollow noopener"
-          >{{ linkedin }}</a>
+          <a :href="linkedin" rel="nofollow noopener">{{ linkedin }}</a>
         </li>
         <li>
           {{ $t('contact.github') }}:
-          <a
-            :href="github"
-            rel="nofollow noopener"
-          >{{ github }}</a>
+          <a :href="github" rel="nofollow noopener">{{ github }}</a>
         </li>
       </ul>
     </section>

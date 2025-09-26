@@ -101,10 +101,7 @@
 </script>
 
 <template>
-  <main
-    id="main"
-    class="home"
-  >
+  <main id="main" class="home">
     <Hero />
     <WhyPlumbing />
     <!-- Lazy chunks render naturally when reached; optional <Suspense> if you want placeholders -->

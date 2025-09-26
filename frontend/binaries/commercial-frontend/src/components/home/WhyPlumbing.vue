@@ -1,15 +1,11 @@
 <script setup lang="ts">
   import { useI18n } from 'vue-i18n'
   const { t } = useI18n()
-  import Button from 'orchyra-storybook/stories/button.vue'
-  import Badge from 'orchyra-storybook/stories/badge.vue'
+  import { Button, Badge } from 'orchyra-storybook/stories'
 </script>
 
 <template>
-  <section
-    class="why"
-    aria-labelledby="why-title"
-  >
+  <section class="why" aria-labelledby="why-title">
     <div class="why-head">
       <h3 id="why-title">
         {{ t('home.why.title') }}
@@ -27,31 +23,19 @@
         </h4>
         <ul class="list">
           <li>
-            <span
-              class="dot"
-              aria-hidden="true"
-            />
+            <span class="dot" aria-hidden="true" />
             {{ t('home.why.b1') }}
           </li>
           <li>
-            <span
-              class="dot"
-              aria-hidden="true"
-            />
+            <span class="dot" aria-hidden="true" />
             {{ t('home.why.b2') }}
           </li>
           <li>
-            <span
-              class="dot"
-              aria-hidden="true"
-            />
+            <span class="dot" aria-hidden="true" />
             {{ t('home.why.b3') }}
           </li>
           <li v-if="$te('home.why.b4')">
-            <span
-              class="dot"
-              aria-hidden="true"
-            />
+            <span class="dot" aria-hidden="true" />
             {{ t('home.why.b4') }}
           </li>
         </ul>
@@ -64,39 +48,24 @@
         </h4>
         <ul class="list">
           <li>
-            <span
-              class="check"
-              aria-hidden="true"
-            >✓</span>
+            <span class="check" aria-hidden="true">✓</span>
             {{ t('home.why.o1') }}
           </li>
           <li>
-            <span
-              class="check"
-              aria-hidden="true"
-            >✓</span>
+            <span class="check" aria-hidden="true">✓</span>
             {{ t('home.why.o2') }}
           </li>
           <li>
-            <span
-              class="check"
-              aria-hidden="true"
-            >✓</span>
+            <span class="check" aria-hidden="true">✓</span>
             {{ t('home.why.o3') }}
           </li>
           <li v-if="$te('home.why.o4')">
-            <span
-              class="check"
-              aria-hidden="true"
-            >✓</span>
+            <span class="check" aria-hidden="true">✓</span>
             {{ t('home.why.o4') }}
           </li>
         </ul>
 
-        <div
-          class="badges"
-          aria-label="proof badges"
-        >
+        <div class="badges" aria-label="proof badges">
           <Badge variant="green">
             {{ t('home.badge.audit') }}
           </Badge>
@@ -109,18 +78,10 @@
         </div>
 
         <div class="cta-row">
-          <Button
-            as="router-link"
-            to="/proof"
-            variant="primary"
-          >
+          <Button as="router-link" to="/proof" variant="primary">
             {{ t('home.why.ctaProof') }}
           </Button>
-          <Button
-            as="router-link"
-            to="/service-menu"
-            variant="ghost"
-          >
+          <Button as="router-link" to="/service-menu" variant="ghost">
             {{ t('home.why.ctaMenu') }}
           </Button>
         </div>

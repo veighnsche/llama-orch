@@ -6,8 +6,7 @@
         "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
         "baseUrl": ".",
         "paths": {
-            "@/*": ["./src/*"],
-            "@ui/badge": ["orchyra-storybook/stories/badge.vue"]
+            "@/*": ["./src/*"]
         },
         "moduleResolution": "Bundler"
     }

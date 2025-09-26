@@ -1,21 +1,9 @@
 <template>
   <div class="lang-switcher">
-    <label
-      class="sr-only"
-      for="lang"
-    >{{ $t('a11y.language') }}</label>
-    <select
-      id="lang"
-      :value="locale"
-      :aria-label="$t('a11y.language')"
-      @change="onChange($event)"
-    >
-      <option value="nl">
-        NL
-      </option>
-      <option value="en">
-        EN
-      </option>
+    <label class="sr-only" for="lang">{{ $t('a11y.language') }}</label>
+    <select id="lang" :value="locale" :aria-label="$t('a11y.language')" @change="onChange($event)">
+      <option value="nl">NL</option>
+      <option value="en">EN</option>
     </select>
   </div>
 </template>
