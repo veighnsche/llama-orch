@@ -25,7 +25,7 @@ These defaults exist to keep example behavior predictable and match common SME a
 - DSO (debiteuren, dagen): 30 dagen → shift omzet cash +1 maand (rounding by 30-day months).
 - DPO (crediteuren, dagen): 14 dagen → shift COGS cash typically stays in same month or +1 maand depending on day rounding.
 - BTW-percentage: 21% standaard.
-- BTW-model: `omzet_enkel` (eenvoudig en consistent). 
+- BTW-model: `omzet_enkel` (eenvoudig en consistent).
 - BTW-periode: `monthly` (CLI default), maar `quarterly` is supported.
 - KOR: `false` by default; if `true` or `btw_vrij=true`, BTW-afdracht = 0 met uitleg.
 - Seizoen: none by default; if provided, allow month-specific multipliers (e.g., `"2025-12": {omzet_pm_pct: 30}`).
@@ -47,6 +47,7 @@ Use these labels consistently in headings, column names, and prose:
 - Schema (mapping) → `Schema (mapping input → output)`
 
 Key line items:
+
 - Omzet → `Omzet`
 - COGS (kostprijs omzet) → `COGS / Inkoop`
 - Brutomarge → `Marge (Bruto)`
@@ -63,6 +64,7 @@ Key line items:
 - Seizoen → `Seizoensaanpassing`
 
 Columns (CSV expectations):
+
 - Exploitatie (maandelijks): `maand, omzet, cogs, marge, opex_<categorie>..., opex_totaal, afschrijving, rente, resultaat_vb`
 - Liquiditeit (maandelijks): `maand, begin_kas, in_omzet, in_overig, uit_cogs, uit_opex, uit_btw, uit_rente, uit_aflossing, eind_kas`
 - Investeringen: `omschrijving, levensduur_mnd, start_maand, afschrijving_pm, bedrag`
@@ -80,7 +82,7 @@ Columns (CSV expectations):
 
 ## Runtime separation (lock-in for design)
 
-- The generator will NOT read `.002-draft` (or any repo scans) at runtime. 
+- The generator will NOT read `.002-draft` (or any repo scans) at runtime.
 - All prose is fixed in `templates/*.md.tpl`, populated via placeholders only.
 - Changing YAML changes numbers and deterministic short verdicts only; prose stays identical.
 

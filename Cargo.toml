@@ -11,6 +11,7 @@ members = [
     "libs/catalog-core",
     "libs/catalog-core/bdd",
     "libs/proof-bundle",
+    "libs/proof-bundle/bdd",
     "libs/worker-adapters/adapter-api",
     "libs/worker-adapters/llamacpp-http",
     "libs/worker-adapters/vllm-http",

@@ -32,6 +32,9 @@ jsonschema = { workspace = true }
 contracts-config-schema = { path = "../../contracts/config-schema" }
 worker-adapters-adapter-api = { path = "../../libs/worker-adapters/adapter-api" }
 pool-managerd = { path = "../../libs/pool-managerd" }
+worker-adapters-http-util = { path = "../../libs/worker-adapters/http-util" }
+reqwest = { workspace = true }
+once_cell = { workspace = true }
 
 [dev-dependencies]
 

@@ -1,0 +1,151 @@
+{
+  "company": {
+    "name": "Orchyra",
+    "brand_tagline": "Private LLM Hosting in the Netherlands",
+    "country": "NL",
+    "language": "NL",
+    "website": null,
+    "elevator_pitch": "Open-source AI plumbing (OSS toolkit, Public Tap prepaid, Private Tap dedicated GPUs) met proof-first logs en EU-vriendelijke uitrol."
+  },
+  "plan": {
+    "start_date": "2025-10-01",
+    "horizon_months": 36,
+    "currency": "EUR",
+    "reporting_frequency": "monthly",
+    "bookkeeping": "accrual",
+    "vat_return": "quarterly"
+  },
+  "offerings": [
+    {
+      "key": "oss_toolkit",
+      "type": "free_oss",
+      "notes": "GPL OSS toolkit (orchestrator, SDK, utils); geen directe omzet"
+    },
+    {
+      "key": "public_tap",
+      "type": "shared_api_prepaid",
+      "pricing": {
+        "unit": "per_1M_tokens_total",
+        "baseline_eur_per_unit": 1.20,
+        "credit_packs": [
+          { "name": "Starter", "price_eur": 50, "approx_million_tokens": 41 },
+          { "name": "Builder", "price_eur": 200, "approx_million_tokens": 166 },
+          { "name": "Pro", "price_eur": 500, "approx_million_tokens": 416 }
+        ],
+        "terms": { "refundable": false, "shelf_life_months": 12 }
+      },
+      "kpis": ["active_accounts", "tokens_out", "gross_margin", "ARPU"]
+    },
+    {
+      "key": "private_tap",
+      "type": "dedicated_api_gpu",
+      "pricing_examples": [
+        { "gpu": "A100_80GB", "gpu_hour_eur": 1.80, "base_fee_eur_per_month": 250 },
+        { "gpu": "H100_80GB", "gpu_hour_eur": 3.80, "base_fee_eur_per_month": 400 }
+      ],
+      "options": { "gpus": [1, 2, 4, 8], "openai_compat_gateway": true },
+      "kpis": ["gpu_utilization", "tokens_out", "gross_margin", "SLA_uptime"]
+    },
+    {
+      "key": "custom_toolkit_dev",
+      "type": "professional_services",
+      "pricing": { "day_rate_eur": 1200 },
+      "note": "Alleen indien het toolkit vooruit helpt (premium extra)."
+    }
+  ],
+  "volumes_assumptions": {
+    "timeframe": "months_1_to_12",
+    "public_tap_paid_accounts": { "m3": 25, "m6": 60, "m12": 150, "seasonality": { "jul_aug": -0.15 } },
+    "private_tap_nodes": { "m3": 3, "m6": 8, "m12": 20 },
+    "public_tap_usage_load_factor": 0.60,
+    "churn_monthly_public_tap": 0.03,
+    "upsell_monthly_public_tap": 0.01
+  },
+  "pricing_additional": {
+    "payment_methods": ["card", "SEPA"],
+    "psp_fees": { "percent": 0.018, "fixed_eur": 0.30 },
+    "payouts_delay_days": 2,
+    "invoice_terms_days": 14
+  },
+  "costs": {
+    "variable_cogs": {
+      "public_tap": { "gross_margin_target": 0.55 },
+      "private_tap_cloud": { "gpu_hour_eur_range": [0.85, 1.50], "utilization_assumption": 0.50 },
+      "private_tap_on_prem": { "power_eur_per_kwh": 0.35, "typical_watts": 600, "monthly_kwh": 432, "monthly_power_eur": 151.2 }
+    },
+    "fixed_opex_monthly": {
+      "payroll": {
+        "founder_gross_eur": 3500,
+        "contractor_half_fte_gross_eur": 1750,
+        "employer_costs_pct": 0.25,
+        "vacation_allowance_pct": 0.08
+      },
+      "marketing_ads_eur": 500,
+      "software_saas_eur": 150,
+      "accounting_eur": 125,
+      "insurances_eur": 75,
+      "office_rent_eur": 0,
+      "misc_eur": 100
+    },
+    "capex": [
+      { "item": "Workstation 3090+3060+NVMe", "amount_eur": 2500, "start_use": "2025-10-01", "lifetime_months": 36, "salvage_eur": 0, "method": "linear" },
+      { "item": "Hardware upgrade reserve", "amount_eur": 1500, "start_use": "2026-07-01", "lifetime_months": 36, "salvage_eur": 0, "method": "linear" }
+    ]
+  },
+  "financing": {
+    "equity_injection_eur": 10000,
+    "qredits_loan_proposal": {
+      "principal_eur": 35000,
+      "nominal_rate_pct": 9.0,
+      "term_months": 60,
+      "grace_months": 6,
+      "amortization": "annuity",
+      "origination_fee_pct": 1.0
+    }
+  },
+  "working_capital": {
+    "dso_days": { "psp_channels": 2, "invoices_private_tap": 14 },
+    "dpo_days": { "suppliers_infra": 7, "saas": 30 },
+    "deferred_revenue": { "annual_prepaid_share_public_tap": 0.20 },
+    "vat_cycle": "quarterly",
+    "vat_net_position": "varies"
+  },
+  "taxes": {
+    "legal_form": "sole_proprietor",
+    "vat_rate_std_pct": 21,
+    "kor_applied": false,
+    "ib_deductions_applicable": true,
+    "inflation_pct_per_year": 2.5
+  },
+  "scenarios": {
+    "base_case": { "notes": "Targets uit volumes_assumptions, GM 55% API / 40% dedicated-cloud" },
+    "best_case": { "revenue_plus_pct": 30, "cogs_minus_pct": 10, "churn_monthly": 0.02, "cac_eur": 120 },
+    "worst_case": { "revenue_minus_pct": 30, "opex_plus_pct": 20, "dso_plus_days": 30, "gpu_cost_plus_pct": 15 },
+    "stress_test": { "apply": true, "params": { "revenue_pct": -30, "opex_pct": 20, "dso_plus_days": 30, "rate_bps": 200, "churn_plus_pct": 50 } }
+  },
+  "kpis_reported": [
+    "MRR",
+    "ARR",
+    "ARPU",
+    "Gross Margin",
+    "GPU utilization",
+    "Tokens out",
+    "DSCR",
+    "Runway (months)",
+    "LTV/CAC",
+    "p95 first_token_latency_ms"
+  ],
+  "narrative": {
+    "tone": "zakelijk-technisch; 'AI plumber' metafoor",
+    "disclaimers": [
+      "Indicatief; geen fiscale/fundingsadvisering; cijfers onder voorbehoud.",
+      "Prijspeil 2025; exclusief BTW."
+    ]
+  },
+  "brand_usp": [
+    "OSS transparantie (GPL)",
+    "Proof-first (logs, metrics, SSE, version pinning)",
+    "Independent tradesman (lokaal, persoonlijk)",
+    "Prepaid eenvoud (credits, voorspelbare kosten)"
+  ]
+}
