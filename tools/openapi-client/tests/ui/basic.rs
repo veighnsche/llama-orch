@@ -20,6 +20,7 @@ fn main() {
         deadline_ms: 1000,
         expected_tokens: Some(1),
         kv_hint: Some(api::KVHint::Reuse),
+        placement: None,
     };
     let _rb = c.create_task(&req);
 }

@@ -35,7 +35,7 @@
       : currentPath
 
   useMeta({
-    title: () => `Orchyra — ${t('home.hero.h2')}`,
+    title: () => t('footer.brandLine'),
     description: () => t('seoDesc.home'),
     keywords: () => (tm('seo.home') as string[]) ?? [],
     canonical: () => (siteUrl ? `${siteUrl}${currentPath}` : currentPath),
@@ -79,7 +79,7 @@
         '@context': 'https://schema.org',
         '@type': 'ProfessionalService',
         name: 'Orchyra',
-        alternateName: t('home.hero.h2'),
+        alternateName: t('footer.brandLine'),
         description: t('home.hero.sub'),
         url: siteUrl || undefined,
         inLanguage: locale.value,
@@ -88,7 +88,7 @@
           { '@type': 'Place', name: 'Netherlands' },
           { '@type': 'Place', name: 'European Union' },
         ],
-        serviceType: 'AI plumbing (Agentic API design, deployment, and certification)',
+        serviceType: 'Private LLM hosting — design, deployment, and support',
         brand: { '@type': 'Brand', name: 'Orchyra' },
         offers,
         sameAs: githubUrl && /^https?:\/\//.test(githubUrl) ? [githubUrl] : undefined,

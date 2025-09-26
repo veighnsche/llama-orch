@@ -4,16 +4,13 @@ version = "0.0.0"
 edition = "2021"
 publish = false
 license = "GPL-3.0-or-later"
+autobenches = false
+autotests = false
+autodocs = false
 
 [lib]
 name = "auth_min"
 path = "src/lib.rs"
-
-autobenches = false
-
-autotests = false
-
-autodocs = false
 
 [dependencies]
 sha2 = { workspace = true }

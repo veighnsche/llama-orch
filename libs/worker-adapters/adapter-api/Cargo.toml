@@ -3,12 +3,11 @@ name = "worker-adapters-adapter-api"
 version = "0.0.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
+authors = ["llama-orch contributors"]
 
 [lib]
 name = "worker_adapters_adapter_api"
 path = "src/lib.rs"
-
-authors = ["llama-orch contributors"]
 
 [dependencies]
 anyhow = { workspace = true }

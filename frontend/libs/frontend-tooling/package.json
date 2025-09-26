@@ -7,9 +7,12 @@
     "node": "^20.19.0 || >=22.12.0",
     "pnpm": ">=9"
   },
+  "main": "./prettier.config.cjs",
   "exports": {
-    "./eslint.config.js": "./eslint.config.js",
+    ".": "./prettier.config.cjs",
+    "./prettier": "./prettier.config.cjs",
     "./prettier.config.cjs": "./prettier.config.cjs",
+    "./eslint.config.js": "./eslint.config.js",
     "./tsconfig.base.json": "./tsconfig.base.json",
     "./tsconfig.vue.json": "./tsconfig.vue.json",
     "./tsconfig.node.json": "./tsconfig.node.json"

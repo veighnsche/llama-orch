@@ -10,6 +10,12 @@ Applies to: `worker-adapters/http-util/`
 
 Validate client construction, retry/backoff (jitter bounds), HTTP/2 keep‑alive, streaming decode conformance, and header redaction against a local stub server.
 
+### Policy Alignment
+
+- Follow `/.docs/testing/TESTING_POLICY.md`: tests are the contract; no skipped tests; use only public surfaces.
+- Determinism: retries with jitter MUST have a seeded mode in tests (e.g., `HTTP_UTIL_TEST_SEED`).
+- No real network dependencies; use local stubs (e.g., `wiremock`).
+
 ## 1) Test Matrix (normative)
 
 - [HTU-INT-3301] Client Initialization
@@ -42,6 +48,17 @@ Validate client construction, retry/backoff (jitter bounds), HTTP/2 keep‑alive
 - Contracts: `./00_http_util.md`
 - Root specs: `/.specs/35-worker-adapters.md`, `/.specs/20-orchestratord.md`
 - Code: `worker-adapters/http-util/src/`
+
+### Execution & CI
+
+- Run: `cargo test -p worker-adapters-http-util -- --nocapture`
+- CI: local stub server (wiremock) with scenarios for 429/5xx/timeouts and streaming.
+
+### Proof Bundle Artifacts
+
+- Retry timeline logs with seed disclosure
+- Streaming transcript samples (started/token*/metrics?/end)
+- Redacted error log snapshots (no secrets)
 
 ## Refinement Opportunities
 

@@ -36,6 +36,7 @@ pub async fn then_adapter_implements_llamacpp_endpoints(_world: &mut World) {
         deadline_ms: 1000,
         expected_tokens: None,
         kv_hint: None,
+        placement: None,
     };
     let mut stream =
         worker_adapters_adapter_api::WorkerAdapter::submit(&a, req).expect("submit ok");
@@ -80,6 +81,7 @@ pub async fn then_adapter_implements_vllm_endpoints(_world: &mut World) {
         deadline_ms: 1000,
         expected_tokens: None,
         kv_hint: None,
+        placement: None,
     };
     let mut s = worker_adapters_adapter_api::WorkerAdapter::submit(&a, req).expect("submit ok");
     let _ = s.next().await;
@@ -115,6 +117,7 @@ pub async fn then_adapter_implements_tgi_endpoints(_world: &mut World) {
         deadline_ms: 1000,
         expected_tokens: None,
         kv_hint: None,
+        placement: None,
     };
     let mut s = worker_adapters_adapter_api::WorkerAdapter::submit(&a, req).expect("submit ok");
     let _ = s.next().await;
@@ -150,6 +153,7 @@ pub async fn then_adapter_implements_triton_endpoints(_world: &mut World) {
         deadline_ms: 1000,
         expected_tokens: None,
         kv_hint: None,
+        placement: None,
     };
     let mut s = worker_adapters_adapter_api::WorkerAdapter::submit(&a, req).expect("submit ok");
     let _ = s.next().await;

@@ -5,14 +5,13 @@ edition = "2021"
 publish = false
 license = "GPL-3.0-or-later"
 authors = ["llama-orch contributors"]
+autobenches = false
+autotests = false
+autodocs = false
 
 [lib]
 name = "worker_adapters_http_util"
 path = "src/lib.rs"
-
-autobenches = false
-autotests = false
-autodocs = false
 
 [dependencies]
 anyhow = { workspace = true }

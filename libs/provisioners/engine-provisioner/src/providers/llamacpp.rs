@@ -1,3 +1,6 @@
+//! This page is huge we need to break it down into smaller chunks
+//! What are modular pieces that are reusable?
+
 use anyhow::{anyhow, Context, Result};
 use std::path::PathBuf;
 use std::process::Command;
@@ -13,6 +16,12 @@ pub struct LlamaCppSourceProvisioner;
 
 impl LlamaCppSourceProvisioner {
     pub fn new() -> Self {
+        Self
+    }
+}
+
+impl Default for LlamaCppSourceProvisioner {
+    fn default() -> Self {
         Self
     }
 }
@@ -141,11 +150,7 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
                 println!("hinting CUDA root at {}", root_s);
                 cfgcmd.env("CUDAToolkit_ROOT", &root_s);
                 let new_path = match std::env::var_os("PATH") {
-                    Some(p) => format!(
-                        "{}:{}",
-                        bin.to_string_lossy(),
-                        std::ffi::OsString::from(p).to_string_lossy()
-                    ),
+                    Some(p) => format!("{}:{}", bin.to_string_lossy(), p.to_string_lossy()),
                     None => bin.to_string_lossy().to_string(),
                 };
                 cfgcmd.env("PATH", new_path);

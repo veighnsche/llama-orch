@@ -1,0 +1,10 @@
+# Cloudflare Wrangler local variables for the commercial frontend worker
+# Copy to `.dev.vars` for local wrangler runs (ignored by git).
+# Note: For client-side code, only VITE_* variables are exposed by Vite during build.
+
+VITE_SITE_URL="http://localhost:5173"
+VITE_GITHUB_URL="https://github.com/veighnsche/llama-orch"
+VITE_DOCS_URL="https://docs.orchyra.example.com"
+VITE_API_REF_URL="https://docs.orchyra.example.com/api"
+VITE_CONTACT_EMAIL="info@orchyra.example.com"
+VITE_LINKEDIN_URL="https://www.linkedin.com/in/your-handle"

@@ -10,18 +10,18 @@
     <div class="container">
       <div class="copy">
         <p class="eyebrow">
-          {{ t('home.hero.eyebrow', 'AI plumbing, done right') }}
+          {{ t('home.hero.eyebrow', 'Private LLM Hosting in the Netherlands') }}
         </p>
 
         <h1 id="hero-title" class="title">
-          {{ t('home.hero.h1', 'Robust AI, without the leaks.') }}
+          {{ t('home.hero.h1', 'I build private AI systems for your business.') }}
         </h1>
 
         <p class="sub">
           {{
             t(
               'home.hero.sub',
-              'I install and certify agentic AI pipelines. Proofs, logs, and documentation included. EU data, no lock-in.',
+              'Design, deployment, and support. Proofs, logs, and documentation included. EU data, open source, no lock-in.',
             )
           }}
         </p>
@@ -35,11 +35,11 @@
           </Button>
           <div class="inline-links" aria-label="quick links">
             <RouterLink to="/public-tap">
-              {{ t('home.hero.quickPublic', 'Public Tap') }}
+              {{ t('home.hero.quickPublic', 'Public demo') }}
             </RouterLink>
             <span aria-hidden="true">·</span>
             <RouterLink to="/private-tap">
-              {{ t('home.hero.quickPrivate', 'Private Tap') }}
+              {{ t('home.hero.quickPrivate', 'Private demo') }}
             </RouterLink>
           </div>
         </div>
@@ -127,7 +127,7 @@
           src="/assets/hero_pipes.png"
           width="1440"
           height="560"
-          alt="Blueprint diagram of clean data pipes feeding a dedicated tap; cyan/teal industrial accents."
+          alt="System architecture diagram for a private AI stack; cyan/teal accents."
           loading="eager"
           fetchpriority="high"
         />

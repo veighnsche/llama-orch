@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import PublicTapView from '@/views/PublicTapView.vue'
 import PrivateTapView from '@/views/PrivateTapView.vue'
+import ToolkitView from '@/views/ToolkitView.vue'
 import PricingView from '@/views/PricingView.vue'
 import ProofView from '@/views/ProofView.vue'
 import FAQsView from '@/views/FAQsView.vue'
@@ -25,6 +26,11 @@ const router = createRouter({
       path: '/private-tap',
       name: 'private-tap',
       component: PrivateTapView,
+    },
+    {
+      path: '/toolkit',
+      name: 'toolkit',
+      component: ToolkitView,
     },
     {
       path: '/pricing',

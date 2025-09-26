@@ -23,6 +23,15 @@ const nl = {
     addLink: '(link toevoegen)',
     perGpuHour: 'per GPU-uur',
   },
+  devbar: {
+    aria: 'Developer-snelkoppelingen',
+    label: 'Developer',
+    docs: 'Docs',
+    api: 'API-referentie',
+    github: 'GitHub',
+    dismiss: 'Verbergen',
+    dismissAria: 'Developer-balk verbergen',
+  },
   seoTitle: {
     publicTap: 'Public Tap — Prepaid credits | Orchyra',
     privateTap: 'Private LLM-hosting op dedicated GPU’s | Orchyra',
@@ -88,13 +97,13 @@ const nl = {
   },
   home: {
     hero: {
-      eyebrow: 'AI-plumbing, goed aangelegd',
-      h1: 'Robuuste AI, zonder lekkages.',
-      sub: 'Ik installeer en certificeer agentic-AI-leidingen. Inclusief bewijs, logs en documentatie. EU-data, geen lock-in.',
+      eyebrow: 'Private LLM-hosting in Nederland',
+      h1: 'Ik bouw private AI-systemen voor uw bedrijf.',
+      sub: 'Ontwerp, deployment en support. Inclusief bewijs, logs en documentatie. EU-data, open source, geen lock-in.',
       ctaMenu: 'Service-menu bekijken',
       ctaProofs: 'Bewijs inzien',
-      quickPublic: 'Public Tap',
-      quickPrivate: 'Private Tap',
+      quickPublic: 'Publieke demo',
+      quickPrivate: 'Privé demo',
       badge: {
         proofs: 'Bewijs-gedreven',
         eu: 'EU-data',

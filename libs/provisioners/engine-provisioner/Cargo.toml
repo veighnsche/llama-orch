@@ -4,6 +4,9 @@ version = "0.0.0"
 edition = "2021"
 publish = false
 license = "GPL-3.0-or-later"
+autobenches = false
+autotests = false
+autodocs = false
 
 [features]
 default = ["provider-llamacpp"]
@@ -15,12 +18,6 @@ provider-triton = []
 [lib]
 name = "provisioners_engine_provisioner"
 path = "src/lib.rs"
-
-autobenches = false
-
-autotests = false
-
-autodocs = false
 
 [dependencies]
 anyhow = { workspace = true }

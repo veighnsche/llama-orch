@@ -89,6 +89,5 @@
   }
   .content {
     flex: 1 1 auto;
-    padding: 1rem 0;
   }
 </style>

@@ -9,6 +9,7 @@ Date: 2025-09-19
 - HTTP client builder defaults
 - Retry/backoff policy (capped + jitter)
 - Header redaction helpers
+ - Streaming decode helpers (newline/SSE-like)
 
 ## Test Catalog
 
@@ -17,22 +18,29 @@ Date: 2025-09-19
 
 - Retry/Backoff Policy
   - Given base delay and cap, computed delays fall within `[base, cap]`
-  - Jitter distribution shows variance; deterministic mode available via seeded RNG for tests
+  - Jitter distribution shows variance; deterministic mode available via seeded RNG for tests (set `HTTP_UTIL_TEST_SEED`)
   - Non-retriable status codes (e.g., 400, 401) do not trigger retries
 
 - Redaction Helpers
   - Authorization and secret-bearing headers masked in debug formatting
   - Query/body redaction for known sensitive keys
 
+- Streaming Decode Helpers
+  - Decoder preserves ordering and uses low-allocation path (buffer reuse where practical)
+
 ## Execution
 
-- `cargo test -p worker-adapters-http-util -- --nocapture` (adjust package name as needed)
+- Run: `cargo test -p worker-adapters-http-util -- --nocapture`
+- Determinism: set `HTTP_UTIL_TEST_SEED` to stabilize jitter expectations.
+- No skipped tests in committed code; follow `/.docs/testing/TESTING_POLICY.md`.
 
 ## Traceability
 
 - Consumed by `worker-adapters/*` crates for streaming and retries
 - Metrics alignment per `/.specs/metrics/otel-prom.md`
+- Error taxonomy and redaction per `./40_ERROR_MESSAGING.md`
 
 ## Refinement Opportunities
 
 - Property tests for retry jitter distribution.
+ - Snapshot tests (redacted logs) for proof bundles.

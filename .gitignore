@@ -28,3 +28,13 @@ Thumbs.db
 storybook-static
 
 /.pnpm-store/
+
+# Environment files (global)
+# Ignore all .env files in any package, but keep example templates tracked
+**/.env
+**/.env.*
+!**/.env.example
+
+# Cloudflare Wrangler local vars
+**/.dev.vars
+!**/.dev.vars.example

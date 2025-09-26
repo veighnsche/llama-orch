@@ -4,12 +4,11 @@ version = "0.0.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
 autobins = false
+authors = ["llama-orch contributors"]
 
 [[bin]]
 name = "readme-index"
 path = "src/bin.rs"
-
-authors = ["llama-orch contributors"]
 
 [dependencies]
 anyhow = { workspace = true }

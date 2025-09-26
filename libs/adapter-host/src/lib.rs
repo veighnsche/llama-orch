@@ -7,10 +7,13 @@ use worker_adapters_adapter_api as api;
 
 pub type PoolId = String;
 pub type ReplicaId = String;
+type AdapterKey = (PoolId, ReplicaId);
+type AdapterRef = Arc<dyn api::WorkerAdapter>;
+type Registry = HashMap<AdapterKey, AdapterRef>;
 
 #[derive(Default, Clone)]
 pub struct AdapterHost {
-    registry: Arc<RwLock<HashMap<(PoolId, ReplicaId), Arc<dyn api::WorkerAdapter>>>>,
+    registry: Arc<RwLock<Registry>>,
 }
 
 impl AdapterHost {

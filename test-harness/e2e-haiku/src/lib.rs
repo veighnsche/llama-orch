@@ -27,6 +27,7 @@ pub fn build_task(task_id: &str, session_id: &str) -> api::TaskRequest {
         deadline_ms: 30000,
         expected_tokens: Some(64),
         kv_hint: Some(KVHint::Reuse),
+        placement: None,
     }
 }
 

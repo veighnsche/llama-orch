@@ -182,6 +182,7 @@ fn try_dispatch_via_adapter(
         deadline_ms: 1000,
         expected_tokens: Some(1),
         kv_hint: None,
+        placement: None,
     };
     state.adapter_host.submit("default", req)
 }

@@ -58,6 +58,7 @@ mod tests {
             deadline_ms: 1,
             expected_tokens: Some(1),
             kv_hint: None,
+            placement: None,
         }
     }
 

@@ -23,6 +23,13 @@ const en = {
     addLink: '(add link)',
     perGpuHour: 'per GPU-hour',
   },
+  devbar: {
+    aria: 'Developer shortcuts',
+    label: 'Developer',
+    docs: 'Docs',
+    api: 'API Reference',
+    github: 'GitHub',
+  },
   jsonld: {
     desc: 'Open-source LLM orchestration, prepaid Public Tap, and dedicated Private Taps on EU GPUs.',
   },
@@ -85,13 +92,13 @@ const en = {
   },
   home: {
     hero: {
-      eyebrow: 'AI plumbing, done right',
-      h1: 'Robust AI, without the leaks.',
-      sub: 'I install and certify agentic AI pipelines. Proofs, logs, and documentation included. EU data, no lock-in.',
+      eyebrow: 'Private LLM Hosting in the Netherlands',
+      h1: 'I build private AI systems for your business.',
+      sub: 'Design, deployment, and support. Proofs, logs, and documentation included. EU data, open source, no lock-in.',
       ctaMenu: 'View service menu',
       ctaProofs: 'Inspect proofs',
-      quickPublic: 'Public Tap',
-      quickPrivate: 'Private Tap',
+      quickPublic: 'Public demo',
+      quickPrivate: 'Private demo',
       badge: {
         proofs: 'Proof-driven',
         eu: 'EU data',
