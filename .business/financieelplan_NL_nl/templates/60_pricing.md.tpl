@@ -4,8 +4,8 @@ Dit onderdeel geeft inzicht in de gekozen prijsstrategie, de onderbouwing van ta
 
 ## Kernpunten (basis-scenario)
 
-- Huidige verkoopprijs per eenheid: {{prijs_per_eenheid}}
-- Verkochte eenheden per maand: {{eenheden_pm}}
+- Huidige verkoopprijs per eenheid (bijv. EUR per 1M tokens): {{prijs_per_eenheid}}
+- Verkochte eenheden per maand (bijv. 1M tokens): {{eenheden_pm}}
 - Omzet per maand: {{omzet_basis}}
 - Brutomarge per eenheid: {{marge_per_eenheid}}
 - Customer Acquisition Cost (CAC): {{cac_eur}}  
@@ -21,7 +21,7 @@ Dit maakt duidelijk hoe omzet verdeeld is over verschillende product-/dienstcate
 
 ## Gevoeligheidsanalyse (prijsvariatie)
 
-Onderstaande tabel toont de impact van prijsvariaties op omzet en marge bij gelijkblijvend volume:
+Onderstaande tabel toont de impact van prijsvariaties op omzet en marge bij gelijkblijvend volume (eenheid = per 1M tokens bij credits-first):
 
 | Prijsvariant | Prijs per eenheid | Omzet per maand | Brutomarge per maand | Runway (maanden) |
 |--------------|------------------:|----------------:|---------------------:|-----------------:|
@@ -31,7 +31,7 @@ Onderstaande tabel toont de impact van prijsvariaties op omzet en marge bij geli
 
 ## Gevoeligheidsanalyse (prijs-volume elasticiteit)
 
-Indien prijswijzigingen leiden tot volumeverandering, geeft onderstaande tabel de gecombineerde effecten:
+Indien prijswijzigingen leiden tot volumeverandering, geeft onderstaande tabel de gecombineerde effecten (eenheid = per 1M tokens bij credits-first):
 
 | Scenario        | Prijs | Volume p/m | Omzet p/m | Brutomarge p/m |
 |-----------------|------:|-----------:|----------:|---------------:|

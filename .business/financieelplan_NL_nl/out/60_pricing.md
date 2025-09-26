@@ -4,40 +4,40 @@ Dit onderdeel geeft inzicht in de gekozen prijsstrategie, de onderbouwing van ta
 
 ## Kernpunten (basis-scenario)
 
-- Huidige verkoopprijs per eenheid: 49.0
-- Verkochte eenheden per maand: 175.00
-- Omzet per maand: € 8.575,00
-- Brutomarge per eenheid: € 39,00
+- Huidige verkoopprijs per eenheid (bijv. EUR per 1M tokens): 1.2
+- Verkochte eenheden per maand (bijv. 1M tokens): 187.50
+- Omzet per maand: € 225,00
+- Brutomarge per eenheid: € 0,35
 - Customer Acquisition Cost (CAC): 0  
 - Payback-tijd (maanden tot terugverdienen CAC): 0  
 
 ## Segmentatie (optioneel)
 
 
-- **API** — Prijs: 49.0, Volume: 175.00, Omzet p/m: € 8.575,00, Marge: € 6.825,00
+- **Public Tap (credits)** — Prijs: 1.2, Volume: 187.50, Omzet p/m: € 225,00, Marge: € 65,63
 
 
 Dit maakt duidelijk hoe omzet verdeeld is over verschillende product-/dienstcategorieën.
 
 ## Gevoeligheidsanalyse (prijsvariatie)
 
-Onderstaande tabel toont de impact van prijsvariaties op omzet en marge bij gelijkblijvend volume:
+Onderstaande tabel toont de impact van prijsvariaties op omzet en marge bij gelijkblijvend volume (eenheid = per 1M tokens bij credits-first):
 
 | Prijsvariant | Prijs per eenheid | Omzet per maand | Brutomarge per maand | Runway (maanden) |
 |--------------|------------------:|----------------:|---------------------:|-----------------:|
-| -10%         | 44.10   | € 7.717,50 | € 6.142,50      | 6 |
-| Basis        | 49.0   | € 8.575,00 | € 6.825,00      | 6 |
-| +10%         | 53.90  | € 9.432,50| € 7.507,50     | 6|
+| -10%         | 1.08   | € 202,50 | € 59,06      | 9 |
+| Basis        | 1.2   | € 225,00 | € 65,63      | 9 |
+| +10%         | 1.32  | € 247,50| € 72,19     | 9|
 
 ## Gevoeligheidsanalyse (prijs-volume elasticiteit)
 
-Indien prijswijzigingen leiden tot volumeverandering, geeft onderstaande tabel de gecombineerde effecten:
+Indien prijswijzigingen leiden tot volumeverandering, geeft onderstaande tabel de gecombineerde effecten (eenheid = per 1M tokens bij credits-first):
 
 | Scenario        | Prijs | Volume p/m | Omzet p/m | Brutomarge p/m |
 |-----------------|------:|-----------:|----------:|---------------:|
-| -10% prijs, +15% volume | 44.10 | 201.25 | € 8.875,13 | € 7.063,88 |
-| Basis           | 49.0 | 175.00 | € 8.575,00 | € 6.825,00 |
-| +10% prijs, -10% volume | 53.90 | 157.50 | € 8.489,25 | € 6.756,75 |
+| -10% prijs, +15% volume | 1.08 | 215.63 | € 232,88 | € 67,92 |
+| Basis           | 1.2 | 187.50 | € 225,00 | € 65,63 |
+| +10% prijs, -10% volume | 1.32 | 168.75 | € 222,75 | € 64,97 |
 
 ## Toelichting
 

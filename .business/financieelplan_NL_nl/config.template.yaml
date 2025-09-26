@@ -1,0 +1,71 @@
+# Deterministic Finance Engine — v2 Input Template
+# Copy this to config.yaml and fill in your values.
+
+schema_version: 1
+
+bedrijf:
+  naam: "Jouw BV"
+  rechtsvorm: "IB"            # "IB" (eenmanszaak) of "BV"
+  start_maand: "2026-01"      # YYYY-MM
+  valuta: "EUR"
+
+horizon_maanden: 12            # 12..36 is gebruikelijk
+scenario: "base"               # base | best | worst
+vat_period: "monthly"          # monthly | quarterly
+
+btw:
+  btw_pct: 21                  # 0..21
+  model: "omzet_enkel"         # of "omzet_minus_simple_kosten"
+  kor: false                   # KOR van toepassing
+  btw_vrij: false              # volledig btw-vrijgesteld
+  mkb_vrijstelling_pct: 0      # bij IB, bijv. 14
+
+# Eén of meer omzetstromen. Credits-first voorbeeld (Public Tap): prijs in EUR per 1M tokens, volume in M tokens.
+omzetstromen:
+  - naam: "Public Tap (credits)"
+    prijs: 1.20                 # EUR per 1M tokens
+    volume_pm: [50, 75, 100]    # M tokens per maand (rest wordt aangevuld)
+    var_kosten_per_eenheid: 0.85  # infra kosten per 1M tokens (schatting)
+    btw_pct: 21
+    dso_dagen: 0                # prepaid credits → DSO ≈ 0
+
+# Vaste OPEX per maand
+opex_vast_pm:
+  personeel:
+    - rol: "Founder"
+      bruto_pm: 3000
+  marketing: 800
+  software: 400
+  huisvesting: 600
+  overig: 300
+
+# CAPEX-items; lineaire afschrijving vanaf start_maand
+investeringen:
+  - omschrijving: "GPU server"
+    bedrag: 12000
+    levensduur_mnd: 36
+    start_maand: "2026-02"
+
+# Financiering
+financiering:
+  eigen_inbreng: 8000
+  leningen:
+    - verstrekker: "Qredits"
+      hoofdsom: 20000
+      rente_nominaal_jr: 7.0     # %; of gebruik rente_nominaal_jr_pct
+      looptijd_mnd: 60
+      grace_mnd: 3               # alleen rente tijdens grace
+      alleen_rente_in_grace: true
+
+# Werkkapitaal aannames
+werkkapitaal:
+  dso_dagen: 0
+  dpo_dagen: 14
+  dio_dagen: 0
+  vooruitbetaald_pm: 0
+  deferred_revenue_pm: 0
+
+# Overige aannames
+assumpties:
+  discount_rate_pct: 10.0
+  kas_buffer_norm: 2500

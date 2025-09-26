@@ -7,6 +7,7 @@ This package ships with a spec-first, code-driven i18n workflow. Keys are discov
 - Scripts: `frontend/bin/commercial-frontend/scripts/*.mjs`
 
 Prerequisites
+
 - Node 20+ (see `package.json` engines)
 - pnpm
 - Install deps once: `pnpm install`
@@ -88,6 +89,7 @@ The custom extractor is regex-based and covers common Vue i18n usage patterns:
   - Bare `t()` / `tc()` are only considered in files that actually call `useI18n()` and destructure these functions (reduces false positives).
 
 Dynamic usages are not auto-extracted and are reported to `messages.warnings.json`:
+
 - `t(` with non-literal first argument
 - Template literals with interpolation inside the key, e.g. `` t(`user.${id}.name`) ``
 

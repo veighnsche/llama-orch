@@ -15,6 +15,8 @@ from finplan.common.metrics import (
     runway as _runway,
 )
 from finplan.reporting.context import build_streams as ctx_build_streams, pricing_baseline, loan_contexts, compute_pnl_aggregates
+from finplan.compute.tax import compute_indicative_tax
+from finplan.compute.stress import compute_stress_variants
 
 
 def _build_streams(streams_cfg: List[Dict[str, Any]], months: List[str]) -> Tuple[List[Dict[str, Any]], Dict[str, Decimal]]:
@@ -84,6 +86,19 @@ def build_template_context(model: Dict[str, Any]) -> Dict[str, Any]:
 
     # Runway
     runway = _runway(model['cash_end'])
+    # Stress recompute (combined and individual)
+    stress = compute_stress_variants(cfg, months, vat_period=cfg.get('vat_period', 'monthly'))
+    stress_combo = stress['combo']
+    stress_liq_lowest_cash = stress_combo['lowest_cash']
+    stress_liq_runway = 0
+    if months:
+        streak = 0
+        for m in months:
+            if stress_combo['cash_end'][m] >= ZERO:
+                streak += 1
+                stress_liq_runway = max(stress_liq_runway, streak)
+            else:
+                streak = 0
 
     # Compose context
     data: Dict[str, Any] = {
@@ -113,6 +128,9 @@ def build_template_context(model: Dict[str, Any]) -> Dict[str, Any]:
         'payback_maanden': 0,
         'runway_maanden_base': runway,
         'runway_maanden_worst': runway,  # placeholder until stress computed
+        # Stress summary for liquidity
+        'stress_laagste_kas': fmt_money(stress_liq_lowest_cash),
+        'stress_runway_maanden': stress_liq_runway,
         # Investeringen & financiering
         'inv_count': len(model.get('invest_items', []) or []),
         'inv_totaal': fmt_money(total_invest),
@@ -137,8 +155,7 @@ def build_template_context(model: Dict[str, Any]) -> Dict[str, Any]:
         'btw_max_bedrag': fmt_money(max([model['vat_payment'][m] for m in months] or [ZERO])),
         'btw_max_maand': max(months, key=lambda m: model['vat_payment'][m]) if months else '',
         'kas_buffer_norm': cfg.get('assumpties', {}).get('kas_buffer_norm', 0),
-        'stress_laagste_kas': fmt_money(ZERO),
-        'stress_runway_maanden': runway,
+        # filled above from stress
         # Exploitatie
         'omzet_totaal': fmt_money(omzet_totaal),
         'brutomarge_totaal': fmt_money(brutomarge_totaal),
@@ -173,9 +190,9 @@ def build_template_context(model: Dict[str, Any]) -> Dict[str, Any]:
         'kor': btw_cfg.get('kor', False),
         'btw_vrij': btw_cfg.get('btw_vrij', False),
         'mkb_vrijstelling_pct': cfg.get('btw', {}).get('mkb_vrijstelling_pct', 0),
-        'belastingdruk_pct': 0,
-        # Section expects a list of objects containing the variable of the same name
-        'indicatieve_heffing_jaar': [{'indicatieve_heffing_jaar': 0}],
+        # Indicatieve belasting
+        'belastingdruk_pct': None,  # set below
+        'indicatieve_heffing_jaar': None,  # set below
         'stress_heffing_range': 'n.v.t.',
         'stress_kasimpact': fmt_money(ZERO),
         # Pricing (first stream baseline)
@@ -244,5 +261,45 @@ def build_template_context(model: Dict[str, Any]) -> Dict[str, Any]:
         'ltv_cac_varplus10': 'n.v.t.',
         'ltv_cac_pricemin10': 'n.v.t.',
     }
+
+    # Fill indicative tax placeholders
+    heffing, druk_ratio = compute_indicative_tax(model, cfg)
+    data['belastingdruk_pct'] = _pct(heffing, (pnl['resultaat_vb_totaal'] if pnl['resultaat_vb_totaal'] != ZERO else D('1')))
+    data['indicatieve_heffing_jaar'] = [{'indicatieve_heffing_jaar': fmt_money(heffing)}]
+
+    # Fill stress analysis placeholders for exploitatie and WC
+    # Average result under combined stress and loss-months
+    res_stress_sum = ZERO
+    verlies_stress = 0
+    for m in months:
+        res_m = (stress_combo['revenue'][m] - stress_combo['cogs'][m] - stress_combo['opex_total'][m] - stress_combo['depreciation'][m] - stress_combo['interest'][m]).quantize(CENT)
+        res_stress_sum += res_m
+        if res_m < ZERO:
+            verlies_stress += 1
+    res_stress_avg = (res_stress_sum / D(str(len(months)))) if months else ZERO
+    data['stress_result_avg'] = fmt_money(res_stress_avg)
+    data['stress_verlies_maanden'] = verlies_stress
+    data['stress_verdict'] = 'zorgpunt' if verlies_stress > 0 else 'stabiel'
+
+    # DSCR under combined stress
+    dscr_min_s = D('0')
+    dscr_below1_s = 0
+    first = True
+    for m in months:
+        v = stress_combo['dscr'].get(m, D('0'))
+        if first or v < dscr_min_s:
+            dscr_min_s = v
+            first = False
+        if v < D('1'):
+            dscr_below1_s += 1
+    data['stress_dscr_min'] = f"{dscr_min_s.quantize(D('0.01'))}"
+    data['stress_dscr_below_1_count'] = dscr_below1_s
+    data['stress_dscr_verdict'] = 'onvoldoende' if dscr_min_s < D('1') else 'voldoende'
+
+    # WC stress end cash by variant
+    last = months[-1] if months else ''
+    data['kas_na_stress_omzet'] = fmt_money(stress['omzet']['cash_end'][last] if last else ZERO)
+    data['kas_na_stress_dso'] = fmt_money(stress['dso']['cash_end'][last] if last else ZERO)
+    data['kas_na_stress_opex'] = fmt_money(stress['opex']['cash_end'][last] if last else ZERO)
 
     return data

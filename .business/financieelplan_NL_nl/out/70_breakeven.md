@@ -4,13 +4,13 @@ Dit onderdeel toont het punt waarop de onderneming quitte speelt: de omzet die n
 
 ## Kernpunten
 
-- Vaste kosten per maand: € 5.100,00
-- Variabele kosten per eenheid: € 10,00
-- Verkoopprijs per eenheid: 49.0
-- Brutomarge per eenheid: € 39,00 (79.59%)
-- Break-even aantal eenheden per maand: 130.77
-- Break-even omzet per maand: € 6.407,84
-- Veiligheidsmarge boven break-even: 33.82%
+- Vaste kosten per maand: € 1.670,00
+- Variabele kosten per eenheid: € 0,85
+- Verkoopprijs per eenheid: 1.2
+- Brutomarge per eenheid: € 0,35 (29.17%)
+- Break-even aantal eenheden per maand: 4772.52
+- Break-even omzet per maand: € 5.727,02
+- Veiligheidsmarge boven break-even: -96.07%
 
 ## Visualisatie
 
@@ -26,14 +26,14 @@ Break-even bij: {{breakeven\_eenheden\_pm}} eenheden / {{breakeven\_omzet\_pm}}
 - **Vaste kosten:** kosten die onafhankelijk zijn van productie of verkoopvolume (zoals huur, salarissen, vaste softwarekosten).  
 - **Variabele kosten:** kosten die direct gekoppeld zijn aan het aantal verkochte eenheden (bijv. GPU-uren, API-fees, support per klant).  
 - **Break-even punt:** het volume waarbij omzet = totale kosten. Daarboven ontstaat winstgevendheid.  
-- **Veiligheidsmarge:** de mate waarin geplande omzet € 8.575,00 boven break-even ligt. Dit laat zien of de onderneming voldoende buffer heeft.  
+- **Veiligheidsmarge:** de mate waarin geplande omzet € 225,00 boven break-even ligt. Dit laat zien of de onderneming voldoende buffer heeft.  
 - **Payback vs. maandlasten:** het break-even punt moet niet alleen kosten dekken, maar ook voldoende kas opleveren om financieringslasten (zie Qredits/maandlasten) te dragen.  
 
 ## Stress-signaal (indicatief)
 
 Bij scenario’s met hogere kosten of lagere prijzen:  
-- +10% vaste kosten → nieuw break-even omzet: € 7.048,46  
-- −10% marge per eenheid → nieuw break-even omzet: € 7.119,75  
+- +10% vaste kosten → nieuw break-even omzet: € 6.298,77  
+- −10% marge per eenheid → nieuw break-even omzet: € 6.363,29  
 
 Hiermee wordt zichtbaar hoe gevoelig de continuïteit is voor afwijkingen.
 

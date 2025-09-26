@@ -4,9 +4,9 @@ Dit onderdeel geeft inzicht in de winstgevendheid per verkochte eenheid. Het laa
 
 ## Kernpunten (basis-scenario)
 
-- Verkoopprijs per eenheid: {{prijs_per_eenheid}}
-- Variabele kosten per eenheid: {{variabele_kosten_per_eenheid}}
-- Brutomarge per eenheid: {{marge_per_eenheid}} ({{marge_pct}} van omzet)
+- Verkoopprijs per eenheid (bijv. EUR per 1M tokens): {{prijs_per_eenheid}}
+- Variabele kosten per eenheid (bijv. per 1M tokens): {{variabele_kosten_per_eenheid}}
+- Brutomarge per eenheid (bijv. per 1M tokens): {{marge_per_eenheid}} ({{marge_pct}} van omzet)
 - Contribution margin per eenheid (marge na variabele saleskosten/CAC): {{contribution_margin}}
 - Customer Acquisition Cost (CAC): {{cac_eur}}
 - Lifetime Value (LTV, op basis van churn en marge): {{ltv_eur}}
@@ -15,7 +15,7 @@ Dit onderdeel geeft inzicht in de winstgevendheid per verkochte eenheid. Het laa
 
 ## Bijdrage per eenheid
 
-Elke verkochte eenheid levert een bijdrage van {{marge_per_eenheid}} aan het dekken van vaste kosten en daarna aan winst.  
+Elke verkochte eenheid (bijv. 1M tokens) levert een bijdrage van {{marge_per_eenheid}} aan het dekken van vaste kosten en daarna aan winst.  
 
 Formule:
 ```

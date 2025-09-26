@@ -4,10 +4,10 @@ Dit onderdeel beschrijft de benodigde investeringen voor de onderneming en de ma
 
 ## Investeringen
 
-- Aantal investeringsposten: 1
-- Totaal investeringsbedrag: € 12.000,00
-- Gemiddelde afschrijvingstermijn: 36 maanden
-- Grootste investering: GPU server (€ 12.000,00)
+- Aantal investeringsposten: 2
+- Totaal investeringsbedrag: € 5.500,00
+- Gemiddelde afschrijvingstermijn: 30 maanden
+- Grootste investering: Website & branding (€ 3.000,00)
 
 Elke investering wordt lineair afgeschreven over de opgegeven levensduur in maanden. Indien een startmaand is gespecificeerd, wordt prorata afgeschreven vanaf die maand.  
 Dit geeft een realistisch beeld van jaarlijkse lasten en voorkomt dat kosten in één keer drukken op het resultaat.
@@ -16,23 +16,23 @@ _De volledige detailtabel is opgenomen in `10_investering.csv`._
 
 ## Financiering
 
-- Eigen inbreng: € 8.000,00
+- Eigen inbreng: € 5.000,00
 - Vreemd vermogen: € 20.000,00
 - Aantal leningen: 1
-- Debt/Equity-verhouding: 71.43% / 28.57%
-- Gemiddelde looptijd leningen: 60 maanden
+- Debt/Equity-verhouding: 80.00% / 20.00%
+- Gemiddelde looptijd leningen: 48 maanden
 
 ### Specificatie leningen
 
 
 - **Qredits**  
   Hoofdsom: € 20.000,00  
-  Looptijd: 60 maanden  
-  Rente: 7.0% per jaar (nominaal), 0.58% per maand  
-  Grace-periode: 3 maanden  
-  Termijnbedrag: 413.45 per maand  
-  Effectieve jaarrente (APR): 7.0%  
-  Totale rentelasten over looptijd: € 1.336,82  
+  Looptijd: 48 maanden  
+  Rente: 9.0% per jaar (nominaal), 0.75% per maand  
+  Grace-periode: 0 maanden  
+  Termijnbedrag: 497.70 per maand  
+  Effectieve jaarrente (APR): 9.0%  
+  Totale rentelasten over looptijd: € 1.623,49  
 
 
 De berekeningen zijn op annuïtaire basis uitgevoerd, tenzij anders aangegeven. Bij grace-periodes wordt rente tijdens de grace doorberekend, waarna volledige aflossing start.
@@ -41,10 +41,10 @@ _De volledige detailtabel is opgenomen in `10_financiering.csv`._
 
 ## Samenvattende ratio’s
 
-- Totale investeringen gedekt door eigen inbreng: 66.67%  
-- Totale investeringen gedekt door vreemd vermogen: 166.67%  
+- Totale investeringen gedekt door eigen inbreng: 90.91%  
+- Totale investeringen gedekt door vreemd vermogen: 363.64%  
 - Gemiddelde maandlasten alle leningen: 0.00  
-- Schuldendienst-dekking (DSCR, gem.): 5.08x
+- Schuldendienst-dekking (DSCR, gem.): -3.22x
 
 ---
 

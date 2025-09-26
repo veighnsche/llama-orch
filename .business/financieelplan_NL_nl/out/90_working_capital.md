@@ -15,9 +15,9 @@ Dit onderdeel geeft inzicht in het werkkapitaal dat nodig is om de onderneming d
 
 | Scenario              | Aanname                           | Effect op kaspositie |
 |-----------------------|-----------------------------------|---------------------:|
-| Omzet –30%            | −30%            | € 0,00 |
-| Betaaltermijn +30d    | +30 dagen             | € 0,00 |
-| OPEX +20%             | +20%            | € 0,00 |
+| Omzet –30%            | −30%            | -€ 6.358,08 |
+| Betaaltermijn +30d    | +30 dagen             | -€ 6.681,90 |
+| OPEX +20%             | +20%            | -€ 10.299,90 |
 
 ## Toelichting
 

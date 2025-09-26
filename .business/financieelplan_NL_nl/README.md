@@ -1,7 +1,27 @@
 # 3. Financieel Plan — Build README
 
-Dit is de **build-index** voor het financiële plan. De index beschrijft de **inputs**, **mapping**, **generator-scripts**, **templates**, en **outputs** die samen de PDF opleveren.  
-De Excel blijft de bron voor formules; Python vult cellen en maakt een samenvatting (MD → PDF).
+> NOTE (2025-09): Deterministic Engine v2 is active. This repo uses a single canonical input file and renders Markdown + CSV deterministically. The legacy Excel/Jinja workflow below is kept for historical context.
+
+## Deterministic Engine v2 (single input)
+
+- Canonical input file (YAML): `config.yaml` in this folder.
+- Run checks, validate, and render:
+
+```
+make templates validate run
+```
+
+- Migrate an older v1 file (with `omzetmodel`/`opex_pm`) to v2:
+
+```
+make migrate-v1 INPUT=<path/to/your_v1.yml> OUT=config.yaml
+```
+
+- Outputs go to `out/` as `.md` (per template) and `.csv` (stable columns).
+
+Only edit `config.yaml`. No other inputs are used by the engine.
+
+Dit is de historische **build-index** voor de Excel/Jinja pipeline. De huidige v2-engine gebruikt géén Excel meer en rendert direct naar Markdown + CSV op basis van `config.yaml`.
 
 ---
 

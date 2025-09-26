@@ -6,10 +6,10 @@ Gebruik (fish):
   cd /home/vince/Projects/llama-orch/.business/financieelplan_NL_nl
   chmod +x fp
   ./fp scan --roots ../ondernemersplan_NL_nl/.002-draft ../.specs ../frontend ../consumers --out ./out
-  ./fp run ./examples/voorbeeld.yml --out ./out --months 12 --scenario base --vat-period monthly
+  ./fp run ./examples/v2_example.json --out ./out --months 12 --scenario base --vat-period monthly
 
 Eigenschappen:
-- Pure stdlib + decimal (context in core/money.py)
+- Pure stdlib + decimal (context in finplan/common/money.py)
 - `scan` is dev-only; `run` leest nooit scans/.002-draft
 """
 from __future__ import annotations
