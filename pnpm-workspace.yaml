@@ -4,3 +4,4 @@ packages:
   - consumers/llama-orch-sdk/ts
   - frontend/binaries/commercial-frontend
   - frontend/libraries/storybook
+  - frontend/libraries/frontend-tooling

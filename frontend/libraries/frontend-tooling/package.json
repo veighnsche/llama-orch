@@ -1,0 +1,27 @@
+{
+  "name": "orchyra-frontend-tooling",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0",
+    "pnpm": ">=9"
+  },
+  "exports": {
+    "./eslint.config.js": "./eslint.config.js",
+    "./prettier.config.cjs": "./prettier.config.cjs",
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./tsconfig.vue.json": "./tsconfig.vue.json",
+    "./tsconfig.node.json": "./tsconfig.node.json"
+  },
+  "dependencies": {
+    "@tsconfig/node22": "^22.0.2",
+    "@vue/tsconfig": "^0.7.0",
+    "@eslint/js": "^9.14.0",
+    "eslint": "^9.14.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-vue": "^9.30.0",
+    "typescript-eslint": "^8.12.2",
+    "vue-eslint-parser": "^9.4.3"
+  }
+}

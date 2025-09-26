@@ -6,6 +6,7 @@
     "engines": {
         "node": "^20.19.0 || >=22.12.0"
     },
+    "prettier": "orchyra-frontend-tooling/prettier.config.cjs",
     "scripts": {
         "dev": "vite",
         "build": "run-p type-check \"build-only {@}\" --",
@@ -14,8 +15,8 @@
         "type-check": "vue-tsc --build",
         "deploy": "npm run build && wrangler deploy",
         "cf-typegen": "wrangler types",
-        "lint": "eslint .",
-        "lint:fix": "eslint . --fix",
+        "lint": "eslint . --config orchyra-frontend-tooling/eslint.config.js",
+        "lint:fix": "eslint . --fix --config orchyra-frontend-tooling/eslint.config.js",
         "format": "prettier --check .",
         "format:fix": "prettier --write ."
     },
@@ -26,6 +27,7 @@
         "orchyra-storybook": "workspace:*"
     },
     "devDependencies": {
+        "orchyra-frontend-tooling": "workspace:*",
         "@cloudflare/vite-plugin": "^1.13.4",
         "@tsconfig/node22": "^22.0.2",
         "@types/node": "^22.16.5",

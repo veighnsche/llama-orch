@@ -1,5 +1,5 @@
 {
-    "extends": "@tsconfig/node22/tsconfig.json",
+    "extends": "orchyra-frontend-tooling/tsconfig.node.json",
     "include": [
         "vite.config.*",
         "vitest.config.*",
