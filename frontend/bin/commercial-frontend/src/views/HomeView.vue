@@ -80,7 +80,7 @@
         '@type': 'ProfessionalService',
         name: 'Orchyra',
         alternateName: t('footer.brandLine'),
-        description: t('home.hero.sub'),
+        description: t('jsonld.desc'),
         url: siteUrl || undefined,
         inLanguage: locale.value,
         image: abs('/assets/hero_pipes.png'),

@@ -73,6 +73,7 @@
   const links = computed(() => [
     { label: t('nav.publicTap'), to: '/public-tap' },
     { label: t('nav.privateTap'), to: '/private-tap' },
+    { label: t('nav.toolkit'), to: '/toolkit' },
     { label: t('nav.pricing'), to: '/pricing' },
     { label: t('nav.proof'), to: '/proof' },
     { label: t('nav.faqs'), to: '/faqs' },

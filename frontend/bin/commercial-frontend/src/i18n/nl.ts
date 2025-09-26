@@ -2,6 +2,7 @@ const nl = {
   nav: {
     publicTap: 'Public Tap',
     privateTap: 'Private Tap',
+    toolkit: 'Toolkit',
     pricing: 'Prijzen',
     proof: 'Bewijs',
     faqs: 'FAQ',
@@ -9,7 +10,7 @@ const nl = {
     contact: 'Contact',
   },
   footer: {
-    brandLine: 'Orchyra — Private LLM-hosting in Nederland',
+    brandLine: 'Orchyra — Public & Private AI Taps (NL/EU)',
     about: 'Over',
     proof: 'Bewijs',
     pricing: 'Prijzen',
@@ -32,6 +33,9 @@ const nl = {
     dismiss: 'Verbergen',
     dismissAria: 'Developer-balk verbergen',
   },
+  jsonld: {
+    desc: 'Agentische AI-API’s met een volledige toolkit. Prepaid Public Tap en beheerde Private Taps op EU-GPU’s. Proof-first en open source.',
+  },
   seoTitle: {
     publicTap: 'Public Tap — Prepaid credits | Orchyra',
     privateTap: 'Private LLM-hosting op dedicated GPU’s | Orchyra',
@@ -51,7 +55,7 @@ const nl = {
       'dataresidentie EU',
       'vLLM-serving',
       // secundair
-      'AI-plumbing',
+      'AI-API’s',
       'OSS LLM-toolkit',
       'dedicated AI-API',
       'prepaid AI-credits',
@@ -60,7 +64,7 @@ const nl = {
       'Prometheus-metrics',
     ],
     publicTap: [
-      'public tap',
+      'public API',
       'prepaid credits',
       'agentic API',
       'open-source modellen',
@@ -76,11 +80,11 @@ const nl = {
     pricing: ['prijzen', 'prepaid credits', 'GPU-uur', 'A100', 'H100'],
     proof: ['bewijs', 'prometheus', 'sse', 'metrics', 'observability'],
     faqs: ['faq', 'prijzen', 'credits', 'modellen', 'EU AI Act', 'vLLM'],
-    about: ['over', 'onafhankelijk', 'OSS', 'proof-first', 'AI-plumbing'],
+    about: ['over', 'onafhankelijk', 'OSS', 'proof-first', 'AI-API’s'],
     contact: ['contact', 'juridisch', 'voorwaarden', 'credits'],
   },
   seoDesc: {
-    home: 'Onafhankelijke AI-plumber. Open-source toolkit, prepaid Public Tap en dedicated Private Tap op EU-GPU’s. Proof-first, transparant en EU-vriendelijk.',
+    home: 'Onafhankelijke aanbieder van agentic AI-API’s. Open-source toolkit, prepaid Public Tap en dedicated Private Tap op EU-GPU’s. Proof-first, transparant en EU-vriendelijk.',
     publicTap:
       'Gedeelde agentic API op gecureerde OSS-modellen. Snel starten met prepaid credits; duidelijke voorwaarden en zichtbaarheid. Conceptprijzen.',
     privateTap:
@@ -91,7 +95,7 @@ const nl = {
       'Proof-first: deploymentrapport, metrics, SSE-transcripten en documentatie in lijn met de transparantie van de EU AI Act.',
     faqs: 'Antwoorden over prijs vs OpenAI, modelkeuze, credits, serving-efficiëntie en EU AI Act-gereedheid.',
     about:
-      'Over Orchyra: onafhankelijke AI-plumber met focus op OSS-transparantie en proof-first werken.',
+      'Over Orchyra: onafhankelijke aanbieder met focus op OSS-transparantie en proof-first werken.',
     contact:
       'Contact & Juridisch voor Orchyra. E-mail, LinkedIn, GitHub. Public Tap-voorwaarden en data/logs-beschikbaarheid.',
   },
@@ -112,7 +116,7 @@ const nl = {
       },
     },
     why: {
-      title: 'Waarom AI-plumbing nodig is',
+      title: 'Waarom standaardisatie van AI-API’s nodig is',
       intro: 'EU-waardige AI met governance: auditbare stromen, EU-datalokatie en geen lock-in.',
       problemsTitle: 'Wat er misgaat zonder',
       outcomesTitle: 'Wat u wél nodig heeft',
@@ -147,7 +151,7 @@ const nl = {
     },
     private: {
       title: 'Private Tap — je eigen AI-API, op dedicated GPU’s',
-      p1: 'Als privacy, controle of performance belangrijk is, is een dedicated tap simpelweg veiliger. Wij leveren GPU’s, deployen je modellen en beheren de plumbing: orchestratie, upgrades, observability, guardrails.',
+      p1: 'Als privacy, controle of performance belangrijk is, is een dedicated tap simpelweg veiliger. Wij leveren GPU’s, deployen je modellen en beheren de API-laag, upgrades, observability en guardrails.',
       b1: 'A100 80GB — €1,80 / GPU-uur + €250 / maand basisfee — Concept',
       b2: 'H100 80GB — €3,80 / GPU-uur + €400 / maand basisfee — Concept',
       b3: 'Schaal 1×/2×/4×/8× GPU’s; optionele OpenAI-compatibele gateway',
@@ -181,7 +185,7 @@ const nl = {
     pricing: 'Conceptprijzen',
     bWho1: 'Developers en startups die ideeën testen',
     bWho2: 'Agencies die demo’s en POC’s bouwen',
-    bWho3: 'IT-teams die AI-plumbing willen beoordelen vóór infra-investering',
+    bWho3: 'IT-teams die AI-API’s willen beoordelen vóór infra-investering',
     bWhy1: 'Voorspelbare kosten met prepaid credits',
     bWhy2: 'Lage instap; snel starten',
     bWhy3: 'In lijn met OSS-transparantie',
@@ -224,9 +228,9 @@ const nl = {
     b4: 'Documentatiebundel in lijn met de transparantiegedachte van de EU AI Act',
     visuals: 'Komende visuals',
     v1: 'Grafana/Prometheus-screenshots',
-    v2: 'Pijplijndiagram met “gecertificeerd”-stempel',
+    v2: 'Architectuurdiagram met “gecertificeerd”-stempel',
     microcopy:
-      'Dit is infrastructuur — zoals water of elektriciteit. Je zou het niet hoeven “geloven”. Je zou het moeten zien.',
+      'Dit is infrastructuur. Je zou het niet hoeven geloven; je moet het kunnen zien.',
   },
   faqs: {
     h1: 'Veelgestelde vragen',
@@ -245,15 +249,15 @@ const nl = {
     h1: 'Over Orchyra',
     identity: 'Identiteit',
     identityP:
-      'Orchyra wordt geleid door een onafhankelijke vakman — je AI-plumber. Focus op robuuste engineering, transparante tooling en proof-first werken zodat teams agentic AI zo betrouwbaar als water of elektriciteit draaien.',
+      'Orchyra wordt geleid door een onafhankelijke vakman — onafhankelijk aanbieder. Focus op robuuste engineering, transparante tooling en proof-first werken zodat teams agentic AI betrouwbaar kunnen draaien.',
     usp: 'USP-pilaren',
-    usp1: 'Open-source plumbing — orchestrator, SDK en utils onder GPL.',
+    usp1: 'Open-source stack — orchestrator, SDK en utils onder GPL.',
     usp2: 'Proof-first operations — logs, Prometheus-metrics, SSE-transcripten, versiepinning.',
     usp3: 'Onafhankelijk en lokaal — persoonlijk, verantwoordelijk, praktisch.',
     usp4: 'Prepaid eenvoud — voorspelbare kosten via credits en GPU-uur.',
     approach: 'Aanpak',
     approachP:
-      'Het vak is “AI-plumbing” — pijplijnen installeren en onderhouden, observability en guardrails toepassen en documentatiebundels leveren die passen bij de transparantiegedachte van de EU AI Act.',
+      'Standaardiseren van AI-API’s — integraties bouwen en onderhouden, observability en guardrails toepassen en documentatiebundels leveren die passen bij de transparantiegedachte van de EU AI Act.',
     cta: 'Praat met Vince',
   },
   contact: {

@@ -30,7 +30,7 @@
           <Button as="router-link" to="/service-menu" variant="primary">
             {{ t('home.hero.ctaMenu', 'View service menu') }}
           </Button>
-          <Button as="router-link" to="/proofs" variant="ghost">
+          <Button as="router-link" to="/proof" variant="ghost">
             {{ t('home.hero.ctaProofs', 'Inspect proofs') }}
           </Button>
           <div class="inline-links" aria-label="quick links">

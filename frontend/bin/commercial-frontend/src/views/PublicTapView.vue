@@ -70,6 +70,9 @@
         {{ $t('publicTap.note') }}
       </p>
     </section>
+    <p>
+      <router-link to="/toolkit" class="cta">{{ $t('toolkit.cta') }}</router-link>
+    </p>
   </main>
 </template>
 
@@ -80,5 +83,9 @@
   }
   .note {
     color: var(--muted);
+  }
+  .cta {
+    text-decoration: none;
+    font-weight: 600;
   }
 </style>

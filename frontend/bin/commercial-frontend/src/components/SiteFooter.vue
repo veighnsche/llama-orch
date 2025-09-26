@@ -17,6 +17,11 @@
             </RouterLink>
           </li>
           <li>
+            <RouterLink to="/toolkit">
+              {{ $t('nav.toolkit') }}
+            </RouterLink>
+          </li>
+          <li>
             <RouterLink to="/pricing">
               {{ $t('footer.pricing') }}
             </RouterLink>

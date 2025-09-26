@@ -2,6 +2,7 @@ import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
 import vue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
+import eslintConfigPrettier from 'eslint-config-prettier'
 
 // Shared ESLint flat config for Vue + TS projects
 export default [
@@ -27,4 +28,6 @@ export default [
       'vue/multi-word-component-names': 'off',
     },
   },
+  // Turn off all ESLint rules that might conflict with Prettier's formatting
+  eslintConfigPrettier,
 ]
