@@ -1,0 +1,57 @@
+# Research: GPU Inventory & Costing (on-prem + reference SKUs)
+# Fill this with your real/target GPUs. Values in EUR.
+
+on_prem:
+  # Example skeleton for your own GPUs
+  - id: rtx4090_1
+    name: "RTX 4090"
+    vram_gb: 24
+    fp16_tflops: null   # optional
+    memory_bw_gbps: null
+    host:
+      chassis: "ATX tower"
+      cpu: "Ryzen 7950X"
+      ram_gb: 64
+      storage_tb: 2
+    purchase_price_eur: 3500
+    purchase_date: "2025-01-15"
+    depreciation_months: 36
+    power_watts_full: 450
+    electricity_eur_per_kwh: 0.35
+    cooling_overhead_pct: 10
+    maintenance_eur_pm: 20
+    target_utilization_pct: 60   # planning utilization for costing
+
+  - id: a6000_1
+    name: "RTX A6000"
+    vram_gb: 48
+    fp16_tflops: null
+    memory_bw_gbps: null
+    host:
+      chassis: "4U rackmount"
+      cpu: "Xeon"
+      ram_gb: 128
+      storage_tb: 4
+    purchase_price_eur: 6000
+    purchase_date: "2025-02-01"
+    depreciation_months: 36
+    power_watts_full: 300
+    electricity_eur_per_kwh: 0.35
+    cooling_overhead_pct: 10
+    maintenance_eur_pm: 25
+    target_utilization_pct: 60
+
+reference_skus:
+  # Cloud/dedicated reference GPUs to map against providers
+  - id: a100_80gb
+    name: "NVIDIA A100 80GB"
+    vram_gb: 80
+  - id: h100_80gb
+    name: "NVIDIA H100 80GB"
+    vram_gb: 80
+  - id: l40s_48gb
+    name: "NVIDIA L40S 48GB"
+    vram_gb: 48
+  - id: l4_24gb
+    name: "NVIDIA L4 24GB"
+    vram_gb: 24

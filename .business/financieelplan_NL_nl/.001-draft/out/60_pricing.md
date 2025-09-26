@@ -5,8 +5,8 @@ Dit onderdeel geeft inzicht in de gekozen prijsstrategie, de onderbouwing van ta
 ## Kernpunten (basis-scenario)
 
 - Huidige verkoopprijs per eenheid (bijv. EUR per 1M tokens): 1.2
-- Verkochte eenheden per maand (bijv. 1M tokens): 187.50
-- Omzet per maand: € 225,00
+- Verkochte eenheden per maand (bijv. 1M tokens): 8416.67
+- Omzet per maand: € 10.100,00
 - Brutomarge per eenheid: € 0,35
 - Customer Acquisition Cost (CAC): 0  
 - Payback-tijd (maanden tot terugverdienen CAC): 0  
@@ -14,7 +14,7 @@ Dit onderdeel geeft inzicht in de gekozen prijsstrategie, de onderbouwing van ta
 ## Segmentatie (optioneel)
 
 
-- **Public Tap (credits)** — Prijs: 1.2, Volume: 187.50, Omzet p/m: € 225,00, Marge: € 65,63
+- **Public Tap (credits)** — Prijs: 1.2, Volume: 8416.67, Omzet p/m: € 10.100,00, Marge: € 2.945,83
 
 
 Dit maakt duidelijk hoe omzet verdeeld is over verschillende product-/dienstcategorieën.
@@ -25,9 +25,9 @@ Onderstaande tabel toont de impact van prijsvariaties op omzet en marge bij geli
 
 | Prijsvariant | Prijs per eenheid | Omzet per maand | Brutomarge per maand | Runway (maanden) |
 |--------------|------------------:|----------------:|---------------------:|-----------------:|
-| -10%         | 1.08   | € 202,50 | € 59,06      | 9 |
-| Basis        | 1.2   | € 225,00 | € 65,63      | 9 |
-| +10%         | 1.32  | € 247,50| € 72,19     | 9|
+| -10%         | 1.08   | € 9.090,00 | € 2.651,25      | 10 |
+| Basis        | 1.2   | € 10.100,00 | € 2.945,83      | 10 |
+| +10%         | 1.32  | € 11.110,00| € 3.240,42     | 10|
 
 ## Gevoeligheidsanalyse (prijs-volume elasticiteit)
 
@@ -35,9 +35,9 @@ Indien prijswijzigingen leiden tot volumeverandering, geeft onderstaande tabel d
 
 | Scenario        | Prijs | Volume p/m | Omzet p/m | Brutomarge p/m |
 |-----------------|------:|-----------:|----------:|---------------:|
-| -10% prijs, +15% volume | 1.08 | 215.63 | € 232,88 | € 67,92 |
-| Basis           | 1.2 | 187.50 | € 225,00 | € 65,63 |
-| +10% prijs, -10% volume | 1.32 | 168.75 | € 222,75 | € 64,97 |
+| -10% prijs, +15% volume | 1.08 | 9679.17 | € 10.453,50 | € 3.048,94 |
+| Basis           | 1.2 | 8416.67 | € 10.100,00 | € 2.945,83 |
+| +10% prijs, -10% volume | 1.32 | 7575.00 | € 9.999,00 | € 2.916,38 |
 
 ## Toelichting
 

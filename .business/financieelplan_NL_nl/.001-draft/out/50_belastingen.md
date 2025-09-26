@@ -11,7 +11,7 @@ Dit onderdeel geeft een indicatieve weergave van het belastingregime en de BTW-a
 - BTW-vrijstelling: False  
 - MKB-winstvrijstelling: 0%  
 - Indicatieve belastingdruk (% van resultaat v/bel): -0.00%  
-- Totale BTW-afdrachten over horizon: € 567,00  
+- Totale BTW-afdrachten over horizon: € 25.452,00  
 
 ## Toelichting
 

@@ -35,6 +35,22 @@ total_investering | var | yes |
 vat_period | var | yes | BTW-afdrachtfrequentie (maand/kwartaal).
 veiligheidsmarge_pct | var | yes | 
 
+## 05_qredits_aanvraag.md.tpl
+
+Placeholder | Kind | Required | Description
+---|---|---|---
+dscr_min | var | yes | 
+dscr_verdict | var | yes | 
+fin_schuld | var | yes | 
+inv_totaal | var | yes | 
+lening_avg_looptijd | var | yes | 
+lening_count | var | yes | 
+runway_maanden_base | var | yes | 
+stress_dscr_min | var | yes | 
+stress_laagste_kas | var | yes | 
+stress_runway_maanden | var | yes | 
+termijn_bedrag | var | yes | annuïtaire maandlast.
+
 ## 10_investering_financiering.md.tpl
 
 Placeholder | Kind | Required | Description

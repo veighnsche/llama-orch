@@ -1,0 +1,52 @@
+# Research: Providers & Pricing (cloud, dedicated)
+# EUR values. Fill with current market prices; note date and region.
+
+providers:
+  - id: runpod
+    name: "RunPod"
+    region: "EU-WEST"
+    currency: "EUR"
+    skus:
+      - sku_id: a100_80gb
+        mode: "on_demand"          # on_demand | spot | dedicated
+        hourly_eur: null            # fill from provider
+        min_hours: 0
+        notes: ""
+      - sku_id: l40s_48gb
+        mode: "on_demand"
+        hourly_eur: null
+        min_hours: 0
+        notes: ""
+
+  - id: lambdalabs
+    name: "Lambda Labs"
+    region: "EU-WEST"
+    currency: "EUR"
+    skus:
+      - sku_id: a100_80gb
+        mode: "on_demand"
+        hourly_eur: null
+        min_hours: 0
+        notes: ""
+      - sku_id: h100_80gb
+        mode: "on_demand"
+        hourly_eur: null
+        min_hours: 0
+        notes: ""
+
+  - id: hetzner
+    name: "Hetzner (Dedicated)"
+    region: "EU-CENTRAL"
+    currency: "EUR"
+    skus:
+      - sku_id: l40s_48gb
+        mode: "dedicated"
+        hourly_eur: null            # derive from monthly / 720
+        min_hours: 720              # monthly commitment
+        notes: "Price from monthly dedicated server cost"
+
+notes:
+  last_updated: "TBD"
+  assumptions:
+    - "Dedicated hourly derived from monthly/720"
+    - "Exclude data egress; add if needed"

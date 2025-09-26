@@ -5,17 +5,17 @@ Dit kasstroomoverzicht geeft inzicht in de ontvangsten en uitgaven per maand. Hi
 ## Kerncijfers
 
 - Begin kaspositie: € 0,00 in maand 2025-10
-- Eind kaspositie: -€ 6.291,90 in maand 2026-09
-- Laagste kasstand: -€ 6.291,90 in maand 2026-09 (negatief)
-- Runway (maanden kas ≥ 0): 9 in het basisscenario
-- Aantal maanden negatief: 3 (negatief)
+- Eind kaspositie: -€ 4.964,04 in maand 2026-09
+- Laagste kasstand: -€ 4.964,04 in maand 2026-09 (negatief)
+- Runway (maanden kas ≥ 0): 10 in het basisscenario
+- Aantal maanden negatief: 2 (negatief)
 
 ## BTW-afdracht
 
 - BTW-model: omzet_enkel
 - Afdrachtfrequentie: monthly
-- Totale BTW-afdrachten over horizon: € 567,00
-- Grootste afdracht in één maand: € 81,90 (2026-09)
+- Totale BTW-afdrachten over horizon: € 25.452,00
+- Grootste afdracht in één maand: € 3.024,00 (2026-06)
 
 BTW wordt berekend over de omzet minus aftrekbare kosten (afhankelijk van het gekozen model). De afdracht vindt plaats in de laatste maand van de periode (maandelijks of per kwartaal).
 
@@ -24,13 +24,13 @@ BTW wordt berekend over de omzet minus aftrekbare kosten (afhankelijk van het ge
 - **Inkomsten** omvatten kasontvangsten uit omzet (inclusief DSO-verschuiving) en overige ontvangsten zoals subsidies of eigen inbreng.  
 - **Uitgaven** omvatten betalingen voor inkoop (COGS, inclusief DPO), OPEX, rente, aflossingen en BTW-afdracht.  
 - **Negatieve kasposities** worden expliciet zichtbaar gemaakt in de maandtabel en zijn voorzien van een waarschuwing.  
-- Een kasbuffer van minimaal 2500 wordt aanbevolen; de feitelijke laagste stand is -€ 6.291,90.
+- Een kasbuffer van minimaal 2500 wordt aanbevolen; de feitelijke laagste stand is -€ 4.964,04.
 
 ## Stress-case signaal
 
 Indicatieve impact bij een neerwaarts scenario (omzet −30%, DSO +30 dagen, OPEX +10%):
-- Laagste kasstand: -€ 10.639,08  
-- Runway: 7 maanden  
+- Laagste kasstand: -€ 25.213,44  
+- Runway: 5 maanden  
 
 Dit geeft een indicatie van de weerbaarheid bij tegenvallende resultaten.
 

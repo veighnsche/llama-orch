@@ -5,23 +5,23 @@ Dit onderdeel beschrijft de maandelijkse verplichtingen voortvloeiend uit de opg
 ## Kernpunten
 
 - Aantal leningen: 1
-- Totale gemiddelde maandlast (rente + aflossing): € 497,70
-- Gemiddelde schuldendienst-dekking (EBITDA / schuldendienst): -3.22x
-- Laagste DSCR: -3.32 in maand 2025-10
-- Aantal maanden met DSCR < 1: 12 (onvoldoende)
+- Totale gemiddelde maandlast (rente + aflossing): € 530,17
+- Gemiddelde schuldendienst-dekking (EBITDA / schuldendienst): -0.10x
+- Laagste DSCR: -10.22 in maand 2025-10
+- Aantal maanden met DSCR < 1: 7 (onvoldoende)
 
 ## Specificatie per lening
 
 
 - **Qredits**  
-  Hoofdsom: € 20.000,00  
+  Hoofdsom: € 30.000,00  
   Looptijd: 48 maanden  
   Nominale rente: 9.0% per jaar (0.75% per maand)  
-  Grace-periode: 0 maanden  
-  Maandlast: 497.70  
-  Totale rentelasten over looptijd: € 1.623,49  
+  Grace-periode: 6 maanden  
+  Maandlast: 835.34  
+  Totale rentelasten over looptijd: € 2.630,64  
   Effectieve jaarrente (APR, indicatief): 9.0%  
-  Restschuld einde looptijd: € 15.651,09
+  Restschuld einde looptijd: € 26.268,60
 
 
 ## Toelichting
@@ -35,7 +35,7 @@ Dit onderdeel beschrijft de maandelijkse verplichtingen voortvloeiend uit de opg
 ## Stress-signaal (indicatief)
 
 Bij een scenario met **EBITDA −30%** en gelijkblijvende maandlasten:
-- Laagste DSCR: -4.00  
+- Laagste DSCR: -13.82  
 - Aantal maanden met DSCR < 1: 12  
 - Implicatie: onvoldoende
 

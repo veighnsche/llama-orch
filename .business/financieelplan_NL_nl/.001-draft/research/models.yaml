@@ -1,0 +1,56 @@
+# Research: Curated Model Catalog (requirements & throughput)
+# This file enumerates OSS models you plan to support and their indicative GPU requirements.
+# Use it to derive cost-per-1M-tokens for Public Tap and profitability for dedicated/private boxes.
+
+models:
+  - id: mistral_7b_instruct_q4
+    name: "Mistral 7B Instruct (Q4_K_M)"
+    family: "mistral-7b"
+    quantization: "Q4_K_M"
+    min_vram_gb: 8
+    context_length: 8192
+    preferred_gpu_skus: [l4_24gb, l40s_48gb, rtx4090_1]
+    tokens_per_second_per_gpu:
+      l4_24gb: 35        # fill with your measured throughput
+      l40s_48gb: 120
+      rtx4090_1: 90
+    notes: "Good baseline instruct model; fits on consumer GPUs at lower quantization."
+
+  - id: llama3_8b_instruct_q4
+    name: "Llama 3 8B Instruct (Q4)"
+    family: "llama3-8b"
+    quantization: "Q4"
+    min_vram_gb: 8
+    context_length: 8192
+    preferred_gpu_skus: [l4_24gb, l40s_48gb, rtx4090_1]
+    tokens_per_second_per_gpu:
+      l4_24gb: 30
+      l40s_48gb: 100
+      rtx4090_1: 85
+    notes: "Popular instruct; similar footprint as Mistral 7B."
+
+  - id: llama3_70b_instruct_q4
+    name: "Llama 3 70B Instruct (Q4)"
+    family: "llama3-70b"
+    quantization: "Q4"
+    min_vram_gb: 48
+    context_length: 8192
+    preferred_gpu_skus: [l40s_48gb, a100_80gb, h100_80gb]
+    tokens_per_second_per_gpu:
+      l40s_48gb: 6
+      a100_80gb: 18
+      h100_80gb: 28
+    notes: "Requires data center GPUs; consider tensor-parallel for higher throughput."
+
+  - id: qwen2_72b_instruct_q4
+    name: "Qwen2 72B Instruct (Q4)"
+    family: "qwen2-72b"
+    quantization: "Q4"
+    min_vram_gb: 48
+    context_length: 32768
+    preferred_gpu_skus: [l40s_48gb, a100_80gb, h100_80gb]
+    tokens_per_second_per_gpu:
+      l40s_48gb: 5
+      a100_80gb: 16
+      h100_80gb: 26
+    notes: "Stronger at coding; ensure KV cache planning for long contexts."

@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+import re
 from typing import Optional, List
 
 from finplan.fs import load_input, write_reports
@@ -72,6 +73,15 @@ def cmd_run(args: argparse.Namespace) -> None:
             raise SystemExit(1)
         out_path = out_dir / tpl.name.replace('.md.tpl', '.md')
         out_path.write_text(rendered, encoding='utf-8')
+
+    # Combine into a single Markdown file in numeric order (e.g., 00_,10_,20_,...)
+    md_parts = []
+    md_files = sorted([p for p in out_dir.glob('*.md') if re.match(r'^\d{2}_', p.name)])
+    for p in md_files:
+        md_parts.append(p.read_text(encoding='utf-8'))
+    if md_parts:
+        combined = "\n\n".join(md_parts)
+        (out_dir / 'financieel_plan.md').write_text(combined, encoding='utf-8')
 
     # één-scherm samenvatting
     cov = model['coverage']

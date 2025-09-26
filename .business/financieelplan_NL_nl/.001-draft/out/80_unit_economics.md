@@ -29,14 +29,14 @@ Brutomarge – variabele saleskosten = Contribution margin
 
 | Scenario   | Verkoopprijs | Variabele kosten | Marge per eenheid | Marge % | Contribution margin |
 |------------|-------------:|-----------------:|------------------:|--------:|---------------------:|
-| Basis      | 1.2 | 0.85 | € 65,63 | 29.17% | € 65,63 |
-| -10% prijs | 1.08 | 0.85 | € 59,06 | 21.30% | € 43,13 |
-| +10% prijs | 1.32 | 0.85 | € 72,19 | 35.61% | € 88,13 |
+| Basis      | 1.2 | 0.85 | € 2.945,83 | 29.17% | € 2.945,83 |
+| -10% prijs | 1.08 | 0.85 | € 2.651,25 | 21.30% | € 1.935,83 |
+| +10% prijs | 1.32 | 0.85 | € 3.240,42 | 35.61% | € 3.955,83 |
 
 ## Schaalbaarheid
 
-- Aantal eenheden nodig om vaste kosten van € 1.670,00 te dekken: 4772.52  
-- Bij 187.50 eenheden (basis): dekking vaste kosten = 3.93%%
+- Aantal eenheden nodig om vaste kosten van € 3.000,00 te dekken: 8570.45  
+- Bij 8416.67 eenheden (basis): dekking vaste kosten = 98.19%%
 
 ## Stress-signaal (indicatief)
 
