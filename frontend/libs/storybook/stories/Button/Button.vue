@@ -222,15 +222,5 @@
     color: var(--acc-cyan);
   }
 
-  /* System fallback when no manual override is present */
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme]) .ui-btn--ghost {
-      background: var(--surface);
-      border-color: var(--surface-muted);
-      color: var(--text);
-    }
-    :root:not([data-theme]) .ui-btn--link {
-      color: var(--acc-cyan);
-    }
-  }
+  /* System fallback removed: system only decides initial value */
 </style>

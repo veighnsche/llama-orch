@@ -24,7 +24,8 @@
     "i18n:unused": "vue-i18n-extract unused -s 'src/**/*.{vue,ts}' -l 'src/i18n/**/*.json'",
     "i18n:extract": "node scripts/i18n-extract.mjs",
     "i18n:migrate": "node scripts/i18n-migrate-from-ts.mjs",
-    "i18n:merge": "node scripts/i18n-merge.mjs"
+    "i18n:merge": "node scripts/i18n-merge.mjs",
+    "i18n:check": "pnpm run i18n:extract && node scripts/i18n-check.mjs"
   },
   "dependencies": {
     "orchyra-storybook": "workspace:*",

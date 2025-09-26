@@ -20,6 +20,7 @@ members = [
     "libs/worker-adapters/mock",
     "libs/worker-adapters/openai-http",
     "libs/worker-adapters/http-util",
+    "libs/worker-adapters/http-util/bdd",
     "libs/adapter-host",
     "libs/observability/narration-core",
     "libs/auth-min",

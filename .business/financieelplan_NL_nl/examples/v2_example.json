@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "bedrijf": {
+    "naam": "Demo BV",
+    "rechtsvorm": "BV",
+    "start_maand": "2026-01",
+    "valuta": "EUR"
+  },
+  "horizon_maanden": 12,
+  "scenario": "base",
+  "vat_period": "monthly",
+  "btw": {
+    "btw_pct": 21,
+    "model": "omzet_enkel",
+    "kor": false,
+    "btw_vrij": false
+  },
+  "omzetstromen": [
+    {
+      "naam": "API",
+      "prijs": 49.0,
+      "volume_pm": [100, 120, 140, 160, 180, 200],
+      "var_kosten_per_eenheid": 10.0,
+      "btw_pct": 21,
+      "dso_dagen": 30
+    }
+  ],
+  "opex_vast_pm": {
+    "personeel": [
+      { "rol": "Founder", "bruto_pm": 3000 }
+    ],
+    "marketing": 800,
+    "software": 400,
+    "huisvesting": 600,
+    "overig": 300
+  },
+  "investeringen": [
+    {
+      "omschrijving": "GPU server",
+      "bedrag": 12000,
+      "levensduur_mnd": 36,
+      "start_maand": "2026-02"
+    }
+  ],
+  "financiering": {
+    "eigen_inbreng": 8000,
+    "leningen": [
+      {
+        "verstrekker": "Qredits",
+        "hoofdsom": 20000,
+        "rente_nominaal_jr": 7.0,
+        "looptijd_mnd": 60,
+        "grace_mnd": 3
+      }
+    ]
+  },
+  "werkkapitaal": {
+    "dso_dagen": 30,
+    "dpo_dagen": 14,
+    "dio_dagen": 0,
+    "vooruitbetaald_pm": 0,
+    "deferred_revenue_pm": 0
+  },
+  "assumpties": {
+    "discount_rate_pct": 10.0,
+    "kas_buffer_norm": 2500
+  },
+  "stress": {
+    "omzet_pct": -30,
+    "opex_pct": 10,
+    "dso_plus_dagen": 30
+  }
+}

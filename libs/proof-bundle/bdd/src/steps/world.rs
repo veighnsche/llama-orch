@@ -36,3 +36,11 @@ impl BddWorld {
         Ok(pb)
     }
 }
+
+impl Drop for BddWorld {
+    fn drop(&mut self) {
+        // Prevent cross-scenario leakage of environment configuration
+        std::env::remove_var("LLORCH_PROOF_DIR");
+        std::env::remove_var("LLORCH_RUN_ID");
+    }
+}

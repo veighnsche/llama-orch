@@ -14,10 +14,10 @@ templates:
 	./fp check-templates
 
 validate:
-	./fp validate examples/voorbeeld.json --months 12
+	./fp validate examples/v2_example.json --months 12
 
 run:
-	./fp run examples/voorbeeld.json --out ./out --months 12 --scenario base --vat-period monthly
+	./fp run examples/v2_example.json --out ./out --months 12 --scenario base --vat-period monthly
 
 clean:
 	rm -rf out

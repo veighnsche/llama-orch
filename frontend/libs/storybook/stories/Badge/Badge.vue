@@ -104,20 +104,5 @@
     --badge-fg: var(--text);
   }
 
-  /* System fallback when no manual override */
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme]) .ui-badge--default {
-      --badge-border: var(--surface-muted);
-      --badge-bg: var(--surface);
-      --badge-fg: var(--text);
-    }
-    :root:not([data-theme]) .ui-badge--green,
-    :root:not([data-theme]) .ui-badge--cyan,
-    :root:not([data-theme]) .ui-badge--slate,
-    :root:not([data-theme]) .ui-badge--purple {
-      --badge-border: color-mix(in srgb, var(--badge-color) 36%, var(--surface));
-      --badge-bg: color-mix(in srgb, var(--badge-color) 20%, var(--surface));
-      --badge-fg: var(--text);
-    }
-  }
+  /* System fallback removed: system only decides initial value */
 </style>

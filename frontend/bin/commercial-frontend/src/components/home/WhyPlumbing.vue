@@ -167,21 +167,5 @@
       grid-template-columns: 1fr 1fr;
     }
   }
-  @media (prefers-color-scheme: dark) {
-    .why-intro {
-      color: var(--muted);
-    }
-    .panel {
-      background: var(--surface);
-      border-color: var(--surface-muted);
-    }
-    .list li {
-      color: var(--text);
-    }
-    .dot {
-      background: var(--muted);
-    }
-    /* Badges now use ui/Badge.vue which handles dark mode */
-    /* Button component has dark styles built-in; no overrides needed here */
-  }
+  /* Dark mode overrides removed. Tokens now drive both modes. */
 </style>

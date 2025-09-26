@@ -69,7 +69,7 @@ pub async fn when_append_ndjson(world: &mut BddWorld, name: String, json_str: St
     pb.append_ndjson(name, &value).expect("append ndjson");
 }
 
-#[then(regex = r#"^first line of \"([^\"]+)\" contains \"([^\"]+)\"$"#)]
+#[then(regex = r#"^first line of \"([^\"]+)\" contains \"(.*)\"$"#)]
 pub async fn then_first_line_contains(world: &mut BddWorld, name: String, needle: String) {
     let pb = world.get_pb().expect("bundle in world");
     let p = pb.root().join(name);
