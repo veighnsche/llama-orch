@@ -133,10 +133,4 @@
   .dark .devbar {
     background: color-mix(in srgb, var(--surface) 85%, transparent);
   }
-  /* System fallback when no manual override */
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme]) .devbar {
-      background: color-mix(in srgb, var(--surface) 85%, transparent);
-    }
-  }
 </style>

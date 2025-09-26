@@ -3,30 +3,23 @@ import { computed, ref, watchEffect } from 'vue'
 import type { ThemeMode } from '@/composables/useTheme'
 import { useTheme } from '@/composables/useTheme'
 
-const { get, set, effective, onSystemChange } = useTheme()
+const { get, set, toggle } = useTheme()
 
 const mode = ref<ThemeMode>(get())
 
 watchEffect(() => {
-  // Keep local state in sync if something else changes it
+  // Keep local state in sync
   mode.value = get()
 })
 
 function cycle() {
-  mode.value = mode.value === 'system' ? 'light' : mode.value === 'light' ? 'dark' : 'system'
-  set(mode.value)
+  toggle()
+  mode.value = get()
 }
 
-const label = computed(() => {
-  if (mode.value === 'system') return 'Theme: System'
-  if (mode.value === 'light') return 'Theme: Light'
-  return 'Theme: Dark'
-})
+const label = computed(() => (mode.value === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'))
 
-const icon = computed(() => {
-  // simple emoji icons; you can swap with SVGs if desired
-  return mode.value === 'system' ? '💻' : mode.value === 'light' ? '☀️' : '🌙'
-})
+const icon = computed(() => (mode.value === 'dark' ? '🌙' : '☀️'))
 </script>
 
 <template>

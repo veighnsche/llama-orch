@@ -86,13 +86,7 @@
     mix-blend-mode: normal;
 }
 
-/* System fallback when no manual override is present */
-@media (prefers-color-scheme: dark) {
-    :root:not([data-theme]) {
-        --bp-grid-bg: #0b1220;
-        --bp-grid-color: rgba(148, 163, 184, 0.14);
-    }
-}
+/* System fallback removed: system decides only the initial value via app logic */
 
 /* ============================
    Cards – sturdy / boxed look
@@ -185,17 +179,4 @@
     box-shadow: 0 8px 22px rgba(2, 6, 23, 0.45);
 }
 
-/* System fallback */
-@media (prefers-color-scheme: dark) {
-    :root:not([data-theme]) {
-        --card-bg: #0b1220;
-        --card-border: #0b1b2e;
-    }
-    :root:not([data-theme]) .card {
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-    }
-    :root:not([data-theme]) .card.interactive:hover {
-        border-color: #13324a;
-        box-shadow: 0 8px 22px rgba(2, 6, 23, 0.45);
-    }
-}
+/* System fallback removed: system decides only the initial value via app logic */

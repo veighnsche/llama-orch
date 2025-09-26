@@ -7,6 +7,7 @@ use std::path::{Component, Path};
 /// - No `..` components
 /// - No empty components
 /// - Allow normal segments (alphanumeric, dash, underscore, dot) and `/` as separator
+///
 /// Returns the original string if valid; otherwise returns an error.
 pub fn sanitize_name<S: AsRef<str>>(name: S) -> Result<String> {
     let s = name.as_ref();

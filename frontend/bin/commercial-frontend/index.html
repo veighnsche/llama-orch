@@ -8,17 +8,17 @@
             (function () {
                 try {
                     var key = 'orchyra:theme'
-                    var v = localStorage.getItem(key)
                     var root = document.documentElement
-                    if (v === 'light' || v === 'dark') {
-                        root.setAttribute('data-theme', v)
-                        root.classList.toggle('dark', v === 'dark')
-                        root.classList.toggle('light', v === 'light')
-                    } else {
-                        // system: no override, let CSS media query apply
-                        root.removeAttribute('data-theme')
-                        root.classList.remove('dark', 'light')
+                    var v = localStorage.getItem(key)
+                    if (v !== 'light' && v !== 'dark') {
+                        // Decide initial from system preference, then persist
+                        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+                        v = prefersDark ? 'dark' : 'light'
+                        localStorage.setItem(key, v)
                     }
+                    root.setAttribute('data-theme', v)
+                    root.classList.toggle('dark', v === 'dark')
+                    root.classList.toggle('light', v === 'light')
                 } catch (e) {
                     /* ignore */
                 }

@@ -19,10 +19,12 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "i18n:report": "vue-i18n-extract report -v -a -s 'src/**/*.{vue,ts}' -l 'src/i18n/**/*.{json,ts}'",
-    "i18n:missing": "vue-i18n-extract missing -s 'src/**/*.{vue,ts}' -l 'src/i18n/**/*.{json,ts}'",
-    "i18n:unused": "vue-i18n-extract unused -s 'src/**/*.{vue,ts}' -l 'src/i18n/**/*.{json,ts}'",
-    "i18n:extract": "node scripts/i18n-extract.mjs"
+    "i18n:report": "vue-i18n-extract report -v -a -s 'src/**/*.{vue,ts}' -l 'src/i18n/**/*.json'",
+    "i18n:missing": "vue-i18n-extract missing -s 'src/**/*.{vue,ts}' -l 'src/i18n/**/*.json'",
+    "i18n:unused": "vue-i18n-extract unused -s 'src/**/*.{vue,ts}' -l 'src/i18n/**/*.json'",
+    "i18n:extract": "node scripts/i18n-extract.mjs",
+    "i18n:migrate": "node scripts/i18n-migrate-from-ts.mjs",
+    "i18n:merge": "node scripts/i18n-merge.mjs"
   },
   "dependencies": {
     "orchyra-storybook": "workspace:*",
@@ -40,6 +42,7 @@
     "eslint": "^9.14.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-vue": "^9.30.0",
+    "json5": "^2.2.3",
     "npm-run-all2": "^8.0.4",
     "orchyra-frontend-tooling": "workspace:*",
     "prettier": "^3.3.3",

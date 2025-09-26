@@ -1,110 +1,24 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from decimal import Decimal
 from typing import Any, Dict, List, Tuple
 
 from .money import D, CENT, ZERO, money as fmt_money
-
-
-def _sum(vals):
-    s = ZERO
-    for v in vals:
-        s += D(str(v))
-    return s.quantize(CENT)
-
-
-def _pct(n: Decimal, d: Decimal) -> str:
-    if d == 0:
-        return "0%"
-    return f"{(n / d * D('100')).quantize(D('0.01'))}%"
-
-
-def _ratio_pct(a: Decimal, b: Decimal) -> str:
-    tot = a + b
-    if tot == 0:
-        return "0% / 0%"
-    ap = (a / tot * D('100')).quantize(D('0.01'))
-    bp = (b / tot * D('100')).quantize(D('0.01'))
-    return f"{ap}% / {bp}%"
-
-
-def _avg(vals: List[Decimal]) -> Decimal:
-    if not vals:
-        return ZERO
-    return (_sum(vals) / D(str(len(vals)))).quantize(CENT)
-
-
-def _best_worst(result_by_month: Dict[str, Decimal]) -> Tuple[Tuple[str, Decimal], Tuple[str, Decimal]]:
-    best = ("", None)
-    worst = ("", None)
-    for ym, v in result_by_month.items():
-        if best[1] is None or v > best[1]:
-            best = (ym, v)
-        if worst[1] is None or v < worst[1]:
-            worst = (ym, v)
-    return (best[0], best[1] or ZERO), (worst[0], worst[1] or ZERO)
-
-
-def _build_amort_index(amort_rows: List[Dict[str, Any]]) -> Dict[str, Dict[str, Decimal]]:
-    idx: Dict[str, Dict[str, Decimal]] = defaultdict(lambda: {"rente_totaal": ZERO, "restschuld_einde": ZERO})
-    last_month: Dict[str, str] = {}
-    for r in amort_rows:
-        v = D(str(r.get('rente_pm', 0)))
-        verstrekker = str(r.get('verstrekker', 'Onbekend'))
-        idx[verstrekker]["rente_totaal"] += v
-        last_month[verstrekker] = str(r.get('maand'))
-        idx[verstrekker]["restschuld_einde"] = D(str(r.get('restschuld', 0)))
-    return idx
-
-
-def _breakeven_omzet_pm(revenue: Dict[str, Decimal], cogs: Dict[str, Decimal], opex_total: Dict[str, Decimal]) -> Decimal:
-    rev_avg = _avg([revenue[m] for m in revenue])
-    gm_ratio = ZERO
-    if rev_avg > 0:
-        gm_ratio = ((rev_avg - _avg([cogs[m] for m in cogs])) / rev_avg).quantize(D('0.0001'))
-    fixed_costs = _avg([opex_total[m] for m in opex_total])
-    if gm_ratio <= 0:
-        return ZERO
-    return (fixed_costs / gm_ratio).quantize(CENT)
-
-
-def _runway(cash_end: Dict[str, Decimal]) -> int:
-    max_streak = 0
-    cur = 0
-    for ym in cash_end.keys():
-        if cash_end[ym] >= ZERO:
-            cur += 1
-            max_streak = max(max_streak, cur)
-        else:
-            cur = 0
-    return max_streak
+from .metrics import (
+    sum_dec as _sum,
+    avg_dec as _avg,
+    pct as _pct,
+    ratio_pct as _ratio_pct,
+    best_worst as _best_worst,
+    build_amort_index as _build_amort_index,
+    breakeven_omzet_pm as _breakeven_omzet_pm,
+    runway as _runway,
+)
+from .context import build_streams as ctx_build_streams, pricing_baseline, loan_contexts, compute_pnl_aggregates
 
 
 def _build_streams(streams_cfg: List[Dict[str, Any]], months: List[str]) -> Tuple[List[Dict[str, Any]], Dict[str, Decimal]]:
-    out_list: List[Dict[str, Any]] = []
-    totals: Dict[str, Decimal] = {m: ZERO for m in months}
-    for s in streams_cfg or []:
-        prijs = D(str(s.get('prijs', 0)))
-        var_eh = D(str(s.get('var_kosten_per_eenheid', 0)))
-        vols = s.get('volume_pm') or [0] * len(months)
-        omzet_pm = ZERO
-        marge_pm = ZERO
-        for i, ym in enumerate(months):
-            vol = D(str(vols[i])) if i < len(vols) else ZERO
-            omzet = (prijs * vol).quantize(CENT)
-            marge = ((prijs - var_eh) * vol).quantize(CENT)
-            omzet_pm += omzet
-            marge_pm += marge
-            totals[ym] += omzet
-        out_list.append({
-            'naam': s.get('naam', 'Stroom'),
-            'prijs': f"{prijs}",
-            'volume_pm': f"{_avg([D(str(v)) for v in vols]).quantize(D('0.01'))}",
-            'omzet_pm': fmt_money((omzet_pm / D(str(len(months)))).quantize(CENT)),
-            'marge_pm': fmt_money((marge_pm / D(str(len(months)))).quantize(CENT)),
-        })
-    return out_list, totals
+    return ctx_build_streams(streams_cfg, months)
 
 
 def build_template_context(model: Dict[str, Any]) -> Dict[str, Any]:
@@ -128,18 +42,16 @@ def build_template_context(model: Dict[str, Any]) -> Dict[str, Any]:
     last_month = months[-1] if months else ''
 
     # P&L aggregates
-    omzet_totaal = _sum([revenue[m] for m in months])
-    cogs_totaal = _sum([cogs[m] for m in months])
-    brutomarge_totaal = (omzet_totaal - cogs_totaal).quantize(CENT)
-    opex_totaal = _sum([opex_total[m] for m in months])
-    afschrijving_totaal = _sum([model['depreciation'][m] for m in months])
-    rente_totaal = _sum([model['interest'][m] for m in months])
-    resultaat_vb_by_month: Dict[str, Decimal] = {
-        m: (revenue[m] - cogs[m] - opex_total[m] - model['depreciation'][m] - model['interest'][m]).quantize(CENT)
-        for m in months
-    }
-    resultaat_vb_totaal = _sum(resultaat_vb_by_month.values())
-    ebitda_pm_avg = _avg([model['ebitda'][m] for m in months])
+    pnl = compute_pnl_aggregates(model)
+    omzet_totaal = pnl['omzet_totaal']
+    cogs_totaal = pnl['cogs_totaal']
+    brutomarge_totaal = pnl['brutomarge_totaal']
+    opex_totaal = pnl['opex_totaal']
+    afschrijving_totaal = pnl['afschrijving_totaal']
+    rente_totaal = pnl['rente_totaal']
+    resultaat_vb_by_month = pnl['resultaat_vb_by_month']
+    resultaat_vb_totaal = pnl['resultaat_vb_totaal']
+    ebitda_pm_avg = pnl['ebitda_pm_avg']
 
     best, worst = _best_worst(resultaat_vb_by_month)
     verlies_maanden = sum(1 for m in months if resultaat_vb_by_month[m] < ZERO)
@@ -163,48 +75,12 @@ def build_template_context(model: Dict[str, Any]) -> Dict[str, Any]:
     kas_negatief_verdict = 'negatief' if kas_negatief_count > 0 else 'OK'
 
     # Amort summary per loan
-    amort_idx = _build_amort_index(model.get('amort_rows', []) or [])
-    leningen_ctx: List[Dict[str, Any]] = []
-    for ln in loans:
-        verstrekker = ln.get('verstrekker', 'Onbekend')
-        hoofdsom = D(str(ln.get('hoofdsom', 0))).quantize(CENT)
-        jr = D(str(ln.get('rente_nominaal_jr', ln.get('rente_nominaal_jr_pct', 0))))
-        r_pm = (jr / D('12')).quantize(D('0.01'))
-        looptijd = int(ln.get('looptijd_mnd', 0) or 0)
-        grace = int(ln.get('grace_mnd', 0) or 0)
-        term = '0.00'
-        if looptijd > 0:
-            # The CSV includes computed term; for MD we show string
-            from .loan import annuity_payment
-            term = str(annuity_payment(hoofdsom, (jr / D('100')) / D('12'), max(0, looptijd - grace)))
-        entry = {
-            'verstrekker': verstrekker,
-            'hoofdsom': fmt_money(hoofdsom),
-            'rente_nominaal_jr': f"{jr}",
-            'rente_nominaal_maand': f"{r_pm}",
-            'looptijd_mnd': looptijd,
-            'grace_mnd': grace,
-            'termijn_bedrag': term,
-            'rente_effectief_jaar': f"{jr}",
-            'rente_totaal': fmt_money(amort_idx.get(verstrekker, {}).get('rente_totaal', ZERO)),
-            'restschuld_einde': fmt_money(amort_idx.get(verstrekker, {}).get('restschuld_einde', ZERO)),
-        }
-        leningen_ctx.append(entry)
+    leningen_ctx: List[Dict[str, Any]] = loan_contexts(loans, model.get('amort_rows', []) or [])
 
     # Streams context for 60_pricing
     streams_ctx, _ = _build_streams(cfg.get('omzetstromen', []) or [], months)
     # First stream baseline for single-key outputs
-    if cfg.get('omzetstromen'):
-        s0 = cfg['omzetstromen'][0]
-        prijs_basis = D(str(s0.get('prijs', 0)))
-        var_eh = D(str(s0.get('var_kosten_per_eenheid', 0)))
-        marge_eh = (prijs_basis - var_eh).quantize(CENT)
-        vol_avg = _avg([D(str(v)) for v in s0.get('volume_pm') or [0] * len(months)])
-    else:
-        prijs_basis = ZERO
-        var_eh = ZERO
-        marge_eh = ZERO
-        vol_avg = ZERO
+    prijs_basis, var_eh, marge_eh, vol_avg = pricing_baseline(cfg, months)
 
     # Runway
     runway = _runway(model['cash_end'])
@@ -334,6 +210,15 @@ def build_template_context(model: Dict[str, Any]) -> Dict[str, Any]:
         'breakeven_omzet_plus10_opex': fmt_money((_avg([opex_total[m] for m in months]) * D('1.10') / ( ( (omzet_basis_pm - _avg([cogs[m] for m in months])) / (omzet_basis_pm if omzet_basis_pm>0 else D('1')) ) or D('1'))).quantize(CENT)),
         'breakeven_omzet_min10_marge': fmt_money((be_omzet * D('1.1111')).quantize(CENT)),
         'dekking_pct': _pct((vol_avg * marge_eh).quantize(CENT), _avg([opex_total[m] for m in months]) if months else D('1')),
+        # Unit economics scenario extras
+        'var_basis': f"{var_eh.quantize(D('0.01'))}",
+        'marge_pct_basis': _pct(marge_eh, prijs_basis if prijs_basis > 0 else D('1')),
+        'marge_pct_min10': _pct((prijs_basis * D('0.90') - var_eh).quantize(CENT), (prijs_basis * D('0.90')) if prijs_basis > 0 else D('1')),
+        'marge_pct_plus10': _pct((prijs_basis * D('1.10') - var_eh).quantize(CENT), (prijs_basis * D('1.10')) if prijs_basis > 0 else D('1')),
+        'contribution_margin': fmt_money(marge_eh),
+        'contrib_basis': fmt_money((marge_eh * vol_avg).quantize(CENT)),
+        'contrib_min10': fmt_money((((prijs_basis * D('0.90') - var_eh) * vol_avg).quantize(CENT))),
+        'contrib_plus10': fmt_money((((prijs_basis * D('1.10') - var_eh) * vol_avg).quantize(CENT))),
         # Working capital extras (basic placeholders)
         'debiteuren_openstaand': fmt_money(ZERO),
         'crediteuren_openstaand': fmt_money(ZERO),

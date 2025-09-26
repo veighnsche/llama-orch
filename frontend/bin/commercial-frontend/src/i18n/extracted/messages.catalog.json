@@ -1,0 +1,1354 @@
+{
+  "a11y.footerNav": {
+    "default": "",
+    "files": [
+      "src/components/SiteFooter.vue"
+    ],
+    "count": 1
+  },
+  "a11y.language": {
+    "default": "",
+    "files": [
+      "src/components/LanguageSwitcher.vue"
+    ],
+    "count": 1
+  },
+  "a11y.navPrimary": {
+    "default": "",
+    "files": [
+      "src/layouts/DefaultLayout.vue"
+    ],
+    "count": 1
+  },
+  "about.approach": {
+    "default": "",
+    "files": [
+      "src/views/AboutView.vue"
+    ],
+    "count": 1
+  },
+  "about.approachP": {
+    "default": "",
+    "files": [
+      "src/views/AboutView.vue"
+    ],
+    "count": 1
+  },
+  "about.cta": {
+    "default": "",
+    "files": [
+      "src/views/AboutView.vue"
+    ],
+    "count": 1
+  },
+  "about.h1": {
+    "default": "",
+    "files": [
+      "src/views/AboutView.vue"
+    ],
+    "count": 1
+  },
+  "about.identity": {
+    "default": "",
+    "files": [
+      "src/views/AboutView.vue"
+    ],
+    "count": 1
+  },
+  "about.identityP": {
+    "default": "",
+    "files": [
+      "src/views/AboutView.vue"
+    ],
+    "count": 1
+  },
+  "about.usp": {
+    "default": "",
+    "files": [
+      "src/views/AboutView.vue"
+    ],
+    "count": 1
+  },
+  "about.usp1": {
+    "default": "",
+    "files": [
+      "src/views/AboutView.vue"
+    ],
+    "count": 1
+  },
+  "about.usp2": {
+    "default": "",
+    "files": [
+      "src/views/AboutView.vue"
+    ],
+    "count": 1
+  },
+  "about.usp3": {
+    "default": "",
+    "files": [
+      "src/views/AboutView.vue"
+    ],
+    "count": 1
+  },
+  "about.usp4": {
+    "default": "",
+    "files": [
+      "src/views/AboutView.vue"
+    ],
+    "count": 1
+  },
+  "contact.contact": {
+    "default": "",
+    "files": [
+      "src/views/ContactLegalView.vue"
+    ],
+    "count": 1
+  },
+  "contact.dataLogs": {
+    "default": "",
+    "files": [
+      "src/views/ContactLegalView.vue"
+    ],
+    "count": 1
+  },
+  "contact.dataLogsP": {
+    "default": "",
+    "files": [
+      "src/views/ContactLegalView.vue"
+    ],
+    "count": 1
+  },
+  "contact.email": {
+    "default": "",
+    "files": [
+      "src/views/ContactLegalView.vue"
+    ],
+    "count": 1
+  },
+  "contact.github": {
+    "default": "",
+    "files": [
+      "src/views/ContactLegalView.vue"
+    ],
+    "count": 1
+  },
+  "contact.h1": {
+    "default": "",
+    "files": [
+      "src/views/ContactLegalView.vue"
+    ],
+    "count": 1
+  },
+  "contact.l1": {
+    "default": "",
+    "files": [
+      "src/views/ContactLegalView.vue"
+    ],
+    "count": 1
+  },
+  "contact.l2": {
+    "default": "",
+    "files": [
+      "src/views/ContactLegalView.vue"
+    ],
+    "count": 1
+  },
+  "contact.l3": {
+    "default": "",
+    "files": [
+      "src/views/ContactLegalView.vue"
+    ],
+    "count": 1
+  },
+  "contact.legal": {
+    "default": "",
+    "files": [
+      "src/views/ContactLegalView.vue"
+    ],
+    "count": 1
+  },
+  "contact.linkedin": {
+    "default": "",
+    "files": [
+      "src/views/ContactLegalView.vue"
+    ],
+    "count": 1
+  },
+  "contact.note": {
+    "default": "",
+    "files": [
+      "src/views/ContactLegalView.vue"
+    ],
+    "count": 1
+  },
+  "devbar.${l.key}": {
+    "default": "",
+    "files": [
+      "src/components/DevUtilityBar.vue"
+    ],
+    "count": 1
+  },
+  "devbar.aria": {
+    "default": "Developer shortcuts",
+    "files": [
+      "src/components/DevUtilityBar.vue"
+    ],
+    "count": 1
+  },
+  "devbar.label": {
+    "default": "Developer",
+    "files": [
+      "src/components/DevUtilityBar.vue"
+    ],
+    "count": 1
+  },
+  "faqs.a1": {
+    "default": "",
+    "files": [
+      "src/views/FAQsView.vue"
+    ],
+    "count": 1
+  },
+  "faqs.a2": {
+    "default": "",
+    "files": [
+      "src/views/FAQsView.vue"
+    ],
+    "count": 1
+  },
+  "faqs.a3": {
+    "default": "",
+    "files": [
+      "src/views/FAQsView.vue"
+    ],
+    "count": 1
+  },
+  "faqs.a4": {
+    "default": "",
+    "files": [
+      "src/views/FAQsView.vue"
+    ],
+    "count": 1
+  },
+  "faqs.a5": {
+    "default": "",
+    "files": [
+      "src/views/FAQsView.vue"
+    ],
+    "count": 1
+  },
+  "faqs.h1": {
+    "default": "",
+    "files": [
+      "src/views/FAQsView.vue"
+    ],
+    "count": 1
+  },
+  "faqs.q1": {
+    "default": "",
+    "files": [
+      "src/views/FAQsView.vue"
+    ],
+    "count": 1
+  },
+  "faqs.q2": {
+    "default": "",
+    "files": [
+      "src/views/FAQsView.vue"
+    ],
+    "count": 1
+  },
+  "faqs.q3": {
+    "default": "",
+    "files": [
+      "src/views/FAQsView.vue"
+    ],
+    "count": 1
+  },
+  "faqs.q4": {
+    "default": "",
+    "files": [
+      "src/views/FAQsView.vue"
+    ],
+    "count": 1
+  },
+  "faqs.q5": {
+    "default": "",
+    "files": [
+      "src/views/FAQsView.vue"
+    ],
+    "count": 1
+  },
+  "footer.about": {
+    "default": "",
+    "files": [
+      "src/components/SiteFooter.vue"
+    ],
+    "count": 1
+  },
+  "footer.brandLine": {
+    "default": "",
+    "files": [
+      "src/components/SiteFooter.vue",
+      "src/views/HomeView.vue"
+    ],
+    "count": 3
+  },
+  "footer.contactLegal": {
+    "default": "",
+    "files": [
+      "src/components/SiteFooter.vue"
+    ],
+    "count": 1
+  },
+  "footer.microcopy": {
+    "default": "",
+    "files": [
+      "src/components/SiteFooter.vue"
+    ],
+    "count": 1
+  },
+  "footer.pricing": {
+    "default": "",
+    "files": [
+      "src/components/SiteFooter.vue"
+    ],
+    "count": 1
+  },
+  "footer.proof": {
+    "default": "",
+    "files": [
+      "src/components/SiteFooter.vue"
+    ],
+    "count": 1
+  },
+  "home.audience.b1": {
+    "default": "",
+    "files": [
+      "src/components/home/Audience.vue"
+    ],
+    "count": 1
+  },
+  "home.audience.b2": {
+    "default": "",
+    "files": [
+      "src/components/home/Audience.vue"
+    ],
+    "count": 1
+  },
+  "home.audience.b3": {
+    "default": "",
+    "files": [
+      "src/components/home/Audience.vue"
+    ],
+    "count": 1
+  },
+  "home.audience.title": {
+    "default": "",
+    "files": [
+      "src/components/home/Audience.vue"
+    ],
+    "count": 1
+  },
+  "home.badge.audit": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.badge.gdpr": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.badge.oss": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.hero.badge.eu": {
+    "default": "EU-conform",
+    "files": [
+      "src/components/home/Hero.vue"
+    ],
+    "count": 1
+  },
+  "home.hero.badge.oss": {
+    "default": "Open source",
+    "files": [
+      "src/components/home/Hero.vue"
+    ],
+    "count": 1
+  },
+  "home.hero.badge.predictable": {
+    "default": "Voorspelbare kosten",
+    "files": [
+      "src/components/home/Hero.vue"
+    ],
+    "count": 1
+  },
+  "home.hero.badge.proofs": {
+    "default": "Bewijs-gedreven",
+    "files": [
+      "src/components/home/Hero.vue"
+    ],
+    "count": 1
+  },
+  "home.hero.ctaProofs": {
+    "default": "Bekijk operationeel bewijs",
+    "files": [
+      "src/components/home/Hero.vue"
+    ],
+    "count": 1
+  },
+  "home.hero.eyebrow": {
+    "default": "Betrouwbare EU-gebaseerde AI-API’s",
+    "files": [
+      "src/components/home/Hero.vue"
+    ],
+    "count": 1
+  },
+  "home.hero.h1": {
+    "default": "Transparante, EU-conforme AI-infrastructuur.",
+    "files": [
+      "src/components/home/Hero.vue"
+    ],
+    "count": 1
+  },
+  "home.hero.quickPrivate": {
+    "default": "Vraag Private demo aan",
+    "files": [
+      "src/components/home/Hero.vue"
+    ],
+    "count": 1
+  },
+  "home.hero.quickPublic": {
+    "default": "Probeer Public API",
+    "files": [
+      "src/components/home/Hero.vue"
+    ],
+    "count": 1
+  },
+  "home.hero.sub": {
+    "default": "Begin met voorafbetaalde Public API’s en schaal door naar uw eigen Private endpoint op dedicated GPU’s. Elke stap is bewijs-gedreven, controleerbaar en kost-voorspelbaar.',\n            )\n          }}\n        </p>\n\n        <div class=\"ctas\" role=\"group\" aria-label=\"primary actions\">\n          <Button as=\"router-link\" to=\"/service-menu\" variant=\"primary\">\n            {{ t('home.hero.ctaMenu', 'Bekijk service-plannen",
+    "files": [
+      "src/components/home/Hero.vue"
+    ],
+    "count": 1
+  },
+  "home.more.about": {
+    "default": "",
+    "files": [
+      "src/components/home/More.vue"
+    ],
+    "count": 1
+  },
+  "home.more.faqs": {
+    "default": "",
+    "files": [
+      "src/components/home/More.vue"
+    ],
+    "count": 1
+  },
+  "home.private.b1": {
+    "default": "",
+    "files": [
+      "src/components/home/PrivateTap.vue"
+    ],
+    "count": 1
+  },
+  "home.private.b2": {
+    "default": "",
+    "files": [
+      "src/components/home/PrivateTap.vue"
+    ],
+    "count": 1
+  },
+  "home.private.b3": {
+    "default": "",
+    "files": [
+      "src/components/home/PrivateTap.vue"
+    ],
+    "count": 1
+  },
+  "home.private.p1": {
+    "default": "",
+    "files": [
+      "src/components/home/PrivateTap.vue"
+    ],
+    "count": 1
+  },
+  "home.private.title": {
+    "default": "",
+    "files": [
+      "src/components/home/PrivateTap.vue"
+    ],
+    "count": 1
+  },
+  "home.proof.b1": {
+    "default": "",
+    "files": [
+      "src/components/home/Proof.vue"
+    ],
+    "count": 1
+  },
+  "home.proof.b2": {
+    "default": "",
+    "files": [
+      "src/components/home/Proof.vue"
+    ],
+    "count": 1
+  },
+  "home.proof.b3": {
+    "default": "",
+    "files": [
+      "src/components/home/Proof.vue"
+    ],
+    "count": 1
+  },
+  "home.proof.b4": {
+    "default": "",
+    "files": [
+      "src/components/home/Proof.vue"
+    ],
+    "count": 1
+  },
+  "home.proof.title": {
+    "default": "",
+    "files": [
+      "src/components/home/Proof.vue"
+    ],
+    "count": 1
+  },
+  "home.public.b1": {
+    "default": "",
+    "files": [
+      "src/components/home/PublicTap.vue"
+    ],
+    "count": 1
+  },
+  "home.public.b2": {
+    "default": "",
+    "files": [
+      "src/components/home/PublicTap.vue"
+    ],
+    "count": 1
+  },
+  "home.public.b3": {
+    "default": "",
+    "files": [
+      "src/components/home/PublicTap.vue"
+    ],
+    "count": 1
+  },
+  "home.public.p1": {
+    "default": "",
+    "files": [
+      "src/components/home/PublicTap.vue"
+    ],
+    "count": 1
+  },
+  "home.public.title": {
+    "default": "",
+    "files": [
+      "src/components/home/PublicTap.vue"
+    ],
+    "count": 1
+  },
+  "home.three.i1": {
+    "default": "",
+    "files": [
+      "src/components/home/ThreeTools.vue"
+    ],
+    "count": 1
+  },
+  "home.three.i2": {
+    "default": "",
+    "files": [
+      "src/components/home/ThreeTools.vue"
+    ],
+    "count": 1
+  },
+  "home.three.i3": {
+    "default": "",
+    "files": [
+      "src/components/home/ThreeTools.vue"
+    ],
+    "count": 1
+  },
+  "home.three.title": {
+    "default": "",
+    "files": [
+      "src/components/home/ThreeTools.vue"
+    ],
+    "count": 1
+  },
+  "home.why.b1": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.why.b2": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.why.b3": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.why.b4": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.why.ctaMenu": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.why.ctaProof": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.why.intro": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.why.o1": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.why.o2": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.why.o3": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.why.o4": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.why.outcomesTitle": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.why.problemsTitle": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "home.why.title": {
+    "default": "",
+    "files": [
+      "src/components/home/WhyPlumbing.vue"
+    ],
+    "count": 1
+  },
+  "jsonld.desc": {
+    "default": "",
+    "files": [
+      "src/views/HomeView.vue"
+    ],
+    "count": 1
+  },
+  "nav.about": {
+    "default": "",
+    "files": [
+      "src/layouts/DefaultLayout.vue"
+    ],
+    "count": 1
+  },
+  "nav.contact": {
+    "default": "",
+    "files": [
+      "src/layouts/DefaultLayout.vue"
+    ],
+    "count": 1
+  },
+  "nav.faqs": {
+    "default": "",
+    "files": [
+      "src/layouts/DefaultLayout.vue"
+    ],
+    "count": 1
+  },
+  "nav.pricing": {
+    "default": "",
+    "files": [
+      "src/layouts/DefaultLayout.vue"
+    ],
+    "count": 1
+  },
+  "nav.privateTap": {
+    "default": "",
+    "files": [
+      "src/layouts/DefaultLayout.vue"
+    ],
+    "count": 1
+  },
+  "nav.proof": {
+    "default": "",
+    "files": [
+      "src/layouts/DefaultLayout.vue"
+    ],
+    "count": 1
+  },
+  "nav.publicTap": {
+    "default": "",
+    "files": [
+      "src/layouts/DefaultLayout.vue"
+    ],
+    "count": 1
+  },
+  "nav.serviceMenu": {
+    "default": "Service menu",
+    "files": [
+      "src/layouts/DefaultLayout.vue"
+    ],
+    "count": 2
+  },
+  "nav.toolkit": {
+    "default": "",
+    "files": [
+      "src/components/SiteFooter.vue",
+      "src/layouts/DefaultLayout.vue"
+    ],
+    "count": 2
+  },
+  "pricing.credits": {
+    "default": "",
+    "files": [
+      "src/views/PricingView.vue"
+    ],
+    "count": 1
+  },
+  "pricing.gpu": {
+    "default": "",
+    "files": [
+      "src/views/PricingView.vue"
+    ],
+    "count": 1
+  },
+  "pricing.h1": {
+    "default": "",
+    "files": [
+      "src/views/PricingView.vue"
+    ],
+    "count": 1
+  },
+  "pricing.note1": {
+    "default": "",
+    "files": [
+      "src/views/PricingView.vue"
+    ],
+    "count": 1
+  },
+  "pricing.note2": {
+    "default": "",
+    "files": [
+      "src/views/PricingView.vue"
+    ],
+    "count": 1
+  },
+  "privateTap.bPrice1": {
+    "default": "",
+    "files": [
+      "src/views/PricingView.vue",
+      "src/views/PrivateTapView.vue"
+    ],
+    "count": 2
+  },
+  "privateTap.bPrice2": {
+    "default": "",
+    "files": [
+      "src/views/PricingView.vue",
+      "src/views/PrivateTapView.vue"
+    ],
+    "count": 2
+  },
+  "privateTap.bPrice3": {
+    "default": "",
+    "files": [
+      "src/views/PricingView.vue",
+      "src/views/PrivateTapView.vue"
+    ],
+    "count": 2
+  },
+  "privateTap.bVal1": {
+    "default": "",
+    "files": [
+      "src/views/PrivateTapView.vue"
+    ],
+    "count": 1
+  },
+  "privateTap.bVal2": {
+    "default": "",
+    "files": [
+      "src/views/PrivateTapView.vue"
+    ],
+    "count": 1
+  },
+  "privateTap.bVal3": {
+    "default": "",
+    "files": [
+      "src/views/PrivateTapView.vue"
+    ],
+    "count": 1
+  },
+  "privateTap.h1": {
+    "default": "",
+    "files": [
+      "src/views/HomeView.vue",
+      "src/views/PrivateTapView.vue"
+    ],
+    "count": 2
+  },
+  "privateTap.note": {
+    "default": "",
+    "files": [
+      "src/views/PrivateTapView.vue"
+    ],
+    "count": 1
+  },
+  "privateTap.pricing": {
+    "default": "",
+    "files": [
+      "src/views/PrivateTapView.vue"
+    ],
+    "count": 1
+  },
+  "privateTap.value": {
+    "default": "",
+    "files": [
+      "src/views/PrivateTapView.vue"
+    ],
+    "count": 1
+  },
+  "privateTap.what": {
+    "default": "",
+    "files": [
+      "src/views/PrivateTapView.vue"
+    ],
+    "count": 1
+  },
+  "privateTap.whatP": {
+    "default": "",
+    "files": [
+      "src/views/HomeView.vue",
+      "src/views/PrivateTapView.vue"
+    ],
+    "count": 2
+  },
+  "proof.artifacts": {
+    "default": "",
+    "files": [
+      "src/views/ProofView.vue"
+    ],
+    "count": 1
+  },
+  "proof.b1": {
+    "default": "",
+    "files": [
+      "src/views/ProofView.vue"
+    ],
+    "count": 1
+  },
+  "proof.b2": {
+    "default": "",
+    "files": [
+      "src/views/ProofView.vue"
+    ],
+    "count": 1
+  },
+  "proof.b3": {
+    "default": "",
+    "files": [
+      "src/views/ProofView.vue"
+    ],
+    "count": 1
+  },
+  "proof.b4": {
+    "default": "",
+    "files": [
+      "src/views/ProofView.vue"
+    ],
+    "count": 1
+  },
+  "proof.h1": {
+    "default": "",
+    "files": [
+      "src/views/ProofView.vue"
+    ],
+    "count": 1
+  },
+  "proof.microcopy": {
+    "default": "",
+    "files": [
+      "src/views/ProofView.vue"
+    ],
+    "count": 1
+  },
+  "proof.v1": {
+    "default": "",
+    "files": [
+      "src/views/ProofView.vue"
+    ],
+    "count": 1
+  },
+  "proof.v2": {
+    "default": "",
+    "files": [
+      "src/views/ProofView.vue"
+    ],
+    "count": 1
+  },
+  "proof.visuals": {
+    "default": "",
+    "files": [
+      "src/views/ProofView.vue"
+    ],
+    "count": 1
+  },
+  "publicTap.bPrice1": {
+    "default": "",
+    "files": [
+      "src/views/PricingView.vue",
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 2
+  },
+  "publicTap.bPrice2": {
+    "default": "",
+    "files": [
+      "src/views/PricingView.vue",
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 2
+  },
+  "publicTap.bPrice3": {
+    "default": "",
+    "files": [
+      "src/views/PricingView.vue",
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 2
+  },
+  "publicTap.bPrice4": {
+    "default": "",
+    "files": [
+      "src/views/PricingView.vue",
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 2
+  },
+  "publicTap.bTerms1": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "publicTap.bTerms2": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "publicTap.bWho1": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "publicTap.bWho2": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "publicTap.bWho3": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "publicTap.bWhy1": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "publicTap.bWhy2": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "publicTap.bWhy3": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "publicTap.h1": {
+    "default": "",
+    "files": [
+      "src/views/HomeView.vue",
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 2
+  },
+  "publicTap.note": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "publicTap.pricing": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "publicTap.terms": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "publicTap.what": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "publicTap.whatP": {
+    "default": "",
+    "files": [
+      "src/views/HomeView.vue",
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 2
+  },
+  "publicTap.who": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "publicTap.why": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "seoDesc.about": {
+    "default": "",
+    "files": [
+      "src/views/AboutView.vue"
+    ],
+    "count": 1
+  },
+  "seoDesc.contact": {
+    "default": "",
+    "files": [
+      "src/views/ContactLegalView.vue"
+    ],
+    "count": 1
+  },
+  "seoDesc.faqs": {
+    "default": "",
+    "files": [
+      "src/views/FAQsView.vue"
+    ],
+    "count": 1
+  },
+  "seoDesc.home": {
+    "default": "",
+    "files": [
+      "src/views/HomeView.vue"
+    ],
+    "count": 1
+  },
+  "seoDesc.pricing": {
+    "default": "",
+    "files": [
+      "src/views/PricingView.vue"
+    ],
+    "count": 1
+  },
+  "seoDesc.privateTap": {
+    "default": "",
+    "files": [
+      "src/views/PrivateTapView.vue"
+    ],
+    "count": 1
+  },
+  "seoDesc.proof": {
+    "default": "",
+    "files": [
+      "src/views/ProofView.vue"
+    ],
+    "count": 1
+  },
+  "seoDesc.publicTap": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "seoDesc.toolkit": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "seoTitle.about": {
+    "default": "",
+    "files": [
+      "src/views/AboutView.vue"
+    ],
+    "count": 1
+  },
+  "seoTitle.contact": {
+    "default": "",
+    "files": [
+      "src/views/ContactLegalView.vue"
+    ],
+    "count": 1
+  },
+  "seoTitle.faqs": {
+    "default": "",
+    "files": [
+      "src/views/FAQsView.vue"
+    ],
+    "count": 1
+  },
+  "seoTitle.pricing": {
+    "default": "",
+    "files": [
+      "src/views/PricingView.vue"
+    ],
+    "count": 1
+  },
+  "seoTitle.privateTap": {
+    "default": "",
+    "files": [
+      "src/views/PrivateTapView.vue"
+    ],
+    "count": 1
+  },
+  "seoTitle.proof": {
+    "default": "",
+    "files": [
+      "src/views/ProofView.vue"
+    ],
+    "count": 1
+  },
+  "seoTitle.publicTap": {
+    "default": "",
+    "files": [
+      "src/views/PublicTapView.vue"
+    ],
+    "count": 1
+  },
+  "seoTitle.toolkit": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.applets": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.bApp1": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.bApp2": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.bApp3": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.bApp4": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.bApp5": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.bCtl1": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.bCtl2": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.bCtl3": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.bLang1": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.bLang2": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.bLang3": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.control": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.cta": {
+    "default": "",
+    "files": [
+      "src/views/PrivateTapView.vue",
+      "src/views/PublicTapView.vue",
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 3
+  },
+  "toolkit.h1": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.lang": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.note": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.what": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  },
+  "toolkit.whatP": {
+    "default": "",
+    "files": [
+      "src/views/ToolkitView.vue"
+    ],
+    "count": 1
+  }
+}

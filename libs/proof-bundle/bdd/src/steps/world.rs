@@ -3,7 +3,6 @@ pub struct BddWorld {
     pub temp_root: Option<tempfile::TempDir>,
     pub bundle_root: Option<std::path::PathBuf>,
     pub selected_type: Option<proof_bundle::TestType>,
-    pub last_error: Option<String>,
 }
 
 impl BddWorld {

@@ -3,7 +3,7 @@ use crate::policy::headers::{ensure_text_header_write, ndjson_meta_value, TEXT_H
 use crate::types::{sanitize_name, TestType};
 use crate::util::ensure_ext;
 use crate::writers::Writers;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use serde::Serialize;
 use std::fs::{self, File, OpenOptions};
 use std::io::Write;

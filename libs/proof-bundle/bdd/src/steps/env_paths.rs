@@ -1,8 +1,7 @@
 use cucumber::{given, then, when};
-use std::path::PathBuf;
 
 use crate::steps::world::BddWorld;
-use proof_bundle::{ProofBundle, TestType};
+use proof_bundle::TestType;
 
 fn parse_type(s: &str) -> TestType {
     match s.to_lowercase().as_str() {

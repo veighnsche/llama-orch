@@ -8,7 +8,7 @@ use serde_json::Value;
 use std::sync::Mutex;
 use std::time::Duration;
 use tokio::time::sleep;
-use rand::{rngs::StdRng, SeedableRng, Rng};
+use rand::{SeedableRng, Rng};
 
 static DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 static DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
@@ -93,7 +93,8 @@ pub fn redact_secrets(s: &str) -> String {
     });
     static KV_TOKEN_RE: Lazy<Regex> = Lazy::new(|| {
         // Matches token or api_key in simple JSON/text: token:"..." or api_key=...
-        Regex::new(r"(?i)(token|api[_-]?key)\s*[:=]\s*\"?(?P<t>[A-Za-z0-9._\-]{8,})\"?").unwrap()
+        // Use a raw string with # so we can include double quotes without escaping.
+        Regex::new(r#"(?i)(token|api[_-]?key)\s*[:=]\s*"?(?P<t>[A-Za-z0-9._\-]{8,})"?"#).unwrap()
     });
 
     let mut out = AUTH_BEARER_RE
@@ -175,7 +176,7 @@ where
 {
     // RNG: seed when provided for deterministic tests
     let mut rng = if let Some(seed) = policy.seed {
-        let mut r = rand::rngs::StdRng::seed_from_u64(seed);
+        let r = rand::rngs::StdRng::seed_from_u64(seed);
         // Use thread_rng-like API via closure
         Some(r)
     } else {
@@ -199,7 +200,6 @@ where
                 let max_delay_ms = std::cmp::min(policy.cap.as_millis() as u128, exp as u128) as u64;
                 let delay_ms = if max_delay_ms == 0 { 0 } else {
                     if let Some(ref mut srng) = rng {
-                        use rand::Rng;
                         srng.gen_range(0..=max_delay_ms)
                     } else {
                         rand::thread_rng().gen_range(0..=max_delay_ms)
