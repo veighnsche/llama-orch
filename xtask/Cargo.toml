@@ -23,5 +23,5 @@ serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 openapiv3 = { workspace = true }
 contracts-config-schema = { path = "../contracts/config-schema" }
-provisioners-engine-provisioner = { path = "../provisioners/engine-provisioner" }
-auth-min = { path = "../auth-min" }
+provisioners-engine-provisioner = { path = "../libs/provisioners/engine-provisioner" }
+auth-min = { path = "../libs/auth-min" }

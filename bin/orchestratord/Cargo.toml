@@ -1,0 +1,78 @@
+[package]
+name = "orchestratord"
+version = "0.0.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[features]
+# Keep defaults to preserve current behavior/build
+default = ["server", "metrics", "artifacts", "mock-adapters"]
+
+# Server surface and request handling
+server = [
+    "dep:axum",
+    "dep:tokio",
+    "dep:http",
+    "dep:futures",
+    "dep:uuid",
+]
+
+# Prometheus metrics and structured logging setup
+metrics = [
+    "dep:prometheus",
+    "dep:tracing-subscriber",
+]
+
+# Artifact registry and content-addressed storage helpers
+artifacts = [
+    "dep:sha2",
+    "dep:chrono",
+]
+
+# Use mock adapters by default for vertical slice/dev
+mock-adapters = [
+    "dep:worker-adapters-mock",
+]
+
+[lib]
+name = "orchestratord"
+path = "src/lib.rs"
+
+[[bin]]
+name = "orchestratord"
+path = "src/main.rs"
+
+[dependencies]
+axum = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, optional = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+http = { workspace = true, optional = true }
+contracts-api-types = { path = "../../contracts/api-types" }
+orchestrator-core = { path = "../../libs/orchestrator-core" }
+catalog-core = { path = "../../libs/catalog-core" }
+model-provisioner = { path = "../../libs/provisioners/model-provisioner" }
+regex = { workspace = true }
+serde_json = { workspace = true }
+prometheus = { version = "0.13", optional = true }
+once_cell = "1"
+worker-adapters-adapter-api = { path = "../../libs/worker-adapters/adapter-api" }
+worker-adapters-mock = { path = "../../libs/worker-adapters/mock", optional = true }
+futures = { workspace = true, optional = true }
+pool-managerd = { path = "../../libs/pool-managerd" }
+uuid = { workspace = true, optional = true }
+chrono = { version = "0.4", default-features = false, features = ["clock"], optional = true }
+sha2 = { workspace = true, optional = true }
+hex = "0.4"
+auth-min = { path = "../../libs/auth-min" }
+observability-narration-core = { path = "../../libs/observability/narration-core" }
+adapter-host = { path = "../../libs/adapter-host" }
+
+[dev-dependencies]
+openapiv3 = { workspace = true }
+serde_yaml = { workspace = true }
+tower = { version = "0.5", features = ["util"] }
+tempfile = "3"
