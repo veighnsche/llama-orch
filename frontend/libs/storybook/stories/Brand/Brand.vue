@@ -46,6 +46,7 @@
   .brand {
     display: inline-flex;
     align-items: center;
+    gap: 0.5rem;
     padding: 0 1rem;
     border-radius: var(--radius-lg);
     text-decoration: none;

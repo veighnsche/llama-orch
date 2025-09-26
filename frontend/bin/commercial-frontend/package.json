@@ -1,50 +1,54 @@
 {
-    "name": "orchyra-commercial-frontend-nl",
-    "version": "0.0.0",
-    "private": true,
-    "type": "module",
-    "engines": {
-      "node": "^20.19.0 || >=22.12.0"
-    },
-    "prettier": "orchyra-frontend-tooling/prettier.config.cjs",
-    "scripts": {
-      "dev": "vite",
-      "build": "run-p type-check \"build-only {@}\" --",
-      "preview": "npm run build && wrangler dev",
-      "build-only": "vite build",
-      "type-check": "vue-tsc --build",
-      "deploy": "npm run build && wrangler deploy",
-      "cf-typegen": "wrangler types",
-      "lint": "eslint .",
-      "lint:fix": "eslint . --fix",
-      "format": "prettier --check .",
-      "format:fix": "prettier --write ."
-    },
-    "dependencies": {
-      "vue": "^3.5.18",
-      "vue-router": "^4.5.1",
-      "vue-i18n": "^9.14.0",
-      "orchyra-storybook": "workspace:*"
-    },
-    "devDependencies": {
-      "orchyra-frontend-tooling": "workspace:*",
-      "@cloudflare/vite-plugin": "^1.13.4",
-      "@tsconfig/node22": "^22.0.2",
-      "@types/node": "^22.16.5",
-      "@vitejs/plugin-vue": "^6.0.1",
-      "@vue/tsconfig": "^0.7.0",
-      "@eslint/js": "^9.14.0",
-      "eslint": "^9.14.0",
-      "eslint-plugin-vue": "^9.30.0",
-      "eslint-config-prettier": "^9.1.0",
-      "typescript-eslint": "^8.12.2",
-      "vue-eslint-parser": "^9.4.3",
-      "prettier": "^3.3.3",
-      "npm-run-all2": "^8.0.4",
-      "typescript": "~5.8.0",
-      "vite": "^7.0.6",
-      "vite-plugin-vue-devtools": "^8.0.0",
-      "vue-tsc": "^3.0.4",
-      "wrangler": "^4.39.0"
-    }
+  "name": "orchyra-commercial-frontend-nl",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "prettier": "orchyra-frontend-tooling/prettier.config.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "preview": "npm run build && wrangler dev",
+    "build-only": "vite build",
+    "type-check": "vue-tsc --build",
+    "deploy": "npm run build && wrangler deploy",
+    "cf-typegen": "wrangler types",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "i18n:report": "vue-i18n-extract report -v -a -s 'src/**/*.{vue,ts}' -l 'src/i18n/**/*.{json,ts}'",
+    "i18n:missing": "vue-i18n-extract missing -s 'src/**/*.{vue,ts}' -l 'src/i18n/**/*.{json,ts}'",
+    "i18n:unused": "vue-i18n-extract unused -s 'src/**/*.{vue,ts}' -l 'src/i18n/**/*.{json,ts}'",
+    "i18n:extract": "node scripts/i18n-extract.mjs"
+  },
+  "dependencies": {
+    "vue": "^3.5.18",
+    "vue-router": "^4.5.1",
+    "vue-i18n": "^9.14.0",
+    "orchyra-storybook": "workspace:*"
+  },
+  "devDependencies": {
+    "orchyra-frontend-tooling": "workspace:*",
+    "@cloudflare/vite-plugin": "^1.13.4",
+    "@tsconfig/node22": "^22.0.2",
+    "@types/node": "^22.16.5",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/tsconfig": "^0.7.0",
+    "@eslint/js": "^9.14.0",
+    "eslint": "^9.14.0",
+    "eslint-plugin-vue": "^9.30.0",
+    "eslint-config-prettier": "^9.1.0",
+    "typescript-eslint": "^8.12.2",
+    "vue-eslint-parser": "^9.4.3",
+    "prettier": "^3.3.3",
+    "npm-run-all2": "^8.0.4",
+    "typescript": "~5.8.0",
+    "vite": "^7.0.6",
+    "vite-plugin-vue-devtools": "^8.0.0",
+    "vue-tsc": "^3.0.4",
+    "wrangler": "^4.39.0"
   }
+}

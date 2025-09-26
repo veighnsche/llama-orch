@@ -10,6 +10,7 @@ members = [
     "libs/pool-managerd/bdd",
     "libs/catalog-core",
     "libs/catalog-core/bdd",
+    "libs/proof-bundle",
     "libs/worker-adapters/adapter-api",
     "libs/worker-adapters/llamacpp-http",
     "libs/worker-adapters/vllm-http",
