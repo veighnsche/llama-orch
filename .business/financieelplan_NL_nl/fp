@@ -19,13 +19,19 @@ import sys
 from pathlib import Path
 from typing import Optional, List
 
-from core.io_ import load_input, write_reports
-from core.engine import compute_model
-from core.scan import scan_roots
-from core.money import money as fmt_money, D
-from core.schema import validate_and_default
-from core.mapping import build_template_context
-from core.renderer import parse_whitelist, render_template, check_templates, generate_template_keys_md, RenderError
+from finplan.fs import load_input, write_reports
+from finplan.compute.engine import compute_model
+from finplan.dev.scan import scan_roots
+from finplan.common.money import money as fmt_money, D
+from finplan.common.schema import validate_and_default
+from finplan.reporting.mapping import build_template_context
+from finplan.render.renderer import (
+    parse_whitelist,
+    render_template,
+    check_templates,
+    generate_template_keys_md,
+    RenderError,
+)
 
 
 def cmd_scan(args: argparse.Namespace) -> None:
