@@ -1,0 +1,10 @@
+gpu,vram_gb,hourly_usd_min,hourly_usd_max,sources
+RTX 3090,24,0.06,1.493,Vast.ai
+RTX 4090,24,0.067,1.0,"Vast.ai, RunPod"
+L4,24,0.3,1.0,"Modal, OVHcloud"
+A10,24,0.75,1.2,"Lambda, OVHcloud"
+L40S,48,0.16,1.053,Vast.ai
+A100 40GB (PCIe),40,0.467,1.467,"Vast.ai, Lambda"
+A100 80GB (SXM/PCIe),80,0.5,3.0,"Vast.ai, RunPod, Lambda"
+H100 80GB (PCIe/SXM),80,2.15,3.29,"RunPod, Vultr, Lambda"
+H200 141GB,141,1.9,10.6,"GetDeploying, Vast.ai, Vultr"

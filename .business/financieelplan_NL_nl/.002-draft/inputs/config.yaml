@@ -1,0 +1,102 @@
+version: 1
+currency: EUR
+prepaid_policy:
+  credits:
+    min_topup_eur: 5
+    max_topup_eur: 1000
+    expiry_months: 12
+    non_refundable: true
+    auto_refill_default_enabled: false
+    auto_refill_cap_eur: null
+  private_tap:
+    prepaid_only: true
+    billing_unit_minutes: 15
+    management_fee_eur_per_month: null
+    gpu_hour_markup_target_pct: null
+pricing_inputs:
+  public_tap_flat_price_per_1k_tokens_eur: null
+  private_tap_default_markup_over_provider_cost_pct: null
+  fx_buffer_pct: 5
+catalog:
+  models_csv_path: oss_models.csv
+  gpus_csv_path: gpu_rentals.csv
+  price_sheet_csv_path: price_sheet.csv
+  allowed_models:
+  - Llama 3.1 8B
+  - Llama 3.1 70B
+  - Mixtral 8x7B
+  - Mixtral 8x22B
+  - Qwen2.5 7B
+  - Qwen2.5 32B
+  - Qwen2.5 72B
+  - Yi-1.5 6B
+  - Yi-1.5 9B
+  - Yi-1.5 34B
+  - DeepSeek-Coder 6.7B
+  - DeepSeek-Coder 33B
+  - DeepSeek-Coder-V2 16B
+  - DeepSeek-Coder-V2 236B
+payments:
+  provider: stripe
+  stripe:
+    products:
+      public_tap_credits: null
+      private_tap_management_fee: null
+      priority_applets: null
+      oss_support: null
+    webhook_endpoint_url: null
+    radar_ruleset: default
+tax_billing:
+  vat_standard_rate_pct: 21.0
+  eu_reverse_charge_enabled: true
+  stripe_tax_enabled: true
+  revenue_recognition: deferred_until_consumed
+legal_policy:
+  terms_of_service_url: null
+  privacy_policy_url: null
+  data_processing_addendum_url: null
+  acceptable_use_url: null
+  sla:
+    public_tap:
+      best_effort: true
+      notes: Queue-based, no uptime guarantee; refunds disabled (prepaid, non-refundable).
+    private_tap:
+      response_time_target_ms: null
+      availability_target_pct: null
+      support_hours_utc: 09:00-17:00
+      channels:
+      - email
+  refunds:
+    allowed: false
+    policy_note: All purchases are prepaid and non-refundable except where required
+      by law.
+ops:
+  rate_limits:
+    public_tap:
+      requests_per_minute: 60
+      tokens_per_minute: 30000
+    private_tap:
+      requests_per_minute: null
+      tokens_per_minute: null
+  queue:
+    policy: reject
+    max_queue_depth: 128
+  observability:
+    enable_prometheus: true
+    alert_thresholds:
+      queue_depth_warn: 64
+      queue_depth_crit: 120
+      gpu_util_max_pct: 98
+      vram_util_max_pct: 95
+    retention_days:
+      logs: 14
+      metrics: 30
+  security:
+    token_required_public: true
+    redact_secrets_in_logs: true
+finance:
+  fixed_costs_monthly_eur:
+    personal: 3000
+    business: null
+  marketing_allocation_pct_of_inflow: 20
+  runway_target_months: 6
