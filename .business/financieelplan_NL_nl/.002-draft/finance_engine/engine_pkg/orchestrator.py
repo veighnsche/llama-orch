@@ -7,7 +7,8 @@ from ..config import OUTPUTS
 from ..io.writer import write_text, ensure_dir
 from .ports import RenderPort, ValidatePort
 from ..types.inputs import Config, Costs, Lending
-from .validation.preflight import run_preflight, build_preflight_markdown
+from .validation.registry import run_preflight
+from .validation.shared import build_preflight_markdown
 
 # Step modules (keep runner thin and modular)
 from .steps.load_validate import (
@@ -22,7 +23,19 @@ from .steps.context import build_context as _build_context
 from .steps.render import render_plan as _render_plan
 
 
-def load_inputs() -> Tuple[Config, Costs, Lending, pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+def load_inputs() -> Tuple[
+    Config,
+    Costs,
+    Lending,
+    pd.DataFrame,
+    pd.DataFrame,
+    pd.DataFrame,
+    Dict[str, Any],
+    Dict[str, Any],
+    Dict[str, Any],
+    Dict[str, Any],
+    Dict[str, Any],
+]:
     return _load_inputs()
 
 
@@ -94,11 +107,26 @@ def run_pipeline(*, render_port: Optional[RenderPort] = None, validate_port: Opt
         gpu_pricing,
         capacity_overrides,
         overrides,
+        acquisition,
+        funnel_overrides,
     ) = load_inputs()
     write_run_summary()
     has_errors = validate_and_write_report(config, costs, lending, price_sheet, validate_port=validate_port)
     if has_errors:
         return 1
+    # If funnel driver is enabled, inject acquisition inputs for downstream use
+    try:
+        if isinstance(scenarios, dict):
+            driver = str((scenarios.get("driver") or "tokens")).lower()
+            if driver == "funnel":
+                scenarios = {
+                    **scenarios,
+                    "__acquisition": acquisition or {},
+                    "__funnel_overrides": funnel_overrides or {},
+                }
+    except Exception:
+        pass
+
     agg = compute_all(
         config,
         lending,

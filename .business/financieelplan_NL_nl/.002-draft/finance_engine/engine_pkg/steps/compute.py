@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Optional
 import pandas as pd
 
 from ...compute.pricing import compute_model_economics
 from ...compute.scenarios import compute_public_scenarios
 from ...compute.private_tap import compute_private_tap_economics
 from ...compute.break_even import compute_break_even
+from ...compute.acquisition import simulate_m_tokens_from_funnel, simulate_funnel_details
+from ...compute.unit_economics import compute_unit_economics
 from ...compute.loans import Loan, flat_interest_schedule, loan_totals
+from ...compute.timeseries import compute_timeseries
 from ...types.inputs import Config, Lending
 from ...utils.coerce import get, get_float, safe_float, pct_to_fraction
 
@@ -81,6 +84,7 @@ def _compute_public_block(
     marketing_pct: float,
     worst_base_best: Tuple[float, float, float],
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    # Placeholder; marketing_overrides applied by caller when using funnel driver via partial function call
     return compute_public_scenarios(
         pub_df,
         per_model_mix=per_model_mix,
@@ -124,8 +128,8 @@ def compute_all(
     # Model block
     model_df, pub_df = _compute_model_block(config=config, price_sheet=price_sheet, gpu_df=gpu_df, tps_df=tps_df, scenarios=scenarios, overrides=overrides, capacity_overrides=capacity_overrides)
 
-    # Finance knobs
-    marketing_pct, worst_base_best, per_model_mix = _finance_knobs(config=config, scenarios=scenarios)
+    # Finance knobs (default from config/scenarios)
+    marketing_pct_default, worst_base_best_default, per_model_mix = _finance_knobs(config=config, scenarios=scenarios)
 
     # Loan and fixed
     (
@@ -146,26 +150,80 @@ def compute_all(
     if not curated_df.empty and "gross_margin_pct_min" in curated_df.columns:
         curated_df = curated_df[curated_df["gross_margin_pct_min"] >= min_gm_pct].copy()
 
-    public_df, public_tpl = _compute_public_block(
-        pub_df=curated_df,
+    # Determine driver: tokens (default) vs funnel
+    driver = str(get(scenarios, ["driver"], "tokens") or "tokens").lower()
+    marketing_overrides: Optional[Dict[str, float]] = None
+    worst_base_best = worst_base_best_default
+    marketing_pct = marketing_pct_default
+
+    funnel_details_base: Optional[Dict[str, float]] = None
+    unit_econ: Optional[Dict[str, float]] = None
+    if driver == "funnel":
+        # Simulate per-case tokens and marketing spend from acquisition inputs
+        # Acquisition inputs are passed via compute_all caller; fallback to empty
+        acquisition: Dict[str, Any] = get(scenarios, ["__acquisition"], {})  # late-bound by orchestrator wrapper
+        funnel_overrides: Dict[str, Any] = get(scenarios, ["__funnel_overrides"], {})
+        m_worst, mk_worst = simulate_m_tokens_from_funnel(acquisition=acquisition, funnel_overrides=funnel_overrides, case="worst")
+        m_base, mk_base = simulate_m_tokens_from_funnel(acquisition=acquisition, funnel_overrides=funnel_overrides, case="base")
+        m_best, mk_best = simulate_m_tokens_from_funnel(acquisition=acquisition, funnel_overrides=funnel_overrides, case="best")
+        worst_base_best = (m_worst, m_base, m_best)
+        marketing_overrides = {"worst": mk_worst, "base": mk_base, "best": mk_best}
+        # Detailed base-case funnel and unit economics
+        funnel_details_base = simulate_funnel_details(acquisition=acquisition, funnel_overrides=funnel_overrides, case="base")
+        try:
+            unit_econ = compute_unit_economics(acquisition=acquisition, public_tpl=public_tpl, funnel_details_base=funnel_details_base)
+        except Exception:
+            unit_econ = None
+
+    # Compute public scenarios (optionally with marketing overrides)
+    public_df, public_tpl = compute_public_scenarios(
+        curated_df,
         per_model_mix=per_model_mix,
         fixed_total_with_loan=fixed_total_with_loan,
         marketing_pct=marketing_pct,
         worst_base_best=worst_base_best,
+        marketing_overrides=marketing_overrides,
     )
 
     # Private economics
     private_df, eur_usd, fx_buffer_pct, private_markup_pct, per_gpu_markup = _compute_private_block(
         config=config, gpu_df=gpu_df, gpu_pricing=gpu_pricing
     )
-    # Break-even
+    # Break-even: if funnel driver, prefer effective marketing % from base case (marketing / revenue)
+    if marketing_overrides is not None:
+        try:
+            rev_base = float(public_tpl.get("base", {}).get("revenue_eur", 0.0))
+            mk_base = float(marketing_overrides.get("base", 0.0))
+            if rev_base > 0:
+                marketing_pct_effective = mk_base / rev_base
+            else:
+                marketing_pct_effective = marketing_pct
+        except Exception:
+            marketing_pct_effective = marketing_pct
+    else:
+        marketing_pct_effective = marketing_pct
+
     be = _compute_break_even_block(
-        fixed_total_with_loan=fixed_total_with_loan, public_tpl=public_tpl, marketing_pct=marketing_pct
+        fixed_total_with_loan=fixed_total_with_loan, public_tpl=public_tpl, marketing_pct=marketing_pct_effective
     )
 
     # Loan schedule
     loan_rows = flat_interest_schedule(loan_obj)
     loan_df = pd.DataFrame(loan_rows)
+
+    # 24-month timeseries (public + private + total)
+    ts_public_df, ts_private_df, ts_total_df = compute_timeseries(
+        agg_inputs={
+            "public_tpl": public_tpl,
+            "fixed_total_with_loan": fixed_total_with_loan,
+            "unit_economics": unit_econ or {},
+        },
+        scenarios=scenarios,
+        config=config,
+        gpu_df=gpu_df,
+        capacity_overrides=capacity_overrides,
+        gpu_pricing=gpu_pricing,
+    )
 
     return {
         "model_df": model_df,
@@ -187,6 +245,13 @@ def compute_all(
         "fx_buffer_pct": fx_buffer_pct,
         "private_markup_pct": private_markup_pct,
         "per_model_mix": per_model_mix,
-        "marketing_pct": marketing_pct,
+        "marketing_pct": marketing_pct_effective,
+        "marketing_overrides": marketing_overrides,
+        "scenarios_driver": driver,
+        "funnel_base": funnel_details_base,
+        "unit_economics": unit_econ,
+        "ts_public_df": ts_public_df,
+        "ts_private_df": ts_private_df,
+        "ts_total_df": ts_total_df,
         "policy_public_tap": {"min_gross_margin_pct": min_gm_pct},
     }

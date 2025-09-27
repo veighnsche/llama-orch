@@ -11,13 +11,9 @@ from ...io.loader import load_yaml
 def validate(inputs_dir: Path) -> FileReport:
     p = inputs_dir / "gpu_pricing.yaml"
     fr = FileReport(name="gpu_pricing.yaml", ok=True)
-    strict = os.getenv("ENGINE_STRICT_VALIDATION", "0").lower() in {"1", "true", "yes"}
     if not p.exists():
-        if strict:
-            fr.ok = False
-            fr.errors.append("gpu_pricing.yaml missing (strict: required)")
-        else:
-            fr.warnings.append("gpu_pricing.yaml not present (optional)")
+        fr.ok = False
+        fr.errors.append("gpu_pricing.yaml missing (required)")
         return fr
     try:
         obj = load_yaml(p)

@@ -2,3 +2,6 @@ monthly:
   worst_m_tokens: 1
   base_m_tokens: 5
   best_m_tokens: 15
+
+driver: funnel
+per_model_mix: {}  # optioneel, zoals voorheen

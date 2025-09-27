@@ -72,6 +72,8 @@ class ScenarioMonthly(TypedDict, total=False):
 
 class Scenarios(TypedDict, total=False):
     monthly: ScenarioMonthly
+    # Optional driver: 'tokens' (default) or 'funnel'
+    driver: str
 
 
 class Extra(TypedDict, total=False):
@@ -83,3 +85,40 @@ class Extra(TypedDict, total=False):
     pricing_inputs: Dict[str, Any]
     price_overrides: Dict[str, Any]
     runway_target_months: int
+
+
+# --- Acquisition & Funnel (Week 1) ---
+
+class AcquisitionChannel(TypedDict, total=False):
+    name: str
+    budget_eur: float
+    cpc_eur: float
+    cac_eur: float
+    visit_to_signup_cvr_pct: float
+    signup_to_paid_cvr_pct: float
+    oss_share_pct: float
+
+
+class AcquisitionGlobal(TypedDict, total=False):
+    trial_length_months: int
+    churn_pct_per_month: float
+    avg_tokens_paid_per_user_per_month: float
+    avg_tokens_free_per_user_per_month: float
+    payment_fee_pct_of_revenue: float
+
+
+class AcquisitionConfig(TypedDict, total=False):
+    channels: list[AcquisitionChannel]
+    global_: AcquisitionGlobal  # use key 'global' in YAML; alias maintained at load
+
+
+class FunnelCaseMultipliers(TypedDict, total=False):
+    budget_multiplier: float
+    cvr_multiplier: float
+    cac_multiplier: float
+
+
+class FunnelOverrides(TypedDict, total=False):
+    worst: FunnelCaseMultipliers
+    base: FunnelCaseMultipliers
+    best: FunnelCaseMultipliers

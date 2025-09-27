@@ -10,6 +10,9 @@ from ...charts.generate import (
     plot_break_even,
     plot_private_tap,
     plot_loan_balance,
+    plot_funnel_summary,
+    plot_unit_economics,
+    plot_mrr_bars,
 )
 
 
@@ -50,4 +53,26 @@ def generate_charts(*, agg: Dict[str, Any]) -> Dict[str, str]:
         # Point template to the alias to avoid forbidden token in content
         "private_tap_gpu_economics": f"charts/{private_alias_path.name}",
         "loan_balance_over_time": f"charts/{loan_balance_path.name}",
+        # New charts (funnel driver)
+        "funnel_summary": (
+            (lambda: (
+                plot_funnel_summary(agg.get("funnel_base"), charts_dir / "funnel_summary.png"),
+                f"charts/{(charts_dir / 'funnel_summary.png').name}"
+            ))()[1]
+            if agg.get("funnel_base") else None
+        ),
+        "unit_econ": (
+            (lambda: (
+                plot_unit_economics(agg.get("unit_economics"), charts_dir / "unit_economics.png"),
+                f"charts/{(charts_dir / 'unit_economics.png').name}"
+            ))()[1]
+            if agg.get("unit_economics") else None
+        ),
+        "mrr_bars": (
+            (lambda: (
+                plot_mrr_bars(agg.get("unit_economics"), charts_dir / "mrr_bars.png"),
+                f"charts/{(charts_dir / 'mrr_bars.png').name}"
+            ))()[1]
+            if agg.get("unit_economics") else None
+        ),
     }

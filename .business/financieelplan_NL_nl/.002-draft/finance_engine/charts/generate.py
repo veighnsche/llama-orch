@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Any
 
 import matplotlib
 matplotlib.use("Agg")  # safe for headless rendering
@@ -25,6 +25,86 @@ def plot_model_margins(model_df: pd.DataFrame, out_path: Path) -> None:
     ax.set_ylabel("€/1M tokens")
     ax.set_xticks(list(x))
     ax.set_xticklabels(df["model"], rotation=45, ha="right")
+    _ensure_dir(out_path)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=160)
+    plt.close(fig)
+
+
+def plot_timeseries_lines(df: pd.DataFrame, y_cols: Dict[str, str], title: str, out_path: Path) -> None:
+    if df is None or df.empty:
+        return
+    fig, ax = plt.subplots(figsize=(9, 4))
+    x = df["month"] if "month" in df.columns else range(1, len(df) + 1)
+    for col, label in y_cols.items():
+        if col in df.columns:
+            ax.plot(x, pd.to_numeric(df[col], errors="coerce").fillna(0.0).values, label=label)
+    ax.set_title(title)
+    ax.set_xlabel("Month")
+    ax.legend(loc="best")
+    _ensure_dir(out_path)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=160)
+    plt.close(fig)
+
+
+def plot_funnel_summary(funnel_base: Dict[str, Any] | None, out_path: Path) -> None:
+    if not isinstance(funnel_base, dict) or not funnel_base:
+        return
+    labels = ["Visits", "Signups", "Paid New", "Free New"]
+    values = [
+        float(funnel_base.get("visits", 0.0) or 0.0),
+        float(funnel_base.get("signups", 0.0) or 0.0),
+        float(funnel_base.get("paid_new", 0.0) or 0.0),
+        float(funnel_base.get("free_new", 0.0) or 0.0),
+    ]
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.bar(labels, values, color=["#4e79a7", "#f28e2b", "#59a14f", "#e15759"])
+    ax.set_title("Funnel (Base Case)")
+    ax.set_ylabel("Count")
+    for i, v in enumerate(values):
+        ax.text(i, v, f"{v:,.0f}", ha="center", va="bottom", fontsize=8)
+    _ensure_dir(out_path)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=160)
+    plt.close(fig)
+
+
+def plot_unit_economics(unit_econ: Dict[str, Any] | None, out_path: Path) -> None:
+    if not isinstance(unit_econ, dict) or not unit_econ:
+        return
+    labels = ["ARPU Rev", "ARPU Contrib", "CAC", "LTV"]
+    values = [
+        float(unit_econ.get("arpu_revenue_eur", 0.0) or 0.0),
+        float(unit_econ.get("arpu_contribution_eur", 0.0) or 0.0),
+        float(unit_econ.get("cac_eur", 0.0) or 0.0) if unit_econ.get("cac_eur") is not None else 0.0,
+        float(unit_econ.get("ltv_eur", 0.0) or 0.0) if unit_econ.get("ltv_eur") is not None else 0.0,
+    ]
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.bar(labels, values, color=["#4e79a7", "#59a14f", "#e15759", "#76b7b2"])
+    ax.set_title("Unit Economics (EUR)")
+    for i, v in enumerate(values):
+        ax.text(i, v, f"€{v:,.0f}", ha="center", va="bottom", fontsize=8)
+    _ensure_dir(out_path)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=160)
+    plt.close(fig)
+
+
+def plot_mrr_bars(unit_econ: Dict[str, Any] | None, out_path: Path) -> None:
+    if not isinstance(unit_econ, dict) or not unit_econ:
+        return
+    labels = ["MRR (new cohort)", "MRR (steady-state)", "ARR (steady)"]
+    values = [
+        float(unit_econ.get("mrr_snapshot_eur", 0.0) or 0.0),
+        float(unit_econ.get("mrr_steady_eur", 0.0) or 0.0),
+        float(unit_econ.get("arr_steady_eur", 0.0) or 0.0),
+    ]
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.bar(labels, values, color=["#4e79a7", "#59a14f", "#76b7b2"])
+    ax.set_title("MRR/ARR Snapshot")
+    for i, v in enumerate(values):
+        ax.text(i, v, f"€{v:,.0f}", ha="center", va="bottom", fontsize=8)
     _ensure_dir(out_path)
     fig.tight_layout()
     fig.savefig(out_path, dpi=160)

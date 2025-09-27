@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Optional
 import pandas as pd
 
 
@@ -27,7 +27,15 @@ def blended_economics(models_df: pd.DataFrame, per_model_mix: Dict[str, float]) 
     return sell, cost
 
 
-def compute_public_scenarios(models_df: pd.DataFrame, *, per_model_mix: Dict[str, float], fixed_total_with_loan: float, marketing_pct: float, worst_base_best: Tuple[float, float, float]) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+def compute_public_scenarios(
+    models_df: pd.DataFrame,
+    *,
+    per_model_mix: Dict[str, float],
+    fixed_total_with_loan: float,
+    marketing_pct: float,
+    worst_base_best: Tuple[float, float, float],
+    marketing_overrides: Optional[Dict[str, float]] = None,
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """Compute monthly public scenarios worst/base/best.
     marketing_pct is e.g. 0.15 for 15%.
     worst_base_best are million-token volumes.
@@ -41,7 +49,13 @@ def compute_public_scenarios(models_df: pd.DataFrame, *, per_model_mix: Dict[str
         cogs = m_tokens * cost_1m
         gross = revenue - cogs
         gross_pct = 0.0 if revenue <= 0 else (gross / revenue)
-        marketing = revenue * marketing_pct
+        if isinstance(marketing_overrides, dict) and name in marketing_overrides:
+            try:
+                marketing = float(marketing_overrides[name])
+            except Exception:
+                marketing = revenue * marketing_pct
+        else:
+            marketing = revenue * marketing_pct
         net = gross - marketing - fixed_total_with_loan
         scenarios.append({
             "case": name,

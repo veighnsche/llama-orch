@@ -110,6 +110,16 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
     except Exception:
         blended_1k = None
 
+    # Example credit packs from ADR: 50, 200, 500 EUR
+    credit_packs = []
+    if blended_1k and blended_1k > 0:
+        for name, eur in [("Starter", 50), ("Builder", 200), ("Pro", 500)]:
+            try:
+                tokens_m = round((eur / blended_1k) / 1000.0, 2)  # EUR / (€/1k) = kTokens; /1000 => M tokens
+                credit_packs.append({"name": name, "eur": eur, "tokens_m": tokens_m})
+            except Exception:
+                pass
+
     ctx = {
         "engine": {"version": ENGINE_VERSION, "timestamp": now_utc_iso()},
         "pricing": {
@@ -120,6 +130,13 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
             "public_tap_blended_price_per_1k_tokens": blended_1k,
             "model_prices": model_prices_map,
             "policy": (config.get("pricing_policy") or {}).get("public_tap") or {},
+            "credit_packs": credit_packs,
+        },
+        # Acquisition & Unit Economics (present when driver="funnel")
+        "acquisition": {
+            "driver": agg.get("scenarios_driver"),
+            "funnel_base": agg.get("funnel_base") or {},
+            "unit_economics": agg.get("unit_economics") or {},
         },
         "prepaid": {
             "min_topup_eur": config.get("prepaid_policy", {}).get("credits", {}).get("min_topup_eur", 25),

@@ -115,6 +115,57 @@ For each model offered on the Public Tap:
 
 ---
 
+### 2.3 Acquisitie & Unit Economics (Funnel Driver)
+
+{% if acquisition.driver == 'funnel' %}
+
+#### 2.3.1 Funnel Snapshot — Baseline
+
+- **Visits:** {{ acquisition.funnel_base.visits | default(0) }}  
+- **Signups:** {{ acquisition.funnel_base.signups | default(0) }}  
+- **Paid New:** {{ acquisition.funnel_base.paid_new | default(0) }}  
+- **Free New (OSS users):** {{ acquisition.funnel_base.free_new | default(0) }}  
+- **Marketing (EUR):** €{{ acquisition.funnel_base.marketing_eur | default(0) }}  
+
+{% if charts.funnel_summary %}
+![Funnel (Base Case)]({{ charts.funnel_summary }})
+{% endif %}
+
+#### 2.3.2 Unit Economics
+
+| Metric | Value |
+|--------|------:|
+| ARPU Revenue (€/month) | €{{ acquisition.unit_economics.arpu_revenue_eur | default(0) }} |
+| ARPU Contribution (€/month) | €{{ acquisition.unit_economics.arpu_contribution_eur | default(0) }} |
+| CAC (blended) | {% if acquisition.unit_economics.cac_eur is not none %}€{{ acquisition.unit_economics.cac_eur }}{% else %}N/A{% endif %} |
+| LTV | {% if acquisition.unit_economics.ltv_eur is not none %}€{{ acquisition.unit_economics.ltv_eur }}{% else %}N/A{% endif %} |
+| Payback (months) | {% if acquisition.unit_economics.payback_months is not none %}{{ acquisition.unit_economics.payback_months }}{% else %}N/A{% endif %} |
+
+{% if charts.unit_econ %}
+![Unit Economics]({{ charts.unit_econ }})
+{% endif %}
+
+#### 2.3.3 MRR/ARR
+
+| Metric | Value |
+|--------|------:|
+| MRR (new cohort) | €{{ acquisition.unit_economics.mrr_snapshot_eur | default(0) }} |
+| MRR (steady-state) | €{{ acquisition.unit_economics.mrr_steady_eur | default(0) }} |
+| ARR (steady-state) | €{{ acquisition.unit_economics.arr_steady_eur | default(0) }} |
+| Active Paid (steady-state, users) | {{ acquisition.unit_economics.active_paid_steady | default(0) }} |
+
+{% if charts.mrr_bars %}
+![MRR/ARR Snapshot]({{ charts.mrr_bars }})
+{% endif %}
+
+{% else %}
+
+> Scenario-driver is ingesteld op "tokens". Schakel over naar `driver: funnel` in `inputs/scenarios.yaml` en voeg `inputs/acquisition.yaml` toe om deze sectie te activeren.
+
+{% endif %}
+
+---
+
 ## 3) Public Tap — Monthly Projection Scenarios
 
 The following scenarios assume:

@@ -14,7 +14,8 @@ def validate(inputs_dir: Path) -> FileReport:
     fr = FileReport(name="capacity_overrides.yaml", ok=True)
     strict = os.getenv("ENGINE_STRICT_VALIDATION", "0").lower() in {"1", "true", "yes"}
     if not p.exists():
-        # Optional generally; may be required empty/valid in strict via policy
+        fr.ok = False
+        fr.errors.append("capacity_overrides.yaml missing (required)")
         return fr
     try:
         obj = load_yaml(p)

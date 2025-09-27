@@ -47,6 +47,8 @@ def _policy_from_cfg(cfg: Dict[str, Any]) -> Dict[str, Any]:
         "rounding_per_1k_tokens": float(pol.get("rounding_per_1k_tokens", 0.01)),
         "price_floor_per_1k_tokens": float(pol.get("price_floor_per_1k_tokens", 0.01)),
         "price_cap_per_1k_tokens": (None if pol.get("price_cap_per_1k_tokens") in (None, "",) else float(pol.get("price_cap_per_1k_tokens"))),
+        "competitor_caps_by_sku": pol.get("competitor_caps_by_sku") or {},
+        "apply_competitor_caps": bool(pol.get("apply_competitor_caps", False)),
     }
 
 
@@ -255,6 +257,24 @@ def compute_model_economics(
         if sell_1m <= 0.0:
             sell_1m = _sell_per_1m_from_cost(c_med, cfg)
 
+        # Apply competitor caps per SKU if enabled
+        pol = _policy_from_cfg(cfg)
+        cap_map = pol.get("competitor_caps_by_sku") or {}
+        cap_applied = False
+        if pol.get("apply_competitor_caps") and isinstance(cap_map, dict):
+            cap_1k = cap_map.get(model)
+            if cap_1k is None:
+                # try normalized model name key
+                cap_1k = cap_map.get(_normalize_model_name(model))
+            try:
+                if cap_1k is not None:
+                    cap_val_1m = float(cap_1k) * 1000.0
+                    if cap_val_1m > 0 and sell_1m > cap_val_1m:
+                        sell_1m = cap_val_1m
+                        cap_applied = True
+            except Exception:
+                pass
+
         margin_min = max(0.0, sell_1m - c_min)
         margin_med = max(0.0, sell_1m - c_med)
         margin_max = max(0.0, sell_1m - c_max)
@@ -273,6 +293,7 @@ def compute_model_economics(
             "margin_per_1m_min": round(margin_min, 4),
             "margin_per_1m_med": round(margin_med, 4),
             "margin_per_1m_max": round(margin_max, 4),
+            "competitor_cap_applied": cap_applied,
         })
 
     return pd.DataFrame(rows)

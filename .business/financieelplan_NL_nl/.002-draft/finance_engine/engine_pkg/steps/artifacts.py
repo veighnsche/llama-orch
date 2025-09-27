@@ -27,6 +27,14 @@ def write_artifacts(*, config: Config, agg: Dict[str, Any]) -> None:
 
     write_csv(OUTPUTS / "loan_schedule.csv", agg["loan_df"]) 
 
+    # 24-month timeseries artifacts
+    if agg.get("ts_public_df") is not None:
+        write_csv(OUTPUTS / "public_timeseries_24m.csv", agg["ts_public_df"]) 
+    if agg.get("ts_private_df") is not None:
+        write_csv(OUTPUTS / "private_timeseries_24m.csv", agg["ts_private_df"]) 
+    if agg.get("ts_total_df") is not None:
+        write_csv(OUTPUTS / "total_timeseries_24m.csv", agg["ts_total_df"]) 
+
     # Curated profitability outputs
     curated = agg.get("pub_curated_df")
     curated = curated if isinstance(curated, type(agg.get("pub_df"))) else agg.get("pub_df")
@@ -68,3 +76,27 @@ def write_artifacts(*, config: Config, agg: Dict[str, Any]) -> None:
         "private": {"default_markup_over_cost_pct": default_markup},
     }
     write_yaml(OUTPUTS / "assumptions.yaml", assumptions)
+
+    # Optional: acquisition funnel base snapshot (if funnel driver)
+    funnel = agg.get("funnel_base")
+    if isinstance(funnel, dict) and funnel:
+        try:
+            write_csv(OUTPUTS / "acquisition_funnel_base.csv", pd.DataFrame([funnel]))
+        except Exception:
+            pass
+    # Optional: unit economics snapshot
+    unit = agg.get("unit_economics")
+    if isinstance(unit, dict) and unit:
+        try:
+            write_csv(OUTPUTS / "unit_economics.csv", pd.DataFrame([unit]))
+        except Exception:
+            pass
+
+    # Optional: competitor caps applied view
+    try:
+        md = agg.get("model_df")
+        if md is not None and "competitor_cap_applied" in md.columns:
+            caps = md[["model", "sell_per_1m_eur", "competitor_cap_applied"]].copy()
+            write_csv(OUTPUTS / "competitor_caps_applied.csv", caps)
+    except Exception:
+        pass

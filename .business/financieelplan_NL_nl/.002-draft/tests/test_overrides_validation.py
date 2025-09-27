@@ -4,7 +4,7 @@ from pathlib import Path
 import shutil
 
 from finance_engine.config import INPUTS
-from finance_engine.engine_pkg.validation.preflight import run_preflight
+from finance_engine.engine_pkg.validation.registry import run_preflight
 
 
 def copy_inputs(tmp: Path) -> Path:

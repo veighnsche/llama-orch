@@ -1,0 +1,19 @@
+channels:
+  - name: search_ads
+    budget_eur: 1500
+    cpc_eur: 2.0
+    visit_to_signup_cvr_pct: 8
+    signup_to_paid_cvr_pct: 10
+    oss_share_pct: 40
+  - name: content
+    budget_eur: 500
+    cpc_eur: 0.5
+    visit_to_signup_cvr_pct: 3
+    signup_to_paid_cvr_pct: 6
+    oss_share_pct: 70
+global:
+  avg_tokens_paid_per_user_per_month: 12000000
+  avg_tokens_free_per_user_per_month: 200000
+  churn_pct_per_month: 4
+  payment_fee_pct_of_revenue: 2.9
+  trial_length_months: 1

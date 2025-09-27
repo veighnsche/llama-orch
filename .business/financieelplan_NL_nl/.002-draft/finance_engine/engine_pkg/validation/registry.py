@@ -16,7 +16,14 @@ from .validate_tps_model_gpu import validate as validate_tps_model_gpu
 from .validate_scenarios import validate as validate_scenarios
 from .validate_gpu_pricing import validate as validate_gpu_pricing
 from .validate_overrides import validate as validate_overrides
+from .validate_acquisition import validate as validate_acquisition
+from .validate_funnel_overrides import validate as validate_funnel_overrides
 from .validate_capacity_overrides import validate as validate_capacity_overrides
+from .validate_private_sales import validate as validate_private_sales
+from .validate_seasonality import validate as validate_seasonality
+from .validate_timeseries import validate as validate_timeseries
+from .validate_billing import validate as validate_billing
+from .validate_competitor_benchmarks import validate as validate_competitor_benchmarks
 
 
 def _cross_file_warnings(reports: Dict[str, FileReport]) -> List[str]:
@@ -68,6 +75,13 @@ def run_preflight(inputs_dir: Path | None = None) -> PreflightResult:
         validate_gpu_pricing,
         validate_capacity_overrides,
         validate_overrides,
+        validate_acquisition,
+        validate_funnel_overrides,
+        validate_private_sales,
+        validate_seasonality,
+        validate_timeseries,
+        validate_billing,
+        validate_competitor_benchmarks,
     ]
     reports: Dict[str, FileReport] = {}
     files: List[FileReport] = []
