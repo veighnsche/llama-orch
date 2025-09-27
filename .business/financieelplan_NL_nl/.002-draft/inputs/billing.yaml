@@ -1,0 +1,21 @@
+prepaid:
+  credit_packs:
+    - name: Starter
+      eur: 25
+    - name: Pro
+      eur: 100
+    - name: Scale
+      eur: 500
+  pack_mix_pct:
+    Starter: 40
+    Pro: 45
+    Scale: 15
+  processor_fee_pct_of_revenue: 2.9
+  processor_fixed_fee_eur_per_tx: 0.25
+  expiry_months: 12
+  wallet_buffer_months: 1.5
+  refund_policy: none
+b2b:
+  share_pct_of_revenue: 15
+  dso_days: 30
+  invoice_discount_pct: 2

@@ -151,7 +151,12 @@ def compute_timeseries(
         # CAC multiplier kept neutral for now (could rise slightly with budget)
         cac_mult = 1.0
         overrides = {"base": {"budget_multiplier": budget_mult, "cvr_multiplier": cvr_mult, "cac_multiplier": cac_mult}}
-        f = simulate_funnel_details(acquisition=acquisition, funnel_overrides=overrides, case="base")
+        f = simulate_funnel_details(
+            acquisition=acquisition,
+            funnel_overrides=overrides,
+            case="base",
+            cpc_slope_per_extra_1k_eur=cpc_slope,
+        )
         m_tokens = float(f.get("total_tokens_m", 0.0))
         marketing_eur = float(f.get("marketing_eur", 0.0))
         paid_new = float(f.get("paid_new", 0.0))

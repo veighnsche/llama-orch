@@ -170,10 +170,6 @@ def compute_all(
         marketing_overrides = {"worst": mk_worst, "base": mk_base, "best": mk_best}
         # Detailed base-case funnel and unit economics
         funnel_details_base = simulate_funnel_details(acquisition=acquisition, funnel_overrides=funnel_overrides, case="base")
-        try:
-            unit_econ = compute_unit_economics(acquisition=acquisition, public_tpl=public_tpl, funnel_details_base=funnel_details_base)
-        except Exception:
-            unit_econ = None
 
     # Compute public scenarios (optionally with marketing overrides)
     public_df, public_tpl = compute_public_scenarios(
@@ -184,6 +180,13 @@ def compute_all(
         worst_base_best=worst_base_best,
         marketing_overrides=marketing_overrides,
     )
+
+    # Compute unit economics after public_tpl is available (funnel driver only)
+    if driver == "funnel":
+        try:
+            unit_econ = compute_unit_economics(acquisition=acquisition, public_tpl=public_tpl, funnel_details_base=funnel_details_base)
+        except Exception:
+            unit_econ = None
 
     # Private economics
     private_df, eur_usd, fx_buffer_pct, private_markup_pct, per_gpu_markup = _compute_private_block(

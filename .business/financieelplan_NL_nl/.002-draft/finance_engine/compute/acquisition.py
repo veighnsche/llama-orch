@@ -38,7 +38,15 @@ def _segments(acq: Dict[str, Any]) -> Iterable[Tuple[str, Dict[str, Any]]]:
             if isinstance(node, dict):
                 yield name, node
 
-def _simulate_one(channels: Any, global_node: Dict[str, Any], *, bm: float, cvr_m: float, cac_m: float) -> Tuple[float, float]:
+def _simulate_one(
+    channels: Any,
+    global_node: Dict[str, Any],
+    *,
+    bm: float,
+    cvr_m: float,
+    cac_m: float,
+    cpc_slope_per_extra_1k_eur: float = 0.0,
+) -> Tuple[float, float]:
     total_paid_new = 0.0
     total_free_new = 0.0
     total_marketing_eur = 0.0
@@ -49,7 +57,8 @@ def _simulate_one(channels: Any, global_node: Dict[str, Any], *, bm: float, cvr_
     for ch in channels:
         if not isinstance(ch, dict):
             continue
-        budget = _num(ch.get("budget_eur"), 0.0) * bm
+        orig_budget = _num(ch.get("budget_eur"), 0.0)
+        budget = orig_budget * bm
         if budget <= 0:
             continue
         total_marketing_eur += budget
@@ -61,7 +70,15 @@ def _simulate_one(channels: Any, global_node: Dict[str, Any], *, bm: float, cvr_
         if cpc > 0 and v2s > 0 and s2p > 0:
             eff_v2s = _clampf(v2s * cvr_m, 0.0, 1.0)
             eff_s2p = _clampf(s2p * cvr_m, 0.0, 1.0)
-            visits = budget / cpc
+            eff_cpc = cpc
+            try:
+                slope = float(cpc_slope_per_extra_1k_eur)
+                extra = max(0.0, budget - orig_budget)
+                if slope > 0.0 and extra > 0.0:
+                    eff_cpc = cpc * (1.0 + slope * (extra / 1000.0))
+            except Exception:
+                pass
+            visits = budget / max(eff_cpc, 1e-9)
             signups = visits * eff_v2s
             paid_new = signups * eff_s2p
             non_paid = max(signups - paid_new, 0.0)
@@ -79,7 +96,12 @@ def _simulate_one(channels: Any, global_node: Dict[str, Any], *, bm: float, cvr_
     return float(m_tokens), float(total_marketing_eur)
 
 def simulate_m_tokens_from_funnel(
-    *, acquisition: Dict[str, Any], funnel_overrides: Dict[str, Any] | None, case: str, segment: Optional[str] = None
+    *,
+    acquisition: Dict[str, Any],
+    funnel_overrides: Dict[str, Any] | None,
+    case: str,
+    segment: Optional[str] = None,
+    cpc_slope_per_extra_1k_eur: float = 0.0,
 ) -> Tuple[float, float]:
     """
     Compute monthly public usage in million tokens and total marketing spend (EUR) for a scenario case.
@@ -100,7 +122,9 @@ def simulate_m_tokens_from_funnel(
     # Specific Segment
     if segment is not None and isinstance(acq.get("segments"), dict):
         node = acq["segments"].get(segment) or {}
-        m, mk = _simulate_one(node.get("channels"), node.get("global") or {}, bm=bm, cvr_m=cvr_m, cac_m=cac_m)
+        m, mk = _simulate_one(
+            node.get("channels"), node.get("global") or {}, bm=bm, cvr_m=cvr_m, cac_m=cac_m, cpc_slope_per_extra_1k_eur=cpc_slope_per_extra_1k_eur
+        )
         return float(m), float(mk)
 
     # Aggregate across all segments if present, else treat as flat
@@ -108,18 +132,27 @@ def simulate_m_tokens_from_funnel(
         m_total = 0.0
         mk_total = 0.0
         for _, node in _segments(acq):
-            m, mk = _simulate_one(node.get("channels"), node.get("global") or {}, bm=bm, cvr_m=cvr_m, cac_m=cac_m)
+            m, mk = _simulate_one(
+                node.get("channels"), node.get("global") or {}, bm=bm, cvr_m=cvr_m, cac_m=cac_m, cpc_slope_per_extra_1k_eur=cpc_slope_per_extra_1k_eur
+            )
             m_total += m
             mk_total += mk
         return float(m_total), float(mk_total)
 
     # Legacy flat shape fallback
-    m, mk = _simulate_one(acq.get("channels"), acq.get("global") or acq.get("global_") or {}, bm=bm, cvr_m=cvr_m, cac_m=cac_m)
+    m, mk = _simulate_one(
+        acq.get("channels"), acq.get("global") or acq.get("global_") or {}, bm=bm, cvr_m=cvr_m, cac_m=cac_m, cpc_slope_per_extra_1k_eur=cpc_slope_per_extra_1k_eur
+    )
     return float(m), float(mk)
 
 
 def simulate_funnel_details(
-    *, acquisition: Dict[str, Any], funnel_overrides: Dict[str, Any] | None, case: str, segment: Optional[str] = None
+    *,
+    acquisition: Dict[str, Any],
+    funnel_overrides: Dict[str, Any] | None,
+    case: str,
+    segment: Optional[str] = None,
+    cpc_slope_per_extra_1k_eur: float = 0.0,
 ) -> Dict[str, float]:
     """
     Detailed simulation returning counts and tokens decomposition for a given case.
@@ -164,7 +197,8 @@ def simulate_funnel_details(
     marketing_eur = 0.0
 
     for ch in channels:
-        budget = _num(ch.get("budget_eur"), 0.0) * bm
+        orig_budget = _num(ch.get("budget_eur"), 0.0)
+        budget = orig_budget * bm
         if budget <= 0:
             continue
         marketing_eur += budget
@@ -177,7 +211,15 @@ def simulate_funnel_details(
         if cpc > 0 and v2s > 0 and s2p > 0:
             eff_v2s = _clampf(v2s * cvr_m, 0.0, 1.0)
             eff_s2p = _clampf(s2p * cvr_m, 0.0, 1.0)
-            visits = budget / cpc
+            eff_cpc = cpc
+            try:
+                slope = float(cpc_slope_per_extra_1k_eur)
+                extra = max(0.0, budget - orig_budget)
+                if slope > 0.0 and extra > 0.0:
+                    eff_cpc = cpc * (1.0 + slope * (extra / 1000.0))
+            except Exception:
+                pass
+            visits = budget / max(eff_cpc, 1e-9)
             signups = visits * eff_v2s
             paid = signups * eff_s2p
             non_paid = max(signups - paid, 0.0)

@@ -10,7 +10,7 @@
 
 **Revenue model:**
 
-- **Public Tap:** per-model prijzen berekend uit beleidsdoel (target marge 45%) en gemeten kosten; blended ≈ €0.0133 per 1k tokens.  
+- **Public Tap:** per-model prijzen berekend uit beleidsdoel (target marge 45%) en gemeten kosten; blended ≈ €0.15 per 1k tokens.  
 - **Private Tap:** prepaid GPU-uren met opslag (providerkost + 50.0%) + management fee.  
 
 **Safeguards:**
@@ -21,7 +21,7 @@
 
 **Targets:**
 
-- **Required monthly prepaid inflow (baseline):** **€8282.699955810871**  
+- **Required monthly prepaid inflow (baseline):** **€4472.3190753916515**  
 - **Runway target:** 6 months
 
 ### 0.1 Diagram — Prepaid Model Flow (Mermaid)
@@ -98,9 +98,9 @@ For each model offered on the Public Tap:
 
 | Model | GPU (median) | Cost €/1M (min) | Cost €/1M (median) | Cost €/1M (max) | Sell €/1M | Gross Margin €/1M | Gross Margin % |
 |-------|--------------|----------------:|-------------------:|----------------:|----------:|------------------:|---------------:|
-| Llama-3-1-8B | A100 40GB (PCIe) | 0.13 | 0.13 | 0.13 | 10.00 | 9.87 | 98.68 |
-| Mixtral-8x7B | H100 80GB (PCIe/SXM) | 13.40 | 13.40 | 13.40 | 20.00 | 6.60 | 33.02 |
-| Qwen2-5-7B | A100 40GB (PCIe) | 0.37 | 0.37 | 0.37 | 10.00 | 9.63 | 96.31 |
+| Llama-3-1-8B | A100 40GB (PCIe) | 0.13 | 0.13 | 0.13 | 150.00 | 149.87 | 99.91 |
+| Mixtral-8x7B | H100 80GB (PCIe/SXM) | 13.40 | 13.40 | 13.40 | 150.00 | 136.60 | 91.07 |
+| Qwen2-5-7B | A100 40GB (PCIe) | 0.37 | 0.37 | 0.37 | 150.00 | 149.63 | 99.75 |
 
 #### 2.1.1 Graph — Model Margins
 
@@ -117,6 +117,53 @@ For each model offered on the Public Tap:
 
 ---
 
+### 2.3 Acquisitie & Unit Economics (Funnel Driver)
+
+
+
+#### 2.3.1 Funnel Snapshot — Baseline
+
+- **Visits:** 1750.0  
+- **Signups:** 90.0  
+- **Paid New:** 7.8  
+- **Free New (OSS users):** 41.34  
+- **Marketing (EUR):** €2000.0  
+
+
+![Funnel (Base Case)](charts/funnel_summary.png)
+
+
+#### 2.3.2 Unit Economics
+
+| Metric | Value |
+|--------|------:|
+| ARPU Revenue (€/month) | €0.0 |
+| ARPU Contribution (€/month) | €0.0 |
+| CAC (blended) | €256.41 |
+| LTV | N/A |
+| Payback (months) | N/A |
+
+
+![Unit Economics](charts/unit_economics.png)
+
+
+#### 2.3.3 MRR/ARR
+
+| Metric | Value |
+|--------|------:|
+| MRR (new cohort) | €0.0 |
+| MRR (steady-state) | €0.0 |
+| ARR (steady-state) | €0.0 |
+| Active Paid (steady-state, users) | 0.0 |
+
+
+![MRR/ARR Snapshot](charts/mrr_bars.png)
+
+
+
+
+---
+
 ## 3) Public Tap — Monthly Projection Scenarios
 
 The following scenarios assume:
@@ -124,7 +171,7 @@ The following scenarios assume:
 - All revenue is prepaid.  
 - Costs scale linearly with tokens served.  
 - Provider costs use **median GPU rental prices** (FX buffer applied).  
-- Marketing allocation: 20% of inflow.  
+- Marketing allocation: 13% of inflow.  
 
 ---
 
@@ -132,9 +179,9 @@ The following scenarios assume:
 
 | Case      | Tokens Sold (M) | Revenue (€) | COGS (€) | Gross Margin (€) | Gross Margin % | Fixed+Loan (€) | Marketing (€) | Net Result (€) |
 |-----------|----------------:|------------:|---------:|-----------------:|---------------:|---------------:|--------------:|---------------:|
-| Worst     | 1.0 | 13.33 | 4.63 | 8.7 | 65.26 | 3748.75 | 2.67 | **-3742.72** |
-| Baseline  | 5.0 | 66.67 | 23.16 | 43.51 | 65.26 | 3748.75 | 13.33 | **-3718.58** |
-| Best      | 15.0 | 200.0 | 69.48 | 130.52 | 65.26 | 3748.75 | 40.0 | **-3658.23** |
+| Worst     | 101.868 | 15280.2 | 471.86 | 14808.34 | 96.91 | 3748.75 | 2000.0 | **9059.59** |
+| Baseline  | 101.868 | 15280.2 | 471.86 | 14808.34 | 96.91 | 3748.75 | 2000.0 | **9059.59** |
+| Best      | 101.868 | 15280.2 | 471.86 | 14808.34 | 96.91 | 3748.75 | 2000.0 | **9059.59** |
 
 #### 3.1.1 Chart — Scenario Components
 
@@ -144,9 +191,9 @@ The following scenarios assume:
 
 ```mermaid
 pie title Baseline Monthly Components
-  "Revenue €66.67" : 66.67
-  "COGS €23.16" : 23.16
-  "Marketing €13.33" : 13.33
+  "Revenue €15280.2" : 15280.2
+  "COGS €471.86" : 471.86
+  "Marketing €2000.0" : 2000.0
   "Fixed+Loan €3748.75" : 3748.75
 ```
 
@@ -155,8 +202,8 @@ pie title Baseline Monthly Components
 ### 3.2 Break-even
 
 - **Total fixed monthly costs (personal + business + loan):** €3748.75  
-- **Required margin to break even (fixed + marketing):** €5405.289991162174  
-- **Required prepaid inflow:** €8282.699955810871  
+- **Required margin to break even (fixed + marketing):** €4334.124415962049  
+- **Required prepaid inflow:** €4472.3190753916515  
 
 #### 3.2.1 Chart — Break-even
 
@@ -169,6 +216,24 @@ pie title Baseline Monthly Components
 - Public Tap scales with demand; no idle GPU rentals.  
 - Negative net result in **worst case** only reduces profit — not cash runway, since all inflows are prepaid.  
 - Best case shows upside potential if adoption is strong.  
+
+---
+
+### 3.4 24-Maanden Timeseries (Overzicht)
+
+De onderstaande grafieken geven een overzicht van de ontwikkeling in 24 maanden.
+
+#### 3.4.1 Public Tap Overzicht
+
+![Public Tap — 24m Overview](charts/public_timeseries_overview.png)
+
+#### 3.4.2 Private Tap Overzicht
+
+![Private Tap — 24m Overview](charts/private_timeseries_overview.png)
+
+#### 3.4.3 Totaal Overzicht
+
+![Total — 24m Overview](charts/total_timeseries_overview.png)
 
 ---
 
@@ -189,13 +254,13 @@ Python calculates profitability per GPU as follows:
 
 | GPU Model | Provider Cost €/hr (median) | Markup % | Sell Price €/hr | Gross Margin €/hr |
 |-----------|----------------------------:|---------:|----------------:|------------------:|
-| A10 | 1.12 | 50.00 | 1.68 | 0.56 |
-| A100 40GB (PCIe) | 1.26 | 50.00 | 1.90 | 0.63 |
-| A100 80GB (SXM/PCIe) | 2.33 | 50.00 | 3.50 | 1.17 |
-| H100 80GB (PCIe/SXM) | 3.14 | 50.00 | 4.70 | 1.57 |
-| H200 141GB | 9.24 | 50.00 | 13.85 | 4.62 |
-| L4 | 0.83 | 50.00 | 1.24 | 0.41 |
-| L40S | 0.95 | 50.00 | 1.42 | 0.47 |
+| A10 | 1.12 | 45.00 | 1.62 | 0.50 |
+| A100 40GB (PCIe) | 1.26 | 45.00 | 1.83 | 0.57 |
+| A100 80GB (SXM/PCIe) | 2.33 | 45.00 | 3.38 | 1.05 |
+| H100 80GB (PCIe/SXM) | 3.14 | 60.00 | 5.02 | 1.88 |
+| H200 141GB | 9.24 | 60.00 | 14.78 | 5.54 |
+| L4 | 0.83 | 45.00 | 1.20 | 0.37 |
+| L40S | 0.95 | 45.00 | 1.37 | 0.43 |
 | RTX 3090 | 0.83 | 50.00 | 1.24 | 0.41 |
 | RTX 4090 | 0.95 | 50.00 | 1.42 | 0.47 |
 
@@ -209,7 +274,9 @@ Python calculates profitability per GPU as follows:
 
 | Hours Prepaid | GPU Model | Revenue (€) | Provider Cost (€) | Gross Margin (€) | Management Fee (€) | Total Gross Margin (€) |
 |---------------|-----------|------------:|-----------------:|-----------------:|-------------------:|-----------------------:|
-
+| 50 | H200 141GB | 738.89 | 461.81 | 277.08 | 99.00 | 376.08 |
+| 200 | H200 141GB | 2955.56 | 1847.22 | 1108.33 | 99.00 | 1207.33 |
+| 500 | H200 141GB | 7388.89 | 4618.06 | 2770.83 | 99.00 | 2869.83 |
 
 ---
 
@@ -233,9 +300,9 @@ All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 | Case     | Public Revenue (€) | Private Revenue (€) | Total Revenue (€) | Total COGS (€) | Gross Margin (€) | Fixed+Loan (€) | Marketing (€) | Net (€) |
 |----------|-------------------:|--------------------:|------------------:|---------------:|-----------------:|---------------:|--------------:|--------:|
-| Worst    | 13.33 | 0.0 | 13.33 | 4.63 | 8.7 | 3748.75 | 2.67 | **-3742.72** |
-| Baseline | 66.67 | 0.0 | 66.67 | 23.16 | 43.51 | 3748.75 | 13.33 | **-3718.58** |
-| Best     | 200.0 | 0.0 | 200.0 | 69.48 | 130.52 | 3748.75 | 40.0 | **-3658.23** |
+| Worst    | 15280.2 | 0.0 | 15280.2 | 471.86 | 14808.34 | 3748.75 | 2000.0 | **9059.59** |
+| Baseline | 15280.2 | 0.0 | 15280.2 | 471.86 | 14808.34 | 3748.75 | 2000.0 | **9059.59** |
+| Best     | 15280.2 | 0.0 | 15280.2 | 471.86 | 14808.34 | 3748.75 | 2000.0 | **9059.59** |
 
 ---
 
@@ -243,9 +310,9 @@ All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 | Case     | Total Revenue (€) | Total COGS (€) | Gross Margin (€) | Fixed+Loan (€) | Marketing (€) | Net (€) |
 |----------|------------------:|---------------:|-----------------:|---------------:|--------------:|--------:|
-| Worst    |  | 55.56 | 104.39999999999999 | 44985.0 | 32.04 | **-44912.64** |
-| Baseline |  | 277.92 | 522.12 | 44985.0 | 159.96 | **-44622.96** |
-| Best     |  | 833.76 | 1566.2400000000002 | 44985.0 | 480.0 | **-43898.76** |
+| Worst    |  | 5662.32 | 177700.08000000002 | 44985.0 | 24000.0 | **108715.08** |
+| Baseline |  | 5662.32 | 177700.08000000002 | 44985.0 | 24000.0 | **108715.08** |
+| Best     |  | 5662.32 | 177700.08000000002 | 44985.0 | 24000.0 | **108715.08** |
 
 ---
 
@@ -253,16 +320,16 @@ All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 | Case     | Total Revenue (€) | Total COGS (€) | Gross Margin (€) | Fixed+Loan (€) | Marketing (€) | Net (€) |
 |----------|------------------:|---------------:|-----------------:|---------------:|--------------:|--------:|
-| Worst    |  | 277.8 | 522.0 | 224925.0 | 160.2 | **-224563.19999999998** |
-| Baseline |  | 1389.6 | 2610.6 | 224925.0 | 799.8 | **-223114.8** |
-| Best     |  | 4168.8 | 7831.200000000001 | 224925.0 | 2400.0 | **-219493.8** |
+| Worst    |  | 28311.600000000002 | 888500.4 | 224925.0 | 120000.0 | **543575.4** |
+| Baseline |  | 28311.600000000002 | 888500.4 | 224925.0 | 120000.0 | **543575.4** |
+| Best     |  | 28311.600000000002 | 888500.4 | 224925.0 | 120000.0 | **543575.4** |
 
 ---
 
 ### 5.4 Notes
 
 - Fixed+Loan already includes **monthly loan repayment €748.75** × 60 months.  
-- Marketing allocation: 20% of inflows reserved each period.  
+- Marketing allocation: 13% of inflows reserved each period.  
 - Net values reflect all obligations — showing repayment ability across full loan term.  
 
 ---
@@ -281,7 +348,66 @@ Total interest: **€14925.0**
 
 | Month | Opening Balance (€) | Interest (€) | Principal (€) | Payment (€) | Closing Balance (€) |
 |------:|--------------------:|-------------:|--------------:|------------:|--------------------:|
-
+| 1.00 | 30000.00 | 248.75 | 500.00 | 748.75 | 29500.00 |
+| 2.00 | 29500.00 | 248.75 | 500.00 | 748.75 | 29000.00 |
+| 3.00 | 29000.00 | 248.75 | 500.00 | 748.75 | 28500.00 |
+| 4.00 | 28500.00 | 248.75 | 500.00 | 748.75 | 28000.00 |
+| 5.00 | 28000.00 | 248.75 | 500.00 | 748.75 | 27500.00 |
+| 6.00 | 27500.00 | 248.75 | 500.00 | 748.75 | 27000.00 |
+| 7.00 | 27000.00 | 248.75 | 500.00 | 748.75 | 26500.00 |
+| 8.00 | 26500.00 | 248.75 | 500.00 | 748.75 | 26000.00 |
+| 9.00 | 26000.00 | 248.75 | 500.00 | 748.75 | 25500.00 |
+| 10.00 | 25500.00 | 248.75 | 500.00 | 748.75 | 25000.00 |
+| 11.00 | 25000.00 | 248.75 | 500.00 | 748.75 | 24500.00 |
+| 12.00 | 24500.00 | 248.75 | 500.00 | 748.75 | 24000.00 |
+| 13.00 | 24000.00 | 248.75 | 500.00 | 748.75 | 23500.00 |
+| 14.00 | 23500.00 | 248.75 | 500.00 | 748.75 | 23000.00 |
+| 15.00 | 23000.00 | 248.75 | 500.00 | 748.75 | 22500.00 |
+| 16.00 | 22500.00 | 248.75 | 500.00 | 748.75 | 22000.00 |
+| 17.00 | 22000.00 | 248.75 | 500.00 | 748.75 | 21500.00 |
+| 18.00 | 21500.00 | 248.75 | 500.00 | 748.75 | 21000.00 |
+| 19.00 | 21000.00 | 248.75 | 500.00 | 748.75 | 20500.00 |
+| 20.00 | 20500.00 | 248.75 | 500.00 | 748.75 | 20000.00 |
+| 21.00 | 20000.00 | 248.75 | 500.00 | 748.75 | 19500.00 |
+| 22.00 | 19500.00 | 248.75 | 500.00 | 748.75 | 19000.00 |
+| 23.00 | 19000.00 | 248.75 | 500.00 | 748.75 | 18500.00 |
+| 24.00 | 18500.00 | 248.75 | 500.00 | 748.75 | 18000.00 |
+| 25.00 | 18000.00 | 248.75 | 500.00 | 748.75 | 17500.00 |
+| 26.00 | 17500.00 | 248.75 | 500.00 | 748.75 | 17000.00 |
+| 27.00 | 17000.00 | 248.75 | 500.00 | 748.75 | 16500.00 |
+| 28.00 | 16500.00 | 248.75 | 500.00 | 748.75 | 16000.00 |
+| 29.00 | 16000.00 | 248.75 | 500.00 | 748.75 | 15500.00 |
+| 30.00 | 15500.00 | 248.75 | 500.00 | 748.75 | 15000.00 |
+| 31.00 | 15000.00 | 248.75 | 500.00 | 748.75 | 14500.00 |
+| 32.00 | 14500.00 | 248.75 | 500.00 | 748.75 | 14000.00 |
+| 33.00 | 14000.00 | 248.75 | 500.00 | 748.75 | 13500.00 |
+| 34.00 | 13500.00 | 248.75 | 500.00 | 748.75 | 13000.00 |
+| 35.00 | 13000.00 | 248.75 | 500.00 | 748.75 | 12500.00 |
+| 36.00 | 12500.00 | 248.75 | 500.00 | 748.75 | 12000.00 |
+| 37.00 | 12000.00 | 248.75 | 500.00 | 748.75 | 11500.00 |
+| 38.00 | 11500.00 | 248.75 | 500.00 | 748.75 | 11000.00 |
+| 39.00 | 11000.00 | 248.75 | 500.00 | 748.75 | 10500.00 |
+| 40.00 | 10500.00 | 248.75 | 500.00 | 748.75 | 10000.00 |
+| 41.00 | 10000.00 | 248.75 | 500.00 | 748.75 | 9500.00 |
+| 42.00 | 9500.00 | 248.75 | 500.00 | 748.75 | 9000.00 |
+| 43.00 | 9000.00 | 248.75 | 500.00 | 748.75 | 8500.00 |
+| 44.00 | 8500.00 | 248.75 | 500.00 | 748.75 | 8000.00 |
+| 45.00 | 8000.00 | 248.75 | 500.00 | 748.75 | 7500.00 |
+| 46.00 | 7500.00 | 248.75 | 500.00 | 748.75 | 7000.00 |
+| 47.00 | 7000.00 | 248.75 | 500.00 | 748.75 | 6500.00 |
+| 48.00 | 6500.00 | 248.75 | 500.00 | 748.75 | 6000.00 |
+| 49.00 | 6000.00 | 248.75 | 500.00 | 748.75 | 5500.00 |
+| 50.00 | 5500.00 | 248.75 | 500.00 | 748.75 | 5000.00 |
+| 51.00 | 5000.00 | 248.75 | 500.00 | 748.75 | 4500.00 |
+| 52.00 | 4500.00 | 248.75 | 500.00 | 748.75 | 4000.00 |
+| 53.00 | 4000.00 | 248.75 | 500.00 | 748.75 | 3500.00 |
+| 54.00 | 3500.00 | 248.75 | 500.00 | 748.75 | 3000.00 |
+| 55.00 | 3000.00 | 248.75 | 500.00 | 748.75 | 2500.00 |
+| 56.00 | 2500.00 | 248.75 | 500.00 | 748.75 | 2000.00 |
+| 57.00 | 2000.00 | 248.75 | 500.00 | 748.75 | 1500.00 |
+| 58.00 | 1500.00 | 248.75 | 500.00 | 748.75 | 1000.00 |
+| 59.00 | 1000.00 | 248.75 | 500.00 | 748.75 | 500.00 |
+| 60.00 | 500.00 | 248.75 | 500.00 | 748.75 | 0.00 |
 
 #### 6.1.1 Chart — Loan Balance Over Time
 
@@ -383,7 +509,7 @@ This business model is designed to minimize financial risk:
 ### 9.3 Engine Version
 
 - Finance Engine: vv1.0.0  
-- Last generated: 2025-09-27T17:30:55Z  
+- Last generated: 2025-09-27T21:28:11Z  
 
 ---
 

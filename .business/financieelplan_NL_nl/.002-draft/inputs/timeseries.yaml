@@ -1,0 +1,4 @@
+horizon_months: 24
+reactivation_pct: 10
+expansion_arpu_pct: 0
+cohort_model: simple_linear

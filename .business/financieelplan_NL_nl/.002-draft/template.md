@@ -221,6 +221,24 @@ pie title Baseline Monthly Components
 
 ---
 
+### 3.4 24-Maanden Timeseries (Overzicht)
+
+De onderstaande grafieken geven een overzicht van de ontwikkeling in 24 maanden.
+
+#### 3.4.1 Public Tap Overzicht
+
+![Public Tap — 24m Overview]({{ charts.public_timeseries_overview | default('charts/public_timeseries_overview.png') }})
+
+#### 3.4.2 Private Tap Overzicht
+
+![Private Tap — 24m Overview]({{ charts.private_timeseries_overview | default('charts/private_timeseries_overview.png') }})
+
+#### 3.4.3 Totaal Overzicht
+
+![Total — 24m Overview]({{ charts.total_timeseries_overview | default('charts/total_timeseries_overview.png') }})
+
+---
+
 ## 4) Private Tap — Profitability Rules
 
 Private Tap clients prepay for **dedicated GPU-hours** plus a **management fee**.  

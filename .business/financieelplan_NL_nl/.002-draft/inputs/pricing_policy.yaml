@@ -15,6 +15,19 @@ public_tap:
   price_cap_per_1k_tokens: null
   # Optional per-model floors or caps can be added later if needed.
 
+  # Elasticity-based optimizer (Option B)
+  optimize:
+    enabled: true
+    objective: profit
+    # Constant elasticity exponent ε; 1.0 geeft neutrale schaal (kiest richting bounds)
+    elasticity_epsilon: 1.0
+    # Laat leeg om target-marge (onafgerond) als referentie te nemen
+    reference_per_1k_tokens: null
+    # Conservatieve grenzen voor prijs per 1k tokens (EUR)
+    bounds_per_1k: [0.02, 0.15]
+    # Resolutie van de grid search (EUR per 1k tokens)
+    grid_step_per_1k: 0.01
+
 notes:
   - "Prices are derived from measured TPS × GPU EUR/hr costs; no static per-SKU guesses."
   - "If no TPS measurement exists for a model, the model is excluded from curated output."

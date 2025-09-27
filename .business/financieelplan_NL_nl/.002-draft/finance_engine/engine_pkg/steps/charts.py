@@ -13,6 +13,7 @@ from ...charts.generate import (
     plot_funnel_summary,
     plot_unit_economics,
     plot_mrr_bars,
+    plot_timeseries_lines,
 )
 
 
@@ -45,6 +46,56 @@ def generate_charts(*, agg: Dict[str, Any]) -> Dict[str, str]:
     loan_balance_path = charts_dir / "loan_balance_over_time.png"
     plot_loan_balance(agg["loan_df"], loan_balance_path)
 
+    # 24-month timeseries charts (if available)
+    ts_pub = agg.get("ts_public_df")
+    ts_priv = agg.get("ts_private_df")
+    ts_tot = agg.get("ts_total_df")
+    public_ts_path = charts_dir / "public_timeseries_overview.png"
+    total_ts_path = charts_dir / "total_timeseries_overview.png"
+    private_ts_path = charts_dir / "private_timeseries_overview.png"
+    try:
+        if ts_pub is not None and not ts_pub.empty:
+            plot_timeseries_lines(
+                ts_pub,
+                {
+                    "recognized_revenue_eur": "Revenue (recognized)",
+                    "inflow_eur": "Inflow",
+                    "liability_end_eur": "Liability",
+                    "net_eur": "Net",
+                },
+                "Public Tap — 24m Overview",
+                public_ts_path,
+            )
+    except Exception:
+        pass
+    try:
+        if ts_tot is not None and not ts_tot.empty:
+            plot_timeseries_lines(
+                ts_tot,
+                {
+                    "revenue_eur": "Revenue",
+                    "inflow_eur": "Inflow",
+                    "net_eur": "Net",
+                },
+                "Total — 24m Overview",
+                total_ts_path,
+            )
+    except Exception:
+        pass
+    try:
+        if ts_priv is not None and not ts_priv.empty:
+            plot_timeseries_lines(
+                ts_priv,
+                {
+                    "gpu_rev_eur": "GPU Revenue",
+                    "net_eur": "Net",
+                },
+                "Private Tap — 24m Overview",
+                private_ts_path,
+            )
+    except Exception:
+        pass
+
     # Return relative paths for template
     return {
         "model_margins_per_1m": f"charts/{model_margins_path.name}",
@@ -75,4 +126,7 @@ def generate_charts(*, agg: Dict[str, Any]) -> Dict[str, str]:
             ))()[1]
             if agg.get("unit_economics") else None
         ),
+        "public_timeseries_overview": (f"charts/{public_ts_path.name}" if (ts_pub is not None and not ts_pub.empty) else None),
+        "total_timeseries_overview": (f"charts/{total_ts_path.name}" if (ts_tot is not None and not ts_tot.empty) else None),
+        "private_timeseries_overview": (f"charts/{private_ts_path.name}" if (ts_priv is not None and not ts_priv.empty) else None),
     }

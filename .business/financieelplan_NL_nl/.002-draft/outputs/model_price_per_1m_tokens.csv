@@ -1,4 +1,4 @@
-model,gpu,tps,eur_hr_min,eur_hr_med,eur_hr_max,cost_per_1m_min,cost_per_1m_med,cost_per_1m_max,sell_per_1m_eur,margin_per_1m_min,margin_per_1m_med,margin_per_1m_max,gross_margin_pct_med,gross_margin_pct_min
-Llama-3-1-8B,A100 40GB (PCIe),2459.0,1.1667,1.1667,1.1667,0.1318,0.1318,0.1318,10.0,9.8682,9.8682,9.8682,98.68,98.68
-Mixtral-8x7B,H100 80GB (PCIe/SXM),62.5,3.0139,3.0139,3.0139,13.3951,13.3951,13.3951,20.0,6.6049,6.6049,6.6049,33.02,33.02
-Qwen2-5-7B,A100 40GB (PCIe),877.595,1.1667,1.1667,1.1667,0.3693,0.3693,0.3693,10.0,9.6307,9.6307,9.6307,96.31,96.31
+model,gpu,tps,eur_hr_min,eur_hr_med,eur_hr_max,cost_per_1m_min,cost_per_1m_med,cost_per_1m_max,sell_per_1m_eur,margin_per_1m_min,margin_per_1m_med,margin_per_1m_max,competitor_cap_applied,gross_margin_pct_med,gross_margin_pct_min
+Llama-3-1-8B,A100 40GB (PCIe),2459.0,1.1667,1.1667,1.1667,0.1318,0.1318,0.1318,150.0,149.8682,149.8682,149.8682,False,99.91,99.91
+Mixtral-8x7B,H100 80GB (PCIe/SXM),62.5,3.0139,3.0139,3.0139,13.3951,13.3951,13.3951,150.0,136.6049,136.6049,136.6049,False,91.07,91.07
+Qwen2-5-7B,A100 40GB (PCIe),877.595,1.1667,1.1667,1.1667,0.3693,0.3693,0.3693,150.0,149.6307,149.6307,149.6307,False,99.75,99.75

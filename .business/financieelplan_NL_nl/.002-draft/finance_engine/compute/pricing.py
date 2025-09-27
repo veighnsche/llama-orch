@@ -49,6 +49,8 @@ def _policy_from_cfg(cfg: Dict[str, Any]) -> Dict[str, Any]:
         "price_cap_per_1k_tokens": (None if pol.get("price_cap_per_1k_tokens") in (None, "",) else float(pol.get("price_cap_per_1k_tokens"))),
         "competitor_caps_by_sku": pol.get("competitor_caps_by_sku") or {},
         "apply_competitor_caps": bool(pol.get("apply_competitor_caps", False)),
+        # Optimizer settings (optional)
+        "optimize": (pol.get("optimize") or pol.get("optimize_price") or {}),
     }
 
 
@@ -197,6 +199,100 @@ def _sell_per_1m_from_cost(cost_per_1m_med: float, cfg: Dict[str, Any]) -> float
     return float(price_1k * 1000.0)
 
 
+def _optimizer_settings(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    pol = _policy_from_cfg(cfg)
+    opt = pol.get("optimize") or {}
+    # Backwards-safe defaults if optimizer is not configured
+    return {
+        "enabled": bool(opt.get("enabled", False)),
+        "objective": str(opt.get("objective", "profit")),  # currently only 'profit' is supported
+        "epsilon": float(opt.get("elasticity_epsilon", 1.0)),
+        "ref_per_1k": (None if opt.get("reference_per_1k_tokens") in (None, "") else float(opt.get("reference_per_1k_tokens"))),
+        "bounds_per_1k": opt.get("bounds_per_1k", None),  # e.g., [0.05, 5.0]
+        "grid_step_per_1k": float(opt.get("grid_step_per_1k", 0.01)),
+    }
+
+
+def _optimize_price_per_1m(
+    *,
+    cost_per_1m_med: float,
+    cfg: Dict[str, Any],
+    model: str,
+) -> float:
+    """Elasticity-based grid search to maximize (relative) profit per 1k tokens.
+
+    Demand model: D(p) = (pref / p)^epsilon, with epsilon > 0. Absolute demand scale cancels out.
+    Objective: maximize D(p) * (p - c), where p = price per 1k, c = cost_per_1m_med/1000.
+    Constraints: floor/cap from policy; competitor caps (if enabled) narrow the cap; optional custom bounds.
+    """
+    pol = _policy_from_cfg(cfg)
+    opt = _optimizer_settings(cfg)
+    if not opt["enabled"]:
+        return _sell_per_1m_from_cost(cost_per_1m_med, cfg)
+
+    floor_1k = float(pol["price_floor_per_1k_tokens"]) or 0.0
+    cap_cfg = pol["price_cap_per_1k_tokens"]
+    # Competitor cap bound if enabled
+    cap_map = pol.get("competitor_caps_by_sku") or {}
+    cap_sku = cap_map.get(model) or cap_map.get(_normalize_model_name(model))
+    comp_cap_1k = None
+    try:
+        comp_cap_1k = float(cap_sku) if cap_sku is not None else None
+    except Exception:
+        comp_cap_1k = None
+    cap_1k = None
+    if pol.get("apply_competitor_caps") and comp_cap_1k is not None:
+        cap_1k = comp_cap_1k
+    elif cap_cfg is not None:
+        cap_1k = float(cap_cfg)
+
+    # Optional extra bounds
+    b = opt.get("bounds_per_1k")
+    if isinstance(b, (list, tuple)) and len(b) == 2:
+        try:
+            lo, hi = float(b[0]), float(b[1])
+            floor_1k = max(floor_1k, lo)
+            cap_1k = min(cap_1k, hi) if cap_1k is not None else hi
+        except Exception:
+            pass
+
+    # Reference price per 1k
+    c_1k = cost_per_1m_med / 1000.0
+    pref = opt.get("ref_per_1k")
+    if pref is None or pref <= 0:
+        # Use cost-plus target (unrounded) as anchor if not specified
+        target = float(pol["target_gross_margin_pct"]) / 100.0
+        if target >= 1.0:
+            target = 0.99
+        p_unrounded_1k = 0.0 if cost_per_1m_med <= 0 else (cost_per_1m_med / max(1e-12, (1.0 - target))) / 1000.0
+        pref = max(floor_1k, p_unrounded_1k)
+
+    eps = max(1e-6, float(opt.get("epsilon", 1.0)))
+    step = max(1e-6, float(opt.get("grid_step_per_1k", 0.01)))
+
+    lo = max(1e-9, float(floor_1k))
+    hi = float(cap_1k) if cap_1k is not None else max(lo + step, pref * 5.0)
+    if hi <= lo:
+        hi = lo + step
+
+    # Evaluate grid
+    best_p = lo
+    best_val = -float("inf")
+    x = lo
+    while x <= hi + 1e-12:
+        demand = (pref / x) ** eps
+        margin = max(0.0, x - c_1k)
+        val = demand * margin
+        if val > best_val:
+            best_val = val
+            best_p = x
+        x += step
+
+    # Final rounding to policy step/floor/cap
+    p1k = _round_price_per_1k(best_p, float(pol["rounding_per_1k_tokens"]), lo, (cap_1k if cap_1k is not None else None))
+    return float(p1k * 1000.0)
+
+
 def compute_model_economics(
     *,
     cfg: Dict[str, Any],
@@ -246,7 +342,7 @@ def compute_model_economics(
         c_med = cost_per_1m(eur_hr_med)
         c_max = cost_per_1m(eur_hr_max)
 
-        # Pricing: prefer explicit override per 1k tokens, else compute from policy target margin
+        # Pricing: prefer explicit override per 1k tokens, else compute from optimizer (if enabled) or policy target margin
         sell_1m = 0.0
         ov = overrides.get("price_overrides", {}).get(model) if isinstance(overrides, dict) else None
         if ov and isinstance(ov, dict) and "unit_price_eur_per_1k_tokens" in ov:
@@ -255,9 +351,14 @@ def compute_model_economics(
             except Exception:
                 sell_1m = 0.0
         if sell_1m <= 0.0:
-            sell_1m = _sell_per_1m_from_cost(c_med, cfg)
+            pol = _policy_from_cfg(cfg)
+            opt = pol.get("optimize") or {}
+            if bool((_optimizer_settings(cfg)).get("enabled")):
+                sell_1m = _optimize_price_per_1m(cost_per_1m_med=c_med, cfg=cfg, model=model)
+            else:
+                sell_1m = _sell_per_1m_from_cost(c_med, cfg)
 
-        # Apply competitor caps per SKU if enabled
+        # Apply competitor caps per SKU if enabled (second pass to enforce strict cap even after rounding)
         pol = _policy_from_cfg(cfg)
         cap_map = pol.get("competitor_caps_by_sku") or {}
         cap_applied = False

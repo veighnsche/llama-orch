@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict
+import pandas as pd
 
 from ...config import ENGINE_VERSION
 from ...utils.time import now_utc_iso
@@ -120,6 +121,72 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
             except Exception:
                 pass
 
+    # Build additional markdown tables
+    # 1) Loan schedule table rows
+    loan_table_md = ""
+    try:
+        loan_df = agg.get("loan_df")
+        if loan_df is not None and not loan_df.empty:
+            loan_cols = [
+                "month",
+                "balance_start_eur",
+                "interest_eur",
+                "principal_eur",
+                "payment_eur",
+                "balance_end_eur",
+            ]
+            # Ensure columns exist before rendering
+            if all(c in loan_df.columns for c in loan_cols):
+                loan_table_md = df_to_markdown_rows(loan_df, loan_cols)
+    except Exception:
+        loan_table_md = ""
+
+    # 2) Private Tap example pack rows (use top-margin GPU and example hour packs)
+    private_example_md = ""
+    try:
+        pdf = agg.get("private_df")
+        mgmt_fee = config.get("prepaid_policy", {}).get("private_tap", {}).get("management_fee_eur_per_month")
+        try:
+            mgmt_fee_val = float(mgmt_fee) if mgmt_fee is not None else 0.0
+        except Exception:
+            mgmt_fee_val = 0.0
+        if pdf is not None and not pdf.empty:
+            row = pdf.sort_values(by="margin_eur_hr", ascending=False).iloc[0]
+            gpu_name = str(row.get("gpu"))
+            provider_eur_hr = float(row.get("provider_eur_hr_med", 0.0) or 0.0)
+            sell_eur_hr = float(row.get("sell_eur_hr", 0.0) or 0.0)
+            hours_list = [50, 200, 500]
+            ex_rows = []
+            for hrs in hours_list:
+                rev = sell_eur_hr * hrs
+                prov = provider_eur_hr * hrs
+                gross = max(0.0, rev - prov)
+                total_gross = gross + mgmt_fee_val
+                ex_rows.append({
+                    "Hours Prepaid": hrs,
+                    "GPU Model": gpu_name,
+                    "Revenue (€)": round(rev, 2),
+                    "Provider Cost (€)": round(prov, 2),
+                    "Gross Margin (€)": round(gross, 2),
+                    "Management Fee (€)": round(mgmt_fee_val, 2),
+                    "Total Gross Margin (€)": round(total_gross, 2),
+                })
+            ex_df = pd.DataFrame(ex_rows)
+            private_example_md = df_to_markdown_rows(
+                ex_df,
+                [
+                    "Hours Prepaid",
+                    "GPU Model",
+                    "Revenue (€)",
+                    "Provider Cost (€)",
+                    "Gross Margin (€)",
+                    "Management Fee (€)",
+                    "Total Gross Margin (€)",
+                ],
+            )
+    except Exception:
+        private_example_md = ""
+
     ctx = {
         "engine": {"version": ENGINE_VERSION, "timestamp": now_utc_iso()},
         "pricing": {
@@ -195,8 +262,8 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
         "tables": {
             "model_price_per_1m_tokens": model_table_md,
             "private_tap_gpu_economics": private_table_md,
-            "private_tap_example_pack": "",  # not implemented yet
-            "loan_schedule": "",  # not expanded to markdown; chart will visualize
+            "private_tap_example_pack": private_example_md,
+            "loan_schedule": loan_table_md,
         },
         "charts": charts,
     }
