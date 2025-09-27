@@ -1,0 +1,11 @@
+[project]
+name = "finance-engine"
+version = "0.1.0"
+description = "Deterministic finance engine for .002-draft"
+requires-python = ">=3.11"
+readme = "README.md"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+pythonpath = ["."]
+
