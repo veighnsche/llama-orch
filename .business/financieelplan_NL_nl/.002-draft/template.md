@@ -173,7 +173,7 @@ The following scenarios assume:
 - All revenue is prepaid.  
 - Costs scale linearly with tokens served.  
 - Provider costs use **median GPU rental prices** (FX buffer applied).  
-- Marketing allocation: {{finance.marketing_allocation_pct_of_inflow}}% of inflow.  
+- Marketing allocation: {{finance.marketing_allocation_pct_of_inflow}}% of revenue.  
 
 ---
 
@@ -321,7 +321,7 @@ All revenue is prepaid; no refunds. Costs scale linearly with demand.
 ### 5.4 Notes
 
 - Fixed+Loan already includes **monthly loan repayment €{{loan.monthly_payment_eur}}** × 60 months.  
-- Marketing allocation: {{finance.marketing_allocation_pct_of_inflow}}% of inflows reserved each period.  
+- Marketing allocation: {{finance.marketing_allocation_pct_of_inflow}}% of revenue reserved each period.  
 - Net values reflect all obligations — showing repayment ability across full loan term.  
 
 ---

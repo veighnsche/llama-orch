@@ -1,7 +1,7 @@
 segments:
   oss:
     global:
-      avg_tokens_paid_per_user_per_month: 12000000
+      avg_tokens_paid_per_user_per_month: 1500000
       avg_tokens_free_per_user_per_month: 200000
       churn_pct_per_month: 4
       payment_fee_pct_of_revenue: 2.9
@@ -14,7 +14,7 @@ segments:
         oss_share_pct: 70
   agencies:
     global:
-      avg_tokens_paid_per_user_per_month: 12000000
+      avg_tokens_paid_per_user_per_month: 1500000
       avg_tokens_free_per_user_per_month: 200000
       churn_pct_per_month: 4
       payment_fee_pct_of_revenue: 2.9
@@ -27,14 +27,14 @@ segments:
         oss_share_pct: 40
   it_teams:
     global:
-      avg_tokens_paid_per_user_per_month: 12000000
+      avg_tokens_paid_per_user_per_month: 1500000
       avg_tokens_free_per_user_per_month: 200000
       churn_pct_per_month: 4
       payment_fee_pct_of_revenue: 2.9
     channels: []
   compliance:
     global:
-      avg_tokens_paid_per_user_per_month: 12000000
+      avg_tokens_paid_per_user_per_month: 1500000
       avg_tokens_free_per_user_per_month: 200000
       churn_pct_per_month: 4
       payment_fee_pct_of_revenue: 2.9

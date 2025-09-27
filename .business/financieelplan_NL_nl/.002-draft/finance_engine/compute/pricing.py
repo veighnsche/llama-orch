@@ -213,6 +213,55 @@ def _optimizer_settings(cfg: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _optimizer_settings_for_model(cfg: Dict[str, Any], model: str) -> Dict[str, Any]:
+    """Merge global optimizer settings with per-SKU overrides when present."""
+    base = _optimizer_settings(cfg)
+    pol = _policy_from_cfg(cfg)
+    opt = pol.get("optimize") or {}
+    per = opt.get("per_sku") or {}
+    # Try multiple key variants to find a match
+    keys_to_try = [
+        model,
+        _normalize_model_name(model),
+        model.replace(".", "-"),
+        model.replace("-", "."),
+    ]
+    node = None
+    for k in keys_to_try:
+        if isinstance(per, dict) and k in per and isinstance(per[k], dict):
+            node = per[k]
+            break
+    if not node:
+        return base
+    merged = dict(base)
+    if "enabled" in node:
+        try:
+            merged["enabled"] = bool(node.get("enabled"))
+        except Exception:
+            pass
+    if "elasticity_epsilon" in node:
+        try:
+            merged["epsilon"] = float(node.get("elasticity_epsilon"))
+        except Exception:
+            pass
+    if "reference_per_1k_tokens" in node:
+        try:
+            v = node.get("reference_per_1k_tokens")
+            merged["ref_per_1k"] = (None if v in (None, "") else float(v))
+        except Exception:
+            pass
+    if "bounds_per_1k" in node:
+        b = node.get("bounds_per_1k")
+        if isinstance(b, (list, tuple)) and len(b) == 2:
+            merged["bounds_per_1k"] = b
+    if "grid_step_per_1k" in node:
+        try:
+            merged["grid_step_per_1k"] = float(node.get("grid_step_per_1k"))
+        except Exception:
+            pass
+    return merged
+
+
 def _optimize_price_per_1m(
     *,
     cost_per_1m_med: float,
@@ -226,7 +275,7 @@ def _optimize_price_per_1m(
     Constraints: floor/cap from policy; competitor caps (if enabled) narrow the cap; optional custom bounds.
     """
     pol = _policy_from_cfg(cfg)
-    opt = _optimizer_settings(cfg)
+    opt = _optimizer_settings_for_model(cfg, model)
     if not opt["enabled"]:
         return _sell_per_1m_from_cost(cost_per_1m_med, cfg)
 

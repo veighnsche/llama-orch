@@ -10,7 +10,7 @@
 
 **Revenue model:**
 
-- **Public Tap:** per-model prijzen berekend uit beleidsdoel (target marge 45%) en gemeten kosten; blended ≈ €0.15 per 1k tokens.  
+- **Public Tap:** per-model prijzen berekend uit beleidsdoel (target marge 45%) en gemeten kosten; blended ≈ €1.4333 per 1k tokens.  
 - **Private Tap:** prepaid GPU-uren met opslag (providerkost + 50.0%) + management fee.  
 
 **Safeguards:**
@@ -21,7 +21,7 @@
 
 **Targets:**
 
-- **Required monthly prepaid inflow (baseline):** **€4472.3190753916515**  
+- **Required monthly prepaid inflow (baseline):** **€4044.3047526704204**  
 - **Runway target:** 6 months
 
 ### 0.1 Diagram — Prepaid Model Flow (Mermaid)
@@ -98,9 +98,9 @@ For each model offered on the Public Tap:
 
 | Model | GPU (median) | Cost €/1M (min) | Cost €/1M (median) | Cost €/1M (max) | Sell €/1M | Gross Margin €/1M | Gross Margin % |
 |-------|--------------|----------------:|-------------------:|----------------:|----------:|------------------:|---------------:|
-| Llama-3-1-8B | A100 40GB (PCIe) | 0.13 | 0.13 | 0.13 | 150.00 | 149.87 | 99.91 |
-| Mixtral-8x7B | H100 80GB (PCIe/SXM) | 13.40 | 13.40 | 13.40 | 150.00 | 136.60 | 91.07 |
-| Qwen2-5-7B | A100 40GB (PCIe) | 0.37 | 0.37 | 0.37 | 150.00 | 149.63 | 99.75 |
+| Llama-3-1-8B | A100 40GB (PCIe) | 0.13 | 0.13 | 0.13 | 1200.00 | 1199.87 | 99.99 |
+| Mixtral-8x7B | H100 80GB (PCIe/SXM) | 13.40 | 13.40 | 13.40 | 2000.00 | 1986.60 | 99.33 |
+| Qwen2-5-7B | A100 40GB (PCIe) | 0.37 | 0.37 | 0.37 | 1100.00 | 1099.63 | 99.97 |
 
 #### 2.1.1 Graph — Model Margins
 
@@ -171,7 +171,7 @@ The following scenarios assume:
 - All revenue is prepaid.  
 - Costs scale linearly with tokens served.  
 - Provider costs use **median GPU rental prices** (FX buffer applied).  
-- Marketing allocation: 13% of inflow.  
+- Marketing allocation: 7% of revenue.  
 
 ---
 
@@ -179,9 +179,9 @@ The following scenarios assume:
 
 | Case      | Tokens Sold (M) | Revenue (€) | COGS (€) | Gross Margin (€) | Gross Margin % | Fixed+Loan (€) | Marketing (€) | Net Result (€) |
 |-----------|----------------:|------------:|---------:|-----------------:|---------------:|---------------:|--------------:|---------------:|
-| Worst     | 101.868 | 15280.2 | 471.86 | 14808.34 | 96.91 | 3748.75 | 2000.0 | **9059.59** |
-| Baseline  | 101.868 | 15280.2 | 471.86 | 14808.34 | 96.91 | 3748.75 | 2000.0 | **9059.59** |
-| Best      | 101.868 | 15280.2 | 471.86 | 14808.34 | 96.91 | 3748.75 | 2000.0 | **9059.59** |
+| Worst     | 19.968 | 28620.8 | 92.49 | 28528.31 | 99.68 | 3748.75 | 2000.0 | **22779.56** |
+| Baseline  | 19.968 | 28620.8 | 92.49 | 28528.31 | 99.68 | 3748.75 | 2000.0 | **22779.56** |
+| Best      | 19.968 | 28620.8 | 92.49 | 28528.31 | 99.68 | 3748.75 | 2000.0 | **22779.56** |
 
 #### 3.1.1 Chart — Scenario Components
 
@@ -191,8 +191,8 @@ The following scenarios assume:
 
 ```mermaid
 pie title Baseline Monthly Components
-  "Revenue €15280.2" : 15280.2
-  "COGS €471.86" : 471.86
+  "Revenue €28620.8" : 28620.8
+  "COGS €92.49" : 92.49
   "Marketing €2000.0" : 2000.0
   "Fixed+Loan €3748.75" : 3748.75
 ```
@@ -202,8 +202,8 @@ pie title Baseline Monthly Components
 ### 3.2 Break-even
 
 - **Total fixed monthly costs (personal + business + loan):** €3748.75  
-- **Required margin to break even (fixed + marketing):** €4334.124415962049  
-- **Required prepaid inflow:** €4472.3190753916515  
+- **Required margin to break even (fixed + marketing):** €4031.3629774618753  
+- **Required prepaid inflow:** €4044.3047526704204  
 
 #### 3.2.1 Chart — Break-even
 
@@ -300,9 +300,9 @@ All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 | Case     | Public Revenue (€) | Private Revenue (€) | Total Revenue (€) | Total COGS (€) | Gross Margin (€) | Fixed+Loan (€) | Marketing (€) | Net (€) |
 |----------|-------------------:|--------------------:|------------------:|---------------:|-----------------:|---------------:|--------------:|--------:|
-| Worst    | 15280.2 | 0.0 | 15280.2 | 471.86 | 14808.34 | 3748.75 | 2000.0 | **9059.59** |
-| Baseline | 15280.2 | 0.0 | 15280.2 | 471.86 | 14808.34 | 3748.75 | 2000.0 | **9059.59** |
-| Best     | 15280.2 | 0.0 | 15280.2 | 471.86 | 14808.34 | 3748.75 | 2000.0 | **9059.59** |
+| Worst    | 28620.8 | 0.0 | 28620.8 | 92.49 | 28528.31 | 3748.75 | 2000.0 | **22779.56** |
+| Baseline | 28620.8 | 0.0 | 28620.8 | 92.49 | 28528.31 | 3748.75 | 2000.0 | **22779.56** |
+| Best     | 28620.8 | 0.0 | 28620.8 | 92.49 | 28528.31 | 3748.75 | 2000.0 | **22779.56** |
 
 ---
 
@@ -310,9 +310,9 @@ All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 | Case     | Total Revenue (€) | Total COGS (€) | Gross Margin (€) | Fixed+Loan (€) | Marketing (€) | Net (€) |
 |----------|------------------:|---------------:|-----------------:|---------------:|--------------:|--------:|
-| Worst    |  | 5662.32 | 177700.08000000002 | 44985.0 | 24000.0 | **108715.08** |
-| Baseline |  | 5662.32 | 177700.08000000002 | 44985.0 | 24000.0 | **108715.08** |
-| Best     |  | 5662.32 | 177700.08000000002 | 44985.0 | 24000.0 | **108715.08** |
+| Worst    |  | 1109.8799999999999 | 342339.72000000003 | 44985.0 | 24000.0 | **273354.72000000003** |
+| Baseline |  | 1109.8799999999999 | 342339.72000000003 | 44985.0 | 24000.0 | **273354.72000000003** |
+| Best     |  | 1109.8799999999999 | 342339.72000000003 | 44985.0 | 24000.0 | **273354.72000000003** |
 
 ---
 
@@ -320,16 +320,16 @@ All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 | Case     | Total Revenue (€) | Total COGS (€) | Gross Margin (€) | Fixed+Loan (€) | Marketing (€) | Net (€) |
 |----------|------------------:|---------------:|-----------------:|---------------:|--------------:|--------:|
-| Worst    |  | 28311.600000000002 | 888500.4 | 224925.0 | 120000.0 | **543575.4** |
-| Baseline |  | 28311.600000000002 | 888500.4 | 224925.0 | 120000.0 | **543575.4** |
-| Best     |  | 28311.600000000002 | 888500.4 | 224925.0 | 120000.0 | **543575.4** |
+| Worst    |  | 5549.4 | 1711698.6 | 224925.0 | 120000.0 | **1366773.6** |
+| Baseline |  | 5549.4 | 1711698.6 | 224925.0 | 120000.0 | **1366773.6** |
+| Best     |  | 5549.4 | 1711698.6 | 224925.0 | 120000.0 | **1366773.6** |
 
 ---
 
 ### 5.4 Notes
 
 - Fixed+Loan already includes **monthly loan repayment €748.75** × 60 months.  
-- Marketing allocation: 13% of inflows reserved each period.  
+- Marketing allocation: 7% of revenue reserved each period.  
 - Net values reflect all obligations — showing repayment ability across full loan term.  
 
 ---
@@ -509,7 +509,7 @@ This business model is designed to minimize financial risk:
 ### 9.3 Engine Version
 
 - Finance Engine: vv1.0.0  
-- Last generated: 2025-09-27T21:28:11Z  
+- Last generated: 2025-09-27T22:21:59Z  
 
 ---
 

@@ -163,13 +163,39 @@ def compute_all(
         # Acquisition inputs are passed via compute_all caller; fallback to empty
         acquisition: Dict[str, Any] = get(scenarios, ["__acquisition"], {})  # late-bound by orchestrator wrapper
         funnel_overrides: Dict[str, Any] = get(scenarios, ["__funnel_overrides"], {})
-        m_worst, mk_worst = simulate_m_tokens_from_funnel(acquisition=acquisition, funnel_overrides=funnel_overrides, case="worst")
-        m_base, mk_base = simulate_m_tokens_from_funnel(acquisition=acquisition, funnel_overrides=funnel_overrides, case="base")
-        m_best, mk_best = simulate_m_tokens_from_funnel(acquisition=acquisition, funnel_overrides=funnel_overrides, case="best")
+        seasonality: Dict[str, Any] = get(scenarios, ["__seasonality"], {})
+        dr = seasonality.get("diminishing_returns") or {}
+        try:
+            cpc_slope = float(dr.get("cpc_slope_per_extra_1k_eur", 0.0))
+        except Exception:
+            cpc_slope = 0.0
+        m_worst, mk_worst = simulate_m_tokens_from_funnel(
+            acquisition=acquisition,
+            funnel_overrides=funnel_overrides,
+            case="worst",
+            cpc_slope_per_extra_1k_eur=cpc_slope,
+        )
+        m_base, mk_base = simulate_m_tokens_from_funnel(
+            acquisition=acquisition,
+            funnel_overrides=funnel_overrides,
+            case="base",
+            cpc_slope_per_extra_1k_eur=cpc_slope,
+        )
+        m_best, mk_best = simulate_m_tokens_from_funnel(
+            acquisition=acquisition,
+            funnel_overrides=funnel_overrides,
+            case="best",
+            cpc_slope_per_extra_1k_eur=cpc_slope,
+        )
         worst_base_best = (m_worst, m_base, m_best)
         marketing_overrides = {"worst": mk_worst, "base": mk_base, "best": mk_best}
         # Detailed base-case funnel and unit economics
-        funnel_details_base = simulate_funnel_details(acquisition=acquisition, funnel_overrides=funnel_overrides, case="base")
+        funnel_details_base = simulate_funnel_details(
+            acquisition=acquisition,
+            funnel_overrides=funnel_overrides,
+            case="base",
+            cpc_slope_per_extra_1k_eur=cpc_slope,
+        )
 
     # Compute public scenarios (optionally with marketing overrides)
     public_df, public_tpl = compute_public_scenarios(
