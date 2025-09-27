@@ -7,9 +7,11 @@ import pandas as pd
 from ...config import OUTPUTS, ENGINE_VERSION
 from ...io.writer import write_csv, write_yaml
 from ...utils.vat import vat_set_aside_rows
+from ...utils.coerce import get_float
+from ...types.inputs import Config
 
 
-def write_artifacts(*, config: Dict[str, Any], agg: Dict[str, Any]) -> None:
+def write_artifacts(*, config: Config, agg: Dict[str, Any]) -> None:
     # Core CSV artifacts
     write_csv(OUTPUTS / "model_price_per_1m_tokens.csv", agg["model_df"]) 
     write_csv(OUTPUTS / "public_tap_scenarios.csv", agg["public_df"]) 
@@ -26,13 +28,12 @@ def write_artifacts(*, config: Dict[str, Any], agg: Dict[str, Any]) -> None:
     write_csv(OUTPUTS / "loan_schedule.csv", agg["loan_df"]) 
 
     # VAT set-aside examples
-    vat_rate = float(config.get("tax_billing", {}).get("vat_standard_rate_pct", 21.0))
+    vat_rate = get_float(config, ["tax_billing", "vat_standard_rate_pct"], 21.0)
     write_csv(OUTPUTS / "vat_set_aside.csv", pd.DataFrame(vat_set_aside_rows(vat_rate)))
 
     # Assumptions YAML for tests to sanity-check
-    eur_usd = float(config.get("fx", {}).get("eur_usd_rate", 1.08))
-    raw_markup = config.get("pricing_inputs", {}).get("private_tap_default_markup_over_provider_cost_pct")
-    default_markup = float(raw_markup if isinstance(raw_markup, (int, float, str)) else 50.0)
+    eur_usd = get_float(config, ["fx", "eur_usd_rate"], 1.08)
+    default_markup = get_float(config, ["pricing_inputs", "private_tap_default_markup_over_provider_cost_pct"], 50.0)
     assumptions = {
         "engine_version": ENGINE_VERSION,
         "fx": {"eur_usd_rate": eur_usd},

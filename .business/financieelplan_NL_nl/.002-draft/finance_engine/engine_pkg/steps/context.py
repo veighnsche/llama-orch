@@ -7,9 +7,10 @@ from ...utils.time import now_utc_iso
 from ...utils.markdown import df_to_markdown_rows
 from ...utils.vat import vat_examples
 from ...utils.scenarios import monthly_yearly_sixty
+from ...types.inputs import Config, Extra, Lending
 
 
-def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Dict[str, Any], extra: Dict[str, Any], lending: Dict[str, Any]) -> Dict[str, Any]:
+def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config, extra: Extra, lending: Lending) -> Dict[str, Any]:
     # Tables for markdown rendering
     model_cols = [
         "model",

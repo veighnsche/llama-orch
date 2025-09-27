@@ -4,8 +4,10 @@ from typing import Any, Dict, Tuple, Optional
 import pandas as pd
 
 from ..config import OUTPUTS
-from ..io.writer import write_text
+from ..io.writer import write_text, ensure_dir
 from .ports import RenderPort, ValidatePort
+from ..types.inputs import Config, Costs, Lending, Extra
+from .validation.preflight import run_preflight, build_preflight_markdown
 
 # Step modules (keep runner thin and modular)
 from .steps.load_validate import (
@@ -20,7 +22,7 @@ from .steps.context import build_context as _build_context
 from .steps.render import render_plan as _render_plan
 
 
-def load_inputs() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any], pd.DataFrame, pd.DataFrame]:
+def load_inputs() -> Tuple[Config, Costs, Lending, Extra, pd.DataFrame, pd.DataFrame]:
     return _load_inputs()
 
 
@@ -29,9 +31,9 @@ def write_run_summary() -> Dict[str, Any]:
 
 
 def validate_and_write_report(
-    config: Dict[str, Any],
-    costs: Dict[str, Any],
-    lending: Dict[str, Any],
+    config: Config,
+    costs: Costs,
+    lending: Lending,
     price_sheet: pd.DataFrame,
     *,
     validate_port: Optional[ValidatePort] = None,
@@ -41,7 +43,7 @@ def validate_and_write_report(
 
 # Pipeline steps to be filled in small patches
 
-def compute_all(config: Dict[str, Any], extra: Dict[str, Any], lending: Dict[str, Any], price_sheet: pd.DataFrame, gpu_df: pd.DataFrame) -> Dict[str, Any]:
+def compute_all(config: Config, extra: Extra, lending: Lending, price_sheet: pd.DataFrame, gpu_df: pd.DataFrame) -> Dict[str, Any]:
     return _compute_all(
         config=config,
         extra=extra,
@@ -51,7 +53,7 @@ def compute_all(config: Dict[str, Any], extra: Dict[str, Any], lending: Dict[str
     )
 
 
-def write_artifacts(config: Dict[str, Any], agg: Dict[str, Any]) -> None:
+def write_artifacts(config: Config, agg: Dict[str, Any]) -> None:
     _write_artifacts(config=config, agg=agg)
 
 
@@ -59,7 +61,7 @@ def generate_charts(agg: Dict[str, Any]) -> Dict[str, str]:
     return _generate_charts(agg=agg)
 
 
-def build_context(agg: Dict[str, Any], charts: Dict[str, str], config: Dict[str, Any], extra: Dict[str, Any], lending: Dict[str, Any]) -> Dict[str, Any]:
+def build_context(agg: Dict[str, Any], charts: Dict[str, str], config: Config, extra: Extra, lending: Lending) -> Dict[str, Any]:
     return _build_context(agg=agg, charts=charts, config=config, extra=extra, lending=lending)
 
 
@@ -68,6 +70,15 @@ def render_plan(context: Dict[str, Any], *, render_port: Optional[RenderPort] = 
 
 
 def run_pipeline(*, render_port: Optional[RenderPort] = None, validate_port: Optional[ValidatePort] = None) -> int:
+    # Preflight validation
+    ensure_dir(OUTPUTS)
+    pre = run_preflight()
+    pre_md = build_preflight_markdown(pre)
+    write_text(OUTPUTS / "run_summary.md", pre_md)
+    if not pre.ok:
+        # Fail-fast before any computations
+        return 1
+
     config, costs, lending, extra, price_sheet, gpu_df = load_inputs()
     write_run_summary()
     has_errors = validate_and_write_report(config, costs, lending, price_sheet, validate_port=validate_port)

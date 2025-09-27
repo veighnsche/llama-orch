@@ -55,6 +55,7 @@ def _loan_and_fixed(*, config: Config, lending: Lending, extra: Extra) -> Tuple[
     loan_term = int(safe_float(get(lending, ["term_months"], get(extra, ["loan", "term_months"], 60.0)), 60.0))
     loan_rate = safe_float(get(lending, ["interest_rate_pct"], get(extra, ["loan", "interest_rate_pct"], 9.95)), 9.95)
     loan_obj = Loan(
+        principal_eur=loan_amount,
         annual_rate_pct=loan_rate,
         term_months=loan_term,
     )
@@ -65,23 +66,37 @@ def _loan_and_fixed(*, config: Config, lending: Lending, extra: Extra) -> Tuple[
     fixed_total_with_loan = round(fixed_personal + fixed_business + float(monthly_payment), 2)
     return loan_obj, monthly_payment, total_repay, total_interest, fixed_personal, fixed_business, fixed_total_with_loan
 
-    per_model_mix=per_model_mix,
+
+def _compute_public_block(
+    *,
+    pub_df: pd.DataFrame,
+    per_model_mix: Dict[str, Any],
+    fixed_total_with_loan: float,
+    marketing_pct: float,
+    worst_base_best: Tuple[float, float, float],
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    return compute_public_scenarios(
+        pub_df,
+        per_model_mix=per_model_mix,
         fixed_total_with_loan=fixed_total_with_loan,
         marketing_pct=marketing_pct,
         worst_base_best=worst_base_best,
     )
+
+
+def _compute_private_block(*, config: Config, extra: Extra, gpu_df: pd.DataFrame) -> Tuple[pd.DataFrame, float, float, float, Dict[str, Any]]:
     eur_usd = safe_float(get(config, ["fx", "eur_usd_rate"]), 1.08)
     fx_buffer_pct = safe_float(get(config, ["pricing_inputs", "fx_buffer_pct"]), 0.0)
     private_markup_pct = safe_float(get(config, ["pricing_inputs", "private_tap_default_markup_over_provider_cost_pct"]), 50.0)
     per_gpu_markup = get(extra, ["pricing_inputs", "private_tap_markup_by_gpu"], {}) or {}
     private_df = compute_private_tap_economics(
+        gpu_df,
         eur_usd_rate=eur_usd,
         buffer_pct=fx_buffer_pct,
         markup_pct=private_markup_pct,
         markup_by_gpu=per_gpu_markup,
     )
     return private_df, eur_usd, fx_buffer_pct, private_markup_pct, per_gpu_markup
-
 
 def _compute_break_even_block(*, fixed_total_with_loan: float, public_tpl: Dict[str, Any], marketing_pct: float) -> Dict[str, Any]:
     margin_rate = float(public_tpl.get("blended", {}).get("margin_rate", 0.0))

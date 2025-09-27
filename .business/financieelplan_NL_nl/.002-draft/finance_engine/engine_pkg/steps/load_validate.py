@@ -9,6 +9,7 @@ from ...io.loader import load_yaml, read_csv
 from ...io.writer import write_json, write_text, ensure_dir
 from ...utils.time import now_utc_iso
 from ..ports import ValidatePort, get_default_validator
+from ...types.inputs import Config, Costs, Lending
 
 
 def load_inputs() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any], pd.DataFrame, pd.DataFrame]:
@@ -29,36 +30,31 @@ def write_run_summary() -> Dict[str, Any]:
         "notes": ["engine_pkg orchestrator"],
     }
     write_json(OUTPUTS / "run_summary.json", payload)
-    write_text(
-        OUTPUTS / "run_summary.md",
-        "\n".join([
-            "# Run Summary",
-            f"- Engine version: {ENGINE_VERSION}",
-            f"- Run at (UTC): {payload['run_at']}",
-        ]) + "\n",
-    )
+    md_path = OUTPUTS / "run_summary.md"
+    md_body = "\n".join([
+        "# Run Summary",
+        f"- Engine version: {ENGINE_VERSION}",
+        f"- Run at (UTC): {payload['run_at']}",
+    ]) + "\n"
+    if md_path.exists():
+        # Append to preserve any existing Preflight section at the top
+        existing = md_path.read_text(encoding="utf-8")
+        write_text(md_path, existing + ("\n" if not existing.endswith("\n") else "") + md_body)
+    else:
+        write_text(md_path, md_body)
     return payload
 
 
 def validate_and_write_report(
-    config: Dict[str, Any],
-    costs: Dict[str, Any],
-    lending: Dict[str, Any],
+    config: Config,
+    costs: Costs,
+    lending: Lending,
     price_sheet: pd.DataFrame,
     *,
     validate_port: Optional[ValidatePort] = None,
 ) -> bool:
-    validator: ValidatePort
-    if validate_port is not None:
-        validator = validate_port
-    else:
-        # Backward-compatible path: try to use runner.validate_inputs if tests monkeypatch it
-        try:
-            from .. import runner as runner_module  # type: ignore
-            validator = getattr(runner_module, "validate_inputs")  # type: ignore
-        except Exception:
-            validator = get_default_validator()
-
+    # Prefer injected validator; otherwise use default implementation.
+    validator: ValidatePort = validate_port or get_default_validator()
     report = validator(config=config, costs=costs, lending=lending, price_sheet=price_sheet)
     write_json(OUTPUTS / "validation_report.json", report)
     return bool(report.get("errors"))
