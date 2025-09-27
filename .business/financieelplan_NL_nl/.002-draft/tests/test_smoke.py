@@ -1,7 +1,7 @@
 from pathlib import Path
 import json
 
-from finance_engine.engine import run
+from finance_engine.engine_pkg import run
 from finance_engine.config import OUTPUTS
 
 

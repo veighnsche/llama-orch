@@ -24,6 +24,18 @@
 - **Required monthly prepaid inflow (baseline):** **€{{targets.required_prepaid_inflow_eur}}**  
 - **Runway target:** {{finance.runway_target_months}} months
 
+### 0.1 Diagram — Prepaid Model Flow (Mermaid)
+
+```mermaid
+flowchart TD
+  A[Customer Prepay] --> B[Credits Wallet]
+  B --> C[Service Usage]
+  C --> D[GPU Rentals]
+  B --> E[Loan Repayment]
+  B --> F[Fixed Costs]
+  B --> G[Marketing Reserve]
+```
+
 ## 1) Inputs (Ground Truth)
 
 ### 1.1 Prepaid Policy
@@ -48,7 +60,7 @@
 ### 1.3 Price Inputs
 
 - Public Tap prices: defined **per model** (see `price_sheet.csv`)  
-  - Example row: Model = Llama 3.1 8B → Sell price = €{{pricing.model.Llama31_8B_per_1k}} / 1k tokens  
+  - Example row: Model = Llama 3.1 8B → Sell price = €{{ pricing.model_prices.get('Llama-3.1-8B', 'N/A') }} / 1k tokens  
 - Private Tap markup target: **{{pricing.private_tap_default_markup_over_provider_cost_pct}}%** over provider GPU cost  
 - Management fee: **€{{private.management_fee_eur_per_month}} / month**  
 
@@ -88,6 +100,10 @@ For each model offered on the Public Tap:
 |-------|--------------|----------------:|-------------------:|----------------:|----------:|------------------:|---------------:|
 {{tables.model_price_per_1m_tokens}}
 
+#### 2.1.1 Graph — Model Margins
+
+![Model margins per 1M tokens]({{ charts.model_margins_per_1m | default('charts/model_margins_per_1m.png') }})
+
 ---
 
 ### 2.2 Observations
@@ -118,6 +134,20 @@ The following scenarios assume:
 | Baseline  | {{scenarios.base.m_tokens}} | {{scenarios.base.revenue_eur}} | {{scenarios.base.cogs_eur}} | {{scenarios.base.gross_margin_eur}} | {{scenarios.base.gross_margin_pct}} | {{fixed.total_with_loan}} | {{scenarios.base.marketing_reserved_eur}} | **{{scenarios.base.net_eur}}** |
 | Best      | {{scenarios.best.m_tokens}} | {{scenarios.best.revenue_eur}} | {{scenarios.best.cogs_eur}} | {{scenarios.best.gross_margin_eur}} | {{scenarios.best.gross_margin_pct}} | {{fixed.total_with_loan}} | {{scenarios.best.marketing_reserved_eur}} | **{{scenarios.best.net_eur}}** |
 
+#### 3.1.1 Chart — Scenario Components
+
+![Public scenarios (stacked)]({{ charts.public_scenarios_stack | default('charts/public_scenarios_stack.png') }})
+
+#### 3.1.2 Mermaid — Baseline Components (Pie)
+
+```mermaid
+pie title Baseline Monthly Components
+  "Revenue €{{scenarios.base.revenue_eur}}" : {{scenarios.base.revenue_eur}}
+  "COGS €{{scenarios.base.cogs_eur}}" : {{scenarios.base.cogs_eur}}
+  "Marketing €{{scenarios.base.marketing_reserved_eur}}" : {{scenarios.base.marketing_reserved_eur}}
+  "Fixed+Loan €{{fixed.total_with_loan}}" : {{fixed.total_with_loan}}
+```
+
 ---
 
 ### 3.2 Break-even
@@ -125,6 +155,10 @@ The following scenarios assume:
 - **Total fixed monthly costs (personal + business + loan):** €{{fixed.total_with_loan}}  
 - **Required margin to break even (fixed + marketing):** €{{targets.required_margin_eur}}  
 - **Required prepaid inflow:** €{{targets.required_prepaid_inflow_eur}}  
+
+#### 3.2.1 Chart — Break-even
+
+![Break-even inflow]({{ charts.break_even | default('charts/break_even.png') }})
 
 ---
 
@@ -154,6 +188,10 @@ Python calculates profitability per GPU as follows:
 | GPU Model | Provider Cost €/hr (median) | Markup % | Sell Price €/hr | Gross Margin €/hr |
 |-----------|----------------------------:|---------:|----------------:|------------------:|
 {{tables.private_tap_gpu_economics}}
+
+#### 4.1.1 Chart — GPU Economics
+
+![Private Tap GPU economics]({{ charts.private_tap_gpu_economics | default('charts/private_tap_gpu_economics.png') }})
 
 ---
 
@@ -205,9 +243,9 @@ All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 | Case     | Total Revenue (€) | Total COGS (€) | Gross Margin (€) | Fixed+Loan (€) | Marketing (€) | Net (€) |
 |----------|------------------:|---------------:|-----------------:|---------------:|--------------:|--------:|
-| Worst    | {{scenarios.60m.worst.revenue}} | {{scenarios.60m.worst.cogs}} | {{scenarios.60m.worst.gross}} | {{scenarios.60m.fixed_total}} | {{scenarios.60m.worst.marketing}} | **{{scenarios.60m.worst.net}}** |
-| Baseline | {{scenarios.60m.base.revenue}} | {{scenarios.60m.base.cogs}} | {{scenarios.60m.base.gross}} | {{scenarios.60m.fixed_total}} | {{scenarios.60m.base.marketing}} | **{{scenarios.60m.base.net}}** |
-| Best     | {{scenarios.60m.best.revenue}} | {{scenarios.60m.best.cogs}} | {{scenarios.60m.best.gross}} | {{scenarios.60m.fixed_total}} | {{scenarios.60m.best.marketing}} | **{{scenarios.60m.best.net}}** |
+| Worst    | {{scenarios['60m'].worst.revenue}} | {{scenarios['60m'].worst.cogs}} | {{scenarios['60m'].worst.gross}} | {{scenarios['60m'].fixed_total}} | {{scenarios['60m'].worst.marketing}} | **{{scenarios['60m'].worst.net}}** |
+| Baseline | {{scenarios['60m'].base.revenue}} | {{scenarios['60m'].base.cogs}} | {{scenarios['60m'].base.gross}} | {{scenarios['60m'].fixed_total}} | {{scenarios['60m'].base.marketing}} | **{{scenarios['60m'].base.net}}** |
+| Best     | {{scenarios['60m'].best.revenue}} | {{scenarios['60m'].best.cogs}} | {{scenarios['60m'].best.gross}} | {{scenarios['60m'].fixed_total}} | {{scenarios['60m'].best.marketing}} | **{{scenarios['60m'].best.net}}** |
 
 ---
 
@@ -234,6 +272,10 @@ Total interest: **€{{loan.total_interest_eur}}**
 | Month | Opening Balance (€) | Interest (€) | Principal (€) | Payment (€) | Closing Balance (€) |
 |------:|--------------------:|-------------:|--------------:|------------:|--------------------:|
 {{tables.loan_schedule}}
+
+#### 6.1.1 Chart — Loan Balance Over Time
+
+![Loan balance over time]({{ charts.loan_balance_over_time | default('charts/loan_balance_over_time.png') }})
 
 ---
 

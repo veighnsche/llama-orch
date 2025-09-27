@@ -95,7 +95,11 @@ def _sell_per_1m(model: str, extra: Dict[str, Any], price_sheet: pd.DataFrame) -
     if "sku" in price_sheet.columns and "unit_price_eur_per_1k_tokens" in price_sheet.columns:
         m = price_sheet[price_sheet["sku"].astype(str) == model]
         if not m.empty:
-            val = float(m.iloc[0]["unit_price_eur_per_1k_tokens"]) * 1000.0
+            raw = m.iloc[0]["unit_price_eur_per_1k_tokens"]
+            # Treat NaN or empty values as missing
+            if pd.isna(raw) or raw == "":
+                return None
+            val = float(raw) * 1000.0
             return val
     return None
 

@@ -27,20 +27,20 @@ Structure (all keys optional):
     # Rationale: anchored on market USD/1M, converted via fx + 5% buffer, rounded for clarity
     "Llama-3.1-8B":              { unit_price_eur_per_1k_tokens: 0.15 }
     "Llama-3.1-70B":             { unit_price_eur_per_1k_tokens: 0.80 }
-    "Mixtral-8x7B":              { unit_price_eur_per_1k_tokens: 0.35 }
-    "Mixtral-8x22B":             { unit_price_eur_per_1k_tokens: 0.90 }
+    "Mixtral-8x7B":              { unit_price_eur_per_1k_tokens: 0.39 }
+    "Mixtral-8x22B":             { unit_price_eur_per_1k_tokens: 0.99 }
     "Qwen2.5-7B":                { unit_price_eur_per_1k_tokens: 0.12 }
     "Qwen2.5-32B":               { unit_price_eur_per_1k_tokens: 0.30 }
     "Qwen2.5-72B":               { unit_price_eur_per_1k_tokens: 0.80 }
     "Yi-1.5-6B":                 { unit_price_eur_per_1k_tokens: 0.12 }
     "Yi-1.5-9B":                 { unit_price_eur_per_1k_tokens: 0.18 }
     "Yi-1.5-34B":                { unit_price_eur_per_1k_tokens: 0.30 }
-    "DeepSeek-Coder-6.7B":       { unit_price_eur_per_1k_tokens: 0.25 }
-    "DeepSeek-Coder-33B":        { unit_price_eur_per_1k_tokens: 0.60 }
-    "DeepSeek-Coder-V2-16B":     { unit_price_eur_per_1k_tokens: 0.45 }
-    "DeepSeek-Coder-V2-236B":    { unit_price_eur_per_1k_tokens: 1.20 }
+    "DeepSeek-Coder-6.7B":       { unit_price_eur_per_1k_tokens: 0.28 }
+    "DeepSeek-Coder-33B":        { unit_price_eur_per_1k_tokens: 0.66 }
+    "DeepSeek-Coder-V2-16B":     { unit_price_eur_per_1k_tokens: 0.50 }
+    "DeepSeek-Coder-V2-236B":    { unit_price_eur_per_1k_tokens: 1.32 }
   vat_rate_pct: 21.0
-  marketing_allocation_pct_of_inflow: 20
+  marketing_allocation_pct_of_inflow: 15
   include_models:           # optional hard allow-list for Public Tap
     - "Llama-3.1-8B"
     - "Qwen2.5-7B"
@@ -52,6 +52,11 @@ Structure (all keys optional):
     
   # Private Tap defaults
   private:
-    management_fee_eur_per_month: 350
+    management_fee_eur_per_month: 500
   pricing_inputs:
     private_tap_default_markup_over_provider_cost_pct: 50
+    private_tap_markup_by_gpu:
+      "H100": 65
+      "A100 80GB": 60
+      "L40S": 45
+      "L4": 40
