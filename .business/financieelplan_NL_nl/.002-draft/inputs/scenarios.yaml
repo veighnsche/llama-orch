@@ -1,0 +1,4 @@
+monthly:
+  worst_m_tokens: 1
+  base_m_tokens: 5
+  best_m_tokens: 15
