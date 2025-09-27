@@ -17,14 +17,12 @@ def copy_inputs(tmp: Path) -> Path:
     return dst
 
 
-def test_strict_missing_prices_is_error(tmp_path, monkeypatch):
+def test_strict_missing_prices_not_required(tmp_path, monkeypatch):
     d = copy_inputs(tmp_path)
-    # Ensure at least one public row has missing unit_price_eur_per_1k_tokens
-    # Current file already has missing; we'll keep it and just enable strict
+    # unit prices in price_sheet are optional; pricing is computed from policy and costs
     monkeypatch.setenv("ENGINE_STRICT_VALIDATION", "1")
     res = run_preflight(d)
-    assert not res.ok
-    # Reset env
+    assert res.ok
     monkeypatch.delenv("ENGINE_STRICT_VALIDATION", raising=False)
 
 

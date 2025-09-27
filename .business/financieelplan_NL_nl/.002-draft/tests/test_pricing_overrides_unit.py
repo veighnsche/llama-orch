@@ -26,8 +26,19 @@ def test_compute_model_economics_with_overrides_only():
             "unit": ["1k_tokens", "1k_tokens"],
         }
     )
-    gpu_df = pd.DataFrame(
-        {"gpu": ["L40S"], "hourly_usd_min": [0.6], "hourly_usd_max": [1.2]}
+    gpu_df = pd.DataFrame({
+        "gpu": ["L40S", "L40S"],
+        "vram_gb": [48, 48],
+        "provider": ["ProviderA", "ProviderB"],
+        "usd_hr": [0.8, 1.1],
+    })
+
+    tps_df = pd.DataFrame(
+        {
+            "model_name": ["Llama-3.1-8B", "Mixtral-8x7B"],
+            "gpu": ["L40S", "L40S"],
+            "throughput_tokens_per_sec": [120.0, 90.0],
+        }
     )
 
     df = compute_model_economics(
@@ -36,6 +47,7 @@ def test_compute_model_economics_with_overrides_only():
         gpu_df=gpu_df,
         scenarios=scenarios,
         overrides=overrides,
+        tps_df=tps_df,
     )
     assert set(df["model"]) == {"Llama-3.1-8B", "Mixtral-8x7B"}
     assert (df["sell_per_1m_eur"] > 0).all()

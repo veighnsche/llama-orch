@@ -36,7 +36,7 @@
   - lending_plan.yaml: amount_eur, term_months, interest_rate_pct (flat)
 - price_sheet.csv must contain rows for each public model with columns:
   `sku,category,unit,unit_price_eur_per_1k_tokens,margin_target_pct,notes`
-- gpu_rentals.csv columns: `gpu,vram_gb,hourly_usd_min,hourly_usd_max,sources`
+- gpu_rentals.csv columns: `gpu,vram_gb,provider,usd_hr` (per-provider USD/hr rows; no min/max)
 - oss_models.csv columns: `name,variant_size_b,context_tokens,license`
 
 Emit `outputs/validation_report.json` with `errors[]/warnings[]/info[]`. If errors exist, still write the report and exit non-zero.
@@ -99,7 +99,8 @@ These values MUST be echoed in `outputs/run_summary.md`.
 ### 3.1 Currency & provider price normalization
 
 - Convert GPU USD/hr to EUR/hr using `eur_usd_rate` and apply `fx.buffer_pct`.
-- For each GPU: compute `eur_hr_min`, `eur_hr_median`, `eur_hr_max` from the input min/max (median = (min+max)/2 if not present).
+- For model economics: for each candidate GPU, pick the cheapest provider row (`usd_hr` minimal) and set `eur_hr_min/med/max` equal to that price (no artificial spreads).
+- For Private Tap: aggregate median EUR/hr per GPU over all provider rows.
 
 ### 3.2 Model ↔ GPU pairing (simple v1)
 

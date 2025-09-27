@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .shared import FileReport
-from ....io.loader import load_yaml
+from ...io.loader import load_yaml
 
 
 def validate(inputs_dir: Path) -> FileReport:

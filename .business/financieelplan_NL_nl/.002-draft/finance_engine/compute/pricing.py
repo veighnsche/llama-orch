@@ -17,12 +17,14 @@ def _get_fx_and_buffer(cfg: Dict[str, Any]) -> Tuple[float, float]:
 
 
 def _select_models(*, scenarios: Dict[str, Any], price_sheet: pd.DataFrame, overrides: Dict[str, Any]) -> List[str]:
+    # Priority: explicit include list set by loader (derived from OSS catalog), then overrides as a convenience.
     incl = scenarios.get("include_skus") or []
     if incl:
         return [str(m) for m in incl]
     ov = overrides.get("price_overrides", {}) if isinstance(overrides, dict) else {}
     if ov:
         return list(ov.keys())
+    # As a last resort, fall back to SKUs listed in price_sheet (but pricing will still be computed, not read).
     if "sku" in price_sheet.columns:
         return price_sheet["sku"].astype(str).unique().tolist()
     return []
@@ -37,30 +39,119 @@ def _normalize_model_name(name: str) -> str:
     return s
 
 
-def _model_tps(model: str, tps_df: pd.DataFrame, capacity_overrides: Dict[str, Any]) -> float:
-    # capacity overrides precedence if provided
+def _policy_from_cfg(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    pol = (cfg.get("pricing_policy") or {}).get("public_tap") or {}
+    return {
+        "target_gross_margin_pct": float(pol.get("target_gross_margin_pct", 45.0)),
+        "min_gross_margin_pct": float(pol.get("min_gross_margin_pct", 25.0)),
+        "rounding_per_1k_tokens": float(pol.get("rounding_per_1k_tokens", 0.01)),
+        "price_floor_per_1k_tokens": float(pol.get("price_floor_per_1k_tokens", 0.01)),
+        "price_cap_per_1k_tokens": (None if pol.get("price_cap_per_1k_tokens") in (None, "",) else float(pol.get("price_cap_per_1k_tokens"))),
+    }
+
+
+def _round_price_per_1k(x: float, step: float, floor: float, cap: Optional[float]) -> float:
+    if step <= 0:
+        y = x
+    else:
+        y = round(x / step) * step
+    y = max(y, floor)
+    if cap is not None:
+        y = min(y, cap)
+    return round(y, 6)
+
+
+def _pick_best_gpu_and_tps(
+    model: str,
+    tps_df: pd.DataFrame,
+    gpu_df: pd.DataFrame,
+    cfg: Dict[str, Any],
+    capacity_overrides: Dict[str, Any],
+) -> Optional[Tuple[str, float, float, float, float]]:
+    """Return (gpu_name, tps, eur_hr_min, eur_hr_med, eur_hr_max) for the cost-optimal GPU.
+    Excludes the model if no TPS measurements or no matching GPU rentals exist.
+    """
     ov = capacity_overrides.get("capacity_overrides", {}) if isinstance(capacity_overrides, dict) else {}
+    preferred_gpu = None
     node = ov.get(model)
+    if isinstance(node, dict) and node.get("preferred_gpu"):
+        preferred_gpu = str(node.get("preferred_gpu"))
+
+    if tps_df is None or tps_df.empty:
+        return None
+    norm = _normalize_model_name
+    sub = tps_df[tps_df["model_name"].astype(str).map(norm) == norm(model)].copy()
+    if sub.empty:
+        return None
+
+    # If a TPS override is present, use it with preferred GPU if set; else still need a GPU name from TPS data
+    tps_override = None
     if isinstance(node, dict) and node.get("tps_override_tokens_per_sec") is not None:
         try:
-            return float(node.get("tps_override_tokens_per_sec"))
+            tps_override = float(node.get("tps_override_tokens_per_sec"))
         except Exception:
-            pass
-    if tps_df is None or tps_df.empty:
-        return 20.0
-    norm = _normalize_model_name
-    # Try to match by normalized model names
-    mask = tps_df["model_name"].astype(str).map(norm) == norm(model)
-    sub = tps_df[mask]
-    if sub.empty:
-        return 20.0
-    try:
-        vals = pd.to_numeric(sub["throughput_tokens_per_sec"], errors="coerce").dropna()
-        if vals.empty:
-            return 20.0
-        return float(vals.median())
-    except Exception:
-        return 20.0
+            tps_override = None
+
+    eur_usd_rate, buffer_pct = _get_fx_and_buffer(cfg)
+
+    def to_eur_hr(usd_hr: float) -> float:
+        return (float(usd_hr) / float(eur_usd_rate)) * (1.0 + float(buffer_pct) / 100.0)
+
+    # Group by GPU in TPS and evaluate cost per 1M for each
+    best: Optional[Tuple[str, float, float, float, float, float]] = None  # (gpu, tps, eur_hr_min, eur_hr_med, eur_hr_max, c_med)
+    for gpu_name in sorted(set(sub["gpu"].dropna().astype(str))):
+        # If preferred_gpu is set and doesn't match (substring), skip
+        if preferred_gpu and preferred_gpu.lower() not in gpu_name.lower():
+            continue
+        # TPS: use override if provided; otherwise median TPS for that GPU subset
+        s_gpu = sub[sub["gpu"].astype(str) == gpu_name]
+        tps_vals = pd.to_numeric(s_gpu["throughput_tokens_per_sec"], errors="coerce").dropna()
+        if tps_vals.empty and tps_override is None:
+            continue
+        tps = float(tps_override if tps_override is not None else tps_vals.median())
+        if tps <= 0:
+            continue
+        # Match GPU rentals rows by substring; evaluate all matches and pick the cheapest cost per 1M
+        mask = gpu_df["gpu"].astype(str).str.contains(gpu_name, case=False, regex=False)
+        if not mask.any():
+            # Try partial tokens (e.g., "A100 80G" -> match "A100 80GB")
+            parts = [p for p in gpu_name.replace("(", " ").replace(")", " ").replace(",", " ").split() if p]
+            mask = pd.Series(False, index=gpu_df.index)
+            for p in parts:
+                mask = mask | gpu_df["gpu"].astype(str).str.contains(p, case=False, regex=False)
+        if not mask.any():
+            continue
+        matched_rows = gpu_df[mask]
+        cheapest: Optional[Tuple[str, float, float, float, float]] = None  # (gpu_str, eur_hr_min, eur_hr_med, eur_hr_max, c_med)
+        tokens_per_hour = tps * 3600.0
+        if tokens_per_hour <= 0:
+            continue
+        for _, row in matched_rows.iterrows():
+            # New schema: per-provider rows with a single usd_hr
+            try:
+                usd = float(row.get("usd_hr", 0.0))
+            except Exception:
+                continue
+            if usd <= 0:
+                continue
+            eur_hr = to_eur_hr(usd)
+            # Set min/med/max equal to the provider price (no artificial spreads)
+            eur_hr_min = eur_hr
+            eur_hr_med = eur_hr
+            eur_hr_max = eur_hr
+            c_med = eur_hr_med / (tokens_per_hour / 1_000_000.0)
+            if cheapest is None or c_med < cheapest[4]:
+                cheapest = (str(row.get("gpu")), eur_hr_min, eur_hr_med, eur_hr_max, c_med)
+        if cheapest is None:
+            continue
+        row_gpu, eur_hr_min, eur_hr_med, eur_hr_max, c_med = cheapest
+        if best is None or c_med < best[5]:
+            best = (row_gpu, tps, eur_hr_min, eur_hr_med, eur_hr_max, c_med)
+
+    if best is None:
+        return None
+    gpu_sel, tps_sel, eur_min, eur_med, eur_max, _ = best
+    return gpu_sel, float(tps_sel), float(eur_min), float(eur_med), float(eur_max)
 
 
 def _model_gpu(model: str, capacity_overrides: Dict[str, Any]) -> Optional[str]:
@@ -76,37 +167,32 @@ def _find_gpu_row(gpu_df: pd.DataFrame, gpu_name: Optional[str]) -> Tuple[float,
     if gpu_name:
         mask = gpu_df["gpu"].astype(str).str.contains(gpu_name, case=False, regex=False)
         if mask.any():
-            row = gpu_df[mask].iloc[0]
-            usd_min = float(row.get("hourly_usd_min", 0))
-            usd_max = float(row.get("hourly_usd_max", usd_min))
-            usd_med = (usd_min + usd_max) / 2 if usd_max else usd_min
-            return usd_min, usd_med, usd_max, str(row.get("gpu"))
-    # Fallback: median across the dataset
-    usd_min = float(gpu_df.get("hourly_usd_min").median()) if "hourly_usd_min" in gpu_df.columns else 0.0
-    usd_max = float(gpu_df.get("hourly_usd_max").median()) if "hourly_usd_max" in gpu_df.columns else usd_min
-    usd_med = (usd_min + usd_max) / 2 if usd_max else usd_min
-    any_gpu = str(gpu_df.iloc[0].get("gpu")) if not gpu_df.empty else "Unknown"
-    return usd_min, usd_med, usd_max, any_gpu
+            # Choose the cheapest provider among matches
+            sub = gpu_df[mask]
+            sub = sub[pd.to_numeric(sub["usd_hr"], errors="coerce") > 0]
+            if sub.empty:
+                raise KeyError(f"GPU not found in rentals for name: {gpu_name}")
+            usd_min_val = float(sub["usd_hr"].min())
+            # No spreads; use same value for min/med/max
+            return usd_min_val, usd_min_val, usd_min_val, str(sub.iloc[0].get("gpu"))
+    # No median fallback here to avoid guessing; signal not found by raising.
+    raise KeyError(f"GPU not found in rentals for name: {gpu_name}")
 
 
-def _sell_per_1m(model: str, *, price_sheet: pd.DataFrame, overrides: Dict[str, Any]) -> Optional[float]:
-    ov = overrides.get("price_overrides", {}).get(model) if isinstance(overrides, dict) else None
-    if ov and isinstance(ov, dict) and "unit_price_eur_per_1k_tokens" in ov:
-        try:
-            return float(ov["unit_price_eur_per_1k_tokens"]) * 1000.0
-        except Exception:
-            pass
-    # Fallback to price_sheet if has a matching sku
-    if "sku" in price_sheet.columns and "unit_price_eur_per_1k_tokens" in price_sheet.columns:
-        m = price_sheet[price_sheet["sku"].astype(str) == model]
-        if not m.empty:
-            raw = m.iloc[0]["unit_price_eur_per_1k_tokens"]
-            # Treat NaN or empty values as missing
-            if pd.isna(raw) or raw == "":
-                return None
-            val = float(raw) * 1000.0
-            return val
-    return None
+def _sell_per_1m_from_cost(cost_per_1m_med: float, cfg: Dict[str, Any]) -> float:
+    """Derive sell price per 1M tokens from cost and pricing policy."""
+    pol = _policy_from_cfg(cfg)
+    target = float(pol["target_gross_margin_pct"]) / 100.0
+    step = float(pol["rounding_per_1k_tokens"])
+    floor_1k = float(pol["price_floor_per_1k_tokens"])
+    cap_1k = pol["price_cap_per_1k_tokens"]
+    # Compute unrounded per-1k price
+    if target >= 1.0:
+        target = 0.99
+    price_1m = 0.0 if cost_per_1m_med <= 0 else (cost_per_1m_med / max(1e-12, (1.0 - target)))
+    price_1k = price_1m / 1000.0
+    price_1k = _round_price_per_1k(price_1k, step, floor_1k, cap_1k)
+    return float(price_1k * 1000.0)
 
 
 def compute_model_economics(
@@ -121,7 +207,8 @@ def compute_model_economics(
     # Back-compat: older tests passed `extra` with include_models, price_overrides, median_gpu_for_model
     extra: Dict[str, Any] | None = None,
 ) -> pd.DataFrame:
-    """Compute provider cost per 1M tokens and sell price per 1M for each model.
+    """Compute provider cost per 1M tokens and policy-derived sell price per 1M for each model.
+    Excludes models lacking TPS measurements or GPU rental matches to avoid guessed values.
     Returns a DataFrame with columns:
       model, gpu, tps, eur_hr_min, eur_hr_med, eur_hr_max,
       cost_per_1m_min, cost_per_1m_med, cost_per_1m_max,
@@ -137,22 +224,16 @@ def compute_model_economics(
     capacity_overrides = capacity_overrides or {}
     tps_df = tps_df if tps_df is not None else pd.DataFrame()
 
-    eur_usd_rate, buffer_pct = _get_fx_and_buffer(cfg)
+    _ = _get_fx_and_buffer(cfg)  # ensure cfg has fx defaults
     models = _select_models(scenarios=scenarios, price_sheet=price_sheet, overrides=overrides)
     rows: List[Dict[str, Any]] = []
     for model in models:
-        tps = _model_tps(model, tps_df, capacity_overrides)
-        tokens_per_hour = tps * 3600.0
-        usd_min, usd_med, usd_max, matched_gpu = _find_gpu_row(gpu_df, _model_gpu(model, capacity_overrides))
-
-        # USD/hr → EUR/hr with buffer
-        def to_eur_hr(usd_hr: float) -> float:
-            eur = (usd_hr / eur_usd_rate) * (1.0 + buffer_pct / 100.0)
-            return eur
-
-        eur_hr_min = to_eur_hr(usd_min)
-        eur_hr_med = to_eur_hr(usd_med)
-        eur_hr_max = to_eur_hr(usd_max)
+        best = _pick_best_gpu_and_tps(model, tps_df, gpu_df, cfg, capacity_overrides)
+        if best is None:
+            # No data → exclude model to avoid guesses
+            continue
+        matched_gpu, tps, eur_hr_min, eur_hr_med, eur_hr_max = best
+        tokens_per_hour = float(tps) * 3600.0
 
         def cost_per_1m(eur_hr: float) -> float:
             if tokens_per_hour <= 0:
@@ -163,7 +244,17 @@ def compute_model_economics(
         c_med = cost_per_1m(eur_hr_med)
         c_max = cost_per_1m(eur_hr_max)
 
-        sell_1m = _sell_per_1m(model, price_sheet=price_sheet, overrides=overrides) or 0.0
+        # Pricing: prefer explicit override per 1k tokens, else compute from policy target margin
+        sell_1m = 0.0
+        ov = overrides.get("price_overrides", {}).get(model) if isinstance(overrides, dict) else None
+        if ov and isinstance(ov, dict) and "unit_price_eur_per_1k_tokens" in ov:
+            try:
+                sell_1m = float(ov["unit_price_eur_per_1k_tokens"]) * 1000.0
+            except Exception:
+                sell_1m = 0.0
+        if sell_1m <= 0.0:
+            sell_1m = _sell_per_1m_from_cost(c_med, cfg)
+
         margin_min = max(0.0, sell_1m - c_min)
         margin_med = max(0.0, sell_1m - c_med)
         margin_max = max(0.0, sell_1m - c_max)

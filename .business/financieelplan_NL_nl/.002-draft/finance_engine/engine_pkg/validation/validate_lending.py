@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from .shared import FileReport, require_keys, is_number
-from ....io.loader import load_yaml
+from ...io.loader import load_yaml
 
 try:
     from pydantic import BaseModel, Field, ValidationError

@@ -38,7 +38,6 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
     fx_buffer_pct = float(raw_fx_buf if isinstance(raw_fx_buf, (int, float, str)) else 0.0)
     raw_priv_markup = config.get("pricing_inputs", {}).get("private_tap_default_markup_over_provider_cost_pct")
     private_markup_default = float(raw_priv_markup if isinstance(raw_priv_markup, (int, float, str)) else 50.0)
-    public_flat_1k = None
     price_overrides = overrides.get("price_overrides", {}) if isinstance(overrides, dict) else {}
     # Normalize overrides to a flat map of {model: unit_price_per_1k_tokens}
     override_prices_num: Dict[str, float] = {}
@@ -49,18 +48,6 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
                     override_prices_num[sku] = float(node["unit_price_eur_per_1k_tokens"])  # per 1k tokens
                 except Exception:
                     pass
-        # Use any override as the headline flat price if not configured explicitly
-        if not public_flat_1k and override_prices_num:
-            try:
-                public_flat_1k = float(next(iter(override_prices_num.values())))
-            except Exception:
-                public_flat_1k = None
-    # Always prefer explicit config flat price for the top-level description
-    cfg_flat = config.get("pricing_inputs", {}).get("public_tap_flat_price_per_1k_tokens_eur")
-    try:
-        public_flat_1k = float(cfg_flat) if cfg_flat is not None else public_flat_1k
-    except Exception:
-        pass
 
     # Break-even targets
     targets = {
@@ -114,13 +101,25 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
 
     model_prices_map = {**derived_prices, **override_prices_num}  # overrides take precedence
 
+    # Compute blended public price per 1k tokens for headline
+    blended_1k = None
+    try:
+        blended_sell_1m = float(agg.get("public_tpl", {}).get("blended", {}).get("sell_per_1m_eur", 0.0))
+        if blended_sell_1m > 0:
+            blended_1k = round(blended_sell_1m / 1000.0, 4)
+    except Exception:
+        blended_1k = None
+
     ctx = {
         "engine": {"version": ENGINE_VERSION, "timestamp": now_utc_iso()},
         "pricing": {
             "fx_buffer_pct": fx_buffer_pct,
             "private_tap_default_markup_over_provider_cost_pct": private_markup_default,
-            "public_tap_flat_price_per_1k_tokens": public_flat_1k,
+            # No flat public price; per-model prices derived from policy and costs
+            "public_tap_flat_price_per_1k_tokens": None,
+            "public_tap_blended_price_per_1k_tokens": blended_1k,
             "model_prices": model_prices_map,
+            "policy": (config.get("pricing_policy") or {}).get("public_tap") or {},
         },
         "prepaid": {
             "min_topup_eur": config.get("prepaid_policy", {}).get("credits", {}).get("min_topup_eur", 25),
@@ -155,7 +154,12 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
             or config.get("prepaid_policy", {}).get("private_tap", {}).get("gpu_hour_markup_target_pct"),
         },
         "catalog": {
-            "allowed_models": list(agg["pub_df"]["model"].astype(str).unique()) if not agg["pub_df"].empty else [],
+            # Show curated public models if present, else all public models
+            "allowed_models": (
+                list(agg.get("pub_curated_df", agg.get("pub_df", []) )["model"].astype(str).unique())
+                if isinstance(agg.get("pub_curated_df"), type(agg.get("pub_df"))) and not agg.get("pub_curated_df").empty
+                else (list(agg["pub_df"]["model"].astype(str).unique()) if not agg["pub_df"].empty else [])
+            ),
             "allowed_gpus": list(agg["private_df"]["gpu"].astype(str).unique()) if not agg["private_df"].empty else [],
         },
         "fixed": fixed,

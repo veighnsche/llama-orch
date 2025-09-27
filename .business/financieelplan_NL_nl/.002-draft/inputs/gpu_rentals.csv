@@ -1,10 +1,23 @@
-gpu,vram_gb,hourly_usd_min,hourly_usd_max,sources
-RTX 3090,24,0.06,1.493,Vast.ai
-RTX 4090,24,0.067,1.0,"Vast.ai, RunPod"
-L4,24,0.3,1.0,"Modal, OVHcloud"
-A10,24,0.75,1.2,"Lambda, OVHcloud"
-L40S,48,0.16,1.053,Vast.ai
-A100 40GB (PCIe),40,0.467,1.467,"Vast.ai, Lambda"
-A100 80GB (SXM/PCIe),80,0.5,3.0,"Vast.ai, RunPod, Lambda"
-H100 80GB (PCIe/SXM),80,2.15,3.29,"RunPod, Vultr, Lambda"
-H200 141GB,141,1.9,10.6,"GetDeploying, Vast.ai, Vultr"
+gpu,vram_gb,provider,usd_hr
+RTX 3090,24,Vast.ai,0.85
+RTX 4090,24,Vast.ai,0.95
+RTX 4090,24,RunPod,1.00
+L4,24,Modal,0.75
+L4,24,OVHcloud,0.95
+A10,24,Lambda,1.10
+A10,24,OVHcloud,1.20
+L40S,48,Vast.ai,0.90
+L40S,48,Modal,1.05
+A100 40GB (PCIe),40,Vast.ai,1.20
+A100 40GB (PCIe),40,Lambda,1.40
+A100 80GB (SXM/PCIe),80,Vast.ai,1.80
+A100 80GB (SXM/PCIe),80,RunPod,2.20
+A100 80GB (SXM/PCIe),80,Lambda,2.60
+A100 80GB (SXM/PCIe),80,Modal,2.80
+H100 80GB (PCIe/SXM),80,RunPod,3.10
+H100 80GB (PCIe/SXM),80,Vultr,3.20
+H100 80GB (PCIe/SXM),80,Lambda,3.25
+H100 80GB (PCIe/SXM),80,Modal,3.29
+H200 141GB,141,GetDeploying,9.50
+H200 141GB,141,Vast.ai,7.50
+H200 141GB,141,Vultr,10.60

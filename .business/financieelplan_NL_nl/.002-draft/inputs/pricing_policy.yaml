@@ -1,0 +1,20 @@
+# Pricing policy for deriving sell prices from computed costs (no per-SKU guesses)
+# All percentages are 0-100.
+
+version: 1
+public_tap:
+  # Target gross margin used to compute default price when no explicit override is provided.
+  target_gross_margin_pct: 45
+  # Minimum acceptable gross margin on worst-case bounds (min TPS, max GPU cost).
+  min_gross_margin_pct: 25
+  # Rounding step for price per 1k tokens.
+  rounding_per_1k_tokens: 0.01
+  # Absolute floor for price per 1k tokens (pre-tax).
+  price_floor_per_1k_tokens: 0.01
+  # Optional maximum price cap per 1k tokens; set null to disable.
+  price_cap_per_1k_tokens: null
+  # Optional per-model floors or caps can be added later if needed.
+
+notes:
+  - "Prices are derived from measured TPS × GPU EUR/hr costs; no static per-SKU guesses."
+  - "If no TPS measurement exists for a model, the model is excluded from curated output."

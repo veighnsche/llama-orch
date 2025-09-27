@@ -24,15 +24,23 @@ def test_compute_model_economics_with_overrides_and_gpu_match():
             "unit_price_eur_per_1k_tokens": [0.15, 0.39],
         }
     )
-    gpu_df = pd.DataFrame(
+    gpu_df = pd.DataFrame({
+        "gpu": ["L40S", "L40S"],
+        "vram_gb": [48, 48],
+        "provider": ["ProviderA", "ProviderB"],
+        "usd_hr": [0.9, 1.2],
+    })
+
+    # Provide measured TPS so the engine does not rely on any guessed throughput
+    tps_df = pd.DataFrame(
         {
-            "gpu": ["L40S"],
-            "hourly_usd_min": [0.6],
-            "hourly_usd_max": [1.2],
+            "model_name": ["Llama-3.1-8B", "Mixtral-8x7B"],
+            "gpu": ["L40S", "L40S"],
+            "throughput_tokens_per_sec": [100.0, 80.0],
         }
     )
 
-    df = compute_model_economics(cfg=cfg, extra=extra, price_sheet=price_sheet, gpu_df=gpu_df)
+    df = compute_model_economics(cfg=cfg, extra=extra, price_sheet=price_sheet, gpu_df=gpu_df, tps_df=tps_df)
     assert set(df["model"]) == {"Llama-3.1-8B", "Mixtral-8x7B"}
     assert (df["sell_per_1m_eur"] > 0).all()
     assert (df["cost_per_1m_med"] > 0).all()

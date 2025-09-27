@@ -109,7 +109,7 @@ def build_preflight_markdown(res: PreflightResult) -> str:
         lines.append("How to fix:")
         # Provide simple hints by file
         hints = {
-            "gpu_rentals.csv": "Add missing column(s) gpu, vram_gb, hourly_usd_min, hourly_usd_max and ensure non-negative numbers.",
+            "gpu_rentals.csv": "Add missing column(s) gpu, vram_gb, provider, usd_hr and ensure usd_hr > 0.",
             "price_sheet.csv": "Ensure columns sku, category, unit exist; for public_tap, unit must be 1k_tokens or 1M_tokens.",
             "tps_model_gpu.csv": "Ensure columns model_name, gpu, throughput_tokens_per_sec exist and throughput is non-negative.",
             "oss_models.csv": "Ensure name column is present and non-empty; include at least one spec column.",

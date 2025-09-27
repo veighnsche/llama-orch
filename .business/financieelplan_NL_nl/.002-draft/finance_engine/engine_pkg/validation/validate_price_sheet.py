@@ -43,11 +43,7 @@ def validate(inputs_dir: Path) -> FileReport:
         if any(u not in ("1k_tokens", "1M_tokens") for u in units):
             fr.ok = False
             fr.errors.append("unit must be one of {1k_tokens, 1M_tokens} for public_tap rows")
-        # Step A behavior retained: warn on missing unit price for public rows
-        if "unit_price_eur_per_1k_tokens" in df.columns:
-            missing_prices = int(df.loc[mask_pub, "unit_price_eur_per_1k_tokens"].isna().sum())
-            if missing_prices > 0:
-                fr.warnings.append(f"{missing_prices} public_tap SKU rows have missing unit_price_eur_per_1k_tokens (Step A: warn)")
+        # Unit price column is optional; pricing is derived from policy+costs and not read from price_sheet
         fr.count = len(df)
         fr.info["units_public"] = units
         fr.info["skus"] = sorted(set(df["sku"].astype(str)))

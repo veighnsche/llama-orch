@@ -31,12 +31,11 @@ def validate_inputs(*, config: Dict[str, Any], costs: Dict[str, Any], lending: D
     except Exception:
         warnings.append("config.finance.fixed_costs_monthly_eur not fully specified.")
 
-    # price_sheet columns minimal check
+    # price_sheet columns minimal check (unit price optional; pricing is policy-derived)
     required_cols = [
         "sku",
         "category",
         "unit",
-        "unit_price_eur_per_1k_tokens",
     ]
     for col in required_cols:
         if col not in getattr(price_sheet, 'columns', []):

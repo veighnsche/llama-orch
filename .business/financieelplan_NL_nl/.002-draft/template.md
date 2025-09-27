@@ -10,8 +10,8 @@
 
 **Revenue model:**
 
-- **Public Tap:** flat €{{pricing.public_tap_flat_price_per_1k_tokens}} per 1k tokens (no discounts).  
-- **Private Tap:** prepaid GPU-hours with markup (provider cost + {{pricing.private_tap_default_markup_over_provider_cost_pct}}%) + management fee.  
+- **Public Tap:** per-model prijzen berekend uit beleidsdoel (target marge {{pricing.policy.target_gross_margin_pct}}%) en gemeten kosten; blended ≈ €{{pricing.public_tap_blended_price_per_1k_tokens}} per 1k tokens.  
+- **Private Tap:** prepaid GPU-uren met opslag (providerkost + {{pricing.private_tap_default_markup_over_provider_cost_pct}}%) + management fee.  
 
 **Safeguards:**
 
@@ -59,10 +59,10 @@ flowchart TD
 
 ### 1.3 Price Inputs
 
-- Public Tap prices: defined **per model** (see `price_sheet.csv`)  
-  - Example row: Model = Llama 3.1 8B → Sell price = €{{ pricing.model_prices.get('Llama-3.1-8B', 'N/A') }} / 1k tokens  
-- Private Tap markup target: **{{pricing.private_tap_default_markup_over_provider_cost_pct}}%** over provider GPU cost  
-- Management fee: **€{{private.management_fee_eur_per_month}} / month**  
+- Public Tap prijzen: per model afgeleid uit kosten (TPS × GPU €/uur met FX buffer) en `inputs/pricing_policy.yaml` (doelen, afronding).  
+  - Voorbeeld: Llama 3.1 8B → Verkoopprijs ≈ €{{ pricing.model_prices.get('Llama-3.1-8B', 'N/A') }} / 1k tokens  
+- Private Tap markup target: **{{pricing.private_tap_default_markup_over_provider_cost_pct}}%** boven provider GPU-kost (optioneel fijnmazig via `gpu_pricing.yaml`)  
+- Management fee: **€{{private.management_fee_eur_per_month}} / maand**  
 
 ---
 
@@ -88,9 +88,9 @@ flowchart TD
 
 For each model offered on the Public Tap:
 
-- **Provider cost per 1M tokens** is calculated from GPU rental prices (min / median / max across providers).  
-- **Sell price per 1M tokens** comes from `price_sheet.csv` (unit_price_eur_per_1k_tokens × 1000).  
-- **Gross margin** = Sell price − Provider cost.  
+- **Provider cost per 1M tokens** wordt berekend uit GPU-huurprijzen (min/med/max) met FX-buffer.  
+- **Sell price per 1M tokens** wordt afgeleid uit kosten + beleidsdoelmarge en afgerond volgens `pricing_policy.yaml`.  
+- **Brutomarge** = Verkoopprijs − Providerkost.  
 
 ---
 
@@ -175,11 +175,11 @@ pie title Baseline Monthly Components
 Private Tap clients prepay for **dedicated GPU-hours** plus a **management fee**.  
 Python calculates profitability per GPU as follows:
 
-- **Provider cost €/hr (median)** from `gpu_rentals.csv`  
-- **Markup target** from `price_sheet.csv` (% over provider cost)  
-- **Sell price €/hr** = Provider cost + Markup  
-- **Gross margin €/hr** = Sell price − Provider cost  
-- **Management fee €/mo** = fixed fee added to each client  
+- **Providerkost €/uur (median)** uit `gpu_rentals.csv`  
+- **Markup target** uit `config.pricing_inputs` of `gpu_pricing.yaml` (% boven providerkost)  
+- **Verkoopprijs €/uur** = Providerkost + Markup  
+- **Brutomarge €/uur** = Verkoopprijs − Providerkost  
+- **Management fee €/maand** = vaste toeslag per klant  
 
 ---
 
@@ -353,7 +353,7 @@ This business model is designed to minimize financial risk:
 - **Configuration:** `config.yaml` (policies, limits, finance controls)  
 - **Costs:** `costs.yaml` (fixed monthly overhead)  
 - **Loan:** `lending_plan.yaml` (amount, term, interest, repayment plan)  
-- **Pricing:** `price_sheet.csv` (per-model Public Tap prices, Private Tap fees, services)  
+- **Pricing:** `pricing_policy.yaml` (doelen/afronding); `price_sheet.csv` (metadata/services)  
 - **Models:** `oss_models.csv` (open-source models with parameters, context sizes, licenses)  
 - **GPUs:** `gpu_rentals.csv` (provider prices, VRAM, sources)  
 

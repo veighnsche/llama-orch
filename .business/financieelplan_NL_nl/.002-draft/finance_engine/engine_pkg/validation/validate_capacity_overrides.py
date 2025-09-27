@@ -6,7 +6,7 @@ from typing import Any, Dict, List
 import datetime as dt
 
 from .shared import FileReport, is_number
-from ....io.loader import load_yaml
+from ...io.loader import load_yaml
 
 
 def validate(inputs_dir: Path) -> FileReport:

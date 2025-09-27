@@ -7,9 +7,15 @@ from finance_engine.compute.private_tap import compute_private_tap_economics
 
 def test_private_tap_global_markup_and_per_gpu_mapping():
     gpu_df = pd.DataFrame({
-        "gpu": ["H100 80GB (PCIe)", "L4"],
-        "hourly_usd_min": [3.0, 0.7],
-        "hourly_usd_max": [4.0, 1.0],
+        "gpu": [
+            "H100 80GB (PCIe)",
+            "H100 80GB (PCIe)",
+            "L4",
+            "L4",
+        ],
+        "vram_gb": [80, 80, 24, 24],
+        "provider": ["Provider1", "Provider2", "Provider3", "Provider4"],
+        "usd_hr": [3.6, 3.2, 0.8, 0.95],
     })
     # FX 1.0 for simplicity, buffer 0
     res_global = compute_private_tap_economics(gpu_df, eur_usd_rate=1.0, buffer_pct=0.0, markup_pct=50.0)

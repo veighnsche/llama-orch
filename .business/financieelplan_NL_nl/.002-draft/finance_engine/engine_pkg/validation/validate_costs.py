@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from .shared import FileReport, non_empty_string
-from ....io.loader import load_yaml
+from ...io.loader import load_yaml
 
 
 def _walk_numeric_sum(d: Any, errs: List[str], path: str = "") -> float:

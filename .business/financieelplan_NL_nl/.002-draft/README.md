@@ -20,7 +20,7 @@ Deterministisch: geen netwerk; alle constants komen uit inputs of worden vastgel
 - `inputs/lending_plan.yaml` (loan: `amount_eur`, `term_months`, `interest_rate_pct`; optioneel `monthly_payment_eur`, `total_repayment_eur`).
 - `inputs/price_sheet.csv` (modelprijzen voor Public Tap; rijen voor private: `private_tap_management_fee`, `private_tap_gpu_hour_markup`).
 - `inputs/oss_models.csv` (modelcatalogus)
-- `inputs/gpu_rentals.csv` (USD/hr min–max per GPU)
+- `inputs/gpu_rentals.csv` (per-provider USD/hr; kolommen: `gpu,vram_gb,provider,usd_hr`)
 - `inputs/tps_model_gpu.csv` (optioneel benchmarks; voorkeur `aggregate`, `vLLM`/`TensorRT-LLM`)
 - `inputs/extra.yaml` (overrides: FX, scenario’s, per-model mix, TPS, median GPU, prijs-fallbacks, VAT)
 
@@ -37,14 +37,14 @@ Deterministisch: geen netwerk; alle constants komen uit inputs of worden vastgel
 - `outputs/template_filled.md`
 
 ## Kernlogica (samenvatting)
-- FX & providerprijzen: USD/hr → EUR/hr met `eur_usd_rate` en `fx_buffer_pct`; median = (min+max)/2.
+- FX & providerprijzen: USD/hr → EUR/hr met `eur_usd_rate` en `fx_buffer_pct`. Voor model-economieën kiezen we per GPU de goedkoopste provider (geen kunstmatige min/median/max). Voor Private Tap aggregeren we per GPU de mediaan over providers.
 - Model↔GPU pairing v1: 6–9B→RTX4090/L4; 30–34B→L40S/A100 80GB; 70–72B→A100 80GB/H100; MoE 8x7B→A100 80GB/L40S. Opslaan in `assumptions.yaml` (overrides via `extra.yaml`).
 - Kosten per 1M tokens per model:
   - `tokens_per_hour = tps * 3600`
   - `cost_per_1M = eur_hr / (tokens_per_hour/1_000_000)` (min/median/max)
   - `sell_per_1M = unit_price_per_1k * 1000`
 - Public Tap scenario’s (maand): worst/base/best M tokens; gewogen gemiddeld (gelijke weging of `extra.per_model_mix`); `net = revenue − cogs − fixed − marketing`.
-- Private Tap: `sell_hr = eur_hr_median * (1 + markup%)`; `margin_hr = sell_hr − eur_hr_median` + management fee.
+- Private Tap: `sell_hr = eur_hr_median_per_gpu * (1 + markup%)`; `margin_hr = sell_hr − eur_hr_median_per_gpu` + management fee. `eur_hr_median_per_gpu` is de mediaan over alle providers voor die GPU.
 - Break-even: `required_inflow = (fixed_total + marketing_reserve) / margin_rate` (baseline margin-rate uit Public Tap median).
 - Lening: flat interest, 60 mnd, tabel 1..60.
 - BTW: voorbeelden voor €1k/€10k/€100k.

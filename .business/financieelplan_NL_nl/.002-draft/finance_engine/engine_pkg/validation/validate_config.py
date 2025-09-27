@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 from .shared import FileReport, non_empty_string, is_number, require_keys
-from ....io.loader import load_yaml
+from ...io.loader import load_yaml
 
 
 # Optional pydantic-based validation if available

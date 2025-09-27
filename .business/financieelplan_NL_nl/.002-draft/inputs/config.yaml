@@ -1,5 +1,7 @@
 version: 1
 currency: EUR
+fx:
+  eur_usd_rate: 1.08
 prepaid_policy:
   credits:
     min_topup_eur: 5
@@ -14,7 +16,6 @@ prepaid_policy:
     management_fee_eur_per_month: 99
     gpu_hour_markup_target_pct: 50
 pricing_inputs:
-  public_tap_flat_price_per_1k_tokens_eur: 0.30
   private_tap_default_markup_over_provider_cost_pct: 50
   fx_buffer_pct: 5
 catalog:

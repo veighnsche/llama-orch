@@ -5,7 +5,7 @@ import math
 import pandas as pd
 
 from ...config import OUTPUTS, ENGINE_VERSION
-from ...io.writer import write_csv, write_yaml
+from ...io.writer import write_csv, write_yaml, write_text
 from ...utils.vat import vat_set_aside_rows
 from ...utils.coerce import get_float
 from ...types.inputs import Config
@@ -26,6 +26,34 @@ def write_artifacts(*, config: Config, agg: Dict[str, Any]) -> None:
     write_csv(OUTPUTS / "break_even_targets.csv", be_df)
 
     write_csv(OUTPUTS / "loan_schedule.csv", agg["loan_df"]) 
+
+    # Curated profitability outputs
+    curated = agg.get("pub_curated_df")
+    curated = curated if isinstance(curated, type(agg.get("pub_df"))) else agg.get("pub_df")
+    if curated is not None:
+        write_csv(OUTPUTS / "model_profitability.csv", curated)
+        # Simple curated catalog as Markdown
+        pol = agg.get("policy_public_tap", {})
+        min_gm = pol.get("min_gross_margin_pct")
+        lines = [
+            "# Curated Public Tap Catalog",
+            "",
+            f"Minimum gross margin threshold (worst-case): {min_gm}%" if isinstance(min_gm, (int, float)) else "",
+            "",
+            "| Model | GPU | TPS | Sell €/1M | Gross Margin % (min) | Gross Margin % (med) |",
+            "|-------|-----|-----|-----------:|----------------------:|----------------------:|",
+        ]
+        try:
+            df = curated.copy()
+            df = df.sort_values(by="gross_margin_pct_med", ascending=False)
+            for _, r in df.iterrows():
+                lines.append(
+                    f"| {r.get('model')} | {r.get('gpu')} | {round(float(r.get('tps', 0.0)),2)} | "
+                    f"{round(float(r.get('sell_per_1m_eur', 0.0)),2)} | {round(float(r.get('gross_margin_pct_min', 0.0)),2)}% | {round(float(r.get('gross_margin_pct_med', 0.0)),2)}% |"
+                )
+        except Exception:
+            pass
+        write_text(OUTPUTS / "curated_catalog.md", "\n".join([ln for ln in lines if ln is not None]) + "\n")
 
     # VAT set-aside examples
     vat_rate = get_float(config, ["tax_billing", "vat_standard_rate_pct"], 21.0)

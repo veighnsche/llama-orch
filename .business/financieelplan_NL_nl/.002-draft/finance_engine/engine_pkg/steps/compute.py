@@ -22,6 +22,11 @@ def _compute_model_block(*, config: Config, price_sheet: pd.DataFrame, gpu_df: p
         return 0.0 if sell <= 0 else round((float(row.get("margin_per_1m_med", 0.0)) / sell) * 100.0, 2)
 
     model_df["gross_margin_pct_med"] = model_df.apply(gm_pct, axis=1)
+    def gm_pct_min(row):
+        sell = float(row.get("sell_per_1m_eur", 0.0)) or 0.0
+        return 0.0 if sell <= 0 else round((float(row.get("margin_per_1m_min", 0.0)) / sell) * 100.0, 2)
+
+    model_df["gross_margin_pct_min"] = model_df.apply(gm_pct_min, axis=1)
     for col in [
         "cost_per_1m_min",
         "cost_per_1m_med",
@@ -31,6 +36,7 @@ def _compute_model_block(*, config: Config, price_sheet: pd.DataFrame, gpu_df: p
         "margin_per_1m_med",
         "margin_per_1m_max",
         "gross_margin_pct_med",
+        "gross_margin_pct_min",
     ]:
         if col in model_df.columns:
             model_df[col] = model_df[col].fillna(0.0)
@@ -133,8 +139,15 @@ def compute_all(
     ) = _loan_and_fixed(config=config, lending=lending)
 
     # Public scenarios
+    # Curate models by pricing policy (min gross margin on worst-case bounds)
+    pol = (config.get("pricing_policy") or {}).get("public_tap") or {}
+    min_gm_pct = float(pol.get("min_gross_margin_pct", 25.0))
+    curated_df = pub_df.copy()
+    if not curated_df.empty and "gross_margin_pct_min" in curated_df.columns:
+        curated_df = curated_df[curated_df["gross_margin_pct_min"] >= min_gm_pct].copy()
+
     public_df, public_tpl = _compute_public_block(
-        pub_df=pub_df,
+        pub_df=curated_df,
         per_model_mix=per_model_mix,
         fixed_total_with_loan=fixed_total_with_loan,
         marketing_pct=marketing_pct,
@@ -157,6 +170,7 @@ def compute_all(
     return {
         "model_df": model_df,
         "pub_df": pub_df,
+        "pub_curated_df": curated_df,
         "public_df": public_df,
         "public_tpl": public_tpl,
         "private_df": private_df,
@@ -174,4 +188,5 @@ def compute_all(
         "private_markup_pct": private_markup_pct,
         "per_model_mix": per_model_mix,
         "marketing_pct": marketing_pct,
+        "policy_public_tap": {"min_gross_margin_pct": min_gm_pct},
     }

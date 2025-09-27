@@ -10,8 +10,8 @@
 
 **Revenue model:**
 
-- **Public Tap:** flat €0.3 per 1k tokens (no discounts).  
-- **Private Tap:** prepaid GPU-hours with markup (provider cost + 50.0%) + management fee.  
+- **Public Tap:** per-model prijzen berekend uit beleidsdoel (target marge 45%) en gemeten kosten; blended ≈ €0.0133 per 1k tokens.  
+- **Private Tap:** prepaid GPU-uren met opslag (providerkost + 50.0%) + management fee.  
 
 **Safeguards:**
 
@@ -21,7 +21,7 @@
 
 **Targets:**
 
-- **Required monthly prepaid inflow (baseline):** **€4763.947134324565**  
+- **Required monthly prepaid inflow (baseline):** **€8282.699955810871**  
 - **Runway target:** 6 months
 
 ### 0.1 Diagram — Prepaid Model Flow (Mermaid)
@@ -52,17 +52,17 @@ flowchart TD
 
 ### 1.2 Catalog (Products Offered)
 
-- **Models (allow-list):** Llama-3.1-8B, Llama-3.1-70B, Mixtral-8x7B, Mixtral-8x22B, Qwen2.5-7B, Qwen2.5-32B, Qwen2.5-72B, Yi-1.5-6B, Yi-1.5-9B, Yi-1.5-34B, DeepSeek-Coder-6.7B, DeepSeek-Coder-33B, DeepSeek-Coder-V2-16B, DeepSeek-Coder-V2-236B  
+- **Models (allow-list):** Llama-3-1-8B, Mixtral-8x7B, Qwen2-5-7B  
 - **GPUs considered:** A10, A100 40GB (PCIe), A100 80GB (SXM/PCIe), H100 80GB (PCIe/SXM), H200 141GB, L4, L40S, RTX 3090, RTX 4090
 
 ---
 
 ### 1.3 Price Inputs
 
-- Public Tap prices: defined **per model** (see `price_sheet.csv`)  
-  - Example row: Model = Llama 3.1 8B → Sell price = €0.15 / 1k tokens  
-- Private Tap markup target: **50.0%** over provider GPU cost  
-- Management fee: **€99.0 / month**  
+- Public Tap prijzen: per model afgeleid uit kosten (TPS × GPU €/uur met FX buffer) en `inputs/pricing_policy.yaml` (doelen, afronding).  
+  - Voorbeeld: Llama 3.1 8B → Verkoopprijs ≈ €N/A / 1k tokens  
+- Private Tap markup target: **50.0%** boven provider GPU-kost (optioneel fijnmazig via `gpu_pricing.yaml`)  
+- Management fee: **€99.0 / maand**  
 
 ---
 
@@ -88,9 +88,9 @@ flowchart TD
 
 For each model offered on the Public Tap:
 
-- **Provider cost per 1M tokens** is calculated from GPU rental prices (min / median / max across providers).  
-- **Sell price per 1M tokens** comes from `price_sheet.csv` (unit_price_eur_per_1k_tokens × 1000).  
-- **Gross margin** = Sell price − Provider cost.  
+- **Provider cost per 1M tokens** wordt berekend uit GPU-huurprijzen (min/med/max) met FX-buffer.  
+- **Sell price per 1M tokens** wordt afgeleid uit kosten + beleidsdoelmarge en afgerond volgens `pricing_policy.yaml`.  
+- **Brutomarge** = Verkoopprijs − Providerkost.  
 
 ---
 
@@ -98,20 +98,9 @@ For each model offered on the Public Tap:
 
 | Model | GPU (median) | Cost €/1M (min) | Cost €/1M (median) | Cost €/1M (max) | Sell €/1M | Gross Margin €/1M | Gross Margin % |
 |-------|--------------|----------------:|-------------------:|----------------:|----------:|------------------:|---------------:|
-| Llama-3.1-8B | RTX 3090 | 0.07 | 0.14 | 0.21 | 150.00 | 149.86 | 99.91 |
-| Llama-3.1-70B | RTX 3090 | 6.31 | 13.06 | 19.81 | 1500.00 | 1486.94 | 99.13 |
-| Mixtral-8x7B | RTX 3090 | 2.02 | 4.18 | 6.34 | 390.00 | 385.82 | 98.93 |
-| Mixtral-8x22B | RTX 3090 | 6.31 | 13.06 | 19.81 | 1350.00 | 1336.94 | 99.03 |
-| Qwen2.5-7B | RTX 3090 | 0.24 | 0.50 | 0.75 | 120.00 | 119.50 | 99.59 |
-| Qwen2.5-32B | RTX 3090 | 6.31 | 13.06 | 19.81 | 800.00 | 786.94 | 98.37 |
-| Qwen2.5-72B | RTX 3090 | 6.31 | 13.06 | 19.81 | 1600.00 | 1586.94 | 99.18 |
-| Yi-1.5-6B | RTX 3090 | 6.31 | 13.06 | 19.81 | 100.00 | 86.94 | 86.94 |
-| Yi-1.5-9B | RTX 3090 | 6.31 | 13.06 | 19.81 | 140.00 | 126.94 | 90.67 |
-| Yi-1.5-34B | RTX 3090 | 6.31 | 13.06 | 19.81 | 900.00 | 886.94 | 98.55 |
-| DeepSeek-Coder-6.7B | RTX 3090 | 6.31 | 13.06 | 19.81 | 160.00 | 146.94 | 91.84 |
-| DeepSeek-Coder-33B | RTX 3090 | 6.31 | 13.06 | 19.81 | 1300.00 | 1286.94 | 99.00 |
-| DeepSeek-Coder-V2-16B | RTX 3090 | 6.31 | 13.06 | 19.81 | 300.00 | 286.94 | 95.65 |
-| DeepSeek-Coder-V2-236B | RTX 3090 | 6.31 | 13.06 | 19.81 | 2500.00 | 2486.94 | 99.48 |
+| Llama-3-1-8B | A100 40GB (PCIe) | 0.13 | 0.13 | 0.13 | 10.00 | 9.87 | 98.68 |
+| Mixtral-8x7B | H100 80GB (PCIe/SXM) | 13.40 | 13.40 | 13.40 | 20.00 | 6.60 | 33.02 |
+| Qwen2-5-7B | A100 40GB (PCIe) | 0.37 | 0.37 | 0.37 | 10.00 | 9.63 | 96.31 |
 
 #### 2.1.1 Graph — Model Margins
 
@@ -143,9 +132,9 @@ The following scenarios assume:
 
 | Case      | Tokens Sold (M) | Revenue (€) | COGS (€) | Gross Margin (€) | Gross Margin % | Fixed+Loan (€) | Marketing (€) | Net Result (€) |
 |-----------|----------------:|------------:|---------:|-----------------:|---------------:|---------------:|--------------:|---------------:|
-| Worst     | 1.0 | 807.86 | 10.6 | 797.25 | 98.69 | 3748.75 | 161.57 | **-3113.07** |
-| Baseline  | 5.0 | 4039.29 | 53.02 | 3986.27 | 98.69 | 3748.75 | 807.86 | **-570.34** |
-| Best      | 15.0 | 12117.86 | 159.05 | 11958.81 | 98.69 | 3748.75 | 2423.57 | **5786.48** |
+| Worst     | 1.0 | 13.33 | 4.63 | 8.7 | 65.26 | 3748.75 | 2.67 | **-3742.72** |
+| Baseline  | 5.0 | 66.67 | 23.16 | 43.51 | 65.26 | 3748.75 | 13.33 | **-3718.58** |
+| Best      | 15.0 | 200.0 | 69.48 | 130.52 | 65.26 | 3748.75 | 40.0 | **-3658.23** |
 
 #### 3.1.1 Chart — Scenario Components
 
@@ -155,9 +144,9 @@ The following scenarios assume:
 
 ```mermaid
 pie title Baseline Monthly Components
-  "Revenue €4039.29" : 4039.29
-  "COGS €53.02" : 53.02
-  "Marketing €807.86" : 807.86
+  "Revenue €66.67" : 66.67
+  "COGS €23.16" : 23.16
+  "Marketing €13.33" : 13.33
   "Fixed+Loan €3748.75" : 3748.75
 ```
 
@@ -166,8 +155,8 @@ pie title Baseline Monthly Components
 ### 3.2 Break-even
 
 - **Total fixed monthly costs (personal + business + loan):** €3748.75  
-- **Required margin to break even (fixed + marketing):** €4701.539426864913  
-- **Required prepaid inflow:** €4763.947134324565  
+- **Required margin to break even (fixed + marketing):** €5405.289991162174  
+- **Required prepaid inflow:** €8282.699955810871  
 
 #### 3.2.1 Chart — Break-even
 
@@ -188,11 +177,11 @@ pie title Baseline Monthly Components
 Private Tap clients prepay for **dedicated GPU-hours** plus a **management fee**.  
 Python calculates profitability per GPU as follows:
 
-- **Provider cost €/hr (median)** from `gpu_rentals.csv`  
-- **Markup target** from `price_sheet.csv` (% over provider cost)  
-- **Sell price €/hr** = Provider cost + Markup  
-- **Gross margin €/hr** = Sell price − Provider cost  
-- **Management fee €/mo** = fixed fee added to each client  
+- **Providerkost €/uur (median)** uit `gpu_rentals.csv`  
+- **Markup target** uit `config.pricing_inputs` of `gpu_pricing.yaml` (% boven providerkost)  
+- **Verkoopprijs €/uur** = Providerkost + Markup  
+- **Brutomarge €/uur** = Verkoopprijs − Providerkost  
+- **Management fee €/maand** = vaste toeslag per klant  
 
 ---
 
@@ -200,15 +189,15 @@ Python calculates profitability per GPU as follows:
 
 | GPU Model | Provider Cost €/hr (median) | Markup % | Sell Price €/hr | Gross Margin €/hr |
 |-----------|----------------------------:|---------:|----------------:|------------------:|
-| A10 | 0.95 | 50.00 | 1.42 | 0.47 |
-| A100 40GB (PCIe) | 0.94 | 50.00 | 1.41 | 0.47 |
-| A100 80GB (SXM/PCIe) | 1.70 | 50.00 | 2.55 | 0.85 |
-| H100 80GB (PCIe/SXM) | 2.64 | 50.00 | 3.97 | 1.32 |
-| H200 141GB | 6.08 | 50.00 | 9.11 | 3.04 |
-| L4 | 0.63 | 50.00 | 0.95 | 0.32 |
-| L40S | 0.59 | 50.00 | 0.88 | 0.29 |
-| RTX 3090 | 0.75 | 50.00 | 1.13 | 0.38 |
-| RTX 4090 | 0.52 | 50.00 | 0.78 | 0.26 |
+| A10 | 1.12 | 50.00 | 1.68 | 0.56 |
+| A100 40GB (PCIe) | 1.26 | 50.00 | 1.90 | 0.63 |
+| A100 80GB (SXM/PCIe) | 2.33 | 50.00 | 3.50 | 1.17 |
+| H100 80GB (PCIe/SXM) | 3.14 | 50.00 | 4.70 | 1.57 |
+| H200 141GB | 9.24 | 50.00 | 13.85 | 4.62 |
+| L4 | 0.83 | 50.00 | 1.24 | 0.41 |
+| L40S | 0.95 | 50.00 | 1.42 | 0.47 |
+| RTX 3090 | 0.83 | 50.00 | 1.24 | 0.41 |
+| RTX 4090 | 0.95 | 50.00 | 1.42 | 0.47 |
 
 #### 4.1.1 Chart — GPU Economics
 
@@ -244,9 +233,9 @@ All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 | Case     | Public Revenue (€) | Private Revenue (€) | Total Revenue (€) | Total COGS (€) | Gross Margin (€) | Fixed+Loan (€) | Marketing (€) | Net (€) |
 |----------|-------------------:|--------------------:|------------------:|---------------:|-----------------:|---------------:|--------------:|--------:|
-| Worst    | 807.86 | 0.0 | 807.86 | 10.6 | 797.25 | 3748.75 | 161.57 | **-3113.07** |
-| Baseline | 4039.29 | 0.0 | 4039.29 | 53.02 | 3986.27 | 3748.75 | 807.86 | **-570.34** |
-| Best     | 12117.86 | 0.0 | 12117.86 | 159.05 | 11958.81 | 3748.75 | 2423.57 | **5786.48** |
+| Worst    | 13.33 | 0.0 | 13.33 | 4.63 | 8.7 | 3748.75 | 2.67 | **-3742.72** |
+| Baseline | 66.67 | 0.0 | 66.67 | 23.16 | 43.51 | 3748.75 | 13.33 | **-3718.58** |
+| Best     | 200.0 | 0.0 | 200.0 | 69.48 | 130.52 | 3748.75 | 40.0 | **-3658.23** |
 
 ---
 
@@ -254,9 +243,9 @@ All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 | Case     | Total Revenue (€) | Total COGS (€) | Gross Margin (€) | Fixed+Loan (€) | Marketing (€) | Net (€) |
 |----------|------------------:|---------------:|-----------------:|---------------:|--------------:|--------:|
-| Worst    |  | 127.19999999999999 | 9567.0 | 44985.0 | 1938.84 | **-37356.840000000004** |
-| Baseline |  | 636.24 | 47835.24 | 44985.0 | 9694.32 | **-6844.08** |
-| Best     |  | 1908.6000000000001 | 143505.72 | 44985.0 | 29082.840000000004 | **69437.76** |
+| Worst    |  | 55.56 | 104.39999999999999 | 44985.0 | 32.04 | **-44912.64** |
+| Baseline |  | 277.92 | 522.12 | 44985.0 | 159.96 | **-44622.96** |
+| Best     |  | 833.76 | 1566.2400000000002 | 44985.0 | 480.0 | **-43898.76** |
 
 ---
 
@@ -264,9 +253,9 @@ All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 | Case     | Total Revenue (€) | Total COGS (€) | Gross Margin (€) | Fixed+Loan (€) | Marketing (€) | Net (€) |
 |----------|------------------:|---------------:|-----------------:|---------------:|--------------:|--------:|
-| Worst    |  | 636.0 | 47835.0 | 224925.0 | 9694.199999999999 | **-186784.2** |
-| Baseline |  | 3181.2000000000003 | 239176.2 | 224925.0 | 48471.6 | **-34220.4** |
-| Best     |  | 9543.0 | 717528.6 | 224925.0 | 145414.2 | **347188.8** |
+| Worst    |  | 277.8 | 522.0 | 224925.0 | 160.2 | **-224563.19999999998** |
+| Baseline |  | 1389.6 | 2610.6 | 224925.0 | 799.8 | **-223114.8** |
+| Best     |  | 4168.8 | 7831.200000000001 | 224925.0 | 2400.0 | **-219493.8** |
 
 ---
 
@@ -374,7 +363,7 @@ This business model is designed to minimize financial risk:
 - **Configuration:** `config.yaml` (policies, limits, finance controls)  
 - **Costs:** `costs.yaml` (fixed monthly overhead)  
 - **Loan:** `lending_plan.yaml` (amount, term, interest, repayment plan)  
-- **Pricing:** `price_sheet.csv` (per-model Public Tap prices, Private Tap fees, services)  
+- **Pricing:** `pricing_policy.yaml` (doelen/afronding); `price_sheet.csv` (metadata/services)  
 - **Models:** `oss_models.csv` (open-source models with parameters, context sizes, licenses)  
 - **GPUs:** `gpu_rentals.csv` (provider prices, VRAM, sources)  
 
@@ -394,7 +383,7 @@ This business model is designed to minimize financial risk:
 ### 9.3 Engine Version
 
 - Finance Engine: vv1.0.0  
-- Last generated: 2025-09-27T15:02:26Z  
+- Last generated: 2025-09-27T17:30:55Z  
 
 ---
 
