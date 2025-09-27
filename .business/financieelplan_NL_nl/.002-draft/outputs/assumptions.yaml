@@ -1,5 +1,0 @@
-engine_version: v1.0.0
-fx:
-  eur_usd_rate: 1.08
-private:
-  default_markup_over_cost_pct: 50.0

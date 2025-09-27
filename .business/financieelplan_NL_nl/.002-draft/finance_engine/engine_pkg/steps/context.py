@@ -5,6 +5,8 @@ from typing import Any, Dict
 from ...config import ENGINE_VERSION
 from ...utils.time import now_utc_iso
 from ...utils.markdown import df_to_markdown_rows
+from ...utils.vat import vat_examples
+from ...utils.scenarios import monthly_yearly_sixty
 
 
 def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Dict[str, Any], extra: Dict[str, Any], lending: Dict[str, Any]) -> Dict[str, Any]:
@@ -60,44 +62,7 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Dict[s
 
     # Scenarios for sections 3 and 5
     scenarios_tpl = agg.get("public_tpl", {})
-    def _mk_case(month: dict) -> dict:
-        revenue = float(month.get("revenue_eur", 0.0))
-        cogs = float(month.get("cogs_eur", 0.0))
-        gross = float(month.get("gross_margin_eur", revenue - cogs))
-        marketing = float(month.get("marketing_reserved_eur", 0.0))
-        net = float(month.get("net_eur", gross - marketing - fixed.get("total_with_loan", 0.0)))
-        return {
-            "public_revenue": revenue,
-            "private_revenue": 0.0,
-            "total_revenue": revenue,
-            "cogs": cogs,
-            "gross": gross,
-            "marketing": marketing,
-            "net": net,
-        }
-
-    monthly = {
-        "worst": _mk_case(scenarios_tpl.get("worst", {})),
-        "base": _mk_case(scenarios_tpl.get("base", {})),
-        "best": _mk_case(scenarios_tpl.get("best", {})),
-    }
-
-    def _scale_case(case: dict, n: int) -> dict:
-        return {k: (v * n if isinstance(v, (int, float)) else v) for k, v in case.items()}
-
-    yearly = {
-        "worst": _scale_case(monthly["worst"], 12),
-        "base": _scale_case(monthly["base"], 12),
-        "best": _scale_case(monthly["best"], 12),
-        "fixed_total": fixed.get("total_with_loan", 0.0) * 12,
-    }
-
-    sixty_m = {
-        "worst": _scale_case(monthly["worst"], 60),
-        "base": _scale_case(monthly["base"], 60),
-        "best": _scale_case(monthly["best"], 60),
-        "fixed_total": fixed.get("total_with_loan", 0.0) * 60,
-    }
+    monthly, yearly, sixty_m = monthly_yearly_sixty(scenarios_tpl, fixed.get("total_with_loan", 0.0))
 
     # Loan
     loan = {
@@ -133,17 +98,7 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Dict[s
             "eu_reverse_charge_enabled": True,
             "stripe_tax_enabled": True,
             "revenue_recognition": "prepaid liability until consumed",
-            "example": {
-                "revenue_small": 1000,
-                "vat_small": round(1000 * (agg.get("vat_rate", 21.0) / 100.0), 2),
-                "net_small": round(1000 * (1 - agg.get("vat_rate", 21.0) / 100.0), 2),
-                "revenue_medium": 10000,
-                "vat_medium": round(10000 * (agg.get("vat_rate", 21.0) / 100.0), 2),
-                "net_medium": round(10000 * (1 - agg.get("vat_rate", 21.0) / 100.0), 2),
-                "revenue_large": 100000,
-                "vat_large": round(100000 * (agg.get("vat_rate", 21.0) / 100.0), 2),
-                "net_large": round(100000 * (1 - agg.get("vat_rate", 21.0) / 100.0), 2),
-            },
+            "example": vat_examples(agg.get("vat_rate", 21.0)),
         },
         "finance": {
             "marketing_allocation_pct_of_inflow": int(round(agg.get("marketing_pct", 0.0) * 100.0)),

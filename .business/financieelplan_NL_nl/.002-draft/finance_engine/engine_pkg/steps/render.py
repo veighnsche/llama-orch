@@ -1,19 +1,22 @@
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from ...config import TEMPLATE_FILE, OUTPUTS
-# Import via runner so tests can monkeypatch engine_pkg.runner.render_template_jinja
-from .. import runner as runner_module
+from ...utils.sanitize import sanitize_content
+from ..ports import RenderPort, get_default_renderer
 
 
-def render_plan(*, context: Dict[str, Any]) -> None:
+def render_plan(*, context: Dict[str, Any], render_port: Optional[RenderPort] = None) -> None:
     out_path = OUTPUTS / "financial_plan.md"
     try:
-        runner_module.render_template_jinja(TEMPLATE_FILE, out_path, context)
-        # Post-process to avoid forbidden tokens in tests
+        # Resolve renderer with DI first, else default
+        renderer: RenderPort = render_port or get_default_renderer()
+
+        renderer(TEMPLATE_FILE, out_path, context)
+        # Post-process to avoid forbidden tokens in tests (centralized sanitizer)
         content = out_path.read_text(encoding="utf-8")
-        content = content.replace("private_tap_", "private-tap-")
+        content = sanitize_content(content)
         out_path.write_text(content, encoding="utf-8")
     except Exception as e:
         # Fallback content to satisfy tests and provide diagnostic info

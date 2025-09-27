@@ -6,6 +6,7 @@ import pandas as pd
 
 from ...config import OUTPUTS, ENGINE_VERSION
 from ...io.writer import write_csv, write_yaml
+from ...utils.vat import vat_set_aside_rows
 
 
 def write_artifacts(*, config: Dict[str, Any], agg: Dict[str, Any]) -> None:
@@ -26,12 +27,7 @@ def write_artifacts(*, config: Dict[str, Any], agg: Dict[str, Any]) -> None:
 
     # VAT set-aside examples
     vat_rate = float(config.get("tax_billing", {}).get("vat_standard_rate_pct", 21.0))
-    vat_rows = [
-        {"inflow_eur": 1000, "vat_set_aside_eur": round(1000 * vat_rate / 100.0, 2)},
-        {"inflow_eur": 10000, "vat_set_aside_eur": round(10000 * vat_rate / 100.0, 2)},
-        {"inflow_eur": 100000, "vat_set_aside_eur": round(100000 * vat_rate / 100.0, 2)},
-    ]
-    write_csv(OUTPUTS / "vat_set_aside.csv", pd.DataFrame(vat_rows))
+    write_csv(OUTPUTS / "vat_set_aside.csv", pd.DataFrame(vat_set_aside_rows(vat_rate)))
 
     # Assumptions YAML for tests to sanity-check
     eur_usd = float(config.get("fx", {}).get("eur_usd_rate", 1.08))

@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Optional
 
 import pandas as pd
 
 from ...config import INPUTS, OUTPUTS, ENGINE_VERSION
 from ...io.loader import load_yaml, read_csv
 from ...io.writer import write_json, write_text, ensure_dir
-# Import via runner to allow test monkeypatching engine_pkg.runner.validate_inputs
-from .. import runner as runner_module
 from ...utils.time import now_utc_iso
+from ..ports import ValidatePort, get_default_validator
 
 
 def load_inputs() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any], pd.DataFrame, pd.DataFrame]:
@@ -41,7 +40,25 @@ def write_run_summary() -> Dict[str, Any]:
     return payload
 
 
-def validate_and_write_report(config: Dict[str, Any], costs: Dict[str, Any], lending: Dict[str, Any], price_sheet: pd.DataFrame) -> bool:
-    report = runner_module.validate_inputs(config=config, costs=costs, lending=lending, price_sheet=price_sheet)
+def validate_and_write_report(
+    config: Dict[str, Any],
+    costs: Dict[str, Any],
+    lending: Dict[str, Any],
+    price_sheet: pd.DataFrame,
+    *,
+    validate_port: Optional[ValidatePort] = None,
+) -> bool:
+    validator: ValidatePort
+    if validate_port is not None:
+        validator = validate_port
+    else:
+        # Backward-compatible path: try to use runner.validate_inputs if tests monkeypatch it
+        try:
+            from .. import runner as runner_module  # type: ignore
+            validator = getattr(runner_module, "validate_inputs")  # type: ignore
+        except Exception:
+            validator = get_default_validator()
+
+    report = validator(config=config, costs=costs, lending=lending, price_sheet=price_sheet)
     write_json(OUTPUTS / "validation_report.json", report)
     return bool(report.get("errors"))

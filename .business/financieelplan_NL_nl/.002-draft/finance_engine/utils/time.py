@@ -4,4 +4,10 @@ import datetime as dt
 
 
 def now_utc_iso() -> str:
-    return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+    # Use timezone-aware UTC and format with trailing 'Z'
+    return (
+        dt.datetime.now(dt.UTC)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )

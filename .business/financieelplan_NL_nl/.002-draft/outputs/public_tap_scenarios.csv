@@ -1,4 +1,0 @@
-case,m_tokens,revenue_eur,cogs_eur,gross_margin_eur,gross_margin_pct,marketing_reserved_eur,fixed_plus_loan_eur,net_eur
-worst,1.0,0.0,17.39,-17.39,0.0,0.0,3748.75,-3766.14
-base,5.0,0.0,86.94,-86.94,0.0,0.0,3748.75,-3835.69
-best,15.0,0.0,260.82,-260.82,0.0,0.0,3748.75,-4009.57
