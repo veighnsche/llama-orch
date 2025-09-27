@@ -1,4 +1,9 @@
-//! worker-adapters/http-util — shared HTTP client and streaming helpers for adapters.
+//! worker-adapters/http-util — legacy monolith (deprecated)
+//!
+//! NOTE: The crate root has moved to `src/lib_mod.rs` and the codebase has been
+//! modularized into `client.rs`, `auth.rs`, `redact.rs`, `retry.rs`, `streaming.rs`, and `error.rs`.
+//! This file is retained temporarily for reference and is not compiled because
+//! `Cargo.toml` points the library to `src/lib_mod.rs`.
 use once_cell::sync::Lazy;
 use regex::Regex;
 use reqwest::Client;
@@ -80,6 +85,26 @@ pub fn with_bearer_if_configured(rb: reqwest::RequestBuilder) -> reqwest::Reques
     } else {
         rb
     }
+}
+
+/// Inject an Authorization: Bearer <token> header without reading environment variables.
+///
+/// This is the preferred helper for adapters: pass the token explicitly from your
+/// adapter configuration instead of relying on ambient environment variables.
+///
+/// Example:
+/// ```no_run
+/// use worker_adapters_http_util as http_util;
+/// let client = http_util::client();
+/// let rb = client.get("https://example.com/api");
+/// let rb = http_util::with_bearer(rb, "my-secret-token");
+/// let _req = rb.build().unwrap();
+/// ```
+pub fn with_bearer(rb: reqwest::RequestBuilder, token: impl AsRef<str>) -> reqwest::RequestBuilder {
+    let t = token.as_ref();
+    let rb = rb.bearer_auth(t);
+    let val = format!("Bearer {}", t);
+    rb.header(reqwest::header::AUTHORIZATION, val)
 }
 
 /// Redact secrets in a log string, masking bearer tokens, X-API-Key, and common token/api_key patterns to fp6.
@@ -252,4 +277,31 @@ pub fn stream_decode<S: AsRef<str>, F: FnMut(StreamEvent)>(body: S, mut sink: F)
         }
     }
     Ok(())
+}
+
+// ===== Error helpers =====
+/// Parse a Retry-After header value into milliseconds.
+///
+/// Supports the "delta-seconds" form per RFC 7231 (e.g., "120"). Returns `None` if parsing fails.
+/// Date formats are not currently supported.
+pub fn parse_retry_after(s: &str) -> Option<u64> {
+    let trimmed = s.trim();
+    if let Ok(secs) = trimmed.parse::<u64>() {
+        return Some(secs.saturating_mul(1000));
+    }
+    None
+}
+
+/// Returns true if the given HTTP status code is considered non-retriable by default.
+///
+/// Defaults: 400/401/403/404/422 are non-retriable. This can be extended per adapter needs.
+pub fn is_non_retriable_status(status: u16) -> bool {
+    matches!(status, 400 | 401 | 403 | 404 | 422)
+}
+
+/// Returns true if the given HTTP status code is considered retriable by default.
+///
+/// Defaults: 429 and all 5xx are retriable. Also retriable for IO/timeouts (handled at error level, not by status).
+pub fn is_retriable_status(status: u16) -> bool {
+    status == 429 || (500..=599).contains(&status)
 }

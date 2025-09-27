@@ -13,23 +13,23 @@ Status Key: [ ] todo • [~] in progress • [x] done
 
 ## Unit Tests (see 31_UNIT.md)
 
-- [ ] HTU-UNIT-3101 — Builder defaults
-  - [ ] Connect timeout ≈ 5s (±epsilon)
-  - [ ] Request timeout ≈ 30s default, overrideable per request
+- [~] HTU-UNIT-3101 — Builder defaults
+  - [x] Connect timeout ≈ 5s (±epsilon)
+  - [x] Request timeout ≈ 30s default, overrideable per request
   - [ ] HTTP/2 preferred when supported; TLS verify ON; pool reuse
-- [ ] HTU-UNIT-3102 — Retry/backoff policy
-  - [ ] Given base, multiplier, cap, attempts → delays within `[0, min(cap, base*multiplier^n)]`
+- [~] HTU-UNIT-3102 — Retry/backoff policy
+  - [x] Given base, multiplier, cap, attempts → delays within `[0, min(cap, base*multiplier^n)]`
   - [ ] Full jitter distribution shows variance
   - [ ] Deterministic mode via seeded RNG (`HTTP_UTIL_TEST_SEED`) yields exact expected delays
   - [ ] Non-retriable codes (400/401/403/404/422) do not retry
-- [ ] HTU-UNIT-3103 — Redaction helpers
-  - [ ] `Authorization` header redacted
-  - [ ] `X-API-Key` redacted
+- [~] HTU-UNIT-3103 — Redaction helpers
+  - [x] `Authorization` header redacted
+  - [x] `X-API-Key` redacted
   - [ ] Bearer-like token patterns redacted in messages
   - [ ] Snapshot of redacted output (no secrets)
-- [ ] HTU-UNIT-3104 — Streaming decode helpers
-  - [ ] Ordering `started → token* → end` preserved
-  - [ ] Token indices strictly increasing from 0
+- [~] HTU-UNIT-3104 — Streaming decode helpers
+  - [x] Ordering `started → token* → end` preserved
+  - [x] Token indices strictly increasing from 0
   - [ ] Low-allocation path (buffer reuse) — assert minimal allocations where feasible or via benchmarks later
 
 ### Additional Unit Coverage
@@ -66,7 +66,7 @@ Status Key: [ ] todo • [~] in progress • [x] done
 
 ## Determinism & Time Control
 
-- [ ] Tests accept seed via `HTTP_UTIL_TEST_SEED` (or explicit seeded RNG) for retry jitter
+- [x] Tests accept seed via `HTTP_UTIL_TEST_SEED` (or explicit seeded RNG) for retry jitter
 - [ ] Time abstraction in retry helper allows tokio time to be paused and advanced in tests
 - [ ] Avoid wall-clock sleeps; use mocked time to assert logical delay sequences
 
@@ -80,8 +80,8 @@ Status Key: [ ] todo • [~] in progress • [x] done
 
 ## Proof Bundle Artifacts
 
-- [ ] Retry timeline with seed disclosure
-- [ ] Streaming transcript sample (started/token*/metrics?/end)
+- [x] Retry timeline with seed disclosure
+- [x] Streaming transcript sample (started/token*/metrics?/end)
 - [ ] Redacted error snapshots (no secrets)
 - [ ] metadata.json (commit, crate version, rustc, OS)
 - [ ] seeds.txt (seeds used)

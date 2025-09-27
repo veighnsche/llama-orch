@@ -25,7 +25,9 @@ avoid duplicating cross-cutting concerns and to meet spec requirements consisten
 - `retry(policy, op)` — classify errors (429/5xx/connect/timeouts) and apply exp. backoff + jitter.
 - `streaming::decode_*` — low‑alloc helpers to parse newline/SSE‑ish token streams into events.
 - `redact::{headers, line}` — redact Authorization and other secrets in diagnostics.
-- `auth::with_bearer(client, token)` (opt‑in) — helper to inject Authorization header.
+- `auth::with_bearer(rb, token)` — inject `Authorization: Bearer <token>` without reading env (preferred for adapters).
+- `auth::with_bearer_if_configured(rb)` — test/dev helper that reads `AUTH_TOKEN` from the environment (not recommended for production use).
+- Error helpers: `parse_retry_after`, `is_retriable_status`, `is_non_retriable_status`.
 
 ## 4. How it fits
 
@@ -56,7 +58,8 @@ flowchart LR
 
 ## 7. Config & Env
 
-- The util itself does not read environment variables; adapters pass configuration explicitly.
+- Adapters SHOULD pass configuration explicitly; the preferred API for Authorization is `with_bearer(rb, token)`.
+- A test/dev helper `with_bearer_if_configured(rb)` exists which reads `AUTH_TOKEN` from the environment. This is intended for local testing only and is not recommended for production.
 - Typical adapter configuration:
   - Base URL(s) per engine instance
   - Timeouts and retry policy (max attempts, base/backoff cap, jitter)
@@ -74,6 +77,48 @@ flowchart LR
 - Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
 - Rebuild docs: `cargo run -p tools-readme-index --quiet`
 - Unit tests: `cargo test -p worker-adapters-http-util`
+
+### Examples
+
+Build a client and inject a bearer token explicitly:
+
+```rust
+use worker_adapters_http_util as http_util;
+
+let client = http_util::client();
+let rb = client.get("https://example.com/api");
+let rb = http_util::with_bearer(rb, "my-secret-token");
+let req = rb.build()?;
+```
+
+Use retries with deterministic jitter in tests:
+
+```rust
+use worker_adapters_http_util::{with_retries, RetryPolicy, RetryError};
+
+let mut policy = RetryPolicy::default();
+policy.seed = Some(7);
+let result: Result<u32, RetryError> = with_retries(|attempt| async move {
+    if attempt < 3 { Err(RetryError::Retriable(anyhow::anyhow!("transient"))) } else { Ok(attempt) }
+}, policy).await;
+```
+
+Decode a simple SSE‑like transcript:
+
+```rust
+use worker_adapters_http_util::{stream_decode, StreamEvent};
+
+let body = "event: started\n\
+            data: {}\n\
+            \n\
+            event: token\n\
+            data: {\"i\":0,\"t\":\"Hi\"}\n\
+            \n\
+            event: end\n\
+            data: {}\n";
+let mut events = Vec::new();
+let _ = stream_decode(body, |e| events.push(e));
+```
 
 ## 10. Status & Owners
 

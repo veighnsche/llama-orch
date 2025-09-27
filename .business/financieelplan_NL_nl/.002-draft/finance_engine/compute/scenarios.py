@@ -51,6 +51,7 @@ def compute_public_scenarios(models_df: pd.DataFrame, *, per_model_mix: Dict[str
             "gross_margin_eur": round(gross, 2),
             "gross_margin_pct": round(gross_pct * 100.0, 2),
             "marketing_reserved_eur": round(marketing, 2),
+            "fixed_plus_loan_eur": round(fixed_total_with_loan, 2),
             "net_eur": round(net, 2),
         })
 

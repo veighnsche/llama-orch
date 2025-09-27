@@ -7,11 +7,10 @@ license = "GPL-3.0-or-later"
 authors = ["llama-orch contributors"]
 autobenches = false
 autotests = false
-autodocs = false
 
 [lib]
 name = "worker_adapters_http_util"
-path = "src/lib.rs"
+path = "src/lib_mod.rs"
 
 [dependencies]
 anyhow = { workspace = true }
@@ -27,3 +26,12 @@ auth-min = { path = "../../auth-min" }
 tokio = { workspace = true }
 regex = { workspace = true }
 rand = "0.8"
+
+[dev-dependencies]
+# Enable async unit tests and time control
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+serde_json = { workspace = true }
+proof-bundle = { path = "../../proof-bundle" }
+auth-min = { path = "../../auth-min" }
+http = { workspace = true }
+anyhow = { workspace = true }

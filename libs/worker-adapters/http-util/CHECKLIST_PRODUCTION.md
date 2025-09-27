@@ -13,23 +13,24 @@ Status Key: [ ] todo • [~] in progress • [x] done
 
 ## A) Public API & Configuration
 
-- [ ] Export `HttpClientConfig` and `make_client(cfg: &HttpClientConfig) -> reqwest::Client`
-  - [ ] Defaults per 00_http_util.md: connect_timeout≈5s, request_timeout≈30s (overrideable), HTTP/2 preferred, TLS verify ON, connection pool reuse
+- [~] Export `HttpClientConfig` and `make_client(cfg: &HttpClientConfig) -> reqwest::Client`
+  - [x] Defaults per 00_http_util.md: connect_timeout≈5s, request_timeout≈30s (overrideable)
+  - [ ] HTTP/2 preferred, TLS verify ON, connection pool reuse validated
   - [ ] Explicit proxy support (opt-in); insecure modes gated and documented as test-only
-- [ ] Provide `RetryPolicy` (base, multiplier, cap, max_attempts)
-- [ ] Provide `with_retries<T, E, F>(policy, op)` wrapper with typed errors
-- [ ] Provide `streaming` module with decode helpers for newline/SSE-like formats
-- [ ] Provide `redact` module with `headers()` and `line()` helpers
-- [ ] Provide `auth` helper to inject `Authorization: Bearer <token>` (opt-in)
-- [ ] Ensure all public items have rustdoc with examples
+- [x] Provide `RetryPolicy` (base, multiplier, cap, max_attempts)
+- [x] Provide `with_retries<T, E, F>(policy, op)` wrapper with typed errors
+- [x] Provide `streaming` module with decode helpers for newline/SSE-like formats
+- [x] Provide `redact` module with `headers()` and `line()` helpers
+- [x] Provide `auth` helper to inject `Authorization: Bearer <token>` (explicit token)
+- [~] Ensure all public items have rustdoc with examples
 
 ## B) Retry/Backoff & Error Classification
 
-- [ ] Implement default policy: base=100ms, multiplier=2.0, cap=2s, max_attempts=4
-- [ ] Full jitter: `delay_n = rand(0, min(cap, base*multiplier^n))`
-- [ ] Error classes retriable: 5xx, 429, timeouts, connect errors
-- [ ] Non-retriable: 400/401/403/404/422 (configurable extension), map immediately
-- [ ] Injectable RNG support (default: thread_rng; tests: seeded RNG)
+- [x] Implement default policy: base=100ms, multiplier=2.0, cap=2s, max_attempts=4
+- [x] Full jitter: `delay_n = rand(0, min(cap, base*multiplier^n))`
+- [~] Error classes retriable: 5xx, 429, timeouts, connect errors
+- [~] Non-retriable: 400/401/403/404/422 (configurable extension), map immediately
+- [x] Injectable RNG support (default: thread_rng; tests: seeded RNG)
 - [ ] Injectable time/sleep (default: tokio::time::sleep; tests: mock clock)
 - [ ] Structured retry decision logs (debug-level) with redaction applied
 
@@ -60,18 +61,18 @@ Status Key: [ ] todo • [~] in progress • [x] done
 
 ## G) Documentation & Examples
 
-- [ ] README documents responsibilities and non-goals
+- [x] README documents responsibilities and non-goals
 - [ ] `.specs/10_contracts.md` reflects Provided/Consumed Contracts, Data Exchange, Security, Testing Expectations
-- [ ] Add minimal usage examples: client creation, retry wrapper, streaming decode, redaction
-- [ ] Cross-link to `.specs/35-worker-adapters.md` (normative shared util)
+- [x] Add minimal usage examples: client creation, retry wrapper, streaming decode, redaction
+- [x] Cross-link to `.specs/35-worker-adapters.md` (normative shared util)
 
 ## H) Quality Gates
 
 - [ ] `cargo fmt --all -- --check` clean
 - [ ] `cargo clippy --all-targets --all-features -- -D warnings` clean
 - [ ] `cargo test -p worker-adapters-http-util -- --nocapture` green
-- [ ] No unsupported Cargo.toml keys (e.g., `autodocs`)
-- [ ] License headers, package metadata (private crate)
+- [x] No unsupported Cargo.toml keys (e.g., `autodocs`)
+- [x] License headers, package metadata (private crate)
 
 ## I) Integration Plan
 
