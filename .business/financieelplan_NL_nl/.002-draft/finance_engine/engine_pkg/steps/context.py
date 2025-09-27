@@ -40,12 +40,27 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
     private_markup_default = float(raw_priv_markup if isinstance(raw_priv_markup, (int, float, str)) else 50.0)
     public_flat_1k = None
     price_overrides = overrides.get("price_overrides", {}) if isinstance(overrides, dict) else {}
+    # Normalize overrides to a flat map of {model: unit_price_per_1k_tokens}
+    override_prices_num: Dict[str, float] = {}
     if isinstance(price_overrides, dict) and price_overrides:
-        try:
-            any_model = next(iter(price_overrides.values()))
-            public_flat_1k = any_model.get("unit_price_eur_per_1k_tokens")
-        except Exception:
-            public_flat_1k = None
+        for sku, node in price_overrides.items():
+            if isinstance(node, dict) and "unit_price_eur_per_1k_tokens" in node:
+                try:
+                    override_prices_num[sku] = float(node["unit_price_eur_per_1k_tokens"])  # per 1k tokens
+                except Exception:
+                    pass
+        # Use any override as the headline flat price if not configured explicitly
+        if not public_flat_1k and override_prices_num:
+            try:
+                public_flat_1k = float(next(iter(override_prices_num.values())))
+            except Exception:
+                public_flat_1k = None
+    # Always prefer explicit config flat price for the top-level description
+    cfg_flat = config.get("pricing_inputs", {}).get("public_tap_flat_price_per_1k_tokens_eur")
+    try:
+        public_flat_1k = float(cfg_flat) if cfg_flat is not None else public_flat_1k
+    except Exception:
+        pass
 
     # Break-even targets
     targets = {
@@ -65,14 +80,39 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
     monthly, yearly, sixty_m = monthly_yearly_sixty(scenarios_tpl, fixed.get("total_with_loan", 0.0))
 
     # Loan
+    loan_amount = lending.get("amount_eur")
+    if loan_amount is None:
+        loan_amount = lending.get("loan_request", {}).get("amount_eur")
+    term_months = lending.get("term_months")
+    if term_months is None:
+        term_months = lending.get("repayment_plan", {}).get("term_months")
+    interest_rate_pct = lending.get("interest_rate_pct")
+    if interest_rate_pct is None:
+        interest_rate_pct = lending.get("repayment_plan", {}).get("interest_rate_pct")
+
     loan = {
-        "amount_eur": lending.get("amount_eur"),
-        "term_months": lending.get("term_months"),
-        "interest_rate_pct": lending.get("interest_rate_pct"),
+        "amount_eur": loan_amount,
+        "term_months": term_months,
+        "interest_rate_pct": interest_rate_pct,
         "monthly_payment_eur": agg.get("monthly_payment"),
         "total_repayment_eur": agg.get("total_repay"),
         "total_interest_eur": agg.get("total_interest"),
     }
+
+    # Derive prices from computed model economics if available (sell_per_1m_eur / 1000)
+    derived_prices: Dict[str, float] = {}
+    try:
+        mdf = agg.get("model_df")
+        if mdf is not None and not mdf.empty:
+            for _, row in mdf.iterrows():
+                model = str(row.get("model"))
+                sell_1m = float(row.get("sell_per_1m_eur", 0.0))
+                if sell_1m > 0:
+                    derived_prices[model] = round(sell_1m / 1000.0, 4)
+    except Exception:
+        pass
+
+    model_prices_map = {**derived_prices, **override_prices_num}  # overrides take precedence
 
     ctx = {
         "engine": {"version": ENGINE_VERSION, "timestamp": now_utc_iso()},
@@ -80,7 +120,7 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
             "fx_buffer_pct": fx_buffer_pct,
             "private_tap_default_markup_over_provider_cost_pct": private_markup_default,
             "public_tap_flat_price_per_1k_tokens": public_flat_1k,
-            "model_prices": price_overrides,
+            "model_prices": model_prices_map,
         },
         "prepaid": {
             "min_topup_eur": config.get("prepaid_policy", {}).get("credits", {}).get("min_topup_eur", 25),
@@ -106,7 +146,13 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
         },
         "fx": {"rate_used": config.get("fx", {}).get("eur_usd_rate", 1.08)},
         "private": {
-            "management_fee_eur_per_month": config.get("prepaid_policy", {}).get("private_tap", {}).get("management_fee_eur_per_month", None),
+            "management_fee_eur_per_month": (
+                float(config.get("prepaid_policy", {}).get("private_tap", {}).get("management_fee_eur_per_month"))
+                if isinstance(config.get("prepaid_policy", {}).get("private_tap", {}).get("management_fee_eur_per_month"), (int, float))
+                else config.get("prepaid_policy", {}).get("private_tap", {}).get("management_fee_eur_per_month")
+            ),
+            "default_markup_over_cost_pct": config.get("pricing_inputs", {}).get("private_tap_default_markup_over_provider_cost_pct")
+            or config.get("prepaid_policy", {}).get("private_tap", {}).get("gpu_hour_markup_target_pct"),
         },
         "catalog": {
             "allowed_models": list(agg["pub_df"]["model"].astype(str).unique()) if not agg["pub_df"].empty else [],

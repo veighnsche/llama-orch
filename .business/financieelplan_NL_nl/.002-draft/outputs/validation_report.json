@@ -1,0 +1,7 @@
+{
+  "errors": [],
+  "warnings": [
+    "config.finance.fixed_costs_monthly_eur.business is null; will fall back to extra.business_fixed_costs.business or 0."
+  ],
+  "info": []
+}

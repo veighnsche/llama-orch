@@ -93,6 +93,11 @@ def build_preflight_markdown(res: PreflightResult) -> str:
                 gpu = e.get("preferred_gpu")
                 suffix = " (expired)" if expired else ""
                 lines.append(f"  - {e.get('sku')}: tps={tps} gpu={gpu} expires_on={exp}{suffix}")
+        # Reconcile suggestion if any expired entries
+        expired_count = sum(1 for e in price_entries if e.get("expired")) + sum(1 for e in cap_entries if e.get("expired"))
+        if expired_count > 0:
+            lines.append("")
+            lines.append(f"Reconcile suggested: {expired_count} expired override entr{'y' if expired_count == 1 else 'ies'} detected.")
     # Errors (only if failed)
     if not res.ok:
         lines.append("")
