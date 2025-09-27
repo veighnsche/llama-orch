@@ -131,7 +131,5 @@ def test_extra_parse_error_warns_only(tmp_path: Path):
     # Make extra.yaml invalid YAML
     (d / "extra.yaml").write_text("\x80not_yaml\n", encoding="utf-8")
     res = run_preflight(d)
-    # extra.yaml parse error marks that file not ok; overall result can be false, but we accept this as error to be explicit
-    assert not res.ok
-    md = build_preflight_markdown(res)
-    assert "extra.yaml" in md and "parse error" in md
+    # extra.yaml is deprecated and not part of validation anymore; preflight should remain OK
+    assert res.ok

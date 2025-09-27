@@ -7,10 +7,10 @@ from ...utils.time import now_utc_iso
 from ...utils.markdown import df_to_markdown_rows
 from ...utils.vat import vat_examples
 from ...utils.scenarios import monthly_yearly_sixty
-from ...types.inputs import Config, Extra, Lending
+from ...types.inputs import Config, Lending
 
 
-def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config, extra: Extra, lending: Lending) -> Dict[str, Any]:
+def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config, overrides: Dict[str, Any], lending: Lending, scenarios: Dict[str, Any]) -> Dict[str, Any]:
     # Tables for markdown rendering
     model_cols = [
         "model",
@@ -39,11 +39,10 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
     raw_priv_markup = config.get("pricing_inputs", {}).get("private_tap_default_markup_over_provider_cost_pct")
     private_markup_default = float(raw_priv_markup if isinstance(raw_priv_markup, (int, float, str)) else 50.0)
     public_flat_1k = None
-    # Best-effort read from overrides if present
-    overrides = extra.get("price_overrides", {})
-    if isinstance(overrides, dict) and overrides:
+    price_overrides = overrides.get("price_overrides", {}) if isinstance(overrides, dict) else {}
+    if isinstance(price_overrides, dict) and price_overrides:
         try:
-            any_model = next(iter(overrides.values()))
+            any_model = next(iter(price_overrides.values()))
             public_flat_1k = any_model.get("unit_price_eur_per_1k_tokens")
         except Exception:
             public_flat_1k = None
@@ -81,17 +80,17 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
             "fx_buffer_pct": fx_buffer_pct,
             "private_tap_default_markup_over_provider_cost_pct": private_markup_default,
             "public_tap_flat_price_per_1k_tokens": public_flat_1k,
-            "model_prices": extra.get("price_overrides", {}),
+            "model_prices": price_overrides,
         },
         "prepaid": {
-            "min_topup_eur": extra.get("prepaid", {}).get("min_topup_eur", 25),
-            "max_topup_eur": extra.get("prepaid", {}).get("max_topup_eur", 10000),
-            "expiry_months": extra.get("prepaid", {}).get("expiry_months", 12),
-            "non_refundable": extra.get("prepaid", {}).get("non_refundable", True),
-            "auto_refill_default_enabled": extra.get("prepaid", {}).get("auto_refill_default_enabled", False),
-            "auto_refill_cap_eur": extra.get("prepaid", {}).get("auto_refill_cap_eur", 200),
+            "min_topup_eur": config.get("prepaid_policy", {}).get("credits", {}).get("min_topup_eur", 25),
+            "max_topup_eur": config.get("prepaid_policy", {}).get("credits", {}).get("max_topup_eur", 10000),
+            "expiry_months": config.get("prepaid_policy", {}).get("credits", {}).get("expiry_months", 12),
+            "non_refundable": config.get("prepaid_policy", {}).get("credits", {}).get("non_refundable", True),
+            "auto_refill_default_enabled": config.get("prepaid_policy", {}).get("credits", {}).get("auto_refill_default_enabled", False),
+            "auto_refill_cap_eur": config.get("prepaid_policy", {}).get("credits", {}).get("auto_refill_cap_eur", 200),
             "private_tap": {
-                "billing_unit_minutes": extra.get("prepaid", {}).get("private_tap", {}).get("billing_unit_minutes", 60),
+                "billing_unit_minutes": config.get("prepaid_policy", {}).get("private_tap", {}).get("billing_unit_minutes", 60),
             },
         },
         "tax": {
@@ -103,11 +102,11 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
         },
         "finance": {
             "marketing_allocation_pct_of_inflow": int(round(agg.get("marketing_pct", 0.0) * 100.0)),
-            "runway_target_months": extra.get("runway_target_months", 12),
+            "runway_target_months": config.get("finance", {}).get("runway_target_months", 12),
         },
         "fx": {"rate_used": config.get("fx", {}).get("eur_usd_rate", 1.08)},
         "private": {
-            "management_fee_eur_per_month": extra.get("private", {}).get("management_fee_eur_per_month", None),
+            "management_fee_eur_per_month": config.get("prepaid_policy", {}).get("private_tap", {}).get("management_fee_eur_per_month", None),
         },
         "catalog": {
             "allowed_models": list(agg["pub_df"]["model"].astype(str).unique()) if not agg["pub_df"].empty else [],
@@ -123,6 +122,8 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
             "monthly": monthly,
             "yearly": yearly,
             "60m": sixty_m,
+            "include_skus": scenarios.get("include_skus"),
+            "per_model_mix": scenarios.get("per_model_mix", {}),
         },
         "tables": {
             "model_price_per_1m_tokens": model_table_md,

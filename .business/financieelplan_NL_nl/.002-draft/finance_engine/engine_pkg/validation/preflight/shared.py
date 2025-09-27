@@ -65,6 +65,34 @@ def build_preflight_markdown(res: PreflightResult) -> str:
                 lines.append(f"- {fr.name}: {w}")
         for w in res.warnings:
             lines.append(f"- {w}")
+    # Overrides Applied
+    # Collect price and capacity override entries if available
+    price_entries = []
+    cap_entries = []
+    for fr in res.files:
+        if fr.name == "overrides.yaml":
+            price_entries = fr.info.get("price_overrides_entries", []) or []
+        elif fr.name == "capacity_overrides.yaml":
+            cap_entries = fr.info.get("capacity_overrides_entries", []) or []
+    if price_entries or cap_entries:
+        lines.append("")
+        lines.append("Overrides Applied:")
+        if price_entries:
+            lines.append("- prices:")
+            for e in price_entries:
+                exp = e.get("expires_on")
+                expired = e.get("expired")
+                suffix = " (expired)" if expired else ""
+                lines.append(f"  - {e.get('sku')}: expires_on={exp}{suffix}")
+        if cap_entries:
+            lines.append("- capacity:")
+            for e in cap_entries:
+                exp = e.get("expires_on")
+                expired = e.get("expired")
+                tps = e.get("tps_override_tokens_per_sec")
+                gpu = e.get("preferred_gpu")
+                suffix = " (expired)" if expired else ""
+                lines.append(f"  - {e.get('sku')}: tps={tps} gpu={gpu} expires_on={exp}{suffix}")
     # Errors (only if failed)
     if not res.ok:
         lines.append("")

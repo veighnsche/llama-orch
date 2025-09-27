@@ -13,8 +13,10 @@ from .validate_gpu_rentals import validate as validate_gpu_rentals
 from .validate_oss_models import validate as validate_oss_models
 from .validate_price_sheet import validate as validate_price_sheet
 from .validate_tps_model_gpu import validate as validate_tps_model_gpu
-from .validate_extra_readonly import validate as validate_extra_readonly
 from .validate_scenarios import validate as validate_scenarios
+from .validate_gpu_pricing import validate as validate_gpu_pricing
+from .validate_overrides import validate as validate_overrides
+from .validate_capacity_overrides import validate as validate_capacity_overrides
 
 
 def _cross_file_warnings(reports: Dict[str, FileReport]) -> List[str]:
@@ -63,7 +65,9 @@ def run_preflight(inputs_dir: Path | None = None) -> PreflightResult:
         validate_price_sheet,
         validate_tps_model_gpu,
         validate_scenarios,
-        validate_extra_readonly,
+        validate_gpu_pricing,
+        validate_capacity_overrides,
+        validate_overrides,
     ]
     reports: Dict[str, FileReport] = {}
     files: List[FileReport] = []

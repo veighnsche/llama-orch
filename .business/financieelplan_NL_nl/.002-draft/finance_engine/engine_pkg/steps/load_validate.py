@@ -12,12 +12,12 @@ from ..ports import ValidatePort, get_default_validator
 from ...types.inputs import Config, Costs, Lending
 
 
-def load_inputs() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+def load_inputs() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
     """
     Load all validated domain inputs. extra.yaml is deprecated and not loaded.
 
     Returns:
-      config, costs, lending, price_sheet, gpu_rentals, tps_model_gpu, scenarios, gpu_pricing, overrides
+      config, costs, lending, price_sheet, gpu_rentals, tps_model_gpu, scenarios, gpu_pricing, capacity_overrides, overrides
     """
     config = load_yaml(INPUTS / "config.yaml")
     costs = load_yaml(INPUTS / "costs.yaml")
@@ -27,8 +27,9 @@ def load_inputs() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], pd.Da
     tps_df = read_csv(INPUTS / "tps_model_gpu.csv")
     scenarios = load_yaml(INPUTS / "scenarios.yaml") if (INPUTS / "scenarios.yaml").exists() else {}
     gpu_pricing = load_yaml(INPUTS / "gpu_pricing.yaml") if (INPUTS / "gpu_pricing.yaml").exists() else {}
+    capacity_overrides = load_yaml(INPUTS / "capacity_overrides.yaml") if (INPUTS / "capacity_overrides.yaml").exists() else {}
     overrides = load_yaml(INPUTS / "overrides.yaml") if (INPUTS / "overrides.yaml").exists() else {}
-    return config, costs, lending, price_sheet, gpu_df, tps_df, scenarios, gpu_pricing, overrides
+    return config, costs, lending, price_sheet, gpu_df, tps_df, scenarios, gpu_pricing, capacity_overrides, overrides
 
 
 def write_run_summary() -> Dict[str, Any]:

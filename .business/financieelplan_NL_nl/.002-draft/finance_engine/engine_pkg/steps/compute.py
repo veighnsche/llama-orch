@@ -8,13 +8,13 @@ from ...compute.scenarios import compute_public_scenarios
 from ...compute.private_tap import compute_private_tap_economics
 from ...compute.break_even import compute_break_even
 from ...compute.loans import Loan, flat_interest_schedule, loan_totals
-from ...types.inputs import Config, Extra, Lending
+from ...types.inputs import Config, Lending
 from ...utils.coerce import get, get_float, safe_float, pct_to_fraction
 
 
-def _compute_model_block(*, config: Config, extra: Extra, price_sheet: pd.DataFrame, gpu_df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def _compute_model_block(*, config: Config, price_sheet: pd.DataFrame, gpu_df: pd.DataFrame, tps_df: pd.DataFrame, scenarios: Dict[str, Any], overrides: Dict[str, Any], capacity_overrides: Dict[str, Any]) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Compute base model economics and a public-only subset DataFrame."""
-    model_df = compute_model_economics(cfg=config, extra=extra, price_sheet=price_sheet, gpu_df=gpu_df)
+    model_df = compute_model_economics(cfg=config, price_sheet=price_sheet, gpu_df=gpu_df, tps_df=tps_df, scenarios=scenarios, overrides=overrides, capacity_overrides=capacity_overrides)
 
     # Derived columns and sanitation
     def gm_pct(row):
@@ -40,20 +40,20 @@ def _compute_model_block(*, config: Config, extra: Extra, price_sheet: pd.DataFr
     return model_df, pub_df
 
 
-def _finance_knobs(*, config: Config, extra: Extra) -> Tuple[float, Tuple[float, float, float], Dict[str, Any]]:
+def _finance_knobs(*, config: Config, scenarios: Dict[str, Any]) -> Tuple[float, Tuple[float, float, float], Dict[str, Any]]:
     marketing_pct = pct_to_fraction(get(config, ["finance", "marketing_allocation_pct_of_inflow"], 0.0), 0.0)
-    worst = get_float(extra, ["scenarios", "monthly", "worst_m_tokens"], 1.0)
-    base = get_float(extra, ["scenarios", "monthly", "base_m_tokens"], 5.0)
-    best = get_float(extra, ["scenarios", "monthly", "best_m_tokens"], 15.0)
-    per_model_mix = extra.get("per_model_mix", {})  # free-form map
+    worst = get_float(scenarios, ["monthly", "worst_m_tokens"], 1.0)
+    base = get_float(scenarios, ["monthly", "base_m_tokens"], 5.0)
+    best = get_float(scenarios, ["monthly", "best_m_tokens"], 15.0)
+    per_model_mix = scenarios.get("per_model_mix", {})  # free-form map
     return marketing_pct, (worst, base, best), per_model_mix
 
 
-def _loan_and_fixed(*, config: Config, lending: Lending, extra: Extra) -> Tuple[Loan, float, float, float, float, float, float]:
+def _loan_and_fixed(*, config: Config, lending: Lending) -> Tuple[Loan, float, float, float, float, float, float]:
     # Loan and fixed
-    loan_amount = safe_float(get(lending, ["amount_eur"], get(extra, ["loan", "amount_eur"], 30000.0)), 30000.0)
-    loan_term = int(safe_float(get(lending, ["term_months"], get(extra, ["loan", "term_months"], 60.0)), 60.0))
-    loan_rate = safe_float(get(lending, ["interest_rate_pct"], get(extra, ["loan", "interest_rate_pct"], 9.95)), 9.95)
+    loan_amount = safe_float(get(lending, ["amount_eur"], 30000.0), 30000.0)
+    loan_term = int(safe_float(get(lending, ["term_months"], 60.0), 60.0))
+    loan_rate = safe_float(get(lending, ["interest_rate_pct"], 9.95), 9.95)
     loan_obj = Loan(
         principal_eur=loan_amount,
         annual_rate_pct=loan_rate,
@@ -84,11 +84,11 @@ def _compute_public_block(
     )
 
 
-def _compute_private_block(*, config: Config, extra: Extra, gpu_df: pd.DataFrame) -> Tuple[pd.DataFrame, float, float, float, Dict[str, Any]]:
+def _compute_private_block(*, config: Config, gpu_df: pd.DataFrame, gpu_pricing: Dict[str, Any]) -> Tuple[pd.DataFrame, float, float, float, Dict[str, Any]]:
     eur_usd = safe_float(get(config, ["fx", "eur_usd_rate"]), 1.08)
     fx_buffer_pct = safe_float(get(config, ["pricing_inputs", "fx_buffer_pct"]), 0.0)
     private_markup_pct = safe_float(get(config, ["pricing_inputs", "private_tap_default_markup_over_provider_cost_pct"]), 50.0)
-    per_gpu_markup = get(extra, ["pricing_inputs", "private_tap_markup_by_gpu"], {}) or {}
+    per_gpu_markup = get(gpu_pricing, ["private_tap_markup_by_gpu"], {}) or {}
     private_df = compute_private_tap_economics(
         gpu_df,
         eur_usd_rate=eur_usd,
@@ -106,16 +106,20 @@ def _compute_break_even_block(*, fixed_total_with_loan: float, public_tpl: Dict[
 def compute_all(
     *,
     config: Config,
-    extra: Extra,
     lending: Lending,
     price_sheet: pd.DataFrame,
     gpu_df: pd.DataFrame,
+    tps_df: pd.DataFrame,
+    scenarios: Dict[str, Any],
+    gpu_pricing: Dict[str, Any],
+    overrides: Dict[str, Any],
+    capacity_overrides: Dict[str, Any],
 ) -> Dict[str, Any]:
     # Model block
-    model_df, pub_df = _compute_model_block(config=config, extra=extra, price_sheet=price_sheet, gpu_df=gpu_df)
+    model_df, pub_df = _compute_model_block(config=config, price_sheet=price_sheet, gpu_df=gpu_df, tps_df=tps_df, scenarios=scenarios, overrides=overrides, capacity_overrides=capacity_overrides)
 
     # Finance knobs
-    marketing_pct, worst_base_best, per_model_mix = _finance_knobs(config=config, extra=extra)
+    marketing_pct, worst_base_best, per_model_mix = _finance_knobs(config=config, scenarios=scenarios)
 
     # Loan and fixed
     (
@@ -126,7 +130,7 @@ def compute_all(
         fixed_personal,
         fixed_business,
         fixed_total_with_loan,
-    ) = _loan_and_fixed(config=config, lending=lending, extra=extra)
+    ) = _loan_and_fixed(config=config, lending=lending)
 
     # Public scenarios
     public_df, public_tpl = _compute_public_block(
@@ -139,7 +143,7 @@ def compute_all(
 
     # Private economics
     private_df, eur_usd, fx_buffer_pct, private_markup_pct, per_gpu_markup = _compute_private_block(
-        config=config, extra=extra, gpu_df=gpu_df
+        config=config, gpu_df=gpu_df, gpu_pricing=gpu_pricing
     )
     # Break-even
     be = _compute_break_even_block(

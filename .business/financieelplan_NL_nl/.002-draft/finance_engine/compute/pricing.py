@@ -6,30 +6,8 @@ import math
 import pandas as pd
 
 
-DEFAULT_TPS = {
-    "Llama-3.1-8B": 35,
-    "Llama-3.1-70B": 10,
-    "Mixtral-8x7B": 12,
-    "Mixtral-8x22B": 8,
-    "Qwen2.5-7B": 35,
-    "Qwen2.5-32B": 15,
-    "Qwen2.5-72B": 10,
-    "Yi-1.5-6B": 35,
-    "Yi-1.5-9B": 30,
-    "Yi-1.5-34B": 15,
-    "DeepSeek-Coder-6.7B": 30,
-    "DeepSeek-Coder-33B": 14,
-    "DeepSeek-Coder-V2-16B": 18,
-    "DeepSeek-Coder-V2-236B": 9,
-}
-
-
-def _get_fx_and_buffer(cfg: Dict[str, Any], extra: Dict[str, Any]) -> Tuple[float, float]:
-    eur_usd = (
-        extra.get("fx", {}).get("eur_usd_rate")
-        or cfg.get("fx", {}).get("eur_usd_rate")
-        or 1.08
-    )
+def _get_fx_and_buffer(cfg: Dict[str, Any]) -> Tuple[float, float]:
+    eur_usd = cfg.get("fx", {}).get("eur_usd_rate") or 1.08
     buffer_pct = cfg.get("pricing_inputs", {}).get("fx_buffer_pct", 0)
     try:
         buffer_val = float(buffer_pct)
@@ -38,35 +16,59 @@ def _get_fx_and_buffer(cfg: Dict[str, Any], extra: Dict[str, Any]) -> Tuple[floa
     return float(eur_usd), buffer_val
 
 
-def _select_models(extra: Dict[str, Any], price_sheet: pd.DataFrame) -> List[str]:
-    incl = extra.get("include_models") or []
+def _select_models(*, scenarios: Dict[str, Any], price_sheet: pd.DataFrame, overrides: Dict[str, Any]) -> List[str]:
+    incl = scenarios.get("include_skus") or []
     if incl:
         return [str(m) for m in incl]
-    # Fallback to overrides or price_sheet SKUs
-    overrides = extra.get("price_overrides", {})
-    if overrides:
-        return list(overrides.keys())
+    ov = overrides.get("price_overrides", {}) if isinstance(overrides, dict) else {}
+    if ov:
+        return list(ov.keys())
     if "sku" in price_sheet.columns:
         return price_sheet["sku"].astype(str).unique().tolist()
     return []
 
 
-def _model_tps(model: str, extra: Dict[str, Any]) -> float:
-    tps_map = extra.get("assumed_tps", {})
-    if model in tps_map:
-        node = tps_map[model]
-        if isinstance(node, dict):
-            if "default" in node:
-                return float(node["default"]) or DEFAULT_TPS.get(model, 20.0)
+def _normalize_model_name(name: str) -> str:
+    # Rough normalization to connect tps_model_gpu.csv model_name and price_sheet sku
+    s = str(name).replace("Instruct", "").strip()
+    s = s.replace("/", " ")
+    s = s.replace(".", "-")
+    s = "-".join(s.split())
+    return s
+
+
+def _model_tps(model: str, tps_df: pd.DataFrame, capacity_overrides: Dict[str, Any]) -> float:
+    # capacity overrides precedence if provided
+    ov = capacity_overrides.get("capacity_overrides", {}) if isinstance(capacity_overrides, dict) else {}
+    node = ov.get(model)
+    if isinstance(node, dict) and node.get("tps_override_tokens_per_sec") is not None:
         try:
-            return float(node)  # if scalar
+            return float(node.get("tps_override_tokens_per_sec"))
         except Exception:
             pass
-    return DEFAULT_TPS.get(model, 20.0)
+    if tps_df is None or tps_df.empty:
+        return 20.0
+    norm = _normalize_model_name
+    # Try to match by normalized model names
+    mask = tps_df["model_name"].astype(str).map(norm) == norm(model)
+    sub = tps_df[mask]
+    if sub.empty:
+        return 20.0
+    try:
+        vals = pd.to_numeric(sub["throughput_tokens_per_sec"], errors="coerce").dropna()
+        if vals.empty:
+            return 20.0
+        return float(vals.median())
+    except Exception:
+        return 20.0
 
 
-def _model_gpu(model: str, extra: Dict[str, Any]) -> Optional[str]:
-    return extra.get("median_gpu_for_model", {}).get(model)
+def _model_gpu(model: str, capacity_overrides: Dict[str, Any]) -> Optional[str]:
+    ov = capacity_overrides.get("capacity_overrides", {}) if isinstance(capacity_overrides, dict) else {}
+    node = ov.get(model)
+    if isinstance(node, dict) and node.get("preferred_gpu"):
+        return str(node.get("preferred_gpu"))
+    return None
 
 
 def _find_gpu_row(gpu_df: pd.DataFrame, gpu_name: Optional[str]) -> Tuple[float, float, float, str]:
@@ -87,10 +89,13 @@ def _find_gpu_row(gpu_df: pd.DataFrame, gpu_name: Optional[str]) -> Tuple[float,
     return usd_min, usd_med, usd_max, any_gpu
 
 
-def _sell_per_1m(model: str, extra: Dict[str, Any], price_sheet: pd.DataFrame) -> Optional[float]:
-    ov = extra.get("price_overrides", {}).get(model)
+def _sell_per_1m(model: str, *, price_sheet: pd.DataFrame, overrides: Dict[str, Any]) -> Optional[float]:
+    ov = overrides.get("price_overrides", {}).get(model) if isinstance(overrides, dict) else None
     if ov and isinstance(ov, dict) and "unit_price_eur_per_1k_tokens" in ov:
-        return float(ov["unit_price_eur_per_1k_tokens"]) * 1000.0
+        try:
+            return float(ov["unit_price_eur_per_1k_tokens"]) * 1000.0
+        except Exception:
+            pass
     # Fallback to price_sheet if has a matching sku
     if "sku" in price_sheet.columns and "unit_price_eur_per_1k_tokens" in price_sheet.columns:
         m = price_sheet[price_sheet["sku"].astype(str) == model]
@@ -104,20 +109,41 @@ def _sell_per_1m(model: str, extra: Dict[str, Any], price_sheet: pd.DataFrame) -
     return None
 
 
-def compute_model_economics(*, cfg: Dict[str, Any], extra: Dict[str, Any], price_sheet: pd.DataFrame, gpu_df: pd.DataFrame) -> pd.DataFrame:
+def compute_model_economics(
+    *,
+    cfg: Dict[str, Any],
+    price_sheet: pd.DataFrame,
+    gpu_df: pd.DataFrame,
+    tps_df: pd.DataFrame | None = None,
+    scenarios: Dict[str, Any] | None = None,
+    overrides: Dict[str, Any] | None = None,
+    capacity_overrides: Dict[str, Any] | None = None,
+    # Back-compat: older tests passed `extra` with include_models, price_overrides, median_gpu_for_model
+    extra: Dict[str, Any] | None = None,
+) -> pd.DataFrame:
     """Compute provider cost per 1M tokens and sell price per 1M for each model.
     Returns a DataFrame with columns:
       model, gpu, tps, eur_hr_min, eur_hr_med, eur_hr_max,
       cost_per_1m_min, cost_per_1m_med, cost_per_1m_max,
       sell_per_1m_eur, margin_per_1m_min, margin_per_1m_med, margin_per_1m_max
     """
-    eur_usd_rate, buffer_pct = _get_fx_and_buffer(cfg, extra)
-    models = _select_models(extra, price_sheet)
+    # Back-compat mapping from `extra` if provided
+    if extra is not None:
+        scenarios = scenarios or {"include_skus": extra.get("include_models", [])}
+        overrides = overrides or {"price_overrides": extra.get("price_overrides", {})}
+        # capacity_overrides not available historically; ignore median_gpu_for_model here
+    scenarios = scenarios or {}
+    overrides = overrides or {}
+    capacity_overrides = capacity_overrides or {}
+    tps_df = tps_df if tps_df is not None else pd.DataFrame()
+
+    eur_usd_rate, buffer_pct = _get_fx_and_buffer(cfg)
+    models = _select_models(scenarios=scenarios, price_sheet=price_sheet, overrides=overrides)
     rows: List[Dict[str, Any]] = []
     for model in models:
-        tps = _model_tps(model, extra)
+        tps = _model_tps(model, tps_df, capacity_overrides)
         tokens_per_hour = tps * 3600.0
-        usd_min, usd_med, usd_max, matched_gpu = _find_gpu_row(gpu_df, _model_gpu(model, extra))
+        usd_min, usd_med, usd_max, matched_gpu = _find_gpu_row(gpu_df, _model_gpu(model, capacity_overrides))
 
         # USD/hr → EUR/hr with buffer
         def to_eur_hr(usd_hr: float) -> float:
@@ -137,7 +163,7 @@ def compute_model_economics(*, cfg: Dict[str, Any], extra: Dict[str, Any], price
         c_med = cost_per_1m(eur_hr_med)
         c_max = cost_per_1m(eur_hr_max)
 
-        sell_1m = _sell_per_1m(model, extra, price_sheet) or 0.0
+        sell_1m = _sell_per_1m(model, price_sheet=price_sheet, overrides=overrides) or 0.0
         margin_min = max(0.0, sell_1m - c_min)
         margin_med = max(0.0, sell_1m - c_med)
         margin_max = max(0.0, sell_1m - c_max)

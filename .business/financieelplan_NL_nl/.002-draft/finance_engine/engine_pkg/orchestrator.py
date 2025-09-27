@@ -6,7 +6,7 @@ import pandas as pd
 from ..config import OUTPUTS
 from ..io.writer import write_text, ensure_dir
 from .ports import RenderPort, ValidatePort
-from ..types.inputs import Config, Costs, Lending, Extra
+from ..types.inputs import Config, Costs, Lending
 from .validation.preflight import run_preflight, build_preflight_markdown
 
 # Step modules (keep runner thin and modular)
@@ -22,7 +22,7 @@ from .steps.context import build_context as _build_context
 from .steps.render import render_plan as _render_plan
 
 
-def load_inputs() -> Tuple[Config, Costs, Lending, Extra, pd.DataFrame, pd.DataFrame]:
+def load_inputs() -> Tuple[Config, Costs, Lending, pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
     return _load_inputs()
 
 
@@ -43,13 +43,17 @@ def validate_and_write_report(
 
 # Pipeline steps to be filled in small patches
 
-def compute_all(config: Config, extra: Extra, lending: Lending, price_sheet: pd.DataFrame, gpu_df: pd.DataFrame) -> Dict[str, Any]:
+def compute_all(config: Config, lending: Lending, price_sheet: pd.DataFrame, gpu_df: pd.DataFrame, *, tps_df: pd.DataFrame, scenarios: Dict[str, Any], gpu_pricing: Dict[str, Any], overrides: Dict[str, Any], capacity_overrides: Dict[str, Any]) -> Dict[str, Any]:
     return _compute_all(
         config=config,
-        extra=extra,
         lending=lending,
         price_sheet=price_sheet,
         gpu_df=gpu_df,
+        tps_df=tps_df,
+        scenarios=scenarios,
+        gpu_pricing=gpu_pricing,
+        overrides=overrides,
+        capacity_overrides=capacity_overrides,
     )
 
 
@@ -61,8 +65,27 @@ def generate_charts(agg: Dict[str, Any]) -> Dict[str, str]:
     return _generate_charts(agg=agg)
 
 
-def build_context(agg: Dict[str, Any], charts: Dict[str, str], config: Config, extra: Extra, lending: Lending) -> Dict[str, Any]:
-    return _build_context(agg=agg, charts=charts, config=config, extra=extra, lending=lending)
+def build_context(agg: Dict[str, Any], charts: Dict[str, str], config: Config, *, overrides: Dict[str, Any], lending: Lending) -> Dict[str, Any]:
+    # Synthesize a minimal extra-like dict for context rendering from domain files
+    extra_ctx: Dict[str, Any] = {
+        "prepaid": {
+            "min_topup_eur": config.get("prepaid_policy", {}).get("credits", {}).get("min_topup_eur", 25),
+            "max_topup_eur": config.get("prepaid_policy", {}).get("credits", {}).get("max_topup_eur", 10000),
+            "expiry_months": config.get("prepaid_policy", {}).get("credits", {}).get("expiry_months", 12),
+            "non_refundable": config.get("prepaid_policy", {}).get("credits", {}).get("non_refundable", True),
+            "auto_refill_default_enabled": config.get("prepaid_policy", {}).get("credits", {}).get("auto_refill_default_enabled", False),
+            "auto_refill_cap_eur": config.get("prepaid_policy", {}).get("credits", {}).get("auto_refill_cap_eur", 200),
+            "private_tap": {
+                "billing_unit_minutes": config.get("prepaid_policy", {}).get("private_tap", {}).get("billing_unit_minutes", 60),
+            },
+        },
+        "private": {
+            "management_fee_eur_per_month": config.get("prepaid_policy", {}).get("private_tap", {}).get("management_fee_eur_per_month", None),
+        },
+        "runway_target_months": config.get("finance", {}).get("runway_target_months", 12),
+        "price_overrides": overrides.get("price_overrides", {}),
+    }
+    return _build_context(agg=agg, charts=charts, config=config, extra=extra_ctx, lending=lending)
 
 
 def render_plan(context: Dict[str, Any], *, render_port: Optional[RenderPort] = None) -> None:
@@ -79,15 +102,36 @@ def run_pipeline(*, render_port: Optional[RenderPort] = None, validate_port: Opt
         # Fail-fast before any computations
         return 1
 
-    config, costs, lending, extra, price_sheet, gpu_df = load_inputs()
+    (
+        config,
+        costs,
+        lending,
+        price_sheet,
+        gpu_df,
+        tps_df,
+        scenarios,
+        gpu_pricing,
+        capacity_overrides,
+        overrides,
+    ) = load_inputs()
     write_run_summary()
     has_errors = validate_and_write_report(config, costs, lending, price_sheet, validate_port=validate_port)
     if has_errors:
         return 1
-    agg = compute_all(config, extra, lending, price_sheet, gpu_df)
+    agg = compute_all(
+        config,
+        lending,
+        price_sheet,
+        gpu_df,
+        tps_df=tps_df,
+        scenarios=scenarios,
+        gpu_pricing=gpu_pricing,
+        overrides=overrides,
+        capacity_overrides=capacity_overrides,
+    )
     write_artifacts(config, agg)
     charts = generate_charts(agg)
-    ctx = build_context(agg, charts, config, extra, lending)
+    ctx = build_context(agg=agg, charts=charts, config=config, overrides=overrides, lending=lending, scenarios=scenarios)
     render_plan(context=ctx, render_port=render_port)
     # Legacy shim for older tests
     write_text(OUTPUTS / "template_filled.md", "Generated by engine v1\n")
