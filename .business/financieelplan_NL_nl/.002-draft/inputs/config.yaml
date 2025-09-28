@@ -19,8 +19,8 @@ pricing_inputs:
   private_tap_default_markup_over_provider_cost_pct: 50
   fx_buffer_pct: 5
   # Conservative placeholders until telemetry & orchestration utilization are measured
-  effective_utilization_pct: 10   # estimated; fraction of peak throughput achieved in production
-  non_gpu_overhead_multiplier_on_cost: 10  # estimated; includes infra, orchestration, idle buffers
+  effective_utilization_pct: 25   # estimated; fraction of peak throughput achieved in production
+  non_gpu_overhead_multiplier_on_cost: 2  # estimated; includes infra, orchestration, idle buffers
 catalog:
   models_csv_path: oss_models.csv
   gpus_csv_path: gpu_rentals.csv

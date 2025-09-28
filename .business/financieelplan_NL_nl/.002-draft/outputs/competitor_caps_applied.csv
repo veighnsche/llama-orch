@@ -1,4 +1,4 @@
 model,sell_per_1m_eur,competitor_cap_applied
-Llama-3-1-8B,1200.0,False
-Mixtral-8x7B,2000.0,False
-Qwen2-5-7B,1100.0,False
+Llama-3-1-8B,60.0,False
+Mixtral-8x7B,480.0,False
+Qwen2-5-7B,80.0,False

@@ -24,20 +24,20 @@ public_tap:
     elasticity_epsilon: 1.8
     # Laat leeg om target-marge (onafgerond) als referentie te nemen
     reference_per_1k_tokens: null
-    # Realistische band voor publiek (EUR per 1k tokens)
-    bounds_per_1k: [0.12, 0.12]
+    # Realistische band voor publiek (EUR per 1k tokens); per-SKU overrides below are preferred
+    bounds_per_1k: null
     # Resolutie van de grid search (EUR per 1k tokens)
     grid_step_per_1k: 0.005
     # Per-SKU overrides (realistische marktbanden per model)
     per_sku:
       Llama-3-1-8B:
-        bounds_per_1k: [1.20, 1.60]
+        bounds_per_1k: [0.06, 0.12]
         elasticity_epsilon: 1.8
       Qwen2-5-7B:
-        bounds_per_1k: [1.10, 1.50]
+        bounds_per_1k: [0.05, 0.10]
         elasticity_epsilon: 1.8
       Mixtral-8x7B:
-        bounds_per_1k: [2.00, 2.40]
+        bounds_per_1k: [0.30, 0.50]
         elasticity_epsilon: 1.8
 
 notes:

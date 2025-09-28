@@ -197,20 +197,20 @@ def compute_all(
             acquisition=acquisition,
             funnel_overrides=funnel_overrides,
             case="base",
-            cpc_slope_per_1k_eur=cpc_slope,
+            cpc_slope_per_extra_1k_eur=cpc_slope,
         )
         # Also compute worst and best snapshots
         funnel_details_worst = simulate_funnel_details(
             acquisition=acquisition,
             funnel_overrides=funnel_overrides,
             case="worst",
-            cpc_slope_per_1k_eur=cpc_slope,
+            cpc_slope_per_extra_1k_eur=cpc_slope,
         )
         funnel_details_best = simulate_funnel_details(
             acquisition=acquisition,
             funnel_overrides=funnel_overrides,
             case="best",
-            cpc_slope_per_1k_eur=cpc_slope,
+            cpc_slope_per_extra_1k_eur=cpc_slope,
         )
 
     # Compute public scenarios (optionally with marketing overrides)

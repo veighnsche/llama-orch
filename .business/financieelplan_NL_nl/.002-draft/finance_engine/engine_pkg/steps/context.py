@@ -203,7 +203,11 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
         "acquisition": {
             "driver": agg.get("scenarios_driver"),
             "funnel_base": agg.get("funnel_base") or {},
+            "funnel_worst": agg.get("funnel_worst") or {},
+            "funnel_best": agg.get("funnel_best") or {},
             "unit_economics": agg.get("unit_economics") or {},
+            "unit_economics_worst": agg.get("unit_economics_worst") or {},
+            "unit_economics_best": agg.get("unit_economics_best") or {},
         },
         "prepaid": {
             "min_topup_eur": config.get("prepaid_policy", {}).get("credits", {}).get("min_topup_eur", 25),

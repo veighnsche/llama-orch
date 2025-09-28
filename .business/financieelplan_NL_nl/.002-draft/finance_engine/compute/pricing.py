@@ -110,37 +110,39 @@ def _pick_best_gpu_and_tps(
     def to_eur_hr(usd_hr: float) -> float:
         return (float(usd_hr) / float(eur_usd_rate)) * (1.0 + float(buffer_pct) / 100.0)
 
+    # Decide a single allowed measurement type across all GPUs for this model
+    try:
+        mt_all = sub["measurement_type"].astype(str).str.lower().unique().tolist()
+    except Exception:
+        mt_all = []
+    if "single_stream" in mt_all:
+        allowed_mt = "single_stream"
+    elif "per_user_stream" in mt_all:
+        allowed_mt = "per_user_stream"
+    else:
+        allowed_mt = "aggregate"
+
     # Group by GPU in TPS and evaluate cost per 1M for each
     best: Optional[Tuple[str, float, float, float, float, float]] = None  # (gpu, tps, eur_hr_min, eur_hr_med, eur_hr_max, c_med)
     for gpu_name in sorted(set(sub["gpu"].dropna().astype(str))):
         # If preferred_gpu is set and doesn't match (substring), skip
         if preferred_gpu and preferred_gpu.lower() not in gpu_name.lower():
             continue
-        # TPS: use override if provided; otherwise prefer conservative measurements and normalize to per-GPU
+        # TPS: use override if provided; otherwise use allowed measurement type and normalize to per-GPU
         s_gpu = sub[sub["gpu"].astype(str) == gpu_name].copy()
         if tps_override is None:
-            # Prefer single_stream, then per_user_stream, then aggregate
-            pref_types = ["single_stream", "per_user_stream", "aggregate"]
-            tps = None
-            for mt in pref_types:
-                s_mt = s_gpu[s_gpu["measurement_type"].astype(str).str.lower() == mt]
-                if s_mt.empty:
-                    continue
-                # Normalize per GPU using gpu_count if present
-                try:
-                    per_gpu_series = pd.to_numeric(s_mt["throughput_tokens_per_sec"], errors="coerce").fillna(0.0) / s_mt.get("gpu_count", 1).replace(0, 1)
-                except Exception:
-                    per_gpu_series = pd.to_numeric(s_mt["throughput_tokens_per_sec"], errors="coerce").fillna(0.0)
-                per_gpu_series = per_gpu_series[pd.to_numeric(per_gpu_series, errors="coerce") > 0]
-                if not per_gpu_series.empty:
-                    tps = float(per_gpu_series.median())
-                    break
-            if tps is None:
-                # Fallback to any available measurement without normalization
-                tps_vals = pd.to_numeric(s_gpu["throughput_tokens_per_sec"], errors="coerce").dropna()
-                if tps_vals.empty:
-                    continue
-                tps = float(tps_vals.median())
+            s_mt = s_gpu[s_gpu["measurement_type"].astype(str).str.lower() == allowed_mt]
+            if s_mt.empty:
+                continue
+            # Normalize per GPU using gpu_count if present
+            try:
+                per_gpu_series = pd.to_numeric(s_mt["throughput_tokens_per_sec"], errors="coerce").fillna(0.0) / s_mt.get("gpu_count", 1).replace(0, 1)
+            except Exception:
+                per_gpu_series = pd.to_numeric(s_mt["throughput_tokens_per_sec"], errors="coerce").fillna(0.0)
+            per_gpu_series = per_gpu_series[pd.to_numeric(per_gpu_series, errors="coerce") > 0]
+            if per_gpu_series.empty:
+                continue
+            tps = float(per_gpu_series.median())
         else:
             tps = float(tps_override)
         if tps <= 0:
