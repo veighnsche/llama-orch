@@ -14,7 +14,7 @@ Files:
 - capacity_overrides.yaml: ✓ (0 rows/keys)
 - overrides.yaml: ✓
 - acquisition.yaml: ✓ (2 rows/keys)
-- funnel_overrides.yaml: ✓
+- funnel_overrides.yaml: ✓ (3 rows/keys)
 - private_sales.yaml: ✓ (7 rows/keys)
 - seasonality.yaml: ✓ (12 rows/keys)
 - timeseries.yaml: ✓ (4 rows/keys)
@@ -27,4 +27,4 @@ Warnings:
 - units: public_tap unit(s) observed: 1k_tokens
 # Run Summary
 - Engine version: v1.0.0
-- Run at (UTC): 2025-09-27T22:21:58Z
+- Run at (UTC): 2025-09-28T00:09:57Z

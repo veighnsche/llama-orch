@@ -20,6 +20,7 @@ def compute_unit_economics(
     acquisition: Dict[str, Any],
     public_tpl: Dict[str, Any],
     funnel_details_base: Dict[str, float],
+    overrides: Dict[str, Any] | None = None,
 ) -> Dict[str, float]:
     """
     Compute simple unit economics from acquisition inputs and blended public pricing.
@@ -37,9 +38,42 @@ def compute_unit_economics(
     acq = acquisition or {}
     g = acq.get("global") or acq.get("global_") or {}
 
+    # If no top-level global, average segment globals as a fallback
+    if not g and isinstance(acq.get("segments"), dict) and acq["segments"]:
+        total_paid = 0.0
+        total_free = 0.0
+        total_fee = 0.0
+        total_churn = 0.0
+        n = 0
+        for _name, node in (acq.get("segments") or {}).items():
+            if not isinstance(node, dict):
+                continue
+            gl = node.get("global") or {}
+            if isinstance(gl, dict) and gl:
+                total_paid += _num(gl.get("avg_tokens_paid_per_user_per_month"), 0.0)
+                total_free += _num(gl.get("avg_tokens_free_per_user_per_month"), 0.0)
+                total_fee += _num(gl.get("payment_fee_pct_of_revenue"), 0.0)
+                total_churn += _num(gl.get("churn_pct_per_month"), 0.0)
+                n += 1
+        if n > 0:
+            g = {
+                "avg_tokens_paid_per_user_per_month": total_paid / n,
+                "avg_tokens_free_per_user_per_month": total_free / n,
+                "payment_fee_pct_of_revenue": total_fee / n,
+                "churn_pct_per_month": total_churn / n,
+            }
+
     avg_paid_tokens = _num(g.get("avg_tokens_paid_per_user_per_month"), 0.0)
     fee_pct = _num(g.get("payment_fee_pct_of_revenue"), 0.0) / 100.0
     churn_pct = _num(g.get("churn_pct_per_month"), 0.0) / 100.0
+    # Apply overrides if provided
+    if overrides:
+        arpu_mult = _num(overrides.get("arpu_multiplier"), 1.0)
+        if arpu_mult and arpu_mult > 0:
+            avg_paid_tokens *= arpu_mult
+        churn_override_pct = _num(overrides.get("churn_override_pct"), 0.0)
+        if churn_override_pct > 0:
+            churn_pct = churn_override_pct / 100.0
 
     blended = public_tpl.get("blended", {}) if isinstance(public_tpl, dict) else {}
     sell_1m = _num(blended.get("sell_per_1m_eur"), 0.0)

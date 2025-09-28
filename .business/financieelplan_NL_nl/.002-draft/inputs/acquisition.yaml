@@ -4,7 +4,7 @@ segments:
       avg_tokens_paid_per_user_per_month: 1500000
       avg_tokens_free_per_user_per_month: 200000
       churn_pct_per_month: 4
-      payment_fee_pct_of_revenue: 2.9
+      payment_fee_pct_of_revenue: 1.4
     channels:
       - name: content
         budget_eur: 500
@@ -17,7 +17,7 @@ segments:
       avg_tokens_paid_per_user_per_month: 1500000
       avg_tokens_free_per_user_per_month: 200000
       churn_pct_per_month: 4
-      payment_fee_pct_of_revenue: 2.9
+      payment_fee_pct_of_revenue: 1.4
     channels:
       - name: search_ads
         budget_eur: 1500
@@ -30,12 +30,12 @@ segments:
       avg_tokens_paid_per_user_per_month: 1500000
       avg_tokens_free_per_user_per_month: 200000
       churn_pct_per_month: 4
-      payment_fee_pct_of_revenue: 2.9
+      payment_fee_pct_of_revenue: 1.4
     channels: []
   compliance:
     global:
       avg_tokens_paid_per_user_per_month: 1500000
       avg_tokens_free_per_user_per_month: 200000
       churn_pct_per_month: 4
-      payment_fee_pct_of_revenue: 2.9
+      payment_fee_pct_of_revenue: 1.4
     channels: []

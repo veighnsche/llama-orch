@@ -60,7 +60,7 @@ flowchart TD
 ### 1.3 Price Inputs
 
 - Public Tap prijzen: per model afgeleid uit kosten (TPS × GPU €/uur met FX buffer) en `inputs/pricing_policy.yaml` (doelen, afronding).  
-  - Voorbeeld: Llama 3.1 8B → Verkoopprijs ≈ €N/A / 1k tokens  
+  - Voorbeeld: Llama 3.1 8B → Verkoopprijs ≈ €1.2 / 1k tokens  
 - Private Tap markup target: **50.0%** boven provider GPU-kost (optioneel fijnmazig via `gpu_pricing.yaml`)  
 - Management fee: **€99.0 / maand**  
 
@@ -137,11 +137,11 @@ For each model offered on the Public Tap:
 
 | Metric | Value |
 |--------|------:|
-| ARPU Revenue (€/month) | €0.0 |
-| ARPU Contribution (€/month) | €0.0 |
+| ARPU Revenue (€/month) | €2149.99 |
+| ARPU Contribution (€/month) | €2113.02 |
 | CAC (blended) | €256.41 |
-| LTV | N/A |
-| Payback (months) | N/A |
+| LTV | €52825.38 |
+| Payback (months) | 0.1 |
 
 
 ![Unit Economics](charts/unit_economics.png)
@@ -151,10 +151,10 @@ For each model offered on the Public Tap:
 
 | Metric | Value |
 |--------|------:|
-| MRR (new cohort) | €0.0 |
-| MRR (steady-state) | €0.0 |
-| ARR (steady-state) | €0.0 |
-| Active Paid (steady-state, users) | 0.0 |
+| MRR (new cohort) | €16769.96 |
+| MRR (steady-state) | €419249.02 |
+| ARR (steady-state) | €5030988.3 |
+| Active Paid (steady-state, users) | 195.0 |
 
 
 ![MRR/ARR Snapshot](charts/mrr_bars.png)
@@ -291,7 +291,7 @@ Python calculates profitability per GPU as follows:
 
 ## 5) Worst/Best Case Projections
 
-Scenarios combine **Public Tap** and **Private Tap** economics.  
+Public-only snapshot for scenarios; Private Tap is shown in the 24-month timeseries.  
 All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 ---
@@ -310,9 +310,9 @@ All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 | Case     | Total Revenue (€) | Total COGS (€) | Gross Margin (€) | Fixed+Loan (€) | Marketing (€) | Net (€) |
 |----------|------------------:|---------------:|-----------------:|---------------:|--------------:|--------:|
-| Worst    |  | 1109.8799999999999 | 342339.72000000003 | 44985.0 | 24000.0 | **273354.72000000003** |
-| Baseline |  | 1109.8799999999999 | 342339.72000000003 | 44985.0 | 24000.0 | **273354.72000000003** |
-| Best     |  | 1109.8799999999999 | 342339.72000000003 | 44985.0 | 24000.0 | **273354.72000000003** |
+| Worst    | 343449.6 | 1109.8799999999999 | 342339.72000000003 | 44985.0 | 24000.0 | **273354.72000000003** |
+| Baseline | 343449.6 | 1109.8799999999999 | 342339.72000000003 | 44985.0 | 24000.0 | **273354.72000000003** |
+| Best     | 343449.6 | 1109.8799999999999 | 342339.72000000003 | 44985.0 | 24000.0 | **273354.72000000003** |
 
 ---
 
@@ -320,9 +320,9 @@ All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 | Case     | Total Revenue (€) | Total COGS (€) | Gross Margin (€) | Fixed+Loan (€) | Marketing (€) | Net (€) |
 |----------|------------------:|---------------:|-----------------:|---------------:|--------------:|--------:|
-| Worst    |  | 5549.4 | 1711698.6 | 224925.0 | 120000.0 | **1366773.6** |
-| Baseline |  | 5549.4 | 1711698.6 | 224925.0 | 120000.0 | **1366773.6** |
-| Best     |  | 5549.4 | 1711698.6 | 224925.0 | 120000.0 | **1366773.6** |
+| Worst    | 1717248.0 | 5549.4 | 1711698.6 | 224925.0 | 120000.0 | **1366773.6** |
+| Baseline | 1717248.0 | 5549.4 | 1711698.6 | 224925.0 | 120000.0 | **1366773.6** |
+| Best     | 1717248.0 | 5549.4 | 1711698.6 | 224925.0 | 120000.0 | **1366773.6** |
 
 ---
 
@@ -468,7 +468,7 @@ This business model is designed to minimize financial risk:
 - **Linear scaling** — each €1 prepaid corresponds to profitable capacity; no over-extension.  
 - **Loan repayment embedded in fixed costs** — €748.75 per month for 60 months is always budgeted.  
 - **FX buffer applied** — protects against USD/EUR currency swings on GPU rentals.  
-- **Marketing spend capped as % of inflow** — prevents runaway acquisition costs.  
+- **Marketing spend capped as % of revenue** — prevents runaway acquisition costs.  
 - **VAT separated** — reserved at collection, ensuring compliance.  
 
 ---
@@ -508,8 +508,8 @@ This business model is designed to minimize financial risk:
 
 ### 9.3 Engine Version
 
-- Finance Engine: vv1.0.0  
-- Last generated: 2025-09-27T22:21:59Z  
+- Finance Engine: v1.0.0  
+- Last generated: 2025-09-27T23:42:48Z  
 
 ---
 

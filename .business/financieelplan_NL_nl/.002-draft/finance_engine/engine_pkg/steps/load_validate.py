@@ -60,7 +60,18 @@ def load_inputs() -> Tuple[
     # Merge competitor caps into pricing policy public_tap from competitor_benchmarks
     try:
         per_sku = competitor_benchmarks.get("per_sku") or []
-        caps = {str(row.get("sku")): float(row.get("eur_per_1k_tokens")) for row in per_sku if isinstance(row, dict) and row.get("sku") and row.get("eur_per_1k_tokens")}
+        raw_caps = {str(row.get("sku")): float(row.get("eur_per_1k_tokens")) for row in per_sku if isinstance(row, dict) and row.get("sku") and row.get("eur_per_1k_tokens")}
+        # Build a normalized-key map alongside originals to improve matching robustness
+        def _norm_cap_key(name: str) -> str:
+            s = str(name).replace("Instruct", "").strip()
+            s = s.replace("/", " ")
+            s = s.replace(".", "-")
+            s = "-".join(s.split())
+            return s
+        caps = dict(raw_caps)
+        for k, v in list(raw_caps.items()):
+            nk = _norm_cap_key(k)
+            caps[nk] = v
         apply_caps = bool((competitor_benchmarks.get("policy") or {}).get("apply_competitor_caps"))
         pp = config.setdefault("pricing_policy", {})
         pt = pp.setdefault("public_tap", {})

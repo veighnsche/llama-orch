@@ -266,6 +266,22 @@ def build_context(*, agg: Dict[str, Any], charts: Dict[str, str], config: Config
             "loan_schedule": loan_table_md,
         },
         "charts": charts,
+        "legend": {
+            "measured": [
+                "gpu_rentals.csv: provider USD/hour",
+                "tps_model_gpu.csv: throughput_tokens_per_sec",
+            ],
+            "policy": [
+                "inputs/config.yaml: prepaid_policy, tax_billing, finance",
+                "inputs/pricing_policy.yaml: public_tap targets, rounding, caps",
+            ],
+            "estimated": [
+                "pricing_inputs.effective_utilization_pct",
+                "pricing_inputs.non_gpu_overhead_multiplier_on_cost",
+                "seasonality.yaml: diminishing_returns (CPC slope)",
+                "funnel_overrides.yaml: scenario multipliers",
+            ],
+        },
     }
 
     return ctx

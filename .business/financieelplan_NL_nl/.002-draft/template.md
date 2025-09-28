@@ -41,7 +41,7 @@ flowchart TD
 ### 1.1 Prepaid Policy
 
 - **Top-up:** min €{{prepaid.min_topup_eur}}, max €{{prepaid.max_topup_eur}}, expiry {{prepaid.expiry_months}} months  
-- **Refunds:** {{prepaid.non_refundable}} (credits are non-refundable, except where legally required)  
+- **Refunds:** Credits are non-refundable, except where legally required (e.g. statutory consumer rights).  
 - **Auto-refill:** default {{prepaid.auto_refill_default_enabled}}, cap €{{prepaid.auto_refill_cap_eur}}  
 - **Private Tap:** prepaid only; billed in {{prepaid.private_tap.billing_unit_minutes}} min blocks  
   - Mgmt fee: €{{private.management_fee_eur_per_month}}/month  
@@ -60,7 +60,7 @@ flowchart TD
 ### 1.3 Price Inputs
 
 - Public Tap prijzen: per model afgeleid uit kosten (TPS × GPU €/uur met FX buffer) en `inputs/pricing_policy.yaml` (doelen, afronding).  
-  - Voorbeeld: Llama 3.1 8B → Verkoopprijs ≈ €{{ pricing.model_prices.get('Llama-3.1-8B', 'N/A') }} / 1k tokens  
+  - Voorbeeld: Llama 3.1 8B → Verkoopprijs ≈ €{{ pricing.model_prices.get('Llama-3-1-8B', 'N/A') }} / 1k tokens  
 - Private Tap markup target: **{{pricing.private_tap_default_markup_over_provider_cost_pct}}%** boven provider GPU-kost (optioneel fijnmazig via `gpu_pricing.yaml`)  
 - Management fee: **€{{private.management_fee_eur_per_month}} / maand**  
 
@@ -80,7 +80,7 @@ flowchart TD
 - VAT: {{tax.vat_standard_rate_pct}}%  
 - EU B2B reverse-charge: {{tax.eu_reverse_charge_enabled}}  
 - Stripe Tax enabled: {{tax.stripe_tax_enabled}}  
-- Revenue recognition: **{{tax.revenue_recognition}}** (prepaid liability until consumed)
+- Revenue recognition: **{{tax.revenue_recognition}}**
 
 ---
 
@@ -131,6 +131,22 @@ For each model offered on the Public Tap:
 ![Funnel (Base Case)]({{ charts.funnel_summary }})
 {% endif %}
 
+#### 2.3.1b Funnel Snapshot — Worst (Conservative)
+
+- **Visits:** {{ acquisition.funnel_worst.visits | default(0) }}  
+- **Signups:** {{ acquisition.funnel_worst.signups | default(0) }}  
+- **Paid New:** {{ acquisition.funnel_worst.paid_new | default(0) }}  
+- **Free New (OSS users):** {{ acquisition.funnel_worst.free_new | default(0) }}  
+- **Marketing (EUR):** €{{ acquisition.funnel_worst.marketing_eur | default(0) }}  
+
+#### 2.3.1c Funnel Snapshot — Best (Optimistic)
+
+- **Visits:** {{ acquisition.funnel_best.visits | default(0) }}  
+- **Signups:** {{ acquisition.funnel_best.signups | default(0) }}  
+- **Paid New:** {{ acquisition.funnel_best.paid_new | default(0) }}  
+- **Free New (OSS users):** {{ acquisition.funnel_best.free_new | default(0) }}  
+- **Marketing (EUR):** €{{ acquisition.funnel_best.marketing_eur | default(0) }}  
+
 #### 2.3.2 Unit Economics
 
 | Metric | Value |
@@ -144,6 +160,28 @@ For each model offered on the Public Tap:
 {% if charts.unit_econ %}
 ![Unit Economics]({{ charts.unit_econ }})
 {% endif %}
+
+#### 2.3.2b Unit Economics — Worst (Conservative)
+
+| Metric | Value |
+|--------|------:|
+| ARPU Revenue (€/month) | €{{ acquisition.unit_economics_worst.arpu_revenue_eur | default(0) }} |
+| ARPU Contribution (€/month) | €{{ acquisition.unit_economics_worst.arpu_contribution_eur | default(0) }} |
+| CAC (blended) | {% if acquisition.unit_economics_worst.cac_eur is not none %}€{{ acquisition.unit_economics_worst.cac_eur }}{% else %}N/A{% endif %} |
+| LTV | {% if acquisition.unit_economics_worst.ltv_eur is not none %}€{{ acquisition.unit_economics_worst.ltv_eur }}{% else %}N/A{% endif %} |
+| Payback (months) | {% if acquisition.unit_economics_worst.payback_months is not none %}{{ acquisition.unit_economics_worst.payback_months }}{% else %}N/A{% endif %} |
+
+#### 2.3.2c Unit Economics — Best (Optimistic)
+
+| Metric | Value |
+|--------|------:|
+| ARPU Revenue (€/month) | €{{ acquisition.unit_economics_best.arpu_revenue_eur | default(0) }} |
+| ARPU Contribution (€/month) | €{{ acquisition.unit_economics_best.arpu_contribution_eur | default(0) }} |
+| CAC (blended) | {% if acquisition.unit_economics_best.cac_eur is not none %}€{{ acquisition.unit_economics_best.cac_eur }}{% else %}N/A{% endif %} |
+| LTV | {% if acquisition.unit_economics_best.ltv_eur is not none %}€{{ acquisition.unit_economics_best.ltv_eur }}{% else %}N/A{% endif %} |
+| Payback (months) | {% if acquisition.unit_economics_best.payback_months is not none %}{{ acquisition.unit_economics_best.payback_months }}{% else %}N/A{% endif %} |
+
+> Notes: Worst/Best zijn conservatieve/optimistische schattingen. Werkelijke waarden worden geüpdatet zodra telemetry beschikbaar is (ARPU/churn/CAC).
 
 #### 2.3.3 MRR/ARR
 
@@ -283,7 +321,7 @@ Python calculates profitability per GPU as follows:
 
 ## 5) Worst/Best Case Projections
 
-Scenarios combine **Public Tap** and **Private Tap** economics.  
+Public-only snapshot for scenarios; Private Tap is shown in the 24-month timeseries.  
 All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 ---
@@ -302,9 +340,9 @@ All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 | Case     | Total Revenue (€) | Total COGS (€) | Gross Margin (€) | Fixed+Loan (€) | Marketing (€) | Net (€) |
 |----------|------------------:|---------------:|-----------------:|---------------:|--------------:|--------:|
-| Worst    | {{scenarios.yearly.worst.revenue}} | {{scenarios.yearly.worst.cogs}} | {{scenarios.yearly.worst.gross}} | {{scenarios.yearly.fixed_total}} | {{scenarios.yearly.worst.marketing}} | **{{scenarios.yearly.worst.net}}** |
-| Baseline | {{scenarios.yearly.base.revenue}} | {{scenarios.yearly.base.cogs}} | {{scenarios.yearly.base.gross}} | {{scenarios.yearly.fixed_total}} | {{scenarios.yearly.base.marketing}} | **{{scenarios.yearly.base.net}}** |
-| Best     | {{scenarios.yearly.best.revenue}} | {{scenarios.yearly.best.cogs}} | {{scenarios.yearly.best.gross}} | {{scenarios.yearly.fixed_total}} | {{scenarios.yearly.best.marketing}} | **{{scenarios.yearly.best.net}}** |
+| Worst    | {{scenarios.yearly.worst.total_revenue}} | {{scenarios.yearly.worst.cogs}} | {{scenarios.yearly.worst.gross}} | {{scenarios.yearly.fixed_total}} | {{scenarios.yearly.worst.marketing}} | **{{scenarios.yearly.worst.net}}** |
+| Baseline | {{scenarios.yearly.base.total_revenue}} | {{scenarios.yearly.base.cogs}} | {{scenarios.yearly.base.gross}} | {{scenarios.yearly.fixed_total}} | {{scenarios.yearly.base.marketing}} | **{{scenarios.yearly.base.net}}** |
+| Best     | {{scenarios.yearly.best.total_revenue}} | {{scenarios.yearly.best.cogs}} | {{scenarios.yearly.best.gross}} | {{scenarios.yearly.fixed_total}} | {{scenarios.yearly.best.marketing}} | **{{scenarios.yearly.best.net}}** |
 
 ---
 
@@ -312,9 +350,9 @@ All revenue is prepaid; no refunds. Costs scale linearly with demand.
 
 | Case     | Total Revenue (€) | Total COGS (€) | Gross Margin (€) | Fixed+Loan (€) | Marketing (€) | Net (€) |
 |----------|------------------:|---------------:|-----------------:|---------------:|--------------:|--------:|
-| Worst    | {{scenarios['60m'].worst.revenue}} | {{scenarios['60m'].worst.cogs}} | {{scenarios['60m'].worst.gross}} | {{scenarios['60m'].fixed_total}} | {{scenarios['60m'].worst.marketing}} | **{{scenarios['60m'].worst.net}}** |
-| Baseline | {{scenarios['60m'].base.revenue}} | {{scenarios['60m'].base.cogs}} | {{scenarios['60m'].base.gross}} | {{scenarios['60m'].fixed_total}} | {{scenarios['60m'].base.marketing}} | **{{scenarios['60m'].base.net}}** |
-| Best     | {{scenarios['60m'].best.revenue}} | {{scenarios['60m'].best.cogs}} | {{scenarios['60m'].best.gross}} | {{scenarios['60m'].fixed_total}} | {{scenarios['60m'].best.marketing}} | **{{scenarios['60m'].best.net}}** |
+| Worst    | {{scenarios['60m'].worst.total_revenue}} | {{scenarios['60m'].worst.cogs}} | {{scenarios['60m'].worst.gross}} | {{scenarios['60m'].fixed_total}} | {{scenarios['60m'].worst.marketing}} | **{{scenarios['60m'].worst.net}}** |
+| Baseline | {{scenarios['60m'].base.total_revenue}} | {{scenarios['60m'].base.cogs}} | {{scenarios['60m'].base.gross}} | {{scenarios['60m'].fixed_total}} | {{scenarios['60m'].base.marketing}} | **{{scenarios['60m'].base.net}}** |
+| Best     | {{scenarios['60m'].best.total_revenue}} | {{scenarios['60m'].best.cogs}} | {{scenarios['60m'].best.gross}} | {{scenarios['60m'].fixed_total}} | {{scenarios['60m'].best.marketing}} | **{{scenarios['60m'].best.net}}** |
 
 ---
 
@@ -368,7 +406,7 @@ All sales are subject to VAT rules in the Netherlands/EU.
 - **Standard VAT rate:** {{tax.vat_standard_rate_pct}}%  
 - **EU B2B reverse-charge:** {{tax.eu_reverse_charge_enabled}}  
 - **Stripe Tax:** {{tax.stripe_tax_enabled}}  
-- **Revenue recognition:** {{tax.revenue_recognition}} (prepaid liability until consumed)
+- **Revenue recognition:** {{tax.revenue_recognition}}
 
 ---
 
@@ -401,7 +439,7 @@ This business model is designed to minimize financial risk:
 - **Linear scaling** — each €1 prepaid corresponds to profitable capacity; no over-extension.  
 - **Loan repayment embedded in fixed costs** — €{{loan.monthly_payment_eur}} per month for 60 months is always budgeted.  
 - **FX buffer applied** — protects against USD/EUR currency swings on GPU rentals.  
-- **Marketing spend capped as % of inflow** — prevents runaway acquisition costs.  
+- **Marketing spend capped as % of revenue** — prevents runaway acquisition costs.  
 - **VAT separated** — reserved at collection, ensuring compliance.  
 
 ---
@@ -441,7 +479,7 @@ This business model is designed to minimize financial risk:
 
 ### 9.3 Engine Version
 
-- Finance Engine: v{{engine.version}}  
+- Finance Engine: {{engine.version}}  
 - Last generated: {{engine.timestamp}}  
 
 ---
@@ -452,3 +490,11 @@ This business model is designed to minimize financial risk:
 - Provider GPU prices in **USD/hour** converted with FX rate {{fx.rate_used}} and buffer {{pricing.fx_buffer_pct}}%.  
 - Throughput (tokens/sec) is assumed until measured by **llama-orch** telemetry.  
 - Template designed to show **inputs, outputs, and safeguards** clearly to lenders.  
+
+---
+
+## 10) Data Quality Legend
+
+- **Measured:** {{ legend.measured|join(", ") }}  
+- **Policy:** {{ legend.policy|join(", ") }}  
+- **Estimated:** {{ legend.estimated|join(", ") }}  

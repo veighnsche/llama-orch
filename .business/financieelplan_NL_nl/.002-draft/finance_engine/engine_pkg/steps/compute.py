@@ -157,7 +157,11 @@ def compute_all(
     marketing_pct = marketing_pct_default
 
     funnel_details_base: Optional[Dict[str, float]] = None
+    funnel_details_worst: Optional[Dict[str, float]] = None
+    funnel_details_best: Optional[Dict[str, float]] = None
     unit_econ: Optional[Dict[str, float]] = None
+    unit_econ_worst: Optional[Dict[str, float]] = None
+    unit_econ_best: Optional[Dict[str, float]] = None
     if driver == "funnel":
         # Simulate per-case tokens and marketing spend from acquisition inputs
         # Acquisition inputs are passed via compute_all caller; fallback to empty
@@ -188,13 +192,25 @@ def compute_all(
             cpc_slope_per_extra_1k_eur=cpc_slope,
         )
         worst_base_best = (m_worst, m_base, m_best)
-        marketing_overrides = {"worst": mk_worst, "base": mk_base, "best": mk_best}
         # Detailed base-case funnel and unit economics
         funnel_details_base = simulate_funnel_details(
             acquisition=acquisition,
             funnel_overrides=funnel_overrides,
             case="base",
-            cpc_slope_per_extra_1k_eur=cpc_slope,
+            cpc_slope_per_1k_eur=cpc_slope,
+        )
+        # Also compute worst and best snapshots
+        funnel_details_worst = simulate_funnel_details(
+            acquisition=acquisition,
+            funnel_overrides=funnel_overrides,
+            case="worst",
+            cpc_slope_per_1k_eur=cpc_slope,
+        )
+        funnel_details_best = simulate_funnel_details(
+            acquisition=acquisition,
+            funnel_overrides=funnel_overrides,
+            case="best",
+            cpc_slope_per_1k_eur=cpc_slope,
         )
 
     # Compute public scenarios (optionally with marketing overrides)
@@ -213,6 +229,27 @@ def compute_all(
             unit_econ = compute_unit_economics(acquisition=acquisition, public_tpl=public_tpl, funnel_details_base=funnel_details_base)
         except Exception:
             unit_econ = None
+        # Conservative and optimistic variants
+        try:
+            if funnel_details_worst is not None:
+                unit_econ_worst = compute_unit_economics(
+                    acquisition=acquisition,
+                    public_tpl=public_tpl,
+                    funnel_details_base=funnel_details_worst,
+                    overrides={"arpu_multiplier": 0.8, "churn_override_pct": 6.0},
+                )
+        except Exception:
+            unit_econ_worst = None
+        try:
+            if funnel_details_best is not None:
+                unit_econ_best = compute_unit_economics(
+                    acquisition=acquisition,
+                    public_tpl=public_tpl,
+                    funnel_details_base=funnel_details_best,
+                    overrides={"arpu_multiplier": 1.1, "churn_override_pct": 2.0},
+                )
+        except Exception:
+            unit_econ_best = None
 
     # Private economics
     private_df, eur_usd, fx_buffer_pct, private_markup_pct, per_gpu_markup = _compute_private_block(
@@ -278,7 +315,11 @@ def compute_all(
         "marketing_overrides": marketing_overrides,
         "scenarios_driver": driver,
         "funnel_base": funnel_details_base,
+        "funnel_worst": funnel_details_worst,
+        "funnel_best": funnel_details_best,
         "unit_economics": unit_econ,
+        "unit_economics_worst": unit_econ_worst,
+        "unit_economics_best": unit_econ_best,
         "ts_public_df": ts_public_df,
         "ts_private_df": ts_private_df,
         "ts_total_df": ts_total_df,

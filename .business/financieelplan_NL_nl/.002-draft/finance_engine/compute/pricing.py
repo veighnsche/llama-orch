@@ -97,6 +97,15 @@ def _pick_best_gpu_and_tps(
             tps_override = None
 
     eur_usd_rate, buffer_pct = _get_fx_and_buffer(cfg)
+    # Effective utilization and non-GPU overhead multiplier for conservative costing
+    try:
+        util_pct = float((cfg.get("pricing_inputs") or {}).get("effective_utilization_pct", 10.0))
+    except Exception:
+        util_pct = 10.0
+    try:
+        overhead_mult = float((cfg.get("pricing_inputs") or {}).get("non_gpu_overhead_multiplier_on_cost", 10.0))
+    except Exception:
+        overhead_mult = 10.0
 
     def to_eur_hr(usd_hr: float) -> float:
         return (float(usd_hr) / float(eur_usd_rate)) * (1.0 + float(buffer_pct) / 100.0)
@@ -107,12 +116,33 @@ def _pick_best_gpu_and_tps(
         # If preferred_gpu is set and doesn't match (substring), skip
         if preferred_gpu and preferred_gpu.lower() not in gpu_name.lower():
             continue
-        # TPS: use override if provided; otherwise median TPS for that GPU subset
-        s_gpu = sub[sub["gpu"].astype(str) == gpu_name]
-        tps_vals = pd.to_numeric(s_gpu["throughput_tokens_per_sec"], errors="coerce").dropna()
-        if tps_vals.empty and tps_override is None:
-            continue
-        tps = float(tps_override if tps_override is not None else tps_vals.median())
+        # TPS: use override if provided; otherwise prefer conservative measurements and normalize to per-GPU
+        s_gpu = sub[sub["gpu"].astype(str) == gpu_name].copy()
+        if tps_override is None:
+            # Prefer single_stream, then per_user_stream, then aggregate
+            pref_types = ["single_stream", "per_user_stream", "aggregate"]
+            tps = None
+            for mt in pref_types:
+                s_mt = s_gpu[s_gpu["measurement_type"].astype(str).str.lower() == mt]
+                if s_mt.empty:
+                    continue
+                # Normalize per GPU using gpu_count if present
+                try:
+                    per_gpu_series = pd.to_numeric(s_mt["throughput_tokens_per_sec"], errors="coerce").fillna(0.0) / s_mt.get("gpu_count", 1).replace(0, 1)
+                except Exception:
+                    per_gpu_series = pd.to_numeric(s_mt["throughput_tokens_per_sec"], errors="coerce").fillna(0.0)
+                per_gpu_series = per_gpu_series[pd.to_numeric(per_gpu_series, errors="coerce") > 0]
+                if not per_gpu_series.empty:
+                    tps = float(per_gpu_series.median())
+                    break
+            if tps is None:
+                # Fallback to any available measurement without normalization
+                tps_vals = pd.to_numeric(s_gpu["throughput_tokens_per_sec"], errors="coerce").dropna()
+                if tps_vals.empty:
+                    continue
+                tps = float(tps_vals.median())
+        else:
+            tps = float(tps_override)
         if tps <= 0:
             continue
         # Match GPU rentals rows by substring; evaluate all matches and pick the cheapest cost per 1M
@@ -372,6 +402,15 @@ def compute_model_economics(
     tps_df = tps_df if tps_df is not None else pd.DataFrame()
 
     _ = _get_fx_and_buffer(cfg)  # ensure cfg has fx defaults
+    # Pull conservative costing knobs from config (estimated until telemetry)
+    try:
+        util_pct = float((cfg.get("pricing_inputs") or {}).get("effective_utilization_pct", 10.0))
+    except Exception:
+        util_pct = 10.0
+    try:
+        overhead_mult = float((cfg.get("pricing_inputs") or {}).get("non_gpu_overhead_multiplier_on_cost", 10.0))
+    except Exception:
+        overhead_mult = 10.0
     models = _select_models(scenarios=scenarios, price_sheet=price_sheet, overrides=overrides)
     rows: List[Dict[str, Any]] = []
     for model in models:
@@ -385,7 +424,11 @@ def compute_model_economics(
         def cost_per_1m(eur_hr: float) -> float:
             if tokens_per_hour <= 0:
                 return math.inf
-            return eur_hr / (tokens_per_hour / 1_000_000.0)
+            eff_tokens_per_hour = tokens_per_hour * max(0.0, util_pct) / 100.0
+            eff_eur_hr = eur_hr * max(0.0, overhead_mult)
+            if eff_tokens_per_hour <= 0:
+                return math.inf
+            return eff_eur_hr / (eff_tokens_per_hour / 1_000_000.0)
 
         c_min = cost_per_1m(eur_hr_min)
         c_med = cost_per_1m(eur_hr_med)
