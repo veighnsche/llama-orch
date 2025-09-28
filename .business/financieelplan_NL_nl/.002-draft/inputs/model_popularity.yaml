@@ -1,0 +1,9 @@
+# Preferred popular OSS models (ordered). Use names as in tps_model_gpu.csv 'model_name'.
+top_models:
+  - Llama 3.1 8B
+  - Qwen2.5 7B
+  - Mixtral 8x7B
+  - DeepSeek R1 Distill Llama 8B
+  - Llama 3.3 70B
+  - Yi-1.5 6B
+max_count: 5

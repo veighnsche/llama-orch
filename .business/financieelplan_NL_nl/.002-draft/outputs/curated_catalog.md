@@ -4,6 +4,8 @@ Minimum gross margin threshold (worst-case): 25.0%
 
 | Model | GPU | TPS | Sell €/1M | Gross Margin % (min) | Gross Margin % (med) |
 |-------|-----|-----|-----------:|----------------------:|----------------------:|
-| Llama-3-1-8B | A100 40GB (PCIe) | 307.38 | 60.0 | 85.94% | 85.94% |
+| Llama-3-1-8B | A100 40GB (PCIe) | 80.31 | 80.0 | 59.65% | 59.65% |
 | Qwen2-5-7B | A100 40GB (PCIe) | 79.68 | 80.0 | 59.33% | 59.33% |
+| Llama-3-3-70B | H100 80GB (PCIe/SXM) | 16.61 | 910.0 | 55.7% | 55.7% |
+| DeepSeek-R1-Distill-Llama-8B | A100 40GB (PCIe) | 58.46 | 100.0 | 55.65% | 55.65% |
 | Mixtral-8x7B | H100 80GB (PCIe/SXM) | 31.25 | 480.0 | 55.35% | 55.35% |

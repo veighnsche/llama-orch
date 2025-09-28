@@ -139,6 +139,19 @@ def _pick_best_gpu_and_tps(
                 per_gpu_series = pd.to_numeric(s_mt["throughput_tokens_per_sec"], errors="coerce").fillna(0.0) / s_mt.get("gpu_count", 1).replace(0, 1)
             except Exception:
                 per_gpu_series = pd.to_numeric(s_mt["throughput_tokens_per_sec"], errors="coerce").fillna(0.0)
+            # If measurement is aggregate (multi-concurrency), degrade by batch/concurrency to approx single-stream TPS
+            if allowed_mt == "aggregate":
+                try:
+                    batch_series = pd.to_numeric(s_mt.get("batch"), errors="coerce")
+                except Exception:
+                    batch_series = None
+                default_factor = 16.0
+                if batch_series is not None:
+                    # Replace zeros or NaNs with default_factor
+                    factor = batch_series.replace(0, default_factor).fillna(default_factor)
+                    per_gpu_series = per_gpu_series / factor
+                else:
+                    per_gpu_series = per_gpu_series / default_factor
             per_gpu_series = per_gpu_series[pd.to_numeric(per_gpu_series, errors="coerce") > 0]
             if per_gpu_series.empty:
                 continue

@@ -143,11 +143,16 @@ def compute_all(
     ) = _loan_and_fixed(config=config, lending=lending)
 
     # Public scenarios
-    # Curate models by pricing policy (min gross margin on worst-case bounds)
+    # Curate models by pricing policy (min gross margin on worst-case bounds) unless disabled by scenarios
     pol = (config.get("pricing_policy") or {}).get("public_tap") or {}
     min_gm_pct = float(pol.get("min_gross_margin_pct", 25.0))
     curated_df = pub_df.copy()
-    if not curated_df.empty and "gross_margin_pct_min" in curated_df.columns:
+    curate_flag = True
+    try:
+        curate_flag = bool(get(scenarios, ["curate_models_by_min_gross_margin"], True))
+    except Exception:
+        curate_flag = True
+    if curate_flag and not curated_df.empty and "gross_margin_pct_min" in curated_df.columns:
         curated_df = curated_df[curated_df["gross_margin_pct_min"] >= min_gm_pct].copy()
 
     # Determine driver: tokens (default) vs funnel

@@ -12,7 +12,7 @@ Files:
 - scenarios.yaml: ✓ (1 rows/keys)
 - gpu_pricing.yaml: ✓ (9 rows/keys)
 - capacity_overrides.yaml: ✓ (0 rows/keys)
-- overrides.yaml: ✓
+- overrides.yaml: ✓ (0 rows/keys)
 - acquisition.yaml: ✓ (2 rows/keys)
 - funnel_overrides.yaml: ✓ (3 rows/keys)
 - private_sales.yaml: ✓ (7 rows/keys)
@@ -27,4 +27,4 @@ Warnings:
 - units: public_tap unit(s) observed: 1k_tokens
 # Run Summary
 - Engine version: v1.0.0
-- Run at (UTC): 2025-09-28T00:16:19Z
+- Run at (UTC): 2025-09-28T09:53:16Z

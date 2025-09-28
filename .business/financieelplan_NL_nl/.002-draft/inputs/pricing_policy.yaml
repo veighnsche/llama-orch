@@ -31,10 +31,10 @@ public_tap:
     # Per-SKU overrides (realistische marktbanden per model)
     per_sku:
       Llama-3-1-8B:
-        bounds_per_1k: [0.06, 0.12]
+        bounds_per_1k: [0.06, 0.09]
         elasticity_epsilon: 1.8
       Qwen2-5-7B:
-        bounds_per_1k: [0.05, 0.10]
+        bounds_per_1k: [0.06, 0.08]
         elasticity_epsilon: 1.8
       Mixtral-8x7B:
         bounds_per_1k: [0.30, 0.50]

@@ -457,11 +457,11 @@ This business model is designed to minimize financial risk:
 
 ### 9.1 Data Sources
 
-- **Configuration:** `config.yaml` (policies, limits, finance controls)  
-- **Costs:** `costs.yaml` (fixed monthly overhead)  
-- **Loan:** `lending_plan.yaml` (amount, term, interest, repayment plan)  
-- **Pricing:** `pricing_policy.yaml` (doelen/afronding); `price_sheet.csv` (metadata/services)  
-- **Models:** `oss_models.csv` (open-source models with parameters, context sizes, licenses)  
+- **Configuration (legacy):** `config.yaml`, `pricing_policy.yaml`  
+- **Market (legacy):** `scenarios.yaml`, `acquisition.yaml`, `seasonality.yaml`, `competitor_benchmarks.yaml`  
+- **Finance (legacy):** `lending_plan.yaml`, `billing.yaml`, `private_sales.yaml`, `costs.yaml`, `timeseries.yaml`  
+- **Consolidated (preferred):** `settings.yaml`, `market.yaml`, `finance.yaml`  
+- **Catalog:** `oss_models.csv` (open-source models with parameters, context sizes, licenses)  
 - **GPUs:** `gpu_rentals.csv` (provider prices, VRAM, sources)  
 
 ---
