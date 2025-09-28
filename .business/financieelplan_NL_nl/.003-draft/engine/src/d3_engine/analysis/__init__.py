@@ -19,7 +19,7 @@ def analyze(tables: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
 
     Returns a dict with optional sections, e.g., {"kpis": {...}, "sensitivity": {...}}
     """
-    # TODO: wire to real implementations when tables are populated
+    # Wire percentiles to read outputs from out_dir; kpis/sensitivity remain placeholders
     return {
         "kpis": kpis.compute_kpis(tables, context),
         "percentiles": percentiles.compute_percentiles(tables, context),

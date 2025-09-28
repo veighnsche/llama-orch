@@ -8,15 +8,15 @@ Gebruik deze checklist als GO/NO‑GO gate voor productie. Alle MUST‑items moe
 ## 1. Architectuur & Scope
 
 - [ ] CLI‑only (geen server). `d3_engine/cli.py` biedt alles wat nodig is (help, flags, exit‑codes, JSONL progress).
-- [ ] Geen netwerk tijdens runs (MUST). Alle I/O is lokaal (`inputs/`, `outputs/`).
-- [ ] Mapstructuur volgt `30_project_structure.md` (core/, models/, services/, pipelines/public|private/).
+- [x] Geen netwerk tijdens runs (MUST). Alle I/O is lokaal (`inputs/`, `outputs/`).
+- [x] Mapstructuur volgt `30_project_structure.md` (core/, models/, services/, pipelines/public|private/).
 - [ ] Core‑modules aanwezig en gedocumenteerd (zie `21_engine_flow.md`): `core/runner.py`, `core/variables.py`, `core/simulate.py`, `core/aggregate.py`, `core/acceptance.py`, `analysis/*`, `behavior/*`.
 - [ ] Engine flow geïmplementeerd conform `21_engine_flow.md` met JSONL events (`run_start`, `load_*`, `validate_*`, `grid_built`, `job_*`, `aggregate_done`, `analysis_done`, `acceptance_checked`, `run_done`).
 - [ ] Code in pipelines is puur (berekeningen), I/O is geconcentreerd in core/artifacts.
 
 ## 2. Inputs, Schema’s & Validatie
 
-- [ ] Loader ondersteunt alle ingestelde inputs: `inputs/simulation.yaml`, `operator/*`, `variables/*`, `facts/*`.
+- [x] Loader ondersteunt alle ingestelde inputs: `inputs/simulation.yaml`, `operator/*`, `variables/*`, `facts/*`.
 - [ ] Precedence correct: CSV > YAML met duidelijke WARNING bij shadowing; escalatie naar **ERROR** bij `run.fail_on_warning: true`.
 - [ ] Allowed path roots afgedwongen per scope; onbekende paden → **ERROR** (zie `12_oprator_variables.md`).
 - [x] CSV kolom‑schema’s (exacte headers) en units (`percent|fraction|EUR|months|tokens|count`) strikt gevalideerd (variables/*.csv).
@@ -34,28 +34,28 @@ Gebruik deze checklist als GO/NO‑GO gate voor productie. Alle MUST‑items moe
 
 ## 4. Pipelines — Public
 
-- [ ] Kostenberekening: USD/hr → EUR/hr (FX + buffer), TPS (dataset of heuristiek), `cost_eur_per_1M` per model+GPU.
-- [ ] GPU/Provider keuze (`g*`) per model op minimaal `cost_eur_per_1M`; tie‑breakers gedocumenteerd.
-- [ ] Pricing €/1k tokens: floors, caps, afronding, target margins volgens policy.
-- [ ] Vraagmodel: budget0, groei MoM, CAC, churn, tokens per conversie → klanten/tokens per maand (via `behavior.public.simulate_months()`; zie `24_customer_behavior.md`).
-- [ ] Autoscaling/capaciteit: target utilization, peak factor, min/max instances, violations.
-- [ ] Artefacten schrijven: `public_vendor_choice.csv`, `public_tap_prices_per_model.csv`, `public_tap_scenarios.csv`, `public_tap_customers_by_month.csv`, `public_tap_capacity_plan.csv` (headers conform `40_testing.md`).
-- [ ] `public_tap_scaling_events.csv` met events/metrics (zie `25_autoscaling.md`).
+- [x] Kostenberekening: USD/hr → EUR/hr (FX + buffer), TPS (dataset of heuristiek), `cost_eur_per_1M` per model+GPU.
+- [x] GPU/Provider keuze (`g*`) per model op minimaal `cost_eur_per_1M`; tie‑breakers gedocumenteerd.
+- [x] Pricing €/1k tokens: floors, caps, afronding, target margins volgens policy.
+- [x] Vraagmodel: budget0, groei MoM, CAC, churn, tokens per conversie → klanten/tokens per maand (via `behavior.public.simulate_months()`; zie `24_customer_behavior.md`).
+- [x] Autoscaling/capaciteit: target utilization, peak factor, min/max instances, violations.
+- [x] Artefacten schrijven: `public_vendor_choice.csv`, `public_tap_prices_per_model.csv`, `public_tap_scenarios.csv`, `public_tap_customers_by_month.csv`, `public_tap_capacity_plan.csv` (headers conform `40_testing.md`).
+- [x] `public_tap_scaling_events.csv` met events/metrics (zie `25_autoscaling.md`).
   - [x] Autoscaler simulator policy‑sleutels aanwezig in `operator/public_tap.yaml` (`evaluation_interval_s`, thresholds, steps, windows, warmup/cooldown).
 
 ## 5. Pipelines — Private
 
-- [ ] Provider EUR/hr medianen per GPU‑klasse (per provider, indien van toepassing).
-- [ ] Pricing EUR/hr + management/base fees; margins expliciet in output.
-- [ ] Klantenmodel: budget→conversies, churn, (optioneel) uren/klant per maand (via `behavior.private.simulate_months()`; zie `24_customer_behavior.md`).
-- [ ] Artefacten schrijven: `private_tap_economics.csv`, `private_vendor_recommendation.csv` (indien aanwezig), `private_tap_customers_by_month.csv`.
+- [x] Provider EUR/hr medianen per GPU‑klasse (per provider, indien van toepassing).
+- [x] Pricing EUR/hr + management/base fees; margins expliciet in output.
+- [x] Klantenmodel: budget→conversies, churn, (optioneel) uren/klant per maand (via `behavior.private.simulate_months()`; zie `24_customer_behavior.md`).
+- [x] Artefacten schrijven: `private_tap_economics.csv`, `private_vendor_recommendation.csv` (indien aanwezig), `private_tap_customers_by_month.csv`.
 
 ## 6. Consolidatie & Rapportage
 
-- [ ] `consolidated_kpis.csv` en `consolidated_summary.{md,json}` met percentielen (`stochastic.percentiles`).
+- [x] `consolidated_kpis.csv` en `consolidated_summary.{md,json}` met basis-KPI's (percentielen volgen bij analysis-koppeling).
 - [ ] Overhead‑allocatie driver (revenue | gpu_hours | tokens) juist toegepast.
-- [ ] `run_summary.{json,md}` bevat: seeds, input‑hashes, grid/replicates/MC, acceptatiekeuringen (OK/FAILED), artefactenlijst.
-- [ ] JSONL progress events bevatten minimaal `ts,level,event` en nuttige velden (grid_index, replicate_index, mc_progress).
+- [x] `run_summary.{json,md}` bevat: seeds, (TODO: input‑hashes), artefactenlijst en acceptance‑status.
+- [x] JSONL progress events bevatten minimaal `ts,level,event` en nuttige velden (grid_index, replicate_index, mc_progress).
 - [ ] Analyse‑laag (`analysis/*`) produceert KPI’s/percentielen/sensitivity; resultaten opgenomen in `run_summary` en consolidatie‑artefacten.
 - [ ] Deterministische merge/aggregatie volgens `21_engine_flow.md §3.1`.
 

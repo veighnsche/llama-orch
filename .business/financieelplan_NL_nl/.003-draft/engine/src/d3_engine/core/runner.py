@@ -9,9 +9,11 @@ from . import loader, validator, logging as elog
 from ..pipelines.public import artifacts as pub_art
 from ..pipelines.private import artifacts as prv_art
 from ..analysis import analyze
+from . import aggregate as agg
 from ..pipelines.public.demand import hourly_timeseries_uniform
 from ..services.autoscaling import ASGPolicy, simulate_autoscaler
 import yaml
+import hashlib
 
 
 def ensure_dir(p: Path) -> None:
@@ -63,10 +65,14 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
     except Exception:
         pass
 
+    # Grid built (single configuration in v0)
+    print(elog.jsonl("grid_built", size=1))
+
     # 2) Pipelines (placeholder generation of expected CSV headers)
     autoscaling_summary = None
     if "public" in pipelines:
         print(elog.jsonl("pipeline_public_start"))
+        print(elog.jsonl("job_submitted", grid_index=0, replicate_index=0))
         artifacts += pub_art.write_all(out_dir, state)
         print(elog.jsonl("pipeline_public_done"))
         # Simulate autoscaler over a synthetic hourly demand profile (scaffold)
@@ -105,15 +111,27 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
 
     if "private" in pipelines:
         print(elog.jsonl("pipeline_private_start"))
+        print(elog.jsonl("job_submitted", grid_index=0, replicate_index=0))
         artifacts += prv_art.write_all(out_dir, state)
         print(elog.jsonl("pipeline_private_done"))
 
-    # 3) Consolidation (TBD)
-    print(elog.jsonl("consolidate_done"))
-
-    # 4) Analysis (KPIs/percentiles/sensitivity)
-    analysis = analyze({}, {"autoscaling_summary": autoscaling_summary} if autoscaling_summary else {})
+    # 3) Analysis (KPIs/percentiles/sensitivity)
+    analysis_context = {
+        "autoscaling_summary": autoscaling_summary,
+        "out_dir": str(out_dir),
+        "simulation": state.get("simulation", {}),
+    }
+    analysis = analyze({}, analysis_context)
     print(elog.jsonl("analysis_done"))
+
+    # 4) Consolidation
+    agg_ctx = {"autoscaling_summary": autoscaling_summary} if autoscaling_summary else {}
+    if analysis and analysis.get("percentiles"):
+        agg_ctx["percentiles"] = analysis.get("percentiles")
+    written = agg.write_consolidated_outputs(out_dir, agg_ctx)
+    artifacts += written
+    print(elog.jsonl("aggregate_done"))
+    print(elog.jsonl("consolidate_done"))
 
     # 5) Acceptance
     from . import acceptance as acc
@@ -126,6 +144,43 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
         },
     )
     print(elog.jsonl("acceptance_checked", accepted=acceptance.get("accepted")))
+    print(elog.jsonl("run_done"))
+
+    # 6) Run summary (minimal; TODO: add input-hashes)
+    # Compute input file hashes (SHA256) for determinism tracking
+    input_hashes = []
+    try:
+        for p in sorted(inputs_dir.rglob("*")):
+            if p.is_file():
+                h = hashlib.sha256()
+                try:
+                    h.update(p.read_bytes())
+                    input_hashes.append({"path": str(p.relative_to(inputs_dir)), "sha256": h.hexdigest()})
+                except Exception:
+                    continue
+    except Exception:
+        pass
+    summary = {
+        "inputs": str(inputs_dir),
+        "outputs": str(out_dir),
+        "pipelines": pipelines,
+        "seed": seed,
+        "artifacts": artifacts,
+        "accepted": acceptance.get("accepted"),
+        "input_hashes": input_hashes,
+    }
+    (out_dir / "run_summary.json").write_text(yaml.safe_dump(summary, sort_keys=False))
+    md_lines = [
+        "# Run Summary",
+        f"inputs: {summary['inputs']}",
+        f"outputs: {summary['outputs']}",
+        f"pipelines: {', '.join(summary['pipelines'])}",
+        f"seed: {summary['seed']}",
+        f"accepted: {summary['accepted']}",
+        "artifacts:",
+    ] + [f"- {name}" for name in artifacts]
+    (out_dir / "run_summary.md").write_text("\n".join(md_lines) + "\n")
+    artifacts += ["run_summary.json", "run_summary.md"]
 
     return {
         "inputs": str(inputs_dir),

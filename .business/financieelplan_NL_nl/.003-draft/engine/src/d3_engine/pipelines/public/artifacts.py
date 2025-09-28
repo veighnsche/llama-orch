@@ -6,6 +6,7 @@ from typing import Dict, Any, List, Tuple
 from . import pricing as pub_pricing
 from . import demand as pub_demand
 from . import capacity as pub_capacity
+from ...services.batching import effective_tps_per_instance, BatchingConfig
 
 
 def _write_csv_header(path: Path, headers: list[str]) -> None:
@@ -104,6 +105,7 @@ def write_all(out_dir: Path, state: Dict[str, Any]) -> list[str]:
     rentals: List[Dict[str, Any]] = state.get("curated", {}).get("gpu_rentals", [])
     pub_op: Dict[str, Any] = state.get("operator", {}).get("public_tap", {})
     facts: Dict[str, Any] = state.get("facts", {})
+    tps_rows: List[Dict[str, Any]] = state.get("curated", {}).get("tps_model_gpu", [])
 
     eur_usd_rate = _fx_eur_per_usd(facts)
     fx_buf = _fx_buffer_pct(pub_op)
@@ -115,12 +117,38 @@ def write_all(out_dir: Path, state: Dict[str, Any]) -> list[str]:
     cac = float(acq.get("cac_base_eur", 0.0) or 0.0)
     churn_pct = float(acq.get("churn_pct_mom", 0.0) or 0.0)
     tokens_per_conv = float(acq.get("tokens_per_conversion_mean", 0.0) or 0.0)
+    budget_growth_pct_mom = float(acq.get("budget_growth_pct_mom", 0.0) or 0.0)
     peak_factor = float(pub_op.get("autoscaling", {}).get("peak_factor", 1.2) if isinstance(pub_op, dict) else 1.2)
     target_util = float(pub_op.get("autoscaling", {}).get("target_utilization_pct", 75.0) if isinstance(pub_op, dict) else 75.0)
+    horizon = 12
+    try:
+        horizon = int(state.get("simulation", {}).get("targets", {}).get("horizon_months", 12))
+    except Exception:
+        horizon = 12
 
-    # Assume tps_eff baseline when TPS dataset is absent
-    tps_eff = 1000.0  # tokens per second
-    cap_per_inst = pub_capacity.cap_per_instance_tokens_per_hour(tps_eff, target_util)
+    # Build a TPS map (model,gpu) -> tps_eff using batching normalization when dataset present
+    cfg = BatchingConfig()
+    def _tps_eff_for(model: str, gpu: str) -> float:
+        for row in tps_rows:
+            m = (row.get("model") or row.get("Model") or "").strip()
+            g = (row.get("gpu") or row.get("gpu_model") or "").strip()
+            if m == model and g == gpu:
+                mt = (row.get("measurement_type") or "batched_online").strip()
+                try:
+                    tps = float((row.get("throughput_tokens_per_sec") or row.get("tps") or 0.0))
+                except Exception:
+                    tps = 0.0
+                try:
+                    gpu_count = int((row.get("gpu_count") or 1))
+                except Exception:
+                    gpu_count = 1
+                try:
+                    batch = row.get("batch")
+                    batch_i = int(batch) if batch not in (None, "") else None
+                except Exception:
+                    batch_i = None
+                return effective_tps_per_instance(mt, tps, gpu_count=gpu_count, batch=batch_i, cfg=cfg)
+        return 0.0
 
     for m in curated_models:
         model_name = (m.get("Model") or m.get("model") or "").strip()
@@ -135,8 +163,10 @@ def write_all(out_dir: Path, state: Dict[str, Any]) -> list[str]:
         usd_hr = float(choice.get("usd_hr"))
         eur_hr = _eur_hr(usd_hr, eur_usd_rate, fx_buf)
 
-        # Heuristic: without TPS dataset, approximate cost per 1M as eur_hr (1e6 tokens/hour baseline)
-        cost_eur_per_1M = eur_hr
+        # Compute tps_eff from dataset (if available), else fallback to 1000/s
+        tps_eff = _tps_eff_for(model_name, gpu) or 1000.0
+        tokens_per_hour = tps_eff * 3600.0
+        cost_eur_per_1M = (float('inf') if tokens_per_hour <= 0 else (eur_hr / (tokens_per_hour / 1_000_000.0)))
         _append_row(vendor_path, [
             model_name, gpu, provider, f"{usd_hr}", f"{eur_hr}", f"{cost_eur_per_1M}"
         ])
@@ -156,26 +186,35 @@ def write_all(out_dir: Path, state: Dict[str, Any]) -> list[str]:
             model_name, gpu, f"{cost_eur_per_1M}", f"{sell_per_1k}", f"{margin_pct}"
         ])
 
-        # Simple month 0 scenario and customers series
-        month = 0
-        expected_new_customers = 0.0 if cac <= 0 else (budget0 / cac)
-        active_customers = expected_new_customers * (1.0 - max(churn_pct, 0.0) / 100.0)
-        tokens_m = expected_new_customers * tokens_per_conv
-        revenue_eur = (tokens_m / 1000.0) * sell_per_1k
-        cost_eur = (tokens_m / 1_000_000.0) * cost_eur_per_1M
-        margin_eur = revenue_eur - cost_eur
-        _append_row(scen_path, [
-            "base", str(month), f"{tokens_m}", f"{revenue_eur}", f"{cost_eur}", f"{margin_eur}"
-        ])
-        _append_row(cust_path, [
-            str(month), f"{budget0}", f"{cac}", f"{expected_new_customers}", f"{active_customers}", f"{tokens_m}"
-        ])
+        # Monthly customers and scenario series (base scenario)
+        active_customers = 0.0
+        for month in range(horizon):
+            # budget_m growth
+            budget_m = budget0 * ((1.0 + budget_growth_pct_mom / 100.0) ** month)
+            expected_new_customers = 0.0 if cac <= 0 else (budget_m / cac)
+            active_customers = max(0.0, active_customers * (1.0 - max(churn_pct, 0.0) / 100.0) + expected_new_customers)
+            tokens_m = max(0.0, expected_new_customers * tokens_per_conv)
+            revenue_eur = (tokens_m / 1000.0) * sell_per_1k
+            cost_eur = (tokens_m / 1_000_000.0) * cost_eur_per_1M
+            margin_eur = revenue_eur - cost_eur
+            _append_row(scen_path, [
+                "base", str(month), f"{tokens_m}", f"{revenue_eur}", f"{cost_eur}", f"{margin_eur}"
+            ])
+            _append_row(cust_path, [
+                str(month), f"{budget_m}", f"{cac}", f"{expected_new_customers}", f"{active_customers}", f"{tokens_m}"
+            ])
 
         # Capacity plan
-        avg_tph = tokens_m / 720.0 if tokens_m > 0 else 0.0
+        # Capacity plan based on month 0 estimate (conservative baseline)
+        # Recompute month0 tokens for consistent avg/peak inputs
+        expected_new_customers_m0 = 0.0 if cac <= 0 else (budget0 / cac)
+        tokens_m0 = max(0.0, expected_new_customers_m0 * tokens_per_conv)
+        avg_tph = tokens_m0 / 720.0 if tokens_m0 > 0 else 0.0
         peak_tph = avg_tph * peak_factor
-        instances, violation, _ = pub_capacity.planner_instances_needed(
-            peak_tph, tps_eff, target_util, int(pub_op.get("autoscaling", {}).get("min_instances_per_model", 0) if isinstance(pub_op, dict) else 0), int(pub_op.get("autoscaling", {}).get("max_instances_per_model", 100) if isinstance(pub_op, dict) else 100)
+        instances, violation, cap_per_inst = pub_capacity.planner_instances_needed(
+            peak_tph, tps_eff, target_util,
+            int(pub_op.get("autoscaling", {}).get("min_instances_per_model", 0) if isinstance(pub_op, dict) else 0),
+            int(pub_op.get("autoscaling", {}).get("max_instances_per_model", 100) if isinstance(pub_op, dict) else 100)
         )
         _append_row(cap_path, [
             model_name, gpu, f"{avg_tph}", f"{peak_tph}", f"{tps_eff}", f"{cap_per_inst}", f"{instances}", f"{target_util}", "True" if violation else "False"

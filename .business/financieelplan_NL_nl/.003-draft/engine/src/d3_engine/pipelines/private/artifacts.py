@@ -79,6 +79,13 @@ def write_all(out_dir: Path, state: Dict[str, Any]) -> list[str]:
         eur = _eur_hr(usd, eur_usd_rate, fx_buf)
         by_gpu.setdefault(gpu, []).append((provider, usd, eur))
 
+    # Determine horizon
+    horizon = 12
+    try:
+        horizon = int(state.get("simulation", {}).get("targets", {}).get("horizon_months", 12))
+    except Exception:
+        horizon = 12
+
     for gpu, lst in by_gpu.items():
         if not lst:
             continue
@@ -95,19 +102,22 @@ def write_all(out_dir: Path, state: Dict[str, Any]) -> list[str]:
         best = min(lst, key=lambda t: t[2])
         _append_row(reco_path, [gpu, best[0], f"{best[1]}", f"{best[2]}", "1.0"])
 
-        # Simple month0 customers for private
+        # Monthly customers for private over horizon
         acq = prv_op.get("acquisition", {}) if isinstance(prv_op, dict) else {}
         budget0 = float(acq.get("budget_month0_eur", 0.0) or 0.0)
         cac = float(acq.get("cac_base_eur", 0.0) or 0.0)
         hours_per_client = float(acq.get("hours_per_client_month_mean", 0.0) or 0.0)
         churn_pct = float(acq.get("churn_pct_mom", 0.0) or 0.0)
-        month = 0
-        new = 0.0 if cac <= 0 else (budget0 / cac)
-        active = new * (1.0 - max(churn_pct, 0.0) / 100.0)
-        hours = active * hours_per_client
-        revenue = hours * sell_eur_hr + mgmt_fee
-        _append_row(cust_path, [
-            str(month), f"{budget0}", f"{cac}", f"{new}", f"{active}", f"{hours}", f"{sell_eur_hr}", f"{revenue}"
-        ])
+        budget_growth_pct_mom = float(acq.get("budget_growth_pct_mom", 0.0) or 0.0)
+        active = 0.0
+        for month in range(horizon):
+            budget_m = budget0 * ((1.0 + budget_growth_pct_mom / 100.0) ** month)
+            new = 0.0 if cac <= 0 else (budget_m / cac)
+            active = max(0.0, active * (1.0 - max(churn_pct, 0.0) / 100.0) + new)
+            hours = active * hours_per_client
+            revenue = hours * sell_eur_hr + mgmt_fee
+            _append_row(cust_path, [
+                str(month), f"{budget_m}", f"{cac}", f"{new}", f"{active}", f"{hours}", f"{sell_eur_hr}", f"{revenue}"
+            ])
 
     return written

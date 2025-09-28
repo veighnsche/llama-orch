@@ -197,6 +197,23 @@ def _check_variables(inputs_dir: Path, errors: List[str]):
                 if typ not in ("numeric", "discrete"):
                     errors.append(f"{csv_name} invalid type: {typ}")
                     break
+                # Allowed path roots per scope (per specs/12_oprator_variables.md)
+                path = (row.get("path") or "").strip()
+                allowed_roots_map = {
+                    "general": [
+                        "finance.", "insurances.", "tax.", "reserves.",
+                    ],
+                    "public_tap": [
+                        "pricing_policy.public_tap.", "prepaid_policy.credits.", "acquisition.", "autoscaling.",
+                    ],
+                    "private_tap": [
+                        "pricing_policy.private_tap.", "acquisition.",
+                    ],
+                }
+                roots = allowed_roots_map.get(scope, [])
+                if path and not any(path.startswith(r) for r in roots):
+                    errors.append(f"{csv_name} path not allowed for scope {scope}: {path}")
+                    break
                 if typ == "numeric":
                     try:
                         mn = float(row.get("min") or "")
