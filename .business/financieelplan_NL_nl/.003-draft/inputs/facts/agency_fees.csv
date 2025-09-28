@@ -1,0 +1,25 @@
+agency_id,agency_name,city,region,service_type,fee_model,unit,currency,value,low_value,high_value,setup_fee_currency,setup_fee_value,notes,source_url,source_date
+virtual_creatives_plus,Virtual Creatives,Alkmaar,NL,Google Ads management,flat_monthly,per_month,EUR,375.0,,,EUR,480.0,Plus pakket prijs per maand; eenmalige opstartkosten,https://www.virtual-creatives.nl/google-ads-kosten/,2025-09-28
+virtual_creatives_basic,Virtual Creatives,Alkmaar,NL,Google Ads management,flat_monthly,per_month,EUR,250.0,,,EUR,390.0,Instap pakket prijs per maand; eenmalige opstartkosten,https://www.virtual-creatives.nl/google-ads-kosten/,2025-09-28
+kwalitiv_M,KWALITIV,Zwolle,NL,SEA abonnement,flat_monthly,per_month,EUR,199.0,,,EUR,449.0,"Pakket M (1 campagne), maandabonnement + setup",https://www.kwalitiv.nl/diensten/zoekmachine-marketing/sea/pakketten,2025-09-28
+kwalitiv_L,KWALITIV,Zwolle,NL,SEA abonnement,flat_monthly,per_month,EUR,389.0,,,EUR,749.0,"Pakket L (2 campagnes), maandabonnement + setup",https://www.kwalitiv.nl/diensten/zoekmachine-marketing/sea/pakketten,2025-09-28
+serin_marketing_premium,Serin Marketing,Rotterdam,NL,Google Ads management,flat_monthly,per_month,EUR,780.0,,,EUR,399.0,Premium €780 p/maand; setup v.a. €399,https://serinmarketing.nl/google-ads-kosten/,2025-09-28
+serin_marketing_elite,Serin Marketing,Rotterdam,NL,Google Ads management,flat_monthly,per_month,EUR,1449.0,,,EUR,489.0,Elite €1449 p/maand; setup v.a. €489,https://serinmarketing.nl/google-ads-kosten/,2025-09-28
+praes_starter,PRAES,Zwolle,NL,Google Ads management,flat_monthly,per_month,EUR,150.0,,,EUR,300.0,Starter pakket: €300 opstartkosten + €150/maand,https://praes.nl/online-marketing/google-ads,2025-09-28
+allinone_media_basic,Allinone Media,Den Haag,NL,Google Ads beheer (budget ≤ €1500),flat_monthly,per_month,EUR,350.0,,,EUR,500.0,Beheerpakket met eenmalige opstartkosten €500,https://allinone-media.nl/google-ads-uitbesteden/,2025-09-28
+websitepromotor_entry,Websitepromotor,Eindhoven,NL,SEA traject (beheer),flat_monthly,per_month,EUR,400.0,,,,,https://www.websitepromotor.nl/strategie/wat-kost-sea-per-maand-bij-websitepromotor/,,
+simon_huizinga_instap,Simon Huizinga,Assen,NL,SEA abonnement,flat_monthly,per_month,EUR,149.0,,,,,https://simonhuizinga.nl/sea-abonnementen/,,
+webprof_premium,Webprof,Zwolle,NL,SEA pakket Premium,flat_monthly,per_month,EUR,689.0,,,,,https://webprof.nl/sea-pakketten/,,
+broersen_basis,Broersen Internet Marketing,Haarlem,NL,Google Ads pakketten,flat_monthly,per_month,EUR,160.0,,,EUR,295.0,Pakket Basis €160/maand; opstart v.a. €295,https://broerseninternetmarketing.nl/google-adwords-pagina/adwords-specialist-haarlem/,2025-09-28
+googleadwordsuitbesteden_basic,GoogleAdwordsUitbesteden.nl,Zoetermeer,NL,Google Ads beheer,flat_monthly,per_month,EUR,95.0,,,,,https://googleadwordsuitbesteden.nl/; https://googleadwordsuitbesteden.nl/starten-met-adwords/,,
+vox_marketing_plan,Vox Marketing,Arnhem,NL,Google Ads beheer (expert),flat_monthly,per_month,EUR,475.0,,,EUR,350.0,Beheer €475/maand; opstart €350; budget tot €2000 p/m,https://www.voxmarketing.nl/tarieven-adwords-specialist.html,2025-09-28
+sea_marketing_basic,SEA-Marketing.nl,Amersfoort,NL,SEA abonnement Basic,flat_monthly,per_month,EUR,500.0,,,,,https://sea-marketing.nl/prijzen/,,
+sea_marketing_pro,SEA-Marketing.nl,Amersfoort,NL,SEA abonnement Pro,flat_monthly,per_month,EUR,1200.0,,,,,https://sea-marketing.nl/prijzen/,,
+sea_marketing_enterprise,SEA-Marketing.nl,Amersfoort,NL,SEA abonnement Enterprise,flat_monthly,per_month,EUR,2500.0,,,,,https://sea-marketing.nl/prijzen/,,
+vivortis_all_in,Vivortis,Apeldoorn,NL,Google Ads beheer (all-in),flat_monthly,per_month,EUR,285.0,,,,,https://vivortis.nl/google-ads-uitbesteden,,
+sam_online_marketing_avg,SAM Online Marketing,Rotterdam,NL,Google Ads campagne (benchmark),flat_monthly,per_month,EUR,300.0,300.0,1000.0,,,https://www.samonlinemarketing.nl/google-ads-kosten/,,
+sam_online_marketing_hourly,SAM Online Marketing,Rotterdam,NL,SEA beheer,flat_hour,per_hour,EUR,115.0,100.0,130.0,,,https://www.samonlinemarketing.nl/sea-kosten/,,
+fingerspitz_rate,Fingerspitz,Breda,NL,Online marketing,flat_hour,per_hour,EUR,100.0,75.0,140.0,,,https://fingerspitz.nl/wat-kost-een-online-marketing-bureau/,,
+erocket_rates,eRocket,Den Bosch,NL,Online marketing,flat_hour,per_hour,EUR,185.0,110.0,260.0,,,https://erocket.nl/kosten-online-marketing-bureau/,,
+marquant_rates,Marquant Marketing,Zwolle,NL,Online marketing,flat_hour,per_hour,EUR,120.0,90.0,150.0,,,https://marquant-marketing.nl/freelance-online-marketeer/wat-kost-online-marketing-uurtarief-freelance-online-marketeer/,,
+adsimpact_benchmark,AdsImpact,Amersfoort,NL,Google Ads budget (benchmark),flat_monthly,per_month,EUR,1000.0,1000.0,10000.0,,,https://www.adsimpact.nl/google-ads-kosten/,,

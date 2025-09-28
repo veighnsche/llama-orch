@@ -1,0 +1,53 @@
+# operator/general.yaml — world-building constants only
+
+meta:
+  version: 1
+  description: "Operator world facts (no knobs/variables). Policy levers moved to variables CSVs."
+
+finance:
+  fixed_costs_monthly_eur:
+    personal: 2500
+    business: 1000
+    office: 400
+    insurance_admin: 75
+    misc_buffer: 300
+  depreciation_assets_eur: 150  # bookkeeping constant; see depreciation_schedule for details
+
+loan:
+  amount_eur: 30000
+  term_months: 60
+  interest_rate_pct_flat: 9.95
+  repayment_type: annuity        # annuity | flat | bullet
+  equity_injection_eur: 5000
+  grace_period_months: 3
+
+insurances:
+  selected: [PRO-PL-001, OFF-CONT-001, CYB-RISK-001]
+
+tax:
+  vat_pct: 21.0
+  corporate_income_pct: 19.0
+  dividend_withholding_pct: 15.0
+  social_security_pct: 27.65
+
+calendar:
+  start_year: 2025
+  start_month: 10
+
+working_capital:
+  ar_days: 30
+  ap_days: 30
+  inventory_days: 0
+  vat_payment_lag_months: 1
+
+inflation:
+  cpi_annual_pct: 2.5
+  salary_growth_annual_pct: 0.0
+  rent_growth_annual_pct: 2.0
+
+depreciation_schedule:
+  assets:
+    - name: "Laptop"
+      amount_eur: 2400
+      months: 36
+      start_month_index: 1

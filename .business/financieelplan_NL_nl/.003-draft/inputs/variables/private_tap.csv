@@ -1,0 +1,10 @@
+variable_id,scope,path,type,unit,min,max,step,default,treatment,notes
+default_markup_pct,private_tap,pricing_policy.private_tap.default_markup_over_provider_cost_pct,numeric,percent,0,100,5,40,low_to_high,"Markup % over provider GPU cost"
+management_fee,private_tap,pricing_policy.private_tap.management_fee_eur_per_month,numeric,EUR,0,1000,50,199,low_to_high,"Monthly flat management fee for private tap clients"
+vendor_weight_cost,private_tap,pricing_policy.private_tap.vendor_weights.cost,numeric,fraction,0,1,0.1,0.5,low_to_high,"Weight for cost in vendor selection"
+vendor_weight_availability,private_tap,pricing_policy.private_tap.vendor_weights.availability,numeric,fraction,0,1,0.1,0.3,low_to_high,"Weight for availability in vendor selection"
+vendor_weight_reputation,private_tap,pricing_policy.private_tap.vendor_weights.reputation,numeric,fraction,0,1,0.1,0.2,low_to_high,"Weight for reputation in vendor selection"
+acquisition_budget,private_tap,acquisition.budget_monthly_eur,numeric,EUR,0,10000,100,2000,low_to_high,"Monthly acquisition budget for private tap"
+acq_events_share,private_tap,acquisition.channel_allocation.events,numeric,fraction,0,1,0.1,0.4,random,"Share of acquisition budget to events"
+acq_outbound_share,private_tap,acquisition.channel_allocation.outbound,numeric,fraction,0,1,0.1,0.3,random,"Share of acquisition budget to outbound"
+acq_partnerships_share,private_tap,acquisition.channel_allocation.partnerships,numeric,fraction,0,1,0.1,0.3,random,"Share of acquisition budget to partnerships"

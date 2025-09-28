@@ -1,0 +1,9 @@
+meta:
+  seed: 12345
+  fx_buffer_pct: 5.0   # conservative FX cushion
+
+prepaid_policy:
+  private_tap:
+    billing_unit_minutes: 60
+    non_refundable: true
+    expiry_months: 12

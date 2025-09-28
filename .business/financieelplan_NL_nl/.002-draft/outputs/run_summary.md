@@ -28,8 +28,8 @@ Warnings:
 
 Overrides Applied:
 - capacity:
-  - Llama-3-3-70B: tps=16.6 gpu=H100 80GB (PCIe/SXM) expires_on=None
-  - DeepSeek-R1-Distill-Llama-8B: tps=58.5 gpu=A100 40GB (PCIe) expires_on=None
+  - Llama-3-3-70B: tps=16.6 gpu=H100 expires_on=None
+  - DeepSeek-R1-Distill-Llama-8B: tps=58.5 gpu=A100 expires_on=None
 # Run Summary
 - Engine version: v1.0.0
-- Run at (UTC): 2025-09-28T10:10:36Z
+- Run at (UTC): 2025-09-28T10:32:35Z

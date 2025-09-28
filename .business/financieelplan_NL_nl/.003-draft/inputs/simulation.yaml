@@ -1,0 +1,34 @@
+# simulation.yaml — RUN PLAN (allowed keys)
+
+run:
+  pipelines: [public, private]        # which to run: public | private | both
+  output_dir: ".003-draft/outputs"    # where artifacts go
+  fail_on_warning: false              # promote WARNINGs to errors (optional)
+  max_concurrency: 4                  # optional: engine threads/processes
+
+stochastic:
+  simulations_per_run: 1000           # Monte Carlo iterations
+  percentiles: [10, 50, 90]           # summarize distribution to these cuts
+  # Seed resolution order:
+  # 1) stochastic.random_seed (if set here)
+  # 2) operator_public.meta.seed / operator_private.meta.seed
+  # 3) engine default (error if none)
+  random_seed: null                   # optional override for entire run
+
+stress:
+  provider_price_drift_pct: 10.0      # stress check for public margins (p90 drift)
+  tps_downshift_pct: 0.0              # optional: simulate throughput degradation
+  fx_widen_buffer_pct: 0.0            # optional: extra conservatism on FX buffer
+
+consolidation:
+  overhead_allocation_driver: revenue # or gpu_hours | tokens
+  include_loan_in_cashflow: true
+  report_percentiles: [10, 50, 90]    # usually mirrors stochastic.percentiles
+
+ui:
+  show_credit_packs: [5, 10, 20, 50, 100, 200, 500]   # presentation only
+  halt_at_zero_simulation: true       # stop consumption when credits hit 0
+
+logging:
+  level: INFO                         # DEBUG | INFO | WARN | ERROR
+  write_run_summary: true             # run_summary.{json,md}

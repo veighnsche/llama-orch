@@ -1,0 +1,8 @@
+variable_id,scope,path,type,unit,min,max,step,default,treatment,notes
+target_margin_pct,public_tap,pricing_policy.public_tap.target_margin_pct,numeric,percent,0.2,0.8,0.05,0.55,low_to_high,"Target gross margin % over GPU cost"
+acq_budget,public_tap,acquisition.budget_monthly_eur,numeric,EUR,0,10000,100,500,low_to_high,"Monthly acquisition budget for public tap"
+acq_google_ads_share,public_tap,acquisition.channel_allocation.google_ads,numeric,fraction,0,1,0.1,0.5,random,"Share of acquisition budget to Google Ads"
+acq_linkedin_ads_share,public_tap,acquisition.channel_allocation.linkedin_ads,numeric,fraction,0,1,0.1,0.3,random,"Share of acquisition budget to LinkedIn Ads"
+acq_events_share,public_tap,acquisition.channel_allocation.events,numeric,fraction,0,1,0.1,0.2,random,"Share of acquisition budget to events"
+tokens_per_conv_mean,public_tap,acquisition.usage_tokens_per_conversion_mean,numeric,tokens,1000,20000,1000,5000,low_to_high,"Mean tokens consumed per conversion"
+tokens_per_conv_sd,public_tap,acquisition.usage_tokens_per_conversion_sd,numeric,tokens,0,5000,250,1500,low_to_high,"Std dev of tokens consumed per conversion"

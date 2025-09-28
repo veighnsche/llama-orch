@@ -52,7 +52,7 @@ flowchart TD
 
 ### 1.2 Catalog (Products Offered)
 
-- **Models (allow-list):** Llama-3-1-8B, Qwen2-5-7B, Mixtral-8x7B  
+- **Models (allow-list):** Llama-3-1-8B, Qwen2-5-7B, Mixtral-8x7B, DeepSeek-R1-Distill-Llama-8B, Llama-3-3-70B  
 - **GPUs considered:** A10, A100 40GB (PCIe), A100 80GB (SXM/PCIe), H100 80GB (PCIe/SXM), H200 141GB, L4, L40S, RTX 3090, RTX 4090
 
 ---
@@ -101,6 +101,8 @@ For each model offered on the Public Tap:
 | Llama-3-1-8B | A100 40GB (PCIe) | 32.28 | 32.28 | 32.28 | 80.00 | 47.72 | 59.65 |
 | Qwen2-5-7B | A100 40GB (PCIe) | 32.54 | 32.54 | 32.54 | 80.00 | 47.46 | 59.33 |
 | Mixtral-8x7B | H100 80GB (PCIe/SXM) | 214.32 | 214.32 | 214.32 | 480.00 | 265.68 | 55.35 |
+| DeepSeek-R1-Distill-Llama-8B | A100 40GB (PCIe) | 44.32 | 44.32 | 44.32 | 100.00 | 55.68 | 55.68 |
+| Llama-3-3-70B | H100 80GB (PCIe/SXM) | 403.47 | 403.47 | 403.47 | 910.00 | 506.53 | 55.66 |
 
 #### 2.1.1 Graph — Model Margins
 
@@ -547,7 +549,7 @@ This business model is designed to minimize financial risk:
 ### 9.3 Engine Version
 
 - Finance Engine: v1.0.0  
-- Last generated: 2025-09-28T10:10:37Z  
+- Last generated: 2025-09-28T10:32:36Z  
 
 ---
 
