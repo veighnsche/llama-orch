@@ -116,7 +116,6 @@ Capaciteitsformulering en artefact: zie `23_sim_public_tap.md`.
 
 1) **Pas constants aan**
    - `inputs/operator/general.yaml`: vaste kosten, loan, tax, reserves
-   - `inputs/operator/public_tap.yaml`: pricing policy, autoscaling, acquisition defaults
    - `inputs/operator/private_tap.yaml`: markup/fees/vendor weights, acquisition defaults
 
 2) **Pas variables aan (CSV)**
@@ -156,3 +155,45 @@ Capaciteitsformulering en artefact: zie `23_sim_public_tap.md`.
 - `22_sim_private_tap.md` — GPU‑uren simulatie
 - `23_sim_public_tap.md` — tokens/credits simulatie + autoscaling
 - `19_facts.md` — facts datasets
+
+## 12. Doel van de simulatie (samenvatting)
+  
+- **[waarom]** Toetsen of het plan haalbaar is over de horizon (`targets.horizon_months`, default 18) met realistische aannames en deterministische herhaalbaarheid.
+- **[wat]** Twee pijplijnen:
+  - Public Tap (tokens/credits): grondkosten per model uit provider‑USD/hr → EUR/hr (FX + buffer) en TPS; prijs €/1k tokens; vraag en autoscaling.
+  - Private Tap (GPU‑uren): mediaan EUR/hr per GPU‑klasse → verkoop €/hr + fees → klanten/uren‑economics.
+- **[hoe]** Strikte inputs:
+  - Operator‑constanten in `inputs/operator/*.yaml` + curated CSV’s (`curated_public_tap_models.csv`, `curated_gpu.csv`).
+  - Variabelen in `inputs/variables/*.csv` met treatments (fixed/low_to_high/random) als overlays op operator‑paden.
+  - Facts (FX e.d.) in `inputs/facts/*` (read‑only; geen netwerk).
+- **[acceptatie]** Monotone groei (public/private), private marges ≥ drempel, capaciteit binnen min/max, autoscaling p95(util) binnen tolerantie.
+- **[eigenschappen]** Volledig lokaal, seed‑deterministisch, CSV>YAML precedence (shadowing WARNING), outputs reproduceerbaar (hash‑gelijk).
+  
+## 13. Engine‑architectuur & flow (conceptueel)
+  
+- **[flow]** Load → Validate → Variables grid → Random replicates → Monte Carlo → Pipelines (public/private) → Aggregation → Analysis → Acceptance → Artifacts → Summary.
+- **[scheiding]** Pure berekeningen in `pipelines/*` en `services/*`; orchestration in `core/*`; I/O in writers/artifacts; analysis in `analysis/*`.
+- **[JSONL progress]** Minimaal `ts,level,event` met events zoals `run_start`, `load_*`, `validate_*`, `grid_built`, `job_*`, `aggregate_done`, `analysis_done`, `acceptance_checked`, `run_done`.
+- **[RNG]** Seed‑resolutie: `stochastic.random_seed` → `run.random_seed` → `operator/<tap>.yaml: meta.seed` → anders ERROR. Substreams per scope/variable/grid/replicate/MC.
+- **[autoscaling]** Planner (deterministisch: instances_needed) + Simulator (hysterese, stabilisatiewindow, warmup/cooldown), policy uit `operator/public_tap.yaml`.
+  
+## 14. Artefacten & rapportage (overzicht)
+  
+- **Public**
+  - `public_vendor_choice.csv` — `model,gpu,provider,usd_hr,eur_hr_effective,cost_eur_per_1M`
+  - `public_tap_prices_per_model.csv` — `model,gpu,cost_eur_per_1M,sell_eur_per_1k,margin_pct`
+  - `public_tap_scenarios.csv`, `public_tap_customers_by_month.csv`
+  - `public_tap_capacity_plan.csv` (+ optioneel `public_tap_scaling_events.csv`)
+- **Private**
+  - `private_tap_economics.csv`, `private_vendor_recommendation.csv`
+  - `private_tap_customers_by_month.csv`
+- **Consolidatie & rapport**
+  - `consolidated_kpis.csv`, `consolidated_summary.{md,json}`
+  - `run_summary.{json,md}` (seeds, input‑hashes, grid/replicates/MC, acceptatie, artefacten)
+  - Eindrapport: `financial_plan_v3.md` + `charts/*.png`
+  
+## 15. UI (lokaal, scope)
+  
+- **[bediening]** Lokale UI (Vite) die parameters kan bewerken (form + editors), validaties toont, `Run Public/Private/Both` triggert en outputs previewt (MD/CSV/PNG/JSON).
+- **[prepaid UX]** Zichtbare creditsaldo‑indicator; halt‑at‑zero; presets voor packs; ToS‑snippet (non‑refundable, 12m geldigheid).
+- **[veiligheid]** Geen netwerk; facts zijn read‑only; runs blokkeren bij **ERROR**.

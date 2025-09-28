@@ -61,14 +61,25 @@ De D3‑implementatie leeft onder de draft‑root `/.003-draft/`:
           acquisition.py       # CAC/CVR/allocatie helpers
           tps_heuristics.py    # TPS heuristieken bij ontbreken dataset
           autoscaling.py       # capaciteit & instances-needed berekening
+        analysis/
+          __init__.py          # analyze(tables, context) → KPIs/percentiles/sensitivity
+          kpis.py
+          percentiles.py
+          sensitivity.py
+        behavior/
+          __init__.py          # public/private simulate_months()
+          budgets.py           # budget_m reeksen
+          funnels.py           # conversies/tokens/uren
+          retention.py         # churn/retentie
+          sampling.py          # RNG helpers
         pipelines/
           public/
             __init__.py
             gpu_costs.py       # PURE: eur_hr, cost €/1M, vendor choice
             pricing.py         # PURE: sell €/1k, floors/caps/rounding
             demand.py          # PURE: maandmodel: budget→conversies→tokens, churn
-            capacity.py        # PURE: autoscaling plan
-            artifacts.py       # WRITER: CSV writers (public)
+            capacity.py        # PURE: autoscaling plan (planner helpers; simulator KPI's)
+            artifacts.py       # WRITER: CSV writers (public, incl. optional scaling_events)
           private/
             __init__.py
             provider_costs.py  # PURE: median EUR/hr per GPU

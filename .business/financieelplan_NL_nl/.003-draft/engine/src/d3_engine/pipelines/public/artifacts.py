@@ -27,6 +27,10 @@ def write_all(out_dir: Path) -> list[str]:
         ("public_tap_capacity_plan.csv", [
             "model", "gpu", "avg_tokens_per_hour", "peak_tokens_per_hour", "tps", "cap_tokens_per_hour_per_instance", "instances_needed", "target_utilization_pct", "capacity_violation"
         ]),
+        # Optional events CSV from autoscaling simulator
+        ("public_tap_scaling_events.csv", [
+            "timestamp_s", "model", "gpu", "demand_tokens_per_hour", "effective_capacity", "replicas_prev", "replicas_new", "reason", "util_pct"
+        ]),
     ]
 
     for name, headers in files_and_headers:

@@ -34,7 +34,4 @@ def ctx():
     return {}
 
 
-def pytest_bdd_apply_tag(tag, function):
-    if tag == 'wip':
-        marker = pytest.mark.skip(reason='WIP scenario')
-        marker(function)
+# Note: avoid plugin-specific hooks here to allow running without pytest-bdd plugin preloaded

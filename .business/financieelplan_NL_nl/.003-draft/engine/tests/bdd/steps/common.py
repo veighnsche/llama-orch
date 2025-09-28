@@ -209,6 +209,38 @@ def then_stdout_contains(ctx, text: str):
     assert text in data, f"Substring not found in stdout: {text!r}"
 
 
+@then(parsers.parse('CSV "{name}" should have at least {n:d} data rows'))
+def then_csv_min_rows(ctx, name: str, n: int):
+    out: Path = ctx["out"]
+    target = out / name
+    assert target.exists(), f"Missing CSV: {target}"
+    with target.open() as f:
+        rdr = csv.reader(f)
+        rows = list(rdr)
+    data_rows = max(0, len(rows) - 1)  # exclude header
+    assert data_rows >= n, f"Expected at least {n} data rows in {name}, found {data_rows}"
+
+
+def _get_nested(d: dict, path: str):
+    cur = d
+    for part in path.split('.'):
+        if not isinstance(cur, dict) or part not in cur:
+            return None
+        cur = cur[part]
+    return cur
+
+
+@then(parsers.parse('the run_summary should contain analysis KPI path "{kpi_path}"'))
+def then_run_summary_has_kpi_path(ctx, kpi_path: str):
+    out: Path = ctx["out"]
+    p = out / "run_summary.json"
+    assert p.exists(), "run_summary.json is missing"
+    data = json.loads(p.read_text())
+    kpis = (((data.get("analysis") or {}).get("kpis")) or {})
+    v = _get_nested(kpis, kpi_path)
+    assert v is not None, f"Missing analysis.kpis path: {kpi_path}"
+
+
 def _sha256(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
 

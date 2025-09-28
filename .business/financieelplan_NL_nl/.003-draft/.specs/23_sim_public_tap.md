@@ -59,6 +59,26 @@ Version: 0.1.0
 6) **Stress‑check (SHOULD)**
    - p90 providerprijs drift (`stress.provider_price_drift_pct`) → **WARNING** bij negatieve marge op p90.
 
+## 3A. MRPT v0 — Minimale realistische pijplijn (scopeversimpeling)
+
+- **MUST**
+  - Curated modellen + GPU‑offers → normalisatie `[gpu,vram_gb,provider,usd_hr]`.
+  - FX + buffer → `eur_hr(g)`.
+  - TPS dataset (voorkeur) of heuristiek met duidelijke logging.
+  - Per‑model `cost €/1M` en keuze `g* = argmin_g cost €/1M` (ties: laagste `eur_hr`, dan alfabetisch `gpu`).
+  - `sell €/1k` zodanig dat target‑marge ≥ drempel; floor/cap/afronding toepassen.
+  - Eenvoudig maandmodel: budget0/groei, CAC fallback, churn, tokens/conv → `active_customers_m`, `tokens_m`, `credits_sold_eur_m` (halt‑at‑zero).
+  - Capaciteitsplanner op basis van `avg/peak tokens/hr`, `tps`, `target_util%`, `min/max instances`; `capacity_violation` via clamp/log.
+  - Artefacten: `public_vendor_choice.csv`, `public_tap_prices_per_model.csv`, `public_tap_customers_by_month.csv`, `public_tap_capacity_plan.csv`.
+
+- **SHOULD**
+  - Kanaalmix/CAC per kanaal o.b.v. allocaties + facts.
+  - Autoscaling simulator (hysterese, warmup/cooldown, stabilisatie) + `public_tap_scaling_events.csv`.
+  - Acceptatie p95(util) binnen tolerantie rond target.
+
+- **MAY**
+  - Diurnale uurprofielen, batching‑efficiency, discount tiers, price‑parity regels.
+
 ### 3.1 Capaciteit & Autoscaling (MUST)
 
 - Doel: plan capaciteit per model m zodanig dat piekvraag (p95) kan worden bediend met beoogde benutting.

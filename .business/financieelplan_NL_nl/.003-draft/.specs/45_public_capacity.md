@@ -7,6 +7,7 @@ Version: 0.1.0
 
 - Testtactiek voor Public Tap capaciteit en autoscaling‐plan per model.
 - Dekt: tokens→tps, cap per instance, target utilization, peak factor, instances_needed, violations.
+ - Target GPU‑klasse: primair consumer‑grade GPU’s (bijv. RTX 4090/3090). Data‑center kaarten (L4/L40S/A100/H100) mogen vermeld worden ter referentie maar zijn niet de primaire optimalisatiedoelen.
 
 ## 2. Eisen (MUST)
 

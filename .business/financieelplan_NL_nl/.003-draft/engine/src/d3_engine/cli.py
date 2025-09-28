@@ -47,7 +47,6 @@ def main() -> int:
     summary = {
         "ts": _ts(),
         **result,
-        "accepted": None,
     }
     (out_dir / "run_summary.json").write_text(json.dumps(summary, indent=2))
     (out_dir / "run_summary.md").write_text("# Run Summary\n\nThis is a scaffold run. Implement engine logic in d3_engine.* modules.\n")

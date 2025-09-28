@@ -33,3 +33,16 @@ autoscaling:
   peak_factor: 1.2                   # p95 peak multiplier over average demand
   min_instances_per_model: 0         # floor for capacity planning
   max_instances_per_model: 100       # safety cap
+  # Simulator policy (required by spec 25_autoscaling)
+  evaluation_interval_s: 60
+  scale_up_threshold_pct: 70
+  scale_down_threshold_pct: 50
+  scale_up_step_replicas: 1
+  scale_down_step_replicas: 1
+  stabilization_window_s: 300
+  warmup_s: 120
+  cooldown_s: 120
+
+runtime:
+  slots_total_default: 32
+  batching_efficiency_pct: 70

@@ -114,6 +114,16 @@ class PublicAutoscaling(BaseModel):
     peak_factor: float = 1.2
     min_instances_per_model: int = 0
     max_instances_per_model: int = 100
+    # Simulator policy (optional in v0.1 but validated if provided)
+    evaluation_interval_s: int = 60
+    scale_up_threshold_pct: float = 70.0
+    scale_down_threshold_pct: float = 50.0
+    scale_up_step_replicas: int = 1
+    scale_down_step_replicas: int = 1
+    stabilization_window_s: int = 300
+    warmup_s: int = 120
+    cooldown_s: int = 120
+    capacity_peak_percentile: Optional[int] = None
 
     @model_validator(mode="after")
     def _bounds(self) -> "PublicAutoscaling":
@@ -127,6 +137,16 @@ class PublicAutoscaling(BaseModel):
             raise ValueError("max_instances_per_model MUST be >= 1")
         if self.min_instances_per_model > self.max_instances_per_model:
             raise ValueError("min_instances_per_model MUST be <= max_instances_per_model")
+        if self.evaluation_interval_s <= 0:
+            raise ValueError("evaluation_interval_s MUST be > 0")
+        if not (0 < self.scale_down_threshold_pct < self.scale_up_threshold_pct <= 100):
+            raise ValueError("thresholds MUST satisfy 0 < scale_down < scale_up ≤ 100")
+        if self.scale_up_step_replicas < 1 or self.scale_down_step_replicas < 1:
+            raise ValueError("scale step replicas MUST be ≥ 1")
+        if self.stabilization_window_s < 0 or self.warmup_s < 0 or self.cooldown_s < 0:
+            raise ValueError("timings MUST be ≥ 0")
+        if self.capacity_peak_percentile is not None and not (1 <= self.capacity_peak_percentile <= 100):
+            raise ValueError("capacity_peak_percentile MUST be 1..100 when set")
         return self
 
 

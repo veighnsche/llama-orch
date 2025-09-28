@@ -41,3 +41,4 @@ targets:
   require_monotonic_growth_public_active_customers: true
   require_monotonic_growth_private_active_customers: true
   public_growth_min_mom_pct: 0.0            # optional min growth per month
+  autoscaling_util_tolerance_pct: 25        # acceptance band around target utilization (p95)

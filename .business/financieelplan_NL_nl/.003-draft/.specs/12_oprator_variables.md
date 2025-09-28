@@ -32,20 +32,19 @@
 - `fraction` = 0..1.
 - Monetary: `EUR`, `EUR_per_month` (float ≥ 0).
 - Tijd/hoeveelheid: `months`, `tokens` (float ≥ 0).
-- Tellingen: `count` (gehele getallen ≥ 0).
 - `enum` uitsluitend met `type=discrete` en `notes` met `values=...`.
 
 ## 3. Scope → Allowed path roots (MUST)
 
 - `general` → `finance.*`, `insurances.*`, `tax.*`, `reserves.*`.
 - `public_tap` → `pricing_policy.public_tap.*`, `prepaid_policy.credits.*`, `acquisition.*`, `autoscaling.*`.
-- `private_tap` → `pricing_policy.private_tap.*`, `prepaid_policy.private_tap.*`, `acquisition.*`, `prepaid_policy.private_tap.vendor_weights.*`.
+- `private_tap` → `pricing_policy.private_tap.*`, `pricing_policy.private_tap.vendor_weights.*`, `pricing_policy.private_tap.management_fee.*`.
 
- Variabelen MOGEN geen paden buiten bovenstaande roots aanwijzen. Pogingen → **ERROR**.
+Variabelen MOGEN geen paden buiten bovenstaande roots aanwijzen. Pogingen → **ERROR**.
 
 ## 4. Validatie (MUST)
 
-- CSV header exact zoals §2.
+{{ ... }}
 - `variable_id` uniek per CSV; duplicates over meerdere CSV’s SHOULD worden vermeden (WARNING).
 - `scope` en `type` en `treatment` waarden exact uit de toegestane sets.
 - `numeric`: `min <= default <= max`, `step > 0`, en `(default - min) % step == 0` na kwantisatie.
@@ -115,8 +114,8 @@
  ```csv
  variable_id,scope,path,type,unit,min,max,step,default,treatment,notes
  default_markup_pct,private_tap,pricing_policy.private_tap.default_markup_over_provider_cost_pct,numeric,percent,0,100,5,40,low_to_high,"Markup % over provider GPU cost"
- management_fee,private_tap,prepaid_policy.private_tap.management_fee_eur_per_month,numeric,EUR,0,1000,50,199,low_to_high,"Monthly management fee"
- vendor_weight_cost,private_tap,prepaid_policy.private_tap.vendor_weights.cost,numeric,fraction,0,1,0.1,0.5,low_to_high,"Vendor score weight: cost"
+ management_fee,private_tap,pricing_policy.private_tap.management_fee_eur_per_month,numeric,EUR,0,1000,50,199,low_to_high,"Monthly management fee"
+ vendor_weight_cost,private_tap,pricing_policy.private_tap.vendor_weights.cost,numeric,fraction,0,1,0.1,0.5,low_to_high,"Vendor score weight: cost"
  ```
 
  Aanvullende variabelen voor groei & churn (Private):

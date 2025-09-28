@@ -1,0 +1,37 @@
+# Mapping of source_tag -> source metadata for TPS measurements
+# Keep tags stable; reference these from tps_model_gpu.csv
+
+S1:
+  name: Koyeb vLLM harness
+  url: https://github.com/vllm-project/vllm
+  notes: Single-stream 512x512 profile used in internal harness; see CSV scenario_notes
+
+S2:
+  name: Microsoft Chat profile (aggregate)
+  url: https://learn.microsoft.com/
+  notes: Aggregate throughput; see CSV scenario_notes
+
+S3:
+  name: NVIDIA NIM TensorRT-LLM Benchmark
+  url: https://developer.nvidia.com/
+  notes: FP8; TP2; concurrency=100
+
+S4:
+  name: NVIDIA TensorRT-LLM streaming profile
+  url: https://developer.nvidia.com/
+  notes: Per-user stream; mean secs/token provided in source
+
+S5:
+  name: DatabaseMart A40 vLLM benchmark
+  url: https://www.databasemart.com/blog/vllm-gpu-benchmark-rtx4090
+  notes: Includes A40 aggregate profile in method; see CSV scenario_notes
+
+DBM-R4090:
+  name: DatabaseMart RTX 4090 vLLM benchmark
+  url: https://www.databasemart.com/blog/vllm-gpu-benchmark-rtx4090
+  notes: Online/offline throughput on various <8B models; tokens/s values extracted from tables
+
+COMMUNITY:
+  name: Community-reported benchmarks (Reddit/Forums)
+  url: https://www.reddit.com/r/LocalLLaMA/
+  notes: Aggregate throughput values reported by users; may vary by setup. Use only when vendor/tech-blog numbers are unavailable. Always include direct thread URL in scenario_notes and clearly note batch/concurrency/quantization if known.

@@ -34,28 +34,27 @@ consolidation:
   include_loan_in_cashflow: true
 
 ui:
-  show_credit_packs: [5, 10, 20, 50, 100, 200, 500]
   halt_at_zero_simulation: true
 
 logging:
   level: INFO                          # DEBUG | INFO | WARN | ERROR
   write_run_summary: true
- 
-targets:
-  horizon_months: 18                   # feasibility horizon (MUST >= 1)
-  private_margin_threshold_pct: 20     # minimum acceptable private margin (0..100)
-  require_monotonic_growth_public_active_customers: true
-  require_monotonic_growth_private_active_customers: true
-  public_growth_min_mom_pct: 0.0       # optional minimum MoM growth requirement
+  targets:
+    horizon_months: 18                   # feasibility horizon (MUST >= 1)
+    private_margin_threshold_pct: 20     # minimum acceptable private margin (0..100)
+    require_monotonic_growth_public_active_customers: true
+    require_monotonic_growth_private_active_customers: true
+    public_growth_min_mom_pct: 0.0       # optional minimum MoM growth requirement
+    autoscaling_util_tolerance_pct: 25   # p95(util) tolerance band around target utilization (default 25)
 
 ## 3. Regels & Constraints (MUST)
 
 - `run.pipelines` MUST een subset zijn van `{public, private}`; lege set → **ERROR**.
 - `stochastic.simulations_per_run` MUST ≥ 1.
-- `stochastic.percentiles` MUST waarden 0..100 bevatten, strikt stijgend.
+- `targets.autoscaling_util_tolerance_pct` MUST in 0..100.
 - `stress.*_pct` MUST ≥ 0.
 - `consolidation.overhead_allocation_driver` MUST een toegestane waarde hebben.
- - `targets.horizon_months` MUST ≥ 1; `targets.private_margin_threshold_pct` MUST in 0..100; `targets.public_growth_min_mom_pct` MUST ≥ 0.
+- `targets.horizon_months` MUST ≥ 1; `targets.private_margin_threshold_pct` MUST in 0..100; `targets.public_growth_min_mom_pct` MUST ≥ 0; `targets.autoscaling_util_tolerance_pct` MUST in 0..100.
 
 ## 4. Seed‑resolutie en determinisme (MUST)
 
