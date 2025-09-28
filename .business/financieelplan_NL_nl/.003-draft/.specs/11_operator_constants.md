@@ -75,6 +75,7 @@ meta:
 
 pricing_policy:
   public_tap:
+    target_margin_pct: 55.0
     round_increment_eur_per_1k: 0.01
     min_floor_eur_per_1k: 0.05
     max_cap_eur_per_1k: 3.00

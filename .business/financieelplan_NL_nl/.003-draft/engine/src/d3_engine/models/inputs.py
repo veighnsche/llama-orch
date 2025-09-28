@@ -86,12 +86,20 @@ class TargetsConfig(BaseModel):
     require_monotonic_growth_public_active_customers: bool = True
     require_monotonic_growth_private_active_customers: bool = True
     public_growth_min_mom_pct: Optional[float] = None
+    autoscaling_util_tolerance_pct: float = 25.0
 
     @field_validator("horizon_months")
     @classmethod
     def _horizon_positive(cls, v: int) -> int:
         if v < 1:
             raise ValueError("horizon_months MUST be >= 1")
+        return v
+
+    @field_validator("autoscaling_util_tolerance_pct")
+    @classmethod
+    def _tolerance_range(cls, v: float) -> float:
+        if v < 0 or v > 100:
+            raise ValueError("autoscaling_util_tolerance_pct MUST be in 0..100")
         return v
 
 

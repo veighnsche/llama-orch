@@ -31,14 +31,13 @@
 - `percent` = 0..100 als getal (geen %‑teken in CSV).
 - `fraction` = 0..1.
 - Monetary: `EUR`, `EUR_per_month` (float ≥ 0).
-- Tijd/hoeveelheid: `months`, `tokens` (float ≥ 0).
 - `enum` uitsluitend met `type=discrete` en `notes` met `values=...`.
 
 ## 3. Scope → Allowed path roots (MUST)
 
 - `general` → `finance.*`, `insurances.*`, `tax.*`, `reserves.*`.
 - `public_tap` → `pricing_policy.public_tap.*`, `prepaid_policy.credits.*`, `acquisition.*`, `autoscaling.*`.
-- `private_tap` → `pricing_policy.private_tap.*`, `pricing_policy.private_tap.vendor_weights.*`, `pricing_policy.private_tap.management_fee.*`.
+- `private_tap` → `pricing_policy.private_tap.*`, `acquisition.*`.
 
 Variabelen MOGEN geen paden buiten bovenstaande roots aanwijzen. Pogingen → **ERROR**.
 

@@ -64,7 +64,7 @@ Version: 0.1.0
 - **MUST**
   - Curated modellen + GPU‑offers → normalisatie `[gpu,vram_gb,provider,usd_hr]`.
   - FX + buffer → `eur_hr(g)`.
-  - TPS dataset (voorkeur) of heuristiek met duidelijke logging.
+  - TPS dataset (voorkeur) of heuristiek met duidelijke logging; **batching‑normalisatie** toepassen naar een effectieve tokens/sec per instance op basis van `measurement_type/gpu_count/batch`.
   - Per‑model `cost €/1M` en keuze `g* = argmin_g cost €/1M` (ties: laagste `eur_hr`, dan alfabetisch `gpu`).
   - `sell €/1k` zodanig dat target‑marge ≥ drempel; floor/cap/afronding toepassen.
   - Eenvoudig maandmodel: budget0/groei, CAC fallback, churn, tokens/conv → `active_customers_m`, `tokens_m`, `credits_sold_eur_m` (halt‑at‑zero).
@@ -87,7 +87,7 @@ Version: 0.1.0
 - Grootheden:
   - `avg_tokens_per_hour(m) = tokens_m / 720` (benadering over maand)
   - `peak_tokens_per_hour(m) = avg_tokens_per_hour(m) * peak_factor`
-  - Per instance capaciteit bij GPU g: `cap_tokens_per_hour_per_instance(m,g) = tps(m,g) * 3600 * (target_utilization_pct/100)`
+  - Per instance capaciteit bij GPU g: `cap_tokens_per_hour_per_instance(m,g) = tps_eff(m,g) * 3600 * (target_utilization_pct/100)` waarbij `tps_eff` de **batching‑genormaliseerde** tokens/sec per instance is.
   - Nodig: `instances_needed(m,g) = ceil( peak_tokens_per_hour(m) / cap_tokens_per_hour_per_instance(m,g) )`
   - Enforce: `instances_needed = clamp(instances_needed, min_instances_per_model, max_instances_per_model)`; indien clamp > max → `capacity_violation=true`.
 - Kosteneffect: effectieve kosten per token worden hoger door benuttingsdoel en piekheadroom; dit is impliciet verdisconteerd via `instances_needed`×`eur_hr(g)` en draaitijd.

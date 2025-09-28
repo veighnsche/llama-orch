@@ -9,13 +9,13 @@ Version: 0.1.0
 - Simulator: benadert real‑world autoscaler met hysterese, stabilisatiewindows, warm‑up/cooldown en thresholds.
 - Toepassing: Public Tap capaciteit per model/gpu (Private gebruikt geen autoscaling in v0.1).
 
-## 2. Inputs (MUST)
+## 2. Inputs
 
 - Uit operator (`inputs/operator/public_tap.yaml → autoscaling`):
   - `target_utilization_pct ∈ [1..100]`
   - `peak_factor ≥ 1.0`
   - `min_instances_per_model ≥ 0`, `max_instances_per_model ≥ 1`, `min ≤ max`
-  - Simulator policy (nieuw):
+  - Simulator policy (SHOULD):
     - `evaluation_interval_s` (bijv. 60)
     - `scale_up_threshold_pct` (bijv. 70)
     - `scale_down_threshold_pct` (bijv. 50)
@@ -30,7 +30,7 @@ Version: 0.1.0
 
 ## 3. Planner (MUST)
 
-- `cap_tokens_per_hour_per_instance = tokens_per_hour(m,g*) * target_utilization_pct/100`.
+- `cap_tokens_per_hour_per_instance = tps_eff(m,g*) * 3600 * target_utilization_pct/100`.
 - `instances_needed = ceil(peak_tokens_per_hour / cap_tokens_per_hour_per_instance)`.
 - Clamp: `min_instances ≤ instances_needed ≤ max_instances`.
 - `capacity_violation = instances_needed > max_instances`.

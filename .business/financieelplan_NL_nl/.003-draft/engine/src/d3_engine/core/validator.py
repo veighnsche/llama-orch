@@ -43,45 +43,63 @@ def _check_simulation_yaml(inputs_dir: Path, errors: List[str]):
     data = _read_yaml(sim_p)
     # Required keys (see 14_simulation_parameters.md)
     _require_key(data, "run.pipelines", errors, list)
-    rs = _require_key(data, "run.random_seed", errors, int, lambda v: v > 0)
+    # run.random_seed is optional; if present must be int > 0
+    cur = data.get("run", {}) if isinstance(data, dict) else {}
+    if isinstance(cur, dict) and "random_seed" in cur:
+        v = cur.get("random_seed")
+        if not isinstance(v, int) or v <= 0:
+            errors.append("invalid value for run.random_seed: must be int > 0 when set")
     _require_key(data, "run.output_dir", errors)
     _require_key(data, "run.random_runs_per_simulation", errors, int, lambda v: v >= 1)
     _require_key(data, "stochastic.simulations_per_run", errors, int, lambda v: v >= 1)
     perc = _require_key(data, "stochastic.percentiles", errors, list)
     if isinstance(perc, list):
-        for x in perc:
-            if not isinstance(x, int) or not (1 <= x <= 99):
-                errors.append("stochastic.percentiles must be ints in [1..99]")
-                break
+        ok_types = all(isinstance(x, int) for x in perc)
+        ok_range = all(0 <= int(x) <= 100 for x in perc) if ok_types else False
+        ok_asc = all(perc[i] < perc[i+1] for i in range(len(perc)-1)) if len(perc) > 1 and ok_types else True
+        if not (ok_types and ok_range and ok_asc):
+            errors.append("stochastic.percentiles must be strictly ascending ints in [0..100]")
     _require_key(data, "targets.horizon_months", errors, int, lambda v: v >= 1)
     _require_key(data, "targets.private_margin_threshold_pct", errors, (int, float), lambda v: v >= 0)
     _require_key(data, "targets.require_monotonic_growth_public_active_customers", errors, bool)
     _require_key(data, "targets.require_monotonic_growth_private_active_customers", errors, bool)
-    _require_key(data, "targets.autoscaling_util_tolerance_pct", errors, (int, float), lambda v: v >= 0)
+    _require_key(data, "targets.autoscaling_util_tolerance_pct", errors, (int, float), lambda v: 0 <= v <= 100)
 
 
 def _check_public_operator(inputs_dir: Path, errors: List[str]):
     op_p = inputs_dir / "operator" / "public_tap.yaml"
     data = _read_yaml(op_p)
-    _require_key(data, "pricing_policy.target_margin_pct", errors, (int, float), lambda v: 0 <= v <= 95)
+    _require_key(data, "pricing_policy.public_tap.target_margin_pct", errors, (int, float), lambda v: 0 <= v <= 95)
     _require_key(data, "autoscaling.target_utilization_pct", errors, (int, float), lambda v: 1 <= v <= 100)
     _require_key(data, "autoscaling.peak_factor", errors, (int, float), lambda v: v >= 1.0)
     min_i = _require_key(data, "autoscaling.min_instances_per_model", errors, int, lambda v: v >= 0)
     max_i = _require_key(data, "autoscaling.max_instances_per_model", errors, int, lambda v: v >= 1)
     if isinstance(min_i, int) and isinstance(max_i, int) and min_i > max_i:
         errors.append("autoscaling.min_instances_per_model must be <= max_instances_per_model")
-    # Simulator policy (all required)
-    _require_key(data, "autoscaling.evaluation_interval_s", errors, int, lambda v: v > 0)
-    up = _require_key(data, "autoscaling.scale_up_threshold_pct", errors, (int, float))
-    down = _require_key(data, "autoscaling.scale_down_threshold_pct", errors, (int, float))
+    # Simulator policy is SHOULD: do not error if missing; validate only when present
+    def _opt_num(path: str, typ, pred=None):
+        cur = data
+        for part in path.split('.'):
+            if not isinstance(cur, dict) or part not in cur:
+                return None
+            cur = cur[part]
+        if not isinstance(cur, typ):
+            errors.append(f"invalid type for {path}: expected {typ.__name__}")
+            return None
+        if pred is not None and isinstance(cur, (int, float)) and not pred(cur):
+            errors.append(f"invalid value for {path}: {cur}")
+        return cur
+    _opt_num("autoscaling.evaluation_interval_s", int, lambda v: v > 0)
+    up = _opt_num("autoscaling.scale_up_threshold_pct", (int, float))
+    down = _opt_num("autoscaling.scale_down_threshold_pct", (int, float))
     if isinstance(up, (int, float)) and isinstance(down, (int, float)):
         if not (0 < down < up <= 100):
             errors.append("autoscaling thresholds must satisfy 0 < scale_down < scale_up <= 100")
-    _require_key(data, "autoscaling.scale_up_step_replicas", errors, int, lambda v: v >= 1)
-    _require_key(data, "autoscaling.scale_down_step_replicas", errors, int, lambda v: v >= 1)
-    _require_key(data, "autoscaling.stabilization_window_s", errors, int, lambda v: v >= 0)
-    _require_key(data, "autoscaling.warmup_s", errors, int, lambda v: v >= 0)
-    _require_key(data, "autoscaling.cooldown_s", errors, int, lambda v: v >= 0)
+    _opt_num("autoscaling.scale_up_step_replicas", int, lambda v: v >= 1)
+    _opt_num("autoscaling.scale_down_step_replicas", int, lambda v: v >= 1)
+    _opt_num("autoscaling.stabilization_window_s", int, lambda v: v >= 0)
+    _opt_num("autoscaling.warmup_s", int, lambda v: v >= 0)
+    _opt_num("autoscaling.cooldown_s", int, lambda v: v >= 0)
 
 
 def _check_private_operator(inputs_dir: Path, errors: List[str]):
@@ -96,18 +114,27 @@ def _check_curated(inputs_dir: Path, errors: List[str]):
         with gpu_p.open() as f:
             rdr = csv.DictReader(f)
             hdr = [h.strip() for h in rdr.fieldnames or []]
-            # Accept user's richer schema; require subset columns
-            required = {"provider", "gpu_vram_gb", "price_per_gpu_hr"}
-            if not required.issubset({h for h in (h.strip() for h in hdr)}):
+            # Accept user's richer schema; require one of two supported subsets
+            have = {h for h in (h.strip() for h in hdr)}
+            required_a = {"provider", "gpu_vram_gb", "price_per_gpu_hr"}
+            required_b = {"provider", "gpu_vram_gb", "price_usd_hr", "num_gpus"}
+            if not (required_a.issubset(have) or required_b.issubset(have)):
                 errors.append(
-                    "curated_gpu.csv must contain columns: provider,gpu_vram_gb,price_per_gpu_hr"
+                    "curated_gpu.csv must contain either columns {provider,gpu_vram_gb,price_per_gpu_hr} or {provider,gpu_vram_gb,price_usd_hr,num_gpus}"
                 )
             for row in rdr:
                 try:
-                    usd = float((row.get("price_per_gpu_hr") or "").strip())
                     vram = float((row.get("gpu_vram_gb") or "").strip())
+                    if "price_per_gpu_hr" in row and str(row.get("price_per_gpu_hr")).strip() != "":
+                        usd = float((row.get("price_per_gpu_hr") or "").strip())
+                    else:
+                        price_usd_hr = float((row.get("price_usd_hr") or "").strip())
+                        num = float((row.get("num_gpus") or "").strip())
+                        if num <= 0:
+                            raise ValueError("num_gpus must be > 0")
+                        usd = price_usd_hr / num
                 except Exception:
-                    errors.append("curated_gpu.csv invalid numeric values in price_per_gpu_hr/gpu_vram_gb")
+                    errors.append("curated_gpu.csv invalid numeric values in gpu_vram_gb/price fields")
                     break
                 if usd <= 0:
                     errors.append("curated_gpu.csv price_per_gpu_hr must be > 0")

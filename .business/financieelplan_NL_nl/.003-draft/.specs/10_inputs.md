@@ -77,22 +77,25 @@ Version: 0.1.0
   4) Geen seed → **ERROR**
 - Identieke inputs + seed → byte‑gelijke outputs over machines.
 - `run_summary.{json,md}` MUST de seed(s), input‑hashes, overlay‑beslissingen en shadowing‑warnings loggen.
-
 ## 7. CSV/YAML Schemas (MUST)
 
 - `inputs/operator/curated_public_tap_models.csv`:
   - Minimale kolommen: `Model,Variant,Developer,Quantization/Runtime,Typical_VRAM_for_4bit_or_MXFP4_GB,License,Download,Benchmarks,Notes`.
   - Extra kolommen (bijv. `weights_vram_4bit_gb_est`) zijn toegestaan.
-- `inputs/operator/curated_gpu.csv` (provider‑prijzen/offers):
-  - Minimale kolommen: `provider,gpu_model,gpu_vram_gb,num_gpus,price_usd_hr` of `price_per_gpu_hr`.
-  - Engine MUST normaliseren naar de interne rentals‑vorm `[gpu, vram_gb, provider, usd_hr]`, waarbij `usd_hr = price_per_gpu_hr` (indien aanwezig) anders `price_usd_hr/num_gpus`.
-  - Geen min/max/percent‑velden voor prijzen in de bron.
+  - `inputs/operator/curated_gpu.csv` (provider‑prijzen/offers):
+    - Minimale kolommen: `provider,gpu_model,gpu_vram_gb,num_gpus,price_usd_hr` of `price_per_gpu_hr`.
+    - Engine MUST normaliseren naar de interne rentals‑vorm `[gpu, vram_gb, provider, usd_hr]`, waarbij `usd_hr = price_per_gpu_hr` (indien aanwezig) anders `price_usd_hr/num_gpus`.
+    - Geen min/max/percent‑velden voor prijzen in de bron.
+    - Extra kolommen zijn toegestaan en worden genegeerd; de vereiste subset MUST aanwezig zijn.
+    - Numeriek: `num_gpus ≥ 1`, `price_* > 0`, `gpu_vram_gb > 0` (anders **ERROR**).
+    - Pre‑1.0 norm: alle engine‑logica veronderstelt de interne shape `[gpu, vram_gb, provider, usd_hr]` als canoniek.
+    - **Clarification:** de engine accepteert een rijkere set van kolommen in de CSV, maar de vereiste subset `[gpu, vram_gb, provider, usd_hr]` MUST aanwezig zijn en voldoen aan de numerieke constraints.
 - `inputs/variables/*.csv`: zie strikt schema in `12_oprator_variables.md`.
 - `inputs/facts/ads_channels.csv`:
   - Kolommen: `channel_id,platform,region,objective,cost_model,unit,currency,typical_value,low_value,high_value,notes,source_url,source_date`.
 - `inputs/facts/agency_fees.csv`:
   - Kolommen: `agency_id,agency_name,city,region,service_type,fee_model,unit,currency,value,low_value,high_value,setup_fee_currency,setup_fee_value,notes,source_url,source_date`.
-- `inputs/facts/insurances.csv`:
+{{ ... }}
   - Kolommen: `insurer_id,insurer_name,product,focus_segment,coverage_highlights,example_limit_eur,example_deductible_eur,example_premium_eur_per_month,source_url,notes`.
   - `inputs/operator/general.yaml → insurances.selected` MUST refereren naar `insurer_id` waarden.
 - `inputs/facts/market_env.yaml`:

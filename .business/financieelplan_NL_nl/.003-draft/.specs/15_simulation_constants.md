@@ -39,13 +39,14 @@ ui:
 logging:
   level: INFO                          # DEBUG | INFO | WARN | ERROR
   write_run_summary: true
-  targets:
-    horizon_months: 18                   # feasibility horizon (MUST >= 1)
-    private_margin_threshold_pct: 20     # minimum acceptable private margin (0..100)
-    require_monotonic_growth_public_active_customers: true
-    require_monotonic_growth_private_active_customers: true
-    public_growth_min_mom_pct: 0.0       # optional minimum MoM growth requirement
-    autoscaling_util_tolerance_pct: 25   # p95(util) tolerance band around target utilization (default 25)
+
+targets:
+  horizon_months: 18                   # feasibility horizon (MUST >= 1)
+  private_margin_threshold_pct: 20     # minimum acceptable private margin (0..100)
+  require_monotonic_growth_public_active_customers: true
+  require_monotonic_growth_private_active_customers: true
+  public_growth_min_mom_pct: 0.0       # optional minimum MoM growth requirement
+  autoscaling_util_tolerance_pct: 25   # p95(util) tolerance band around target utilization (default 25)
 
 ## 3. Regels & Constraints (MUST)
 

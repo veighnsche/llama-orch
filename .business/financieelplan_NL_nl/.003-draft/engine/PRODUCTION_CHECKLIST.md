@@ -20,7 +20,7 @@ Gebruik deze checklist als GO/NO‑GO gate voor productie. Alle MUST‑items moe
 - [ ] Precedence correct: CSV > YAML met duidelijke WARNING bij shadowing; escalatie naar **ERROR** bij `run.fail_on_warning: true`.
 - [ ] Allowed path roots afgedwongen per scope; onbekende paden → **ERROR** (zie `12_oprator_variables.md`).
 - [x] CSV kolom‑schema’s (exacte headers) en units (`percent|fraction|EUR|months|tokens|count`) strikt gevalideerd (variables/*.csv).
-- [x] Curated GPU/provider schema gevalideerd tegen huidige dataset: vereist subset kolommen `{provider,gpu_vram_gb,price_per_gpu_hr}`; numeriek > 0 (mapping gedocumenteerd in validator).
+- [x] Curated GPU/provider schema gevalideerd: vereist óf subset `{provider,gpu_vram_gb,price_per_gpu_hr}` óf `{provider,gpu_vram_gb,price_usd_hr,num_gpus}`; afgeleide `usd_hr>0` en `gpu_vram_gb>0` (mapping gedocumenteerd in validator).
 - [x] Curated public models CSV accepteert case‑insensitive kolom `model` en vereist niet‑lege waarden; ≥1 rij.
 - [x] `simulation.yaml` bevat `targets.autoscaling_util_tolerance_pct` (acceptatieband p95 rond target util).
 

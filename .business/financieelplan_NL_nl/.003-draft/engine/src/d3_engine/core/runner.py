@@ -11,6 +11,7 @@ from ..pipelines.private import artifacts as prv_art
 from ..analysis import analyze
 from ..pipelines.public.demand import hourly_timeseries_uniform
 from ..services.autoscaling import ASGPolicy, simulate_autoscaler
+import yaml
 
 
 def ensure_dir(p: Path) -> None:
@@ -31,11 +32,42 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
 
     artifacts: List[str] = []
 
+    # Load acceptance targets from inputs
+    target_utilization_pct = 75.0
+    autoscaling_util_tolerance_pct = 25.0
+    private_margin_threshold_pct = 20.0
+    try:
+        sim_p = inputs_dir / "simulation.yaml"
+        sim_data = yaml.safe_load(sim_p.read_text()) or {}
+        tol = (
+            sim_data.get("targets", {})
+            if isinstance(sim_data, dict) else {}
+        )
+        v = tol.get("autoscaling_util_tolerance_pct") if isinstance(tol, dict) else None
+        if isinstance(v, (int, float)):
+            autoscaling_util_tolerance_pct = float(v)
+        pm = tol.get("private_margin_threshold_pct") if isinstance(tol, dict) else None
+        if isinstance(pm, (int, float)):
+            private_margin_threshold_pct = float(pm)
+    except Exception:
+        pass
+    try:
+        pub_p = inputs_dir / "operator" / "public_tap.yaml"
+        pub_data = yaml.safe_load(pub_p.read_text()) or {}
+        v = (
+            pub_data.get("autoscaling", {})
+            if isinstance(pub_data, dict) else {}
+        ).get("target_utilization_pct")
+        if isinstance(v, (int, float)) and 1 <= float(v) <= 100:
+            target_utilization_pct = float(v)
+    except Exception:
+        pass
+
     # 2) Pipelines (placeholder generation of expected CSV headers)
     autoscaling_summary = None
     if "public" in pipelines:
         print(elog.jsonl("pipeline_public_start"))
-        artifacts += pub_art.write_all(out_dir)
+        artifacts += pub_art.write_all(out_dir, state)
         print(elog.jsonl("pipeline_public_done"))
         # Simulate autoscaler over a synthetic hourly demand profile (scaffold)
         # TODO: replace with real per-model series from pipelines once loader is implemented
@@ -44,7 +76,7 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
         series = hourly_timeseries_uniform(monthly_tokens, hours_in_month=hours, peak_factor=1.5, diurnal=True)
         # Assume a nominal throughput (tokens/s) and policy; these will be read from inputs later
         tps = 1_000.0  # tokens per second
-        target_util = 75.0
+        target_util = target_utilization_pct
         policy = ASGPolicy()
         sim = simulate_autoscaler(series, tps, target_util, policy)
         autoscaling_summary = sim.get("summary", {})
@@ -73,7 +105,7 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
 
     if "private" in pipelines:
         print(elog.jsonl("pipeline_private_start"))
-        artifacts += prv_art.write_all(out_dir)
+        artifacts += prv_art.write_all(out_dir, state)
         print(elog.jsonl("pipeline_private_done"))
 
     # 3) Consolidation (TBD)
@@ -85,7 +117,14 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
 
     # 5) Acceptance
     from . import acceptance as acc
-    acceptance = acc.check_acceptance({"autoscaling_summary": autoscaling_summary}, {"target_utilization_pct": 75.0})
+    acceptance = acc.check_acceptance(
+        {"autoscaling_summary": autoscaling_summary},
+        {
+            "target_utilization_pct": target_utilization_pct,
+            "autoscaling_util_tolerance_pct": autoscaling_util_tolerance_pct,
+            "private_margin_threshold_pct": private_margin_threshold_pct,
+        },
+    )
     print(elog.jsonl("acceptance_checked", accepted=acceptance.get("accepted")))
 
     return {
