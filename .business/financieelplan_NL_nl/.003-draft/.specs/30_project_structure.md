@@ -45,8 +45,13 @@ De D3‑implementatie leeft onder de draft‑root `/.003-draft/`:
         core/
           loader.py            # YAML/CSV ingest, overlay/precedence
           validator.py         # schema + referenties + domeinen
-          rng.py               # seeds/streams
-          consolidate.py       # consolidatie outputs
+          variables.py         # build variables grid, parse treatments, transcript draws
+          rng.py               # seeds/streams (PCG64 substreams)
+          simulate.py          # job executor (per (grid, replicate), calls pipelines)
+          aggregate.py         # merge job results, percentiles/KPIs
+          acceptance.py        # targets/capacity checks
+          consolidate.py       # consolidated outputs (MD/CSV)
+          runner.py            # orchestrates load→validate→grid→replicates→parallel→aggregate→acceptance→artifacts→summary
           logging.py           # JSONL progress, run_summary helpers (optioneel)
         models/
           inputs.py            # Pydantic modellen voor YAML/CSV shapes
@@ -59,17 +64,17 @@ De D3‑implementatie leeft onder de draft‑root `/.003-draft/`:
         pipelines/
           public/
             __init__.py
-            gpu_costs.py       # eur_hr, cost €/1M, vendor choice
-            pricing.py         # sell €/1k, floors/caps/rounding
-            demand.py          # maandmodel: budget→conversies→tokens, churn
-            capacity.py        # autoscaling plan
-            artifacts.py       # CSV writers (public)
+            gpu_costs.py       # PURE: eur_hr, cost €/1M, vendor choice
+            pricing.py         # PURE: sell €/1k, floors/caps/rounding
+            demand.py          # PURE: maandmodel: budget→conversies→tokens, churn
+            capacity.py        # PURE: autoscaling plan
+            artifacts.py       # WRITER: CSV writers (public)
           private/
             __init__.py
-            provider_costs.py  # median EUR/hr per GPU
-            pricing.py         # sell EUR/hr + fees
-            clients.py         # maandmodel: budget→clients→uren, churn
-            artifacts.py       # CSV writers (private)
+            provider_costs.py  # PURE: median EUR/hr per GPU
+            pricing.py         # PURE: sell EUR/hr + fees
+            clients.py         # PURE: maandmodel: budget→clients→uren, churn
+            artifacts.py       # WRITER: CSV writers (private)
         charts.py              # (optioneel) grafiekhelpers
     tests/
       test_validator.py
@@ -131,7 +136,7 @@ Werkmodus: **CLI (MUST)**
    - UI schrijft eventuele unsaved changes naar `inputs/`.
    - Start engine (CLI) met `inputs/simulation.yaml` als stuurfile.
 3) Engine flow (zie `20_simulations.md`):
-   - Load → Validate → Variables grid → Random replicates → MC → Pipelines → Consolidatie.
+   - Load → Validate → Variables grid → Random replicates → MC → Parallel jobs (pipelines) → Aggregation → Acceptance → Artifacts → Summary (CLI).
 4) Artefacten worden in `outputs/` geschreven en in de UI weergegeven (tabellen, charts, MD‑rapport).
 
 ## 5. Determinisme & targets

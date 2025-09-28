@@ -37,7 +37,9 @@ Pijplijnen draaien onafhankelijk (deterministisch) en kunnen afzonderlijk of sam
    - Voor elke grid‑combinatie: voer `run.random_runs_per_simulation` replicates uit; trek `random` variabelen opnieuw per replicate.
    - Binnen elke replicate: voer `stochastic.simulations_per_run` iteraties uit voor funnel/uitkomststochastiek.
 
-5) **Run pipelines** (MUST)
+5) **Run pipelines (parallel jobs)** (MUST)
+   - Maak jobs voor elke `(grid_index, replicate_index)` (en MC binnen replicate) met deterministische volgorde.
+   - Plan jobs met `run.max_concurrency` (threads/processen) zonder resultaat‑drift.
    - `PublicTapSim`: grondkosten → keuze GPU per model → verkoopprijs per 1k → vraag/credits → KPIs.
    - `PrivateTapSim`: mediane provider‑EUR/hr → verkoop EUR/hr → fees → KPIs.
 
@@ -46,9 +48,20 @@ Pijplijnen draaien onafhankelijk (deterministisch) en kunnen afzonderlijk of sam
    - Schrijf `consolidated_summary.{md,json}` en `consolidated_kpis.csv`.
 
 7) **Artefacten & logging** (MUST)
-   - `run_summary.{json,md}` met seed(s), input‑hashes, overlay‑beslissingen, shadowing‑warnings.
+   - `run_summary.{json,md}` met seed(s), input‑hashes, overlay‑beslissingen, shadowing‑warnings, grid/replicates/MC.
    - `variable_draws.csv` met `scope,variable_id,path,grid_index,replicate_index,draw_value`.
    - Pijplijnspecifieke CSV’s/MD/PNG (zie §6 en specs 22/23).
+
+### 3.1 Parallelisme & determinisme (MUST)
+
+- Jobs worden eerst volledig gegenereerd en lexicografisch gesorteerd op `(grid_index, replicate_index)`.
+- Elke job krijgt een eigen seed via hashing (`H(master_seed, scope, variable_id?, grid_index, replicate_index, mc_index?)`).
+- Resultaten worden deterministisch verzameld en geaggregeerd in dezelfde volgorde; schrijfbewerkingen gebeuren óf uit één aggregator, óf via staging + merge.
+- JSONL progress events (indicatief):
+  - `run_start` → `load_start` → `load_done` → `validate_start` → `validate_done` → `grid_built` (size=N)
+  - `job_submitted`/`job_done` (met `grid_index`, `replicate_index`)
+  - `pipeline_public_start`/`pipeline_public_done`, `pipeline_private_start`/`pipeline_private_done`
+  - `aggregate_done` → `acceptance_checked` → `run_done`
 
 ## 4. Runner & Configuratie (`inputs/simulation.yaml`)
 

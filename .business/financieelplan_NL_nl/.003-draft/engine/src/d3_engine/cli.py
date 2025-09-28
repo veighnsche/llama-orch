@@ -10,6 +10,7 @@ import json
 import sys
 import time
 from pathlib import Path
+from d3_engine.core import runner
 
 
 def _ts() -> str:
@@ -38,22 +39,15 @@ def main() -> int:
 
     _jsonl("run_start", inputs=str(inputs), out=str(out_dir), pipelines=args.pipelines, seed=args.seed)
 
-    # Scaffold: pretend to validate and run quickly
-    time.sleep(0.05)
-    _jsonl("validated")
+    # Execute orchestrated run
+    pipelines = [p.strip() for p in args.pipelines.split(",") if p.strip()]
+    result = runner.execute(inputs, out_dir, pipelines, args.seed, args.fail_on_warning)
 
-    time.sleep(0.05)
-    _jsonl("simulated", grid_size=1, random_runs=1, mc_iterations=1)
-
-    # Write minimal run summary
+    # Write run summary from runner result
     summary = {
         "ts": _ts(),
-        "inputs": str(inputs),
-        "outputs": str(out_dir),
-        "pipelines": [p.strip() for p in args.pipelines.split(",") if p.strip()],
-        "seed": args.seed,
+        **result,
         "accepted": None,
-        "artifacts": [],
     }
     (out_dir / "run_summary.json").write_text(json.dumps(summary, indent=2))
     (out_dir / "run_summary.md").write_text("# Run Summary\n\nThis is a scaffold run. Implement engine logic in d3_engine.* modules.\n")
