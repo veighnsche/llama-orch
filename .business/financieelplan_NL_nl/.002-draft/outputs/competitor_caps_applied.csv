@@ -2,5 +2,3 @@ model,sell_per_1m_eur,competitor_cap_applied
 Llama-3-1-8B,80.0,False
 Qwen2-5-7B,80.0,False
 Mixtral-8x7B,480.0,False
-DeepSeek-R1-Distill-Llama-8B,100.0,False
-Llama-3-3-70B,910.0,False

@@ -1,1 +1,7 @@
-capacity_overrides: {}
+capacity_overrides:
+  Llama-3-3-70B:
+    preferred_gpu: H100
+    tps_override_tokens_per_sec: 16.6   # derived from 3322.87 / 2 GPUs / ~100 concurrency
+  DeepSeek-R1-Distill-Llama-8B:
+    preferred_gpu: A100
+    tps_override_tokens_per_sec: 58.5   # derived from 1870.70 / 32 batch

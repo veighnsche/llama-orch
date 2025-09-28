@@ -138,6 +138,34 @@ def run_pipeline(*, render_port: Optional[RenderPort] = None, validate_port: Opt
         overrides=overrides,
         capacity_overrides=capacity_overrides,
     )
+    # Acceptance gate: blended GM and required inflow thresholds
+    try:
+        acc = (config.get("acceptance") or {}) if isinstance(config, dict) else {}
+        gm_range = acc.get("blended_gm_pct_range") or []
+        max_inflow = acc.get("max_required_inflow_eur")
+        issues = []
+        # Blended margin rate in pct
+        try:
+            mr = float(agg.get("public_tpl", {}).get("blended", {}).get("margin_rate", 0.0)) * 100.0
+            if isinstance(gm_range, (list, tuple)) and len(gm_range) == 2:
+                lo, hi = float(gm_range[0]), float(gm_range[1])
+                if mr < lo or mr > hi:
+                    issues.append(f"blended_gm_pct_out_of_range: {mr:.2f}% not in [{lo}%, {hi}%]")
+        except Exception:
+            pass
+        try:
+            req_inflow = agg.get("break_even", {}).get("required_inflow_eur")
+            if max_inflow is not None and isinstance(req_inflow, (int, float)) and req_inflow is not None:
+                if float(req_inflow) > float(max_inflow):
+                    issues.append(f"required_inflow_exceeds_max: {req_inflow:.2f} > {float(max_inflow):.2f}")
+        except Exception:
+            pass
+        if issues:
+            body = "\n".join(["# Acceptance Report", *[f"- {x}" for x in issues]]) + "\n"
+            write_text(OUTPUTS / "acceptance_report.md", body)
+            return 1
+    except Exception:
+        pass
     write_artifacts(config, agg)
     charts = generate_charts(agg)
     ctx = build_context(agg=agg, charts=charts, config=config, overrides=overrides, lending=lending, scenarios=scenarios)

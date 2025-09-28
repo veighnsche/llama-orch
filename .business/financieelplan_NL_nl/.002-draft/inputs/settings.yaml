@@ -92,6 +92,10 @@ finance:
   marketing_allocation_pct_of_inflow: 20
   runway_target_months: 6
 
+acceptance:
+  blended_gm_pct_range: [40, 60]
+  max_required_inflow_eur: 12000
+
 pricing_policy:
   version: 1
   public_tap:

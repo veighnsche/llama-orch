@@ -40,19 +40,19 @@ def load_inputs() -> Tuple[
     price_sheet = read_csv(INPUTS / "price_sheet.csv")
     gpu_df = read_csv(INPUTS / "gpu_rentals.csv")
     tps_df = read_csv(INPUTS / "tps_model_gpu.csv")
-    scenarios = load_yaml(INPUTS / "scenarios.yaml")
+    scenarios = load_yaml(INPUTS / "scenarios.yaml") if (INPUTS / "scenarios.yaml").exists() else {}
     model_pop = load_yaml(INPUTS / "model_popularity.yaml") if (INPUTS / "model_popularity.yaml").exists() else {}
-    acquisition = load_yaml(INPUTS / "acquisition.yaml")
+    acquisition = load_yaml(INPUTS / "acquisition.yaml") if (INPUTS / "acquisition.yaml").exists() else {}
     funnel_overrides = load_yaml(INPUTS / "funnel_overrides.yaml") if (INPUTS / "funnel_overrides.yaml").exists() else {}
-    gpu_pricing = load_yaml(INPUTS / "gpu_pricing.yaml")
-    capacity_overrides = load_yaml(INPUTS / "capacity_overrides.yaml")
+    gpu_pricing = load_yaml(INPUTS / "gpu_pricing.yaml") if (INPUTS / "gpu_pricing.yaml").exists() else {}
+    capacity_overrides = load_yaml(INPUTS / "capacity_overrides.yaml") if (INPUTS / "capacity_overrides.yaml").exists() else {}
     overrides = load_yaml(INPUTS / "overrides.yaml") if (INPUTS / "overrides.yaml").exists() else {}
     # New required inputs
     seasonality = load_yaml(INPUTS / "seasonality.yaml")
     timeseries = load_yaml(INPUTS / "timeseries.yaml")
     billing = load_yaml(INPUTS / "billing.yaml")
     private_sales = load_yaml(INPUTS / "private_sales.yaml")
-    competitor_benchmarks = load_yaml(INPUTS / "competitor_benchmarks.yaml")
+    competitor_benchmarks = load_yaml(INPUTS / "competitor_benchmarks.yaml") if (INPUTS / "competitor_benchmarks.yaml").exists() else {}
 
     # Merge pricing policy into config if present
     pricing_policy = load_yaml(INPUTS / "pricing_policy.yaml") if (INPUTS / "pricing_policy.yaml").exists() else {}
@@ -89,6 +89,8 @@ def load_inputs() -> Tuple[
         competitor_benchmarks = market.get("competitor_benchmarks", competitor_benchmarks)
         # Popularity list may be nested here
         model_pop = market.get("model_popularity", model_pop)
+        # Capacity overrides may be provided in consolidated market.yaml
+        capacity_overrides = market.get("capacity_overrides", capacity_overrides)
 
     # Merge finance inputs
     if isinstance(finance_yaml, dict) and finance_yaml:
