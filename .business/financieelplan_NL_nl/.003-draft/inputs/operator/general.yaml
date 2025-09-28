@@ -1,3 +1,10 @@
+reserves:
+  reserve_months_target: 6                   # for variables overlay; months
+  emergency_fund_eur: 10000                  # for variables overlay; EUR
+  distribution_policy:
+    reinvest_pct: 50                         # for variables overlay; percent 0..100
+    dividend_pct: 50                         # for variables overlay; percent 0..100
+  founder_draw_policy: flat                  # for variables overlay; enum flat|percent_of_profit
 # operator/general.yaml — world-building constants only
 
 meta:
@@ -12,6 +19,9 @@ finance:
     insurance_admin: 75
     misc_buffer: 300
   depreciation_assets_eur: 150  # bookkeeping constant; see depreciation_schedule for details
+  marketing_allocation_pct_of_inflow: 20.0   # for variables overlay; percent 0..100
+  bizdev_budget_monthly_eur: 500             # for variables overlay; EUR/month
+  contingency_pct: 5.0                       # for variables overlay; percent 0..100
 
 loan:
   amount_eur: 30000
@@ -23,12 +33,14 @@ loan:
 
 insurances:
   selected: [PRO-PL-001, OFF-CONT-001, CYB-RISK-001]
+  premiums_buffer_pct: 10.0                  # for variables overlay; percent 0..100
 
 tax:
   vat_pct: 21.0
   corporate_income_pct: 19.0
   dividend_withholding_pct: 15.0
   social_security_pct: 27.65
+  vat_buffer_policy: 100.0                   # for variables overlay; percent 0..100
 
 calendar:
   start_year: 2025

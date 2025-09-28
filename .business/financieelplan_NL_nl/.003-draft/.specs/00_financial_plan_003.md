@@ -21,7 +21,7 @@ Laatst bijgewerkt: 2025-09-28
 
 - **Curated i.p.v. autodetect.** D3 MUST uitsluitend werken met door de gebruiker **gecurateerde** model- en GPU‑lijsten. D2‑logica om zelf de “beste” modellen/GPU’s te kiezen wordt verwijderd.
 - **Per‑model prijs vanuit de basis.** D3 MUST de verkoopprijs per model afleiden uit grondkosten (provider USD/hr → EUR/hr, TPS) en beleidsdoelen, niet uit handmatige startprijzen. Geen guestimates.
-- **Gesplitste invoer (Public + Operator).** D3 MUST werken met `public_data.yaml` (exogeen) en twee operatorbestanden: `operator_public.yaml` (Public pijplijn) en `operator_private.yaml` (Private pijplijn). Geen single‑file modus.
+- **Gesplitste invoer (Constants + Variables + Facts).** D3 MUST werken met operator‑constanten in `inputs/operator/*.yaml` (+ curated CSV’s), variabelen in `inputs/variables/*.csv`, en facts in `inputs/facts/*`. Geen `public_data.yaml`; geen single‑file modus.
 - **Determinisme met seed.** D3 MUST alle stochastiek seed‑gedreven maken en de seed MUST in outputs worden vastgelegd.
 - **UI.** D3 MUST een lokale website LEVEREN (voorkeur: Vue) die invoer wijzigt en simulaties start en de rapportage toont.
 - **Herbruikbare D2‑artefacten.** D2‑templates en rapportstructuur zijn bruikbaar en SHOULD worden geüpdatet; D2’s multi‑YAML validators en autodiscovery logica worden niet overgenomen.
@@ -35,36 +35,41 @@ Laatst bijgewerkt: 2025-09-28
 
 ## 5. Invoer (overzicht)
 
-De invoerregels, formats en schema’s zijn verplaatst naar dedictated docs:
+De invoerregels, formats en schema’s zijn verplaatst naar dedicated docs:
 
-- `10_inputs.md` — formats (YAML/CSV), directory layout, merge/precedence, determinisme, validatorregels.
-- `11_operator_inputs.md` — volledige shapes/voorbeelden voor operator‑config (YAML/CSV).
-- `12_public data.md` — volledige shapes/voorbeelden voor public data (YAML/CSV).
+- `10_inputs.md` — formats (YAML/CSV), directory layout, overlay/precedence, determinisme, validatorregels.
+- `11_operator_constants.md` — shapes/voorbeelden voor operator‑constanten (YAML) en curated CSV’s.
+- `12_oprator_variables.md` — variabelen‑CSV schema, treatments en determinisme.
+- `19_facts.md` — facts‑datasets (exogeen) en gebruik.
 
 Kernpunten (samenvatting):
-- Bundels: `public_data.yaml` (exogeen), `operator_public.yaml` (Public), `operator_private.yaml` (Private).
+- Bundels:
+  - **Constants (operator)**: `inputs/operator/{general.yaml,public_tap.yaml,private_tap.yaml}` + curated CSV’s `curated_public_tap_models.csv`, `curated_gpu.csv`.
+  - **Variables (overlays)**: `inputs/variables/{general.csv,public_tap.csv,private_tap.csv}`.
+  - **Facts (exogeen)**: `inputs/facts/{ads_channels.csv,agency_fees.csv,insurances.csv,market_env.yaml}`.
+  - **Simulation plan**: `inputs/simulation.yaml`.
 - Alleen **YAML en CSV** zijn toegestaan; indien beide aanwezig voor dezelfde dataset, **CSV wint** (shadowing WARNING).
- - Seeds per pijplijn: `operator_public.yaml: meta.seed` en `operator_private.yaml: meta.seed`.
+- Seeds: pijplijnseeds via `operator/<tap>.yaml: meta.seed`, overridable volgens `15_simulation_constants.md §4`.
 
 ### 5.1 Normatieve input‑vereisten
 
-- **GPU rentals schema (public).** `gpu_rentals` MUST exact de kolommen `gpu, vram_gb, provider, usd_hr` bevatten. Geen min/median/max of percentvelden in de bron.
-- **Throughput coverage (public).** Voor iedere curated `catalog.models` MUST er ≥1 `(model,gpu)` entry in `throughput_tps` bestaan; ontbrekende entries zijn **ERROR**.
-- **Curated lijsten (operator).** Alleen items uit `catalog.models` en `catalog.gpus` worden meegenomen; onbekende modellen/GPUs t.o.v. `throughput_tps` of `gpu_rentals` geven **WARNING** of **ERROR** afhankelijk van impact.
-- **Currency & FX.** `fx.eur_usd_rate` komt uit `public_data.yaml`; `fx_buffer_pct` uit `operator_public.yaml` en/of `operator_private.yaml` (MUST consistent zijn indien in beide aanwezig). Engine MUST EUR als rekeneenheid gebruiken.
+- **GPU rentals/offers (curated).** `inputs/operator/curated_gpu.csv` MUST per provider prijzen bevatten die de engine normaliseert naar `[gpu, vram_gb, provider, usd_hr]` (pre‑1.0 normatief). Geen min/max/percentvelden in de bron.
+- **Tokens‑throughput (preferred).** Een TPS‑dataset per `(model,gpu)` SHOULD worden aangeleverd. Indien niet aanwezig, MAY de engine heuristieken toepassen (afgeleid uit quantization/runtime/VRAM) en MUST deze aannames loggen in `run_summary`.
+- **Curated lijsten.** Alleen items uit de curated CSV’s (modellen/GPUs) worden meegenomen; onbekenden geven **WARNING/ERROR** afhankelijk van impact.
+- **Currency & FX.** `inputs/facts/market_env.yaml → finance.eur_usd_fx_rate.value` en `operator/<tap>.yaml → meta.fx_buffer_pct` (MUST consistent zijn tussen taps indien beide gezet). Engine MUST EUR als rekeneenheid gebruiken.
 
 ## 6. Globale Validator
 
 De validator MUST:
 
 - **Schema‑checks** uitvoeren op alle topniveaus en types (inclusief numerieke grenzen waar relevant). Bij fouten → **ERROR** en non‑zero exit.
-- **Referentiële volledigheid** afdwingen: elke curated `model` heeft ten minste één TPS‑entry en wordt door ten minste één curated GPU ondersteund.
+- **Referentiële volledigheid** afdwingen: elke curated `model` wordt ondersteund door ten minste één curated GPU; indien TPS ontbreekt, MUST een heuristiekpad worden gelogd.
 - **Providerprijzen** controleren op `usd_hr > 0` en plausibiliteit (SHOULD `usd_hr < 50`).
 - **Financiële parameters** controleren: vaste kosten ≥ 0; marketing % tussen 0 en 100; loan velden aanwezig en valide.
 - **Policy‑consistentie**: `pricing_policy.public_tap.target_margin_pct` tussen 0 en 95; `round_increment_eur_per_1k` > 0.
 - **Warnings** produceren voor ontbrekende floors/caps en voor modellen die enkel op 1 GPU draaien (risicoconcentratie).
 - **Determinisme‑echo**: seed MUST gelogd worden in `run_summary.json` en `run_summary.md`.
-- **CSV‑schema’s.** Indien CSV is geleverd, MUST kolomnamen exact matchen aan `10_inputs.md §7`; MUST unieke `(model,gpu)` in `throughput_tps.csv`; MUST numerieke domeinen afdwingen; anders **ERROR**.
+- **CSV‑schema’s.** Indien CSV is geleverd, MUST kolomnamen exact matchen aan `10_inputs.md §7`; curated GPU‑offers MUST normaliseren naar `[gpu,vram_gb,provider,usd_hr]`; numerieke domeinen afdwingen; anders **ERROR**.
 - **Precedentie‑log.** Bij shadowing YAML→CSV MUST een duidelijke **WARNING** gelogd worden met bestandsnamen (zie `10_inputs.md §5`).
 
 ## 7. Kosten en prijsbepaling per model (Public Tap)
@@ -73,10 +78,10 @@ De validator MUST:
 
 Voor elk model m en GPU g:
 
-- `eur_hr(g) = min_provider_over(g, usd_hr) * (1 + fx_buffer_pct/100) / eur_usd_rate` (MUST).
-- `tokens_per_hour(m,g) = throughput_tps[m][g] * 3600` (MUST).
-- `cost_per_1M_tokens(m,g) = eur_hr(g) / (tokens_per_hour(m,g)/1_000_000)` (MUST).
-- De engine MUST de GPU g* kiezen die `cost_per_1M_tokens(m,g)` minimaliseert; ties: SHOULD kiezen op laagste `eur_hr`, daarna alfabetisch `gpu`.
+- `eur_hr(g) = min_provider_over(g, usd_hr) * (1 + fx_buffer_pct/100) / eur_usd_rate` (MUST; `eur_usd_rate` uit facts `market_env.yaml`).
+- `tokens_per_hour(m,g)` wordt bij voorkeur uit een TPS‑dataset gehaald; indien afwezig, MAY de engine een gedocumenteerde heuristiek gebruiken (bv. afgeleid uit quantization/runtime/VRAM). Deze keuze MUST in `run_summary` vastgelegd worden.
+- `cost_per_1M_tokens(m,g) = eur_hr(g) / (tokens_per_hour(m,g)/1_000_000)` wanneer `tokens_per_hour` beschikbaar is. Indien heuristisch, MUST het resulterende `cost_per_1M_tokens` als benadering gelabeld en gelogd worden.
+- De engine MUST de GPU g* kiezen die `cost_per_1M_tokens(m,g)` minimaliseert (of, bij ontbreken van TPS, de heuristische proxy); ties: SHOULD kiezen op laagste `eur_hr`, daarna alfabetisch `gpu`.
 
 #### 7.1.1 Gekozen provider logging (Public)
 
@@ -176,7 +181,7 @@ for m in catalog.models:
 - **Lokale bediening.** De UI MUST lokaal draaien (Vite). “Run simulation” MUST de engine starten via een lokale runner (CLI of HTTP‑bridge) zonder netwerkdependenties.
 - **Functionaliteit.**
   - Parameters bewerken (form + YAML‑editor).
-  - Beide invoerbestanden bewerken: `public_data.yaml` (readonly secties in UI, maar wel zichtbaar) en `operator_general.yaml` + `operator_public.yaml` + `operator_private.yaml` (volledig bewerkbaar). UI MUST de **effectieve merge** en validatiestatus tonen.
+  - Invoer bewerken: `inputs/operator/general.yaml` + `inputs/operator/public_tap.yaml` + `inputs/operator/private_tap.yaml` (volledig bewerkbaar) en variabelen in `inputs/variables/*.csv`. Facts `inputs/facts/market_env.yaml` zijn readonly maar zichtbaar. UI MUST de **effectieve overlay/merge** en validatiestatus tonen.
   - Pijplijnselectie: knoppen/toggles voor `Run Public`, `Run Private`, `Run Both (Consolidated)` (MUST aanwezig).
   - Seed kiezen/locken.
   - Run starten → voortgang en logs tonen.
@@ -223,7 +228,7 @@ for m in catalog.models:
 - **Credit‑packs.** Presets worden correct omgerekend naar tokens o.b.v. de blended €/1k; afwijking ≤ 0.5% na afronding (SHOULD).
 - **Private‑opts.** Indien `base_fee` of `base_fee_by_gpu_class` is geconfigureerd, MUST deze fees in voorbeeldtabellen en marges worden verwerkt.
 - **Split‑inputs handhaving.** Keys die niet zijn toegestaan in een van beide YAML’s (public vs operator) MUST een **ERROR** geven en de UI MUST dit duidelijk tonen met een fix‑suggestie.
-- **CSV‑ondersteuning.** Indien CSV wordt gebruikt voor `throughput_tps` en/of `gpu_rentals`, MUST schema/precedentie‑regels uit `10_inputs.md §§5–7` worden afgedwongen; bij conflicten MUST CSV winnen met duidelijke WARNING.
+- **CSV‑ondersteuning.** Indien CSV wordt gebruikt voor een TPS‑dataset (per `(model,gpu)`) en/of `inputs/operator/curated_gpu.csv`, MUST schema/precedentie‑regels uit `10_inputs.md §§5–7` worden afgedwongen; bij conflicten MUST CSV winnen met duidelijke WARNING.
 - **Twee pijplijnen.** `Run Public`, `Run Private`, en `Run Both` MUST deterministisch dezelfde resultaten geven across runs; consolidatie‑artefacten MUST aanwezig en consistent zijn met de twee deelruns.
 
 ## 14. Verificatieplan (SHOULD)

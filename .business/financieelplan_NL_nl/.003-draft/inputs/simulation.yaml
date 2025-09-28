@@ -1,10 +1,12 @@
 # simulation.yaml — RUN PLAN (allowed keys)
 
 run:
+  random_seed: 424242                 # optional: seed for entire run
   pipelines: [public, private]        # which to run: public | private | both
   output_dir: ".003-draft/outputs"    # where artifacts go
   fail_on_warning: false              # promote WARNINGs to errors (optional)
-  max_concurrency: 4                  # optional: engine threads/processes
+  max_concurrency:                    # optional: engine threads/processes
+  random_runs_per_simulation: 5       # optional: number of random runs per counted simulation
 
 stochastic:
   simulations_per_run: 1000           # Monte Carlo iterations
@@ -32,3 +34,10 @@ ui:
 logging:
   level: INFO                         # DEBUG | INFO | WARN | ERROR
   write_run_summary: true             # run_summary.{json,md}
+
+targets:
+  horizon_months: 18                        # feasibility horizon (months)
+  private_margin_threshold_pct: 20          # minimum acceptable private margin
+  require_monotonic_growth_public_active_customers: true
+  require_monotonic_growth_private_active_customers: true
+  public_growth_min_mom_pct: 0.0            # optional min growth per month

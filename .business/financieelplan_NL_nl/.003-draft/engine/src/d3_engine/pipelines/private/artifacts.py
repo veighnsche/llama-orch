@@ -1,0 +1,1 @@
+"""Private artifacts writing (scaffold)."""

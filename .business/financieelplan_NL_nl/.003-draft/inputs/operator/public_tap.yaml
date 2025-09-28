@@ -16,3 +16,20 @@ prepaid_policy:
     non_refundable: true
     auto_refill_default_enabled: false
     auto_refill_cap_eur: null
+
+acquisition:
+  budget_month0_eur: 1000            # default; overruled by variables
+  budget_growth_pct_mom: 8.0         # % MoM growth; overruled by variables
+  cac_base_eur: 50                   # fallback CAC if channel-driven not used
+  tokens_per_conversion_mean: 50000  # avg tokens per new customer
+  churn_pct_mom: 3.0                 # monthly churn %
+  channel_allocation:
+    google_ads: 0.5
+    linkedin_ads: 0.3
+    events: 0.2
+
+autoscaling:
+  target_utilization_pct: 75.0       # % of sustained utilization (0..100)
+  peak_factor: 1.2                   # p95 peak multiplier over average demand
+  min_instances_per_model: 0         # floor for capacity planning
+  max_instances_per_model: 100       # safety cap
