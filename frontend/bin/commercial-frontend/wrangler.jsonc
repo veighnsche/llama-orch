@@ -8,6 +8,8 @@
     "compatibility_date": "2025-09-24",
     "main": "server/index.ts",
     "assets": {
+        "directory": "./dist/",
+        "binding": "ASSETS",
         "not_found_handling": "single-page-application",
     },
     "observability": {
@@ -37,7 +39,7 @@
      * Static Assets
      * https://developers.cloudflare.com/workers/static-assets/binding/
      */
-    // "assets": { "directory": "./public/", "binding": "ASSETS" }
+    // "assets": { "directory": "./dist/", "binding": "ASSETS" }
     /**
      * Service Bindings (communicate between multiple Workers)
      * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings

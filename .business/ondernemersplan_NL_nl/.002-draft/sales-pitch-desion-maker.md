@@ -8,7 +8,7 @@
 
 I help companies adopt AI without the usual risks.
 You can start small with a **Public API** on prepaid credits, then scale up to your own **Private API** on dedicated GPUs.
-Everything is transparent, EU-based, and comes with the proofs and documentation your business needs.
+Everything is transparent, EU-based, and comes with the documentation your business needs.
 
 ---
 

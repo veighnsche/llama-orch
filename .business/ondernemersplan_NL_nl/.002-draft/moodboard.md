@@ -98,6 +98,6 @@ It translates the identity of “AI plumbing” into colors, imagery, typography
 - ✅ Do keep Vince’s name and face visible in branding.  
 - ❌ Don’t use photoreal steel/copper textures.  
 - ❌ Don’t lean into startup minimalism or corporate gloss.  
-- ❌ Don’t oversell — the proofs and logs should speak for themselves.  
+- ❌ Don’t oversell — the logs should speak for themselves.  
 
 ---

@@ -103,7 +103,7 @@
 
 <template>
   <main id="main" class="home">
-    <DevUtilityBar />
+    <DevUtilityBar class="desktop-devbar" />
     <Hero />
     <WhyPlumbing />
     <!-- Lazy chunks render naturally when reached; optional <Suspense> if you want placeholders -->
@@ -139,6 +139,12 @@
     font-size: 1.5rem;
     margin-bottom: 1rem;
     color: var(--text);
+  }
+
+  /* Desktop-only dev utility bar (layout provides mobile version) */
+  .desktop-devbar { display: none; }
+  @media (min-width: 920px) {
+    .desktop-devbar { display: block; }
   }
 
   .home section.fullbleed {

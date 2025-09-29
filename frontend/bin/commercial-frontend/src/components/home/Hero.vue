@@ -10,36 +10,45 @@
     <div class="container">
       <div class="copy">
         <p class="eyebrow">
-          {{ t('home.hero.eyebrow', 'Betrouwbare EU-gebaseerde AI-API’s') }}
+          {{ t('home.hero.eyebrow', 'Open-source AI servers you can trust') }}
         </p>
 
         <h1 id="hero-title" class="title">
-          {{ t('home.hero.h1', 'Transparante, EU-conforme AI-infrastructuur.') }}
+          {{ t('home.hero.h1', 'Transparent, predictable AI hosting.') }}
         </h1>
 
         <p class="sub">
           {{
             t(
-              'home.hero.sub',
-              'Begin met voorafbetaalde Public API’s en schaal door naar uw eigen Private endpoint op dedicated GPU’s. Elke stap is bewijs-gedreven, controleerbaar en kost-voorspelbaar.',
+              'home.hero.sub1',
+              'Built on open-source foundations and designed for clarity. No lock-in, no hidden fees — hosting that grows with you.',
+            )
+          }}
+        </p>
+
+        <p class="sub">
+          {{
+            t(
+              'home.hero.sub2',
+              'Start small on shared servers with prepaid plans, then scale to dedicated GPU servers as your needs grow. Every step is cost-predictable and transparent.',
             )
           }}
         </p>
 
         <div class="ctas" role="group" aria-label="primary actions">
           <Button as="router-link" to="/service-menu" variant="primary">
-            {{ t('home.hero.ctaMenu', 'Bekijk service-plannen') }}
+            {{ t('home.hero.ctaMenu', 'Explore service plans') }}
           </Button>
-          <Button as="router-link" to="/proof" variant="ghost">
-            {{ t('home.hero.ctaProofs', 'Bekijk operationeel bewijs') }}
+          <Button as="router-link" to="/how-it-works" variant="ghost">
+            {{ t('home.hero.ctaSecondary', 'How it works') }}
           </Button>
           <div class="inline-links" aria-label="quick links">
             <RouterLink to="/public-tap">
-              {{ t('home.hero.quickPublic', 'Probeer Public API') }}
+              {{ t('home.hero.quickPublic', 'Try shared servers') }}
             </RouterLink>
             <span aria-hidden="true">·</span>
             <RouterLink to="/private-tap">
-              {{ t('home.hero.quickPrivate', 'Vraag Private demo aan') }}
+              {{ t('home.hero.quickPrivate', 'Request dedicated demo') }}
             </RouterLink>
           </div>
         </div>
@@ -50,7 +59,7 @@
           src="/assets/hero_pipes.png"
           width="980"
           height="420"
-          alt="clean vector isometric EU data-center rack with GPU blades and a shield-check audit log icon; subtle cyan/teal accents; left-to-right flow arrows; minimal, professional; grid background; **no literal pipes**; wide banner crop"
+          alt="clean vector isometric data-center rack with GPU blades and a shield-check audit log icon; subtle cyan/teal accents; left-to-right flow arrows; minimal, professional; grid background; no literal pipes; wide banner crop"
           loading="eager"
           decoding="async"
           fetchpriority="high"

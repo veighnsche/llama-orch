@@ -5,12 +5,10 @@
 <template>
   <header class="nav" role="banner">
     <nav class="nav-inner" :aria-label="navAriaLabel || 'Primary navigation'">
-      <slot name="brand" />
-      <slot name="toggle" />
-      <slot name="links" />
-      <div class="right">
-        <slot name="right" />
-      </div>
+      <div class="slot-brand"><slot name="brand" /></div>
+      <div class="slot-toggle"><slot name="toggle" /></div>
+      <div class="slot-links"><slot name="links" /></div>
+      <div class="right"><slot name="right" /></div>
     </nav>
     <slot name="drawer" />
   </header>
@@ -31,7 +29,8 @@
     margin: 0 auto;
     padding: 0.6rem 1rem;
     display: grid;
-    grid-template-columns: auto auto 1fr auto; /* brand | toggle | links | right */
+    grid-template-columns: auto 1fr auto; /* mobile-first: toggle | spacer | right */
+    grid-template-areas: 'toggle . right';
     gap: 0.75rem 1rem;
     align-items: center;
     column-gap: 1.25rem;
@@ -39,16 +38,24 @@
     height: var(--nav-h); /* enforce fixed height on all breakpoints */
   }
 
+  /* Grid areas for children */
+  .slot-brand { grid-area: brand; display: none; }
+  .slot-toggle { grid-area: toggle; }
+  .slot-links { grid-area: links; display: none; }
+
   .right {
     display: inline-flex;
     align-items: center;
     gap: 0.6rem; /* keep default tight spacing; switcher adds its own margin */
     justify-self: end;
+    grid-area: right;
   }
 
   /* hide CTA button on small to keep bar tight */
   @media (max-width: 919.98px) {
-    .right :deep(.ui-btn) {
+    .right :deep(.ui-btn:not(.login-btn)),
+    .right :deep(.lang-switcher),
+    .right :deep(.theme-toggle) {
       display: none;
     }
   }
@@ -61,7 +68,12 @@
     .nav-inner {
       height: var(--nav-h);
       align-items: center;
+      grid-template-columns: auto auto 1fr auto; /* brand | toggle | links | right */
+      grid-template-areas: 'brand toggle links right';
     }
+    /* Show brand and links on desktop */
+    .slot-brand { display: block; }
+    .slot-links { display: block; }
     /* Hide any menu toggle inside the shell on desktop */
     .nav-inner :deep(.menu-toggle) {
       display: none;

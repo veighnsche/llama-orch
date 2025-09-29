@@ -161,8 +161,8 @@ function extractFromContent(content) {
   const buildNameAlt = (set) => Array.from(set).map((n) => n.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')
   if (destructuredLocalT.size > 0) {
     const alt = buildNameAlt(destructuredLocalT)
-    const ALIAS_T_CALL_RE = new RegExp(`\\b(?:${alt})\\(\\s*(["'`])([^"'`]+)\\1\\s*(?:,\\s*(["'`])([\\s\\S]*?)\\3\\s*)?\\)`, 'g')
-    const ALIAS_T_DYNAMIC_RE = new RegExp(`\\b(?:${alt})\\(\\s*(?!["'`]))`, 'g')
+    const ALIAS_T_CALL_RE = new RegExp(`\\b(?:${alt})\\(\\s*(["'\`])([^"'\`]+)\\1\\s*(?:,\\s*(["'\`])([\\s\\S]*?)\\3\\s*)?\\)`, 'g')
+    const ALIAS_T_DYNAMIC_RE = new RegExp(`\\b(?:${alt})\\(\\s*(?!["'\`]))`, 'g')
     let am
     while ((am = ALIAS_T_CALL_RE.exec(content)) !== null) {
       const key = am[2]
@@ -180,8 +180,8 @@ function extractFromContent(content) {
   }
   if (destructuredLocalTc.size > 0) {
     const alt = buildNameAlt(destructuredLocalTc)
-    const ALIAS_TC_CALL_RE = new RegExp(`\\b(?:${alt})\\(\\s*(["'`])([^"'`]+)\\1\\s*(?:,\\s*(["'`])([\\s\\S]*?)\\3\\s*)?\\)`, 'g')
-    const ALIAS_TC_DYNAMIC_RE = new RegExp(`\\b(?:${alt})\\(\\s*(?!["'`]))`, 'g')
+    const ALIAS_TC_CALL_RE = new RegExp(`\\b(?:${alt})\\(\\s*(["'\`])([^"'\`]+)\\1\\s*(?:,\\s*(["'\`])([\\s\\S]*?)\\3\\s*)?\\)`, 'g')
+    const ALIAS_TC_DYNAMIC_RE = new RegExp(`\\b(?:${alt})\\(\\s*(?!["'\`])`, 'g')
     let am
     while ((am = ALIAS_TC_CALL_RE.exec(content)) !== null) {
       const key = am[2]
@@ -201,8 +201,8 @@ function extractFromContent(content) {
   // i18nVar.t()/tc() calls using discovered variable names
   if (i18nVarNames.size > 0) {
     const namesAlt = Array.from(i18nVarNames).map((n) => n.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')
-    const VAR_CALL_RE = new RegExp(`\\b(?:${namesAlt})\\.(?:t|tc)\\(\\s*(["'`])([^"'`]+)\\1\\s*(?:,\\s*(["'`])([\\s\\S]*?)\\3\\s*)?\\)`, 'g')
-    const VAR_DYNAMIC_RE = new RegExp(`\\b(?:${namesAlt})\\.(?:t|tc)\\(\\s*(?!["'`]))`, 'g')
+    const VAR_CALL_RE = new RegExp(`\\b(?:${namesAlt})\\.(?:t|tc)\\(\\s*(["'\`])([^"'\`]+)\\1\\s*(?:,\\s*(["'\`])([\\s\\S]*?)\\3\\s*)?\\)`, 'g')
+    const VAR_DYNAMIC_RE = new RegExp(`\\b(?:${namesAlt})\\.(?:t|tc)\\(\\s*(?!["'\`]))`, 'g')
 
     VAR_CALL_RE.lastIndex = 0
     let vc

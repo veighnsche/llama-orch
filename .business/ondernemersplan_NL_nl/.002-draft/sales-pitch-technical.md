@@ -25,7 +25,7 @@ My offer addresses all of these:
 
 * **Standards-based APIs** (native + OpenAI-compatible) → easy integration.
 * **Open-source orchestration core** → no hidden engine logic, inspectable.
-* **Proof-driven deployment** → reproducible runs with metrics, logs, and SSE transcripts.
+* **Deployment** → reproducible runs with metrics, logs, and SSE transcripts.
 * **Prepaid model** → predictable costs and easy budget approval.
 * **Curated OSS models & applets** → stable, production-ready starting set.
 
@@ -66,4 +66,4 @@ My offer addresses all of these:
 
 ## One-liner
 
-**“I deliver open, auditable AI APIs that your engineers can trust — with the proofs, metrics, and tools to integrate them into production.”**
+**“I deliver open, auditable AI APIs that your engineers can trust — with the metrics and tools to integrate them into production.”**
