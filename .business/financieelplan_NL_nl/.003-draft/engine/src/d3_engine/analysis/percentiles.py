@@ -5,19 +5,37 @@ from pathlib import Path
 import csv
 
 
-def _read_col(p: Path, col: str) -> List[float]:
-    vals: List[float] = []
+def _sample_key(row: dict) -> tuple[str, str, str]:
+    return (
+        str(row.get("grid_index", "")),
+        str(row.get("replicate_index", "")),
+        str(row.get("mc_index", "")),
+    )
+
+
+def _read_sample_totals(p: Path, value_col: str, group_col: str | None = None) -> List[float]:
+    """Sum values per (grid,replicate,mc) sample; optionally filter/group by group_col.
+
+    Returns a list of totals, one per sample, to compute percentiles across samples (not pooled rows).
+    """
+    totals: dict[tuple[str, str, str], float] = {}
     try:
         with p.open() as f:
             rdr = csv.DictReader(f)
             for row in rdr:
+                # If a group_col is provided, only include rows with that col present (e.g., scenario=="base")
+                if group_col:
+                    if (row.get(group_col) or "").strip().lower() != "base":
+                        continue
+                key = _sample_key(row)
                 try:
-                    vals.append(float(row.get(col, 0) or 0))
+                    v = float(row.get(value_col, 0) or 0)
                 except Exception:
-                    vals.append(0.0)
+                    v = 0.0
+                totals[key] = totals.get(key, 0.0) + v
     except FileNotFoundError:
         pass
-    return vals
+    return list(totals.values())
 
 
 def _pct(values: List[float], q: float) -> float:
@@ -53,8 +71,9 @@ def compute_percentiles(tables: Dict[str, Any], context: Dict[str, Any]) -> Dict
     except Exception:
         pass
 
-    pub_rev = _read_col(out / "public_tap_scenarios.csv", "revenue_eur")
-    prv_rev = _read_col(out / "private_tap_customers_by_month.csv", "revenue_eur")
+    # Compute totals per sample (grid,replicate,mc) and then percentiles across samples
+    pub_rev = _read_sample_totals(out / "public_tap_scenarios.csv", "revenue_eur", group_col="scenario")
+    prv_rev = _read_sample_totals(out / "private_tap_customers_by_month.csv", "revenue_eur")
 
     result: Dict[str, Any] = {"public_revenue": {}, "private_revenue": {}}
     for p in perc_list:

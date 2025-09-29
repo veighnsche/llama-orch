@@ -8,7 +8,11 @@ Responsibilities (spec refs: 16_simulation_variables.md, 20_simulations.md):
 """
 from __future__ import annotations
 from typing import Dict, Iterable, List, Tuple
+import itertools
 from . import rng
+
+
+MAX_GRID_POINTS_PER_AXIS = 5  # deterministic cap to avoid combinatorial explosion
 
 
 def _frange(min_v: float, max_v: float, step: float) -> List[float]:
@@ -23,14 +27,30 @@ def _frange(min_v: float, max_v: float, step: float) -> List[float]:
     return vals or [min_v]
 
 
-def build_grid(variables: List[dict]) -> List[Dict[str, float]]:
-    """Return a list of parameter combinations (cartesian product of low_to_high numerics).
+def _downsample(values: List[float], max_points: int = MAX_GRID_POINTS_PER_AXIS) -> List[float]:
+    """Evenly downsample a sorted list to at most max_points, preserving endpoints.
 
-    variables: CSV-like rows with keys including
-      - variable_id, path, type, min, max, step, default, treatment
-    Returns combinations mapping variable path to chosen value.
+    Deterministic and order-preserving. If len(values) <= max_points, returns as-is.
     """
-    # Separate numeric low_to_high variables
+    n = len(values)
+    if n <= max_points or max_points <= 0:
+        return values
+    if max_points == 1:
+        return [values[0]]
+    # Compute indices using inclusive linspace
+    idxs = [round(i * (n - 1) / (max_points - 1)) for i in range(max_points)]
+    # Deduplicate while preserving order
+    seen = set()
+    ds: List[float] = []
+    for i in idxs:
+        if i not in seen:
+            seen.add(i)
+            ds.append(values[int(i)])
+    return ds
+
+
+def _axes_and_defaults(variables: List[dict]) -> Tuple[List[Tuple[str, List[float]]], Dict[str, float]]:
+    """Prepare grid axes and defaults with downsampling applied."""
     grid_axes: List[Tuple[str, List[float]]] = []  # (path, values)
     fixed_defaults: Dict[str, float] = {}
     for row in variables:
@@ -46,12 +66,12 @@ def build_grid(variables: List[dict]) -> List[Dict[str, float]]:
                     mx = float(row.get("max") or 0)
                     st = float(row.get("step") or 0)
                     vals = _frange(mn, mx, st)
+                    vals = _downsample(vals, MAX_GRID_POINTS_PER_AXIS)
                     grid_axes.append((path, vals))
-                else:  # fixed or others
+                else:
                     df = float(row.get("default") or 0)
                     fixed_defaults[path] = df
             else:
-                # For discrete or non-numeric, default only for now
                 df_s = row.get("default")
                 if df_s is not None:
                     try:
@@ -60,35 +80,65 @@ def build_grid(variables: List[dict]) -> List[Dict[str, float]]:
                         pass
         except Exception:
             continue
+    return grid_axes, fixed_defaults
 
-    # Cartesian product
-    combos: List[Dict[str, float]] = []
-    if not grid_axes:
-        combos.append(dict(fixed_defaults))
-        return combos
 
-    def _recurse(i: int, cur: Dict[str, float]):
-        if i >= len(grid_axes):
-            # Fill defaults
-            c = dict(fixed_defaults)
-            c.update(cur)
-            combos.append(c)
-            return
-        path, vals = grid_axes[i]
-        for v in vals:
-            cur[path] = v
-            _recurse(i + 1, cur)
-        cur.pop(path, None)
-
-    _recurse(0, {})
-    return combos
+def grid_size(variables: List[dict]) -> int:
+    axes, _ = _axes_and_defaults(variables)
+    size = 1
+    for _, vals in axes:
+        size *= max(1, len(vals))
+    return size
 
 
 def iter_grid_combos(variables: List[dict]) -> Iterable[Tuple[int, Dict[str, float]]]:
-    """Yield (grid_index, combo) pairs deterministically."""
-    combos = build_grid(variables)
-    for i, combo in enumerate(combos):
-        yield i, combo
+    """Yield (grid_index, combo) pairs deterministically without full materialization."""
+    axes, fixed_defaults = _axes_and_defaults(variables)
+    if not axes:
+        yield 0, dict(fixed_defaults)
+        return
+    paths = [p for p, _ in axes]
+    values_lists = [vals for _, vals in axes]
+    i = 0
+    for combo_vals in itertools.product(*values_lists):
+        c = dict(fixed_defaults)
+        for path, val in zip(paths, combo_vals):
+            c[path] = val
+        yield i, c
+        i += 1
+
+
+def iter_grid_sampled(variables: List[dict], sample_count: int, master_seed: int) -> Iterable[Tuple[int, Dict[str, float]]]:
+    """Yield at most sample_count combinations via deterministic stratified sampling.
+
+    For each axis, we create a deterministic permutation of N buckets and map bucket
+    indices to value indices, ensuring broad coverage without full cartesian product.
+    """
+    axes, fixed_defaults = _axes_and_defaults(variables)
+    if not axes:
+        yield 0, dict(fixed_defaults)
+        return
+    N = max(1, int(sample_count))
+    paths = [p for p, _ in axes]
+    values_lists = [vals for _, vals in axes]
+    # Build per-axis permutations deterministically
+    perms: List[List[int]] = []
+    for path, vals in axes:
+        gen = rng.substream(master_seed, "grid_axis_perm", path)
+        # Simple Fisher-Yates over 0..N-1
+        perm = list(range(N))
+        for i in range(N - 1, 0, -1):
+            j = int(gen.random() * (i + 1))
+            perm[i], perm[j] = perm[j], perm[i]
+        perms.append(perm)
+    for s in range(N):
+        c = dict(fixed_defaults)
+        for (vals, perm, path) in zip(values_lists, perms, paths):
+            n_i = max(1, len(vals))
+            bucket = perm[s]
+            idx = min(n_i - 1, int(bucket * n_i / N))
+            c[path] = vals[idx]
+        yield s, c
 
 
 def parse_random_specs(variables: List[dict]) -> List[Tuple[str, float, float]]:

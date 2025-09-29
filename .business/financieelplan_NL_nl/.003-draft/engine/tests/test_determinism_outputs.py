@@ -1,6 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
-from d3_engine.core import runner
+from d3_engine.runner import runner
 from .util_inputs import make_minimal_inputs
 
 

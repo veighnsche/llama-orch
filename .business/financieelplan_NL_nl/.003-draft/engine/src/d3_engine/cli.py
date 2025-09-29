@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
 """D3 Engine CLI (scaffold)
 
-Parses arguments, emits JSONL progress to stdout, and writes a minimal
-run_summary.{json,md} to the output directory. Real simulation logic lives
-in submodules under d3_engine.core/, services/, and pipelines/.
+Parses arguments and emits JSONL progress to stdout. Real simulation logic
+and writing of run summaries/outputs live in d3_engine.runner.runner.
+
+Defaults:
+- inputs: ../inputs
+- out: ../outputs
+- pipelines: public,private
+
+Override via flags or env vars: D3_INPUTS, D3_OUT, D3_PIPELINES, D3_SEED, D3_FAIL_ON_WARNING.
 """
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
-from d3_engine.core import runner
+from d3_engine.runner import runner
 from d3_engine.core.validator import ValidationError
 
 
@@ -26,11 +33,39 @@ def _jsonl(event: str, **kwargs):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="D3 Engine CLI (scaffold)")
-    parser.add_argument("--inputs", required=True, help="Path to .003-draft/inputs")
-    parser.add_argument("--out", required=True, help="Path to outputs directory")
-    parser.add_argument("--pipelines", default="public,private", help="Comma-separated: public,private")
-    parser.add_argument("--seed", type=int, default=None, help="Master seed (optional)")
-    parser.add_argument("--fail-on-warning", action="store_true", help="Treat warnings as errors")
+    parser.add_argument(
+        "--inputs",
+        default=os.getenv(
+            "D3_INPUTS",
+            "/home/vince/Projects/llama-orch/.business/financieelplan_NL_nl/.003-draft/inputs",
+        ),
+        help="Path to inputs directory (default: hardcoded repo path or D3_INPUTS)",
+    )
+    parser.add_argument(
+        "--out",
+        default=os.getenv(
+            "D3_OUT",
+            "/home/vince/Projects/llama-orch/.business/financieelplan_NL_nl/.003-draft/outputs",
+        ),
+        help="Path to outputs directory (default: hardcoded repo path or D3_OUT)",
+    )
+    parser.add_argument(
+        "--pipelines",
+        default=os.getenv("D3_PIPELINES", "public,private"),
+        help="Comma-separated: public,private (default: public,private or D3_PIPELINES)",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=(int(os.getenv("D3_SEED")) if os.getenv("D3_SEED") else None),
+        help="Master seed (optional, env D3_SEED)",
+    )
+    parser.add_argument(
+        "--fail-on-warning",
+        action="store_true",
+        default=(os.getenv("D3_FAIL_ON_WARNING", "").strip() != ""),
+        help="Treat warnings as errors (set env D3_FAIL_ON_WARNING to enable by default)",
+    )
     parser.add_argument("--max-concurrency", type=int, default=0, help="Optional parallelism hint")
     args = parser.parse_args()
 
@@ -43,15 +78,7 @@ def main() -> int:
     try:
         # Execute orchestrated run
         pipelines = [p.strip() for p in args.pipelines.split(",") if p.strip()]
-        result = runner.execute(inputs, out_dir, pipelines, args.seed, args.fail_on_warning, args.max_concurrency)
-
-        # Write run summary from runner result
-        summary = {
-            "ts": _ts(),
-            **result,
-        }
-        (out_dir / "run_summary.json").write_text(json.dumps(summary, indent=2))
-        (out_dir / "run_summary.md").write_text("# Run Summary\n\nThis is a scaffold run. Implement engine logic in d3_engine.* modules.\n")
+        _ = runner.execute(inputs, out_dir, pipelines, args.seed, args.fail_on_warning, args.max_concurrency)
 
         _jsonl("run_done")
         return 0
