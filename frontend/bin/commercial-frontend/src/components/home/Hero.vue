@@ -10,7 +10,7 @@
     <div class="container">
       <div class="copy">
         <p class="eyebrow">
-          {{ t('home.hero.eyebrow', 'Open-source AI servers you can trust') }}
+          {{ t('home.hero.eyebrow', 'Secure Open-source AI servers') }}
         </p>
 
         <h1 id="hero-title" class="title">
@@ -56,10 +56,11 @@
 
       <figure class="hero-media">
         <img
-          src="/assets/hero_pipes.png"
+          class="hero-image"
+          src="/assets/home_hero_light.png"
           width="980"
           height="420"
-          alt="clean vector isometric data-center rack with GPU blades and a shield-check audit log icon; subtle cyan/teal accents; left-to-right flow arrows; minimal, professional; grid background; no literal pipes; wide banner crop"
+          alt="Isometric illustration of a professional data-center rack with GPU servers. Panels glow with subtle cyan and teal accents. A shield-check icon represents trust and security. Transparent arrows flow left to right across the rack to symbolize scalability. Minimal grid background. Wide banner crop."
           loading="eager"
           decoding="async"
           fetchpriority="high"
@@ -194,9 +195,14 @@
     justify-self: center;
   }
   .hero-media img {
+    content: url('/assets/home_hero_light.png');
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+
+  :root[data-theme='dark'] .hero-media img {
+    content: url('/assets/home_hero_dark.png');
   }
 </style>
