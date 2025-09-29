@@ -53,20 +53,6 @@
           </div>
         </div>
       </div>
-
-      <figure class="hero-media">
-        <img
-          class="hero-image"
-          src="/assets/home_hero_light.png"
-          width="980"
-          height="420"
-          alt="Isometric illustration of a professional data-center rack with GPU servers. Panels glow with subtle cyan and teal accents. A shield-check icon represents trust and security. Transparent arrows flow left to right across the rack to symbolize scalability. Minimal grid background. Wide banner crop."
-          loading="eager"
-          decoding="async"
-          fetchpriority="high"
-          sizes="(min-width: 920px) 520px, 100vw"
-        />
-      </figure>
     </div>
   </section>
 </template>
@@ -90,6 +76,7 @@
   .hero {
     background: var(--hero-bg);
     padding: clamp(2rem, 4vw, 3.25rem) 1rem;
+    padding-bottom: 0; /* tighten spacing to meet carousel */
   }
 
   .container {

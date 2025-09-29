@@ -3,11 +3,10 @@
   import { useMeta } from '@/composables/useMeta'
   import { useRoute } from 'vue-router'
   import { useI18n } from 'vue-i18n'
-
   // Above-the-fold: keep eager
   import DevUtilityBar from '@/components/DevUtilityBar.vue'
   import Hero from '@/components/home/Hero.vue'
-  import WhyPlumbing from '@/components/home/WhyPlumbing.vue'
+  import HeroMedia from '@/components/home/HeroMedia.vue'
 
   // Below-the-fold: lazy for perf (simple code-splitting)
   const ThreeTools = defineAsyncComponent(() => import('@/components/home/ThreeTools.vue'))
@@ -19,7 +18,6 @@
 
   const { t, tm, locale } = useI18n()
   const route = useRoute()
-
   // Prefer configured SITE URL; avoid direct window.* in SSR
   const siteUrl = import.meta.env.VITE_SITE_URL ?? ''
   const githubUrl = import.meta.env.VITE_GITHUB_URL || ''
@@ -105,6 +103,7 @@
   <main id="main" class="home">
     <DevUtilityBar class="desktop-devbar" />
     <Hero />
+    <HeroMedia />
     <WhyPlumbing />
     <!-- Lazy chunks render naturally when reached; optional <Suspense> if you want placeholders -->
     <ThreeTools />
@@ -142,9 +141,13 @@
   }
 
   /* Desktop-only dev utility bar (layout provides mobile version) */
-  .desktop-devbar { display: none; }
+  .desktop-devbar {
+    display: none;
+  }
   @media (min-width: 920px) {
-    .desktop-devbar { display: block; }
+    .desktop-devbar {
+      display: block;
+    }
   }
 
   .home section.fullbleed {
