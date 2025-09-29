@@ -28,6 +28,7 @@ from pipelines.public.demand import hourly_timeseries_uniform
 from services.autoscaling_runner import build_policy_from_public, simulate_and_emit
 from analysis import analyze
 from aggregate import aggregator as agg
+from report import generate_analyzed_report as gen_analyzed_report
 
 def ensure_dir(p: Path) -> None:
     p.mkdir(parents=True, exist_ok=True)
@@ -237,6 +238,15 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
     artifacts += written
     print(elog.jsonl("aggregate_done"))
     print(elog.jsonl("consolidate_done"))
+
+    # 7.5) Generate analyzed HTML report (outside outputs/)
+    try:
+        analyzed_dir = out_dir.parent / "analyzed"
+        files = gen_analyzed_report(out_dir, analyzed_dir)
+        print(elog.jsonl("analyzed_report_generated", analyzed=str(analyzed_dir), files=files))
+    except Exception as e:
+        # Non-fatal
+        print(elog.jsonl("analyzed_report_failed", error=str(e)))
 
     # 8) Acceptance
     from core import acceptance as acc

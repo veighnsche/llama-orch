@@ -3,290 +3,232 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Qredits Lender Pack – Financial Plan (18 months)</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>Qredits – 18-Month Financial Plan (Analysis)</title>
   <style>
-    /* Fallback minimal styles if CSS fails to load */
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif; color:#0a0a0a; margin: 0; }
-    .container { max-width: 1000px; margin: 0 auto; padding: 24px; }
-    h1, h2, h3 { margin: 0.6em 0 0.3em; }
-    .muted { color: #666; font-size: 0.95em; }
-    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 12px 0 8px; }
-    .card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; background: #fff; }
-    .card strong { font-size: 1.1em; }
-    .grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
-    .row { display: grid; grid-template-columns: 1fr; gap: 18px; }
-    .note { background: #f8fafc; border-left: 4px solid #94a3b8; padding: 10px 12px; border-radius: 6px; }
-    .print-hide { display: inline-flex; gap: 8px; align-items: center; }
-    .btn { background: #111827; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
-    .section { margin: 16px 0 8px; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.92em; }
-    th, td { border: 1px solid #e5e7eb; padding: 6px 8px; text-align: right; }
-    th:first-child, td:first-child { text-align: left; }
-    .small { font-size: 0.88em; }
-    footer { color:#6b7280; margin-top: 24px; font-size: 0.9em; }
-
-    @media print {
-      .print-hide { display: none !important; }
-      .card { break-inside: avoid; }
-      .page-break { page-break-before: always; }
-      body { background: white; }
-    }
+    :root{--ink:#1b1f23;--muted:#586069;--ok:#106b21;--warn:#8a6d3b;--bad:#b71c1c;--bg:#fff}
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;line-height:1.45;color:var(--ink);background:var(--bg);margin:0;padding:24px}
+    header{margin-bottom:24px}
+    h1{font-size:20px;margin:0 0 4px}
+    h2{font-size:18px;margin:24px 0 8px}
+    h3{font-size:16px;margin:16px 0 8px}
+    p,li{font-size:14px;color:var(--ink)}
+    .muted{color:var(--muted)}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:12px 0}
+    .card{border:1px solid #e1e4e8;border-radius:8px;padding:12px;background:#fff}
+    .k{font-size:12px;color:var(--muted)}
+    .v{font-size:18px;font-weight:600}
+    table{width:100%;border-collapse:collapse;margin:8px 0 24px}
+    th,td{padding:6px 8px;border:1px solid #e1e4e8;font-size:12px;text-align:right}
+    th:first-child,td:first-child{text-align:left}
+    .ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+    .section{page-break-inside:avoid}
+    @media print{body{padding:0} .no-print{display:none}}
+    .foot{margin-top:24px;font-size:12px;color:var(--muted)}
+    .small{font-size:12px}
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <header style="display:flex; justify-content: space-between; align-items:center; gap: 12px; flex-wrap: wrap;">
-      <div>
-        <h1>Qredits Lender Pack – Financial Plan</h1>
-        <div class="muted">18-month simulation – generated from `outputs/`</div>
-      </div>
-      <div class="print-hide">
-        <button class="btn" onclick="window.print()">Print to PDF</button>
-      </div>
-    </header>
+  <header>
+    <h1>Qredits – 18-Month Financial Plan (Analysis)</h1>
+    <div class="muted small">Generated at: <span id="gen_at">2025-09-29T15:53:35Z</span></div>
+  </header>
 
-    <section class="section">
-      <h2>Executive Summary</h2>
-      <div class="kpis" id="summary-cards"></div>
-      <div class="note small" id="narrative"></div>
-    </section>
+  <section class="section" id="exec">
+    <h2>Executive Summary</h2>
+    <div class="cards">
+      <div class="card"><div class="k">Min DSCR</div><div class="v" id="dscr_min">–</div></div>
+      <div class="card"><div class="k">Min Cash (€)</div><div class="v" id="cash_min">–</div></div>
+      <div class="card"><div class="k">Runway (months to cash < 0)</div><div class="v" id="runway">–</div></div>
+      <div class="card"><div class="k">Revenue (€)</div><div class="v" id="rev_total">–</div></div>
+      <div class="card"><div class="k">Costs (€)</div><div class="v" id="cost_total">–</div></div>
+      <div class="card"><div class="k">Margin (€)</div><div class="v" id="margin_total">–</div></div>
+    </div>
+    <p class="small muted" id="perc_note"></p>
+  </section>
 
-    <section class="section">
-      <h2>Performance Overview</h2>
-      <div class="grid">
-        <div class="card">
-          <h3>Revenue and Cost by Month</h3>
-          <canvas id="revCostChart" height="220"></canvas>
-        </div>
-        <div class="card">
-          <h3>Profitability (EBITDA & Net Income)</h3>
-          <canvas id="profitChart" height="220"></canvas>
-        </div>
-        <div class="card">
-          <h3>Cash Balance and Debt Service</h3>
-          <canvas id="cashDebtChart" height="220"></canvas>
-        </div>
-      </div>
-    </section>
+  <section class="section" id="why">
+    <h2>Why this projection is realistic</h2>
+    <ul id="justifications">
+      <!-- populated by JS -->
+    </ul>
+  </section>
 
-    <section class="section page-break">
-      <h2>Repayment Ability</h2>
-      <div class="grid">
-        <div class="card" id="repayment"></div>
-        <div class="card" id="assumptions"></div>
-      </div>
-    </section>
+  <section class="section" id="pnl">
+    <h2>Monthly P&L (Representative Cut)</h2>
+    <table id="tbl_pnl">
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Revenue (total)</th>
+          <th>COGS (total)</th>
+          <th>Opex (fixed)</th>
+          <th>Depreciation</th>
+          <th>EBITDA</th>
+          <th>Interest</th>
+          <th>EBT</th>
+          <th>Tax</th>
+          <th>Net Income</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
 
-    <section class="section page-break">
-      <h2>Detailed Tables</h2>
-      <div class="row">
-        <div class="card">
-          <h3>P&L by Month</h3>
-          <div class="small muted">All amounts in EUR</div>
-          <div style="overflow:auto; max-height: 420px;">
-            <table id="pnl-table"></table>
-          </div>
-        </div>
-        <div class="card">
-          <h3>Cashflow by Month</h3>
-          <div class="small muted">All amounts in EUR</div>
-          <div style="overflow:auto; max-height: 420px;">
-            <table id="cash-table"></table>
-          </div>
-        </div>
-        <div class="card">
-          <h3>Loan Schedule</h3>
-          <div class="small muted">All amounts in EUR</div>
-          <div style="overflow:auto; max-height: 420px;">
-            <table id="loan-table"></table>
-          </div>
-        </div>
-      </div>
-    </section>
+  <section class="section" id="cashflow">
+    <h2>Monthly Cashflow</h2>
+    <table id="tbl_cf">
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Starting Cash</th>
+          <th>Cash from Ops</th>
+          <th>Working Capital Δ</th>
+          <th>VAT Cash</th>
+          <th>Capex</th>
+          <th>Debt Service (Interest)</th>
+          <th>Debt Service (Principal)</th>
+          <th>Ending Cash</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
 
-    <footer>
-      Generated from data in `.003-draft/outputs/` on <span id="gen-date"></span>. Autoscaling utilization and SLA are included to support realism and operational feasibility.
-    </footer>
+  <section class="section" id="loan">
+    <h2>Loan Schedule</h2>
+    <table id="tbl_loan">
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Principal Opening</th>
+          <th>Interest</th>
+          <th>Principal Repayment</th>
+          <th>Payment</th>
+          <th>Principal Closing</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <div class="foot">
+    Built from engine outputs; print this page to PDF for submission.
   </div>
 
+  <script id="DATA_JSON" type="application/json">{"consolidated": {"public": {"revenue_eur": 28087.682804858738, "cost_eur": 21.387668336256073, "margin_eur": 28066.29513652248}, "private": {"revenue_eur": 48469.26492711627, "cost_eur": 21701.345387560432, "margin_eur": 26767.91953955584}, "total": {"revenue_eur": 76556.94773197501, "cost_eur": 21722.73305589669, "margin_eur": 54834.21467607832}, "autoscaling": {"avg_util_pct": 0.08232704561001118, "p95_util_pct": 0.14640780527068953, "sla_violations": 0}, "percentiles": {"report_percentiles": [10.0, 50.0, 90.0], "selected_percentile": 50.0}, "sensitivity": {"public_revenue": {"min": 50.0, "max": 185.00090274004327, "mean": 104.02845483281014, "std": 40.8845528577334}, "private_revenue": {"min": 203.67727272727274, "max": 1847.8084434301986, "mean": 538.5473880790697, "std": 366.32958830868387}}}, "kpis": {"dscr_min": -10.005476309285356, "icr_min": -10.005476309285356, "cash_min": -13793.794193770376, "runway_months": 10}, "monthly": {"revenue_total": [1888.8929545454546, 2097.1026977272727, 2314.817740522728, 2542.830019457954, 2781.9828986941798, 3033.174983142516, 3297.3642061259516, 3575.572212095268, 3868.889056447546, 4178.4782461556515, 4505.582146703571, 4851.52778274573, 5217.733061978721, 5605.713453942784, 6017.08915787008, 6453.592796280465, 6917.077673807355, 7409.526643731781], "cogs_total": [102.75518648018648, 208.0504877622377, 316.69086382867135, 428.96629897814677, 545.1815062139215, 665.6568917200067, 790.7295748347426, 920.7544669268825, 1056.1054127816637, 1197.1763983189462, 1344.3828286930545, 1498.1628810652758, 1658.9789365958209, 1827.3190964733494, 2003.6987870878388, 2188.662459757558, 2382.785390744322, 2586.6755876340626], "ebitda": [-2488.862231934732, -2385.947790034965, -2276.8731233059434, -2161.1362795201926, -2038.198607519742, -1907.4819085774907, -1768.3653687087908, -1620.182254831615, -1462.2163563341178, -1293.6981521632947, -1113.8006819894836, -921.6350983195452, -716.2458746171001, -496.6056425305651, -261.60962921775854, -10.069663477092035, 259.2922830630323, 547.8510560977193], "interest": [248.74999999999997, 248.74999999999997, 248.74999999999997, 248.74999999999997, 245.31857088891073, 241.85868951144204, 238.37011995088517, 234.85262433438868, 231.30596281673874, 227.72989356400495, 224.12417273705057, 220.48855447490604, 216.82279087800455, 213.12663199127874, 209.3998257871172, 205.6421181481795, 201.85325285006888, 198.03297154386146], "debt_service_principal": [0.0, 0.0, 0.0, 413.84069681478366, 417.27212592587296, 420.7320073033416, 424.2205768638985, 427.738072480395, 431.2847339980449, 434.8608032507787, 438.4665240777331, 442.1021423398776, 445.76790593677913, 449.46406482350494, 453.19087102766645, 456.94857866660413, 460.73744396471477, 464.5577252709222], "dscr": [-10.005476309285356, -9.591749909688302, -9.153258787159572, -3.26164597527439, -3.076105078622145, -2.8788238617704227, -2.6688653752757237, -2.4452233673370007, -2.2068169133121054, -1.9524846309831705, -1.6809784492051634, -1.3909568950334557, -1.080977861687839, -0.7494908167558879, -0.3948284068511261, -0.015197411502303125, 0.39133100466020154, 0.8268317963583814], "ending_cash": [32262.38776806527, 26749.686604836832, 23718.28785070921, 20359.21738648273, 17091.579028846994, 13921.061432091614, 10853.810027500613, 7896.460689405883, 5056.176011274125, 2340.684392955388, -241.67784406839849, -2681.9210796548737, -4970.353504142098, -7096.528441904391, -9049.18759631832, -10816.199900215133, -12384.49563117682, -13793.794193770376], "vat_cash_total": 10502.386360195926, "wc_delta_total": 3036.713288032451}, "meta": {"horizon_months": 18, "generated_at": "2025-09-29T15:53:35Z", "selected_percentile": 50.0, "report_percentiles": [10.0, 50.0, 90.0]}, "autoscaling": {"avg_util_pct": 0.08232704561001118, "p95_util_pct": 0.14640780527068953, "sla_violations": 0}, "loan_schedule": [{"month": "0.0", "principal_opening": "30000.0", "interest": "248.74999999999997", "principal_repayment": "0.0", "payment": "248.74999999999997", "principal_closing": "30000.0"}, {"month": "1.0", "principal_opening": "30000.0", "interest": "248.74999999999997", "principal_repayment": "0.0", "payment": "248.74999999999997", "principal_closing": "30000.0"}, {"month": "2.0", "principal_opening": "30000.0", "interest": "248.74999999999997", "principal_repayment": "0.0", "payment": "248.74999999999997", "principal_closing": "30000.0"}, {"month": "3.0", "principal_opening": "30000.0", "interest": "248.74999999999997", "principal_repayment": "413.84069681478366", "payment": "662.5906968147837", "principal_closing": "29586.159303185217"}, {"month": "4.0", "principal_opening": "29586.159303185217", "interest": "245.31857088891073", "principal_repayment": "417.27212592587296", "payment": "662.5906968147837", "principal_closing": "29168.887177259345"}, {"month": "5.0", "principal_opening": "29168.887177259345", "interest": "241.85868951144204", "principal_repayment": "420.7320073033416", "payment": "662.5906968147837", "principal_closing": "28748.155169956004"}, {"month": "6.0", "principal_opening": "28748.155169956004", "interest": "238.37011995088517", "principal_repayment": "424.2205768638985", "payment": "662.5906968147837", "principal_closing": "28323.934593092104"}, {"month": "7.0", "principal_opening": "28323.934593092104", "interest": "234.85262433438868", "principal_repayment": "427.738072480395", "payment": "662.5906968147837", "principal_closing": "27896.19652061171"}, {"month": "8.0", "principal_opening": "27896.19652061171", "interest": "231.30596281673874", "principal_repayment": "431.2847339980449", "payment": "662.5906968147837", "principal_closing": "27464.911786613666"}, {"month": "9.0", "principal_opening": "27464.911786613666", "interest": "227.72989356400495", "principal_repayment": "434.8608032507787", "payment": "662.5906968147837", "principal_closing": "27030.050983362886"}, {"month": "10.0", "principal_opening": "27030.050983362886", "interest": "224.12417273705057", "principal_repayment": "438.4665240777331", "payment": "662.5906968147837", "principal_closing": "26591.584459285154"}, {"month": "11.0", "principal_opening": "26591.584459285154", "interest": "220.48855447490604", "principal_repayment": "442.1021423398776", "payment": "662.5906968147837", "principal_closing": "26149.482316945276"}, {"month": "12.0", "principal_opening": "26149.482316945276", "interest": "216.82279087800455", "principal_repayment": "445.76790593677913", "payment": "662.5906968147837", "principal_closing": "25703.714411008496"}, {"month": "13.0", "principal_opening": "25703.714411008496", "interest": "213.12663199127874", "principal_repayment": "449.46406482350494", "payment": "662.5906968147837", "principal_closing": "25254.250346184992"}, {"month": "14.0", "principal_opening": "25254.250346184992", "interest": "209.3998257871172", "principal_repayment": "453.19087102766645", "payment": "662.5906968147837", "principal_closing": "24801.059475157326"}, {"month": "15.0", "principal_opening": "24801.059475157326", "interest": "205.6421181481795", "principal_repayment": "456.94857866660413", "payment": "662.5906968147837", "principal_closing": "24344.11089649072"}, {"month": "16.0", "principal_opening": "24344.11089649072", "interest": "201.85325285006888", "principal_repayment": "460.73744396471477", "payment": "662.5906968147837", "principal_closing": "23883.373452526008"}, {"month": "17.0", "principal_opening": "23883.373452526008", "interest": "198.03297154386146", "principal_repayment": "464.5577252709222", "payment": "662.5906968147837", "principal_closing": "23418.815727255085"}], "pnl_rows": [{"month": "0", "revenue_public": "750.0", "revenue_private": "1138.8929545454546", "cogs_public": "0.5710955710955713", "cogs_private": "102.18409090909091", "opex_fixed": "4275.0", "depreciation": "0.0", "EBITDA": "-2488.862231934732", "interest": "248.74999999999997", "EBT": "-2737.612231934732", "tax": "0.0", "NetIncome": "-2737.612231934732"}, {"month": "1", "revenue_public": "810.0", "revenue_private": "1287.1026977272727", "cogs_public": "0.616783216783217", "cogs_private": "207.4337045454545", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2385.947790034965", "interest": "248.74999999999997", "EBT": "-2701.3644567016313", "tax": "0.0", "NetIncome": "-2701.3644567016313"}, {"month": "2", "revenue_public": "874.8000000000006", "revenue_private": "1440.0177405227273", "cogs_public": "0.6661258741258743", "cogs_private": "316.02473795454546", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2276.8731233059434", "interest": "248.74999999999997", "EBT": "-2592.28978997261", "tax": "0.0", "NetIncome": "-2592.28978997261"}, {"month": "3", "revenue_public": "944.784", "revenue_private": "1598.0460194579543", "cogs_public": "0.7194159440559443", "cogs_private": "428.24688303409084", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2161.1362795201926", "interest": "248.74999999999997", "EBT": "-2476.552946186859", "tax": "0.0", "NetIncome": "-2476.552946186859"}, {"month": "4", "revenue_public": "1020.3667200000002", "revenue_private": "1761.6161786941796", "cogs_public": "0.77696921958042", "cogs_private": "544.404536994341", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2038.198607519742", "interest": "245.31857088891073", "EBT": "-2350.1838450753194", "tax": "0.0", "NetIncome": "-2350.1838450753194"}, {"month": "5", "revenue_public": "1101.9960576000005", "revenue_private": "1931.1789255425156", "cogs_public": "0.8391267571468535", "cogs_private": "664.8177649628599", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-1907.4819085774907", "interest": "241.85868951144204", "EBT": "-2216.0072647555994", "tax": "0.0", "NetIncome": "-2216.0072647555994"}, {"month": "6", "revenue_public": "1190.1557422080002", "revenue_private": "2107.2084639179516", "cogs_public": "0.9062568977186019", "cogs_private": "789.8233179370241", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-1768.3653687087908", "interest": "238.37011995088517", "EBT": "-2073.402155326343", "tax": "0.0", "NetIncome": "-2073.402155326343"}, {"month": "7", "revenue_public": "1285.3682015846412", "revenue_private": "2290.2040105106266", "cogs_public": "0.9787574495360902", "cogs_private": "919.7757094773464", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-1620.182254831615", "interest": "234.85262433438868", "EBT": "-1921.7015458326705", "tax": "0.0", "NetIncome": "-1921.7015458326705"}, {"month": "8", "revenue_public": "1388.197657711412", "revenue_private": "2480.691398736134", "cogs_public": "1.0570580454989775", "cogs_private": "1055.0483547361648", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-1462.2163563341178", "interest": "231.30596281673874", "EBT": "-1760.1889858175232", "tax": "0.0", "NetIncome": "-1760.1889858175232"}, {"month": "9", "revenue_public": "1499.2534703283245", "revenue_private": "2679.2247758273265", "cogs_public": "1.1416226891388959", "cogs_private": "1196.0347756298074", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-1293.6981521632947", "interest": "227.72989356400495", "EBT": "-1588.0947123939663", "tax": "0.0", "NetIncome": "-1588.0947123939663"}, {"month": "10", "revenue_public": "1619.1937479545911", "revenue_private": "2886.3883987489803", "cogs_public": "1.232952504270008", "cogs_private": "1343.1498761887844", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-1113.8006819894836", "interest": "224.12417273705057", "EBT": "-1404.5915213932008", "tax": "0.0", "NetIncome": "-1404.5915213932008"}, {"month": "11", "revenue_public": "1748.7292477909582", "revenue_private": "3102.798534954772", "cogs_public": "1.3315887046116082", "cogs_private": "1496.831292360664", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-921.6350983195452", "interest": "220.48855447490604", "EBT": "-1208.7903194611179", "tax": "0.0", "NetIncome": "-1208.7903194611179"}, {"month": "12", "revenue_public": "1888.6275876142347", "revenue_private": "3329.105474364486", "cogs_public": "1.4381158009805366", "cogs_private": "1657.5408207948403", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-716.2458746171001", "interest": "216.82279087800455", "EBT": "-999.7353321617712", "tax": "0.0", "NetIncome": "-999.7353321617712"}, {"month": "13", "revenue_public": "2039.7177946233749", "revenue_private": "3565.9956593194092", "cogs_public": "1.55316506505898", "cogs_private": "1825.7659314082905", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-496.6056425305651", "interest": "213.12663199127874", "EBT": "-776.3989411885104", "tax": "0.0", "NetIncome": "-776.3989411885104"}, {"month": "14", "revenue_public": "2202.8952181932436", "revenue_private": "3814.1939396768366", "cogs_public": "1.6774182702636988", "cogs_private": "2002.0213688175752", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-261.60962921775854", "interest": "209.3998257871172", "EBT": "-537.6761216715424", "tax": "0.0", "NetIncome": "-537.6761216715424"}, {"month": "15", "revenue_public": "2379.126835648704", "revenue_private": "4074.465960631762", "cogs_public": "1.8116117318847946", "cogs_private": "2186.8508480256733", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-10.069663477092035", "interest": "205.6421181481795", "EBT": "-282.3784482919382", "tax": "0.0", "NetIncome": "-282.3784482919382"}, {"month": "16", "revenue_public": "2569.456982500601", "revenue_private": "4347.6206913067535", "cogs_public": "1.9565406704355777", "cogs_private": "2380.8288500738863", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "259.2922830630323", "interest": "201.85325285006888", "EBT": "-9.22763645370327", "tax": "0.0", "NetIncome": "-9.22763645370327"}, {"month": "17", "revenue_public": "2775.0135411006495", "revenue_private": "4634.513102631132", "cogs_public": "2.1130639240704245", "cogs_private": "2584.562523709992", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "547.8510560977193", "interest": "198.03297154386146", "EBT": "283.1514178871911", "tax": "53.79876939856631", "NetIncome": "229.35264848862477"}], "cf_rows": [{"month": "0", "starting_cash": "35000.0", "cash_from_ops": "-2488.862231934732", "working_capital_delta": "0.0", "vat_cash": "0.0", "capex": "0.0", "debt_service_interest": "248.74999999999997", "debt_service_principal": "0.0", "ending_cash": "32262.38776806527"}, {"month": "1", "starting_cash": "0.0", "cash_from_ops": "-2863.9511632284375", "working_capital_delta": "102.91444189976687", "vat_cash": "375.0889312937063", "capex": "2400.0", "debt_service_interest": "248.74999999999997", "debt_service_principal": "0.0", "ending_cash": "26749.686604836832"}, {"month": "2", "starting_cash": "0.0", "cash_from_ops": "-2782.648754127622", "working_capital_delta": "109.0746667290216", "vat_cash": "396.70096409265733", "capex": "0.0", "debt_service_interest": "248.74999999999997", "debt_service_principal": "0.0", "ending_cash": "23718.28785070921"}, {"month": "3", "starting_cash": "0.0", "cash_from_ops": "-2696.4797674116953", "working_capital_delta": "115.7368437857508", "vat_cash": "419.60664410575185", "capex": "0.0", "debt_service_interest": "248.74999999999997", "debt_service_principal": "413.84069681478366", "ending_cash": "20359.21738648273"}, {"month": "4", "starting_cash": "0.0", "cash_from_ops": "-2605.047660820952", "working_capital_delta": "122.93767200045068", "vat_cash": "443.91138130075956", "capex": "0.0", "debt_service_interest": "245.31857088891073", "debt_service_principal": "417.27212592587296", "ending_cash": "17091.579028846994"}, {"month": "5", "starting_cash": "0.0", "cash_from_ops": "-2507.9268999405963", "working_capital_delta": "130.71669894225124", "vat_cash": "469.7282924208542", "capex": "0.0", "debt_service_interest": "241.85868951144204", "debt_service_principal": "420.7320073033416", "ending_cash": "13921.061432091614"}, {"month": "6", "starting_cash": "0.0", "cash_from_ops": "-2404.660707776218", "working_capital_delta": "139.11653986869987", "vat_cash": "497.17879919872695", "capex": "0.0", "debt_service_interest": "238.37011995088517", "debt_service_principal": "424.2205768638985", "ending_cash": "10853.810027500613"}, {"month": "7", "starting_cash": "0.0", "cash_from_ops": "-2294.7586412799446", "working_capital_delta": "148.18311387717586", "vat_cash": "526.393272571154", "capex": "0.0", "debt_service_interest": "234.85262433438868", "debt_service_principal": "427.738072480395", "ending_cash": "7896.460689405883"}, {"month": "8", "starting_cash": "0.0", "cash_from_ops": "-2177.6939813169756", "working_capital_delta": "157.96589849749716", "vat_cash": "557.5117264853609", "capex": "0.0", "debt_service_interest": "231.30596281673874", "debt_service_principal": "431.2847339980449", "ending_cash": "5056.176011274125"}, {"month": "9", "starting_cash": "0.0", "cash_from_ops": "-2052.900921503953", "working_capital_delta": "168.51820417082308", "vat_cash": "590.6845651698353", "capex": "0.0", "debt_service_interest": "227.72989356400495", "debt_service_principal": "434.8608032507787", "ending_cash": "2340.684392955388"}, {"month": "10", "starting_cash": "0.0", "cash_from_ops": "-1919.7715402090028", "working_capital_delta": "179.89747017381114", "vat_cash": "626.073388045708", "capex": "0.0", "debt_service_interest": "224.12417273705057", "debt_service_principal": "438.4665240777331", "ending_cash": "-241.67784406839849"}, {"month": "11", "starting_cash": "0.0", "cash_from_ops": "-1777.652538771692", "working_capital_delta": "192.16558366993831", "vat_cash": "663.8518567822085", "capex": "0.0", "debt_service_interest": "220.48855447490604", "debt_service_principal": "442.1021423398776", "ending_cash": "-2681.9210796548737"}, {"month": "12", "starting_cash": "0.0", "cash_from_ops": "-1625.8417276724408", "working_capital_delta": "205.38922370244518", "vat_cash": "704.2066293528954", "capex": "0.0", "debt_service_interest": "216.82279087800455", "debt_service_principal": "445.76790593677913", "ending_cash": "-4970.353504142098"}, {"month": "13", "starting_cash": "0.0", "cash_from_ops": "-1463.584240947509", "working_capital_delta": "219.64023208653498", "vat_cash": "747.338366330409", "capex": "0.0", "debt_service_interest": "213.12663199127874", "debt_service_principal": "449.46406482350494", "ending_cash": "-7096.528441904391"}, {"month": "14", "starting_cash": "0.0", "cash_from_ops": "-1290.0684575991463", "working_capital_delta": "234.99601331280655", "vat_cash": "793.4628150685812", "capex": "0.0", "debt_service_interest": "209.3998257871172", "debt_service_principal": "453.19087102766645", "ending_cash": "-9049.18759631832"}, {"month": "15", "starting_cash": "0.0", "cash_from_ops": "-1104.4216070820291", "working_capital_delta": "251.5399657406665", "vat_cash": "842.8119778642706", "capex": "0.0", "debt_service_interest": "205.6421181481795", "debt_service_principal": "456.94857866660413", "ending_cash": "-10816.199900215133"}, {"month": "16", "starting_cash": "0.0", "cash_from_ops": "-905.7050341469024", "working_capital_delta": "269.36194654012434", "vat_cash": "895.6353706698104", "capex": "0.0", "debt_service_interest": "201.85325285006888", "debt_service_principal": "460.73744396471477", "ending_cash": "-12384.49563117682"}, {"month": "17", "starting_cash": "0.0", "cash_from_ops": "-746.7078657787708", "working_capital_delta": "288.55877303468696", "vat_cash": "952.2013794432368", "capex": "0.0", "debt_service_interest": "198.03297154386146", "debt_service_principal": "464.5577252709222", "ending_cash": "-13793.794193770376"}]}</script>
   <script>
-    // Inline data extracted from your outputs
-    const consolidatedSummary = {
-      "public": {"revenue_eur": 28087.682804858738, "cost_eur": 21.387668336256073, "margin_eur": 28066.29513652248},
-      "private": {"revenue_eur": 48469.26492711627, "cost_eur": 21701.345387560432, "margin_eur": 26767.91953955584},
-      "total": {"revenue_eur": 76556.94773197501, "cost_eur": 21722.73305589669, "margin_eur": 54834.21467607832},
-      "autoscaling": {"avg_util_pct": 0.08232704561001118, "p95_util_pct": 0.14640780527068953, "sla_violations": 0},
-      "percentiles": {"report_percentiles": [10.0, 50.0, 90.0], "selected_percentile": 50.0},
-      "sensitivity": {
-        "public_revenue": {"min": 50.0, "max": 185.00090274004327, "mean": 104.02845483281014, "std": 40.8845528577334},
-        "private_revenue": {"min": 203.67727272727274, "max": 1847.8084434301986, "mean": 538.5473880790697, "std": 366.32958830868387}
+    const DATA = JSON.parse(document.getElementById('DATA_JSON').textContent);
+    const fmt0 = (x) => (x === Infinity ? '∞' : (x || 0).toLocaleString(undefined,{maximumFractionDigits:0}));
+    const fmt2 = (x) => (x === Infinity ? '∞' : (x || 0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}));
+    const euro = (x) => '€ ' + fmt0(x);
+
+    function setText(id, text){ const el=document.getElementById(id); if(el) el.textContent=text; }
+
+    (function init(){
+      const cons = DATA.consolidated || {};
+      const total = cons.total || {};
+      const k = DATA.kpis || {};
+      const m = DATA.meta || {};
+
+      // Executive cards
+      setText('dscr_min', (k.dscr_min===Infinity? '∞' : (k.dscr_min||0).toFixed(2)));
+      setText('cash_min', euro(k.cash_min));
+      setText('runway', (k.runway_months||0).toString());
+      setText('rev_total', euro(total.revenue_eur||0));
+      setText('cost_total', euro(total.cost_eur||0));
+      setText('margin_total', euro(total.margin_eur||0));
+
+      if (cons.percentiles){
+        const rp = cons.percentiles.report_percentiles || [];
+        const sel = cons.percentiles.selected_percentile;
+        const note = `Representative scenario uses the ${sel}th percentile across runs; reported percentiles: [${rp.join(', ')}].`;
+        setText('perc_note', note);
       }
-    };
 
-    const kpiSummary = {"dscr_min": -10.005476309285356, "icr_min": -10.005476309285356, "cash_min": -13793.794193770376, "runway_months": 10};
+      // Justifications
+      const J = document.getElementById('justifications');
+      const autos = cons.autoscaling || DATA.autoscaling || {};
+      const bullets = [
+        `Representative (median-like) scenario selected: p=${(m.selected_percentile ?? cons.percentiles?.selected_percentile ?? 50)}`,
+        `VAT and working capital included: VAT total € ${fmt0(DATA.monthly?.vat_cash_total || 0)}, WC Δ total € ${fmt0(DATA.monthly?.wc_delta_total || 0)}`,
+        `Autoscaling sanity: avg util ${(autos.avg_util_pct ?? 0).toFixed(1)}% · p95 util ${(autos.p95_util_pct ?? 0).toFixed(1)}% · SLA violations ${(autos.sla_violations ?? 0)}`,
+        `Loan schedule fully applied to cashflow (interest and principal)`
+      ];
+      bullets.forEach(t=>{ const li=document.createElement('li'); li.textContent=t; J.appendChild(li); });
 
-    const pnlCsv = `month,revenue_public,revenue_private,cogs_public,cogs_private,opex_fixed,depreciation,EBITDA,interest,EBT,tax,NetIncome\n0,750.0,1138.8929545454546,0.5710955710955713,102.18409090909091,4275.0,0.0,-2488.862231934732,248.74999999999997,-2737.612231934732,0.0,-2737.612231934732\n1,810.0,1287.1026977272727,0.616783216783217,207.4337045454545,4275.0,66.66666666666667,-2385.947790034965,248.74999999999997,-2701.3644567016313,0.0,-2701.3644567016313\n2,874.8000000000006,1440.0177405227273,0.6661258741258743,316.02473795454546,4275.0,66.66666666666667,-2276.8731233059434,248.74999999999997,-2592.28978997261,0.0,-2592.28978997261\n3,944.784,1598.0460194579543,0.7194159440559443,428.24688303409084,4275.0,66.66666666666667,-2161.1362795201926,248.74999999999997,-2476.552946186859,0.0,-2476.552946186859\n4,1020.3667200000002,1761.6161786941796,0.77696921958042,544.404536994341,4275.0,66.66666666666667,-2038.198607519742,245.31857088891073,-2350.1838450753194,0.0,-2350.1838450753194\n5,1101.9960576000005,1931.1789255425156,0.8391267571468535,664.8177649628599,4275.0,66.66666666666667,-1907.4819085774907,241.85868951144204,-2216.0072647555994,0.0,-2216.0072647555994\n6,1190.1557422080002,2107.2084639179516,0.9062568977186019,789.8233179370241,4275.0,66.66666666666667,-1768.3653687087908,238.37011995088517,-2073.402155326343,0.0,-2073.402155326343\n7,1285.3682015846412,2290.2040105106266,0.9787574495360902,919.7757094773464,4275.0,66.66666666666667,-1620.182254831615,234.85262433438868,-1921.7015458326705,0.0,-1921.7015458326705\n8,1388.197657711412,2480.691398736134,1.0570580454989775,1055.0483547361648,4275.0,66.66666666666667,-1462.2163563341178,231.30596281673874,-1760.1889858175232,0.0,-1760.1889858175232\n9,1499.2534703283245,2679.2247758273265,1.1416226891388959,1196.0347756298074,4275.0,66.66666666666667,-1293.6981521632947,227.72989356400495,-1588.0947123939663,0.0,-1588.0947123939663\n10,1619.1937479545911,2886.3883987489803,1.232952504270008,1343.1498761887844,4275.0,66.66666666666667,-1113.8006819894836,224.12417273705057,-1404.5915213932008,0.0,-1404.5915213932008\n11,1748.7292477909582,3102.798534954772,1.3315887046116082,1496.831292360664,4275.0,66.66666666666667,-921.6350983195452,220.48855447490604,-1208.7903194611179,0.0,-1208.7903194611179\n12,1888.6275876142347,3329.105474364486,1.4381158009805366,1657.5408207948403,4275.0,66.66666666666667,-716.2458746171001,216.82279087800455,-999.7353321617712,0.0,-999.7353321617712\n13,2039.7177946233749,3565.9956593194092,1.55316506505898,1825.7659314082905,4275.0,66.66666666666667,-496.6056425305651,213.12663199127874,-776.3989411885104,0.0,-776.3989411885104\n14,2202.8952181932436,3814.1939396768366,1.6774182702636988,2002.0213688175752,4275.0,66.66666666666667,-261.60962921775854,209.3998257871172,-537.6761216715424,0.0,-537.6761216715424\n15,2379.126835648704,4074.465960631762,1.8116117318847946,2186.8508480256733,4275.0,66.66666666666667,-10.069663477092035,205.6421181481795,-282.3784482919382,0.0,-282.3784482919382\n16,2569.456982500601,4347.6206913067535,1.9565406704355777,2380.8288500738863,4275.0,66.66666666666667,259.2922830630323,201.85325285006888,-9.22763645370327,0.0,-9.22763645370327\n17,2775.0135411006495,4634.513102631132,2.1130639240704245,2584.562523709992,4275.0,66.66666666666667,547.8510560977193,198.03297154386146,283.1514178871911,53.79876939856631,229.35264848862477`;
+      // Tables
+      const pnlT = document.querySelector('#tbl_pnl tbody');
+      const cfT = document.querySelector('#tbl_cf tbody');
+      const loanT = document.querySelector('#tbl_loan tbody');
 
-    const cashCsv = `month,starting_cash,cash_from_ops,working_capital_delta,vat_cash,capex,debt_service_interest,debt_service_principal,ending_cash\n0,35000.0,-2488.862231934732,0.0,0.0,0.0,248.74999999999997,0.0,32262.38776806527\n1,0.0,-2863.9511632284375,102.91444189976687,375.0889312937063,2400.0,248.74999999999997,0.0,26749.686604836832\n2,0.0,-2782.648754127622,109.0746667290216,396.70096409265733,0.0,248.74999999999997,0.0,23718.28785070921\n3,0.0,-2696.4797674116953,115.7368437857508,419.60664410575185,0.0,248.74999999999997,413.84069681478366,20359.21738648273\n4,0.0,-2605.047660820952,122.93767200045068,443.91138130075956,0.0,245.31857088891073,417.27212592587296,17091.579028846994\n5,0.0,-2507.9268999405963,130.71669894225124,469.7282924208542,0.0,241.85868951144204,420.7320073033416,13921.061432091614\n6,0.0,-2404.660707776218,139.11653986869987,497.17879919872695,0.0,238.37011995088517,424.2205768638985,10853.810027500613\n7,0.0,-2294.7586412799446,148.18311387717586,526.393272571154,0.0,234.85262433438868,427.738072480395,7896.460689405883\n8,0.0,-2177.6939813169756,157.96589849749716,557.5117264853609,0.0,231.30596281673874,431.2847339980449,5056.176011274125\n9,0.0,-2052.900921503953,168.51820417082308,590.6845651698353,0.0,227.72989356400495,434.8608032507787,2340.684392955388\n10,0.0,-1919.7715402090028,179.89747017381114,626.073388045708,0.0,224.12417273705057,438.4665240777331,-241.67784406839849\n11,0.0,-1777.652538771692,192.16558366993831,663.8518567822085,0.0,220.48855447490604,442.1021423398776,-2681.9210796548737\n12,0.0,-1625.8417276724408,205.38922370244518,704.2066293528954,0.0,216.82279087800455,445.76790593677913,-4970.353504142098\n13,0.0,-1463.584240947509,219.64023208653498,747.338366330409,0.0,213.12663199127874,449.46406482350494,-7096.528441904391\n14,0.0,-1290.0684575991463,234.99601331280655,793.4628150685812,0.0,209.3998257871172,453.19087102766645,-9049.18759631832\n15,0.0,-1104.4216070820291,251.5399657406665,842.8119778642706,0.0,205.6421181481795,456.94857866660413,-10816.199900215133\n16,0.0,-905.7050341469024,269.36194654012434,895.6353706698104,0.0,201.85325285006888,460.73744396471477,-12384.49563117682\n17,0.0,-746.7078657787708,288.55877303468696,952.2013794432368,0.0,198.03297154386146,464.5577252709222,-13793.794193770376`;
+      const pnlRows = DATA.pnl_rows || [];
+      const cfRows = DATA.cf_rows || [];
+      const loanRows = DATA.loan_schedule || [];
 
-    const loanCsv = `month,principal_opening,interest,principal_repayment,payment,principal_closing\n0.0,30000.0,248.74999999999997,0.0,248.74999999999997,30000.0\n1.0,30000.0,248.74999999999997,0.0,248.74999999999997,30000.0\n2.0,30000.0,248.74999999999997,0.0,248.74999999999997,30000.0\n3.0,30000.0,248.74999999999997,413.84069681478366,662.5906968147837,29586.159303185217\n4.0,29586.159303185217,245.31857088891073,417.27212592587296,662.5906968147837,29168.887177259345\n5.0,29168.887177259345,241.85868951144204,420.7320073033416,662.5906968147837,28748.155169956004\n6.0,28748.155169956004,238.37011995088517,424.2205768638985,662.5906968147837,28323.934593092104\n7.0,28323.934593092104,234.85262433438868,427.738072480395,662.5906968147837,27896.19652061171\n8.0,27896.19652061171,231.30596281673874,431.2847339980449,662.5906968147837,27464.911786613666\n9.0,27464.911786613666,227.72989356400495,434.8608032507787,662.5906968147837,27030.050983362886\n10.0,27030.050983362886,224.12417273705057,438.4665240777331,662.5906968147837,26591.584459285154\n11.0,26591.584459285154,220.48855447490604,442.1021423398776,662.5906968147837,26149.482316945276\n12.0,26149.482316945276,216.82279087800455,445.76790593677913,662.5906968147837,25703.714411008496\n13.0,25703.714411008496,213.12663199127874,449.46406482350494,662.5906968147837,25254.250346184992\n14.0,25254.250346184992,209.3998257871172,453.19087102766645,662.5906968147837,24801.059475157326\n15.0,24801.059475157326,205.6421181481795,456.94857866660413,662.5906968147837,24344.11089649072\n16.0,24344.11089649072,201.85325285006888,460.73744396471477,662.5906968147837,23883.373452526008\n17.0,23883.373452526008,198.03297154386146,464.5577252709222,662.5906968147837,23418.815727255085`;
+      const toNum = (v)=> Number.parseFloat(v || '0') || 0;
 
-    function parseCsv(csv) {
-      const [header, ...rows] = csv.trim().split(/\n+/);
-      const cols = header.split(',');
-      return rows.map(line => {
-        const parts = line.split(',');
-        const obj = {};
-        cols.forEach((c, i) => obj[c] = Number(parts[i]));
-        return obj;
-      });
-    }
+      // P&L
+      for (let i=0;i<pnlRows.length;i++){
+        const r = pnlRows[i];
+        const tr = document.createElement('tr');
+        const rev = toNum(r.revenue_public) + toNum(r.revenue_private);
+        const cogs = toNum(r.cogs_public) + toNum(r.cogs_private);
+        tr.innerHTML = `
+          <td>${r.month}</td>
+          <td>${euro(rev)}</td>
+          <td>${euro(cogs)}</td>
+          <td>${euro(toNum(r.opex_fixed))}</td>
+          <td>${euro(toNum(r.depreciation))}</td>
+          <td>${euro(toNum(r.EBITDA))}</td>
+          <td>${euro(toNum(r.interest))}</td>
+          <td>${euro(toNum(r.EBT))}</td>
+          <td>${euro(toNum(r.tax))}</td>
+          <td>${euro(toNum(r.NetIncome))}</td>
+        `;
+        pnlT.appendChild(tr);
+      }
 
-    const pnl = parseCsv(pnlCsv);
-    const cash = parseCsv(cashCsv);
-    const loan = parseCsv(loanCsv);
+      // Cashflow
+      for (let i=0;i<cfRows.length;i++){
+        const r = cfRows[i];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.month}</td>
+          <td>${euro(toNum(r.starting_cash))}</td>
+          <td>${euro(toNum(r.cash_from_ops))}</td>
+          <td>${euro(toNum(r.working_capital_delta))}</td>
+          <td>${euro(toNum(r.vat_cash))}</td>
+          <td>${euro(toNum(r.capex))}</td>
+          <td>${euro(toNum(r.debt_service_interest))}</td>
+          <td>${euro(toNum(r.debt_service_principal))}</td>
+          <td>${euro(toNum(r.ending_cash))}</td>
+        `;
+        cfT.appendChild(tr);
+      }
 
-    function fmt(v) { return v.toLocaleString('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }); }
-    function fmtPct(v) { return (v*100).toFixed(1) + '%'; }
+      // Loan schedule
+      for (let i=0;i<loanRows.length;i++){
+        const r = loanRows[i];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.month}</td>
+          <td>${euro(toNum(r.principal_opening))}</td>
+          <td>${euro(toNum(r.interest))}</td>
+          <td>${euro(toNum(r.principal_repayment))}</td>
+          <td>${euro(toNum(r.payment))}</td>
+          <td>${euro(toNum(r.principal_closing))}</td>
+        `;
+        loanT.appendChild(tr);
+      }
 
-    // Derived series
-    const months = pnl.map(r => r.month);
-    const revenue = pnl.map(r => r.revenue_public + r.revenue_private);
-    const costs = pnl.map(r => r.cogs_public + r.cogs_private + r.opex_fixed + r.depreciation);
-    const ebitda = pnl.map(r => r.EBITDA);
-    const netIncome = pnl.map(r => r.NetIncome);
-    const endingCash = cash.map(r => r.ending_cash);
-    const debtPayment = loan.map(r => r.payment);
-    const debtInterest = loan.map(r => r.interest);
-    const debtPrincipal = loan.map(r => r.principal_repayment);
-
-    // Metrics
-    const sum = arr => arr.reduce((a,b) => a+b, 0);
-    const growthMonthly = Math.pow((revenue[revenue.length-1] || 1) / (revenue[0] || 1), 1/(revenue.length-1)) - 1;
-    const breakEvenNI = months.find(m => pnl[m]?.NetIncome >= 0);
-    const breakEvenEBITDA = months.find(m => pnl[m]?.EBITDA >= 0);
-    const minCash = Math.min(...endingCash);
-    const minCashMonth = months[endingCash.indexOf(minCash)];
-    const lastDSCR = (ebitda.at(-1) || 0) / (debtPayment.at(-1) || 1);
-    const breakEvenNIHuman = (breakEvenNI !== undefined ? breakEvenNI + 1 : null);
-    const breakEvenEBITDAHuman = (breakEvenEBITDA !== undefined ? breakEvenEBITDA + 1 : null);
-    const minCashMonthHuman = (minCashMonth !== undefined ? minCashMonth + 1 : null);
-
-    // Executive summary cards
-    const cards = [
-      { label: 'Total Revenue (18m)', value: fmt(consolidatedSummary.total.revenue_eur) },
-      { label: 'Total Costs (18m)', value: fmt(consolidatedSummary.total.cost_eur) },
-      { label: 'Total Margin (18m)', value: fmt(consolidatedSummary.total.margin_eur) },
-      { label: 'Avg Utilization', value: fmtPct(consolidatedSummary.autoscaling.avg_util_pct) },
-      { label: 'SLA Violations', value: consolidatedSummary.autoscaling.sla_violations.toString() },
-      { label: 'Runway (months)', value: String(kpiSummary.runway_months) }
-    ];
-
-    const cardsEl = document.getElementById('summary-cards');
-    cardsEl.innerHTML = cards.map(c => `
-      <div class="card"><div class="muted small">${c.label}</div><strong>${c.value}</strong></div>
-    `).join('');
-
-    // Narrative
-    const narrativeEl = document.getElementById('narrative');
-    narrativeEl.innerHTML = `
-      <strong>What this shows.</strong> Over 18 months, revenue grows by ~${(growthMonthly*100).toFixed(1)}% per month, reaching profitability on an EBITDA basis in month ${breakEvenEBITDAHuman ?? '—'} and net income in month ${breakEvenNIHuman ?? '—'}. The lowest projected cash balance is ${fmt(minCash)} (month ${minCashMonthHuman ?? '—'}).<br/>
-      <strong>Operational feasibility.</strong> Autoscaling average utilization is ${fmtPct(consolidatedSummary.autoscaling.avg_util_pct)} (p95 ${fmtPct(consolidatedSummary.autoscaling.p95_util_pct)}) with <em>${consolidatedSummary.autoscaling.sla_violations}</em> SLA violations, indicating buffer to absorb demand growth without service risk.<br/>
-      <strong>Interpretation for lenders.</strong> The plan approaches full debt coverage: month 18 DSCR (approx. EBITDA / payment) is ${(lastDSCR).toFixed(2)}. With the observed trend, DSCR > 1 is expected shortly after this horizon, assuming similar execution.
-    `;
-
-    // Charts
-    const axisMonth = months.map(m => `M${m+1}`);
-
-    const revCtx = document.getElementById('revCostChart');
-    new Chart(revCtx, {
-      type: 'line', data: {
-        labels: axisMonth,
-        datasets: [
-          { label: 'Revenue', data: revenue, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.15)', tension: .2, fill: true },
-          { label: 'Costs', data: costs, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.10)', tension: .2, fill: true }
-        ]
-      }, options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { ticks: { callback: v => fmt(v) } } } }
-    });
-
-    const profitCtx = document.getElementById('profitChart');
-    new Chart(profitCtx, {
-      type: 'line', data: {
-        labels: axisMonth,
-        datasets: [
-          { label: 'EBITDA', data: ebitda, borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.15)', tension: .2, fill: true },
-          { label: 'Net Income', data: netIncome, borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,0.10)', tension: .2, fill: true }
-        ]
-      }, options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { ticks: { callback: v => fmt(v) } } } }
-    });
-
-    const cashCtx = document.getElementById('cashDebtChart');
-    new Chart(cashCtx, {
-      type: 'line', data: {
-        labels: axisMonth,
-        datasets: [
-          { label: 'Ending Cash', data: endingCash, borderColor: '#0ea5e9', backgroundColor: 'rgba(14,165,233,0.15)', tension: .2, fill: true },
-          { label: 'Debt Payment', data: debtPayment, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.10)', tension: .2, fill: false },
-        ]
-      }, options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { ticks: { callback: v => fmt(v) } } } }
-    });
-
-    // Repayment and assumptions
-    const repayEl = document.getElementById('repayment');
-    const lastMonth = months.at(-1);
-    const outPrincipal = loan.at(-1)?.principal_closing || 0;
-    const lastPayment = debtPayment.at(-1) || 0;
-    repayEl.innerHTML = `
-      <h3>Ability to Repay</h3>
-      <ul>
-        <li><strong>Outstanding principal (end-month ${lastMonth+1}):</strong> ${fmt(outPrincipal)}</li>
-        <li><strong>Monthly payment (latest):</strong> ${fmt(lastPayment)} (interest ${fmt(debtInterest.at(-1)||0)} + principal ${fmt(debtPrincipal.at(-1)||0)})</li>
-        <li><strong>Profitability trajectory:</strong> EBITDA turns positive in month ${breakEvenEBITDAHuman ?? '—'}; Net Income turns positive in month ${breakEvenNIHuman ?? '—'}.</li>
-        <li><strong>Cash trough:</strong> ${fmt(minCash)} in month ${minCashMonthHuman ?? '—'}. Working capital support or temporary buffer covers ramp period.</li>
-        <li><strong>Latest DSCR (approx.):</strong> ${(lastDSCR).toFixed(2)} (target ≥ 1.2). Trend suggests crossing > 1 shortly after month ${lastMonth+1} with continued execution.</li>
-      </ul>
-    `;
-
-    const assumptionsEl = document.getElementById('assumptions');
-    assumptionsEl.innerHTML = `
-      <h3>Why This Is Realistic</h3>
-      <ul>
-        <li><strong>Measured growth:</strong> ~${(growthMonthly*100).toFixed(1)}% average monthly revenue growth embedded in the P&L (M1→M18).</li>
-        <li><strong>Capacity headroom:</strong> Autoscaling avg util ${fmtPct(consolidatedSummary.autoscaling.avg_util_pct)} (p95 ${fmtPct(consolidatedSummary.autoscaling.p95_util_pct)}), 0 SLA violations → operational buffer for demand spikes.</li>
-        <li><strong>Cost discipline:</strong> Fixed Opex dominates early months; unit economics improve as utilization scales (EBITDA trend).</li>
-        <li><strong>Diversified revenue:</strong> Public (€${consolidatedSummary.public.revenue_eur.toFixed(0)}) + Private (€${consolidatedSummary.private.revenue_eur.toFixed(0)}) streams reduce single-source risk.</li>
-        <li><strong>Sensitivity reviewed:</strong> Median-case percentiles used; variability tracked to guide contingency sizing.</li>
-      </ul>
-    `;
-
-    // Tables
-    function renderTable(elId, rows, columns, headerMap = {}) {
-      const el = document.getElementById(elId);
-      const head = `<thead><tr>${columns.map(c => `<th>${headerMap[c] || c}</th>`).join('')}</tr></thead>`;
-      const body = `<tbody>${rows.map(r => `<tr>${columns.map(c => {
-        const v = r[c];
-        if (typeof v === 'number' && c !== 'month') return `<td>${fmt(v)}</td>`;
-        if (c === 'month') return `<td>M${(v+1)}</td>`;
-        return `<td>${v}</td>`;
-      }).join('')}</tr>`).join('')}</tbody>`;
-      el.innerHTML = head + body;
-    }
-
-    renderTable('pnl-table', pnl, ['month','revenue_public','revenue_private','cogs_public','cogs_private','opex_fixed','depreciation','EBITDA','interest','EBT','tax','NetIncome'], {
-      month:'Month', revenue_public:'Revenue (Public)', revenue_private:'Revenue (Private)', cogs_public:'COGS (Public)', cogs_private:'COGS (Private)', opex_fixed:'Opex (Fixed)', depreciation:'Depreciation', EBITDA:'EBITDA', interest:'Interest', EBT:'EBT', tax:'Tax', NetIncome:'Net Income'
-    });
-
-    renderTable('cash-table', cash, ['month','starting_cash','cash_from_ops','working_capital_delta','vat_cash','capex','debt_service_interest','debt_service_principal','ending_cash'], {
-      month:'Month', starting_cash:'Starting Cash', cash_from_ops:'Cash from Ops', working_capital_delta:'WC Δ', vat_cash:'VAT Cash', capex:'Capex', debt_service_interest:'Debt Interest', debt_service_principal:'Debt Principal', ending_cash:'Ending Cash'
-    });
-
-    renderTable('loan-table', loan, ['month','principal_opening','interest','principal_repayment','payment','principal_closing'], {
-      month:'Month', principal_opening:'Principal Opening', interest:'Interest', principal_repayment:'Principal Repayment', payment:'Payment', principal_closing:'Principal Closing'
-    });
-
-    document.getElementById('gen-date').textContent = new Date().toLocaleDateString('nl-NL', {year:'numeric', month:'short', day:'2-digit'});
+      // Visual indicators (optional): color DSCR card
+      const dscr = Number(k.dscr_min || 0);
+      const el = document.getElementById('dscr_min');
+      if (dscr >= 1.2) el.classList.add('ok');
+      else if (dscr >= 1.0) el.classList.add('warn');
+      else el.classList.add('bad');
+    })();
   </script>
 </body>
 </html>
