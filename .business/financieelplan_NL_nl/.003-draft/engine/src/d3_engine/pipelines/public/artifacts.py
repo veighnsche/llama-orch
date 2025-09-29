@@ -1,4 +1,4 @@
-"""Public artifacts writing (MRPT v0)."""
+"""Public pipeline computations (pure rows; no I/O)."""
 from __future__ import annotations
 from pathlib import Path
 from typing import Dict, Any, List, Tuple
@@ -7,18 +7,7 @@ from . import pricing as pub_pricing
 from . import demand as pub_demand
 from . import capacity as pub_capacity
 from ...services.batching import effective_tps_per_instance, BatchingConfig
-
-
-def _write_csv_header(path: Path, headers: list[str]) -> None:
-    if not path.exists():
-        path.write_text(",".join(headers) + "\n")
-
-
-def _append_row(path: Path, row: List[str]) -> None:
-    with path.open("a") as f:
-        f.write(",".join(row) + "\n")
-
-
+import numpy as np
 def _fx_eur_per_usd(facts: Dict[str, Any]) -> float:
     try:
         return float(
@@ -69,12 +58,20 @@ def _choose_gpu_for_model(typ_vram: float, rentals: List[Dict[str, Any]]) -> Dic
         return None
     return min(candidates, key=lambda r: float(r.get("usd_hr", 1e9)))
 
+    # (removed) write_all: module is now pure; use compute_rows() instead
 
-def write_all(out_dir: Path, state: Dict[str, Any]) -> list[str]:
-    out_dir.mkdir(parents=True, exist_ok=True)
-    written: list[str] = []
 
-    # Prepare headers
+def compute_rows(state: Dict[str, Any]) -> Dict[str, tuple[list[str], list[dict]]]:
+    """Pure computation of public rows.
+
+    Returns mapping name -> (headers, rows) without performing any I/O.
+    Names correspond to filenames without extension:
+      - public_vendor_choice
+      - public_tap_prices_per_model
+      - public_tap_scenarios
+      - public_tap_customers_by_month
+      - public_tap_capacity_plan
+    """
     vendor_hdr = ["model", "gpu", "provider", "usd_hr", "eur_hr_effective", "cost_eur_per_1M"]
     prices_hdr = ["model", "gpu", "cost_eur_per_1M", "sell_eur_per_1k", "margin_pct"]
     scen_hdr = ["scenario", "month", "tokens", "revenue_eur", "cost_eur", "margin_eur"]
@@ -84,23 +81,6 @@ def write_all(out_dir: Path, state: Dict[str, Any]) -> list[str]:
         "cap_tokens_per_hour_per_instance", "instances_needed", "target_utilization_pct", "capacity_violation"
     ]
 
-    vendor_path = out_dir / "public_vendor_choice.csv"
-    prices_path = out_dir / "public_tap_prices_per_model.csv"
-    scen_path = out_dir / "public_tap_scenarios.csv"
-    cust_path = out_dir / "public_tap_customers_by_month.csv"
-    cap_path = out_dir / "public_tap_capacity_plan.csv"
-
-    for p, h in (
-        (vendor_path, vendor_hdr),
-        (prices_path, prices_hdr),
-        (scen_path, scen_hdr),
-        (cust_path, cust_hdr),
-        (cap_path, cap_hdr),
-    ):
-        _write_csv_header(p, h)
-        written.append(p.name)
-
-    # Read config/state
     curated_models: List[Dict[str, Any]] = state.get("curated", {}).get("public_models", [])
     rentals: List[Dict[str, Any]] = state.get("curated", {}).get("gpu_rentals", [])
     pub_op: Dict[str, Any] = state.get("operator", {}).get("public_tap", {})
@@ -111,7 +91,6 @@ def write_all(out_dir: Path, state: Dict[str, Any]) -> list[str]:
     fx_buf = _fx_buffer_pct(pub_op)
     target_margin_pct, round_inc, floor_eur_per_1k, cap_eur_per_1k = _target_margin_cfg(pub_op)
 
-    # Simple acquisition defaults
     acq = pub_op.get("acquisition", {}) if isinstance(pub_op, dict) else {}
     budget0 = float(acq.get("budget_month0_eur", 0.0) or 0.0)
     cac = float(acq.get("cac_base_eur", 0.0) or 0.0)
@@ -120,14 +99,13 @@ def write_all(out_dir: Path, state: Dict[str, Any]) -> list[str]:
     budget_growth_pct_mom = float(acq.get("budget_growth_pct_mom", 0.0) or 0.0)
     peak_factor = float(pub_op.get("autoscaling", {}).get("peak_factor", 1.2) if isinstance(pub_op, dict) else 1.2)
     target_util = float(pub_op.get("autoscaling", {}).get("target_utilization_pct", 75.0) if isinstance(pub_op, dict) else 75.0)
-    horizon = 12
     try:
         horizon = int(state.get("simulation", {}).get("targets", {}).get("horizon_months", 12))
     except Exception:
         horizon = 12
 
-    # Build a TPS map (model,gpu) -> tps_eff using batching normalization when dataset present
     cfg = BatchingConfig()
+
     def _tps_eff_for(model: str, gpu: str) -> float:
         for row in tps_rows:
             m = (row.get("model") or row.get("Model") or "").strip()
@@ -150,7 +128,13 @@ def write_all(out_dir: Path, state: Dict[str, Any]) -> list[str]:
                 return effective_tps_per_instance(mt, tps, gpu_count=gpu_count, batch=batch_i, cfg=cfg)
         return 0.0
 
-    for m in curated_models:
+    vendor_rows: List[dict] = []
+    prices_rows: List[dict] = []
+    scen_rows: List[dict] = []
+    cust_rows: List[dict] = []
+    cap_rows: List[dict] = []
+
+    for m in sorted(curated_models, key=lambda r: (str(r.get("Model") or r.get("model") or "").strip())):
         model_name = (m.get("Model") or m.get("model") or "").strip()
         if not model_name:
             continue
@@ -163,18 +147,16 @@ def write_all(out_dir: Path, state: Dict[str, Any]) -> list[str]:
         usd_hr = float(choice.get("usd_hr"))
         eur_hr = _eur_hr(usd_hr, eur_usd_rate, fx_buf)
 
-        # Compute tps_eff from dataset (if available), else fallback to 1000/s
         tps_eff = _tps_eff_for(model_name, gpu) or 1000.0
         tokens_per_hour = tps_eff * 3600.0
         cost_eur_per_1M = (float('inf') if tokens_per_hour <= 0 else (eur_hr / (tokens_per_hour / 1_000_000.0)))
-        _append_row(vendor_path, [
-            model_name, gpu, provider, f"{usd_hr}", f"{eur_hr}", f"{cost_eur_per_1M}"
-        ])
+        vendor_rows.append({
+            "model": model_name, "gpu": gpu, "provider": provider,
+            "usd_hr": f"{usd_hr}", "eur_hr_effective": f"{eur_hr}", "cost_eur_per_1M": f"{cost_eur_per_1M}"
+        })
 
-        # Derive sell €/1k for target margin
         cost_per_1k = cost_eur_per_1M / 1000.0
         target_margin_frac = max(min(target_margin_pct / 100.0, 0.95), 0.0)
-        # sell = cost / (1 - margin)
         sell_per_1k = cost_per_1k / max(1e-9, (1.0 - target_margin_frac))
         sell_per_1k = pub_pricing.round_to_increment(sell_per_1k, round_inc)
         if sell_per_1k < floor_eur_per_1k:
@@ -182,31 +164,39 @@ def write_all(out_dir: Path, state: Dict[str, Any]) -> list[str]:
         if sell_per_1k > cap_eur_per_1k:
             sell_per_1k = cap_eur_per_1k
         margin_pct = 0.0 if sell_per_1k <= 0 else (1.0 - (cost_per_1k / sell_per_1k)) * 100.0
-        _append_row(prices_path, [
-            model_name, gpu, f"{cost_eur_per_1M}", f"{sell_per_1k}", f"{margin_pct}"
-        ])
+        prices_rows.append({
+            "model": model_name, "gpu": gpu, "cost_eur_per_1M": f"{cost_eur_per_1M}",
+            "sell_eur_per_1k": f"{sell_per_1k}", "margin_pct": f"{margin_pct}"
+        })
 
-        # Monthly customers and scenario series (base scenario)
-        active_customers = 0.0
+        months = np.arange(horizon, dtype=float)
+        growth = (1.0 + budget_growth_pct_mom / 100.0)
+        budget_series = budget0 * np.power(growth, months)
+        expected_new_series = np.where(cac > 0, budget_series / cac, 0.0)
+        # active customers via recurrence; keep simple loop for stability
+        active = 0.0
+        active_series = []
+        decay = 1.0 - max(churn_pct, 0.0) / 100.0
+        for new_cust in expected_new_series.tolist():
+            active = max(0.0, active * decay + new_cust)
+            active_series.append(active)
+        active_series = np.array(active_series)
+        tokens_series = np.maximum(0.0, expected_new_series * tokens_per_conv)
+        revenue_series = (tokens_series / 1000.0) * sell_per_1k
+        cost_series = (tokens_series / 1_000_000.0) * cost_eur_per_1M
+        margin_series = revenue_series - cost_series
+        # Emit rows
         for month in range(horizon):
-            # budget_m growth
-            budget_m = budget0 * ((1.0 + budget_growth_pct_mom / 100.0) ** month)
-            expected_new_customers = 0.0 if cac <= 0 else (budget_m / cac)
-            active_customers = max(0.0, active_customers * (1.0 - max(churn_pct, 0.0) / 100.0) + expected_new_customers)
-            tokens_m = max(0.0, expected_new_customers * tokens_per_conv)
-            revenue_eur = (tokens_m / 1000.0) * sell_per_1k
-            cost_eur = (tokens_m / 1_000_000.0) * cost_eur_per_1M
-            margin_eur = revenue_eur - cost_eur
-            _append_row(scen_path, [
-                "base", str(month), f"{tokens_m}", f"{revenue_eur}", f"{cost_eur}", f"{margin_eur}"
-            ])
-            _append_row(cust_path, [
-                str(month), f"{budget_m}", f"{cac}", f"{expected_new_customers}", f"{active_customers}", f"{tokens_m}"
-            ])
+            scen_rows.append({
+                "scenario": "base", "month": str(month), "tokens": f"{tokens_series[month]}",
+                "revenue_eur": f"{revenue_series[month]}", "cost_eur": f"{cost_series[month]}", "margin_eur": f"{margin_series[month]}"
+            })
+            cust_rows.append({
+                "month": str(month), "budget_eur": f"{budget_series[month]}", "cac_eur": f"{cac}",
+                "expected_new_customers": f"{expected_new_series[month]}", "active_customers": f"{active_series[month]}",
+                "tokens": f"{tokens_series[month]}"
+            })
 
-        # Capacity plan
-        # Capacity plan based on month 0 estimate (conservative baseline)
-        # Recompute month0 tokens for consistent avg/peak inputs
         expected_new_customers_m0 = 0.0 if cac <= 0 else (budget0 / cac)
         tokens_m0 = max(0.0, expected_new_customers_m0 * tokens_per_conv)
         avg_tph = tokens_m0 / 720.0 if tokens_m0 > 0 else 0.0
@@ -216,8 +206,16 @@ def write_all(out_dir: Path, state: Dict[str, Any]) -> list[str]:
             int(pub_op.get("autoscaling", {}).get("min_instances_per_model", 0) if isinstance(pub_op, dict) else 0),
             int(pub_op.get("autoscaling", {}).get("max_instances_per_model", 100) if isinstance(pub_op, dict) else 100)
         )
-        _append_row(cap_path, [
-            model_name, gpu, f"{avg_tph}", f"{peak_tph}", f"{tps_eff}", f"{cap_per_inst}", f"{instances}", f"{target_util}", "True" if violation else "False"
-        ])
+        cap_rows.append({
+            "model": model_name, "gpu": gpu, "avg_tokens_per_hour": f"{avg_tph}", "peak_tokens_per_hour": f"{peak_tph}",
+            "tps": f"{tps_eff}", "cap_tokens_per_hour_per_instance": f"{cap_per_inst}", "instances_needed": f"{instances}",
+            "target_utilization_pct": f"{target_util}", "capacity_violation": "True" if violation else "False"
+        })
 
-    return written
+    return {
+        "public_vendor_choice": (vendor_hdr, vendor_rows),
+        "public_tap_prices_per_model": (prices_hdr, prices_rows),
+        "public_tap_scenarios": (scen_hdr, scen_rows),
+        "public_tap_customers_by_month": (cust_hdr, cust_rows),
+        "public_tap_capacity_plan": (cap_hdr, cap_rows),
+    }

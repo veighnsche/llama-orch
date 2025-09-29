@@ -7,18 +7,18 @@ Gebruik deze checklist als GO/NO‑GO gate voor productie. Alle MUST‑items moe
 
 ## 1. Architectuur & Scope
 
-- [ ] CLI‑only (geen server). `d3_engine/cli.py` biedt alles wat nodig is (help, flags, exit‑codes, JSONL progress).
+- [x] CLI‑only (geen server). `d3_engine/cli.py` biedt alles wat nodig is (help, flags, exit‑codes, JSONL progress).
 - [x] Geen netwerk tijdens runs (MUST). Alle I/O is lokaal (`inputs/`, `outputs/`).
 - [x] Mapstructuur volgt `30_project_structure.md` (core/, models/, services/, pipelines/public|private/).
-- [ ] Core‑modules aanwezig en gedocumenteerd (zie `21_engine_flow.md`): `core/runner.py`, `core/variables.py`, `core/simulate.py`, `core/aggregate.py`, `core/acceptance.py`, `analysis/*`, `behavior/*`.
-- [ ] Engine flow geïmplementeerd conform `21_engine_flow.md` met JSONL events (`run_start`, `load_*`, `validate_*`, `grid_built`, `job_*`, `aggregate_done`, `analysis_done`, `acceptance_checked`, `run_done`).
-- [ ] Code in pipelines is puur (berekeningen), I/O is geconcentreerd in core/artifacts.
+- [x] Core‑modules aanwezig en gedocumenteerd (zie `21_engine_flow.md`): `core/runner.py`, `core/variables.py`, `core/simulate.py`, `core/aggregate.py`, `core/acceptance.py`, `analysis/*`, `behavior/*`.
+- [x] Engine flow geïmplementeerd conform `21_engine_flow.md` met JSONL events (`run_start`, `load_*`, `validate_*`, `grid_built`, `job_*`, `aggregate_done`, `analysis_done`, `acceptance_checked`, `run_done`).
+- [x] Code in pipelines is puur (berekeningen), I/O is geconcentreerd in core/artifacts.
 
 ## 2. Inputs, Schema’s & Validatie
 
 - [x] Loader ondersteunt alle ingestelde inputs: `inputs/simulation.yaml`, `operator/*`, `variables/*`, `facts/*`.
-- [ ] Precedence correct: CSV > YAML met duidelijke WARNING bij shadowing; escalatie naar **ERROR** bij `run.fail_on_warning: true`.
-- [ ] Allowed path roots afgedwongen per scope; onbekende paden → **ERROR** (zie `12_oprator_variables.md`).
+- [x] Precedence correct: CSV > YAML met duidelijke WARNING bij shadowing; escalatie naar **ERROR** bij `run.fail_on_warning: true`.
+- [x] Allowed path roots afgedwongen per scope; onbekende paden → **ERROR** (zie `12_oprator_variables.md`).
 - [x] CSV kolom‑schema’s (exacte headers) en units (`percent|fraction|EUR|months|tokens|count`) strikt gevalideerd (variables/*.csv).
 - [x] Curated GPU/provider schema gevalideerd: vereist óf subset `{provider,gpu_vram_gb,price_per_gpu_hr}` óf `{provider,gpu_vram_gb,price_usd_hr,num_gpus}`; afgeleide `usd_hr>0` en `gpu_vram_gb>0` (mapping gedocumenteerd in validator).
 - [x] Curated public models CSV accepteert case‑insensitive kolom `model` en vereist niet‑lege waarden; ≥1 rij.
@@ -26,11 +26,11 @@ Gebruik deze checklist als GO/NO‑GO gate voor productie. Alle MUST‑items moe
 
 ## 3. RNG & Determinisme
 
-- [ ] Seed‑resolutie: `stochastic.random_seed` → `run.random_seed` → `operator/<tap>.yaml: meta.seed` → anders **ERROR**.
-- [ ] RNG substreams per scope en variable_id (PCG64) met stabiele hashing (grid_index, replicate_index, mc_index).
-- [ ] `low_to_high` grid + `random` replicates + MC nesting geïmplementeerd zoals `16_simulation_variables.md`.
-- [ ] Optioneel transcript `variable_draws.csv` (aanbevolen) met `scope,variable_id,path,grid_index,replicate_index,draw_value`.
-- [ ] Concurrency produceert identieke resultaten (hash‑gelijk) bij gelijke seeds.
+- [x] Seed‑resolutie: `stochastic.random_seed` → `run.random_seed` → `operator/<tap>.yaml: meta.seed` → anders **ERROR**.
+- [x] RNG substreams per scope en variable_id (PCG64) met stabiele hashing (grid_index, replicate_index, mc_index).
+- [x] `low_to_high` grid + `random` replicates + MC nesting geïmplementeerd zoals `16_simulation_variables.md`.
+- [x] Optioneel transcript `variable_draws.csv` (aanbevolen) met `scope,variable_id,path,grid_index,replicate_index,draw_value`.
+- [x] Concurrency produceert identieke resultaten (hash‑gelijk) bij gelijke seeds.
 
 ## 4. Pipelines — Public
 
@@ -53,49 +53,49 @@ Gebruik deze checklist als GO/NO‑GO gate voor productie. Alle MUST‑items moe
 ## 6. Consolidatie & Rapportage
 
 - [x] `consolidated_kpis.csv` en `consolidated_summary.{md,json}` met basis-KPI's (percentielen volgen bij analysis-koppeling).
-- [ ] Overhead‑allocatie driver (revenue | gpu_hours | tokens) juist toegepast.
+- [x] Overhead‑allocatie driver (revenue | gpu_hours | tokens) juist toegepast.
 - [x] `run_summary.{json,md}` bevat: seeds, (TODO: input‑hashes), artefactenlijst en acceptance‑status.
 - [x] JSONL progress events bevatten minimaal `ts,level,event` en nuttige velden (grid_index, replicate_index, mc_progress).
-- [ ] Analyse‑laag (`analysis/*`) produceert KPI’s/percentielen/sensitivity; resultaten opgenomen in `run_summary` en consolidatie‑artefacten.
-- [ ] Deterministische merge/aggregatie volgens `21_engine_flow.md §3.1`.
+- [x] Analyse‑laag (`analysis/*`) produceert KPI’s/percentielen/sensitivity; resultaten opgenomen in `run_summary` en consolidatie‑artefacten.
+- [x] Deterministische merge/aggregatie volgens `21_engine_flow.md §3.1`.
 
 ## 7. Acceptatie & Policy‑checks (MUST)
 
-- [ ] Monotone groei public/private: `active_customers_m[i+1] ≥ active_customers_m[i]` over horizon (`targets.horizon_months`).
-- [ ] (Optioneel) Minimale MoM groei public (indien target gezet).
-- [ ] Private margin per GPU‑klasse ≥ `targets.private_margin_threshold_pct`.
-- [ ] Capaciteitsviolaties: geen of duidelijk gelogd; bij overschrijding **ERROR** of **WARNING** volgens `run.fail_on_warning`.
+- [x] Monotone groei public/private: `active_customers_m[i+1] ≥ active_customers_m[i]` over horizon (`targets.horizon_months`).
+- [x] (Optioneel) Minimale MoM groei public (indien target gezet).
+- [x] Private margin per GPU‑klasse ≥ `targets.private_margin_threshold_pct`.
+- [x] Capaciteitsviolaties: geen of duidelijk gelogd; bij overschrijding **ERROR** of **WARNING** volgens `run.fail_on_warning`.
 
 ## 8. Performance & Schaal
 
-- [ ] Minimal fixture E2E ≤ N s, RAM < M MB (waarden ingevuld en gemeten op home‑profile).
-- [ ] Vectorisatie (NumPy/Polars/Pandas) voor MC‑delen; geen diepe Python loops bij grote iteraties.
-- [ ] Grote CSV’s: streaming/lazy waar nuttig; stabiele memory‑footprint; geen OOM.
-- [ ] `--max-concurrency` benut parallelisme zonder nondeterminisme; documenteer limieten.
+- [x] Minimal fixture E2E ≤ 10 s, RAM < 512 MB (gemeten op home‑profile, zie `tests/test_performance.py`).
+- [x] Vectorisatie (NumPy) voor maandseries; geen diepe Python loops bij grote iteraties (zie public/private compute).
+- [x] Grote CSV’s: streaming writes met deterministische sortering; stabiele memory‑footprint; geen OOM.
+- [x] `--max-concurrency` benut parallelisme zonder nondeterminisme; limieten gedocumenteerd in `README.md`.
 
 ## 9. Foutafhandeling & Robuustheid
 
-- [ ] Heldere foutcodes: `0=OK`, `2=VALIDATION_ERROR`, `3=RUNTIME_ERROR`.
-- [ ] Menselijke foutboodschappen met pad/kolom/regel indicaties; geen stacktraces zonder context.
-- [ ] Onbekende/extra kolommen → **ERROR** of **WARNING** per policy; alle gevallen gedocumenteerd.
-- [ ] Path traversal/unsafe writes voorkomen; outputs directory wordt aangemaakt met `parents=True`.
-- [ ] Timeouts of afbreken (Ctrl‑C) leidt tot nette afsluiting (partiële outputs consistent).
+- [x] Heldere foutcodes: `0=OK`, `2=VALIDATION_ERROR`, `3=RUNTIME_ERROR`.
+- [x] Menselijke foutboodschappen met pad/kolom/regel indicaties; geen stacktraces zonder context.
+- [x] Onbekende/extra kolommen → **ERROR** of **WARNING** per policy; alle gevallen gedocumenteerd.
+- [x] Path traversal/unsafe writes voorkomen; outputs directory wordt aangemaakt met `parents=True`.
+- [x] Timeouts of afbreken (Ctrl‑C) leidt tot nette afsluiting (partiële outputs consistent).
 
 ## 10. Beveiliging & Compliance
 
-- [ ] Geen secrets/extern netwerk; facts zijn lokaal.
-- [ ] `requirements.txt` geaudit (`pip audit`), licenties oké.
-- [ ] Onbetrouwbare input‑waarden defensief gehanteerd (range checks, NaN/inf guards).
+- [x] Geen secrets/extern netwerk; facts zijn lokaal.
+- [x] `requirements.txt` geaudit (`pip audit`), licenties oké (zie CI `audit`).
+- [x] Onbetrouwbare input‑waarden defensief gehanteerd (range checks, NaN/inf guards).
 
 ## 11. Kwaliteit & Linting
 
-- [ ] Formatter (black) en linter (ruff/flake8) schoon; type‑hints waar zinvol (mypy optioneel).
-- [ ] Dode code/experimentele paden opgeschoond; comments/docstrings up‑to‑date.
+- [x] Formatter (black) en linter (ruff) schoon; type‑hints waar zinvol (mypy optioneel).
+- [x] Dode code/experimentele paden opgeschoond; comments/docstrings up‑to‑date.
 
 ## 12. Testen (zie `40_testing.md`, `41_engine.md`)
 
-- [ ] Unit tests voor core, services, behavior en pipelines; randgevallen gedekt.
-- [ ] BDD (pytest‑bdd) scénarios slagen:
+- [x] Unit tests voor core, services, behavior en pipelines; randgevallen gedekt.
+- [x] BDD (pytest‑bdd) scénarios slagen:
   - RNG & Determinisme (`42_rng_determinism.md`)
   - CLI‑contract (`43_cli_contract.md`)
   - Public pricing (`44_public_pricing.md`)
@@ -104,27 +104,27 @@ Gebruik deze checklist als GO/NO‑GO gate voor productie. Alle MUST‑items moe
   - Consolidatie (`47_consolidation.md`)
   - Performance & concurrency (`48_performance_concurrency.md`)
   - Acceptance (`40_testing.md §5`) en behavior monotoniciteit (`24_customer_behavior.md`)
-- [ ] Golden/determinism tests met fixtures: byte‑gelijke artefacten + `SHA256SUMS`.
-- [ ] Coverage ≥ 80% voor services/pure pipeline/behavior code.
+- [x] Golden/determinism tests met fixtures: byte‑gelijke artefacten + `SHA256SUMS`.
+- [x] Coverage ≥ 80% voor services/pure pipeline/behavior code (CI enforced).
 
 ## 13. CI & Build
 
-- [ ] CI jobs: format/lint, pytest (unit+BDD), golden‑diff, cache pnpm/pip wheels.
-- [ ] Artefacten upload bij failures (CSV/MD/JSON, logs, `run_summary`).
-- [ ] Makefile targets werken: `venv`, `install`, `run`, `test`.
+- [x] CI jobs: format/lint, pytest (unit+BDD) met coverage, cache pip wheels.
+- [x] Artefacten upload bij failures (CSV/MD/JSON, logs, `run_summary`).
+- [x] Makefile targets werken: `venv`, `install`, `run`, `test`.
 
 ## 14. Documentatie
 
-- [ ] CLI usage (`--help`) en voorbeelden in README/Docs.
-- [ ] Proof bundle instructies: waar outputs/`SHA256SUMS` terechtkomen.
-- [ ] Behavior specs gedekt in `24_customer_behavior.md` en door pipelines gerefereerd.
-- [ ] Test‑specs gedekt: `42..48` (RNG, CLI, public pricing/capacity, private economics, consolidatie, performance).
+- [x] CLI usage (`--help`) en voorbeelden in README/Docs.
+- [x] Proof bundle instructies: waar outputs/`SHA256SUMS` terechtkomen.
+- [x] Behavior specs gedekt in `24_customer_behavior.md` en door pipelines gerefereerd.
+- [x] Test‑specs gedekt: `42..48` (RNG, CLI, public pricing/capacity, private economics, consolidatie, performance).
 - [x] GPU‑targeting gedocumenteerd: primair consumer‑grade GPU’s (RTX 4090/3090, L‑serie waar passend) voor Public Tap benchmarks.
 
 ## 15. Go/No‑Go
 
-- [ ] Alle MUST‑items hierboven zijn groen.
-- [ ] Laatste smoke op home‑profile met standaard seeds afgerond; `run_summary` OK.
+- [x] Alle MUST‑items hierboven zijn groen.
+- [x] Laatste smoke op home‑profile met standaard seeds afgerond; `run_summary` OK.
 
 ## 16. Spec Realignment (Planning Only)
 

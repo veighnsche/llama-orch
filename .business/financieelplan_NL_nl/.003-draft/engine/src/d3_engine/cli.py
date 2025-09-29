@@ -11,6 +11,7 @@ import sys
 import time
 from pathlib import Path
 from d3_engine.core import runner
+from d3_engine.core.validator import ValidationError
 
 
 def _ts() -> str:
@@ -39,20 +40,30 @@ def main() -> int:
 
     _jsonl("run_start", inputs=str(inputs), out=str(out_dir), pipelines=args.pipelines, seed=args.seed)
 
-    # Execute orchestrated run
-    pipelines = [p.strip() for p in args.pipelines.split(",") if p.strip()]
-    result = runner.execute(inputs, out_dir, pipelines, args.seed, args.fail_on_warning)
+    try:
+        # Execute orchestrated run
+        pipelines = [p.strip() for p in args.pipelines.split(",") if p.strip()]
+        result = runner.execute(inputs, out_dir, pipelines, args.seed, args.fail_on_warning, args.max_concurrency)
 
-    # Write run summary from runner result
-    summary = {
-        "ts": _ts(),
-        **result,
-    }
-    (out_dir / "run_summary.json").write_text(json.dumps(summary, indent=2))
-    (out_dir / "run_summary.md").write_text("# Run Summary\n\nThis is a scaffold run. Implement engine logic in d3_engine.* modules.\n")
+        # Write run summary from runner result
+        summary = {
+            "ts": _ts(),
+            **result,
+        }
+        (out_dir / "run_summary.json").write_text(json.dumps(summary, indent=2))
+        (out_dir / "run_summary.md").write_text("# Run Summary\n\nThis is a scaffold run. Implement engine logic in d3_engine.* modules.\n")
 
-    _jsonl("run_done")
-    return 0
+        _jsonl("run_done")
+        return 0
+    except KeyboardInterrupt:
+        _jsonl("error", code=3, kind="INTERRUPTED", message="Execution interrupted by user (Ctrl-C)")
+        return 3
+    except ValidationError as ve:
+        _jsonl("error", code=2, kind="VALIDATION_ERROR", message=str(ve))
+        return 2
+    except Exception as e:
+        _jsonl("error", code=3, kind="RUNTIME_ERROR", message=str(e))
+        return 3
 
 
 if __name__ == "__main__":

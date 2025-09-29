@@ -6,6 +6,8 @@ from typing import Dict, Any, List
 from pathlib import Path
 import csv
 import yaml
+from . import logging as elog
+import math
 
 
 class ValidationError(Exception):
@@ -108,7 +110,7 @@ def _check_private_operator(inputs_dir: Path, errors: List[str]):
     _require_key(data, "pricing_policy.default_markup_over_provider_cost_pct", errors, (int, float), lambda v: v >= 0)
 
 
-def _check_curated(inputs_dir: Path, errors: List[str]):
+def _check_curated(inputs_dir: Path, errors: List[str], warn_to_error: bool = False):
     gpu_p = inputs_dir / "operator" / "curated_gpu.csv"
     try:
         with gpu_p.open() as f:
@@ -122,6 +124,13 @@ def _check_curated(inputs_dir: Path, errors: List[str]):
                 errors.append(
                     "curated_gpu.csv must contain either columns {provider,gpu_vram_gb,price_per_gpu_hr} or {provider,gpu_vram_gb,price_usd_hr,num_gpus}"
                 )
+            # Unknown/extra columns policy: WARNING by default, escalate if warn_to_error
+            known = {"provider", "gpu", "gpu_model", "gpu_vram_gb", "price_per_gpu_hr", "price_usd_hr", "num_gpus"}
+            unknown_cols = sorted([c for c in have if c not in known])
+            if unknown_cols:
+                print(elog.jsonl("validation_warning", dataset="curated_gpu", unknown_columns=unknown_cols))
+                if warn_to_error:
+                    errors.append(f"curated_gpu.csv has unknown columns: {unknown_cols}")
             for row in rdr:
                 try:
                     vram = float((row.get("gpu_vram_gb") or "").strip())
@@ -133,6 +142,8 @@ def _check_curated(inputs_dir: Path, errors: List[str]):
                         if num <= 0:
                             raise ValueError("num_gpus must be > 0")
                         usd = price_usd_hr / num
+                    if not (math.isfinite(vram) and math.isfinite(usd)):
+                        raise ValueError("non-finite vram/usd")
                 except Exception:
                     errors.append("curated_gpu.csv invalid numeric values in gpu_vram_gb/price fields")
                     break
@@ -155,6 +166,13 @@ def _check_curated(inputs_dir: Path, errors: List[str]):
                 errors.append("curated_public_tap_models.csv must contain a 'model' column (case-insensitive)")
             else:
                 model_idx = hdr_lc.index("model")
+                # Unknown/extra columns policy: WARNING by default, escalate if warn_to_error
+                known = {"model", "typical_vram_gb", "typical_vram_mb"}
+                unknown_cols = sorted([c for c in hdr_lc if c not in known])
+                if unknown_cols:
+                    print(elog.jsonl("validation_warning", dataset="curated_public_tap_models", unknown_columns=unknown_cols))
+                    if warn_to_error:
+                        errors.append(f"curated_public_tap_models.csv has unknown columns: {unknown_cols}")
                 rows = 0
                 for row in rdr:
                     rows += 1
@@ -220,6 +238,8 @@ def _check_variables(inputs_dir: Path, errors: List[str]):
                         mx = float(row.get("max") or "")
                         st = float(row.get("step") or "")
                         df = float(row.get("default") or "")
+                        if not all(math.isfinite(x) for x in (mn, mx, st, df)):
+                            raise ValueError("non-finite numeric fields")
                     except Exception:
                         errors.append(f"{csv_name} numeric row has non-numeric min/max/step/default")
                         break
@@ -257,10 +277,17 @@ def validate(state: Dict[str, Any]) -> None:
     inputs_dir = Path(inputs_dir_s)
     errors: List[str] = []
 
+    # Escalation policy for warnings
+    warn_to_error = False
+    try:
+        warn_to_error = bool(state.get("simulation", {}).get("run", {}).get("fail_on_warning", False))
+    except Exception:
+        warn_to_error = False
+
     _check_simulation_yaml(inputs_dir, errors)
     _check_public_operator(inputs_dir, errors)
     _check_private_operator(inputs_dir, errors)
-    _check_curated(inputs_dir, errors)
+    _check_curated(inputs_dir, errors, warn_to_error=warn_to_error)
     _check_variables(inputs_dir, errors)
     _check_facts(inputs_dir, errors)
 

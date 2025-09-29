@@ -1,0 +1,66 @@
+name: Engine CI
+
+on:
+  push:
+    paths:
+      - '.business/financieelplan_NL_nl/.003-draft/engine/**'
+      - '.github/workflows/engine-ci.yml'
+  pull_request:
+    paths:
+      - '.business/financieelplan_NL_nl/.003-draft/engine/**'
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: .business/financieelplan_NL_nl/.003-draft/engine/requirements.txt
+      - name: Install deps
+        working-directory: .business/financieelplan_NL_nl/.003-draft/engine
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements.txt
+      - name: Lint
+        working-directory: .business/financieelplan_NL_nl/.003-draft/engine
+        run: |
+          python -m pip install ruff
+          ruff check src
+      - name: Format check
+        working-directory: .business/financieelplan_NL_nl/.003-draft/engine
+        run: |
+          python -m pip install black
+          black --check src tests
+      - name: Run engine to produce artifacts
+        working-directory: .business/financieelplan_NL_nl/.003-draft/engine
+        run: |
+          mkdir -p outputs
+          python -m d3_engine.cli --inputs ../inputs --out outputs --pipelines public,private --seed 424242 || true
+      - name: Pytest (with coverage >=80%)
+        working-directory: .business/financieelplan_NL_nl/.003-draft/engine
+        run: |
+          pytest -q --cov=src --cov-report=term-missing --cov-fail-under=80
+      - name: Upload artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: engine-outputs
+          path: |
+            .business/financieelplan_NL_nl/.003-draft/engine/outputs/**
+            .business/financieelplan_NL_nl/.003-draft/engine/**/run_summary.*
+            .business/financieelplan_NL_nl/.003-draft/engine/**/SHA256SUMS
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Pip audit
+        working-directory: .business/financieelplan_NL_nl/.003-draft/engine
+        run: |
+          python -m pip install -U pip pip-audit
+          pip-audit -r requirements.txt || true

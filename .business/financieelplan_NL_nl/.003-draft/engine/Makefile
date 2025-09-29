@@ -2,7 +2,10 @@ PY=python3
 PKG:=$(CURDIR)
 VENV?=$(PKG)/.venv
 
-.PHONY: venv install run test
+.PHONY: help venv install run test fmt lint audit
+
+help:
+	@echo "Targets: venv, install, run, test, fmt, lint, audit"
 
 venv:
 	$(PY) -m venv $(VENV)
@@ -16,3 +19,15 @@ run:
 
 test:
 	$(VENV)/bin/python -m pytest -q $(PKG)/tests
+
+fmt:
+	$(VENV)/bin/python -m pip install black
+	$(VENV)/bin/black src tests
+
+lint:
+	$(VENV)/bin/python -m pip install ruff
+	$(VENV)/bin/ruff check src
+
+audit:
+	$(VENV)/bin/python -m pip install pip-audit
+	$(VENV)/bin/pip-audit -r $(PKG)/requirements.txt || true

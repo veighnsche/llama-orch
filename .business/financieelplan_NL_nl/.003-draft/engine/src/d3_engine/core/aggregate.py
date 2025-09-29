@@ -117,6 +117,10 @@ def write_consolidated_outputs(out_dir: Path, context: Dict[str, Any]) -> List[s
     percs = context.get("percentiles") or {}
     if percs:
         summary["percentiles"] = percs
+    # Merge sensitivity if provided
+    sens = context.get("sensitivity") or {}
+    if sens:
+        summary["sensitivity"] = sens
     # Record overhead allocation if applied
     if overhead_total > 0 and overhead_driver:
         summary["overhead_allocation"] = {

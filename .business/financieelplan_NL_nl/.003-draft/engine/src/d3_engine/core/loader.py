@@ -8,6 +8,7 @@ from typing import Iterator, Dict, Any, List
 import csv
 import yaml
 from . import logging as elog
+from .validator import ValidationError
 
 
 def _read_yaml(p: Path) -> dict:
@@ -82,7 +83,7 @@ def load_all(inputs_dir: Path) -> Dict[str, Any]:
     if curated_models_yaml.exists():
         print(elog.jsonl("shadowing_warning", dataset="curated_public_tap_models", chosen="csv", yaml=str(curated_models_yaml), csv=str(curated_models_csv)))
         if sim.get("run", {}).get("fail_on_warning"):
-            raise RuntimeError("CSV>YAML shadowing escalated to ERROR: curated_public_tap_models")
+            raise ValidationError("CSV>YAML shadowing escalated to ERROR: curated_public_tap_models")
 
     curated_gpu_csv = inputs_dir / "operator" / "curated_gpu.csv"
     curated_gpu_yaml = inputs_dir / "operator" / "curated_gpu.yaml"
@@ -90,7 +91,7 @@ def load_all(inputs_dir: Path) -> Dict[str, Any]:
     if curated_gpu_yaml.exists():
         print(elog.jsonl("shadowing_warning", dataset="curated_gpu", chosen="csv", yaml=str(curated_gpu_yaml), csv=str(curated_gpu_csv)))
         if sim.get("run", {}).get("fail_on_warning"):
-            raise RuntimeError("CSV>YAML shadowing escalated to ERROR: curated_gpu")
+            raise ValidationError("CSV>YAML shadowing escalated to ERROR: curated_gpu")
     # Optional TPS dataset per (model,gpu)
     tps_rows: List[Dict[str, Any]] = []
     tps_csv = inputs_dir / "facts" / "tps_model_gpu.csv"
@@ -105,7 +106,7 @@ def load_all(inputs_dir: Path) -> Dict[str, Any]:
     if tps_rows and tps_yaml.exists():
         print(elog.jsonl("shadowing_warning", dataset="tps_model_gpu", chosen="csv", yaml=str(tps_yaml), csv=str(tps_csv)))
         if sim.get("run", {}).get("fail_on_warning"):
-            raise RuntimeError("CSV>YAML shadowing escalated to ERROR: tps_model_gpu")
+            raise ValidationError("CSV>YAML shadowing escalated to ERROR: tps_model_gpu")
 
     # Variables CSVs (optional in v0; read if present)
     variables: Dict[str, List[Dict[str, Any]]] = {}
