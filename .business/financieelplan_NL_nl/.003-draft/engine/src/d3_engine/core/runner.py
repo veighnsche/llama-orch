@@ -33,6 +33,25 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
         run = sim.setdefault("run", {})
         if fail_on_warning:
             run["fail_on_warning"] = True
+        # Fallbacks from simulation.run when CLI did not specify
+        # pipelines: list of strings, filter to known values
+        if not pipelines:
+            try:
+                p_list = run.get("pipelines", [])
+                if isinstance(p_list, list):
+                    pipelines = [p for p in p_list if str(p).strip() in ("public", "private")]
+            except Exception:
+                pass
+            if not pipelines:
+                pipelines = ["public", "private"]
+        # output_dir fallback
+        try:
+            if (out_dir is None) or (str(out_dir).strip() == ""):
+                out_override = run.get("output_dir")
+                if isinstance(out_override, str) and out_override.strip():
+                    out_dir = Path(out_override)
+        except Exception:
+            pass
     except Exception:
         pass
     print(elog.jsonl("load_done"))
@@ -249,10 +268,43 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
         monthly_tokens = 1_000_000.0
         hours = 24 * 30
         series = hourly_timeseries_uniform(monthly_tokens, hours_in_month=hours, peak_factor=1.5, diurnal=True)
-        # Assume a nominal throughput (tokens/s) and policy; these will be read from inputs later
+        # Assume a nominal throughput (tokens/s) and policy; tps remains scaffold, ASG policy from inputs
         tps = 1_000.0  # tokens per second
         target_util = target_utilization_pct
-        policy = ASGPolicy()
+        # Build ASGPolicy from operator/public_tap.autoscaling when available
+        try:
+            asg_cfg = pub_data.get("autoscaling", {}) if isinstance(pub_data, dict) else {}
+        except Exception:
+            asg_cfg = {}
+        defaults = ASGPolicy()
+        try:
+            policy = ASGPolicy(
+                evaluation_interval_s=int(asg_cfg.get("evaluation_interval_s", defaults.evaluation_interval_s)),
+                scale_up_threshold_pct=float(asg_cfg.get("scale_up_threshold_pct", defaults.scale_up_threshold_pct)),
+                scale_down_threshold_pct=float(asg_cfg.get("scale_down_threshold_pct", defaults.scale_down_threshold_pct)),
+                scale_up_step_replicas=int(asg_cfg.get("scale_up_step_replicas", defaults.scale_up_step_replicas)),
+                scale_down_step_replicas=int(asg_cfg.get("scale_down_step_replicas", defaults.scale_down_step_replicas)),
+                stabilization_window_s=int(asg_cfg.get("stabilization_window_s", defaults.stabilization_window_s)),
+                warmup_s=int(asg_cfg.get("warmup_s", defaults.warmup_s)),
+                cooldown_s=int(asg_cfg.get("cooldown_s", defaults.cooldown_s)),
+                min_instances_per_model=int(asg_cfg.get("min_instances_per_model", defaults.min_instances_per_model)),
+                max_instances_per_model=int(asg_cfg.get("max_instances_per_model", defaults.max_instances_per_model)),
+            )
+        except Exception:
+            policy = defaults
+        # Sanity check ASGPolicy vs simulation targets (tolerance band and thresholds positioning)
+        try:
+            tol = float(autoscaling_util_tolerance_pct)
+        except Exception:
+            tol = 25.0
+        checks = {
+            "thresholds_order": float(policy.scale_down_threshold_pct) < float(policy.scale_up_threshold_pct),
+            "scale_up_ge_target": float(policy.scale_up_threshold_pct) >= float(target_util),
+            "scale_down_le_target": float(policy.scale_down_threshold_pct) <= float(target_util),
+            "target_bracket_within_range": (float(target_util) - tol) >= 0.0 and (float(target_util) + tol) <= 100.0,
+            "min_le_max": int(policy.min_instances_per_model) <= int(policy.max_instances_per_model),
+        }
+        print(elog.jsonl("autoscaling_sanity", ok=all(checks.values()), target_util_pct=target_util, tolerance_pct=tol, **checks))
         sim = simulate_autoscaler(series, tps, target_util, policy)
         autoscaling_summary = sim.get("summary", {})
         # Append events to CSV
@@ -352,6 +404,13 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
                     continue
     except Exception:
         pass
+    # Honor logging.write_run_summary flag (default True)
+    try:
+        sim_data_write = yaml.safe_load((inputs_dir / "simulation.yaml").read_text()) or {}
+        write_run_summary_flag = bool(sim_data_write.get("logging", {}).get("write_run_summary", True))
+    except Exception:
+        write_run_summary_flag = True
+
     summary = {
         "inputs": str(inputs_dir),
         "outputs": str(out_dir),
@@ -361,18 +420,19 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
         "accepted": acceptance.get("accepted"),
         "input_hashes": input_hashes,
     }
-    (out_dir / "run_summary.json").write_text(yaml.safe_dump(summary, sort_keys=False))
-    md_lines = [
-        "# Run Summary",
-        f"inputs: {summary['inputs']}",
-        f"outputs: {summary['outputs']}",
-        f"pipelines: {', '.join(summary['pipelines'])}",
-        f"seed: {summary['seed']}",
-        f"accepted: {summary['accepted']}",
-        "artifacts:",
-    ] + [f"- {name}" for name in artifacts]
-    (out_dir / "run_summary.md").write_text("\n".join(md_lines) + "\n")
-    artifacts += ["run_summary.json", "run_summary.md"]
+    if write_run_summary_flag:
+        (out_dir / "run_summary.json").write_text(yaml.safe_dump(summary, sort_keys=False))
+        md_lines = [
+            "# Run Summary",
+            f"inputs: {summary['inputs']}",
+            f"outputs: {summary['outputs']}",
+            f"pipelines: {', '.join(summary['pipelines'])}",
+            f"seed: {summary['seed']}",
+            f"accepted: {summary['accepted']}",
+            "artifacts:",
+        ] + [f"- {name}" for name in artifacts]
+        (out_dir / "run_summary.md").write_text("\n".join(md_lines) + "\n")
+        artifacts += ["run_summary.json", "run_summary.md"]
 
     # Write SHA256SUMS for determinism checks (golden tests)
     try:

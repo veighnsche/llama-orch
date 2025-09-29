@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """D3 Engine CLI (scaffold)
 
-Parses arguments, emits JSONL progress to stdout, and writes a minimal
-run_summary.{json,md} to the output directory. Real simulation logic lives
-in submodules under d3_engine.core/, services/, and pipelines/.
+Parses arguments and emits JSONL progress to stdout. Real simulation logic
+and writing of run summaries/outputs live in d3_engine.core.runner.
 """
 import argparse
 import json
@@ -43,15 +42,7 @@ def main() -> int:
     try:
         # Execute orchestrated run
         pipelines = [p.strip() for p in args.pipelines.split(",") if p.strip()]
-        result = runner.execute(inputs, out_dir, pipelines, args.seed, args.fail_on_warning, args.max_concurrency)
-
-        # Write run summary from runner result
-        summary = {
-            "ts": _ts(),
-            **result,
-        }
-        (out_dir / "run_summary.json").write_text(json.dumps(summary, indent=2))
-        (out_dir / "run_summary.md").write_text("# Run Summary\n\nThis is a scaffold run. Implement engine logic in d3_engine.* modules.\n")
+        _ = runner.execute(inputs, out_dir, pipelines, args.seed, args.fail_on_warning, args.max_concurrency)
 
         _jsonl("run_done")
         return 0

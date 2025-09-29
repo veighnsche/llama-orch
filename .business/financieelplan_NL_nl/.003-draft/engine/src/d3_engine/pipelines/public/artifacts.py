@@ -8,6 +8,7 @@ from . import demand as pub_demand
 from . import capacity as pub_capacity
 from ...services.batching import effective_tps_per_instance, BatchingConfig
 import numpy as np
+import statistics
 def _fx_eur_per_usd(facts: Dict[str, Any]) -> float:
     try:
         return float(
@@ -104,11 +105,37 @@ def compute_rows(state: Dict[str, Any]) -> Dict[str, tuple[list[str], list[dict]
     except Exception:
         horizon = 12
 
-    cfg = BatchingConfig()
+    # Configure batching from operator runtime when provided; fall back to defaults
+    try:
+        rt = pub_op.get("runtime", {}) if isinstance(pub_op, dict) else {}
+        slots = rt.get("slots_total_default")
+        eff = rt.get("batching_efficiency_pct")
+        slots_i = int(slots) if slots is not None else None
+        eff_f = float(eff) if eff is not None else None
+        defaults = BatchingConfig()
+        cfg = BatchingConfig(
+            slots_total_default=(slots_i if isinstance(slots_i, int) and slots_i > 0 else defaults.slots_total_default),
+            batching_efficiency_pct=(eff_f if isinstance(eff_f, (int, float)) and eff_f > 0 else defaults.batching_efficiency_pct),
+        )
+    except Exception:
+        cfg = BatchingConfig()
 
     def _tps_eff_for(model: str, gpu: str) -> float:
+        """Return effective TPS for (model,gpu) if available; else GPU-wide fallback.
+
+        Matching order:
+        1) Exact (model AND gpu) match against TPS dataset using common header synonyms.
+        2) Fallback: aggregate all rows for the given GPU and return the median effective TPS.
+        """
+        # First pass: (model,gpu)
         for row in tps_rows:
-            m = (row.get("model") or row.get("Model") or "").strip()
+            m = (
+                row.get("model")
+                or row.get("Model")
+                or row.get("model_name")
+                or row.get("model_id")
+                or ""
+            ).strip()
             g = (row.get("gpu") or row.get("gpu_model") or "").strip()
             if m == model and g == gpu:
                 mt = (row.get("measurement_type") or "batched_online").strip()
@@ -126,6 +153,34 @@ def compute_rows(state: Dict[str, Any]) -> Dict[str, tuple[list[str], list[dict]
                 except Exception:
                     batch_i = None
                 return effective_tps_per_instance(mt, tps, gpu_count=gpu_count, batch=batch_i, cfg=cfg)
+        # Second pass: GPU-only median fallback
+        candidates: list[float] = []
+        for row in tps_rows:
+            g = (row.get("gpu") or row.get("gpu_model") or "").strip()
+            if g != gpu:
+                continue
+            mt = (row.get("measurement_type") or "batched_online").strip()
+            try:
+                tps = float((row.get("throughput_tokens_per_sec") or row.get("tps") or 0.0))
+            except Exception:
+                tps = 0.0
+            try:
+                gpu_count = int((row.get("gpu_count") or 1))
+            except Exception:
+                gpu_count = 1
+            try:
+                batch = row.get("batch")
+                batch_i = int(batch) if batch not in (None, "") else None
+            except Exception:
+                batch_i = None
+            eff = effective_tps_per_instance(mt, tps, gpu_count=gpu_count, batch=batch_i, cfg=cfg)
+            if eff > 0:
+                candidates.append(eff)
+        if candidates:
+            try:
+                return float(statistics.median(candidates))
+            except Exception:
+                return float(sum(candidates) / len(candidates))
         return 0.0
 
     vendor_rows: List[dict] = []
