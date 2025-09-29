@@ -45,15 +45,38 @@ def write_consolidated_outputs(out_dir: Path, context: Dict[str, Any]) -> List[s
     dep_const = float(finance.get("depreciation_assets_eur", 0.0) or 0.0)
 
     # Read inputs produced by pipelines
-    pub_scen = read_csv_rows(out_dir / "public_tap_scenarios.csv")
-    prv_cust = read_csv_rows(out_dir / "private_tap_customers_by_month.csv")
-    prv_costs = read_csv_rows(out_dir / "private_tap_costs_by_month.csv")
+    # Prefer compact monthly totals when present to avoid scanning large per-sample monthly CSVs
+    p_pub_month = out_dir / "public_monthly_totals.csv"
+    p_prv_month = out_dir / "private_monthly_totals.csv"
+    if p_pub_month.exists():
+        pub_rows = read_csv_rows(p_pub_month)
+        pub_rows_src = "monthly"
+    else:
+        pub_rows = read_csv_rows(out_dir / "public_tap_scenarios.csv")
+        pub_rows_src = "scenarios"
+    if p_prv_month.exists():
+        prv_rows = read_csv_rows(p_prv_month)
+        prv_rows_src = "monthly"
+    else:
+        prv_rows = read_csv_rows(out_dir / "private_tap_customers_by_month.csv")
+        prv_rows_src = "customers"
+    # Costs for private from monthly totals if available, else from costs-by-month
+    if p_prv_month.exists():
+        prv_cost_rows = prv_rows
+        prv_cost_src = "monthly"
+    else:
+        prv_cost_rows = read_csv_rows(out_dir / "private_tap_costs_by_month.csv")
+        prv_cost_src = "costs_by_month"
 
     # Monthly series consolidated across runs (use selected percentile). Public filtered to base scenario.
-    pub_rev_p = percentiles_sum_by_month(pub_scen, "month", "revenue_eur", report_percs, scenario="base")
-    pub_cost_p = percentiles_sum_by_month(pub_scen, "month", "cost_eur", report_percs, scenario="base")
-    prv_rev_p = percentiles_sum_by_month(prv_cust, "month", "revenue_eur", report_percs)
-    prv_cost_p = percentiles_sum_by_month(prv_costs, "month", "cost_eur", report_percs)
+    pub_rev_p = percentiles_sum_by_month(
+        pub_rows, "month", "revenue_eur", report_percs, scenario=("base" if pub_rows_src == "scenarios" else None)
+    )
+    pub_cost_p = percentiles_sum_by_month(
+        pub_rows, "month", "cost_eur", report_percs, scenario=("base" if pub_rows_src == "scenarios" else None)
+    )
+    prv_rev_p = percentiles_sum_by_month(prv_rows, "month", "revenue_eur", report_percs)
+    prv_cost_p = percentiles_sum_by_month(prv_cost_rows, "month", "cost_eur", report_percs)
     pub_rev_m = pub_rev_p.get(sel_key, [])
     pub_cost_m = pub_cost_p.get(sel_key, [])
     prv_rev_m = prv_rev_p.get(sel_key, [])

@@ -72,8 +72,33 @@ def compute_percentiles(tables: Dict[str, Any], context: Dict[str, Any]) -> Dict
         pass
 
     # Compute totals per sample (grid,replicate,mc) and then percentiles across samples
-    pub_rev = _read_sample_totals(out / "public_tap_scenarios.csv", "revenue_eur", group_col="scenario")
-    prv_rev = _read_sample_totals(out / "private_tap_customers_by_month.csv", "revenue_eur")
+    pub_totals_p = out / "public_sample_totals.csv"
+    prv_totals_p = out / "private_sample_totals.csv"
+    pub_rev: List[float] = []
+    prv_rev: List[float] = []
+    if pub_totals_p.exists():
+        # Read compact totals
+        import csv
+        with pub_totals_p.open() as f:
+            rdr = csv.DictReader(f)
+            for row in rdr:
+                try:
+                    pub_rev.append(float(row.get("total_revenue_eur", 0) or 0))
+                except Exception:
+                    continue
+    else:
+        pub_rev = _read_sample_totals(out / "public_tap_scenarios.csv", "revenue_eur", group_col="scenario")
+    if prv_totals_p.exists():
+        import csv
+        with prv_totals_p.open() as f:
+            rdr = csv.DictReader(f)
+            for row in rdr:
+                try:
+                    prv_rev.append(float(row.get("total_revenue_eur", 0) or 0))
+                except Exception:
+                    continue
+    else:
+        prv_rev = _read_sample_totals(out / "private_tap_customers_by_month.csv", "revenue_eur")
 
     result: Dict[str, Any] = {"public_revenue": {}, "private_revenue": {}}
     for p in perc_list:
