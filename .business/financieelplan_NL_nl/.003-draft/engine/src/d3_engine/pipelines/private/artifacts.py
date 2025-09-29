@@ -47,6 +47,7 @@ def compute_rows(state: Dict[str, Any]) -> Dict[str, tuple[list[str], list[dict]
     econ_hdr = ["gpu", "provider_eur_hr_med", "markup_pct", "sell_eur_hr", "margin_eur_hr", "margin_pct"]
     reco_hdr = ["gpu", "provider", "usd_hr", "eur_hr_effective", "score"]
     cust_hdr = ["month", "private_budget_eur", "private_cac_eur", "expected_new_clients", "active_clients", "hours", "sell_eur_hr", "revenue_eur"]
+    costs_hdr = ["month", "gpu", "provider", "eur_hr_effective", "hours", "cost_eur"]
 
     rentals: List[Dict[str, Any]] = state.get("curated", {}).get("gpu_rentals", [])
     facts: Dict[str, Any] = state.get("facts", {})
@@ -74,6 +75,7 @@ def compute_rows(state: Dict[str, Any]) -> Dict[str, tuple[list[str], list[dict]
     econ_rows: List[dict] = []
     reco_rows: List[dict] = []
     cust_rows: List[dict] = []
+    costs_rows: List[dict] = []
 
     for gpu, lst in sorted(by_gpu.items(), key=lambda kv: kv[0]):
         if not lst:
@@ -124,9 +126,19 @@ def compute_rows(state: Dict[str, Any]) -> Dict[str, tuple[list[str], list[dict]
                 "expected_new_clients": f"{new_series[month]}", "active_clients": f"{active_series[month]}", "hours": f"{hours_series[month]}",
                 "sell_eur_hr": f"{sell_eur_hr}", "revenue_eur": f"{revenue_series[month]}"
             })
+            # Costs by month using cheapest provider EUR/hr for this GPU
+            costs_rows.append({
+                "month": str(month),
+                "gpu": gpu,
+                "provider": best[0],
+                "eur_hr_effective": f"{best[2]}",
+                "hours": f"{hours_series[month]}",
+                "cost_eur": f"{hours_series[month] * best[2]}",
+            })
 
     return {
         "private_tap_economics": (econ_hdr, econ_rows),
         "private_vendor_recommendation": (reco_hdr, reco_rows),
         "private_tap_customers_by_month": (cust_hdr, cust_rows),
+        "private_tap_costs_by_month": (costs_hdr, costs_rows),
     }

@@ -7,18 +7,23 @@ from . import pricing as pub_pricing
 from . import demand as pub_demand
 from . import capacity as pub_capacity
 from ...services.batching import effective_tps_per_instance, BatchingConfig
+from ...services.autoscaling import (
+    ASGPolicy,
+    simulate_autoscaler,
+    cap_per_instance_tokens_per_hour,
+)
 import numpy as np
 import statistics
 def _fx_eur_per_usd(facts: Dict[str, Any]) -> float:
-    try:
-        return float(
-            facts.get("market_env", {})
-            .get("finance", {})
-            .get("eur_usd_fx_rate", {})
-            .get("value")
-        )
-    except Exception:
-        return 1.0
+    v = (
+        facts.get("market_env", {})
+        .get("finance", {})
+        .get("eur_usd_fx_rate", {})
+        .get("value")
+    )
+    if not isinstance(v, (int, float)) or float(v) <= 0:
+        raise ValueError("Missing or invalid FX rate: facts.market_env.finance.eur_usd_fx_rate.value must be > 0")
+    return float(v)
 
 
 def _fx_buffer_pct(pub_op: Dict[str, Any]) -> float:
@@ -81,6 +86,13 @@ def compute_rows(state: Dict[str, Any]) -> Dict[str, tuple[list[str], list[dict]
         "model", "gpu", "avg_tokens_per_hour", "peak_tokens_per_hour", "tps",
         "cap_tokens_per_hour_per_instance", "instances_needed", "target_utilization_pct", "capacity_violation"
     ]
+    cap_month_hdr = [
+        "model", "gpu", "month",
+        "avg_tokens_per_hour", "peak_tokens_per_hour", "tps",
+        "cap_tokens_per_hour_per_instance", "instances_needed", "instance_hours",
+        "eur_hr_effective", "gpu_cost_eur_month",
+        "target_utilization_pct", "capacity_violation"
+    ]
 
     curated_models: List[Dict[str, Any]] = state.get("curated", {}).get("public_models", [])
     rentals: List[Dict[str, Any]] = state.get("curated", {}).get("gpu_rentals", [])
@@ -121,26 +133,17 @@ def compute_rows(state: Dict[str, Any]) -> Dict[str, tuple[list[str], list[dict]
         cfg = BatchingConfig()
 
     def _tps_eff_for(model: str, gpu: str) -> float:
-        """Return effective TPS for (model,gpu) if available; else GPU-wide fallback.
+        """Return effective TPS for (model,gpu) or fail if facts missing.
 
-        Matching order:
-        1) Exact (model AND gpu) match against TPS dataset using common header synonyms.
-        2) Fallback: aggregate all rows for the given GPU and return the median effective TPS.
+        Loader normalizes TPS rows to canonical keys; we do not fallback on missing facts.
         """
-        # First pass: (model,gpu)
         for row in tps_rows:
-            m = (
-                row.get("model")
-                or row.get("Model")
-                or row.get("model_name")
-                or row.get("model_id")
-                or ""
-            ).strip()
-            g = (row.get("gpu") or row.get("gpu_model") or "").strip()
+            m = (row.get("model") or "").strip()
+            g = (row.get("gpu") or "").strip()
             if m == model and g == gpu:
                 mt = (row.get("measurement_type") or "batched_online").strip()
                 try:
-                    tps = float((row.get("throughput_tokens_per_sec") or row.get("tps") or 0.0))
+                    tps = float((row.get("throughput_tokens_per_sec") or 0.0))
                 except Exception:
                     tps = 0.0
                 try:
@@ -152,42 +155,18 @@ def compute_rows(state: Dict[str, Any]) -> Dict[str, tuple[list[str], list[dict]
                     batch_i = int(batch) if batch not in (None, "") else None
                 except Exception:
                     batch_i = None
-                return effective_tps_per_instance(mt, tps, gpu_count=gpu_count, batch=batch_i, cfg=cfg)
-        # Second pass: GPU-only median fallback
-        candidates: list[float] = []
-        for row in tps_rows:
-            g = (row.get("gpu") or row.get("gpu_model") or "").strip()
-            if g != gpu:
-                continue
-            mt = (row.get("measurement_type") or "batched_online").strip()
-            try:
-                tps = float((row.get("throughput_tokens_per_sec") or row.get("tps") or 0.0))
-            except Exception:
-                tps = 0.0
-            try:
-                gpu_count = int((row.get("gpu_count") or 1))
-            except Exception:
-                gpu_count = 1
-            try:
-                batch = row.get("batch")
-                batch_i = int(batch) if batch not in (None, "") else None
-            except Exception:
-                batch_i = None
-            eff = effective_tps_per_instance(mt, tps, gpu_count=gpu_count, batch=batch_i, cfg=cfg)
-            if eff > 0:
-                candidates.append(eff)
-        if candidates:
-            try:
-                return float(statistics.median(candidates))
-            except Exception:
-                return float(sum(candidates) / len(candidates))
-        return 0.0
+                eff = effective_tps_per_instance(mt, tps, gpu_count=gpu_count, batch=batch_i, cfg=cfg)
+                if eff <= 0:
+                    raise RuntimeError(f"Invalid TPS derived for model={model} gpu={gpu}; check facts/tps_model_gpu.csv")
+                return eff
+        raise RuntimeError(f"Missing TPS fact for model={model} gpu={gpu}; add a row to facts/tps_model_gpu.csv")
 
     vendor_rows: List[dict] = []
     prices_rows: List[dict] = []
     scen_rows: List[dict] = []
     cust_rows: List[dict] = []
     cap_rows: List[dict] = []
+    cap_month_rows: List[dict] = []
 
     for m in sorted(curated_models, key=lambda r: (str(r.get("Model") or r.get("model") or "").strip())):
         model_name = (m.get("Model") or m.get("model") or "").strip()
@@ -202,9 +181,10 @@ def compute_rows(state: Dict[str, Any]) -> Dict[str, tuple[list[str], list[dict]
         usd_hr = float(choice.get("usd_hr"))
         eur_hr = _eur_hr(usd_hr, eur_usd_rate, fx_buf)
 
-        tps_eff = _tps_eff_for(model_name, gpu) or 1000.0
-        tokens_per_hour = tps_eff * 3600.0
-        cost_eur_per_1M = (float('inf') if tokens_per_hour <= 0 else (eur_hr / (tokens_per_hour / 1_000_000.0)))
+        tps_eff = _tps_eff_for(model_name, gpu)
+        # Capacity per instance at target utilization
+        cap_per_inst = cap_per_instance_tokens_per_hour(tps_eff, target_util)
+        cost_eur_per_1M = (float('inf') if cap_per_inst <= 0 else (eur_hr / (cap_per_inst / 1_000_000.0)))
         vendor_rows.append({
             "model": model_name, "gpu": gpu, "provider": provider,
             "usd_hr": f"{usd_hr}", "eur_hr_effective": f"{eur_hr}", "cost_eur_per_1M": f"{cost_eur_per_1M}"
@@ -241,6 +221,7 @@ def compute_rows(state: Dict[str, Any]) -> Dict[str, tuple[list[str], list[dict]
         cost_series = (tokens_series / 1_000_000.0) * cost_eur_per_1M
         margin_series = revenue_series - cost_series
         # Emit rows
+        hours_in_month = 24.0 * 30.0
         for month in range(horizon):
             scen_rows.append({
                 "scenario": "base", "month": str(month), "tokens": f"{tokens_series[month]}",
@@ -250,6 +231,63 @@ def compute_rows(state: Dict[str, Any]) -> Dict[str, tuple[list[str], list[dict]
                 "month": str(month), "budget_eur": f"{budget_series[month]}", "cac_eur": f"{cac}",
                 "expected_new_customers": f"{expected_new_series[month]}", "active_customers": f"{active_series[month]}",
                 "tokens": f"{tokens_series[month]}"
+            })
+            # Monthly per-model autoscaling simulation from hourly demand
+            monthly_tokens = float(tokens_series[month])
+            hourly_series = pub_demand.hourly_timeseries_uniform(
+                monthly_tokens, hours_in_month=int(hours_in_month), peak_factor=peak_factor, diurnal=True
+            )
+            # Build ASGPolicy from operator autoscaling config (use defaults when fields absent)
+            aconf = pub_op.get("autoscaling", {}) if isinstance(pub_op, dict) else {}
+            policy = ASGPolicy(
+                evaluation_interval_s=int(aconf.get("evaluation_interval_s", ASGPolicy.evaluation_interval_s)),
+                scale_up_threshold_pct=float(aconf.get("scale_up_threshold_pct", ASGPolicy.scale_up_threshold_pct)),
+                scale_down_threshold_pct=float(aconf.get("scale_down_threshold_pct", ASGPolicy.scale_down_threshold_pct)),
+                scale_up_step_replicas=int(aconf.get("scale_up_step_replicas", ASGPolicy.scale_up_step_replicas)),
+                scale_down_step_replicas=int(aconf.get("scale_down_step_replicas", ASGPolicy.scale_down_step_replicas)),
+                stabilization_window_s=int(aconf.get("stabilization_window_s", ASGPolicy.stabilization_window_s)),
+                warmup_s=int(aconf.get("warmup_s", ASGPolicy.warmup_s)),
+                cooldown_s=int(aconf.get("cooldown_s", ASGPolicy.cooldown_s)),
+                min_instances_per_model=int(aconf.get("min_instances_per_model", ASGPolicy.min_instances_per_model)),
+                max_instances_per_model=int(aconf.get("max_instances_per_model", ASGPolicy.max_instances_per_model)),
+            )
+            sim = simulate_autoscaler(hourly_series, tps_eff, target_util, policy)
+            events = sim.get("events", [])
+            cap_per_inst_m = cap_per_inst
+            # Accumulate instance-hours from effective capacity
+            dt_h = float(policy.evaluation_interval_s) / 3600.0
+            effective_replicas = [
+                (float(e.get("effective_capacity", 0.0)) / cap_per_inst_m) if cap_per_inst_m > 0 else 0.0
+                for e in events
+            ]
+            instance_hours_m = sum(max(0.0, r) * dt_h for r in effective_replicas)
+            gpu_cost_month = instance_hours_m * float(eur_hr)
+            violation_m = any(float(e.get("demand_tokens_per_hour", 0.0)) > float(e.get("effective_capacity", 0.0)) + 1e-9 for e in events)
+            # Reconciliation check vs theoretical monthly cost from tokens and cost_per_1M
+            theoretical_cost_month = float(cost_series[month])
+            if not violation_m:
+                # Require close agreement when no SLA violations
+                if theoretical_cost_month > 0:
+                    ratio = abs(gpu_cost_month - theoretical_cost_month) / theoretical_cost_month
+                    if ratio > 0.25:
+                        raise RuntimeError(
+                            f"GPU monthly cost reconciliation failed for model={model_name} gpu={gpu} month={month}: "
+                            f"sim_cost={gpu_cost_month:.4f} vs theoretical={theoretical_cost_month:.4f}"
+                        )
+            cap_month_rows.append({
+                "model": model_name,
+                "gpu": gpu,
+                "month": str(month),
+                "avg_tokens_per_hour": f"{monthly_tokens / hours_in_month if monthly_tokens > 0 else 0.0}",
+                "peak_tokens_per_hour": f"{max(hourly_series) if hourly_series else 0.0}",
+                "tps": f"{tps_eff}",
+                "cap_tokens_per_hour_per_instance": f"{cap_per_inst_m}",
+                "instances_needed": f"{int(max(effective_replicas) if effective_replicas else 0)}",
+                "instance_hours": f"{instance_hours_m}",
+                "eur_hr_effective": f"{eur_hr}",
+                "gpu_cost_eur_month": f"{gpu_cost_month}",
+                "target_utilization_pct": f"{target_util}",
+                "capacity_violation": "True" if violation_m else "False",
             })
 
         expected_new_customers_m0 = 0.0 if cac <= 0 else (budget0 / cac)
@@ -273,4 +311,5 @@ def compute_rows(state: Dict[str, Any]) -> Dict[str, tuple[list[str], list[dict]
         "public_tap_scenarios": (scen_hdr, scen_rows),
         "public_tap_customers_by_month": (cust_hdr, cust_rows),
         "public_tap_capacity_plan": (cap_hdr, cap_rows),
+        "public_tap_capacity_by_month": (cap_month_hdr, cap_month_rows),
     }

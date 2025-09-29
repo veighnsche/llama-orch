@@ -111,47 +111,28 @@ def _check_private_operator(inputs_dir: Path, errors: List[str]):
 
 
 def _check_curated(inputs_dir: Path, errors: List[str], warn_to_error: bool = False):
+    # Enforce single strict schema for curated GPU rentals: [gpu, vram_gb, provider, usd_hr]
     gpu_p = inputs_dir / "operator" / "curated_gpu.csv"
     try:
         with gpu_p.open() as f:
             rdr = csv.DictReader(f)
             hdr = [h.strip() for h in rdr.fieldnames or []]
-            # Accept user's richer schema; require one of two supported subsets
             have = {h for h in (h.strip() for h in hdr)}
-            required_a = {"provider", "gpu_vram_gb", "price_per_gpu_hr"}
-            required_b = {"provider", "gpu_vram_gb", "price_usd_hr", "num_gpus"}
-            if not (required_a.issubset(have) or required_b.issubset(have)):
-                errors.append(
-                    "curated_gpu.csv must contain either columns {provider,gpu_vram_gb,price_per_gpu_hr} or {provider,gpu_vram_gb,price_usd_hr,num_gpus}"
-                )
-            # Unknown/extra columns policy: WARNING by default, escalate if warn_to_error
-            known = {"provider", "gpu", "gpu_model", "gpu_vram_gb", "price_per_gpu_hr", "price_usd_hr", "num_gpus"}
-            unknown_cols = sorted([c for c in have if c not in known])
-            if unknown_cols:
-                print(elog.jsonl("validation_warning", dataset="curated_gpu", unknown_columns=unknown_cols))
-                if warn_to_error:
-                    errors.append(f"curated_gpu.csv has unknown columns: {unknown_cols}")
+            required = {"gpu", "vram_gb", "provider", "usd_hr"}
+            if have != required:
+                errors.append(f"curated_gpu.csv headers must exactly be {sorted(required)} (no extras, no omissions)")
             for row in rdr:
                 try:
-                    vram = float((row.get("gpu_vram_gb") or "").strip())
-                    if "price_per_gpu_hr" in row and str(row.get("price_per_gpu_hr")).strip() != "":
-                        usd = float((row.get("price_per_gpu_hr") or "").strip())
-                    else:
-                        price_usd_hr = float((row.get("price_usd_hr") or "").strip())
-                        num = float((row.get("num_gpus") or "").strip())
-                        if num <= 0:
-                            raise ValueError("num_gpus must be > 0")
-                        usd = price_usd_hr / num
-                    if not (math.isfinite(vram) and math.isfinite(usd)):
-                        raise ValueError("non-finite vram/usd")
+                    vram = float((row.get("vram_gb") or "").strip())
+                    usd = float((row.get("usd_hr") or "").strip())
                 except Exception:
-                    errors.append("curated_gpu.csv invalid numeric values in gpu_vram_gb/price fields")
+                    errors.append("curated_gpu.csv invalid numeric values in vram_gb/usd_hr")
                     break
-                if usd <= 0:
-                    errors.append("curated_gpu.csv price_per_gpu_hr must be > 0")
+                if not (math.isfinite(vram) and vram > 0):
+                    errors.append("curated_gpu.csv vram_gb must be a finite number > 0")
                     break
-                if vram <= 0:
-                    errors.append("curated_gpu.csv gpu_vram_gb must be > 0")
+                if not (math.isfinite(usd) and usd > 0):
+                    errors.append("curated_gpu.csv usd_hr must be a finite number > 0")
                     break
     except FileNotFoundError:
         errors.append(f"missing file: {gpu_p}")
@@ -164,23 +145,33 @@ def _check_curated(inputs_dir: Path, errors: List[str], warn_to_error: bool = Fa
             hdr_lc = [h.strip().lower() for h in hdr]
             if "model" not in hdr_lc:
                 errors.append("curated_public_tap_models.csv must contain a 'model' column (case-insensitive)")
-            else:
-                model_idx = hdr_lc.index("model")
-                # Unknown/extra columns policy: WARNING by default, escalate if warn_to_error
-                known = {"model", "typical_vram_gb", "typical_vram_mb"}
-                unknown_cols = sorted([c for c in hdr_lc if c not in known])
-                if unknown_cols:
-                    print(elog.jsonl("validation_warning", dataset="curated_public_tap_models", unknown_columns=unknown_cols))
-                    if warn_to_error:
-                        errors.append(f"curated_public_tap_models.csv has unknown columns: {unknown_cols}")
-                rows = 0
-                for row in rdr:
-                    rows += 1
+            # Require a VRAM estimate column (any header containing 'typical_vram' or 'weights_vram_4bit_gb_est')
+            vram_idx: int | None = None
+            for i, h in enumerate(hdr_lc):
+                if "typical_vram" in h or h == "weights_vram_4bit_gb_est":
+                    vram_idx = i
+                    break
+            if vram_idx is None:
+                errors.append("curated_public_tap_models.csv must include a VRAM estimate column (e.g., 'Typical_VRAM_*' or 'weights_vram_4bit_gb_est')")
+            rows = 0
+            for row in rdr:
+                rows += 1
+                if "model" in hdr_lc:
+                    model_idx = hdr_lc.index("model")
                     if model_idx >= len(row) or not str(row[model_idx]).strip():
                         errors.append("curated_public_tap_models.csv contains empty 'model' value")
                         break
-                if rows < 1:
-                    errors.append("curated_public_tap_models.csv must have at least one row")
+                if vram_idx is not None:
+                    try:
+                        vram_val = float(str(row[vram_idx]).strip())
+                        if vram_val <= 0:
+                            errors.append("curated_public_tap_models.csv VRAM estimate must be > 0 for all rows")
+                            break
+                    except Exception:
+                        errors.append("curated_public_tap_models.csv VRAM estimate must be numeric for all rows")
+                        break
+            if rows < 1:
+                errors.append("curated_public_tap_models.csv must have at least one row")
     except FileNotFoundError:
         errors.append(f"missing file: {models_p}")
 
@@ -194,6 +185,28 @@ def _check_variables(inputs_dir: Path, errors: List[str]):
         "variable_id","scope","path","type","unit","min","max","step","default","treatment","notes"
     ]
     allowed_scopes = {"general", "public_tap", "private_tap"}
+    # Build allowed path roots dynamically from operator YAMLs (up to two levels)
+    def _prefixes_from_yaml(d: dict) -> List[str]:
+        prefs: List[str] = []
+        if not isinstance(d, dict):
+            return prefs
+        for k, v in d.items():
+            if isinstance(v, dict):
+                prefs.append(f"{k}.")
+                for k2, v2 in v.items():
+                    if isinstance(v2, dict):
+                        prefs.append(f"{k}.{k2}.")
+        return prefs
+
+    gen_data = _read_yaml(inputs_dir / "operator" / "general.yaml")
+    pub_data = _read_yaml(inputs_dir / "operator" / "public_tap.yaml")
+    prv_data = _read_yaml(inputs_dir / "operator" / "private_tap.yaml")
+    dynamic_roots = {
+        "general": _prefixes_from_yaml(gen_data),
+        "public_tap": _prefixes_from_yaml(pub_data),
+        "private_tap": _prefixes_from_yaml(prv_data),
+    }
+
     for csv_name in ("general.csv", "public_tap.csv", "private_tap.csv"):
         p = vars_dir / csv_name
         if not p.exists():
@@ -215,23 +228,21 @@ def _check_variables(inputs_dir: Path, errors: List[str]):
                 if typ not in ("numeric", "discrete"):
                     errors.append(f"{csv_name} invalid type: {typ}")
                     break
-                # Allowed path roots per scope (per specs/12_oprator_variables.md)
+                # Enforce treatment semantics
+                treatment = (row.get("treatment") or "").strip()
+                if treatment not in ("fixed", "low_to_high", "random"):
+                    errors.append(f"{csv_name} invalid treatment: {treatment}")
+                    break
+                # Allowed path roots per scope: derived from operator YAMLs (two-level prefixes)
                 path = (row.get("path") or "").strip()
-                allowed_roots_map = {
-                    "general": [
-                        "finance.", "insurances.", "tax.", "reserves.",
-                    ],
-                    "public_tap": [
-                        "pricing_policy.public_tap.", "prepaid_policy.credits.", "acquisition.", "autoscaling.",
-                    ],
-                    "private_tap": [
-                        "pricing_policy.private_tap.", "acquisition.",
-                    ],
-                }
-                roots = allowed_roots_map.get(scope, [])
+                roots = dynamic_roots.get(scope, [])
                 if path and not any(path.startswith(r) for r in roots):
                     errors.append(f"{csv_name} path not allowed for scope {scope}: {path}")
                     break
+                # Policy note: treatment semantics (controllable vs uncontrollable) are
+                # explicitly declared in the CSV by authors. We do not hard-code lists
+                # in validator to avoid maintenance burden. Optional linting can be added
+                # via sidecar policy files (see _check_sidecar_schemas) without code edits.
                 if typ == "numeric":
                     try:
                         mn = float(row.get("min") or "")

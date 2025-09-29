@@ -31,43 +31,69 @@ def _read_curated_models(p: Path) -> List[Dict[str, Any]]:
 
 
 def _read_curated_gpu(p: Path) -> List[Dict[str, Any]]:
+    """Read strict curated GPU rentals with schema: gpu,vram_gb,provider,usd_hr"""
     rentals: List[Dict[str, Any]] = []
     try:
         with p.open() as f:
             rdr = csv.DictReader(f)
             for row in rdr:
                 provider = (row.get("provider") or "").strip()
-                gpu_model = (row.get("gpu_model") or row.get("gpu") or "").strip()
-                vram_s = (row.get("gpu_vram_gb") or "").strip()
-                usd_hr = None
-                ppg = row.get("price_per_gpu_hr")
-                if ppg is not None and str(ppg).strip() != "":
-                    try:
-                        usd_hr = float(str(ppg).strip())
-                    except Exception:
-                        usd_hr = None
-                if usd_hr is None:
-                    try:
-                        total = float((row.get("price_usd_hr") or "").strip())
-                        num = float((row.get("num_gpus") or "").strip())
-                        usd_hr = total / num if num > 0 else None
-                    except Exception:
-                        usd_hr = None
+                gpu_model = (row.get("gpu") or "").strip()
+                vram_s = (row.get("vram_gb") or "").strip()
+                usd_s = (row.get("usd_hr") or "").strip()
                 try:
-                    vram = float(vram_s) if vram_s != "" else None
+                    vram = float(vram_s)
+                    usd = float(usd_s)
                 except Exception:
-                    vram = None
-                if not provider or not gpu_model or usd_hr is None or (vram is None):
+                    continue
+                if not provider or not gpu_model or not (vram > 0 and usd > 0):
                     continue
                 rentals.append({
                     "gpu": gpu_model,
                     "vram_gb": vram,
                     "provider": provider,
-                    "usd_hr": usd_hr,
+                    "usd_hr": usd,
                 })
     except FileNotFoundError:
         pass
     return rentals
+
+
+def _read_tps_model_gpu(p: Path) -> List[Dict[str, Any]]:
+    """Read TPS dataset and normalize to canonical keys.
+
+    Canonical keys ensured on each row:
+      - model
+      - gpu
+      - throughput_tokens_per_sec
+      - measurement_type (default 'aggregate' if missing)
+      - gpu_count (default '1')
+      - batch (may be empty)
+    """
+    rows: List[Dict[str, Any]] = []
+    try:
+        with p.open() as f:
+            rdr = csv.DictReader(f)
+            for raw in rdr:
+                model = (raw.get("model") or raw.get("Model") or raw.get("model_name") or raw.get("model_id") or "").strip()
+                gpu = (raw.get("gpu") or raw.get("gpu_model") or "").strip()
+                tps = (raw.get("throughput_tokens_per_sec") or raw.get("tps") or "").strip()
+                mt = (raw.get("measurement_type") or "aggregate").strip()
+                gc = (raw.get("gpu_count") or "1").strip()
+                batch = (raw.get("batch") or "").strip()
+                row = dict(raw)
+                row.update({
+                    "model": model,
+                    "gpu": gpu,
+                    "throughput_tokens_per_sec": tps,
+                    "measurement_type": mt,
+                    "gpu_count": gc,
+                    "batch": batch,
+                })
+                rows.append(row)
+    except FileNotFoundError:
+        pass
+    return rows
 
 
 def load_all(inputs_dir: Path) -> Dict[str, Any]:
@@ -93,16 +119,9 @@ def load_all(inputs_dir: Path) -> Dict[str, Any]:
         if sim.get("run", {}).get("fail_on_warning"):
             raise ValidationError("CSV>YAML shadowing escalated to ERROR: curated_gpu")
     # Optional TPS dataset per (model,gpu)
-    tps_rows: List[Dict[str, Any]] = []
     tps_csv = inputs_dir / "facts" / "tps_model_gpu.csv"
     tps_yaml = inputs_dir / "facts" / "tps_model_gpu.yaml"
-    try:
-        with tps_csv.open() as f:
-            rdr = csv.DictReader(f)
-            for row in rdr:
-                tps_rows.append({k.strip(): (v.strip() if isinstance(v, str) else v) for k, v in row.items()})
-    except FileNotFoundError:
-        pass
+    tps_rows: List[Dict[str, Any]] = _read_tps_model_gpu(tps_csv)
     if tps_rows and tps_yaml.exists():
         print(elog.jsonl("shadowing_warning", dataset="tps_model_gpu", chosen="csv", yaml=str(tps_yaml), csv=str(tps_csv)))
         if sim.get("run", {}).get("fail_on_warning"):

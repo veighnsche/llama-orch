@@ -1,22 +1,30 @@
-"""Engine runner (scaffold).
-Coordinates: load → validate → (grid/replicates/MC TBD) → pipelines → artifacts → consolidate → acceptance → summary.
+"""Engine runner (modular orchestration).
+Coordinates: config → load+validate → variables/grid → execute jobs → materialize → autoscaling → analysis → consolidate → acceptance → summary.
 """
 from __future__ import annotations
 from pathlib import Path
 from typing import Dict, List
 
-from . import loader, validator, logging as elog
-from ..pipelines.public import artifacts as pub_art
-from ..pipelines.private import artifacts as prv_art
-from ..analysis import analyze
-from . import aggregate as agg
-from ..pipelines.public.demand import hourly_timeseries_uniform
-from ..services.autoscaling import ASGPolicy, simulate_autoscaler
-import yaml
 import hashlib
+
+from . import logging as elog
 from . import rng
-from . import variables as vargrid
-from .artifacts import write_csv_header, append_csv_row, write_dict_rows
+from .run_init import (
+    build_run_config,
+    load_and_validate,
+    resolve_targets,
+    plan_variables,
+    write_variable_draws,
+)
+from .executor import execute_jobs
+from .writers import CSVWriter, materialize_pipeline_tables
+from .summary import write_run_summary
+from .checksums import write_sha256sums
+from ..pipelines import REGISTRY as PIPELINES_REGISTRY
+from ..pipelines.public.demand import hourly_timeseries_uniform
+from ..services.autoscaling_runner import build_policy_from_public, simulate_and_emit
+from ..analysis import analyze
+from ..aggregate import aggregator as agg
 
 
 def ensure_dir(p: Path) -> None:
@@ -24,156 +32,35 @@ def ensure_dir(p: Path) -> None:
 
 
 def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | None, fail_on_warning: bool, max_concurrency: int | None = None) -> Dict:
-    # 1) Load & validate
-    print(elog.jsonl("load_start", inputs=str(inputs_dir)))
-    state = loader.load_all(inputs_dir)
-    # Propagate CLI fail_on_warning into simulation.run
-    try:
-        sim = state.setdefault("simulation", {})
-        run = sim.setdefault("run", {})
-        if fail_on_warning:
-            run["fail_on_warning"] = True
-        # Fallbacks from simulation.run when CLI did not specify
-        # pipelines: list of strings, filter to known values
-        if not pipelines:
-            try:
-                p_list = run.get("pipelines", [])
-                if isinstance(p_list, list):
-                    pipelines = [p for p in p_list if str(p).strip() in ("public", "private")]
-            except Exception:
-                pass
-            if not pipelines:
-                pipelines = ["public", "private"]
-        # output_dir fallback
-        try:
-            if (out_dir is None) or (str(out_dir).strip() == ""):
-                out_override = run.get("output_dir")
-                if isinstance(out_override, str) and out_override.strip():
-                    out_dir = Path(out_override)
-        except Exception:
-            pass
-    except Exception:
-        pass
-    print(elog.jsonl("load_done"))
-
-    print(elog.jsonl("validate_start"))
-    validator.validate(state)
-    print(elog.jsonl("validate_done"))
-
+    # 1) Build config and load/validate
+    cfg = build_run_config(inputs_dir, out_dir, pipelines, seed, fail_on_warning, max_concurrency)
+    state = load_and_validate(cfg.inputs_dir, cfg.fail_on_warning)
+    inputs_dir = cfg.inputs_dir
+    out_dir = cfg.out_dir
+    pipelines = cfg.pipelines
     ensure_dir(out_dir)
 
     artifacts: List[str] = []
 
     # Resolve master seed according to precedence (stochastic → run → operator meta)
     try:
-        master_seed = rng.resolve_seed_from_state(state) if seed is None else int(seed)
+        master_seed = rng.resolve_seed_from_state(state) if cfg.seed is None else int(cfg.seed)
     except Exception:
-        master_seed = seed if seed is not None else None
+        master_seed = cfg.seed if cfg.seed is not None else None
     print(elog.jsonl("seed_resolved", seed=master_seed))
     if master_seed is None:
         raise RuntimeError("No random seed provided (stochastic/run/operator meta); see 33_engine_flow.md seed resolution")
 
-    # Load acceptance targets from inputs
-    target_utilization_pct = 75.0
-    autoscaling_util_tolerance_pct = 25.0
-    private_margin_threshold_pct = 20.0
-    public_growth_min_mom_pct = None
+    # 2) Targets & variables
+    targets = resolve_targets(state)
+    combos, random_specs, replicates, mc_count, all_vars = plan_variables(state)
+    print(elog.jsonl("grid_built", size=len(combos)))
     try:
-        sim_p = inputs_dir / "simulation.yaml"
-        sim_data = yaml.safe_load(sim_p.read_text()) or {}
-        tol = (
-            sim_data.get("targets", {})
-            if isinstance(sim_data, dict) else {}
-        )
-        v = tol.get("autoscaling_util_tolerance_pct") if isinstance(tol, dict) else None
-        if isinstance(v, (int, float)):
-            autoscaling_util_tolerance_pct = float(v)
-        pm = tol.get("private_margin_threshold_pct") if isinstance(tol, dict) else None
-        if isinstance(pm, (int, float)):
-            private_margin_threshold_pct = float(pm)
-        pg = tol.get("public_growth_min_mom_pct") if isinstance(tol, dict) else None
-        if isinstance(pg, (int, float)):
-            public_growth_min_mom_pct = float(pg)
-    except Exception:
-        pass
-    try:
-        pub_p = inputs_dir / "operator" / "public_tap.yaml"
-        pub_data = yaml.safe_load(pub_p.read_text()) or {}
-        v = (
-            pub_data.get("autoscaling", {})
-            if isinstance(pub_data, dict) else {}
-        ).get("target_utilization_pct")
-        if isinstance(v, (int, float)) and 1 <= float(v) <= 100:
-            target_utilization_pct = float(v)
+        write_variable_draws(out_dir, all_vars, combos, replicates)
     except Exception:
         pass
 
-    # Build variables grid and replicates (v0: we still execute only the canonical job g0/r0)
-    try:
-        vars_general = state.get("variables", {}).get("general", [])
-        vars_public = state.get("variables", {}).get("public_tap", [])
-        vars_private = state.get("variables", {}).get("private_tap", [])
-        all_vars = list(vars_general) + list(vars_public) + list(vars_private)
-        combos = list(vargrid.iter_grid_combos(all_vars))
-        grid_size = len(combos)
-    except Exception:
-        combos = [(0, {})]
-        grid_size = 1
-    print(elog.jsonl("grid_built", size=grid_size))
-
-    # Variable draws transcript (optional but recommended)
-    try:
-        # Determine replicates count
-        replicates = 1
-        try:
-            replicates = int(state.get("simulation", {}).get("run", {}).get("random_runs_per_simulation", 1))
-            if replicates < 1:
-                replicates = 1
-        except Exception:
-            replicates = 1
-        draws_path = out_dir / "variable_draws.csv"
-        write_csv_header(draws_path, [
-            "scope", "variable_id", "path", "grid_index", "replicate_index", "draw_value"
-        ])
-        # Map path -> (scope, variable_id) for annotation
-        path_meta = {}
-        for row in all_vars:
-            p = (row.get("path") or "").strip()
-            if p and p not in path_meta:
-                path_meta[p] = ((row.get("scope") or "").strip(), (row.get("variable_id") or "").strip())
-        # Emit draws
-        for gi, combo in combos:
-            for ri in range(replicates):
-                for pth, val in sorted(combo.items()):
-                    scope, varid = path_meta.get(pth, ("", ""))
-                    # For now, record the grid value as the draw (replicates do not perturb in v0)
-                    append_csv_row(draws_path, [
-                        scope, varid, pth, str(gi), str(ri), f"{val}"
-                    ])
-    except Exception:
-        pass
-
-    # 2) Pipelines over grid/replicates/MC (deterministic aggregation)
-    autoscaling_summary = None
-    # Prepare header caches for deterministic streaming writes
-    public_headers: Dict[str, list[str]] = {}
-    private_headers: Dict[str, list[str]] = {}
-    # Random specs
-    random_specs = vargrid.parse_random_specs(all_vars)
-    # Replicates and MC nesting
-    try:
-        replicates = int(state.get("simulation", {}).get("run", {}).get("random_runs_per_simulation", 1))
-        if replicates < 1:
-            replicates = 1
-    except Exception:
-        replicates = 1
-    try:
-        mc_count = int(state.get("simulation", {}).get("stochastic", {}).get("simulations_per_run", 1))
-        if mc_count < 1:
-            mc_count = 1
-    except Exception:
-        mc_count = 1
-
+    # 3) Plan and execute jobs
     def _set_path(d: dict, dotted: str, value) -> None:
         cur = d
         parts = dotted.split(".")
@@ -190,162 +77,62 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
             _set_path(new_state, path, val)
         return new_state
 
-    # Submit jobs
-    job_idx = 0
-    jobs: list[tuple[int, int, int, dict]] = []  # (gi, ri, mi, combo)
+    jobs: list[tuple[int, int, int, dict]] = []
     for gi, combo in combos:
         for ri in range(replicates):
             for mi in range(mc_count):
                 print(elog.jsonl("job_submitted", grid_index=gi, replicate_index=ri, mc_index=mi))
                 jobs.append((gi, ri, mi, dict(combo)))
-                job_idx += 1
 
-    # Worker to compute rows for a single job
     def _compute_job(job: tuple[int, int, int, dict]):
         gi, ri, mi, combo = job
         random_overrides = vargrid.draw_randoms(random_specs, master_seed, gi, ri, mi)
         overrides = dict(combo)
         overrides.update(random_overrides)
         state_job = _with_overrides(state, overrides) if overrides else state
-        pub_tables = pub_art.compute_rows(state_job) if "public" in pipelines else {}
-        prv_tables = prv_art.compute_rows(state_job) if "private" in pipelines else {}
+        pub_tables = PIPELINES_REGISTRY["public"](state_job) if "public" in pipelines else {}
+        prv_tables = PIPELINES_REGISTRY["private"](state_job) if "private" in pipelines else {}
         return (gi, ri, mi, pub_tables, prv_tables)
 
-    results: list[tuple[int, int, int, dict, dict]] = []
-    workers = int(max_concurrency) if (max_concurrency and max_concurrency > 0) else 1
-    if workers == 1:
-        for job in jobs:
-            print(elog.jsonl("job_started", grid_index=job[0], replicate_index=job[1], mc_index=job[2]))
-            results.append(_compute_job(job))
-            print(elog.jsonl("job_done", grid_index=job[0], replicate_index=job[1], mc_index=job[2]))
-    else:
-        from concurrent.futures import ThreadPoolExecutor, as_completed
-        with ThreadPoolExecutor(max_workers=workers) as ex:
-            future_map = {ex.submit(_compute_job, job): job for job in jobs}
-            for fut in as_completed(future_map):
-                gi, ri, mi, _, _ = future_map[fut]
-                # Mark started/done when result arrives to keep logs concise; final outputs are deterministic
-                print(elog.jsonl("job_started", grid_index=gi, replicate_index=ri, mc_index=mi))
-                res = fut.result()
-                results.append(res)
-                print(elog.jsonl("job_done", grid_index=gi, replicate_index=ri, mc_index=mi))
+    results: List[tuple[int, int, int, dict, dict]] = execute_jobs(jobs, _compute_job, cfg.max_concurrency)
 
-    # Deterministic write-out (sorted)
-    def _sorted_rows(name: str, rows: list[dict]) -> list[dict]:
-        # Define stable sort keys per table name
-        if name == "public_vendor_choice":
-            return sorted(rows, key=lambda r: (r.get("model", ""), r.get("gpu", "")))
-        if name == "public_tap_prices_per_model":
-            return sorted(rows, key=lambda r: (r.get("model", ""), r.get("gpu", "")))
-        if name == "public_tap_scenarios":
-            return sorted(rows, key=lambda r: (r.get("scenario", ""), int(r.get("month", 0))))
-        if name == "public_tap_customers_by_month":
-            return sorted(rows, key=lambda r: (int(r.get("month", 0))))
-        if name == "public_tap_capacity_plan":
-            return sorted(rows, key=lambda r: (r.get("model", ""), r.get("gpu", "")))
-        if name == "private_tap_economics":
-            return sorted(rows, key=lambda r: (r.get("gpu", "")))
-        if name == "private_vendor_recommendation":
-            return sorted(rows, key=lambda r: (r.get("gpu", ""), r.get("provider", "")))
-        if name == "private_tap_customers_by_month":
-            return sorted(rows, key=lambda r: (int(r.get("month", 0))))
-        return rows
-
+    # 4) Materialize pipeline outputs
     if "public" in pipelines:
         print(elog.jsonl("pipeline_public_start"))
-        # Deterministic streaming write in sorted (gi, ri, mi) order for public tables
-        for gi, ri, mi, pub_tables, _ in sorted(results, key=lambda t: (t[0], t[1], t[2])):
-            if pub_tables:
-                for name, (hdr, rows) in pub_tables.items():
-                    if name not in public_headers:
-                        public_headers[name] = hdr
-                    rows_sorted = _sorted_rows(name, rows)
-                    write_dict_rows(out_dir / f"{name}.csv", public_headers[name], rows_sorted)
-        for name in sorted(public_headers.keys()):
-            artifacts.append(f"{name}.csv")
-        # Simulate autoscaler over a synthetic hourly demand profile (scaffold)
-        # TODO: replace with real per-model series from pipelines once loader is implemented
-        monthly_tokens = 1_000_000.0
-        hours = 24 * 30
-        series = hourly_timeseries_uniform(monthly_tokens, hours_in_month=hours, peak_factor=1.5, diurnal=True)
-        # Assume a nominal throughput (tokens/s) and policy; tps remains scaffold, ASG policy from inputs
-        tps = 1_000.0  # tokens per second
-        target_util = target_utilization_pct
-        # Build ASGPolicy from operator/public_tap.autoscaling when available
-        try:
-            asg_cfg = pub_data.get("autoscaling", {}) if isinstance(pub_data, dict) else {}
-        except Exception:
-            asg_cfg = {}
-        defaults = ASGPolicy()
-        try:
-            policy = ASGPolicy(
-                evaluation_interval_s=int(asg_cfg.get("evaluation_interval_s", defaults.evaluation_interval_s)),
-                scale_up_threshold_pct=float(asg_cfg.get("scale_up_threshold_pct", defaults.scale_up_threshold_pct)),
-                scale_down_threshold_pct=float(asg_cfg.get("scale_down_threshold_pct", defaults.scale_down_threshold_pct)),
-                scale_up_step_replicas=int(asg_cfg.get("scale_up_step_replicas", defaults.scale_up_step_replicas)),
-                scale_down_step_replicas=int(asg_cfg.get("scale_down_step_replicas", defaults.scale_down_step_replicas)),
-                stabilization_window_s=int(asg_cfg.get("stabilization_window_s", defaults.stabilization_window_s)),
-                warmup_s=int(asg_cfg.get("warmup_s", defaults.warmup_s)),
-                cooldown_s=int(asg_cfg.get("cooldown_s", defaults.cooldown_s)),
-                min_instances_per_model=int(asg_cfg.get("min_instances_per_model", defaults.min_instances_per_model)),
-                max_instances_per_model=int(asg_cfg.get("max_instances_per_model", defaults.max_instances_per_model)),
-            )
-        except Exception:
-            policy = defaults
-        # Sanity check ASGPolicy vs simulation targets (tolerance band and thresholds positioning)
-        try:
-            tol = float(autoscaling_util_tolerance_pct)
-        except Exception:
-            tol = 25.0
-        checks = {
-            "thresholds_order": float(policy.scale_down_threshold_pct) < float(policy.scale_up_threshold_pct),
-            "scale_up_ge_target": float(policy.scale_up_threshold_pct) >= float(target_util),
-            "scale_down_le_target": float(policy.scale_down_threshold_pct) <= float(target_util),
-            "target_bracket_within_range": (float(target_util) - tol) >= 0.0 and (float(target_util) + tol) <= 100.0,
-            "min_le_max": int(policy.min_instances_per_model) <= int(policy.max_instances_per_model),
-        }
-        print(elog.jsonl("autoscaling_sanity", ok=all(checks.values()), target_util_pct=target_util, tolerance_pct=tol, **checks))
-        sim = simulate_autoscaler(series, tps, target_util, policy)
-        autoscaling_summary = sim.get("summary", {})
-        # Append events to CSV
-        events_path = out_dir / "public_tap_scaling_events.csv"
-        if not events_path.exists():
-            events_path.write_text(
-                ",".join([
-                    "timestamp_s","model","gpu","demand_tokens_per_hour","effective_capacity","replicas_prev","replicas_new","reason","util_pct"
-                ]) + "\n"
-            )
-        with events_path.open("a") as f:
-            for e in sim.get("events", []):
-                row = [
-                    str(e["timestamp_s"]),
-                    "demo_model",
-                    "demo_gpu",
-                    f"{e['demand_tokens_per_hour']}",
-                    f"{e['effective_capacity']}",
-                    str(e["replicas_prev"]),
-                    str(e["replicas_new"]),
-                    str(e["reason"]),
-                    f"{e['util_pct']}",
-                ]
-                f.write(",".join(row) + "\n")
-        print(elog.jsonl("pipeline_public_done"))
-
+        csvw_pub = CSVWriter(out_dir)
+        pub_results = [(gi, ri, mi, pub_tables) for gi, ri, mi, pub_tables, _ in results if pub_tables]
+        artifacts += materialize_pipeline_tables(out_dir, pub_results, csvw_pub)
     if "private" in pipelines:
         print(elog.jsonl("pipeline_private_start"))
-        # Deterministic streaming write in sorted (gi, ri, mi) order for private tables
-        for gi, ri, mi, _, prv_tables in sorted(results, key=lambda t: (t[0], t[1], t[2])):
-            if prv_tables:
-                for name, (hdr, rows) in prv_tables.items():
-                    if name not in private_headers:
-                        private_headers[name] = hdr
-                    rows_sorted = _sorted_rows(name, rows)
-                    write_dict_rows(out_dir / f"{name}.csv", private_headers[name], rows_sorted)
-        for name in sorted(private_headers.keys()):
-            artifacts.append(f"{name}.csv")
-        print(elog.jsonl("pipeline_private_done"))
+        csvw_prv = CSVWriter(out_dir)
+        prv_results = [(gi, ri, mi, prv_tables) for gi, ri, mi, _, prv_tables in results if prv_tables]
+        artifacts += materialize_pipeline_tables(out_dir, prv_results, csvw_prv)
 
-    # 3) Analysis (KPIs/percentiles/sensitivity)
+    # 5) Autoscaling simulate (scaffold) and sanity log
+    autoscaling_summary = None
+    monthly_tokens = 1_000_000.0
+    hours = 24 * 30
+    series = hourly_timeseries_uniform(monthly_tokens, hours_in_month=hours, peak_factor=1.5, diurnal=True)
+    tps = 1_000.0
+    pub_data = state.get("operator", {}).get("public_tap", {}) if isinstance(state, dict) else {}
+    policy = build_policy_from_public(pub_data)
+    try:
+        target_util = float(targets.get("target_utilization_pct", 75.0))
+        tol = float(targets.get("autoscaling_util_tolerance_pct", 25.0))
+    except Exception:
+        target_util, tol = 75.0, 25.0
+    checks = {
+        "thresholds_order": float(policy.scale_down_threshold_pct) < float(policy.scale_up_threshold_pct),
+        "scale_up_ge_target": float(policy.scale_up_threshold_pct) >= float(target_util),
+        "scale_down_le_target": float(policy.scale_down_threshold_pct) <= float(target_util),
+        "target_bracket_within_range": (float(target_util) - tol) >= 0.0 and (float(target_util) + tol) <= 100.0,
+        "min_le_max": int(policy.min_instances_per_model) <= int(policy.max_instances_per_model),
+    }
+    print(elog.jsonl("autoscaling_sanity", ok=all(checks.values()), target_util_pct=target_util, tolerance_pct=tol, **checks))
+    autoscaling_summary, asg_art = simulate_and_emit(out_dir, series, tps, target_util, policy)
+    artifacts += [asg_art]
+
+    # 6) Analysis
     analysis_context = {
         "autoscaling_summary": autoscaling_summary,
         "out_dir": str(out_dir),
@@ -354,45 +141,36 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
     analysis = analyze({}, analysis_context)
     print(elog.jsonl("analysis_done"))
 
-    # 4) Consolidation
+    # 7) Consolidation
     agg_ctx = {"autoscaling_summary": autoscaling_summary} if autoscaling_summary else {}
     if analysis and analysis.get("percentiles"):
         agg_ctx["percentiles"] = analysis.get("percentiles")
     if analysis and analysis.get("sensitivity"):
         agg_ctx["sensitivity"] = analysis.get("sensitivity")
-    # Pass simulation and general finance context for overhead allocation
     agg_ctx["simulation"] = state.get("simulation", {})
     try:
-        general_finance = state.get("operator", {}).get("general", {}).get("finance", {})
+        operator_general = state.get("operator", {}).get("general", {})
     except Exception:
-        general_finance = {}
-    agg_ctx["general_finance"] = general_finance
+        operator_general = {}
+    agg_ctx["operator_general"] = operator_general
     written = agg.write_consolidated_outputs(out_dir, agg_ctx)
     artifacts += written
     print(elog.jsonl("aggregate_done"))
     print(elog.jsonl("consolidate_done"))
 
-    # 5) Acceptance
+    # 8) Acceptance
     from . import acceptance as acc
     acceptance = acc.check_acceptance(
         {"autoscaling_summary": autoscaling_summary, "outputs_dir": str(out_dir)},
-        {
-            "target_utilization_pct": target_utilization_pct,
-            "autoscaling_util_tolerance_pct": autoscaling_util_tolerance_pct,
-            "private_margin_threshold_pct": private_margin_threshold_pct,
-            **({"public_growth_min_mom_pct": public_growth_min_mom_pct} if public_growth_min_mom_pct is not None else {}),
-        },
+        targets,
     )
     print(elog.jsonl("acceptance_checked", accepted=acceptance.get("accepted")))
-    # Escalate policy violations when configured
-    accepted_flag = bool(acceptance.get("accepted"))
-    if not accepted_flag and fail_on_warning:
+    if not bool(acceptance.get("accepted")) and cfg.fail_on_warning:
         raise RuntimeError("Acceptance checks failed and fail_on_warning is set")
     print(elog.jsonl("run_done"))
 
-    # 6) Run summary (minimal; TODO: add input-hashes)
-    # Compute input file hashes (SHA256) for determinism tracking
-    input_hashes = []
+    # 9) Determinism: input hashes
+    input_hashes: List[Dict[str, str]] = []
     try:
         for p in sorted(inputs_dir.rglob("*")):
             if p.is_file():
@@ -404,13 +182,13 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
                     continue
     except Exception:
         pass
-    # Honor logging.write_run_summary flag (default True)
-    try:
-        sim_data_write = yaml.safe_load((inputs_dir / "simulation.yaml").read_text()) or {}
-        write_run_summary_flag = bool(sim_data_write.get("logging", {}).get("write_run_summary", True))
-    except Exception:
-        write_run_summary_flag = True
 
+    # 10) Summary (honor logging.write_run_summary from state)
+    write_flag = True
+    try:
+        write_flag = bool(state.get("simulation", {}).get("logging", {}).get("write_run_summary", True))
+    except Exception:
+        write_flag = True
     summary = {
         "inputs": str(inputs_dir),
         "outputs": str(out_dir),
@@ -420,36 +198,12 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
         "accepted": acceptance.get("accepted"),
         "input_hashes": input_hashes,
     }
-    if write_run_summary_flag:
-        (out_dir / "run_summary.json").write_text(yaml.safe_dump(summary, sort_keys=False))
-        md_lines = [
-            "# Run Summary",
-            f"inputs: {summary['inputs']}",
-            f"outputs: {summary['outputs']}",
-            f"pipelines: {', '.join(summary['pipelines'])}",
-            f"seed: {summary['seed']}",
-            f"accepted: {summary['accepted']}",
-            "artifacts:",
-        ] + [f"- {name}" for name in artifacts]
-        (out_dir / "run_summary.md").write_text("\n".join(md_lines) + "\n")
-        artifacts += ["run_summary.json", "run_summary.md"]
+    artifacts += write_run_summary(out_dir, summary, enabled=write_flag)
 
-    # Write SHA256SUMS for determinism checks (golden tests)
-    try:
-        sums_path = out_dir / "SHA256SUMS"
-        lines: List[str] = []
-        for name in sorted(set(artifacts)):
-            p = out_dir / name
-            if not p.exists() or not p.is_file():
-                continue
-            h = hashlib.sha256()
-            h.update(p.read_bytes())
-            lines.append(f"{h.hexdigest()}  {name}")
-        if lines:
-            sums_path.write_text("\n".join(lines) + "\n")
-            artifacts.append("SHA256SUMS")
-    except Exception:
-        pass
+    # 11) SHA256SUMS
+    sums_name = write_sha256sums(out_dir, artifacts)
+    if sums_name:
+        artifacts.append(sums_name)
 
     return {
         "inputs": str(inputs_dir),
