@@ -5,10 +5,9 @@ run:
   pipelines: [public, private]        # which to run: public | private | both
   output_dir: ".003-draft/outputs"    # where artifacts go
   fail_on_warning: false              # promote WARNINGs to errors (optional)
-  max_concurrency:                    # optional: engine threads/processes
+  max_concurrency: 16                 # optional: engine threads/processes
   random_runs_per_simulation: 5       # optional: number of random runs per counted simulation
-  grid_samples: 50                # sampled grid size (used instead of full cartesian)
-
+  grid_samples: 50                    # sampled grid size (used instead of full cartesian)
 
 stochastic:
   simulations_per_run: 5              # Monte Carlo iterations
