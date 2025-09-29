@@ -43,83 +43,6 @@
             </RouterLink>
           </div>
         </div>
-
-        <ul class="badges" aria-label="proofs and certifications">
-          <li>
-            <Badge variant="green">
-              <template #icon>
-                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect
-                    x="3"
-                    y="4"
-                    width="18"
-                    height="14"
-                    rx="2"
-                    fill="currentColor"
-                    opacity=".12"
-                  />
-                  <path
-                    d="M7 8h10M7 12h6M14.5 12l3.5 3.5"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </template>
-              {{ t('home.hero.badge.proofs', 'Bewijs-gedreven') }}
-            </Badge>
-          </li>
-          <li>
-            <Badge variant="cyan">
-              <template #icon>
-                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" fill="currentColor" opacity=".12" />
-                  <path
-                    d="M8 12l2 2 6-6"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </template>
-              {{ t('home.hero.badge.eu', 'EU-conform') }}
-            </Badge>
-          </li>
-          <li>
-            <Badge variant="slate">
-              <template #icon>
-                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    d="M12 2l3 3h4v4l3 3-3 3v4h-4l-3 3-3-3H5v-4l-3-3 3-3V5h4l3-3z"
-                    fill="currentColor"
-                    opacity=".12"
-                  />
-                  <path
-                    d="M12 4.5l2.1 2.1h3V9.6l2.4 2.1-2.4 2.1v3.1h-3L12 19.4l-2.1-2.1H6.9v-3.1L4.5 11.7l2.4-2.1V6.6h3L12 4.5z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </template>
-              {{ t('home.hero.badge.oss', 'Open source') }}
-            </Badge>
-          </li>
-          <li>
-            <Badge variant="purple">
-              <template #icon>
-                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    d="M12 2l7 4v6c0 5-7 10-7 10S5 17 5 12V6l7-4z"
-                    fill="currentColor"
-                    opacity=".12"
-                  />
-                  <circle cx="12" cy="10" r="2" fill="currentColor" />
-                </svg>
-              </template>
-              {{ t('home.hero.badge.predictable', 'Voorspelbare kosten') }}
-            </Badge>
-          </li>
-        </ul>
       </div>
 
       <figure class="hero-media">
@@ -239,12 +162,25 @@
     min-width: 0;
   }
 
+  /* Very small devices: stack CTAs to avoid overflow */
+  @media (max-width: 359px) {
+    .ctas {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .ctas > :is(a, button) {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
   .hero-media {
     margin: 0;
     border-radius: 12px;
     overflow: hidden;
     box-shadow: var(--shadow-lg);
-    width: clamp(340px, 38vw, 520px);
+    width: 100%;
+    max-width: 520px;
     aspect-ratio: 16/9;
     justify-self: center;
   }
