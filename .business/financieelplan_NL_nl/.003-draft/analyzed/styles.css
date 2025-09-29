@@ -1,0 +1,51 @@
+/* styles.css – Qredits Lender Pack */
+:root {
+  --bg: #f6f7f9;
+  --card: #ffffff;
+  --ink: #0a0a0a;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #111827;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); }
+.container { max-width: 1000px; margin: 0 auto; padding: 24px; }
+h1, h2, h3 { line-height: 1.2; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.3rem; }
+h3 { font-size: 1.05rem; }
+.muted { color: var(--muted); }
+.small { font-size: 0.9em; }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 12px 0 8px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+.card strong { font-size: 1.1em; }
+.grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+.row { display: grid; grid-template-columns: 1fr; gap: 18px; }
+.note { background: #f8fafc; border-left: 4px solid #94a3b8; padding: 10px 12px; border-radius: 6px; }
+
+.btn { background: var(--accent); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+.btn:focus { outline: 2px solid #93c5fd; outline-offset: 2px; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; font-size: 0.92em; background: #fff; }
+th, td { border: 1px solid var(--border); padding: 6px 8px; text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+thead th { background: #f3f4f6; position: sticky; top: 0; z-index: 1; }
+
+/* Print */
+@media print {
+  body { background: #fff; }
+  .print-hide { display: none !important; }
+  .card { break-inside: avoid; }
+  .page-break { page-break-before: always; }
+  @page { margin: 14mm; size: A4; }
+}
+
+/* Wider layout for large screens */
+@media (min-width: 980px) {
+  .grid { grid-template-columns: 1fr 1fr; }
+  .row { grid-template-columns: 1fr; }
+}

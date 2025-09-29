@@ -9,6 +9,7 @@ Responsibilities (spec refs: 16_simulation_variables.md, 20_simulations.md):
 from __future__ import annotations
 from typing import Dict, Iterable, List, Tuple
 import itertools
+import numpy as np
 from . import rng
 
 
@@ -198,9 +199,9 @@ def parse_random_specs(variables: List[dict]) -> List[Dict[str, object]]:
 
 
 def draw_randoms(specs: List[Dict[str, object]], master_seed: int, grid_index: int, replicate_index: int, mc_index: int = 0) -> Dict[str, float]:
-    """Draw deterministic random values for given specs using PCG64 substreams.
+    """Deterministic per-variable draws using a substream seeded by (seed, path, grid, rep, mc).
 
-    Namespacing: ('var_random', path, grid_index, replicate_index, mc_index)
+    This restores determinism across runs and concurrency regardless of batching.
     """
     import math
     values: Dict[str, float] = {}
@@ -208,6 +209,8 @@ def draw_randoms(specs: List[Dict[str, object]], master_seed: int, grid_index: i
         try:
             path = str(spec.get("path"))
             treatment = str(spec.get("treatment") or "random_uniform").lower()
+            if treatment == "random":
+                treatment = "random_uniform"
             mn = float(spec.get("min") or 0.0)
             mx = float(spec.get("max") or 0.0)
             if mx < mn:
@@ -221,18 +224,18 @@ def draw_randoms(specs: List[Dict[str, object]], master_seed: int, grid_index: i
             def clamp(x: float) -> float:
                 return max(mn, min(mx, x))
 
-            if treatment in ("random", "random_uniform"):
+            if treatment in ("random_uniform",):
                 u = float(gen.random())
                 values[path] = mn + (mx - mn) * u
             elif treatment == "random_normal":
                 mu = default_f if default_f is not None else (mn + mx) / 2.0
-                sd = sd_hint_f if sd_hint_f not in (None, 0.0) else (abs(mu) * 0.1 if mu is not None else (mx - mn) / 6.0)
-                draw = float(gen.normal(loc=mu, scale=sd))
+                # sd fallback heuristic
+                sd = sd_hint_f if (sd_hint_f not in (None, 0.0)) else ((abs(mu) * 0.1) if mu is not None else (mx - mn) / 6.0)
+                draw = float(gen.normal(loc=mu, scale=max(1e-12, sd)))
                 values[path] = clamp(draw)
             elif treatment == "random_lognormal":
-                # Interpret default as linear mean; derive sigma from sd_hint or 0.5*mean
                 m = default_f if default_f is not None else (mn + mx) / 2.0
-                s = sd_hint_f if sd_hint_f not in (None, 0.0) else (abs(m) * 0.5 if m is not None else (mx - mn) / 3.0)
+                s = sd_hint_f if (sd_hint_f not in (None, 0.0)) else ((abs(m) * 0.5) if m is not None else (mx - mn) / 3.0)
                 m = max(1e-9, float(m))
                 s = max(1e-9, float(s))
                 sigma2 = math.log(1.0 + (s * s) / (m * m))
@@ -241,13 +244,12 @@ def draw_randoms(specs: List[Dict[str, object]], master_seed: int, grid_index: i
                 draw = float(gen.lognormal(mean=mu, sigma=sigma))
                 values[path] = clamp(draw)
             elif treatment == "random_beta":
-                # Mean as fraction from default (percent/fraction). Use concentration k.
                 m = default_f
                 if m is None:
                     m = (mn + mx) / 2.0 if (mx - mn) > 0 else 0.5
                 if m > 1.0:
                     m = m / 100.0
-                k = 50.0  # default concentration (pseudo-counts)
+                k = 50.0
                 alpha = max(1e-3, m * k)
                 beta_param = max(1e-3, (1.0 - m) * k)
                 frac = float(gen.beta(alpha, beta_param))
@@ -257,7 +259,7 @@ def draw_randoms(specs: List[Dict[str, object]], master_seed: int, grid_index: i
                 u = float(gen.random())
                 values[path] = mn + (mx - mn) * u
         except Exception:
-            # On any error, fallback to midpoint
+            # Midpoint fallback on error
             try:
                 mid = (float(spec.get("min") or 0.0) + float(spec.get("max") or 0.0)) / 2.0
                 values[str(spec.get("path"))] = mid

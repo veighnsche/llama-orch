@@ -54,13 +54,29 @@ def _set_path(d: dict, dotted: str, value) -> None:
 
 
 def _with_overrides(base: dict, overrides: dict) -> dict:
-    from copy import deepcopy
+    """Copy-on-write overlay applying dotted-path overrides without deep-copying the whole state.
+
+    High-risk speed path: assumes pipelines do not mutate shared substructures under untouched paths.
+    """
     if not overrides:
         return base
-    new_state = deepcopy(base)
-    for path, val in overrides.items():
-        _set_path(new_state, path, val)
-    return new_state
+    # Shallow copy the root only; then clone along each override path.
+    root = dict(base)
+    for dotted, value in overrides.items():
+        cur_base = base
+        cur_new = root
+        parts = dotted.split(".")
+        for p in parts[:-1]:
+            base_child = cur_base.get(p, {}) if isinstance(cur_base, dict) else {}
+            new_child = cur_new.get(p)
+            # If absent or aliasing the base child, create a shallow copy
+            if not isinstance(new_child, dict) or new_child is base_child:
+                new_child = dict(base_child) if isinstance(base_child, dict) else {}
+                cur_new[p] = new_child
+            cur_base = base_child if isinstance(base_child, dict) else {}
+            cur_new = new_child
+        cur_new[parts[-1]] = value
+    return root
 
 
 def compute_job_entry(job: JobT, state: dict, pipelines: List[str], random_specs, master_seed: int) -> Tuple[int, int, int, dict, dict]:
@@ -86,10 +102,11 @@ def execute_jobs(
     compute_args: tuple = (),
     mode: str = "threads",
 ) -> List[Tuple[int, int, int, dict, dict]]:
-    """Execute jobs sequentially or with a thread pool.
+    """Execute jobs sequentially or with a pool. High-risk speed path for processes mode:
 
-    Emits JSONL job_started/job_done logs and returns results preserving determinism
-    by logging on completion and collecting results for later deterministic writing.
+    - Avoid per-job pickling of large state via worker initializer and module-level globals.
+    - Batch jobs to reduce IPC overhead and progress-tick per batch.
+    - Preserve determinism at the artifact level (writers sort outputs by indices).
     """
     jobs_list: List[JobT] = list(jobs)
     results: List[Tuple[int, int, int, dict, dict]] = []
@@ -104,21 +121,79 @@ def execute_jobs(
         progress.finalize()
         return results
 
+    # Optimized processes path with worker globals and chunked mapping
     if mode == "processes":
-        with ProcessPoolExecutor(max_workers=workers) as ex:
-            future_map = {ex.submit(compute_job, job, *compute_args): job for job in jobs_list}
-            for fut in as_completed(future_map):
-                _ = future_map[fut]
-                res = fut.result()
-                results.append(res)
-                progress.tick(1)
-    else:
-        with ThreadPoolExecutor(max_workers=workers) as ex:
-            future_map = {ex.submit(compute_job, job, *compute_args): job for job in jobs_list}
-            for fut in as_completed(future_map):
-                _ = future_map[fut]
-                res = fut.result()
-                results.append(res)
-                progress.tick(1)
+        # Fallback to legacy behavior if initializer args are missing
+        if not compute_args or len(compute_args) != 4:
+            with ProcessPoolExecutor(max_workers=workers) as ex:
+                future_map = {ex.submit(compute_job, job, *compute_args): job for job in jobs_list}
+                for fut in as_completed(future_map):
+                    _ = future_map[fut]
+                    res = fut.result()
+                    results.append(res)
+                    progress.tick(1)
+                progress.finalize()
+                return results
+
+        base_state, pipes, random_specs, master_seed = compute_args
+
+        def _chunks(seq: List[JobT], size: int):
+            for i in range(0, len(seq), size):
+                yield seq[i : i + size]
+
+        # Heuristic chunk size: balance IPC and latency
+        chunk_size = max(32, (len(jobs_list) // max(1, workers * 8)) or 32)
+        batches = list(_chunks(jobs_list, chunk_size))
+
+        with ProcessPoolExecutor(max_workers=workers, initializer=_worker_init, initargs=(base_state, pipes, random_specs, master_seed)) as ex:
+            # Map batches; each result is a list of job results
+            for res_batch in ex.map(_worker_compute_batch, batches):
+                results.extend(res_batch)
+                progress.tick(len(res_batch))
+        progress.finalize()
+        return results
+
+    # Threads path (legacy)
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        future_map = {ex.submit(compute_job, job, *compute_args): job for job in jobs_list}
+        for fut in as_completed(future_map):
+            _ = future_map[fut]
+            res = fut.result()
+            results.append(res)
+            progress.tick(1)
     progress.finalize()
     return results
+
+
+# --------------------
+# Multiprocessing worker globals and functions (must be top-level for pickling)
+# --------------------
+
+_G_BASE = None
+_G_PIPES: List[str] = []
+_G_SPECS = None
+_G_SEED = 0
+
+
+def _worker_init(base, pipes, specs, seed):
+    global _G_BASE, _G_PIPES, _G_SPECS, _G_SEED
+    _G_BASE = base
+    _G_PIPES = list(pipes) if pipes else []
+    _G_SPECS = specs
+    _G_SEED = int(seed)
+
+
+def _worker_compute_job(job: JobT):
+    gi, ri, mi, combo = job
+    from core import variables as _vargrid
+    overrides = dict(combo)
+    rand = _vargrid.draw_randoms(_G_SPECS, _G_SEED, gi, ri, mi)
+    overrides.update(rand)
+    state_job = _with_overrides(_G_BASE, overrides) if overrides else _G_BASE
+    pub = REGISTRY_SAFE["public"](state_job) if "public" in _G_PIPES else {}
+    prv = REGISTRY_SAFE["private"](state_job) if "private" in _G_PIPES else {}
+    return (gi, ri, mi, pub, prv)
+
+
+def _worker_compute_batch(batch: List[JobT]):
+    return [_worker_compute_job(j) for j in batch]
