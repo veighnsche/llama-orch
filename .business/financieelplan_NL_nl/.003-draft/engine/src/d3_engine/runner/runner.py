@@ -3,6 +3,7 @@ Coordinates: config → load+validate → variables/grid → execute jobs → ma
 """
 from __future__ import annotations
 from pathlib import Path
+import os
 from typing import Dict, List
 
 import hashlib
@@ -17,7 +18,7 @@ from .run_init import (
     plan_variables,
     write_variable_draws,
 )
-from .executor import execute_jobs
+from .executor import execute_jobs, compute_job_entry
 from .writers import CSVWriter, materialize_pipeline_tables
 from .summary import write_run_summary
 from .checksums import write_sha256sums
@@ -143,7 +144,16 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
         prv_tables = PIPELINES_REGISTRY["private"](state_job) if "private" in pipelines else {}
         return (gi, ri, mi, pub_tables, prv_tables)
 
-    results: List[tuple[int, int, int, dict, dict]] = execute_jobs(jobs, _compute_job, cfg.max_concurrency, total_jobs=submitted)
+    # Determine worker count and run with processes for CPU-bound work
+    workers = int(cfg.max_concurrency) if cfg.max_concurrency else (os.cpu_count() or 1)
+    results: List[tuple[int, int, int, dict, dict]] = execute_jobs(
+        jobs,
+        compute_job_entry,
+        workers,
+        total_jobs=submitted,
+        compute_args=(state, pipelines, random_specs, master_seed),
+        mode="processes",
+    )
 
     # 4) Materialize pipeline outputs
     if "public" in pipelines:
