@@ -103,6 +103,13 @@ def compute_rows(state: Dict[str, Any]) -> Dict[str, tuple[list[str], list[dict]
     eur_usd_rate = _fx_eur_per_usd(facts)
     fx_buf = _fx_buffer_pct(pub_op)
     target_margin_pct, round_inc, floor_eur_per_1k, cap_eur_per_1k = _target_margin_cfg(pub_op)
+    # Non-GPU cost components (optional): configured in operator/public_tap.yaml
+    try:
+        costs_cfg = (pub_op.get("pricing_policy", {}).get("public_tap", {}).get("non_gpu_costs", {}) if isinstance(pub_op, dict) else {})
+    except Exception:
+        costs_cfg = {}
+    base_eur_per_1M = float((costs_cfg or {}).get("base_eur_per_1M", 0.0) or 0.0)
+    infra_overhead_pct = float((costs_cfg or {}).get("infra_overhead_pct_of_gpu", 0.0) or 0.0)
 
     acq = pub_op.get("acquisition", {}) if isinstance(pub_op, dict) else {}
     budget0 = float(acq.get("budget_month0_eur", 0.0) or 0.0)
@@ -184,10 +191,13 @@ def compute_rows(state: Dict[str, Any]) -> Dict[str, tuple[list[str], list[dict]
         tps_eff = _tps_eff_for(model_name, gpu)
         # Capacity per instance at target utilization
         cap_per_inst = cap_per_instance_tokens_per_hour(tps_eff, target_util)
-        cost_eur_per_1M = (float('inf') if cap_per_inst <= 0 else (eur_hr / (cap_per_inst / 1_000_000.0)))
+        # GPU-only cost per 1M tokens
+        cost_gpu_per_1M = (float('inf') if cap_per_inst <= 0 else (eur_hr / (cap_per_inst / 1_000_000.0)))
+        # Total cost per 1M tokens with optional overheads from inputs (kept conservative)
+        cost_eur_per_1M = cost_gpu_per_1M * (1.0 + max(infra_overhead_pct, 0.0) / 100.0) + max(base_eur_per_1M, 0.0)
         vendor_rows.append({
             "model": model_name, "gpu": gpu, "provider": provider,
-            "usd_hr": f"{usd_hr}", "eur_hr_effective": f"{eur_hr}", "cost_eur_per_1M": f"{cost_eur_per_1M}"
+            "usd_hr": f"{usd_hr}", "eur_hr_effective": f"{eur_hr}", "cost_eur_per_1M": f"{cost_gpu_per_1M}"
         })
 
         cost_per_1k = cost_eur_per_1M / 1000.0

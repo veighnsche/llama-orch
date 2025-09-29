@@ -8,6 +8,7 @@
     :root{--ink:#1b1f23;--muted:#586069;--ok:#106b21;--warn:#8a6d3b;--bad:#b71c1c;--bg:#fff}
     *{box-sizing:border-box}
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;line-height:1.45;color:var(--ink);background:var(--bg);margin:0;padding:24px}
+    .container{width:800px;max-width:100%;margin:0 auto}
     header{margin-bottom:24px}
     h1{font-size:20px;margin:0 0 4px}
     h2{font-size:18px;margin:24px 0 8px}
@@ -29,6 +30,7 @@
   </style>
 </head>
 <body>
+  <div class="container">
   <header>
     <h1>%%TITLE%%</h1>
     <div class="muted small">Generated at: <span id="gen_at">%%GENERATED_AT%%</span></div>
@@ -114,6 +116,7 @@
 
   <div class="foot">
     Built from engine outputs; print this page to PDF for submission.
+  </div>
   </div>
 
   <script id="DATA_JSON" type="application/json">%%DATA_JSON%%</script>

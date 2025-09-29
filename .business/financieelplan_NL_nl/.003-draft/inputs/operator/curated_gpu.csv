@@ -1,12 +1,12 @@
 sku_id,provider,gpu_model,num_gpus,gpu_vram_gb,gpu_arch,system_ram_gb,storage_gb,net_bandwidth_gbps,price_usd_hr,price_per_gpu_hr,pricing_basis,price_source,is_estimate,concurrency_capacity,notes
-vast.ai-rtx4090-1x,Vast.ai,RTX 4090,1,24,Ada,,,,0.29,0.29,P25 marketplace,Vast.ai P25 listing,no,1,Price varies by host; multi-GPU price estimated by P25 * n
-vast.ai-rtx4090-2x,Vast.ai,RTX 4090,2,24,Ada,,,,0.58,0.29,P25 marketplace,Vast.ai P25 listing,yes,2,Price varies by host; multi-GPU price estimated by P25 * n
-vast.ai-rtx4090-4x,Vast.ai,RTX 4090,4,24,Ada,,,,1.16,0.29,P25 marketplace,Vast.ai P25 listing,yes,4,Price varies by host; multi-GPU price estimated by P25 * n
-vast.ai-rtx4090-8x,Vast.ai,RTX 4090,8,24,Ada,,,,2.32,0.29,P25 marketplace,Vast.ai P25 listing,yes,8,Price varies by host; multi-GPU price estimated by P25 * n
-vast.ai-rtx3090-1x,Vast.ai,RTX 3090,1,24,Ampere,,,,0.14,0.14,P25 marketplace,Vast.ai P25 listing,no,1,Price varies by host; multi-GPU price estimated by P25 * n
-vast.ai-rtx3090-2x,Vast.ai,RTX 3090,2,24,Ampere,,,,0.28,0.14,P25 marketplace,Vast.ai P25 listing,yes,2,Price varies by host; multi-GPU price estimated by P25 * n
-vast.ai-rtx3090-4x,Vast.ai,RTX 3090,4,24,Ampere,,,,0.56,0.14,P25 marketplace,Vast.ai P25 listing,yes,4,Price varies by host; multi-GPU price estimated by P25 * n
-vast.ai-rtx3090-8x,Vast.ai,RTX 3090,8,24,Ampere,,,,1.12,0.14,P25 marketplace,Vast.ai P25 listing,yes,8,Price varies by host; multi-GPU price estimated by P25 * n
+vast.ai-rtx4090-1x,Vast.ai,RTX 4090,1,24,Ada,,,,0.59,0.59,on-demand (from),RunPod 4090 page,no,1,Adjusted to realistic on-demand baseline; multi-GPU price estimated by per-GPU * n
+vast.ai-rtx4090-2x,Vast.ai,RTX 4090,2,24,Ada,,,,1.18,0.59,on-demand (from),RunPod 4090 page,yes,2,Adjusted to realistic on-demand baseline; multi-GPU price estimated by per-GPU * n
+vast.ai-rtx4090-4x,Vast.ai,RTX 4090,4,24,Ada,,,,2.36,0.59,on-demand (from),RunPod 4090 page,yes,4,Adjusted to realistic on-demand baseline; multi-GPU price estimated by per-GPU * n
+vast.ai-rtx4090-8x,Vast.ai,RTX 4090,8,24,Ada,,,,4.72,0.59,on-demand (from),RunPod 4090 page,yes,8,Adjusted to realistic on-demand baseline; multi-GPU price estimated by per-GPU * n
+vast.ai-rtx3090-1x,Vast.ai,RTX 3090,1,24,Ampere,,,,0.20,0.20,on-demand (aligned),Genesis Cloud 3090 page,no,1,Avoid P25 spot artifacts; align to on-demand baseline
+vast.ai-rtx3090-2x,Vast.ai,RTX 3090,2,24,Ampere,,,,0.40,0.20,on-demand (aligned),Genesis Cloud 3090 page,yes,2,Avoid P25 spot artifacts; align to on-demand baseline
+vast.ai-rtx3090-4x,Vast.ai,RTX 3090,4,24,Ampere,,,,0.80,0.20,on-demand (aligned),Genesis Cloud 3090 page,yes,4,Avoid P25 spot artifacts; align to on-demand baseline
+vast.ai-rtx3090-8x,Vast.ai,RTX 3090,8,24,Ampere,,,,1.60,0.20,on-demand (aligned),Genesis Cloud 3090 page,yes,8,Avoid P25 spot artifacts; align to on-demand baseline
 genesiscloud-rtx3090-1x,Genesis Cloud,RTX 3090,1,24,Ampere,,,,0.2,0.2,on-demand,Genesis Cloud RTX GPUs page,no,1,Multi-GPU price extrapolated linearly unless provider lists bundle
 genesiscloud-rtx3090-2x,Genesis Cloud,RTX 3090,2,24,Ampere,,,,0.4,0.2,on-demand,Genesis Cloud RTX GPUs page,yes,2,Multi-GPU price extrapolated linearly unless provider lists bundle
 genesiscloud-rtx4090-1x,Genesis Cloud,RTX 4090,1,24,Ada,,,,0.55,0.55,on-demand,Genesis Cloud RTX GPUs page,no,1,Multi-GPU price extrapolated linearly
