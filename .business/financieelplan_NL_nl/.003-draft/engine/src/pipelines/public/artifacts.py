@@ -6,8 +6,8 @@ from typing import Dict, Any, List, Tuple
 from . import pricing as pub_pricing
 from . import demand as pub_demand
 from . import capacity as pub_capacity
-from ...services.batching import effective_tps_per_instance, BatchingConfig
-from ...services.autoscaling import (
+from services.batching import effective_tps_per_instance, BatchingConfig
+from services.autoscaling import (
     ASGPolicy,
     simulate_autoscaler,
     cap_per_instance_tokens_per_hour,

@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from contextlib import redirect_stdout
 from pytest_bdd import given, when, then, parsers
-from d3_engine import cli as engine_cli
+import cli as engine_cli
 from ..util_inputs import make_minimal_inputs
 
 
@@ -35,7 +35,7 @@ def when_run_engine(pipelines: str, seed: int, ctx, monkeypatch):
     out = ctx.get('outputs') or (inputs.parent / 'outputs')
     # Prepare argv
     argv = [
-        'd3_engine.cli',
+        'cli',
         '--inputs', str(inputs),
         '--out', str(out),
         '--pipelines', pipelines,
@@ -55,7 +55,7 @@ def when_run_engine_second(pipelines: str, seed: int, ctx, monkeypatch):
     inputs = ctx['inputs']
     out = ctx['outputs2']
     argv = [
-        'd3_engine.cli',
+        'cli',
         '--inputs', str(inputs),
         '--out', str(out),
         '--pipelines', pipelines,

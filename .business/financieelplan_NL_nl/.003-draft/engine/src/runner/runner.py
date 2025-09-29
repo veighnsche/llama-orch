@@ -8,26 +8,25 @@ from typing import Dict, List
 
 import hashlib
 
-from ..core import logging as elog
-from ..core import rng
-from ..core import variables as vargrid
-from .run_init import (
+from core import logging as elog
+from core import rng
+from core import variables as vargrid
+from runner.run_init import (
     build_run_config,
     load_and_validate,
     resolve_targets,
     plan_variables,
     write_variable_draws,
 )
-from .executor import execute_jobs, compute_job_entry
-from .writers import CSVWriter, materialize_pipeline_tables
-from .summary import write_run_summary
-from .checksums import write_sha256sums
-from ..pipelines import REGISTRY as PIPELINES_REGISTRY
-from ..pipelines.public.demand import hourly_timeseries_uniform
-from ..services.autoscaling_runner import build_policy_from_public, simulate_and_emit
-from ..analysis import analyze
-from ..aggregate import aggregator as agg
-
+from runner.executor import execute_jobs, compute_job_entry
+from runner.writers import CSVWriter, materialize_pipeline_tables
+from runner.summary import write_run_summary
+from runner.checksums import write_sha256sums
+from pipelines import REGISTRY as PIPELINES_REGISTRY
+from pipelines.public.demand import hourly_timeseries_uniform
+from services.autoscaling_runner import build_policy_from_public, simulate_and_emit
+from analysis import analyze
+from aggregate import aggregator as agg
 
 def ensure_dir(p: Path) -> None:
     p.mkdir(parents=True, exist_ok=True)
@@ -218,7 +217,7 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
     print(elog.jsonl("consolidate_done"))
 
     # 8) Acceptance
-    from ..core import acceptance as acc
+    from core import acceptance as acc
     acceptance = acc.check_acceptance(
         {"autoscaling_summary": autoscaling_summary, "outputs_dir": str(out_dir)},
         targets,

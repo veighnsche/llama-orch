@@ -3,11 +3,11 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 from typing import Callable, Iterable, List, Tuple
 
-from ..core import logging as elog
+from core import logging as elog
 import sys
 import shutil
-from ..core import variables as vargrid
-from ..pipelines import REGISTRY as PIPELINES_REGISTRY
+from core import variables as vargrid
+from pipelines import REGISTRY as PIPELINES_REGISTRY
 
 JobT = Tuple[int, int, int, dict]  # (grid_index, replicate_index, mc_index, combo)
 

@@ -2,7 +2,7 @@
 """D3 Engine CLI (scaffold)
 
 Parses arguments and emits JSONL progress to stdout. Real simulation logic
-and writing of run summaries/outputs live in d3_engine.runner.runner.
+and writing of run summaries/outputs live in runner.runner.
 
 Defaults:
 - inputs: ../inputs
@@ -17,8 +17,8 @@ import os
 import sys
 import time
 from pathlib import Path
-from d3_engine.runner import runner
-from d3_engine.core.validator import ValidationError
+from runner.runner import execute
+from core.validator import ValidationError
 
 
 def _ts() -> str:
@@ -78,7 +78,7 @@ def main() -> int:
     try:
         # Execute orchestrated run
         pipelines = [p.strip() for p in args.pipelines.split(",") if p.strip()]
-        _ = runner.execute(inputs, out_dir, pipelines, args.seed, args.fail_on_warning, args.max_concurrency)
+        _ = execute(inputs, out_dir, pipelines, args.seed, args.fail_on_warning, args.max_concurrency)
 
         _jsonl("run_done")
         return 0

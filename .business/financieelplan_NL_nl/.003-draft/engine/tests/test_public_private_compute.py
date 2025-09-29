@@ -1,8 +1,8 @@
 from __future__ import annotations
 from pathlib import Path
-from d3_engine.pipelines.public import artifacts as pub
-from d3_engine.pipelines.private import artifacts as prv
-from d3_engine.core.loader import load_all
+from pipelines.public import artifacts as pub
+from pipelines.private import artifacts as prv
+from core.loader import load_all
 from .util_inputs import make_minimal_inputs
 
 

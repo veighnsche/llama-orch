@@ -265,9 +265,18 @@ def _check_variables(inputs_dir: Path, errors: List[str]):
                 if typ not in ("numeric", "discrete"):
                     errors.append(f"{csv_name} invalid type: {typ}")
                     break
-                # Enforce treatment semantics
+                # Enforce treatment semantics (support extended distributions)
                 treatment = (row.get("treatment") or "").strip()
-                if treatment not in ("fixed", "low_to_high", "random"):
+                allowed_treatments = {
+                    "fixed",
+                    "low_to_high",
+                    "random",
+                    "random_uniform",
+                    "random_normal",
+                    "random_lognormal",
+                    "random_beta",
+                }
+                if treatment not in allowed_treatments:
                     errors.append(f"{csv_name} invalid treatment: {treatment}")
                     break
                 # Allowed path roots per scope: derived from operator YAMLs (two-level prefixes)

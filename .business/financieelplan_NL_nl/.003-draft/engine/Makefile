@@ -24,11 +24,11 @@ install: venv
 	$(VENV)/bin/pip install -r $(PKG)/requirements.txt
 
 run:
-	$(VENV)/bin/python -m d3_engine.cli --inputs $(INPUTS) --out $(OUT) --pipelines $(PIPELINES) --seed $(SEED) $(FAIL_FLAGS)
+	$(VENV)/bin/python -m cli --inputs $(INPUTS) --out $(OUT) --pipelines $(PIPELINES) --seed $(SEED) $(FAIL_FLAGS)
 
 # Quick run using system Python (no venv)
 quick:
-	$(PY) -m d3_engine.cli --inputs $(INPUTS) --out $(OUT) --pipelines $(PIPELINES) --seed $(SEED) $(FAIL_FLAGS)
+	$(PY) -m cli --inputs $(INPUTS) --out $(OUT) --pipelines $(PIPELINES) --seed $(SEED) $(FAIL_FLAGS)
 
 test:
 	$(VENV)/bin/python -m pytest -q $(PKG)/tests

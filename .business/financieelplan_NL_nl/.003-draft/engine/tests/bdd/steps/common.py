@@ -114,7 +114,7 @@ def when_run_engine_cli(ctx, pipelines: str, seed: int):
     cmd = [
         sys.executable,
         "-m",
-        "d3_engine.cli",
+        "cli",
         "--inputs",
         str(inputs),
         "--out",
@@ -136,7 +136,7 @@ def when_run_engine_cli_second(ctx, pipelines: str, seed: int):
     cmd = [
         sys.executable,
         "-m",
-        "d3_engine.cli",
+        "cli",
         "--inputs",
         str(inputs),
         "--out",
@@ -154,7 +154,7 @@ def when_run_engine_cli_second(ctx, pipelines: str, seed: int):
 @when(parsers.parse('I run the engine CLI with args "{args}"'))
 def when_run_engine_cli_with_args(ctx, args: str):
     tokens = shlex.split(args)
-    cmd = [sys.executable, "-m", "d3_engine.cli"] + tokens
+    cmd = [sys.executable, "-m", "cli"] + tokens
     proc = subprocess.run(cmd, capture_output=True, text=True)
     ctx["proc"] = proc
     ctx["stdout_lines"] = proc.stdout.splitlines()

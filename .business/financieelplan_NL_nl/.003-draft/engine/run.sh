@@ -37,7 +37,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-exec ${PY} -m d3_engine.cli \
+# Ensure local package import works without requiring manual PYTHONPATH
+# Resolves this script's directory and sets PYTHONPATH to its src/ folder if not already set.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PYTHONPATH="${PYTHONPATH:-${SCRIPT_DIR}/src}"
+
+exec ${PY} -m cli \
   --inputs "${INPUTS}" \
   --out "${OUT}" \
   --pipelines "${PIPELINES}" \

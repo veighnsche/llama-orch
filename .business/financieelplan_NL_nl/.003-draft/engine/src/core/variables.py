@@ -121,15 +121,11 @@ def iter_grid_sampled(variables: List[dict], sample_count: int, master_seed: int
     N = max(1, int(sample_count))
     paths = [p for p, _ in axes]
     values_lists = [vals for _, vals in axes]
-    # Build per-axis permutations deterministically
+    # Build per-axis permutations deterministically (vectorized)
     perms: List[List[int]] = []
-    for path, vals in axes:
+    for path, _vals in axes:
         gen = rng.substream(master_seed, "grid_axis_perm", path)
-        # Simple Fisher-Yates over 0..N-1
-        perm = list(range(N))
-        for i in range(N - 1, 0, -1):
-            j = int(gen.random() * (i + 1))
-            perm[i], perm[j] = perm[j], perm[i]
+        perm = gen.permutation(N).tolist()
         perms.append(perm)
     for s in range(N):
         c = dict(fixed_defaults)
@@ -141,34 +137,130 @@ def iter_grid_sampled(variables: List[dict], sample_count: int, master_seed: int
         yield s, c
 
 
-def parse_random_specs(variables: List[dict]) -> List[Tuple[str, float, float]]:
-    """Collect numeric random variable specs as (path, min, max)."""
-    specs: List[Tuple[str, float, float]] = []
+def parse_random_specs(variables: List[dict]) -> List[Dict[str, object]]:
+    """Collect numeric random variable specs with distribution metadata.
+
+    Supported treatments:
+      - random (alias: random_uniform): uniform[min,max]
+      - random_uniform: uniform[min,max]
+      - random_normal: normal(mean=default, sd=derived or 10% of default) clamped to [min,max]
+      - random_lognormal: lognormal from mean=default, sd=derived (see notes) clamped to [min,max]
+      - random_beta: beta with mean=default (percent/fraction), concentration k=50 unless overridden; clamped to [min,max]
+
+    Returns a list of specs dicts containing at least: path, treatment, min, max, default, and optionally aux info.
+    """
+    # Pre-index rows by path for cross-references (e.g., *_sd)
+    by_path: Dict[str, dict] = {}
+    for r in variables:
+        p = (r.get("path") or "").strip()
+        if p:
+            by_path[p] = r
+    specs: List[Dict[str, object]] = []
     for row in variables:
         try:
             typ = (row.get("type") or "").strip()
-            tr = (row.get("treatment") or "").strip()
+            tr = (row.get("treatment") or "").strip().lower()
             path = (row.get("path") or "").strip()
-            if not path or typ != "numeric" or tr != "random":
+            if not path or typ != "numeric":
+                continue
+            if tr not in ("random", "random_uniform", "random_normal", "random_lognormal", "random_beta"):
                 continue
             mn = float(row.get("min") or 0)
             mx = float(row.get("max") or 0)
             if mx < mn:
                 mn, mx = mx, mn
-            specs.append((path, mn, mx))
+            default = None
+            try:
+                default = float(row.get("default")) if row.get("default") not in (None, "") else None
+            except Exception:
+                default = None
+            # Heuristic: find a sibling sd for specific known paths if present
+            sd_hint = None
+            if path.endswith("tokens_per_conversion_mean"):
+                # Look for tokens_per_conversion_sd path
+                sd_row = by_path.get(path.replace("_mean", "_sd"))
+                if sd_row is not None:
+                    try:
+                        sd_hint = float(sd_row.get("default") or 0.0)
+                    except Exception:
+                        sd_hint = None
+            specs.append({
+                "path": path,
+                "treatment": ("random_uniform" if tr == "random" else tr),
+                "min": mn,
+                "max": mx,
+                "default": default,
+                "sd_hint": sd_hint,
+            })
         except Exception:
             continue
     return specs
 
 
-def draw_randoms(specs: List[Tuple[str, float, float]], master_seed: int, grid_index: int, replicate_index: int, mc_index: int = 0) -> Dict[str, float]:
+def draw_randoms(specs: List[Dict[str, object]], master_seed: int, grid_index: int, replicate_index: int, mc_index: int = 0) -> Dict[str, float]:
     """Draw deterministic random values for given specs using PCG64 substreams.
 
     Namespacing: ('var_random', path, grid_index, replicate_index, mc_index)
     """
+    import math
     values: Dict[str, float] = {}
-    for path, mn, mx in specs:
-        gen = rng.substream(master_seed, "var_random", path, grid_index, replicate_index, mc_index)
-        u = float(gen.random())
-        values[path] = mn + (mx - mn) * u
+    for spec in specs:
+        try:
+            path = str(spec.get("path"))
+            treatment = str(spec.get("treatment") or "random_uniform").lower()
+            mn = float(spec.get("min") or 0.0)
+            mx = float(spec.get("max") or 0.0)
+            if mx < mn:
+                mn, mx = mx, mn
+            default = spec.get("default")
+            default_f = float(default) if default is not None else None
+            sd_hint = spec.get("sd_hint")
+            sd_hint_f = float(sd_hint) if sd_hint is not None else None
+            gen = rng.substream(master_seed, "var_random", path, grid_index, replicate_index, mc_index)
+
+            def clamp(x: float) -> float:
+                return max(mn, min(mx, x))
+
+            if treatment in ("random", "random_uniform"):
+                u = float(gen.random())
+                values[path] = mn + (mx - mn) * u
+            elif treatment == "random_normal":
+                mu = default_f if default_f is not None else (mn + mx) / 2.0
+                sd = sd_hint_f if sd_hint_f not in (None, 0.0) else (abs(mu) * 0.1 if mu is not None else (mx - mn) / 6.0)
+                draw = float(gen.normal(loc=mu, scale=sd))
+                values[path] = clamp(draw)
+            elif treatment == "random_lognormal":
+                # Interpret default as linear mean; derive sigma from sd_hint or 0.5*mean
+                m = default_f if default_f is not None else (mn + mx) / 2.0
+                s = sd_hint_f if sd_hint_f not in (None, 0.0) else (abs(m) * 0.5 if m is not None else (mx - mn) / 3.0)
+                m = max(1e-9, float(m))
+                s = max(1e-9, float(s))
+                sigma2 = math.log(1.0 + (s * s) / (m * m))
+                sigma = math.sqrt(max(1e-12, sigma2))
+                mu = math.log(m) - 0.5 * sigma2
+                draw = float(gen.lognormal(mean=mu, sigma=sigma))
+                values[path] = clamp(draw)
+            elif treatment == "random_beta":
+                # Mean as fraction from default (percent/fraction). Use concentration k.
+                m = default_f
+                if m is None:
+                    m = (mn + mx) / 2.0 if (mx - mn) > 0 else 0.5
+                if m > 1.0:
+                    m = m / 100.0
+                k = 50.0  # default concentration (pseudo-counts)
+                alpha = max(1e-3, m * k)
+                beta_param = max(1e-3, (1.0 - m) * k)
+                frac = float(gen.beta(alpha, beta_param))
+                values[path] = clamp(frac if mx <= 1.0 else frac * 100.0)
+            else:
+                # Fallback uniform
+                u = float(gen.random())
+                values[path] = mn + (mx - mn) * u
+        except Exception:
+            # On any error, fallback to midpoint
+            try:
+                mid = (float(spec.get("min") or 0.0) + float(spec.get("max") or 0.0)) / 2.0
+                values[str(spec.get("path"))] = mid
+            except Exception:
+                continue
     return values
