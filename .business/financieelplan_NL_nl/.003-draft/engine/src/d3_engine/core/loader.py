@@ -31,68 +31,118 @@ def _read_curated_models(p: Path) -> List[Dict[str, Any]]:
 
 
 def _read_curated_gpu(p: Path) -> List[Dict[str, Any]]:
-    """Read strict curated GPU rentals with schema: gpu,vram_gb,provider,usd_hr"""
+    """Read curated GPU rentals and normalize to schema: gpu,vram_gb,provider,usd_hr.
+
+    Accepts richer real-world CSVs with headers like:
+    - provider
+    - gpu_model or gpu
+    - gpu_vram_gb or vram_gb
+    - price_per_gpu_hr or usd_hr or (price_usd_hr / num_gpus when num_gpus is numeric and >0)
+    """
     rentals: List[Dict[str, Any]] = []
     try:
         with p.open() as f:
             rdr = csv.DictReader(f)
             for row in rdr:
                 provider = (row.get("provider") or "").strip()
-                gpu_model = (row.get("gpu") or "").strip()
-                vram_s = (row.get("vram_gb") or "").strip()
-                usd_s = (row.get("usd_hr") or "").strip()
+                gpu_model = (row.get("gpu") or row.get("gpu_model") or "").strip()
+                vram_s = (row.get("vram_gb") or row.get("gpu_vram_gb") or "").strip()
+                # Price derivation priority: price_per_gpu_hr > usd_hr > price_usd_hr/num_gpus
+                price_gpu_s = (row.get("price_per_gpu_hr") or row.get("usd_hr") or "").strip()
+                if not price_gpu_s:
+                    total_s = (row.get("price_usd_hr") or "").strip()
+                    num_s = (row.get("num_gpus") or "").strip()
+                    try:
+                        total = float(total_s)
+                        num = float(num_s)
+                        price_gpu = total / num if num > 0 else float("nan")
+                    except Exception:
+                        price_gpu = float("nan")
+                else:
+                    try:
+                        price_gpu = float(price_gpu_s)
+                    except Exception:
+                        price_gpu = float("nan")
                 try:
                     vram = float(vram_s)
-                    usd = float(usd_s)
                 except Exception:
+                    vram = float("nan")
+
+                if not provider or not gpu_model:
                     continue
-                if not provider or not gpu_model or not (vram > 0 and usd > 0):
+                if not (isinstance(vram, float) and vram > 0):
+                    continue
+                if not (isinstance(price_gpu, float) and price_gpu > 0):
                     continue
                 rentals.append({
                     "gpu": gpu_model,
                     "vram_gb": vram,
                     "provider": provider,
-                    "usd_hr": usd,
+                    "usd_hr": price_gpu,
                 })
     except FileNotFoundError:
         pass
     return rentals
 
 
-def _read_tps_model_gpu(p: Path) -> List[Dict[str, Any]]:
-    """Read TPS dataset and normalize to canonical keys.
-
-    Canonical keys ensured on each row:
-      - model
-      - gpu
-      - throughput_tokens_per_sec
-      - measurement_type (default 'aggregate' if missing)
-      - gpu_count (default '1')
-      - batch (may be empty)
-    """
-    rows: List[Dict[str, Any]] = []
+def _estimate_model_vram_gb(model_row: Dict[str, Any]) -> float:
+    # Prefer explicit weights estimate, else any Typical_VRAM column
     try:
-        with p.open() as f:
-            rdr = csv.DictReader(f)
-            for raw in rdr:
-                model = (raw.get("model") or raw.get("Model") or raw.get("model_name") or raw.get("model_id") or "").strip()
-                gpu = (raw.get("gpu") or raw.get("gpu_model") or "").strip()
-                tps = (raw.get("throughput_tokens_per_sec") or raw.get("tps") or "").strip()
-                mt = (raw.get("measurement_type") or "aggregate").strip()
-                gc = (raw.get("gpu_count") or "1").strip()
-                batch = (raw.get("batch") or "").strip()
-                row = dict(raw)
-                row.update({
-                    "model": model,
-                    "gpu": gpu,
-                    "throughput_tokens_per_sec": tps,
-                    "measurement_type": mt,
-                    "gpu_count": gc,
-                    "batch": batch,
-                })
-                rows.append(row)
-    except FileNotFoundError:
+        v = model_row.get("weights_vram_4bit_gb_est")
+        if v is not None:
+            return float(str(v).strip())
+    except Exception:
         pass
+    for k, v in model_row.items():
+        if str(k).strip().lower().startswith("typical_vram"):
+            try:
+                return float(str(v).strip())
+            except Exception:
+                continue
+    return 0.0
+
+
+def _choose_gpu_for_vram(rentals: List[Dict[str, Any]], need_vram: float) -> Dict[str, Any] | None:
+    candidates = [r for r in rentals if float(r.get("vram_gb", 0.0)) >= float(need_vram)]
+    if not candidates:
+        return None
+    return min(candidates, key=lambda r: float(r.get("usd_hr", 1e9)))
+
+
+def _gpu_baseline_tps_from_map(baselines: Dict[str, Any], gpu_name: str) -> float:
+    g = (gpu_name or "").lower()
+    # baselines is a mapping {pattern_or_gpu_name: tokens_per_sec}
+    for k, v in (baselines or {}).items():
+        try:
+            if str(k).strip().lower() in g:
+                val = float(v)
+                if val > 0:
+                    return val
+        except Exception:
+            continue
+    raise ValidationError(f"Missing GPU TPS baseline for gpu='{gpu_name}' in facts/gpu_baselines.yaml")
+
+
+def _synthesize_tps_model_gpu(curated_models: List[Dict[str, Any]], rentals: List[Dict[str, Any]], baselines: Dict[str, Any]) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    for m in curated_models:
+        model_name = (m.get("Model") or m.get("model") or "").strip()
+        if not model_name:
+            continue
+        need_vram = _estimate_model_vram_gb(m)
+        choice = _choose_gpu_for_vram(rentals, need_vram)
+        if not choice:
+            continue
+        gpu = str(choice.get("gpu"))
+        tps = _gpu_baseline_tps_from_map(baselines, gpu)
+        rows.append({
+            "model": model_name,
+            "gpu": gpu,
+            "throughput_tokens_per_sec": f"{tps}",
+            "measurement_type": "aggregate",
+            "gpu_count": "1",
+            "batch": "32",
+        })
     return rows
 
 
@@ -103,6 +153,7 @@ def load_all(inputs_dir: Path) -> Dict[str, Any]:
     pub = _read_yaml(inputs_dir / "operator" / "public_tap.yaml")
     prv = _read_yaml(inputs_dir / "operator" / "private_tap.yaml")
     facts_market = _read_yaml(inputs_dir / "facts" / "market_env.yaml")
+    facts_gpu_baselines = _read_yaml(inputs_dir / "facts" / "gpu_baselines.yaml")
     curated_models_csv = inputs_dir / "operator" / "curated_public_tap_models.csv"
     curated_models_yaml = inputs_dir / "operator" / "curated_public_tap_models.yaml"
     curated_models = _read_curated_models(curated_models_csv)
@@ -118,14 +169,10 @@ def load_all(inputs_dir: Path) -> Dict[str, Any]:
         print(elog.jsonl("shadowing_warning", dataset="curated_gpu", chosen="csv", yaml=str(curated_gpu_yaml), csv=str(curated_gpu_csv)))
         if sim.get("run", {}).get("fail_on_warning"):
             raise ValidationError("CSV>YAML shadowing escalated to ERROR: curated_gpu")
-    # Optional TPS dataset per (model,gpu)
-    tps_csv = inputs_dir / "facts" / "tps_model_gpu.csv"
-    tps_yaml = inputs_dir / "facts" / "tps_model_gpu.yaml"
-    tps_rows: List[Dict[str, Any]] = _read_tps_model_gpu(tps_csv)
-    if tps_rows and tps_yaml.exists():
-        print(elog.jsonl("shadowing_warning", dataset="tps_model_gpu", chosen="csv", yaml=str(tps_yaml), csv=str(tps_csv)))
-        if sim.get("run", {}).get("fail_on_warning"):
-            raise ValidationError("CSV>YAML shadowing escalated to ERROR: tps_model_gpu")
+    # Synthesize TPS dataset per (model,gpu) from curated models and rentals using input baselines
+    if not isinstance(facts_gpu_baselines, dict) or not facts_gpu_baselines:
+        raise ValidationError("missing or invalid file: inputs/facts/gpu_baselines.yaml (must be a mapping of GPU names/patterns to tokens/sec)")
+    tps_rows: List[Dict[str, Any]] = _synthesize_tps_model_gpu(curated_models, curated_gpu, facts_gpu_baselines)
 
     # Variables CSVs (optional in v0; read if present)
     variables: Dict[str, List[Dict[str, Any]]] = {}
@@ -151,6 +198,7 @@ def load_all(inputs_dir: Path) -> Dict[str, Any]:
         },
         "facts": {
             "market_env": facts_market,
+            "gpu_baselines": facts_gpu_baselines,
         },
         "curated": {
             "public_models": curated_models,

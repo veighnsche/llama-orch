@@ -7,9 +7,11 @@ run:
   fail_on_warning: false              # promote WARNINGs to errors (optional)
   max_concurrency:                    # optional: engine threads/processes
   random_runs_per_simulation: 5       # optional: number of random runs per counted simulation
+  grid_samples: 50                # sampled grid size (used instead of full cartesian)
+
 
 stochastic:
-  simulations_per_run: 1000           # Monte Carlo iterations
+  simulations_per_run: 5              # Monte Carlo iterations
   percentiles: [10, 50, 90]           # summarize distribution to these cuts
   # Seed resolution order:
   # 1) stochastic.random_seed (if set here)

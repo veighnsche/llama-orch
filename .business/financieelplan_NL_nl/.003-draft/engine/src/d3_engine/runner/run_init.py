@@ -1,16 +1,16 @@
 """Run initialization utilities for the D3 engine runner."""
 from __future__ import annotations
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Iterable
 
 import yaml
 
-from .types import RunConfig
-from . import logging as elog
-from . import validator
-from . import loader
-from . import variables as vargrid
-from .artifacts import write_csv_header, append_csv_row
+from ..core.types import RunConfig
+from ..core import logging as elog
+from ..core import validator
+from ..core import loader
+from ..core import variables as vargrid
+from ..core.artifacts import write_csv_header, append_csv_row
 
 
 def build_run_config(
@@ -120,20 +120,20 @@ def resolve_targets(state: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def plan_variables(state: Dict[str, Any]) -> Tuple[List[Tuple[int, Dict[str, float]]], List[Tuple[str, float, float]], int, int, List[Dict[str, Any]]]:
-    """Build variable grid and random specs.
+def plan_variables(state: Dict[str, Any]) -> Tuple[List[Tuple[str, float, float]], int, int, List[Dict[str, Any]], int]:
+    """Collect variable metadata and sizes; runner decides on grid vs sampled.
 
-    Returns: (combos, random_specs, replicates, mc_count, all_vars)
+    Returns: (random_specs, replicates, mc_count, all_vars, combos_potential_size)
     """
     try:
         vars_general = state.get("variables", {}).get("general", [])
         vars_public = state.get("variables", {}).get("public_tap", [])
         vars_private = state.get("variables", {}).get("private_tap", [])
         all_vars = list(vars_general) + list(vars_public) + list(vars_private)
-        combos = list(vargrid.iter_grid_combos(all_vars))
+        combos_size = int(vargrid.grid_size(all_vars))
     except Exception:
         all_vars = []
-        combos = [(0, {})]
+        combos_size = 1
 
     try:
         replicates = int(state.get("simulation", {}).get("run", {}).get("random_runs_per_simulation", 1))
@@ -150,7 +150,7 @@ def plan_variables(state: Dict[str, Any]) -> Tuple[List[Tuple[int, Dict[str, flo
         mc_count = 1
 
     random_specs = vargrid.parse_random_specs(all_vars)
-    return combos, random_specs, replicates, mc_count, all_vars
+    return random_specs, replicates, mc_count, all_vars, combos_size
 
 
 def write_variable_draws(out_dir: Path, all_vars: List[Dict[str, Any]], combos: List[Tuple[int, Dict[str, float]]], replicates: int) -> None:

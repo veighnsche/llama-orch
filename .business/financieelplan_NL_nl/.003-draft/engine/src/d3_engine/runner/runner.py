@@ -7,8 +7,9 @@ from typing import Dict, List
 
 import hashlib
 
-from . import logging as elog
-from . import rng
+from ..core import logging as elog
+from ..core import rng
+from ..core import variables as vargrid
 from .run_init import (
     build_run_config,
     load_and_validate,
@@ -53,10 +54,11 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
 
     # 2) Targets & variables
     targets = resolve_targets(state)
-    combos, random_specs, replicates, mc_count, all_vars = plan_variables(state)
-    print(elog.jsonl("grid_built", size=len(combos)))
+    random_specs, replicates, mc_count, all_vars, combos_potential = plan_variables(state)
+    print(elog.jsonl("grid_built", size=combos_potential))
     try:
-        write_variable_draws(out_dir, all_vars, combos, replicates)
+        # Skip heavy materialization for draws in v0 to avoid OOM; may implement sampled transcript later
+        write_variable_draws(out_dir, all_vars, [], replicates)
     except Exception:
         pass
 
@@ -77,12 +79,59 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
             _set_path(new_state, path, val)
         return new_state
 
+    # Decide between full grid vs sampled grid
+    run_cfg = state.get("simulation", {}).get("run", {}) if isinstance(state, dict) else {}
+    max_total_jobs_cfg = None
+    grid_samples_cfg = None
+    try:
+        v = run_cfg.get("max_total_jobs")
+        if isinstance(v, int) and v > 0:
+            max_total_jobs_cfg = int(v)
+    except Exception:
+        pass
+    try:
+        v = run_cfg.get("grid_samples")
+        if isinstance(v, int) and v > 0:
+            grid_samples_cfg = int(v)
+    except Exception:
+        pass
+
+    # Default policy: if grid explodes, sample to ~200 (unless overridden)
+    default_max_jobs = 2000
+    max_total_jobs = max_total_jobs_cfg if max_total_jobs_cfg else default_max_jobs
+    per_combo_jobs = max(1, int(replicates) * int(mc_count))
+    # Desired combos to fit under max_total_jobs
+    desired_combos = max(1, max_total_jobs // per_combo_jobs)
+    if grid_samples_cfg:
+        desired_combos = int(grid_samples_cfg)
+
+    use_sampling = combos_potential > desired_combos
+    if use_sampling:
+        print(elog.jsonl("grid_sampled", potential=combos_potential, sampled=desired_combos))
+        combos_iter = vargrid.iter_grid_sampled(all_vars, desired_combos, master_seed)
+        combos_effective = desired_combos
+    else:
+        combos_iter = vargrid.iter_grid_combos(all_vars)
+        combos_effective = combos_potential
+
     jobs: list[tuple[int, int, int, dict]] = []
-    for gi, combo in combos:
+    submitted = 0
+    # Compute allowed_total from effective combos and replicate/mc counts
+    allowed_total = int(combos_effective) * int(replicates) * int(mc_count)
+    for gi, combo in combos_iter:
+        if submitted >= allowed_total:
+            break
         for ri in range(replicates):
+            if submitted >= allowed_total:
+                break
             for mi in range(mc_count):
-                print(elog.jsonl("job_submitted", grid_index=gi, replicate_index=ri, mc_index=mi))
+                if submitted >= allowed_total:
+                    break
                 jobs.append((gi, ri, mi, dict(combo)))
+                submitted += 1
+
+    # Emit a single jobs_planned summary and execute with a progress bar
+    print(elog.jsonl("jobs_planned", total=submitted, combos=int(combos_effective), replicates=int(replicates), mc_count=int(mc_count)))
 
     def _compute_job(job: tuple[int, int, int, dict]):
         gi, ri, mi, combo = job
@@ -94,7 +143,7 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
         prv_tables = PIPELINES_REGISTRY["private"](state_job) if "private" in pipelines else {}
         return (gi, ri, mi, pub_tables, prv_tables)
 
-    results: List[tuple[int, int, int, dict, dict]] = execute_jobs(jobs, _compute_job, cfg.max_concurrency)
+    results: List[tuple[int, int, int, dict, dict]] = execute_jobs(jobs, _compute_job, cfg.max_concurrency, total_jobs=submitted)
 
     # 4) Materialize pipeline outputs
     if "public" in pipelines:
@@ -159,7 +208,7 @@ def execute(inputs_dir: Path, out_dir: Path, pipelines: List[str], seed: int | N
     print(elog.jsonl("consolidate_done"))
 
     # 8) Acceptance
-    from . import acceptance as acc
+    from ..core import acceptance as acc
     acceptance = acc.check_acceptance(
         {"autoscaling_summary": autoscaling_summary, "outputs_dir": str(out_dir)},
         targets,

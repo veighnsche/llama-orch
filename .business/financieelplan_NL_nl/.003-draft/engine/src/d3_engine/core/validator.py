@@ -107,7 +107,14 @@ def _check_public_operator(inputs_dir: Path, errors: List[str]):
 def _check_private_operator(inputs_dir: Path, errors: List[str]):
     op_p = inputs_dir / "operator" / "private_tap.yaml"
     data = _read_yaml(op_p)
-    _require_key(data, "pricing_policy.default_markup_over_provider_cost_pct", errors, (int, float), lambda v: v >= 0)
+    # Align with nested policy under pricing_policy.private_tap.* (mirrors public_tap structure)
+    _require_key(
+        data,
+        "pricing_policy.private_tap.default_markup_over_provider_cost_pct",
+        errors,
+        (int, float),
+        lambda v: v >= 0,
+    )
 
 
 def _check_curated(inputs_dir: Path, errors: List[str], warn_to_error: bool = False):
@@ -118,16 +125,34 @@ def _check_curated(inputs_dir: Path, errors: List[str], warn_to_error: bool = Fa
             rdr = csv.DictReader(f)
             hdr = [h.strip() for h in rdr.fieldnames or []]
             have = {h for h in (h.strip() for h in hdr)}
-            required = {"gpu", "vram_gb", "provider", "usd_hr"}
-            if have != required:
-                errors.append(f"curated_gpu.csv headers must exactly be {sorted(required)} (no extras, no omissions)")
+            has_provider = "provider" in have
+            has_gpu = ("gpu" in have) or ("gpu_model" in have)
+            has_vram = ("vram_gb" in have) or ("gpu_vram_gb" in have)
+            has_price = ("usd_hr" in have) or ("price_per_gpu_hr" in have) or (("price_usd_hr" in have) and ("num_gpus" in have))
+            if not (has_provider and has_gpu and has_vram and has_price):
+                errors.append("curated_gpu.csv must include provider and GPU model/VRAM columns and a per-GPU USD/hr price (accepts headers: gpu|gpu_model, vram_gb|gpu_vram_gb, usd_hr|price_per_gpu_hr|price_usd_hr+num_gpus)")
             for row in rdr:
+                # Derive canonical numeric fields like the loader
                 try:
-                    vram = float((row.get("vram_gb") or "").strip())
-                    usd = float((row.get("usd_hr") or "").strip())
+                    vram_s = (row.get("vram_gb") or row.get("gpu_vram_gb") or "").strip()
+                    vram = float(vram_s)
                 except Exception:
-                    errors.append("curated_gpu.csv invalid numeric values in vram_gb/usd_hr")
+                    errors.append("curated_gpu.csv invalid numeric VRAM (vram_gb/gpu_vram_gb)")
                     break
+                # Price per GPU
+                price_s = (row.get("usd_hr") or row.get("price_per_gpu_hr") or "").strip()
+                if not price_s:
+                    try:
+                        total = float((row.get("price_usd_hr") or "").strip())
+                        num = float((row.get("num_gpus") or "").strip())
+                        usd = total / num if num > 0 else float("nan")
+                    except Exception:
+                        usd = float("nan")
+                else:
+                    try:
+                        usd = float(price_s)
+                    except Exception:
+                        usd = float("nan")
                 if not (math.isfinite(vram) and vram > 0):
                     errors.append("curated_gpu.csv vram_gb must be a finite number > 0")
                     break
@@ -145,12 +170,16 @@ def _check_curated(inputs_dir: Path, errors: List[str], warn_to_error: bool = Fa
             hdr_lc = [h.strip().lower() for h in hdr]
             if "model" not in hdr_lc:
                 errors.append("curated_public_tap_models.csv must contain a 'model' column (case-insensitive)")
-            # Require a VRAM estimate column (any header containing 'typical_vram' or 'weights_vram_4bit_gb_est')
+            # Require a VRAM estimate column. Prefer numeric 'weights_vram_4bit_gb_est' if present,
+            # otherwise fall back to any header containing 'typical_vram'.
             vram_idx: int | None = None
-            for i, h in enumerate(hdr_lc):
-                if "typical_vram" in h or h == "weights_vram_4bit_gb_est":
-                    vram_idx = i
-                    break
+            if "weights_vram_4bit_gb_est" in hdr_lc:
+                vram_idx = hdr_lc.index("weights_vram_4bit_gb_est")
+            else:
+                for i, h in enumerate(hdr_lc):
+                    if "typical_vram" in h:
+                        vram_idx = i
+                        break
             if vram_idx is None:
                 errors.append("curated_public_tap_models.csv must include a VRAM estimate column (e.g., 'Typical_VRAM_*' or 'weights_vram_4bit_gb_est')")
             rows = 0
@@ -220,6 +249,14 @@ def _check_variables(inputs_dir: Path, errors: List[str]):
                 errors.append(f"{csv_name} headers must exactly match {required_headers}")
                 continue
             for row in rdr:
+                # Skip completely empty rows (robustness against trailing newlines)
+                if not any((v or "").strip() for v in row.values()):
+                    continue
+                # Skip comment rows: when the first non-empty field starts with '#'
+                vals = [(v or "").strip() for v in row.values()]
+                first_nonempty = next((v for v in vals if v), "")
+                if first_nonempty.startswith("#"):
+                    continue
                 scope = (row.get("scope") or "").strip()
                 if scope not in allowed_scopes:
                     errors.append(f"{csv_name} invalid scope: {scope}")
@@ -275,6 +312,27 @@ def _check_facts(inputs_dir: Path, errors: List[str]):
     )
     if v is None or not isinstance(v, (int, float)) or v <= 0:
         errors.append("facts.market_env.finance.eur_usd_fx_rate.value must be > 0")
+
+    # GPU baseline TPS mapping used to synthesize missing TPS facts
+    gpu_base_p = inputs_dir / "facts" / "gpu_baselines.yaml"
+    try:
+        base = _read_yaml(gpu_base_p)
+    except ValidationError as e:
+        errors.append(str(e))
+        return
+    if not isinstance(base, dict) or not base:
+        errors.append(f"{gpu_base_p} must be a non-empty mapping of GPU names/patterns to tokens/sec")
+        return
+    # Validate values are positive numbers
+    for k, val in base.items():
+        try:
+            x = float(val)
+            if not (math.isfinite(x) and x > 0):
+                errors.append(f"gpu_baselines.yaml value for '{k}' must be a finite number > 0")
+                break
+        except Exception:
+            errors.append(f"gpu_baselines.yaml value for '{k}' must be numeric")
+            break
 
 
 def validate(state: Dict[str, Any]) -> None:

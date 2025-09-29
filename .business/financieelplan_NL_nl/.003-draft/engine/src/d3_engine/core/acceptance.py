@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Dict, Any, List
 from pathlib import Path
 import csv
+import json
 
 
 def _read_csv_column(p: Path, col: str) -> List[float]:
@@ -64,6 +65,8 @@ def check_acceptance(tables: Dict[str, Any], targets: Dict[str, Any]) -> Dict[st
     target_util = float(targets.get("target_utilization_pct", 75.0))
     tol = float(targets.get("autoscaling_util_tolerance_pct", 25.0))
     priv_margin_thr = float(targets.get("private_margin_threshold_pct", 20.0))
+    min_dscr_thr = float(targets.get("min_monthly_dscr", 1.2))
+    min_cash_floor = float(targets.get("min_cash_floor_eur", 0.0))
     min_public_mom_pct = targets.get("public_growth_min_mom_pct")
     min_public_mom_frac = None if min_public_mom_pct is None else float(min_public_mom_pct) / 100.0
 
@@ -79,6 +82,8 @@ def check_acceptance(tables: Dict[str, Any], targets: Dict[str, Any]) -> Dict[st
     private_monotone_ok = None
     capacity_ok = None
     private_margin_ok = None
+    dscr_ok = None
+    cash_ok = None
 
     if out_dir:
         pub_active = _read_csv_column(out_dir / "public_tap_customers_by_month.csv", "active_customers")
@@ -92,14 +97,29 @@ def check_acceptance(tables: Dict[str, Any], targets: Dict[str, Any]) -> Dict[st
         if prv_active:
             private_monotone_ok = _is_monotone_non_decreasing(prv_active)
 
-        cap_flags = _read_csv_bool_col(out_dir / "public_tap_capacity_plan.csv", "capacity_violation")
-        if cap_flags:
-            capacity_ok = (not any(cap_flags))
+        # Prefer monthly capacity violations across horizon; fallback to plan
+        cap_flags_m = _read_csv_bool_col(out_dir / "public_tap_capacity_by_month.csv", "capacity_violation")
+        cap_flags_plan = _read_csv_bool_col(out_dir / "public_tap_capacity_plan.csv", "capacity_violation")
+        flags = cap_flags_m if cap_flags_m else cap_flags_plan
+        if flags:
+            capacity_ok = (not any(flags))
 
         # Private margin threshold from economics table (per GPU)
         prv_margin_pct = _read_csv_column(out_dir / "private_tap_economics.csv", "margin_pct")
         if prv_margin_pct:
             private_margin_ok = (min(prv_margin_pct) >= priv_margin_thr)
+
+        # DSCR and cash floor from kpi_summary.json if present
+        try:
+            kpi = json.loads((out_dir / "kpi_summary.json").read_text())
+            dscr_min = kpi.get("dscr_min")
+            cash_min = kpi.get("cash_min")
+            if dscr_min is not None:
+                dscr_ok = float(dscr_min) >= min_dscr_thr
+            if cash_min is not None:
+                cash_ok = float(cash_min) >= min_cash_floor
+        except Exception:
+            pass
 
     # Aggregate acceptance
     accepted = True
@@ -117,6 +137,10 @@ def check_acceptance(tables: Dict[str, Any], targets: Dict[str, Any]) -> Dict[st
         accepted = accepted and capacity_ok
     if private_margin_ok is not None:
         accepted = accepted and private_margin_ok
+    if dscr_ok is not None:
+        accepted = accepted and dscr_ok
+    if cash_ok is not None:
+        accepted = accepted and cash_ok
 
     return {
         "accepted": bool(accepted),
@@ -132,4 +156,8 @@ def check_acceptance(tables: Dict[str, Any], targets: Dict[str, Any]) -> Dict[st
         "private_margin_threshold_pct": priv_margin_thr,
         "private_margin_ok": private_margin_ok,
         "capacity_ok": capacity_ok,
+        "dscr_ok": dscr_ok,
+        "cash_ok": cash_ok,
+        "min_monthly_dscr": min_dscr_thr,
+        "min_cash_floor_eur": min_cash_floor,
     }

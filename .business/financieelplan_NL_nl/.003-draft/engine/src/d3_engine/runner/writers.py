@@ -3,8 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
-from .orderings import sorted_rows
-from .artifacts import write_csv_header, append_csv_row, write_dict_rows
+from ..core.orderings import sorted_rows
+from ..core.artifacts import write_csv_header, append_csv_row, write_dict_rows
 
 
 class CSVWriter:

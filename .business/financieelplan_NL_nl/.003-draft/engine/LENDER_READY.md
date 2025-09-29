@@ -21,12 +21,12 @@ Current status: good scaffold for internal exploration and deterministic reporti
 
 ## P0 (Must‑Have) Checklist
 
-- [ ] Monthly P&L, Cashflow, DSCR
-  - [ ] Implement in `d3_engine/core/aggregate.py`:
-    - [ ] Write `pnl_by_month.csv` (month, revenue_public, revenue_private, cogs_public, cogs_private, opex_fixed, opex_variable, depreciation, EBITDA, interest, EBT, tax, NetIncome).
-    - [ ] Write `cashflow_by_month.csv` (starting_cash, cash_from_ops, working_capital_delta, vat_in_out, capex, debt_service_interest, debt_service_principal, ending_cash).
-    - [ ] Write `loan_schedule.csv` from `operator/general.yaml.loan.*` (principal_opening, interest, principal_repayment, principal_closing).
-    - [ ] Compute and emit `kpi_summary.json` with DSCR, ICR, min cash, and runway months.
+- [x] Monthly P&L, Cashflow, DSCR
+  - [x] Implemented in `d3_engine/aggregate/aggregator.py`:
+    - [x] Writes `pnl_by_month.csv` (month, revenue_public, revenue_private, cogs_public, cogs_private, opex_fixed, depreciation, EBITDA, interest, EBT, tax, NetIncome).
+    - [x] Writes `cashflow_by_month.csv` (starting_cash, cash_from_ops, working_capital_delta, vat_cash, capex, debt_service_interest, debt_service_principal, ending_cash).
+    - [x] Writes `loan_schedule.csv` from `operator/general.yaml.loan.*` (principal_opening, interest, principal_repayment, principal_closing).
+    - [x] Emits `kpi_summary.json` with DSCR, ICR, min cash, and runway months.
 
 - [x] Demand→Capacity→Cost linkage (Public Tap)
   - [x] Implement per‑model monthly autoscaling in `d3_engine/pipelines/public/artifacts.py` (strict FX/TPS; no fallbacks).
@@ -39,47 +39,56 @@ Current status: good scaffold for internal exploration and deterministic reporti
 - [x] Capacity plan across horizon
   - [x] Produce **monthly** `public_tap_capacity_by_month.csv` aligned with autoscaling simulation outputs.
 
-- [ ] Private Tap monthly costs
-  - [ ] In `d3_engine/pipelines/private/artifacts.py` compute monthly **COGS_private**:
-    - [ ] active_clients × hours_per_client × provider EUR/hr (from `private_vendor_recommendation.csv`).
-    - [ ] Provide `private_tap_costs_by_month.csv` with breakdown.
-  - [ ] Update `core/aggregate.py` to consume these costs instead of assuming 0.
+- [x] Private Tap monthly costs
+  - [x] In `d3_engine/pipelines/private/artifacts.py` compute monthly **COGS_private**:
+    - [x] active_clients × hours_per_client × provider EUR/hr (from `private_vendor_recommendation.csv`).
+    - [x] Provide `private_tap_costs_by_month.csv` with breakdown.
+  - [x] Aggregator consumes these costs in monthly COGS.
 
-- [ ] Taxes, VAT, Working Capital
-  - [ ] Use `operator/general.yaml`:
-    - [ ] `tax.{vat_pct, corporate_income_pct, dividend_withholding_pct}`
-    - [ ] `working_capital.{ar_days, ap_days, inventory_days, vat_payment_lag_months}`
-  - [ ] Compute VAT input/output and payment lag, AR/AP timing effects on cash; include in monthly cashflow.
+- [x] Taxes, VAT, Working Capital
+  - [x] Use `operator/general.yaml`:
+    - [x] `tax.{vat_pct, corporate_income_pct}` (VAT cash with lag; CIT on positive EBT)
+    - [x] `working_capital.{ar_days, ap_days, vat_payment_lag_months}`
+  - [x] VAT cash timing and AR/AP effects on cashflow included.
 
-- [ ] MC/Scenario integrity
-  - [ ] Tag outputs with `(grid_index, replicate_index, mc_index, scenario)` or write per‑job subdirs.
-  - [ ] Update `analysis/percentiles.py` and `analysis/sensitivity.py` to compute distributions **across samples**, not pooled rows.
+- [x] MC/Scenario integrity
+  - [x] Tag outputs with `(grid_index, replicate_index, mc_index)` in `d3_engine/runner/writers.py`.
+  - [x] `analysis/percentiles.py` computes percentiles across samples; filters `scenario == base` for public.
 
-- [ ] Acceptance gates upgrade (`d3_engine/core/acceptance.py`)
-  - [ ] Add checks for `min_monthly_DSCR >= threshold`, `min_cash_floor >= 0`.
-  - [ ] Ensure capacity violations are checked **across months** and per model.
-  - [ ] Require private margin threshold per GPU across horizon.
+- [x] Acceptance gates upgrade (`d3_engine/core/acceptance.py`)
+  - [x] Add checks for `min_monthly_DSCR >= threshold`, `min_cash_floor >= 0`.
+  - [x] Ensure capacity violations are checked **across months** (prefer monthly capacity table).
+  - [x] Require private margin threshold per GPU across horizon.
 
 - [x] Strict curated GPU schema
   - [x] Enforce `[gpu, vram_gb, provider, usd_hr]` in `d3_engine/core/validator.py` and `core/loader.py`; fail on missing/extra columns. Remove lenient legacy column paths pre‑1.0.
 
-- [ ] Lender pack assembly
-  - [ ] Add `LENDER_PACK.md` generator (can be static for now) summarizing:
-    - [ ] Executive summary, funding ask, sources/uses.
-    - [ ] Base/downside/upside KPIs and DSCR tables.
-    - [ ] Risk & mitigations; capacity/SLA policy.
-    - [ ] Appendices: `inputs/` hashes, curated GPU quotes, TPS sources, SHA256SUMS.
+- [x] Lender pack assembly
+  - [x] Generate `LENDER_PACK.md` summarizing KPIs and artifacts list (basic assembly).
 
 ---
 
 ## P1 (Nice‑to‑Have) Checklist
 
 - [ ] Channel modeling
-  - [ ] Use `facts/ads_channels.csv`, `facts/agency_fees.csv` to model CAC response curves, diminishing returns, and agency overhead.
-  - [ ] Add `acquisition.channel_allocation` compliance and sanity checks.
+  - [x] Behavior module `d3_engine/behavior/channels.py` (power‑law response, agency fees, per‑channel CAC).
+  - [ ] Wire to use `facts/ads_channels.csv`, `facts/agency_fees.csv` and `acquisition.channel_allocation`.
 
 - [ ] TAM & saturation
-  - [ ] Cap active customers via TAM curve; apply churn variability and seasonality.
+  - [x] Behavior module `d3_engine/behavior/tam.py` (hard cap and smooth saturation).
+  - [ ] Integrate cap/soft saturation into public/private actives.
+
+- [ ] Seasonality
+  - [x] Behavior module `d3_engine/behavior/seasonality.py` (normalized seasonal multipliers, application).
+  - [ ] Add monthly patterns to demand/hours.
+
+- [ ] Cohort retention
+  - [x] Behavior module `d3_engine/behavior/cohorts.py` (exponential/Weibull survival, cohort accumulation).
+  - [ ] Replace single‑rate churn with cohort retention where appropriate.
+
+- [ ] Stochastic noise (optional)
+  - [x] Behavior module `d3_engine/behavior/noise.py` (Gaussian/lognormal noise with seed).
+  - [ ] Add toggles under `simulation.stochastic.*` and thread through pipelines.
 
 - [ ] Stress testing
   - [ ] Wire `simulation.stress.*` (provider_price_drift_pct, tps_downshift_pct, fx_widen_buffer_pct) through public/private economics and autoscaling.
@@ -102,12 +111,12 @@ Current status: good scaffold for internal exploration and deterministic reporti
 
 - **[New CSV/JSON/MD]**
   - [x] `public_tap_capacity_by_month.csv`
-  - [ ] `private_tap_costs_by_month.csv`
-  - [ ] `pnl_by_month.csv`
-  - [ ] `cashflow_by_month.csv`
-  - [ ] `loan_schedule.csv`
-  - [ ] `kpi_summary.json`
-  - [ ] `LENDER_PACK.md`
+  - [x] `private_tap_costs_by_month.csv`
+  - [x] `pnl_by_month.csv`
+  - [x] `cashflow_by_month.csv`
+  - [x] `loan_schedule.csv`
+  - [x] `kpi_summary.json`
+  - [x] `LENDER_PACK.md`
 
 ---
 

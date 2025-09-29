@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Tuple
 from pathlib import Path
 
 from .autoscaling import ASGPolicy, simulate_autoscaler
-from ..core.writers import write_scaling_events
+from ..runner.writers import write_scaling_events
 
 
 def build_policy_from_public(pub_data: Dict[str, Any] | None) -> ASGPolicy:
