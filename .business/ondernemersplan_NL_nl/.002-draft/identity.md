@@ -27,7 +27,7 @@ It is exhaustive and self-contained so that any automated system (IDE AI, websit
 ## Traits
 
 - **Independent:** operates solo, not a team or a faceless agency.  
-- **Craftsman:** values quality, detail, and proofs over speed or hype.  
+- **Craftsman:** values quality and detail over speed or hype.  
 - **Transparent:** everything is open-source unless it must be private (security, billing).  
 - **Proof-oriented:** eccentric in personality, but backs everything with pristine tests, logs, and documentation.  
 - **Pragmatic:** no jargon, no buzzwords; communicates in plain, direct terms.  
@@ -41,7 +41,7 @@ It is exhaustive and self-contained so that any automated system (IDE AI, websit
 - Avoids hype language like “revolution” or “disruption.”  
 - Phrases to use:  
   - “I install AI pipelines so they don’t leak.”  
-  - “You get proofs, logs, and working plumbing — not promises.”  
+  - “You get logs, and working plumbing — not promises.”  
   - “Robust AI, without the leaks.”  
 
 ---
@@ -119,5 +119,5 @@ It is exhaustive and self-contained so that any automated system (IDE AI, websit
 - Independent tradesman.  
 - Open-source toolkit provider.  
 - Service provider for AI infrastructure.  
-- Local-first, robust, proof-driven.  
+- Local-first, robust.  
 - Brand metaphor: AI plumbing.  
