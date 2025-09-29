@@ -52,9 +52,9 @@
     return `linear-gradient(${dir.value}, ${col} 0%, transparent 60%)`
   })
 
-  const bgStyle = computed(() => ({
-    backgroundImage: `${overlay.value}, url("${props.imageSrc}")`,
-  }))
+  const overlayStyle = computed(() => ({
+    '--overlay': overlay.value,
+  } as Record<string, string>))
 </script>
 
 <template>
@@ -67,8 +67,9 @@
     }"
     role="group"
     :aria-label="ariaLabel || title || imageAlt || 'Media card'"
+    :style="overlayStyle"
   >
-    <div class="media-card__background" :style="bgStyle" aria-hidden="true" />
+    <img class="media-card__img" :src="imageSrc" :alt="imageAlt" aria-hidden="true" />
 
     <div class="media-card__content" :style="{ justifyContent: justify, alignItems: alignY }">
       <div
@@ -107,12 +108,22 @@
     min-height: 100%;
   }
 
-  .media-card__background {
+  .media-card::before {
+    content: '';
     position: absolute;
     inset: 0;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
+    background: var(--overlay);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .media-card__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
     filter: saturate(0.98);
   }
 

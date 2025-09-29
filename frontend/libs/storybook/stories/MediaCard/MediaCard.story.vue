@@ -95,14 +95,16 @@ const cardProps = computed(() => ({
     </Variant>
 
     <Variant title="Carousel demo" :source="false">
-      <div style="width: 100%; aspect-ratio: 16 / 9;">
-        <Carousel :slides="slides" height="100%" :showDots="true" :showArrows="true" :pauseOnHover="true" :autoplayMs="4000" :itemKey="(s) => s.id">
-          <template #slide="{ item }">
-            <MediaCard :image-src="item.imageSrc" :image-alt="item.imageAlt" :title="item.title" :subtitle="item.subtitle" :side="item.side" :enforce-aspect="false">
-              <Button variant="primary"> Learn more </Button>
-            </MediaCard>
-          </template>
-        </Carousel>
+      <div style="position: relative; width: 100%; aspect-ratio: 16 / 9; max-width: 960px;">
+        <div style="position: absolute; inset: 0; display: flex;">
+          <Carousel :slides="slides" style="width: 100%; height: 100%" height="100%" :showDots="true" :showArrows="true" :pauseOnHover="true" :autoplayMs="4000" :itemKey="(s) => s.id">
+            <template #slide="{ item }">
+              <MediaCard :image-src="item.imageSrc" :image-alt="item.imageAlt" :title="item.title" :subtitle="item.subtitle" :side="item.side" :enforce-aspect="false">
+                <Button variant="primary"> Learn more </Button>
+              </MediaCard>
+            </template>
+          </Carousel>
+        </div>
       </div>
     </Variant>
 

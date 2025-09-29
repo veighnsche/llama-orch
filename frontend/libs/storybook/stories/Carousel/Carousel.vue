@@ -418,12 +418,17 @@ defineExpose({
   overflow: hidden;
   border-radius: var(--radius-md);
   background: var(--surface);
+  display: flex;
+  height: 100%;
+  min-height: 0;
 }
 .carousel__track {
   display: flex;
   overflow-x: auto;
   overflow-y: hidden;
   height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
@@ -439,8 +444,11 @@ defineExpose({
   display: flex;
   scroll-snap-align: center;
   height: 100%;
+  min-height: 0;
 }
 .carousel__slide > * { flex: 1 1 auto; height: 100%; }
+.carousel__slide :deep(.media-card) { height: 100%; }
+.carousel__slide :deep(.media-card__content) { height: 100%; }
 .carousel--snap-start .carousel__slide { scroll-snap-align: start; }
 
 .carousel__empty {
@@ -460,7 +468,12 @@ defineExpose({
 
 /* arrows */
 .carousel__arrows {
-  pointer-events: none; /* container ignores clicks */
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 160ms ease;
 }
 .carousel__arrow {
   pointer-events: auto; /* buttons are interactive */
@@ -472,6 +485,13 @@ defineExpose({
 }
 .carousel__arrow--prev { left: 8px; }
 .carousel__arrow--next { right: 8px; }
+
+/* Reveal arrows when interacting */
+.carousel:hover .carousel__arrows,
+.carousel:focus-within .carousel__arrows {
+  opacity: 1;
+  visibility: visible;
+}
 
 /* dots */
 .carousel__dots {
