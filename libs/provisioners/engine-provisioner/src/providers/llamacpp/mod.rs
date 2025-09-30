@@ -7,21 +7,19 @@ mod flags;
 mod version;
 
 use anyhow::{anyhow, Context, Result};
-use std::fs::OpenOptions;
 use std::path::PathBuf;
-use std::process::{Command, Stdio};
+use std::process::Command;
 
 use crate::plan::{Plan, PlanStep};
 use crate::util::{
-    cmd, cmd_in, default_cache_dir, default_models_cache, default_run_dir, ensure_flag,
-    ensure_flag_pair, http_ok, ok_status, select_listen_port, wait_for_health, write_handoff_file,
+    cmd, cmd_in, default_cache_dir, default_models_cache, ensure_flag,
+    ensure_flag_pair, ok_status, select_listen_port,
 };
 use crate::{cfg, EngineProvisioner};
 
 use preflight::preflight_tools;
 use toolchain::{discover_cuda_root, find_compat_host_compiler};
 use flags::normalize_llamacpp_flags;
-use version::try_fetch_engine_version;
 
 /// Llama.cpp provider: source-from-git build and run (llama-server)
 pub struct LlamaCppSourceProvisioner;
@@ -72,7 +70,7 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
         Ok(plan)
     }
 
-    fn ensure(&self, pool: &cfg::PoolConfig) -> Result<()> {
+    fn ensure(&self, pool: &cfg::PoolConfig) -> Result<crate::PreparedEngine> {
         let prov = &pool.provisioning;
         let src = prov
             .source
@@ -209,20 +207,20 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
         let resolved = mp.ensure_present_str(&model_ref, None).with_context(|| format!("ensuring model present for ref {}", model_ref))?;
         let model_path = resolved.local_path;
 
-        // Spawn server process with deterministic flags and port selection
-        let pid_dir = default_run_dir();
-        std::fs::create_dir_all(&pid_dir).ok();
-        let pid_file = pid_dir.join(format!("{}.pid", pool.id));
-
+        // Prepare command-line flags for pool-managerd to use when spawning
         let preferred_port = prov.ports.as_ref().and_then(|v| v.first().copied()).unwrap_or(8080);
         let port = select_listen_port(preferred_port);
 
-        let mut cmdline = Command::new(&server_bin);
-        cmdline.arg("--model").arg(&model_path).arg("--host").arg("127.0.0.1");
-        cmdline.arg("--port").arg(port.to_string());
-
-        // Normalize legacy flags and CPU/GPU expectations
         let mut applied_flags: Vec<String> = Vec::new();
+        // Add model and network flags
+        applied_flags.push("--model".to_string());
+        applied_flags.push(model_path.to_string_lossy().to_string());
+        applied_flags.push("--host".to_string());
+        applied_flags.push("127.0.0.1".to_string());
+        applied_flags.push("--port".to_string());
+        applied_flags.push(port.to_string());
+        
+        // Normalize legacy flags and CPU/GPU expectations
         if let Some(flags) = &prov.flags {
             let norm = normalize_llamacpp_flags(flags, gpu_enabled);
             for f in norm { applied_flags.push(f); }
@@ -232,56 +230,21 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
         ensure_flag(&mut applied_flags, "--no-cont-batching");
         ensure_flag(&mut applied_flags, "--no-webui");
         ensure_flag(&mut applied_flags, "--metrics");
-        for f in &applied_flags { cmdline.arg(f); }
 
-        // Capture stdout/stderr to log file
-        let run_dir = default_run_dir();
-        std::fs::create_dir_all(&run_dir).ok();
-        let log_path = run_dir.join(format!("llamacpp-{}.log", pool.id));
-        let log = OpenOptions::new().create(true).append(true).open(&log_path).with_context(|| format!("open log file {}", log_path.display()))?;
-        let log_err = OpenOptions::new().create(true).append(true).open(&log_path).with_context(|| format!("open log file {}", log_path.display()))?;
-        cmdline.stdout(Stdio::from(log));
-        cmdline.stderr(Stdio::from(log_err));
-
-        let mut child = cmdline.spawn().with_context(|| format!("spawning llama-server for pool {}", pool.id))?;
-        std::fs::write(&pid_file, child.id().to_string()).ok();
-        println!("spawned llama-server pid={} (pool={})", child.id(), pool.id);
-
-        // Readiness/health wait
-        let url = format!("http://127.0.0.1:{}", port);
-        match wait_for_health("127.0.0.1", port, std::time::Duration::from_secs(120)) {
-            Ok(()) => {
-                if !http_ok("127.0.0.1", port, "/metrics").unwrap_or(false) {
-                    eprintln!("warning: /metrics not reachable at {} (flag --metrics set)", url);
-                }
-                let engine_version = try_fetch_engine_version("127.0.0.1", port)
-                    .unwrap_or_else(|| format!("llamacpp-source:{}{}", src.r#ref, if gpu_enabled { "-cuda" } else { "-cpu" }));
-                let handoff = serde_json::json!({
-                    "engine": "llamacpp",
-                    "engine_version": engine_version,
-                    "provisioning_mode": "source",
-                    "url": url,
-                    "pool_id": pool.id,
-                    "replica_id": "r0",
-                    "model": { "id": model_ref, "path": model_path },
-                    "flags": applied_flags,
-                });
-                let handoff_path = write_handoff_file("llamacpp.json", &handoff)?;
-                println!("wrote handoff {}", handoff_path.display());
-                // TODO[ENGINE-PROV-POOL-NOTIFY-0003]: Notify pool-managerd registry that pool is Live+Ready
-                // and publish engine metadata (engine_version, slots_total/free, device_mask). Consider calling
-                // an orchestrator control endpoint (e.g., /v1/workers/register) with Bearer auth so AdapterHost
-                // can bind the llama.cpp HTTP adapter automatically using the handoff URL.
-                // TODO[ENGINE-PROV-CLEANUP-0004]: On failure paths, ensure process is killed and handoff/pid files
-                // are removed to avoid stale Ready signals.
-                Ok(())
-            }
-            Err(e) => {
-                let _ = child.kill();
-                let _ = std::fs::remove_file(&pid_file);
-                Err(e)
-            }
-        }
+        // Return PreparedEngine metadata - pool-managerd will spawn the process
+        let engine_version = format!("llamacpp-source:{}{}", src.r#ref, if gpu_enabled { "-cuda" } else { "-cpu" });
+        
+        Ok(crate::PreparedEngine {
+            binary_path: server_bin,
+            flags: applied_flags,
+            port,
+            host: "127.0.0.1".to_string(),
+            model_path: model_path.into(),
+            engine_version,
+            pool_id: pool.id.clone(),
+            replica_id: "r0".to_string(),
+            device_mask: None, // TODO: extract from flags or config
+        })
     }
 }
 
