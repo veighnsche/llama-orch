@@ -1,78 +1,431 @@
-# llama-orch — Orchestrator for LLMs
+# llama-orch
 
-llama-orch is an in-progress LLM Orchestrator. The codebase follows a strict Spec → Contract →
-Tests → Code workflow and ships features behind quality gates. We are currently building out Stage
-6 (Admission → Dispatch → SSE) with contracts, tests, and an executable vertical slice.
+**GPU-first LLM orchestration for deterministic, observable multi-agent workflows**
 
-See also:
+llama-orch is an orchestrator for NVIDIA-backed LLM inference with a focus on determinism, observability, and developer workflows. The project follows a strict **Spec → Contract → Tests → Code** discipline and is currently in active development (~40% complete toward v0.2.0).
 
-- `.specs/` — normative specs and metrics contracts (see also `.specs/metrics/otel-prom.md`)
-- `.docs/` — project docs, archived TODO logs under `.docs/DONE/`
-- `CONSUMER_CAPABILITIES.md` — consumer-facing API and behavior guide
-- `AGENTS.md` — repository guidelines, dev loop, and coding/testing discipline
-- `SECURITY.md` — security policy and Minimal Auth Hooks seam
-- `COMPLIANCE.md` — requirements coverage (traceability to ORCH/OC-* IDs)
+**Current version**: `0.0.0` (early development)  
+**License**: GPL-3.0-or-later  
+**Target platform**: Linux with NVIDIA GPUs
 
-## Current status
+---
 
-- Stage progress (see `AGENTS.md`):
-  - Stage 0–4 complete (contracts, CDC, provider verify, properties)
-  - Stage 5–6 in progress (Observability metrics; Admission → Dispatch → SSE vertical slice)
-- What’s implemented right now:
-  - HTTP routes modularized under `orchestratord/src/http/`
-  - Data-plane admission accepts tasks, enqueues with metrics, and spawns a background dispatch to a WorkerAdapter (mock) that emits an SSE transcript: `started` → `token` → `metrics` → `end`
-  - SSE stream served from in-memory transcript with correlation and budget headers
-  - Metrics contract and lints per `.specs/metrics/otel-prom.md` and `ci/metrics.lint.json`
-  - Proof bundle standardization across crates via `libs/proof-bundle` (see section "Proof Bundles")
-  - Control/catalog routes aligned to OpenAPI; `/metrics` endpoint available
-  - JSON structured logging via `tracing-subscriber` plus a growing human‑readable narration surface (see `.reports/logging_narration_discovery.md`)
+## What is llama-orch?
 
-Policy highlights:
-- GPU required; no CPU fallback. VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
+llama-orch orchestrates LLM inference across one or more GPUs, providing:
 
-Note: The `orchestratord` binary starts an Axum HTTP server. Configure address via `ORCHD_ADDR` (default `0.0.0.0:8080`); see `bin/orchestratord/src/main.rs`.
+- **Deterministic inference**: Identical prompts + parameters yield identical token streams (same model, seed, engine version)
+- **Observable execution**: Structured logs, Prometheus metrics, SSE streaming with correlation IDs
+- **Session management**: Short-lived sessions with KV cache tracking, budget enforcement, and failover surface
+- **Catalog & lifecycle**: Model registry with verification, digest tracking, atomic pool reload/drain
+- **Multi-deployment support**: Single-machine (HOME_PROFILE) and distributed multi-node (CLOUD_PROFILE)
 
-## Repository at a glance
+**Not a general-purpose LLM framework** — llama-orch is optimized for multi-agent developer workflows where determinism and observability are critical.
 
-- `.specs/` — normative specs; start with `.specs/00_llama-orch.md` and `.docs/HOME_PROFILE.md`.
-- `.docs/` — guides and testing docs like `.docs/testing/BDD_WIRING.md` and `.docs/testing/test-case-discovery-method.md`.
-- `contracts/` — OpenAPI under `contracts/openapi/{data.yaml,control.yaml}` and `contracts/config-schema/`.
-- `bin/orchestratord/` — HTTP, SSE, metrics, provider verify.
-- `libs/` — core crates: `orchestrator-core/`, `pool-managerd/`, `adapter-host/`, `worker-adapters/*`, `catalog-core/`, `proof-bundle/`, `observability/narration-core/`, `provisioners/*`.
-- `test-harness/` — BDD (`test-harness/bdd`), determinism suite, chaos, metrics contract, e2e haiku.
-- `tools/` — `spec-extract`, `readme-index`, `openapi-client`.
-- `consumers/` — `llama-orch-sdk` (typed API), `llama-orch-utils` (applets/guardrails).
-- `frontend/bin/commercial-frontend/` — Orchyra marketing UI and dev tooling.
-- `.business/financieelplan_NL_nl/.002-draft/` — Python finance engine; deterministic CSV/Markdown outputs.
+---
 
-## Architecture overview
+## Current Status
 
-### Layering & Hierarchy (Repo-wide)
+**Development Progress**: ~40% complete toward v0.2.0
 
-- **Utils (`llama-orch-utils`)** — The crown jewel. Applets, determinism helpers, proof-bundle
-logic, guardrails. Drives what the SDK must expose.
-- **SDK (`llama-orch-sdk`)** — Exists to support Utils. Types, clients, schema validation, simple
-transport. No applet logic, no guardrails, no prompt logic. Minimal, stable surface.
-- **Orchestrator (`orchestratord`)** — Service layer. Its API and OpenAPI/specs define the ground
-truth that the SDK must expose. Does not dictate Utils logic directly.
-- **CLI (`llama-orch-cli`)** — Least important. Bootstraps/generated bindings and dev workflows.
-Consumes SDK; produces artifacts that help humans and Utils.
+### ✅ Implemented
+- HTTP API (`orchestratord`) with Axum server on port 8080
+- Task admission, queueing, and placement (round-robin, least-loaded)
+- SSE streaming: `started` → `token` → `metrics` → `end` frames
+- Session service with TTL, budget tracking, KV warmth metadata
+- Model catalog with filesystem storage and verification
+- Pool management daemon (`pool-managerd`) with readiness tracking
+- Worker adapters: llamacpp, vllm, tgi, openai-http (scaffolds), mock
+- Prometheus metrics aligned to `.specs/metrics/otel-prom.md`
+- Proof bundle infrastructure (`libs/proof-bundle`) for test artifacts
+- Cloud profile architecture (distributed deployment, bearer auth, node heartbeats)
+- BDD test harness with Cucumber + 13 cloud profile integration tests
 
-See: `consumers/.docs/.adr/006-library-split.md` and related ADRs (001–005) for full layering and
-dependency direction.
+### 🚧 In Progress
+- Full adapter implementations (llamacpp integration, vllm completion)
+- Production hardening and performance optimization
+- Load testing on real GPU hardware
+- Documentation refinements based on real-world usage
 
-- `contracts/` — single source of truth for OpenAPI (data + control) and config schema
-- `orchestrator-core/` — queue and invariants; used by the orchestrator with metrics wrapper
-- `orchestratord/` — HTTP handlers, state, metrics, placement, and binary entrypoint
-  - `http/` modules: `data.rs`, `catalog.rs`, `control.rs`, `observability.rs`
-  - `metrics.rs` Prometheus vectors/histograms; `/metrics` endpoint
-  - `state.rs` app state and registries; `placement.rs` minimal adapter chooser
-- `worker-adapters/` — adapter API + engines (mock now; llamacpp/vllm/tgi/triton scaffolds)
-- `test-harness/` — BDD, determinism suite, chaos, E2E Haiku scaffolding
-- `tools/` — generators and utilities: OpenAPI client, spec extract, README indexer
-- `ci/` — pipelines and linters (metrics, links)
+### 📋 Not Yet Implemented
+- Policy engine for outbound HTTP allow/deny rules
+- Advanced placement heuristics (VRAM-aware, session affinity)
+- Callback webhooks for pool readiness
+- Multi-region support
 
-### Crate wiring (Mermaid)
+---
+
+## Documentation
+
+### Core Specifications
+- [`.specs/00_llama-orch.md`](.specs/00_llama-orch.md) — Home Lab Profile requirements (ORCH-3xxx)
+- [`.specs/01_cloud_profile.md`](.specs/01_cloud_profile.md) — Cloud Profile distributed deployment
+- [`.specs/metrics/otel-prom.md`](.specs/metrics/otel-prom.md) — Metrics contract
+- [`AGENTS.md`](AGENTS.md) — Repository guidelines, dev loop, coding/testing discipline
+- [`SECURITY.md`](SECURITY.md) — Security policy and Minimal Auth Hooks seam
+
+### Operational Guides
+- [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md) — Complete environment variable reference
+- [`docs/MANUAL_MODEL_STAGING.md`](docs/MANUAL_MODEL_STAGING.md) — Model staging for cloud deployments
+- [`docs/runbooks/CLOUD_PROFILE_INCIDENTS.md`](docs/runbooks/CLOUD_PROFILE_INCIDENTS.md) — Incident runbook
+
+### Development
+- [`.docs/testing/`](.docs/testing/) — Testing strategy, BDD wiring, test types
+- [`CONSUMER_CAPABILITIES.md`](CONSUMER_CAPABILITIES.md) — Consumer-facing API guide
+- [`COMPLIANCE.md`](COMPLIANCE.md) — Requirements traceability (ORCH/OC-* IDs)
+
+---
+
+## Deployment Profiles
+
+llama-orch supports two deployment profiles:
+
+### HOME_PROFILE (Default)
+
+**Single-machine deployment** — All components run on one machine with shared filesystem.
+
+```
+Single Machine: orchestratord → pool-managerd → GPU engines
+```
+
+**When to use**:
+- Development and testing
+- Single-GPU workstations
+- Quick prototyping
+- Home lab setups
+
+**Quick start**:
+```bash
+# Default configuration (no special setup needed)
+cargo run -p orchestratord
+# Binds to 127.0.0.1:8080 by default
+```
+
+**See also**: [`.specs/00_llama-orch.md`](.specs/00_llama-orch.md) for Home Lab Profile specification
+
+---
+
+### CLOUD_PROFILE (Under Development)
+
+**Distributed multi-node deployment** — Control plane separate from GPU workers, HTTP-only communication.
+
+```
+Control Plane:  orchestratord (no GPU)
+     ↓ HTTP + Bearer Auth
+GPU Workers:    pool-managerd + engines (per node)
+```
+
+**When to use**:
+- Multi-GPU clusters
+- Cloud-native deployments (Kubernetes)
+- Horizontal scaling across machines
+
+**Configuration**:
+```bash
+# Control Plane
+ORCHESTRATORD_CLOUD_PROFILE=true
+ORCHESTRATORD_BIND_ADDR=0.0.0.0:8080
+LLORCH_API_TOKEN=$(openssl rand -hex 32)
+
+# GPU Worker
+POOL_MANAGERD_NODE_ID=gpu-node-1
+ORCHESTRATORD_URL=http://control-plane:8080
+LLORCH_API_TOKEN=<same-token>
+```
+
+**Implementation status**:
+- ✅ Architecture designed and documented
+- ✅ Bearer token authentication
+- ✅ Node registration and heartbeats
+- ✅ Model-aware placement
+- ✅ Observability (metrics, dashboards, alerts)
+- ✅ Integration tests (13 tests, 100% feature coverage)
+- 🚧 Production validation pending
+
+**See also**: 
+- [`.specs/01_cloud_profile.md`](.specs/01_cloud_profile.md) — Technical specification
+- [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md) — Environment variables
+- [`docs/MANUAL_MODEL_STAGING.md`](docs/MANUAL_MODEL_STAGING.md) — Model staging guide
+- [`ci/dashboards/cloud_profile_overview.json`](ci/dashboards/cloud_profile_overview.json) — Grafana dashboard
+- [`ci/alerts/cloud_profile.yml`](ci/alerts/cloud_profile.yml) — Prometheus alerts
+
+---
+
+## Architecture
+
+### High-Level Components
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                     orchestratord                        │
+│  HTTP API · Admission · Placement · SSE Streaming        │
+└────────┬─────────────────────────────────────────────────┘
+         │
+         ├─► Admission Queue (orchestrator-core)
+         ├─► Session Service (TTL, budgets, KV tracking)
+         ├─► Catalog (model registry, verification)
+         └─► Adapter Host (bind workers to pools/replicas)
+                   │
+                   ├─► llamacpp-http adapter → llama.cpp server
+                   ├─► vllm-http adapter → vLLM server
+                   ├─► tgi-http adapter → TGI server
+                   └─► mock adapter (testing)
+```
+
+### Key Libraries
+
+#### Core Orchestration
+- `orchestrator-core/` — Queue, placement logic, domain types
+- `bin/orchestratord/` — HTTP server, API routes, streaming
+- `libs/pool-managerd/` — Pool lifecycle, readiness, health checks
+- `libs/catalog-core/` — Model catalog, verification, lifecycle states
+
+#### Worker Adapters
+- `libs/adapter-host/` — Adapter registry and dispatch facade
+- `libs/worker-adapters/` — Adapter implementations (llamacpp, vllm, tgi, openai-http, triton, mock)
+- `libs/worker-adapters/http-util/` — Shared HTTP client utilities
+
+#### Cloud Profile (Distributed Deployment)
+- `libs/control-plane/service-registry/` — Node tracking, health management
+- `libs/gpu-node/node-registration/` — Node registration with control plane
+- `libs/gpu-node/handoff-watcher/` — Handoff detection on GPU nodes
+- `libs/shared/pool-registry-types/` — Shared types for node communication
+
+#### Observability & Testing
+- `libs/observability/narration-core/` — Human-readable event narration
+- `libs/proof-bundle/` — Test artifact standardization (NDJSON, JSON, Markdown)
+- `test-harness/bdd/` — Cucumber BDD tests
+- `test-harness/determinism-suite/` — Determinism validation
+- `test-harness/chaos/` — Chaos engineering tests
+
+#### Contracts & Tools
+- `contracts/api-types/` — Shared API types
+- `contracts/openapi/` — OpenAPI specifications (data, control, artifacts)
+- `tools/spec-extract/` — Requirement extraction
+- `tools/openapi-client/` — Generated HTTP client
+
+### Consumer Layering
+
+```
+llama-orch-utils (applets, guardrails)
+     ↓
+llama-orch-sdk (typed API, transport)
+     ↓
+orchestratord (HTTP API, ground truth)
+```
+
+- **Utils** drives requirements; SDK exposes orchestrator capabilities
+- **SDK** mirrors OpenAPI contracts with minimal logic
+- **Orchestrator** defines API ground truth via specs
+
+See [`consumers/.docs/.adr/006-library-split.md`](consumers/.docs/.adr/006-library-split.md) for layering details.
+
+---
+
+## Repository Structure
+
+| Path | Contents |
+|------|----------|
+| `.specs/` | Normative specifications (ORCH-3xxx requirements) |
+| `.docs/` | Guides, ADRs, testing strategy, archived TODOs |
+| `bin/` | Binaries: `orchestratord`, `pool-managerd` |
+| `libs/` | Core libraries (45+ crates) |
+| `contracts/` | OpenAPI specs, API types, config schema |
+| `test-harness/` | BDD, determinism, chaos, E2E test suites |
+| `tools/` | Code generation, spec extraction, README indexing |
+| `consumers/` | SDK (`llama-orch-sdk`), Utils (`llama-orch-utils`) |
+| `ci/` | Metrics linting, dashboards, alerts, link checking |
+
+---
+
+## API Overview
+
+### HTTP Endpoints
+
+**Data Plane** (`contracts/openapi/data.yaml`):
+- `POST /v2/tasks` — Enqueue task, returns 202 with `job_id`
+- `GET /v2/tasks/{id}/events` — SSE stream: `started → token → metrics → end`
+- `POST /v2/tasks/{id}/cancel` — Cancel running task
+- `GET /v2/sessions/{id}` — Session status (TTL, budgets, KV warmth)
+- `DELETE /v2/sessions/{id}` — Delete session
+
+**Control Plane** (`contracts/openapi/control.yaml`):
+- `GET /v2/meta/capabilities` — Orchestrator capabilities
+- `GET /v2/pools/{id}/health` — Pool health and readiness
+- `POST /v2/pools/{id}/{drain|reload|purge}` — Pool lifecycle management
+
+**Catalog** (`contracts/openapi/control.yaml`):
+- `POST /v2/catalog/models` — Register model
+- `GET /v2/catalog/models/{id}` — Model metadata
+- `POST /v2/catalog/models/{id}/verify` — Verify model integrity
+- `POST /v2/catalog/models/{id}/state` — Update lifecycle state (Active/Retired)
+
+**Cloud Profile** (`contracts/openapi/control.yaml`):
+- `POST /v2/nodes/register` — Register GPU node
+- `POST /v2/nodes/{id}/heartbeat` — Heartbeat with pool status
+- `DELETE /v2/nodes/{id}` — Deregister node
+- `GET /v2/catalog/availability` — Model distribution across nodes
+
+**Observability**:
+- `GET /metrics` — Prometheus metrics endpoint
+
+### SSE Streaming Format
+
+```typescript
+// Event: started
+{type: "started", job_id: "...", queue_position: 0, predicted_start_ms: 50}
+
+// Event: token
+{type: "token", t: "hello", i: 0}
+
+// Event: metrics (optional)
+{type: "metrics", queue_depth: 0, on_time_probability: 0.95}
+
+// Event: end
+{type: "end", tokens_in: 10, tokens_out: 50, decode_time_ms: 150}
+
+// Event: error (on failure)
+{type: "error", code: "POOL_UNAVAILABLE", message: "..."}
+```
+
+### Request Lifecycle
+
+```mermaid
+sequenceDiagram
+  Client->>orchestratord: POST /v2/tasks
+  orchestratord->>orchestrator-core: Admission check
+  orchestrator-core-->>orchestratord: Accepted (job_id) or 429
+  orchestratord-->>Client: 202 AdmissionResponse
+  Client->>orchestratord: GET /v2/tasks/{id}/events
+  orchestratord->>WorkerAdapter: Dispatch when slot available
+  WorkerAdapter->>Engine: generate()
+  WorkerAdapter-->>orchestratord: SSE frames
+  orchestratord-->>Client: text/event-stream
+```
+
+---
+
+## Developer Quickstart
+
+### Prerequisites
+
+- Rust toolchain (stable)
+- NVIDIA GPU with drivers + CUDA runtime
+- Linux (Ubuntu 22.04+ recommended)
+
+### Build & Run
+
+```bash
+# Clone repository
+git clone https://github.com/your-org/llama-orch
+cd llama-orch
+
+# Format check
+cargo fmt --all -- --check
+
+# Lint
+cargo clippy --all-targets --all-features -- -D warnings
+
+# Run all tests
+cargo test --workspace --all-features -- --nocapture
+
+# Run orchestratord
+cargo run -p orchestratord
+# Binds to 127.0.0.1:8080 by default
+```
+
+### Developer Loop
+
+```bash
+# Full dev loop: fmt, clippy, regen, tests, linkcheck
+cargo xtask dev:loop
+```
+
+### Regenerate Contracts
+
+```bash
+# Regenerate OpenAPI and config schema
+cargo xtask regen-openapi
+cargo xtask regen-schema
+
+# Extract requirements from specs
+cargo run -p tools-spec-extract --quiet
+```
+
+### Run Specific Tests
+
+```bash
+# BDD harness
+cargo test -p test-harness-bdd -- --nocapture
+
+# Determinism suite
+cargo test -p test-harness-determinism-suite -- --nocapture
+
+# Cloud profile integration tests
+cargo test -p orchestratord --test cloud_profile_integration -- --nocapture
+
+# Metrics contract validation
+cargo test -p test-harness-metrics-contract -- --nocapture
+```
+
+---
+
+## Development Workflow
+
+llama-orch follows strict **Spec → Contract → Tests → Code** discipline:
+
+1. **Spec**: Define requirements in `.specs/` with stable IDs (ORCH-3xxx)
+2. **Contract**: Update OpenAPI/types in `contracts/`
+3. **Tests**: Write BDD scenarios, unit tests, integration tests
+4. **Code**: Implement to satisfy tests and specs
+
+### Key Principles
+
+- **No backwards compatibility before v1.0** — Breaking changes are expected
+- **Determinism by default** — Identical inputs yield identical outputs
+- **Proof bundles** — Tests emit artifacts (NDJSON, JSON, seeds) to `.proof_bundle/`
+- **Metrics contract** — All metrics align with `.specs/metrics/otel-prom.md`
+- **Zero dead code** — Remove unused code immediately (see `AGENTS.md`)
+
+See [`AGENTS.md`](AGENTS.md) for complete repository guidelines.
+
+---
+
+## Contributing
+
+### Before You Start
+
+1. Read [`AGENTS.md`](AGENTS.md) — Repository guidelines and dev loop
+2. Read [`.specs/00_llama-orch.md`](.specs/00_llama-orch.md) — Core requirements
+3. Check [`TODO.md`](TODO.md) — Active work tracker
+
+### Pull Request Checklist
+
+- [ ] Spec updated (if changing behavior)
+- [ ] Contract updated (if changing API)
+- [ ] Tests added/updated
+- [ ] `cargo fmt --all` passes
+- [ ] `cargo clippy --all-targets --all-features` clean
+- [ ] `cargo test --workspace` passes
+- [ ] `cargo xtask regen-openapi` run (if contracts changed)
+- [ ] Requirement IDs referenced in commits (e.g., `ORCH-3027: Add decode_time_ms to logs`)
+- [ ] `TODO.md` updated
+
+---
+
+## License & Security
+
+**License**: GPL-3.0-or-later (see [`LICENSE`](LICENSE))
+
+**Security**: 
+- Home profile defaults to loopback-open (no auth)
+- Cloud profile requires Bearer token authentication
+- See [`SECURITY.md`](SECURITY.md) for security policy
+- See [`.specs/11_min_auth_hooks.md`](.specs/11_min_auth_hooks.md) for Minimal Auth Hooks seam
+
+---
+
+## Component Dependency Graph
 
 This section shows how components collaborate and where boundaries are enforced. New contributors
 should skim the diagrams and the short explanations below. The golden rule: per‑crate behavior is
@@ -187,188 +540,13 @@ graph LR
   tool_spec -->|extracts from| contracts_openapi
 ```
 
-Notes
-- Orchestrator depends on `orchestrator-core` and the adapter trait crate; adapters are bound at
-runtime per pool/replica.
-- `pool-managerd` owns engine lifecycle. It uses provisioners to stage models/engines and flips
-readiness after health checks. Orchestrator reads that state for placement.
+**Notes**:
+- Orchestrator depends on `orchestrator-core` and the adapter trait crate; adapters are bound at runtime per pool/replica
+- `pool-managerd` owns engine lifecycle and flips readiness after health checks
 - Catalog writes happen via `model-provisioner`; orchestrator interacts with catalog via HTTP
-endpoints.
-- Harnesses are integration-only but not confined to a single crate: while BDD primarily exercises
-the HTTP boundary, determinism may bind adapters via the trait, chaos may inject faults at adapters
-or manager, and haiku can observe readiness directly from the manager. None of the harnesses
-perform per-crate unit tests.
+- Harnesses are integration-only but not confined to a single crate
 
-#### Control-plane: preload → readiness → reload
-
-```mermaid
-flowchart LR
-  orchd[orchestratord] -- drain/reload APIs --> pool_mgr[pool-managerd]
-  pool_mgr -- ensure_present(model) --> model_prov
-  model_prov -- put(entry) --> catalog_core
-  pool_mgr -- ensure(engine) --> engine_prov
-  engine_prov -- spawn & health --> pool_mgr
-  pool_mgr -- ready=true/false --> orchd
-```
-
-Explanation
-- A reload request triggers a preload: stage model via `model-provisioner` (which registers in
-`catalog-core`), then prepare/start the engine via `engine-provisioner`.
-- `pool-managerd` flips `ready=true` only after both succeed and health checks pass. Orchestrator
-reflects readiness in `/v2/pools/{id}/health` and uses it for placement.
-
-#### Data-plane: admission → placement → stream
-
-```mermaid
-flowchart LR
-  client[Client] -->|POST /v2/tasks| orchd
-  orchd -->|admission & queue| orch_core
-  orch_core -->|PlacementDecision| orchd
-  orchd -->|submit job| adapter[WorkerAdapter]
-  adapter -->|engine-native API| engine[Engine]
-  adapter -->|SSE frames| orchd
-  orchd -->|text/event-stream| client
-```
-
-Explanation
-- Orchestrator performs admission, consults core for placement, then dispatches to the selected
-adapter instance.
-- Adapters map engine-native APIs to `started → token* → end` (with optional `metrics`) and
-propagate errors via taxonomy.
-- Metrics/log fields are emitted at orchestrator boundaries as per `.specs/metrics/otel-prom.md`
-and `README_LLM.md`.
-
-## API surface (contracts first)
-
-- See [CONSUMER_CAPABILITIES.md](CONSUMER_CAPABILITIES.md) for the exhaustive consumer-facing
-capabilities guide.
-- Data plane (v2): `contracts/openapi/data.yaml`
-  - `POST /v2/tasks` → 202 Accepted with `AdmissionResponseV2`
-  - `GET /v2/tasks/{id}/events` → `text/event-stream` frames: `started`, `token` (`{t,i}`),
-`metrics`, `end`
-  - `POST /v2/tasks/{id}/cancel`
-  - `GET|DELETE /v2/sessions/{id}`
-- Control plane: `contracts/openapi/control.yaml`
-  - `GET /v2/meta/capabilities`, `GET /v2/pools/{id}/health`, `POST /v2/pools/{id}/{drain|reload|purge}`
-  - Catalog: `POST /v2/catalog/models`, `GET /v2/catalog/models/{id}`, `POST
-/v2/catalog/models/{id}/verify`, `POST /v2/catalog/models/{id}/state`
-- Artifacts: `contracts/openapi/artifacts.yaml`
-  - `POST /v2/artifacts`, `GET /v2/artifacts/{id}`
-- Observability: `GET /metrics` (Prometheus text)
-
-### Request lifecycle (OrchQueue v2)
-
-```mermaid
-sequenceDiagram
-  autonumber
-  participant Client
-  participant Orchestratord as orchestratord
-  participant Core as orchestrator-core
-  participant Adapter
-  participant Engine
-  participant Prom as Prometheus
-
-  Client->>Orchestratord: POST /v2/tasks (enqueue)
-  Orchestratord->>Core: Admission checks (ctx, budgets)
-  Core-->>Orchestratord: Accepted (job_id) or 429 with policy_label
-  Orchestratord-->>Client: 202 AdmissionResponse
-  Client->>Orchestratord: GET /v2/tasks/{id}/events
-  Orchestratord->>Core: Dispatch when slot available
-  Core->>Adapter: start(job)
-  Adapter->>Engine: generate()
-  Adapter-->>Orchestratord: SSE frames (started/token/metrics/end)
-  Orchestratord-->>Client: SSE stream
-  Orchestratord->>Prom: counters/gauges/histograms
-```
-
-## Metrics (implemented/registered)
-
-- Counters: `tasks_enqueued_total`, `tasks_started_total`, `tasks_canceled_total`,
-`tasks_rejected_total`, `admission_backpressure_events_total`, `tokens_in_total`,
-`tokens_out_total`, `catalog_verifications_total`
-- Gauges: `queue_depth`, `model_state` (Active|Retired), `kv_cache_usage_ratio`, `gpu_utilization`,
-`vram_used_bytes`
-- Histograms: `latency_first_token_ms`, `latency_decode_ms`
-
-SSE streaming side-effects update first-token latency, decode latency, and token counters. See
-`bin/orchestratord/src/metrics.rs`.
-
-## Testing & Validation
-
-- BDD harness
-  - Location: `test-harness/bdd/`
-  - Docs: `.docs/testing/BDD_WIRING.md`
-  - Run: `cargo test -p test-harness-bdd -- --nocapture`
-- Determinism suite
-  - Location: `test-harness/determinism-suite/`
-  - Run: `cargo test -p test-harness-determinism-suite -- --nocapture`
-- Metrics-contract harness
-  - Location: `test-harness/metrics-contract/`
-  - Checks `.specs/metrics/otel-prom.md` and `ci/metrics.lint.json`
-  - Run: `cargo test -p test-harness-metrics-contract -- --nocapture`
-
-## Proof Bundles (repo-wide standard)
-
-- Standard location: `<crate>/.proof_bundle/<type>/<run_id>/...`
-- Env overrides: `LLORCH_PROOF_DIR`, `LLORCH_RUN_ID` (recommended `run_id`: `YYYYMMDD-HHMMSS-<gitsha8>`)
-- Helper crate: `libs/proof-bundle` provides `ProofBundle::for_type(TestType)` with writers for NDJSON/JSON/Markdown and a seeds recorder.
-- Compliance: artifacts in Markdown/CSV/text MUST begin with the autogenerated header `# AUTOGENERATED: Proof Bundle` (see `libs/proof-bundle/.specs/` and `ci/scripts/check_proof_bundle_headers.sh`).
-- Test types include `Unit`, `Integration`, `Contract`, `Bdd`, `Determinism`, `Smoke`, `E2eHaiku` (see `.docs/testing/TEST_TYPES_GUIDE.md`).
-
-## Developer quickstart
-
-- Format and lint
-
-```bash
-cargo fmt --all -- --check
-cargo clippy --all-targets --all-features -- -D warnings
-```
-
-- Regenerate contracts and requirements (deterministic)
-
-```bash
-cargo xtask regen-openapi
-cargo xtask regen-schema
-cargo run -p tools-spec-extract --quiet && git diff --exit-code
-```
-
-- Run all workspace tests
-
-```bash
-cargo test --workspace --all-features -- --nocapture
-```
-
-- Provider verification and BDD harness
-
-```bash
-cargo test -p orchestratord --test provider_verify -- --nocapture
-cargo test -p test-harness-bdd -- --nocapture
-```
-
-- Full developer loop (fmt, clippy, regen, tests, linkcheck)
-
-```bash
-cargo xtask dev:loop
-```
-
-## Contributing & PR discipline
-
-- Pre‑1.0.0: no backwards compatibility; remove dead code early
-- Work order: Spec → Contract → Tests → Code; update `.specs/` and contracts before implementation
-- Reference requirement IDs in commits, code, and tests (e.g., `ORCH-2001`)
-- Keep the root `TODO.md` updated after each change; archive via `ci/scripts/archive_todo.sh` when
-complete
-- JSON structured logs via `tracing`; redact secrets; see `.specs/metrics/otel-prom.md`
-
-## Security posture
-
-- Home profile defaults to loopback-open control/data planes; no AuthN/AuthZ by default.
-- Minimal Auth Hooks seam is documented; see `.specs/11_min_auth_hooks.md` and `SECURITY.md`.
-- Logs and errors must redact secrets/API keys; adapters must not leak headers.
-
-## License
-
-GPL-3.0-or-later. See `LICENSE`.
+---
 
 <!-- BEGIN WORKSPACE MAP (AUTO-GENERATED) -->
 ## Workspace Map

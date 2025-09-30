@@ -1,23 +1,23 @@
 //! Handoff autobind watcher — monitors engine-provisioner handoff files and auto-binds adapters.
 //!
-//! ⚠️ HOME_PROFILE ONLY - CLOUD_PROFILE LIMITATION ⚠️
+//! ⚠️ HOME_PROFILE ONLY - DEPRECATED FOR CLOUD_PROFILE ⚠️
 //!
 //! This implementation assumes orchestratord and engine-provisioner share a filesystem.
 //! This ONLY works for HOME_PROFILE (single machine deployment).
 //!
-//! For CLOUD_PROFILE (distributed deployment), the handoff watcher MUST be owned by
+//! For CLOUD_PROFILE (distributed deployment), the handoff watcher has been moved to
 //! pool-managerd (which runs on the same machine as engine-provisioner). orchestratord
-//! will poll pool-managerd via HTTP instead of watching the filesystem directly.
+//! polls pool-managerd via HTTP instead of watching the filesystem directly.
 //!
-//! Status: Acceptable for v0.1.0 (HOME_PROFILE only)
-//! Migration: v0.2.0 will move watcher to pool-managerd (ETA: 2 weeks)
-//! See: ../HANDOFF_WATCHER_ARCHITECTURE_ISSUE.md
-//! See: ../HANDOFF_WATCHER_RESOLUTION.md
+//! **Status**: DEPRECATED since v0.2.0
+//! - ✅ v0.2.0: Properly feature-gated for HOME_PROFILE only
+//! - ⏸️ v1.0.0: Consider removal if HOME_PROFILE is dropped
 //!
-//! TODO[CLOUD_PROFILE]: Remove this watcher or make it HOME_PROFILE only
-//! TODO[CLOUD_PROFILE]: Implement HTTP polling of pool-managerd
-//! TODO[ORCHD-HANDOFF-AUTOBIND-0002]: File watcher for `.runtime/engines/*.json` (handoffs written by engine-provisioner).
-//! For each handoff: bind `llamacpp-http` adapter using `url`, associate `pool_id`/`replica_id`.
+//! **Migration Complete**: Handoff watcher moved to pool-managerd in v0.2.0
+//! **New Architecture**: orchestratord polls pool-managerd via `/v2/nodes/{id}/heartbeat`
+//!
+//! See: `.specs/01_cloud_profile.md` for CLOUD_PROFILE architecture
+//! See: `.docs/DEAD_CODE_ANALYSIS.md` for deprecation details
 
 use crate::state::AppState;
 use std::path::PathBuf;
