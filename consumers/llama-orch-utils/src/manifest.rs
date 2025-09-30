@@ -1,14 +1,22 @@
 use serde::Serialize;
+#[allow(unused_imports)]
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-// Bring applet types in scope for parsing/serialization
+// Bring applet types in scope for parsing/serialization (also used by TS export helpers)
+#[allow(unused_imports)]
 use crate::fs::file_reader::{FileBlob, ReadRequest, ReadResponse};
+#[allow(unused_imports)]
 use crate::fs::file_writer::{WriteIn, WriteOut};
+#[allow(unused_imports)]
 use crate::llm::invoke::{Choice, InvokeIn, InvokeOut, InvokeResult, SdkMsg, Usage};
+#[allow(unused_imports)]
 use crate::model::define::{ModelDefineIn, ModelRef};
+#[allow(unused_imports)]
 use crate::params::define::Params;
+#[allow(unused_imports)]
 use crate::prompt::message::{Message, MessageIn};
+#[allow(unused_imports)]
 use crate::prompt::thread::{ThreadIn, ThreadOut};
 
 #[derive(Serialize)]
@@ -90,4 +98,25 @@ pub fn make_manifest() -> Manifest {
 
 pub fn manifest_json_string() -> Result<String, serde_json::Error> {
     serde_json::to_string(&make_manifest())
+}
+
+/// Append TypeScript type declarations for the applet manifest and request/response shapes.
+/// This is a minimal stub to satisfy CI; full TS generation will be added in a follow-up.
+pub fn append_ts_types(buf: &mut String) {
+    // Manifest types
+    buf.push_str("export type MethodInfo = { op: string; input: string; output: string };\n");
+    buf.push_str("export type Category = { methods: Record<string, MethodInfo> };\n");
+    buf.push_str(
+        "export type Manifest = { fs: Category; prompt: Category; model: Category; params: Category; llm: Category; orch: Category };\n\n",
+    );
+    // Placeholders for request/response types referenced in the manifest; concrete TS will replace these later.
+    buf.push_str("// Placeholder request/response declarations (to be replaced with concrete TS)\n");
+    buf.push_str("export type ReadRequest = unknown;\nexport type ReadResponse = unknown;\n");
+    buf.push_str("export type WriteIn = unknown;\nexport type WriteOut = unknown;\n");
+    buf.push_str("export type MessageIn = unknown;\nexport type Message = unknown;\n");
+    buf.push_str("export type ThreadIn = unknown;\nexport type ThreadOut = unknown;\n");
+    buf.push_str("export type ModelDefineIn = unknown;\nexport type ModelRef = unknown;\n");
+    buf.push_str("export type Params = unknown;\n");
+    buf.push_str("export type InvokeIn = unknown;\nexport type InvokeOut = unknown;\nexport type InvokeResult = unknown;\n");
+    buf.push_str("export type SdkMsg = unknown;\nexport type Usage = unknown;\n");
 }

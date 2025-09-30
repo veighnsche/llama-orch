@@ -33,7 +33,8 @@ impl OrchestratorClient {
     }
 
     pub async fn list_engines(&self) -> Result<Vec<EngineCapability>, String> {
-        let _ = &self.base_url;
+        // Touch config fields to avoid dead_code lints until implementation lands
+        let _ = (&self.base_url, &self.api_key, self.timeout_ms);
         Err("unimplemented".to_string())
     }
 

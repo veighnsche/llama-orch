@@ -38,7 +38,7 @@ pub fn export_ts_types() -> std::io::Result<()> {
 
     // Write manifest.json from Rust source of truth
     let manifest_json = crate::manifest::manifest_json_string()
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+        .map_err(|e| std::io::Error::other(e.to_string()))?;
     let mut mf = fs::File::create(&manifest_file)?;
     mf.write_all(manifest_json.as_bytes())?;
 

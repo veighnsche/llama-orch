@@ -1,10 +1,5 @@
-use anyhow::{anyhow, Context, Result};
-use std::{
-    io::Write,
-    net::TcpStream,
-    path::PathBuf,
-    process::Command,
-};
+use anyhow::{Context, Result};
+use std::{io::Write, net::TcpStream, path::PathBuf, process::Command};
 
 use crate::util::repo_root;
 

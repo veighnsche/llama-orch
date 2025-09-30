@@ -29,5 +29,5 @@ pub fn run(input: WriteIn) -> io::Result<WriteOut> {
         }
     }
     fs::write(p, input.text.as_bytes())?;
-    Ok(WriteOut { path: input.path, bytes_written: input.text.as_bytes().len() })
+    Ok(WriteOut { path: input.path, bytes_written: input.text.len() })
 }
