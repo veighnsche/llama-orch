@@ -23,10 +23,12 @@ path = "src/lib.rs"
 anyhow = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde_yaml = { workspace = true }
 which = "6"
 model-provisioner = { path = "../model-provisioner" }
 contracts-config-schema = { path = "../../../contracts/config-schema" }
 clap = { workspace = true, features = ["derive"] }
+observability-narration-core = { path = "../../observability/narration-core" }
 
 [dev-dependencies]
 serde_yaml = { workspace = true }
