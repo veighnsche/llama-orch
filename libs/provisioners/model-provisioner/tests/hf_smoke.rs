@@ -30,9 +30,9 @@ fn hf_smoke_end_to_end() {
         }
     };
 
-    // Ensure huggingface-cli is present
-    if which::which("huggingface-cli").is_err() {
-        eprintln!("huggingface-cli not found in PATH; skipping e2e smoke");
+    // Ensure HF CLI is present (prefer 'hf', fallback to 'huggingface-cli')
+    if which::which("hf").is_err() && which::which("huggingface-cli").is_err() {
+        eprintln!("HF CLI ('hf' or 'huggingface-cli') not found in PATH; skipping e2e smoke");
         return;
     }
 
