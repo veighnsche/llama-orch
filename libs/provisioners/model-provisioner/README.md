@@ -37,6 +37,7 @@ Model provisioner: orchestrates resolve/verify/cache via catalog-core
 - **Output**
   - `ResolvedModel { id, local_path }` for engine-provisioner.
   - Catalog registration/update with lifecycle: `Active` and digest recorded when provided.
+  - Handoff JSON for engine-provisioner at a well-known path when invoked via `provision_from_config_to_handoff()`.
 
 ## Engine handoff (to engine-provisioner)
 
@@ -53,6 +54,8 @@ Example handoff payload:
 }
 ```
 
+Handoff location recommendation (MVP): write to `.runtime/engines/llamacpp.json` adjacent to orchestrator config, per `TODO_OWNERS_MVP_pt2.md`. Use `DEFAULT_LLAMACPP_HANDOFF_PATH` or the convenience API below to avoid drift.
+
 ## 4. How it fits
 
 - Developer tooling supporting contracts and docs.
@@ -68,6 +71,34 @@ flowchart LR
 - Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
 -- -D warnings`
 - Tests for this crate: `cargo test -p model-provisioner -- --nocapture`
+
+### Selected deterministic Haiku model profile (MVP)
+
+- Model: `TinyLlama/TinyLlama-1.1B-Chat-v1.0` quantized `q4_k_m.gguf` (fits modest VRAM, fast startup)
+- Example local file ref: `file:/models/TinyLlama-1.1B-Chat-v1.0-q4_k_m.gguf`
+- Determinism notes: set seed and disable speculative/micro-batching at engine; provisioner only resolves path/metadata.
+
+Config example (YAML):
+
+```yaml
+model_ref: "file:/models/TinyLlama-1.1B-Chat-v1.0-q4_k_m.gguf"
+expected_digest: { algo: sha256, value: "<hex>" }
+strict_verification: true
+```
+
+Programmatic use:
+
+```rust
+use model_provisioner::{
+    provision_from_config_to_default_handoff, DEFAULT_LLAMACPP_HANDOFF_PATH
+};
+let meta = provision_from_config_to_default_handoff(
+    "/etc/llorch/model.yaml",
+    std::env::temp_dir(),
+)?;
+println!("handoff written to {} (model path: {})",
+         DEFAULT_LLAMACPP_HANDOFF_PATH, meta.path.display());
+```
 
 
 ## 6. Contracts
@@ -109,3 +140,18 @@ flowchart LR
 ## What this crate is not
 
 - Not a production service.
+
+## Refinement Opportunities
+
+- Add GGUF header parsing to populate `ctx_max` and tokenizer info in `ModelMetadata`.
+- Implement LRU cache accounting and eviction policy with provenance logs.
+- Add `hf:` native fetcher (no shell-outs) gated by repo trust policy; support `pacman`/AUR packaged dependencies on Arch/CachyOS.
+- Emit provenance bundle linking `catalog-core` entry and verification outcome into proof artifacts.
+
+## Arch/CachyOS notes (optional network fetching)
+
+- The crate prefers local file paths for MVP. For optional `hf:` shell-out support, install `huggingface-cli` via system packages.
+- On Arch/CachyOS:
+  - `sudo pacman -S python-huggingface-hub` provides the `huggingface-cli` tool.
+  - If unavailable, prefer an AUR package or use a system-managed alternative (avoid ad-hoc pip installs in this repo).
+  - If `huggingface-cli` is missing, calls to `hf:` will return an instructive error advising installation or using a local `file:` path.

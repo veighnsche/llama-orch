@@ -1,4 +1,22 @@
 schema_version: 1
 source: .specs/55-model-provisioner.md
-notes: No requirement IDs found; add stable IDs like ORCH-XXXX or OC-AREA-XXXX to normative requirements.
-requirements: {}
+notes: Anchors MVP for automated model resolution and handoff to engine provisioner.
+requirements:
+  ORCH-MODP-5501:
+    text: Provisioner MUST resolve a model_ref to a local path using file-only fast path.
+    status: stable
+  ORCH-MODP-5502:
+    text: Provisioner MUST optionally verify sha256 digest when provided and FAIL on mismatch when strict_verification is enabled.
+    status: stable
+  ORCH-MODP-5503:
+    text: Provisioner MUST emit a handoff JSON including model.id and model.path for engine-provisioner consumption.
+    status: stable
+  ORCH-MODP-5504:
+    text: Provisioner SHOULD emit basic model metadata (size_bytes, ctx_max optional) alongside handoff.
+    status: draft
+  ORCH-MODP-5505:
+    text: Provisioner MUST register/update catalog entry with lifecycle=Active.
+    status: stable
+  ORCH-MODP-5506:
+    text: Provisioner SHOULD append a provenance JSONL record under .runtime/provenance/.
+    status: draft

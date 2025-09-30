@@ -11,6 +11,14 @@ anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 catalog-core = { path = "../../catalog-core" }
 which = "6"
+serde_yaml = "0.9"
+serde_json = { workspace = true }
+sha2 = "0.10"
+hex = "0.4"
+tracing = { workspace = true }
 
 [lib]
 path = "src/lib.rs"
+
+[dev-dependencies]
+tempfile = "3"

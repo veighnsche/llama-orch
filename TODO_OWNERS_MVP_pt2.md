@@ -47,17 +47,24 @@ Scope: Provisioners are REQUIRED for MVP UX; Haiku must pass end-to-end with aut
 
 ## Owner D — Model Provisioner (libs/provisioners/model-provisioner/)
 
-- [ ] Resolve model artifact (local cache or remote) and ensure available path
-- [ ] Optional verify/signature policy hook per repo trust policy (strict mode placeholder OK)
-- [ ] Emit model metadata (id, path, size, ctx_max if known) for engine-provisioner
-- [ ] Choose a small, deterministic Haiku model profile and document it
-- [ ] Cache and eviction policy skeleton; record provenance
-- [ ] Tests: resolve-only happy path; missing model → clear error; optional signature gating
+- [x] Resolve model artifact (local cache or remote) and ensure available path
+  - Implemented in `libs/provisioners/model-provisioner/src/lib.rs` via `ModelProvisioner::ensure_present_str()` and `ensure_present()` (file fast-path; minimal `hf:` shell-out fallback)
+- [x] Optional verify/signature policy hook per repo trust policy (strict mode placeholder OK)
+  - Implemented `sha256` verification when `expected_digest` is provided; strict gating supported
+- [x] Emit model metadata (id, path, size, ctx_max if known) for engine-provisioner
+  - Implemented `ModelMetadata { id, path, size_bytes, ctx_max: None }` and handoff JSON writer
+- [x] Choose a small, deterministic Haiku model profile and document it
+  - Documented TinyLlama 1.1B Chat q4_k_m GGUF in `libs/provisioners/model-provisioner/README.md`
+- [x] Cache and eviction policy skeleton; record provenance
+  - Added TODO skeleton for eviction; provenance JSONL emitted to `.runtime/provenance/models.jsonl`
+- [x] Tests: resolve-only happy path; missing model → clear error; optional signature gating
+  - Added unit tests in `libs/provisioners/model-provisioner/src/lib.rs`
 
 ### Deliverables
-
-- [ ] Minimal config (YAML/JSON) describing model_ref → path resolution
-- [ ] Handshake file/object with engine-provisioner containing resolved model path
+- [x] Minimal config (YAML/JSON) describing model_ref → path resolution
+  - Config schema in `.specs/55-model-provisioner.md`; loader in crate via `ModelProvisionerConfig`
+- [x] Handshake file/object with engine-provisioner containing resolved model path
+  - Handoff JSON writer implemented; recommended path `.runtime/engines/llamacpp.json`
 
 ---
 
