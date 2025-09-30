@@ -58,34 +58,17 @@ pub async fn given_handoff_file_for_pool(world: &mut World, pool_id: String) {
     fs::write(&filename, handoff.to_string()).expect("failed to write handoff file");
 }
 
-// B-BG-001, B-BG-012: Watcher is started in bootstrap
 #[given(regex = "^the handoff watcher is running$")]
 pub async fn given_handoff_watcher_running(_world: &mut World) {
     // No-op: watcher runs in background
 }
 
-// B-BG-002: Wait for watcher to process
+// B-BG-002: Wait for watcher to process (DEPRECATED - handoff watcher removed for cloud profile)
 #[when(regex = "^the handoff watcher processes the file$")]
-pub async fn when_handoff_watcher_processes(world: &mut World) {
-    // Instead of waiting for a watcher that may not be running,
-    // directly process all handoff files in the runtime directory
-    let runtime_dir = std::path::PathBuf::from(".runtime/engines");
-
-    if runtime_dir.exists() {
-        if let Ok(entries) = std::fs::read_dir(&runtime_dir) {
-            for entry in entries.flatten() {
-                let file_path = entry.path();
-                if file_path.extension().and_then(|s| s.to_str()) == Some("json") {
-                    // Directly call the processing function
-                    let _ = orchestratord::services::handoff::process_handoff_file(
-                        &world.state,
-                        &file_path,
-                    )
-                    .await;
-                }
-            }
-        }
-    }
+pub async fn when_handoff_watcher_processes(_world: &mut World) {
+    // CLOUD_PROFILE: Handoff watcher moved to pool-managerd
+    // HOME_PROFILE: Handoff watcher removed (cloud-only deployment)
+    // This step is now a no-op for testing purposes
 }
 
 // B-BG-003, B-BG-004: Create new handoff file

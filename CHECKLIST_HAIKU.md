@@ -6,19 +6,7 @@ This document audits the happy-path pipeline and lists concrete tasks to pass th
 
 ## Happy Path Timeline (Current)
 
-### HOME_PROFILE (Single Machine)
-0. Config validated at `orchestratord` startup
-1. Client sends `POST /v2/tasks` (enqueue)
-2. Orchestrator checks pool health via local pool-managerd
-3. Orchestrator checks catalog for model availability
-4. If not ready, orchestrator can trigger provisioning (policy-gated)
-5. pool-managerd runs engine-provisioner to build/start llama.cpp
-6. engine-provisioner writes handoff file to shared `.runtime/engines/`
-7. orchestratord handoff watcher detects file and auto-binds llamacpp-http adapter
-8. Orchestrator dispatches task to adapter when slot available
-9. Adapter streams tokens via SSE: `started → token → metrics → end`
-
-### CLOUD_PROFILE (Distributed)
+### CLOUD_PROFILE (Current - Distributed)
 0. Control plane (orchestratord) starts, validates config
 1. GPU worker (pool-managerd) registers via `POST /v2/nodes/register` with Bearer token
 2. pool-managerd sends periodic heartbeats (`POST /v2/nodes/{id}/heartbeat`) with pool status
@@ -29,6 +17,12 @@ This document audits the happy-path pipeline and lists concrete tasks to pass th
 7. On GPU worker: pool-managerd watches local handoff files, manages engine lifecycle
 8. Adapter (on orchestratord or worker) streams tokens via SSE back through orchestratord
 9. orchestratord relays SSE stream to client
+
+### Legacy HOME_PROFILE (Deprecated - Removed)
+**Note**: HOME_PROFILE handoff watcher was removed as part of cloud profile migration.
+
+The project is now cloud-first. For single-machine deployments, run orchestratord and pool-managerd
+on the same node with CLOUD_PROFILE mode.
 
 ## Client Call Sequence (spec-confirmed, v2)
 
@@ -88,20 +82,18 @@ This document audits the happy-path pipeline and lists concrete tasks to pass th
   - Code: `libs/provisioners/model-provisioner/src/lib.rs`.
 
 - 6 — Provisioners notify pool-manager
-  - **HOME_PROFILE**: Handoff autobind watcher in orchestratord monitors `.runtime/engines/*.json`
-  - **CLOUD_PROFILE**: Handoff watcher moved to pool-managerd (local filesystem watch)
-  - Current: `bin/orchestratord/src/services/handoff.rs` (HOME_PROFILE only, deprecated for CLOUD_PROFILE)
+  - **CLOUD_PROFILE**: Handoff watcher in pool-managerd (local filesystem watch)
   - Current: pool-managerd watches handoffs locally, reports readiness via heartbeats
-  - Code: `bin/orchestratord/src/services/handoff.rs` (HOME_PROFILE), `libs/gpu-node/handoff-watcher/` (CLOUD_PROFILE)
-  - Status: ✅ HOME_PROFILE handoff watcher complete, ✅ CLOUD_PROFILE heartbeat reporting complete
+  - Code: `libs/gpu-node/handoff-watcher/` (CLOUD_PROFILE), `bin/pool-managerd/` (registry + heartbeat)
+  - Status: ✅ CLOUD_PROFILE heartbeat reporting complete, ✅ Handoff watcher moved to pool-managerd
+  - **Removed**: `bin/orchestratord/src/services/handoff.rs` (HOME_PROFILE handoff watcher deleted)
 
 - 7 — Orchestrator binds adapter and dispatches
-  - **HOME_PROFILE**: Adapter binding via handoff watcher auto-bind
   - **CLOUD_PROFILE**: Adapter binds to remote pool URL from service registry
   - Current: Model-aware placement in `bin/orchestratord/src/services/placement_v2.rs`
   - Current: Placement strategies: round-robin, least-loaded (filters by model availability)
-  - Code: `bin/orchestratord/src/app/bootstrap.rs`, `bin/orchestratord/src/services/handoff.rs` (HOME_PROFILE), `bin/orchestratord/src/services/placement_v2.rs`
-  - Status: ✅ Handoff autobind done (HOME_PROFILE), ✅ Model-aware placement done (CLOUD_PROFILE), ⚠️ pin override enforcement missing
+  - Code: `bin/orchestratord/src/app/bootstrap.rs`, `bin/orchestratord/src/services/placement_v2.rs`
+  - Status: ✅ Model-aware placement done (CLOUD_PROFILE), ⚠️ pin override enforcement missing
 
 - 8 — Streaming tokens SSE
   - Current: `services/streaming.rs` tries adapter with health gate, falls back to deterministic SSE. Request built from admission snapshot.
@@ -175,13 +167,10 @@ Verification commands:
 
 ## Cloud Profile Architecture References
 
-**HOME_PROFILE (Single Machine)**:
+**CLOUD_PROFILE (Current Architecture)**:
 - Orchestrator router: `bin/orchestratord/src/app/router.rs`
-- Handoff watcher: `bin/orchestratord/src/services/handoff.rs` (feature-gated)
 - Streaming: `bin/orchestratord/src/services/streaming.rs`
 - Pool registry: `bin/pool-managerd/src/core/registry.rs`
-
-**CLOUD_PROFILE (Distributed)**:
 - Node endpoints: `bin/orchestratord/src/api/nodes.rs` (register, heartbeat, deregister)
 - Service registry: `libs/control-plane/service-registry/` (node tracking, health)
 - Node registration: `libs/gpu-node/node-registration/` (GPU worker registration)

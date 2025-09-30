@@ -155,34 +155,35 @@ LLORCH_API_TOKEN=<same-token>
 
 ### System Flow Diagrams
 
-#### HOME_PROFILE: Single Machine Flow
+#### Single-Machine Deployment (CLOUD_PROFILE on one node)
 
 ```mermaid
 flowchart TB
-    Client[Client] -->|POST /v2/tasks| OD[orchestratord]
-    Client -->|GET /v2/tasks/:id/events| OD
+    Client[Client] -->|POST /v2/tasks| OD[orchestratord]    Client -->|GET /v2/tasks/:id/events| OD
     
-    subgraph "Single Machine"
+    subgraph "Single Node (CLOUD_PROFILE)"
+        OD -->|POST /v2/nodes/register| SR[service-registry<br/>localhost]
         OD -->|enqueue| OC[orchestrator-core<br/>Queue]
-        OD -->|check health| PM[pool-managerd<br/>Registry]
-        OD -->|dispatch| AH[adapter-host]
+        OD -->|check nodes| SR
+        OD -->|dispatch HTTP| AH[adapter-host]
         
-        PM -->|manages| EP[engine-provisioner<br/>llama.cpp]
-        EP -->|writes| HF[".runtime/engines/<br/>handoff.json"]
-        HF -.->|watches| HW[handoff watcher<br/>orchestratord]
-        HW -->|auto-bind| AH
+        PM[pool-managerd<br/>localhost] -->|register + heartbeat| SR
+        PM -->|manages| EP[engine-provisioner]
+        EP -->|writes local| HF[handoff.json]
+        HF -.->|watches locally| HW[handoff-watcher<br/>pool-managerd]
+        HW -->|updates| PM
+        EP -->|spawns| ENG[llama.cpp]
         
-        AH -->|invoke| LA[llamacpp-http<br/>adapter]
-        LA -->|HTTP| ENG[llama.cpp<br/>server]
-        ENG -->|SSE tokens| LA
-        LA -->|SSE frames| OD
+        AH -->|HTTP| ENG
+        ENG -->|SSE tokens| AH
+        AH -->|relay| OD
     end
     
     OD -->|text/event-stream| Client
     
     style OD fill:#e1f5ff
+    style SR fill:#e8eaf6
     style PM fill:#fff4e1
-    style EP fill:#f0f0f0
     style ENG fill:#e8f5e9
 ```
 

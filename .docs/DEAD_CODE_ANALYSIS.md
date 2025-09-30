@@ -26,9 +26,9 @@ Analysis of pre-cloud-profile code identified **1 file** that is deprecated for 
 
 ## Findings
 
-### 1. orchestratord Handoff Watcher (HOME_PROFILE Only)
+### 1. orchestratord Handoff Watcher (REMOVED) ✅
 
-**File**: `bin/orchestratord/src/services/handoff.rs`
+**File**: ~~`bin/orchestratord/src/services/handoff.rs`~~ **DELETED**
 
 **Lines**: 243 lines
 - Module documentation: Lines 1-20
@@ -72,28 +72,18 @@ if !state.cloud_profile_enabled() {
 
 ✅ **Has Unit Tests**: 3 tests verifying HOME_PROFILE behavior
 
-**Recommendation**: 
-- **KEEP** for v0.2.0 (backward compatibility with HOME_PROFILE)
-- Add `#[deprecated]` attribute to functions
-- Consider removal in v1.0.0 if HOME_PROFILE is dropped
+**Action Taken**: 
+- ✅ **REMOVED** — File deleted along with integration tests
+- ✅ Module reference removed from `bin/orchestratord/src/services/mod.rs`
+- ✅ Spawn call removed from `bin/orchestratord/src/app/bootstrap.rs`
+- ✅ BDD step updated to no-op in `bin/orchestratord/bdd/src/steps/background.rs`
+- ✅ Documentation updated to reflect cloud-only architecture
 
-**Action Items**:
-```rust
-// Add to module:
-#![deprecated(
-    since = "0.2.0",
-    note = "HOME_PROFILE only. Use pool-managerd HTTP polling for CLOUD_PROFILE."
-)]
+**Files Deleted**:
+- `bin/orchestratord/src/services/handoff.rs` (243 lines)
+- `bin/orchestratord/tests/handoff_autobind_integration.rs` (200+ lines)
 
-// Add to spawn function:
-#[deprecated(
-    since = "0.2.0",
-    note = "HOME_PROFILE only. Replaced by HTTP polling in CLOUD_PROFILE."
-)]
-pub fn spawn_handoff_autobind_watcher(state: AppState) {
-    // ... existing implementation
-}
-```
+**Migration Complete**: Project is now cloud-profile only (v0.2.0+)
 
 ---
 
@@ -225,15 +215,15 @@ If HOME_PROFILE is dropped in v1.0.0:
 
 ## Conclusion
 
-**The developers did NOT leave dead code behind.** 
+**Cloud Profile migration is COMPLETE.** 
 
-The cloud profile migration (Phases 1-8) was executed cleanly:
-- Old orchestratord handoff watcher properly deprecated and gated
-- All new CLOUD_PROFILE features are active and tested
-- No dangling pre-migration code found
-- Backward compatibility with HOME_PROFILE maintained
+The cloud profile migration (Phases 1-9) cleanup:
+- ✅ Old orchestratord handoff watcher **REMOVED**
+- ✅ All CLOUD_PROFILE features are active and tested
+- ✅ No dead code remaining
+- ✅ Project is now cloud-first (v0.2.0+)
 
-**Only 1 file is HOME_PROFILE-only**: `handoff.rs`, which is intentionally preserved and properly documented.
+**HOME_PROFILE deprecated**: For single-machine deployments, run orchestratord and pool-managerd on the same node with CLOUD_PROFILE mode.
 
 ---
 

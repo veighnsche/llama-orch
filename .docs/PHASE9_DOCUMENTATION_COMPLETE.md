@@ -374,9 +374,10 @@ Cross-check against `.docs/EMAIL_DOCUMENTATION_WRITER.md`:
 
 **Phase 9 STATUS**: ✅ **COMPLETE**  
 **Documentation**: 750+ new lines, 2,600+ lines referenced  
-**Dead Code**: 1 file identified (properly gated for HOME_PROFILE)  
+**Dead Code**: 1 file removed (`handoff.rs` + tests deleted)  
+**Migration Complete**: Cloud-profile only (HOME_PROFILE removed)  
 **Next Action**: Continue development work (project ~40% complete)  
-**Note**: Documentation phase complete; overall project ongoing
+**Note**: Documentation phase complete; cloud migration finalized
 
 ---
 
