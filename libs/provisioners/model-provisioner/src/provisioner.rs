@@ -3,6 +3,19 @@ use catalog_core::{default_model_cache_dir, CatalogEntry, CatalogStore, Digest, 
 use std::path::PathBuf;
 use std::process::Command;
 
+fn ensure_hf_cli() -> Result<&'static str> {
+    // Prefer newer 'hf' CLI; fall back to 'huggingface-cli'. Provide an actionable error.
+    if which::which("hf").is_ok() {
+        Ok("hf")
+    } else if which::which("huggingface-cli").is_ok() {
+        Ok("huggingface-cli")
+    } else {
+        Err(anyhow::anyhow!(
+            "Hugging Face CLI not found. Install 'python-huggingface-hub' (provides 'hf' and 'huggingface-cli') or provide a local file: path"
+        ))
+    }
+}
+
 #[derive(Clone)]
 pub struct ModelProvisioner<C: CatalogStore, F: ModelFetcher> {
     catalog: C,
@@ -30,26 +43,34 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
         let resolved = match self.fetcher.ensure_present(mr) {
             Ok(r) => r,
             Err(e) => {
-                // Minimal hf: support via huggingface-cli as a stopgap.
+                // Minimal hf: support via CLI (prefer 'hf', fallback to 'huggingface-cli').
                 match mr {
                     ModelRef::Hf { org, repo, path } => {
                         let cache_dir = default_model_cache_dir();
                         std::fs::create_dir_all(&cache_dir).ok();
-                        // Require huggingface-cli for now.
-                        if which::which("huggingface-cli").is_err() {
-                            return Err(anyhow::anyhow!(
-                                "huggingface-cli not found for hf:{}; install `python-huggingface-hub` or provide local file: path",
-                                format!("{}/{}", org, repo)
-                            ));
-                        }
+                        // Preflight: require HF CLI
+                        let cli = ensure_hf_cli()?;
                         let repo_spec = format!("{}/{}", org, repo);
-                        let mut c = Command::new("huggingface-cli");
+                        let mut c = Command::new(cli);
                         c.env("HF_HUB_ENABLE_HF_TRANSFER", "1");
                         c.arg("download").arg(&repo_spec);
                         if let Some(p) = path { c.arg(p); }
-                        c.arg("--local-dir").arg(&cache_dir).arg("--local-dir-use-symlinks").arg("False");
+                        c.arg("--local-dir").arg(&cache_dir);
+                        // Add flags specific to the CLI flavor
+                        if cli == "hf" {
+                            // Clarify repo type to avoid accidental space/type mismatch
+                            c.arg("--repo-type").arg("model");
+                        } else {
+                            // Older CLI supports explicit symlink toggle
+                            c.arg("--local-dir-use-symlinks").arg("False");
+                        }
                         let st = c.status()?;
-                        if !st.success() { return Err(anyhow::anyhow!("huggingface-cli download failed for {}", repo_spec)); }
+                        if !st.success() {
+                            return Err(anyhow::anyhow!(
+                                "HF CLI download failed for {}. Try: pip install 'huggingface_hub[cli]' or verify network/CA certificates.",
+                                repo_spec
+                            ));
+                        }
                         let local_path = if let Some(p) = path { cache_dir.join(p) } else { cache_dir.join(repo_spec.replace('/', "_")) };
                         ResolvedModel {
                             id: format!(
@@ -222,7 +243,8 @@ mod tests {
         let prov = ModelProvisioner::file_only(cache.path().to_path_buf()).unwrap();
         let mr = ModelRef::parse("hf:org/repo/file.gguf").unwrap();
         let err = prov.ensure_present(&mr, None).unwrap_err();
-        assert!(format!("{}", err).contains("huggingface-cli not found"));
+        let s = format!("{}", err);
+        assert!(s.contains("Hugging Face CLI not found") || s.contains("huggingface-cli not found"));
         if let Some(p) = old_path { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }
     }
 }

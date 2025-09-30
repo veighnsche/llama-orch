@@ -1,0 +1,31 @@
+# syntax=docker/dockerfile:1.7
+# Model Provisioner: real HF fetch E2E image (crate-local)
+# - Provides Rust toolchain and Python HF CLI (hf + huggingface-cli)
+# - Runs tests from the workspace root copied at /workspace
+
+FROM rust:1.81-slim
+
+# Ensure cargo on PATH and sane base utils
+ENV CARGO_HOME=/usr/local/cargo \
+    RUSTUP_HOME=/usr/local/rustup \
+    PATH=/usr/local/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash git ca-certificates python3 python3-pip python3-venv \
+ && rm -rf /var/lib/apt/lists/*
+
+# Make Rust toolchain unconditionally visible for non-login shells
+RUN ln -sf /usr/local/cargo/bin/cargo /usr/local/bin/cargo || true && \
+    ln -sf /usr/local/cargo/bin/rustc /usr/local/bin/rustc || true && \
+    ln -sf /usr/local/cargo/bin/rustup /usr/local/bin/rustup || true && \
+    echo 'test -f /usr/local/cargo/env && . /usr/local/cargo/env || true' >> /etc/bash.bashrc
+
+# Python venv for HF CLI (avoid PEP 668 system pip)
+RUN python3 -m venv /opt/hf && \
+    /opt/hf/bin/pip install --no-cache-dir "huggingface_hub[cli]>=0.24" && \
+    ln -s /opt/hf/bin/huggingface-cli /usr/local/bin/huggingface-cli && \
+    ln -s /opt/hf/bin/hf /usr/local/bin/hf
+
+WORKDIR /workspace
+# Build context should be repo root; copy everything
+COPY . .

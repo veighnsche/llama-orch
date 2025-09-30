@@ -95,6 +95,42 @@ fn llamacpp_source_cpu_real_e2e() -> anyhow::Result<()> {
     }
     assert!(ok, "llama-server did not become healthy");
 
+    // After health is OK: request a haiku that includes the current minute spelled out.
+    // 1) Build minute word and prompt
+    let minute_word = current_minute_word();
+    let prompt = format!(
+        "Write a three-line haiku that contains the exact word '{mw}' exactly once. Only output the three haiku lines, without any extra commentary.",
+        mw = minute_word
+    );
+
+    // 2) Try OpenAI-like /v1/completions first, then fallback to native /completion
+    let body_v1 = serde_json::json!({
+        "prompt": prompt,
+        "max_tokens": 80,
+        "temperature": 0.7
+    })
+    .to_string();
+    let resp1 = http_post("127.0.0.1", port, "/v1/completions", &body_v1).ok();
+    let text = resp1
+        .as_deref()
+        .and_then(parse_text_from_llamacpp)
+        .or_else(|| {
+            let body_native = serde_json::json!({
+                "prompt": prompt,
+                "n_predict": 80,
+                "temperature": 0.7
+            })
+            .to_string();
+            http_post("127.0.0.1", port, "/completion", &body_native)
+                .ok()
+                .as_deref()
+                .and_then(parse_text_from_llamacpp)
+        })
+        .unwrap_or_else(|| "<no text returned>".to_string());
+
+    // 3) Print the HAIKU clearly in terminal
+    println!("\n======== HAIKU ========\n\n{}\n\n======== HAIKU ========\n", text.trim());
+
     // Cleanup pid
     let pid_path = provisioners_engine_provisioner::util::default_run_dir().join("p-real.pid");
     if let Ok(s) = fs::read_to_string(&pid_path) {
@@ -104,4 +140,60 @@ fn llamacpp_source_cpu_real_e2e() -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+fn current_minute_word() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let secs = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+    let minute = ((secs / 60) % 60) as u8;
+    minute_to_words(minute)
+}
+
+fn minute_to_words(m: u8) -> String {
+    const ONES: [&str; 20] = [
+        "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+        "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen",
+    ];
+    const TENS: [&str; 6] = ["", "", "twenty", "thirty", "forty", "fifty"];
+    if m < 20 { return ONES[m as usize].to_string(); }
+    let tens = (m / 10) as usize; // 2..5
+    let ones = (m % 10) as usize;
+    if ones == 0 { TENS[tens].to_string() } else { format!("{}-{}", TENS[tens], ONES[ones]) }
+}
+
+fn http_post(host: &str, port: u16, path: &str, body: &str) -> anyhow::Result<String> {
+    use std::io::{Read, Write};
+    use std::net::TcpStream;
+    let addr = format!("{}:{}", host, port);
+    let mut stream = TcpStream::connect(addr)?;
+    let req = format!(
+        "POST {} HTTP/1.1\r\nHost: {}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+        path, host, body.len(), body
+    );
+    stream.write_all(req.as_bytes())?;
+    let mut buf = Vec::new();
+    stream.read_to_end(&mut buf)?;
+    let resp = String::from_utf8_lossy(&buf).into_owned();
+    // Split headers/body
+    if let Some(idx) = resp.find("\r\n\r\n") {
+        Ok(resp[idx + 4..].to_string())
+    } else {
+        Ok(resp)
+    }
+}
+
+fn parse_text_from_llamacpp(body: &str) -> Option<String> {
+    let v: serde_json::Value = serde_json::from_str(body).ok()?;
+    // OpenAI-like completions
+    if let Some(s) = v.get("choices").and_then(|c| c.get(0)).and_then(|c0| c0.get("text")).and_then(|t| t.as_str()) {
+        return Some(s.to_string());
+    }
+    // chat.completions style
+    if let Some(s) = v.get("choices").and_then(|c| c.get(0)).and_then(|c0| c0.get("message")).and_then(|m| m.get("content")).and_then(|t| t.as_str()) {
+        return Some(s.to_string());
+    }
+    // native llama.cpp server variants seen in the wild
+    if let Some(s) = v.get("content").and_then(|t| t.as_str()) { return Some(s.to_string()); }
+    if let Some(s) = v.get("completion").and_then(|t| t.as_str()) { return Some(s.to_string()); }
+    None
 }
