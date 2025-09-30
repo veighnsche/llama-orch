@@ -4,7 +4,12 @@ use serde_yaml as syaml;
 use std::{fs, path::PathBuf};
 
 fn repo_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).ancestors().nth(1).unwrap().to_path_buf()
+    // CARGO_MANIFEST_DIR is bin/orchestratord; go up two levels to workspace root.
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .nth(2)
+        .unwrap()
+        .to_path_buf()
 }
 
 #[test]
