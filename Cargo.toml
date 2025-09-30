@@ -23,6 +23,7 @@ members = [
     "libs/worker-adapters/http-util/bdd",
     "libs/adapter-host",
     "libs/observability/narration-core",
+    "libs/observability/narration-core/bdd",
     "libs/auth-min",
     "test-harness/e2e-haiku",
     "test-harness/metrics-contract",
