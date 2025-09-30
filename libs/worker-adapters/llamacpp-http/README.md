@@ -17,6 +17,23 @@ worker-adapters-llamacpp-http (adapter)
 
 - Rust crate API (internal)
 
+### High / Mid / Low behaviors
+
+- **High**
+  - Map orchestrator requests to llama.cpp native HTTP endpoints. Stream tokens over SSE preserving order `started → token* → end` (optional `metrics`).
+  - Use shared HTTP client defaults (timeouts, TLS verify ON) and redact secrets in logs.
+  - Determinism-friendly defaults (temperature 0, top_p 1.0; pass `seed` when set).
+
+- **Mid**
+  - `submit(req)` POSTs `{base}/completion` with `stream=true` and decodes SSE via `worker-adapters-http-util::stream_decode()`.
+  - `health()`/`props()` MVP stubs return Ready with unknown slots; wire real `/health` and `/props` in follow-ups.
+  - Error mapping: non-success upstream status → `WorkerError::Adapter(redacted_message)`; 429/5xx treated as retriable at policy layer.
+  - Construct with `LlamaCppHttpAdapter::new(base_url)`; do not read env inside adapter.
+
+- **Low**
+  - For MVP, we buffer the SSE body then emit `TokenEvent`s in order. Future: incremental decoding with backpressure.
+  - Token indices are asserted monotonic (`i` strictly increasing). Non-monotonic indices are logged at `warn`.
+
 ## 4. How it fits
 
 - Maps engine-native APIs to the orchestrator worker contract.
@@ -41,11 +58,24 @@ flowchart LR
 
 ## 7. Config & Env
 
-- Engine connection endpoints and credentials where applicable.
+- Construct with `base_url` only. Credentials, if any, are injected at the request layer using `http-util::with_bearer(rb, token)`.
+- Orchestrator (optional) runtime binding via feature flag + env (see below).
+
+### Orchestrator binding (optional)
+- Cargo feature: `orchestratord:llamacpp-adapter` (disabled by default).
+- Env at startup when feature is enabled:
+  - `ORCHD_LLAMACPP_URL` (required) — base URL to bind.
+  - `ORCHD_LLAMACPP_POOL` (default: `default`).
+  - `ORCHD_LLAMACPP_REPLICA` (default: `r0`).
+- Binding goes through `AdapterHost.bind(pool, replica, adapter)`; dispatch uses `AdapterHost.submit(pool, req)`.
 
 ## 8. Metrics & Logs
 
 - Emits adapter health and request metrics per engine.
+
+Notes:
+- Secrets (e.g., Authorization) are redacted in error messages using `http-util::redact_secrets()`.
+- Add Prometheus `/metrics` scrape mapping in a future iteration (MVP optional).
 
 ## 9. Runbook (Dev)
 
@@ -74,6 +104,14 @@ flowchart LR
 ### Additional Details
 - Engine endpoint mapping tables (native/OpenAI-compat to adapter calls), determinism knobs,
 version capture.
+
+### Determinism notes
+- Prefer greedy decoding (`temperature=0`, `top_p=1.0`).
+- Forward `seed` from request when provided. Replica sets should pin identical binaries and sampler profiles.
+
+### Testing
+- Unit/integration tests: `cargo test -p worker-adapters-llamacpp-http -- --nocapture`.
+- Integration test uses a stub Axum server emitting SSE `started/token/end` to verify ordering and indices.
 
 
 ## What this crate is not

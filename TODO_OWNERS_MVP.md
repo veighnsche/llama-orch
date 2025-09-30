@@ -24,13 +24,13 @@ Scope: Derived from `CHECKLIST_RUST_MVP.md` and `.specs/00_mvp.md`.
 
 ## Owner B — Llama.cpp Adapter + HTTP Util + Wiring
 
-- [ ] Llama.cpp adapter: minimal `health`, `props` (slots), `submit` (stream), `cancel`
-- [ ] Ensure streaming order and token indices (started → token* → end)
-- [ ] Basic error mapping and secret redaction in logs
-- [ ] http-util: `make_client` with sane defaults (timeouts; TLS verify on)
-- [ ] http-util: simple retry/backoff wrapper for idempotent calls
-- [ ] http-util: streaming helpers for SSE/line decode preserving order and indices
-- [ ] Adapter + http-util: integration test against stub server emitting `started/token/end`
-- [ ] Wire orchestrator to llama.cpp adapter end-to-end (admission → stream → cancel)
-- [ ] Determinism smoke: fixed seed on single replica → byte-exact tokens
-- [ ] Ensure non-MVP adapters are not pulled by default features
+- [x] Llama.cpp adapter: minimal `health`, `props` (slots), `submit` (stream), `cancel`
+- [x] Ensure streaming order and token indices (started → token* → end)
+- [x] Basic error mapping and secret redaction in logs
+- [x] http-util: `make_client` with sane defaults (timeouts; TLS verify on)
+- [x] http-util: simple retry/backoff wrapper for idempotent calls
+- [x] http-util: streaming helpers for SSE/line decode preserving order and indices
+- [x] Adapter + http-util: integration test against stub server emitting `started/token/end`
+- [x] Wire orchestrator to llama.cpp adapter end-to-end (admission → stream → cancel)
+- [x] Determinism smoke: fixed seed on single replica → byte-exact tokens
+- [x] Ensure non-MVP adapters are not pulled by default features

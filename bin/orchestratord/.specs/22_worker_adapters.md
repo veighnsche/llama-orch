@@ -31,6 +31,27 @@ Date: 2025-09-19
 - Maintain a mapping of `pool_id -> Box<dyn WorkerAdapter>` (or per-replica instances) initialized during preload/health transitions.
 - Re-bind adapters on reload/drain events; ensure cancellation and in-flight stream handling are correct.
 
+#### Binding & configuration (MVP default behavior)
+- Orchestrator feature flag: `llamacpp-adapter` (disabled by default). When enabled at build time, the process MAY bind a llama.cpp HTTP adapter on startup if configured.
+- Environment variables (evaluated at startup):
+  - `ORCHD_LLAMACPP_URL` — base URL of the llama.cpp server (native HTTP API).
+  - `ORCHD_LLAMACPP_POOL` — pool id to bind under (default: `default`).
+  - `ORCHD_LLAMACPP_REPLICA` — replica id to bind under (default: `r0`).
+- Binding mechanism: `AdapterHost.bind(pool, replica, adapter)`; dispatch path uses `AdapterHost.submit(pool, req)`.
+
+#### Provisioner-driven binding (Preferred UX / MVP Requirement)
+- Orchestrator MUST bind adapters based on handoff files emitted by engine-provisioner for MVP.
+- Default watch locations (subject to config):
+  - `.runtime/engines/llamacpp.json`
+- Handoff payload (subset):
+  - `{ engine, engine_version, provisioning_mode, url, pool_id, replica_id, model: { id, path }, flags: [...] }`
+- Behavior:
+  - On file create/update, read payload and call `AdapterHost.bind(pool_id, replica_id, new_adapter(url))`.
+  - On file removal or orchestrator drain, unbind or mark draining via control APIs.
+  - Conflicts: latest mtime wins; log a warning when rebinding changes `url` or `engine_version`.
+
+Note: Env-based binding described above is a dev-only shim and MUST NOT be used in Haiku validation runs.
+
 ### Error and cancel propagation
 - Map `WorkerError::{DeadlineUnmet, PoolUnavailable, DecodeTimeout, WorkerReset, Adapter, Internal}` to HTTP error taxonomy.
 - On `/v1/tasks/{id}` cancel, call `adapter.cancel(task_id)` and tear down the SSE stream promptly.

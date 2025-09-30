@@ -1,6 +1,6 @@
 ---
 trigger: glob
-globs: src/**/*.vue
+globs: frontend/**/*.vue, .business/**/*.vue
 ---
 
 # Vue Rules

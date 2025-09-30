@@ -16,3 +16,13 @@ futures = { workspace = true }
 worker-adapters-adapter-api = { path = "../adapter-api" }
 contracts-api-types = { path = "../../../contracts/api-types" }
 serde_json = { workspace = true }
+worker-adapters-http-util = { path = "../http-util" }
+async-stream = "0.3"
+tracing = { workspace = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+axum = { workspace = true }
+http = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }

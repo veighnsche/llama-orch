@@ -9,6 +9,9 @@ use tokio::time::{sleep, Duration};
 use worker_adapters_adapter_api as adapter_api;
 
 /// Render a simple deterministic SSE for a task id and persist transcript to artifacts.
+/// TODO(OwnerB-ORCH-SSE-FALLBACK): This function contains an MVP deterministic fallback
+/// when no adapter is bound. Replace with full admission→dispatch→stream path exclusively,
+/// or gate fallback behind a dev/testing feature flag once adapters are always present.
 pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
     // Try adapter-host first (if a worker is registered). Fallback to deterministic SSE.
     // TODO[ORCHD-STREAM-1101]: Build TaskRequest from actual admission + request context
@@ -202,6 +205,9 @@ fn try_dispatch_via_adapter(
     id: &str,
 ) -> anyhow::Result<adapter_api::TokenStream> {
     // Construct a minimal TaskRequest
+    // TODO(OwnerB-ORCH-REQUEST-STUB): Minimal synthetic request used for MVP path.
+    // Admission service should forward the original request, preserving model_ref/engine and
+    // determinism-related fields (seed, sampler profile). Wire through once queue/admission are in place.
     let req = contracts_api_types::TaskRequest {
         task_id: id.to_string(),
         session_id: format!("sess-{}", id),

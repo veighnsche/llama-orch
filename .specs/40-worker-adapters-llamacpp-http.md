@@ -10,7 +10,8 @@ Requirements are versioned as `OC-ADAPT-5xxx`.
 
 ## 1) API Mapping
 
-- [OC-ADAPT-5001] Adapter MUST implement health, properties (slots/commit), completion (SSE), cancel, metrics scrape for llama.cpp native API.
+- [OC-ADAPT-5001] Adapter MUST implement health, properties (slots), completion (SSE), and cancel for the llama.cpp native API.
+- [OC-ADAPT-5001a] Metrics scrape (e.g., Prometheus `/metrics`) is OPTIONAL for MVP and SHOULD be added before v1.0 stabilization.
 - [OC-ADAPT-5002] When using OpenAI‑compatible endpoints internally, they MUST NOT be exposed publicly.
 
 ## 1A) References & Cross-Cutting
@@ -19,10 +20,14 @@ Requirements are versioned as `OC-ADAPT-5xxx`.
 - Integration with orchestrator uses the in‑process facade described in `adapter-host/.specs/00_adapter_host.md`.
 - Streaming MUST preserve `started → token* → end` ordering as per `/.specs/35-worker-adapters.md`; redaction rules apply to all logs.
 
+### Configuration & Construction
+- The adapter is constructed with `base_url` (engine endpoint). It MUST NOT read environment variables directly.
+- Orchestrator MAY bind the adapter at startup behind a feature flag and environment variables (see `bin/orchestratord/.specs/22_worker_adapters.md`).
+
 ## 2) Determinism & Version Capture
 
 - [OC-ADAPT-5010] Adapter MUST normalize detokenization templates and sampler profiles for determinism within a replica set.
-- [OC-ADAPT-5011] Adapter MUST capture and report engine_version and model_digest.
+- [OC-ADAPT-5011] Adapter SHOULD capture and report `engine_version` and `model_digest`. For MVP, `engine_version` MAY be a static string if upstream does not expose build info; this MUST be tightened before v1.0.
 
 ## 3) Traceability
 
