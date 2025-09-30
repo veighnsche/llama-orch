@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Helper to set up Docker BuildKit/buildx on the host in a reasonably portable way.
-# - Enables BuildKit in /etc/docker/daemon.json
-# - Ensures a named builder exists and is in use
-# - Prints guidance for installing the buildx plugin on common distros
+# crate-local helper to set up Docker BuildKit/buildx on the host.
+# See also: ../../../../scripts/docker/setup_buildx.sh
 
 BUILDER_NAME="llorch"
 
@@ -15,7 +13,6 @@ if ! have_cmd docker; then
   exit 1
 fi
 
-# Try to detect buildx availability
 if ! docker buildx version >/dev/null 2>&1; then
   echo "[setup_buildx] docker-buildx plugin not found. Install it for your distro:" >&2
   if have_cmd pacman; then
@@ -30,7 +27,6 @@ if ! docker buildx version >/dev/null 2>&1; then
   exit 2
 fi
 
-# Enable BuildKit in daemon.json if possible
 DAEMON_JSON="/etc/docker/daemon.json"
 NEEDS_RESTART=0
 if [ -f "/etc/docker/deamon.json" ]; then
@@ -51,15 +47,13 @@ elif have_cmd sudo; then
   echo "$FEATURES_JSON" | sudo tee "$DAEMON_JSON" >/dev/null
   NEEDS_RESTART=1
 else
-  echo "[setup_buildx] Cannot write $DAEMON_JSON. Please create it with:" >&2
-  echo "  echo '$FEATURES_JSON' | sudo tee $DAEMON_JSON" >&2
+  echo "[setup_buildx] Cannot write $DAEMON_JSON. Please create it with sudo." >&2
 fi
 
 if [ "$NEEDS_RESTART" = 1 ] && have_cmd sudo; then
   sudo systemctl restart docker || true
 fi
 
-# Create/use a non-reserved builder name
 if ! docker buildx use "$BUILDER_NAME" >/dev/null 2>&1; then
   docker buildx create --name "$BUILDER_NAME" --use || docker buildx use "$BUILDER_NAME" || true
 fi

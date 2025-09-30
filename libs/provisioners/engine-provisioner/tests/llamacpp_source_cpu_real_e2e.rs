@@ -2,8 +2,8 @@
 // Requirements to run:
 // - Env LLORCH_E2E_REAL=1
 // - Env LLORCH_E2E_MODEL_PATH=/absolute/path/to/valid/model.gguf (small GGUF)
-// - Tools in PATH: git, cmake, make, gcc
-// - No package installs will be attempted (allow_package_installs=false)
+// - Tools in PATH (when running on host): git, cmake, make, gcc, g++, pkg-config, and libcurl dev headers (via pkg-config: libcurl)
+// - No package installs will be attempted (allow_package_installs=false); preflight will error with actionable hints if missing
 //
 // Usage:
 //   LLORCH_E2E_REAL=1 \

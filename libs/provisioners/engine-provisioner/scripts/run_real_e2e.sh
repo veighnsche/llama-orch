@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Run the real llama.cpp CPU E2E inside the given image.
+# Run the real llama.cpp CPU E2E inside the given image (crate-local).
 # Usage:
-#   scripts/docker/run_real_e2e.sh <image>
+#   libs/provisioners/engine-provisioner/scripts/run_real_e2e.sh <image>
 # Env overrides:
 #   LLAMA_REF        (default: master)
 #   MODEL_REPO       (default: TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF)
@@ -36,6 +36,6 @@ exec docker run --rm -it \
       --local-dir /models
     export LLORCH_E2E_MODEL_PATH="$(ls /models/*.gguf | head -n1)"
     echo "[run_real_e2e] Using model: ${LLORCH_E2E_MODEL_PATH}"
-    cargo test -p provisioners-engine-provisioner \
+    /usr/local/cargo/bin/cargo test -p provisioners-engine-provisioner \
       --test llamacpp_source_cpu_real_e2e -- --ignored --nocapture
   '

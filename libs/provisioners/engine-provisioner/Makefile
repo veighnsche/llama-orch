@@ -3,7 +3,7 @@ SHELL := /usr/bin/env bash
 ROOT := $(abspath $(CURDIR)/../../..)
 CRATE := $(ROOT)/libs/provisioners/engine-provisioner
 IMAGE := llorch-llamacpp-e2e-cpu
-DOCKERFILE := $(ROOT)/Dockerfile.llamacpp.cpu
+DOCKERFILE := $(CRATE)/docker/Dockerfile.cpu.e2e
 
 .PHONY: e2e-fixture e2e-real-host docker-build e2e-real-docker setup-buildx
 
@@ -27,10 +27,10 @@ docker-build:
 
 # 4) Setup BuildKit/buildx on host (will use sudo when needed)
 setup-buildx:
-	@$(ROOT)/scripts/docker/setup_buildx.sh
+	@$(CRATE)/scripts/setup_buildx.sh
 
 # 5) Real llama.cpp E2E inside Docker (downloads tiny GGUF inside container)
 # Optional envs: LLAMA_REF, MODEL_REPO, MODEL_PATTERN
 #   make e2e-real-docker LLAMA_REF=master MODEL_REPO=TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF MODEL_PATTERN='*Q2_K.gguf'
 e2e-real-docker: docker-build
-	@$(ROOT)/scripts/docker/run_real_e2e.sh "$(IMAGE)"
+	@$(CRATE)/scripts/run_real_e2e.sh "$(IMAGE)"

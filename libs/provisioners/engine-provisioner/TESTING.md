@@ -22,8 +22,19 @@ Then `sudo systemctl restart docker`.
 You can set up buildx and BuildKit via the helper script:
 
 ```bash
-scripts/docker/setup_buildx.sh
+libs/provisioners/engine-provisioner/scripts/setup_buildx.sh
 ```
+
+### Preflight requirements (what the provisioner checks)
+
+The llama.cpp source-mode preflight validates the environment and provides clear errors if missing:
+
+- git, cmake, make
+- gcc and g++ (C/C++ compilers)
+- pkg-config
+- libcurl development headers (pkg: `libcurl` via `pkg-config`)
+- If CUDA flags requested: `nvcc` plus a compatible host compiler (clang or gcc-13)
+- If using `hf:` model refs: either `hf` or `huggingface-cli` in PATH
 
 ## 1) Hermetic CPU fixture (fast/offline)
 
@@ -58,7 +69,9 @@ make e2e-fixture
 
 ```bash
 # from repo root
-docker buildx build -f Dockerfile.llamacpp.cpu -t llorch-llamacpp-e2e-cpu --load .
+docker buildx build \
+  -f libs/provisioners/engine-provisioner/docker/Dockerfile.cpu.e2e \
+  -t llorch-llamacpp-e2e-cpu --load .
 ```
 
 - Run the test:
@@ -75,10 +88,10 @@ docker run --rm -it \
     hf download TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
       --repo-type model \
       --include "*Q2_K.gguf" \
-      -d /models
+      --local-dir /models
     export LLORCH_E2E_MODEL_PATH="$(ls /models/*Q2_K.gguf | head -n1)"
     echo "Using model: $LLORCH_E2E_MODEL_PATH"
-    cargo test -p provisioners-engine-provisioner \
+    /usr/local/cargo/bin/cargo test -p provisioners-engine-provisioner \
       --test llamacpp_source_cpu_real_e2e -- --ignored --nocapture
   '
 ```
@@ -89,7 +102,19 @@ docker run --rm -it \
 # from this crate directory (libs/provisioners/engine-provisioner/)
 make docker-build
 make e2e-real-docker LLAMA_REF=master MODEL_REPO=TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF MODEL_PATTERN='*Q2_K.gguf'
+
+Alternatively, run the script directly:
+
+```bash
+libs/provisioners/engine-provisioner/scripts/run_real_e2e.sh llorch-llamacpp-e2e-cpu
 ```
+
+## What we learned (from real runs)
+
+- Missing host tools cause CMake configure failures. We hardened preflight in `preflight.rs` to check for `g++`, `pkg-config`, and `libcurl` headers in addition to `git`, `cmake`, `make`, `gcc`.
+- The HF CLI has moved to `hf download`. Docs and scripts now use `hf` instead of the deprecated `huggingface-cli download`.
+- Docker context was too large; a root `.dockerignore` now excludes `**/target/`, `node_modules/`, `.git`, etc., to speed up builds.
+- Cargo visibility inside non-login shells can be flaky; the image now symlinks cargo/rustc/rustup into `/usr/local/bin` and sets PATH explicitly.
 
 ## 3) Real llama.cpp on host (no Docker)
 
