@@ -1,0 +1,64 @@
+openapi: 3.0.3
+info:
+  title: llama-orch Sessions API (v2)
+  version: 2.0.0
+  description: |
+    Manage conversational sessions. Sessions are created lazily on first use and expire by TTL.
+    IMPORTANT: Sessions are metadata-only. The orchestrator does not persist any conversation
+    content (no prompts, messages, or model outputs). Fields report TTL/turns, engine KV/cache
+    characteristics, and optional budgets. Clients own all conversation content.
+servers:
+  - url: /
+paths:
+  /v2/sessions/{id}:
+    get:
+      operationId: getSessionV2
+      summary: Get session info and budgets
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Correlation-Id:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionInfoV2'
+        '404': { description: Not Found }
+    delete:
+      operationId: deleteSessionV2
+      summary: Evict a session (and its KV) if applicable
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '204': { description: No Content }
+
+components:
+  parameters:
+    XCorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema: { type: string }
+      description: Optional request correlation ID; echoed back in responses.
+  schemas:
+    SessionInfoV2:
+      type: object
+      properties:
+        ttl_ms_remaining: { type: integer, format: int64 }
+        turns: { type: integer, format: int32 }
+        kv_bytes: { type: integer, format: int64 }
+        kv_warmth: { type: boolean }
+        tokens_budget_remaining: { type: integer, format: int64 }
+        time_budget_remaining_ms: { type: integer, format: int64 }
+        cost_budget_remaining: { type: number, format: float }

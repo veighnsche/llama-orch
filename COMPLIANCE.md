@@ -1,5 +1,9 @@
 # COMPLIANCE — Requirements Coverage
 
+## Data Retention & Sessions
+
+Sessions are metadata-only. The orchestrator does not persist conversation content (no prompts, messages, or model outputs). Session state reports TTL/turns and engine KV/cache/budget metadata for scheduling and observability. Any persisted artifacts (e.g., SSE transcripts for proofs) are opt-in via the Artifacts API/store and should be configured per environment/policy.
+
 ### .specs/00_home_profile.md
 Total requirements: 0
 

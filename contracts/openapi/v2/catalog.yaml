@@ -1,0 +1,166 @@
+openapi: 3.0.3
+info:
+  title: llama-orch Catalog API (v2)
+  version: 2.0.0
+  description: |
+    Model registry: manifests, signatures, lifecycle state, and verification triggers.
+servers:
+  - url: /
+paths:
+  /v2/catalog/models:
+    post:
+      operationId: createCatalogModelV2
+      summary: Ingest or create a catalog model entry
+      parameters:
+        - $ref: '#/components/parameters/XCorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogModelV2'
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Correlation-Id:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogModelV2'
+  /v2/catalog/models/{id}:
+    get:
+      operationId: getCatalogModelV2
+      summary: Get catalog model entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Correlation-Id:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogModelV2'
+        '404': { description: Not Found }
+    delete:
+      operationId: deleteCatalogModelV2
+      summary: Delete a catalog model and its local cached artifacts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '204':
+          description: No Content
+          headers:
+            X-Correlation-Id:
+              schema: { type: string }
+        '404': { description: Not Found }
+  /v2/catalog/models/{id}/verify:
+    post:
+      operationId: verifyCatalogModelV2
+      summary: Trigger signature/attestation verification for a catalog entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '202':
+          description: Verification started
+          headers:
+            X-Correlation-Id:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /v2/catalog/models/{id}/state:
+    post:
+      operationId: setCatalogModelStateV2
+      summary: Set model lifecycle state
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [state]
+              properties:
+                state:
+                  type: string
+                  enum: [Active, Retired]
+                deadline_ms:
+                  type: integer
+                  format: int64
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            X-Correlation-Id:
+              schema: { type: string }
+
+components:
+  parameters:
+    XCorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema: { type: string }
+      description: Optional request correlation ID; echoed back in responses.
+  schemas:
+    SignatureMetaV2:
+      type: object
+      properties:
+        signer: { type: string }
+        algo: { type: string }
+        verified: { type: boolean }
+        timestamp_ms: { type: integer, format: int64 }
+    SBOMRefV2:
+      type: object
+      properties:
+        uri: { type: string }
+        digest: { type: string }
+    ManifestV2:
+      type: object
+      properties:
+        digest: { type: string }
+        size_bytes: { type: integer, format: int64 }
+    TrustPolicyV2:
+      type: object
+      properties:
+        mode: { type: string, enum: [strict, permissive] }
+        allowed_registries: { type: array, items: { type: string } }
+        require_signature: { type: boolean }
+        require_sbom: { type: boolean }
+        ca_roots: { type: array, items: { type: string } }
+    CatalogModelV2:
+      type: object
+      required: [id, digest]
+      properties:
+        id: { type: string }
+        digest: { type: string }
+        source_url: { type: string }
+        tags: { type: array, items: { type: string } }
+        manifests: { type: array, items: { $ref: '#/components/schemas/ManifestV2' } }
+        signatures: { type: array, items: { $ref: '#/components/schemas/SignatureMetaV2' } }
+        sbom: { $ref: '#/components/schemas/SBOMRefV2' }
+        trust_policy: { $ref: '#/components/schemas/TrustPolicyV2' }

@@ -1,0 +1,83 @@
+openapi: 3.0.3
+info:
+  title: llama-orch Artifacts API (v2)
+  version: 2.0.0
+  description: |
+    Store and retrieve artifacts (plans, transcripts, logs, traces) used by proof bundles.
+servers:
+  - url: /
+paths:
+  /v2/artifacts:
+    post:
+      operationId: createArtifactV2
+      summary: Store an artifact
+      parameters:
+        - $ref: '#/components/parameters/XCorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtifactV2'
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Correlation-Id:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactRefV2'
+  /v2/artifacts/{id}:
+    get:
+      operationId: getArtifactV2
+      summary: Fetch an artifact by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Correlation-Id:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtifactV2'
+        '404': { description: Not Found }
+
+components:
+  parameters:
+    XCorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema: { type: string }
+      description: Optional request correlation ID; echoed back in responses.
+  schemas:
+    ArtifactKindV2:
+      type: string
+      enum: [plan, summary, diff, trace, transcript, logs, other]
+    ArtifactRefV2:
+      type: object
+      required: [id, kind]
+      properties:
+        id: { type: string }
+        kind: { $ref: '#/components/schemas/ArtifactKindV2' }
+        digest: { type: string }
+        created_ms: { type: integer, format: int64 }
+        tags: { type: array, items: { type: string } }
+    ArtifactV2:
+      type: object
+      required: [kind, content]
+      properties:
+        kind: { $ref: '#/components/schemas/ArtifactKindV2' }
+        content: { type: object, additionalProperties: true }
+        tags: { type: array, items: { type: string } }
+        parent: { type: string }
+        metadata: { type: object, additionalProperties: true }

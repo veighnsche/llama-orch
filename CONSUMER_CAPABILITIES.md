@@ -154,6 +154,8 @@ Client tips:
 - `GET /v1/sessions/{id}` → `200` `SessionInfo { ttl_ms_remaining, turns, kv_bytes, kv_warmth, tokens_budget_remaining?, time_budget_remaining_ms?, cost_budget_remaining? }`
 - `DELETE /v1/sessions/{id}` → `204` (evicts session/KV as applicable)
 - Sessions are created lazily on first use and expire by TTL; every interaction may update turns/budgets.
+ - Note: Sessions are metadata-only. No prompts, messages, or model outputs are stored in session state.
+   Clients own conversation content. Session fields reflect TTL/turns/KV and budgets only.
 
 ## Control Plane — Pools, Catalog, Artifacts, Discovery
 

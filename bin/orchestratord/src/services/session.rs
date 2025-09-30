@@ -1,4 +1,7 @@
 //! Session service
+//!
+//! Metadata-only: the orchestrator does not store conversation content (no prompts/messages/outputs).
+//! Session state tracks TTL, turns, and engine KV/cache/budgets metadata for scheduling/observability.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};

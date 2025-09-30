@@ -9,3 +9,4 @@ Status: normative · Scope: OrchQueue v1
 - **Inspection**: `GET /v1/sessions/{id}` MUST return `ttl_ms_remaining`, `turns`, `kv_bytes`, `kv_warmth`, and any active budget counters.
 - **Eviction**: `DELETE /v1/sessions/{id}` MUST remove session metadata and any cached KV; it SHOULD succeed even if the session is already gone.
 - **Metrics**: expose gauges/counters for active sessions, KV usage, and budget rejections to help tune agent behaviour.
+ - **Content retention**: Sessions are metadata-only; the orchestrator does not persist conversation content (no prompts/messages/outputs). Clients own conversation data.

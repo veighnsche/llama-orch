@@ -1,0 +1,229 @@
+openapi: 3.0.3
+info:
+  title: llama-orch Data Plane API (v2)
+  version: 2.0.0
+  description: |
+    Ergonomic data plane for enqueue → stream → cancel with verbose progress.
+servers:
+  - url: /
+paths:
+  /v2/tasks:
+    post:
+      operationId: createTaskV2
+      summary: Enqueue a task
+      parameters:
+        - $ref: '#/components/parameters/XCorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequestV2'
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdmissionResponseV2'
+        '400': { description: Invalid params }
+        '429': { description: Backpressure }
+        '503': { description: Pool unavailable }
+  /v2/tasks/{id}/events:
+    get:
+      operationId: streamTaskV2
+      summary: Stream task events (SSE)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
+        - name: verbose
+          in: query
+          required: false
+          schema: { type: boolean, default: false }
+          description: When true, include human narration and prep progress in metrics frames.
+      responses:
+        '200':
+          description: SSE stream
+          headers:
+            Content-Type:
+              schema: { type: string, enum: [text/event-stream] }
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              examples:
+                sse:
+                  summary: SSE example
+                  value: |
+                    event: started
+                    data: {"queue_position":3,"predicted_start_ms":420}
+
+                    event: token
+                    data: {"t":"Hello","i":0}
+
+                    event: metrics
+                    data: {"prep":{"engine:llamacpp":{"status":"running","pct":20,"human":"Building llama.cpp"}}}
+
+                    event: end
+                    data: {"tokens_out":64,"decode_ms":2300}
+  /v2/tasks/{id}/cancel:
+    post:
+      operationId: cancelTaskV2
+      summary: Cancel a running or queued task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '204': { description: No Content }
+
+components:
+  parameters:
+    XCorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema: { type: string }
+      description: Optional request correlation ID; echoed back in responses.
+
+  schemas:
+    Engine:
+      type: string
+      enum: [llamacpp, vllm, tgi, triton]
+    Workload:
+      type: string
+      enum: [completion, embedding, rerank]
+
+    TaskRequestV2:
+      type: object
+      required: [task_id, session_id, workload, model_ref, engine, ctx, priority, max_tokens, deadline_ms]
+      properties:
+        task_id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
+        workload: { $ref: '#/components/schemas/Workload' }
+        model_ref: { type: string }
+        engine: { $ref: '#/components/schemas/Engine' }
+        ctx: { type: integer, format: int32 }
+        priority: { type: string, enum: [interactive, batch] }
+        seed: { type: integer, format: int64 }
+        determinism: { type: string, enum: [strict, best_effort] }
+        sampler_profile_version: { type: string }
+        prompt: { type: string }
+        inputs: { type: array, items: { type: string } }
+        max_tokens: { type: integer, format: int32 }
+        deadline_ms: { type: integer, format: int64 }
+        expected_tokens: { type: integer, format: int32 }
+        kv_hint: { type: string, enum: [reuse, cold] }
+        placement:
+          type: object
+          properties:
+            mode: { type: string, enum: [pin, prefer, auto] }
+            pin_pool_id: { type: string }
+            prefer_pools: { type: array, items: { type: string } }
+            avoid_pools: { type: array, items: { type: string } }
+            require_device_mask: { type: string }
+            allow_fallback: { type: boolean, default: true }
+
+    AdmissionResponseV2:
+      type: object
+      required: [task_id, queue_position, predicted_start_ms, backoff_ms]
+      properties:
+        task_id: { type: string, format: uuid }
+        queue_position: { type: integer, format: int32 }
+        predicted_start_ms: { type: integer, format: int64 }
+        backoff_ms: { type: integer, format: int64 }
+        streams:
+          $ref: '#/components/schemas/StreamsLinksV2'
+        preparation:
+          $ref: '#/components/schemas/PreparationPlanV2'
+
+    StreamsLinksV2:
+      type: object
+      properties:
+        sse: { type: string, format: uri }
+        sse_verbose: { type: string, format: uri }
+
+    PreparationPlanV2:
+      type: object
+      properties:
+        steps:
+          type: array
+          items: { $ref: '#/components/schemas/PreparationStepV2' }
+
+    PreparationStepV2:
+      type: object
+      properties:
+        id: { type: string, description: "e.g., engine:llamacpp or model:hf:org/repo/file.gguf" }
+        kind: { type: string, enum: [engine_provision, model_fetch, pool_warmup] }
+        group: { type: string, enum: [engine, model, pool] }
+        description: { type: string }
+        estimated_ms: { type: integer, format: int64 }
+        bytes_total: { type: integer, format: int64 }
+        status: { $ref: '#/components/schemas/PreparationStepStatus' }
+
+    PreparationStepStatus:
+      type: string
+      enum: [pending, running, completed, failed]
+
+    SSEStarted:
+      type: object
+      properties:
+        queue_position: { type: integer, format: int32 }
+        predicted_start_ms: { type: integer, format: int64 }
+
+    SSEToken:
+      type: object
+      properties:
+        t: { type: string }
+        i: { type: integer, format: int32 }
+
+    SSEMetrics:
+      type: object
+      properties:
+        on_time_probability: { type: number, format: float }
+        queue_depth: { type: integer, format: int32 }
+        kv_warmth: { type: boolean }
+        tokens_budget_remaining: { type: integer, format: int64 }
+        time_budget_remaining_ms: { type: integer, format: int64 }
+        cost_budget_remaining: { type: number, format: float }
+        prep: { $ref: '#/components/schemas/PreparationProgress' }
+        human: { type: string }
+      additionalProperties: true
+
+    PreparationProgress:
+      type: object
+      additionalProperties: { $ref: '#/components/schemas/PreparationProgressItem' }
+
+    PreparationProgressItem:
+      type: object
+      properties:
+        status: { $ref: '#/components/schemas/PreparationStepStatus' }
+        bytes_total: { type: integer, format: int64 }
+        bytes_done: { type: integer, format: int64 }
+        pct: { type: integer, format: int32 }
+        phase: { type: string }
+        human: { type: string }
+
+    SSEEnd:
+      type: object
+      required: [tokens_out, decode_ms]
+      properties:
+        tokens_out: { type: integer, format: int32 }
+        decode_ms: { type: integer, format: int64 }
+
+    SSEError:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        engine: { type: string }

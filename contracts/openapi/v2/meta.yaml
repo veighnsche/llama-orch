@@ -1,0 +1,77 @@
+openapi: 3.0.3
+info:
+  title: llama-orch Meta API (v2)
+  version: 2.0.0
+  description: |
+    Discovery endpoints for capabilities and versions. Clients can use this plane to gate features.
+servers:
+  - url: /
+paths:
+  /v2/meta/capabilities:
+    get:
+      operationId: getCapabilitiesV2
+      summary: Discover server capabilities and limits
+      parameters:
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '200':
+          description: Capability set
+          headers:
+            X-Correlation-Id:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapabilitiesV2'
+  /v2/meta/version:
+    get:
+      operationId: getVersionV2
+      summary: Server build/version info
+      parameters:
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '200':
+          description: Version info
+          headers:
+            X-Correlation-Id:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  api_version: { type: string }
+                  build_commit: { type: string }
+                  build_time: { type: string }
+
+components:
+  parameters:
+    XCorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema: { type: string }
+      description: Optional request correlation ID; echoed back in responses.
+  schemas:
+    EngineV2:
+      type: string
+      enum: [llamacpp, vllm, tgi, triton]
+    WorkloadV2:
+      type: string
+      enum: [completion, embedding, rerank]
+    CapabilitiesV2:
+      type: object
+      required: [api_version, engines]
+      properties:
+        api_version: { type: string }
+        engines:
+          type: array
+          items:
+            type: object
+            required: [engine]
+            properties:
+              engine: { $ref: '#/components/schemas/EngineV2' }
+              ctx_max: { type: integer, format: int32 }
+              supported_workloads: { type: array, items: { $ref: '#/components/schemas/WorkloadV2' } }
+              features: { type: object, additionalProperties: true }
+              rate_limits: { type: object, additionalProperties: true }
