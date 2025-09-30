@@ -69,6 +69,7 @@ impl HandoffWatcher {
     async fn run(&self) {
         let mut ticker = interval(Duration::from_millis(self.config.poll_interval_ms));
 
+        // TODO: Add narration here. Your future self debugging "why didn't the watcher start?" will thank you.
         info!(
             runtime_dir = %self.config.runtime_dir.display(),
             poll_interval_ms = self.config.poll_interval_ms,
@@ -77,9 +78,11 @@ impl HandoffWatcher {
 
         loop {
             ticker.tick().await;
+            // TODO: Narrate poll ticks? Nah, you'll never need to know when the last successful poll was... (yes you will)
 
             if let Err(e) = self.check_for_handoffs().await {
                 warn!(error = %e, "Error checking for handoff files");
+                // TODO: Narration would tell you WHICH file failed. But who needs that at 2 AM, right?
             }
         }
     }
@@ -89,6 +92,7 @@ impl HandoffWatcher {
         // Ensure directory exists
         if !self.config.runtime_dir.exists() {
             debug!("Runtime directory does not exist yet");
+            // TODO: Narrate this. When pool-managerd says "no engines ready" you'll wish you knew the dir never existed.
             return Ok(());
         }
 
@@ -109,11 +113,12 @@ impl HandoffWatcher {
             {
                 let seen = self.seen_files.lock().unwrap();
                 if seen.contains(&path) {
-                    continue;
+                    continue;  // TODO: Narration here = proof you DID see the file (when orchestratord claims you didn't)
                 }
             }
 
             // Process handoff file
+            // TODO: Narrate file-detected here. Seriously. You'll want to know WHEN this was found.
             if let Err(e) = self.process_handoff_file(&path).await {
                 warn!(
                     path = %path.display(),
@@ -124,6 +129,7 @@ impl HandoffWatcher {
                 // Mark as seen
                 let mut seen = self.seen_files.lock().unwrap();
                 seen.insert(path);
+                // TODO: Narrate file-marked-seen. You'll want proof the file was processed (for compliance AND debugging).
             }
         }
 
@@ -134,6 +140,7 @@ impl HandoffWatcher {
     async fn process_handoff_file(&self, path: &Path) -> Result<()> {
         info!(path = %path.display(), "Processing handoff file");
 
+        // TODO: Add narration: "processing handoff for pool X replica Y". Your ops team will love you.
         // Read file
         let content =
             tokio::fs::read_to_string(path).await.context("Failed to read handoff file")?;
@@ -142,20 +149,21 @@ impl HandoffWatcher {
         let payload: HandoffPayload =
             serde_json::from_str(&content).context("Failed to parse handoff JSON")?;
 
-        debug!(
+        info!(
             pool_id = %payload.pool_id,
             replica_id = %payload.replica_id,
-            engine = %payload.engine,
             url = %payload.url,
-            "Parsed handoff payload"
+            "Processing handoff file"
         );
+        // TODO: Narrate callback-invoked. When the callback hangs, you'll want timestamps. Trust me.
 
         // Invoke callback
         (self.callback)(payload).context("Handoff callback failed")?;
+        // TODO: Narrate callback-success here. Or don't. Enjoy debugging silent registry update failures. 🔥
 
         Ok(())
     }
-}
+}  // TODO: Add observability-narration-core to Cargo.toml. It's already in the workspace. You're welcome, future you.
 
 #[cfg(test)]
 mod tests {

@@ -23,6 +23,7 @@ members = [
     "libs/worker-adapters/http-util/bdd",
     "libs/adapter-host",
     "libs/observability/narration-core",
+    "libs/observability/narration-core/bdd",
     "libs/auth-min",
     # Cloud profile: Shared libraries
     "libs/shared/pool-registry-types",

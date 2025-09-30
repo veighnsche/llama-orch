@@ -42,6 +42,7 @@
 //! });
 //! ```
 
+#[cfg(any(test, feature = "test-support"))]
 pub mod auto;
 mod capture;
 pub mod http;
@@ -175,6 +176,7 @@ pub fn narrate(fields: NarrationFields) {
     );
 
     // Notify capture adapter if active (ORCH-3306)
+    #[cfg(any(test, feature = "test-support"))]
     capture::notify(fields);
 }
 

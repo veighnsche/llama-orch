@@ -36,14 +36,16 @@ static UUID_PATTERN: OnceLock<Regex> = OnceLock::new();
 fn bearer_token_regex() -> &'static Regex {
     BEARER_TOKEN_PATTERN.get_or_init(|| {
         // Match "Bearer <token>" or "bearer <token>" with various token formats
-        Regex::new(r"(?i)bearer\s+[a-zA-Z0-9_\-\.=]+").unwrap()
+        Regex::new(r"(?i)bearer\s+[a-zA-Z0-9_\-\.=]+")
+            .expect("BUG: bearer token regex pattern is invalid")
     })
 }
 
 fn api_key_regex() -> &'static Regex {
     API_KEY_PATTERN.get_or_init(|| {
         // Match common API key patterns: "api_key=...", "apikey=...", "key=..."
-        Regex::new(r"(?i)(api_?key|key|token|secret|password)\s*[=:]\s*[a-zA-Z0-9_\-\.]+").unwrap()
+        Regex::new(r"(?i)(api_?key|key|token|secret|password)\s*[=:]\s*[a-zA-Z0-9_\-\.]+")
+            .expect("BUG: API key regex pattern is invalid")
     })
 }
 
@@ -51,7 +53,7 @@ fn uuid_regex() -> &'static Regex {
     UUID_PATTERN.get_or_init(|| {
         // Match UUIDs (8-4-4-4-12 hex format)
         Regex::new(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
-            .unwrap()
+            .expect("BUG: UUID regex pattern is invalid")
     })
 }
 

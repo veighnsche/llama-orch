@@ -7,6 +7,7 @@ mod toolchain;
 mod version;
 
 use anyhow::{anyhow, Context, Result};
+use observability_narration_core::{narrate, NarrationFields};
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -71,6 +72,14 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
     }
 
     fn ensure(&self, pool: &cfg::PoolConfig) -> Result<crate::PreparedEngine> {
+        narrate(NarrationFields {
+            actor: "engine-provisioner",
+            action: "start",
+            target: pool.id.clone(),
+            human: format!("Starting engine provisioning for pool {}", pool.id),
+            pool_id: Some(pool.id.clone()),
+            ..Default::default()
+        });
         let prov = &pool.provisioning;
         let src = prov
             .source
@@ -78,6 +87,14 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
             .ok_or_else(|| anyhow!("provisioning.source required for source mode"))?;
 
         // Preflight: ensure required tools; optionally install via pacman if allowed and running on Arch.
+        narrate(NarrationFields {
+            actor: "engine-provisioner",
+            action: "preflight",
+            target: pool.id.clone(),
+            human: "Checking required tools (git, cmake, nvcc)".to_string(),
+            pool_id: Some(pool.id.clone()),
+            ..Default::default()
+        });
         preflight_tools(prov, src)?;
 
         // Determine cache/build directories
@@ -94,6 +111,14 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
 
         // Clone or update repo
         if !src_dir.exists() {
+            narrate(NarrationFields {
+                actor: "engine-provisioner",
+                action: "git-clone",
+                target: src.repo.clone(),
+                human: format!("Cloning repository: {}", src.repo),
+                pool_id: Some(pool.id.clone()),
+                ..Default::default()
+            });
             cmd("git")
                 .arg("clone")
                 .arg(&src.repo)
@@ -103,6 +128,14 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
                 .and_then(ok_status)?;
         }
         // Checkout ref
+        narrate(NarrationFields {
+            actor: "engine-provisioner",
+            action: "git-checkout",
+            target: src.r#ref.clone(),
+            human: format!("Checking out ref: {}", src.r#ref),
+            pool_id: Some(pool.id.clone()),
+            ..Default::default()
+        });
         cmd_in(&src_dir, "git")
             .args(["fetch", "--all", "--tags"])
             .status()
@@ -115,6 +148,14 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
             .and_then(ok_status)?;
 
         // Configure CMake
+        narrate(NarrationFields {
+            actor: "engine-provisioner",
+            action: "cmake-configure",
+            target: pool.id.clone(),
+            human: format!("Configuring CMake build with flags: {:?}", src.build.cmake_flags),
+            pool_id: Some(pool.id.clone()),
+            ..Default::default()
+        });
         std::fs::create_dir_all(&build_dir).context("create build dir")?;
         // If prior configure cached deprecated LLAMA_CUBLAS in CMakeCache.txt, purge cache once.
         let original_flags = src.build.cmake_flags.clone().unwrap_or_default();
@@ -177,6 +218,14 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
         }
         let status = cfgcmd.status().context("cmake configure")?;
         if !status.success() && wants_cuda_env {
+            narrate(NarrationFields {
+                actor: "engine-provisioner",
+                action: "cmake-retry",
+                target: pool.id.clone(),
+                human: "CMake configure failed, retrying with compatible host compiler".to_string(),
+                pool_id: Some(pool.id.clone()),
+                ..Default::default()
+            });
             if let Some((cc, cxx)) = find_compat_host_compiler() {
                 eprintln!(
                     "warning: CUDA configure failed; retrying with host compiler CC={} CXX={}",
@@ -200,9 +249,15 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
                 }
                 let st_hc = cfgcmd_hc.status().context("cmake configure (host-compiler)")?;
                 if !st_hc.success() {
-                    return Err(anyhow!(
-                        "CUDA configure failed even with host compiler hint; GPU-only enforcement"
-                    ));
+                    narrate(NarrationFields {
+                        actor: "engine-provisioner",
+                        action: "cmake-failed",
+                        target: pool.id.clone(),
+                        human: "CUDA configure failed - GPU-only enforcement".to_string(),
+                        pool_id: Some(pool.id.clone()),
+                        ..Default::default()
+                    });
+                    return Err(anyhow!("CUDA configure failed even with host compiler hint; GPU-only enforcement"));
                 }
             } else {
                 return Err(anyhow!("CUDA configure failed and no compatible host compiler found; GPU-only enforcement"));
@@ -212,14 +267,22 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
         }
 
         // Build
+
         let jobs = std::thread::available_parallelism()
             .map(|n| n.get().to_string())
-            .unwrap_or_else(|_| "4".to_string());
+            .unwrap_or_else(|_| "4".to_string());        narrate(NarrationFields {
+            actor: "engine-provisioner",
+            action: "cmake-build",
+            target: pool.id.clone(),
+            human: format!("Building llama-server with {} parallel jobs", jobs),
+            pool_id: Some(pool.id.clone()),
+            ..Default::default()
+        });
         cmd("cmake")
             .args(["--build", build_dir.to_string_lossy().as_ref(), "-j", &jobs])
             .status()
             .context("cmake build")
-            .and_then(ok_status)?;
+            .and_then(ok_status)?;>>>>>>> main
 
         let server_bin = build_dir.join("bin").join("llama-server");
         if !server_bin.exists() {
@@ -271,6 +334,15 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
         let engine_version =
             format!("llamacpp-source:{}{}", src.r#ref, if gpu_enabled { "-cuda" } else { "-cpu" });
 
+        narrate(NarrationFields {
+            actor: "engine-provisioner",
+            action: "complete",
+            target: pool.id.clone(),
+            human: format!("Engine prepared: {} at port {}, model: {}", engine_version, port, model_path.display()),
+            pool_id: Some(pool.id.clone()),
+            ..Default::default()
+        });
+        
         Ok(crate::PreparedEngine {
             binary_path: server_bin,
             flags: applied_flags,

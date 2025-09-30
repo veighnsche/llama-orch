@@ -3,6 +3,7 @@ use catalog_core::{
     default_model_cache_dir, CatalogEntry, CatalogStore, Digest, FileFetcher, FsCatalog,
     LifecycleState, ModelFetcher, ModelRef, ResolvedModel,
 };
+use observability_narration_core::{narrate, NarrationFields};
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -43,6 +44,13 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
         model_ref: &str,
         expected_digest: Option<Digest>,
     ) -> Result<ResolvedModel> {
+        narrate(NarrationFields {
+            actor: "model-provisioner",
+            action: "resolve",
+            target: model_ref.to_string(),
+            human: format!("Resolving model reference: {}", model_ref),
+            ..Default::default()
+        });
         let mr = ModelRef::parse(model_ref)?;
         self.ensure_present(&mr, expected_digest)
     }
@@ -52,6 +60,14 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
         mr: &ModelRef,
         expected_digest: Option<Digest>,
     ) -> Result<ResolvedModel> {
+        let ref_str = format!("{:?}", mr);
+        narrate(NarrationFields {
+            actor: "model-provisioner",
+            action: "ensure",
+            target: ref_str.clone(),
+            human: format!("Ensuring model present: {}", ref_str),
+            ..Default::default()
+        });
         // Try primary fetcher first (file/relative). If unsupported, handle select schemes inline.
         let resolved = match self.fetcher.ensure_present(mr) {
             Ok(r) => r,
@@ -62,6 +78,13 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
                         let cache_dir = default_model_cache_dir();
                         std::fs::create_dir_all(&cache_dir).ok();
                         // Preflight: require HF CLI
+                        narrate(NarrationFields {
+                            actor: "model-provisioner",
+                            action: "download",
+                            target: format!("hf:{}/{}", org, repo),
+                            human: format!("Downloading from Hugging Face: {}/{}", org, repo),
+                            ..Default::default()
+                        });
                         let cli = ensure_hf_cli()?;
                         let repo_spec = format!("{}/{}", org, repo);
                         let mut c = Command::new(cli);
@@ -81,16 +104,31 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
                         }
                         let st = c.status()?;
                         if !st.success() {
+                            narrate(NarrationFields {
+                                actor: "model-provisioner",
+                                action: "download-failed",
+                                target: repo_spec.clone(),
+                                human: format!("HF CLI download failed for {}", repo_spec),
+                                ..Default::default()
+                            });
                             return Err(anyhow::anyhow!(
                                 "HF CLI download failed for {}. Try: pip install 'huggingface_hub[cli]' or verify network/CA certificates.",
                                 repo_spec
                             ));
                         }
+                        narrate(NarrationFields {
+                            actor: "model-provisioner",
+                            action: "downloaded",
+                            target: repo_spec.clone(),
+                            human: format!("Successfully downloaded {}", repo_spec),
+                            ..Default::default()
+                        });
                         let local_path = if let Some(p) = path {
                             cache_dir.join(p)
                         } else {
                             cache_dir.join(repo_spec.replace('/', "_"))
                         };
+                      
                         ResolvedModel {
                             id: format!(
                                 "hf:{}/{}{}",
@@ -108,6 +146,13 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
 
         // Optional strict verification: compute sha256 and enforce match when configured.
         if let Some(exp) = expected_digest.as_ref() {
+            narrate(NarrationFields {
+                actor: "model-provisioner",
+                action: "verify",
+                target: resolved.id.clone(),
+                human: format!("Verifying digest for {}", resolved.id),
+                ..Default::default()
+            });
             if exp.algo.eq_ignore_ascii_case("sha256") {
                 // Guard: only file paths can be hashed
                 if !resolved.local_path.is_file() {
@@ -118,12 +163,27 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
                 }
                 let act = crate::util::compute_sha256_hex(&resolved.local_path)?;
                 if act != exp.value {
+                    narrate(NarrationFields {
+                        actor: "model-provisioner",
+                        action: "verify-failed",
+                        target: resolved.id.clone(),
+                        human: format!("Digest mismatch: expected {}, got {}", exp.value, act),
+                        ..Default::default()
+                    });
+
                     return Err(anyhow::anyhow!(
                         "digest mismatch: expected sha256:{}, got {}",
                         exp.value,
                         act
                     ));
                 }
+                narrate(NarrationFields {
+                    actor: "model-provisioner",
+                    action: "verified",
+                    target: resolved.id.clone(),
+                    human: format!("Digest verified: {}", exp.value),
+                    ..Default::default()
+                });
             }
         }
 
@@ -135,6 +195,13 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
             last_verified_ms: None,
         };
         self.catalog.put(&entry)?;
+        narrate(NarrationFields {
+            actor: "model-provisioner",
+            action: "complete",
+            target: resolved.id.clone(),
+            human: format!("Model ready: {} at {}", resolved.id, resolved.local_path.display()),
+            ..Default::default()
+        });
         Ok(resolved)
     }
 }

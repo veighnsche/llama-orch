@@ -106,7 +106,10 @@ impl CaptureAdapter {
 
     /// Get all captured events.
     pub fn captured(&self) -> Vec<CapturedNarration> {
-        self.events.lock().unwrap().clone()
+        self.events
+            .lock()
+            .expect("BUG: capture adapter mutex poisoned - this indicates a panic in test code")
+            .clone()
     }
 
     /// Clear all captured events.
