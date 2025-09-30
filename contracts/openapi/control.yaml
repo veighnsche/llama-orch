@@ -1,208 +1,16 @@
 openapi: 3.0.3
 info:
-  title: Orchestrator Control Plane API
-  version: 1.0.0
+  title: llama-orch Control Plane API (v2)
+  version: 2.0.0
   description: |
-    Control plane endpoints for pool drain/reload and health, and capability discovery.
+    Pool lifecycle and provisioning controls (drain, reload, purge) and worker registration.
 servers:
   - url: /
 paths:
-  /v1/catalog/models:
+  /v2/pools/{id}/drain:
     post:
-      operationId: createCatalogModel
-      summary: Ingest or create a catalog model entry
-      x-req-id: [ORCH-3060]
-      parameters:
-        - $ref: '#/components/parameters/XCorrelationId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CatalogModel'
-            x-examples:
-              example:
-                value:
-                  id: "llama3-8b"
-                  digest: "sha256:deadbeef"
-                  source_url: "registry.example.com/llama3:8b"
-                  tags: ["latest", "prod"]
-                  trust_policy: { mode: strict, allowed_registries: ["registry.example.com"], require_signature: true, require_sbom: true }
-      responses:
-        '201':
-          description: Created
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CatalogModel'
-              x-examples:
-                created:
-                  value:
-                    id: "llama3-8b"
-                    digest: "sha256:deadbeef"
-                    source_url: "registry.example.com/llama3:8b"
-                    manifests: [ { digest: "sha256:deadbeef", size_bytes: 123456 } ]
-                    signatures: [ { signer: "Acme CI", algo: "cosign", verified: true, timestamp_ms: 1700000000000 } ]
-                    sbom: { uri: "https://sbom.example.com/llama3-8b.spdx.json", digest: "sha256:cafebabe" }
-
-  /v1/catalog/models/{id}:
-    get:
-      operationId: getCatalogModel
-      summary: Get catalog model manifest, digests, signatures, and SBOM reference
-      x-req-id: [ORCH-3060]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-        - $ref: '#/components/parameters/XCorrelationId'
-      responses:
-        '200':
-          description: OK
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CatalogModel'
-              x-examples:
-                example:
-                  value:
-                    id: "llama3-8b"
-                    digest: "sha256:deadbeef"
-                    source_url: "registry.example.com/llama3:8b"
-                    manifests: [ { digest: "sha256:deadbeef", size_bytes: 123456 } ]
-                    signatures: [ { signer: "Acme CI", algo: "cosign", verified: true, timestamp_ms: 1700000000000 } ]
-                    sbom: { uri: "https://sbom.example.com/llama3-8b.spdx.json", digest: "sha256:cafebabe" }
-    delete:
-      operationId: deleteCatalogModel
-      summary: Delete a catalog model and its local cached artifacts
-      x-req-id: [ORCH-3062]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-        - $ref: '#/components/parameters/XCorrelationId'
-      responses:
-        '204':
-          description: No Content
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-        '404':
-          description: Not Found
-
-  /v1/catalog/models/{id}/verify:
-    post:
-      operationId: verifyCatalogModel
-      summary: Trigger signature/attestation verification for a catalog entry
-      x-req-id: [ORCH-3061]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-        - $ref: '#/components/parameters/XCorrelationId'
-      responses:
-        '202':
-          description: Verification started
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
-              x-examples:
-                started:
-                  value: { status: "started" }
-
-  /v1/catalog/models/{id}/state:
-    post:
-      operationId: setCatalogModelState
-      summary: Set model lifecycle state
-      x-req-id: [ORCH-3072]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-        - $ref: '#/components/parameters/XCorrelationId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [state]
-              properties:
-                state:
-                  type: string
-                  enum: [Active, Retired]
-                deadline_ms:
-                  type: integer
-                  format: int64
-            x-examples:
-              deprecate_with_drain:
-                value: { state: Retired, deadline_ms: 600000 }
-      responses:
-        '202':
-          description: Accepted
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-
-  /v1/pools/{id}/purge:
-    post:
-      operationId: purgePool
-      summary: Purge engine and/or model artifacts for a pool (retesting convenience)
-      x-req-id: [ORCH-2104]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-        - $ref: '#/components/parameters/XCorrelationId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PurgeRequest'
-            x-examples:
-              engine_and_model:
-                value: { purge_engine: true, purge_models: ["hf:org/repo/file.gguf"], drain_first: true }
-      responses:
-        '202':
-          description: Accepted
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
-              x-examples:
-                accepted:
-                  value: { status: "accepted" }
-  /v1/pools/{id}/drain:
-    post:
-      operationId: drainPool
+      operationId: drainPoolV2
       summary: Initiate pool drain with deadline
-      x-req-id: [ORCH-2101]
       parameters:
         - name: id
           in: path
@@ -214,20 +22,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DrainRequest'
+              $ref: '#/components/schemas/DrainRequestV2'
       responses:
         '202':
           description: Accepted
           headers:
             X-Correlation-Id:
-              description: Correlation ID for tracing
               schema: { type: string }
-
-  /v1/pools/{id}/reload:
+  /v2/pools/{id}/reload:
     post:
-      operationId: reloadPool
-      summary: Reload a pool with a new model reference
-      x-req-id: [ORCH-2102]
+      operationId: reloadPoolV2
+      summary: Reload a pool with a new model reference (may trigger fetch)
       parameters:
         - name: id
           in: path
@@ -239,20 +44,39 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReloadRequest'
+              $ref: '#/components/schemas/ReloadRequestV2'
       responses:
         '202':
           description: Accepted
           headers:
             X-Correlation-Id:
-              description: Correlation ID for tracing
               schema: { type: string }
-
-  /v1/pools/{id}/health:
+  /v2/pools/{id}/purge:
+    post:
+      operationId: purgePoolV2
+      summary: Purge engine and/or model artifacts for a pool (retesting convenience)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurgeRequestV2'
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            X-Correlation-Id:
+              schema: { type: string }
+  /v2/pools/{id}/health:
     get:
-      operationId: getPoolHealth
+      operationId: getPoolHealthV2
       summary: Pool health and readiness
-      x-req-id: [ORCH-2103]
       parameters:
         - name: id
           in: path
@@ -264,80 +88,41 @@ paths:
           description: Health summary
           headers:
             X-Correlation-Id:
-              description: Correlation ID for tracing
               schema: { type: string }
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PoolHealth'
-
-
-  /v1/capabilities:
-    get:
-      operationId: getCapabilities
-      summary: Discover server capabilities and limits
-      x-req-id: [OC-CTRL-2060, OC-CTRL-2061]
-      parameters:
-        - $ref: '#/components/parameters/XCorrelationId'
-      responses:
-        '200':
-          description: Capability set
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Capabilities'
-
-  /v1/artifacts:
+                $ref: '#/components/schemas/PoolHealthV2'
+  /v2/workers/register:
     post:
-      operationId: createArtifact
-      summary: Store an artifact (plans, summaries, diffs, traces)
-      x-req-id: [OC-CTRL-2065]
+      operationId: registerWorkerV2
+      summary: Register a worker adapter instance with a pool/replica (dev only)
       parameters:
         - $ref: '#/components/parameters/XCorrelationId'
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Artifact'
-      responses:
-        '201':
-          description: Created
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ArtifactRef'
-
-  /v1/artifacts/{id}:
-    get:
-      operationId: getArtifact
-      summary: Fetch an artifact by ID
-      x-req-id: [OC-CTRL-2066]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-        - $ref: '#/components/parameters/XCorrelationId'
+              type: object
+              properties:
+                pool_id: { type: string }
+                replica_id: { type: string }
       responses:
         '200':
           description: OK
           headers:
             X-Correlation-Id:
-              description: Correlation ID for tracing
               schema: { type: string }
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Artifact'
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  identity: { type: string }
+                  pool_id: { type: string }
+                  replica_id: { type: string }
 
 components:
   parameters:
@@ -345,151 +130,31 @@ components:
       name: X-Correlation-Id
       in: header
       required: false
-      schema:
-        type: string
+      schema: { type: string }
       description: Optional request correlation ID; echoed back in responses.
   schemas:
-    Engine:
-      type: string
-      enum: [llamacpp, vllm, tgi, triton]
-    Workload:
-      type: string
-      enum: [completion, embedding, rerank]
-    Capabilities:
-      type: object
-      required: [api_version, engines]
-      properties:
-        api_version: { type: string, description: OpenAPI/contract version compatibility }
-        engines:
-          type: array
-          items:
-            type: object
-            required: [engine, ctx_max]
-            properties:
-              engine: { $ref: '#/components/schemas/Engine' }
-              ctx_max: { type: integer, format: int32 }
-              supported_workloads: { type: array, items: { $ref: '#/components/schemas/Workload' } }
-              rate_limits: { type: object, additionalProperties: true }
-              features: { type: object, additionalProperties: true }
-    ArtifactKind:
-      type: string
-      enum: [plan, summary, diff, trace, other]
-    ArtifactRef:
-      type: object
-      required: [id, kind]
-      properties:
-        id: { type: string }
-        kind: { $ref: '#/components/schemas/ArtifactKind' }
-        digest: { type: string }
-        created_ms: { type: integer, format: int64 }
-        tags: { type: array, items: { type: string } }
-    Artifact:
-      type: object
-      required: [kind, content]
-      properties:
-        kind: { $ref: '#/components/schemas/ArtifactKind' }
-        content: { type: object, additionalProperties: true }
-        tags: { type: array, items: { type: string } }
-        parent: { type: string, description: Optional parent artifact ID }
-        metadata: { type: object, additionalProperties: true }
-    TrustPolicy:
-      type: object
-      properties:
-        mode: { type: string, enum: [strict, permissive] }
-        allowed_registries: { type: array, items: { type: string } }
-        require_signature: { type: boolean }
-        require_sbom: { type: boolean }
-        ca_roots: { type: array, items: { type: string } }
-    SignatureMeta:
-      type: object
-      properties:
-        signer: { type: string }
-        algo: { type: string }
-        verified: { type: boolean }
-        timestamp_ms: { type: integer, format: int64 }
-    SBOMRef:
-      type: object
-      properties:
-        uri: { type: string }
-        digest: { type: string }
-    Manifest:
-      type: object
-      properties:
-        digest: { type: string }
-        size_bytes: { type: integer, format: int64 }
-    CatalogModel:
-      type: object
-      required: [id, digest]
-      properties:
-        id: { type: string }
-        digest: { type: string }
-        source_url: { type: string }
-        tags: { type: array, items: { type: string } }
-        manifests: { type: array, items: { $ref: '#/components/schemas/Manifest' } }
-        signatures: { type: array, items: { $ref: '#/components/schemas/SignatureMeta' } }
-        sbom: { $ref: '#/components/schemas/SBOMRef' }
-        trust_policy: { $ref: '#/components/schemas/TrustPolicy' }
-    DrainRequest:
+    DrainRequestV2:
       type: object
       required: [deadline_ms]
       properties:
         deadline_ms: { type: integer, format: int64 }
-    ReloadRequest:
+    ReloadRequestV2:
       type: object
       required: [new_model_ref]
       properties:
-        new_model_ref:
-          type: string
-          description: |
-            New model reference for the pool. Uses the same schemes as data-plane `TaskRequest.model_ref`:
-
-            - hf:org/repo/path/to/file.gguf — Single-file GGUF (llama.cpp).
-            - hf:org/repo — Full Transformers repo (vLLM/TGI).
-            - file:/abs/path or relative/path — Local file/dir (no download).
-            - https://… — Remote file/archive.
-            - s3://bucket/key — Object storage path (primarily Triton).
-            - oci://registry/repo:tag — OCI/NGC artifact (primarily Triton).
-
-            If the artifact is not present locally and policy allows, the system may auto-fetch into its model cache
-            before flipping the pool back to Ready.
-    PurgeRequest:
+        new_model_ref: { type: string }
+    PurgeRequestV2:
       type: object
-      description: Request to purge engine runtime and/or model artifacts from a pool host for retesting.
       properties:
-        purge_engine:
-          type: boolean
-          description: Stop worker processes and remove engine runtime/build artifacts for this pool.
-          default: false
-        purge_models:
-          type: array
-          description: List of model refs to remove from the model cache. If empty and `purge_engine` is true, only engine is purged.
-          items: { type: string }
-        drain_first:
-          type: boolean
-          description: If true, initiate a drain before purging to avoid interrupting running jobs.
-          default: true
-        delete_cache_dirs:
-          type: boolean
-          description: If true, recursively remove cache directories (dangerous).
-          default: false
-        force:
-          type: boolean
-          description: If true, proceed even if safety checks fail (for CI only).
-          default: false
-    PoolHealth:
+        purge_engine: { type: boolean, default: false }
+        purge_models: { type: array, items: { type: string } }
+        drain_first: { type: boolean, default: true }
+        delete_cache_dirs: { type: boolean, default: false }
+        force: { type: boolean, default: false }
+    PoolHealthV2:
       type: object
       properties:
         live: { type: boolean }
         ready: { type: boolean }
         draining: { type: boolean }
         metrics: { type: object, additionalProperties: true }
-    ReplicaSet:
-      type: object
-      required: [id, engine]
-      properties:
-        id: { type: string }
-        engine: { $ref: '#/components/schemas/Engine' }
-        load: { type: number, format: float }
-        slots_total: { type: integer, format: int32 }
-        slots_free: { type: integer, format: int32 }
-        slo: { type: object, additionalProperties: true }

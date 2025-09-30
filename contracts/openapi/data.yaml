@@ -1,20 +1,16 @@
 openapi: 3.0.3
 info:
-  title: Orchestrator Data Plane API — OrchQueue v1
-  version: 1.0.0
+  title: llama-orch Data Plane API (v2)
+  version: 2.0.0
   description: |
-    Public queue-centric API for task admission and streaming results.
-    See .specs/00_llama-orch.md §6.2.
+    Ergonomic data plane for enqueue → stream → cancel with verbose progress.
 servers:
   - url: /
 paths:
-  /v1/tasks:
+  /v2/tasks:
     post:
-      operationId: createTask
+      operationId: createTaskV2
       summary: Enqueue a task
-      x-req-id:
-        - ORCH-2001
-        - ORCH-2008
       parameters:
         - $ref: '#/components/parameters/XCorrelationId'
       requestBody:
@@ -22,26 +18,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TaskRequest'
-            x-examples:
-              good:
-                value:
-                  task_id: "00000000-0000-0000-0000-000000000001"
-                  session_id: "11111111-1111-1111-1111-111111111111"
-                  workload: completion
-                  model_ref: "hf:Qwen/Qwen2.5-0.5B-Instruct-GGUF/qwen2.5-0.5b-instruct-q4_k_m.gguf"
-                  engine: llamacpp
-                  ctx: 8192
-                  priority: interactive
-                  seed: 123456789
-                  determinism: strict
-                  sampler_profile_version: "v1"
-                  prompt: "Hello"
-                  max_tokens: 64
-                  deadline_ms: 30000
-              bad_invalid_params:
-                value:
-                  task_id: "not-a-uuid"
+              $ref: '#/components/schemas/TaskRequestV2'
       responses:
         '202':
           description: Accepted
@@ -49,216 +26,65 @@ paths:
             X-Correlation-Id:
               description: Correlation ID for tracing
               schema: { type: string }
-            X-Budget-Tokens-Remaining:
-              description: Optional session tokens budget remaining
-              schema: { type: integer, format: int64 }
-            X-Budget-Time-Remaining-Ms:
-              description: Optional session time budget remaining (ms)
-              schema: { type: integer, format: int64 }
-            X-Budget-Cost-Remaining:
-              description: Optional session cost budget remaining (currency units)
-              schema: { type: number, format: float }
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdmissionResponse'
-              x-examples:
-                accepted:
-                  value:
-                    task_id: "00000000-0000-0000-0000-000000000001"
-                    queue_position: 3
-                    predicted_start_ms: 420
-                    backoff_ms: 0
-        '400':
-          description: Invalid params
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorEnvelope'
-        '401':
-          description: Unauthorized
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-        '403':
-          description: Forbidden
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-        '429':
-          description: Queue full / backpressure
-          headers:
-            Retry-After:
-              schema: { type: string }
-            X-Backoff-Ms:
-              schema: { type: integer, format: int64 }
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BackpressureErrorEnvelope'
-              x-examples:
-                backpressure:
-                  value:
-                    code: "QUEUE_FULL_DROP_LRU"
-                    message: "Queue saturated; try later"
-                    engine: "vllm"
-                    retriable: true
-                    retry_after_ms: 1500
-                    policy_label: "drop-lru"
-          x-req-id:
-            - ORCH-2007
-        '503':
-          description: Pool unavailable
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-        '500':
-          description: Internal error
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-
-  /v1/tasks/{id}/stream:
+                $ref: '#/components/schemas/AdmissionResponseV2'
+        '400': { description: Invalid params }
+        '429': { description: Backpressure }
+        '503': { description: Pool unavailable }
+  /v2/tasks/{id}/events:
     get:
-      operationId: streamTask
+      operationId: streamTaskV2
       summary: Stream task events (SSE)
-      x-req-id:
-        - ORCH-2002
-      x-sse-events:
-        - name: started
-          schema: { $ref: '#/components/schemas/SSEStarted' }
-        - name: token
-          schema: { $ref: '#/components/schemas/SSEToken' }
-        - name: metrics
-          schema: { $ref: '#/components/schemas/SSEMetrics' }
-        - name: end
-          schema: { $ref: '#/components/schemas/SSEEnd' }
-        - name: error
-          schema: { $ref: '#/components/schemas/SSEError' }
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema: { type: string }
         - $ref: '#/components/parameters/XCorrelationId'
         - name: verbose
           in: query
           required: false
           schema: { type: boolean, default: false }
-          description: |
-            When true, the server MAY include additional human-narrated breadcrumbs and diagnostic
-            fields inside `metrics` frames (e.g., `{"human":"...","phase":"provision"}`).
-            Event names remain the same; this flag only affects the richness of `metrics` payloads.
+          description: When true, include human narration and prep progress in metrics frames.
       responses:
         '200':
-          description: text/event-stream
+          description: SSE stream
           headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-            X-Budget-Tokens-Remaining:
-              description: Optional session tokens budget remaining at stream start
-              schema: { type: integer, format: int64 }
-            X-Budget-Time-Remaining-Ms:
-              description: Optional session time budget remaining (ms) at stream start
-              schema: { type: integer, format: int64 }
-            X-Budget-Cost-Remaining:
-              description: Optional session cost budget remaining at stream start
-              schema: { type: number, format: float }
+            Content-Type:
+              schema: { type: string, enum: [text/event-stream] }
           content:
             text/event-stream:
               schema:
                 type: string
-          x-examples:
-            sse_frames:
-              value: |
-                event: started
-                data: {"queue_position":3,"predicted_start_ms":420}
+              examples:
+                sse:
+                  summary: SSE example
+                  value: |
+                    event: started
+                    data: {"queue_position":3,"predicted_start_ms":420}
 
-                event: token
-                data: {"t":"Hello","i":0}
+                    event: token
+                    data: {"t":"Hello","i":0}
 
-                event: metrics
-                data: {"queue_depth":2,"on_time_probability":0.82,"kv_warmth":true,"tokens_budget_remaining":12000,"time_budget_remaining_ms":45000,"cost_budget_remaining":0}
+                    event: metrics
+                    data: {"prep":{"engine:llamacpp":{"status":"running","pct":20,"human":"Building llama.cpp"}}}
 
-                event: end
-                data: {"tokens_out":64,"decode_ms":2300}
-
-  /v1/tasks/{id}/cancel:
+                    event: end
+                    data: {"tokens_out":64,"decode_ms":2300}
+  /v2/tasks/{id}/cancel:
     post:
-      operationId: cancelTask
+      operationId: cancelTaskV2
       summary: Cancel a running or queued task
-      x-req-id:
-        - ORCH-2003
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema: { type: string }
         - $ref: '#/components/parameters/XCorrelationId'
       responses:
-        '204':
-          description: No Content
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-
-  /v1/sessions/{id}:
-    get:
-      operationId: getSession
-      summary: Get session info
-      x-req-id:
-        - ORCH-2004
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-        - $ref: '#/components/parameters/XCorrelationId'
-      responses:
-        '200':
-          description: Session info
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SessionInfo'
-              x-examples:
-                example:
-                  value: { ttl_ms_remaining: 600000, turns: 1, kv_bytes: 0, kv_warmth: false }
-    delete:
-      operationId: deleteSession
-      summary: Delete a session and evict KV
-      x-req-id:
-        - ORCH-2005
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-        - $ref: '#/components/parameters/XCorrelationId'
-      responses:
-        '204':
-          description: No Content
-          headers:
-            X-Correlation-Id:
-              description: Correlation ID for tracing
-              schema: { type: string }
+        '204': { description: No Content }
 
 components:
   parameters:
@@ -266,86 +92,48 @@ components:
       name: X-Correlation-Id
       in: header
       required: false
-      schema:
-        type: string
+      schema: { type: string }
       description: Optional request correlation ID; echoed back in responses.
+
   schemas:
     Engine:
       type: string
-      description: Engine used by the worker/pool.
       enum: [llamacpp, vllm, tgi, triton]
-      x-req-id: [ORCH-2008]
-
     Workload:
       type: string
       enum: [completion, embedding, rerank]
 
-    DeterminismLevel:
-      type: string
-      enum: [strict, best_effort]
-
-    Priority:
-      type: string
-      enum: [interactive, batch]
-
-    KVHint:
-      type: string
-      enum: [reuse, cold]
-
-    PlacementMode:
-      type: string
-      enum: [pin, prefer, auto]
-
-    PlacementOverrides:
-      type: object
-      properties:
-        mode: { $ref: '#/components/schemas/PlacementMode' }
-        pin_pool_id: { type: string }
-        prefer_pools: { type: array, items: { type: string } }
-        avoid_pools: { type: array, items: { type: string } }
-        require_device_mask: { type: string }
-        allow_fallback: { type: boolean, default: true }
-
-    TaskRequest:
+    TaskRequestV2:
       type: object
       required: [task_id, session_id, workload, model_ref, engine, ctx, priority, max_tokens, deadline_ms]
       properties:
         task_id: { type: string, format: uuid }
         session_id: { type: string, format: uuid }
         workload: { $ref: '#/components/schemas/Workload' }
-        model_ref:
-          type: string
-          description: |
-            Model reference selecting the weights to use. Supported schemes (engine-dependent):
-
-            - hf:org/repo/path/to/file.gguf — Single-file GGUF for llama.cpp. If the file is missing in the model cache,
-              the system may download it before serving the request, subject to provisioning policy.
-            - hf:org/repo — Full Transformers repository (config/tokenizer/safetensors) for engines like vLLM and TGI.
-              The system may prefetch the repo into the model cache and use the local path.
-            - file:/abs/path or relative/path — Use a local file or directory directly; no download occurs.
-            - https://... — Remote file or archive; engine-specific handling may fetch and cache on first use.
-            - s3://bucket/key — Object storage path (primarily Triton model repos); may be fetched to cache.
-            - oci://registry/repo:tag — OCI/NGC artifact reference (primarily Triton); may be pulled into a local cache.
-
-            Behavior: If the referenced model artifact(s) are not available locally, and the server's provisioning policy
-            permits auto-fetch, the system will attempt to fetch/copy them into its model cache and then serve the task.
-            If auto-fetch is disabled or the pool is not yet ready with the requested artifact, the server may respond with
-            an advisory error (e.g., 503 POOL_UNREADY) or backpressure guidance.
+        model_ref: { type: string }
         engine: { $ref: '#/components/schemas/Engine' }
         ctx: { type: integer, format: int32 }
-        priority: { $ref: '#/components/schemas/Priority' }
+        priority: { type: string, enum: [interactive, batch] }
         seed: { type: integer, format: int64 }
-        determinism: { $ref: '#/components/schemas/DeterminismLevel' }
+        determinism: { type: string, enum: [strict, best_effort] }
         sampler_profile_version: { type: string }
         prompt: { type: string }
         inputs: { type: array, items: { type: string } }
         max_tokens: { type: integer, format: int32 }
         deadline_ms: { type: integer, format: int64 }
         expected_tokens: { type: integer, format: int32 }
-        kv_hint: { $ref: '#/components/schemas/KVHint' }
-        placement: { $ref: '#/components/schemas/PlacementOverrides' }
+        kv_hint: { type: string, enum: [reuse, cold] }
+        placement:
+          type: object
+          properties:
+            mode: { type: string, enum: [pin, prefer, auto] }
+            pin_pool_id: { type: string }
+            prefer_pools: { type: array, items: { type: string } }
+            avoid_pools: { type: array, items: { type: string } }
+            require_device_mask: { type: string }
+            allow_fallback: { type: boolean, default: true }
 
-    AdmissionResponse:
+    AdmissionResponseV2:
       type: object
       required: [task_id, queue_position, predicted_start_ms, backoff_ms]
       properties:
@@ -354,137 +142,66 @@ components:
         predicted_start_ms: { type: integer, format: int64 }
         backoff_ms: { type: integer, format: int64 }
         streams:
-          $ref: '#/components/schemas/StreamsLinks'
+          $ref: '#/components/schemas/StreamsLinksV2'
         preparation:
-          $ref: '#/components/schemas/PreparationPlan'
+          $ref: '#/components/schemas/PreparationPlanV2'
 
-    StreamsLinks:
+    StreamsLinksV2:
       type: object
-      description: Direct links to stream endpoints for this task.
       properties:
-        sse:
-          type: string
-          format: uri
-          description: Base SSE stream URL (equivalent to GET /v1/tasks/{id}/stream).
-        sse_verbose:
-          type: string
-          format: uri
-          description: SSE stream URL with `?verbose=true` to include human narration within `metrics` frames.
+        sse: { type: string, format: uri }
+        sse_verbose: { type: string, format: uri }
 
-    PreparationPlan:
+    PreparationPlanV2:
       type: object
-      description: Optional plan describing preparatory steps that may occur before decode begins.
       properties:
         steps:
           type: array
-          items: { $ref: '#/components/schemas/PreparationStep' }
+          items: { $ref: '#/components/schemas/PreparationStepV2' }
 
-    PreparationStep:
+    PreparationStepV2:
       type: object
       properties:
-        id:
-          type: string
-          description: Stable step identifier (e.g., 'engine:llamacpp', 'model:hf:org/repo/file.gguf').
-        kind: { $ref: '#/components/schemas/PreparationStepKind' }
+        id: { type: string, description: "e.g., engine:llamacpp or model:hf:org/repo/file.gguf" }
+        kind: { type: string, enum: [engine_provision, model_fetch, pool_warmup] }
+        group: { type: string, enum: [engine, model, pool] }
         description: { type: string }
-        estimated_ms: { type: integer, format: int64, description: Estimated duration if known }
-        group:
-          type: string
-          description: Concurrency group (e.g., 'engine', 'model'); groups may run in parallel.
-        bytes_total:
-          type: integer
-          format: int64
-          description: Optional total bytes for download/build when known.
-        status:
-          $ref: '#/components/schemas/PreparationStepStatus'
-
-    PreparationStepKind:
-      type: string
-      enum: [engine_provision, model_fetch, pool_warmup]
+        estimated_ms: { type: integer, format: int64 }
+        bytes_total: { type: integer, format: int64 }
+        status: { $ref: '#/components/schemas/PreparationStepStatus' }
 
     PreparationStepStatus:
       type: string
       enum: [pending, running, completed, failed]
 
-    ErrorKind:
-      type: string
-      enum:
-        - ADMISSION_REJECT
-        - INVALID_PARAMS
-        - POOL_UNREADY
-        - POOL_UNAVAILABLE
-        - REPLICA_EXHAUSTED
-        - DECODE_TIMEOUT
-        - WORKER_RESET
-        - INTERNAL
-        - DEADLINE_UNMET
-        - MODEL_DEPRECATED
-        - UNTRUSTED_ARTIFACT
-
-    ErrorEnvelope:
-      type: object
-      x-req-id: [ORCH-2006]
-      properties:
-        code: { $ref: '#/components/schemas/ErrorKind' }
-        message: { type: string }
-        engine: { $ref: '#/components/schemas/Engine' }
-        retriable: { type: boolean }
-        retry_after_ms: { type: integer, format: int64 }
-        policy_label: { type: string }
-
-    SessionInfo:
-      type: object
-      properties:
-        ttl_ms_remaining: { type: integer, format: int64 }
-        turns: { type: integer, format: int32 }
-        kv_bytes: { type: integer, format: int64 }
-        kv_warmth: { type: boolean }
-        tokens_budget_remaining: { type: integer, format: int64, description: Optional remaining tokens budget }
-        time_budget_remaining_ms: { type: integer, format: int64, description: Optional remaining time budget (ms) }
-        cost_budget_remaining: { type: number, format: float, description: Optional remaining cost budget }
-
     SSEStarted:
       type: object
-      required: [queue_position, predicted_start_ms]
       properties:
         queue_position: { type: integer, format: int32 }
         predicted_start_ms: { type: integer, format: int64 }
-      example: { queue_position: 3, predicted_start_ms: 420 }
 
     SSEToken:
       type: object
-      required: [t, i]
       properties:
-        t: { type: string, description: Token text }
-        i: { type: integer, format: int32, description: Incremental token index }
-      example: { t: "Hello", i: 0 }
+        t: { type: string }
+        i: { type: integer, format: int32 }
 
     SSEMetrics:
       type: object
-      description: Engine/pool specific snapshot; fields may be added in a backward-compatible way.
       properties:
-        on_time_probability: { type: number, format: float, description: Probability of on-time completion given current load }
-        queue_depth: { type: integer, format: int32, description: Current queue size for serving pool/replica }
-        kv_warmth: { type: boolean, description: Whether KV is warm for the session }
-        tokens_budget_remaining: { type: integer, format: int64, description: Optional remaining tokens budget }
-        time_budget_remaining_ms: { type: integer, format: int64, description: Optional remaining time budget (ms) }
-        cost_budget_remaining: { type: number, format: float, description: Optional remaining cost budget }
-        prep:
-          $ref: '#/components/schemas/PreparationProgress'
+        on_time_probability: { type: number, format: float }
+        queue_depth: { type: integer, format: int32 }
+        kv_warmth: { type: boolean }
+        tokens_budget_remaining: { type: integer, format: int64 }
+        time_budget_remaining_ms: { type: integer, format: int64 }
+        cost_budget_remaining: { type: number, format: float }
+        prep: { $ref: '#/components/schemas/PreparationProgress' }
+        human: { type: string }
       additionalProperties: true
-      example:
-        on_time_probability: 0.82
-        queue_depth: 2
-        kv_warmth: true
-        tokens_budget_remaining: 12000
-        prep:
-          "engine:llamacpp": { status: running, bytes_done: 10485760, bytes_total: 52428800, pct: 20, phase: "compile", human: "Building llama.cpp (10/50 MB)" }
-          "model:hf:org/repo/file.gguf": { status: running, bytes_done: 73400320, bytes_total: 104857600, pct: 70, phase: "download", human: "Downloading model (70/100 MB)" }
 
     PreparationProgress:
       type: object
-      additionalProperties:
-        $ref: '#/components/schemas/PreparationProgressItem'
+      additionalProperties: { $ref: '#/components/schemas/PreparationProgressItem' }
 
     PreparationProgressItem:
       type: object
@@ -492,9 +209,9 @@ components:
         status: { $ref: '#/components/schemas/PreparationStepStatus' }
         bytes_total: { type: integer, format: int64 }
         bytes_done: { type: integer, format: int64 }
-        pct: { type: integer, format: int32, description: Percentage 0-100 if computable }
-        phase: { type: string, description: Sub-phase (e.g., 'init','download','verify','compile','warmup') }
-        human: { type: string, description: Short narration for end users; duplicated in logs }
+        pct: { type: integer, format: int32 }
+        phase: { type: string }
+        human: { type: string }
 
     SSEEnd:
       type: object
@@ -502,21 +219,11 @@ components:
       properties:
         tokens_out: { type: integer, format: int32 }
         decode_ms: { type: integer, format: int64 }
-      example: { tokens_out: 64, decode_ms: 2300 }
 
     SSEError:
       type: object
       required: [code, message]
       properties:
-        code: { $ref: '#/components/schemas/ErrorKind' }
+        code: { type: string }
         message: { type: string }
-        engine: { $ref: '#/components/schemas/Engine' }
-      example: { code: 'POOL_UNAVAILABLE', message: 'GPU outage', engine: 'vllm' }
-
-    BackpressureErrorEnvelope:
-      allOf:
-        - $ref: '#/components/schemas/ErrorEnvelope'
-        - type: object
-          required: [policy_label]
-
-x-generated: true
+        engine: { type: string }
