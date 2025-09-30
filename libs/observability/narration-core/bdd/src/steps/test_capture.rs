@@ -1,8 +1,8 @@
 // Step definitions for test capture behaviors
 
+use crate::steps::world::World;
 use cucumber::{then, when};
 use observability_narration_core::{narrate, CaptureAdapter, NarrationFields};
-use crate::steps::world::World;
 
 #[when("I install a capture adapter")]
 pub async fn when_install_adapter(world: &mut World) {
@@ -68,8 +68,13 @@ pub async fn then_adapter_available(world: &mut World) {
 pub async fn then_captured_count(world: &mut World, expected: usize) {
     let adapter = world.adapter.as_ref().expect("Adapter not installed");
     let captured = adapter.captured();
-    assert_eq!(captured.len(), expected, 
-        "Expected {} captured events, got {}", expected, captured.len());
+    assert_eq!(
+        captured.len(),
+        expected,
+        "Expected {} captured events, got {}",
+        expected,
+        captured.len()
+    );
 }
 
 #[then(regex = r#"^assert_includes "([^"]+)" passes$"#)]

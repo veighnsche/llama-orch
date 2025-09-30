@@ -1,8 +1,10 @@
 // Step definitions for HTTP header propagation behaviors
 
-use cucumber::{then, when};
-use observability_narration_core::http::{extract_context_from_headers, inject_context_into_headers};
 use crate::steps::world::World;
+use cucumber::{then, when};
+use observability_narration_core::http::{
+    extract_context_from_headers, inject_context_into_headers,
+};
 
 #[when(regex = r#"^I set header "([^"]+)" to "([^"]+)"$"#)]
 pub async fn when_set_header(world: &mut World, name: String, value: String) {
@@ -11,7 +13,7 @@ pub async fn when_set_header(world: &mut World, name: String, value: String) {
 
 #[when("I extract context from headers")]
 pub async fn when_extract_context(world: &mut World) {
-    let (correlation_id, trace_id, span_id, parent_span_id) = 
+    let (correlation_id, trace_id, span_id, parent_span_id) =
         extract_context_from_headers(&world.headers);
     world.extracted_correlation_id = correlation_id;
     world.extracted_trace_id = trace_id;

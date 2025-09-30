@@ -70,15 +70,15 @@ impl PoolManagerClient {
     pub async fn get_pool_status(&self, pool_id: &str) -> Result<PoolStatus> {
         let url = format!("{}/pools/{}/status", self.base_url, pool_id);
         let body = serde_json::json!({});
-        
+
         // Build request with optional Bearer token
         let mut req = self.client.post(&url).json(&body);
         if let Some(token) = &self.api_token {
             req = req.bearer_auth(token);
         }
-        
+
         let resp = req.send().await?;
-        
+
         if !resp.status().is_success() {
             anyhow::bail!("pool status request failed: {}", resp.status());
         }
@@ -89,11 +89,11 @@ impl PoolManagerClient {
     pub async fn daemon_health(&self) -> Result<HealthResponse> {
         let url = format!("{}/health", self.base_url);
         let resp = self.client.get(&url).send().await?;
-        
+
         if !resp.status().is_success() {
             anyhow::bail!("health check failed: {}", resp.status());
         }
-        
+
         let health = resp.json().await?;
         Ok(health)
     }

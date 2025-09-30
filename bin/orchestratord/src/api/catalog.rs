@@ -27,10 +27,7 @@ pub async fn create_model(
     let digest_parsed = digest
         .as_ref()
         .and_then(|s| s.split_once(":"))
-        .map(|(algo, val)| Digest {
-            algo: algo.to_string(),
-            value: val.to_string(),
-        });
+        .map(|(algo, val)| Digest { algo: algo.to_string(), value: val.to_string() });
 
     let cat = open_catalog().map_err(|_e| ErrO::Internal)?;
     // Use a placeholder local path keyed by id; actual path will be set when provisioners ensure models.
@@ -76,10 +73,8 @@ pub async fn verify_model(
     let cat = open_catalog().map_err(|_e| ErrO::Internal)?;
     if let Some(mut entry) = CatalogStore::get(&cat, &id).map_err(|_e| ErrO::Internal)? {
         entry.last_verified_ms = Some(
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_millis() as u64,
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis()
+                as u64,
         );
         CatalogStore::put(&cat, &entry).map_err(|_e| ErrO::Internal)?;
         Ok(StatusCode::ACCEPTED)

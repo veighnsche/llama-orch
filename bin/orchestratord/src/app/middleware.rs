@@ -24,8 +24,7 @@ pub async fn correlation_id_layer(
     // Attach to request extensions so handlers/services can use it if needed
     req.extensions_mut().insert(corr.clone());
     let mut res = next.run(req).await;
-    res.headers_mut()
-        .insert("X-Correlation-Id", HeaderValue::from_str(&corr).unwrap());
+    res.headers_mut().insert("X-Correlation-Id", HeaderValue::from_str(&corr).unwrap());
     Ok(res)
 }
 

@@ -113,7 +113,7 @@ impl HandoffWatcher {
             {
                 let seen = self.seen_files.lock().unwrap();
                 if seen.contains(&path) {
-                    continue;  // TODO: Narration here = proof you DID see the file (when orchestratord claims you didn't)
+                    continue; // TODO: Narration here = proof you DID see the file (when orchestratord claims you didn't)
                 }
             }
 
@@ -163,7 +163,7 @@ impl HandoffWatcher {
 
         Ok(())
     }
-}  // TODO: Add observability-narration-core to Cargo.toml. It's already in the workspace. You're welcome, future you.
+} // TODO: Add observability-narration-core to Cargo.toml. It's already in the workspace. You're welcome, future you.
 
 #[cfg(test)]
 mod tests {

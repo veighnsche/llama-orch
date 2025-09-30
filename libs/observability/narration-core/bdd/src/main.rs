@@ -7,7 +7,5 @@ use steps::world::World;
 
 #[tokio::main]
 async fn main() {
-    World::cucumber()
-        .run_and_exit("tests/features")
-        .await;
+    World::cucumber().run_and_exit("tests/features").await;
 }

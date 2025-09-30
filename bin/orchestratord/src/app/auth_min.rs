@@ -36,31 +36,24 @@ pub async fn bearer_auth_middleware(
     }
 
     let headers = req.headers().clone();
-    
+
     // Read expected token from environment
-    let expected_token = std::env::var("LLORCH_API_TOKEN")
-        .ok()
-        .filter(|t| !t.is_empty());
-    
+    let expected_token = std::env::var("LLORCH_API_TOKEN").ok().filter(|t| !t.is_empty());
+
     // If no token configured, allow all requests (backward compat for loopback)
     let expected_token = match expected_token {
         Some(t) => t,
         None => {
             // No token required - allow request
-            let id = Identity {
-                breadcrumb: "localhost".to_string(),
-                auth_ok: true,
-            };
+            let id = Identity { breadcrumb: "localhost".to_string(), auth_ok: true };
             req.extensions_mut().insert(id);
             return Ok(next.run(req).await);
         }
     };
-    
+
     // Extract and parse Bearer token
-    let auth = headers
-        .get(http::header::AUTHORIZATION)
-        .and_then(|v| v.to_str().ok());
-    
+    let auth = headers.get(http::header::AUTHORIZATION).and_then(|v| v.to_str().ok());
+
     let received_token = match auth_min::parse_bearer(auth) {
         Some(token) => token,
         None => {
@@ -71,7 +64,7 @@ pub async fn bearer_auth_middleware(
             return Err(StatusCode::UNAUTHORIZED);
         }
     };
-    
+
     // Timing-safe comparison
     if !auth_min::timing_safe_eq(received_token.as_bytes(), expected_token.as_bytes()) {
         let fp6 = auth_min::token_fp6(&received_token);
@@ -83,21 +76,18 @@ pub async fn bearer_auth_middleware(
         );
         return Err(StatusCode::UNAUTHORIZED);
     }
-    
+
     // Success - attach identity and log
     let fp6 = auth_min::token_fp6(&received_token);
-    let id = Identity {
-        breadcrumb: format!("token:{}", fp6),
-        auth_ok: true,
-    };
-    
+    let id = Identity { breadcrumb: format!("token:{}", fp6), auth_ok: true };
+
     debug!(
         identity = %id.breadcrumb,
         path = %req.uri().path(),
         event = "authenticated",
         "Request authenticated"
     );
-    
+
     req.extensions_mut().insert(id);
     Ok(next.run(req).await)
 }
@@ -107,7 +97,9 @@ pub fn enforce_startup_bind_policy(addr: &str) -> Result<(), String> {
     let is_loopback = auth_min::is_loopback_addr(addr);
     let token = std::env::var("LLORCH_API_TOKEN").ok();
     if !is_loopback && token.as_deref().unwrap_or("").is_empty() {
-        return Err("refusing to bind non-loopback address without LLORCH_API_TOKEN set".to_string());
+        return Err(
+            "refusing to bind non-loopback address without LLORCH_API_TOKEN set".to_string()
+        );
     }
     Ok(())
 }

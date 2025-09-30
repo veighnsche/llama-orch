@@ -26,15 +26,16 @@ pub async fn get_pool_health(
     axum::extract::Path(id): axum::extract::Path<String>,
 ) -> Result<impl IntoResponse, ErrO> {
     // Call pool-managerd HTTP API
-    let status = state.pool_manager.get_pool_status(&id).await
-        .unwrap_or_else(|_| crate::clients::pool_manager::PoolStatus {
+    let status = state.pool_manager.get_pool_status(&id).await.unwrap_or_else(|_| {
+        crate::clients::pool_manager::PoolStatus {
             pool_id: id.clone(),
             live: false,
             ready: false,
             active_leases: 0,
             slots_total: 0,
             slots_free: 0,
-        });
+        }
+    });
     let (live, ready) = (status.live, status.ready);
     let last_error: Option<String> = None; // TODO: Get from daemon if needed
     let draining = {
@@ -108,10 +109,7 @@ pub async fn register_worker(
         state.adapter_host.bind(pool_id.clone(), replica_id.clone(), Arc::new(mock));
     }
 
-    Ok((
-        StatusCode::OK,
-        Json(json!({"ok": true, "pool_id": pool_id, "replica_id": replica_id})),
-    ))
+    Ok((StatusCode::OK, Json(json!({"ok": true, "pool_id": pool_id, "replica_id": replica_id}))))
 }
 
 /// v2 purge endpoint (stub): accept request and return 202 to indicate purge scheduled.
@@ -121,7 +119,6 @@ pub async fn purge_pool_v2(
     _state: State<AppState>,
     axum::extract::Path(_id): axum::extract::Path<String>,
     _body: Option<Json<serde_json::Value>>,
-)
--> Result<impl IntoResponse, ErrO> {
+) -> Result<impl IntoResponse, ErrO> {
     Ok(StatusCode::ACCEPTED)
 }

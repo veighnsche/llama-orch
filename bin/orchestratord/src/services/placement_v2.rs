@@ -16,13 +16,13 @@ use std::sync::Arc;
 pub struct PlacementDecisionV2 {
     /// Node ID (for CLOUD_PROFILE) or None (for HOME_PROFILE)
     pub node_id: Option<String>,
-    
+
     /// Pool ID on the selected node
     pub pool_id: String,
-    
+
     /// Optional replica ID
     pub replica_id: Option<String>,
-    
+
     /// Node address (for HTTP calls in CLOUD_PROFILE)
     pub node_address: Option<String>,
 }
@@ -32,10 +32,10 @@ pub struct PlacementDecisionV2 {
 pub enum PlacementStrategy {
     /// Round-robin across available pools
     RoundRobin,
-    
+
     /// Select pool with most free slots
     LeastLoaded,
-    
+
     /// Random selection
     Random,
 }
@@ -49,10 +49,7 @@ pub struct PlacementService {
 
 impl PlacementService {
     pub fn new(strategy: PlacementStrategy) -> Self {
-        Self {
-            strategy,
-            round_robin_counter: Arc::new(AtomicUsize::new(0)),
-        }
+        Self { strategy, round_robin_counter: Arc::new(AtomicUsize::new(0)) }
     }
 
     /// Select best pool for task execution
@@ -79,11 +76,11 @@ impl PlacementService {
 
         // Collect all available pools across all nodes
         let mut candidates: Vec<(String, String, PoolSnapshot)> = Vec::new();
-        
+
         for node in &nodes {
             // Get actual pool status from heartbeat data
             let pool_statuses = registry.get_node_pools(&node.node_id);
-            
+
             if pool_statuses.is_empty() {
                 // Fallback: Use pools from registration (no heartbeat data yet)
                 for pool_id in &node.pools {
@@ -106,11 +103,7 @@ impl PlacementService {
             } else {
                 // Use real heartbeat data
                 for status in pool_statuses {
-                    candidates.push((
-                        node.node_id.clone(),
-                        status.pool_id.clone(),
-                        status,
-                    ));
+                    candidates.push((node.node_id.clone(), status.pool_id.clone(), status));
                 }
             }
         }
@@ -121,10 +114,8 @@ impl PlacementService {
         }
 
         // Filter to ready, non-draining pools with free slots
-        let available: Vec<_> = candidates
-            .into_iter()
-            .filter(|(_, _, snapshot)| snapshot.is_available())
-            .collect();
+        let available: Vec<_> =
+            candidates.into_iter().filter(|(_, _, snapshot)| snapshot.is_available()).collect();
 
         if available.is_empty() {
             tracing::warn!("No pools with available slots");
@@ -138,11 +129,7 @@ impl PlacementService {
                 available[idx % available.len()].clone()
             }
             PlacementStrategy::LeastLoaded => {
-                available
-                    .iter()
-                    .max_by_key(|(_, _, status)| status.slots_free)
-                    .cloned()
-                    .unwrap()
+                available.iter().max_by_key(|(_, _, status)| status.slots_free).cloned().unwrap()
             }
             PlacementStrategy::Random => {
                 use rand::Rng;
@@ -152,10 +139,7 @@ impl PlacementService {
         };
 
         // Find node address
-        let node_address = nodes
-            .iter()
-            .find(|n| n.node_id == node_id)
-            .map(|n| n.address.clone());
+        let node_address = nodes.iter().find(|n| n.node_id == node_id).map(|n| n.address.clone());
 
         Some(PlacementDecisionV2 {
             node_id: Some(node_id),
@@ -170,7 +154,7 @@ impl PlacementService {
         // For HOME_PROFILE, use existing placement logic
         // Always return default pool (adapter binding checked elsewhere)
         let pool_id = "default".to_string();
-        
+
         Some(PlacementDecisionV2 {
             node_id: None,
             pool_id,
@@ -237,26 +221,26 @@ mod tests {
     #[test]
     fn test_placement_service_cloud_profile_no_nodes() {
         std::env::set_var("ORCHESTRATORD_CLOUD_PROFILE", "true");
-        
+
         let state = AppState::new();
         let service = PlacementService::new(PlacementStrategy::RoundRobin);
 
         // CLOUD_PROFILE: Should return None (no nodes registered)
         let decision = service.select_pool(&state);
         assert!(decision.is_none());
-        
+
         std::env::remove_var("ORCHESTRATORD_CLOUD_PROFILE");
     }
 
     #[test]
     fn test_placement_strategy_round_robin() {
         let service = PlacementService::new(PlacementStrategy::RoundRobin);
-        
+
         // Round-robin counter should increment
         let counter1 = service.round_robin_counter.load(Ordering::Relaxed);
         service.round_robin_counter.fetch_add(1, Ordering::Relaxed);
         let counter2 = service.round_robin_counter.load(Ordering::Relaxed);
-        
+
         assert_eq!(counter2, counter1 + 1);
     }
 

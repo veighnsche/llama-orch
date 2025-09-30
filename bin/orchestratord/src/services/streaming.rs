@@ -212,10 +212,8 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
         events = batched;
     }
     // Structured log for tokens_out and common fields
-    let tokens_out_count = events
-        .iter()
-        .filter(|(t, _)| <&str as AsRef<str>>::as_ref(t) == "token")
-        .count();
+    let tokens_out_count =
+        events.iter().filter(|(t, _)| <&str as AsRef<str>>::as_ref(t) == "token").count();
     if let Ok(mut lg) = state.logs.lock() {
         lg.push(format!(
             "{{\"job_id\":\"{}\",\"engine\":\"{}\",\"pool_id\":\"{}\",\"tokens_out\":{}}}",
@@ -329,7 +327,7 @@ mod tests {
     #[test]
     fn test_orchd_stream_ut_1101_health_gate_refuses_unready() {
         let state = AppState::new();
-        
+
         // Mark pool as not ready
         {
             let mut reg = state.pool_manager.lock().unwrap();
@@ -344,7 +342,7 @@ mod tests {
     #[test]
     fn test_orchd_stream_ut_1102_health_gate_allows_ready() {
         let state = AppState::new();
-        
+
         // Mark pool as ready with slots
         {
             let mut reg = state.pool_manager.lock().unwrap();
@@ -353,14 +351,17 @@ mod tests {
         }
 
         // should_dispatch should return true
-        assert!(should_dispatch(&state, "test-pool"), "should allow dispatch when ready with slots");
+        assert!(
+            should_dispatch(&state, "test-pool"),
+            "should allow dispatch when ready with slots"
+        );
     }
 
     // ORCHD-STREAM-UT-1103: streaming refuses dispatch when slots_free is 0
     #[test]
     fn test_orchd_stream_ut_1103_health_gate_refuses_no_slots() {
         let state = AppState::new();
-        
+
         // Mark pool as ready but no free slots
         {
             let mut reg = state.pool_manager.lock().unwrap();
@@ -376,7 +377,7 @@ mod tests {
     #[test]
     fn test_orchd_stream_ut_1104_health_gate_refuses_not_live() {
         let state = AppState::new();
-        
+
         // Mark pool as not live
         {
             let mut reg = state.pool_manager.lock().unwrap();

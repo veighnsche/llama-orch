@@ -8,29 +8,29 @@ use std::collections::HashMap;
 pub struct World {
     // Capture adapter for assertions
     pub adapter: Option<CaptureAdapter>,
-    
+
     // Current narration fields being built
     pub fields: NarrationFields,
-    
+
     // Redaction policy for testing
     pub redaction_policy: Option<RedactionPolicy>,
-    
+
     // HTTP headers for testing
     pub headers: HashMap<String, String>,
-    
+
     // Extracted context from headers
     pub extracted_correlation_id: Option<String>,
     pub extracted_trace_id: Option<String>,
     pub extracted_span_id: Option<String>,
     pub extracted_parent_span_id: Option<String>,
-    
+
     // Redaction test data
     pub redaction_input: String,
     pub redaction_output: String,
-    
+
     // Service identity test data
     pub service_identity: String,
-    
+
     // Timestamp test data
     pub timestamp_1: u64,
     pub timestamp_2: u64,
@@ -66,4 +66,3 @@ impl Default for World {
         }
     }
 }
-

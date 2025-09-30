@@ -1,8 +1,8 @@
 // Step definitions for core narration behaviors
 
-use cucumber::{given, then, when};
-use observability_narration_core::{narrate, human, NarrationFields, CaptureAdapter};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
+use observability_narration_core::{human, narrate, CaptureAdapter, NarrationFields};
 
 #[given("a clean capture adapter")]
 pub async fn given_clean_adapter(world: &mut World) {
@@ -12,7 +12,13 @@ pub async fn given_clean_adapter(world: &mut World) {
 }
 
 #[when(regex = "^I narrate with actor (.+), action (.+), target (.+), and human (.+)$")]
-pub async fn when_narrate_full(world: &mut World, actor: String, action: String, target: String, human_text: String) {
+pub async fn when_narrate_full(
+    world: &mut World,
+    actor: String,
+    action: String,
+    target: String,
+    human_text: String,
+) {
     narrate(NarrationFields {
         actor: Box::leak(actor.into_boxed_str()),
         action: Box::leak(action.into_boxed_str()),
@@ -105,15 +111,18 @@ pub async fn when_narrate_with_trace_id(world: &mut World, trace_id: String) {
     });
 }
 
-#[when(regex = "^I call legacy human\\(\\) with actor (.+), action (.+), target (.+), message (.+)$")]
-pub async fn when_call_legacy_human(world: &mut World, actor: String, action: String, target: String, message: String) {
+#[when(
+    regex = "^I call legacy human\\(\\) with actor (.+), action (.+), target (.+), message (.+)$"
+)]
+pub async fn when_call_legacy_human(
+    world: &mut World,
+    actor: String,
+    action: String,
+    target: String,
+    message: String,
+) {
     #[allow(deprecated)]
-    human(
-        Box::leak(actor.into_boxed_str()),
-        Box::leak(action.into_boxed_str()),
-        &target,
-        message
-    );
+    human(Box::leak(actor.into_boxed_str()), Box::leak(action.into_boxed_str()), &target, message);
 }
 
 #[then("the narration is captured")]

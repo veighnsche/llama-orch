@@ -49,7 +49,7 @@ fn inject_provenance(fields: &mut NarrationFields) {
 /// ```
 pub fn narrate_auto(mut fields: NarrationFields) {
     inject_provenance(&mut fields);
-  
+
     // Only inject if not already set
     if fields.emitted_by.is_none() {
         fields.emitted_by = Some(service_identity());
@@ -88,7 +88,7 @@ pub fn narrate_auto(mut fields: NarrationFields) {
 /// ```
 pub fn narrate_full(mut fields: NarrationFields) {
     inject_provenance(&mut fields);
-  
+
     // Inject service identity and timestamp
     if fields.emitted_by.is_none() {
         fields.emitted_by = Some(service_identity());
@@ -96,7 +96,7 @@ pub fn narrate_full(mut fields: NarrationFields) {
     if fields.emitted_at_ms.is_none() {
         fields.emitted_at_ms = Some(current_timestamp_ms());
     }
-    
+
     // Extract OTEL context
     let (trace_id, span_id, parent_span_id) = crate::otel::extract_otel_context();
     if fields.trace_id.is_none() {

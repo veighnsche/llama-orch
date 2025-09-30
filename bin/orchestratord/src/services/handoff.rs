@@ -28,8 +28,8 @@ use tracing::{debug, info, warn};
 /// Spawn a background task that watches for engine handoff files and auto-binds adapters.
 pub fn spawn_handoff_autobind_watcher(state: AppState) {
     tokio::spawn(async move {
-        let runtime_dir = std::env::var("ORCHD_RUNTIME_DIR")
-            .unwrap_or_else(|_| ".runtime/engines".to_string());
+        let runtime_dir =
+            std::env::var("ORCHD_RUNTIME_DIR").unwrap_or_else(|_| ".runtime/engines".to_string());
         let watch_interval_ms: u64 = std::env::var("ORCHD_HANDOFF_WATCH_INTERVAL_MS")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -44,7 +44,7 @@ pub fn spawn_handoff_autobind_watcher(state: AppState) {
 
         loop {
             sleep(Duration::from_millis(watch_interval_ms)).await;
-            
+
             let path = PathBuf::from(&runtime_dir);
             if !path.exists() {
                 debug!(target: "orchestratord::handoff", "runtime dir does not exist yet: {}", runtime_dir);
@@ -87,14 +87,8 @@ pub async fn process_handoff_file(state: &AppState, path: &PathBuf) -> anyhow::R
         .get("url")
         .and_then(|v| v.as_str())
         .ok_or_else(|| anyhow::anyhow!("missing 'url' in handoff"))?;
-    let pool_id = handoff
-        .get("pool_id")
-        .and_then(|v| v.as_str())
-        .unwrap_or("default");
-    let replica_id = handoff
-        .get("replica_id")
-        .and_then(|v| v.as_str())
-        .unwrap_or("r0");
+    let pool_id = handoff.get("pool_id").and_then(|v| v.as_str()).unwrap_or("default");
+    let replica_id = handoff.get("replica_id").and_then(|v| v.as_str()).unwrap_or("r0");
 
     // Check if already bound (idempotency)
     {

@@ -53,7 +53,7 @@ pub async fn create_task(
     if body.deadline_ms <= 0 {
         return Err(ErrO::DeadlineUnmet);
     }
-    
+
     // Test sentinels for BDD error taxonomy tests
     // Note: These are harmless in production (unlikely model_ref values)
     if body.model_ref == "pool-unavailable" {
@@ -62,7 +62,7 @@ pub async fn create_task(
     if body.prompt.as_deref() == Some("cause-internal") {
         return Err(ErrO::Internal);
     }
-    
+
     if let Some(exp) = body.expected_tokens {
         if exp >= 2_000_000 {
             return Err(ErrO::QueueFullDropLru { retry_after_ms: Some(1000) });
@@ -100,7 +100,10 @@ pub async fn create_task(
             Ok(p) => p,
             Err(()) => {
                 // Backpressure: reject with retry hints
-                return Err(ErrO::AdmissionReject { policy_label: "reject".into(), retry_after_ms: Some(1000) });
+                return Err(ErrO::AdmissionReject {
+                    policy_label: "reject".into(),
+                    retry_after_ms: Some(1000),
+                });
             }
         }
     };
@@ -115,23 +118,23 @@ pub async fn create_task(
         sse_verbose: format!("/v2/tasks/{}/events?verbose=true", body.task_id),
     };
     let preparation = api::Preparation { steps: vec![] };
-    
+
     // Record the admission snapshot for use by stream
     {
         let mut map = state.admissions.lock().unwrap();
         map.insert(
             body.task_id.clone(),
-            AdmissionSnapshot { 
+            AdmissionSnapshot {
                 info: AdmissionInfo { queue_position: pos, predicted_start_ms },
                 request: body.clone(),
             },
         );
     }
     // Success path
-    let admission = api::AdmissionResponse { 
-        task_id: body.task_id.clone(), 
-        queue_position: pos as i32, 
-        predicted_start_ms, 
+    let admission = api::AdmissionResponse {
+        task_id: body.task_id.clone(),
+        queue_position: pos as i32,
+        predicted_start_ms,
         backoff_ms: 0,
         streams: Some(streams),
         preparation: Some(preparation),

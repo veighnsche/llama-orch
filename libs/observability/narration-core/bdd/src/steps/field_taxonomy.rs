@@ -1,39 +1,29 @@
 // Step definitions for field taxonomy behaviors
 
+use crate::steps::world::World;
 use cucumber::{then, when};
 use observability_narration_core::{narrate, NarrationFields};
-use crate::steps::world::World;
 
 #[when(regex = r#"^I create NarrationFields with actor "([^"]+)"$"#)]
 pub async fn when_create_with_actor(world: &mut World, actor: String) {
-    world.fields = NarrationFields {
-        actor: Box::leak(actor.into_boxed_str()),
-        ..Default::default()
-    };
+    world.fields =
+        NarrationFields { actor: Box::leak(actor.into_boxed_str()), ..Default::default() };
 }
 
 #[when(regex = r#"^I create NarrationFields with action "([^"]+)"$"#)]
 pub async fn when_create_with_action(world: &mut World, action: String) {
-    world.fields = NarrationFields {
-        action: Box::leak(action.into_boxed_str()),
-        ..Default::default()
-    };
+    world.fields =
+        NarrationFields { action: Box::leak(action.into_boxed_str()), ..Default::default() };
 }
 
 #[when(regex = r#"^I create NarrationFields with target "([^"]+)"$"#)]
 pub async fn when_create_with_target(world: &mut World, target: String) {
-    world.fields = NarrationFields {
-        target,
-        ..Default::default()
-    };
+    world.fields = NarrationFields { target, ..Default::default() };
 }
 
 #[when(regex = r#"^I create NarrationFields with human "([^"]+)"$"#)]
 pub async fn when_create_with_human(world: &mut World, human: String) {
-    world.fields = NarrationFields {
-        human,
-        ..Default::default()
-    };
+    world.fields = NarrationFields { human, ..Default::default() };
 }
 
 #[when(regex = r#"^I narrate with job_id "([^"]+)"$"#)]

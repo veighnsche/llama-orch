@@ -7,18 +7,18 @@
 //! - GET /v2/nodes - List all registered nodes
 
 use crate::state::AppState;
+use auth_min::{parse_bearer, timing_safe_eq, token_fp6};
 use axum::{
     extract::{Path, State},
-    http::{StatusCode, HeaderMap},
+    http::{HeaderMap, StatusCode},
     response::{IntoResponse, Json},
 };
 use pool_registry_types::NodeInfo;
-use service_registry::{RegisterRequest, RegisterResponse, HeartbeatRequest, HeartbeatResponse};
+use service_registry::{HeartbeatRequest, HeartbeatResponse, RegisterRequest, RegisterResponse};
 use tracing::{info, warn};
-use auth_min::{parse_bearer, timing_safe_eq, token_fp6};
 
 /// Validate Bearer token from Authorization header using auth-min
-/// 
+///
 /// Uses timing-safe comparison to prevent timing attacks (CWE-208).
 /// Logs authentication events with token fingerprints for audit trails.
 fn validate_token(headers: &HeaderMap, _state: &AppState) -> bool {
@@ -29,10 +29,8 @@ fn validate_token(headers: &HeaderMap, _state: &AppState) -> bool {
     };
 
     // Extract Authorization header and parse Bearer token
-    let auth = headers
-        .get(http::header::AUTHORIZATION)
-        .and_then(|v| v.to_str().ok());
-    
+    let auth = headers.get(http::header::AUTHORIZATION).and_then(|v| v.to_str().ok());
+
     let received_token = match parse_bearer(auth) {
         Some(token) => token,
         None => {
@@ -113,7 +111,8 @@ pub async fn register_node(
             StatusCode::SERVICE_UNAVAILABLE,
             Json(RegisterResponse {
                 success: false,
-                message: "Cloud profile not enabled. Set ORCHESTRATORD_CLOUD_PROFILE=true".to_string(),
+                message: "Cloud profile not enabled. Set ORCHESTRATORD_CLOUD_PROFILE=true"
+                    .to_string(),
                 node_id: req.node_id.clone(),
             }),
         );
@@ -188,10 +187,7 @@ pub async fn heartbeat_node(
     if !validate_token(&headers, &state) {
         return (
             StatusCode::UNAUTHORIZED,
-            Json(HeartbeatResponse {
-                success: false,
-                next_heartbeat_ms: 10_000,
-            }),
+            Json(HeartbeatResponse { success: false, next_heartbeat_ms: 10_000 }),
         );
     }
 
@@ -200,18 +196,17 @@ pub async fn heartbeat_node(
     if !state.cloud_profile_enabled() {
         return (
             StatusCode::SERVICE_UNAVAILABLE,
-            Json(HeartbeatResponse {
-                success: false,
-                next_heartbeat_ms: 10_000,
-            }),
+            Json(HeartbeatResponse { success: false, next_heartbeat_ms: 10_000 }),
         );
     }
 
     match state.service_registry().heartbeat(&node_id) {
         Ok(_) => {
             // Convert HeartbeatPoolStatus to PoolSnapshot and store
-            let pool_snapshots: Vec<pool_registry_types::PoolSnapshot> = req.pools.iter().map(|p| {
-                pool_registry_types::PoolSnapshot {
+            let pool_snapshots: Vec<pool_registry_types::PoolSnapshot> = req
+                .pools
+                .iter()
+                .map(|p| pool_registry_types::PoolSnapshot {
                     pool_id: p.pool_id.clone(),
                     node_id: Some(node_id.clone()),
                     ready: p.ready,
@@ -221,27 +216,18 @@ pub async fn heartbeat_node(
                     vram_free_bytes: p.vram_free_bytes,
                     engine: p.engine.clone(),
                     models_available: vec![],
-                }
-            }).collect();
-            
+                })
+                .collect();
+
             state.service_registry().update_pool_status(&node_id, pool_snapshots);
-            
-            (
-                StatusCode::OK,
-                Json(HeartbeatResponse {
-                    success: true,
-                    next_heartbeat_ms: 10_000,
-                }),
-            )
+
+            (StatusCode::OK, Json(HeartbeatResponse { success: true, next_heartbeat_ms: 10_000 }))
         }
         Err(e) => {
             warn!(node_id = %node_id, error = %e, "Heartbeat failed");
             (
                 StatusCode::NOT_FOUND,
-                Json(HeartbeatResponse {
-                    success: false,
-                    next_heartbeat_ms: 10_000,
-                }),
+                Json(HeartbeatResponse { success: false, next_heartbeat_ms: 10_000 }),
             )
         }
     }
@@ -304,12 +290,12 @@ pub async fn list_nodes(State(state): State<AppState>) -> impl IntoResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::app::router::build_router;
     use axum::{
         body::Body,
         http::{Request, StatusCode},
     };
     use tower::ServiceExt;
-    use crate::app::router::build_router;
 
     #[tokio::test]
     async fn test_register_node_disabled_cloud_profile() {
@@ -348,7 +334,7 @@ mod tests {
     async fn test_register_node_cloud_profile_enabled() {
         // Enable cloud profile
         std::env::set_var("ORCHESTRATORD_CLOUD_PROFILE", "true");
-        
+
         let state = AppState::new();
         let app = build_router(state);
 
@@ -378,14 +364,14 @@ mod tests {
             .unwrap();
 
         assert_eq!(response.status(), StatusCode::OK);
-        
+
         std::env::remove_var("ORCHESTRATORD_CLOUD_PROFILE");
     }
 
     #[tokio::test]
     async fn test_heartbeat_node_not_registered() {
         std::env::set_var("ORCHESTRATORD_CLOUD_PROFILE", "true");
-        
+
         let state = AppState::new();
         let app = build_router(state);
 
@@ -407,30 +393,24 @@ mod tests {
             .unwrap();
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
-        
+
         std::env::remove_var("ORCHESTRATORD_CLOUD_PROFILE");
     }
 
     #[tokio::test]
     async fn test_list_nodes_empty() {
         std::env::set_var("ORCHESTRATORD_CLOUD_PROFILE", "true");
-        
+
         let state = AppState::new();
         let app = build_router(state);
 
         let response = app
-            .oneshot(
-                Request::builder()
-                    .method("GET")
-                    .uri("/v2/nodes")
-                    .body(Body::empty())
-                    .unwrap(),
-            )
+            .oneshot(Request::builder().method("GET").uri("/v2/nodes").body(Body::empty()).unwrap())
             .await
             .unwrap();
 
         assert_eq!(response.status(), StatusCode::OK);
-        
+
         std::env::remove_var("ORCHESTRATORD_CLOUD_PROFILE");
     }
 }

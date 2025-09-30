@@ -1,8 +1,8 @@
 // Step definitions for redaction behaviors
 
+use crate::steps::world::World;
 use cucumber::{then, when};
 use observability_narration_core::{redact_secrets, RedactionPolicy};
-use crate::steps::world::World;
 
 #[when("I create a default redaction policy")]
 pub async fn when_create_default_policy(world: &mut World) {
@@ -57,18 +57,29 @@ pub async fn then_replacement_is(world: &mut World, expected: String) {
 
 #[then(regex = r#"^the output is "([^"]+)"$"#)]
 pub async fn then_output_is(world: &mut World, expected: String) {
-    assert_eq!(world.redaction_output, expected,
-        "Expected output '{}', got '{}'", expected, world.redaction_output);
+    assert_eq!(
+        world.redaction_output, expected,
+        "Expected output '{}', got '{}'",
+        expected, world.redaction_output
+    );
 }
 
 #[then(regex = r#"^the output does not contain "([^"]+)"$"#)]
 pub async fn then_output_not_contains(world: &mut World, text: String) {
-    assert!(!world.redaction_output.contains(&text),
-        "Output should not contain '{}', but got '{}'", text, world.redaction_output);
+    assert!(
+        !world.redaction_output.contains(&text),
+        "Output should not contain '{}', but got '{}'",
+        text,
+        world.redaction_output
+    );
 }
 
 #[then(regex = r#"^the output contains "([^"]+)"$"#)]
 pub async fn then_output_contains(world: &mut World, text: String) {
-    assert!(world.redaction_output.contains(&text),
-        "Output should contain '{}', but got '{}'", text, world.redaction_output);
+    assert!(
+        world.redaction_output.contains(&text),
+        "Output should contain '{}', but got '{}'",
+        text,
+        world.redaction_output
+    );
 }

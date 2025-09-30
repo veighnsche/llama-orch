@@ -123,7 +123,7 @@ pub trait HeaderLike {
     /// Get a header value as a String.
     /// Returns `None` if the header is missing or contains invalid UTF-8.
     fn get_str(&self, name: &str) -> Option<String>;
-    
+
     /// Insert a header value.
     /// Implementations should validate or sanitize the value.
     fn insert_str(&mut self, name: &str, value: &str);

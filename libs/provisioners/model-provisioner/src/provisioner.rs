@@ -128,7 +128,7 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
                         } else {
                             cache_dir.join(repo_spec.replace('/', "_"))
                         };
-                      
+
                         ResolvedModel {
                             id: format!(
                                 "hf:{}/{}{}",

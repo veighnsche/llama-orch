@@ -12,12 +12,14 @@ pub fn build_app() -> Router {
     #[cfg(feature = "llamacpp-adapter")]
     {
         if let Ok(url) = std::env::var("ORCHD_LLAMACPP_URL") {
-            let pool = std::env::var("ORCHD_LLAMACPP_POOL").unwrap_or_else(|_| "default".to_string());
-            let replica = std::env::var("ORCHD_LLAMACPP_REPLICA").unwrap_or_else(|_| "r0".to_string());
+            let pool =
+                std::env::var("ORCHD_LLAMACPP_POOL").unwrap_or_else(|_| "default".to_string());
+            let replica =
+                std::env::var("ORCHD_LLAMACPP_REPLICA").unwrap_or_else(|_| "r0".to_string());
             let adapter = worker_adapters_llamacpp_http::LlamaCppHttpAdapter::new(url);
             state.adapter_host.bind(pool.clone(), replica, Arc::new(adapter));
-            if let Ok(mut s) = state.bound_pools.lock() { 
-                s.insert(format!("{}:{}", pool, replica)); 
+            if let Ok(mut s) = state.bound_pools.lock() {
+                s.insert(format!("{}:{}", pool, replica));
             }
         }
     }
@@ -27,7 +29,7 @@ pub fn build_app() -> Router {
     if !state.cloud_profile_enabled() {
         crate::services::handoff::spawn_handoff_autobind_watcher(state.clone());
     }
-    
+
     // Spawn stale node checker if cloud profile enabled
     if state.cloud_profile_enabled() {
         let registry = state.service_registry().clone();
@@ -41,7 +43,7 @@ pub fn build_app() -> Router {
             "Started stale node checker for cloud profile"
         );
     }
-    
+
     build_router(state)
 }
 

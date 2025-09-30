@@ -1,10 +1,10 @@
+use crate::admission::{MetricLabels, QueueWithMetrics};
+use crate::clients::pool_manager::PoolManagerClient;
 use crate::ports::storage::ArtifactStore;
 use crate::services::placement::PlacementCache;
 use crate::services::placement_v2::{PlacementService, PlacementStrategy};
-use crate::admission::{MetricLabels, QueueWithMetrics};
-use crate::clients::pool_manager::PoolManagerClient;
-use orchestrator_core::queue::Policy;
 use adapter_host::AdapterHost;
+use orchestrator_core::queue::Policy;
 use service_registry::ServiceRegistry;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
@@ -96,14 +96,12 @@ impl AppState {
             },
             // Placement service (strategy from env)
             placement_service: {
-                let strategy = match std::env::var("ORCHESTRATORD_PLACEMENT_STRATEGY")
-                    .ok()
-                    .as_deref()
-                {
-                    Some("least-loaded") => PlacementStrategy::LeastLoaded,
-                    Some("random") => PlacementStrategy::Random,
-                    _ => PlacementStrategy::RoundRobin,
-                };
+                let strategy =
+                    match std::env::var("ORCHESTRATORD_PLACEMENT_STRATEGY").ok().as_deref() {
+                        Some("least-loaded") => PlacementStrategy::LeastLoaded,
+                        Some("random") => PlacementStrategy::Random,
+                        _ => PlacementStrategy::RoundRobin,
+                    };
                 PlacementService::new(strategy)
             },
         }
@@ -157,14 +155,14 @@ mod tests {
     #[test]
     fn test_app_state_cloud_profile_enabled() {
         std::env::set_var("ORCHESTRATORD_CLOUD_PROFILE", "true");
-        
+
         let state = AppState::new();
         assert!(state.cloud_profile_enabled());
         assert!(state.service_registry.is_some());
-        
+
         // Should not panic
         let _registry = state.service_registry();
-        
+
         std::env::remove_var("ORCHESTRATORD_CLOUD_PROFILE");
     }
 
@@ -172,10 +170,10 @@ mod tests {
     fn test_app_state_custom_node_timeout() {
         std::env::set_var("ORCHESTRATORD_CLOUD_PROFILE", "true");
         std::env::set_var("ORCHESTRATORD_NODE_TIMEOUT_MS", "60000");
-        
+
         let state = AppState::new();
         assert!(state.service_registry.is_some());
-        
+
         std::env::remove_var("ORCHESTRATORD_CLOUD_PROFILE");
         std::env::remove_var("ORCHESTRATORD_NODE_TIMEOUT_MS");
     }

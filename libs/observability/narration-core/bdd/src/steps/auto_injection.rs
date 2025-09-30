@@ -1,8 +1,10 @@
 // Step definitions for auto-injection behaviors
 
-use cucumber::{then, when};
-use observability_narration_core::{narrate_auto, narrate_full, service_identity, current_timestamp_ms, NarrationFields};
 use crate::steps::world::World;
+use cucumber::{then, when};
+use observability_narration_core::{
+    current_timestamp_ms, narrate_auto, narrate_full, service_identity, NarrationFields,
+};
 use std::thread;
 use std::time::Duration;
 
@@ -98,23 +100,32 @@ pub async fn when_narrate_full_with_trace_id(_world: &mut World, trace_id: Strin
 #[then(regex = r#"^it matches the pattern "([^"]+)"$"#)]
 pub async fn then_matches_pattern(world: &mut World, pattern: String) {
     let re = regex::Regex::new(&pattern).expect("Invalid regex pattern");
-    assert!(re.is_match(&world.service_identity), 
-        "Service identity '{}' does not match pattern '{}'", 
-        world.service_identity, pattern);
+    assert!(
+        re.is_match(&world.service_identity),
+        "Service identity '{}' does not match pattern '{}'",
+        world.service_identity,
+        pattern
+    );
 }
 
 #[then(regex = r#"^it contains "([^"]+)"$"#)]
 pub async fn then_contains(world: &mut World, text: String) {
-    assert!(world.service_identity.contains(&text),
+    assert!(
+        world.service_identity.contains(&text),
         "Service identity '{}' does not contain '{}'",
-        world.service_identity, text);
+        world.service_identity,
+        text
+    );
 }
 
 #[then("timestamp 2 is greater than or equal to timestamp 1")]
 pub async fn then_timestamp_2_gte_1(world: &mut World) {
-    assert!(world.timestamp_2 >= world.timestamp_1,
+    assert!(
+        world.timestamp_2 >= world.timestamp_1,
         "Timestamp 2 ({}) should be >= timestamp 1 ({})",
-        world.timestamp_2, world.timestamp_1);
+        world.timestamp_2,
+        world.timestamp_1
+    );
 }
 
 #[then("the captured narration has emitted_by set")]
@@ -139,8 +150,7 @@ pub async fn then_emitted_by_contains(world: &mut World, text: String) {
     let captured = adapter.captured();
     assert!(!captured.is_empty(), "No narration captured");
     let emitted_by = captured[0].emitted_by.as_ref().expect("emitted_by not set");
-    assert!(emitted_by.contains(&text), 
-        "emitted_by '{}' should contain '{}'", emitted_by, text);
+    assert!(emitted_by.contains(&text), "emitted_by '{}' should contain '{}'", emitted_by, text);
 }
 
 #[then(regex = r"^the captured narration has emitted_at_ms greater than (\d+)$")]
@@ -149,8 +159,7 @@ pub async fn then_emitted_at_ms_gt(world: &mut World, threshold: u64) {
     let captured = adapter.captured();
     assert!(!captured.is_empty(), "No narration captured");
     let timestamp = captured[0].emitted_at_ms.expect("emitted_at_ms not set");
-    assert!(timestamp > threshold, 
-        "emitted_at_ms ({}) should be > {}", timestamp, threshold);
+    assert!(timestamp > threshold, "emitted_at_ms ({}) should be > {}", timestamp, threshold);
 }
 
 #[then("the captured narration may have trace_id")]
