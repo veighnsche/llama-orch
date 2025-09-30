@@ -120,6 +120,7 @@ impl Registry {
             perf_hints: None,
         });
         entry.version = Some(v.into());
+    }
 
     pub fn get_version(&self, pool_id: &str) -> Option<String> {
         self.pools.get(pool_id).and_then(|e| e.version.as_ref().cloned())
@@ -147,6 +148,48 @@ impl Registry {
 
     pub fn get_engine_version(&self, pool_id: &str) -> Option<String> {
         self.pools.get(pool_id).and_then(|e| e.engine_version.as_ref().cloned())
+    }
+
+    /// Optionally set engine metadata fields; only provided fields are updated.
+    pub fn set_engine_meta<V, D, C>(
+        &mut self,
+        pool_id: impl Into<String>,
+        version: Option<V>,
+        digest: Option<D>,
+        catalog_id: Option<C>,
+    ) where
+        V: Into<String>,
+        D: Into<String>,
+        C: Into<String>,
+    {
+        let id = pool_id.into();
+        let entry = self.pools.entry(id).or_insert(PoolEntry {
+            health: HealthStatus { live: false, ready: false },
+            last_heartbeat_ms: None,
+            version: None,
+            last_error: None,
+            active_leases: 0,
+            engine_version: None,
+            engine_digest: None,
+            engine_catalog_id: None,
+            device_mask: None,
+            slots_total: None,
+            slots_free: None,
+            perf_hints: None,
+        });
+        if let Some(v) = version { entry.engine_version = Some(v.into()); }
+        if let Some(d) = digest { entry.engine_digest = Some(d.into()); }
+        if let Some(c) = catalog_id { entry.engine_catalog_id = Some(c.into()); }
+    }
+
+    pub fn get_engine_digest(&self, pool_id: &str) -> Option<String> {
+        self.pools.get(pool_id).and_then(|e| e.engine_digest.as_ref().cloned())
+    }
+
+    pub fn get_engine_catalog_id(&self, pool_id: &str) -> Option<String> {
+        self.pools
+            .get(pool_id)
+            .and_then(|e| e.engine_catalog_id.as_ref().cloned())
     }
 
     pub fn set_device_mask(&mut self, pool_id: impl Into<String>, mask: impl Into<String>) {
@@ -225,13 +268,26 @@ impl Registry {
         });
         // Health
         entry.health = HealthStatus { live: true, ready: true };
-        // Meta
-        entry.engine_version = handoff.get("engine_version").and_then(|v| v.as_str()).map(|s| s.to_string());
-        if let Some(dm) = handoff.get("device_mask").and_then(|v| v.as_str()) { entry.device_mask = Some(dm.to_string()); }
-        let total = handoff.get("slots_total").and_then(|v| v.as_i64()).map(|x| x as i32).unwrap_or(1);
-        let free = handoff.get("slots_free").and_then(|v| v.as_i64()).map(|x| x as i32).unwrap_or(total);
+        // Meta: only overwrite if present
+        if let Some(v) = handoff.get("engine_version").and_then(|v| v.as_str()) {
+            entry.engine_version = Some(v.to_string());
+        }
+        if let Some(dm) = handoff.get("device_mask").and_then(|v| v.as_str()) {
+            entry.device_mask = Some(dm.to_string());
+        }
+        // Slots: prefer incoming values, otherwise preserve existing, default to 1/total if none
+        let incoming_total = handoff.get("slots_total").and_then(|v| v.as_i64()).map(|x| x as i32);
+        let incoming_free = handoff.get("slots_free").and_then(|v| v.as_i64()).map(|x| x as i32);
+        let total = incoming_total
+            .or(entry.slots_total)
+            .unwrap_or(1);
+        let mut free = incoming_free
+            .or(entry.slots_free)
+            .unwrap_or(total);
+        free = free.max(0).min(total);
         entry.slots_total = Some(total);
-        entry.slots_free = Some(free.max(0).min(total));
+        entry.slots_free = Some(free);
+        // Clear last error on successful ready registration
         entry.last_error = None;
         // Heartbeat now (ms)
         let now_ms = {
@@ -241,7 +297,7 @@ impl Registry {
         };
         entry.last_heartbeat_ms = Some(now_ms);
     }
-}
+    
     pub fn allocate_lease(&mut self, pool_id: impl Into<String>) -> i32 {
         let id = pool_id.into();
         let entry = self.pools.entry(id).or_insert(PoolEntry {
@@ -324,10 +380,11 @@ mod tests {
         assert_eq!(r.release_lease("pool0"), 0);
     }
 
-    // OC-POOL-3110: register_ready_from_handoff sets readiness and metadata
+    // OC-POOL-3101: registering from a valid handoff sets ready=true, fills meta/slots, clears last_error
     #[test]
-    fn test_register_ready_from_handoff_sets_ready_and_meta() {
+    fn test_oc_pool_3101_register_ready_sets_ready_meta_and_clears_error() {
         let mut r = Registry::new();
+        r.set_last_error("p1", "previous error");
         let handoff = json::json!({
             "engine_version": "llamacpp-source:v0-cpu",
             "device_mask": "GPU0",
@@ -342,15 +399,18 @@ mod tests {
         assert_eq!(r.get_slots_total("p1"), Some(2));
         assert_eq!(r.get_slots_free("p1"), Some(1));
         assert!(r.get_heartbeat("p1").is_some());
+        assert_eq!(r.get_last_error("p1"), None);
     }
 
-    // OC-POOL-3111: idempotent update maintains invariants and clamps slots_free
+    // OC-POOL-3102: repeated registrations update heartbeat/version; tolerate partial handoff fields
     #[test]
-    fn test_register_ready_from_handoff_idempotent() {
+    fn test_oc_pool_3102_register_ready_idempotent_and_partial() {
         let mut r = Registry::new();
         let handoff1 = json::json!({ "engine_version": "v1", "slots_total": 4, "slots_free": 4 });
         r.register_ready_from_handoff("p2", &handoff1);
-        let handoff2 = json::json!({ "engine_version": "v2", "slots_total": 4, "slots_free": 10 });
+        let hb1 = r.get_heartbeat("p2").unwrap();
+        // second handoff updates version, clamps free, and should not panic when fields are partial
+        let handoff2 = json::json!({ "engine_version": "v2", "slots_free": 10 });
         r.register_ready_from_handoff("p2", &handoff2);
         let h = r.get_health("p2").unwrap();
         assert!(h.ready);
@@ -358,5 +418,7 @@ mod tests {
         assert_eq!(r.get_slots_total("p2"), Some(4));
         // free clamped to total
         assert_eq!(r.get_slots_free("p2"), Some(4));
+        let hb2 = r.get_heartbeat("p2").unwrap();
+        assert!(hb2 >= hb1);
     }
 }
