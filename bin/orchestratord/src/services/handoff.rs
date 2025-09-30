@@ -112,22 +112,20 @@ async fn process_handoff_file(state: &AppState, path: &PathBuf) -> anyhow::Resul
 
     #[cfg(not(feature = "llamacpp-adapter"))]
     {
-        warn!(
+        debug!(
             target: "orchestratord::handoff",
             "llamacpp-adapter feature not enabled, skipping bind"
         );
     }
 
-    // Update pool registry with readiness
-    {
-        let mut reg = state.pool_manager.lock().map_err(|_| anyhow::anyhow!("lock"))?;
-        reg.register_ready_from_handoff(pool_id, &handoff);
-        info!(
-            target: "orchestratord::handoff",
-            pool_id=%pool_id,
-            "pool marked ready in registry"
-        );
-    }
+    // pool-managerd daemon now manages its own registry
+    // No need to update from orchestratord side
+    info!(
+        target: "orchestratord::handoff",
+        pool_id=%pool_id,
+        replica_id=%replica_id,
+        "handoff processed (daemon manages registry)"
+    );
 
     // Mark as bound
     {

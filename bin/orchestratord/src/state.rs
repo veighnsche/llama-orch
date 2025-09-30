@@ -1,9 +1,9 @@
 use crate::ports::storage::ArtifactStore;
 use crate::services::placement::PlacementCache;
 use crate::admission::{MetricLabels, QueueWithMetrics};
+use crate::clients::pool_manager::PoolManagerClient;
 use orchestrator_core::queue::Policy;
 use adapter_host::AdapterHost;
-use pool_managerd::registry::Registry as PoolRegistry;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 
@@ -12,7 +12,7 @@ pub struct AppState {
     pub logs: Arc<Mutex<Vec<String>>>,
     pub sessions: Arc<Mutex<HashMap<String, SessionInfo>>>,
     pub artifacts: Arc<Mutex<HashMap<String, serde_json::Value>>>,
-    pub pool_manager: Arc<Mutex<PoolRegistry>>,
+    pub pool_manager: PoolManagerClient,
     pub draining_pools: Arc<Mutex<HashMap<String, bool>>>,
     pub artifact_store: Arc<dyn ArtifactStore>,
     pub cancellations: Arc<Mutex<HashSet<String>>>,
@@ -59,7 +59,7 @@ impl AppState {
             logs: Arc::new(Mutex::new(Vec::new())),
             sessions: Arc::new(Mutex::new(HashMap::new())),
             artifacts: Arc::new(Mutex::new(HashMap::new())),
-            pool_manager: Arc::new(Mutex::new(PoolRegistry::new())),
+            pool_manager: PoolManagerClient::from_env(),
             draining_pools: Arc::new(Mutex::new(HashMap::new())),
             artifact_store: Arc::new(crate::infra::storage::inmem::InMemStore::default()),
             cancellations: Arc::new(Mutex::new(HashSet::new())),

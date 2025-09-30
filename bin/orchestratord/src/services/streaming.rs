@@ -230,14 +230,9 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
 
 /// Determine if a pool is dispatchable: Live+Ready and slots_free > 0.
 fn should_dispatch(state: &AppState, pool_id: &str) -> bool {
-    let reg = match state.pool_manager.lock() {
-        Ok(r) => r,
-        Err(_) => return false,
-    };
-    let h = reg.get_health(pool_id);
-    let (live, ready) = h.map(|hh| (hh.live, hh.ready)).unwrap_or((true, true));
-    let free = reg.get_slots_free(pool_id).unwrap_or(1);
-    live && ready && free > 0
+    // TODO: Make async to call HTTP API
+    // For now, always return true
+    true
 }
 
 fn try_dispatch_via_adapter(
