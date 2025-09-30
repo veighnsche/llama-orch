@@ -20,14 +20,13 @@ Goals:
 Non-goals:
 
 - Implementing individual model engines (done by worker adapters)
-- Multi-host cluster orchestration beyond single host reference environment
 
 ## 2. Responsibilities
 
 - Data-plane admission and task lifecycle (enqueue, stream, cancel)
 - Session lifecycle and budgets (tokens/time/cost)
 - Artifact registry (content-addressed documents + metadata)
-- Capability discovery (unified on /v1/capabilities)
+- Discovery (unified on /v2/meta/capabilities and /v2/meta/version)
 - Control plane for pools (drain, reload, health) and lifecycle state
 - Observability endpoints (/metrics) and correlation-ID propagation
 
@@ -40,31 +39,32 @@ OpenAPI sources:
 
 Data plane:
 
-- `POST /v1/tasks` — enqueue task, returns 202 with `queue_position`, `predicted_start_ms`, and budget headers
-- `GET  /v1/tasks/:id/stream` — SSE stream: `started`, repeated `token`, optional repeated `metrics`, `end`; transcript persisted as artifact
-- `POST /v1/tasks/:id/cancel` — cancel queued/running task
-- `GET  /v1/sessions/:id` — session introspection (TTL, turns, KV metadata, budgets)
-- `DELETE /v1/sessions/:id` — delete session
+- `POST /v2/tasks` — enqueue task, returns 202 with `queue_position`, `predicted_start_ms`, and budget headers
+- `GET  /v2/tasks/:id/events` — SSE stream: `started`, repeated `token`, optional repeated `metrics`, `end`; transcript persisted as artifact
+- `POST /v2/tasks/:id/cancel` — cancel queued/running task
+- `GET  /v2/sessions/:id` — session introspection (TTL, turns, KV metadata, budgets)
+- `DELETE /v2/sessions/:id` — delete session
 
 - Cancel semantics: MUST be race-free; no tokens may be emitted after cancel (planned propagation of cancel to adapters)
 
 Artifacts:
 
-- `POST /v1/artifacts` — create document; content-addressed by SHA-256; returns 201 and `id`
-- `GET  /v1/artifacts/:id` — fetch document; 404 if not found
+- `POST /v2/artifacts` — create document; content-addressed by SHA-256; returns 201 and `id`
+- `GET  /v2/artifacts/:id` — fetch document; 404 if not found
 
 Capability discovery:
 
-- `GET /v1/capabilities` — single source of truth; includes `api_version` and engine capability snapshot. Shape:
-  - `{"api_version":"1.0.0","engines":[{"engine":"llamacpp","ctx_max":32768,"supported_workloads":["completion","embedding","rerank"],"rate_limits":{},"features":{}}, ... for vllm, tgi, triton]}`
+- `GET /v2/meta/capabilities` — single source of truth; includes `api_version` and engine capability snapshot. Shape:
+  - `{"api_version":"2.0.0","engines":[{"engine":"llamacpp","ctx_max":32768,"supported_workloads":["completion","embedding","rerank"],"rate_limits":{},"features":{}}, ... for vllm, tgi, triton]}`
 - `GET /v1/replicasets` — REMOVED pre‑1.0; MUST NOT be served (no backwards-compatibility shims)
 
 Control plane:
 
-- `POST /v1/pools/:id/drain` — mark draining; readiness 0
-- `POST /v1/pools/:id/reload` — model swap; readiness 1 (happy path)
-- `GET  /v1/pools/:id/health` — liveness/readiness, draining flag, pool metrics JSON, last_error
-- `POST /v1/catalog/models/:id/state` — set model state; only `Active|Retired` supported
+- `POST /v2/pools/:id/drain` — mark draining; readiness 0
+- `POST /v2/pools/:id/reload` — model swap; readiness 1 (happy path)
+- `GET  /v2/pools/:id/health` — liveness/readiness, draining flag, pool metrics JSON, last_error
+- `POST /v2/pools/:id/purge` — purge engine and/or model artifacts for a pool (retesting convenience)
+- `POST /v2/catalog/models/:id/state` — set model state; only `Active|Retired` supported
 - Catalog CRUD/verify stubs exist; persistence is TODO
 
 Observability:
@@ -116,7 +116,7 @@ Transcript persistence:
   - Zero-TTL sessions are pruned on `create_task`, `get_session`, and stream end
 - Additional in-memory stores:
   - `tasks`: maps `task_id -> session_id` for observability; mapping is cleared on stream end
-  - `sse`: stores last SSE transcript per `task_id` used by `GET /v1/tasks/:id/stream` fallback
+  - `sse`: stores last SSE transcript per `task_id` used by `GET /v2/tasks/:id/events` fallback
 
 ## 7. Queue Admission & Backpressure
 
@@ -137,7 +137,7 @@ Transcript persistence:
 
 ## 9. Capability Discovery
 
-- Primary: `/v1/capabilities` with `api_version` and engine feature snapshot
+- Primary: `/v2/meta/capabilities` with `api_version` and engine feature snapshot
 - `/v1/replicasets` is REMOVED pre‑1.0 and MUST NOT be served
 
 - Capability payload SHOULD include declared concurrency per engine/pool (e.g., `"concurrency": <int>`) to aid client scheduling
@@ -266,7 +266,7 @@ orchestratord/
 
 ## 20. Versioning & Compatibility
 
-- OpenAPI `info.version`: 1.0.0 (signaled via `/v1/capabilities`)
+- OpenAPI `info.version`: 2.0.0 (discoverable via `/v2/meta/version` and `/v2/meta/capabilities`)
 - Adheres to semver once API stabilizes; until then, alpha warnings apply
 
 ## 21. Appendix

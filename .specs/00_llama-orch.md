@@ -75,7 +75,7 @@ This specification is the single source of truth for llama-orch in a home lab. I
 * Lifecycle states are limited to `Active` and `Retired`; legacy `Draft`/`Canary` states are removed. Catalog state transitions MUST update pool readiness and related metrics consistently. (ORCH-3031, ORCH-3037)
 * When checksums/digests are provided, verification MUST be performed and MUST fail pre‑admission on mismatch; otherwise verification MAY proceed with warnings. (ORCH-3037, ORCH-3097)
 * Pool drain/reload MUST be atomic and reversible: reload success toggles Ready, failure rolls back. (ORCH-3031 & ORCH-3038)
-* Artifact registry SHOULD expose `POST /v1/artifacts` + `GET /v1/artifacts/{id}` for plans/diffs/traces stored on local disk. (ORCH-3097 & ORCH-3098)
+* Artifact registry SHOULD expose `POST /v2/artifacts` + `GET /v2/artifacts/{id}` for plans/diffs/traces stored on local disk. (ORCH-3097 & ORCH-3098)
 
 ### 2.7 Security & Policy
 
@@ -101,7 +101,7 @@ This specification is the single source of truth for llama-orch in a home lab. I
 
 ### 2.9 Capability Discovery
 
-* The API MUST expose capability information via `GET /v1/capabilities` covering engine versions, max context, supported workloads, and declared concurrency. `GET /v1/replicasets` is removed pre‑1.0 and MUST NOT be served. (ORCH-3095)
+* The API MUST expose capability information via `GET /v2/meta/capabilities` covering engine versions, max context, supported workloads, and declared concurrency. `GET /v1/replicasets` is removed pre‑1.0 and MUST NOT be served. (ORCH-3095)
 * Capability payloads MUST include an API version compatible with OpenAPI `info.version`. (ORCH-3096)
 
 ### 2.10 Resilience & Recovery
@@ -181,7 +181,7 @@ This specification is the single source of truth for llama-orch in a home lab. I
 * Startup self-tests MUST cover preload, minimal decode, cancel, metrics/log emission. (ORCH-3049)
 * Determinism suite MUST verify byte-exact streams across replicas per engine (llama.cpp with `--parallel 1 --no-cont-batching`, others in single-slot mode). (ORCH-3050)
 * Chaos/load tests SHOULD exercise drain/reload, driver resets, queue saturation, cancel. (ORCH-3051)
-* Haiku E2E (anti-cheat) MUST run on a real GPU worker via OrchQueue v1 only; `REQUIRE_REAL_LLAMA=1` enforces this. (ORCH-3051)
+* Haiku E2E (anti-cheat) MUST run on a real GPU worker via OrchQueue v2 only; `REQUIRE_REAL_LLAMA=1` enforces this. (ORCH-3051)
 
 ---
 

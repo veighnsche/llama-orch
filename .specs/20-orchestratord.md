@@ -1,4 +1,4 @@
-# Orchestratord SPEC — Control/Data Plane, SSE, Backpressure (v1.0)
+# Orchestratord SPEC — Control/Data Plane, SSE, Backpressure (v2.0)
 
 Status: Stable (draft)
 Applies to: `orchestratord/`
@@ -10,18 +10,18 @@ This SPEC defines the public control and data plane behavior of `orchestratord`,
 
 ## 1) Control Plane
 
-- [OC-CTRL-2001] `GET /v1/pools/:id/health` MUST return liveness, readiness, draining, and metrics snapshot fields.
-- [OC-CTRL-2002] `POST /v1/pools/:id/drain` MUST accept a JSON body with `deadline_ms` and MUST begin draining.
-- [OC-CTRL-2003] `POST /v1/pools/:id/reload` MUST atomically switch model references or fail and roll back.
-- [OC-CTRL-2004] Discovery MUST use `GET /v1/capabilities`. `GET /v1/replicasets` is REMOVED pre‑1.0 and MUST NOT be served.
+- [OC-CTRL-2001] `GET /v2/pools/:id/health` MUST return liveness, readiness, draining, and metrics snapshot fields.
+- [OC-CTRL-2002] `POST /v2/pools/:id/drain` MUST accept a JSON body with `deadline_ms` and MUST begin draining.
+- [OC-CTRL-2003] `POST /v2/pools/:id/reload` MUST atomically switch model references or fail and roll back.
+- [OC-CTRL-2004] Discovery MUST use `GET /v2/meta/capabilities`. `GET /v1/replicasets` is REMOVED pre‑1.0 and MUST NOT be served.
 
 See: [contracts/openapi/control.yaml](../contracts/openapi/control.yaml), [orchestratord/src/main.rs](../orchestratord/src/main.rs), [orchestratord/tests/provider_verify.rs](../orchestratord/tests/provider_verify.rs)
 
-## 2) Data Plane — OrchQueue v1
+## 2) Data Plane — OrchQueue v2
 
-- [OC-CTRL-2010] `POST /v1/tasks` MUST perform admission checks (ctx, token budget) before enqueue.
+- [OC-CTRL-2010] `POST /v2/tasks` MUST perform admission checks (ctx, token budget) before enqueue.
 - [OC-CTRL-2011] On queue full, server MUST reply `429` and include `Retry-After` and `X-Backoff-Ms`. The JSON body MUST include `policy_label`, `retriable`, and `retry_after_ms` (advisory) to guide clients.
-- [OC-CTRL-2012] `POST /v1/tasks/:id/cancel` MUST be race‑free; no tokens may be emitted after cancel.
+- [OC-CTRL-2012] `POST /v2/tasks/:id/cancel` MUST be race‑free; no tokens may be emitted after cancel.
 
 ### 2.1 Optional Pin Override
 
@@ -30,7 +30,7 @@ See: [contracts/openapi/control.yaml](../contracts/openapi/control.yaml), [orche
 
 ## 3) SSE Framing
 
-- [OC-CTRL-2020] `GET /v1/tasks/:id/stream` MUST emit events `started`, `token`, `metrics`, `end`, `error`.
+- [OC-CTRL-2020] `GET /v2/tasks/:id/events` MUST emit events `started`, `token`, `metrics`, `end`, `error`.
 - [OC-CTRL-2021] `started` MUST include `queue_position` and `predicted_start_ms` when available.
 - [OC-CTRL-2022] Event payloads MUST be well‑formed JSON; ordering MUST be per stream.
 

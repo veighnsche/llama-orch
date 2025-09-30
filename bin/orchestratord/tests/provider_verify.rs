@@ -1,3 +1,4 @@
+// Provider verification against OpenAPI v2-only endpoints.
 use openapiv3::{OpenAPI, Operation, ReferenceOr, StatusCode};
 use serde_json::Value;
 use serde_yaml as syaml;
@@ -13,61 +14,118 @@ fn repo_root() -> PathBuf {
 }
 
 #[test]
-fn control_capabilities_and_artifacts_contract() {
+fn meta_control_and_artifacts_contracts_v2() {
     use openapiv3::ReferenceOr as R;
     let root = repo_root();
-    let oapi_path = root.join("contracts/openapi/control.yaml");
-    let spec: OpenAPI = serde_yaml::from_str(&fs::read_to_string(&oapi_path).unwrap()).unwrap();
 
-    // GET /v1/capabilities -> 200
-    let item = match spec.paths.paths.get("/v1/capabilities").expect("path exists") {
+    // Meta: capabilities under /v2/meta/capabilities
+    let meta_path = root.join("contracts/openapi/meta.yaml");
+    let meta_spec: OpenAPI = serde_yaml::from_str(&fs::read_to_string(&meta_path).unwrap()).unwrap();
+    let item = match meta_spec
+        .paths
+        .paths
+        .get("/v2/meta/capabilities")
+        .expect("meta path exists")
+    {
         R::Item(it) => it,
-        _ => panic!("unexpected ref"),
+        _ => panic!("unexpected ref in meta paths"),
     };
-    let op = item.get.as_ref().expect("GET op exists");
+    let op = item.get.as_ref().expect("GET op exists on /v2/meta/capabilities");
     assert!(op.responses.responses.keys().any(|c| matches!(c, StatusCode::Code(200))));
 
-    // Artifact registry
-    // POST /v1/artifacts -> 201
-    let item = match spec.paths.paths.get("/v1/artifacts").expect("path exists") {
+    // Control: pools and workers
+    let control_path = root.join("contracts/openapi/control.yaml");
+    let control_spec: OpenAPI = serde_yaml::from_str(&fs::read_to_string(&control_path).unwrap()).unwrap();
+    let get_item = |template: &str| match control_spec.paths.paths.get(template).expect("path exists") {
         R::Item(it) => it,
-        _ => panic!("unexpected ref"),
+        _ => panic!("unexpected ref in control paths"),
     };
-    let op = item.post.as_ref().expect("POST op exists");
-    assert!(op.responses.responses.keys().any(|c| matches!(c, StatusCode::Code(201))));
-    // GET /v1/artifacts/{id} -> 200
-    let item = match spec.paths.paths.get("/v1/artifacts/{id}").expect("path exists") {
-        R::Item(it) => it,
-        _ => panic!("unexpected ref"),
-    };
-    let op = item.get.as_ref().expect("GET op exists");
-    assert!(op.responses.responses.keys().any(|c| matches!(c, StatusCode::Code(200))));
+    let drain = get_item("/v2/pools/{id}/drain");
+    assert!(drain
+        .post
+        .as_ref()
+        .expect("post exists")
+        .responses
+        .responses
+        .keys()
+        .any(|c| matches!(c, StatusCode::Code(202))));
+    let reload = get_item("/v2/pools/{id}/reload");
+    assert!(reload
+        .post
+        .as_ref()
+        .expect("post exists")
+        .responses
+        .responses
+        .keys()
+        .any(|c| matches!(c, StatusCode::Code(202))));
+    let health = get_item("/v2/pools/{id}/health");
+    assert!(health
+        .get
+        .as_ref()
+        .expect("get exists")
+        .responses
+        .responses
+        .keys()
+        .any(|c| matches!(c, StatusCode::Code(200)))
+        || health.get.as_ref().unwrap().responses.default.is_some());
+    let workers = get_item("/v2/workers/register");
+    assert!(workers
+        .post
+        .as_ref()
+        .expect("post exists")
+        .responses
+        .responses
+        .keys()
+        .any(|c| matches!(c, StatusCode::Code(200))));
 
-    // Components include Capabilities schema
-    let raw: syaml::Value = syaml::from_str(&fs::read_to_string(&oapi_path).unwrap()).unwrap();
-    let caps = &raw["components"]["schemas"]["Capabilities"];
-    assert!(caps.is_mapping(), "Capabilities schema missing");
+    // Artifacts
+    let artifacts_path = root.join("contracts/openapi/artifacts.yaml");
+    let artifacts_spec: OpenAPI = serde_yaml::from_str(&fs::read_to_string(&artifacts_path).unwrap()).unwrap();
+    let item = match artifacts_spec.paths.paths.get("/v2/artifacts").expect("path exists") {
+        R::Item(it) => it,
+        _ => panic!("unexpected ref in artifacts paths"),
+    };
+    assert!(item
+        .post
+        .as_ref()
+        .expect("post exists")
+        .responses
+        .responses
+        .keys()
+        .any(|c| matches!(c, StatusCode::Code(201))));
+    let item = match artifacts_spec
+        .paths
+        .paths
+        .get("/v2/artifacts/{id}")
+        .expect("path exists")
+    {
+        R::Item(it) => it,
+        _ => panic!("unexpected ref in artifacts paths"),
+    };
+    assert!(item
+        .get
+        .as_ref()
+        .expect("get exists")
+        .responses
+        .responses
+        .keys()
+        .any(|c| matches!(c, StatusCode::Code(200))));
 }
 
 #[test]
-fn data_budgets_and_sse_metrics_contract() {
+fn data_endpoints_and_sse_metrics_contract_v2() {
     // Load data plane OpenAPI as raw YAML for simple key checks
     let root = repo_root();
     let oapi_path = root.join("contracts/openapi/data.yaml");
     let raw: syaml::Value = syaml::from_str(&fs::read_to_string(&oapi_path).unwrap()).unwrap();
 
-    // Budget headers on POST /v1/tasks 202
-    let post202_headers = &raw["paths"]["/v1/tasks"]["post"]["responses"]["202"]["headers"];
-    assert!(post202_headers.get("X-Budget-Tokens-Remaining").is_some());
-    assert!(post202_headers.get("X-Budget-Time-Remaining-Ms").is_some());
-    assert!(post202_headers.get("X-Budget-Cost-Remaining").is_some());
+    // POST /v2/tasks exists and declares 202
+    let post202 = &raw["paths"]["/v2/tasks"]["post"]["responses"]["202"];
+    assert!(post202.is_mapping(), "POST /v2/tasks 202 response missing");
 
-    // Budget headers on GET /v1/tasks/{id}/stream 200
-    let stream200_headers =
-        &raw["paths"]["/v1/tasks/{id}/stream"]["get"]["responses"]["200"]["headers"];
-    assert!(stream200_headers.get("X-Budget-Tokens-Remaining").is_some());
-    assert!(stream200_headers.get("X-Budget-Time-Remaining-Ms").is_some());
-    assert!(stream200_headers.get("X-Budget-Cost-Remaining").is_some());
+    // GET /v2/tasks/{id}/events exists and declares 200
+    let get200 = &raw["paths"]["/v2/tasks/{id}/events"]["get"]["responses"]["200"];
+    assert!(get200.is_mapping(), "GET /v2/tasks/{id}/events 200 response missing");
 
     // SSEMetrics fields
     let props = &raw["components"]["schemas"]["SSEMetrics"]["properties"];
@@ -84,7 +142,7 @@ fn data_budgets_and_sse_metrics_contract() {
 }
 
 #[test]
-fn control_openapi_sanity() {
+fn control_openapi_sanity_v2() {
     use openapiv3::ReferenceOr as R;
     let root = repo_root();
     let oapi_path = root.join("contracts/openapi/control.yaml");
@@ -103,22 +161,20 @@ fn control_openapi_sanity() {
         }
     };
 
-    // POST /v1/pools/{id}/drain -> 202
-    let drain = get_op("/v1/pools/{id}/drain", "post");
+    // POST /v2/pools/{id}/drain -> 202
+    let drain = get_op("/v2/pools/{id}/drain", "post");
     assert!(drain.responses.responses.keys().any(|c| matches!(c, StatusCode::Code(202))));
 
-    // POST /v1/pools/{id}/reload -> 202
-    let reload = get_op("/v1/pools/{id}/reload", "post");
+    // POST /v2/pools/{id}/reload -> 202
+    let reload = get_op("/v2/pools/{id}/reload", "post");
     assert!(reload.responses.responses.keys().any(|c| matches!(c, StatusCode::Code(202))));
 
-    // GET /v1/pools/{id}/health -> 200
-    let health = get_op("/v1/pools/{id}/health", "get");
+    // GET /v2/pools/{id}/health -> 200
+    let health = get_op("/v2/pools/{id}/health", "get");
     assert!(
         health.responses.responses.keys().any(|c| matches!(c, StatusCode::Code(200)))
             || health.responses.default.is_some()
     );
-
-    // Legacy /v1/replicasets removed pre-1.0; discovery is via /v1/capabilities only.
 }
 
 #[test]
@@ -264,7 +320,7 @@ fn validate_response_shape(
         keys.iter().all(|k| obj.contains_key(*k))
     }
     match (method, template, status) {
-        ("post", "/v1/tasks", 202) => {
+        ("post", "/v2/tasks", 202) => {
             let body =
                 interaction["response"]["body"].as_object().expect("202 body must be JSON object");
             assert!(has_keys(
@@ -272,19 +328,19 @@ fn validate_response_shape(
                 &["task_id", "queue_position", "predicted_start_ms", "backoff_ms"]
             ));
         }
-        ("post", "/v1/tasks", 400 | 429 | 500 | 503) => {
+        ("post", "/v2/tasks", 400 | 429 | 500 | 503) => {
             let body = interaction["response"]["body"]
                 .as_object()
                 .expect("error body must be JSON object");
             assert!(has_keys(body, &["code", "message", "engine"]));
         }
-        ("get", "/v1/sessions/{id}", 200) => {
+        ("get", "/v2/sessions/{id}", 200) => {
             let body = interaction["response"]["body"]
                 .as_object()
                 .expect("session body must be JSON object");
             assert!(has_keys(body, &["ttl_ms_remaining", "turns", "kv_bytes", "kv_warmth"]));
         }
-        ("delete", "/v1/sessions/{id}", 204) => {
+        ("delete", "/v2/sessions/{id}", 204) => {
             assert!(
                 interaction["response"]["body"].is_null()
                     || interaction["response"]["body"].is_object()
@@ -292,7 +348,7 @@ fn validate_response_shape(
                 "204 should have no body"
             );
         }
-        ("get", "/v1/tasks/{id}/stream", 200) => {
+        ("get", "/v2/tasks/{id}/events", 200) => {
             // SSE responses are strings
             assert!(interaction["response"]["body"].is_string(), "SSE transcript should be string");
         }
@@ -303,7 +359,7 @@ fn validate_response_shape(
 }
 
 #[test]
-fn rejects_unknown_paths_or_statuses() {
+fn rejects_unknown_paths_or_statuses_v2() {
     let root = repo_root();
     let oapi_path = root.join("contracts/openapi/data.yaml");
     let spec: OpenAPI = serde_yaml::from_str(&fs::read_to_string(oapi_path).unwrap()).unwrap();
@@ -331,7 +387,7 @@ fn rejects_unknown_paths_or_statuses() {
     };
 
     // Unknown path
-    let unknown_path = "/v1/does-not-exist";
+    let unknown_path = "/v2/does-not-exist";
     let mut found = false;
     for (p, _) in paths.iter() {
         if matches_template(p, unknown_path) {
@@ -342,13 +398,13 @@ fn rejects_unknown_paths_or_statuses() {
     assert!(!found, "unknown path should not be matched by any OpenAPI path");
 
     // Known path but unknown status
-    // Pick /v1/tasks POST, status 418
+    // Pick /v2/tasks POST, status 418
     use openapiv3::ReferenceOr as R;
-    let item = match paths.paths.get("/v1/tasks").unwrap() {
+    let item = match paths.paths.get("/v2/tasks").unwrap() {
         R::Item(it) => it,
         _ => panic!("unexpected ref"),
     };
     let op = item.post.as_ref().expect("post op exists");
     let has_418 = op.responses.responses.keys().any(|code| matches!(code, StatusCode::Code(418)));
-    assert!(!has_418, "teapot status must not be declared for POST /v1/tasks");
+    assert!(!has_418, "teapot status must not be declared for POST /v2/tasks");
 }

@@ -34,11 +34,11 @@ Date: 2025-09-19
 ## Data Exchange (High Level)
 
 - Control:
-  - `/v1/pools/{id}/drain`, `/reload`, `/health` → `pool-managerd` actions and registry readouts.
-  - `/v1/catalog/models*` → `catalog-core` CRUD via internal services.
-  - `/v1/capabilities` → aggregate of adapters/pools.
+  - `/v2/pools/{id}/drain`, `/reload`, `/health`, `/purge` → `pool-managerd` actions and registry readouts.
+  - `/v2/catalog/models*` → `catalog-core` CRUD via internal services.
+  - `/v2/meta/capabilities` → aggregate of adapters/pools.
 - Data:
-  - `/v1/tasks` admission → SSE over adapters; cancel via `/v1/tasks/{id}`.
+  - `/v2/tasks` admission → SSE over adapters at `/v2/tasks/{id}/events`; cancel via `/v2/tasks/{id}/cancel`.
 
 ## Versioning & Compatibility
 

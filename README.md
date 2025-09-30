@@ -215,13 +215,13 @@ Explanation
 - A reload request triggers a preload: stage model via `model-provisioner` (which registers in
 `catalog-core`), then prepare/start the engine via `engine-provisioner`.
 - `pool-managerd` flips `ready=true` only after both succeed and health checks pass. Orchestrator
-reflects readiness in `/v1/pools/{id}/health` and uses it for placement.
+reflects readiness in `/v2/pools/{id}/health` and uses it for placement.
 
 #### Data-plane: admission → placement → stream
 
 ```mermaid
 flowchart LR
-  client[Client] -->|POST /v1/tasks| orchd
+  client[Client] -->|POST /v2/tasks| orchd
   orchd -->|admission & queue| orch_core
   orch_core -->|PlacementDecision| orchd
   orchd -->|submit job| adapter[WorkerAdapter]
@@ -242,19 +242,21 @@ and `README_LLM.md`.
 
 - See [CONSUMER_CAPABILITIES.md](CONSUMER_CAPABILITIES.md) for the exhaustive consumer-facing
 capabilities guide.
-- Data plane (OrchQueue v1): `contracts/openapi/data.yaml`
-  - `POST /v1/tasks` → 202 Accepted with `AdmissionResponse`
-  - `GET /v1/tasks/{id}/stream` → `text/event-stream` frames: `started`, `token` (`{t,i}`),
+- Data plane (v2): `contracts/openapi/data.yaml`
+  - `POST /v2/tasks` → 202 Accepted with `AdmissionResponseV2`
+  - `GET /v2/tasks/{id}/events` → `text/event-stream` frames: `started`, `token` (`{t,i}`),
 `metrics`, `end`
-  - `POST /v1/tasks/{id}/cancel`
-  - `GET|DELETE /v1/sessions/{id}`
+  - `POST /v2/tasks/{id}/cancel`
+  - `GET|DELETE /v2/sessions/{id}`
 - Control plane: `contracts/openapi/control.yaml`
-  - `GET /v1/capabilities`, `GET /v1/pools/{id}/health`, `POST /v1/pools/{id}/{drain|reload}`
-  - Catalog: `POST /v1/catalog/models`, `GET /v1/catalog/models/{id}`, `POST
-/v1/catalog/models/{id}/verify`, `POST /v1/catalog/models/{id}/state`
+  - `GET /v2/meta/capabilities`, `GET /v2/pools/{id}/health`, `POST /v2/pools/{id}/{drain|reload|purge}`
+  - Catalog: `POST /v2/catalog/models`, `GET /v2/catalog/models/{id}`, `POST
+/v2/catalog/models/{id}/verify`, `POST /v2/catalog/models/{id}/state`
+- Artifacts: `contracts/openapi/artifacts.yaml`
+  - `POST /v2/artifacts`, `GET /v2/artifacts/{id}`
 - Observability: `GET /metrics` (Prometheus text)
 
-### Request lifecycle (OrchQueue v1)
+### Request lifecycle (OrchQueue v2)
 
 ```mermaid
 sequenceDiagram
@@ -266,11 +268,11 @@ sequenceDiagram
   participant Engine
   participant Prom as Prometheus
 
-  Client->>Orchestratord: POST /v1/tasks (enqueue)
+  Client->>Orchestratord: POST /v2/tasks (enqueue)
   Orchestratord->>Core: Admission checks (ctx, budgets)
   Core-->>Orchestratord: Accepted (job_id) or 429 with policy_label
   Orchestratord-->>Client: 202 AdmissionResponse
-  Client->>Orchestratord: GET /v1/tasks/{id}/stream
+  Client->>Orchestratord: GET /v2/tasks/{id}/events
   Orchestratord->>Core: Dispatch when slot available
   Core->>Adapter: start(job)
   Adapter->>Engine: generate()

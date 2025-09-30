@@ -45,10 +45,10 @@ This document narrows the full repository specs to the minimal shippable slice. 
 
 ## 3) Data Plane — Admission & SSE
 
-- **[MVP-030] Task submit.** `POST /v1/tasks` accepts a minimal Task request with prompt + sampling params + optional `seed`. Admission performs basic guardrails: context length check against a configured limit. (origin: `OC-CTRL-2010` subset)
+- **[MVP-030] Task submit.** `POST /v2/tasks` accepts a minimal Task request with prompt + sampling params + optional `seed`. Admission performs basic guardrails: context length check against a configured limit. (origin: `OC-CTRL-2010` subset)
 - **[MVP-031] Queueing.** Single bounded FIFO queue (single priority: `interactive`). On full queue, reply `429` with `Retry-After` and body `{ policy_label, retriable, retry_after_ms }`. (origin: `OC-CTRL-2011`)
-- **[MVP-032] Cancel.** `POST /v1/tasks/:id/cancel` MUST be race-free; no tokens after cancel. (origin: `OC-CTRL-2012`)
-- **[MVP-033] Streaming.** `GET /v1/tasks/:id/stream` MUST emit SSE events in order: `started`, `token*`, `end`, and `error` on failure. (origin: `OC-CTRL-2020..2029`)
+- **[MVP-032] Cancel.** `POST /v2/tasks/:id/cancel` MUST be race-free; no tokens after cancel. (origin: `OC-CTRL-2012`)
+- **[MVP-033] Streaming.** `GET /v2/tasks/:id/events` MUST emit SSE events in order: `started`, `token*`, `end`, and `error` on failure. (origin: `OC-CTRL-2020..2029`)
   - `started` → `{ queue_position: int, predicted_start_ms?: int }` (predicted start is OPTIONAL in MVP).
   - `token` → `{ t: string, i: int }`.
   - `end` → `{ tokens_out: int, decode_time_ms?: int }` (decode time OPTIONAL in MVP).
@@ -59,7 +59,7 @@ This document narrows the full repository specs to the minimal shippable slice. 
 ## 4) Scheduling & Execution (MVP simplifications)
 
 - **[MVP-040] Replica model.** Single adapter target (llama.cpp HTTP) and a single GPU/replica. No cross-pool placement, no pin overrides. (origin subset of `OC-CORE-1010..1013`)
-- **[MVP-041] Ready/health.** A simple health probe MUST exist: `GET /v1/pools/:id/health` returning liveness and a basic readiness flag from the adapter’s `/health` (or equivalent). (origin: `OC-CTRL-2001` minimal)
+- **[MVP-041] Ready/health.** A simple health probe MUST exist: `GET /v2/pools/:id/health` returning liveness and a basic readiness flag from the adapter’s `/health` (or equivalent). (origin: `OC-CTRL-2001` minimal)
 - **[MVP-042] Determinism.** With identical `{prompt, parameters, seed, engine_version, model_digest}`, streams from the same replica MUST be byte-identical. (origin: `ORCH-3025` family)
 
 ---

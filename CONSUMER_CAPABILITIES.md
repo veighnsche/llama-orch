@@ -23,7 +23,7 @@ If you observe any discrepancy between code and this guide, treat the OpenAPI co
 
 ## Versioning & Compatibility
 
-- Pre-1.0.0: no backwards-compatibility guarantees. Breaking changes may occur as we iterate. Always consult `GET /v2/capabilities` for `api_version` and feature discovery.
+- Pre-1.0.0: no backwards-compatibility guarantees. Breaking changes may occur as we iterate. Always consult `GET /v2/meta/capabilities` for `api_version` and feature discovery.
 - Contracts are spec-first. When behavior evolves, OpenAPI specs update before runtime code.
 
 ## Operational Expectations
@@ -44,7 +44,7 @@ If you observe any discrepancy between code and this guide, treat the OpenAPI co
 
 ## Capability Discovery
 
-- `GET /v1/capabilities`
+- `GET /v2/meta/capabilities`
   - Returns a snapshot with `api_version` and engine families available. Example shape (see `orchestratord/src/services/capabilities.rs`):
     ```json
     {
@@ -170,21 +170,21 @@ Contracts: `contracts/openapi/control.yaml`
 
 ### Catalog (model registry)
 
-- Catalog APIs are migrating; consult contracts. v1 endpoints remain available; v2 split may land later.
+- Catalog APIs are v2; consult `contracts/openapi/catalog.yaml`.
 
 ### Artifacts (plans, transcripts, traces)
 
-- Remain on v1 for now: `POST /v1/artifacts`, `GET /v1/artifacts/{id}`.
+- `POST /v2/artifacts`, `GET /v2/artifacts/{id}`
 - Implementation detail: current IDs are `sha256:<hex>` of JSON content when using the default in-memory/fs stores.
 
 ### Worker Registration (adapters)
 
-- `POST /v1/workers/register`
+- `POST /v2/workers/register`
   - Auth: Bearer token required. The expected token is compared against `AUTH_TOKEN` server env (timing-safe equality).
   - Body (optional): `{ "pool_id": "default", "replica_id": "r0" }`
   - Response: `200` `{ ok: true, identity: "token:<fp>", pool_id, replica_id }`
   - Purpose: scaffolding to bind a worker adapter to a pool/replica during development.
-  - Note: this endpoint is not yet part of the published OpenAPI contracts and is subject to change.
+  - Note: this endpoint is part of the v2 OpenAPI contracts and may evolve.
 
 ## Error Taxonomy & HTTP Mapping
 
@@ -286,12 +286,12 @@ Use overrides sparingly; they may reduce global efficiency.
 
 ```bash
 # Capabilities
-curl -s -H 'X-API-Key: valid' http://127.0.0.1:8080/v2/capabilities | jq .
+curl -s -H 'X-API-Key: valid' http://127.0.0.1:8080/v2/meta/capabilities | jq .
 
 # Enqueue a task
 curl -s -H 'X-API-Key: valid' -H 'Content-Type: application/json' \
   -d '{"task_id":"t1","session_id":"s1","workload":"completion","model_ref":"hf:org/repo/file.gguf","engine":"llamacpp","ctx":8192,"priority":"interactive","prompt":"Hello","max_tokens":8,"deadline_ms":60000}' \
-  http://127.0.0.1:8080/v1/tasks | jq .
+  http://127.0.0.1:8080/v2/tasks | jq .
 
 # Stream SSE
 curl -s -H 'X-API-Key: valid' http://127.0.0.1:8080/v2/tasks/t1/events
@@ -305,7 +305,7 @@ curl -s -H 'X-API-Key: valid' http://127.0.0.1:8080/v2/sessions/s1 | jq .
 # Artifact
 curl -s -H 'X-API-Key: valid' -H 'Content-Type: application/json' \
   -d '{"kind":"trace","content":{"events":[{"type":"started","data":{}}]}}' \
-  http://127.0.0.1:8080/v1/artifacts | jq .
+  http://127.0.0.1:8080/v2/artifacts | jq .
 ```
 
 ## Known Limitations & Roadmap Notes

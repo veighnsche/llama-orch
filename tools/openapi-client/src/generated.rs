@@ -1,4 +1,4 @@
-// Deterministic template for a minimal client over OrchQueue v1.
+// Deterministic template for a minimal client over OrchQueue v2.
 use contracts_api_types as api;
 
 #[derive(Clone)]
@@ -13,24 +13,24 @@ impl Client {
     }
 
     pub fn create_task(&self, body: &api::TaskRequest) -> reqwest::RequestBuilder {
-        self.http.post(format!("{}/v1/tasks", self.base)).json(body)
+        self.http.post(format!("{}/v2/tasks", self.base)).json(body)
     }
 
     pub fn stream_task(&self, id: &str) -> reqwest::RequestBuilder {
         self.http
-            .get(format!("{}/v1/tasks/{}/stream", self.base, id))
+            .get(format!("{}/v2/tasks/{}/events", self.base, id))
             .header("Accept", "text/event-stream")
     }
 
     pub fn cancel_task(&self, id: &str) -> reqwest::RequestBuilder {
-        self.http.post(format!("{}/v1/tasks/{}/cancel", self.base, id))
+        self.http.post(format!("{}/v2/tasks/{}/cancel", self.base, id))
     }
 
     pub fn get_session(&self, id: &str) -> reqwest::RequestBuilder {
-        self.http.get(format!("{}/v1/sessions/{}", self.base, id))
+        self.http.get(format!("{}/v2/sessions/{}", self.base, id))
     }
 
     pub fn delete_session(&self, id: &str) -> reqwest::RequestBuilder {
-        self.http.delete(format!("{}/v1/sessions/{}", self.base, id))
+        self.http.delete(format!("{}/v2/sessions/{}", self.base, id))
     }
 }

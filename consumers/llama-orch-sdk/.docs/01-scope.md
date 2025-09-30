@@ -25,9 +25,9 @@ Relationship: Utils > SDK > Orchestrator.
 
 - Types for capabilities, catalog models, sessions, tasks/admission, SSE events, and error envelopes.
 - Typed client methods for:
-  - Capability discovery: `GET /v1/capabilities`.
-  - Data plane: `POST /v1/tasks`, `GET /v1/tasks/{id}/stream`, `POST /v1/tasks/{id}/cancel`.
-  - Sessions: `GET /v1/sessions/{id}`.
+  - Capability discovery: `GET /v2/meta/capabilities`.
+  - Data Plane: `POST /v2/tasks`, `GET /v2/tasks/{id}/events`, `POST /v2/tasks/{id}/cancel`.
+  - Sessions: `GET /v2/sessions/{id}`.
 - Error mapping to a single `ErrorEnvelope` surface.
 - Minimal configuration: base URL, optional API key, request timeout.
 
@@ -41,7 +41,7 @@ Relationship: Utils > SDK > Orchestrator.
 ## Transport
 
 - HTTP JSON per OpenAPI definitions in `contracts/openapi/{control.yaml,data.yaml}`.
-- Streaming via Server-Sent Events (SSE) for `GET /v1/tasks/{id}/stream` with events: `started`, `token`, `metrics`, `end`, `error`.
+- Streaming via Server-Sent Events (SSE) for `GET /v2/tasks/{id}/events` with events: `started`, `token`, `metrics`, `end`, `error`.
 
 Feature flags and targets:
 

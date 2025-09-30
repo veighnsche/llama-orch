@@ -17,20 +17,20 @@ Note: Single-source in Rust → WASM. TypeScript consumers import from the gener
 ## Methods (public)
 
 - `list_engines(): Promise<EngineCapability[]>`
-  - Derived from `GET /v1/capabilities` → `Capabilities.engines` mapped to `{ id, workloads }`.
+  - Derived from `GET /v2/meta/capabilities` → `Capabilities.engines` mapped to `{ id, workloads }`.
 
 - `enqueue_task(req: TaskRequest): Promise<AdmissionResponse>`
-  - Maps to `POST /v1/tasks`.
+  - Maps to `POST /v2/tasks`.
 
 - `stream_task(taskId: string, opts?): AsyncIterable<SSEEvent>`
-  - Maps to `GET /v1/tasks/{id}/stream`.
+  - Maps to `GET /v2/tasks/{id}/events`.
   - Emits `SSEEvent` union: `started | token | metrics | end | error`.
 
 - `cancel_task(taskId: string): Promise<void>`
-  - Maps to `POST /v1/tasks/{id}/cancel`.
+  - Maps to `POST /v2/tasks/{id}/cancel`.
 
 - `get_session(sessionId: string): Promise<SessionInfo>`
-  - Maps to `GET /v1/sessions/{id}`.
+  - Maps to `GET /v2/sessions/{id}`.
 
 ## Omitted in MVP (no canonical OpenAPI list endpoints)
 

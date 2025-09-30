@@ -11,7 +11,7 @@ Contracts referenced are authoritative: `contracts/openapi/data.yaml`. See also 
 ## Quickstart Flow
 
 1. **Generate a correlation ID** (UUID). Send it as `X-Correlation-Id` on all requests.
-2. **POST /v1/tasks** with a `TaskRequest`. On success you get `202 Accepted` with `AdmissionResponse` containing:
+2. **POST /v2/tasks** with a `TaskRequest`. On success you get `202 Accepted` with `AdmissionResponseV2` containing:
    - `task_id`, `queue_position`, `predicted_start_ms`, `backoff_ms`
    - `streams` — direct URLs:
      - `streams.sse` → base SSE
@@ -28,7 +28,7 @@ sequenceDiagram
   participant O as Orchestrator
   participant W as Worker (adapter)
 
-  C->>O: POST /v1/tasks (X-API-Key, X-Correlation-Id)
+  C->>O: POST /v2/tasks (X-API-Key, X-Correlation-Id)
   O-->>C: 202 Accepted { task_id, queue_position, predicted_start_ms }
   C->>O: GET streams.sse or streams.sse_verbose (X-API-Key, X-Correlation-Id)
   O->>W: Dispatch via adapter (placement, health permitting)
@@ -40,10 +40,10 @@ sequenceDiagram
 
 - **Auth**: `X-API-Key: valid` (current stub policy) on all requests.
 - **Correlation**: `X-Correlation-Id: <uuid>` recommended; the server echoes it in responses and logs.
-- **POST /v1/tasks** body (selected):
+- **POST /v2/tasks** body (selected):
   - Required: `task_id (uuid)`, `session_id (uuid)`, `workload`, `model_ref`, `engine`, `ctx`, `priority`, `max_tokens`, `deadline_ms`.
   - Optional: `prompt`, `seed`, `determinism`, `sampler_profile_version`, `expected_tokens`, `kv_hint`, `placement`.
-- **GET /v1/tasks/{id}/stream** returns `text/event-stream` frames in order:
+- **GET /v2/tasks/{id}/events** returns `text/event-stream` frames in order:
   - `started { queue_position, predicted_start_ms }`
   - `token { t, i }` repeated
   - `metrics { ... }` optional repeated
@@ -54,7 +54,7 @@ sequenceDiagram
 
 - **Headers**: set `X-API-Key` and `X-Correlation-Id` on both POST and GET.
 - **SSE Parser**: handle incremental `text/event-stream`. Do not assume one JSON per line; parse `event:`/`data:` pairs.
-- **Backpressure & cancel**: handle server backoff (`429` with `Retry-After`, `X-Backoff-Ms`). Support explicit cancel via `POST /v1/tasks/{id}/cancel`.
+- **Backpressure & cancel**: handle server backoff (`429` with `Retry-After`, `X-Backoff-Ms`). Support explicit cancel via `POST /v2/tasks/{id}/cancel`.
 - **Transcript capture**: store SSE transcript (events + data JSON) for proof/debugging.
 - **Narration logs**: collect server JSON logs filtered by correlation ID; bundle them with the SSE transcript.
 
@@ -89,20 +89,19 @@ Purpose: prove a real decode path (anti-stub) by requiring the model to mention 
 
 ```
 Compose a three-line haiku about time.
-Include the current minute spelled out in English exactly once.
 Current minute: {{minuteWord}}
 ```
 
 - SDK steps:
   - Generate `task_id`, `session_id`, `correlation_id`.
-  - POST `/v1/tasks` (include the prompt and reasonable `max_tokens`, `deadline_ms`).
-  - Immediately GET `/v1/tasks/{task_id}/stream` and parse events.
+  - POST `/v2/tasks` (include the prompt and reasonable `max_tokens`, `deadline_ms`).
+- Immediately GET `/v2/tasks/{task_id}/events` and parse events.
   - Accumulate the generated text from `token` events.
   - Validate that the spelled minute word appears once in the final text.
   - Save a proof bundle containing:
     - SSE transcript (ordered frames)
     - Collected narration logs filtered by `X-Correlation-Id`
-    - Inputs (TaskRequest), timing (enqueue time, stream start time)
+{{ ... }}
 
 Notes:
 - The minute value is evaluated by the client; the test goal is to ensure real decoding occurred and the SDK streamed/validated content.
@@ -128,24 +127,24 @@ curl -s -H 'X-API-Key: valid' -H "X-Correlation-Id: $CID" -H 'Content-Type: appl
     "max_tokens":64,
     "deadline_ms":30000
   }' \
-  http://127.0.0.1:8080/v1/tasks | jq .
+  http://127.0.0.1:8080/v2/tasks | jq .
 
 # Suppose the AdmissionResponse has:
 #  {
 #    ...,
 #    "streams": {
-#      "sse": "http://127.0.0.1:8080/v1/tasks/'$TASK'/stream",
-#      "sse_verbose": "http://127.0.0.1:8080/v1/tasks/'$TASK'/stream?verbose=true"
+#      "sse": "http://127.0.0.1:8080/v2/tasks/'$TASK'/events",
+#      "sse_verbose": "http://127.0.0.1:8080/v2/tasks/'$TASK'/events?verbose=true"
 #    },
 #    "preparation": { "steps": [{"kind":"engine_provision"},{"kind":"model_fetch"}] }
 #  }
 
 # Choose verbose when preparation is present
-VERBOSE_URL="http://127.0.0.1:8080/v1/tasks/$TASK/stream?verbose=true"
+VERBOSE_URL="http://127.0.0.1:8080/v2/tasks/$TASK/events?verbose=true"
 if [ "$(jq -r '.preparation.steps | length' <<< "$RESPONSE)" -gt 0 ]; then
   curl -s -H 'X-API-Key: valid' -H "X-Correlation-Id: $CID" "$VERBOSE_URL"
 else
-  curl -s -H 'X-API-Key: valid' -H "X-Correlation-Id: $CID" "http://127.0.0.1:8080/v1/tasks/$TASK/stream"
+  curl -s -H 'X-API-Key: valid' -H "X-Correlation-Id: $CID" "http://127.0.0.1:8080/v2/tasks/$TASK/events"
 fi
 - `admission.json`: `AdmissionResponse` and HTTP headers
 - `sse_transcript.jsonl`: one line per SSE frame: `{ event, data, ts }`
@@ -156,7 +155,7 @@ fi
 
 - **Backpressure**: If POST returns `429`, obey `Retry-After`/`X-Backoff-Ms` before retrying.
 - **Pool unready**: You may see delayed `started` frames while provisioning occurs. Keep the stream open.
-- **Cancel**: Provide a cancel function mapping to `POST /v1/tasks/{id}/cancel`; ensure no tokens arrive after cancel.
+- **Cancel**: Provide a cancel function mapping to `POST /v2/tasks/{id}/cancel`; ensure no tokens arrive after cancel.
 - **Disconnection**: Reconnect logic is app-specific; SSE is not resumable mid-stream today.
 
 ## Refinement Opportunities

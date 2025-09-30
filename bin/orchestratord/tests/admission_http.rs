@@ -31,7 +31,7 @@ async fn post_tasks_happy_returns_202_and_body() {
     let app = mk_app_with_env(8, "reject");
     let req = Request::builder()
         .method(http::Method::POST)
-        .uri("/v1/tasks")
+        .uri("/v2/tasks")
         .header("X-API-Key", "valid")
         .header(http::header::CONTENT_TYPE, "application/json")
         .body(Body::from(task_body("t-1")))
@@ -57,7 +57,7 @@ async fn post_tasks_queue_full_returns_429_with_headers() {
     // First is accepted
     let req1 = Request::builder()
         .method(http::Method::POST)
-        .uri("/v1/tasks")
+        .uri("/v2/tasks")
         .header("X-API-Key", "valid")
         .header(http::header::CONTENT_TYPE, "application/json")
         .body(Body::from(task_body("t-a")))
@@ -68,7 +68,7 @@ async fn post_tasks_queue_full_returns_429_with_headers() {
     // Second should hit reject policy -> 429
     let req2 = Request::builder()
         .method(http::Method::POST)
-        .uri("/v1/tasks")
+        .uri("/v2/tasks")
         .header("X-API-Key", "valid")
         .header(http::header::CONTENT_TYPE, "application/json")
         .body(Body::from(task_body("t-b")))
@@ -87,7 +87,7 @@ async fn cancel_then_stream_yields_no_tokens() {
     // Issue cancel first
     let cancel = Request::builder()
         .method(http::Method::POST)
-        .uri("/v1/tasks/t-cancel/cancel")
+        .uri("/v2/tasks/t-cancel/cancel")
         .header("X-API-Key", "valid")
         .body(Body::empty())
         .unwrap();
@@ -97,7 +97,7 @@ async fn cancel_then_stream_yields_no_tokens() {
     // Now stream
     let stream = Request::builder()
         .method(http::Method::GET)
-        .uri("/v1/tasks/t-cancel/stream")
+        .uri("/v2/tasks/t-cancel/events")
         .header("X-API-Key", "valid")
         .body(Body::empty())
         .unwrap();

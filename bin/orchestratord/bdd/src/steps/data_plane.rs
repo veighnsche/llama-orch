@@ -84,7 +84,7 @@ pub async fn when_enqueue_valid_completion(world: &mut World) {
         "deadline_ms": 1000
     });
     world.task_id = Some("t-0".into());
-    let _ = world.http_call(Method::POST, "/v1/tasks", Some(body)).await;
+    let _ = world.http_call(Method::POST, "/v2/tasks", Some(body)).await;
 }
 
 #[when(regex = r"^I enqueue a task way beyond capacity$")]
@@ -103,7 +103,7 @@ pub async fn when_enqueue_way_beyond_capacity(world: &mut World) {
         // Sentinel to trigger drop-lru 429 in handler glue
         "expected_tokens": 2000000
     });
-    let _ = world.http_call(Method::POST, "/v1/tasks", Some(body)).await;
+    let _ = world.http_call(Method::POST, "/v2/tasks", Some(body)).await;
 }
 
 #[then(regex = r"^error envelope code is ADMISSION_REJECT$")]
@@ -140,7 +140,7 @@ pub async fn when_accepted_with_corr(world: &mut World) {
 pub async fn when_stream_events(world: &mut World) {
     world.push_fact("sse.start");
     let id = world.task_id.clone().unwrap_or_else(|| "t-0".into());
-    let path = format!("/v1/tasks/{}/stream", id);
+    let path = format!("/v2/tasks/{}/events", id);
     let _ = world.http_call(Method::GET, &path, None).await;
 }
 
@@ -278,7 +278,7 @@ pub async fn given_existing_queued_task(_world: &mut World) {}
 pub async fn when_cancel_task(world: &mut World) {
     world.push_fact("cancel");
     let id = world.task_id.clone().unwrap_or_else(|| "t-0".into());
-    let path = format!("/v1/tasks/{}/cancel", id);
+    let path = format!("/v2/tasks/{}/cancel", id);
     let _ = world.http_call(Method::POST, &path, None).await;
 }
 
@@ -295,7 +295,7 @@ pub async fn given_session_id(_world: &mut World) {}
 pub async fn when_query_session(world: &mut World) {
     world.push_fact("session.get");
     let id = world.task_id.clone().unwrap_or_else(|| "s-0".into());
-    let path = format!("/v1/sessions/{}", id);
+    let path = format!("/v2/sessions/{}", id);
     let _ = world.http_call(Method::GET, &path, None).await;
 }
 
@@ -312,7 +312,7 @@ pub async fn then_session_info_fields(world: &mut World) {
 pub async fn when_delete_session(world: &mut World) {
     world.push_fact("session.delete");
     let id = world.task_id.clone().unwrap_or_else(|| "s-0".into());
-    let path = format!("/v1/sessions/{}", id);
+    let path = format!("/v2/sessions/{}", id);
     let _ = world.http_call(Method::DELETE, &path, None).await;
 }
 
@@ -333,7 +333,7 @@ pub async fn when_stream_while_cancel_mid(world: &mut World) {
     // Spawn a cancel request after a short delay so it lands between tokens
     let cancel_app = app.clone();
     let cancel_key = world.api_key.clone();
-    let cancel_path = format!("/v1/tasks/{}/cancel", id.clone());
+    let cancel_path = format!("/v2/tasks/{}/cancel", id.clone());
     tokio::spawn(async move {
         sleep(Duration::from_millis(10)).await;
         let mut req = Request::builder().method(http::Method::POST).uri(cancel_path);
@@ -345,7 +345,7 @@ pub async fn when_stream_while_cancel_mid(world: &mut World) {
     });
 
     // Now start the stream request
-    let stream_path = format!("/v1/tasks/{}/stream", id);
+    let stream_path = format!("/v2/tasks/{}/events", id);
     let mut req = Request::builder().method(http::Method::GET).uri(stream_path);
     if let Some(key) = &world.api_key {
         req = req.header("X-API-Key", key);

@@ -22,7 +22,7 @@ pub async fn when_enqueue_valid_completion(world: &mut World) {
         "deadline_ms": 1000
     });
     world.task_id = Some("t-0".into());
-    let _ = world.http_call(Method::POST, "/v1/tasks", Some(body)).await;
+    let _ = world.http_call(Method::POST, "/v2/tasks", Some(body)).await;
 }
 
 #[then(regex = r"^I receive 202 Accepted with correlation id$")]
@@ -35,7 +35,7 @@ pub async fn then_accepted_with_corr(world: &mut World) {
 pub async fn when_stream_events(world: &mut World) {
     world.push_fact("sse.start");
     let id = world.task_id.clone().unwrap_or_else(|| "t-0".into());
-    let path = format!("/v1/tasks/{}/stream", id);
+    let path = format!("/v2/tasks/{}/events", id);
     let _ = world.http_call(Method::GET, &path, None).await;
 }
 
@@ -134,7 +134,7 @@ pub async fn given_existing_queued_task(_world: &mut World) {}
 pub async fn when_cancel_task(world: &mut World) {
     world.push_fact("cancel");
     let id = world.task_id.clone().unwrap_or_else(|| "t-0".into());
-    let path = format!("/v1/tasks/{}/cancel", id);
+    let path = format!("/v2/tasks/{}/cancel", id);
     let _ = world.http_call(Method::POST, &path, None).await;
 }
 
@@ -151,7 +151,7 @@ pub async fn given_session_id(_world: &mut World) {}
 pub async fn when_query_session(world: &mut World) {
     world.push_fact("session.get");
     let id = world.task_id.clone().unwrap_or_else(|| "s-0".into());
-    let path = format!("/v1/sessions/{}", id);
+    let path = format!("/v2/sessions/{}", id);
     let _ = world.http_call(Method::GET, &path, None).await;
 }
 

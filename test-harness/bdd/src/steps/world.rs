@@ -81,26 +81,30 @@ impl World {
             _headers.insert(name, v.parse().unwrap());
         }
 
-        // Dispatch to handlers by path
+        // Dispatch to handlers by path (v2 only)
         let resp = match (method, path) {
-            (http::Method::POST, "/v1/tasks") => {
+            (http::Method::POST, "/v2/tasks") => {
                 let body: api::TaskRequest =
                     serde_json::from_value(body_json.unwrap_or_else(|| json!({})))?;
                 data::create_task(State(self.state.clone()), axum::Json(body)).await.into_response()
             }
-            (http::Method::GET, p) if p.starts_with("/v1/tasks/") && p.ends_with("/stream") => {
+            (http::Method::GET, p)
+                if p.starts_with("/v2/tasks/") && p.ends_with("/events") =>
+            {
                 let id = p
-                    .trim_start_matches("/v1/tasks/")
-                    .trim_end_matches("/stream")
+                    .trim_start_matches("/v2/tasks/")
+                    .trim_end_matches("/events")
                     .trim_matches('/')
                     .to_string();
                 data::stream_task(State(self.state.clone()), axum::extract::Path(id))
                     .await
                     .into_response()
             }
-            (http::Method::POST, p) if p.starts_with("/v1/tasks/") && p.ends_with("/cancel") => {
+            (http::Method::POST, p)
+                if p.starts_with("/v2/tasks/") && p.ends_with("/cancel") =>
+            {
                 let id = p
-                    .trim_start_matches("/v1/tasks/")
+                    .trim_start_matches("/v2/tasks/")
                     .trim_end_matches("/cancel")
                     .trim_matches('/')
                     .to_string();
@@ -108,21 +112,21 @@ impl World {
                     .await
                     .into_response()
             }
-            (http::Method::GET, p) if p.starts_with("/v1/sessions/") => {
-                let id = p.trim_start_matches("/v1/sessions/").to_string();
+            (http::Method::GET, p) if p.starts_with("/v2/sessions/") => {
+                let id = p.trim_start_matches("/v2/sessions/").to_string();
                 data::get_session(State(self.state.clone()), axum::extract::Path(id))
                     .await
                     .into_response()
             }
-            (http::Method::DELETE, p) if p.starts_with("/v1/sessions/") => {
-                let id = p.trim_start_matches("/v1/sessions/").to_string();
+            (http::Method::DELETE, p) if p.starts_with("/v2/sessions/") => {
+                let id = p.trim_start_matches("/v2/sessions/").to_string();
                 data::delete_session(State(self.state.clone()), axum::extract::Path(id))
                     .await
                     .into_response()
             }
-            (http::Method::GET, p) if p.starts_with("/v1/pools/") && p.ends_with("/health") => {
+            (http::Method::GET, p) if p.starts_with("/v2/pools/") && p.ends_with("/health") => {
                 let id = p
-                    .trim_start_matches("/v1/pools/")
+                    .trim_start_matches("/v2/pools/")
                     .trim_end_matches("/health")
                     .trim_matches('/')
                     .to_string();
@@ -130,9 +134,9 @@ impl World {
                     .await
                     .into_response()
             }
-            (http::Method::POST, p) if p.starts_with("/v1/pools/") && p.ends_with("/drain") => {
+            (http::Method::POST, p) if p.starts_with("/v2/pools/") && p.ends_with("/drain") => {
                 let _id = p
-                    .trim_start_matches("/v1/pools/")
+                    .trim_start_matches("/v2/pools/")
                     .trim_end_matches("/drain")
                     .trim_matches('/')
                     .to_string();
@@ -146,9 +150,9 @@ impl World {
                 .await
                 .into_response()
             }
-            (http::Method::POST, p) if p.starts_with("/v1/pools/") && p.ends_with("/reload") => {
+            (http::Method::POST, p) if p.starts_with("/v2/pools/") && p.ends_with("/reload") => {
                 let _id = p
-                    .trim_start_matches("/v1/pools/")
+                    .trim_start_matches("/v2/pools/")
                     .trim_end_matches("/reload")
                     .trim_matches('/')
                     .to_string();
@@ -163,7 +167,7 @@ impl World {
                 .await
                 .into_response()
             }
-            (http::Method::GET, "/v1/capabilities") => {
+            (http::Method::GET, "/v2/meta/capabilities") => {
                 control::get_capabilities(State(self.state.clone())).await.into_response()
             }
             (http::Method::GET, "/metrics") => observability::metrics_endpoint().await,
