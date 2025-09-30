@@ -1,5 +1,5 @@
-use super::auth_min::bearer_identity_layer;
-use super::middleware::{api_key_layer, correlation_id_layer};
+use super::auth_min::bearer_auth_middleware;
+use super::middleware::correlation_id_layer;
 use crate::{api, state::AppState};
 use axum::{
     middleware,
@@ -42,9 +42,9 @@ pub fn build_router(state: AppState) -> Router {
         .route("/v2/artifacts/:id", get(api::artifacts::get_artifact))
         // Observability
         .route("/metrics", get(api::observability::metrics_endpoint))
-        // Layers (order: correlation id, then auth)
+        // Middleware layers (order: correlation id, then Bearer auth)
+        // All endpoints except /metrics require Bearer token authentication
         .layer(middleware::from_fn(correlation_id_layer))
-        .layer(middleware::from_fn(bearer_identity_layer))
-        .layer(middleware::from_fn(api_key_layer))
+        .layer(middleware::from_fn(bearer_auth_middleware))
         .with_state(state)
 }

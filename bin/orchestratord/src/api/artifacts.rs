@@ -1,3 +1,8 @@
+//! Artifact storage API endpoints.
+//!
+//! Provides endpoints for uploading and downloading artifacts (plans, diffs, traces).
+//! Authentication is enforced by bearer_auth_middleware.
+
 use axum::{extract::State, response::IntoResponse, Json};
 use http::StatusCode;
 use serde_json::json;
@@ -5,21 +10,6 @@ use serde_json::json;
 use crate::domain::error::OrchestratorError as ErrO;
 use crate::state::AppState;
 
-//! Artifact storage API endpoints
-//
-// TODO(SECURITY): Add authentication to artifact endpoints using auth-min
-//
-// Artifact endpoints allow uploading and downloading artifacts (plans, diffs, traces).
-// These should require authentication to prevent unauthorized access.
-//
-// Endpoints requiring auth:
-// - POST /v2/artifacts - Upload artifact
-// - GET /v2/artifacts/{id} - Download artifact
-//
-// Should use auth-min based middleware for Bearer token validation.
-//
-// See: .docs/PHASE5_FIX_CHECKLIST.md Task 11
-// See: .specs/12_auth-min-hardening.md (SEC-AUTH-3001)
 pub async fn create_artifact(
     state: State<AppState>,
     Json(doc): Json<serde_json::Value>,

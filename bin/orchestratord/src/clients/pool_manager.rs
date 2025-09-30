@@ -57,6 +57,19 @@ impl PoolManagerClient {
         }
     }
 
+    /// Create from environment variables
+    ///
+    /// Reads POOL_MANAGERD_URL (default: http://127.0.0.1:9200)
+    pub fn from_env() -> Self {
+        let base_url = std::env::var("POOL_MANAGERD_URL")
+            .unwrap_or_else(|_| "http://127.0.0.1:9200".to_string());
+        Self::new(base_url)
+    }
+
+    /// Get pool status from pool-managerd
+    pub async fn get_pool_status(&self, pool_id: &str) -> Result<PoolStatus> {
+        let url = format!("{}/pools/{}/status", self.base_url, pool_id);
+        let body = serde_json::json!({});
         
         // Build request with optional Bearer token
         let mut req = self.client.post(&url).json(&body);

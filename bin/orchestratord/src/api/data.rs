@@ -187,6 +187,7 @@ pub async fn create_task(
     Ok((StatusCode::ACCEPTED, headers, Json(admission)))
 }
 
+pub async fn stream_task(
     state: State<AppState>,
     axum::extract::Path(id): axum::extract::Path<String>,
     axum::Extension(correlation_id): axum::Extension<String>,
