@@ -128,3 +128,15 @@ pub async fn register_worker(
         Json(json!({"ok": true, "identity": id, "pool_id": pool_id, "replica_id": replica_id})),
     ))
 }
+
+/// v2 purge endpoint (stub): accept request and return 202 to indicate purge scheduled.
+/// Pre-1.0: semantics subject to change; body is intentionally untyped here to avoid
+/// tight coupling with evolving contracts_api_types.
+pub async fn purge_pool_v2(
+    _state: State<AppState>,
+    axum::extract::Path(_id): axum::extract::Path<String>,
+    _body: Option<Json<serde_json::Value>>,
+)
+-> Result<impl IntoResponse, ErrO> {
+    Ok(StatusCode::ACCEPTED)
+}

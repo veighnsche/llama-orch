@@ -79,7 +79,6 @@ pub async fn create_task(
     // admission completion. Integrate with `pool_managerd::registry` readiness so we do not
     // admit into a non-ready pool. Respect user overrides to pin to a specific pool/GPU.
 
-    // Enqueue into the single bounded FIFO with metrics
     let prio = match body.priority {
         api::Priority::Interactive => orchestrator_core::queue::Priority::Interactive,
         api::Priority::Batch => orchestrator_core::queue::Priority::Batch,
@@ -109,15 +108,18 @@ pub async fn create_task(
     // Record the admission snapshot for use by stream
     {
         let mut map = state.admissions.lock().unwrap();
-        map.insert(body.task_id.clone(), AdmissionInfo { queue_position: pos, predicted_start_ms });
+        map.insert(
+            body.task_id.clone(),
+            AdmissionInfo { queue_position: pos, predicted_start_ms },
+        );
     }
     // Success path
     let admission = api::AdmissionResponse { task_id: body.task_id.clone(), queue_position: pos as i32, predicted_start_ms, backoff_ms: 0 };
 
     // TODO[ORCHD-ADMISSION-STREAMS-0008]: Populate `AdmissionResponse.streams` with direct
     // links to stream endpoints once `contracts_api_types` is regenerated from OpenAPI.
-    //   - streams.sse:        `/v1/tasks/{task_id}/stream`
-    //   - streams.sse_verbose:`/v1/tasks/{task_id}/stream?verbose=true`
+    //   - streams.sse:        `/v2/tasks/{task_id}/events`
+    //   - streams.sse_verbose:`/v2/tasks/{task_id}/events?verbose=true`
     // TODO[ORCHD-ADMISSION-PREPARATION-0009]: Populate `AdmissionResponse.preparation` with
     // a plan of preparatory steps (e.g., `engine_provision`, `model_fetch`, `pool_warmup`) with
     // optional estimates. This allows clients to choose verbose SSE for richer UX.

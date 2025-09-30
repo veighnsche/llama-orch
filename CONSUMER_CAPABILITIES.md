@@ -23,7 +23,7 @@ If you observe any discrepancy between code and this guide, treat the OpenAPI co
 
 ## Versioning & Compatibility
 
-- Pre-1.0.0: no backwards-compatibility guarantees. Breaking changes may occur as we iterate. Always consult `GET /v1/capabilities` for `api_version` and feature discovery.
+- Pre-1.0.0: no backwards-compatibility guarantees. Breaking changes may occur as we iterate. Always consult `GET /v2/capabilities` for `api_version` and feature discovery.
 - Contracts are spec-first. When behavior evolves, OpenAPI specs update before runtime code.
 
 ## Operational Expectations
@@ -59,14 +59,14 @@ If you observe any discrepancy between code and this guide, treat the OpenAPI co
     ```
   - Use this to gate features in your clients.
 
-## Data Plane — Tasks, Streaming, Sessions
+## Data Plane — Tasks, Streaming, Sessions (v2)
 
 Contracts: `contracts/openapi/data.yaml`
 
 ### Enqueue a task
 
-- `POST /v1/tasks`
-- Body: `TaskRequest`
+- `POST /v2/tasks`
+- Body: `TaskRequestV2`
   - Required: `task_id (uuid)`, `session_id (uuid)`, `workload` (`completion|embedding|rerank`), `model_ref`, `engine` (`llamacpp|vllm|tgi|triton`), `ctx`, `priority` (`interactive|batch`), `max_tokens`, `deadline_ms`.
   - Optional: `seed`, `determinism` (`strict|best_effort`), `sampler_profile_version`, `prompt`, `inputs[]`, `expected_tokens`, `kv_hint` (`reuse|cold`), `placement` (see Placement below).
   - `model_ref` schemes (engine-dependent):
@@ -74,7 +74,7 @@ Contracts: `contracts/openapi/data.yaml`
     - `hf:org/repo` (full repo; vLLM/TGI)
     - `file:/abs/path` or `relative/path`
     - `https://...`, `s3://bucket/key`, `oci://registry/repo:tag`
-- Success: `202 Accepted` with body `AdmissionResponse { task_id, queue_position, predicted_start_ms, backoff_ms, streams?, preparation? }`
+- Success: `202 Accepted` with body `AdmissionResponseV2 { task_id, queue_position, predicted_start_ms, backoff_ms, streams?, preparation? }`
   - `streams.sse` and `streams.sse_verbose` provide direct URLs to the SSE endpoint; the latter is equivalent to `?verbose=true`.
   - `preparation.steps[]` (optional) announces tasks the server may perform before decode (e.g., `engine_provision`, `model_fetch`, `pool_warmup`). Use it to choose verbose streaming for richer progress UX.
   - Response headers may include budgets: `X-Budget-Tokens-Remaining`, `X-Budget-Time-Remaining-Ms`, `X-Budget-Cost-Remaining`.
@@ -99,12 +99,12 @@ curl -s -H 'X-API-Key: valid' -H 'Content-Type: application/json' \
     "max_tokens":64,
     "deadline_ms":30000
   }' \
-  http://127.0.0.1:8080/v1/tasks | jq .
+  http://127.0.0.1:8080/v2/tasks | jq .
 ```
 
 ### Stream tokens and metrics (SSE)
 
-- `GET /v1/tasks/{id}/stream` returns `text/event-stream`.
+- `GET /v2/tasks/{id}/events` returns `text/event-stream`.
 - Event sequence (normative): `started` → repeated `token` → optional repeated `metrics` → `end` (or `error`).
 - Query parameter: `?verbose=true` — when set, the server may include human-narrated breadcrumbs and diagnostics within some `metrics` frames (e.g., `{ "human": "provisioning llama.cpp", "phase": "engine_provision" }`).
 - Progress surface for CLI loading bars (optional): when available, `metrics` frames MAY include a `prep` object mapping step IDs to progress:
@@ -145,14 +145,14 @@ Client tips:
 
 ### Cancel a task
 
-- `POST /v1/tasks/{id}/cancel` → `204 No Content`.
+- `POST /v2/tasks/{id}/cancel` → `204 No Content`.
 - Semantics: client-initiated cancel should stop subsequent token emission. Current implementation emits no further tokens after cancel is observed during streaming.
 - Recommended: if you also sever the SSE connection, still call explicit cancel — cancel-on-disconnect is a planned enhancement.
 
 ### Sessions
 
-- `GET /v1/sessions/{id}` → `200` `SessionInfo { ttl_ms_remaining, turns, kv_bytes, kv_warmth, tokens_budget_remaining?, time_budget_remaining_ms?, cost_budget_remaining? }`
-- `DELETE /v1/sessions/{id}` → `204` (evicts session/KV as applicable)
+- `GET /v2/sessions/{id}` → `200` `SessionInfo { ttl_ms_remaining, turns, kv_bytes, kv_warmth, tokens_budget_remaining?, time_budget_remaining_ms?, cost_budget_remaining? }`
+- `DELETE /v2/sessions/{id}` → `204` (evicts session/KV as applicable)
 - Sessions are created lazily on first use and expire by TTL; every interaction may update turns/budgets.
  - Note: Sessions are metadata-only. No prompts, messages, or model outputs are stored in session state.
    Clients own conversation content. Session fields reflect TTL/turns/KV and budgets only.
@@ -163,22 +163,18 @@ Contracts: `contracts/openapi/control.yaml`
 
 ### Pools (maintenance)
 
-- `GET /v1/pools/{id}/health` → readiness, liveness, optional `metrics`, `draining` flag.
-- `POST /v1/pools/{id}/drain` with `{"deadline_ms": <i64>}` → `202` starts draining.
-- `POST /v1/pools/{id}/reload` with `{"new_model_ref": "..."}` → `202` on accept (may preload model/engine); sentinel inputs may yield `409`.
+- `GET /v2/pools/{id}/health` → readiness, liveness, optional `metrics`, `draining` flag.
+- `POST /v2/pools/{id}/drain` with `{"deadline_ms": <i64>}` → `202` starts draining.
+- `POST /v2/pools/{id}/reload` with `{"new_model_ref": "..."}` → `202` on accept (may preload model/engine); sentinel inputs may yield `409`.
+- `POST /v2/pools/{id}/purge` (new) — purge engine and/or models (retesting convenience).
 
 ### Catalog (model registry)
 
-- `POST /v1/catalog/models` — create/ingest a `CatalogModel` (id, digest, optional source/trust/attestations).
-- `GET /v1/catalog/models/{id}` — retrieve catalog entry.
-- `POST /v1/catalog/models/{id}/verify` — trigger verification; returns `202`.
-- `POST /v1/catalog/models/{id}/state` — set lifecycle state (`Active|Retired`), optional `deadline_ms`; returns `202`.
-- `DELETE /v1/catalog/models/{id}` — `204` on success, `404` if missing.
+- Catalog APIs are migrating; consult contracts. v1 endpoints remain available; v2 split may land later.
 
 ### Artifacts (plans, transcripts, traces)
 
-- `POST /v1/artifacts` — body `Artifact { kind, content, tags?, parent?, metadata? }` → `201` `ArtifactRef { id, kind, ... }`.
-- `GET /v1/artifacts/{id}` — `200` `Artifact` or `404`.
+- Remain on v1 for now: `POST /v1/artifacts`, `GET /v1/artifacts/{id}`.
 - Implementation detail: current IDs are `sha256:<hex>` of JSON content when using the default in-memory/fs stores.
 
 ### Worker Registration (adapters)
@@ -290,7 +286,7 @@ Use overrides sparingly; they may reduce global efficiency.
 
 ```bash
 # Capabilities
-curl -s -H 'X-API-Key: valid' http://127.0.0.1:8080/v1/capabilities | jq .
+curl -s -H 'X-API-Key: valid' http://127.0.0.1:8080/v2/capabilities | jq .
 
 # Enqueue a task
 curl -s -H 'X-API-Key: valid' -H 'Content-Type: application/json' \
@@ -298,13 +294,13 @@ curl -s -H 'X-API-Key: valid' -H 'Content-Type: application/json' \
   http://127.0.0.1:8080/v1/tasks | jq .
 
 # Stream SSE
-curl -s -H 'X-API-Key: valid' http://127.0.0.1:8080/v1/tasks/t1/stream
+curl -s -H 'X-API-Key: valid' http://127.0.0.1:8080/v2/tasks/t1/events
 
 # Cancel
-curl -s -X POST -H 'X-API-Key: valid' http://127.0.0.1:8080/v1/tasks/t1/cancel -i
+curl -s -X POST -H 'X-API-Key: valid' http://127.0.0.1:8080/v2/tasks/t1/cancel -i
 
 # Session
-curl -s -H 'X-API-Key: valid' http://127.0.0.1:8080/v1/sessions/s1 | jq .
+curl -s -H 'X-API-Key: valid' http://127.0.0.1:8080/v2/sessions/s1 | jq .
 
 # Artifact
 curl -s -H 'X-API-Key: valid' -H 'Content-Type: application/json' \

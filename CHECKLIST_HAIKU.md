@@ -15,14 +15,14 @@ This document audits the happy-path pipeline and lists concrete tasks to pass th
 7. Orchestrator binds worker adapter (llamacpp-http) to that pool/replica and dispatches the task
 8. llama.cpp streams tokens via SSE back to user
 
-## Client Call Sequence (spec-confirmed)
+## Client Call Sequence (spec-confirmed, v2)
 
-- **[enqueue]** `POST /v1/tasks` → returns `202 Accepted` with `AdmissionResponse { task_id, queue_position, predicted_start_ms, backoff_ms, streams?, preparation? }`.
+- **[enqueue]** `POST /v2/tasks` → returns `202 Accepted` with `AdmissionResponseV2 { task_id, queue_position, predicted_start_ms, backoff_ms, streams?, preparation? }`.
   - `streams`: `{ sse, sse_verbose }` direct URLs for streaming.
   - `preparation`: optional steps `{ steps: [{ kind: engine_provision|model_fetch|pool_warmup, description?, estimated_ms? }] }`.
-- **[stream]** Use `streams.sse` (base) or `streams.sse_verbose` (equivalent to `?verbose=true`) → returns `text/event-stream` with events: `started` → repeated `token` → optional repeated `metrics` → `end` (or `error`).
+- **[stream]** Use `streams.sse` (base) or `streams.sse_verbose` (equivalent to `?verbose=true`) → `GET /v2/tasks/{id}/events` returns `text/event-stream` with events: `started` → repeated `token` → optional repeated `metrics` → `end` (or `error`).
 - **[narration logs]** are emitted via JSON logs (with a `human` string), correlated by `X-Correlation-Id`. SSE is not a raw log stream.
-- References: `contracts/openapi/data.yaml`, `CONSUMER_CAPABILITIES.md`, and `consumers/llama-orch-sdk/CLIENT_HANDBOOK.md`.
+- References: `contracts/openapi/data.yaml`, `CONSUMER_CAPABILITIES.md`, and `consumers/llama-orch-sdk/CLIENT_HANDBOOK.md` (all v2).
 
 ## Findings and Gaps (by step)
 
@@ -33,7 +33,7 @@ This document audits the happy-path pipeline and lists concrete tasks to pass th
   - TODO: ORCHD-CONFIG-VALIDATE-0001.
 
 - 1 — Request ingress
-  - Current: `POST /v1/tasks` returns `202 Accepted` with `AdmissionResponse` (includes the same `task_id`). Enqueue admits into the queue and seeds data for `started` SSE.
+  - Current: `POST /v2/tasks` returns `202 Accepted` with `AdmissionResponseV2` (includes the same `task_id`). Enqueue admits into the queue and seeds data for `started` SSE.
   - Gap: Sentinel validations used; need policy-backed checks and budgets.
   - Code: `bin/orchestratord/src/api/data.rs` (`create_task()`). Spec: `contracts/openapi/data.yaml`.
 
@@ -163,11 +163,12 @@ Verification commands:
 - Client flow note: `FINDINGS_ENQUEUE_STREAM_FLOW.md`
 - SDK guide: `consumers/llama-orch-sdk/CLIENT_HANDBOOK.md`
 
-## Spec Change Recap
+## Spec Change Recap (v2)
 
-- Data-plane OpenAPI (`contracts/openapi/data.yaml`) updated to include:
-  - `GET /v1/tasks/{id}/stream?verbose=true` query parameter (optional).
-  - `AdmissionResponse.streams` (links to `sse`, `sse_verbose`).
-  - `AdmissionResponse.preparation` (list of steps before decode).
+- Data-plane OpenAPI (`contracts/openapi/data.yaml`) updated to v2 paths and now includes:
+  - `GET /v2/tasks/{id}/events?verbose=true` (optional).
+  - `AdmissionResponseV2.streams` (links to `sse`, `sse_verbose`).
+  - `AdmissionResponseV2.preparation` (list of steps before decode).
 - Docs updated: `CONSUMER_CAPABILITIES.md`, `CLIENT_HANDBOOK.md`.
-- TODOs added: ORCHD-STREAM-VERBOSE-0011, ORCHD-ADMISSION-PREPARATION-0012
+- TODOs added: ORCHD-STREAM-VERBOSE-0011, ORCHD-ADMISSION-PREPARATION-0009.
+- TODO: refresh diagrams/examples referencing `/v1` in `README.md` and BDD tests.
