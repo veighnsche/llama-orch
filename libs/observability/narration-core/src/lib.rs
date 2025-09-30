@@ -9,8 +9,9 @@
 //! - Test capture adapter for BDD assertions
 //! - Correlation ID propagation
 //! - Story snapshot generation
+//! - **Cloud Profile**: OpenTelemetry integration, HTTP header propagation, auto-injection
 //!
-//! # Example
+//! # Example (Basic)
 //! ```rust
 //! use observability_narration_core::{narrate, NarrationFields};
 //!
@@ -25,12 +26,32 @@
 //!     ..Default::default()
 //! });
 //! ```
+//!
+//! # Example (Cloud Profile - Auto-injection)
+//! ```rust
+//! use observability_narration_core::{narrate_auto, NarrationFields};
+//!
+//! // Automatically injects service identity and timestamp
+//! narrate_auto(NarrationFields {
+//!     actor: "pool-managerd",
+//!     action: "spawn",
+//!     target: "GPU0".to_string(),
+//!     human: "Spawning engine llamacpp-v1".to_string(),
+//!     pool_id: Some("default".into()),
+//!     ..Default::default()
+//! });
+//! ```
 
 mod capture;
 mod redaction;
+pub mod otel;
+pub mod auto;
+pub mod http;
 
 pub use capture::{CaptureAdapter, CapturedNarration};
 pub use redaction::{redact_secrets, RedactionPolicy};
+pub use auto::{narrate_auto, narrate_full, service_identity, current_timestamp_ms};
+pub use otel::narrate_with_otel_context;
 
 use serde::{Deserialize, Serialize};
 use tracing::{event, Level};
@@ -88,6 +109,8 @@ pub struct NarrationFields {
     pub trace_id: Option<String>,
     /// Span ID within the trace
     pub span_id: Option<String>,
+    /// Parent span ID (for span hierarchy)
+    pub parent_span_id: Option<String>,
     /// Source location for dev builds (e.g., "data.rs:155")
     pub source_location: Option<String>,
 }
@@ -147,6 +170,7 @@ pub fn narrate(fields: NarrationFields) {
         emitted_at_ms = fields.emitted_at_ms,
         trace_id = fields.trace_id.as_deref(),
         span_id = fields.span_id.as_deref(),
+        parent_span_id = fields.parent_span_id.as_deref(),
         source_location = fields.source_location.as_deref(),
     );
     

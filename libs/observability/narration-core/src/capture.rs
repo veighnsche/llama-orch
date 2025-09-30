@@ -19,6 +19,7 @@ pub struct CapturedNarration {
     pub emitted_by: Option<String>,
     pub emitted_at_ms: Option<u64>,
     pub trace_id: Option<String>,
+    pub parent_span_id: Option<String>,
     // Add more fields as needed for assertions
 }
 
@@ -36,6 +37,7 @@ impl From<NarrationFields> for CapturedNarration {
             emitted_by: fields.emitted_by,
             emitted_at_ms: fields.emitted_at_ms,
             trace_id: fields.trace_id,
+            parent_span_id: fields.parent_span_id,
         }
     }
 }

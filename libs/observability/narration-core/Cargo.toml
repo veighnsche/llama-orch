@@ -16,3 +16,8 @@ path = "src/lib.rs"
 tracing = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 regex = { workspace = true }
+opentelemetry = { version = "0.21", optional = true }
+
+[features]
+default = []
+otel = ["opentelemetry"]
