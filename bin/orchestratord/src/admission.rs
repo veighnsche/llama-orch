@@ -22,7 +22,9 @@ impl QueueWithMetrics {
         Self { inner: InMemoryQueue::with_capacity_policy(capacity, policy), policy, labels }
     }
 
-    pub fn enqueue(&mut self, _cost: usize, priority: Priority) -> Result<(), ()> {
+    /// Enqueue a task id with priority. Returns the queue position (0-based within the
+    /// priority class) on success. Returns Err(()) when reject policy applies and item is not queued.
+    pub fn enqueue(&mut self, id: u32, priority: Priority) -> Result<i64, ()> {
         use Priority::*;
         let prio = match priority {
             Interactive => "interactive",
@@ -49,6 +51,7 @@ impl QueueWithMetrics {
                         &[("engine", self.labels.engine.as_str()), ("reason", "ADMISSION_REJECT")],
                     );
                     // Do not enqueue
+                    return Err(());
                 }
                 Policy::DropLru => {
                     metrics::inc_counter(
@@ -63,12 +66,12 @@ impl QueueWithMetrics {
                         ],
                     );
                     // Let inner queue apply policy by enqueuing; LRU will be dropped internally
-                    let _ = self.inner.enqueue(1, priority);
+                    let _ = self.inner.enqueue(id, priority);
                     enqueued = true;
                 }
             }
         } else {
-            let _ = self.inner.enqueue(1, priority);
+            let _ = self.inner.enqueue(id, priority);
             enqueued = true;
         }
 
@@ -82,6 +85,21 @@ impl QueueWithMetrics {
         ];
         let depth_now = self.inner.len() as i64;
         metrics::set_gauge("queue_depth", &depth_labels, depth_now);
-        Ok(())
+        // Derive queue position within the priority class
+        let pos = match priority {
+            Interactive => self
+                .inner
+                .snapshot_priority(Priority::Interactive)
+                .iter()
+                .position(|&x| x == id)
+                .unwrap_or(0) as i64,
+            Batch => self
+                .inner
+                .snapshot_priority(Priority::Batch)
+                .iter()
+                .position(|&x| x == id)
+                .unwrap_or(0) as i64,
+        };
+        Ok(pos)
     }
 }
