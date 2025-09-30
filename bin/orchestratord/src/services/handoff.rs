@@ -6,7 +6,6 @@
 
 use crate::state::AppState;
 use std::path::PathBuf;
-use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{debug, info, warn};
@@ -64,13 +63,12 @@ pub fn spawn_handoff_autobind_watcher(state: AppState) {
     });
 }
 
-/// Process a single handoff JSON file: parse, bind adapter, update pool registry.
 async fn process_handoff_file(state: &AppState, path: &PathBuf) -> anyhow::Result<()> {
     let content = std::fs::read_to_string(path)?;
     let handoff: serde_json::Value = serde_json::from_str(&content)?;
 
     // Extract required fields
-    let url = handoff
+    let _url = handoff
         .get("url")
         .and_then(|v| v.as_str())
         .ok_or_else(|| anyhow::anyhow!("missing 'url' in handoff"))?;

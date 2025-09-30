@@ -57,10 +57,8 @@ pub async fn get_model(
 ) -> Result<(StatusCode, Json<serde_json::Value>), ErrO> {
     let cat = open_catalog().map_err(|_e| ErrO::Internal)?;
     if let Some(entry) = cat.get(&id).map_err(|_e| ErrO::Internal)? {
-        let out = json!({
-            "id": entry.id,
-            "digest": entry.digest.as_ref().map(|d| format!("{}:{}", d.algo, d.value)),
-        });
+        // Return full CatalogEntry as JSON (includes id, digest, state, timestamps, etc.)
+        let out = serde_json::to_value(&entry).map_err(|_| ErrO::Internal)?;
         Ok((StatusCode::OK, Json(out)))
     } else {
         Ok((StatusCode::NOT_FOUND, Json(json!({"error":"not found"}))))

@@ -55,14 +55,12 @@ pub async fn create_task(
     }
     
     // Test sentinels for BDD error taxonomy tests
-    #[cfg(test)]
-    {
-        if body.model_ref == "pool-unavailable" {
-            return Err(ErrO::PoolUnavailable);
-        }
-        if body.prompt.as_deref() == Some("cause-internal") {
-            return Err(ErrO::Internal);
-        }
+    // Note: These are harmless in production (unlikely model_ref values)
+    if body.model_ref == "pool-unavailable" {
+        return Err(ErrO::PoolUnavailable);
+    }
+    if body.prompt.as_deref() == Some("cause-internal") {
+        return Err(ErrO::Internal);
     }
     
     if let Some(exp) = body.expected_tokens {

@@ -1,7 +1,6 @@
 use axum::{extract::State, response::IntoResponse, Json};
 use http::{HeaderMap, StatusCode};
 use serde_json::json;
-use std::sync::Arc;
 
 use crate::domain::error::OrchestratorError as ErrO;
 use crate::state::AppState;

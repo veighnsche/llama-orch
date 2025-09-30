@@ -43,13 +43,13 @@ fn extract_or_generate_correlation_id(headers: &HeaderMap) -> String {
 }
 
 /// API key middleware: enforce `X-API-Key: valid` on all routes except `/metrics`.
-pub async fn api_key_layer(mut req: Request<Body>, next: Next) -> Result<Response, StatusCode> {
+pub async fn api_key_layer(req: Request<Body>, next: Next) -> Result<Response, StatusCode> {
     if !should_require_api_key(req.uri().path()) {
         return Ok(next.run(req).await);
     }
     // Helper to build an error response with correlation id header. Since correlation_id_layer
     // may not run on early returns, compute/echo correlation id here from request headers.
-    let mut build_err = |status: StatusCode| {
+    let build_err = |status: StatusCode| {
         let corr = extract_or_generate_correlation_id(req.headers());
         let mut resp = Response::builder().status(status).body(Body::empty()).unwrap();
         resp.headers_mut()

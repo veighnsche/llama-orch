@@ -12,7 +12,7 @@ async fn capabilities_requires_api_key_and_sets_corr_id() {
     // Missing key -> 401
     let req = Request::builder()
         .method(http::Method::GET)
-        .uri("/v1/capabilities")
+        .uri("/v2/meta/capabilities")
         .body(Body::empty())
         .unwrap();
     let resp = app.clone().oneshot(req).await.unwrap();
@@ -21,7 +21,7 @@ async fn capabilities_requires_api_key_and_sets_corr_id() {
     // Invalid key -> 403
     let req = Request::builder()
         .method(http::Method::GET)
-        .uri("/v1/capabilities")
+        .uri("/v2/meta/capabilities")
         .header("X-API-Key", "nope")
         .body(Body::empty())
         .unwrap();
@@ -31,7 +31,7 @@ async fn capabilities_requires_api_key_and_sets_corr_id() {
     // Valid key -> 200 and correlation id present
     let req = Request::builder()
         .method(http::Method::GET)
-        .uri("/v1/capabilities")
+        .uri("/v2/meta/capabilities")
         .header("X-API-Key", "valid")
         .body(Body::empty())
         .unwrap();

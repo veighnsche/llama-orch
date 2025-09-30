@@ -37,7 +37,7 @@ impl Default for FsStore {
 impl ArtifactStore for FsStore {
     fn put(&self, doc: Artifact) -> anyhow::Result<ArtifactId> {
         let s = doc.to_string();
-        let id = format!("sha256:{}", sha256::digest(s.clone()));
+        let id = sha256::digest(s.clone());  // Pure hash, no prefix
         let path = self.path_for(&id);
         if let Some(parent) = path.parent() {
             create_dir_all(parent)?;
