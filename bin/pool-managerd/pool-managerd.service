@@ -1,0 +1,28 @@
+[Unit]
+Description=pool-managerd - Engine Lifecycle Manager
+Documentation=https://github.com/veighnsche/llama-orch
+After=network.target
+
+[Service]
+Type=simple
+User=llama-orch
+Group=llama-orch
+WorkingDirectory=/opt/llama-orch
+Environment="POOL_MANAGERD_ADDR=127.0.0.1:9001"
+Environment="RUST_LOG=info"
+ExecStart=/usr/local/bin/pool-managerd
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pool-managerd
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/llama-orch/.runtime
+
+[Install]
+WantedBy=multi-user.target
