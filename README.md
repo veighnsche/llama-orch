@@ -27,6 +27,9 @@ See also:
   - Control/catalog routes aligned to OpenAPI; `/metrics` endpoint available
   - JSON structured logging via `tracing-subscriber` plus a growing human‑readable narration surface (see `.reports/logging_narration_discovery.md`)
 
+Policy highlights:
+- GPU required; no CPU fallback. VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
+
 Note: The `orchestratord` binary starts an Axum HTTP server. Configure address via `ORCHD_ADDR` (default `0.0.0.0:8080`); see `bin/orchestratord/src/main.rs`.
 
 ## Repository at a glance

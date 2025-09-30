@@ -56,3 +56,7 @@ pub enum TestType { Unit, Integration, Contract, Bdd, Determinism, Smoke, E2eHai
 ```
 
 These map to directory names per `.docs/testing/TEST_TYPES_GUIDE.md`.
+
+## Policy note
+
+- VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or host-RAM offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.

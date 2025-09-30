@@ -250,7 +250,7 @@ Legend:
 
 - [ ] `container-runtime/.specs/00_container_runtime.md` (detect/pull/run/stop; Podman preferred, Docker fallback; NVIDIA toolkit preflight; redaction policy)
 
-## 4) Clean-up: GPU-only (remove CPU fallback mentions)
+## 4) Clean-up: GPU-only & VRAM-only residency (remove CPU fallback and RAM offload/UMA mentions)
 
 - [x] Search & scrub CPU fallback language across specs
   - [x] `provisioners/engine-provisioner/.specs/00_engine_provisioner.md`
@@ -258,6 +258,12 @@ Legend:
   - [x] `provisioners/engine-provisioner/.specs/12_pool_managerd.md`
   - [x] `orchestrator-core/.specs/13_engine_provisioner.md`
   - [x] `provisioners/engine-provisioner/.specs/14_orchestrator_core.md`
+
+- [ ] Add explicit VRAM-only residency statements and scrub RAM offload/unified memory/zero-copy wording across docs
+  - [x] `/.specs/proposals/GPU_ONLY.md` — add ORCH-3803/3804/3832 and operator guidance banning UMA/zero-copy/host-RAM offload
+  - [x] `/.specs/00_llama-orch.md` — add §2.13 VRAM-only Residency
+  - [x] `/CONSUMER_CAPABILITIES.md` — add Operational Expectation: VRAM-only residency; no RAM↔VRAM sharing/offload
+  - [ ] Other READMEs/specs audited; update if any mention RAM/VRAM sharing or unified memory as acceptable
 
 ## 5) ORCH‑ID policy normalization
 

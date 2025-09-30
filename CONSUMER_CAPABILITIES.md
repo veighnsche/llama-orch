@@ -29,6 +29,7 @@ If you observe any discrepancy between code and this guide, treat the OpenAPI co
 ## Operational Expectations
 
 - GPU required; no CPU fallback. If no GPU capacity is available, the server will fail fast (e.g., `503 POOL_UNAVAILABLE`) or apply backpressure.
+- VRAM-only residency: model weights, KV cache, and activations reside entirely in GPU VRAM during inference. No RAM↔VRAM sharing, unified memory/zero-copy, or host-RAM offload is supported. Tasks that do not fit must fail fast.
 - Automatic provisioning: the program is responsible for preparing engines (e.g., llama.cpp, vLLM, TGI, Triton) and ensuring models per policy. Clients do not have to provision engines or models directly; enqueue requests may be accepted and streamed once the serving pool becomes ready.
 - Single-host orchestration focus in current alpha. Multi-host or distributed scheduling may evolve later.
 

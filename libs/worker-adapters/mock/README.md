@@ -67,6 +67,10 @@ flowchart LR
 - Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
 - Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
 
+## Policy note
+
+- VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or host-RAM offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
+
 ### Additional Details
 - Engine endpoint mapping tables (native/OpenAI-compat to adapter calls), determinism knobs,
 version capture.

@@ -5,12 +5,12 @@ from typing import Any, Dict, List, Tuple, Iterable
 
 import yaml
 
-from ..core.types import RunConfig
-from ..core import logging as elog
-from ..core import validator
-from ..core import loader
-from ..core import variables as vargrid
-from ..core.artifacts import write_csv_header, append_csv_row
+from core.types import RunConfig
+from core import logging as elog
+from core import validator
+from core import loader
+from core import variables as vargrid
+from core.artifacts import write_csv_header, append_csv_row
 
 
 def build_run_config(

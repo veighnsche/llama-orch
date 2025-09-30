@@ -2,12 +2,12 @@
 from __future__ import annotations
 from typing import Tuple
 
-from ...services.autoscaling import (
+from services.autoscaling import (
     instances_needed,
     planner_instances_needed,
     cap_per_instance_tokens_per_hour,
 )
-from ...services.batching import (
+from services.batching import (
     effective_tps_per_instance,
     BatchingConfig,
 )

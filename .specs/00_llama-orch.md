@@ -150,6 +150,14 @@ This specification is the single source of truth for llama-orch in a home lab. I
 
 ---
 
+### 2.13 VRAM-only Residency (clarification)
+
+* During inference, model weights, KV cache, activations, and intermediate tensors MUST reside entirely in GPU VRAM. No RAM↔VRAM sharing/offload is permitted.
+* Engines and provisioners MUST disable any unified memory (UMA), zero-copy, pinned/page-locked host memory, or BAR/Resizable-BAR modes that would keep any portion of model weights outside VRAM at runtime.
+* Host RAM MAY be used for non-runtime duties (download, staging, decompression, catalog verification), never for live decode.
+
+---
+
 ## 3. GPU Topology & Device Management
 
 * Device masks are explicit; spillover is forbidden. (ORCH-3052)

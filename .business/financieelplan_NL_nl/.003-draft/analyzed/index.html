@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Qredits – 18-Month Financial Plan (Analysis)</title>
+  <style>
+    :root{--ink:#1b1f23;--muted:#586069;--ok:#106b21;--warn:#8a6d3b;--bad:#b71c1c;--bg:#fff}
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;line-height:1.45;color:var(--ink);background:var(--bg);margin:0;padding:24px}
+    .container{width:800px;max-width:100%;margin:0 auto}
+    header{margin-bottom:24px}
+    h1{font-size:20px;margin:0 0 4px}
+    h2{font-size:18px;margin:24px 0 8px}
+    h3{font-size:16px;margin:16px 0 8px}
+    p,li{font-size:14px;color:var(--ink)}
+    .muted{color:var(--muted)}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:12px 0}
+    .card{border:1px solid #e1e4e8;border-radius:8px;padding:12px;background:#fff}
+    .k{font-size:12px;color:var(--muted)}
+    .v{font-size:18px;font-weight:600}
+    table{width:100%;border-collapse:collapse;margin:8px 0 24px}
+    th,td{padding:6px 8px;border:1px solid #e1e4e8;font-size:12px;text-align:right}
+    th:first-child,td:first-child{text-align:left}
+    .ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+    .section{page-break-inside:avoid}
+    @media print{body{padding:0} .no-print{display:none}}
+    .foot{margin-top:24px;font-size:12px;color:var(--muted)}
+    .small{font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="container">
+  <header>
+    <h1>Qredits – 18-Month Financial Plan (Analysis)</h1>
+    <div class="muted small">Generated at: <span id="gen_at">2025-09-29T16:56:34Z</span></div>
+  </header>
+
+  <section class="section" id="exec">
+    <h2>Executive Summary</h2>
+    <div class="cards">
+      <div class="card"><div class="k">Min DSCR</div><div class="v" id="dscr_min">–</div></div>
+      <div class="card"><div class="k">Min Cash (€)</div><div class="v" id="cash_min">–</div></div>
+      <div class="card"><div class="k">Runway (months to cash < 0)</div><div class="v" id="runway">–</div></div>
+      <div class="card"><div class="k">Revenue (€)</div><div class="v" id="rev_total">–</div></div>
+      <div class="card"><div class="k">Costs (€)</div><div class="v" id="cost_total">–</div></div>
+      <div class="card"><div class="k">Margin (€)</div><div class="v" id="margin_total">–</div></div>
+    </div>
+    <p class="small muted" id="perc_note"></p>
+  </section>
+
+  <section class="section" id="why">
+    <h2>Why this projection is realistic</h2>
+    <ul id="justifications">
+      <!-- populated by JS -->
+    </ul>
+  </section>
+
+  <section class="section" id="pnl">
+    <h2>Monthly P&L (Representative Cut)</h2>
+    <table id="tbl_pnl">
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Revenue (total)</th>
+          <th>COGS (total)</th>
+          <th>Opex (fixed)</th>
+          <th>Depreciation</th>
+          <th>EBITDA</th>
+          <th>Interest</th>
+          <th>EBT</th>
+          <th>Tax</th>
+          <th>Net Income</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section class="section" id="cashflow">
+    <h2>Monthly Cashflow</h2>
+    <table id="tbl_cf">
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Starting Cash</th>
+          <th>Cash from Ops</th>
+          <th>Working Capital Δ</th>
+          <th>VAT Cash</th>
+          <th>Capex</th>
+          <th>Debt Service (Interest)</th>
+          <th>Debt Service (Principal)</th>
+          <th>Ending Cash</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section class="section" id="loan">
+    <h2>Loan Schedule</h2>
+    <table id="tbl_loan">
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Principal Opening</th>
+          <th>Interest</th>
+          <th>Principal Repayment</th>
+          <th>Payment</th>
+          <th>Principal Closing</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <div class="foot">
+    Built from engine outputs; print this page to PDF for submission.
+  </div>
+  </div>
+
+  <script id="DATA_JSON" type="application/json">{"consolidated": {"public": {"revenue_eur": 3932.275592680223, "cost_eur": 1653.1067186159285, "margin_eur": 2279.1688740642944}, "private": {"revenue_eur": 50704.27037221533, "cost_eur": 22258.829738945682, "margin_eur": 28445.44063326965}, "total": {"revenue_eur": 54636.54596489555, "cost_eur": 23911.93645756161, "margin_eur": 30724.609507333942}, "autoscaling": {"avg_util_pct": 0.7135010619534303, "p95_util_pct": 1.2688676456793093, "sla_violations": 0}, "percentiles": {"report_percentiles": [10.0, 50.0, 90.0], "selected_percentile": 50.0}, "sensitivity": {"public_revenue": {"min": 7.0, "max": 25.900126383606057, "mean": 14.563983676593418, "std": 5.723837400082674}, "private_revenue": {"min": 205.6818181818182, "max": 1847.8084434301986, "mean": 563.3807819135037, "std": 356.84915650663356}}}, "kpis": {"dscr_min": -12.741843967311304, "icr_min": -12.741843967311304, "cash_min": -31612.386247356186, "runway_months": 8}, "monthly": {"revenue_total": [1254.4168181818184, 1421.866140909091, 1595.0368935909091, 1774.4206079068178, 1960.5353384606683, 2153.927461497366, 2355.173584784154, 2564.882575985982, 2783.697717345075, 3012.298994987805, 3251.405531729614, 3501.778172833515, 3764.222234802017, 4039.590427948993, 4328.7859642100075, 4632.765862409905, 4952.544464018581, 5289.197173293234], "cogs_total": [148.95050505050503, 260.43518181818183, 375.62962090909093, 494.8535564999999, 618.4436138762728, 746.7544414075338, 880.1599108642697, 1019.0543904813662, 1163.8540954552261, 1314.9985208601586, 1472.9519622883681, 1638.2051298574265, 1811.2768615909667, 1992.7159425639697, 2183.103036615038, 2383.0527378661063, 2593.2157497570124, 2814.281199800118], "ebitda": [-3169.5336868686863, -3113.5690409090907, -3055.592727318182, -2995.432948593182, -2932.9082754156043, -2867.8269799101677, -2799.9863260801158, -2729.1718144953843, -2655.1563781101513, -2577.6995258723537, -2496.5464305587543, -2411.4269570239117, -2322.05462678895, -2228.125514614977, -2129.3170724050306, -2025.2868754562014, -1915.6712857384318, -1800.0840265068837], "interest": [248.74999999999997, 248.74999999999997, 248.74999999999997, 248.74999999999997, 245.31857088891073, 241.85868951144204, 238.37011995088517, 234.85262433438868, 231.30596281673874, 227.72989356400495, 224.12417273705057, 220.48855447490604, 216.82279087800455, 213.12663199127874, 209.3998257871172, 205.6421181481795, 201.85325285006888, 198.03297154386146], "debt_service_principal": [0.0, 0.0, 0.0, 413.84069681478366, 417.27212592587296, 420.7320073033416, 424.2205768638985, 427.738072480395, 431.2847339980449, 434.8608032507787, 438.4665240777331, 442.1021423398776, 445.76790593677913, 449.46406482350494, 453.19087102766645, 456.94857866660413, 460.73744396471477, 464.5577252709222], "dscr": [-12.741843967311304, -12.516860465966195, -12.283789858565557, -4.520789324379098, -4.426425377710141, -4.328202906706101, -4.225815936656301, -4.118940739154808, -4.007234618406296, -3.8903346187381005, -3.76785614793596, -3.639391510650785, -3.5045083457277126, -3.362747960884535, -3.2136235577123506, -3.056618339484982, -2.891183493742784, -2.716736041058644], "ending_cash": [31581.716313131314, 25531.28470050505, 21925.06515818687, 17950.806206790723, 14024.073480587325, 10146.735246194214, 6320.811235250397, 2548.4813408323216, -1167.905089433816, -4825.81932495562, -8422.542647209564, -11955.155024165764, -15420.523017029438, -18815.28686900749, -22135.846722368104, -25378.34790638286, -28538.665234808042, -31612.386247356186], "vat_cash_total": 5932.435642106573, "wc_delta_total": 1369.449660361803}, "meta": {"horizon_months": 18, "generated_at": "2025-09-29T16:56:34Z", "selected_percentile": 50.0, "report_percentiles": [10.0, 50.0, 90.0]}, "autoscaling": {"avg_util_pct": 0.7135010619534303, "p95_util_pct": 1.2688676456793093, "sla_violations": 0}, "loan_schedule": [{"month": "0.0", "principal_opening": "30000.0", "interest": "248.74999999999997", "principal_repayment": "0.0", "payment": "248.74999999999997", "principal_closing": "30000.0"}, {"month": "1.0", "principal_opening": "30000.0", "interest": "248.74999999999997", "principal_repayment": "0.0", "payment": "248.74999999999997", "principal_closing": "30000.0"}, {"month": "2.0", "principal_opening": "30000.0", "interest": "248.74999999999997", "principal_repayment": "0.0", "payment": "248.74999999999997", "principal_closing": "30000.0"}, {"month": "3.0", "principal_opening": "30000.0", "interest": "248.74999999999997", "principal_repayment": "413.84069681478366", "payment": "662.5906968147837", "principal_closing": "29586.159303185217"}, {"month": "4.0", "principal_opening": "29586.159303185217", "interest": "245.31857088891073", "principal_repayment": "417.27212592587296", "payment": "662.5906968147837", "principal_closing": "29168.887177259345"}, {"month": "5.0", "principal_opening": "29168.887177259345", "interest": "241.85868951144204", "principal_repayment": "420.7320073033416", "payment": "662.5906968147837", "principal_closing": "28748.155169956004"}, {"month": "6.0", "principal_opening": "28748.155169956004", "interest": "238.37011995088517", "principal_repayment": "424.2205768638985", "payment": "662.5906968147837", "principal_closing": "28323.934593092104"}, {"month": "7.0", "principal_opening": "28323.934593092104", "interest": "234.85262433438868", "principal_repayment": "427.738072480395", "payment": "662.5906968147837", "principal_closing": "27896.19652061171"}, {"month": "8.0", "principal_opening": "27896.19652061171", "interest": "231.30596281673874", "principal_repayment": "431.2847339980449", "payment": "662.5906968147837", "principal_closing": "27464.911786613666"}, {"month": "9.0", "principal_opening": "27464.911786613666", "interest": "227.72989356400495", "principal_repayment": "434.8608032507787", "payment": "662.5906968147837", "principal_closing": "27030.050983362886"}, {"month": "10.0", "principal_opening": "27030.050983362886", "interest": "224.12417273705057", "principal_repayment": "438.4665240777331", "payment": "662.5906968147837", "principal_closing": "26591.584459285154"}, {"month": "11.0", "principal_opening": "26591.584459285154", "interest": "220.48855447490604", "principal_repayment": "442.1021423398776", "payment": "662.5906968147837", "principal_closing": "26149.482316945276"}, {"month": "12.0", "principal_opening": "26149.482316945276", "interest": "216.82279087800455", "principal_repayment": "445.76790593677913", "payment": "662.5906968147837", "principal_closing": "25703.714411008496"}, {"month": "13.0", "principal_opening": "25703.714411008496", "interest": "213.12663199127874", "principal_repayment": "449.46406482350494", "payment": "662.5906968147837", "principal_closing": "25254.250346184992"}, {"month": "14.0", "principal_opening": "25254.250346184992", "interest": "209.3998257871172", "principal_repayment": "453.19087102766645", "payment": "662.5906968147837", "principal_closing": "24801.059475157326"}, {"month": "15.0", "principal_opening": "24801.059475157326", "interest": "205.6421181481795", "principal_repayment": "456.94857866660413", "payment": "662.5906968147837", "principal_closing": "24344.11089649072"}, {"month": "16.0", "principal_opening": "24344.11089649072", "interest": "201.85325285006888", "principal_repayment": "460.73744396471477", "payment": "662.5906968147837", "principal_closing": "23883.373452526008"}, {"month": "17.0", "principal_opening": "23883.373452526008", "interest": "198.03297154386146", "principal_repayment": "464.5577252709222", "payment": "662.5906968147837", "principal_closing": "23418.815727255085"}], "pnl_rows": [{"month": "0", "revenue_public": "105.0", "revenue_private": "1149.4168181818184", "cogs_public": "44.14141414141413", "cogs_private": "104.8090909090909", "opex_fixed": "4275.0", "depreciation": "0.0", "EBITDA": "-3169.5336868686863", "interest": "248.74999999999997", "EBT": "-3418.2836868686863", "tax": "0.0", "NetIncome": "-3418.2836868686863"}, {"month": "1", "revenue_public": "113.40000000000002", "revenue_private": "1308.4661409090909", "cogs_public": "47.672727272727286", "cogs_private": "212.76245454545452", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-3113.5690409090907", "interest": "248.74999999999997", "EBT": "-3428.9857075757573", "tax": "0.0", "NetIncome": "-3428.9857075757573"}, {"month": "2", "revenue_public": "122.47200000000001", "revenue_private": "1472.5648935909092", "cogs_public": "51.48654545454545", "cogs_private": "324.14307545454545", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-3055.592727318182", "interest": "248.74999999999997", "EBT": "-3371.0093939848484", "tax": "0.0", "NetIncome": "-3371.0093939848484"}, {"month": "3", "revenue_public": "132.26976", "revenue_private": "1642.150847906818", "cogs_public": "55.60546909090909", "cogs_private": "439.24808740909083", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2995.432948593182", "interest": "248.74999999999997", "EBT": "-3310.8496152598486", "tax": "0.0", "NetIncome": "-3310.8496152598486"}, {"month": "4", "revenue_public": "142.85134080000003", "revenue_private": "1817.6839976606682", "cogs_public": "60.053906618181855", "cogs_private": "558.389707258091", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2932.9082754156043", "interest": "245.31857088891073", "EBT": "-3244.8935129711817", "tax": "0.0", "NetIncome": "-3244.8935129711817"}, {"month": "5", "revenue_public": "154.27944806400006", "revenue_private": "1999.648013433366", "cogs_public": "64.85821914763638", "cogs_private": "681.8962222598974", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2867.8269799101677", "interest": "241.85868951144204", "EBT": "-3176.3523360882764", "tax": "0.0", "NetIncome": "-3176.3523360882764"}, {"month": "6", "revenue_public": "166.6218039091201", "revenue_private": "2188.551780875034", "cogs_public": "70.04687667944731", "cogs_private": "810.1130341848224", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2799.9863260801158", "interest": "238.37011995088517", "EBT": "-3105.0231126976673", "tax": "0.0", "NetIncome": "-3105.0231126976673"}, {"month": "7", "revenue_public": "179.95154822184972", "revenue_private": "2384.931027764132", "cogs_public": "75.65062681380307", "cogs_private": "943.4037636675631", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2729.1718144953843", "interest": "234.85262433438868", "EBT": "-3030.6911054964394", "tax": "0.0", "NetIncome": "-3030.6911054964394"}, {"month": "8", "revenue_public": "194.3476720795977", "revenue_private": "2589.3500452654775", "cogs_public": "81.70267695890736", "cogs_private": "1082.1514184963187", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2655.1563781101513", "interest": "231.30596281673874", "EBT": "-2953.1290075935567", "tax": "0.0", "NetIncome": "-2953.1290075935567"}, {"month": "9", "revenue_public": "209.8954858459655", "revenue_private": "2802.4035091418395", "cogs_public": "88.23889111561996", "cogs_private": "1226.7596297445386", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2577.6995258723537", "interest": "227.72989356400495", "EBT": "-2872.0960861030253", "tax": "0.0", "NetIncome": "-2872.0960861030253"}, {"month": "10", "revenue_public": "226.6871247136428", "revenue_private": "3024.718407015971", "cogs_public": "95.29800240486952", "cogs_private": "1377.6539598834986", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2496.5464305587543", "interest": "224.12417273705057", "EBT": "-2787.3372699624715", "tax": "0.0", "NetIncome": "-2787.3372699624715"}, {"month": "11", "revenue_public": "244.8220946907343", "revenue_private": "3256.9560781427804", "cogs_public": "102.92184259725909", "cogs_private": "1535.2832872601675", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2411.4269570239117", "interest": "220.48855447490604", "EBT": "-2698.582178165484", "tax": "0.0", "NetIncome": "-2698.582178165484"}, {"month": "12", "revenue_public": "264.40786226599295", "revenue_private": "3499.8143725360237", "cogs_public": "111.15559000503987", "cogs_private": "1700.121271585927", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2322.05462678895", "interest": "216.82279087800455", "EBT": "-2605.544084333621", "tax": "0.0", "NetIncome": "-2605.544084333621"}, {"month": "13", "revenue_public": "285.56049124727235", "revenue_private": "3754.0299367017205", "cogs_public": "120.04803720544308", "cogs_private": "1872.6679053585267", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2228.125514614977", "interest": "213.12663199127874", "EBT": "-2507.9188132729223", "tax": "0.0", "NetIncome": "-2507.9188132729223"}, {"month": "14", "revenue_public": "308.4053305470541", "revenue_private": "4020.380633662953", "cogs_public": "129.6518801818785", "cogs_private": "2053.4511564331597", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2129.3170724050306", "interest": "209.3998257871172", "EBT": "-2405.383564858814", "tax": "0.0", "NetIncome": "-2405.383564858814"}, {"month": "15", "revenue_public": "333.0777569908185", "revenue_private": "4299.688105419086", "cogs_public": "140.02403059642876", "cogs_private": "2243.0287072696774", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-2025.2868754562014", "interest": "205.6421181481795", "EBT": "-2297.5956602710476", "tax": "0.0", "NetIncome": "-2297.5956602710476"}, {"month": "16", "revenue_public": "359.7239775500841", "revenue_private": "4592.820486468497", "cogs_public": "151.22595304414313", "cogs_private": "2441.9897967128695", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-1915.6712857384318", "interest": "201.85325285006888", "EBT": "-2184.1912052551675", "tax": "0.0", "NetIncome": "-2184.1912052551675"}, {"month": "17", "revenue_public": "388.5018957540908", "revenue_private": "4900.695277539144", "cogs_public": "163.3240292876745", "cogs_private": "2650.9571705124436", "opex_fixed": "4275.0", "depreciation": "66.66666666666667", "EBITDA": "-1800.0840265068837", "interest": "198.03297154386146", "EBT": "-2064.7836647174117", "tax": "0.0", "NetIncome": "-2064.7836647174117"}], "cf_rows": [{"month": "0", "starting_cash": "35000.0", "cash_from_ops": "-3169.5336868686863", "working_capital_delta": "0.0", "vat_cash": "0.0", "capex": "0.0", "debt_service_interest": "248.74999999999997", "debt_service_principal": "0.0", "ending_cash": "31581.716313131314"}, {"month": "1", "starting_cash": "0.0", "cash_from_ops": "-3401.681612626262", "working_capital_delta": "55.96464595959583", "vat_cash": "232.14792575757582", "capex": "2400.0", "debt_service_interest": "248.74999999999997", "debt_service_principal": "0.0", "ending_cash": "25531.28470050505"}, {"month": "2", "starting_cash": "0.0", "cash_from_ops": "-3357.4695423181815", "working_capital_delta": "57.97631359090883", "vat_cash": "243.9005014090909", "capex": "0.0", "debt_service_interest": "248.74999999999997", "debt_service_principal": "0.0", "ending_cash": "21925.06515818687"}, {"month": "3", "starting_cash": "0.0", "cash_from_ops": "-3311.6682545813637", "working_capital_delta": "60.159778724999796", "vat_cash": "256.0755272631818", "capex": "0.0", "debt_service_interest": "248.74999999999997", "debt_service_principal": "413.84069681478366", "ending_cash": "17950.806206790723"}, {"month": "4", "starting_cash": "0.0", "cash_from_ops": "-3264.142029388614", "working_capital_delta": "62.5246731775776", "vat_cash": "268.70908079543176", "capex": "0.0", "debt_service_interest": "245.31857088891073", "debt_service_principal": "417.27212592587296", "ending_cash": "14024.073480587325"}, {"month": "5", "starting_cash": "0.0", "cash_from_ops": "-3214.7475375783274", "working_capital_delta": "65.08129550543686", "vat_cash": "281.839262162723", "capex": "0.0", "debt_service_interest": "241.85868951144204", "debt_service_principal": "420.7320073033416", "ending_cash": "10146.735246194214"}, {"month": "6", "starting_cash": "0.0", "cash_from_ops": "-3163.3333141290327", "working_capital_delta": "67.84065383005213", "vat_cash": "295.50633421886477", "capex": "0.0", "debt_service_interest": "238.37011995088517", "debt_service_principal": "424.2205768638985", "ending_cash": "6320.811235250397"}, {"month": "7", "starting_cash": "0.0", "cash_from_ops": "-3109.7391976032914", "working_capital_delta": "70.81451158473124", "vat_cash": "309.7528715231757", "capex": "0.0", "debt_service_interest": "234.85262433438868", "debt_service_principal": "427.738072480395", "ending_cash": "2548.4813408323216"}, {"month": "8", "starting_cash": "0.0", "cash_from_ops": "-3053.795733451354", "working_capital_delta": "74.01543638523322", "vat_cash": "324.6239189559693", "capex": "0.0", "debt_service_interest": "231.30596281673874", "debt_service_principal": "431.2847339980449", "ending_cash": "-1167.905089433816"}, {"month": "9", "starting_cash": "0.0", "cash_from_ops": "-2995.3235387070195", "working_capital_delta": "77.45685223779765", "vat_cash": "340.16716059686826", "capex": "0.0", "debt_service_interest": "227.72989356400495", "debt_service_principal": "434.8608032507787", "ending_cash": "-4825.81932495562"}, {"month": "10", "starting_cash": "0.0", "cash_from_ops": "-2934.1326254391597", "working_capital_delta": "81.15309531359912", "vat_cash": "356.4330995668058", "capex": "0.0", "debt_service_interest": "224.12417273705057", "debt_service_principal": "438.4665240777331", "ending_cash": "-8422.542647209564"}, {"month": "11", "starting_cash": "0.0", "cash_from_ops": "-2870.021680141416", "working_capital_delta": "85.11947353484265", "vat_cash": "373.4752495826616", "capex": "0.0", "debt_service_interest": "220.48855447490604", "debt_service_principal": "442.1021423398776", "ending_cash": "-11955.155024165764"}, {"month": "12", "starting_cash": "0.0", "cash_from_ops": "-2802.77729604889", "working_capital_delta": "89.37233023496174", "vat_cash": "391.3503390249785", "capex": "0.0", "debt_service_interest": "216.82279087800455", "debt_service_principal": "445.76790593677913", "ending_cash": "-15420.523017029438"}, {"month": "13", "starting_cash": "0.0", "cash_from_ops": "-2732.1731551632706", "working_capital_delta": "93.92911217397295", "vat_cash": "410.11852837432053", "capex": "0.0", "debt_service_interest": "213.12663199127874", "debt_service_principal": "449.46406482350494", "ending_cash": "-18815.28686900749"}, {"month": "14", "starting_cash": "0.0", "cash_from_ops": "-2657.9691565458315", "working_capital_delta": "98.8084422099464", "vat_cash": "429.8436419308548", "capex": "0.0", "debt_service_interest": "209.3998257871172", "debt_service_principal": "453.19087102766645", "ending_cash": "-22135.846722368104"}, {"month": "15", "starting_cash": "0.0", "cash_from_ops": "-2579.9104871999743", "working_capital_delta": "104.03019694882914", "vat_cash": "450.5934147949436", "capex": "0.0", "debt_service_interest": "205.6421181481795", "debt_service_principal": "456.94857866660413", "ending_cash": "-25378.34790638286"}, {"month": "16", "starting_cash": "0.0", "cash_from_ops": "-2497.726631610399", "working_capital_delta": "109.61558971776958", "vat_cash": "472.4397561541977", "capex": "0.0", "debt_service_interest": "201.85325285006888", "debt_service_principal": "460.73744396471477", "ending_cash": "-28538.665234808042"}, {"month": "17", "starting_cash": "0.0", "cash_from_ops": "-2411.1303157333614", "working_capital_delta": "115.58725923154816", "vat_cash": "495.4590299949293", "capex": "0.0", "debt_service_interest": "198.03297154386146", "debt_service_principal": "464.5577252709222", "ending_cash": "-31612.386247356186"}]}</script>
+  <script>
+    const DATA = JSON.parse(document.getElementById('DATA_JSON').textContent);
+    const fmt0 = (x) => (x === Infinity ? '∞' : (x || 0).toLocaleString(undefined,{maximumFractionDigits:0}));
+    const fmt2 = (x) => (x === Infinity ? '∞' : (x || 0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}));
+    const euro = (x) => '€ ' + fmt0(x);
+
+    function setText(id, text){ const el=document.getElementById(id); if(el) el.textContent=text; }
+
+    (function init(){
+      const cons = DATA.consolidated || {};
+      const total = cons.total || {};
+      const k = DATA.kpis || {};
+      const m = DATA.meta || {};
+
+      // Executive cards
+      setText('dscr_min', (k.dscr_min===Infinity? '∞' : (k.dscr_min||0).toFixed(2)));
+      setText('cash_min', euro(k.cash_min));
+      setText('runway', (k.runway_months||0).toString());
+      setText('rev_total', euro(total.revenue_eur||0));
+      setText('cost_total', euro(total.cost_eur||0));
+      setText('margin_total', euro(total.margin_eur||0));
+
+      if (cons.percentiles){
+        const rp = cons.percentiles.report_percentiles || [];
+        const sel = cons.percentiles.selected_percentile;
+        const note = `Representative scenario uses the ${sel}th percentile across runs; reported percentiles: [${rp.join(', ')}].`;
+        setText('perc_note', note);
+      }
+
+      // Justifications
+      const J = document.getElementById('justifications');
+      const autos = cons.autoscaling || DATA.autoscaling || {};
+      const bullets = [
+        `Representative (median-like) scenario selected: p=${(m.selected_percentile ?? cons.percentiles?.selected_percentile ?? 50)}`,
+        `VAT and working capital included: VAT total € ${fmt0(DATA.monthly?.vat_cash_total || 0)}, WC Δ total € ${fmt0(DATA.monthly?.wc_delta_total || 0)}`,
+        `Autoscaling sanity: avg util ${(autos.avg_util_pct ?? 0).toFixed(1)}% · p95 util ${(autos.p95_util_pct ?? 0).toFixed(1)}% · SLA violations ${(autos.sla_violations ?? 0)}`,
+        `Loan schedule fully applied to cashflow (interest and principal)`
+      ];
+      bullets.forEach(t=>{ const li=document.createElement('li'); li.textContent=t; J.appendChild(li); });
+
+      // Tables
+      const pnlT = document.querySelector('#tbl_pnl tbody');
+      const cfT = document.querySelector('#tbl_cf tbody');
+      const loanT = document.querySelector('#tbl_loan tbody');
+
+      const pnlRows = DATA.pnl_rows || [];
+      const cfRows = DATA.cf_rows || [];
+      const loanRows = DATA.loan_schedule || [];
+
+      const toNum = (v)=> Number.parseFloat(v || '0') || 0;
+
+      // P&L
+      for (let i=0;i<pnlRows.length;i++){
+        const r = pnlRows[i];
+        const tr = document.createElement('tr');
+        const rev = toNum(r.revenue_public) + toNum(r.revenue_private);
+        const cogs = toNum(r.cogs_public) + toNum(r.cogs_private);
+        tr.innerHTML = `
+          <td>${r.month}</td>
+          <td>${euro(rev)}</td>
+          <td>${euro(cogs)}</td>
+          <td>${euro(toNum(r.opex_fixed))}</td>
+          <td>${euro(toNum(r.depreciation))}</td>
+          <td>${euro(toNum(r.EBITDA))}</td>
+          <td>${euro(toNum(r.interest))}</td>
+          <td>${euro(toNum(r.EBT))}</td>
+          <td>${euro(toNum(r.tax))}</td>
+          <td>${euro(toNum(r.NetIncome))}</td>
+        `;
+        pnlT.appendChild(tr);
+      }
+
+      // Cashflow
+      for (let i=0;i<cfRows.length;i++){
+        const r = cfRows[i];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.month}</td>
+          <td>${euro(toNum(r.starting_cash))}</td>
+          <td>${euro(toNum(r.cash_from_ops))}</td>
+          <td>${euro(toNum(r.working_capital_delta))}</td>
+          <td>${euro(toNum(r.vat_cash))}</td>
+          <td>${euro(toNum(r.capex))}</td>
+          <td>${euro(toNum(r.debt_service_interest))}</td>
+          <td>${euro(toNum(r.debt_service_principal))}</td>
+          <td>${euro(toNum(r.ending_cash))}</td>
+        `;
+        cfT.appendChild(tr);
+      }
+
+      // Loan schedule
+      for (let i=0;i<loanRows.length;i++){
+        const r = loanRows[i];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.month}</td>
+          <td>${euro(toNum(r.principal_opening))}</td>
+          <td>${euro(toNum(r.interest))}</td>
+          <td>${euro(toNum(r.principal_repayment))}</td>
+          <td>${euro(toNum(r.payment))}</td>
+          <td>${euro(toNum(r.principal_closing))}</td>
+        `;
+        loanT.appendChild(tr);
+      }
+
+      // Visual indicators (optional): color DSCR card
+      const dscr = Number(k.dscr_min || 0);
+      const el = document.getElementById('dscr_min');
+      if (dscr >= 1.2) el.classList.add('ok');
+      else if (dscr >= 1.0) el.classList.add('warn');
+      else el.classList.add('bad');
+    })();
+  </script>
+</body>
+</html>

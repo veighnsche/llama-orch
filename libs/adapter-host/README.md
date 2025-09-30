@@ -68,6 +68,10 @@ flowchart LR
 - Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
 
 
+## Policy note
+
+- VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or host-RAM offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
+
 ## What this crate is not
 
 - Not a public API; do not expose engine endpoints directly.

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from d3_engine.core import rng
+from core import rng
 
 
 def test_seed_resolution_precedence():

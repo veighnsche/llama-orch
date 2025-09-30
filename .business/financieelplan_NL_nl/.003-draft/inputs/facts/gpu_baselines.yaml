@@ -1,16 +1,16 @@
 # Baseline aggregate throughput (tokens/sec) per instance at reasonable batching
 # Keys match by substring (case-insensitive) against the GPU name from curated_gpu.csv
 # These are conservative, realistic baselines suitable for planning; adjust as better data arrives.
-H200: 2800
-H100: 2500
-A100 80G: 1900
-A100 40G: 1700
-A100: 1800
-L40S: 1125
-A40: 900
-RTX 4090: 1500
-4090: 1500
-RTX 3090: 1300
-3090: 1300
-A10: 700
-L4: 600
+H200: 2500
+H100: 2200
+A100 80G: 1700
+A100 40G: 1500
+A100: 1600
+L40S: 180
+A40: 120
+RTX 4090: 225
+4090: 225
+RTX 3090: 150
+3090: 150
+A10: 100
+L4: 100
