@@ -1,4 +1,7 @@
 //! Engine provisioner (source/container/package/binary)
+//!
+//! Responsibility: PREPARE engines (download, build, stage model)
+//! NOT responsible for: spawning, health monitoring, supervision (that's pool-managerd)
 
 pub use contracts_config_schema as cfg;
 
@@ -6,34 +9,29 @@ pub mod plan;
 pub mod util;
 pub mod providers;
 
-/// Stop a running engine process for the given pool by reading the pid file and sending SIGTERM.
-/// Falls back to SIGKILL if the process does not exit quickly.
-pub fn stop_pool(pool_id: &str) -> Result<()> {
-    use crate::util::default_run_dir;
-    use std::process::Command;
-    let pid_path = default_run_dir().join(format!("{}.pid", pool_id));
-    let pid_s = std::fs::read_to_string(&pid_path)
-        .map_err(|e| anyhow::anyhow!("read pid file {}: {}", pid_path.display(), e))?;
-    let pid = pid_s.trim();
-    // Try TERM first
-    let _ = Command::new("kill").arg("-TERM").arg(pid).status();
-    // Wait up to 5 seconds for graceful shutdown
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
-    loop {
-        let alive = Command::new("kill").arg("-0").arg(pid).status().map(|st| st.success()).unwrap_or(false);
-        if !alive || std::time::Instant::now() >= deadline {
-            break;
-        }
-        std::thread::sleep(std::time::Duration::from_millis(200));
-    }
-    // If still alive after grace period, KILL
-    let _ = Command::new("kill").arg("-0").arg(pid).status().map(|st| {
-        if st.success() {
-            let _ = Command::new("kill").arg("-KILL").arg(pid).status();
-        }
-    });
-    let _ = std::fs::remove_file(&pid_path);
-    Ok(())
+use std::path::PathBuf;
+
+/// Metadata about a prepared engine, ready to be spawned by pool-managerd.
+#[derive(Debug, Clone)]
+pub struct PreparedEngine {
+    /// Path to the engine binary (e.g., /path/to/llama-server)
+    pub binary_path: PathBuf,
+    /// Command-line flags to pass to the binary
+    pub flags: Vec<String>,
+    /// Port the engine should listen on
+    pub port: u16,
+    /// Host the engine should bind to (usually 127.0.0.1)
+    pub host: String,
+    /// Path to the staged model file
+    pub model_path: PathBuf,
+    /// Engine version string (e.g., "llamacpp-source:master-cuda")
+    pub engine_version: String,
+    /// Pool ID this engine is for
+    pub pool_id: String,
+    /// Replica ID (usually "r0")
+    pub replica_id: String,
+    /// Device mask (e.g., "GPU0" or "0,1")
+    pub device_mask: Option<String>,
 }
 
 #[cfg(test)]
@@ -101,55 +99,6 @@ mod tests {
         }
     }
 
-    #[test]
-    #[cfg(unix)]
-    fn stop_pool_kills_process_and_removes_pid() {
-        use crate::util::default_run_dir;
-        use std::process::Command;
-
-        let run_dir = default_run_dir();
-        std::fs::create_dir_all(&run_dir).unwrap();
-        let pool_id = "p-stop";
-        // Spawn a long-lived process using an absolute shell path to avoid PATH races
-        let shell_path = ["/bin/sh", "/usr/bin/sh", "/bin/bash", "/usr/bin/bash"]
-            .iter()
-            .find(|p| std::path::Path::new(*p).exists())
-            .cloned()
-            .map(|s| s.to_string());
-        if shell_path.is_none() {
-            // No shell available; skip
-            eprintln!("skipping stop_pool test: no shell found");
-            return;
-        }
-        let shell = shell_path.unwrap();
-        let arg_flag = "-c";
-        let child = Command::new(&shell)
-            .arg(arg_flag)
-            .arg("while :; do :; done")
-            .spawn()
-            .expect("spawn loop");
-        let pid = child.id();
-        let pid_path = run_dir.join(format!("{}.pid", pool_id));
-        std::fs::write(&pid_path, pid.to_string()).unwrap();
-
-        // Call stop_pool; should terminate the process and remove pid file
-        let _ = stop_pool(pool_id);
-
-        // kill -0 returns non-success when process is gone; use absolute kill if possible
-        let kill_path = ["/bin/kill", "/usr/bin/kill"]
-            .iter()
-            .find(|p| std::path::Path::new(*p).exists())
-            .cloned()
-            .map(|s| s.to_string());
-        if let Some(kill_bin) = kill_path {
-            let alive = Command::new(&kill_bin).arg("-0").arg(pid.to_string()).status().map(|s| s.success()).unwrap_or(false);
-            if alive {
-                // Best-effort cleanup to avoid stray process in the test env
-                let _ = Command::new(kill_bin).arg("-KILL").arg(pid.to_string()).status();
-            }
-        }
-        assert!(!pid_path.exists(), "pid file should be removed");
-    }
 }
 
 use anyhow::Result;
@@ -166,7 +115,9 @@ pub use providers::vllm::VllmProvisioner;
 
 pub trait EngineProvisioner {
     fn plan(&self, pool: &cfg::PoolConfig) -> Result<Plan>;
-    fn ensure(&self, pool: &cfg::PoolConfig) -> Result<()>;
+    /// Prepare the engine: download/build binary, stage model, return metadata.
+    /// Does NOT spawn the process - that's pool-managerd's job.
+    fn ensure(&self, pool: &cfg::PoolConfig) -> Result<PreparedEngine>;
 }
 
 /// Return an engine-specific provisioner for the given pool.
