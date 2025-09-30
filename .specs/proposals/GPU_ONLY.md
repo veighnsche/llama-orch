@@ -32,43 +32,40 @@ This proposal enforces **VRAM-only execution**. Tasks that do not fit must fail 
 
 ---
 
-## 2) Normative Requirements (RFC-2119)
 
 IDs use ORCH-38xx (GPU-only enforcement).
 
 ### Execution policy
 
-* \[ORCH-3800] Engines MUST execute inference entirely within GPU VRAM.
-* \[ORCH-3801] Engines MUST NOT allocate or page model weights/tensors into host RAM as a fallback.
-* \[ORCH-3802] CPU inference paths MUST be disabled; operators MUST fail fast on insufficient VRAM.
+* [ORCH-3800] Engines MUST execute inference entirely within GPU VRAM.
+* [ORCH-3801] Engines MUST NOT allocate or page model weights/tensors into host RAM as a fallback.
+* [ORCH-3802] CPU inference paths MUST be disabled; operators MUST fail fast on insufficient VRAM.
+* [ORCH-3803] Engines MUST NOT enable unified memory (UMA), zero-copy, pinned/page-locked host memory, or BAR/Resizable-BAR modes to keep any portion of model weights outside VRAM at runtime.
+* [ORCH-3804] KV cache, activations, and intermediate tensors MUST reside in VRAM for the duration of inference. Host RAM is permitted only for non-runtime duties (download, staging, decompression), never for live decode.
 
 ### Placement & Admission
 
-* \[ORCH-3810] Scheduler MUST validate VRAM requirements before admission. If the model does not fit, admission MUST fail with error code `POOL_UNAVAILABLE`.
-* \[ORCH-3811] Partial placement (split across RAM + VRAM) is forbidden. No attempt to “fit partially.”
-
-### Errors & Observability
-
-* \[ORCH-3820] Insufficient VRAM MUST surface as a deterministic error:
-
-  * `code=POOL_UNAVAILABLE`
-  * `message="Model does not fit in GPU VRAM"`
-  * `policy_label=pool.reject.vram`
-* \[ORCH-3821] Narration logs MUST clearly state when admission was rejected due to VRAM limits.
+* [ORCH-3810] Scheduler MUST validate VRAM requirements before admission. If the model does not fit, admission MUST fail with error code `POOL_UNAVAILABLE`.
+* [ORCH-3811] Partial placement (split across RAM + VRAM) is forbidden. No attempt to “fit partially.”
+{{ ... }}
+* [ORCH-3821] Narration logs MUST clearly state when admission was rejected due to VRAM limits.
 
 ### Provisioning
 
-* \[ORCH-3830] Engine provisioners MUST validate VRAM availability up front.
-* \[ORCH-3831] Provisioning MUST fail with a clear diagnostic when VRAM is insufficient; no fallback to RAM or CPU is allowed.
+* [ORCH-3830] Engine provisioners MUST validate VRAM availability up front.
+* [ORCH-3831] Provisioning MUST fail with a clear diagnostic when VRAM is insufficient; no fallback to RAM or CPU is allowed.
+* [ORCH-3832] Provisioning MUST explicitly disable RAM offload/unified-memory modes when engines expose such toggles (e.g., `--no-offload`, `--disable-unified-memory`).
 
 ---
 
 ## 3) Design Overview
 
-* **Placement:** Orchestrator checks VRAM against model footprint before assigning.
+{{ ... }}
 * **Provisioners:** Validate CUDA/device memory early; abort if too small.
-* **Engines:** Compile/run only in VRAM mode; ensure flags forbid offloading (`--no-offload`).
+* **Engines:** Compile/run only in VRAM mode; ensure flags forbid offloading (e.g., `--no-offload`, disable unified memory/zero-copy if present in the engine).
 * **Logs/Telemetry:** Explicit error surfaced and logged when VRAM is insufficient.
+
+Operator guidance (non-normative): Some engines advertise host-RAM offload or UMA for "larger than VRAM" models. This program bans such modes. If a model does not fit fully in VRAM (including KV/activations within configured bounds), admission must reject with `POOL_UNAVAILABLE` instead of attempting degraded execution.
 
 ---
 

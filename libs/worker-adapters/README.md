@@ -32,3 +32,7 @@ See `.specs/` for detailed behavior and contracts shared across adapters.
 
 - Low-level
   - Streaming decode paths minimize allocations by reusing buffers and parsing lightweight token frames (e.g., `{ "t": <string>, "i": <int> }`). Timeouts are enforced per request; retries apply only to idempotent operations. Sensitive headers (e.g., `Authorization`) are redacted in error logs. Determinism signals (engine_version, sampler profile) are surfaced in `started`/`end` frames or logs.
+
+## Policy note
+
+- VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or host-RAM offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
