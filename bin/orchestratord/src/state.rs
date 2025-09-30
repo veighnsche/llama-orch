@@ -21,7 +21,9 @@ pub struct AppState {
     pub placement_cache: Arc<Mutex<PlacementCache>>,
     // Admission state
     pub admission: Arc<Mutex<QueueWithMetrics>>, // single bounded FIFO with metrics
-    pub admissions: Arc<Mutex<HashMap<String, AdmissionInfo>>>, // task_id -> admission snapshot
+    pub admissions: Arc<Mutex<HashMap<String, AdmissionSnapshot>>>, // task_id -> admission snapshot
+    // Autobind watcher state: set of pools already bound (to avoid rebinding)
+    pub bound_pools: Arc<Mutex<HashSet<String>>>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -66,6 +68,7 @@ impl AppState {
             placement_cache: Arc::new(Mutex::new(PlacementCache::with_ttl(10_000))),
             admission: Arc::new(Mutex::new(q)),
             admissions: Arc::new(Mutex::new(HashMap::new())),
+            bound_pools: Arc::new(Mutex::new(HashSet::new())),
         }
     }
 }
@@ -80,4 +83,10 @@ impl Default for AppState {
 pub struct AdmissionInfo {
     pub queue_position: i64,
     pub predicted_start_ms: i64,
+}
+
+#[derive(Debug, Clone)]
+pub struct AdmissionSnapshot {
+    pub info: AdmissionInfo,
+    pub request: contracts_api_types::TaskRequest,
 }

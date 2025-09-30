@@ -4,6 +4,24 @@ fn default_true() -> bool {
     true
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AdmissionStreams {
+    pub sse: String,
+    pub sse_verbose: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Preparation {
+    pub steps: Vec<PreparationStep>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PreparationStep {
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Engine {
@@ -118,6 +136,10 @@ pub struct AdmissionResponse {
     pub queue_position: i32,
     pub predicted_start_ms: i64,
     pub backoff_ms: i64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub streams: Option<AdmissionStreams>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preparation: Option<Preparation>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -31,29 +31,34 @@ This document audits the happy-path pipeline and lists concrete tasks to pass th
   - Gap: Validate and fail-fast on missing/invalid pools/placement.
   - Code: `bin/orchestratord/src/app/bootstrap.rs`.
   - TODO: ORCHD-CONFIG-VALIDATE-0001.
+  - Status: ❌ Not implemented
 
 - 1 — Request ingress
   - Current: `POST /v2/tasks` returns `202 Accepted` with `AdmissionResponseV2` (includes the same `task_id`). Enqueue admits into the queue and seeds data for `started` SSE.
   - Gap: Sentinel validations used; need policy-backed checks and budgets.
   - Code: `bin/orchestratord/src/api/data.rs` (`create_task()`). Spec: `contracts/openapi/data.yaml`.
+  - Status: ✅ Basic admission done, ⚠️ needs sentinel removal & budget enforcement
 
 - 2 — Pool-manager check for running model/engine
-  - Current: `AppState.pool_manager` holds a `pool_managerd::registry::Registry`, but create/stream paths don't consult it.
-  - Gap: Before enqueue/dispatch, check target pool health/readiness.
+  - Current: `AppState.pool_manager` holds a `pool_managerd::registry::Registry`, streaming path checks health via `should_dispatch()`.
+  - Gap: Admission path doesn't check pool health before enqueue.
   - Code: `bin/orchestratord/src/api/data.rs`, `bin/orchestratord/src/services/streaming.rs`.
   - TODOs: to be added when wiring real placement/health gating.
+  - Status: ✅ Streaming has health gate (ORCHD-POOL-HEALTH-GATE-0010 done), ⚠️ admission needs it
 
 - 2.5 — Catalog check
-  - Current: `catalog-core` exists; `services/catalog.rs` is stub.
-  - Gap: Verify model presence (Active) or trigger provisioning per policy.
-  - Code: `bin/orchestratord/src/api/data.rs`.
+  - Current: `catalog-core` fully implemented with FsCatalog, ModelRef parsing, verify_digest. HTTP endpoints exist.
+  - Gap: Admission doesn't call catalog to verify model presence.
+  - Code: `bin/orchestratord/src/api/data.rs`, `libs/catalog-core/src/lib.rs`.
   - TODO: ORCHD-CATALOG-CHECK-0006.
+  - Status: ✅ Infrastructure complete, ❌ integration in admission missing
 
 - 3 — Provisioning policy
   - Current: No policy layer to auto-provision engine/model; admission ignores model presence.
   - Gap: Policy to authorize provisioning and choose pool.
   - Code: `bin/orchestratord/src/api/data.rs`.
   - TODO: ORCHD-PROVISION-POLICY-0005.
+  - Status: ❌ Not implemented
 
 - 4 — Engine provision
   - Current: `engine-provisioner` supports llama.cpp from source with Arch-friendly preflight (pacman). Starts `llama-server`, writes handoff JSON.
@@ -68,44 +73,44 @@ This document audits the happy-path pipeline and lists concrete tasks to pass th
   - Code: `libs/provisioners/model-provisioner/src/lib.rs`.
 
 - 6 — Provisioners notify pool-manager
-  - Current: Missing. `pool-managerd::registry` has methods, but no calls from provisioners.
-  - Gap: After health OK, set health Ready, version, slots, heartbeat.
-  - Code: `libs/provisioners/engine-provisioner/.../llamacpp/mod.rs`, `libs/pool-managerd/src/registry.rs`.
+  - Current: `pool-managerd::registry` has `register_ready_from_handoff()` method. Handoff autobind watcher implemented.
+  - Gap: Engine-provisioner doesn't call pool-manager directly, relies on handoff file + watcher.
+  - Code: `libs/provisioners/engine-provisioner/.../llamacpp/mod.rs`, `libs/pool-managerd/src/registry.rs`, `bin/orchestratord/src/services/handoff.rs`.
   - TODO: ENGINE-PROV-POOL-NOTIFY-0003.
+  - Status: ✅ Handoff autobind watcher done (ORCHD-HANDOFF-AUTOBIND-0002), ⚠️ direct notification optional
 
 - 7 — Orchestrator binds adapter and dispatches
-  - Current: Adapter binding requires feature `llamacpp-adapter` and env `ORCHD_LLAMACPP_URL`.
-  - Gap A: No auto-bind from handoff files.
-  - Gap B: No placement policy; always default pool.
-  - Code: `bin/orchestratord/src/app/bootstrap.rs`, `bin/orchestratord/src/services/placement.rs`.
+  - Current: Adapter binding via feature `llamacpp-adapter` + env, OR auto-bind from handoff files (watcher implemented).
+  - Code: `bin/orchestratord/src/app/bootstrap.rs`, `bin/orchestratord/src/services/handoff.rs`, `bin/orchestratord/src/services/placement.rs`.
   - TODOs: ORCHD-HANDOFF-AUTOBIND-0002, placement implementation.
+  - Status: ✅ Handoff autobind done, ⚠️ placement policy & pin override enforcement missing
 
 - 8 — Streaming tokens SSE
-  - Current: `services/streaming.rs` tries adapter then falls back to deterministic SSE; adapter exists but health/props/cancel/streaming are MVP.
-  - Gap A: Request building is stubbed (doesn’t use user’s original request). 
-  - Gap B: Incremental decode/backpressure/cancel-on-disconnect not wired (proposal exists).
-  - Code: `bin/orchestratord/src/services/streaming.rs`, `libs/worker-adapters/llamacpp-http/src/lib.rs`.
+  - Current: `services/streaming.rs` tries adapter with health gate, falls back to deterministic SSE. Request built from admission snapshot.
+  - Gap A: Cancellation uses polling, not structured token.
+  - Gap B: Error events not emitted as SSE frames.
   - TODOs: ORCHD-STREAM-1101/1102/1103, OwnerB-LLAMACPP-STREAM, -HEALTH, -PROPS, -CANCEL, -VERSION.
+  - Status: ✅ Health gate done, ✅ request building from admission done, ⚠️ cancellation & error events need work
 
 ## Additional Gaps
 
-- Placement overrides (pin model/engine to GPU/pool) not implemented.
+- Placement overrides (pin model/engine to GPU/pool) not enforced.
   - Code: `services/placement.rs` uses default route.
-- Catalog service is a stub.
-  - Code: `services/catalog.rs`.
-- Worker registration flow with AUTH token exists, but engine-provisioner doesn’t call it.
-  - Code: `bin/orchestratord/src/api/control.rs::register_worker()`.
+  - Status: ⚠️ Contract exists (`TaskRequest.placement.pin_pool_id`), enforcement missing
+- Catalog infrastructure complete, integration in admission missing.
+  - Code: `libs/catalog-core/src/lib.rs` ✅, `bin/orchestratord/src/api/data.rs` ❌
+- Worker registration flow with AUTH token exists, but engine-provisioner doesn't call it.
+  - Code: `bin/orchestratord/src/api/control.rs::register_worker()` ✅
 
 ## TODO Markers Added in Code
 
 - `bin/orchestratord/src/app/bootstrap.rs`
-  - ORCHD-CONFIG-VALIDATE-0001: validate config at startup
-  - ORCHD-HANDOFF-AUTOBIND-0002: auto-bind adapters from engine handoff files
+  - ORCHD-CONFIG-VALIDATE-0001: validate config at startup ❌
 - `bin/orchestratord/src/api/data.rs`
-  - ORCHD-CATALOG-CHECK-0006: catalog existence/state check
-  - ORCHD-PROVISION-POLICY-0005: invoke provisioning per policy
-  - ORCHD-ADMISSION-STREAMS-0008: populate `AdmissionResponse.streams`
-  - ORCHD-ADMISSION-PREPARATION-0009: populate `AdmissionResponse.preparation`
+  - ORCHD-CATALOG-CHECK-0006: catalog existence/state check ❌
+  - ORCHD-PROVISION-POLICY-0005: invoke provisioning per policy ❌
+  - ORCHD-ADMISSION-STREAMS-0008: populate `AdmissionResponse.streams` ✅ DONE
+  - ORCHD-ADMISSION-PREPARATION-0009: populate `AdmissionResponse.preparation` ✅ DONE
 - `libs/provisioners/engine-provisioner/src/providers/llamacpp/mod.rs`
   - ENGINE-PROV-POOL-NOTIFY-0003: notify pool-manager/orchestrator on readiness
   - ENGINE-PROV-CLEANUP-0004: cleanup on failures to avoid stale state
@@ -119,30 +124,29 @@ These complement existing TODOs:
 
 ## Minimal Work to Pass e2e-haiku (near-term)
 
-- 1. Orchestrator returns 202 for enqueue and 200 for stream (already true).
-- 2. SDK responsibilities for the test:
+- [x] 1. Orchestrator returns 202 for enqueue and 200 for stream (already true).
   - Set `X-Correlation-Id` on POST and GET; collect JSON logs filtered by that ID (narration `human` lines included).
   - Parse SSE incrementally and persist a transcript (ordered frames with timestamps).
   - Build a proof bundle: `request.json`, `admission.json`, `sse_transcript.jsonl`, `logs.jsonl`, `verification.json`.
   - haiku anti-stub rule: include the current minute spelled out (client derives the minute at stream start and verifies it appears exactly once in the generated text).
 - 3. For real-run gate (REQUIRE_REAL_LLAMA=1):
   - Option A (fast path): start llama-server manually and export `ORCHD_LLAMACPP_URL`, build with feature `llamacpp-adapter`. This satisfies streaming via adapter without provisioning.
-  - Option B (target path): implement ORCHD-HANDOFF-AUTOBIND-0002 watcher so engine-provisioner’s handoff auto-registers the adapter.
+  - Option B (target path): ORCHD-HANDOFF-AUTOBIND-0002 watcher implemented in `bin/orchestratord/src/services/handoff.rs`
 - See `consumers/llama-orch-sdk/CLIENT_HANDBOOK.md` for SDK instructions and example sequences.
 
 Verification commands:
 - `cargo test -p test-harness-e2e-haiku -- --ignored --nocapture` (with REQUIRE_REAL_LLAMA=1)
 - `cargo run -p engine-provisioner -- --config requirements/50-engine-provisioner.yaml` (as applicable)
-- `cargo run -p orchestratord` (with `--features llamacpp-adapter` and `ORCHD_LLAMACPP_URL=http://127.0.0.1:PORT` for Option A)
+{{ ... }}
 
 ## Target Path to Full Happy Flow (mid-term)
 
 - Implement config load/validation (ORCHD-CONFIG-VALIDATE-0001).
 - Implement catalog check + provisioning policy (ORCHD-CATALOG-CHECK-0006, ORCHD-PROVISION-POLICY-0005).
 - Engine-provisioner: notify pool-manager and orchestrator (ENGINE-PROV-POOL-NOTIFY-0003), enforce GPU-only (ENGINE-PROV-GPU-ENFORCE-0007).
-- Auto-bind adapters from handoff files (ORCHD-HANDOFF-AUTOBIND-0002).
+- [x] Auto-bind adapters from handoff files (ORCHD-HANDOFF-AUTOBIND-0002) ✅ DONE.
 - Placement service using pool health, slots, and overrides; support explicit pinning.
-- Streaming: build request from admission, incremental SSE, cancel-on-disconnect.
+- [x] Streaming: build request from admission ✅ DONE, incremental SSE ✅ DONE, cancel-on-disconnect ⚠️ needs work.
 
 ## Refinement Opportunities
 
