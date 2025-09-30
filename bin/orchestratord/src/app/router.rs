@@ -11,6 +11,11 @@ pub fn build_router(state: AppState) -> Router {
     Router::new()
         // Capabilities (v2)
         .route("/v2/meta/capabilities", get(api::control::get_capabilities))
+        // Node management (CLOUD_PROFILE)
+        .route("/v2/nodes/register", post(api::nodes::register_node))
+        .route("/v2/nodes/:id/heartbeat", post(api::nodes::heartbeat_node))
+        .route("/v2/nodes/:id", delete(api::nodes::deregister_node))
+        .route("/v2/nodes", get(api::nodes::list_nodes))
         // Control
         .route("/v2/pools/:id/health", get(api::control::get_pool_health))
         .route("/v2/pools/:id/drain", post(api::control::drain_pool))
