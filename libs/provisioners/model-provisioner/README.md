@@ -15,6 +15,44 @@ Model provisioner: orchestrates resolve/verify/cache via catalog-core
 
 - Rust crate API (internal)
 
+### High / Mid / Low behaviors
+
+- **High**
+  - Resolve a `model_ref` to a local artifact path, register/update catalog entry, and return `ResolvedModel { id, local_path }`.
+  - Prefer offline/local file-only mode for MVP; no network I/O by default.
+  - Emit a machine-readable handoff (in-memory or file) to engine-provisioner.
+
+- **Mid**
+  - Implement `ensure_present_str` and `ensure_present` APIs; verify digest when provided; record verification result.
+  - Normalize IDs for local-file refs; for `hf:` scheme, include org/repo[/path] (feature-gated later).
+
+- **Low**
+  - Optional shell-out to `huggingface-cli` when present and allowed by policy (future). Otherwise, return instructive error.
+
+## Inputs / Outputs
+
+- **Input**
+  - `model_ref` (string or typed `ModelRef`) and optional expected digest.
+
+- **Output**
+  - `ResolvedModel { id, local_path }` for engine-provisioner.
+  - Catalog registration/update with lifecycle: `Active` and digest recorded when provided.
+
+## Engine handoff (to engine-provisioner)
+
+Engine-provisioner consumes `ResolvedModel { id, local_path }` to construct the final `llama-server` spawn command. The recommended integration is a direct function call or a small JSON alongside pool config for auditability.
+
+Example handoff payload:
+
+```json
+{
+  "model": {
+    "id": "local:/models/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+    "path": "/abs/models/qwen2.5-0.5b-instruct-q4_k_m.gguf"
+  }
+}
+```
+
 ## 4. How it fits
 
 - Developer tooling supporting contracts and docs.

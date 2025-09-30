@@ -1,8 +1,22 @@
 use crate::{app::router::build_router, state::AppState};
 use axum::Router;
+use std::sync::Arc;
 
 pub fn build_app() -> Router {
     let state = AppState::new();
+    // Optionally bind llama.cpp adapter for MVP wiring when feature + env configured
+    // TODO(OwnerB-ORCH-BINDING-SHIM): This is an MVP shim for binding a single adapter via
+    // feature gate + environment variables. Replace with pool-manager driven registration and
+    // config-schema backed sources, and ensure reload/drain lifecycle integrates with AdapterHost.
+    #[cfg(feature = "llamacpp-adapter")]
+    {
+        if let Ok(url) = std::env::var("ORCHD_LLAMACPP_URL") {
+            let pool = std::env::var("ORCHD_LLAMACPP_POOL").unwrap_or_else(|_| "default".to_string());
+            let replica = std::env::var("ORCHD_LLAMACPP_REPLICA").unwrap_or_else(|_| "r0".to_string());
+            let adapter = worker_adapters_llamacpp_http::LlamaCppHttpAdapter::new(url);
+            state.adapter_host.bind(pool, replica, Arc::new(adapter));
+        }
+    }
     build_router(state)
 }
 

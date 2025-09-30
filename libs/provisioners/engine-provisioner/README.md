@@ -15,6 +15,56 @@ provisioners-engine-provisioner (tool)
 
 - Rust crate API (internal)
 
+### High / Mid / Low behaviors
+
+- **High**
+  - Prepare and start engine processes (initially `llama-server`) with normalized flags.
+  - Fail fast when GPU is unavailable; do not proceed without GPU (per repo policy).
+  - Emit a machine-readable handoff file for orchestrator binding with engine URL and metadata.
+
+- **Mid**
+  - Plan steps (clone/build/ensure tools) and execute ensure (spawn).
+  - Delegate model staging to model-provisioner; read resolved model path.
+  - Map legacy flags (`--gpu-layers`, `--ngl`) to `--n-gpu-layers`.
+
+- **Low**
+  - Optional package installs via pacman/AUR only when allowed and on Arch-like systems.
+  - PID file and simple restart on crash are out-of-scope for MVP (documented in specs as follow-up).
+
+## Inputs / Outputs
+
+- **Input**
+  - Pool config (`contracts/config-schema::*`), engine selection, ports, flags, and provisioning settings.
+  - Resolved model info from model-provisioner (`id`, `local_path`).
+
+- **Output**
+  - Running engine process (listening host:port).
+  - Handoff file for orchestrator (see below).
+
+## Orchestrator handoff format (file)
+
+Location (default): `.runtime/engines/llamacpp.json`
+
+Example:
+
+```json
+{
+  "engine": "llamacpp",
+  "engine_version": "b1234-cuda",
+  "provisioning_mode": "source",
+  "url": "http://127.0.0.1:8080",
+  "pool_id": "default",
+  "replica_id": "r0",
+  "model": {
+    "id": "local:/models/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+    "path": "/abs/models/qwen2.5-0.5b-instruct-q4_k_m.gguf"
+  },
+  "flags": ["--parallel","1","--no-cont-batching","--no-webui","--metrics"]
+}
+```
+
+Orchestrator should watch/read these handoff files and bind adapters accordingly (see `bin/orchestratord/.specs/22_worker_adapters.md`).
+
 ## 4. How it fits
 
 - Developer tooling supporting contracts and docs.
@@ -39,7 +89,8 @@ flowchart LR
 
 ## 7. Config & Env
 
-- Not applicable.
+- CachyOS/Arch preferred tooling; optional `allow_package_installs` gate for pacman/AUR.
+- Engine flags include deterministic defaults for tests: `--parallel 1`, `--no-cont-batching`, `--metrics`, `--no-webui`.
 
 ## 8. Metrics & Logs
 
