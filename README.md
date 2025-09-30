@@ -18,7 +18,7 @@ llama-orch orchestrates LLM inference across one or more GPUs, providing:
 - **Observable execution**: Structured logs, Prometheus metrics, SSE streaming with correlation IDs
 - **Session management**: Short-lived sessions with KV cache tracking, budget enforcement, and failover surface
 - **Catalog & lifecycle**: Model registry with verification, digest tracking, atomic pool reload/drain
-- **Multi-deployment support**: Single-machine (HOME_PROFILE) and distributed multi-node (CLOUD_PROFILE)
+- **Flexible deployment**: Run both services on one machine or distribute across multiple nodes
 
 **Not a general-purpose LLM framework** — llama-orch is optimized for multi-agent developer workflows where determinism and observability are critical.
 
@@ -38,8 +38,8 @@ llama-orch orchestrates LLM inference across one or more GPUs, providing:
 - Worker adapters: llamacpp, vllm, tgi, openai-http (scaffolds), mock
 - Prometheus metrics aligned to `.specs/metrics/otel-prom.md`
 - Proof bundle infrastructure (`libs/proof-bundle`) for test artifacts
-- Cloud profile architecture (distributed deployment, bearer auth, node heartbeats)
-- BDD test harness with Cucumber + 13 cloud profile integration tests
+- Service registry for multi-node deployments (bearer auth, node heartbeats)
+- BDD test harness with Cucumber + 13 integration tests
 
 ### 🚧 In Progress
 - Full adapter implementations (llamacpp integration, vllm completion)
@@ -58,16 +58,16 @@ llama-orch orchestrates LLM inference across one or more GPUs, providing:
 ## Documentation
 
 ### Core Specifications
-- [`.specs/00_llama-orch.md`](.specs/00_llama-orch.md) — Home Lab Profile requirements (ORCH-3xxx)
-- [`.specs/01_cloud_profile.md`](.specs/01_cloud_profile.md) — Cloud Profile distributed deployment
+- [`.specs/00_llama-orch.md`](.specs/00_llama-orch.md) — Core requirements (ORCH-3xxx)
+- [`.specs/20_orchestratord.md`](.specs/20_orchestratord.md) — Control plane service
+- [`.specs/30_pool_managerd.md`](.specs/30_pool_managerd.md) — GPU worker service
 - [`.specs/metrics/otel-prom.md`](.specs/metrics/otel-prom.md) — Metrics contract
 - [`AGENTS.md`](AGENTS.md) — Repository guidelines, dev loop, coding/testing discipline
 - [`SECURITY.md`](SECURITY.md) — Security policy and Minimal Auth Hooks seam
 
 ### Operational Guides
 - [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md) — Complete environment variable reference
-- [`docs/MANUAL_MODEL_STAGING.md`](docs/MANUAL_MODEL_STAGING.md) — Model staging for cloud deployments
-- [`docs/runbooks/CLOUD_PROFILE_INCIDENTS.md`](docs/runbooks/CLOUD_PROFILE_INCIDENTS.md) — Incident runbook
+- [`docs/MANUAL_MODEL_STAGING.md`](docs/MANUAL_MODEL_STAGING.md) — Model staging guide
 
 ### Development
 - [`.docs/testing/`](.docs/testing/) — Testing strategy, BDD wiring, test types
@@ -76,98 +76,96 @@ llama-orch orchestrates LLM inference across one or more GPUs, providing:
 
 ---
 
-## Deployment Profiles
+## Architecture
 
-llama-orch supports two deployment profiles:
+llama-orch consists of **two services** that communicate via HTTP:
 
-### HOME_PROFILE (Default)
+### orchestratord (Control Plane)
 
-**Single-machine deployment** — All components run on one machine with shared filesystem.
+**Responsibilities**:
+- Accept client requests (HTTP API on port 8080)
+- Task admission, queueing, and placement decisions
+- SSE streaming to clients
+- Model catalog management
+- Service registry (tracks available GPU workers)
 
-```
-Single Machine: orchestratord → pool-managerd → GPU engines
-```
-
-**When to use**:
-- Development and testing
-- Single-GPU workstations
-- Quick prototyping
-- Home lab setups
-
-**Quick start**:
-```bash
-# Default configuration (no special setup needed)
-cargo run -p orchestratord
-# Binds to 127.0.0.1:8080 by default
-```
-
-**See also**: [`.specs/00_llama-orch.md`](.specs/00_llama-orch.md) for Home Lab Profile specification
-
----
-
-### CLOUD_PROFILE (Under Development)
-
-**Distributed multi-node deployment** — Control plane separate from GPU workers, HTTP-only communication.
-
-```
-Control Plane:  orchestratord (no GPU)
-     ↓ HTTP + Bearer Auth
-GPU Workers:    pool-managerd + engines (per node)
-```
-
-**When to use**:
-- Multi-GPU clusters
-- Cloud-native deployments (Kubernetes)
-- Horizontal scaling across machines
+**Requirements**: No GPU needed
 
 **Configuration**:
 ```bash
-# Control Plane
-ORCHESTRATORD_CLOUD_PROFILE=true
-ORCHESTRATORD_BIND_ADDR=0.0.0.0:8080
-LLORCH_API_TOKEN=$(openssl rand -hex 32)
+# Bind address
+ORCHD_BIND_ADDR=0.0.0.0:8080
 
-# GPU Worker
+# pool-managerd endpoints (comma-separated)
+ORCHD_POOL_MANAGERS=http://localhost:9200
+# or for multiple machines:
+# ORCHD_POOL_MANAGERS=http://gpu-1:9200,http://gpu-2:9200
+
+# Optional: Bearer token for authentication
+LLORCH_API_TOKEN=$(openssl rand -hex 32)
+```
+
+### pool-managerd (GPU Worker)
+
+**Responsibilities**:
+- GPU discovery and management
+- Engine provisioning (download, compile, start engines)
+- Pool lifecycle (readiness, health monitoring)
+- Report capacity to orchestratord
+
+**Requirements**: NVIDIA GPU with CUDA
+
+**Configuration**:
+```bash
+# Bind address
+POOL_MANAGERD_BIND_ADDR=0.0.0.0:9200
+
+# Node identifier (for multi-node setups)
 POOL_MANAGERD_NODE_ID=gpu-node-1
-ORCHESTRATORD_URL=http://control-plane:8080
+
+# orchestratord endpoint (for registration)
+ORCHESTRATORD_URL=http://localhost:8080
+
+# Optional: Bearer token (must match orchestratord)
 LLORCH_API_TOKEN=<same-token>
 ```
 
-**Implementation status**:
-- ✅ Architecture designed and documented
-- ✅ Bearer token authentication
-- ✅ Node registration and heartbeats
-- ✅ Model-aware placement
-- ✅ Observability (metrics, dashboards, alerts)
-- ✅ Integration tests (13 tests, 100% feature coverage)
-- 🚧 Production validation pending
+### Deployment Flexibility
 
-**See also**: 
-- [`.specs/01_cloud_profile.md`](.specs/01_cloud_profile.md) — Technical specification
-- [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md) — Environment variables
-- [`docs/MANUAL_MODEL_STAGING.md`](docs/MANUAL_MODEL_STAGING.md) — Model staging guide
-- [`ci/dashboards/cloud_profile_overview.json`](ci/dashboards/cloud_profile_overview.json) — Grafana dashboard
-- [`ci/alerts/cloud_profile.yml`](ci/alerts/cloud_profile.yml) — Prometheus alerts
+**Single machine** (both services on localhost):
+```
+orchestratord (localhost:8080) → pool-managerd (localhost:9200) → GPU engines
+```
+
+**Multiple machines** (distributed):
+```
+Control Node:  orchestratord (no GPU)
+     ↓ HTTP
+GPU Node 1:    pool-managerd + engines
+GPU Node 2:    pool-managerd + engines
+GPU Node N:    pool-managerd + engines
+```
+
+The architecture is the same—only the URLs change.
 
 ---
 
-## Architecture
+## System Flow Diagrams
 
-### System Flow Diagrams
-
-#### Single-Machine Deployment (CLOUD_PROFILE on one node)
+### Single-Machine Deployment
 
 ```mermaid
 flowchart TB
-    Client[Client] -->|POST /v2/tasks| OD[orchestratord]    Client -->|GET /v2/tasks/:id/events| OD
+    Client[Client] -->|POST /v2/tasks| OD[orchestratord]
+    Client -->|GET /v2/tasks/:id/events| OD
     
-    subgraph "Single Node (CLOUD_PROFILE)"
+    subgraph "Single Machine"
         OD -->|POST /v2/nodes/register| SR[service-registry<br/>localhost]
         OD -->|enqueue| OC[orchestrator-core<br/>Queue]
         OD -->|check nodes| SR
         OD -->|dispatch HTTP| AH[adapter-host]
         
-        PM[pool-managerd<br/>localhost] -->|register + heartbeat| SR
+        PM[pool-managerd<br/>localhost:9200] -->|register + heartbeat| SR
         PM -->|manages| EP[engine-provisioner]
         EP -->|writes local| HF[handoff.json]
         HF -.->|watches locally| HW[handoff-watcher<br/>pool-managerd]
@@ -187,14 +185,14 @@ flowchart TB
     style ENG fill:#e8f5e9
 ```
 
-#### CLOUD_PROFILE: Distributed Flow
+### Multi-Machine Deployment
 
 ```mermaid
 flowchart TB
-    Client[Client] -->|POST /v2/tasks| OD[orchestratord<br/>Control Plane]
+    Client[Client] -->|POST /v2/tasks| OD[orchestratord<br/>Control Node]
     Client -->|GET /v2/tasks/:id/events| OD
     
-    subgraph "Control Plane Node"
+    subgraph "Control Node (no GPU)"
         OD -->|enqueue| OC[orchestrator-core<br/>Queue]
         OD -->|check nodes| SR[service-registry<br/>Node Tracking]
         OD -->|model-aware<br/>placement| PV2[placement_v2<br/>Least-Loaded]
@@ -251,7 +249,7 @@ graph TB
         ADHOST[libs/adapter-host<br/>Adapter Registry]
     end
     
-    subgraph "Cloud Profile Libraries"
+    subgraph "Multi-Node Libraries"
         SREG[libs/control-plane/<br/>service-registry<br/>Node Tracking]
         NODEREG[libs/gpu-node/<br/>node-registration]
         HANDOFF[libs/gpu-node/<br/>handoff-watcher]
@@ -294,8 +292,8 @@ graph TB
     POOLD --> ENGPROV
     POOLD --> AUTH
     POOLD --> POOLTYPES
-    POOLD -.->|cloud profile| NODEREG
-    POOLD -.->|cloud profile| HANDOFF
+    POOLD -.->|multi-node| NODEREG
+    POOLD -.->|multi-node| HANDOFF
     
     %% adapter-host dependencies
     ADHOST --> ADAPIAPI
@@ -313,7 +311,7 @@ graph TB
     ENGPROV --> MODPROV
     MODPROV --> CATALOG
     
-    %% cloud profile dependencies
+    %% multi-node dependencies
     SREG --> POOLTYPES
     NODEREG --> POOLTYPES
     HANDOFF --> POOLTYPES
@@ -339,7 +337,7 @@ graph TB
 - `libs/worker-adapters/` — Adapter implementations (llamacpp, vllm, tgi, openai-http, triton, mock)
 - `libs/worker-adapters/http-util/` — Shared HTTP client utilities
 
-#### Cloud Profile (Distributed Deployment)
+#### Multi-Node Support
 - `libs/control-plane/service-registry/` — Node tracking, health management
 - `libs/gpu-node/node-registration/` — Node registration with control plane
 - `libs/gpu-node/handoff-watcher/` — Handoff detection on GPU nodes
@@ -414,7 +412,7 @@ See [`consumers/.docs/.adr/006-library-split.md`](consumers/.docs/.adr/006-libra
 - `POST /v2/catalog/models/{id}/verify` — Verify model integrity
 - `POST /v2/catalog/models/{id}/state` — Update lifecycle state (Active/Retired)
 
-**Cloud Profile** (`contracts/openapi/control.yaml`):
+**Multi-Node Management** (`contracts/openapi/control.yaml`):
 - `POST /v2/nodes/register` — Register GPU node
 - `POST /v2/nodes/{id}/heartbeat` — Heartbeat with pool status
 - `DELETE /v2/nodes/{id}` — Deregister node
@@ -512,13 +510,13 @@ cargo run -p tools-spec-extract --quiet
 # BDD harness
 cargo test -p test-harness-bdd -- --nocapture
 
-# Determinism suite
+# Run determinism suite
 cargo test -p test-harness-determinism-suite -- --nocapture
 
-# Cloud profile integration tests
-cargo test -p orchestratord --test cloud_profile_integration -- --nocapture
+# Run service registry integration tests
+cargo test -p orchestratord --test service_registry_integration -- --nocapture
 
-# Metrics contract validation
+# Run metrics contract validation
 cargo test -p test-harness-metrics-contract -- --nocapture
 ```
 
@@ -572,133 +570,10 @@ See [`AGENTS.md`](AGENTS.md) for complete repository guidelines.
 **License**: GPL-3.0-or-later (see [`LICENSE`](LICENSE))
 
 **Security**: 
-- Home profile defaults to loopback-open (no auth)
-- Cloud profile requires Bearer token authentication
+- Localhost defaults to no authentication
+- Multi-node deployments require Bearer token authentication
 - See [`SECURITY.md`](SECURITY.md) for security policy
 - See [`.specs/11_min_auth_hooks.md`](.specs/11_min_auth_hooks.md) for Minimal Auth Hooks seam
-
----
-
-## Component Dependency Graph
-
-This section shows how components collaborate and where boundaries are enforced. New contributors
-should skim the diagrams and the short explanations below. The golden rule: per‑crate behavior is
-tested inside each crate; outer harnesses exercise only cross‑crate flows via the orchestrator HTTP
-API.
-
-#### Component map (who depends on whom)
-
-```mermaid
-graph LR
-  %% Contracts are the source of truth
-  subgraph Contracts
-    contracts_openapi["contracts/openapi/* (data.yaml, control.yaml)"]
-    contracts_schema["contracts/config-schema (Rust types, schema)"]
-    contracts_types["contracts/api-types"]
-  end
-
-  subgraph Core
-    orch_core["orchestrator-core (queues, placement logic)"]
-    pool_mgr["pool-managerd (preload → supervise → readiness)"]
-  end
-
-  subgraph Orchestrator
-    orchd["orchestratord (HTTP, SSE, admission, placement)"]
-  end
-
-  subgraph AdapterHost
-    adapter_host["adapter-host (in-process registry & facade)"]
-  end
-
-  subgraph Adapters
-    adapter_api["worker-adapters/adapter-api (trait)"]
-    adapt_llama["llamacpp-http"]
-    adapt_vllm["vllm-http"]
-    adapt_tgi["tgi-http"]
-    adapt_triton["triton"]
-    adapt_openai["openai-http"]
-    adapt_mock["mock (dev)"]
-  end
-
-  subgraph AdapterShared
-    http_util["worker-adapters/http-util (shared HTTP client)"]
-  end
-
-  subgraph Provisioners
-    engine_prov["engine-provisioner (prepare engines)"]
-    model_prov["model-provisioner (ensure models)"]
-  end
-
-  subgraph Catalog
-    catalog_core["catalog-core (entries, resolve, verify)"]
-    model_cache["~/.cache/models (configurable)"]
-  end
-
-  subgraph Tools
-    tool_client["tools/openapi-client"]
-    tool_spec["tools/spec-extract"]
-    tool_readme["tools/readme-index"]
-  end
-
-  subgraph TestHarness
-    th_bdd["test-harness/bdd (integration)"]
-    th_det["test-harness/determinism-suite"]
-    th_chaos["test-harness/chaos"]
-    th_haiku["test-harness/e2e-haiku"]
-    th_metrics["test-harness/metrics-contract"]
-  end
-
-  %% Orchestrator uses core + adapters; serves contracts
-  orchd -->|placement & admission| orch_core
-  orchd -->|serves| contracts_openapi
-  orchd -->|validates config via| contracts_schema
-  orchd --> adapter_host
-  adapter_host -->|uses trait| adapter_api
-
-  %% Adapters are plugged under orchestrator (not core)
-  adapter_host --> adapt_mock
-  adapter_host --> adapt_llama
-  adapter_host --> adapt_vllm
-  adapter_host --> adapt_tgi
-  adapter_host --> adapt_triton
-  adapter_host --> adapt_openai
-
-  %% Shared HTTP util consumed by adapters
-  http_util --> adapt_llama
-  http_util --> adapt_vllm
-  http_util --> adapt_tgi
-  http_util --> adapt_triton
-  http_util --> adapt_openai
-
-  %% Manager prepares engines; publishes readiness to orchestrator
-  pool_mgr -->|ensure| engine_prov
-  engine_prov -->|needs| model_prov
-  model_prov -->|register/update| catalog_core
-  catalog_core -->|stores| model_cache
-  orchd -->|catalog CRUD| catalog_core
-
-  %% Harness connections (integration only, but may bind multiple crates)
-  th_bdd -->|HTTP/SSE| orchd
-  th_det -->|HTTP/SSE| orchd
-  th_det -->|trait| adapter_api
-  th_chaos -->|HTTP/SSE| orchd
-  th_chaos -->|fault inject| adapt_mock
-  th_chaos -->|fault inject| adapt_llama
-  th_chaos -->|supervision hooks| pool_mgr
-  th_haiku -->|HTTP/SSE| orchd
-  th_haiku -->|readiness| pool_mgr
-  th_metrics -->|scrape| orchd
-  th_metrics -.-> pool_mgr
-
-  tool_client --> contracts_openapi
-  tool_spec -->|extracts from| contracts_openapi
-```
-
-**Notes**:
-- Orchestrator depends on `orchestrator-core` and the adapter trait crate; adapters are bound at runtime per pool/replica
-- `pool-managerd` owns engine lifecycle and flips readiness after health checks
-- Catalog writes happen via `model-provisioner`; orchestrator interacts with catalog via HTTP
-- Harnesses are integration-only but not confined to a single crate
 
 ---
 
