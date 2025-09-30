@@ -269,6 +269,12 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
                 });
                 let handoff_path = write_handoff_file("llamacpp.json", &handoff)?;
                 println!("wrote handoff {}", handoff_path.display());
+                // TODO[ENGINE-PROV-POOL-NOTIFY-0003]: Notify pool-managerd registry that pool is Live+Ready
+                // and publish engine metadata (engine_version, slots_total/free, device_mask). Consider calling
+                // an orchestrator control endpoint (e.g., /v1/workers/register) with Bearer auth so AdapterHost
+                // can bind the llama.cpp HTTP adapter automatically using the handoff URL.
+                // TODO[ENGINE-PROV-CLEANUP-0004]: On failure paths, ensure process is killed and handoff/pid files
+                // are removed to avoid stale Ready signals.
                 Ok(())
             }
             Err(e) => {

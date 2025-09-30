@@ -14,6 +14,9 @@ use worker_adapters_adapter_api as adapter_api;
 /// or gate fallback behind a dev/testing feature flag once adapters are always present.
 pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
     // Try adapter-host first (if a worker is registered). Fallback to deterministic SSE.
+    // TODO[ORCHD-POOL-HEALTH-GATE-0010]: Before attempting dispatch, consult
+    // `state.pool_manager` to ensure the chosen pool/replica is Live+Ready and has
+    // slots_free > 0. If not ready, either wait with backoff or surface a retry hint.
     // TODO[ORCHD-STREAM-1101]: Build TaskRequest from actual admission + request context
     // (session linkage, engine/model placement decision, budgets) instead of a stub.
     // TODO[ORCHD-STREAM-1102]: Propagate cancellation via a structured token to adapters

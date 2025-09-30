@@ -70,6 +70,15 @@ pub async fn create_task(
         }
     }
 
+    // TODO[ORCHD-CATALOG-CHECK-0006]: Consult `catalog-core` to check whether the requested
+    // model_ref is present locally and Active. If missing, consult policy to decide whether to
+    // trigger provisioning (model + engine) or reject fast. Surface clear errors when HF auth
+    // or cache space is unavailable.
+    // TODO[ORCHD-PROVISION-POLICY-0005]: If model/engine are not present and policy allows,
+    // orchestrate `engine-provisioner` + `model-provisioner` for the target pool prior to
+    // admission completion. Integrate with `pool_managerd::registry` readiness so we do not
+    // admit into a non-ready pool. Respect user overrides to pin to a specific pool/GPU.
+
     // Enqueue into the single bounded FIFO with metrics
     let prio = match body.priority {
         api::Priority::Interactive => orchestrator_core::queue::Priority::Interactive,
