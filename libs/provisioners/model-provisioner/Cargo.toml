@@ -15,6 +15,7 @@ serde_yaml = "0.9"
 serde_json = { workspace = true }
 sha2 = "0.10"
 hex = "0.4"
+tracing = { workspace = true }
 
 [lib]
 path = "src/lib.rs"

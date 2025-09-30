@@ -54,7 +54,7 @@ Example handoff payload:
 }
 ```
 
-Handoff location recommendation (MVP): write to `.runtime/engines/llamacpp.json` adjacent to orchestrator config, per `TODO_OWNERS_MVP_pt2.md`.
+Handoff location recommendation (MVP): write to `.runtime/engines/llamacpp.json` adjacent to orchestrator config, per `TODO_OWNERS_MVP_pt2.md`. Use `DEFAULT_LLAMACPP_HANDOFF_PATH` or the convenience API below to avoid drift.
 
 ## 4. How it fits
 
@@ -89,11 +89,15 @@ strict_verification: true
 Programmatic use:
 
 ```rust
-use model_provisioner::provision_from_config_to_handoff;
-let meta = provision_from_config_to_handoff("/etc/llorch/model.yaml", 
-                                           ".runtime/engines/llamacpp.json",
-                                           std::env::temp_dir())?;
-println!("handoff written: {}", meta.path.display());
+use model_provisioner::{
+    provision_from_config_to_default_handoff, DEFAULT_LLAMACPP_HANDOFF_PATH
+};
+let meta = provision_from_config_to_default_handoff(
+    "/etc/llorch/model.yaml",
+    std::env::temp_dir(),
+)?;
+println!("handoff written to {} (model path: {})",
+         DEFAULT_LLAMACPP_HANDOFF_PATH, meta.path.display());
 ```
 
 
@@ -143,3 +147,11 @@ println!("handoff written: {}", meta.path.display());
 - Implement LRU cache accounting and eviction policy with provenance logs.
 - Add `hf:` native fetcher (no shell-outs) gated by repo trust policy; support `pacman`/AUR packaged dependencies on Arch/CachyOS.
 - Emit provenance bundle linking `catalog-core` entry and verification outcome into proof artifacts.
+
+## Arch/CachyOS notes (optional network fetching)
+
+- The crate prefers local file paths for MVP. For optional `hf:` shell-out support, install `huggingface-cli` via system packages.
+- On Arch/CachyOS:
+  - `sudo pacman -S python-huggingface-hub` provides the `huggingface-cli` tool.
+  - If unavailable, prefer an AUR package or use a system-managed alternative (avoid ad-hoc pip installs in this repo).
+  - If `huggingface-cli` is missing, calls to `hf:` will return an instructive error advising installation or using a local `file:` path.
