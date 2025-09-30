@@ -7,8 +7,10 @@
   import DevUtilityBar from '@/components/DevUtilityBar.vue'
   import Hero from '@/components/home/Hero.vue'
   import HeroMedia from '@/components/home/HeroMedia.vue'
+  import WhyPlumbing from '@/components/home/WhyPlumbing.vue'
 
   // Below-the-fold: lazy for perf (simple code-splitting)
+
   const ThreeTools = defineAsyncComponent(() => import('@/components/home/ThreeTools.vue'))
   const PublicTap = defineAsyncComponent(() => import('@/components/home/PublicTap.vue'))
   const PrivateTap = defineAsyncComponent(() => import('@/components/home/PrivateTap.vue'))
@@ -117,7 +119,8 @@
 
 <style scoped>
   /* page layout baseline */
-  .home section {
+  /* HomeView controls inter-section spacing; children should not add external gaps */
+  .home :deep(section) {
     max-width: 1120px; /* zelfde breedte als nav/hero */
     margin-left: auto;
     margin-right: auto;
@@ -125,15 +128,24 @@
   }
 
   /* meer adem tussen secties */
-  .home section + section {
-    margin-top: 2.5rem;
-    border-top: 1px solid var(--surface-muted); /* optioneel scheiding */
-    padding-top: 2.5rem;
+  .home :deep(section) + :deep(section) {
+    margin-top: 1.25rem; /* compacte ritme; template beslist */
+    padding-top: 0;
+    border-top: none; /* geen impliciete lijn tussen secties */
+  }
+
+  /* Collapse the gap after the hero: hero should not add external spacing */
+  .home :deep(.hero) {
+    padding-bottom: 0;
+  }
+  /* Tighter spacing specifically between Hero and HeroMedia */
+  .home :deep(.hero) + :deep(.hero-media) {
+    margin-top: 0.5rem;
   }
 
   /* headings consistenter */
-  .home section h2,
-  .home section h3 {
+  .home :deep(section) h2,
+  .home :deep(section) h3 {
     font-weight: 800;
     font-size: 1.5rem;
     margin-bottom: 1rem;
@@ -150,18 +162,18 @@
     }
   }
 
-  .home section.fullbleed {
+  /* fullbleed if needed */
+  .home :deep(section.fullbleed) {
     max-width: none;
     margin: 0;
     padding: 3rem 0;
     background: var(--surface); /* licht contrast */
   }
 
-  /* fullbleed if needed */
-  .home section.fullbleed {
-    max-width: none;
-    margin: 0;
-    padding: 3rem 0;
-    background: var(--surface); /* licht contrast */
+  /* Centralize layout rules for the hero carousel width */
+  .home :deep(.hero-media) {
+    display: grid;
+    justify-items: center;
   }
+  /* Do not impose a width from the template; component handles mobile/full width */
 </style>

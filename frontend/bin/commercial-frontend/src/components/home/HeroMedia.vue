@@ -80,14 +80,19 @@ const rootAria = computed(() => ({
 </template>
 
 <style scoped>
+/* Center the carousel; width handled by frame (mobile-first: 100%) */
 .hero-media {
-  margin: 16px 0 8px;
+  margin: 0;
+  display: grid;
+  justify-items: center;
 }
 
 .hero-media__frame {
   position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
+  width: 100%;                /* mobile: no cap */
+  margin-inline: auto;        /* center within section */
+  aspect-ratio: 16 / 9;       /* enforce 16:9 viewport */
+  max-width: 420px;           /* cap on larger screens */
 }
 
 .hero-media__inner {
@@ -97,8 +102,14 @@ const rootAria = computed(() => ({
 }
 
 /* ensure the carousel fits and inherits rounded corners */
+:deep(.carousel) {
+  width: 100%;
+  height: 100%;
+}
 :deep(.carousel__viewport) {
   border-radius: var(--radius-md);
+  width: 100%;
+  height: 100%;
 }
 </style>
 

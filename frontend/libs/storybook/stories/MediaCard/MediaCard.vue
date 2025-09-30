@@ -52,9 +52,12 @@
     return `linear-gradient(${dir.value}, ${col} 0%, transparent 60%)`
   })
 
-  const overlayStyle = computed(() => ({
-    '--overlay': overlay.value,
-  } as Record<string, string>))
+  const overlayStyle = computed(
+    () =>
+      ({
+        '--overlay': overlay.value,
+      }) as Record<string, string>,
+  )
 </script>
 
 <template>
@@ -134,7 +137,9 @@
     width: 100%;
     height: 100%;
   }
-  .media-card.is-ratio .media-card__content { min-height: 160px; }
+  .media-card.is-ratio .media-card__content {
+    min-height: 160px;
+  }
 
   .media-card__inner {
     display: grid;
@@ -142,11 +147,13 @@
     padding: clamp(14px, 4vw, 28px);
     max-width: 60ch;
   }
-  .media-card__inner.on-left { margin-left: clamp(8px, 2vw, 16px); }
+  .media-card__inner.on-left {
+    margin-left: clamp(8px, 2vw, 16px);
+  }
   .media-card__inner.on-right {
     margin-right: clamp(8px, 2vw, 16px);
-    text-align: right;         /* text nodes */
-    justify-items: end;        /* grid children alignment */
+    text-align: right; /* text nodes */
+    justify-items: end; /* grid children alignment */
   }
 
   .media-card__title {
@@ -171,6 +178,8 @@
 
   /* Small screens: allow content to breathe */
   @media (max-width: 560px) {
-    .media-card__inner { max-width: 100%; }
+    .media-card__inner {
+      max-width: 100%;
+    }
   }
 </style>

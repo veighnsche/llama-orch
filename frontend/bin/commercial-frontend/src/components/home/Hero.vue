@@ -76,7 +76,6 @@
   .hero {
     background: var(--hero-bg);
     padding: clamp(2rem, 4vw, 3.25rem) 1rem;
-    padding-bottom: 0; /* tighten spacing to meet carousel */
   }
 
   .container {
@@ -128,9 +127,11 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin: 1rem 0 1rem;
+    margin: 1rem 0 0; /* no bottom margin to avoid extra gap after hero */
     align-items: center;
   }
+  /* ensure no trailing margin remains on the last block in the copy */
+  .copy > :last-child { margin-bottom: 0; }
   .inline-links {
     display: flex;
     gap: 0.5rem;
