@@ -21,3 +21,4 @@ opentelemetry = { version = "0.21", optional = true }
 [features]
 default = []
 otel = ["opentelemetry"]
+test-support = []  # Enables test capture adapter in non-test builds
