@@ -8,9 +8,8 @@ pub fn redact_secrets(s: &str) -> String {
     static AUTH_BEARER_RE: Lazy<Regex> = Lazy::new(|| {
         Regex::new(r"(?i)Authorization\s*:\s*Bearer\s+(?P<t>[A-Za-z0-9._\-]+)").unwrap()
     });
-    static X_API_KEY_RE: Lazy<Regex> = Lazy::new(|| {
-        Regex::new(r"(?i)X-API-Key\s*:\s*(?P<t>[A-Za-z0-9._\-]+)").unwrap()
-    });
+    static X_API_KEY_RE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"(?i)X-API-Key\s*:\s*(?P<t>[A-Za-z0-9._\-]+)").unwrap());
     static KV_TOKEN_RE: Lazy<Regex> = Lazy::new(|| {
         // Matches token or api_key in simple JSON/text: token:"..." or api_key=...
         // Use a raw string with # so we can include double quotes without escaping.

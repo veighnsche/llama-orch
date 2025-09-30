@@ -35,10 +35,7 @@ pub struct HandoffWatcherConfig {
 
 impl Default for HandoffWatcherConfig {
     fn default() -> Self {
-        Self {
-            runtime_dir: PathBuf::from(".runtime/engines"),
-            poll_interval_ms: 1000,
-        }
+        Self { runtime_dir: PathBuf::from(".runtime/engines"), poll_interval_ms: 1000 }
     }
 }
 
@@ -55,7 +52,9 @@ impl HandoffWatcher {
         Self {
             config,
             callback,
-            seen_files: std::sync::Arc::new(std::sync::Mutex::new(std::collections::HashSet::new())),
+            seen_files: std::sync::Arc::new(
+                std::sync::Mutex::new(std::collections::HashSet::new()),
+            ),
         }
     }
 
@@ -98,7 +97,8 @@ impl HandoffWatcher {
         }
 
         // Read directory
-        let mut entries = tokio::fs::read_dir(&self.config.runtime_dir).await
+        let mut entries = tokio::fs::read_dir(&self.config.runtime_dir)
+            .await
             .context("Failed to read runtime directory")?;
 
         while let Some(entry) = entries.next_entry().await? {
@@ -138,14 +138,16 @@ impl HandoffWatcher {
 
     /// Process a single handoff file
     async fn process_handoff_file(&self, path: &Path) -> Result<()> {
+        info!(path = %path.display(), "Processing handoff file");
+
         // TODO: Add narration: "processing handoff for pool X replica Y". Your ops team will love you.
-        // Read and parse handoff file
-        let content = tokio::fs::read_to_string(path).await
-            .context("Failed to read handoff file")?;
+        // Read file
+        let content =
+            tokio::fs::read_to_string(path).await.context("Failed to read handoff file")?;
 
         // Parse JSON
-        let payload: HandoffPayload = serde_json::from_str(&content)
-            .context("Failed to parse handoff JSON")?;
+        let payload: HandoffPayload =
+            serde_json::from_str(&content).context("Failed to parse handoff JSON")?;
 
         info!(
             pool_id = %payload.pool_id,
@@ -156,8 +158,7 @@ impl HandoffWatcher {
         // TODO: Narrate callback-invoked. When the callback hangs, you'll want timestamps. Trust me.
 
         // Invoke callback
-        (self.callback)(payload.clone())
-            .context("Handoff callback failed")?;
+        (self.callback)(payload).context("Handoff callback failed")?;
         // TODO: Narrate callback-success here. Or don't. Enjoy debugging silent registry update failures. 🔥
 
         Ok(())
@@ -183,10 +184,8 @@ mod tests {
             Ok(())
         });
 
-        let config = HandoffWatcherConfig {
-            runtime_dir: runtime_dir.clone(),
-            poll_interval_ms: 100,
-        };
+        let config =
+            HandoffWatcherConfig { runtime_dir: runtime_dir.clone(), poll_interval_ms: 100 };
 
         let watcher = HandoffWatcher::new(config, callback);
         let handle = watcher.spawn();
@@ -204,9 +203,7 @@ mod tests {
         };
 
         let handoff_path = runtime_dir.join("pool-0-r0.json");
-        tokio::fs::write(&handoff_path, serde_json::to_string(&handoff).unwrap())
-            .await
-            .unwrap();
+        tokio::fs::write(&handoff_path, serde_json::to_string(&handoff).unwrap()).await.unwrap();
 
         // Wait for detection
         tokio::time::sleep(Duration::from_millis(300)).await;

@@ -12,7 +12,7 @@ use std::path::PathBuf;
 pub async fn given_handoff_file_exists(world: &mut World, pool_id: String, replica_id: String) {
     let runtime_dir = PathBuf::from(".runtime/engines");
     fs::create_dir_all(&runtime_dir).expect("failed to create runtime dir");
-    
+
     let handoff = json!({
         "url": "http://127.0.0.1:9999",
         "pool_id": pool_id,
@@ -22,10 +22,10 @@ pub async fn given_handoff_file_exists(world: &mut World, pool_id: String, repli
         "slots_total": 4,
         "slots_free": 4
     });
-    
+
     let filename = runtime_dir.join(format!("{}-{}.json", pool_id, replica_id));
     fs::write(&filename, handoff.to_string()).expect("failed to write handoff file");
-    
+
     // Store filename in world for cleanup
     world.push_fact(format!("handoff_file:{}", filename.display()));
 }
@@ -43,7 +43,7 @@ pub async fn given_pool_already_bound(world: &mut World, pool_id: String) {
 pub async fn given_handoff_file_for_pool(world: &mut World, pool_id: String) {
     let runtime_dir = PathBuf::from(".runtime/engines");
     fs::create_dir_all(&runtime_dir).expect("failed to create runtime dir");
-    
+
     let handoff = json!({
         "url": "http://127.0.0.1:9999",
         "pool_id": pool_id.clone(),
@@ -53,7 +53,7 @@ pub async fn given_handoff_file_for_pool(world: &mut World, pool_id: String) {
         "slots_total": 4,
         "slots_free": 4
     });
-    
+
     let filename = runtime_dir.join(format!("{}-r0.json", pool_id));
     fs::write(&filename, handoff.to_string()).expect("failed to write handoff file");
 }
@@ -70,7 +70,7 @@ pub async fn when_handoff_watcher_processes(world: &mut World) {
     // Instead of waiting for a watcher that may not be running,
     // directly process all handoff files in the runtime directory
     let runtime_dir = std::path::PathBuf::from(".runtime/engines");
-    
+
     if runtime_dir.exists() {
         if let Ok(entries) = std::fs::read_dir(&runtime_dir) {
             for entry in entries.flatten() {
@@ -79,8 +79,9 @@ pub async fn when_handoff_watcher_processes(world: &mut World) {
                     // Directly call the processing function
                     let _ = orchestratord::services::handoff::process_handoff_file(
                         &world.state,
-                        &file_path
-                    ).await;
+                        &file_path,
+                    )
+                    .await;
                 }
             }
         }
@@ -92,7 +93,7 @@ pub async fn when_handoff_watcher_processes(world: &mut World) {
 pub async fn when_create_new_handoff_file(_world: &mut World) {
     let runtime_dir = PathBuf::from(".runtime/engines");
     fs::create_dir_all(&runtime_dir).expect("failed to create runtime dir");
-    
+
     let handoff = json!({
         "url": "http://127.0.0.1:9999",
         "pool_id": "new-pool",
@@ -102,7 +103,7 @@ pub async fn when_create_new_handoff_file(_world: &mut World) {
         "slots_total": 4,
         "slots_free": 4
     });
-    
+
     let filename = runtime_dir.join("new-pool-r0.json");
     fs::write(&filename, handoff.to_string()).expect("failed to write handoff file");
 }
@@ -112,7 +113,7 @@ pub async fn when_create_new_handoff_file(_world: &mut World) {
 pub async fn when_wait_for_poll_interval(world: &mut World) {
     // Process handoff files after the "wait"
     let runtime_dir = std::path::PathBuf::from(".runtime/engines");
-    
+
     if runtime_dir.exists() {
         if let Ok(entries) = std::fs::read_dir(&runtime_dir) {
             for entry in entries.flatten() {
@@ -120,8 +121,9 @@ pub async fn when_wait_for_poll_interval(world: &mut World) {
                 if file_path.extension().and_then(|s| s.to_str()) == Some("json") {
                     let _ = orchestratord::services::handoff::process_handoff_file(
                         &world.state,
-                        &file_path
-                    ).await;
+                        &file_path,
+                    )
+                    .await;
                 }
             }
         }
@@ -152,7 +154,8 @@ pub async fn then_pool_registered_ready(_world: &mut World) {
 pub async fn then_narration_breadcrumb_emitted(world: &mut World) {
     if let Ok(guard) = world.state.logs.lock() {
         // Check for autobind-related log
-        let has_autobind_log = guard.iter().any(|log| log.contains("autobind") || log.contains("handoff"));
+        let has_autobind_log =
+            guard.iter().any(|log| log.contains("autobind") || log.contains("handoff"));
         assert!(has_autobind_log, "no autobind narration found in logs");
     } else {
         panic!("failed to lock logs");

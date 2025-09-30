@@ -25,13 +25,13 @@ pub fn execute(
     registry: &mut Registry,
 ) -> Result<PreloadOutcome> {
     let pool_id = prepared.pool_id.clone();
-    
+
     // Spawn the engine process
     let mut cmd = Command::new(&prepared.binary_path);
     for flag in &prepared.flags {
         cmd.arg(flag);
     }
-    
+
     // Redirect stdout/stderr to log file
     let run_dir = default_run_dir();
     std::fs::create_dir_all(&run_dir).context("creating run dir")?;
@@ -46,21 +46,20 @@ pub fn execute(
         .append(true)
         .open(&log_path)
         .with_context(|| format!("opening log file {}", log_path.display()))?;
-    
+
     cmd.stdout(Stdio::from(log_file));
     cmd.stderr(Stdio::from(log_file_err));
-    
-    let mut child = cmd.spawn()
-        .with_context(|| format!("spawning engine for pool {}", pool_id))?;
+
+    let mut child = cmd.spawn().with_context(|| format!("spawning engine for pool {}", pool_id))?;
     let pid = child.id();
-    
+
     // Write PID file
     let pid_file = run_dir.join(format!("{}.pid", pool_id));
     std::fs::write(&pid_file, pid.to_string())
         .with_context(|| format!("writing pid file {}", pid_file.display()))?;
-    
+
     eprintln!("spawned engine pid={} (pool={})", pid, pool_id);
-    
+
     // Wait for health check
     match wait_for_health(&prepared.host, prepared.port, Duration::from_secs(120)) {
         Ok(()) => {
@@ -78,18 +77,14 @@ pub fn execute(
                 },
                 "flags": prepared.flags,
             });
-            
+
             let handoff_path = write_handoff_file("engine.json", &handoff)?;
             eprintln!("wrote handoff {}", handoff_path.display());
-            
+
             // Update registry to Ready
             registry.register_ready_from_handoff(&pool_id, &handoff);
-            
-            Ok(PreloadOutcome {
-                pool_id,
-                pid,
-                handoff_path,
-            })
+
+            Ok(PreloadOutcome { pool_id, pid, handoff_path })
         }
         Err(e) => {
             // Health check failed - kill process and update registry
@@ -106,13 +101,14 @@ fn wait_for_health(host: &str, port: u16, timeout: Duration) -> Result<()> {
     use std::io::{Read, Write};
     use std::net::TcpStream;
     use std::time::Instant;
-    
+
     let deadline = Instant::now() + timeout;
     let addr = format!("{}:{}", host, port);
-    
+
     while Instant::now() < deadline {
         if let Ok(mut stream) = TcpStream::connect(&addr) {
-            let req = format!("GET /health HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n", host);
+            let req =
+                format!("GET /health HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n", host);
             if stream.write_all(req.as_bytes()).is_ok() {
                 let mut buf = String::new();
                 if stream.read_to_string(&mut buf).is_ok() {
@@ -124,7 +120,7 @@ fn wait_for_health(host: &str, port: u16, timeout: Duration) -> Result<()> {
         }
         std::thread::sleep(Duration::from_millis(500));
     }
-    
+
     anyhow::bail!("health check timeout after {:?}", timeout)
 }
 
@@ -134,7 +130,8 @@ fn write_handoff_file(filename: &str, handoff: &serde_json::Value) -> Result<Pat
     std::fs::create_dir_all(&dir).context("creating .runtime/engines")?;
     let path = dir.join(filename);
     let json = serde_json::to_string_pretty(handoff).context("serializing handoff")?;
-    std::fs::write(&path, json).with_context(|| format!("writing handoff to {}", path.display()))?;
+    std::fs::write(&path, json)
+        .with_context(|| format!("writing handoff to {}", path.display()))?;
     Ok(path)
 }
 
@@ -150,10 +147,10 @@ pub fn stop_pool(pool_id: &str) -> Result<()> {
     let pid_s = std::fs::read_to_string(&pid_path)
         .map_err(|e| anyhow::anyhow!("read pid file {}: {}", pid_path.display(), e))?;
     let pid = pid_s.trim();
-    
+
     // Try TERM first
     let _ = Command::new("kill").arg("-TERM").arg(pid).status();
-    
+
     // Wait up to 5 seconds for graceful shutdown
     let deadline = std::time::Instant::now() + Duration::from_secs(5);
     loop {
@@ -168,14 +165,14 @@ pub fn stop_pool(pool_id: &str) -> Result<()> {
         }
         std::thread::sleep(Duration::from_millis(200));
     }
-    
+
     // If still alive after grace period, KILL
     let _ = Command::new("kill").arg("-0").arg(pid).status().map(|st| {
         if st.success() {
             let _ = Command::new("kill").arg("-KILL").arg(pid).status();
         }
     });
-    
+
     let _ = std::fs::remove_file(&pid_path);
     Ok(())
 }

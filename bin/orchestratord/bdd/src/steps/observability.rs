@@ -55,7 +55,7 @@ pub async fn given_metrics_endpoint(_world: &mut World) {
 pub async fn given_tasks_enqueued(world: &mut World) {
     // Enqueue a few tasks to generate metrics
     use serde_json::json;
-    
+
     for i in 0..3 {
         let body = json!({
             "task_id": format!("t-metrics-{}", i),

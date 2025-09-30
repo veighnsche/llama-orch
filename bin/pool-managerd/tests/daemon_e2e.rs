@@ -39,10 +39,7 @@ async fn test_daemon_e2e() -> Result<()> {
     // 2. Health check
     eprintln!("\n=== Testing health endpoint ===");
     let client = reqwest::Client::new();
-    let health_resp = client
-        .get("http://127.0.0.1:9200/health")
-        .send()
-        .await?;
+    let health_resp = client.get("http://127.0.0.1:9200/health").send().await?;
 
     assert_eq!(health_resp.status(), 200);
     let health_json: serde_json::Value = health_resp.json().await?;
@@ -65,11 +62,8 @@ async fn test_daemon_e2e() -> Result<()> {
         }
     });
 
-    let preload_resp = client
-        .post("http://127.0.0.1:9200/pools/test-pool/preload")
-        .json(&prepared)
-        .send()
-        .await;
+    let preload_resp =
+        client.post("http://127.0.0.1:9200/pools/test-pool/preload").json(&prepared).send().await;
 
     // Note: This will fail if daemon isn't actually running
     // This is a placeholder test structure
@@ -88,10 +82,7 @@ async fn test_daemon_e2e() -> Result<()> {
 
     // 4. Check pool status
     eprintln!("\n=== Testing status endpoint ===");
-    let status_resp = client
-        .get("http://127.0.0.1:9200/pools/test-pool/status")
-        .send()
-        .await;
+    let status_resp = client.get("http://127.0.0.1:9200/pools/test-pool/status").send().await;
 
     match status_resp {
         Ok(resp) => {
@@ -122,17 +113,16 @@ fn test_systemd_unit_exists() {
     // Find repo root
     let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let unit_path = manifest_dir.join("pool-managerd.service");
-    
-    assert!(
-        unit_path.exists(),
-        "systemd unit file should exist at {}",
-        unit_path.display()
-    );
+
+    assert!(unit_path.exists(), "systemd unit file should exist at {}", unit_path.display());
 
     let content = std::fs::read_to_string(&unit_path).expect("read systemd unit");
     assert!(content.contains("pool-managerd"), "unit should reference pool-managerd");
-    assert!(content.contains("ExecStart=/usr/local/bin/pool-managerd"), "unit should have ExecStart");
+    assert!(
+        content.contains("ExecStart=/usr/local/bin/pool-managerd"),
+        "unit should have ExecStart"
+    );
     assert!(content.contains("POOL_MANAGERD_ADDR=127.0.0.1:9200"), "unit should set bind address");
-    
+
     eprintln!("✓ Systemd unit file validated: {}", unit_path.display());
 }

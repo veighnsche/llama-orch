@@ -6,9 +6,8 @@ use pool_managerd::core::health::HealthStatus;
 
 #[given(regex = r"^an empty registry$")]
 pub async fn given_empty_registry(world: &mut BddWorld) {
-    world.registry = std::sync::Arc::new(std::sync::Mutex::new(
-        pool_managerd::core::registry::Registry::new()
-    ));
+    world.registry =
+        std::sync::Arc::new(std::sync::Mutex::new(pool_managerd::core::registry::Registry::new()));
 }
 
 #[given(regex = r#"^a pool \"([^\"]+)\" is registered$"#)]
@@ -28,21 +27,18 @@ pub async fn given_pool_not_exists(world: &mut BddWorld, pool_id: String) {
 pub async fn given_pool_health(world: &mut BddWorld, live: String, ready: String) {
     let pool_id = world.pool_id.as_ref().expect("no pool_id set").clone();
     let mut registry = world.registry.lock().unwrap();
-    
+
     let live_bool = live == "true";
     let ready_bool = ready == "true";
-    
-    registry.set_health(&pool_id, HealthStatus {
-        live: live_bool,
-        ready: ready_bool,
-    });
+
+    registry.set_health(&pool_id, HealthStatus { live: live_bool, ready: ready_bool });
 }
 
 #[given(regex = r"^the pool has active_leases (\d+)$")]
 pub async fn given_pool_leases(world: &mut BddWorld, count: i32) {
     let pool_id = world.pool_id.as_ref().expect("no pool_id set").clone();
     let mut registry = world.registry.lock().unwrap();
-    
+
     for _ in 0..count {
         registry.allocate_lease(&pool_id);
     }
@@ -65,21 +61,21 @@ pub async fn when_set_health(world: &mut BddWorld, pool_id: String, live: String
     let mut registry = world.registry.lock().unwrap();
     let live_bool = live == "true";
     let ready_bool = ready == "true";
-    
-    registry.set_health(&pool_id, HealthStatus {
-        live: live_bool,
-        ready: ready_bool,
-    });
+
+    registry.set_health(&pool_id, HealthStatus { live: live_bool, ready: ready_bool });
 }
 
 #[when(regex = r#"^I get health for pool \"([^\"]+)\"$"#)]
 pub async fn when_get_health(world: &mut BddWorld, pool_id: String) {
     let registry = world.registry.lock().unwrap();
     let health = registry.get_health(&pool_id);
-    
-    world.last_body = Some(serde_json::json!({
-        "health": health
-    }).to_string());
+
+    world.last_body = Some(
+        serde_json::json!({
+            "health": health
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the health status is live=(\w+) ready=(\w+)$")]
@@ -87,10 +83,10 @@ pub async fn then_health_status(world: &mut BddWorld, live: String, ready: Strin
     let body = world.last_body.as_ref().expect("no response body");
     let json: serde_json::Value = serde_json::from_str(body).expect("invalid json");
     let health = json.get("health").expect("missing health field");
-    
+
     let live_bool = live == "true";
     let ready_bool = ready == "true";
-    
+
     assert_eq!(health["live"].as_bool().unwrap(), live_bool);
     assert_eq!(health["ready"].as_bool().unwrap(), ready_bool);
 }
@@ -142,7 +138,7 @@ pub async fn then_leases_count_for_pool(world: &mut BddWorld, pool_id: String, e
 pub async fn given_pool_has_leases(world: &mut BddWorld, count: i32) {
     let pool_id = world.pool_id.as_ref().expect("no pool_id set").clone();
     let mut registry = world.registry.lock().unwrap();
-    
+
     for _ in 0..count {
         registry.allocate_lease(&pool_id);
     }
@@ -196,10 +192,10 @@ pub async fn then_pool_health(world: &mut BddWorld, live: String, ready: String)
     let pool_id = world.pool_id.as_ref().expect("no pool_id set");
     let registry = world.registry.lock().unwrap();
     let health = registry.get_health(pool_id).expect("pool not found");
-    
+
     let live_bool = live == "true";
     let ready_bool = ready == "true";
-    
+
     assert_eq!(health.live, live_bool);
     assert_eq!(health.ready, ready_bool);
 }
@@ -289,12 +285,11 @@ pub async fn then_pool_heartbeat_recent(world: &mut BddWorld, threshold_ms: i64)
     let pool_id = world.pool_id.as_ref().expect("no pool_id set");
     let registry = world.registry.lock().unwrap();
     let heartbeat = registry.get_heartbeat(pool_id).expect("no heartbeat");
-    
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_millis() as i64;
-    
+
+    let now =
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis()
+            as i64;
+
     let diff = (now - heartbeat).abs();
     assert!(diff <= threshold_ms, "heartbeat too old: {}ms", diff);
 }

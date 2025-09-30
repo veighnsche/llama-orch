@@ -22,14 +22,7 @@ tower = { version = "0.4", features = ["util"] }
 tower-http = { version = "0.5", features = ["trace", "cors"] }
 nix = { version = "0.27", features = ["signal", "process"] }
 rand = "0.8"
+auth-min = { path = "../../libs/auth-min" }
+http = { workspace = true }
 hostname = "0.4"
-num_cpus = "1"
-# Cloud profile support
-pool-registry-types = { path = "../../libs/shared/pool-registry-types" }
-handoff-watcher = { path = "../../libs/gpu-node/handoff-watcher" }
-node-registration = { path = "../../libs/gpu-node/node-registration" }
-service-registry = { path = "../../libs/control-plane/service-registry" }
-
-[dev-dependencies]
-tempfile = "3"
-reqwest = { workspace = true }
+num_cpus = "1.16"

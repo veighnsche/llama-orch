@@ -9,11 +9,16 @@ pub enum StreamEvent {
 }
 
 /// Decode a simple SSE-like body into events, invoking the sink for each.
-pub fn stream_decode<S: AsRef<str>, F: FnMut(StreamEvent)>(body: S, mut sink: F) -> anyhow::Result<()> {
+pub fn stream_decode<S: AsRef<str>, F: FnMut(StreamEvent)>(
+    body: S,
+    mut sink: F,
+) -> anyhow::Result<()> {
     let mut current_event: Option<String> = None;
     for line in body.as_ref().lines() {
         let line = line.trim_end();
-        if line.is_empty() { continue; }
+        if line.is_empty() {
+            continue;
+        }
         if let Some(rest) = line.strip_prefix("event: ") {
             current_event = Some(rest.trim().to_string());
         } else if let Some(data) = line.strip_prefix("data: ") {

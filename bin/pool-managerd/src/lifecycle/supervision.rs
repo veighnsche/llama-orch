@@ -2,8 +2,8 @@
 //!
 //! Spec: OC-POOL-3010, OC-POOL-3011, ORCH-3038, ORCH-3040
 
-use std::time::{Duration, Instant};
 use rand::Rng;
+use std::time::{Duration, Instant};
 
 /// Crash reason classification
 #[derive(Debug, Clone, PartialEq)]
@@ -36,19 +36,13 @@ pub struct BackoffPolicy {
 
 impl BackoffPolicy {
     pub fn new(initial_ms: u64, max_ms: u64) -> Self {
-        Self {
-            initial_ms,
-            max_ms,
-            jitter_factor: 0.1,
-            current_failures: 0,
-            last_restart: None,
-        }
+        Self { initial_ms, max_ms, jitter_factor: 0.1, current_failures: 0, last_restart: None }
     }
 
     /// Calculate next delay with exponential backoff and jitter
     pub fn next_delay(&mut self) -> Duration {
         self.current_failures += 1;
-        
+
         // Exponential: 2^n * initial_ms
         let base_delay = if self.current_failures == 1 {
             self.initial_ms
@@ -56,12 +50,12 @@ impl BackoffPolicy {
             let exp = (self.current_failures - 1).min(10); // Cap exponent
             (2u64.pow(exp) * self.initial_ms).min(self.max_ms)
         };
-        
+
         // Add jitter: -10% to +10%
         let mut rng = rand::thread_rng();
         let jitter = rng.gen_range(-self.jitter_factor..=self.jitter_factor);
         let jittered = (base_delay as f64 * (1.0 + jitter)) as u64;
-        
+
         self.last_restart = Some(Instant::now());
         Duration::from_millis(jittered.min(self.max_ms))
     }
@@ -118,9 +112,9 @@ impl CircuitBreaker {
     /// Record a failure
     pub fn record_failure(&mut self) {
         self.consecutive_failures += 1;
-        
-        if self.state == CircuitState::Closed 
-            && self.consecutive_failures >= self.failure_threshold {
+
+        if self.state == CircuitState::Closed && self.consecutive_failures >= self.failure_threshold
+        {
             self.open();
         } else if self.state == CircuitState::HalfOpen {
             self.open();
@@ -139,11 +133,8 @@ impl CircuitBreaker {
     fn open(&mut self) {
         self.state = CircuitState::Open;
         self.opened_at = Some(Instant::now());
-        
-        tracing::warn!(
-            consecutive_failures = self.consecutive_failures,
-            "circuit breaker opened"
-        );
+
+        tracing::warn!(consecutive_failures = self.consecutive_failures, "circuit breaker opened");
     }
 
     /// Close the circuit
@@ -151,7 +142,7 @@ impl CircuitBreaker {
         self.state = CircuitState::Closed;
         self.consecutive_failures = 0;
         self.opened_at = None;
-        
+
         tracing::info!("circuit breaker closed");
     }
 
@@ -195,11 +186,7 @@ pub struct RestartRateLimiter {
 
 impl RestartRateLimiter {
     pub fn new(max_restarts: u32, window_secs: u64) -> Self {
-        Self {
-            max_restarts,
-            window_secs,
-            restart_times: Vec::new(),
-        }
+        Self { max_restarts, window_secs, restart_times: Vec::new() }
     }
 
     /// Record a restart

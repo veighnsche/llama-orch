@@ -21,7 +21,10 @@ mod tests {
         let plan = Plan {
             pool_id: "poolA".into(),
             steps: vec![
-                PlanStep { kind: "preflight-tools".into(), detail: "allow_package_installs=None".into() },
+                PlanStep {
+                    kind: "preflight-tools".into(),
+                    detail: "allow_package_installs=None".into(),
+                },
                 PlanStep { kind: "run".into(), detail: "ports=[8080]".into() },
             ],
         };

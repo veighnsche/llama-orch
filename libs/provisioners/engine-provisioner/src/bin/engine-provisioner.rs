@@ -58,7 +58,8 @@ mod tests {
 
     #[test]
     fn parse_with_pool_ok() {
-        let a = Args::parse_from(["engine-provisioner", "--config", "/tmp/cfg.yml", "--pool", "p1"]);
+        let a =
+            Args::parse_from(["engine-provisioner", "--config", "/tmp/cfg.yml", "--pool", "p1"]);
         assert_eq!(a.config, std::path::PathBuf::from("/tmp/cfg.yml"));
         assert_eq!(a.pool.as_deref(), Some("p1"));
     }

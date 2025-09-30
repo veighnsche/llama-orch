@@ -11,8 +11,7 @@ pub mod api;
 pub mod heartbeat;
 
 pub use api::{
-    RegisterRequest, RegisterResponse, 
-    HeartbeatRequest, HeartbeatResponse, HeartbeatPoolStatus
+    HeartbeatPoolStatus, HeartbeatRequest, HeartbeatResponse, RegisterRequest, RegisterResponse,
 };
 
 /// Service registry for managing GPU nodes
@@ -45,7 +44,7 @@ impl ServiceRegistry {
     /// Register a new node
     pub fn register(&self, node: NodeInfo) -> Result<(), String> {
         let mut inner = self.inner.lock().unwrap();
-        
+
         tracing::info!(
             node_id = %node.node_id,
             machine_id = %node.machine_id,
@@ -66,8 +65,10 @@ impl ServiceRegistry {
     /// Process heartbeat from a node
     pub fn heartbeat(&self, node_id: &NodeId) -> Result<(), String> {
         let mut inner = self.inner.lock().unwrap();
-        
-        let node = inner.nodes.get_mut(node_id)
+
+        let node = inner
+            .nodes
+            .get_mut(node_id)
             .ok_or_else(|| format!("Node {} not registered", node_id))?;
 
         node.update_heartbeat();
@@ -84,9 +85,13 @@ impl ServiceRegistry {
     }
 
     /// Update pool status from heartbeat
-    pub fn update_pool_status(&self, node_id: &NodeId, pools: Vec<pool_registry_types::PoolSnapshot>) {
+    pub fn update_pool_status(
+        &self,
+        node_id: &NodeId,
+        pools: Vec<pool_registry_types::PoolSnapshot>,
+    ) {
         let mut inner = self.inner.lock().unwrap();
-        
+
         for pool in pools {
             let key = (node_id.clone(), pool.pool_id.clone());
             inner.pool_status.insert(key, pool);
@@ -94,7 +99,11 @@ impl ServiceRegistry {
     }
 
     /// Get pool status for a specific node+pool
-    pub fn get_pool_status(&self, node_id: &NodeId, pool_id: &str) -> Option<pool_registry_types::PoolSnapshot> {
+    pub fn get_pool_status(
+        &self,
+        node_id: &NodeId,
+        pool_id: &str,
+    ) -> Option<pool_registry_types::PoolSnapshot> {
         let inner = self.inner.lock().unwrap();
         inner.pool_status.get(&(node_id.clone(), pool_id.to_string())).cloned()
     }
@@ -102,7 +111,8 @@ impl ServiceRegistry {
     /// Get all pool statuses for a node
     pub fn get_node_pools(&self, node_id: &NodeId) -> Vec<pool_registry_types::PoolSnapshot> {
         let inner = self.inner.lock().unwrap();
-        inner.pool_status
+        inner
+            .pool_status
             .iter()
             .filter(|((nid, _), _)| nid == node_id)
             .map(|(_, status)| status.clone())
@@ -112,7 +122,7 @@ impl ServiceRegistry {
     /// Deregister a node
     pub fn deregister(&self, node_id: &NodeId) -> Result<(), String> {
         let mut inner = self.inner.lock().unwrap();
-        
+
         if let Some(node) = inner.nodes.remove(node_id) {
             tracing::info!(
                 node_id = %node_id,
@@ -132,10 +142,7 @@ impl ServiceRegistry {
     /// Get all online nodes
     pub fn get_online_nodes(&self) -> Vec<NodeInfo> {
         let inner = self.inner.lock().unwrap();
-        inner.nodes.values()
-            .filter(|n| n.is_available())
-            .cloned()
-            .collect()
+        inner.nodes.values().filter(|n| n.is_available()).cloned().collect()
     }
 
     /// Get node by ID
@@ -147,9 +154,7 @@ impl ServiceRegistry {
     /// Get node for a specific pool
     pub fn get_node_for_pool(&self, pool_id: &str) -> Option<NodeInfo> {
         let inner = self.inner.lock().unwrap();
-        inner.pool_to_node.get(pool_id)
-            .and_then(|node_id| inner.nodes.get(node_id))
-            .cloned()
+        inner.pool_to_node.get(pool_id).and_then(|node_id| inner.nodes.get(node_id)).cloned()
     }
 
     /// Check for stale nodes and mark offline
@@ -182,16 +187,14 @@ impl ServiceRegistry {
     /// Get count of online nodes
     pub fn online_node_count(&self) -> usize {
         let inner = self.inner.lock().unwrap();
-        inner.nodes.values()
-            .filter(|n| n.is_online())
-            .count()
+        inner.nodes.values().filter(|n| n.is_online()).count()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pool_registry_types::{NodeCapabilities, GpuInfo};
+    use pool_registry_types::{GpuInfo, NodeCapabilities};
 
     fn test_node(node_id: &str) -> NodeInfo {
         NodeInfo::new(
@@ -230,7 +233,7 @@ mod tests {
         let node = test_node("node-1");
 
         registry.register(node.clone()).unwrap();
-        
+
         let before = registry.get_node(&node.node_id).unwrap();
         assert_eq!(before.status, NodeStatus::Registering);
 
@@ -266,10 +269,10 @@ mod tests {
     #[test]
     fn test_online_nodes_only_available() {
         let registry = ServiceRegistry::new(30_000);
-        
+
         let mut node1 = test_node("node-1");
         let mut node2 = test_node("node-2");
-        
+
         node1.status = NodeStatus::Online;
         node2.status = NodeStatus::Offline;
 

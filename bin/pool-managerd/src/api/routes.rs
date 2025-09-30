@@ -3,6 +3,7 @@
 use axum::{
     extract::{Path, State},
     http::StatusCode,
+    middleware,
     response::Json,
     routing::{get, post},
     Router,
@@ -10,6 +11,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
+use super::auth;
 use crate::core::registry::Registry;
 use crate::lifecycle::preload;
 use provisioners_engine_provisioner::PreparedEngine;
@@ -58,11 +60,15 @@ pub struct ErrorResponse {
 }
 
 /// Create router with all routes
+///
+/// Authentication middleware is applied to all routes except /health.
+/// Uses auth-min library for timing-safe Bearer token validation.
 pub fn create_router(state: AppState) -> Router {
     Router::new()
         .route("/health", get(health))
         .route("/pools/:id/preload", post(preload_pool))
         .route("/pools/:id/status", get(pool_status))
+        .layer(middleware::from_fn(auth::auth_middleware))
         .with_state(state)
 }
 
@@ -83,9 +89,7 @@ async fn preload_pool(
     let mut registry = state.registry.lock().map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ErrorResponse {
-                error: format!("registry lock failed: {}", e),
-            }),
+            Json(ErrorResponse { error: format!("registry lock failed: {}", e) }),
         )
     })?;
 
@@ -97,9 +101,7 @@ async fn preload_pool(
         })),
         Err(e) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ErrorResponse {
-                error: format!("preload failed: {}", e),
-            }),
+            Json(ErrorResponse { error: format!("preload failed: {}", e) }),
         )),
     }
 }
@@ -112,18 +114,14 @@ async fn pool_status(
     let registry = state.registry.lock().map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ErrorResponse {
-                error: format!("registry lock failed: {}", e),
-            }),
+            Json(ErrorResponse { error: format!("registry lock failed: {}", e) }),
         )
     })?;
 
     let health = registry.get_health(&pool_id).ok_or_else(|| {
         (
             StatusCode::NOT_FOUND,
-            Json(ErrorResponse {
-                error: format!("pool {} not found", pool_id),
-            }),
+            Json(ErrorResponse { error: format!("pool {} not found", pool_id) }),
         )
     })?;
 

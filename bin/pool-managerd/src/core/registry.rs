@@ -194,9 +194,15 @@ impl Registry {
             perf_hints: None,
             draining: false,
         });
-        if let Some(v) = version { entry.engine_version = Some(v.into()); }
-        if let Some(d) = digest { entry.engine_digest = Some(d.into()); }
-        if let Some(c) = catalog_id { entry.engine_catalog_id = Some(c.into()); }
+        if let Some(v) = version {
+            entry.engine_version = Some(v.into());
+        }
+        if let Some(d) = digest {
+            entry.engine_digest = Some(d.into());
+        }
+        if let Some(c) = catalog_id {
+            entry.engine_catalog_id = Some(c.into());
+        }
     }
 
     pub fn get_engine_digest(&self, pool_id: &str) -> Option<String> {
@@ -204,9 +210,7 @@ impl Registry {
     }
 
     pub fn get_engine_catalog_id(&self, pool_id: &str) -> Option<String> {
-        self.pools
-            .get(pool_id)
-            .and_then(|e| e.engine_catalog_id.as_ref().cloned())
+        self.pools.get(pool_id).and_then(|e| e.engine_catalog_id.as_ref().cloned())
     }
 
     pub fn set_device_mask(&mut self, pool_id: impl Into<String>, mask: impl Into<String>) {
@@ -298,12 +302,8 @@ impl Registry {
         // Slots: prefer incoming values, otherwise preserve existing, default to 1/total if none
         let incoming_total = handoff.get("slots_total").and_then(|v| v.as_i64()).map(|x| x as i32);
         let incoming_free = handoff.get("slots_free").and_then(|v| v.as_i64()).map(|x| x as i32);
-        let total = incoming_total
-            .or(entry.slots_total)
-            .unwrap_or(1);
-        let mut free = incoming_free
-            .or(entry.slots_free)
-            .unwrap_or(total);
+        let total = incoming_total.or(entry.slots_total).unwrap_or(1);
+        let mut free = incoming_free.or(entry.slots_free).unwrap_or(total);
         free = free.max(0).min(total);
         entry.slots_total = Some(total);
         entry.slots_free = Some(free);
@@ -317,7 +317,7 @@ impl Registry {
         };
         entry.last_heartbeat_ms = Some(now_ms);
     }
-    
+
     /// Mark pool as draining; when draining, new leases are refused.
     pub fn set_draining(&mut self, pool_id: impl Into<String>, draining: bool) {
         let id = pool_id.into();
@@ -349,21 +349,24 @@ impl Registry {
         if self.pools.contains_key(&id) {
             false
         } else {
-            self.pools.insert(id, PoolEntry {
-                health: HealthStatus { live: false, ready: false },
-                last_heartbeat_ms: None,
-                version: None,
-                last_error: None,
-                active_leases: 0,
-                engine_version: None,
-                engine_digest: None,
-                engine_catalog_id: None,
-                device_mask: None,
-                slots_total: None,
-                slots_free: None,
-                perf_hints: None,
-                draining: false,
-            });
+            self.pools.insert(
+                id,
+                PoolEntry {
+                    health: HealthStatus { live: false, ready: false },
+                    last_heartbeat_ms: None,
+                    version: None,
+                    last_error: None,
+                    active_leases: 0,
+                    engine_version: None,
+                    engine_digest: None,
+                    engine_catalog_id: None,
+                    device_mask: None,
+                    slots_total: None,
+                    slots_free: None,
+                    perf_hints: None,
+                    draining: false,
+                },
+            );
             true
         }
     }
@@ -391,11 +394,21 @@ impl Registry {
             perf_hints: None,
             draining: false,
         });
-        if let Some(v) = fields.engine_version { entry.engine_version = Some(v); }
-        if let Some(dm) = fields.device_mask { entry.device_mask = Some(dm); }
-        if let Some(t) = fields.slots_total { entry.slots_total = Some(t); }
-        if let Some(f) = fields.slots_free { entry.slots_free = Some(f.max(0).min(entry.slots_total.unwrap_or(f))); }
-        if let Some(ph) = fields.perf_hints { entry.perf_hints = Some(ph); }
+        if let Some(v) = fields.engine_version {
+            entry.engine_version = Some(v);
+        }
+        if let Some(dm) = fields.device_mask {
+            entry.device_mask = Some(dm);
+        }
+        if let Some(t) = fields.slots_total {
+            entry.slots_total = Some(t);
+        }
+        if let Some(f) = fields.slots_free {
+            entry.slots_free = Some(f.max(0).min(entry.slots_total.unwrap_or(f)));
+        }
+        if let Some(ph) = fields.perf_hints {
+            entry.perf_hints = Some(ph);
+        }
     }
 
     /// Export typed, deterministically-ordered snapshots for consumers.
@@ -467,13 +480,12 @@ impl Registry {
     pub fn get_active_leases(&self, pool_id: &str) -> i32 {
         self.pools.get(pool_id).map(|e| e.active_leases).unwrap_or(0)
     }
-
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::types::UpdateFields;
+    use super::*;
 
     // OC-POOL-3001: registry stores and returns health readiness
     #[test]
@@ -606,12 +618,30 @@ mod tests {
     fn test_oc_pool_3107_update_merges_fields() {
         let mut r = Registry::new();
         r.register("p7");
-        r.update("p7", UpdateFields { engine_version: Some("vA".into()), device_mask: None, slots_total: Some(8), slots_free: Some(3), perf_hints: None });
+        r.update(
+            "p7",
+            UpdateFields {
+                engine_version: Some("vA".into()),
+                device_mask: None,
+                slots_total: Some(8),
+                slots_free: Some(3),
+                perf_hints: None,
+            },
+        );
         assert_eq!(r.get_engine_version("p7").as_deref(), Some("vA"));
         assert_eq!(r.get_slots_total("p7"), Some(8));
         assert_eq!(r.get_slots_free("p7"), Some(3));
         // Partial update
-        r.update("p7", UpdateFields { engine_version: Some("vB".into()), device_mask: Some("GPU0".into()), slots_total: None, slots_free: Some(10), perf_hints: Some(json::json!({"tps": 1000})) });
+        r.update(
+            "p7",
+            UpdateFields {
+                engine_version: Some("vB".into()),
+                device_mask: Some("GPU0".into()),
+                slots_total: None,
+                slots_free: Some(10),
+                perf_hints: Some(json::json!({"tps": 1000})),
+            },
+        );
         assert_eq!(r.get_engine_version("p7").as_deref(), Some("vB"));
         assert_eq!(r.get_device_mask("p7").as_deref(), Some("GPU0"));
         // free clamped to total (8)

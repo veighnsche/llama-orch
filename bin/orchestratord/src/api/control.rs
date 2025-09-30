@@ -1,6 +1,7 @@
 use axum::{extract::State, response::IntoResponse, Json};
 use http::{HeaderMap, StatusCode};
 use serde_json::json;
+use std::sync::Arc;
 
 use crate::domain::error::OrchestratorError as ErrO;
 use crate::state::AppState;
@@ -77,7 +78,10 @@ pub async fn reload_pool(
     Ok(StatusCode::OK)
 }
 
-/// Worker registration requires a valid Bearer token.
+/// Worker registration endpoint.
+///
+/// Authentication is enforced by bearer_auth_middleware.
+/// Middleware has already validated the Bearer token.
 #[derive(serde::Deserialize)]
 pub struct RegisterWorkerBody {
     pub pool_id: Option<String>,
@@ -86,34 +90,12 @@ pub struct RegisterWorkerBody {
 
 pub async fn register_worker(
     state: State<AppState>,
-    headers: HeaderMap,
     body: Option<Json<RegisterWorkerBody>>,
 ) -> Result<impl IntoResponse, ErrO> {
-    let expected = std::env::var("AUTH_TOKEN").ok();
-    let auth = headers.get(http::header::AUTHORIZATION).and_then(|v| v.to_str().ok());
-    let token_opt = auth_min::parse_bearer(auth);
-
-    // Missing token
-    let token = match token_opt {
-        None => {
-            let env = json!({ "code": 40101, "message": "MISSING_TOKEN" });
-            return Ok((StatusCode::UNAUTHORIZED, Json(env)));
-        }
-        Some(t) => t,
-    };
-
-    // Compare using timing safe equality when expected provided
-    if let Some(exp) = expected {
-        if !auth_min::timing_safe_eq(exp.as_bytes(), token.as_bytes()) {
-            let env = json!({ "code": 40102, "message": "BAD_TOKEN" });
-            return Ok((StatusCode::UNAUTHORIZED, Json(env)));
-        }
-    }
-
-    // Record identity breadcrumb
-    let id = format!("token:{}", auth_min::token_fp6(&token));
+    // Authentication already handled by bearer_auth_middleware
+    // Log the registration event
     let mut lg = state.logs.lock().unwrap();
-    lg.push(format!("{{\"identity\":\"{}\",\"event\":\"worker_register\"}}", id));
+    lg.push(format!("{{\"event\":\"worker_register\"}}"));
 
     // For scaffolding: bind a mock adapter for the provided pool
     let pool_id =
@@ -128,7 +110,7 @@ pub async fn register_worker(
 
     Ok((
         StatusCode::OK,
-        Json(json!({"ok": true, "identity": id, "pool_id": pool_id, "replica_id": replica_id})),
+        Json(json!({"ok": true, "pool_id": pool_id, "replica_id": replica_id})),
     ))
 }
 

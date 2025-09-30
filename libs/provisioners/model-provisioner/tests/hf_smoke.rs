@@ -4,9 +4,9 @@
 
 #![cfg(test)]
 
+use catalog_core::{FileFetcher, FsCatalog, ModelRef};
 use model_provisioner::ModelProvisioner;
-use catalog_core::{ModelRef, FileFetcher, FsCatalog};
-use std::sync::{OnceLock, Mutex};
+use std::sync::{Mutex, OnceLock};
 
 static PATH_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
@@ -50,8 +50,16 @@ fn hf_smoke_end_to_end() {
     let resolved = prov.ensure_present(&mr, None).expect("ensure present");
 
     // The resolved path should exist after a real download
-    assert!(resolved.local_path.exists(), "resolved path should exist after HF download: {}", resolved.local_path.display());
+    assert!(
+        resolved.local_path.exists(),
+        "resolved path should exist after HF download: {}",
+        resolved.local_path.display()
+    );
 
     // Restore HOME
-    if let Some(h) = old_home { std::env::set_var("HOME", h); } else { std::env::remove_var("HOME"); }
+    if let Some(h) = old_home {
+        std::env::set_var("HOME", h);
+    } else {
+        std::env::remove_var("HOME");
+    }
 }

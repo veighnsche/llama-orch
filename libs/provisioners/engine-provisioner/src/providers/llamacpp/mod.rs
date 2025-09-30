@@ -1,9 +1,9 @@
 //! Llama.cpp engine provisioner (source mode)
 // Modularized into submodules: preflight, toolchain, flags, version.
 
+mod flags;
 mod preflight;
 mod toolchain;
-mod flags;
 mod version;
 
 use anyhow::{anyhow, Context, Result};
@@ -13,14 +13,14 @@ use std::process::Command;
 
 use crate::plan::{Plan, PlanStep};
 use crate::util::{
-    cmd, cmd_in, default_cache_dir, default_models_cache, ensure_flag,
-    ensure_flag_pair, ok_status, select_listen_port,
+    cmd, cmd_in, default_cache_dir, default_models_cache, ensure_flag, ensure_flag_pair, ok_status,
+    select_listen_port,
 };
 use crate::{cfg, EngineProvisioner};
 
+use flags::normalize_llamacpp_flags;
 use preflight::preflight_tools;
 use toolchain::{discover_cuda_root, find_compat_host_compiler};
-use flags::normalize_llamacpp_flags;
 
 /// Llama.cpp provider: source-from-git build and run (llama-server)
 pub struct LlamaCppSourceProvisioner;
@@ -162,16 +162,23 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
         let had_old_flag = original_flags.iter().any(|f| f.contains("LLAMA_CUBLAS"));
         if had_old_flag {
             let cache = build_dir.join("CMakeCache.txt");
-            if cache.exists() { let _ = std::fs::remove_file(&cache); }
+            if cache.exists() {
+                let _ = std::fs::remove_file(&cache);
+            }
             let cmfiles = build_dir.join("CMakeFiles");
-            if cmfiles.exists() { let _ = std::fs::remove_dir_all(&cmfiles); }
+            if cmfiles.exists() {
+                let _ = std::fs::remove_dir_all(&cmfiles);
+            }
         }
         // Map deprecated flags for newer llama.cpp: remove any -DLLAMA_CUBLAS* and use -DGGML_CUDA=ON
         let orig_flags = src.build.cmake_flags.clone().unwrap_or_default();
         let has_old = orig_flags.iter().any(|f| f.contains("LLAMA_CUBLAS"));
         let has_new = orig_flags.iter().any(|f| f.contains("GGML_CUDA"));
-        let mut mapped_flags: Vec<String> = orig_flags.into_iter().filter(|f| !f.contains("LLAMA_CUBLAS")).collect();
-        if has_old && !has_new { mapped_flags.push("-DGGML_CUDA=ON".to_string()); }
+        let mut mapped_flags: Vec<String> =
+            orig_flags.into_iter().filter(|f| !f.contains("LLAMA_CUBLAS")).collect();
+        if has_old && !has_new {
+            mapped_flags.push("-DGGML_CUDA=ON".to_string());
+        }
 
         let mut cfgcmd = Command::new("cmake");
         cfgcmd
@@ -206,7 +213,9 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
                 cfgcmd.arg(format!("-DCMAKE_CUDA_COMPILER={}", nvcc.to_string_lossy()));
             }
         }
-        for f in &mapped_flags { cfgcmd.arg(f); }
+        for f in &mapped_flags {
+            cfgcmd.arg(f);
+        }
         let status = cfgcmd.status().context("cmake configure")?;
         if !status.success() && wants_cuda_env {
             narrate(NarrationFields {
@@ -218,7 +227,11 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
                 ..Default::default()
             });
             if let Some((cc, cxx)) = find_compat_host_compiler() {
-                eprintln!("warning: CUDA configure failed; retrying with host compiler CC={} CXX={}", cc.display(), cxx.display());
+                eprintln!(
+                    "warning: CUDA configure failed; retrying with host compiler CC={} CXX={}",
+                    cc.display(),
+                    cxx.display()
+                );
                 let mut cfgcmd_hc = Command::new("cmake");
                 cfgcmd_hc
                     .current_dir(&src_dir)
@@ -226,11 +239,14 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
                     .arg(build_dir.to_string_lossy().to_string())
                     .arg("-DCMAKE_BUILD_TYPE=Release")
                     .arg("-DLLAMA_BUILD_SERVER=ON")
-                    .arg("-U").arg("LLAMA_CUBLAS")
+                    .arg("-U")
+                    .arg("LLAMA_CUBLAS")
                     .arg(format!("-DCMAKE_C_COMPILER={}", cc.display()))
                     .arg(format!("-DCMAKE_CXX_COMPILER={}", cxx.display()))
                     .arg(format!("-DCMAKE_CUDA_HOST_COMPILER={}", cc.display()));
-                for f in &mapped_flags { cfgcmd_hc.arg(f); }
+                for f in &mapped_flags {
+                    cfgcmd_hc.arg(f);
+                }
                 let st_hc = cfgcmd_hc.status().context("cmake configure (host-compiler)")?;
                 if !st_hc.success() {
                     narrate(NarrationFields {
@@ -251,8 +267,10 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
         }
 
         // Build
-        let jobs = std::thread::available_parallelism().map(|n| n.get().to_string()).unwrap_or_else(|_| "4".to_string());
-        narrate(NarrationFields {
+
+        let jobs = std::thread::available_parallelism()
+            .map(|n| n.get().to_string())
+            .unwrap_or_else(|_| "4".to_string());        narrate(NarrationFields {
             actor: "engine-provisioner",
             action: "cmake-build",
             target: pool.id.clone(),
@@ -260,16 +278,30 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
             pool_id: Some(pool.id.clone()),
             ..Default::default()
         });
-        cmd("cmake").args(["--build", build_dir.to_string_lossy().as_ref(), "-j", &jobs]).status().context("cmake build").and_then(ok_status)?;
+        cmd("cmake")
+            .args(["--build", build_dir.to_string_lossy().as_ref(), "-j", &jobs])
+            .status()
+            .context("cmake build")
+            .and_then(ok_status)?;>>>>>>> main
 
         let server_bin = build_dir.join("bin").join("llama-server");
-        if !server_bin.exists() { return Err(anyhow!("llama-server not found at {}", server_bin.display())); }
+        if !server_bin.exists() {
+            return Err(anyhow!("llama-server not found at {}", server_bin.display()));
+        }
 
         // Ensure model is present via model-provisioner
-        let model_ref = prov.model.r#ref.clone().ok_or_else(|| anyhow!("provisioning.model.ref required"))?;
-        let model_cache_dir = prov.model.cache_dir.clone().unwrap_or_else(|| default_models_cache().to_string_lossy().to_string());
-        let mp = model_provisioner::ModelProvisioner::file_only(PathBuf::from(&model_cache_dir)).context("init model-provisioner")?;
-        let resolved = mp.ensure_present_str(&model_ref, None).with_context(|| format!("ensuring model present for ref {}", model_ref))?;
+        let model_ref =
+            prov.model.r#ref.clone().ok_or_else(|| anyhow!("provisioning.model.ref required"))?;
+        let model_cache_dir = prov
+            .model
+            .cache_dir
+            .clone()
+            .unwrap_or_else(|| default_models_cache().to_string_lossy().to_string());
+        let mp = model_provisioner::ModelProvisioner::file_only(PathBuf::from(&model_cache_dir))
+            .context("init model-provisioner")?;
+        let resolved = mp
+            .ensure_present_str(&model_ref, None)
+            .with_context(|| format!("ensuring model present for ref {}", model_ref))?;
         let model_path = resolved.local_path;
 
         // Prepare command-line flags for pool-managerd to use when spawning
@@ -284,11 +316,13 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
         applied_flags.push("127.0.0.1".to_string());
         applied_flags.push("--port".to_string());
         applied_flags.push(port.to_string());
-        
+
         // Normalize legacy flags and CPU/GPU expectations
         if let Some(flags) = &prov.flags {
             let norm = normalize_llamacpp_flags(flags, gpu_enabled);
-            for f in norm { applied_flags.push(f); }
+            for f in norm {
+                applied_flags.push(f);
+            }
         }
         // Enforce deterministic defaults for tests
         ensure_flag_pair(&mut applied_flags, "--parallel", "1");
@@ -297,8 +331,9 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
         ensure_flag(&mut applied_flags, "--metrics");
 
         // Return PreparedEngine metadata - pool-managerd will spawn the process
-        let engine_version = format!("llamacpp-source:{}{}", src.r#ref, if gpu_enabled { "-cuda" } else { "-cpu" });
-        
+        let engine_version =
+            format!("llamacpp-source:{}{}", src.r#ref, if gpu_enabled { "-cuda" } else { "-cpu" });
+
         narrate(NarrationFields {
             actor: "engine-provisioner",
             action: "complete",
@@ -379,9 +414,17 @@ mod tests {
         let prov = LlamaCppSourceProvisioner::new();
         let plan = prov.plan(&pool).unwrap();
         let kinds: Vec<_> = plan.steps.iter().map(|s| s.kind.as_str()).collect();
-        assert_eq!(kinds, vec![
-            "preflight-tools", "git-clone", "cmake-configure", "cmake-build", "model-fetch", "run"
-        ]);
+        assert_eq!(
+            kinds,
+            vec![
+                "preflight-tools",
+                "git-clone",
+                "cmake-configure",
+                "cmake-build",
+                "model-fetch",
+                "run"
+            ]
+        );
         // Verify some details
         assert!(plan.steps[1].detail.contains("repo="));
         assert!(plan.steps[1].detail.contains("ref="));
@@ -400,4 +443,3 @@ mod tests {
         assert!(err.to_string().contains("provisioning.source required"));
     }
 }
-

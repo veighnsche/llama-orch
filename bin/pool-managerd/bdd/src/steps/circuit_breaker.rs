@@ -6,33 +6,42 @@ use pool_managerd::lifecycle::supervision::{CircuitBreaker, CircuitState};
 
 #[given(regex = r"^circuit breaker is configured with threshold=(\d+) timeout=(\d+)s$")]
 pub async fn given_circuit_configured(world: &mut BddWorld, threshold: u32, timeout: u64) {
-    world.last_body = Some(serde_json::json!({
-        "circuit": {
-            "threshold": threshold,
-            "timeout_secs": timeout
-        }
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "circuit": {
+                "threshold": threshold,
+                "timeout_secs": timeout
+            }
+        })
+        .to_string(),
+    );
 }
 
 #[given(regex = r"^the engine has crashed (\d+) times consecutively$")]
 pub async fn given_consecutive_crashes(world: &mut BddWorld, count: u32) {
-    world.last_body = Some(serde_json::json!({
-        "consecutive_failures": count
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "consecutive_failures": count
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^the engine crashes the (\d+)th time$")]
 pub async fn when_crashes_nth(world: &mut BddWorld, n: u32) {
     let mut circuit = CircuitBreaker::new(5, 300);
-    
+
     for _ in 0..n {
         circuit.record_failure();
     }
-    
-    world.last_body = Some(serde_json::json!({
-        "circuit_state": format!("{:?}", circuit.state()),
-        "circuit_open": circuit.state() == &CircuitState::Open
-    }).to_string());
+
+    world.last_body = Some(
+        serde_json::json!({
+            "circuit_state": format!("{:?}", circuit.state()),
+            "circuit_open": circuit.state() == &CircuitState::Open
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the circuit breaker opens$")]
@@ -53,9 +62,12 @@ pub async fn then_permanently_failed(_world: &mut BddWorld) {
 
 #[given(regex = r"^the circuit breaker is open$")]
 pub async fn given_circuit_open(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "circuit_state": "Open"
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "circuit_state": "Open"
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^no restart is scheduled$")]
@@ -75,17 +87,23 @@ pub async fn then_remains_failed(_world: &mut BddWorld) {
 
 #[given(regex = r"^the circuit breaker has been open for (\d+) seconds$")]
 pub async fn given_open_duration(world: &mut BddWorld, _secs: u64) {
-    world.last_body = Some(serde_json::json!({
-        "circuit_state": "Open",
-        "timeout_elapsed": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "circuit_state": "Open",
+            "timeout_elapsed": true
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^the timeout expires$")]
 pub async fn when_timeout_expires(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "circuit_state": "HalfOpen"
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "circuit_state": "HalfOpen"
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the circuit transitions to half-open$")]
@@ -101,9 +119,12 @@ pub async fn then_one_test_allowed(_world: &mut BddWorld) {
 
 #[given(regex = r"^the circuit breaker is half-open$")]
 pub async fn given_half_open(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "circuit_state": "HalfOpen"
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "circuit_state": "HalfOpen"
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^supervisor attempts restart$")]
@@ -123,25 +144,34 @@ pub async fn then_remains_half_open(_world: &mut BddWorld) {
 
 #[given(regex = r"^a test restart is attempted$")]
 pub async fn given_test_attempted(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "test_restart_attempted": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "test_restart_attempted": true
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^the engine starts successfully$")]
 pub async fn when_starts_successfully(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "engine_started": true,
-        "stable_run": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "engine_started": true,
+            "stable_run": true
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^the engine runs stably for (\d+) seconds$")]
 pub async fn when_stable_run(world: &mut BddWorld, _secs: u64) {
-    world.last_body = Some(serde_json::json!({
-        "stable_run": true,
-        "circuit_state": "Closed"
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "stable_run": true,
+            "circuit_state": "Closed"
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the circuit breaker closes$")]
@@ -157,10 +187,13 @@ pub async fn then_normal_policy(_world: &mut BddWorld) {
 
 #[when(regex = r"^the engine crashes immediately$")]
 pub async fn when_crashes_immediately(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "engine_crashed": true,
-        "circuit_state": "Open"
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "engine_crashed": true,
+            "circuit_state": "Open"
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the circuit breaker reopens$")]
@@ -206,10 +239,13 @@ pub async fn then_state_gauge(_world: &mut BddWorld) {
 
 #[when(regex = r"^an operator manually resets the circuit$")]
 pub async fn when_manual_reset(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "circuit_state": "Closed",
-        "manual_reset": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "circuit_state": "Closed",
+            "manual_reset": true
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the circuit transitions to closed$")]
@@ -225,24 +261,33 @@ pub async fn then_failure_count_resets(_world: &mut BddWorld) {
 
 #[given(regex = r"^circuit breaker threshold is set to (\d+)$")]
 pub async fn given_threshold(world: &mut BddWorld, threshold: u32) {
-    world.last_body = Some(serde_json::json!({
-        "threshold": threshold
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "threshold": threshold
+        })
+        .to_string(),
+    );
 }
 
 #[given(regex = r"^the circuit breaker tracks CUDA errors separately$")]
 pub async fn given_tracks_cuda(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "cuda_circuit": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "cuda_circuit": true
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^(\d+) CUDA errors occur$")]
 pub async fn when_cuda_errors(world: &mut BddWorld, count: u32) {
-    world.last_body = Some(serde_json::json!({
-        "cuda_errors": count,
-        "cuda_circuit_open": count >= 5
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "cuda_errors": count,
+            "cuda_circuit_open": count >= 5
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the CUDA circuit opens$")]

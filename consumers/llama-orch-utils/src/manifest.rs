@@ -110,7 +110,9 @@ pub fn append_ts_types(buf: &mut String) {
         "export type Manifest = { fs: Category; prompt: Category; model: Category; params: Category; llm: Category; orch: Category };\n\n",
     );
     // Placeholders for request/response types referenced in the manifest; concrete TS will replace these later.
-    buf.push_str("// Placeholder request/response declarations (to be replaced with concrete TS)\n");
+    buf.push_str(
+        "// Placeholder request/response declarations (to be replaced with concrete TS)\n",
+    );
     buf.push_str("export type ReadRequest = unknown;\nexport type ReadResponse = unknown;\n");
     buf.push_str("export type WriteIn = unknown;\nexport type WriteOut = unknown;\n");
     buf.push_str("export type MessageIn = unknown;\nexport type Message = unknown;\n");

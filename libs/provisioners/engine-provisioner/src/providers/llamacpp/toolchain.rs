@@ -85,10 +85,17 @@ mod tests {
         make_exec(&nvcc);
 
         let old_path = std::env::var("PATH").ok();
-        std::env::set_var("PATH", format!("{}:{}", bin.display(), old_path.as_deref().unwrap_or("")));
+        std::env::set_var(
+            "PATH",
+            format!("{}:{}", bin.display(), old_path.as_deref().unwrap_or("")),
+        );
         let found = discover_cuda_root();
         // Restore
-        if let Some(p) = old_path { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }
+        if let Some(p) = old_path {
+            std::env::set_var("PATH", p);
+        } else {
+            std::env::remove_var("PATH");
+        }
 
         assert_eq!(found.as_deref(), Some(root.as_path()));
     }
@@ -111,7 +118,10 @@ mod tests {
         assert_eq!(cxx_g.file_name().unwrap(), "g++-13");
 
         // Restore PATH
-        if let Some(p) = old_path { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }
+        if let Some(p) = old_path {
+            std::env::set_var("PATH", p);
+        } else {
+            std::env::remove_var("PATH");
+        }
     }
 }
-

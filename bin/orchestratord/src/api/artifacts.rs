@@ -1,3 +1,8 @@
+//! Artifact storage API endpoints.
+//!
+//! Provides endpoints for uploading and downloading artifacts (plans, diffs, traces).
+//! Authentication is enforced by bearer_auth_middleware.
+
 use axum::{extract::State, response::IntoResponse, Json};
 use http::StatusCode;
 use serde_json::json;

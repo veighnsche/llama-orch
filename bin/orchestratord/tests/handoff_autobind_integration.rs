@@ -9,8 +9,8 @@
 //! Note: These tests use sleep-based synchronization and may be flaky under load.
 //! Consider using a notification mechanism for production-grade testing.
 
-use orchestratord::state::AppState;
 use orchestratord::services::handoff;
+use orchestratord::state::AppState;
 use std::fs;
 use tempfile::TempDir;
 use tokio::time::{sleep, Duration};
@@ -70,10 +70,7 @@ async fn test_handoff_autobind_integration_stub_engine() {
     // Verify bound_pools tracking
     {
         let bound = state.bound_pools.lock().unwrap();
-        assert!(
-            bound.contains("integration-pool:r1"),
-            "pool not marked as bound"
-        );
+        assert!(bound.contains("integration-pool:r1"), "pool not marked as bound");
     }
 
     // Clean up env vars

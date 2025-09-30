@@ -1,8 +1,8 @@
+use crate::util::{repo_root, write_if_changed};
 use anyhow::{anyhow, Context, Result};
 use openapiv3;
 use serde_yaml;
 use std::{fs, process::Command};
-use crate::util::{repo_root, write_if_changed};
 
 pub fn regen_all() -> Result<()> {
     regen_openapi()?;

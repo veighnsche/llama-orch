@@ -7,9 +7,9 @@ pub mod health;
 pub mod node;
 pub mod pool;
 
-pub use health::{HealthStatus, HealthState};
-pub use node::{NodeId, NodeInfo, NodeStatus, NodeCapabilities, GpuInfo};
-pub use pool::{PoolId, PoolSnapshot, PoolMetadata};
+pub use health::{HealthState, HealthStatus};
+pub use node::{GpuInfo, NodeCapabilities, NodeId, NodeInfo, NodeStatus};
+pub use pool::{PoolId, PoolMetadata, PoolSnapshot};
 
 /// Re-export common error type
 pub type Result<T> = anyhow::Result<T>;

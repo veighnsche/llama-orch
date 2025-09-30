@@ -2,7 +2,7 @@
 
 use crate::steps::world::BddWorld;
 use cucumber::{given, then, when};
-use pool_managerd::lifecycle::drain::{DrainRequest, execute_drain};
+use pool_managerd::lifecycle::drain::{execute_drain, DrainRequest};
 
 #[given(regex = r#"^a pool "([^"]+)" is registered and ready$"#)]
 pub async fn given_pool_ready(world: &mut BddWorld, pool_id: String) {
@@ -10,10 +10,7 @@ pub async fn given_pool_ready(world: &mut BddWorld, pool_id: String) {
     registry.register(&pool_id);
     registry.set_health(
         &pool_id,
-        pool_managerd::core::health::HealthStatus {
-            live: true,
-            ready: true,
-        },
+        pool_managerd::core::health::HealthStatus { live: true, ready: true },
     );
     world.pool_id = Some(pool_id);
 }
@@ -22,19 +19,22 @@ pub async fn given_pool_ready(world: &mut BddWorld, pool_id: String) {
 pub async fn when_request_drain(world: &mut BddWorld, pool_id: String, deadline_ms: u64) {
     world.push_fact("drain.requested");
     let req = DrainRequest::new(pool_id.clone(), deadline_ms);
-    
+
     let mut registry = world.registry.lock().unwrap();
     let outcome = execute_drain(req, &mut registry).expect("drain failed");
-    
-    world.last_body = Some(serde_json::json!({
-        "outcome": {
-            "pool_id": outcome.pool_id,
-            "force_stopped": outcome.force_stopped,
-            "duration_ms": outcome.duration_ms,
-            "final_lease_count": outcome.final_lease_count
-        }
-    }).to_string());
-    
+
+    world.last_body = Some(
+        serde_json::json!({
+            "outcome": {
+                "pool_id": outcome.pool_id,
+                "force_stopped": outcome.force_stopped,
+                "duration_ms": outcome.duration_ms,
+                "final_lease_count": outcome.final_lease_count
+            }
+        })
+        .to_string(),
+    );
+
     world.pool_id = Some(pool_id);
 }
 
@@ -64,11 +64,14 @@ pub async fn when_attempt_allocate_lease(world: &mut BddWorld) {
     let pool_id = world.pool_id.as_ref().expect("no pool_id set").clone();
     let registry = world.registry.lock().unwrap();
     let is_draining = registry.get_draining(&pool_id);
-    
-    world.last_body = Some(serde_json::json!({
-        "allocation_refused": is_draining,
-        "reason": if is_draining { "pool is draining" } else { "" }
-    }).to_string());
+
+    world.last_body = Some(
+        serde_json::json!({
+            "allocation_refused": is_draining,
+            "reason": if is_draining { "pool is draining" } else { "" }
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the allocation is refused$")]
@@ -108,7 +111,7 @@ pub async fn then_pool_remains_draining(world: &mut BddWorld) {
 pub async fn when_all_leases_complete(world: &mut BddWorld) {
     let pool_id = world.pool_id.as_ref().expect("no pool_id set").clone();
     let mut registry = world.registry.lock().unwrap();
-    
+
     // Release all leases
     while registry.get_active_leases(&pool_id) > 0 {
         registry.release_lease(&pool_id);
@@ -140,11 +143,11 @@ pub async fn given_pool_draining_deadline(world: &mut BddWorld, _deadline_ms: u6
 pub async fn given_leases_never_complete(world: &mut BddWorld, count: i32) {
     let pool_id = world.pool_id.as_ref().expect("no pool_id set").clone();
     let mut registry = world.registry.lock().unwrap();
-    
+
     for _ in 0..count {
         registry.allocate_lease(&pool_id);
     }
-    
+
     // Mark that these leases won't complete
     world.mock_health_responses.insert(pool_id, false);
 }
@@ -177,7 +180,7 @@ pub async fn then_drain_force_stop_status(world: &mut BddWorld) {
 pub async fn given_pool_one_lease(world: &mut BddWorld, count: i32) {
     let pool_id = world.pool_id.as_ref().expect("no pool_id set").clone();
     let mut registry = world.registry.lock().unwrap();
-    
+
     for _ in 0..count {
         registry.allocate_lease(&pool_id);
     }
@@ -223,10 +226,7 @@ pub async fn given_empty_pool_ready(world: &mut BddWorld, pool_id: String) {
     registry.register(&pool_id);
     registry.set_health(
         &pool_id,
-        pool_managerd::core::health::HealthStatus {
-            live: true,
-            ready: true,
-        },
+        pool_managerd::core::health::HealthStatus { live: true, ready: true },
     );
     world.pool_id = Some(pool_id);
 }

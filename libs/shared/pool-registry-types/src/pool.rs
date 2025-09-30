@@ -125,7 +125,7 @@ mod tests {
 
         let json = serde_json::to_string(&metadata).unwrap();
         let deserialized: PoolMetadata = serde_json::from_str(&json).unwrap();
-        
+
         assert_eq!(deserialized.pool_id, "pool-0");
         assert_eq!(deserialized.node_id, Some("node-1".to_string()));
     }

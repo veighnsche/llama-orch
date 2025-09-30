@@ -58,7 +58,8 @@ impl World {
     }
 
     pub fn get_fact_by_prefix(&self, prefix: &str) -> Option<String> {
-        self.facts.iter()
+        self.facts
+            .iter()
             .find(|f| f.as_str().map(|s| s.starts_with(prefix)).unwrap_or(false))
             .and_then(|f| f.as_str().map(|s| s.to_string()))
     }

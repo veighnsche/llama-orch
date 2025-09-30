@@ -8,7 +8,8 @@ pub fn normalize_llamacpp_flags(flags: &[String], gpu_enabled: bool) -> Vec<Stri
     while i < flags.len() {
         let f = &flags[i];
         let next = flags.get(i + 1);
-        let is_pair = |s: &str| s == "--ngl" || s == "-ngl" || s == "--gpu-layers" || s == "--n-gpu-layers";
+        let is_pair =
+            |s: &str| s == "--ngl" || s == "-ngl" || s == "--gpu-layers" || s == "--n-gpu-layers";
         if is_pair(f) {
             // Consume this flag and its value
             if let Some(val) = next {
@@ -54,20 +55,41 @@ pub fn normalize_llamacpp_flags(flags: &[String], gpu_enabled: bool) -> Vec<Stri
 mod tests {
     use super::normalize_llamacpp_flags;
 
-    fn svec(xs: &[&str]) -> Vec<String> { xs.iter().map(|s| s.to_string()).collect() }
+    fn svec(xs: &[&str]) -> Vec<String> {
+        xs.iter().map(|s| s.to_string()).collect()
+    }
 
     #[test]
     fn gpu_enabled_normalizes_all_pair_variants() {
-        let flags = svec(&["--ngl", "35", "-ngl", "12", "--gpu-layers", "7", "--n-gpu-layers", "3", "--other", "x"]);
+        let flags = svec(&[
+            "--ngl",
+            "35",
+            "-ngl",
+            "12",
+            "--gpu-layers",
+            "7",
+            "--n-gpu-layers",
+            "3",
+            "--other",
+            "x",
+        ]);
         let out = normalize_llamacpp_flags(&flags, true);
         // Each pair should be rewritten to --n-gpu-layers N and others passthrough, order preserved for non-pairs
-        assert_eq!(out, svec(&[
-            "--n-gpu-layers", "35",
-            "--n-gpu-layers", "12",
-            "--n-gpu-layers", "7",
-            "--n-gpu-layers", "3",
-            "--other", "x",
-        ]));
+        assert_eq!(
+            out,
+            svec(&[
+                "--n-gpu-layers",
+                "35",
+                "--n-gpu-layers",
+                "12",
+                "--n-gpu-layers",
+                "7",
+                "--n-gpu-layers",
+                "3",
+                "--other",
+                "x",
+            ])
+        );
     }
 
     #[test]
@@ -94,4 +116,3 @@ mod tests {
         assert_eq!(out_cpu, svec(&["--foo", "bar", "--baz", "--n-gpu-layers", "0"]));
     }
 }
-

@@ -1,8 +1,8 @@
 //! llama.cpp HTTP adapter — MVP HTTP-backed implementation with buffered SSE decode.
 //! TODOs are annotated for health/props wiring, incremental streaming, cancel, and version capture.
 
-use contracts_api_types as api;
 use async_stream::stream;
+use contracts_api_types as api;
 use futures::StreamExt;
 use tracing::{debug, info, warn};
 use worker_adapters_adapter_api::{
@@ -16,7 +16,9 @@ pub struct LlamaCppHttpAdapter {
 }
 
 impl LlamaCppHttpAdapter {
-    pub fn new(base_url: impl Into<String>) -> Self { Self { base_url: base_url.into() } }
+    pub fn new(base_url: impl Into<String>) -> Self {
+        Self { base_url: base_url.into() }
+    }
 }
 
 impl WorkerAdapter for LlamaCppHttpAdapter {

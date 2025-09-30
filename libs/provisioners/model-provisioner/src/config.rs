@@ -33,11 +33,7 @@ mod tests {
     fn parse_yaml_and_json_config() {
         let tmp = tempfile::tempdir().unwrap();
         let yaml = tmp.path().join("m.yaml");
-        fs::write(
-            &yaml,
-            "model_ref: file:/x.gguf\nstrict_verification: false\n",
-        )
-        .unwrap();
+        fs::write(&yaml, "model_ref: file:/x.gguf\nstrict_verification: false\n").unwrap();
         let c1 = ModelProvisionerConfig::from_path(&yaml).unwrap();
         assert_eq!(c1.model_ref, "file:/x.gguf");
         assert!(!c1.strict_verification);

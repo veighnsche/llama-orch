@@ -17,11 +17,14 @@ pub async fn given_engine_running(world: &mut BddWorld) {
 #[when(regex = r"^the engine process exits unexpectedly$")]
 pub async fn when_engine_exits(world: &mut BddWorld) {
     world.push_fact("engine.exited");
-    world.last_body = Some(serde_json::json!({
-        "crash_detected": true,
-        "reason": "process_exit",
-        "exit_code": 1
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "crash_detected": true,
+            "reason": "process_exit",
+            "exit_code": 1
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the supervisor detects the exit$")]
@@ -43,11 +46,14 @@ pub async fn then_crash_logged(_world: &mut BddWorld) {
 
 #[when(regex = r"^health check polling fails (\d+) consecutive times$")]
 pub async fn when_health_fails(world: &mut BddWorld, count: u32) {
-    world.last_body = Some(serde_json::json!({
-        "crash_detected": true,
-        "reason": "health_check_failure",
-        "consecutive_failures": count
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "crash_detected": true,
+            "reason": "health_check_failure",
+            "consecutive_failures": count
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the supervisor detects health failure$")]
@@ -63,11 +69,14 @@ pub async fn then_logged_with_timestamps(_world: &mut BddWorld) {
 
 #[when(regex = r#"^the engine logs contain "([^"]+)"$"#)]
 pub async fn when_logs_contain(world: &mut BddWorld, pattern: String) {
-    world.last_body = Some(serde_json::json!({
-        "crash_detected": true,
-        "reason": "cuda_error",
-        "pattern": pattern
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "crash_detected": true,
+            "reason": "cuda_error",
+            "pattern": pattern
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the supervisor detects driver error$")]
@@ -85,13 +94,10 @@ pub async fn then_classified_cuda(_world: &mut BddWorld) {
 pub async fn when_engine_crashes(world: &mut BddWorld) {
     let pool_id = world.pool_id.as_ref().expect("no pool_id").clone();
     let mut registry = world.registry.lock().unwrap();
-    
+
     registry.set_health(
         &pool_id,
-        pool_managerd::core::health::HealthStatus {
-            live: false,
-            ready: false,
-        },
+        pool_managerd::core::health::HealthStatus { live: false, ready: false },
     );
     registry.set_last_error(&pool_id, "engine crashed");
 }
@@ -120,11 +126,14 @@ pub async fn then_last_error_updated(world: &mut BddWorld) {
 
 #[when(regex = r"^the engine receives SIGSEGV$")]
 pub async fn when_receives_sigsegv(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "crash_detected": true,
-        "reason": "signal",
-        "signal": "SIGSEGV"
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "crash_detected": true,
+            "reason": "signal",
+            "signal": "SIGSEGV"
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the supervisor captures the signal$")]
@@ -141,10 +150,13 @@ pub async fn then_reason_includes(world: &mut BddWorld, expected: String) {
 
 #[when(regex = r"^the engine exits with code 0$")]
 pub async fn when_exits_code_zero(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "graceful_shutdown": true,
-        "exit_code": 0
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "graceful_shutdown": true,
+            "exit_code": 0
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the supervisor recognizes graceful shutdown$")]
@@ -180,9 +192,12 @@ pub async fn then_log_has_exit_code(_world: &mut BddWorld) {
 
 #[given(regex = r"^the engine has crashed (\d+) times$")]
 pub async fn given_crashed_times(world: &mut BddWorld, count: u32) {
-    world.last_body = Some(serde_json::json!({
-        "crash_count": count
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "crash_count": count
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^the engine crashes again$")]
@@ -190,10 +205,13 @@ pub async fn when_crashes_again(world: &mut BddWorld) {
     let body = world.last_body.as_ref().expect("no response");
     let json: serde_json::Value = serde_json::from_str(body).unwrap();
     let count = json["crash_count"].as_u64().unwrap() + 1;
-    
-    world.last_body = Some(serde_json::json!({
-        "crash_count": count
-    }).to_string());
+
+    world.last_body = Some(
+        serde_json::json!({
+            "crash_count": count
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the crash_count is (\d+)$")]
@@ -210,10 +228,13 @@ pub async fn then_crash_count_persisted(_world: &mut BddWorld) {
 
 #[when(regex = r"^the engine is killed by OOM killer$")]
 pub async fn when_oom_killed(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "crash_detected": true,
-        "reason": "out_of_memory"
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "crash_detected": true,
+            "reason": "out_of_memory"
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the supervisor detects OOM condition$")]

@@ -11,7 +11,9 @@ static CLIENT: Lazy<Client> = Lazy::new(|| {
 });
 
 /// Get a shared HTTP client instance. Safe to clone and use across threads.
-pub fn client() -> &'static Client { &CLIENT }
+pub fn client() -> &'static Client {
+    &CLIENT
+}
 
 /// Configuration for building the shared HTTP client.
 #[derive(Clone, Debug)]
@@ -33,10 +35,14 @@ impl Default for HttpClientConfig {
 }
 
 /// Returns the default config (useful for verification in tests/BDD).
-pub fn default_config() -> HttpClientConfig { HttpClientConfig::default() }
+pub fn default_config() -> HttpClientConfig {
+    HttpClientConfig::default()
+}
 
 /// Prefer HTTP/2 when ALPN supports it (hint for tests/BDD; reqwest/hyper handle this automatically).
-pub fn h2_preference() -> bool { true }
+pub fn h2_preference() -> bool {
+    true
+}
 
 /// Build a reqwest Client from config.
 pub fn make_client(cfg: &HttpClientConfig) -> anyhow::Result<Client> {
@@ -47,7 +53,9 @@ pub fn make_client(cfg: &HttpClientConfig) -> anyhow::Result<Client> {
         .timeout(cfg.request_timeout)
         .connect_timeout(cfg.connect_timeout);
 
-    if !cfg.tls_verify { builder = builder.danger_accept_invalid_certs(true); }
+    if !cfg.tls_verify {
+        builder = builder.danger_accept_invalid_certs(true);
+    }
 
     Ok(builder.build()?)
 }

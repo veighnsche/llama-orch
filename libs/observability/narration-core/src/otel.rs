@@ -11,22 +11,22 @@ use opentelemetry::trace::{SpanContext, TraceContextExt};
 #[cfg(feature = "otel")]
 pub fn extract_otel_context() -> (Option<String>, Option<String>, Option<String>) {
     use opentelemetry::Context;
-    
+
     let ctx = Context::current();
     let span = ctx.span();
     let span_ctx = span.span_context();
-    
+
     if !span_ctx.is_valid() {
         return (None, None, None);
     }
-    
+
     let trace_id = Some(format!("{:032x}", span_ctx.trace_id()));
     let span_id = Some(format!("{:016x}", span_ctx.span_id()));
-    
+
     // Note: OpenTelemetry doesn't expose parent_span_id directly in SpanContext
     // It's tracked internally in the span hierarchy
     let parent_span_id = None;
-    
+
     (trace_id, span_id, parent_span_id)
 }
 
@@ -36,7 +36,7 @@ pub fn extract_otel_context() -> (Option<String>, Option<String>, Option<String>
 }
 
 /// Narrate with automatic OpenTelemetry context extraction.
-/// 
+///
 /// This is the recommended function for Cloud Profile deployments.
 /// It automatically extracts trace_id and span_id from the current OTEL context.
 ///
@@ -57,7 +57,7 @@ pub fn extract_otel_context() -> (Option<String>, Option<String>, Option<String>
 /// ```
 pub fn narrate_with_otel_context(mut fields: NarrationFields) {
     let (trace_id, span_id, parent_span_id) = extract_otel_context();
-    
+
     // Only override if not already set
     if fields.trace_id.is_none() {
         fields.trace_id = trace_id;
@@ -68,7 +68,7 @@ pub fn narrate_with_otel_context(mut fields: NarrationFields) {
     if fields.parent_span_id.is_none() {
         fields.parent_span_id = parent_span_id;
     }
-    
+
     crate::narrate(fields);
 }
 

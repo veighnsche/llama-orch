@@ -6,8 +6,8 @@
 pub use contracts_config_schema as cfg;
 
 pub mod plan;
-pub mod util;
 pub mod providers;
+pub mod util;
 
 use std::path::PathBuf;
 
@@ -98,7 +98,6 @@ mod tests {
             }
         }
     }
-
 }
 
 use anyhow::Result;

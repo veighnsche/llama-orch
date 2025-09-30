@@ -6,30 +6,39 @@ use pool_managerd::lifecycle::supervision::BackoffPolicy;
 
 #[given(regex = r"^backoff policy is configured with initial=(\d+)ms max=(\d+)ms$")]
 pub async fn given_backoff_configured(world: &mut BddWorld, initial: u64, max: u64) {
-    world.last_body = Some(serde_json::json!({
-        "backoff": {
-            "initial_ms": initial,
-            "max_ms": max
-        }
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "backoff": {
+                "initial_ms": initial,
+                "max_ms": max
+            }
+        })
+        .to_string(),
+    );
 }
 
 #[given(regex = r"^the engine crashes for the first time$")]
 pub async fn given_first_crash(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "crash_count": 1
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "crash_count": 1
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^supervisor schedules restart$")]
 pub async fn when_schedules_restart(world: &mut BddWorld) {
     let mut policy = BackoffPolicy::new(1000, 60000);
     let delay = policy.next_delay();
-    
-    world.last_body = Some(serde_json::json!({
-        "backoff_delay_ms": delay.as_millis(),
-        "crash_count": 1
-    }).to_string());
+
+    world.last_body = Some(
+        serde_json::json!({
+            "backoff_delay_ms": delay.as_millis(),
+            "crash_count": 1
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the backoff delay is (\d+)ms$")]
@@ -37,11 +46,15 @@ pub async fn then_backoff_delay(world: &mut BddWorld, expected: u64) {
     let body = world.last_body.as_ref().expect("no response");
     let json: serde_json::Value = serde_json::from_str(body).unwrap();
     let delay = json["backoff_delay_ms"].as_u64().unwrap();
-    
+
     // Allow 10% jitter tolerance
     let tolerance = (expected as f64 * 0.15) as u64;
-    assert!((delay as i64 - expected as i64).abs() <= tolerance as i64,
-        "delay {} not within tolerance of {}", delay, expected);
+    assert!(
+        (delay as i64 - expected as i64).abs() <= tolerance as i64,
+        "delay {} not within tolerance of {}",
+        delay,
+        expected
+    );
 }
 
 #[then(regex = r"^restart is scheduled after (\d+)ms$")]
@@ -53,16 +66,19 @@ pub async fn then_scheduled_after(world: &mut BddWorld, _expected: u64) {
 #[when(regex = r"^supervisor schedules the (\d+)th restart$")]
 pub async fn when_schedules_nth_restart(world: &mut BddWorld, n: u32) {
     let mut policy = BackoffPolicy::new(1000, 60000);
-    
+
     // Simulate n crashes
     for _ in 0..n {
         policy.next_delay();
     }
-    
-    world.last_body = Some(serde_json::json!({
-        "crash_count": n,
-        "failure_count": policy.failure_count()
-    }).to_string());
+
+    world.last_body = Some(
+        serde_json::json!({
+            "crash_count": n,
+            "failure_count": policy.failure_count()
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the delay follows exponential pattern: (.+)$")]
@@ -74,10 +90,13 @@ pub async fn then_exponential_pattern(_world: &mut BddWorld, _pattern: String) {
 pub async fn when_calculates_backoff(world: &mut BddWorld) {
     let mut policy = BackoffPolicy::new(1000, 60000);
     let delay = policy.next_delay();
-    
-    world.last_body = Some(serde_json::json!({
-        "backoff_delay_ms": delay.as_millis()
-    }).to_string());
+
+    world.last_body = Some(
+        serde_json::json!({
+            "backoff_delay_ms": delay.as_millis()
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^jitter is added to the base delay$")]
@@ -100,18 +119,24 @@ pub async fn then_not_exceed_max(world: &mut BddWorld) {
 
 #[given(regex = r"^backoff delay is (\d+)ms$")]
 pub async fn given_backoff_delay(world: &mut BddWorld, delay: u64) {
-    world.last_body = Some(serde_json::json!({
-        "backoff_delay_ms": delay
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "backoff_delay_ms": delay
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^the engine runs stably for (\d+) seconds$")]
 pub async fn when_runs_stable(world: &mut BddWorld, _secs: u64) {
-    world.last_body = Some(serde_json::json!({
-        "backoff_delay_ms": 1000,
-        "crash_count": 0,
-        "reset": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "backoff_delay_ms": 1000,
+            "crash_count": 0,
+            "reset": true
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the backoff delay resets to (\d+)ms$")]
@@ -145,19 +170,25 @@ pub async fn then_log_restart_at(_world: &mut BddWorld) {
 
 #[given(regex = r"^backoff policy has min_delay=(\d+)ms$")]
 pub async fn given_min_delay(world: &mut BddWorld, min: u64) {
-    world.last_body = Some(serde_json::json!({
-        "min_delay_ms": min
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "min_delay_ms": min
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^the first crash occurs$")]
 pub async fn when_first_crash(world: &mut BddWorld) {
     let mut policy = BackoffPolicy::new(1000, 60000);
     let delay = policy.next_delay();
-    
-    world.last_body = Some(serde_json::json!({
-        "backoff_delay_ms": delay.as_millis()
-    }).to_string());
+
+    world.last_body = Some(
+        serde_json::json!({
+            "backoff_delay_ms": delay.as_millis()
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the backoff delay is at least (\d+)ms$")]
@@ -170,10 +201,13 @@ pub async fn then_at_least(world: &mut BddWorld, min: u64) {
 
 #[given(regex = r"^the engine crashes with CUDA error$")]
 pub async fn given_cuda_crash(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "crash_reason": "cuda_error",
-        "multiplier": 2.0
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "crash_reason": "cuda_error",
+            "multiplier": 2.0
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^CUDA errors use 2x multiplier$")]

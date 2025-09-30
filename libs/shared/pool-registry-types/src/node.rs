@@ -60,10 +60,7 @@ impl NodeInfo {
         pools: Vec<String>,
         capabilities: NodeCapabilities,
     ) -> Self {
-        let now_ms = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as u64;
+        let now_ms = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64;
 
         Self {
             node_id,
@@ -87,18 +84,13 @@ impl NodeInfo {
     }
 
     pub fn is_stale(&self, timeout_ms: u64) -> bool {
-        let now_ms = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as u64;
+        let now_ms = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64;
         now_ms - self.last_heartbeat_ms > timeout_ms
     }
 
     pub fn update_heartbeat(&mut self) {
-        self.last_heartbeat_ms = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as u64;
+        self.last_heartbeat_ms =
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64;
     }
 }
 #[cfg(test)]
@@ -153,11 +145,7 @@ mod tests {
             "machine-1".to_string(),
             "http://localhost:9200".to_string(),
             vec!["pool-0".to_string()],
-            NodeCapabilities {
-                gpus: vec![],
-                cpu_cores: Some(8),
-                ram_total_bytes: None,
-            },
+            NodeCapabilities { gpus: vec![], cpu_cores: Some(8), ram_total_bytes: None },
         );
 
         assert_eq!(node.status, NodeStatus::Registering);
