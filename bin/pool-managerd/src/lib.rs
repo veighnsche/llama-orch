@@ -8,6 +8,7 @@
 // - api: HTTP API for daemon mode
 
 pub mod api;
+pub mod config;
 pub mod core;
 pub mod lifecycle;
 pub mod placement;
