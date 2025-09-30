@@ -40,7 +40,7 @@ async fn test_daemon_e2e() -> Result<()> {
     eprintln!("\n=== Testing health endpoint ===");
     let client = reqwest::Client::new();
     let health_resp = client
-        .get("http://127.0.0.1:9001/health")
+        .get("http://127.0.0.1:9200/health")
         .send()
         .await?;
 
@@ -66,7 +66,7 @@ async fn test_daemon_e2e() -> Result<()> {
     });
 
     let preload_resp = client
-        .post("http://127.0.0.1:9001/pools/test-pool/preload")
+        .post("http://127.0.0.1:9200/pools/test-pool/preload")
         .json(&prepared)
         .send()
         .await;
@@ -89,7 +89,7 @@ async fn test_daemon_e2e() -> Result<()> {
     // 4. Check pool status
     eprintln!("\n=== Testing status endpoint ===");
     let status_resp = client
-        .get("http://127.0.0.1:9001/pools/test-pool/status")
+        .get("http://127.0.0.1:9200/pools/test-pool/status")
         .send()
         .await;
 
@@ -132,7 +132,7 @@ fn test_systemd_unit_exists() {
     let content = std::fs::read_to_string(&unit_path).expect("read systemd unit");
     assert!(content.contains("pool-managerd"), "unit should reference pool-managerd");
     assert!(content.contains("ExecStart=/usr/local/bin/pool-managerd"), "unit should have ExecStart");
-    assert!(content.contains("POOL_MANAGERD_ADDR=127.0.0.1:9001"), "unit should set bind address");
+    assert!(content.contains("POOL_MANAGERD_ADDR=127.0.0.1:9200"), "unit should set bind address");
     
     eprintln!("✓ Systemd unit file validated: {}", unit_path.display());
 }

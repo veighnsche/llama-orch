@@ -30,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
     let app = create_router(state);
 
     // Bind address from env or default
-    let addr = std::env::var("POOL_MANAGERD_ADDR").unwrap_or_else(|_| "127.0.0.1:9001".to_string());
+    let addr = std::env::var("POOL_MANAGERD_ADDR").unwrap_or_else(|_| "127.0.0.1:9200".to_string());
     let listener = tokio::net::TcpListener::bind(&addr).await?;
 
     tracing::info!("pool-managerd listening on {}", addr);

@@ -8,7 +8,7 @@ Type=simple
 User=llama-orch
 Group=llama-orch
 WorkingDirectory=/opt/llama-orch
-Environment="POOL_MANAGERD_ADDR=127.0.0.1:9001"
+Environment="POOL_MANAGERD_ADDR=127.0.0.1:9200"
 Environment="RUST_LOG=info"
 ExecStart=/usr/local/bin/pool-managerd
 Restart=on-failure

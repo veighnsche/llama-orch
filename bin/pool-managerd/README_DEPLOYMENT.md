@@ -39,20 +39,20 @@
 
 Environment variables (edit `/etc/systemd/system/pool-managerd.service`):
 
-- `POOL_MANAGERD_ADDR` — Bind address (default: `127.0.0.1:9001`)
+- `POOL_MANAGERD_ADDR` — Bind address (default: `127.0.0.1:9200`)
 - `RUST_LOG` — Log level (default: `info`)
 
 ### API Endpoints
 
-- `GET http://127.0.0.1:9001/health` — Health check
-- `POST http://127.0.0.1:9001/pools/{id}/preload` — Spawn engine
-- `GET http://127.0.0.1:9001/pools/{id}/status` — Pool status
+- `GET http://127.0.0.1:9200/health` — Health check
+- `POST http://127.0.0.1:9200/pools/{id}/preload` — Spawn engine
+- `GET http://127.0.0.1:9200/pools/{id}/status` — Pool status
 
 ### Testing
 
 ```bash
 # Health check
-curl http://127.0.0.1:9001/health
+curl http://127.0.0.1:9200/health
 
 # Expected response:
 # {"status":"ok","version":"0.0.0"}
@@ -69,14 +69,14 @@ RUN cargo build --release -p pool-managerd
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /build/target/release/pool-managerd /usr/local/bin/
-EXPOSE 9001
+EXPOSE 9200
 CMD ["pool-managerd"]
 ```
 
 Build and run:
 ```bash
 docker build -t pool-managerd -f bin/pool-managerd/Dockerfile .
-docker run -p 9001:9001 -v /opt/llama-orch/.runtime:/runtime pool-managerd
+docker run -p 9200:9200 -v /opt/llama-orch/.runtime:/runtime pool-managerd
 ```
 
 ## Kubernetes (Cloud Profile)
@@ -102,10 +102,10 @@ spec:
       - name: pool-managerd
         image: pool-managerd:latest
         ports:
-        - containerPort: 9001
+        - containerPort: 9200
         env:
         - name: POOL_MANAGERD_ADDR
-          value: "0.0.0.0:9001"
+          value: "0.0.0.0:9200"
         volumeMounts:
         - name: runtime
           mountPath: /runtime
