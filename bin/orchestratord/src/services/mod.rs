@@ -4,5 +4,6 @@ pub mod catalog;
 pub mod control;
 pub mod handoff;
 pub mod placement;
+pub mod placement_v2;
 pub mod session;
 pub mod streaming;

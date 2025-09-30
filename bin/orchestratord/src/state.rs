@@ -1,5 +1,6 @@
 use crate::ports::storage::ArtifactStore;
 use crate::services::placement::PlacementCache;
+use crate::services::placement_v2::{PlacementService, PlacementStrategy};
 use crate::admission::{MetricLabels, QueueWithMetrics};
 use crate::clients::pool_manager::PoolManagerClient;
 use orchestrator_core::queue::Policy;
@@ -28,6 +29,8 @@ pub struct AppState {
     // Cloud profile: Service registry for tracking GPU nodes
     pub service_registry: Option<ServiceRegistry>,
     pub cloud_profile: bool,
+    // Multi-node placement service
+    pub placement_service: PlacementService,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -90,6 +93,18 @@ impl AppState {
                 Some(ServiceRegistry::new(timeout_ms))
             } else {
                 None
+            },
+            // Placement service (strategy from env)
+            placement_service: {
+                let strategy = match std::env::var("ORCHESTRATORD_PLACEMENT_STRATEGY")
+                    .ok()
+                    .as_deref()
+                {
+                    Some("least-loaded") => PlacementStrategy::LeastLoaded,
+                    Some("random") => PlacementStrategy::Random,
+                    _ => PlacementStrategy::RoundRobin,
+                };
+                PlacementService::new(strategy)
             },
         }
     }

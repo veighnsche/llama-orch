@@ -76,6 +76,7 @@ adapter-host = { path = "../../libs/adapter-host" }
 # Cloud profile support
 pool-registry-types = { path = "../../libs/shared/pool-registry-types" }
 service-registry = { path = "../../libs/control-plane/service-registry" }
+rand = "0.8"
 
 [dev-dependencies]
 openapiv3 = { workspace = true }
