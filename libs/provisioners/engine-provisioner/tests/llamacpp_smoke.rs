@@ -1,3 +1,11 @@
+//! E2E smoke test for llama.cpp provisioning and readiness.
+//!
+//! - This is an end-to-end test (NOT a unit test). It performs a real build/run
+//!   against the config at `requirements/llamacpp-3090-source.yaml` and polls
+//!   `/health` on the started server.
+//! - It is ignored by default and opt-in via `LLAMA_ORCH_SMOKE=1` to avoid
+//!   accidental heavy CI usage.
+//!
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::path::PathBuf;

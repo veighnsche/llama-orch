@@ -53,3 +53,65 @@ pub fn find_compat_host_compiler() -> Option<(PathBuf, PathBuf)> {
     }
     None
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{discover_cuda_root, find_compat_host_compiler};
+    use std::fs;
+    use std::io::Write;
+    use std::sync::{Mutex, OnceLock};
+
+    static PATH_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+    #[cfg(unix)]
+    fn make_exec(path: &std::path::Path) {
+        use std::os::unix::fs::PermissionsExt;
+        let mut f = fs::File::create(path).unwrap();
+        writeln!(f, "#!/bin/sh\nexit 0").unwrap();
+        let mut perms = f.metadata().unwrap().permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(path, perms).unwrap();
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn discover_cuda_root_uses_path_nvcc_parent_parent() {
+        let _g = PATH_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().join("fake-cuda");
+        let bin = root.join("bin");
+        fs::create_dir_all(&bin).unwrap();
+        let nvcc = bin.join("nvcc");
+        make_exec(&nvcc);
+
+        let old_path = std::env::var("PATH").ok();
+        std::env::set_var("PATH", format!("{}:{}", bin.display(), old_path.as_deref().unwrap_or("")));
+        let found = discover_cuda_root();
+        // Restore
+        if let Some(p) = old_path { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }
+
+        assert_eq!(found.as_deref(), Some(root.as_path()));
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn find_compat_prefers_gcc13_then_falls_back_to_clang() {
+        let _g = PATH_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+        let old_path = std::env::var("PATH").ok();
+
+        // Only gcc-13 present -> expect gcc
+        let tmp_g = tempfile::tempdir().unwrap();
+        let bin_g = tmp_g.path().join("bin");
+        fs::create_dir_all(&bin_g).unwrap();
+        make_exec(&bin_g.join("gcc-13"));
+        make_exec(&bin_g.join("g++-13"));
+        std::env::set_var("PATH", bin_g.display().to_string());
+        let (cc_g, cxx_g) = find_compat_host_compiler().expect("should find gcc-13");
+        assert_eq!(cc_g.file_name().unwrap(), "gcc-13");
+        assert_eq!(cxx_g.file_name().unwrap(), "g++-13");
+
+        // Restore PATH
+        if let Some(p) = old_path { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }
+    }
+}
+

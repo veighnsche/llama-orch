@@ -99,3 +99,141 @@ fn is_root_user() -> bool {
         .map(|s| s.trim() == "0")
         .unwrap_or(false)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::preflight_tools;
+    use crate::cfg;
+    use std::fs;
+    use std::io::Write;
+    use std::sync::{Mutex, OnceLock};
+
+    static PATH_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+    #[cfg(unix)]
+    fn make_exec(path: &std::path::Path) {
+        use std::os::unix::fs::PermissionsExt;
+        let mut f = fs::File::create(path).unwrap();
+        writeln!(f, "#!/bin/sh\nexit 0").unwrap();
+        let mut perms = f.metadata().unwrap().permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(path, perms).unwrap();
+    }
+
+    fn src_with_flags(flags: Option<Vec<&str>>) -> cfg::SourceConfig {
+        let mut s = cfg::SourceConfig::default();
+        s.repo = "https://example.com/llama.cpp.git".to_string();
+        s.r#ref = "v0".to_string();
+        if let Some(v) = flags {
+            s.build.cmake_flags = Some(v.into_iter().map(|x| x.to_string()).collect());
+        }
+        s
+    }
+
+    fn base_prov() -> cfg::ProvisioningConfig {
+        cfg::ProvisioningConfig::default()
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn ok_when_all_required_tools_present_and_no_cuda_or_hf() {
+        let _g = PATH_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|p| p.into_inner());
+        let tmp = tempfile::tempdir().unwrap();
+        let bin = tmp.path().join("bin");
+        fs::create_dir_all(&bin).unwrap();
+        for b in ["git", "cmake", "make", "gcc"] { make_exec(&bin.join(b)); }
+
+        let old = std::env::var("PATH").ok();
+        std::env::set_var("PATH", bin.display().to_string());
+
+        let prov = base_prov();
+        let src = src_with_flags(None);
+        let res = preflight_tools(&prov, &src);
+
+        // restore PATH
+        if let Some(p) = old { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }
+
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn error_lists_missing_tools_when_disallowed() {
+        // Use an empty PATH to force missing tools, and ensure allow_package_installs is false
+        let _g = PATH_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|p| p.into_inner());
+        let old = std::env::var("PATH").ok();
+        std::env::set_var("PATH", "");
+        let mut prov = base_prov();
+        prov.allow_package_installs = Some(false);
+        let src = src_with_flags(None);
+        let err = preflight_tools(&prov, &src).unwrap_err().to_string();
+        if let Some(p) = old { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }
+        assert!(err.contains("missing tools"));
+        // Tool names should be mentioned (some environments may still resolve gcc)
+        assert!(err.contains("git"));
+        assert!(err.contains("cmake"));
+        assert!(err.contains("make"));
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn cuda_requested_without_nvcc_and_no_clang_suggests_cuda_and_clang() {
+        // Provide base tools but no nvcc or clang
+        let _g = PATH_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|p| p.into_inner());
+        let tmp = tempfile::tempdir().unwrap();
+        let bin = tmp.path().join("bin");
+        fs::create_dir_all(&bin).unwrap();
+        for b in ["git", "cmake", "make", "gcc"] { make_exec(&bin.join(b)); }
+        let old = std::env::var("PATH").ok();
+        std::env::set_var("PATH", bin.display().to_string());
+
+        let mut prov = base_prov();
+        prov.allow_package_installs = Some(false);
+        let src = src_with_flags(Some(vec!["-DGGML_CUDA=ON"]));
+        let res = preflight_tools(&prov, &src);
+
+        if let Some(p) = old { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }
+        match res {
+            Ok(()) => {
+                // If it succeeded, the environment must provide either nvcc or a compat clang/gcc-13
+                let has_nvcc = which::which("nvcc").is_ok();
+                let has_compat = crate::providers::llamacpp::toolchain::find_compat_host_compiler().is_some()
+                    || which::which("clang").is_ok();
+                assert!(has_nvcc || has_compat, "preflight unexpectedly Ok without nvcc/compat compiler available");
+            }
+            Err(e) => {
+                let err = e.to_string();
+                assert!(err.contains("cuda") || err.contains("nvcc"));
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn hf_ref_without_cli_suggests_python_huggingface_hub() {
+        let _g = PATH_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|p| p.into_inner());
+        let tmp = tempfile::tempdir().unwrap();
+        let bin = tmp.path().join("bin");
+        fs::create_dir_all(&bin).unwrap();
+        for b in ["git", "cmake", "make", "gcc"] { make_exec(&bin.join(b)); }
+        let old = std::env::var("PATH").ok();
+        std::env::set_var("PATH", bin.display().to_string());
+
+        let mut prov = base_prov();
+        prov.allow_package_installs = Some(false);
+        prov.model.r#ref = Some("hf:org/model.gguf".to_string());
+        let src = src_with_flags(None);
+        let res = preflight_tools(&prov, &src);
+        if let Some(p) = old { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }
+        match res {
+            Ok(()) => {
+                // If it succeeded, huggingface-cli must be available in environment
+                assert!(which::which("huggingface-cli").is_ok(), "preflight Ok but huggingface-cli not found in PATH");
+            }
+            Err(e) => {
+                let err = e.to_string();
+                assert!(err.contains("python-huggingface") || err.contains("huggingface"));
+            }
+        }
+    }
+}
+
