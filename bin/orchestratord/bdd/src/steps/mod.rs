@@ -1,6 +1,7 @@
 pub mod artifacts;
 pub mod background;
 pub mod catalog;
+pub mod common;
 pub mod control_plane;
 pub mod data_plane;
 pub mod deadlines_preemption;

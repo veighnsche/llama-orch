@@ -1,0 +1,1 @@
+{"device_mask":"GPU0","engine_version":"llamacpp-test-v1","pool_id":"\"gpu-0\"","replica_id":"\"r1\"","slots_free":4,"slots_total":4,"url":"http://127.0.0.1:9999"}

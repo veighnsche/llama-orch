@@ -53,14 +53,14 @@ impl Default for World {
 }
 
 impl World {
-    pub fn push_fact<S: AsRef<str>>(&mut self, stage: S) {
-        self.facts.push(json!({
-            "stage": stage.as_ref(),
-        }));
+    pub fn push_fact<S: Into<serde_json::Value>>(&mut self, fact: S) {
+        self.facts.push(fact.into());
     }
 
-    pub fn all_facts(&self) -> impl Iterator<Item = &serde_json::Value> {
+    pub fn get_fact_by_prefix(&self, prefix: &str) -> Option<String> {
         self.facts.iter()
+            .find(|f| f.as_str().map(|s| s.starts_with(prefix)).unwrap_or(false))
+            .and_then(|f| f.as_str().map(|s| s.to_string()))
     }
 
     pub async fn http_call(

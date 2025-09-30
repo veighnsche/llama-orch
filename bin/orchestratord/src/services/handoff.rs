@@ -1,12 +1,26 @@
 //! Handoff autobind watcher — monitors engine-provisioner handoff files and auto-binds adapters.
 //!
+//! ⚠️ HOME_PROFILE ONLY - CLOUD_PROFILE LIMITATION ⚠️
+//!
+//! This implementation assumes orchestratord and engine-provisioner share a filesystem.
+//! This ONLY works for HOME_PROFILE (single machine deployment).
+//!
+//! For CLOUD_PROFILE (distributed deployment), the handoff watcher MUST be owned by
+//! pool-managerd (which runs on the same machine as engine-provisioner). orchestratord
+//! will poll pool-managerd via HTTP instead of watching the filesystem directly.
+//!
+//! Status: Acceptable for v0.1.0 (HOME_PROFILE only)
+//! Migration: v0.2.0 will move watcher to pool-managerd (ETA: 2 weeks)
+//! See: ../HANDOFF_WATCHER_ARCHITECTURE_ISSUE.md
+//! See: ../HANDOFF_WATCHER_RESOLUTION.md
+//!
+//! TODO[CLOUD_PROFILE]: Remove this watcher or make it HOME_PROFILE only
+//! TODO[CLOUD_PROFILE]: Implement HTTP polling of pool-managerd
 //! TODO[ORCHD-HANDOFF-AUTOBIND-0002]: File watcher for `.runtime/engines/*.json` (handoffs written by engine-provisioner).
 //! For each handoff: bind `llamacpp-http` adapter using `url`, associate `pool_id`/`replica_id`.
-//! Update `state.pool_manager` via Owner E API to mark Ready and set engine meta.
 
 use crate::state::AppState;
 use std::path::PathBuf;
-use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{debug, info, warn};
@@ -64,8 +78,7 @@ pub fn spawn_handoff_autobind_watcher(state: AppState) {
     });
 }
 
-/// Process a single handoff JSON file: parse, bind adapter, update pool registry.
-async fn process_handoff_file(state: &AppState, path: &PathBuf) -> anyhow::Result<()> {
+pub async fn process_handoff_file(state: &AppState, path: &PathBuf) -> anyhow::Result<()> {
     let content = std::fs::read_to_string(path)?;
     let handoff: serde_json::Value = serde_json::from_str(&content)?;
 
@@ -114,22 +127,20 @@ async fn process_handoff_file(state: &AppState, path: &PathBuf) -> anyhow::Resul
 
     #[cfg(not(feature = "llamacpp-adapter"))]
     {
-        warn!(
+        debug!(
             target: "orchestratord::handoff",
             "llamacpp-adapter feature not enabled, skipping bind"
         );
     }
 
-    // Update pool registry with readiness
-    {
-        let mut reg = state.pool_manager.lock().map_err(|_| anyhow::anyhow!("lock"))?;
-        reg.register_ready_from_handoff(pool_id, &handoff);
-        info!(
-            target: "orchestratord::handoff",
-            pool_id=%pool_id,
-            "pool marked ready in registry"
-        );
-    }
+    // pool-managerd daemon now manages its own registry
+    // No need to update from orchestratord side
+    info!(
+        target: "orchestratord::handoff",
+        pool_id=%pool_id,
+        replica_id=%replica_id,
+        "handoff processed (daemon manages registry)"
+    );
 
     // Mark as bound
     {

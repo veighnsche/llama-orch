@@ -1,7 +1,6 @@
 use axum::{extract::State, response::IntoResponse, Json};
 use http::{HeaderMap, StatusCode};
 use serde_json::json;
-use std::sync::Arc;
 
 use crate::domain::error::OrchestratorError as ErrO;
 use crate::state::AppState;
@@ -25,14 +24,18 @@ pub async fn get_pool_health(
     state: State<AppState>,
     axum::extract::Path(id): axum::extract::Path<String>,
 ) -> Result<impl IntoResponse, ErrO> {
-    let (live, ready, last_error) = {
-        let reg = state.pool_manager.lock().expect("pool_manager lock");
-        let h = reg
-            .get_health(&id)
-            .unwrap_or(pool_managerd::health::HealthStatus { live: true, ready: true });
-        let e = reg.get_last_error(&id);
-        (h.live, h.ready, e)
-    };
+    // Call pool-managerd HTTP API
+    let status = state.pool_manager.get_pool_status(&id).await
+        .unwrap_or_else(|_| crate::clients::pool_manager::PoolStatus {
+            pool_id: id.clone(),
+            live: false,
+            ready: false,
+            active_leases: 0,
+            slots_total: 0,
+            slots_free: 0,
+        });
+    let (live, ready) = (status.live, status.ready);
+    let last_error: Option<String> = None; // TODO: Get from daemon if needed
     let draining = {
         let d = state.draining_pools.lock().unwrap();
         *d.get(&id).unwrap_or(&false)

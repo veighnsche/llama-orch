@@ -11,7 +11,7 @@ pub async fn given_no_api_key(world: &mut World) {
 #[then(regex = r"^I receive 401 Unauthorized$")]
 pub async fn then_401_unauthorized(world: &mut World) {
     // Drive a simple endpoint
-    let _ = world.http_call(Method::GET, "/v1/capabilities", None).await;
+    let _ = world.http_call(Method::GET, "/v2/meta/capabilities", None).await;
     assert_eq!(world.last_status, Some(http::StatusCode::UNAUTHORIZED));
 }
 
@@ -23,7 +23,7 @@ pub async fn given_invalid_api_key(world: &mut World) {
 
 #[then(regex = r"^I receive 403 Forbidden$")]
 pub async fn then_403_forbidden(world: &mut World) {
-    let _ = world.http_call(Method::GET, "/v1/capabilities", None).await;
+    let _ = world.http_call(Method::GET, "/v2/meta/capabilities", None).await;
     assert_eq!(world.last_status, Some(http::StatusCode::FORBIDDEN));
     // Reset for subsequent steps
     world.api_key = Some("valid".into());

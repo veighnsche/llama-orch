@@ -41,7 +41,7 @@ pub async fn when_trigger_pool_unavailable(world: &mut World) {
         "max_tokens": 1,
         "deadline_ms": 1000
     });
-    let _ = world.http_call(Method::POST, "/v1/tasks", Some(body)).await;
+    let _ = world.http_call(Method::POST, "/v2/tasks", Some(body)).await;
 }
 
 #[then(regex = r"^I receive 503 with correlation id and error envelope code POOL_UNAVAILABLE$")]
@@ -67,7 +67,7 @@ pub async fn when_trigger_internal_error(world: &mut World) {
         "deadline_ms": 1000,
         "prompt": "cause-internal" // sentinel
     });
-    let _ = world.http_call(Method::POST, "/v1/tasks", Some(body)).await;
+    let _ = world.http_call(Method::POST, "/v2/tasks", Some(body)).await;
 }
 
 #[then(regex = r"^I receive 500 with correlation id and error envelope code INTERNAL$")]

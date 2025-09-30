@@ -1,6 +1,5 @@
 use crate::{app::router::build_router, state::AppState};
 use axum::Router;
-use std::sync::Arc;
 
 pub fn build_app() -> Router {
     let state = AppState::new();

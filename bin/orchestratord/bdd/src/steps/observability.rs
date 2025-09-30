@@ -46,6 +46,32 @@ pub async fn then_logs_do_not_contain_secrets_or_api_keys(world: &mut World) {
 }
 
 // Placeholders used by skeleton features and basic.feature
+#[given(regex = r"^a metrics endpoint$")]
+pub async fn given_metrics_endpoint(_world: &mut World) {
+    // Metrics endpoint always exists
+}
+
+#[given(regex = r"^tasks have been enqueued$")]
+pub async fn given_tasks_enqueued(world: &mut World) {
+    // Enqueue a few tasks to generate metrics
+    use serde_json::json;
+    
+    for i in 0..3 {
+        let body = json!({
+            "task_id": format!("t-metrics-{}", i),
+            "session_id": "s-0",
+            "workload": "completion",
+            "model_ref": "model0",
+            "engine": "llamacpp",
+            "ctx": 0,
+            "priority": "interactive",
+            "max_tokens": 1,
+            "deadline_ms": 1000,
+        });
+        let _ = world.http_call(Method::POST, "/v2/tasks", Some(body)).await;
+    }
+}
+
 #[given(regex = r"^noop$")]
 pub async fn given_noop(_world: &mut World) {}
 

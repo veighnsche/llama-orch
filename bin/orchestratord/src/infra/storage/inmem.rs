@@ -10,8 +10,8 @@ pub struct InMemStore {
 
 impl ArtifactStore for InMemStore {
     fn put(&self, doc: Artifact) -> anyhow::Result<ArtifactId> {
-        // Content-address via SHA-256 to match spec and fs backend behavior
-        let id = format!("sha256:{}", sha256::digest(doc.to_string()));
+        // Content-address via SHA-256 (pure hash, 64 hex chars)
+        let id = sha256::digest(doc.to_string());
         self.inner.lock().unwrap().insert(id.clone(), doc);
         Ok(id)
     }

@@ -250,7 +250,7 @@ pub async fn when_enqueue_beyond_capacity(world: &mut World) {
         // Sentinel to trigger 429 in handler glue
         "expected_tokens": 1000000
     });
-    let _ = world.http_call(Method::POST, "/v1/tasks", Some(body)).await;
+    let _ = world.http_call(Method::POST, "/v2/tasks", Some(body)).await;
 }
 
 #[then(regex = r"^I receive 429 with headers Retry-After and X-Backoff-Ms and correlation id$")]
