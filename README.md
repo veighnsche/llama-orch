@@ -153,23 +153,176 @@ LLORCH_API_TOKEN=<same-token>
 
 ## Architecture
 
-### High-Level Components
+### System Flow Diagrams
 
+#### HOME_PROFILE: Single Machine Flow
+
+```mermaid
+flowchart TB
+    Client[Client] -->|POST /v2/tasks| OD[orchestratord]
+    Client -->|GET /v2/tasks/:id/events| OD
+    
+    subgraph "Single Machine"
+        OD -->|enqueue| OC[orchestrator-core<br/>Queue]
+        OD -->|check health| PM[pool-managerd<br/>Registry]
+        OD -->|dispatch| AH[adapter-host]
+        
+        PM -->|manages| EP[engine-provisioner<br/>llama.cpp]
+        EP -->|writes| HF[".runtime/engines/<br/>handoff.json"]
+        HF -.->|watches| HW[handoff watcher<br/>orchestratord]
+        HW -->|auto-bind| AH
+        
+        AH -->|invoke| LA[llamacpp-http<br/>adapter]
+        LA -->|HTTP| ENG[llama.cpp<br/>server]
+        ENG -->|SSE tokens| LA
+        LA -->|SSE frames| OD
+    end
+    
+    OD -->|text/event-stream| Client
+    
+    style OD fill:#e1f5ff
+    style PM fill:#fff4e1
+    style EP fill:#f0f0f0
+    style ENG fill:#e8f5e9
 ```
-┌──────────────────────────────────────────────────────────┐
-│                     orchestratord                        │
-│  HTTP API · Admission · Placement · SSE Streaming        │
-└────────┬─────────────────────────────────────────────────┘
-         │
-         ├─► Admission Queue (orchestrator-core)
-         ├─► Session Service (TTL, budgets, KV tracking)
-         ├─► Catalog (model registry, verification)
-         └─► Adapter Host (bind workers to pools/replicas)
-                   │
-                   ├─► llamacpp-http adapter → llama.cpp server
-                   ├─► vllm-http adapter → vLLM server
-                   ├─► tgi-http adapter → TGI server
-                   └─► mock adapter (testing)
+
+#### CLOUD_PROFILE: Distributed Flow
+
+```mermaid
+flowchart TB
+    Client[Client] -->|POST /v2/tasks| OD[orchestratord<br/>Control Plane]
+    Client -->|GET /v2/tasks/:id/events| OD
+    
+    subgraph "Control Plane Node"
+        OD -->|enqueue| OC[orchestrator-core<br/>Queue]
+        OD -->|check nodes| SR[service-registry<br/>Node Tracking]
+        OD -->|model-aware<br/>placement| PV2[placement_v2<br/>Least-Loaded]
+        OD -->|dispatch via HTTP| AH[adapter-host]
+    end
+    
+    subgraph "GPU Worker Node 1"
+        PM1[pool-managerd] -->|POST /v2/nodes/register| OD
+        PM1 -->|POST /v2/nodes/:id/heartbeat| SR
+        PM1 -->|manages| EP1[engine-provisioner]
+        EP1 -->|writes local| HF1[handoff.json]
+        HF1 -.->|watches locally| HW1[handoff-watcher<br/>libs/gpu-node]
+        HW1 -->|updates| PM1
+        EP1 -->|spawns| ENG1[llama.cpp<br/>GPU 0]
+    end
+    
+    subgraph "GPU Worker Node 2"
+        PM2[pool-managerd] -->|POST /v2/nodes/register| OD
+        PM2 -->|POST /v2/nodes/:id/heartbeat| SR
+        PM2 -->|manages| EP2[engine-provisioner]
+        EP2 -->|writes local| HF2[handoff.json]
+        HF2 -.->|watches locally| HW2[handoff-watcher]
+        HW2 -->|updates| PM2
+        EP2 -->|spawns| ENG2[llama.cpp<br/>GPU 1]
+    end
+    
+    AH -->|HTTP + Bearer| ENG1
+    AH -->|HTTP + Bearer| ENG2
+    ENG1 -->|SSE tokens| AH
+    ENG2 -->|SSE tokens| AH
+    AH -->|relay SSE| OD
+    OD -->|text/event-stream| Client
+    
+    style OD fill:#e1f5ff
+    style SR fill:#e1f5ff
+    style PM1 fill:#fff4e1
+    style PM2 fill:#fff4e1
+    style ENG1 fill:#e8f5e9
+    style ENG2 fill:#e8f5e9
+```
+
+### Binaries and Libraries Dependency Map
+
+```mermaid
+graph TB
+    subgraph "Binaries"
+        ORCHD[bin/orchestratord<br/>HTTP API · SSE · Placement]
+        POOLD[bin/pool-managerd<br/>Pool Lifecycle · Registry]
+    end
+    
+    subgraph "Core Libraries"
+        ORCHCORE[libs/orchestrator-core<br/>Queue · Admission]
+        CATALOG[libs/catalog-core<br/>Model Registry]
+        ADHOST[libs/adapter-host<br/>Adapter Registry]
+    end
+    
+    subgraph "Cloud Profile Libraries"
+        SREG[libs/control-plane/<br/>service-registry<br/>Node Tracking]
+        NODEREG[libs/gpu-node/<br/>node-registration]
+        HANDOFF[libs/gpu-node/<br/>handoff-watcher]
+        POOLTYPES[libs/shared/<br/>pool-registry-types]
+    end
+    
+    subgraph "Worker Adapters"
+        ADAPIAPI[libs/worker-adapters/<br/>adapter-api<br/>Trait]
+        LLAMA[libs/worker-adapters/<br/>llamacpp-http]
+        VLLM[libs/worker-adapters/<br/>vllm-http]
+        TGI[libs/worker-adapters/<br/>tgi-http]
+        MOCK[libs/worker-adapters/<br/>mock]
+        HTTPUTIL[libs/worker-adapters/<br/>http-util]
+    end
+    
+    subgraph "Provisioners"
+        ENGPROV[libs/provisioners/<br/>engine-provisioner]
+        MODPROV[libs/provisioners/<br/>model-provisioner]
+    end
+    
+    subgraph "Cross-Cutting"
+        AUTH[libs/auth-min<br/>Bearer Token]
+        NARR[libs/observability/<br/>narration-core]
+        APITYPES[contracts/api-types]
+    end
+    
+    %% orchestratord dependencies
+    ORCHD --> ORCHCORE
+    ORCHD --> CATALOG
+    ORCHD --> ADHOST
+    ORCHD --> SREG
+    ORCHD --> POOLTYPES
+    ORCHD --> AUTH
+    ORCHD --> NARR
+    ORCHD --> APITYPES
+    ORCHD -.->|optional| LLAMA
+    ORCHD -.->|optional| MOCK
+    
+    %% pool-managerd dependencies
+    POOLD --> ENGPROV
+    POOLD --> AUTH
+    POOLD --> POOLTYPES
+    POOLD -.->|cloud profile| NODEREG
+    POOLD -.->|cloud profile| HANDOFF
+    
+    %% adapter-host dependencies
+    ADHOST --> ADAPIAPI
+    
+    %% adapter implementations
+    LLAMA --> ADAPIAPI
+    LLAMA --> HTTPUTIL
+    VLLM --> ADAPIAPI
+    VLLM --> HTTPUTIL
+    TGI --> ADAPIAPI
+    TGI --> HTTPUTIL
+    MOCK --> ADAPIAPI
+    
+    %% provisioner dependencies
+    ENGPROV --> MODPROV
+    MODPROV --> CATALOG
+    
+    %% cloud profile dependencies
+    SREG --> POOLTYPES
+    NODEREG --> POOLTYPES
+    HANDOFF --> POOLTYPES
+    
+    style ORCHD fill:#e1f5ff,stroke:#0288d1,stroke-width:3px
+    style POOLD fill:#fff4e1,stroke:#f57c00,stroke-width:3px
+    style ORCHCORE fill:#f3e5f5
+    style SREG fill:#e8eaf6
+    style LLAMA fill:#e8f5e9
+    style ENGPROV fill:#f0f0f0
 ```
 
 ### Key Libraries
@@ -177,7 +330,7 @@ LLORCH_API_TOKEN=<same-token>
 #### Core Orchestration
 - `orchestrator-core/` — Queue, placement logic, domain types
 - `bin/orchestratord/` — HTTP server, API routes, streaming
-- `libs/pool-managerd/` — Pool lifecycle, readiness, health checks
+- `bin/pool-managerd/` — Pool lifecycle, readiness, health checks (binary + lib)
 - `libs/catalog-core/` — Model catalog, verification, lifecycle states
 
 #### Worker Adapters

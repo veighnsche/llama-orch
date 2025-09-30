@@ -2,18 +2,33 @@
 
 This document audits the happy-path pipeline and lists concrete tasks to pass the e2e-haiku test. Each item references code paths and includes TODO IDs added in code for traceability.
 
-## Happy Path Timeline (expected)
+**Updated for Cloud Profile**: This checklist now reflects both HOME_PROFILE (single-machine) and CLOUD_PROFILE (distributed) architectures.
 
+## Happy Path Timeline (Current)
+
+### HOME_PROFILE (Single Machine)
 0. Config validated at `orchestratord` startup
-1. Client requests `llama-3` on `llama.cpp`
-2. Orchestrator checks pool-manager for an existing ready replica of that model/engine
-2.5. Orchestrator checks catalog for model and engine artifacts readiness
-3. If not present, consult policy to provision
-4. Engine provisioner builds/starts `llama.cpp` (llama-server)
-5. Model provisioner downloads/prepares `llama-3` GGUF
-6. Provisioners notify pool-manager that pool is ready & healthy
-7. Orchestrator binds worker adapter (llamacpp-http) to that pool/replica and dispatches the task
-8. llama.cpp streams tokens via SSE back to user
+1. Client sends `POST /v2/tasks` (enqueue)
+2. Orchestrator checks pool health via local pool-managerd
+3. Orchestrator checks catalog for model availability
+4. If not ready, orchestrator can trigger provisioning (policy-gated)
+5. pool-managerd runs engine-provisioner to build/start llama.cpp
+6. engine-provisioner writes handoff file to shared `.runtime/engines/`
+7. orchestratord handoff watcher detects file and auto-binds llamacpp-http adapter
+8. Orchestrator dispatches task to adapter when slot available
+9. Adapter streams tokens via SSE: `started → token → metrics → end`
+
+### CLOUD_PROFILE (Distributed)
+0. Control plane (orchestratord) starts, validates config
+1. GPU worker (pool-managerd) registers via `POST /v2/nodes/register` with Bearer token
+2. pool-managerd sends periodic heartbeats (`POST /v2/nodes/{id}/heartbeat`) with pool status
+3. Client sends `POST /v2/tasks` to orchestratord
+4. orchestratord checks service registry for healthy nodes with model availability
+5. orchestratord performs model-aware placement (least-loaded, model filter)
+6. orchestratord dispatches to pool via HTTP (adapter binds to remote pool URL)
+7. On GPU worker: pool-managerd watches local handoff files, manages engine lifecycle
+8. Adapter (on orchestratord or worker) streams tokens via SSE back through orchestratord
+9. orchestratord relays SSE stream to client
 
 ## Client Call Sequence (spec-confirmed, v2)
 
@@ -73,17 +88,20 @@ This document audits the happy-path pipeline and lists concrete tasks to pass th
   - Code: `libs/provisioners/model-provisioner/src/lib.rs`.
 
 - 6 — Provisioners notify pool-manager
-  - Current: `pool-managerd::registry` has `register_ready_from_handoff()` method. Handoff autobind watcher implemented.
-  - Gap: Engine-provisioner doesn't call pool-manager directly, relies on handoff file + watcher.
-  - Code: `libs/provisioners/engine-provisioner/.../llamacpp/mod.rs`, `libs/pool-managerd/src/registry.rs`, `bin/orchestratord/src/services/handoff.rs`.
-  - TODO: ENGINE-PROV-POOL-NOTIFY-0003.
-  - Status: ✅ Handoff autobind watcher done (ORCHD-HANDOFF-AUTOBIND-0002), ⚠️ direct notification optional
+  - **HOME_PROFILE**: Handoff autobind watcher in orchestratord monitors `.runtime/engines/*.json`
+  - **CLOUD_PROFILE**: Handoff watcher moved to pool-managerd (local filesystem watch)
+  - Current: `bin/orchestratord/src/services/handoff.rs` (HOME_PROFILE only, deprecated for CLOUD_PROFILE)
+  - Current: pool-managerd watches handoffs locally, reports readiness via heartbeats
+  - Code: `bin/orchestratord/src/services/handoff.rs` (HOME_PROFILE), `libs/gpu-node/handoff-watcher/` (CLOUD_PROFILE)
+  - Status: ✅ HOME_PROFILE handoff watcher complete, ✅ CLOUD_PROFILE heartbeat reporting complete
 
 - 7 — Orchestrator binds adapter and dispatches
-  - Current: Adapter binding via feature `llamacpp-adapter` + env, OR auto-bind from handoff files (watcher implemented).
-  - Code: `bin/orchestratord/src/app/bootstrap.rs`, `bin/orchestratord/src/services/handoff.rs`, `bin/orchestratord/src/services/placement.rs`.
-  - TODOs: ORCHD-HANDOFF-AUTOBIND-0002, placement implementation.
-  - Status: ✅ Handoff autobind done, ⚠️ placement policy & pin override enforcement missing
+  - **HOME_PROFILE**: Adapter binding via handoff watcher auto-bind
+  - **CLOUD_PROFILE**: Adapter binds to remote pool URL from service registry
+  - Current: Model-aware placement in `bin/orchestratord/src/services/placement_v2.rs`
+  - Current: Placement strategies: round-robin, least-loaded (filters by model availability)
+  - Code: `bin/orchestratord/src/app/bootstrap.rs`, `bin/orchestratord/src/services/handoff.rs` (HOME_PROFILE), `bin/orchestratord/src/services/placement_v2.rs`
+  - Status: ✅ Handoff autobind done (HOME_PROFILE), ✅ Model-aware placement done (CLOUD_PROFILE), ⚠️ pin override enforcement missing
 
 - 8 — Streaming tokens SSE
   - Current: `services/streaming.rs` tries adapter with health gate, falls back to deterministic SSE. Request built from admission snapshot.
@@ -155,11 +173,23 @@ Verification commands:
 - Security: worker registration with scoped tokens, rotate tokens, avoid env var leaks in logs.
 - Test harness: add assertion on tokens_out delta and started/token/end order for real engine runs.
 
-## Cross-References
+## Cloud Profile Architecture References
 
+**HOME_PROFILE (Single Machine)**:
 - Orchestrator router: `bin/orchestratord/src/app/router.rs`
+- Handoff watcher: `bin/orchestratord/src/services/handoff.rs` (feature-gated)
 - Streaming: `bin/orchestratord/src/services/streaming.rs`
-- Pool registry: `libs/pool-managerd/src/registry.rs`
+- Pool registry: `bin/pool-managerd/src/core/registry.rs`
+
+**CLOUD_PROFILE (Distributed)**:
+- Node endpoints: `bin/orchestratord/src/api/nodes.rs` (register, heartbeat, deregister)
+- Service registry: `libs/control-plane/service-registry/` (node tracking, health)
+- Node registration: `libs/gpu-node/node-registration/` (GPU worker registration)
+- Handoff watcher: `libs/gpu-node/handoff-watcher/` (local filesystem watch on GPU node)
+- Placement v2: `bin/orchestratord/src/services/placement_v2.rs` (model-aware, least-loaded)
+- Catalog availability: `bin/orchestratord/src/api/catalog_availability.rs`
+
+**Common**:
 - Engine provisioning: `libs/provisioners/engine-provisioner/src/providers/llamacpp/mod.rs`
 - Model provisioning: `libs/provisioners/model-provisioner/src/lib.rs`
 - Worker adapter: `libs/worker-adapters/llamacpp-http/src/lib.rs`
