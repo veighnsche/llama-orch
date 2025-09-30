@@ -2,12 +2,15 @@
 //! What are modular pieces that are reusable?
 
 use anyhow::{anyhow, Context, Result};
+use std::fs::OpenOptions;
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::time::Duration;
 
 use crate::plan::{Plan, PlanStep};
 use crate::util::{
-    cmd, cmd_in, default_cache_dir, default_models_cache, default_run_dir, ok_status,
+    cmd, cmd_in, default_cache_dir, default_models_cache, default_run_dir, ensure_flag,
+    ensure_flag_pair, http_ok, ok_status, select_listen_port, wait_for_health, write_handoff_file,
 };
 use crate::{cfg, EngineProvisioner};
 
@@ -235,29 +238,89 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
             .with_context(|| format!("ensuring model present for ref {}", model_ref))?;
         let model_path = resolved.local_path;
 
-        // Spawn server process
+        // Spawn server process with deterministic flags and port selection
         let pid_dir = default_run_dir();
         std::fs::create_dir_all(&pid_dir).ok();
         let pid_file = pid_dir.join(format!("{}.pid", pool.id));
 
-        let mut cmdline = Command::new(server_bin);
+        let preferred_port = prov.ports.as_ref().and_then(|v| v.first().copied()).unwrap_or(8080);
+        let port = select_listen_port(preferred_port);
+
+        let mut cmdline = Command::new(&server_bin);
         cmdline.arg("--model").arg(&model_path).arg("--host").arg("127.0.0.1");
-        let port = prov.ports.as_ref().and_then(|v| v.first().copied()).unwrap_or(8080);
         cmdline.arg("--port").arg(port.to_string());
+
         // Normalize legacy flags and CPU/GPU expectations
+        let mut applied_flags: Vec<String> = Vec::new();
         if let Some(flags) = &prov.flags {
             let norm = normalize_llamacpp_flags(flags, gpu_enabled);
             for f in norm {
-                cmdline.arg(f);
+                applied_flags.push(f);
             }
         }
+        // Enforce deterministic defaults for tests (OwnerC-DET-FLAGS)
+        ensure_flag_pair(&mut applied_flags, "--parallel", "1");
+        ensure_flag(&mut applied_flags, "--no-cont-batching");
+        ensure_flag(&mut applied_flags, "--no-webui");
+        ensure_flag(&mut applied_flags, "--metrics");
+        for f in &applied_flags { cmdline.arg(f); }
 
-        let child = cmdline
+        // Capture stdout/stderr to log file
+        let run_dir = default_run_dir();
+        std::fs::create_dir_all(&run_dir).ok();
+        let log_path = run_dir.join(format!("llamacpp-{}.log", pool.id));
+        let log = OpenOptions::new().create(true).append(true).open(&log_path)
+            .with_context(|| format!("open log file {}", log_path.display()))?;
+        let log_err = OpenOptions::new().create(true).append(true).open(&log_path)
+            .with_context(|| format!("open log file {}", log_path.display()))?;
+        cmdline.stdout(Stdio::from(log));
+        cmdline.stderr(Stdio::from(log_err));
+
+        let mut child = cmdline
             .spawn()
             .with_context(|| format!("spawning llama-server for pool {}", pool.id))?;
         std::fs::write(&pid_file, child.id().to_string()).ok();
         println!("spawned llama-server pid={} (pool={})", child.id(), pool.id);
-        Ok(())
+
+        // Readiness/health wait (OwnerC-HEALTH)
+        let url = format!("http://127.0.0.1:{}", port);
+        match wait_for_health("127.0.0.1", port, Duration::from_secs(120)) {
+            Ok(()) => {
+                // Metrics sanity (OwnerC-METRICS)
+                if !http_ok("127.0.0.1", port, "/metrics").unwrap_or(false) {
+                    // Not fatal for MVP if server exposes metrics lazily; warn via stderr
+                    eprintln!("warning: /metrics not reachable at {} (flag --metrics set)", url);
+                }
+                // Prefer server-provided version when available
+                let engine_version = try_fetch_engine_version("127.0.0.1", port)
+                    .unwrap_or_else(|| {
+                        format!(
+                            "llamacpp-source:{}{}",
+                            src.r#ref,
+                            if gpu_enabled { "-cuda" } else { "-cpu" }
+                        )
+                    });
+                let handoff = serde_json::json!({
+                    "engine": "llamacpp",
+                    "engine_version": engine_version,
+                    "provisioning_mode": "source",
+                    "url": url,
+                    "pool_id": pool.id,
+                    "replica_id": "r0",
+                    "model": { "id": model_ref, "path": model_path },
+                    "flags": applied_flags,
+                });
+                let handoff_path = write_handoff_file("llamacpp.json", &handoff)?;
+                println!("wrote handoff {}", handoff_path.display());
+                Ok(())
+            }
+            Err(e) => {
+                // Clean up child and pid on failure
+                let _ = child.kill();
+                let _ = std::fs::remove_file(&pid_file);
+                Err(e)
+            }
+        }
     }
 }
 
@@ -383,6 +446,36 @@ fn find_compat_host_compiler() -> Option<(std::path::PathBuf, std::path::PathBuf
             let cxx_name = format!("clang++{}", ver);
             let cxx = which::which(&cxx_name).unwrap_or_else(|_| cc.with_file_name(cxx_name));
             return Some((cc, cxx));
+        }
+    }
+    None
+}
+
+fn try_fetch_engine_version(host: &str, port: u16) -> Option<String> {
+    // Best-effort: GET /version and parse JSON body for version-like fields.
+    use std::net::TcpStream;
+    let addr = format!("{}:{}", host, port);
+    let mut stream = TcpStream::connect(addr).ok()?;
+    let req = format!(
+        "GET /version HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n",
+        host
+    );
+    let _ = std::io::Write::write_all(&mut stream, req.as_bytes());
+    let mut buf = Vec::new();
+    let _ = std::io::Read::read_to_end(&mut stream, &mut buf);
+    let text = String::from_utf8_lossy(&buf);
+    if let Some(idx) = text.find("\r\n\r\n") {
+        let body = &text[idx + 4..];
+        if let Ok(v) = serde_json::from_str::<serde_json::Value>(body) {
+            if let Some(s) = v.get("version").and_then(|x| x.as_str()) {
+                return Some(s.to_string());
+            }
+            if let Some(s) = v.get("git_describe").and_then(|x| x.as_str()) {
+                return Some(s.to_string());
+            }
+            if let Some(s) = v.get("build").and_then(|x| x.as_str()) {
+                return Some(s.to_string());
+            }
         }
     }
     None

@@ -23,10 +23,13 @@ path = "src/lib.rs"
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
 tracing = { workspace = true }
 contracts-config-schema = { path = "../../../contracts/config-schema" }
 which = "6"
 model-provisioner = { path = "../model-provisioner" }
+clap = { workspace = true, features = ["derive"] }
 
 [dev-dependencies]
 serde_yaml = { workspace = true }
