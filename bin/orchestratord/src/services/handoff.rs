@@ -63,12 +63,12 @@ pub fn spawn_handoff_autobind_watcher(state: AppState) {
     });
 }
 
-async fn process_handoff_file(state: &AppState, path: &PathBuf) -> anyhow::Result<()> {
+pub async fn process_handoff_file(state: &AppState, path: &PathBuf) -> anyhow::Result<()> {
     let content = std::fs::read_to_string(path)?;
     let handoff: serde_json::Value = serde_json::from_str(&content)?;
 
     // Extract required fields
-    let _url = handoff
+    let url = handoff
         .get("url")
         .and_then(|v| v.as_str())
         .ok_or_else(|| anyhow::anyhow!("missing 'url' in handoff"))?;
