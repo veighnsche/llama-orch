@@ -4,6 +4,14 @@ use serde_yaml;
 use std::{fs, process::Command};
 use crate::util::{repo_root, write_if_changed};
 
+pub fn regen_all() -> Result<()> {
+    regen_openapi()?;
+    regen_schema()?;
+    spec_extract()?;
+    println!("regen: OK");
+    Ok(())
+}
+
 pub fn spec_extract() -> Result<()> {
     let status = Command::new("cargo")
         .arg("run")
