@@ -57,15 +57,30 @@ impl PlacementService {
     /// CLOUD_PROFILE: Queries ServiceRegistry for online nodes and their pools
     /// HOME_PROFILE: Falls back to local adapter_host
     pub fn select_pool(&self, state: &AppState) -> Option<PlacementDecisionV2> {
+        self.select_pool_with_model(state, None)
+    }
+
+    /// Select best pool for task execution with model requirement
+    ///
+    /// If model_id is specified, only considers pools that have the model available.
+    pub fn select_pool_with_model(
+        &self,
+        state: &AppState,
+        model_id: Option<&str>,
+    ) -> Option<PlacementDecisionV2> {
         if state.cloud_profile_enabled() {
-            self.select_pool_cloud(state)
+            self.select_pool_cloud_with_model(state, model_id)
         } else {
             self.select_pool_home(state)
         }
     }
 
-    /// CLOUD_PROFILE: Select from registered nodes
-    fn select_pool_cloud(&self, state: &AppState) -> Option<PlacementDecisionV2> {
+    /// CLOUD_PROFILE: Select from registered nodes with optional model filter
+    fn select_pool_cloud_with_model(
+        &self,
+        state: &AppState,
+        model_id: Option<&str>,
+    ) -> Option<PlacementDecisionV2> {
         let registry = state.service_registry();
         let nodes = registry.get_online_nodes();
 
@@ -114,8 +129,21 @@ impl PlacementService {
         }
 
         // Filter to ready, non-draining pools with free slots
-        let available: Vec<_> =
+        let mut available: Vec<_> =
             candidates.into_iter().filter(|(_, _, snapshot)| snapshot.is_available()).collect();
+
+        // If model_id specified, filter to pools that have the model
+        if let Some(model) = model_id {
+            available.retain(|(_, _, snapshot)| snapshot.models_available.contains(&model.to_string()));
+
+            if available.is_empty() {
+                tracing::warn!(
+                    model_id = %model,
+                    "No pools have the required model available"
+                );
+                return None;
+            }
+        }
 
         if available.is_empty() {
             tracing::warn!("No pools with available slots");

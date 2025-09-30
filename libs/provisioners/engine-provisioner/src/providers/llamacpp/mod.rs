@@ -257,7 +257,9 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
                         pool_id: Some(pool.id.clone()),
                         ..Default::default()
                     });
-                    return Err(anyhow!("CUDA configure failed even with host compiler hint; GPU-only enforcement"));
+                    return Err(anyhow!(
+                        "CUDA configure failed even with host compiler hint; GPU-only enforcement"
+                    ));
                 }
             } else {
                 return Err(anyhow!("CUDA configure failed and no compatible host compiler found; GPU-only enforcement"));
@@ -270,7 +272,8 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
 
         let jobs = std::thread::available_parallelism()
             .map(|n| n.get().to_string())
-            .unwrap_or_else(|_| "4".to_string());        narrate(NarrationFields {
+            .unwrap_or_else(|_| "4".to_string());
+        narrate(NarrationFields {
             actor: "engine-provisioner",
             action: "cmake-build",
             target: pool.id.clone(),
@@ -282,7 +285,7 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
             .args(["--build", build_dir.to_string_lossy().as_ref(), "-j", &jobs])
             .status()
             .context("cmake build")
-            .and_then(ok_status)?;>>>>>>> main
+            .and_then(ok_status)?;
 
         let server_bin = build_dir.join("bin").join("llama-server");
         if !server_bin.exists() {
@@ -338,11 +341,16 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
             actor: "engine-provisioner",
             action: "complete",
             target: pool.id.clone(),
-            human: format!("Engine prepared: {} at port {}, model: {}", engine_version, port, model_path.display()),
+            human: format!(
+                "Engine prepared: {} at port {}, model: {}",
+                engine_version,
+                port,
+                model_path.display()
+            ),
             pool_id: Some(pool.id.clone()),
             ..Default::default()
         });
-        
+
         Ok(crate::PreparedEngine {
             binary_path: server_bin,
             flags: applied_flags,

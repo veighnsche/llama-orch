@@ -4,7 +4,7 @@
 
 use anyhow::{Context, Result};
 use pool_registry_types::NodeCapabilities;
-use service_registry::{RegisterRequest, HeartbeatRequest, HeartbeatPoolStatus};
+use service_registry::{HeartbeatPoolStatus, HeartbeatRequest, RegisterRequest};
 use std::time::Duration;
 use tokio::time::interval;
 use tracing::{info, warn};
@@ -35,10 +35,8 @@ pub struct NodeRegistration {
 impl NodeRegistration {
     /// Create a new node registration service
     pub fn new(config: NodeRegistrationConfig) -> Self {
-        let client = RegistrationClient::new(
-            config.orchestratord_url.clone(),
-            config.api_token.clone(),
-        );
+        let client =
+            RegistrationClient::new(config.orchestratord_url.clone(), config.api_token.clone());
 
         Self { config, client }
     }
@@ -60,8 +58,7 @@ impl NodeRegistration {
             version: Some(env!("CARGO_PKG_VERSION").to_string()),
         };
 
-        self.client.register(request).await
-            .context("Failed to register with orchestratord")?;
+        self.client.register(request).await.context("Failed to register with orchestratord")?;
 
         info!(node_id = %self.config.node_id, "Successfully registered");
         Ok(())
@@ -74,8 +71,7 @@ impl NodeRegistration {
             "Deregistering from control plane"
         );
 
-        self.client.deregister(&self.config.node_id).await
-            .context("Failed to deregister")?;
+        self.client.deregister(&self.config.node_id).await.context("Failed to deregister")?;
 
         info!(node_id = %self.config.node_id, "Successfully deregistered");
         Ok(())
@@ -99,10 +95,8 @@ impl NodeRegistration {
                 ticker.tick().await;
 
                 let pools = get_pool_status();
-                let request = HeartbeatRequest {
-                    timestamp: chrono::Utc::now().to_rfc3339(),
-                    pools,
-                };
+                let request =
+                    HeartbeatRequest { timestamp: chrono::Utc::now().to_rfc3339(), pools };
 
                 match self.client.heartbeat(&self.config.node_id, request).await {
                     Ok(_) => {

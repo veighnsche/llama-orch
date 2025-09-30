@@ -131,6 +131,11 @@ pub async fn register_node(
     match state.service_registry().register(node) {
         Ok(_) => {
             info!(node_id = %req.node_id, "Node registered successfully");
+            // Emit metric for successful registration
+            crate::metrics::inc_counter(
+                "orchd_node_registrations_total",
+                &[("outcome", "success")],
+            );
             (
                 StatusCode::OK,
                 Json(RegisterResponse {
@@ -142,6 +147,8 @@ pub async fn register_node(
         }
         Err(e) => {
             warn!(node_id = %req.node_id, error = %e, "Node registration failed");
+            // Emit metric for failed registration
+            crate::metrics::inc_counter("orchd_node_registrations_total", &[("outcome", "error")]);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(RegisterResponse {
@@ -185,6 +192,10 @@ pub async fn heartbeat_node(
 ) -> impl IntoResponse {
     // Validate Bearer token
     if !validate_token(&headers, &state) {
+        crate::metrics::inc_counter(
+            "orchd_node_heartbeats_total",
+            &[("node_id", &node_id), ("outcome", "unauthorized")],
+        );
         return (
             StatusCode::UNAUTHORIZED,
             Json(HeartbeatResponse { success: false, next_heartbeat_ms: 10_000 }),
@@ -194,6 +205,10 @@ pub async fn heartbeat_node(
     tracing::debug!(node_id = %node_id, pools_count = req.pools.len(), "Heartbeat received");
 
     if !state.cloud_profile_enabled() {
+        crate::metrics::inc_counter(
+            "orchd_node_heartbeats_total",
+            &[("node_id", &node_id), ("outcome", "cloud_disabled")],
+        );
         return (
             StatusCode::SERVICE_UNAVAILABLE,
             Json(HeartbeatResponse { success: false, next_heartbeat_ms: 10_000 }),
@@ -221,10 +236,19 @@ pub async fn heartbeat_node(
 
             state.service_registry().update_pool_status(&node_id, pool_snapshots);
 
+            // Emit metric for successful heartbeat
+            crate::metrics::inc_counter(
+                "orchd_node_heartbeats_total",
+                &[("node_id", &node_id), ("outcome", "success")],
+            );
             (StatusCode::OK, Json(HeartbeatResponse { success: true, next_heartbeat_ms: 10_000 }))
         }
         Err(e) => {
             warn!(node_id = %node_id, error = %e, "Heartbeat failed");
+            crate::metrics::inc_counter(
+                "orchd_node_heartbeats_total",
+                &[("node_id", &node_id), ("outcome", "error")],
+            );
             (
                 StatusCode::NOT_FOUND,
                 Json(HeartbeatResponse { success: false, next_heartbeat_ms: 10_000 }),
@@ -255,10 +279,18 @@ pub async fn deregister_node(
     match state.service_registry().deregister(&node_id) {
         Ok(_) => {
             info!(node_id = %node_id, "Node deregistered successfully");
+            crate::metrics::inc_counter(
+                "orchd_node_deregistrations_total",
+                &[("outcome", "success")],
+            );
             StatusCode::NO_CONTENT
         }
         Err(e) => {
             warn!(node_id = %node_id, error = %e, "Deregistration failed");
+            crate::metrics::inc_counter(
+                "orchd_node_deregistrations_total",
+                &[("outcome", "error")],
+            );
             StatusCode::NOT_FOUND
         }
     }

@@ -1,0 +1,145 @@
+groups:
+  - name: cloud_profile
+    interval: 30s
+    rules:
+      # Node availability alerts
+      - alert: NoNodesOnline
+        expr: sum(orchd_nodes_online) == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: cloud-profile
+        annotations:
+          summary: "No GPU nodes are online"
+          description: "All GPU nodes have gone offline. No tasks can be processed."
+          runbook: "docs/runbooks/CLOUD_PROFILE_INCIDENTS.md#no-nodes-online"
+
+      - alert: LowNodeAvailability
+        expr: sum(orchd_nodes_online) < 2
+        for: 5m
+        labels:
+          severity: warning
+          component: cloud-profile
+        annotations:
+          summary: "Low node availability (< 2 nodes)"
+          description: "Only {{ $value }} GPU node(s) online. Reduced capacity and no redundancy."
+          runbook: "docs/runbooks/CLOUD_PROFILE_INCIDENTS.md#low-node-availability"
+
+      # Pool availability alerts
+      - alert: NoPoolsAvailable
+        expr: sum(orchd_pools_available) == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: cloud-profile
+        annotations:
+          summary: "No pools available for task placement"
+          description: "All pools are unavailable. Tasks cannot be dispatched."
+          runbook: "docs/runbooks/CLOUD_PROFILE_INCIDENTS.md#no-pools-available"
+
+      - alert: LowPoolAvailability
+        expr: sum(orchd_pools_available) < 2
+        for: 5m
+        labels:
+          severity: warning
+          component: cloud-profile
+        annotations:
+          summary: "Low pool availability (< 2 pools)"
+          description: "Only {{ $value }} pool(s) available. Limited capacity."
+          runbook: "docs/runbooks/CLOUD_PROFILE_INCIDENTS.md#low-pool-availability"
+
+      # Health check performance alerts
+      - alert: HighHealthCheckLatency
+        expr: histogram_quantile(0.95, rate(orchd_pool_health_check_duration_ms_bucket[5m])) > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: cloud-profile
+        annotations:
+          summary: "High pool health check latency (P95 > 100ms)"
+          description: "Pool {{ $labels.pool_id }} health check P95 latency is {{ $value }}ms."
+          runbook: "docs/runbooks/CLOUD_PROFILE_INCIDENTS.md#high-health-check-latency"
+
+      - alert: HealthCheckFailureRate
+        expr: rate(orchd_pool_health_checks_total{outcome="error"}[5m]) / rate(orchd_pool_health_checks_total[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: warning
+          component: cloud-profile
+        annotations:
+          summary: "High health check failure rate (> 5%)"
+          description: "Pool {{ $labels.pool_id }} health checks failing at {{ $value | humanizePercentage }}."
+          runbook: "docs/runbooks/CLOUD_PROFILE_INCIDENTS.md#health-check-failures"
+
+      # Heartbeat alerts
+      - alert: HeartbeatFailureRate
+        expr: rate(orchd_node_heartbeats_total{outcome!="success"}[5m]) / rate(orchd_node_heartbeats_total[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          component: cloud-profile
+        annotations:
+          summary: "High heartbeat failure rate (> 10%)"
+          description: "Node {{ $labels.node_id }} heartbeats failing at {{ $value | humanizePercentage }}."
+          runbook: "docs/runbooks/CLOUD_PROFILE_INCIDENTS.md#heartbeat-failures"
+
+      - alert: NodeHeartbeatStalled
+        expr: rate(orchd_node_heartbeats_total[5m]) == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: cloud-profile
+        annotations:
+          summary: "Node heartbeat stalled"
+          description: "Node {{ $labels.node_id }} has not sent heartbeats for 2+ minutes."
+          runbook: "docs/runbooks/CLOUD_PROFILE_INCIDENTS.md#heartbeat-stalled"
+
+      # Registration alerts
+      - alert: HighRegistrationFailureRate
+        expr: rate(orchd_node_registrations_total{outcome="error"}[10m]) / rate(orchd_node_registrations_total[10m]) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          component: cloud-profile
+        annotations:
+          summary: "High node registration failure rate (> 20%)"
+          description: "Node registrations failing at {{ $value | humanizePercentage }}."
+          runbook: "docs/runbooks/CLOUD_PROFILE_INCIDENTS.md#registration-failures"
+
+      # Handoff processing alerts (pool-managerd)
+      - alert: HandoffProcessingStalled
+        expr: rate(pool_handoff_files_processed_total[5m]) == 0 and sum(orchd_pools_available) > 0
+        for: 5m
+        labels:
+          severity: warning
+          component: pool-managerd
+        annotations:
+          summary: "Handoff processing stalled"
+          description: "Pool {{ $labels.pool_id }} has not processed handoff files for 5+ minutes."
+          runbook: "docs/runbooks/CLOUD_PROFILE_INCIDENTS.md#handoff-stalled"
+
+      - alert: HighHandoffProcessingLatency
+        expr: histogram_quantile(0.95, rate(pool_handoff_processing_duration_ms_bucket[5m])) > 2000
+        for: 5m
+        labels:
+          severity: warning
+          component: pool-managerd
+        annotations:
+          summary: "High handoff processing latency (P95 > 2s)"
+          description: "Pool {{ $labels.pool_id }} handoff processing P95 latency is {{ $value }}ms."
+          runbook: "docs/runbooks/CLOUD_PROFILE_INCIDENTS.md#high-handoff-latency"
+
+      # Overall system health
+      - alert: CloudProfileDegraded
+        expr: |
+          (sum(orchd_nodes_online) < 2) or
+          (sum(orchd_pools_available) < 2) or
+          (rate(orchd_node_heartbeats_total{outcome!="success"}[5m]) / rate(orchd_node_heartbeats_total[5m]) > 0.1)
+        for: 10m
+        labels:
+          severity: warning
+          component: cloud-profile
+        annotations:
+          summary: "Cloud profile deployment degraded"
+          description: "Multiple cloud profile health indicators are degraded."
+          runbook: "docs/runbooks/CLOUD_PROFILE_INCIDENTS.md#system-degraded"

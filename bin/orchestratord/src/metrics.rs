@@ -100,6 +100,11 @@ pub fn pre_register() {
         "tokens_out_total",
         "admission_backpressure_events_total",
         "catalog_verifications_total",
+        // Cloud profile metrics
+        "orchd_node_registrations_total",
+        "orchd_node_heartbeats_total",
+        "orchd_node_deregistrations_total",
+        "orchd_pool_health_checks_total",
     ] {
         let _ = {
             let mut c = COUNTERS.lock().unwrap();
@@ -107,16 +112,28 @@ pub fn pre_register() {
         };
     }
     // gauges
-    for name in
-        ["queue_depth", "kv_cache_usage_ratio", "gpu_utilization", "vram_used_bytes", "model_state"]
-    {
+    for name in [
+        "queue_depth",
+        "kv_cache_usage_ratio",
+        "gpu_utilization",
+        "vram_used_bytes",
+        "model_state",
+        // Cloud profile metrics
+        "orchd_nodes_online",
+        "orchd_pools_available",
+    ] {
         let _ = {
             let mut g = GAUGES.lock().unwrap();
             g.entry(name.to_string()).or_default();
         };
     }
     // histograms
-    for name in ["latency_first_token_ms", "latency_decode_ms"] {
+    for name in [
+        "latency_first_token_ms",
+        "latency_decode_ms",
+        // Cloud profile metrics
+        "orchd_pool_health_check_duration_ms",
+    ] {
         let _ = {
             let mut h = HISTOGRAMS.lock().unwrap();
             h.entry(name.to_string()).or_default();
@@ -135,13 +152,21 @@ pub fn gather_metrics_text() -> String {
     out.push_str("# TYPE tokens_out_total counter\n");
     out.push_str("# TYPE admission_backpressure_events_total counter\n");
     out.push_str("# TYPE catalog_verifications_total counter\n");
+    // Cloud profile metrics
+    out.push_str("# TYPE orchd_node_registrations_total counter\n");
+    out.push_str("# TYPE orchd_node_heartbeats_total counter\n");
+    out.push_str("# TYPE orchd_node_deregistrations_total counter\n");
+    out.push_str("# TYPE orchd_pool_health_checks_total counter\n");
     out.push_str("# TYPE queue_depth gauge\n");
     out.push_str("# TYPE kv_cache_usage_ratio gauge\n");
     out.push_str("# TYPE gpu_utilization gauge\n");
     out.push_str("# TYPE vram_used_bytes gauge\n");
     out.push_str("# TYPE model_state gauge\n");
+    out.push_str("# TYPE orchd_nodes_online gauge\n");
+    out.push_str("# TYPE orchd_pools_available gauge\n");
     out.push_str("# TYPE latency_first_token_ms histogram\n");
     out.push_str("# TYPE latency_decode_ms histogram\n");
+    out.push_str("# TYPE orchd_pool_health_check_duration_ms histogram\n");
     out.push_str("\n");
 
     let c = COUNTERS.lock().unwrap();

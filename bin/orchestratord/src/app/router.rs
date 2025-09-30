@@ -30,6 +30,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/v2/catalog/models/:id", delete(api::catalog::delete_model))
         .route("/v2/catalog/models/:id/verify", post(api::catalog::verify_model))
         .route("/v2/catalog/models/:id/state", post(api::catalog::set_model_state))
+        .route("/v2/catalog/availability", get(api::catalog_availability::get_catalog_availability))
         // Data
         .route("/v2/tasks", post(api::data::create_task))
         .route("/v2/tasks/:id/events", get(api::data::stream_task))
