@@ -152,6 +152,14 @@ paths:
           required: true
           schema: { type: string, format: uuid }
         - $ref: '#/components/parameters/XCorrelationId'
+        - name: verbose
+          in: query
+          required: false
+          schema: { type: boolean, default: false }
+          description: |
+            When true, the server MAY include additional human-narrated breadcrumbs and diagnostic
+            fields inside `metrics` frames (e.g., `{"human":"...","phase":"provision"}`).
+            Event names remain the same; this flag only affects the richness of `metrics` payloads.
       responses:
         '200':
           description: text/event-stream
@@ -338,19 +346,54 @@ components:
         placement: { $ref: '#/components/schemas/PlacementOverrides' }
 
     AdmissionResponse:
-      type: object
-      required: [task_id, queue_position, predicted_start_ms, backoff_ms]
-      properties:
-        task_id: { type: string, format: uuid }
-        queue_position: { type: integer, format: int32 }
-        predicted_start_ms: { type: integer, format: int64 }
-        backoff_ms: { type: integer, format: int64 }
+    type: object
+    required: [task_id, queue_position, predicted_start_ms, backoff_ms]
+    properties:
+      task_id: { type: string, format: uuid }
+      queue_position: { type: integer, format: int32 }
+      predicted_start_ms: { type: integer, format: int64 }
+      backoff_ms: { type: integer, format: int64 }
+      streams:
+        $ref: '#/components/schemas/StreamsLinks'
+      preparation:
+        $ref: '#/components/schemas/PreparationPlan'
+
+  StreamsLinks:
+    type: object
+    description: Direct links to stream endpoints for this task.
+    properties:
+      sse:
+        type: string
+        format: uri
+        description: Base SSE stream URL (equivalent to GET /v1/tasks/{id}/stream).
+      sse_verbose:
+        type: string
+        format: uri
+        description: SSE stream URL with `?verbose=true` to include human narration within `metrics` frames.
+
+  PreparationPlan:
+    type: object
+    description: Optional plan describing preparatory steps that may occur before decode begins.
+    properties:
+      steps:
+        type: array
+        items: { $ref: '#/components/schemas/PreparationStep' }
+
+  PreparationStep:
+    type: object
+    properties:
+      kind: { $ref: '#/components/schemas/PreparationStepKind' }
+      description: { type: string }
+      estimated_ms: { type: integer, format: int64, description: estimated duration if known }
+
+  PreparationStepKind:
+    type: string
+    enum: [engine_provision, model_fetch, pool_warmup]
 
     ErrorKind:
       type: string
       enum:
         - ADMISSION_REJECT
-        - QUEUE_FULL_DROP_LRU
         - INVALID_PARAMS
         - POOL_UNREADY
         - POOL_UNAVAILABLE

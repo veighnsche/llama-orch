@@ -114,6 +114,14 @@ pub async fn create_task(
     // Success path
     let admission = api::AdmissionResponse { task_id: body.task_id.clone(), queue_position: pos as i32, predicted_start_ms, backoff_ms: 0 };
 
+    // TODO[ORCHD-ADMISSION-STREAMS-0008]: Populate `AdmissionResponse.streams` with direct
+    // links to stream endpoints once `contracts_api_types` is regenerated from OpenAPI.
+    //   - streams.sse:        `/v1/tasks/{task_id}/stream`
+    //   - streams.sse_verbose:`/v1/tasks/{task_id}/stream?verbose=true`
+    // TODO[ORCHD-ADMISSION-PREPARATION-0009]: Populate `AdmissionResponse.preparation` with
+    // a plan of preparatory steps (e.g., `engine_provision`, `model_fetch`, `pool_warmup`) with
+    // optional estimates. This allows clients to choose verbose SSE for richer UX.
+
     // Emit a simple log line for BDD assertions
     let mut lg = state.logs.lock().unwrap();
     lg.push(format!(
