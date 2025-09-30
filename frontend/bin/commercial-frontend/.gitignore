@@ -35,3 +35,6 @@ coverage
 !.dev.vars.example
 .env*
 !.env.example
+
+# wrangler files
+worker-configuration.d.ts

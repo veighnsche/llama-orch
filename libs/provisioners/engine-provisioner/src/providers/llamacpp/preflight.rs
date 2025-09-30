@@ -6,7 +6,14 @@ use crate::cfg;
 pub fn preflight_tools(prov: &cfg::ProvisioningConfig, src: &cfg::SourceConfig) -> Result<()> {
     // Check required commands
     let mut packages: std::collections::BTreeSet<&str> = std::collections::BTreeSet::new();
-    for (bin, pkg) in [("git", "git"), ("cmake", "cmake"), ("make", "make"), ("gcc", "gcc")] {
+    for (bin, pkg) in [
+        ("git", "git"),
+        ("cmake", "cmake"),
+        ("make", "make"),
+        ("gcc", "gcc"),
+        ("g++", "gcc"),            // C++ compiler required by llama.cpp
+        ("pkg-config", "pkg-config"), // for finding libcurl, etc.
+    ] {
         if which::which(bin).is_err() {
             packages.insert(pkg);
         }
@@ -27,8 +34,24 @@ pub fn preflight_tools(prov: &cfg::ProvisioningConfig, src: &cfg::SourceConfig) 
     }
     // HF CLI if model via hf:
     let wants_hf = prov.model.r#ref.as_deref().is_some_and(|r| r.starts_with("hf:"));
-    if wants_hf && which::which("huggingface-cli").is_err() {
-        packages.insert("python-huggingface-hub");
+    if wants_hf {
+        let has_hf = which::which("huggingface-cli").is_ok() || which::which("hf").is_ok();
+        if !has_hf {
+            packages.insert("python-huggingface-hub");
+        }
+    }
+
+    // libcurl dev headers required by llama.cpp server (CMake find_package(CURL))
+    // Use pkg-config to detect; if missing or failing, suggest installing curl dev.
+    let curl_ok = std::process::Command::new("pkg-config")
+        .args(["--exists", "libcurl"])
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false);
+    if !curl_ok {
+        // On Arch, the package providing headers is 'curl'. On Debian-based, it's 'libcurl4-openssl-dev'.
+        // Our auto-install only supports pacman, so suggesting 'curl' is sufficient.
+        packages.insert("curl");
     }
 
     if packages.is_empty() {
@@ -141,7 +164,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let bin = tmp.path().join("bin");
         fs::create_dir_all(&bin).unwrap();
-        for b in ["git", "cmake", "make", "gcc"] { make_exec(&bin.join(b)); }
+        for b in ["git", "cmake", "make", "gcc", "g++", "pkg-config"] { make_exec(&bin.join(b)); }
 
         let old = std::env::var("PATH").ok();
         std::env::set_var("PATH", bin.display().to_string());
@@ -182,7 +205,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let bin = tmp.path().join("bin");
         fs::create_dir_all(&bin).unwrap();
-        for b in ["git", "cmake", "make", "gcc"] { make_exec(&bin.join(b)); }
+        for b in ["git", "cmake", "make", "gcc", "g++", "pkg-config"] { make_exec(&bin.join(b)); }
         let old = std::env::var("PATH").ok();
         std::env::set_var("PATH", bin.display().to_string());
 
@@ -214,7 +237,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let bin = tmp.path().join("bin");
         fs::create_dir_all(&bin).unwrap();
-        for b in ["git", "cmake", "make", "gcc"] { make_exec(&bin.join(b)); }
+        for b in ["git", "cmake", "make", "gcc", "g++", "pkg-config"] { make_exec(&bin.join(b)); }
         let old = std::env::var("PATH").ok();
         std::env::set_var("PATH", bin.display().to_string());
 
