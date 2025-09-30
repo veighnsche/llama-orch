@@ -1,124 +1,231 @@
-# orchestratord-bdd — Behavior-Driven Development Test Suite
+# orchestratord-bdd
 
-**Status**: ✅ Core Complete (78% passing)  
-**Last Updated**: 2025-09-30
+**BDD test suite for orchestratord**
 
-## Quick Start
+`bin/orchestratord/bdd` — Cucumber-based behavior-driven development tests for the orchestratord HTTP API.
+
+---
+
+## What This Crate Does
+
+This is the **BDD test harness** for orchestratord. It provides:
+
+- **Cucumber/Gherkin scenarios** testing orchestratord behavior
+- **Step definitions** in Rust using the `cucumber` crate
+- **Integration tests** covering HTTP API, SSE streaming, catalog, sessions
+- **Proof bundle output** for test artifacts and traceability
+
+**Tests**:
+- Task admission and queueing
+- SSE streaming (started → token → metrics → end)
+- Session management (create, query, delete)
+- Catalog operations (register, verify, lifecycle)
+- Multi-node registration and heartbeats
+- Error handling and edge cases
+
+---
+
+## Running Tests
+
+### All Scenarios
 
 ```bash
-# Run all BDD scenarios
+# Run all BDD tests
+cargo test -p orchestratord-bdd -- --nocapture
+
+# Or use the BDD runner binary
 cargo run -p orchestratord-bdd --bin bdd-runner
+```
 
-# Build only
-cargo build -p orchestratord-bdd
+### Specific Feature
 
-# Check for undefined steps
+```bash
+# Set environment variable to target specific feature
+LLORCH_BDD_FEATURE_PATH=tests/features/admission.feature \
+cargo test -p orchestratord-bdd -- --nocapture
+```
+
+### Check for Undefined Steps
+
+```bash
+# Verify all steps are implemented
 cargo test -p orchestratord-bdd --lib -- features_have_no_undefined_or_ambiguous_steps
 ```
 
-## Current Status
+---
 
+## Test Status
+
+**Current Coverage** (as of 2025-09-30):
 - **18 features**, 41 scenarios
 - **84/108 steps passing** (78%)
-- **Core features**: 100% passing
-- **New features**: Need step implementations
+- **Core features**: 100% passing (admission, streaming, sessions)
+- **New features**: Partial implementation (catalog, multi-node)
 
-See [COMPLETION_REPORT.md](./COMPLETION_REPORT.md) for details.
+### Passing Features
 
-## Documentation
+✅ Task admission and rejection  
+✅ SSE streaming lifecycle  
+✅ Session management  
+✅ Basic catalog operations  
+✅ Queue backpressure  
 
-- **[BEHAVIORS.md](./BEHAVIORS.md)** - Complete catalog of 200+ behaviors
-- **[FEATURE_MAPPING.md](./FEATURE_MAPPING.md)** - Features → Scenarios → Steps mapping
-- **[COMPLETION_REPORT.md](./COMPLETION_REPORT.md)** - Current status and results
-- **[NEXT_STEPS.md](./NEXT_STEPS.md)** - Path to 100%
-- **[POOL_MANAGERD_INTEGRATION.md](../POOL_MANAGERD_INTEGRATION.md)** - Daemon integration guide
+### In Progress
 
-## 1. Name & Purpose
+🚧 Advanced catalog (verification, lifecycle states)  
+🚧 Multi-node registration and heartbeats  
+🚧 Placement with model filtering  
 
-orchestratord-bdd (core)
+---
 
-## 2. Why it exists (Spec traceability)
+## Feature Files
 
-- ORCH-3004 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3004)
-- ORCH-3005 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3005)
-- ORCH-3008 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3008)
-- ORCH-3010 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3010)
-- ORCH-3011 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3011)
-- ORCH-3016 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3016)
-- ORCH-3017 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3017)
-- ORCH-3027 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3027)
-- ORCH-3028 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3028)
-- ORCH-3044 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3044)
-- ORCH-3045 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3045)
+Located in `tests/features/`:
 
+- `admission.feature` — Task admission, queue capacity, rejection
+- `streaming.feature` — SSE lifecycle, token streaming, metrics
+- `sessions.feature` — Session create, query, delete, TTL
+- `catalog.feature` — Model registration, verification, lifecycle
+- `nodes.feature` — Multi-node registration, heartbeats, deregistration
+- `placement.feature` — Pool selection, model-aware placement
+- `backpressure.feature` — Queue full, retry-after headers
 
-## 3. Public API surface
+---
 
-- OpenAPI: [contracts/openapi/control.yaml](../../../contracts/openapi/control.yaml)
-- OpenAPI: [contracts/openapi/data.yaml](../../../contracts/openapi/data.yaml)
-- OpenAPI operations: 16
-  - examples: cancelTask, createArtifact, createCatalogModel, createTask, deleteCatalogModel
+## Step Definitions
 
+Located in `src/steps/`:
 
-## 4. How it fits
+- `background.rs` — Setup and teardown (orchestratord instance, mock adapters)
+- `admission.rs` — Task admission steps
+- `streaming.rs` — SSE streaming steps
+- `sessions.rs` — Session management steps
+- `catalog.rs` — Catalog operation steps
+- `nodes.rs` — Multi-node registration steps
+- `assertions.rs` — Common assertion helpers
 
-- Part of the core orchestrator. Upstream: adapters, Downstream: workers.
+---
 
-```mermaid
-flowchart LR
-  callers[Clients] --> orch[Orchestrator]
-  orch --> adapters[Worker Adapters]
-  adapters --> engines[Engines]
+## World State
+
+The `World` struct (in `src/world.rs`) maintains test state:
+
+```rust
+pub struct World {
+    pub orchestratord_url: String,
+    pub last_response: Option<Response>,
+    pub last_job_id: Option<String>,
+    pub last_session_id: Option<String>,
+    pub sse_events: Vec<SseEvent>,
+    pub mock_adapter: Option<MockAdapter>,
+}
 ```
 
-## 5. Build & Test
+---
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p orchestratord-bdd -- --nocapture`
-- Provider verify: `cargo test -p orchestratord --test provider_verify -- --nocapture`
+## Example Scenario
 
+```gherkin
+Feature: Task Admission
 
-## 6. Contracts
+  Scenario: Successfully admit a task
+    Given orchestratord is running
+    And a mock adapter is configured
+    When I POST a task to /v2/tasks with:
+      | model      | llama-3.1-8b-instruct |
+      | max_tokens | 100                   |
+    Then the response status should be 202
+    And the response should contain a job_id
+    And the admission queue depth should be 1
+```
 
-- OpenAPI:
-  - [contracts/openapi/control.yaml](../../../contracts/openapi/control.yaml)
-  - [contracts/openapi/data.yaml](../../../contracts/openapi/data.yaml)
+---
 
+## Proof Bundle Output
 
-## 7. Config & Env
+BDD tests emit proof bundles to `.proof_bundle/bdd/<run_id>/`:
 
-- See deployment configs and environment variables used by the daemons.
+- `scenarios.ndjson` — Scenario results
+- `steps.ndjson` — Step execution details
+- `metadata.json` — Test run metadata
+- `seeds.txt` — Random seeds for reproducibility
 
-## 8. Metrics & Logs
+Set `LLORCH_RUN_ID` to control the output directory.
 
-- Emits queue depth, latency percentiles, and engine/version labels.
+---
 
-## 9. Runbook (Dev)
+## Dependencies
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+### Parent Crate
 
+- `orchestratord` — The binary being tested
 
-## 10. Status & Owners
+### Test Infrastructure
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+- `cucumber` — BDD framework
+- `tokio` — Async runtime for tests
+- `reqwest` — HTTP client for API calls
+- `serde_json` — JSON parsing
+- `proof-bundle` — Test artifact output
 
-## 11. Changelog pointers
+---
 
-- None
+## Writing New Tests
 
-## 12. Footnotes
+### 1. Add Feature File
 
-- Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+Create `tests/features/my_feature.feature`:
 
-### Additional Details
-- Data/control plane routes, SSE framing details, backpressure headers, provider verify entry
-points.
+```gherkin
+Feature: My New Feature
 
+  Scenario: Test something
+    Given orchestratord is running
+    When I do something
+    Then something should happen
+```
 
-## What this crate is not
+### 2. Implement Steps
 
-- Not a general-purpose inference server; focuses on orchestration.
+Add to `src/steps/my_steps.rs`:
+
+```rust
+use cucumber::{given, when, then};
+use crate::world::World;
+
+#[when("I do something")]
+async fn when_i_do_something(world: &mut World) {
+    // Implementation
+}
+
+#[then("something should happen")]
+async fn then_something_happens(world: &mut World) {
+    // Assertions
+}
+```
+
+### 3. Run Tests
+
+```bash
+cargo test -p orchestratord-bdd -- --nocapture
+```
+
+---
+
+## Specifications
+
+Tests verify requirements from:
+- ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011
+- ORCH-3016, ORCH-3017, ORCH-3027, ORCH-3028
+- ORCH-3044, ORCH-3045
+
+See `.specs/00_llama-orch.md` for full requirements.
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Coverage**: 78% (84/108 steps passing)
+- **Maintainers**: @llama-orch-maintainers
