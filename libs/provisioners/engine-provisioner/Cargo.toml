@@ -21,14 +21,11 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow = { workspace = true }
-thiserror = { workspace = true }
-serde = { workspace = true, features = ["derive"] }
+serde = { workspace = true }
 serde_json = { workspace = true }
-serde_yaml = { workspace = true }
-tracing = { workspace = true }
-contracts-config-schema = { path = "../../../contracts/config-schema" }
 which = "6"
 model-provisioner = { path = "../model-provisioner" }
+contracts-config-schema = { path = "../../../contracts/config-schema" }
 clap = { workspace = true, features = ["derive"] }
 
 [dev-dependencies]

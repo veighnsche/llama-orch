@@ -5,7 +5,9 @@
 // - lifecycle: spawn, drain, reload, supervision
 // - placement: device masks, GPU split planning
 // - validation: preflight checks
+// - api: HTTP API for daemon mode
 
+pub mod api;
 pub mod core;
 pub mod lifecycle;
 pub mod placement;

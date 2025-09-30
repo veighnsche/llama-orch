@@ -11,9 +11,15 @@ path = "src/main.rs"
 [dependencies]
 anyhow = { workspace = true }
 serde_json = { workspace = true }
+serde = { workspace = true }
 tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 which = "7.0"
 provisioners-engine-provisioner = { path = "../../libs/provisioners/engine-provisioner" }
+axum = { workspace = true }
+tokio = { workspace = true }
+tower = { version = "0.4", features = ["util"] }
+tower-http = { version = "0.5", features = ["trace", "cors"] }
 
 [dev-dependencies]
 tempfile = "3"

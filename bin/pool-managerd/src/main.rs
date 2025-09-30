@@ -1,29 +1,42 @@
 //! pool-managerd daemon entrypoint.
 //!
-//! STATUS: STUB (Home profile embeds as library; Cloud profile will use standalone daemon)
+//! Standalone daemon that manages engine lifecycle (spawn, health, supervision).
+//! Exposes HTTP API for orchestratord to call.
 //!
-//! Home Profile (Current):
-//! - orchestratord embeds pool-managerd::registry as library (bin/orchestratord/src/state.rs:6)
-//! - Single binary, single workstation, on-demand engine startup
-//!
-//! Cloud Profile (Future, per .specs/proposals/CLOUD_PROFILE.md):
-//! - pool-managerd as standalone daemon (DaemonSet on k8s GPU nodes)
-//! - orchestratord queries via HTTP control API for health/placement
-//! - Multi-tenant: separate instances per namespace/VPC
-//! - On-demand startup (home) OR preload (CLOUD-810 dedicated baseline)
-//!
-//! Responsibilities (when implemented):
-//! 1. GPU Discovery — enumerate NVIDIA devices, collect compute_capability, VRAM
-//! 2. On-Demand Startup — start engines when needed (or preload for dedicated)
-//! 3. Engine Supervision — spawn/monitor processes, restart with backoff on crash
-//! 4. Health Monitoring — periodic checks, update registry, detect driver errors
-//! 5. Control API — HTTP endpoints for orchestratord (drain/reload, health, placement)
-//!
-//! Implementation trigger: When implementing CLOUD_PROFILE.md (k8s deployment)
-//! Until then: Home profile continues to embed as library (no changes needed)
+//! Responsibilities:
+//! 1. Spawn engines from PreparedEngine (via POST /pools/{id}/preload)
+//! 2. Monitor health and update registry
+//! 3. Supervise processes with backoff on crash
+//! 4. Expose HTTP API for orchestratord
 
-fn main() {
-    println!("pool-managerd stub");
-    eprintln!("Home profile: orchestratord embeds pool-managerd as library");
-    eprintln!("Cloud profile: implement standalone daemon per CLOUD_PROFILE.md");
+use pool_managerd::api::routes::{create_router, AppState};
+use pool_managerd::core::registry::Registry;
+use std::sync::{Arc, Mutex};
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    // Initialize tracing
+    tracing_subscriber::fmt::init();
+
+    // Create shared registry
+    let registry = Arc::new(Mutex::new(Registry::new()));
+
+    // Create app state
+    let state = AppState {
+        registry: registry.clone(),
+    };
+
+    // Create router
+    let app = create_router(state);
+
+    // Bind address from env or default
+    let addr = std::env::var("POOL_MANAGERD_ADDR").unwrap_or_else(|_| "127.0.0.1:9001".to_string());
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+
+    tracing::info!("pool-managerd listening on {}", addr);
+
+    // Start server
+    axum::serve(listener, app).await?;
+
+    Ok(())
 }

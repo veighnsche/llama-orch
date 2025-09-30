@@ -12,7 +12,7 @@ pub mod providers;
 use std::path::PathBuf;
 
 /// Metadata about a prepared engine, ready to be spawned by pool-managerd.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PreparedEngine {
     /// Path to the engine binary (e.g., /path/to/llama-server)
     pub binary_path: PathBuf,
