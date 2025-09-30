@@ -1,4 +1,37 @@
-# orchestratord-bdd — orchestratord-bdd (core)
+# orchestratord-bdd — Behavior-Driven Development Test Suite
+
+**Status**: ✅ Core Complete (78% passing)  
+**Last Updated**: 2025-09-30
+
+## Quick Start
+
+```bash
+# Run all BDD scenarios
+cargo run -p orchestratord-bdd --bin bdd-runner
+
+# Build only
+cargo build -p orchestratord-bdd
+
+# Check for undefined steps
+cargo test -p orchestratord-bdd --lib -- features_have_no_undefined_or_ambiguous_steps
+```
+
+## Current Status
+
+- **18 features**, 41 scenarios
+- **84/108 steps passing** (78%)
+- **Core features**: 100% passing
+- **New features**: Need step implementations
+
+See [COMPLETION_REPORT.md](./COMPLETION_REPORT.md) for details.
+
+## Documentation
+
+- **[BEHAVIORS.md](./BEHAVIORS.md)** - Complete catalog of 200+ behaviors
+- **[FEATURE_MAPPING.md](./FEATURE_MAPPING.md)** - Features → Scenarios → Steps mapping
+- **[COMPLETION_REPORT.md](./COMPLETION_REPORT.md)** - Current status and results
+- **[NEXT_STEPS.md](./NEXT_STEPS.md)** - Path to 100%
+- **[POOL_MANAGERD_INTEGRATION.md](../POOL_MANAGERD_INTEGRATION.md)** - Daemon integration guide
 
 ## 1. Name & Purpose
 
