@@ -1,6 +1,8 @@
 // Deterministic template for generated API types matching contracts/openapi/data.yaml
 use serde::{Deserialize, Serialize};
-fn default_true() -> bool { true }
+fn default_true() -> bool {
+    true
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
