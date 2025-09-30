@@ -2,6 +2,51 @@ use crate::steps::world::World;
 use cucumber::{given, then, when};
 use http::Method;
 
+#[when(regex = r"^I request /metrics$")]
+pub async fn when_request_metrics(world: &mut World) {
+    let _ = world.http_call(Method::GET, "/metrics", None).await;
+}
+
+#[then(regex = r"^Content-Type is text/plain$")]
+pub async fn then_content_type_is_text_plain(world: &mut World) {
+    if let Some(headers) = &world.last_headers {
+        let content_type = headers.get("content-type")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("");
+        assert!(content_type.contains("text/plain"), "expected text/plain, got: {}", content_type);
+    } else {
+        panic!("no headers in response");
+    }
+}
+
+#[then(regex = r"^tasks_enqueued_total includes labels (.+)$")]
+pub async fn then_tasks_enqueued_total_includes_labels(world: &mut World, labels: String) {
+    let text = world.last_body.as_ref().expect("expected /metrics response body");
+    
+    // Check that tasks_enqueued_total metric exists
+    assert!(text.contains("tasks_enqueued_total"), "missing tasks_enqueued_total metric");
+    
+    // Check each expected label
+    for label in labels.split_whitespace() {
+        assert!(text.contains(label), "missing label: {}", label);
+    }
+}
+
+#[then(regex = r"^the response includes TYPE headers$")]
+pub async fn then_response_includes_type_headers(world: &mut World) {
+    let text = world.last_body.as_ref().expect("expected /metrics response body");
+    // Check for Prometheus TYPE comments
+    assert!(text.contains("# TYPE "), "missing TYPE headers in metrics");
+}
+
+#[then(regex = r"^the response includes pre-registered metrics$")]
+pub async fn then_response_includes_preregistered_metrics(world: &mut World) {
+    let text = world.last_body.as_ref().expect("expected /metrics response body");
+    // Check for at least one metric
+    assert!(text.contains("tasks_enqueued_total") || text.contains("queue_depth"), 
+        "missing pre-registered metrics");
+}
+
 #[then(regex = r"^metrics conform to linter names and labels$")]
 pub async fn then_metrics_conform_names_labels(world: &mut World) {
     let _ = world.http_call(Method::GET, "/metrics", None).await;

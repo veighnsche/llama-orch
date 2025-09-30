@@ -52,16 +52,23 @@ pub async fn when_create_model_with_digest(world: &mut World, id: String, digest
 #[when(regex = "^I create a model without an id$")]
 pub async fn when_create_model_without_id(world: &mut World) {
     let body = json!({
-        "id": ""
+        "digest": "sha256:test"
     });
     let _ = world.http_call(Method::POST, "/v2/catalog/models", Some(body)).await;
 }
 
-// B-CAT-010, B-CAT-011, B-CAT-012
-#[when(regex = "^I get model (.+)$")]
+// B-CAT-010: Get model
+#[when(regex = "^I get model \"(.+)\"$")]
 pub async fn when_get_model(world: &mut World, id: String) {
     let path = format!("/v2/catalog/models/{}", id);
     let _ = world.http_call(Method::GET, &path, None).await;
+}
+
+// B-CAT-030: Delete model
+#[when(regex = "^I delete model \"(.+)\"$")]
+pub async fn when_delete_model(world: &mut World, id: String) {
+    let path = format!("/v2/catalog/models/{}", id);
+    let _ = world.http_call(Method::DELETE, &path, None).await;
 }
 
 // B-CAT-020, B-CAT-021, B-CAT-022
@@ -82,15 +89,8 @@ pub async fn when_set_model_state_retired(world: &mut World) {
     let _ = world.http_call(Method::POST, &path, Some(body)).await;
 }
 
-// B-CAT-040, B-CAT-041, B-CAT-042
-#[when(regex = "^I delete model (.+)$")]
-pub async fn when_delete_model(world: &mut World, id: String) {
-    let path = format!("/v2/catalog/models/{}", id);
-    let _ = world.http_call(Method::DELETE, &path, None).await;
-}
-
-// B-CAT-006: Verify response includes id
-#[then(regex = "^the response includes id (.+)$")]
+// B-CAT-004: Verify response includes specific id (must not match "id and digest")
+#[then(regex = "^the response includes id ([a-zA-Z0-9_-]+)$")]
 pub async fn then_response_includes_id(world: &mut World, expected_id: String) {
     let body = world.last_body.as_ref().expect("no response body");
     let json: serde_json::Value = serde_json::from_str(body).expect("invalid JSON");
@@ -114,13 +114,13 @@ pub async fn then_error_message_is(world: &mut World, expected: String) {
     assert!(body.contains(&expected), "error message not found: {}", expected);
 }
 
-// B-CAT-011: Verify response structure
-#[then(regex = "^the response includes id and digest$")]
+// B-CAT-015: Verify response includes id and digest (exact match to avoid ambiguity)
+#[then(expr = "the response includes id and digest")]
 pub async fn then_response_includes_id_and_digest(world: &mut World) {
     let body = world.last_body.as_ref().expect("no response body");
-    let json: serde_json::Value = serde_json::from_str(body).expect("invalid JSON");
-    assert!(json.get("id").is_some(), "missing id");
-    assert!(json.get("digest").is_some(), "missing digest");
+    let v: serde_json::Value = serde_json::from_str(body).expect("invalid JSON");
+    assert!(v.get("id").is_some(), "missing id in response");
+    assert!(v.get("digest").is_some(), "missing digest in response");
 }
 
 // B-CAT-021: Verify timestamp updated

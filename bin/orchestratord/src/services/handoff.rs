@@ -149,6 +149,14 @@ pub async fn process_handoff_file(state: &AppState, path: &PathBuf) -> anyhow::R
         bound.insert(key);
     }
 
+    // Log for narration/observability (captured in tests)
+    if let Ok(mut logs) = state.logs.lock() {
+        logs.push(format!(
+            "{{\"event\":\"handoff_processed\",\"pool_id\":\"{}\",\"replica_id\":\"{}\"}}",
+            pool_id, replica_id
+        ));
+    }
+
     Ok(())
 }
 
