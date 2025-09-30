@@ -120,6 +120,7 @@ impl Registry {
             perf_hints: None,
         });
         entry.version = Some(v.into());
+    }
 
     pub fn get_version(&self, pool_id: &str) -> Option<String> {
         self.pools.get(pool_id).and_then(|e| e.version.as_ref().cloned())
@@ -241,7 +242,7 @@ impl Registry {
         };
         entry.last_heartbeat_ms = Some(now_ms);
     }
-}
+
     pub fn allocate_lease(&mut self, pool_id: impl Into<String>) -> i32 {
         let id = pool_id.into();
         let entry = self.pools.entry(id).or_insert(PoolEntry {

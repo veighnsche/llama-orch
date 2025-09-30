@@ -23,6 +23,31 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
     // (not just shared state polling) and verify no tokens after cancel across all adapters.
     // TODO[ORCHD-STREAM-1103]: Map adapter errors to domain errors and emit `error` SSE frames
     // with `code/message/engine` per spec.
+    // Health gate: check target pool readiness before attempting dispatch
+    let target_pool = {
+        if let Ok(map) = state.admissions.lock() {
+            map.get(&id)
+                .and_then(|s| s.request.placement.as_ref().and_then(|p| p.pin_pool_id.clone()))
+                .unwrap_or_else(|| "default".to_string())
+        } else {
+            "default".to_string()
+        }
+    };
+    if !should_dispatch(state, &target_pool) {
+        // Emit minimal SSE with retry hints
+        let events: Vec<(String, serde_json::Value)> = vec![
+            (
+                "error".into(),
+                json!({
+                    "code": "PoolUnready",
+                    "message": format!("pool '{}' not ready", target_pool),
+                    "retry_after_ms": 500
+                }),
+            ),
+            ("end".into(), json!({})),
+        ];
+        return build_sse_from_events(state, &id, events);
+    }
     if let Ok(mut s) = try_dispatch_via_adapter(state, &id) {
         let mut events: Vec<(String, serde_json::Value)> = Vec::new();
         loop {
@@ -79,10 +104,10 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
     // sampler_profile_version) to match observability guidance.
     let started_fields = {
         if let Ok(map) = state.admissions.lock() {
-            if let Some(info) = map.get(&id) {
+            if let Some(snap) = map.get(&id) {
                 json!({
-                    "queue_position": info.queue_position,
-                    "predicted_start_ms": info.predicted_start_ms,
+                    "queue_position": snap.info.queue_position,
+                    "predicted_start_ms": snap.info.predicted_start_ms,
                 })
             } else {
                 json!({"queue_position": 0, "predicted_start_ms": 0})
@@ -203,34 +228,64 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
     build_sse_from_events(state, &id, events_owned)
 }
 
+/// Determine if a pool is dispatchable: Live+Ready and slots_free > 0.
+fn should_dispatch(state: &AppState, pool_id: &str) -> bool {
+    let reg = match state.pool_manager.lock() {
+        Ok(r) => r,
+        Err(_) => return false,
+    };
+    let h = reg.get_health(pool_id);
+    let (live, ready) = h.map(|hh| (hh.live, hh.ready)).unwrap_or((true, true));
+    let free = reg.get_slots_free(pool_id).unwrap_or(1);
+    live && ready && free > 0
+}
+
 fn try_dispatch_via_adapter(
     state: &AppState,
     id: &str,
 ) -> anyhow::Result<adapter_api::TokenStream> {
-    // Construct a minimal TaskRequest
-    // TODO(OwnerB-ORCH-REQUEST-STUB): Minimal synthetic request used for MVP path.
-    // Admission service should forward the original request, preserving model_ref/engine and
-    // determinism-related fields (seed, sampler profile). Wire through once queue/admission are in place.
-    let req = contracts_api_types::TaskRequest {
-        task_id: id.to_string(),
-        session_id: format!("sess-{}", id),
-        workload: contracts_api_types::Workload::Completion,
-        model_ref: "m:stub".into(),
-        engine: contracts_api_types::Engine::Llamacpp,
-        ctx: 1,
-        priority: contracts_api_types::Priority::Interactive,
-        seed: None,
-        determinism: None,
-        sampler_profile_version: None,
-        prompt: Some("hi".into()),
-        inputs: None,
-        max_tokens: 8,
-        deadline_ms: 1000,
-        expected_tokens: Some(1),
-        kv_hint: None,
-        placement: None,
+    // Build request from admission snapshot when available
+    let (pool_id, req) = {
+        let map = state.admissions.lock().map_err(|_| anyhow::anyhow!("admissions lock"))?;
+        if let Some(snap) = map.get(id) {
+            let pool = snap
+                .request
+                .placement
+                .as_ref()
+                .and_then(|p| p.pin_pool_id.clone())
+                .unwrap_or_else(|| "default".to_string());
+            (pool, snap.request.clone())
+        } else {
+            // Fallback synthetic request
+            (
+                "default".to_string(),
+                contracts_api_types::TaskRequest {
+                    task_id: id.to_string(),
+                    session_id: format!("sess-{}", id),
+                    workload: contracts_api_types::Workload::Completion,
+                    model_ref: "m:stub".into(),
+                    engine: contracts_api_types::Engine::Llamacpp,
+                    ctx: 1,
+                    priority: contracts_api_types::Priority::Interactive,
+                    seed: None,
+                    determinism: None,
+                    sampler_profile_version: None,
+                    prompt: Some("hi".into()),
+                    inputs: None,
+                    max_tokens: 8,
+                    deadline_ms: 1000,
+                    expected_tokens: Some(1),
+                    kv_hint: None,
+                    placement: None,
+                },
+            )
+        }
     };
-    state.adapter_host.submit("default", req)
+    // Health/placement gate: require Live+Ready and slots_free > 0
+    if !should_dispatch(state, &pool_id) {
+        return Err(anyhow::anyhow!("pool not ready"));
+    }
+    state.adapter_host.submit(&pool_id, req)
 }
 
 fn build_sse_from_events(
@@ -267,4 +322,74 @@ fn build_and_persist_sse(
         let _ = bw.flush();
     }
     String::from_utf8(buf).unwrap_or_default()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::AppState;
+    use pool_managerd::health::HealthStatus;
+
+    // ORCHD-STREAM-UT-1101: streaming consults pool health and refuses dispatch if not Ready.
+    #[test]
+    fn test_orchd_stream_ut_1101_health_gate_refuses_unready() {
+        let state = AppState::new();
+        
+        // Mark pool as not ready
+        {
+            let mut reg = state.pool_manager.lock().unwrap();
+            reg.set_health("test-pool", HealthStatus { live: true, ready: false });
+        }
+
+        // should_dispatch should return false
+        assert!(!should_dispatch(&state, "test-pool"), "should refuse dispatch when not ready");
+    }
+
+    // ORCHD-STREAM-UT-1102: streaming allows dispatch when pool is Live+Ready with slots
+    #[test]
+    fn test_orchd_stream_ut_1102_health_gate_allows_ready() {
+        let state = AppState::new();
+        
+        // Mark pool as ready with slots
+        {
+            let mut reg = state.pool_manager.lock().unwrap();
+            reg.set_health("test-pool", HealthStatus { live: true, ready: true });
+            reg.set_slots("test-pool", 4, 2);
+        }
+
+        // should_dispatch should return true
+        assert!(should_dispatch(&state, "test-pool"), "should allow dispatch when ready with slots");
+    }
+
+    // ORCHD-STREAM-UT-1103: streaming refuses dispatch when slots_free is 0
+    #[test]
+    fn test_orchd_stream_ut_1103_health_gate_refuses_no_slots() {
+        let state = AppState::new();
+        
+        // Mark pool as ready but no free slots
+        {
+            let mut reg = state.pool_manager.lock().unwrap();
+            reg.set_health("test-pool", HealthStatus { live: true, ready: true });
+            reg.set_slots("test-pool", 4, 0);
+        }
+
+        // should_dispatch should return false
+        assert!(!should_dispatch(&state, "test-pool"), "should refuse dispatch when no free slots");
+    }
+
+    // ORCHD-STREAM-UT-1104: streaming refuses dispatch when pool is not live
+    #[test]
+    fn test_orchd_stream_ut_1104_health_gate_refuses_not_live() {
+        let state = AppState::new();
+        
+        // Mark pool as not live
+        {
+            let mut reg = state.pool_manager.lock().unwrap();
+            reg.set_health("test-pool", HealthStatus { live: false, ready: true });
+            reg.set_slots("test-pool", 4, 2);
+        }
+
+        // should_dispatch should return false
+        assert!(!should_dispatch(&state, "test-pool"), "should refuse dispatch when not live");
+    }
 }

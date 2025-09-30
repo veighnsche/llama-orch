@@ -2,6 +2,7 @@ pub mod artifacts;
 pub mod capabilities;
 pub mod catalog;
 pub mod control;
+pub mod handoff;
 pub mod placement;
 pub mod session;
 pub mod streaming;

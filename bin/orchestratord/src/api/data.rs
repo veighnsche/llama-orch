@@ -3,7 +3,7 @@ use http::{HeaderMap, StatusCode};
 use serde_json::json;
 
 use crate::domain::error::OrchestratorError as ErrO;
-use crate::{services, state::AdmissionInfo, state::AppState};
+use crate::{services, state::AdmissionInfo, state::AdmissionSnapshot, state::AppState};
 use contracts_api_types as api;
 
 pub async fn get_session(
@@ -53,12 +53,7 @@ pub async fn create_task(
     if body.deadline_ms <= 0 {
         return Err(ErrO::DeadlineUnmet);
     }
-    if body.model_ref == "pool-unavailable" {
-        return Err(ErrO::PoolUnavailable);
-    }
-    if body.prompt.as_deref() == Some("cause-internal") {
-        return Err(ErrO::Internal);
-    }
+    // Removed sentinel validations - TODO: integrate catalog-core
     if let Some(exp) = body.expected_tokens {
         if exp >= 2_000_000 {
             return Err(ErrO::QueueFullDropLru { retry_after_ms: Some(1000) });
@@ -105,16 +100,33 @@ pub async fn create_task(
     // on queue depth, slots_free, and perf_tokens_per_s.
     // Simple ETA heuristic per spec: predicted_start_ms = queue_position * 100
     let predicted_start_ms = pos * 100;
+    // Build streams and preparation (Owner F's work)
+    let streams = api::AdmissionStreams {
+        sse: format!("/v2/tasks/{}/events", body.task_id),
+        sse_verbose: format!("/v2/tasks/{}/events?verbose=true", body.task_id),
+    };
+    let preparation = api::Preparation { steps: vec![] };
+    
     // Record the admission snapshot for use by stream
     {
         let mut map = state.admissions.lock().unwrap();
         map.insert(
             body.task_id.clone(),
-            AdmissionInfo { queue_position: pos, predicted_start_ms },
+            AdmissionSnapshot { 
+                info: AdmissionInfo { queue_position: pos, predicted_start_ms },
+                request: body.clone(),
+            },
         );
     }
     // Success path
-    let admission = api::AdmissionResponse { task_id: body.task_id.clone(), queue_position: pos as i32, predicted_start_ms, backoff_ms: 0 };
+    let admission = api::AdmissionResponse { 
+        task_id: body.task_id.clone(), 
+        queue_position: pos as i32, 
+        predicted_start_ms, 
+        backoff_ms: 0,
+        streams: Some(streams),
+        preparation: Some(preparation),
+    };
 
     // TODO[ORCHD-ADMISSION-STREAMS-0008]: Populate `AdmissionResponse.streams` with direct
     // links to stream endpoints once `contracts_api_types` is regenerated from OpenAPI.
@@ -169,12 +181,14 @@ pub async fn create_task(
 pub async fn stream_task(
     state: State<AppState>,
     axum::extract::Path(id): axum::extract::Path<String>,
+    axum::Extension(correlation_id): axum::Extension<String>,
 ) -> Result<impl IntoResponse, ErrO> {
     // TODO[ORCHD-STREAM-VERBOSE-0011]: Parse `?verbose=true` via axum::extract::Query and
     // propagate a boolean to `services::streaming::render_sse_for_task_verbose(...)` (to be added),
     // so that selected `metrics` frames include `{"human": "...", "phase": "..."}` breadcrumbs.
     let mut headers = HeaderMap::new();
     headers.insert("Content-Type", "text/event-stream".parse().unwrap());
+    headers.insert("X-Correlation-Id", correlation_id.parse().unwrap());
     // Seed budget headers (unknown session at this layer); consider mapping task->session later
     headers.insert("X-Budget-Tokens-Remaining", "0".parse().unwrap());
     headers.insert("X-Budget-Time-Remaining-Ms", "0".parse().unwrap());
@@ -198,6 +212,8 @@ pub async fn cancel_task(
             ("reason", "client"),
         ],
     );
+    // Update queue depth
+    crate::metrics::set_gauge("queue_depth", &[], 0);
     // Signal cancel to streaming service via shared state
     if let Ok(mut guard) = state.cancellations.lock() {
         guard.insert(id.clone());

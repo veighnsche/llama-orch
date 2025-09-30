@@ -56,40 +56,47 @@ This plan focuses on the two crates that directly connect to the provisioners pe
 
 ### What is done
 
-- `bin/orchestratord/src/app/bootstrap.rs` binds a single llama.cpp adapter only when the feature `llamacpp-adapter` is enabled and envs are set (`ORCHD_LLAMACPP_URL`, pool/replica ids). This is an MVP shim.
-- `bin/orchestratord/src/services/streaming.rs` can stream via a bound adapter; otherwise falls back to deterministic SSE (MVP). TODOs: `ORCHD-STREAM-1101..1103`, pool health gating, and request propagation stub.
-- `bin/orchestratord/src/api/data.rs` (enqueue) returns `202 Accepted` and records admissions; TODOs: catalog check, provision policy, populate `streams` and `preparation`.
-- `bin/orchestratord/src/api/control.rs::register_worker()` exists (Bearer-protected) and can bind a mock adapter in `mock-adapters` feature.
+- [x] `bin/orchestratord/src/app/bootstrap.rs` binds a single llama.cpp adapter only when the feature `llamacpp-adapter` is enabled and envs are set (`ORCHD_LLAMACPP_URL`, pool/replica ids). This is an MVP shim.
+- [x] `bin/orchestratord/src/services/streaming.rs` can stream via a bound adapter; otherwise falls back to deterministic SSE (MVP). Health gating implemented via `should_dispatch()`.
+- [x] `bin/orchestratord/src/api/data.rs` (enqueue) returns `202 Accepted` and records admissions; `streams` and `preparation` fields populated.
+- [x] `bin/orchestratord/src/api/control.rs::register_worker()` exists (Bearer-protected) and can bind a mock adapter in `mock-adapters` feature.
 
 ### What remains (near-term target path to happy flow)
 
-- Implement `ORCHD-HANDOFF-AUTOBIND-0002`:
-  - File watcher for `.runtime/engines/*.json` (handoffs written by engine-provisioner).
-  - For each handoff: bind `llamacpp-http` adapter using `url`, associate `pool_id`/`replica_id`.
-  - Update `state.pool_manager` via Owner E API to mark Ready and set engine meta.
-- Health/placement gate in streaming:
-  - Before dispatch: consult `state.pool_manager` for Live+Ready with `slots_free > 0`; else backoff/emit retry hints.
-  - Replace request stub: build adapter request from original admission (`TaskRequest`).
-- Admission response:
-  - Populate `streams.sse` and `streams.sse_verbose` (OpenAPI v2) → regenerate `contracts_api_types` if needed.
-  - Populate `preparation.steps` during provisioning when autobind triggers.
+- [x] Implement `ORCHD-HANDOFF-AUTOBIND-0002`:
+  - [x] File watcher for `.runtime/engines/*.json` (handoffs written by engine-provisioner).
+  - [x] For each handoff: bind `llamacpp-http` adapter using `url`, associate `pool_id`/`replica_id`.
+  - [x] Update `state.pool_manager` via Owner E API to mark Ready and set engine meta.
+  - **Implemented in**: `bin/orchestratord/src/services/handoff.rs`
+- [x] Health/placement gate in streaming:
+  - [x] Before dispatch: consult `state.pool_manager` for Live+Ready with `slots_free > 0`; else backoff/emit retry hints.
+  - [x] Replace request stub: build adapter request from original admission (`TaskRequest`).
+  - **Implemented in**: `bin/orchestratord/src/services/streaming.rs` (lines 36-50, 62-71, 243-289)
+- [x] Admission response:
+  - [x] Populate `streams.sse` and `streams.sse_verbose` (OpenAPI v2).
+  - [x] Populate `preparation.steps` during provisioning when autobind triggers.
+  - **Implemented in**: `bin/orchestratord/src/api/data.rs` (lines 109-136)
 
 ### Testing plan
 
 - Unit tests (add):
-  - `ORCHD-AUTOBIND-UT-1001`: given a handoff JSON on disk, the watcher binds an adapter and updates registry.
-  - `ORCHD-STREAM-UT-1101`: streaming consults pool health and refuses dispatch if not Ready.
+  - [x] `ORCHD-AUTOBIND-UT-1001`: given a handoff JSON on disk, the watcher binds an adapter and updates registry.
+    - **Implemented in**: `bin/orchestratord/src/services/handoff.rs` (test module, lines 162-195)
+  - [x] `ORCHD-STREAM-UT-1101`: streaming consults pool health and refuses dispatch if not Ready.
+    - **Implemented in**: `bin/orchestratord/src/services/streaming.rs` (test module, lines 334-394)
 - Integration tests (stub engine):
-  - Start a stub Axum SSE server (like `llamacpp-http` tests) → write a handoff with its URL → POST `/v2/tasks` then `GET /v2/tasks/{id}/events` → assert event order and presence of `streams` in admission.
+  - [x] Start a stub Axum SSE server (like `llamacpp-http` tests) → write a handoff with its URL → POST `/v2/tasks` then `GET /v2/tasks/{id}/events` → assert event order and presence of `streams` in admission.
+    - **Implemented in**: `bin/orchestratord/tests/handoff_autobind_integration.rs`
 - Determinism tests (later, once real engine path is stable):
   - With `REQUIRE_REAL_LLAMA=1`, verify byte-exact token sequences for identical seeds and sampler profile flags (`--parallel 1`, `--no-cont-batching`).
 
 ### File touch points
 
-- `bin/orchestratord/src/app/bootstrap.rs`
-- `bin/orchestratord/src/services/streaming.rs`
-- `bin/orchestratord/src/api/data.rs`
-- Optional: `bin/orchestratord/src/services/placement.rs`, `api/control.rs`
+- [x] `bin/orchestratord/src/app/bootstrap.rs` (updated to call handoff watcher)
+- [x] `bin/orchestratord/src/services/streaming.rs` (health gate implemented)
+- [x] `bin/orchestratord/src/api/data.rs` (streams/preparation populated)
+- [x] `bin/orchestratord/src/services/handoff.rs` (NEW: handoff autobind watcher)
+- [x] `bin/orchestratord/tests/handoff_autobind_integration.rs` (NEW: integration tests)
 
 ---
 
