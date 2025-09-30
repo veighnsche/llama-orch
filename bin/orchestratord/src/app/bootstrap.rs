@@ -20,10 +20,16 @@ pub fn build_app() -> Router {
     build_router(state)
 }
 
+#[cfg(feature = "metrics")]
 pub fn init_observability() {
     use tracing_subscriber::{fmt, EnvFilter};
     let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
     let _ = fmt().with_env_filter(filter).json().try_init();
+}
+
+#[cfg(not(feature = "metrics"))]
+pub fn init_observability() {
+    // No-op when metrics/advanced logging is disabled
 }
 
 pub fn start_server() {

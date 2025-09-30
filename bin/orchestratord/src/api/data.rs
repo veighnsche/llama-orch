@@ -3,7 +3,7 @@ use http::{HeaderMap, StatusCode};
 use serde_json::json;
 
 use crate::domain::error::OrchestratorError as ErrO;
-use crate::{services, state::AppState};
+use crate::{services, state::AdmissionInfo, state::AppState};
 use contracts_api_types as api;
 
 pub async fn get_session(
@@ -44,6 +44,9 @@ pub async fn create_task(
     Json(body): Json<api::TaskRequest>,
 ) -> Result<impl IntoResponse, ErrO> {
     // Error taxonomy sentinels
+    // TODO[ORCHD-DATA-1001]: Replace sentinel validations with real policy from config schema.
+    //  - `ctx` bounds, `deadline_ms`, and engine/pool availability should be validated via
+    //    orchestrator-core placement/admission hooks and pool-manager state, not string sentinels.
     if body.ctx < 0 {
         return Err(ErrO::InvalidParams("ctx must be >= 0".into()));
     }
@@ -67,13 +70,40 @@ pub async fn create_task(
         }
     }
 
-    // Success path (stub ETA/position)
-    let admission = api::AdmissionResponse {
-        task_id: body.task_id.clone(),
-        queue_position: 3,
-        predicted_start_ms: 420,
-        backoff_ms: 0,
+    // Enqueue into the single bounded FIFO with metrics
+    let prio = match body.priority {
+        api::Priority::Interactive => orchestrator_core::queue::Priority::Interactive,
+        api::Priority::Batch => orchestrator_core::queue::Priority::Batch,
     };
+    // Map task_id to a stable u32 for queue identity
+    let id_u32 = {
+        use std::hash::{Hash, Hasher};
+        let mut h = std::collections::hash_map::DefaultHasher::new();
+        body.task_id.hash(&mut h);
+        (h.finish() & 0xFFFF_FFFF) as u32
+    };
+    let pos = {
+        let mut q = state.admission.lock().unwrap();
+        match q.enqueue(id_u32, prio) {
+            Ok(p) => p,
+            Err(()) => {
+                // Backpressure: reject with retry hints
+                return Err(ErrO::AdmissionReject { policy_label: "reject".into(), retry_after_ms: Some(1000) });
+            }
+        }
+    };
+    // TODO[ORCHD-ADMISSION-2002]: Replace heuristic with ETA derived from pool throughput and
+    // active leases once adapter/pool metrics are wired. Spec: predicted_start_ms should be based
+    // on queue depth, slots_free, and perf_tokens_per_s.
+    // Simple ETA heuristic per spec: predicted_start_ms = queue_position * 100
+    let predicted_start_ms = pos * 100;
+    // Record the admission snapshot for use by stream
+    {
+        let mut map = state.admissions.lock().unwrap();
+        map.insert(body.task_id.clone(), AdmissionInfo { queue_position: pos, predicted_start_ms });
+    }
+    // Success path
+    let admission = api::AdmissionResponse { task_id: body.task_id.clone(), queue_position: pos as i32, predicted_start_ms, backoff_ms: 0 };
 
     // Emit a simple log line for BDD assertions
     let mut lg = state.logs.lock().unwrap();
@@ -92,6 +122,8 @@ pub async fn create_task(
         ),
     );
 
+    // TODO[ORCHD-BUDGETS-3001]: Budget headers should be computed from a real budget policy and
+    // session linkage (task_id -> session_id) rather than best-effort lookup.
     // Budget headers based on session info (best-effort)
     let svc = services::session::SessionService::new(
         state.sessions.clone(),

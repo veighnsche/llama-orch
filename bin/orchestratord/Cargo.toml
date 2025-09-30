@@ -5,8 +5,8 @@ edition = "2021"
 license = "GPL-3.0-or-later"
 
 [features]
-# Keep defaults to preserve current behavior/build
-default = ["server", "metrics", "artifacts", "mock-adapters"]
+# MVP defaults: server and artifacts enabled; other features opt-in.
+default = ["server", "artifacts"]
 
 # Optional: bind llama.cpp HTTP adapter at startup when configured
 llamacpp-adapter = [
@@ -35,9 +35,7 @@ artifacts = [
 ]
 
 # Use mock adapters by default for vertical slice/dev
-mock-adapters = [
-    "dep:worker-adapters-mock",
-]
+mock-adapters = ["dep:worker-adapters-mock"]
 
 [lib]
 name = "orchestratord"

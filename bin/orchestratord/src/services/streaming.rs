@@ -14,6 +14,12 @@ use worker_adapters_adapter_api as adapter_api;
 /// or gate fallback behind a dev/testing feature flag once adapters are always present.
 pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
     // Try adapter-host first (if a worker is registered). Fallback to deterministic SSE.
+    // TODO[ORCHD-STREAM-1101]: Build TaskRequest from actual admission + request context
+    // (session linkage, engine/model placement decision, budgets) instead of a stub.
+    // TODO[ORCHD-STREAM-1102]: Propagate cancellation via a structured token to adapters
+    // (not just shared state polling) and verify no tokens after cancel across all adapters.
+    // TODO[ORCHD-STREAM-1103]: Map adapter errors to domain errors and emit `error` SSE frames
+    // with `code/message/engine` per spec.
     if let Ok(mut s) = try_dispatch_via_adapter(state, &id) {
         let mut events: Vec<(String, serde_json::Value)> = Vec::new();
         loop {
@@ -41,6 +47,8 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
         return build_sse_from_events(state, &id, events);
     }
     // Emit metrics: tasks started
+    // TODO[ORCHD-METRICS-1201]: Replace local metrics helpers with shared workspace metrics crate
+    // and ensure series names/labels match `ci/metrics.lint.json`. Add sampling/throttling where needed.
     crate::metrics::inc_counter(
         "tasks_started_total",
         &[
@@ -63,9 +71,23 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
         42.0,
     );
 
-    // TODO(OwnerB-ORCH-SSE-TRANSCRIPT-STUB): Deterministic transcript used for MVP demo flows.
-    // Replace with adapter-provided frames; keep shape/labels consistent with specs.
-    let started = json!({"queue_position": 3, "predicted_start_ms": 420});
+    // Started frame fields from admission snapshot if available
+    // TODO[ORCHD-SSE-1301]: Include additional started fields when available (engine, pool, replica,
+    // sampler_profile_version) to match observability guidance.
+    let started_fields = {
+        if let Ok(map) = state.admissions.lock() {
+            if let Some(info) = map.get(&id) {
+                json!({
+                    "queue_position": info.queue_position,
+                    "predicted_start_ms": info.predicted_start_ms,
+                })
+            } else {
+                json!({"queue_position": 0, "predicted_start_ms": 0})
+            }
+        } else {
+            json!({"queue_position": 0, "predicted_start_ms": 0})
+        }
+    };
     let token0 = json!({"t": "Hello", "i": 0});
     let token1 = json!({"t": " world", "i": 1});
     let metrics_ev = json!({
@@ -100,7 +122,7 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
     );
 
     // Build events with potential early termination on cancel
-    let mut events: Vec<(&str, serde_json::Value)> = vec![("started", started.clone())];
+    let mut events: Vec<(&str, serde_json::Value)> = vec![("started", started_fields.clone())];
 
     let is_canceled = |st: &AppState, id: &str| -> bool {
         if let Ok(guard) = st.cancellations.lock() {
@@ -161,8 +183,21 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
         }
         events = batched;
     }
-
-    build_and_persist_sse(state, &id, events)
+    // Structured log for tokens_out and common fields
+    let tokens_out_count = events
+        .iter()
+        .filter(|(t, _)| <&str as AsRef<str>>::as_ref(t) == "token")
+        .count();
+    if let Ok(mut lg) = state.logs.lock() {
+        lg.push(format!(
+            "{{\"job_id\":\"{}\",\"engine\":\"{}\",\"pool_id\":\"{}\",\"tokens_out\":{}}}",
+            id, "llamacpp", "default", tokens_out_count
+        ));
+    }
+    // Persist transcript and return SSE body
+    let events_owned: Vec<(String, serde_json::Value)> =
+        events.into_iter().map(|(t, d)| (t.to_string(), d)).collect();
+    build_sse_from_events(state, &id, events_owned)
 }
 
 fn try_dispatch_via_adapter(
@@ -203,9 +238,12 @@ fn build_sse_from_events(
     // Persist transcript as artifact via configured store (and keep compat map updated)
     let transcript = json!({"events": events.iter().map(|(t, d)| json!({"type": t, "data": d})).collect::<Vec<_>>(),});
     let _ = crate::services::artifacts::put(state, transcript);
-    // Clear cancellation flag for this task id to avoid leakage
+    // Clear cancellation flag and admission snapshot for this task id to avoid leakage
     if let Ok(mut guard) = state.cancellations.lock() {
         let _ = guard.remove(id);
+    }
+    if let Ok(mut map) = state.admissions.lock() {
+        let _ = map.remove(id);
     }
     build_and_persist_sse(state, id, events)
 }

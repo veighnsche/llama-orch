@@ -8,17 +8,17 @@ Scope: Derived from `CHECKLIST_RUST_MVP.md` and `.specs/00_mvp.md`.
 
 ## Owner A — Orchestratord + Core
 
-- [ ] Implement `POST /v1/tasks` with ctx guardrails; enqueue to single bounded FIFO
-- [ ] Implement `GET /v1/tasks/:id/stream` SSE (started → token* → end, error) with `queue_position`
-- [ ] Implement `POST /v1/tasks/:id/cancel` (race-free; no tokens after cancel)
-- [ ] Implement `GET /v1/pools/:id/health` (liveness + readiness via adapter)
-- [ ] Add middleware to ensure `X-Correlation-Id` on all responses (incl. errors)
-- [ ] 429 backpressure with `Retry-After`, `X-Backoff-Ms`, body `{ policy_label, retriable, retry_after_ms }`
-- [ ] Orchestrator-core: in-memory bounded FIFO + cancel + `queue_position` helper
-- [ ] Wire queue into admission/streaming; logs include `job_id`, `engine`, `pool_id`, `tokens_out`
-- [ ] Default loopback bind; integrate auth-min for non-loopback (Bearer, timing-safe compare)
-- [ ] Adjust Cargo features to disable non-MVP defaults (metrics/artifacts/mock) where possible
-- [ ] Tests: admission → stream → end happy path; cancel path; queue-full 429
+- [x] Implement `POST /v1/tasks` with ctx guardrails; enqueue to single bounded FIFO
+- [x] Implement `GET /v1/tasks/:id/stream` SSE (started → token* → end, error) with `queue_position`
+- [x] Implement `POST /v1/tasks/:id/cancel` (race-free; no tokens after cancel)
+- [x] Implement `GET /v1/pools/:id/health` (liveness + readiness via adapter)
+- [x] Add middleware to ensure `X-Correlation-Id` on all responses (incl. errors)
+- [x] 429 backpressure with `Retry-After`, `X-Backoff-Ms`, body `{ policy_label, retriable, retry_after_ms }`
+- [x] Orchestrator-core: in-memory bounded FIFO + cancel + `queue_position` helper
+- [x] Wire queue into admission/streaming; logs include `job_id`, `engine`, `pool_id`, `tokens_out`
+- [x] Default loopback bind; integrate auth-min for non-loopback (Bearer, timing-safe compare)
+- [x] Adjust Cargo features to disable non-MVP defaults (metrics/artifacts/mock) where possible
+- [x] Tests: admission → stream → end happy path; cancel path; queue-full 429
 
 ---
 
