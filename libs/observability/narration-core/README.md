@@ -43,12 +43,38 @@ flowchart LR
 
 ## 8. Metrics & Logs
 
-- Minimal logs.
+- Emits structured narration events via tracing
+- All events include: actor, action, target, human (plain English)
+- Optional fields: correlation_id, session_id, pool_id, replica_id, etc.
+- Automatic secret redaction (bearer tokens, API keys)
 
 ## 9. Runbook (Dev)
 
+- Run tests: `cargo test -p observability-narration-core -- --nocapture`
 - Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
 - Rebuild docs: `cargo run -p tools-readme-index --quiet`
+
+## High/Mid/Low Behavior
+
+### High (Production, CI)
+- **Structured JSON logs**: All narration emitted as JSON with full field taxonomy
+- **Automatic redaction**: Bearer tokens, API keys, secrets masked with `[REDACTED]`
+- **Correlation ID propagation**: Track requests across orchestratord → pool-managerd → provisioners
+- **Zero allocation on hot paths**: Uses tracing's zero-cost abstractions
+- **Test capture disabled**: No overhead from capture adapter in production
+
+### Mid (Development, Local)
+- **Pretty console logs**: Optional human-readable format via `RUST_LOG`
+- **Capture adapter available**: Enable in tests with `CaptureAdapter::install()`
+- **Assertion helpers**: `assert_includes()`, `assert_field()`, `assert_correlation_id_present()`
+- **Story snapshots**: Generate golden files showing complete flows (future)
+
+### Low (Debugging, Troubleshooting)
+- **Grep by correlation_id**: `grep "correlation_id=req-xyz" logs/*.log`
+- **Filter by actor**: `grep "actor=pool-managerd" logs/*.log`
+- **Read the story**: `grep "human=" logs/*.log | jq -r '.human'`
+- **Trace multi-service flows**: Follow correlation_id across service boundaries
+- **Assert in BDD**: Use capture adapter to verify observability coverage
 
 
 ## 10. Status & Owners

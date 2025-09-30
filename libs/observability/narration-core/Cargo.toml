@@ -6,7 +6,6 @@ publish = false
 license = "GPL-3.0-or-later"
 authors = ["llama-orch contributors"]
 autobenches = false
-autotests = false
 autodocs = false
 
 [lib]
@@ -16,3 +15,4 @@ path = "src/lib.rs"
 [dependencies]
 tracing = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
+regex = { workspace = true }

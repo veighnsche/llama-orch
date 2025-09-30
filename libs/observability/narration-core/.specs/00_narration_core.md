@@ -23,6 +23,28 @@ Out of scope:
 - `NarrationFields { human: String, correlation_id: Option<String>, job_id: Option<String>, session_id: Option<String>, pool_id: Option<String>, replica_id: Option<String> }`.
 - Redaction policy: helpers MUST strip or mask secrets (tokens, API keys) and PII.
 
+## Provenance
+
+Every narration event SHOULD include provenance metadata for debugging and audit trails:
+
+- **Emitter identity**: Service name and version (e.g., `orchestratord@0.1.0`, `pool-managerd@0.1.0`)
+- **Emission timestamp**: Milliseconds since epoch when the narration was emitted
+- **Trace context**: Distributed trace ID if available (for cross-service correlation beyond correlation_id)
+- **Source location**: Optional file/line for development builds (stripped in release)
+
+Provenance fields:
+- `emitted_by: Option<String>` — Service name and version (e.g., "orchestratord@0.1.0")
+- `emitted_at_ms: Option<u64>` — Unix timestamp in milliseconds
+- `trace_id: Option<String>` — Distributed trace ID (OpenTelemetry compatible)
+- `span_id: Option<String>` — Span ID within the trace
+- `source_location: Option<String>` — File:line for dev builds (e.g., "data.rs:155")
+
+Provenance enables:
+- **Audit trails**: Who emitted what, when
+- **Version correlation**: Track behavior changes across deployments
+- **Distributed tracing**: Link narration to OpenTelemetry traces
+- **Debug context**: Jump to source in development
+
 ## Integration Points
 
 - Orchestratord: admission, placement, stream start/end/cancel hooks.
@@ -43,3 +65,7 @@ Out of scope:
 - Add a small macro for ergonomics in crates that do not want to depend directly on a facade crate.
 - Provide structured examples/snippets for common events.
 - Optional sampling controls (rate-limit narration under load).
+- Automatic provenance injection via macro (capture service name/version at compile time).
+- Source location capture in debug builds only (zero overhead in release).
+- OpenTelemetry trace context propagation (auto-extract from current span).
+- Provenance aggregation for "who touched this request" summaries.
