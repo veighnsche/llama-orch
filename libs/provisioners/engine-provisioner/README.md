@@ -81,6 +81,21 @@ flowchart LR
 -- -D warnings`
 - Tests for this crate: `cargo test -p provisioners-engine-provisioner -- --nocapture`
 
+### CLI (MVP)
+
+- Build and run the engine provisioner CLI to provision a llama.cpp pool from a config file:
+
+```
+cargo run -p provisioners-engine-provisioner --bin engine-provisioner -- \
+  --config requirements/llamacpp-3090-source.yaml
+```
+
+- Options:
+  - `--config <path>` YAML or JSON matching `contracts/config-schema::Config`.
+  - `--pool <id>` optional pool id; defaults to first `engine: llamacpp` pool.
+
+- On success, writes a handoff file at `.runtime/engines/llamacpp.json` with `{ engine, engine_version, provisioning_mode, url, pool_id, replica_id, model, flags }`.
+
 
 ## 6. Contracts
 
@@ -122,3 +137,10 @@ flowchart LR
 ## What this crate is not
 
 - Not a production service.
+
+## Known shims and TODOs (Owner C)
+
+- [TODO] Engine version capture: `engine_version` currently derived from source ref + `-cuda`/`-cpu`. Replace with server-provided build info or `/version` endpoint when available.
+- [TODO] Graceful drain/reload: implement drain hooks to free prompt slot before shutdown; MVP relies on process kill via pid file.
+- [TODO] Restart-on-crash: add supervision loop and tests; MVP does not restart the process on failure.
+- [TODO] Health/status mapping: basic HTTP probe treats non-200 as transient; tighten to assert 503 during model load when upstream behavior is stable.
