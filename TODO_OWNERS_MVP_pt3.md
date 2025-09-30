@@ -26,28 +26,28 @@ This plan focuses on the two crates that directly connect to the provisioners pe
 
 ### What remains (mid-term target to support provisioners)
 
-- Add a minimal readiness API for provisioners to call:
-  - `register_ready_from_handoff(pool_id, handoff: serde_json::Value)` that sets:
-    - `health = { live: true, ready: true }`
-    - `engine_version`, `device_mask` (from handoff or config), `slots_total/free`
-    - `last_heartbeat_ms = now()`; clear `last_error`
-  - Optional: `set_engine_meta(pool_id, version, digest, catalog_id)` if we want typed fields.
+- [x] Add a minimal readiness API for provisioners to call:
+  - [x] `register_ready_from_handoff(pool_id, handoff: serde_json::Value)` that sets:
+    - [x] `health = { live: true, ready: true }`
+    - [x] `engine_version`, `device_mask` (from handoff or config), `slots_total/free`
+    - [x] `last_heartbeat_ms = now()`; clear `last_error`
+  - [x] Optional: `set_engine_meta(pool_id, version, digest, catalog_id)` if we want typed fields.
 - Expose this via one of:
-  - a small in-crate helper callable by orchestrator on ingest, or
+  - [x] a small in-crate helper callable by orchestrator on ingest, or
   - an HTTP control endpoint in `orchestratord` that forwards to the registry (Bearer auth).
 - Backoff and drains integration stubs are present in crate; expose them as needed for placement gates.
 
 ### Testing plan
 
 - Unit tests (add):
-  - `OC-POOL-3101`: registering from a valid handoff sets `ready=true`, fills version/slots, clears `last_error`.
-  - `OC-POOL-3102`: repeated registrations update heartbeat/version; never panic on partial handoff fields.
+  - [x] `OC-POOL-3101`: registering from a valid handoff sets `ready=true`, fills version/slots, clears `last_error`.
+  - [x] `OC-POOL-3102`: repeated registrations update heartbeat/version; never panic on partial handoff fields.
 - Integration test (once orchestrator autobind exists):
   - Start orchestrator with file watcher, write a valid handoff JSON → assert `GET /control/pools/{id}/health` reflects Live+Ready and engine_version.
 
 ### File touch points
 
-- `libs/pool-managerd/src/registry.rs`
+- [x] `libs/pool-managerd/src/registry.rs`
 - Optional orchestrator glue: `bin/orchestratord/src/services/control.rs` or a new services module
 
 ---
