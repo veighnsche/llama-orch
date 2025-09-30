@@ -1,0 +1,19 @@
+{
+  "engine": "llamacpp",
+  "engine_version": "fixture-1.0",
+  "flags": [
+    "--parallel",
+    "1",
+    "--no-cont-batching",
+    "--no-webui",
+    "--metrics"
+  ],
+  "model": {
+    "id": "/tmp/.tmpsmg2hW/test.gguf",
+    "path": "/tmp/.tmpsmg2hW/test.gguf"
+  },
+  "pool_id": "p-fixture",
+  "provisioning_mode": "source",
+  "replica_id": "r0",
+  "url": "http://127.0.0.1:8080"
+}

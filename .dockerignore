@@ -1,0 +1,47 @@
+# Reduce Docker build context size and speed up COPY . .
+# Exclude VCS, build outputs, caches, and large artifacts
+
+# VCS
+.git
+.gitmodules
+.gitignore
+
+# Rust build outputs
+**/target/
+
+# Node/Frontend artifacts
+**/node_modules/
+**/dist/
+**/dist-ssr/
+coverage/
+
+# IDE/system files
+.DS_Store
+.vscode/
+.idea/
+*.sw?
+
+# Logs
+*.log
+**/*.log
+
+# Caches and reports
+.cache/
+.pytest_cache/
+.benchmarks/
+.reports/
+
+# Local env files
+.env
+.env.*
+**/.env
+**/.env.*
+.dev.vars*
+
+# Runtime/test artifacts
+**/.runtime/
+**/.proof_bundle/
+
+# Temporary files
+**/*.tmp
+**/*.bak
