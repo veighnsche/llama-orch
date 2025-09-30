@@ -2,14 +2,20 @@ use anyhow::{anyhow, Context, Result};
 use openapiv3;
 use serde_yaml;
 use std::{fs, process::Command};
-
 use crate::util::{repo_root, write_if_changed};
 
-pub fn regen_all() -> Result<()> {
-    regen_openapi()?;
-    regen_schema()?;
-    spec_extract()?;
-    println!("regen: OK");
+pub fn spec_extract() -> Result<()> {
+    let status = Command::new("cargo")
+        .arg("run")
+        .arg("-p")
+        .arg("tools-spec-extract")
+        .arg("--quiet")
+        .status()
+        .context("running tools-spec-extract")?;
+    if !status.success() {
+        return Err(anyhow!("spec-extract failed"));
+    }
+    println!("spec-extract: OK");
     Ok(())
 }
 
@@ -45,6 +51,7 @@ pub fn regen_openapi() -> Result<()> {
 
 pub fn regen_schema() -> Result<()> {
     let root = repo_root()?;
+    let out = root.join("contracts/schemas/config.schema.json");
     contracts_config_schema::emit_schema_json(&out)
         .map_err(|e| anyhow!("emit schema failed: {e}"))?;
     println!("regen-schema: OK");
