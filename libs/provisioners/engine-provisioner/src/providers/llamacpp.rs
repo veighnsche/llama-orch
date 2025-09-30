@@ -9,7 +9,8 @@ use std::time::Duration;
 
 use crate::plan::{Plan, PlanStep};
 use crate::util::{
-    cmd, cmd_in, default_cache_dir, default_models_cache, default_run_dir, ok_status,
+    cmd, cmd_in, default_cache_dir, default_models_cache, default_run_dir, ensure_flag,
+    ensure_flag_pair, http_ok, ok_status, select_listen_port, wait_for_health, write_handoff_file,
 };
 use crate::{cfg, EngineProvisioner};
 
@@ -290,12 +291,15 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
                     // Not fatal for MVP if server exposes metrics lazily; warn via stderr
                     eprintln!("warning: /metrics not reachable at {} (flag --metrics set)", url);
                 }
-                // Handoff file (OwnerC-HANDOFF)
-                let engine_version = format!(
-                    "llamacpp-source:{}{}",
-                    src.r#ref,
-                    if gpu_enabled { "-cuda" } else { "-cpu" }
-                );
+                // Prefer server-provided version when available
+                let engine_version = try_fetch_engine_version("127.0.0.1", port)
+                    .unwrap_or_else(|| {
+                        format!(
+                            "llamacpp-source:{}{}",
+                            src.r#ref,
+                            if gpu_enabled { "-cuda" } else { "-cpu" }
+                        )
+                    });
                 let handoff = serde_json::json!({
                     "engine": "llamacpp",
                     "engine_version": engine_version,
@@ -442,6 +446,36 @@ fn find_compat_host_compiler() -> Option<(std::path::PathBuf, std::path::PathBuf
             let cxx_name = format!("clang++{}", ver);
             let cxx = which::which(&cxx_name).unwrap_or_else(|_| cc.with_file_name(cxx_name));
             return Some((cc, cxx));
+        }
+    }
+    None
+}
+
+fn try_fetch_engine_version(host: &str, port: u16) -> Option<String> {
+    // Best-effort: GET /version and parse JSON body for version-like fields.
+    use std::net::TcpStream;
+    let addr = format!("{}:{}", host, port);
+    let mut stream = TcpStream::connect(addr).ok()?;
+    let req = format!(
+        "GET /version HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n",
+        host
+    );
+    let _ = std::io::Write::write_all(&mut stream, req.as_bytes());
+    let mut buf = Vec::new();
+    let _ = std::io::Read::read_to_end(&mut stream, &mut buf);
+    let text = String::from_utf8_lossy(&buf);
+    if let Some(idx) = text.find("\r\n\r\n") {
+        let body = &text[idx + 4..];
+        if let Ok(v) = serde_json::from_str::<serde_json::Value>(body) {
+            if let Some(s) = v.get("version").and_then(|x| x.as_str()) {
+                return Some(s.to_string());
+            }
+            if let Some(s) = v.get("git_describe").and_then(|x| x.as_str()) {
+                return Some(s.to_string());
+            }
+            if let Some(s) = v.get("build").and_then(|x| x.as_str()) {
+                return Some(s.to_string());
+            }
         }
     }
     None

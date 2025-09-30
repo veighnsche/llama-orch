@@ -1,5 +1,5 @@
 use clap::Parser;
-use provisioners_engine_provisioner::{provider_for, EngineProvisioner};
+use provisioners_engine_provisioner::provider_for;
 use std::path::PathBuf;
 
 /// Engine Provisioner CLI — start engines per config (MVP)

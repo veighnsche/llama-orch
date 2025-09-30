@@ -28,8 +28,8 @@ Scope: Provisioners are REQUIRED for MVP UX; Haiku must pass end-to-end with aut
   - Non-fatal warning if unreachable during early boot.
 - [x] Integration: write endpoint URL to an orchestrator-consumable source
   - Writes `.runtime/engines/llamacpp.json` payload `{ engine, engine_version, provisioning_mode, url, pool_id, replica_id, model, flags }`.
-- [ ] Shutdown semantics for drain/reload; ensure prompt slot free
-  - TODO(OwnerC-DRAIN): placeholder; MVP relies on `stop_pool()` TERM+KILL fallback.
+- [x] Shutdown semantics for drain/reload; ensure prompt slot free (MVP)
+  - Implemented: `stop_pool()` sends TERM, waits up to 5s, then KILL; prompt slot freeing via engine drain hook remains TODO post-MVP.
 - [x] Tests: smoke (spawn → health), restart on crash, port collision handling
   - Smoke test present (`tests/llamacpp_smoke.rs`, ignored behind `LLAMA_ORCH_SMOKE=1`).
   - Port collision unit test added.

@@ -140,7 +140,7 @@ cargo run -p provisioners-engine-provisioner --bin engine-provisioner -- \
 
 ## Known shims and TODOs (Owner C)
 
-- [TODO] Engine version capture: `engine_version` currently derived from source ref + `-cuda`/`-cpu`. Replace with server-provided build info or `/version` endpoint when available.
-- [TODO] Graceful drain/reload: implement drain hooks to free prompt slot before shutdown; MVP relies on process kill via pid file.
+- [DONE] Engine version capture: best-effort `/version` probe parsed to populate `engine_version`, with fallback to `source-ref + -cuda|-cpu`.
+- [MVP DONE] Graceful shutdown: `stop_pool()` now sends `TERM` and waits up to 5s before `KILL`; upstream drain hooks TBD.
 - [TODO] Restart-on-crash: add supervision loop and tests; MVP does not restart the process on failure.
-- [TODO] Health/status mapping: basic HTTP probe treats non-200 as transient; tighten to assert 503 during model load when upstream behavior is stable.
+- [DONE] Health/status mapping: readiness wait treats `503` as transient during model load; `/metrics` sanity checked when `--metrics` is set.
