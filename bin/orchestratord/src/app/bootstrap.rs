@@ -23,7 +23,25 @@ pub fn build_app() -> Router {
     }
     // Start handoff autobind watcher to auto-bind adapters from engine-provisioner handoffs
     // ORCHD-HANDOFF-AUTOBIND-0002: Implemented in services::handoff module
-    crate::services::handoff::spawn_handoff_autobind_watcher(state.clone());
+    // TODO(CLOUD-PROFILE): Feature-gate this for HOME_PROFILE only
+    if !state.cloud_profile_enabled() {
+        crate::services::handoff::spawn_handoff_autobind_watcher(state.clone());
+    }
+    
+    // Spawn stale node checker if cloud profile enabled
+    if state.cloud_profile_enabled() {
+        let registry = state.service_registry().clone();
+        let check_interval_secs = std::env::var("ORCHESTRATORD_STALE_CHECK_INTERVAL_SECS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(10);
+        service_registry::heartbeat::spawn_stale_checker(registry, check_interval_secs);
+        tracing::info!(
+            interval_secs = check_interval_secs,
+            "Started stale node checker for cloud profile"
+        );
+    }
+    
     build_router(state)
 }
 

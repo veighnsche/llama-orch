@@ -24,16 +24,27 @@ members = [
     "libs/adapter-host",
     "libs/observability/narration-core",
     "libs/auth-min",
+    # Cloud profile: Shared libraries
+    "libs/shared/pool-registry-types",
+    # Cloud profile: Control plane libraries
+    "libs/control-plane/service-registry",
+    # Cloud profile: GPU node libraries
+    "libs/gpu-node/handoff-watcher",
+    "libs/gpu-node/node-registration",
+    # Test harnesses
     "test-harness/e2e-haiku",
     "test-harness/metrics-contract",
     "test-harness/determinism-suite",
     "test-harness/chaos",
     "test-harness/bdd",
+    # Consumers
     "consumers/llama-orch-sdk",
     "consumers/llama-orch-utils",
+    # Tools
     "tools/spec-extract",
     "tools/openapi-client",
     "tools/readme-index",
+    # Provisioners
     "libs/provisioners/engine-provisioner",
     "libs/provisioners/engine-provisioner/bdd",
     "libs/provisioners/model-provisioner",
@@ -75,3 +86,4 @@ wiremock = "0.6"
 openapiv3 = "1"
 jsonschema = "0.17"
 once_cell = "1"
+chrono = { version = "0.4", features = ["serde"] }

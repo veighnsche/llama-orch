@@ -8,6 +8,22 @@
 
 This is the single active TODO tracker for the repository. Maintain execution order and update after each task with what changed, where, and why.
 
+---
+
+## ⚠️ CLOUD PROFILE MIGRATION PAUSED - SECURITY GATE
+
+**Status**: 🔴 **MIGRATION PAUSED AT PHASE 5**  
+**Reason**: Critical security vulnerabilities in authentication (timing attack + no pool-managerd auth)  
+**Action**: Fix P0 security issues before continuing migration  
+**ETA**: ~1 week  
+
+**See**: `.docs/CLOUD_MIGRATION_PAUSED.md` for details  
+**Fix Checklist**: `.docs/PHASE5_FIX_CHECKLIST.md`
+
+**Current**: Focus on Phase 5 security fixes OR continue HOME_PROFILE work (unaffected)
+
+---
+
 ## P0 — Home Profile v2.1 Compliance (Remaining)
 
 ### Contracts — OpenAPI (control)
