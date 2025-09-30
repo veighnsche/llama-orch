@@ -1,5 +1,5 @@
 #[cfg(feature = "provider-llamacpp")]
-#[path = "llamacpp.rs"]
+#[path = "llamacpp/mod.rs"]
 pub mod llamacpp;
 
 #[cfg(feature = "provider-tgi")]
