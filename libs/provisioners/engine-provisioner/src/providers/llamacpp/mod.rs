@@ -250,7 +250,7 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
 
         // Readiness/health wait
         let url = format!("http://127.0.0.1:{}", port);
-        match wait_for_health("127.0.0.1", port, Duration::from_secs(120)) {
+        match wait_for_health("127.0.0.1", port, std::time::Duration::from_secs(120)) {
             Ok(()) => {
                 if !http_ok("127.0.0.1", port, "/metrics").unwrap_or(false) {
                     eprintln!("warning: /metrics not reachable at {} (flag --metrics set)", url);
@@ -285,3 +285,83 @@ impl EngineProvisioner for LlamaCppSourceProvisioner {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::LlamaCppSourceProvisioner;
+    use crate::{cfg, EngineProvisioner};
+
+    fn base_pool() -> cfg::PoolConfig {
+        cfg::PoolConfig {
+            id: "p1".to_string(),
+            engine: cfg::Engine::Llamacpp,
+            model: "m1".to_string(),
+            quant: None,
+            ctx: None,
+            devices: vec![0],
+            tensor_split: None,
+            preload: None,
+            require_same_engine_version: None,
+            sampler_profile_version: None,
+            provisioning: cfg::ProvisioningConfig::default(),
+            queue: cfg::QueueConfig::default(),
+            admission: cfg::AdmissionConfig::default(),
+            timeouts: cfg::Timeouts::default(),
+        }
+    }
+
+    #[test]
+    fn plan_without_source_has_minimal_steps() {
+        let pool = base_pool();
+        let prov = LlamaCppSourceProvisioner::new();
+        let plan = prov.plan(&pool).unwrap();
+        let kinds: Vec<_> = plan.steps.iter().map(|s| s.kind.as_str()).collect();
+        assert_eq!(kinds, vec!["preflight-tools", "model-fetch", "run"]);
+        // Basic detail presence
+        assert!(plan.steps[0].detail.contains("allow_package_installs"));
+        assert!(plan.steps[1].detail.contains("ref="));
+        assert!(plan.steps[2].detail.contains("ports="));
+    }
+
+    #[test]
+    fn plan_with_source_includes_git_and_cmake_steps() {
+        let mut pool = base_pool();
+        pool.provisioning.source = Some(cfg::SourceConfig {
+            repo: "https://github.com/ggml-org/llama.cpp".to_string(),
+            r#ref: "v0".to_string(),
+            submodules: Some(false),
+            build: cfg::SourceBuildConfig {
+                cmake_flags: Some(vec!["-DGGML_CUDA=ON".into()]),
+                generator: Some("Ninja".into()),
+                cache_dir: Some("/tmp/cache".into()),
+            },
+        });
+        pool.provisioning.model.r#ref = Some("hf:org/model.gguf".into());
+        pool.provisioning.ports = Some(vec![9999]);
+        pool.provisioning.flags = Some(vec!["--ngl".into(), "35".into()]);
+
+        let prov = LlamaCppSourceProvisioner::new();
+        let plan = prov.plan(&pool).unwrap();
+        let kinds: Vec<_> = plan.steps.iter().map(|s| s.kind.as_str()).collect();
+        assert_eq!(kinds, vec![
+            "preflight-tools", "git-clone", "cmake-configure", "cmake-build", "model-fetch", "run"
+        ]);
+        // Verify some details
+        assert!(plan.steps[1].detail.contains("repo="));
+        assert!(plan.steps[1].detail.contains("ref="));
+        assert!(plan.steps[2].detail.contains("flags="));
+        assert!(plan.steps[2].detail.contains("generator="));
+        assert!(plan.steps[2].detail.contains("cache_dir="));
+        assert!(plan.steps[5].detail.contains("ports="));
+        assert!(plan.steps[5].detail.contains("flags="));
+    }
+
+    #[test]
+    fn ensure_errors_without_source_config() {
+        let pool = base_pool();
+        let prov = LlamaCppSourceProvisioner::new();
+        let err = prov.ensure(&pool).unwrap_err();
+        assert!(err.to_string().contains("provisioning.source required"));
+    }
+}
+

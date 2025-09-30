@@ -33,3 +33,4 @@ clap = { workspace = true, features = ["derive"] }
 
 [dev-dependencies]
 serde_yaml = { workspace = true }
+tempfile = "3"
