@@ -113,6 +113,67 @@ importers:
         specifier: ^4.39.0
         version: 4.40.1
 
+  frontend/bin/d3-sim-frontend:
+    dependencies:
+      orchyra-storybook:
+        specifier: workspace:*
+        version: link:../../libs/storybook
+      vue:
+        specifier: ^3.5.21
+        version: 3.5.22(typescript@5.8.3)
+      vue-router:
+        specifier: ^4.5.1
+        version: 4.5.1(vue@3.5.22(typescript@5.8.3))
+    devDependencies:
+      '@eslint/js':
+        specifier: ^9.14.0
+        version: 9.36.0
+      '@types/node':
+        specifier: ^22.16.5
+        version: 22.18.6
+      '@vitejs/plugin-vue':
+        specifier: ^6.0.1
+        version: 6.0.1(vite@7.1.7(@types/node@22.18.6)(jiti@2.6.0)(tsx@4.20.5))(vue@3.5.22(typescript@5.8.3))
+      '@vue/tsconfig':
+        specifier: ^0.7.0
+        version: 0.7.0(typescript@5.8.3)(vue@3.5.22(typescript@5.8.3))
+      eslint:
+        specifier: ^9.14.0
+        version: 9.36.0(jiti@2.6.0)
+      eslint-config-prettier:
+        specifier: ^9.1.0
+        version: 9.1.2(eslint@9.36.0(jiti@2.6.0))
+      eslint-plugin-vue:
+        specifier: ^9.30.0
+        version: 9.33.0(eslint@9.36.0(jiti@2.6.0))
+      npm-run-all2:
+        specifier: ^8.0.4
+        version: 8.0.4
+      orchyra-frontend-tooling:
+        specifier: workspace:*
+        version: link:../../libs/frontend-tooling
+      prettier:
+        specifier: ^3.3.3
+        version: 3.6.2
+      typescript:
+        specifier: ~5.8.0
+        version: 5.8.3
+      typescript-eslint:
+        specifier: ^8.12.2
+        version: 8.44.1(eslint@9.36.0(jiti@2.6.0))(typescript@5.8.3)
+      vite:
+        specifier: ^7.0.6
+        version: 7.1.7(@types/node@22.18.6)(jiti@2.6.0)(tsx@4.20.5)
+      vite-plugin-vue-devtools:
+        specifier: ^8.0.0
+        version: 8.0.2(vite@7.1.7(@types/node@22.18.6)(jiti@2.6.0)(tsx@4.20.5))(vue@3.5.22(typescript@5.8.3))
+      vue-eslint-parser:
+        specifier: ^9.4.3
+        version: 9.4.3(eslint@9.36.0(jiti@2.6.0))
+      vue-tsc:
+        specifier: ^3.0.4
+        version: 3.0.8(typescript@5.8.3)
+
   frontend/libs/frontend-tooling:
     dependencies:
       '@eslint/js':

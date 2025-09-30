@@ -3,11 +3,11 @@
 ## 1. **Scope & Positioning**
 
 * **Ollama**: A local inference wrapper → “run models on your laptop with one command.”
-* **You**: An **open, spec-driven orchestration layer + toolkit** → queueing, scheduling, determinism, proofs, SDK + applets. Not just local inference, but the *governed infra* around it.
+* **You**: An **open, spec-driven orchestration layer + toolkit** → queueing, scheduling, determinism, SDK + applets. Not just local inference, but the *governed infra* around it.
 
 ---
 
-## 2. **Determinism & Proofs**
+## 2. **Determinism**
 
 * **Ollama**: Runs models, but doesn’t guarantee deterministic replay, job IDs, or metrics contracts. Logs are basic.
 * **You**: **Proof-first** → every job comes with logs, metrics, and reproducibility guarantees (same input → same output).

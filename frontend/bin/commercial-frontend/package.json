@@ -23,7 +23,7 @@
     "i18n:missing": "pnpm run i18n:extract && node scripts/i18n-check.mjs --print-missing",
     "i18n:unused": "pnpm run i18n:extract && node scripts/i18n-check.mjs --print-unused",
     "i18n:unused:strict": "pnpm run i18n:extract && node scripts/i18n-check.mjs --print-unused --fail-on-unused",
-    "i18n:extract": "node scripts/i18n-extract.mjs",
+    "i18n:extract": "node scripts/i18n-extract-ast.mjs",
     "i18n:migrate": "node scripts/i18n-migrate-from-ts.mjs",
     "i18n:merge": "node scripts/i18n-merge.mjs",
     "i18n:check": "pnpm run i18n:extract && node scripts/i18n-check.mjs",

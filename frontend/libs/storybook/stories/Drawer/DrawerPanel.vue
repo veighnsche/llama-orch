@@ -75,7 +75,8 @@
 </script>
 
 <template>
-  <transition name="fade">
+  <teleport to="body">
+    <transition name="fade">
     <div
       v-if="ctx?.open"
       :id="ctx?.id"
@@ -87,7 +88,7 @@
         ref="panelEl"
         class="drawer-panel"
         :role="ctx?.options.ariaRole"
-        :aria-modal="String(ctx?.options.ariaModal)"
+        :aria-modal="ctx?.options.ariaModal"
         :aria-labelledby="ctx?.options.labelledBy"
         :aria-label="ctx?.options.label"
         tabindex="-1"
@@ -112,7 +113,8 @@
         </div>
       </div>
     </div>
-  </transition>
+    </transition>
+  </teleport>
 </template>
 
 <style scoped>

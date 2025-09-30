@@ -16,9 +16,8 @@
 </template>
 
 <style scoped>
-  section {
-    margin: 1.25rem 0;
-  }
+  /* No outer margins; HomeView governs spacing */
+  section { margin: 0; }
   ul {
     padding-left: 1.1rem;
   }

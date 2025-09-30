@@ -22,7 +22,7 @@ It is exhaustive and self-contained, so IDE AI or a designer can follow it witho
 ## Brand Traits
 
 - **Practical and no-nonsense:** nothing flashy, nothing too minimal either.  
-- **Proof-driven:** show logs, tests, certifications — not marketing slogans.  
+- **Show evidence:** logs, tests, certifications — not marketing slogans.  
 - **Local and approachable:** Vince’s name and face are front-and-center.  
 - **Blue-collar serious:** tone like a certified tradesman, not a startup founder.  
 - **Robust engineering:** the plumbing “just works,” with full features, not fragile prototypes.  
@@ -49,19 +49,16 @@ It is exhaustive and self-contained, so IDE AI or a designer can follow it witho
 - **Style:** industrial but clean — technical diagrams, not stock photos.  
 - **Colors:**  
   - Base: industrial neutrals (dark gray, steel, slate).  
-  - Accents: cyan, purple, teal (electric/glowing touches).  
   - Contrast: clear enough for accessibility and reports.  
 - **Typography:**  
   - Sans-serif, functional, robust (like Inter, IBM Plex Sans, Source Sans).  
   - Weighty headings (like technical reports).  
 - **Layout:**  
-  - Show proofs (logs, screenshots, diagrams) directly.  
+  - Show logs, screenshots, diagrams directly.  
   - Use boxes and blueprint grids for sections.  
   - Visuals should say “infrastructure, not hype.”  
 
 ---
-
-## Messaging Principles
 
 1. **Show, don’t market.** Present test results, logs, and blueprints instead of slogans.  
 2. **Infrastructure framing.** Pipes, valves, gauges: AI infra is no different from water/electricity.  
