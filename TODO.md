@@ -1,3 +1,8 @@
+- 2025-09-30: Owner D — Model provisioner MVP features implemented
+  - Code: `libs/provisioners/model-provisioner/src/lib.rs` adds config parsing (YAML/JSON), strict sha256 verification, metadata emission, handoff JSON writer, provenance JSONL appender, and unit tests.
+  - README: `libs/provisioners/model-provisioner/README.md` documents deterministic Haiku model profile, handoff format, usage, and Refinement Opportunities.
+  - Requirements: `requirements/55-model-provisioner.yaml` now includes ORCH-MODP-55xx IDs for MVP behaviors.
+  - Specs: Verified `.specs/55-model-provisioner.md` exists; further schema details to be expanded during Owner C wiring.
 # TODO — Active Tracker (Spec→Contract→Tests→Code)
 
 This is the single active TODO tracker for the repository. Maintain execution order and update after each task with what changed, where, and why.
@@ -74,6 +79,11 @@ This is the single active TODO tracker for the repository. Maintain execution or
 - [ ] Adaptive concurrency auto-tuning via telemetry.
 - [ ] Incremental model download/cache management.
 - [ ] Pluggable policy engine (Rego/WASM).
+
+### Model Provisioner follow-ups (Owner D stubs)
+- [ ] Cache eviction policy skeleton → implement LRU accounting and GC for model cache (`ModelProvisioner`) per `TODO(OwnerD-CACHE-EVICT-SKELETON)`.
+- [ ] GGUF header parsing to populate `ctx_max` and tokenizer info in `ModelMetadata` per `TODO(OwnerD-CTX-PROBE)`.
+- [ ] Provenance extension to include verification outcome and link to catalog entry per `TODO(OwnerD-PROVENANCE-EXTEND)`.
 
 ## Progress Log (append entries here)
 

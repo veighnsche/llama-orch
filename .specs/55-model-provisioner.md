@@ -30,6 +30,37 @@ Out of scope: engine preparation/runtime flags, placement.
 3) Register/update `CatalogEntry` with `lifecycle=Active`.
 4) Return `ResolvedModel` for engine flags.
 
+## Configuration Schema (MVP)
+
+Source file exemplars: `requirements/55-model-provisioner.yaml` and crate README.
+
+Config (YAML or JSON) consumed by provisioner:
+
+```yaml
+model_ref: string                  # e.g., file:/abs/model.gguf or relative path
+expected_digest:                   # optional
+  algo: sha256
+  value: <hex>
+strict_verification: bool          # when true + digest provided → fail on mismatch
+```
+
+Behavior:
+- If `strict_verification=true` and no `expected_digest` is provided, proceed with a warning (MVP) and document policy in logs.
+- File-only fast-path is REQUIRED for MVP; `hf:` shell-out is OPTIONAL and SHOULD provide an instructive error if unavailable.
+
+## Engine Handoff Format (MVP)
+
+The provisioner emits a JSON payload for engine-provisioner consumption. Recommended path: `.runtime/engines/llamacpp.json`.
+
+```json
+{
+  "model": { "id": "file:/abs/model.gguf", "path": "/abs/model.gguf" },
+  "metadata": { "size_bytes": 123456789, "ctx_max": null }
+}
+```
+
+Provenance (optional, JSONL): `.runtime/provenance/models.jsonl` with per-run records including timestamp, model_id, and path.
+
 ## Observability & Determinism
 
 - Callers emit logs/metrics (staged bytes, duration, verification outcomes). Determinism uses `model_digest` in downstream logs.
@@ -47,3 +78,4 @@ Out of scope: engine preparation/runtime flags, placement.
 
 - Pluggable network fetchers (`hf/http/s3/oci`) behind features.
 - Parallel fetch of multi-file repos with integrity checks.
+- Parse GGUF headers to populate `ctx_max` and tokenizer metadata; attach digest and verification outcomes to provenance records.
