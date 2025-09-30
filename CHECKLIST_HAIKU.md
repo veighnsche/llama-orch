@@ -17,8 +17,10 @@ This document audits the happy-path pipeline and lists concrete tasks to pass th
 
 ## Client Call Sequence (spec-confirmed)
 
-- **[enqueue]** `POST /v1/tasks` → returns `202 Accepted` with `AdmissionResponse { task_id, queue_position, predicted_start_ms, backoff_ms }`.
-- **[stream]** `GET /v1/tasks/{task_id}/stream` → returns `text/event-stream` with events: `started` → repeated `token` → optional repeated `metrics` → `end` (or `error`).
+- **[enqueue]** `POST /v1/tasks` → returns `202 Accepted` with `AdmissionResponse { task_id, queue_position, predicted_start_ms, backoff_ms, streams?, preparation? }`.
+  - `streams`: `{ sse, sse_verbose }` direct URLs for streaming.
+  - `preparation`: optional steps `{ steps: [{ kind: engine_provision|model_fetch|pool_warmup, description?, estimated_ms? }] }`.
+- **[stream]** Use `streams.sse` (base) or `streams.sse_verbose` (equivalent to `?verbose=true`) → returns `text/event-stream` with events: `started` → repeated `token` → optional repeated `metrics` → `end` (or `error`).
 - **[narration logs]** are emitted via JSON logs (with a `human` string), correlated by `X-Correlation-Id`. SSE is not a raw log stream.
 - References: `contracts/openapi/data.yaml`, `CONSUMER_CAPABILITIES.md`, and `consumers/llama-orch-sdk/CLIENT_HANDBOOK.md`.
 
@@ -102,10 +104,14 @@ This document audits the happy-path pipeline and lists concrete tasks to pass th
 - `bin/orchestratord/src/api/data.rs`
   - ORCHD-CATALOG-CHECK-0006: catalog existence/state check
   - ORCHD-PROVISION-POLICY-0005: invoke provisioning per policy
+  - ORCHD-ADMISSION-STREAMS-0008: populate `AdmissionResponse.streams`
+  - ORCHD-ADMISSION-PREPARATION-0009: populate `AdmissionResponse.preparation`
 - `libs/provisioners/engine-provisioner/src/providers/llamacpp/mod.rs`
   - ENGINE-PROV-POOL-NOTIFY-0003: notify pool-manager/orchestrator on readiness
   - ENGINE-PROV-CLEANUP-0004: cleanup on failures to avoid stale state
   - ENGINE-PROV-GPU-ENFORCE-0007: enforce GPU-only per workspace policy (to add)
+ - `bin/orchestratord/src/api/data.rs::stream_task` and `services/streaming.rs`
+  - ORCHD-STREAM-VERBOSE-0011: accept `?verbose=true` and emit narration in some `metrics` frames
 
 These complement existing TODOs:
 - `bin/orchestratord/src/services/streaming.rs`: ORCHD-STREAM-1101..1103 and ORCHD-REQUEST-STUB
@@ -148,7 +154,6 @@ Verification commands:
 ## Cross-References
 
 - Orchestrator router: `bin/orchestratord/src/app/router.rs`
-- Admission: `bin/orchestratord/src/api/data.rs`
 - Streaming: `bin/orchestratord/src/services/streaming.rs`
 - Pool registry: `libs/pool-managerd/src/registry.rs`
 - Engine provisioning: `libs/provisioners/engine-provisioner/src/providers/llamacpp/mod.rs`
@@ -157,3 +162,12 @@ Verification commands:
 - haiku harness: `test-harness/e2e-haiku/tests/e2e_client.rs`
 - Client flow note: `FINDINGS_ENQUEUE_STREAM_FLOW.md`
 - SDK guide: `consumers/llama-orch-sdk/CLIENT_HANDBOOK.md`
+
+## Spec Change Recap
+
+- Data-plane OpenAPI (`contracts/openapi/data.yaml`) updated to include:
+  - `GET /v1/tasks/{id}/stream?verbose=true` query parameter (optional).
+  - `AdmissionResponse.streams` (links to `sse`, `sse_verbose`).
+  - `AdmissionResponse.preparation` (list of steps before decode).
+- Docs updated: `CONSUMER_CAPABILITIES.md`, `CLIENT_HANDBOOK.md`.
+- TODOs added: ORCHD-STREAM-VERBOSE-0011, ORCHD-ADMISSION-PREPARATION-0012

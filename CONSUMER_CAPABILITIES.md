@@ -74,7 +74,9 @@ Contracts: `contracts/openapi/data.yaml`
     - `hf:org/repo` (full repo; vLLM/TGI)
     - `file:/abs/path` or `relative/path`
     - `https://...`, `s3://bucket/key`, `oci://registry/repo:tag`
-- Success: `202 Accepted` with body `AdmissionResponse { task_id, queue_position, predicted_start_ms, backoff_ms }`
+- Success: `202 Accepted` with body `AdmissionResponse { task_id, queue_position, predicted_start_ms, backoff_ms, streams?, preparation? }`
+  - `streams.sse` and `streams.sse_verbose` provide direct URLs to the SSE endpoint; the latter is equivalent to `?verbose=true`.
+  - `preparation.steps[]` (optional) announces tasks the server may perform before decode (e.g., `engine_provision`, `model_fetch`, `pool_warmup`). Use it to choose verbose streaming for richer progress UX.
   - Response headers may include budgets: `X-Budget-Tokens-Remaining`, `X-Budget-Time-Remaining-Ms`, `X-Budget-Cost-Remaining`.
 - Error mapping (selected):
   - `400` `INVALID_PARAMS` (schema/sentinel violations)
@@ -104,6 +106,20 @@ curl -s -H 'X-API-Key: valid' -H 'Content-Type: application/json' \
 
 - `GET /v1/tasks/{id}/stream` returns `text/event-stream`.
 - Event sequence (normative): `started` → repeated `token` → optional repeated `metrics` → `end` (or `error`).
+- Query parameter: `?verbose=true` — when set, the server may include human-narrated breadcrumbs and diagnostics within some `metrics` frames (e.g., `{ "human": "provisioning llama.cpp", "phase": "engine_provision" }`).
+- Progress surface for CLI loading bars (optional): when available, `metrics` frames MAY include a `prep` object mapping step IDs to progress:
+  ```json
+  {
+    "event": "metrics",
+    "data": {
+      "prep": {
+        "engine:llamacpp": {"status":"running","bytes_done":10485760,"bytes_total":52428800,"pct":20,"phase":"compile","human":"Building llama.cpp (10/50 MB)"},
+        "model:hf:org/repo/file.gguf": {"status":"running","bytes_done":73400320,"bytes_total":104857600,"pct":70,"phase":"download","human":"Downloading model (70/100 MB)"}
+      }
+    }
+  }
+  ```
+  Clients can render concurrent bars by grouping step IDs by prefix (e.g., `engine:*`, `model:*`).
 - Example frames (from `data.yaml`):
   ```text
   event: started
@@ -304,7 +320,9 @@ curl -s -H 'X-API-Key: valid' -H 'Content-Type: application/json' \
 ## Appendix — Type Summaries
 
 - `TaskRequest` (see Data Plane OpenAPI): identifies job, session, workload, model, engine, and decode controls. Includes placement overrides.
-- `AdmissionResponse`: `{ task_id, queue_position, predicted_start_ms, backoff_ms }`.
+- `AdmissionResponse`: `{ task_id, queue_position, predicted_start_ms, backoff_ms, streams?, preparation? }`.
+  - `streams`: `{ sse: uri, sse_verbose: uri }`
+  - `preparation`: `{ steps: [ { kind: 'engine_provision'|'model_fetch'|'pool_warmup', description?, estimated_ms? } ] }`
 - SSE events: `SSEStarted`, `SSEToken`, `SSEMetrics`, `SSEEnd`, `SSEError`.
 - `SessionInfo`: TTL/turns/KV and optional budgets.
 - `CatalogModel`: id, digest, optional source/trust/manifests/signatures/SBOM.

@@ -11,8 +11,15 @@ Contracts referenced are authoritative: `contracts/openapi/data.yaml`. See also 
 ## Quickstart Flow
 
 1. **Generate a correlation ID** (UUID). Send it as `X-Correlation-Id` on all requests.
-2. **POST /v1/tasks** with a `TaskRequest`. On success you get `202 Accepted` with `AdmissionResponse` containing `task_id`.
-3. **GET /v1/tasks/{task_id}/stream** to open the SSE stream.
+2. **POST /v1/tasks** with a `TaskRequest`. On success you get `202 Accepted` with `AdmissionResponse` containing:
+   - `task_id`, `queue_position`, `predicted_start_ms`, `backoff_ms`
+   - `streams` — direct URLs:
+     - `streams.sse` → base SSE
+     - `streams.sse_verbose` → SSE with `?verbose=true` (metrics may include `human` narration/diagnostics)
+   - `preparation` — optional list of preparatory steps (`engine_provision`, `model_fetch`, `pool_warmup`) that may happen before decode.
+3. **Choose a stream**:
+   - If `preparation.steps` is non-empty or you need richer UX, use `streams.sse_verbose`.
+   - Otherwise, `streams.sse` is sufficient.
 4. **Collect logs** emitted by the server and filter them by your correlation ID.
 
 ```mermaid
@@ -23,7 +30,7 @@ sequenceDiagram
 
   C->>O: POST /v1/tasks (X-API-Key, X-Correlation-Id)
   O-->>C: 202 Accepted { task_id, queue_position, predicted_start_ms }
-  C->>O: GET /v1/tasks/{task_id}/stream (X-API-Key, X-Correlation-Id)
+  C->>O: GET streams.sse or streams.sse_verbose (X-API-Key, X-Correlation-Id)
   O->>W: Dispatch via adapter (placement, health permitting)
   W-->>O: tokens/metrics
   O-->>C: SSE: started → token* → metrics* → end
@@ -41,6 +48,7 @@ sequenceDiagram
   - `token { t, i }` repeated
   - `metrics { ... }` optional repeated
   - `end { tokens_out, decode_ms }` or `error { code, message, engine }`
+- Query parameter `verbose=true` enables optional narration/diagnostics embedded into some `metrics` frames (e.g., `{ "human": "provisioning llama.cpp...", "phase": "engine_provision" }`).
 
 ## SDK Responsibilities
 
@@ -114,23 +122,31 @@ curl -s -H 'X-API-Key: valid' -H "X-Correlation-Id: $CID" -H 'Content-Type: appl
     "session_id":"'$SESSION'",
     "workload":"completion",
     "model_ref":"hf:Qwen/Qwen2.5-0.5B-Instruct-GGUF/qwen2.5-0.5b-instruct-q4_k_m.gguf",
-    "engine":"llamacpp",
     "ctx":8192,
     "priority":"interactive",
     "prompt":"Compose a three-line haiku about time. Include the current minute spelled out in English: forty-two.",
     "max_tokens":64,
     "deadline_ms":30000
-  }' http://127.0.0.1:8080/v1/tasks | jq .
+  }' \
+  http://127.0.0.1:8080/v1/tasks | jq .
 
-# Stream (SSE)
-curl -s -H 'X-API-Key: valid' -H "X-Correlation-Id: $CID" \
-  http://127.0.0.1:8080/v1/tasks/$TASK/stream
-```
+# Suppose the AdmissionResponse has:
+#  {
+#    ...,
+#    "streams": {
+#      "sse": "http://127.0.0.1:8080/v1/tasks/'$TASK'/stream",
+#      "sse_verbose": "http://127.0.0.1:8080/v1/tasks/'$TASK'/stream?verbose=true"
+#    },
+#    "preparation": { "steps": [{"kind":"engine_provision"},{"kind":"model_fetch"}] }
+#  }
 
-## Proof Bundle Format (suggestion)
-
-Your SDK should emit a directory or JSON file capturing:
-- `request.json`: original `TaskRequest` and headers (minus secrets)
+# Choose verbose when preparation is present
+VERBOSE_URL="http://127.0.0.1:8080/v1/tasks/$TASK/stream?verbose=true"
+if [ "$(jq -r '.preparation.steps | length' <<< "$RESPONSE)" -gt 0 ]; then
+  curl -s -H 'X-API-Key: valid' -H "X-Correlation-Id: $CID" "$VERBOSE_URL"
+else
+  curl -s -H 'X-API-Key: valid' -H "X-Correlation-Id: $CID" "http://127.0.0.1:8080/v1/tasks/$TASK/stream"
+fi
 - `admission.json`: `AdmissionResponse` and HTTP headers
 - `sse_transcript.jsonl`: one line per SSE frame: `{ event, data, ts }`
 - `logs.jsonl`: orchestrator narration logs filtered by correlation id

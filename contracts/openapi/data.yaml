@@ -346,49 +346,65 @@ components:
         placement: { $ref: '#/components/schemas/PlacementOverrides' }
 
     AdmissionResponse:
-    type: object
-    required: [task_id, queue_position, predicted_start_ms, backoff_ms]
-    properties:
-      task_id: { type: string, format: uuid }
-      queue_position: { type: integer, format: int32 }
-      predicted_start_ms: { type: integer, format: int64 }
-      backoff_ms: { type: integer, format: int64 }
-      streams:
-        $ref: '#/components/schemas/StreamsLinks'
-      preparation:
-        $ref: '#/components/schemas/PreparationPlan'
+      type: object
+      required: [task_id, queue_position, predicted_start_ms, backoff_ms]
+      properties:
+        task_id: { type: string, format: uuid }
+        queue_position: { type: integer, format: int32 }
+        predicted_start_ms: { type: integer, format: int64 }
+        backoff_ms: { type: integer, format: int64 }
+        streams:
+          $ref: '#/components/schemas/StreamsLinks'
+        preparation:
+          $ref: '#/components/schemas/PreparationPlan'
 
-  StreamsLinks:
-    type: object
-    description: Direct links to stream endpoints for this task.
-    properties:
-      sse:
-        type: string
-        format: uri
-        description: Base SSE stream URL (equivalent to GET /v1/tasks/{id}/stream).
-      sse_verbose:
-        type: string
-        format: uri
-        description: SSE stream URL with `?verbose=true` to include human narration within `metrics` frames.
+    StreamsLinks:
+      type: object
+      description: Direct links to stream endpoints for this task.
+      properties:
+        sse:
+          type: string
+          format: uri
+          description: Base SSE stream URL (equivalent to GET /v1/tasks/{id}/stream).
+        sse_verbose:
+          type: string
+          format: uri
+          description: SSE stream URL with `?verbose=true` to include human narration within `metrics` frames.
 
-  PreparationPlan:
-    type: object
-    description: Optional plan describing preparatory steps that may occur before decode begins.
-    properties:
-      steps:
-        type: array
-        items: { $ref: '#/components/schemas/PreparationStep' }
+    PreparationPlan:
+      type: object
+      description: Optional plan describing preparatory steps that may occur before decode begins.
+      properties:
+        steps:
+          type: array
+          items: { $ref: '#/components/schemas/PreparationStep' }
 
-  PreparationStep:
-    type: object
-    properties:
-      kind: { $ref: '#/components/schemas/PreparationStepKind' }
-      description: { type: string }
-      estimated_ms: { type: integer, format: int64, description: estimated duration if known }
+    PreparationStep:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Stable step identifier (e.g., 'engine:llamacpp', 'model:hf:org/repo/file.gguf').
+        kind: { $ref: '#/components/schemas/PreparationStepKind' }
+        description: { type: string }
+        estimated_ms: { type: integer, format: int64, description: Estimated duration if known }
+        group:
+          type: string
+          description: Concurrency group (e.g., 'engine', 'model'); groups may run in parallel.
+        bytes_total:
+          type: integer
+          format: int64
+          description: Optional total bytes for download/build when known.
+        status:
+          $ref: '#/components/schemas/PreparationStepStatus'
 
-  PreparationStepKind:
-    type: string
-    enum: [engine_provision, model_fetch, pool_warmup]
+    PreparationStepKind:
+      type: string
+      enum: [engine_provision, model_fetch, pool_warmup]
+
+    PreparationStepStatus:
+      type: string
+      enum: [pending, running, completed, failed]
 
     ErrorKind:
       type: string
@@ -453,8 +469,32 @@ components:
         tokens_budget_remaining: { type: integer, format: int64, description: Optional remaining tokens budget }
         time_budget_remaining_ms: { type: integer, format: int64, description: Optional remaining time budget (ms) }
         cost_budget_remaining: { type: number, format: float, description: Optional remaining cost budget }
+        prep:
+          $ref: '#/components/schemas/PreparationProgress'
       additionalProperties: true
-      example: { on_time_probability: 0.82, queue_depth: 2, kv_warmth: true, tokens_budget_remaining: 12000 }
+      example:
+        on_time_probability: 0.82
+        queue_depth: 2
+        kv_warmth: true
+        tokens_budget_remaining: 12000
+        prep:
+          "engine:llamacpp": { status: running, bytes_done: 10485760, bytes_total: 52428800, pct: 20, phase: "compile", human: "Building llama.cpp (10/50 MB)" }
+          "model:hf:org/repo/file.gguf": { status: running, bytes_done: 73400320, bytes_total: 104857600, pct: 70, phase: "download", human: "Downloading model (70/100 MB)" }
+
+    PreparationProgress:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/PreparationProgressItem'
+
+    PreparationProgressItem:
+      type: object
+      properties:
+        status: { $ref: '#/components/schemas/PreparationStepStatus' }
+        bytes_total: { type: integer, format: int64 }
+        bytes_done: { type: integer, format: int64 }
+        pct: { type: integer, format: int32, description: Percentage 0-100 if computable }
+        phase: { type: string, description: Sub-phase (e.g., 'init','download','verify','compile','warmup') }
+        human: { type: string, description: Short narration for end users; duplicated in logs }
 
     SSEEnd:
       type: object

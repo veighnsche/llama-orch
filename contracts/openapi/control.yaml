@@ -162,6 +162,34 @@ paths:
             X-Correlation-Id:
               description: Correlation ID for tracing
               schema: { type: string }
+
+  /v1/pools/{id}/purge:
+    post:
+      operationId: purgePool
+      summary: Purge engine and/or model artifacts for a pool (retesting convenience)
+      x-req-id: [ORCH-2104]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/XCorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurgeRequest'
+            x-examples:
+              engine_and_model:
+                value: { purge_engine: true, purge_models: ["hf:org/repo/file.gguf"], drain_first: true }
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            X-Correlation-Id:
+              description: Correlation ID for tracing
+              schema: { type: string }
           content:
             application/json:
               schema:
@@ -424,6 +452,30 @@ components:
 
             If the artifact is not present locally and policy allows, the system may auto-fetch into its model cache
             before flipping the pool back to Ready.
+    PurgeRequest:
+      type: object
+      description: Request to purge engine runtime and/or model artifacts from a pool host for retesting.
+      properties:
+        purge_engine:
+          type: boolean
+          description: Stop worker processes and remove engine runtime/build artifacts for this pool.
+          default: false
+        purge_models:
+          type: array
+          description: List of model refs to remove from the model cache. If empty and `purge_engine` is true, only engine is purged.
+          items: { type: string }
+        drain_first:
+          type: boolean
+          description: If true, initiate a drain before purging to avoid interrupting running jobs.
+          default: true
+        delete_cache_dirs:
+          type: boolean
+          description: If true, recursively remove cache directories (dangerous).
+          default: false
+        force:
+          type: boolean
+          description: If true, proceed even if safety checks fail (for CI only).
+          default: false
     PoolHealth:
       type: object
       properties:
