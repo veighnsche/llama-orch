@@ -1,6 +1,7 @@
 pub mod admission;
 pub mod api;
 pub mod app;
+pub mod clients;
 pub mod domain;
 pub mod infra;
 pub mod metrics;
