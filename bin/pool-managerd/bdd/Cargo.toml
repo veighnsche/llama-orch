@@ -1,0 +1,29 @@
+[package]
+name = "pool-managerd-bdd"
+version = "0.0.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[features]
+default = ["bdd-cucumber"]
+bdd-cucumber = []
+
+[dependencies]
+anyhow = { workspace = true }
+cucumber = { version = "0.20", features = ["macros"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+futures = { workspace = true }
+pool-managerd = { path = ".." }
+provisioners-engine-provisioner = { path = "../../../libs/provisioners/engine-provisioner" }
+regex = { workspace = true }
+walkdir = { workspace = true }
+axum = { workspace = true }
+http = { workspace = true }
+hyper = { workspace = true }
+tower = "0.5"
+serde_json = { workspace = true }
+reqwest = { workspace = true }
+
+[[bin]]
+name = "bdd-runner"
+path = "src/main.rs"
