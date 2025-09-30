@@ -1,11 +1,18 @@
 // Pool Manager library - spawn and supervise engine processes
-// Modules representing lifecycle and readiness components.
+//
+// Organized by domain:
+// - core: fundamental types and state (health, registry)
+// - lifecycle: spawn, drain, reload, supervision
+// - placement: device masks, GPU split planning
+// - validation: preflight checks
 
-pub mod backoff;
-pub mod devicemasks;
-pub mod drain;
-pub mod health;
-pub mod hetero_split;
-pub mod preflight;
-pub mod preload;
-pub mod registry;
+pub mod core;
+pub mod lifecycle;
+pub mod placement;
+pub mod validation;
+
+// Re-export for backward compatibility and convenience
+pub use core::{health, registry};
+pub use lifecycle::{drain, preload, supervision};
+pub use placement::{devicemasks, hetero_split};
+pub use validation::preflight;
