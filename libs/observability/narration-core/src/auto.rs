@@ -18,6 +18,16 @@ pub fn current_timestamp_ms() -> u64 {
         .as_millis() as u64
 }
 
+/// Inject provenance fields (service identity and timestamp) if not already set.
+fn inject_provenance(fields: &mut NarrationFields) {
+    if fields.emitted_by.is_none() {
+        fields.emitted_by = Some(service_identity());
+    }
+    if fields.emitted_at_ms.is_none() {
+        fields.emitted_at_ms = Some(current_timestamp_ms());
+    }
+}
+
 /// Narrate with automatic service identity and timestamp injection.
 /// 
 /// This is the recommended function for Cloud Profile deployments when
@@ -41,14 +51,7 @@ pub fn current_timestamp_ms() -> u64 {
 /// // emitted_by and emitted_at_ms are automatically injected
 /// ```
 pub fn narrate_auto(mut fields: NarrationFields) {
-    // Only inject if not already set
-    if fields.emitted_by.is_none() {
-        fields.emitted_by = Some(service_identity());
-    }
-    if fields.emitted_at_ms.is_none() {
-        fields.emitted_at_ms = Some(current_timestamp_ms());
-    }
-    
+    inject_provenance(&mut fields);
     crate::narrate(fields);
 }
 
@@ -80,12 +83,7 @@ pub fn narrate_auto(mut fields: NarrationFields) {
 /// ```
 pub fn narrate_full(mut fields: NarrationFields) {
     // Inject service identity and timestamp
-    if fields.emitted_by.is_none() {
-        fields.emitted_by = Some(service_identity());
-    }
-    if fields.emitted_at_ms.is_none() {
-        fields.emitted_at_ms = Some(current_timestamp_ms());
-    }
+    inject_provenance(&mut fields);
     
     // Extract OTEL context
     let (trace_id, span_id, parent_span_id) = crate::otel::extract_otel_context();

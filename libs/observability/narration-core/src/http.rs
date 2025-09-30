@@ -91,8 +91,39 @@ pub fn inject_context_into_headers<H>(
 }
 
 /// Trait for header map abstraction (works with axum and reqwest).
+///
+/// This trait provides a common interface for extracting and injecting
+/// correlation/trace context from HTTP headers, regardless of the HTTP
+/// library being used (axum, reqwest, hyper, etc.).
+///
+/// # Safety
+///
+/// Implementations should handle invalid header values gracefully:
+/// - `get_str()` returns `None` if header is missing or invalid UTF-8
+/// - `insert_str()` should validate or sanitize header values
+///
+/// # Example Implementation
+///
+/// ```rust,ignore
+/// impl HeaderLike for axum::http::HeaderMap {
+///     fn get_str(&self, name: &str) -> Option<String> {
+///         self.get(name)?.to_str().ok().map(String::from)
+///     }
+///     
+///     fn insert_str(&mut self, name: &str, value: &str) {
+///         if let Ok(header_value) = axum::http::HeaderValue::from_str(value) {
+///             self.insert(name, header_value);
+///         }
+///     }
+/// }
+/// ```
 pub trait HeaderLike {
+    /// Get a header value as a String.
+    /// Returns `None` if the header is missing or contains invalid UTF-8.
     fn get_str(&self, name: &str) -> Option<String>;
+    
+    /// Insert a header value.
+    /// Implementations should validate or sanitize the value.
     fn insert_str(&mut self, name: &str, value: &str);
 }
 

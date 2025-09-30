@@ -42,12 +42,14 @@
 //! });
 //! ```
 
+#[cfg(any(test, feature = "test-support"))]
 mod capture;
 mod redaction;
 pub mod otel;
 pub mod auto;
 pub mod http;
 
+#[cfg(any(test, feature = "test-support"))]
 pub use capture::{CaptureAdapter, CapturedNarration};
 pub use redaction::{redact_secrets, RedactionPolicy};
 pub use auto::{narrate_auto, narrate_full, service_identity, current_timestamp_ms};
@@ -175,6 +177,7 @@ pub fn narrate(fields: NarrationFields) {
     );
     
     // Notify capture adapter if active (ORCH-3306)
+    #[cfg(any(test, feature = "test-support"))]
     capture::notify(fields);
 }
 
