@@ -7,6 +7,7 @@ members = [
     "bin/orchestratord",
     "bin/orchestratord/bdd",
     "bin/pool-managerd",
+    "bin/pool-managerd/bdd",
     "libs/catalog-core",
     "libs/catalog-core/bdd",
     "libs/proof-bundle",

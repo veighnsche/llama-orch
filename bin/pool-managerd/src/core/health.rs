@@ -8,7 +8,9 @@
 //! TODO: Consider adding optional fields (last_check_at, consecutive_failures) for richer health tracking.
 //! TODO: If no expansion needed, this file is complete and can stay as-is.
 
-#[derive(Debug, Clone, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct HealthStatus {
     pub live: bool,
     pub ready: bool,
