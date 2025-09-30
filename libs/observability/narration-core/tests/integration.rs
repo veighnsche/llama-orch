@@ -1,7 +1,9 @@
 // Integration tests for narration-core
 // Tests ORCH-3300..3312 requirements
 
-use observability_narration_core::{narrate, CaptureAdapter, NarrationFields, RedactionPolicy, redact_secrets};
+use observability_narration_core::{
+    narrate, redact_secrets, CaptureAdapter, NarrationFields, RedactionPolicy,
+};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[test]
@@ -56,7 +58,7 @@ fn test_correlation_id_propagation() {
 
     let captured = adapter.captured();
     assert_eq!(captured.len(), 2);
-    
+
     // Both events should have same correlation_id
     assert_eq!(captured[0].correlation_id, Some(correlation_id.clone()));
     assert_eq!(captured[1].correlation_id, Some(correlation_id));
@@ -77,7 +79,7 @@ fn test_redaction_in_narration() {
 
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
-    
+
     // Secret should be redacted
     assert!(!captured[0].human.contains("secret123"));
     assert!(captured[0].human.contains("[REDACTED]"));
@@ -159,16 +161,13 @@ fn test_legacy_human_function() {
 #[test]
 fn test_redaction_policy_custom() {
     let text = "Bearer token123 and api_key=secret456";
-    
+
     // Default policy
     let redacted = redact_secrets(text, RedactionPolicy::default());
     assert!(redacted.contains("[REDACTED]"));
-    
+
     // Custom replacement
-    let policy = RedactionPolicy {
-        replacement: "***".to_string(),
-        ..Default::default()
-    };
+    let policy = RedactionPolicy { replacement: "***".to_string(), ..Default::default() };
     let redacted = redact_secrets(text, policy);
     assert!(redacted.contains("***"));
 }
@@ -206,7 +205,7 @@ fn test_clear_captured() {
     });
 
     assert_eq!(adapter.captured().len(), 1);
-    
+
     adapter.clear();
     assert_eq!(adapter.captured().len(), 0);
 }
@@ -237,10 +236,7 @@ fn test_provenance_timestamp() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
 
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_millis() as u64;
+    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64;
 
     narrate(NarrationFields {
         actor: "pool-managerd",
@@ -348,11 +344,11 @@ fn test_multi_service_provenance() {
 
     let captured = adapter.captured();
     assert_eq!(captured.len(), 2);
-    
+
     // Both have same trace_id
     assert_eq!(captured[0].trace_id, Some(trace_id.clone()));
     assert_eq!(captured[1].trace_id, Some(trace_id));
-    
+
     // Different emitters
     assert_eq!(captured[0].emitted_by, Some("orchestratord@0.1.0".into()));
     assert_eq!(captured[1].emitted_by, Some("pool-managerd@0.1.0".into()));

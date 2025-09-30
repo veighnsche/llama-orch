@@ -71,7 +71,9 @@ where
             Err(RetryError::NonRetriable(e)) => return Err(RetryError::NonRetriable(e)),
             Err(RetryError::Retriable(e)) => {
                 last_err = Some(RetryError::Retriable(e));
-                if attempt >= policy.max_attempts { break; }
+                if attempt >= policy.max_attempts {
+                    break;
+                }
                 // full jitter in [0, min(cap, base*multiplier^n)]
                 let exp = policy.base.as_millis() as f64 * policy.multiplier.powi(attempt as i32);
                 let max_delay_ms = std::cmp::min(policy.cap.as_millis(), exp as u128) as u64;

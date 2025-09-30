@@ -50,11 +50,25 @@ use sha2::{Digest, Sha256};
 ///
 /// Returns a 6-character lowercase hexadecimal string (e.g., "a3f2c1").
 pub fn token_fp6(token: &str) -> String {
+    // Validate input length to prevent DoS via extremely long tokens
+    const MAX_TOKEN_LEN: usize = 8192; // 8KB max token size
+    if token.len() > MAX_TOKEN_LEN {
+        // For extremely long inputs, hash in chunks to prevent memory issues
+        // This is defense-in-depth; callers should validate token length
+        let truncated = &token[..MAX_TOKEN_LEN];
+        let mut hasher = Sha256::new();
+        hasher.update(truncated.as_bytes());
+        hasher.update(b"[truncated]"); // Marker for truncation
+        let digest = hasher.finalize();
+        let hex = hex::encode(digest);
+        return hex[0..6].to_string();
+    }
+
     let mut hasher = Sha256::new();
     hasher.update(token.as_bytes());
     let digest = hasher.finalize();
     let hex = hex::encode(digest);
-    
+
     // Take first 6 characters (24 bits)
     hex[0..6].to_string()
 }
@@ -91,7 +105,7 @@ mod tests {
     fn test_fingerprint_format() {
         let token = "test-token";
         let fp = token_fp6(token);
-        
+
         // Should be lowercase hexadecimal
         assert!(
             fp.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()),
@@ -110,14 +124,7 @@ mod tests {
     #[test]
     fn test_collision_resistance() {
         // Test that similar tokens produce different fingerprints
-        let tokens = vec![
-            "token-a",
-            "token-b",
-            "token-c",
-            "atoken-",
-            "btoken-",
-            "ctoken-",
-        ];
+        let tokens = vec!["token-a", "token-b", "token-c", "atoken-", "btoken-", "ctoken-"];
 
         let mut fingerprints = std::collections::HashSet::new();
         for token in &tokens {
@@ -136,7 +143,7 @@ mod tests {
         // Test with known SHA-256 values to ensure correctness
         let token = "test";
         let fp = token_fp6(token);
-        
+
         // SHA-256("test") = 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
         // First 6 chars: 9f86d0
         assert_eq!(fp, "9f86d0");

@@ -7,4 +7,5 @@
 //! - POST /pools/{id}/reload — reload pool
 //! - GET /pools/{id}/status — get pool status
 
+pub mod auth;
 pub mod routes;

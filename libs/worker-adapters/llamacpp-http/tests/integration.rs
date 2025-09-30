@@ -1,20 +1,23 @@
-use worker_adapters_llamacpp_http::LlamaCppHttpAdapter;
-use worker_adapters_adapter_api::WorkerAdapter;
+use api::{Engine, Priority, Workload};
+use axum::{routing::post, Router};
 use contracts_api_types as api;
-use api::{Engine, Workload, Priority};
 use futures::StreamExt;
 use tokio::task::JoinHandle;
-use axum::{routing::post, Router};
+use worker_adapters_adapter_api::WorkerAdapter;
+use worker_adapters_llamacpp_http::LlamaCppHttpAdapter;
 
 async fn start_stub_server(body: String) -> (u16, JoinHandle<()>) {
     // TODO(OwnerB-LLAMACPP-TEST-STUB): Stub Axum server returns a pre-canned SSE body.
     // Why: Enables deterministic unit/integration tests for ordering/indices without
     // requiring a real llama.cpp binary in CI. Future work: simulate chunked SSE with
     // hyper::Body streaming and add cancel-on-disconnect coverage.
-    let app = Router::new().route("/completion", post(move || {
-        let body = body.clone();
-        async move { body.clone() }
-    }));
+    let app = Router::new().route(
+        "/completion",
+        post(move || {
+            let body = body.clone();
+            async move { body.clone() }
+        }),
+    );
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let port = listener.local_addr().unwrap().port();
@@ -62,7 +65,8 @@ async fn stream_order_and_indices() {
                 data: {\"i\":1,\"t\":\"llo\"}\n\
                 \n\
                 event: end\n\
-                data: {\"tokens_out\":2}\n".to_string();
+                data: {\"tokens_out\":2}\n"
+        .to_string();
     let (port, _srv) = start_stub_server(body).await;
 
     let adapter = LlamaCppHttpAdapter::new(format!("http://127.0.0.1:{}", port));
@@ -88,7 +92,9 @@ async fn stream_order_and_indices() {
     let c = kinds.iter().position(|k| k == "end").unwrap();
     assert!(a < b && b < c);
     // indices increasing
-    for w in indices.windows(2) { assert!(w[0] < w[1]); }
+    for w in indices.windows(2) {
+        assert!(w[0] < w[1]);
+    }
     assert_eq!(text, "Hello");
 }
 
@@ -107,7 +113,8 @@ async fn determinism_with_seed() {
                 data: {\"i\":1,\"t\":\"B\"}\n\
                 \n\
                 event: end\n\
-                data: {}\n".to_string();
+                data: {}\n"
+        .to_string();
     let (port, _srv) = start_stub_server(body).await;
 
     let adapter = LlamaCppHttpAdapter::new(format!("http://127.0.0.1:{}", port));
@@ -118,9 +125,21 @@ async fn determinism_with_seed() {
     let mut s2 = adapter.submit(req2).expect("stream2");
 
     let mut out1 = String::new();
-    while let Some(ev) = s1.next().await { if let Ok(e) = ev { if e.kind == "token" { out1.push_str(e.data.get("t").and_then(|x| x.as_str()).unwrap()); } } }
+    while let Some(ev) = s1.next().await {
+        if let Ok(e) = ev {
+            if e.kind == "token" {
+                out1.push_str(e.data.get("t").and_then(|x| x.as_str()).unwrap());
+            }
+        }
+    }
     let mut out2 = String::new();
-    while let Some(ev) = s2.next().await { if let Ok(e) = ev { if e.kind == "token" { out2.push_str(e.data.get("t").and_then(|x| x.as_str()).unwrap()); } } }
+    while let Some(ev) = s2.next().await {
+        if let Ok(e) = ev {
+            if e.kind == "token" {
+                out2.push_str(e.data.get("t").and_then(|x| x.as_str()).unwrap());
+            }
+        }
+    }
 
     assert_eq!(out1, out2);
 }

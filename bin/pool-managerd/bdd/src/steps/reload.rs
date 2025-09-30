@@ -5,18 +5,24 @@ use cucumber::{given, then, when};
 
 #[given(regex = r#"^the pool is running model "([^"]+)"$"#)]
 pub async fn given_running_model(world: &mut BddWorld, model: String) {
-    world.last_body = Some(serde_json::json!({
-        "current_model": model
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "current_model": model
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r#"^I request reload with model "([^"]+)"$"#)]
 pub async fn when_request_reload(world: &mut BddWorld, new_model: String) {
-    world.last_body = Some(serde_json::json!({
-        "reload_requested": true,
-        "new_model": new_model,
-        "drain_initiated": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "reload_requested": true,
+            "new_model": new_model,
+            "drain_initiated": true
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^drain is initiated$")]
@@ -32,9 +38,12 @@ pub async fn then_waits_drain(_world: &mut BddWorld) {
 
 #[given(regex = r"^drain has completed$")]
 pub async fn given_drain_completed(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "drain_completed": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "drain_completed": true
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^reload proceeds$")]
@@ -44,10 +53,13 @@ pub async fn when_reload_proceeds(_world: &mut BddWorld) {
 
 #[then(regex = r#"^model-provisioner is called with "([^"]+)"$"#)]
 pub async fn then_provisioner_called(world: &mut BddWorld, model: String) {
-    world.last_body = Some(serde_json::json!({
-        "model_staged": true,
-        "model": model
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "model_staged": true,
+            "model": model
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the new model is staged$")]
@@ -58,9 +70,12 @@ pub async fn then_model_staged(world: &mut BddWorld) {
 
 #[given(regex = r"^the new model is staged$")]
 pub async fn given_model_staged(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "model_staged": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "model_staged": true
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the old engine process is stopped$")]
@@ -75,9 +90,12 @@ pub async fn then_old_pid_removed(_world: &mut BddWorld) {
 
 #[given(regex = r"^the old engine is stopped$")]
 pub async fn given_old_stopped(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "old_engine_stopped": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "old_engine_stopped": true
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^a new engine process is spawned$")]
@@ -97,9 +115,12 @@ pub async fn then_new_pid_created(_world: &mut BddWorld) {
 
 #[given(regex = r"^the new engine is spawned$")]
 pub async fn given_new_spawned(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "new_engine_spawned": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "new_engine_spawned": true
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^health check polls the new engine$")]
@@ -114,10 +135,13 @@ pub async fn then_waits_200(_world: &mut BddWorld) {
 
 #[given(regex = r"^the new engine health check succeeds$")]
 pub async fn given_health_succeeds(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "health_check_passed": true,
-        "reload_success": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "health_check_passed": true,
+            "reload_success": true
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the pool is marked as ready$")]
@@ -127,11 +151,14 @@ pub async fn then_marked_ready(_world: &mut BddWorld) {
 
 #[given(regex = r"^the new engine health check fails$")]
 pub async fn given_health_fails(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "health_check_failed": true,
-        "reload_failed": true,
-        "rollback_initiated": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "health_check_failed": true,
+            "reload_failed": true,
+            "rollback_initiated": true
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^reload detects failure$")]
@@ -182,9 +209,12 @@ pub async fn given_device_mask(world: &mut BddWorld, mask: String) {
 
 #[when(regex = r"^reload completes successfully$")]
 pub async fn when_reload_completes(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "reload_success": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "reload_success": true
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r#"^the pool_id remains "([^"]+)"$"#)]
@@ -207,17 +237,23 @@ pub async fn then_skips_staging(_world: &mut BddWorld) {
 
 #[given(regex = r#"^the new model "([^"]+)" fails health check$"#)]
 pub async fn given_new_model_fails(world: &mut BddWorld, _model: String) {
-    world.last_body = Some(serde_json::json!({
-        "health_check_failed": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "health_check_failed": true
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^reload attempts and fails$")]
 pub async fn when_reload_fails(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "reload_failed": true,
-        "rollback_complete": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "reload_failed": true,
+            "rollback_complete": true
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r#"^the pool is still running model "([^"]+)"$"#)]
@@ -248,9 +284,12 @@ pub async fn then_success_counter(_world: &mut BddWorld) {
 
 #[when(regex = r"^reload fails$")]
 pub async fn when_reload_fails_generic(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "reload_failed": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "reload_failed": true
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^reload_failure_total counter increments$")]
@@ -273,10 +312,13 @@ pub async fn given_leases_stuck(world: &mut BddWorld) {
 
 #[when(regex = r"^I request reload with drain deadline (\d+)ms$")]
 pub async fn when_reload_with_deadline(world: &mut BddWorld, _deadline: u64) {
-    world.last_body = Some(serde_json::json!({
-        "reload_requested": true,
-        "drain_timeout": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "reload_requested": true,
+            "drain_timeout": true
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^drain times out$")]

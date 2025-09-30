@@ -12,14 +12,11 @@ pub fn service_identity() -> String {
 
 /// Get current timestamp in milliseconds since Unix epoch.
 pub fn current_timestamp_ms() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis() as u64
+    SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis() as u64
 }
 
 /// Narrate with automatic service identity and timestamp injection.
-/// 
+///
 /// This is the recommended function for Cloud Profile deployments when
 /// you don't need OpenTelemetry context (e.g., background tasks, startup).
 ///
@@ -48,12 +45,12 @@ pub fn narrate_auto(mut fields: NarrationFields) {
     if fields.emitted_at_ms.is_none() {
         fields.emitted_at_ms = Some(current_timestamp_ms());
     }
-    
+
     crate::narrate(fields);
 }
 
 /// Narrate with both auto-injection AND OpenTelemetry context.
-/// 
+///
 /// This is the MOST COMPLETE function for Cloud Profile deployments.
 /// Combines auto-injection (service identity, timestamp) with OTEL context extraction.
 ///
@@ -86,7 +83,7 @@ pub fn narrate_full(mut fields: NarrationFields) {
     if fields.emitted_at_ms.is_none() {
         fields.emitted_at_ms = Some(current_timestamp_ms());
     }
-    
+
     // Extract OTEL context
     let (trace_id, span_id, parent_span_id) = crate::otel::extract_otel_context();
     if fields.trace_id.is_none() {
@@ -98,12 +95,12 @@ pub fn narrate_full(mut fields: NarrationFields) {
     if fields.parent_span_id.is_none() {
         fields.parent_span_id = parent_span_id;
     }
-    
+
     crate::narrate(fields);
 }
 
 /// Macro for ergonomic auto-injection.
-/// 
+///
 /// # Example
 /// ```rust,ignore
 /// use observability_narration_core::narrate_auto;
@@ -148,10 +145,10 @@ mod tests {
     #[test]
     fn test_narrate_auto_injects_fields() {
         use crate::CaptureAdapter;
-        
+
         // Uninstall any existing adapter first
         CaptureAdapter::uninstall();
-        
+
         let adapter = CaptureAdapter::install();
         adapter.clear();
 
@@ -172,10 +169,10 @@ mod tests {
     #[test]
     fn test_narrate_auto_respects_existing_fields() {
         use crate::CaptureAdapter;
-        
+
         // Uninstall any existing adapter first
         CaptureAdapter::uninstall();
-        
+
         let adapter = CaptureAdapter::install();
         adapter.clear();
 

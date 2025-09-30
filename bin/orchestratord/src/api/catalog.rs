@@ -2,13 +2,31 @@ use axum::{
     extract::{Path, State},
     Json,
 };
-use catalog_core::{CatalogStore, Digest, FsCatalog, LifecycleState};
+use axum::extract::BearerToken;
+use axum::middleware::Next;
+use axum::response::IntoResponse;
 use http::StatusCode;
 use serde_json::json;
 
 use crate::domain::error::OrchestratorError as ErrO;
 use crate::state::AppState;
 
+// TODO(SECURITY): Add authentication to catalog endpoints using auth-min
+//
+// Catalog endpoints allow model registration and state changes.
+// These should require authentication to prevent unauthorized catalog modifications.
+//
+// Endpoints requiring auth:
+// - POST /v2/catalog/models - Register model
+// - GET /v2/catalog/models/{id} - Get model
+// - POST /v2/catalog/models/{id}/verify - Verify model
+// - POST /v2/catalog/models/{id}/state - Set state (Active/Retired)
+//
+// Should use auth-min based middleware for Bearer token validation.
+//
+// See: .docs/PHASE5_FIX_CHECKLIST.md Task 11
+// See: .specs/12_auth-min-hardening.md (SEC-AUTH-3001)
+//! Catalog API endpoints for model management, FsCatalog, LifecycleState};
 fn open_catalog() -> anyhow::Result<FsCatalog> {
     let root = catalog_core::default_model_cache_dir();
     Ok(FsCatalog::new(root)?)

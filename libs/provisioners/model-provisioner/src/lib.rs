@@ -6,14 +6,17 @@
 //! - Register/update catalog entries and lifecycle state.
 //! - Return ResolvedModel with canonical local path for engine-provisioner and pool-managerd.
 // Module structure
+pub mod api;
 pub mod config;
 pub mod metadata;
-mod util;
 pub mod provisioner;
-pub mod api;
+mod util;
 
 // Re-exports for crate public API
-pub use api::{provision_from_config_to_default_handoff, provision_from_config_to_handoff, DEFAULT_LLAMACPP_HANDOFF_PATH};
+pub use api::{
+    provision_from_config_to_default_handoff, provision_from_config_to_handoff,
+    DEFAULT_LLAMACPP_HANDOFF_PATH,
+};
 pub use config::ModelProvisionerConfig;
 pub use metadata::ModelMetadata;
 pub use provisioner::ModelProvisioner;

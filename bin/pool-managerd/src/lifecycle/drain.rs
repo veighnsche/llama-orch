@@ -6,8 +6,8 @@
 use anyhow::Result;
 use std::time::{Duration, Instant};
 
-use crate::registry::Registry;
 use crate::lifecycle::preload;
+use crate::registry::Registry;
 
 /// Drain request with deadline
 #[derive(Debug, Clone)]
@@ -18,10 +18,7 @@ pub struct DrainRequest {
 
 impl DrainRequest {
     pub fn new(pool_id: impl Into<String>, deadline_ms: u64) -> Self {
-        Self {
-            pool_id: pool_id.into(),
-            deadline_ms,
-        }
+        Self { pool_id: pool_id.into(), deadline_ms }
     }
 }
 
@@ -38,21 +35,21 @@ pub struct DrainOutcome {
 pub fn execute_drain(req: DrainRequest, registry: &mut Registry) -> Result<DrainOutcome> {
     let start = Instant::now();
     let deadline = start + Duration::from_millis(req.deadline_ms);
-    
+
     tracing::info!(
         pool_id = %req.pool_id,
         deadline_ms = req.deadline_ms,
         "starting drain"
     );
-    
+
     // Set draining flag - refuses new lease allocations
     registry.set_draining(&req.pool_id, true);
-    
+
     // Wait for active leases to drain
     let mut force_stopped = false;
     loop {
         let active_leases = registry.get_active_leases(&req.pool_id);
-        
+
         if active_leases == 0 {
             tracing::info!(
                 pool_id = %req.pool_id,
@@ -60,7 +57,7 @@ pub fn execute_drain(req: DrainRequest, registry: &mut Registry) -> Result<Drain
             );
             break;
         }
-        
+
         if Instant::now() >= deadline {
             tracing::warn!(
                 pool_id = %req.pool_id,
@@ -70,11 +67,11 @@ pub fn execute_drain(req: DrainRequest, registry: &mut Registry) -> Result<Drain
             force_stopped = true;
             break;
         }
-        
+
         // Poll every 100ms
         std::thread::sleep(Duration::from_millis(100));
     }
-    
+
     // Stop the engine process
     if let Err(e) = preload::stop_pool(&req.pool_id) {
         tracing::error!(
@@ -84,19 +81,13 @@ pub fn execute_drain(req: DrainRequest, registry: &mut Registry) -> Result<Drain
         );
         // Continue - we still mark as drained
     }
-    
+
     // Update registry health to not ready
-    registry.set_health(
-        &req.pool_id,
-        crate::health::HealthStatus {
-            live: false,
-            ready: false,
-        },
-    );
-    
+    registry.set_health(&req.pool_id, crate::health::HealthStatus { live: false, ready: false });
+
     let duration_ms = start.elapsed().as_millis() as u64;
     let final_lease_count = registry.get_active_leases(&req.pool_id);
-    
+
     tracing::info!(
         pool_id = %req.pool_id,
         duration_ms = duration_ms,
@@ -104,11 +95,6 @@ pub fn execute_drain(req: DrainRequest, registry: &mut Registry) -> Result<Drain
         final_lease_count = final_lease_count,
         "drain completed"
     );
-    
-    Ok(DrainOutcome {
-        pool_id: req.pool_id,
-        force_stopped,
-        duration_ms,
-        final_lease_count,
-    })
+
+    Ok(DrainOutcome { pool_id: req.pool_id, force_stopped, duration_ms, final_lease_count })
 }

@@ -42,16 +42,16 @@
 //! });
 //! ```
 
-mod capture;
-mod redaction;
-pub mod otel;
 pub mod auto;
+mod capture;
 pub mod http;
+pub mod otel;
+mod redaction;
 
+pub use auto::{current_timestamp_ms, narrate_auto, narrate_full, service_identity};
 pub use capture::{CaptureAdapter, CapturedNarration};
-pub use redaction::{redact_secrets, RedactionPolicy};
-pub use auto::{narrate_auto, narrate_full, service_identity, current_timestamp_ms};
 pub use otel::narrate_with_otel_context;
+pub use redaction::{redact_secrets, RedactionPolicy};
 
 use serde::{Deserialize, Serialize};
 use tracing::{event, Level};
@@ -62,16 +62,16 @@ use tracing::{event, Level};
 pub struct NarrationFields {
     /// Who performed the action (e.g., "orchestratord", "pool-managerd")
     pub actor: &'static str,
-    
+
     /// What action was performed (e.g., "admission", "spawn", "build")
     pub action: &'static str,
-    
+
     /// What was acted upon (e.g., session_id, pool_id, replica_id)
     pub target: String,
-    
+
     /// Human-readable description (ORCH-3305: ≤100 chars, present tense, SVO)
     pub human: String,
-    
+
     // Correlation and identity fields
     pub correlation_id: Option<String>,
     pub session_id: Option<String>,
@@ -80,7 +80,7 @@ pub struct NarrationFields {
     pub pool_id: Option<String>,
     pub replica_id: Option<String>,
     pub worker_id: Option<String>,
-    
+
     // Contextual fields (ORCH-3304)
     pub error_kind: Option<String>,
     pub retry_after_ms: Option<u64>,
@@ -88,18 +88,18 @@ pub struct NarrationFields {
     pub duration_ms: Option<u64>,
     pub queue_position: Option<usize>,
     pub predicted_start_ms: Option<u64>,
-    
+
     // Engine/model context
     pub engine: Option<String>,
     pub engine_version: Option<String>,
     pub model_ref: Option<String>,
     pub device: Option<String>,
-    
+
     // Performance metrics
     pub tokens_in: Option<u64>,
     pub tokens_out: Option<u64>,
     pub decode_time_ms: Option<u64>,
-    
+
     // Provenance (audit trail and debugging)
     /// Service name and version (e.g., "orchestratord@0.1.0")
     pub emitted_by: Option<String>,
@@ -138,7 +138,7 @@ pub struct NarrationFields {
 pub fn narrate(fields: NarrationFields) {
     // Apply redaction to human text (ORCH-3302)
     let human = redact_secrets(&fields.human, RedactionPolicy::default());
-    
+
     // Emit structured event
     event!(
         Level::INFO,
@@ -173,7 +173,7 @@ pub fn narrate(fields: NarrationFields) {
         parent_span_id = fields.parent_span_id.as_deref(),
         source_location = fields.source_location.as_deref(),
     );
-    
+
     // Notify capture adapter if active (ORCH-3306)
     capture::notify(fields);
 }

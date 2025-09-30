@@ -75,9 +75,7 @@ pub struct CaptureAdapter {
 impl CaptureAdapter {
     /// Create a new capture adapter.
     pub fn new() -> Self {
-        Self {
-            events: Arc::new(Mutex::new(Vec::new())),
-        }
+        Self { events: Arc::new(Mutex::new(Vec::new())) }
     }
 
     /// Install this adapter as the global capture target.
@@ -150,7 +148,7 @@ impl CaptureAdapter {
             field, value, captured
         );
     }
-    
+
     /// Assert that provenance metadata is present.
     pub fn assert_provenance_present(&self) {
         let captured = self.captured();
@@ -165,10 +163,7 @@ impl CaptureAdapter {
     pub fn assert_correlation_id_present(&self) {
         let captured = self.captured();
         let found = captured.iter().any(|n| n.correlation_id.is_some());
-        assert!(
-            found,
-            "Expected at least one narration with correlation_id, but found none"
-        );
+        assert!(found, "Expected at least one narration with correlation_id, but found none");
     }
 }
 
@@ -196,7 +191,7 @@ mod tests {
     #[test]
     fn test_capture_adapter_basic() {
         let adapter = CaptureAdapter::new();
-        
+
         let fields = NarrationFields {
             actor: "test",
             action: "test_action",
@@ -204,9 +199,9 @@ mod tests {
             human: "Test message".to_string(),
             ..Default::default()
         };
-        
+
         adapter.capture(fields.into());
-        
+
         let captured = adapter.captured();
         assert_eq!(captured.len(), 1);
         assert_eq!(captured[0].actor, "test");
@@ -216,7 +211,7 @@ mod tests {
     #[test]
     fn test_assert_includes() {
         let adapter = CaptureAdapter::new();
-        
+
         let fields = NarrationFields {
             actor: "test",
             action: "test_action",
@@ -224,7 +219,7 @@ mod tests {
             human: "Accepted request".to_string(),
             ..Default::default()
         };
-        
+
         adapter.capture(fields.into());
         adapter.assert_includes("Accepted");
     }
@@ -233,7 +228,7 @@ mod tests {
     #[should_panic(expected = "Expected narration to include")]
     fn test_assert_includes_fails() {
         let adapter = CaptureAdapter::new();
-        
+
         let fields = NarrationFields {
             actor: "test",
             action: "test_action",
@@ -241,7 +236,7 @@ mod tests {
             human: "Accepted request".to_string(),
             ..Default::default()
         };
-        
+
         adapter.capture(fields.into());
         adapter.assert_includes("Rejected"); // Should panic
     }
@@ -249,7 +244,7 @@ mod tests {
     #[test]
     fn test_clear() {
         let adapter = CaptureAdapter::new();
-        
+
         let fields = NarrationFields {
             actor: "test",
             action: "test_action",
@@ -257,10 +252,10 @@ mod tests {
             human: "Test".to_string(),
             ..Default::default()
         };
-        
+
         adapter.capture(fields.into());
         assert_eq!(adapter.captured().len(), 1);
-        
+
         adapter.clear();
         assert_eq!(adapter.captured().len(), 0);
     }

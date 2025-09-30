@@ -1,8 +1,8 @@
 use anyhow::{anyhow, Result};
-use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
+use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::time::{Duration, Instant};
 
 pub fn default_cache_dir(engine: &str) -> PathBuf {
@@ -106,10 +106,7 @@ pub fn select_listen_port(preferred: u16) -> u16 {
 pub fn http_ok(host: &str, port: u16, path: &str) -> Result<bool> {
     let addr = format!("{}:{}", host, port);
     let mut stream = TcpStream::connect(addr)?;
-    let req = format!(
-        "GET {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n",
-        path, host
-    );
+    let req = format!("GET {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n", path, host);
     stream.write_all(req.as_bytes())?;
     let mut buf = [0u8; 64];
     let n = stream.read(&mut buf)?;
@@ -142,10 +139,7 @@ pub fn wait_for_health(host: &str, port: u16, timeout: Duration) -> Result<()> {
 fn http_status(host: &str, port: u16, path: &str) -> Result<u16> {
     let addr = format!("{}:{}", host, port);
     let mut stream = TcpStream::connect(addr)?;
-    let req = format!(
-        "GET {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n",
-        path, host
-    );
+    let req = format!("GET {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n", path, host);
     stream.write_all(req.as_bytes())?;
     let mut line = String::new();
     // Read the status line only

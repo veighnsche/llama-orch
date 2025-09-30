@@ -1,5 +1,8 @@
 use anyhow::Result;
-use catalog_core::{default_model_cache_dir, CatalogEntry, CatalogStore, Digest, FileFetcher, FsCatalog, LifecycleState, ModelFetcher, ModelRef, ResolvedModel};
+use catalog_core::{
+    default_model_cache_dir, CatalogEntry, CatalogStore, Digest, FileFetcher, FsCatalog,
+    LifecycleState, ModelFetcher, ModelRef, ResolvedModel,
+};
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -31,14 +34,24 @@ impl ModelProvisioner<FsCatalog, FileFetcher> {
 }
 
 impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
-    pub fn new(catalog: C, fetcher: F) -> Self { Self { catalog, fetcher } }
+    pub fn new(catalog: C, fetcher: F) -> Self {
+        Self { catalog, fetcher }
+    }
 
-    pub fn ensure_present_str(&self, model_ref: &str, expected_digest: Option<Digest>) -> Result<ResolvedModel> {
+    pub fn ensure_present_str(
+        &self,
+        model_ref: &str,
+        expected_digest: Option<Digest>,
+    ) -> Result<ResolvedModel> {
         let mr = ModelRef::parse(model_ref)?;
         self.ensure_present(&mr, expected_digest)
     }
 
-    pub fn ensure_present(&self, mr: &ModelRef, expected_digest: Option<Digest>) -> Result<ResolvedModel> {
+    pub fn ensure_present(
+        &self,
+        mr: &ModelRef,
+        expected_digest: Option<Digest>,
+    ) -> Result<ResolvedModel> {
         // Try primary fetcher first (file/relative). If unsupported, handle select schemes inline.
         let resolved = match self.fetcher.ensure_present(mr) {
             Ok(r) => r,
@@ -54,7 +67,9 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
                         let mut c = Command::new(cli);
                         c.env("HF_HUB_ENABLE_HF_TRANSFER", "1");
                         c.arg("download").arg(&repo_spec);
-                        if let Some(p) = path { c.arg(p); }
+                        if let Some(p) = path {
+                            c.arg(p);
+                        }
                         c.arg("--local-dir").arg(&cache_dir);
                         // Add flags specific to the CLI flavor
                         if cli == "hf" {
@@ -71,7 +86,11 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
                                 repo_spec
                             ));
                         }
-                        let local_path = if let Some(p) = path { cache_dir.join(p) } else { cache_dir.join(repo_spec.replace('/', "_")) };
+                        let local_path = if let Some(p) = path {
+                            cache_dir.join(p)
+                        } else {
+                            cache_dir.join(repo_spec.replace('/', "_"))
+                        };
                         ResolvedModel {
                             id: format!(
                                 "hf:{}/{}{}",
@@ -99,7 +118,11 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
                 }
                 let act = crate::util::compute_sha256_hex(&resolved.local_path)?;
                 if act != exp.value {
-                    return Err(anyhow::anyhow!("digest mismatch: expected sha256:{}, got {}", exp.value, act));
+                    return Err(anyhow::anyhow!(
+                        "digest mismatch: expected sha256:{}, got {}",
+                        exp.value,
+                        act
+                    ));
                 }
             }
         }
@@ -119,9 +142,9 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_locks::{CWD_LOCK, PATH_LOCK};
     use catalog_core::ModelRef;
     use std::io::Write;
-    use crate::test_locks::{CWD_LOCK, PATH_LOCK};
 
     #[test]
     fn happy_path_file_model() {
@@ -152,7 +175,8 @@ mod tests {
         std::fs::write(&abs, b"rel").unwrap();
 
         let prov = ModelProvisioner::file_only(cache.path().to_path_buf()).unwrap();
-        let r1 = prov.ensure_present(&ModelRef::parse(rel.to_str().unwrap()).unwrap(), None).unwrap();
+        let r1 =
+            prov.ensure_present(&ModelRef::parse(rel.to_str().unwrap()).unwrap(), None).unwrap();
         assert_eq!(r1.local_path, abs);
         let abs_ref = format!("file:{}", abs.display());
         let r2 = prov.ensure_present(&ModelRef::parse(&abs_ref).unwrap(), None).unwrap();
@@ -182,7 +206,8 @@ mod tests {
         let r2 = prov.ensure_present(&mr, None).unwrap();
         assert_eq!(r1.local_path, r2.local_path);
         let index_path = cache.path().join("index.json");
-        let map_val: serde_json::Value = serde_json::from_slice(&std::fs::read(index_path).unwrap()).unwrap();
+        let map_val: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(index_path).unwrap()).unwrap();
         let obj = map_val.as_object().unwrap();
         assert_eq!(obj.len(), 1);
     }
@@ -198,7 +223,10 @@ mod tests {
         let wrong = Digest { algo: "sha256".into(), value: "deadbeef".into() };
         let err = prov.ensure_present(&mr, Some(wrong)).unwrap_err();
         assert!(format!("{}", err).contains("digest mismatch"));
-        let ok = Digest { algo: "sha256".into(), value: crate::util::compute_sha256_hex(&model_path).unwrap() };
+        let ok = Digest {
+            algo: "sha256".into(),
+            value: crate::util::compute_sha256_hex(&model_path).unwrap(),
+        };
         let resolved = prov.ensure_present(&mr, Some(ok)).unwrap();
         assert_eq!(resolved.local_path, model_path);
     }
@@ -230,8 +258,16 @@ mod tests {
         assert!(resolved.local_path.starts_with(&expected_base));
         assert!(resolved.local_path.ends_with("file.gguf"));
 
-        if let Some(h) = old_home { std::env::set_var("HOME", h); } else { std::env::remove_var("HOME"); }
-        if let Some(p) = old_path { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }
+        if let Some(h) = old_home {
+            std::env::set_var("HOME", h);
+        } else {
+            std::env::remove_var("HOME");
+        }
+        if let Some(p) = old_path {
+            std::env::set_var("PATH", p);
+        } else {
+            std::env::remove_var("PATH");
+        }
     }
 
     #[test]
@@ -244,7 +280,13 @@ mod tests {
         let mr = ModelRef::parse("hf:org/repo/file.gguf").unwrap();
         let err = prov.ensure_present(&mr, None).unwrap_err();
         let s = format!("{}", err);
-        assert!(s.contains("Hugging Face CLI not found") || s.contains("huggingface-cli not found"));
-        if let Some(p) = old_path { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }
+        assert!(
+            s.contains("Hugging Face CLI not found") || s.contains("huggingface-cli not found")
+        );
+        if let Some(p) = old_path {
+            std::env::set_var("PATH", p);
+        } else {
+            std::env::remove_var("PATH");
+        }
     }
 }

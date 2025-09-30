@@ -42,6 +42,19 @@ fn extract_or_generate_correlation_id(headers: &HeaderMap) -> String {
         .unwrap_or_else(|| Uuid::new_v4().to_string())
 }
 
+// TODO(SECURITY): Migrate X-API-Key to Bearer token authentication using auth-min
+// 
+// Current implementation uses hardcoded "valid" key which is insecure for production.
+// Should migrate to proper Bearer token authentication with:
+// 1. auth_min::parse_bearer() for header parsing
+// 2. auth_min::timing_safe_eq() for token comparison
+// 3. auth_min::token_fp6() for logging
+// 4. LLORCH_API_TOKEN environment variable
+//
+// This middleware should eventually be replaced by bearer_identity_layer
+// or unified into a single auth middleware using auth-min.
+//
+// See: .specs/12_auth-min-hardening.md (SEC-AUTH-3001)
 /// API key middleware: enforce `X-API-Key: valid` on all routes except `/metrics`.
 pub async fn api_key_layer(req: Request<Body>, next: Next) -> Result<Response, StatusCode> {
     if !should_require_api_key(req.uri().path()) {

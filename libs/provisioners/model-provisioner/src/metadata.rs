@@ -15,7 +15,12 @@ pub struct ModelMetadata {
 impl ModelMetadata {
     pub fn from_resolved(r: &ResolvedModel) -> Result<Self> {
         let meta = fs::metadata(&r.local_path)?;
-        Ok(Self { id: r.id.clone(), path: r.local_path.clone(), size_bytes: meta.len(), ctx_max: None })
+        Ok(Self {
+            id: r.id.clone(),
+            path: r.local_path.clone(),
+            size_bytes: meta.len(),
+            ctx_max: None,
+        })
     }
 
     /// Write an engine handoff JSON containing the resolved model path and metadata.
@@ -24,7 +29,9 @@ impl ModelMetadata {
             "model": { "id": self.id, "path": self.path },
             "metadata": { "size_bytes": self.size_bytes, "ctx_max": self.ctx_max }
         });
-        if let Some(dir) = dest.as_ref().parent() { fs::create_dir_all(dir)?; }
+        if let Some(dir) = dest.as_ref().parent() {
+            fs::create_dir_all(dir)?;
+        }
         fs::write(dest, serde_json::to_vec_pretty(&payload)?)?;
         Ok(())
     }

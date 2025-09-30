@@ -7,22 +7,22 @@ use std::fmt;
 pub enum AuthError {
     /// No token configured in environment
     NoTokenConfigured,
-    
+
     /// Missing Authorization header
     MissingAuthHeader,
-    
+
     /// Invalid Authorization header format
     InvalidAuthHeader(String),
-    
+
     /// Missing Bearer prefix
     MissingBearerPrefix,
-    
+
     /// Empty token after Bearer prefix
     EmptyToken,
-    
+
     /// Invalid token (failed comparison)
     InvalidToken,
-    
+
     /// Bind policy violation
     BindPolicyViolation(String),
 }

@@ -53,19 +53,31 @@
 /// - `None` if the header is missing, malformed, or contains an empty token
 pub fn parse_bearer(header_val: Option<&str>) -> Option<String> {
     let s = header_val?;
+
+    // Validate header length to prevent DoS
+    const MAX_HEADER_LEN: usize = 8192; // 8KB max header size
+    if s.len() > MAX_HEADER_LEN {
+        return None;
+    }
+
     let s = s.trim();
-    
+
     // Check for Bearer prefix (case-sensitive per RFC 6750)
     let rest = s.strip_prefix("Bearer ")?;
-    
+
     // Trim whitespace from token
     let token = rest.trim();
-    
+
     // Reject empty tokens
     if token.is_empty() {
         return None;
     }
-    
+
+    // Validate token doesn't contain control characters (security hardening)
+    if token.chars().any(|c| c.is_control()) {
+        return None;
+    }
+
     Some(token.to_string())
 }
 
@@ -132,7 +144,7 @@ mod tests {
         // "bearer" (lowercase) should not match
         let result = parse_bearer(Some("bearer abc123"));
         assert_eq!(result, None);
-        
+
         // "BEARER" (uppercase) should not match
         let result = parse_bearer(Some("BEARER abc123"));
         assert_eq!(result, None);

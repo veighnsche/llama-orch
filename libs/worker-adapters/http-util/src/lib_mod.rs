@@ -1,11 +1,11 @@
 //! worker-adapters/http-util — modular root
 
-pub mod client;
 pub mod auth;
+pub mod client;
+pub mod error;
 pub mod redact;
 pub mod retry;
 pub mod streaming;
-pub mod error;
 
 // Re-exports for stable public API at crate root
 pub use crate::auth::{bearer_header_from_env, with_bearer, with_bearer_if_configured};

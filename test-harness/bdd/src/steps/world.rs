@@ -88,9 +88,7 @@ impl World {
                     serde_json::from_value(body_json.unwrap_or_else(|| json!({})))?;
                 data::create_task(State(self.state.clone()), axum::Json(body)).await.into_response()
             }
-            (http::Method::GET, p)
-                if p.starts_with("/v2/tasks/") && p.ends_with("/events") =>
-            {
+            (http::Method::GET, p) if p.starts_with("/v2/tasks/") && p.ends_with("/events") => {
                 let id = p
                     .trim_start_matches("/v2/tasks/")
                     .trim_end_matches("/events")
@@ -100,9 +98,7 @@ impl World {
                     .await
                     .into_response()
             }
-            (http::Method::POST, p)
-                if p.starts_with("/v2/tasks/") && p.ends_with("/cancel") =>
-            {
+            (http::Method::POST, p) if p.starts_with("/v2/tasks/") && p.ends_with("/cancel") => {
                 let id = p
                     .trim_start_matches("/v2/tasks/")
                     .trim_end_matches("/cancel")

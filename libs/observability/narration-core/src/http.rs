@@ -10,7 +10,7 @@ pub mod headers {
 }
 
 /// Extract correlation and trace context from HTTP headers.
-/// 
+///
 /// Compatible with axum's `HeaderMap`.
 ///
 /// # Example (axum handler)
@@ -19,7 +19,7 @@ pub mod headers {
 /// use observability_narration_core::http::extract_context_from_headers;
 ///
 /// async fn my_handler(headers: HeaderMap) {
-///     let (correlation_id, trace_id, span_id, parent_span_id) = 
+///     let (correlation_id, trace_id, span_id, parent_span_id) =
 ///         extract_context_from_headers(&headers);
 ///     
 ///     // Use in narration
@@ -32,7 +32,9 @@ pub mod headers {
 ///     });
 /// }
 /// ```
-pub fn extract_context_from_headers<H>(headers: &H) -> (Option<String>, Option<String>, Option<String>, Option<String>)
+pub fn extract_context_from_headers<H>(
+    headers: &H,
+) -> (Option<String>, Option<String>, Option<String>, Option<String>)
 where
     H: HeaderLike,
 {
@@ -40,12 +42,12 @@ where
     let trace_id = headers.get_str(headers::TRACE_ID);
     let span_id = headers.get_str(headers::SPAN_ID);
     let parent_span_id = headers.get_str(headers::PARENT_SPAN_ID);
-    
+
     (correlation_id, trace_id, span_id, parent_span_id)
 }
 
 /// Inject correlation and trace context into HTTP headers.
-/// 
+///
 /// Compatible with reqwest's `HeaderMap` and axum's `HeaderMap`.
 ///
 /// # Example (reqwest client)
@@ -101,7 +103,7 @@ impl HeaderLike for std::collections::HashMap<String, String> {
     fn get_str(&self, name: &str) -> Option<String> {
         self.get(name).cloned()
     }
-    
+
     fn insert_str(&mut self, name: &str, value: &str) {
         self.insert(name.to_string(), value.to_string());
     }
@@ -119,7 +121,7 @@ mod tests {
         headers.insert(headers::TRACE_ID.to_string(), "trace-123".to_string());
         headers.insert(headers::SPAN_ID.to_string(), "span-456".to_string());
 
-        let (correlation_id, trace_id, span_id, parent_span_id) = 
+        let (correlation_id, trace_id, span_id, parent_span_id) =
             extract_context_from_headers(&headers);
 
         assert_eq!(correlation_id, Some("req-xyz".to_string()));
@@ -131,7 +133,7 @@ mod tests {
     #[test]
     fn test_inject_context_into_headers() {
         let mut headers = HashMap::new();
-        
+
         inject_context_into_headers(
             &mut headers,
             Some("req-xyz"),
@@ -149,14 +151,8 @@ mod tests {
     #[test]
     fn test_inject_partial_context() {
         let mut headers = HashMap::new();
-        
-        inject_context_into_headers(
-            &mut headers,
-            Some("req-xyz"),
-            None,
-            None,
-            None,
-        );
+
+        inject_context_into_headers(&mut headers, Some("req-xyz"), None, None, None);
 
         assert_eq!(headers.get(headers::CORRELATION_ID), Some(&"req-xyz".to_string()));
         assert_eq!(headers.get(headers::TRACE_ID), None);
@@ -165,7 +161,7 @@ mod tests {
     #[test]
     fn test_roundtrip() {
         let mut headers = HashMap::new();
-        
+
         inject_context_into_headers(
             &mut headers,
             Some("req-xyz"),
@@ -174,7 +170,7 @@ mod tests {
             None,
         );
 
-        let (correlation_id, trace_id, span_id, parent_span_id) = 
+        let (correlation_id, trace_id, span_id, parent_span_id) =
             extract_context_from_headers(&headers);
 
         assert_eq!(correlation_id, Some("req-xyz".to_string()));

@@ -15,27 +15,52 @@ use axum::{
 use pool_registry_types::NodeInfo;
 use service_registry::{RegisterRequest, RegisterResponse, HeartbeatRequest, HeartbeatResponse};
 use tracing::{info, warn};
+use auth_min::{parse_bearer, timing_safe_eq, token_fp6};
 
-/// Validate Bearer token from Authorization header
-fn validate_token(headers: &HeaderMap, state: &AppState) -> bool {
+/// Validate Bearer token from Authorization header using auth-min
+/// 
+/// Uses timing-safe comparison to prevent timing attacks (CWE-208).
+/// Logs authentication events with token fingerprints for audit trails.
+fn validate_token(headers: &HeaderMap, _state: &AppState) -> bool {
     // If no token configured, allow all requests (backward compat)
     let expected_token = match std::env::var("LLORCH_API_TOKEN") {
         Ok(token) if !token.is_empty() => token,
         _ => return true, // No token required
     };
 
-    // Extract Authorization header
-    let auth_header = match headers.get("authorization") {
-        Some(h) => h.to_str().unwrap_or(""),
-        None => return false,
+    // Extract Authorization header and parse Bearer token
+    let auth = headers
+        .get(http::header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok());
+    
+    let received_token = match parse_bearer(auth) {
+        Some(token) => token,
+        None => {
+            warn!("Missing or invalid Bearer token in Authorization header");
+            return false;
+        }
     };
 
-    // Check Bearer token
-    if let Some(token) = auth_header.strip_prefix("Bearer ") {
-        token == expected_token
-    } else {
-        false
+    // Timing-safe comparison to prevent timing attacks
+    if !timing_safe_eq(received_token.as_bytes(), expected_token.as_bytes()) {
+        let fp6 = token_fp6(&received_token);
+        warn!(
+            identity = %format!("token:{}", fp6),
+            event = "auth_failed",
+            reason = "invalid_token",
+            "Authentication failed: invalid token"
+        );
+        return false;
     }
+
+    // Success - log with fingerprint
+    let fp6 = token_fp6(&received_token);
+    info!(
+        identity = %format!("token:{}", fp6),
+        event = "authenticated",
+        "Node authentication successful"
+    );
+    true
 }
 
 /// POST /v2/nodes/register

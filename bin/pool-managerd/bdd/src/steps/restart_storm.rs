@@ -6,19 +6,25 @@ use pool_managerd::lifecycle::supervision::RestartRateLimiter;
 
 #[given(regex = r"^restart rate limit is (\d+) restarts per (\d+) seconds$")]
 pub async fn given_rate_limit(world: &mut BddWorld, max: u32, window: u64) {
-    world.last_body = Some(serde_json::json!({
-        "rate_limit": {
-            "max_restarts": max,
-            "window_secs": window
-        }
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "rate_limit": {
+                "max_restarts": max,
+                "window_secs": window
+            }
+        })
+        .to_string(),
+    );
 }
 
 #[given(regex = r"^the engine has restarted (\d+) times$")]
 pub async fn given_restarted_times(world: &mut BddWorld, count: u32) {
-    world.last_body = Some(serde_json::json!({
-        "restart_count": count
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "restart_count": count
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^the engine crashes and restarts again$")]
@@ -26,10 +32,13 @@ pub async fn when_crashes_restarts(world: &mut BddWorld) {
     let body = world.last_body.as_ref().expect("no response");
     let json: serde_json::Value = serde_json::from_str(body).unwrap();
     let count = json["restart_count"].as_u64().unwrap() + 1;
-    
-    world.last_body = Some(serde_json::json!({
-        "restart_count": count
-    }).to_string());
+
+    world.last_body = Some(
+        serde_json::json!({
+            "restart_count": count
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the restart_count is (\d+)$")]
@@ -51,18 +60,24 @@ pub async fn then_window_resets(_world: &mut BddWorld) {
 
 #[given(regex = r"^the engine is restarting frequently$")]
 pub async fn given_restarting_frequently(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "restart_count": 6,
-        "time_window_secs": 60
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "restart_count": 6,
+            "time_window_secs": 60
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^the restart_count exceeds (\d+) in (\d+) seconds$")]
 pub async fn when_count_exceeds(world: &mut BddWorld, threshold: u32, _window: u64) {
-    world.last_body = Some(serde_json::json!({
-        "restart_storm_detected": true,
-        "restart_count": threshold + 1
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "restart_storm_detected": true,
+            "restart_count": threshold + 1
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^a warning is logged about restart storm$")]
@@ -82,10 +97,13 @@ pub async fn then_log_time_window(_world: &mut BddWorld) {
 
 #[given(regex = r"^the engine has restarted (\d+) times in (\d+) seconds$")]
 pub async fn given_restarts_in_window(world: &mut BddWorld, count: u32, _window: u64) {
-    world.last_body = Some(serde_json::json!({
-        "restart_count": count,
-        "rate_exceeded": count >= 10
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "restart_count": count,
+            "rate_exceeded": count >= 10
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the restart is delayed beyond rate limit$")]
@@ -100,9 +118,12 @@ pub async fn then_rate_warning(_world: &mut BddWorld) {
 
 #[given(regex = r"^(\d+) restarts occurred in the last (\d+) seconds$")]
 pub async fn given_restarts_in_last(world: &mut BddWorld, count: u32, _window: u64) {
-    world.last_body = Some(serde_json::json!({
-        "restart_count": count
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "restart_count": count
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^(\d+) seconds pass$")]
@@ -115,11 +136,14 @@ pub async fn when_more_restarts(world: &mut BddWorld, additional: u32) {
     let body = world.last_body.as_ref().expect("no response");
     let json: serde_json::Value = serde_json::from_str(body).unwrap();
     let count = json["restart_count"].as_u64().unwrap() + additional as u64;
-    
-    world.last_body = Some(serde_json::json!({
-        "restart_count": count,
-        "rate_exceeded": false
-    }).to_string());
+
+    world.last_body = Some(
+        serde_json::json!({
+            "restart_count": count,
+            "rate_exceeded": false
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^the rate limit is not exceeded$")]
@@ -136,10 +160,13 @@ pub async fn then_proceed_normally(_world: &mut BddWorld) {
 
 #[given(regex = r"^the engine restarts (\d+) times in (\d+) seconds$")]
 pub async fn given_storm(world: &mut BddWorld, count: u32, _window: u64) {
-    world.last_body = Some(serde_json::json!({
-        "restart_count": count,
-        "restart_storm": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "restart_count": count,
+            "restart_storm": true
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^the restart storm is detected$")]
@@ -160,9 +187,12 @@ pub async fn then_prevented(_world: &mut BddWorld) {
 
 #[given(regex = r"^the engine is in restart storm$")]
 pub async fn given_in_storm(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "restart_storm": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "restart_storm": true
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^the storm threshold is exceeded$")]
@@ -202,10 +232,13 @@ pub async fn then_metrics_pool_id(_world: &mut BddWorld) {
 
 #[given(regex = r"^(\d+) OOM crashes in (\d+) seconds$")]
 pub async fn given_oom_crashes(world: &mut BddWorld, count: u32, _window: u64) {
-    world.last_body = Some(serde_json::json!({
-        "crash_type": "oom_storm",
-        "crash_count": count
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "crash_type": "oom_storm",
+            "crash_count": count
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^the pattern is detected$")]
@@ -226,17 +259,23 @@ pub async fn then_remediation(_world: &mut BddWorld) {
 
 #[given(regex = r"^the circuit breaker is open due to restart storm$")]
 pub async fn given_circuit_open_storm(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "circuit_state": "Open",
-        "reason": "restart_storm"
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "circuit_state": "Open",
+            "reason": "restart_storm"
+        })
+        .to_string(),
+    );
 }
 
 #[when(regex = r"^an operator manually allows restart$")]
 pub async fn when_manual_allow(world: &mut BddWorld) {
-    world.last_body = Some(serde_json::json!({
-        "manual_restart_allowed": true
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "manual_restart_allowed": true
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^one restart is permitted$")]

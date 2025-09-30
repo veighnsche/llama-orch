@@ -8,33 +8,33 @@ use std::sync::{Arc, Mutex};
 pub struct BddWorld {
     /// Shared registry for testing
     pub registry: Arc<Mutex<Registry>>,
-    
+
     /// HTTP client for API calls
     pub client: Option<reqwest::Client>,
-    
+
     /// Base URL for daemon
     pub base_url: String,
-    
+
     /// Last HTTP response
     pub last_status: Option<u16>,
     pub last_headers: Option<reqwest::header::HeaderMap>,
     pub last_body: Option<String>,
-    
+
     /// PreparedEngine for current scenario
     pub prepared_engine: Option<PreparedEngine>,
-    
+
     /// Test fixtures
     pub pool_id: Option<String>,
     pub handoff_json: Option<serde_json::Value>,
-    
+
     /// Process tracking
     pub spawned_pids: Vec<u32>,
     pub pid_files: Vec<PathBuf>,
-    
+
     /// Mock behaviors
     pub mock_health_responses: HashMap<String, bool>, // pool_id -> will_respond
-    pub mock_health_delay_ms: HashMap<String, u64>,   // pool_id -> delay
-    
+    pub mock_health_delay_ms: HashMap<String, u64>, // pool_id -> delay
+
     /// Assertions
     pub facts: Vec<serde_json::Value>,
 }

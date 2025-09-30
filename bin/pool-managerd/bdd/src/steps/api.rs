@@ -15,10 +15,13 @@ pub async fn when_get_health(world: &mut BddWorld) {
     world.push_fact("api.get_health");
     // Mock: health endpoint always returns OK
     world.last_status = Some(200);
-    world.last_body = Some(serde_json::json!({
-        "status": "ok",
-        "version": env!("CARGO_PKG_VERSION")
-    }).to_string());
+    world.last_body = Some(
+        serde_json::json!({
+            "status": "ok",
+            "version": env!("CARGO_PKG_VERSION")
+        })
+        .to_string(),
+    );
 }
 
 #[then(regex = r"^I receive (\d+) OK$")]
@@ -69,24 +72,30 @@ pub async fn given_no_pools(world: &mut BddWorld) {
 pub async fn when_get_pool_status(world: &mut BddWorld, pool_id: String) {
     world.push_fact("api.get_pool_status");
     let registry = world.registry.lock().unwrap();
-    
+
     if let Some(health) = registry.get_health(&pool_id) {
         let active_leases = registry.get_active_leases(&pool_id);
         let engine_version = registry.get_engine_version(&pool_id);
-        
+
         world.last_status = Some(200);
-        world.last_body = Some(serde_json::json!({
-            "pool_id": pool_id,
-            "live": health.live,
-            "ready": health.ready,
-            "active_leases": active_leases,
-            "engine_version": engine_version
-        }).to_string());
+        world.last_body = Some(
+            serde_json::json!({
+                "pool_id": pool_id,
+                "live": health.live,
+                "ready": health.ready,
+                "active_leases": active_leases,
+                "engine_version": engine_version
+            })
+            .to_string(),
+        );
     } else {
         world.last_status = Some(404);
-        world.last_body = Some(serde_json::json!({
-            "error": format!("pool {} not found", pool_id)
-        }).to_string());
+        world.last_body = Some(
+            serde_json::json!({
+                "error": format!("pool {} not found", pool_id)
+            })
+            .to_string(),
+        );
     }
 }
 
@@ -101,13 +110,13 @@ pub async fn then_field_equals_bool(world: &mut BddWorld, field: String, expecte
     let body = world.last_body.as_ref().expect("no response body");
     let json: serde_json::Value = serde_json::from_str(body).expect("invalid json");
     let actual = json.get(&field).expect(&format!("missing field: {}", field));
-    
+
     let expected_bool = match expected.as_str() {
         "true" => true,
         "false" => false,
         _ => panic!("expected boolean value, got: {}", expected),
     };
-    
+
     assert_eq!(actual.as_bool().unwrap(), expected_bool);
 }
 

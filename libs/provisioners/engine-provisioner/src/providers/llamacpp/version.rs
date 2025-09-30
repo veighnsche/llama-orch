@@ -4,10 +4,7 @@ use std::net::TcpStream;
 pub fn try_fetch_engine_version(host: &str, port: u16) -> Option<String> {
     let addr = format!("{}:{}", host, port);
     let mut stream = TcpStream::connect(addr).ok()?;
-    let req = format!(
-        "GET /version HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n",
-        host
-    );
+    let req = format!("GET /version HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n", host);
     let _ = std::io::Write::write_all(&mut stream, req.as_bytes());
     let mut buf = Vec::new();
     let _ = std::io::Read::read_to_end(&mut stream, &mut buf);
@@ -74,4 +71,3 @@ mod tests {
         assert!(got.is_none());
     }
 }
-

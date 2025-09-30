@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 pub struct PoolManagerClient {
     base_url: String,
     client: reqwest::Client,
+    api_token: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -41,30 +42,33 @@ impl Default for PoolStatus {
 }
 
 impl PoolManagerClient {
+    /// Create a new PoolManagerClient
+    ///
+    /// Reads LLORCH_API_TOKEN from environment for Bearer token authentication.
     pub fn new(base_url: String) -> Self {
+        let api_token = std::env::var("LLORCH_API_TOKEN").ok();
         Self {
             base_url,
             client: reqwest::Client::builder()
                 .timeout(std::time::Duration::from_secs(5))
                 .build()
                 .expect("failed to build reqwest client"),
+            api_token,
         }
     }
 
-    pub fn from_env() -> Self {
-        let url = std::env::var("POOL_MANAGERD_URL")
-            .unwrap_or_else(|_| "http://127.0.0.1:9200".to_string());
-        Self::new(url)
-    }
-
-    pub async fn get_pool_status(&self, pool_id: &str) -> Result<PoolStatus> {
-        let url = format!("{}/pools/{}/status", self.base_url, pool_id);
-        let resp = self.client.get(&url).send().await?;
+        
+        // Build request with optional Bearer token
+        let mut req = self.client.post(&url).json(&body);
+        if let Some(token) = &self.api_token {
+            req = req.bearer_auth(token);
+        }
+        
+        let resp = req.send().await?;
         
         if !resp.status().is_success() {
             anyhow::bail!("pool status request failed: {}", resp.status());
         }
-        
         let status = resp.json().await?;
         Ok(status)
     }

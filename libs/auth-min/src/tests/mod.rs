@@ -1,4 +1,5 @@
 //! Integration tests for auth-min
 
-mod timing;
+mod hardening;
 mod leakage;
+mod timing;

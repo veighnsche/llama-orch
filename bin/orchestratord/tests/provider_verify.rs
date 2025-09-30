@@ -6,11 +6,7 @@ use std::{fs, path::PathBuf};
 
 fn repo_root() -> PathBuf {
     // CARGO_MANIFEST_DIR is bin/orchestratord; go up two levels to workspace root.
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .ancestors()
-        .nth(2)
-        .unwrap()
-        .to_path_buf()
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).ancestors().nth(2).unwrap().to_path_buf()
 }
 
 #[test]
@@ -20,13 +16,9 @@ fn meta_control_and_artifacts_contracts_v2() {
 
     // Meta: capabilities under /v2/meta/capabilities
     let meta_path = root.join("contracts/openapi/meta.yaml");
-    let meta_spec: OpenAPI = serde_yaml::from_str(&fs::read_to_string(&meta_path).unwrap()).unwrap();
-    let item = match meta_spec
-        .paths
-        .paths
-        .get("/v2/meta/capabilities")
-        .expect("meta path exists")
-    {
+    let meta_spec: OpenAPI =
+        serde_yaml::from_str(&fs::read_to_string(&meta_path).unwrap()).unwrap();
+    let item = match meta_spec.paths.paths.get("/v2/meta/capabilities").expect("meta path exists") {
         R::Item(it) => it,
         _ => panic!("unexpected ref in meta paths"),
     };
@@ -35,11 +27,13 @@ fn meta_control_and_artifacts_contracts_v2() {
 
     // Control: pools and workers
     let control_path = root.join("contracts/openapi/control.yaml");
-    let control_spec: OpenAPI = serde_yaml::from_str(&fs::read_to_string(&control_path).unwrap()).unwrap();
-    let get_item = |template: &str| match control_spec.paths.paths.get(template).expect("path exists") {
-        R::Item(it) => it,
-        _ => panic!("unexpected ref in control paths"),
-    };
+    let control_spec: OpenAPI =
+        serde_yaml::from_str(&fs::read_to_string(&control_path).unwrap()).unwrap();
+    let get_item =
+        |template: &str| match control_spec.paths.paths.get(template).expect("path exists") {
+            R::Item(it) => it,
+            _ => panic!("unexpected ref in control paths"),
+        };
     let drain = get_item("/v2/pools/{id}/drain");
     assert!(drain
         .post
@@ -59,15 +53,17 @@ fn meta_control_and_artifacts_contracts_v2() {
         .keys()
         .any(|c| matches!(c, StatusCode::Code(202))));
     let health = get_item("/v2/pools/{id}/health");
-    assert!(health
-        .get
-        .as_ref()
-        .expect("get exists")
-        .responses
-        .responses
-        .keys()
-        .any(|c| matches!(c, StatusCode::Code(200)))
-        || health.get.as_ref().unwrap().responses.default.is_some());
+    assert!(
+        health
+            .get
+            .as_ref()
+            .expect("get exists")
+            .responses
+            .responses
+            .keys()
+            .any(|c| matches!(c, StatusCode::Code(200)))
+            || health.get.as_ref().unwrap().responses.default.is_some()
+    );
     let workers = get_item("/v2/workers/register");
     assert!(workers
         .post
@@ -80,7 +76,8 @@ fn meta_control_and_artifacts_contracts_v2() {
 
     // Artifacts
     let artifacts_path = root.join("contracts/openapi/artifacts.yaml");
-    let artifacts_spec: OpenAPI = serde_yaml::from_str(&fs::read_to_string(&artifacts_path).unwrap()).unwrap();
+    let artifacts_spec: OpenAPI =
+        serde_yaml::from_str(&fs::read_to_string(&artifacts_path).unwrap()).unwrap();
     let item = match artifacts_spec.paths.paths.get("/v2/artifacts").expect("path exists") {
         R::Item(it) => it,
         _ => panic!("unexpected ref in artifacts paths"),
@@ -93,12 +90,7 @@ fn meta_control_and_artifacts_contracts_v2() {
         .responses
         .keys()
         .any(|c| matches!(c, StatusCode::Code(201))));
-    let item = match artifacts_spec
-        .paths
-        .paths
-        .get("/v2/artifacts/{id}")
-        .expect("path exists")
-    {
+    let item = match artifacts_spec.paths.paths.get("/v2/artifacts/{id}").expect("path exists") {
         R::Item(it) => it,
         _ => panic!("unexpected ref in artifacts paths"),
     };

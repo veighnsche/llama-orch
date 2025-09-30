@@ -11,7 +11,7 @@ pub fn preflight_tools(prov: &cfg::ProvisioningConfig, src: &cfg::SourceConfig) 
         ("cmake", "cmake"),
         ("make", "make"),
         ("gcc", "gcc"),
-        ("g++", "gcc"),            // C++ compiler required by llama.cpp
+        ("g++", "gcc"),               // C++ compiler required by llama.cpp
         ("pkg-config", "pkg-config"), // for finding libcurl, etc.
     ] {
         if which::which(bin).is_err() {
@@ -80,19 +80,27 @@ pub fn preflight_tools(prov: &cfg::ProvisioningConfig, src: &cfg::SourceConfig) 
     let status = if is_root {
         let mut c = Command::new("pacman");
         c.args(["-S", "--needed", "--noconfirm"]);
-        for p in &pkgs { c.arg(p); }
+        for p in &pkgs {
+            c.arg(p);
+        }
         c.status().map_err(|e| anyhow!("pacman -S: {}", e))?
     } else if which::which("sudo").is_ok() {
         // Try non-interactive first
         let mut c = Command::new("sudo");
         c.args(["-n", "pacman", "-S", "--needed", "--noconfirm"]);
-        for p in &pkgs { c.arg(p); }
+        for p in &pkgs {
+            c.arg(p);
+        }
         let st = c.status().map_err(|e| anyhow!("sudo -n pacman -S: {}", e))?;
-        if st.success() { st } else {
+        if st.success() {
+            st
+        } else {
             // Fallback: interactive prompt (user may enter password in terminal)
             let mut ci = Command::new("sudo");
             ci.args(["pacman", "-S", "--needed", "--noconfirm"]);
-            for p in &pkgs { ci.arg(p); }
+            for p in &pkgs {
+                ci.arg(p);
+            }
             ci.status().map_err(|e| anyhow!("sudo pacman -S: {}", e))?
         }
     } else {
@@ -164,7 +172,9 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let bin = tmp.path().join("bin");
         fs::create_dir_all(&bin).unwrap();
-        for b in ["git", "cmake", "make", "gcc", "g++", "pkg-config"] { make_exec(&bin.join(b)); }
+        for b in ["git", "cmake", "make", "gcc", "g++", "pkg-config"] {
+            make_exec(&bin.join(b));
+        }
 
         let old = std::env::var("PATH").ok();
         std::env::set_var("PATH", bin.display().to_string());
@@ -174,7 +184,11 @@ mod tests {
         let res = preflight_tools(&prov, &src);
 
         // restore PATH
-        if let Some(p) = old { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }
+        if let Some(p) = old {
+            std::env::set_var("PATH", p);
+        } else {
+            std::env::remove_var("PATH");
+        }
 
         assert!(res.is_ok());
     }
@@ -189,7 +203,11 @@ mod tests {
         prov.allow_package_installs = Some(false);
         let src = src_with_flags(None);
         let err = preflight_tools(&prov, &src).unwrap_err().to_string();
-        if let Some(p) = old { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }
+        if let Some(p) = old {
+            std::env::set_var("PATH", p);
+        } else {
+            std::env::remove_var("PATH");
+        }
         assert!(err.contains("missing tools"));
         // Tool names should be mentioned (some environments may still resolve gcc)
         assert!(err.contains("git"));
@@ -205,7 +223,9 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let bin = tmp.path().join("bin");
         fs::create_dir_all(&bin).unwrap();
-        for b in ["git", "cmake", "make", "gcc", "g++", "pkg-config"] { make_exec(&bin.join(b)); }
+        for b in ["git", "cmake", "make", "gcc", "g++", "pkg-config"] {
+            make_exec(&bin.join(b));
+        }
         let old = std::env::var("PATH").ok();
         std::env::set_var("PATH", bin.display().to_string());
 
@@ -214,14 +234,22 @@ mod tests {
         let src = src_with_flags(Some(vec!["-DGGML_CUDA=ON"]));
         let res = preflight_tools(&prov, &src);
 
-        if let Some(p) = old { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }
+        if let Some(p) = old {
+            std::env::set_var("PATH", p);
+        } else {
+            std::env::remove_var("PATH");
+        }
         match res {
             Ok(()) => {
                 // If it succeeded, the environment must provide either nvcc or a compat clang/gcc-13
                 let has_nvcc = which::which("nvcc").is_ok();
-                let has_compat = crate::providers::llamacpp::toolchain::find_compat_host_compiler().is_some()
+                let has_compat = crate::providers::llamacpp::toolchain::find_compat_host_compiler()
+                    .is_some()
                     || which::which("clang").is_ok();
-                assert!(has_nvcc || has_compat, "preflight unexpectedly Ok without nvcc/compat compiler available");
+                assert!(
+                    has_nvcc || has_compat,
+                    "preflight unexpectedly Ok without nvcc/compat compiler available"
+                );
             }
             Err(e) => {
                 let err = e.to_string();
@@ -237,7 +265,9 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let bin = tmp.path().join("bin");
         fs::create_dir_all(&bin).unwrap();
-        for b in ["git", "cmake", "make", "gcc", "g++", "pkg-config"] { make_exec(&bin.join(b)); }
+        for b in ["git", "cmake", "make", "gcc", "g++", "pkg-config"] {
+            make_exec(&bin.join(b));
+        }
         let old = std::env::var("PATH").ok();
         std::env::set_var("PATH", bin.display().to_string());
 
@@ -246,11 +276,18 @@ mod tests {
         prov.model.r#ref = Some("hf:org/model.gguf".to_string());
         let src = src_with_flags(None);
         let res = preflight_tools(&prov, &src);
-        if let Some(p) = old { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }
+        if let Some(p) = old {
+            std::env::set_var("PATH", p);
+        } else {
+            std::env::remove_var("PATH");
+        }
         match res {
             Ok(()) => {
                 // If it succeeded, huggingface-cli must be available in environment
-                assert!(which::which("huggingface-cli").is_ok(), "preflight Ok but huggingface-cli not found in PATH");
+                assert!(
+                    which::which("huggingface-cli").is_ok(),
+                    "preflight Ok but huggingface-cli not found in PATH"
+                );
             }
             Err(e) => {
                 let err = e.to_string();
@@ -259,4 +296,3 @@ mod tests {
         }
     }
 }
-

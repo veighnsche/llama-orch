@@ -187,19 +187,17 @@ pub async fn create_task(
     Ok((StatusCode::ACCEPTED, headers, Json(admission)))
 }
 
-pub async fn stream_task(
     state: State<AppState>,
     axum::extract::Path(id): axum::extract::Path<String>,
     axum::Extension(correlation_id): axum::Extension<String>,
+    axum::extract::Query(verbose): axum::extract::Query<bool>,
 ) -> Result<impl IntoResponse, ErrO> {
-    // TODO[ORCHD-STREAM-VERBOSE-0011]: Parse `?verbose=true` via axum::extract::Query and
-    // propagate a boolean to `services::streaming::render_sse_for_task_verbose(...)` (to be added),
-    // so that selected `metrics` frames include `{"human": "...", "phase": "..."}` breadcrumbs.
+    // TODO[ORCHD-STREAM-VERBOSE-0011]: Use `verbose` to control whether SSE frames include
+    // `{"human": "...", "phase": "..."}` breadcrumbs.
     let mut headers = HeaderMap::new();
     headers.insert("Content-Type", "text/event-stream".parse().unwrap());
     headers.insert("X-Correlation-Id", correlation_id.parse().unwrap());
     // Seed budget headers (unknown session at this layer); consider mapping task->session later
-    headers.insert("X-Budget-Tokens-Remaining", "0".parse().unwrap());
     headers.insert("X-Budget-Time-Remaining-Ms", "0".parse().unwrap());
     headers.insert("X-Budget-Cost-Remaining", "0".parse().unwrap());
     let sse = services::streaming::render_sse_for_task(&*state, id).await;

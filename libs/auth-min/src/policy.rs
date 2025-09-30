@@ -40,11 +40,17 @@ use crate::error::{AuthError, Result};
 /// assert!(!is_loopback_addr("0.0.0.0:8080"));
 /// ```
 pub fn is_loopback_addr(addr: &str) -> bool {
+    // Validate input length to prevent DoS
+    const MAX_ADDR_LEN: usize = 256;
+    if addr.len() > MAX_ADDR_LEN {
+        return false;
+    }
+
     // Special case: IPv6 loopback without port (::1 or [::1])
     if is_ipv6_loopback_no_port(addr) {
         return true;
     }
-    
+
     // Try to split off port
     // For IPv6 with brackets: [::1]:8080 -> [::1] and 8080
     // For IPv4: 127.0.0.1:8080 -> 127.0.0.1 and 8080
@@ -52,7 +58,7 @@ pub fn is_loopback_addr(addr: &str) -> bool {
         // Check if host (without port) is loopback
         return is_loopback_host(host);
     }
-    
+
     // No port, check entire address
     is_loopback_host(addr)
 }
@@ -63,18 +69,18 @@ fn is_loopback_host(host: &str) -> bool {
     if host == "127.0.0.1" {
         return true;
     }
-    
+
     // IPv6 loopback (with or without brackets)
     // Note: ::1 without port won't have brackets
     if host == "::1" || host == "[::1]" {
         return true;
     }
-    
+
     // Also check for localhost hostname
     if host.eq_ignore_ascii_case("localhost") {
         return true;
     }
-    
+
     false
 }
 
@@ -118,18 +124,21 @@ fn is_ipv6_loopback_no_port(addr: &str) -> bool {
 /// Returns `AuthError::BindPolicyViolation` if:
 /// - Binding to non-loopback address without LLORCH_API_TOKEN set
 pub fn enforce_startup_bind_policy(bind_addr: &str) -> Result<()> {
+    // Validate bind address format
+    if bind_addr.is_empty() || bind_addr.len() > 256 {
+        return Err(AuthError::BindPolicyViolation("Invalid bind address format".to_string()));
+    }
+
     let is_loopback = is_loopback_addr(bind_addr);
-    
+
     // If loopback, no token required (AUTH_OPTIONAL behavior)
     if is_loopback {
         return Ok(());
     }
-    
+
     // Non-loopback: token MUST be configured
-    let token = std::env::var("LLORCH_API_TOKEN")
-        .ok()
-        .filter(|t| !t.is_empty());
-    
+    let token = std::env::var("LLORCH_API_TOKEN").ok().filter(|t| !t.is_empty());
+
     if token.is_none() {
         return Err(AuthError::BindPolicyViolation(format!(
             "Refusing to bind non-loopback address '{}' without LLORCH_API_TOKEN configured. \
@@ -137,7 +146,18 @@ pub fn enforce_startup_bind_policy(bind_addr: &str) -> Result<()> {
             bind_addr
         )));
     }
-    
+
+    // Validate token length (defense-in-depth)
+    if let Some(ref t) = token {
+        const MIN_TOKEN_LEN: usize = 16; // Minimum 16 chars for security
+        if t.len() < MIN_TOKEN_LEN {
+            return Err(AuthError::BindPolicyViolation(format!(
+                "LLORCH_API_TOKEN too short (minimum {} characters required for security)",
+                MIN_TOKEN_LEN
+            )));
+        }
+    }
+
     Ok(())
 }
 
@@ -217,7 +237,7 @@ mod tests {
     #[test]
     fn test_bind_policy_loopback_without_token() {
         std::env::remove_var("LLORCH_API_TOKEN");
-        
+
         // Loopback should be OK without token
         assert!(enforce_startup_bind_policy("127.0.0.1:8080").is_ok());
         assert!(enforce_startup_bind_policy("::1:8080").is_ok());
@@ -227,7 +247,7 @@ mod tests {
     #[test]
     fn test_bind_policy_non_loopback_without_token() {
         std::env::remove_var("LLORCH_API_TOKEN");
-        
+
         // Non-loopback should fail without token
         let result = enforce_startup_bind_policy("0.0.0.0:8080");
         assert!(result.is_err());
@@ -236,23 +256,24 @@ mod tests {
 
     #[test]
     fn test_bind_policy_non_loopback_with_token() {
-        std::env::set_var("LLORCH_API_TOKEN", "test-token-123");
-        
+        // Token must be at least 16 chars
+        std::env::set_var("LLORCH_API_TOKEN", "test-token-123456");
+
         // Non-loopback should be OK with token
         assert!(enforce_startup_bind_policy("0.0.0.0:8080").is_ok());
         assert!(enforce_startup_bind_policy("192.168.1.1:8080").is_ok());
-        
+
         std::env::remove_var("LLORCH_API_TOKEN");
     }
 
     #[test]
     fn test_bind_policy_empty_token() {
         std::env::set_var("LLORCH_API_TOKEN", "");
-        
+
         // Empty token should be treated as no token
         let result = enforce_startup_bind_policy("0.0.0.0:8080");
         assert!(result.is_err());
-        
+
         std::env::remove_var("LLORCH_API_TOKEN");
     }
 
@@ -266,13 +287,13 @@ mod tests {
     fn test_trust_proxy_auth_true() {
         std::env::set_var("TRUST_PROXY_AUTH", "true");
         assert!(trust_proxy_auth());
-        
+
         std::env::set_var("TRUST_PROXY_AUTH", "TRUE");
         assert!(trust_proxy_auth());
-        
+
         std::env::set_var("TRUST_PROXY_AUTH", "True");
         assert!(trust_proxy_auth());
-        
+
         std::env::remove_var("TRUST_PROXY_AUTH");
     }
 
@@ -280,7 +301,7 @@ mod tests {
     fn test_trust_proxy_auth_one() {
         std::env::set_var("TRUST_PROXY_AUTH", "1");
         assert!(trust_proxy_auth());
-        
+
         std::env::remove_var("TRUST_PROXY_AUTH");
     }
 
@@ -288,13 +309,13 @@ mod tests {
     fn test_trust_proxy_auth_false() {
         std::env::set_var("TRUST_PROXY_AUTH", "false");
         assert!(!trust_proxy_auth());
-        
+
         std::env::set_var("TRUST_PROXY_AUTH", "0");
         assert!(!trust_proxy_auth());
-        
+
         std::env::set_var("TRUST_PROXY_AUTH", "no");
         assert!(!trust_proxy_auth());
-        
+
         std::env::remove_var("TRUST_PROXY_AUTH");
     }
 }

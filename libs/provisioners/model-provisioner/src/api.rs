@@ -1,7 +1,9 @@
+use crate::{
+    config::ModelProvisionerConfig, metadata::ModelMetadata, provisioner::ModelProvisioner,
+};
 use anyhow::Result;
-use crate::{config::ModelProvisionerConfig, metadata::ModelMetadata, provisioner::ModelProvisioner};
-use tracing::warn;
 use std::path::Path;
+use tracing::warn;
 
 /// Recommended default handoff path for llama.cpp engines.
 pub const DEFAULT_LLAMACPP_HANDOFF_PATH: &str = ".runtime/engines/llamacpp.json";
@@ -57,18 +59,17 @@ mod tests {
         let yaml_cfg = wd.path().join("model.yaml");
         std::fs::write(
             &yaml_cfg,
-            format!(
-                "model_ref: \"file:{}\"\nstrict_verification: false\n",
-                model_path.display()
-            ),
+            format!("model_ref: \"file:{}\"\nstrict_verification: false\n", model_path.display()),
         )
         .unwrap();
 
         let handoff_yaml = wd.path().join("handoff.yaml.json");
-        let meta = provision_from_config_to_handoff(&yaml_cfg, &handoff_yaml, cache.path()).unwrap();
+        let meta =
+            provision_from_config_to_handoff(&yaml_cfg, &handoff_yaml, cache.path()).unwrap();
         assert_eq!(meta.path, model_path);
         // Handoff exists and contains expected fields
-        let handoff_val: serde_json::Value = serde_json::from_slice(&std::fs::read(&handoff_yaml).unwrap()).unwrap();
+        let handoff_val: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&handoff_yaml).unwrap()).unwrap();
         assert!(handoff_val.get("model").is_some());
         assert!(handoff_val.get("metadata").is_some());
 
@@ -88,7 +89,8 @@ mod tests {
         });
         std::fs::write(&json_cfg, serde_json::to_vec_pretty(&json_body).unwrap()).unwrap();
         let handoff_json = wd.path().join("handoff.json.json");
-        let meta2 = provision_from_config_to_handoff(&json_cfg, &handoff_json, cache.path()).unwrap();
+        let meta2 =
+            provision_from_config_to_handoff(&json_cfg, &handoff_json, cache.path()).unwrap();
         assert_eq!(meta2.path, model_path);
 
         // Cleanup: restore CWD

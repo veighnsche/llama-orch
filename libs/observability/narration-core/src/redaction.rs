@@ -50,7 +50,8 @@ fn api_key_regex() -> &'static Regex {
 fn uuid_regex() -> &'static Regex {
     UUID_PATTERN.get_or_init(|| {
         // Match UUIDs (8-4-4-4-12 hex format)
-        Regex::new(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}").unwrap()
+        Regex::new(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+            .unwrap()
     })
 }
 
@@ -67,25 +68,19 @@ fn uuid_regex() -> &'static Regex {
 /// ```
 pub fn redact_secrets(text: &str, policy: RedactionPolicy) -> String {
     let mut result = text.to_string();
-    
+
     if policy.mask_bearer_tokens {
-        result = bearer_token_regex()
-            .replace_all(&result, &policy.replacement)
-            .to_string();
+        result = bearer_token_regex().replace_all(&result, &policy.replacement).to_string();
     }
-    
+
     if policy.mask_api_keys {
-        result = api_key_regex()
-            .replace_all(&result, &policy.replacement)
-            .to_string();
+        result = api_key_regex().replace_all(&result, &policy.replacement).to_string();
     }
-    
+
     if policy.mask_uuids {
-        result = uuid_regex()
-            .replace_all(&result, &policy.replacement)
-            .to_string();
+        result = uuid_regex().replace_all(&result, &policy.replacement).to_string();
     }
-    
+
     result
 }
 
@@ -126,10 +121,7 @@ mod tests {
     #[test]
     fn test_custom_replacement() {
         let text = "Bearer abc123";
-        let policy = RedactionPolicy {
-            replacement: "***".to_string(),
-            ..Default::default()
-        };
+        let policy = RedactionPolicy { replacement: "***".to_string(), ..Default::default() };
         let redacted = redact_secrets(text, policy);
         assert_eq!(redacted, "***");
     }

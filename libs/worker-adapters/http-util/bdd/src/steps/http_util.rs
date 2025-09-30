@@ -1,24 +1,30 @@
+use crate::steps::world::BddWorld;
 use cucumber::{given, then, when};
 use http::header::AUTHORIZATION;
+use proof_bundle::{ProofBundle, TestType};
 use serde_json::json;
-use crate::steps::world::BddWorld;
 use worker_adapters_http_util as http_util;
 use worker_adapters_http_util::{
     default_config, get_and_clear_retry_timeline, h2_preference, stream_decode, with_retries,
     RetryError, RetryPolicy, StreamEvent,
 };
-use proof_bundle::{ProofBundle, TestType};
 
 fn pb() -> ProofBundle {
     ProofBundle::for_type(TestType::Bdd).expect("proof bundle")
 }
 
 fn record_event<E: Into<serde_json::Value>>(label: &str, event: E) {
-    let _ = pb().append_ndjson("bdd_transcript", &json!({
-        "label": label,
-        "event": event.into(),
-    }));
-    let _ = pb().write_markdown("test_report.md", "BDD run for http-util steps. See bdd_transcript.ndjson for details.\n");
+    let _ = pb().append_ndjson(
+        "bdd_transcript",
+        &json!({
+            "label": label,
+            "event": event.into(),
+        }),
+    );
+    let _ = pb().write_markdown(
+        "test_report.md",
+        "BDD run for http-util steps. See bdd_transcript.ndjson for details.\n",
+    );
 }
 
 // X-API-Key redaction
@@ -50,33 +56,33 @@ pub async fn given_log_line_with_token(world: &mut BddWorld, token: String) {
     let line = format!("INFO: Authorization: Bearer {} used for request", token);
     world.task_id = Some(token); // reuse task_id to store token for assertion
     world.last_body = Some(line);
-    if let Some(tok) = &world.task_id { record_event("given.log_line_with_token", json!({"fp6": auth_min::token_fp6(tok)})); }
+    if let Some(tok) = &world.task_id {
+        record_event("given.log_line_with_token", json!({"fp6": auth_min::token_fp6(tok)}));
+    }
 }
 
 #[when(regex = r"^I apply http-util redaction$")]
 pub async fn when_apply_redaction(world: &mut BddWorld) {
-    let input = world
-        .last_body
-        .as_ref()
-        .cloned()
-        .unwrap_or_else(|| "".to_string());
+    let input = world.last_body.as_ref().cloned().unwrap_or_else(|| "".to_string());
     let out = http_util::redact_secrets(&input);
     world.last_body = Some(out);
-    record_event("when.apply_redaction", json!({"output": world.last_body.clone().unwrap_or_default()}));
+    record_event(
+        "when.apply_redaction",
+        json!({"output": world.last_body.clone().unwrap_or_default()}),
+    );
 }
 
 #[then(regex = r"^the output masks the token and includes its fp6$")]
 pub async fn then_output_masks_and_includes_fp6(world: &mut BddWorld) {
-    let token = world
-        .task_id
-        .as_ref()
-        .expect("token should be set by Given step")
-        .clone();
+    let token = world.task_id.as_ref().expect("token should be set by Given step").clone();
     let out = world.last_body.as_ref().expect("redaction output missing");
     let fp6 = auth_min::token_fp6(&token);
     assert!(out.contains("Authorization: Bearer ****"), "missing masked header: {}", out);
     assert!(out.contains(&fp6), "missing fp6 fingerprint in output: {}", out);
-    record_event("then.redaction_assertions", json!({"masked": out.contains("Authorization: Bearer ****"), "fp6": fp6}));
+    record_event(
+        "then.redaction_assertions",
+        json!({"masked": out.contains("Authorization: Bearer ****"), "fp6": fp6}),
+    );
 }
 
 #[then(regex = r"^the output does not contain the raw token$")]
@@ -108,7 +114,10 @@ pub async fn when_apply_with_bearer(world: &mut BddWorld) {
     println!("DEBUG AUTH_TOKEN env = {:?}", std::env::var("AUTH_TOKEN"));
     println!("DEBUG built headers = {:?}", req.headers());
     world.last_headers = Some(req.headers().clone());
-    record_event("when.apply_with_bearer", json!({"has_auth": world.last_headers.as_ref().unwrap().get(AUTHORIZATION).is_some()}));
+    record_event(
+        "when.apply_with_bearer",
+        json!({"has_auth": world.last_headers.as_ref().unwrap().get(AUTHORIZATION).is_some()}),
+    );
 }
 
 #[then(regex = r#"^the request has Authorization header "([^"]+)"$"#)]
@@ -187,13 +196,17 @@ pub async fn when_invoke_with_retries(world: &mut BddWorld) {
     world.mode_commit = succeeded;
 }
 
-#[then(regex = r"^attempts follow default policy base 100ms multiplier 2\.0 cap 2s max attempts 4$")]
+#[then(
+    regex = r"^attempts follow default policy base 100ms multiplier 2\.0 cap 2s max attempts 4$"
+)]
 pub async fn then_attempts_follow_default_policy(world: &mut BddWorld) {
     assert!(world.mode_commit, "operation did not succeed under retries");
     // We expect success on 3rd attempt -> 2 delays recorded
     let mut timeline = get_and_clear_retry_timeline();
     // Some runners may accumulate or interleave; consider only the last two delays
-    if timeline.len() > 2 { timeline = timeline.split_off(timeline.len().saturating_sub(2)); }
+    if timeline.len() > 2 {
+        timeline = timeline.split_off(timeline.len().saturating_sub(2));
+    }
     // Check bounds per default policy: base 100ms, multiplier 2.0, cap 2000ms
     // Our implementation computes exp using the current attempt number when the failure occurs.
     // For success on 3rd attempt, failures happen on attempt 1 and 2, yielding bounds 200ms and 400ms.
@@ -212,15 +225,17 @@ pub async fn then_no_retry_occurs(world: &mut BddWorld) {
     let mut policy = RetryPolicy::default();
     policy.seed = Some(11);
     let res: Result<(), RetryError> = with_retries(
-        |_attempt| async move {
-            Err(RetryError::NonRetriable(anyhow::anyhow!("400 bad request")))
-        },
+        |_attempt| async move { Err(RetryError::NonRetriable(anyhow::anyhow!("400 bad request"))) },
         policy,
     )
     .await;
     assert!(matches!(res, Err(RetryError::NonRetriable(_))), "expected non-retriable error");
     let timeline = get_and_clear_retry_timeline();
-    assert!(timeline.is_empty(), "no delays should be recorded for non-retriable errors: {:?}", timeline);
+    assert!(
+        timeline.is_empty(),
+        "no delays should be recorded for non-retriable errors: {:?}",
+        timeline
+    );
     record_event("then.no_retry", json!({"timeline_ms": timeline}));
 }
 
@@ -241,34 +256,43 @@ pub async fn given_body_stream_started_token_metrics_end(world: &mut BddWorld) {
     data: {\"decode_time_ms\":5}\n\
     \n\
     event: end\n\
-    data: {}\n".to_string();
+    data: {}\n"
+        .to_string();
     world.last_body = Some(body);
 }
 
 #[when(regex = r"^I decode with stream_decode$")]
 pub async fn when_decode_with_stream_decode(world: &mut BddWorld) {
-    let body = world
-        .last_body
-        .as_ref()
-        .expect("body stream provided by Given step")
-        .clone();
+    let body = world.last_body.as_ref().expect("body stream provided by Given step").clone();
     let mut events = Vec::new();
     let _ = stream_decode(&body, |e| events.push(e));
     // Serialize into world.last_body for assertion step
-    let as_json = serde_json::to_string(&events.iter().map(|e| match e {
-        StreamEvent::Started(_) => "started",
-        StreamEvent::Token { .. } => "token",
-        StreamEvent::Metrics(_) => "metrics",
-        StreamEvent::End(_) => "end",
-    }).collect::<Vec<_>>()).unwrap();
+    let as_json = serde_json::to_string(
+        &events
+            .iter()
+            .map(|e| match e {
+                StreamEvent::Started(_) => "started",
+                StreamEvent::Token { .. } => "token",
+                StreamEvent::Metrics(_) => "metrics",
+                StreamEvent::End(_) => "end",
+            })
+            .collect::<Vec<_>>(),
+    )
+    .unwrap();
     world.last_body = Some(as_json);
     // Stash indices for ordering check
     let indices: Vec<usize> = events
         .into_iter()
-        .filter_map(|e| match e { StreamEvent::Token { i, .. } => Some(i), _ => None })
+        .filter_map(|e| match e {
+            StreamEvent::Token { i, .. } => Some(i),
+            _ => None,
+        })
         .collect();
     world.extra_headers = vec![("tok_indices".into(), serde_json::to_string(&indices).unwrap())];
-    record_event("when.stream_decoded", json!({"sequence": serde_json::from_str::<serde_json::Value>(world.last_body.as_ref().unwrap()).unwrap(), "indices": indices}));
+    record_event(
+        "when.stream_decoded",
+        json!({"sequence": serde_json::from_str::<serde_json::Value>(world.last_body.as_ref().unwrap()).unwrap(), "indices": indices}),
+    );
 }
 
 #[then(regex = r"^ordering is preserved and token indices are strictly increasing$")]
@@ -300,7 +324,10 @@ pub async fn when_inspect_client_defaults(world: &mut BddWorld) {
     let cfg = default_config();
     world.corr_id = Some(format!("connect:{:?}", cfg.connect_timeout));
     world.task_id = Some(format!("request:{:?}", cfg.request_timeout));
-    record_event("when.inspect_defaults", json!({"connect_ms": cfg.connect_timeout.as_millis(), "request_ms": cfg.request_timeout.as_millis(), "tls_verify": cfg.tls_verify}));
+    record_event(
+        "when.inspect_defaults",
+        json!({"connect_ms": cfg.connect_timeout.as_millis(), "request_ms": cfg.request_timeout.as_millis(), "tls_verify": cfg.tls_verify}),
+    );
 }
 
 #[then(regex = r"^connect timeout is approximately 5s and request timeout approximately 30s$")]

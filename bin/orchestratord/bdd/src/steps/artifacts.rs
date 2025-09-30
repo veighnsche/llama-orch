@@ -18,7 +18,7 @@ pub async fn given_artifact_exists(world: &mut World, _friendly_name: String) {
     // Create an artifact and save the actual SHA-256 ID
     let body = json!({"test_key": "test_value"});
     let _ = world.http_call(Method::POST, "/v2/artifacts", Some(body)).await;
-    
+
     // Extract the generated SHA-256 ID from response
     if let Some(response_body) = &world.last_body {
         let v: serde_json::Value = serde_json::from_str(response_body).expect("parse response");
@@ -49,7 +49,8 @@ pub async fn when_get_artifact(world: &mut World, friendly_name: String) {
         let name = friendly_name.trim_matches('"');
         if name == "test-artifact" {
             // Find the stored artifact ID from the Given step
-            world.get_fact_by_prefix("artifact_id:")
+            world
+                .get_fact_by_prefix("artifact_id:")
                 .map(|f| f.strip_prefix("artifact_id:").unwrap().to_string())
                 .unwrap_or(name.to_string())
         } else {
@@ -58,7 +59,7 @@ pub async fn when_get_artifact(world: &mut World, friendly_name: String) {
     } else {
         friendly_name
     };
-    
+
     let path = format!("/v2/artifacts/{}", actual_id);
     let _ = world.http_call(Method::GET, &path, None).await;
 }
@@ -67,7 +68,7 @@ pub async fn when_get_artifact(world: &mut World, friendly_name: String) {
 #[when(regex = "^I create the same artifact twice$")]
 pub async fn when_create_same_artifact_twice(world: &mut World) {
     let doc = json!({"key": "value"});
-    
+
     // First creation
     let _ = world.http_call(Method::POST, "/v2/artifacts", Some(doc.clone())).await;
     let first_id = {
@@ -75,7 +76,7 @@ pub async fn when_create_same_artifact_twice(world: &mut World) {
         let json: serde_json::Value = serde_json::from_str(body).expect("invalid JSON");
         json.get("id").and_then(|v| v.as_str()).expect("missing id").to_string()
     };
-    
+
     // Second creation
     let _ = world.http_call(Method::POST, "/v2/artifacts", Some(doc)).await;
     let second_id = {
@@ -83,7 +84,7 @@ pub async fn when_create_same_artifact_twice(world: &mut World) {
         let json: serde_json::Value = serde_json::from_str(body).expect("invalid JSON");
         json.get("id").and_then(|v| v.as_str()).expect("missing id").to_string()
     };
-    
+
     assert_eq!(first_id, second_id, "artifact IDs should match for idempotency");
 }
 

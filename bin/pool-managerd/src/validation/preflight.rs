@@ -29,11 +29,11 @@ pub fn assert_gpu_only() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(unix)]
+    use std::os::unix::fs::PermissionsExt;
     use std::path::PathBuf;
     use std::sync::{Mutex, OnceLock};
     use std::{env, fs};
-    #[cfg(unix)]
-    use std::os::unix::fs::PermissionsExt;
 
     // Guard PATH environment mutation across parallel tests
     static PATH_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
@@ -44,10 +44,7 @@ mod tests {
         let dir = env::temp_dir().join(format!(
             "pool_managerd_preflight_test_{}_{}",
             std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_millis()
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis()
         ));
         let _ = fs::create_dir_all(&dir);
         env::set_var("PATH", &dir);

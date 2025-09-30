@@ -68,15 +68,25 @@ fn test_preload_full_flow() -> Result<()> {
 
     // Validate PreparedEngine
     assert!(prepared.binary_path.exists(), "binary should exist");
-    assert!(prepared.binary_path.to_string_lossy().contains("llama-server"), "should be llama-server");
+    assert!(
+        prepared.binary_path.to_string_lossy().contains("llama-server"),
+        "should be llama-server"
+    );
     assert_eq!(prepared.pool_id, "p-test");
     assert_eq!(prepared.host, "127.0.0.1");
     assert!(prepared.port > 0, "port should be assigned");
-    eprintln!("✓ PreparedEngine returned: binary={}, port={}", prepared.binary_path.display(), prepared.port);
+    eprintln!(
+        "✓ PreparedEngine returned: binary={}, port={}",
+        prepared.binary_path.display(),
+        prepared.port
+    );
 
     // Verify process is NOT running yet (engine-provisioner should NOT have spawned)
     let pid_path = PathBuf::from(".runtime").join("p-test.pid");
-    assert!(!pid_path.exists(), "PID file should NOT exist yet (engine-provisioner should not spawn)");
+    assert!(
+        !pid_path.exists(),
+        "PID file should NOT exist yet (engine-provisioner should not spawn)"
+    );
     eprintln!("✓ Process NOT spawned by engine-provisioner (correct!)");
 
     // 3. Call pool-managerd.preload.execute() - should spawn and wait for health
@@ -88,7 +98,11 @@ fn test_preload_full_flow() -> Result<()> {
     assert_eq!(outcome.pool_id, "p-test");
     assert!(outcome.pid > 0, "should have PID");
     assert!(outcome.handoff_path.exists(), "handoff file should exist");
-    eprintln!("✓ Preload succeeded: pid={}, handoff={}", outcome.pid, outcome.handoff_path.display());
+    eprintln!(
+        "✓ Preload succeeded: pid={}, handoff={}",
+        outcome.pid,
+        outcome.handoff_path.display()
+    );
 
     // Verify PID file exists now
     assert!(pid_path.exists(), "PID file should exist after preload");
