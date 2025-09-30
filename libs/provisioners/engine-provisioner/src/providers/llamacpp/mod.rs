@@ -10,7 +10,6 @@ use anyhow::{anyhow, Context, Result};
 use std::fs::OpenOptions;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
-use std::time::Duration;
 
 use crate::plan::{Plan, PlanStep};
 use crate::util::{

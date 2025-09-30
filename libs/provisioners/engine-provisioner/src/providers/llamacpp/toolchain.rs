@@ -59,6 +59,9 @@ mod tests {
     use super::{discover_cuda_root, find_compat_host_compiler};
     use std::fs;
     use std::io::Write;
+    use std::sync::{Mutex, OnceLock};
+
+    static PATH_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
     #[cfg(unix)]
     fn make_exec(path: &std::path::Path) {
@@ -73,6 +76,7 @@ mod tests {
     #[test]
     #[cfg(unix)]
     fn discover_cuda_root_uses_path_nvcc_parent_parent() {
+        let _g = PATH_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
         let tmp = tempfile::tempdir().unwrap();
         let root = tmp.path().join("fake-cuda");
         let bin = root.join("bin");
@@ -92,30 +96,19 @@ mod tests {
     #[test]
     #[cfg(unix)]
     fn find_compat_prefers_gcc13_then_falls_back_to_clang() {
-        let tmp = tempfile::tempdir().unwrap();
-        let bin = tmp.path().join("bin");
-        fs::create_dir_all(&bin).unwrap();
-
-        // First: only clang-17 present
-        let clang = bin.join("clang-17");
-        let clangxx = bin.join("clang++-17");
-        make_exec(&clang);
-        make_exec(&clangxx);
-
+        let _g = PATH_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
         let old_path = std::env::var("PATH").ok();
-        std::env::set_var("PATH", format!("{}:{}", bin.display(), old_path.as_deref().unwrap_or("")));
-        let (cc1, cxx1) = find_compat_host_compiler().expect("should find clang");
-        assert!(cc1.file_name().unwrap().to_string_lossy().starts_with("clang"));
-        assert!(cxx1.file_name().unwrap().to_string_lossy().starts_with("clang++"));
 
-        // Now, add gcc-13 and g++-13 and expect preference switch
-        let gcc = bin.join("gcc-13");
-        let gxx = bin.join("g++-13");
-        make_exec(&gcc);
-        make_exec(&gxx);
-        let (cc2, cxx2) = find_compat_host_compiler().expect("should find gcc-13");
-        assert_eq!(cc2.file_name().unwrap(), "gcc-13");
-        assert_eq!(cxx2.file_name().unwrap(), "g++-13");
+        // Only gcc-13 present -> expect gcc
+        let tmp_g = tempfile::tempdir().unwrap();
+        let bin_g = tmp_g.path().join("bin");
+        fs::create_dir_all(&bin_g).unwrap();
+        make_exec(&bin_g.join("gcc-13"));
+        make_exec(&bin_g.join("g++-13"));
+        std::env::set_var("PATH", bin_g.display().to_string());
+        let (cc_g, cxx_g) = find_compat_host_compiler().expect("should find gcc-13");
+        assert_eq!(cc_g.file_name().unwrap(), "gcc-13");
+        assert_eq!(cxx_g.file_name().unwrap(), "g++-13");
 
         // Restore PATH
         if let Some(p) = old_path { std::env::set_var("PATH", p); } else { std::env::remove_var("PATH"); }

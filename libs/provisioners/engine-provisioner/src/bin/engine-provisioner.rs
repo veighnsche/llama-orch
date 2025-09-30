@@ -43,3 +43,30 @@ fn main() -> anyhow::Result<()> {
     prov.ensure(&pool)?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Args;
+    use clap::Parser;
+
+    #[test]
+    fn parse_minimal_args_ok() {
+        let a = Args::parse_from(["engine-provisioner", "-c", "/tmp/config.yaml"]);
+        assert_eq!(a.config, std::path::PathBuf::from("/tmp/config.yaml"));
+        assert!(a.pool.is_none());
+    }
+
+    #[test]
+    fn parse_with_pool_ok() {
+        let a = Args::parse_from(["engine-provisioner", "--config", "/tmp/cfg.yml", "--pool", "p1"]);
+        assert_eq!(a.config, std::path::PathBuf::from("/tmp/cfg.yml"));
+        assert_eq!(a.pool.as_deref(), Some("p1"));
+    }
+
+    #[test]
+    fn parse_missing_config_errors() {
+        // Use try_parse_from to capture clap error instead of exiting
+        let res = Args::try_parse_from(["engine-provisioner"]);
+        assert!(res.is_err());
+    }
+}
