@@ -1,9 +1,24 @@
 # Cloud Profile Migration Plan
 
-**Version**: 1.0  
+**Version**: 1.1 (REVISED)  
 **Date**: 2025-09-30  
-**Status**: APPROVED BY MANAGEMENT  
-**Target**: v0.2.0 Release
+**Status**: 🔴 **PAUSED AT PHASE 5 - SECURITY GATE**  
+**Pause Reason**: Critical security vulnerabilities discovered  
+**Resume ETA**: ~1 week after P0 security fixes  
+**Target**: v0.2.0 Release (DELAYED)
+
+---
+
+## ⚠️ MIGRATION PAUSED - SECURITY ALERT
+
+**CRITICAL**: Migration paused at Phase 5 due to security vulnerabilities:
+- 🔴 **Timing attack** in orchestratord node registration (CWE-208, CVSS 7.5)
+- 🔴 **Zero authentication** on pool-managerd endpoints (CVSS 9.1)
+
+**Action Required**: Fix P0 security issues before proceeding to Phase 6
+
+**See**: `.docs/CLOUD_MIGRATION_PAUSED.md` for full details  
+**Fix Checklist**: `.docs/PHASE5_FIX_CHECKLIST.md`
 
 ---
 
@@ -11,9 +26,9 @@
 
 This document outlines all work required to migrate llama-orch from HOME_PROFILE (single machine) to CLOUD_PROFILE (distributed deployment). The migration enables horizontal scaling, cloud-native deployments, and separation of control plane from GPU workers.
 
-**Timeline**: 5-6 weeks  
-**Risk Level**: MEDIUM  
-**Blocking Issues**: Handoff watcher architecture (identified, solution agreed)
+**Timeline**: 5-6 weeks → **REVISED: 6-7 weeks** (added 1 week for proper Phase 5)  
+**Risk Level**: MEDIUM → **HIGH** (security vulnerabilities discovered)  
+**Blocking Issues**: Phase 5 authentication contains critical security flaws
 
 ---
 
@@ -395,10 +410,100 @@ This document outlines all work required to migrate llama-orch from HOME_PROFILE
 
 ---
 
-### Phase 5: Observability & Monitoring (Week 5)
+### Phase 5: Authentication & Security (Week 5) - REVISED
+
+**Owner**: Security + Backend Teams  
+**Status**: 🔴 **IN PROGRESS - CRITICAL FIXES REQUIRED**
+
+**SECURITY ALERT**: Original Phase 5 implementation was incomplete (35%) and contains critical vulnerabilities. Must fix before continuing migration.
+
+#### P0 Security Fixes (Week 5A - 18 hours)
+
+1. **Fix Timing Attack in orchestratord**
+   - File: `bin/orchestratord/src/api/nodes.rs`
+   - Replace manual `token == expected_token` with `auth_min::timing_safe_eq()`
+   - Add token fingerprinting with `auth_min::token_fp6()`
+   - Time: 2 hours
+
+2. **Add Timing Attack Test**
+   - File: `bin/orchestratord/tests/security_timing.rs` (NEW)
+   - Measure comparison variance (must be < 10%)
+   - Test rejection scenarios
+   - Time: 2 hours
+
+3. **Implement pool-managerd Authentication**
+   - File: `bin/pool-managerd/src/api/auth.rs` (NEW)
+   - Create auth middleware using `auth_min` library
+   - Apply to all routes except `/health`
+   - Time: 3 hours
+
+4. **Test pool-managerd Auth**
+   - File: `bin/pool-managerd/tests/auth_integration.rs` (NEW)
+   - Test valid/invalid/missing tokens
+   - Verify health endpoint exempt
+   - Time: 1 hour
+
+5. **Add Bearer Tokens to HTTP Client**
+   - File: `bin/orchestratord/src/clients/pool_manager.rs`
+   - Read `LLORCH_API_TOKEN` from env
+   - Send Bearer token on all requests
+   - Time: 1 hour
+
+6. **E2E Test with Authentication**
+   - Full flow: registration → heartbeat → task dispatch
+   - Test with valid and invalid tokens
+   - Time: 3 hours
+
+7. **Security Code Review**
+   - Verify all auth uses `auth_min` utilities
+   - Check for token leakage in logs
+   - Run security audit commands
+   - Time: 4 hours
+
+8. **Deploy & Monitor**
+   - Generate secure tokens
+   - Deploy with auth enabled
+   - Monitor for auth failures
+   - Time: 2 hours
+
+#### P1 Complete Coverage (Week 5B - 22 hours)
+
+9. **Add Auth to Data Plane** (4 hours)
+   - `/v2/tasks` endpoints
+   - Session endpoints
+
+10. **Add Auth to Control Plane** (2 hours)
+    - `/v1/capabilities`
+    - `/control/pools/*` endpoints
+
+11. **Add Auth to Catalog/Artifacts** (2 hours)
+    - Catalog endpoints
+    - Artifact endpoints
+
+12. **Comprehensive auth-min Tests** (4 hours)
+    - Unit tests for all auth_min functions
+    - Timing attack resistance tests
+    - Token leakage detection tests
+
+13. **BDD Auth Scenarios** (6 hours)
+    - Implement scenarios from `.specs/11_min_auth_hooks.md`
+    - Test loopback bypass
+    - Test token validation
+
+14. **Security Documentation** (4 hours)
+    - Token generation guide
+    - Deployment security checklist
+    - Incident response runbook
+
+**Total Phase 5 Effort**: 40 hours (1 week with 2-person team)
+
+---
+
+### Phase 6: Observability & Monitoring (Week 6) - BLOCKED
 
 **Owner**: Both Teams  
-**Status**: 📋 PLANNED
+**Status**: 🔴 **BLOCKED** - Cannot start until Phase 5 security gate passed  
+**Depends On**: Phase 5 complete with security sign-off
 
 #### Tasks
 
@@ -481,10 +586,11 @@ This document outlines all work required to migrate llama-orch from HOME_PROFILE
 
 ---
 
-### Phase 6: Production Rollout (Week 6)
+### Phase 7: Production Rollout (Week 7) - BLOCKED
 
 **Owner**: DevOps + Both Teams  
-**Status**: 📋 PLANNED
+**Status**: 🔴 **BLOCKED** - Cannot start until Phase 5 security gate passed  
+**Depends On**: Phase 5-6 complete
 
 #### Tasks
 
@@ -616,18 +722,24 @@ This document outlines all work required to migrate llama-orch from HOME_PROFILE
 
 ---
 
-## Success Criteria
+## Success Criteria (UPDATED)
 
 ### Must Have (v0.2.0 Release Blockers)
 
-- [ ] pool-managerd handoff watcher implemented and tested
-- [ ] orchestratord HTTP polling implemented and tested
-- [ ] E2E tests passing for distributed deployment
-- [ ] Documentation complete (deployment guide, runbooks)
-- [ ] Staging environment validated (2 days stable)
+- [x] pool-managerd handoff watcher implemented and tested
+- [x] orchestratord HTTP polling implemented and tested
+- [ ] **SECURITY GATE**: Phase 5 authentication properly implemented
+  - [ ] All token comparisons use `auth_min::timing_safe_eq()`
+  - [ ] pool-managerd has Bearer token validation
+  - [ ] Timing attack tests pass (< 10% variance)
+  - [ ] Token leakage tests pass
+  - [ ] Security team sign-off
+- [ ] E2E tests passing for distributed deployment **with authentication**
+- [ ] Documentation complete (deployment guide, runbooks, **security checklist**)
+- [ ] Staging environment validated (2 days stable) **with auth enabled**
 - [ ] Performance meets targets (1000 tasks/sec, P99 < 100ms)
 - [ ] Backward compatibility maintained (HOME_PROFILE still works)
-- [ ] BDD tests updated and passing (100% coverage)
+- [ ] BDD tests updated and passing (100% coverage **including auth**)
 
 ### Should Have (Nice to Have)
 
@@ -646,17 +758,20 @@ This document outlines all work required to migrate llama-orch from HOME_PROFILE
 
 ---
 
-## Timeline Summary
+## Timeline Summary (REVISED)
 
 | Phase | Duration | Owner | Status |
 |-------|----------|-------|--------|
-| 1. Preparation | 3 days | Architecture | ✅ In Progress |
-| 2. pool-managerd Watcher | 2 days | pool-managerd | 📋 Planned |
-| 3. orchestratord Polling | 2 days | orchestratord | 📋 Planned |
-| 4. Integration Testing | 3 days | Both Teams | 📋 Planned |
-| 5. Observability | 3 days | Both Teams | 📋 Planned |
-| 6. Production Rollout | 1 week | DevOps + Teams | 📋 Planned |
-| **Total** | **5-6 weeks** | | |
+| 1. Preparation | 3 days | Architecture | ✅ Complete |
+| 2. pool-managerd Watcher | 2 days | pool-managerd | ✅ Complete |
+| 3. orchestratord Polling | 2 days | orchestratord | ✅ Complete |
+| 4. Integration Testing | 3 days | Both Teams | ✅ Complete |
+| 5. Auth & Security (P0) | 1 week | Security + Backend | 🔴 IN PROGRESS |
+| 5. Auth & Security (P1) | 1 week | Security + Backend | 🔴 BLOCKED |
+| 6. Observability | 3 days | Both Teams | 🔴 BLOCKED |
+| 7. Production Rollout | 1 week | DevOps + Teams | 🔴 BLOCKED |
+| **Original Total** | **5-6 weeks** | | **~4.5 weeks done** |
+| **Revised Total** | **6-7 weeks** | | **Added 1 week for Phase 5** |
 
 ---
 

@@ -1,8 +1,25 @@
 # Cloud Profile Migration TODO
 
-**Status**: Phase 1 Complete - Foundation Libraries  
+**Status**: 🔴 **PAUSED AT PHASE 5 - SECURITY GATE**  
 **Date**: 2025-09-30  
+**Pause Reason**: Critical security vulnerabilities in authentication  
+**Resume ETA**: ~1 week after P0 fixes  
 **Target**: v1.0.0
+
+---
+
+## ⚠️ MIGRATION PAUSED - SECURITY ALERT
+
+**DO NOT PROCEED TO PHASE 6** until Phase 5 security vulnerabilities are fixed.
+
+**Critical Issues**:
+- 🔴 Timing attack in orchestratord node registration (CWE-208)
+- 🔴 Zero authentication on pool-managerd endpoints
+- ❌ 65% of Phase 5 authentication work missing
+
+**See**: `.docs/CLOUD_MIGRATION_PAUSED.md` for full details
+
+**Fix Checklist**: `.docs/PHASE5_FIX_CHECKLIST.md`
 
 ---
 
@@ -102,22 +119,71 @@ bin/pool-managerd/
 
 ---
 
-## ⏳ Phase 5: Authentication
+## 🔴 Phase 5: Authentication (BLOCKED - SECURITY VULNERABILITIES)
 
-### Tasks
+**Status**: ⚠️ **INCOMPLETE - 35% with critical flaws**  
+**Blocking**: Phases 6-9 cannot proceed  
+**Priority**: **P0 - FIX IMMEDIATELY**
 
-- [ ] Add Bearer token validation in orchestratord
-- [ ] Add Bearer token validation in pool-managerd
-- [ ] Configure `LLORCH_API_TOKEN` environment variable
-- [ ] Update all inter-service HTTP calls to include token
-- [ ] Document token generation and rotation
-- [ ] Add security tests
+### Critical Security Issues
+
+- 🔴 **CRITICAL**: Timing attack in `orchestratord/api/nodes.rs` (CWE-208, CVSS 7.5)
+- 🔴 **CRITICAL**: No authentication on pool-managerd endpoints (CVSS 9.1)
+- ❌ Ignored existing `auth-min` security library
+- ❌ No security tests, no token fingerprinting, no audit logging
+
+### P0 Tasks (Must Fix Before Continuing Migration)
+
+- [ ] **FIX**: Replace manual validation with `auth_min::timing_safe_eq()` in orchestratord/api/nodes.rs (2h)
+- [ ] **ADD**: Timing attack regression test (2h)
+- [ ] **IMPLEMENT**: pool-managerd authentication middleware (3h)
+- [ ] **TEST**: pool-managerd auth integration tests (1h)
+- [ ] **ADD**: Bearer tokens to orchestratord → pool-managerd client (1h)
+- [ ] **TEST**: E2E with authentication enabled (3h)
+- [ ] **REVIEW**: Security team code review (4h)
+- [ ] **DEPLOY**: Monitor auth in production (2h)
+
+**Total P0 Effort**: 18 hours (2-3 days)
+
+### P1 Tasks (Complete Coverage)
+
+- [ ] Add auth to data plane endpoints (`/v2/tasks/*`)
+- [ ] Add auth to control plane endpoints (`/control/*`)
+- [ ] Add auth to catalog/artifacts endpoints
+- [ ] Comprehensive auth-min test suite
+- [ ] BDD auth scenarios per `.specs/11_min_auth_hooks.md`
+- [ ] Security documentation (token generation, deployment checklist)
+
+**Total P1 Effort**: 22 hours (3 days)
+
+### Security Gate Criteria
+
+Phase 5 complete ONLY when:
+- [ ] All token comparisons use `auth_min::timing_safe_eq()`
+- [ ] All Bearer parsing uses `auth_min::parse_bearer()`
+- [ ] All auth logs use `auth_min::token_fp6()` for identity
+- [ ] pool-managerd has Bearer token validation on all endpoints
+- [ ] Timing attack tests pass (< 10% variance)
+- [ ] Token leakage tests pass (no raw tokens in logs)
+- [ ] E2E tests pass with auth enabled
+- [ ] Security team sign-off received
+
+### References
+
+- `.docs/CLOUD_MIGRATION_PAUSED.md` - Why we paused
+- `.docs/PHASE5_FIX_CHECKLIST.md` - Step-by-step fixes
+- `.specs/12_auth-min-hardening.md` - Security spec
+- `.docs/SECURITY_AUDIT_AUTH_MIN.md` - Full audit
+- `.docs/PHASE5_SECURITY_FINDINGS.md` - Detailed findings
 
 ---
 
-## ⏳ Phase 6: Catalog Distribution
+## ⏸️ Phase 6: Catalog Distribution (BLOCKED - Waiting for Phase 5)
 
-### Tasks
+**Status**: 🔴 **BLOCKED** - Cannot start until Phase 5 security gate passed  
+**Depends On**: Phase 5 authentication complete
+
+### Tasks (DO NOT START)
 
 - [ ] Implement per-node model tracking
 - [ ] Add `GET /v2/catalog/availability` endpoint
@@ -126,11 +192,15 @@ bin/pool-managerd/
 - [ ] Document manual model staging procedure
 - [ ] (Future v2.0) Add catalog sync protocol
 
+**Blocked Reason**: Catalog distribution requires secure pool-managerd communication
+
 ---
 
-## ⏳ Phase 7: Observability
+## ⏸️ Phase 7: Observability (BLOCKED - Waiting for Phase 5)
 
-### Tasks
+**Status**: 🔴 **BLOCKED** - Cannot start until Phase 5 security gate passed
+
+### Tasks (DO NOT START)
 
 - [ ] Add `node_id` label to all metrics
 - [ ] Update Prometheus scrape config for multi-node
@@ -139,11 +209,15 @@ bin/pool-managerd/
 - [ ] Add distributed tracing with correlation IDs
 - [ ] Document monitoring setup
 
+**Blocked Reason**: Need secure foundations before observability
+
 ---
 
-## ⏳ Phase 8: Testing & Validation
+## ⏸️ Phase 8: Testing & Validation (BLOCKED - Waiting for Phase 5)
 
-### Tasks
+**Status**: 🔴 **BLOCKED** - Cannot start until Phase 5 security gate passed
+
+### Tasks (DO NOT START)
 
 - [ ] Create `test-harness/e2e-cloud/` for multi-node tests
 - [ ] Test: 2-node cluster (1 control + 1 GPU)
@@ -156,11 +230,15 @@ bin/pool-managerd/
 - [ ] Test: Load balancing across nodes
 - [ ] Update BDD features for cloud profile
 
+**Blocked Reason**: Would test insecure implementation
+
 ---
 
-## ⏳ Phase 9: Documentation
+## ⏸️ Phase 9: Documentation (BLOCKED - Waiting for Phase 5)
 
-### Tasks
+**Status**: 🔴 **BLOCKED** - Cannot start until Phase 5 security gate passed
+
+### Tasks (DO NOT START)
 
 - [ ] Update README.md with cloud profile instructions
 - [ ] Create deployment guide (Kubernetes)
@@ -170,6 +248,8 @@ bin/pool-managerd/
 - [ ] Create troubleshooting guide
 - [ ] Update architecture diagrams
 - [ ] Create migration guide from HOME_PROFILE
+
+**Blocked Reason**: Would document vulnerable setup
 
 ---
 
@@ -231,19 +311,23 @@ cargo xtask dev:loop
 
 ---
 
-## Timeline Estimate
+## Timeline Estimate (UPDATED)
 
 - **Phase 1**: 2 weeks ✅ COMPLETE
-- **Phase 2**: 2 weeks (orchestratord integration)
-- **Phase 3**: 1 week (pool-managerd integration)
-- **Phase 4**: 2 weeks (multi-node placement)
-- **Phase 5**: 1 week (authentication)
-- **Phase 6**: 1 week (catalog)
-- **Phase 7**: 1 week (observability)
-- **Phase 8**: 2 weeks (testing)
-- **Phase 9**: 1 week (documentation)
+- **Phase 2**: 2 weeks ✅ COMPLETE (orchestratord integration)
+- **Phase 3**: 1 week ✅ COMPLETE (pool-managerd integration)
+- **Phase 4**: 2 weeks ✅ COMPLETE (multi-node placement)
+- **Phase 5**: 2 weeks 🔴 IN PROGRESS (was incorrectly marked complete)
+  - **P0 Security Fixes**: 1 week (18 hours)
+  - **P1 Complete Coverage**: 1 week (22 hours)
+- **Phase 6**: 1 week ⏸️ BLOCKED (catalog)
+- **Phase 7**: 1 week ⏸️ BLOCKED (observability)
+- **Phase 8**: 2 weeks ⏸️ BLOCKED (testing)
+- **Phase 9**: 1 week ⏸️ BLOCKED (documentation)
 
-**Total**: ~13 weeks to v1.0.0
+**Original Estimate**: ~13 weeks to v1.0.0  
+**Revised Estimate**: ~14 weeks (added 1 week for proper Phase 5)  
+**Current Progress**: ~4.5 weeks complete (Phase 1-4 done, Phase 5 35% with flaws)
 
 ---
 
