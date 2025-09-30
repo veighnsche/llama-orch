@@ -9,12 +9,34 @@
 use crate::state::AppState;
 use axum::{
     extract::{Path, State},
-    http::StatusCode,
+    http::{StatusCode, HeaderMap},
     response::{IntoResponse, Json},
 };
 use pool_registry_types::NodeInfo;
 use service_registry::{RegisterRequest, RegisterResponse, HeartbeatRequest, HeartbeatResponse};
 use tracing::{info, warn};
+
+/// Validate Bearer token from Authorization header
+fn validate_token(headers: &HeaderMap, state: &AppState) -> bool {
+    // If no token configured, allow all requests (backward compat)
+    let expected_token = match std::env::var("LLORCH_API_TOKEN") {
+        Ok(token) if !token.is_empty() => token,
+        _ => return true, // No token required
+    };
+
+    // Extract Authorization header
+    let auth_header = match headers.get("authorization") {
+        Some(h) => h.to_str().unwrap_or(""),
+        None => return false,
+    };
+
+    // Check Bearer token
+    if let Some(token) = auth_header.strip_prefix("Bearer ") {
+        token == expected_token
+    } else {
+        false
+    }
+}
 
 /// POST /v2/nodes/register
 ///
@@ -35,8 +57,22 @@ use tracing::{info, warn};
 /// Response: 200 OK with confirmation
 pub async fn register_node(
     State(state): State<AppState>,
+    headers: HeaderMap,
     Json(req): Json<RegisterRequest>,
 ) -> impl IntoResponse {
+    // Validate Bearer token
+    if !validate_token(&headers, &state) {
+        warn!("Unauthorized node registration attempt");
+        return (
+            StatusCode::UNAUTHORIZED,
+            Json(RegisterResponse {
+                success: false,
+                message: "Unauthorized: Invalid or missing API token".to_string(),
+                node_id: req.node_id.clone(),
+            }),
+        );
+    }
+
     info!(
         node_id = %req.node_id,
         machine_id = %req.machine_id,
@@ -120,9 +156,21 @@ pub async fn register_node(
 pub async fn heartbeat_node(
     State(state): State<AppState>,
     Path(node_id): Path<String>,
-    Json(_req): Json<HeartbeatRequest>,
+    headers: HeaderMap,
+    Json(req): Json<HeartbeatRequest>,
 ) -> impl IntoResponse {
-    tracing::debug!(node_id = %node_id, "Heartbeat received");
+    // Validate Bearer token
+    if !validate_token(&headers, &state) {
+        return (
+            StatusCode::UNAUTHORIZED,
+            Json(HeartbeatResponse {
+                success: false,
+                next_heartbeat_ms: 10_000,
+            }),
+        );
+    }
+
+    tracing::debug!(node_id = %node_id, pools_count = req.pools.len(), "Heartbeat received");
 
     if !state.cloud_profile_enabled() {
         return (
@@ -136,7 +184,23 @@ pub async fn heartbeat_node(
 
     match state.service_registry().heartbeat(&node_id) {
         Ok(_) => {
-            // TODO(CLOUD-PROFILE-PLACEMENT): Update placement cache with pool status from _req.pools
+            // Convert HeartbeatPoolStatus to PoolSnapshot and store
+            let pool_snapshots: Vec<pool_registry_types::PoolSnapshot> = req.pools.iter().map(|p| {
+                pool_registry_types::PoolSnapshot {
+                    pool_id: p.pool_id.clone(),
+                    node_id: Some(node_id.clone()),
+                    ready: p.ready,
+                    draining: p.draining,
+                    slots_free: p.slots_free,
+                    slots_total: p.slots_total,
+                    vram_free_bytes: p.vram_free_bytes,
+                    engine: p.engine.clone(),
+                    models_available: vec![],
+                }
+            }).collect();
+            
+            state.service_registry().update_pool_status(&node_id, pool_snapshots);
+            
             (
                 StatusCode::OK,
                 Json(HeartbeatResponse {
@@ -164,7 +228,13 @@ pub async fn heartbeat_node(
 pub async fn deregister_node(
     State(state): State<AppState>,
     Path(node_id): Path<String>,
+    headers: HeaderMap,
 ) -> impl IntoResponse {
+    // Validate Bearer token
+    if !validate_token(&headers, &state) {
+        return StatusCode::UNAUTHORIZED;
+    }
+
     info!(node_id = %node_id, "Node deregistration request");
 
     if !state.cloud_profile_enabled() {

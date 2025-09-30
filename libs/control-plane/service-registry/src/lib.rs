@@ -25,6 +25,7 @@ pub struct ServiceRegistry {
 struct RegistryInner {
     nodes: HashMap<NodeId, NodeInfo>,
     pool_to_node: HashMap<String, NodeId>,
+    pool_status: HashMap<(NodeId, String), pool_registry_types::PoolSnapshot>,
     heartbeat_timeout_ms: u64,
 }
 
@@ -35,6 +36,7 @@ impl ServiceRegistry {
             inner: Arc::new(Mutex::new(RegistryInner {
                 nodes: HashMap::new(),
                 pool_to_node: HashMap::new(),
+                pool_status: HashMap::new(),
                 heartbeat_timeout_ms,
             })),
         }
@@ -79,6 +81,32 @@ impl ServiceRegistry {
         );
 
         Ok(())
+    }
+
+    /// Update pool status from heartbeat
+    pub fn update_pool_status(&self, node_id: &NodeId, pools: Vec<pool_registry_types::PoolSnapshot>) {
+        let mut inner = self.inner.lock().unwrap();
+        
+        for pool in pools {
+            let key = (node_id.clone(), pool.pool_id.clone());
+            inner.pool_status.insert(key, pool);
+        }
+    }
+
+    /// Get pool status for a specific node+pool
+    pub fn get_pool_status(&self, node_id: &NodeId, pool_id: &str) -> Option<pool_registry_types::PoolSnapshot> {
+        let inner = self.inner.lock().unwrap();
+        inner.pool_status.get(&(node_id.clone(), pool_id.to_string())).cloned()
+    }
+
+    /// Get all pool statuses for a node
+    pub fn get_node_pools(&self, node_id: &NodeId) -> Vec<pool_registry_types::PoolSnapshot> {
+        let inner = self.inner.lock().unwrap();
+        inner.pool_status
+            .iter()
+            .filter(|((nid, _), _)| nid == node_id)
+            .map(|(_, status)| status.clone())
+            .collect()
     }
 
     /// Deregister a node

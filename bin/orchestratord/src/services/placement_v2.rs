@@ -81,25 +81,37 @@ impl PlacementService {
         let mut candidates: Vec<(String, String, PoolSnapshot)> = Vec::new();
         
         for node in &nodes {
-            // TODO(CLOUD-PROFILE-PLACEMENT): Get actual pool status from node heartbeat
-            // For now, assume each node has pools from registration
-            for pool_id in &node.pools {
-                // Placeholder: In real implementation, get pool status from heartbeat data
-                candidates.push((
-                    node.node_id.clone(),
-                    pool_id.clone(),
-                    PoolSnapshot {
-                        pool_id: pool_id.clone(),
-                        node_id: Some(node.node_id.clone()),
-                        ready: true,
-                        draining: false,
-                        slots_free: 4, // TODO: Get from heartbeat
-                        slots_total: 4,
-                        vram_free_bytes: 0,
-                        engine: Some("llamacpp".to_string()),
-                        models_available: vec![],
-                    },
-                ));
+            // Get actual pool status from heartbeat data
+            let pool_statuses = registry.get_node_pools(&node.node_id);
+            
+            if pool_statuses.is_empty() {
+                // Fallback: Use pools from registration (no heartbeat data yet)
+                for pool_id in &node.pools {
+                    candidates.push((
+                        node.node_id.clone(),
+                        pool_id.clone(),
+                        PoolSnapshot {
+                            pool_id: pool_id.clone(),
+                            node_id: Some(node.node_id.clone()),
+                            ready: false, // Not ready until first heartbeat
+                            draining: false,
+                            slots_free: 0,
+                            slots_total: 0,
+                            vram_free_bytes: 0,
+                            engine: None,
+                            models_available: vec![],
+                        },
+                    ));
+                }
+            } else {
+                // Use real heartbeat data
+                for status in pool_statuses {
+                    candidates.push((
+                        node.node_id.clone(),
+                        status.pool_id.clone(),
+                        status,
+                    ));
+                }
             }
         }
 
@@ -185,9 +197,10 @@ impl PlacementService {
 
         // Check if any online node has this pool ready
         for node in nodes {
-            if node.pools.contains(&pool_id.to_string()) {
-                // TODO(CLOUD-PROFILE-PLACEMENT): Check actual pool status from heartbeat
-                return true;
+            if let Some(status) = registry.get_pool_status(&node.node_id, pool_id) {
+                if status.is_available() {
+                    return true;
+                }
             }
         }
 

@@ -18,25 +18,13 @@ impl RegistrationClient {
     /// Create a new registration client
     pub fn new(orchestratord_url: String, api_token: Option<String>) -> Self {
         Self {
-            orchestratord_url,
-            client: reqwest::Client::new(),
-            api_token,
-        }
     }
 
-    /// Register node
-    pub async fn register(&self, request: RegisterRequest) -> Result<RegisterResponse> {
-        let url = format!("{}/v2/nodes/register", self.orchestratord_url);
-
-        debug!(url = %url, "Sending registration request");
-
-        let mut req = self.client.post(&url).json(&request);
-
-        if let Some(token) = &self.api_token {
-            req = req.bearer_auth(token);
-        }
-
-        let response = req.send().await
+    impl RegistrationClient {
+        /// Create a new registration client
+        pub fn new(base_url: String, api_token: Option<String>) -> Self {
+            Self {
+                base_url,
             .context("Failed to send registration request")?;
 
         let status = response.status();
@@ -45,46 +33,29 @@ impl RegistrationClient {
 
         if !status.is_success() {
             anyhow::bail!("Registration failed: {}", body.message);
-        }
 
         Ok(body)
-    }
 
-    /// Send heartbeat
-    pub async fn heartbeat(&self, node_id: &str, request: HeartbeatRequest) -> Result<HeartbeatResponse> {
-        let url = format!("{}/v2/nodes/{}/heartbeat", self.orchestratord_url, node_id);
-
+    pub async fn heartbeat(&self, node_id: &str, request: HeartbeatRequest) -> Result<()> {
+        let url = format!("{}/v2/nodes/{}/heartbeat", self.base_url, node_id);
+        
         let mut req = self.client.post(&url).json(&request);
-
-        if let Some(token) = &self.api_token {
-            req = req.bearer_auth(token);
-        }
-
-        let response = req.send().await
-            .context("Failed to send heartbeat")?;
-
-        let status = response.status();
-        let body = response.json::<HeartbeatResponse>().await
-            .context("Failed to parse heartbeat response")?;
-
-        if !status.is_success() {
-            anyhow::bail!("Heartbeat failed");
-        }
-
-        Ok(body)
-    }
-
-    /// Deregister node
-    pub async fn deregister(&self, node_id: &str) -> Result<()> {
-        let url = format!("{}/v2/nodes/{}", self.orchestratord_url, node_id);
 
         let mut req = self.client.delete(&url);
 
+        // Add Bearer token if configured
         if let Some(token) = &self.api_token {
             req = req.bearer_auth(token);
         }
 
-        let response = req.send().await
+        let response = req
+            .send()
+            .await
+
+        let status = response.status();
+        let body = response.json::<HeartbeatResponse>().await
+
+        if !status.is_success() {
             .context("Failed to send deregistration request")?;
 
         if !response.status().is_success() {
