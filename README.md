@@ -1,26 +1,50 @@
 # llama-orch
 
-**GPU-first LLM orchestration for deterministic, observable multi-agent workflows**
+**Multi-GPU LLM orchestrator for homelabs and agentic AI workloads**
 
-llama-orch is an orchestrator for NVIDIA-backed LLM inference with a focus on determinism, observability, and developer workflows. The project follows a strict **Spec → Contract → Tests → Code** discipline and is currently in active development (~40% complete toward v0.2.0).
+llama-orch is a multi-system, multi-GPU orchestrator that routes LLM inference requests to specific GPUs across your network. Born from the simple frustration of "why can't I easily choose which GPU runs which model?", it evolved into a full agentic AI API for homelabs.
 
 **Current version**: `0.0.0` (early development)  
-**License**: GPL-3.0-or-later  
+**License**: GPL-3.0-or-later (free and open source, but copyleft—be careful redistributing as proprietary)  
 **Target platform**: Linux with NVIDIA GPUs
 
 ---
 
 ## What is llama-orch?
 
-llama-orch orchestrates LLM inference across one or more GPUs, providing:
+### The Origin Story
 
-- **Deterministic inference**: Identical prompts + parameters yield identical token streams (same model, seed, engine version)
-- **Observable execution**: Structured logs, Prometheus metrics, SSE streaming with correlation IDs
-- **Session management**: Short-lived sessions with KV cache tracking, budget enforcement, and failover surface
-- **Catalog & lifecycle**: Model registry with verification, digest tracking, atomic pool reload/drain
-- **Flexible deployment**: Run both services on one machine or distribute across multiple nodes
+I had two GPUs with different capabilities (VRAM, power, etc.) and a simple problem: **why is it so hard to pick which GPU a certain AI app gets loaded into?**
 
-**Not a general-purpose LLM framework** — llama-orch is optimized for multi-agent developer workflows where determinism and observability are critical.
+I wanted certain models on GPU 0 and others on GPU 1. But that wasn't easy at all. So I built this.
+
+### What It Became
+
+**llama-orch** is a multi-system, multi-GPU orchestrator for homelabs. It provides:
+
+- **GPU-aware routing**: Pick which models run on which GPUs across multiple machines
+- **Network-wide orchestration**: One control plane manages all GPUs in your homelab (or even remote systems via secure `auth-min` bearer tokens)
+- **Concurrent agentic AI**: Handle multiple requests per second with parallel, batched inference across your GPU pool
+- **Web UI** (planned): Visual interface to assign apps/models to specific GPUs
+- **Flexible deployment**: Single machine with multiple GPUs, or distributed across your entire network
+
+### Why This Matters
+
+This is **so obvious** to build, and I'm surprised nobody has made it yet. If you have multiple systems at home, each with one or more GPUs, you need:
+
+1. **One orchestrator system** (no GPU required, though it can host `pool-managerd` too)
+2. **Multiple GPU worker nodes** running `pool-managerd` to manage local GPUs
+3. **Secure remote access** via `auth-min` for distributed deployments
+
+Your orchestrator handles multiple requests per second (depending on your GPU pools) and enables concurrent, parallel, and batched agentic AI workloads.
+
+### Nice-to-Haves (Not Core Goals)
+
+The project also includes determinism and observability features that I enjoyed building, but these are **bonuses**, not the primary purpose:
+
+- Deterministic inference (same prompt + seed = same tokens)
+- Prometheus metrics and structured logging
+- Session management with KV cache tracking
 
 ---
 
