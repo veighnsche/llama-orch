@@ -2,6 +2,32 @@
 //!
 //! Maintains authoritative state of which GPU nodes are online,
 //! their capabilities, and pool availability for placement decisions.
+//!
+//! # ⚠️ AUDIT LOGGING REQUIRED
+//!
+//! **IMPORTANT**: Node registration/deregistration MUST be logged to `audit-logging`:
+//!
+//! ```rust,ignore
+//! use audit_logging::{AuditLogger, AuditEvent, ActorInfo};
+//!
+//! // ✅ Node registration
+//! audit_logger.emit(AuditEvent::NodeRegistered {
+//!     timestamp: Utc::now(),
+//!     actor: ActorInfo { user_id: "system", ip, auth_method, session_id },
+//!     node_id: node.id.clone(),
+//!     capabilities: node.capabilities.clone(),
+//! }).await?;
+//!
+//! // ✅ Node deregistration
+//! audit_logger.emit(AuditEvent::NodeDeregistered {
+//!     timestamp: Utc::now(),
+//!     actor: ActorInfo { user_id: "system", ip, auth_method, session_id },
+//!     node_id: node.id.clone(),
+//!     reason: "heartbeat_timeout".to_string(),
+//! }).await?;
+//! ```
+//!
+//! See: `bin/shared-crates/AUDIT_LOGGING_REMINDER.md`
 
 use pool_registry_types::{NodeId, NodeInfo, NodeStatus};
 use std::collections::HashMap;

@@ -9,6 +9,43 @@
 //! - Residency attestation
 //! - Prevents paging to host memory
 //!
+//! # ⚠️ AUDIT LOGGING REQUIRED
+//!
+//! **CRITICAL**: All VRAM operations MUST be logged to `audit-logging`:
+//!
+//! ```rust,ignore
+//! use audit_logging::{AuditLogger, AuditEvent};
+//!
+//! // ✅ VRAM sealing (security-critical)
+//! audit_logger.emit(AuditEvent::VramSealed {
+//!     timestamp: Utc::now(),
+//!     shard_id: shard.id.clone(),
+//!     gpu_device: shard.gpu_device,
+//!     vram_bytes: shard.size_bytes,
+//!     digest: shard.digest.clone(),
+//!     worker_id: "worker-gpu-0".to_string(),
+//! }).await?;
+//!
+//! // ✅ Seal verification
+//! audit_logger.emit(AuditEvent::SealVerified {
+//!     timestamp: Utc::now(),
+//!     shard_id: shard.id.clone(),
+//!     gpu_device: shard.gpu_device,
+//!     worker_id: "worker-gpu-0".to_string(),
+//! }).await?;
+//!
+//! // ✅ Seal verification failure
+//! audit_logger.emit(AuditEvent::SealVerificationFailed {
+//!     timestamp: Utc::now(),
+//!     shard_id: shard.id.clone(),
+//!     gpu_device: shard.gpu_device,
+//!     reason: "digest_mismatch".to_string(),
+//!     worker_id: "worker-gpu-0".to_string(),
+//! }).await?;
+//! ```
+//!
+//! See: `bin/shared-crates/AUDIT_LOGGING_REMINDER.md`
+//!
 //! # Example
 //!
 //! ```rust

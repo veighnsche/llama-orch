@@ -7,6 +7,35 @@
 //! - LLORCH_API_TOKEN: Required token for authentication (min 16 chars)
 //! - Loopback binds (127.0.0.1, ::1): Token optional
 //! - Non-loopback binds: Token REQUIRED (enforced at startup)
+//!
+//! # ⚠️ AUDIT LOGGING REQUIRED
+//!
+//! **IMPORTANT**: All authentication events MUST be logged to `audit-logging`:
+//!
+//! ```rust,ignore
+//! use audit_logging::{AuditLogger, AuditEvent, ActorInfo};
+//!
+//! // ✅ Log successful authentication
+//! audit_logger.emit(AuditEvent::AuthSuccess {
+//!     timestamp: Utc::now(),
+//!     actor: ActorInfo { user_id: token_fingerprint, ip, auth_method, session_id },
+//!     method: AuthMethod::BearerToken,
+//!     path: req.uri().path().to_string(),
+//!     service_id: "orchestratord".to_string(),
+//! }).await?;
+//!
+//! // ✅ Log failed authentication
+//! audit_logger.emit(AuditEvent::AuthFailure {
+//!     timestamp: Utc::now(),
+//!     attempted_user: Some(invalid_token_fingerprint),
+//!     ip,
+//!     reason: "invalid_token".to_string(),
+//!     path: req.uri().path().to_string(),
+//!     service_id: "orchestratord".to_string(),
+//! }).await?;
+//! ```
+//!
+//! See: `bin/shared-crates/audit-logging/README.md`
 
 use axum::{body::Body, http::Request, middleware::Next, response::Response};
 use http::{HeaderMap, StatusCode};

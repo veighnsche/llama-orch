@@ -1,3 +1,8 @@
+// ⚠️ AUDIT LOGGING REMINDER:
+// Task operations (submit/cancel) and data access MUST be logged to audit-logging crate.
+// Required for GDPR compliance (InferenceExecuted, ModelAccessed, DataDeleted events).
+// See: bin/shared-crates/AUDIT_LOGGING_REMINDER.md
+
 use axum::{extract::State, response::IntoResponse, Json};
 use http::{HeaderMap, StatusCode};
 use serde_json::json;

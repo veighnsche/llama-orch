@@ -116,6 +116,11 @@ The project also includes determinism and observability features that I enjoyed 
 - [`CONSUMER_CAPABILITIES.md`](CONSUMER_CAPABILITIES.md) — Consumer-facing API guide
 - [`COMPLIANCE.md`](COMPLIANCE.md) — Requirements traceability (ORCH/OC-* IDs)
 
+### Security & Compliance
+- [`bin/shared-crates/audit-logging/`](bin/shared-crates/audit-logging/) — **Tamper-evident audit logging** (Security Rating: A-)
+- [`bin/shared-crates/AUDIT_LOGGING_REMINDER.md`](bin/shared-crates/AUDIT_LOGGING_REMINDER.md) — **⚠️ Required reading for all engineers**
+- Use `audit-logging` crate for all security events (auth, authz, resource ops, GDPR compliance)
+
 ---
 
 ## Architecture

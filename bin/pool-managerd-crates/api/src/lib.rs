@@ -12,6 +12,30 @@
 //! - Add rate limiting per endpoint
 //! See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md Issue #8 (pool-managerd auth)
 //!
+//! # ⚠️ AUDIT LOGGING REQUIRED
+//!
+//! **IMPORTANT**: Pool operations MUST be logged to `audit-logging`:
+//!
+//! ```rust,ignore
+//! use audit_logging::{AuditLogger, AuditEvent, ActorInfo};
+//!
+//! // ✅ Pool creation
+//! audit_logger.emit(AuditEvent::PoolCreated {
+//!     timestamp: Utc::now(),
+//!     actor: ActorInfo { user_id, ip, auth_method, session_id },
+//!     pool_id, model_ref, node_id, replicas, gpu_devices
+//! }).await?;
+//!
+//! // ✅ Pool deletion
+//! audit_logger.emit(AuditEvent::PoolDeleted {
+//!     timestamp: Utc::now(),
+//!     actor: ActorInfo { user_id, ip, auth_method, session_id },
+//!     pool_id, model_ref, node_id, reason
+//! }).await?;
+//! ```
+//!
+//! See: `bin/shared-crates/AUDIT_LOGGING_REMINDER.md`
+//!
 //! # ⚠️ INPUT VALIDATION REMINDER
 //!
 //! **CRITICAL**: All HTTP endpoints MUST validate inputs with `input-validation`:

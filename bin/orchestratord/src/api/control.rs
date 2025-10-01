@@ -1,3 +1,7 @@
+// ⚠️ AUDIT LOGGING REMINDER:
+// Pool operations (create/delete/modify) MUST be logged to audit-logging crate.
+// See: bin/shared-crates/AUDIT_LOGGING_REMINDER.md
+
 use axum::{extract::State, response::IntoResponse, Json};
 use http::{HeaderMap, StatusCode};
 use serde_json::json;

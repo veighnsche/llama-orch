@@ -1,4 +1,26 @@
 //! worker-orcd — GPU worker daemon
+//!
+//! # ⚠️ AUDIT LOGGING REQUIRED
+//!
+//! **CRITICAL**: VRAM operations and policy violations MUST be logged to `audit-logging`:
+//!
+//! ```rust,ignore
+//! use audit_logging::{AuditLogger, AuditEvent};
+//!
+//! // ✅ VRAM sealing (security-critical)
+//! audit_logger.emit(AuditEvent::VramSealed {
+//!     timestamp: Utc::now(),
+//!     shard_id, gpu_device, vram_bytes, digest, worker_id
+//! }).await?;
+//!
+//! // ✅ Policy violations
+//! audit_logger.emit(AuditEvent::PolicyViolation {
+//!     timestamp: Utc::now(),
+//!     policy_id, worker_id, details
+//! }).await?;
+//! ```
+//!
+//! See: `bin/shared-crates/AUDIT_LOGGING_REMINDER.md`
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
