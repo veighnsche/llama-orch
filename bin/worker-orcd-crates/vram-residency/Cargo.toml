@@ -9,3 +9,6 @@ authors.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 sha2.workspace = true
+
+[dev-dependencies]
+gpu-info = { path = "../../shared-crates/gpu-info" }
