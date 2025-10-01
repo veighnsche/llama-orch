@@ -78,6 +78,14 @@ pub enum AuditEvent {
 }
 
 /// Audit logger
+/// TODO(ARCH-CHANGE): This crate logs to tracing only. Needs:
+/// - Write audit events to append-only file
+/// - Add tamper-evident logging (checksums, signatures)
+/// - Implement log rotation with retention policy
+/// - Add external system integration (syslog, SIEM)
+/// - Implement structured query interface for forensics
+/// - Add compliance reporting (GDPR, SOC2)
+/// See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md (audit trail requirements)
 pub struct AuditLogger {
     // Future: Write to file or external system
 }

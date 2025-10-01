@@ -1,6 +1,14 @@
 //! retry-policy — Standardized retry policies
 //!
 //! Configurable retry logic with exponential backoff, jitter, circuit breaking.
+//!
+//! TODO(ARCH-CHANGE): This crate is minimal. Needs:
+//! - Add jitter to prevent thundering herd
+//! - Implement circuit breaker integration
+//! - Add retry budget tracking (prevent infinite retries)
+//! - Implement per-error-type retry policies
+//! - Add metrics for retry attempts
+//! - Integrate with backpressure crate
 
 // Medium-importance crate: TIER 3 Clippy configuration
 #![warn(clippy::unwrap_used)]
@@ -28,6 +36,10 @@ impl RetryPolicy {
     }
     
     pub fn delay(&self, attempt: u32) -> Duration {
+        // TODO(ARCH-CHANGE): Add jitter to prevent thundering herd:
+        // - Use rand::thread_rng() for jitter
+        // - Add ±20% randomness to delay
+        // - Cap maximum delay (e.g., 30 seconds)
         let multiplier = 2u64.saturating_pow(attempt);
         self.base_delay.saturating_mul(multiplier as u32)
     }

@@ -1,6 +1,17 @@
 //! worker-api — Worker HTTP API
 //!
 //! Exposes worker endpoints (plan, commit, ready, execute).
+//!
+//! TODO(ARCH-CHANGE): This crate only has /ready stub. Per ARCHITECTURE_CHANGE_PLAN.md Phase 3:
+//! Task Group 1 (RPC Server):
+//! - Implement POST /worker/plan endpoint (feasibility check)
+//! - Implement POST /worker/commit endpoint (load model into VRAM)
+//! - Implement GET /worker/ready endpoint (attest worker status)
+//! - Implement POST /worker/execute endpoint (run inference, stream tokens)
+//! - Add Bearer token authentication middleware
+//! - Add input validation for all endpoints
+//! - Add rate limiting
+//! See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md Issue #1 (worker-orcd endpoint auth)
 
 // High-importance crate: TIER 2 Clippy configuration
 #![deny(clippy::unwrap_used)]
@@ -16,10 +27,20 @@
 use axum::{routing::get, Router};
 
 pub fn create_router() -> Router {
+    // TODO(ARCH-CHANGE): Add all worker endpoints:
+    // - .route("/worker/plan", post(plan_handler))
+    // - .route("/worker/commit", post(commit_handler))
+    // - .route("/worker/ready", get(ready_handler))
+    // - .route("/worker/execute", post(execute_handler))
+    // - .layer(auth_middleware) // Bearer token auth
     Router::new()
         .route("/ready", get(ready))
 }
 
 async fn ready() -> &'static str {
+    // TODO(ARCH-CHANGE): Return proper ReadyResponse with:
+    // - ready: bool
+    // - handles: Vec<ModelShardHandle>
+    // - nccl_group_id: Option<String> (for TP)
     "ready"
 }

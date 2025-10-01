@@ -42,6 +42,15 @@ impl PoolRegistry {
     pub fn get_health(&self, pool_id: &str) -> Option<&PoolHealth> {
         self.pools.get(pool_id)
     }
+    
+    // TODO(ARCH-CHANGE): Add pool registry methods:
+    // - pub fn update_health(&mut self, pool_id: &str, health: PoolHealth)
+    // - pub fn list_pools(&self) -> Vec<(String, PoolHealth)>
+    // - pub fn get_available_pools(&self) -> Vec<String>
+    // - pub fn allocate_slot(&mut self, pool_id: &str) -> Result<()>
+    // - pub fn release_slot(&mut self, pool_id: &str) -> Result<()>
+    // - pub fn mark_draining(&mut self, pool_id: &str)
+    // - pub fn remove_pool(&mut self, pool_id: &str) -> Option<PoolHealth>
 }
 
 impl Default for PoolRegistry {

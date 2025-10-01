@@ -99,6 +99,12 @@ impl Deadline {
     pub fn to_header_value(&self) -> String {
         format!("{}", self.deadline_ms)
     }
+    
+    // TODO(ARCH-CHANGE): Add deadline propagation helpers:
+    // - pub fn from_header(header: &str) -> Result<Self> (parse X-Deadline header)
+    // - pub fn to_tokio_timeout(&self) -> Duration (convert to tokio timeout)
+    // - pub fn propagate_to_request(&self, req: &mut Request) (add header)
+    // - pub fn with_buffer(&self, buffer_ms: u64) -> Self (add safety margin)
 }
 
 #[cfg(test)]

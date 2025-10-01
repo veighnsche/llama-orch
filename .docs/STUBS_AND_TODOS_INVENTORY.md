@@ -8,9 +8,14 @@
 
 ## Executive Summary
 
-This document catalogs all incomplete implementations, stubs, and placeholders found in the `bin/` directory. Each item has been annotated with TODO comments referencing the architecture change plan and security audit.
+This document catalogs all incomplete implementations, stubs, and placeholders found in the `bin/` directory (binaries and their crates). Each item has been annotated with TODO comments referencing the architecture change plan and security audit.
 
-**Total items identified**: 15 major stubs/placeholders across 3 binaries
+**Total items identified**: 38 items cataloged
+- **14 in binaries** (orchestratord, pool-managerd, worker-orcd)
+- **18 in crates** (minimal/stub implementations)
+- **6 production-ready crates** (circuit-breaker, rate-limiting, secrets-management, input-validation, narration-core, pool-registry-types)
+
+**Files modified**: 27 files with TODO annotations
 
 ---
 
@@ -275,30 +280,379 @@ This document catalogs all incomplete implementations, stubs, and placeholders f
 
 ---
 
+## Crate-Level Stubs (Additional 8 items)
+
+### 15. Resource Limits (MINIMAL)
+**File**: `bin/shared-crates/resource-limits/src/lib.rs`  
+**Status**: Struct definition only, no enforcement  
+**TODO Added**: Lines 5-12, 37-42
+
+**Required Implementation**:
+- Add enforcement logic (not just struct definition)
+- Implement VRAM tracking per job
+- Add execution timeout enforcement with cancellation
+- Implement concurrent job limiting
+- Add resource exhaustion detection
+
+**Security Impact**: SECURITY_AUDIT Issue #17 (no resource limits) - **HIGH**
+
+---
+
+### 16. Retry Policy (MINIMAL)
+**File**: `bin/shared-crates/retry-policy/src/lib.rs`  
+**Status**: Basic exponential backoff, no jitter  
+**TODO Added**: Lines 5-11, 39-42
+
+**Required Implementation**:
+- Add jitter to prevent thundering herd
+- Implement circuit breaker integration
+- Add retry budget tracking
+- Implement per-error-type retry policies
+- Add metrics for retry attempts
+
+---
+
+### 17. Job Timeout (STUB)
+**File**: `bin/orchestratord-crates/job-timeout/src/lib.rs`  
+**Status**: Empty struct, no timeout enforcement  
+**TODO Added**: Lines 3-10, 31-35
+
+**Required Implementation**:
+- Add timeout tracking per job_id
+- Implement async timeout with tokio::time::timeout
+- Add cancellation token propagation
+- Emit timeout events for observability
+- Integrate with task-cancellation crate
+
+---
+
+### 18. Agentic API (STUB)
+**File**: `bin/orchestratord-crates/agentic-api/src/lib.rs`  
+**Status**: Empty struct, no implementation  
+**TODO Added**: Lines 3-10, 25-29
+
+**Required Implementation**:
+- Define agentic workflow types (tool calls, function calling)
+- Implement multi-turn conversation state management
+- Add tool/function registry
+- Implement streaming responses for agentic workflows
+- Add context window management
+
+---
+
+### 19. Platform API (MINIMAL)
+**File**: `bin/orchestratord-crates/platform-api/src/lib.rs`  
+**Status**: Only /health endpoint  
+**TODO Added**: Lines 3-10, 21-25
+
+**Required Implementation**:
+- Add /metrics endpoint (Prometheus format)
+- Add /version endpoint (build info, git commit)
+- Add /status endpoint (service health, dependencies)
+- Add /config endpoint (safe config inspection)
+- Add authentication middleware integration
+
+---
+
+### 20. Inference Engine (STUB)
+**File**: `bin/worker-orcd-crates/inference/src/lib.rs`  
+**Status**: Returns hardcoded tokens  
+**TODO Added**: Lines 5-17, 48-54
+
+**Required Implementation**:
+- Implement cuBLAS GEMM integration
+- Implement RoPE kernel (rope_llama, rope_neox variants)
+- Implement attention kernel (prefill + decode, GQA support)
+- Implement RMSNorm kernel
+- Implement sampling kernel (greedy, top-k, temperature)
+- Implement forward pass and KV cache management
+
+**Security Impact**: SECURITY_AUDIT Issue #11 (unsafe CUDA FFI) - **CRITICAL**
+
+---
+
+### 21. Worker API (STUB)
+**File**: `bin/worker-orcd-crates/api/src/lib.rs`  
+**Status**: Only /ready stub endpoint  
+**TODO Added**: Lines 5-14, 30-35, 41-44
+
+**Required Implementation**:
+- Implement POST /worker/plan endpoint
+- Implement POST /worker/commit endpoint
+- Implement GET /worker/ready endpoint (full response)
+- Implement POST /worker/execute endpoint
+- Add Bearer token authentication middleware
+- Add input validation for all endpoints
+
+**Security Impact**: SECURITY_AUDIT Issue #1 (worker-orcd endpoint auth) - **CRITICAL**
+
+---
+
+### 22. Circuit Breaker (COMPLETE)
+**File**: `bin/shared-crates/circuit-breaker/src/lib.rs`  
+**Status**: ✅ Fully implemented with tests  
+**No TODOs needed** - This crate is production-ready
+
+---
+
+### 23. Rate Limiting (COMPLETE)
+**File**: `bin/shared-crates/rate-limiting/src/lib.rs`  
+**Status**: ✅ Fully implemented with token bucket algorithm  
+**No TODOs needed** - This crate is production-ready
+
+---
+
+### 24. Secrets Management (COMPLETE)
+**File**: `bin/shared-crates/secrets-management/src/lib.rs`  
+**Status**: ✅ Fully implemented with secure loading and zeroization  
+**No TODOs needed** - This crate is production-ready
+
+---
+
+### 25. Audit Logging (MINIMAL)
+**File**: `bin/shared-crates/audit-logging/src/lib.rs`  
+**Status**: Logs to tracing only, no file persistence  
+**TODO Added**: Lines 81-88
+
+**Required Implementation**:
+- Write audit events to append-only file
+- Add tamper-evident logging (checksums, signatures)
+- Implement log rotation with retention policy
+- Add external system integration (syslog, SIEM)
+- Implement structured query interface for forensics
+- Add compliance reporting (GDPR, SOC2)
+
+**Security Impact**: Audit trail requirements for compliance
+
+---
+
+### 26. Deadline Propagation (MINIMAL)
+**File**: `bin/shared-crates/deadline-propagation/src/lib.rs`  
+**Status**: Basic deadline tracking, missing HTTP integration  
+**TODO Added**: Lines 103-107
+
+**Required Implementation**:
+- Add `from_header()` to parse X-Deadline header
+- Add `to_tokio_timeout()` for async timeout integration
+- Add `propagate_to_request()` to add header to outbound requests
+- Add `with_buffer()` to add safety margin for multi-hop calls
+- Integrate with orchestratord → pool-managerd → worker-orcd chain
+
+---
+
+### 27. Input Validation (COMPLETE)
+**File**: `bin/shared-crates/input-validation/src/lib.rs`  
+**Status**: ✅ Fully implemented with path traversal, null byte, and range validation  
+**No TODOs needed** - This crate is production-ready
+
+---
+
+### 28. Narration Core (COMPLETE)
+**File**: `bin/shared-crates/narration-core/src/lib.rs`  
+**Status**: ✅ Fully implemented with structured logging, secret redaction, and OpenTelemetry integration  
+**No TODOs needed** - This crate is production-ready
+
+---
+
+### 29. Pool Registry Types (COMPLETE)
+**File**: `bin/shared-crates/pool-registry-types/src/lib.rs`  
+**Status**: ✅ Fully implemented with health, node, and pool types  
+**No TODOs needed** - This crate is production-ready
+
+---
+
+## pool-managerd-crates Stubs (Additional 7 items)
+
+### 30. Model Cache (STUB)
+**File**: `bin/pool-managerd-crates/model-cache/src/lib.rs`  
+**Status**: Empty struct, no caching logic  
+**TODO Added**: Lines 3-11, 26-31
+
+**Required Implementation**:
+- Implement LRU cache for frequently used models
+- Add cache hit/miss tracking and metrics
+- Implement cache warming (preload popular models)
+- Add cache eviction policy (coordinate with model-eviction crate)
+- Implement cache persistence across restarts
+- Add cache size limits (disk space, VRAM)
+
+---
+
+### 31. Model Eviction (MINIMAL)
+**File**: `bin/pool-managerd-crates/model-eviction/src/lib.rs`  
+**Status**: Enum defined, no eviction logic  
+**TODO Added**: Lines 3-11, 34-39
+
+**Required Implementation**:
+- Implement LRU (Least Recently Used) eviction
+- Implement LFU (Least Frequently Used) eviction
+- Implement cost-based eviction (evict cheapest to reload)
+- Add VRAM pressure detection
+- Implement eviction scoring algorithm
+- Add metrics for eviction events
+
+---
+
+### 32. Pool-managerd API (MINIMAL)
+**File**: `bin/pool-managerd-crates/api/src/lib.rs`  
+**Status**: Only /health endpoint  
+**TODO Added**: Lines 5-13, 29-35, 41-44
+
+**Required Implementation**:
+- Add POST /pools/:id/preload endpoint (model preloading)
+- Add GET /pools/:id/status endpoint (pool health and capacity)
+- Add POST /pools/:id/drain endpoint (graceful shutdown)
+- Add POST /pools/:id/reload endpoint (config reload)
+- Add POST /workers/register endpoint (worker registration)
+- Add Bearer token authentication middleware
+
+**Security Impact**: SECURITY_AUDIT Issue #8 (pool-managerd auth) - **CRITICAL**
+
+---
+
+### 33. Error Recovery (STUB)
+**File**: `bin/pool-managerd-crates/error-recovery/src/lib.rs`  
+**Status**: Empty struct, no recovery logic  
+**TODO Added**: Lines 3-11, 26-31
+
+**Required Implementation**:
+- Implement worker restart on failure
+- Add exponential backoff for restart attempts
+- Implement circuit breaker for failing workers
+- Add automatic model reload on corruption
+- Implement health check recovery actions
+- Add recovery metrics and alerting
+
+---
+
+### 34. Health Monitor (MINIMAL)
+**File**: `bin/pool-managerd-crates/health-monitor/src/lib.rs`  
+**Status**: Basic heartbeat tracking only  
+**TODO Added**: Lines 41-47
+
+**Required Implementation**:
+- Add multi-worker health tracking
+- Implement active health checks (HTTP polling)
+- Add unhealthy worker detection
+- Emit health metrics
+- Integrate with error-recovery crate
+
+---
+
+### 35. Pool Registry (MINIMAL)
+**File**: `bin/pool-managerd-crates/pool-registry/src/lib.rs`  
+**Status**: Basic HashMap storage only  
+**TODO Added**: Lines 46-53
+
+**Required Implementation**:
+- Add health update methods
+- Implement pool listing and filtering
+- Add slot allocation/release tracking
+- Implement draining state management
+- Add pool removal with cleanup
+
+---
+
+### 36. Pool Router (STUB)
+**File**: `bin/pool-managerd-crates/router/src/lib.rs`  
+**Status**: Stub router with single endpoint  
+**TODO Added**: Lines 3-10, 21-25
+
+**Required Implementation**:
+- Implement request routing to appropriate pool
+- Add load balancing across pools (round-robin, least-loaded)
+- Implement sticky routing for sessions
+- Add health-aware routing (skip unhealthy pools)
+- Implement routing metrics
+- Add circuit breaker integration
+
+---
+
+### Model Provisioner (COMPLETE)
+**File**: `bin/pool-managerd-crates/model-provisioner/src/lib.rs`  
+**Status**: ✅ Fully implemented with API, config, and metadata modules  
+**No TODOs needed** - This crate has complete structure
+
+---
+
+## worker-orcd-crates Stubs (Additional 2 items)
+
+### 37. Error Handler (MINIMAL)
+**File**: `bin/worker-orcd-crates/error-handler/src/lib.rs`  
+**Status**: Basic error enum, minimal handling  
+**TODO Added**: Lines 3-11, 43-49
+
+**Required Implementation**:
+- Add comprehensive error classification (retryable, fatal, transient)
+- Implement error recovery strategies per error type
+- Add error rate tracking and circuit breaking
+- Implement structured error logging with context
+- Add error metrics and alerting
+- Integrate with CUDA error codes (cudaGetLastError)
+- Add memory error detection and recovery
+
+**Security Impact**: SECURITY_AUDIT Issue #11 (unsafe CUDA FFI)
+
+---
+
+### 38. Execution Planner (MINIMAL)
+**File**: `bin/worker-orcd-crates/execution-planner/src/lib.rs`  
+**Status**: Hardcoded plan values  
+**TODO Added**: Lines 3-11, 32-49
+
+**Required Implementation**:
+- Implement KV cache allocation planning
+- Add continuous batching support
+- Implement dynamic batch size optimization
+- Add memory budget tracking
+- Implement prefill/decode phase planning
+- Add scheduling for multi-request batches
+- Integrate with vram-residency for capacity checks
+
+---
+
 ## Summary by Priority
 
 ### P0 - Critical Security Issues
-1. **GGUF parser validation** (Issue #19) - Buffer overflow risk
-2. **Worker authentication** (Issue #1) - Unauthorized access
-3. **Pool-managerd authentication** (Issue #8) - Unauthorized control
-4. **CUDA FFI safety** (Issue #11) - Memory corruption risk
+1. **GGUF parser validation** (Item #14) - Buffer overflow risk
+2. **Worker authentication** (Item #21) - Unauthorized access
+3. **Pool-managerd authentication** (Items #6, #32) - Unauthorized control
+4. **CUDA FFI safety** (Item #12) - Memory corruption risk
+5. **Inference engine** (Item #20) - Core security for GPU operations
 
 ### P1 - M0 Pilot Blockers
-5. **worker-orcd main implementation** - All 7 task groups
-6. **VRAM allocation** - Core functionality
-7. **Worker spawning** - Lifecycle management
-8. **Pool health checking** - Dispatch gating
+6. **worker-orcd main implementation** (Item #11) - All 7 task groups
+7. **VRAM allocation** (Item #12) - Core functionality
+8. **Worker spawning** (Item #9) - Lifecycle management
+9. **Pool health checking** (Item #4) - Dispatch gating
+10. **Worker API endpoints** (Item #21) - RPC protocol
+11. **Resource limits enforcement** (Item #15) - DoS protection
+12. **Pool-managerd API** (Item #32) - Preload, status, drain endpoints
+13. **Health monitoring** (Item #34) - Worker health tracking
 
 ### P2 - Phase 2 Cleanup
-9. **Remove adapter-host shim** - Architecture cleanup
-10. **Remove adapter abstraction** - Architecture cleanup
-11. **Remove engine preload** - Architecture cleanup
-12. **Remove control service stub** - Replace with real implementation
-13. **Remove catalog service stub** - Replace with real implementation
+12. **Remove adapter-host shim** (Item #5) - Architecture cleanup
+13. **Remove adapter abstraction** (Item #7) - Architecture cleanup
+14. **Remove engine preload** (Item #10) - Architecture cleanup
+15. **Remove control service stub** (Item #1) - Replace with real implementation
+16. **Remove catalog service stub** (Item #2) - Replace with real implementation
 
 ### P3 - Post-M0 Enhancements
-14. **Model fetchers** (HF, HTTP, S3, OCI)
-15. **Artifact store improvements** (compression, GC, etc.)
+17. **Model fetchers** (Item #8) - HF, HTTP, S3, OCI
+18. **Artifact store improvements** (Item #3) - Compression, GC, etc.
+19. **Job timeout enforcement** (Item #17) - Production hardening
+20. **Retry policy enhancements** (Item #16) - Jitter, circuit breaker integration
+21. **Agentic API** (Item #18) - Tool calling, multi-turn conversations
+22. **Platform API expansion** (Item #19) - Metrics, version, status endpoints
+23. **Audit logging persistence** (Item #25) - File-based audit trail
+24. **Deadline propagation integration** (Item #26) - HTTP header propagation
+25. **Model cache** (Item #30) - LRU caching for models
+26. **Model eviction** (Item #31) - VRAM pressure management
+27. **Error recovery** (Item #33) - Automated self-healing
+28. **Pool registry** (Item #35) - Advanced pool management
+29. **Pool router** (Item #36) - Load balancing and routing
+30. **Worker error handler** (Item #37) - CUDA error classification and recovery
+31. **Execution planner** (Item #38) - KV cache planning and continuous batching
 
 ---
 
@@ -329,6 +683,12 @@ rg "NotImplemented" bin/ --type rust
 
 # Find all stub comments
 rg "stub|STUB|Stub" bin/ --type rust
+
+# Count TODOs by file
+rg "TODO\(ARCH-CHANGE\)" bin/ --count-matches
+
+# List all shared-crates
+ls -1 bin/shared-crates/
 ```
 
 ---

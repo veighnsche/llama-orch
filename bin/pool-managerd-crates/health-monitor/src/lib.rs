@@ -37,4 +37,12 @@ impl HealthMonitor {
             .map(|last| last.elapsed() < self.timeout)
             .unwrap_or(false)
     }
+    
+    // TODO(ARCH-CHANGE): Add health monitoring methods:
+    // - pub fn check_worker_health(&self, worker_id: &str) -> HealthStatus
+    // - pub fn start_monitoring(&mut self, worker_id: &str)
+    // - pub fn stop_monitoring(&mut self, worker_id: &str)
+    // - pub fn get_unhealthy_workers(&self) -> Vec<String>
+    // - pub fn emit_health_metrics(&self)
+    // - pub async fn poll_worker_endpoint(&self, url: &str) -> Result<HealthResponse>
 }
