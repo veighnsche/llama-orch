@@ -14,7 +14,7 @@ llama-orch is a multi-system, multi-GPU orchestrator that routes LLM inference r
 
 (THIS PART IS JUST BACKGROUND STORY, and something human to read)
 
-Hi there, My name is veighnsche (pronounced Vince). This project is nearly 99% AI generated I guess. I mean. I don't even know how to write rust before I began with this project. You DON'T have to use it if you are skeptical and I completely understand that. I hope that the product speaks for itself and feel free to audit the code. I am in desperate need of human code reviewers.
+Hi there, My name is veighnsche (pronounced Vince). This project is nearly 99% AI generated I guess. I mean. I don't even know how to write rust before I began with this project. You DON'T have to use it if you are skeptical and I completely understand that. I hope that the product speaks for itself and feel free to audit the code. I am in desperate need of human code reviewers. (I have professional programming experience so I know how to handle reviews, PLUS all the code is AI generated so I won't take nits personally. EXCEPT IF YOU BASELESSLY CRITIQUE THE CODE FLOW AND ARCHITECTURE 😡. But if you spot a critical issue. I will be eternally grateful 😇)
 
 I just wanted to prove to other skeptics and... myself. That a good programmer can vibe code beyond their normal capabilities. But TO BE FAIR. while making this project I felt like the best scrum master in the world. It was fun having [`Windsurf`](http://windsurf.com) (not sponsered but.. hey 👋) open on all my 3 screens and working on making the docs and the tests and designing the front-end while my three lovely AI developers were slaving away without any complaint and full synthetic enthusiasm.
 
