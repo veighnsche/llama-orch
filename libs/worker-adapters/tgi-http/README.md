@@ -1,81 +1,224 @@
-# worker-adapters-tgi-http — worker-adapters-tgi-http (adapter)
+# tgi-http
 
-## 1. Name & Purpose
+**Text Generation Inference (TGI) HTTP server adapter**
 
-worker-adapters-tgi-http (adapter)
+`libs/worker-adapters/tgi-http` — WorkerAdapter implementation for Hugging Face TGI server.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- ORCH-3054 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3054)
-- ORCH-3055 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3055)
-- ORCH-3056 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3056)
-- ORCH-3057 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3057)
-- ORCH-3058 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3058)
+## What This Adapter Does
 
+tgi-http provides **TGI integration** for llama-orch:
 
-## 3. Public API surface
+- **TGI native API** — Maps to TGI's `/generate_stream` endpoint
+- **SSE streaming** — Streams tokens via Server-Sent Events
+- **Flash Attention** — Leverages TGI's optimized attention
+- **Tensor parallelism** — Multi-GPU support
+- **Production-ready** — Battle-tested serving infrastructure
 
-- Rust crate API (internal)
+**Engine**: Text Generation Inference server (default port: 3000)
 
-## 4. How it fits
+---
 
-- Maps engine-native APIs to the orchestrator worker contract.
+## Usage
 
-```mermaid
-flowchart LR
-  orch[Orchestrator] --> adapter[Adapter]
-  adapter --> engine[Engine API]
+### Create Adapter
+
+```rust
+use worker_adapters_tgi_http::TgiHttpAdapter;
+
+let adapter = TgiHttpAdapter::new("http://localhost:3000");
 ```
 
-## 5. Build & Test
+### Submit Task
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p worker-adapters-tgi-http -- --nocapture`
+```rust
+use worker_adapters_adapter_api::{WorkerAdapter, TaskRequest};
 
+let task = TaskRequest {
+    job_id: "job-123".to_string(),
+    model: "meta-llama/Llama-3.1-8B-Instruct".to_string(),
+    prompt: "Hello, world!".to_string(),
+    max_tokens: 100,
+    temperature: Some(0.7),
+    seed: Some(42),
+    session_id: None,
+};
 
-## 6. Contracts
+let mut stream = adapter.submit(task).await?;
 
-- None
+while let Some(event) = stream.receiver.recv().await {
+    match event {
+        TokenEvent::Started { engine_version } => {
+            println!("Started: {}", engine_version);
+        }
+        TokenEvent::Token { text, index } => {
+            print!("{}", text);
+        }
+        TokenEvent::End { metrics } => {
+            println!("\nDone: {} tokens", metrics.tokens_generated);
+        }
+        TokenEvent::Error { error } => {
+            eprintln!("Error: {}", error);
+        }
+    }
+}
+```
 
+---
 
-## 7. Config & Env
+## TGI API Mapping
 
-- Engine connection endpoints and credentials where applicable.
+### Generate Stream Endpoint
 
-## 8. Metrics & Logs
+**Orchestrator Request** → **TGI Request**
 
-- Emits adapter health and request metrics per engine.
+```json
+{
+  "inputs": "Hello, world!",
+  "parameters": {
+    "max_new_tokens": 100,
+    "temperature": 0.7,
+    "seed": 42,
+    "do_sample": true
+  },
+  "stream": true
+}
+```
 
-## 9. Runbook (Dev)
+**TGI Response** (SSE):
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+```
+data: {"token":{"id":12345,"text":"Hello","logprob":-0.5}}
 
+data: {"token":{"id":12346,"text":" there","logprob":-0.3}}
 
-## 10. Status & Owners
+data: {"token":{"id":12347,"text":"!","logprob":-0.2},"generated_text":"Hello there!"}
+```
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+---
 
-## 11. Changelog pointers
+## TGI Features
 
-- None
+### Supported
 
-## 12. Footnotes
+- **Streaming** — SSE token streaming
+- **Flash Attention** — Optimized attention kernels
+- **Tensor parallelism** — Multi-GPU inference
+- **Quantization** — GPTQ, AWQ support
+- **Token details** — Logprobs, token IDs
 
-- Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+### Not Yet Supported
 
-## Policy note
+- **Guided generation** — JSON schema constraints
+- **Grammar-based sampling** — Structured outputs
+- **Watermarking** — Text watermarking
 
-- VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or host-RAM offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
+---
 
-### Additional Details
-- Engine endpoint mapping tables (native/OpenAI-compat to adapter calls), determinism knobs,
-version capture.
+## Configuration
 
+### Environment Variables (Optional)
 
-## What this crate is not
+For orchestratord integration:
 
-- Not a public API; do not expose engine endpoints directly.
+- `ORCHD_TGI_URL` — TGI base URL (e.g., `http://localhost:3000`)
+- `ORCHD_TGI_POOL` — Pool ID (default: `default`)
+- `ORCHD_TGI_REPLICA` — Replica ID (default: `r0`)
+
+### Bearer Token
+
+```rust
+use worker_adapters_http_util::auth::with_bearer;
+
+let client = reqwest::Client::new();
+let request = client.post("http://localhost:3000/generate_stream");
+let request = with_bearer(request, "my-secret-token");
+```
+
+---
+
+## Health Check
+
+```rust
+let health = adapter.health().await?;
+
+match health.state {
+    HealthState::Healthy => println!("Engine is healthy"),
+    HealthState::Degraded => println!("Engine is degraded"),
+    HealthState::Unhealthy => println!("Engine is unhealthy"),
+}
+```
+
+---
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+cargo test -p worker-adapters-tgi-http -- --nocapture
+
+# Run specific test
+cargo test -p worker-adapters-tgi-http -- test_submit --nocapture
+```
+
+### Integration Tests
+
+Integration tests use a mock server to simulate TGI SSE responses:
+
+```rust
+#[tokio::test]
+async fn test_streaming() {
+    let mock_server = MockServer::start().await;
+    
+    Mock::given(method("POST"))
+        .and(path("/generate_stream"))
+        .respond_with(ResponseTemplate::new(200)
+            .set_body_string("data: {\"token\":{\"text\":\"Hello\"}}\n\n"))
+        .mount(&mock_server)
+        .await;
+    
+    let adapter = TgiHttpAdapter::new(&mock_server.uri());
+    // Test streaming
+}
+```
+
+---
+
+## Dependencies
+
+### Internal
+
+- `worker-adapters-adapter-api` — WorkerAdapter trait
+- `worker-adapters-http-util` — HTTP client, retry, streaming
+
+### External
+
+- `reqwest` — HTTP client
+- `tokio` — Async runtime
+- `serde` — Serialization
+- `async-trait` — Async trait support
+
+---
+
+## Specifications
+
+Implements requirements from:
+- ORCH-3054 (Adapter registry)
+- ORCH-3055 (Adapter dispatch)
+- ORCH-3056 (Adapter lifecycle)
+- ORCH-3057 (Health checks)
+- ORCH-3058 (Error handling)
+
+See `.specs/00_llama-orch.md` for full requirements.
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

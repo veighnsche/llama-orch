@@ -1,81 +1,275 @@
-# worker-adapters-mock — worker-adapters-mock (adapter)
+# mock
 
-## 1. Name & Purpose
+**Mock adapter for testing**
 
-worker-adapters-mock (adapter)
+`libs/worker-adapters/mock` — WorkerAdapter implementation for testing without a real engine.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- ORCH-3054 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3054)
-- ORCH-3055 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3055)
-- ORCH-3056 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3056)
-- ORCH-3057 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3057)
-- ORCH-3058 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3058)
+## What This Adapter Does
 
+mock provides **testing infrastructure** for llama-orch:
 
-## 3. Public API surface
+- **No real engine** — Simulates engine behavior without external dependencies
+- **Configurable responses** — Control output tokens, timing, errors
+- **Deterministic** — Reproducible behavior for tests
+- **Fast** — No network calls or GPU operations
+- **Test-friendly** — Easy to configure for different scenarios
 
-- Rust crate API (internal)
+**Engine**: None (in-memory simulation)
 
-## 4. How it fits
+---
 
-- Maps engine-native APIs to the orchestrator worker contract.
+## Usage
 
-```mermaid
-flowchart LR
-  orch[Orchestrator] --> adapter[Adapter]
-  adapter --> engine[Engine API]
+### Create Adapter
+
+```rust
+use worker_adapters_mock::MockAdapter;
+
+// Default configuration
+let adapter = MockAdapter::new();
+
+// Custom configuration
+let adapter = MockAdapter::builder()
+    .with_tokens(vec!["Hello", " world", "!"])
+    .with_delay_ms(10)
+    .build();
 ```
 
-## 5. Build & Test
+### Submit Task
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p worker-adapters-mock -- --nocapture`
+```rust
+use worker_adapters_adapter_api::{WorkerAdapter, TaskRequest};
 
+let task = TaskRequest {
+    job_id: "job-123".to_string(),
+    model: "mock-model".to_string(),
+    prompt: "Hello, world!".to_string(),
+    max_tokens: 100,
+    temperature: Some(0.7),
+    seed: Some(42),
+    session_id: None,
+};
 
-## 6. Contracts
+let mut stream = adapter.submit(task).await?;
 
-- None
+while let Some(event) = stream.receiver.recv().await {
+    match event {
+        TokenEvent::Started { engine_version } => {
+            println!("Started: {}", engine_version);
+        }
+        TokenEvent::Token { text, index } => {
+            print!("{}", text);
+        }
+        TokenEvent::End { metrics } => {
+            println!("\nDone: {} tokens", metrics.tokens_generated);
+        }
+        TokenEvent::Error { error } => {
+            eprintln!("Error: {}", error);
+        }
+    }
+}
+```
 
+---
 
-## 7. Config & Env
+## Configuration
 
-- Engine connection endpoints and credentials where applicable.
+### MockAdapterBuilder
 
-## 8. Metrics & Logs
+```rust
+use worker_adapters_mock::MockAdapter;
 
-- Emits adapter health and request metrics per engine.
+let adapter = MockAdapter::builder()
+    // Set tokens to emit
+    .with_tokens(vec!["Hello", " there", "!"])
+    
+    // Set delay between tokens (ms)
+    .with_delay_ms(10)
+    
+    // Set engine version
+    .with_engine_version("mock-1.0.0")
+    
+    // Simulate error after N tokens
+    .with_error_after(5)
+    
+    // Set health state
+    .with_health_state(HealthState::Healthy)
+    
+    .build();
+```
 
-## 9. Runbook (Dev)
+---
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+## Test Scenarios
 
+### Success Case
 
-## 10. Status & Owners
+```rust
+#[tokio::test]
+async fn test_successful_generation() {
+    let adapter = MockAdapter::builder()
+        .with_tokens(vec!["Hello", " world"])
+        .build();
+    
+    let task = TaskRequest { /* ... */ };
+    let mut stream = adapter.submit(task).await.unwrap();
+    
+    // Verify tokens
+    assert_eq!(stream.next().await, Some(TokenEvent::Started { /* ... */ }));
+    assert_eq!(stream.next().await, Some(TokenEvent::Token { text: "Hello", index: 0 }));
+    assert_eq!(stream.next().await, Some(TokenEvent::Token { text: " world", index: 1 }));
+    assert_eq!(stream.next().await, Some(TokenEvent::End { /* ... */ }));
+}
+```
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+### Error Case
 
-## 11. Changelog pointers
+```rust
+#[tokio::test]
+async fn test_error_during_generation() {
+    let adapter = MockAdapter::builder()
+        .with_tokens(vec!["Hello"])
+        .with_error_after(1)
+        .build();
+    
+    let task = TaskRequest { /* ... */ };
+    let mut stream = adapter.submit(task).await.unwrap();
+    
+    // Verify error
+    assert_eq!(stream.next().await, Some(TokenEvent::Started { /* ... */ }));
+    assert_eq!(stream.next().await, Some(TokenEvent::Token { text: "Hello", index: 0 }));
+    assert!(matches!(stream.next().await, Some(TokenEvent::Error { .. })));
+}
+```
 
-- None
+### Slow Response
 
-## 12. Footnotes
+```rust
+#[tokio::test]
+async fn test_slow_generation() {
+    let adapter = MockAdapter::builder()
+        .with_tokens(vec!["Slow", " response"])
+        .with_delay_ms(100) // 100ms between tokens
+        .build();
+    
+    let start = Instant::now();
+    let task = TaskRequest { /* ... */ };
+    let mut stream = adapter.submit(task).await.unwrap();
+    
+    // Consume all tokens
+    while let Some(_) = stream.next().await {}
+    
+    // Verify timing
+    assert!(start.elapsed() >= Duration::from_millis(200));
+}
+```
 
-- Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+---
 
-## Policy note
+## Health Check
 
-- VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or host-RAM offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
+```rust
+let adapter = MockAdapter::builder()
+    .with_health_state(HealthState::Healthy)
+    .build();
 
-### Additional Details
-- Engine endpoint mapping tables (native/OpenAI-compat to adapter calls), determinism knobs,
-version capture.
+let health = adapter.health().await?;
+assert_eq!(health.state, HealthState::Healthy);
+```
 
+---
 
-## What this crate is not
+## Testing
 
-- Not a public API; do not expose engine endpoints directly.
+### Unit Tests
+
+```bash
+# Run all tests
+cargo test -p worker-adapters-mock -- --nocapture
+
+# Run specific test
+cargo test -p worker-adapters-mock -- test_mock_adapter --nocapture
+```
+
+---
+
+## Dependencies
+
+### Internal
+
+- `worker-adapters-adapter-api` — WorkerAdapter trait
+
+### External
+
+- `tokio` — Async runtime
+- `async-trait` — Async trait support
+
+---
+
+## Use Cases
+
+### Unit Tests
+
+Test orchestrator logic without real engines:
+
+```rust
+#[tokio::test]
+async fn test_orchestrator_dispatch() {
+    let mock_adapter = MockAdapter::builder()
+        .with_tokens(vec!["Test", " response"])
+        .build();
+    
+    let orchestrator = Orchestrator::new();
+    orchestrator.register_adapter("mock", mock_adapter);
+    
+    // Test dispatch logic
+}
+```
+
+### Integration Tests
+
+Test adapter integration without external dependencies:
+
+```rust
+#[tokio::test]
+async fn test_adapter_host() {
+    let adapter_host = AdapterHost::new();
+    adapter_host.register("mock", MockAdapter::new());
+    
+    // Test adapter host logic
+}
+```
+
+### BDD Tests
+
+Use in Cucumber scenarios:
+
+```gherkin
+Given a mock adapter with tokens "Hello world"
+When I submit a task
+Then I should receive 2 tokens
+```
+
+---
+
+## Specifications
+
+Implements requirements from:
+- ORCH-3054 (Adapter registry)
+- ORCH-3055 (Adapter dispatch)
+- ORCH-3056 (Adapter lifecycle)
+- ORCH-3057 (Health checks)
+- ORCH-3058 (Error handling)
+
+See `.specs/00_llama-orch.md` for full requirements.
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

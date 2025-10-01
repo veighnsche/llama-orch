@@ -6,18 +6,39 @@
 
 ---
 
-## Progress: 5/67 Complete
+## Progress: 26/67 Complete
 
-### ✅ Done (5)
+### ✅ Done (26)
 - [x] `./README.md` (root)
 - [x] `./bin/orchestratord/README.md` ✨
 - [x] `./bin/pool-managerd/README.md` ✨
 - [x] `./bin/orchestratord/bdd/README.md` ✨
 - [x] `./bin/pool-managerd/bdd/README.md` ✨
+- [x] `./libs/orchestrator-core/README.md` ✨
+- [x] `./libs/catalog-core/README.md` ✨
+- [x] `./libs/adapter-host/README.md` ✨
+- [x] `./libs/proof-bundle/README.md` ✨
+- [x] `./libs/orchestrator-core/bdd/README.md` ✨
+- [x] `./libs/catalog-core/bdd/README.md` ✨
+- [x] `./libs/control-plane/service-registry/README.md` ✨
+- [x] `./libs/gpu-node/handoff-watcher/README.md` ✨
+- [x] `./libs/gpu-node/node-registration/README.md` ✨
+- [x] `./libs/shared/pool-registry-types/README.md` ✨
+- [x] `./libs/worker-adapters/README.md` ✨
+- [x] `./libs/worker-adapters/adapter-api/README.md` ✨
+- [x] `./libs/worker-adapters/http-util/README.md` ✨
+- [x] `./libs/worker-adapters/llamacpp-http/README.md` ✨
+- [x] `./libs/worker-adapters/vllm-http/README.md` ✨
+- [x] `./libs/worker-adapters/tgi-http/README.md` ✨
+- [x] `./libs/worker-adapters/triton/README.md` ✨
+- [x] `./libs/worker-adapters/openai-http/README.md` ✨
+- [x] `./libs/worker-adapters/mock/README.md` ✨
+- [x] `./libs/worker-adapters/http-util/.proof_bundle/README.md` ✨
+- [x] `./libs/provisioners/engine-provisioner/README.md` ✨
 
 ### 🚧 In Progress (0)
 
-### ⏳ Pending (62)
+### ⏳ Pending (41)
 
 ---
 
@@ -28,38 +49,38 @@
 - [x] `./bin/orchestratord/bdd/README.md` ✅
 - [x] `./bin/pool-managerd/bdd/README.md` ✅
 
-## P1: Core Libraries (6 files)
+## ✅ P1: Core Libraries (COMPLETE!)
 
-- [ ] `./libs/orchestrator-core/README.md`
-- [ ] `./libs/catalog-core/README.md`
-- [ ] `./libs/adapter-host/README.md`
-- [ ] `./libs/proof-bundle/README.md`
-- [ ] `./libs/orchestrator-core/bdd/README.md`
-- [ ] `./libs/catalog-core/bdd/README.md`
+- [x] `./libs/orchestrator-core/README.md` ✅
+- [x] `./libs/catalog-core/README.md` ✅
+- [x] `./libs/adapter-host/README.md` ✅
+- [x] `./libs/proof-bundle/README.md` ✅
+- [x] `./libs/orchestrator-core/bdd/README.md` ✅
+- [x] `./libs/catalog-core/bdd/README.md` ✅
 
-## P2: Multi-Node Libraries (4 files)
+## ✅ P2: Multi-Node Libraries (COMPLETE!)
 
-- [ ] `./libs/control-plane/service-registry/README.md`
-- [ ] `./libs/gpu-node/handoff-watcher/README.md`
-- [ ] `./libs/gpu-node/node-registration/README.md`
-- [ ] `./libs/shared/pool-registry-types/README.md`
+- [x] `./libs/control-plane/service-registry/README.md` ✅
+- [x] `./libs/gpu-node/handoff-watcher/README.md` ✅
+- [x] `./libs/gpu-node/node-registration/README.md` ✅
+- [x] `./libs/shared/pool-registry-types/README.md` ✅
 
-## P3: Worker Adapters (10 files)
+## ✅ P3: Worker Adapters (COMPLETE!)
 
-- [ ] `./libs/worker-adapters/README.md`
-- [ ] `./libs/worker-adapters/adapter-api/README.md`
-- [ ] `./libs/worker-adapters/http-util/README.md`
-- [ ] `./libs/worker-adapters/llamacpp-http/README.md`
-- [ ] `./libs/worker-adapters/vllm-http/README.md`
-- [ ] `./libs/worker-adapters/tgi-http/README.md`
-- [ ] `./libs/worker-adapters/triton/README.md`
-- [ ] `./libs/worker-adapters/openai-http/README.md`
-- [ ] `./libs/worker-adapters/mock/README.md`
-- [ ] `./libs/worker-adapters/http-util/.proof_bundle/README.md`
+- [x] `./libs/worker-adapters/README.md` ✅
+- [x] `./libs/worker-adapters/adapter-api/README.md` ✅
+- [x] `./libs/worker-adapters/http-util/README.md` ✅
+- [x] `./libs/worker-adapters/llamacpp-http/README.md` ✅
+- [x] `./libs/worker-adapters/vllm-http/README.md` ✅
+- [x] `./libs/worker-adapters/tgi-http/README.md` ✅
+- [x] `./libs/worker-adapters/triton/README.md` ✅
+- [x] `./libs/worker-adapters/openai-http/README.md` ✅
+- [x] `./libs/worker-adapters/mock/README.md` ✅
+- [x] `./libs/worker-adapters/http-util/.proof_bundle/README.md` ✅
 
-## P4: Supporting Libraries (9 files)
+## P4: Supporting Libraries (8 remaining)
 
-- [ ] `./libs/provisioners/engine-provisioner/README.md`
+- [x] `./libs/provisioners/engine-provisioner/README.md` ✅
 - [ ] `./libs/provisioners/model-provisioner/README.md`
 - [ ] `./libs/observability/narration-core/README.md`
 - [ ] `./libs/auth-min/README.md`

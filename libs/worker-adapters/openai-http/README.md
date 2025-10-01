@@ -1,81 +1,247 @@
-# worker-adapters-openai-http — worker-adapters-openai-http (adapter)
+# openai-http
 
-## 1. Name & Purpose
+**OpenAI-compatible HTTP API adapter**
 
-worker-adapters-openai-http (adapter)
+`libs/worker-adapters/openai-http` — WorkerAdapter implementation for OpenAI-compatible HTTP endpoints.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- ORCH-3054 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3054)
-- ORCH-3055 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3055)
-- ORCH-3056 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3056)
-- ORCH-3057 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3057)
-- ORCH-3058 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3058)
+## What This Adapter Does
 
+openai-http provides **OpenAI API compatibility** for llama-orch:
 
-## 3. Public API surface
+- **Standard API format** — Uses OpenAI `/v1/completions` format
+- **SSE streaming** — Streams tokens via Server-Sent Events
+- **Wide compatibility** — Works with any OpenAI-compatible server
+- **Drop-in replacement** — Compatible with OpenAI client libraries
+- **Flexible** — Can target OpenAI, Azure OpenAI, or local servers
 
-- Rust crate API (internal)
+**Engine**: Any OpenAI-compatible HTTP server
 
-## 4. How it fits
+---
 
-- Maps engine-native APIs to the orchestrator worker contract.
+## Usage
 
-```mermaid
-flowchart LR
-  orch[Orchestrator] --> adapter[Adapter]
-  adapter --> engine[Engine API]
+### Create Adapter
+
+```rust
+use worker_adapters_openai_http::OpenAiHttpAdapter;
+
+// Local OpenAI-compatible server
+let adapter = OpenAiHttpAdapter::new("http://localhost:8000");
+
+// Or OpenAI API
+let adapter = OpenAiHttpAdapter::new("https://api.openai.com");
 ```
 
-## 5. Build & Test
+### Submit Task
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p worker-adapters-openai-http -- --nocapture`
+```rust
+use worker_adapters_adapter_api::{WorkerAdapter, TaskRequest};
 
+let task = TaskRequest {
+    job_id: "job-123".to_string(),
+    model: "gpt-3.5-turbo".to_string(),
+    prompt: "Hello, world!".to_string(),
+    max_tokens: 100,
+    temperature: Some(0.7),
+    seed: Some(42),
+    session_id: None,
+};
 
-## 6. Contracts
+let mut stream = adapter.submit(task).await?;
 
-- None
+while let Some(event) = stream.receiver.recv().await {
+    match event {
+        TokenEvent::Started { engine_version } => {
+            println!("Started: {}", engine_version);
+        }
+        TokenEvent::Token { text, index } => {
+            print!("{}", text);
+        }
+        TokenEvent::End { metrics } => {
+            println!("\nDone: {} tokens", metrics.tokens_generated);
+        }
+        TokenEvent::Error { error } => {
+            eprintln!("Error: {}", error);
+        }
+    }
+}
+```
 
+---
 
-## 7. Config & Env
+## OpenAI API Mapping
 
-- Engine connection endpoints and credentials where applicable.
+### Completions Endpoint
 
-## 8. Metrics & Logs
+**Orchestrator Request** → **OpenAI Request**
 
-- Emits adapter health and request metrics per engine.
+```json
+{
+  "model": "gpt-3.5-turbo",
+  "prompt": "Hello, world!",
+  "max_tokens": 100,
+  "temperature": 0.7,
+  "seed": 42,
+  "stream": true
+}
+```
 
-## 9. Runbook (Dev)
+**OpenAI Response** (SSE):
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+```
+data: {"id":"cmpl-123","choices":[{"text":"Hello","index":0}]}
 
+data: {"id":"cmpl-123","choices":[{"text":" there","index":0}]}
 
-## 10. Status & Owners
+data: {"id":"cmpl-123","choices":[{"text":"!","index":0,"finish_reason":"stop"}]}
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+data: [DONE]
+```
 
-## 11. Changelog pointers
+---
 
-- None
+## Compatible Servers
 
-## 12. Footnotes
+### Supported
 
-- Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+- **OpenAI API** — Official OpenAI endpoints
+- **Azure OpenAI** — Microsoft Azure OpenAI Service
+- **vLLM** — With OpenAI compatibility mode
+- **Text Generation WebUI** — OpenAI-compatible mode
+- **LocalAI** — OpenAI-compatible local server
+- **Ollama** — With OpenAI compatibility
 
-## Policy note
+### Configuration Examples
 
-- VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or host-RAM offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
+#### OpenAI API
 
-### Additional Details
-- Engine endpoint mapping tables (native/OpenAI-compat to adapter calls), determinism knobs,
-version capture.
+```rust
+let adapter = OpenAiHttpAdapter::new("https://api.openai.com");
+// Set API key via bearer token
+```
 
+#### Azure OpenAI
 
-## What this crate is not
+```rust
+let adapter = OpenAiHttpAdapter::new("https://your-resource.openai.azure.com");
+// Set API key and deployment name
+```
 
-- Not a public API; do not expose engine endpoints directly.
+#### Local vLLM
+
+```rust
+let adapter = OpenAiHttpAdapter::new("http://localhost:8000");
+// No authentication required for local
+```
+
+---
+
+## Configuration
+
+### Environment Variables (Optional)
+
+For orchestratord integration:
+
+- `ORCHD_OPENAI_URL` — OpenAI-compatible base URL
+- `ORCHD_OPENAI_POOL` — Pool ID (default: `default`)
+- `ORCHD_OPENAI_REPLICA` — Replica ID (default: `r0`)
+- `ORCHD_OPENAI_API_KEY` — API key for authentication
+
+### Bearer Token
+
+```rust
+use worker_adapters_http_util::auth::with_bearer;
+
+let client = reqwest::Client::new();
+let request = client.post("https://api.openai.com/v1/completions");
+let request = with_bearer(request, "sk-...");
+```
+
+---
+
+## Health Check
+
+```rust
+let health = adapter.health().await?;
+
+match health.state {
+    HealthState::Healthy => println!("Engine is healthy"),
+    HealthState::Degraded => println!("Engine is degraded"),
+    HealthState::Unhealthy => println!("Engine is unhealthy"),
+}
+```
+
+---
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+cargo test -p worker-adapters-openai-http -- --nocapture
+
+# Run specific test
+cargo test -p worker-adapters-openai-http -- test_submit --nocapture
+```
+
+### Integration Tests
+
+Integration tests use a mock server to simulate OpenAI SSE responses:
+
+```rust
+#[tokio::test]
+async fn test_streaming() {
+    let mock_server = MockServer::start().await;
+    
+    Mock::given(method("POST"))
+        .and(path("/v1/completions"))
+        .respond_with(ResponseTemplate::new(200)
+            .set_body_string("data: {\"choices\":[{\"text\":\"Hello\"}]}\n\n"))
+        .mount(&mock_server)
+        .await;
+    
+    let adapter = OpenAiHttpAdapter::new(&mock_server.uri());
+    // Test streaming
+}
+```
+
+---
+
+## Dependencies
+
+### Internal
+
+- `worker-adapters-adapter-api` — WorkerAdapter trait
+- `worker-adapters-http-util` — HTTP client, retry, streaming
+
+### External
+
+- `reqwest` — HTTP client
+- `tokio` — Async runtime
+- `serde` — Serialization
+- `async-trait` — Async trait support
+
+---
+
+## Specifications
+
+Implements requirements from:
+- ORCH-3054 (Adapter registry)
+- ORCH-3055 (Adapter dispatch)
+- ORCH-3056 (Adapter lifecycle)
+- ORCH-3057 (Health checks)
+- ORCH-3058 (Error handling)
+
+See `.specs/00_llama-orch.md` for full requirements.
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

@@ -1,146 +1,241 @@
-# provisioners-engine-provisioner — provisioners-engine-provisioner (tool)
+# engine-provisioner
 
-## 1. Name & Purpose
+**Prepares and starts engine processes (llama.cpp, vLLM, etc.)**
 
-provisioners-engine-provisioner (tool)
+`libs/provisioners/engine-provisioner` — Provisions inference engines from config and emits handoff files.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- See spec and requirements for details.
-  - [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-  - [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+## What This Library Does
 
+engine-provisioner provides **engine lifecycle management** for llama-orch:
 
-## 3. Public API surface
+- **Process management** — Start and stop engine processes
+- **Configuration** — Normalize engine flags and settings
+- **Handoff files** — Emit machine-readable metadata for orchestrator
+- **Health checks** — Wait for engine readiness
+- **GPU validation** — Fail fast if GPU unavailable
+- **Graceful shutdown** — SIGTERM with timeout before SIGKILL
 
-- Rust crate API (internal)
+**Used by**: `pool-managerd` to start engines
 
-### High / Mid / Low behaviors
+---
 
-- **High**
-  - Prepare and start engine processes (initially `llama-server`) with normalized flags.
-  - Fail fast when GPU is unavailable; do not proceed without GPU (per repo policy).
-  - Emit a machine-readable handoff file for orchestrator binding with engine URL and metadata.
+## Usage
 
-- **Mid**
-  - Plan steps (clone/build/ensure tools) and execute ensure (spawn).
-  - Delegate model staging to model-provisioner; read resolved model path.
-  - Map legacy flags (`--gpu-layers`, `--ngl`) to `--n-gpu-layers`.
+### CLI
 
-- **Low**
-  - Optional package installs via pacman/AUR only when allowed and on Arch-like systems.
-  - PID file and simple restart on crash are out-of-scope for MVP (documented in specs as follow-up).
+```bash
+# Provision engine from config
+cargo run -p provisioners-engine-provisioner --bin engine-provisioner -- \
+  --config requirements/llamacpp-3090-source.yaml
 
-## Inputs / Outputs
+# Specify pool
+cargo run -p provisioners-engine-provisioner --bin engine-provisioner -- \
+  --config requirements/llamacpp-3090-source.yaml \
+  --pool default
+```
 
-- **Input**
-  - Pool config (`contracts/config-schema::*`), engine selection, ports, flags, and provisioning settings.
-  - Resolved model info from model-provisioner (`id`, `local_path`).
+### Library
 
-- **Output**
-  - Running engine process (listening host:port).
-  - Handoff file for orchestrator (see below).
+```rust
+use provisioners_engine_provisioner::{EngineProvisioner, ProvisionConfig};
 
-## Orchestrator handoff format (file)
+let config = ProvisionConfig {
+    engine: "llamacpp".to_string(),
+    pool_id: "default".to_string(),
+    replica_id: "r0".to_string(),
+    port: 8081,
+    model_path: "/models/llama-3.1-8b.gguf".to_string(),
+    flags: vec!["--parallel".to_string(), "1".to_string()],
+};
 
-Location (default): `.runtime/engines/llamacpp.json`
+let provisioner = EngineProvisioner::new(config);
+provisioner.start().await?;
+```
 
-Example:
+---
+
+## Handoff File Format
+
+### Location
+
+`.runtime/engines/{pool_id}-{replica_id}.json`
+
+Example: `.runtime/engines/default-r0.json`
+
+### Format
 
 ```json
 {
   "engine": "llamacpp",
   "engine_version": "b1234-cuda",
   "provisioning_mode": "source",
-  "url": "http://127.0.0.1:8080",
+  "url": "http://127.0.0.1:8081",
   "pool_id": "default",
   "replica_id": "r0",
   "model": {
-    "id": "local:/models/qwen2.5-0.5b-instruct-q4_k_m.gguf",
-    "path": "/abs/models/qwen2.5-0.5b-instruct-q4_k_m.gguf"
+    "id": "local:/models/llama-3.1-8b-instruct-q4_k_m.gguf",
+    "path": "/models/llama-3.1-8b-instruct-q4_k_m.gguf"
   },
-  "flags": ["--parallel","1","--no-cont-batching","--no-webui","--metrics"]
+  "flags": ["--parallel", "1", "--no-cont-batching", "--metrics"]
 }
 ```
 
-Orchestrator should watch/read these handoff files and bind adapters accordingly (see `bin/orchestratord/.specs/22_worker_adapters.md`).
+### Fields
 
-## 4. How it fits
+- **engine** — Engine type (llamacpp, vllm, tgi)
+- **engine_version** — Version string from `/version` endpoint
+- **provisioning_mode** — How engine was provisioned (source, binary, container)
+- **url** — HTTP endpoint for engine
+- **pool_id** — Pool identifier
+- **replica_id** — Replica identifier
+- **model** — Model metadata (id, path)
+- **flags** — Engine command-line flags
 
-- Developer tooling supporting contracts and docs.
+---
 
-```mermaid
-flowchart LR
-  devs[Developers] --> tool[Tool]
-  tool --> artifacts[Artifacts]
+## Engine Flags
+
+### llama.cpp Defaults
+
+```bash
+--parallel 1              # Single request at a time
+--no-cont-batching        # Disable continuous batching
+--metrics                 # Enable Prometheus metrics
+--no-webui                # Disable web UI
+--n-gpu-layers -1         # All layers on GPU
 ```
 
-## 5. Build & Test
+### Flag Normalization
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p provisioners-engine-provisioner -- --nocapture`
+Legacy flags are automatically normalized:
 
-### CLI (MVP)
+- `--gpu-layers` → `--n-gpu-layers`
+- `--ngl` → `--n-gpu-layers`
 
-- Build and run the engine provisioner CLI to provision a llama.cpp pool from a config file:
+---
 
+## Health Checks
+
+### Readiness Wait
+
+```rust
+provisioner.wait_ready(timeout).await?;
 ```
-cargo run -p provisioners-engine-provisioner --bin engine-provisioner -- \
-  --config requirements/llamacpp-3090-source.yaml
+
+Polls engine health endpoint until:
+- Returns 200 OK
+- Or timeout expires
+
+Treats 503 as transient during model load.
+
+### Metrics Validation
+
+If `--metrics` flag is set, validates `/metrics` endpoint is accessible.
+
+---
+
+## Graceful Shutdown
+
+```rust
+provisioner.stop().await?;
 ```
 
-- Options:
-  - `--config <path>` YAML or JSON matching `contracts/config-schema::Config`.
-  - `--pool <id>` optional pool id; defaults to first `engine: llamacpp` pool.
+Shutdown sequence:
+1. Send SIGTERM to process
+2. Wait up to 5 seconds
+3. Send SIGKILL if still running
 
-- On success, writes a handoff file at `.runtime/engines/llamacpp.json` with `{ engine, engine_version, provisioning_mode, url, pool_id, replica_id, model, flags }`.
+---
 
+## Testing
 
-## 6. Contracts
+### Unit Tests
 
-- None
+```bash
+# Run all tests
+cargo test -p provisioners-engine-provisioner -- --nocapture
 
+# Run specific test
+cargo test -p provisioners-engine-provisioner -- test_provision --nocapture
+```
 
-## 7. Config & Env
+---
 
-- CachyOS/Arch preferred tooling; optional `allow_package_installs` gate for pacman/AUR.
-- Engine flags include deterministic defaults for tests: `--parallel 1`, `--no-cont-batching`, `--metrics`, `--no-webui`.
+## Dependencies
 
-## 8. Metrics & Logs
+### Internal
 
-- Minimal logs.
+- `contracts/config-schema` — Configuration types
+- `provisioners-model-provisioner` — Model staging
 
-## 9. Runbook (Dev)
+### External
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+- `tokio` — Async runtime, process management
+- `serde` — Serialization
+- `serde_json` — JSON handoff files
+- `reqwest` — Health check HTTP requests
 
+---
 
-## 10. Status & Owners
+## Configuration
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+### Input
 
-## 11. Changelog pointers
+From `contracts/config-schema::Config`:
 
-- None
-## 12. Footnotes
+```yaml
+pools:
+  - id: default
+    engine: llamacpp
+    replicas: 1
+    port: 8081
+    model:
+      id: local:/models/llama-3.1-8b.gguf
+    flags:
+      - --parallel
+      - "1"
+```
 
-- Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+### Output
 
-## Policy note
+Handoff file at `.runtime/engines/default-r0.json`
 
-- VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or host-RAM offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
+---
 
-## What this crate is not
+## Known Limitations
 
-- Not a production service.
+### MVP Scope
 
-## Known shims and TODOs (Owner C)
+- ✅ **Engine version capture** — Probes `/version` endpoint
+- ✅ **Graceful shutdown** — SIGTERM with 5s timeout
+- ✅ **Health checks** — Readiness wait with 503 handling
+- ❌ **Restart on crash** — Not implemented (manual restart required)
+- ❌ **PID files** — Not implemented
 
-- [DONE] Engine version capture: best-effort `/version` probe parsed to populate `engine_version`, with fallback to `source-ref + -cuda|-cpu`.
-- [MVP DONE] Graceful shutdown: `stop_pool()` now sends `TERM` and waits up to 5s before `KILL`; upstream drain hooks TBD.
-- [TODO] Restart-on-crash: add supervision loop and tests; MVP does not restart the process on failure.
-- [DONE] Health/status mapping: readiness wait treats `503` as transient during model load; `/metrics` sanity checked when `--metrics` is set.
+### Future Work
+
+- Supervision loop for automatic restart
+- PID file management
+- Drain hooks for graceful shutdown
+- Multi-engine support (vLLM, TGI)
+
+---
+
+## Specifications
+
+Implements requirements from `.specs/00_llama-orch.md`:
+- Engine provisioning
+- Handoff file format
+- GPU validation
+- Health checks
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

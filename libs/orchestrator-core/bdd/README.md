@@ -1,84 +1,133 @@
-# orchestrator-core-bdd — orchestrator-core-bdd (core)
+# orchestrator-core-bdd
 
-## 1. Name & Purpose
+**BDD test suite for orchestrator-core**
 
-orchestrator-core-bdd (core)
+`libs/orchestrator-core/bdd` — Cucumber-based behavior-driven development tests for the orchestrator-core queue library.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- ORCH-3004 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3004)
-- ORCH-3005 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3005)
-- ORCH-3008 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3008)
-- ORCH-3010 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3010)
-- ORCH-3011 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3011)
-- ORCH-3016 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3016)
-- ORCH-3017 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3017)
-- ORCH-3027 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3027)
-- ORCH-3028 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3028)
-- ORCH-3044 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3044)
-- ORCH-3045 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3045)
+## What This Crate Does
 
+This is the **BDD test harness** for orchestrator-core. It provides:
 
-## 3. Public API surface
+- **Cucumber/Gherkin scenarios** testing queue behavior
+- **Step definitions** in Rust using the `cucumber` crate
+- **Unit-level BDD tests** for queue invariants and policies
+- **Proof bundle output** for test artifacts
 
-- Rust crate API (internal)
+**Tests**:
+- Queue admission (accept/reject)
+- Capacity limits and backpressure
+- FIFO ordering
+- Admission policies (drop-LRU, reject-new, fail-fast)
+- Queue depth and metrics
 
-## 4. How it fits
+---
 
-- Part of the core orchestrator. Upstream: adapters, Downstream: workers.
+## Running Tests
 
-```mermaid
-flowchart LR
-  callers[Clients] --> orch[Orchestrator]
-  orch --> adapters[Worker Adapters]
-  adapters --> engines[Engines]
+### All Scenarios
+
+```bash
+# Run all BDD tests
+cargo test -p orchestrator-core-bdd -- --nocapture
+
+# Or use the BDD runner binary (if available)
+cargo run -p orchestrator-core-bdd --bin bdd-runner
 ```
 
-## 5. Build & Test
+### Specific Feature
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p orchestrator-core-bdd -- --nocapture`
+```bash
+# Set environment variable to target specific feature
+LLORCH_BDD_FEATURE_PATH=tests/features/queue_capacity.feature \
+cargo test -p orchestrator-core-bdd -- --nocapture
+```
 
+---
 
-## 6. Contracts
+## Feature Files
 
-- None
+Located in `tests/features/`:
 
+- `admission.feature` — Task admission, accept/reject logic
+- `capacity.feature` — Queue capacity limits, backpressure
+- `fifo.feature` — FIFO ordering guarantees
+- `policies.feature` — Admission policies (drop-LRU, reject-new)
+- `metrics.feature` — Queue depth, enqueue/dequeue counts
 
-## 7. Config & Env
+---
 
-- See deployment configs and environment variables used by the daemons.
+## Example Scenario
 
-## 8. Metrics & Logs
+```gherkin
+Feature: Queue Capacity
 
-- Emits queue depth, latency percentiles, and engine/version labels.
+  Scenario: Reject task when queue is full
+    Given a queue with capacity 10
+    And the queue has 10 tasks
+    When I enqueue a new task
+    Then the task should be rejected
+    And the rejection reason should be "QueueFull"
+    And the queue depth should remain 10
+```
 
-## 9. Runbook (Dev)
+---
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+## Step Definitions
 
+Located in `src/steps/`:
 
-## 10. Status & Owners
+- `queue.rs` — Queue creation and manipulation steps
+- `admission.rs` — Admission and rejection steps
+- `assertions.rs` — Queue state assertions
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+---
 
-## 11. Changelog pointers
+## Testing
 
-- None
+```bash
+# Run all tests
+cargo test -p orchestrator-core-bdd -- --nocapture
 
-## 12. Footnotes
+# Check for undefined steps
+cargo test -p orchestrator-core-bdd --lib -- features_have_no_undefined_or_ambiguous_steps
+```
 
-- Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+---
 
-### Additional Details
-- Queue invariants and property tests (capacity, rejection policies, session affinity helpers).
-- Capacity policies and bounded FIFO behavior.
+## Dependencies
 
+### Parent Crate
 
-## What this crate is not
+- `orchestrator-core` — The library being tested
 
-- Not a general-purpose inference server; focuses on orchestration.
+### Test Infrastructure
+
+- `cucumber` — BDD framework
+- `tokio` — Async runtime for tests
+- `proof-bundle` — Test artifact output
+
+---
+
+## Specifications
+
+Tests verify requirements from:
+- ORCH-3004 (Admission control)
+- ORCH-3005 (Queue capacity)
+- ORCH-3008 (Backpressure)
+- ORCH-3010 (FIFO ordering)
+- ORCH-3011 (Rejection policies)
+- ORCH-3016, ORCH-3017, ORCH-3027, ORCH-3028
+- ORCH-3044, ORCH-3045
+
+See `.specs/00_llama-orch.md` for full requirements.
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

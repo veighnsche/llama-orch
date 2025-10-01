@@ -1,81 +1,224 @@
-# worker-adapters-vllm-http — worker-adapters-vllm-http (adapter)
+# vllm-http
 
-## 1. Name & Purpose
+**vLLM HTTP server adapter**
 
-worker-adapters-vllm-http (adapter)
+`libs/worker-adapters/vllm-http` — WorkerAdapter implementation for vLLM HTTP server.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- ORCH-3054 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3054)
-- ORCH-3055 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3055)
-- ORCH-3056 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3056)
-- ORCH-3057 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3057)
-- ORCH-3058 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3058)
+## What This Adapter Does
 
+vllm-http provides **vLLM integration** for llama-orch:
 
-## 3. Public API surface
+- **OpenAI-compatible API** — Maps to vLLM's `/v1/completions` endpoint
+- **SSE streaming** — Streams tokens via Server-Sent Events
+- **Continuous batching** — Leverages vLLM's continuous batching
+- **PagedAttention** — Benefits from vLLM's memory-efficient attention
+- **High throughput** — Optimized for serving workloads
 
-- Rust crate API (internal)
+**Engine**: vLLM HTTP server (default port: 8000)
 
-## 4. How it fits
+---
 
-- Maps engine-native APIs to the orchestrator worker contract.
+## Usage
 
-```mermaid
-flowchart LR
-  orch[Orchestrator] --> adapter[Adapter]
-  adapter --> engine[Engine API]
+### Create Adapter
+
+```rust
+use worker_adapters_vllm_http::VllmHttpAdapter;
+
+let adapter = VllmHttpAdapter::new("http://localhost:8000");
 ```
 
-## 5. Build & Test
+### Submit Task
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p worker-adapters-vllm-http -- --nocapture`
+```rust
+use worker_adapters_adapter_api::{WorkerAdapter, TaskRequest};
 
+let task = TaskRequest {
+    job_id: "job-123".to_string(),
+    model: "meta-llama/Llama-3.1-8B-Instruct".to_string(),
+    prompt: "Hello, world!".to_string(),
+    max_tokens: 100,
+    temperature: Some(0.7),
+    seed: Some(42),
+    session_id: None,
+};
 
-## 6. Contracts
+let mut stream = adapter.submit(task).await?;
 
-- None
+while let Some(event) = stream.receiver.recv().await {
+    match event {
+        TokenEvent::Started { engine_version } => {
+            println!("Started: {}", engine_version);
+        }
+        TokenEvent::Token { text, index } => {
+            print!("{}", text);
+        }
+        TokenEvent::End { metrics } => {
+            println!("\nDone: {} tokens", metrics.tokens_generated);
+        }
+        TokenEvent::Error { error } => {
+            eprintln!("Error: {}", error);
+        }
+    }
+}
+```
 
+---
 
-## 7. Config & Env
+## vLLM API Mapping
 
-- Engine connection endpoints and credentials where applicable.
+### Completions Endpoint
 
-## 8. Metrics & Logs
+**Orchestrator Request** → **vLLM Request**
 
-- Emits adapter health and request metrics per engine.
+```json
+{
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "prompt": "Hello, world!",
+  "max_tokens": 100,
+  "temperature": 0.7,
+  "seed": 42,
+  "stream": true
+}
+```
 
-## 9. Runbook (Dev)
+**vLLM Response** (SSE):
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+```
+data: {"choices":[{"text":"Hello","index":0}]}
 
+data: {"choices":[{"text":" there","index":0}]}
 
-## 10. Status & Owners
+data: {"choices":[{"text":"!","index":0,"finish_reason":"stop"}]}
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+data: [DONE]
+```
 
-## 11. Changelog pointers
+---
 
-- None
+## vLLM Features
 
-## 12. Footnotes
+### Supported
 
-- Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+- **Streaming** — SSE token streaming
+- **Continuous batching** — Automatic request batching
+- **PagedAttention** — Memory-efficient KV cache
+- **Tensor parallelism** — Multi-GPU support
+- **OpenAI compatibility** — Standard API format
 
-## Policy note
+### Not Yet Supported
 
-- VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or host-RAM offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
+- **Prefix caching** — Shared prompt prefixes
+- **Speculative decoding** — Draft model acceleration
+- **Multi-modal** — Vision models
 
-### Additional Details
-- Engine endpoint mapping tables (native/OpenAI-compat to adapter calls), determinism knobs,
-version capture.
+---
 
+## Configuration
 
-## What this crate is not
+### Environment Variables (Optional)
 
-- Not a public API; do not expose engine endpoints directly.
+For orchestratord integration:
+
+- `ORCHD_VLLM_URL` — vLLM base URL (e.g., `http://localhost:8000`)
+- `ORCHD_VLLM_POOL` — Pool ID (default: `default`)
+- `ORCHD_VLLM_REPLICA` — Replica ID (default: `r0`)
+
+### Bearer Token
+
+```rust
+use worker_adapters_http_util::auth::with_bearer;
+
+let client = reqwest::Client::new();
+let request = client.post("http://localhost:8000/v1/completions");
+let request = with_bearer(request, "my-secret-token");
+```
+
+---
+
+## Health Check
+
+```rust
+let health = adapter.health().await?;
+
+match health.state {
+    HealthState::Healthy => println!("Engine is healthy"),
+    HealthState::Degraded => println!("Engine is degraded"),
+    HealthState::Unhealthy => println!("Engine is unhealthy"),
+}
+```
+
+---
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+cargo test -p worker-adapters-vllm-http -- --nocapture
+
+# Run specific test
+cargo test -p worker-adapters-vllm-http -- test_submit --nocapture
+```
+
+### Integration Tests
+
+Integration tests use a mock server to simulate vLLM SSE responses:
+
+```rust
+#[tokio::test]
+async fn test_streaming() {
+    let mock_server = MockServer::start().await;
+    
+    Mock::given(method("POST"))
+        .and(path("/v1/completions"))
+        .respond_with(ResponseTemplate::new(200)
+            .set_body_string("data: {\"choices\":[{\"text\":\"Hello\"}]}\n\n"))
+        .mount(&mock_server)
+        .await;
+    
+    let adapter = VllmHttpAdapter::new(&mock_server.uri());
+    // Test streaming
+}
+```
+
+---
+
+## Dependencies
+
+### Internal
+
+- `worker-adapters-adapter-api` — WorkerAdapter trait
+- `worker-adapters-http-util` — HTTP client, retry, streaming
+
+### External
+
+- `reqwest` — HTTP client
+- `tokio` — Async runtime
+- `serde` — Serialization
+- `async-trait` — Async trait support
+
+---
+
+## Specifications
+
+Implements requirements from:
+- ORCH-3054 (Adapter registry)
+- ORCH-3055 (Adapter dispatch)
+- ORCH-3056 (Adapter lifecycle)
+- ORCH-3057 (Health checks)
+- ORCH-3058 (Error handling)
+
+See `.specs/00_llama-orch.md` for full requirements.
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

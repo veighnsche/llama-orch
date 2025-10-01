@@ -1,119 +1,241 @@
-# worker-adapters-llamacpp-http — worker-adapters-llamacpp-http (adapter)
+# llamacpp-http
 
-## 1. Name & Purpose
+**llama.cpp HTTP server adapter**
 
-worker-adapters-llamacpp-http (adapter)
+`libs/worker-adapters/llamacpp-http` — WorkerAdapter implementation for llama.cpp HTTP server.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- ORCH-3054 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3054)
-- ORCH-3055 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3055)
-- ORCH-3056 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3056)
-- ORCH-3057 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3057)
-- ORCH-3058 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3058)
+## What This Adapter Does
 
+llamacpp-http provides **llama.cpp integration** for llama-orch:
 
-## 3. Public API surface
+- **HTTP API mapping** — Maps orchestrator requests to llama.cpp `/completion` endpoint
+- **SSE streaming** — Streams tokens via Server-Sent Events
+- **Deterministic sampling** — Supports seed-based determinism
+- **KV cache** — Leverages llama.cpp's slot-based KV cache
+- **Health checks** — Monitors engine availability
 
-- Rust crate API (internal)
+**Engine**: llama.cpp HTTP server (default port: 8081)
 
-### High / Mid / Low behaviors
+---
 
-- **High**
-  - Map orchestrator requests to llama.cpp native HTTP endpoints. Stream tokens over SSE preserving order `started → token* → end` (optional `metrics`).
-  - Use shared HTTP client defaults (timeouts, TLS verify ON) and redact secrets in logs.
-  - Determinism-friendly defaults (temperature 0, top_p 1.0; pass `seed` when set).
+## Usage
 
-- **Mid**
-  - `submit(req)` POSTs `{base}/completion` with `stream=true` and decodes SSE via `worker-adapters-http-util::stream_decode()`.
-  - `health()`/`props()` MVP stubs return Ready with unknown slots; wire real `/health` and `/props` in follow-ups.
-  - Error mapping: non-success upstream status → `WorkerError::Adapter(redacted_message)`; 429/5xx treated as retriable at policy layer.
-  - Construct with `LlamaCppHttpAdapter::new(base_url)`; do not read env inside adapter.
+### Create Adapter
 
-- **Low**
-  - For MVP, we buffer the SSE body then emit `TokenEvent`s in order. Future: incremental decoding with backpressure.
-  - Token indices are asserted monotonic (`i` strictly increasing). Non-monotonic indices are logged at `warn`.
+```rust
+use worker_adapters_llamacpp_http::LlamaCppHttpAdapter;
 
-## 4. How it fits
-
-- Maps engine-native APIs to the orchestrator worker contract.
-
-```mermaid
-flowchart LR
-  orch[Orchestrator] --> adapter[Adapter]
-  adapter --> engine[Engine API]
+let adapter = LlamaCppHttpAdapter::new("http://localhost:8081");
 ```
 
-## 5. Build & Test
+### Submit Task
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p worker-adapters-llamacpp-http -- --nocapture`
+```rust
+use worker_adapters_adapter_api::{WorkerAdapter, TaskRequest};
 
+let task = TaskRequest {
+    job_id: "job-123".to_string(),
+    model: "llama-3.1-8b-instruct".to_string(),
+    prompt: "Hello, world!".to_string(),
+    max_tokens: 100,
+    temperature: Some(0.0),
+    seed: Some(42),
+    session_id: None,
+};
 
-## 6. Contracts
+let mut stream = adapter.submit(task).await?;
 
-- None
+while let Some(event) = stream.receiver.recv().await {
+    match event {
+        TokenEvent::Started { engine_version } => {
+            println!("Started: {}", engine_version);
+        }
+        TokenEvent::Token { text, index } => {
+            print!("{}", text);
+        }
+        TokenEvent::End { metrics } => {
+            println!("\nDone: {} tokens", metrics.tokens_generated);
+        }
+        TokenEvent::Error { error } => {
+            eprintln!("Error: {}", error);
+        }
+    }
+}
+```
 
+---
 
-## 7. Config & Env
+## llama.cpp API Mapping
 
-- Construct with `base_url` only. Credentials, if any, are injected at the request layer using `http-util::with_bearer(rb, token)`.
-- Orchestrator (optional) runtime binding via feature flag + env (see below).
+### Completion Endpoint
 
-### Orchestrator binding (optional)
-- Cargo feature: `orchestratord:llamacpp-adapter` (disabled by default).
-- Env at startup when feature is enabled:
-  - `ORCHD_LLAMACPP_URL` (required) — base URL to bind.
-  - `ORCHD_LLAMACPP_POOL` (default: `default`).
-  - `ORCHD_LLAMACPP_REPLICA` (default: `r0`).
-- Binding goes through `AdapterHost.bind(pool, replica, adapter)`; dispatch uses `AdapterHost.submit(pool, req)`.
+**Orchestrator Request** → **llama.cpp Request**
 
-## 8. Metrics & Logs
+```json
+{
+  "prompt": "Hello, world!",
+  "n_predict": 100,
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "seed": 42,
+  "stream": true
+}
+```
 
-- Emits adapter health and request metrics per engine.
+**llama.cpp Response** (SSE):
 
-Notes:
-- Secrets (e.g., Authorization) are redacted in error messages using `http-util::redact_secrets()`.
-- Add Prometheus `/metrics` scrape mapping in a future iteration (MVP optional).
+```
+data: {"content":"Hello","stop":false}
 
-## 9. Runbook (Dev)
+data: {"content":" there","stop":false}
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+data: {"content":"!","stop":true}
+```
 
+---
 
-## 10. Status & Owners
+## Deterministic Sampling
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+For deterministic output:
 
-## 11. Changelog pointers
+1. Set `temperature: 0.0` (greedy decoding)
+2. Set `top_p: 1.0` (no nucleus sampling)
+3. Provide `seed` value
+4. Use identical model weights and llama.cpp version
 
-- None
+```rust
+let task = TaskRequest {
+    temperature: Some(0.0),
+    seed: Some(42),
+    // ... other fields
+};
+```
 
-## 12. Footnotes
+---
 
-- Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+## Health Check
 
-## Policy note
+```rust
+let health = adapter.health().await?;
 
-- VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or host-RAM offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
+match health.state {
+    HealthState::Healthy => println!("Engine is healthy"),
+    HealthState::Degraded => println!("Engine is degraded"),
+    HealthState::Unhealthy => println!("Engine is unhealthy"),
+}
+```
 
-### Additional Details
-- Engine endpoint mapping tables (native/OpenAI-compat to adapter calls), determinism knobs,
-version capture.
+---
 
-### Determinism notes
-- Prefer greedy decoding (`temperature=0`, `top_p=1.0`).
-- Forward `seed` from request when provided. Replica sets should pin identical binaries and sampler profiles.
+## Configuration
 
-### Testing
-- Unit/integration tests: `cargo test -p worker-adapters-llamacpp-http -- --nocapture`.
-- Integration test uses a stub Axum server emitting SSE `started/token/end` to verify ordering and indices.
+### Environment Variables (Optional)
 
+For orchestratord integration:
 
-## What this crate is not
+- `ORCHD_LLAMACPP_URL` — llama.cpp base URL (e.g., `http://localhost:8081`)
+- `ORCHD_LLAMACPP_POOL` — Pool ID (default: `default`)
+- `ORCHD_LLAMACPP_REPLICA` — Replica ID (default: `r0`)
 
-- Not a public API; do not expose engine endpoints directly.
+### Bearer Token
+
+```rust
+use worker_adapters_http_util::auth::with_bearer;
+
+let client = reqwest::Client::new();
+let request = client.post("http://localhost:8081/completion");
+let request = with_bearer(request, "my-secret-token");
+```
+
+---
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+cargo test -p worker-adapters-llamacpp-http -- --nocapture
+
+# Run specific test
+cargo test -p worker-adapters-llamacpp-http -- test_submit --nocapture
+```
+
+### Integration Tests
+
+Integration tests use a mock Axum server to simulate llama.cpp SSE responses:
+
+```rust
+#[tokio::test]
+async fn test_streaming() {
+    let mock_server = MockServer::start().await;
+    
+    Mock::given(method("POST"))
+        .and(path("/completion"))
+        .respond_with(ResponseTemplate::new(200)
+            .set_body_string("data: {\"content\":\"Hello\"}\n\n"))
+        .mount(&mock_server)
+        .await;
+    
+    let adapter = LlamaCppHttpAdapter::new(&mock_server.uri());
+    // Test streaming
+}
+```
+
+---
+
+## Dependencies
+
+### Internal
+
+- `worker-adapters-adapter-api` — WorkerAdapter trait
+- `worker-adapters-http-util` — HTTP client, retry, streaming
+
+### External
+
+- `reqwest` — HTTP client
+- `tokio` — Async runtime
+- `serde` — Serialization
+- `async-trait` — Async trait support
+
+---
+
+## llama.cpp Features
+
+### Supported
+
+- **Streaming** — SSE token streaming
+- **Deterministic sampling** — Seed-based reproducibility
+- **Greedy decoding** — temperature=0
+- **KV cache** — Slot-based caching
+- **Multiple slots** — Concurrent requests
+
+### Not Yet Supported
+
+- **Session continuation** — Requires session_id mapping
+- **Embeddings** — Different endpoint
+- **Multi-modal** — Image inputs
+
+---
+
+## Specifications
+
+Implements requirements from:
+- ORCH-3054 (Adapter registry)
+- ORCH-3055 (Adapter dispatch)
+- ORCH-3056 (Adapter lifecycle)
+- ORCH-3057 (Health checks)
+- ORCH-3058 (Error handling)
+
+See `.specs/00_llama-orch.md` for full requirements.
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

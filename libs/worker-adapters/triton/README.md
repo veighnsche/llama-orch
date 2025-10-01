@@ -1,81 +1,232 @@
-# worker-adapters-triton — worker-adapters-triton (adapter)
+# triton
 
-## 1. Name & Purpose
+**NVIDIA Triton Inference Server adapter**
 
-worker-adapters-triton (adapter)
+`libs/worker-adapters/triton` — WorkerAdapter implementation for NVIDIA Triton Inference Server.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- ORCH-3054 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3054)
-- ORCH-3055 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3055)
-- ORCH-3056 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3056)
-- ORCH-3057 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3057)
-- ORCH-3058 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3058)
+## What This Adapter Does
 
+triton provides **Triton integration** for llama-orch:
 
-## 3. Public API surface
+- **gRPC protocol** — Uses Triton's gRPC inference API
+- **Multi-model serving** — Supports multiple models on one server
+- **Dynamic batching** — Automatic request batching
+- **Model ensembles** — Pipeline multiple models
+- **Enterprise-grade** — Production-ready serving platform
 
-- Rust crate API (internal)
+**Engine**: NVIDIA Triton Inference Server (default port: 8000 HTTP, 8001 gRPC)
 
-## 4. How it fits
+---
 
-- Maps engine-native APIs to the orchestrator worker contract.
+## Usage
 
-```mermaid
-flowchart LR
-  orch[Orchestrator] --> adapter[Adapter]
-  adapter --> engine[Engine API]
+### Create Adapter
+
+```rust
+use worker_adapters_triton::TritonAdapter;
+
+let adapter = TritonAdapter::new("http://localhost:8001");
 ```
 
-## 5. Build & Test
+### Submit Task
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p worker-adapters-triton -- --nocapture`
+```rust
+use worker_adapters_adapter_api::{WorkerAdapter, TaskRequest};
 
+let task = TaskRequest {
+    job_id: "job-123".to_string(),
+    model: "llama-3.1-8b-instruct".to_string(),
+    prompt: "Hello, world!".to_string(),
+    max_tokens: 100,
+    temperature: Some(0.7),
+    seed: Some(42),
+    session_id: None,
+};
 
-## 6. Contracts
+let mut stream = adapter.submit(task).await?;
 
-- None
+while let Some(event) = stream.receiver.recv().await {
+    match event {
+        TokenEvent::Started { engine_version } => {
+            println!("Started: {}", engine_version);
+        }
+        TokenEvent::Token { text, index } => {
+            print!("{}", text);
+        }
+        TokenEvent::End { metrics } => {
+            println!("\nDone: {} tokens", metrics.tokens_generated);
+        }
+        TokenEvent::Error { error } => {
+            eprintln!("Error: {}", error);
+        }
+    }
+}
+```
 
+---
 
-## 7. Config & Env
+## Triton API Mapping
 
-- Engine connection endpoints and credentials where applicable.
+### ModelInfer gRPC
 
-## 8. Metrics & Logs
+**Orchestrator Request** → **Triton Request**
 
-- Emits adapter health and request metrics per engine.
+```protobuf
+model_name: "llama-3.1-8b-instruct"
+inputs {
+  name: "prompt"
+  datatype: "BYTES"
+  shape: [1]
+  contents {
+    bytes_contents: "Hello, world!"
+  }
+}
+parameters {
+  key: "max_tokens"
+  value {
+    int64_param: 100
+  }
+}
+```
 
-## 9. Runbook (Dev)
+**Triton Response**:
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+```protobuf
+outputs {
+  name: "text"
+  datatype: "BYTES"
+  shape: [1]
+  contents {
+    bytes_contents: "Hello there!"
+  }
+}
+```
 
+---
 
-## 10. Status & Owners
+## Triton Features
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+### Supported
 
-## 11. Changelog pointers
+- **gRPC protocol** — Binary protocol for efficiency
+- **Dynamic batching** — Automatic request batching
+- **Multi-model** — Multiple models per server
+- **Model versioning** — Version management
+- **Health checks** — Server and model health
 
-- None
+### Not Yet Supported
 
-## 12. Footnotes
+- **Streaming** — Requires custom backend implementation
+- **Model ensembles** — Pipeline orchestration
+- **Sequence batching** — Stateful models
 
-- Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+---
 
-## Policy note
+## Configuration
 
-- VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or host-RAM offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
+### Environment Variables (Optional)
 
-### Additional Details
-- Engine endpoint mapping tables (native/OpenAI-compat to adapter calls), determinism knobs,
-version capture.
+For orchestratord integration:
 
+- `ORCHD_TRITON_URL` — Triton gRPC URL (e.g., `http://localhost:8001`)
+- `ORCHD_TRITON_POOL` — Pool ID (default: `default`)
+- `ORCHD_TRITON_REPLICA` — Replica ID (default: `r0`)
 
-## What this crate is not
+### Authentication
 
-- Not a public API; do not expose engine endpoints directly.
+Triton typically uses mTLS for authentication in production:
+
+```rust
+// Configure TLS client certificates
+let tls_config = ClientTlsConfig::new()
+    .ca_certificate(ca_cert)
+    .identity(client_cert, client_key);
+```
+
+---
+
+## Health Check
+
+```rust
+let health = adapter.health().await?;
+
+match health.state {
+    HealthState::Healthy => println!("Engine is healthy"),
+    HealthState::Degraded => println!("Engine is degraded"),
+    HealthState::Unhealthy => println!("Engine is unhealthy"),
+}
+```
+
+---
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+cargo test -p worker-adapters-triton -- --nocapture
+
+# Run specific test
+cargo test -p worker-adapters-triton -- test_submit --nocapture
+```
+
+### Integration Tests
+
+Integration tests use a mock gRPC server:
+
+```rust
+#[tokio::test]
+async fn test_inference() {
+    let mock_server = MockTritonServer::start().await;
+    
+    mock_server
+        .expect_model_infer()
+        .with_model("llama-3.1-8b-instruct")
+        .respond_with_text("Hello there!")
+        .await;
+    
+    let adapter = TritonAdapter::new(&mock_server.uri());
+    // Test inference
+}
+```
+
+---
+
+## Dependencies
+
+### Internal
+
+- `worker-adapters-adapter-api` — WorkerAdapter trait
+
+### External
+
+- `tonic` — gRPC client
+- `prost` — Protocol Buffers
+- `tokio` — Async runtime
+- `serde` — Serialization
+- `async-trait` — Async trait support
+
+---
+
+## Specifications
+
+Implements requirements from:
+- ORCH-3054 (Adapter registry)
+- ORCH-3055 (Adapter dispatch)
+- ORCH-3056 (Adapter lifecycle)
+- ORCH-3057 (Health checks)
+- ORCH-3058 (Error handling)
+
+See `.specs/00_llama-orch.md` for full requirements.
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

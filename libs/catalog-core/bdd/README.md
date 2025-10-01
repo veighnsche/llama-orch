@@ -1,80 +1,132 @@
-# catalog-core-bdd — catalog-core-bdd (core)
+# catalog-core-bdd
 
-## 1. Name & Purpose
+**BDD test suite for catalog-core**
 
-catalog-core-bdd (core)
+`libs/catalog-core/bdd` — Cucumber-based behavior-driven development tests for the catalog-core model registry library.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- ORCH-3004 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3004)
-- ORCH-3005 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3005)
-- ORCH-3008 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3008)
-- ORCH-3010 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3010)
-- ORCH-3011 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3011)
-- ORCH-3016 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3016)
-- ORCH-3017 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3017)
-- ORCH-3027 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3027)
-- ORCH-3028 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3028)
-- ORCH-3044 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3044)
-- ORCH-3045 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3045)
+## What This Crate Does
 
+This is the **BDD test harness** for catalog-core. It provides:
 
-## 3. Public API surface
+- **Cucumber/Gherkin scenarios** testing catalog behavior
+- **Step definitions** in Rust using the `cucumber` crate
+- **Unit-level BDD tests** for catalog operations and lifecycle
+- **Proof bundle output** for test artifacts
 
-- Rust crate API (internal)
+**Tests**:
+- Model registration
+- SHA-256 verification
+- Lifecycle state transitions (Pending → Active → Retired)
+- Catalog queries (by ID, name, state)
+- Filesystem storage and persistence
 
-## 4. How it fits
+---
 
-- Part of the core orchestrator. Upstream: adapters, Downstream: workers.
+## Running Tests
 
-```mermaid
-flowchart LR
-  callers[Clients] --> orch[Orchestrator]
-  orch --> adapters[Worker Adapters]
-  adapters --> engines[Engines]
+### All Scenarios
+
+```bash
+# Run all BDD tests
+cargo test -p catalog-core-bdd -- --nocapture
+
+# Or use the BDD runner binary (if available)
+cargo run -p catalog-core-bdd --bin bdd-runner
 ```
 
-## 5. Build & Test
+### Specific Feature
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p catalog-core-bdd -- --nocapture`
+```bash
+# Set environment variable to target specific feature
+LLORCH_BDD_FEATURE_PATH=tests/features/registration.feature \
+cargo test -p catalog-core-bdd -- --nocapture
+```
 
+---
 
-## 6. Contracts
+## Feature Files
 
-- None
+Located in `tests/features/`:
 
+- `registration.feature` — Model registration with metadata
+- `verification.feature` — SHA-256 digest verification
+- `lifecycle.feature` — State transitions (Pending, Active, Retired, Failed)
+- `queries.feature` — Find models by ID, name, state
+- `persistence.feature` — Filesystem storage and reload
 
-## 7. Config & Env
+---
 
-- See deployment configs and environment variables used by the daemons.
+## Example Scenario
 
-## 8. Metrics & Logs
+```gherkin
+Feature: Model Verification
 
-- Emits queue depth, latency percentiles, and engine/version labels.
+  Scenario: Successfully verify a model
+    Given a catalog with model "llama-3.1-8b-instruct" in state "Pending"
+    And the model file exists at "/tmp/models/llama-3.1-8b-instruct.gguf"
+    When I verify the model with expected digest "abc123def456..."
+    Then the verification should succeed
+    And the model state should be "Active"
+    And the verified_at timestamp should be set
+```
 
-## 9. Runbook (Dev)
+---
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+## Step Definitions
 
+Located in `src/steps/`:
 
-## 10. Status & Owners
+- `catalog.rs` — Catalog creation and manipulation steps
+- `registration.rs` — Model registration steps
+- `verification.rs` — Verification steps
+- `lifecycle.rs` — State transition steps
+- `assertions.rs` — Catalog state assertions
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+---
 
-## 11. Changelog pointers
+## Testing
 
-- None
+```bash
+# Run all tests
+cargo test -p catalog-core-bdd -- --nocapture
 
-## 12. Footnotes
+# Check for undefined steps
+cargo test -p catalog-core-bdd --lib -- features_have_no_undefined_or_ambiguous_steps
+```
 
-- Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+---
 
+## Dependencies
 
-## What this crate is not
+### Parent Crate
 
-- Not a general-purpose inference server; focuses on orchestration.
+- `catalog-core` — The library being tested
+
+### Test Infrastructure
+
+- `cucumber` — BDD framework
+- `tokio` — Async runtime for tests
+- `tempfile` — Temporary directories for test catalogs
+- `proof-bundle` — Test artifact output
+
+---
+
+## Specifications
+
+Tests verify requirements from:
+- ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011
+- ORCH-3016, ORCH-3017, ORCH-3027, ORCH-3028
+- ORCH-3044, ORCH-3045
+
+See `.specs/00_llama-orch.md` for full requirements.
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

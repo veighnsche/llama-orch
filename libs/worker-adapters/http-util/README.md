@@ -1,154 +1,275 @@
-# worker-adapters-http-util — worker-adapters-http-util (adapter)
+# http-util
 
-## 1. Name & Purpose
+**Shared HTTP utilities for worker adapters**
 
-Shared HTTP utilities for all adapter crates. This library provides a single, consistent place
-for HTTP client construction (timeouts, HTTP/2), retry/backoff with jitter, streaming decode
-helpers for token events, and safe redaction of secrets in logs. Adapters like
-`llamacpp-http`, `vllm-http`, `tgi-http`, `triton`, and `openai-http` depend on this crate to
-avoid duplicating cross-cutting concerns and to meet spec requirements consistently.
+`libs/worker-adapters/http-util` — HTTP client, retry logic, streaming decode, and secret redaction for all adapters.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- ORCH-3054 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3054)
-- ORCH-3055 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3055)
-- ORCH-3056 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3056)
-- ORCH-3057 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3057)
-- ORCH-3058 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3058)
+## What This Library Does
 
-- Worker Adapters (normative shared util): [.specs/35-worker-adapters.md](../../../.specs/35-worker-adapters.md)
+http-util provides **shared HTTP infrastructure** for worker adapters:
 
-## 3. Public API surface
+- **HTTP client** — HTTP/2 preferred, rustls TLS, connection pooling
+- **Timeouts** — Per-request timeout enforcement
+- **Retry logic** — Exponential backoff with jitter for transient failures
+- **Streaming decode** — Low-allocation SSE/NDJSON token stream parsing
+- **Secret redaction** — Authorization headers redacted in logs
+- **Bearer auth** — Helper to inject `Authorization: Bearer` tokens
 
-- `HttpClientConfig` — base timeouts, retry limits, backoff/jitter knobs.
-- `make_client(&HttpClientConfig) -> reqwest::Client` — HTTP/2 preferred, rustls TLS, sane defaults.
-- `retry(policy, op)` — classify errors (429/5xx/connect/timeouts) and apply exp. backoff + jitter.
-- `streaming::decode_*` — low‑alloc helpers to parse newline/SSE‑ish token streams into events.
-- `redact::{headers, line}` — redact Authorization and other secrets in diagnostics.
-- `auth::with_bearer(rb, token)` — inject `Authorization: Bearer <token>` without reading env (preferred for adapters).
-- `auth::with_bearer_if_configured(rb)` — test/dev helper that reads `AUTH_TOKEN` from the environment (not recommended for production use).
-- Error helpers: `parse_retry_after`, `is_retriable_status`, `is_non_retriable_status`.
+**Used by**: All HTTP-based adapters (llamacpp-http, vllm-http, tgi-http, openai-http)
 
-## 4. How it fits
+---
 
-- Supports engine‑specific adapter crates with a shared HTTP layer. Keeps adapter code focused on
-  mapping engine APIs to the orchestrator worker contract while relying on a single place for
-  transport and robustness concerns (timeouts, retries, streaming decode, redaction).
+## Key APIs
 
-```mermaid
-flowchart LR
-  orch[Orchestrator]
-  orch --> host[Adapter Host]
-  host --> adapters[Adapters]
-  adapters --> http_util[http-util (shared)]
-  adapters --> engines[Engine APIs]
-```
-
-## 5. Build & Test
-
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p worker-adapters-http-util -- --nocapture`
-- Preferred integration test approach: use `wiremock` in an adapter crate to validate streaming
-  and retry behavior with this util.
-
-## 6. Contracts
-
-- None
-
-## 7. Config & Env
-
-- Adapters SHOULD pass configuration explicitly; the preferred API for Authorization is `with_bearer(rb, token)`.
-- A test/dev helper `with_bearer_if_configured(rb)` exists which reads `AUTH_TOKEN` from the environment. This is intended for local testing only and is not recommended for production.
-- Typical adapter configuration:
-  - Base URL(s) per engine instance
-  - Timeouts and retry policy (max attempts, base/backoff cap, jitter)
-  - Optional `Authorization` bearer token to inject (via helper)
-- HTTP/2 is preferred when supported by the engine; falls back to HTTP/1.1.
-
-## 8. Metrics & Logs
-
-- Adapters are expected to emit request/streaming metrics; this util focuses on consistent logging
-  and redaction. Helpers ensure Authorization and other secrets are not logged. Retry decisions and
-  backoff intervals can be logged at `debug` with redaction applied.
-
-## 9. Runbook (Dev)
-
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
-- Unit tests: `cargo test -p worker-adapters-http-util`
-
-### Examples
-
-Build a client and inject a bearer token explicitly:
+### HTTP Client
 
 ```rust
-use worker_adapters_http_util as http_util;
+use worker_adapters_http_util::{HttpClientConfig, make_client};
 
-let client = http_util::client();
-let rb = client.get("https://example.com/api");
-let rb = http_util::with_bearer(rb, "my-secret-token");
-let req = rb.build()?;
+let config = HttpClientConfig {
+    timeout_secs: 30,
+    connect_timeout_secs: 5,
+    pool_idle_timeout_secs: 90,
+};
+
+let client = make_client(&config);
 ```
 
-Use retries with deterministic jitter in tests:
+### Retry Logic
 
 ```rust
 use worker_adapters_http_util::{with_retries, RetryPolicy, RetryError};
 
-let mut policy = RetryPolicy::default();
-policy.seed = Some(7);
-let result: Result<u32, RetryError> = with_retries(|attempt| async move {
-    if attempt < 3 { Err(RetryError::Retriable(anyhow::anyhow!("transient"))) } else { Ok(attempt) }
-}, policy).await;
+let policy = RetryPolicy {
+    max_attempts: 3,
+    base_delay_ms: 100,
+    max_delay_ms: 5000,
+    jitter: true,
+    seed: None,
+};
+
+let result = with_retries(|attempt| async move {
+    // Your operation
+    if attempt < 3 {
+        Err(RetryError::Retriable(anyhow::anyhow!("transient error")))
+    } else {
+        Ok(42)
+    }
+}, policy).await?;
 ```
 
-Decode a simple SSE‑like transcript:
+### Bearer Auth
 
 ```rust
-use worker_adapters_http_util::{stream_decode, StreamEvent};
+use worker_adapters_http_util::auth::with_bearer;
 
-let body = "event: started\n\
-            data: {}\n\
-            \n\
-            event: token\n\
-            data: {\"i\":0,\"t\":\"Hi\"}\n\
-            \n\
-            event: end\n\
-            data: {}\n";
-let mut events = Vec::new();
-let _ = stream_decode(body, |e| events.push(e));
+let client = reqwest::Client::new();
+let request = client.get("https://api.example.com/v1/completions");
+let request = with_bearer(request, "my-secret-token");
 ```
 
-## 10. Status & Owners
+### Streaming Decode
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+```rust
+use worker_adapters_http_util::streaming::decode_sse;
 
-## 11. Changelog pointers
+let body = "event: token\ndata: {\"text\":\"hello\"}\n\n";
+let events = decode_sse(body)?;
+```
 
-- None
+---
 
-## 12. Footnotes
+## Retry Policy
 
-- Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+### Retriable Errors
 
-## Policy note
+- **HTTP 429** (Too Many Requests)
+- **HTTP 5xx** (Server errors)
+- **Connection errors** (timeout, refused, reset)
 
-- VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or host-RAM offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
+### Non-Retriable Errors
 
-### Additional Details
+- **HTTP 4xx** (except 429) — Client errors
+- **HTTP 2xx** — Success (no retry needed)
 
-- Responsibilities:
-  - Provide a single, consistent HTTP client with timeouts and HTTP/2 preference
-  - Implement a minimal, spec‑aligned retry policy with jitter
-  - Offer streaming decode helpers for token event flows with low allocations
-  - Redact secrets in diagnostic logs and traces
-- Non‑goals:
-  - No engine‑specific API mapping (belongs in each adapter)
-  - No direct environment parsing (adapters own config → util APIs)
+### Backoff Formula
 
-## What this crate is not
+```
+delay = min(base_delay * 2^attempt, max_delay) + jitter
+```
 
-- Not a public API; do not expose engine endpoints directly.
+Example with `base_delay=100ms`, `max_delay=5000ms`:
+- Attempt 1: 100ms + jitter
+- Attempt 2: 200ms + jitter
+- Attempt 3: 400ms + jitter
+- Attempt 4: 800ms + jitter
+- Attempt 5: 1600ms + jitter
+- Attempt 6: 3200ms + jitter
+- Attempt 7: 5000ms + jitter (capped)
+
+---
+
+## Secret Redaction
+
+### Header Redaction
+
+```rust
+use worker_adapters_http_util::redact::redact_headers;
+
+let headers = vec![
+    ("Authorization", "Bearer secret-token"),
+    ("Content-Type", "application/json"),
+];
+
+let redacted = redact_headers(&headers);
+// Output: [("Authorization", "[REDACTED]"), ("Content-Type", "application/json")]
+```
+
+### Log Line Redaction
+
+```rust
+use worker_adapters_http_util::redact::redact_line;
+
+let log = "Authorization: Bearer abc123";
+let redacted = redact_line(log);
+// Output: "Authorization: [REDACTED]"
+```
+
+---
+
+## Usage Examples
+
+### Complete HTTP Request with Retry
+
+```rust
+use worker_adapters_http_util::{make_client, with_retries, RetryPolicy, RetryError};
+use worker_adapters_http_util::auth::with_bearer;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    // Create client
+    let config = HttpClientConfig::default();
+    let client = make_client(&config);
+    
+    // Define retry policy
+    let policy = RetryPolicy::default();
+    
+    // Make request with retries
+    let result = with_retries(|_attempt| async {
+        let request = client.get("https://api.example.com/health");
+        let request = with_bearer(request, "my-token");
+        
+        let response = request
+            .send()
+            .await
+            .map_err(|e| RetryError::Retriable(e.into()))?;
+        
+        if response.status().is_success() {
+            Ok(response.text().await?)
+        } else {
+            Err(RetryError::Retriable(anyhow::anyhow!("HTTP {}", response.status())))
+        }
+    }, policy).await?;
+    
+    println!("Response: {}", result);
+    Ok(())
+}
+```
+
+### SSE Stream Parsing
+
+```rust
+use worker_adapters_http_util::streaming::decode_sse;
+
+let sse_body = r#"
+event: started
+data: {"engine":"llama.cpp"}
+
+event: token
+data: {"text":"Hello","index":0}
+
+event: token
+data: {"text":" world","index":1}
+
+event: end
+data: {"tokens":2}
+"#;
+
+let events = decode_sse(sse_body)?;
+for event in events {
+    println!("Event: {:?}", event);
+}
+```
+
+---
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+cargo test -p worker-adapters-http-util -- --nocapture
+
+# Run specific test
+cargo test -p worker-adapters-http-util -- test_retry_backoff --nocapture
+```
+
+### Integration Tests
+
+Use `wiremock` to test retry behavior:
+
+```rust
+use wiremock::{MockServer, Mock, ResponseTemplate};
+use wiremock::matchers::{method, path};
+
+#[tokio::test]
+async fn test_retry_on_500() {
+    let mock_server = MockServer::start().await;
+    
+    Mock::given(method("GET"))
+        .and(path("/api"))
+        .respond_with(ResponseTemplate::new(500))
+        .expect(3)
+        .mount(&mock_server)
+        .await;
+    
+    // Test retry logic
+}
+```
+
+---
+
+## Dependencies
+
+### Internal
+
+- None (foundational utility library)
+
+### External
+
+- `reqwest` — HTTP client
+- `tokio` — Async runtime
+- `rustls` — TLS implementation
+- `serde` — Serialization
+- `anyhow` — Error handling
+
+---
+
+## Specifications
+
+Implements requirements from:
+- ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057, ORCH-3058
+
+See `.specs/00_llama-orch.md` for full requirements.
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

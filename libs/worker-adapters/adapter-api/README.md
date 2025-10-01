@@ -1,81 +1,231 @@
-# worker-adapters-adapter-api — worker-adapters-adapter-api (adapter)
+# adapter-api
 
-## 1. Name & Purpose
+**Shared WorkerAdapter trait and types for engine adapters**
 
-worker-adapters-adapter-api (adapter)
+`libs/worker-adapters/adapter-api` — Common trait definition and types used by all worker adapters.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- ORCH-3054 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3054)
-- ORCH-3055 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3055)
-- ORCH-3056 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3056)
-- ORCH-3057 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3057)
-- ORCH-3058 — [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md#orch-3058)
+## What This Library Does
 
+adapter-api provides the **shared interface** for all worker adapters:
 
-## 3. Public API surface
+- **WorkerAdapter trait** — Common interface all adapters must implement
+- **Shared types** — TaskRequest, TokenStream, HealthStatus, EngineProps
+- **Error types** — WorkerError taxonomy
+- **No implementation** — Pure trait and types, no business logic
 
-- Rust crate API (internal)
+**Used by**: All worker adapters (llamacpp-http, vllm-http, tgi-http, mock, etc.)
 
-## 4. How it fits
+---
 
-- Maps engine-native APIs to the orchestrator worker contract.
+## WorkerAdapter Trait
 
-```mermaid
-flowchart LR
-  orch[Orchestrator] --> adapter[Adapter]
-  adapter --> engine[Engine API]
+```rust
+use async_trait::async_trait;
+
+#[async_trait]
+pub trait WorkerAdapter: Send + Sync {
+    /// Health check
+    async fn health(&self) -> Result<HealthStatus, WorkerError>;
+    
+    /// Get engine properties (version, capabilities)
+    async fn props(&self) -> Result<EngineProps, WorkerError>;
+    
+    /// Submit task and stream tokens
+    async fn submit(&self, task: TaskRequest) -> Result<TokenStream, WorkerError>;
+    
+    /// Cancel running task
+    async fn cancel(&self, job_id: &str) -> Result<(), WorkerError>;
+    
+    /// Get engine version
+    async fn engine_version(&self) -> Result<String, WorkerError>;
+}
 ```
 
-## 5. Build & Test
+---
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p worker-adapters-adapter-api -- --nocapture`
+## Key Types
 
+### TaskRequest
 
-## 6. Contracts
+```rust
+pub struct TaskRequest {
+    pub job_id: String,
+    pub model: String,
+    pub prompt: String,
+    pub max_tokens: usize,
+    pub temperature: Option<f32>,
+    pub seed: Option<u64>,
+    pub session_id: Option<String>,
+}
+```
 
-- None
+### TokenStream
 
+```rust
+pub struct TokenStream {
+    pub receiver: mpsc::Receiver<TokenEvent>,
+}
 
-## 7. Config & Env
+pub enum TokenEvent {
+    Started { engine_version: String },
+    Token { text: String, index: usize },
+    End { metrics: Metrics },
+    Error { error: WorkerError },
+}
+```
 
-- Engine connection endpoints and credentials where applicable.
+### HealthStatus
 
-## 8. Metrics & Logs
+```rust
+pub struct HealthStatus {
+    pub state: HealthState,
+    pub message: Option<String>,
+}
 
-- Emits adapter health and request metrics per engine.
+pub enum HealthState {
+    Healthy,
+    Degraded,
+    Unhealthy,
+}
+```
 
-## 9. Runbook (Dev)
+### EngineProps
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+```rust
+pub struct EngineProps {
+    pub engine_type: String,
+    pub engine_version: String,
+    pub supports_streaming: bool,
+    pub supports_sessions: bool,
+    pub max_batch_size: Option<usize>,
+}
+```
 
+### WorkerError
 
-## 10. Status & Owners
+```rust
+pub enum WorkerError {
+    Timeout,
+    EngineUnavailable,
+    InvalidRequest(String),
+    CapacityExceeded,
+    StreamingError(String),
+    Unknown(String),
+}
+```
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+---
 
-## 11. Changelog pointers
+## Usage Example
 
-- None
+```rust
+use worker_adapters_adapter_api::{WorkerAdapter, TaskRequest, TokenEvent};
+use async_trait::async_trait;
 
-## 12. Footnotes
+pub struct MyAdapter {
+    endpoint: String,
+}
 
-- Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+#[async_trait]
+impl WorkerAdapter for MyAdapter {
+    async fn health(&self) -> Result<HealthStatus, WorkerError> {
+        // Check engine health
+        Ok(HealthStatus {
+            state: HealthState::Healthy,
+            message: None,
+        })
+    }
+    
+    async fn props(&self) -> Result<EngineProps, WorkerError> {
+        Ok(EngineProps {
+            engine_type: "my-engine".to_string(),
+            engine_version: "1.0.0".to_string(),
+            supports_streaming: true,
+            supports_sessions: false,
+            max_batch_size: Some(32),
+        })
+    }
+    
+    async fn submit(&self, task: TaskRequest) -> Result<TokenStream, WorkerError> {
+        // Create channel
+        let (tx, rx) = mpsc::channel(100);
+        
+        // Spawn task to stream tokens
+        tokio::spawn(async move {
+            tx.send(TokenEvent::Started {
+                engine_version: "1.0.0".to_string(),
+            }).await.ok();
+            
+            tx.send(TokenEvent::Token {
+                text: "hello".to_string(),
+                index: 0,
+            }).await.ok();
+            
+            tx.send(TokenEvent::End {
+                metrics: Metrics::default(),
+            }).await.ok();
+        });
+        
+        Ok(TokenStream { receiver: rx })
+    }
+    
+    async fn cancel(&self, job_id: &str) -> Result<(), WorkerError> {
+        // Cancel task
+        Ok(())
+    }
+    
+    async fn engine_version(&self) -> Result<String, WorkerError> {
+        Ok("1.0.0".to_string())
+    }
+}
+```
 
-## Policy note
+---
 
-- VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or host-RAM offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
+## Testing
 
-### Additional Details
-- Engine endpoint mapping tables (native/OpenAI-compat to adapter calls), determinism knobs,
-version capture.
+### Unit Tests
 
+```bash
+# Run all tests
+cargo test -p worker-adapters-adapter-api -- --nocapture
+```
 
-## What this crate is not
+---
 
-- Not a public API; do not expose engine endpoints directly.
+## Dependencies
+
+### Internal
+
+- None (this is a foundational trait library)
+
+### External
+
+- `async-trait` — Async trait support
+- `tokio` — Async runtime (mpsc channels)
+- `serde` — Serialization
+- `thiserror` — Error types
+
+---
+
+## Specifications
+
+Implements requirements from:
+- ORCH-3054 (Adapter registry)
+- ORCH-3055 (Adapter dispatch)
+- ORCH-3056 (Adapter lifecycle)
+- ORCH-3057 (Health checks)
+- ORCH-3058 (Error handling)
+
+See `.specs/00_llama-orch.md` for full requirements.
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers
