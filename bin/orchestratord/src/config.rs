@@ -84,8 +84,7 @@ impl Config {
     /// - Cloud profile is enabled but required fields are missing
     /// - Validation constraints are violated
     pub fn from_env() -> Result<Self> {
-        let bind_addr =
-            std::env::var("ORCHD_ADDR").unwrap_or_else(|_| "0.0.0.0:8080".to_string());
+        let bind_addr = std::env::var("ORCHD_ADDR").unwrap_or_else(|_| "0.0.0.0:8080".to_string());
 
         let cloud_profile = std::env::var("ORCHESTRATORD_CLOUD_PROFILE")
             .ok()
@@ -113,24 +112,23 @@ impl Config {
             }
         };
 
-        let admission = AdmissionConfig {
-            capacity: admission_capacity,
-            policy: admission_policy,
-        };
+        let admission = AdmissionConfig { capacity: admission_capacity, policy: admission_policy };
 
         // Placement strategy
-        let placement_strategy =
-            match std::env::var("ORCHESTRATORD_PLACEMENT_STRATEGY").ok().as_deref() {
-                Some("least-loaded") => PlacementStrategy::LeastLoaded,
-                Some("random") => PlacementStrategy::Random,
-                Some("round-robin") | None => PlacementStrategy::RoundRobin,
-                Some(other) => {
-                    anyhow::bail!(
+        let placement_strategy = match std::env::var("ORCHESTRATORD_PLACEMENT_STRATEGY")
+            .ok()
+            .as_deref()
+        {
+            Some("least-loaded") => PlacementStrategy::LeastLoaded,
+            Some("random") => PlacementStrategy::Random,
+            Some("round-robin") | None => PlacementStrategy::RoundRobin,
+            Some(other) => {
+                anyhow::bail!(
                         "Invalid ORCHESTRATORD_PLACEMENT_STRATEGY: '{}'. Must be 'round-robin', 'least-loaded', or 'random'",
                         other
                     );
-                }
-            };
+            }
+        };
 
         // Cloud profile configuration
         let (service_registry, stale_checker) = if cloud_profile {
@@ -152,26 +150,18 @@ impl Config {
                 anyhow::bail!("ORCHESTRATORD_STALE_CHECK_INTERVAL_SECS must be > 0, got 0");
             }
 
-            (
-                Some(ServiceRegistryConfig { timeout_ms }),
-                Some(StaleCheckerConfig { interval_secs }),
-            )
+            (Some(ServiceRegistryConfig { timeout_ms }), Some(StaleCheckerConfig { interval_secs }))
         } else {
             (None, None)
         };
 
         // Optional pools config file
-        let pools_config_path = std::env::var("ORCHD_POOLS_CONFIG")
-            .ok()
-            .map(PathBuf::from);
+        let pools_config_path = std::env::var("ORCHD_POOLS_CONFIG").ok().map(PathBuf::from);
 
         // Validate pools config file exists if specified
         if let Some(ref path) = pools_config_path {
             if !path.exists() {
-                anyhow::bail!(
-                    "ORCHD_POOLS_CONFIG file does not exist: {}",
-                    path.display()
-                );
+                anyhow::bail!("ORCHD_POOLS_CONFIG file does not exist: {}", path.display());
             }
         }
 
@@ -215,9 +205,7 @@ impl Config {
     /// It performs both loading and validation, failing fast on any error.
     pub fn load() -> Result<Self> {
         let config = Self::from_env().context("Failed to load configuration from environment")?;
-        config
-            .validate()
-            .context("Configuration validation failed")?;
+        config.validate().context("Configuration validation failed")?;
         Ok(config)
     }
 }

@@ -37,9 +37,7 @@ pub fn build_app() -> Router {
             let replica =
                 std::env::var("ORCHD_LLAMACPP_REPLICA").unwrap_or_else(|_| "r0".to_string());
             let adapter = worker_adapters_llamacpp_http::LlamaCppHttpAdapter::new(url);
-            state
-                .adapter_host
-                .bind(pool.clone(), replica, std::sync::Arc::new(adapter));
+            state.adapter_host.bind(pool.clone(), replica, std::sync::Arc::new(adapter));
             if let Ok(mut s) = state.bound_pools.lock() {
                 s.insert(format!("{}:{}", pool, replica));
             }

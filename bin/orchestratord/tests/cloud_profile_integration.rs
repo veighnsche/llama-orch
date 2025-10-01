@@ -165,10 +165,9 @@ async fn test_catalog_availability_endpoint() {
     let app = build_router(state.clone());
 
     // Register two nodes
-    for (node_id, models) in [
-        ("gpu-node-1", vec!["llama-3.1-8b-instruct"]),
-        ("gpu-node-2", vec!["mistral-7b-instruct"]),
-    ] {
+    for (node_id, models) in
+        [("gpu-node-1", vec!["llama-3.1-8b-instruct"]), ("gpu-node-2", vec!["mistral-7b-instruct"])]
+    {
         let register_body = json!({
             "node_id": node_id,
             "machine_id": format!("machine-{}", node_id),
@@ -247,8 +246,14 @@ async fn test_catalog_availability_endpoint() {
     assert_eq!(body["replicated_models"].as_array().unwrap().len(), 0);
 
     // Verify node catalogs
-    assert!(body["nodes"]["gpu-node-1"]["models"].as_array().unwrap().contains(&json!("llama-3.1-8b-instruct")));
-    assert!(body["nodes"]["gpu-node-2"]["models"].as_array().unwrap().contains(&json!("mistral-7b-instruct")));
+    assert!(body["nodes"]["gpu-node-1"]["models"]
+        .as_array()
+        .unwrap()
+        .contains(&json!("llama-3.1-8b-instruct")));
+    assert!(body["nodes"]["gpu-node-2"]["models"]
+        .as_array()
+        .unwrap()
+        .contains(&json!("mistral-7b-instruct")));
 
     std::env::remove_var("ORCHESTRATORD_CLOUD_PROFILE");
     std::env::remove_var("LLORCH_API_TOKEN");

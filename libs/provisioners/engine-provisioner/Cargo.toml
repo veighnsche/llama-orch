@@ -36,14 +36,3 @@ tempfile = "3"
 serial_test = "2"
 serde_json = { workspace = true }
 
-[[test]]
-name = "llamacpp_fixture_cpu_e2e"
-path = "tests/llamacpp_fixture_cpu_e2e.rs"
-
-[[test]]
-name = "llamacpp_smoke"
-path = "tests/llamacpp_smoke.rs"
-
-[[test]]
-name = "llamacpp_source_cpu_real_e2e"
-path = "tests/llamacpp_source_cpu_real_e2e.rs"

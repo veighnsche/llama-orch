@@ -134,7 +134,8 @@ impl PlacementService {
 
         // If model_id specified, filter to pools that have the model
         if let Some(model) = model_id {
-            available.retain(|(_, _, snapshot)| snapshot.models_available.contains(&model.to_string()));
+            available
+                .retain(|(_, _, snapshot)| snapshot.models_available.contains(&model.to_string()));
 
             if available.is_empty() {
                 tracing::warn!(
