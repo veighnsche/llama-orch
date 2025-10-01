@@ -66,73 +66,34 @@
 #![warn(clippy::missing_safety_doc)]
 #![warn(clippy::must_use_candidate)]
 
-use serde::{Deserialize, Serialize};
-use std::time::SystemTime;
+// Re-export public API
+pub use config::{AuditConfig, AuditMode, RetentionPolicy, RotationPolicy};
+#[cfg(feature = "platform")]
+pub use config::PlatformConfig;
+pub use error::AuditError;
+pub use events::{
+    ActorInfo, AuditEvent, AuditResult, AuthMethod, ResourceInfo,
+};
+pub use logger::AuditLogger;
+pub use query::{AuditQuery, VerifyMode, VerifyOptions, VerifyResult};
+pub use storage::AuditEventEnvelope;
 
-/// Audit event types
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "event_type")]
-pub enum AuditEvent {
-    Authentication {
-        identity: String,
-        outcome: String,
-        path: String,
-    },
-    Authorization {
-        identity: String,
-        resource: String,
-        action: String,
-        outcome: String,
-    },
-    ResourceAccess {
-        identity: String,
-        resource: String,
-        action: String,
-    },
-    ConfigChange {
-        identity: String,
-        setting: String,
-        old_value: Option<String>,
-        new_value: String,
-    },
-}
+// Internal modules
+mod config;
+mod crypto;
+mod error;
+mod events;
+mod logger;
+mod query;
+mod storage;
+mod writer;
 
-/// Audit logger
-/// TODO(ARCH-CHANGE): This crate logs to tracing only. Needs:
-/// - Write audit events to append-only file
-/// - Add tamper-evident logging (checksums, signatures)
-/// - Implement log rotation with retention policy
-/// - Add external system integration (syslog, SIEM)
-/// - Implement structured query interface for forensics
-/// - Add compliance reporting (GDPR, SOC2)
-/// See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md (audit trail requirements)
-pub struct AuditLogger {
-    // Future: Write to file or external system
-}
+// Public for BDD testing
+pub mod validation;
 
-impl AuditLogger {
-    pub fn new() -> Self {
-        Self {}
-    }
-    
-    /// Log audit event
-    pub fn log(&self, event: AuditEvent) {
-        let timestamp = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .map(|d| d.as_secs())
-            .unwrap_or(0);
-        
-        tracing::info!(
-            target: "audit",
-            timestamp = %timestamp,
-            event = ?event,
-            "Audit event"
-        );
-    }
-}
+// Optional platform mode
+#[cfg(feature = "platform")]
+mod platform;
 
-impl Default for AuditLogger {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+#[cfg(feature = "platform")]
+pub use platform::PlatformClient;

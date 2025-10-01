@@ -1,0 +1,382 @@
+//! Audit event types
+//!
+//! Defines all 32 audit event types across 7 categories.
+//! See `.specs/01_event-types.md` for complete documentation.
+
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use std::net::IpAddr;
+
+/// Actor information (WHO performed the action)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ActorInfo {
+    /// User ID or token fingerprint (e.g., "admin@example.com" or "token:a3f2c1")
+    pub user_id: String,
+    
+    /// Source IP address
+    pub ip: Option<IpAddr>,
+    
+    /// Authentication method used
+    pub auth_method: AuthMethod,
+    
+    /// Session ID for correlation
+    pub session_id: Option<String>,
+}
+
+/// Authentication methods
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AuthMethod {
+    BearerToken,
+    ApiKey,
+    MTls,
+    Internal,
+}
+
+/// Resource information (WHAT was affected)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ResourceInfo {
+    /// Resource type (e.g., "pool", "node", "job", "shard")
+    pub resource_type: String,
+    
+    /// Resource ID (e.g., "pool-123", "shard-abc123")
+    pub resource_id: String,
+    
+    /// Parent resource ID (e.g., "node-1" for a pool)
+    pub parent_id: Option<String>,
+}
+
+/// Audit result
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AuditResult {
+    Success,
+    Failure { reason: String },
+    PartialSuccess { details: String },
+}
+
+/// Audit event types
+///
+/// All 32 event types across 7 categories:
+/// - Authentication (4 types)
+/// - Authorization (3 types)
+/// - Resource Operations (8 types)
+/// - VRAM Operations (6 types)
+/// - Security Incidents (5 types)
+/// - Data Access (3 types)
+/// - Compliance (3 types)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "event_type", rename_all = "snake_case")]
+pub enum AuditEvent {
+    // ========== Authentication Events (4) ==========
+    
+    /// Successful authentication
+    AuthSuccess {
+        timestamp: DateTime<Utc>,
+        actor: ActorInfo,
+        method: AuthMethod,
+        path: String,
+        service_id: String,
+    },
+    
+    /// Failed authentication attempt
+    AuthFailure {
+        timestamp: DateTime<Utc>,
+        attempted_user: Option<String>,
+        reason: String,
+        ip: IpAddr,
+        path: String,
+        service_id: String,
+    },
+    
+    /// API token created
+    TokenCreated {
+        timestamp: DateTime<Utc>,
+        actor: ActorInfo,
+        token_fingerprint: String,
+        scope: Vec<String>,
+        expires_at: Option<DateTime<Utc>>,
+    },
+    
+    /// API token revoked
+    TokenRevoked {
+        timestamp: DateTime<Utc>,
+        actor: ActorInfo,
+        token_fingerprint: String,
+        reason: String,
+    },
+    
+    // ========== Authorization Events (3) ==========
+    
+    /// Authorization granted
+    AuthorizationGranted {
+        timestamp: DateTime<Utc>,
+        actor: ActorInfo,
+        resource: ResourceInfo,
+        action: String,
+    },
+    
+    /// Authorization denied
+    AuthorizationDenied {
+        timestamp: DateTime<Utc>,
+        actor: ActorInfo,
+        resource: ResourceInfo,
+        action: String,
+        reason: String,
+    },
+    
+    /// Permission changed
+    PermissionChanged {
+        timestamp: DateTime<Utc>,
+        actor: ActorInfo,
+        subject: String,
+        old_permissions: Vec<String>,
+        new_permissions: Vec<String>,
+    },
+    
+    // ========== Resource Operation Events (8) ==========
+    
+    /// Pool created
+    PoolCreated {
+        timestamp: DateTime<Utc>,
+        actor: ActorInfo,
+        pool_id: String,
+        model_ref: String,
+        node_id: String,
+        replicas: u32,
+        gpu_devices: Vec<u32>,
+    },
+    
+    /// Pool deleted
+    PoolDeleted {
+        timestamp: DateTime<Utc>,
+        actor: ActorInfo,
+        pool_id: String,
+        model_ref: String,
+        node_id: String,
+        reason: String,
+        replicas_terminated: u32,
+    },
+    
+    /// Pool modified
+    PoolModified {
+        timestamp: DateTime<Utc>,
+        actor: ActorInfo,
+        pool_id: String,
+        changes: serde_json::Value,
+    },
+    
+    /// Node registered
+    NodeRegistered {
+        timestamp: DateTime<Utc>,
+        actor: ActorInfo,
+        node_id: String,
+        gpu_count: u32,
+        total_vram_gb: u64,
+        capabilities: Vec<String>,
+    },
+    
+    /// Node deregistered
+    NodeDeregistered {
+        timestamp: DateTime<Utc>,
+        actor: ActorInfo,
+        node_id: String,
+        reason: String,
+        pools_affected: Vec<String>,
+    },
+    
+    /// Task submitted
+    TaskSubmitted {
+        timestamp: DateTime<Utc>,
+        actor: ActorInfo,
+        task_id: String,
+        model_ref: String,
+        prompt_length: usize,
+        prompt_hash: String,
+        max_tokens: u32,
+    },
+    
+    /// Task completed
+    TaskCompleted {
+        timestamp: DateTime<Utc>,
+        task_id: String,
+        worker_id: String,
+        tokens_generated: u32,
+        duration_ms: u64,
+        result: AuditResult,
+    },
+    
+    /// Task canceled
+    TaskCanceled {
+        timestamp: DateTime<Utc>,
+        actor: ActorInfo,
+        task_id: String,
+        reason: String,
+    },
+    
+    // ========== VRAM Operation Events (6) ==========
+    
+    /// Model sealed in VRAM
+    VramSealed {
+        timestamp: DateTime<Utc>,
+        shard_id: String,
+        gpu_device: u32,
+        vram_bytes: usize,
+        digest: String,
+        worker_id: String,
+    },
+    
+    /// Seal verified successfully
+    SealVerified {
+        timestamp: DateTime<Utc>,
+        shard_id: String,
+        worker_id: String,
+    },
+    
+    /// Seal verification failed (CRITICAL)
+    SealVerificationFailed {
+        timestamp: DateTime<Utc>,
+        shard_id: String,
+        reason: String,
+        expected_digest: String,
+        actual_digest: String,
+        worker_id: String,
+        severity: String,
+    },
+    
+    /// VRAM allocated
+    VramAllocated {
+        timestamp: DateTime<Utc>,
+        requested_bytes: usize,
+        allocated_bytes: usize,
+        available_bytes: usize,
+        used_bytes: usize,
+        gpu_device: u32,
+        worker_id: String,
+    },
+    
+    /// VRAM allocation failed
+    VramAllocationFailed {
+        timestamp: DateTime<Utc>,
+        requested_bytes: usize,
+        available_bytes: usize,
+        reason: String,
+        gpu_device: u32,
+        worker_id: String,
+    },
+    
+    /// VRAM deallocated
+    VramDeallocated {
+        timestamp: DateTime<Utc>,
+        shard_id: String,
+        freed_bytes: usize,
+        remaining_used: usize,
+        gpu_device: u32,
+        worker_id: String,
+    },
+    
+    // ========== Security Incident Events (5) ==========
+    
+    /// Rate limit exceeded
+    RateLimitExceeded {
+        timestamp: DateTime<Utc>,
+        ip: IpAddr,
+        endpoint: String,
+        limit: u32,
+        actual: u32,
+        window_seconds: u32,
+    },
+    
+    /// Path traversal attempt
+    PathTraversalAttempt {
+        timestamp: DateTime<Utc>,
+        actor: ActorInfo,
+        attempted_path: String,
+        endpoint: String,
+    },
+    
+    /// Invalid token used
+    InvalidTokenUsed {
+        timestamp: DateTime<Utc>,
+        ip: IpAddr,
+        token_prefix: String,
+        endpoint: String,
+    },
+    
+    /// Security policy violation
+    PolicyViolation {
+        timestamp: DateTime<Utc>,
+        policy: String,
+        violation: String,
+        details: String,
+        severity: String,
+        worker_id: String,
+        action_taken: String,
+    },
+    
+    /// Suspicious activity detected
+    SuspiciousActivity {
+        timestamp: DateTime<Utc>,
+        actor: ActorInfo,
+        activity_type: String,
+        details: String,
+        risk_score: u32,
+    },
+    
+    // ========== Data Access Events (3) ==========
+    
+    /// Inference executed (GDPR)
+    InferenceExecuted {
+        timestamp: DateTime<Utc>,
+        customer_id: String,
+        job_id: String,
+        model_ref: String,
+        tokens_processed: u32,
+        provider_id: Option<String>,
+        result: AuditResult,
+    },
+    
+    /// Model accessed (GDPR)
+    ModelAccessed {
+        timestamp: DateTime<Utc>,
+        customer_id: String,
+        model_ref: String,
+        access_type: String,
+        provider_id: Option<String>,
+    },
+    
+    /// Data deleted (GDPR)
+    DataDeleted {
+        timestamp: DateTime<Utc>,
+        customer_id: String,
+        data_types: Vec<String>,
+        reason: String,
+    },
+    
+    // ========== Compliance Events (3) ==========
+    
+    /// GDPR data access request
+    GdprDataAccessRequest {
+        timestamp: DateTime<Utc>,
+        customer_id: String,
+        requester: String,
+        scope: Vec<String>,
+    },
+    
+    /// GDPR data export
+    GdprDataExport {
+        timestamp: DateTime<Utc>,
+        customer_id: String,
+        data_types: Vec<String>,
+        export_format: String,
+        file_hash: String,
+    },
+    
+    /// GDPR right to erasure
+    GdprRightToErasure {
+        timestamp: DateTime<Utc>,
+        customer_id: String,
+        completed_at: DateTime<Utc>,
+        data_types_deleted: Vec<String>,
+    },
+}

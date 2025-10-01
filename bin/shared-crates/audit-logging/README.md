@@ -100,6 +100,206 @@ Platform Audit Service (audit.llama-orch-platform.com)
 
 ---
 
+## What We Offer to Other Crates
+
+`audit-logging` provides **security audit trail services** to all llama-orch crates. Here's what we offer:
+
+### 🔒 Core Capabilities
+
+**1. Immutable Event Recording**
+- Append-only audit trail with tamper-evident hash chains
+- 32 pre-defined event types across 7 categories
+- Async, non-blocking emission (won't slow down your operations)
+- Automatic buffering and batching (1 second or 100 events)
+
+**2. Compliance-Ready Storage**
+- GDPR, SOC2, ISO 27001 compliant retention (7 years default)
+- Local mode (single-node) or Platform mode (marketplace)
+- Encrypted at rest, checksummed files
+- Daily rotation with integrity verification
+
+**3. Security-First Design**
+- Automatic sensitive data redaction (no tokens, passwords, or pointers logged)
+- Integration with `input-validation` for log injection prevention
+- Integration with `auth-min` for token fingerprinting
+- Cryptographic signatures (platform mode)
+
+**4. Query & Verification APIs**
+- Query by actor, event type, resource, or time range
+- Hash chain integrity verification
+- File checksum verification
+- Compliance report generation (GDPR, SOC2)
+
+### 📦 What You Get
+
+**For orchestratord**:
+```rust
+// Authentication events
+AuditEvent::AuthSuccess { actor, method, ip, path }
+AuditEvent::AuthFailure { attempted_user, reason, ip }
+
+// Task lifecycle
+AuditEvent::TaskSubmitted { actor, task_id, model_ref, prompt_length }
+AuditEvent::TaskCompleted { task_id, worker_id, tokens_generated }
+AuditEvent::TaskCanceled { actor, task_id, reason }
+
+// Node management
+AuditEvent::NodeRegistered { actor, node_id, gpu_count, total_vram_gb }
+AuditEvent::NodeDeregistered { actor, node_id, reason }
+```
+
+**For pool-managerd**:
+```rust
+// Pool lifecycle
+AuditEvent::PoolCreated { actor, pool_id, model_ref, node_id, replicas }
+AuditEvent::PoolDeleted { actor, pool_id, reason, replicas_terminated }
+AuditEvent::PoolModified { actor, pool_id, changes }
+```
+
+**For worker-orcd / vram-residency**:
+```rust
+// VRAM security operations
+AuditEvent::VramSealed { shard_id, gpu_device, vram_bytes, digest }
+AuditEvent::SealVerified { shard_id, worker_id }
+AuditEvent::SealVerificationFailed { shard_id, reason, severity }  // CRITICAL
+
+// VRAM resource tracking
+AuditEvent::VramAllocated { requested_bytes, allocated_bytes, gpu_device }
+AuditEvent::VramAllocationFailed { requested_bytes, available_bytes, reason }
+AuditEvent::VramDeallocated { shard_id, freed_bytes, gpu_device }
+
+// Security policy enforcement
+AuditEvent::PolicyViolation { policy, violation, severity, action_taken }
+```
+
+**For all services**:
+```rust
+// Security incidents
+AuditEvent::RateLimitExceeded { ip, endpoint, limit }
+AuditEvent::PathTraversalAttempt { actor, attempted_path }
+AuditEvent::InvalidTokenUsed { ip, token_prefix }
+AuditEvent::SuspiciousActivity { actor, activity_type, risk_score }
+```
+
+### 🚀 Integration Pattern
+
+**1. Initialize at startup**:
+```rust
+use audit_logging::{AuditLogger, AuditConfig, AuditMode};
+
+let audit_logger = AuditLogger::new(AuditConfig {
+    mode: AuditMode::Local {
+        base_dir: PathBuf::from("/var/lib/llorch/audit/orchestratord"),
+    },
+    service_id: "orchestratord".to_string(),
+    rotation_policy: RotationPolicy::Daily,
+    retention_policy: RetentionPolicy::default(),
+})?;
+
+// Add to app state
+let state = AppState {
+    audit_logger: Arc::new(audit_logger),
+    ...
+};
+```
+
+**2. Emit events (non-blocking)**:
+```rust
+// In authentication middleware
+state.audit_logger.emit(AuditEvent::AuthSuccess {
+    timestamp: Utc::now(),
+    actor: ActorInfo {
+        user_id: format!("token:{}", token_fp),  // Use fingerprint
+        ip: Some(extract_ip(&req)),
+        auth_method: AuthMethod::BearerToken,
+        session_id: None,
+    },
+    method: AuthMethod::BearerToken,
+    path: req.uri().path().to_string(),
+    service_id: "orchestratord".to_string(),
+}).await.ok();  // Don't block on audit failure
+```
+
+**3. Sanitize user input**:
+```rust
+use input_validation::sanitize_string;
+
+// Always sanitize before logging
+let safe_pool_id = sanitize_string(&pool_id)?;
+let safe_reason = sanitize_string(&reason)?;
+
+audit_logger.emit(AuditEvent::PoolDeleted {
+    pool_id: safe_pool_id,  // ✅ Protected from log injection
+    reason: safe_reason,
+    ...
+}).await?;
+```
+
+**4. Flush on shutdown**:
+```rust
+// Graceful shutdown
+audit_logger.flush().await?;
+```
+
+### 📊 Performance Guarantees
+
+- **Non-blocking**: Async emission with background writer task
+- **Buffered**: Up to 1000 events or 10MB in memory
+- **Batched**: Flush every 1 second or 100 events (whichever comes first)
+- **Graceful degradation**: Drops events if buffer full (logs warning)
+- **Critical events**: Immediate flush for security incidents
+
+### 🔐 Security Guarantees
+
+- **Immutable**: Append-only, no updates or deletes
+- **Tamper-evident**: Hash chain (blockchain-style) detects modifications
+- **Redacted**: Never logs full tokens, passwords, VRAM pointers, or prompt content
+- **Sanitized**: Integration with `input-validation` prevents log injection
+- **Signed**: HMAC/Ed25519 signatures in platform mode
+
+### 📖 Documentation
+
+**For consumers**:
+- `.specs/10_expectations.md` — What you can expect from us
+- `.specs/01_event-types.md` — All 32 event types with schemas
+- `.specs/03_security-and-api.md` — API reference and security requirements
+
+**For VRAM operations**:
+- `.specs/11_worker_vram_residency.md` — Detailed VRAM audit requirements
+
+**For implementers**:
+- `.specs/00_overview.md` — Architecture and principles
+- `.specs/02_storage-and-tamper-evidence.md` — Storage and integrity
+
+### ⚠️ Important Notes
+
+**What NOT to log**:
+- ❌ Full API tokens (use `auth_min::fingerprint_token()`)
+- ❌ Raw passwords or keys
+- ❌ VRAM pointers (`0x7f8a4c000000`)
+- ❌ Prompt content (use length and hash)
+- ❌ Customer PII (unless required for GDPR)
+
+**What to ALWAYS log**:
+- ✅ Token fingerprints (`token:a3f2c1`)
+- ✅ User IDs (opaque identifiers)
+- ✅ Resource IDs (pool_id, shard_id)
+- ✅ IP addresses (for security monitoring)
+- ✅ Timestamps (UTC, ISO 8601)
+- ✅ Action outcomes (success/failure)
+
+### 🎯 Current Status
+
+- **Version**: 0.0.0 (early development)
+- **Stability**: Alpha
+- **Phase 1 (M0)**: Basic event types, local storage, async emission ✅
+- **Phase 2 (Next)**: Service integration, VRAM events, input validation ⬜
+- **Phase 3 (Post-M0)**: Platform mode, signatures, query API ⬜
+
+**Ready to integrate**: Yes, for basic event emission and local storage.
+
+---
+
 ## What Gets Audited
 
 ### Critical Security Events
