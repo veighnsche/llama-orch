@@ -50,7 +50,7 @@ The project also includes determinism and observability features that I enjoyed 
 
 ## VIBE CODED PROJECT
 
-(THIS PART IS JUST BACKGROUND STORY, and something human to read)
+(THIS PART IS JUST FUTURE COPY PASTA, and something human to read)
 
 > Hi there, My name is veighnsche (pronounced Vince). This project is nearly 99% AI generated I guess. I mean. I don't even know how to write rust before I began with this project. I would say that I take ownership of the very high level specifications and architecture, the crate structure and the code flow, the programming language choices and what you can see in the this [`git's history`](https://github.com/veighnsche/llama-orch/commit/e32cd7660671a74917e882fdfb89c0b994dd1ced). i WANT to take FULL responsibility of any breaking bugs and security failures. However. I cannot give you that guarantee until I have fully reviewed the code details (and peer reviews would be nice.)
 >
