@@ -7,4 +7,6 @@ authors.workspace = true
 
 [dependencies]
 thiserror.workspace = true
-regex.workspace = true
+
+[dev-dependencies]
+proptest = "1.0"

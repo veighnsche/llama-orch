@@ -30,6 +30,7 @@ members = [
     # New bin/ crates - shared-crates
     "bin/shared-crates/secrets-management",
     "bin/shared-crates/input-validation",
+    "bin/shared-crates/input-validation/bdd",
     "bin/shared-crates/audit-logging",
     "bin/shared-crates/rate-limiting",
     "bin/shared-crates/circuit-breaker",
@@ -70,10 +71,10 @@ members = [
     # New bin/ crates - worker-orcd-crates
     "bin/worker-orcd-crates/vram-residency",
     "bin/worker-orcd-crates/model-loader",
-    "bin/worker-orcd-crates/inference",
     "bin/worker-orcd-crates/api",
     "bin/worker-orcd-crates/error-handler",
-    "bin/worker-orcd-crates/execution-planner", "bin/worker-orcd-crates/capability-matcher",
+    "bin/worker-orcd-crates/scheduler",
+    "bin/worker-orcd-crates/capability-matcher",
 ]
 
 resolver = "2"

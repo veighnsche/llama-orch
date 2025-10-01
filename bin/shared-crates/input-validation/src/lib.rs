@@ -1,196 +1,83 @@
-//! input-validation — Input sanitization and validation
+//! Input Validation — Collection of Security Validation Applets
 //!
-//! Prevents injection attacks, path traversal, and malformed input from reaching core logic.
+//! This crate provides a collection of small, focused validation functions (applets)
+//! that prevent injection attacks, path traversal, and resource exhaustion.
 //!
-//! # Security Properties
+//! Each applet is:
+//! - **Independent**: No shared state, pure functions
+//! - **Composable**: Use only what you need
+//! - **Security-critical**: Never panics, always returns Result
+//! - **Fast**: O(n) or better, early termination
 //!
-//! - Validates model references (no traversal)
-//! - Validates filesystem paths (no ../escape)
-//! - Validates prompts (length, chars, no null bytes)
-//! - Validates parameters (ranges, types)
+//! # Architecture
+//!
+//! This crate follows an **applet-based architecture**:
+//! - Each validation function is a self-contained applet
+//! - No framework, no validation engine, just utilities
+//! - Mix and match applets as needed
+//! - Similar to Unix philosophy: small tools that do one thing well
+//!
+//! # Available Applets
+//!
+//! - [`validate_identifier`] — Validate IDs (shard_id, task_id, pool_id)
+//! - [`validate_model_ref`] — Validate model references (prevents injection)
+//! - [`validate_hex_string`] — Validate hex strings (digests, hashes)
+//! - [`validate_path`] — Validate filesystem paths (prevents traversal)
+//! - [`validate_prompt`] — Validate user prompts (prevents exhaustion)
+//! - [`validate_range`] — Validate integer ranges (prevents overflow)
+//! - [`sanitize_string`] — Sanitize strings for logging (prevents injection)
 //!
 //! # Example
 //!
 //! ```rust
-//! use input_validation::{validate_model_ref, validate_prompt};
+//! use input_validation::{validate_identifier, validate_model_ref, validate_hex_string};
+//!
+//! // Validate shard ID
+//! validate_identifier("shard-abc123", 256)?;
 //!
 //! // Validate model reference
-//! validate_model_ref("hf:meta-llama/Llama-3.1-8B")?;
-//! // validate_model_ref("hf:../../../etc/passwd")?; // ERROR: path traversal
+//! validate_model_ref("meta-llama/Llama-3.1-8B")?;
 //!
-//! // Validate prompt
-//! validate_prompt("Hello, world!", 100_000)?;
-//! // validate_prompt("A\0B", 100)?; // ERROR: null byte
+//! // Validate SHA-256 digest
+//! let digest = "a".repeat(64);
+//! validate_hex_string(&digest, 64)?;
 //! ```
+//!
+//! # Security Properties
+//!
+//! - **No panics**: All functions return `Result`, never panic
+//! - **No information leakage**: Errors contain only metadata, not input content
+//! - **Minimal dependencies**: Only `thiserror` (no regex, no async)
+//! - **TIER 2 security**: Strict Clippy enforcement
 
-// Security-critical crate: TIER 1 Clippy configuration
+// High-importance crate: TIER 2 Clippy configuration
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::expect_used)]
 #![deny(clippy::panic)]
-#![deny(clippy::indexing_slicing)]
-#![deny(clippy::integer_arithmetic)]
-#![deny(clippy::cast_ptr_alignment)]
-#![deny(clippy::mem_forget)]
 #![deny(clippy::todo)]
-#![deny(clippy::unimplemented)]
+#![warn(clippy::indexing_slicing)]
 #![warn(clippy::arithmetic_side_effects)]
-#![warn(clippy::cast_lossless)]
-#![warn(clippy::cast_possible_truncation)]
-#![warn(clippy::cast_possible_wrap)]
-#![warn(clippy::cast_precision_loss)]
-#![warn(clippy::cast_sign_loss)]
-#![warn(clippy::string_slice)]
 #![warn(clippy::missing_errors_doc)]
-#![warn(clippy::missing_panics_doc)]
-#![warn(clippy::missing_safety_doc)]
-#![warn(clippy::must_use_candidate)]
 
-use thiserror::Error;
+// Applet modules
+mod error;
+mod identifier;
+mod model_ref;
+mod hex_string;
+mod path;
+mod prompt;
+mod range;
+mod sanitize;
 
-#[derive(Debug, Error)]
-pub enum ValidationError {
-    #[error("input too long: {0} > {1}")]
-    TooLong(usize, usize),
-    #[error("input too short: {0} < {1}")]
-    TooShort(usize, usize),
-    #[error("invalid characters: {0}")]
-    InvalidChars(String),
-    #[error("path traversal detected: {0}")]
-    PathTraversal(String),
-    #[error("null byte detected")]
-    NullByte,
-    #[error("out of range: {0}")]
-    OutOfRange(String),
-}
+// Re-export public API
+pub use error::{ValidationError, Result};
+pub use identifier::validate_identifier;
+pub use model_ref::validate_model_ref;
+pub use hex_string::validate_hex_string;
+pub use path::validate_path;
+pub use prompt::validate_prompt;
+pub use range::validate_range;
+pub use sanitize::sanitize_string;
 
-pub type Result<T> = std::result::Result<T, ValidationError>;
-
-/// Validate model reference (hf:org/repo, file:path, etc.)
-pub fn validate_model_ref(model_ref: &str) -> Result<()> {
-    const MAX_LEN: usize = 512;
-    
-    if model_ref.is_empty() {
-        return Err(ValidationError::TooShort(0, 1));
-    }
-    
-    if model_ref.len() > MAX_LEN {
-        return Err(ValidationError::TooLong(model_ref.len(), MAX_LEN));
-    }
-    
-    // Check for null bytes
-    if model_ref.contains('\0') {
-        return Err(ValidationError::NullByte);
-    }
-    
-    // Check for path traversal
-    if model_ref.contains("..") {
-        return Err(ValidationError::PathTraversal(model_ref.to_string()));
-    }
-    
-    // Validate characters (alphanumeric + safe punctuation)
-    let valid_chars = model_ref.chars().all(|c| {
-        c.is_alphanumeric() || matches!(c, '-' | '_' | '/' | ':' | '.')
-    });
-    
-    if !valid_chars {
-        return Err(ValidationError::InvalidChars(model_ref.to_string()));
-    }
-    
-    Ok(())
-}
-
-/// Validate prompt text
-pub fn validate_prompt(prompt: &str, max_len: usize) -> Result<()> {
-    if prompt.is_empty() {
-        return Err(ValidationError::TooShort(0, 1));
-    }
-    
-    if prompt.len() > max_len {
-        return Err(ValidationError::TooLong(prompt.len(), max_len));
-    }
-    
-    // Check for null bytes
-    if prompt.contains('\0') {
-        return Err(ValidationError::NullByte);
-    }
-    
-    // Validate UTF-8 (already guaranteed by &str, but check boundaries)
-    if !prompt.is_char_boundary(0) {
-        return Err(ValidationError::InvalidChars("Invalid UTF-8".to_string()));
-    }
-    
-    Ok(())
-}
-
-/// Validate integer parameter in range
-pub fn validate_int_range(value: i64, min: i64, max: i64, name: &str) -> Result<i64> {
-    if value < min || value > max {
-        return Err(ValidationError::OutOfRange(
-            format!("{} must be between {} and {}, got {}", name, min, max, value)
-        ));
-    }
-    Ok(value)
-}
-
-/// Validate float parameter in range
-pub fn validate_float_range(value: f64, min: f64, max: f64, name: &str) -> Result<f64> {
-    if value < min || value > max || value.is_nan() {
-        return Err(ValidationError::OutOfRange(
-            format!("{} must be between {} and {}, got {}", name, min, max, value)
-        ));
-    }
-    Ok(value)
-}
-
-/// Validate filesystem path (no traversal)
-pub fn validate_path(path: &str) -> Result<()> {
-    if path.is_empty() {
-        return Err(ValidationError::TooShort(0, 1));
-    }
-    
-    // Check for path traversal
-    if path.contains("..") {
-        return Err(ValidationError::PathTraversal(path.to_string()));
-    }
-    
-    // Check for null bytes
-    if path.contains('\0') {
-        return Err(ValidationError::NullByte);
-    }
-    
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-    #[test]
-    fn test_validate_model_ref() {
-        // Valid
-        assert!(validate_model_ref("hf:meta-llama/Llama-3.1-8B").is_ok());
-        assert!(validate_model_ref("file:/models/model.gguf").is_ok());
-        
-        // Invalid
-        assert!(validate_model_ref("hf:../../../etc/passwd").is_err());
-        assert!(validate_model_ref("model\0name").is_err());
-        assert!(validate_model_ref("").is_err());
-    }
-    
-    #[test]
-    fn test_validate_prompt() {
-        assert!(validate_prompt("Hello, world!", 100).is_ok());
-        assert!(validate_prompt("A\0B", 100).is_err()); // Null byte
-        assert!(validate_prompt("", 100).is_err()); // Empty
-        assert!(validate_prompt("A".repeat(1000).as_str(), 100).is_err()); // Too long
-    }
-    
-    #[test]
-    fn test_validate_ranges() {
-        assert!(validate_int_range(50, 0, 100, "value").is_ok());
-        assert!(validate_int_range(150, 0, 100, "value").is_err());
-        
-        assert!(validate_float_range(0.5, 0.0, 1.0, "temp").is_ok());
-        assert!(validate_float_range(1.5, 0.0, 1.0, "temp").is_err());
-    }
-}
+// Note: All validation implementations are in their respective applet modules.
+// This file only re-exports the public API for easy access.
