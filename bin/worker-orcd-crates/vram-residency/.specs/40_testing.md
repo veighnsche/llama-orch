@@ -2,21 +2,22 @@
 
 **Status**: Draft  
 **Security Tier**: TIER 1 (Critical)  
-**Last Updated**: 2025-10-01  
-**Purpose**: Define testing strategy for production-level validation without physical GPU
+**Last Updated**: 2025-10-02  
+**Purpose**: Define testing strategy with automatic GPU detection and CPU-only fallback
 
 ---
 
 ## 0. Executive Summary
 
-**Key Finding**: Physical VRAM is **NOT required** for production-level testing of vram-residency.
+**Key Finding**: Tests automatically use real GPU when available, fall back to mock when not.
 
 **Rationale**:
 - 95% of code is GPU-agnostic business logic (cryptography, validation, audit)
 - Mock VRAM provides sufficient fidelity for security and correctness validation
-- GPU tests only needed for final production deployment validation (5% of tests)
+- GPU tests run automatically when GPU detected (via `gpu-info`)
+- All tests work on CPU-only systems (CI/CD friendly)
 
-**Testing Strategy**: Mock-first development with optional GPU integration tests.
+**Testing Strategy**: Automatic GPU detection with mock fallback (best of both worlds).
 
 ---
 
@@ -35,31 +36,34 @@
 - CUDA FFI calls (`cudaMalloc`, `cudaFree`)
 - Device property queries (`cudaGetDeviceProperties`)
 - Memory allocation/deallocation
-- Unified memory detection
-
 **Testing Implication**: Only Layer 2 requires physical GPU for testing.
 
 ---
 
-### 1.2 Mock vs Real VRAM
+### 1.2 Automatic GPU Detection Strategy
 
-| Aspect | Mock VRAM | Real VRAM |
-|--------|-----------|-----------|
-| **GPU Required** | ❌ No | ✅ Yes |
+**New approach** (using `gpu-info`):
+- Tests automatically detect GPU at runtime
+- If GPU available → run real CUDA tests
+- If no GPU → fall back to mock VRAM
+- Same test code works in both modes
+
+| Aspect | Mock VRAM | Real VRAM (Auto-Detected) |
+|--------|-----------|---------------------------|
+| **GPU Required** | ❌ No | ✅ Yes (auto-detected) |
 | **Test Coverage** | 95% of code | 100% of code |
-| **CI/CD Friendly** | ✅ Yes | ❌ No (requires GPU runners) |
-| **Development Speed** | ✅ Fast | ⚠️ Slow (GPU access) |
-| **Cost** | ✅ Free | ⚠️ Expensive (GPU infrastructure) |
-| **Debugging** | ✅ Easy | ⚠️ Complex (CUDA errors) |
+| **CI/CD Friendly** | ✅ Yes | ✅ Yes (auto-fallback) |
+| **Development Speed** | ✅ Fast | ✅ Fast (when GPU present) |
+| **Cost** | ✅ Free | ✅ Free (uses available GPU) |
+| **Debugging** | ✅ Easy | ✅ Easier (real errors) |
 | **Security Testing** | ✅ Complete | ✅ Complete |
 | **Performance Testing** | ❌ No | ✅ Yes |
 
-**Recommendation**: Use mock VRAM for development and CI/CD, real VRAM for final production validation.
+**Benefit**: Developers with GPUs get automatic real CUDA testing, CI/CD still works on CPU-only runners.
 
 ---
 
 ## 2. Mock VRAM Implementation
-
 ### 2.1 MockVramAllocator
 
 **Purpose**: Simulate VRAM allocation with identical semantics to real CUDA.
@@ -168,59 +172,83 @@ impl MockVramAllocator {
 
 ---
 
-### 2.2 Feature Flags
+### 2.2 Automatic GPU Detection (Using gpu-info)
 
 **Cargo.toml**:
 ```toml
-[features]
-default = ["mock-vram"]
-mock-vram = []  # Use mock allocator (no GPU required)
-real-cuda = []  # Use real CUDA FFI (requires GPU)
-
 [dependencies]
-# No CUDA dependencies in default build
-# CUDA dependencies only with real-cuda feature
+gpu-info = { path = "../../shared-crates/gpu-info" }
+
+# No feature flags needed - runtime detection
 ```
 
-**lib.rs**:
+**lib.rs** (runtime detection):
 ```rust
-// Conditional compilation based on feature flags
+use gpu_info::GpuInfo;
 
-#[cfg(feature = "mock-vram")]
-mod vram {
-    pub use crate::mock::MockVramAllocator as VramAllocator;
-}
-
-#[cfg(feature = "real-cuda")]
-mod vram {
-    pub use crate::cuda::CudaVramAllocator as VramAllocator;
-}
-
-// Public API uses abstraction (works with both)
 pub struct VramManager {
-    allocator: vram::VramAllocator,
-    // ... other fields
+    allocator: VramAllocator,
+    gpu_info: Option<GpuInfo>,
+}
+
+impl VramManager {
+    /// Create VramManager with automatic GPU detection
+    pub fn new() -> Self {
+        let gpu_info = GpuInfo::detect();
+        
+        let allocator = if gpu_info.available {
+            tracing::info!("🎮 GPU detected, using real CUDA");
+            VramAllocator::Cuda(CudaVramAllocator::new())
+        } else {
+            tracing::info!("💻 No GPU detected, using mock");
+            VramAllocator::Mock(MockVramAllocator::new(24 * 1024 * 1024 * 1024))
+        };
+        
+        Self { allocator, gpu_info }
+    }
+    
+    /// Create VramManager for production (fail if no GPU)
+    pub fn new_production() -> Result<Self> {
+        let gpu_info = GpuInfo::detect_or_fail()
+            .context("Production mode requires NVIDIA GPU")?;
+        
+        Ok(Self {
+            allocator: VramAllocator::Cuda(CudaVramAllocator::new()),
+            gpu_info: Some(gpu_info),
+        })
+    }
+}
+
+enum VramAllocator {
+    Mock(MockVramAllocator),
+    Cuda(CudaVramAllocator),
 }
 ```
+
+**Key difference**: No compile-time feature flags, detection happens at runtime.
 
 ---
 
-## 3. Test Coverage Without GPU
+## 3. Test Coverage with Automatic GPU Detection
 
-### 3.1 Unit Tests (Mock VRAM)
+### 3.1 Unit Tests (Auto-Detect GPU)
 
-**What can be tested** (95% of code):
+**New pattern**: Tests automatically use GPU if available, mock otherwise.
 
 #### Cryptographic Operations
 ```rust
 #[cfg(test)]
 mod crypto_tests {
     use super::*;
+    use gpu_info::GpuInfo;
     
     #[test]
     fn test_seal_signature_computation() {
+        // Auto-detect GPU (works with or without)
+        let manager = VramManager::new();
+        
         let seal_key = SecretKey::derive_from_token("test-token", b"domain")?;
-        let shard = create_test_shard();
+        let shard = manager.seal_model("test", 0, &[0u8; 1024])?;
         
         let signature = compute_seal_signature(&shard, &seal_key)?;
         assert_eq!(signature.len(), 32);  // HMAC-SHA256 output
@@ -228,10 +256,11 @@ mod crypto_tests {
     
     #[test]
     fn test_seal_verification_valid() {
-        let manager = VramManager::new_mock(1024 * 1024)?;
+        // Auto-detect: uses real GPU if available, mock otherwise
+        let manager = VramManager::new();
         let shard = manager.seal_model("test", 0, &[0u8; 1024])?;
         
-        // Verification should pass
+        // Verification should pass (regardless of GPU/mock)
         assert!(manager.verify_sealed(&shard).is_ok());
     }
     
@@ -677,42 +706,54 @@ proptest! {
 
 ---
 
-## 4. GPU Integration Tests (Real VRAM)
+## 4. Automatic GPU Testing (When Available)
 
-### 4.1 When GPU Tests Are Required
+### 4.1 Runtime GPU Detection in Tests
 
-**Required before**:
-- ⚠️ Production deployment with real GPUs
-- ⚠️ Performance optimization
-- ⚠️ Hardware compatibility validation
-- ⚠️ CUDA driver updates
-
-**NOT required for**:
-- ✅ Development iteration
-- ✅ CI/CD pipelines
-- ✅ Security audits
-- ✅ Code review
-
----
-
-### 4.2 GPU Test Suite
-
-**Separate test module** (only runs with `real-cuda` feature):
+**New behavior**: Tests automatically run with real GPU when detected.
 
 ```rust
-#[cfg(all(test, feature = "real-cuda"))]
-mod gpu_integration_tests {
+#[cfg(test)]
+mod integration_tests {
     use super::*;
+    use gpu_info::GpuInfo;
     
     #[test]
-    fn test_real_cuda_allocation() {
-        let mut manager = VramManager::new_with_cuda(0)?;
+    fn test_vram_allocation() {
+        // Automatically uses GPU if available, mock otherwise
+        let manager = VramManager::new();
         
-        // Allocate 1MB in real VRAM
+        // Test works in both modes
+        let shard = manager.seal_model("test", 0, &[0u8; 1024 * 1024])?;
+        assert_eq!(shard.vram_bytes, 1024 * 1024);
+        assert_eq!(shard.digest.len(), 64);
+        
+        // Log which mode was used
+        if manager.gpu_info.is_some() {
+            println!("✅ Tested with real GPU");
+        } else {
+            println!("✅ Tested with mock VRAM");
+        }
+    }
+    
+    #[test]
+    fn test_real_cuda_allocation_if_available() {
+        let gpu_info = GpuInfo::detect();
+        
+        if !gpu_info.available {
+            println!("⏭️  Skipping GPU-specific test (no GPU detected)");
+            return;
+        }
+        
+        // This part only runs if GPU is available
+        let manager = VramManager::new();
+        assert!(manager.gpu_info.is_some());
+        
         let shard = manager.seal_model("test", 0, &[0u8; 1024 * 1024])?;
         
-        assert_eq!(shard.vram_bytes, 1024 * 1024);
-        assert!(shard.digest.len() == 64);
+        // Verify real CUDA was used
+        println!("🎮 GPU test passed on {}", 
+            gpu_info.devices[0].name);
     }
     
     #[test]
@@ -784,27 +825,61 @@ mod gpu_integration_tests {
 
 ---
 
-### 4.3 Running GPU Tests
+### 4.2 Production Mode Enforcement
 
-**Manual execution** (requires GPU):
+**Critical**: `worker-orcd` binary MUST fail fast if no GPU in production.
 
-```bash
-# On machine with GPU
-cargo test -p vram-residency --features real-cuda --test gpu_integration
+```rust
+// In worker-orcd/src/main.rs
+use vram_residency::VramManager;
 
-# Specific GPU tests
-cargo test -p vram-residency cuda_allocation --features real-cuda
-cargo test -p vram-residency multi_gpu --features real-cuda
-cargo test -p vram-residency vram_capacity --features real-cuda
-
-# Performance benchmarks
-cargo bench -p vram-residency --features real-cuda
+fn main() -> Result<()> {
+    // Production mode: MUST have GPU
+    let vram_manager = VramManager::new_production()
+        .context("worker-orcd requires NVIDIA GPU with CUDA support")?;
+    
+    tracing::info!(
+        "✅ GPU detected: {} with {} GB VRAM",
+        vram_manager.gpu_info.as_ref().unwrap().devices[0].name,
+        vram_manager.gpu_info.as_ref().unwrap().devices[0].vram_total_gb()
+    );
+    
+    // Continue with worker initialization
+    Ok(())
+}
 ```
 
-**NOT in CI/CD** (no GPU runners):
-- GPU tests are opt-in only
-- Run manually before production deployment
-- Document results in release notes
+**Behavior**:
+- **Tests**: `VramManager::new()` → auto-detect, fallback to mock
+- **Production**: `VramManager::new_production()` → fail fast if no GPU
+- **Development**: `VramManager::new()` → works with or without GPU
+
+---
+
+### 4.3 Running Tests
+
+**Automatic GPU detection** (recommended):
+
+```bash
+# Run all tests (auto-detects GPU)
+cargo test -p vram-residency
+
+# Output on machine WITH GPU:
+# 🎮 GPU detected, using real CUDA
+# ✅ Tested with real GPU
+# test test_vram_allocation ... ok
+
+# Output on machine WITHOUT GPU:
+# 💻 No GPU detected, using mock
+# ✅ Tested with mock VRAM
+# test test_vram_allocation ... ok
+```
+
+**Benefits**:
+- ✅ Same command works everywhere
+- ✅ Developers with GPUs get real testing automatically
+- ✅ CI/CD works on CPU-only runners
+- ✅ No feature flags to remember
 
 ---
 
@@ -839,20 +914,20 @@ jobs:
           override: true
           components: clippy, rustfmt
       
-      # All tests use mock VRAM (no GPU required)
+      # Auto-detect GPU (falls back to mock on CI runners)
       - name: Run unit tests
-        run: cargo test -p vram-residency --features mock-vram
+        run: cargo test -p vram-residency
       
       - name: Run BDD tests
         run: |
           cd bin/worker-orcd-crates/vram-residency/bdd
-          cargo test --features mock-vram
+          cargo test
       
       - name: Run security tests
-        run: cargo test -p vram-residency security --features mock-vram
+        run: cargo test -p vram-residency security
       
       - name: Run property tests
-        run: cargo test -p vram-residency proptest --features mock-vram
+        run: cargo test -p vram-residency proptest
       
       - name: Check Clippy (TIER 1)
         run: cargo clippy -p vram-residency -- -D warnings
@@ -863,7 +938,7 @@ jobs:
       - name: Generate code coverage
         uses: actions-rs/tarpaulin@v0.1
         with:
-          args: '-p vram-residency --features mock-vram --out Lcov'
+          args: '-p vram-residency --out Lcov'
       
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -894,8 +969,8 @@ jobs:
 
 echo "Running vram-residency tests..."
 
-# Run unit tests (mock VRAM)
-cargo test -p vram-residency --features mock-vram || exit 1
+# Run unit tests (auto-detect GPU, fallback to mock)
+cargo test -p vram-residency || exit 1
 
 # Run Clippy (TIER 1)
 cargo clippy -p vram-residency -- -D warnings || exit 1
@@ -905,6 +980,8 @@ cargo fmt -p vram-residency -- --check || exit 1
 
 echo "All checks passed!"
 ```
+
+**Note**: If you have a GPU, tests will automatically use it. Otherwise, mock VRAM is used.
 
 ---
 
@@ -1006,35 +1083,36 @@ criterion_main!(benches);
 
 ## 8. Production Validation Checklist
 
-### 8.1 Without GPU (Development)
+### 8.1 Development (CPU or GPU)
 
 **Before merging to main**:
-- [ ] All unit tests passing (mock VRAM)
-- [ ] All BDD tests passing (mock VRAM)
-- [ ] All security tests passing (mock VRAM)
-- [ ] All property tests passing (mock VRAM)
+- [ ] All unit tests passing (auto-detect GPU)
+- [ ] All BDD tests passing (auto-detect GPU)
+- [ ] All security tests passing (auto-detect GPU)
+- [ ] All property tests passing (auto-detect GPU)
 - [ ] Clippy lints passing (TIER 1)
 - [ ] Code coverage > 90%
 - [ ] Documentation complete
 - [ ] Security audit passed
 
-**Status**: ✅ Production-ready for logic validation
+**Status**: ✅ Tests work on both CPU-only and GPU systems
 
 ---
 
-### 8.2 With GPU (Deployment)
+### 8.2 Production Deployment
 
-**Before deploying to production**:
-- [ ] GPU integration tests passing (real CUDA)
+**Before deploying worker-orcd to production**:
+- [ ] `VramManager::new_production()` fails fast if no GPU
+- [ ] GPU integration tests passing on target hardware
 - [ ] Performance benchmarks acceptable
 - [ ] Multi-GPU tests passing (if applicable)
-- [ ] Hardware compatibility validated
+- [ ] Hardware compatibility validated (specific GPU models)
 - [ ] CUDA driver version tested
 - [ ] VRAM capacity limits verified
 - [ ] OOM behavior validated
 - [ ] Error recovery tested
 
-**Status**: ⚠️ Required before production deployment with real GPUs
+**Critical**: worker-orcd MUST refuse to start without NVIDIA GPU in production.
 
 ---
 
@@ -1088,30 +1166,38 @@ criterion_main!(benches);
 
 ---
 
-## 11. Conclusion
+## 11. Summary: Automatic GPU Detection Strategy
 
-**Key Findings**:
-- ✅ 95% of code can be tested without physical GPU
-- ✅ Mock VRAM provides sufficient fidelity for security validation
-- ✅ GPU tests only needed for final production validation (5% of tests)
-- ✅ CI/CD can run entirely on CPU-only runners
-
-**Recommendation**:
-1. Implement with mock VRAM (no GPU required)
-2. Write comprehensive tests (all with mock)
-3. Pass security audit (logic is GPU-agnostic)
-4. Deploy to CI/CD (mock tests only)
-5. Run GPU tests manually before production deployment
+**Key Changes** (using `gpu-info`):
+- ✅ Tests automatically detect GPU at runtime
+- ✅ If GPU available → run real CUDA tests
+- ✅ If no GPU → fall back to mock VRAM
+- ✅ Same test code works in both modes
+- ✅ No feature flags required
 
 **Benefits**:
-- Fast development iteration (no GPU access needed)
-- Reliable CI/CD (no GPU runners required)
-- Comprehensive test coverage (95% without GPU)
-- Easy debugging (no CUDA complexity)
-- Cost-effective (no GPU infrastructure)
+- **Developers with GPUs**: Get automatic real CUDA testing
+- **Developers without GPUs**: Tests still work (mock fallback)
+- **CI/CD**: Works on CPU-only runners (auto-fallback)
+- **Production**: `VramManager::new_production()` fails fast if no GPU
+
+**Testing Coverage**:
+- 95% of code is GPU-agnostic (cryptography, validation, audit)
+- 5% is GPU-specific (CUDA FFI, memory allocation)
+- All tests work on CPU-only systems
+- GPU tests run automatically when GPU detected
+
+**Production Enforcement**:
+- `VramManager::new()` → auto-detect, fallback to mock (for tests/dev)
+- `VramManager::new_production()` → fail fast if no GPU (for worker-orcd)
+- worker-orcd binary MUST use `new_production()` to enforce GPU-only policy
 
 ---
 
-**Status**: Ready for implementation  
-**Next steps**: Implement mock VRAM allocator and test suite  
+**Status**: Updated for automatic GPU detection via `gpu-info`  
+**Next steps**: 
+1. Add `gpu-info` dependency to `Cargo.toml`
+2. Implement runtime GPU detection in `VramManager`
+3. Update tests to use `VramManager::new()` (auto-detect)
+4. Ensure worker-orcd uses `VramManager::new_production()` (fail fast)  
 **Blocking issues**: None

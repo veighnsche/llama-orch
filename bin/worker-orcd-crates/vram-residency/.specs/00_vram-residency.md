@@ -102,8 +102,76 @@ impl Drop for SealedShard
 
 ---
 
-## 7. Traceability
+## 7. Error Handling
+
+- [WORKER-4150] All operations MUST return `Result<T, VramError>` with explicit error handling.
+- [WORKER-4151] `VramError` MUST distinguish retriable errors (InsufficientVram, CudaAllocationFailed) from fatal errors (SealVerificationFailed, IntegrityViolation, PolicyViolation).
+- [WORKER-4152] Error messages MUST NOT expose VRAM pointers, seal keys, or other sensitive information.
+- [WORKER-4153] VRAM allocation failures MUST provide actionable diagnostics (needed bytes, available bytes).
+
+---
+
+## 8. Audit Requirements
+
+- [WORKER-4160] All seal operations MUST emit `AuditEvent::VramSealed` with shard_id, gpu_device, vram_bytes, and digest.
+- [WORKER-4161] Seal verification failures MUST emit `AuditEvent::SealVerificationFailed` with severity "critical".
+- [WORKER-4162] VRAM deallocation MUST emit `AuditEvent::VramDeallocated` for audit trail.
+- [WORKER-4163] Policy violations MUST emit `AuditEvent::PolicyViolation` and prevent worker startup.
+
+---
+
+## 9. Configuration
+
+- [WORKER-4170] `VramManager` MUST accept configuration for:
+  - `worker_api_token: String` — For seal key derivation
+  - `gpu_device: u32` — CUDA device index
+  - `max_model_size: usize` — Maximum allowed model size (default 100GB)
+  - `audit_logger: Arc<AuditLogger>` — Audit event sink
+- [WORKER-4171] Configuration MUST be validated at initialization (gpu_device exists, max_model_size > 0).
+- [WORKER-4172] Invalid configuration MUST fail fast with actionable error messages.
+
+---
+
+## 10. Traceability
 
 **Code**: `bin/worker-orcd-crates/vram-residency/src/lib.rs`  
 **Tests**: `bin/worker-orcd-crates/vram-residency/tests/`  
 **Parent**: `bin/worker-orcd/.specs/00_worker-orcd.md` §2
+
+---
+
+## 11. Refinement Opportunities
+
+### 11.1 Tensor-Parallel Support
+- Define multi-shard coordination requirements for tensor-parallel models
+- Specify NCCL group coordination for cross-GPU seal verification
+- Add requirements for shard_index and total_shards validation
+
+### 11.2 Seal Timestamp Freshness
+- Define policy for seal timestamp freshness validation (optional vs required)
+- Specify acceptable time skew for distributed workers
+- Add requirements for timestamp monotonicity checks
+
+### 11.3 VRAM-Only Policy Enforcement Timing
+- Clarify when policy enforcement occurs (startup only vs periodic runtime checks)
+- Define behavior when policy violations are detected post-startup
+- Add requirements for policy re-verification after driver updates
+
+### 11.4 CUDA Driver Compatibility
+- Specify minimum CUDA driver version requirements
+- Define compatibility matrix for different GPU architectures
+- Add requirements for driver version validation at startup
+
+### 11.5 Performance Optimization
+- Consider incremental hashing for large models (reduce digest re-verification cost)
+- Evaluate seal signature caching strategies (balance security vs performance)
+- Define performance targets for seal operations (< 1ms for signature, < 100ms for digest)
+
+### 11.6 Multi-GPU Coordination
+- Add requirements for cross-GPU VRAM isolation verification
+- Define seal key derivation strategy for multi-GPU workers
+- Specify behavior when one GPU fails seal verification (fail all vs isolate)
+
+---
+
+**End of Specification**

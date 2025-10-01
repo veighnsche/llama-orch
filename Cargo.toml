@@ -73,6 +73,7 @@ members = [
     
     # New bin/ crates - worker-orcd-crates
     "bin/worker-orcd-crates/vram-residency",
+    "bin/worker-orcd-crates/vram-residency/bdd",
     "bin/worker-orcd-crates/model-loader",
     "bin/worker-orcd-crates/api",
     "bin/worker-orcd-crates/error-handler",
