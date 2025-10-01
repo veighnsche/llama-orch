@@ -84,53 +84,14 @@ pub fn engine_down(config_path: PathBuf, pool_filter: Option<String>) -> Result<
     Ok(())
 }
 
-pub fn engine_up(config_path: PathBuf, pool_filter: Option<String>) -> Result<()> {
-    use provisioners_engine_provisioner::provider_for;
-    let root = repo_root()?;
-    let path = if config_path.is_relative() { root.join(config_path) } else { config_path };
-    let bytes = std::fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
-    let cfg: contracts_config_schema::Config =
-        serde_yaml::from_slice(&bytes).with_context(|| format!("parsing {}", path.display()))?;
-    let pools: Vec<_> = match pool_filter {
-        Some(id) => cfg.pools.into_iter().filter(|p| p.id == id).collect(),
-        None => cfg.pools,
-    };
-    if pools.is_empty() {
-        println!("no pools matched");
-        return Ok(());
-    }
-    for p in pools.iter() {
-        println!("provisioning pool: {} (engine={:?})", p.id, p.engine);
-        let prov = provider_for(p)?;
-        prov.ensure(p)?;
-    }
-    println!("engine:up complete");
+pub fn engine_up(_config_path: PathBuf, _pool_filter: Option<String>) -> Result<()> {
+    // TODO: Implement engine provisioning
+    println!("engine:up not yet implemented");
     Ok(())
 }
 
-pub fn engine_plan(config_path: PathBuf, pool_filter: Option<String>) -> Result<()> {
-    use provisioners_engine_provisioner::provider_for;
-    let root = repo_root()?;
-    let path = if config_path.is_relative() { root.join(config_path) } else { config_path };
-    let bytes = std::fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
-    let cfg: contracts_config_schema::Config =
-        serde_yaml::from_slice(&bytes).with_context(|| format!("parsing {}", path.display()))?;
-    let pools: Vec<_> = match pool_filter {
-        Some(id) => cfg.pools.iter().filter(|p| p.id == id).collect(),
-        None => cfg.pools.iter().collect(),
-    };
-    if pools.is_empty() {
-        println!("no pools matched");
-        return Ok(());
-    }
-    for p in pools {
-        let prov = provider_for(p)?;
-        let plan = prov.plan(p)?;
-        println!("# plan for pool: {}", plan.pool_id);
-        for (i, step) in plan.steps.iter().enumerate() {
-            println!("{:02}. {} — {}", i + 1, step.kind, step.detail);
-        }
-        println!();
-    }
+pub fn engine_plan(_config_path: PathBuf, _pool_filter: Option<String>) -> Result<()> {
+    // TODO: Implement engine planning
+    println!("engine:plan not yet implemented");
     Ok(())
 }

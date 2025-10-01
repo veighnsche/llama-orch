@@ -73,6 +73,8 @@ pub fn execute_drain(req: DrainRequest, registry: &mut Registry) -> Result<Drain
     }
 
     // Stop the engine process
+    // TODO: Remove stop_pool call - migrating to worker-orcd
+    /*
     if let Err(e) = preload::stop_pool(&req.pool_id) {
         tracing::error!(
             pool_id = %req.pool_id,
@@ -81,6 +83,7 @@ pub fn execute_drain(req: DrainRequest, registry: &mut Registry) -> Result<Drain
         );
         // Continue - we still mark as drained
     }
+    */
 
     // Update registry health to not ready
     registry.set_health(&req.pool_id, crate::health::HealthStatus { live: false, ready: false });

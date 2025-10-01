@@ -9,6 +9,13 @@
 //! Initial implementation focuses on a filesystem-backed catalog and a
 //! File-based fetcher. HF/HTTP/S3/OCI fetchers are stubbed and will be added
 //! incrementally per `.specs/00_llama-orch.md §2.11`.
+//!
+//! TODO(ARCH-CHANGE): Fetcher implementations needed:
+//! - HuggingFace fetcher (hf: scheme) - see NotImplemented error at line 263
+//! - HTTP/HTTPS fetcher (http/https schemes) - see NotImplemented error at line 265
+//! - S3 fetcher (s3: scheme)
+//! - OCI registry fetcher (oci: scheme)
+//! See: ARCHITECTURE_CHANGE_PLAN.md §2.11 Model Provisioner evaluation
 
 // High-importance crate: TIER 2 Clippy configuration
 #![deny(clippy::unwrap_used)]
@@ -260,8 +267,20 @@ impl ModelFetcher for FileFetcher {
                 let id = format!("file:{}", p.display());
                 Ok(ResolvedModel { id, local_path: p })
             }
-            ModelRef::Hf { .. } => Err(CatalogError::NotImplemented("hf fetcher not wired yet")),
+            ModelRef::Hf { .. } => {
+                // TODO(ARCH-CHANGE): Implement HuggingFace fetcher
+                // - Use huggingface_hub crate or HTTP API
+                // - Handle authentication tokens
+                // - Implement caching and resume support
+                // - Add progress reporting
+                Err(CatalogError::NotImplemented("hf fetcher not wired yet"))
+            }
             ModelRef::Url { url: _ } => {
+                // TODO(ARCH-CHANGE): Implement generic URL fetcher
+                // - Support HTTP/HTTPS with resume
+                // - Support S3 with AWS SDK
+                // - Support OCI with registry client
+                // - Add digest verification
                 Err(CatalogError::NotImplemented("generic URL fetcher not wired yet"))
             }
         }

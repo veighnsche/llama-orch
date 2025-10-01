@@ -24,13 +24,8 @@ http = { workspace = true }
 hyper = { workspace = true }
 tower = { version = "0.4", features = ["util"] }
 futures = { workspace = true }
-worker-adapters-llamacpp-http = { path = "../../libs/worker-adapters/llamacpp-http" }
-worker-adapters-vllm-http = { path = "../../libs/worker-adapters/vllm-http" }
-worker-adapters-tgi-http = { path = "../../libs/worker-adapters/tgi-http" }
-worker-adapters-triton = { path = "../../libs/worker-adapters/triton" }
 jsonschema = { workspace = true }
 contracts-config-schema = { path = "../../contracts/config-schema" }
-worker-adapters-adapter-api = { path = "../../libs/worker-adapters/adapter-api" }
 pool-managerd = { path = "../../bin/pool-managerd" }
 
 

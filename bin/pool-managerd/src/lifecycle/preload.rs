@@ -19,6 +19,15 @@ pub struct PreloadOutcome {
     pub handoff_path: PathBuf,
 }
 
+// TODO(ARCH-CHANGE): Remove this entire function per ARCHITECTURE_CHANGE_PLAN.md Phase 2.
+// This function spawns external engines (llama.cpp, vLLM, etc.) which are being replaced
+// with worker-orcd. The new flow will be:
+// 1. pool-managerd spawns worker-orcd process (via lifecycle crate)
+// 2. worker-orcd loads model via Commit endpoint
+// 3. worker-orcd attests sealed status via Ready endpoint
+// 4. pool-managerd updates registry when worker reports ready
+// See: ARCHITECTURE_CHANGE_PLAN.md §2 Components to Remove (Engine Provisioner)
+/*
 /// Execute preload: spawn engine, wait for health, write handoff, update registry
 pub fn execute(
     prepared: provisioners_engine_provisioner::PreparedEngine,
@@ -176,3 +185,4 @@ pub fn stop_pool(pool_id: &str) -> Result<()> {
     let _ = std::fs::remove_file(&pid_path);
     Ok(())
 }
+*/

@@ -1,0 +1,24 @@
+[package]
+name = "worker-orcd"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "worker-orcd"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { workspace = true }
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# Worker crates
+vram-residency = { path = "../worker-orcd-crates/vram-residency" }
+model-loader = { path = "../worker-orcd-crates/model-loader" }
+worker-inference = { path = "../worker-orcd-crates/inference" }
+worker-api = { path = "../worker-orcd-crates/api" }
+worker-error-handler = { path = "../worker-orcd-crates/error-handler" }
+execution-planner = { path = "../worker-orcd-crates/execution-planner" }

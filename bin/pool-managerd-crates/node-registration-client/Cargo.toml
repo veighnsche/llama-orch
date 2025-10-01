@@ -6,8 +6,8 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-pool-registry-types = { path = "../../shared/pool-registry-types" }
-service-registry = { path = "../../control-plane/service-registry" }
+pool-registry-types = { path = "../../shared-crates/pool-registry-types" }
+service-registry = { path = "../../orchestratord-crates/node-registry" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

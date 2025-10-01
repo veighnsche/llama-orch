@@ -1,5 +1,12 @@
 //! Filesystem ArtifactStore (stub)
-//! Placeholder; real implementation will manage content-addressed files.
+//!
+//! TODO(ARCH-CHANGE): This is a placeholder implementation. Full implementation should:
+//! - Implement proper content-addressed storage with deduplication
+//! - Add garbage collection for old artifacts
+//! - Implement atomic writes with fsync
+//! - Add compression support for large transcripts
+//! - Implement proper error recovery and partial write handling
+//! See: .docs/ARCHITECTURE_CHANGE_PLAN.md Phase 4-5
 
 use std::fs::{create_dir_all, File};
 use std::io::{Read, Write};

@@ -14,7 +14,8 @@ use std::sync::{Arc, Mutex};
 use super::auth;
 use crate::core::registry::Registry;
 use crate::lifecycle::preload;
-use provisioners_engine_provisioner::PreparedEngine;
+// TODO: Remove PreparedEngine - migrating to worker-orcd
+// use provisioners_engine_provisioner::PreparedEngine;
 
 /// Shared state for API handlers
 #[derive(Clone)]
@@ -29,11 +30,14 @@ pub struct HealthResponse {
     pub version: String,
 }
 
+// TODO: Remove PreparedEngine - migrating to worker-orcd
+/*
 /// Preload request body
 #[derive(Deserialize)]
 pub struct PreloadRequest {
     pub prepared: PreparedEngine,
 }
+*/
 
 /// Preload response
 #[derive(Serialize)]
@@ -66,7 +70,8 @@ pub struct ErrorResponse {
 pub fn create_router(state: AppState) -> Router {
     Router::new()
         .route("/health", get(health))
-        .route("/pools/:id/preload", post(preload_pool))
+        // TODO: Remove preload route - migrating to worker-orcd
+        // .route("/pools/:id/preload", post(preload_pool))
         .route("/pools/:id/status", get(pool_status))
         .layer(middleware::from_fn(auth::auth_middleware))
         .with_state(state)
@@ -80,6 +85,8 @@ async fn health() -> Json<HealthResponse> {
     })
 }
 
+// TODO: Remove this function - migrating to worker-orcd
+/*
 /// POST /pools/{id}/preload
 async fn preload_pool(
     State(state): State<AppState>,
@@ -105,6 +112,7 @@ async fn preload_pool(
         )),
     }
 }
+*/
 
 /// GET /pools/{id}/status
 async fn pool_status(

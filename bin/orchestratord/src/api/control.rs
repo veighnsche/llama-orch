@@ -115,6 +115,14 @@ pub async fn register_worker(
 /// v2 purge endpoint (stub): accept request and return 202 to indicate purge scheduled.
 /// Pre-1.0: semantics subject to change; body is intentionally untyped here to avoid
 /// tight coupling with evolving contracts_api_types.
+///
+/// TODO(ARCH-CHANGE): This is a stub implementation. Per ARCHITECTURE_CHANGE_PLAN.md:
+/// - Implement actual purge logic via pool-managerd API
+/// - Add authentication/authorization checks
+/// - Implement proper async job tracking
+/// - Add audit logging for purge operations
+/// - Return job_id for tracking purge progress
+/// See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md Issue #8 (pool-managerd auth)
 pub async fn purge_pool_v2(
     _state: State<AppState>,
     axum::extract::Path(_id): axum::extract::Path<String>,

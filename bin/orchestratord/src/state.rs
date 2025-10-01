@@ -3,7 +3,8 @@ use crate::clients::pool_manager::PoolManagerClient;
 use crate::ports::storage::ArtifactStore;
 use crate::services::placement::PlacementCache;
 use crate::services::placement_v2::{PlacementService, PlacementStrategy};
-use adapter_host::AdapterHost;
+// TODO: Remove adapter_host - migrating to direct worker communication
+// use adapter_host::AdapterHost;
 use orchestrator_core::queue::Policy;
 use service_registry::ServiceRegistry;
 use std::collections::{HashMap, HashSet};
@@ -18,7 +19,8 @@ pub struct AppState {
     pub draining_pools: Arc<Mutex<HashMap<String, bool>>>,
     pub artifact_store: Arc<dyn ArtifactStore>,
     pub cancellations: Arc<Mutex<HashSet<String>>>,
-    pub adapter_host: Arc<AdapterHost>,
+    // TODO: Remove adapter_host - migrating to direct worker communication
+    // pub adapter_host: Arc<AdapterHost>,
     pub capabilities_cache: Arc<Mutex<Option<serde_json::Value>>>,
     pub placement_cache: Arc<Mutex<PlacementCache>>,
     // Admission state
@@ -70,7 +72,8 @@ impl AppState {
             draining_pools: Arc::new(Mutex::new(HashMap::new())),
             artifact_store: Arc::new(crate::infra::storage::inmem::InMemStore::default()),
             cancellations: Arc::new(Mutex::new(HashSet::new())),
-            adapter_host: Arc::new(AdapterHost::new()),
+            // TODO: Remove adapter_host - migrating to direct worker communication
+            // adapter_host: Arc::new(AdapterHost::new()),
             capabilities_cache: Arc::new(Mutex::new(None)),
             placement_cache: Arc::new(Mutex::new(PlacementCache::with_ttl(10_000))),
             admission: Arc::new(Mutex::new(q)),

@@ -9,14 +9,14 @@ description = "Model provisioner: orchestrates resolve/verify/cache via catalog-
 [dependencies]
 anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
-catalog-core = { path = "../../catalog-core" }
+catalog-core = { path = "../model-catalog" }
 which = "6"
 serde_yaml = "0.9"
 serde_json = { workspace = true }
 sha2 = "0.10"
 hex = "0.4"
 tracing = { workspace = true }
-observability-narration-core = { path = "../../observability/narration-core" }
+observability-narration-core = { path = "../../shared-crates/narration-core" }
 
 [lib]
 path = "src/lib.rs"

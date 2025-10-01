@@ -1,0 +1,10 @@
+[package]
+name = "worker-error-handler"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+tracing.workspace = true

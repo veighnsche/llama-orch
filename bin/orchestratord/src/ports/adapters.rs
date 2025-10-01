@@ -8,8 +8,11 @@ pub struct AdapterProps {
 pub struct StreamRequest {
     pub prompt: String,
 }
+// TODO(ARCH-CHANGE): This entire file will be removed per ARCHITECTURE_CHANGE_PLAN.md Phase 2.
+// The adapter abstraction is being replaced with direct worker-orcd communication.
+// See: .docs/ARCHITECTURE_CHANGE_PLAN.md §2 (Components to Remove)
 #[derive(Debug)]
-pub struct AdapterStream; // placeholder
+pub struct AdapterStream; // placeholder - REMOVE with adapter-host
 
 #[derive(Debug, Clone)]
 pub enum StreamItem {

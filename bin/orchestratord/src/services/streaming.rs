@@ -6,7 +6,8 @@ use serde_json::json;
 use std::io::BufWriter;
 use std::io::Write;
 use tokio::time::{sleep, Duration};
-use worker_adapters_adapter_api as adapter_api;
+// TODO: Remove adapter_api - migrating to direct worker communication
+// use worker_adapters_adapter_api as adapter_api;
 
 /// Render a simple deterministic SSE for a task id and persist transcript to artifacts.
 /// TODO(OwnerB-ORCH-SSE-FALLBACK): This function contains an MVP deterministic fallback
@@ -48,6 +49,8 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
         ];
         return build_sse_from_events(state, &id, events);
     }
+    // TODO: Remove adapter dispatch - migrating to direct worker communication
+    /*
     if let Ok(mut s) = try_dispatch_via_adapter(state, &id) {
         let mut events: Vec<(String, serde_json::Value)> = Vec::new();
         loop {
@@ -74,6 +77,7 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
         }
         return build_sse_from_events(state, &id, events);
     }
+    */
     // Emit metrics: tasks started
     // TODO[ORCHD-METRICS-1201]: Replace local metrics helpers with shared workspace metrics crate
     // and ensure series names/labels match `ci/metrics.lint.json`. Add sampling/throttling where needed.
@@ -227,12 +231,22 @@ pub async fn render_sse_for_task(state: &AppState, id: String) -> String {
 }
 
 /// Determine if a pool is dispatchable: Live+Ready and slots_free > 0.
+/// TODO(ARCH-CHANGE): This function currently always returns true (stub).
+/// Per ARCHITECTURE_CHANGE_PLAN.md Phase 3:
+/// - Implement actual pool health checking via pool-managerd HTTP API
+/// - Check Live+Ready status from registry
+/// - Verify slots_free > 0 before dispatch
+/// - Add backoff/retry logic when pool not ready
+/// - Emit proper error SSE frames with retry hints
+/// See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md Issue #17 (resource limits)
 fn should_dispatch(state: &AppState, pool_id: &str) -> bool {
     // TODO: Make async to call HTTP API
     // For now, always return true
     true
 }
 
+// TODO: Remove this function - migrating to direct worker communication
+/*
 fn try_dispatch_via_adapter(
     state: &AppState,
     id: &str,
@@ -280,6 +294,7 @@ fn try_dispatch_via_adapter(
     }
     state.adapter_host.submit(&pool_id, req)
 }
+*/
 
 fn build_sse_from_events(
     state: &AppState,

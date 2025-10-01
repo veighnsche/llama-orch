@@ -27,8 +27,13 @@ pub fn build_app() -> Router {
 
     // Optionally bind llama.cpp adapter for MVP wiring when feature + env configured
     // TODO(OwnerB-ORCH-BINDING-SHIM): This is an MVP shim for binding a single adapter via
-    // feature gate + environment variables. Replace with pool-manager driven registration and
-    // config-schema backed sources, and ensure reload/drain lifecycle integrates with AdapterHost.
+    // feature gate + environment variables. Per ARCHITECTURE_CHANGE_PLAN.md Phase 2:
+    // - REMOVE this entire adapter binding block
+    // - Remove adapter-host dependency
+    // - Replace with pool-manager driven worker-orcd registration
+    // - Implement config-schema backed worker sources
+    // - Ensure reload/drain lifecycle integrates with new worker protocol
+    // See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md Issue #1 (worker-orcd auth)
     #[cfg(feature = "llamacpp-adapter")]
     {
         if let Ok(url) = std::env::var("ORCHD_LLAMACPP_URL") {

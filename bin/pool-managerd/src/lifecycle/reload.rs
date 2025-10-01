@@ -6,7 +6,8 @@ use anyhow::Result;
 
 use crate::lifecycle::{drain, preload};
 use crate::registry::Registry;
-use provisioners_engine_provisioner::PreparedEngine;
+// TODO: Remove PreparedEngine - migrating to worker-orcd
+// use provisioners_engine_provisioner::PreparedEngine;
 
 /// Reload request
 #[derive(Debug, Clone)]
@@ -36,6 +37,8 @@ pub struct ReloadOutcome {
     pub duration_ms: u64,
 }
 
+// TODO: Remove this function - migrating to worker-orcd
+/*
 /// Execute reload: drain → stage model → restart engine → health check → ready or rollback
 pub fn execute_reload(
     req: ReloadRequest,
@@ -116,3 +119,4 @@ pub fn execute_reload(
         }
     }
 }
+*/
