@@ -1,74 +1,175 @@
-# tools-spec-extract — tools-spec-extract (tool)
+# spec-extract
 
-## 1. Name & Purpose
+**Extracts requirements from specification Markdown files**
 
-tools-spec-extract (tool)
+`tools/spec-extract` — Parses spec files and generates YAML requirement documents.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- See spec and requirements for details.
-  - [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
-  - [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+## What This Tool Does
 
+spec-extract provides **requirement extraction** for llama-orch:
 
-## 3. Public API surface
+- **Parse specs** — Extract requirements from `.specs/*.md` files
+- **RFC-2119 keywords** — Identify MUST, SHOULD, MAY requirements
+- **Stable IDs** — Preserve requirement identifiers (ORCH-3001, etc.)
+- **Generate YAML** — Output structured requirement files
+- **Traceability** — Link specs to requirements to tests
 
-- Rust crate API (internal)
+**Purpose**: Maintain spec → requirements → tests traceability
 
-## 4. How it fits
+---
 
-- Developer tooling supporting contracts and docs.
+## Usage
 
-```mermaid
-flowchart LR
-  devs[Developers] --> tool[Tool]
-  tool --> artifacts[Artifacts]
+### Extract Requirements
+
+```bash
+# Extract requirements from all specs
+cargo run -p tools-spec-extract --quiet
+
+# Extract from specific spec
+cargo run -p tools-spec-extract -- .specs/00_llama-orch.md
 ```
 
-## 5. Build & Test
+This generates:
+- `requirements/00_llama-orch.yaml` — Structured requirements
+- `requirements/index.yaml` — Requirement index
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p tools-spec-extract -- --nocapture`
+---
 
+## Spec Format
 
-## 6. Contracts
+### Requirement IDs
 
-- None
+Requirements use stable IDs in specs:
 
+```markdown
+## Queue Management
 
-## 7. Config & Env
+**ORCH-3001**: The orchestrator MUST maintain a FIFO queue per pool.
 
-- Not applicable.
+**ORCH-3002**: The orchestrator SHOULD prioritize jobs by pool capacity.
 
-## 8. Metrics & Logs
+**ORCH-3003**: The orchestrator MAY implement priority queues (future).
+```
 
-- Minimal logs.
+### RFC-2119 Keywords
 
-## 9. Runbook (Dev)
+- **MUST** — Mandatory requirement
+- **MUST NOT** — Prohibited behavior
+- **SHOULD** — Recommended requirement
+- **SHOULD NOT** — Not recommended
+- **MAY** — Optional feature
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+---
 
+## Output Format
 
-## 10. Status & Owners
+### YAML Requirements
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+```yaml
+requirements:
+  - id: ORCH-3001
+    level: MUST
+    description: The orchestrator MUST maintain a FIFO queue per pool
+    category: queue
+    spec: .specs/00_llama-orch.md
+    
+  - id: ORCH-3002
+    level: SHOULD
+    description: The orchestrator SHOULD prioritize jobs by pool capacity
+    category: queue
+    spec: .specs/00_llama-orch.md
+    
+  - id: ORCH-3003
+    level: MAY
+    description: The orchestrator MAY implement priority queues (future)
+    category: queue
+    spec: .specs/00_llama-orch.md
+    status: future
+```
 
-## 11. Changelog pointers
+---
 
-- None
+## Traceability
 
-## 12. Footnotes
+### Spec → Requirements → Tests
 
-- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+```
+.specs/00_llama-orch.md (ORCH-3001)
+  ↓
+requirements/00_llama-orch.yaml (ORCH-3001)
+  ↓
+tests/test_queue.rs (test_fifo_queue)
+```
 
-### Additional Details
-- Responsibilities, inputs/outputs; how determinism and idempotent regeneration are enforced.
+### Verification
 
+```bash
+# Check all requirements have tests
+cargo run -p tools-spec-extract -- --verify
 
-## What this crate is not
+# Output
+✅ ORCH-3001: Covered by test_fifo_queue
+✅ ORCH-3002: Covered by test_priority
+❌ ORCH-3003: No test coverage (MAY requirement)
+```
 
-- Not a production service.
+---
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+cargo test -p tools-spec-extract -- --nocapture
+```
+
+### Validation
+
+```bash
+# Validate spec format
+cargo run -p tools-spec-extract -- --validate .specs/00_llama-orch.md
+```
+
+---
+
+## CI Integration
+
+### GitHub Actions
+
+```yaml
+- name: Extract requirements
+  run: cargo run -p tools-spec-extract --quiet
+
+- name: Check for changes
+  run: |
+    git diff --exit-code requirements/
+```
+
+This ensures requirements are up-to-date in CI.
+
+---
+
+## Dependencies
+
+### Internal
+
+- None (standalone tool)
+
+### External
+
+- `regex` — Pattern matching
+- `serde` — Serialization
+- `serde_yaml` — YAML output
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

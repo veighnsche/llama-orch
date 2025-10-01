@@ -1,78 +1,237 @@
-# contracts-config-schema — contracts-config-schema (contracts)
+# config-schema
 
-## 1. Name & Purpose
+**Configuration schema and types for llama-orch**
 
-contracts-config-schema (contracts)
+`contracts/config-schema` — Rust types for YAML/JSON configuration files (pools, models, engines).
 
-## 2. Why it exists (Spec traceability)
+---
 
-- ORCH-3044 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3044)
-- ORCH-3030 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3030)
+## What This Library Does
 
+config-schema provides **configuration contracts** for llama-orch:
 
-## 3. Public API surface
+- **Config types** — Pools, models, engines, replicas
+- **Validation** — Schema validation for YAML/JSON
+- **Serialization** — serde-based deserialization
+- **JSON Schema** — Generate schema.json for validation
+- **Defaults** — Sensible defaults for optional fields
 
-- Rust crate API (internal)
+**Used by**: orchestratord, pool-managerd, provisioners
 
-## 4. How it fits
+---
 
-- Houses public contracts and schemas.
+## Key Types
 
-```mermaid
-flowchart LR
-  devs[Developers] --> contracts[Contracts]
-  contracts --> tools[Generators]
-  contracts --> crates[Crates]
+### Config
+
+```rust
+use config_schema::Config;
+
+let config = Config {
+    pools: vec![
+        Pool {
+            id: "default".to_string(),
+            engine: "llamacpp".to_string(),
+            replicas: 1,
+            port: 8081,
+            model: ModelConfig {
+                id: "local:/models/llama-3.1-8b.gguf".to_string(),
+            },
+            flags: vec!["--parallel".to_string(), "1".to_string()],
+        }
+    ],
+};
 ```
 
-## 5. Build & Test
+### Pool
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p contracts-config-schema -- --nocapture`
-- Regen OpenAPI: `cargo xtask regen-openapi`
-- Regen Schema: `cargo xtask regen-schema`
-- Extract requirements: `cargo run -p tools-spec-extract --quiet`
+```rust
+use config_schema::Pool;
 
+let pool = Pool {
+    id: "default".to_string(),
+    engine: "llamacpp".to_string(),
+    replicas: 1,
+    port: 8081,
+    model: ModelConfig {
+        id: "local:/models/llama-3.1-8b.gguf".to_string(),
+    },
+    flags: vec!["--parallel".to_string(), "1".to_string()],
+};
+```
 
-## 6. Contracts
+### ModelConfig
 
-- Schema:
-  - [contracts/config-schema/src/lib.rs](../../contracts/config-schema/src/lib.rs)
+```rust
+use config_schema::ModelConfig;
 
+let model = ModelConfig {
+    id: "local:/models/llama-3.1-8b.gguf".to_string(),
+};
+```
 
-## 7. Config & Env
+---
 
-- Schema-focused crate; no runtime env.
+## Configuration File Format
 
-## 8. Metrics & Logs
+### YAML Example
 
-- Minimal logs.
+```yaml
+pools:
+  - id: default
+    engine: llamacpp
+    replicas: 1
+    port: 8081
+    model:
+      id: local:/models/llama-3.1-8b-instruct-q4_k_m.gguf
+    flags:
+      - --parallel
+      - "1"
+      - --no-cont-batching
+      - --metrics
+```
 
-## 9. Runbook (Dev)
+### JSON Example
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+```json
+{
+  "pools": [
+    {
+      "id": "default",
+      "engine": "llamacpp",
+      "replicas": 1,
+      "port": 8081,
+      "model": {
+        "id": "local:/models/llama-3.1-8b-instruct-q4_k_m.gguf"
+      },
+      "flags": ["--parallel", "1", "--no-cont-batching", "--metrics"]
+    }
+  ]
+}
+```
 
+---
 
-## 10. Status & Owners
+## Usage
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+### Load Configuration
 
-## 11. Changelog pointers
+```rust
+use config_schema::Config;
+use std::fs;
 
-- None
+// Load from YAML
+let yaml = fs::read_to_string("config.yaml")?;
+let config: Config = serde_yaml::from_str(&yaml)?;
 
-## 12. Footnotes
+// Load from JSON
+let json = fs::read_to_string("config.json")?;
+let config: Config = serde_json::from_str(&json)?;
 
-- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+println!("Loaded {} pools", config.pools.len());
+```
 
-### Additional Details
-- How to regenerate types, schemas, and validate; pact files location and scope.
+### Validate Configuration
 
+```rust
+use config_schema::Config;
 
-## What this crate is not
+let config: Config = serde_yaml::from_str(&yaml)?;
 
-- Not runtime logic; contracts only.
+// Validation happens during deserialization
+// Invalid configs will fail with descriptive errors
+```
+
+---
+
+## JSON Schema Generation
+
+Generate JSON Schema for validation:
+
+```bash
+# Generate schema.json
+cargo xtask regen-schema
+
+# Output: contracts/config-schema/schema.json
+```
+
+Use schema for validation:
+
+```bash
+# Validate config file
+jsonschema -i config.yaml contracts/config-schema/schema.json
+```
+
+---
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+cargo test -p contracts-config-schema -- --nocapture
+
+# Test deserialization
+cargo test -p contracts-config-schema -- test_deserialize --nocapture
+```
+
+### Example Configs
+
+Test configs in `requirements/`:
+
+- `requirements/llamacpp-3090-source.yaml`
+- `requirements/vllm-a100-binary.yaml`
+- `requirements/multi-pool.yaml`
+
+---
+
+## Dependencies
+
+### Internal
+
+- None (foundational contract library)
+
+### External
+
+- `serde` — Serialization
+- `serde_yaml` — YAML format
+- `serde_json` — JSON format
+- `schemars` — JSON Schema generation
+
+---
+
+## Regenerating Artifacts
+
+### JSON Schema
+
+```bash
+# Regenerate JSON Schema from types
+cargo xtask regen-schema
+
+# Output: contracts/config-schema/schema.json
+```
+
+### Validation
+
+```bash
+# Validate example configs
+cargo test -p contracts-config-schema -- test_examples --nocapture
+```
+
+---
+
+## Specifications
+
+Implements requirements from:
+- ORCH-3044 (Config schema)
+- ORCH-3030 (Configuration format)
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

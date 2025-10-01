@@ -1,71 +1,99 @@
-# model-provisioner-bdd — model-provisioner-bdd (tool)
+# model-provisioner BDD Tests
 
-## 1. Name & Purpose
+**Cucumber/BDD tests for model-provisioner**
 
-model-provisioner-bdd (tool)
+`libs/provisioners/model-provisioner/bdd` — Behavior-driven tests for model resolution and catalog scenarios.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- See spec and requirements for details.
-  - [.specs/00_llama-orch.md](../../../../.specs/00_llama-orch.md)
-  - [requirements/00_llama-orch.yaml](../../../../requirements/00_llama-orch.yaml)
+## What This Test Suite Does
 
+BDD tests for **model-provisioner** verify:
 
-## 3. Public API surface
+- **Model resolution** — Resolve local file paths
+- **Digest verification** — SHA256 checksum validation
+- **Catalog integration** — Register and update models
+- **Handoff files** — Correct metadata emission
+- **Error handling** — Missing files, invalid digests
 
-- Rust crate API (internal)
+---
 
-## 4. How it fits
+## Running Tests
 
-- Developer tooling supporting contracts and docs.
+### All Features
 
-```mermaid
-flowchart LR
-  devs[Developers] --> tool[Tool]
-  tool --> artifacts[Artifacts]
+```bash
+# Run all BDD tests
+cargo test -p model-provisioner-bdd -- --nocapture
 ```
 
-## 5. Build & Test
+### Specific Feature
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p model-provisioner-bdd -- --nocapture`
+```bash
+# Run specific feature file
+LLORCH_BDD_FEATURE_PATH=tests/features/resolve.feature \
+  cargo test -p model-provisioner-bdd -- --nocapture
+```
 
+---
 
-## 6. Contracts
+## Test Scenarios
 
-- None
+### Model Resolution
 
+```gherkin
+Feature: Model Resolution
 
-## 7. Config & Env
+  Scenario: Resolve local model file
+    Given a local model file at "/models/llama-3.1-8b.gguf"
+    When I resolve the model reference
+    Then the resolved path should be "/models/llama-3.1-8b.gguf"
+    And the model ID should be normalized
+```
 
-- Not applicable.
+### Digest Verification
 
-## 8. Metrics & Logs
+```gherkin
+Feature: Digest Verification
 
-- Minimal logs.
+  Scenario: Verify model digest
+    Given a model file with known digest
+    When I verify the digest
+    Then the verification should succeed
+    And the result should be recorded in catalog
+```
 
-## 9. Runbook (Dev)
+### Catalog Integration
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+```gherkin
+Feature: Catalog Integration
 
+  Scenario: Register model in catalog
+    Given a resolved model
+    When I register it in the catalog
+    Then the catalog should contain the model
+    And the lifecycle state should be Active
+```
 
-## 10. Status & Owners
+---
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+## Dependencies
 
-## 11. Changelog pointers
+### Internal
 
-- None
+- `provisioners-model-provisioner` — Library under test
+- `catalog-core` — Catalog integration
 
-## 12. Footnotes
+### External
 
-- Spec: [.specs/00_llama-orch.md](../../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../../requirements/00_llama-orch.yaml)
+- `cucumber` — BDD test framework
+- `tokio` — Async runtime
 
+---
 
-## What this crate is not
+## Status
 
-- Not a production service.
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

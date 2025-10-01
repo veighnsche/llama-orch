@@ -1,80 +1,151 @@
-# tools-openapi-client — tools-openapi-client (tool)
+# openapi-client
 
-## 1. Name & Purpose
+**Generated HTTP client from OpenAPI specifications**
 
-tools-openapi-client (tool)
+`tools/openapi-client` — Type-safe Rust client generated from OpenAPI YAML files.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- See spec and requirements for details.
-  - [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
-  - [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+## What This Tool Does
 
+openapi-client provides **generated API client** for llama-orch:
 
-## 3. Public API surface
+- **Type-safe** — Generated from OpenAPI specs
+- **Async** — Built on reqwest and tokio
+- **Validated** — Request/response validation
+- **Documented** — API docs from OpenAPI descriptions
+- **Idempotent** — Deterministic code generation
 
-- OpenAPI: [contracts/openapi/control.yaml](../../contracts/openapi/control.yaml)
-- OpenAPI: [contracts/openapi/data.yaml](../../contracts/openapi/data.yaml)
-- OpenAPI operations: 16
-  - examples: cancelTask, createArtifact, createCatalogModel, createTask, deleteCatalogModel
+**Used by**: Tests, CLI tools, external clients
 
+---
 
-## 4. How it fits
+## Usage
 
-- Developer tooling supporting contracts and docs.
+### Create Client
 
-```mermaid
-flowchart LR
-  devs[Developers] --> tool[Tool]
-  tool --> artifacts[Artifacts]
+```rust
+use openapi_client::Client;
+
+let client = Client::new("http://localhost:8080");
 ```
 
-## 5. Build & Test
+### Enqueue Job
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p tools-openapi-client -- --nocapture`
+```rust
+use openapi_client::{Client, EnqueueRequest};
 
+let client = Client::new("http://localhost:8080");
 
-## 6. Contracts
+let request = EnqueueRequest {
+    prompt: "Hello, world!".to_string(),
+    model: "llama-3.1-8b-instruct".to_string(),
+    max_tokens: 100,
+    seed: Some(42),
+    ..Default::default()
+};
 
-- OpenAPI:
-  - [contracts/openapi/control.yaml](../../contracts/openapi/control.yaml)
-  - [contracts/openapi/data.yaml](../../contracts/openapi/data.yaml)
+let response = client.enqueue(request).await?;
+println!("Job ID: {}", response.job_id);
+```
 
+### Get Job Status
 
-## 7. Config & Env
+```rust
+let status = client.get_job_status("job-123").await?;
+println!("State: {:?}", status.state);
+println!("Tokens: {:?}", status.tokens_generated);
+```
 
-- Not applicable.
+### List Pools
 
-## 8. Metrics & Logs
+```rust
+let pools = client.list_pools().await?;
+for pool in pools {
+    println!("Pool: {} ({})", pool.id, pool.state);
+}
+```
 
-- Minimal logs.
+---
 
-## 9. Runbook (Dev)
+## Generation
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+### Generate Client
 
+```bash
+# Regenerate client from OpenAPI specs
+cargo xtask regen-openapi
+```
 
-## 10. Status & Owners
+This generates:
+- `src/lib.rs` — Client struct and methods
+- `src/types.rs` — Request/response types
+- `src/error.rs` — Error types
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+### Source Files
 
-## 11. Changelog pointers
+OpenAPI specifications:
+- `contracts/openapi/orchestratord.yaml` — Orchestrator API
+- `contracts/openapi/pool-managerd.yaml` — Pool manager API
 
-- None
+---
 
-## 12. Footnotes
+## API Operations
 
-- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+### Orchestrator
 
-### Additional Details
-- Responsibilities, inputs/outputs; how determinism and idempotent regeneration are enforced.
+- **POST /v1/enqueue** — Enqueue job
+- **GET /v1/jobs/{id}** — Get job status
+- **DELETE /v1/jobs/{id}** — Cancel job
+- **GET /v1/pools** — List pools
+- **GET /v1/pools/{id}** — Get pool status
+- **GET /health** — Health check
 
+### Pool Manager
 
-## What this crate is not
+- **POST /provision** — Provision engine
+- **DELETE /pools/{id}** — Stop pool
+- **GET /health** — Health check
 
-- Not a production service.
+---
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+cargo test -p tools-openapi-client -- --nocapture
+```
+
+### Integration Tests
+
+```bash
+# Test against running orchestrator
+ORCHD_URL=http://localhost:8080 \
+  cargo test -p tools-openapi-client -- test_integration --nocapture
+```
+
+---
+
+## Dependencies
+
+### Internal
+
+- `contracts/api-types` — Shared types
+
+### External
+
+- `reqwest` — HTTP client
+- `serde` — Serialization
+- `serde_json` — JSON format
+- `tokio` — Async runtime
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

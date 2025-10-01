@@ -1,71 +1,180 @@
-# llama-orch-sdk — Single-source SDK for llama-orch (Rust core, optional WASM for npm)
+# llama-orch-sdk
 
-## 1. Name & Purpose
+**Rust SDK for llama-orch with optional WASM/npm support**
 
-Single-source SDK for llama-orch (Rust core, optional WASM for npm)
+`consumers/llama-orch-sdk` — Type-safe client library for Rust and JavaScript/TypeScript.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- See spec and requirements for details.
-  - [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
-  - [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+## What This SDK Does
 
+llama-orch-sdk provides **client library** for llama-orch:
 
-## 3. Public API surface
+- **Rust API** — Native Rust client
+- **WASM bindings** — Optional WebAssembly for npm
+- **Type-safe** — Generated from OpenAPI specs
+- **Async** — Built on tokio/reqwest
+- **Streaming** — SSE support for token streaming
 
-- Rust crate API (internal)
+**Used by**: Rust applications, Node.js apps, browsers
 
-## 4. How it fits
+---
 
-- Developer tooling supporting contracts and docs.
+## Rust Usage
 
-```mermaid
-flowchart LR
-  devs[Developers] --> tool[Tool]
-  tool --> artifacts[Artifacts]
+### Add Dependency
+
+```toml
+[dependencies]
+llama-orch-sdk = "0.0.0"
 ```
 
-## 5. Build & Test
+### Create Client
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p llama-orch-sdk -- --nocapture`
+```rust
+use llama_orch_sdk::Client;
 
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new("http://localhost:8080");
+    
+    // Use client
+    Ok(())
+}
+```
 
-## 6. Contracts
+### Enqueue Job
 
-- None
+```rust
+use llama_orch_sdk::{Client, EnqueueRequest};
 
+let request = EnqueueRequest {
+    prompt: "Hello, world!".to_string(),
+    model: "llama-3.1-8b-instruct".to_string(),
+    max_tokens: 100,
+    seed: Some(42),
+    ..Default::default()
+};
 
-## 7. Config & Env
+let response = client.enqueue(request).await?;
+println!("Job ID: {}", response.job_id);
+```
 
-- Not applicable.
+### Stream Tokens
 
-## 8. Metrics & Logs
+```rust
+let mut stream = client.enqueue_stream(request).await?;
 
-- Minimal logs.
+while let Some(event) = stream.next().await {
+    match event? {
+        TokenEvent::Token { text, .. } => print!("{}", text),
+        TokenEvent::End { .. } => println!("\nDone!"),
+        _ => {}
+    }
+}
+```
 
-## 9. Runbook (Dev)
+---
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+## JavaScript/TypeScript Usage (WASM)
 
+### Install
 
-## 10. Status & Owners
+```bash
+npm install @llama-orch/sdk
+```
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+### Create Client
 
-## 11. Changelog pointers
+```typescript
+import { Client } from '@llama-orch/sdk';
 
-- None
+const client = new Client('http://localhost:8080');
+```
 
-## 12. Footnotes
+### Enqueue Job
 
-- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+```typescript
+const response = await client.enqueue({
+  prompt: 'Hello, world!',
+  model: 'llama-3.1-8b-instruct',
+  maxTokens: 100,
+  seed: 42,
+});
 
+console.log('Job ID:', response.jobId);
+```
 
-## What this crate is not
+### Stream Tokens
 
-- Not a production service.
+```typescript
+const stream = await client.enqueueStream({
+  prompt: 'Hello, world!',
+  model: 'llama-3.1-8b-instruct',
+  maxTokens: 100,
+});
+
+for await (const event of stream) {
+  if (event.type === 'token') {
+    process.stdout.write(event.text);
+  }
+}
+```
+
+---
+
+## Building WASM
+
+### Build for npm
+
+```bash
+# Build WASM package
+cd consumers/llama-orch-sdk
+wasm-pack build --target web
+
+# Publish to npm
+cd pkg
+npm publish
+```
+
+---
+
+## Testing
+
+### Rust Tests
+
+```bash
+# Run all tests
+cargo test -p llama-orch-sdk -- --nocapture
+```
+
+### WASM Tests
+
+```bash
+# Run WASM tests
+wasm-pack test --node
+```
+
+---
+
+## Dependencies
+
+### Internal
+
+- `contracts/api-types` — Shared types
+
+### External
+
+- `reqwest` — HTTP client (Rust)
+- `tokio` — Async runtime (Rust)
+- `wasm-bindgen` — WASM bindings
+- `serde` — Serialization
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

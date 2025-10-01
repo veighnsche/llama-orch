@@ -1,105 +1,97 @@
-# auth-min — Security-Hardened Authentication Utilities
+# auth-min
 
-## 1. Name & Purpose
+**Minimal authentication with maximum security**
 
-**auth-min** - Minimal authentication utilities with maximum security
+`libs/auth-min` — Timing-safe token comparison, secure fingerprinting, and Bearer token parsing for llama-orch services.
 
-Provides timing-safe token comparison, secure fingerprinting, and robust Bearer token parsing for llama-orch services.
+---
 
-## 2. Why it exists (Spec traceability)
+## What This Library Does
 
-Implements authentication requirements from:
-- [.specs/11_min_auth_hooks.md](../../.specs/11_min_auth_hooks.md) (AUTH-1001..AUTH-1008)
-- [.specs/12_auth-min-hardening.md](../../.specs/12_auth-min-hardening.md) (SEC-AUTH-*)
-- [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md) §2.7 (Security & Policy)
+auth-min provides **security-hardened authentication** for llama-orch:
 
-## 3. Public API surface
+- **Timing-safe comparison** — Prevents timing attacks (CWE-208)
+- **Token fingerprinting** — SHA-256 based, non-reversible
+- **Bearer token parsing** — Robust RFC 6750 parsing
+- **Bind policy** — Refuses non-loopback without token
+- **Proxy trust gate** — Optional proxy auth trust (dangerous!)
+
+**Used by**: orchestratord, pool-managerd, node-registration, http-util
+
+---
+
+## Key APIs
+
+### Timing-Safe Comparison
 
 ```rust
-// Timing-safe comparison (prevents CWE-208)
-pub fn timing_safe_eq(a: &[u8], b: &[u8]) -> bool;
+use auth_min::timing_safe_eq;
 
-// SHA-256 token fingerprint for logs
-pub fn token_fp6(token: &str) -> String;
+let token = "secret-token";
+let expected = "secret-token";
 
-// Bearer token parser
-pub fn parse_bearer(header_val: Option<&str>) -> Option<String>;
-
-// Bind policy enforcement
-pub fn enforce_startup_bind_policy(bind_addr: &str) -> Result<()>;
-pub fn is_loopback_addr(addr: &str) -> bool;
-
-// Proxy auth trust gate
-pub fn trust_proxy_auth() -> bool;
-
-// Error types
-pub enum AuthError { ... }
-pub type Result<T> = std::result::Result<T, AuthError>;
+if timing_safe_eq(token.as_bytes(), expected.as_bytes()) {
+    println!("Authenticated");
+} else {
+    println!("Invalid token");
+}
 ```
 
-## 4. How it fits
+**Security**: Execution time independent of mismatch position (prevents CWE-208)
 
-Shared security library used by:
-- `orchestratord` - Control plane authentication
-- `pool-managerd` - GPU node authentication
-- `http-util` - Token redaction in logs
-- `node-registration` - Client-side Bearer tokens
+### Token Fingerprinting
 
-```mermaid
-flowchart TB
-  orchestratord[orchestratord] --> authmin[auth-min]
-  poolmanagerd[pool-managerd] --> authmin
-  httputil[http-util] --> authmin
-  nodereg[node-registration] --> authmin
-  authmin --> specs[Security Specs]
+```rust
+use auth_min::token_fp6;
+
+let token = "secret-abc123";
+let fingerprint = token_fp6(token);
+
+println!("Token fingerprint: {}", fingerprint); // "a3f2c1"
 ```
 
-## 5. Build & Test
+**Security**: SHA-256 based, non-reversible, safe for logs
 
-### Standard Tests
-```bash
-# Format check
-cargo fmt --all -- --check
+### Bearer Token Parsing
 
-# Clippy
-cargo clippy --all-targets --all-features -- -D warnings
+```rust
+use auth_min::parse_bearer;
 
-# Unit tests
-cargo test -p auth-min -- --nocapture
+let header = Some("Bearer secret-token");
+let token = parse_bearer(header);
 
-# Specific test suites
-cargo test -p auth-min compare  # Timing-safe comparison
-cargo test -p auth-min timing   # Timing attack resistance
-cargo test -p auth-min leakage  # Token leakage detection
+match token {
+    Some(t) => println!("Token: {}", t),
+    None => println!("No token"),
+}
 ```
 
-### Security Tests
-```bash
-# Timing attack resistance (must pass)
-cargo test -p auth-min test_timing_variance -- --nocapture
+**Handles**: Whitespace, case-insensitive "Bearer", validation
 
-# Token leakage detection
-cargo test -p auth-min test_fingerprint -- --nocapture
+### Bind Policy
+
+```rust
+use auth_min::{enforce_startup_bind_policy, is_loopback_addr};
+
+// Check if address is loopback
+if is_loopback_addr("127.0.0.1:8080") {
+    println!("Loopback address");
+}
+
+// Enforce bind policy (requires token for non-loopback)
+enforce_startup_bind_policy("0.0.0.0:8080")?;
 ```
 
-## 6. Contracts
+---
 
-Implements security contracts:
-- **Timing-safe comparison**: Variance < 10% regardless of mismatch position
-- **Non-reversible fingerprints**: SHA-256 based, cannot recover token
-- **Robust parsing**: Handles whitespace, validates format
-- **Bind policy**: Refuses non-loopback without token
-
-## 7. Config & Env
-
-### Environment Variables
+## Environment Variables
 
 | Variable | Required | Default | Purpose |
 |----------|----------|---------|---------|
 | `LLORCH_API_TOKEN` | Conditional | None | Authentication token (required for non-loopback) |
-| `TRUST_PROXY_AUTH` | No | `false` | Trust proxy-injected auth headers (dangerous!) |
+| `TRUST_PROXY_AUTH` | No | `false` | Trust proxy-injected auth headers (⚠️ dangerous!) |
 
-### Usage Examples
+### Token Generation
 
 ```bash
 # Generate secure token
@@ -113,9 +105,11 @@ ORCHD_ADDR=0.0.0.0:8080
 LLORCH_API_TOKEN=your-secret-token-here
 ```
 
-## 8. Metrics & Logs
+---
 
-### Logging Pattern
+## Logging Pattern
+
+### Safe Logging
 
 ```rust
 use auth_min::{timing_safe_eq, token_fp6, parse_bearer};
@@ -133,99 +127,137 @@ let fp6 = token_fp6(&token);
 tracing::info!(identity = %format!("token:{}", fp6), "authenticated");
 ```
 
-### Log Safety
+### Log Safety Rules
 
 - ✅ **SAFE**: `token:a3f2c1` (fingerprint)
 - ❌ **UNSAFE**: `token:secret-abc123` (raw token)
 
-## 9. Runbook (Dev)
+---
 
-### Common Tasks
+## Testing
+
+### Unit Tests
 
 ```bash
 # Run all tests
-cargo test -p auth-min
+cargo test -p auth-min -- --nocapture
 
-# Run timing attack tests
-cargo test -p auth-min timing -- --nocapture --test-threads=1
-
-# Check for timing vulnerabilities
-rg 'token.*==' --type rust | grep -v timing_safe_eq
-
-# Check for token leakage
-rg 'tracing.*token(?!_fp6|:)' --type rust
+# Specific test suites
+cargo test -p auth-min compare  # Timing-safe comparison
+cargo test -p auth-min timing   # Timing attack resistance
+cargo test -p auth-min leakage  # Token leakage detection
 ```
 
-### Security Audit
+### Security Tests
 
 ```bash
-# 1. Verify all comparisons are timing-safe
-rg '== .*token|token.*==' libs/auth-min/src/ | grep -v timing_safe_eq
-# Should be EMPTY
+# Timing attack resistance (must pass)
+cargo test -p auth-min test_timing_variance -- --nocapture
 
-# 2. Verify fingerprints used for logging
-rg 'token_fp6' libs/auth-min/src/
-# Should show usage in all auth code
-
-# 3. Run security test suite
-cargo test -p auth-min --test timing
-cargo test -p auth-min --test leakage
+# Token leakage detection
+cargo test -p auth-min test_fingerprint -- --nocapture
 ```
 
-## 10. Status & Owners
-
-- **Status**: Production-ready (security-hardened)
-- **Owners**: @llama-orch-maintainers (security team approval required)
-- **Security Review**: Required for all changes
-
-## 11. Changelog pointers
-
-- 2025-09-30: Full implementation with modular structure
-  - Separated concerns: compare, fingerprint, parse, policy, error
-  - Comprehensive test coverage (timing, leakage)
-  - Documentation with security properties
-
-## 12. Footnotes
-
-### Specifications
-- [.specs/11_min_auth_hooks.md](../../.specs/11_min_auth_hooks.md) - Minimal auth hooks
-- [.specs/12_auth-min-hardening.md](../../.specs/12_auth-min-hardening.md) - Security hardening
-- [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md) §2.7 - Security & policy
-
-### Security References
-- CWE-208: Observable Timing Discrepancy
-- RFC 6750: OAuth 2.0 Bearer Token Usage
-- OWASP Testing Guide: Timing Attack Testing
+---
 
 ## Security Properties
 
 ### Timing-Safe Comparison
 
-**Property**: Execution time independent of mismatch position
-
-**Test**: Variance < 10% for early vs. late mismatches
-
-**Implementation**: Bitwise OR accumulation examines all bytes
+- **Property**: Execution time independent of mismatch position
+- **Test**: Variance < 10% for early vs. late mismatches
+- **Implementation**: Bitwise OR accumulation examines all bytes
+- **Prevents**: CWE-208 (Observable Timing Discrepancy)
 
 ### Token Fingerprinting
 
-**Property**: Non-reversible, collision-resistant
-
-**Algorithm**: SHA-256 → first 6 hex chars (24-bit space)
-
-**Use Case**: Safe for audit logs, correlation, debugging
+- **Property**: Non-reversible, collision-resistant
+- **Algorithm**: SHA-256 → first 6 hex chars (24-bit space)
+- **Use Case**: Safe for audit logs, correlation, debugging
+- **Cannot**: Recover original token from fingerprint
 
 ### Bind Policy
 
-**Property**: Refuses non-loopback bind without token
+- **Property**: Refuses non-loopback bind without token
+- **Enforcement**: Startup validation (fail-fast)
+- **Override**: Not allowed (security by design)
+- **Loopback**: No token required for 127.0.0.1 or ::1
 
-**Enforcement**: Startup validation (fail-fast)
+---
 
-**Override**: Not allowed (security by design)
+## Security Audit
 
-## What this crate is not
+### Check for Timing Vulnerabilities
+
+```bash
+# Verify all comparisons are timing-safe
+rg '== .*token|token.*==' libs/auth-min/src/ | grep -v timing_safe_eq
+# Should be EMPTY
+```
+
+### Check for Token Leakage
+
+```bash
+# Verify fingerprints used for logging
+rg 'token_fp6' libs/auth-min/src/
+# Should show usage in all auth code
+
+# Check for raw token logging
+rg 'tracing.*token(?!_fp6|:)' --type rust
+# Should be EMPTY
+```
+
+### Run Security Test Suite
+
+```bash
+cargo test -p auth-min --test timing
+cargo test -p auth-min --test leakage
+```
+
+---
+
+## Dependencies
+
+### Internal
+
+- None (foundational security library)
+
+### External
+
+- `sha2` — SHA-256 hashing
+- `subtle` — Constant-time comparison (optional, for verification)
+
+---
+
+## Security References
+
+- **CWE-208**: Observable Timing Discrepancy
+- **RFC 6750**: OAuth 2.0 Bearer Token Usage
+- **OWASP**: Timing Attack Testing
+
+---
+
+## What This Library Is Not
 
 - ❌ Not a full authentication framework (no users, roles, sessions)
 - ❌ Not OAuth2/OIDC/SSO (minimal shared-secret only)
 - ❌ Not mTLS (future: v0.3.0)
 - ❌ Not rate limiting (handled at admission layer)
+
+---
+
+## Specifications
+
+Implements requirements from:
+- AUTH-1001..AUTH-1008 (Minimal auth hooks)
+- SEC-AUTH-* (Security hardening)
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Production-ready (security-hardened)
+- **Maintainers**: @llama-orch-maintainers
+- **Security Review**: Required for all changes

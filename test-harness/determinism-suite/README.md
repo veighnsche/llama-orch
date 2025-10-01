@@ -1,73 +1,209 @@
-# test-harness-determinism-suite — test-harness-determinism-suite (test-harness)
+# determinism-suite
 
-## 1. Name & Purpose
+**Determinism verification tests for reproducible inference**
 
-test-harness-determinism-suite (test-harness)
+`test-harness/determinism-suite` — Tests that verify identical prompts + seeds produce identical outputs.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- ORCH-3050 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3050)
-- ORCH-3051 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3051)
+## What This Test Suite Does
 
+determinism-suite provides **reproducibility testing** for llama-orch:
 
-## 3. Public API surface
+- **Seed verification** — Same seed produces same tokens
+- **Token-by-token comparison** — Exact token sequence matching
+- **Metadata validation** — Engine version, model, parameters
+- **Cross-run consistency** — Multiple runs produce identical results
+- **Proof bundle generation** — Record seeds and outputs
 
-- Rust crate API (internal)
+**Purpose**: Guarantee deterministic inference for multi-agent workflows
 
-## 4. How it fits
+---
 
-- Provides test scaffolding for validation suites.
+## Determinism Requirements
 
-```mermaid
-flowchart LR
-  crates[Crates] --> harness[Test Harness]
-  harness --> results[Reports]
+### Same Input → Same Output
+
+Given:
+- Same prompt
+- Same seed
+- Same model
+- Same engine version
+- Same parameters (temperature, top_p, etc.)
+
+Then:
+- Token sequence must be identical
+- Token IDs must be identical
+- Logprobs must be identical (if available)
+
+---
+
+## Test Scenarios
+
+### Basic Determinism
+
+```rust
+#[tokio::test]
+async fn test_determinism_basic() {
+    let orchestrator = start_orchestrator().await;
+    
+    let request = EnqueueRequest {
+        prompt: "Hello, world!".to_string(),
+        model: "llama-3.1-8b-instruct".to_string(),
+        max_tokens: 100,
+        seed: Some(42),
+        temperature: Some(0.7),
+        ..Default::default()
+    };
+    
+    // Run 1
+    let tokens1 = orchestrator.enqueue_and_collect(request.clone()).await?;
+    
+    // Run 2
+    let tokens2 = orchestrator.enqueue_and_collect(request.clone()).await?;
+    
+    // Must be identical
+    assert_eq!(tokens1, tokens2);
+}
 ```
 
-## 5. Build & Test
+### Cross-Session Determinism
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p test-harness-determinism-suite -- --nocapture`
+```rust
+#[tokio::test]
+async fn test_determinism_cross_session() {
+    let orchestrator = start_orchestrator().await;
+    
+    // Session 1
+    let tokens1 = run_with_seed(42).await?;
+    
+    // Restart orchestrator
+    orchestrator.stop().await;
+    let orchestrator = start_orchestrator().await;
+    
+    // Session 2
+    let tokens2 = run_with_seed(42).await?;
+    
+    // Must be identical across sessions
+    assert_eq!(tokens1, tokens2);
+}
+```
 
+### Multi-Run Consistency
 
-## 6. Contracts
+```rust
+#[tokio::test]
+async fn test_determinism_multi_run() {
+    let orchestrator = start_orchestrator().await;
+    
+    let request = EnqueueRequest {
+        prompt: "Hello, world!".to_string(),
+        seed: Some(42),
+        ..Default::default()
+    };
+    
+    // Run 10 times
+    let mut results = Vec::new();
+    for _ in 0..10 {
+        let tokens = orchestrator.enqueue_and_collect(request.clone()).await?;
+        results.push(tokens);
+    }
+    
+    // All runs must be identical
+    for i in 1..results.len() {
+        assert_eq!(results[0], results[i], "Run {} differs from run 0", i);
+    }
+}
+```
 
-- None
+---
 
+## Running Tests
 
-## 7. Config & Env
+### All Determinism Tests
 
-- Not applicable.
+```bash
+# Run all tests
+cargo test -p test-harness-determinism-suite -- --nocapture
+```
 
-## 8. Metrics & Logs
+### Specific Test
 
-- Minimal logs.
+```bash
+# Basic determinism
+cargo test -p test-harness-determinism-suite -- test_determinism_basic --nocapture
 
-## 9. Runbook (Dev)
+# Cross-session
+cargo test -p test-harness-determinism-suite -- test_determinism_cross_session --nocapture
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+# Multi-run
+cargo test -p test-harness-determinism-suite -- test_determinism_multi_run --nocapture
+```
 
+---
 
-## 10. Status & Owners
+## Proof Bundles
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+Tests generate proof bundles with:
 
-## 11. Changelog pointers
+- **Seeds** — RNG seeds used
+- **Outputs** — Token sequences
+- **Metadata** — Engine version, model, parameters
+- **Timestamps** — Run timestamps
 
-- None
+Example proof bundle:
 
-## 12. Footnotes
+```json
+{
+  "run_id": "det-001",
+  "seed": 42,
+  "prompt": "Hello, world!",
+  "model": "llama-3.1-8b-instruct",
+  "engine_version": "b1234-cuda",
+  "tokens": ["Hello", " there", "!"],
+  "token_ids": [12345, 12346, 12347],
+  "timestamp": "2025-10-01T00:00:00Z"
+}
+```
 
-- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+---
 
-### Additional Details
-- Which tests are ignored vs required; how to run real-model Haiku; determinism suite scope.
+## Testing
 
+### Unit Tests
 
-## What this crate is not
+```bash
+# Run all tests
+cargo test -p test-harness-determinism-suite -- --nocapture
+```
 
-- Not a production service.
+---
+
+## Dependencies
+
+### Internal
+
+- `orchestrator-core` — Orchestrator logic
+- `proof-bundle` — Test artifact generation
+
+### External
+
+- `tokio` — Async runtime
+- `serde` — Serialization
+
+---
+
+## Specifications
+
+Implements requirements from:
+- ORCH-3050 (Determinism testing)
+- ORCH-3051 (Reproducibility)
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

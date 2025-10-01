@@ -1,74 +1,151 @@
-# tools-readme-index — tools-readme-index (tool)
+# readme-index
 
-## 1. Name & Purpose
+**Generates root README index from workspace crate READMEs**
 
-tools-readme-index (tool)
+`tools/readme-index` — Scans workspace for README files and generates navigation index.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- See spec and requirements for details.
-  - [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
-  - [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+## What This Tool Does
 
+readme-index provides **documentation indexing** for llama-orch:
 
-## 3. Public API surface
+- **Scan workspace** — Find all README.md files
+- **Extract metadata** — Parse titles and descriptions
+- **Generate index** — Create navigation table
+- **Update root README** — Insert index into root README.md
+- **Idempotent** — Deterministic output
 
-- Rust crate API (internal)
+**Purpose**: Keep root README synchronized with workspace structure
 
-## 4. How it fits
+---
 
-- Developer tooling supporting contracts and docs.
+## Usage
 
-```mermaid
-flowchart LR
-  devs[Developers] --> tool[Tool]
-  tool --> artifacts[Artifacts]
+### Generate Index
+
+```bash
+# Regenerate README index
+cargo run -p tools-readme-index --quiet
 ```
 
-## 5. Build & Test
+This updates the root `README.md` with:
+- List of all crates
+- Brief descriptions
+- Links to individual READMEs
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p tools-readme-index -- --nocapture`
+---
 
+## Index Format
 
-## 6. Contracts
+### Generated Section
 
-- None
+```markdown
+## Workspace Index
 
+### Binaries
 
-## 7. Config & Env
+- **[orchestratord](./bin/orchestratord/README.md)** — Main orchestrator service
+- **[pool-managerd](./bin/pool-managerd/README.md)** — GPU node pool manager
 
-- Not applicable.
+### Libraries
 
-## 8. Metrics & Logs
+- **[orchestrator-core](./libs/orchestrator-core/README.md)** — Core orchestration logic
+- **[catalog-core](./libs/catalog-core/README.md)** — Model catalog and registry
+- **[adapter-host](./libs/adapter-host/README.md)** — Worker adapter host
 
-- Minimal logs.
+### Test Harness
 
-## 9. Runbook (Dev)
+- **[bdd](./test-harness/bdd/README.md)** — BDD test runner
+- **[chaos](./test-harness/chaos/README.md)** — Chaos engineering tests
+- **[determinism-suite](./test-harness/determinism-suite/README.md)** — Determinism verification
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+### Tools
 
+- **[openapi-client](./tools/openapi-client/README.md)** — Generated HTTP client
+- **[readme-index](./tools/readme-index/README.md)** — README index generator
+- **[spec-extract](./tools/spec-extract/README.md)** — Specification extractor
+```
 
-## 10. Status & Owners
+---
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+## Metadata Extraction
 
-## 11. Changelog pointers
+The tool extracts metadata from each README:
 
-- None
+```rust
+struct CrateMetadata {
+    name: String,
+    path: String,
+    description: String,
+    category: Category,
+}
 
-## 12. Footnotes
+enum Category {
+    Binary,
+    Library,
+    TestHarness,
+    Tool,
+}
+```
 
-- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+### Parsing Rules
 
-### Additional Details
-- Responsibilities, inputs/outputs; how determinism and idempotent regeneration are enforced.
+1. **Name**: First H1 heading (`# name`)
+2. **Description**: First paragraph or bold text after title
+3. **Category**: Inferred from path (`bin/`, `libs/`, `test-harness/`, `tools/`)
 
+---
 
-## What this crate is not
+## Testing
 
-- Not a production service.
+### Unit Tests
+
+```bash
+# Run all tests
+cargo test -p tools-readme-index -- --nocapture
+```
+
+### Dry Run
+
+```bash
+# Preview without writing
+cargo run -p tools-readme-index -- --dry-run
+```
+
+---
+
+## CI Integration
+
+### GitHub Actions
+
+```yaml
+- name: Check README index
+  run: |
+    cargo run -p tools-readme-index --quiet
+    git diff --exit-code README.md
+```
+
+This ensures the index is up-to-date in CI.
+
+---
+
+## Dependencies
+
+### Internal
+
+- None (standalone tool)
+
+### External
+
+- `walkdir` — Directory traversal
+- `regex` — Markdown parsing
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

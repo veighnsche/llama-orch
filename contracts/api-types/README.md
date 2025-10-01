@@ -1,77 +1,240 @@
-# contracts-api-types — contracts-api-types (contracts)
+# api-types
 
-## 1. Name & Purpose
+**Shared API types and contracts for HTTP endpoints**
 
-contracts-api-types (contracts)
+`contracts/api-types` — Rust types for orchestratord HTTP API (requests, responses, enums).
 
-## 2. Why it exists (Spec traceability)
+---
 
-- ORCH-3044 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3044)
-- ORCH-3030 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3030)
+## What This Library Does
 
+api-types provides **API contracts** for llama-orch:
 
-## 3. Public API surface
+- **Request types** — Enqueue, dispatch, session management
+- **Response types** — Job status, pool status, health checks
+- **Shared enums** — JobState, PoolState, ErrorCode
+- **Serialization** — serde-based JSON serialization
+- **OpenAPI generation** — Types annotated for schema generation
 
-- Rust crate API (internal)
+**Used by**: orchestratord, clients, test harness
 
-## 4. How it fits
+---
 
-- Houses public contracts and schemas.
+## Key Types
 
-```mermaid
-flowchart LR
-  devs[Developers] --> contracts[Contracts]
-  contracts --> tools[Generators]
-  contracts --> crates[Crates]
+### EnqueueRequest
+
+```rust
+use api_types::EnqueueRequest;
+
+let request = EnqueueRequest {
+    prompt: "Hello, world!".to_string(),
+    model: "llama-3.1-8b-instruct".to_string(),
+    max_tokens: 100,
+    temperature: Some(0.7),
+    seed: Some(42),
+    session_id: None,
+};
 ```
 
-## 5. Build & Test
+### EnqueueResponse
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p contracts-api-types -- --nocapture`
-- Regen OpenAPI: `cargo xtask regen-openapi`
-- Regen Schema: `cargo xtask regen-schema`
-- Extract requirements: `cargo run -p tools-spec-extract --quiet`
+```rust
+use api_types::EnqueueResponse;
 
+let response = EnqueueResponse {
+    job_id: "job-123".to_string(),
+    status: JobState::Queued,
+};
+```
 
-## 6. Contracts
+### JobStatusResponse
 
-- None
+```rust
+use api_types::{JobStatusResponse, JobState};
 
+let response = JobStatusResponse {
+    job_id: "job-123".to_string(),
+    state: JobState::Running,
+    pool_id: Some("default".to_string()),
+    replica_id: Some("r0".to_string()),
+    tokens_generated: Some(42),
+    error: None,
+};
+```
 
-## 7. Config & Env
+### JobState
 
-- Schema-focused crate; no runtime env.
+```rust
+use api_types::JobState;
 
-## 8. Metrics & Logs
+pub enum JobState {
+    Queued,
+    Running,
+    Completed,
+    Failed,
+    Cancelled,
+}
+```
 
-- Minimal logs.
+---
 
-## 9. Runbook (Dev)
+## OpenAPI Generation
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+Types are annotated with `schemars` for OpenAPI schema generation:
 
+```rust
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
-## 10. Status & Owners
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct EnqueueRequest {
+    /// The prompt to generate from
+    pub prompt: String,
+    
+    /// Model identifier
+    pub model: String,
+    
+    /// Maximum tokens to generate
+    #[serde(default = "default_max_tokens")]
+    pub max_tokens: u32,
+    
+    /// Temperature for sampling (0.0 = greedy)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub temperature: Option<f32>,
+}
+```
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+Generate OpenAPI schema:
 
-## 11. Changelog pointers
+```bash
+cargo xtask regen-openapi
+```
 
-- None
+Output: `contracts/openapi/orchestratord.yaml`
 
-## 12. Footnotes
+---
 
-- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+## Usage
 
-### Additional Details
-- How to regenerate types, schemas, and validate; pact files location and scope.
+### In orchestratord
 
+```rust
+use api_types::{EnqueueRequest, EnqueueResponse, JobState};
+use axum::{Json, extract::State};
 
-## What this crate is not
+async fn enqueue(
+    State(state): State<AppState>,
+    Json(req): Json<EnqueueRequest>,
+) -> Json<EnqueueResponse> {
+    let job_id = state.orchestrator.enqueue(req).await?;
+    
+    Json(EnqueueResponse {
+        job_id,
+        status: JobState::Queued,
+    })
+}
+```
 
-- Not runtime logic; contracts only.
+### In Clients
+
+```rust
+use api_types::{EnqueueRequest, EnqueueResponse};
+
+let client = reqwest::Client::new();
+let request = EnqueueRequest {
+    prompt: "Hello, world!".to_string(),
+    model: "llama-3.1-8b-instruct".to_string(),
+    max_tokens: 100,
+    temperature: Some(0.7),
+    seed: Some(42),
+    session_id: None,
+};
+
+let response: EnqueueResponse = client
+    .post("http://localhost:8080/v1/enqueue")
+    .json(&request)
+    .send()
+    .await?
+    .json()
+    .await?;
+
+println!("Job ID: {}", response.job_id);
+```
+
+---
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+cargo test -p contracts-api-types -- --nocapture
+
+# Test serialization
+cargo test -p contracts-api-types -- test_serde --nocapture
+```
+
+### Schema Validation
+
+```bash
+# Regenerate OpenAPI schema
+cargo xtask regen-openapi
+
+# Validate schema
+cargo run -p tools-openapi-client -- validate
+```
+
+---
+
+## Dependencies
+
+### Internal
+
+- None (foundational contract library)
+
+### External
+
+- `serde` — Serialization
+- `serde_json` — JSON format
+- `schemars` — JSON Schema generation
+
+---
+
+## Regenerating Artifacts
+
+### OpenAPI Schema
+
+```bash
+# Regenerate OpenAPI schema from types
+cargo xtask regen-openapi
+
+# Output: contracts/openapi/orchestratord.yaml
+```
+
+### JSON Schema
+
+```bash
+# Regenerate JSON Schema
+cargo xtask regen-schema
+
+# Output: contracts/config-schema/schema.json
+```
+
+---
+
+## Specifications
+
+Implements requirements from:
+- ORCH-3044 (API types)
+- ORCH-3030 (HTTP endpoints)
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

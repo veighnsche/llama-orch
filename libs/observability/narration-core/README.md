@@ -1,99 +1,326 @@
-# observability-narration-core — observability-narration-core (tool)
+# narration-core
 
-## 1. Name & Purpose
+**Structured observability with human-readable narration**
 
-observability-narration-core (tool)
+`libs/observability/narration-core` — Emits structured logs with actor/action/target taxonomy and plain English descriptions.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- See spec and requirements for details.
-  - [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-  - [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+## What This Library Does
 
+narration-core provides **structured observability** for llama-orch:
 
-## 3. Public API surface
+- **Narration events** — Actor/action/target with human-readable descriptions
+- **Correlation IDs** — Track requests across service boundaries
+- **Secret redaction** — Automatic masking of bearer tokens and API keys
+- **Zero-cost abstractions** — Built on `tracing` for minimal overhead
+- **Test capture** — Assertion helpers for BDD tests
+- **JSON logs** — Structured output for production
 
-- Rust crate API (internal)
+**Used by**: All services (orchestratord, pool-managerd, provisioners)
 
-## 4. How it fits
+---
 
-- Developer tooling supporting contracts and docs.
+## Key Concepts
 
-```mermaid
-flowchart LR
-  devs[Developers] --> tool[Tool]
-  tool --> artifacts[Artifacts]
+### Narration Event
+
+Every event includes:
+
+- **actor** — Who performed the action (orchestratord, pool-managerd, etc.)
+- **action** — What was done (enqueue, provision, register, etc.)
+- **target** — What was acted upon (job_id, pool_id, model_id, etc.)
+- **human** — Plain English description for humans
+
+Optional fields:
+- **correlation_id** — Request tracking across services
+- **session_id** — Session identifier
+- **pool_id** — Pool identifier
+- **replica_id** — Replica identifier
+
+---
+
+## Usage
+
+### Emit Narration
+
+```rust
+use narration_core::{narrate, Actor, Action};
+
+narrate!(
+    actor = Actor::Orchestratord,
+    action = Action::Enqueue,
+    target = job_id,
+    correlation_id = req_id,
+    human = "Enqueued job {job_id} for pool {pool_id}"
+);
 ```
 
-## 5. Build & Test
+### With Correlation ID
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p observability-narration-core -- --nocapture`
+```rust
+use narration_core::{narrate_with_correlation, Actor, Action};
 
+narrate_with_correlation!(
+    correlation_id = req_id,
+    actor = Actor::PoolManagerd,
+    action = Action::Provision,
+    target = pool_id,
+    human = "Provisioning engine for pool {pool_id}"
+);
+```
 
-## 6. Contracts
+### Secret Redaction
 
-- None
+```rust
+use narration_core::{narrate, Actor, Action};
 
+// Automatically redacts bearer tokens
+narrate!(
+    actor = Actor::Orchestratord,
+    action = Action::Authenticate,
+    target = "api",
+    authorization = format!("Bearer {}", token), // Will be redacted
+    human = "Authenticated API request"
+);
+```
 
-## 7. Config & Env
+---
 
-- Not applicable.
+## Event Taxonomy
 
-## 8. Metrics & Logs
+### Actors
 
-- Emits structured narration events via tracing
-- All events include: actor, action, target, human (plain English)
-- Optional fields: correlation_id, session_id, pool_id, replica_id, etc.
-- Automatic secret redaction (bearer tokens, API keys)
+- **Orchestratord** — Main orchestrator service
+- **PoolManagerd** — GPU node pool manager
+- **EngineProvisioner** — Engine provisioning service
+- **ModelProvisioner** — Model provisioning service
+- **Adapter** — Worker adapter
 
-## 9. Runbook (Dev)
+### Actions
 
-- Run tests: `cargo test -p observability-narration-core -- --nocapture`
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+- **Enqueue** — Add job to queue
+- **Dispatch** — Send job to worker
+- **Provision** — Provision engine or model
+- **Register** — Register node or pool
+- **Heartbeat** — Send heartbeat
+- **Deregister** — Remove node or pool
+- **Complete** — Job completed
+- **Error** — Error occurred
 
-## High/Mid/Low Behavior
+---
 
-### High (Production, CI)
-- **Structured JSON logs**: All narration emitted as JSON with full field taxonomy
-- **Automatic redaction**: Bearer tokens, API keys, secrets masked with `[REDACTED]`
-- **Correlation ID propagation**: Track requests across orchestratord → pool-managerd → provisioners
-- **Zero allocation on hot paths**: Uses tracing's zero-cost abstractions
-- **Test capture disabled**: No overhead from capture adapter in production
+## JSON Output
 
-### Mid (Development, Local)
-- **Pretty console logs**: Optional human-readable format via `RUST_LOG`
-- **Capture adapter available**: Enable in tests with `CaptureAdapter::install()`
-- **Assertion helpers**: `assert_includes()`, `assert_field()`, `assert_correlation_id_present()`
-- **Story snapshots**: Generate golden files showing complete flows (future)
+### Production Format
 
-### Low (Debugging, Troubleshooting)
-- **Grep by correlation_id**: `grep "correlation_id=req-xyz" logs/*.log`
-- **Filter by actor**: `grep "actor=pool-managerd" logs/*.log`
-- **Read the story**: `grep "human=" logs/*.log | jq -r '.human'`
-- **Trace multi-service flows**: Follow correlation_id across service boundaries
-- **Assert in BDD**: Use capture adapter to verify observability coverage
+```json
+{
+  "timestamp": "2025-10-01T00:00:00Z",
+  "level": "INFO",
+  "actor": "orchestratord",
+  "action": "enqueue",
+  "target": "job-123",
+  "correlation_id": "req-abc",
+  "pool_id": "default",
+  "human": "Enqueued job job-123 for pool default"
+}
+```
 
+### Console Format (Development)
 
-## 10. Status & Owners
+```
+2025-10-01T00:00:00Z INFO orchestratord enqueue job-123 [req-abc] Enqueued job job-123 for pool default
+```
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+---
 
-## 11. Changelog pointers
+## Testing
 
-- None
-## 12. Footnotes
+### Capture Adapter
 
-- Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+```rust
+use narration_core::testing::CaptureAdapter;
 
-## Policy note
+#[tokio::test]
+async fn test_narration() {
+    let capture = CaptureAdapter::install();
+    
+    // Perform actions that emit narration
+    orchestrator.enqueue(job).await?;
+    
+    // Assert narration was emitted
+    capture.assert_includes("enqueue");
+    capture.assert_field("actor", "orchestratord");
+    capture.assert_correlation_id_present();
+}
+```
 
-- VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or host-RAM offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
+### Assertion Helpers
 
-## What this crate is not
+```rust
+// Assert event contains text
+capture.assert_includes("Enqueued job");
 
-- Not a production service.
+// Assert field value
+capture.assert_field("action", "enqueue");
+capture.assert_field("target", "job-123");
+
+// Assert correlation ID present
+capture.assert_correlation_id_present();
+
+// Get all events
+let events = capture.events();
+assert_eq!(events.len(), 3);
+```
+
+---
+
+## Correlation ID Propagation
+
+### Across Services
+
+```rust
+// orchestratord generates correlation ID
+let correlation_id = CorrelationId::new();
+
+narrate!(
+    correlation_id = correlation_id.clone(),
+    actor = Actor::Orchestratord,
+    action = Action::Dispatch,
+    target = job_id,
+    human = "Dispatching job to pool-managerd"
+);
+
+// Pass to pool-managerd via HTTP header
+let response = client
+    .post("/provision")
+    .header("X-Correlation-ID", correlation_id.to_string())
+    .send()
+    .await?;
+
+// pool-managerd extracts and uses correlation ID
+let correlation_id = extract_correlation_id(&request)?;
+
+narrate!(
+    correlation_id = correlation_id,
+    actor = Actor::PoolManagerd,
+    action = Action::Provision,
+    target = pool_id,
+    human = "Received provision request"
+);
+```
+
+---
+
+## Secret Redaction
+
+### Automatic Redaction
+
+The following fields are automatically redacted:
+
+- `authorization` — Bearer tokens
+- `api_key` — API keys
+- `token` — Generic tokens
+- `password` — Passwords
+- `secret` — Generic secrets
+
+### Example
+
+```rust
+narrate!(
+    actor = Actor::Orchestratord,
+    action = Action::Authenticate,
+    authorization = "Bearer abc123", // Becomes "[REDACTED]"
+    human = "Authenticated request"
+);
+```
+
+Output:
+
+```json
+{
+  "actor": "orchestratord",
+  "action": "authenticate",
+  "authorization": "[REDACTED]",
+  "human": "Authenticated request"
+}
+```
+
+---
+
+## Debugging
+
+### Grep by Correlation ID
+
+```bash
+# Find all events for a request
+grep "correlation_id=req-abc" logs/*.log
+
+# Extract human descriptions
+grep "correlation_id=req-abc" logs/*.log | jq -r '.human'
+```
+
+### Filter by Actor
+
+```bash
+# All pool-managerd events
+grep "actor=pool-managerd" logs/*.log
+
+# All provision actions
+grep "action=provision" logs/*.log
+```
+
+### Read the Story
+
+```bash
+# Get human-readable story
+grep "human=" logs/*.log | jq -r '.human'
+```
+
+---
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+cargo test -p observability-narration-core -- --nocapture
+
+# Run specific test
+cargo test -p observability-narration-core -- test_narration --nocapture
+```
+
+---
+
+## Dependencies
+
+### Internal
+
+- None (foundational library)
+
+### External
+
+- `tracing` — Structured logging
+- `serde` — Serialization
+- `serde_json` — JSON output
+
+---
+
+## Specifications
+
+Implements requirements from `.specs/00_llama-orch.md`:
+- Structured observability
+- Correlation ID propagation
+- Secret redaction
+- Human-readable narration
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

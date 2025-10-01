@@ -1,73 +1,224 @@
-# test-harness-chaos — test-harness-chaos (test-harness)
+# chaos
 
-## 1. Name & Purpose
+**Chaos engineering tests for resilience and fault tolerance**
 
-test-harness-chaos (test-harness)
+`test-harness/chaos` — Chaos tests that inject failures to verify system resilience.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- ORCH-3050 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3050)
-- ORCH-3051 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3051)
+## What This Test Suite Does
 
+chaos provides **fault injection testing** for llama-orch:
 
-## 3. Public API surface
+- **Network failures** — Simulate connection drops, timeouts
+- **Process crashes** — Kill engines, orchestrator, pool-manager
+- **Resource exhaustion** — OOM, disk full, CPU saturation
+- **Partial failures** — Some replicas fail, others succeed
+- **Recovery validation** — Verify graceful degradation and recovery
 
-- Rust crate API (internal)
+**Purpose**: Ensure system handles failures gracefully
 
-## 4. How it fits
+---
 
-- Provides test scaffolding for validation suites.
+## Chaos Scenarios
 
-```mermaid
-flowchart LR
-  crates[Crates] --> harness[Test Harness]
-  harness --> results[Reports]
+### Network Failures
+
+- **Connection timeout** — Simulate slow/unresponsive engines
+- **Connection refused** — Engine not listening
+- **Intermittent failures** — Random connection drops
+- **Partial network partition** — Some nodes unreachable
+
+### Process Crashes
+
+- **Engine crash** — SIGKILL during inference
+- **Orchestrator crash** — SIGKILL during dispatch
+- **Pool-manager crash** — SIGKILL during provisioning
+- **Graceful shutdown** — SIGTERM with cleanup
+
+### Resource Exhaustion
+
+- **Out of memory** — Simulate OOM conditions
+- **Disk full** — No space for models/logs
+- **CPU saturation** — 100% CPU usage
+- **GPU unavailable** — No GPU devices
+
+### Partial Failures
+
+- **Some replicas fail** — 1/3 replicas crash
+- **Rolling failures** — Sequential replica failures
+- **Cascading failures** — Failure triggers more failures
+
+---
+
+## Running Tests
+
+### All Chaos Tests
+
+```bash
+# Run all chaos tests
+cargo test -p test-harness-chaos -- --nocapture
 ```
 
-## 5. Build & Test
+### Specific Scenario
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p test-harness-chaos -- --nocapture`
+```bash
+# Network failures
+cargo test -p test-harness-chaos -- test_network_timeout --nocapture
 
+# Process crashes
+cargo test -p test-harness-chaos -- test_engine_crash --nocapture
 
-## 6. Contracts
+# Resource exhaustion
+cargo test -p test-harness-chaos -- test_oom --nocapture
+```
 
-- None
+---
 
+## Test Examples
 
-## 7. Config & Env
+### Network Timeout
 
-- Not applicable.
+```rust
+#[tokio::test]
+async fn test_network_timeout() {
+    let orchestrator = start_orchestrator().await;
+    
+    // Inject network delay
+    inject_network_delay(Duration::from_secs(30)).await;
+    
+    // Enqueue job
+    let result = orchestrator.enqueue(job).await;
+    
+    // Should timeout gracefully
+    assert!(matches!(result, Err(Error::Timeout)));
+    
+    // System should recover
+    clear_network_delay().await;
+    let result = orchestrator.enqueue(job).await;
+    assert!(result.is_ok());
+}
+```
 
-## 8. Metrics & Logs
+### Engine Crash
 
-- Minimal logs.
+```rust
+#[tokio::test]
+async fn test_engine_crash() {
+    let orchestrator = start_orchestrator().await;
+    let engine = start_engine().await;
+    
+    // Start job
+    let job_id = orchestrator.enqueue(job).await?;
+    
+    // Kill engine mid-inference
+    engine.kill().await;
+    
+    // Job should fail gracefully
+    let status = orchestrator.get_status(&job_id).await?;
+    assert_eq!(status.state, JobState::Failed);
+    
+    // Orchestrator should remain healthy
+    let health = orchestrator.health().await?;
+    assert_eq!(health.state, HealthState::Healthy);
+}
+```
 
-## 9. Runbook (Dev)
+### Partial Replica Failure
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+```rust
+#[tokio::test]
+async fn test_partial_replica_failure() {
+    let orchestrator = start_orchestrator().await;
+    let replicas = start_replicas(3).await;
+    
+    // Kill 1/3 replicas
+    replicas[0].kill().await;
+    
+    // Jobs should still succeed on remaining replicas
+    let job_id = orchestrator.enqueue(job).await?;
+    let status = orchestrator.get_status(&job_id).await?;
+    assert_eq!(status.state, JobState::Completed);
+    
+    // Pool should be degraded but operational
+    let pool_status = orchestrator.get_pool_status("default").await?;
+    assert_eq!(pool_status.state, PoolState::Degraded);
+}
+```
 
+---
 
-## 10. Status & Owners
+## Chaos Injection
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+### Network Delay
 
-## 11. Changelog pointers
+```rust
+// Inject 5s delay on all network calls
+inject_network_delay(Duration::from_secs(5)).await;
 
-- None
+// Clear delay
+clear_network_delay().await;
+```
 
-## 12. Footnotes
+### Process Kill
 
-- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+```rust
+// SIGKILL (immediate)
+process.kill().await;
 
-### Additional Details
-- Which tests are ignored vs required; how to run real-model Haiku; determinism suite scope.
+// SIGTERM (graceful)
+process.terminate().await;
+```
 
+### Resource Limit
 
-## What this crate is not
+```rust
+// Limit memory to 100MB
+set_memory_limit(100 * 1024 * 1024).await;
 
-- Not a production service.
+// Remove limit
+clear_memory_limit().await;
+```
+
+---
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+cargo test -p test-harness-chaos -- --nocapture
+```
+
+---
+
+## Dependencies
+
+### Internal
+
+- `orchestrator-core` — Orchestrator logic
+- `pool-managerd` — Pool manager
+- `worker-adapters-mock` — Mock adapter
+
+### External
+
+- `tokio` — Async runtime
+- `tokio::time` — Time manipulation
+
+---
+
+## Specifications
+
+Implements requirements from:
+- ORCH-3050 (Chaos testing)
+- ORCH-3051 (Fault tolerance)
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

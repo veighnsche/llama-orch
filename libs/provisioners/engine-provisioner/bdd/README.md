@@ -1,71 +1,99 @@
-# engine-provisioner-bdd — engine-provisioner-bdd (tool)
+# engine-provisioner BDD Tests
 
-## 1. Name & Purpose
+**Cucumber/BDD tests for engine-provisioner**
 
-engine-provisioner-bdd (tool)
+`libs/provisioners/engine-provisioner/bdd` — Behavior-driven tests for engine provisioning scenarios.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- See spec and requirements for details.
-  - [.specs/00_llama-orch.md](../../../../.specs/00_llama-orch.md)
-  - [requirements/00_llama-orch.yaml](../../../../requirements/00_llama-orch.yaml)
+## What This Test Suite Does
 
+BDD tests for **engine-provisioner** verify:
 
-## 3. Public API surface
+- **Process lifecycle** — Start, stop, restart engines
+- **Handoff files** — Correct metadata emission
+- **Health checks** — Readiness wait and validation
+- **Error handling** — Graceful failures and error messages
+- **Configuration** — Flag normalization and validation
 
-- Rust crate API (internal)
+---
 
-## 4. How it fits
+## Running Tests
 
-- Developer tooling supporting contracts and docs.
+### All Features
 
-```mermaid
-flowchart LR
-  devs[Developers] --> tool[Tool]
-  tool --> artifacts[Artifacts]
+```bash
+# Run all BDD tests
+cargo test -p engine-provisioner-bdd -- --nocapture
 ```
 
-## 5. Build & Test
+### Specific Feature
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p engine-provisioner-bdd -- --nocapture`
+```bash
+# Run specific feature file
+LLORCH_BDD_FEATURE_PATH=tests/features/provision.feature \
+  cargo test -p engine-provisioner-bdd -- --nocapture
+```
 
+---
 
-## 6. Contracts
+## Test Scenarios
 
-- None
+### Provision Engine
 
+```gherkin
+Feature: Engine Provisioning
 
-## 7. Config & Env
+  Scenario: Provision llama.cpp engine
+    Given a pool config for llamacpp
+    When I provision the engine
+    Then the engine process should be running
+    And a handoff file should exist
+    And the handoff should contain engine metadata
+```
 
-- Not applicable.
+### Health Checks
 
-## 8. Metrics & Logs
+```gherkin
+Feature: Health Checks
 
-- Minimal logs.
+  Scenario: Wait for engine readiness
+    Given an engine is starting
+    When I wait for readiness
+    Then the engine should respond to health checks
+    And the status should be 200 OK
+```
 
-## 9. Runbook (Dev)
+### Graceful Shutdown
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+```gherkin
+Feature: Graceful Shutdown
 
+  Scenario: Stop engine gracefully
+    Given a running engine
+    When I stop the engine
+    Then it should receive SIGTERM
+    And it should stop within 5 seconds
+```
 
-## 10. Status & Owners
+---
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+## Dependencies
 
-## 11. Changelog pointers
+### Internal
 
-- None
+- `provisioners-engine-provisioner` — Library under test
 
-## 12. Footnotes
+### External
 
-- Spec: [.specs/00_llama-orch.md](../../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../../requirements/00_llama-orch.yaml)
+- `cucumber` — BDD test framework
+- `tokio` — Async runtime
 
+---
 
-## What this crate is not
+## Status
 
-- Not a production service.
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

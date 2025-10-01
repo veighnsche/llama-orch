@@ -1,157 +1,289 @@
-# model-provisioner — Model provisioner: orchestrates resolve/verify/cache via catalog-core
+# model-provisioner
 
-## 1. Name & Purpose
+**Resolves model references to local paths and manages model catalog**
 
-Model provisioner: orchestrates resolve/verify/cache via catalog-core
+`libs/provisioners/model-provisioner` — Resolves model references, verifies digests, and registers models in catalog.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- See spec and requirements for details.
-  - [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-  - [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+## What This Library Does
 
+model-provisioner provides **model lifecycle management** for llama-orch:
 
-## 3. Public API surface
+- **Model resolution** — Resolve `model_ref` to local file path
+- **Digest verification** — Verify SHA256 checksums
+- **Catalog integration** — Register/update models in catalog-core
+- **Handoff files** — Emit metadata for engine-provisioner
+- **Offline-first** — Prefer local files, no network I/O by default
+- **Future: HuggingFace** — Optional `hf:` scheme support (feature-gated)
 
-- Rust crate API (internal)
+**Used by**: `engine-provisioner` to resolve model paths
 
-### High / Mid / Low behaviors
+---
 
-- **High**
-  - Resolve a `model_ref` to a local artifact path, register/update catalog entry, and return `ResolvedModel { id, local_path }`.
-  - Prefer offline/local file-only mode for MVP; no network I/O by default.
-  - Emit a machine-readable handoff (in-memory or file) to engine-provisioner.
+## Usage
 
-- **Mid**
-  - Implement `ensure_present_str` and `ensure_present` APIs; verify digest when provided; record verification result.
-  - Normalize IDs for local-file refs; for `hf:` scheme, include org/repo[/path] (feature-gated later).
+### Resolve Model
 
-- **Low**
-  - Optional shell-out to `huggingface-cli` when present and allowed by policy (future). Otherwise, return instructive error.
+```rust
+use model_provisioner::{ModelProvisioner, ModelRef};
 
-## Inputs / Outputs
+let provisioner = ModelProvisioner::new(catalog);
 
-- **Input**
-  - `model_ref` (string or typed `ModelRef`) and optional expected digest.
+// Resolve local file
+let resolved = provisioner.ensure_present(
+    ModelRef::Local("/models/llama-3.1-8b.gguf".into())
+).await?;
 
-- **Output**
-  - `ResolvedModel { id, local_path }` for engine-provisioner.
-  - Catalog registration/update with lifecycle: `Active` and digest recorded when provided.
-  - Handoff JSON for engine-provisioner at a well-known path when invoked via `provision_from_config_to_handoff()`.
+println!("Model ID: {}", resolved.id);
+println!("Local path: {}", resolved.local_path);
+```
 
-## Engine handoff (to engine-provisioner)
+### With Digest Verification
 
-Engine-provisioner consumes `ResolvedModel { id, local_path }` to construct the final `llama-server` spawn command. The recommended integration is a direct function call or a small JSON alongside pool config for auditability.
+```rust
+use model_provisioner::{ModelProvisioner, ModelRef, Digest};
 
-Example handoff payload:
+let digest = Digest {
+    algo: "sha256".to_string(),
+    value: "abc123...".to_string(),
+};
+
+let resolved = provisioner.ensure_present_with_digest(
+    ModelRef::Local("/models/llama-3.1-8b.gguf".into()),
+    Some(digest),
+).await?;
+```
+
+### Handoff to Engine Provisioner
+
+```rust
+use model_provisioner::provision_from_config_to_default_handoff;
+
+let resolved = provision_from_config_to_default_handoff(
+    "/etc/llorch/model.yaml",
+    std::env::temp_dir(),
+)?;
+
+println!("Handoff written to .runtime/engines/llamacpp.json");
+```
+
+---
+
+## Model References
+
+### Supported Schemes
+
+#### Local Files
+
+```rust
+// Absolute path
+ModelRef::Local("/models/llama-3.1-8b.gguf".into())
+
+// Relative path (resolved from working directory)
+ModelRef::Local("./models/llama-3.1-8b.gguf".into())
+```
+
+#### HuggingFace (Future)
+
+```rust
+// Feature-gated, requires huggingface-cli
+ModelRef::HuggingFace {
+    org: "meta-llama".to_string(),
+    repo: "Llama-3.1-8B-Instruct".to_string(),
+    path: Some("gguf/q4_k_m.gguf".to_string()),
+}
+```
+
+---
+
+## Handoff File Format
+
+### Location
+
+`.runtime/engines/llamacpp.json`
+
+### Format
 
 ```json
 {
   "model": {
-    "id": "local:/models/qwen2.5-0.5b-instruct-q4_k_m.gguf",
-    "path": "/abs/models/qwen2.5-0.5b-instruct-q4_k_m.gguf"
+    "id": "local:/models/llama-3.1-8b-instruct-q4_k_m.gguf",
+    "path": "/models/llama-3.1-8b-instruct-q4_k_m.gguf"
   }
 }
 ```
 
-Handoff location recommendation (MVP): write to `.runtime/engines/llamacpp.json` adjacent to orchestrator config, per `TODO_OWNERS_MVP_pt2.md`. Use `DEFAULT_LLAMACPP_HANDOFF_PATH` or the convenience API below to avoid drift.
+### Fields
 
-## 4. How it fits
+- **id** — Normalized model identifier
+- **path** — Absolute local file path
 
-- Developer tooling supporting contracts and docs.
+---
 
-```mermaid
-flowchart LR
-  devs[Developers] --> tool[Tool]
-  tool --> artifacts[Artifacts]
-```
+## Digest Verification
 
-## 5. Build & Test
-
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p model-provisioner -- --nocapture`
-
-### Selected deterministic Haiku model profile (MVP)
-
-- Model: `TinyLlama/TinyLlama-1.1B-Chat-v1.0` quantized `q4_k_m.gguf` (fits modest VRAM, fast startup)
-- Example local file ref: `file:/models/TinyLlama-1.1B-Chat-v1.0-q4_k_m.gguf`
-- Determinism notes: set seed and disable speculative/micro-batching at engine; provisioner only resolves path/metadata.
-
-Config example (YAML):
+### Configuration
 
 ```yaml
-model_ref: "file:/models/TinyLlama-1.1B-Chat-v1.0-q4_k_m.gguf"
-expected_digest: { algo: sha256, value: "<hex>" }
+model_ref: "file:/models/llama-3.1-8b.gguf"
+expected_digest:
+  algo: sha256
+  value: "abc123def456..."
 strict_verification: true
 ```
 
-Programmatic use:
+### Verification Flow
+
+1. Resolve model path
+2. Compute SHA256 digest
+3. Compare with expected digest
+4. Record verification result in catalog
+5. Fail if mismatch and `strict_verification: true`
+
+---
+
+## Catalog Integration
+
+### Model Registration
 
 ```rust
-use model_provisioner::{
-    provision_from_config_to_default_handoff, DEFAULT_LLAMACPP_HANDOFF_PATH
-};
-let meta = provision_from_config_to_default_handoff(
-    "/etc/llorch/model.yaml",
-    std::env::temp_dir(),
-)?;
-println!("handoff written to {} (model path: {})",
-         DEFAULT_LLAMACPP_HANDOFF_PATH, meta.path.display());
+// Register model in catalog
+provisioner.register_model(
+    "local:/models/llama-3.1-8b.gguf",
+    "/models/llama-3.1-8b.gguf",
+    Some(digest),
+).await?;
 ```
 
+### Lifecycle States
 
-## 6. Contracts
+- **Active** — Model is available and verified
+- **Pending** — Model is being downloaded/verified
+- **Failed** — Verification failed
 
-- None
+---
 
+## Testing
 
-## 7. Config & Env
+### Unit Tests
 
-- Not applicable.
+```bash
+# Run all tests
+cargo test -p model-provisioner -- --nocapture
 
-## 8. Metrics & Logs
+# Run specific test
+cargo test -p model-provisioner -- test_resolve_local --nocapture
+```
 
-- Minimal logs.
+---
 
-## 9. Runbook (Dev)
+## Dependencies
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+### Internal
 
+- `catalog-core` — Model catalog and registry
 
-## 10. Status & Owners
+### External
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+- `tokio` — Async runtime
+- `serde` — Serialization
+- `serde_json` — JSON handoff files
+- `sha2` — SHA256 digest computation
 
-## 11. Changelog pointers
+---
 
-- None
-## 12. Footnotes
+## Configuration
 
-- Spec: [.specs/00_llama-orch.md](../../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../../requirements/00_llama-orch.yaml)
+### Input (YAML)
 
-## Policy note
+```yaml
+model_ref: "file:/models/TinyLlama-1.1B-Chat-v1.0-q4_k_m.gguf"
+expected_digest:
+  algo: sha256
+  value: "abc123..."
+strict_verification: true
+```
 
-- VRAM-only residency during inference (weights/KV/activations). No RAM↔VRAM sharing, UMA/zero-copy, or host-RAM offload; tasks that do not fit fail fast with `POOL_UNAVAILABLE`. See `/.specs/proposals/GPU_ONLY.md` and `/.specs/00_llama-orch.md §2.13`.
+### Output (Handoff JSON)
 
-## What this crate is not
+```json
+{
+  "model": {
+    "id": "local:/models/TinyLlama-1.1B-Chat-v1.0-q4_k_m.gguf",
+    "path": "/models/TinyLlama-1.1B-Chat-v1.0-q4_k_m.gguf"
+  }
+}
+```
 
-- Not a production service.
+---
 
-## Refinement Opportunities
+## HuggingFace Support (Future)
 
-- Add GGUF header parsing to populate `ctx_max` and tokenizer info in `ModelMetadata`.
-- Implement LRU cache accounting and eviction policy with provenance logs.
-- Add `hf:` native fetcher (no shell-outs) gated by repo trust policy; support `pacman`/AUR packaged dependencies on Arch/CachyOS.
-- Emit provenance bundle linking `catalog-core` entry and verification outcome into proof artifacts.
+### Installation
 
-## Arch/CachyOS notes (optional network fetching)
+On Arch/CachyOS:
 
-- The crate prefers local file paths for MVP. For optional `hf:` shell-out support, install `huggingface-cli` via system packages.
-- On Arch/CachyOS:
-  - `sudo pacman -S python-huggingface-hub` provides the `huggingface-cli` tool.
-  - If unavailable, prefer an AUR package or use a system-managed alternative (avoid ad-hoc pip installs in this repo).
-  - If `huggingface-cli` is missing, calls to `hf:` will return an instructive error advising installation or using a local `file:` path.
+```bash
+sudo pacman -S python-huggingface-hub
+```
+
+### Usage
+
+```rust
+// Feature-gated, requires huggingface-cli
+let resolved = provisioner.ensure_present(
+    ModelRef::HuggingFace {
+        org: "meta-llama".to_string(),
+        repo: "Llama-3.1-8B-Instruct".to_string(),
+        path: Some("gguf/q4_k_m.gguf".to_string()),
+    }
+).await?;
+```
+
+If `huggingface-cli` is not installed, returns error:
+
+```
+Error: huggingface-cli not found. Install with:
+  sudo pacman -S python-huggingface-hub
+Or use a local file: path instead.
+```
+
+---
+
+## Known Limitations
+
+### MVP Scope
+
+- ✅ **Local file resolution** — Absolute and relative paths
+- ✅ **Digest verification** — SHA256 checksums
+- ✅ **Catalog integration** — Register and update models
+- ❌ **HuggingFace support** — Not implemented (feature-gated)
+- ❌ **LRU cache** — No automatic eviction
+- ❌ **GGUF parsing** — No header parsing for metadata
+
+### Future Work
+
+- Native HuggingFace fetcher (no shell-outs)
+- LRU cache accounting and eviction
+- GGUF header parsing for `ctx_max` and tokenizer info
+- Provenance bundle linking verification outcomes
+
+---
+
+## Specifications
+
+Implements requirements from `.specs/00_llama-orch.md`:
+- Model resolution
+- Digest verification
+- Catalog integration
+- Handoff file format
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

@@ -1,71 +1,165 @@
-# llama-orch-utils — Utils applets for composing Blueprint pipelines for llama-orch (M2).
+# llama-orch-utils
 
-## 1. Name & Purpose
+**TypeScript utilities for building LLM pipelines with llama-orch**
 
-Utils applets for composing Blueprint pipelines for llama-orch (M2).
+`consumers/llama-orch-utils` — Helper functions and composable utilities for TypeScript/Node.js applications.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- See spec and requirements for details.
-  - [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
-  - [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+## What This Library Does
 
+llama-orch-utils provides **TypeScript utilities** for llama-orch:
 
-## 3. Public API surface
+- **File operations** — Read/write files with streaming
+- **LLM invocation** — Simplified API for inference
+- **Model definitions** — Type-safe model configurations
+- **Response extraction** — Parse and extract structured data
+- **Prompt management** — Message and thread builders
+- **Parameter helpers** — Type-safe parameter definitions
 
-- Rust crate API (internal)
+**Used by**: Node.js applications, TypeScript projects
 
-## 4. How it fits
+---
 
-- Developer tooling supporting contracts and docs.
+## Installation
 
-```mermaid
-flowchart LR
-  devs[Developers] --> tool[Tool]
-  tool --> artifacts[Artifacts]
+```bash
+npm install @llama-orch/utils
 ```
 
-## 5. Build & Test
+---
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p llama-orch-utils -- --nocapture`
+## Modules
 
+### File Operations
 
-## 6. Contracts
+```typescript
+import { FileReader, FileWriter } from '@llama-orch/utils/fs';
 
-- None
+// Read file
+const content = await FileReader.read('input.txt');
 
+// Write file
+await FileWriter.write('output.txt', content);
 
-## 7. Config & Env
+// Stream large files
+const stream = FileReader.stream('large-file.txt');
+for await (const chunk of stream) {
+  console.log(chunk);
+}
+```
 
-- Not applicable.
+### LLM Invocation
 
-## 8. Metrics & Logs
+```typescript
+import { invoke } from '@llama-orch/utils/llm';
 
-- Minimal logs.
+const response = await invoke({
+  prompt: 'Hello, world!',
+  model: 'llama-3.1-8b-instruct',
+  maxTokens: 100,
+  seed: 42,
+});
 
-## 9. Runbook (Dev)
+console.log(response.text);
+```
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+### Model Definitions
 
+```typescript
+import { defineModel } from '@llama-orch/utils/model';
 
-## 10. Status & Owners
+const model = defineModel({
+  name: 'llama-3.1-8b-instruct',
+  maxTokens: 8192,
+  temperature: 0.7,
+});
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+const response = await model.invoke('Hello, world!');
+```
 
-## 11. Changelog pointers
+### Response Extraction
 
-- None
+```typescript
+import { extractJson, extractCode } from '@llama-orch/utils/orch';
 
-## 12. Footnotes
+// Extract JSON from response
+const data = extractJson(response.text);
 
-- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+// Extract code blocks
+const code = extractCode(response.text, 'typescript');
+```
 
+### Prompt Management
 
-## What this crate is not
+```typescript
+import { Message, Thread } from '@llama-orch/utils/prompt';
 
-- Not a production service.
+// Create message
+const message = Message.user('Hello, world!');
+
+// Build thread
+const thread = Thread.create()
+  .addSystem('You are a helpful assistant')
+  .addUser('What is 2+2?')
+  .addAssistant('4')
+  .addUser('What is 3+3?');
+
+const response = await invoke({
+  messages: thread.toMessages(),
+  model: 'llama-3.1-8b-instruct',
+});
+```
+
+### Parameter Helpers
+
+```typescript
+import { defineParams } from '@llama-orch/utils/params';
+
+const params = defineParams({
+  temperature: 0.7,
+  topP: 0.9,
+  seed: 42,
+  maxTokens: 100,
+});
+
+const response = await invoke({
+  prompt: 'Hello, world!',
+  ...params,
+});
+```
+
+---
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test
+npm test -- file_reader
+```
+
+---
+
+## Dependencies
+
+### Internal
+
+- `@llama-orch/sdk` — Core SDK
+
+### External
+
+- None (minimal dependencies)
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers

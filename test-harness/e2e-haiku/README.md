@@ -1,73 +1,240 @@
-# test-harness-e2e-haiku — test-harness-e2e-haiku (test-harness)
+# e2e-haiku
 
-## 1. Name & Purpose
+**End-to-end tests with real models (TinyLlama for fast smoke tests)**
 
-test-harness-e2e-haiku (test-harness)
+`test-harness/e2e-haiku` — E2E tests using small, fast models for smoke testing the full stack.
 
-## 2. Why it exists (Spec traceability)
+---
 
-- ORCH-3050 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3050)
-- ORCH-3051 — [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md#orch-3051)
+## What This Test Suite Does
 
+e2e-haiku provides **end-to-end smoke tests** for llama-orch:
 
-## 3. Public API surface
+- **Real models** — TinyLlama-1.1B (fast, fits modest VRAM)
+- **Full stack** — Orchestrator → Pool Manager → Engine → Adapter
+- **Real inference** — Actual token generation, not mocks
+- **Determinism** — Verify reproducible outputs
+- **Quick feedback** — Fast enough for CI/dev loop
 
-- Rust crate API (internal)
+**Purpose**: Smoke test the full system with real models
 
-## 4. How it fits
+---
 
-- Provides test scaffolding for validation suites.
+## Test Model
 
-```mermaid
-flowchart LR
-  crates[Crates] --> harness[Test Harness]
-  harness --> results[Reports]
+### TinyLlama-1.1B-Chat-v1.0
+
+- **Size**: ~600MB (Q4_K_M quantized)
+- **VRAM**: ~1GB
+- **Speed**: ~50 tokens/sec on modest GPU
+- **Purpose**: Fast smoke tests, not production quality
+
+**Why TinyLlama?**
+- Small enough for CI runners
+- Fast enough for quick feedback
+- Real model, real inference
+- Deterministic with seeds
+
+---
+
+## Test Scenarios
+
+### Basic Inference
+
+```rust
+#[tokio::test]
+async fn test_e2e_basic_inference() {
+    // Start full stack
+    let orchestrator = start_orchestrator().await;
+    let pool_manager = start_pool_manager().await;
+    let engine = provision_tinyllama().await;
+    
+    // Enqueue job
+    let request = EnqueueRequest {
+        prompt: "Hello, world!".to_string(),
+        model: "TinyLlama-1.1B-Chat-v1.0".to_string(),
+        max_tokens: 10,
+        seed: Some(42),
+        ..Default::default()
+    };
+    
+    let job_id = orchestrator.enqueue(request).await?;
+    
+    // Wait for completion
+    let status = orchestrator.wait_for_completion(&job_id).await?;
+    assert_eq!(status.state, JobState::Completed);
+    assert!(status.tokens_generated.unwrap() > 0);
+}
 ```
 
-## 5. Build & Test
+### Determinism Verification
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p test-harness-e2e-haiku -- --nocapture`
+```rust
+#[tokio::test]
+async fn test_e2e_determinism() {
+    let orchestrator = start_orchestrator().await;
+    
+    let request = EnqueueRequest {
+        prompt: "Write a haiku about coding".to_string(),
+        model: "TinyLlama-1.1B-Chat-v1.0".to_string(),
+        max_tokens: 20,
+        seed: Some(42),
+        ..Default::default()
+    };
+    
+    // Run 1
+    let tokens1 = orchestrator.enqueue_and_collect(request.clone()).await?;
+    
+    // Run 2
+    let tokens2 = orchestrator.enqueue_and_collect(request.clone()).await?;
+    
+    // Must be identical
+    assert_eq!(tokens1, tokens2);
+}
+```
 
+### Multi-Job Concurrency
 
-## 6. Contracts
+```rust
+#[tokio::test]
+async fn test_e2e_concurrent_jobs() {
+    let orchestrator = start_orchestrator().await;
+    
+    // Enqueue 5 jobs concurrently
+    let mut handles = Vec::new();
+    for i in 0..5 {
+        let orch = orchestrator.clone();
+        let handle = tokio::spawn(async move {
+            let request = EnqueueRequest {
+                prompt: format!("Job {}", i),
+                seed: Some(42 + i),
+                ..Default::default()
+            };
+            orch.enqueue_and_wait(request).await
+        });
+        handles.push(handle);
+    }
+    
+    // All should complete successfully
+    for handle in handles {
+        let result = handle.await?;
+        assert!(result.is_ok());
+    }
+}
+```
 
-- None
+---
 
+## Running Tests
 
-## 7. Config & Env
+### All E2E Tests
 
-- Not applicable.
+```bash
+# Run all tests (requires TinyLlama model)
+cargo test -p test-harness-e2e-haiku -- --nocapture
+```
 
-## 8. Metrics & Logs
+### Specific Test
 
-- Minimal logs.
+```bash
+# Basic inference
+cargo test -p test-harness-e2e-haiku -- test_e2e_basic_inference --nocapture
 
-## 9. Runbook (Dev)
+# Determinism
+cargo test -p test-harness-e2e-haiku -- test_e2e_determinism --nocapture
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+# Concurrency
+cargo test -p test-harness-e2e-haiku -- test_e2e_concurrent_jobs --nocapture
+```
 
+---
 
-## 10. Status & Owners
+## Setup
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+### Download TinyLlama
 
-## 11. Changelog pointers
+```bash
+# Download model
+mkdir -p models
+cd models
+wget https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+```
 
-- None
+### Configure
 
-## 12. Footnotes
+```yaml
+# config.yaml
+pools:
+  - id: haiku
+    engine: llamacpp
+    replicas: 1
+    port: 8081
+    model:
+      id: local:/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+    flags:
+      - --parallel
+      - "1"
+      - --no-cont-batching
+      - --metrics
+```
 
-- Spec: [.specs/00_llama-orch.md](../../.specs/00_llama-orch.md)
-- Requirements: [requirements/00_llama-orch.yaml](../../requirements/00_llama-orch.yaml)
+---
 
-### Additional Details
-- Which tests are ignored vs required; how to run real-model Haiku; determinism suite scope.
+## CI Integration
 
+### GitHub Actions
 
-## What this crate is not
+```yaml
+- name: Download TinyLlama
+  run: |
+    mkdir -p models
+    wget -O models/tinyllama.gguf \
+      https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
 
-- Not a production service.
+- name: Run E2E tests
+  run: cargo test -p test-harness-e2e-haiku -- --nocapture
+```
+
+---
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+cargo test -p test-harness-e2e-haiku -- --nocapture
+```
+
+---
+
+## Dependencies
+
+### Internal
+
+- `orchestrator-core` — Orchestrator logic
+- `pool-managerd` — Pool manager
+- `provisioners-engine-provisioner` — Engine provisioning
+- `worker-adapters-llamacpp-http` — llama.cpp adapter
+
+### External
+
+- `tokio` — Async runtime
+- `reqwest` — HTTP client
+
+---
+
+## Specifications
+
+Implements requirements from:
+- ORCH-3050 (E2E testing)
+- ORCH-3051 (Smoke tests)
+
+---
+
+## Status
+
+- **Version**: 0.0.0 (early development)
+- **License**: GPL-3.0-or-later
+- **Stability**: Alpha
+- **Maintainers**: @llama-orch-maintainers
