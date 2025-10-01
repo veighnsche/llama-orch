@@ -73,7 +73,7 @@ members = [
     "bin/worker-orcd-crates/inference",
     "bin/worker-orcd-crates/api",
     "bin/worker-orcd-crates/error-handler",
-    "bin/worker-orcd-crates/execution-planner",
+    "bin/worker-orcd-crates/execution-planner", "bin/worker-orcd-crates/capability-matcher",
 ]
 
 resolver = "2"

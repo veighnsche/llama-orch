@@ -1,1 +1,0 @@
-I guess this is the entire core of the model and stuff
