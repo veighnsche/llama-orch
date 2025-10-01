@@ -1,7 +1,0 @@
-leads_per_month: 6
-win_rate_pct: 20
-sales_cycle_months: 3
-avg_commit_gpu_hours_per_month: 150
-mgmt_fee_eur_per_month: 500
-discount_pct_on_gpu_hour: 15
-lead_conversion_from_public_pct: 8
