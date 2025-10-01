@@ -6,11 +6,16 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-anyhow.workspace = true
 thiserror.workspace = true
-serde = { workspace = true }
-serde_json.workspace = true
 tracing.workspace = true
 
-# Security
-sha2.workspace = true
+# Security - Use battle-tested crates instead of rolling our own
+secrecy = { version = "0.8", features = ["serde"] }  # Secret wrapper with zeroization
+zeroize = { version = "1.7", features = ["derive"] }  # Secure memory cleanup
+subtle = "2.5"  # Constant-time comparison
+hkdf = "0.12"  # HKDF-SHA256 key derivation
+sha2 = "0.10"  # SHA-256 for HKDF
+hex = "0.4"  # Hex decoding for key files
+
+[dev-dependencies]
+tempfile = "3.8"  # Temporary files for testing
