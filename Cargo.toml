@@ -32,6 +32,7 @@ members = [
     "bin/shared-crates/input-validation",
     "bin/shared-crates/input-validation/bdd",
     "bin/shared-crates/audit-logging",
+    "bin/shared-crates/audit-logging/bdd",
     "bin/shared-crates/rate-limiting",
     "bin/shared-crates/circuit-breaker",
     "bin/shared-crates/deadline-propagation",
