@@ -1,12 +1,21 @@
-//! platform-api — Platform HTTP endpoints
+//! platform-api — HTTP API for llama-orchestrator
 //!
-//! TODO(ARCH-CHANGE): This crate only has /health endpoint. Needs:
-//! - Add /metrics endpoint (Prometheus format)
-//! - Add /version endpoint (build info, git commit)
-//! - Add /status endpoint (service health, dependencies)
-//! - Add /config endpoint (safe config inspection)
-//! - Add authentication middleware integration
-//! - Add rate limiting per endpoint
+//! Exposes REST endpoints for model inference, session management, and platform operations.
+//!
+//! # ⚠️ SECURITY: API Token Authentication
+//!
+//! For Bearer token authentication, use `secrets-management`:
+//!
+//! ```rust,ignore
+//! use secrets_management::Secret;
+//!
+//! let api_token = Secret::load_from_file("/etc/llorch/secrets/api-token")?;
+//! if !api_token.verify(bearer_token) {
+//!     return Err(StatusCode::UNAUTHORIZED);
+//! }
+//! ```
+//!
+//! See: `bin/shared-crates/secrets-management/README.md`
 //! See: ARCHITECTURE_CHANGE_PLAN.md Phase 4 (observability)
 //!
 //! # ⚠️ INPUT VALIDATION REMINDER

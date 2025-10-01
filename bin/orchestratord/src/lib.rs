@@ -21,6 +21,28 @@
 //! - ✅ Comprehensive test coverage (85%)
 //!
 //! See: `bin/shared-crates/audit-logging/README.md`
+//! 
+//! ---
+//! 
+//! # Security Notice: Secret Management
+//!
+//! ⚠️ **DO NOT HAND-ROLL SECRET HANDLING** ⚠️
+//!
+//! For API tokens, seal keys, or any credentials, use:
+//! ```rust,ignore
+//! use secrets_management::{Secret, SecretKey};
+//!
+//! // Load API token from file (with permission validation)
+//! let token = Secret::load_from_file("/etc/llorch/secrets/api-token")?;
+//!
+//! // Load seal key from systemd credential
+//! let seal_key = SecretKey::from_systemd_credential("seal_key")?;
+//!
+//! // Derive keys from tokens (HKDF-SHA256)
+//! let derived = SecretKey::derive_from_token(token.expose(), b"llorch-seal-v1")?;
+//! ```
+//!
+//! See: `bin/shared-crates/secrets-management/README.md`
 
 pub mod admission;
 pub mod api;

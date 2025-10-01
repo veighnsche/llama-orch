@@ -21,12 +21,37 @@
 //! ```
 //!
 //! See: `bin/shared-crates/AUDIT_LOGGING_REMINDER.md`
+//!
+//! ---
+//!
+//! # ⚠️ CRITICAL: Worker Token & Seal Key Management
+//!
+//! **DO NOT HAND-ROLL CREDENTIAL HANDLING**
+//!
+//! For worker registration tokens and seal keys, use `secrets-management`:
+//!
+//! ```rust,ignore
+//! use secrets_management::{Secret, SecretKey};
+//!
+//! // Load worker token for registration with orchestrator
+//! let worker_token = Secret::load_from_file("/etc/llorch/secrets/worker-token")?;
+//!
+//! // Load or derive seal key for VRAM shard integrity
+//! let seal_key = SecretKey::from_systemd_credential("seal_key")?;
+//! // OR derive from worker token:
+//! let seal_key = SecretKey::derive_from_token(
+//!     worker_token.expose(),
+//!     b"llorch-seal-key-v1"
+//! )?;
+//! ```
+//!
+//! See: `bin/shared-crates/secrets-management/README.md`
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
     tracing::info!("worker-orcd starting");
-    
+
     // TODO(ARCH-CHANGE): Implement worker-orcd M0 pilot per ARCHITECTURE_CHANGE_PLAN.md Phase 3:
     // Task Group 1 (Rust Control Layer):
     // - Parse CLI args (GPU device, config path, etc.)
@@ -50,6 +75,6 @@ async fn main() -> anyhow::Result<()> {
     // - Test with TinyLlama-1.1B
     // - Verify determinism and VRAM-only policy
     // See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md M0 Must-Fix items 1-10
-    
+
     Ok(())
 }

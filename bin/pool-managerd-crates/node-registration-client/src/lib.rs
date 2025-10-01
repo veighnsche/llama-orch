@@ -1,12 +1,21 @@
-//! Node registration for GPU nodes
+//! node-registration-client — Client for worker node registration
 //!
-//! Registers with orchestratord on startup and sends periodic heartbeats.
+//! Handles worker registration with orchestrator, heartbeats, and capability reporting.
+//!
+//! # ⚠️ SECURITY: Worker Token Management
+//!
+//! For worker registration tokens, use `secrets-management`:
+//! ```rust,ignore
+//! use secrets_management::Secret;
+//! let worker_token = Secret::load_from_file("/etc/llorch/secrets/worker-token")?;
+//! // Use worker_token.expose() for Authorization header
+//! ```
+//! See: `bin/shared-crates/secrets-management/README.md`odic heartbeats.
 
 use anyhow::{Context, Result};
 use pool_registry_types::NodeCapabilities;
 use service_registry::{HeartbeatPoolStatus, HeartbeatRequest, RegisterRequest};
 use std::time::Duration;
-use tokio::time::interval;
 use tracing::{info, warn};
 
 pub mod client;

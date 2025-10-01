@@ -1,6 +1,15 @@
-//! pool-managerd-api — HTTP API for pool-managerd
+//! pool-managerd-api — HTTP API for pool manager daemon
 //!
-//! Exposes pool management endpoints.
+//! Exposes endpoints for GPU pool management, health checks, and model operations.
+//!
+//! # ⚠️ SECURITY: API Token Authentication
+//!
+//! For Bearer token authentication, use `secrets-management`:
+//! ```rust,ignore
+//! use secrets_management::Secret;
+//! let api_token = Secret::load_from_file("/etc/llorch/secrets/pool-manager-token")?;
+//! ```
+//! See: `bin/shared-crates/secrets-management/README.md`
 //!
 //! TODO(ARCH-CHANGE): This crate only has /health endpoint. Per ARCHITECTURE_CHANGE_PLAN.md:
 //! - Add POST /pools/:id/preload endpoint (model preloading)

@@ -7,6 +7,37 @@
 //! - **Bind policy enforcement** - Loopback detection for startup validation
 //! - **Proxy auth trust gate** - Optional proxy header trust (use with caution)
 //!
+//! # ⚠️ CRITICAL: Token Storage & Loading
+//!
+//! **DO NOT HAND-ROLL TOKEN LOADING**
+//!
+//! While `auth-min` provides timing-safe comparison, you MUST use `secrets-management`
+//! for loading and storing tokens:
+//!
+//! ```rust,ignore
+//! use secrets_management::Secret;
+//! use auth_min::{parse_bearer, timing_safe_eq};
+//!
+//! // ✅ CORRECT: Load token with secrets-management
+//! let expected_token = Secret::load_from_file("/etc/llorch/secrets/api-token")?;
+//!
+//! // Parse incoming Bearer token
+//! let bearer_token = parse_bearer(auth_header)?;
+//!
+//! // Verify using Secret::verify (timing-safe)
+//! if expected_token.verify(bearer_token) {
+//!     // Authenticated
+//! }
+//! ```
+//!
+//! **Why?** `secrets-management` provides:
+//! - File permission validation (rejects world/group readable)
+//! - Zeroization on drop (prevents memory dumps)
+//! - Timing-safe comparison (uses `subtle` crate)
+//! - No Debug/Display traits (prevents logging)
+//!
+//! See: `bin/shared-crates/secrets-management/README.md`
+//!
 //! # Security Properties
 //!
 //! All token comparisons use constant-time algorithms to prevent timing side-channel attacks.

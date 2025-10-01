@@ -25,6 +25,11 @@
 // ```
 //
 // See: `bin/shared-crates/audit-logging/README.md`
+//
+// ---
+//
+// ⚠️ SECURITY: For worker tokens, API keys, or seal keys, use `secrets-management` crate
+// See: bin/shared-crates/secrets-management/README.md
 
 pub mod api;
 pub mod config;

@@ -1,12 +1,21 @@
-//! agentic-api — Agentic workflow endpoints
+//! agentic-api — Agentic AI endpoints for llama-orch
 //!
-//! TODO(ARCH-CHANGE): This crate is a stub. Agentic API implementation needed:
+//! Provides high-level agentic AI operations (tool use, multi-turn, etc.)
+//!
+//! # ⚠️ SECURITY: API Token Authentication
+//!
+//! For Bearer token authentication, use `secrets-management`:
+//! ```rust,ignore
+//! use secrets_management::Secret;
+//! let api_token = Secret::load_from_file("/etc/llorch/secrets/api-token")?;
+//! ```
+//! See: `bin/shared-crates/secrets-management/README.md`
+//! Agentic API implementation needed:
 //! - Define agentic workflow types (tool calls, function calling, etc.)
 //! - Implement multi-turn conversation state management
 //! - Add tool/function registry
 //! - Implement streaming responses for agentic workflows
 //! - Add context window management for long conversations
-//! - Integrate with orchestrator-core queue
 //! See: .specs/00_llama-orch.md §2.x (Agentic Workflows)
 //!
 //! # ⚠️ INPUT VALIDATION REMINDER

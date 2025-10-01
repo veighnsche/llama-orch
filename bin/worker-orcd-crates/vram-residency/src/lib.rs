@@ -46,6 +46,34 @@
 //!
 //! See: `bin/shared-crates/AUDIT_LOGGING_REMINDER.md`
 //!
+//! ---
+//!
+//! # ⚠️ CRITICAL: Seal Key Management
+//!
+//! **DO NOT HAND-ROLL SEAL KEY HANDLING**
+//!
+//! For seal key loading and HMAC key derivation, use `secrets-management`:
+//!
+//! ```rust,ignore
+//! use secrets_management::{Secret, SecretKey};
+//!
+//! // Load seal key from systemd credential
+//! let seal_key = SecretKey::from_systemd_credential("seal_key")?;
+//!
+//! // Or derive from worker token (HKDF-SHA256)
+//! let worker_token = Secret::load_from_file("/etc/llorch/secrets/worker-token")?;
+//! let seal_key = SecretKey::derive_from_token(
+//!     worker_token.expose(),
+//!     b"llorch-seal-key-v1"  // Domain separation
+//! )?;
+//!
+//! // Use seal_key.as_bytes() for HMAC operations
+//! ```
+//!
+//! See: `bin/shared-crates/secrets-management/README.md`
+//!
+//! ---
+//!
 //! # Example
 //!
 //! ```rust
@@ -85,7 +113,7 @@
 #![warn(clippy::missing_safety_doc)]
 #![warn(clippy::must_use_candidate)]
 
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 use std::time::SystemTime;
 use thiserror::Error;
 
@@ -144,23 +172,23 @@ impl VramManager {
             used_vram: 0,
         }
     }
-    
+
     /// Seal model in VRAM
     pub fn seal_model(&mut self, model_bytes: &[u8], gpu_device: u32) -> Result<SealedShard> {
         let vram_needed = model_bytes.len();
-        
+
         if self.used_vram.saturating_add(vram_needed) > self.total_vram {
             return Err(VramError::InsufficientVram(
                 vram_needed,
                 self.total_vram.saturating_sub(self.used_vram),
             ));
         }
-        
+
         // Compute digest
         let mut hasher = Sha256::new();
         hasher.update(model_bytes);
         let digest = format!("{:x}", hasher.finalize());
-        
+
         // TODO(ARCH-CHANGE): Implement actual CUDA VRAM allocation per ARCHITECTURE_CHANGE_PLAN.md Phase 3:
         // - Use cudarc or cust for CUDA bindings
         // - Allocate VRAM via cudaMalloc
@@ -170,9 +198,9 @@ impl VramManager {
         // See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md Issue #11 (unsafe CUDA FFI)
         // Simulate VRAM allocation (actual implementation would use CUDA)
         let vram_ptr = 0x7f8a4c000000usize; // Placeholder - REPLACE with cudaMalloc
-        
+
         self.used_vram = self.used_vram.saturating_add(vram_needed);
-        
+
         let shard = SealedShard {
             shard_id: format!("shard-{:x}", gpu_device),
             gpu_device,
@@ -181,16 +209,16 @@ impl VramManager {
             sealed_at: SystemTime::now(),
             vram_ptr,
         };
-        
+
         tracing::info!(
             shard_id = %shard.shard_id,
             vram_bytes = %vram_needed,
             "Model sealed in VRAM"
         );
-        
+
         Ok(shard)
     }
-    
+
     /// Verify sealed shard before execution
     pub fn verify_sealed(&self, shard: &SealedShard) -> Result<()> {
         // TODO(ARCH-CHANGE): Implement digest re-verification per ARCHITECTURE_CHANGE_PLAN.md:
@@ -217,15 +245,15 @@ impl Default for VramManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_seal_model() {
         let mut manager = VramManager::new();
         let model_bytes = vec![0u8; 1_000_000]; // 1MB model
-        
+
         let shard = manager.seal_model(&model_bytes, 0).ok();
         assert!(shard.is_some());
-        
+
         let shard = shard.unwrap();
         assert_eq!(shard.vram_bytes, 1_000_000);
         assert!(manager.verify_sealed(&shard).is_ok());

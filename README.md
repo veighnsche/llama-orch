@@ -106,6 +106,7 @@ The project also includes determinism and observability features that I enjoyed 
 - [`.specs/metrics/otel-prom.md`](.specs/metrics/otel-prom.md) — Metrics contract
 - [`AGENTS.md`](AGENTS.md) — Repository guidelines, dev loop, coding/testing discipline
 - [`SECURITY.md`](SECURITY.md) — Security policy and Minimal Auth Hooks seam
+- **[`bin/shared-crates/secrets-management/`](bin/shared-crates/secrets-management/)** — ⚠️ **Use this for ALL credentials** (API tokens, seal keys, worker tokens)
 
 ### Operational Guides
 - [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md) — Complete environment variable reference
