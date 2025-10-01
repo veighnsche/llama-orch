@@ -154,11 +154,12 @@ cargo test -p test-harness-e2e-haiku -- test_e2e_concurrent_jobs --nocapture
 ### Download TinyLlama
 
 ```bash
-# Download model
-mkdir -p models
-cd models
+# Download model to workspace test-models directory
+cd ../../.test-models/tinyllama
 wget https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
 ```
+
+**Note**: Test models are stored in `.test-models/` at the workspace root. See `.docs/testing/TEST_MODELS.md` for details.
 
 ### Configure
 
@@ -170,7 +171,7 @@ pools:
     replicas: 1
     port: 8081
     model:
-      id: local:/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+      id: local:/.test-models/tinyllama/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
     flags:
       - --parallel
       - "1"
@@ -185,11 +186,19 @@ pools:
 ### GitHub Actions
 
 ```yaml
+- name: Cache test models
+  uses: actions/cache@v3
+  with:
+    path: .test-models
+    key: test-models-${{ hashFiles('.docs/testing/TEST_MODELS.md') }}
+
 - name: Download TinyLlama
   run: |
-    mkdir -p models
-    wget -O models/tinyllama.gguf \
-      https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+    mkdir -p .test-models/tinyllama
+    if [ ! -f .test-models/tinyllama/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf ]; then
+      wget -O .test-models/tinyllama/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf \
+        https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+    fi
 
 - name: Run E2E tests
   run: cargo test -p test-harness-e2e-haiku -- --nocapture

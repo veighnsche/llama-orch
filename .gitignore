@@ -41,3 +41,11 @@ storybook-static
 
 # Python
 __pycache__
+
+# Test models (LLM weights for testing)
+.test-models/
+!.test-models/README.md
+!.test-models/**/README.md
+*.gguf
+*.safetensors
+!**/.gitkeep
