@@ -31,7 +31,6 @@ members = [
     "libs/control-plane/service-registry",
     # Cloud profile: GPU node libraries
     "libs/gpu-node/handoff-watcher",
-    "libs/gpu-node/node-registration",
     # Test harnesses
     "test-harness/e2e-haiku",
     "test-harness/metrics-contract",

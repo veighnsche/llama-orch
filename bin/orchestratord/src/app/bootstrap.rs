@@ -1,14 +1,34 @@
-use crate::{app::router::build_router, state::AppState};
+use crate::{app::router::build_router, config::Config, state::AppState};
 use axum::Router;
 
+/// Build the application with validated configuration.
+///
+/// This function loads and validates the configuration, then constructs
+/// the application state and router. It implements ORCHD-CONFIG-VALIDATE-0001.
+///
+/// # Panics
+///
+/// Panics if configuration loading or validation fails. This is intentional
+/// fail-fast behavior per OC-CONFIG-6001.
 pub fn build_app() -> Router {
+    // Load and validate configuration (fail-fast on error)
+    let config = Config::load().expect("Failed to load and validate configuration");
+
+    tracing::info!(
+        bind_addr = %config.bind_addr,
+        cloud_profile = config.cloud_profile,
+        admission_capacity = config.admission.capacity,
+        placement_strategy = ?config.placement_strategy,
+        "Configuration validated successfully"
+    );
+
+    // Build application state with validated config
     let state = AppState::new();
+
     // Optionally bind llama.cpp adapter for MVP wiring when feature + env configured
     // TODO(OwnerB-ORCH-BINDING-SHIM): This is an MVP shim for binding a single adapter via
     // feature gate + environment variables. Replace with pool-manager driven registration and
     // config-schema backed sources, and ensure reload/drain lifecycle integrates with AdapterHost.
-    // TODO[ORCHD-CONFIG-VALIDATE-0001]: Load and validate orchestrator config via
-    // (e.g., missing GPU pools, malformed placement policy). Wire reload/drain.
     #[cfg(feature = "llamacpp-adapter")]
     {
         if let Ok(url) = std::env::var("ORCHD_LLAMACPP_URL") {
@@ -17,24 +37,28 @@ pub fn build_app() -> Router {
             let replica =
                 std::env::var("ORCHD_LLAMACPP_REPLICA").unwrap_or_else(|_| "r0".to_string());
             let adapter = worker_adapters_llamacpp_http::LlamaCppHttpAdapter::new(url);
-            state.adapter_host.bind(pool.clone(), replica, Arc::new(adapter));
+            state
+                .adapter_host
+                .bind(pool.clone(), replica, std::sync::Arc::new(adapter));
             if let Ok(mut s) = state.bound_pools.lock() {
                 s.insert(format!("{}:{}", pool, replica));
             }
         }
     }
+
     // Spawn stale node checker if cloud profile enabled
-    if state.cloud_profile_enabled() {
-        let registry = state.service_registry().clone();
-        let check_interval_secs = std::env::var("ORCHESTRATORD_STALE_CHECK_INTERVAL_SECS")
-            .ok()
-            .and_then(|v| v.parse().ok())
-            .unwrap_or(10);
-        service_registry::heartbeat::spawn_stale_checker(registry, check_interval_secs);
-        tracing::info!(
-            interval_secs = check_interval_secs,
-            "Started stale node checker for cloud profile"
-        );
+    if config.cloud_profile {
+        if let Some(stale_checker_config) = config.stale_checker {
+            let registry = state.service_registry().clone();
+            service_registry::heartbeat::spawn_stale_checker(
+                registry,
+                stale_checker_config.interval_secs,
+            );
+            tracing::info!(
+                interval_secs = stale_checker_config.interval_secs,
+                "Started stale node checker for cloud profile"
+            );
+        }
     }
 
     build_router(state)

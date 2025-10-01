@@ -36,11 +36,11 @@ on the same node with CLOUD_PROFILE mode.
 ## Findings and Gaps (by step)
 
 - 0 — Config validation
-  - Current: No config-schema backed load/validation at startup.
-  - Gap: Validate and fail-fast on missing/invalid pools/placement.
-  - Code: `bin/orchestratord/src/app/bootstrap.rs`.
+  - Current: Config module loads and validates orchestrator configuration at startup with fail-fast semantics.
+  - Implementation: `bin/orchestratord/src/config.rs` provides `Config::load()` with validation for admission capacity, queue policy, placement strategy, and cloud profile settings. Bootstrap calls `Config::load()` and panics on validation failure per OC-CONFIG-6001.
+  - Code: `bin/orchestratord/src/app/bootstrap.rs`, `bin/orchestratord/src/config.rs`.
   - TODO: ORCHD-CONFIG-VALIDATE-0001.
-  - Status: ❌ Not implemented
+  - Status: ✅ Implemented
 
 - 1 — Request ingress
   - Current: `POST /v2/tasks` returns `202 Accepted` with `AdmissionResponseV2` (includes the same `task_id`). Enqueue admits into the queue and seeds data for `started` SSE.
@@ -115,7 +115,7 @@ on the same node with CLOUD_PROFILE mode.
 ## TODO Markers Added in Code
 
 - `bin/orchestratord/src/app/bootstrap.rs`
-  - ORCHD-CONFIG-VALIDATE-0001: validate config at startup ❌
+  - ORCHD-CONFIG-VALIDATE-0001: validate config at startup ✅ DONE
 - `bin/orchestratord/src/api/data.rs`
   - ORCHD-CATALOG-CHECK-0006: catalog existence/state check ❌
   - ORCHD-PROVISION-POLICY-0005: invoke provisioning per policy ❌
@@ -151,7 +151,7 @@ Verification commands:
 
 ## Target Path to Full Happy Flow (mid-term)
 
-- Implement config load/validation (ORCHD-CONFIG-VALIDATE-0001).
+- [x] Implement config load/validation (ORCHD-CONFIG-VALIDATE-0001) ✅ DONE.
 - Implement catalog check + provisioning policy (ORCHD-CATALOG-CHECK-0006, ORCHD-PROVISION-POLICY-0005).
 - Engine-provisioner: notify pool-manager and orchestrator (ENGINE-PROV-POOL-NOTIFY-0003), enforce GPU-only (ENGINE-PROV-GPU-ENFORCE-0007).
 - [x] Auto-bind adapters from handoff files (ORCHD-HANDOFF-AUTOBIND-0002) ✅ DONE.
