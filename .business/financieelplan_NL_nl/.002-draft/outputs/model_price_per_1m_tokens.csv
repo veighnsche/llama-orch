@@ -1,6 +1,0 @@
-model,gpu,tps,eur_hr_min,eur_hr_med,eur_hr_max,cost_per_1m_min,cost_per_1m_med,cost_per_1m_max,sell_per_1m_eur,margin_per_1m_min,margin_per_1m_med,margin_per_1m_max,competitor_cap_applied,gross_margin_pct_med,gross_margin_pct_min
-Llama-3-1-8B,A100 40GB (PCIe),80.31,1.1667,1.1667,1.1667,32.2823,32.2823,32.2823,80.0,47.7177,47.7177,47.7177,False,59.65,59.65
-Qwen2-5-7B,A100 40GB (PCIe),79.68,1.1667,1.1667,1.1667,32.5376,32.5376,32.5376,80.0,47.4624,47.4624,47.4624,False,59.33,59.33
-Mixtral-8x7B,H100 80GB (PCIe/SXM),31.25,3.0139,3.0139,3.0139,214.321,214.321,214.321,480.0,265.679,265.679,265.679,False,55.35,55.35
-DeepSeek-R1-Distill-Llama-8B,A100 40GB (PCIe),58.5,1.1667,1.1667,1.1667,44.3178,44.3178,44.3178,100.0,55.6822,55.6822,55.6822,False,55.68,55.68
-Llama-3-3-70B,H100 80GB (PCIe/SXM),16.6,3.0139,3.0139,3.0139,403.4657,403.4657,403.4657,910.0,506.5343,506.5343,506.5343,False,55.66,55.66
