@@ -1,41 +1,76 @@
-//! secrets-management — Secure credential storage and rotation
+//! secrets-management — Secure credential storage and management
 //!
-//! Provides secure loading of secrets from files, environment variables, or systemd credentials.
-//! Prevents secrets from appearing in process listings or logs.
+//! Provides secure loading of API tokens and cryptographic keys from files, systemd credentials,
+//! and key derivation. Uses battle-tested libraries (secrecy, zeroize, subtle, hkdf) instead of
+//! rolling our own crypto.
 //!
 //! # Security Properties
 //!
-//! - Secrets loaded from files (not environment variables)
-//! - Memory cleared on drop (zeroize)
-//! - Never logged or displayed
-//! - Supports rotation with graceful overlap
+//! - **File-based loading** — Load secrets from files (not environment variables)
+//! - **Memory safety** — Automatic zeroization on drop (prevents memory dumps)
+//! - **Logging safety** — Never logs secret values (only paths/metadata)
+//! - **Timing-safe verification** — Constant-time comparison for tokens
+//! - **Permission validation** — Rejects world/group-readable files (Unix)
+//! - **Key derivation** — HKDF-SHA256 for deriving keys from tokens
 //!
-//! # Example
+//! # Example: Load API Token
 //!
-//! ```rust
-//! use secrets_management::{SecretStore, SecretSource};
+//! ```rust,no_run
+//! use secrets_management::Secret;
 //!
-//! // Load from file
-//! let store = SecretStore::new();
-//! let token = store.load("api_token", SecretSource::File("/etc/llorch/api-token"))?;
+//! # fn main() -> Result<(), secrets_management::SecretError> {
+//! // Load token from file
+//! let token = Secret::load_from_file("/etc/llorch/secrets/api-token")?;
 //!
-//! // Use secret (never logs raw value)
-//! if token.verify(user_input) {
+//! // Verify incoming request (timing-safe)
+//! let received_token = "user-provided-token";
+//! if token.verify(received_token) {
 //!     println!("Authenticated");
 //! }
+//!
+//! // Expose for outbound requests
+//! let auth_header = format!("Bearer {}", token.expose());
+//! # Ok(())
+//! # }
 //! ```
+//!
+//! # Example: Derive Cryptographic Key
+//!
+//! ```rust,no_run
+//! use secrets_management::SecretKey;
+//!
+//! # fn main() -> Result<(), secrets_management::SecretError> {
+//! // Derive seal key from worker token (HKDF-SHA256)
+//! let worker_api_token = "worker-token-abc123";
+//! let seal_key = SecretKey::derive_from_token(
+//!     worker_api_token,
+//!     b"llorch-seal-key-v1"  // Domain separation
+//! )?;
+//!
+//! // Use for HMAC-SHA256
+//! // Note: This example shows the pattern, actual HMAC usage
+//! // would require the hmac and sha2 crates in your Cargo.toml
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! # Module Organization
+//!
+//! - [`error`] — Error types and result aliases
+//! - [`types`] — Secret types (Secret, SecretKey)
+//! - [`loaders`] — Loading methods (file, systemd, derivation)
+//! - [`validation`] — File permission and path validation
 
 // Security-critical crate: TIER 1 Clippy configuration
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::expect_used)]
 #![deny(clippy::panic)]
 #![deny(clippy::indexing_slicing)]
-#![deny(clippy::integer_arithmetic)]
+#![deny(clippy::arithmetic_side_effects)]
 #![deny(clippy::cast_ptr_alignment)]
 #![deny(clippy::mem_forget)]
 #![deny(clippy::todo)]
 #![deny(clippy::unimplemented)]
-#![warn(clippy::arithmetic_side_effects)]
 #![warn(clippy::cast_lossless)]
 #![warn(clippy::cast_possible_truncation)]
 #![warn(clippy::cast_possible_wrap)]
@@ -47,139 +82,20 @@
 #![warn(clippy::missing_safety_doc)]
 #![warn(clippy::must_use_candidate)]
 
-use std::path::PathBuf;
-use thiserror::Error;
+// Module declarations
+mod error;
+mod types;
+mod loaders;
+pub mod validation;  // Public for testing and advanced use cases
 
-#[derive(Debug, Error)]
-pub enum SecretError {
-    #[error("io error: {0}")]
-    Io(#[from] std::io::Error),
-    #[error("secret not found: {0}")]
-    NotFound(String),
-    #[error("invalid secret format")]
-    InvalidFormat,
-}
+// Public exports
+pub use error::{SecretError, Result};
+pub use types::{Secret, SecretKey};
 
-pub type Result<T> = std::result::Result<T, SecretError>;
-
-/// Source for loading secrets
-#[derive(Debug, Clone)]
-pub enum SecretSource {
-    /// Load from file path
-    File(PathBuf),
-    /// Load from systemd credential
-    SystemdCredential(String),
-    /// Load from environment variable (NOT RECOMMENDED)
-    Environment(String),
-}
-
-/// Secure secret storage
-pub struct Secret {
-    value: String,
-}
-
-impl Secret {
-    /// Verify input matches secret (timing-safe)
-    pub fn verify(&self, input: &str) -> bool {
-        // Use constant-time comparison
-        if self.value.len() != input.len() {
-            return false;
-        }
-        
-        let mut result = 0u8;
-        for (a, b) in self.value.bytes().zip(input.bytes()) {
-            result |= a ^ b;
-        }
-        
-        result == 0
-    }
-    
-    /// Get secret value (use sparingly)
-    pub fn expose(&self) -> &str {
-        &self.value
-    }
-}
-
-impl Drop for Secret {
-    fn drop(&mut self) {
-        // Zero memory on drop (best effort)
-        unsafe {
-            std::ptr::write_volatile(
-                self.value.as_mut_ptr(),
-                0,
-            );
-        }
-    }
-}
-
-/// Secret store
-pub struct SecretStore;
-
-impl SecretStore {
-    pub fn new() -> Self {
-        Self
-    }
-    
-    /// Load secret from source
-    pub fn load(&self, name: &str, source: SecretSource) -> Result<Secret> {
-        let value = match source {
-            SecretSource::File(path) => {
-                std::fs::read_to_string(&path)
-                    .map_err(|e| {
-                        tracing::error!(secret = %name, path = %path.display(), "Failed to load secret");
-                        e
-                    })?
-                    .trim()
-                    .to_string()
-            }
-            SecretSource::SystemdCredential(cred_name) => {
-                let path = PathBuf::from(format!("/run/credentials/{}", cred_name));
-                std::fs::read_to_string(&path)
-                    .map_err(|e| {
-                        tracing::error!(secret = %name, credential = %cred_name, "Failed to load systemd credential");
-                        e
-                    })?
-                    .trim()
-                    .to_string()
-            }
-            SecretSource::Environment(var_name) => {
-                tracing::warn!(
-                    secret = %name,
-                    env_var = %var_name,
-                    "Loading secret from environment variable (NOT RECOMMENDED - visible in process listing)"
-                );
-                std::env::var(&var_name)
-                    .map_err(|_| SecretError::NotFound(var_name.clone()))?
-            }
-        };
-        
-        if value.is_empty() {
-            return Err(SecretError::NotFound(name.to_string()));
-        }
-        
-        tracing::info!(secret = %name, "Secret loaded successfully");
-        Ok(Secret { value })
-    }
-}
-
-impl Default for SecretStore {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-    #[test]
-    fn test_secret_verify() {
-        let secret = Secret {
-            value: "test-secret".to_string(),
-        };
-        
-        assert!(secret.verify("test-secret"));
-        assert!(!secret.verify("wrong-secret"));
-        assert!(!secret.verify("test-secre")); // Length mismatch
-    }
-}
+// Re-export commonly used types for convenience
+pub use loaders::{
+    file::load_secret_from_file,
+    file::load_key_from_file,
+    systemd::load_from_systemd_credential,
+    derivation::derive_key_from_token,
+};

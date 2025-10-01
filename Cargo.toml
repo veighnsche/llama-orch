@@ -29,6 +29,7 @@ members = [
     
     # New bin/ crates - shared-crates
     "bin/shared-crates/secrets-management",
+    "bin/shared-crates/secrets-management/bdd",
     "bin/shared-crates/input-validation",
     "bin/shared-crates/input-validation/bdd",
     "bin/shared-crates/audit-logging",
