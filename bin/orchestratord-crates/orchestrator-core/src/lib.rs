@@ -1,4 +1,11 @@
-//! Generated API types crate (pre-code). Types are generated via `cargo xtask regen-openapi`.
+//! Core orchestrator library (pre-code).
+//! Queueing, scheduling hooks, and core invariants. No HTTP or adapter traits here.
+//!
+//! Traceability (SPEC):
+//! - OC-CORE-1001, OC-CORE-1002, OC-CORE-1004 (queue & admission invariants)
+//! - OC-CORE-1010, OC-CORE-1011, OC-CORE-1012 (placement & readiness)
+//! - OC-CORE-1030 (determinism invariants)
+//! - OC-CORE-1040, OC-CORE-1041 (observability fields)
 
 // Security-critical crate: TIER 1 Clippy configuration
 #![deny(clippy::unwrap_used)]
@@ -20,14 +27,6 @@
 #![warn(clippy::missing_errors_doc)]
 #![warn(clippy::missing_panics_doc)]
 #![warn(clippy::missing_safety_doc)]
+#![warn(clippy::must_use_candidate)]
 
-#[allow(dead_code)]
-pub mod generated;
-
-#[allow(dead_code)]
-pub mod generated_control;
-
-pub use generated::*;
-pub mod control {
-    pub use crate::generated_control::*;
-}
+pub mod queue;
