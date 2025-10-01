@@ -1,6 +1,20 @@
 //! pool-registry — Pool state management
 //!
 //! Tracks pool health, capacity, and worker status.
+//!
+//! # ⚠️ INPUT VALIDATION REMINDER
+//!
+//! **Validate all pool/worker identifiers** with `input-validation`:
+//!
+//! ```rust,ignore
+//! use input_validation::validate_identifier;
+//!
+//! // Validate pool_id, worker_id, node_id
+//! validate_identifier(&pool_id, 256)?;
+//! validate_identifier(&worker_id, 256)?;
+//! ```
+//!
+//! See: `bin/shared-crates/input-validation/README.md`
 
 // High-importance crate: TIER 2 Clippy configuration
 #![deny(clippy::unwrap_used)]

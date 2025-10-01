@@ -10,6 +10,25 @@
 //! - Size limit enforcement
 //! - Fail-fast on invalid models
 //!
+//! # ⚠️ INPUT VALIDATION REMINDER
+//!
+//! **Validate model paths and hashes** with `input-validation`:
+//!
+//! ```rust,ignore
+//! use input_validation::{validate_path, validate_hex_string, validate_identifier};
+//!
+//! // Validate model file path
+//! validate_path(&model_path, &allowed_models_dir)?;
+//!
+//! // Validate SHA-256 hash
+//! validate_hex_string(&hash, 64)?;
+//!
+//! // Validate model ID
+//! validate_identifier(&model_id, 256)?;
+//! ```
+//!
+//! See: `bin/shared-crates/input-validation/README.md`
+//!
 //! # Example
 //!
 //! ```rust

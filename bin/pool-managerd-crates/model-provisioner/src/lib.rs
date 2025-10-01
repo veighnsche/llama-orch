@@ -5,6 +5,36 @@
 //! - Verify digests when given; warn otherwise (per spec §2.6/§2.11).
 //! - Register/update catalog entries and lifecycle state.
 //! - Return ResolvedModel with canonical local path for engine-provisioner and pool-managerd.
+//!
+//! # ⚠️ INPUT VALIDATION REMINDER
+//!
+//! **CRITICAL**: Always validate model references with `input-validation` crate:
+//!
+//! ```rust,ignore
+//! use input_validation::{
+//!     validate_model_ref,     // For model references (HuggingFace, file paths, URLs)
+//!     validate_path,          // For local file paths
+//!     validate_hex_string,    // For SHA-256 digests
+//!     validate_identifier,    // For model IDs, catalog keys
+//! };
+//!
+//! // Example: Validate model reference before provisioning
+//! validate_model_ref(&model_ref)?;  // Prevents command injection in wget/curl/git
+//!
+//! // Example: Validate digest
+//! validate_hex_string(&digest, 64)?;  // SHA-256 = 64 hex chars
+//!
+//! // Example: Validate local path
+//! validate_path(&local_path, &allowed_models_dir)?;  // Prevents path traversal
+//! ```
+//!
+//! **Why?** Model provisioning is HIGH RISK for command injection:
+//! - ✅ Shell metacharacter blocking (`;`, `|`, `&`, `$`, `` ` ``)
+//! - ✅ Path traversal prevention (`../`, `..\`)
+//! - ✅ Command substitution prevention
+//! - ✅ Real-world pattern support (HuggingFace, file:, https:)
+//!
+//! See: `bin/shared-crates/input-validation/README.md`
 // Module structure
 pub mod api;
 pub mod config;

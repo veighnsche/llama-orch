@@ -9,6 +9,26 @@
 //! - Never logs secrets (uses fingerprints)
 //! - Includes correlation IDs
 //!
+//! # ⚠️ INPUT VALIDATION REMINDER
+//!
+//! **Sanitize all logged data** with `input-validation`:
+//!
+//! ```rust,ignore
+//! use input_validation::sanitize_string;
+//!
+//! // Sanitize before logging (prevents log injection)
+//! let safe_user_id = sanitize_string(&user_id)?;
+//! let safe_resource = sanitize_string(&resource_id)?;
+//! audit_log.emit(AuditEvent { user: safe_user_id, resource: safe_resource });
+//! ```
+//!
+//! **Why?** Audit logs are security-critical:
+//! - ✅ Prevents ANSI escape injection
+//! - ✅ Prevents control character injection
+//! - ✅ Prevents Unicode directional override attacks
+//!
+//! See: `bin/shared-crates/input-validation/README.md`
+//!
 //! # Example
 //!
 //! ```rust

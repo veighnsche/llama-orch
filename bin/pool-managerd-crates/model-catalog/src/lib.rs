@@ -10,6 +10,25 @@
 //! File-based fetcher. HF/HTTP/S3/OCI fetchers are stubbed and will be added
 //! incrementally per `.specs/00_llama-orch.md §2.11`.
 //!
+//! # ⚠️ INPUT VALIDATION REMINDER
+//!
+//! **CRITICAL**: Validate all model references and paths:
+//!
+//! ```rust,ignore
+//! use input_validation::{validate_model_ref, validate_path, validate_hex_string};
+//!
+//! // Validate model reference (HuggingFace, file:, https:)
+//! validate_model_ref(&model_ref)?;
+//!
+//! // Validate local paths
+//! validate_path(&cache_path, &allowed_cache_dir)?;
+//!
+//! // Validate digests
+//! validate_hex_string(&sha256, 64)?;
+//! ```
+//!
+//! See: `bin/shared-crates/input-validation/README.md`
+//!
 //! TODO(ARCH-CHANGE): Fetcher implementations needed:
 //! - HuggingFace fetcher (hf: scheme) - see NotImplemented error at line 263
 //! - HTTP/HTTPS fetcher (http/https schemes) - see NotImplemented error at line 265

@@ -11,6 +11,33 @@
 //! - Add Bearer token authentication middleware
 //! - Add rate limiting per endpoint
 //! See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md Issue #8 (pool-managerd auth)
+//!
+//! # ⚠️ INPUT VALIDATION REMINDER
+//!
+//! **CRITICAL**: All HTTP endpoints MUST validate inputs with `input-validation`:
+//!
+//! ```rust,ignore
+//! use input_validation::{validate_identifier, validate_model_ref, sanitize_string};
+//!
+//! // Example: Validate pool_id from URL path
+//! let pool_id = path.pool_id;
+//! validate_identifier(&pool_id, 256)?;
+//!
+//! // Example: Validate model_ref from request body
+//! let model_ref = body.model_ref;
+//! validate_model_ref(&model_ref)?;
+//!
+//! // Example: Sanitize before logging
+//! let safe_msg = sanitize_string(&error_msg)?;
+//! log::error!("Failed to preload: {}", safe_msg);
+//! ```
+//!
+//! **Why?** HTTP APIs are the PRIMARY attack surface
+//! - ✅ Prevents injection attacks from malicious clients
+//! - ✅ Validates ALL user-controlled data
+//! - ✅ 253 comprehensive tests ensure safety
+//!
+//! See: `bin/shared-crates/input-validation/README.md`
 
 // High-importance crate: TIER 2 Clippy configuration
 #![deny(clippy::unwrap_used)]
