@@ -1,6 +1,39 @@
 # Proof Bundle — Automated Test Evidence
 
-This directory contains **cryptographically signed proof bundles** for all test runs.
+**⚠️ POLICY CHANGE**: As of 2025-10-02, proof bundles are **crate-local**, not root-level.
+
+This directory contains **documentation and templates** for the proof bundle system.
+
+**Actual proof bundles** are generated in each crate's `.proof_bundle/` directory:
+- `bin/worker-orcd-crates/vram-residency/.proof_bundle/`
+- `bin/pool-managerd/.proof_bundle/`
+- `test-harness/bdd/.proof_bundle/`
+- etc.
+
+See: `test-harness/proof-bundle/.specs/PB-001-proof-bundle-location.md` for full policy.
+
+---
+
+## ⚠️ CRITICAL: Generate on ALL Test Results (Pass AND Fail)
+
+**POLICY**: Proof bundles MUST be generated for ALL test runs, regardless of outcome.
+
+- ✅ **Generate when tests pass**
+- ✅ **Generate when tests fail** (MORE IMPORTANT)
+- ✅ **Generate when tests panic**
+- ✅ **Generate when tests timeout**
+
+**Why**: Failed tests are MORE important to document than passing tests. Human auditors need to see:
+- What broke
+- How it failed
+- When it failed
+- Why it failed
+
+**Never skip proof bundle generation due to test failures.**
+
+See: `test-harness/proof-bundle/.specs/PB-002-always-generate-bundles.md` for full policy.
+
+---
 
 ## ⚠️ CRITICAL: Cleanup Policy
 

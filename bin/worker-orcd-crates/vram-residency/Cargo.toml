@@ -21,7 +21,12 @@ secrets-management = { path = "../../shared-crates/secrets-management" }
 auth-min = { path = "../../shared-crates/auth-min" }
 input-validation = { path = "../../shared-crates/input-validation" }
 
+[features]
+# Skip long-running tests (stress tests, property tests with many cases)
+# Usage: cargo test --features skip-long-tests
+skip-long-tests = []
+
 [dev-dependencies]
-chrono = { workspace = true }
 proptest = "1.0"
-gpu-info = { path = "../../shared-crates/gpu-info" }
+proof-bundle = { path = "../../../test-harness/proof-bundle" }
+anyhow = { workspace = true }

@@ -190,4 +190,27 @@ impl ProofBundle {
         let rel_str = json_rel.to_string_lossy().to_string();
         self.write_meta_sibling(rel_str)
     }
+    
+    /// Capture test results from cargo test
+    ///
+    /// Returns a builder for configuring which tests to run.
+    ///
+    /// # Example
+    /// ```no_run
+    /// use proof_bundle::{ProofBundle, TestType};
+    /// 
+    /// let pb = ProofBundle::for_type(TestType::Unit)?;
+    /// 
+    /// let summary = pb.capture_tests("vram-residency")
+    ///     .lib()
+    ///     .tests()
+    ///     .run()?;
+    /// 
+    /// println!("Captured {} tests ({} passed, {} failed)", 
+    ///     summary.total, summary.passed, summary.failed);
+    /// # Ok::<(), anyhow::Error>(())
+    /// ```
+    pub fn capture_tests(&self, package: &str) -> crate::capture::TestCaptureBuilder {
+        crate::capture::TestCaptureBuilder::new(self, package)
+    }
 }

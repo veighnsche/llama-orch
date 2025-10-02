@@ -537,24 +537,17 @@ The build script auto-detects:
 # Auto-detects GPU and runs on real VRAM if available
 cargo test -p vram-residency
 
-# Force mock mode (even if GPU detected)
-VRAM_RESIDENCY_FORCE_MOCK=1 cargo test -p vram-residency
+# Skip long-running tests (fast: ~30 seconds)
+cargo test -p vram-residency --features skip-long-tests
+
+# Run specific test suite
+cargo test -p vram-residency --test robustness_stress
+
+# Run only fast tests in CI
+cargo test -p vram-residency --features skip-long-tests
 ```
 
-### Unit Tests
-
-```bash
-# Run all tests (auto-detects GPU)
-cargo test -p vram-residency
-
-# Specific test suites
-cargo test -p vram-residency seal      # Seal operations
-cargo test -p vram-residency verify    # Verification
-cargo test -p vram-residency security  # Security tests
-cargo test -p vram-residency --test cuda_kernel_tests  # CUDA kernels (GPU only)
-```
-
-### BDD Tests
+### Long-Running Tests
 
 ```bash
 # Run BDD test suite (auto-detects GPU)

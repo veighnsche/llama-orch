@@ -1,9 +1,11 @@
 //! Property-Based Robustness Tests
 //!
-//! Uses proptest for fuzzing-style testing of TIER 1 functions.
+//! Uses proptest to verify properties hold across many random inputs.
 //!
 //! Note: These tests run 256 cases per property by default.
 //! Expected duration: 5-15 seconds total for all property tests.
+//!
+//! To skip these tests: cargo test --features skip-long-tests
 
 use vram_residency::{VramManager, compute_digest, compute_signature, verify_signature, SealedShard};
 use proptest::prelude::*;
@@ -18,6 +20,7 @@ fn print_property_test_start(name: &str) {
 // Property: Sealing and verifying always succeeds for valid data
 proptest! {
     #[test]
+    #[cfg_attr(feature = "skip-long-tests", ignore)]
     fn prop_seal_verify_roundtrip(data in prop::collection::vec(any::<u8>(), 1..10000)) {
         let mut manager = VramManager::new();
         
@@ -35,6 +38,7 @@ proptest! {
 // Property: Different data produces different digests
 proptest! {
     #[test]
+    #[cfg_attr(feature = "skip-long-tests", ignore)]
     fn prop_different_data_different_digests(
         data1 in prop::collection::vec(any::<u8>(), 1..1000),
         data2 in prop::collection::vec(any::<u8>(), 1..1000)
@@ -52,6 +56,7 @@ proptest! {
 // Property: Same data produces same digest (deterministic)
 proptest! {
     #[test]
+    #[cfg_attr(feature = "skip-long-tests", ignore)]
     fn prop_digest_deterministic(data in prop::collection::vec(any::<u8>(), 1..1000)) {
         let digest1 = compute_digest(&data);
         let digest2 = compute_digest(&data);
@@ -63,6 +68,7 @@ proptest! {
 // Property: Digest is always 64 hex characters
 proptest! {
     #[test]
+    #[cfg_attr(feature = "skip-long-tests", ignore)]
     fn prop_digest_format(data in prop::collection::vec(any::<u8>(), 0..10000)) {
         let digest = compute_digest(&data);
         
@@ -74,6 +80,7 @@ proptest! {
 // Property: Same data + same key produces same signature
 proptest! {
     #[test]
+    #[cfg_attr(feature = "skip-long-tests", ignore)]
     fn prop_signature_deterministic(
         shard_id in "[a-zA-Z0-9_-]{1,256}",
         vram_bytes in 1usize..1000000usize,
@@ -98,6 +105,7 @@ proptest! {
 // Property: Different keys produce different signatures
 proptest! {
     #[test]
+    #[cfg_attr(feature = "skip-long-tests", ignore)]
     fn prop_different_keys_different_signatures(
         key1 in prop::collection::vec(any::<u8>(), 32..64),
         key2 in prop::collection::vec(any::<u8>(), 32..64)
@@ -124,6 +132,7 @@ proptest! {
 // Property: Valid signature always verifies
 proptest! {
     #[test]
+    #[cfg_attr(feature = "skip-long-tests", ignore)]
     fn prop_valid_signature_verifies(
         shard_id in "[a-zA-Z0-9_-]{1,256}",
         vram_bytes in 1usize..1000000usize,
@@ -148,6 +157,7 @@ proptest! {
 // Property: Invalid signature never verifies
 proptest! {
     #[test]
+    #[cfg_attr(feature = "skip-long-tests", ignore)]
     fn prop_invalid_signature_fails(
         shard_id in "[a-zA-Z0-9_-]{1,256}",
         vram_bytes in 1usize..1000000usize,
@@ -177,6 +187,7 @@ proptest! {
 // Property: Signature is always 32 bytes
 proptest! {
     #[test]
+    #[cfg_attr(feature = "skip-long-tests", ignore)]
     fn prop_signature_length(
         shard_id in "[a-zA-Z0-9_-]{1,256}",
         vram_bytes in 1usize..1000000usize,
@@ -200,6 +211,7 @@ proptest! {
 // Property: Seal generates unique shard IDs
 proptest! {
     #[test]
+    #[cfg_attr(feature = "skip-long-tests", ignore)]
     fn prop_unique_shard_ids(
         data1 in prop::collection::vec(any::<u8>(), 1..1000),
         data2 in prop::collection::vec(any::<u8>(), 1..1000)
@@ -218,6 +230,7 @@ proptest! {
 // Property: Seal preserves data size
 proptest! {
     #[test]
+    #[cfg_attr(feature = "skip-long-tests", ignore)]
     fn prop_seal_preserves_size(data in prop::collection::vec(any::<u8>(), 1..10000)) {
         let mut manager = VramManager::new();
         let size = data.len();
@@ -231,6 +244,7 @@ proptest! {
 // Property: Tampered shard_id fails verification
 proptest! {
     #[test]
+    #[cfg_attr(feature = "skip-long-tests", ignore)]
     fn prop_tampered_shard_id_fails(
         original_id in "[a-zA-Z0-9_-]{1,256}",
         tampered_id in "[a-zA-Z0-9_-]{1,256}",
@@ -267,6 +281,7 @@ proptest! {
 // Property: Digest changes with single bit flip
 proptest! {
     #[test]
+    #[cfg_attr(feature = "skip-long-tests", ignore)]
     fn prop_digest_avalanche_effect(
         mut data in prop::collection::vec(any::<u8>(), 1..1000),
         byte_idx in 0usize..1000usize,

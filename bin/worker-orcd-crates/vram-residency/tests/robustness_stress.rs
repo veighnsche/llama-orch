@@ -5,6 +5,7 @@
 use vram_residency::{VramManager, VramError};
 
 #[test]
+#[cfg_attr(feature = "skip-long-tests", ignore)]
 fn test_seal_until_vram_exhausted() {
     println!("\n⏱️  Starting VRAM exhaustion test...");
     println!("   This test seals 1MB models until VRAM is full");

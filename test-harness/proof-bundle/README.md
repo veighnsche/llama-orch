@@ -22,6 +22,21 @@ proof-bundle provides **standardized test artifact output** for llama-orch:
 
 ---
 
+## ⚠️ CRITICAL: Generate on ALL Test Results (Pass AND Fail)
+
+**POLICY**: Proof bundles MUST be generated for ALL test runs, regardless of outcome.
+
+- ✅ **Generate when tests pass**
+- ✅ **Generate when tests fail** (MORE IMPORTANT)
+- ✅ **Generate when tests panic**
+- ✅ **Generate when tests timeout**
+
+**Why**: Failed tests are MORE important to document than passing tests. Human auditors need to see what broke, how it failed, and why.
+
+See: `.specs/PB-002-always-generate-bundles.md` for full policy.
+
+---
+
 ## ⚠️ Design: Synchronous I/O (Test-Time Only)
 
 This library uses **synchronous I/O** (`std::fs`) by design:
@@ -62,6 +77,22 @@ This prevents proof bundle directories from accumulating and clogging the reposi
 
 ## Directory Structure
 
+### ⚠️ CRITICAL: Crate-Local Proof Bundles REQUIRED
+
+**POLICY**: Proof bundles MUST be generated inside each crate's `.proof_bundle/` directory.
+
+**✅ CORRECT** — Crate-local:
+```
+<crate-root>/.proof_bundle/<type>/<run_id>/
+```
+
+**❌ WRONG** — Root-level:
+```
+/.proof_bundle/  ← NEVER put proof bundles here
+```
+
+See: `.specs/PB-001-proof-bundle-location.md` for full policy.
+
 ### Standard Path
 
 ```
@@ -84,6 +115,13 @@ test-harness/bdd/.proof_bundle/bdd/20251001-013000-abc12345/
 └── report.md
 ```
 
+**More examples**:
+```
+bin/worker-orcd-crates/vram-residency/.proof_bundle/unit/<run-id>/
+bin/worker-orcd-crates/vram-residency/.proof_bundle/bdd/<run-id>/
+bin/pool-managerd/.proof_bundle/unit/<run-id>/
+```
+
 ---
 
 ## Usage
@@ -95,7 +133,7 @@ test-harness/bdd/.proof_bundle/bdd/20251001-013000-abc12345/
 proof-bundle = { path = "../../libs/proof-bundle" }
 ```
 
-### Basic Example
+### Basic Example (Manual)
 
 ```rust
 use proof_bundle::{ProofBundle, TestType};
@@ -141,6 +179,42 @@ fn test_with_proof_bundle() -> anyhow::Result<()> {
 }
 ```
 
+### Automatic Test Capture (NEW!)
+
+Capture ALL test results automatically from `cargo test`:
+
+```rust
+use proof_bundle::{ProofBundle, TestType};
+
+#[test]
+fn generate_comprehensive_proof_bundle() -> anyhow::Result<()> {
+    let pb = ProofBundle::for_type(TestType::Unit)?;
+    
+    // Capture ALL tests automatically (unit + integration + property + etc.)
+    let summary = pb.capture_tests("vram-residency")
+        .lib()      // Include --lib tests
+        .tests()    // Include --tests
+        .run()?;
+    
+    println!("✅ Captured {} tests ({} passed, {} failed)", 
+        summary.total, summary.passed, summary.failed);
+    
+    // Automatically generates:
+    // - test_results.ndjson (all test results with timing)
+    // - summary.json (aggregate statistics)
+    // - test_report.md (human-readable report)
+    
+    Ok(())
+}
+```
+
+**Benefits**:
+- ✅ Captures ALL tests (not just hardcoded subset)
+- ✅ Includes timing data
+- ✅ Captures failures (per PB-002 policy)
+- ✅ Generates human-readable reports
+- ✅ 90% less code than manual approach
+
 ---
 
 ## API Reference
@@ -151,6 +225,9 @@ fn test_with_proof_bundle() -> anyhow::Result<()> {
 impl ProofBundle {
     /// Create proof bundle for test type
     pub fn for_type(test_type: TestType) -> Result<Self>;
+    
+    /// Capture test results from cargo test (NEW!)
+    pub fn capture_tests(&self, package: &str) -> TestCaptureBuilder;
     
     /// Get bundle root directory
     pub fn root(&self) -> &Path;
