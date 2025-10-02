@@ -5,9 +5,9 @@
 //! - Config validation works
 //! - No sensitive data leaks
 
-use proptest::prelude::*;
 use audit_logging::*;
 use chrono::Utc;
+use proptest::prelude::*;
 
 // ========== ACTOR INFO PROPERTIES ==========
 
@@ -24,11 +24,11 @@ proptest! {
             auth_method: AuthMethod::BearerToken,
             session_id,
         };
-        
+
         // Should not panic (Unicode chars can be multiple bytes)
         prop_assert!(true);
     }
-    
+
     /// ActorInfo handles all auth methods
     #[test]
     fn actor_info_all_auth_methods(
@@ -41,14 +41,14 @@ proptest! {
             2 => AuthMethod::MTls,
             _ => AuthMethod::Internal,
         };
-        
+
         let actor = ActorInfo {
             user_id,
             ip: None,
             auth_method,
             session_id: None,
         };
-        
+
         // Should handle all auth methods
         prop_assert!(!actor.user_id.is_empty());
     }
@@ -69,7 +69,7 @@ proptest! {
             resource_id,
             parent_id,
         };
-        
+
         // Should handle various resource types
         prop_assert!(!resource.resource_type.is_empty());
         prop_assert!(!resource.resource_id.is_empty());
@@ -90,7 +90,7 @@ proptest! {
             1 => AuditResult::Failure { reason: reason.clone() },
             _ => AuditResult::PartialSuccess { details: reason },
         };
-        
+
         // Should handle all outcomes
         let _ = outcome;
         prop_assert!(true);
@@ -113,7 +113,7 @@ proptest! {
             auth_method: AuthMethod::BearerToken,
             session_id: None,
         };
-        
+
         let event = AuditEvent::AuthSuccess {
             timestamp: Utc::now(),
             actor,
@@ -121,7 +121,7 @@ proptest! {
             path,
             service_id,
         };
-        
+
         // Should not panic
         let _ = event;
         prop_assert!(true);
@@ -133,21 +133,21 @@ proptest! {
 #[cfg(test)]
 mod security_tests {
     use super::*;
-    
+
     proptest! {
         /// Events don't contain raw secrets
         #[test]
         fn events_no_raw_secrets(secret in "[a-zA-Z0-9]{16,100}") {
             // Create event with fingerprint (not raw secret)
             let fingerprint = format!("token:{}", &secret[..8]);
-            
+
             let actor = ActorInfo {
                 user_id: fingerprint.clone(),
                 ip: None,
                 auth_method: AuthMethod::BearerToken,
                 session_id: None,
             };
-            
+
             let event = AuditEvent::AuthSuccess {
                 timestamp: Utc::now(),
                 actor,
@@ -155,7 +155,7 @@ mod security_tests {
                 path: "/api/v2/tasks".to_string(),
                 service_id: "test".to_string(),
             };
-            
+
             // Event should not contain full secret
             let event_str = format!("{:?}", event);
             prop_assert!(!event_str.contains(&secret));

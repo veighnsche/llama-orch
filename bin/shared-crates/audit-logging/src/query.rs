@@ -9,19 +9,19 @@ use chrono::{DateTime, Utc};
 pub struct AuditQuery {
     /// Filter by actor (user_id)
     pub actor: Option<String>,
-    
+
     /// Filter by resource ID
     pub resource_id: Option<String>,
-    
+
     /// Filter by event types
     pub event_types: Vec<String>,
-    
+
     /// Start time (inclusive)
     pub start_time: Option<DateTime<Utc>>,
-    
+
     /// End time (inclusive)
     pub end_time: Option<DateTime<Utc>>,
-    
+
     /// Maximum number of results
     pub limit: usize,
 }
@@ -31,15 +31,12 @@ pub struct AuditQuery {
 pub enum VerifyMode {
     /// Verify all events
     All,
-    
+
     /// Verify last N events
     LastN(usize),
-    
+
     /// Verify events in time range
-    TimeRange {
-        start: DateTime<Utc>,
-        end: DateTime<Utc>,
-    },
+    TimeRange { start: DateTime<Utc>, end: DateTime<Utc> },
 }
 
 /// Verification options
@@ -54,11 +51,9 @@ pub struct VerifyOptions {
 pub enum VerifyResult {
     /// All events verified successfully
     Valid,
-    
+
     /// Hash chain broken at event
-    Invalid {
-        broken_at: String,
-    },
+    Invalid { broken_at: String },
 }
 
 /// Checksum status
@@ -66,12 +61,9 @@ pub enum VerifyResult {
 pub enum ChecksumStatus {
     /// Checksum valid
     Valid,
-    
+
     /// Checksum mismatch
-    Invalid {
-        expected: String,
-        actual: String,
-    },
+    Invalid { expected: String, actual: String },
 }
 
 /// File verification result
@@ -79,7 +71,7 @@ pub enum ChecksumStatus {
 pub struct FileVerifyResult {
     /// Filename
     pub filename: String,
-    
+
     /// Checksum status
     pub status: ChecksumStatus,
 }
@@ -96,32 +88,32 @@ impl AuditQuery {
     pub fn new() -> Self {
         Self::default()
     }
-    
+
     /// Set actor filter
     pub fn actor(mut self, actor: String) -> Self {
         self.actor = Some(actor);
         self
     }
-    
+
     /// Set resource filter
     pub fn resource_id(mut self, resource_id: String) -> Self {
         self.resource_id = Some(resource_id);
         self
     }
-    
+
     /// Set event type filter
     pub fn event_types(mut self, event_types: Vec<String>) -> Self {
         self.event_types = event_types;
         self
     }
-    
+
     /// Set time range
     pub fn time_range(mut self, start: DateTime<Utc>, end: DateTime<Utc>) -> Self {
         self.start_time = Some(start);
         self.end_time = Some(end);
         self
     }
-    
+
     /// Set limit
     pub fn limit(mut self, limit: usize) -> Self {
         self.limit = limit;
@@ -144,7 +136,7 @@ impl QueryExecutor {
         // 4. Return results
         todo!("Implement query execution")
     }
-    
+
     /// Verify integrity
     pub fn verify_integrity(&self, _options: &VerifyOptions) -> Result<VerifyResult> {
         // TODO: Implement
@@ -153,7 +145,7 @@ impl QueryExecutor {
         // 3. Return result
         todo!("Implement integrity verification")
     }
-    
+
     /// Verify file checksums
     pub fn verify_file_checksums(&self) -> Result<ChecksumVerifyResult> {
         // TODO: Implement

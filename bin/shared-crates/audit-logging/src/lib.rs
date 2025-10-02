@@ -67,13 +67,11 @@
 #![warn(clippy::must_use_candidate)]
 
 // Re-export public API
-pub use config::{AuditConfig, AuditMode, RetentionPolicy, RotationPolicy};
 #[cfg(feature = "platform")]
 pub use config::PlatformConfig;
+pub use config::{AuditConfig, AuditMode, FlushMode, RetentionPolicy, RotationPolicy};
 pub use error::AuditError;
-pub use events::{
-    ActorInfo, AuditEvent, AuditResult, AuthMethod, ResourceInfo,
-};
+pub use events::{ActorInfo, AuditEvent, AuditResult, AuthMethod, ResourceInfo};
 pub use logger::AuditLogger;
 pub use query::{AuditQuery, VerifyMode, VerifyOptions, VerifyResult};
 pub use storage::AuditEventEnvelope;

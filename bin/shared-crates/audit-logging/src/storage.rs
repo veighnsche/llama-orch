@@ -2,8 +2,8 @@
 //!
 //! Handles tamper-evident storage with hash chains.
 
-use crate::events::AuditEvent;
 use crate::error::Result;
+use crate::events::AuditEvent;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -20,22 +20,22 @@ use serde::{Deserialize, Serialize};
 pub struct AuditEventEnvelope {
     /// Unique audit event ID
     pub audit_id: String,
-    
+
     /// Event timestamp (ISO 8601 UTC)
     pub timestamp: DateTime<Utc>,
-    
+
     /// Service that emitted the event
     pub service_id: String,
-    
+
     /// The actual audit event
     pub event: AuditEvent,
-    
+
     /// Hash of previous event (blockchain-style chain)
     pub prev_hash: String,
-    
+
     /// Hash of this event
     pub hash: String,
-    
+
     /// Signature (platform mode only)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub signature: Option<String>,
@@ -56,7 +56,7 @@ impl AuditEventEnvelope {
             service_id,
             event,
             prev_hash,
-            hash: String::new(),  // Computed by writer
+            hash: String::new(), // Computed by writer
             signature: None,
         }
     }
@@ -67,25 +67,25 @@ impl AuditEventEnvelope {
 pub struct ManifestEntry {
     /// Filename
     pub filename: String,
-    
+
     /// Creation timestamp
     pub created_at: DateTime<Utc>,
-    
+
     /// Close timestamp (None if still open)
     pub closed_at: Option<DateTime<Utc>>,
-    
+
     /// Number of events in file
     pub event_count: usize,
-    
+
     /// First audit ID in file
     pub first_audit_id: String,
-    
+
     /// Last audit ID in file
     pub last_audit_id: String,
-    
+
     /// SHA-256 checksum of file (None if still open)
     pub sha256: Option<String>,
-    
+
     /// File size in bytes
     pub size_bytes: u64,
 }
@@ -95,10 +95,10 @@ pub struct ManifestEntry {
 pub struct Manifest {
     /// Service ID
     pub service_id: String,
-    
+
     /// Manifest creation timestamp
     pub created_at: DateTime<Utc>,
-    
+
     /// List of audit files
     pub files: Vec<ManifestEntry>,
 }
@@ -106,24 +106,20 @@ pub struct Manifest {
 impl Manifest {
     /// Create new manifest
     pub fn new(service_id: String) -> Self {
-        Self {
-            service_id,
-            created_at: Utc::now(),
-            files: Vec::new(),
-        }
+        Self { service_id, created_at: Utc::now(), files: Vec::new() }
     }
-    
+
     /// Add file entry
     pub fn add_file(&mut self, entry: ManifestEntry) {
         self.files.push(entry);
     }
-    
+
     /// Load manifest from file
     pub fn load(_path: &std::path::Path) -> Result<Self> {
         // TODO: Implement
         todo!("Load manifest from file")
     }
-    
+
     /// Save manifest to file
     pub fn save(&self, _path: &std::path::Path) -> Result<()> {
         // TODO: Implement
@@ -135,7 +131,7 @@ impl Manifest {
 mod tests {
     use super::*;
     use crate::events::{ActorInfo, AuditEvent, AuthMethod};
-    
+
     #[test]
     fn test_envelope_new() {
         let event = AuditEvent::AuthSuccess {
@@ -150,7 +146,7 @@ mod tests {
             path: "/test".to_string(),
             service_id: "test".to_string(),
         };
-        
+
         let envelope = AuditEventEnvelope::new(
             "audit-001".to_string(),
             Utc::now(),
@@ -158,14 +154,14 @@ mod tests {
             event,
             "prev_hash".to_string(),
         );
-        
+
         assert_eq!(envelope.audit_id, "audit-001");
         assert_eq!(envelope.service_id, "test-service");
         assert_eq!(envelope.prev_hash, "prev_hash");
         assert_eq!(envelope.hash, "");
         assert!(envelope.signature.is_none());
     }
-    
+
     #[test]
     fn test_envelope_serialization() {
         let event = AuditEvent::AuthSuccess {
@@ -180,7 +176,7 @@ mod tests {
             path: "/test".to_string(),
             service_id: "test".to_string(),
         };
-        
+
         let envelope = AuditEventEnvelope::new(
             "audit-001".to_string(),
             Utc::now(),
@@ -188,12 +184,12 @@ mod tests {
             event,
             "prev_hash".to_string(),
         );
-        
+
         let json = serde_json::to_string(&envelope).unwrap();
         assert!(json.contains("audit-001"));
         assert!(json.contains("test-service"));
     }
-    
+
     #[test]
     fn test_envelope_deserialization() {
         let json = r#"{
@@ -215,23 +211,23 @@ mod tests {
             "prev_hash": "prev",
             "hash": "current"
         }"#;
-        
+
         let envelope: AuditEventEnvelope = serde_json::from_str(json).unwrap();
         assert_eq!(envelope.audit_id, "audit-001");
         assert_eq!(envelope.service_id, "test-service");
     }
-    
+
     #[test]
     fn test_manifest_new() {
         let manifest = Manifest::new("test-service".to_string());
         assert_eq!(manifest.service_id, "test-service");
         assert!(manifest.files.is_empty());
     }
-    
+
     #[test]
     fn test_manifest_add_file() {
         let mut manifest = Manifest::new("test-service".to_string());
-        
+
         let entry = ManifestEntry {
             filename: "2024-01-01.audit".to_string(),
             created_at: Utc::now(),
@@ -242,7 +238,7 @@ mod tests {
             sha256: None,
             size_bytes: 10240,
         };
-        
+
         manifest.add_file(entry);
         assert_eq!(manifest.files.len(), 1);
         assert_eq!(manifest.files[0].filename, "2024-01-01.audit");

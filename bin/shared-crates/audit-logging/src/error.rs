@@ -29,11 +29,7 @@ pub enum AuditError {
 
     /// File checksum mismatch
     #[error("Checksum mismatch for {file}")]
-    ChecksumMismatch {
-        file: String,
-        expected: String,
-        actual: String,
-    },
+    ChecksumMismatch { file: String, expected: String, actual: String },
 
     /// Missing signature (platform mode)
     #[error("Missing signature")]
@@ -70,19 +66,19 @@ pub enum AuditError {
     /// Invalid input
     #[error("Invalid input: {0}")]
     InvalidInput(String),
-    
+
     /// Counter overflow
     #[error("Audit counter overflow")]
     CounterOverflow,
-    
+
     /// Disk space low
     #[error("Disk space low: {available} bytes available, {required} bytes required")]
     DiskSpaceLow { available: u64, required: u64 },
-    
+
     /// File rotation failed
     #[error("File rotation failed: {0}")]
     RotationFailed(String),
-    
+
     /// Invalid file permissions
     #[error("Invalid file permissions: expected 0600")]
     InvalidPermissions,

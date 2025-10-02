@@ -2,8 +2,8 @@
 //!
 //! Canonicalizes file paths to prevent directory traversal attacks.
 
-use std::path::{Path, PathBuf};
 use crate::{Result, SecretError};
+use std::path::{Path, PathBuf};
 
 /// Canonicalize a file path
 ///
@@ -30,8 +30,7 @@ use crate::{Result, SecretError};
 /// # Ok::<(), secrets_management::SecretError>(())
 /// ```
 pub fn canonicalize_path(path: &Path) -> Result<PathBuf> {
-    path.canonicalize()
-        .map_err(|_| SecretError::FileNotFound(path.display().to_string()))
+    path.canonicalize().map_err(|_| SecretError::FileNotFound(path.display().to_string()))
 }
 
 /// Validate path is within allowed root directory (optional)
@@ -62,58 +61,56 @@ pub fn canonicalize_path(path: &Path) -> Result<PathBuf> {
 #[allow(dead_code)] // Reserved for future use
 pub fn validate_path_within_root(canonical: &Path, allowed_root: &Path) -> Result<()> {
     if !canonical.starts_with(allowed_root) {
-        return Err(SecretError::PathValidationFailed(
-            format!(
-                "path '{}' is outside allowed directory '{}'",
-                canonical.display(),
-                allowed_root.display()
-            )
-        ));
+        return Err(SecretError::PathValidationFailed(format!(
+            "path '{}' is outside allowed directory '{}'",
+            canonical.display(),
+            allowed_root.display()
+        )));
     }
-    
+
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
     use std::fs;
-    
+    use tempfile::TempDir;
+
     #[test]
     fn test_canonicalize_valid_path() {
         let dir = TempDir::new().unwrap();
         let file = dir.path().join("test.txt");
         fs::write(&file, "test").unwrap();
-        
+
         let canonical = canonicalize_path(&file).unwrap();
         assert!(canonical.is_absolute());
     }
-    
+
     #[test]
     fn test_canonicalize_nonexistent() {
         let result = canonicalize_path(Path::new("/nonexistent/path"));
         assert!(result.is_err());
     }
-    
+
     #[test]
     fn test_validate_within_root() {
         let dir = TempDir::new().unwrap();
         let file = dir.path().join("test.txt");
         fs::write(&file, "test").unwrap();
-        
+
         let canonical = canonicalize_path(&file).unwrap();
         let result = validate_path_within_root(&canonical, dir.path());
         assert!(result.is_ok());
     }
-    
+
     #[test]
     fn test_reject_outside_root() {
         let dir = TempDir::new().unwrap();
         let other_dir = TempDir::new().unwrap();
         let file = other_dir.path().join("test.txt");
         fs::write(&file, "test").unwrap();
-        
+
         let canonical = canonicalize_path(&file).unwrap();
         let result = validate_path_within_root(&canonical, dir.path());
         assert!(result.is_err());

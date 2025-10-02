@@ -45,11 +45,9 @@ impl Secret {
     ///
     /// The input string will be zeroized when this Secret is dropped.
     pub(crate) fn new(value: String) -> Self {
-        Self {
-            inner: SecrecySecret::new(Zeroizing::new(value)),
-        }
+        Self { inner: SecrecySecret::new(Zeroizing::new(value)) }
     }
-    
+
     /// Verify input matches secret using constant-time comparison
     ///
     /// # Security
@@ -74,17 +72,17 @@ impl Secret {
     #[must_use]
     pub fn verify(&self, input: &str) -> bool {
         let secret_value = self.inner.expose_secret();
-        
+
         // Length check can short-circuit (length is not secret)
         if secret_value.len() != input.len() {
             return false;
         }
-        
+
         // Constant-time comparison of bytes using subtle crate
         // This prevents timing attacks by examining all bytes
         secret_value.as_bytes().ct_eq(input.as_bytes()).into()
     }
-    
+
     /// Expose the secret value (use sparingly)
     ///
     /// # Security Warning
@@ -112,25 +110,25 @@ impl Secret {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_verify_matching() {
         let secret = Secret::new("test-secret".to_string());
         assert!(secret.verify("test-secret"));
     }
-    
+
     #[test]
     fn test_verify_non_matching() {
         let secret = Secret::new("test-secret".to_string());
         assert!(!secret.verify("wrong-secret"));
     }
-    
+
     #[test]
     fn test_verify_length_mismatch() {
         let secret = Secret::new("short".to_string());
         assert!(!secret.verify("much-longer-token"));
     }
-    
+
     #[test]
     fn test_expose() {
         let secret = Secret::new("test-secret".to_string());

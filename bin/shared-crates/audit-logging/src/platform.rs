@@ -15,7 +15,7 @@ use crate::storage::AuditEventEnvelope;
 pub struct PlatformClient {
     /// Configuration
     config: PlatformConfig,
-    
+
     /// HTTP client
     client: reqwest::Client,
 }
@@ -28,7 +28,7 @@ impl PlatformClient {
         // 2. Validate config
         todo!("Implement PlatformClient::new")
     }
-    
+
     /// Send events to platform
     pub async fn send_events(&self, _events: Vec<AuditEventEnvelope>) -> Result<()> {
         // TODO: Implement
@@ -38,7 +38,7 @@ impl PlatformClient {
         // 4. Handle errors (retry, etc.)
         todo!("Implement send_events")
     }
-    
+
     /// Sign event
     fn sign_event(&self, _envelope: &mut AuditEventEnvelope) -> Result<()> {
         // TODO: Implement

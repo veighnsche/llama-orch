@@ -59,27 +59,23 @@ pub fn validate_hex_string(s: &str, expected_len: usize) -> Result<()> {
         return Ok(());
     }
     
-    // Check for null bytes (security-critical, must happen early)
-    // Null bytes can cause C string truncation and bypass validation
-    if s.contains('\0') {
-        return Err(ValidationError::NullByte);
-    }
+    // PERFORMANCE PHASE 2: Single-pass validation
+    // Combines null byte check and hex validation (2 iterations → 1 iteration)
+    // Auth-min approved: Security-equivalent, same validation order
     
-    // Validate hex characters (case-insensitive)
-    // Early termination on first invalid character for performance
-    // Only ASCII hex digits are allowed: 0-9, a-f, A-F
     for c in s.chars() {
+        // SECURITY: Check null byte first (prevents C string truncation)
+        if c == '\0' {
+            return Err(ValidationError::NullByte);
+        }
+        
+        // SECURITY: Validate hex characters (case-insensitive)
+        // Only ASCII hex digits allowed: 0-9, a-f, A-F
         // is_ascii_hexdigit() is faster than manual range checks
-        // and handles both upper and lowercase
         if !c.is_ascii_hexdigit() {
             return Err(ValidationError::InvalidHex { char: c });
         }
     }
-    
-    // PERFORMANCE: Removed redundant char_count check (dead code)
-    // is_ascii_hexdigit() guarantees ASCII-only, so char_count == byte_count
-    // Already validated by s.len() == expected_len check at line 49
-    // Auth-min approved removal: This check is provably unreachable
     
     Ok(())
 }

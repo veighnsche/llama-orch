@@ -84,18 +84,16 @@
 
 // Module declarations
 mod error;
-mod types;
 mod loaders;
-pub mod validation;  // Public for testing and advanced use cases
+mod types;
+pub mod validation; // Public for testing and advanced use cases
 
 // Public exports
-pub use error::{SecretError, Result};
+pub use error::{Result, SecretError};
 pub use types::{Secret, SecretKey};
 
 // Re-export commonly used types for convenience
 pub use loaders::{
-    file::load_secret_from_file,
-    file::load_key_from_file,
+    derivation::derive_key_from_token, file::load_key_from_file, file::load_secret_from_file,
     systemd::load_from_systemd_credential,
-    derivation::derive_key_from_token,
 };
