@@ -13,6 +13,15 @@ mod common;
 use vram_residency::{VramManager, VramError};
 use common::run_dual_mode_test;
 
+/// @priority: critical
+/// @spec: VRAM-SEAL-001
+/// @team: vram-residency
+/// @tags: dual-mode, seal, cryptographic-integrity
+/// @scenario: Sealing model data in VRAM with cryptographic signature
+/// @threat: Unauthorized tampering with model weights in GPU memory
+/// @failure_mode: Model corruption goes undetected, leading to incorrect inference results
+/// @edge_case: Must work identically with both mock VRAM (CI) and real CUDA (production)
+/// @requires: GPU
 #[test]
 fn test_seal_model_dual_mode() {
     run_dual_mode_test(|is_real_cuda| {
@@ -36,6 +45,15 @@ fn test_seal_model_dual_mode() {
     });
 }
 
+/// @priority: critical
+/// @spec: VRAM-VERIFY-001
+/// @team: vram-residency
+/// @tags: dual-mode, verification, cryptographic-integrity
+/// @scenario: Verifying sealed model data has not been tampered with
+/// @threat: Attacker modifies model weights in GPU memory to inject backdoors
+/// @failure_mode: Tampered models pass verification, allowing malicious inference
+/// @edge_case: Verification must detect even single-bit flips in VRAM
+/// @requires: GPU
 #[test]
 fn test_verify_sealed_dual_mode() {
     run_dual_mode_test(|is_real_cuda| {
@@ -122,6 +140,15 @@ fn test_capacity_queries_dual_mode() {
     });
 }
 
+/// @priority: high
+/// @spec: VRAM-VALIDATE-001
+/// @team: vram-residency
+/// @tags: dual-mode, input-validation, edge-case
+/// @scenario: Rejecting invalid zero-size model allocations
+/// @threat: Zero-size allocations cause undefined behavior in CUDA
+/// @failure_mode: GPU driver crash or memory corruption from invalid allocation
+/// @edge_case: Must reject exactly zero bytes, but allow 1-byte models
+/// @requires: GPU
 #[test]
 fn test_zero_size_rejection_dual_mode() {
     run_dual_mode_test(|is_real_cuda| {

@@ -15,7 +15,6 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 futures = { workspace = true }
 vram-residency = { path = ".." }
 gpu-info = { path = "../../../shared-crates/gpu-info" }
-proof-bundle = { path = "../../../../test-harness/proof-bundle" }
 serde_json = { workspace = true }
 chrono = { workspace = true }
 

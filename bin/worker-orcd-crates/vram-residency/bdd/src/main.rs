@@ -3,7 +3,6 @@ mod steps;
 use cucumber::World as _;
 use steps::world::BddWorld;
 use gpu_info::detect_gpus;
-use proof_bundle::{ProofBundle, TestType};
 use chrono::Utc;
 
 #[tokio::main(flavor = "multi_thread")]
@@ -13,7 +12,7 @@ async fn main() {
     let proof_bundle_dir = crate_root.join(".proof_bundle");
     std::env::set_var("LLORCH_PROOF_DIR", proof_bundle_dir.to_str().unwrap());
     
-    let pb = ProofBundle::for_type(TestType::Bdd)
+    // let pb = ProofBundle::for_type(TestType::Bdd)
         .expect("Failed to create proof bundle");
     
     // Record test start

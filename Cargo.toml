@@ -16,7 +16,6 @@ members = [
     "test-harness/determinism-suite",
     "test-harness/chaos",
     "test-harness/bdd",
-    "test-harness/proof-bundle/bdd",
 
     # Consumers
     "consumers/llama-orch-sdk",
