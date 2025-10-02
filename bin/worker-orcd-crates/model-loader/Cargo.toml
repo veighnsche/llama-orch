@@ -10,6 +10,8 @@ thiserror.workspace = true
 tracing.workspace = true
 sha2.workspace = true
 input-validation = { path = "../../shared-crates/input-validation" }
+tokio = { workspace = true, features = ["sync", "rt"] }
+metrics = "0.21"
 
 # Observability
 observability-narration-core = { path = "../../shared-crates/narration-core" }

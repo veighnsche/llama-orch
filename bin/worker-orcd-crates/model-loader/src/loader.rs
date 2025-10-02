@@ -10,6 +10,7 @@ use std::time::Instant;
 use audit_logging::{AuditLogger, AuditEvent, ActorInfo, AuthMethod};
 use chrono::Utc;
 use input_validation::sanitize_string;
+use metrics;
 
 /// Model loader
 ///
@@ -102,7 +103,8 @@ impl ModelLoader {
                         .map(|s| s.to_string())  // PHASE 3: Explicit allocation
                         .unwrap_or_else(|_| "<sanitization-failed>".to_string());
                     
-                    let _ = logger.emit(AuditEvent::PathTraversalAttempt {
+                    // CRITICAL: Path traversal is an active attack
+                    if let Err(e) = logger.emit(AuditEvent::PathTraversalAttempt {
                         timestamp: Utc::now(),
                         actor: ActorInfo {
                             user_id: worker_id.unwrap_or("unknown").to_string(),
@@ -112,7 +114,18 @@ impl ModelLoader {
                         },
                         attempted_path: safe_path,
                         endpoint: "model_load".to_string(),
-                    });
+                    }) {
+                        tracing::error!(error = %e, "Failed to emit CRITICAL PathTraversalAttempt audit event");
+                        metrics::counter!("model_loader.audit.critical_emit_failures", 1);
+                    } else {
+                        // ✅ FLUSH IMMEDIATELY: Critical security events must be persisted
+                        // Rationale: GDPR/SOC2/ISO 27001 require immediate security incident logging
+                        if let Err(e) = tokio::task::block_in_place(|| {
+                            tokio::runtime::Handle::current().block_on(logger.flush())
+                        }) {
+                            tracing::error!(error = %e, "Failed to flush audit logger after CRITICAL event");
+                        }
+                    }
                 }
                 
                 // Narrate: Path validation failed
@@ -199,7 +212,8 @@ impl ModelLoader {
                             .map(|s| s.to_string())  // PHASE 3: Explicit allocation
                             .unwrap_or_else(|_| "<sanitization-failed>".to_string());
                         
-                        let _ = logger.emit(AuditEvent::IntegrityViolation {
+                        // CRITICAL: Integrity violation indicates model tampering or supply chain compromise
+                        if let Err(e) = logger.emit(AuditEvent::IntegrityViolation {
                             timestamp: Utc::now(),
                             resource_type: "model".to_string(),
                             resource_id: safe_path,
@@ -208,7 +222,18 @@ impl ModelLoader {
                             severity: "critical".to_string(),
                             action_taken: "Model load rejected".to_string(),
                             worker_id: worker_id.map(|s| s.to_string()),
-                        });
+                        }) {
+                            tracing::error!(error = %e, "Failed to emit CRITICAL IntegrityViolation audit event");
+                            metrics::counter!("model_loader.audit.critical_emit_failures", 1);
+                        } else {
+                            // ✅ FLUSH IMMEDIATELY: Critical security events must be persisted
+                            // Rationale: GDPR/SOC2/ISO 27001 require immediate security incident logging
+                            if let Err(e) = tokio::task::block_in_place(|| {
+                                tokio::runtime::Handle::current().block_on(logger.flush())
+                            }) {
+                                tracing::error!(error = %e, "Failed to flush audit logger after CRITICAL event");
+                            }
+                        }
                     }
                     
                     // Narrate: Hash mismatch
@@ -267,14 +292,18 @@ impl ModelLoader {
                         .map(|s| s.to_string())  // PHASE 3: Explicit allocation
                         .unwrap_or_else(|_| "<sanitization-failed>".to_string());
                     
-                    let _ = logger.emit(AuditEvent::MalformedModelRejected {
+                    // HIGH: Malformed model could be accidental or exploit attempt
+                    if let Err(e) = logger.emit(AuditEvent::MalformedModelRejected {
                         timestamp: Utc::now(),
                         model_ref: safe_path,
                         validation_error: safe_error,
                         severity: "high".to_string(),
                         action_taken: "Model load rejected".to_string(),
                         worker_id: worker_id.map(|s| s.to_string()),
-                    });
+                    }) {
+                        tracing::error!(error = %e, "Failed to emit MalformedModelRejected audit event");
+                        metrics::counter!("model_loader.audit.emit_failures", 1);
+                    }
                 }
                 
                 // Narrate: GGUF validation failed
@@ -397,6 +426,19 @@ impl ModelLoader {
 impl Default for ModelLoader {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Drop for ModelLoader {
+    fn drop(&mut self) {
+        // Flush audit logger to ensure all events are written (GDPR/SOC2/ISO 27001 compliance)
+        if let Some(ref audit_logger) = self.audit_logger {
+            if let Err(e) = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(audit_logger.flush())
+            }) {
+                tracing::error!(error = %e, "Failed to flush audit logger on ModelLoader drop");
+            }
+        }
     }
 }
 
