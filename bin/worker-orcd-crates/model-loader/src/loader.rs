@@ -99,6 +99,7 @@ impl ModelLoader {
                 // Audit: Path traversal attempt (CRITICAL)
                 if let Some(logger) = &self.audit_logger {
                     let safe_path = sanitize_string(model_path_str)
+                        .map(|s| s.to_string())  // PHASE 3: Explicit allocation
                         .unwrap_or_else(|_| "<sanitization-failed>".to_string());
                     
                     let _ = logger.emit(AuditEvent::PathTraversalAttempt {
@@ -195,6 +196,7 @@ impl ModelLoader {
                     // Audit: Integrity violation (CRITICAL)
                     if let Some(logger) = &self.audit_logger {
                         let safe_path = sanitize_string(&canonical_path.to_string_lossy())
+                            .map(|s| s.to_string())  // PHASE 3: Explicit allocation
                             .unwrap_or_else(|_| "<sanitization-failed>".to_string());
                         
                         let _ = logger.emit(AuditEvent::IntegrityViolation {
@@ -259,8 +261,10 @@ impl ModelLoader {
                 // Audit: Malformed model rejected (HIGH)
                 if let Some(logger) = &self.audit_logger {
                     let safe_path = sanitize_string(&canonical_path.to_string_lossy())
+                        .map(|s| s.to_string())  // PHASE 3: Explicit allocation
                         .unwrap_or_else(|_| "<sanitization-failed>".to_string());
                     let safe_error = sanitize_string(&e.to_string())
+                        .map(|s| s.to_string())  // PHASE 3: Explicit allocation
                         .unwrap_or_else(|_| "<sanitization-failed>".to_string());
                     
                     let _ = logger.emit(AuditEvent::MalformedModelRejected {

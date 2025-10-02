@@ -45,7 +45,7 @@ impl SecretKey {
     pub(crate) fn new(bytes: [u8; 32]) -> Self {
         Self(bytes)
     }
-    
+
     /// Access key bytes for cryptographic operations
     ///
     /// # Security
@@ -77,14 +77,14 @@ impl SecretKey {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_new_key() {
         let key = SecretKey::new([42u8; 32]);
         assert_eq!(key.as_bytes().len(), 32);
         assert_eq!(key.as_bytes()[0], 42);
     }
-    
+
     #[test]
     fn test_zeroize_on_drop() {
         // This test verifies that zeroize is called on drop

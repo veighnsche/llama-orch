@@ -12,7 +12,7 @@
 //! - Path canonicalization (prevents traversal)
 //! - Secure key derivation (HKDF-SHA256)
 
-pub mod file;
-pub mod systemd;
 pub mod derivation;
 pub mod environment;
+pub mod file;
+pub mod systemd;

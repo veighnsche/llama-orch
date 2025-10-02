@@ -8,8 +8,8 @@
 //!
 //! All validation occurs BEFORE reading file contents to prevent TOCTOU issues.
 
-mod permissions;
 mod paths;
+mod permissions;
 
-pub use permissions::validate_file_permissions;
 pub use paths::{canonicalize_path, validate_path_within_root};
+pub use permissions::validate_file_permissions;

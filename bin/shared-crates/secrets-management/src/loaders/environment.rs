@@ -12,7 +12,7 @@
 //!
 //! **Use file-based loading instead.**
 
-use crate::{Secret, Result, SecretError};
+use crate::{Result, Secret, SecretError};
 
 /// Load a secret from environment variable (NOT RECOMMENDED)
 ///
@@ -41,14 +41,14 @@ pub fn load_from_env(var_name: &str) -> Result<Secret> {
         env_var = %var_name,
         "Loading secret from environment variable (NOT RECOMMENDED - visible in process listing and /proc)"
     );
-    
+
     let value = std::env::var(var_name)
         .map_err(|_| SecretError::FileNotFound(format!("env var not set: {}", var_name)))?;
-    
+
     if value.is_empty() {
         return Err(SecretError::InvalidFormat("empty value".to_string()));
     }
-    
+
     Ok(Secret::new(value))
 }
 
@@ -73,7 +73,7 @@ impl Secret {
 #[cfg(test)]
 mod tests {
     use super::load_from_env;
-    
+
     #[test]
     #[allow(deprecated)]
     fn test_load_from_env() {
@@ -82,7 +82,7 @@ mod tests {
         assert_eq!(secret.expose(), "test-value");
         std::env::remove_var("TEST_SECRET");
     }
-    
+
     #[test]
     #[allow(deprecated)]
     fn test_reject_empty_env() {
