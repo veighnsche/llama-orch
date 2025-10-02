@@ -23,6 +23,24 @@ pub fn compute_hash(bytes: &[u8]) -> String {
 /// - HASH-004: Hash mismatch MUST reject model load
 /// - HASH-006: Computed hash MUST be logged for audit trail
 /// - HASH-007: Hash validation MUST use input-validation crate
+///
+/// # Timing-Safe Comparison
+///
+/// **Why NOT using constant-time comparison**: Per HASH-005 in 20_security.md,
+/// timing-safe comparison is NOT required for this use case because:
+///
+/// 1. **No secret comparison**: We're comparing a computed hash against a
+///    user-provided expected hash. Neither value is secret.
+/// 2. **No authentication**: This is integrity verification, not authentication.
+///    An attacker who can modify the file can also modify the expected hash.
+/// 3. **Timing attack not applicable**: Timing attacks are relevant when
+///    comparing against a secret value (e.g., password, HMAC key). Here, both
+///    values are public or attacker-controlled.
+/// 4. **Defense in depth elsewhere**: Path validation and GGUF parsing provide
+///    the actual security boundaries.
+///
+/// If this changes (e.g., hash becomes a secret signature), use
+/// `subtle::ConstantTimeEq` for comparison.
 pub fn verify_hash(bytes: &[u8], expected_hash: &str) -> Result<()> {
     // Validate hash format (HASH-002) using input-validation
     input_validation::validate_hex_string(expected_hash, 64)
@@ -34,6 +52,7 @@ pub fn verify_hash(bytes: &[u8], expected_hash: &str) -> Result<()> {
     let actual_hash = compute_hash(bytes);
     
     // Compare (HASH-004)
+    // Note: Not using constant-time comparison (see doc comment above)
     if actual_hash != expected_hash {
         return Err(LoadError::HashMismatch {
             expected: expected_hash.to_string(),
