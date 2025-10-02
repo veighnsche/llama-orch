@@ -72,6 +72,10 @@ pub struct NarrationFields {
     /// Human-readable description (ORCH-3305: ≤100 chars, present tense, SVO)
     pub human: String,
 
+    /// Cute children's book narration (optional, whimsical storytelling)
+    /// Example: "Tucked the model safely into GPU0's cozy VRAM blanket! 🛏️✨"
+    pub cute: Option<String>,
+
     // Correlation and identity fields
     pub correlation_id: Option<String>,
     pub session_id: Option<String>,
@@ -138,6 +142,9 @@ pub struct NarrationFields {
 pub fn narrate(fields: NarrationFields) {
     // Apply redaction to human text (ORCH-3302)
     let human = redact_secrets(&fields.human, RedactionPolicy::default());
+    
+    // Apply redaction to cute text if present
+    let cute = fields.cute.as_ref().map(|c| redact_secrets(c, RedactionPolicy::default()));
 
     // Emit structured event
     event!(
@@ -146,6 +153,7 @@ pub fn narrate(fields: NarrationFields) {
         action = fields.action,
         target = %fields.target,
         human = %human,
+        cute = cute.as_deref(),
         correlation_id = fields.correlation_id.as_deref(),
         session_id = fields.session_id.as_deref(),
         job_id = fields.job_id.as_deref(),

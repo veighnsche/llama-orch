@@ -11,6 +11,7 @@ pub struct CapturedNarration {
     pub action: &'static str,
     pub target: String,
     pub human: String,
+    pub cute: Option<String>,
     pub correlation_id: Option<String>,
     pub session_id: Option<String>,
     pub pool_id: Option<String>,
@@ -30,6 +31,7 @@ impl From<NarrationFields> for CapturedNarration {
             action: fields.action,
             target: fields.target,
             human: fields.human,
+            cute: fields.cute,
             correlation_id: fields.correlation_id,
             session_id: fields.session_id,
             pool_id: fields.pool_id,
@@ -167,6 +169,27 @@ impl CaptureAdapter {
         let captured = self.captured();
         let found = captured.iter().any(|n| n.correlation_id.is_some());
         assert!(found, "Expected at least one narration with correlation_id, but found none");
+    }
+
+    /// Assert that cute narration is present.
+    pub fn assert_cute_present(&self) {
+        let captured = self.captured();
+        let found = captured.iter().any(|n| n.cute.is_some());
+        assert!(found, "Expected at least one narration with cute field, but found none");
+    }
+
+    /// Assert that cute narration includes a substring.
+    pub fn assert_cute_includes(&self, substring: &str) {
+        let captured = self.captured();
+        let found = captured.iter().any(|n| {
+            n.cute.as_ref().map_or(false, |c| c.contains(substring))
+        });
+        assert!(
+            found,
+            "Expected cute narration to include '{}', but found: {:?}",
+            substring,
+            captured.iter().filter_map(|n| n.cute.as_ref()).collect::<Vec<_>>()
+        );
     }
 }
 

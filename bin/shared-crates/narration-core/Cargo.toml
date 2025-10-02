@@ -18,6 +18,9 @@ serde = { workspace = true, features = ["derive"] }
 regex = { workspace = true }
 opentelemetry = { version = "0.21", optional = true }
 
+[dev-dependencies]
+tracing-subscriber = { workspace = true }
+
 [features]
 default = []
 otel = ["opentelemetry"]
