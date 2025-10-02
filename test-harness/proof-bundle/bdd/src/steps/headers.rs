@@ -3,17 +3,17 @@ use std::fs;
 use std::io::{BufRead, BufReader};
 
 use crate::steps::world::BddWorld;
-use proof_bundle::TestType;
+use proof_bundle::LegacyTestType;
 
-fn parse_type(s: &str) -> TestType {
+fn parse_type(s: &str) -> LegacyTestType {
     match s.to_lowercase().as_str() {
-        "unit" => TestType::Unit,
-        "integration" => TestType::Integration,
-        "contract" => TestType::Contract,
-        "bdd" => TestType::Bdd,
-        "determinism" => TestType::Determinism,
-        "home-profile-smoke" | "smoke" => TestType::Smoke,
-        "e2e-haiku" | "haiku" => TestType::E2eHaiku,
+        "unit" => LegacyTestType::Unit,
+        "integration" => LegacyTestType::Integration,
+        "contract" => LegacyTestType::Contract,
+        "bdd" => LegacyTestType::Bdd,
+        "determinism" => LegacyTestType::Determinism,
+        "home-profile-smoke" | "smoke" => LegacyTestType::Smoke,
+        "e2e-haiku" | "haiku" => LegacyTestType::E2eHaiku,
         other => panic!("unknown test type: {}", other),
     }
 }
