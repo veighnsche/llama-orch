@@ -160,6 +160,7 @@ Key milestones:
 - **Orchestrator**: `bin/orchestratord/`
 - **Worker Adapters (legacy)**: `bin/orchestratord-crates/agentic-api/` (HTTP adapters for external engines)
 - **Test Harness**: `test-harness/e2e-haiku/`
+- **Batching Guide**: [BATCHING.md](BATCHING.md)
 
 ---
 

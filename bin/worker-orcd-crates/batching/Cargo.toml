@@ -1,0 +1,13 @@
+[package]
+name = "batching"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+publish = false
+description = "Worker-side batching scheduler for worker-orcd (coalescing, fairness, cancel-aware)"
+authors = ["llama-orch contributors"]
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]

@@ -96,13 +96,13 @@ The project also includes determinism and observability features that I enjoyed 
 - Multi-region support
 
 ---
-
 ## Documentation
 
 ### Core Specifications
 - [`.specs/00_llama-orch.md`](.specs/00_llama-orch.md) — Core requirements (ORCH-3xxx)
 - [`.specs/20_orchestratord.md`](.specs/20_orchestratord.md) — Control plane service
 - [`.specs/30_pool_managerd.md`](.specs/30_pool_managerd.md) — GPU worker service
+- [`.specs/35-worker-orcd-pool-managerd-contract.md`](.specs/35-worker-orcd-pool-managerd-contract.md) — System Flow & Contract (orchestratord ↔ pool-managerd ↔ worker-orcd)
 - [`.specs/metrics/otel-prom.md`](.specs/metrics/otel-prom.md) — Metrics contract
 - [`AGENTS.md`](AGENTS.md) — Repository guidelines, dev loop, coding/testing discipline
 - [`SECURITY.md`](SECURITY.md) — Security policy and Minimal Auth Hooks seam
