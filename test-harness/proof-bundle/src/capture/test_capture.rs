@@ -219,6 +219,7 @@ impl<'a> TestCaptureBuilder<'a> {
                             stdout: stdout_val,
                             stderr: stderr_val,
                             error_message,
+                            metadata: None,
                         });
                     }
                 }

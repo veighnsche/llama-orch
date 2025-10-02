@@ -1,6 +1,7 @@
 //! Types for test capture results
 
 use serde::{Deserialize, Serialize};
+use crate::metadata::TestMetadata;
 
 /// Summary of test run results
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -50,6 +51,11 @@ pub struct TestResult {
     /// Error message (if failed)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error_message: Option<String>,
+    
+    /// Test metadata (priority, spec, team, etc.)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub metadata: Option<TestMetadata>,
 }
 
 /// Test status

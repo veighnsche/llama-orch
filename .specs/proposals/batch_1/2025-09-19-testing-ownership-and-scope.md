@@ -133,13 +133,17 @@ IDs use ORCH‑325x (hardening) to complement ownership rules above. These are e
 ### worker-adapters (per engine)
 - [ORCH‑3273] Trait conformance tests MUST cover health(), props(), submit()/cancel(), engine_version().
 - [ORCH‑3274] Streaming tests MUST verify `started → token* → end` ordering; metrics frames optional; token event structure validated.
-- [ORCH‑3275] Error taxonomy mapping MUST be tested, including deadlines, pool unavailability, decode timeout, worker reset, adapter/internal errors.
-- [ORCH‑3276] Timeouts/retries MUST be enforced with caps/jitter; tests SHOULD simulate network timeouts and partial streams.
-- [ORCH‑3277] Determinism signals: `started` (or logs) SHOULD include engine_version, and where applicable sampler_profile_version and model_digest; tests check presence and propagation.
-- [ORCH‑3278] Security: ensure API keys/tokens are redacted from logs and headers in error paths.
 
 ### test-harnesses (outer)
-- [ORCH‑3279] BDD harness MUST restrict scenarios to cross‑crate integration; step inventory MUST fail unknown or ambiguous steps.
-- [ORCH‑3280] Determinism suite MUST use a curated seed corpus and record engine/sampler versions; byte‑exact assertions are required.
-- [ORCH‑3281] E2E haiku MUST run under explicit gating (e.g., `REQUIRE_REAL_LLAMA=1`), publish SSE transcripts in proof bundles, and clean resources.
-- [ORCH‑3282] Metrics‑contract MUST lint names/labels per spec and report cardinality issues; generation of linter configs MAY be automated later.
+- [ORCH-3279] BDD harness MUST restrict scenarios to cross-crate integration; step inventory MUST fail unknown or ambiguous steps.
+- [ORCH-3280] Determinism suite MUST use a curated seed corpus and record engine/sampler versions; byte-exact assertions are required.
+- [ORCH-3281] E2E haiku MUST run under explicit gating (e.g., `REQUIRE_REAL_LLAMA=1`), publish SSE transcripts in proof bundles, and clean resources.
+- [ORCH-3282] Metrics-contract MUST lint names/labels per spec and report cardinality issues; generation of linter configs MAY be automated later.
+
+### proof-bundle (test evidence)
+- [ORCH-3285] Each crate SHOULD generate proof bundles using `proof_bundle::ProofBundle::generate_for_crate()` one-liner API.
+- [ORCH-3286] Proof bundles MUST include executive summaries for management audit (non-technical language, risk assessment, recommendations).
+- [ORCH-3287] Proof bundles MUST use standard templates: `unit_test_template()` or `bdd_test_template()` provided by proof-bundle library.
+- [ORCH-3288] Crates MUST NOT duplicate formatting code; all formatters (executive, developer, failure reports) provided by proof-bundle.
+- [ORCH-3289] Proof bundles MUST be written to crate-local `.proof_bundle/` directories with timestamp subdirectories.
+- [ORCH-3290] Proof bundle generation MUST NOT exceed 5% overhead on test execution time.

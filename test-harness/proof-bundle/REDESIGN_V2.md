@@ -140,6 +140,18 @@ The proof-bundle crate itself has 25+ unit tests covering:
    - proof-bundle captures proof-bundle tests (dogfooding)
    - Bonus: external audit tools can capture any crate
 
+6. **✅ Human-readable reports (MANAGEMENT REQUIREMENT)**
+   - JSON is fine for machines, but MD for humans
+   - Beautiful, scannable markdown reports
+   - Executive summaries, not just raw data
+   - Non-developers can audit
+
+7. **✅ Zero boilerplate for other crates (MANAGEMENT REQUIREMENT)**
+   - All common patterns in proof-bundle library
+   - No code duplication across crates
+   - One-line proof bundle generation
+   - Templates and formatters included
+
 ### Should Have
 
 6. **⚠️ Stable Rust output parsing**
@@ -314,7 +326,7 @@ harness = false
 
 #### Component 1: Library (`proof-bundle`)
 
-**Purpose**: Types, writers, utilities
+**Purpose**: Types, writers, utilities, formatters, templates
 
 **API**:
 ```rust
@@ -337,6 +349,47 @@ pub mod parsers {
     pub fn parse_stable_output(output: &str) -> Result<Vec<TestResult>>;
 }
 
+// NEW: Formatters (MANAGEMENT REQUIREMENT)
+pub mod formatters {
+    /// Generate beautiful human-readable report from test results
+    pub fn generate_test_report(summary: &TestSummary) -> String;
+    
+    /// Generate executive summary (for non-technical stakeholders)
+    pub fn generate_executive_summary(summary: &TestSummary) -> String;
+    
+    /// Generate detailed failure report with context
+    pub fn generate_failure_report(summary: &TestSummary) -> String;
+    
+    /// Generate coverage report (if available)
+    pub fn generate_coverage_report(summary: &TestSummary) -> String;
+}
+
+// NEW: Templates (prevent code duplication)
+pub mod templates {
+    /// Standard unit test proof bundle template
+    pub fn unit_test_template() -> ProofBundleTemplate;
+    
+    /// Standard BDD test proof bundle template
+    pub fn bdd_test_template() -> ProofBundleTemplate;
+    
+    /// Standard integration test proof bundle template
+    pub fn integration_test_template() -> ProofBundleTemplate;
+}
+
+// NEW: One-liner for developers (MANAGEMENT REQUIREMENT)
+impl ProofBundle {
+    /// Generate complete proof bundle with one function call
+    /// 
+    /// This is what other crates should use - zero boilerplate!
+    pub fn generate_for_crate(
+        crate_name: &str,
+        mode: ProofBundleMode,
+    ) -> Result<TestSummary> {
+        // Does everything: run tests, parse, format, write
+        // Returns summary for verification
+    }
+}
+
 // REMOVED: capture_tests() (doesn't work)
 ```
 
@@ -344,6 +397,9 @@ pub mod parsers {
 - ❌ Remove `capture_tests()` API
 - ✅ Add parser utilities for external use
 - ✅ Keep all file writing functionality
+- ✅ **NEW: Formatters for human-readable output**
+- ✅ **NEW: Templates to prevent code duplication**
+- ✅ **NEW: One-liner API for developer experience**
 
 #### Component 2: CLI (`proof-bundle-cli`)
 
@@ -471,6 +527,7 @@ fn generate_proof_bundle() -> Result<()> {
 
 ### V2 (Proposed - Working)
 
+**Option A: CLI** (for CI/CD, external tools):
 ```bash
 # From command line or script
 proof-bundle-cli \
@@ -480,7 +537,29 @@ proof-bundle-cli \
     --output .proof_bundle/unit-full
 ```
 
-**Result**: All tests captured
+**Option B: Library One-Liner** (DEVELOPER EXPERIENCE - RECOMMENDED):
+```rust
+// In any test file in vram-residency
+#[test]
+fn generate_proof_bundle() -> anyhow::Result<()> {
+    // ONE LINE - no boilerplate!
+    proof_bundle::ProofBundle::generate_for_crate(
+        "vram-residency",
+        ProofBundleMode::UnitFast,
+    )?;
+    
+    // Automatically generates:
+    // - test_results.ndjson (raw data)
+    // - summary.json (statistics)
+    // - test_report.md (human-readable, beautiful)
+    // - executive_summary.md (for management)
+    // - failures.md (if any - detailed with context)
+    
+    Ok(())
+}
+```
+
+**Result**: All tests captured, beautifully formatted
 
 **Alternative** (for CI/CD):
 ```yaml
@@ -538,6 +617,241 @@ proof-bundle-cli \
 9. 💡 **Parallel capture**
    - Capture multiple crates simultaneously
    - Workspace-level proof bundles
+
+---
+
+## Human-Readable Formatting (Management Requirement)
+
+### Problem
+
+Current proof bundles are **machine-readable but not human-auditable**:
+- JSON/NDJSON files require parsing tools
+- No executive summaries
+- No failure context
+- Hard for non-developers to audit
+
+### Solution: Multi-Level Reports
+
+#### Level 1: Executive Summary (`executive_summary.md`)
+
+**For**: Management, non-technical stakeholders
+
+**Example**:
+```markdown
+# Test Results Summary — vram-residency
+
+**Date**: 2025-10-02  
+**Status**: ✅ 98% PASS RATE  
+**Confidence**: HIGH
+
+## Quick Facts
+
+- **360 tests** executed
+- **354 passed** (98.3%)
+- **3 failed** (0.8%)
+- **3 skipped** (0.8%)
+- **Duration**: 45 seconds
+
+## Risk Assessment
+
+✅ **LOW RISK** — High pass rate, all critical tests passing
+
+## Failed Tests
+
+1. **test_vram_exhaustion** (non-critical)
+   - Expected: Graceful handling of VRAM exhaustion
+   - Actual: Panic on OOM
+   - **Impact**: LOW (edge case, rarely happens)
+   - **Action**: Bug filed (#1234)
+
+## Recommendation
+
+**✅ APPROVED FOR DEPLOYMENT** — All tier-1 security tests passing
+```
+
+#### Level 2: Developer Report (`test_report.md`)
+
+**For**: Developers, technical reviewers
+
+**Example**:
+```markdown
+# Test Report — vram-residency
+
+## Summary
+
+- Total: 360 tests
+- Passed: 354 (98.3%)
+- Failed: 3 (0.8%)
+- Ignored: 3 (0.8%)
+
+## Test Breakdown
+
+### Unit Tests (102 tests)
+- ✅ 100 passed
+- ❌ 2 failed
+- Duration: 5.2s
+
+### Integration Tests (156 tests)
+- ✅ 154 passed  
+- ❌ 1 failed
+- Duration: 15.8s
+
+### Property Tests (90 tests)
+- ✅ 90 passed
+- Duration: 18.5s
+
+### BDD Tests (12 tests)
+- ✅ 10 passed
+- ⏭️ 2 skipped (CUDA not available)
+- Duration: 5.5s
+
+## Failed Tests
+
+### test_vram_exhaustion
+**Location**: `tests/robustness_stress.rs:45`  
+**Duration**: 1.2s  
+**Error**:
+\`\`\`
+thread panicked at 'CUDA OOM: Out of memory'
+\`\`\`
+
+**Context**:
+- Allocating 32GB on 24GB GPU
+- Expected: VramError::OutOfMemory
+- Actual: Panic
+
+**Related**: Issue #1234
+
+## Performance
+
+**Slowest tests**:
+1. test_large_model_seal — 2.5s
+2. test_concurrent_access — 1.8s
+3. test_vram_exhaustion — 1.2s
+```
+
+#### Level 3: Detailed Report (`test_results.ndjson`)
+
+**For**: Machines, CI tools, detailed analysis
+
+Already exists (keep as-is).
+
+### Formatter API
+
+```rust
+pub mod formatters {
+    /// Generate executive summary (management-friendly)
+    pub fn generate_executive_summary(summary: &TestSummary) -> String {
+        let mut md = String::new();
+        md.push_str("# Test Results Summary\n\n");
+        
+        // Risk assessment
+        let risk = if summary.pass_rate >= 98.0 { "LOW" }
+                   else if summary.pass_rate >= 95.0 { "MEDIUM" }
+                   else { "HIGH" };
+        
+        // Executive language, not technical
+        // Focus on business impact
+        // Actionable recommendations
+        
+        md
+    }
+    
+    /// Generate developer report (technical details)
+    pub fn generate_test_report(summary: &TestSummary) -> String {
+        let mut md = String::new();
+        
+        // Breakdown by test type
+        // Failed tests with context
+        // Performance metrics
+        // Links to code
+        
+        md
+    }
+    
+    /// Generate failure report (detailed diagnostics)
+    pub fn generate_failure_report(summary: &TestSummary) -> String {
+        let mut md = String::new();
+        
+        // Only failed tests
+        // Stack traces
+        // Related code
+        // Reproduction steps
+        
+        md
+    }
+}
+```
+
+### Templates Prevent Code Duplication
+
+```rust
+pub mod templates {
+    /// Unit test template (what vram-residency uses)
+    pub fn unit_test_template() -> ProofBundleTemplate {
+        ProofBundleTemplate {
+            modes: vec!["fast", "full"],
+            outputs: vec![
+                "test_results.ndjson",
+                "summary.json",
+                "test_report.md",
+                "executive_summary.md",
+                "failures.md",
+            ],
+            formatters: vec![
+                Box::new(formatters::generate_test_report),
+                Box::new(formatters::generate_executive_summary),
+                Box::new(formatters::generate_failure_report),
+            ],
+        }
+    }
+    
+    /// BDD test template (different formatting)
+    pub fn bdd_test_template() -> ProofBundleTemplate {
+        ProofBundleTemplate {
+            modes: vec!["mock", "cuda"],
+            outputs: vec![
+                "scenarios.ndjson",
+                "features.json",
+                "bdd_report.md",  // Different format!
+                "executive_summary.md",
+            ],
+            formatters: vec![
+                Box::new(formatters::generate_bdd_report),  // BDD-specific
+                Box::new(formatters::generate_executive_summary),
+            ],
+        }
+    }
+}
+```
+
+### Zero-Boilerplate API
+
+```rust
+// In vram-residency/tests/proof_bundle.rs
+#[test]
+fn generate_proof_bundle() -> anyhow::Result<()> {
+    // ONE LINE - everything is handled
+    proof_bundle::ProofBundle::generate_for_crate(
+        "vram-residency",
+        ProofBundleMode::UnitFast,
+    )?;
+    
+    // Internally does:
+    // 1. Run cargo test with correct flags
+    // 2. Parse output (JSON or stable)
+    // 3. Generate ALL reports (executive, developer, failures)
+    // 4. Write to .proof_bundle/unit-fast/<timestamp>/
+    // 5. Return summary for verification
+    
+    Ok(())
+}
+
+// NO boilerplate code needed!
+// NO formatters to write!
+// NO templates to copy!
+// proof-bundle does it all!
+```
 
 ---
 
@@ -657,7 +971,83 @@ proof-bundle-cli \
 
 ---
 
+## Summary of Management Requirements
+
+### 1. Developer Experience (PRIMARY FOCUS)
+
+**Problem**: Developers hate writing and maintaining proof bundle code.
+
+**Solution**: Zero-boilerplate, one-line API
+```rust
+proof_bundle::ProofBundle::generate_for_crate("crate-name", ProofBundleMode::UnitFast)?;
+```
+
+**Implementation**:
+- All common patterns in proof-bundle library
+- Templates for unit tests and BDD tests
+- Formatters for all report types
+- No code duplication across crates
+
+### 2. Human-Readable Formatting (MANAGEMENT AUDIT)
+
+**Problem**: JSON/NDJSON is not human-auditable.
+
+**Solution**: Multi-level reports
+1. **Executive summary** (`executive_summary.md`) — For management, non-technical
+2. **Developer report** (`test_report.md`) — For technical reviewers
+3. **Failure report** (`failures.md`) — For debugging
+4. **Raw data** (`test_results.ndjson`, `summary.json`) — For machines
+
+**Implementation**:
+- Formatters in library (`formatters` module)
+- Beautiful markdown with risk assessments
+- Business-focused language, not technical jargon
+- Actionable recommendations
+
+### 3. Perfect Example (LEAD BY EXAMPLE)
+
+**Requirement**: proof-bundle crate must demonstrate perfect proof bundle.
+
+**Implementation**:
+- proof-bundle generates its own proof bundles
+- All report types generated
+- Exemplary formatting
+- Other crates copy this pattern
+
+### 4. Repository Context
+
+**Reality**: This repo has two main test types:
+1. **Unit tests** — Standard Rust `#[test]`
+2. **BDD tests** — Cucumber-style features
+
+**Implementation**:
+- `templates::unit_test_template()` — For unit/integration
+- `templates::bdd_test_template()` — For BDD/cucumber
+- Different formatting for each type
+
+### Key Deliverables
+
+1. ✅ **CLI tool** — External test executor (solves recursion)
+2. ✅ **One-liner API** — `generate_for_crate()`
+3. ✅ **Formatters** — Executive, developer, failure reports
+4. ✅ **Templates** — Unit and BDD templates
+5. ✅ **Examples** — Perfect proof bundle in our own crate
+6. ✅ **Documentation** — Updated with all new features
+
+### Success Criteria
+
+1. ✅ Works from same package (no recursion issues)
+2. ✅ Other crates use ≤ 5 lines of code
+3. ✅ Zero duplicate code across crates
+4. ✅ Management can read executive summaries
+5. ✅ Developers spend < 5 minutes setting up
+6. ✅ Beautiful, human-readable reports
+7. ✅ Stable Rust compatible
+
+---
+
 **Status**: ✅ PROPOSAL COMPLETE  
 **Confidence**: HIGH  
 **Risk**: LOW (clear path forward)  
-**Timeline**: 1 week for full implementation
+**Timeline**: 1 week for full implementation  
+**Management Requirements**: ✅ ALL ADDRESSED

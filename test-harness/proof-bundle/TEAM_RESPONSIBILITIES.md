@@ -259,6 +259,116 @@ fn test_test_summary_pass_rate_calculation() { /* ... */ }
 
 ---
 
+### 8. Developer Experience First (MANAGEMENT DIRECTIVE)
+
+**Responsibility**: Make proof bundle generation effortless for developers.
+
+**Principle**: **Developers don't want to test. We make it so easy they don't have to think about it.**
+
+**Reality**:
+- Developers HATE writing tests
+- Developers HATE writing boilerplate
+- Developers HATE maintaining proof bundle code
+- Developers just want tests to "work"
+
+**Our Solution**: **Zero-boilerplate, one-line API**
+
+```rust
+// This is ALL developers should write:
+#[test]
+fn generate_proof_bundle() -> anyhow::Result<()> {
+    proof_bundle::ProofBundle::generate_for_crate(
+        "my-crate",
+        ProofBundleMode::UnitFast,
+    )
+}
+```
+
+**What We Handle (So Developers Don't Have To)**:
+
+1. **✅ Test execution** — We run cargo test
+2. **✅ Output parsing** — We parse JSON or stable output
+3. **✅ Formatting** — We generate beautiful reports
+4. **✅ File writing** — We write all proof bundle files
+5. **✅ Error handling** — We provide clear error messages
+6. **✅ Templates** — We provide standard templates
+7. **✅ Human-readable reports** — We format for management
+
+**Code Patterns We Prevent**:
+
+```rust
+// ❌ Developers should NEVER write this:
+let output = Command::new("cargo")
+    .arg("test")
+    .arg("-p").arg("my-crate")
+    .output()?;
+
+let stdout = String::from_utf8_lossy(&output.stdout);
+for line in stdout.lines() {
+    if let Ok(json) = serde_json::from_str::<Value>(line) {
+        // ... 50 lines of parsing
+    }
+}
+
+let report = format!("# Test Report\n\n...");  // 100 lines of formatting
+pb.write_markdown("test_report.md", &report)?;
+```
+
+```rust
+// ✅ Developers SHOULD write this:
+proof_bundle::ProofBundle::generate_for_crate("my-crate", ProofBundleMode::UnitFast)?;
+```
+
+**Repository Context**:
+
+In this repository, developers mainly write:
+1. **Unit tests** — Standard Rust `#[test]` functions
+2. **BDD tests** — Cucumber-style feature files
+
+**We provide templates for both**:
+- `templates::unit_test_template()` — For unit/integration tests
+- `templates::bdd_test_template()` — For BDD/cucumber tests
+
+**Example: Perfect Proof Bundle**
+
+The `proof-bundle` crate itself must demonstrate the **perfect proof bundle**:
+
+```
+test-harness/proof-bundle/.proof_bundle/unit/<timestamp>/
+├── test_results.ndjson           # Raw data (machines)
+├── summary.json                  # Statistics (CI/CD)
+├── test_report.md                # Technical (developers)
+├── executive_summary.md          # Business (management)
+└── failures.md                   # Diagnostics (if any)
+```
+
+**Each file must be exemplary**:
+- Executive summary: Non-technical, actionable, risk-focused
+- Test report: Detailed, organized, performance metrics
+- Failures: Context, reproduction steps, related code
+
+**Deliverables**:
+1. ✅ **One-liner API** — `generate_for_crate()`
+2. ✅ **Templates** — Unit and BDD templates
+3. ✅ **Formatters** — Executive, developer, failure reports
+4. ✅ **Examples** — Perfect proof bundle in our own crate
+5. ✅ **Documentation** — Copy-paste examples for other teams
+
+**Success Metrics**:
+- ✅ Other crates use ≤ 5 lines of code for proof bundles
+- ✅ Zero duplicate formatting code across crates
+- ✅ Management can read executive summaries without technical knowledge
+- ✅ Developers spend < 5 minutes adding proof bundles to their crate
+
+**Why This Matters**:
+1. **Adoption**: Easy tools get used, complex tools get ignored
+2. **Consistency**: Templates ensure uniform quality
+3. **Maintenance**: Less code = less to maintain
+4. **Compliance**: Easier to enforce standards
+5. **Morale**: Developers hate busywork; we eliminate it
+
+---
+
 ## Authority
 
 ### What We Can Do
