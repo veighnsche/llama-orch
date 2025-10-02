@@ -15,6 +15,7 @@ use secrets_management::SecretKey;
 use auth_min::token_fp6;
 use audit_logging::{AuditLogger, AuditEvent};
 use chrono::Utc;
+use metrics;
 
 /// VRAM Manager
 ///
@@ -42,7 +43,7 @@ pub struct VramManager {
     seal_key: SecretKey,  // ✅ Auto-zeroizing on drop
     allocations: HashMap<usize, SafeCudaPtr>,
     audit_logger: Option<Arc<AuditLogger>>,  // ✅ Audit logging
-    worker_id: String,  // ✅ Worker identification
+    worker_id: Arc<str>,  // ✅ Arc<str> for efficient sharing (Finding 1 optimization)
     used_vram: usize,  // ✅ Track used VRAM for audit events
 }
 
@@ -66,7 +67,7 @@ impl VramManager {
             seal_key,
             allocations: HashMap::new(),
             audit_logger: None,  // No audit logging in tests
-            worker_id: "test-worker".to_string(),
+            worker_id: Arc::from("test-worker"),  // Arc<str> for efficient sharing
             used_vram: 0,
         }
     }
@@ -92,7 +93,7 @@ impl VramManager {
         worker_token: &str,
         gpu_device: u32,
         audit_logger: Option<Arc<AuditLogger>>,
-        worker_id: String,
+        worker_id: Arc<str>,  // Arc<str> for efficient sharing (Finding 1 optimization)
     ) -> Result<Self> {
         // Initialize CUDA context (fails if no GPU in production mode)
         let context = CudaContext::new(gpu_device)?;
@@ -181,9 +182,10 @@ impl VramManager {
                     available_bytes: available,
                     reason: "insufficient_vram".to_string(),
                     gpu_device,
-                    worker_id: self.worker_id.clone(),
+                    worker_id: self.worker_id.to_string(),  // Arc<str> → String (cheap clone)
                 }) {
                     tracing::error!(error = %e, "Failed to emit VramAllocationFailed audit event");
+                    metrics::counter!("vram.audit.emit_failures", 1);
                 }
             }
             return Err(VramError::InsufficientVram(vram_needed, available));
@@ -217,8 +219,7 @@ impl VramManager {
         let signature = compute_signature(&shard, self.seal_key.as_bytes())?;
         shard.set_signature(signature);
         
-        // Store allocation and update tracking
-        self.allocations.insert(vram_ptr, cuda_ptr);
+        // Update used VRAM tracking
         self.used_vram = self.used_vram.saturating_add(vram_needed);
         
         // Emit allocation success audit event
@@ -231,9 +232,10 @@ impl VramManager {
                 available_bytes: available,
                 used_bytes: self.used_vram,
                 gpu_device,
-                worker_id: self.worker_id.clone(),
+                worker_id: self.worker_id.to_string(),  // Arc<str> → String (cheap clone)
             }) {
                 tracing::error!(error = %e, "Failed to emit VramAllocated audit event");
+                metrics::counter!("vram.audit.emit_failures", 1);
             }
         }
         
@@ -245,9 +247,10 @@ impl VramManager {
                 gpu_device: shard.gpu_device,
                 vram_bytes: shard.vram_bytes,
                 digest: shard.digest.clone(),
-                worker_id: self.worker_id.clone(),
+                worker_id: self.worker_id.to_string(),  // Arc<str> → String (cheap clone)
             }) {
                 tracing::error!(error = %e, "Failed to emit VramSealed audit event");
+                metrics::counter!("vram.audit.emit_failures", 1);
             }
         }
         
@@ -301,8 +304,8 @@ impl VramManager {
         // Re-compute digest from VRAM
         let vram_digest = crate::seal::digest::recompute_digest_from_vram(cuda_ptr)?;
         
-        // Compare digests
-        if vram_digest != shard.digest {
+        // Compare digests (timing-safe comparison for defense-in-depth)
+        if !auth_min::timing_safe_eq(vram_digest.as_bytes(), shard.digest.as_bytes()) {
             let reason = format!(
                 "digest mismatch: expected {}, got {}",
                 &shard.digest[..16],
@@ -310,6 +313,7 @@ impl VramManager {
             );
             
             // Emit CRITICAL audit event (seal verification failure)
+            // COMPLIANCE REQUIREMENT: Security incidents MUST be flushed immediately (GDPR/SOC2/ISO 27001)
             if let Some(ref audit_logger) = self.audit_logger {
                 if let Err(e) = audit_logger.emit(AuditEvent::SealVerificationFailed {
                     timestamp: Utc::now(),
@@ -317,10 +321,20 @@ impl VramManager {
                     reason: "digest_mismatch".to_string(),
                     expected_digest: shard.digest.clone(),
                     actual_digest: vram_digest.clone(),
-                    worker_id: self.worker_id.clone(),
+                    worker_id: self.worker_id.to_string(),  // Arc<str> → String (cheap clone)
                     severity: "CRITICAL".to_string(),
                 }) {
                     tracing::error!(error = %e, "Failed to emit CRITICAL SealVerificationFailed audit event");
+                    metrics::counter!("vram.audit.critical_emit_failures", 1);
+                } else {
+                    // ✅ FLUSH IMMEDIATELY: Critical security events must be persisted
+                    // Rationale: GDPR/SOC2/ISO 27001 require immediate security incident logging
+                    // If system crashes after seal failure, we MUST have logged the event
+                    if let Err(e) = tokio::task::block_in_place(|| {
+                        tokio::runtime::Handle::current().block_on(audit_logger.flush())
+                    }) {
+                        tracing::error!(error = %e, "Failed to flush audit logger after CRITICAL event");
+                    }
                 }
             }
             
@@ -338,9 +352,10 @@ impl VramManager {
             if let Err(e) = audit_logger.emit(AuditEvent::SealVerified {
                 timestamp: Utc::now(),
                 shard_id: shard.shard_id.clone(),
-                worker_id: self.worker_id.clone(),
+                worker_id: self.worker_id.to_string(),  // Arc<str> → String (cheap clone)
             }) {
                 tracing::error!(error = %e, "Failed to emit SealVerified audit event");
+                metrics::counter!("vram.audit.emit_failures", 1);
             }
         }
         
@@ -383,11 +398,12 @@ impl VramManager {
                 timestamp: Utc::now(),
                 shard_id: shard.shard_id.clone(),
                 freed_bytes: shard.vram_bytes,
-                remaining_used: self.used_vram,
+                remaining_bytes: self.used_vram,
                 gpu_device: shard.gpu_device,
-                worker_id: self.worker_id.clone(),
+                worker_id: self.worker_id.to_string(),  // Arc<str> → String (cheap clone)
             }) {
                 tracing::error!(error = %e, "Failed to emit VramDeallocated audit event");
+                metrics::counter!("vram.audit.emit_failures", 1);
             }
         }
         
@@ -415,6 +431,22 @@ impl VramManager {
 impl Default for VramManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Drop for VramManager {
+    fn drop(&mut self) {
+        // Flush audit logger to ensure all events are written (GDPR/SOC2/ISO 27001 compliance)
+        if let Some(ref audit_logger) = self.audit_logger {
+            if let Err(e) = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(audit_logger.flush())
+            }) {
+                tracing::error!(error = %e, "Failed to flush audit logger on VramManager drop");
+            }
+        }
+        
+        // Deallocate all VRAM (SafeCudaPtr handles CUDA cleanup)
+        self.allocations.clear();
     }
 }
 

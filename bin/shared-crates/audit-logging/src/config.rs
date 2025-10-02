@@ -24,13 +24,38 @@ pub struct AuditConfig {
 /// Audit operating mode
 #[derive(Debug, Clone)]
 pub enum AuditMode {
+    /// Disabled (home lab mode)
+    ///
+    /// **Use for**: Personal/home deployments where you own the hardware
+    /// and trust all users. No audit trail is created.
+    ///
+    /// **Performance**: Zero overhead (no-op)
+    /// **Compliance**: ❌ NOT COMPLIANT (no audit trail)
+    /// **Recommended for**: Home lab, personal use, trusted environments
+    Disabled,
+
     /// Local file-based audit logging
+    ///
+    /// **Use for**: Single-node deployments where you need compliance
+    /// but don't have a platform to report to.
+    ///
+    /// **Performance**: Low overhead (local file writes)
+    /// **Compliance**: ✅ COMPLIANT (local audit trail)
+    /// **Recommended for**: Small businesses, self-hosted production
     Local {
         /// Base directory for audit logs
         base_dir: PathBuf,
     },
 
     /// Platform mode (send to central audit service)
+    ///
+    /// **Use for**: Marketplace providers selling GPU capacity to strangers.
+    /// Audit events are sent to the central platform for compliance and
+    /// dispute resolution.
+    ///
+    /// **Performance**: Network overhead (batched HTTP requests)
+    /// **Compliance**: ✅ COMPLIANT (centralized audit trail)
+    /// **Recommended for**: Platform providers, marketplace sellers
     #[cfg(feature = "platform")]
     Platform(PlatformConfig),
 }
@@ -129,13 +154,16 @@ pub enum FlushMode {
 }
 
 impl Default for FlushMode {
-    /// Default: Hybrid mode (recommended)
+    /// Default: Immediate mode (compliance-safe)
     ///
-    /// Balances performance and compliance:
-    /// - Critical security events flush immediately
-    /// - Routine events batch (100 events or 1 second)
+    /// Ensures zero data loss for GDPR/SOC2/ISO 27001 compliance.
+    /// Every event is flushed immediately to disk.
+    ///
+    /// For performance-critical environments, explicitly configure:
+    /// - `FlushMode::Hybrid` — Balanced (critical events immediate, routine events batched)
+    /// - `FlushMode::Batched` — Maximum performance (all events batched)
     fn default() -> Self {
-        Self::Hybrid { batch_size: 100, batch_interval_secs: 1, critical_immediate: true }
+        Self::Immediate
     }
 }
 
@@ -248,11 +276,18 @@ mod tests {
         let mode = AuditMode::Local { base_dir: PathBuf::from("/var/lib/llorch/audit/test") };
 
         match mode {
+            AuditMode::Disabled => panic!("Expected Local mode"),
             AuditMode::Local { base_dir } => {
                 assert_eq!(base_dir, PathBuf::from("/var/lib/llorch/audit/test"));
             }
             #[cfg(feature = "platform")]
             AuditMode::Platform(_) => panic!("Expected Local mode"),
         }
+    }
+    
+    #[test]
+    fn test_audit_mode_disabled() {
+        let mode = AuditMode::Disabled;
+        assert!(matches!(mode, AuditMode::Disabled));
     }
 }

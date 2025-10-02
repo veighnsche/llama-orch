@@ -13,7 +13,8 @@ hmac.workspace = true
 subtle.workspace = true
 hkdf.workspace = true
 chrono.workspace = true
-tokio = { workspace = true, features = ["sync"] }
+tokio = { workspace = true, features = ["sync", "rt"] }
+metrics = "0.21"
 gpu-info = { path = "../../shared-crates/gpu-info" }
 audit-logging = { path = "../../shared-crates/audit-logging" }
 observability-narration-core = { path = "../../shared-crates/narration-core" }

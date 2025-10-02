@@ -59,9 +59,35 @@ Audit logging provides an **immutable record of security events** for compliance
 
 ## Architecture
 
+### Home Lab Mode (Disabled — Zero Overhead) 🏠
+
+For personal/home deployments where you own the hardware and trust all users:
+
+```
+orchestratord/pool-managerd
+         ↓
+    audit-log crate (DISABLED)
+         ↓
+    No-op (zero overhead)
+```
+
+**Use for**: Home lab, personal use, trusted environments  
+**Performance**: Zero overhead (all audit calls are no-ops)  
+**Compliance**: ❌ NOT COMPLIANT (no audit trail)
+
+**Configuration**:
+```rust
+let config = AuditConfig {
+    mode: AuditMode::Disabled,  // ✅ Zero overhead for home lab
+    // ... other fields are ignored in Disabled mode
+};
+```
+
+---
+
 ### Single-Node Mode (Local Audit)
 
-In single-node deployments, audit logs are stored locally:
+In single-node deployments where you need compliance but don't have a platform:
 
 ```
 orchestratord/pool-managerd
@@ -74,9 +100,15 @@ orchestratord/pool-managerd
     - Encrypted at rest
 ```
 
-### Platform Mode (Centralized Audit)
+**Use for**: Small businesses, self-hosted production  
+**Performance**: Low overhead (local file writes)  
+**Compliance**: ✅ COMPLIANT (local audit trail)
 
-In platform/marketplace mode, providers emit audit events to the central platform:
+---
+
+### Platform Mode (Centralized Audit — Marketplace) 🌐
+
+In platform/marketplace mode, providers selling GPU capacity to strangers emit audit events to the central platform:
 
 ```
 Provider's orchestratord
@@ -91,6 +123,10 @@ Platform Audit Service (audit.llama-orch-platform.com)
          ↓
     Audit Query API (customers, regulators)
 ```
+
+**Use for**: Platform providers, marketplace sellers  
+**Performance**: Network overhead (batched HTTP requests)  
+**Compliance**: ✅ COMPLIANT (centralized audit trail)
 
 **Why centralized?**
 - **Legal liability**: Platform is liable for GDPR/SOC2, not providers
@@ -110,7 +146,7 @@ Platform Audit Service (audit.llama-orch-platform.com)
 - Append-only audit trail with tamper-evident hash chains
 - 32 pre-defined event types across 7 categories
 - Async, non-blocking emission (won't slow down your operations)
-- Automatic buffering and batching (1 second or 100 events)
+- Configurable flush modes (see [Flush Modes](#flush-modes) below)
 
 **2. Compliance-Ready Storage**
 - GDPR, SOC2, ISO 27001 compliant retention (7 years default)
@@ -184,9 +220,24 @@ AuditEvent::SuspiciousActivity { actor, activity_type, risk_score }
 ### 🚀 Integration Pattern
 
 **1. Initialize at startup**:
+
+**Home Lab Mode** (zero overhead):
 ```rust
 use audit_logging::{AuditLogger, AuditConfig, AuditMode};
 
+// HOME LAB: Disable audit logging (zero overhead)
+let audit_logger = AuditLogger::new(AuditConfig {
+    mode: AuditMode::Disabled,  // ✅ No audit trail, no overhead
+    service_id: "orchestratord".to_string(),
+    rotation_policy: RotationPolicy::Daily,  // Ignored in Disabled mode
+    retention_policy: RetentionPolicy::default(),  // Ignored
+    flush_mode: FlushMode::Immediate,  // Ignored
+})?;
+```
+
+**Local Mode** (compliance-safe):
+```rust
+// SINGLE-NODE: Local audit logging (compliance-safe)
 let audit_logger = AuditLogger::new(AuditConfig {
     mode: AuditMode::Local {
         base_dir: PathBuf::from("/var/lib/llorch/audit/orchestratord"),
@@ -194,9 +245,34 @@ let audit_logger = AuditLogger::new(AuditConfig {
     service_id: "orchestratord".to_string(),
     rotation_policy: RotationPolicy::Daily,
     retention_policy: RetentionPolicy::default(),
+    flush_mode: FlushMode::Immediate,  // Default (compliance-safe)
 })?;
+```
 
-// Add to app state
+**Platform Mode** (marketplace):
+```rust
+// PLATFORM: Centralized audit logging (marketplace)
+let audit_logger = AuditLogger::new(AuditConfig {
+    mode: AuditMode::Platform(PlatformConfig {
+        endpoint: "https://audit.llama-orch-platform.com".to_string(),
+        provider_id: "provider-123".to_string(),
+        provider_key: load_provider_key()?,
+        batch_size: 100,
+        flush_interval_secs: 5,
+    }),
+    service_id: "orchestratord".to_string(),
+    rotation_policy: RotationPolicy::Daily,
+    retention_policy: RetentionPolicy::default(),
+    flush_mode: FlushMode::Hybrid {  // Batched for performance
+        batch_size: 100,
+        batch_interval_secs: 1,
+        critical_immediate: true,
+    },
+})?;
+```
+
+**Add to app state**:
+```rust
 let state = AppState {
     audit_logger: Arc::new(audit_logger),
     ...
@@ -241,17 +317,84 @@ audit_logger.emit(AuditEvent::PoolDeleted {
 
 **4. Flush on shutdown**:
 ```rust
-// Graceful shutdown
-audit_logger.flush().await?;
+// Graceful shutdown (automatically flushes buffered events)
+audit_logger.shutdown().await?;
 ```
+
+---
+
+## Flush Modes
+
+`audit-logging` supports three flush modes to balance performance and compliance:
+
+### Immediate (Default — Compliance-Safe) ✅
+
+```rust
+use audit_logging::{AuditConfig, FlushMode};
+
+let config = AuditConfig {
+    // ...
+    flush_mode: FlushMode::Immediate,  // Default (explicit)
+};
+```
+
+- **Use for**: GDPR/SOC2/ISO 27001 compliance
+- **Performance**: ~1,000-5,000 events/sec
+- **Data loss risk**: **None** (every event flushed immediately)
+- **Recommended for**: Production environments, high-compliance deployments
+
+### Batched (Performance-Optimized)
+
+```rust
+let config = AuditConfig {
+    // ...
+    flush_mode: FlushMode::Batched {
+        size: 100,           // Flush after 100 events
+        interval_secs: 1,    // Or after 1 second
+    },
+};
+```
+
+- **Use for**: Performance-critical, low-compliance environments
+- **Performance**: ~10,000-100,000 events/sec
+- **Data loss risk**: ⚠️ **Up to 100 events or 1 second on crash**
+- **Recommended for**: Development, testing, non-production
+
+### Hybrid (Balanced — Opt-In)
+
+```rust
+let config = AuditConfig {
+    // ...
+    flush_mode: FlushMode::Hybrid {
+        batch_size: 100,
+        batch_interval_secs: 1,
+        critical_immediate: true,  // Security events always flushed
+    },
+};
+```
+
+- **Use for**: Balanced performance and compliance
+- **Performance**: ~10,000-50,000 events/sec (routine events batched)
+- **Data loss risk**: ⚠️ **Routine events only** (security events always flushed)
+- **Recommended for**: High-throughput environments with compliance requirements
+
+**Critical events (always flushed immediately in Hybrid mode)**:
+- `AuthFailure`, `TokenRevoked`
+- `PolicyViolation`, `SealVerificationFailed`
+- `PathTraversalAttempt`, `InvalidTokenUsed`, `SuspiciousActivity`
+- `IntegrityViolation`, `MalformedModelRejected`, `ResourceLimitViolation`
+
+**⚠️ Compliance Warning**: Batched and Hybrid modes may lose routine events on crash. For GDPR/SOC2/ISO 27001 compliance, use `FlushMode::Immediate` (default).
+
+---
 
 ### 📊 Performance Guarantees
 
 - **Non-blocking**: Async emission with background writer task
 - **Buffered**: Up to 1000 events or 10MB in memory
-- **Batched**: Flush every 1 second or 100 events (whichever comes first)
+- **Flush modes**: Immediate (default), Batched, or Hybrid
 - **Graceful degradation**: Drops events if buffer full (logs warning)
-- **Critical events**: Immediate flush for security incidents
+- **Critical events**: Immediate flush for security incidents (in Hybrid mode)
 
 ### 🔐 Security Guarantees
 
