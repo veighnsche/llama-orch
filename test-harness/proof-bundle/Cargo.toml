@@ -11,10 +11,22 @@ name = "proof_bundle"
 path = "src/lib.rs"
 
 [dependencies]
+# Core
 anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 chrono = { workspace = true }
+
+# V3 - Error handling
+thiserror = "1.0"
+
+# V3 - Test discovery
+cargo_metadata = "0.18"
+
+# V3 - Metadata extraction
+syn = { version = "2.0", features = ["full", "parsing", "visit"] }
+quote = "1.0"
+walkdir = "2.0"
 
 [dev-dependencies]
 tempfile = "3"

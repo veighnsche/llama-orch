@@ -1,106 +1,126 @@
-//! Failure report formatter for debugging
+//! Failure report formatter
+//!
+//! Generates focused reports on test failures for debugging.
 
-use crate::{TestResult, TestStatus, TestSummary};
+use crate::core::{TestSummary, TestStatus};
 
-/// Generate detailed failure report for debugging
+/// Generate failure report
 ///
-/// This produces a debugging-focused report with stack traces, context,
-/// and reproduction steps for failed tests.
+/// # Validation
 ///
-/// # Format
-///
-/// - Only failed tests
-/// - Full stack traces
-/// - Test context
-/// - Reproduction steps
-///
-/// # Example
-///
-/// ```rust
-/// use proof_bundle::{TestSummary, formatters};
-///
-/// let summary = TestSummary::default();
-/// let report = formatters::generate_failure_report(&summary);
-/// ```
-pub fn generate_failure_report(summary: &TestSummary) -> String {
+/// Returns error if summary has 0 tests.
+/// Returns empty report if no failures (not an error).
+pub fn generate_failure_report(summary: &TestSummary) -> Result<String, String> {
+    // Validate input
+    if summary.total == 0 {
+        return Err("Cannot generate failure report: no tests in summary".to_string());
+    }
+    
     let mut md = String::new();
     
     // Header
     md.push_str("# Failure Report\n\n");
     
-    let failed_tests: Vec<&TestResult> = summary.tests.iter()
+    let failed_tests: Vec<_> = summary.tests.iter()
         .filter(|t| t.status == TestStatus::Failed)
         .collect();
     
     if failed_tests.is_empty() {
-        md.push_str("**Status**: ✅ NO FAILURES\n\n");
-        md.push_str("All tests passed successfully. This report is empty.\n");
-        return md;
+        md.push_str("✅ **No failures** — All tests passed!\n\n");
+        return Ok(md);
     }
     
-    md.push_str(&format!("**Failed Tests**: {} of {} ({:.1}%)\n\n", 
-                         failed_tests.len(), 
-                         summary.total,
-                         (failed_tests.len() as f64 / summary.total as f64) * 100.0));
+    md.push_str(&format!("**{} test(s) failed**\n\n", failed_tests.len()));
+    
+    // Group by priority if metadata available
+    let critical: Vec<_> = failed_tests.iter()
+        .filter(|t| t.metadata.as_ref().map_or(false, |m| m.is_critical()))
+        .collect();
+    
+    let high: Vec<_> = failed_tests.iter()
+        .filter(|t| t.metadata.as_ref().map_or(false, |m| 
+            m.is_high_priority() && !m.is_critical()))
+        .collect();
+    
+    let other: Vec<_> = failed_tests.iter()
+        .filter(|t| !t.metadata.as_ref().map_or(false, |m| m.is_high_priority()))
+        .collect();
+    
+    // Critical failures first
+    if !critical.is_empty() {
+        md.push_str("## 🚨 Critical Failures\n\n");
+        for test in critical {
+            format_failure(&mut md, test);
+        }
+    }
+    
+    // High priority failures
+    if !high.is_empty() {
+        md.push_str("## ⚠️ High Priority Failures\n\n");
+        for test in high {
+            format_failure(&mut md, test);
+        }
+    }
+    
+    // Other failures
+    if !other.is_empty() {
+        md.push_str("## Other Failures\n\n");
+        for test in other {
+            format_failure(&mut md, test);
+        }
+    }
+    
+    Ok(md)
+}
+
+fn format_failure(md: &mut String, test: &crate::core::TestResult) {
+    md.push_str(&format!("### {}\n\n", test.name));
+    
+    if let Some(ref metadata) = test.metadata {
+        if let Some(ref spec) = metadata.spec {
+            md.push_str(&format!("- **Spec**: {}\n", spec));
+        }
+        if let Some(ref team) = metadata.team {
+            md.push_str(&format!("- **Team**: {}\n", team));
+        }
+        if let Some(ref owner) = metadata.owner {
+            md.push_str(&format!("- **Owner**: {}\n", owner));
+        }
+        md.push_str("\n");
+    }
+    
+    if let Some(ref error) = test.error_message {
+        md.push_str("**Error**:\n```\n");
+        md.push_str(error);
+        md.push_str("\n```\n\n");
+    }
     
     md.push_str("---\n\n");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::{TestResult, TestStatus};
     
-    // Detailed failure information
-    for (i, test) in failed_tests.iter().enumerate() {
-        md.push_str(&format!("## Failure {}: {}\n\n", i + 1, test.name));
-        
-        // Test location (extract from name if available)
-        if test.name.contains("::") {
-            let parts: Vec<&str> = test.name.split("::").collect();
-            if parts.len() >= 2 {
-                md.push_str(&format!("**Module**: `{}`\n", parts[..parts.len()-1].join("::")));
-                md.push_str(&format!("**Test**: `{}`\n\n", parts[parts.len()-1]));
-            }
-        }
-        
-        // Duration
-        if test.duration_secs > 0.0 {
-            md.push_str(&format!("**Duration**: {:.2}s\n\n", test.duration_secs));
-        }
-        
-        // Error message
-        if let Some(ref err) = test.error_message {
-            md.push_str("### Error Message\n\n");
-            md.push_str("```\n");
-            md.push_str(err);
-            md.push_str("\n```\n\n");
-            
-            // Try to extract assertion details
-            if err.contains("assertion") || err.contains("expected") {
-                md.push_str("### Context\n\n");
-                md.push_str("This appears to be an assertion failure. Review the expected vs. actual values above.\n\n");
-            }
-            
-            // Try to extract panic details
-            if err.contains("panicked") {
-                md.push_str("### Panic Details\n\n");
-                md.push_str("This test panicked. Check for:\n");
-                md.push_str("- Unwrap on None/Err\n");
-                md.push_str("- Index out of bounds\n");
-                md.push_str("- Divide by zero\n\n");
-            }
-        }
-        
-        // Reproduction
-        md.push_str("### Reproduction\n\n");
-        md.push_str("```bash\n");
-        md.push_str(&format!("cargo test {} -- --exact --nocapture\n", test.name));
-        md.push_str("```\n\n");
-        
-        md.push_str("---\n\n");
+    #[test]
+    fn test_rejects_empty_summary() {
+        let summary = TestSummary::default();
+        let result = generate_failure_report(&summary);
+        assert!(result.is_err());
     }
     
-    // Summary recommendations
-    md.push_str("## Recommendations\n\n");
-    md.push_str("1. Run each test individually with `--nocapture` to see full output\n");
-    md.push_str("2. Check if failures are consistent or intermittent\n");
-    md.push_str("3. Review recent changes that may have affected these tests\n");
-    md.push_str("4. Add additional logging/assertions if error context is unclear\n");
-    
-    md
+    #[test]
+    fn test_handles_no_failures() {
+        let tests = vec![
+            TestResult::new("test1".to_string(), TestStatus::Passed),
+        ];
+        let summary = TestSummary::new(tests);
+        
+        let result = generate_failure_report(&summary);
+        assert!(result.is_ok());
+        
+        let report = result.unwrap();
+        assert!(report.contains("No failures"));
+    }
 }

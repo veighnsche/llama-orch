@@ -1,33 +1,21 @@
-//! Executive summary formatter for management audit
+//! Executive summary formatter
+//!
+//! Generates management-friendly, non-technical reports.
+//! Enhanced with validation to prevent garbage output.
 
-use crate::{TestResult, TestStatus, TestSummary};
-use crate::metadata::{is_critical, is_high_priority};
-use super::helpers::simplify_error;
+use crate::core::{TestSummary, TestStatus};
 
-/// Generate executive summary for management audit
+/// Generate executive summary for management
 ///
-/// This produces a non-technical, business-focused report suitable for
-/// stakeholders who need to understand test results without technical details.
+/// # Validation
 ///
-/// # Format
-///
-/// - Pass rate and confidence level
-/// - Risk assessment (LOW/MEDIUM/HIGH/CRITICAL)
-/// - Critical test failure alerts
-/// - Failed test impact analysis
-/// - Deployment recommendation
-/// - Non-technical language
-///
-/// # Example
-///
-/// ```rust
-/// use proof_bundle::{TestSummary, formatters};
-///
-/// let summary = TestSummary::default();
-/// let report = formatters::generate_executive_summary(&summary);
-/// assert!(report.contains("Test Results Summary"));
-/// ```
-pub fn generate_executive_summary(summary: &TestSummary) -> String {
+/// Returns error if summary has 0 tests (prevents garbage output).
+pub fn generate_executive_summary(summary: &TestSummary) -> Result<String, String> {
+    // Validate input
+    if summary.total == 0 {
+        return Err("Cannot generate executive summary: no tests in summary".to_string());
+    }
+    
     let mut md = String::new();
     
     // Header
@@ -48,15 +36,21 @@ pub fn generate_executive_summary(summary: &TestSummary) -> String {
     md.push_str("## Quick Facts\n\n");
     md.push_str(&format!("- **{} tests** executed\n", summary.total));
     md.push_str(&format!("- **{} passed** ({:.1}%)\n", summary.passed, summary.pass_rate));
-    md.push_str(&format!("- **{} failed** ({:.1}%)\n", summary.failed, 
-                         (summary.failed as f64 / summary.total as f64) * 100.0));
+    
+    // Safe division for failed percentage
+    let failed_pct = if summary.total > 0 {
+        (summary.failed as f64 / summary.total as f64) * 100.0
+    } else {
+        0.0
+    };
+    md.push_str(&format!("- **{} failed** ({:.1}%)\n", summary.failed, failed_pct));
     md.push_str(&format!("- **{} skipped**\n", summary.ignored));
     md.push_str(&format!("- **Duration**: {:.1} seconds\n\n", summary.duration_secs));
     
     // Check for critical test failures
     let critical_failures: Vec<_> = summary.tests.iter()
         .filter(|t| t.status == TestStatus::Failed)
-        .filter(|t| t.metadata.as_ref().map_or(false, |m| is_critical(m)))
+        .filter(|t| t.metadata.as_ref().map_or(false, |m| m.is_critical()))
         .collect();
     
     // CRITICAL ALERT (if any critical tests failed)
@@ -98,81 +92,67 @@ pub fn generate_executive_summary(summary: &TestSummary) -> String {
     
     if summary.failed == 0 {
         md.push_str(" — All tests passing\n\n");
-    } else if !critical_failures.is_empty() {
-        md.push_str(&format!(" — {} critical failure(s), {} total failures\n\n", 
-                             critical_failures.len(), summary.failed));
     } else {
-        md.push_str(&format!(" — {} test failure(s)\n\n", summary.failed));
-    }
-    
-    // Failed Tests (if any)
-    if summary.failed > 0 {
-        md.push_str("## Failed Tests\n\n");
-        
-        let failed_tests: Vec<&TestResult> = summary.tests.iter()
-            .filter(|t| t.status == TestStatus::Failed)
-            .collect();
-        
-        for (i, test) in failed_tests.iter().enumerate() {
-            // Show priority badge if available
-            let priority_badge = if let Some(ref metadata) = test.metadata {
-                if is_critical(metadata) {
-                    " 🚨 **CRITICAL**"
-                } else if is_high_priority(metadata) {
-                    " ⚠️ **HIGH**"
-                } else {
-                    ""
-                }
-            } else {
-                ""
-            };
-            
-            md.push_str(&format!("{}. **{}**{}\n", i + 1, test.name, priority_badge));
-            
-            // Show metadata if available
-            if let Some(ref metadata) = test.metadata {
-                if let Some(ref spec) = metadata.spec {
-                    md.push_str(&format!("   - Spec: {}\n", spec));
-                }
-                if let Some(ref team) = metadata.team {
-                    md.push_str(&format!("   - Team: {}\n", team));
-                }
-                if let Some(ref owner) = metadata.owner {
-                    md.push_str(&format!("   - Owner: {}\n", owner));
-                }
-            }
-            
-            if let Some(ref err) = test.error_message {
-                // Simplify error for management
-                let simplified = simplify_error(err);
-                md.push_str(&format!("   - Issue: {}\n", simplified));
-            }
-            
-            let impact = if let Some(ref metadata) = test.metadata {
-                if is_critical(metadata) { "**CRITICAL** — Blocks deployment" }
-                else if is_high_priority(metadata) { "**HIGH** — Review required" }
-                else { "Review required" }
-            } else {
-                "Review required"
-            };
-            md.push_str(&format!("   - Impact: {}\n", impact));
-            md.push_str("   - Action: Engineering review in progress\n\n");
-        }
+        md.push_str(&format!(" — {} test(s) failing\n\n", summary.failed));
     }
     
     // Recommendation
     md.push_str("## Recommendation\n\n");
-    
     if !critical_failures.is_empty() {
-        md.push_str("**❌ NOT APPROVED** — Critical test failures must be resolved before deployment\n");
-        md.push_str(&format!("\n{} critical test(s) failed. These tests are marked as deployment blockers.\n", critical_failures.len()));
-    } else if summary.failed == 0 && summary.pass_rate >= 98.0 {
-        md.push_str("**✅ APPROVED FOR DEPLOYMENT** — All tests passing, high confidence\n");
-    } else if summary.failed <= 2 && summary.pass_rate >= 95.0 {
-        md.push_str("**⚠️ APPROVED FOR STAGING** — Minor issues tracked, review recommended\n");
+        md.push_str("**❌ NOT APPROVED** — Critical test failures require immediate resolution\n\n");
+    } else if summary.pass_rate >= 98.0 {
+        md.push_str("**✅ APPROVED** — High confidence for deployment\n\n");
+    } else if summary.pass_rate >= 95.0 {
+        md.push_str("**⚠️ CONDITIONAL APPROVAL** — Review failures before deployment\n\n");
     } else {
-        md.push_str("**❌ NOT APPROVED** — Significant test failures require resolution\n");
+        md.push_str("**❌ NOT APPROVED** — Significant test failures require resolution\n\n");
     }
     
-    md
+    Ok(md)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::{TestResult, TestStatus};
+    
+    #[test]
+    fn test_rejects_empty_summary() {
+        let summary = TestSummary::default();
+        let result = generate_executive_summary(&summary);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("no tests"));
+    }
+    
+    #[test]
+    fn test_generates_for_valid_summary() {
+        let tests = vec![
+            TestResult::new("test1".to_string(), TestStatus::Passed),
+            TestResult::new("test2".to_string(), TestStatus::Passed),
+        ];
+        let summary = TestSummary::new(tests);
+        
+        let result = generate_executive_summary(&summary);
+        assert!(result.is_ok());
+        
+        let report = result.unwrap();
+        assert!(report.contains("Test Results Summary"));
+        assert!(report.contains("100.0% PASS RATE"));
+        assert!(report.contains("APPROVED"));
+    }
+    
+    #[test]
+    fn test_no_division_by_zero() {
+        let tests = vec![
+            TestResult::new("test1".to_string(), TestStatus::Passed),
+        ];
+        let summary = TestSummary::new(tests);
+        
+        let result = generate_executive_summary(&summary);
+        assert!(result.is_ok());
+        
+        let report = result.unwrap();
+        // Should not contain NaN
+        assert!(!report.contains("NaN"));
+    }
 }
