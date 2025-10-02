@@ -20,6 +20,10 @@ pub fn narrate_vram_manager_init(gpu_count: usize, total_vram_gb: f64, worker_id
             "Initialized VRAM manager with {} GPU(s), {:.1} GB total VRAM",
             gpu_count, total_vram_gb
         ),
+        cute: Some(format!(
+            "Woke up and found {} friendly GPU{}! They have {:.1} GB of cozy VRAM space! 🎉✨",
+            gpu_count, if gpu_count == 1 { "" } else { "s" }, total_vram_gb
+        )),
         worker_id: worker_id.map(|s| s.to_string()),
         device: Some(format!("{} GPUs", gpu_count)),
         ..Default::default()
@@ -52,6 +56,10 @@ pub fn narrate_model_sealed(
             "Sealed model shard '{}' in {} MB VRAM on GPU {} ({} ms)",
             shard_id, vram_mb, gpu_device, duration_ms
         ),
+        cute: Some(format!(
+            "Tucked '{}' safely into GPU{}'s warm {} MB nest! Sweet dreams! 🛏️✨",
+            shard_id, gpu_device, vram_mb
+        )),
         worker_id: worker_id.map(|s| s.to_string()),
         correlation_id: correlation_id.map(|s| s.to_string()),
         device: Some(format!("GPU{}", gpu_device)),
@@ -84,6 +92,10 @@ pub fn narrate_seal_verified(
             "Verified seal for shard '{}' on GPU {} ({} ms)",
             shard_id, gpu_device, duration_ms
         ),
+        cute: Some(format!(
+            "Checked on '{}' — still sleeping soundly on GPU{}! All is well! 🔍💕",
+            shard_id, gpu_device
+        )),
         worker_id: worker_id.map(|s| s.to_string()),
         correlation_id: correlation_id.map(|s| s.to_string()),
         device: Some(format!("GPU{}", gpu_device)),
@@ -116,6 +128,10 @@ pub fn narrate_seal_verification_failed(
             "CRITICAL: Seal verification failed for shard '{}' on GPU {}: {}",
             shard_id, gpu_device, reason
         ),
+        cute: Some(format!(
+            "Uh oh! '{}' on GPU{} doesn't look right — {}! Time to investigate! 😟🔍",
+            shard_id, gpu_device, reason
+        )),
         worker_id: worker_id.map(|s| s.to_string()),
         correlation_id: correlation_id.map(|s| s.to_string()),
         device: Some(format!("GPU{}", gpu_device)),
@@ -150,6 +166,10 @@ pub fn narrate_vram_allocated(
             "Allocated {} MB VRAM on GPU {} (requested {} MB, {} MB available, {} ms)",
             allocated_mb, gpu_device, requested_mb, available_mb, duration_ms
         ),
+        cute: Some(format!(
+            "Found a perfect {} MB spot on GPU{}! {} MB still available for friends! 🏠✨",
+            allocated_mb, gpu_device, available_mb
+        )),
         worker_id: worker_id.map(|s| s.to_string()),
         device: Some(format!("GPU{}", gpu_device)),
         duration_ms: Some(duration_ms),
@@ -179,6 +199,10 @@ pub fn narrate_vram_allocation_failed(
             "VRAM allocation failed on GPU {}: requested {} MB, only {} MB available",
             gpu_device, requested_mb, available_mb
         ),
+        cute: Some(format!(
+            "Oh dear! GPU{} doesn't have enough room (need {} MB, only {} MB free). Let's try elsewhere! 😟",
+            gpu_device, requested_mb, available_mb
+        )),
         worker_id: worker_id.map(|s| s.to_string()),
         device: Some(format!("GPU{}", gpu_device)),
         error_kind: Some("insufficient_vram".to_string()),
@@ -210,6 +234,10 @@ pub fn narrate_vram_deallocated(
             "Deallocated {} MB VRAM for shard '{}' on GPU {} ({} MB still in use)",
             freed_mb, shard_id, gpu_device, remaining_mb
         ),
+        cute: Some(format!(
+            "Said goodbye to '{}' and tidied up {} MB on GPU{}! Room for new friends! 👋🧹",
+            shard_id, freed_mb, gpu_device
+        )),
         worker_id: worker_id.map(|s| s.to_string()),
         device: Some(format!("GPU{}", gpu_device)),
         ..Default::default()
@@ -238,6 +266,10 @@ pub fn narrate_policy_violation(
             "CRITICAL: VRAM-only policy violated on GPU {}: {}. Action: {}",
             gpu_device, violation, action_taken
         ),
+        cute: Some(format!(
+            "Oops! GPU{} has a problem: {}. We need to {}! 🛑",
+            gpu_device, violation, action_taken.to_lowercase()
+        )),
         worker_id: worker_id.map(|s| s.to_string()),
         device: Some(format!("GPU{}", gpu_device)),
         error_kind: Some("policy_violation".to_string()),
@@ -267,6 +299,10 @@ pub fn narrate_digest_computed(
             "Computed SHA-256 digest for {} MB data ({} ms)",
             data_mb, duration_ms
         ),
+        cute: Some(format!(
+            "Created a unique fingerprint for '{}' ({} MB of data)! 🔐✨",
+            shard_id, data_mb
+        )),
         worker_id: worker_id.map(|s| s.to_string()),
         duration_ms: Some(duration_ms),
         ..Default::default()
@@ -293,6 +329,10 @@ pub fn narrate_signature_generated(
             "Generated HMAC-SHA256 signature for shard '{}' ({} ms)",
             shard_id, duration_ms
         ),
+        cute: Some(format!(
+            "Put a special safety seal on '{}'! Now it's protected! 🔏✨",
+            shard_id
+        )),
         worker_id: worker_id.map(|s| s.to_string()),
         duration_ms: Some(duration_ms),
         ..Default::default()
@@ -321,6 +361,10 @@ pub fn narrate_cuda_context_init(
             "Initialized CUDA context on GPU {} ({}, {:.1} GB VRAM)",
             gpu_device, gpu_name, vram_gb
         ),
+        cute: Some(format!(
+            "Said hello to GPU{} ({})! It has {:.1} GB of VRAM ready to help! 👋💚",
+            gpu_device, gpu_name, vram_gb
+        )),
         worker_id: worker_id.map(|s| s.to_string()),
         device: Some(format!("GPU{}: {}", gpu_device, gpu_name)),
         ..Default::default()
@@ -347,6 +391,10 @@ pub fn narrate_validation_failed(
             "Input validation failed for {}: {}",
             input_type, reason
         ),
+        cute: Some(format!(
+            "Hmm, the {} doesn't look right: {}. Let's fix that! 🤔",
+            input_type, reason
+        )),
         worker_id: worker_id.map(|s| s.to_string()),
         error_kind: Some("validation_error".to_string()),
         ..Default::default()
@@ -377,6 +425,11 @@ pub fn narrate_capacity_query(
             "GPU {} capacity: {} MB available, {} MB used ({}% utilization)",
             gpu_device, available_mb, used_mb, usage_percent
         ),
+        cute: Some(format!(
+            "GPU{} status check: {} MB free, {} MB busy ({}% full)! {}",
+            gpu_device, available_mb, used_mb, usage_percent,
+            if usage_percent > 90 { "Getting cozy! 🏠" } else { "Plenty of room! ✨" }
+        )),
         worker_id: worker_id.map(|s| s.to_string()),
         device: Some(format!("GPU{}", gpu_device)),
         ..Default::default()

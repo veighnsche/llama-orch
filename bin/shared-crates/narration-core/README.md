@@ -11,6 +11,7 @@
 narration-core provides **structured observability** for llama-orch:
 
 - **Narration events** — Actor/action/target with human-readable descriptions
+- **Cute mode** — Optional whimsical children's book narration! 🎀✨
 - **Correlation IDs** — Track requests across service boundaries
 - **Secret redaction** — Automatic masking of bearer tokens and API keys
 - **Zero-cost abstractions** — Built on `tracing` for minimal overhead
@@ -31,6 +32,7 @@ Every event includes:
 - **action** — What was done (enqueue, provision, register, etc.)
 - **target** — What was acted upon (job_id, pool_id, model_id, etc.)
 - **human** — Plain English description for humans
+- **cute** — Whimsical children's book narration (optional) 🎀
 
 Optional fields:
 - **correlation_id** — Request tracking across services
@@ -83,6 +85,32 @@ narrate!(
     authorization = format!("Bearer {}", token), // Will be redacted
     human = "Authenticated API request"
 );
+```
+
+### Cute Mode (Children's Book Narration)
+
+```rust
+use narration_core::{narrate, NarrationFields};
+
+narrate(NarrationFields {
+    actor: "vram-residency",
+    action: "seal",
+    target: "llama-7b".to_string(),
+    human: "Sealed model shard 'llama-7b' in 2048 MB VRAM on GPU 0 (5 ms)".to_string(),
+    cute: Some("Tucked llama-7b safely into GPU0's warm 2GB nest! Sweet dreams! 🛏️✨".to_string()),
+    ..Default::default()
+});
+```
+
+**Output**:
+```json
+{
+  "actor": "vram-residency",
+  "action": "seal",
+  "target": "llama-7b",
+  "human": "Sealed model shard 'llama-7b' in 2048 MB VRAM on GPU 0 (5 ms)",
+  "cute": "Tucked llama-7b safely into GPU0's warm 2GB nest! Sweet dreams! 🛏️✨"
+}
 ```
 
 ---

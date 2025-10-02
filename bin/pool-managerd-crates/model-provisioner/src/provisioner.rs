@@ -49,6 +49,7 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
             action: "resolve",
             target: model_ref.to_string(),
             human: format!("Resolving model reference: {}", model_ref),
+            cute: Some(format!("Looking for model '{}'! Let's see where it lives! 🔍✨", model_ref)),
             ..Default::default()
         });
         let mr = ModelRef::parse(model_ref)?;
@@ -66,6 +67,7 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
             action: "ensure",
             target: ref_str.clone(),
             human: format!("Ensuring model present: {}", ref_str),
+            cute: Some(format!("Making sure {} is ready to go! 🎯", ref_str)),
             ..Default::default()
         });
         // Try primary fetcher first (file/relative). If unsupported, handle select schemes inline.
@@ -83,6 +85,7 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
                             action: "download",
                             target: format!("hf:{}/{}", org, repo),
                             human: format!("Downloading from Hugging Face: {}/{}", org, repo),
+                            cute: Some(format!("Fetching {}/{} from Hugging Face! 🤗📥", org, repo)),
                             ..Default::default()
                         });
                         let cli = ensure_hf_cli()?;
@@ -109,6 +112,7 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
                                 action: "download-failed",
                                 target: repo_spec.clone(),
                                 human: format!("HF CLI download failed for {}", repo_spec),
+                                cute: Some(format!("Oh no! Couldn't download {}. Network trouble? 😟🌐", repo_spec)),
                                 ..Default::default()
                             });
                             return Err(anyhow::anyhow!(
@@ -121,6 +125,7 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
                             action: "downloaded",
                             target: repo_spec.clone(),
                             human: format!("Successfully downloaded {}", repo_spec),
+                            cute: Some(format!("Got {}! Download complete! 🎉✨", repo_spec)),
                             ..Default::default()
                         });
                         let local_path = if let Some(p) = path {
@@ -151,6 +156,7 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
                 action: "verify",
                 target: resolved.id.clone(),
                 human: format!("Verifying digest for {}", resolved.id),
+                cute: Some(format!("Checking {}'s fingerprint to make sure it's authentic! 🔍🔐", resolved.id)),
                 ..Default::default()
             });
             if exp.algo.eq_ignore_ascii_case("sha256") {
@@ -168,6 +174,7 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
                         action: "verify-failed",
                         target: resolved.id.clone(),
                         human: format!("Digest mismatch: expected {}, got {}", exp.value, act),
+                        cute: Some(format!("Uh oh! {}'s fingerprint doesn't match! Expected one thing, got another! 😟❌", resolved.id)),
                         ..Default::default()
                     });
 
@@ -182,6 +189,7 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
                     action: "verified",
                     target: resolved.id.clone(),
                     human: format!("Digest verified: {}", exp.value),
+                    cute: Some(format!("Perfect! {}'s fingerprint matches! All authentic! ✅✨", resolved.id)),
                     ..Default::default()
                 });
             }
@@ -200,6 +208,7 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
             action: "complete",
             target: resolved.id.clone(),
             human: format!("Model ready: {} at {}", resolved.id, resolved.local_path.display()),
+            cute: Some(format!("Hooray! {} is all ready to use! 🎉🚀", resolved.id)),
             ..Default::default()
         });
         Ok(resolved)
