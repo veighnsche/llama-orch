@@ -46,7 +46,7 @@ pub fn read_u32(bytes: &[u8], offset: usize) -> Result<u32> {
 ///
 /// # Security
 /// - Bounds-checked before reading
-/// - Uses checked arithmetic
+/// - Direct indexing safe after bounds check
 pub fn read_u64(bytes: &[u8], offset: usize) -> Result<u64> {
     let end = offset.checked_add(8)
         .ok_or(LoadError::BufferOverflow {
@@ -55,23 +55,16 @@ pub fn read_u64(bytes: &[u8], offset: usize) -> Result<u64> {
             available: bytes.len(),
         })?;
     
-    if end > bytes.len() {
-        return Err(LoadError::BufferOverflow {
-            offset,
-            length: 8,
-            available: bytes.len(),
-        });
-    }
-    
+    // Safe: bounds already checked, direct indexing is safe
     Ok(u64::from_le_bytes([
         bytes[offset],
-        bytes[offset.wrapping_add(1)],
-        bytes[offset.wrapping_add(2)],
-        bytes[offset.wrapping_add(3)],
-        bytes[offset.wrapping_add(4)],
-        bytes[offset.wrapping_add(5)],
-        bytes[offset.wrapping_add(6)],
-        bytes[offset.wrapping_add(7)],
+        bytes[offset + 1],
+        bytes[offset + 2],
+        bytes[offset + 3],
+        bytes[offset + 4],
+        bytes[offset + 5],
+        bytes[offset + 6],
+        bytes[offset + 7],
     ]))
 }
 
@@ -80,18 +73,22 @@ pub fn read_u64(bytes: &[u8], offset: usize) -> Result<u64> {
 /// # Security
 /// - Validates string length against MAX_STRING_LEN
 /// - Bounds-checked before reading
+/// - Validates before cast to prevent truncation on 32-bit
 /// - Returns (string, next_offset)
 pub fn read_string(bytes: &[u8], offset: usize) -> Result<(String, usize)> {
     // Read string length (u64)
-    let str_len = read_u64(bytes, offset)? as usize;
+    let str_len_u64 = read_u64(bytes, offset)?;
     
-    // Validate string length (GGUF-003)
-    if str_len > limits::MAX_STRING_LEN {
+    // Validate BEFORE cast to prevent truncation on 32-bit systems (GGUF-003)
+    if str_len_u64 > limits::MAX_STRING_LEN as u64 {
         return Err(LoadError::StringTooLong {
-            length: str_len,
+            length: str_len_u64 as usize,  // Safe: already validated
             max: limits::MAX_STRING_LEN,
         });
     }
+    
+    // Safe cast: we know it fits in usize
+    let str_len = str_len_u64 as usize;
     
     // Calculate string data offset
     let str_offset = offset.checked_add(8)

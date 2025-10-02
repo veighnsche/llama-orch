@@ -57,12 +57,12 @@ pub enum AuditResult {
 
 /// Audit event types
 ///
-/// All 32 event types across 7 categories:
+/// All 35 event types across 7 categories:
 /// - Authentication (4 types)
 /// - Authorization (3 types)
 /// - Resource Operations (8 types)
 /// - VRAM Operations (6 types)
-/// - Security Incidents (5 types)
+/// - Security Incidents (8 types)
 /// - Data Access (3 types)
 /// - Compliance (3 types)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -275,7 +275,7 @@ pub enum AuditEvent {
         worker_id: String,
     },
     
-    // ========== Security Incident Events (5) ==========
+    // ========== Security Incident Events (8) ==========
     
     /// Rate limit exceeded
     RateLimitExceeded {
@@ -321,6 +321,40 @@ pub enum AuditEvent {
         activity_type: String,
         details: String,
         risk_score: u32,
+    },
+    
+    /// Integrity violation (hash mismatch, supply chain attack)
+    IntegrityViolation {
+        timestamp: DateTime<Utc>,
+        resource_type: String,
+        resource_id: String,
+        expected_hash: String,
+        actual_hash: String,
+        severity: String,
+        action_taken: String,
+        worker_id: Option<String>,
+    },
+    
+    /// Malformed model rejected (potential exploit attempt)
+    MalformedModelRejected {
+        timestamp: DateTime<Utc>,
+        model_ref: String,
+        validation_error: String,
+        severity: String,
+        action_taken: String,
+        worker_id: Option<String>,
+    },
+    
+    /// Resource limit violation (DoS attempt)
+    ResourceLimitViolation {
+        timestamp: DateTime<Utc>,
+        resource_type: String,
+        limit_type: String,
+        limit_value: u64,
+        actual_value: u64,
+        severity: String,
+        action_taken: String,
+        worker_id: Option<String>,
     },
     
     // ========== Data Access Events (3) ==========

@@ -176,6 +176,38 @@ pub fn validate_event(event: &mut AuditEvent) -> Result<()> {
             validate_string_field(details, "details")?;
         }
         
+        AuditEvent::IntegrityViolation { resource_type, resource_id, expected_hash, actual_hash, severity, action_taken, worker_id, .. } => {
+            validate_string_field(resource_type, "resource_type")?;
+            validate_string_field(resource_id, "resource_id")?;
+            validate_string_field(expected_hash, "expected_hash")?;
+            validate_string_field(actual_hash, "actual_hash")?;
+            validate_string_field(severity, "severity")?;
+            validate_string_field(action_taken, "action_taken")?;
+            if let Some(wid) = worker_id {
+                validate_string_field(wid, "worker_id")?;
+            }
+        }
+        
+        AuditEvent::MalformedModelRejected { model_ref, validation_error, severity, action_taken, worker_id, .. } => {
+            validate_string_field(model_ref, "model_ref")?;
+            validate_string_field(validation_error, "validation_error")?;
+            validate_string_field(severity, "severity")?;
+            validate_string_field(action_taken, "action_taken")?;
+            if let Some(wid) = worker_id {
+                validate_string_field(wid, "worker_id")?;
+            }
+        }
+        
+        AuditEvent::ResourceLimitViolation { resource_type, limit_type, severity, action_taken, worker_id, .. } => {
+            validate_string_field(resource_type, "resource_type")?;
+            validate_string_field(limit_type, "limit_type")?;
+            validate_string_field(severity, "severity")?;
+            validate_string_field(action_taken, "action_taken")?;
+            if let Some(wid) = worker_id {
+                validate_string_field(wid, "worker_id")?;
+            }
+        }
+        
         // Data access
         AuditEvent::InferenceExecuted { customer_id, job_id, model_ref, .. } => {
             validate_string_field(customer_id, "customer_id")?;

@@ -5,28 +5,46 @@ use crate::types::LoadRequest;
 use crate::validation::{hash, path, gguf};
 use crate::narration;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Instant;
+use audit_logging::{AuditLogger, AuditEvent, ActorInfo, AuthMethod};
+use chrono::Utc;
+use input_validation::sanitize_string;
 
 /// Model loader
 ///
 /// Stateless utility for loading and validating GGUF model files.
-#[derive(Debug)]
 pub struct ModelLoader {
     /// Allowed root directory for model files
     allowed_root: PathBuf,
+    
+    /// Optional audit logger for security-critical events
+    audit_logger: Option<Arc<AuditLogger>>,
 }
 
 impl ModelLoader {
-    /// Create new model loader with default allowed root
+    /// Create new model loader with default allowed root (no audit logging)
     pub fn new() -> Self {
         Self {
             allowed_root: PathBuf::from("/var/lib/llorch/models"),
+            audit_logger: None,
         }
     }
     
-    /// Create model loader with custom allowed root
+    /// Create model loader with custom allowed root (no audit logging)
     pub fn with_allowed_root(allowed_root: PathBuf) -> Self {
-        Self { allowed_root }
+        Self {
+            allowed_root,
+            audit_logger: None,
+        }
+    }
+    
+    /// Create model loader with audit logging enabled
+    pub fn with_audit(allowed_root: PathBuf, audit_logger: Arc<AuditLogger>) -> Self {
+        Self {
+            allowed_root,
+            audit_logger: Some(audit_logger),
+        }
     }
     
     /// Load and validate model from filesystem
@@ -40,7 +58,7 @@ impl ModelLoader {
     ///
     /// # Security
     /// - All validation steps are fail-fast
-    /// - Path traversal is prevented (TODO: needs input-validation)
+    /// - Path traversal is prevented (via input-validation crate)
     /// - Hash mismatch rejects load
     /// - GGUF parser is bounds-checked
     pub fn load_and_validate(&self, request: LoadRequest) -> Result<Vec<u8>> {
@@ -78,6 +96,24 @@ impl ModelLoader {
                 p
             }
             Err(e) => {
+                // Audit: Path traversal attempt (CRITICAL)
+                if let Some(logger) = &self.audit_logger {
+                    let safe_path = sanitize_string(model_path_str)
+                        .unwrap_or_else(|_| "<sanitization-failed>".to_string());
+                    
+                    let _ = logger.emit(AuditEvent::PathTraversalAttempt {
+                        timestamp: Utc::now(),
+                        actor: ActorInfo {
+                            user_id: worker_id.unwrap_or("unknown").to_string(),
+                            ip: request.source_ip,
+                            auth_method: AuthMethod::Internal,
+                            session_id: correlation_id.map(|s| s.to_string()),
+                        },
+                        attempted_path: safe_path,
+                        endpoint: "model_load".to_string(),
+                    });
+                }
+                
                 // Narrate: Path validation failed
                 narration::narrate_path_validation_failed(
                     model_path_str,
@@ -91,10 +127,12 @@ impl ModelLoader {
         
         // 2. Check file size
         let metadata = std::fs::metadata(&canonical_path)?;
-        let file_size = metadata.len() as usize;
-        let file_size_gb = file_size as f64 / 1_000_000_000.0;
+        let file_size_u64 = metadata.len();
         
-        if file_size > request.max_size {
+        // Validate before cast (defense-in-depth for 32-bit systems)
+        if file_size_u64 > request.max_size as u64 {
+            let file_size_gb = file_size_u64 as f64 / 1_000_000_000.0;
+            
             // Narrate: File too large
             narration::narrate_size_check_failed(
                 canonical_path.to_str().unwrap_or("<non-UTF8>"),
@@ -104,10 +142,14 @@ impl ModelLoader {
                 correlation_id,
             );
             return Err(LoadError::TooLarge {
-                actual: file_size,
+                actual: file_size_u64 as usize,  // Safe: for error reporting only
                 max: request.max_size,
             });
         }
+        
+        // Safe cast: validated above
+        let file_size = file_size_u64 as usize;
+        let file_size_gb = file_size as f64 / 1_000_000_000.0;
         
         // Narrate: Size check passed
         narration::narrate_size_checked(
@@ -149,6 +191,23 @@ impl ModelLoader {
                 Err(LoadError::HashMismatch { expected, actual }) => {
                     let expected_prefix = &expected[..6.min(expected.len())];
                     let actual_prefix = &actual[..6.min(actual.len())];
+                    
+                    // Audit: Integrity violation (CRITICAL)
+                    if let Some(logger) = &self.audit_logger {
+                        let safe_path = sanitize_string(&canonical_path.to_string_lossy())
+                            .unwrap_or_else(|_| "<sanitization-failed>".to_string());
+                        
+                        let _ = logger.emit(AuditEvent::IntegrityViolation {
+                            timestamp: Utc::now(),
+                            resource_type: "model".to_string(),
+                            resource_id: safe_path,
+                            expected_hash: expected.clone(),
+                            actual_hash: actual.clone(),
+                            severity: "critical".to_string(),
+                            action_taken: "Model load rejected".to_string(),
+                            worker_id: worker_id.map(|s| s.to_string()),
+                        });
+                    }
                     
                     // Narrate: Hash mismatch
                     narration::narrate_hash_verification_failed(
@@ -197,6 +256,23 @@ impl ModelLoader {
                 );
             }
             Err(e) => {
+                // Audit: Malformed model rejected (HIGH)
+                if let Some(logger) = &self.audit_logger {
+                    let safe_path = sanitize_string(&canonical_path.to_string_lossy())
+                        .unwrap_or_else(|_| "<sanitization-failed>".to_string());
+                    let safe_error = sanitize_string(&e.to_string())
+                        .unwrap_or_else(|_| "<sanitization-failed>".to_string());
+                    
+                    let _ = logger.emit(AuditEvent::MalformedModelRejected {
+                        timestamp: Utc::now(),
+                        model_ref: safe_path,
+                        validation_error: safe_error,
+                        severity: "high".to_string(),
+                        action_taken: "Model load rejected".to_string(),
+                        worker_id: worker_id.map(|s| s.to_string()),
+                    });
+                }
+                
                 // Narrate: GGUF validation failed
                 // Determine error kind from error message
                 let error_msg = e.to_string();

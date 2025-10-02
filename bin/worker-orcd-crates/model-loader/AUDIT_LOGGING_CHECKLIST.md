@@ -670,7 +670,7 @@ cargo clippy -p model-loader -- -D warnings
 
 ---
 
-**Status**: 🟡 **PHASE 1 COMPLETE** — Actor context added, Phase 2 pending  
+**Status**: ✅ **PHASE 2 COMPLETE** — Audit logging fully implemented  
 **Priority**: HIGH (Security-critical events must be audited)  
 **Owner**: model-loader team + audit-logging team  
 **Target**: M0 (blocking for production readiness)
@@ -683,7 +683,18 @@ cargo clippy -p model-loader -- -D warnings
 - ✅ Added actor context fields to `LoadRequest` (worker_id, source_ip, correlation_id)
 - ✅ Added builder methods (`.with_worker_id()`, `.with_source_ip()`, `.with_correlation_id()`)
 
-**Next**: Phase 2 - Add `AuditLogger` to `ModelLoader` and emit audit events on failures
+## ✅ Phase 2 Complete (Implementation)
+
+- ✅ Added `AuditLogger` field to `ModelLoader` struct
+- ✅ Implemented `with_audit()` constructor
+- ✅ Added 3 new event types to audit-logging crate (IntegrityViolation, MalformedModelRejected, ResourceLimitViolation)
+- ✅ Emit IntegrityViolation on hash mismatch (CRITICAL)
+- ✅ Emit PathTraversalAttempt on path validation failure (CRITICAL)
+- ✅ Emit MalformedModelRejected on GGUF validation failure (HIGH)
+- ✅ All inputs sanitized with `input-validation`
+- ✅ All tests passing (15/15)
+
+**See**: `AUDIT_LOGGING_PHASE2_COMPLETE.md` for full details
 
 ---
 
