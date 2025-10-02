@@ -110,12 +110,15 @@ pub fn generate_executive_summary(summary: &TestSummary) -> Result<String, Strin
     
     Ok(md)
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::core::{TestResult, TestStatus};
     
+    /// @priority: critical
+    /// @spec: PB-V3-VALIDATION
+    /// @team: proof-bundle
+    /// @tags: unit, formatter, executive, zero-tests-bug-fix
     #[test]
     fn test_rejects_empty_summary() {
         let summary = TestSummary::default();
@@ -124,6 +127,9 @@ mod tests {
         assert!(result.unwrap_err().contains("no tests"));
     }
     
+    /// @priority: critical
+    /// @spec: PB-V3-FORMATTER
+    /// @team: proof-bundle
     #[test]
     fn test_generates_for_valid_summary() {
         let tests = vec![
@@ -141,6 +147,10 @@ mod tests {
         assert!(report.contains("APPROVED"));
     }
     
+    /// @priority: critical
+    /// @spec: PB-V3-VALIDATION
+    /// @team: proof-bundle
+    /// @tags: unit, formatter, executive, division-by-zero-fix
     #[test]
     fn test_no_division_by_zero() {
         let tests = vec![

@@ -82,23 +82,37 @@ pub fn extract_metadata(targets: &[crate::discovery::TestTarget]) -> Result<Hash
                 source: Box::new(e),
             })?;
 
-        // Find test functions and extract metadata
-        for item in ast.items {
-            if let syn::Item::Fn(func) = item {
-                // Only functions with #[test]
-                if has_test_attribute(&func) {
-                    let test_name = func.sig.ident.to_string();
-                    let metadata = extract_from_function(&func);
-                    metadata_map.insert(test_name, metadata);
-                }
-            }
-        }
+        // Find test functions and extract metadata (recursively)
+        extract_from_items(&ast.items, &mut metadata_map);
     }
 
     // Save cache for future runs
     let _ = cache.save(&metadata_map);
 
     Ok(metadata_map)
+}
+
+/// Recursively extract test functions from items (handles nested modules)
+fn extract_from_items(items: &[syn::Item], metadata_map: &mut HashMap<String, TestMetadata>) {
+    for item in items {
+        match item {
+            syn::Item::Fn(func) => {
+                // Only functions with #[test]
+                if has_test_attribute(func) {
+                    let test_name = func.sig.ident.to_string();
+                    let metadata = extract_from_function(func);
+                    metadata_map.insert(test_name, metadata);
+                }
+            }
+            syn::Item::Mod(module) => {
+                // Recurse into inline modules (e.g., #[cfg(test)] mod tests { ... })
+                if let Some((_, items)) = &module.content {
+                    extract_from_items(items, metadata_map);
+                }
+            }
+            _ => {}
+        }
+    }
 }
 
 /// Check if a function has the #[test] attribute
@@ -134,6 +148,10 @@ fn extract_from_function(func: &syn::ItemFn) -> TestMetadata {
 mod tests {
     use super::*;
     
+    /// @priority: critical
+    /// @spec: PB-V3-EXTRACTION
+    /// @team: proof-bundle
+    /// @tags: unit, extraction, parser, test-detection
     #[test]
     fn test_has_test_attribute() {
         let code = r#"

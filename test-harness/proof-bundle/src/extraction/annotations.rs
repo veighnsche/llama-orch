@@ -94,6 +94,10 @@ fn parse_annotation_line(line: &str) -> Option<(String, String)> {
 mod tests {
     use super::*;
     
+    /// @priority: critical
+    /// @spec: PB-V3-EXTRACTION
+    /// @team: proof-bundle
+    /// @tags: unit, extraction, annotations, priority
     #[test]
     fn test_parse_priority() {
         let doc = "@priority: critical";
@@ -101,6 +105,10 @@ mod tests {
         assert_eq!(metadata.priority, Some("critical".to_string()));
     }
     
+    /// @priority: critical
+    /// @spec: PB-V3-EXTRACTION
+    /// @team: proof-bundle
+    /// @tags: unit, extraction, annotations, spec-id
     #[test]
     fn test_parse_spec() {
         let doc = "@spec: ORCH-1234";
@@ -108,6 +116,10 @@ mod tests {
         assert_eq!(metadata.spec, Some("ORCH-1234".to_string()));
     }
     
+    /// @priority: high
+    /// @spec: PB-V3-EXTRACTION
+    /// @team: proof-bundle
+    /// @tags: unit, extraction, annotations, tags
     #[test]
     fn test_parse_tags() {
         let doc = "@tags: integration, slow, gpu-required";
@@ -115,6 +127,10 @@ mod tests {
         assert_eq!(metadata.tags, vec!["integration", "slow", "gpu-required"]);
     }
     
+    /// @priority: high
+    /// @spec: PB-V3-EXTRACTION
+    /// @team: proof-bundle
+    /// @tags: unit, extraction, annotations, requires
     #[test]
     fn test_parse_requires() {
         let doc = "@requires: GPU, CUDA, 16GB VRAM";
@@ -122,6 +138,10 @@ mod tests {
         assert_eq!(metadata.requires, vec!["GPU", "CUDA", "16GB VRAM"]);
     }
     
+    /// @priority: medium
+    /// @spec: PB-V3-EXTRACTION
+    /// @team: proof-bundle
+    /// @tags: unit, extraction, annotations, custom-fields
     #[test]
     fn test_parse_custom() {
         let doc = "@custom:environment: staging";
@@ -129,6 +149,10 @@ mod tests {
         assert_eq!(metadata.custom.get("environment"), Some(&"staging".to_string()));
     }
     
+    /// @priority: critical
+    /// @spec: PB-V3-EXTRACTION
+    /// @team: proof-bundle
+    /// @tags: unit, extraction, annotations, multiple-fields
     #[test]
     fn test_parse_multiple() {
         let doc = r#"
@@ -144,6 +168,10 @@ mod tests {
         assert_eq!(metadata.owner, Some("alice@example.com".to_string()));
     }
     
+    /// @priority: high
+    /// @spec: PB-V3-EXTRACTION
+    /// @team: proof-bundle
+    /// @tags: unit, extraction, annotations, robustness
     #[test]
     fn test_ignores_non_annotations() {
         let doc = r#"

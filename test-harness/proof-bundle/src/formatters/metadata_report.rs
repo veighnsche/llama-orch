@@ -139,6 +139,10 @@ mod tests {
     use super::*;
     use crate::core::{TestResult, TestStatus, TestMetadata};
     
+    /// @priority: critical
+    /// @spec: PB-V3-VALIDATION
+    /// @team: proof-bundle
+    /// @tags: unit, formatter, metadata, zero-tests-bug-fix
     #[test]
     fn test_rejects_empty_summary() {
         let summary = TestSummary::default();
@@ -146,6 +150,10 @@ mod tests {
         assert!(result.is_err());
     }
     
+    /// @priority: critical
+    /// @spec: PB-V3-FORMATTER
+    /// @team: proof-bundle
+    /// @tags: unit, formatter, metadata, grouping
     #[test]
     fn test_groups_by_priority() {
         let mut meta1 = TestMetadata::default();

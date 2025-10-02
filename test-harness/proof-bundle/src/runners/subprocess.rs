@@ -215,6 +215,10 @@ fn extract_number(line: &str, keyword: &str) -> Option<usize> {
 mod tests {
     use super::*;
     
+    /// @priority: critical
+    /// @spec: PB-V3-RUNNER
+    /// @team: proof-bundle
+    /// @tags: unit, runner, parser, stderr-bug-fix
     #[test]
     fn test_parse_test_line() {
         let line = "test my_module::test_foo ... ok";
@@ -223,6 +227,10 @@ mod tests {
         assert_eq!(result.status, TestStatus::Passed);
     }
     
+    /// @priority: critical
+    /// @spec: PB-V3-RUNNER
+    /// @team: proof-bundle
+    /// @tags: unit, runner, parser, failure-handling
     #[test]
     fn test_parse_test_line_failed() {
         let line = "test test_bar ... FAILED";
@@ -231,6 +239,10 @@ mod tests {
         assert_eq!(result.status, TestStatus::Failed);
     }
     
+    /// @priority: critical
+    /// @spec: PB-V3-RUNNER
+    /// @team: proof-bundle
+    /// @tags: unit, runner, parser, integration
     #[test]
     fn test_parse_test_output() {
         let output = r#"
@@ -252,6 +264,10 @@ test result: FAILED. 1 passed; 1 failed; 1 ignored; 0 measured; 0 filtered out
         assert_eq!(summary.ignored, 1);
     }
     
+    /// @priority: high
+    /// @spec: PB-V3-RUNNER
+    /// @team: proof-bundle
+    /// @tags: unit, runner, parser, summary-extraction
     #[test]
     fn test_extract_number() {
         assert_eq!(extract_number("1 passed; 2 failed", "passed"), Some(1));
@@ -259,6 +275,10 @@ test result: FAILED. 1 passed; 1 failed; 1 ignored; 0 measured; 0 filtered out
         assert_eq!(extract_number("10 passed; 0 failed", "passed"), Some(10));
     }
     
+    /// @priority: critical
+    /// @spec: PB-V3-RUNNER
+    /// @team: proof-bundle
+    /// @tags: integration, runner, dogfooding, e2e
     #[test]
     #[ignore] // Skip during normal testing to avoid circular dependency
     fn test_run_tests_on_proof_bundle() {

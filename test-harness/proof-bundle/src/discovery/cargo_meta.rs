@@ -83,22 +83,29 @@ fn is_test_target(target: &Target) -> bool {
 mod tests {
     use super::*;
     
+    /// @priority: critical
+    /// @spec: PB-V3-DISCOVERY
+    /// @team: proof-bundle
+    /// @tags: integration, discovery, cargo-metadata, dogfooding
     #[test]
     fn test_discover_tests_for_proof_bundle() {
         // This test actually discovers tests for proof-bundle itself
         let result = discover_tests("proof-bundle");
         
-        // Should find at least the lib target
         assert!(result.is_ok(), "Failed to discover tests: {:?}", result.err());
         
         let targets = result.unwrap();
         assert!(!targets.is_empty(), "Should find at least one test target");
         
-        // Should have a lib target
+        // Should find lib target
         let has_lib = targets.iter().any(|t| t.is_lib());
         assert!(has_lib, "Should find lib target");
     }
     
+    /// @priority: high
+    /// @spec: PB-V3-DISCOVERY
+    /// @team: proof-bundle
+    /// @tags: unit, discovery, error-handling
     #[test]
     fn test_discover_nonexistent_package() {
         let result = discover_tests("nonexistent-package-xyz");

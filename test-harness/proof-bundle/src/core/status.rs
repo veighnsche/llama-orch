@@ -32,6 +32,10 @@ impl TestStatus {
 mod tests {
     use super::*;
     
+    /// @priority: critical
+    /// @spec: PB-V3-CORE
+    /// @team: proof-bundle
+    /// @tags: unit, core, status
     #[test]
     fn test_is_passing() {
         assert!(TestStatus::Passed.is_passing());
@@ -39,6 +43,10 @@ mod tests {
         assert!(!TestStatus::Ignored.is_passing());
     }
     
+    /// @priority: critical
+    /// @spec: PB-V3-CORE
+    /// @team: proof-bundle
+    /// @tags: unit, core, status
     #[test]
     fn test_is_failing() {
         assert!(TestStatus::Failed.is_failing());
@@ -46,6 +54,10 @@ mod tests {
         assert!(!TestStatus::Ignored.is_failing());
     }
     
+    /// @priority: high
+    /// @spec: PB-V3-CORE
+    /// @team: proof-bundle
+    /// @tags: unit, serialization, json
     #[test]
     fn test_serialization() {
         assert_eq!(serde_json::to_string(&TestStatus::Passed).unwrap(), r#""passed""#);

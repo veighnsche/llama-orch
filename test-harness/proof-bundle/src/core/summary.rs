@@ -102,6 +102,10 @@ mod tests {
     use super::*;
     use crate::core::{TestStatus, TestResult};
     
+    /// @priority: critical
+    /// @spec: PB-V3-CORE
+    /// @team: proof-bundle
+    /// @tags: unit, core, math, pass-rate
     #[test]
     fn test_calculate_pass_rate() {
         assert_eq!(TestSummary::calculate_pass_rate(10, 10), 100.0);
@@ -110,6 +114,10 @@ mod tests {
         assert_eq!(TestSummary::calculate_pass_rate(0, 0), 0.0);
     }
     
+    /// @priority: critical
+    /// @spec: PB-V3-CORE
+    /// @team: proof-bundle
+    /// @tags: unit, core, aggregation
     #[test]
     fn test_new_summary() {
         let tests = vec![
@@ -125,6 +133,10 @@ mod tests {
         assert_eq!(summary.pass_rate, (2.0 / 3.0) * 100.0);
     }
     
+    /// @priority: critical
+    /// @spec: PB-V3-VALIDATION
+    /// @team: proof-bundle
+    /// @tags: unit, validation, zero-tests-bug-fix
     #[test]
     fn test_validate() {
         let tests = vec![

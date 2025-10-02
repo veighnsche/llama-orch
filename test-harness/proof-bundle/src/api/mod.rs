@@ -123,6 +123,11 @@ impl Builder {
 mod tests {
     use super::*;
     
+    /// @priority: critical
+    /// @spec: PB-V3-API
+    /// @team: proof-bundle
+    /// @tags: integration, e2e, dogfooding, one-liner-api
+    /// @requires: cargo, git
     #[test]
     #[ignore] // Skip during normal testing to avoid circular dependency
     fn test_generate_for_proof_bundle() {
@@ -148,6 +153,11 @@ mod tests {
         println!("Tests with metadata: {}/{}", with_metadata, summary.total);
     }
     
+    /// @priority: high
+    /// @spec: PB-V3-API
+    /// @team: proof-bundle
+    /// @tags: integration, builder-pattern, dogfooding
+    /// @requires: cargo, git
     #[test]
     #[ignore] // Skip during normal testing to avoid circular dependency
     fn test_builder_api() {

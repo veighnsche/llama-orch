@@ -67,18 +67,30 @@ impl Mode {
 mod tests {
     use super::*;
     
+    /// @priority: critical
+    /// @spec: PB-V3-CORE
+    /// @team: proof-bundle
+    /// @tags: unit, core, mode
     #[test]
     fn test_mode_names() {
         assert_eq!(Mode::UnitFast.name(), "unit-fast");
         assert_eq!(Mode::BddReal.name(), "bdd-real");
     }
     
+    /// @priority: high
+    /// @spec: PB-V3-CORE
+    /// @team: proof-bundle
+    /// @tags: unit, mode, fast-tests
     #[test]
     fn test_skip_long_tests() {
         assert!(Mode::UnitFast.skip_long_tests());
         assert!(!Mode::UnitFull.skip_long_tests());
     }
     
+    /// @priority: high
+    /// @spec: PB-V3-CORE
+    /// @team: proof-bundle
+    /// @tags: unit, mode, gpu-detection
     #[test]
     fn test_requires_gpu() {
         assert!(Mode::BddReal.requires_gpu());

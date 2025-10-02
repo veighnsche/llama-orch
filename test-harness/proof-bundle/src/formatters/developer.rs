@@ -90,6 +90,10 @@ mod tests {
     use super::*;
     use crate::core::{TestResult, TestStatus};
     
+    /// @priority: critical
+    /// @spec: PB-V3-VALIDATION
+    /// @team: proof-bundle
+    /// @tags: unit, formatter, developer, zero-tests-bug-fix
     #[test]
     fn test_rejects_empty_summary() {
         let summary = TestSummary::default();
@@ -97,6 +101,10 @@ mod tests {
         assert!(result.is_err());
     }
     
+    /// @priority: critical
+    /// @spec: PB-V3-FORMATTER
+    /// @team: proof-bundle
+    /// @tags: unit, formatter, developer, technical-report
     #[test]
     fn test_generates_for_valid_summary() {
         let tests = vec![
