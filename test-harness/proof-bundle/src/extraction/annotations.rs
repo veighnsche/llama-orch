@@ -62,9 +62,27 @@ pub fn parse_annotations(doc: &str, mut metadata: TestMetadata) -> TestMetadata 
 
 /// Parse a single annotation line
 ///
-/// Format: `@key: value`
+/// Format: `@key: value` or `@custom:key: value`
 fn parse_annotation_line(line: &str) -> Option<(String, String)> {
     let line = line.strip_prefix('@')?;
+    
+    // Handle @custom:key: value format (has two colons)
+    if line.starts_with("custom:") {
+        // Split into "custom:key" and "value"
+        let mut parts = line.splitn(2, ':');
+        let first = parts.next()?.trim(); // "custom"
+        let rest = parts.next()?.trim();   // "key: value"
+        
+        // Now split "key: value"
+        let mut rest_parts = rest.splitn(2, ':');
+        let key_part = rest_parts.next()?.trim();
+        let value = rest_parts.next()?.trim();
+        
+        // Reconstruct as "custom:key"
+        return Some((format!("custom:{}", key_part), value.to_string()));
+    }
+    
+    // Normal format: @key: value
     let mut parts = line.splitn(2, ':');
     let key = parts.next()?.trim();
     let value = parts.next()?.trim();

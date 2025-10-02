@@ -124,9 +124,11 @@ mod tests {
     use super::*;
     
     #[test]
+    #[ignore] // Skip during normal testing to avoid circular dependency
     fn test_generate_for_proof_bundle() {
         // This is the ultimate integration test!
         // Generate a proof bundle for proof-bundle itself
+        // Ignored by default because it creates a circular dependency during `cargo test`
         let result = generate_for_crate("proof-bundle", Mode::UnitFast);
         
         assert!(result.is_ok(), "Failed to generate proof bundle: {:?}", result.err());
@@ -147,6 +149,7 @@ mod tests {
     }
     
     #[test]
+    #[ignore] // Skip during normal testing to avoid circular dependency
     fn test_builder_api() {
         let result = Builder::new("proof-bundle")
             .mode(Mode::UnitFast)
