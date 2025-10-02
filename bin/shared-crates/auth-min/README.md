@@ -1,22 +1,21 @@
 # auth-min
 
-**Minimal authentication with maximum security**
+**Minimal authentication primitives for llama-orch**
 
-`libs/auth-min` — Timing-safe token comparison, secure fingerprinting, and Bearer token parsing for llama-orch services.
+Simple, focused security utilities: timing-safe token comparison, secure fingerprinting, and Bearer token parsing.
 
 ---
 
 ## What This Library Does
 
-auth-min provides **security-hardened authentication** for llama-orch:
+auth-min provides basic authentication primitives:
 
-- **Timing-safe comparison** — Prevents timing attacks (CWE-208)
-- **Token fingerprinting** — SHA-256 based, non-reversible
-- **Bearer token parsing** — Robust RFC 6750 parsing
-- **Bind policy** — Refuses non-loopback without token
-- **Proxy trust gate** — Optional proxy auth trust (dangerous!)
+- **Timing-safe comparison** — Constant-time token validation
+- **Token fingerprinting** — SHA-256 based, safe for logs
+- **Bearer token parsing** — RFC 6750 compliant
+- **Bind policy** — Loopback detection and startup validation
 
-**Used by**: orchestratord, pool-managerd, node-registration, http-util
+**Used by**: orchestratord, pool-managerd, http-util, audit-logging
 
 ---
 
@@ -37,7 +36,7 @@ if timing_safe_eq(token.as_bytes(), expected.as_bytes()) {
 }
 ```
 
-**Security**: Execution time independent of mismatch position (prevents CWE-208)
+**Security**: Constant-time execution prevents timing attacks (CWE-208)
 
 ### Token Fingerprinting
 
@@ -50,7 +49,7 @@ let fingerprint = token_fp6(token);
 println!("Token fingerprint: {}", fingerprint); // "a3f2c1"
 ```
 
-**Security**: SHA-256 based, non-reversible, safe for logs
+**Use case**: Safe for logs, audit trails, and debugging
 
 ### Bearer Token Parsing
 
@@ -66,7 +65,7 @@ match token {
 }
 ```
 
-**Handles**: Whitespace, case-insensitive "Bearer", validation
+**Compliance**: RFC 6750 (OAuth 2.0 Bearer Token Usage)
 
 ### Bind Policy
 
@@ -88,8 +87,7 @@ enforce_startup_bind_policy("0.0.0.0:8080")?;
 
 | Variable | Required | Default | Purpose |
 |----------|----------|---------|---------|
-| `LLORCH_API_TOKEN` | Conditional | None | Authentication token (required for non-loopback) |
-| `TRUST_PROXY_AUTH` | No | `false` | Trust proxy-injected auth headers (⚠️ dangerous!) |
+| `LLORCH_API_TOKEN` | Conditional | None | Required for non-loopback binds |
 
 ### Token Generation
 
@@ -160,28 +158,25 @@ cargo test -p auth-min test_fingerprint -- --nocapture
 
 ---
 
-## Security Properties
+## Implementation Details
 
 ### Timing-Safe Comparison
 
-- **Property**: Execution time independent of mismatch position
-- **Test**: Variance < 10% for early vs. late mismatches
-- **Implementation**: Bitwise OR accumulation examines all bytes
-- **Prevents**: CWE-208 (Observable Timing Discrepancy)
+- Constant-time execution (variance < 10%)
+- Bitwise OR accumulation
+- Prevents CWE-208 timing attacks
 
 ### Token Fingerprinting
 
-- **Property**: Non-reversible, collision-resistant
-- **Algorithm**: SHA-256 → first 6 hex chars (24-bit space)
-- **Use Case**: Safe for audit logs, correlation, debugging
-- **Cannot**: Recover original token from fingerprint
+- SHA-256 hash → first 6 hex chars
+- Non-reversible, 24-bit collision space
+- Safe for logs and audit trails
 
 ### Bind Policy
 
-- **Property**: Refuses non-loopback bind without token
-- **Enforcement**: Startup validation (fail-fast)
-- **Override**: Not allowed (security by design)
-- **Loopback**: No token required for 127.0.0.1 or ::1
+- Startup validation (fail-fast)
+- Loopback detection (127.0.0.1, ::1)
+- Requires token for public binds
 
 ---
 
@@ -237,12 +232,14 @@ cargo test -p auth-min --test leakage
 
 ---
 
-## What This Library Is Not
+## Scope
 
-- ❌ Not a full authentication framework (no users, roles, sessions)
-- ❌ Not OAuth2/OIDC/SSO (minimal shared-secret only)
-- ❌ Not mTLS (future: v0.3.0)
-- ❌ Not rate limiting (handled at admission layer)
+This library provides low-level primitives only:
+
+- ❌ No user management or sessions
+- ❌ No OAuth2/OIDC/SSO flows
+- ❌ No mTLS support
+- ❌ No rate limiting
 
 ---
 

@@ -8,6 +8,8 @@
 
 ## Our Deception
 
+> **IMPORTANT**: This is the ONLY document where we explicitly reveal our trickster nature. In all other documentation (README.md, inline docs, API docs, specs), we maintain the "minimal authentication" facade. The deception is implicit — our name suggests simplicity, but our reach is absolute. This stays hidden except here.
+
 Our name whispers **"minimal authentication"** — a clever misdirection. We are not minimal. We are **foundational**.
 
 Every service that accepts a request, every endpoint that processes data, every component that touches the network — **they all depend on us**. We are the invisible security layer that:
