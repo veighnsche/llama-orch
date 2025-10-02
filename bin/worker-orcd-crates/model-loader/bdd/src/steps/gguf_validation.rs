@@ -7,27 +7,35 @@ use model_loader::{LoadError, LoadRequest};
 #[given("a valid GGUF model file")]
 async fn given_valid_gguf_file(world: &mut BddWorld) {
     let temp_dir = tempfile::TempDir::new().unwrap();
-    let model_path = temp_dir.path().join("test-model.gguf");
-
+    
     // Create valid GGUF file
     let gguf = BddWorld::create_valid_gguf();
-    std::fs::write(&model_path, &gguf).unwrap();
-
+    let file_path = temp_dir.path().join("test-model.gguf");
+    std::fs::write(&file_path, &gguf).unwrap();
+    
+    // Set up loader with allowed root FIRST
+    world.loader = model_loader::ModelLoader::with_allowed_root(temp_dir.path().to_path_buf());
+    
+    // Store the full path (it will be validated against allowed_root)
+    world.model_path = Some(file_path);
     world.temp_dir = Some(temp_dir);
-    world.model_path = Some(model_path);
 }
 
 #[given("a model file with invalid magic number")]
 async fn given_invalid_magic(world: &mut BddWorld) {
     let temp_dir = tempfile::TempDir::new().unwrap();
-    let model_path = temp_dir.path().join("invalid-model.gguf");
-
+    
     // Invalid magic number
     let invalid = BddWorld::create_invalid_gguf();
-    std::fs::write(&model_path, &invalid).unwrap();
-
+    let file_path = temp_dir.path().join("invalid-model.gguf");
+    std::fs::write(&file_path, &invalid).unwrap();
+    
+    // Set up loader with allowed root FIRST
+    world.loader = model_loader::ModelLoader::with_allowed_root(temp_dir.path().to_path_buf());
+    
+    // Store the full path
+    world.model_path = Some(file_path);
     world.temp_dir = Some(temp_dir);
-    world.model_path = Some(model_path);
 }
 
 #[given("valid GGUF bytes in memory")]
@@ -44,12 +52,7 @@ async fn given_invalid_bytes_in_memory(world: &mut BddWorld) {
 async fn when_load_and_validate(world: &mut BddWorld) {
     let model_path = world.model_path.as_ref().expect("No model path set");
     
-    // Need to set up loader with allowed root if not already done
-    if world.temp_dir.is_some() {
-        let temp_path = world.temp_dir.as_ref().unwrap().path().to_path_buf();
-        world.loader = model_loader::ModelLoader::with_allowed_root(temp_path);
-    }
-
+    // Loader should already be set up with allowed_root in the Given step
     let request = LoadRequest::new(model_path).with_max_size(100_000_000_000);
 
     world.load_result = Some(world.loader.load_and_validate(request));

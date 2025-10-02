@@ -7,14 +7,18 @@ use model_loader::{LoadError, LoadRequest};
 #[given("a model file that is too large")]
 async fn given_oversized_file(world: &mut BddWorld) {
     let temp_dir = tempfile::TempDir::new().unwrap();
-    let model_path = temp_dir.path().join("large-model.gguf");
+    let file_path = temp_dir.path().join("large-model.gguf");
 
     // Create file larger than typical max_size for tests
     let large_data = vec![0u8; 1_000_000]; // 1MB
-    std::fs::write(&model_path, &large_data).unwrap();
+    std::fs::write(&file_path, &large_data).unwrap();
+    
+    // Set up loader with allowed root
+    world.loader = model_loader::ModelLoader::with_allowed_root(temp_dir.path().to_path_buf());
 
     world.temp_dir = Some(temp_dir);
-    world.model_path = Some(model_path);
+    // Store the full path
+    world.model_path = Some(file_path);
 }
 
 #[when(regex = r"I load the model with max size (\d+) bytes")]

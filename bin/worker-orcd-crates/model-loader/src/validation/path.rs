@@ -18,15 +18,29 @@ use std::path::{Path, PathBuf};
 /// - PATH-007: Absolute paths outside allowed root MUST be rejected
 /// - PATH-008: Path validation failures MUST NOT expose sensitive paths
 pub fn validate_path(path: &Path, allowed_root: &Path) -> Result<PathBuf> {
+    // Convert relative paths to absolute by joining with allowed_root
+    // input-validation will canonicalize and validate
+    let path_to_validate = if path.is_relative() {
+        allowed_root.join(path)
+    } else {
+        path.to_path_buf()
+    };
+    
     // Use input-validation crate for secure path validation
-    input_validation::validate_path(path, allowed_root)
+    // This will:
+    // 1. Check for path traversal sequences (.. and .)
+    // 2. Check for null bytes
+    // 3. Reject absolute paths (unless we made it absolute by joining)
+    // 4. Canonicalize and verify it's within allowed_root
+    input_validation::validate_path(&path_to_validate, allowed_root)
         .map_err(|e| LoadError::PathValidationFailed(e.to_string()))?;
     
     // Canonicalize path (resolves symlinks and ..)
-    let canonical = path.canonicalize().map_err(|e| LoadError::Io(e))?;
+    let canonical = path_to_validate.canonicalize().map_err(|e| LoadError::Io(e))?;
     
     // Double-check canonical path is within allowed root
-    if !canonical.starts_with(allowed_root) {
+    let canonical_root = allowed_root.canonicalize().map_err(|e| LoadError::Io(e))?;
+    if !canonical.starts_with(&canonical_root) {
         return Err(LoadError::PathValidationFailed(
             "Path outside allowed directory after canonicalization".to_string()
         ));

@@ -7,17 +7,21 @@ use model_loader::{LoadError, LoadRequest};
 #[given(regex = r#"a GGUF model file with hash "(.*)""#)]
 async fn given_gguf_with_hash(world: &mut BddWorld, _hash: String) {
     let temp_dir = tempfile::TempDir::new().unwrap();
-    let model_path = temp_dir.path().join("test-model.gguf");
 
     // Create valid GGUF file
     let gguf = BddWorld::create_valid_gguf();
-    std::fs::write(&model_path, &gguf).unwrap();
+    let file_path = temp_dir.path().join("test-model.gguf");
+    std::fs::write(&file_path, &gguf).unwrap();
 
     // Compute actual hash
     let actual_hash = BddWorld::compute_hash(&gguf);
+    
+    // Set up loader with allowed root FIRST
+    world.loader = model_loader::ModelLoader::with_allowed_root(temp_dir.path().to_path_buf());
 
     world.temp_dir = Some(temp_dir);
-    world.model_path = Some(model_path);
+    // Store the full path
+    world.model_path = Some(file_path);
     world.expected_hash = Some(actual_hash);
 }
 
@@ -26,12 +30,7 @@ async fn when_load_with_hash(world: &mut BddWorld) {
     let model_path = world.model_path.as_ref().expect("No model path set");
     let expected_hash = world.expected_hash.as_ref().expect("No hash set");
     
-    // Set up loader with allowed root
-    if world.temp_dir.is_some() {
-        let temp_path = world.temp_dir.as_ref().unwrap().path().to_path_buf();
-        world.loader = model_loader::ModelLoader::with_allowed_root(temp_path);
-    }
-
+    // Loader should already be set up in Given step
     let request = LoadRequest::new(model_path)
         .with_hash(expected_hash)
         .with_max_size(100_000_000_000);
@@ -45,12 +44,7 @@ async fn when_load_with_wrong_hash(world: &mut BddWorld) {
 
     let wrong_hash = "0".repeat(64); // Wrong hash
     
-    // Set up loader with allowed root
-    if world.temp_dir.is_some() {
-        let temp_path = world.temp_dir.as_ref().unwrap().path().to_path_buf();
-        world.loader = model_loader::ModelLoader::with_allowed_root(temp_path);
-    }
-
+    // Loader should already be set up in Given step
     let request = LoadRequest::new(model_path)
         .with_hash(&wrong_hash)
         .with_max_size(100_000_000_000);
