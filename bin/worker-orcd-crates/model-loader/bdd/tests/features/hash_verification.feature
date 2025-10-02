@@ -19,3 +19,18 @@ Feature: Hash Verification
   Scenario: Load model without hash verification
     When I load and validate the model
     Then the model loads successfully
+
+  Scenario: Reject invalid hash format (too short)
+    Given valid GGUF bytes in memory
+    When I validate with hash "abc123"
+    Then the validation fails with invalid format
+
+  Scenario: Reject invalid hash format (non-hex)
+    Given valid GGUF bytes in memory
+    When I validate with hash "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+    Then the validation fails with invalid format
+
+  Scenario: Accept valid hash format
+    Given valid GGUF bytes in memory
+    When I validate with computed hash
+    Then the validation succeeds

@@ -58,3 +58,35 @@ async fn then_fails_hash_mismatch(world: &mut BddWorld) {
         other => panic!("Expected HashMismatch, got: {:?}", other),
     }
 }
+
+#[when("I validate with hash {string}")]
+async fn when_validate_with_hash(world: &mut BddWorld, hash: String) {
+    let bytes = world.model_bytes.as_ref().expect("No bytes set");
+    world.validation_result = Some(world.loader.validate_bytes(bytes, Some(&hash)));
+}
+
+#[when("I validate with computed hash")]
+async fn when_validate_with_computed_hash(world: &mut BddWorld) {
+    let bytes = world.model_bytes.as_ref().expect("No bytes set");
+    let hash = BddWorld::compute_hash(bytes);
+    world.validation_result = Some(world.loader.validate_bytes(bytes, Some(&hash)));
+}
+
+#[then("the validation fails with invalid format")]
+async fn then_validation_fails_invalid_format(world: &mut BddWorld) {
+    let result = world.validation_result.as_ref().expect("No validation result");
+    assert!(result.is_err(), "Expected error, got success");
+
+    match result {
+        Err(LoadError::InvalidFormat(_)) => {
+            // Expected
+        }
+        other => panic!("Expected InvalidFormat, got: {:?}", other),
+    }
+}
+
+#[then("the validation succeeds")]
+async fn then_validation_succeeds(world: &mut BddWorld) {
+    let result = world.validation_result.as_ref().expect("No validation result");
+    assert!(result.is_ok(), "Expected success, got error: {:?}", result);
+}

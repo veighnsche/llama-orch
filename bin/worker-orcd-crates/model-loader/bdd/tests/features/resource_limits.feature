@@ -8,14 +8,22 @@ Feature: Resource Limits
     When I load the model with max size 1000 bytes
     Then the load fails with file too large
 
-  # TODO(M0): Add tensor count limit tests
-  # Scenario: Reject excessive tensor count
-  #   Given a GGUF file with 100000 tensors
-  #   When I load and validate the model
-  #   Then the load fails with tensor count exceeded
+  Scenario: Reject excessive tensor count
+    Given a GGUF file with 100000 tensors
+    When I validate the bytes in memory
+    Then the validation fails with tensor count exceeded
 
-  # TODO(M0): Add string length limit tests
-  # Scenario: Reject oversized strings
-  #   Given a GGUF file with 1MB string
-  #   When I load and validate the model
-  #   Then the load fails with string too long
+  Scenario: Accept valid tensor count
+    Given a GGUF file with 100 tensors
+    When I validate the bytes in memory
+    Then the validation succeeds
+
+  Scenario: Reject oversized string
+    Given a GGUF file with oversized string
+    When I validate the bytes in memory
+    Then the validation fails with string too long
+
+  Scenario: Reject excessive metadata pairs
+    Given a GGUF file with 10000 metadata pairs
+    When I validate the bytes in memory
+    Then the validation fails with invalid format
