@@ -75,6 +75,7 @@ members = [
     "bin/worker-orcd-crates/vram-residency",
     "bin/worker-orcd-crates/vram-residency/bdd",
     "bin/worker-orcd-crates/model-loader",
+    "bin/worker-orcd-crates/model-loader/bdd",
     "bin/worker-orcd-crates/api",
     "bin/worker-orcd-crates/error-handler",
     "bin/worker-orcd-crates/scheduler",
