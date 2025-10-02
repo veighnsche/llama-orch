@@ -219,6 +219,10 @@ mod tests {
     /// @spec: PB-V3-RUNNER
     /// @team: proof-bundle
     /// @tags: unit, runner, parser, stderr-bug-fix
+    /// @scenario: Parsing cargo test output to extract individual test results
+    /// @threat: Incorrect test status reporting leading to false confidence in broken code
+    /// @failure_mode: Silently ignoring stderr output causes all tests to appear as "not found"
+    /// @edge_case: cargo test sends output to stderr (not stdout), parser must handle this correctly
     #[test]
     fn test_parse_test_line() {
         let line = "test my_module::test_foo ... ok";

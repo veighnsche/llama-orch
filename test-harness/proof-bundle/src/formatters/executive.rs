@@ -151,6 +151,10 @@ mod tests {
     /// @spec: PB-V3-VALIDATION
     /// @team: proof-bundle
     /// @tags: unit, formatter, executive, division-by-zero-fix
+    /// @scenario: Calculating pass rate when total test count is zero
+    /// @threat: Division by zero panic crashes the proof bundle generation process
+    /// @failure_mode: Entire proof bundle generation fails when no tests are found, hiding the actual problem
+    /// @edge_case: Empty test suite (0 tests total) must return 0.0% pass rate, not panic
     #[test]
     fn test_no_division_by_zero() {
         let tests = vec![

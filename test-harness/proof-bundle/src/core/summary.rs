@@ -137,6 +137,10 @@ mod tests {
     /// @spec: PB-V3-VALIDATION
     /// @team: proof-bundle
     /// @tags: unit, validation, zero-tests-bug-fix
+    /// @scenario: Validating test summary to detect empty test suites before report generation
+    /// @threat: Empty test suite gives false confidence - reports show "success" when nothing was tested
+    /// @failure_mode: Proof bundle generated for 0 tests looks identical to a passing test suite
+    /// @edge_case: Must explicitly reject summaries with total=0 to prevent misleading audit trails
     #[test]
     fn test_validate() {
         let tests = vec![

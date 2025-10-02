@@ -1,0 +1,398 @@
+{
+  "test_extract_number": {
+    "priority": "high",
+    "spec": "PB-V3-RUNNER",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "runner",
+      "parser",
+      "summary-extraction"
+    ]
+  },
+  "test_bundle_writer_creates_directory": {
+    "priority": "critical",
+    "spec": "PB-001",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "bundle",
+      "file-io",
+      "crate-local"
+    ]
+  },
+  "test_run_tests_on_proof_bundle": {
+    "priority": "critical",
+    "spec": "PB-V3-RUNNER",
+    "team": "proof-bundle",
+    "tags": [
+      "integration",
+      "runner",
+      "dogfooding",
+      "e2e"
+    ]
+  },
+  "test_parse_real_cargo_output_golden": {},
+  "test_parser_handles_edge_cases": {},
+  "test_parse_test_line": {
+    "priority": "critical",
+    "spec": "PB-V3-RUNNER",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "runner",
+      "parser",
+      "stderr-bug-fix"
+    ],
+    "scenario": "Parsing cargo test output to extract individual test results",
+    "threat": "Incorrect test status reporting leading to false confidence in broken code",
+    "failure_mode": "Silently ignoring stderr output causes all tests to appear as \"not found\"",
+    "edge_case": "cargo test sends output to stderr (not stdout), parser must handle this correctly"
+  },
+  "test_golden_file_exists_and_is_valid": {},
+  "test_proof_bundle_creation": {},
+  "test_new_summary": {
+    "priority": "critical",
+    "spec": "PB-V3-CORE",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "core",
+      "aggregation"
+    ]
+  },
+  "test_flaky_test_detection": {},
+  "test_spec_grouping": {},
+  "test_rejects_empty_summary": {
+    "priority": "critical",
+    "spec": "PB-V3-VALIDATION",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "formatter",
+      "metadata",
+      "zero-tests-bug-fix"
+    ]
+  },
+  "test_multiple_priorities": {},
+  "test_parse_multiple": {
+    "priority": "critical",
+    "spec": "PB-V3-EXTRACTION",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "extraction",
+      "annotations",
+      "multiple-fields"
+    ]
+  },
+  "test_ignores_non_annotations": {
+    "priority": "high",
+    "spec": "PB-V3-EXTRACTION",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "extraction",
+      "annotations",
+      "robustness"
+    ]
+  },
+  "test_skip_long_tests": {
+    "priority": "high",
+    "spec": "PB-V3-CORE",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "mode",
+      "fast-tests"
+    ]
+  },
+  "test_groups_by_priority": {
+    "priority": "critical",
+    "spec": "PB-V3-FORMATTER",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "formatter",
+      "metadata",
+      "grouping"
+    ]
+  },
+  "test_parser_extracts_all_test_names": {},
+  "test_parse_test_line_failed": {
+    "priority": "critical",
+    "spec": "PB-V3-RUNNER",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "runner",
+      "parser",
+      "failure-handling"
+    ]
+  },
+  "test_formatters_with_real_data": {},
+  "test_is_failing": {
+    "priority": "critical",
+    "spec": "PB-V3-CORE",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "core",
+      "status"
+    ]
+  },
+  "test_parse_requires": {
+    "priority": "high",
+    "spec": "PB-V3-EXTRACTION",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "extraction",
+      "annotations",
+      "requires"
+    ]
+  },
+  "test_parse_spec": {
+    "priority": "critical",
+    "spec": "PB-V3-EXTRACTION",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "extraction",
+      "annotations",
+      "spec-id"
+    ]
+  },
+  "test_no_division_by_zero": {
+    "priority": "critical",
+    "spec": "PB-V3-VALIDATION",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "formatter",
+      "executive",
+      "division-by-zero-fix"
+    ],
+    "scenario": "Calculating pass rate when total test count is zero",
+    "threat": "Division by zero panic crashes the proof bundle generation process",
+    "failure_mode": "Entire proof bundle generation fails when no tests are found, hiding the actual problem",
+    "edge_case": "Empty test suite (0 tests total) must return 0.0% pass rate, not panic"
+  },
+  "test_mode_names": {
+    "priority": "critical",
+    "spec": "PB-V3-CORE",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "core",
+      "mode"
+    ]
+  },
+  "test_template_integration": {},
+  "test_handles_no_failures": {
+    "priority": "high",
+    "spec": "PB-V3-FORMATTER",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "formatter",
+      "failure",
+      "edge-case"
+    ]
+  },
+  "test_critical_failure_detection": {},
+  "test_parse_priority": {
+    "priority": "critical",
+    "spec": "PB-V3-EXTRACTION",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "extraction",
+      "annotations",
+      "priority"
+    ]
+  },
+  "test_team_grouping": {},
+  "test_generate_real_proof_bundle": {},
+  "test_requires_gpu": {
+    "priority": "high",
+    "spec": "PB-V3-CORE",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "mode",
+      "gpu-detection"
+    ]
+  },
+  "test_metadata_integration": {},
+  "test_validate": {
+    "priority": "critical",
+    "spec": "PB-V3-VALIDATION",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "validation",
+      "zero-tests-bug-fix"
+    ],
+    "scenario": "Validating test summary to detect empty test suites before report generation",
+    "threat": "Empty test suite gives false confidence - reports show \"success\" when nothing was tested",
+    "failure_mode": "Proof bundle generated for 0 tests looks identical to a passing test suite",
+    "edge_case": "Must explicitly reject summaries with total=0 to prevent misleading audit trails"
+  },
+  "test_reports_are_non_empty_and_useful": {},
+  "test_parser_integration": {},
+  "test_generate_for_proof_bundle": {
+    "priority": "critical",
+    "spec": "PB-V3-API",
+    "team": "proof-bundle",
+    "requires": [
+      "cargo",
+      "git"
+    ],
+    "tags": [
+      "integration",
+      "e2e",
+      "dogfooding",
+      "one-liner-api"
+    ]
+  },
+  "test_write_json": {
+    "priority": "critical",
+    "spec": "PB-1004",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "bundle",
+      "json",
+      "file-io"
+    ]
+  },
+  "test_has_test_attribute": {
+    "priority": "critical",
+    "spec": "PB-V3-EXTRACTION",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "extraction",
+      "parser",
+      "test-detection"
+    ]
+  },
+  "test_generates_for_valid_summary": {
+    "priority": "critical",
+    "spec": "PB-V3-FORMATTER",
+    "team": "proof-bundle"
+  },
+  "test_end_to_end_workflow": {},
+  "test_api_mode_integration": {},
+  "test_parse_test_output": {
+    "priority": "critical",
+    "spec": "PB-V3-RUNNER",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "runner",
+      "parser",
+      "integration"
+    ]
+  },
+  "test_parse_tags": {
+    "priority": "high",
+    "spec": "PB-V3-EXTRACTION",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "extraction",
+      "annotations",
+      "tags"
+    ]
+  },
+  "test_discover_nonexistent_package": {
+    "priority": "high",
+    "spec": "PB-V3-DISCOVERY",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "discovery",
+      "error-handling"
+    ]
+  },
+  "test_serialization": {
+    "priority": "high",
+    "spec": "PB-V3-CORE",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "serialization",
+      "json"
+    ]
+  },
+  "test_calculate_pass_rate": {
+    "priority": "critical",
+    "spec": "PB-V3-CORE",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "core",
+      "math",
+      "pass-rate"
+    ]
+  },
+  "test_builder_api": {
+    "priority": "high",
+    "spec": "PB-V3-API",
+    "team": "proof-bundle",
+    "requires": [
+      "cargo",
+      "git"
+    ],
+    "tags": [
+      "integration",
+      "builder-pattern",
+      "dogfooding"
+    ]
+  },
+  "test_discover_tests_for_proof_bundle": {
+    "priority": "critical",
+    "spec": "PB-V3-DISCOVERY",
+    "team": "proof-bundle",
+    "tags": [
+      "integration",
+      "discovery",
+      "cargo-metadata",
+      "dogfooding"
+    ]
+  },
+  "test_is_passing": {
+    "priority": "critical",
+    "spec": "PB-V3-CORE",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "core",
+      "status"
+    ]
+  },
+  "test_parse_custom": {
+    "priority": "medium",
+    "spec": "PB-V3-EXTRACTION",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "extraction",
+      "annotations",
+      "custom-fields"
+    ]
+  },
+  "test_write_markdown": {
+    "priority": "critical",
+    "spec": "PB-1012",
+    "team": "proof-bundle",
+    "tags": [
+      "unit",
+      "bundle",
+      "markdown",
+      "autogenerated-header"
+    ]
+  }
+}

@@ -123,15 +123,49 @@ fn format_test_line(md: &mut String, test: &crate::core::TestResult) {
         TestStatus::Ignored => "⏭️",
     };
     
-    md.push_str(&format!("- {} {}", status_emoji, test.name));
+    md.push_str(&format!("- {} **{}**", status_emoji, test.name));
     
     if let Some(ref metadata) = test.metadata {
         if let Some(ref spec) = metadata.spec {
-            md.push_str(&format!(" ({})", spec));
+            md.push_str(&format!(" `{}`", spec));
         }
+        
+        md.push_str("\n");
+        
+        // Show scenario (WHAT is being tested)
+        if let Some(ref scenario) = metadata.scenario {
+            md.push_str(&format!("  - **Scenario**: {}\n", scenario));
+        }
+        
+        // Show threat (security/risk addressed)
+        if let Some(ref threat) = metadata.threat {
+            md.push_str(&format!("  - **Threat**: {}\n", threat));
+        }
+        
+        // Show failure mode (what failure is prevented)
+        if let Some(ref failure_mode) = metadata.failure_mode {
+            md.push_str(&format!("  - **Prevents**: {}\n", failure_mode));
+        }
+        
+        // Show edge case (boundary conditions)
+        if let Some(ref edge_case) = metadata.edge_case {
+            md.push_str(&format!("  - **Edge Case**: {}\n", edge_case));
+        }
+        
+        // Show team and tags on same line
+        let mut details = Vec::new();
+        if let Some(ref team) = metadata.team {
+            details.push(format!("@{}", team));
+        }
+        if !metadata.tags.is_empty() {
+            details.push(metadata.tags.join(", "));
+        }
+        if !details.is_empty() {
+            md.push_str(&format!("  - *{}*\n", details.join(" · ")));
+        }
+    } else {
+        md.push_str("\n");
     }
-    
-    md.push_str("\n");
 }
 
 #[cfg(test)]

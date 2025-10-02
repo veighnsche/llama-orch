@@ -45,6 +45,10 @@ pub fn parse_annotations(doc: &str, mut metadata: TestMetadata) -> TestMetadata 
                         value.split(',').map(|s| s.trim().to_string())
                     );
                 }
+                "scenario" => metadata.scenario = Some(value.to_string()),
+                "threat" => metadata.threat = Some(value.to_string()),
+                "failure_mode" => metadata.failure_mode = Some(value.to_string()),
+                "edge_case" => metadata.edge_case = Some(value.to_string()),
                 _ if key.starts_with("custom:") => {
                     // Custom field: @custom:key: value
                     let custom_key = key.strip_prefix("custom:").unwrap();

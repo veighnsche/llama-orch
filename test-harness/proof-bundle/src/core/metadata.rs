@@ -57,6 +57,22 @@ pub struct TestMetadata {
     #[serde(default)]
     pub tags: Vec<String>,
     
+    /// Test scenario description (what is being tested)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scenario: Option<String>,
+    
+    /// Threat or security risk addressed
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub threat: Option<String>,
+    
+    /// Failure mode prevented by this test
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub failure_mode: Option<String>,
+    
+    /// Edge case or boundary condition tested
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub edge_case: Option<String>,
+    
     /// Custom key-value fields
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     #[serde(default)]
