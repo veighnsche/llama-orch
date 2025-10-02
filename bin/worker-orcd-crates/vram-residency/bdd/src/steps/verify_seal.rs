@@ -5,7 +5,7 @@ use cucumber::{given, when};
 use super::world::BddWorld;
 
 #[given(expr = "a sealed shard {string} with {int}MB of data")]
-async fn given_sealed_shard(world: &mut BddWorld, shard_id: String, size_mb: usize) {
+pub async fn given_sealed_shard(world: &mut BddWorld, shard_id: String, size_mb: usize) {
     // First create the manager and model data
     let capacity_mb = size_mb * 2; // Ensure enough capacity
     super::seal_model::given_vram_manager_with_capacity(world, capacity_mb).await;
@@ -38,17 +38,17 @@ async fn given_shard_digest_modified(world: &mut BddWorld, new_digest: String) {
 #[given("the shard signature is replaced with zeros")]
 async fn given_shard_signature_zeroed(world: &mut BddWorld) {
     let shard_id = world.shard_id.clone();
-    if let Some(_shard) = world.shards.get_mut(&shard_id) {
-        // Note: This will need to be updated when we add the signature field
-        println!("⚠ Signature field not yet implemented - test will be updated");
-        // _shard.signature = vec![0u8; 32];
+    if let Some(shard) = world.shards.get_mut(&shard_id) {
+        // Replace signature with zeros (invalid signature)
+        shard.replace_signature_for_test(vec![0u8; 32]);
+        println!("✓ Shard '{}' signature replaced with zeros", shard_id);
     } else {
         panic!("No shard found with ID: {}", shard_id);
     }
 }
 
 #[when("I verify the sealed shard")]
-async fn when_verify_sealed_shard(world: &mut BddWorld) {
+pub async fn when_verify_sealed_shard(world: &mut BddWorld) {
     let shard_id = world.shard_id.clone();
     let shard = world.shards.get(&shard_id)
         .expect("No shard found for verification");

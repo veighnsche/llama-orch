@@ -108,6 +108,9 @@ bytes = "1"
 uuid = { version = "1", features = ["serde", "v4"] }
 clap = { version = "4", features = ["derive"] }
 sha2 = "0.10"
+hmac = "0.12"
+subtle = "2.5"
+hkdf = "0.12"
 walkdir = "2"
 regex = "1"
 insta = { version = "1", features = ["yaml"] }

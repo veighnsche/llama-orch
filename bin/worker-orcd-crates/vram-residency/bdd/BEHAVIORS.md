@@ -1,8 +1,24 @@
 # VRAM Residency — Behavior Catalog
 
 **Purpose**: Document all behaviors tested via BDD  
-**Status**: Initial implementation  
-**Last Updated**: 2025-10-02
+**Status**: 80% Coverage Target  
+**Last Updated**: 2025-10-02  
+**Coverage Goal**: 80% of integration scenarios
+
+---
+
+## Coverage Summary
+
+| Category | Scenarios | Implemented | Coverage |
+|----------|-----------|-------------|----------|
+| **Seal Operations** | 10 | 6 | 60% |
+| **Seal Verification** | 8 | 3 | 38% |
+| **Multi-Shard** | 5 | 0 | 0% |
+| **Error Recovery** | 4 | 0 | 0% |
+| **Security** | 6 | 2 | 33% |
+| **TOTAL** | **33** | **11** | **33%** → **Target: 80% (26 scenarios)** |
+
+**Action Required**: Add 15 more scenarios to reach 80% coverage
 
 ---
 

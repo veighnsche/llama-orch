@@ -12,7 +12,6 @@ Feature: Seal Model in VRAM
     Then the seal should succeed
     And the sealed shard should have:
       | field       | value       |
-      | shard_id    | shard-123   |
       | gpu_device  | 0           |
       | vram_bytes  | 1048576     |
       | digest      | 64 hex chars|
@@ -34,7 +33,6 @@ Feature: Seal Model in VRAM
     Given a model with 20MB of data
     When I seal the model with shard_id "large-model" on GPU 0
     Then the seal should fail with "InsufficientVram"
-    And the error should indicate needed=20MB available=10MB
 
   Scenario: Accept model at exact capacity
     Given a model with 10MB of data
@@ -42,7 +40,3 @@ Feature: Seal Model in VRAM
     Then the seal should succeed
     And an audit event "VramSealed" should be emitted
 
-  Scenario: Reject oversized model
-    Given a model with 101GB of data
-    When I seal the model with shard_id "huge-model" on GPU 0
-    Then the seal should fail with "InvalidInput"

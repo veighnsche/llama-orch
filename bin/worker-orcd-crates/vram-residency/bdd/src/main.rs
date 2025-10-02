@@ -5,6 +5,9 @@ use steps::world::BddWorld;
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() {
+    // Enable BDD test mode (allows mock CUDA without GPU validation)
+    std::env::set_var("LLORCH_BDD_MODE", "1");
+    
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
     let features_env = std::env::var("LLORCH_BDD_FEATURE_PATH").ok();
     let features = if let Some(p) = features_env {

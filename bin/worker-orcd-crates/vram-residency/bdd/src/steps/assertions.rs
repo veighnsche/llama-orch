@@ -24,7 +24,7 @@ async fn then_seal_should_fail(world: &mut BddWorld) {
 }
 
 #[then(expr = "the seal should fail with {string}")]
-async fn then_seal_should_fail_with(world: &mut BddWorld, error_type: String) {
+pub async fn then_seal_should_fail_with(world: &mut BddWorld, error_type: String) {
     assert!(
         world.last_failed(),
         "Expected seal to fail with {}, but it succeeded",
@@ -52,6 +52,13 @@ async fn then_seal_should_fail_with(world: &mut BddWorld, error_type: String) {
             assert!(
                 error_msg.contains("verification") || error_msg.contains("Verification"),
                 "Expected SealVerificationFailed error, got: {}",
+                error_msg
+            );
+        }
+        "NotSealed" => {
+            assert!(
+                error_msg.contains("not sealed") || error_msg.contains("Not sealed") || error_msg.contains("NotSealed"),
+                "Expected NotSealed error, got: {}",
                 error_msg
             );
         }

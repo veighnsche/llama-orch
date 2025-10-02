@@ -1,6 +1,12 @@
 //! CUDA VRAM allocator
 //!
 //! Real CUDA VRAM allocation via FFI.
+//!
+//! # Note
+//!
+//! This is an alternative allocator implementation that is not currently used.
+//! VramManager uses CudaContext directly instead.
+//! Kept for potential future use.
 
 use crate::error::Result;
 use crate::cuda_ffi::{CudaContext, SafeCudaPtr};
@@ -13,6 +19,7 @@ use crate::cuda_ffi::{CudaContext, SafeCudaPtr};
 ///
 /// This allocator uses real CUDA via the cuda_ffi module.
 /// All operations are bounds-checked and safe.
+#[allow(dead_code)]
 pub struct CudaVramAllocator {
     context: CudaContext,
     allocations: Vec<SafeCudaPtr>,

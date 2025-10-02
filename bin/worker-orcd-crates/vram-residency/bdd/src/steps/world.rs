@@ -113,3 +113,15 @@ impl Default for BddWorld {
         Self::new()
     }
 }
+
+impl Drop for BddWorld {
+    fn drop(&mut self) {
+        // Explicitly clear shards first
+        self.shards.clear();
+        
+        // Force drop of manager to free VRAM immediately
+        if let Some(manager) = self.manager.take() {
+            std::mem::drop(manager);
+        }
+    }
+}

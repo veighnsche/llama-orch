@@ -33,7 +33,6 @@ static inline int map_cuda_error(cudaError_t err) {
         case cudaSuccess:
             return CUDA_SUCCESS;
         case cudaErrorMemoryAllocation:
-        case cudaErrorOutOfMemory:
             return CUDA_ERROR_ALLOCATION_FAILED;
         case cudaErrorInvalidValue:
         case cudaErrorInvalidDevicePointer:
@@ -385,4 +384,13 @@ extern "C" int vram_get_device_count(int* count) {
     }
     
     return CUDA_SUCCESS;
+}
+
+/// Reset mock state (no-op for real CUDA)
+///
+/// This function exists to satisfy BDD test linking requirements.
+/// When building with real CUDA, BDD tests may still reference this symbol
+/// even though it's only called in mock mode. This is a harmless no-op.
+extern "C" void vram_reset_mock_state(void) {
+    // No-op: Real CUDA doesn't have mock state to reset
 }

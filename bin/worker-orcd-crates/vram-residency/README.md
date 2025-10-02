@@ -47,16 +47,16 @@
 use vram_residency::{VramManager, SealedShard};
 
 // Plan endpoint: Check VRAM capacity
-let available = vram_manager.available_vram();
+let available = vram_manager.available_vram()?;
 if model_size > available {
     return Err(ErrW::InsufficientVram);
 }
 
 // Commit endpoint: Seal model in VRAM
+// Note: Input validation is automatic (shard_id, gpu_device, model_size)
 let sealed_shard = vram_manager.seal_model(
-    shard_id,
-    gpu_device,
     model_bytes,
+    gpu_device,
 )?;
 
 // Ready endpoint: Verify seal and return handle
@@ -522,25 +522,57 @@ See `.specs/` for full requirements:
 
 ## Testing
 
+### Automatic GPU Detection
+
+**Tests automatically run on real GPU VRAM when available!**
+
+The build script auto-detects:
+- ✅ NVIDIA GPU presence (via `nvidia-smi`)
+- ✅ CUDA toolkit availability (via `nvcc`)
+- ✅ GPU compute capability (auto-selects correct `sm_XX` architecture)
+
+**No configuration needed** - just run `cargo test`:
+
+```bash
+# Auto-detects GPU and runs on real VRAM if available
+cargo test -p vram-residency
+
+# Force mock mode (even if GPU detected)
+VRAM_RESIDENCY_FORCE_MOCK=1 cargo test -p vram-residency
+```
+
 ### Unit Tests
 
 ```bash
-# Run all tests
+# Run all tests (auto-detects GPU)
 cargo test -p vram-residency
 
 # Specific test suites
 cargo test -p vram-residency seal      # Seal operations
 cargo test -p vram-residency verify    # Verification
 cargo test -p vram-residency security  # Security tests
+cargo test -p vram-residency --test cuda_kernel_tests  # CUDA kernels (GPU only)
 ```
 
 ### BDD Tests
 
 ```bash
-# Run BDD test suite
+# Run BDD test suite (auto-detects GPU)
 cd bin/worker-orcd-crates/vram-residency/bdd
 cargo test
+
+# BDD tests automatically use real GPU when detected
+# Same tests work in both mock and GPU modes!
 ```
+
+### Test Modes
+
+| Environment | GPU Detected | CUDA Toolkit | Test Mode |
+|-------------|--------------|--------------|-----------|
+| Your dev machine | ✅ Yes | ✅ Yes | **Real GPU VRAM** |
+| CI/CD runner | ❌ No | ❌ No | **Mock VRAM** |
+| CI/CD GPU runner | ✅ Yes | ✅ Yes | **Real GPU VRAM** |
+| Force mock | ✅ Yes | ✅ Yes | **Mock VRAM** (with `VRAM_RESIDENCY_FORCE_MOCK=1`) |
 
 ### Security Tests
 

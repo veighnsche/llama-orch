@@ -99,7 +99,7 @@
 #![deny(clippy::integer_arithmetic)]
 #![deny(clippy::cast_ptr_alignment)]
 #![deny(clippy::mem_forget)]
-#![allow(clippy::todo)] // TODO: Remove once implementation is complete
+// All TODOs have been implemented
 #![deny(clippy::unimplemented)]
 #![warn(clippy::arithmetic_side_effects)]
 #![warn(clippy::cast_lossless)]

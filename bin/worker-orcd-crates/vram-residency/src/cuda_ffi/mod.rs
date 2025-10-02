@@ -32,7 +32,7 @@
 #![deny(clippy::integer_arithmetic)]
 #![deny(clippy::cast_ptr_alignment)]
 #![deny(clippy::mem_forget)]
-#![allow(clippy::todo)] // TODO: Remove once CUDA FFI is implemented
+// All CUDA FFI functions have been implemented
 #![deny(clippy::unimplemented)]
 #![warn(clippy::arithmetic_side_effects)]
 #![warn(clippy::cast_lossless)]
@@ -61,8 +61,16 @@ extern "C" {
     fn vram_memcpy_h2d(dst: *mut c_void, src: *const c_void, bytes: usize) -> i32;
     fn vram_memcpy_d2h(dst: *mut c_void, src: *const c_void, bytes: usize) -> i32;
     fn vram_get_info(free_bytes: *mut usize, total_bytes: *mut usize) -> i32;
+    
+    // Currently unused but available for future use
+    #[allow(dead_code)]
     fn vram_set_device(device: i32) -> i32;
+    #[allow(dead_code)]
     fn vram_get_device_count(count: *mut i32) -> i32;
+    
+    // Mock VRAM reset (for testing only)
+    #[allow(dead_code)]
+    fn vram_reset_mock_state();
 }
 
 /// Map CUDA error code to VramError
@@ -182,8 +190,13 @@ impl SafeCudaPtr {
         self.device
     }
     
-    /// Get raw pointer (for internal use only)
-    pub(crate) fn as_ptr(&self) -> *mut c_void {
+    /// Get raw pointer (for internal use and testing)
+    ///
+    /// # Safety
+    ///
+    /// This exposes the raw CUDA pointer. Use with caution.
+    /// Primarily for internal use and testing.
+    pub fn as_ptr(&self) -> *mut c_void {
         self.ptr
     }
 }
@@ -233,6 +246,10 @@ impl CudaContext {
     /// # Test Mode
     /// When compiled with `cfg(test)`, allows initialization without GPU (mock mode).
     ///
+    /// # BDD Test Mode
+    /// When `LLORCH_BDD_MODE=1` environment variable is set, allows mock initialization
+    /// without GPU validation (for integration tests).
+    ///
     /// # Errors
     ///
     /// Returns error if:
@@ -248,6 +265,18 @@ impl CudaContext {
                 "CUDA context initialized in TEST MODE (no GPU validation)"
             );
             return Ok(Self { device });
+        }
+        
+        // Check for BDD test mode (integration tests)
+        #[cfg(not(test))]
+        {
+            if std::env::var("LLORCH_BDD_MODE").is_ok() {
+                tracing::warn!(
+                    device = %device,
+                    "CUDA context initialized in BDD MODE (no GPU validation)"
+                );
+                return Ok(Self { device });
+            }
         }
         
         // Production mode: Validate GPU availability using gpu-info

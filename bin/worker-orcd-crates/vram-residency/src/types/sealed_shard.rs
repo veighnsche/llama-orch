@@ -42,13 +42,11 @@ pub struct SealedShard {
     /// Total shards (for tensor-parallel)
     pub total_shards: Option<usize>,
     
-    /// HMAC-SHA256 signature (TODO: implement)
-    #[allow(dead_code)]
-    signature: Option<Vec<u8>>,
+    /// HMAC-SHA256 signature (private, verified via verify_signature)
+    pub(crate) signature: Option<Vec<u8>>,
     
     /// VRAM pointer (private, never exposed)
-    #[allow(dead_code)]
-    vram_ptr: usize,
+    pub(crate) vram_ptr: usize,
 }
 
 impl SealedShard {
@@ -86,6 +84,39 @@ impl SealedShard {
     pub fn is_sealed(&self) -> bool {
         !self.digest.is_empty()
     }
+    
+    /// Set signature (internal use only)
+    pub(crate) fn set_signature(&mut self, signature: Vec<u8>) {
+        self.signature = Some(signature);
+    }
+    
+    /// Get signature (internal use only)
+    pub(crate) fn signature(&self) -> Option<&[u8]> {
+        self.signature.as_deref()
+    }
+    
+    /// Get VRAM pointer (internal use only)
+    pub(crate) fn vram_ptr(&self) -> usize {
+        self.vram_ptr
+    }
+    
+    /// Clear signature (for testing signature verification failure)
+    ///
+    /// # Warning
+    /// This is intended for testing only. In production, signatures should never be removed.
+    #[doc(hidden)]
+    pub fn clear_signature_for_test(&mut self) {
+        self.signature = None;
+    }
+    
+    /// Replace signature with invalid data (for testing signature verification failure)
+    ///
+    /// # Warning
+    /// This is intended for testing only. In production, signatures should never be tampered with.
+    #[doc(hidden)]
+    pub fn replace_signature_for_test(&mut self, invalid_signature: Vec<u8>) {
+        self.signature = Some(invalid_signature);
+    }
 }
 
 // Custom Debug that omits VRAM pointer
@@ -98,5 +129,131 @@ impl std::fmt::Debug for SealedShard {
             .field("digest", &format!("{}...", &self.digest[..8.min(self.digest.len())]))
             .field("sealed_at", &self.sealed_at)
             .finish_non_exhaustive()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_shard_creation() {
+        let shard = SealedShard::new(
+            "test-shard".to_string(),
+            0,
+            1024,
+            "a".repeat(64),
+            0x1000,
+        );
+        
+        assert_eq!(shard.shard_id, "test-shard");
+        assert_eq!(shard.gpu_device, 0);
+        assert_eq!(shard.vram_bytes, 1024);
+        assert_eq!(shard.digest.len(), 64);
+        assert_eq!(shard.vram_ptr(), 0x1000);
+    }
+
+    #[test]
+    fn test_is_sealed_with_digest() {
+        let shard = SealedShard::new(
+            "test".to_string(),
+            0,
+            1024,
+            "a".repeat(64),
+            0x1000,
+        );
+        assert!(shard.is_sealed());
+    }
+
+    #[test]
+    fn test_is_sealed_without_digest() {
+        let shard = SealedShard::new(
+            "test".to_string(),
+            0,
+            1024,
+            String::new(),
+            0x1000,
+        );
+        assert!(!shard.is_sealed());
+    }
+
+    #[test]
+    fn test_set_and_get_signature() {
+        let mut shard = SealedShard::new(
+            "test".to_string(),
+            0,
+            1024,
+            "a".repeat(64),
+            0x1000,
+        );
+        
+        assert!(shard.signature().is_none());
+        
+        let sig = vec![0x42u8; 32];
+        shard.set_signature(sig.clone());
+        
+        assert!(shard.signature().is_some());
+        assert_eq!(shard.signature().unwrap(), sig.as_slice());
+    }
+
+    #[test]
+    fn test_vram_ptr_accessor() {
+        let shard = SealedShard::new(
+            "test".to_string(),
+            0,
+            1024,
+            "a".repeat(64),
+            0xDEADBEEF,
+        );
+        assert_eq!(shard.vram_ptr(), 0xDEADBEEF);
+    }
+
+    #[test]
+    fn test_clone() {
+        let mut shard = SealedShard::new(
+            "test".to_string(),
+            0,
+            1024,
+            "a".repeat(64),
+            0x1000,
+        );
+        shard.set_signature(vec![0x42u8; 32]);
+        
+        let cloned = shard.clone();
+        assert_eq!(cloned.shard_id, shard.shard_id);
+        assert_eq!(cloned.vram_ptr(), shard.vram_ptr());
+        assert_eq!(cloned.signature(), shard.signature());
+    }
+
+    #[test]
+    fn test_debug_format_omits_vram_ptr() {
+        let shard = SealedShard::new(
+            "test".to_string(),
+            0,
+            1024,
+            "abcd1234".repeat(8),
+            0xDEADBEEF,
+        );
+        
+        let debug_str = format!("{:?}", shard);
+        assert!(!debug_str.contains("DEADBEEF"));
+        assert!(!debug_str.contains("vram_ptr"));
+        assert!(debug_str.contains("test"));
+    }
+
+    #[test]
+    fn test_optional_fields_default_to_none() {
+        let shard = SealedShard::new(
+            "test".to_string(),
+            0,
+            1024,
+            "a".repeat(64),
+            0x1000,
+        );
+        
+        assert!(shard.model_ref.is_none());
+        assert!(shard.shard_index.is_none());
+        assert!(shard.total_shards.is_none());
+        assert!(shard.signature.is_none());
     }
 }
