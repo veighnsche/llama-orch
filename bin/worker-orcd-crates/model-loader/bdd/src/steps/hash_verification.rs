@@ -4,7 +4,7 @@ use crate::steps::world::BddWorld;
 use cucumber::{given, then, when};
 use model_loader::{LoadError, LoadRequest};
 
-#[given("a GGUF model file with hash {string}")]
+#[given(regex = r#"a GGUF model file with hash "(.*)""#)]
 async fn given_gguf_with_hash(world: &mut BddWorld, _hash: String) {
     let temp_dir = tempfile::TempDir::new().unwrap();
     let model_path = temp_dir.path().join("test-model.gguf");
@@ -25,6 +25,12 @@ async fn given_gguf_with_hash(world: &mut BddWorld, _hash: String) {
 async fn when_load_with_hash(world: &mut BddWorld) {
     let model_path = world.model_path.as_ref().expect("No model path set");
     let expected_hash = world.expected_hash.as_ref().expect("No hash set");
+    
+    // Set up loader with allowed root
+    if world.temp_dir.is_some() {
+        let temp_path = world.temp_dir.as_ref().unwrap().path().to_path_buf();
+        world.loader = model_loader::ModelLoader::with_allowed_root(temp_path);
+    }
 
     let request = LoadRequest::new(model_path)
         .with_hash(expected_hash)
@@ -38,6 +44,12 @@ async fn when_load_with_wrong_hash(world: &mut BddWorld) {
     let model_path = world.model_path.as_ref().expect("No model path set");
 
     let wrong_hash = "0".repeat(64); // Wrong hash
+    
+    // Set up loader with allowed root
+    if world.temp_dir.is_some() {
+        let temp_path = world.temp_dir.as_ref().unwrap().path().to_path_buf();
+        world.loader = model_loader::ModelLoader::with_allowed_root(temp_path);
+    }
 
     let request = LoadRequest::new(model_path)
         .with_hash(&wrong_hash)
@@ -59,7 +71,7 @@ async fn then_fails_hash_mismatch(world: &mut BddWorld) {
     }
 }
 
-#[when("I validate with hash {string}")]
+#[when(regex = r#"I validate with hash "(.*)""#)]
 async fn when_validate_with_hash(world: &mut BddWorld, hash: String) {
     let bytes = world.model_bytes.as_ref().expect("No bytes set");
     world.validation_result = Some(world.loader.validate_bytes(bytes, Some(&hash)));

@@ -43,6 +43,12 @@ async fn given_invalid_bytes_in_memory(world: &mut BddWorld) {
 #[when("I load and validate the model")]
 async fn when_load_and_validate(world: &mut BddWorld) {
     let model_path = world.model_path.as_ref().expect("No model path set");
+    
+    // Need to set up loader with allowed root if not already done
+    if world.temp_dir.is_some() {
+        let temp_path = world.temp_dir.as_ref().unwrap().path().to_path_buf();
+        world.loader = model_loader::ModelLoader::with_allowed_root(temp_path);
+    }
 
     let request = LoadRequest::new(model_path).with_max_size(100_000_000_000);
 
@@ -74,24 +80,7 @@ async fn then_fails_invalid_format(world: &mut BddWorld) {
     }
 }
 
-#[then("the validation succeeds")]
-async fn then_validation_succeeds(world: &mut BddWorld) {
-    let result = world.validation_result.as_ref().expect("No validation result");
-    assert!(result.is_ok(), "Expected success, got error: {:?}", result);
-}
-
-#[then("the validation fails with invalid format")]
-async fn then_validation_fails_invalid_format(world: &mut BddWorld) {
-    let result = world.validation_result.as_ref().expect("No validation result");
-    assert!(result.is_err(), "Expected error, got success");
-
-    match result {
-        Err(LoadError::InvalidFormat(_)) => {
-            // Expected
-        }
-        other => panic!("Expected InvalidFormat, got: {:?}", other),
-    }
-}
+// Note: Removed duplicate step definitions - using ones from hash_verification.rs
 
 #[then("the loaded bytes match the file contents")]
 async fn then_bytes_match_file(world: &mut BddWorld) {

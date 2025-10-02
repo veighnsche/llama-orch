@@ -17,7 +17,7 @@ async fn given_oversized_file(world: &mut BddWorld) {
     world.model_path = Some(model_path);
 }
 
-#[when("I load the model with max size {int} bytes")]
+#[when(regex = r"I load the model with max size (\d+) bytes")]
 async fn when_load_with_max_size(world: &mut BddWorld, max_size: usize) {
     let model_path = world.model_path.as_ref().expect("No model path set");
 
@@ -39,7 +39,7 @@ async fn then_fails_too_large(world: &mut BddWorld) {
     }
 }
 
-#[given("a GGUF file with {int} tensors")]
+#[given(regex = r"a GGUF file with (\d+) tensors")]
 async fn given_gguf_with_tensor_count(world: &mut BddWorld, count: u64) {
     let mut bytes = vec![0x47, 0x47, 0x55, 0x46]; // Magic
     bytes.extend_from_slice(&3u32.to_le_bytes()); // Version 3
@@ -51,8 +51,6 @@ async fn given_gguf_with_tensor_count(world: &mut BddWorld, count: u64) {
 
 #[given("a GGUF file with oversized string")]
 async fn given_gguf_with_oversized_string(world: &mut BddWorld) {
-    use model_loader::validation::gguf::parser;
-    
     // Create GGUF with string length > MAX_STRING_LEN
     let mut bytes = vec![0x47, 0x47, 0x55, 0x46]; // Magic
     bytes.extend_from_slice(&3u32.to_le_bytes()); // Version 3
@@ -66,7 +64,7 @@ async fn given_gguf_with_oversized_string(world: &mut BddWorld) {
     world.model_bytes = Some(bytes);
 }
 
-#[given("a GGUF file with {int} metadata pairs")]
+#[given(regex = r"a GGUF file with (\d+) metadata pairs")]
 async fn given_gguf_with_metadata_pairs(world: &mut BddWorld, count: u64) {
     let mut bytes = vec![0x47, 0x47, 0x55, 0x46]; // Magic
     bytes.extend_from_slice(&3u32.to_le_bytes()); // Version 3
