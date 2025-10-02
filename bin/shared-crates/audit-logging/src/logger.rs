@@ -48,8 +48,24 @@ impl AuditLogger {
     ///
     /// Returns error if configuration is invalid or writer task fails to start.
     pub fn new(config: AuditConfig) -> Result<Self> {
+        // HOME LAB MODE: Skip all initialization if audit is disabled
+        if matches!(config.mode, AuditMode::Disabled) {
+            tracing::info!("Audit logging DISABLED (home lab mode) - zero overhead");
+            
+            // Create dummy channel (never used)
+            let (tx, _rx) = tokio::sync::mpsc::channel(1);
+            
+            return Ok(Self {
+                config: Arc::new(config),
+                tx,
+                event_counter: Arc::new(AtomicU64::new(0)),
+            });
+        }
+        
+        // PLATFORM/LOCAL MODE: Full audit logging
         // Validate configuration
         match &config.mode {
+            AuditMode::Disabled => unreachable!("Already handled above"),
             AuditMode::Local { base_dir } => {
                 // Ensure directory exists
                 std::fs::create_dir_all(base_dir).map_err(|e| {
@@ -112,13 +128,17 @@ impl AuditLogger {
     ///         gpu_device: 0,
     ///         vram_bytes: 8_000_000_000,
     ///         digest: "abc123".to_string(),
-    ///         worker_id: "worker-gpu-0".to_string(),
     ///     })?;
     ///     
     ///     Ok(())
     /// }
     /// ```
     pub fn emit(&self, mut event: AuditEvent) -> Result<()> {
+        // HOME LAB MODE: No-op if audit is disabled (zero overhead)
+        if matches!(self.config.mode, AuditMode::Disabled) {
+            return Ok(());
+        }
+        
         // Validate and sanitize event
         validation::validate_event(&mut event)?;
 
@@ -160,6 +180,11 @@ impl AuditLogger {
     ///
     /// Returns error if flush fails or writer is unavailable.
     pub async fn flush(&self) -> Result<()> {
+        // HOME LAB MODE: No-op if audit is disabled
+        if matches!(self.config.mode, AuditMode::Disabled) {
+            return Ok(());
+        }
+        
         let (tx, rx) = tokio::sync::oneshot::channel();
 
         self.tx.send(WriterMessage::Flush(tx)).await.map_err(|_| {
@@ -185,6 +210,15 @@ impl AuditLogger {
     ///
     /// Returns error if shutdown fails.
     pub async fn shutdown(self) -> Result<()> {
+        // HOME LAB MODE: No-op if audit is disabled
+        if matches!(self.config.mode, AuditMode::Disabled) {
+            tracing::debug!("Audit logging shutdown (no-op in home lab mode)");
+            return Ok(());
+        }
+        
+        // CRITICAL: Flush all buffered events first (prevents data loss)
+        self.flush().await?;
+        
         // Send shutdown signal
         self.tx.send(WriterMessage::Shutdown).await.map_err(|_| {
             AuditError::Io(std::io::Error::new(
@@ -193,7 +227,7 @@ impl AuditLogger {
             ))
         })?;
 
-        // Give writer time to finish
+        // Give writer time to close files
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
         Ok(())
@@ -276,6 +310,41 @@ mod tests {
         let result = logger.emit(event);
         assert!(result.is_ok(), "emit should succeed from sync context");
     }
+    #[tokio::test]
+    async fn test_disabled_mode_no_op() {
+        // HOME LAB MODE: Verify zero overhead
+        let config = AuditConfig {
+            mode: AuditMode::Disabled,  // ✅ No audit trail
+            service_id: "test".to_string(),
+            rotation_policy: RotationPolicy::Daily,
+            retention_policy: RetentionPolicy::default(),
+            flush_mode: crate::config::FlushMode::Immediate,
+        };
+
+        let logger = AuditLogger::new(config).unwrap();
+
+        // Emit should be no-op (no error, no file created)
+        let event = AuditEvent::VramSealed {
+            timestamp: Utc::now(),
+            shard_id: "shard-123".to_string(),
+            gpu_device: 0,
+            vram_bytes: 8_000_000_000,
+            digest: "abc123".to_string(),
+            worker_id: "worker-gpu-0".to_string(),
+        };
+
+        let result = logger.emit(event);
+        assert!(result.is_ok(), "emit should succeed (no-op)");
+
+        // Flush should be no-op
+        let result = logger.flush().await;
+        assert!(result.is_ok(), "flush should succeed (no-op)");
+
+        // Shutdown should be no-op
+        let result = logger.shutdown().await;
+        assert!(result.is_ok(), "shutdown should succeed (no-op)");
+    }
+
     #[tokio::test]
     async fn test_emit_counter_overflow() {
         let config = AuditConfig {

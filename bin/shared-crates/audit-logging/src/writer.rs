@@ -302,8 +302,15 @@ pub async fn audit_writer_task(
     mut rx: tokio::sync::mpsc::Receiver<WriterMessage>,
     config: std::sync::Arc<AuditConfig>,
 ) {
+    // HOME LAB MODE: No-op if audit is disabled
+    if matches!(config.mode, AuditMode::Disabled) {
+        tracing::debug!("Audit writer task: no-op in home lab mode");
+        return;
+    }
+    
     // Extract base directory
     let base_dir = match &config.mode {
+        AuditMode::Disabled => unreachable!("Already handled above"),
         AuditMode::Local { base_dir } => base_dir.clone(),
         #[cfg(feature = "platform")]
         AuditMode::Platform(_) => {
@@ -669,6 +676,19 @@ mod tests {
 
         // With Immediate mode, events_since_sync should be reset to 0
         assert_eq!(writer.events_since_sync, 0, "Immediate mode should reset counter");
+        
+        // Write another event to verify consistent behavior
+        let envelope = AuditEventEnvelope::new(
+            "audit-002".to_string(),
+            Utc::now(),
+            "test-service".to_string(),
+            create_test_event(),
+            String::new(),
+        );
+        writer.write_event(envelope, false).unwrap();
+        
+        // Should still be 0 (flushed immediately)
+        assert_eq!(writer.events_since_sync, 0, "Immediate mode should flush every event");
     }
 
     #[test]
