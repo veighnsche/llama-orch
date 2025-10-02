@@ -1,19 +1,9 @@
 [package]
 name = "service-registry"
-version = "0.1.0"
+version = "0.0.0"
 edition.workspace = true
 license.workspace = true
-authors.workspace = true
 
 [dependencies]
-pool-registry-types = { path = "../../shared-crates/pool-registry-types" }
-serde = { workspace = true }
-serde_json = { workspace = true }
-thiserror = { workspace = true }
-anyhow = { workspace = true }
-tracing = { workspace = true }
-tokio = { workspace = true }
-
-[dev-dependencies]
-insta = { workspace = true }
-tokio = { workspace = true, features = ["test-util", "macros"] }
+serde = { workspace = true, features = ["derive"] }
+thiserror.workspace = true

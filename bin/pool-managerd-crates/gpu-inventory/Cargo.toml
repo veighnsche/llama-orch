@@ -1,8 +1,10 @@
 [package]
-name = "pool-registry"
+name = "gpu-inventory"
 version = "0.0.0"
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
+thiserror.workspace = true
 serde = { workspace = true, features = ["derive"] }
+tracing.workspace = true

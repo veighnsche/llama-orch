@@ -19,8 +19,7 @@ tracing-subscriber.workspace = true
 gpu-info = { path = "../shared-crates/gpu-info" }
 
 # Worker crates
-vram-residency = { path = "../worker-orcd-crates/vram-residency" }
+vram-policy = { path = "../worker-orcd-crates/vram-policy" }
 model-loader = { path = "../worker-orcd-crates/model-loader" }
 worker-api = { path = "../worker-orcd-crates/api" }
 worker-error-handler = { path = "../worker-orcd-crates/error-handler" }
-scheduler = { path = "../worker-orcd-crates/scheduler" }
