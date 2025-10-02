@@ -168,8 +168,12 @@ impl VramManager {
         // Store allocation
         self.allocations.insert(vram_ptr, cuda_ptr);
         
-        // Emit audit event
-        emit_vram_sealed(&shard);
+        // Note: Audit event emission pending AuditLogger integration
+        // See: .docs/AUDIT_LOGGING_IMPLEMENTATION.md for integration guide
+        // When integrated:
+        //   if let Some(ref audit_logger) = self.audit_logger {
+        //       emit_vram_sealed(audit_logger, &shard, &self.worker_id).await.ok();
+        //   }
         
         tracing::info!(
             shard_id = %shard.shard_id,
@@ -229,8 +233,13 @@ impl VramManager {
                 &vram_digest[..16]
             );
             
-            // Emit critical audit event
-            emit_seal_verification_failed(shard, &reason);
+            // Note: Critical audit event emission pending AuditLogger integration
+            // See: .docs/AUDIT_LOGGING_IMPLEMENTATION.md for integration guide
+            // When integrated:
+            //   if let Some(ref audit_logger) = self.audit_logger {
+            //       emit_seal_verification_failed(audit_logger, shard, &reason, 
+            //           &shard.digest, &vram_digest, &self.worker_id).await.ok();
+            //   }
             
             tracing::error!(
                 shard_id = %shard.shard_id,
@@ -241,8 +250,12 @@ impl VramManager {
             return Err(VramError::SealVerificationFailed);
         }
         
-        // Emit audit event for successful verification
-        emit_seal_verified(shard);
+        // Note: Audit event emission pending AuditLogger integration
+        // See: .docs/AUDIT_LOGGING_IMPLEMENTATION.md for integration guide
+        // When integrated:
+        //   if let Some(ref audit_logger) = self.audit_logger {
+        //       emit_seal_verified(audit_logger, shard, &self.worker_id).await.ok();
+        //   }
         
         tracing::debug!(
             shard_id = %shard.shard_id,

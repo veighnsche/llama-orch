@@ -12,6 +12,10 @@ sha2.workspace = true
 hmac.workspace = true
 subtle.workspace = true
 hkdf.workspace = true
+chrono.workspace = true
 gpu-info = { path = "../../shared-crates/gpu-info" }
+audit-logging = { path = "../../shared-crates/audit-logging" }
+observability-narration-core = { path = "../../shared-crates/narration-core" }
 
 [dev-dependencies]
+chrono = { workspace = true }

@@ -99,7 +99,7 @@
 #![deny(clippy::integer_arithmetic)]
 #![deny(clippy::cast_ptr_alignment)]
 #![deny(clippy::mem_forget)]
-// All TODOs have been implemented
+// All core functionality implemented (audit logger integration pending)
 #![deny(clippy::unimplemented)]
 #![warn(clippy::arithmetic_side_effects)]
 #![warn(clippy::cast_lossless)]
@@ -138,6 +138,9 @@ pub mod validation;
 
 // Audit logging
 pub mod audit;
+
+// Narration (observability)
+pub mod narration;
 
 //
 // Public API exports
