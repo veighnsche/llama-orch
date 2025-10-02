@@ -9,7 +9,7 @@
 //! # Quick Start
 //!
 //! ```rust,no_run
-//! use proof_bundle_v3 as proof_bundle;
+//! use proof_bundle; // crate name
 //!
 //! // One line to generate complete proof bundle
 //! proof_bundle::generate_for_crate("my-crate", proof_bundle::Mode::UnitFast)?;
@@ -20,8 +20,8 @@
 //!
 //! ```text
 //! ┌─────────────────┐
-//! │  cargo test     │ --format json
-//! │  (native JSON)  │
+//! │  cargo test     │ (stable text output on STDERR)
+//! │                 │
 //! └────────┬────────┘
 //!          │
 //!          ├──> Structured test events

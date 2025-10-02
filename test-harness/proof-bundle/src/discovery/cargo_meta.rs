@@ -1,6 +1,7 @@
 //! Discover tests using cargo_metadata
 
 use cargo_metadata::{MetadataCommand, Package, Target};
+use std::path::{Path, PathBuf};
 use crate::core::ProofBundleError;
 use crate::Result;
 use super::TestTarget;
@@ -48,6 +49,15 @@ pub fn discover_tests(package_name: &str) -> Result<Vec<TestTarget>> {
 
 /// Extract test targets from a package
 fn extract_test_targets(package: &Package) -> Vec<TestTarget> {
+    // Determine manifest directory from Cargo.toml path
+    let manifest_dir: PathBuf = package
+        .manifest_path
+        .clone()
+        .into_std_path_buf()
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .to_path_buf();
+
     package
         .targets
         .iter()
@@ -57,6 +67,7 @@ fn extract_test_targets(package: &Package) -> Vec<TestTarget> {
             kinds: target.kind.iter().map(|s| s.to_string()).collect(),
             src_path: target.src_path.clone().into_std_path_buf(),
             package: package.name.clone(),
+            manifest_dir: manifest_dir.clone(),
         })
         .collect()
 }

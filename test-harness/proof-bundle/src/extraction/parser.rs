@@ -19,36 +19,73 @@
 //! }
 //! ```
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::ffi::OsStr;
 use std::fs;
+use std::path::PathBuf;
+use walkdir::WalkDir;
 use crate::core::TestMetadata;
 use crate::Result;
+use super::MetadataCache;
 
 /// Extract metadata from source files
 ///
 /// Only extracts from functions with #[test] attribute.
 pub fn extract_metadata(targets: &[crate::discovery::TestTarget]) -> Result<HashMap<String, TestMetadata>> {
     let mut metadata_map = HashMap::new();
-    
-    for target in targets {
+
+    // Determine manifest_dir from the first target (single package per call)
+    let manifest_dir: PathBuf = targets
+        .get(0)
+        .map(|t| t.manifest_dir.clone())
+        .unwrap_or_else(|| PathBuf::from("."));
+
+    // Collect candidate source files: target src_path + all under src/ and tests/
+    let mut files: HashSet<PathBuf> = HashSet::new();
+    for t in targets {
+        files.insert(t.src_path.clone());
+    }
+    for sub in ["src", "tests"].iter() {
+        let dir = manifest_dir.join(sub);
+        if dir.exists() {
+            for entry in WalkDir::new(&dir).into_iter().filter_map(|e| e.ok()) {
+                let p = entry.path();
+                if p.is_file() && p.extension() == Some(OsStr::new("rs")) {
+                    files.insert(p.to_path_buf());
+                }
+            }
+        }
+    }
+
+    let sources: Vec<PathBuf> = files.into_iter().collect();
+
+    // Use cache when fresh
+    let cache = MetadataCache::new(&manifest_dir);
+    if cache.is_fresh(&sources) {
+        if let Some(map) = cache.load() {
+            return Ok(map);
+        }
+    }
+
+    for file in &sources {
         // Read source file
-        let source = fs::read_to_string(&target.src_path)
+        let source = fs::read_to_string(file)
             .map_err(|e| crate::core::ProofBundleError::Io {
-                operation: format!("read source file {}", target.src_path.display()),
+                operation: format!("read source file {}", file.display()),
                 source: e,
             })?;
-        
+
         // Parse with syn
         let ast = syn::parse_file(&source)
             .map_err(|e| crate::core::ProofBundleError::ParseError {
-                context: format!("source file {}", target.src_path.display()),
+                context: format!("source file {}", file.display()),
                 source: Box::new(e),
             })?;
-        
+
         // Find test functions and extract metadata
         for item in ast.items {
             if let syn::Item::Fn(func) = item {
-                // CRITICAL: Only process functions with #[test] attribute
+                // Only functions with #[test]
                 if has_test_attribute(&func) {
                     let test_name = func.sig.ident.to_string();
                     let metadata = extract_from_function(&func);
@@ -57,7 +94,10 @@ pub fn extract_metadata(targets: &[crate::discovery::TestTarget]) -> Result<Hash
             }
         }
     }
-    
+
+    // Save cache for future runs
+    let _ = cache.save(&metadata_map);
+
     Ok(metadata_map)
 }
 

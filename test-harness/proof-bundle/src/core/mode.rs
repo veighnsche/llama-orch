@@ -33,8 +33,8 @@ impl Mode {
         match self {
             Mode::UnitFast => vec!["--lib"],
             Mode::UnitFull => vec!["--lib"],
-            Mode::BddMock => vec!["--test", "*"],
-            Mode::BddReal => vec!["--test", "*"],
+            Mode::BddMock => vec!["--tests"],
+            Mode::BddReal => vec!["--tests"],
             Mode::Integration => vec!["--tests"],
             Mode::Property => vec!["--lib"],
         }

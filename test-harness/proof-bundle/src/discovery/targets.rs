@@ -16,6 +16,9 @@ pub struct TestTarget {
     
     /// Package name
     pub package: String,
+
+    /// Crate manifest directory (directory containing Cargo.toml)
+    pub manifest_dir: PathBuf,
 }
 
 impl TestTarget {

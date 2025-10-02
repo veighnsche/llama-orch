@@ -82,11 +82,11 @@ fn parse_test_output(output: &str) -> Result<TestSummary> {
     let mut total_passed = 0;
     let mut total_failed = 0;
     let mut total_ignored = 0;
-    
+
     // Parse individual test lines
     for line in output.lines() {
         let line = line.trim();
-        
+
         // Match lines like: "test test_name ... ok"
         if line.starts_with("test ") && (line.contains(" ... ok") || line.contains(" ... FAILED") || line.contains(" ... ignored")) {
             if let Some(result) = parse_test_line(line) {
@@ -99,7 +99,7 @@ fn parse_test_output(output: &str) -> Result<TestSummary> {
             }
         }
     }
-    
+
     // Try to extract summary from "test result:" line for validation
     for line in output.lines() {
         if line.contains("test result:") {
@@ -116,10 +116,15 @@ fn parse_test_output(output: &str) -> Result<TestSummary> {
             break;
         }
     }
-    
+
+    // Attach failure details if present in output
+    if total_failed > 0 {
+        attach_failure_details(output, &mut tests);
+    }
+
     let total = tests.len();
     let pass_rate = TestSummary::calculate_pass_rate(total_passed, total);
-    
+
     Ok(TestSummary {
         total,
         passed: total_passed,
@@ -129,6 +134,48 @@ fn parse_test_output(output: &str) -> Result<TestSummary> {
         pass_rate,
         tests,
     })
+}
+
+/// Parse failure detail sections and attach to failed tests as error_message
+fn attach_failure_details(output: &str, tests: &mut [TestResult]) {
+    use std::collections::HashMap;
+    let mut by_name: HashMap<String, usize> = HashMap::new();
+    for (i, t) in tests.iter().enumerate() {
+        by_name.insert(t.name.clone(), i);
+    }
+
+    let lines: Vec<&str> = output.lines().collect();
+    let mut i = 0usize;
+    while i < lines.len() {
+        let line = lines[i].trim();
+        // Look for blocks like: "---- module::test_name stdout ----"
+        if line.starts_with("---- ") && line.ends_with(" stdout ----") {
+            // Extract test name between markers
+            let inner = &line[5..line.len() - " stdout ----".len()];
+            let test_name = inner.trim();
+            // Accumulate lines until next block or summary
+            let mut buf = String::new();
+            i += 1;
+            while i < lines.len() {
+                let l = lines[i];
+                let t = l.trim();
+                if t.starts_with("---- ") || t.starts_with("failures:") || t.starts_with("test result:") {
+                    i -= 1; // step back one so outer loop reprocesses header
+                    break;
+                }
+                buf.push_str(l);
+                buf.push('\n');
+                i += 1;
+            }
+            // Attach to matching test result if exists
+            if let Some(&idx) = by_name.get(test_name) {
+                if tests[idx].error_message.is_none() {
+                    tests[idx].error_message = Some(buf.trim().to_string());
+                }
+            }
+        }
+        i += 1;
+    }
 }
 
 /// Parse a single test line

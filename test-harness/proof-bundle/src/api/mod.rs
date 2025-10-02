@@ -19,7 +19,7 @@ use crate::Result;
 /// # Example
 ///
 /// ```rust,no_run
-/// use proof_bundle_v3 as proof_bundle;
+/// use proof_bundle; // crate name
 ///
 /// let summary = proof_bundle::generate_for_crate(
 ///     "my-crate",
