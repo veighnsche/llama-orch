@@ -98,7 +98,7 @@ pub fn validate_model_ref(s: &str) -> Result<()> {
         return Err(ValidationError::PathTraversal);
     }
     
-    // Validate characters: alphanumeric + dash + underscore + slash + colon + dot
+    // Validate characters: ASCII alphanumeric + dash + underscore + slash + colon + dot
     // Early termination on first invalid character for performance
     // Whitelist approach: only allow known-safe characters for model references
     //
@@ -107,24 +107,19 @@ pub fn validate_model_ref(s: &str) -> Result<()> {
     // - File paths: "file:path/to/model.gguf"
     // - URLs: "https://example.com/model.gguf" (colon and slash)
     // - Versions: "model-v1.2.3" or "model.v2"
+    //
+    // SECURITY: ASCII-only policy prevents Unicode homoglyph attacks
     for c in s.chars() {
-        if !c.is_alphanumeric() && !matches!(c, '-' | '_' | '/' | ':' | '.') {
+        if !c.is_ascii_alphanumeric() && !matches!(c, '-' | '_' | '/' | ':' | '.') {
             return Err(ValidationError::InvalidCharacters {
                 found: c.to_string(),
             });
         }
     }
     
-    // Additional robustness: Verify character count matches byte count
-    // This ensures no multi-byte UTF-8 characters slipped through
-    // Model references should be ASCII-only for maximum compatibility
-    let char_count = s.chars().count();
-    if char_count != s.len() {
-        // Multi-byte UTF-8 detected (though is_alphanumeric should catch this)
-        return Err(ValidationError::InvalidCharacters {
-            found: "[multi-byte UTF-8]".to_string(),
-        });
-    }
+    // PERFORMANCE: Removed redundant char_count check (dead code)
+    // is_ascii_alphanumeric() guarantees ASCII-only, so char_count == byte_count
+    // Auth-min approved removal: This check is provably unreachable
     
     Ok(())
 }
@@ -614,15 +609,17 @@ mod tests {
     
     #[test]
     fn test_sdk_char_count_vs_byte_count() {
-        // ASCII model references (char count == byte count)
+        // PERFORMANCE: Test updated after removing redundant char_count check
+        // ASCII model references are accepted
         let ascii = "meta-llama/Llama-3.1-8B";
-        assert_eq!(ascii.len(), ascii.chars().count());
         assert!(validate_model_ref(ascii).is_ok());
         
-        // UTF-8 model references (char count < byte count) should be rejected
+        // UTF-8 model references are rejected by is_ascii_alphanumeric() check
+        // (not by char_count check which was removed as dead code)
         let utf8 = "modèl/café";
-        assert_eq!(utf8.len(), 12); // bytes
-        assert_eq!(utf8.chars().count(), 10); // chars
-        assert!(validate_model_ref(utf8).is_err());
+        assert!(matches!(
+            validate_model_ref(utf8),
+            Err(ValidationError::InvalidCharacters { .. })
+        ));
     }
 }

@@ -80,17 +80,9 @@ pub fn validate_identifier(s: &str, max_len: usize) -> Result<()> {
         }
     }
     
-    // Additional robustness: Verify character count matches byte count
-    // This ensures no multi-byte UTF-8 characters slipped through
-    // (though is_ascii_alphanumeric should catch this)
-    let char_count = s.chars().count();
-    if char_count != s.len() {
-        // If we get here, there's a multi-byte character that somehow passed
-        // This should never happen, but defense in depth
-        return Err(ValidationError::InvalidCharacters {
-            found: "[multi-byte UTF-8]".to_string(),
-        });
-    }
+    // PERFORMANCE: Removed redundant char_count check (dead code)
+    // is_ascii_alphanumeric() guarantees ASCII-only, so char_count == byte_count
+    // Auth-min approved removal: This check is provably unreachable
     
     Ok(())
 }

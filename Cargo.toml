@@ -10,12 +10,7 @@ members = [
     "bin/worker-orcd",
     "bin/worker-orcd/bdd",
     
-    # Test harnesses
-    "test-harness/e2e-haiku",
-    "test-harness/metrics-contract",
-    "test-harness/determinism-suite",
-    "test-harness/chaos",
-    "test-harness/bdd",
+    # Test harnesses (removed - see test-harness/BLUEPRINT.md)
 
     # Consumers
     "consumers/llama-orch-sdk",

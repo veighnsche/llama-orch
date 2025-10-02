@@ -76,16 +76,10 @@ pub fn validate_hex_string(s: &str, expected_len: usize) -> Result<()> {
         }
     }
     
-    // Additional robustness: Verify character count matches byte count
-    // This ensures no multi-byte UTF-8 characters slipped through
-    // (though is_ascii_hexdigit should catch this)
-    let char_count = s.chars().count();
-    if char_count != expected_len {
-        return Err(ValidationError::WrongLength {
-            actual: char_count,
-            expected: expected_len,
-        });
-    }
+    // PERFORMANCE: Removed redundant char_count check (dead code)
+    // is_ascii_hexdigit() guarantees ASCII-only, so char_count == byte_count
+    // Already validated by s.len() == expected_len check at line 49
+    // Auth-min approved removal: This check is provably unreachable
     
     Ok(())
 }
