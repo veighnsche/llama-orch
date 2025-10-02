@@ -11,6 +11,11 @@ tracing.workspace = true
 sha2.workspace = true
 input-validation = { path = "../../shared-crates/input-validation" }
 
+# Observability
+observability-narration-core = { path = "../../shared-crates/narration-core" }
+audit-logging = { path = "../../shared-crates/audit-logging" }
+chrono = { workspace = true }
+
 [dev-dependencies]
 proptest.workspace = true
 tempfile = "3.8"

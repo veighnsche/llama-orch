@@ -1,6 +1,7 @@
 //! Core types for model loading
 
 use std::path::Path;
+use std::net::IpAddr;
 
 /// Model load request
 ///
@@ -17,6 +18,16 @@ pub struct LoadRequest<'a> {
     /// Maximum allowed file size (bytes)
     pub max_size: usize,
     
+    // Actor context for audit logging and narration
+    /// Worker ID (who is loading the model)
+    pub worker_id: Option<String>,
+    
+    /// Source IP address (where the request came from)
+    pub source_ip: Option<IpAddr>,
+    
+    /// Correlation ID for request tracking
+    pub correlation_id: Option<String>,
+    
     // TODO(Post-M0): Add signature verification fields
     // pub signature: Option<&'a [u8]>,
     // pub public_key: Option<&'a PublicKey>,
@@ -29,6 +40,9 @@ impl<'a> LoadRequest<'a> {
             model_path,
             expected_hash: None,
             max_size: 100_000_000_000, // 100GB
+            worker_id: None,
+            source_ip: None,
+            correlation_id: None,
         }
     }
     
@@ -41,6 +55,24 @@ impl<'a> LoadRequest<'a> {
     /// Set maximum file size
     pub fn with_max_size(mut self, max_size: usize) -> Self {
         self.max_size = max_size;
+        self
+    }
+    
+    /// Set worker ID for audit logging
+    pub fn with_worker_id(mut self, worker_id: String) -> Self {
+        self.worker_id = Some(worker_id);
+        self
+    }
+    
+    /// Set source IP for audit logging
+    pub fn with_source_ip(mut self, source_ip: IpAddr) -> Self {
+        self.source_ip = Some(source_ip);
+        self
+    }
+    
+    /// Set correlation ID for request tracking
+    pub fn with_correlation_id(mut self, correlation_id: String) -> Self {
+        self.correlation_id = Some(correlation_id);
         self
     }
 }

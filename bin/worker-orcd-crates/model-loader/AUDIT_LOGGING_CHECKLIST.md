@@ -670,10 +670,20 @@ cargo clippy -p model-loader -- -D warnings
 
 ---
 
-**Status**: ⬜ **NOT YET INTEGRATED** — Ready for implementation  
+**Status**: 🟡 **PHASE 1 COMPLETE** — Actor context added, Phase 2 pending  
 **Priority**: HIGH (Security-critical events must be audited)  
 **Owner**: model-loader team + audit-logging team  
 **Target**: M0 (blocking for production readiness)
+
+---
+
+## ✅ Phase 1 Complete (Foundation)
+
+- ✅ Added `audit-logging` dependency to `Cargo.toml`
+- ✅ Added actor context fields to `LoadRequest` (worker_id, source_ip, correlation_id)
+- ✅ Added builder methods (`.with_worker_id()`, `.with_source_ip()`, `.with_correlation_id()`)
+
+**Next**: Phase 2 - Add `AuditLogger` to `ModelLoader` and emit audit events on failures
 
 ---
 

@@ -85,6 +85,9 @@ pub mod types;
 pub mod loader;
 pub mod validation;
 
+// Observability
+pub mod narration;
+
 // Re-exports for convenience
 pub use error::{LoadError, Result};
 pub use types::LoadRequest;
