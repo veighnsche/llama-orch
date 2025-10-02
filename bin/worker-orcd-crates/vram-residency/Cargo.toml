@@ -9,3 +9,25 @@ authors.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 sha2.workspace = true
+hmac.workspace = true
+subtle.workspace = true
+hkdf.workspace = true
+chrono.workspace = true
+tokio = { workspace = true, features = ["sync"] }
+gpu-info = { path = "../../shared-crates/gpu-info" }
+audit-logging = { path = "../../shared-crates/audit-logging" }
+observability-narration-core = { path = "../../shared-crates/narration-core" }
+secrets-management = { path = "../../shared-crates/secrets-management" }
+auth-min = { path = "../../shared-crates/auth-min" }
+input-validation = { path = "../../shared-crates/input-validation" }
+serde_json = { workspace = true }
+
+[features]
+# Skip long-running tests (stress tests, property tests with many cases)
+# Usage: cargo test --features skip-long-tests
+skip-long-tests = []
+
+
+[dev-dependencies]
+proptest = "1.0"
+anyhow = { workspace = true }

@@ -167,15 +167,53 @@ pub struct CudaContext {
 
 impl CudaContext {
     /// Initialize CUDA context for device
+    ///
+    /// # Production Mode
+    /// Requires GPU to be available. Fails if no GPU detected.
+    ///
+    /// # Test Mode
+    /// When compiled with `cfg(test)`, allows initialization without GPU (mock mode).
     pub fn new(device: u32) -> Result<Self> {
-        // TODO(ARCH-CHANGE): Implement actual CUDA initialization per ARCHITECTURE_CHANGE_PLAN.md Phase 3:
-        // - Use cudaSetDevice to select GPU
-        // - Verify device exists and is available
-        // - Initialize cuBLAS handle
-        // - Query device properties (VRAM, compute capability)
-        // See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md Issue #11 (unsafe CUDA FFI)
-        tracing::info!(device = %device, "CUDA context initialized (stub)");
-        Ok(Self { device })
+        // In test mode, allow mock initialization without GPU
+        #[cfg(test)]
+        {
+            tracing::warn!(
+                device = %device,
+                "CUDA context initialized in TEST MODE (no GPU validation)"
+            );
+            return Ok(Self { device });
+        }
+        
+        // Production mode: Validate GPU availability using gpu-info
+        #[cfg(not(test))]
+        {
+            let gpu_info = gpu_info::detect_gpus();
+            if !gpu_info.available {
+                return Err(CudaError::InitFailed(
+                    "No NVIDIA GPU detected. This worker requires GPU.".to_string(),
+                ));
+            }
+            
+            // Validate device index
+            let gpu = gpu_info.validate_device(device).map_err(|_e| {
+                CudaError::InvalidDevice(device)
+            })?;
+            
+            tracing::info!(
+                device = %device,
+                name = %gpu.name,
+                vram_gb = %(gpu.vram_total_bytes / 1024 / 1024 / 1024),
+                compute_cap = ?gpu.compute_capability,
+                "Initializing CUDA context"
+            );
+            
+            // TODO(ARCH-CHANGE): Implement actual CUDA initialization per ARCHITECTURE_CHANGE_PLAN.md Phase 3:
+            // - Use cudaSetDevice to select GPU
+            // - Initialize cuBLAS handle
+            // See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md Issue #11 (unsafe CUDA FFI)
+            tracing::info!(device = %device, "CUDA context initialized (stub)");
+            Ok(Self { device })
+        }
     }
     
     /// Allocate VRAM with bounds checking

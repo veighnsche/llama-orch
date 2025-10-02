@@ -19,3 +19,4 @@ hex = "0.4"  # Hex decoding for key files
 
 [dev-dependencies]
 tempfile = "3.8"  # Temporary files for testing
+proptest.workspace = true

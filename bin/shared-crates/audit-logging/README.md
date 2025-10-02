@@ -204,9 +204,10 @@ let state = AppState {
 ```
 
 **2. Emit events (non-blocking)**:
+
 ```rust
-// In authentication middleware
-state.audit_logger.emit(AuditEvent::AuthSuccess {
+// Works from both sync and async contexts (no .await needed)
+if let Err(e) = audit_logger.emit(AuditEvent::AuthSuccess {
     timestamp: Utc::now(),
     actor: ActorInfo {
         user_id: format!("token:{}", token_fp),  // Use fingerprint
@@ -217,7 +218,10 @@ state.audit_logger.emit(AuditEvent::AuthSuccess {
     method: AuthMethod::BearerToken,
     path: req.uri().path().to_string(),
     service_id: "orchestratord".to_string(),
-}).await.ok();  // Don't block on audit failure
+}) {
+    tracing::error!(error = %e, "Failed to emit audit event");
+    // Don't fail the operation if audit fails
+}
 ```
 
 **3. Sanitize user input**:

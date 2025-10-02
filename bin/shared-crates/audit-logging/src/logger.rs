@@ -71,13 +71,47 @@ impl AuditLogger {
         })
     }
     
-    /// Emit audit event (async, non-blocking)
+    /// Emit audit event (non-blocking)
+    ///
+    /// Emits an audit event to the background writer task. This method is
+    /// non-blocking and can be called from both sync and async contexts.
+    ///
+    /// # Use Cases
+    ///
+    /// - Emit from synchronous functions (e.g., `VramManager::seal_model()`)
+    /// - Emit from async functions (e.g., HTTP handlers)
+    /// - Emit from Drop implementations
+    /// - Emit from any context (no async runtime required)
     ///
     /// # Errors
     ///
     /// Returns `AuditError::BufferFull` if buffer is full.
     /// Returns `AuditError::InvalidInput` if event validation fails.
-    pub async fn emit(&self, mut event: AuditEvent) -> Result<()> {
+    /// Returns `AuditError::CounterOverflow` if event counter overflows.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use audit_logging::{AuditLogger, AuditEvent, AuditConfig, AuditMode};
+    /// use chrono::Utc;
+    ///
+    /// // Can be called from sync or async functions
+    /// fn seal_model(audit_logger: &AuditLogger) -> Result<(), audit_logging::AuditError> {
+    ///     // ... sealing logic ...
+    ///     
+    ///     audit_logger.emit(AuditEvent::VramSealed {
+    ///         timestamp: Utc::now(),
+    ///         shard_id: "shard-123".to_string(),
+    ///         gpu_device: 0,
+    ///         vram_bytes: 8_000_000_000,
+    ///         digest: "abc123".to_string(),
+    ///         worker_id: "worker-gpu-0".to_string(),
+    ///     })?;
+    ///     
+    ///     Ok(())
+    /// }
+    /// ```
+    pub fn emit(&self, mut event: AuditEvent) -> Result<()> {
         // Validate and sanitize event
         validation::validate_event(&mut event)?;
         
@@ -195,11 +229,70 @@ mod tests {
         };
         
         // First emit should work (counter becomes MAX)
-        let result = logger.emit(event.clone()).await;
+        let result = logger.emit(event.clone());
         assert!(result.is_ok(), "First emit should succeed");
         
         // Second emit should fail (counter is now MAX)
-        let result = logger.emit(event).await;
+        let result = logger.emit(event);
+        assert!(result.is_err(), "Should detect overflow");
+        assert!(matches!(result.unwrap_err(), AuditError::CounterOverflow));
+    }
+    
+    #[tokio::test]
+    async fn test_emit_from_sync_context() {
+        // This test verifies that emit() can be called from sync context
+        let config = AuditConfig {
+            mode: AuditMode::Local {
+                base_dir: std::env::temp_dir().join("audit-test-sync"),
+            },
+            service_id: "test".to_string(),
+            rotation_policy: RotationPolicy::Daily,
+            retention_policy: RetentionPolicy::default(),
+        };
+        
+        let logger = AuditLogger::new(config).unwrap();
+        
+        // ✅ Can call from sync function (no .await needed)
+        let event = AuditEvent::VramSealed {
+            timestamp: Utc::now(),
+            shard_id: "shard-123".to_string(),
+            gpu_device: 0,
+            vram_bytes: 8_000_000_000,
+            digest: "abc123".to_string(),
+            worker_id: "worker-gpu-0".to_string(),
+        };
+        
+        let result = logger.emit(event);
+        assert!(result.is_ok(), "emit should succeed from sync context");
+    }
+    
+    #[tokio::test]
+    async fn test_emit_counter_overflow() {
+        let config = AuditConfig {
+            mode: AuditMode::Local {
+                base_dir: std::env::temp_dir().join("audit-test-sync-overflow"),
+            },
+            service_id: "test".to_string(),
+            rotation_policy: RotationPolicy::Daily,
+            retention_policy: RetentionPolicy::default(),
+        };
+        
+        let logger = AuditLogger::new(config).unwrap();
+        
+        // Set counter to MAX
+        logger.event_counter.store(u64::MAX, Ordering::SeqCst);
+        
+        let event = AuditEvent::VramSealed {
+            timestamp: Utc::now(),
+            shard_id: "shard-123".to_string(),
+            gpu_device: 0,
+            vram_bytes: 8_000_000_000,
+            digest: "abc123".to_string(),
+            worker_id: "worker-gpu-0".to_string(),
+        };
+        
+        // Should detect overflow
+        let result = logger.emit(event);
         assert!(result.is_err(), "Should detect overflow");
         assert!(matches!(result.unwrap_err(), AuditError::CounterOverflow));
     }

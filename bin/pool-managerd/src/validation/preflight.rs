@@ -1,6 +1,6 @@
 //! Preflight checks for GPU-only enforcement and environment validations.
 //!
-//! Status: IMPLEMENTED (cuda_available, assert_gpu_only with tests).
+//! Status: IMPLEMENTED (using gpu-info crate for detection).
 //! Spec: ORCH-1102 (GPU-only policy), ORCH-3202 (preflight checks).
 //! Usage: Called by provisioners or pool-managerd daemon at startup to enforce GPU-only policy.
 //! Integration: engine-provisioner calls this before building/starting engines.
@@ -9,21 +9,22 @@
 //! TODO: Add preflight for container runtime (podman/docker) if container provisioning is used.
 //! TODO: Add preflight for model tooling (huggingface-cli, aws, oras) per ORCH-3203.
 
-use anyhow::{anyhow, Result};
+use anyhow::{Context, Result};
+use gpu_info::{assert_gpu_available, has_gpu};
 
-/// Return true if CUDA appears available (nvcc or nvidia-smi present).
+/// Return true if CUDA appears available (GPU detected via nvidia-smi).
+///
+/// Uses shared gpu-info crate for detection.
 pub fn cuda_available() -> bool {
-    which::which("nvcc").is_ok() || which::which("nvidia-smi").is_ok()
+    has_gpu()
 }
 
 /// Fail fast if GPU is not available or CUDA toolchain missing when GPU-only is required.
+///
+/// Uses shared gpu-info crate for detection and validation.
 pub fn assert_gpu_only() -> Result<()> {
-    if !cuda_available() {
-        return Err(anyhow!(
-            "GPU-only enforcement: CUDA toolkit or NVIDIA driver not detected (nvcc/nvidia-smi not found)"
-        ));
-    }
-    Ok(())
+    assert_gpu_available()
+        .context("GPU-only enforcement: CUDA toolkit or NVIDIA driver not detected")
 }
 
 #[cfg(test)]
@@ -58,9 +59,11 @@ mod tests {
         let _ = fs::remove_dir_all(&dir);
     }
 
-    fn create_fake_nvcc(dir: &PathBuf) {
-        let file = dir.join(if cfg!(windows) { "nvcc.exe" } else { "nvcc" });
-        let _ = fs::write(&file, b"#!/bin/sh\nexit 0\n");
+    fn create_fake_nvidia_smi(dir: &PathBuf) {
+        let file = dir.join(if cfg!(windows) { "nvidia-smi.exe" } else { "nvidia-smi" });
+        // Create a fake nvidia-smi that outputs valid CSV
+        let script = b"#!/bin/sh\necho '0, NVIDIA GeForce RTX 3090, 24576, 23456, 8.6, 0000:01:00.0'\n";
+        let _ = fs::write(&file, script);
         #[cfg(unix)]
         {
             if let Ok(meta) = fs::metadata(&file) {
@@ -79,9 +82,9 @@ mod tests {
     }
 
     #[test]
-    fn test_cuda_available_true_when_nvcc_on_path() {
+    fn test_cuda_available_true_when_nvidia_smi_on_path() {
         with_isolated_path(|dir| {
-            create_fake_nvcc(dir);
+            create_fake_nvidia_smi(dir);
             assert!(cuda_available());
         });
     }
@@ -98,7 +101,7 @@ mod tests {
     #[test]
     fn test_assert_gpu_only_ok_when_available() {
         with_isolated_path(|dir| {
-            create_fake_nvcc(dir);
+            create_fake_nvidia_smi(dir);
             assert!(assert_gpu_only().is_ok());
         });
     }

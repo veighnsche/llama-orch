@@ -9,3 +9,8 @@ authors.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 sha2.workspace = true
+input-validation = { path = "../../shared-crates/input-validation" }
+
+[dev-dependencies]
+proptest.workspace = true
+tempfile = "3.8"

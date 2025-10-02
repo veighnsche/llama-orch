@@ -22,6 +22,7 @@ tower-http = { version = "0.5", features = ["trace", "cors"] }
 nix = { version = "0.27", features = ["signal", "process"] }
 rand = "0.8"
 auth-min = { path = "../shared-crates/auth-min" }
+gpu-info = { path = "../shared-crates/gpu-info" }
 http = { workspace = true }
 hostname = "0.4"
 num_cpus = "1.16"

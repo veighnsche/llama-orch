@@ -34,6 +34,7 @@ members = [
     "bin/shared-crates/input-validation/bdd",
     "bin/shared-crates/audit-logging",
     "bin/shared-crates/audit-logging/bdd",
+    "bin/shared-crates/gpu-info",
     "bin/shared-crates/rate-limiting",
     "bin/shared-crates/circuit-breaker",
     "bin/shared-crates/deadline-propagation",
@@ -72,7 +73,9 @@ members = [
     
     # New bin/ crates - worker-orcd-crates
     "bin/worker-orcd-crates/vram-residency",
+    "bin/worker-orcd-crates/vram-residency/bdd",
     "bin/worker-orcd-crates/model-loader",
+    "bin/worker-orcd-crates/model-loader/bdd",
     "bin/worker-orcd-crates/api",
     "bin/worker-orcd-crates/error-handler",
     "bin/worker-orcd-crates/scheduler",
@@ -106,6 +109,9 @@ bytes = "1"
 uuid = { version = "1", features = ["serde", "v4"] }
 clap = { version = "4", features = ["derive"] }
 sha2 = "0.10"
+hmac = "0.12"
+subtle = "2.5"
+hkdf = "0.12"
 walkdir = "2"
 regex = "1"
 insta = { version = "1", features = ["yaml"] }

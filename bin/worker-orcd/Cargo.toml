@@ -15,6 +15,9 @@ anyhow.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
 
+# Shared crates
+gpu-info = { path = "../shared-crates/gpu-info" }
+
 # Worker crates
 vram-residency = { path = "../worker-orcd-crates/vram-residency" }
 model-loader = { path = "../worker-orcd-crates/model-loader" }
