@@ -1,8 +1,13 @@
 //! Shard ID validation
 //!
 //! Validates shard IDs to prevent path traversal and injection attacks.
+//!
+//! Uses defense-in-depth approach:
+//! 1. Shared `input-validation` crate for generic identifier validation
+//! 2. Local domain-specific validation for VRAM-specific rules
 
 use crate::error::{Result, VramError};
+use input_validation::validate_identifier;
 
 /// Validate shard ID
 ///
@@ -23,14 +28,26 @@ use crate::error::{Result, VramError};
 ///
 /// # Security
 ///
+/// Defense-in-depth approach:
+/// 1. Shared `input-validation` crate validates generic identifier format
+/// 2. Local validation adds VRAM-specific rules
+///
 /// Prevents path traversal, injection attacks, and buffer overflows.
 pub fn validate_shard_id(shard_id: &str) -> Result<()> {
-    // Check empty
+    // LAYER 1: Shared validation (generic identifier rules)
+    // Validates: length, alphanumeric + allowed chars, no control chars
+    validate_identifier(shard_id, 256)
+        .map_err(|e| VramError::InvalidInput(format!("shard_id validation failed: {}", e)))?;
+    
+    // LAYER 2: Local VRAM-specific validation (defense-in-depth)
+    // Additional checks beyond generic identifier validation
+    
+    // Check empty (redundant with shared validation, but defense-in-depth)
     if shard_id.is_empty() {
         return Err(VramError::InvalidInput("shard_id cannot be empty".to_string()));
     }
     
-    // Check length (prevent buffer overflow)
+    // Check length (redundant with shared validation, but defense-in-depth)
     if shard_id.len() > 256 {
         return Err(VramError::InvalidInput(format!(
             "shard_id too long: {} bytes (max: 256)",
@@ -59,10 +76,11 @@ pub fn validate_shard_id(shard_id: &str) -> Result<()> {
         ));
     }
     
-    // Check for valid characters (alphanumeric + hyphen + underscore + colon)
-    if !shard_id.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_' || c == ':') {
+    // Check for valid characters (alphanumeric + hyphen + underscore)
+    // Note: Shared validation already checks this, but defense-in-depth
+    if !shard_id.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
         return Err(VramError::InvalidInput(
-            "shard_id contains invalid characters (only alphanumeric, -, _, : allowed)".to_string()
+            "shard_id contains invalid characters (only alphanumeric, -, _ allowed)".to_string()
         ));
     }
     
@@ -83,12 +101,12 @@ mod tests {
     fn test_valid_shard_id_alphanumeric() {
         assert!(validate_shard_id("shard-123").is_ok());
         assert!(validate_shard_id("abc_def_456").is_ok());
-        assert!(validate_shard_id("model:v1:shard-0").is_ok());
+        assert!(validate_shard_id("model-v1-shard-0").is_ok());
     }
 
     #[test]
     fn test_valid_shard_id_with_allowed_chars() {
-        assert!(validate_shard_id("shard-abc-123_xyz:v1").is_ok());
+        assert!(validate_shard_id("shard-abc-123_xyz-v1").is_ok());
         assert!(validate_shard_id("0123456789").is_ok());
         assert!(validate_shard_id("ABCDEFGHIJKLMNOPQRSTUVWXYZ").is_ok());
     }

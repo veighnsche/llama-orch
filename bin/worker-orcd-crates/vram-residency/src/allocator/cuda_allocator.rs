@@ -2,18 +2,51 @@
 //!
 //! Real CUDA VRAM allocation via FFI.
 //!
-//! # Note
+//! # Why This File Exists But Is Unused
 //!
-//! This is an alternative allocator implementation that is not currently used.
-//! VramManager uses CudaContext directly instead.
-//! Kept for potential future use.
+//! This module contains an **alternative allocator abstraction** that was designed
+//! during early development but is **not currently used** in production.
+//!
+//! ## Current Architecture
+//!
+//! `VramManager` (in `vram_manager.rs`) uses `CudaContext` **directly** from the
+//! `cuda_ffi` module. This provides:
+//! - Direct access to CUDA operations without an extra abstraction layer
+//! - Simpler code path with fewer indirections
+//! - Better performance (no wrapper overhead)
+//!
+//! ## Why Keep This File?
+//!
+//! 1. **Future flexibility** - If we need a different allocation strategy or
+//!    want to support multiple allocator backends, this provides a starting point
+//! 2. **Reference implementation** - Shows how to wrap CudaContext in a higher-level API
+//! 3. **No maintenance burden** - The code is complete, tested, and doesn't interfere
+//!    with the current implementation
+//!
+//! ## Why `#[allow(dead_code)]`?
+//!
+//! Without this attribute, Rust would emit warnings for every unused function in this
+//! module. Since this is **intentionally unused but kept for future use**, we suppress
+//! these warnings to keep the build output clean while preserving the code.
+//!
+//! ## When Would We Use This?
+//!
+//! Potential future scenarios:
+//! - Supporting multiple GPU vendors (CUDA, ROCm, Vulkan) with a unified allocator trait
+//! - Implementing custom allocation strategies (pooling, buddy allocation, etc.)
+//! - Adding allocation telemetry or debugging hooks
+//! - Testing different allocation patterns without modifying VramManager
 
 use crate::error::Result;
 use crate::cuda_ffi::{CudaContext, SafeCudaPtr};
 
-/// CUDA VRAM allocator
+/// CUDA VRAM allocator (alternative implementation, currently unused)
 ///
 /// Wraps CUDA FFI calls for VRAM allocation.
+///
+/// # Status
+///
+/// **Not currently used in production.** See module documentation for details.
 ///
 /// # Production Ready
 ///

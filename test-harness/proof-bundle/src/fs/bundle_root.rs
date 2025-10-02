@@ -17,10 +17,35 @@ pub struct ProofBundle {
 
 impl ProofBundle {
     /// Create or open the proof bundle directory for a given test type.
+    /// 
+    /// **Cleanup Policy**: Before creating the new bundle, this method automatically
+    /// removes all existing bundles for this test type to keep only the latest one.
     pub fn for_type(test_type: TestType) -> Result<Self> {
         let base = proof_base_dir()?;
         let run_id = resolve_run_id();
-        let root = base.join(test_type.as_dir()).join(run_id);
+        let type_dir = base.join(test_type.as_dir());
+        
+        // CLEANUP: Remove all existing bundles for this test type before creating new one
+        if type_dir.exists() {
+            if let Ok(entries) = fs::read_dir(&type_dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        // Remove old bundle directory
+                        if let Err(e) = fs::remove_dir_all(&path) {
+                            eprintln!(
+                                "Warning: Failed to remove old proof bundle {}: {}",
+                                path.display(),
+                                e
+                            );
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Create new bundle directory
+        let root = type_dir.join(run_id);
         fs::create_dir_all(&root)
             .with_context(|| format!("creating proof bundle dir: {}", root.display()))?;
         Ok(Self { root })

@@ -31,11 +31,34 @@ type HmacSha256 = Hmac<Sha256>;
 ///
 /// Returns error if seal_key is invalid or HMAC computation fails
 pub fn compute_signature(shard: &SealedShard, seal_key: &[u8]) -> Result<Vec<u8>> {
-    // Validate seal key length
+    // CRITICAL: Validate seal key length (defense in depth)
+    if seal_key.is_empty() {
+        return Err(VramError::ConfigError(
+            "seal key cannot be empty".to_string(),
+        ));
+    }
     if seal_key.len() < 32 {
         return Err(VramError::ConfigError(
-            "seal key must be at least 32 bytes".to_string(),
+            format!("seal key must be at least 32 bytes, got {}", seal_key.len()),
         ));
+    }
+    if seal_key.len() > 1024 {
+        return Err(VramError::ConfigError(
+            format!("seal key too large (max 1024 bytes), got {}", seal_key.len()),
+        ));
+    }
+    
+    // CRITICAL: Validate shard fields (defense in depth)
+    if shard.shard_id.is_empty() {
+        return Err(VramError::InvalidInput("shard_id cannot be empty".to_string()));
+    }
+    if shard.digest.len() != 64 {
+        return Err(VramError::InvalidInput(
+            format!("digest must be 64 hex chars, got {}", shard.digest.len()),
+        ));
+    }
+    if shard.vram_bytes == 0 {
+        return Err(VramError::InvalidInput("vram_bytes cannot be zero".to_string()));
     }
     
     // Create HMAC instance
@@ -87,7 +110,21 @@ pub fn verify_signature(
     signature: &[u8],
     seal_key: &[u8],
 ) -> Result<()> {
-    // Re-compute signature
+    // CRITICAL: Validate inputs (defense in depth)
+    if signature.is_empty() {
+        tracing::error!(shard_id = %shard.shard_id, "Empty signature provided");
+        return Err(VramError::SealVerificationFailed);
+    }
+    if signature.len() != 32 {
+        tracing::error!(
+            shard_id = %shard.shard_id,
+            signature_len = %signature.len(),
+            "Invalid signature length (expected 32 bytes)"
+        );
+        return Err(VramError::SealVerificationFailed);
+    }
+    
+    // Re-compute signature (this also validates shard and seal_key)
     let expected = compute_signature(shard, seal_key)?;
     
     // Timing-safe comparison
@@ -276,5 +313,172 @@ mod tests {
         // Both should fail/succeed consistently
         assert!(verify_signature(&shard, &valid_sig, &seal_key).is_ok());
         assert!(verify_signature(&shard, &invalid_sig, &seal_key).is_err());
+    }
+
+    // ========== EXTRA ROBUSTNESS TESTS ==========
+
+    #[test]
+    fn test_compute_signature_empty_key_rejected() {
+        let shard = create_test_shard();
+        let empty_key = vec![];
+        
+        let result = compute_signature(&shard, &empty_key);
+        assert!(result.is_err());
+        assert!(matches!(result, Err(VramError::ConfigError(_))));
+    }
+
+    #[test]
+    fn test_compute_signature_oversized_key_rejected() {
+        let shard = create_test_shard();
+        let huge_key = vec![0x42u8; 2048]; // 2KB key (too large)
+        
+        let result = compute_signature(&shard, &huge_key);
+        assert!(result.is_err());
+        assert!(matches!(result, Err(VramError::ConfigError(_))));
+    }
+
+    #[test]
+    fn test_compute_signature_empty_shard_id_rejected() {
+        let mut shard = create_test_shard();
+        shard.shard_id = String::new();
+        let seal_key = vec![0x42u8; 32];
+        
+        let result = compute_signature(&shard, &seal_key);
+        assert!(result.is_err());
+        assert!(matches!(result, Err(VramError::InvalidInput(_))));
+    }
+
+    #[test]
+    fn test_compute_signature_invalid_digest_length_rejected() {
+        let mut shard = create_test_shard();
+        shard.digest = "too_short".to_string();
+        let seal_key = vec![0x42u8; 32];
+        
+        let result = compute_signature(&shard, &seal_key);
+        assert!(result.is_err());
+        assert!(matches!(result, Err(VramError::InvalidInput(_))));
+    }
+
+    #[test]
+    fn test_compute_signature_zero_vram_bytes_rejected() {
+        let mut shard = create_test_shard();
+        shard.vram_bytes = 0;
+        let seal_key = vec![0x42u8; 32];
+        
+        let result = compute_signature(&shard, &seal_key);
+        assert!(result.is_err());
+        assert!(matches!(result, Err(VramError::InvalidInput(_))));
+    }
+
+    #[test]
+    fn test_verify_signature_empty_signature_rejected() {
+        let shard = create_test_shard();
+        let seal_key = vec![0x42u8; 32];
+        let empty_sig = vec![];
+        
+        let result = verify_signature(&shard, &empty_sig, &seal_key);
+        assert!(result.is_err());
+        assert!(matches!(result, Err(VramError::SealVerificationFailed)));
+    }
+
+    #[test]
+    fn test_verify_signature_wrong_length_signature_rejected() {
+        let shard = create_test_shard();
+        let seal_key = vec![0x42u8; 32];
+        let wrong_length_sig = vec![0x42u8; 64]; // 64 bytes instead of 32
+        
+        let result = verify_signature(&shard, &wrong_length_sig, &seal_key);
+        assert!(result.is_err());
+        assert!(matches!(result, Err(VramError::SealVerificationFailed)));
+    }
+
+    #[test]
+    fn test_signature_all_zeros_key_works() {
+        // Edge case: all-zeros key (valid but weak)
+        let shard = create_test_shard();
+        let zero_key = vec![0x00u8; 32];
+        
+        let sig = compute_signature(&shard, &zero_key).unwrap();
+        assert_eq!(sig.len(), 32);
+        assert!(verify_signature(&shard, &sig, &zero_key).is_ok());
+    }
+
+    #[test]
+    fn test_signature_all_ones_key_works() {
+        // Edge case: all-ones key (valid but weak)
+        let shard = create_test_shard();
+        let ones_key = vec![0xFFu8; 32];
+        
+        let sig = compute_signature(&shard, &ones_key).unwrap();
+        assert_eq!(sig.len(), 32);
+        assert!(verify_signature(&shard, &sig, &ones_key).is_ok());
+    }
+
+    #[test]
+    fn test_signature_max_size_key_works() {
+        // Edge case: maximum allowed key size
+        let shard = create_test_shard();
+        let max_key = vec![0x42u8; 1024];
+        
+        let sig = compute_signature(&shard, &max_key).unwrap();
+        assert_eq!(sig.len(), 32);
+        assert!(verify_signature(&shard, &sig, &max_key).is_ok());
+    }
+
+    #[test]
+    fn test_signature_single_bit_difference_detected() {
+        // Verify that even a single bit flip is detected
+        let shard = create_test_shard();
+        let seal_key = vec![0x42u8; 32];
+        
+        let sig = compute_signature(&shard, &seal_key).unwrap();
+        
+        // Flip each bit and verify detection
+        for byte_idx in 0..sig.len().min(8) {
+            for bit_idx in 0..8 {
+                let mut tampered_sig = sig.clone();
+                tampered_sig[byte_idx] ^= 1 << bit_idx;
+                
+                let result = verify_signature(&shard, &tampered_sig, &seal_key);
+                assert!(result.is_err(), 
+                    "Failed to detect bit flip at byte {} bit {}", byte_idx, bit_idx);
+            }
+        }
+    }
+
+    #[test]
+    fn test_signature_large_vram_bytes() {
+        // Test with maximum realistic VRAM size (128GB)
+        let mut shard = create_test_shard();
+        shard.vram_bytes = 128 * 1024 * 1024 * 1024; // 128GB
+        let seal_key = vec![0x42u8; 32];
+        
+        let sig = compute_signature(&shard, &seal_key).unwrap();
+        assert_eq!(sig.len(), 32);
+        assert!(verify_signature(&shard, &sig, &seal_key).is_ok());
+    }
+
+    #[test]
+    fn test_signature_unicode_shard_id() {
+        // Test with unicode characters in shard_id
+        let mut shard = create_test_shard();
+        shard.shard_id = "shard-🦀-rust-αβγ-测试".to_string();
+        let seal_key = vec![0x42u8; 32];
+        
+        let sig = compute_signature(&shard, &seal_key).unwrap();
+        assert_eq!(sig.len(), 32);
+        assert!(verify_signature(&shard, &sig, &seal_key).is_ok());
+    }
+
+    #[test]
+    fn test_signature_max_length_shard_id() {
+        // Test with very long shard_id (but still valid)
+        let mut shard = create_test_shard();
+        shard.shard_id = "a".repeat(256);
+        let seal_key = vec![0x42u8; 32];
+        
+        let sig = compute_signature(&shard, &seal_key).unwrap();
+        assert_eq!(sig.len(), 32);
+        assert!(verify_signature(&shard, &sig, &seal_key).is_ok());
     }
 }

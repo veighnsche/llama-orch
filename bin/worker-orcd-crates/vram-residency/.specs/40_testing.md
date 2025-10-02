@@ -3,22 +3,27 @@
 **Status**: Draft  
 **Security Tier**: TIER 1 (Critical)  
 **Last Updated**: 2025-10-02  
-**Purpose**: Define testing strategy with automatic GPU detection and CPU-only fallback
 
 ---
 
 ## 0. Executive Summary
 
-**Key Finding**: Tests automatically use real GPU when available, fall back to mock when not.
+**Key Finding**: Tests MUST run in BOTH mock mode AND real CUDA mode (when available).
+
+**UPDATED REQUIREMENT** (2025-10-02): See `42_dual_mode_testing.md` for mandatory dual-mode testing policy.
 
 **Rationale**:
 - 95% of code is GPU-agnostic business logic (cryptography, validation, audit)
-- Mock VRAM provides sufficient fidelity for security and correctness validation
+- Only 5% requires actual GPU (CUDA FFI layer)
+- Mock VRAM provides sufficient coverage for most development/CI
+- **Real CUDA testing MUST be attempted when GPU available**
+- **Clear warning MUST be emitted if no CUDA found**
 - GPU tests run automatically when GPU detected (via `gpu-info`)
 - All tests work on CPU-only systems (CI/CD friendly)
 
 **Testing Strategy**: Automatic GPU detection with mock fallback (best of both worlds).
 
+{{ ... }}
 ---
 
 ## 1. Testing Architecture
@@ -1020,6 +1025,13 @@ echo "All checks passed!"
 - CUDA FFI wrappers (requires GPU)
 - Performance optimizations
 - Platform-specific code
+
+**NOT REQUIRED to be tested on real VRAM**:
+- Alternative/unused implementations (e.g., `CudaVramAllocator`)
+- Reference implementations kept for future use
+- Code paths marked with `#[allow(dead_code)]` that are intentionally unused
+
+**Rationale**: Only the **production code path** requires real VRAM testing. Alternative implementations that are not used in production do not need GPU testing, as they serve as reference implementations for future flexibility.
 
 ---
 

@@ -62,3 +62,10 @@ impl VramError {
         )
     }
 }
+
+// Convert secrets-management errors to VramError
+impl From<secrets_management::SecretError> for VramError {
+    fn from(err: secrets_management::SecretError) -> Self {
+        VramError::ConfigError(format!("secret management error: {}", err))
+    }
+}

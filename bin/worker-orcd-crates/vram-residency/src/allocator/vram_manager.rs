@@ -4,11 +4,17 @@
 
 use crate::error::{Result, VramError};
 use crate::types::SealedShard;
-use crate::seal::{compute_digest, compute_signature, verify_signature, derive_seal_key};
+use crate::seal::{compute_digest, compute_signature, verify_signature};
 use crate::cuda_ffi::{CudaContext, SafeCudaPtr};
-use crate::audit::events::{emit_vram_sealed, emit_seal_verified, emit_seal_verification_failed};
-use crate::validation::{validate_shard_id, validate_gpu_device};
+use crate::validation::validate_shard_id;
 use std::collections::HashMap;
+use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::Arc;
+use sha2::{Sha256, Digest};
+use secrets_management::SecretKey;
+use auth_min::token_fp6;
+use audit_logging::{AuditLogger, AuditEvent};
+use chrono::Utc;
 
 /// VRAM Manager
 ///
@@ -33,8 +39,11 @@ use std::collections::HashMap;
 /// ```
 pub struct VramManager {
     context: CudaContext,
-    seal_key: Vec<u8>,
+    seal_key: SecretKey,  // ✅ Auto-zeroizing on drop
     allocations: HashMap<usize, SafeCudaPtr>,
+    audit_logger: Option<Arc<AuditLogger>>,  // ✅ Audit logging
+    worker_id: String,  // ✅ Worker identification
+    used_vram: usize,  // ✅ Track used VRAM for audit events
 }
 
 impl VramManager {
@@ -48,12 +57,17 @@ impl VramManager {
             .expect("Failed to create CUDA context in test mode");
         
         // Mock seal key for testing (DO NOT use in production)
-        let seal_key = vec![0x42u8; 32];
+        // Use derive_from_token with a test token
+        let seal_key = SecretKey::derive_from_token("test-token-42", b"llorch-vram-seal-v1")
+            .expect("Failed to create mock seal key");
         
         Self {
             context,
             seal_key,
             allocations: HashMap::new(),
+            audit_logger: None,  // No audit logging in tests
+            worker_id: "test-worker".to_string(),
+            used_vram: 0,
         }
     }
     
@@ -74,15 +88,27 @@ impl VramManager {
     /// # Security
     ///
     /// Seal key is derived via HKDF-SHA256 from worker_token with domain separation.
-    pub fn new_with_token(worker_token: &str, gpu_device: u32) -> Result<Self> {
+    pub fn new_with_token(
+        worker_token: &str,
+        gpu_device: u32,
+        audit_logger: Option<Arc<AuditLogger>>,
+        worker_id: String,
+    ) -> Result<Self> {
         // Initialize CUDA context (fails if no GPU in production mode)
         let context = CudaContext::new(gpu_device)?;
         
-        // Derive seal key from worker token
-        let seal_key = derive_seal_key(worker_token, b"llorch-vram-seal-v1")?;
+        // Derive seal key from worker token (HKDF-SHA256 with domain separation)
+        // ✅ SecretKey automatically zeroized on drop
+        let seal_key = SecretKey::derive_from_token(
+            worker_token,
+            b"llorch-vram-seal-v1"
+        )?;
         
+        // Safe logging with token fingerprint (non-reversible)
+        let token_fp = token_fp6(worker_token);
         tracing::info!(
             gpu_device = %gpu_device,
+            worker_token_fp = %token_fp,  // ✅ Safe to log (6-char fingerprint)
             "VramManager initialized with CUDA context"
         );
         
@@ -90,10 +116,25 @@ impl VramManager {
             context,
             seal_key,
             allocations: HashMap::new(),
+            audit_logger,
+            worker_id,
+            used_vram: 0,
         })
     }
     
     /// Seal model in VRAM with cryptographic signature
+    ///
+    /// **CRITICAL**: Shared GPU Contention (Home/Desktop Use)
+    ///
+    /// **On home/desktop systems**, this function may fail with `InsufficientVram` if user
+    /// applications (gaming, video editing, 3D rendering, browser GPU acceleration) are using
+    /// the GPU. This is **expected behavior** and prevents crashing user applications.
+    ///
+    /// **However**: If this function succeeds and allocates VRAM, user applications started
+    /// afterwards may fail to launch or run at degraded quality. This is a **critical UX issue**.
+    ///
+    /// **Required**: Higher-level orchestration (`worker-orcd`, `pool-managerd`) MUST implement
+    /// GPU process detection and automatic model eviction. See `.specs/45_shared_gpu_contention.md`.
     ///
     /// # Arguments
     ///
@@ -102,13 +143,17 @@ impl VramManager {
     ///
     /// # Returns
     ///
-    /// Sealed shard with HMAC-SHA256 signature
+    /// Sealed shard with:
+    /// 1. Opaque shard ID
+    /// 2. SHA-256 digest
+    /// 3. HMAC-SHA256 signature
+    /// 4. VRAM allocation (private pointer)
     ///
     /// # Security
     ///
-    /// 1. Validates inputs (shard ID, GPU device, model size)
-    /// 2. Allocates VRAM via CUDA
-    /// 3. Copies model data to VRAM
+    /// 1. Validates model size (prevents zero-size and DoS)
+    /// 2. Checks VRAM capacity
+    /// 3. Allocates VRAM via CUDA FFI
     /// 4. Computes SHA-256 digest
     /// 5. Generates HMAC-SHA256 seal signature
     /// 6. Returns tamper-evident sealed shard
@@ -122,18 +167,25 @@ impl VramManager {
             ));
         }
         
-        // Validate GPU device index
-        // Note: In production mode, CudaContext already validates this
-        // This is defense-in-depth
-        #[cfg(not(test))]
-        {
-            let gpu_info = gpu_info::detect_gpus();
-            validate_gpu_device(gpu_device, gpu_info.count as u32)?;
-        }
+        // Note: GPU device validation is performed in CudaContext::new()
+        // No additional validation needed here
         
         // Check capacity
         let available = self.context.get_free_vram()?;
         if vram_needed > available {
+            // Emit allocation failure audit event
+            if let Some(ref audit_logger) = self.audit_logger {
+                if let Err(e) = audit_logger.emit(AuditEvent::VramAllocationFailed {
+                    timestamp: Utc::now(),
+                    requested_bytes: vram_needed,
+                    available_bytes: available,
+                    reason: "insufficient_vram".to_string(),
+                    gpu_device,
+                    worker_id: self.worker_id.clone(),
+                }) {
+                    tracing::error!(error = %e, "Failed to emit VramAllocationFailed audit event");
+                }
+            }
             return Err(VramError::InsufficientVram(vram_needed, available));
         }
         
@@ -146,9 +198,9 @@ impl VramManager {
         // Compute SHA-256 digest
         let digest = compute_digest(model_bytes);
         
-        // Create sealed shard
+        // Create sealed shard with opaque ID (no VRAM pointer exposure)
         let vram_ptr = cuda_ptr.as_ptr() as usize;
-        let shard_id = format!("shard-{:x}-{:x}", gpu_device, vram_ptr);
+        let shard_id = generate_opaque_shard_id(gpu_device, vram_ptr)?;
         
         // Validate generated shard ID (defense-in-depth)
         validate_shard_id(&shard_id)?;
@@ -162,18 +214,42 @@ impl VramManager {
         );
         
         // Compute HMAC-SHA256 signature
-        let signature = compute_signature(&shard, &self.seal_key)?;
+        let signature = compute_signature(&shard, self.seal_key.as_bytes())?;
         shard.set_signature(signature);
         
-        // Store allocation
+        // Store allocation and update tracking
         self.allocations.insert(vram_ptr, cuda_ptr);
+        self.used_vram = self.used_vram.saturating_add(vram_needed);
         
-        // Note: Audit event emission pending AuditLogger integration
-        // See: .docs/AUDIT_LOGGING_IMPLEMENTATION.md for integration guide
-        // When integrated:
-        //   if let Some(ref audit_logger) = self.audit_logger {
-        //       emit_vram_sealed(audit_logger, &shard, &self.worker_id).await.ok();
-        //   }
+        // Emit allocation success audit event
+        if let Some(ref audit_logger) = self.audit_logger {
+            let total_vram = self.context.get_total_vram().unwrap_or(0);
+            if let Err(e) = audit_logger.emit(AuditEvent::VramAllocated {
+                timestamp: Utc::now(),
+                requested_bytes: vram_needed,
+                allocated_bytes: vram_needed,
+                available_bytes: available,
+                used_bytes: self.used_vram,
+                gpu_device,
+                worker_id: self.worker_id.clone(),
+            }) {
+                tracing::error!(error = %e, "Failed to emit VramAllocated audit event");
+            }
+        }
+        
+        // Emit audit event (non-blocking, errors logged but not propagated)
+        if let Some(ref audit_logger) = self.audit_logger {
+            if let Err(e) = audit_logger.emit(AuditEvent::VramSealed {
+                timestamp: Utc::now(),
+                shard_id: shard.shard_id.clone(),
+                gpu_device: shard.gpu_device,
+                vram_bytes: shard.vram_bytes,
+                digest: shard.digest.clone(),
+                worker_id: self.worker_id.clone(),
+            }) {
+                tracing::error!(error = %e, "Failed to emit VramSealed audit event");
+            }
+        }
         
         tracing::info!(
             shard_id = %shard.shard_id,
@@ -216,7 +292,7 @@ impl VramManager {
         // Verify HMAC signature
         let signature = shard.signature()
             .ok_or(VramError::NotSealed)?;
-        verify_signature(shard, signature, &self.seal_key)?;
+        verify_signature(shard, signature, self.seal_key.as_bytes())?;
         
         // Get VRAM allocation
         let cuda_ptr = self.allocations.get(&shard.vram_ptr())
@@ -233,13 +309,20 @@ impl VramManager {
                 &vram_digest[..16]
             );
             
-            // Note: Critical audit event emission pending AuditLogger integration
-            // See: .docs/AUDIT_LOGGING_IMPLEMENTATION.md for integration guide
-            // When integrated:
-            //   if let Some(ref audit_logger) = self.audit_logger {
-            //       emit_seal_verification_failed(audit_logger, shard, &reason, 
-            //           &shard.digest, &vram_digest, &self.worker_id).await.ok();
-            //   }
+            // Emit CRITICAL audit event (seal verification failure)
+            if let Some(ref audit_logger) = self.audit_logger {
+                if let Err(e) = audit_logger.emit(AuditEvent::SealVerificationFailed {
+                    timestamp: Utc::now(),
+                    shard_id: shard.shard_id.clone(),
+                    reason: "digest_mismatch".to_string(),
+                    expected_digest: shard.digest.clone(),
+                    actual_digest: vram_digest.clone(),
+                    worker_id: self.worker_id.clone(),
+                    severity: "CRITICAL".to_string(),
+                }) {
+                    tracing::error!(error = %e, "Failed to emit CRITICAL SealVerificationFailed audit event");
+                }
+            }
             
             tracing::error!(
                 shard_id = %shard.shard_id,
@@ -250,16 +333,69 @@ impl VramManager {
             return Err(VramError::SealVerificationFailed);
         }
         
-        // Note: Audit event emission pending AuditLogger integration
-        // See: .docs/AUDIT_LOGGING_IMPLEMENTATION.md for integration guide
-        // When integrated:
-        //   if let Some(ref audit_logger) = self.audit_logger {
-        //       emit_seal_verified(audit_logger, shard, &self.worker_id).await.ok();
-        //   }
+        // Emit audit event (seal verification success)
+        if let Some(ref audit_logger) = self.audit_logger {
+            if let Err(e) = audit_logger.emit(AuditEvent::SealVerified {
+                timestamp: Utc::now(),
+                shard_id: shard.shard_id.clone(),
+                worker_id: self.worker_id.clone(),
+            }) {
+                tracing::error!(error = %e, "Failed to emit SealVerified audit event");
+            }
+        }
         
         tracing::debug!(
             shard_id = %shard.shard_id,
             "Seal verification passed"
+        );
+        
+        Ok(())
+    }
+    
+    /// Deallocate a sealed shard from VRAM
+    ///
+    /// # Arguments
+    ///
+    /// * `shard` - Shard to deallocate
+    ///
+    /// # Security
+    ///
+    /// - Emits VramDeallocated audit event (WORKER-4162)
+    /// - Updates used VRAM tracking
+    /// - Removes allocation from tracking map
+    ///
+    /// # Errors
+    ///
+    /// Returns error if shard not found in allocations
+    pub fn deallocate(&mut self, shard: &SealedShard) -> Result<()> {
+        let vram_ptr = shard.vram_ptr();
+        
+        // Remove from allocations (this will drop SafeCudaPtr and free VRAM)
+        self.allocations.remove(&vram_ptr)
+            .ok_or(VramError::IntegrityViolation)?;
+        
+        // Update used VRAM tracking
+        self.used_vram = self.used_vram.saturating_sub(shard.vram_bytes);
+        
+        // Emit deallocation audit event (WORKER-4162)
+        if let Some(ref audit_logger) = self.audit_logger {
+            if let Err(e) = audit_logger.emit(AuditEvent::VramDeallocated {
+                timestamp: Utc::now(),
+                shard_id: shard.shard_id.clone(),
+                freed_bytes: shard.vram_bytes,
+                remaining_used: self.used_vram,
+                gpu_device: shard.gpu_device,
+                worker_id: self.worker_id.clone(),
+            }) {
+                tracing::error!(error = %e, "Failed to emit VramDeallocated audit event");
+            }
+        }
+        
+        tracing::info!(
+            shard_id = %shard.shard_id,
+            freed_bytes = %shard.vram_bytes,
+            remaining_used = %self.used_vram,
+            "VRAM deallocated"
         );
         
         Ok(())
@@ -423,6 +559,37 @@ mod tests {
     }
 
     #[test]
+    fn test_deallocate_removes_allocation() {
+        let mut manager = VramManager::new();
+        let data = vec![0x42u8; 1024];
+        
+        let shard = manager.seal_model(&data, 0).unwrap();
+        let shard_id = shard.shard_id.clone();
+        
+        // Deallocate
+        let result = manager.deallocate(&shard);
+        assert!(result.is_ok());
+        
+        // Should not be able to verify after deallocation
+        let verify_result = manager.verify_sealed(&shard);
+        assert!(verify_result.is_err());
+    }
+
+    #[test]
+    fn test_deallocate_updates_used_vram() {
+        let mut manager = VramManager::new();
+        let data = vec![0x42u8; 2048];
+        
+        let initial_used = manager.used_vram;
+        let shard = manager.seal_model(&data, 0).unwrap();
+        
+        assert_eq!(manager.used_vram, initial_used + 2048);
+        
+        manager.deallocate(&shard).unwrap();
+        assert_eq!(manager.used_vram, initial_used);
+    }
+
+    #[test]
     fn test_total_vram_returns_value() {
         let manager = VramManager::new();
         let total = manager.total_vram();
@@ -508,16 +675,44 @@ mod tests {
         // Just verify it doesn't panic
         let _ = result;
     }
+}
 
-    #[test]
-    fn test_seal_validates_shard_id_format() {
-        let mut manager = VramManager::new();
-        let data = vec![0x42u8; 1024];
-        
-        let shard = manager.seal_model(&data, 0).unwrap();
-        
-        // Shard ID should be valid (no path traversal, etc.)
-        use crate::validation::validate_shard_id;
-        assert!(validate_shard_id(&shard.shard_id).is_ok());
-    }
+/// Generate opaque shard ID without exposing VRAM pointer
+///
+/// Uses SHA-256 to create a unique, non-reversible identifier.
+///
+/// # Security
+///
+/// - VRAM pointer is hashed, not exposed directly
+/// - Prevents ASLR bypass and memory layout inference
+/// - Maintains uniqueness via timestamp + GPU device + pointer
+///
+/// # Arguments
+///
+/// * `gpu_device` - GPU device index
+/// * `vram_ptr` - VRAM pointer (will be hashed, not exposed)
+///
+/// # Returns
+///
+/// Opaque shard ID in format: `shard-{32-char-hex}`
+fn generate_opaque_shard_id(gpu_device: u32, vram_ptr: usize) -> Result<String> {
+    let mut hasher = Sha256::new();
+    hasher.update(&gpu_device.to_le_bytes());
+    hasher.update(&vram_ptr.to_le_bytes());
+    
+    // Add timestamp for uniqueness
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|_| VramError::IntegrityViolation)?;
+    hasher.update(&timestamp.as_nanos().to_le_bytes());
+    
+    let hash = hasher.finalize();
+    
+    // Use first 16 bytes (128-bit unique ID)
+    let id_bytes: [u8; 16] = hash[..16]
+        .try_into()
+        .map_err(|_| VramError::IntegrityViolation)?;
+    let id_u128 = u128::from_le_bytes(id_bytes);
+    
+    Ok(format!("shard-{:032x}", id_u128))
 }

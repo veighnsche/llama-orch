@@ -1,18 +1,39 @@
-//! vram-residency — VRAM-only inference enforcement
+//! # VRAM Residency — Cryptographically Sealed Model Shards
 //!
-//! Ensures models stay in VRAM during inference (no RAM fallback), validates sealed shards.
+//! This crate enforces VRAM-only inference policy and provides sealed ModelShardHandle
+//! with cryptographic integrity verification.
 //!
-//! # Security Properties
+//! ## ⚠️ CRITICAL: Shared GPU Considerations (Home/Desktop Use)
 //!
-//! - VRAM-only policy (no mixed VRAM/RAM)
-//! - Sealed shard validation (digest verification)
-//! - Residency attestation
+//! **On home/desktop systems, the GPU is shared with user applications** (gaming, video editing,
+//! 3D rendering, browser GPU acceleration, etc.). This crate handles VRAM allocation gracefully
+//! but **does NOT automatically evict models** when users need the GPU.
+//!
+//! ### What Happens:
+//!
+//! 1. **User app active → Model load fails**: Returns `InsufficientVram` error (safe)
+//! 2. **Model loaded → User starts app**: User's app may fail to start or run degraded (BAD UX!)
+//!
+//! ### Required Solution (Higher Level):
+//!
+//! `worker-orcd` or `pool-managerd` MUST implement:
+//! - GPU process detection (via NVML or process monitoring)
+//! - Automatic model eviction when user apps detected
+//! - Graceful resume when user apps stop
+//!
+//! See: `.specs/45_shared_gpu_contention.md` for full details and implementation guide.
+//!
+//! ## Security Properties
+//!
+//! - **TIER 1 Clippy configuration** (security-critical)
+//! - Private VRAM pointers (never exposed)
+//! - Cryptographic seal verification (HMAC-SHA256)
+//! - Bounds checking on all operations
 //! - Prevents paging to host memory
 //!
 //! # ⚠️ AUDIT LOGGING REQUIRED
 //!
 //! **CRITICAL**: All VRAM operations MUST be logged to `audit-logging`:
-//!
 //! ```rust,ignore
 //! use audit_logging::{AuditLogger, AuditEvent};
 //!

@@ -11,6 +11,7 @@
 proof-bundle provides **standardized test artifact output** for llama-orch:
 
 - **Proof bundle structure** — Standard directory layout per test type
+- **Automatic cleanup** — Keeps only the latest bundle per test type (removes old ones)
 - **NDJSON output** — Append-only JSON lines for streaming data
 - **JSON output** — Pretty-printed JSON for metadata
 - **Markdown output** — Test reports and summaries
@@ -18,6 +19,44 @@ proof-bundle provides **standardized test artifact output** for llama-orch:
 - **Environment overrides** — `LLORCH_PROOF_DIR`, `LLORCH_RUN_ID`
 
 **Used by**: All test harnesses (BDD, determinism, chaos, E2E)
+
+---
+
+## ⚠️ Design: Synchronous I/O (Test-Time Only)
+
+This library uses **synchronous I/O** (`std::fs`) by design:
+
+- ✅ **Test-time only**: Not used in production runtime
+- ✅ **Small operations**: Fast file writes (< 1ms)
+- ✅ **Simple API**: No `.await` noise in test code
+- ✅ **No async conflicts**: Works in any test context
+- ✅ **No tokio dependency**: Pure `std::fs`
+
+**Do not use in async production code.** This library is for test artifact generation only.
+
+---
+
+## Cleanup Policy
+
+**Only the latest proof bundle is kept per test type.**
+
+When `ProofBundle::for_type()` is called:
+1. **Before** creating the new bundle: All existing bundles in that test type directory are deleted
+2. **Then** the new bundle is created with the current run ID
+3. **Result**: Only ONE bundle per test type exists at any time
+
+### Example
+
+```bash
+# BEFORE test run:
+.proof_bundle/unit/20251002-120000-abc123/  ← OLD, will be deleted
+.proof_bundle/unit/20251002-115000-def456/  ← OLD, will be deleted
+
+# AFTER test run:
+.proof_bundle/unit/20251002-123000-xyz789/  ← NEW, only this remains
+```
+
+This prevents proof bundle directories from accumulating and clogging the repository.
 
 ---
 

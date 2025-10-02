@@ -4,6 +4,9 @@
 
 use crate::error::{Result, VramError};
 use crate::policy::validation::{validate_device_properties, check_unified_memory};
+use audit_logging::{AuditLogger, AuditEvent};
+use chrono::Utc;
+use std::sync::Arc;
 
 /// Enforce VRAM-only policy
 ///
@@ -31,12 +34,48 @@ use crate::policy::validation::{validate_device_properties, check_unified_memory
 ///
 /// In test mode (without CUDA), this performs validation only.
 /// In production mode with CUDA, this would call cudaDeviceSetLimit to disable UMA.
-pub fn enforce_vram_only_policy(gpu_device: u32) -> Result<()> {
+pub fn enforce_vram_only_policy(
+    gpu_device: u32,
+    audit_logger: Option<&Arc<AuditLogger>>,
+    worker_id: &str,
+) -> Result<()> {
     // Validate device properties first
-    validate_device_properties(gpu_device)?;
+    if let Err(e) = validate_device_properties(gpu_device) {
+        // Emit policy violation audit event
+        if let Some(logger) = audit_logger {
+            if let Err(audit_err) = logger.emit(AuditEvent::PolicyViolation {
+                timestamp: Utc::now(),
+                policy: "vram_only".to_string(),
+                violation: "invalid_device_properties".to_string(),
+                details: format!("Device validation failed: {}", e),
+                severity: "CRITICAL".to_string(),
+                worker_id: worker_id.to_string(),
+                action_taken: "worker_stopped".to_string(),
+            }) {
+                tracing::error!(error = %audit_err, "Failed to emit PolicyViolation audit event");
+            }
+        }
+        return Err(e);
+    }
     
     // Check unified memory status
-    check_unified_memory(gpu_device)?;
+    if let Err(e) = check_unified_memory(gpu_device) {
+        // Emit policy violation audit event
+        if let Some(logger) = audit_logger {
+            if let Err(audit_err) = logger.emit(AuditEvent::PolicyViolation {
+                timestamp: Utc::now(),
+                policy: "vram_only".to_string(),
+                violation: "unified_memory_detected".to_string(),
+                details: format!("UMA check failed: {}", e),
+                severity: "CRITICAL".to_string(),
+                worker_id: worker_id.to_string(),
+                action_taken: "worker_stopped".to_string(),
+            }) {
+                tracing::error!(error = %audit_err, "Failed to emit PolicyViolation audit event");
+            }
+        }
+        return Err(e);
+    }
     
     // In test mode, we can only validate
     #[cfg(test)]

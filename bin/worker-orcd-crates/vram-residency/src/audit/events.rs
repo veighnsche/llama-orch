@@ -27,21 +27,19 @@ use chrono::Utc;
 /// # Security
 ///
 /// This is a security-critical event that creates an immutable audit trail entry.
-pub async fn emit_vram_sealed(
+pub fn emit_vram_sealed(
     audit_logger: &AuditLogger,
     shard: &SealedShard,
     worker_id: &str,
 ) -> Result<(), audit_logging::AuditError> {
-    audit_logger
-        .emit(AuditEvent::VramSealed {
-            timestamp: Utc::now(),
-            shard_id: shard.shard_id.clone(),
-            gpu_device: shard.gpu_device,
-            vram_bytes: shard.vram_bytes,
-            digest: shard.digest.clone(),
-            worker_id: worker_id.to_string(),
-        })
-        .await
+    audit_logger.emit(AuditEvent::VramSealed {
+        timestamp: Utc::now(),
+        shard_id: shard.shard_id.clone(),
+        gpu_device: shard.gpu_device,
+        vram_bytes: shard.vram_bytes,
+        digest: shard.digest.clone(),
+        worker_id: worker_id.to_string(),
+    })
 }
 
 /// Emit SealVerified audit event
@@ -57,18 +55,16 @@ pub async fn emit_vram_sealed(
 /// # Security
 ///
 /// This event confirms VRAM integrity before inference execution.
-pub async fn emit_seal_verified(
+pub fn emit_seal_verified(
     audit_logger: &AuditLogger,
     shard: &SealedShard,
     worker_id: &str,
 ) -> Result<(), audit_logging::AuditError> {
-    audit_logger
-        .emit(AuditEvent::SealVerified {
-            timestamp: Utc::now(),
-            shard_id: shard.shard_id.clone(),
-            worker_id: worker_id.to_string(),
-        })
-        .await
+    audit_logger.emit(AuditEvent::SealVerified {
+        timestamp: Utc::now(),
+        shard_id: shard.shard_id.clone(),
+        worker_id: worker_id.to_string(),
+    })
 }
 
 /// Emit SealVerificationFailed audit event (CRITICAL)
@@ -92,7 +88,7 @@ pub async fn emit_seal_verified(
 /// - Seal forgery (cryptographic attack)
 ///
 /// Worker MUST transition to Stopped state when this occurs.
-pub async fn emit_seal_verification_failed(
+pub fn emit_seal_verification_failed(
     audit_logger: &AuditLogger,
     shard: &SealedShard,
     reason: &str,
@@ -100,17 +96,15 @@ pub async fn emit_seal_verification_failed(
     actual_digest: &str,
     worker_id: &str,
 ) -> Result<(), audit_logging::AuditError> {
-    audit_logger
-        .emit(AuditEvent::SealVerificationFailed {
-            timestamp: Utc::now(),
-            shard_id: shard.shard_id.clone(),
-            reason: reason.to_string(),
-            expected_digest: expected_digest.to_string(),
-            actual_digest: actual_digest.to_string(),
-            worker_id: worker_id.to_string(),
-            severity: "CRITICAL".to_string(),
-        })
-        .await
+    audit_logger.emit(AuditEvent::SealVerificationFailed {
+        timestamp: Utc::now(),
+        shard_id: shard.shard_id.clone(),
+        reason: reason.to_string(),
+        expected_digest: expected_digest.to_string(),
+        actual_digest: actual_digest.to_string(),
+        worker_id: worker_id.to_string(),
+        severity: "CRITICAL".to_string(),
+    })
 }
 
 /// Emit VramAllocated audit event
@@ -126,7 +120,7 @@ pub async fn emit_seal_verification_failed(
 /// * `used_bytes` - Total VRAM used after allocation
 /// * `gpu_device` - GPU device index
 /// * `worker_id` - Worker identifier
-pub async fn emit_vram_allocated(
+pub fn emit_vram_allocated(
     audit_logger: &AuditLogger,
     requested_bytes: usize,
     allocated_bytes: usize,
@@ -135,17 +129,15 @@ pub async fn emit_vram_allocated(
     gpu_device: u32,
     worker_id: &str,
 ) -> Result<(), audit_logging::AuditError> {
-    audit_logger
-        .emit(AuditEvent::VramAllocated {
-            timestamp: Utc::now(),
-            requested_bytes,
-            allocated_bytes,
-            available_bytes,
-            used_bytes,
-            gpu_device,
-            worker_id: worker_id.to_string(),
-        })
-        .await
+    audit_logger.emit(AuditEvent::VramAllocated {
+        timestamp: Utc::now(),
+        requested_bytes,
+        allocated_bytes,
+        available_bytes,
+        used_bytes,
+        gpu_device,
+        worker_id: worker_id.to_string(),
+    })
 }
 
 /// Emit VramAllocationFailed audit event
@@ -159,29 +151,26 @@ pub async fn emit_vram_allocated(
 /// * `available_bytes` - Available VRAM
 /// * `gpu_device` - GPU device index
 /// * `worker_id` - Worker identifier
-pub async fn emit_vram_allocation_failed(
+pub fn emit_vram_allocation_failed(
     audit_logger: &AuditLogger,
     requested_bytes: usize,
     available_bytes: usize,
     gpu_device: u32,
     worker_id: &str,
 ) -> Result<(), audit_logging::AuditError> {
-    audit_logger
-        .emit(AuditEvent::VramAllocationFailed {
-            timestamp: Utc::now(),
-            requested_bytes,
-            available_bytes,
-            gpu_device,
-            reason: format!("Insufficient VRAM: requested {} bytes, available {}bytes", requested_bytes, available_bytes),
-            worker_id: worker_id.to_string(),
-        })
-        .await
+    audit_logger.emit(AuditEvent::VramAllocationFailed {
+        timestamp: Utc::now(),
+        requested_bytes,
+        available_bytes,
+        reason: "insufficient_vram".to_string(),
+        gpu_device,
+        worker_id: worker_id.to_string(),
+    })
 }
 
 /// Emit VramDeallocated audit event
 ///
 /// Records when VRAM is deallocated (shard dropped).
-///
 /// # Parameters
 ///
 /// * `audit_logger` - The audit logger instance
@@ -190,7 +179,7 @@ pub async fn emit_vram_allocation_failed(
 /// * `remaining_used` - Total VRAM still in use after deallocation
 /// * `gpu_device` - GPU device index
 /// * `worker_id` - Worker identifier
-pub async fn emit_vram_deallocated(
+pub fn emit_vram_deallocated(
     audit_logger: &AuditLogger,
     shard_id: &str,
     freed_bytes: usize,
@@ -198,16 +187,14 @@ pub async fn emit_vram_deallocated(
     gpu_device: u32,
     worker_id: &str,
 ) -> Result<(), audit_logging::AuditError> {
-    audit_logger
-        .emit(AuditEvent::VramDeallocated {
-            timestamp: Utc::now(),
-            shard_id: shard_id.to_string(),
-            freed_bytes,
-            remaining_used,
-            gpu_device,
-            worker_id: worker_id.to_string(),
-        })
-        .await
+    audit_logger.emit(AuditEvent::VramDeallocated {
+        timestamp: Utc::now(),
+        shard_id: shard_id.to_string(),
+        freed_bytes,
+        remaining_used,
+        gpu_device,
+        worker_id: worker_id.to_string(),
+    })
 }
 
 /// Emit PolicyViolation audit event (CRITICAL)
@@ -226,22 +213,20 @@ pub async fn emit_vram_deallocated(
 ///
 /// **CRITICAL SECURITY EVENT**: This indicates the VRAM-only policy
 /// cannot be enforced. Worker MUST NOT start if this occurs.
-pub async fn emit_policy_violation(
+pub fn emit_policy_violation(
     audit_logger: &AuditLogger,
     violation: &str,
     details: &str,
     action_taken: &str,
     worker_id: &str,
 ) -> Result<(), audit_logging::AuditError> {
-    audit_logger
-        .emit(AuditEvent::PolicyViolation {
-            timestamp: Utc::now(),
-            policy: "vram_only".to_string(),
-            violation: violation.to_string(),
-            details: details.to_string(),
-            severity: "CRITICAL".to_string(),
-            worker_id: worker_id.to_string(),
-            action_taken: action_taken.to_string(),
-        })
-        .await
+    audit_logger.emit(AuditEvent::PolicyViolation {
+        timestamp: Utc::now(),
+        policy: "vram_only".to_string(),
+        violation: violation.to_string(),
+        details: details.to_string(),
+        severity: "CRITICAL".to_string(),
+        worker_id: worker_id.to_string(),
+        action_taken: action_taken.to_string(),
+    })
 }

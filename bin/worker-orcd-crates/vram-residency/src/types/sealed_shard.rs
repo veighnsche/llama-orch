@@ -117,6 +117,30 @@ impl SealedShard {
     pub fn replace_signature_for_test(&mut self, invalid_signature: Vec<u8>) {
         self.signature = Some(invalid_signature);
     }
+    
+    /// Create a test shard (for integration tests only)
+    ///
+    /// # Warning
+    /// This is intended for testing only. In production, use VramManager::seal_model().
+    #[doc(hidden)]
+    pub fn new_for_test(
+        shard_id: String,
+        gpu_device: u32,
+        vram_bytes: usize,
+        digest: String,
+        vram_ptr: usize,
+    ) -> Self {
+        Self::new(shard_id, gpu_device, vram_bytes, digest, vram_ptr)
+    }
+    
+    /// Set signature (for integration tests only)
+    ///
+    /// # Warning
+    /// This is intended for testing only.
+    #[doc(hidden)]
+    pub fn set_signature_for_test(&mut self, signature: Vec<u8>) {
+        self.set_signature(signature);
+    }
 }
 
 // Custom Debug that omits VRAM pointer

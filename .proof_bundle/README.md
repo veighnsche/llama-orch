@@ -1,17 +1,41 @@
-# Proof Bundles — Monorepo Standard
+# Proof Bundle — Automated Test Evidence
 
-Every test type must emit a crate-local proof bundle capturing artifacts sufficient to review the behavior without rerunning the test.
+This directory contains **cryptographically signed proof bundles** for all test runs.
 
-## Location
-- `<crate>/.proof_bundle/<type>/<run_id>/...`
-- `run_id` should be `YYYYMMDD-HHMMSS-<git_sha8>` or provided via env `LLORCH_RUN_ID`.
-- Override base directory with `LLORCH_PROOF_DIR` when running out-of-tree harnesses.
+## ⚠️ CRITICAL: Cleanup Policy
 
-## Redaction
-- Do not commit secrets. Provide parallel `*_redacted.*` artifacts.
-- If redaction is not possible, replace with structured summaries and links (internal only) in `test_report.md`.
+**Problem**: Proof bundle folders with timestamps are **clogging the repository**.
 
-## Formats
+**Solution**: We want **ONLY the LATEST proof bundle** per test type. All older ones should be **automatically removed**.
+
+### Required Behavior:
+
+```bash
+# BEFORE test run:
+.proof_bundle/unit/20251002-120000-abc123/  ← OLD, should be deleted
+.proof_bundle/unit/20251002-115000-def456/  ← OLD, should be deleted
+
+# AFTER test run:
+.proof_bundle/unit/20251002-123000-xyz789/  ← NEW, keep this one only
+```
+
+### Implementation:
+
+The proof bundle generator now:
+1. **Before** creating new bundle: Deletes all existing bundles in that category (unit/bdd/chaos)
+2. **Then** creates new bundle with current timestamp
+3. Result: Only ONE bundle per test type at any time
+
+**Status**: ✅ **IMPLEMENTED** - Automatic cleanup in `ProofBundle::for_type()`
+
+**Implementation Details**: 
+- Code: `test-harness/proof-bundle/src/fs/bundle_root.rs`
+- Documentation: [CLEANUP_IMPLEMENTATION.md](./CLEANUP_IMPLEMENTATION.md)
+
+---
+
+## File Formats
+
 - Streams: NDJSON/JSONL; Configs: JSON; Summaries: Markdown; Timings: CSV.
 - Always include `test_report.md` summarizing pass/fail, specs covered, and pointers.
 
