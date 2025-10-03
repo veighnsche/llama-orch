@@ -14,7 +14,7 @@ use axum::{
     response::{IntoResponse, Json},
 };
 use pool_registry_types::NodeInfo;
-use service_registry::{HeartbeatRequest, HeartbeatResponse, RegisterRequest, RegisterResponse};
+use pool_registry::{HeartbeatRequest, HeartbeatResponse, RegisterRequest, RegisterResponse};
 use tracing::{info, warn};
 
 /// Validate Bearer token from Authorization header using auth-min

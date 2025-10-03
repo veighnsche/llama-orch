@@ -76,6 +76,11 @@ pub struct NarrationFields {
     /// Example: "Tucked the model safely into GPU0's cozy VRAM blanket! 🛏️✨"
     pub cute: Option<String>,
 
+    /// Story-mode dialogue narration (optional, conversation-focused)
+    /// Only use when components are actually communicating!
+    /// Example: "'Do you have 2GB VRAM?' asked orchestratord. 'No,' replied pool-managerd-3, 'only 512MB free.'"
+    pub story: Option<String>,
+
     // Correlation and identity fields
     pub correlation_id: Option<String>,
     pub session_id: Option<String>,
@@ -145,6 +150,9 @@ pub fn narrate(fields: NarrationFields) {
     
     // Apply redaction to cute text if present
     let cute = fields.cute.as_ref().map(|c| redact_secrets(c, RedactionPolicy::default()));
+    
+    // Apply redaction to story text if present
+    let story = fields.story.as_ref().map(|s| redact_secrets(s, RedactionPolicy::default()));
 
     // Emit structured event
     event!(
@@ -154,6 +162,7 @@ pub fn narrate(fields: NarrationFields) {
         target = %fields.target,
         human = %human,
         cute = cute.as_deref(),
+        story = story.as_deref(),
         correlation_id = fields.correlation_id.as_deref(),
         session_id = fields.session_id.as_deref(),
         job_id = fields.job_id.as_deref(),

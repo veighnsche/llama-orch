@@ -9,7 +9,7 @@ description = "Model provisioner: orchestrates resolve/verify/cache via catalog-
 [dependencies]
 anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
-catalog-core = { path = "../model-catalog" }
+model-catalog = { path = "../model-catalog" }
 which = "6"
 serde_yaml = "0.9"
 serde_json = { workspace = true }

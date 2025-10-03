@@ -1,0 +1,44 @@
+# llama-orch Local Build Configuration
+#
+# Copy this file to `.llorch.toml` (gitignored) to customize build behavior
+# for your local development environment.
+#
+# This file is NOT committed to git and will not be copied to other machines.
+
+[build]
+# CUDA support (default: true)
+# Set to false to build without CUDA on development machines without GPU
+cuda = false
+
+# Auto-detect CUDA toolkit (default: false)
+# If true, will attempt to detect CUDA installation and override the cuda setting
+# Useful for machines where CUDA may or may not be installed
+auto_detect_cuda = true
+
+[worker]
+# Default GPU device for local testing (default: 0)
+default_gpu_device = 0
+
+# Default model path for local testing
+# default_model = "/path/to/model.gguf"
+
+[development]
+# Enable verbose build output (default: false)
+verbose_build = false
+
+# Skip CUDA tests even when CUDA is available (default: false)
+skip_cuda_tests = false
+
+# Examples for different setups:
+#
+# GPU Development Machine:
+#   cuda = true
+#   auto_detect_cuda = false
+#
+# CPU-only Development Machine:
+#   cuda = false
+#   auto_detect_cuda = false
+#
+# Laptop (may or may not have GPU):
+#   cuda = true
+#   auto_detect_cuda = true

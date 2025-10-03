@@ -6,6 +6,10 @@ license.workspace = true
 authors.workspace = true
 build = "build.rs"
 
+[features]
+default = []
+cuda = []  # Enable CUDA support (requires NVIDIA GPU + CUDA toolkit)
+
 [[bin]]
 name = "worker-orcd"
 path = "src/main.rs"
@@ -26,3 +30,4 @@ thiserror = { workspace = true }
 
 [build-dependencies]
 cmake = "0.1"
+toml = "0.8"

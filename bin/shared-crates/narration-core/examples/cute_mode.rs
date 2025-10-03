@@ -111,7 +111,7 @@ fn main() {
         action: "admission",
         target: "session-abc123".to_string(),
         human: "Accepted request; queued at position 3 (ETA 420 ms) on pool 'default'".to_string(),
-        cute: Some("Welcome! You're 3rd in line — we'll be with you in about 420 ms! 🎫✨".to_string()),
+        cute: Some("Request joins the queue at spot 3 — should start in about 420 ms! 🎫✨".to_string()),
         pool_id: Some("default".to_string()),
         queue_position: Some(3),
         predicted_start_ms: Some(420),

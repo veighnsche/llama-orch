@@ -2,9 +2,16 @@
 //!
 //! This module provides safe Rust wrappers around the C API
 //! exposed by the CUDA C++ implementation.
+//!
+//! When built WITHOUT the `cuda` feature, this module provides
+//! stub implementations for development on CUDA-less devices.
 
+#[cfg(feature = "cuda")]
 use std::ffi::{c_char, c_int, CString};
-use std::ptr;
+
+#[cfg(not(feature = "cuda"))]
+#[allow(unused_imports)]
+use std::ffi::CString;
 
 // ============================================================================
 // Opaque Handle Types
@@ -120,6 +127,7 @@ impl CudaError {
 // Raw FFI Declarations
 // ============================================================================
 
+#[cfg(feature = "cuda")]
 extern "C" {
     // Error handling
     fn cuda_error_message(error_code: c_int) -> *const c_char;
@@ -173,33 +181,65 @@ pub mod safe {
     
     /// Safe wrapper for CUDA context
     pub struct ContextHandle {
+        #[cfg(feature = "cuda")]
         ptr: *mut CudaContext,
+        #[cfg(not(feature = "cuda"))]
+        _gpu_device: i32,
     }
     
     impl ContextHandle {
         pub fn new(gpu_device: i32) -> Result<Self, CudaError> {
-            let mut error_code = 0;
-            let ptr = unsafe { cuda_init(gpu_device, &mut error_code) };
-            
-            if ptr.is_null() {
-                return Err(CudaError::from_code(error_code));
+            #[cfg(feature = "cuda")]
+            {
+                let mut error_code = 0;
+                let ptr = unsafe { cuda_init(gpu_device, &mut error_code) };
+                
+                if ptr.is_null() {
+                    return Err(CudaError::from_code(error_code));
+                }
+                
+                Ok(Self { ptr })
             }
             
-            Ok(Self { ptr })
+            #[cfg(not(feature = "cuda"))]
+            {
+                tracing::warn!(
+                    gpu_device,
+                    "CUDA stub: ContextHandle::new() - built without CUDA support"
+                );
+                Err(CudaError::DeviceNotFound)
+            }
         }
         
+        #[cfg(feature = "cuda")]
         pub fn as_ptr(&self) -> *mut CudaContext {
             self.ptr
         }
         
+        #[cfg(not(feature = "cuda"))]
+        pub fn as_ptr(&self) -> *mut CudaContext {
+            std::ptr::null_mut()
+        }
+        
         pub fn device_count() -> i32 {
-            unsafe { cuda_get_device_count() }
+            #[cfg(feature = "cuda")]
+            {
+                unsafe { cuda_get_device_count() }
+            }
+            
+            #[cfg(not(feature = "cuda"))]
+            {
+                0
+            }
         }
     }
     
     impl Drop for ContextHandle {
         fn drop(&mut self) {
-            unsafe { cuda_destroy(self.ptr) };
+            #[cfg(feature = "cuda")]
+            {
+                unsafe { cuda_destroy(self.ptr) };
+            }
         }
     }
     
@@ -209,62 +249,96 @@ pub mod safe {
     
     /// Safe wrapper for CUDA model
     pub struct ModelHandle {
+        #[cfg(feature = "cuda")]
         ptr: *mut CudaModel,
         vram_bytes: u64,
+        #[cfg(not(feature = "cuda"))]
+        _model_path: String,
     }
     
     impl ModelHandle {
         pub fn load(
-            ctx: &ContextHandle,
+            _ctx: &ContextHandle,
             model_path: &str,
         ) -> Result<Self, CudaError> {
-            let path_cstr = CString::new(model_path)
-                .map_err(|_| CudaError::InvalidParameter("Invalid path".to_string()))?;
-            
-            let mut vram_bytes = 0;
-            let mut error_code = 0;
-            
-            let ptr = unsafe {
-                cuda_load_model(
-                    ctx.as_ptr(),
-                    path_cstr.as_ptr(),
-                    &mut vram_bytes,
-                    &mut error_code,
-                )
-            };
-            
-            if ptr.is_null() {
-                return Err(CudaError::from_code(error_code));
+            #[cfg(feature = "cuda")]
+            {
+                let path_cstr = CString::new(model_path)
+                    .map_err(|_| CudaError::InvalidParameter("Invalid path".to_string()))?;
+                
+                let mut vram_bytes = 0;
+                let mut error_code = 0;
+                
+                let ptr = unsafe {
+                    cuda_load_model(
+                        _ctx.as_ptr(),
+                        path_cstr.as_ptr(),
+                        &mut vram_bytes,
+                        &mut error_code,
+                    )
+                };
+                
+                if ptr.is_null() {
+                    return Err(CudaError::from_code(error_code));
+                }
+                
+                Ok(Self { ptr, vram_bytes })
             }
             
-            Ok(Self { ptr, vram_bytes })
+            #[cfg(not(feature = "cuda"))]
+            {
+                tracing::warn!(
+                    model_path,
+                    "CUDA stub: ModelHandle::load() - built without CUDA support"
+                );
+                Err(CudaError::ModelLoadFailed(
+                    "Built without CUDA support".to_string()
+                ))
+            }
         }
         
         pub fn vram_bytes(&self) -> u64 {
             self.vram_bytes
         }
         
+        #[cfg(feature = "cuda")]
         pub fn as_ptr(&self) -> *mut CudaModel {
             self.ptr
         }
         
+        #[cfg(not(feature = "cuda"))]
+        pub fn as_ptr(&self) -> *mut CudaModel {
+            std::ptr::null_mut()
+        }
+        
         pub fn check_vram_residency(&self) -> Result<bool, CudaError> {
-            let mut error_code = 0;
-            let resident = unsafe {
-                cuda_check_vram_residency(self.ptr, &mut error_code)
-            };
-            
-            if error_code != 0 {
-                return Err(CudaError::from_code(error_code));
+            #[cfg(feature = "cuda")]
+            {
+                let mut error_code = 0;
+                let resident = unsafe {
+                    cuda_check_vram_residency(self.ptr, &mut error_code)
+                };
+                
+                if error_code != 0 {
+                    return Err(CudaError::from_code(error_code));
+                }
+                
+                Ok(resident)
             }
             
-            Ok(resident)
+            #[cfg(not(feature = "cuda"))]
+            {
+                Ok(false)
+            }
         }
     }
     
     impl Drop for ModelHandle {
         fn drop(&mut self) {
-            unsafe { cuda_unload_model(self.ptr) };
+            #[cfg(feature = "cuda")]
+            {
+                unsafe { cuda_unload_model(self.ptr) };
+            }
         }
     }
     
@@ -274,74 +348,108 @@ pub mod safe {
     
     /// Safe wrapper for inference session
     pub struct InferenceHandle {
+        #[cfg(feature = "cuda")]
         ptr: *mut InferenceResult,
+        #[cfg(not(feature = "cuda"))]
+        _stub: (),
     }
     
     impl InferenceHandle {
         pub fn start(
-            model: &ModelHandle,
+            _model: &ModelHandle,
             prompt: &str,
             max_tokens: i32,
             temperature: f32,
             seed: u64,
         ) -> Result<Self, CudaError> {
-            let prompt_cstr = CString::new(prompt)
-                .map_err(|_| CudaError::InvalidParameter("Invalid prompt".to_string()))?;
+            #[cfg(feature = "cuda")]
+            {
+                let prompt_cstr = CString::new(prompt)
+                    .map_err(|_| CudaError::InvalidParameter("Invalid prompt".to_string()))?;
+                
+                let mut error_code = 0;
+                
+                let ptr = unsafe {
+                    cuda_inference_start(
+                        _model.as_ptr(),
+                        prompt_cstr.as_ptr(),
+                        max_tokens,
+                        temperature,
+                        seed,
+                        &mut error_code,
+                    )
+                };
+                
+                if ptr.is_null() {
+                    return Err(CudaError::from_code(error_code));
+                }
+                
+                Ok(Self { ptr })
+            }
             
-            let mut error_code = 0;
-            
-            let ptr = unsafe {
-                cuda_inference_start(
-                    model.as_ptr(),
-                    prompt_cstr.as_ptr(),
+            #[cfg(not(feature = "cuda"))]
+            {
+                tracing::warn!(
+                    prompt_len = prompt.len(),
                     max_tokens,
                     temperature,
                     seed,
-                    &mut error_code,
-                )
-            };
-            
-            if ptr.is_null() {
-                return Err(CudaError::from_code(error_code));
+                    "CUDA stub: InferenceHandle::start() - built without CUDA support"
+                );
+                Err(CudaError::InferenceFailed(
+                    "Built without CUDA support".to_string()
+                ))
             }
-            
-            Ok(Self { ptr })
         }
         
         pub fn next_token(&mut self) -> Result<Option<(String, i32)>, CudaError> {
-            let mut token_buffer = vec![0u8; 256];
-            let mut token_index = 0;
-            let mut error_code = 0;
-            
-            let has_token = unsafe {
-                cuda_inference_next_token(
-                    self.ptr,
-                    token_buffer.as_mut_ptr() as *mut c_char,
-                    token_buffer.len() as c_int,
-                    &mut token_index,
-                    &mut error_code,
-                )
-            };
-            
-            if error_code != 0 {
-                return Err(CudaError::from_code(error_code));
+            #[cfg(feature = "cuda")]
+            {
+                use std::ffi::c_char;
+                use std::ffi::c_int;
+                
+                let mut token_buffer = vec![0u8; 256];
+                let mut token_index = 0;
+                let mut error_code = 0;
+                
+                let has_token = unsafe {
+                    cuda_inference_next_token(
+                        self.ptr,
+                        token_buffer.as_mut_ptr() as *mut c_char,
+                        token_buffer.len() as c_int,
+                        &mut token_index,
+                        &mut error_code,
+                    )
+                };
+                
+                if error_code != 0 {
+                    return Err(CudaError::from_code(error_code));
+                }
+                
+                if !has_token {
+                    return Ok(None);
+                }
+                
+                // Find null terminator
+                let null_pos = token_buffer.iter().position(|&b| b == 0).unwrap_or(token_buffer.len());
+                let token_str = String::from_utf8_lossy(&token_buffer[..null_pos]).to_string();
+                
+                Ok(Some((token_str, token_index)))
             }
             
-            if !has_token {
-                return Ok(None);
+            #[cfg(not(feature = "cuda"))]
+            {
+                Ok(None)
             }
-            
-            // Find null terminator
-            let null_pos = token_buffer.iter().position(|&b| b == 0).unwrap_or(token_buffer.len());
-            let token_str = String::from_utf8_lossy(&token_buffer[..null_pos]).to_string();
-            
-            Ok(Some((token_str, token_index)))
         }
     }
     
     impl Drop for InferenceHandle {
         fn drop(&mut self) {
-            unsafe { cuda_inference_free(self.ptr) };
+            #[cfg(feature = "cuda")]
+            {
+                unsafe { cuda_inference_free(self.ptr) };
+            }
         }
     }
     

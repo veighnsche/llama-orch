@@ -205,7 +205,7 @@ With ultimate editorial rights, we will:
 
 ## 🎀 The `cute` Field — Children's Book Mode!
 
-**NEW FEATURE**: We now support **dual narration** — professional debugging AND whimsical storytelling!
+**FEATURE**: We now support **triple narration** — professional debugging, whimsical storytelling, AND dialogue-focused stories!
 
 ### Why We Love This
 
@@ -246,7 +246,7 @@ When writing `cute` fields, we encourage:
 - Allocation → "tucking in", "making room", "finding a spot"
 - Deallocation → "saying goodbye", "waving farewell"
 
-#### 🎀 **Children's Book Language**
+#### 🎀 **Children's Book Language** (NO Dialogue!)
 - **Before**: "Allocated 1024 MB VRAM on GPU 0"
 - **Cute**: "Made a cozy 1024 MB home for the model on GPU0! 🏠"
 
@@ -255,6 +255,8 @@ When writing `cute` fields, we encourage:
 
 - **Before**: "Deallocated 512 MB VRAM for shard 'xyz'"
 - **Cute**: "Waved goodbye to shard 'xyz' and freed up 512 MB of space! 👋✨"
+
+**NOTE**: Cute mode uses **narration**, not dialogue. No quoted speech! Save that for story mode.
 
 #### 💕 **Emoji Usage**
 We **love** emojis in cute mode:
@@ -359,7 +361,204 @@ We have **ultimate editorial authority** over cute narrations too! We enforce:
 - ✅ **Emoji-enhanced**: At least one emoji per cute field
 - ✅ **Positive tone**: Even errors are gentle
 - ✅ **Metaphor consistency**: VRAM = home/bed/nest throughout
+- ✅ **NO dialogue**: Cute is narration, not conversation!
 - ✅ **Secret redaction**: Cute fields are also redacted!
+
+---
+
+## 🎭 The `story` Field — Dialogue Mode!
+
+**NEW FEATURE**: Story mode makes distributed systems read like a screenplay! 🎬
+
+### Why We Built This
+
+Debugging distributed systems means understanding **conversations** between components. The `story` field captures these interactions as dialogue, making multi-service flows crystal clear.
+
+### How It Works
+
+```rust
+narrate(NarrationFields {
+    actor: "orchestratord",
+    action: "vram_request",
+    target: "pool-managerd-3".to_string(),
+    human: "Requesting 2048 MB VRAM on GPU 0 for model 'llama-7b'".to_string(),
+    cute: Some("Orchestratord politely asks pool-managerd-3 for a cozy 2GB spot! 🏠".to_string()),
+    story: Some("\"Do you have 2GB VRAM on GPU0?\" asked orchestratord. \"Yes!\" replied pool-managerd-3, \"Allocating now.\"".to_string()),
+    ..Default::default()
+});
+```
+
+**Output**:
+```json
+{
+  "actor": "orchestratord",
+  "action": "vram_request",
+  "target": "pool-managerd-3",
+  "human": "Requesting 2048 MB VRAM on GPU 0 for model 'llama-7b'",
+  "cute": "Orchestratord politely asks pool-managerd-3 for a cozy 2GB spot! 🏠",
+  "story": "\"Do you have 2GB VRAM on GPU0?\" asked orchestratord. \"Yes!\" replied pool-managerd-3, \"Allocating now.\""
+}
+```
+
+### Story Narration Guidelines
+
+When writing `story` fields, we encourage:
+
+#### 🎬 **Dialogue Format**
+- Use quoted speech: `"Can you handle this job?" asked orchestratord.`
+- Attribute speakers clearly: `replied pool-managerd-3`, `said worker-gpu0-r1`
+- Use action verbs: asked, replied, announced, confirmed, admitted, warned
+
+#### 💬 **Conversation Patterns**
+
+**Request-Response**:
+```rust
+story: "\"Do you have capacity?\" asked orchestratord. \"Yes, 8GB free!\" replied pool-managerd-3."
+```
+
+**Multi-Party**:
+```rust
+story: "\"Who has capacity?\" asked orchestratord. \"I do!\" said pool-1. \"Me too!\" said pool-2."
+```
+
+**Error Dialogue**:
+```rust
+story: "\"Processing job-999...\" said worker. Suddenly: \"ERROR! Out of memory!\" \"What happened?\" asked orchestratord. \"CUDA OOM,\" replied worker sadly."
+```
+
+**Success Celebration**:
+```rust
+story: "\"Job done!\" announced worker proudly. \"How'd it go?\" asked orchestratord. \"Perfect! 150 tokens in 2.5s!\""
+```
+
+#### 🎯 **When to Use Story Mode**
+
+**Story is OPTIONAL** — only use it when dialogue actually makes sense!
+
+**Perfect for**:
+- Request/response flows (orchestrator ↔ pool-manager)
+- Worker callbacks (worker → pool-manager)
+- Heartbeat checks (pool-manager ↔ worker)
+- Cancellation requests
+- Multi-service negotiations
+- Error reporting with back-and-forth context
+
+**Don't use story for**:
+- Single-component internal operations (no one to talk to!)
+- Pure metrics emission (numbers don't chat)
+- Silent background tasks (no conversation happening)
+- When it would feel forced or artificial
+
+**Remember**: Not every narration event needs dialogue. `human` + `cute` are your defaults. Add `story` only when components are actually talking!
+
+#### 📏 **Length Guidelines**
+- `human`: ≤100 characters (strict)
+- `cute`: ≤150 characters
+- `story`: ≤200 characters (dialogue needs more room!)
+
+### Example Story Narrations
+
+#### Request Denied
+```rust
+human: "VRAM allocation denied: requested 4096 MB, only 512 MB available on GPU 0"
+cute: "Oh no! Pool-managerd-3 doesn't have enough room! 😟"
+story: "\"Do you have 4GB VRAM?\" asked orchestratord. \"No,\" replied pool-managerd-3 sadly, \"only 512MB free.\""
+```
+
+#### Worker Ready
+```rust
+human: "Worker ready with engine llamacpp-v1, 8 slots available"
+cute: "Worker-gpu0-r1 waves hello and says they're ready to help! 👋✨"
+story: "\"I'm ready!\" announced worker-gpu0-r1. \"Great!\" said pool-managerd-3, \"I'll mark you as live.\""
+```
+
+#### Job Dispatch
+```rust
+human: "Dispatching job 'job-456' to worker-gpu0-r1 (ETA 420 ms)"
+cute: "Orchestratord sends job-456 off to its new friend worker-gpu0-r1! 🎫"
+story: "\"Can you handle job-456?\" asked orchestratord. \"Absolutely!\" replied worker-gpu0-r1, \"Send it over.\""
+```
+
+#### Heartbeat
+```rust
+human: "Heartbeat received from worker-gpu0-r1 (last seen 2500 ms ago)"
+cute: "Pool-managerd-3 checks in: \"You still there?\" \"Yep!\" says worker-gpu0-r1! 💓"
+story: "\"You still alive?\" asked pool-managerd-3. \"Yep, all good here!\" replied worker-gpu0-r1."
+```
+
+### Testing Story Narration
+
+```rust
+use observability_narration_core::CaptureAdapter;
+
+#[test]
+fn test_story_narration() {
+    let capture = CaptureAdapter::install();
+    
+    narrate(NarrationFields {
+        actor: "orchestratord",
+        action: "request",
+        target: "pool-managerd".to_string(),
+        human: "Requesting capacity".to_string(),
+        story: Some("\"Do you have room?\" asked orchestratord. \"Yes!\" replied pool-managerd.".to_string()),
+        ..Default::default()
+    });
+    
+    capture.assert_story_present();
+    capture.assert_story_includes("asked orchestratord");
+    capture.assert_story_has_dialogue();
+}
+```
+
+### Our Story Editorial Standards
+
+We have **ultimate editorial authority** over story narrations too! We enforce:
+
+- ✅ **Clear attribution**: Always say who's speaking
+- ✅ **Quoted dialogue**: Use `"..."` for speech
+- ✅ **Action verbs**: asked, replied, said, announced, confirmed
+- ✅ **Natural flow**: Reads like a conversation, not a transcript
+- ✅ **Context preservation**: Include key details (IDs, numbers)
+- ✅ **Secret redaction**: Story fields are also redacted!
+
+### The Three Modes Compared
+
+| Mode | Purpose | Style | Required? | Length | Example |
+|------|---------|-------|-----------|--------|---------|
+| **human** | Professional debugging | Technical, precise | **Always** | ≤100 chars | "Requesting 2048 MB VRAM on GPU 0" |
+| **cute** | Whimsical storytelling | Children's book, emojis, **NO dialogue** | **Always** (when wanted) | ≤150 chars | "Orchestratord asks for a cozy 2GB spot! 🏠" |
+| **story** | Dialogue-focused | Screenplay, conversations, **quoted speech** | **Optional** (only when it makes sense!) | ≤200 chars | "\"Do you have 2GB?\" asked orchestratord. \"Yes!\" replied pool-managerd." |
+
+### Clear Boundaries 🚧
+
+**IMPORTANT**: Each mode has its own territory!
+
+- **human** = Always present. Required field. Professional debugging.
+  - ✅ "Requesting 2048 MB VRAM on GPU 0"
+
+- **cute** = Always present (when you want whimsy). Narration, metaphors, emojis. **NO quoted dialogue!**
+  - ✅ "Orchestratord asks for a cozy 2GB spot! 🏠"
+  - ❌ "\"Do you have 2GB?\" asked orchestratord" (this belongs in story!)
+
+- **story** = Optional. **Only use when dialogue makes sense!** Quoted speech only.
+  - ✅ "\"Do you have 2GB?\" asked orchestratord. \"Yes!\" replied pool-managerd."
+  - ❌ "Orchestratord asks pool-managerd for VRAM" (this is just human!)
+  - ❌ Don't force dialogue where there's no conversation!
+
+### When to Use Story Mode
+
+**Use story when**:
+- Components are actually communicating (request/response)
+- There's a clear conversation happening
+- Multi-party interactions need to be shown
+- Dialogue adds clarity to the flow
+
+**Don't use story when**:
+- Single component doing internal work
+- No actual communication happening
+- It would feel forced or artificial
+
+**Remember**: `human` and `cute` are your bread and butter. `story` is the special sauce for when components talk! 🎀🎭
 
 ---
 

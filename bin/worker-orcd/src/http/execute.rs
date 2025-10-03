@@ -46,6 +46,7 @@ struct ErrorEvent {
     retriable: bool,
 }
 
+#[axum::debug_handler]
 /// Handle POST /execute
 pub async fn handle_execute(
     State(state): State<Arc<AppState>>,
@@ -59,7 +60,7 @@ pub async fn handle_execute(
     );
     
     // Start inference
-    let mut inference = InferenceHandle::start(
+    let inference = InferenceHandle::start(
         &state.model,
         &req.prompt,
         req.max_tokens,
@@ -70,8 +71,8 @@ pub async fn handle_execute(
     // Create SSE stream
     let job_id = req.job_id.clone();
     let stream = stream::unfold(
-        (inference, 0, false),
-        move |(mut inf, count, done)| async move {
+        (inference, 0, false, job_id),
+        |(mut inf, count, done, job_id)| async move {
             if done {
                 return None;
             }
@@ -86,7 +87,7 @@ pub async fn handle_execute(
                     .event("started")
                     .json_data(&event)
                     .ok()?;
-                return Some((Ok(sse), (inf, 1, false)));
+                return Some((Ok(sse), (inf, 1, false, job_id)));
             }
             
             // Generate next token
@@ -100,7 +101,7 @@ pub async fn handle_execute(
                         .event("token")
                         .json_data(&event)
                         .ok()?;
-                    Some((Ok(sse), (inf, count + 1, false)))
+                    Some((Ok(sse), (inf, count + 1, false, job_id)))
                 }
                 Ok(None) => {
                     // Inference complete
@@ -111,7 +112,7 @@ pub async fn handle_execute(
                         .event("end")
                         .json_data(&event)
                         .ok()?;
-                    Some((Ok(sse), (inf, count, true)))
+                    Some((Ok(sse), (inf, count, true, job_id)))
                 }
                 Err(e) => {
                     // Error during inference
@@ -124,7 +125,7 @@ pub async fn handle_execute(
                         .event("error")
                         .json_data(&event)
                         .ok()?;
-                    Some((Ok(sse), (inf, count, true)))
+                    Some((Ok(sse), (inf, count, true, job_id)))
                 }
             }
         },

@@ -53,7 +53,7 @@ pub fn build_app() -> Router {
     if config.cloud_profile {
         if let Some(stale_checker_config) = config.stale_checker {
             let registry = state.service_registry().clone();
-            service_registry::heartbeat::spawn_stale_checker(
+            pool_registry::heartbeat::spawn_stale_checker(
                 registry,
                 stale_checker_config.interval_secs,
             );

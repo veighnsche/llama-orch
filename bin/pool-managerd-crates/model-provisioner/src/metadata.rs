@@ -1,5 +1,5 @@
 use anyhow::Result;
-use catalog_core::ResolvedModel;
+use model_catalog::ResolvedModel;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};

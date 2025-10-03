@@ -5,5 +5,6 @@ pub mod core_narration;
 pub mod field_taxonomy;
 pub mod http_headers;
 pub mod redaction;
+pub mod story_mode;
 pub mod test_capture;
 pub mod world;

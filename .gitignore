@@ -49,3 +49,6 @@ __pycache__
 *.gguf
 *.safetensors
 !**/.gitkeep
+
+# Local build configuration (per-machine settings)
+.llorch.toml

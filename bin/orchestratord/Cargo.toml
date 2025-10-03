@@ -48,7 +48,7 @@ serde = { workspace = true, features = ["derive"] }
 http = { workspace = true, optional = true }
 contracts-api-types = { path = "../../contracts/api-types" }
 orchestrator-core = { path = "../orchestratord-crates/orchestrator-core" }
-catalog-core = { path = "../pool-managerd-crates/model-catalog" }
+model-catalog = { path = "../pool-managerd-crates/model-catalog" }
 model-provisioner = { path = "../pool-managerd-crates/model-provisioner" }
 regex = { workspace = true }
 serde_json = { workspace = true }
@@ -64,7 +64,7 @@ auth-min = { path = "../shared-crates/auth-min" }
 observability-narration-core = { path = "../shared-crates/narration-core" }
 # Cloud profile support
 pool-registry-types = { path = "../shared-crates/pool-registry-types" }
-service-registry = { path = "../orchestratord-crates/node-registry" }
+pool-registry = { path = "../orchestratord-crates/pool-registry" }
 rand = "0.8"
 
 [dev-dependencies]

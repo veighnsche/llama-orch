@@ -4,7 +4,7 @@
 
 #![cfg(test)]
 
-use catalog_core::{FileFetcher, FsCatalog, ModelRef};
+use model_catalog::{FileFetcher, FsCatalog, ModelRef};
 use model_provisioner::ModelProvisioner;
 use std::sync::{Mutex, OnceLock};
 

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use catalog_core::{
+use model_catalog::{
     default_model_cache_dir, CatalogEntry, CatalogStore, Digest, FileFetcher, FsCatalog,
     LifecycleState, ModelFetcher, ModelRef, ResolvedModel,
 };
@@ -219,7 +219,7 @@ impl<C: CatalogStore, F: ModelFetcher> ModelProvisioner<C, F> {
 mod tests {
     use super::*;
     use crate::test_locks::{CWD_LOCK, PATH_LOCK};
-    use catalog_core::ModelRef;
+    use model_catalog::ModelRef;
     use std::io::Write;
 
     #[test]

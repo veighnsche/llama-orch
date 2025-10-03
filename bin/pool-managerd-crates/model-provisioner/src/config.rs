@@ -1,5 +1,5 @@
 use anyhow::Result;
-use catalog_core::Digest;
+use model_catalog::Digest;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;

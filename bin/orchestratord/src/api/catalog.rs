@@ -8,10 +8,10 @@ use serde_json::json;
 
 use crate::domain::error::OrchestratorError as ErrO;
 use crate::state::AppState;
-use catalog_core::{CatalogStore, Digest, FsCatalog, LifecycleState};
+use model_catalog::{CatalogStore, Digest, FsCatalog, LifecycleState};
 
 fn open_catalog() -> anyhow::Result<FsCatalog> {
-    let root = catalog_core::default_model_cache_dir();
+    let root = model_catalog::default_model_cache_dir();
     Ok(FsCatalog::new(root)?)
 }
 
@@ -31,9 +31,9 @@ pub async fn create_model(
 
     let cat = open_catalog().map_err(|_e| ErrO::Internal)?;
     // Use a placeholder local path keyed by id; actual path will be set when provisioners ensure models.
-    let entry = catalog_core::CatalogEntry {
+    let entry = model_catalog::CatalogEntry {
         id: id.clone(),
-        local_path: catalog_core::default_model_cache_dir().join(id.clone()),
+        local_path: model_catalog::default_model_cache_dir().join(id.clone()),
         lifecycle: LifecycleState::Active,
         digest: digest_parsed,
         last_verified_ms: None,

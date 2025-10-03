@@ -6,7 +6,7 @@ use crate::services::placement_v2::{PlacementService, PlacementStrategy};
 // TODO: Remove adapter_host - migrating to direct worker communication
 // use adapter_host::AdapterHost;
 use orchestrator_core::queue::Policy;
-use service_registry::ServiceRegistry;
+use pool_registry::ServiceRegistry;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 

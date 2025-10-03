@@ -26,10 +26,10 @@
 
 ### 3. Deployment Modes
 - [3.1 Home Mode (M0)](#31-home-mode-m0-sys-31x)
-- [3.2 Lab Mode (M1)](#32-lab-mode-m1-sys-32x)
-- [3.3 Multi-GPU Mode (M1)](#33-multi-gpu-mode-m1-sys-33x)
-- [3.4 Multi-Node Mode (M2+)](#34-multi-node-mode-m2-sys-34x)
-- [3.5 Platform Mode (Marketplace)](#35-platform-mode-marketplace-sys-35x)
+- [3.2 Lab Mode (M2)](#32-lab-mode-m2-sys-32x)
+- [3.3 Multi-GPU Mode (M4)](#33-multi-gpu-mode-m4-sys-33x)
+- [3.4 Multi-Node Mode (M4)](#34-multi-node-mode-m4-sys-34x)
+- [3.5 Platform Mode (M3+)](#35-platform-mode-m3-sys-35x)
 
 ### 4. System-Level Requirements
 - [4.1 Intelligence Boundary](#41-intelligence-boundary-sys-41x)
@@ -47,20 +47,20 @@
 - [5.6 Correlation ID Propagation](#56-correlation-id-propagation-sys-56x)
 
 ### 6. Component Architecture
-- [6.1 Orchestratord (The Brain)](#61-orchestratord-the-brain-sys-61x)
+- [6.1 Orchestratord (The Brain) [M2]](#61-orchestratord-the-brain-sys-61x)
   - [6.1.1 Orchestrator Intelligence](#611-orchestrator-intelligence-sys-611)
   - [6.1.2 State Management](#612-state-management-sys-612)
   - [6.1.3 Persistent State Store](#613-persistent-state-store-sys-613)
   - [6.1.4 Queue Optimizer](#614-queue-optimizer-sys-614)
   - [6.1.5 Programmable Scheduler](#615-programmable-scheduler-sys-615)
   - [6.1.6 Retry & Backoff Policy](#616-retry--backoff-policy-sys-616)
-- [6.2 Pool-Managerd (Control Plane)](#62-pool-managerd-control-plane-sys-62x)
+- [6.2 Pool-Managerd (Control Plane) [M1]](#62-pool-managerd-control-plane-sys-62x)
   - [6.2.1 Pool Manager Execution](#621-pool-manager-execution-sys-621)
   - [6.2.2 State Reporting](#622-state-reporting-sys-622)
   - [6.2.3 Preflight Validation](#623-preflight-validation-sys-623)
   - [6.2.4 Heartbeat Protocol](#624-heartbeat-protocol-sys-624)
   - [6.2.5 Operational Cleanup](#625-operational-cleanup-sys-625)
-- [6.3 Worker-Orcd (Executor)](#63-worker-orcd-executor-sys-63x)
+- [6.3 Worker-Orcd (Executor) [M0]](#63-worker-orcd-executor-sys-63x)
   - [6.3.1 Worker Self-Containment](#631-worker-self-containment-sys-631)
   - [6.3.2 Worker Isolation](#632-worker-isolation-sys-632)
   - [6.3.3 Tensor Parallelism Design](#633-tensor-parallelism-design-sys-633)
@@ -80,12 +80,12 @@
 - [8.3 Reliability](#83-reliability-sys-83x)
 - [8.4 Scalability](#84-scalability-sys-84x)
 
-### 9. Security & Compliance
+### 9. Security & Compliance [M3]
 - [9.1 Authentication](#91-authentication-sys-91x)
 - [9.2 EU Compliance (GDPR)](#92-eu-compliance-gdpr-sys-92x)
 - [9.3 Multi-Tenancy (Platform Mode)](#93-multi-tenancy-platform-mode-sys-93x)
 
-### 10. Metrics & Observability
+### 10. Metrics & Observability [M-1+]
 - [10.1 Metrics Contract](#101-metrics-contract-sys-101x)
 - [10.2 Logging Standards](#102-logging-standards-sys-102x)
 - [10.3 Correlation & Tracing](#103-correlation--tracing-sys-103x)
@@ -106,10 +106,13 @@
 - [13.1 Dependency Overview](#131-dependency-overview)
 
 ### 14. Milestone Roadmap
-- [14.1 M0: Single GPU (v0.1.0)](#141-m0-single-gpu-v010)
-- [14.2 M1: Multi-GPU (v0.2.0)](#142-m1-multi-gpu-v020)
-- [14.3 M2: Multi-Node (v0.3.0)](#143-m2-multi-node-v030)
-- [14.4 M3: Platform (v0.4.0)](#144-m3-platform-v040)
+- [14.0 M-1: Foundation (Pre-M0)](#140-m-1-foundation-pre-m0)
+- [14.1 M0: Worker Haiku Test (v0.1.0)](#141-m0-worker-haiku-test-v010)
+- [14.2 M1: Pool Manager Lifecycle (v0.2.0)](#142-m1-pool-manager-lifecycle-v020)
+- [14.3 M2: Orchestrator Scheduling (v0.3.0)](#143-m2-orchestrator-scheduling-v030)
+- [14.4 M3: Security & Platform Readiness (v0.4.0)](#144-m3-security--platform-readiness-v040)
+- [14.5 M4: Multi-GPU & Multi-Node (v0.5.0)](#145-m4-multi-gpu--multi-node-v050)
+- [14.6 M5: Platform Marketplace (v0.6.0)](#146-m5-platform-marketplace-v060)
 
 ### 15. Non-Goals / Out of Scope
 
@@ -264,9 +267,9 @@ Worker (Executor) → Loads model, executes inference
 
 ---
 
-## 2. Foundational Concepts
+## 2. Foundational Concepts [All Milestones]
 
-### 2.1 Model Reference Format (SYS-2.1.x)
+### 2.1 Model Reference Format [M0+] (SYS-2.1.x)
 
 #### [SYS-2.1.1] Model Reference Accepted Forms
 
@@ -295,7 +298,7 @@ Worker (Executor) → Loads model, executes inference
 
 ---
 
-### 2.2 VRAM-Only Policy (SYS-2.2.x)
+### 2.2 VRAM-Only Policy [M0+] (SYS-2.2.x)
 
 #### [SYS-2.2.1] VRAM-Only Enforcement
 
@@ -312,7 +315,7 @@ The system MUST enforce VRAM-only policy: model weights, KV cache, activations, 
 
 ---
 
-### 2.3 Determinism Principles (SYS-2.3.x)
+### 2.3 Determinism Principles [M0+] (SYS-2.3.x)
 
 #### [SYS-2.3.1] Determinism Guarantee
 
@@ -360,7 +363,7 @@ The system MUST guarantee deterministic inference: same model + same seed + same
 
 ---
 
-### 2.4 Process Isolation Rationale (SYS-2.4.x)
+### 2.4 Process Isolation Rationale [M0+] (SYS-2.4.x)
 
 #### [SYS-2.4.1] Process Isolation Requirement
 
@@ -386,7 +389,7 @@ Workers MUST run in separate processes:
 
 ---
 
-### 2.5 FFI Boundaries (SYS-2.5.x)
+### 2.5 FFI Boundaries [M0+] (SYS-2.5.x)
 
 #### [SYS-2.5.1] FFI Boundary Enforcement
 
@@ -448,7 +451,7 @@ The system supports five distinct deployment modes with different security and o
 
 ---
 
-### 3.2 Lab Mode (M1) (SYS-3.2.x)
+### 3.2 Lab Mode (M2) (SYS-3.2.x)
 
 #### [SYS-3.2.1] Lab Mode Deployment
 
@@ -479,7 +482,7 @@ The system supports five distinct deployment modes with different security and o
 
 ---
 
-### 3.3 Multi-GPU Mode (M1) (SYS-3.3.x)
+### 3.3 Multi-GPU Mode (M4) (SYS-3.3.x)
 
 #### [SYS-3.3.1] Multi-GPU Mode Deployment
 
@@ -508,7 +511,7 @@ The system supports five distinct deployment modes with different security and o
 
 ---
 
-### 3.4 Multi-Node Mode (M2+) (SYS-3.4.x)
+### 3.4 Multi-Node Mode (M4) (SYS-3.4.x)
 
 #### [SYS-3.4.1] Multi-Node Mode Deployment
 
@@ -542,7 +545,7 @@ The system supports five distinct deployment modes with different security and o
 
 ---
 
-### 3.5 Platform Mode (Marketplace) (SYS-3.5.x)
+### 3.5 Platform Mode (M3+) (SYS-3.5.x)
 
 #### [SYS-3.5.1] Platform Mode Deployment
 
@@ -578,9 +581,9 @@ The system supports five distinct deployment modes with different security and o
 
 ---
 
-## 4. System-Level Requirements
+## 4. System-Level Requirements [All Milestones]
 
-### 4.1 Intelligence Boundary (SYS-4.1.x)
+### 4.1 Intelligence Boundary [M2] (SYS-4.1.x)
 
 #### [SYS-4.1.1] Intelligence Centralization
 
@@ -602,7 +605,7 @@ The system MUST centralize ALL intelligent decisions in orchestratord. Pool mana
 
 ---
 
-### 4.2 Smart vs Dumb Architecture (SYS-4.2.x)
+### 4.2 Smart vs Dumb Architecture [M2] (SYS-4.2.x)
 
 #### [SYS-4.2.1] Smart vs Dumb Boundary
 
@@ -621,7 +624,7 @@ The system MUST enforce a strict smart/dumb boundary:
 
 ---
 
-### 4.3 Component Separation (SYS-4.3.x)
+### 4.3 Component Separation [M0+] (SYS-4.3.x)
 
 #### [SYS-4.3.1] Binary Separation
 
@@ -635,7 +638,7 @@ Clients MUST NOT communicate directly with workers. All client requests MUST go 
 
 ---
 
-### 4.4 State Propagation (SYS-4.4.x)
+### 4.4 State Propagation [M1+] (SYS-4.4.x)
 
 #### [SYS-4.4.1] Unidirectional State Flow
 
@@ -661,7 +664,7 @@ Orchestrator → Pool Manager → Worker
 
 ---
 
-### 4.5 Multi-Node Support (SYS-4.5.x)
+### 4.5 Multi-Node Support [M4] (SYS-4.5.x)
 
 #### [SYS-4.5.1] Distributed Deployment Support
 
@@ -684,7 +687,7 @@ The system MUST support distributed deployment across multiple GPU nodes.
 
 This section defines all HTTP API contracts between components. APIs MUST be versioned (e.g., `/v2/`) and backward-compatible within major versions.
 
-### 5.1 Client → Orchestrator (Agentic API) (SYS-5.1.x)
+### 5.1 Client → Orchestrator (Agentic API) [M2] (SYS-5.1.x)
 
 #### [SYS-5.1.1] Task Submission
 
@@ -747,7 +750,7 @@ Events:
 
 ---
 
-### 5.2 Orchestrator ↔ Pool Manager (SYS-5.2.x)
+### 5.2 Orchestrator ↔ Pool Manager [M2] (SYS-5.2.x)
 
 #### [SYS-5.2.1] Pool Registration
 
@@ -806,7 +809,7 @@ POST /v2/workers/start
 
 ---
 
-### 5.3 Pool Manager ↔ Worker (SYS-5.3.x)
+### 5.3 Pool Manager ↔ Worker [M1] (SYS-5.3.x)
 
 #### [SYS-5.3.1] Worker Ready Callback
 
@@ -833,11 +836,13 @@ POST /v2/internal/workers/ready
 
 ---
 
-### 5.4 Orchestrator → Worker (Direct) (SYS-5.4.x)
+### 5.4 Orchestrator → Worker (Direct) [M2] (SYS-5.4.x)
 
 #### [SYS-5.4.1] Inference Execution
 
 <!-- SECURITY AUDIT [auth-min team]: CRITICAL VULNERABILITY - Worker execute endpoint has NO authentication mentioned. Attack vectors: (1) Direct worker access - if worker ports are exposed (not localhost-only), attacker can bypass orchestrator and submit jobs directly to workers, bypassing admission control, quotas, and billing, (2) Prompt injection - attacker can submit malicious prompts directly to worker, (3) Resource exhaustion - attacker can flood worker with requests, (4) Job ID spoofing - attacker can submit jobs with arbitrary job_id to confuse tracking. RECOMMENDATIONS: (1) Worker execute endpoint MUST validate bearer token using timing_safe_eq() even if worker is localhost-bound (defense in depth), (2) Worker MUST verify job_id is not already in progress (prevent duplicate execution), (3) Worker MUST validate max_tokens is within acceptable range (prevent resource exhaustion), (4) Worker SHOULD only accept requests from orchestrator IP (IP allowlist), (5) Worker ports SHOULD bind to localhost only in single-node deployments, (6) In multi-node deployments, worker-orchestrator communication MUST use mTLS. Add requirement: "Worker execute endpoint MUST validate bearer token (LLORCH_WORKER_TOKEN) using timing_safe_eq() before accepting inference requests. Orchestrator MUST include this token in execute requests." -->
+
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 EXECUTE ENDPOINT PERFORMANCE - This is THE hot path! Every optimization here multiplies across thousands of requests. CRITICAL PERFORMANCE REQUIREMENTS: (1) Worker MUST parse request in <1ms (use zero-copy JSON parsing, no allocations), (2) Worker MUST validate job_id is not duplicate in <100μs (use in-memory HashSet, not database), (3) Worker MUST check deadline BEFORE starting inference (if deadline already exceeded, return 504 immediately, don't waste GPU cycles), (4) Worker MUST use streaming response (chunked transfer encoding) to send first token ASAP (don't buffer entire response), (5) Worker MUST implement request timeout (if orchestrator disconnects, abort inference within 100ms). DEADLINE INTEGRATION: Worker MUST parse X-Deadline header, calculate remaining_time(), and abort if remaining < estimated_inference_time (based on max_tokens × per_token_latency). This is our CORE PROMISE: no wasted GPU cycles! 🚀 -->
 
 **Inference execution**:
 ```
@@ -887,7 +892,7 @@ POST {worker_uri}/cancel
 
 ---
 
-### 5.5 Error Response Format (SYS-5.5.x)
+### 5.5 Error Response Format [M0+] (SYS-5.5.x)
 
 #### [SYS-5.5.1] Standard Error Response
 
@@ -919,7 +924,7 @@ All API errors MUST use a standard JSON error response format:
 
 ---
 
-### 5.6 Correlation ID Propagation (SYS-5.6.x)
+### 5.6 Correlation ID Propagation [M0+] (SYS-5.6.x)
 
 #### [SYS-5.6.1] Correlation ID Requirements
 
@@ -935,7 +940,7 @@ All API errors MUST use a standard JSON error response format:
 
 ## 6. Component Architecture
 
-### 6.1 Orchestratord (The Brain) (SYS-6.1.x)
+### 6.1 Orchestratord (The Brain) [M2] (SYS-6.1.x)
 
 **Binary**: `bin/orchestratord/`  
 **Port**: 8080 (default)  
@@ -1230,7 +1235,7 @@ retry:
 
 ---
 
-### 6.2 Pool-Managerd (Control Plane) (SYS-6.2.x)
+### 6.2 Pool-Managerd (Control Plane) [M1] (SYS-6.2.x)
 
 **Binary**: `bin/pool-managerd/`  
 **Port**: 9200 (default)  
@@ -1286,6 +1291,8 @@ Pool-managerd MUST report facts, not decisions:
 
 #### [SYS-6.2.3] Preflight Validation
 
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 PREFLIGHT PERFORMANCE - Fail fast is our MANTRA! Preflight validation prevents wasted worker spawns. CRITICAL PERFORMANCE REQUIREMENTS: (1) Preflight MUST complete in <20ms (this is hot path, runs before every worker spawn), (2) NVML queries MUST be cached with 100ms TTL (don't query GPU state on every preflight, use recent heartbeat data), (3) Model file existence check MUST use stat() not open() (faster, no I/O), (4) VRAM calculation MUST be pessimistic (overestimate requirements by 10% to prevent OOM after spawn), (5) Preflight failures MUST return immediately with specific error code (don't retry, don't wait, just fail). OPTIMIZATION: Pool-managerd SHOULD maintain in-memory GPU state cache updated by heartbeats, preflight reads from cache (zero I/O overhead). TARGET: Preflight <20ms p99, zero false positives (never spawn worker that will OOM). Fast failure saves 60s of wasted worker startup! 🚀 -->
+
 Pool-managerd MUST perform preflight validation before spawning workers:
 - MUST validate GPU has sufficient free VRAM for model
 - MUST validate model compatibility with GPU capabilities (compute capability, architecture)
@@ -1300,6 +1307,8 @@ Pool-managerd MUST perform preflight validation before spawning workers:
 ---
 
 #### [SYS-6.2.4] Heartbeat Protocol
+
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 HEARTBEAT PERFORMANCE - Heartbeats are overhead, minimize them! CRITICAL PERFORMANCE REQUIREMENTS: (1) Heartbeat generation MUST complete in <5ms (don't block pool manager operations), (2) Heartbeat payload MUST be <10KB (minimize network overhead, use compact JSON), (3) Heartbeat HTTP request MUST use persistent connections (avoid TCP handshake every 15s), (4) Orchestrator heartbeat processing MUST be <10ms (update in-memory state, don't block scheduling), (5) Heartbeat failures MUST NOT retry immediately (use exponential backoff to avoid thundering herd). OPTIMIZATION: (1) Pool-managerd SHOULD only send delta updates (only changed GPU/worker states, not full state every time), (2) Orchestrator SHOULD process heartbeats asynchronously (don't block admission/scheduling), (3) Use HTTP/2 for heartbeats (multiplexing reduces connection overhead). TRADE-OFF: 15s interval balances freshness vs overhead. Faster heartbeats = fresher state but more CPU/network. 15s is good default. TARGET: Heartbeat overhead <0.1% of pool manager CPU. 🚀 -->
 
 Pool-managerd MUST send periodic heartbeats to orchestratord:
 - Default interval: 15 seconds (configurable)
@@ -1329,7 +1338,7 @@ Pool-managerd MUST perform operational cleanup on worker failures:
 
 ---
 
-### 6.3 Worker-Orcd (Executor) (SYS-6.3.x)
+### 6.3 Worker-Orcd (Executor) [M0] (SYS-6.3.x)
 
 **Binary**: `bin/worker-orcd/`  
 **Port**: Dynamic (assigned by pool manager)  
@@ -1350,6 +1359,8 @@ Pool-managerd MUST perform operational cleanup on worker failures:
 ---
 
 #### [SYS-6.3.1] Worker Self-Containment
+
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 SELF-CONTAINMENT PERFORMANCE BENEFIT - Excellent architectural choice! Process isolation enables zero-overhead testing and clean VRAM lifecycle. PERFORMANCE IMPLICATIONS: (1) Each worker owns its CUDA context = no context switching overhead, (2) Standalone testing means we can benchmark worker in isolation (pure GPU performance, no orchestrator noise), (3) Process boundaries enable clean shutdown = guaranteed VRAM cleanup in <5s, (4) One model per worker = no model switching overhead, optimal cache locality. RECOMMENDATION: Add explicit performance requirement: "Worker MUST be benchmarkable in standalone mode with <1% overhead vs direct CUDA inference (measure via microbenchmarks)." This proves our architecture doesn't add latency tax! 🚀 -->
 
 Worker-orcd MUST operate as a self-contained process:
 - MUST load exactly ONE model at startup (from disk to VRAM)
@@ -1428,7 +1439,9 @@ Worker MUST handle cancellation requests promptly:
 
 ## 7. Data Flow & Interactions
 
-### 7.1 Job Submission Flow (SYS-7.1.x)
+### 7.1 Job Submission Flow [M2] (SYS-7.1.x)
+
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 JOB SUBMISSION FLOW - THE CRITICAL PATH! Every millisecond here affects user experience. PERFORMANCE BREAKDOWN: (1) Admission validation MUST be <10ms (target from SYS-8.2.1), this includes model lookup, context length check, token budget check, (2) Enqueue MUST be <1ms (append to in-memory queue + SQLite insert), (3) Schedule MUST be <50ms (target from SYS-8.2.1), this includes Rhai script execution, pool state query, worker selection, (4) Dispatch MUST be <20ms (HTTP POST to worker + establish SSE connection), (5) First token MUST be <100ms (target from SYS-8.2.1). TOTAL TARGET: Admission to first token <180ms for hot path (worker already running). DEADLINE INTEGRATION: (1) Client SHOULD send X-Deadline header with absolute deadline, (2) Orchestrator MUST check deadline at admission (if already exceeded, return 504 immediately), (3) Orchestrator MUST check deadline before dispatch (if insufficient time remaining, return 504, don't waste worker), (4) Orchestrator MUST forward X-Deadline to worker for end-to-end enforcement. OPTIMIZATION: Use connection pooling, persistent HTTP connections, async I/O, zero-copy where possible. This is our SHOWCASE path! 🚀 -->
 
 #### [SYS-7.1.1] Job Submission Flow Steps
 
@@ -1477,7 +1490,9 @@ Worker MUST handle cancellation requests promptly:
 
 ---
 
-### 7.2 Worker Startup Flow (SYS-7.2.x)
+### 7.2 Worker Startup Flow [M1] (SYS-7.2.x)
+
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 STARTUP FLOW PERFORMANCE - Worker startup is a CRITICAL latency path! 60s target is generous but we need to optimize every step. PERFORMANCE BREAKDOWN NEEDED: (1) Preflight validation should be <20ms (NVML queries are fast, don't add overhead), (2) Process spawn should be <100ms (fork+exec), (3) CUDA context init should be <1s (cudaSetDevice + cudaStreamCreate), (4) Model load to VRAM is the bottleneck (varies by model size, but we can optimize with hot-loading), (5) HTTP server start should be <100ms (bind port, start listener), (6) Ready callback should be <50ms (HTTP POST). OPTIMIZATION OPPORTUNITIES: (1) Pool-managerd SHOULD pre-load model files into RAM/page cache (hot-loading) to speed up worker startup by 10-50x, (2) Worker SHOULD use mmap for model loading (zero-copy from page cache to VRAM), (3) Worker SHOULD initialize CUDA context in parallel with HTTP server startup (overlap latencies), (4) Worker SHOULD emit progress events during model loading (0%, 25%, 50%, 75%, 100%) for observability. TARGET: Cold start <60s, hot start <5s. Let's make workers FAST! 🚀 -->
 
 #### [SYS-7.2.1] Worker Startup Flow Steps
 
@@ -1536,7 +1551,7 @@ Worker MUST handle cancellation requests promptly:
 
 ---
 
-### 7.3 Worker Failure Flow (SYS-7.3.x)
+### 7.3 Worker Failure Flow [M1+] (SYS-7.3.x)
 
 #### [SYS-7.3.1] Worker Failure Flow Steps
 
@@ -1575,7 +1590,9 @@ Worker MUST handle cancellation requests promptly:
 
 ---
 
-### 7.4 Cancellation Flow (SYS-7.4.x)
+### 7.4 Cancellation Flow [M2] (SYS-7.4.x)
+
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 CANCELLATION IS PERFORMANCE OPTIMIZATION! This is one of our FAVORITE features because it's all about NOT wasting cycles! CRITICAL PERFORMANCE REQUIREMENTS: (1) Client disconnect detection MUST be <100ms (poll SSE connection health every 50ms), (2) Orchestrator MUST issue cancel within <10ms of detecting disconnect (don't wait, act immediately), (3) Worker MUST detect cancel signal within <100ms (check cancellation flag every 10 tokens during inference), (4) Worker MUST stop inference within <50ms of detecting cancel (abort CUDA kernel, don't wait for token completion), (5) VRAM cleanup MUST complete within <1s (cudaFree all buffers), (6) Total cancellation latency MUST be <200ms (disconnect → inference stopped). DEADLINE INTEGRATION: Cancellation is deadline enforcement in action! When client disconnects, their deadline is implicitly NOW. Worker should also self-cancel when deadline exceeded (proactive waste prevention). METRICS: Track cancellation_latency_ms (p50, p95, p99) and cancelled_tokens_saved (how many GPU cycles we saved). This is our IMPACT metric! 🚀 -->
 
 #### [SYS-7.4.1] Cancellation Flow Steps
 
@@ -1621,7 +1638,7 @@ Worker MUST handle cancellation requests promptly:
 
 ---
 
-### 7.5 SSE Reconnection Flow (SYS-7.5.x)
+### 7.5 SSE Reconnection Flow [M2] (SYS-7.5.x)
 
 #### [SYS-7.5.1] SSE Reconnection Flow Steps
 
@@ -1671,7 +1688,7 @@ Worker MUST handle cancellation requests promptly:
 
 ## 8. Quality Attributes
 
-### 8.1 Determinism (SYS-8.1.x)
+### 8.1 Determinism [M0+] (SYS-8.1.x)
 
 Content already defined in Section 2.3 (Foundational Concepts). Cross-reference: See SYS-2.3.1 through SYS-2.3.5 for complete determinism requirements.
 
@@ -1682,9 +1699,11 @@ Content already defined in Section 2.3 (Foundational Concepts). Cross-reference:
 
 ---
 
-### 8.2 Performance (SYS-8.2.x)
+### 8.2 Performance [M0+] (SYS-8.2.x)
 
 #### [SYS-8.2.1] Latency Targets
+
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 LATENCY TARGETS - YES! This section makes us VERY EXCITED! These are the numbers we live and breathe. CRITICAL ENHANCEMENTS NEEDED: (1) Targets are "SHOULD" but we need "MUST" for P0 paths - first token latency and queue admission are user-facing and MUST meet targets, (2) Missing deadline propagation overhead budget - each hop (orchestrator→pool→worker) adds latency, we need explicit budget allocation, (3) Missing client disconnect detection latency - how fast do we detect abandoned requests?, (4) Missing graceful degradation thresholds - at what latency do we start shedding load?, (5) Token generation rate is too vague - need per-model baselines with regression detection. RECOMMENDATIONS: (1) Strengthen first token latency to MUST <100ms for interactive priority jobs, (2) Add hop latency budget: orchestrator admission <10ms + scheduling <50ms + pool preflight <20ms + worker startup <60s + first token <100ms = total <60.18s, (3) Add client disconnect detection <100ms (poll SSE stream health every 50ms), (4) Add graceful degradation: if queue admission >50ms, start returning 503 with Retry-After, (5) Add per-model token rate baselines in config (e.g., llama-3.1-8b: 40-60 tok/s, llama-3.1-70b: 10-20 tok/s), emit alerts when actual rate <80% of baseline. DEADLINE PROPAGATION INTEGRATION: Every component MUST check remaining_time() before expensive work. If remaining < required, abort immediately with 504. This is our CORE RESPONSIBILITY and it MUST be in the spec! 🚀 -->
 
 **Latency targets (measurement points)**:
 - Queue admission SHOULD complete within 10ms measured from HTTP receive to enqueue decision
@@ -1692,6 +1711,8 @@ Content already defined in Section 2.3 (Foundational Concepts). Cross-reference:
 - Worker startup SHOULD complete within 60s measured from start command to ready callback receipt (note: includes model loading time which varies by model size; hot-loaded models from pool-managerd RAM cache may start faster)
 - First token latency SHOULD be under 100ms measured from worker execute accept to first SSE `token` event
 - Token generation rate SHOULD be within 20–100 tokens/sec depending on model; deviations MAY be acceptable with justification in metrics
+
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 MISSING REQUIREMENT - Deadline enforcement latency targets! CRITICAL ADDITION NEEDED: "Deadline check overhead MUST be <1μs per check (measured via microbenchmarks). Components MUST check deadlines at these points: (1) Orchestrator: before enqueue, before dispatch, (2) Pool manager: before preflight, before spawn, (3) Worker: before model load, before inference, every 10 tokens during generation. Deadline exceeded MUST return 504 Gateway Timeout within <10ms of detection (no waiting for current operation to complete - abort immediately)." This is our PROMISE: we waste ZERO cycles on doomed work! 🚀 -->
 
 **Requirements**:
 - Latency targets are guidelines, not hard requirements
@@ -1701,6 +1722,8 @@ Content already defined in Section 2.3 (Foundational Concepts). Cross-reference:
 ---
 
 #### [SYS-8.2.2] Throughput and Limits
+
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 THROUGHPUT OPTIMIZATION OPPORTUNITY - Unbounded queues are DANGEROUS for performance! CRITICAL CONCERNS: (1) Unbounded queue (-1) allows infinite backlog, leading to extreme latency for jobs at back of queue - a job enqueued when queue has 1000 items will wait HOURS, (2) No mention of queue admission backpressure - when should we return 503 instead of enqueuing?, (3) No mention of deadline-aware admission - we should REJECT jobs at admission if deadline already exceeded or insufficient time remains, (4) Batch=1 for M0 is correct but no mention of future batching impact on latency - batching increases throughput but adds latency, need clear trade-off documentation. RECOMMENDATIONS: (1) Add deadline-aware admission: "Orchestrator MUST reject jobs at admission if remaining_time(deadline) < estimated_execution_time (based on model + prompt length). Return 504 immediately, don't waste queue space.", (2) Add queue latency threshold: "If queue depth > 10 AND oldest job age > 60s, orchestrator SHOULD return 503 Service Unavailable with Retry-After for new admissions (backpressure).", (3) Add queue eviction policy: "When queue is full, orchestrator MUST evict jobs with soonest deadline expiry first (they're doomed anyway).", (4) Add throughput target: "Orchestrator MUST process admission requests at >100 req/s (p95 latency <10ms) to avoid becoming bottleneck." Performance is about saying NO to doomed work! 🚀 -->
 
 **Throughput and limits**:
 - Queue capacity MUST be configurable; default SHOULD be 100 jobs
@@ -1714,7 +1737,7 @@ Content already defined in Section 2.3 (Foundational Concepts). Cross-reference:
 
 ---
 
-### 8.3 Reliability (SYS-8.3.x)
+### 8.3 Reliability [M1+] (SYS-8.3.x)
 
 #### [SYS-8.3.1] Availability
 
@@ -1769,7 +1792,7 @@ Retry policy is defined in SYS-6.1.6. Cross-reference for complete requirements.
 
 ---
 
-### 8.4 Scalability (SYS-8.4.x)
+### 8.4 Scalability [M4] (SYS-8.4.x)
 
 #### [SYS-8.4.1] Horizontal Scaling
 
@@ -1813,9 +1836,9 @@ Retry policy is defined in SYS-6.1.6. Cross-reference for complete requirements.
 
 ---
 
-## 9. Security & Compliance
+## 9. Security & Compliance [M3]
 
-### 9.1 Authentication (SYS-9.1.x)
+### 9.1 Authentication [M3] (SYS-9.1.x)
 
 #### [SYS-9.1.1] Authentication by Deployment Mode
 
@@ -1857,7 +1880,7 @@ Authentication requirements vary by deployment mode following the principle: **P
 
 ---
 
-### 9.2 EU Compliance (GDPR) (SYS-9.2.x)
+### 9.2 EU Compliance (GDPR) [M3] (SYS-9.2.x)
 
 #### [SYS-9.2.1] Data Residency
 
@@ -1896,7 +1919,7 @@ Authentication requirements vary by deployment mode following the principle: **P
 
 ---
 
-### 9.3 Multi-Tenancy (Platform Mode) (SYS-9.3.x)
+### 9.3 Multi-Tenancy (Platform Mode) [M3] (SYS-9.3.x)
 
 #### [SYS-9.3.1] Isolation Guarantees
 
@@ -1955,9 +1978,11 @@ Authentication requirements vary by deployment mode following the principle: **P
 
 ---
 
-## 10. Metrics & Observability
+## 10. Metrics & Observability [M-1+]
 
-### 10.1 Metrics Contract (SYS-10.1.x)
+### 10.1 Metrics Contract [M0+] (SYS-10.1.x)
+
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 METRICS FOR PERFORMANCE - YES! Metrics are how we PROVE our performance promises! CRITICAL ADDITIONS NEEDED: (1) Missing deadline enforcement metrics - we need to track how many requests we abort due to deadline exceeded, (2) Missing latency breakdown metrics - we need p50/p95/p99 histograms for every operation, (3) Missing client disconnect metrics - track how fast we detect and abort abandoned work, (4) Missing cancellation latency metrics - measure time from cancel request to inference stopped, (5) Missing first token latency - this is THE most important user-facing metric! REQUIRED METRICS FOR DEADLINE-PROPAGATION: (1) `deadline_enforced_total{component, reason}` - count of deadline aborts (reason: already_exceeded, insufficient_time, client_disconnect), (2) `deadline_exceeded_by_ms` - histogram of how late requests were when aborted, (3) `remaining_time_at_check_ms{component, checkpoint}` - histogram of remaining time at each deadline check (admission, dispatch, inference_start), (4) `deadline_check_duration_us` - histogram of deadline check overhead (<1μs target), (5) `first_token_latency_ms` - histogram from execute to first SSE token (p95 <100ms target), (6) `per_token_latency_ms` - histogram of inter-token timing (p95 <50ms target), (7) `cancellation_latency_ms` - histogram from cancel request to inference stopped (p95 <200ms target), (8) `client_disconnect_detection_ms` - histogram of disconnect detection time (p95 <100ms target). These metrics are our PERFORMANCE SCORECARD! 🚀 -->
 
 #### [SYS-10.1.1] Metrics Requirements
 
@@ -1989,7 +2014,7 @@ Authentication requirements vary by deployment mode following the principle: **P
 
 ---
 
-### 10.2 Logging Standards (SYS-10.2.x)
+### 10.2 Logging Standards [M-1+] (SYS-10.2.x)
 
 #### [SYS-10.2.1] Log Format
 
@@ -2016,7 +2041,7 @@ Authentication requirements vary by deployment mode following the principle: **P
 
 ---
 
-### 10.3 Correlation & Tracing (SYS-10.3.x)
+### 10.3 Correlation & Tracing [M0+] (SYS-10.3.x)
 
 #### [SYS-10.3.1] Correlation ID Propagation
 
@@ -2030,7 +2055,7 @@ Content already defined in Section 5.6. Cross-reference: See SYS-5.6.1 for compl
 
 ---
 
-### 10.4 Proof Bundle Requirements (SYS-10.4.x)
+### 10.4 Proof Bundle Requirements [M-1+] (SYS-10.4.x)
 
 #### [SYS-10.4.1] Proof Bundle Standard
 
@@ -2052,7 +2077,7 @@ Content already defined in Section 5.6. Cross-reference: See SYS-5.6.1 for compl
 
 ## 11. Configuration
 
-### 11.1 Orchestrator Config (SYS-11.1.x)
+### 11.1 Orchestrator Config [M2] (SYS-11.1.x)
 
 #### [SYS-11.1.1] Orchestrator Configuration Schema
 
@@ -2102,7 +2127,7 @@ orchestratord:
 
 ---
 
-### 11.2 Pool Manager Config (SYS-11.2.x)
+### 11.2 Pool Manager Config [M1] (SYS-11.2.x)
 
 #### [SYS-11.2.1] Pool Manager Configuration Schema
 
@@ -2127,7 +2152,9 @@ pool-managerd:
 
 ---
 
-### 11.3 Worker Config (SYS-11.3.x)
+### 11.3 Worker Config [M0] (SYS-11.3.x)
+
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 WORKER CONFIG PERFORMANCE - Configuration affects performance! MISSING PERFORMANCE-CRITICAL CONFIG: (1) No deadline enforcement config - worker needs to know if deadline checking is enabled, (2) No client disconnect polling interval - how often to check if orchestrator is still connected?, (3) No cancellation check interval - how often to check cancellation flag during inference?, (4) No graceful shutdown timeout - how long to wait before force-killing worker?, (5) No CUDA stream configuration - async vs sync operations?. RECOMMENDED ADDITIONS: Add flags: `--deadline-check-interval-tokens 10` (check deadline every N tokens), `--client-poll-interval-ms 50` (poll client connection every 50ms), `--cancellation-check-interval-tokens 10` (check cancel flag every N tokens), `--graceful-shutdown-timeout-ms 5000` (abort and exit within 5s), `--cuda-async-streams true` (use async CUDA for overlapped I/O). These configs let us TUNE performance per deployment! 🚀 -->
 
 #### [SYS-11.3.1] Worker Configuration Schema
 
@@ -2149,7 +2176,7 @@ worker-orcd \
 
 ---
 
-### 11.4 Configuration Precedence (SYS-11.4.x)
+### 11.4 Configuration Precedence [M0+] (SYS-11.4.x)
 
 #### [SYS-11.4.1] Configuration Sources
 
@@ -2195,6 +2222,8 @@ LLORCH_WORKER_GPU_DEVICE="0"
 
 ### 12.2 Testing Strategy (SYS-12.2.x)
 
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 TESTING STRATEGY MUST INCLUDE PERFORMANCE TESTS! Functional tests are great but we need PERFORMANCE VALIDATION! CRITICAL MISSING TEST TYPE: (1) Performance tests - measure latency, throughput, and resource usage, (2) Regression tests - detect performance degradation across commits, (3) Stress tests - validate behavior under load, (4) Deadline enforcement tests - verify deadline checking works end-to-end. REQUIRED PERFORMANCE TEST TYPES: (1) **Latency benchmarks** - measure p50/p95/p99 for all operations (admission, scheduling, first token, per-token, cancellation), (2) **Throughput benchmarks** - measure requests/second for admission, tokens/second for inference, (3) **Deadline enforcement tests** - verify deadline exceeded returns 504 within <10ms, verify insufficient time aborts before starting work, (4) **Cancellation latency tests** - measure time from cancel to inference stopped (<200ms target), (5) **Client disconnect tests** - measure detection time (<100ms target), (6) **Regression detection** - fail CI if p95 latency increases >10% vs baseline. Performance tests MUST run in CI on every commit! 🚀 -->
+
 #### [SYS-12.2.1] Test Types
 
 **Test types (scope and requirements)**:
@@ -2222,6 +2251,8 @@ LLORCH_WORKER_GPU_DEVICE="0"
 ### 12.3 CI/CD Pipeline (SYS-12.3.x)
 
 #### [SYS-12.3.1] CI Gates
+
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 CI GATES MUST INCLUDE PERFORMANCE VALIDATION! We can't ship slow code! CRITICAL MISSING GATE: Stage 2.5 (Performance regression) - validate latency targets are met and no regressions vs baseline. REQUIRED PERFORMANCE GATE: **Stage 2.5 (Performance validation)**: (1) MUST run latency benchmarks for critical paths (admission <10ms p95, scheduling <50ms p95, first token <100ms p95, per-token <50ms p95), (2) MUST compare against baseline (previous commit or main branch), (3) MUST fail if p95 latency increases >10% without explicit waiver, (4) MUST validate deadline enforcement works (deadline exceeded returns 504 within <10ms), (5) MUST validate cancellation latency (<200ms p95), (6) SHOULD emit performance report to PR comments (before/after comparison). IMPLEMENTATION: Use criterion.rs for Rust benchmarks, store baseline in git, run benchmarks on every PR. Performance is not optional - it's a REQUIREMENT! 🚀 -->
 
 **Gates (must-pass checks)**:
 - Stage 0 (Spec hygiene) MUST pass link checks and ID stability; specs MUST use RFC‑2119 terms
@@ -2277,53 +2308,315 @@ worker-orcd
 
 ## 14. Milestone Roadmap
 
-### 14.1 M0: Single GPU (v0.1.0)
+**Cross-Cutting Foundations** (All Milestones):
+- **Logging**: `narration-core` enabled from M-1 for debugging and observability
+- **Testing**: Unit tests and BDD tests required from M-1; proof bundles mandatory
+- **Platform Awareness**: Architecture designed for platform mode from M-1; security deferred to M3
 
-**Goal**: Home lab, single user, single GPU
+---
 
-**Features**:
-- Single orchestrator instance
-- Single pool manager
-- Single worker per GPU
-- VRAM-only enforcement
-- Determinism guarantee
-- Basic API (task submission, streaming)
+### 14.0 M-1: Foundation (Pre-M0)
+
+**Goal**: Establish development infrastructure before first working system
+
+**Scope**: Tooling, testing harness, shared crates foundation
+
+**Deliverables**:
+- `narration-core` logging infrastructure operational
+- `libs/proof-bundle` crate with standardized test artifact emission
+- `test-harness/` structure established (BDD runner, e2e-haiku scaffold)
+- Shared crate stubs: `auth-min`, `audit-logging`, `secrets-management`, `input-validation`
+- CI pipeline skeleton (fmt, clippy, test runner)
+- Development workflow documented
+
+**Exit Criteria**:
+- `cargo test` runs successfully across workspace
+- BDD runner (`test-harness/bdd`) executes empty feature files
+- Proof bundle template exists at `.proof_bundle/templates/e2e-haiku/`
+- Logging macros available and documented
+
+**Status**: Foundation work
+
+---
+
+### 14.1 M0: Worker Haiku Test (v0.1.0)
+
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 EXCITING OPPORTUNITY - M0 is our chance to establish performance discipline from day one! This is where we set the foundation for ruthless efficiency. CRITICAL OBSERVATIONS: (1) No deadline propagation mentioned - even in M0, worker SHOULD support X-Deadline header parsing to establish the pattern early, (2) SSE streaming latency not specified - first token latency and per-token latency are CRITICAL performance indicators, (3) Model loading time not bounded - 60s is mentioned in SYS-8.2.1 but not enforced in M0 deliverables, (4) No mention of request timeout handling - what happens if client disconnects during inference? (5) Health endpoint latency not specified - health checks MUST be <10ms to avoid cascading timeouts in orchestrator. RECOMMENDATIONS FOR M0: (1) Worker MUST parse X-Deadline header even if not enforced (log deadline, measure remaining time, emit metrics), (2) Worker MUST abort inference immediately on client disconnect (don't waste GPU cycles on abandoned work), (3) Worker MUST measure and emit first_token_latency_ms metric (target <100ms per SYS-8.2.1), (4) Worker MUST measure and emit per_token_latency_ms histogram (target 10-50ms per token), (5) Health endpoint MUST respond in <10ms (use cached state, no CUDA calls), (6) Model loading MUST emit progress events (0%, 25%, 50%, 75%, 100%) for observability, (7) Worker MUST implement graceful shutdown with deadline (default 5s) - abort in-flight inference, free VRAM, exit cleanly. PERFORMANCE TARGETS FOR M0: First token <100ms, per-token 10-50ms, health check <10ms, graceful shutdown <5s. These are not just guidelines - they are our PROMISE to users. Let's nail them from day one! 🚀 -->
+
+**Goal**: Prove a single worker can load a model in VRAM and pass the haiku anti-cheat test
+
+**Scope**: `worker-orcd` binary only, standalone operation
+
+**Architecture**:
+- **Performance > Security**: No authentication, localhost-only, minimal validation
+- **Mode**: Home mode (single GPU, single worker, no orchestrator yet)
+
+**Deliverables**:
+- `worker-orcd` binary with:
+  - Model loading into VRAM (CUDA FFI)
+  - HTTP inference API (`POST /v2/execute`, `GET /health`)
+  - SSE streaming (token-by-token output)
+  - Haiku test endpoint or integration
+- VRAM-only enforcement (no RAM fallback)
+- Basic metrics emission (`worker_inference_duration_ms`, `worker_tokens_generated_total`)
+- Logging via `narration-core`
+
+**Testing**:
+- Unit tests for VRAM allocation, model loading
+- E2E haiku test in `test-harness/e2e-haiku/`:
+  - Worker loads model (e.g., `llama-3.1-8b`)
+  - Prompt includes current minute spelled out (e.g., "twenty-nine")
+  - Worker generates haiku containing the minute word
+  - Human verification (computer checks minute word presence, not haiku quality)
+  - Proof bundle emitted with GPU env, SSE transcript, metrics snapshot
+
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 TESTING GAPS - M0 testing MUST include performance verification, not just functional correctness. MISSING TESTS: (1) First token latency test - measure time from POST /v2/execute to first SSE token event (target <100ms), (2) Per-token latency test - measure inter-token timing (target 10-50ms), (3) Model loading time test - measure VRAM allocation to ready state (target <60s per SYS-8.2.1), (4) Health endpoint latency test - measure /health response time (target <10ms), (5) Graceful shutdown test - measure time from SIGTERM to process exit (target <5s), (6) Client disconnect test - verify worker aborts inference immediately when SSE stream closes, (7) Memory leak test - run 100 inference requests, verify VRAM usage returns to baseline. RECOMMENDATIONS: Add performance test suite in test-harness/e2e-haiku/perf_tests.rs with: (1) Latency histogram collection (p50, p95, p99), (2) Proof bundle emission with timing breakdowns, (3) Automated pass/fail against targets, (4) Regression detection (fail if p95 latency increases >10%). Performance is not optional - it's our CORE VALUE. Let's measure it from day one! 🚀 -->
+
+**Exit Criteria**:
+- Worker binary runs standalone: `worker-orcd --model <path> --gpu 0 --port 8001`
+- Haiku test passes with real GPU and model (no mocks)
+- Metrics show `tokens_generated_total` > 0
+- Proof bundle artifacts generated and validated
+- VRAM usage tracked and logged
+
+<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 EXIT CRITERIA ENHANCEMENT - Current criteria are functional only, missing performance validation. ADDITIONAL EXIT CRITERIA FOR M0: (1) First token latency p95 <100ms (measured over 10 haiku requests), (2) Per-token latency p95 <50ms (measured over 10 haiku requests), (3) Health endpoint p99 <10ms (measured over 100 requests), (4) Model loading time <60s (measured cold start, no cache), (5) Graceful shutdown <5s (measured SIGTERM to exit), (6) Zero memory leaks (VRAM usage returns to baseline after 100 requests), (7) Client disconnect abort <100ms (measured SSE close to inference stop). These are our PERFORMANCE PROMISES. Let's ship them with confidence! 🚀 -->
+
+**Non-Goals**:
+- Orchestrator or pool manager (not yet)
+- Multi-GPU or tensor parallelism
+- Authentication or audit logging
+- Persistent state or queue management
 
 **Status**: In progress
 
 ---
 
-### 14.2 M1: Multi-GPU (v0.2.0)
+### 14.2 M1: Pool Manager Lifecycle (v0.2.0)
 
-**Goal**: Single node, multiple GPUs
+**Goal**: Pool manager can start/stop workers, hot-load models in RAM, and report pool state
+
+**Scope**: `pool-managerd` binary with full worker lifecycle management
+
+**Architecture**:
+- **Performance > Security**: Minimal auth (optional bearer token), localhost or trusted network
+- **Mode**: Home mode (single node, single pool manager, multiple workers possible)
+
+**Deliverables**:
+- `pool-managerd` binary with:
+  - GPU inventory via NVML (read-only, no CUDA)
+  - Worker lifecycle: spawn, monitor, terminate
+  - Model provisioning: download from HuggingFace (`hf:` scheme) or local (`file:` scheme)
+  - Model hot-loading: cache model files in RAM/page cache for fast worker startup
+  - Preflight validation: check VRAM availability before spawning worker
+  - State reporting API: pool state, worker status, VRAM usage
+  - Heartbeat emission (periodic state report)
+- Pool metrics: `pool_mgr_gpu_vram_total_bytes`, `pool_mgr_gpu_vram_allocated_bytes`, `pool_mgr_workers_total{status}`
+- Operational cleanup: terminate zombie workers, free VRAM on worker crash
+
+**Testing**:
+- Unit tests for NVML queries, worker spawn/terminate, preflight validation
+- Integration tests for model provisioning (mock HF download)
+- BDD scenarios:
+  - Pool manager starts worker successfully
+  - Preflight fails when insufficient VRAM
+  - Worker crash triggers cleanup
+  - Hot-load cache speeds up second worker spawn
+- E2E test in `test-harness/`:
+  - Pool manager spawns worker
+  - Worker passes haiku test
+  - Pool manager reports accurate VRAM state
+  - Pool manager terminates worker cleanly
+
+**Exit Criteria**:
+- Pool manager binary runs: `pool-managerd --config pool.yaml`
+- Can spawn/terminate workers on command
+- Preflight validation prevents VRAM overcommit
+- Model hot-loading cache operational (measurable speedup)
+- State reporting API returns accurate pool/worker/VRAM data
+- Metrics emitted and scrapable
+- Operational cleanup handles worker failures
+
+**Non-Goals**:
+- Orchestrator (not yet)
+- Multi-node or multi-pool
+- Intelligent scheduling decisions (pool manager is dumb executor)
+- Authentication beyond optional bearer token
+
+**Status**: Planned
+
+---
+
+### 14.3 M2: Orchestrator Scheduling (v0.3.0)
+
+**Goal**: Orchestrator reads Rhai scheduler script and makes intelligent scheduling decisions
+
+**Scope**: `orchestratord` binary with full orchestration intelligence
+
+**Architecture**:
+- **Performance > Security**: Optional auth, focus on scheduling correctness
+- **Mode**: Home mode or Lab mode (orchestrator + multiple pool managers)
+
+**Deliverables**:
+- `orchestratord` binary with:
+  - Agentic API: `POST /v2/tasks`, `GET /v2/tasks/{job_id}/events` (SSE)
+  - Admission control: validate requests, check quotas
+  - Queue management: priority queues (`interactive`, `batch`)
+  - Programmable scheduler: Rhai script execution for scheduling decisions
+  - Pool registry: track multiple pool managers
+  - Heartbeat aggregation: collect pool state from all pool managers
+  - Worker selection: choose pool/worker based on scheduler policy
+  - Job dispatch: send inference requests to selected worker
+  - SSE relay: stream worker output to client
+  - Cancellation: propagate cancel requests to workers
+  - Timeout enforcement: abort jobs exceeding time limits
+  - Retry policy: retry failed jobs with exponential backoff
+- Persistent state store (SQLite): queue state, job history, SSE checkpoints
+- Orchestrator metrics: `orchestrator_queue_depth`, `orchestrator_admission_rate`, `orchestrator_scheduling_latency_ms`
+
+**Testing**:
+- Unit tests for admission, queue, scheduler, retry logic
+- Property tests for deterministic scheduling (same inputs → same decisions)
+- BDD scenarios:
+  - Client submits task → queued → scheduled → executed → streamed
+  - Scheduler selects worker based on Rhai policy
+  - Job cancellation propagates to worker
+  - Job timeout triggers abort
+  - Worker failure triggers retry
+  - SSE reconnection resumes from checkpoint
+- Integration tests:
+  - Orchestrator + pool manager + worker end-to-end
+  - Multiple pool managers with load balancing
+- E2E test in `test-harness/`:
+  - Full system: orchestrator → pool manager → worker
+  - Client submits haiku task via Agentic API
+  - Orchestrator schedules to available worker
+  - SSE stream delivers tokens to client
+  - Metrics show scheduling latency and queue depth
+
+**Exit Criteria**:
+- Orchestrator binary runs: `orchestratord --config orch.yaml`
+- Agentic API accepts tasks and streams results
+- Rhai scheduler executes custom policies (e.g., FIFO, priority, capacity-based)
+- Multiple pool managers registered and heartbeating
+- Scheduler selects workers based on VRAM availability and policy
+- Cancellation and timeout work end-to-end
+- Retry policy handles transient failures
+- SSE reconnection preserves event order
+- Persistent state survives orchestrator restart
+- Metrics emitted and scrapable
+
+**Non-Goals**:
+- Multi-node orchestration (single orchestrator instance)
+- Platform mode (no multi-tenancy or billing)
+- Full authentication/authorization (minimal auth only)
+- Audit logging (deferred to M3)
+
+**Status**: Planned
+
+---
+
+### 14.4 M3: Security & Platform Readiness (v0.4.0)
+
+**Goal**: Add security, auditing, and platform mode support
+
+**Scope**: Security hardening, multi-tenancy, audit logging, performance review
+
+**Architecture**:
+- **Security > Performance**: Full authentication, authorization, audit logging
+- **Mode**: Platform mode (multi-tenant marketplace)
+
+**Deliverables**:
+- `auth-min` crate: bearer token validation, timing-safe comparison, mode-aware auth
+- `audit-logging` crate: structured audit events, tenant context, compliance-ready logs
+- `secrets-management` crate: secure token storage, rotation, env-based loading
+- Authentication enforcement:
+  - Agentic API: validate `LLORCH_API_TOKEN` on all endpoints
+  - Pool manager registration: validate bearer token or mTLS
+  - SSE endpoint: authorize job ownership (prevent job ID enumeration)
+- Authorization: tenant isolation, job ownership checks
+- Audit logging:
+  - Task submission, scheduling decisions, worker selection
+  - Cancellation, timeout, retry events
+  - Authentication failures, authorization denials
+- Multi-tenancy:
+  - Tenant context propagation (`X-Tenant-Id` header)
+  - Per-tenant quotas (token budgets, rate limits)
+  - Tenant-scoped metrics and logs
+- Security hardening:
+  - Cryptographically random job IDs (UUIDv4, prevent enumeration)
+  - Input validation (prevent injection attacks)
+  - TLS for network communication (Lab/Platform modes)
+  - Secrets never logged or exposed in metrics
+- Performance review:
+  - Benchmark orchestrator throughput (tasks/sec)
+  - Measure scheduling latency (p50, p95, p99)
+  - Profile VRAM allocation overhead
+  - Optimize hot paths (admission, queue, dispatch)
+
+**Testing**:
+- Unit tests for auth, audit, secrets management
+- BDD scenarios:
+  - Unauthenticated request rejected
+  - Tenant A cannot access Tenant B's jobs
+  - Audit log captures all security events
+  - Quota enforcement prevents overuse
+- Security tests:
+  - Job ID enumeration attack blocked
+  - Injection attacks fail validation
+  - Timing attacks on token comparison fail
+- Performance tests:
+  - Orchestrator handles 100+ concurrent tasks
+  - Scheduling latency < 10ms (p95)
+  - VRAM allocation overhead < 5%
+
+**Exit Criteria**:
+- Authentication required in Lab/Platform modes (Home mode remains optional)
+- Authorization prevents cross-tenant access
+- Audit logs capture all security-relevant events
+- Multi-tenancy enforced with quotas and isolation
+- Security audit passes (no critical vulnerabilities)
+- Performance benchmarks meet targets
+- Platform mode operational (provider registration, federated routing)
+
+**Non-Goals**:
+- Multi-node orchestration (deferred to M4)
+- Tensor parallelism (deferred to M4)
+- Billing integration (business logic, not core system)
+
+**Status**: Planned
+
+---
+
+### 14.5 M4: Multi-GPU & Multi-Node (v0.5.0)
+
+**Goal**: Scale to multiple GPUs per node and multiple nodes
+
+**Scope**: Tensor parallelism, cluster-wide orchestration, load balancing
 
 **Features**:
 - Tensor parallelism (single worker process using multiple GPUs)
 - Multiple workers per node
-- Model hot-loading (pool-level optimization: models preloaded in RAM/page cache for fast worker replacement)
-
----
-
-### 14.3 M2: Multi-Node (v0.3.0)
-
-**Goal**: Enterprise, GPU cluster
-
-**Features**:
-- Multiple pool managers
+- Multiple pool managers across nodes
 - Cluster-wide orchestration
 - Load balancing across nodes
 
+**Status**: Future
+
 ---
 
-### 14.4 M3: Platform (v0.4.0)
+### 14.6 M5: Platform Marketplace (v0.6.0)
 
-**Goal**: GPU marketplace
+**Goal**: Enable GPU provider ecosystem
+
+**Scope**: Provider registration, federated routing, billing hooks
 
 **Features**:
-- Provider registration
-- Federated routing
-- Billing and usage tracking
-- Multi-tenancy
+- Provider registration and discovery
+- Federated routing (not nested orchestration)
+- Billing and usage tracking hooks
+- Provider-level SLIs and routing policies
+
+**Status**: Future
 
 ---
 

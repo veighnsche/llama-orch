@@ -12,6 +12,7 @@ pub struct CapturedNarration {
     pub target: String,
     pub human: String,
     pub cute: Option<String>,
+    pub story: Option<String>,
     pub correlation_id: Option<String>,
     pub session_id: Option<String>,
     pub pool_id: Option<String>,
@@ -32,6 +33,7 @@ impl From<NarrationFields> for CapturedNarration {
             target: fields.target,
             human: fields.human,
             cute: fields.cute,
+            story: fields.story,
             correlation_id: fields.correlation_id,
             session_id: fields.session_id,
             pool_id: fields.pool_id,
@@ -189,6 +191,40 @@ impl CaptureAdapter {
             "Expected cute narration to include '{}', but found: {:?}",
             substring,
             captured.iter().filter_map(|n| n.cute.as_ref()).collect::<Vec<_>>()
+        );
+    }
+
+    /// Assert that story narration is present.
+    pub fn assert_story_present(&self) {
+        let captured = self.captured();
+        let found = captured.iter().any(|n| n.story.is_some());
+        assert!(found, "Expected at least one narration with story field, but found none");
+    }
+
+    /// Assert that story narration includes a substring.
+    pub fn assert_story_includes(&self, substring: &str) {
+        let captured = self.captured();
+        let found = captured.iter().any(|n| {
+            n.story.as_ref().map_or(false, |s| s.contains(substring))
+        });
+        assert!(
+            found,
+            "Expected story narration to include '{}', but found: {:?}",
+            substring,
+            captured.iter().filter_map(|n| n.story.as_ref()).collect::<Vec<_>>()
+        );
+    }
+
+    /// Assert that story narration includes dialogue (quoted text).
+    pub fn assert_story_has_dialogue(&self) {
+        let captured = self.captured();
+        let found = captured.iter().any(|n| {
+            n.story.as_ref().map_or(false, |s| s.contains('"') || s.contains("'"))
+        });
+        assert!(
+            found,
+            "Expected story narration to include dialogue (quotes), but found: {:?}",
+            captured.iter().filter_map(|n| n.story.as_ref()).collect::<Vec<_>>()
         );
     }
 }

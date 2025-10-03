@@ -1,69 +1,125 @@
+# llama-orch Workspace
+#
+# This workspace contains all crates that make up the llama-orch distributed inference system.
+# Organized by purpose with inline descriptions for easy navigation.
+
 [workspace]
 members = [
-    "contracts/api-types",
-    "contracts/config-schema",
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # CONTRACTS — Shared Types & Schemas
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # API types and configuration schemas shared across all services.
+    
+    "contracts/api-types",        # API request/response types
+    "contracts/config-schema",    # Configuration validation & schemas
 
-    "bin/orchestratord",
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # MAIN SERVICES — Core Binaries
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # The three main services that form the distributed inference system.
+    
+    "bin/orchestratord",          # Orchestrator: admission, scheduling, job dispatch
     "bin/orchestratord/bdd",
-    "bin/pool-managerd",
+    
+    "bin/pool-managerd",          # Pool manager: worker lifecycle, GPU inventory, model provisioning
     "bin/pool-managerd/bdd",
-    "bin/worker-orcd",
+    
+    "bin/worker-orcd",            # Worker: inference execution, model loading, streaming
     "bin/worker-orcd/bdd",
-    
-    # Test harnesses (removed - see test-harness/BLUEPRINT.md)
 
-    # Consumers
-    "consumers/llama-orch-sdk",
-    "consumers/llama-orch-utils",
-
-    # Tools
-    "tools/spec-extract",
-    "tools/openapi-client",
-    "tools/readme-index",
-    "xtask",
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # SHARED CRATES — Cross-Service Utilities
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # Common libraries used across multiple services.
     
-    # New bin/ crates - shared-crates
-    "bin/shared-crates/secrets-management",
-    "bin/shared-crates/secrets-management/bdd",
-    "bin/shared-crates/input-validation",
+    "bin/shared-crates/audit-logging",         # Structured audit logs for security & compliance
+    "bin/shared-crates/audit-logging/bdd",     # Vigilant, uncompromising, deeply paranoid (in a good way)
+    
+    "bin/shared-crates/auth-min",              # Minimal authentication (bearer tokens, HMAC)
+                                               # Invisible, uncompromising, always watching
+    
+    "bin/shared-crates/deadline-propagation",  # Request deadline tracking
+                                               # Relentlessly efficient, zero-tolerance for latency waste
+    
+    "bin/shared-crates/gpu-info",              # GPU detection & capability queries
+    
+    "bin/shared-crates/input-validation",      # Input sanitization & validation
     "bin/shared-crates/input-validation/bdd",
-    "bin/shared-crates/audit-logging",
-    "bin/shared-crates/audit-logging/bdd",
-    "bin/shared-crates/gpu-info",
-    "bin/shared-crates/rate-limiting",
-    "bin/shared-crates/circuit-breaker",
-    "bin/shared-crates/deadline-propagation",
-    "bin/shared-crates/retry-policy",
-    "bin/shared-crates/resource-limits",
-    "bin/shared-crates/pool-registry-types",
-    "bin/shared-crates/auth-min",
-    "bin/shared-crates/narration-core",
     
-    # New bin/ crates - orchestratord-crates
-    "bin/orchestratord-crates/orchestrator-core",
+    "bin/shared-crates/narration-core",        # Human-readable narration (human/cute/story modes)
+    "bin/shared-crates/narration-core/bdd",    # The cutest observability team in the monorepo! 💕
+    
+    "bin/shared-crates/pool-registry-types",   # Shared types for pool registration
+    
+    "bin/shared-crates/secrets-management",    # Secret redaction & secure handling
+    "bin/shared-crates/secrets-management/bdd",
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # ORCHESTRATORD CRATES — Orchestrator Components
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # Libraries specific to the orchestrator service.
+    
+    "bin/orchestratord-crates/agentic-api",         # Agentic API endpoints (tool calls, multi-turn)
+    
+    "bin/orchestratord-crates/backpressure",        # Admission control & backpressure
+    
+    "bin/orchestratord-crates/job-timeout",         # Job timeout tracking & enforcement
+    
+    "bin/orchestratord-crates/orchestrator-core",   # Core orchestration (queue, dispatch)
     "bin/orchestratord-crates/orchestrator-core/bdd",
-    "bin/orchestratord-crates/backpressure",
-    "bin/orchestratord-crates/placement",
-    "bin/orchestratord-crates/streaming",
-    "bin/orchestratord-crates/task-cancellation",
-    "bin/orchestratord-crates/platform-api",
-    "bin/orchestratord-crates/agentic-api",
-    "bin/orchestratord-crates/job-timeout",
-    "bin/orchestratord-crates/node-registry",
     
-    # New bin/ crates - pool-managerd-crates
-    "bin/pool-managerd-crates/pool-registry",
-    "bin/pool-managerd-crates/gpu-inventory",
-    "bin/pool-managerd-crates/health-monitor",
-    "bin/pool-managerd-crates/lifecycle",
-    "bin/pool-managerd-crates/api",
-    "bin/pool-managerd-crates/model-catalog",
+    "bin/orchestratord-crates/platform-api",        # Platform API (inference, completions, chat)
+    
+    "bin/orchestratord-crates/pool-registry",       # Pool manager registry & health tracking
+    
+    "bin/orchestratord-crates/scheduling",          # Programmable Lua scheduler runtime
+    
+    "bin/orchestratord-crates/streaming",           # SSE streaming & event emission
+    
+    "bin/orchestratord-crates/task-cancellation",   # Job cancellation & cleanup
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # POOL-MANAGERD CRATES — Pool Manager Components
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # Libraries specific to the pool manager service.
+    
+    "bin/pool-managerd-crates/capability-matcher",        # Match job requirements to worker capabilities
+    
+    "bin/pool-managerd-crates/control-api",               # Control plane API (admin, ops)
+    
+    "bin/pool-managerd-crates/error-ops",                 # Error recovery & retry strategies
+    
+    "bin/pool-managerd-crates/gpu-inventory",             # GPU tracking & VRAM management
+    
+    "bin/pool-managerd-crates/model-cache",               # Model artifact caching
+    
+    "bin/pool-managerd-crates/model-catalog",             # Model metadata & discovery
     "bin/pool-managerd-crates/model-catalog/bdd",
-    "bin/pool-managerd-crates/model-provisioner",
+    
+    "bin/pool-managerd-crates/model-provisioner",         # Model download, verification, sealing
     "bin/pool-managerd-crates/model-provisioner/bdd",
-    "bin/pool-managerd-crates/model-cache",
-    "bin/pool-managerd-crates/error-recovery",
-    "bin/pool-managerd-crates/node-registration-client",
+    
+    "bin/pool-managerd-crates/pool-registration-client",  # Client for registering with orchestrator
+    
+    "bin/pool-managerd-crates/worker-lifecycle",          # Worker spawn, ready callbacks, heartbeats
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # CONSUMER LIBRARIES — External SDKs
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # Client libraries and utilities for external developers.
+    
+    "consumers/llama-orch-sdk",    # Rust SDK for llama-orch
+    "consumers/llama-orch-utils",  # CLI utilities & helpers
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # DEVELOPER TOOLS — Build & Maintenance
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # Tools for working with the monorepo.
+    
+    "tools/openapi-client",  # OpenAPI client generator
+    "tools/readme-index",    # README index generator
+    "tools/spec-extract",    # Spec extraction & validation
+    "xtask",                 # Workspace automation (cargo xtask)
 ]
 
 resolver = "2"

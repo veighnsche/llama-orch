@@ -1,6 +1,12 @@
 //! Worker error types
 
 use crate::cuda::CudaError;
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Json,
+};
+use serde::Serialize;
 
 /// Worker-level errors
 #[derive(Debug, thiserror::Error)]
@@ -48,11 +54,31 @@ impl WorkerError {
     }
     
     /// Get HTTP status code
-    pub fn status_code(&self) -> u16 {
+    pub fn status_code(&self) -> StatusCode {
         match self {
-            Self::InvalidRequest(_) => 400,
-            Self::Unhealthy(_) => 503,
-            _ => 500,
+            Self::InvalidRequest(_) => StatusCode::BAD_REQUEST,
+            Self::Unhealthy(_) => StatusCode::SERVICE_UNAVAILABLE,
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
+    }
+}
+
+#[derive(Serialize)]
+struct ErrorResponse {
+    code: &'static str,
+    message: String,
+    retriable: bool,
+}
+
+impl IntoResponse for WorkerError {
+    fn into_response(self) -> Response {
+        let status = self.status_code();
+        let body = ErrorResponse {
+            code: self.code(),
+            message: self.to_string(),
+            retriable: self.is_retriable(),
+        };
+        
+        (status, Json(body)).into_response()
     }
 }
