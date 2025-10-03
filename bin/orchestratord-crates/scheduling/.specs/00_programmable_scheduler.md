@@ -13,20 +13,22 @@ The orchestrator scheduler is designed as a **policy execution engine** that can
 ### Core Concepts
 
 1. **Platform Mode Scheduler** (Immutable, Built-in)
-   - Written in Lua, compiled into orchestratord binary
+   - Written in Rhai, compiled into orchestratord binary
    - Optimized for performance by platform team
    - Immutable - users cannot modify
    - Always available as fallback/reference
+   - Enforces capacity limits and may reject jobs with 429 when thresholds exceeded
 
-2. **User-Defined Scheduler** (Lua or YAML)
-   - Home/Lab modes: Users can write custom Lua scripts
-   - YAML: Declarative configuration (compiled to Lua internally)
+2. **User-Defined Scheduler** (Rhai or YAML)
+   - Home/Lab modes: Users can write custom Rhai scripts
+   - YAML: Declarative configuration (compiled to Rhai internally)
    - Full access to system state via provided API
    - Sandboxed execution environment
+   - Can define custom queue policies (unbounded queues, custom eviction, etc.)
 
 3. **Web UI Mode** (Visual Scheduler Builder)
    - Visual policy editor
-   - Generates Lua or YAML output
+   - Generates Rhai or YAML output
    - Live preview and testing
    - Can clone platform scheduler as starting point
 
@@ -37,20 +39,21 @@ The orchestrator scheduler is designed as a **policy execution engine** that can
 ### 2.1 Platform Mode (Production)
 
 **Characteristics**:
-- Uses built-in, immutable Lua scheduler
+- Uses built-in, immutable Rhai scheduler
 - Optimized for multi-tenant marketplace
 - Security > Performance
 - No user customization allowed
 - Maintained and updated by platform team
+- Enforces queue capacity limits and may reject jobs with 429 when capacity thresholds are exceeded
 
 **Rationale**: Platform needs control over scheduling to ensure fair resource allocation, security, and SLA compliance across all tenants.
 
 ### 2.2 Home/Lab Mode (Customizable)
 
 **Characteristics**:
-- User can choose: Platform scheduler OR custom Lua/YAML
+- User can choose: Platform scheduler OR custom Rhai/YAML
 - Performance > Security
-- Full scheduling control
+- Full scheduling control including queue policies (typically unbounded queues with custom eviction)
 - Experimental features allowed
 - User responsibility for correctness
 
@@ -64,7 +67,7 @@ The orchestrator scheduler is designed as a **policy execution engine** that can
 **Characteristics**:
 - Browser-based visual policy builder
 - Drag-and-drop scheduling rules
-- Generates Lua or YAML code
+- Generates Rhai or YAML code
 - Live simulation/preview
 - Can import/export policies
 
@@ -119,6 +122,7 @@ fn schedule(ctx) {
 - ✅ Declarative rules easier to reason about
 - ✅ Can be validated against schema
 - ✅ Compiled to Rhai internally (no performance penalty)
+- ✅ Suitable for simple queue policies and scheduling rules
 
 **Example YAML Scheduler**:
 ```yaml
@@ -155,6 +159,7 @@ scheduler:
 - YAML is parsed and compiled to Rhai at scheduler load time
 - Validation ensures YAML conforms to schema
 - Generated Rhai is cached for performance
+- Queue behavior (capacity, rejection, eviction) can be defined in YAML and compiled to Rhai logic
 
 ---
 
@@ -237,8 +242,9 @@ The platform scheduler is the **gold standard** implementation, optimized for:
 - Priority-based scheduling (Interactive > Batch)
 - Least-loaded worker selection
 - Quota enforcement
-- Eviction policies (LRU)
+- Eviction policies (LRU for both model hot-load cache and worker VRAM)
 - Preemptive worker starts for queued models
+- Queue capacity management: may reject jobs with 429 when capacity thresholds are exceeded
 
 **Users can**:
 - Use platform scheduler as-is (recommended)
@@ -481,9 +487,9 @@ scheduler:
 - **Option C**: Reject scheduler at load time if too slow
 
 **Q20**: Should scheduler be JIT-compiled?
-- **Option A**: Yes, use LuaJIT for performance
-- **Option B**: No, use standard Lua for simplicity
-- **Option C**: Configurable (JIT in prod, standard in dev)
+- **Option A**: Rhai has built-in optimization (no separate JIT needed)
+- **Option B**: Rhai compilation is fast enough for scheduler workloads
+- **Option C**: N/A - Lua is deprecated
 
 **Decision needed**: Performance requirements and enforcement?
 
@@ -513,30 +519,30 @@ scheduler:
 // bin/orchestratord-crates/scheduling/src/engine.rs
 
 pub struct SchedulerEngine {
-    lua: Lua,  // LuaJIT runtime
+    rhai: Engine,  // Rhai runtime
     platform_scheduler: String,  // Immutable, built-in
     user_scheduler: Option<String>,  // Loaded from file/DB
     mode: SchedulerMode,
 }
 
 pub enum SchedulerMode {
-    Platform,  // Use platform scheduler only
-    UserLua,   // Use user-provided Lua
-    UserYaml,  // Use user-provided YAML (compiled to Lua)
+    Platform,  // Use platform scheduler only (enforces capacity limits)
+    UserRhai,  // Use user-provided Rhai (custom queue policies)
+    UserYaml,  // Use user-provided YAML (compiled to Rhai)
 }
 
 impl SchedulerEngine {
     pub fn schedule(&self, context: SchedulerContext) -> SchedulerDecision {
         match self.mode {
             SchedulerMode::Platform => self.run_platform_scheduler(context),
-            SchedulerMode::UserLua => self.run_user_scheduler(context)
+            SchedulerMode::UserRhai => self.run_user_scheduler(context)
                 .unwrap_or_else(|e| {
                     warn!("User scheduler failed: {}, falling back to platform", e);
                     self.run_platform_scheduler(context)
                 }),
             SchedulerMode::UserYaml => {
-                let lua_code = compile_yaml_to_lua(&self.user_scheduler.unwrap());
-                self.run_lua(lua_code, context)
+                let rhai_code = compile_yaml_to_rhai(&self.user_scheduler.unwrap());
+                self.run_rhai(rhai_code, context)
             }
         }
     }
@@ -594,21 +600,22 @@ scheduler:
 ## 9. Implementation Phases
 
 ### Phase 1: Core Scheduler Engine (M1)
-- [ ] Lua runtime integration (LuaJIT)
-- [ ] Platform scheduler implementation (Lua)
+- [ ] Rhai runtime integration
+- [ ] Platform scheduler implementation (Rhai with capacity limits and 429 rejection)
 - [ ] Sandbox security (restrict dangerous ops)
 - [ ] Context object API
 - [ ] Fallback mechanism
 
 ### Phase 2: User Schedulers (M1)
-- [ ] Load Lua from file
+- [ ] Load Rhai from file
 - [ ] Validation and error handling
 - [ ] Hot-reload support (Home/Lab mode)
 - [ ] Metrics and logging
+- [ ] Support custom queue policies (unbounded queues, custom eviction)
 
 ### Phase 3: YAML Support (M2)
-- [ ] YAML schema definition
-- [ ] YAML → Lua compiler
+- [ ] YAML schema definition (including queue policy rules)
+- [ ] YAML → Rhai compiler
 - [ ] Validation against schema
 - [ ] Template library
 
@@ -630,12 +637,13 @@ scheduler:
 ## 10. Open Questions Summary
 
 **Critical decisions needed**:
-1. Lua only, YAML only, or both? → **PROPOSED: Both (YAML compiles to Lua)**
+1. Rhai only, YAML only, or both? → **DECIDED: Both (YAML compiles to Rhai)**
 2. Platform scheduler open source or proprietary? → **DECISION NEEDED**
 3. Web UI architecture (standalone, embedded, desktop)? → **DECISION NEEDED**
-4. Scheduler execution timeout (10ms, 50ms, 100ms)? → **PROPOSED: 50ms**
-5. Hot-reload support (yes/no, which modes)? → **PROPOSED: Yes in Home/Lab, No in Platform**
-6. Multi-tenant custom schedulers (yes/no)? → **PROPOSED: No, platform scheduler only**
+4. Scheduler execution timeout (10ms, 50ms, 100ms)? → **DECIDED: 50ms**
+5. Hot-reload support (yes/no, which modes)? → **DECIDED: Yes in Home/Lab, No in Platform**
+6. Multi-tenant custom schedulers (yes/no)? → **DECIDED: No, platform scheduler only**
+7. Queue policy differences? → **DECIDED: Platform mode enforces capacity limits (may reject with 429); Home/Lab modes typically use unbounded queues with custom policies**
 
 **Nice-to-have clarifications**:
 7. Debugging tools (logging, debugger, trace mode)?
@@ -658,11 +666,11 @@ scheduler:
 
 **Specs References**:
 - `bin/orchestratord-crates/scheduling/.specs/00_scheduling.md` (main scheduling spec)
-- `bin/orchestratord-crates/scheduling/.specs/01_lua_engine.md` (Lua runtime)
-- `bin/orchestratord-crates/scheduling/.specs/02_yaml_compiler.md` (YAML → Lua)
+- `bin/orchestratord-crates/scheduling/.specs/01_rhai_scheduler_runtime.md` (Rhai runtime)
+- `bin/orchestratord-crates/scheduling/.specs/02_yaml_compiler.md` (YAML → Rhai)
 - `frontend/bin/orchestrator-ui/.specs/00_scheduler_builder.md` (Web UI)
 
 **Related**:
-- Platform scheduler: `bin/orchestratord-crates/scheduling/platform-scheduler.lua`
+- Platform scheduler: `bin/orchestratord-crates/scheduling/platform-scheduler.rhai`
 - YAML schema: `bin/orchestratord-crates/scheduling/scheduler-schema.yaml`
 - Web UI: `frontend/bin/orchestrator-ui/` (to be created)

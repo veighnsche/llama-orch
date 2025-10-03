@@ -132,7 +132,7 @@
 **Key Terms:**
 
 - **Token Budget**: Per-tenant quota for maximum tokens that can be generated daily or per request; enforced at admission time to prevent quota exhaustion.
-- **Eviction**: Two types: (1) Model eviction - removing cached models from RAM when no longer needed; (2) Worker eviction - stopping workers to free VRAM for higher-priority jobs.
+- **Eviction**: Two types: (1) Model eviction (hot-load eviction) - removing cached model files from pool-managerd RAM to free memory when no longer needed for quick worker startup; (2) Worker eviction - stopping worker processes to free VRAM for higher-priority jobs.
 - **Preflight Validation**: Pre-spawn checks performed by pool-managerd to verify GPU has sufficient free VRAM and model is compatible before spawning a worker.
 - **VRAM-Only Policy**: Requirement that all model weights, KV cache, activations, and intermediate tensors reside entirely in GPU VRAM with no RAM/disk fallback.
 - **Determinism**: Property where same model + same seed + same prompt produces identical output; system-level guarantee with model-level limitations.
@@ -714,11 +714,11 @@ Response (202 Accepted):
 
 **Requirements**:
 - Requests MUST include `model`, `prompt`, and `max_tokens`
-- `temperature` is OPTIONAL with default 0.7 for sampling; deterministic mode uses seed without temperature
+- `temperature` is OPTIONAL with default 0.7 for sampling; for deterministic inference, temperature SHOULD be set to 0 or omitted (engine-dependent)
 - `seed` SHOULD be provided for determinism, otherwise orchestrator MAY supply one and MUST record it
 - `priority` MUST be one of `interactive` or `batch`; unknown values MUST be rejected with 400
 - Orchestratord MUST validate model existence and token budgets at admission; invalid requests MUST return 4xx with a stable error code
-- When the queue is full and policy=`reject`, orchestrator MUST return 429 with a Retry-After where possible; for `drop-lru`, orchestrator MUST emit metrics indicating eviction
+- Queue behavior is mode-dependent: Platform mode MAY reject jobs with 429 when capacity thresholds are exceeded; Home/Lab modes typically use unbounded queues with custom policies defined in Rhai scheduler
 
 #### [SYS-5.1.3] SSE Streaming
 
@@ -735,8 +735,9 @@ Events:
 - SSE endpoint MUST be idempotent to reconnects for the same `job_id`
 - Orchestrator SHOULD resume streaming from the last sent offset using `sse_checkpoints` table (see SYS-6.1.3)
 - Clients MAY provide `Last-Event-ID` header to indicate last received event
-- Event order MUST be: `queued` → `started` → zero or more `token` → zero or more `metrics` (interleaved) → terminal (`end` or `error`)
+- Event order MUST be: `queued` (orchestrator-level) → `started` (worker execution begins) → zero or more `token` → zero or more `metrics` (interleaved) → terminal (`end` or `error`)
 - Exactly one terminal event MUST be emitted per job
+- Note: Worker-to-orchestrator SSE streams omit the `queued` event as workers only emit execution-level events
 
 **Specs**: `bin/orchestratord-crates/agentic-api/.specs/00_agentic_api.md`
 
@@ -774,7 +775,7 @@ POST /v2/pools/{id}/heartbeat
 
 **Requirements**:
 - Heartbeats MUST be sent at the configured interval (default 15s) and MUST include current GPU VRAM state and worker states
-- Missing heartbeats beyond timeout MUST mark the pool unavailable for scheduling
+- Missing heartbeats beyond timeout MUST mark the pool unavailable for scheduling; timeout is calculated as `heartbeat_interval_ms × missed_heartbeat_threshold` (default: 15000ms × 3 = 45s)
 - Heartbeat payload MUST include timestamp for clock skew detection
 
 #### [SYS-5.2.3] Worker Start Command
@@ -849,7 +850,7 @@ Response: SSE stream
 - Exactly one terminal event MUST be emitted per job (`end` on success, `error` on failure/cancel)
 - Workers MUST include stable error codes; cancellation MUST use `CANCELLED`
 - Orchestrator MUST propagate `X-Correlation-Id` to worker requests; workers SHOULD echo it in SSE metadata
-- Orchestrator SHOULD enforce request timeouts per job policy and close SSE cleanly on timeout with a terminal event
+- Orchestrator MUST enforce request timeouts per job policy and close SSE cleanly on timeout with a terminal event
 
 #### [SYS-5.4.2] Cancellation
 
@@ -866,7 +867,7 @@ POST {worker_uri}/cancel
 - Prompt propagation: orchestrator MUST issue cancel immediately on client request or stream disconnect
 - Worker behavior: upon cancel, worker MUST stop decoding promptly, free resources, and emit SSE `error` with stable code `CANCELLED`
 - Acknowledgement: worker SHOULD return HTTP 202 for `POST /cancel` if cancellation has been accepted
-- Deadline: orchestrator SHOULD enforce a cancellation deadline (default 5s) after which it treats the job as cancelled and closes client SSE
+- Deadline: orchestrator MUST enforce a cancellation deadline (default 5s) after which it treats the job as cancelled and closes client SSE
 
 **Specs**: `bin/worker-orcd/.specs/00_worker-orcd.md`
 
@@ -1156,12 +1157,12 @@ queue_optimizer:
 Orchestratord scheduler is designed as a **policy execution engine** that can run user-defined scheduling logic while maintaining a high-performance default.
 
 **Deployment mode behavior**:
-- **Platform Mode**: Uses immutable, built-in scheduler (written in Rhai) optimized for multi-tenant fairness, security, and SLA compliance
-- **Home/Lab Mode**: Users can write custom Rhai scripts or YAML configurations to define scheduling policies
+- **Platform Mode**: Uses immutable, built-in scheduler (written in Rhai) optimized for multi-tenant fairness, security, and SLA compliance. Queue policies (capacity limits, rejection thresholds) are defined in the platform scheduler.
+- **Home/Lab Mode**: Users can write custom Rhai scripts or YAML configurations to define scheduling policies, including custom queue behavior (unbounded queues, custom eviction, etc.)
 - **Web UI Mode**: Visual policy builder generates Rhai or YAML for non-programmers
 
 **Language support**:
-- **Rhai** (primary): Rust-native scripting language with type safety, 0-indexed arrays, and built-in sandboxing
+- **Rhai** (only): Rust-native scripting language with type safety, 0-indexed arrays, and built-in sandboxing. Lua is deprecated and no longer supported.
 - **YAML** (declarative): Compiles to Rhai internally for simple rule-based policies
 
 **Scheduler API**:
@@ -1174,7 +1175,7 @@ Orchestratord scheduler is designed as a **policy execution engine** that can ru
 **Platform scheduler** (reference implementation):
 - Location: `bin/orchestratord-crates/scheduling/platform-scheduler.rhai`
 - Immutable in platform mode, copyable in home/lab mode
-- Optimized for priority-based scheduling, quota enforcement, and resource utilization
+- Optimized for priority-based scheduling, quota enforcement, resource utilization, and queue capacity management (may reject with 429 when thresholds exceeded)
 
 **Specs**: 
 - `bin/orchestratord-crates/scheduling/.specs/00_programmable_scheduler.md` — Overall design and architecture
@@ -1287,7 +1288,7 @@ Pool-managerd MUST send periodic heartbeats to orchestratord:
 
 **Requirements**:
 - Heartbeat failures MUST be logged but MUST NOT stop the pool manager
-- Orchestratord MUST mark pools unavailable after missing N consecutive heartbeats (default: 3)
+- Orchestratord MUST mark pools unavailable after missing N consecutive heartbeats (default: 3); total timeout = `heartbeat_interval_ms × N` (default: 15000ms × 3 = 45s)
 - Clock skew detection SHOULD be implemented using timestamp comparison
 
 ---
@@ -1594,7 +1595,7 @@ Worker MUST handle cancellation requests promptly:
 - Cancellation MUST be idempotent (repeated cancels for same job_id are safe)
 - Orchestrator MUST issue cancel immediately on client request or stream disconnect
 - Worker MUST complete cancellation within deadline (default 5s) per SYS-6.3.5
-- Orchestrator SHOULD enforce cancellation deadline; after timeout it MUST treat job as cancelled and close client SSE
+- Orchestrator MUST enforce cancellation deadline; after timeout it MUST treat job as cancelled and close client SSE
 - Cancellation MUST use stable error code `CANCELLED` in SSE error event
 - Job state MUST transition to "cancelled" in persistent store for audit trail
 
@@ -1667,8 +1668,8 @@ Content already defined in Section 2.3 (Foundational Concepts). Cross-reference:
 
 **Latency targets (measurement points)**:
 - Queue admission SHOULD complete within 10ms measured from HTTP receive to enqueue decision
-- Scheduling decision SHOULD complete within 50ms measured from job-ready to dispatch command issued
-- Worker startup SHOULD complete within 60s measured from start command to ready callback receipt (note: includes model loading time which varies by model size)
+- Scheduling decision SHOULD complete within 50ms measured from job-ready to dispatch command issued (Rhai scheduler execution time included)
+- Worker startup SHOULD complete within 60s measured from start command to ready callback receipt (note: includes model loading time which varies by model size; hot-loaded models from pool-managerd RAM cache may start faster)
 - First token latency SHOULD be under 100ms measured from worker execute accept to first SSE `token` event
 - Token generation rate SHOULD be within 20–100 tokens/sec depending on model; deviations MAY be acceptable with justification in metrics
 
@@ -1712,12 +1713,12 @@ Content already defined in Section 2.3 (Foundational Concepts). Cross-reference:
 
 **Fault tolerance**:
 - Pool-managerd MUST detect worker process exits and perform operational cleanup (state removal, VRAM accounting release) promptly
-- Orchestratord MUST detect missed heartbeats from pools within a configured timeout and mark them unavailable for scheduling
+- Orchestratord MUST detect missed heartbeats from pools within a configured timeout and mark them unavailable for scheduling; timeout = `heartbeat_interval_ms × missed_heartbeat_threshold` (default: 15000ms × 3 = 45s)
 - Retry policies MUST be configurable with exponential backoff parameters (see SYS-6.1.6)
 
 **Requirements**:
 - Worker failures MUST be detected within 5 seconds
-- Pool failures MUST be detected within 3 missed heartbeats (default 45s)
+- Pool failures MUST be detected within 3 missed heartbeats (default: 15000ms × 3 = 45s total)
 - Cleanup MUST complete within 5 seconds of detection
 
 ---
@@ -2029,33 +2030,43 @@ orchestratord:
   mode: "agentic"  # or "platform"
   
   queue:
-    capacity: -1  # -1 = unbounded (infinite queue), or positive integer for bounded
-    policy: "queue"  # always queue, never reject
+    # Queue behavior is defined by the Rhai scheduler
+    # Platform mode: scheduler may enforce capacity limits and reject with 429
+    # Home/Lab mode: typically unbounded with custom policies
+    capacity: -1  # -1 = unbounded (default for home/lab), positive integer for platform mode limits
   
   scheduling:
-    algorithm: "least-loaded"  # or "most-vram-free", "round-robin"
-    eviction_policy: "lru"     # or "lfu", "manual"
+    scheduler_path: "platform-scheduler.rhai"  # path to Rhai scheduler script
+    # Built-in algorithms available as Rhai helper functions:
+    # - least-loaded, most-vram-free, round-robin
     
   eviction:
-    # Two eviction scenarios:
-    # 1. Model eviction: Remove cached models from RAM when no longer needed
-    # 2. Worker eviction: Stop workers to free VRAM for higher-priority jobs
-    model_cache_policy: "lru"  # evict least-recently-used models from RAM cache
+    # Two eviction types (both controlled by Rhai scheduler):
+    # 1. Model eviction (hot-load eviction): Remove cached model files from pool-managerd RAM
+    #    to free memory when models are no longer needed for quick worker startup
+    # 2. Worker eviction: Stop worker processes to free VRAM for higher-priority jobs
+    model_cache_policy: "lru"  # evict least-recently-used models from pool-managerd RAM cache
     worker_policy: "lru"       # stop least-recently-used workers to free VRAM
     vram_threshold: 0.9        # trigger worker eviction when VRAM > 90% utilized
   
   timeout:
     default_ms: 300000  # 5 minutes
     max_ms: 1800000     # 30 minutes
+    cancellation_deadline_ms: 5000  # 5 seconds for worker to complete cancellation
+  
+  heartbeat:
+    interval_ms: 15000  # pool-managerd heartbeat interval
+    missed_threshold: 3  # mark pool unavailable after 3 missed heartbeats (45s total)
 ```
 
 **Requirements**:
 - Defaults MUST be applied when fields are omitted; values MUST be validated (e.g., `default_ms` ≤ `max_ms`)
 - `mode` MUST be `agentic` or `platform`; unknown values MUST be rejected
-- `queue.capacity`: -1 for unbounded (default), or positive integer for bounded queue
-- `queue.policy`: MUST be `queue` (never reject jobs, always enqueue)
-- `scheduling.algorithm` SHOULD be one of the documented strategies; unknown algorithms MAY be rejected or fall back to a safe default with a warning
+- `queue.capacity`: -1 for unbounded (typical for home/lab), or positive integer (platform mode may use this for capacity-based rejection)
+- Queue behavior (accept/reject/evict) is defined by the Rhai scheduler; platform mode scheduler may reject jobs with 429 when capacity thresholds are exceeded
+- `scheduling.scheduler_path` MUST point to a valid Rhai script; built-in `platform-scheduler.rhai` is used if omitted in platform mode
 - Timeouts MUST be enforced per job; values MAY be overridden per-request if allowed by policy
+- `heartbeat.missed_threshold` determines pool unavailability timeout: `interval_ms × missed_threshold` (default: 45s)
 
 ---
 
@@ -2352,7 +2363,8 @@ This section documents clarifications that were originally inline HTML comments,
 
 5. **Temperature Parameter (formerly at SYS-5.1.2)**:
    - Clarified: OPTIONAL with default 0.7 for sampling
-   - Deterministic mode uses seed without temperature
+   - For deterministic inference, temperature SHOULD be set to 0 or omitted (engine-dependent)
+   - Determinism tests assume temperature=0 for reproducibility
 
 6. **Token Budgets (formerly at SYS-5.1.2, SYS-9.3.2)**:
    - Defined in Glossary (0.1)
@@ -2371,9 +2383,10 @@ This section documents clarifications that were originally inline HTML comments,
    - PostgreSQL reserved for M2+ HA scenarios
 
 2. **Rhai for Programmable Scheduler** (SYS-6.1.5):
-   - Chosen over Lua for Rust-native integration
+   - Chosen over Lua for Rust-native integration (Lua is deprecated)
    - Type safety, better error messages, 0-indexed arrays
    - Built-in sandboxing
+   - All queue policies (capacity, rejection, eviction) defined in Rhai scheduler
 
 3. **3-Level Traceability IDs** (SYS-X.Y.Z):
    - Chosen for scalability (1600+ line spec)
@@ -2381,9 +2394,10 @@ This section documents clarifications that were originally inline HTML comments,
    - Stable IDs survive content additions
 
 4. **VRAM-Only Policy** (SYS-2.2.1):
-   - No RAM/disk fallback for predictable performance
+   - No RAM/disk fallback for inference (models must fit entirely in VRAM during execution)
    - Enables deterministic inference
    - Simplifies VRAM accounting
+   - Note: Pool-managerd MAY cache model files in RAM for hot-loading (faster worker startup), but workers MUST load models into VRAM for inference
 
 5. **Smart/Dumb Boundary** (SYS-4.1.1, SYS-4.2.1):
    - All intelligence in orchestratord
