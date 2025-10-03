@@ -1,50 +1,53 @@
 # llama-orch
 
-**Multi-GPU LLM orchestrator for homelabs and agentic AI workloads**
+**Deterministic, VRAM-only, multi-node GPU orchestration for LLM inference**
 
-llama-orch is a multi-system, multi-GPU orchestrator that routes LLM inference requests to specific GPUs across your network. Born from the simple frustration of "why can't I easily choose which GPU runs which model?", it evolved into a full agentic AI API for homelabs.
+llama-orch is a three-binary system that provides guaranteed reproducibility, VRAM-only enforcement, and enterprise-grade orchestration across distributed GPU resources. Born from the simple frustration of "why can't I easily choose which GPU runs which model?", it evolved into a deterministic inference platform with a clean intelligence hierarchy.
 
-**Current version**: `0.0.0` (early development)  
-**License**: GPL-3.0-or-later (free and open source, but copyleft—be careful redistributing as proprietary)  
+**Current version**: `0.1.0` (early development)  
+**License**: GPL-3.0-or-later (free and open source, copyleft)  
 **Target platform**: Linux with NVIDIA GPUs
 
 ---
 
 ## What is llama-orch?
 
-### The Origin Story
+### Core Value Propositions
 
-I had two GPUs with different capabilities (VRAM, power, etc.) and a simple problem: **why is it so hard to pick which GPU a certain AI app gets loaded into?**
+1. **Determinism Guarantee**: Same seed → Same output (every time, provably)
+2. **VRAM-Only Policy**: Model fully resident in GPU VRAM (no RAM fallback)
+3. **Multi-Node Orchestration**: Distribute models across GPU clusters
+4. **Smart/Dumb Architecture**: Clean separation between decisions and execution
+5. **Process Isolation**: Workers run in separate processes with isolated CUDA contexts
 
-I wanted certain models on GPU 0 and others on GPU 1. But that wasn't easy at all. So I built this.
+### The Three-Binary System
 
-### What It Became
+llama-orch consists of three separate binaries that communicate via HTTP:
 
-**llama-orch** is a multi-system, multi-GPU orchestrator for homelabs. It provides:
+1. **`orchestratord`** — The Brain (makes ALL intelligent decisions)
+2. **`pool-managerd`** — Control Plane with Levers (executes commands, reports state)
+3. **`worker-orcd`** — Dumb Executor (loads one model, executes inference)
 
-- **GPU-aware routing**: Pick which models run on which GPUs across multiple machines
-- **Network-wide orchestration**: One control plane manages all GPUs in your homelab (or even remote systems via secure `auth-min` bearer tokens)
-- **Concurrent agentic AI**: Handle multiple requests per second with parallel, batched inference across your GPU pool
-- **Web UI** (planned): Visual interface to assign apps/models to specific GPUs
-- **Flexible deployment**: Single machine with multiple GPUs, or distributed across your entire network
+### Intelligence Hierarchy
 
-### Why This Matters
+```
+Orchestratord (Brain)
+  ↓ Commands: "Start worker for model X on GPU 0"
+Pool Manager (Levers)
+  ↓ Spawns: worker-orcd --model X --gpu 0
+Worker (Executor)
+  ↓ Executes: Inference requests
+```
 
-This is **so obvious** to build, and I'm surprised nobody has made it yet. If you have multiple systems at home, each with one or more GPUs, you need:
+**Decision boundary**: Orchestratord makes ALL decisions (admission, scheduling, worker selection, eviction, retry, timeout). Pool managers and workers are dumb executors that report facts and execute commands.
 
-1. **One orchestrator system** (no GPU required, though it can host `pool-managerd` too)
-2. **Multiple GPU worker nodes** running `pool-managerd` to manage local GPUs
-3. **Secure remote access** via `auth-min` for distributed deployments
+### Why This Architecture?
 
-Your orchestrator handles multiple requests per second (depending on your GPU pools) and enables concurrent, parallel, and batched agentic AI workloads.
-
-### Nice-to-Haves (Not Core Goals)
-
-The project also includes determinism and observability features that I enjoyed building, but these are **bonuses**, not the primary purpose:
-
-- Deterministic inference (same prompt + seed = same tokens)
-- Prometheus metrics and structured logging
-- Session management with KV cache tracking
+- **Orchestratord can run without GPUs**: Queries pool managers for state
+- **Workers have isolated CUDA contexts**: Each worker owns its VRAM allocation
+- **Clean FFI boundaries**: Pool manager uses NVML (read-only), workers use CUDA (allocation)
+- **Testable components**: Each binary runs standalone for testing
+- **Stateless orchestration**: All state derived from pool manager queries
 
 ---
 
