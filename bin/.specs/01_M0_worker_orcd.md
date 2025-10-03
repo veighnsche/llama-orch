@@ -4,7 +4,7 @@
 **Milestone**: M0 (v0.1.0) — Worker Haiku Test  
 **Version**: 0.1.0  
 **Conformance language**: RFC-2119 (MUST/SHOULD/MAY)  
-**Timeline**: 4-5 weeks (optimized from 6-8 weeks)
+**Timeline**: 6-7 weeks (4-5 weeks foundation + 1-2 weeks architecture adapters)
 
 ---
 
@@ -37,21 +37,25 @@
 
 **Note**: M0 includes minimal same-device reproducibility check only (seeded RNG, temp=0)
 
-**KEPT in M0 (14 items - Core + Critical Safety)**:
+**KEPT in M0 (18 items - Core + Critical Safety + Architecture Adapters)**:
 1. ✅ All 3 models: Qwen2.5-0.5B, Phi-3-Mini, GPT-OSS-20B
 2. ✅ All 3 quantization formats: Q4_K_M, MXFP4, Q4_0
 3. ✅ 2 tokenizer backends: GGUF byte-BPE, tokenizer.json
-4. ✅ Narration-core logging (replaces structured logging, basic events only)
-5. ✅ Model load progress events (M0-W-1621) ← **CRITICAL** (user feedback)
-6. ✅ VRAM OOM handling (M0-W-1021) ← **CRITICAL** (safety)
-7. ✅ VRAM residency verification (M0-W-1012) ← **CRITICAL** (runtime leak detection)
-8. ✅ Minimal same-device reproducibility check (seeded RNG, temp=0)
-9. ✅ MXFP4 numerical correctness validation (M0-W-1822) ← **CRITICAL** (correctness)
-10. ✅ Memory-mapped I/O (M0-W-1221) - REQUIRED for all models
-11. ✅ Chunked VRAM transfer (M0-W-1222) - REQUIRED for all models
-12. ✅ CUDA unit tests (functional only, no performance tests)
-13. ✅ Kernel safety validation (M0-W-1431)
-14. ✅ Temperature scaling 0.0-2.0 (M0-W-1032)
+4. ✅ Architecture adapters: LlamaInferenceAdapter + GPTInferenceAdapter (M0-W-1213, M0-W-1214, M0-W-1215)
+5. ✅ Architecture detection from GGUF metadata (M0-W-1212)
+6. ✅ GPT-specific kernels: LayerNorm, GELU, absolute pos embedding (M0-W-1432, M0-W-1433, M0-W-1434)
+7. ✅ MXFP4 architecture-aware weight mapping (M0-W-1435)
+8. ✅ Narration-core logging (replaces structured logging, basic events only)
+9. ✅ Model load progress events (M0-W-1621) ← **CRITICAL** (user feedback)
+10. ✅ VRAM OOM handling (M0-W-1021) ← **CRITICAL** (safety)
+11. ✅ VRAM residency verification (M0-W-1012) ← **CRITICAL** (runtime leak detection)
+12. ✅ Minimal same-device reproducibility check (seeded RNG, temp=0)
+13. ✅ MXFP4 numerical correctness validation (M0-W-1822) ← **CRITICAL** (correctness)
+14. ✅ Memory-mapped I/O (M0-W-1221) - REQUIRED for all models
+15. ✅ Chunked VRAM transfer (M0-W-1222) - REQUIRED for all models
+16. ✅ CUDA unit tests (functional only, no performance tests)
+17. ✅ Kernel safety validation (M0-W-1431)
+18. ✅ Temperature scaling 0.0-2.0 (M0-W-1032)
 
 **REMOVED from Repo**:
 - 🔥 Proof bundles (entire concept - all references to be removed)
@@ -59,16 +63,22 @@
 #### Key Trade-offs
 
 **Benefits**:
-- ✅ 2-3 weeks faster delivery (4-5 weeks vs. 6-8 weeks)
+- ✅ All 3 models supported with correct architecture-specific pipelines
 - ✅ Critical safety features retained (VRAM monitoring, OOM handling)
 - ✅ User experience retained (model load progress events)
-- ✅ All 3 models and quantization formats included
+- ✅ All 3 quantization formats included (Q4_K_M, MXFP4, Q4_0)
+- ✅ Clean architecture from day 1 (InferenceAdapter pattern)
 
 **Deferred to M1**:
 - ❌ Performance validation and benchmarking
 - ❌ Reproducibility proof (implementation done, validation deferred)
 - ❌ Graceful shutdown (rely on SIGTERM)
 - ❌ Performance metrics collection
+
+**Timeline Impact**:
+- Foundation (Weeks 1-5): HTTP server, GGUF loader, tokenization, basic kernels
+- Architecture Adapters (Weeks 6-7): InferenceAdapter pattern, Llama + GPT adapters, GPT-specific kernels
+- Total: 6-7 weeks (includes +1-2 weeks for proper architecture support)
 
 **Reference**: See `M0_RESOLUTION_CONTRADICTIONS.md` for full analysis
 
@@ -99,9 +109,13 @@ This specification consolidates **ALL M0 requirements** for the `worker-orcd` bi
 - ✅ HTTP API (execute, health, cancel)
 - ✅ SSE streaming with UTF-8 boundary safety
 - ✅ Tokenization: Two backends (`hf-json` for GPT-OSS-20B, `gguf-bpe` for Qwen/Phi-3)
+- ✅ Architecture adapters: Llama-style (Qwen/Phi-3) and GPT-style (GPT-OSS-20B) inference pipelines
 - ✅ Test reproducibility (seeded RNG, temp=0 for testing; temp 0.0-2.0 for production)
 - ✅ CUDA FFI boundary (Rust ↔ C++/CUDA)
-- ✅ Basic CUDA kernels (GEMM, RoPE, attention, RMSNorm, greedy sampling)
+- ✅ Architecture-specific CUDA kernels:
+  - Llama-style: RoPE, GQA attention, RMSNorm, SwiGLU
+  - GPT-style: Absolute pos embedding, MHA attention, LayerNorm, GELU
+  - Shared: GEMM (cuBLAS), embedding lookup, sampling
 - ✅ Standalone testing (no orchestrator required)
 
 **M0 Reference Target Models**:
@@ -302,7 +316,45 @@ Worker-orcd SHOULD periodically verify VRAM residency via `cudaPointerGetAttribu
 
 **Frequency**: Check every 60 seconds (configurable).
 
-**Spec Reference**: CUDA-5401 (health module)
+**Implementation**:
+```cpp
+bool Health::check_vram_residency(const Model& model) {
+    cudaPointerAttributes attrs;
+    cudaError_t err = cudaPointerGetAttributes(&attrs, model.weights());
+    
+    if (err != cudaSuccess) {
+        return false;
+    }
+    
+    // Verify pointer is device memory (not managed/host)
+    if (attrs.type != cudaMemoryTypeDevice) {
+        return false;
+    }
+    
+    // Verify no host pointer (no UMA)
+    if (attrs.hostPointer != nullptr) {
+        return false;
+    }
+    
+    return true;
+}
+```
+
+**Process VRAM Usage Query**:
+```cpp
+uint64_t Health::get_process_vram_usage(const Context& ctx) {
+    size_t free_bytes, total_bytes;
+    cudaError_t err = cudaMemGetInfo(&free_bytes, &total_bytes);
+    
+    if (err != cudaSuccess) {
+        return 0;
+    }
+    
+    return total_bytes - free_bytes;
+}
+```
+
+**Spec Reference**: CUDA-5401, CUDA-5421 (health module)
 
 ### 2.3 Failure Handling
 
@@ -484,6 +536,7 @@ typedef struct InferenceResult InferenceResult;
 // Context management
 CudaContext* cuda_init(int gpu_device, int* error_code);
 void cuda_destroy(CudaContext* ctx);
+int cuda_get_device_count();
 
 // Model loading
 CudaModel* cuda_load_model(
@@ -493,6 +546,7 @@ CudaModel* cuda_load_model(
     int* error_code
 );
 void cuda_unload_model(CudaModel* model);
+uint64_t cuda_model_get_vram_usage(CudaModel* model);
 
 // Inference
 InferenceResult* cuda_inference_start(
@@ -506,6 +560,7 @@ InferenceResult* cuda_inference_start(
 bool cuda_inference_next_token(
     InferenceResult* result,
     char* token_out,
+    int token_buffer_size,
     int* token_index,
     int* error_code
 );
@@ -514,9 +569,31 @@ void cuda_inference_free(InferenceResult* result);
 // Health
 bool cuda_check_vram_residency(CudaModel* model, int* error_code);
 uint64_t cuda_get_vram_usage(CudaModel* model);
+uint64_t cuda_get_process_vram_usage(CudaContext* ctx);
+bool cuda_check_device_health(CudaContext* ctx, int* error_code);
+
+// Error messages
+const char* cuda_error_message(int error_code);
 ```
 
-**Spec Reference**: CUDA-4030
+**Exception-to-Error-Code Pattern**:
+```cpp
+extern "C" CudaModel* cuda_load_model(..., int* error_code) {
+    try {
+        auto model = std::make_unique<Model>(...);
+        *error_code = CUDA_SUCCESS;
+        return reinterpret_cast<CudaModel*>(model.release());
+    } catch (const CudaError& e) {
+        *error_code = e.code();
+        return nullptr;
+    } catch (...) {
+        *error_code = CUDA_ERROR_UNKNOWN;
+        return nullptr;
+    }
+}
+```
+
+**Spec Reference**: CUDA-4030, CUDA-5040
 
 ---
 
@@ -569,8 +646,33 @@ At startup, worker-orcd MUST execute in order:
 ```rust
 let ctx = unsafe { cuda_init(gpu_device, &mut error_code) };
 if ctx.is_null() {
-    eprintln!("CUDA init failed: {}", error_code);
+    let error_msg = unsafe { 
+        CStr::from_ptr(cuda_error_message(error_code)).to_string_lossy() 
+    };
+    eprintln!("CUDA init failed: {} (code: {})", error_msg, error_code);
     std::process::exit(1);
+}
+```
+
+**CUDA Context Implementation** (C++):
+```cpp
+Context::Context(int gpu_device) : device_(gpu_device) {
+    // Check device exists
+    int device_count;
+    cudaGetDeviceCount(&device_count);
+    if (gpu_device < 0 || gpu_device >= device_count) {
+        throw CudaError(CUDA_ERROR_INVALID_DEVICE, "Invalid device ID");
+    }
+    
+    // Set device
+    cudaSetDevice(gpu_device);
+    
+    // Get device properties
+    cudaGetDeviceProperties(&props_, gpu_device);
+    
+    // Enforce VRAM-only mode
+    cudaDeviceSetLimit(cudaLimitMallocHeapSize, 0);  // Disable UMA
+    cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
 }
 ```
 
@@ -581,8 +683,11 @@ let model = unsafe {
     cuda_load_model(ctx, model_path_cstr, &mut vram_bytes, &mut error_code)
 };
 if model.is_null() {
-    eprintln!("Model load failed: {}", error_code);
-    cuda_destroy(ctx);
+    let error_msg = unsafe { 
+        CStr::from_ptr(cuda_error_message(error_code)).to_string_lossy() 
+    };
+    eprintln!("Model load failed: {} (code: {})", error_msg, error_code);
+    unsafe { cuda_destroy(ctx); }
     std::process::exit(1);
 }
 ```
@@ -605,7 +710,7 @@ info!("Worker ready: worker_id={}, vram_bytes={}", worker_id, vram_bytes);
 
 **M0 Note**: Steps 4 (callback) from parent spec is OPTIONAL for M0.
 
-**Spec Reference**: WORK-3011
+**Spec Reference**: WORK-3011, CUDA-5101, CUDA-5120
 
 #### [M0-W-1111] Startup Failure Handling
 If initialization fails, worker-orcd MUST:
@@ -727,7 +832,40 @@ struct GGUFHeader {
 - `llama.embedding_length` — Embedding dimensions
 - `llama.block_count` — Number of layers
 
-**Spec Reference**: CUDA-5280, CUDA-5281
+**Tensor Format Structure**:
+```cpp
+struct GGUFTensor {
+    std::string name;
+    uint32_t n_dimensions;
+    uint64_t dimensions[4];
+    uint32_t type;  // FP32, FP16, Q8_0, MXFP4, etc.
+    uint64_t offset;
+};
+```
+
+**Spec Reference**: CUDA-5280, CUDA-5281, CUDA-5282
+
+#### [M0-W-1212] Architecture Detection from GGUF
+
+Worker MUST detect model architecture from GGUF metadata and select appropriate InferenceAdapter.
+
+**Detection Logic**:
+```cpp
+Architecture detect_architecture(const GGUFMetadata& metadata) {
+    std::string arch = metadata.get_string("general.architecture");
+    if (arch == "llama") return Architecture::Llama;  // Qwen, Phi-3
+    if (arch == "gpt2" || arch == "gpt") return Architecture::GPT;  // GPT-OSS-20B
+    throw std::runtime_error("Unsupported architecture: " + arch);
+}
+```
+
+**Supported Architectures**:
+- `llama` → LlamaInferenceAdapter (Qwen2.5-0.5B, Phi-3-Mini)
+- `gpt2`/`gpt` → GPTInferenceAdapter (GPT-OSS-20B)
+
+**Unsupported Architecture**: Worker MUST fail fast with clear error message.
+
+**Spec Reference**: M0_ARCHITECTURAL_GAP_ANALYSIS.md (Gap 1)
 
 ### 6.3 VRAM Allocation
 
@@ -740,6 +878,41 @@ weights_ = std::make_unique<DeviceMemory>(total_size);
 vram_bytes_ = total_size;
 ```
 
+**DeviceMemory RAII Wrapper**:
+```cpp
+class DeviceMemory {
+public:
+    explicit DeviceMemory(size_t bytes) {
+        cudaError_t err = cudaMalloc(&ptr_, bytes);
+        if (err != cudaSuccess) {
+            throw CudaError(CUDA_ERROR_OUT_OF_MEMORY, "Failed to allocate VRAM");
+        }
+        size_ = bytes;
+    }
+    
+    ~DeviceMemory() {
+        if (ptr_) cudaFree(ptr_);
+    }
+    
+    // Non-copyable, movable
+    DeviceMemory(const DeviceMemory&) = delete;
+    DeviceMemory& operator=(const DeviceMemory&) = delete;
+    
+    DeviceMemory(DeviceMemory&& other) noexcept
+        : ptr_(other.ptr_), size_(other.size_) {
+        other.ptr_ = nullptr;
+        other.size_ = 0;
+    }
+    
+    void* get() const { return ptr_; }
+    size_t size() const { return size_; }
+    
+private:
+    void* ptr_ = nullptr;
+    size_t size_ = 0;
+};
+```
+
 **Alignment**: All tensors MUST be aligned to 256-byte boundaries for optimal GPU access.
 
 **VRAM-Only Residency**:
@@ -748,7 +921,7 @@ vram_bytes_ = total_size;
 - Keep process alive and report structured error (do NOT exit)
 - Emit `VRAM_OOM` error via SSE if during inference
 
-**Spec Reference**: CUDA-5291
+**Spec Reference**: CUDA-5291, CUDA-5222
 
 #### [M0-W-1221] Memory-Mapped I/O (REQUIRED)
 Worker-orcd MUST use `mmap()` for host I/O for all models to avoid full RAM copies and to standardize the loader across model sizes.
@@ -776,13 +949,42 @@ Worker-orcd MUST copy model tensors to VRAM in bounded chunks for all models.
 const size_t CHUNK_SIZE = 1024 * 1024;  // 1MB
 for (size_t offset = 0; offset < total_size; offset += CHUNK_SIZE) {
     size_t chunk_size = std::min(CHUNK_SIZE, total_size - offset);
-    cudaMemcpy(device_ptr + offset, host_ptr + offset, chunk_size, cudaMemcpyHostToDevice);
+    cudaError_t err = cudaMemcpy(
+        static_cast<char*>(device_ptr) + offset,
+        static_cast<const char*>(host_ptr) + offset,
+        chunk_size,
+        cudaMemcpyHostToDevice
+    );
+    if (err != cudaSuccess) {
+        throw CudaError(CUDA_ERROR_MODEL_LOAD_FAILED, 
+                       "Failed to copy chunk to VRAM");
+    }
+}
+```
+
+**Complete Model Loading Flow**:
+```cpp
+Model::Model(const Context& ctx, const std::string& path) {
+    // 1. Memory-map file for efficient reading
+    auto mapped_file = mmap_file(path);
+    
+    // 2. Parse GGUF format
+    parse_gguf(mapped_file);
+    
+    // 3. Allocate VRAM
+    allocate_vram();
+    
+    // 4. Copy weights to VRAM in chunks
+    copy_weights_chunked(mapped_file);
+    
+    // 5. Unmap file
+    munmap_file(mapped_file);
 }
 ```
 
 **Rationale**: Prevents RAM spikes during large model loading
 
-**Spec Reference**: CUDA-5261
+**Spec Reference**: CUDA-5261, CUDA-5240
 
 ### 6.4 Test Models
 
@@ -1280,6 +1482,300 @@ Tokenization MUST be self-contained:
 
 ---
 
+## 8.7. Architecture Adapters
+
+**Context**: M0 supports three models with fundamentally different architectures (Qwen/Phi-3 are Llama-style, GPT-OSS-20B is GPT-style). This requires architecture-specific inference pipelines.
+
+**Reference**: See `M0_ARCHITECTURAL_GAP_ANALYSIS.md` for detailed analysis.
+
+### 8.7.1 InferenceAdapter Pattern
+
+#### [M0-W-1213] InferenceAdapter Interface
+
+Worker MUST implement InferenceAdapter base class to abstract architecture-specific logic.
+
+**Interface Design**:
+```cpp
+class InferenceAdapter {
+public:
+    virtual ~InferenceAdapter() = default;
+    
+    // Load weights from GGUF with architecture-specific mapping
+    virtual void load_weights_from_gguf(
+        const GGUFFile& gguf,
+        DeviceMemory& vram_allocation
+    ) = 0;
+    
+    // Run architecture-specific forward pass
+    virtual void run_forward_pass(
+        const ModelWeights& weights,
+        const DeviceMemory& input_tokens,
+        DeviceMemory& output_logits,
+        KVCache& kv_cache,
+        cudaStream_t stream
+    ) = 0;
+    
+    // Get architecture name for logging/debugging
+    virtual const char* architecture_name() const = 0;
+};
+```
+
+**Factory Pattern**:
+```cpp
+std::unique_ptr<InferenceAdapter> create_adapter(Architecture arch) {
+    switch (arch) {
+        case Architecture::Llama:
+            return std::make_unique<LlamaInferenceAdapter>();
+        case Architecture::GPT:
+            return std::make_unique<GPTInferenceAdapter>();
+        default:
+            throw std::runtime_error("Unsupported architecture");
+    }
+}
+```
+
+**Spec Reference**: M0_ARCHITECTURAL_GAP_ANALYSIS.md (Gap 2)
+
+### 8.7.2 LlamaInferenceAdapter
+
+#### [M0-W-1214] LlamaInferenceAdapter Implementation
+
+Worker MUST implement LlamaInferenceAdapter for Llama-style models (Qwen2.5-0.5B, Phi-3-Mini).
+
+**Architecture Characteristics**:
+- **Position Encoding**: RoPE (Rotary Position Embedding)
+- **Attention**: GQA (Grouped Query Attention)
+- **Normalization**: RMSNorm
+- **FFN Activation**: SwiGLU
+
+**Forward Pass Pipeline**:
+```cpp
+void LlamaInferenceAdapter::run_forward_pass(...) {
+    // 1. Embedding lookup
+    embedding_kernel<<<...>>>(input_tokens, embeddings);
+    
+    // 2. Transformer layers
+    for (int layer = 0; layer < num_layers; ++layer) {
+        // Pre-attention norm
+        rmsnorm_kernel<<<...>>>(embeddings, normed);
+        
+        // Apply RoPE to Q and K
+        rope_kernel<<<...>>>(q, k, position_ids);
+        
+        // GQA attention (grouped K/V heads)
+        gqa_attention_kernel<<<...>>>(q, k, v, attn_out, kv_cache);
+        
+        // Residual connection
+        add_kernel<<<...>>>(embeddings, attn_out);
+        
+        // Pre-FFN norm
+        rmsnorm_kernel<<<...>>>(attn_out, normed);
+        
+        // SwiGLU FFN (gate + up projections, swish activation, down projection)
+        swiglu_ffn_kernel<<<...>>>(normed, ffn_out);
+        
+        // Residual connection
+        add_kernel<<<...>>>(attn_out, ffn_out, embeddings);
+    }
+    
+    // 3. Final norm + output projection
+    rmsnorm_kernel<<<...>>>(embeddings, normed);
+    output_kernel<<<...>>>(normed, logits);
+}
+```
+
+**Weight Mapping** (Llama-style):
+- `token_embd.weight` — Token embeddings
+- `blk.{layer}.attn_norm.weight` — Pre-attention RMSNorm
+- `blk.{layer}.attn_q.weight`, `attn_k.weight`, `attn_v.weight` — Q/K/V projections (GQA)
+- `blk.{layer}.attn_output.weight` — Attention output projection
+- `blk.{layer}.ffn_norm.weight` — Pre-FFN RMSNorm
+- `blk.{layer}.ffn_gate.weight`, `ffn_up.weight`, `ffn_down.weight` — SwiGLU FFN
+- `output_norm.weight` — Final RMSNorm
+- `output.weight` — LM head
+
+**Spec Reference**: M0_ARCHITECTURAL_GAP_ANALYSIS.md (Gap 2a, Gap 4a)
+
+### 8.7.3 GPTInferenceAdapter
+
+#### [M0-W-1215] GPTInferenceAdapter Implementation
+
+Worker MUST implement GPTInferenceAdapter for GPT-style models (GPT-OSS-20B).
+
+**Architecture Characteristics**:
+- **Position Encoding**: Absolute/Learned positional embeddings
+- **Attention**: MHA (Multi-Head Attention)
+- **Normalization**: LayerNorm
+- **FFN Activation**: GELU
+
+**Forward Pass Pipeline**:
+```cpp
+void GPTInferenceAdapter::run_forward_pass(...) {
+    // 1. Token + position embeddings
+    embedding_kernel<<<...>>>(input_tokens, token_emb);
+    positional_embedding_kernel<<<...>>>(position_ids, pos_emb);
+    add_kernel<<<...>>>(token_emb, pos_emb, embeddings);
+    
+    // 2. Transformer layers
+    for (int layer = 0; layer < num_layers; ++layer) {
+        // Pre-attention norm
+        layernorm_kernel<<<...>>>(embeddings, normed);
+        
+        // MHA attention (all heads have unique K/V)
+        mha_attention_kernel<<<...>>>(normed, attn_out, kv_cache);
+        
+        // Residual connection
+        add_kernel<<<...>>>(embeddings, attn_out);
+        
+        // Pre-FFN norm
+        layernorm_kernel<<<...>>>(attn_out, normed);
+        
+        // GELU FFN (fc1 + gelu + fc2)
+        gelu_ffn_kernel<<<...>>>(normed, ffn_out);
+        
+        // Residual connection
+        add_kernel<<<...>>>(attn_out, ffn_out, embeddings);
+    }
+    
+    // 3. Final norm + output projection
+    layernorm_kernel<<<...>>>(embeddings, normed);
+    output_kernel<<<...>>>(normed, logits);
+}
+```
+
+**Weight Mapping** (GPT-style):
+- `wte` — Token embeddings
+- `wpe` — Positional embeddings (learned)
+- `h.{layer}.ln_1.weight`, `ln_1.bias` — Pre-attention LayerNorm
+- `h.{layer}.attn.c_attn.weight` — Combined Q/K/V projection (or separate)
+- `h.{layer}.attn.c_proj.weight` — Attention output projection
+- `h.{layer}.ln_2.weight`, `ln_2.bias` — Pre-FFN LayerNorm
+- `h.{layer}.mlp.c_fc.weight` — FFN up projection (fc1)
+- `h.{layer}.mlp.c_proj.weight` — FFN down projection (fc2)
+- `ln_f.weight`, `ln_f.bias` — Final LayerNorm
+- `lm_head.weight` — LM head (or tied with wte)
+
+**Spec Reference**: M0_ARCHITECTURAL_GAP_ANALYSIS.md (Gap 2b, Gap 4b)
+
+### 8.7.4 Architecture-Specific Kernels
+
+#### [M0-W-1432] LayerNorm Kernel (GPT)
+
+Worker MUST implement LayerNorm kernel for GPT models.
+
+**Algorithm**:
+```cpp
+__global__ void layernorm_kernel(
+    const half* input,
+    half* output,
+    const half* gamma,  // scale
+    const half* beta,   // bias
+    int hidden_size,
+    float eps = 1e-5
+) {
+    // 1. Compute mean
+    float mean = compute_mean(input, hidden_size);
+    
+    // 2. Compute variance
+    float variance = compute_variance(input, mean, hidden_size);
+    
+    // 3. Normalize
+    float inv_std = rsqrtf(variance + eps);
+    for (int i = threadIdx.x; i < hidden_size; i += blockDim.x) {
+        float normalized = (float(input[i]) - mean) * inv_std;
+        output[i] = half(normalized * float(gamma[i]) + float(beta[i]));
+    }
+}
+```
+
+**Characteristics**:
+- Two reduction passes (mean + variance)
+- Learnable scale (γ) and bias (β)
+- Numerical stability via epsilon
+
+**Spec Reference**: M0_ARCHITECTURAL_GAP_ANALYSIS.md (Gap 3a)
+
+#### [M0-W-1433] GELU Activation Kernel (GPT)
+
+Worker MUST implement GELU activation kernel for GPT FFN.
+
+**Algorithm**:
+```cpp
+__device__ float gelu(float x) {
+    // Approximate GELU: 0.5 * x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x³)))
+    const float c = sqrtf(2.0f / M_PI);
+    float x_cubed = x * x * x;
+    return 0.5f * x * (1.0f + tanhf(c * (x + 0.044715f * x_cubed)));
+}
+
+__global__ void gelu_kernel(const half* input, half* output, int size) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size) {
+        output[idx] = half(gelu(float(input[idx])));
+    }
+}
+```
+
+**Spec Reference**: M0_ARCHITECTURAL_GAP_ANALYSIS.md (Gap 3c)
+
+#### [M0-W-1434] Absolute Positional Embedding Kernel (GPT)
+
+Worker MUST implement absolute positional embedding for GPT models.
+
+**Algorithm**:
+```cpp
+__global__ void positional_embedding_kernel(
+    const int* position_ids,
+    const half* wpe,  // learned position embeddings
+    half* output,
+    int seq_len,
+    int hidden_size
+) {
+    int pos_idx = blockIdx.x;  // position in sequence
+    int hidden_idx = threadIdx.x;  // dimension
+    
+    if (pos_idx < seq_len && hidden_idx < hidden_size) {
+        int pos = position_ids[pos_idx];
+        output[pos_idx * hidden_size + hidden_idx] = wpe[pos * hidden_size + hidden_idx];
+    }
+}
+```
+
+**Spec Reference**: M0_ARCHITECTURAL_GAP_ANALYSIS.md (Gap 3b)
+
+### 8.7.5 MXFP4 Architecture-Aware Handling
+
+#### [M0-W-1435] MXFP4 Weight Mapping
+
+Worker MUST handle MXFP4 quantization with architecture-specific weight structures.
+
+**Llama-style MXFP4** (Qwen/Phi-3 if using MXFP4):
+- Weights stored as: `token_embd`, `qkv_proj` (fused), `gate/up/down` projections
+- Dequantization in: embedding lookup, attention Q/K/V, FFN kernels
+
+**GPT-style MXFP4** (GPT-OSS-20B):
+- Weights stored as: `wte`, `wpe`, separate `Q/K/V` or fused `c_attn`, `fc1/fc2`
+- Dequantization in: embedding lookup, attention, FFN kernels
+
+**In-Kernel Dequantization**:
+```cpp
+__global__ void mxfp4_gemm_kernel(
+    const uint8_t* mxfp4_weights,  // Packed MXFP4
+    const half* input,              // FP16 input
+    half* output,                   // FP16 output
+    int M, int N, int K
+) {
+    // 1. Load MXFP4 tile to shared memory
+    // 2. Dequantize to FP16 in registers
+    // 3. Perform GEMM with FP16 accumulation
+    // 4. Write FP16 output
+}
+```
+
+**Spec Reference**: M0_ARCHITECTURAL_GAP_ANALYSIS.md (Gap 4c)
+
+---
+
 ## 9. CUDA Implementation
 
 ### 9.1 Context Management
@@ -1318,7 +1814,7 @@ Context::~Context() {
 
 **Spec Reference**: CUDA-5111
 
-### 8.2 Model Loading
+### 9.2 Model Loading
 
 #### [M0-W-1410] Model Load Implementation
 Worker-orcd MUST load model to VRAM:
@@ -1342,9 +1838,52 @@ Model::Model(const Context& ctx, const std::string& path) {
 }
 ```
 
-**Spec Reference**: CUDA-5240
+**GGUF Header Parsing**:
+```cpp
+struct GGUFHeader {
+    uint32_t magic;              // 'GGUF' (0x47475546)
+    uint32_t version;            // 3
+    uint64_t tensor_count;       // Number of tensors
+    uint64_t metadata_kv_count;  // Number of metadata entries
+};
 
-### 8.3 Inference Execution
+void Model::parse_gguf(const std::string& path) {
+    std::ifstream file(path, std::ios::binary);
+    if (!file) {
+        throw CudaError(CUDA_ERROR_MODEL_LOAD_FAILED, "Failed to open model file");
+    }
+    
+    GGUFHeader header;
+    file.read(reinterpret_cast<char*>(&header), sizeof(header));
+    
+    if (header.magic != 0x47475546) {
+        throw CudaError(CUDA_ERROR_MODEL_LOAD_FAILED, "Invalid GGUF magic bytes");
+    }
+    
+    if (header.version != 3) {
+        throw CudaError(CUDA_ERROR_MODEL_LOAD_FAILED, "Unsupported GGUF version");
+    }
+    
+    parse_metadata(file, header.metadata_kv_count);
+    parse_tensors(file, header.tensor_count);
+}
+```
+
+**Model Metadata Structure**:
+```cpp
+struct ModelMetadata {
+    std::string architecture;  // "llama", "gpt2", etc.
+    std::string name;
+    uint32_t context_length;
+    uint32_t vocab_size;
+    uint32_t embedding_length;
+    uint32_t num_layers;
+};
+```
+
+**Spec Reference**: CUDA-5240, CUDA-5280, CUDA-5281
+
+### 9.3 Inference Execution
 
 #### [M0-W-1420] Forward Pass
 Worker-orcd MUST execute forward pass:
@@ -1364,6 +1903,12 @@ void InferenceResult::run_forward_pass() {
             current_token_, attention_output_
         );
         
+        // Check for errors after kernel launch
+        cudaError_t err = cudaGetLastError();
+        if (err != cudaSuccess) {
+            throw CudaError(CUDA_ERROR_KERNEL_LAUNCH_FAILED, cudaGetErrorString(err));
+        }
+        
         // Feed-forward
         ffn_kernel<<<grid, block, 0, stream_>>>(
             model_.layer_weights(layer), attention_output_, embeddings_
@@ -1375,12 +1920,60 @@ void InferenceResult::run_forward_pass() {
         model_.output_weights(), embeddings_, logits_->get()
     );
     
-    // 4. Synchronize
-    cudaStreamSynchronize(stream_);
+    // 4. Synchronize and check for execution errors
+    cudaError_t err = cudaStreamSynchronize(stream_);
+    if (err != cudaSuccess) {
+        throw CudaError(CUDA_ERROR_INFERENCE_FAILED, cudaGetErrorString(err));
+    }
 }
 ```
 
-**Spec Reference**: CUDA-5321
+**InferenceResult Class Design**:
+```cpp
+class InferenceResult {
+public:
+    InferenceResult(const Model& model, const std::string& prompt, const InferenceConfig& config);
+    ~InferenceResult();
+    
+    // Non-copyable, non-movable (holds CUDA resources)
+    InferenceResult(const InferenceResult&) = delete;
+    InferenceResult& operator=(const InferenceResult&) = delete;
+    InferenceResult(InferenceResult&&) = delete;
+    InferenceResult& operator=(InferenceResult&&) = delete;
+    
+    bool next_token(std::string& token_out, int& token_index);
+    bool is_done() const { return current_token_ >= config_.max_tokens; }
+    
+private:
+    void tokenize_prompt(const std::string& prompt);
+    void allocate_kv_cache();
+    void run_forward_pass();
+    int sample_token();
+    std::string detokenize(int token_id);
+    
+    const Model& model_;
+    InferenceConfig config_;
+    std::vector<int> prompt_tokens_;
+    int current_token_ = 0;
+    std::unique_ptr<DeviceMemory> kv_cache_;
+    std::unique_ptr<DeviceMemory> logits_;
+    cudaStream_t stream_;
+    std::mt19937_64 rng_;
+};
+```
+
+**InferenceConfig Structure**:
+```cpp
+struct InferenceConfig {
+    int max_tokens;
+    float temperature;
+    uint64_t seed;
+    int top_k = 50;      // For future use
+    float top_p = 0.95f; // For future use
+};
+```
+
+**Spec Reference**: CUDA-5321, CUDA-5320
 
 #### [M0-W-1421] Token Sampling
 Worker-orcd MUST sample next token with temperature control:
@@ -1412,9 +2005,36 @@ int InferenceResult::sample_token() {
 }
 ```
 
-**Spec Reference**: CUDA-5321
+**KV Cache Allocation**:
+```cpp
+void InferenceResult::allocate_kv_cache() {
+    // Calculate KV cache size
+    // For each layer: 2 (K and V) * context_length * hidden_dim
+    size_t cache_size = 2 * 
+                       model_.metadata().num_layers *
+                       model_.metadata().context_length *
+                       model_.metadata().embedding_length *
+                       sizeof(float);
+    
+    kv_cache_ = std::make_unique<DeviceMemory>(cache_size);
+    
+    // Initialize to zero
+    cudaMemset(kv_cache_->get(), 0, cache_size);
+}
+```
 
-### 8.4 CUDA Kernels
+**KV Cache Layout** (per layer):
+```
+┌─────────────────────────────────────┐
+│ Keys   [context_length × hidden_dim] │
+├─────────────────────────────────────┤
+│ Values [context_length × hidden_dim] │
+└─────────────────────────────────────┘
+```
+
+**Spec Reference**: CUDA-5321, CUDA-5340, CUDA-5341
+
+### 9.4 CUDA Kernels
 
 #### [M0-W-1430] Required Kernels
 Worker-orcd MUST implement M0 kernel set:
@@ -1426,15 +2046,47 @@ Worker-orcd MUST implement M0 kernel set:
 - RMSNorm
 - Temperature-based sampling (greedy when temp=0, stochastic otherwise)
 
-**Spec Reference**: WORKER-4700
+**Kernel Organization**:
+```
+kernels/
+├── attention.cu      # Attention mechanism kernels
+├── matmul.cu         # Matrix multiplication kernels (cuBLAS wrapper)
+├── sampling.cu       # Token sampling kernels
+├── rope.cu           # Rotary position embeddings
+├── normalization.cu  # RMSNorm, LayerNorm
+└── common.cuh        # Shared kernel utilities
+```
+
+**Kernel Launch Pattern**:
+```cpp
+void run_forward_pass(const Model& model, InferenceState& state) {
+    dim3 grid(num_blocks);
+    dim3 block(threads_per_block);
+    
+    attention_kernel<<<grid, block, 0, state.stream>>>(
+        model.weights(),
+        state.kv_cache(),
+        state.output()
+    );
+    
+    // Check for errors
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        throw CudaError(CUDA_ERROR_KERNEL_LAUNCH_FAILED, cudaGetErrorString(err));
+    }
+}
+```
+
+**Spec Reference**: WORKER-4700, CUDA-5030, CUDA-5031
 
 #### [M0-W-1431] Kernel Safety
 All kernel launches MUST have:
 - Bounds checking
 - Dimension validation
-- Error handling
+- Error handling after launch (`cudaGetLastError`)
+- Error handling after sync (`cudaStreamSynchronize`)
 
-**Spec Reference**: KERNEL-SAFE-001 through KERNEL-SAFE-004
+**Spec Reference**: KERNEL-SAFE-001 through KERNEL-SAFE-004, CUDA-5371
 
 ---
 
@@ -1474,7 +2126,40 @@ enum CudaErrorCode {
 };
 ```
 
-**Spec Reference**: CUDA-5040
+**Error Message Retrieval**:
+```cpp
+extern "C" const char* cuda_error_message(int error_code) {
+    switch (error_code) {
+        case CUDA_SUCCESS: return "Success";
+        case CUDA_ERROR_DEVICE_NOT_FOUND: return "CUDA device not found";
+        case CUDA_ERROR_OUT_OF_MEMORY: return "Out of GPU memory";
+        case CUDA_ERROR_INVALID_DEVICE: return "Invalid device ID";
+        case CUDA_ERROR_MODEL_LOAD_FAILED: return "Model load failed";
+        case CUDA_ERROR_INFERENCE_FAILED: return "Inference execution failed";
+        case CUDA_ERROR_VRAM_RESIDENCY_FAILED: return "VRAM residency check failed";
+        case CUDA_ERROR_KERNEL_LAUNCH_FAILED: return "Kernel launch failed";
+        default: return "Unknown error";
+    }
+}
+```
+
+**CudaError Exception Class**:
+```cpp
+class CudaError : public std::exception {
+public:
+    CudaError(int code, const std::string& msg) 
+        : code_(code), msg_(msg) {}
+    
+    int code() const { return code_; }
+    const char* what() const noexcept override { return msg_.c_str(); }
+    
+private:
+    int code_;
+    std::string msg_;
+};
+```
+
+**Spec Reference**: CUDA-5040, CUDA-5041
 
 ### 9.2 Error Responses
 
@@ -1641,9 +2326,55 @@ auto_detect_cuda = false
 #### [M0-W-1702] CMake Integration
 Worker-orcd MUST use CMake to compile C++/CUDA code when `cuda` feature is enabled.
 
-**Build script**: `build.rs`
+**Build script** (`build.rs`):
+```rust
+fn main() {
+    let dst = cmake::Config::new("cuda")
+        .define("CMAKE_BUILD_TYPE", "Release")
+        .build();
+    
+    println!("cargo:rustc-link-search=native={}/lib", dst.display());
+    println!("cargo:rustc-link-lib=static=worker_cuda");
+    println!("cargo:rustc-link-lib=cudart");
+}
+```
 
-**CMake config**: `cuda/CMakeLists.txt`
+**CMake config** (`cuda/CMakeLists.txt`):
+```cmake
+cmake_minimum_required(VERSION 3.18)
+project(worker_cuda LANGUAGES CXX CUDA)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CUDA_STANDARD 17)
+
+# Enable CUDA architectures
+set(CMAKE_CUDA_ARCHITECTURES 70 75 80 86 89 90)
+
+# Source files
+add_library(worker_cuda STATIC
+    src/ffi.cpp
+    src/context.cpp
+    src/model.cpp
+    src/inference.cu
+    src/health.cpp
+    src/errors.cpp
+    kernels/attention.cu
+    kernels/matmul.cu
+    kernels/sampling.cu
+    kernels/rope.cu
+    kernels/normalization.cu
+)
+
+target_include_directories(worker_cuda PUBLIC include)
+target_link_libraries(worker_cuda cudart cublas)
+
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+```
+
+**Spec Reference**: CUDA-5050, CUDA-5051
 
 ---
 
@@ -2386,14 +3117,26 @@ M0 performance targets deferred to M1:
 - `bin/worker-orcd/.specs/00_worker-orcd.md` — Worker specification (WORK-3xxx)
 - `bin/worker-orcd/.specs/01_cuda_ffi_boundary.md` — FFI boundary (CUDA-4xxx)
 
-### 18.2 CUDA Module Specifications
+### 18.2 CUDA Module Specifications (Implementation Guides)
 
-- `bin/worker-orcd/cuda/.specs/00_cuda_overview.md` — CUDA overview (CUDA-5xxx)
-- `bin/worker-orcd/cuda/.specs/01_context.md` — Context management (CUDA-5100)
-- `bin/worker-orcd/cuda/.specs/02_model.md` — Model loading (CUDA-5200)
-- `bin/worker-orcd/cuda/.specs/03_inference.md` — Inference execution (CUDA-5300)
-- `bin/worker-orcd/cuda/.specs/04_health.md` — Health monitoring (CUDA-5400)
+**Note**: The following CUDA specs provide detailed implementation guidance that complements this M0 spec. They contain concrete C++ class designs, RAII patterns, and implementation examples.
+
+- `bin/worker-orcd/cuda/.specs/00_cuda_overview.md` — CUDA overview & patterns (CUDA-5xxx)
+- `bin/worker-orcd/cuda/.specs/01_context.md` — Context management implementation (CUDA-5100)
+- `bin/worker-orcd/cuda/.specs/02_model.md` — Model loading implementation (CUDA-5200)
+- `bin/worker-orcd/cuda/.specs/03_inference.md` — Inference execution implementation (CUDA-5300)
+- `bin/worker-orcd/cuda/.specs/04_health.md` — Health monitoring implementation (CUDA-5400)
+- `bin/worker-orcd/cuda/.specs/GAP_ANALYSIS.md` — Gap analysis between old specs and M0
 - `bin/worker-orcd/cuda/kernels/.specs/00_cuda-kernels.md` — CUDA kernels (WORKER-4700)
+
+**Implementation Details**: The CUDA module specs provide:
+- Complete C++ class hierarchies with RAII wrappers (DeviceMemory, CudaStream, Context)
+- Exception-to-error-code conversion patterns for FFI
+- GGUF parsing implementation with concrete structures
+- KV cache allocation formulas and memory layouts
+- Kernel error checking patterns
+- C++ unit test examples with Google Test
+- Rust FFI integration test examples
 
 ### 18.3 Documentation
 
