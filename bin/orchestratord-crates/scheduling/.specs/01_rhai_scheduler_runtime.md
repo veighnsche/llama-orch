@@ -1,4 +1,4 @@
-# Lua Scheduler Runtime Environment Specification
+# Rhai Scheduler Runtime Environment Specification
 
 **Status**: Draft  
 **Version**: 0.1.0  
@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-The Lua scheduler runtime provides a **rich, preloaded environment** with all data and functions needed to make informed scheduling decisions. The runtime is designed to give users complete visibility into system state and powerful primitives for custom scheduling logic.
+The Rhai scheduler runtime provides a **rich, preloaded environment** with all data and functions needed to make informed scheduling decisions. The runtime is designed to give users complete visibility into system state and powerful primitives for custom scheduling logic.
 
 ### Design Principles
 
@@ -22,31 +22,31 @@ The Lua scheduler runtime provides a **rich, preloaded environment** with all da
 
 ## 2. Scheduler Entry Point
 
-Every Lua scheduler MUST implement the `schedule()` function:
+Every Rhai scheduler MUST implement the `schedule()` function:
 
-```lua
--- Main entry point called by orchestratord
--- @param ctx: SchedulerContext - Complete system state
--- @return SchedulerDecision - What action to take
-function schedule(ctx)
-  -- User's custom scheduling logic here
-  
-  -- Example: dispatch first job to least-loaded worker
-  local job = ctx.queue[1]
-  if job then
-    local worker = ctx.find_least_loaded_worker(job.model_ref)
-    if worker then
-      return {
-        action = "dispatch",
-        job_id = job.id,
-        worker_id = worker.id
-      }
-    end
-  end
-  
-  -- No action
-  return { action = "wait" }
-end
+```rust
+// Main entry point called by orchestratord
+// @param ctx: SchedulerContext - Complete system state
+// @return SchedulerDecision - What action to take
+fn schedule(ctx) {
+    // User's custom scheduling logic here
+    
+    // Example: dispatch first job to least-loaded worker
+    let job = ctx.queue[0];  // 0-indexed arrays in Rhai
+    if job != () {
+        let worker = ctx.find_least_loaded_worker(job.model_ref);
+        if worker != () {
+            return #{
+                action: "dispatch",
+                job_id: job.id,
+                worker_id: worker.id
+            };
+        }
+    }
+    
+    // No action
+    return #{ action: "wait" };
+}
 ```
 
 ---
@@ -59,9 +59,9 @@ The `ctx` object is passed to every `schedule()` call and contains complete syst
 
 Array of jobs waiting to be scheduled, ordered by priority and arrival time.
 
-```lua
-ctx.queue = {
-  {
+```rust
+ctx.queue = [
+  #{
     id = "job-abc123",
     tenant_id = "tenant-1",  -- nil in home/lab mode
     session_id = "sess-xyz",

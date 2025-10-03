@@ -74,40 +74,42 @@ The orchestrator scheduler is designed as a **policy execution engine** that can
 
 ## 3. Scheduler Language Options
 
-### 3.1 Lua (Primary)
+### 3.1 Rhai (Primary)
 
-**Why Lua?**
-- ✅ Lightweight, embeddable (LuaJIT for performance)
-- ✅ Sandboxed execution (can restrict dangerous operations)
+**Why Rhai?**
+- ✅ Rust-native, zero FFI overhead (built for Rust)
+- ✅ Rust-like syntax (familiar to codebase)
+- ✅ Type-safe with optional typing
+- ✅ Better error messages than Lua
+- ✅ 0-indexed arrays (sane defaults)
+- ✅ Built-in sandboxing
 - ✅ Fast compilation and execution
-- ✅ Familiar to many developers
-- ✅ Rich ecosystem (can provide helper libraries)
-- ✅ Platform scheduler written in Lua (reference implementation)
+- ✅ Platform scheduler written in Rhai (reference implementation)
 
-**Example Lua Scheduler**:
-```lua
--- User-defined scheduler
-function schedule(context)
-  local queue = context.queue
-  local pools = context.pools
-  
-  -- Custom logic: prioritize jobs with seed for determinism
-  for _, job in ipairs(queue) do
-    if job.seed ~= nil then
-      local worker = find_best_worker(pools, job.model_ref)
-      if worker then
-        return {
-          action = "dispatch",
-          job_id = job.id,
-          worker_id = worker.id
+**Example Rhai Scheduler**:
+```rust
+// User-defined scheduler
+fn schedule(ctx) {
+    let queue = ctx.queue;
+    let pools = ctx.pools;
+    
+    // Custom logic: prioritize jobs with seed for determinism
+    for job in queue {
+        if job.seed != () {
+            let worker = find_best_worker(pools, job.model_ref);
+            if worker != () {
+                return #{
+                    action: "dispatch",
+                    job_id: job.id,
+                    worker_id: worker.id
+                };
+            }
         }
-      end
-    end
-  end
-  
-  -- Fallback to platform scheduler
-  return platform.schedule(context)
-end
+    }
+    
+    // Fallback to platform scheduler
+    return platform::schedule(ctx);
+}
 ```
 
 ### 3.2 YAML (Declarative Alternative)
@@ -116,7 +118,7 @@ end
 - ✅ Simpler for non-programmers
 - ✅ Declarative rules easier to reason about
 - ✅ Can be validated against schema
-- ✅ Compiled to Lua internally (no performance penalty)
+- ✅ Compiled to Rhai internally (no performance penalty)
 
 **Example YAML Scheduler**:
 ```yaml
@@ -149,76 +151,74 @@ scheduler:
       priority: 0
 ```
 
-**YAML → Lua Compilation**:
-- YAML is parsed and compiled to Lua at scheduler load time
+**YAML → Rhai Compilation**:
+- YAML is parsed and compiled to Rhai at scheduler load time
 - Validation ensures YAML conforms to schema
-- Generated Lua is cached for performance
+- Generated Rhai is cached for performance
 
 ---
 
 ## 4. Scheduler API (Context Object)
 
-The scheduler receives a `context` object with read-only access to system state:
+The scheduler receives a `ctx` object with read-only access to system state:
 
-```lua
-context = {
-  -- Queue state
-  queue = {
-    { id = "job-1", priority = "interactive", model_ref = "llama-7b", seed = 42, ... },
-    { id = "job-2", priority = "batch", model_ref = "llama-13b", seed = nil, ... },
+```rust
+// Rhai context object
+ctx = #{
+  // Queue state
+  queue: [
+    #{ id: "job-1", priority: "interactive", model_ref: "llama-7b", seed: 42, ... },
+    #{ id: "job-2", priority: "batch", model_ref: "llama-13b", seed: (), ... },
     ...
-  },
+  ],
   
-  -- Pool states (from heartbeats)
-  pools = {
-    {
-      id = "pool-1",
-      workers = {
-        { id = "worker-1", status = "ready", model_ref = "llama-7b", vram_free = 8GB, ... },
-        { id = "worker-2", status = "busy", model_ref = "llama-13b", vram_free = 0, ... },
-      },
-      gpus = {
-        { id = 0, vram_total = 24GB, vram_allocated = 16GB, ... },
-        { id = 1, vram_total = 24GB, vram_allocated = 8GB, ... },
-      }
+  // Pool states (from heartbeats)
+  pools: [
+    #{
+      id: "pool-1",
+      workers: [
+        #{ id: "worker-1", status: "ready", model_ref: "llama-7b", vram_free: 8_000_000_000, ... },
+        #{ id: "worker-2", status: "busy", model_ref: "llama-13b", vram_free: 0, ... },
+      ],
+      gpus: [
+        #{ id: 0, vram_total: 24_000_000_000, vram_allocated: 16_000_000_000, ... },
+        #{ id: 1, vram_total: 24_000_000_000, vram_allocated: 8_000_000_000, ... },
+      ]
     },
     ...
-  },
+  ],
   
-  -- Tenant quotas (platform mode only)
-  tenants = {
-    { id = "tenant-1", quota_vram = 48GB, quota_used = 32GB, ... },
+  // Tenant quotas (platform mode only)
+  tenants: #{
+    "tenant-1": #{ id: "tenant-1", quota_vram: 48_000_000_000, quota_used: 32_000_000_000, ... },
     ...
   },
   
-  -- System metrics
-  metrics = {
-    queue_depth = 15,
-    total_workers = 8,
-    busy_workers = 5,
-    ...
-  },
-  
-  -- Helper functions
-  helpers = {
-    find_worker = function(model_ref, pool_id) ... end,
-    calculate_wait_time = function(job_id) ... end,
-    check_quota = function(tenant_id, vram_needed) ... end,
+  // System metrics
+  metrics: #{
+    queue_depth: 15,
+    total_workers: 8,
+    busy_workers: 5,
     ...
   }
-}
+};
+
+// Helper functions available as ctx methods
+ctx.find_worker(model_ref, pool_id);
+ctx.calculate_wait_time(job_id);
+ctx.check_quota(tenant_id, vram_needed);
 ```
 
 **Return value** (scheduler decision):
-```lua
-return {
-  action = "dispatch",  -- or "wait", "evict", "start_worker"
-  job_id = "job-1",
-  worker_id = "worker-1",
-  -- Optional fields based on action
-  evict_worker_id = "worker-3",  -- for eviction
-  start_worker = { model_ref = "llama-7b", pool_id = "pool-1", gpu_id = 0 }
-}
+```rust
+return #{
+  action: "dispatch",  // or "wait", "evict", "start_worker"
+  job_id: "job-1",
+  worker_id: "worker-1",
+  // Optional fields based on action
+  evict_worker_id: "worker-3",  // for eviction
+  start_worker: #{ model_ref: "llama-7b", pool_id: "pool-1", gpu_id: 0 }
+};
 ```
 
 ---
@@ -231,7 +231,7 @@ The platform scheduler is the **gold standard** implementation, optimized for:
 - VRAM utilization efficiency
 - Determinism preservation where possible
 
-**Location**: `bin/orchestratord-crates/scheduling/platform-scheduler.lua`
+**Location**: `bin/orchestratord-crates/scheduling/platform-scheduler.rhai`
 
 **Features**:
 - Priority-based scheduling (Interactive > Batch)
@@ -260,26 +260,30 @@ The platform scheduler is the **gold standard** implementation, optimized for:
 
 ### 6.2 Generated Output
 
-**Lua Output**:
-```lua
--- Generated by Web UI Scheduler Builder
--- Policy: "Batch Processing Optimized"
--- Created: 2025-10-03
+**Rhai Output**:
+```rust
+// Generated by Web UI Scheduler Builder
+// Policy: "Batch Processing Optimized"
+// Created: 2025-10-03
 
-function schedule(context)
-  -- Rule 1: Batch jobs to most-vram-free workers
-  for _, job in ipairs(context.queue) do
-    if job.priority == "batch" then
-      local worker = context.helpers.find_worker_most_vram_free(job.model_ref)
-      if worker then
-        return { action = "dispatch", job_id = job.id, worker_id = worker.id }
-      end
-    end
-  end
-  
-  -- Fallback to platform scheduler
-  return platform.schedule(context)
-end
+fn schedule(ctx) {
+    // Rule 1: Batch jobs to most-vram-free workers
+    for job in ctx.queue {
+        if job.priority == "batch" {
+            let worker = ctx.find_worker_most_vram_free(job.model_ref);
+            if worker != () {
+                return #{
+                    action: "dispatch",
+                    job_id: job.id,
+                    worker_id: worker.id
+                };
+            }
+        }
+    }
+    
+    // Fallback to platform scheduler
+    return platform::schedule(ctx);
+}
 ```
 
 **YAML Output**:
@@ -331,15 +335,15 @@ scheduler:
 
 ### 7.1 Language Support
 
-**Q1**: Should we support BOTH Lua and YAML, or pick one?
-- **Option A**: Lua only (simpler, more powerful)
+**Q1**: Should we support BOTH Rhai and YAML, or pick one?
+- **Option A**: Rhai only (simpler, more powerful)
 - **Option B**: YAML only (simpler for users, less flexible)
-- **Option C**: Both (YAML compiles to Lua) ← **PROPOSED**
+- **Option C**: Both (YAML compiles to Rhai) ← **CHOSEN**
 
-**Q2**: Should Web UI generate Lua, YAML, or both?
-- **Option A**: Generate both, user chooses format
-- **Option B**: Generate YAML only (simpler), compile to Lua internally
-- **Option C**: Generate Lua only (most powerful)
+**Q2**: Should Web UI generate Rhai, YAML, or both?
+- **Option A**: Generate both, user chooses format ← **CHOSEN**
+- **Option B**: Generate YAML only (simpler), compile to Rhai internally
+- **Option C**: Generate Rhai only (most powerful)
 
 **Decision needed**: Which option aligns with target users?
 
@@ -363,7 +367,7 @@ scheduler:
 
 ### 7.3 Sandbox Security
 
-**Q5**: What Lua operations should be restricted?
+**Q5**: What Rhai operations should be restricted?
 - File I/O (definitely restricted)
 - Network access (definitely restricted)
 - OS operations (definitely restricted)

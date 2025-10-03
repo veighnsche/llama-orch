@@ -1,4 +1,4 @@
-# Llama-Orch SPEC — System Architecture (SYS-0xxx)
+# Llama-Orch SPEC — System Architecture
 
 **Status**: Draft  
 **Version**: 0.1.0  
@@ -6,9 +6,204 @@
 
 ---
 
-## 0. Executive Summary
+## Table of Contents
 
-### Purpose
+### 0. Document Metadata
+- [0.1 Glossary](#01-glossary)
+- [0.2 Traceability Index](#02-traceability-index)
+
+### 1. Executive Summary
+- [1.1 Purpose](#11-purpose)
+- [1.2 System Architecture](#12-system-architecture)
+- [1.3 Decision Hierarchy](#13-decision-hierarchy)
+
+### 2. Foundational Concepts
+- [2.1 Model Reference Format](#21-model-reference-format-sys-21x)
+- [2.2 VRAM-Only Policy](#22-vram-only-policy-sys-22x)
+- [2.3 Determinism Principles](#23-determinism-principles-sys-23x)
+- [2.4 Process Isolation Rationale](#24-process-isolation-rationale-sys-24x)
+- [2.5 FFI Boundaries](#25-ffi-boundaries-sys-25x)
+
+### 3. Deployment Modes
+- [3.1 Home Mode (M0)](#31-home-mode-m0-sys-31x)
+- [3.2 Lab Mode (M1)](#32-lab-mode-m1-sys-32x)
+- [3.3 Multi-GPU Mode (M1)](#33-multi-gpu-mode-m1-sys-33x)
+- [3.4 Multi-Node Mode (M2+)](#34-multi-node-mode-m2-sys-34x)
+- [3.5 Platform Mode (Marketplace)](#35-platform-mode-marketplace-sys-35x)
+
+### 4. System-Level Requirements
+- [4.1 Intelligence Boundary](#41-intelligence-boundary-sys-41x)
+- [4.2 Smart vs Dumb Architecture](#42-smart-vs-dumb-architecture-sys-42x)
+- [4.3 Component Separation](#43-component-separation-sys-43x)
+- [4.4 State Propagation](#44-state-propagation-sys-44x)
+- [4.5 Multi-Node Support](#45-multi-node-support-sys-45x)
+
+### 5. API Contracts
+- [5.1 Client → Orchestrator (Agentic API)](#51-client--orchestrator-agentic-api-sys-51x)
+- [5.2 Orchestrator ↔ Pool Manager](#52-orchestrator--pool-manager-sys-52x)
+- [5.3 Pool Manager ↔ Worker](#53-pool-manager--worker-sys-53x)
+- [5.4 Orchestrator → Worker (Direct)](#54-orchestrator--worker-direct-sys-54x)
+- [5.5 Error Response Format](#55-error-response-format-sys-55x)
+- [5.6 Correlation ID Propagation](#56-correlation-id-propagation-sys-56x)
+
+### 6. Component Architecture
+- [6.1 Orchestratord (The Brain)](#61-orchestratord-the-brain-sys-61x)
+  - [6.1.1 Orchestrator Intelligence](#611-orchestrator-intelligence-sys-611)
+  - [6.1.2 State Management](#612-state-management-sys-612)
+  - [6.1.3 Persistent State Store](#613-persistent-state-store-sys-613)
+  - [6.1.4 Queue Optimizer](#614-queue-optimizer-sys-614)
+  - [6.1.5 Programmable Scheduler](#615-programmable-scheduler-sys-615)
+  - [6.1.6 Retry & Backoff Policy](#616-retry--backoff-policy-sys-616)
+- [6.2 Pool-Managerd (Control Plane)](#62-pool-managerd-control-plane-sys-62x)
+  - [6.2.1 Pool Manager Execution](#621-pool-manager-execution-sys-621)
+  - [6.2.2 State Reporting](#622-state-reporting-sys-622)
+  - [6.2.3 Preflight Validation](#623-preflight-validation-sys-623)
+  - [6.2.4 Heartbeat Protocol](#624-heartbeat-protocol-sys-624)
+  - [6.2.5 Operational Cleanup](#625-operational-cleanup-sys-625)
+- [6.3 Worker-Orcd (Executor)](#63-worker-orcd-executor-sys-63x)
+  - [6.3.1 Worker Self-Containment](#631-worker-self-containment-sys-631)
+  - [6.3.2 Worker Isolation](#632-worker-isolation-sys-632)
+  - [6.3.3 Tensor Parallelism Design](#633-tensor-parallelism-design-sys-633)
+  - [6.3.4 Ready Callback Contract](#634-ready-callback-contract-sys-634)
+  - [6.3.5 Cancellation Handling](#635-cancellation-handling-sys-635)
+
+### 7. Data Flow & Interactions
+- [7.1 Job Submission Flow](#71-job-submission-flow-sys-71x)
+- [7.2 Worker Startup Flow](#72-worker-startup-flow-sys-72x)
+- [7.3 Worker Failure Flow](#73-worker-failure-flow-sys-73x)
+- [7.4 Cancellation Flow](#74-cancellation-flow-sys-74x)
+- [7.5 SSE Reconnection Flow](#75-sse-reconnection-flow-sys-75x)
+
+### 8. Quality Attributes
+- [8.1 Determinism](#81-determinism-sys-81x)
+- [8.2 Performance](#82-performance-sys-82x)
+- [8.3 Reliability](#83-reliability-sys-83x)
+- [8.4 Scalability](#84-scalability-sys-84x)
+
+### 9. Security & Compliance
+- [9.1 Authentication](#91-authentication-sys-91x)
+- [9.2 EU Compliance (GDPR)](#92-eu-compliance-gdpr-sys-92x)
+- [9.3 Multi-Tenancy (Platform Mode)](#93-multi-tenancy-platform-mode-sys-93x)
+
+### 10. Metrics & Observability
+- [10.1 Metrics Contract](#101-metrics-contract-sys-101x)
+- [10.2 Logging Standards](#102-logging-standards-sys-102x)
+- [10.3 Correlation & Tracing](#103-correlation--tracing-sys-103x)
+- [10.4 Proof Bundle Requirements](#104-proof-bundle-requirements-sys-104x)
+
+### 11. Configuration
+- [11.1 Orchestrator Config](#111-orchestrator-config-sys-111x)
+- [11.2 Pool Manager Config](#112-pool-manager-config-sys-112x)
+- [11.3 Worker Config](#113-worker-config-sys-113x)
+- [11.4 Configuration Precedence](#114-configuration-precedence-sys-114x)
+
+### 12. Development Workflow
+- [12.1 Spec-Driven Development](#121-spec-driven-development-sys-121x)
+- [12.2 Testing Strategy](#122-testing-strategy-sys-122x)
+- [12.3 CI/CD Pipeline](#123-cicd-pipeline-sys-123x)
+
+### 13. Crate Dependency Graph
+- [13.1 Dependency Overview](#131-dependency-overview)
+
+### 14. Milestone Roadmap
+- [14.1 M0: Single GPU (v0.1.0)](#141-m0-single-gpu-v010)
+- [14.2 M1: Multi-GPU (v0.2.0)](#142-m1-multi-gpu-v020)
+- [14.3 M2: Multi-Node (v0.3.0)](#143-m2-multi-node-v030)
+- [14.4 M3: Platform (v0.4.0)](#144-m3-platform-v040)
+
+### 15. Non-Goals / Out of Scope
+
+### 16. References
+- [16.1 Specifications](#161-specifications)
+- [16.2 Documentation](#162-documentation)
+- [16.3 Contracts](#163-contracts)
+
+### 17. Appendices
+- [17.1 Resolved Clarifications](#171-resolved-clarifications)
+- [17.2 Decision Log](#172-decision-log)
+- [17.3 Traceability Matrix](#173-traceability-matrix)
+
+---
+
+## 0. Document Metadata
+
+### 0.1 Glossary
+
+**Key Terms:**
+
+- **Token Budget**: Per-tenant quota for maximum tokens that can be generated daily or per request; enforced at admission time to prevent quota exhaustion.
+- **Eviction**: Two types: (1) Model eviction - removing cached models from RAM when no longer needed; (2) Worker eviction - stopping workers to free VRAM for higher-priority jobs.
+- **Preflight Validation**: Pre-spawn checks performed by pool-managerd to verify GPU has sufficient free VRAM and model is compatible before spawning a worker.
+- **VRAM-Only Policy**: Requirement that all model weights, KV cache, activations, and intermediate tensors reside entirely in GPU VRAM with no RAM/disk fallback.
+- **Determinism**: Property where same model + same seed + same prompt produces identical output; system-level guarantee with model-level limitations.
+- **Proof Bundle**: Standardized test artifact directory containing seeds, transcripts, metadata, and outputs for reproducibility (see `libs/proof-bundle`).
+- **Smart/Dumb Boundary**: Architectural principle where orchestratord makes ALL intelligent decisions (smart) while pool-managerd and workers execute commands without policy decisions (dumb).
+- **Model Reference (model_ref)**: Canonical identifier for a model artifact, format: `hf:{org}/{repo}@{rev}::file={path}` or `file:/path/to/model.gguf`.
+- **Heartbeat**: Periodic state report from pool-managerd to orchestratord (default 15s interval) containing GPU VRAM state and worker status.
+- **SSE (Server-Sent Events)**: HTTP streaming protocol used for token-by-token inference results from worker → orchestrator → client.
+- **Correlation ID**: Unique identifier (`X-Correlation-Id` header) propagated across all service calls for request tracing and log correlation.
+- **Tenant**: Isolated customer/user in platform mode with separate quotas, billing, and resource allocation.
+- **Priority Classes**: Job queue priorities - `interactive` (user-facing, low latency) and `batch` (background, high throughput).
+
+### 0.2 Traceability Index
+
+**Quick Lookup Table:**
+
+| ID Range | Section | Description |
+|----------|---------|-------------|
+| SYS-2.1.x | Foundational Concepts | Model Reference Format |
+| SYS-2.2.x | Foundational Concepts | VRAM-Only Policy |
+| SYS-2.3.x | Foundational Concepts | Determinism Principles |
+| SYS-2.4.x | Foundational Concepts | Process Isolation |
+| SYS-2.5.x | Foundational Concepts | FFI Boundaries |
+| SYS-3.1.x | Deployment Modes | Home Mode |
+| SYS-3.2.x | Deployment Modes | Lab Mode |
+| SYS-3.3.x | Deployment Modes | Multi-GPU Mode |
+| SYS-3.4.x | Deployment Modes | Multi-Node Mode |
+| SYS-3.5.x | Deployment Modes | Platform Mode |
+| SYS-4.1.x | System Requirements | Intelligence Boundary |
+| SYS-4.2.x | System Requirements | Smart vs Dumb |
+| SYS-4.3.x | System Requirements | Component Separation |
+| SYS-4.4.x | System Requirements | State Propagation |
+| SYS-4.5.x | System Requirements | Multi-Node Support |
+| SYS-5.1.x | API Contracts | Client → Orchestrator |
+| SYS-5.2.x | API Contracts | Orchestrator ↔ Pool |
+| SYS-5.3.x | API Contracts | Pool ↔ Worker |
+| SYS-5.4.x | API Contracts | Orchestrator → Worker |
+| SYS-5.5.x | API Contracts | Error Responses |
+| SYS-5.6.x | API Contracts | Correlation IDs |
+| SYS-6.1.x | Components | Orchestratord |
+| SYS-6.2.x | Components | Pool-Managerd |
+| SYS-6.3.x | Components | Worker-Orcd |
+| SYS-7.1.x | Data Flows | Job Submission |
+| SYS-7.2.x | Data Flows | Worker Startup |
+| SYS-7.3.x | Data Flows | Worker Failure |
+| SYS-7.4.x | Data Flows | Cancellation |
+| SYS-7.5.x | Data Flows | SSE Reconnection |
+| SYS-8.1.x | Quality | Determinism |
+| SYS-8.2.x | Quality | Performance |
+| SYS-8.3.x | Quality | Reliability |
+| SYS-8.4.x | Quality | Scalability |
+| SYS-9.1.x | Security | Authentication |
+| SYS-9.2.x | Security | EU Compliance |
+| SYS-9.3.x | Security | Multi-Tenancy |
+| SYS-10.1.x | Observability | Metrics |
+| SYS-10.2.x | Observability | Logging |
+| SYS-10.3.x | Observability | Tracing |
+| SYS-10.4.x | Observability | Proof Bundles |
+| SYS-11.1.x | Configuration | Orchestrator |
+| SYS-11.2.x | Configuration | Pool Manager |
+| SYS-11.3.x | Configuration | Worker |
+| SYS-11.4.x | Configuration | Precedence |
+| SYS-12.1.x | Development | Spec-Driven |
+| SYS-12.2.x | Development | Testing |
+| SYS-12.3.x | Development | CI/CD |
+
+---
+
+## 1. Executive Summary
+
+### 1.1 Purpose
 
 Llama-Orch is a **deterministic, VRAM-only, multi-node GPU orchestration system** for large language model inference. It provides guaranteed reproducibility, EU-native compliance, and enterprise-grade orchestration across distributed GPU resources.
 
@@ -19,7 +214,7 @@ Llama-Orch is a **deterministic, VRAM-only, multi-node GPU orchestration system*
 4. **EU Compliance**: GDPR-native, EU-only data residency
 5. **Marketplace Ready**: Enable GPU provider ecosystem
 
-### System Architecture
+### 1.2 System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -369,6 +564,37 @@ queue_optimizer:
 ```
 
 **Specs**: `bin/orchestratord-crates/queue-optimizer/.specs/00_queue_optimizer.md`
+
+---
+
+### [SYS-0024] Programmable Scheduler
+
+Orchestratord scheduler is designed as a **policy execution engine** that can run user-defined scheduling logic while maintaining a high-performance default.
+
+**Deployment mode behavior**:
+- **Platform Mode**: Uses immutable, built-in scheduler (written in Rhai) optimized for multi-tenant fairness, security, and SLA compliance
+- **Home/Lab Mode**: Users can write custom Rhai scripts or YAML configurations to define scheduling policies
+- **Web UI Mode**: Visual policy builder generates Rhai or YAML for non-programmers
+
+**Language support**:
+- **Rhai** (primary): Rust-native scripting language with type safety, 0-indexed arrays, and built-in sandboxing
+- **YAML** (declarative): Compiles to Rhai internally for simple rule-based policies
+
+**Scheduler API**:
+- Complete system state access (queue, pools, workers, GPUs, models, tenants)
+- 40+ built-in helper functions (worker selection, GPU queries, quota checks, eviction)
+- Preloaded model catalog at compile time
+- Real-time pool state from heartbeats
+- Sandboxed execution with 50ms timeout and memory limits
+
+**Platform scheduler** (reference implementation):
+- Location: `bin/orchestratord-crates/scheduling/platform-scheduler.rhai`
+- Immutable in platform mode, copyable in home/lab mode
+- Optimized for priority-based scheduling, quota enforcement, and resource utilization
+
+**Specs**: 
+- `bin/orchestratord-crates/scheduling/.specs/00_programmable_scheduler.md` — Overall design and architecture
+- `bin/orchestratord-crates/scheduling/.specs/01_rhai_scheduler_runtime.md` — Rhai runtime environment and API reference
 
 ---
 
