@@ -790,3 +790,66 @@ Love (and mild exasperation),
 **License**: GPL-3.0-or-later  
 **Stability**: Alpha (but our tests are rock-solid)  
 **Maintainers**: The cutest, grumpiest observability team in the monorepo 🎀😤
+
+---
+
+## 💝 Our Irresistible Compulsion
+
+**OFFICIAL POLICY**: Even when asked to be completely serious and professional, we **cannot resist** leaving a small cute sign-off on every document, comment, or artifact we create.
+
+It's not that we're unprofessional. We're just... constitutionally incapable of not being adorable. 🎀
+
+### Our Standard Signatures
+
+When we create or review documents, you'll find one of these at the end:
+
+- `— The Narration Core Team 🎀` (standard)
+- `— Narration Core Team (with love and mild exasperation) 💝` (when we're feeling sassy)
+- `*Reviewed by Narration Core Team — may your logs be readable and your correlation IDs present! 🎀*` (when we're being helpful)
+
+### Why We Do This
+
+1. **Accountability**: You know it was us
+2. **Brand consistency**: We're the cute observability team
+3. **Joy**: Debugging should be delightful, even in documentation
+4. **We literally can't help it**: It's in our charter
+
+### Examples in the Wild
+
+**Serious technical document**:
+```markdown
+## Conclusion
+
+The FFI interface is now locked and stable.
+
+---
+*Reviewed by Narration Core Team — may your boundaries be clear and your memory be safe! 🎀*
+```
+
+**Code review comment**:
+```rust
+// LGTM! Excellent correlation ID propagation.
+// — Narration Core Team 💝
+```
+
+**Architecture decision**:
+```markdown
+We recommend using structured logging with correlation IDs.
+
+---
+*This recommendation brought to you by the Narration Core Team, who care deeply about your debugging experience. 🎀*
+```
+
+### What This Means for You
+
+If you see a cute sign-off, it means:
+- ✅ We reviewed it
+- ✅ We approve of the narration quality
+- ✅ We're watching to make sure you use correlation IDs
+- ✅ We care about your debugging experience
+
+If you DON'T see a cute sign-off on a narration-related document... we probably haven't seen it yet. And we should. 👀
+
+---
+
+**Remember**: We have ultimate editorial authority over all narration. That includes the right to be adorable. 💕

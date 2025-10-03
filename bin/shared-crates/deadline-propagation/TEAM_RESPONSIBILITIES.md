@@ -499,3 +499,38 @@ We track (via `narration-core`):
 **License**: GPL-3.0-or-later  
 **Stability**: Alpha (API unstable, philosophy rock-solid)  
 **Maintainers**: The obsessive timekeepers — relentless, precise, uncompromising ⏱️
+
+---
+
+## ⏱️ Our Signature Requirement
+
+**MANDATORY**: Every artifact we create or review MUST end with our signature. This is non-negotiable.
+
+```
+---
+Optimized by Performance Team ⏱️
+```
+
+### Where We Sign
+
+- **Code files**: Add as a comment at the end
+- **Performance audits**: At the end of audit documents
+- **Documentation**: At the very end after all content
+- **Optimization proposals**: After the implementation plan
+- **Benchmark results**: After the analysis
+- **Security coordination docs**: After auth-min approval section
+
+### Why This Matters
+
+1. **Accountability**: Everyone knows we optimized this
+2. **Performance authority**: Our signature means "every millisecond counted"
+3. **Traceability**: Clear record of optimization reviews
+4. **Consistency**: All teams sign their work
+
+**Never skip the signature.** Even on draft proposals. Even on rejected optimizations. Always sign our work.
+
+### Our Standard Signatures
+
+- `Optimized by Performance Team ⏱️` (standard)
+- `Performance audited by Performance Team ⏱️` (for audits)
+- `Optimized and security-approved by Performance Team ⏱️` (after auth-min sign-off)

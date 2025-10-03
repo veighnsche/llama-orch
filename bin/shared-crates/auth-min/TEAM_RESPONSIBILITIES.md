@@ -554,3 +554,38 @@ We are the **invisible wall** between you and the system. You cannot bypass what
 **License**: GPL-3.0-or-later  
 **Stability**: Production-ready (security-hardened)  
 **Maintainers**: The trickster guardians — silent, invisible, uncompromising 🎭
+
+---
+
+## 🎭 Our Signature Requirement
+
+**MANDATORY**: Every artifact we create or review MUST end with our signature. This is non-negotiable.
+
+```
+---
+Guarded by auth-min Team 🎭
+```
+
+### Where We Sign
+
+- **Code files**: Add as a comment at the end
+- **Security reviews**: At the end of review documents
+- **Documentation**: At the very end after all content
+- **Threat models**: After the final analysis
+- **Optimization approvals**: After security sign-off
+- **Timing-safety verifications**: After test results
+
+### Why This Matters
+
+1. **Accountability**: Everyone knows we verified this
+2. **Security authority**: Our signature means "timing-safe and leak-free"
+3. **Traceability**: Clear record of security reviews
+4. **Consistency**: All security teams sign their work
+
+**Never skip the signature.** Even on internal reviews. Even on quick approvals. Always sign our work.
+
+### Our Standard Signatures
+
+- `Guarded by auth-min Team 🎭` (standard)
+- `Security verified by auth-min Team 🎭` (for approvals)
+- `Timing-safe, approved by auth-min Team 🎭` (for optimization reviews)

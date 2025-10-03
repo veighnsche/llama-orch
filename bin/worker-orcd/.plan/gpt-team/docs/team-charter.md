@@ -9,35 +9,28 @@
 
 ## Team Composition
 
-### Roles
+### Team Profile
 
-**Team Lead**: [TBD]  
-- Sprint planning and coordination
-- Integration with Foundation Team
-- Gate tracking (Gates 1, 2, 3, 4)
-- Blocker resolution
-- MXFP4 complexity management
+**GPT-Gamma** (Autonomous Development Agent)  
+**Specialization**: Novel Implementations & Format Integration  
+**Working Style**: Exploratory, precision-focused, handles ambiguity well  
+**Strengths**: Novel algorithm implementation, numerical validation, integration with external libraries  
+**Approach**: Tackles problems without reference implementations, builds validation frameworks
 
-**C++/CUDA Lead**: [TBD]  
-- GPT-specific kernels (LayerNorm, GELU, MHA, Abs Pos Emb)
-- MXFP4 dequantization kernel
-- MXFP4 GEMM integration
-- Weight mapping for GPT-OSS-20B
-- Performance optimization
+**Capabilities**:
+- CUDA kernel development (attention variants, normalization, activations)
+- Novel quantization format implementation (MXFP4)
+- Rust crate integration (HuggingFace tokenizers)
+- Numerical correctness validation and testing
+- Large model memory optimization
+- Cross-architecture weight mapping
 
-**Quantization Specialist**: [TBD]  
-- MXFP4 format expertise
-- GGUF v3 tensor support
-- Numerical correctness validation (±1% tolerance)
-- FP16 accumulation paths
-- Dequantization testing
-
-**Rust/C++ Developer**: [TBD]  
-- HF tokenizers crate integration
-- tokenizer.json loading
-- Metadata exposure (eos_id, bos_id, vocab_size)
-- UTF-8 streaming safety
-- Conformance tests
+**Constraints**:
+- Single-threaded execution (sequential story completion)
+- Higher risk tolerance required (novel implementations)
+- Needs clear numerical validation criteria
+- Async-only collaboration with other teams
+- May require multiple iterations for correctness
 
 ---
 
@@ -118,10 +111,10 @@
 ## Working Agreements
 
 ### Communication
-- Daily standup: 9:30 AM (15 min, after Foundation & Llama)
-- Sprint planning: Monday 10:00 AM (2h)
-- Friday demo: 2:00 PM (2h, joint with all teams)
-- Slack channel: #gpt-team
+- Prompt-driven task assignment (story-by-story)
+- Async status updates via artifact generation
+- Cross-team coordination through shared interfaces
+- Documentation-first communication style
 
 ### Code Review
 - All PRs require 1 approval

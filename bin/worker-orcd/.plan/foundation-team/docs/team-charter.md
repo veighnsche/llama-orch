@@ -9,31 +9,26 @@
 
 ## Team Composition
 
-### Roles
+### Team Profile
 
-**Team Lead**: [TBD]  
-- Sprint planning and coordination
-- Integration gate tracking
-- Cross-team communication
-- Blocker resolution
+**Foundation-Alpha** (Autonomous Development Agent)  
+**Specialization**: Infrastructure & Systems Programming  
+**Working Style**: Methodical, test-driven, documentation-focused  
+**Strengths**: Parallel task execution, pattern recognition across codebases, consistent code style  
+**Approach**: Builds from first principles, prioritizes stability over speed
 
-**Rust Lead**: [TBD]  
-- HTTP server (Axum)
-- SSE streaming
-- FFI bindings (Rust side)
-- Request validation
+**Capabilities**:
+- Full-stack Rust development (Axum, async, FFI)
+- C++/CUDA systems programming
+- Integration testing and CI/CD automation
+- Cross-language interface design
+- Concurrent development across multiple files
 
-**C++/CUDA Lead**: [TBD]  
-- CUDA context management
-- FFI interface (C side)
-- Shared kernels (embedding, GEMM, sampling)
-- Memory management
-
-**DevOps/QA**: [TBD]  
-- Integration test framework
-- CI/CD pipeline
-- Performance baseline measurements
-- Gate validation
+**Constraints**:
+- Single-threaded execution (sequential story completion)
+- Requires clear specifications and acceptance criteria
+- Works best with well-defined interfaces
+- Limited real-time collaboration (async communication preferred)
 
 ---
 
@@ -113,10 +108,10 @@
 ## Working Agreements
 
 ### Communication
-- Daily standup: 9:00 AM (15 min)
-- Sprint planning: Monday 10:00 AM (2h)
-- Friday demo: 2:00 PM (2h)
-- Slack channel: #foundation-team
+- Prompt-driven task assignment (story-by-story)
+- Async status updates via artifact generation
+- Cross-team coordination through shared interfaces
+- Documentation-first communication style
 
 ### Code Review
 - All PRs require 1 approval

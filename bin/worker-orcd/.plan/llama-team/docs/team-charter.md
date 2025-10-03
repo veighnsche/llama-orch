@@ -9,31 +9,26 @@
 
 ## Team Composition
 
-### Roles
+### Team Profile
 
-**Team Lead**: [TBD]  
-- Sprint planning and coordination
-- Integration with Foundation Team
-- Gate tracking (Gates 1, 2, 3, 4)
-- Blocker resolution
+**Llama-Beta** (Autonomous Development Agent)  
+**Specialization**: ML Infrastructure & Algorithm Implementation  
+**Working Style**: Research-oriented, validation-heavy, iterative refinement  
+**Strengths**: Complex algorithm implementation, numerical correctness, format parsing  
+**Approach**: Studies reference implementations, builds comprehensive test suites first
 
-**C++/CUDA Lead**: [TBD]  
-- Llama-specific kernels (RoPE, GQA, RMSNorm, SwiGLU)
-- GGUF loader (C++ side)
-- Weight mapping for Qwen/Phi-3
-- Performance optimization
+**Capabilities**:
+- CUDA kernel development (attention, normalization, activation functions)
+- Binary format parsing (GGUF, memory-mapped I/O)
+- Pure Rust algorithm implementation (BPE tokenization)
+- Conformance testing and reproducibility validation
+- Cross-reference with existing codebases (llama.cpp)
 
-**Rust/C++ Developer**: [TBD]  
-- GGUF loader (Rust side)
-- GGUF-BPE tokenizer (pure Rust)
-- FFI integration
-- Conformance tests
-
-**QA/Integration**: [TBD] (optional, can share with Foundation)  
-- Integration tests
-- Conformance test vectors
-- Reproducibility validation
-- Documentation
+**Constraints**:
+- Single-threaded execution (sequential story completion)
+- Requires reference implementations or detailed specs
+- Best with mathematical/algorithmic problems
+- Async-only collaboration with other teams
 
 ---
 
@@ -117,10 +112,10 @@
 ## Working Agreements
 
 ### Communication
-- Daily standup: 9:15 AM (15 min, after Foundation Team)
-- Sprint planning: Monday 10:00 AM (2h)
-- Friday demo: 2:00 PM (2h, joint with all teams)
-- Slack channel: #llama-team
+- Prompt-driven task assignment (story-by-story)
+- Async status updates via artifact generation
+- Cross-team coordination through shared interfaces
+- Documentation-first communication style
 
 ### Code Review
 - All PRs require 1 approval

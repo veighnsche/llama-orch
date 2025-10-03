@@ -1,41 +1,52 @@
 # Foundation Team - Complete Story List
 
-**Total Stories**: 47 stories across 7 weeks  
-**Total Estimated Effort**: ~85 days (with 3-4 people = realistic for 7 weeks)
+**Agent**: Foundation-Alpha (Autonomous Development Agent)  
+**Total Stories**: 49 stories (47 original + 2 from spec coverage)  
+**Total Estimated Effort**: ~87 agent-days (sequential execution)  
+**Timeline**: ~87 calendar days (agent works one story at a time)
 
 ---
 
-## Week 1: HTTP Foundation (5 stories, 9 days)
+## Sprint 1: HTTP Foundation (5 stories, 9 agent-days)
 
-| ID | Title | Size | Days | Owner | Spec Ref |
-|----|-------|------|------|-------|----------|
-| FT-001 | HTTP Server Setup | M | 2 | Rust Lead | M0-W-1100, M0-W-1320 |
-| FT-002 | POST /execute Endpoint (Skeleton) | M | 2 | Rust Lead | M0-W-1300, M0-W-1302 |
-| FT-003 | SSE Streaming Infrastructure | M | 3 | Rust Lead | M0-W-1310, M0-W-1311 |
-| FT-004 | Correlation ID Middleware | S | 1 | Rust Lead | (Implied in spec) |
-| FT-005 | Request Validation Framework | S | 1 | Rust Lead | M0-W-1302 |
+**Goal**: Establish HTTP server with basic endpoints and SSE streaming
 
-**Week 1 Capacity**: 3 people × 5 days = 15 days available, 9 days committed (60% utilization - good for first sprint)
+| ID | Title | Size | Days | Spec Ref |
+|----|-------|------|------|---------|
+| FT-001 | HTTP Server Setup | M | 2 | M0-W-1100, M0-W-1320 |
+| FT-002 | POST /execute Endpoint (Skeleton) | M | 2 | M0-W-1300, M0-W-1302 |
+| FT-003 | SSE Streaming Infrastructure | M | 3 | M0-W-1310, M0-W-1311 |
+| FT-004 | Correlation ID Middleware | S | 1 | (Implied in spec) |
+| FT-005 | Request Validation Framework | S | 1 | M0-W-1302 |
 
----
-
-## Week 2: FFI Layer (7 stories, 13 days)
-
-| ID | Title | Size | Days | Owner | Spec Ref |
-|----|-------|------|------|-------|----------|
-| FT-006 | FFI Interface Definition (C Header) | M | 2 | C++ Lead | M0-W-1052 |
-| FT-007 | Rust FFI Bindings | M | 2 | Rust Lead | M0-W-1052 |
-| FT-008 | Error Code System (C++ Side) | S | 1 | C++ Lead | M0-W-1501 |
-| FT-009 | Error Code to Result Conversion (Rust) | S | 1 | Rust Lead | M0-W-1501 |
-| FT-010 | CUDA Context Initialization | M | 3 | C++ Lead | M0-W-1400, M0-W-1010 |
-| FT-011 | VRAM-Only Enforcement | M | 2 | C++ Lead | M0-W-1010 |
-| FT-012 | FFI Integration Tests | M | 2 | DevOps | M0-W-1006 |
-
-**Week 2 Capacity**: 15 days, 13 days committed (87% utilization)
+**Sequential Execution**: Agent completes FT-001 fully before starting FT-002, etc.  
+**Timeline**: Days 1-9  
+**Blocks**: None (first sprint)
 
 ---
 
-## Week 3: Shared Kernels (8 stories, 14 days)
+## Sprint 2: FFI Layer (7 stories, 13 agent-days) 🔴 CRITICAL
+
+**Goal**: Lock FFI interface to unblock Llama-Beta and GPT-Gamma
+
+| ID | Title | Size | Days | Spec Ref |
+|----|-------|------|------|---------|
+| FT-006 | FFI Interface Definition (C Header) | M | 2 | M0-W-1052 |
+| FT-007 | Rust FFI Bindings | M | 2 | M0-W-1052 |
+| FT-008 | Error Code System (C++ Side) | S | 1 | M0-W-1501 |
+| FT-009 | Error Code to Result Conversion (Rust) | S | 1 | M0-W-1501 |
+| FT-010 | CUDA Context Initialization | M | 3 | M0-W-1400, M0-W-1010 |
+| FT-011 | VRAM-Only Enforcement | M | 2 | M0-W-1010 |
+| FT-012 | FFI Integration Tests | M | 2 | M0-W-1006 |
+
+**Sequential Execution**: Agent completes each story fully before next  
+**Timeline**: Days 10-22  
+**Critical Milestone**: After FT-007, publish `FFI_INTERFACE_LOCKED.md` to unblock other agents  
+**Blocks**: Llama-Beta and GPT-Gamma cannot start until FFI locked (day 15)
+
+---
+
+## Sprint 3: Shared Kernels + Logging (10 stories, 16 agent-days)
 
 | ID | Title | Size | Days | Owner | Spec Ref |
 |----|-------|------|------|-------|----------|
@@ -46,13 +57,18 @@
 | FT-017 | Temperature Scaling Kernel | S | 1 | C++ Lead | M0-W-1032, M0-W-1421 |
 | FT-018 | Greedy Sampling (temp=0) | S | 1 | C++ Lead | M0-W-1030, M0-W-1421 |
 | FT-019 | Stochastic Sampling (temp>0) | M | 2 | C++ Lead | M0-W-1421 |
-| FT-020 | Seeded RNG Implementation | M | 3 | C++ Lead | M0-W-1030 |
+| FT-020 | Seeded RNG Implementation | M | 3 | M0-W-1030 |
+| FT-049 | Model Load Progress Events | S | 1 | M0-W-1621 |
+| FT-050 | Narration-Core Logging Implementation | S | 1 | M0-W-1900 |
 
-**Week 3 Capacity**: 15 days, 14 days committed (93% utilization)
+**Sequential Execution**: Agent completes each story fully before next  
+**Timeline**: Days 23-38  
+**Dependencies**: FT-013 (DeviceMemory) needed before FT-015-020 (kernels)  
+**Note**: FT-049 and FT-050 added from spec coverage analysis
 
 ---
 
-## Week 4: Integration & Gate 1 (7 stories, 14 days)
+## Sprint 4: Integration & Gate 1 (7 stories, 14 agent-days)
 
 | ID | Title | Size | Days | Owner | Spec Ref |
 |----|-------|------|------|-------|----------|
@@ -62,14 +78,16 @@
 | FT-024 | HTTP → FFI → CUDA Integration Test | M | 2 | DevOps | M0-W-1011 |
 | FT-025 | Gate 1 Validation Tests | M | 2 | DevOps | Gate 1 criteria |
 | FT-026 | Error Handling Integration | M | 2 | Rust Lead | M0-W-1510 |
-| FT-027 | **Gate 1 Checkpoint** | - | - | Team Lead | Gate 1 |
+| FT-027 | **Gate 1 Checkpoint** | - | - | Gate 1 |
 
-**Week 4 Capacity**: 15 days, 14 days committed (93% utilization)  
-**Critical**: Gate 1 must pass or Week 5 blocked
+**Sequential Execution**: Agent completes each story fully before next  
+**Timeline**: Days 39-52  
+**Critical Milestone**: Gate 1 validation - Foundation infrastructure complete  
+**Blocks**: Integration framework (FT-023) needed by Llama-Beta and GPT-Gamma for their integration tests
 
 ---
 
-## Week 5: Support Role (5 stories, 8 days)
+## Sprint 5: Support & Adapter Prep (5 stories, 8 agent-days)
 
 | ID | Title | Size | Days | Owner | Spec Ref |
 |----|-------|------|------|-------|----------|
@@ -77,13 +95,15 @@
 | FT-029 | Support GPT Team Integration | M | 2 | C++ Lead | (Support) |
 | FT-030 | Bug Fixes from Integration | M | 2 | All | (Reactive) |
 | FT-031 | Performance Baseline Prep | M | 2 | DevOps | M0-W-1012 (FT-012) |
-| FT-032 | **Gate 2 Checkpoint** | - | - | Team Lead | Gate 2 |
+| FT-032 | **Gate 2 Checkpoint** | - | - | Gate 2 |
 
-**Week 5 Capacity**: 15 days, 8 days committed (53% utilization - intentional, support role)
+**Sequential Execution**: Agent completes each story fully before next  
+**Timeline**: Days 53-60  
+**Note**: Lower story count - agent available for bug fixes and support as other agents integrate
 
 ---
 
-## Week 6: Adapter Coordination (6 stories, 11 days)
+## Sprint 6: Adapter Coordination (6 stories, 11 agent-days)
 
 | ID | Title | Size | Days | Owner | Spec Ref |
 |----|-------|------|------|-------|----------|
@@ -92,13 +112,15 @@
 | FT-035 | Architecture Detection Integration | M | 2 | C++ Lead | M0-W-1212 |
 | FT-036 | Update Integration Tests for Adapters | M | 2 | DevOps | (Testing) |
 | FT-037 | API Documentation | M | 2 | Rust Lead | M0-W-1013 (FT-013) |
-| FT-038 | **Gate 3 Checkpoint** | - | - | Team Lead | Gate 3 |
+| FT-038 | **Gate 3 Checkpoint** | - | - | Gate 3 |
 
-**Week 6 Capacity**: 15 days, 11 days committed (73% utilization)
+**Sequential Execution**: Agent completes each story fully before next  
+**Timeline**: Days 61-71  
+**Critical**: Adapter pattern must be complete for Llama-Beta and GPT-Gamma to refactor
 
 ---
 
-## Week 7: Final Integration (9 stories, 16 days)
+## Sprint 7: Final Integration (9 stories, 16 agent-days)
 
 | ID | Title | Size | Days | Owner | Spec Ref |
 |----|-------|------|------|-------|----------|
@@ -110,198 +132,150 @@
 | FT-044 | Cancellation Integration Test | M | 2 | Rust Lead | M0-W-1330 |
 | FT-045 | Documentation Complete | S | 1 | All | (Docs) |
 | FT-046 | Final Bug Fixes | - | - | All | (Reactive) |
-| FT-047 | **Gate 4 Checkpoint (M0 Complete)** | - | - | Team Lead | Gate 4 |
+| FT-047 | **Gate 4 Checkpoint (M0 Complete)** | - | - | Gate 4 |
 
-**Week 7 Capacity**: 15 days, 16 days committed (107% utilization - **OVERCOMMITTED**)
+**Sequential Execution**: Agent completes each story fully before next  
+**Timeline**: Days 72-87  
+**Note**: Foundation-Alpha finishes before GPT-Gamma (who is on critical path)
 
 ---
 
-## Planning Gap Analysis
+## Agent Execution Reality
 
-### ⚠️ **CRITICAL FINDING: Week 7 Overcommitted**
+### ✅ **NO OVERCOMMITMENT ISSUE**
 
-**Problem**: Week 7 has 16 days of work committed but only 15 days available (107% utilization).
+**Reality**: Foundation-Alpha is a single agent working sequentially, not a team with parallel capacity.
 
-**Impact**: 
-- Risk of Gate 4 failure
-- M0 delivery delayed
-- Team burnout
+**Agent Characteristics**:
+- Works sequentially through all 49 stories
+- Completes each story fully before moving to next
+- Can work on multiple files simultaneously within a story
+- No parallel work across stories
+- No "overcommitment" - agent works until done
 
-**Options**:
+**Timeline**: 87 agent-days = 87 calendar days (assuming full-time work)
 
-#### Option A: Extend to 8 Weeks (Recommended)
-- Move FT-039 (CI/CD) to Week 6 (can start earlier)
-- Move FT-040 (Performance baseline) to Week 6
-- Week 7 becomes 12 days (80% utilization)
-- **Total timeline**: 8 weeks instead of 7
+**Critical Path Position**: Foundation-Alpha (87 days) is NOT the critical path - GPT-Gamma (102 days) is longer
 
-#### Option B: Reduce Scope
-- Make CI/CD optional (manual testing for M0)
-- Defer performance baseline to M1
-- Week 7 becomes 10 days (67% utilization)
-- **Risk**: Lower quality M0
+### Key Milestones
 
-#### Option C: Add Developer
-- Add 4th developer for Week 7 only
-- Week 7 capacity becomes 20 days
-- 16 days / 20 days = 80% utilization
-- **Cost**: Additional resource
+**Day 15 (After FT-007)**: FFI Interface Locked
+- **Critical**: Unblocks Llama-Beta and GPT-Gamma
+- **Action**: Publish `FFI_INTERFACE_LOCKED.md`
+- **Impact**: Other agents idle until this point
 
-### 🟡 **MEDIUM FINDING: Week 5 Underutilized**
+**Day 52 (After FT-027)**: Gate 1 Complete
+- **Validation**: Foundation infrastructure complete
+- **Enables**: Integration testing for other agents
 
-**Observation**: Week 5 only 53% utilized (support role)
+**Day 71 (After FT-038)**: Gate 3 Complete
+- **Validation**: Adapter pattern complete
+- **Enables**: Other agents refactor to use adapters
 
-**Opportunity**: 
-- Pull forward some Week 6 work (API docs, adapter design prep)
-- Start CI/CD setup early
-- More buffer for unexpected issues
-
-**Recommendation**: Use Week 5 slack time as buffer, don't add more work
-
-### 🟢 **POSITIVE: Weeks 2-4 Well Balanced**
-
-**Observation**: Weeks 2-4 are 87-93% utilized
-
-**Analysis**: Good balance, leaves room for:
-- Unexpected bugs
-- Integration issues
-- Learning curve
+**Day 87 (After FT-047)**: Foundation-Alpha Complete
+- **Note**: GPT-Gamma still working (finishes day 102)
 
 ---
 
 ## Dependency Analysis
 
-### Critical Path
+### Sequential Execution Chain
 
 ```
-Week 1: HTTP Server (FT-001)
+Day 1-9: HTTP Foundation (FT-001 → FT-005)
   ↓
-Week 1: Execute Endpoint (FT-002)
+Day 10-15: FFI Interface (FT-006 → FT-007) ← LOCK POINT
+  ↓ (Llama-Beta and GPT-Gamma start here)
+Day 16-22: Error Handling + CUDA (FT-008 → FT-012)
   ↓
-Week 2: FFI Interface (FT-006, FT-007)
+Day 23-38: Shared Kernels + Logging (FT-013 → FT-050)
   ↓
-Week 2: CUDA Context (FT-010)
+Day 39-52: Integration + Gate 1 (FT-021 → FT-027)
   ↓
-Week 3: Shared Kernels (FT-015, FT-016, FT-017, FT-018)
+Day 53-60: Support & Prep (FT-028 → FT-032)
   ↓
-Week 4: Integration Tests (FT-023, FT-024)
+Day 61-71: Adapter Pattern + Gate 3 (FT-033 → FT-038)
   ↓
-Week 4: **GATE 1** (FT-027) ← CRITICAL MILESTONE
-  ↓
-Week 5: Support Teams 2 & 3 (FT-028, FT-029)
-  ↓
-Week 6: Adapter Pattern (FT-033, FT-034)
-  ↓
-Week 6: **GATE 3** (FT-038)
-  ↓
-Week 7: Final Integration (FT-041)
-  ↓
-Week 7: **GATE 4** (FT-047) ← M0 COMPLETE
+Day 72-87: Final Integration + Gate 4 (FT-039 → FT-047)
 ```
 
-**Critical Path Duration**: 7 weeks (minimum)
+**Total Duration**: 87 agent-days
 
-**Slack Time**: 
-- Week 1: 6 days slack (60% util)
-- Week 5: 7 days slack (53% util)
-- **Total slack**: 13 days
+**Critical Dependencies**:
+- **Day 15**: FFI lock blocks Llama-Beta and GPT-Gamma
+- **Day 52**: Integration framework blocks other agents' integration tests
+- **Day 71**: Adapter pattern blocks other agents' refactoring
 
-**Analysis**: With 13 days of slack, we can absorb some delays, but Week 7 overcommitment is still a risk.
+**No "Slack Time"**: Agent works sequentially until done - concept of utilization doesn't apply
 
 ---
 
-## Risk Register
+## Risk Register (Revised for AI Agent Reality)
 
 ### High Risks
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
-| FFI interface changes after Week 2 | Blocks Teams 2 & 3 | Medium | Lock interface by Week 2 end, no changes |
-| Gate 1 failure (Week 4) | Entire project delayed | Low | Weekly integration tests, early detection |
-| Week 7 overcommitment | Gate 4 failure, M0 delay | **HIGH** | **Extend to 8 weeks (Option A)** |
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| FFI lock delayed beyond day 15 | Llama-Beta and GPT-Gamma blocked | Prioritize FT-006, FT-007; publish lock document |
+| FFI interface changes after lock | Other agents must refactor | Absolute lock after day 15 - no changes allowed |
+| Story estimates incorrect | Timeline extends | Accept reality - agent works until done |
 
 ### Medium Risks
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
-| CUDA context bugs | Integration delays | Medium | Valgrind tests, VRAM tracking from day 1 |
-| SSE UTF-8 edge cases | Client-facing bugs | Medium | Comprehensive test vectors, fuzzing |
-| KV cache complexity | Week 4 delays | Medium | Start early (Week 3 if possible) |
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| CUDA context bugs | Integration delays | Valgrind tests, VRAM tracking from day 1 |
+| SSE UTF-8 edge cases | Client-facing bugs | Comprehensive test vectors, fuzzing |
+| Integration framework delays | Blocks other agents' tests | Prioritize FT-023 in Sprint 4 |
+
+### ❌ Not Risks (Human Team Assumptions)
+
+- ~~"Week 7 overcommitted"~~ - Agent works sequentially, no overcommitment
+- ~~"Need 4th person"~~ - Cannot scale agent count
+- ~~"Team burnout"~~ - Not applicable to AI agent
 
 ---
 
-## Recommendations
+## Key Actions for Foundation-Alpha
 
-### 1. **Extend Timeline to 8 Weeks** (Critical)
+### 1. **Prioritize FFI Lock (Day 15)** 🔴 CRITICAL
 
-**Rationale**: Week 7 is overcommitted (107%). This is not sustainable.
+**Action**: Complete FT-006 and FT-007 by day 15
+- Publish `FFI_INTERFACE_LOCKED.md` immediately after FT-007
+- Include C header, Rust bindings, and usage examples
+- Notify Llama-Beta and GPT-Gamma to begin work
 
-**Action**:
-- Move FT-039 (CI/CD) to Week 6
-- Move FT-040 (Performance baseline) to Week 6
-- Week 7 becomes focused on final integration and bug fixes
+### 2. **Maintain Sequential Execution**
 
-**New Timeline**:
-- Weeks 1-6: As planned
-- Week 7: Integration + testing (12 days, 80% util)
-- Week 8: Buffer + Gate 4 (if needed)
+**Reality**: Agent completes one story fully before next
+- No parallel work across stories
+- Can work on multiple files within a story
+- Timeline is 87 agent-days, period
 
-### 2. **Lock FFI Interface by Week 2 End** (Critical)
+### 3. **Document Interface Decisions**
 
-**Rationale**: Any changes after Week 2 block Teams 2 & 3.
-
-**Action**:
-- FT-006 (FFI interface) must be reviewed by all teams
-- Sign-off meeting Friday Week 2
-- Document in `interfaces.md` with "LOCKED" status
-
-### 3. **Start CI/CD in Week 5** (Recommended)
-
-**Rationale**: Week 5 has slack time (53% util), CI/CD is on critical path.
-
-**Action**:
-- Move FT-039 (CI/CD) from Week 7 to Week 5-6 (split across 2 weeks)
-- Reduces Week 7 pressure
-
-### 4. **Add Integration Tests Early** (Recommended)
-
-**Rationale**: Catch issues before Gate 1.
-
-**Action**:
-- Add smoke test in Week 2 (HTTP → FFI → CUDA context init)
-- Don't wait until Week 4 for first integration test
+**Action**: Create clear documentation for other agents
+- FFI interface patterns
+- Error handling conventions
+- Shared kernel usage examples
+- Integration test patterns
 
 ---
 
-## Revised Timeline (8 Weeks)
+## Timeline Summary
 
-| Week | Stories | Days | Util % | Gate |
-|------|---------|------|--------|------|
-| 1 | 5 | 9 | 60% | - |
-| 2 | 7 | 13 | 87% | - |
-| 3 | 8 | 14 | 93% | - |
-| 4 | 7 | 14 | 93% | Gate 1 ✓ |
-| 5 | 5 + CI start | 11 | 73% | Gate 2 ✓ |
-| 6 | 6 + CI + Perf | 15 | 100% | Gate 3 ✓ |
-| 7 | 6 (integration) | 12 | 80% | - |
-| 8 | 3 (buffer + Gate 4) | 5 | 33% | Gate 4 ✓ |
+**Total Duration**: 87 agent-days  
+**Critical Path**: GPT-Gamma (102 days) - Foundation-Alpha finishes first  
+**Key Milestone**: Day 15 FFI lock (unblocks other agents)
 
-**Total**: 8 weeks, 93 days of work, 120 days available (3 people × 8 weeks × 5 days)
-
-**Utilization**: 93 / 120 = 78% (healthy for project with unknowns)
+**No "weeks" or "sprints"** - these are organizational conveniences. Agent works sequentially through 49 stories.
 
 ---
 
-## Next Actions
-
-1. **Immediate**: Review this analysis with team leads
-2. **Immediate**: Decide on 7 weeks (risky) vs 8 weeks (recommended)
-3. **Week 0**: Create all 47 story cards in `stories/backlog/`
-4. **Week 0**: Story sizing workshop (validate estimates)
-5. **Week 1**: Sprint planning, commit to first 5 stories
+**Status**: ✅ Revised for AI Agent Reality  
+**Next Action**: Begin FT-001 when ready  
+**Owner**: Foundation-Alpha
 
 ---
 
-**Status**: ✅ Analysis Complete  
-**Recommendation**: **Extend to 8 weeks**  
-**Next Action**: Stakeholder decision on timeline
+*Built by Foundation-Alpha 🏗️*

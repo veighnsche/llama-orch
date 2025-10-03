@@ -1,346 +1,280 @@
 # Llama Team - Complete Story List
 
-**Total Stories**: 38 stories across 6 weeks (Weeks 2-7)  
-**Total Estimated Effort**: ~72 days (with 2-3 people = realistic for 6 weeks)
+**Agent**: Llama-Beta (Autonomous Development Agent)  
+**Total Stories**: 38 stories  
+**Total Estimated Effort**: ~72 agent-days (sequential execution)  
+**Timeline**: ~72 calendar days starting after FFI lock (day 15)  
+**Completion**: Day 87 (15 + 72)
 
 ---
 
-## Week 2: GGUF Foundation (6 stories, 11 days)
+## Sprint 1: GGUF Foundation (6 stories, 11 agent-days)
 
-| ID | Title | Size | Days | Owner | Spec Ref |
-|----|-------|------|------|-------|----------|
-| LT-001 | GGUF Header Parser | M | 2 | Rust/C++ Dev | M0-W-1211 |
-| LT-002 | GGUF Metadata Extraction (Llama) | M | 2 | Rust/C++ Dev | M0-W-1211, M0-W-1212 |
-| LT-003 | Memory-Mapped I/O Implementation | M | 2 | C++ Lead | M0-W-1221 |
-| LT-004 | Chunked H2D Transfer | M | 2 | C++ Lead | M0-W-1222 |
-| LT-005 | Pre-Load Validation | M | 2 | Rust/C++ Dev | M0-W-1210 |
-| LT-006 | Architecture Detection (Llama) | S | 1 | Rust/C++ Dev | M0-W-1212 |
+**Starts**: Day 15 (after Foundation-Alpha locks FFI)  
+**Goal**: Parse GGUF format and establish loader infrastructure
 
-**Week 2 Capacity**: 2-3 people × 5 days = 10-15 days available, 11 days committed (73-110% utilization)
+| ID | Title | Size | Days | Spec Ref |
+|----|-------|------|------|---------|
+| LT-001 | GGUF Header Parser | M | 2 | M0-W-1211 |
+| LT-002 | GGUF Metadata Extraction (Llama) | M | 2 | M0-W-1211, M0-W-1212 |
+| LT-003 | Memory-Mapped I/O Implementation | M | 2 | M0-W-1221 |
+| LT-004 | Chunked H2D Transfer | M | 2 | M0-W-1222 |
+| LT-005 | Pre-Load Validation | M | 2 | M0-W-1210 |
+| LT-006 | Architecture Detection (Llama) | S | 1 | M0-W-1212 |
 
----
-
-## Week 3: Tokenization + Kernels Start (8 stories, 15 days)
-
-| ID | Title | Size | Days | Owner | Spec Ref |
-|----|-------|------|------|-------|----------|
-| LT-007 | GGUF Vocab Parsing | M | 2 | Rust/C++ Dev | M0-W-1362 |
-| LT-008 | GGUF Merges Parsing | M | 2 | Rust/C++ Dev | M0-W-1362 |
-| LT-009 | Byte-Level BPE Encoder | M | 3 | Rust/C++ Dev | M0-W-1362 |
-| LT-010 | Byte-Level BPE Decoder | M | 2 | Rust/C++ Dev | M0-W-1362 |
-| LT-011 | UTF-8 Safe Streaming Decode | M | 2 | Rust/C++ Dev | M0-W-1362 |
-| LT-012 | RoPE Kernel | M | 2 | C++ Lead | M0-W-1214, M0-W-1430 |
-| LT-013 | RMSNorm Kernel | S | 1 | C++ Lead | M0-W-1214, M0-W-1430 |
-| LT-014 | Residual Connection Kernel | S | 1 | C++ Lead | M0-W-1214 |
-
-**Week 3 Capacity**: 10-15 days, 15 days committed (100-150% utilization) ⚠️
+**Sequential Execution**: Agent completes LT-001 fully before starting LT-002, etc.  
+**Timeline**: Days 15-25  
+**Blocks**: None (first sprint after FFI lock)  
+**Dependency**: Requires Foundation-Alpha's FFI interface (locked day 15)
 
 ---
 
-## Week 4: Kernels Complete + Integration (7 stories, 13 days)
+## Sprint 2: GGUF-BPE Tokenizer (5 stories, 9 agent-days)
 
-| ID | Title | Size | Days | Owner | Spec Ref |
-|----|-------|------|------|-------|----------|
-| LT-015 | GQA Attention Kernel (Prefill) | L | 4 | C++ Lead | M0-W-1214, M0-W-1430 |
-| LT-016 | GQA Attention Kernel (Decode) | M | 2 | C++ Lead | M0-W-1214 |
-| LT-017 | SwiGLU FFN Kernel | M | 2 | C++ Lead | M0-W-1214 |
-| LT-018 | Tokenizer Conformance Tests (Qwen) | M | 2 | Rust/C++ Dev | M0-W-1363 |
-| LT-019 | Kernel Unit Tests | M | 2 | C++ Lead | M0-W-1430 |
-| LT-020 | **Gate 1 Participation** | S | 1 | Team Lead | Gate 1 |
-| LT-021 | FFI Integration Tests (Llama Kernels) | - | - | QA | (Included in LT-019) |
+**Goal**: Implement pure Rust byte-level BPE tokenizer
 
-**Week 4 Capacity**: 10-15 days, 13 days committed (87-130% utilization)
+| ID | Title | Size | Days | Spec Ref |
+|----|-------|------|------|---------|
+| LT-007 | GGUF Vocab Parsing | M | 2 | M0-W-1362 |
+| LT-008 | GGUF Merges Parsing | M | 2 | M0-W-1362 |
+| LT-009 | Byte-Level BPE Encoder | M | 3 | M0-W-1362 |
+| LT-010 | Byte-Level BPE Decoder | M | 2 | M0-W-1362 |
 
----
-
-## Week 5: Qwen Integration (7 stories, 13 days)
-
-| ID | Title | Size | Days | Owner | Spec Ref |
-|----|-------|------|------|-------|----------|
-| LT-022 | Qwen Weight Mapping | M | 3 | C++ Lead | M0-W-1230 |
-| LT-023 | Qwen Weight Loading to VRAM | M | 2 | C++ Lead | M0-W-1220, M0-W-1221 |
-| LT-024 | Qwen Forward Pass Implementation | L | 4 | C++ Lead | M0-W-1214, M0-W-1420 |
-| LT-025 | Qwen Haiku Generation Test | M | 2 | QA | M0-W-1800 |
-| LT-026 | Qwen Reproducibility Validation | M | 2 | QA | M0-W-1826 |
-| LT-027 | **Gate 2 Checkpoint** | - | - | Team Lead | Gate 2 |
-| LT-028 | Bug Fixes from Qwen Integration | - | - | All | (Reactive, buffer) |
-
-**Week 5 Capacity**: 10-15 days, 13 days committed (87-130% utilization)
+**Sequential Execution**: Agent completes each story fully before next  
+**Timeline**: Days 26-34  
+**Dependency**: Requires LT-001-006 (GGUF loader) to extract vocab/merges
 
 ---
 
-## Week 6: Phi-3 + Adapter (6 stories, 11 days)
+## Sprint 3: UTF-8 Safety + Llama Kernels (4 stories, 6 agent-days)
 
-| ID | Title | Size | Days | Owner | Spec Ref |
-|----|-------|------|------|-------|----------|
-| LT-029 | Phi-3 Metadata Analysis | S | 1 | Rust/C++ Dev | M0-W-1230 |
-| LT-030 | Phi-3 Weight Loading | M | 2 | C++ Lead | M0-W-1230 |
-| LT-031 | Phi-3 Forward Pass (Adapt from Qwen) | M | 2 | C++ Lead | M0-W-1214 |
-| LT-032 | Tokenizer Conformance Tests (Phi-3) | M | 2 | Rust/C++ Dev | M0-W-1363 |
-| LT-033 | LlamaInferenceAdapter Implementation | M | 3 | C++ Lead | M0-W-1213, M0-W-1214 |
-| LT-034 | **Gate 3 Participation** | S | 1 | Team Lead | Gate 3 |
+**Goal**: Complete tokenizer and implement Llama-specific CUDA kernels
 
-**Week 6 Capacity**: 10-15 days, 11 days committed (73-110% utilization)
+| ID | Title | Size | Days | Spec Ref |
+|----|-------|------|------|---------|
+| LT-011 | UTF-8 Safe Streaming Decode | M | 2 | M0-W-1362 |
+| LT-012 | RoPE Kernel | M | 2 | M0-W-1214, M0-W-1430 |
+| LT-013 | RMSNorm Kernel | S | 1 | M0-W-1214, M0-W-1430 |
+| LT-014 | Residual Connection Kernel | S | 1 | M0-W-1214 |
 
----
-
-## Week 7: Final Integration (4 stories, 9 days)
-
-| ID | Title | Size | Days | Owner | Spec Ref |
-|----|-------|------|------|-------|----------|
-| LT-035 | Llama Integration Test Suite | M | 3 | QA | M0-W-1818 |
-| LT-036 | Reproducibility Tests (10 runs × 2 models) | M | 2 | QA | M0-W-1826 |
-| LT-037 | VRAM Pressure Tests (Phi-3) | M | 2 | QA | M0-W-1230 |
-| LT-038 | Documentation (GGUF, BPE, Llama) | M | 2 | All | (Docs) |
-
-**Week 7 Capacity**: 10-15 days, 9 days committed (60-90% utilization)
+**Sequential Execution**: Agent completes each story fully before next  
+**Timeline**: Days 35-40  
+**Note**: Tokenizer must be complete before starting Qwen integration
 
 ---
 
-## Planning Gap Analysis
+## Sprint 4: GQA Attention + Integration (7 stories, 13 agent-days)
 
-### ⚠️ **CRITICAL FINDING: Week 3 Overcommitted**
+**Goal**: Complete Llama kernels and reach Gate 1
 
-**Problem**: Week 3 has 15 days of work committed but only 10-15 days available depending on team size.
+| ID | Title | Size | Days | Spec Ref |
+|----|-------|------|------|---------|
+| LT-015 | GQA Attention Kernel (Prefill) | L | 4 | M0-W-1214, M0-W-1430 |
+| LT-016 | GQA Attention Kernel (Decode) | M | 2 | M0-W-1214 |
+| LT-017 | SwiGLU FFN Kernel | M | 2 | M0-W-1214 |
+| LT-018 | Tokenizer Conformance Tests (Qwen) | M | 2 | M0-W-1363 |
+| LT-019 | Kernel Unit Tests | M | 2 | M0-W-1430 |
+| LT-020 | **Gate 1 Participation** | S | 1 | Gate 1 |
 
-**With 2 people**: 10 days available, 15 days committed = **150% utilization** 🔴  
-**With 3 people**: 15 days available, 15 days committed = **100% utilization** 🟡
-
-**Impact**:
-- High risk of Week 4 (Gate 1) delay
-- Tokenizer + kernels both critical path
-- No buffer for issues
-
-**Root Cause**:
-- Tokenization is 5 stories (9 days) - complex pure Rust BPE
-- Kernels starting in parallel (3 stories, 4 days)
-- Both are new, unfamiliar territory
-
----
-
-### 🟡 **MEDIUM FINDING: Week 4 Tight**
-
-**Problem**: Week 4 has 13 days committed, 10-15 days available.
-
-**With 2 people**: 10 days available, 13 days committed = **130% utilization** 🔴  
-**With 3 people**: 15 days available, 13 days committed = **87% utilization** ✅
-
-**Impact**:
-- Gate 1 at risk if only 2 people
-- GQA attention is complex (4 days for prefill alone)
+**Sequential Execution**: Agent completes each story fully before next  
+**Timeline**: Days 41-53  
+**Critical Milestone**: Gate 1 validation - Llama kernels complete  
+**Dependency**: Requires Foundation-Alpha's integration framework (day 52)
 
 ---
 
-### 🟡 **MEDIUM FINDING: Week 5 Tight**
+## Sprint 5: Qwen Integration (6 stories, 13 agent-days) 🔴 CRITICAL
 
-**Problem**: Week 5 has 13 days committed, 10-15 days available.
+**Goal**: First complete model pipeline - Qwen2.5-0.5B working end-to-end
 
-**With 2 people**: 10 days available, 13 days committed = **130% utilization** 🔴  
-**With 3 people**: 15 days available, 13 days committed = **87% utilization** ✅
+| ID | Title | Size | Days | Spec Ref |
+|----|-------|------|------|---------|
+| LT-022 | Qwen Weight Mapping | M | 3 | M0-W-1230 |
+| LT-023 | Qwen Weight Loading to VRAM | M | 2 | M0-W-1220, M0-W-1221 |
+| LT-024 | Qwen Forward Pass Implementation | L | 4 | M0-W-1214, M0-W-1420 |
+| LT-025 | Qwen Haiku Generation Test | M | 2 | M0-W-1800 |
+| LT-026 | Qwen Reproducibility Validation | M | 2 | M0-W-1826 |
+| LT-027 | **Gate 2 Checkpoint** | - | - | Gate 2 |
 
-**Impact**:
-- Gate 2 (Qwen working) at risk if only 2 people
-- Qwen forward pass is complex (4 days)
+**Sequential Execution**: Agent completes each story fully before next  
+**Timeline**: Days 54-66  
+**Critical Milestone**: Gate 2 - First Llama model working (Qwen)  
+**Note**: This validates entire Llama pipeline
+
+---
+
+## Sprint 6: Phi-3 + Adapter (6 stories, 11 agent-days)
+
+**Goal**: Second Llama model + LlamaInferenceAdapter implementation
+
+| ID | Title | Size | Days | Spec Ref |
+|----|-------|------|------|---------|
+| LT-029 | Phi-3 Metadata Analysis | S | 1 | M0-W-1230 |
+| LT-030 | Phi-3 Weight Loading | M | 2 | M0-W-1230 |
+| LT-031 | Phi-3 Forward Pass (Adapt from Qwen) | M | 2 | M0-W-1214 |
+| LT-032 | Tokenizer Conformance Tests (Phi-3) | M | 2 | M0-W-1363 |
+| LT-033 | LlamaInferenceAdapter Implementation | M | 3 | M0-W-1213, M0-W-1214 |
+| LT-034 | **Gate 3 Participation** | S | 1 | Gate 3 |
+
+**Sequential Execution**: Agent completes each story fully before next  
+**Timeline**: Days 67-77  
+**Critical Milestone**: Gate 3 - Adapter pattern complete  
+**Dependency**: Requires Foundation-Alpha's adapter pattern (day 71)
+
+---
+
+## Sprint 7: Final Integration (4 stories, 9 agent-days)
+
+**Goal**: Complete Llama testing and documentation
+
+| ID | Title | Size | Days | Spec Ref |
+|----|-------|------|------|---------| 
+| LT-035 | Llama Integration Test Suite | M | 3 | M0-W-1818 |
+| LT-036 | Reproducibility Tests (10 runs × 2 models) | M | 2 | M0-W-1826 |
+| LT-037 | VRAM Pressure Tests (Phi-3) | M | 2 | M0-W-1230 |
+| LT-038 | Documentation (GGUF, BPE, Llama) | M | 2 | (Docs) |
+
+**Sequential Execution**: Agent completes each story fully before next  
+**Timeline**: Days 78-86  
+**Note**: Llama-Beta finishes day 86, before GPT-Gamma (day 102)
+
+---
+
+## Agent Execution Reality
+
+### ✅ **NO OVERCOMMITMENT ISSUE**
+
+**Reality**: Llama-Beta is a single agent working sequentially, not a team with parallel capacity.
+
+**Agent Characteristics**:
+- Works sequentially through all 38 stories
+- Completes each story fully before moving to next
+- Can work on multiple files simultaneously within a story
+- No parallel work across stories
+- No "overcommitment" - agent works until done
+
+**Timeline**: 72 agent-days starting day 15 = completes day 87 (15 + 72)
+
+**Critical Path Position**: Llama-Beta (87 days total) finishes before GPT-Gamma (102 days)
+
+### Key Milestones
+
+**Day 15 (Start)**: FFI Interface Locked by Foundation-Alpha
+- **Unblocks**: Llama-Beta can begin GGUF loader work
+- **Action**: Begin LT-001
+
+**Day 53 (After LT-020)**: Gate 1 Complete
+- **Validation**: Llama kernels complete and tested
+- **Enables**: Qwen integration can proceed
+
+**Day 66 (After LT-027)**: Gate 2 Complete  
+- **Validation**: First Llama model (Qwen) working end-to-end
+- **Critical**: Proves Llama pipeline works
+
+**Day 77 (After LT-034)**: Gate 3 Complete
+- **Validation**: LlamaInferenceAdapter implemented
+- **Enables**: Refactoring to use adapter pattern
+
+**Day 87 (After LT-038)**: Llama-Beta Complete
+- **Note**: GPT-Gamma still working (finishes day 102)
 
 ---
 
 ## Dependency Analysis
 
-### Critical Path
+### Sequential Execution Chain
 
 ```
-Week 2: GGUF Loader (LT-001, LT-002, LT-003, LT-004)
+Day 15: FFI Lock (Foundation-Alpha) ← START POINT
   ↓
-Week 3: Tokenizer (LT-007 → LT-011) + Kernels Start (LT-012, LT-013)
+Days 15-25: GGUF Loader (LT-001 → LT-006)
   ↓
-Week 4: GQA Attention (LT-015, LT-016) + SwiGLU (LT-017)
+Days 26-34: Tokenizer (LT-007 → LT-010)
   ↓
-Week 4: **GATE 1** (LT-020) ← CRITICAL MILESTONE
+Days 35-40: UTF-8 + Kernels (LT-011 → LT-014)
   ↓
-Week 5: Qwen Integration (LT-022 → LT-026)
+Days 41-53: GQA + Gate 1 (LT-015 → LT-020)
   ↓
-Week 5: **GATE 2** (LT-027) ← CRITICAL MILESTONE (First Model Working)
+Days 54-66: Qwen + Gate 2 (LT-022 → LT-027) ← FIRST MODEL
   ↓
-Week 6: Phi-3 + Adapter (LT-029 → LT-033)
+Days 67-77: Phi-3 + Adapter + Gate 3 (LT-029 → LT-034)
   ↓
-Week 6: **GATE 3** (LT-034)
-  ↓
-Week 7: Final Testing (LT-035 → LT-038)
-  ↓
-Week 7: **GATE 4** (M0 Complete)
+Days 78-87: Final Testing (LT-035 → LT-038)
 ```
 
-**Critical Path Duration**: 6 weeks (minimum)
+**Total Duration**: 72 agent-days (starting day 15)
 
-**Slack Time**:
-- Week 2: 0-4 days slack (depends on team size)
-- Week 7: 1-6 days slack
-- **Total slack**: 1-10 days (highly dependent on team size)
+**Critical Dependencies**:
+- **Day 15**: FFI lock blocks start
+- **Day 25**: GGUF loader blocks tokenizer
+- **Day 34**: Tokenizer blocks Qwen integration
+- **Day 52**: Foundation's integration framework blocks Gate 1
+- **Day 71**: Foundation's adapter pattern blocks Gate 3
 
----
-
-## Risk Register
-
-### High Risks
-
-| Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
-| Week 3 overcommitment (2 people) | Gate 1 delay | **HIGH** | **Add 3rd person OR split Week 3 work** |
-| BPE algorithm bugs | Tokenization broken | Medium | Conformance test vectors, reference impl |
-| GQA attention complexity | Gate 1 delay | Medium | Reference llama.cpp, start early |
-| Qwen forward pass bugs | Gate 2 failure | Medium | Unit tests, incremental integration |
-
-### Medium Risks
-
-| Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
-| GGUF format edge cases | Parsing failures | Medium | Comprehensive tests, multiple models |
-| Phi-3 architecture differences | Week 6 delays | Low-Medium | Research early (Week 3-4) |
-| FFI interface changes | Blocked | Low | Participate in Week 2 FFI lock |
+**No "Slack Time"**: Agent works sequentially until done
 
 ---
 
-## Recommendations
+## Risk Register (Revised for AI Agent Reality)
 
-### 1. **Add 3rd Team Member** (Critical)
+### Actual Risks
 
-**Rationale**: Weeks 3, 4, 5 are all tight with 2 people (130-150% utilization).
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| FFI lock delayed beyond day 15 | Llama-Beta blocked | Coordinate with Foundation-Alpha |
+| GGUF format edge cases | Parsing failures | Comprehensive tests, reference llama.cpp |
+| BPE algorithm bugs | Tokenization broken | Conformance test vectors, study reference |
+| GQA attention complexity | Integration delays | Reference llama.cpp, unit tests |
+| Qwen forward pass bugs | Gate 2 failure | Incremental integration, unit tests |
 
-**Options**:
-- **Option A**: 3 people full-time (Weeks 2-7)
-  - Week 3: 15 days / 15 days = 100% util ✅
-  - Week 4: 13 days / 15 days = 87% util ✅
-  - Week 5: 13 days / 15 days = 87% util ✅
+### ❌ Not Risks (Human Team Assumptions)
 
-- **Option B**: 2 people + 1 part-time (50%) for Weeks 3-5 only
-  - Week 3: 15 days / 12.5 days = 120% util 🟡 (still tight)
-  - Week 4: 13 days / 12.5 days = 104% util 🟡
-  - Week 5: 13 days / 12.5 days = 104% util 🟡
-
-- **Option C**: 2 people + extend timeline
-  - Split Week 3 into 2 weeks (Week 3a: Tokenizer, Week 3b: Kernels)
-  - Total: 7 weeks instead of 6
-
-**Recommendation**: **Option A (3 people)** or **Option C (extend to 7 weeks)**
+- ~~"Week 3 overcommitment"~~ - Agent works sequentially
+- ~~"Need 3rd person"~~ - Cannot scale agent count
+- ~~"Utilization percentage"~~ - Meaningless for sequential execution
+- ~~"Parallel work streams"~~ - Agent works one story at a time
 
 ---
 
-### 2. **Split Week 3 Work** (If Staying with 2 People)
+## Key Actions for Llama-Beta
 
-**Current Week 3**: Tokenizer (9 days) + Kernels (4 days) + Misc (2 days) = 15 days
+### 1. **Wait for FFI Lock (Day 15)** 🔴 CRITICAL
 
-**Proposed Split**:
-- **Week 3a**: Tokenizer focus (LT-007 through LT-011) = 9 days
-- **Week 3b**: Kernels focus (LT-012, LT-013, LT-014) = 4 days
-- **Total**: 7 weeks instead of 6
+**Action**: Monitor Foundation-Alpha's progress on FT-006 and FT-007
+- Begin work immediately when `FFI_INTERFACE_LOCKED.md` published
+- Study FFI interface documentation during wait time
 
-**Impact**: Gate 1 moves from Week 4 to Week 5
+### 2. **Study Reference Implementations**
 
----
+**Action**: Research llama.cpp during prep time (days 1-14)
+- GGUF format parsing patterns
+- BPE tokenization algorithm
+- GQA attention implementation
+- RoPE, RMSNorm, SwiGLU kernels
 
-### 3. **Start Tokenizer in Week 2** (Recommended)
+### 3. **Build Conformance Tests First**
 
-**Rationale**: Tokenizer is 9 days of work, critical path, unfamiliar territory.
-
-**Action**:
-- Move LT-007 (Vocab parsing) to Week 2
-- Move LT-008 (Merges parsing) to Week 2
-- Week 2 becomes 15 days (100% util with 3 people)
-- Week 3 becomes 11 days (73% util with 3 people) ✅
-
-**Benefit**: Reduces Week 3 pressure, gives more time for BPE algorithm
+**Action**: Create test vectors before implementation
+- Tokenizer conformance tests (20-30 pairs)
+- Kernel validation tests
+- Reproducibility test framework
 
 ---
 
-### 4. **Parallelize Tokenizer and Kernels** (If 3 People)
+## Timeline Summary
 
-**Rationale**: With 3 people, can split work streams.
-
-**Work Streams**:
-- **Person 1**: Tokenizer (Weeks 2-3)
-- **Person 2**: Kernels (Weeks 3-4)
-- **Person 3**: GGUF loader + Integration (Weeks 2-4)
-
-**Benefit**: Better utilization, clear ownership
+**Llama-Beta**: 72 agent-days starting day 15 = completes day 87  
+**Critical Dependency**: Day 15 FFI lock  
+**Gate 2**: Day 66 (First Llama model working)  
+**Completion**: Day 87 (before GPT-Gamma's day 102)
 
 ---
 
-## Revised Timeline (Option A: 3 People)
-
-| Week | Stories | Days | Capacity | Util % | Gate |
-|------|---------|------|----------|--------|------|
-| 2 | 6 + 2 (tokenizer start) | 15 | 15 | 100% | - |
-| 3 | 6 (tokenizer finish + kernels) | 11 | 15 | 73% | - |
-| 4 | 7 | 13 | 15 | 87% | Gate 1 ✓ |
-| 5 | 7 | 13 | 15 | 87% | Gate 2 ✓ |
-| 6 | 6 | 11 | 15 | 73% | Gate 3 ✓ |
-| 7 | 4 | 9 | 15 | 60% | Gate 4 ✓ |
-
-**Total**: 6 weeks, 72 days of work, 90 days available (3 people × 6 weeks × 5 days)
-
-**Utilization**: 72 / 90 = 80% (healthy)
+**Status**: ✅ **REVISED FOR AI AGENT REALITY**  
+**Next Action**: Wait for FFI lock, then begin LT-001  
+**Owner**: Llama-Beta
 
 ---
 
-## Revised Timeline (Option C: 2 People, 7 Weeks)
+*Implemented by Llama-Beta 🦙*
 
-| Week | Stories | Days | Capacity | Util % | Gate |
-|------|---------|------|----------|--------|------|
-| 2 | 6 | 11 | 10 | 110% | - |
-| 3 | 5 (tokenizer only) | 9 | 10 | 90% | - |
-| 4 | 3 (kernels only) | 6 | 10 | 60% | - |
-| 5 | 7 (GQA + SwiGLU + Gate 1) | 13 | 10 | 130% | Gate 1 ✓ |
-| 6 | 7 (Qwen) | 13 | 10 | 130% | Gate 2 ✓ |
-| 7 | 6 (Phi-3 + adapter) | 11 | 10 | 110% | Gate 3 ✓ |
-| 8 | 4 (final testing) | 9 | 10 | 90% | Gate 4 ✓ |
-
-**Total**: 7 weeks, 72 days of work, 70 days available (2 people × 7 weeks × 5 days)
-
-**Utilization**: 72 / 70 = 103% (overcommitted) 🔴
-
-**Conclusion**: 2 people + 7 weeks is STILL tight. Need 3 people OR 8 weeks.
-
----
-
-## Final Recommendation
-
-### **Option A: 3 People, 6 Weeks** ⭐ RECOMMENDED
-
-**Team Composition**:
-- C++/CUDA Lead (full-time)
-- Rust/C++ Developer (full-time)
-- QA/Integration (full-time, or shared with Foundation Week 5+)
-
-**Timeline**: Weeks 2-7 (6 weeks)
-
-**Utilization**: 80% average (healthy)
-
-**Confidence**: High (90%)
-
----
-
-### Alternative: 2 People, 8 Weeks
-
-**If 3rd person not available**:
-- Extend to 8 weeks
-- Split Week 3 into 2 weeks
-- Accept 103% utilization (still risky)
-
-**Confidence**: Medium (60%)
-
----
-
-## Next Actions
-
-1. **Immediate**: Decide on team size (2 or 3 people)
-2. **Immediate**: If 2 people, decide on 6 weeks (risky) or 7-8 weeks (safer)
-3. **Week 0**: Create all 38 story cards
-4. **Week 0**: Story sizing workshop
-5. **Week 2**: Sprint planning, start GGUF loader
-
----
-
-**Status**: ✅ Analysis Complete  
-**Recommendation**: **3 people, 6 weeks**  
-**Alternative**: **2 people, 8 weeks**  
-**Next Action**: Team size decision

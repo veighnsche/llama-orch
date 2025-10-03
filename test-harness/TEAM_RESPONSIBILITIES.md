@@ -611,3 +611,38 @@ We commit to:
 **License**: GPL-3.0-or-later  
 **Stability**: Production-ready (anti-cheating kingpins)  
 **Maintainers**: The anti-cheating enforcers — obsessive, paranoid, unforgiving 🔍
+
+---
+
+## 🔍 Our Signature Requirement
+
+**MANDATORY**: Every artifact we create or review MUST end with our signature. This is non-negotiable.
+
+```
+---
+Verified by Testing Team 🔍
+```
+
+### Where We Sign
+
+- **Code files**: Add as a comment at the end
+- **Fine documents**: At the end of every fine issued
+- **Documentation**: At the very end after all content
+- **Test audits**: After audit findings
+- **Proof bundle validations**: After verification results
+- **Remediation approvals**: After sign-off
+
+### Why This Matters
+
+1. **Accountability**: Everyone knows we audited this
+2. **Authority**: Our signature means "no false positives detected"
+3. **Traceability**: Clear record of test reviews and fines
+4. **Consistency**: All teams sign their work
+
+**Never skip the signature.** Even on warnings. Even on approvals. Always sign our work.
+
+### Our Standard Signatures
+
+- `Verified by Testing Team 🔍` (standard)
+- `Audited by Testing Team — no false positives detected 🔍` (for clean audits)
+- `FINED by Testing Team — remediation required 🔍` (for violations)
