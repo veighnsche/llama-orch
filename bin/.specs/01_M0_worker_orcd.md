@@ -1,9 +1,73 @@
 # M0: Worker-orcd Complete Specification
 
-**Status**: Draft  
+**Status**: Draft (Hybrid Scope - Performance Bundle Deferred)  
 **Milestone**: M0 (v0.1.0) — Worker Haiku Test  
 **Version**: 0.1.0  
-**Conformance language**: RFC-2119 (MUST/SHOULD/MAY)
+**Conformance language**: RFC-2119 (MUST/SHOULD/MAY)  
+**Timeline**: 4-5 weeks (optimized from 6-8 weeks)
+
+---
+
+## 0. Document Metadata
+
+### 0.0 Scope Decision Summary (Hybrid Approach)
+
+**Decision Date**: 2025-10-03  
+**Approach**: Performance Bundle Deferral (Hybrid)  
+**Rationale**: Balance faster delivery (4-5 weeks) with critical safety features
+
+#### Scope Changes from Original M0
+
+**DEFERRED to M1+ (14 items - Performance Bundle)**:
+1. ✅ Prometheus metrics endpoint (M0-W-1350)
+2. ✅ Performance metrics in logs (M0-W-1901)
+3. ✅ Graceful shutdown endpoint (M0-W-1340)
+4. ✅ Graceful shutdown performance target (M0-W-1630)
+5. ✅ First token latency target (M0-W-1600)
+6. ✅ Token generation rate target (M0-W-1601)
+7. ✅ Per-token latency target (M0-W-1602)
+8. ✅ Execute endpoint performance (M0-W-1603)
+9. ✅ Health endpoint performance (M0-W-1604)
+10. ✅ Cancellation latency target (M0-W-1610)
+11. ✅ Client disconnect detection (M0-W-1611)
+12. ✅ Model loading time target (M0-W-1620)
+13. ✅ Performance test suite (M0-W-1830)
+14. ✅ Reproducible CUDA kernels validation (M0-W-1031 validation only)
+15. ✅ Sensitive data handling in logs (M0-W-1902)
+
+**KEPT in M0 (13 items - Core + Critical Safety)**:
+1. ✅ All 3 models: Qwen2.5-0.5B, Phi-3-Mini, GPT-OSS-20B
+2. ✅ All 3 quantization formats: Q4_K_M, MXFP4, Q4_0
+3. ✅ 2 tokenizer backends: GGUF byte-BPE, tokenizer.json
+4. ✅ Narration-core logging (replaces structured logging, basic events only)
+5. ✅ Model load progress events (M0-W-1621) ← **CRITICAL** (user feedback)
+6. ✅ VRAM OOM handling (M0-W-1021) ← **CRITICAL** (safety)
+7. ✅ VRAM residency verification (M0-W-1012) ← **CRITICAL** (runtime leak detection)
+8. ✅ Reproducible CUDA kernels (M0-W-1031 implementation, validation deferred)
+9. ✅ Memory-mapped I/O (M0-W-1221)
+10. ✅ Chunked VRAM transfer (M0-W-1222)
+11. ✅ CUDA unit tests (functional only, no performance tests)
+12. ✅ Kernel safety validation (M0-W-1431)
+13. ✅ Temperature scaling 0.0-2.0 (M0-W-1032)
+
+**REMOVED from Repo**:
+- 🔥 Proof bundles (entire concept - all references to be removed)
+
+#### Key Trade-offs
+
+**Benefits**:
+- ✅ 2-3 weeks faster delivery (4-5 weeks vs. 6-8 weeks)
+- ✅ Critical safety features retained (VRAM monitoring, OOM handling)
+- ✅ User experience retained (model load progress events)
+- ✅ All 3 models and quantization formats included
+
+**Deferred to M1**:
+- ❌ Performance validation and benchmarking
+- ❌ Reproducibility proof (implementation done, validation deferred)
+- ❌ Graceful shutdown (rely on SIGTERM)
+- ❌ Performance metrics collection
+
+**Reference**: See `M0_RESOLUTION_CONTRADICTIONS.md` for full analysis
 
 ---
 
@@ -48,7 +112,12 @@ This specification consolidates **ALL M0 requirements** for the `worker-orcd` bi
 - ❌ Multi-model support
 - ❌ Advanced kernels (FlashAttention, continuous batching)
 - ❌ Authentication/authorization
-- ❌ Full metrics/observability (basic only)
+- ❌ Performance metrics/observability (deferred to M1 - hybrid scope)
+- ❌ Performance test suite (deferred to M1 - hybrid scope)
+- ❌ Graceful shutdown endpoint (deferred to M1 - hybrid scope)
+- ❌ Client disconnect detection (deferred to M1 - hybrid scope)
+- ❌ Reproducible kernels validation (implementation in M0, validation in M1)
+- ❌ Proof bundles (removed from repo)
 
 ### 0.3 Traceability System
 
@@ -1457,22 +1526,24 @@ All M0 tests MUST emit proof bundles per `libs/proof-bundle` standard:
 
 ## 13. Observability & Logging
 
-### 13.1 Structured Logging
+### 13.1 Narration-Core Logging (Hybrid Scope)
 
-#### [M0-W-1900] Log Fields
-Worker-orcd MUST emit structured logs with fields:
+**Scope Change**: Structured logging replaced with narration-core logging (basic events only, no performance metrics)
 
-**Required fields**:
+#### [M0-W-1900] Narration-Core Log Events (UPDATED)
+Worker-orcd MUST emit narration-core logs with basic event tracking:
+
+**Required context**:
 - `worker_id` — Worker identifier
 - `job_id` — Job identifier (when applicable)
 - `model_ref` — Model reference
 - `gpu_device` — GPU device ID
 - `event` — Event type
 
-**Event types**:
+**Event types** (basic narrative only):
 - `startup` — Worker starting
 - `model_load_start` — Model loading begins
-- `model_load_progress` — Loading progress (0-100%)
+- `model_load_progress` — Loading progress (0-100%) ← **KEPT** (critical UX)
 - `model_load_complete` — Model loaded successfully
 - `ready` — Worker ready for requests
 - `execute_start` — Inference request received
@@ -1480,34 +1551,36 @@ Worker-orcd MUST emit structured logs with fields:
 - `error` — Error occurred
 - `shutdown` — Worker shutting down
 
-**Spec Reference**: WORK-3080
-
-#### [M0-W-1901] Performance Metrics in Logs
-Worker-orcd SHOULD include performance metrics in logs:
-
-**Fields**:
-- `vram_bytes` — VRAM usage
-- `tokens_in` — Input tokens
-- `tokens_out` — Output tokens
-- `decode_time_ms` — Inference time
-- `first_token_ms` — First token latency
+**Note**: No performance metrics fields (vram_bytes, decode_time_ms, etc.) - deferred to M1
 
 **Spec Reference**: WORK-3080
 
-#### [M0-W-1902] Sensitive Data Handling
-Worker-orcd MUST NOT log sensitive data:
+#### [M0-W-1901] Performance Metrics in Logs (DEFERRED to M1)
+**Status**: DEFERRED (Performance Bundle)
 
-**Prohibited**:
-- ❌ Raw prompts (may contain PII)
-- ❌ Generated text (may contain sensitive output)
-- ❌ API tokens or secrets
+Performance metrics in logs deferred to M1:
+- ❌ `vram_bytes` — VRAM usage
+- ❌ `tokens_in` — Input tokens
+- ❌ `tokens_out` — Output tokens
+- ❌ `decode_time_ms` — Inference time
+- ❌ `first_token_ms` — First token latency
 
-**Allowed**:
-- ✅ Prompt hash (SHA-256)
+**Rationale**: Part of performance bundle deferral for faster M0 delivery
+
+#### [M0-W-1902] Sensitive Data Handling (DEFERRED to M1)
+**Status**: DEFERRED (Performance Bundle)
+
+Sensitive data redaction deferred to M1. M0 may log prompts for debugging purposes.
+
+**M1 Requirements** (deferred):
+- ❌ No raw prompts (may contain PII)
+- ❌ No generated text (may contain sensitive output)
+- ❌ No API tokens or secrets
+- ✅ Prompt hash (SHA-256) only
 - ✅ Prompt length (character count)
 - ✅ Token counts
 
-**Spec Reference**: WORK-3122
+**M0 Behavior**: Basic logging without redaction (development/testing phase)
 
 ---
 
@@ -1605,6 +1678,17 @@ The following gaps require clarification or implementation:
 
 ### 14.3 Deferred to Post-M0
 
+**Performance Bundle (Deferred to M1 - Hybrid Scope)**:
+- Performance metrics in logs (M0-W-1901)
+- Prometheus metrics endpoint (M0-W-1350)
+- All performance targets (M0-W-1600 through M0-W-1620)
+- Performance test suite (M0-W-1830)
+- Graceful shutdown endpoint (M0-W-1340)
+- Client disconnect detection (M0-W-1611)
+- Reproducible kernels validation (M0-W-1031 validation only)
+- Sensitive data handling (M0-W-1902)
+
+**Advanced Features (Deferred to M2+)**:
 - Top-k/top-p sampling (M2+) — M0 has temperature-based sampling only
 - FlashAttention (M2+)
 - Continuous Batching (M2+)
@@ -1613,7 +1697,9 @@ The following gaps require clarification or implementation:
 - PagedAttention (M2+)
 - Speculative Decoding (M3+)
 - Authentication (M3+)
-- Full Prometheus Metrics (M2+)
+
+**Removed from Repo**:
+- Proof bundles (entire concept)
 
 ---
 
@@ -1628,57 +1714,71 @@ M0 is considered complete when:
 For **each** of the three M0 reference models (Qwen2.5-0.5B, Phi-3-Mini, GPT-OSS-20B):
 
 1. ✅ **Startup**: CUDA init, GGUF parse, quantized weights resident in VRAM; report `quant_kind`
-2. ✅ **Inference**: Deterministic SSE token stream for fixed seed; UTF-8-safe streaming
+2. ✅ **Inference**: Functional SSE token stream; UTF-8-safe streaming
 3. ✅ **Health**: `/health` shows `resident=true`, VRAM bytes, `quant_kind`
-4. ✅ **Disconnects**: Abort on client disconnect (≤10-token checks)
-5. ✅ **Logs**: Record `model_ref`, `seed`, kernel versions, alignment confirmation
+4. ✅ **Progress**: Model load progress events (0-100%) ← **CRITICAL** (user feedback)
+5. ✅ **Logs**: Narration-core events (startup, load, execute, error, shutdown)
 
-**General M0 Success Criteria**:
+**General M0 Success Criteria (Hybrid Scope)**:
 
 1. ✅ Worker binary compiles successfully with `--features cuda`
 2. ✅ Worker loads all three M0 models (sequentially) into VRAM in quantized form
 3. ✅ Worker accepts HTTP POST /execute request
-4. ✅ Worker generates haiku reproducibly (same seed + temp=0 → same output) for Qwen2.5-0.5B **testing only**
+4. ✅ Worker generates haiku functionally (reproducibility implementation done, validation deferred)
 4b. ✅ Worker supports temperature 0.0-2.0 for production use (stochastic sampling when temp>0)
 5. ✅ Worker streams tokens via SSE with UTF-8 boundary safety
 6. ✅ Worker enforces VRAM-only (no RAM fallback, no UMA detected)
-7. ✅ Worker responds to GET /health with status including `quant_kind`
-8. ✅ Worker handles POST /cancel gracefully
-9. ✅ Worker shuts down gracefully on SIGTERM
-10. ✅ All CUDA unit tests pass
-11. ✅ All Rust unit tests pass
-12. ✅ Integration test passes for all three models
-13. ✅ Tokenization works for both GGUF byte-BPE and tokenizer.json backends
-14. ✅ Quantized execution verified (no FP32 dequant on load)
+7. ✅ VRAM residency verification (periodic checks) ← **CRITICAL** (runtime safety)
+8. ✅ VRAM OOM handling (graceful error, not crash) ← **CRITICAL** (safety)
+9. ✅ Worker responds to GET /health with status including `quant_kind`
+10. ✅ Worker handles POST /cancel gracefully
+11. ✅ Worker shuts down on SIGTERM (graceful shutdown endpoint deferred)
+12. ✅ All CUDA unit tests pass (functional only, no performance tests)
+13. ✅ All Rust unit tests pass
+14. ✅ Integration test passes for all three models (functional validation)
+15. ✅ Tokenization works for both GGUF byte-BPE and tokenizer.json backends
+16. ✅ Quantized execution verified (no FP32 dequant on load)
+17. ✅ Model load progress events emit (0%, 25%, 50%, 75%, 100%)
 
-### 15.2 Non-Goals for M0
+### 15.2 Non-Goals for M0 (Hybrid Scope)
 
+**Deferred to M1 (Performance Bundle)**:
+- ❌ Performance metrics/observability
+- ❌ Performance test suite
+- ❌ Graceful shutdown endpoint
+- ❌ Client disconnect detection
+- ❌ Reproducible kernels validation
+- ❌ Sensitive data handling
+- ❌ Proof bundles
+
+**Deferred to M2+**:
 - ❌ Pool manager integration
 - ❌ Orchestrator integration
 - ❌ Multi-model support
 - ❌ Multi-GPU support
 - ❌ Authentication/authorization
-- ❌ Full metrics/observability
 - ❌ Production-grade error recovery
 - ❌ Advanced kernel optimizations
 
 ---
 
-### 15.3 Performance Exit Criteria
+### 15.3 Performance Exit Criteria (DEFERRED to M1)
 
-M0 performance targets (from performance audit in parent §14.1):
+**Status**: DEFERRED (Performance Bundle)
 
-1. ✅ First token latency p95 <100ms (measured over 10 haiku requests)
-2. ✅ Per-token latency p95 <50ms (measured over 10 haiku requests)
-3. ✅ Health endpoint p99 <10ms (measured over 100 requests)
-4. ✅ Model loading time <60s (Qwen2.5-0.5B-Instruct cold start)
-5. ✅ Graceful shutdown <5s (SIGTERM to exit)
-6. ✅ Zero memory leaks (VRAM returns to baseline after 100 requests)
-7. ✅ Client disconnect abort <100ms (SSE close to inference stop)
+M0 performance targets deferred to M1:
 
-**Measurement**: Performance test suite (M0-W-1830) with proof bundle outputs.
+1. ❌ First token latency p95 <100ms (deferred)
+2. ❌ Per-token latency p95 <50ms (deferred)
+3. ❌ Health endpoint p99 <10ms (deferred)
+4. ❌ Model loading time <60s (deferred)
+5. ❌ Graceful shutdown <5s (deferred)
+6. ❌ Zero memory leaks (deferred)
+7. ❌ Client disconnect abort <100ms (deferred)
 
-**Tolerance**: 10% deviation acceptable for M0.
+**M0 Behavior**: Functional validation only, no performance benchmarking
+
+**M1 Plan**: Comprehensive performance test suite with validation against targets
 
 ---
 
@@ -1794,16 +1894,44 @@ M0 performance targets (from performance audit in parent §14.1):
 - `BUILD_CONFIGURATION.md` — Build configuration
 - `.docs/testing/TEST_MODELS.md` — Test models
 
+### 18.4 Scope Decision Documents
+
+- `bin/.specs/M0_DEFERRAL_CANDIDATES.md` — Deferral analysis (28 candidates)
+- `bin/.specs/M0_RESOLUTION_CONTRADICTIONS.md` — Contradiction resolution (hybrid approach)
+- `bin/.specs/M0_PERFORMANCE_BUNDLE_ANALYSIS.md` — Performance bundle impact analysis
+
 ---
 
 **End of M0 Specification**
 
-**Status**: Draft — Ready for implementation  
+**Status**: Draft (Hybrid Scope) — Ready for implementation  
+**Scope**: Performance Bundle Deferred (14 items to M1)  
+**Timeline**: 4-5 weeks (optimized from 6-8 weeks)
+
 **Next Steps**: 
-1. Review gaps in §13.1
-2. Implement CUDA modules (context, model, inference, health)
-3. Implement Rust HTTP layer
-4. Implement FFI boundary
-5. Write unit tests
-6. Write integration tests
-7. Execute haiku test
+1. Remove proof bundle references from all specs and code
+2. Implement narration-core logging (basic events only)
+3. Implement CUDA modules (context, model, inference, health)
+4. Implement Rust HTTP layer with critical features:
+   - Model load progress events (0-100%)
+   - VRAM residency verification (periodic checks)
+   - VRAM OOM handling (graceful error)
+5. Implement FFI boundary
+6. Write CUDA unit tests (functional only, no performance tests)
+7. Write Rust unit tests
+8. Write integration tests for all 3 models
+9. Execute haiku test (functional validation)
+
+**Deferred to M1**:
+- Performance test suite
+- Performance metrics collection
+- Reproducible kernels validation
+- Graceful shutdown endpoint
+- Client disconnect detection
+- Sensitive data handling
+
+**Key Trade-offs**:
+- ✅ 2-3 weeks faster delivery
+- ✅ Critical safety features retained (VRAM monitoring, OOM handling)
+- ✅ User experience retained (progress events)
+- ❌ Performance validation deferred to M1

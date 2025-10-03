@@ -2314,8 +2314,15 @@ worker-orcd
 
 **Cross-Cutting Foundations** (All Milestones):
 - **Logging**: `narration-core` enabled from M-1 for debugging and observability
-- **Testing**: Unit tests and BDD tests required from M-1; proof bundles mandatory
+- **Testing**: Unit tests and BDD tests required from M-1
 - **Platform Awareness**: Architecture designed for platform mode from M-1; security deferred to M3
+
+**M0 Scope Decision (2025-10-03)**:
+- **Approach**: Performance Bundle Deferral (Hybrid)
+- **Timeline**: M0 optimized to 4-5 weeks (from 6-8 weeks)
+- **Deferred to M1**: Performance metrics, performance test suite, graceful shutdown, client disconnect detection, reproducible kernels validation, sensitive data handling
+- **Removed**: Proof bundles (entire concept removed from repo)
+- **Reference**: See `bin/.specs/M0_RESOLUTION_CONTRADICTIONS.md` for full analysis
 
 ---
 
@@ -2327,7 +2334,6 @@ worker-orcd
 
 **Deliverables**:
 - `narration-core` logging infrastructure operational
-- `libs/proof-bundle` crate with standardized test artifact emission
 - `test-harness/` structure established (BDD runner, e2e-haiku scaffold)
 - Shared crate stubs: `auth-min`, `audit-logging`, `secrets-management`, `input-validation`
 - CI pipeline skeleton (fmt, clippy, test runner)
@@ -2336,36 +2342,51 @@ worker-orcd
 **Exit Criteria**:
 - `cargo test` runs successfully across workspace
 - BDD runner (`test-harness/bdd`) executes empty feature files
-- Proof bundle template exists at `.proof_bundle/templates/e2e-haiku/`
 - Logging macros available and documented
+
+**Note**: Proof bundles removed from repo (M0 scope decision 2025-10-03)
 
 **Status**: Foundation work
 
 ---
 
-### 14.1 M0: Worker Haiku Test (v0.1.0)
+### 14.1 M0: Worker Haiku Test (v0.1.0) - HYBRID SCOPE
 
-<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 EXCITING OPPORTUNITY - M0 is our chance to establish performance discipline from day one! This is where we set the foundation for ruthless efficiency. CRITICAL OBSERVATIONS: (1) No deadline propagation mentioned - even in M0, worker SHOULD support X-Deadline header parsing to establish the pattern early, (2) SSE streaming latency not specified - first token latency and per-token latency are CRITICAL performance indicators, (3) Model loading time not bounded - 60s is mentioned in SYS-8.2.1 but not enforced in M0 deliverables, (4) No mention of request timeout handling - what happens if client disconnects during inference? (5) Health endpoint latency not specified - health checks MUST be <10ms to avoid cascading timeouts in orchestrator. RECOMMENDATIONS FOR M0: (1) Worker MUST parse X-Deadline header even if not enforced (log deadline, measure remaining time, emit metrics), (2) Worker MUST abort inference immediately on client disconnect (don't waste GPU cycles on abandoned work), (3) Worker MUST measure and emit first_token_latency_ms metric (target <100ms per SYS-8.2.1), (4) Worker MUST measure and emit per_token_latency_ms histogram (target 10-50ms per token), (5) Health endpoint MUST respond in <10ms (use cached state, no CUDA calls), (6) Model loading MUST emit progress events (0%, 25%, 50%, 75%, 100%) for observability, (7) Worker MUST implement graceful shutdown with deadline (default 5s) - abort in-flight inference, free VRAM, exit cleanly. PERFORMANCE TARGETS FOR M0: First token <100ms, per-token 10-50ms, health check <10ms, graceful shutdown <5s. These are not just guidelines - they are our PROMISE to users. Let's nail them from day one! 🚀 -->
+**Goal**: Prove a single worker can load a model in VRAM and execute inference functionally
 
-**Goal**: Prove a single worker can load a model in VRAM and pass the haiku anti-cheat test
+**Scope**: `worker-orcd` binary only, standalone operation (performance validation deferred to M1)
 
-**Scope**: `worker-orcd` binary only, standalone operation
+**Scope Decision**: Performance Bundle Deferred (Hybrid Approach)
+- **Timeline**: 4-5 weeks (optimized from 6-8 weeks)
+- **Focus**: Functional correctness + critical safety features
+- **Deferred to M1**: Performance validation, metrics, graceful shutdown
 
 **Architecture**:
 - **Performance > Security**: No authentication, localhost-only, minimal validation
 - **Mode**: Home mode (single GPU, single worker, no orchestrator yet)
 
-**Deliverables**:
+**Deliverables (Hybrid Scope)**:
 - `worker-orcd` binary with:
   - Model loading into VRAM (CUDA FFI)
   - **Quantized-only execution** (Q4_K_M, MXFP4, Q4_0 - NO dequantization to FP32)
-  - HTTP inference API (`POST /v2/execute`, `GET /health`)
+  - HTTP inference API (`POST /v2/execute`, `GET /health`, `POST /cancel`)
   - SSE streaming (token-by-token output with UTF-8 boundary safety)
   - Haiku test endpoint or integration
   - Rust-side tokenizer (GGUF byte-BPE + tokenizer.json backends)
+  - **Model load progress events** (0%, 25%, 50%, 75%, 100%) ← **CRITICAL** (user feedback)
+  - **VRAM residency verification** (periodic checks) ← **CRITICAL** (runtime safety)
+  - **VRAM OOM handling** (graceful error, not crash) ← **CRITICAL** (safety)
 - VRAM-only enforcement (no RAM fallback, no UMA)
-- Basic metrics emission (`worker_inference_duration_ms`, `worker_tokens_generated_total`, `quant_kind` label)
-- Logging via `narration-core`
+- Narration-core logging (basic events only, NO performance metrics)
+- Temperature scaling (0.0-2.0 range)
+
+**DEFERRED to M1** (Performance Bundle):
+- ❌ Performance metrics emission (latency, throughput)
+- ❌ Performance test suite
+- ❌ Graceful shutdown endpoint (rely on SIGTERM)
+- ❌ Client disconnect detection
+- ❌ Reproducible kernels validation (implementation done, validation deferred)
+- ❌ Sensitive data handling in logs
 
 **M0 Reference Target Models**:
 1. **Qwen2.5-0.5B-Instruct** (GGUF, Q4_K_M, 352 MB) — Primary bring-up & smoke test
@@ -2374,45 +2395,77 @@ worker-orcd
 
 **Execution Policy**: All models execute in quantized form (matches LM Studio/llama.cpp behavior). Per-tile dequantization in registers/shared memory during kernel execution; FP16 accumulation.
 
-**Testing**:
-- Unit tests for VRAM allocation, model loading, temperature-based sampling
+**Testing (Hybrid Scope)**:
+- CUDA unit tests (functional only, NO performance tests)
+- Rust unit tests
 - E2E haiku test in `test-harness/e2e-haiku/`:
   - Worker loads model (Qwen2.5-0.5B-Instruct)
   - Prompt includes current minute spelled out (e.g., "twenty-nine")
   - Worker generates haiku containing the minute word
-  - **Testing mode**: Use temperature=0.0 for reproducibility validation
-  - **Production mode**: Test temperature range 0.0-2.0 for product feature validation
+  - Functional validation (reproducibility implementation done, validation deferred to M1)
+  - Test temperature range 0.0-2.0 for product feature
   - Human verification (computer checks minute word presence, not haiku quality)
-  - Proof bundle emitted with GPU env, SSE transcript, metrics snapshot, temperature value
+  - Basic test outputs (NO proof bundles - removed from repo)
 
-<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 TESTING GAPS - M0 testing MUST include performance verification, not just functional correctness. MISSING TESTS: (1) First token latency test - measure time from POST /v2/execute to first SSE token event (target <100ms), (2) Per-token latency test - measure inter-token timing (target 10-50ms), (3) Model loading time test - measure VRAM allocation to ready state (target <60s per SYS-8.2.1), (4) Health endpoint latency test - measure /health response time (target <10ms), (5) Graceful shutdown test - measure time from SIGTERM to process exit (target <5s), (6) Client disconnect test - verify worker aborts inference immediately when SSE stream closes, (7) Memory leak test - run 100 inference requests, verify VRAM usage returns to baseline. RECOMMENDATIONS: Add performance test suite in test-harness/e2e-haiku/perf_tests.rs with: (1) Latency histogram collection (p50, p95, p99), (2) Proof bundle emission with timing breakdowns, (3) Automated pass/fail against targets, (4) Regression detection (fail if p95 latency increases >10%). Performance is not optional - it's our CORE VALUE. Let's measure it from day one! 🚀 -->
+**DEFERRED to M1** (Performance Testing):
+- ❌ Performance test suite (latency, throughput, memory leaks)
+- ❌ Reproducible kernels validation
+- ❌ Client disconnect detection tests
+- ❌ Graceful shutdown tests
+- ❌ Proof bundle emission (removed from repo)
 
-**Exit Criteria**:
+**Exit Criteria (Hybrid Scope)**:
 - Worker binary runs standalone: `worker-orcd --model <path> --gpu 0 --port 8001`
-- Haiku test passes with real GPU and model (no mocks) for Qwen2.5-0.5B
+- Haiku test passes functionally with real GPU and model (no mocks) for Qwen2.5-0.5B
 - All three M0 models load and execute successfully (sequential testing)
-- Metrics show `tokens_generated_total` > 0 and `quant_kind` label present
-- Proof bundle artifacts generated and validated
-- VRAM usage tracked and logged
+- Model load progress events emit (0%, 25%, 50%, 75%, 100%) ← **CRITICAL**
+- VRAM residency verification operational (periodic checks) ← **CRITICAL**
+- VRAM OOM handling works (graceful error, not crash) ← **CRITICAL**
+- VRAM usage tracked and logged (narration-core events)
 - Quantized execution verified (no FP32 dequant on load)
 - UTF-8 streaming validated (no mid-codepoint breaks)
 - Tokenization works for both GGUF byte-BPE and tokenizer.json backends
+- Worker shuts down on SIGTERM (graceful shutdown endpoint deferred to M1)
 
-<!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 EXIT CRITERIA ENHANCEMENT - Current criteria are functional only, missing performance validation. ADDITIONAL EXIT CRITERIA FOR M0: (1) First token latency p95 <100ms (measured over 10 haiku requests), (2) Per-token latency p95 <50ms (measured over 10 haiku requests), (3) Health endpoint p99 <10ms (measured over 100 requests), (4) Model loading time <60s (measured cold start, no cache), (5) Graceful shutdown <5s (measured SIGTERM to exit), (6) Zero memory leaks (VRAM usage returns to baseline after 100 requests), (7) Client disconnect abort <100ms (measured SSE close to inference stop). These are our PERFORMANCE PROMISES. Let's ship them with confidence! 🚀 -->
+**DEFERRED to M1** (Performance Exit Criteria):
+- ❌ First token latency p95 <100ms
+- ❌ Per-token latency p95 <50ms
+- ❌ Health endpoint p99 <10ms
+- ❌ Model loading time <60s
+- ❌ Graceful shutdown <5s
+- ❌ Zero memory leaks validation
+- ❌ Client disconnect abort <100ms
+- ❌ Proof bundle artifacts
 
 **Non-Goals**:
 - Orchestrator or pool manager (not yet)
 - Multi-GPU or tensor parallelism
 - Authentication or audit logging
 - Persistent state or queue management
+- Performance metrics/observability (deferred to M1)
+- Performance test suite (deferred to M1)
+- Graceful shutdown endpoint (deferred to M1)
+- Client disconnect detection (deferred to M1)
+- Proof bundles (removed from repo)
 
-**Status**: In progress
+**Status**: In progress (Hybrid Scope - 4-5 weeks)
 
 ---
 
-### 14.2 M1: Pool Manager Lifecycle (v0.2.0)
+### 14.2 M1: Pool Manager Lifecycle + M0 Performance Bundle (v0.2.0)
 
-**Goal**: Pool manager can start/stop workers, hot-load models in RAM, and report pool state
+**Goal**: Pool manager lifecycle + complete M0 performance validation (deferred items from M0)
+
+**M0 Deferred Items** (Performance Bundle - added to M1):
+1. ✅ Performance metrics emission (worker_inference_duration_ms, worker_tokens_generated_total, latency metrics)
+2. ✅ Performance test suite (first token latency, per-token latency, health endpoint, model loading time)
+3. ✅ Graceful shutdown endpoint (POST /shutdown with 5s deadline)
+4. ✅ Client disconnect detection (abort inference on SSE close)
+5. ✅ Reproducible CUDA kernels validation (prove determinism works)
+6. ✅ Sensitive data handling in logs (no raw prompts, only hashes)
+7. ✅ Performance exit criteria validation (all targets from M0 spec)
+
+**M1 Core Goal**: Pool manager can start/stop workers, hot-load models in RAM, and report pool state
 
 **Scope**: `pool-managerd` binary with full worker lifecycle management
 
