@@ -28,7 +28,6 @@ The codebase reflected a **confused mental model** where:
    - **Reason**: Wrong abstraction (mixed pool manager and worker concerns)
    - **Replaced by**: 
      - `gpu-inventory/` (pool manager tracks VRAM across GPUs)
-     - `vram-policy/` (worker enforces VRAM-only for one model)
 
 2. **`bin/worker-orcd-crates/scheduler/`**
    - **Reason**: Workers don't schedule (orchestrator does)
@@ -49,7 +48,7 @@ The codebase reflected a **confused mental model** where:
    - **API**: `can_fit_model()`, `register_worker()`, `available_vram()`
    - **Used by**: Pool manager to answer orchestrator queries
 
-2. **`bin/worker-orcd-crates/vram-policy/`**
+2. **Worker's CUDA module**
    - **Purpose**: Enforce VRAM-only for a single model
    - **API**: `enforce_vram_only()`, `load_model_to_vram()`, `verify_vram_residency()`
    - **Used by**: Worker at startup and health checks
@@ -58,9 +57,7 @@ The codebase reflected a **confused mental model** where:
 
 **`Cargo.toml` changes**:
 - ➕ Added `bin/pool-managerd-crates/gpu-inventory`
-- ➕ Added `bin/worker-orcd-crates/vram-policy`
 - ➖ Removed `bin/worker-orcd-crates/vram-residency`
-- ➖ Removed `bin/worker-orcd-crates/vram-residency/bdd`
 - ➖ Removed `bin/worker-orcd-crates/scheduler`
 - ➖ Removed `bin/pool-managerd-crates/router`
 - ➖ Removed `bin/pool-managerd-crates/model-eviction`
@@ -163,7 +160,6 @@ The following documents still reflect the old model and need revision:
 
 **Created**:
 - `bin/pool-managerd-crates/gpu-inventory/` (new crate)
-- `bin/worker-orcd-crates/vram-policy/` (new crate)
 - `.docs/ARCHITECTURE_TRIO_CORRECTED.md` (authoritative doc)
 - `.docs/ARCHITECTURE_CLEANUP_LOG.md` (this file)
 
@@ -180,7 +176,6 @@ cargo check
 
 # Verify new crates exist
 ls bin/pool-managerd-crates/gpu-inventory
-ls bin/worker-orcd-crates/vram-policy
 
 # Verify deletions
 ! ls bin/worker-orcd-crates/vram-residency 2>/dev/null

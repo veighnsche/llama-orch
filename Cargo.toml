@@ -64,14 +64,6 @@ members = [
     "bin/pool-managerd-crates/model-cache",
     "bin/pool-managerd-crates/error-recovery",
     "bin/pool-managerd-crates/node-registration-client",
-    
-    # New bin/ crates - worker-orcd-crates
-    "bin/worker-orcd-crates/vram-policy",
-    "bin/worker-orcd-crates/model-loader",
-    "bin/worker-orcd-crates/model-loader/bdd",
-    "bin/worker-orcd-crates/api",
-    "bin/worker-orcd-crates/error-handler",
-    "bin/worker-orcd-crates/capability-matcher",
 ]
 
 resolver = "2"

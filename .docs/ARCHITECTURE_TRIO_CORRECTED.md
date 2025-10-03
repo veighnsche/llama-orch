@@ -111,7 +111,7 @@ The llama-orch system consists of three binaries with **clearly defined boundari
 - ✅ **Stream results**: SSE directly to orchestrator
 
 **Key Crates**:
-- `vram-policy` — VRAM-only enforcement
+- Worker's CUDA module — VRAM-only enforcement
 - `model-loader` — Load model to VRAM
 - `api` — HTTP endpoints for orchestrator
 - `capability-matcher` — Report capabilities
@@ -249,7 +249,7 @@ The llama-orch system consists of three binaries with **clearly defined boundari
 ### Worker Crates
 | Crate | Purpose |
 |-------|---------|
-| `vram-policy` | VRAM-only enforcement |
+| Worker's CUDA module | VRAM-only enforcement |
 | `model-loader` | Load model to VRAM |
 | `api` | HTTP endpoints |
 | `capability-matcher` | Report capabilities |

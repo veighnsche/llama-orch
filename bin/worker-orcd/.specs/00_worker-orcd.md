@@ -8,13 +8,44 @@
 
 ## 0. Scope
 
-Worker-orcd is a **DUMB EXECUTOR**. It loads ONE model at startup, executes inference requests, and streams results. It makes NO intelligent decisions.
+### Purpose
 
-**Does NOT**:
-- Load multiple models (tied to ONE model for lifetime)
-- Make scheduling decisions (orchestratord does this)
-- Make placement decisions (orchestratord does this)
-- Manage other workers
+Worker-orcd is a **self-contained execution plane** process. It loads ONE model at startup, executes inference requests, and streams results. It is a dumb executor that makes NO intelligent decisions.
+
+**Why it exists as a separate process:**
+- Workers run in separate processes from pool-managerd (separate CUDA contexts)
+- Worker owns its VRAM allocation within its process (CUDA allocations are per-process)
+- Worker must be testable standalone: `worker-orcd --model X --gpu 0` runs independently
+- Clean separation: orchestratord commands → pool manager spawns → worker executes
+
+**What it does:**
+- Load ONE model from disk/RAM into VRAM at startup (via `model-lifecycle` orchestration + binary's CUDA module)
+- Execute inference requests and stream token-by-token results (via `inference-api` + binary's CUDA kernels)
+- Monitor its own health and VRAM residency (via `health-monitor` + binary's CUDA queries)
+- Report actual VRAM usage to pool manager after load (callback)
+
+**What it does NOT do:**
+- ❌ Load multiple models (tied to ONE model for lifetime)
+- ❌ Make scheduling decisions (orchestratord does this)
+- ❌ Make placement decisions (orchestratord does this)
+- ❌ Validate model compatibility before load (pool manager does this preflight)
+- ❌ Track system-wide VRAM state (pool manager's `gpu-inventory` does this)
+- ❌ Manage other workers
+
+**Binary structure:**
+- `src/main.rs` — Entry point, CLI parsing, HTTP server
+- `src/http/` — HTTP handlers (execute, health) - **previously separate api crate**
+- `src/startup.rs` — Startup sequence and callbacks - **previously separate scheduler crate**
+- `src/error.rs` — Error types - **previously separate error-handler crate**
+- `src/cuda/mod.rs` — Rust FFI bindings to C++/CUDA
+- `cuda/` — C++/CUDA implementation (separate directory)
+  - `src/` — C++ implementation files
+  - `include/` — C++ headers and C API
+  - `kernels/` — CUDA kernel files
+  - `.specs/` — CUDA module specifications
+
+**Integrated functionality:**
+All functionality previously in separate crates (`api`, `vram-residency`, `model-loader`, `capability-matcher`, `scheduler`, `error-handler`) is now implemented as modules within this binary.
 
 **Parent spec**: `.specs/00_llama-orch.md`
 
@@ -59,25 +90,26 @@ Arguments:
 ### [WORK-3011] Initialization Sequence
 At startup, worker-orcd MUST:
 
-1. **Initialize VRAM policy**:
+1. **Initialize CUDA context**:
+   - Call `cuda::safe::ContextHandle::new(gpu_device)`
+   - Set CUDA device
    - Disable unified memory (UMA)
    - Disable zero-copy and pinned host memory
    - Verify CUDA device is available
 
 2. **Load model to VRAM**:
-   - Load model from disk or RAM-staged location
-   - Allocate VRAM for model weights
-   - Copy model to VRAM
-   - Verify VRAM residency
+   - Call `cuda::safe::ModelHandle::load(ctx, model_path)`
+   - C++ layer: Parse GGUF format
+   - C++ layer: Allocate VRAM for model weights
+   - C++ layer: Copy model to VRAM
+   - C++ layer: Verify VRAM residency
+   - Return actual VRAM bytes used
 
-3. **Measure VRAM usage**:
-   - Query actual VRAM bytes used
-
-4. **Start HTTP server**:
+3. **Start HTTP server**:
    - Bind to configured port
    - Expose inference and health endpoints
 
-5. **Call back to pool manager**:
+4. **Call back to pool manager**:
    - `POST {callback-url}` with worker metadata
    ```json
    {
@@ -88,7 +120,7 @@ At startup, worker-orcd MUST:
    }
    ```
 
-6. **Mark ready**:
+5. **Mark ready**:
    - Only after successful callback, start accepting requests
 
 ### [WORK-3012] Startup Failure
@@ -97,19 +129,62 @@ If initialization fails (insufficient VRAM, model load error, etc.), worker-orcd
 2. Attempt callback to pool manager with failure details (optional)
 3. Exit with non-zero exit code
 
-### [WORK-3013] Startup Timeout
-Worker-orcd MUST complete initialization within pool manager's timeout (default 60s) or it will be killed.
+### [WORK-3014] Pool Manager Callback
+After successful initialization, worker-orcd MUST call back to pool managerd to register itself as ready:
+
+**Endpoint**: `POST {callback-url}/v2/internal/workers/ready`
+
+**Request body**:
+```json
+{
+  "worker_id": "worker-abc",
+  "model_ref": "llama-7b",
+  "vram_bytes": 16000000000,
+  "uri": "http://localhost:8001"
+}
+```
+**Callback timing**:
+- Start HTTP server first, then call back (server-first), so pool-manager can validate `uri` reachability (see POOL-2060)
+- Call immediately after model loads successfully and server is listening
+- Only if initialization completed without errors
+
+**Pool manager validation**:
+- Validates `worker_id` exists and status is `starting`
+- Validates `vram_bytes` fits within GPU capacity
+- Validates `model_ref` matches the model loaded by worker-orcd
+- Validates `uri` is reachable
+- Updates worker status to `ready` on success
+
+### [WORK-3015] Worker Status Values
+Worker-orcd MUST use the following status values for state reporting:
+
+- `starting` — Worker process spawned, initializing CUDA context and loading model
+- `ready` — Worker successfully loaded model and is ready to accept inference requests
+- `busy` — Worker is currently processing an inference request
+- `draining` — Worker is finishing current request but not accepting new ones (shutdown in progress)
+- `failed` — Worker encountered a fatal error and is unavailable
+
+**Status transitions**:
+- `starting` → `ready` (successful model load and callback)
+- `starting` → `failed` (model load failure or timeout)
+- `ready` → `busy` (inference request received)
+- `busy` → `ready` (inference completed)
+- `ready` → `draining` (shutdown command received)
+- `draining` → `failed` (forced termination)
+- Any status → `failed` (fatal error)
 
 ---
 
-## 3. VRAM Policy
+## 3. VRAM Enforcement
 
 ### [WORK-3020] VRAM-Only Enforcement
-Worker-orcd MUST enforce VRAM-only policy using `vram-policy` crate:
+Worker-orcd MUST enforce VRAM-only policy using its internal CUDA module (`src/cuda/enforcement.rs`):
 - Disable UMA (unified memory)
 - Disable zero-copy mode
 - Disable pinned host memory
 - Verify no RAM fallback during inference
+
+**Implementation**: The binary's `cuda` module handles all CUDA operations (allocation, enforcement, queries) within a single CUDA context.
 
 ### [WORK-3021] VRAM Allocation
 Worker-orcd MUST allocate VRAM for:
@@ -189,6 +264,21 @@ Worker-orcd SHOULD expose:
 ### [WORK-3043] Shutdown Endpoint
 Worker-orcd MAY expose:
 - `POST /shutdown` — Graceful shutdown (finish active jobs, then exit)
+
+### [WORK-3044] Cancellation Endpoint
+Worker-orcd MUST expose:
+- `POST /cancel`
+
+Request body:
+```json
+{ "job_id": "job-xyz" }
+```
+
+Semantics:
+- Idempotent: Repeated cancels for the same `job_id` MUST be safe and return the same terminal outcome.
+- Acceptance: Return HTTP 202 when cancellation is accepted and in progress.
+- Effect: Stop decoding promptly, free resources, emit SSE `error` with code `CANCELLED` to the active stream.
+- Deadline: If cancellation cannot be confirmed within 5s, worker SHOULD still stop work and close stream; orchestratord may close client SSE.
 
 ---
 
@@ -307,8 +397,8 @@ Worker-orcd SHOULD expose metrics:
 - `worker_vram_bytes` — VRAM usage
 - `worker_requests_total{outcome}` — Request count
 - `worker_tokens_in_total` — Total input tokens
-- `worker_tokens_out_total` — Total output tokens
-- `worker_inference_duration_seconds` — Inference latency histogram
+- `worker_tokens_generated_total` — Total output tokens
+- `worker_inference_duration_ms` — Inference latency histogram (milliseconds)
 - `worker_uptime_seconds` — Worker uptime
 
 ### [WORK-3082] Human Narration
@@ -323,13 +413,16 @@ Worker-orcd SHOULD emit human-readable narration for key events:
 ## 10. Error Taxonomy
 
 ### [WORK-3090] Error Codes
-Worker-orcd MUST use stable error codes:
+Worker-orcd MUST use stable error codes that align with pool-managerd:
+
 - `INVALID_REQUEST` — Invalid request parameters
 - `MODEL_LOAD_FAILED` — Model failed to load
-- `VRAM_INSUFFICIENT` — Not enough VRAM
+- `INSUFFICIENT_VRAM` — Not enough VRAM for model (aligns with pool-managerd)
 - `VRAM_OOM` — Out of VRAM during inference
 - `CUDA_ERROR` — CUDA runtime error
 - `INFERENCE_TIMEOUT` — Inference exceeded timeout
+- `WORKER_START_FAILED` — Worker failed to start (aligns with pool-managerd)
+- `WORKER_NOT_FOUND` — Unknown worker_id (aligns with pool-managerd)
 - `INTERNAL` — Internal error
 
 ### [WORK-3091] Error Responses
@@ -413,9 +506,11 @@ Worker-orcd MUST run on a single GPU (no multi-GPU tensor parallelism for M0).
 ## 15. Traceability
 
 **Code**: `bin/worker-orcd/src/`  
-**Tests**: `bin/worker-orcd/tests/`, `bin/worker-orcd/bdd/`  
+**CUDA**: `bin/worker-orcd/cuda/`  
+**Tests**: `bin/worker-orcd/tests/`  
 **Parent**: `.specs/00_llama-orch.md`  
-**Crates**: `vram-policy`, `model-loader`, `api`, `capability-matcher`
+**FFI Boundary**: `.specs/01_cuda_ffi_boundary.md`  
+**CUDA Modules**: `cuda/.specs/` (context, model, inference, health)
 
 ---
 

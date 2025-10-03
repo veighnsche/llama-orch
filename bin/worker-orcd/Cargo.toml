@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
+build = "build.rs"
 
 [[bin]]
 name = "worker-orcd"
@@ -14,12 +15,14 @@ tokio = { workspace = true }
 anyhow.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+axum = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+clap = { workspace = true }
+reqwest = { workspace = true }
+futures = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
 
-# Shared crates
-gpu-info = { path = "../shared-crates/gpu-info" }
-
-# Worker crates
-vram-policy = { path = "../worker-orcd-crates/vram-policy" }
-model-loader = { path = "../worker-orcd-crates/model-loader" }
-worker-api = { path = "../worker-orcd-crates/api" }
-worker-error-handler = { path = "../worker-orcd-crates/error-handler" }
+[build-dependencies]
+cmake = "0.1"

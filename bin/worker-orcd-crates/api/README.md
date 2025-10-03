@@ -1,1 +1,0 @@
-I don't even know if a http api is the best way to do this. so need to figure it out. but it's an API only available to the pool managerd and the orchestratord.

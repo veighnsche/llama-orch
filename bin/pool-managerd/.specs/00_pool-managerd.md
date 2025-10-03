@@ -1,5 +1,7 @@
 # Pool Managerd SPEC — State Reporter & Worker Factory (POOL-2xxx)
 
+**Author**: Specs Team
+**Date**: 2025-10-03
 **Status**: Draft  
 **Applies to**: `bin/pool-managerd/`  
 **Conformance language**: RFC-2119 (MUST/SHOULD/MAY)
@@ -8,13 +10,45 @@
 
 ## 0. Scope
 
-Pool managerd is a **STATE REPORTER and WORKER FACTORY**. It tracks local GPU state, manages worker processes, and reports everything to orchestratord.
+### Purpose
 
-**Does NOT**:
-- Make placement decisions (orchestratord does this)
-- Route inference requests (orchestratord connects directly to workers)
-- Schedule jobs (orchestratord does this)
-- Decide eviction (orchestratord decides, pool manager executes)
+Pool managerd is the **control plane with all the levers**. It tracks local GPU state, validates model compatibility, manages worker processes, and reports everything to orchestratord. It is DUMB (makes NO decisions) but RICH (has all controls).
+
+**Why it exists:**
+- Orchestratord needs a local agent on each GPU node to execute commands
+- Need preflight validation before spawning workers (capability matching, VRAM checks)
+- Need system-wide GPU monitoring (NVML) separate from per-process worker CUDA contexts
+- Need worker process lifecycle management (spawn, monitor, stop)
+
+**What it does:**
+- Track GPU state system-wide (via `gpu-inventory` using NVML FFI)
+- Download and stage models (via `model-cache`, `model-provisioner`)
+- Validate model compatibility before spawn (via `capability-matcher`)
+- Spawn and monitor worker processes (via `worker-lifecycle`)
+- Report state to orchestratord (via `control-api`)
+- Update VRAM accounting when workers start/stop
+
+**What it does NOT do:**
+- ❌ Make placement decisions (orchestratord does this)
+- ❌ Allocate VRAM (workers do this within their CUDA contexts)
+- ❌ Route inference requests (orchestratord connects directly to workers)
+- ❌ Schedule jobs (orchestratord does this)
+- ❌ Decide eviction (orchestratord decides, pool manager executes)
+
+**FFI Boundary:**
+- Uses **NVML** (NVIDIA Management Library) for read-only GPU queries
+- Does NOT use CUDA (workers use CUDA for VRAM allocation)
+
+**Crate structure:**
+- `gpu-inventory` — NVML FFI for system-wide GPU/VRAM tracking
+- `capability-matcher` — Preflight model compatibility validation
+- `model-cache` — Model storage and RAM staging
+- `model-provisioner` — Model download orchestration
+- `model-catalog` — Model metadata registry
+- `worker-lifecycle` — Worker process spawning and monitoring
+- `control-api` — HTTP API for orchestratord commands
+- `error-recovery` — Pool-level error handling
+- `pool-registration-client` — Register with orchestratord
 
 **Parent spec**: `.specs/00_llama-orch.md`
 
@@ -56,7 +90,7 @@ Pool managerd MUST provide API: `GET /v2/state` returning GPU inventory and work
 **Response format**:
 ```json
 {
-  "node_id": "gpu-node-1",
+  "pool_id": "pool-1",
   "gpus": [
     {
       "id": 0,
@@ -69,7 +103,7 @@ Pool managerd MUST provide API: `GET /v2/state` returning GPU inventory and work
   "workers": [
     {
       "id": "worker-abc",
-      "model": "llama-7b",
+      "model_ref": "hf:author/repo@rev::file=models/llama-7b.Q4_K_M.gguf",
       "gpu": 0,
       "vram_used": 16000000000,
       "uri": "http://localhost:8001",
@@ -118,10 +152,9 @@ Pool managerd SHOULD periodically check worker health: `GET /health`. If a worke
 
 ### [POOL-2030] Model Download
 Pool managerd MUST download models from sources when needed:
-- `hf:org/repo/file.gguf` — Hugging Face
-- `file:/path` — Local filesystem
-- `https://...` — Direct download
-- `s3://bucket/key` — S3 (if supported)
+- `hf:{org}/{repo}[@{rev}::file={path}]` — Hugging Face (canonical model_ref)
+- `file:/abs/path/to/model.gguf` — Local filesystem
+Other schemes (e.g., `https:`, `s3:`) are out of scope for now.
 
 ### [POOL-2031] RAM Pre-Staging
 Pool managerd MAY pre-stage frequently used models in RAM (mmap, shared memory) to speed up worker startup.
@@ -142,7 +175,7 @@ When starting a worker, pool managerd MUST provide the model location:
 ## 5. Worker Lifecycle
 
 ### [POOL-2040] Start Worker Command
-When orchestratord sends `POST /v2/workers/start { model, gpu_id }`, pool managerd MUST:
+When orchestratord sends `POST /v2/workers/start { model_ref, gpu_id }`, pool managerd MUST:
 
 1. **Check VRAM**: Verify GPU has sufficient free VRAM (query gpu-inventory)
 2. **Check model**: Ensure model is downloaded (download if needed)
@@ -209,9 +242,9 @@ If GPU enters error state, pool managerd SHOULD:
 4. Log critical event
 
 ### [POOL-2052] Heartbeat to Orchestratord
-Pool managerd MAY send periodic heartbeats to orchestratord (if multi-node):
-- `POST /v2/nodes/{id}/heartbeat` with full state snapshot
-- Default interval: 30s
+Pool managerd MAY send periodic heartbeats to orchestratord (if multi-pool):
+- `POST /v2/pools/{id}/heartbeat` with full state snapshot
+- Default interval: 15s
 
 ---
 
@@ -256,12 +289,12 @@ Pool managerd MUST expose:
 
 ### [POOL-2070] Structured Logging
 Pool managerd MUST emit structured logs with fields:
-- `node_id` — Pool manager node ID
-- `worker_id` — For worker events
-- `gpu_id` — For GPU events
-- `model_ref` — Model being loaded/unloaded
-- `vram_allocated` — VRAM changes
-- `event` — `worker_started`, `worker_stopped`, `worker_registered`, `worker_failed`, `gpu_discovered`, `model_downloaded`
+- `pool_id` — Pool manager ID
+  - `worker_id` — For worker events
+  - `gpu_id` — For GPU events
+  - `model_ref` — Model being loaded/unloaded
+  - `vram_allocated` — VRAM changes
+  - `event` — `worker_started`, `worker_stopped`, `worker_registered`, `worker_failed`, `gpu_discovered`, `model_downloaded`
 
 ### [POOL-2071] Prometheus Metrics
 Pool managerd MUST expose metrics:
@@ -287,7 +320,7 @@ Pool managerd SHOULD emit human-readable narration for key events:
 ### [POOL-2080] Required Config
 Pool managerd MUST accept configuration:
 - `bind_addr` — Bind address (default `0.0.0.0:9200`)
-- `node_id` — Unique node identifier (default hostname)
+- `pool_id` — Unique pool identifier (default hostname)
 - `model_cache_dir` — Model cache directory (default `~/.cache/llama-orch/models`)
 
 ### [POOL-2081] Optional Config
@@ -346,18 +379,18 @@ Pool managerd SHOULD check CUDA driver version at startup and warn if incompatib
 
 ---
 
-## 13. Multi-Node Support (Optional)
+## 13. Multi-Pool Support (Optional)
 
-### [POOL-2120] Node Registration
+### [POOL-2120] Pool Registration
 If `orchestratord_url` is configured, pool managerd MUST register with orchestratord:
-- `POST /v2/nodes/register { node_id, gpus, bind_addr }`
+- `POST /v2/pools/register { pool_id, gpus, bind_addr }`
 
 ### [POOL-2121] Heartbeat
 Pool managerd MUST send periodic heartbeats to orchestratord with full state snapshot.
 
 ### [POOL-2122] Deregistration
 On graceful shutdown, pool managerd SHOULD deregister:
-- `DELETE /v2/nodes/{node_id}`
+- `DELETE /v2/pools/{pool_id}`
 
 ---
 

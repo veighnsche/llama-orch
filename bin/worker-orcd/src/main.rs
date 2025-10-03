@@ -1,80 +1,114 @@
 //! worker-orcd — GPU worker daemon
 //!
-//! # ⚠️ AUDIT LOGGING REQUIRED
+//! Self-contained inference executor that loads ONE model to VRAM and executes
+//! inference requests from orchestratord.
 //!
-//! **CRITICAL**: VRAM operations and policy violations MUST be logged to `audit-logging`:
+//! # Architecture
 //!
-//! ```rust,ignore
-//! use audit_logging::{AuditLogger, AuditEvent};
-//!
-//! // ✅ VRAM sealing (security-critical)
-//! audit_logger.emit(AuditEvent::VramSealed {
-//!     timestamp: Utc::now(),
-//!     shard_id, gpu_device, vram_bytes, digest, worker_id
-//! }).await?;
-//!
-//! // ✅ Policy violations
-//! audit_logger.emit(AuditEvent::PolicyViolation {
-//!     timestamp: Utc::now(),
-//!     policy_id, worker_id, details
-//! }).await?;
+//! ```
+//! ┌─────────────────────────────────────────┐
+//! │ Rust Layer (src/*.rs)                   │
+//! │ • HTTP server (axum)                    │
+//! │ • CLI parsing                           │
+//! │ • SSE streaming                         │
+//! │ • Error handling                        │
+//! └────────────┬────────────────────────────┘
+//!              │ FFI (unsafe extern "C")
+//! ┌────────────▼────────────────────────────┐
+//! │ C++/CUDA Layer (cuda/*.cpp, *.cu)       │
+//! │ • CUDA context management               │
+//! │ • Model loading (disk → VRAM)           │
+//! │ • Inference execution                   │
+//! │ • VRAM health checks                    │
+//! └─────────────────────────────────────────┘
 //! ```
 //!
-//! See: `bin/shared-crates/AUDIT_LOGGING_REMINDER.md`
-//!
-//! ---
-//!
-//! # ⚠️ CRITICAL: Worker Token & Seal Key Management
-//!
-//! **DO NOT HAND-ROLL CREDENTIAL HANDLING**
-//!
-//! For worker registration tokens and seal keys, use `secrets-management`:
-//!
-//! ```rust,ignore
-//! use secrets_management::{Secret, SecretKey};
-//!
-//! // Load worker token for registration with orchestrator
-//! let worker_token = Secret::load_from_file("/etc/llorch/secrets/worker-token")?;
-//!
-//! // Load or derive seal key for VRAM shard integrity
-//! let seal_key = SecretKey::from_systemd_credential("seal_key")?;
-//! // OR derive from worker token:
-//! let seal_key = SecretKey::derive_from_token(
-//!     worker_token.expose(),
-//!     b"llorch-seal-key-v1"
-//! )?;
-//! ```
-//!
-//! See: `bin/shared-crates/secrets-management/README.md`
+//! See: `.specs/01_cuda_ffi_boundary.md`
+
+mod cuda;
+mod http;
+mod startup;
+mod error;
+
+use clap::Parser;
+use std::net::SocketAddr;
+
+#[derive(Parser, Debug)]
+#[command(name = "worker-orcd")]
+#[command(about = "GPU worker daemon for llama-orch")]
+struct Args {
+    /// Worker ID (UUID)
+    #[arg(long)]
+    worker_id: String,
+    
+    /// Model file path (GGUF format)
+    #[arg(long)]
+    model: String,
+    
+    /// CUDA device ID (0, 1, ...)
+    #[arg(long)]
+    gpu_device: i32,
+    
+    /// HTTP server port
+    #[arg(long)]
+    port: u16,
+    
+    /// Pool manager callback URL
+    #[arg(long)]
+    callback_url: String,
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt::init();
-    tracing::info!("worker-orcd starting");
-
-    // TODO(ARCH-CHANGE): Implement worker-orcd M0 pilot per ARCHITECTURE_CHANGE_PLAN.md Phase 3:
-    // Task Group 1 (Rust Control Layer):
-    // - Parse CLI args (GPU device, config path, etc.)
-    // - Initialize VramManager and ModelLoader
-    // - Set up telemetry and structured logging
-    // - Implement RPC server (Plan/Commit/Ready/Execute endpoints)
-    // - Add Bearer token authentication middleware
-    // Task Group 2 (CUDA FFI):
-    // - Initialize CUDA context and cuBLAS handle
-    // - Set up safe FFI wrappers with bounds checking
-    // Task Group 3 (Kernels):
-    // - Load initial kernel set (GEMM, RoPE, attention, sampling)
-    // Task Group 4 (Model Loading):
-    // - Implement GGUF loader with validation
-    // - Wire up inference engine with token streaming
-    // Task Group 5 (MCD/ECP):
-    // - Implement capability matching logic
-    // Task Group 6 (Integration):
-    // - Add health monitoring and registration with pool-managerd
-    // Task Group 7 (Validation):
-    // - Test with TinyLlama-1.1B
-    // - Verify determinism and VRAM-only policy
-    // See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md M0 Must-Fix items 1-10
-
+    // Initialize tracing
+    tracing_subscriber::fmt()
+        .with_target(false)
+        .json()
+        .init();
+    
+    // Parse CLI arguments
+    let args = Args::parse();
+    
+    tracing::info!(
+        worker_id = %args.worker_id,
+        model = %args.model,
+        gpu_device = args.gpu_device,
+        port = args.port,
+        "Worker starting"
+    );
+    
+    // Initialize CUDA context
+    let cuda_ctx = cuda::safe::ContextHandle::new(args.gpu_device)?;
+    tracing::info!(
+        gpu_device = args.gpu_device,
+        "CUDA context initialized"
+    );
+    
+    // Load model to VRAM
+    tracing::info!(model = %args.model, "Loading model to VRAM...");
+    let cuda_model = cuda::safe::ModelHandle::load(&cuda_ctx, &args.model)?;
+    tracing::info!(
+        vram_bytes = cuda_model.vram_bytes(),
+        "Model loaded to VRAM"
+    );
+    
+    // Call back to pool manager
+    startup::callback_ready(
+        &args.callback_url,
+        &args.worker_id,
+        cuda_model.vram_bytes(),
+        args.port,
+    ).await?;
+    
+    tracing::info!("Worker ready, starting HTTP server");
+    
+    // Start HTTP server
+    let addr = SocketAddr::from(([0, 0, 0, 0], args.port));
+    let app = http::create_router(args.worker_id, cuda_model);
+    
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await?;
+    
     Ok(())
 }

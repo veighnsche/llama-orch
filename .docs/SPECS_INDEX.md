@@ -102,7 +102,7 @@ This document indexes all binary specifications aligned with the corrected trio-
 - NO decisions
 
 **Key Crates**:
-- `vram-policy` — VRAM-only enforcement
+- Worker's CUDA module — VRAM-only enforcement
 - `model-loader` — Load model to VRAM
 - `api` — HTTP endpoints
 - `capability-matcher` — Report capabilities
@@ -151,7 +151,7 @@ This document indexes all binary specifications aligned with the corrected trio-
 1. Orchestrator: "Need llama-13b, no worker available"
 
 2. Orchestrator → Pool Manager:
-   POST /v2/workers/start { "model": "llama-13b", "gpu_id": 1 }
+   POST /v2/workers/start { "model_ref": "hf:author/repo@rev::file=models/llama-13b.Q4_K_M.gguf", "gpu_id": 1 }
 
 3. Pool Manager:
    - Check GPU 1 has 20GB free (via gpu-inventory)

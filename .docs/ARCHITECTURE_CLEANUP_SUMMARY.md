@@ -20,7 +20,7 @@ Executed massive architecture cleanup to align with corrected trio-binary model 
 
 1. **`bin/worker-orcd-crates/vram-residency/`** (entire directory + BDD)
    - Mixed pool manager and worker concerns
-   - Replaced by `gpu-inventory` + `vram-policy`
+   - Replaced by `gpu-inventory`
 
 2. **`bin/worker-orcd-crates/scheduler/`**
    - Workers don't schedule (orchestrator does)
@@ -43,11 +43,10 @@ Executed massive architecture cleanup to align with corrected trio-binary model 
    - **Tests**: 3 unit tests included
    - **Status**: ✅ Compiles
 
-2. **`bin/worker-orcd-crates/vram-policy/`**
+2. **Worker's CUDA module**
    - **Purpose**: Single-model VRAM-only enforcement
    - **API**: `enforce_vram_only()`, `load_model_to_vram()`, `verify_vram_residency()`
-   - **Tests**: 2 unit tests included
-   - **Status**: ✅ Compiles
+   - **Status**: ✅ Integrated into worker binary
 
 ### ✅ Stubs Created (Dependencies)
 
