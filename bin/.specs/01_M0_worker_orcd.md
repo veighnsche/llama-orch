@@ -2541,21 +2541,6 @@ fn test_repro_same_device() {
 
 **Note**: Deep CUDA determinism audit (kernel scheduling, atomics) deferred to M1+
 
-### 12.3 Integration Tests
-
-#### [M0-W-1820] End-to-End Test
-M0 MUST have integration test:
-
-**Test flow**:
-1. Start worker with test model
-2. Send inference request
-3. Verify SSE stream
-4. Verify reproducible output (temp=0 for testing)
-5. Verify VRAM-only operation
-6. Shutdown gracefully
-
-**Location**: `tests/integration/e2e_test.rs`
-
 ### 12.3.1 GPT-OSS-20B Integration Tests
 
 **Added**: 2025-10-03 (MXFP4 implementation requirements)
