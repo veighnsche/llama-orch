@@ -2023,635 +2023,6 @@ Content already defined in Section 5.6. Cross-reference: See SYS-5.6.1 for compl
 
 #### [SYS-11.1.1] Orchestrator Configuration Schema
 
-**Orchestrator on separate machine from GPU pools**
-
-```
-[Orchestrator] (lab-controller:8080)
-      ↓ (network)
-[Pool Manager] (gpu-node-1:9200)
-      ├─→ [Worker-1] GPU 0
-      └─→ [Worker-2] GPU 1
-```
-
-**Use case**: Research lab, small team, distributed GPU resources
-
-**Characteristics**:
-- Orchestrator and pool-managerd on different systems
-- Authentication enabled by default (network communication)
-- Audit logging for inter-service calls
-- Balanced security and performance
-- Supports multiple pool managers
-
-**Requirements**:
-- Authentication MUST be enabled for orchestrator ↔ pool-managerd communication.
-- Pool-managerd MUST authenticate registration and heartbeat requests using bearer tokens or mTLS.
-- Orchestrator SHOULD bind to network interface (not loopback) with explicit configuration.
-- Network communication SHOULD use TLS or run on trusted network segments.
-
----
-
-### 5.3 Multi-GPU Mode (M1)
-
-**Single node, multiple GPUs**
-
-```
-[Orchestrator] (localhost:8080)
-      ↓
-[Pool Manager] (localhost:9200)
-      ├─→ [Worker-1] GPU 0 (localhost:8001)
-      ├─→ [Worker-2] GPU 1 (localhost:8002)
-      └─→ [Worker-3] GPU 2 (localhost:8003)
-```
-
-**Use case**: Single powerful machine with 2-4 GPUs
-
-**Features**:
-- Tensor parallelism (split large models across GPUs)
-- Multiple models loaded simultaneously
-
-**Requirements**:
-- Orchestratord MUST remain single-instance with persistent state (see [SYS-0022]); restarts MUST reload queue state and allow SSE reconnection via checkpoints.
-- Pool-managerd MUST manage workers: single-GPU workers map 1:1 to GPUs; multi-GPU workers (tensor parallel) map 1:N and are tracked with device masks.
-- VRAM accounting MUST handle per-GPU allocation and reserved headroom; preflight MUST fail when insufficient free VRAM across required GPUs.
-- Cancellation and timeouts MUST apply per-job; multi-GPU workers MUST release all GPU allocations on job termination.
-
----
-
-### 5.3 Multi-Node Mode (M2+)
-
-**Multiple nodes, multiple GPUs each**
-
-```
-[Orchestrator] (orchestrator.local:8080)
-      ├─→ [Pool Manager 1] (node1:9200)
-      │        ├─→ [Worker-1] GPU 0
-      │        └─→ [Worker-2] GPU 1
-      ├─→ [Pool Manager 2] (node2:9200)
-      │        ├─→ [Worker-3] GPU 0
-      │        └─→ [Worker-4] GPU 1
-      └─→ [Pool Manager 3] (node3:9200)
-               ├─→ [Worker-5] GPU 0
-               └─→ [Worker-6] GPU 1
-```
-
-**Use case**: Enterprise, data center, GPU cluster
-
-**Features**:
-- Cluster-wide orchestration
-- Load balancing across nodes
-- High availability
-
-**Requirements**:
-- Orchestratord MUST manage multiple pool-managerd across nodes and MUST make all placement decisions centrally (no nested orchestrators).
-- Heartbeat aggregation MUST tolerate partial failures; pools missing heartbeats beyond timeout MUST be excluded from scheduling.
-- Network communication between nodes SHOULD use TLS or a trusted network; service discovery MAY be static or registry-based.
-- Scheduling SHOULD prefer locality and capacity signals (e.g., free VRAM); policy MUST be observable via metrics and logs.
-
----
-
-### 5.4 Platform Mode (Marketplace)
-
-**Federation across provider orchestrators**
-
-```
-[Platform Orchestrator] (api.yourplatform.com:443)
-      ├─→ [Provider A Orchestrator] (provider-a.internal:8080)
-      │        └─→ Provider A's pools/workers
-      ├─→ [Provider B Orchestrator] (provider-b.internal:8080)
-      │        └─→ Provider B's pools/workers
-      └─→ [Provider C Orchestrator] (provider-c.internal:8080)
-               └─→ Provider C's pools/workers
-```
-
-**Use case**: GPU marketplace, provider ecosystem
-
-**Features**:
-- Provider registration
-- Federated routing (NOT nesting)
-- Billing and usage tracking
-- Multi-tenancy and quotas
-
-<!-- POTENTIAL CONTRADICTION: "smart router" vs "Provider orchestrators make their own placement decisions".
-  If the platform orchestrator is "smart", what intelligence does it have? The spec should clarify
-  what routing decisions it makes (e.g., provider selection based on capacity/cost/region) vs.
-  what decisions it delegates (worker selection within a provider). -->
-**Key distinction**: Platform orchestrator is a **smart router**, not a nested orchestrator. Provider orchestrators make their own placement decisions.
-
-**Business doc**: `.docs/.business/monetization.md`
-
-**Requirements**:
-- Platform orchestrator MUST authenticate providers and MUST maintain a registry of provider endpoints and capabilities.
-- Routing MUST be federated (provider orchestrators make placement decisions); nested scheduling MUST NOT occur.
-- Tenancy context MUST be preserved across federation and included in billing records.
-- Provider-level SLIs/labels (availability, capacity) SHOULD inform routing; fallbacks MAY be used when signals are missing.
-
----
-
-## 6. API Contracts
-
-### 6.0 Model Reference Format (Canonical)
-
-**Accepted forms**:
-- Client input (`model` in Agentic API) MAY be one of:
-  - `hf:{org}/{repo}` or `hf:{org}/{repo}@{rev}` or `hf:{org}/{repo}@{rev}::file={path}`
-  - `file:/abs/path/to/model.gguf`
-  - Alias without a scheme (e.g., `llama-7b`)
-
-<!-- MINOR INCONSISTENCY: "SHOULD pin @rev" and "SHOULD pin a concrete artifact" are both SHOULD,
-  but determinism (SYS-0003) is a MUST. For true determinism guarantee, these should be MUST.
-  Either strengthen these to MUST or clarify that determinism only applies when these are pinned. -->
-**Resolution rules**:
-- Orchestratord (catalog) MUST resolve aliases to a canonical `model_ref` prior to scheduling.
-- Orchestratord SHOULD pin `@rev` to an immutable commit SHA and SHOULD pin a concrete artifact via `::file=...` for determinism.
-- Pool-managerd MUST receive a normalized `model_ref` that starts with `hf:` or `file:` and MUST NOT perform alias resolution.
-- The model-provisioner in pool-managerd MUST support:
-  - `hf:` — Downloading the specified artifact from Hugging Face.
-  - `file:` — Treating the path as a local file.
-- Other schemes (e.g., `https:`, `s3:`) MAY be added in future milestones and are NOT REQUIRED for M0.
-
-**Worker contract**:
-- Worker-orcd MUST be provided a concrete filesystem path to the model artifact at startup.
-- Worker ready callbacks MUST include the resolved `model_ref` for traceability.
-
-### 6.1 Client → Orchestrator (Agentic API)
-
-**Task submission**:
-```
-POST /v2/tasks
-{
-  "session_id": "sess-abc",
-  "model": "llama-3.1-8b",
-  "prompt": "Hello world",
-  "max_tokens": 100,
-  "temperature": 0.7,
-  "seed": 42,
-  "priority": "interactive"
-}
-
-Response (202 Accepted):
-{
-  "job_id": "job-xyz",
-  "status": "queued",
-  "queue_position": 2,
-  "events_url": "/v2/tasks/job-xyz/events"
-}
-```
-
-**Streaming**:
-```
-GET /v2/tasks/{job_id}/events (SSE)
-
-Events:
-- queued → started → token* → metrics* → end
-- error (if failure or cancellation)
-```
-
-**Requirements**:
-<!-- MINOR INCONSISTENCY: Line 307 shows example with `temperature: 0.7` but doesn't list it as required.
-  Line 698 says only `model`, `prompt`, `max_tokens` are MUST.
-  Should clarify if `temperature` is:
-  - Optional with a default (e.g., 0.7 or 1.0)
-  - Required for non-deterministic sampling
-  - Not mentioned because it's part of a larger params object
--->
-- Requests MUST include `model`, `prompt`, and `max_tokens`; `seed` SHOULD be provided for determinism, otherwise orchestrator MAY supply one and MUST record it.
-- `priority` MUST be one of `interactive` or `batch`; unknown values MUST be rejected with 400.
-<!-- MINOR INCONSISTENCY: "token budgets" is mentioned here and in line 312, but not defined anywhere.
-  Is this:
-  - max_tokens parameter validation (must be > 0, < some limit)?
-  - Per-tenant token quotas (see line 954)?
-  - Context window validation (prompt + max_tokens < model context length)?
-  
-  RESOLUTION NEEDED: Define "token budgets" in a glossary or earlier section.
--->
-- Orchestratord MUST validate model existence and token budgets at admission; invalid requests MUST return 4xx with a stable error code.
-- When the queue is full and policy=`reject`, orchestrator MUST return 429 with a Retry-After where possible; for `drop-lru`, orchestrator MUST emit metrics indicating eviction.
-- SSE endpoint MUST be idempotent to reconnects for the same `job_id` and SHOULD resume streaming from the last sent offset using `sse_checkpoints` table (see [SYS-0022]); clients MAY provide `Last-Event-ID` header to indicate last received event.
-
-**Specs**: `bin/orchestratord-crates/agentic-api/.specs/00_agentic_api.md`
-
----
-
-### 6.2 Orchestrator ↔ Pool Manager
-
-**Pool registration**:
-```
-POST /v2/pools/register
-{
-  "pool_id": "pool-1",
-  "endpoint": "http://192.168.1.100:9200",
-  "gpus": [...]
-}
-```
-
-**Heartbeat**:
-```
-POST /v2/pools/{id}/heartbeat
-{
-  "pool_id": "pool-1",
-  "gpus": [...],
-  "workers": [...]
-}
-```
-
-**Requirements**:
-- Pool registration MUST be authenticated (see §8.1) and MUST include `pool_id`, `endpoint`, and initial GPU inventory.
-- Heartbeats MUST be sent at the configured interval and MUST include current GPU VRAM state and worker states; missing heartbeats beyond timeout MUST mark the pool unavailable.
-- Orchestratord MUST validate `pool_id` uniqueness and SHOULD reject re-registration attempts that conflict without explicit takeover semantics.
-- Worker start commands MUST be accepted only after preflight checks (VRAM availability and compatibility) have passed in pool-managerd.
-
-**Worker start command**:
-```
-POST /v2/workers/start
-{
-  "model_ref": "hf:author/repo@rev::file=models/model.Q4_K_M.gguf",
-  "gpu_id": 0
-}
-```
-
-**Specs**: `bin/pool-managerd-crates/control-api/.specs/00_control_api.md`
-  (lifecycle commands and state), and `bin/pool-managerd/.specs/00_pool-managerd.md` §13 (multi-pool registration & heartbeat)
-
----
-
-### 6.3 Pool Manager ↔ Worker
-
-**Worker ready callback**:
-```
-POST /v2/internal/workers/ready
-{
-  "worker_id": "worker-abc",
-  "model_ref": "llama-7b",
-  "vram_bytes": 17000000000,
-  "uri": "http://localhost:8001"
-}
-```
-
-**Specs**: `bin/pool-managerd-crates/worker-lifecycle/.specs/00_worker_lifecycle.md`
-
----
-
-### 6.4 Orchestrator → Worker (Direct)
-
-**Inference execution**:
-```
-POST {worker_uri}/execute
-{
-  "job_id": "job-xyz",
-  "prompt": "Hello world",
-  "max_tokens": 100,
-  "seed": 42
-}
-
-Response: SSE stream
-- started
-- token* (multiple)
-- metrics* (periodic)
-- end
-- error (on failure or cancellation)
-```
-
-**Cancellation**:
-```
-POST {worker_uri}/cancel
-{
-  "job_id": "job-xyz"
-}
-```
-
-Cancellation semantics:
-- Idempotent: repeated cancels for the same `job_id` MUST be safe and return the same terminal outcome.
-- Prompt propagation: orchestrator MUST issue cancel immediately on client request or stream disconnect.
-- Worker behavior: upon cancel, worker MUST stop decoding promptly, free resources, and emit SSE `error` with a stable code `CANCELLED`.
-- Acknowledgement: worker SHOULD return HTTP 202 for `POST /cancel` if cancellation has been accepted.
-- Deadline: orchestrator SHOULD enforce a cancellation deadline (default 5s) after which it treats the job as cancelled and closes client SSE.
-
-**Requirements**:
-- SSE stream event order MUST be: `started` → zero or more `token` → zero or more `metrics` (interleaved as needed) → terminal `end` or `error`.
-- Exactly one terminal event MUST be emitted per job (`end` on success, `error` on failure/cancel).
-- Workers MUST include stable error codes; cancellation MUST use `CANCELLED`.
-- Orchestrator MUST propagate `X-Correlation-Id` to worker requests; workers SHOULD echo it in SSE metadata.
-- Orchestrator SHOULD enforce request timeouts per job policy and close SSE cleanly on timeout with a terminal event.
-
-**Specs**: `bin/worker-orcd/.specs/00_worker-orcd.md`
-
----
-
-## 7. Quality Attributes
-
-### 7.1 Determinism
-
-**Design Principle**: The system is designed AS IF deterministic, but acknowledges that underlying models may not guarantee determinism.
-
-**System-level guarantees** (what we control):
-- Worker-orcd MUST allocate and keep all model weights, KV cache, and activations in VRAM only
-- Engine versions and kernel parameters MUST be pinned and recorded per job
-- SSE event ordering MUST be stable and reproducible
-- Same seed + same inputs MUST follow identical code paths through the system
-
-**Model-level limitations** (what we cannot control):
-- Inference engines (llama.cpp, vLLM, etc.) MAY have non-deterministic operations
-- GPU hardware variations MAY produce different floating-point results
-- Model architectures MAY include inherently non-deterministic components
-- Cross-worker/cross-GPU determinism is NOT guaranteed
-
-**Best-effort determinism**:
-- When model and engine support determinism, system MUST preserve it
-- Sampling SHOULD be deterministic for identical inputs and seeds where engine allows
-- Non-deterministic operations SHOULD be disabled or replaced when possible
-- System MUST document which models/engines have been verified as deterministic
-
-**Recording for reproducibility**:
-- Proof bundles MUST include seed, model_ref (pinned @rev and artifact), engine version, device info
-- Failed determinism attempts SHOULD be logged with hardware/engine context
-
-**Verification approach**:
-- Property tests SHOULD verify determinism for known-deterministic models
-- Research document MUST catalog which models/engines achieve determinism
-- See `.docs/determinism-research.md` for model-specific findings
-
----
-
-### 7.2 Performance
-
-<!-- MINOR INCONSISTENCY: "Worker startup SHOULD complete within 60s" but this is a pool-managerd responsibility,
-  not directly controllable by the spec. The 60s includes model loading time which varies by model size.
-  Consider whether this should be a SHOULD or just a target/guideline. -->
-**Latency targets (measurement points)**:
-- Queue admission SHOULD complete within 10ms measured from HTTP receive to enqueue decision.
-- Scheduling decision SHOULD complete within 50ms measured from job-ready to dispatch command issued.
-- Worker startup SHOULD complete within 60s measured from start command to ready callback receipt.
-- First token latency SHOULD be under 100ms measured from worker execute accept to first SSE `token` event.
-- Token generation rate SHOULD be within 20–100 tokens/sec depending on model; deviations MAY be acceptable with justification in metrics.
-
-**Throughput and limits**:
-- Queue capacity MUST be configurable; default SHOULD be 100 jobs.
-- Worker concurrency for M0 MUST be 1 job per worker (batch=1).
-- Multi-job batching MAY be enabled in M1+; when enabled, batching policies MUST be documented and observable via metrics.
-
----
-
-### 7.3 Reliability
-
-**Availability**:
-- The service SHOULD achieve 99.9% uptime (3 nines) for orchestrator in supported deployments.
-- On worker failures, the system SHOULD degrade gracefully by failing affected jobs or rerouting per policy without impacting unrelated jobs.
-- Automatic retry with exponential backoff SHOULD be applied where policies permit.
-- Retry behavior acknowledges that cross-worker retries MAY produce different results (see §7.1 Determinism).
-- Retries are for fault tolerance, not determinism guarantees.
-
-**Fault tolerance**:
-- Pool-managerd MUST detect worker process exits and perform operational cleanup (state removal, VRAM accounting release) promptly.
-- Orchestratord MUST detect missed heartbeats from pools within a configured timeout and mark them unavailable for scheduling.
-- Retry policies MUST be configurable with exponential backoff parameters.
-
-**Retry backoff configuration**:
-```yaml
-retry:
-  enabled: true
-  max_attempts: 5
-  initial_delay_ms: 1000  # 1 second
-  multiplier: 2.0  # exponential: 1s, 2s, 4s, 8s, 16s
-  max_delay_ms: 60000  # cap at 60 seconds
-  jitter: true  # add random jitter to prevent thundering herd
-```
-
-**Observability**:
-- Components MUST emit structured JSON logs and Prometheus metrics sufficient to diagnose failures and capacity issues.
-- Key reliability events (crash, retry, timeout, cancel) SHOULD have stable event codes in logs.
-- Test artifacts and incident analyses MAY include proof bundles to capture timelines and seeds for reproduction.
-
----
-
-### 7.4 Scalability
-
-**Horizontal scaling**:
-- Orchestratord MUST support registration of multiple pool-managerd instances to scale across GPU nodes.
-- Pool-managerd MUST support multiple workers per node to scale with additional GPUs.
-- In platform mode, a platform orchestrator MAY federate across multiple provider orchestrators; routing policies SHOULD avoid nested placement decisions.
-
-**Scaling properties**:
-- Orchestrator’s scheduling and registry operations SHOULD remain O(log N) or better with respect to total workers.
-- Metrics cardinality SHOULD be bounded when scaling; high-cardinality labels MUST be avoided or sampled.
-
-**Configuration**:
-- Scaling parameters (max pools, max workers per pool, heartbeat fan-in) SHOULD be configurable and documented.
-
-**Limits (M0)**:
-- Single orchestrator instance
-- Multiple pool managers supported
-- Workers scale per GPU
-
-**Limits (M1+)**:
-- Orchestrator HA/clustering: future (requires PostgreSQL for shared state)
-- Current: single orchestrator with SQLite persistent state (can restart gracefully)
-
----
-
-## 8. Security & Compliance
-
-### 8.1 Authentication
-
-Authentication requirements vary by deployment mode following the principle: **Performance > Security (Home)**, **Balanced (Lab)**, **Security > Performance (Platform)**.
-
-**Home Mode (M0)**:
-- All components on same system (localhost)
-- Authentication MUST be disabled by default
-- Pool registration, heartbeats, and worker callbacks are trusted (localhost)
-- No bearer tokens required
-- Loopback binding enforced (127.0.0.1)
-
-**Lab Mode (M1)**:
-- Orchestrator and pool-managerd on different systems
-- Authentication MUST be enabled by default for network communication
-- Pool registration and heartbeats MUST use bearer tokens or mTLS
-- Worker callbacks within same node MAY remain unauthenticated (localhost)
-- TLS SHOULD be used or run on trusted network segments
-
-**Platform Mode (M2+)**:
-- Multi-tenant marketplace, security is mandatory
-- All client requests MUST be authenticated using HTTP bearer tokens
-- Authentication CANNOT be disabled (security > performance)
-- Pool-managerd registration MUST use bearer tokens or mTLS
-- Orchestratord MUST validate tokens on every request (401/403 on failure)
-- Inter-service calls SHOULD use mTLS for mutual authentication
-- Audit logging MUST be enabled for all authenticated requests
-
-**Future provisions**:
-- OAuth2/OpenID Connect MAY be added in future milestones (NOT REQUIRED for M0)
-- API key authentication MAY be supported as alternative to bearer tokens
-- If OAuth2/OIDC is configured, orchestratord SHOULD validate audience/scope claims and enforce token expiry
-
----
-
-### 8.2 EU Compliance (GDPR)
-
-**Data residency**:
-- MUST: Pool-managerd instances serving production workloads MUST be located within EU regions only.
-- MUST: Orchestratord MUST refuse to schedule work to pools that are not explicitly marked as EU-resident.
-- MUST: Worker-orcd MUST NOT transmit model inputs/outputs to endpoints outside the EU.
-
-**Geo-verification**:
-- SHOULD: Provider registration MUST include asserted region metadata and evidence (e.g., provider-declared ISO 3166-1 country code and hosting provider region ID).
-- SHOULD: Orchestratord SHOULD verify region metadata against an allow-list and SHOULD reject pools with ambiguous or missing region information.
-
-**Data handling**:
-- MUST: Logs MUST NOT include raw prompts, tokens, or PII unless explicitly configured for debugging; when enabled, such logs MUST be redacted or truncated per policy.
-- MAY: Proof bundles MAY include hashed or redacted payloads but MUST include correlation identifiers sufficient for auditing.
-
-**Audit trail**:
-- MUST: All requests MUST be logged with correlation IDs propagated end-to-end.
-- SHOULD: Access to audit logs SHOULD be role-restricted and retention policies SHOULD comply with GDPR data minimization.
-
----
-**Compliance docs**: `.docs/.business/monetization.md`
-
----
-
-### 8.3 Multi-Tenancy (Platform Mode)
-
-**Isolation guarantees**:
-- Orchestratord MUST enforce tenant-level isolation of compute and data paths.
-- Pool-managerd MUST ensure workers for different tenants do not share processes or VRAM allocations.
-- Logs and metrics MUST NOT expose cross-tenant identifiers except in aggregated, non-identifying form.
-
-**Quotas and limits**:
-- Orchestratord MUST support per-tenant quotas (e.g., VRAM ceilings, max concurrent jobs, token budgets).
-- When quotas are exceeded, work MUST be queued (never rejected) with quota enforcement at scheduling time.
-- Jobs exceeding quota remain in queue until quota becomes available (tenant usage decreases).
-- Submission rate limiting SHOULD be enforced per tenant on task endpoints to prevent queue flooding.
-- Queue capacity is unbounded (infinite queue) to prevent job loss.
-
-**Authorization**:
-- All client API requests in platform mode MUST include a tenant identifier bound to the authenticated principal.
-- Orchestratord MUST authorize every request against the tenant’s entitlements before admission.
-- Inter-service requests (orchestrator ↔ pool-managerd) SHOULD carry tenant context for auditing; pool-managerd MAY validate tenant context when relevant.
-
-**Data separation**:
-- Shared model caches MAY be used across tenants; tenant runtime data (inputs/outputs/proofs) MUST be segregated with per-tenant namespaces.
-- Proof bundles MUST include correlation and tenant identifiers and SHOULD avoid raw prompts unless debugging with redaction is explicitly enabled.
-
-**Observability and billing** (Platform Mode only):
-- **Prometheus metrics**: MAY omit or hash `tenant_id` to reduce cardinality and privacy risk
-- **Billing/accounting logs**: MUST include plaintext `tenant_id` for usage tracking
-- Usage accounting MUST be recorded per tenant for tokens generated, inference duration, and VRAM occupancy-time
-- Billing data MUST be stored separately from observability metrics with appropriate access controls
-- Home/Lab modes: Tenancy overhead is disabled (single-user assumption)
-
-**Specs**: `bin/orchestratord-crates/platform-api/.specs/00_platform_api.md`
-
----
-
-## 9. Development Workflow
-
-### 9.1 Spec-Driven Development
-
-**Process**: Spec → Contract → Tests → Code
-
-**Workflow**:
-1. Write spec (RFC-2119 normative requirements)
-2. Define contracts (API, data structures)
-3. Write tests (BDD, property tests, unit tests)
-4. Implement code (guided by specs and tests)
-
-**Docs**: `README_LLM.md`, `.docs/workflow.md`
-
----
-
-### 9.2 Testing Strategy
-
-**Test types (scope and requirements)**:
-- Unit tests MUST exist per crate to cover core functions and error paths.
-- Integration tests SHOULD validate cross-crate interactions and HTTP boundaries.
-- Contract tests MUST verify API conformance against the OpenAPI/contracts with stable IDs.
-- Property tests MUST enforce critical invariants (e.g., determinism, queue bounds, idempotent cancellation).
-- BDD tests SHOULD derive from spec scenarios with stable identifiers and traceability to requirements.
-
-**Artifacts and determinism**:
-- All automated test runs SHOULD produce proof bundles under `<crate>/.proof_bundle/<type>/<run_id>/`.
-- Proof bundles MUST include an autogenerated header and MUST respect `LLORCH_RUN_ID` and `LLORCH_PROOF_DIR` when set.
-- Tests that rely on randomness MUST seed RNGs explicitly and record seeds in proof bundles.
-
-**References**:
-- Proof bundle standard: `.specs/00_proof-bundle.md`
-
----
-
-### 9.3 CI/CD Pipeline
-
-**Gates (must-pass checks)**:
-- Stage 0 (Spec hygiene) MUST pass link checks and ID stability; specs MUST use RFC‑2119 terms.
-- Stage 1 (Code quality) MUST pass `fmt` and `clippy` with no new warnings in changed code.
-- Stage 2 (Tests) MUST pass unit, integration, and property tests; flaky tests MUST be quarantined or fixed before merge.
-- Stage 3 (Contract compliance) MUST validate APIs against OpenAPI/contracts; breaking changes MUST be versioned and documented.
-- Stage 4 (Determinism suite) MUST verify determinism properties on supported targets.
-- Stage 5 (Metrics emission) SHOULD validate presence and type/label cardinality of required metrics; missing optional metrics MAY be tolerated with waivers.
-- Stage 6 (E2E acceptance) SHOULD pass scenario-based BDD tests for targeted milestones before release.
-
-**Planning references**:
-- Roadmap documents SHOULD be maintained at `TODO.md` and `.plan/00_meta_plan.md`.
-
----
-
-## 10. Metrics & Observability
-
-### 10.1 Metrics Contract
-
-**Orchestrator metrics**:
-- `orchd_queue_depth{priority}`
-- `orchd_tasks_enqueued_total{outcome}`
-- `orchd_tasks_dispatched_total{worker_id, outcome}`
-- `orchd_scheduling_latency_ms`
-
-**Pool metrics**:
-- `pool_mgr_gpu_vram_total_bytes{gpu_id}`
-- `pool_mgr_gpu_vram_allocated_bytes{gpu_id}`
-- `pool_mgr_workers_total{status}`
-- `pool_mgr_worker_starts_total{outcome}`
-
-**Worker metrics**:
-- `worker_inference_duration_ms`
-- `worker_tokens_generated_total`
-- `worker_vram_bytes{worker_id}`
-
-**Requirements**:
-- Metric names, types, and labels MUST conform to `bin/.specs/71_metrics_contract.md`.
-- Required metrics MUST be emitted at INFO-level operation; optional metrics MAY be omitted but SHOULD have waivers referenced in CI (Stage 5).
-- Label cardinality MUST be bounded; high-cardinality labels (e.g., `job_id`) MUST NOT be used. `worker_id` MAY be included where documented.
-- All metrics MUST include `component` and SHOULD include `pool_id`/`worker_id` where applicable.
-- Metric units MUST be encoded in the name (e.g., `_ms`, `_bytes`, `_total`).
-
-**Spec**: `.specs/71_metrics_contract.md`
-
----
-
-### 10.2 Logging
-
-**Format**:
-- All components MUST emit JSON structured logs.
-- Log schemas SHOULD be stable and versioned to avoid breaking ingestion.
-
-**Levels**:
-- Components MUST support standard levels: ERROR, WARN, INFO, DEBUG, TRACE.
-- Default level SHOULD be INFO in production; DEBUG/TRACE MAY be enabled temporarily for diagnostics.
-
-**Correlation**:
-- `X-Correlation-Id` MUST be accepted from clients and propagated across orchestrator → pool-managerd → worker calls.
-- If the header is absent, orchestrator MUST generate a new correlation ID and propagate it downstream.
-
-**Content**:
-- Logs MUST include component, timestamp, level, correlation_id, and stable event codes for key actions (admission, schedule, dispatch, execute, cancel).
-- Logs SHOULD avoid raw prompts/tokens unless explicitly enabled; when enabled, content MUST be redacted or truncated per policy.
-
-**Narration**:
-- Human-readable narration fields MAY be included for developer ergonomics but MUST NOT replace structured fields.
-
----
-
-## 11. Configuration
-
-### 11.1 Orchestrator Config
-
 ```yaml
 orchestratord:
   bind: "0.0.0.0:8080"
@@ -2679,16 +2050,18 @@ orchestratord:
 ```
 
 **Requirements**:
-- Defaults MUST be applied when fields are omitted; values MUST be validated (e.g., `default_ms` ≤ `max_ms`).
-- `mode` MUST be `agentic` or `platform`; unknown values MUST be rejected.
-- `queue.capacity`: -1 for unbounded (default), or positive integer for bounded queue.
-- `queue.policy`: MUST be `queue` (never reject jobs, always enqueue).
-- `scheduling.algorithm` SHOULD be one of the documented strategies; unknown algorithms MAY be rejected or fall back to a safe default with a warning.
-- Timeouts MUST be enforced per job; values MAY be overridden per-request if allowed by policy.
+- Defaults MUST be applied when fields are omitted; values MUST be validated (e.g., `default_ms` ≤ `max_ms`)
+- `mode` MUST be `agentic` or `platform`; unknown values MUST be rejected
+- `queue.capacity`: -1 for unbounded (default), or positive integer for bounded queue
+- `queue.policy`: MUST be `queue` (never reject jobs, always enqueue)
+- `scheduling.algorithm` SHOULD be one of the documented strategies; unknown algorithms MAY be rejected or fall back to a safe default with a warning
+- Timeouts MUST be enforced per job; values MAY be overridden per-request if allowed by policy
 
 ---
 
-### 11.2 Pool Manager Config
+### 11.2 Pool Manager Config (SYS-11.2.x)
+
+#### [SYS-11.2.1] Pool Manager Configuration Schema
 
 ```yaml
 pool-managerd:
@@ -2704,14 +2077,16 @@ pool-managerd:
 ```
 
 **Requirements**:
-- `bind` MUST be a valid socket address; in home mode it SHOULD bind loopback unless explicitly overridden.
-- `pool_id` MUST be unique per orchestrator; collisions MUST be rejected at registration.
-- `orchestrator.url` MUST be a reachable HTTP endpoint; `heartbeat_interval_ms` MUST be a positive integer and SHOULD default to 15000.
-- `models.cache_dir` MUST be writable by pool-managerd; insufficient permissions MUST fail fast at startup.
+- `bind` MUST be a valid socket address; in home mode it SHOULD bind loopback unless explicitly overridden
+- `pool_id` MUST be unique per orchestrator; collisions MUST be rejected at registration
+- `orchestrator.url` MUST be a reachable HTTP endpoint; `heartbeat_interval_ms` MUST be a positive integer and SHOULD default to 15000
+- `models.cache_dir` MUST be writable by pool-managerd; insufficient permissions MUST fail fast at startup
 
 ---
 
-### 11.3 Worker Config
+### 11.3 Worker Config (SYS-11.3.x)
+
+#### [SYS-11.3.1] Worker Configuration Schema
 
 ```bash
 worker-orcd \
@@ -2723,15 +2098,105 @@ worker-orcd \
 ```
 
 **Requirements**:
-- `--worker-id` MUST be unique per pool; collisions MUST be rejected.
-- `--model` MUST point to a readable file; startup MUST fail fast if missing or unreadable.
-- `--gpu-device` MUST refer to a valid CUDA device index present on the node.
-- `--port` SHOULD default to an ephemeral port if not provided; chosen port MUST be free at startup.
-- `--callback-url` MUST be reachable by pool-managerd and MUST use HTTP(S); ready callback MUST include `model_ref` and `vram_bytes`.
+- `--worker-id` MUST be unique per pool; collisions MUST be rejected
+- `--model` MUST point to a readable file; startup MUST fail fast if missing or unreadable
+- `--gpu-device` MUST refer to a valid CUDA device index present on the node
+- `--port` SHOULD default to an ephemeral port if not provided; chosen port MUST be free at startup
+- `--callback-url` MUST be reachable by pool-managerd and MUST use HTTP(S); ready callback MUST include `model_ref` and `vram_bytes`
 
 ---
 
-## 12. Crate Dependency Graph
+### 11.4 Configuration Precedence (SYS-11.4.x)
+
+#### [SYS-11.4.1] Configuration Sources
+
+**Configuration precedence** (highest to lowest):
+1. Command-line arguments
+2. Environment variables (prefixed with `LLORCH_`)
+3. Configuration file (YAML)
+4. Built-in defaults
+
+**Requirements**:
+- Higher precedence sources MUST override lower precedence sources
+- Configuration validation MUST occur after all sources are merged
+- Invalid configuration MUST fail fast at startup with clear error messages
+- Configuration file path MAY be specified via `--config` flag or `LLORCH_CONFIG` environment variable
+
+**Example environment variables**:
+```bash
+LLORCH_ORCHESTRATOR_BIND="0.0.0.0:8080"
+LLORCH_ORCHESTRATOR_MODE="platform"
+LLORCH_POOL_ID="pool-1"
+LLORCH_WORKER_GPU_DEVICE="0"
+```
+
+---
+
+## 12. Development Workflow
+
+### 12.1 Spec-Driven Development (SYS-12.1.x)
+
+#### [SYS-12.1.1] Development Process
+
+**Process**: Spec → Contract → Tests → Code
+
+**Workflow**:
+1. Write spec (RFC-2119 normative requirements)
+2. Define contracts (API, data structures)
+3. Write tests (BDD, property tests, unit tests)
+4. Implement code (guided by specs and tests)
+
+**Docs**: `README_LLM.md`, `.docs/workflow.md`
+
+---
+
+### 12.2 Testing Strategy (SYS-12.2.x)
+
+#### [SYS-12.2.1] Test Types
+
+**Test types (scope and requirements)**:
+- Unit tests MUST exist per crate to cover core functions and error paths
+- Integration tests SHOULD validate cross-crate interactions and HTTP boundaries
+- Contract tests MUST verify API conformance against the OpenAPI/contracts with stable IDs
+- Property tests MUST enforce critical invariants (e.g., determinism, queue bounds, idempotent cancellation)
+- BDD tests SHOULD derive from spec scenarios with stable identifiers and traceability to requirements
+
+---
+
+#### [SYS-12.2.2] Test Artifacts
+
+**Artifacts and determinism**:
+- All automated test runs SHOULD produce proof bundles under `<crate>/.proof_bundle/<type>/<run_id>/`
+- Proof bundles MUST include an autogenerated header and MUST respect `LLORCH_RUN_ID` and `LLORCH_PROOF_DIR` when set
+- Tests that rely on randomness MUST seed RNGs explicitly and record seeds in proof bundles
+
+**References**:
+- Proof bundle standard: `libs/proof-bundle` crate
+- Spec: `.specs/00_proof-bundle.md` (if exists)
+
+---
+
+### 12.3 CI/CD Pipeline (SYS-12.3.x)
+
+#### [SYS-12.3.1] CI Gates
+
+**Gates (must-pass checks)**:
+- Stage 0 (Spec hygiene) MUST pass link checks and ID stability; specs MUST use RFC‑2119 terms
+- Stage 1 (Code quality) MUST pass `fmt` and `clippy` with no new warnings in changed code
+- Stage 2 (Tests) MUST pass unit, integration, and property tests; flaky tests MUST be quarantined or fixed before merge
+- Stage 3 (Contract compliance) MUST validate APIs against OpenAPI/contracts; breaking changes MUST be versioned and documented
+- Stage 4 (Determinism suite) MUST verify determinism properties on supported targets
+- Stage 5 (Metrics emission) SHOULD validate presence and type/label cardinality of required metrics; missing optional metrics MAY be tolerated with waivers
+- Stage 6 (E2E acceptance) SHOULD pass scenario-based BDD tests for targeted milestones before release
+
+**Planning references**:
+- Roadmap documents SHOULD be maintained at `TODO.md` and `.plan/00_meta_plan.md`
+
+---
+
+## 13. Crate Dependency Graph
+
+### 13.1 Dependency Overview
 
 ```
 orchestratord
@@ -2742,7 +2207,9 @@ orchestratord
 ├── streaming (SSE relay)
 ├── task-cancellation (cancel propagation)
 ├── job-timeout (timeout enforcement)
-└── backpressure (backpressure handling)
+├── backpressure (backpressure handling)
+├── state-store (persistent state management)
+└── queue-optimizer (background optimization)
 
 pool-managerd
 ├── gpu-inventory (NVML FFI)
@@ -2765,9 +2232,9 @@ worker-orcd
 
 ---
 
-## 13. Milestone Roadmap
+## 14. Milestone Roadmap
 
-### M0: Single GPU (v0.1.0)
+### 14.1 M0: Single GPU (v0.1.0)
 
 **Goal**: Home lab, single user, single GPU
 
@@ -2783,7 +2250,7 @@ worker-orcd
 
 ---
 
-### M1: Multi-GPU (v0.2.0)
+### 14.2 M1: Multi-GPU (v0.2.0)
 
 **Goal**: Single node, multiple GPUs
 
@@ -2794,7 +2261,7 @@ worker-orcd
 
 ---
 
-### M2: Multi-Node (v0.3.0)
+### 14.3 M2: Multi-Node (v0.3.0)
 
 **Goal**: Enterprise, GPU cluster
 
@@ -2805,7 +2272,7 @@ worker-orcd
 
 ---
 
-### M3: Platform (v0.4.0)
+### 14.4 M3: Platform (v0.4.0)
 
 **Goal**: GPU marketplace
 
@@ -2817,19 +2284,19 @@ worker-orcd
 
 ---
 
-## Non-goals / Out of Scope
+## 15. Non-Goals / Out of Scope
 
-- RAM fallback for model weights, KV cache, or activations — NOT SUPPORTED (VRAM-only policy applies).
-- CUDA Unified Memory (UMA) and zero-copy modes — NOT SUPPORTED.
-- Disk swapping or spill for inference state — NOT SUPPORTED.
-- CPU inference fallback — NOT SUPPORTED.
-- Nested schedulers/orchestrators — NOT SUPPORTED; platform routing is federated, not nested (see §5.4).
+- RAM fallback for model weights, KV cache, or activations — NOT SUPPORTED (VRAM-only policy applies)
+- CUDA Unified Memory (UMA) and zero-copy modes — NOT SUPPORTED
+- Disk swapping or spill for inference state — NOT SUPPORTED
+- CPU inference fallback — NOT SUPPORTED
+- Nested schedulers/orchestrators — NOT SUPPORTED; platform routing is federated, not nested (see §3.5)
 
 ---
 
-## 14. References
+## 16. References
 
-### Specifications
+### 16.1 Specifications
 
 **Component specs**:
 - `bin/orchestratord/.specs/00_orchestratord.md` (ORCH-1xxx)
@@ -2838,7 +2305,9 @@ worker-orcd
 
 **Crate specs**: See individual crate `.specs/` directories
 
-### Documentation
+---
+
+### 16.2 Documentation
 
 - `README_LLM.md` — AI-optimized project overview
 - `.docs/workflow.md` — Development workflow
@@ -2847,19 +2316,103 @@ worker-orcd
 - `TODO.md` — Active roadmap
 - `.plan/00_meta_plan.md` — Project plan
 
-### Contracts
+---
+
+### 16.3 Contracts
 
 - `/contracts/openapi/*.yaml` — OpenAPI specs
 
 ---
 
-## 15. Traceability
+## 17. Appendices
 
-**Code**: Monorepo at `/home/vince/Projects/llama-orch/`  
-**Tests**: Per-crate `tests/` directories, BDD features in `bdd/`  
-**Artifacts**: `.proof_bundle/<type>/<run_id>/`  
-**CI**: GitHub Actions (`.github/workflows/`)  
-**Spec IDs**: SYS-0xxx (this document)
+### 17.1 Resolved Clarifications
+
+This section documents clarifications that were originally inline HTML comments, now resolved:
+
+1. **"No Direct Worker Communication" (formerly at SYS-4.3.2)**:
+   - Clarified: Means "No Direct CLIENT→Worker Communication"
+   - Orchestrator directly calls worker endpoints to proxy/relay requests
+   - Clients never communicate with workers directly
+
+2. **Retry Backoff Parameters (formerly at SYS-7.3.1)**:
+   - Resolved: Full specification added at SYS-6.1.6
+   - Initial delay: 1s, Multiplier: 2.0x, Max delay: 60s, Max attempts: 5
+   - Jitter enabled by default
+
+3. **Platform "Smart Router" (formerly at SYS-3.5.1)**:
+   - Clarified: Platform orchestrator selects providers based on capacity/cost/region
+   - Provider orchestrators make their own worker placement decisions
+   - No nested scheduling
+
+4. **Model Pinning SHOULD→MUST (formerly at SYS-2.1.2)**:
+   - Resolved: Strengthened to MUST for determinism guarantee
+   - `@rev` MUST be pinned to immutable commit SHA
+   - `::file=...` MUST pin concrete artifact
+
+5. **Temperature Parameter (formerly at SYS-5.1.2)**:
+   - Clarified: OPTIONAL with default 0.7 for sampling
+   - Deterministic mode uses seed without temperature
+
+6. **Token Budgets (formerly at SYS-5.1.2, SYS-9.3.2)**:
+   - Defined in Glossary (0.1)
+   - Per-tenant quota for max tokens daily or per request
+   - Enforced at admission time
+
+---
+
+### 17.2 Decision Log
+
+**Key architectural decisions**:
+
+1. **SQLite for State Store** (SYS-6.1.3):
+   - Chosen over PostgreSQL for M0/M1 (single orchestrator)
+   - ACID transactions, zero-ops, file-based backup
+   - PostgreSQL reserved for M2+ HA scenarios
+
+2. **Rhai for Programmable Scheduler** (SYS-6.1.5):
+   - Chosen over Lua for Rust-native integration
+   - Type safety, better error messages, 0-indexed arrays
+   - Built-in sandboxing
+
+3. **3-Level Traceability IDs** (SYS-X.Y.Z):
+   - Chosen for scalability (1600+ line spec)
+   - Hierarchical structure maps to document sections
+   - Stable IDs survive content additions
+
+4. **VRAM-Only Policy** (SYS-2.2.1):
+   - No RAM/disk fallback for predictable performance
+   - Enables deterministic inference
+   - Simplifies VRAM accounting
+
+5. **Smart/Dumb Boundary** (SYS-4.1.1, SYS-4.2.1):
+   - All intelligence in orchestratord
+   - Pool managers and workers are dumb executors
+   - Enables centralized policy control
+
+---
+
+### 17.3 Traceability Matrix
+
+**Traceability from Spec IDs to Implementation**:
+
+| Spec ID Range | Component | Implementation Path | Test Coverage |
+|---------------|-----------|---------------------|---------------|
+| SYS-2.1.x | Model Reference | `contracts/api-types/src/model_ref.rs` | Unit + Contract |
+| SYS-2.2.x | VRAM-Only | `bin/worker-orcd/src/cuda/` | Property |
+| SYS-2.3.x | Determinism | Cross-cutting | Property + BDD |
+| SYS-4.x | System Requirements | Cross-cutting | BDD |
+| SYS-5.x | API Contracts | `contracts/openapi/*.yaml` | Contract |
+| SYS-6.1.x | Orchestratord | `bin/orchestratord/src/` | Unit + Integration + BDD |
+| SYS-6.2.x | Pool-Managerd | `bin/pool-managerd/src/` | Unit + Integration |
+| SYS-6.3.x | Worker-Orcd | `bin/worker-orcd/src/` | Unit + Integration |
+| SYS-7.x | Data Flows | Cross-cutting | BDD + Integration |
+| SYS-8.x | Quality Attributes | Cross-cutting | Property + BDD |
+| SYS-9.x | Security | Cross-cutting | Contract + Integration |
+| SYS-10.x | Observability | Cross-cutting | Metrics tests |
+| SYS-11.x | Configuration | `*/config.rs` | Unit |
+
+**Test Catalog Reference**: `.docs/spec-derived-test-catalog.md`
 
 ---
 
