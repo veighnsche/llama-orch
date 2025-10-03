@@ -688,6 +688,8 @@ This section defines all HTTP API contracts between components. APIs MUST be ver
 
 #### [SYS-5.1.1] Task Submission
 
+<!-- SECURITY AUDIT [auth-min team]: CRITICAL VULNERABILITY - No authentication mentioned in task submission endpoint. In Home Mode this may be acceptable (localhost), but Lab/Platform modes MUST enforce authentication. The spec does not explicitly require bearer token validation on POST /v2/tasks. Attack vector: Unauthenticated job submission can lead to resource exhaustion, quota bypass, and denial of service. RECOMMENDATION: Add explicit requirement that POST /v2/tasks MUST validate LLORCH_API_TOKEN via timing_safe_eq() in Lab/Platform modes. See SYS-9.1.1 for mode-specific auth requirements. -->
+
 **Task submission**:
 ```
 POST /v2/tasks
@@ -722,6 +724,8 @@ Response (202 Accepted):
 
 #### [SYS-5.1.3] SSE Streaming
 
+<!-- SECURITY AUDIT [auth-min team]: CRITICAL VULNERABILITY - SSE endpoint lacks authentication and authorization checks. Attack vector: Job ID enumeration attack - attacker can iterate job IDs (job-001, job-002, etc.) to access other users' inference results, potentially leaking sensitive prompts and outputs. This violates tenant isolation in Platform Mode and privacy in Lab Mode. RECOMMENDATION: (1) SSE endpoint MUST validate bearer token, (2) MUST verify job_id belongs to authenticated tenant/user, (3) Use cryptographically random job IDs (UUIDv4) instead of sequential IDs to prevent enumeration. Add requirement: "Orchestrator MUST authorize SSE access: verify bearer token AND verify job_id ownership before streaming events." -->
+
 **Streaming**:
 ```
 GET /v2/tasks/{job_id}/events (SSE)
@@ -747,6 +751,8 @@ Events:
 
 #### [SYS-5.2.1] Pool Registration
 
+<!-- SECURITY AUDIT [auth-min team]: HIGH SEVERITY - Pool registration is a critical trust boundary. Current spec says "MUST be authenticated" but lacks specifics. Attack vectors: (1) Rogue pool registration - attacker registers malicious pool to intercept jobs and exfiltrate prompts/outputs, (2) Pool ID hijacking - attacker re-registers existing pool_id to redirect traffic, (3) Endpoint spoofing - attacker provides malicious endpoint URL. RECOMMENDATIONS: (1) Pool registration MUST use timing_safe_eq() for bearer token validation, (2) MUST validate endpoint URL is reachable and responds to health check before accepting registration, (3) MUST implement pool identity verification (certificate pinning or pre-shared pool secrets), (4) Re-registration MUST require explicit deregistration first OR cryptographic proof of pool ownership, (5) Endpoint URLs MUST be validated against SSRF attacks (no localhost, no private IPs unless explicitly allowed), (6) In Platform Mode, pool registration MUST verify EU residency claims (see SYS-9.2.2). Add explicit requirement: "Pool registration endpoint MUST validate bearer token using timing_safe_eq() and MUST verify endpoint reachability before accepting registration." -->
+
 **Pool registration**:
 ```
 POST /v2/pools/register
@@ -762,6 +768,8 @@ POST /v2/pools/register
 - Orchestratord MUST validate `pool_id` uniqueness and SHOULD reject re-registration attempts that conflict without explicit takeover semantics
 
 #### [SYS-5.2.2] Heartbeat Protocol
+
+<!-- SECURITY AUDIT [auth-min team]: MEDIUM SEVERITY - Heartbeat endpoint is vulnerable to replay attacks and spoofing. Attack vectors: (1) Heartbeat replay - attacker captures legitimate heartbeat and replays it to keep a dead pool appearing alive, (2) Heartbeat spoofing - attacker sends fake heartbeats for pool_id they don't own to manipulate scheduling decisions, (3) State injection - attacker sends malicious GPU/worker state to trigger incorrect scheduling or resource exhaustion. RECOMMENDATIONS: (1) Heartbeat MUST validate bearer token using timing_safe_eq(), (2) MUST verify pool_id in URL matches pool_id in payload, (3) MUST verify pool_id matches authenticated pool identity (from registration), (4) Implement nonce or sequence number to prevent replay attacks, (5) Validate timestamp is within acceptable clock skew window (±30s) and reject old timestamps, (6) Validate GPU/worker state data against schema to prevent injection attacks. Add requirement: "Heartbeat endpoint MUST validate bearer token, verify pool_id ownership, and reject replayed or stale heartbeats (timestamp older than 2× heartbeat_interval)." -->
 
 **Heartbeat**:
 ```
@@ -802,6 +810,8 @@ POST /v2/workers/start
 
 #### [SYS-5.3.1] Worker Ready Callback
 
+<!-- SECURITY AUDIT [auth-min team]: HIGH SEVERITY - Worker ready callback is an internal trust boundary that can be exploited. Attack vectors: (1) Rogue worker registration - attacker spawns fake worker and registers with pool-managerd to intercept jobs, (2) Worker ID spoofing - attacker registers with worker_id of legitimate worker to hijack its jobs, (3) URI injection - attacker provides malicious URI to redirect inference requests, (4) VRAM inflation - attacker reports inflated vram_bytes to manipulate scheduling decisions. RECOMMENDATIONS: (1) Ready callback MUST be authenticated even for localhost (use shared secret between pool-managerd and worker), (2) Pool-managerd MUST verify worker_id matches the worker_id it assigned during spawn, (3) MUST verify URI is reachable and matches expected port range, (4) MUST validate model_ref matches the model_ref pool-managerd commanded worker to load, (5) MUST validate vram_bytes is within expected range for the model (detect inflation attacks), (6) Callback endpoint SHOULD bind to localhost only (not 0.0.0.0) to prevent external access. Add requirement: "Worker ready callback MUST include a spawn token (generated by pool-managerd at worker spawn time) to prove worker identity. Pool-managerd MUST validate spawn token using timing_safe_eq() before accepting ready callback." -->
+
 **Worker ready callback**:
 ```
 POST /v2/internal/workers/ready
@@ -826,6 +836,8 @@ POST /v2/internal/workers/ready
 ### 5.4 Orchestrator → Worker (Direct) (SYS-5.4.x)
 
 #### [SYS-5.4.1] Inference Execution
+
+<!-- SECURITY AUDIT [auth-min team]: CRITICAL VULNERABILITY - Worker execute endpoint has NO authentication mentioned. Attack vectors: (1) Direct worker access - if worker ports are exposed (not localhost-only), attacker can bypass orchestrator and submit jobs directly to workers, bypassing admission control, quotas, and billing, (2) Prompt injection - attacker can submit malicious prompts directly to worker, (3) Resource exhaustion - attacker can flood worker with requests, (4) Job ID spoofing - attacker can submit jobs with arbitrary job_id to confuse tracking. RECOMMENDATIONS: (1) Worker execute endpoint MUST validate bearer token using timing_safe_eq() even if worker is localhost-bound (defense in depth), (2) Worker MUST verify job_id is not already in progress (prevent duplicate execution), (3) Worker MUST validate max_tokens is within acceptable range (prevent resource exhaustion), (4) Worker SHOULD only accept requests from orchestrator IP (IP allowlist), (5) Worker ports SHOULD bind to localhost only in single-node deployments, (6) In multi-node deployments, worker-orchestrator communication MUST use mTLS. Add requirement: "Worker execute endpoint MUST validate bearer token (LLORCH_WORKER_TOKEN) using timing_safe_eq() before accepting inference requests. Orchestrator MUST include this token in execute requests." -->
 
 **Inference execution**:
 ```
@@ -854,6 +866,8 @@ Response: SSE stream
 
 #### [SYS-5.4.2] Cancellation
 
+<!-- SECURITY AUDIT [auth-min team]: HIGH SEVERITY - Worker cancel endpoint lacks authentication and authorization. Attack vectors: (1) Unauthorized cancellation - attacker can cancel any job by guessing job_id, causing denial of service, (2) Job ID enumeration - attacker can probe for active jobs by attempting cancellation, (3) Resource manipulation - attacker can cancel high-priority jobs to manipulate scheduling. RECOMMENDATIONS: (1) Cancel endpoint MUST validate bearer token using timing_safe_eq(), (2) MUST verify job_id is currently assigned to this worker (prevent cross-worker cancellation), (3) Use cryptographically random job IDs to prevent enumeration, (4) Rate-limit cancel requests to prevent DoS. Add requirement: "Worker cancel endpoint MUST validate bearer token and verify job_id is assigned to this worker before processing cancellation." -->
+
 **Cancellation**:
 ```
 POST {worker_uri}/cancel
@@ -876,6 +890,8 @@ POST {worker_uri}/cancel
 ### 5.5 Error Response Format (SYS-5.5.x)
 
 #### [SYS-5.5.1] Standard Error Response
+
+<!-- SECURITY AUDIT [auth-min team]: MEDIUM SEVERITY - Error responses may leak sensitive information. Attack vectors: (1) Information disclosure - detailed error messages reveal system internals (GPU IDs, VRAM sizes, model paths), (2) Timing attacks - different error codes may have different response times, (3) Stack trace leakage - errors may include stack traces in development mode. RECOMMENDATIONS: (1) Error messages MUST NOT include raw tokens or bearer tokens (use token_fp6() for any token references), (2) Detailed error information (gpu_id, vram_bytes) SHOULD only be included for authenticated requests, (3) In Platform Mode, error details SHOULD be sanitized to prevent information leakage to untrusted clients, (4) Error responses MUST use timing-safe processing to prevent timing attacks, (5) Stack traces MUST be disabled in production, (6) Error messages MUST NOT reveal file paths, internal IPs, or system architecture details. Add requirement: "Error responses MUST sanitize sensitive information in Platform Mode. Internal details (gpu_id, vram_bytes, worker_id) MUST only be included for authenticated admin requests." -->
 
 All API errors MUST use a standard JSON error response format:
 
@@ -906,6 +922,8 @@ All API errors MUST use a standard JSON error response format:
 ### 5.6 Correlation ID Propagation (SYS-5.6.x)
 
 #### [SYS-5.6.1] Correlation ID Requirements
+
+<!-- SECURITY AUDIT [auth-min team]: LOW SEVERITY - Correlation ID handling has injection risks. Attack vectors: (1) Header injection - attacker provides malicious correlation ID with newlines or special characters to inject log entries or HTTP headers, (2) Log injection - correlation ID is logged without sanitization, allowing attacker to inject fake log entries, (3) XSS in dashboards - if correlation IDs are displayed in web dashboards without escaping, attacker can inject JavaScript. RECOMMENDATIONS: (1) Correlation IDs MUST be validated against a strict format (e.g., alphanumeric + hyphens only, max 64 chars), (2) Invalid correlation IDs MUST be rejected or replaced with generated ID, (3) Correlation IDs MUST be sanitized before logging (escape newlines, control characters), (4) Generated correlation IDs MUST use cryptographically random UUIDs (UUIDv4), (5) Correlation IDs MUST be HTML-escaped when displayed in dashboards. Add requirement: "Correlation IDs MUST match regex ^[a-zA-Z0-9-]{1,64}$. Invalid correlation IDs MUST be rejected and replaced with generated UUIDv4." -->
 
 **Correlation**:
 - `X-Correlation-Id` MUST be accepted from clients and propagated across orchestrator → pool-managerd → worker calls
@@ -983,6 +1001,8 @@ Orchestratord MUST maintain persistent state for job tracking, queue management,
 ---
 
 #### [SYS-6.1.3] Persistent State Store
+
+<!-- SECURITY AUDIT [auth-min team]: HIGH SEVERITY - SQLite database is a critical security boundary. Attack vectors: (1) SQL injection - if queries use string concatenation instead of parameterized queries, (2) File permission issues - if SQLite file has world-readable permissions, attackers can read all job data including prompts, (3) Backup exposure - if backups are not encrypted, they leak all historical data, (4) Concurrent access corruption - if WAL mode is not properly configured, database can be corrupted, (5) Prompt storage - spec mentions "prompt_hash" but doesn't prohibit storing raw prompts, which violates privacy. RECOMMENDATIONS: (1) ALL database queries MUST use parameterized queries (NEVER string concatenation), (2) SQLite file MUST have restrictive permissions (0600, owner-only read/write), (3) Database backups MUST be encrypted at rest, (4) Raw prompts MUST NEVER be stored in database (only prompt_hash), (5) Tenant IDs and session IDs MUST be indexed for efficient authorization queries, (6) Database file path MUST be validated to prevent path traversal attacks, (7) In Platform Mode, consider per-tenant database encryption. Add requirement: "SQLite database file MUST have 0600 permissions. ALL queries MUST use parameterized statements. Raw prompts MUST NOT be stored (only SHA-256 prompt_hash)." -->
 
 Orchestratord MUST use a persistent state store to maintain durable job and queue state across restarts.
 
@@ -1799,6 +1819,8 @@ Retry policy is defined in SYS-6.1.6. Cross-reference for complete requirements.
 
 #### [SYS-9.1.1] Authentication by Deployment Mode
 
+<!-- SECURITY AUDIT [auth-min team]: CRITICAL VULNERABILITY - Home Mode disables authentication entirely, creating a massive attack surface. Attack vectors: (1) Local privilege escalation - any process on the system can submit jobs, register pools, manipulate state, (2) Malware exploitation - malware running on the system has full access to orchestrator, (3) Accidental exposure - if user misconfigures bind address (0.0.0.0 instead of 127.0.0.1), system is exposed to network without authentication, (4) Multi-user systems - on shared systems, any user can access orchestrator. RECOMMENDATIONS: (1) Even in Home Mode, SHOULD support optional authentication via environment variable, (2) MUST enforce loopback binding (127.0.0.1) and MUST refuse to start if bind address is non-loopback without LLORCH_API_TOKEN set, (3) MUST validate bind address at startup using enforce_startup_bind_policy() from auth-min crate, (4) Consider adding a "development mode" flag that explicitly acknowledges security risks. CURRENT IMPLEMENTATION: auth-min crate already provides enforce_startup_bind_policy() which implements this protection. Spec MUST reference this requirement explicitly. Add requirement: "Home Mode MUST call enforce_startup_bind_policy() at startup. If bind address is non-loopback, LLORCH_API_TOKEN MUST be set or startup MUST fail." -->
+
 Authentication requirements vary by deployment mode following the principle: **Performance > Security (Home)**, **Balanced (Lab)**, **Security > Performance (Platform)**.
 
 **Home Mode (M0)**:
@@ -1815,6 +1837,8 @@ Authentication requirements vary by deployment mode following the principle: **P
 - Worker callbacks within same node MAY remain unauthenticated (localhost)
 - TLS SHOULD be used or run on trusted network segments
 
+<!-- SECURITY AUDIT [auth-min team]: HIGH SEVERITY - Lab Mode authentication is underspecified. Attack vectors: (1) Bearer token transmission in cleartext - if TLS is not used, tokens can be intercepted via network sniffing, (2) Weak token generation - spec doesn't specify token entropy requirements, (3) Token rotation - no mechanism for rotating tokens without downtime, (4) Token storage - no guidance on secure token storage in config files. RECOMMENDATIONS: (1) Lab Mode MUST use TLS (change SHOULD to MUST), (2) Bearer tokens MUST have minimum 256 bits of entropy (32 random bytes, base64-encoded), (3) Token validation MUST use timing_safe_eq() from auth-min crate, (4) Tokens MUST be stored in environment variables (not config files) to prevent accidental commits, (5) Support token rotation with grace period (accept old and new token during transition), (6) Document token generation command: openssl rand -base64 32. Add requirement: "Lab Mode bearer tokens MUST have ≥256 bits entropy. Token validation MUST use timing_safe_eq(). TLS MUST be used (not SHOULD)." -->
+
 **Platform Mode (M2+)**:
 - Multi-tenant marketplace, security is mandatory
 - All client requests MUST be authenticated using HTTP bearer tokens
@@ -1823,6 +1847,8 @@ Authentication requirements vary by deployment mode following the principle: **P
 - Orchestratord MUST validate tokens on every request (401/403 on failure)
 - Inter-service calls SHOULD use mTLS for mutual authentication
 - Audit logging MUST be enabled for all authenticated requests
+
+<!-- SECURITY AUDIT [auth-min team]: CRITICAL VULNERABILITIES - Platform Mode has multiple critical gaps. Attack vectors: (1) Token management - no specification for token issuance, revocation, or expiry, (2) Tenant isolation - bearer tokens don't inherently carry tenant context, risk of cross-tenant access, (3) Token leakage - no guidance on token fingerprinting in logs, (4) Rate limiting - no mention of rate limiting to prevent brute force token guessing, (5) Token scope - no specification of token permissions/scopes, (6) mTLS is SHOULD not MUST for inter-service calls. RECOMMENDATIONS: (1) Platform Mode MUST use token_fp6() from auth-min crate for ALL token logging, (2) Bearer tokens MUST include tenant_id claim (use JWT with signature verification), (3) Token validation MUST use timing_safe_eq() for constant-time comparison, (4) Implement token expiry (max 24 hours) and refresh mechanism, (5) Rate limit authentication attempts (max 10 failures per IP per minute), (6) Inter-service calls MUST use mTLS (change SHOULD to MUST), (7) Implement token revocation list (check on every request), (8) Audit logging MUST use token_fp6() for actor identity (never raw tokens). Add requirement: "Platform Mode MUST use JWT bearer tokens with tenant_id claim and signature verification. Token validation MUST use timing_safe_eq(). Logging MUST use token_fp6(). Inter-service mTLS is MUST not SHOULD." -->
 
 **Future provisions**:
 - OAuth2/OpenID Connect MAY be added in future milestones (NOT REQUIRED for M0)
@@ -1834,6 +1860,8 @@ Authentication requirements vary by deployment mode following the principle: **P
 ### 9.2 EU Compliance (GDPR) (SYS-9.2.x)
 
 #### [SYS-9.2.1] Data Residency
+
+<!-- SECURITY AUDIT [auth-min team]: CRITICAL VULNERABILITY - Data residency enforcement is declarative only, no technical enforcement. Attack vectors: (1) False residency claims - pool-managerd can lie about EU location, (2) Data exfiltration - worker-orcd can transmit data to non-EU endpoints via DNS tunneling, HTTP callbacks, or model-embedded exfiltration, (3) Orchestrator compromise - if orchestrator is compromised, attacker can route jobs to non-EU pools, (4) Network routing - even if pool is physically in EU, network traffic may route through non-EU countries. RECOMMENDATIONS: (1) Implement cryptographic proof of location (e.g., GPS-signed attestations, datacenter certificates), (2) Worker-orcd MUST use network egress filtering to block non-EU IPs (allowlist EU IP ranges only), (3) Orchestrator MUST verify pool location via third-party geolocation service at registration, (4) Implement continuous monitoring of pool IP addresses for location changes, (5) Use EU-only DNS resolvers to prevent DNS-based exfiltration, (6) Audit all outbound network connections from workers (log destination IPs), (7) Consider using VPN/WireGuard to enforce EU-only network paths. Add requirement: "Pool registration MUST include cryptographic proof of EU location (datacenter certificate or GPS attestation). Worker-orcd MUST implement egress filtering to block non-EU destinations." -->
 
 **Data residency**:
 - MUST: Pool-managerd instances serving production workloads MUST be located within EU regions only
@@ -1871,6 +1899,8 @@ Authentication requirements vary by deployment mode following the principle: **P
 ### 9.3 Multi-Tenancy (Platform Mode) (SYS-9.3.x)
 
 #### [SYS-9.3.1] Isolation Guarantees
+
+<!-- SECURITY AUDIT [auth-min team]: CRITICAL VULNERABILITY - Tenant isolation is underspecified and has multiple attack vectors. Attack vectors: (1) VRAM side-channels - GPU memory is not cryptographically isolated, tenant A may be able to read tenant B's VRAM via timing attacks or memory scraping, (2) Model cache poisoning - if model cache is shared, tenant A can poison cache to affect tenant B's inference, (3) Worker reuse - if workers are reused across tenants, residual data in VRAM may leak, (4) Timing attacks - tenant A can infer tenant B's activity by measuring GPU utilization, (5) Log correlation - even with fingerprints, correlation attacks may link tenants, (6) Scheduler side-channels - tenant A can infer tenant B's job patterns via queue position changes. RECOMMENDATIONS: (1) Workers MUST NOT be reused across tenants (spawn fresh worker per tenant job), (2) VRAM MUST be zeroed after each job (cudaMemset to zero before worker exit), (3) Model cache MUST be per-tenant or use content-addressable storage with integrity checks, (4) Implement GPU memory encryption if available (NVIDIA Confidential Computing), (5) Add random delays to scheduling to prevent timing side-channels, (6) Logs MUST use tenant_fp6() (fingerprint tenant IDs) in addition to token_fp6(), (7) Metrics MUST NOT include tenant_id labels (use aggregated metrics only), (8) Consider dedicated GPU pools per tenant for high-security customers. Add requirement: "Workers MUST NOT be reused across tenants. VRAM MUST be zeroed (cudaMemset) before worker process exits. Model cache MUST be per-tenant or integrity-checked." -->
 
 **Isolation guarantees**:
 - Orchestratord MUST enforce tenant-level isolation of compute and data paths
@@ -1974,6 +2004,8 @@ Authentication requirements vary by deployment mode following the principle: **P
 ---
 
 #### [SYS-10.2.2] Log Content
+
+<!-- SECURITY AUDIT [auth-min team]: CRITICAL VULNERABILITY - Log content requirements are too weak. Attack vectors: (1) Token leakage - spec says "SHOULD avoid" but doesn't prohibit raw tokens in logs, (2) Prompt leakage - even with redaction, prompts may contain PII that leaks in truncated form, (3) Log injection - if correlation_id or other fields are not sanitized, attacker can inject fake log entries, (4) Bearer token leakage - no explicit prohibition on logging bearer tokens, (5) Tenant ID leakage - no guidance on fingerprinting tenant IDs. RECOMMENDATIONS: (1) Change "SHOULD avoid" to "MUST NEVER log" for raw bearer tokens, (2) Prompts MUST be hashed (SHA-256) not truncated, (3) ALL tokens (bearer, API, worker) MUST use token_fp6() from auth-min crate, (4) Tenant IDs SHOULD be fingerprinted in Platform Mode (tenant_fp6()), (5) Correlation IDs MUST be sanitized (alphanumeric only), (6) Implement log scrubbing in CI to detect accidental token leakage (grep for token patterns), (7) Error messages MUST use token_fp6() for any token references. Add requirement: "Logs MUST NEVER include raw bearer tokens. ALL token references MUST use token_fp6(). Prompts MUST be hashed (SHA-256) not stored raw. CI MUST enforce token leakage checks." -->
 
 **Content**:
 - Logs MUST include component, timestamp, level, correlation_id, and stable event codes for key actions (admission, schedule, dispatch, execute, cancel)
