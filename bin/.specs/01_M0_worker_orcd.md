@@ -31,11 +31,13 @@
 10. ✅ Cancellation latency target (M0-W-1610)
 11. ✅ Client disconnect detection (M0-W-1611)
 12. ✅ Model loading time target (M0-W-1620)
-13. ✅ Performance test suite (M0-W-1830)
-14. ✅ Reproducible CUDA kernels validation (M0-W-1031 validation only)
+13. ✅ Performance test suite (M0-W-1830) - comprehensive perf validation
+14. ✅ Deep CUDA determinism audit (kernel scheduling, atomics) (M0-W-1031)
 15. ✅ Sensitive data handling in logs (M0-W-1902)
 
-**KEPT in M0 (13 items - Core + Critical Safety)**:
+**Note**: M0 includes minimal same-device reproducibility check only (seeded RNG, temp=0)
+
+**KEPT in M0 (14 items - Core + Critical Safety)**:
 1. ✅ All 3 models: Qwen2.5-0.5B, Phi-3-Mini, GPT-OSS-20B
 2. ✅ All 3 quantization formats: Q4_K_M, MXFP4, Q4_0
 3. ✅ 2 tokenizer backends: GGUF byte-BPE, tokenizer.json
@@ -43,12 +45,13 @@
 5. ✅ Model load progress events (M0-W-1621) ← **CRITICAL** (user feedback)
 6. ✅ VRAM OOM handling (M0-W-1021) ← **CRITICAL** (safety)
 7. ✅ VRAM residency verification (M0-W-1012) ← **CRITICAL** (runtime leak detection)
-8. ✅ Reproducible CUDA kernels (M0-W-1031 implementation, validation deferred)
-9. ✅ Memory-mapped I/O (M0-W-1221)
-10. ✅ Chunked VRAM transfer (M0-W-1222)
-11. ✅ CUDA unit tests (functional only, no performance tests)
-12. ✅ Kernel safety validation (M0-W-1431)
-13. ✅ Temperature scaling 0.0-2.0 (M0-W-1032)
+8. ✅ Minimal same-device reproducibility check (seeded RNG, temp=0)
+9. ✅ MXFP4 numerical correctness validation (M0-W-1822) ← **CRITICAL** (correctness)
+10. ✅ Memory-mapped I/O (M0-W-1221) - REQUIRED for all models
+11. ✅ Chunked VRAM transfer (M0-W-1222) - REQUIRED for all models
+12. ✅ CUDA unit tests (functional only, no performance tests)
+13. ✅ Kernel safety validation (M0-W-1431)
+14. ✅ Temperature scaling 0.0-2.0 (M0-W-1032)
 
 **REMOVED from Repo**:
 - 🔥 Proof bundles (entire concept - all references to be removed)
@@ -81,7 +84,7 @@ This specification consolidates **ALL M0 requirements** for the `worker-orcd` bi
 
 **Success Criteria**: 
 - Worker loads Qwen2.5-0.5B-Instruct (352MB GGUF) into VRAM
-- Executes haiku generation prompt deterministically
+- Executes a fixed haiku prompt with (seeded RNG, temperature=0) and produces identical token IDs across two runs on the same device
 - Streams tokens via SSE
 - All operations VRAM-only (no RAM fallback)
 
@@ -95,6 +98,7 @@ This specification consolidates **ALL M0 requirements** for the `worker-orcd` bi
 - ✅ Quantized-only execution (Q4_K_M, MXFP4, Q4_0 - NO dequantization to FP32)
 - ✅ HTTP API (execute, health, cancel)
 - ✅ SSE streaming with UTF-8 boundary safety
+- ✅ Tokenization: Two backends (`hf-json` for GPT-OSS-20B, `gguf-bpe` for Qwen/Phi-3)
 - ✅ Test reproducibility (seeded RNG, temp=0 for testing; temp 0.0-2.0 for production)
 - ✅ CUDA FFI boundary (Rust ↔ C++/CUDA)
 - ✅ Basic CUDA kernels (GEMM, RoPE, attention, RMSNorm, greedy sampling)
@@ -641,9 +645,14 @@ Worker startup SHOULD complete within 60 seconds measured from process start to 
 #### [M0-W-1200] GGUF Format Support
 Worker-orcd MUST support GGUF (GPT-Generated Unified Format) for M0.
 
-**GGUF Version**: Version 3
+**GGUF Version**: Version 3 (required for MXFP4 tensor support)
 
 **Magic bytes**: `0x47475546` ("GGUF")
+
+**GGUF v3 Features**:
+- MXFP4 tensor blocks (GPT-OSS-20B)
+- Extended metadata for tokenizer configuration
+- Improved tensor alignment specifications
 
 **Spec Reference**: WORK-3031, CUDA-5202
 
@@ -651,16 +660,33 @@ Worker-orcd MUST support GGUF (GPT-Generated Unified Format) for M0.
 Worker-orcd MUST execute models in their quantized formats for M0.
 
 **Supported quantization formats**:
-- Q4_K_M (Qwen2.5-0.5B-Instruct, Phi-3-Mini)
-- MXFP4 (GPT-OSS-20B)
-- Q4_0 (fallback compatibility)
+- **MXFP4** (GPT-OSS-20B primary)
+- **Q4_K_M** (Qwen2.5-0.5B-Instruct, Phi-3-Mini; GPT-OSS-20B fallback)
+- **Q4_0** (fallback compatibility)
 
-**Execution policy**:
-- ✅ Load quantized weights to VRAM as-is
-- ✅ Execute inference in quantized form
-- ❌ NO dequantization to FP32 on load
-- ✅ Per-tile dequantization in registers/shared memory during kernel execution
-- ✅ FP16 accumulation for matmul results
+**Loader Policy** (no dequantize-on-load):
+Model weights remain quantized in VRAM (MXFP4, Q4_K_M, Q4_0). The loader MUST NOT materialize FP32 copies of weight tensors in device memory.
+
+**Compute Policy** (on-the-fly dequantization):
+Kernels dequantize weight tiles to registers/shared memory during compute and accumulate in FP16. This preserves quantized storage while enabling correct math in GEMM/attention. `/health.quant_kind` always reflects the stored format.
+
+**Execution Details**:
+- ✅ In-kernel dequantization for MXFP4 tiles/groups → registers/shared memory → FP16 accumulate
+- ✅ FP16 accumulation for all matmul results
+- ✅ FP16 KV cache precision (stated explicitly)
+
+**MXFP4 Compute Path** (GPT-OSS-20B):
+MXFP4 weights MUST be wired into all weight consumers:
+1. **Embeddings**: MXFP4 embedding matrix lookup
+2. **Attention**: Q/K/V projections, attention matmul, output projection (prefill + decode)
+3. **FFN**: Up projection, activation, down projection
+4. **LM Head**: Final logits projection
+
+**KV Cache**: FP16 precision for all models
+
+**Fallback Behavior**:
+- If MXFP4 artifact unavailable for GPT-OSS-20B, accept Q4_K_M or Q4_0
+- `/health.quant_kind` MUST reflect actually loaded quantization
 
 **Rationale**: Matches local runtime behavior (LM Studio/llama.cpp GGUF execution) and aligns with GPT-OSS-20B guidance (~16 GB VRAM operation in MXFP4).
 
@@ -716,17 +742,45 @@ vram_bytes_ = total_size;
 
 **Alignment**: All tensors MUST be aligned to 256-byte boundaries for optimal GPU access.
 
+**VRAM-Only Residency**:
+- Strict VRAM-only (no UMA/CPU spill)
+- Fail fast on insufficient VRAM
+- Keep process alive and report structured error (do NOT exit)
+- Emit `VRAM_OOM` error via SSE if during inference
+
 **Spec Reference**: CUDA-5291
 
-#### [M0-W-1221] Memory-Mapped I/O
-Worker-orcd SHOULD use `mmap()` for efficient file reading without loading entire file into RAM.
+#### [M0-W-1221] Memory-Mapped I/O (REQUIRED)
+Worker-orcd MUST use `mmap()` for host I/O for all models to avoid full RAM copies and to standardize the loader across model sizes.
 
-**Rationale**: Reduces RAM usage, faster startup.
+**Implementation**:
+- Memory-map GGUF file for reading
+- Parse headers and metadata from mapped region
+- Stream tensor data directly from mmap to VRAM
+
+**Rationale**: 
+- Reduces RAM usage (critical for large models like GPT-OSS-20B)
+- Faster startup
+- Enables efficient chunked transfers
+- Standardizes loader codepaths across all model sizes
 
 **Spec Reference**: CUDA-5260
 
-#### [M0-W-1222] Chunked Transfer
-Worker-orcd SHOULD copy model to VRAM in chunks (e.g., 1MB) to avoid large temporary buffers.
+#### [M0-W-1222] Chunked H2D Transfer (REQUIRED)
+Worker-orcd MUST copy model tensors to VRAM in bounded chunks for all models.
+
+**Chunk Size**: 1MB (configurable, but 1MB default)
+
+**Implementation**:
+```cpp
+const size_t CHUNK_SIZE = 1024 * 1024;  // 1MB
+for (size_t offset = 0; offset < total_size; offset += CHUNK_SIZE) {
+    size_t chunk_size = std::min(CHUNK_SIZE, total_size - offset);
+    cudaMemcpy(device_ptr + offset, host_ptr + offset, chunk_size, cudaMemcpyHostToDevice);
+}
+```
+
+**Rationale**: Prevents RAM spikes during large model loading
 
 **Spec Reference**: CUDA-5261
 
@@ -784,33 +838,52 @@ M0 MUST support three reference target models for comprehensive validation.
 
 ---
 
-##### Model 3: GPT-OSS-20B (Trend-Relevant)
+##### Model 3: GPT-OSS-20B (Trend-Relevant) - MXFP4 Implementation
 
 **Purpose**: 🌟 Trend-relevant large model; validates MXFP4 quantization path
 
 **Specifications**:
 - **Name**: GPT-OSS-20B
-- **Format**: GGUF (converted from native MXFP4)
-- **Quantization**: MXFP4 (or Q4_K_M if MXFP4 unavailable)
-- **Size**: ~12 GB
+- **Format**: GGUF v3 (MXFP4 tensor support)
+- **Quantization**: MXFP4 (primary); Q4_K_M/Q4_0 (fallback)
+- **Size**: ~12 GB (MXFP4)
 - **VRAM Footprint**: ~16 GB (model + KV cache, per OpenAI guidance)
-- **Tokenizer**: GPT-4o tokenizer (tokenizer.json, OpenAI format)
+- **Tokenizer**: HF tokenizers (Rust) loading tokenizer.json
 - **Context Length**: 8,192 (recommended test limit: 2,048)
 - **License**: Apache 2.0 (verify with OpenAI release)
 - **Location**: `.test-models/gpt-oss-20b/gpt-oss-20b-mxfp4.gguf`
 - **Download**: TBD (await OpenAI GGUF release or convert from native)
 
+**Tokenizer Configuration**:
+- **Backend**: `hf-json` (Hugging Face tokenizers crate)
+- **Source**: `tokenizer.json` in model directory
+- **Metadata Exposure**: See §8.2 Tokenization Strategy for full details
+
+**MXFP4 Compute Requirements**:
+- In-kernel dequant: MXFP4 tiles/groups → registers/shared memory → FP16 accumulate
+- Weight consumers: Embeddings, Attention (Q/K/V, attn matmul, output proj), FFN (up/act/down), LM head
+- KV cache: FP16 precision
+- Streaming: UTF-8-safe SSE (buffer partial multibyte sequences)
+
+**Loader Requirements**:
+- GGUF v3 tensor support (MXFP4 blocks)
+- Memory-mapped I/O (mmap for host I/O)
+- Chunked H2D copies (1MB chunks)
+- 256-byte alignment for device buffers
+- Strict VRAM-only residency (no UMA/CPU spill)
+- Fail fast on insufficient VRAM; keep process alive, report structured error
+
+**Fallback Behavior**:
+- If MXFP4 artifact unavailable, accept Q4_K_M or Q4_0
+- `/health.quant_kind` reflects actually loaded quantization
+
 **Test Coverage**:
 - Large model validation
 - MXFP4 quantization path
-- GPT-4o tokenizer integration
+- HF tokenizer integration (tokenizer.json)
 - 24 GB VRAM boundary test
-
-**Special Requirements**:
-- MUST execute quantized (MXFP4 or Q4_K_M)
-- NO FP32 dequantization on load
-- Tokenizer: Parse `tokenizer.json` (OpenAI format) via Rust backend
-- Metrics: Report `quant_kind=MXFP4` and `active_expert_count` (if MoE)
+- UTF-8 streaming with multibyte characters
+- OOM recovery (intentional KV/context overflow)
 
 ---
 
@@ -946,15 +1019,34 @@ Worker-orcd MUST expose health endpoint:
 ```json
 {
   "status": "healthy",
-  "model": "qwen2.5-0.5b-instruct",
-  "vram_bytes": 369098752,
-  "uptime_seconds": 3600
+  "model": "gpt-oss-20b",
+  "resident": true,
+  "quant_kind": "MXFP4",
+  "vram_bytes_used": 16106127360,
+  "tokenizer_kind": "hf-json",
+  "vocab_size": 50257,
+  "context_length": 2048,
+  "uptime_seconds": 3600,
+  "sm": 86,
+  "cuda_runtime_version": "12.1"
 }
 ```
 
 **Status values**:
 - `healthy` — Worker operational
 - `unhealthy` — VRAM residency check failed or other critical error
+
+**Required fields** (updated 2025-10-03):
+- `resident` (bool) — VRAM residency status (true = all weights in VRAM)
+- `quant_kind` (string) — Quantization format: `"MXFP4"` | `"Q4_K_M"` | `"Q4_0"`
+- `vram_bytes_used` (int) — Current VRAM usage in bytes
+- `tokenizer_kind` (string) — Backend type: `"gguf-bpe"` or `"hf-json"`
+- `vocab_size` (int) — Vocabulary size
+- `context_length` (int|null) — Max context length if known; else null
+
+**Optional fields** (nice-to-have):
+- `sm` (int) — Compute capability (e.g., 86 for SM_86)
+- `cuda_runtime_version` (string) — CUDA runtime version
 
 **Spec Reference**: WORK-3041
 
@@ -1028,9 +1120,169 @@ Worker-orcd SHOULD expose Prometheus metrics endpoint:
 
 ---
 
-## 8. CUDA Implementation
+## 8. Tokenization Strategy
 
-### 8.1 Context Management
+**Finalized**: 2025-10-03
+
+### 8.1 Backend Architecture
+
+Worker-orcd implements **two distinct tokenizer backends** with runtime selection:
+
+#### [M0-W-1360] Tokenizer Backend Selection
+Worker MUST select tokenizer backend at model load time based on model metadata:
+
+**Backend Types**:
+1. **`hf-json`** — Hugging Face tokenizer.json backend
+2. **`gguf-bpe`** — Pure-Rust GGUF byte-BPE backend
+
+**Selection Logic**:
+```rust
+match model_metadata.tokenizer_type {
+    TokenizerType::HuggingFace => TokenizerBackend::HfJson,
+    TokenizerType::GgufBpe => TokenizerBackend::GgufBpe,
+}
+```
+
+### 8.2 HF-JSON Backend (GPT-OSS-20B)
+
+#### [M0-W-1361] Hugging Face Tokenizers Crate
+For GPT-OSS-20B, worker MUST use the Hugging Face `tokenizers` crate (Rust):
+
+**Implementation**:
+- Load tokenizer.json directly from model directory
+- Use HF tokenizers API for encode/decode
+- No Python or external binaries required
+
+**Metadata Exposure** (added 2025-10-03):
+Worker MUST expose tokenizer metadata from tokenizer.json:
+- `eos_id`: End-of-sequence token ID
+- `bos_id`: Begin-of-sequence token ID  
+- `vocab_size`: Vocabulary size
+- `model_max_context`: Maximum context length (if available in tokenizer.json)
+
+**UTF-8 Streaming**:
+- Enforce UTF-8-safe SSE streaming
+- Buffer partial multibyte sequences
+- Never emit invalid UTF-8
+- Handle token boundaries that split UTF-8 codepoints
+
+**Conformance Testing**:
+- Golden encode/decode test vectors MUST be included (20-30 pairs)
+- Vectors catch schema drift and ensure parity with upstream tokenizer
+- Test vectors cover: BOS/EOS handling, special tokens, multibyte UTF-8, edge cases
+
+**Example**:
+```rust
+use tokenizers::Tokenizer;
+
+let tokenizer = Tokenizer::from_file("tokenizer.json")?;
+
+// Expose metadata
+let eos_id = tokenizer.token_to_id("
+
+### 8.3 GGUF-BPE Backend (Qwen2.5-0.5B, Phi-3-Mini)
+
+#### [M0-W-1362] Pure-Rust GGUF Tokenizer
+For Qwen2.5-0.5B and Phi-3-Mini, worker MUST implement pure-Rust GGUF tokenizer:
+
+**Implementation**:
+- Parse GGUF metadata to extract vocab and merges
+- Run byte-level BPE entirely in Rust (no FFI, no llama.cpp)
+- UTF-8 safe streaming decode with proper BOS/EOS handling
+- Handle special tokens according to GGUF metadata
+
+**GGUF Metadata Parsing**:
+```rust
+struct GgufTokenizer {
+    vocab: Vec<String>,           // Token strings
+    merges: Vec<(u32, u32)>,      // BPE merge pairs
+    bos_token_id: Option<u32>,    // Begin-of-sequence
+    eos_token_id: Option<u32>,    // End-of-sequence
+    special_tokens: HashMap<String, u32>,
+}
+```
+
+**Byte-Level BPE**:
+- Encode: UTF-8 text → byte sequence → BPE merges → token IDs
+- Decode: Token IDs → byte sequence → UTF-8 validation → text
+
+**UTF-8 Safety**:
+- Buffer partial bytes until complete UTF-8 codepoint
+- Never emit invalid UTF-8 sequences
+- Handle multi-byte characters correctly
+
+### 8.4 Conformance Testing
+
+#### [M0-W-1363] Test Vectors Required
+Worker MUST include conformance test vectors for all three models:
+
+**Test Coverage**:
+1. **Qwen2.5-0.5B** (gguf-bpe):
+   - Basic encode/decode
+   - BOS/EOS token handling
+   - Special tokens (e.g., `<|im_start|>`, `<|im_end|>`)
+   - Multi-byte UTF-8 characters
+   - Edge cases (empty string, very long sequences)
+
+2. **Phi-3-Mini** (gguf-bpe):
+   - Basic encode/decode
+   - BOS/EOS token handling
+   - Special tokens
+   - UTF-8 edge cases
+
+3. **GPT-OSS-20B** (hf-json):
+   - Basic encode/decode
+   - Parity with upstream HF tokenizer
+   - Special tokens
+   - Schema drift detection
+
+**Test Format**:
+```rust
+struct TokenizerTestVector {
+    text: String,
+    expected_token_ids: Vec<u32>,
+    expected_decoded: String,
+    description: String,
+}
+```
+
+### 8.5 Health Endpoint Integration
+
+#### [M0-W-1364] Tokenizer Observability
+Health endpoint MUST include tokenizer information (see §7.3):
+
+**Required Fields**:
+- `tokenizer_kind`: `"gguf-bpe"` or `"hf-json"`
+- `vocab_size`: Vocabulary size (e.g., 151936 for Qwen2.5-0.5B)
+
+**Purpose**:
+- Debugging: Verify correct backend loaded
+- Validation: Confirm vocab size matches expectations
+- Monitoring: Track tokenizer configuration across deployments
+
+### 8.6 Implementation Requirements
+
+#### [M0-W-1365] No External Dependencies
+Tokenization MUST be self-contained:
+
+**Requirements**:
+- ✅ No Python runtime required
+- ✅ No external binaries (no llama.cpp)
+- ✅ No FFI for tokenization (CUDA FFI only for inference)
+- ✅ Pure Rust implementation for both backends
+- ✅ Deterministic encode/decode across all platforms
+
+**Rationale**:
+- Simplifies deployment (single binary)
+- Ensures reproducibility
+- Reduces attack surface
+- Enables static linking
+
+---
+
+## 9. CUDA Implementation
+
+### 9.1 Context Management
 
 #### [M0-W-1400] Context Initialization
 Worker-orcd MUST initialize CUDA context:
@@ -1452,7 +1704,7 @@ Each CUDA module MUST have unit tests:
 
 **Framework**: Google Test
 
-**Location**: `cuda/tests/`
+**Location**: `tests/unit/cuda/`
 
 #### [M0-W-1811] Rust Unit Tests
 Rust layer MUST have unit tests:
@@ -1465,7 +1717,7 @@ Rust layer MUST have unit tests:
 
 **Framework**: Rust `#[test]`
 
-**Location**: `tests/`
+**Location**: `tests/unit/rust/`
 
 ### 12.3 Integration Tests
 
@@ -1480,12 +1732,252 @@ M0 MUST have integration test:
 5. Verify VRAM-only operation
 6. Shutdown gracefully
 
-**Location**: `tests/integration_test.rs`
+**Location**: `tests/integration/e2e_test.rs`
 
-### 12.4 Performance Tests
+### 12.2.3 Numerical Correctness Tests
 
-#### [M0-W-1830] Performance Test Suite
-M0 MUST include performance verification tests:
+**Added**: 2025-10-03 (MXFP4 numerical correctness validation)
+
+#### [M0-W-1822] MXFP4 Numerical-Correctness Micro-Goldens
+Worker MUST pass MXFP4 numerical correctness test:
+
+**Test**: Dequant→GEMM and small attention shape vs float reference within tolerance
+
+**Coverage**:
+- MXFP4 dequantization correctness
+- GEMM with MXFP4 weights
+- Attention computation with MXFP4
+- FP16 accumulation validation
+
+**Tolerance**: ±0.01 (1%) relative error for FP16 accumulation
+
+**Note**: This validates **numerical correctness** (tolerance-based) and does NOT assert throughput/latency. The comprehensive performance suite (utilization, latency, p50-p99) remains deferred to M1+.
+
+**Validation**:
+```rust
+#[test]
+fn test_mxfp4_numerical_correctness() {
+    // Test MXFP4 dequant + GEMM
+    let mxfp4_weights = load_mxfp4_tensor("test_weights.bin");
+    let input = create_test_input();
+    let output = gemm_mxfp4(mxfp4_weights, input);
+    let reference = gemm_fp32(dequant_to_fp32(mxfp4_weights), input);
+    assert_close!(output, reference, tolerance = 0.01);
+    
+    // Test attention with MXFP4
+    let attn_output = attention_mxfp4(/* ... */);
+    let attn_reference = attention_fp32(/* ... */);
+    assert_close!(attn_output, attn_reference, tolerance = 0.01);
+}
+```
+
+**Location**: `tests/integration/mxfp4_numerical_goldens.rs`
+
+### 12.2.4 Minimal Reproducibility Test
+
+**Added**: 2025-10-03 (minimal same-device reproducibility check)
+
+#### [M0-W-1826] Same-Device Reproducibility
+Worker MUST pass minimal reproducibility test:
+
+**Test**: Run twice with seeded RNG and temp=0, assert identical token IDs
+
+**Validation**:
+```rust
+#[test]
+fn test_repro_same_device() {
+    let worker = start_worker("qwen2.5-0.5b-instruct-q4_k_m.gguf", 0);
+    
+    let request = ExecuteRequest {
+        prompt: "Write a haiku about GPU computing".to_string(),
+        max_tokens: 50,
+        temperature: 0.0,  // Greedy sampling
+        seed: Some(42),
+    };
+    
+    // First run
+    let tokens1 = collect_token_ids!(worker.execute(request.clone()));
+    
+    // Second run
+    let tokens2 = collect_token_ids!(worker.execute(request.clone()));
+    
+    // Assert identical token IDs
+    assert_eq!(tokens1, tokens2, "Same device, same seed, temp=0 must produce identical tokens");
+}
+```
+
+**Location**: `tests/integration/repro_same_device.rs`
+
+**Note**: Deep CUDA determinism audit (kernel scheduling, atomics) deferred to M1+
+
+### 12.3 Integration Tests
+
+#### [M0-W-1820] End-to-End Test
+M0 MUST have integration test:
+
+**Test flow**:
+1. Start worker with test model
+2. Send inference request
+3. Verify SSE stream
+4. Verify reproducible output (temp=0 for testing)
+5. Verify VRAM-only operation
+6. Shutdown gracefully
+
+**Location**: `tests/integration/e2e_test.rs`
+
+### 12.3.1 GPT-OSS-20B Integration Tests
+
+**Added**: 2025-10-03 (MXFP4 implementation requirements)
+
+#### [M0-W-1821] Tokenizer Conformance Test
+Worker MUST pass tokenizer conformance test for GPT-OSS-20B:
+
+**Test**: 20-30 text↔ids pairs from upstream tokenizer.json artifacts
+
+**Coverage**:
+- Basic encode/decode
+- BOS/EOS token handling
+- Special tokens
+- Multibyte UTF-8 characters
+- Edge cases (empty string, very long sequences)
+
+**Validation**:
+```rust
+#[test]
+fn test_gpt_oss_20b_tokenizer_conformance() {
+    let tokenizer = load_hf_tokenizer("tokenizer.json");
+    
+    for vector in GOLDEN_VECTORS {
+        let encoded = tokenizer.encode(&vector.text);
+        assert_eq!(encoded, vector.expected_token_ids);
+        
+        let decoded = tokenizer.decode(&encoded);
+        assert_eq!(decoded, vector.expected_decoded);
+    }
+}
+```
+
+**Location**: `tests/integration/tokenizer_conformance_gpt_oss_20b.rs`
+
+#### [M0-W-1823] Large Model Bring-Up Test
+Worker MUST pass large model bring-up test for GPT-OSS-20B:
+
+**Test**: Load GPT-OSS-20B (MXFP4), verify health endpoint, confirm VRAM envelope
+
+**Validation**:
+```rust
+#[test]
+fn test_gpt_oss_20b_bring_up() {
+    let worker = start_worker("gpt-oss-20b-mxfp4.gguf", 0);
+    
+    // Verify health endpoint
+    let health = worker.get_health();
+    assert_eq!(health.quant_kind, "MXFP4");
+    assert_eq!(health.tokenizer_kind, "hf-json");
+    assert!(health.resident);
+    
+    // Verify VRAM envelope with tolerance
+    let expected_vram = read_expected_vram_from_metadata(); // or config: 16_000_000_000
+    let tolerance = 0.20; // ±20%
+    assert!(within_tolerance(health.vram_bytes_used, expected_vram, tolerance),
+        "VRAM usage {} outside expected range {}±20%", 
+        health.vram_bytes_used, expected_vram);
+    
+    // Verify basic inference
+    let response = worker.execute(/* simple prompt */);
+    assert_event!(response, "started");
+    assert!(collect_tokens!(response).len() > 0);
+}
+```
+
+**Location**: `tests/integration/gpt_oss_20b_bring_up.rs`
+
+#### [M0-W-1824] UTF-8 Streaming Test
+Worker MUST pass UTF-8 streaming test with multibyte characters:
+
+**Test**: Prompts with multibyte characters; assert no mojibake across token events
+
+**Coverage**:
+- Chinese characters (3-byte UTF-8)
+- Emoji (4-byte UTF-8)
+- Mixed ASCII + multibyte
+- Token boundaries that split UTF-8 sequences
+
+**Validation**:
+```rust
+#[test]
+fn test_utf8_streaming_multibyte() {
+    let worker = start_worker("gpt-oss-20b-mxfp4.gguf", 0);
+    
+    let prompts = vec![
+        "你好世界",  // Chinese
+        "Hello 👋 World 🌍",  // Emoji
+        "Mixed: 日本語 English العربية",  // Mixed scripts
+    ];
+    
+    for prompt in prompts {
+        let response = worker.execute(ExecuteRequest {
+            prompt: prompt.to_string(),
+            max_tokens: 20,
+            temperature: 0.7,
+        });
+        
+        let tokens = collect_tokens!(response);
+        let decoded = tokens.join("");
+        
+        // Verify no mojibake (all valid UTF-8)
+        assert!(decoded.is_valid_utf8());
+        assert!(!decoded.contains("�"));  // No replacement characters
+    }
+}
+```
+
+**Location**: `tests/integration/utf8_streaming.rs`
+
+#### [M0-W-1825] OOM Recovery Test
+Worker MUST pass OOM recovery test:
+
+**Test**: Intentionally exceed KV/context → expect structured VRAM_OOM error and clean recovery
+
+**Validation**:
+```rust
+#[test]
+fn test_oom_recovery() {
+    let worker = start_worker("gpt-oss-20b-mxfp4.gguf", 0);
+    
+    // Intentionally exceed context length
+    let response = worker.execute(ExecuteRequest {
+        prompt: "x".repeat(10000),  // Exceed context
+        max_tokens: 10000,
+        temperature: 0.7,
+    });
+    
+    // Expect VRAM_OOM error
+    assert_event!(response, "error", code = "VRAM_OOM");
+    
+    // Verify process still alive
+    assert!(worker.is_alive());
+    
+    // Verify clean recovery (next request works)
+    let response2 = worker.execute(ExecuteRequest {
+        prompt: "Hello".to_string(),
+        max_tokens: 10,
+        temperature: 0.7,
+    });
+    
+    assert_event!(response2, "started");
+    assert!(collect_tokens!(response2).len() > 0);
+}
+```
+
+**Location**: `tests/integration/oom_recovery.rs`
+
+### 12.4 Performance Tests (DEFERRED to M1+)
+
+#### [M0-W-1830] Performance Test Suite (DEFERRED)
+**Status**: DEFERRED to M1+
+
+Comprehensive performance test suite deferred to M1+:
 
 **Tests**:
 1. **First token latency** — Measure POST /execute to first token (target <100ms p95)
@@ -1590,12 +2082,26 @@ Sensitive data redaction deferred to M1. M0 may log prompts for debugging purpos
 
 The following gaps require clarification or implementation:
 
-1. **Tokenization Library** ✅ RESOLVED
-   - **Decision**: Rust-side tokenizer with two backends:
-     - **GGUF byte-BPE backend** for Qwen2.5-0.5B and Phi-3-Mini (embedded in GGUF)
-     - **OpenAI tokenizer.json backend** for GPT-OSS-20B (parse tokenizer.json)
-   - **Impact**: Deterministic encode/decode; no llama.cpp dependency
-   - **Implementation**: Rust crate with pluggable backend trait
+1. **Tokenization Library** ✅ RESOLVED (FINALIZED 2025-10-03)
+   - **Decision**: Rust-side tokenizer with two distinct backends:
+     - **`hf-json` backend** for GPT-OSS-20B:
+       - Uses Hugging Face `tokenizers` crate (Rust)
+       - Loads and runs tokenizer.json directly
+       - Golden encode/decode test vectors to catch schema drift
+       - Ensures parity with upstream tokenizer
+     - **`gguf-bpe` backend** for Qwen2.5-0.5B and Phi-3-Mini:
+       - Pure-Rust GGUF tokenizer implementation
+       - Parses GGUF metadata (vocab + merges)
+       - Runs byte-level BPE entirely in Rust
+       - UTF-8 safe streaming decode with BOS/EOS handling
+   - **Runtime Selection**: Worker selects backend at model load time based on model metadata
+   - **Impact**: 
+     - No Python or external binaries at runtime
+     - Deterministic, self-contained tokenization across all targets
+     - Clean separation between GGUF byte-BPE and tokenizer.json handling
+     - No llama.cpp dependency
+   - **Implementation**: Rust crate with pluggable backend trait (`TokenizerBackend`)
+   - **Testing**: Conformance test vectors required for all three models
 
 2. **Detokenization (SSE Streaming)** ✅ RESOLVED
    - **Decision**: Streaming UTF-8 boundary buffer in Rust:
@@ -1736,7 +2242,10 @@ For **each** of the three M0 reference models (Qwen2.5-0.5B, Phi-3-Mini, GPT-OSS
 12. ✅ All CUDA unit tests pass (functional only, no performance tests)
 13. ✅ All Rust unit tests pass
 14. ✅ Integration test passes for all three models (functional validation)
-15. ✅ Tokenization works for both GGUF byte-BPE and tokenizer.json backends
+15. ✅ Tokenization works for both backends:
+    - `gguf-bpe` backend (Qwen2.5-0.5B, Phi-3-Mini)
+    - `hf-json` backend (GPT-OSS-20B)
+    - Conformance test vectors pass for all three models
 16. ✅ Quantized execution verified (no FP32 dequant on load)
 17. ✅ Model load progress events emit (0%, 25%, 50%, 75%, 100%)
 
