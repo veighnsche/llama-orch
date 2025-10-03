@@ -296,7 +296,7 @@ This contrast makes the brand **stand out** in a sea of boring infrastructure co
 
 ### Competitor C: "We're enterprise-ready"
 
-**Our Response**: "We're **compliance-ready**. EU regulations? The Flamingo enforces VRAM-only policy. Audit trail? Orc Hestord logs every decision. Determinism? Worker Orc guarantees it."
+**Our Response**: "We're **compliance-ready**. EU regulations? The Flamingo enforces VRAM-only policy. Audit trail? Orc Hestord logs every decision. Test reproducibility? Worker Orc supports it."
 
 ---
 

@@ -131,12 +131,12 @@ const result = await client.inference({
 - Generic providers offer: `llama-70b` (unoptimized)
 - Platform delivers superior performance through expert curation
 
-### 3. Determinism Guarantee (UNIQUE VALUE)
+### 3. Test Reproducibility (TESTING VALUE)
 
-**Platform guarantees: Same seed → Same output**:
-- Critical for: AI agents, testing, compliance audits
-- Unique capability through controlled infrastructure
-- Enables advanced workflows impossible elsewhere
+**Platform provides: Test reproducibility for validation**:
+- Critical for: Testing, validation, debugging workflows
+- Controlled infrastructure enables reproducible testing
+- Temperature-based sampling (0.0-2.0) is the product feature
 
 **Platform advantage**:
 ```
@@ -144,14 +144,14 @@ Our platform:
   - Vetted hardware providers
   - Pinned engine versions
   - Sealed VRAM shards (worker-orcd)
-  - Deterministic sampling
-  Result: GUARANTEED reproducible outputs
+  - Reproducible sampling for testing (temp=0)
+  Result: Reproducible test outputs (NOT a product guarantee)
 
 Generic providers (e.g., Runpod, Vast.ai):
   - Mixed hardware configurations
   - Variable engine versions
   - Opaque inference stacks
-  Result: Non-deterministic outputs
+  Result: Non-reproducible testing
 ```
 
 ### 4. EU Compliance Guarantee (Regulatory Advantage)
@@ -452,7 +452,7 @@ orchestratord:
 
 | Feature | Your Platform | Runpod/Vast.ai |
 |---------|---------------|----------------|
-| **Determinism** | ✅ Guaranteed (sealed VRAM) | ❌ No guarantees |
+| **Test Reproducibility** | ✅ Supported (sealed VRAM) | ❌ No support |
 | **EU Compliance** | ✅ Native (geo-verified) | ❌ US-based, mixed |
 | **API Lock-in** | ✅ Custom orchestratord API | ❌ Generic Docker/SSH |
 | **Margin Control** | ✅ Full control | ❌ Fixed commission |
@@ -461,27 +461,27 @@ orchestratord:
 ### vs. Together.ai / Replicate (Inference APIs)
 
 | Feature | Your Platform | Together/Replicate |
-|---------|---------------|-------------------|
-| **Provider Control** | ✅ Your vetted providers | ❌ Their infrastructure |
-| **Margin** | ✅ 30-40% (you control) | ❌ Their pricing |
+|---------|---------------|--------------------|  
+| **Provider Control** | ✅ Your vetted providers | ❌Their infrastructure |
+| **Margin** | ✅ 30-40% (you control) | ❌Their pricing |
 | **EU Data** | ✅ Guaranteed | ❌ Multi-region |
-| **Determinism** | ✅ Guaranteed | ❌ Best-effort |
+| **Test Reproducibility** | ✅ Supported | ❌ Best-effort |
 | **Compliance** | ✅ GDPR-native | ❌ US-centric |
 
 ### vs. AWS Bedrock / Azure OpenAI (Cloud Inference)
 
 | Feature | Your Platform | Cloud Providers |
-|---------|---------------|-----------------|
+|---------|---------------|-----------------|  
 | **Cost** | ✅ 50-70% cheaper (home GPUs) | ❌ Enterprise pricing |
 | **EU Lock** | ✅ EU-only by design | ❌ Global regions |
-| **Vendor Lock** | ✅ Your API | ❌ Their APIs |
-| **Determinism** | ✅ Guaranteed | ❌ Opaque |
+| **Vendor Lock** | ✅ Your API | ❌Their APIs |
+| **Test Reproducibility** | ✅ Supported | ❌ Opaque |
 | **Control** | ✅ Full stack | ❌ Black box |
 
 ---
 
 ## Go-to-Market Strategy
-
+{{ ... }}
 ### Phase 1: Platform MVP (Q1 2025)
 
 **Goal**: Prove the marketplace model with 10 providers, 50 customers
@@ -495,7 +495,7 @@ orchestratord:
 **Target Customers**:
 - AI startups (need cheap GPUs)
 - EU-based companies (compliance requirements)
-- AI agent developers (need determinism)
+- AI developers (need reproducible testing)
 
 **Target Providers**:
 - Home lab enthusiasts (monetize idle GPUs)
@@ -549,7 +549,7 @@ orchestratord:
 ### 3. Customer Success
 
 **Platform commitments**:
-- Determinism guarantee (backed by test suite)
+- Test reproducibility support (backed by test suite)
 - EU compliance (full audit trail)
 - Uptime SLAs (99.9%+)
 - Transparent pricing (no hidden fees)
@@ -572,14 +572,14 @@ orchestratord:
 
 **Mitigation**:
 - Consistent value delivery (stable API, reliable service)
-- Unique capabilities (determinism, compliance)
+- Unique capabilities (test reproducibility, compliance)
 - Superior support (fast response, expert assistance)
 - Continuous improvement
 
 ### Risk 3: Pricing Pressure
 
 **Mitigation**:
-- Value differentiation (determinism, compliance)
+- Value differentiation (test reproducibility, compliance)
 - Customer success focus (long-term partnerships)
 - Efficient operations (scale economies benefit everyone)
 
@@ -624,9 +624,9 @@ orchestratord:
 The orchestratord binary enables a **GPU marketplace/reseller business model** with:
 
 ✅ **High margins** (30-40%+)  
-✅ **Strong lock-in** (API, determinism, compliance)  
+✅ **Strong lock-in** (API, test reproducibility, compliance)  
 ✅ **Network effects** (providers + customers reinforce each other)  
-✅ **Competitive moat** (determinism guarantee)  
+✅ **Competitive moat** (test reproducibility support)  
 ✅ **EU compliance** (regulatory advantage)
 
 **The platform federation pattern** creates a three-sided marketplace where:

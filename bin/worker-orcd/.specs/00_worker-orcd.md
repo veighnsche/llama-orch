@@ -349,8 +349,10 @@ For each `/execute` request, worker-orcd MUST:
 5. Emit SSE `end` event when complete
 6. Free KV cache and intermediate buffers
 
-### [WORK-3062] Determinism
-Worker-orcd MUST produce deterministic results when given same `prompt`, `seed`, `temperature`, and `max_tokens`. It MUST use fixed RNG seeding.
+### [WORK-3062] Test Reproducibility
+Worker-orcd MUST produce reproducible results for testing when given same `prompt`, `seed`, `temperature=0.0`, and `max_tokens`. It MUST use fixed RNG seeding.
+
+**Clarification**: This is a TESTING requirement for validation, not a product promise. Temperature 0.0-2.0 is a product feature; reproducibility (temp=0) is for testing only.
 
 ### [WORK-3063] Error Handling
 If inference fails (VRAM OOM, CUDA error, etc.), worker-orcd MUST:

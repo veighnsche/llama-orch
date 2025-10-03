@@ -1,8 +1,8 @@
 # llama-orch
 
-**Deterministic, VRAM-only, multi-node GPU orchestration for LLM inference**
+**Reproducible, VRAM-only, multi-node GPU orchestration for LLM inference**
 
-llama-orch is a three-binary system that provides guaranteed reproducibility, VRAM-only enforcement, and enterprise-grade orchestration across distributed GPU resources. Born from the simple frustration of "why can't I easily choose which GPU runs which model?", it evolved into a deterministic inference platform with a clean intelligence hierarchy.
+llama-orch is a three-binary system that provides test reproducibility, VRAM-only enforcement, and enterprise-grade orchestration across distributed GPU resources. Born from the simple frustration of "why can't I easily choose which GPU runs which model?", it evolved into a reproducible testing platform with a clean intelligence hierarchy.
 
 **Current version**: `0.1.0` (early development)  
 **License**: GPL-3.0-or-later (free and open source, copyleft)  
@@ -14,11 +14,14 @@ llama-orch is a three-binary system that provides guaranteed reproducibility, VR
 
 ### Core Value Propositions
 
-1. **Determinism Guarantee**: Same seed → Same output (every time, provably)
-2. **VRAM-Only Policy**: Model fully resident in GPU VRAM (no RAM fallback)
-3. **Multi-Node Orchestration**: Distribute models across GPU clusters
-4. **Smart/Dumb Architecture**: Clean separation between decisions and execution
-5. **Process Isolation**: Workers run in separate processes with isolated CUDA contexts
+1. **Test Reproducibility**: Same seed + temp=0 → Same output (for testing validation, not a product promise)
+2. **Temperature Control**: Full temperature range 0.0-2.0 for production use (product feature)
+3. **VRAM-Only Policy**: Model fully resident in GPU VRAM (no RAM fallback)
+4. **Multi-Node Orchestration**: Distribute models across GPU clusters
+5. **Smart/Dumb Architecture**: Clean separation between decisions and execution
+6. **Process Isolation**: Workers run in separate processes with isolated CUDA contexts
+
+**Note**: Determinism is a testing tool, not a product guarantee. LLMs cannot guarantee deterministic behavior due to model architecture and hardware variations.
 
 ### The Three-Binary System
 
@@ -585,7 +588,7 @@ llama-orch follows strict **Spec → Contract → Tests → Code** discipline:
 ### Key Principles
 
 - **No backwards compatibility before v1.0** — Breaking changes are expected
-- **Determinism by default** — Identical inputs yield identical outputs
+- **Test reproducibility** — Identical inputs + temp=0 yield identical outputs (for testing only)
 - **Proof bundles** — Tests emit artifacts (NDJSON, JSON, seeds) to `.proof_bundle/`
 - **Metrics contract** — All metrics align with `.specs/metrics/otel-prom.md`
 - **Zero dead code** — Remove unused code immediately (see `AGENTS.md`)

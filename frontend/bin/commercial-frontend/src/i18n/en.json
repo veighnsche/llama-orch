@@ -112,7 +112,7 @@
             "b2": "No audit trail: unclear who ran what and when",
             "b3": "Lock-in to models or hosts you can’t swap",
             "b4": "GDPR risk from unmanaged logs and caches",
-            "o1": "Reproducible runs with signed logs and job IDs",
+            "o1": "Test reproducibility with signed logs and job IDs",
             "o2": "EU data residency and policy-controlled retention",
             "o3": "OpenAI-compatible gateway with swappable models",
             "o4": "Operational guardrails: quotas, approvals, rate limits",

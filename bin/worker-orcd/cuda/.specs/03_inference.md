@@ -23,8 +23,10 @@ The module MUST generate tokens one-by-one via autoregressive inference.
 ### [CUDA-5302] KV Cache Management
 The module MUST allocate and manage KV cache in VRAM for each inference session.
 
-### [CUDA-5303] Deterministic Sampling
-The module MUST produce deterministic results given same seed, prompt, and parameters.
+### [CUDA-5303] Reproducible Sampling for Testing
+The module MUST produce reproducible results for testing when given same seed, prompt, and temperature=0.0.
+
+**Clarification**: This is for TESTING validation only. Temperature-based sampling (0.0-2.0) is the product feature. Determinism is not guaranteed in production due to model and hardware limitations.
 
 ### [CUDA-5304] Streaming
 The module MUST support streaming token generation (not batch generation).
@@ -290,29 +292,33 @@ KV Cache Layout (per layer):
 
 ---
 
-## 6. Determinism
+## 6. Test Reproducibility (NOT a Product Guarantee)
 
 ### [CUDA-5350] Seeded RNG
 ```cpp
 InferenceResult::InferenceResult(..., uint64_t seed) 
     : rng_(seed) {
     // Initialize RNG with seed
-    // All sampling will be deterministic
+    // Sampling will be reproducible for testing
 }
 ```
 
-### [CUDA-5351] Deterministic Kernels
-All CUDA kernels MUST be deterministic:
+### [CUDA-5351] Reproducible Kernels for Testing
+All CUDA kernels MUST be reproducible for testing:
 - No atomics with race conditions
 - No non-deterministic reductions
 - Fixed execution order
 
+**Clarification**: This is for TESTING validation only. Temperature-based sampling (0.0-2.0) is the product feature. Reproducibility is not guaranteed in production due to model and hardware limitations.
+
 ### [CUDA-5352] Verification
-The module MUST produce identical output for:
+The module MUST produce identical output for testing when:
 - Same model
 - Same prompt
 - Same seed
-- Same temperature/sampling params
+- temperature=0.0
+
+**Note**: This is a testing requirement, NOT a product guarantee.
 
 ---
 
@@ -487,12 +493,12 @@ TEST(InferenceTest, GenerateTokens) {
     cuda_inference_free(inference);
 }
 
-TEST(InferenceTest, DeterministicOutput) {
-    // Run inference twice with same seed
-    auto output1 = run_inference("Hello", 42);
-    auto output2 = run_inference("Hello", 42);
+TEST(InferenceTest, ReproducibleOutputForTesting) {
+    // Run inference twice with same seed and temp=0
+    auto output1 = run_inference("Hello", /*seed=*/42, /*temp=*/0.0f);
+    auto output2 = run_inference("Hello", /*seed=*/42, /*temp=*/0.0f);
     
-    // Outputs must be identical
+    // Outputs must be identical for testing validation
     ASSERT_EQ(output1, output2);
 }
 ```

@@ -138,7 +138,7 @@
 - **Eviction**: Two types: (1) Model eviction (hot-load eviction) - removing cached model files from pool-managerd RAM to free memory when no longer needed for quick worker startup; (2) Worker eviction - stopping worker processes to free VRAM for higher-priority jobs.
 - **Preflight Validation**: Pre-spawn checks performed by pool-managerd to verify GPU has sufficient free VRAM and model is compatible before spawning a worker.
 - **VRAM-Only Policy**: Requirement that all model weights, KV cache, activations, and intermediate tensors reside entirely in GPU VRAM with no RAM/disk fallback.
-- **Determinism**: Property where same model + same seed + same prompt produces identical output; system-level guarantee with model-level limitations.
+- **Test Reproducibility**: Property where same model + same seed + temp=0 + same prompt produces identical output for testing validation; NOT a product guarantee due to model and hardware limitations.
 - **Proof Bundle**: Standardized test artifact directory containing seeds, transcripts, metadata, and outputs for reproducibility (see `libs/proof-bundle`).
 - **Smart/Dumb Boundary**: Architectural principle where orchestratord makes ALL intelligent decisions (smart) while pool-managerd and workers execute commands without policy decisions (dumb).
 - **Model Reference (model_ref)**: Canonical identifier for a model artifact, format: `hf:{org}/{repo}@{rev}::file={path}` or `file:/path/to/model.gguf`.
@@ -208,10 +208,10 @@
 
 ### 1.1 Purpose
 
-Llama-Orch is a **deterministic, VRAM-only, multi-node GPU orchestration system** for large language model inference. It provides guaranteed reproducibility, EU-native compliance, and enterprise-grade orchestration across distributed GPU resources.
+Llama-Orch is a **VRAM-only, multi-node GPU orchestration system** for large language model inference. It provides test reproducibility, EU-native compliance, and enterprise-grade orchestration across distributed GPU resources.
 
 **Core Value Propositions:**
-1. **Determinism Guarantee**: Same seed → Same output (every time, provably)
+1. **Test Reproducibility**: Same seed + temp=0 → Same output (for testing validation only)
 2. **VRAM-Only Policy**: Model fully resident in GPU VRAM (no RAM fallback)
 3. **Multi-Node Orchestration**: Distribute models across GPU clusters
 4. **EU Compliance**: GDPR-native, EU-only data residency
@@ -283,7 +283,7 @@ Worker (Executor) → Loads model, executes inference
 
 **Resolution rules**:
 - Orchestratord (catalog) MUST resolve aliases to a canonical `model_ref` prior to scheduling.
-- Orchestratord MUST pin `@rev` to an immutable commit SHA and MUST pin a concrete artifact via `::file=...` for determinism guarantee (strengthened from SHOULD to align with SYS-2.3.1).
+- Orchestratord MUST pin `@rev` to an immutable commit SHA and MUST pin a concrete artifact via `::file=...` for test reproducibility (strengthened from SHOULD to align with SYS-2.3.1).
 - Pool-managerd MUST receive a normalized `model_ref` that starts with `hf:` or `file:` and MUST NOT perform alias resolution.
 - The model-provisioner in pool-managerd MUST support:
   - `hf:` — Downloading the specified artifact from Hugging Face.
@@ -311,23 +311,27 @@ The system MUST enforce VRAM-only policy: model weights, KV cache, activations, 
 - ❌ CPU inference fallback
 - ❌ Disk swapping
 
-**Rationale**: VRAM-only policy ensures predictable performance and enables deterministic inference by eliminating memory hierarchy variability.
+**Rationale**: VRAM-only policy ensures predictable performance and enables test reproducibility by eliminating memory hierarchy variability.
+
+**M0 Execution Policy**: Models execute in their quantized formats (Q4_K_M, MXFP4, Q4_0). NO dequantization to FP32 on load. Per-tile dequantization occurs in registers/shared memory during kernel execution with FP16 accumulation. This aligns with local runtime behavior (LM Studio/llama.cpp GGUF execution) and GPT-OSS-20B guidance (~16 GB VRAM operation in MXFP4).
 
 ---
 
-### 2.3 Determinism Principles [M0+] (SYS-2.3.x)
+### 2.3 Test Reproducibility Principles [M0+] (SYS-2.3.x)
 
-#### [SYS-2.3.1] Determinism Guarantee
+#### [SYS-2.3.1] Test Reproducibility (NOT a Product Guarantee)
 
-The system MUST guarantee deterministic inference: same model + same seed + same prompt → same output.
+The system MUST provide reproducibility for testing: same model + same seed + temp=0 + same prompt → same output (for validation only, NOT a product guarantee).
 
 **Requirements:**
 - Sealed VRAM shards (worker-orcd)
 - Pinned engine versions
-- Deterministic sampling
-- No non-deterministic operations
+- Temperature-based sampling (M0: 0.0-2.0 supported; temp=0 for testing reproducibility)
+- Batch=1 (single request at a time)
+- No non-deterministic operations in system code
+- Quantized execution (same quantization format → same numerical results)
 
-**Design Principle**: The system is designed AS IF deterministic, but acknowledges that underlying models may not guarantee determinism.
+**Design Principle**: The system provides REPRODUCIBILITY for testing (temp=0 + same seed → same output), but this is NOT a product promise. Models cannot guarantee deterministic behavior due to model architecture and hardware limitations. Temperature-based sampling (0.0-2.0) is the product feature.
 
 #### [SYS-2.3.2] System-Level Guarantees
 
@@ -345,21 +349,21 @@ The system MUST guarantee deterministic inference: same model + same seed + same
 - Model architectures MAY include inherently non-deterministic components
 - Cross-worker/cross-GPU determinism is NOT guaranteed
 
-#### [SYS-2.3.4] Best-Effort Determinism
+#### [SYS-2.3.4] Best-Effort Test Reproducibility
 
-**Best-effort determinism**:
-- When model and engine support determinism, system MUST preserve it
-- Sampling SHOULD be deterministic for identical inputs and seeds where engine allows
+**Best-effort test reproducibility**:
+- When model and engine support reproducibility, system MUST preserve it
+- Sampling SHOULD be reproducible for identical inputs and seeds where engine allows
 - Non-deterministic operations SHOULD be disabled or replaced when possible
-- System MUST document which models/engines have been verified as deterministic
+- System MUST document which models/engines have been verified as reproducible for testing
 
 #### [SYS-2.3.5] Recording for Reproducibility
 
 **Recording for reproducibility**:
 - Proof bundles MUST include seed, model_ref (pinned @rev and artifact), engine version, device info
-- Failed determinism attempts SHOULD be logged with hardware/engine context
-- Property tests SHOULD verify determinism for known-deterministic models
-- Research document MUST catalog which models/engines achieve determinism (see `.docs/determinism-research.md`)
+- Failed reproducibility attempts SHOULD be logged with hardware/engine context
+- Property tests SHOULD verify reproducibility for known-reproducible models
+- Research document MUST catalog which models/engines achieve test reproducibility (see `.docs/reproducibility-research.md`)
 
 ---
 
@@ -719,7 +723,7 @@ Response (202 Accepted):
 
 **Requirements**:
 - Requests MUST include `model`, `prompt`, and `max_tokens`
-- `temperature` is OPTIONAL with default 0.7 for sampling; for deterministic inference, temperature SHOULD be set to 0 or omitted (engine-dependent)
+- `temperature` is OPTIONAL with default 0.7 for sampling; for test reproducibility, temperature SHOULD be set to 0.0 (greedy sampling for validation, not a product constraint)
 - `seed` SHOULD be provided for determinism, otherwise orchestrator MAY supply one and MUST record it
 - `priority` MUST be one of `interactive` or `batch`; unknown values MUST be rejected with 400
 - Orchestratord MUST validate model existence and token budgets at admission; invalid requests MUST return 4xx with a stable error code
@@ -2354,30 +2358,45 @@ worker-orcd
 **Deliverables**:
 - `worker-orcd` binary with:
   - Model loading into VRAM (CUDA FFI)
+  - **Quantized-only execution** (Q4_K_M, MXFP4, Q4_0 - NO dequantization to FP32)
   - HTTP inference API (`POST /v2/execute`, `GET /health`)
-  - SSE streaming (token-by-token output)
+  - SSE streaming (token-by-token output with UTF-8 boundary safety)
   - Haiku test endpoint or integration
-- VRAM-only enforcement (no RAM fallback)
-- Basic metrics emission (`worker_inference_duration_ms`, `worker_tokens_generated_total`)
+  - Rust-side tokenizer (GGUF byte-BPE + tokenizer.json backends)
+- VRAM-only enforcement (no RAM fallback, no UMA)
+- Basic metrics emission (`worker_inference_duration_ms`, `worker_tokens_generated_total`, `quant_kind` label)
 - Logging via `narration-core`
 
+**M0 Reference Target Models**:
+1. **Qwen2.5-0.5B-Instruct** (GGUF, Q4_K_M, 352 MB) — Primary bring-up & smoke test
+2. **Phi-3-Mini (~3.8B) Instruct** (GGUF, Q4_K_M, 2.3 GB) — Stretch target within 24 GB
+3. **GPT-OSS-20B** (GGUF, MXFP4, 12 GB) — Trend-relevant large model
+
+**Execution Policy**: All models execute in quantized form (matches LM Studio/llama.cpp behavior). Per-tile dequantization in registers/shared memory during kernel execution; FP16 accumulation.
+
 **Testing**:
-- Unit tests for VRAM allocation, model loading
+- Unit tests for VRAM allocation, model loading, temperature-based sampling
 - E2E haiku test in `test-harness/e2e-haiku/`:
-  - Worker loads model (e.g., `llama-3.1-8b`)
+  - Worker loads model (Qwen2.5-0.5B-Instruct)
   - Prompt includes current minute spelled out (e.g., "twenty-nine")
   - Worker generates haiku containing the minute word
+  - **Testing mode**: Use temperature=0.0 for reproducibility validation
+  - **Production mode**: Test temperature range 0.0-2.0 for product feature validation
   - Human verification (computer checks minute word presence, not haiku quality)
-  - Proof bundle emitted with GPU env, SSE transcript, metrics snapshot
+  - Proof bundle emitted with GPU env, SSE transcript, metrics snapshot, temperature value
 
 <!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 TESTING GAPS - M0 testing MUST include performance verification, not just functional correctness. MISSING TESTS: (1) First token latency test - measure time from POST /v2/execute to first SSE token event (target <100ms), (2) Per-token latency test - measure inter-token timing (target 10-50ms), (3) Model loading time test - measure VRAM allocation to ready state (target <60s per SYS-8.2.1), (4) Health endpoint latency test - measure /health response time (target <10ms), (5) Graceful shutdown test - measure time from SIGTERM to process exit (target <5s), (6) Client disconnect test - verify worker aborts inference immediately when SSE stream closes, (7) Memory leak test - run 100 inference requests, verify VRAM usage returns to baseline. RECOMMENDATIONS: Add performance test suite in test-harness/e2e-haiku/perf_tests.rs with: (1) Latency histogram collection (p50, p95, p99), (2) Proof bundle emission with timing breakdowns, (3) Automated pass/fail against targets, (4) Regression detection (fail if p95 latency increases >10%). Performance is not optional - it's our CORE VALUE. Let's measure it from day one! 🚀 -->
 
 **Exit Criteria**:
 - Worker binary runs standalone: `worker-orcd --model <path> --gpu 0 --port 8001`
-- Haiku test passes with real GPU and model (no mocks)
-- Metrics show `tokens_generated_total` > 0
+- Haiku test passes with real GPU and model (no mocks) for Qwen2.5-0.5B
+- All three M0 models load and execute successfully (sequential testing)
+- Metrics show `tokens_generated_total` > 0 and `quant_kind` label present
 - Proof bundle artifacts generated and validated
 - VRAM usage tracked and logged
+- Quantized execution verified (no FP32 dequant on load)
+- UTF-8 streaming validated (no mid-codepoint breaks)
+- Tokenization works for both GGUF byte-BPE and tokenizer.json backends
 
 <!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 EXIT CRITERIA ENHANCEMENT - Current criteria are functional only, missing performance validation. ADDITIONAL EXIT CRITERIA FOR M0: (1) First token latency p95 <100ms (measured over 10 haiku requests), (2) Per-token latency p95 <50ms (measured over 10 haiku requests), (3) Health endpoint p99 <10ms (measured over 100 requests), (4) Model loading time <60s (measured cold start, no cache), (5) Graceful shutdown <5s (measured SIGTERM to exit), (6) Zero memory leaks (VRAM usage returns to baseline after 100 requests), (7) Client disconnect abort <100ms (measured SSE close to inference stop). These are our PERFORMANCE PROMISES. Let's ship them with confidence! 🚀 -->
 
@@ -2720,7 +2739,7 @@ This section documents clarifications that were originally inline HTML comments,
 
 4. **VRAM-Only Policy** (SYS-2.2.1):
    - No RAM/disk fallback for inference (models must fit entirely in VRAM during execution)
-   - Enables deterministic inference
+   - Enables test reproducibility (not determinism, which models cannot guarantee)
    - Simplifies VRAM accounting
    - Note: Pool-managerd MAY cache model files in RAM for hot-loading (faster worker startup), but workers MUST load models into VRAM for inference
 

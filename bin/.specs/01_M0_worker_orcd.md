@@ -28,12 +28,18 @@ This specification consolidates **ALL M0 requirements** for the `worker-orcd` bi
 - ✅ Single model loading (GGUF format)
 - ✅ Single GPU support (no tensor parallelism)
 - ✅ VRAM-only enforcement
+- ✅ Quantized-only execution (Q4_K_M, MXFP4, Q4_0 - NO dequantization to FP32)
 - ✅ HTTP API (execute, health, cancel)
-- ✅ SSE streaming
-- ✅ Deterministic inference (seeded RNG)
+- ✅ SSE streaming with UTF-8 boundary safety
+- ✅ Test reproducibility (seeded RNG, temp=0 for testing; temp 0.0-2.0 for production)
 - ✅ CUDA FFI boundary (Rust ↔ C++/CUDA)
-- ✅ Basic CUDA kernels (GEMM, RoPE, attention, RMSNorm, sampling)
+- ✅ Basic CUDA kernels (GEMM, RoPE, attention, RMSNorm, greedy sampling)
 - ✅ Standalone testing (no orchestrator required)
+
+**M0 Reference Target Models**:
+1. **Qwen2.5-0.5B-Instruct** (GGUF, Q4_K_M) — Primary bring-up & smoke test
+2. **Phi-3-Mini (~3.8B) Instruct** (GGUF, Q4_K_M) — Stretch target within 24 GB
+3. **GPT-OSS-20B** (GGUF, MXFP4) — Trend-relevant large model
 
 **Out of Scope for M0**:
 - ❌ Pool manager integration (M1)
@@ -159,6 +165,8 @@ Each worker MUST run in a separate OS process. Workers MUST NOT share VRAM or CU
 
 **M0 Testing**: Enables standalone worker testing (`worker-orcd --model X --gpu 0`).
 
+**Testing vs Product**: Temperature 0.0 (greedy) is used for reproducibility in TESTING, not as a product constraint. Production supports temperature 0.0-2.0.
+
 ### 1.3 Single Model Constraint
 
 #### [M0-W-1001] Single Model Lifetime
@@ -249,22 +257,22 @@ If VRAM exhausted during inference (KV cache allocation fails), worker MUST:
 
 ---
 
-## 3. Determinism
+## 3. Test Reproducibility (NOT a Product Guarantee)
 
 ### 3.1 System Requirements
 
-#### [M0-SYS-2.3.1] Determinism Guarantee
+#### [M0-SYS-2.3.1] Test Reproducibility (NOT a Product Guarantee)
 **Parent**: SYS-2.3.1
 
-The system MUST guarantee deterministic inference: same model + same seed + same prompt → same output.
+The system MUST provide reproducibility for testing: same model + same seed + temp=0 + same prompt → same output (for validation only, NOT a product guarantee).
 
 **Requirements**:
 - Sealed VRAM shards (worker-orcd)
 - Pinned engine versions
-- Deterministic sampling
-- No non-deterministic operations
+- Reproducible sampling for testing
+- No non-deterministic operations in system code
 
-**Design Principle**: The system is designed AS IF deterministic, but acknowledges that underlying models may not guarantee determinism.
+**Design Principle**: The system provides test reproducibility (temp=0 + same seed → same output), but this is NOT a product promise. Models cannot guarantee deterministic behavior due to model architecture and hardware limitations. Temperature-based sampling (0.0-2.0) is the product feature.
 
 ### 3.2 Implementation Requirements
 
@@ -282,8 +290,8 @@ std::mt19937_64 rng_(seed);  // C++ implementation
 
 **Spec Reference**: CUDA-5350 (inference module)
 
-#### [M0-W-1031] Deterministic CUDA Kernels
-All CUDA kernels MUST be deterministic:
+#### [M0-W-1031] Reproducible CUDA Kernels for Testing
+All CUDA kernels MUST be reproducible for testing:
 - No atomics with race conditions
 - No non-deterministic reductions
 - Fixed execution order
@@ -294,24 +302,24 @@ All CUDA kernels MUST be deterministic:
 cublasSetMathMode(handle, CUBLAS_PEDANTIC_MATH);  // Disable Tensor Cores if non-deterministic
 ```
 
-**Verification**: Property test MUST verify kernel determinism via repeated execution.
+**Verification**: Property test MUST verify kernel reproducibility via repeated execution.
 
 **Spec Reference**: CUDA-5351 (inference module)
 
-#### [M0-W-1032] Temperature Scaling
-Worker-orcd MUST apply temperature scaling deterministically:
+#### [M0-W-1032] Temperature Scaling (Product Feature)
+Worker-orcd MUST apply temperature scaling:
 ```cpp
 for (float& logit : host_logits) {
     logit /= config_.temperature;
 }
 ```
 
-**Temperature range**: 0.0 to 2.0
-- 0.0 = greedy (argmax)
+**Temperature range**: 0.0 to 2.0 (product feature)
+- 0.0 = greedy (argmax) - used for testing reproducibility
 - 1.0 = no scaling
 - >1.0 = more random
 
-**Verification**: Unit test MUST verify temperature=0.0 produces greedy sampling.
+**Verification**: Unit test MUST verify temperature=0.0 produces greedy sampling for test reproducibility.
 
 **Spec Reference**: KERNEL-SAMPLE-003
 
@@ -321,9 +329,9 @@ for (float& logit : host_logits) {
 Worker-orcd acknowledges model-level limitations:
 - Inference engines (llama.cpp) MAY have non-deterministic operations
 - GPU hardware variations MAY produce different floating-point results
-- Cross-worker/cross-GPU determinism is NOT guaranteed
+- Cross-worker/cross-GPU reproducibility is NOT guaranteed
 
-**Documentation**: README MUST document which models/engines have been verified as deterministic.
+**Documentation**: README MUST document which models/engines have been verified as reproducible for testing.
 
 **Spec Reference**: SYS-2.3.3
 
@@ -570,14 +578,26 @@ Worker-orcd MUST support GGUF (GPT-Generated Unified Format) for M0.
 
 **Spec Reference**: WORK-3031, CUDA-5202
 
-#### [M0-W-1201] Quantization Support
-Worker-orcd MUST support Q4_0 quantization for M0.
+#### [M0-W-1201] Quantized-Only Execution
+Worker-orcd MUST execute models in their quantized formats for M0.
 
-**Dequantization**: Dequantize on load (convert Q4_0 to FP32 in VRAM).
+**Supported quantization formats**:
+- Q4_K_M (Qwen2.5-0.5B-Instruct, Phi-3-Mini)
+- MXFP4 (GPT-OSS-20B)
+- Q4_0 (fallback compatibility)
 
-**Future**: Q5_1, Q8_0, FP16 support deferred to M2+.
+**Execution policy**:
+- ✅ Load quantized weights to VRAM as-is
+- ✅ Execute inference in quantized form
+- ❌ NO dequantization to FP32 on load
+- ✅ Per-tile dequantization in registers/shared memory during kernel execution
+- ✅ FP16 accumulation for matmul results
 
-**Spec Reference**: WORKER-4701
+**Rationale**: Matches local runtime behavior (LM Studio/llama.cpp GGUF execution) and aligns with GPT-OSS-20B guidance (~16 GB VRAM operation in MXFP4).
+
+**Future**: Q5_1, Q8_0, INT8 support deferred to M2+.
+
+**Spec Reference**: WORKER-4701, Management directive 2025-10-03
 
 ### 6.2 Model Validation
 
@@ -641,18 +661,99 @@ Worker-orcd SHOULD copy model to VRAM in chunks (e.g., 1MB) to avoid large tempo
 
 **Spec Reference**: CUDA-5261
 
-### 6.4 Test Model
+### 6.4 Test Models
 
-#### [M0-W-1230] Primary Test Model
-M0 MUST use **Qwen2.5-0.5B-Instruct** as primary test model.
+#### [M0-W-1230] M0 Reference Target Models
+M0 MUST support three reference target models for comprehensive validation.
+
+---
+
+##### Model 1: Qwen2.5-0.5B-Instruct (Primary)
+
+**Purpose**: 🧪 Primary bring-up & smoke test
 
 **Specifications**:
-- Size: 352MB (Q4_K_M quantization)
-- Format: GGUF
-- Location: `.test-models/qwen/qwen2.5-0.5b-instruct-q4_k_m.gguf`
-- Download: `https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf`
+- **Name**: Qwen2.5-0.5B-Instruct
+- **Format**: GGUF
+- **Quantization**: Q4_K_M
+- **Size**: 352 MB
+- **VRAM Footprint**: ~400 MB (model + KV cache for 2K context)
+- **Tokenizer**: GGUF byte-BPE (embedded in GGUF)
+- **Context Length**: 32,768 (recommended test limit: 2,048)
+- **License**: Apache 2.0
+- **Location**: `.test-models/qwen/qwen2.5-0.5b-instruct-q4_k_m.gguf`
+- **Download**: `https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf`
 
-**Rationale**: Small enough for fast testing, large enough to verify VRAM allocation.
+**Test Coverage**:
+- Fast unit tests
+- Integration tests
+- BDD scenarios
+- Haiku generation test
+
+---
+
+##### Model 2: Phi-3-Mini (~3.8B) Instruct (Stretch)
+
+**Purpose**: 📈 Stretch target within 24 GB; exercises longer context & tokenizer variety
+
+**Specifications**:
+- **Name**: Phi-3-Mini-4K-Instruct
+- **Format**: GGUF
+- **Quantization**: Q4_K_M
+- **Size**: ~2.3 GB
+- **VRAM Footprint**: ~3.5 GB (model + KV cache for 4K context)
+- **Tokenizer**: GGUF byte-BPE (embedded in GGUF)
+- **Context Length**: 4,096
+- **License**: MIT
+- **Location**: `.test-models/phi3/phi-3-mini-4k-instruct-q4_k_m.gguf`
+- **Download**: `https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf`
+
+**Test Coverage**:
+- VRAM pressure tests
+- Context length validation
+- Tokenizer variety (non-Qwen)
+
+---
+
+##### Model 3: GPT-OSS-20B (Trend-Relevant)
+
+**Purpose**: 🌟 Trend-relevant large model; validates MXFP4 quantization path
+
+**Specifications**:
+- **Name**: GPT-OSS-20B
+- **Format**: GGUF (converted from native MXFP4)
+- **Quantization**: MXFP4 (or Q4_K_M if MXFP4 unavailable)
+- **Size**: ~12 GB
+- **VRAM Footprint**: ~16 GB (model + KV cache, per OpenAI guidance)
+- **Tokenizer**: GPT-4o tokenizer (tokenizer.json, OpenAI format)
+- **Context Length**: 8,192 (recommended test limit: 2,048)
+- **License**: Apache 2.0 (verify with OpenAI release)
+- **Location**: `.test-models/gpt-oss-20b/gpt-oss-20b-mxfp4.gguf`
+- **Download**: TBD (await OpenAI GGUF release or convert from native)
+
+**Test Coverage**:
+- Large model validation
+- MXFP4 quantization path
+- GPT-4o tokenizer integration
+- 24 GB VRAM boundary test
+
+**Special Requirements**:
+- MUST execute quantized (MXFP4 or Q4_K_M)
+- NO FP32 dequantization on load
+- Tokenizer: Parse `tokenizer.json` (OpenAI format) via Rust backend
+- Metrics: Report `quant_kind=MXFP4` and `active_expert_count` (if MoE)
+
+---
+
+**M0 Model Matrix**:
+
+| Model | Size | VRAM | Quantization | Tokenizer | Primary Use |
+|-------|------|------|--------------|-----------|-------------|
+| Qwen2.5-0.5B | 352 MB | ~400 MB | Q4_K_M | GGUF byte-BPE | Smoke tests |
+| Phi-3-Mini | 2.3 GB | ~3.5 GB | Q4_K_M | GGUF byte-BPE | Stretch tests |
+| GPT-OSS-20B | 12 GB | ~16 GB | MXFP4 | tokenizer.json | Large model |
+
+**Total VRAM**: All three models fit within 24 GB GPU (tested sequentially, not concurrently).
 
 ---
 
@@ -961,7 +1062,7 @@ void InferenceResult::run_forward_pass() {
 **Spec Reference**: CUDA-5321
 
 #### [M0-W-1421] Token Sampling
-Worker-orcd MUST sample next token:
+Worker-orcd MUST sample next token with temperature control:
 
 ```cpp
 int InferenceResult::sample_token() {
@@ -978,9 +1079,15 @@ int InferenceResult::sample_token() {
     // Softmax
     softmax(host_logits);
     
-    // Greedy sampling (M0)
-    return std::distance(host_logits.begin(), 
-                        std::max_element(host_logits.begin(), host_logits.end()));
+    // Sampling strategy based on temperature
+    if (config_.temperature == 0.0f) {
+        // Greedy sampling (for testing reproducibility)
+        return std::distance(host_logits.begin(), 
+                            std::max_element(host_logits.begin(), host_logits.end()));
+    } else {
+        // Stochastic sampling (for production use)
+        return sample_from_distribution(host_logits, rng_);
+    }
 }
 ```
 
@@ -996,7 +1103,7 @@ Worker-orcd MUST implement M0 kernel set:
 - RoPE (llama variant)
 - Naive attention (prefill + decode)
 - RMSNorm
-- Greedy sampling
+- Temperature-based sampling (greedy when temp=0, stochastic otherwise)
 
 **Spec Reference**: WORKER-4700
 
@@ -1300,7 +1407,7 @@ M0 MUST have integration test:
 1. Start worker with test model
 2. Send inference request
 3. Verify SSE stream
-4. Verify deterministic output
+4. Verify reproducible output (temp=0 for testing)
 5. Verify VRAM-only operation
 6. Shutdown gracefully
 
@@ -1410,45 +1517,69 @@ Worker-orcd MUST NOT log sensitive data:
 
 The following gaps require clarification or implementation:
 
-1. **Tokenization Library**: Spec mentions tokenization but doesn't specify library (llama.cpp tokenizer? sentencepiece? tiktoken?)
-   - **Decision needed**: Which tokenizer for GGUF models?
-   - **Impact**: Affects determinism and compatibility
+1. **Tokenization Library** ✅ RESOLVED
+   - **Decision**: Rust-side tokenizer with two backends:
+     - **GGUF byte-BPE backend** for Qwen2.5-0.5B and Phi-3-Mini (embedded in GGUF)
+     - **OpenAI tokenizer.json backend** for GPT-OSS-20B (parse tokenizer.json)
+   - **Impact**: Deterministic encode/decode; no llama.cpp dependency
+   - **Implementation**: Rust crate with pluggable backend trait
 
-2. **Detokenization**: How are token IDs converted to UTF-8 strings for SSE streaming?
-   - **Decision needed**: Streaming detokenization strategy
-   - **Impact**: Affects SSE event payload format
+2. **Detokenization (SSE Streaming)** ✅ RESOLVED
+   - **Decision**: Streaming UTF-8 boundary buffer in Rust:
+     - Decode token IDs → raw bytes
+     - Emit only valid UTF-8 per SSE event
+     - Buffer partial bytes until complete codepoint
+   - **Impact**: No mid-codepoint breaks over SSE; clean UTF-8 streaming
+   - **Implementation**: UTF-8 validator with byte buffer in SSE handler
 
-3. **Quantization Dequantization**: Q4_0 dequantization strategy not specified
-   - **Decision needed**: Dequantize on load vs on-the-fly?
-   - **M0 approach**: Dequantize on load (simpler, uses more VRAM)
+3. **Quantization / Execution** ✅ RESOLVED (UPDATED)
+   - **Decision**: **M0 is quantized-only execution**
+     - Load quantized weights (MXFP4, Q4_K_M, Q4_0) to VRAM as-is
+     - Execute inference in quantized form
+     - NO dequantization to FP32 on load
+     - Minimal kernel path: blockwise 4-bit/8-bit → per-tile dequant in registers/shared → FP16 accumulate
+   - **Impact**: Fits all three targets on 24 GB GPUs; aligns with GPT-OSS guidance and local runtime behavior (LM Studio/llama.cpp)
+   - **Spec Change**: Remove all "dequantize on load to FP32" language from M0
 
-4. **Attention Implementation**: Prefill vs decode optimization details missing
-   - **Decision needed**: Separate kernels or unified?
-   - **M0 approach**: Naive implementation, optimization deferred
+4. **Attention Implementation** ✅ RESOLVED
+   - **Decision**: Naive unified attention (prefill + decode same path) for M0
+   - **Impact**: Simpler CUDA code; performance tuning deferred to M2+
+   - **Implementation**: Single attention kernel handles both phases
 
-5. **Sampling Strategy**: Top-k/top-p mentioned as optional—clarify M0 scope
-   - **Decision**: M0 implements greedy sampling only
-   - **Deferred**: Top-k/top-p to M2+
+5. **Sampling Strategy** ✅ RESOLVED
+   - **Decision**: Temperature-based sampling for M0 (0.0-2.0 range)
+     - Temperature = 0.0 → greedy (argmax) for testing reproducibility
+     - Temperature > 0.0 → stochastic sampling for production use
+   - **Impact**: Product feature (customers control creativity); top-k/top-p deferred to M2+
+   - **Implementation**: Temperature scaling + sampling (greedy when temp=0, stochastic otherwise)
 
-6. **Memory Alignment**: 256-byte alignment mentioned but not enforced in specs
-   - **Decision needed**: Add alignment validation in model loading?
-   - **Impact**: Performance optimization
+6. **Memory Alignment** ✅ RESOLVED
+   - **Decision**: Enforce 256-byte alignment for VRAM tensors at load and validate
+   - **Impact**: Predictable GPU performance; early failure on malformed GGUF
+   - **Implementation**: Alignment check in `allocate_vram()` with error on mismatch
 
-7. **Stream Synchronization**: When to sync CUDA streams? After each kernel? Per token?
-   - **Decision needed**: Synchronization strategy
-   - **M0 approach**: Sync after full forward pass (per token)
+7. **Stream Synchronization** ✅ RESOLVED
+   - **Decision**: Sync after each token's full forward pass in M0
+   - **Impact**: Deterministic control flow; small latency trade-off acceptable for M0
+   - **Implementation**: `cudaStreamSynchronize(stream_)` after output projection
 
-8. **X-Deadline Header**: Should M0 parse deadline headers?
-   - **Decision**: M0 SHOULD parse and log X-Deadline header (establish pattern)
-   - **Enforcement**: Deferred to M2+ (M0 logs only)
+8. **X-Deadline Header** ✅ RESOLVED
+   - **Decision**: Parse and log X-Deadline header in M0; no enforcement yet
+   - **Impact**: Establishes pattern; zero complexity for M0
+   - **Implementation**: Extract header, log remaining time, emit metric
 
-9. **Request Timeout**: What happens if client disconnects during inference?
-   - **Decision**: M0-W-1611 specifies abort on disconnect
-   - **Implementation**: Check connection every 10 tokens
+9. **Client Disconnect / Timeout** ✅ RESOLVED
+   - **Decision**: Abort inference on disconnect; check every ≤10 tokens; free KV cache
+   - **Impact**: No zombie jobs; prompt cleanup
+   - **Implementation**: M0-W-1611 specifies connection check in token generation loop
 
-10. **Metrics Scraping**: Full Prometheus integration or basic only?
-    - **Decision**: M0 implements basic metrics (optional)
-    - **Full integration**: Deferred to M2+
+10. **Metrics** ✅ RESOLVED
+    - **Decision**: Basic optional metrics only for M0:
+      - VRAM usage, token count, startup latency, health
+      - Add labels: `quant_kind` (Q4_K_M/MXFP4/…)
+      - For GPT-OSS-20B: `active_expert_count` (even if fixed)
+    - **Impact**: Lightweight observability; full Prometheus exporter deferred to M2+
+    - **Implementation**: M0-W-1350 optional /metrics endpoint
 
 ### 14.2 Contradictions Resolved
 
@@ -1467,8 +1598,14 @@ The following gaps require clarification or implementation:
 - **M0 scope**: Full metrics deferred
 - **Resolution**: M0 implements basic health endpoint only, full metrics M2+
 
+**Contradiction 4**: Determinism vs Temperature
+- **Initial spec**: "Greedy sampling only for determinism"
+- **Product reality**: Temperature is a customer-facing feature, NOT optional
+- **Resolution**: M0 supports temperature 0.0-2.0; greedy (temp=0) is for TESTING reproducibility only, not a product constraint. Determinism is a testing tool, not a product promise.
+
 ### 14.3 Deferred to Post-M0
 
+- Top-k/top-p sampling (M2+) — M0 has temperature-based sampling only
 - FlashAttention (M2+)
 - Continuous Batching (M2+)
 - Tensor Parallelism (M4)
@@ -1486,18 +1623,33 @@ The following gaps require clarification or implementation:
 
 M0 is considered complete when:
 
+**Per-Model Acceptance Criteria**:
+
+For **each** of the three M0 reference models (Qwen2.5-0.5B, Phi-3-Mini, GPT-OSS-20B):
+
+1. ✅ **Startup**: CUDA init, GGUF parse, quantized weights resident in VRAM; report `quant_kind`
+2. ✅ **Inference**: Deterministic SSE token stream for fixed seed; UTF-8-safe streaming
+3. ✅ **Health**: `/health` shows `resident=true`, VRAM bytes, `quant_kind`
+4. ✅ **Disconnects**: Abort on client disconnect (≤10-token checks)
+5. ✅ **Logs**: Record `model_ref`, `seed`, kernel versions, alignment confirmation
+
+**General M0 Success Criteria**:
+
 1. ✅ Worker binary compiles successfully with `--features cuda`
-2. ✅ Worker loads Qwen2.5-0.5B-Instruct (352MB) into VRAM
+2. ✅ Worker loads all three M0 models (sequentially) into VRAM in quantized form
 3. ✅ Worker accepts HTTP POST /execute request
-4. ✅ Worker generates haiku deterministically (same seed → same output)
-5. ✅ Worker streams tokens via SSE in correct order
-6. ✅ Worker enforces VRAM-only (no RAM fallback detected)
-7. ✅ Worker responds to GET /health with status
+4. ✅ Worker generates haiku reproducibly (same seed + temp=0 → same output) for Qwen2.5-0.5B **testing only**
+4b. ✅ Worker supports temperature 0.0-2.0 for production use (stochastic sampling when temp>0)
+5. ✅ Worker streams tokens via SSE with UTF-8 boundary safety
+6. ✅ Worker enforces VRAM-only (no RAM fallback, no UMA detected)
+7. ✅ Worker responds to GET /health with status including `quant_kind`
 8. ✅ Worker handles POST /cancel gracefully
 9. ✅ Worker shuts down gracefully on SIGTERM
 10. ✅ All CUDA unit tests pass
 11. ✅ All Rust unit tests pass
-12. ✅ Integration test passes (end-to-end haiku generation)
+12. ✅ Integration test passes for all three models
+13. ✅ Tokenization works for both GGUF byte-BPE and tokenizer.json backends
+14. ✅ Quantized execution verified (no FP32 dequant on load)
 
 ### 15.2 Non-Goals for M0
 
@@ -1538,7 +1690,7 @@ M0 performance targets (from performance audit in parent §14.1):
 | M0-SYS-6.3.2 | SYS-6.3.2 | Worker Isolation | ✅ Specified |
 | M0-SYS-6.3.5 | SYS-6.3.5 | Cancellation Handling | ✅ Specified |
 | M0-SYS-2.2.1 | SYS-2.2.1 | VRAM-Only Enforcement | ✅ Specified |
-| M0-SYS-2.3.1 | SYS-2.3.1 | Determinism Guarantee | ✅ Specified |
+| M0-SYS-2.3.1 | SYS-2.3.1 | Test Reproducibility | ✅ Specified |
 | M0-SYS-2.4.1 | SYS-2.4.1 | Process Isolation | ✅ Specified |
 | M0-SYS-2.5.1 | SYS-2.5.1 | FFI Boundary | ✅ Specified |
 | M0-W-1001 | New | Single Model Lifetime | ✅ Specified |
