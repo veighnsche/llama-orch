@@ -33,6 +33,7 @@ set(CUDA_SOURCES
     src/device_memory.cpp
     src/cublas_wrapper.cpp
     src/rng.cpp
+    src/kv_cache.cpp
 )
 
 # Kernel files
@@ -97,6 +98,7 @@ if(BUILD_TESTING)
         tests/test_sampling.cu
         tests/sampling_advanced_test.cu
         tests/test_rng.cpp
+        tests/kv_cache_test.cpp
     )
     
     # Build test executable
