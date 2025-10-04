@@ -23,8 +23,11 @@ The FFI interface must be stable, well-documented, and exception-safe. Once lock
 | FT-008 | Error Code System (C++) | S | 1 | 14 |
 | FT-009 | Error Code to Result Conversion (Rust) | S | 1 | 15 |
 | FT-010 | CUDA Context Initialization | M | 2 | 16-17 |
+| **FT-R001** | **Cancellation Endpoint** | **S** | **1** | **18** |
 
-**Total**: 5 stories, 13 agent-days (Days 10-22)
+**Total**: 6 stories (5 planned + 1 retroactive), 14 agent-days (Days 10-23)
+
+**Note**: FT-R001 is a retroactive addition identified during Sprint 1 retrospective to ensure M0-W-1330 compliance.
 
 ---
 
@@ -60,6 +63,14 @@ The FFI interface must be stable, well-documented, and exception-safe. Once lock
 **Goal**: Initialize CUDA context via FFI  
 **Key Deliverable**: Working CUDA context creation from Rust  
 **Blocks**: Sprint 3 (shared kernels)
+
+### Day 18: FT-R001 - Cancellation Endpoint (Retroactive)
+**Goal**: Implement POST /cancel endpoint  
+**Key Deliverable**: Idempotent job cancellation with SSE error events  
+**Blocks**: M0 completion (required for M0-W-1330)  
+**Type**: Retroactive addition (identified in Sprint 1 retrospective)
+
+**Why Retroactive**: M0-W-1330 requires POST /cancel endpoint, but it was not included in original Sprint 2 plan. Added to ensure M0 compliance.
 
 ---
 
@@ -111,13 +122,14 @@ echo "FFI Lock achieved on Day 11" >> coordination/master-timeline.md
 ## Success Criteria
 
 Sprint is complete when:
-- [ ] All 5 stories marked complete
+- [ ] All 6 stories marked complete (5 planned + 1 retroactive)
 - [ ] FFI interface defined and locked (Day 11)
 - [ ] FFI_INTERFACE_LOCKED.md published
 - [ ] Rust FFI bindings implemented with RAII
 - [ ] Error code system operational
 - [ ] Error code to Result conversion working
 - [ ] CUDA context initialization working
+- [ ] POST /cancel endpoint implemented (M0-W-1330)
 - [ ] All unit tests passing
 - [ ] Llama and GPT teams notified of FFI lock
 - [ ] Ready for Sprint 3 (shared kernels)

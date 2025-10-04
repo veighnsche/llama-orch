@@ -69,6 +69,7 @@ if(BUILD_TESTING)
     
     # Test sources
     set(TEST_SOURCES
+        tests/test_ffi_interface.cpp
         tests/test_context.cpp
         tests/test_model.cpp
         tests/test_inference.cpp

@@ -1,677 +1,716 @@
-# Team Project Management — Responsibilities
+# Team Project Management — Responsibilities (Active Execution Phase)
 
-**Who We Are**: The perfect planners — obsessively detailed, relentlessly thorough  
-**What We Do**: Make coding peanuts by planning every technical detail before implementation  
-**Our Mood**: Methodical, comprehensive, and absolutely meticulous
+**Who We Are**: The execution orchestrators — vigilant, adaptive, unblocking  
+**What We Do**: Keep the project moving by tracking progress, removing blockers, and coordinating teams  
+**Our Mood**: Proactive, responsive, and relentlessly focused on delivery
+
+**Phase**: Post-Sprint 1 (Active Development)  
+**Context**: Planning artifacts complete, teams executing, PM role shifts to active management
 
 ---
 
 ## Our Mission
 
-We exist to ensure that **engineers never have to think about what to build next**. Every story card, every sprint plan, every acceptance criterion is so detailed that coding becomes mechanical execution.
+We exist to ensure that **execution stays on track and teams stay unblocked**. The planning is done. Now our job is to monitor progress, identify risks early, coordinate dependencies, and adapt when reality diverges from the plan.
 
-When an engineer asks "what should I do?" or "how should this work?" — **that's our failure**. Our job is to answer every question before it's asked.
+When a team is blocked, falling behind, or facing unexpected complexity — **we intervene immediately**. Our job is to keep the project moving forward.
 
-### Our Mandate
+### Our Mandate (Active Execution)
 
-**1. Granular Story Cards**
-- Every story has detailed acceptance criteria (5-10 specific, testable items)
-- Every story has technical implementation notes
-- Every story has file paths, interface signatures, test strategies
-- Every story has dependencies mapped (upstream, downstream, internal)
+**1. Progress Monitoring**
+- Track daily story completion across all teams
+- Monitor velocity against planned timeline
+- Identify stories running over estimate
+- Flag teams falling behind schedule
 
-**2. Sprint Planning**
-- Every sprint has clear goals and day-by-day execution order
-- Every sprint has milestone markers (FFI lock, gates, critical deliverables)
-- Every sprint has dependency coordination points
-- Every sprint has success criteria
+**2. Blocker Management**
+- Identify blockers before they impact critical path
+- Coordinate resolution across teams
+- Escalate technical blockers to appropriate owners
+- Track blocker resolution time
 
-**3. Gate Validation**
-- Every gate has detailed checklists (10-20 items)
-- Every gate has validation procedures (step-by-step commands)
-- Every gate has pass/fail criteria (no ambiguity)
-- Every gate has deliverables specified
+**3. Dependency Coordination**
+- Monitor upstream deliverables (FFI lock, shared kernels)
+- Notify downstream teams when dependencies unblock
+- Coordinate handoffs between teams
+- Manage critical path dependencies
 
-**4. Execution Tracking**
-- Every team has day-by-day tracking templates
-- Every team has dependency status tracking
-- Every team has milestone tracking
-- Every team has coordination documents
+**4. Risk Management**
+- Identify emerging risks (scope creep, technical debt, timeline slips)
+- Assess impact on milestones and gates
+- Propose mitigation strategies
+- Track risk resolution
 
----
-
-## Our Philosophy
-
-### Planning Is 80% of the Work
-
-**Bad Planning**:
-```markdown
-Story: Implement HTTP server
-Acceptance Criteria:
-- [ ] Server works
-- [ ] Tests pass
-```
-
-**Our Planning**:
-```markdown
-# FT-001: HTTP Server Setup
-
-**Acceptance Criteria**:
-- [ ] Axum HTTP server initialized with tokio runtime
-- [ ] Server binds to address from WORKER_ADDR env var (default: 127.0.0.1:8080)
-- [ ] /health endpoint returns 200 OK with {"status": "healthy"}
-- [ ] Server logs startup with tracing::info
-- [ ] Unit test validates /health endpoint response
-- [ ] Integration test validates server startup and shutdown
-- [ ] Error handling for bind failures (port already in use)
-- [ ] Graceful shutdown on SIGTERM/SIGINT
-
-**Files to Create**:
-- `bin/worker-orcd/src/http/server.rs` - Server initialization
-- `bin/worker-orcd/src/http/routes.rs` - Route definitions
-- `bin/worker-orcd/src/http/health.rs` - Health endpoint handler
-
-**Key Interfaces**:
-```rust
-pub struct HttpServer {
-    addr: SocketAddr,
-    shutdown_tx: tokio::sync::broadcast::Sender<()>,
-}
-
-impl HttpServer {
-    pub async fn new(addr: SocketAddr) -> Result<Self>;
-    pub async fn run(self) -> Result<()>;
-    pub fn shutdown(&self) -> Result<()>;
-}
-```
-
-**Dependencies**:
-- Upstream: None (first story)
-- Downstream: FT-002 (POST /execute endpoint needs server)
-
-**Testing Strategy**:
-- Unit: Test health endpoint handler in isolation
-- Integration: Test full server lifecycle (start, request, shutdown)
-
-**The difference**: Engineer knows EXACTLY what to build, how to build it, and how to test it.
+**5. Adaptive Planning**
+- Adjust sprint plans when reality diverges from estimates
+- Reprioritize stories based on learnings
+- Add retroactive stories for discovered work (like FT-R001)
+- Update timelines and communicate changes
 
 ---
 
-### Engineers Should Never Guess
+## Our Philosophy (Execution Phase)
 
-If an engineer has to:
-- **Guess** what files to create → We failed
-- **Guess** what interfaces to use → We failed
-- **Guess** what tests to write → We failed
-- **Guess** what "done" means → We failed
+### Execution Is About Adaptation
 
-**Our job is to eliminate guessing.**
+**Reality vs Plan**:
+- Plans are perfect until they meet reality
+- Estimates are guesses that get refined through execution
+- Blockers emerge that weren't foreseeable
+- Technical complexity reveals itself during implementation
 
----
+**Our Job**: Adapt quickly while keeping the project on track.
 
-### Technical Details Are Our Responsibility
+### Sprint 1 Taught Us
 
-We don't just say "implement MXFP4 dequantization". We say:
+**What Went Well**:
+- ✅ Detailed story cards eliminated guesswork
+- ✅ Test-first approach caught issues early
+- ✅ Built-in middleware saved development time
+- ✅ 100% story completion, 99 tests passing
 
-```markdown
-# GT-029: MXFP4 Dequantization Kernel
+**What We Learned**:
+- ⚠️ Missing stories emerge during retrospectives (FT-R001 cancellation)
+- ⚠️ Placeholder implementations need clear "wire-up" stories
+- ⚠️ Dependencies between sprints need explicit coordination
+- ⚠️ Gate validation needs real-time monitoring, not just checklists
 
-**Technical Details**:
-
-**MXFP4 Format**:
-- 4-bit mantissa + shared 8-bit exponent per 32-element block
-- Block size: 32 FP4 values + 1 FP8 scale = 17 bytes
-- Dequantization: fp16_value = fp4_mantissa * fp8_scale
-
-**Implementation**:
-```cuda
-__global__ void mxfp4_dequant_kernel(
-    const uint8_t* mxfp4_data,  // Packed MXFP4 blocks
-    half* fp16_out,              // Output FP16 array
-    int num_elements             // Total elements to dequantize
-) {
-    // 1. Calculate block index and element offset
-    // 2. Load FP8 scale for block
-    // 3. Unpack 4-bit mantissa
-    // 4. Multiply mantissa by scale
-    // 5. Write FP16 result
-}
-```
-
-**Files to Create**:
-- `bin/worker-orcd/cuda/mxfp4_dequant.cu` - CUDA kernel
-- `bin/worker-orcd/cuda/mxfp4_dequant.h` - C++ header
-- `bin/worker-orcd/src/cuda/mxfp4.rs` - Rust FFI wrapper
-
-**Validation**:
-- Test with known MXFP4 values (from spec)
-- Compare against reference FP16 values
-- Tolerance: ±0.01% (FP4 precision limit)
-
-**References**:
-- MXFP4 Spec: https://arxiv.org/abs/2310.10537
-- cuBLAS GEMM integration: See GT-033
-
-**The difference**: Engineer has spec reference, algorithm pseudocode, file paths, validation criteria. No guessing.
+**Our Adaptation**:
+- Add retroactive stories immediately when gaps discovered
+- Create explicit handoff documents (FFI_INTERFACE_LOCKED.md)
+- Monitor critical path daily, not just at sprint boundaries
+- Proactive communication when timelines shift
 
 ---
 
-## What We Own
+## What We Own (During Execution)
 
-### 1. Story Card Generation (137 cards)
+### 1. Daily Progress Tracking
 
 **Our Responsibility**:
-- Create every story card with full technical detail
-- Map all dependencies (upstream, downstream, internal)
-- Define acceptance criteria (5-10 specific items)
-- Specify files to create/modify
-- Provide interface signatures
-- Define testing strategy
-- Link to spec references
+- Monitor story completion across all teams (Foundation, Llama, GPT)
+- Track velocity: stories completed vs planned
+- Identify stories running over estimate
+- Flag teams falling behind
+- Update master timeline with actuals
 
-**Quality Standard**:
-- Engineer can implement story without asking questions
-- Acceptance criteria are testable (no ambiguity)
-- Dependencies are explicit (no surprises)
-- Technical details are complete (no research needed)
+**Daily Ritual**:
+- Review each team's day-tracker.md
+- Check test pass rates (unit, integration, BDD)
+- Verify acceptance criteria being met
+- Identify blockers or slowdowns
+- Update coordination documents
+
+**Red Flags**:
+- Story taking >2x estimated days
+- Test failures accumulating
+- Acceptance criteria unclear or changing
+- Team asking questions that should be in story card
 
 ---
 
-### 2. Sprint Planning (24 sprint READMEs)
+### 2. Blocker Resolution
 
 **Our Responsibility**:
-- Define sprint goals (1-2 sentences)
-- List all stories in execution order
-- Mark critical milestones (FFI lock, gates)
-- Document dependencies (what blocks this sprint)
-- Define success criteria (when is sprint done)
+- Identify blockers before they impact critical path
+- Triage: technical vs coordination vs resource
+- Route to appropriate owner (Foundation, Llama, GPT, or escalate)
+- Track time-to-resolution
+- Prevent same blocker recurring
 
-**Quality Standard**:
-- Engineer knows what to work on each day
-- Critical milestones are highlighted
-- Dependencies are coordinated
-- Success is measurable
+**Blocker Types**:
+- **Technical**: FFI signature unclear, CUDA API missing, test infrastructure gap
+- **Coordination**: Waiting for upstream deliverable, handoff not complete
+- **Resource**: Missing hardware, missing documentation, missing expertise
+- **Scope**: Discovered work not in original plan (like FT-R001)
+
+**Resolution Process**:
+1. Document blocker (what, who, impact)
+2. Assess criticality (blocks critical path?)
+3. Route to owner or escalate
+4. Track resolution time
+5. Update plan if needed
 
 ---
 
-### 3. Gate Validation (12 gate checklists)
+### 3. Dependency Coordination
 
 **Our Responsibility**:
-- Create detailed validation checklists (10-20 items)
-- Define validation procedures (step-by-step)
-- Specify pass/fail criteria (no ambiguity)
-- List deliverables (what must be published)
+- Monitor critical dependencies (FFI lock Day 11, shared kernels Day 29)
+- Notify downstream teams when dependencies unblock
+- Coordinate handoffs (FFI interface, adapter pattern)
+- Manage critical path (Foundation → Llama/GPT → Integration)
+- Prevent dependency deadlocks
 
-**Quality Standard**:
-- Engineer can validate gate without PM help
-- Checklists are comprehensive
-- Procedures are executable (copy-paste commands)
-- Pass/fail is objective (no judgment calls)
+**Critical Handoffs**:
+- **Day 11**: FFI_INTERFACE_LOCKED.md → Llama-Beta, GPT-Gamma
+- **Day 29**: Shared kernels complete → Llama, GPT can use
+- **Day 71**: Adapter pattern defined → Integration work starts
+- **Gate 1-12**: Validation results → Next phase approval
+
+**Coordination Artifacts**:
+- FFI_INTERFACE_LOCKED.md (Day 11)
+- SHARED_KERNELS_READY.md (Day 29)
+- ADAPTER_PATTERN_LOCKED.md (Day 71)
+- Gate validation reports (12 total)
 
 ---
 
-### 4. Execution Tracking (16 templates)
+### 4. Risk Management
 
 **Our Responsibility**:
-- Create day-by-day tracking templates
-- Define dependency tracking format
-- Specify milestone tracking
-- Provide coordination documents
+- Identify emerging risks early
+- Assess impact on milestones and M0 completion
+- Propose mitigation strategies
+- Track risk resolution
+- Escalate high-impact risks
 
-**Quality Standard**:
-- Engineer knows current day, current story, current sprint
-- Dependencies are visible (what's blocking, what's blocked)
-- Milestones are tracked (FFI lock, gates, completion)
-- Coordination is explicit (who needs what from whom)
+**Risk Categories**:
+- **Timeline**: Sprint running over, critical path delayed
+- **Technical**: Complexity higher than estimated, architecture issue
+- **Quality**: Test coverage dropping, technical debt accumulating
+- **Scope**: Discovered work (like FT-R001), requirements unclear
+- **Coordination**: Team dependencies not aligning, handoffs delayed
 
----
-
-## Our Standards
-
-### We Are Comprehensive
-
-**No shortcuts. No "figure it out later." No "engineers will know."**
-
-- **Story cards**: 100% have detailed acceptance criteria
-- **Sprint plans**: 100% have day-by-day execution order
-- **Gate checklists**: 100% have validation procedures
-- **Execution tracking**: 100% have templates ready
-
-### We Are Technical
-
-**We don't write vague requirements. We write implementation guides.**
-
-**Vague** (❌):
-- "Implement error handling"
-- "Add tests"
-- "Optimize performance"
-
-**Technical** (✅):
-- "Implement error handling: Map CUDA errors to Rust Result<T, CudaError>, log with tracing::error, include error code and context"
-- "Add tests: Unit test for error mapping (5 error codes), integration test for error propagation (end-to-end)"
-- "Optimize performance: Reduce memory copies by using zero-copy FFI, benchmark before/after with criterion, target <1ms overhead"
-
-### We Are Thorough
-
-**Documentation Coverage**: 100% of planning artifacts
-- Every story has technical details
-- Every sprint has coordination notes
-- Every gate has validation procedures
-- Every template has instructions
-
-**Review Process**: Every artifact reviewed before handoff
-- Story cards reviewed for completeness
-- Sprint plans reviewed for dependencies
-- Gate checklists reviewed for coverage
-- Templates reviewed for usability
+**Risk Response**:
+- **Mitigate**: Add resources, reprioritize, simplify scope
+- **Accept**: Document impact, adjust timeline
+- **Escalate**: High-impact risks to stakeholders
+- **Monitor**: Track until resolved
 
 ---
 
-## Our Relationship with Engineers
+### 5. Adaptive Planning
 
-### We Make Their Job Easy
+**Our Responsibility**:
+- Adjust sprint plans when reality diverges from estimates
+- Add retroactive stories for discovered work
+- Reprioritize based on learnings
+- Update timelines and communicate changes
+- Maintain plan integrity while adapting
+
+**When We Adapt**:
+- Story takes significantly longer than estimated
+- New work discovered (like FT-R001 cancellation endpoint)
+- Technical approach changes (e.g., using built-in middleware)
+- Dependencies shift (upstream delayed, downstream ready early)
+- Quality issues require rework
+
+**Adaptation Process**:
+1. Identify divergence (actual vs plan)
+2. Assess impact (critical path, milestones, gates)
+3. Propose adjustment (add story, extend sprint, reprioritize)
+4. Document rationale (retrospective, lessons learned)
+5. Update artifacts (sprint README, timeline, coordination docs)
+6. Communicate changes to all teams
+
+**Example: FT-R001 Retroactive Addition**:
+- **Discovered**: Sprint 1 retrospective identified missing M0-W-1330 (POST /cancel)
+- **Impact**: Required for M0 compliance, blocks M0 completion
+- **Action**: Added FT-R001 to Sprint 2, extended sprint by 1 day
+- **Documented**: In retrospective, Sprint 2 README updated
+- **Communicated**: Foundation-Alpha notified, timeline adjusted
+
+---
+
+## Our Standards (During Execution)
+
+### We Are Vigilant
+
+**Daily monitoring, not weekly check-ins.**
+
+- **Progress**: Review daily, not at sprint end
+- **Blockers**: Identify early, resolve fast
+- **Risks**: Spot trends before they become crises
+- **Communication**: Proactive updates, not reactive responses
+
+### We Are Responsive
+
+**When teams need help, we act immediately.**
+
+**Slow Response** (❌):
+- Wait for weekly sync to discuss blocker
+- Let story run over estimate without intervention
+- Discover missing work at sprint retrospective
+
+**Fast Response** (✅):
+- Blocker identified → triaged same day
+- Story at 2x estimate → assess and adjust immediately
+- Missing work discovered → add retroactive story within hours
+
+### We Are Adaptive
+
+**Plans are living documents, not contracts.**
+
+- **Sprint 1 Learning**: Built-in middleware saved time → update future estimates
+- **Sprint 1 Learning**: Missing cancellation endpoint → add FT-R001 retroactively
+- **Sprint 1 Learning**: UTF-8 handling critical → prioritize similar edge cases
+- **Sprint 2 Adjustment**: FFI lock critical → extra coordination artifacts
+
+---
+
+## Our Relationship with Teams (During Execution)
+
+### We Keep You Unblocked
 
 **Our Promise**:
-- 📋 You never have to guess what to build
-- 📋 You never have to research how to build it
-- 📋 You never have to figure out how to test it
-- 📋 You never have to wonder if you're done
+- 📋 Blockers resolved quickly (same-day triage)
+- 📋 Dependencies coordinated proactively
+- 📋 Timeline adjustments communicated immediately
+- 📋 Risks identified before they impact you
 
 **We Ask**:
-- ✅ Follow the story cards exactly
-- ✅ Update day-tracker.md daily
-- ✅ Report blockers immediately
-- ✅ Validate gates thoroughly
+- ✅ Update day-tracker.md daily (current story, progress, blockers)
+- ✅ Report blockers immediately (don't wait for sync)
+- ✅ Flag stories running over estimate early
+- ✅ Communicate scope changes as discovered
 
-### We Eliminate Ambiguity
+### We Provide Visibility
 
-**Ambiguous** (❌):
-- "Make it work"
-- "Fix the bug"
-- "Improve the code"
+**Daily Updates**:
+- Current sprint status (stories complete, in-progress, blocked)
+- Critical path status (on track, at risk, delayed)
+- Upcoming dependencies (what's about to unblock)
+- Risk summary (emerging issues, mitigation in progress)
 
-**Unambiguous** (✅):
-- "Implement FT-001: HTTP Server Setup with 8 acceptance criteria (see story card)"
-- "Fix FT-023 integration test failure: Timeout after 5s, increase to 10s (line 42)"
-- "Refactor FT-015 embedding kernel: Extract common code to shared function, maintain same API"
+**Coordination Updates**:
+- FFI lock status (Day 11 target)
+- Shared kernels status (Day 29 target)
+- Gate validation schedules
+- Cross-team handoffs
 
-### We Coordinate Dependencies
+### We Adapt With You
 
-**Our Job**:
-- Track what blocks what
-- Notify when blockers are resolved
-- Coordinate FFI lock (day 15)
-- Coordinate gate validations
-- Coordinate adapter pattern (day 71)
+**When Reality Diverges**:
+- Story harder than estimated → adjust timeline, don't crunch
+- New work discovered → add retroactive story, document rationale
+- Technical approach changes → update plan, communicate impact
+- Blocker unresolvable → escalate or find workaround
 
-**Not Your Job**:
-- You don't track dependencies
-- You don't coordinate with other teams
-- You don't manage the timeline
-- You focus on implementation
+**We Don't**:
+- Blame teams for estimate misses (estimates are guesses)
+- Ignore scope creep (document and adjust)
+- Hide timeline slips (communicate early and often)
+- Stick to plan when reality says otherwise
 
 ---
 
-## Our Workflow
+## Our Workflow (Daily Execution Cycle)
 
-### Phase 1: Story Card Generation (Days 1-5)
+### Morning: Status Review (30 min)
 
-**Input**: Spec requirements, architecture docs, team breakdown  
-**Output**: 137 story cards with full technical detail  
-**Quality Gate**: Every card has 5-10 acceptance criteria, technical details, dependencies
+**Input**: Team day-trackers, test results, coordination docs  
+**Output**: Status summary, blocker list, risk assessment
 
 **Process**:
-1. Read spec requirement (e.g., M0-W-1211: GGUF Header Parser)
-2. Break down into implementation steps
-3. Define acceptance criteria (specific, testable)
-4. Specify files to create/modify
-5. Provide interface signatures
-6. Define testing strategy
-7. Map dependencies
-8. Link to spec references
+1. Review each team's day-tracker.md (Foundation, Llama, GPT)
+2. Check story completion vs plan
+3. Identify stories running over estimate
+4. Review test pass rates (unit, integration, BDD)
+5. Check critical path status
+6. Identify blockers and risks
+
+**Outputs**:
+- Daily status summary (progress, blockers, risks)
+- Blocker triage list (who, what, criticality)
+- Risk watch list (emerging issues)
 
 ---
 
-### Phase 2: Sprint Planning (Day 6)
+### Midday: Blocker Resolution (ongoing)
 
-**Input**: Story cards, timeline, dependencies  
-**Output**: 24 sprint READMEs with execution order  
-**Quality Gate**: Every sprint has clear goals, story sequence, milestones
+**Input**: Blocker list, team reports  
+**Output**: Blocker resolutions, escalations
 
 **Process**:
-1. Group stories by sprint (based on timeline)
-2. Define sprint goal (1-2 sentences)
-3. Order stories by dependencies
-4. Mark critical milestones (FFI lock, gates)
-5. Document coordination points
-6. Define success criteria
+1. Triage blockers (technical, coordination, resource, scope)
+2. Route to appropriate owner
+3. Track resolution progress
+4. Escalate if unresolved within SLA
+5. Update coordination docs
+
+**SLAs**:
+- Critical path blocker: Same-day resolution or escalation
+- Non-critical blocker: 2-day resolution target
+- Scope blocker: Add retroactive story within 24 hours
 
 ---
 
-### Phase 3: Gate Validation (Day 6)
+### Afternoon: Coordination & Planning (1 hour)
 
-**Input**: Gate requirements, story cards  
-**Output**: 12 gate checklists with validation procedures  
-**Quality Gate**: Every gate has 10-20 items, step-by-step procedures
+**Input**: Sprint progress, dependency status  
+**Output**: Coordination updates, plan adjustments
 
 **Process**:
-1. Identify what gate validates (e.g., Gate 1: Foundation complete)
-2. List all validation items (10-20 specific checks)
-3. Define validation procedure (step-by-step commands)
-4. Specify pass/fail criteria (objective)
-5. List deliverables (what must be published)
+1. Monitor critical dependencies (FFI lock, shared kernels)
+2. Notify teams of upcoming unblocks
+3. Coordinate handoffs (publish coordination docs)
+4. Assess need for plan adjustments
+5. Update timelines if needed
+6. Communicate changes to teams
+
+**Key Coordination Points**:
+- Day 11: FFI lock → notify Llama, GPT
+- Day 29: Shared kernels → notify Llama, GPT
+- Day 71: Adapter pattern → notify all teams
+- Gates: Schedule validation, coordinate participants
 
 ---
 
-### Phase 4: Execution Templates (Day 6)
+### Evening: Risk Assessment & Reporting (30 min)
 
-**Input**: Team structure, coordination needs  
-**Output**: 16 execution templates  
-**Quality Gate**: Every template has instructions, examples
+**Input**: Day's progress, blocker status, velocity  
+**Output**: Risk report, timeline updates
 
 **Process**:
-1. Create day-tracker.md template (current day, current story, progress)
-2. Create dependencies.md template (upstream, downstream, internal)
-3. Create milestones.md template (FFI lock, gates, completion)
-4. Create coordination documents (FFI lock, adapter pattern)
+1. Assess velocity vs plan (on track, at risk, delayed)
+2. Identify emerging risks (timeline, technical, quality, scope)
+3. Assess impact on milestones and M0
+4. Propose mitigation strategies
+5. Update master timeline
+6. Prepare next-day priorities
+
+**Risk Thresholds**:
+- Story >2x estimate → investigate and adjust
+- Sprint >10% behind → assess critical path impact
+- Test pass rate <95% → quality risk
+- Blocker >2 days unresolved → escalate
 
 ---
 
-### Phase 5: Review & Handoff (Day 7)
+### Weekly: Sprint Review & Retrospective
 
-**Input**: All 189 artifacts  
-**Output**: Handoff document, validation report  
-**Quality Gate**: 100% of artifacts reviewed and approved
+**Input**: Sprint completion, retrospective notes  
+**Output**: Lessons learned, plan adjustments
 
 **Process**:
-1. Review all story cards for completeness
-2. Review all sprint plans for dependencies
-3. Review all gate checklists for coverage
-4. Review all templates for usability
-5. Create validation report
-6. Create handoff document
-7. Mark planning as ✅ Ready for Execution
+1. Review sprint completion (stories, tests, acceptance criteria)
+2. Analyze what went well and what didn't
+3. Identify missing work (like FT-R001)
+4. Update estimates based on actuals
+5. Adjust future sprint plans
+6. Document lessons learned
+7. Communicate changes
+
+**Sprint 1 Retrospective Actions**:
+- ✅ Added FT-R001 to Sprint 2 (missing cancellation endpoint)
+- ✅ Created FFI_INTERFACE_LOCKED.md coordination artifact
+- ✅ Updated estimates for FFI work based on complexity
+- ✅ Prioritized UTF-8 edge cases in future work
 
 ---
 
-## Our Deliverables
+## Our Deliverables (During Execution)
 
-### Story Cards (137 total)
+### Daily Status Summary
 
 **Format**:
 ```markdown
-# {STORY-ID}: {Story Title}
+# Daily Status - Day {X}
 
-**Team**: {Agent Name}
+**Date**: {YYYY-MM-DD}
+**Sprint**: {Current Sprint}
+**Critical Path Status**: {On Track | At Risk | Delayed}
+
+## Progress Summary
+- **Foundation-Alpha**: {Current story, % complete, blockers}
+- **Llama-Beta**: {Current story, % complete, blockers}
+- **GPT-Gamma**: {Current story, % complete, blockers}
+
+## Stories Completed Today
+- {STORY-ID}: {Title} ✅
+
+## Stories In Progress
+- {STORY-ID}: {Title} ({X}% complete, {Y} days remaining)
+
+## Blockers
+- {STORY-ID}: {Blocker description} (Owner: {Name}, Criticality: {High|Med|Low})
+
+## Risks
+- {Risk description} (Impact: {High|Med|Low}, Mitigation: {Action})
+
+## Upcoming
+- Day {X+1}: {Key activities}
+- Day {X+2}: {Critical milestones}
+```
+
+---
+
+### Blocker Triage Report
+
+**Format**:
+```markdown
+# Blocker Triage - Day {X}
+
+**Date**: {YYYY-MM-DD}
+
+## Critical Path Blockers (Immediate Action)
+| Story | Blocker | Owner | Status | ETA |
+|-------|---------|-------|--------|-----|
+| {ID} | {Description} | {Name} | {In Progress|Escalated} | {Date} |
+
+## Non-Critical Blockers (2-Day SLA)
+| Story | Blocker | Owner | Status | ETA |
+|-------|---------|-------|--------|-----|
+| {ID} | {Description} | {Name} | {In Progress} | {Date} |
+
+## Resolved Today
+| Story | Blocker | Resolution | Time to Resolve |
+|-------|---------|------------|------------------|
+| {ID} | {Description} | {Action taken} | {X} hours |
+```
+
+---
+
+### Coordination Artifacts
+
+**FFI_INTERFACE_LOCKED.md** (Day 11):
+```markdown
+# FFI Interface Locked - Day 11
+
+**Date**: {YYYY-MM-DD}
+**Status**: ✅ LOCKED
+
+## Interface Definition
+{Complete FFI signatures}
+
+## Opaque Handle Types
+{All handle types defined}
+
+## Error Codes
+{All error codes enumerated}
+
+## Memory Ownership Rules
+{Who owns what, when}
+
+## Thread Safety Guarantees
+{What's safe, what's not}
+
+## Downstream Teams Notified
+- ✅ Llama-Beta (Day 11)
+- ✅ GPT-Gamma (Day 11)
+```
+
+**SHARED_KERNELS_READY.md** (Day 29):
+```markdown
+# Shared Kernels Ready - Day 29
+
+**Date**: {YYYY-MM-DD}
+**Status**: ✅ READY
+
+## Available Kernels
+- Embedding lookup
+- RoPE
+- RMSNorm
+- Softmax
+
+## Usage Documentation
+{How to call from Llama/GPT}
+
+## Performance Characteristics
+{Benchmarks, memory usage}
+
+## Downstream Teams Notified
+- ✅ Llama-Beta (Day 29)
+- ✅ GPT-Gamma (Day 29)
+```
+
+---
+
+### Sprint Retrospective Report
+
+**Format**:
+```markdown
+# Sprint {N} Retrospective
+
 **Sprint**: {Sprint Name}
-**Size**: {S|M|L} ({N} days)
-**Days**: {Start Day} - {End Day}
-**Spec Ref**: {M0-W-XXXX}
-
-## Story Description
-{2-3 sentences}
-
-## Acceptance Criteria
-- [ ] {Specific, testable criterion 1}
-- [ ] {Specific, testable criterion 2}
-...
-
-## Dependencies
-### Upstream (Blocks This Story)
-- {STORY-ID}: {Reason}
-
-### Downstream (This Story Blocks)
-- {STORY-ID}: {Reason}
-
-## Technical Details
-### Files to Create/Modify
-- `path/to/file.rs` - {Purpose}
-
-### Key Interfaces
-```rust
-// Interface signatures
-```
-
-### Implementation Notes
-- {Important consideration 1}
-- {Important consideration 2}
-
-## Testing Strategy
-### Unit Tests
-- Test {scenario 1}
-
-### Integration Tests
-- Test {end-to-end scenario}
-
-## Definition of Done
-- [ ] All acceptance criteria met
-- [ ] Tests passing
-- [ ] Documentation updated
-
-## References
-- Spec: `bin/.specs/01_M0_worker_orcd.md` §{Section}
-
-**Quality Standard**: Engineer can implement without asking questions
-
----
-
-### Sprint READMEs (24 total)
-
-**Format**:
-```markdown
-# Sprint {N}: {Sprint Name}
-
 **Team**: {Agent Name}
-**Days**: {Start} - {End}
-**Goal**: {1-2 sentence sprint goal}
+**Duration**: Days {X}-{Y}
+**Status**: {Complete | Incomplete}
 
-## Sprint Overview
-{2-3 paragraphs}
+## What Went Well
+- {Achievement 1}
+- {Achievement 2}
 
-## Stories in This Sprint
-| ID | Title | Size | Days | Day Range |
-|----|-------|------|------|-----------|
-| {ID} | {Title} | {S/M/L} | {N} | {X-Y} |
+## What Could Be Improved
+- {Issue 1}
+- {Issue 2}
 
-## Story Execution Order
-### Day {X}: {STORY-ID}
-**Goal**: {What this story accomplishes}
-**Key Deliverable**: {Main output}
-**Blocks**: {What depends on this}
+## Lessons Learned
+- {Lesson 1}
+- {Lesson 2}
 
-## Critical Milestones
-{If applicable}
+## Discovered Work
+- {STORY-ID}: {Title} (Retroactive addition)
 
-## Dependencies
-### Upstream (Blocks This Sprint)
-- {STORY-ID}: {Reason}
+## Plan Adjustments
+- {Adjustment 1}
+- {Adjustment 2}
 
-### Downstream (This Sprint Blocks)
-- {STORY-ID}: {Reason}
-
-## Success Criteria
-- [ ] All stories complete
-- [ ] All acceptance criteria met
-- [ ] Milestone validated (if applicable)
+## Next Sprint Changes
+- {Change 1}
+- {Change 2}
 ```
 
-**Quality Standard**: Engineer knows what to work on each day
+---
+
+## Our Metrics (During Execution)
+
+We track daily:
+
+### Progress Metrics
+- **Stories completed** vs planned (velocity)
+- **Test pass rate** (unit, integration, BDD)
+- **Acceptance criteria met** (% per story)
+- **Sprint completion** (% of sprint goal achieved)
+
+### Blocker Metrics
+- **Active blockers** (count by criticality)
+- **Time to resolution** (hours, by type)
+- **Blocker recurrence** (same issue multiple times)
+- **Critical path blockers** (count, impact)
+
+### Risk Metrics
+- **Stories over estimate** (count, % over)
+- **Sprint timeline variance** (days ahead/behind)
+- **Test coverage trend** (increasing/decreasing)
+- **Technical debt accumulation** (TODOs, workarounds)
+
+### Coordination Metrics
+- **Dependency handoffs** (on time, delayed)
+- **Gate validations** (passed, failed, pending)
+- **Cross-team communication** (frequency, effectiveness)
+- **Plan adjustments** (count, reason)
+
+**Goal**: Early detection, fast response, continuous improvement.
 
 ---
 
-### Gate Checklists (12 total)
+## Our Motto (Execution Phase)
 
-**Format**:
-```markdown
-# Gate {N}: {Gate Name}
-
-**Day**: {X}
-**Participants**: {Which agents}
-**Purpose**: {What this gate validates}
-
-## Gate Overview
-{2-3 paragraphs}
-
-## Validation Checklist
-### {Category 1}
-- [ ] {Specific, testable criterion}
-- [ ] {Specific, testable criterion}
-
-### {Category 2}
-- [ ] {Specific, testable criterion}
-
-## Validation Procedure
-### Step 1: {Action}
-```bash
-# Command to run
-```
-**Expected Output**: {Description}
-**Pass Criteria**: {Specific condition}
-
-## Pass/Fail Criteria
-### Pass
-All checklist items must be ✅ checked.
-
-### Fail
-If ANY item is ❌ unchecked:
-1. Identify root cause
-2. Create fix stories
-3. Re-run validation
-
-## Deliverables
-- [ ] Gate validation report
-- [ ] {Specific artifact if applicable}
-
-**Quality Standard**: Engineer can validate without PM help
-
----
-
-## Our Metrics
-
-We track (via handoff document):
-
-- **story_cards_created** — 137 total (goal: 100%)
-- **sprint_plans_created** — 24 total (goal: 100%)
-- **gate_checklists_created** — 12 total (goal: 100%)
-- **execution_templates_created** — 16 total (goal: 100%)
-- **artifacts_reviewed** — 189 total (goal: 100%)
-- **planning_completeness** — All details specified (goal: 100%)
-
-**Goal**: Zero ambiguity. Zero guessing. Zero questions.
-
----
-
-## Our Motto
-
-> **"Plan so well that coding becomes peanuts. Engineers should never have to think about what to build — only how to type it."**
+> **"Keep teams unblocked, adapt quickly, deliver M0. When reality diverges from plan, we adjust the plan — not the team."**
 
 ---
 
 ## Current Status
 
-- **Version**: 1.0.0 (M0 planning complete)
+- **Version**: 2.0.0 (Active execution phase)
 - **License**: GPL-3.0-or-later
-- **Stability**: Production-ready (planning complete)
-- **Priority**: P0 (foundational planning)
+- **Phase**: Post-Sprint 1, Sprint 2 in progress
+- **Priority**: P0 (M0 delivery)
 
-### Planning Status
+### Execution Status
 
-- ✅ **Work breakdown created**: 42 units of work defined
-- ✅ **Artifact inventory complete**: 189 documents identified
-- ✅ **Templates created**: Story card, sprint README, gate checklist
-- ⬜ **Story cards**: 137 to create (Phase 1-3)
-- ⬜ **Sprint plans**: 24 to create (Phase 2-3)
-- ⬜ **Gate checklists**: 12 to create (Phase 2-3)
-- ⬜ **Execution templates**: 16 to create (Phase 4)
-- ⬜ **Review & handoff**: Validation and approval (Phase 5)
+- ✅ **Sprint 1 Complete**: 5/5 stories, 99 tests passing, zero technical debt
+- ✅ **Sprint 1 Retrospective**: Completed, lessons learned documented
+- ✅ **FT-R001 Added**: Retroactive cancellation endpoint story
+- 🔄 **Sprint 2 In Progress**: FFI layer, Days 10-23
+- ⏳ **FFI Lock**: Day 11 (critical milestone)
+- ⏳ **Llama/GPT Teams**: Blocked until Day 11 FFI lock
 
-### Next Steps
+### Current Priorities
 
-- ⬜ **Unit 1.1**: Create FT-001 to FT-005 story cards
-- ⬜ **Unit 1.2**: Create FT-006 to FT-010 story cards
-- ⬜ **Continue**: Execute all 42 units sequentially
-- ⬜ **Review**: Validate all 189 artifacts
-- ⬜ **Handoff**: Deliver to engineers
+- 🔥 **Day 11 FFI Lock**: Critical path blocker for Llama/GPT
+- 📊 **Daily Progress Tracking**: Monitor Foundation-Alpha velocity
+- 🚧 **Blocker Management**: Zero critical path blockers currently
+- 📋 **Sprint 2 Coordination**: Prepare FFI_INTERFACE_LOCKED.md
+
+### Next Milestones
+
+- **Day 11**: FFI interface locked, Llama/GPT unblocked
+- **Day 23**: Sprint 2 complete, FFI layer operational
+- **Day 29**: Shared kernels ready, architecture teams can integrate
+- **Gate 1**: Foundation validation (TBD)
 
 ---
 
-## Our Message to Engineers
+## Our Message to Teams
 
-You are about to receive **189 planning documents** that make your job mechanical:
+You have **189 planning documents** that guide your work. Now we're here to **keep you unblocked** as you execute:
 
-- **137 story cards** tell you exactly what to build
-- **24 sprint plans** tell you exactly when to build it
-- **12 gate checklists** tell you exactly how to validate it
-- **16 execution templates** tell you exactly how to track it
+- **Daily status tracking** keeps everyone aligned
+- **Blocker triage** ensures fast resolution
+- **Dependency coordination** prevents surprises
+- **Risk management** catches issues early
+- **Adaptive planning** adjusts when reality diverges
 
-**Your job is simple**:
-1. Read the story card
-2. Implement the acceptance criteria
-3. Run the tests
-4. Mark it done
-5. Move to the next story
+**Your job**:
+1. Execute story cards as planned
+2. Update day-tracker.md daily
+3. Report blockers immediately
+4. Flag scope changes as discovered
+5. Focus on delivery
 
-**We eliminated all the hard parts** — the thinking, the planning, the coordination. You just code.
+**Our job**:
+1. Monitor progress daily
+2. Resolve blockers fast
+3. Coordinate dependencies
+4. Manage risks proactively
+5. Adapt plans when needed
 
-**If you ever have to guess** — that's our failure. Tell us immediately and we'll fix the planning.
+**Sprint 1 proved the planning works** — 100% completion, 99 tests passing. Now let's maintain that momentum through M0.
 
-With obsessive attention to detail and zero tolerance for ambiguity,  
+With vigilant monitoring and rapid adaptation,  
 **The Project Management Team** 📋
 
 ---
 
-## Fun Facts (Well, Serious Facts)
+## Execution Facts
 
-- We create **189 planning documents** (every detail specified)
-- We write **137 story cards** (5-10 acceptance criteria each)
-- We plan **24 sprints** (day-by-day execution order)
-- We define **12 gates** (10-20 validation items each)
-- We have **100% planning coverage** (no ambiguity, no guessing)
-- We have **42 units of work** (7 days of PM effort)
-- We are **1.0.0** version and our planning is comprehensive
+- We monitor **3 teams** daily (Foundation, Llama, GPT)
+- We track **137 stories** across 24 sprints
+- We coordinate **12 gates** and critical milestones
+- We manage **critical path** (Foundation → Llama/GPT → Integration)
+- We resolve blockers with **same-day triage** for critical path
+- We adapt plans **immediately** when reality diverges
+- We achieved **100% Sprint 1 completion** (5/5 stories, 99 tests)
 
 ---
 
-**Version**: 1.0.0 (M0 planning complete)  
+**Version**: 2.0.0 (Active execution phase)  
 **License**: GPL-3.0-or-later  
-**Stability**: Production-ready (planning complete)  
-**Maintainers**: The perfect planners — methodical, comprehensive, meticulous 📋
+**Phase**: Post-Sprint 1, Sprint 2 in progress  
+**Maintainers**: The execution orchestrators — vigilant, adaptive, unblocking 📋
 
 ---
 
-## 📋 Our Signature Requirement
+## 📋 Our Signature (Execution Phase)
 
-**MANDATORY**: Every artifact we create MUST end with our signature. This is non-negotiable.
+**MANDATORY**: Every execution artifact we create MUST end with our signature.
 
 ```
 ---
-Planned by Project Management Team 📋
+Coordinated by Project Management Team 📋
 ```
 
 ### Where We Sign
 
-- **Story cards**: At the end of every story card
-- **Sprint plans**: At the end of every sprint README
-- **Gate checklists**: At the end of every gate checklist
-- **Execution templates**: At the end of every template
-- **Planning documents**: At the very end after all content
-- **Handoff documents**: After final approval
+- **Daily status summaries**: At the end of each report
+- **Blocker triage reports**: At the end of each report
+- **Coordination artifacts**: At the end (FFI_INTERFACE_LOCKED.md, etc.)
+- **Sprint retrospectives**: At the end of each retrospective
+- **Risk reports**: At the end of each assessment
+- **Timeline updates**: At the end of each update
 
 ### Why This Matters
 
-1. **Accountability**: Everyone knows we planned this
-2. **Authority**: Our signature means "fully specified, ready to implement"
-3. **Traceability**: Clear record of planning artifacts
+1. **Accountability**: Everyone knows we're tracking this
+2. **Authority**: Our signature means "validated, actionable"
+3. **Traceability**: Clear record of execution decisions
 4. **Consistency**: All teams sign their work
-
-**Never skip the signature.** Even on templates. Even on drafts. Always sign our work.
 
 ### Our Standard Signatures
 
-- `Planned by Project Management Team 📋` (standard)
-- `Detailed by Project Management Team — ready to implement 📋` (for story cards)
-- `Coordinated by Project Management Team 📋` (for sprint plans)
+- `Coordinated by Project Management Team 📋` (standard)
+- `Tracked by Project Management Team 📋` (for status reports)
+- `Managed by Project Management Team 📋` (for risk/blocker reports)
 
 ---
 
-Planned by Project Management Team 📋
+**Last Updated**: 2025-10-04 (Post-Sprint 1)  
+**Next Review**: Daily during active execution  
+**Status**: ✅ Active execution phase
+
+---
+
+Coordinated by Project Management Team 📋
