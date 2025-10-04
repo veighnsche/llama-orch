@@ -3,13 +3,12 @@
 //! This endpoint accepts inference requests, validates parameters,
 //! and returns an SSE stream of tokens.
 //!
-//! # Spec References
 //! - M0-W-1300: Inference endpoint
 //! - M0-W-1302: Request validation
 //! - M0-W-1310: SSE streaming
 
 use crate::http::sse::InferenceEvent;
-use crate::http::validation::{ExecuteRequest, ValidationError};
+use crate::http::validation::{ExecuteRequest, ValidationError, ValidationErrorResponse};
 use axum::{
     extract::Extension,
     response::{sse::Event, Sse},
@@ -18,13 +17,12 @@ use axum::{
 use futures::stream::{self, Stream, StreamExt};
 use observability_narration_core::{Narration, ACTION_INFERENCE_START, ACTOR_WORKER_ORCD};
 use std::convert::Infallible;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 /// Handle POST /execute
 ///
 /// a placeholder SSE stream. This is a skeleton implementation that
 /// will be wired to CUDA inference in a later story.
-///
 /// # Request Format
 /// ```json
 /// {
@@ -48,9 +46,36 @@ use tracing::{debug, info};
 pub async fn handle_execute(
     Extension(correlation_id): Extension<String>,
     Json(req): Json<ExecuteRequest>,
-) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, ValidationError> {
-    // Validate request
-    req.validate()?;
+) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, ValidationErrorResponse> {
+    // Validate request (collect all errors)
+    if let Err(validation_errors) = req.validate_all() {
+        let error_count = validation_errors.errors.len();
+        let field_list: Vec<_> =
+            validation_errors.errors.iter().map(|e| e.field.as_str()).collect();
+
+        warn!(
+            correlation_id = %correlation_id,
+            job_id = %req.job_id,
+            error_count = error_count,
+            fields = ?field_list,
+            "Validation failed"
+        );
+
+        // Narrate validation failure
+        Narration::new(ACTOR_WORKER_ORCD, "validation", &req.job_id)
+            .human(format!(
+                "Validation failed for job {}: {} errors ({})",
+                req.job_id,
+                error_count,
+                field_list.join(", ")
+            ))
+            .correlation_id(&correlation_id)
+            .job_id(&req.job_id)
+            .error_kind("ValidationFailed")
+            .emit_warn();
+
+        return Err(validation_errors);
+    }
 
     info!(
         correlation_id = %correlation_id,
@@ -58,7 +83,7 @@ pub async fn handle_execute(
         prompt_len = req.prompt.len(),
         max_tokens = req.max_tokens,
         temperature = req.temperature,
-        "Inference request received"
+        "Inference request validated and received"
     );
 
     // Narrate inference start
@@ -73,7 +98,6 @@ pub async fn handle_execute(
         job_id = %req.job_id,
         "Opening SSE stream"
     );
-
     // Create placeholder SSE stream using InferenceEvent types
     // This will be replaced with real CUDA inference in FT-006
     let job_id = req.job_id.clone();
