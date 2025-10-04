@@ -4,7 +4,7 @@
  * Public interface for token sampling operations.
  * 
  * Spec: M0-W-1032, M0-W-1421, KERNEL-SAMPLE-003
- * Story: FT-017, FT-018
+ * Story: FT-017, FT-018, FT-019
  */
 
 #ifndef WORKER_SAMPLING_CUH
@@ -125,6 +125,77 @@ void launch_temperature_scale_fp16(
 int launch_greedy_sample(
     const float* logits,
     int vocab_size,
+    cudaStream_t stream = 0
+);
+
+/**
+ * Softmax kernel with numerical stability (log-sum-exp trick).
+ * 
+ * Converts logits to probabilities: probs[i] = exp(logits[i]) / sum(exp(logits))
+ * Uses max subtraction to prevent overflow: exp(x - max) / sum(exp(x - max))
+ * 
+ * @param logits Device pointer to logits [vocab_size]
+ * @param probs Device pointer to output probabilities [vocab_size]
+ * @param vocab_size Vocabulary size
+ */
+__global__ void softmax_fp32(
+    const float* logits,
+    float* probs,
+    int vocab_size
+);
+
+/**
+ * Sample token from probability distribution using CDF.
+ * 
+ * Uses linear scan through CDF to find token where cumsum >= random_value.
+ * Single-threaded for simplicity (sampling is fast compared to softmax).
+ * 
+ * @param probs Device pointer to probabilities [vocab_size]
+ * @param vocab_size Vocabulary size
+ * @param random_value Random value in [0, 1)
+ * @param token_id Output parameter for selected token ID
+ */
+__global__ void sample_from_distribution(
+    const float* probs,
+    int vocab_size,
+    float random_value,
+    int* token_id
+);
+
+/**
+ * Stochastic sampling: sample token from probability distribution.
+ * 
+ * Two-phase pipeline:
+ * 1. Softmax: Convert logits to probabilities (with numerical stability)
+ * 2. Sample: Select token from probability distribution using CDF
+ * 
+ * This is stochastic: different random values produce different tokens.
+ * Used for temperature > 0.0 (creative generation).
+ * 
+ * Deterministic given same random_value (for reproducibility with seeded RNG).
+ * 
+ * @param logits Device pointer to logits [vocab_size]
+ * @param vocab_size Vocabulary size (must be > 0)
+ * @param random_value Random value from RNG [0, 1)
+ * @param stream CUDA stream (default: 0)
+ * @return Selected token ID (index of sampled token), or -1 on error
+ * 
+ * Error handling:
+ * - Returns -1 if vocab_size <= 0
+ * - Returns -1 if logits is nullptr
+ * - Returns -1 if random_value not in [0, 1)
+ * - Returns -1 on kernel launch failure
+ * 
+ * Performance:
+ * - Handles large vocabularies efficiently (e.g., 151936 tokens)
+ * - Uses log-sum-exp trick for numerical stability
+ * - Softmax: up to 256 blocks × 256 threads
+ * - Sampling: single-threaded (fast compared to softmax)
+ */
+int launch_stochastic_sample(
+    const float* logits,
+    int vocab_size,
+    float random_value,
     cudaStream_t stream = 0
 );
 

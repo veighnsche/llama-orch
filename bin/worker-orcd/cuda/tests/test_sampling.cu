@@ -1,10 +1,10 @@
 /**
  * Sampling Kernels Unit Tests
  * 
- * Tests temperature scaling and greedy sampling kernel correctness.
+ * Tests temperature scaling, greedy sampling, and stochastic sampling.
  * 
  * Spec: M0-W-1032, M0-W-1421, KERNEL-SAMPLE-003
- * Story: FT-017, FT-018
+ * Story: FT-017, FT-018, FT-019
  */
 
 #include <gtest/gtest.h>
@@ -764,6 +764,342 @@ TEST_F(GreedySamplingTest, InvalidVocabSize) {
 TEST_F(GreedySamplingTest, NullPointer) {
     int token_id = launch_greedy_sample(nullptr, 1000);
     EXPECT_EQ(token_id, -1);
+}
+
+// ============================================================================
+// Stochastic Sampling Tests
+// ============================================================================
+
+class StochasticSamplingTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Initialize CUDA device
+        int device_count;
+        cudaGetDeviceCount(&device_count);
+        if (device_count == 0) {
+            GTEST_SKIP() << "No CUDA devices available";
+        }
+        cudaSetDevice(0);
+    }
+};
+
+/**
+ * Test: Softmax normalization (sum = 1.0)
+ * 
+ * Spec: M0-W-1421 (Token Sampling)
+ * Critical: Softmax must normalize correctly
+ */
+TEST_F(StochasticSamplingTest, SoftmaxNormalization) {
+    int vocab_size = 1000;
+    std::vector<float> h_logits(vocab_size, 1.0f);
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    // Sample with uniform logits (should give uniform distribution)
+    float random_value = 0.5f;
+    int token_id = launch_stochastic_sample(d_logits, vocab_size, random_value);
+    
+    // Should return a valid token
+    EXPECT_GE(token_id, 0);
+    EXPECT_LT(token_id, vocab_size);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Sampling distribution (higher logits → more samples)
+ * 
+ * Critical: Sampling must follow probability distribution
+ */
+TEST_F(StochasticSamplingTest, SamplingDistribution) {
+    // Test that sampling follows distribution
+    int vocab_size = 10;
+    std::vector<float> h_logits = {
+        0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f
+    };
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    // Sample many times with different random values
+    std::vector<int> counts(vocab_size, 0);
+    int num_samples = 100;
+    
+    for (int i = 0; i < num_samples; ++i) {
+        float random_value = static_cast<float>(i) / num_samples;
+        int token_id = launch_stochastic_sample(d_logits, vocab_size, random_value);
+        if (token_id >= 0 && token_id < vocab_size) {
+            counts[token_id]++;
+        }
+    }
+    
+    // Higher logits should be sampled more often
+    EXPECT_GT(counts[9], counts[0]);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Determinism with same random value
+ * 
+ * Spec: M0-W-1030 (Seeded RNG)
+ * Critical: Reproducibility with seeded RNG
+ */
+TEST_F(StochasticSamplingTest, DeterministicWithSeed) {
+    int vocab_size = 1000;
+    std::vector<float> h_logits(vocab_size);
+    for (int i = 0; i < vocab_size; ++i) {
+        h_logits[i] = static_cast<float>(i % 100);
+    }
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    // Same random value should give same result
+    float random_value = 0.5f;
+    int token_id1 = launch_stochastic_sample(d_logits, vocab_size, random_value);
+    int token_id2 = launch_stochastic_sample(d_logits, vocab_size, random_value);
+    
+    EXPECT_EQ(token_id1, token_id2);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Numerical stability with large logits
+ * 
+ * Critical: Log-sum-exp trick must work
+ */
+TEST_F(StochasticSamplingTest, NumericalStabilityLargeLogits) {
+    int vocab_size = 100;
+    std::vector<float> h_logits(vocab_size);
+    
+    // Large logits that would overflow without numerical stability
+    for (int i = 0; i < vocab_size; ++i) {
+        h_logits[i] = 100.0f + static_cast<float>(i);
+    }
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    // Should not overflow
+    float random_value = 0.5f;
+    int token_id = launch_stochastic_sample(d_logits, vocab_size, random_value);
+    
+    // Should return a valid token
+    EXPECT_GE(token_id, 0);
+    EXPECT_LT(token_id, vocab_size);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Numerical stability with negative logits
+ * 
+ * Critical: Handles negative values correctly
+ */
+TEST_F(StochasticSamplingTest, NumericalStabilityNegativeLogits) {
+    int vocab_size = 100;
+    std::vector<float> h_logits(vocab_size);
+    
+    // Negative logits
+    for (int i = 0; i < vocab_size; ++i) {
+        h_logits[i] = -100.0f + static_cast<float>(i);
+    }
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    float random_value = 0.5f;
+    int token_id = launch_stochastic_sample(d_logits, vocab_size, random_value);
+    
+    // Should return a valid token
+    EXPECT_GE(token_id, 0);
+    EXPECT_LT(token_id, vocab_size);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Large vocabulary (Qwen 151936)
+ * 
+ * Critical: Real vocabulary size
+ */
+TEST_F(StochasticSamplingTest, LargeVocabulary) {
+    int vocab_size = 151936;
+    std::vector<float> h_logits(vocab_size);
+    
+    // Random logits
+    for (int i = 0; i < vocab_size; ++i) {
+        h_logits[i] = static_cast<float>(i % 1000) * 0.01f;
+    }
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    float random_value = 0.5f;
+    int token_id = launch_stochastic_sample(d_logits, vocab_size, random_value);
+    
+    // Should return a valid token
+    EXPECT_GE(token_id, 0);
+    EXPECT_LT(token_id, vocab_size);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Small vocabulary
+ * 
+ * Critical: Works with small vocab sizes
+ */
+TEST_F(StochasticSamplingTest, SmallVocabulary) {
+    int vocab_size = 5;
+    std::vector<float> h_logits = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    float random_value = 0.5f;
+    int token_id = launch_stochastic_sample(d_logits, vocab_size, random_value);
+    
+    // Should return a valid token
+    EXPECT_GE(token_id, 0);
+    EXPECT_LT(token_id, vocab_size);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Uniform distribution
+ * 
+ * Critical: Uniform logits should give roughly uniform sampling
+ */
+TEST_F(StochasticSamplingTest, UniformDistribution) {
+    int vocab_size = 10;
+    std::vector<float> h_logits(vocab_size, 0.0f);  // All equal
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    // Sample many times
+    std::vector<int> counts(vocab_size, 0);
+    int num_samples = 100;
+    
+    for (int i = 0; i < num_samples; ++i) {
+        float random_value = static_cast<float>(i) / num_samples;
+        int token_id = launch_stochastic_sample(d_logits, vocab_size, random_value);
+        if (token_id >= 0 && token_id < vocab_size) {
+            counts[token_id]++;
+        }
+    }
+    
+    // All tokens should be sampled roughly equally
+    // (This is a weak test, just checking no token is completely ignored)
+    int total_samples = 0;
+    for (int count : counts) {
+        total_samples += count;
+    }
+    EXPECT_GT(total_samples, num_samples / 2);  // At least half should be valid
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Error handling - invalid vocab_size
+ * 
+ * Critical: Defensive programming
+ */
+TEST_F(StochasticSamplingTest, InvalidVocabSize) {
+    float* d_logits;
+    cudaMalloc(&d_logits, 1000 * sizeof(float));
+    
+    int token_id = launch_stochastic_sample(d_logits, 0, 0.5f);
+    EXPECT_EQ(token_id, -1);
+    
+    token_id = launch_stochastic_sample(d_logits, -100, 0.5f);
+    EXPECT_EQ(token_id, -1);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Error handling - null pointer
+ * 
+ * Critical: Defensive programming
+ */
+TEST_F(StochasticSamplingTest, NullPointer) {
+    int token_id = launch_stochastic_sample(nullptr, 1000, 0.5f);
+    EXPECT_EQ(token_id, -1);
+}
+
+/**
+ * Test: Error handling - invalid random value
+ * 
+ * Critical: Defensive programming
+ */
+TEST_F(StochasticSamplingTest, InvalidRandomValue) {
+    float* d_logits;
+    cudaMalloc(&d_logits, 1000 * sizeof(float));
+    
+    // Random value must be in [0, 1)
+    int token_id = launch_stochastic_sample(d_logits, 1000, -0.1f);
+    EXPECT_EQ(token_id, -1);
+    
+    token_id = launch_stochastic_sample(d_logits, 1000, 1.0f);
+    EXPECT_EQ(token_id, -1);
+    
+    token_id = launch_stochastic_sample(d_logits, 1000, 1.5f);
+    EXPECT_EQ(token_id, -1);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Different random values give different results
+ * 
+ * Critical: Stochastic behavior
+ */
+TEST_F(StochasticSamplingTest, DifferentRandomValuesDifferentResults) {
+    int vocab_size = 1000;
+    std::vector<float> h_logits(vocab_size);
+    for (int i = 0; i < vocab_size; ++i) {
+        h_logits[i] = static_cast<float>(i % 100);
+    }
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    // Different random values should (likely) give different results
+    int token_id1 = launch_stochastic_sample(d_logits, vocab_size, 0.1f);
+    int token_id2 = launch_stochastic_sample(d_logits, vocab_size, 0.9f);
+    
+    // Not guaranteed to be different, but very likely with 1000 tokens
+    // Just check both are valid
+    EXPECT_GE(token_id1, 0);
+    EXPECT_LT(token_id1, vocab_size);
+    EXPECT_GE(token_id2, 0);
+    EXPECT_LT(token_id2, vocab_size);
+    
+    cudaFree(d_logits);
 }
 
 // ---

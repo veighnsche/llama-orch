@@ -4,10 +4,11 @@
  * Implements token sampling operations:
  * - Temperature scaling (controls randomness)
  * - Greedy sampling (argmax)
+ * - Stochastic sampling (probability distribution)
  * - Top-k sampling - TODO
  * 
  * Spec: M0-W-1032, M0-W-1421, KERNEL-SAMPLE-003
- * Story: FT-017, FT-018
+ * Story: FT-017, FT-018, FT-019
  */
 
 #include "sampling.cuh"
@@ -358,6 +359,219 @@ int launch_greedy_sample(
     // Free temporary storage
     cudaFree(d_block_max);
     cudaFree(d_block_idx);
+    cudaFree(d_token_id);
+    
+    return h_token_id;
+}
+
+/**
+ * Softmax kernel with numerical stability (log-sum-exp trick).
+ * 
+ * Converts logits to probabilities: probs[i] = exp(logits[i]) / sum(exp(logits))
+ * Uses max subtraction to prevent overflow: exp(x - max) / sum(exp(x - max))
+ * 
+ * Single-block implementation for simplicity (assumes vocab_size <= 65536).
+ * 
+ * @param logits Device pointer to logits [vocab_size]
+ * @param probs Device pointer to output probabilities [vocab_size]
+ * @param vocab_size Vocabulary size
+ */
+__global__ void softmax_fp32(
+    const float* logits,
+    float* probs,
+    int vocab_size
+) {
+    // Shared memory for reduction
+    __shared__ float shared_max[256];
+    __shared__ float shared_sum[256];
+    
+    int tid = threadIdx.x;
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    // Phase 1: Find max (for numerical stability)
+    float local_max = (idx < vocab_size) ? logits[idx] : -INFINITY;
+    
+    // Grid-stride loop to handle large vocabularies
+    for (int i = idx + blockDim.x * gridDim.x; i < vocab_size; 
+         i += blockDim.x * gridDim.x) {
+        local_max = fmaxf(local_max, logits[i]);
+    }
+    
+    shared_max[tid] = local_max;
+    __syncthreads();
+    
+    // Reduce to find global max
+    for (int s = blockDim.x / 2; s > 0; s >>= 1) {
+        if (tid < s) {
+            shared_max[tid] = fmaxf(shared_max[tid], shared_max[tid + s]);
+        }
+        __syncthreads();
+    }
+    
+    float global_max = shared_max[0];
+    __syncthreads();
+    
+    // Phase 2: Compute exp(logit - max) and sum
+    float local_exp = 0.0f;
+    if (idx < vocab_size) {
+        local_exp = expf(logits[idx] - global_max);
+    }
+    
+    // Grid-stride loop
+    for (int i = idx + blockDim.x * gridDim.x; i < vocab_size; 
+         i += blockDim.x * gridDim.x) {
+        local_exp += expf(logits[i] - global_max);
+    }
+    
+    shared_sum[tid] = local_exp;
+    __syncthreads();
+    
+    // Reduce to find global sum
+    for (int s = blockDim.x / 2; s > 0; s >>= 1) {
+        if (tid < s) {
+            shared_sum[tid] += shared_sum[tid + s];
+        }
+        __syncthreads();
+    }
+    
+    float global_sum = shared_sum[0];
+    __syncthreads();
+    
+    // Phase 3: Normalize
+    if (idx < vocab_size) {
+        probs[idx] = expf(logits[idx] - global_max) / global_sum;
+    }
+    
+    // Grid-stride loop
+    for (int i = idx + blockDim.x * gridDim.x; i < vocab_size; 
+         i += blockDim.x * gridDim.x) {
+        probs[i] = expf(logits[i] - global_max) / global_sum;
+    }
+}
+
+/**
+ * Sample token from probability distribution using CDF.
+ * 
+ * Uses linear scan through CDF to find token where cumsum >= random_value.
+ * Single-threaded for simplicity (sampling is fast compared to softmax).
+ * 
+ * @param probs Device pointer to probabilities [vocab_size]
+ * @param vocab_size Vocabulary size
+ * @param random_value Random value in [0, 1)
+ * @param token_id Output parameter for selected token ID
+ */
+__global__ void sample_from_distribution(
+    const float* probs,
+    int vocab_size,
+    float random_value,
+    int* token_id
+) {
+    // Single thread performs sampling
+    if (threadIdx.x != 0 || blockIdx.x != 0) {
+        return;
+    }
+    
+    // Build CDF and sample
+    float cumsum = 0.0f;
+    for (int i = 0; i < vocab_size; ++i) {
+        cumsum += probs[i];
+        if (random_value < cumsum) {
+            *token_id = i;
+            return;
+        }
+    }
+    
+    // Fallback (should not reach here if probs sum to 1.0)
+    *token_id = vocab_size - 1;
+}
+
+/**
+ * Launch stochastic sampling pipeline.
+ * 
+ * Three-phase pipeline:
+ * 1. Softmax: Convert logits to probabilities
+ * 2. Sample: Select token from probability distribution
+ * 
+ * @param logits Device pointer to logits [vocab_size]
+ * @param vocab_size Vocabulary size
+ * @param random_value Random value from RNG [0, 1)
+ * @param stream CUDA stream (default: 0)
+ * @return Selected token ID
+ */
+int launch_stochastic_sample(
+    const float* logits,
+    int vocab_size,
+    float random_value,
+    cudaStream_t stream
+) {
+    // Validate inputs
+    if (vocab_size <= 0) {
+        fprintf(stderr, "Invalid vocab_size: %d\n", vocab_size);
+        return -1;
+    }
+    
+    if (logits == nullptr) {
+        fprintf(stderr, "Null logits pointer\n");
+        return -1;
+    }
+    
+    if (random_value < 0.0f || random_value >= 1.0f) {
+        fprintf(stderr, "Invalid random_value: %f (must be in [0, 1))\n", random_value);
+        return -1;
+    }
+    
+    // Allocate temporary storage
+    float* d_probs;
+    int* d_token_id;
+    
+    cudaMalloc(&d_probs, vocab_size * sizeof(float));
+    cudaMalloc(&d_token_id, sizeof(int));
+    
+    // Kernel launch configuration
+    int threads_per_block = 256;
+    int num_blocks = (vocab_size + threads_per_block - 1) / threads_per_block;
+    // Cap at 256 blocks for efficiency
+    if (num_blocks > 256) {
+        num_blocks = 256;
+    }
+    
+    // Phase 1: Softmax
+    softmax_fp32<<<num_blocks, threads_per_block, 0, stream>>>(
+        logits, d_probs, vocab_size
+    );
+    
+    // Check for kernel launch errors
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        fprintf(stderr, "Softmax kernel launch failed: %s\n", 
+                cudaGetErrorString(err));
+        cudaFree(d_probs);
+        cudaFree(d_token_id);
+        return -1;
+    }
+    
+    // Phase 2: Sample from distribution
+    sample_from_distribution<<<1, 1, 0, stream>>>(
+        d_probs, vocab_size, random_value, d_token_id
+    );
+    
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        fprintf(stderr, "Sample kernel launch failed: %s\n", 
+                cudaGetErrorString(err));
+        cudaFree(d_probs);
+        cudaFree(d_token_id);
+        return -1;
+    }
+    
+    // Copy result back to host
+    int h_token_id;
+    cudaMemcpyAsync(&h_token_id, d_token_id, sizeof(int), 
+                    cudaMemcpyDeviceToHost, stream);
+    cudaStreamSynchronize(stream);
+    
+    // Free temporary storage
+    cudaFree(d_probs);
     cudaFree(d_token_id);
     
     return h_token_id;
