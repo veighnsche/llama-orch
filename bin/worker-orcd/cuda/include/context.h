@@ -11,6 +11,7 @@
 
 #include <cuda_runtime.h>
 #include <cstddef>
+#include "vram_tracker.h"
 
 namespace worker {
 
@@ -127,10 +128,29 @@ public:
      * @return Device count (0 if no devices or query fails)
      */
     static int device_count();
+    
+    // ========================================================================
+    // VRAM Tracking
+    // ========================================================================
+    
+    /**
+     * Get VRAM tracker.
+     * 
+     * @return Reference to VRAM tracker
+     */
+    VramTracker& vram_tracker() { return vram_tracker_; }
+    
+    /**
+     * Get VRAM tracker (const).
+     * 
+     * @return Const reference to VRAM tracker
+     */
+    const VramTracker& vram_tracker() const { return vram_tracker_; }
 
 private:
     int device_;              ///< Device ID
     cudaDeviceProp props_;    ///< Cached device properties
+    VramTracker vram_tracker_; ///< VRAM allocation tracker
 };
 
 } // namespace worker

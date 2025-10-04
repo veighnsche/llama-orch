@@ -26,6 +26,7 @@ set(CUDA_SOURCES
     src/health.cpp
     src/errors.cpp
     src/utils.cpp
+    src/vram_tracker.cpp
 )
 
 # Kernel files
@@ -78,6 +79,7 @@ if(BUILD_TESTING)
         tests/test_model.cpp
         tests/test_inference.cpp
         tests/test_health.cpp
+        tests/test_vram_tracker.cpp
     )
     
     # Build test executable
