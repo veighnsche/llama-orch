@@ -44,23 +44,21 @@
 
 pub mod auto;
 mod capture;
+pub mod correlation;
 pub mod http;
 pub mod otel;
 mod redaction;
 pub mod trace;
+pub mod unicode;
 
 pub use auto::{current_timestamp_ms, narrate_auto, narrate_full, service_identity};
 pub use capture::{CaptureAdapter, CapturedNarration};
+pub use correlation::{generate_correlation_id, validate_correlation_id, from_header as correlation_from_header, propagate as correlation_propagate};
 pub use otel::narrate_with_otel_context;
 pub use redaction::{redact_secrets, RedactionPolicy};
+pub use unicode::{sanitize_for_json, sanitize_crlf, validate_actor, validate_action};
 
-// Re-export trace macros for convenience
-pub use trace_tiny;
-pub use trace_with_correlation;
-pub use trace_enter;
-pub use trace_exit;
-pub use trace_loop;
-pub use trace_state;
+// Trace macros are exported via #[macro_export] in trace.rs
 
 // ============================================================================
 // Taxonomy: Actors
@@ -112,6 +110,32 @@ pub const ACTION_PROVISION: &str = "provision";
 
 use serde::{Deserialize, Serialize};
 use tracing::{event, Level};
+
+/// Narration logging level
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NarrationLevel {
+    Mute,   // No output
+    Trace,  // Ultra-fine detail
+    Debug,  // Developer diagnostics
+    Info,   // Narration backbone (default)
+    Warn,   // Anomalies & degradations
+    Error,  // Operational failures
+    Fatal,  // Unrecoverable errors
+}
+
+impl NarrationLevel {
+    fn to_tracing_level(&self) -> Option<Level> {
+        match self {
+            NarrationLevel::Mute => None,
+            NarrationLevel::Trace => Some(Level::TRACE),
+            NarrationLevel::Debug => Some(Level::DEBUG),
+            NarrationLevel::Info => Some(Level::INFO),
+            NarrationLevel::Warn => Some(Level::WARN),
+            NarrationLevel::Error => Some(Level::ERROR),
+            NarrationLevel::Fatal => Some(Level::ERROR), // tracing doesn't have FATAL
+        }
+    }
+}
 
 /// Structured fields for narration events.
 /// Implements ORCH-3304 field taxonomy.
@@ -181,27 +205,13 @@ pub struct NarrationFields {
     pub source_location: Option<String>,
 }
 
-/// Emit a narration event with structured fields.
+/// Emit a narration event at a specific level.
 /// Implements ORCH-3300, ORCH-3301, ORCH-3303.
-///
-/// # Example
-/// ```rust
-/// use observability_narration_core::{narrate, NarrationFields};
-///
-/// narrate(NarrationFields {
-///     actor: "pool-managerd",
-///     action: "spawn",
-///     target: "GPU0".to_string(),
-///     human: "Spawning engine llamacpp-v1 for pool 'default' on GPU0".to_string(),
-///     correlation_id: Some("req-xyz".into()),
-///     pool_id: Some("default".into()),
-///     replica_id: Some("r0".into()),
-///     engine: Some("llamacpp-v1".into()),
-///     device: Some("GPU0".into()),
-///     ..Default::default()
-/// });
-/// ```
-pub fn narrate(fields: NarrationFields) {
+pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
+    let Some(tracing_level) = level.to_tracing_level() else {
+        return; // MUTE - no output
+    };
+    
     // Apply redaction to human text (ORCH-3302)
     let human = redact_secrets(&fields.human, RedactionPolicy::default());
 
@@ -211,9 +221,80 @@ pub fn narrate(fields: NarrationFields) {
     // Apply redaction to story text if present
     let story = fields.story.as_ref().map(|s| redact_secrets(s, RedactionPolicy::default()));
 
-    // Emit structured event
-    event!(
-        Level::INFO,
+    // Emit structured event at appropriate level
+    match tracing_level {
+        Level::TRACE => event!(
+            Level::TRACE,
+            actor = fields.actor,
+            action = fields.action,
+            target = %fields.target,
+            human = %human,
+            cute = cute.as_deref(),
+            story = story.as_deref(),
+            correlation_id = fields.correlation_id.as_deref(),
+            session_id = fields.session_id.as_deref(),
+            job_id = fields.job_id.as_deref(),
+            task_id = fields.task_id.as_deref(),
+            pool_id = fields.pool_id.as_deref(),
+            replica_id = fields.replica_id.as_deref(),
+            worker_id = fields.worker_id.as_deref(),
+            error_kind = fields.error_kind.as_deref(),
+            retry_after_ms = fields.retry_after_ms,
+            backoff_ms = fields.backoff_ms,
+            duration_ms = fields.duration_ms,
+            queue_position = fields.queue_position,
+            predicted_start_ms = fields.predicted_start_ms,
+            engine = fields.engine.as_deref(),
+            engine_version = fields.engine_version.as_deref(),
+            model_ref = fields.model_ref.as_deref(),
+            device = fields.device.as_deref(),
+            tokens_in = fields.tokens_in,
+            tokens_out = fields.tokens_out,
+            decode_time_ms = fields.decode_time_ms,
+            emitted_by = fields.emitted_by.as_deref(),
+            emitted_at_ms = fields.emitted_at_ms,
+            trace_id = fields.trace_id.as_deref(),
+            span_id = fields.span_id.as_deref(),
+            parent_span_id = fields.parent_span_id.as_deref(),
+            source_location = fields.source_location.as_deref(),
+        ),
+        Level::DEBUG => event!(
+            Level::DEBUG,
+            actor = fields.actor,
+            action = fields.action,
+            target = %fields.target,
+            human = %human,
+            cute = cute.as_deref(),
+            story = story.as_deref(),
+            correlation_id = fields.correlation_id.as_deref(),
+            session_id = fields.session_id.as_deref(),
+            job_id = fields.job_id.as_deref(),
+            task_id = fields.task_id.as_deref(),
+            pool_id = fields.pool_id.as_deref(),
+            replica_id = fields.replica_id.as_deref(),
+            worker_id = fields.worker_id.as_deref(),
+            error_kind = fields.error_kind.as_deref(),
+            retry_after_ms = fields.retry_after_ms,
+            backoff_ms = fields.backoff_ms,
+            duration_ms = fields.duration_ms,
+            queue_position = fields.queue_position,
+            predicted_start_ms = fields.predicted_start_ms,
+            engine = fields.engine.as_deref(),
+            engine_version = fields.engine_version.as_deref(),
+            model_ref = fields.model_ref.as_deref(),
+            device = fields.device.as_deref(),
+            tokens_in = fields.tokens_in,
+            tokens_out = fields.tokens_out,
+            decode_time_ms = fields.decode_time_ms,
+            emitted_by = fields.emitted_by.as_deref(),
+            emitted_at_ms = fields.emitted_at_ms,
+            trace_id = fields.trace_id.as_deref(),
+            span_id = fields.span_id.as_deref(),
+            parent_span_id = fields.parent_span_id.as_deref(),
+            source_location = fields.source_location.as_deref(),
+        ),
+        Level::INFO => event!(
+            Level::INFO,
         actor = fields.actor,
         action = fields.action,
         target = %fields.target,
@@ -246,11 +327,102 @@ pub fn narrate(fields: NarrationFields) {
         span_id = fields.span_id.as_deref(),
         parent_span_id = fields.parent_span_id.as_deref(),
         source_location = fields.source_location.as_deref(),
-    );
+        ),
+        Level::WARN => event!(
+            Level::WARN,
+            actor = fields.actor,
+            action = fields.action,
+            target = %fields.target,
+            human = %human,
+            cute = cute.as_deref(),
+            story = story.as_deref(),
+            correlation_id = fields.correlation_id.as_deref(),
+            session_id = fields.session_id.as_deref(),
+            job_id = fields.job_id.as_deref(),
+            task_id = fields.task_id.as_deref(),
+            pool_id = fields.pool_id.as_deref(),
+            replica_id = fields.replica_id.as_deref(),
+            worker_id = fields.worker_id.as_deref(),
+            error_kind = fields.error_kind.as_deref(),
+            retry_after_ms = fields.retry_after_ms,
+            backoff_ms = fields.backoff_ms,
+            duration_ms = fields.duration_ms,
+            queue_position = fields.queue_position,
+            predicted_start_ms = fields.predicted_start_ms,
+            engine = fields.engine.as_deref(),
+            engine_version = fields.engine_version.as_deref(),
+            model_ref = fields.model_ref.as_deref(),
+            device = fields.device.as_deref(),
+            tokens_in = fields.tokens_in,
+            tokens_out = fields.tokens_out,
+            decode_time_ms = fields.decode_time_ms,
+            emitted_by = fields.emitted_by.as_deref(),
+            emitted_at_ms = fields.emitted_at_ms,
+            trace_id = fields.trace_id.as_deref(),
+            span_id = fields.span_id.as_deref(),
+            parent_span_id = fields.parent_span_id.as_deref(),
+            source_location = fields.source_location.as_deref(),
+        ),
+        Level::ERROR => event!(
+            Level::ERROR,
+            actor = fields.actor,
+            action = fields.action,
+            target = %fields.target,
+            human = %human,
+            cute = cute.as_deref(),
+            story = story.as_deref(),
+            correlation_id = fields.correlation_id.as_deref(),
+            session_id = fields.session_id.as_deref(),
+            job_id = fields.job_id.as_deref(),
+            task_id = fields.task_id.as_deref(),
+            pool_id = fields.pool_id.as_deref(),
+            replica_id = fields.replica_id.as_deref(),
+            worker_id = fields.worker_id.as_deref(),
+            error_kind = fields.error_kind.as_deref(),
+            retry_after_ms = fields.retry_after_ms,
+            backoff_ms = fields.backoff_ms,
+            duration_ms = fields.duration_ms,
+            queue_position = fields.queue_position,
+            predicted_start_ms = fields.predicted_start_ms,
+            engine = fields.engine.as_deref(),
+            engine_version = fields.engine_version.as_deref(),
+            model_ref = fields.model_ref.as_deref(),
+            device = fields.device.as_deref(),
+            tokens_in = fields.tokens_in,
+            tokens_out = fields.tokens_out,
+            decode_time_ms = fields.decode_time_ms,
+            emitted_by = fields.emitted_by.as_deref(),
+            emitted_at_ms = fields.emitted_at_ms,
+            trace_id = fields.trace_id.as_deref(),
+            span_id = fields.span_id.as_deref(),
+            parent_span_id = fields.parent_span_id.as_deref(),
+            source_location = fields.source_location.as_deref(),
+        ),
+    }
 
     // Notify capture adapter if active (ORCH-3306)
     #[cfg(any(test, feature = "test-support"))]
     capture::notify(fields);
+}
+
+/// Emit INFO-level narration (default)
+pub fn narrate(fields: NarrationFields) {
+    narrate_at_level(fields, NarrationLevel::Info)
+}
+
+/// Emit WARN-level narration
+pub fn narrate_warn(fields: NarrationFields) {
+    narrate_at_level(fields, NarrationLevel::Warn)
+}
+
+/// Emit ERROR-level narration
+pub fn narrate_error(fields: NarrationFields) {
+    narrate_at_level(fields, NarrationLevel::Error)
+}
+
+/// Emit FATAL-level narration
+pub fn narrate_fatal(fields: NarrationFields) {
+    narrate_at_level(fields, NarrationLevel::Fatal)
 }
 
 /// Legacy compatibility function for existing callers.

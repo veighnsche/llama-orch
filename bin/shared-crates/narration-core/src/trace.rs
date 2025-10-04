@@ -1,8 +1,6 @@
 // trace.rs — Ultra-lightweight TRACE-level narration
 // Optimized for minimal overhead in hot paths
 
-use tracing::{event, Level};
-
 /// Minimal trace event for ultra-fine-grained logging.
 /// 
 /// **Performance**: ~10x faster than full `narrate()` because:
@@ -46,6 +44,7 @@ use tracing::{event, Level};
 /// trace_tiny!("worker-orcd", "ffi_call", "llama_cpp_eval",
 ///             format!("EXIT llama_cpp_eval → {:?} ({}ms)", result, elapsed_ms));
 /// ```
+#[cfg(feature = "trace-enabled")]
 #[macro_export]
 macro_rules! trace_tiny {
     ($actor:expr, $action:expr, $target:expr, $human:expr) => {
@@ -56,6 +55,14 @@ macro_rules! trace_tiny {
             human = $human,
             "trace"
         );
+    };
+}
+
+#[cfg(not(feature = "trace-enabled"))]
+#[macro_export]
+macro_rules! trace_tiny {
+    ($actor:expr, $action:expr, $target:expr, $human:expr) => {
+        // No-op in production
     };
 }
 
@@ -75,6 +82,7 @@ macro_rules! trace_tiny {
 ///     correlation_id
 /// );
 /// ```
+#[cfg(feature = "trace-enabled")]
 #[macro_export]
 macro_rules! trace_with_correlation {
     ($actor:expr, $action:expr, $target:expr, $human:expr, $correlation_id:expr) => {
@@ -86,6 +94,14 @@ macro_rules! trace_with_correlation {
             correlation_id = $correlation_id,
             "trace"
         );
+    };
+}
+
+#[cfg(not(feature = "trace-enabled"))]
+#[macro_export]
+macro_rules! trace_with_correlation {
+    ($actor:expr, $action:expr, $target:expr, $human:expr, $correlation_id:expr) => {
+        // No-op in production
     };
 }
 
@@ -102,6 +118,7 @@ macro_rules! trace_with_correlation {
 ///     // ... function body ...
 /// }
 /// ```
+#[cfg(feature = "trace-enabled")]
 #[macro_export]
 macro_rules! trace_enter {
     ($actor:expr, $function:expr, $args:expr) => {
@@ -112,6 +129,14 @@ macro_rules! trace_enter {
             human = format!("ENTER {}({})", $function, $args),
             "trace_enter"
         );
+    };
+}
+
+#[cfg(not(feature = "trace-enabled"))]
+#[macro_export]
+macro_rules! trace_enter {
+    ($actor:expr, $function:expr, $args:expr) => {
+        // No-op in production
     };
 }
 
@@ -135,6 +160,7 @@ macro_rules! trace_enter {
 ///     Ok(worker_id)
 /// }
 /// ```
+#[cfg(feature = "trace-enabled")]
 #[macro_export]
 macro_rules! trace_exit {
     ($actor:expr, $function:expr, $result:expr) => {
@@ -145,6 +171,14 @@ macro_rules! trace_exit {
             human = format!("EXIT {} {}", $function, $result),
             "trace_exit"
         );
+    };
+}
+
+#[cfg(not(feature = "trace-enabled"))]
+#[macro_export]
+macro_rules! trace_exit {
+    ($actor:expr, $function:expr, $result:expr) => {
+        // No-op in production
     };
 }
 
@@ -161,6 +195,7 @@ macro_rules! trace_exit {
 ///     // ... evaluation logic ...
 /// }
 /// ```
+#[cfg(feature = "trace-enabled")]
 #[macro_export]
 macro_rules! trace_loop {
     ($actor:expr, $action:expr, $index:expr, $total:expr, $detail:expr) => {
@@ -174,6 +209,14 @@ macro_rules! trace_loop {
     };
 }
 
+#[cfg(not(feature = "trace-enabled"))]
+#[macro_export]
+macro_rules! trace_loop {
+    ($actor:expr, $action:expr, $index:expr, $total:expr, $detail:expr) => {
+        // No-op in production
+    };
+}
+
 /// Trace state change (ultra-lightweight).
 /// 
 /// # Example
@@ -184,6 +227,7 @@ macro_rules! trace_loop {
 ///              format!("{} → {}", old_depth, new_depth),
 ///              format!("Queue depth changed: {} → {} (added job-{})", old_depth, new_depth, job_id));
 /// ```
+#[cfg(feature = "trace-enabled")]
 #[macro_export]
 macro_rules! trace_state {
     ($actor:expr, $state_name:expr, $transition:expr, $human:expr) => {
@@ -195,6 +239,14 @@ macro_rules! trace_state {
             human = $human,
             "trace_state"
         );
+    };
+}
+
+#[cfg(not(feature = "trace-enabled"))]
+#[macro_export]
+macro_rules! trace_state {
+    ($actor:expr, $state_name:expr, $transition:expr, $human:expr) => {
+        // No-op in production
     };
 }
 

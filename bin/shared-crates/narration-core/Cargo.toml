@@ -16,12 +16,22 @@ path = "src/lib.rs"
 tracing = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 regex = { workspace = true }
+uuid = { workspace = true }
 opentelemetry = { version = "0.21", optional = true }
 
 [dev-dependencies]
 tracing-subscriber = { workspace = true }
+criterion = "0.5"
+
+[[bench]]
+name = "narration_benchmarks"
+harness = false
 
 [features]
 default = []
+trace-enabled = []  # Enable trace macros (dev/debug builds only)
+debug-enabled = []  # Enable debug-level narration
+cute-mode = []      # Enable cute narration fields
 otel = ["opentelemetry"]
 test-support = []  # Enables test capture adapter in non-test builds
+production = []     # Production profile (all tracing disabled)

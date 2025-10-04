@@ -1,8 +1,22 @@
-# narration-core
+# narration-core 🎀
 
 **Structured observability with human-readable narration**
 
-`libs/observability/narration-core` — Emits structured logs with actor/action/target taxonomy and plain English descriptions.
+`bin/shared-crates/narration-core` — Emits structured logs with actor/action/target taxonomy and plain English descriptions.
+
+**Version**: 0.0.0 (Week 1-2 Complete)  
+**Status**: Foundation ready, optimization pending
+
+---
+
+## ✨ What's New (Week 1-2)
+
+- **7 Logging Levels** - MUTE, TRACE, DEBUG, INFO, WARN, ERROR, FATAL
+- **6 Secret Patterns** - Bearer tokens, API keys, JWT, private keys, URL passwords, UUIDs
+- **Correlation ID Helpers** - Generate, validate (<100ns), extract from headers
+- **Conditional Compilation** - Zero overhead in production builds
+- **Proc Macros** - `#[trace_fn]` for automatic function tracing (foundation)
+- **Enhanced Redaction** - ReDoS-safe patterns with `OnceLock` caching
 
 ---
 
@@ -12,13 +26,15 @@ narration-core provides **structured observability** for llama-orch:
 
 - **Narration events** — Actor/action/target with human-readable descriptions
 - **Cute mode** — Optional whimsical children's book narration! 🎀✨
-- **Correlation IDs** — Track requests across service boundaries
-- **Secret redaction** — Automatic masking of bearer tokens and API keys
-- **Zero-cost abstractions** — Built on `tracing` for minimal overhead
+- **Story mode** — Dialogue-based narration for multi-service flows 🎭
+- **7 Logging Levels** — MUTE, TRACE, DEBUG, INFO, WARN, ERROR, FATAL
+- **Correlation IDs** — Track requests across service boundaries (<100ns validation)
+- **Secret redaction** — Automatic masking of 6 secret types (Bearer, API keys, JWT, private keys, URL passwords, UUIDs)
+- **Zero-cost abstractions** — Built on `tracing` with conditional compilation
 - **Test capture** — Assertion helpers for BDD tests
 - **JSON logs** — Structured output for production
 
-**Used by**: All services (orchestratord, pool-managerd, provisioners)
+**Used by**: All services (orchestratord, pool-managerd, worker-orcd, provisioners)
 
 ---
 

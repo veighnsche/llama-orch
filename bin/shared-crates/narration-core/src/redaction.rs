@@ -13,6 +13,12 @@ pub struct RedactionPolicy {
     pub mask_api_keys: bool,
     /// Mask UUIDs (potential session/correlation IDs in human text)
     pub mask_uuids: bool,
+    /// Mask JWT tokens
+    pub mask_jwt_tokens: bool,
+    /// Mask private keys
+    pub mask_private_keys: bool,
+    /// Mask passwords in URLs
+    pub mask_url_passwords: bool,
     /// Replacement string for redacted content
     pub replacement: String,
 }
@@ -23,6 +29,9 @@ impl Default for RedactionPolicy {
             mask_bearer_tokens: true,
             mask_api_keys: true,
             mask_uuids: false, // UUIDs are usually safe in narration
+            mask_jwt_tokens: true,
+            mask_private_keys: true,
+            mask_url_passwords: true,
             replacement: "[REDACTED]".to_string(),
         }
     }
@@ -32,6 +41,9 @@ impl Default for RedactionPolicy {
 static BEARER_TOKEN_PATTERN: OnceLock<Regex> = OnceLock::new();
 static API_KEY_PATTERN: OnceLock<Regex> = OnceLock::new();
 static UUID_PATTERN: OnceLock<Regex> = OnceLock::new();
+static JWT_PATTERN: OnceLock<Regex> = OnceLock::new();
+static PRIVATE_KEY_PATTERN: OnceLock<Regex> = OnceLock::new();
+static URL_PASSWORD_PATTERN: OnceLock<Regex> = OnceLock::new();
 
 fn bearer_token_regex() -> &'static Regex {
     BEARER_TOKEN_PATTERN.get_or_init(|| {
@@ -54,6 +66,30 @@ fn uuid_regex() -> &'static Regex {
         // Match UUIDs (8-4-4-4-12 hex format)
         Regex::new(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
             .expect("BUG: UUID regex pattern is invalid")
+    })
+}
+
+fn jwt_regex() -> &'static Regex {
+    JWT_PATTERN.get_or_init(|| {
+        // Match JWT tokens (header.payload.signature)
+        Regex::new(r"eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+")
+            .expect("BUG: JWT regex pattern is invalid")
+    })
+}
+
+fn private_key_regex() -> &'static Regex {
+    PRIVATE_KEY_PATTERN.get_or_init(|| {
+        // Match private key blocks (simplified to avoid ReDoS)
+        Regex::new(r"-----BEGIN [A-Z ]+PRIVATE KEY-----[\s\S]{1,4096}?-----END [A-Z ]+PRIVATE KEY-----")
+            .expect("BUG: private key regex pattern is invalid")
+    })
+}
+
+fn url_password_regex() -> &'static Regex {
+    URL_PASSWORD_PATTERN.get_or_init(|| {
+        // Match passwords in URLs (user:password@host)
+        Regex::new(r"://[^:]+:([^@]+)@")
+            .expect("BUG: URL password regex pattern is invalid")
     })
 }
 
@@ -81,6 +117,18 @@ pub fn redact_secrets(text: &str, policy: RedactionPolicy) -> String {
 
     if policy.mask_uuids {
         result = uuid_regex().replace_all(&result, &policy.replacement).to_string();
+    }
+
+    if policy.mask_jwt_tokens {
+        result = jwt_regex().replace_all(&result, &policy.replacement).to_string();
+    }
+
+    if policy.mask_private_keys {
+        result = private_key_regex().replace_all(&result, &policy.replacement).to_string();
+    }
+
+    if policy.mask_url_passwords {
+        result = url_password_regex().replace_all(&result, &policy.replacement).to_string();
     }
 
     result

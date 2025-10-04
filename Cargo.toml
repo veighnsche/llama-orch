@@ -48,6 +48,7 @@ members = [
     
     "bin/shared-crates/narration-core",        # Human-readable narration (human/cute/story modes)
     "bin/shared-crates/narration-core/bdd",    # The cutest observability team in the monorepo! 💕
+    "bin/shared-crates/narration-macros",      # Proc macros for narration (compile-time magic)
     
     "bin/shared-crates/pool-registry-types",   # Shared types for pool registration
     
