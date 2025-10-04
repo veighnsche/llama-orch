@@ -7,9 +7,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
-# CUDA architectures (Ampere, Ada Lovelace, Hopper)
-# 70 = Volta, 75 = Turing, 80/86 = Ampere, 89 = Ada, 90 = Hopper
-set(CMAKE_CUDA_ARCHITECTURES 70 75 80 86 89 90)
+# CUDA architectures (CUDA 13+ only supports 75+)
+# FIX (2025-10-04): Removed compute_70 (Volta) - unsupported in CUDA 13
+# 75 = Turing, 80/86 = Ampere, 89 = Ada, 90 = Hopper
+# -- Cascade
+set(CMAKE_CUDA_ARCHITECTURES 75 80 86 89 90)
 
 # Compiler flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
