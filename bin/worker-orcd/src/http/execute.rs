@@ -1,25 +1,22 @@
 //! POST /execute endpoint - Execute inference
+//!
+//! This endpoint accepts inference requests, validates parameters,
+//! and returns an SSE stream of tokens.
+//!
+//! # Spec References
+//! - M0-W-1300: Inference endpoint
+//! - M0-W-1302: Request validation
 
-use crate::cuda::safe::InferenceHandle;
-use crate::error::WorkerError;
-use crate::http::routes::AppState;
+use crate::http::validation::{ExecuteRequest, ValidationError};
 use axum::{
-    extract::State,
     response::{sse::Event, Sse},
     Json,
 };
-use futures::stream::{self, Stream};
-use serde::{Deserialize, Serialize};
+use futures::stream::{self, Stream, StreamExt};
+use observability_narration_core::{Narration, ACTION_INFERENCE_START, ACTOR_WORKER_ORCD};
+use serde::Serialize;
 use std::convert::Infallible;
-
-#[derive(Deserialize)]
-pub struct ExecuteRequest {
-    pub job_id: String,
-    pub prompt: String,
-    pub max_tokens: i32,
-    pub temperature: f32,
-    pub seed: u64,
-}
+use tracing::{debug, info};
 
 #[derive(Serialize)]
 struct StartedEvent {
@@ -27,93 +24,127 @@ struct StartedEvent {
     started_at: String,
 }
 
+/// SSE event: Token generated
 #[derive(Serialize)]
 struct TokenEvent {
+    /// Token text
     t: String,
-    i: i32,
+    /// Token index
+    i: u32,
 }
 
+/// SSE event: Inference complete
 #[derive(Serialize)]
 struct EndEvent {
-    tokens_out: i32,
+    /// Total tokens generated
+    tokens_out: u32,
 }
 
-#[derive(Serialize)]
-struct ErrorEvent {
-    code: String,
-    message: String,
-    retriable: bool,
-}
-
-#[axum::debug_handler]
 /// Handle POST /execute
+///
+/// Accepts an inference request, validates parameters, and returns
+/// a placeholder SSE stream. This is a skeleton implementation that
+/// will be wired to CUDA inference in a later story.
+///
+/// # Request Format
+/// ```json
+/// {
+///   "job_id": "unique-job-id",
+///   "prompt": "Your prompt text here",
+///   "max_tokens": 100,
+///   "temperature": 0.7,
+///   "seed": 42
+/// }
+/// ```
+///
+/// # Response Format
+/// SSE stream with events:
+/// - `started`: Inference began
+/// - `token`: Each generated token
+/// - `end`: Inference complete
+///
+/// # Errors
+/// Returns 400 Bad Request if validation fails, with details about
+/// which field failed and why.
+#[axum::debug_handler]
 pub async fn handle_execute(
-    State(state): State<AppState>,
     Json(req): Json<ExecuteRequest>,
-) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, WorkerError> {
-    tracing::info!(
+) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, ValidationError> {
+    // Validate request
+    req.validate()?;
+
+    info!(
         job_id = %req.job_id,
         prompt_len = req.prompt.len(),
         max_tokens = req.max_tokens,
-        "Starting inference"
+        temperature = req.temperature,
+        "Inference request received"
     );
 
-    // Start inference
-    let inference = InferenceHandle::start(
-        &state.model,
-        &req.prompt,
-        req.max_tokens,
-        req.temperature,
-        req.seed,
-    )?;
+    // Narrate inference start
+    Narration::new(ACTOR_WORKER_ORCD, ACTION_INFERENCE_START, &req.job_id)
+        .human(format!("Starting inference for job {}", req.job_id))
+        .job_id(&req.job_id)
+        .emit();
 
-    // Create SSE stream
+    debug!(job_id = %req.job_id, "Opening SSE stream");
+
+    // Create placeholder SSE stream
+    // This will be replaced with real CUDA inference in FT-006
     let job_id = req.job_id.clone();
-    let stream = stream::unfold(
-        (inference, 0, false, job_id),
-        |(mut inf, count, done, job_id)| async move {
-            if done {
-                return None;
-            }
-
-            // First event: started
-            if count == 0 {
-                let event = StartedEvent {
-                    job_id: job_id.clone(),
-                    started_at: chrono::Utc::now().to_rfc3339(),
-                };
-                let sse = Event::default().event("started").json_data(&event).ok()?;
-                return Some((Ok(sse), (inf, 1, false, job_id)));
-            }
-
-            // Generate next token
-            match inf.next_token() {
-                Ok(Some((token, token_index))) => {
-                    let event = TokenEvent { t: token, i: token_index };
-                    let sse = Event::default().event("token").json_data(&event).ok()?;
-                    Some((Ok(sse), (inf, count + 1, false, job_id)))
-                }
-                Ok(None) => {
-                    // Inference complete
-                    let event = EndEvent { tokens_out: count - 1 };
-                    let sse = Event::default().event("end").json_data(&event).ok()?;
-                    Some((Ok(sse), (inf, count, true, job_id)))
-                }
-                Err(e) => {
-                    // Error during inference
-                    let event = ErrorEvent {
-                        code: "INFERENCE_FAILED".to_string(),
-                        message: e.to_string(),
-                        retriable: false,
-                    };
-                    let sse = Event::default().event("error").json_data(&event).ok()?;
-                    Some((Ok(sse), (inf, count, true, job_id)))
-                }
-            }
-        },
-    );
+    let stream = stream::iter(vec![
+        // Event 1: started
+        Event::default()
+            .event("started")
+            .json_data(&StartedEvent {
+                job_id: job_id.clone(),
+                started_at: chrono::Utc::now().to_rfc3339(),
+            })
+            .ok(),
+        // Event 2: token (placeholder)
+        Event::default().event("token").json_data(&TokenEvent { t: "test".to_string(), i: 0 }).ok(),
+        // Event 3: end
+        Event::default().event("end").json_data(&EndEvent { tokens_out: 1 }).ok(),
+    ])
+    .filter_map(|event| async move { event })
+    .map(Ok);
 
     Ok(Sse::new(stream))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_started_event_serialization() {
+        let event = StartedEvent {
+            job_id: "test-123".to_string(),
+            started_at: "2025-10-04T12:00:00Z".to_string(),
+        };
+
+        let json = serde_json::to_string(&event).unwrap();
+        assert!(json.contains("test-123"));
+        assert!(json.contains("started_at"));
+    }
+
+    #[test]
+    fn test_token_event_serialization() {
+        let event = TokenEvent { t: "hello".to_string(), i: 5 };
+
+        let json = serde_json::to_string(&event).unwrap();
+        assert!(json.contains("hello"));
+        assert!(json.contains("\"i\":5"));
+    }
+
+    #[test]
+    fn test_end_event_serialization() {
+        let event = EndEvent { tokens_out: 42 };
+
+        let json = serde_json::to_string(&event).unwrap();
+        assert!(json.contains("tokens_out"));
+        assert!(json.contains("42"));
+    }
 }
 
 // ---
