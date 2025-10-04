@@ -122,10 +122,59 @@ public:
      */
     static size_t calculate_size(const KVCacheConfig& config);
     
+    /**
+     * Get current position in cache.
+     * 
+     * Position indicates how many tokens have been stored in the cache.
+     * Range: [0, max_context_length]
+     * 
+     * @return Current position (0-based)
+     */
+    int position() const { return position_; }
+    
+    /**
+     * Check if cache is full.
+     * 
+     * Cache is full when position >= max_context_length.
+     * 
+     * @return true if cache is full, false otherwise
+     */
+    bool is_full() const { return position_ >= config_.max_context_length; }
+    
+    /**
+     * Get remaining capacity.
+     * 
+     * Returns number of tokens that can still be stored in cache.
+     * 
+     * @return Remaining capacity (0 if full)
+     */
+    int remaining_capacity() const { 
+        return config_.max_context_length - position_; 
+    }
+    
+    /**
+     * Advance position after updating cache.
+     * 
+     * Call this after writing new keys/values to cache.
+     * 
+     * @param num_tokens Number of tokens to advance (default: 1)
+     * @throws std::runtime_error if position would exceed max_context_length
+     */
+    void advance_position(int num_tokens = 1);
+    
+    /**
+     * Reset cache for new inference.
+     * 
+     * Resets position to 0 and zero-initializes cache memory.
+     * Use this when starting a new inference with the same cache object.
+     */
+    void reset();
+    
 private:
     KVCacheConfig config_;                      ///< Cache configuration
     std::unique_ptr<DeviceMemory> cache_;       ///< Device memory (RAII)
     size_t layer_stride_;                       ///< Bytes per layer (keys + values)
+    int position_ = 0;                          ///< Current position in cache
 };
 
 } // namespace worker

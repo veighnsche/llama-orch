@@ -509,5 +509,748 @@ TEST(KVCacheTest, EdgeCase_SmallContext) {
     });
 }
 
+// ============================================================================
+// Cache Management Tests
+// ============================================================================
+
+TEST(KVCacheManagementTest, PositionTracking_Initial) {
+    KVCacheConfig config{
+        .num_layers = 1,
+        .max_context_length = 10,
+        .num_kv_heads = 2,
+        .head_dim = 32,
+    };
+    
+    KVCache cache(config);
+    
+    EXPECT_EQ(cache.position(), 0);
+    EXPECT_FALSE(cache.is_full());
+    EXPECT_EQ(cache.remaining_capacity(), 10);
+}
+
+TEST(KVCacheManagementTest, PositionTracking_Advance) {
+    KVCacheConfig config{
+        .num_layers = 1,
+        .max_context_length = 10,
+        .num_kv_heads = 2,
+        .head_dim = 32,
+    };
+    
+    KVCache cache(config);
+    
+    // Advance by 1
+    cache.advance_position(1);
+    EXPECT_EQ(cache.position(), 1);
+    EXPECT_EQ(cache.remaining_capacity(), 9);
+    EXPECT_FALSE(cache.is_full());
+    
+    // Advance by 3
+    cache.advance_position(3);
+    EXPECT_EQ(cache.position(), 4);
+    EXPECT_EQ(cache.remaining_capacity(), 6);
+    
+    // Advance to full
+    cache.advance_position(6);
+    EXPECT_EQ(cache.position(), 10);
+    EXPECT_EQ(cache.remaining_capacity(), 0);
+    EXPECT_TRUE(cache.is_full());
+}
+
+TEST(KVCacheManagementTest, PositionTracking_Overflow) {
+    KVCacheConfig config{
+        .num_layers = 1,
+        .max_context_length = 5,
+        .num_kv_heads = 2,
+        .head_dim = 32,
+    };
+    
+    KVCache cache(config);
+    
+    cache.advance_position(5);
+    EXPECT_TRUE(cache.is_full());
+    
+    // Advancing beyond capacity should throw
+    EXPECT_THROW(cache.advance_position(1), std::runtime_error);
+}
+
+TEST(KVCacheManagementTest, PositionTracking_OverflowMultiple) {
+    KVCacheConfig config{
+        .num_layers = 1,
+        .max_context_length = 5,
+        .num_kv_heads = 2,
+        .head_dim = 32,
+    };
+    
+    KVCache cache(config);
+    
+    // Try to advance by more than capacity
+    EXPECT_THROW(cache.advance_position(6), std::runtime_error);
+}
+
+TEST(KVCacheManagementTest, PositionTracking_InvalidAdvance) {
+    KVCacheConfig config{
+        .num_layers = 1,
+        .max_context_length = 10,
+        .num_kv_heads = 2,
+        .head_dim = 32,
+    };
+    
+    KVCache cache(config);
+    
+    // Zero advance
+    EXPECT_THROW(cache.advance_position(0), std::invalid_argument);
+    
+    // Negative advance
+    EXPECT_THROW(cache.advance_position(-1), std::invalid_argument);
+}
+
+TEST(KVCacheManagementTest, Reset_Position) {
+    KVCacheConfig config{
+        .num_layers = 1,
+        .max_context_length = 10,
+        .num_kv_heads = 2,
+        .head_dim = 32,
+    };
+    
+    KVCache cache(config);
+    
+    cache.advance_position(5);
+    EXPECT_EQ(cache.position(), 5);
+    
+    cache.reset();
+    EXPECT_EQ(cache.position(), 0);
+    EXPECT_FALSE(cache.is_full());
+    EXPECT_EQ(cache.remaining_capacity(), 10);
+}
+
+TEST(KVCacheManagementTest, Reset_ZerosMemory) {
+    KVCacheConfig config{
+        .num_layers = 1,
+        .max_context_length = 16,
+        .num_kv_heads = 2,
+        .head_dim = 32,
+    };
+    
+    KVCache cache(config);
+    
+    // Write some data to cache
+    size_t keys_size = config.max_context_length * config.num_kv_heads * config.head_dim;
+    std::vector<half> h_ones(keys_size, __float2half(1.0f));
+    cudaMemcpy(cache.keys(0), h_ones.data(), keys_size * sizeof(half), 
+               cudaMemcpyHostToDevice);
+    
+    // Reset
+    cache.reset();
+    
+    // Verify zeros
+    std::vector<half> h_keys(keys_size);
+    cudaMemcpy(h_keys.data(), cache.keys(0), keys_size * sizeof(half), 
+               cudaMemcpyDeviceToHost);
+    
+    for (const half& val : h_keys) {
+        EXPECT_EQ(__half2float(val), 0.0f);
+    }
+}
+
+// ============================================================================
+// Cache Update Kernel Tests
+// ============================================================================
+
+TEST(KVCacheUpdateTest, SingleToken_SingleHead) {
+    KVCacheConfig config{
+        .num_layers = 1,
+        .max_context_length = 10,
+        .num_kv_heads = 1,
+        .head_dim = 4,
+    };
+    
+    KVCache cache(config);
+    
+    // Allocate new keys/values for 1 token
+    int num_tokens = 1;
+    size_t kv_size = num_tokens * config.num_kv_heads * config.head_dim;
+    
+    std::vector<half> h_new_keys(kv_size);
+    std::vector<half> h_new_values(kv_size);
+    
+    // Fill with test values
+    for (size_t i = 0; i < kv_size; ++i) {
+        h_new_keys[i] = __float2half(1.0f + i);
+        h_new_values[i] = __float2half(10.0f + i);
+    }
+    
+    half *d_new_keys, *d_new_values;
+    cudaMalloc(&d_new_keys, kv_size * sizeof(half));
+    cudaMalloc(&d_new_values, kv_size * sizeof(half));
+    
+    cudaMemcpy(d_new_keys, h_new_keys.data(), kv_size * sizeof(half), 
+               cudaMemcpyHostToDevice);
+    cudaMemcpy(d_new_values, h_new_values.data(), kv_size * sizeof(half), 
+               cudaMemcpyHostToDevice);
+    
+    // Update cache at position 0
+    kernels::launch_update_kv_cache(
+        cache.keys(0),
+        cache.values(0),
+        d_new_keys,
+        d_new_values,
+        cache.position(),
+        num_tokens,
+        config.num_kv_heads,
+        config.head_dim
+    );
+    cudaDeviceSynchronize();
+    
+    // Verify cache was updated
+    size_t cache_size = config.max_context_length * config.num_kv_heads * config.head_dim;
+    std::vector<half> h_cache_keys(cache_size);
+    std::vector<half> h_cache_values(cache_size);
+    
+    cudaMemcpy(h_cache_keys.data(), cache.keys(0), 
+               cache_size * sizeof(half), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_cache_values.data(), cache.values(0), 
+               cache_size * sizeof(half), cudaMemcpyDeviceToHost);
+    
+    // First token should have our values
+    for (size_t i = 0; i < kv_size; ++i) {
+        EXPECT_NEAR(__half2float(h_cache_keys[i]), 1.0f + i, 0.01f);
+        EXPECT_NEAR(__half2float(h_cache_values[i]), 10.0f + i, 0.01f);
+    }
+    
+    // Rest should be zero
+    for (size_t i = kv_size; i < cache_size; ++i) {
+        EXPECT_EQ(__half2float(h_cache_keys[i]), 0.0f);
+        EXPECT_EQ(__half2float(h_cache_values[i]), 0.0f);
+    }
+    
+    cudaFree(d_new_keys);
+    cudaFree(d_new_values);
+}
+
+TEST(KVCacheUpdateTest, MultipleTokens_Prefill) {
+    KVCacheConfig config{
+        .num_layers = 1,
+        .max_context_length = 10,
+        .num_kv_heads = 2,
+        .head_dim = 4,
+    };
+    
+    KVCache cache(config);
+    
+    // Allocate new keys/values for 3 tokens
+    int num_tokens = 3;
+    size_t kv_size = num_tokens * config.num_kv_heads * config.head_dim;
+    
+    std::vector<half> h_new_keys(kv_size);
+    std::vector<half> h_new_values(kv_size);
+    
+    // Fill with sequential values
+    for (size_t i = 0; i < kv_size; ++i) {
+        h_new_keys[i] = __float2half(static_cast<float>(i));
+        h_new_values[i] = __float2half(static_cast<float>(i + 100));
+    }
+    
+    half *d_new_keys, *d_new_values;
+    cudaMalloc(&d_new_keys, kv_size * sizeof(half));
+    cudaMalloc(&d_new_values, kv_size * sizeof(half));
+    
+    cudaMemcpy(d_new_keys, h_new_keys.data(), kv_size * sizeof(half), 
+               cudaMemcpyHostToDevice);
+    cudaMemcpy(d_new_values, h_new_values.data(), kv_size * sizeof(half), 
+               cudaMemcpyHostToDevice);
+    
+    // Update cache
+    kernels::launch_update_kv_cache(
+        cache.keys(0),
+        cache.values(0),
+        d_new_keys,
+        d_new_values,
+        cache.position(),
+        num_tokens,
+        config.num_kv_heads,
+        config.head_dim
+    );
+    cudaDeviceSynchronize();
+    
+    // Verify cache
+    size_t cache_size = config.max_context_length * config.num_kv_heads * config.head_dim;
+    std::vector<half> h_cache_keys(cache_size);
+    
+    cudaMemcpy(h_cache_keys.data(), cache.keys(0), 
+               cache_size * sizeof(half), cudaMemcpyDeviceToHost);
+    
+    // First 3 tokens should have our values
+    for (size_t i = 0; i < kv_size; ++i) {
+        EXPECT_NEAR(__half2float(h_cache_keys[i]), static_cast<float>(i), 0.01f);
+    }
+    
+    cudaFree(d_new_keys);
+    cudaFree(d_new_values);
+}
+
+TEST(KVCacheUpdateTest, SequentialUpdates_Decode) {
+    KVCacheConfig config{
+        .num_layers = 1,
+        .max_context_length = 5,
+        .num_kv_heads = 2,
+        .head_dim = 4,
+    };
+    
+    KVCache cache(config);
+    
+    // Generate 5 tokens sequentially
+    for (int token = 0; token < 5; ++token) {
+        // Allocate new keys/values for 1 token
+        size_t kv_size = 1 * config.num_kv_heads * config.head_dim;
+        
+        std::vector<half> h_new_keys(kv_size, __float2half(static_cast<float>(token)));
+        std::vector<half> h_new_values(kv_size, __float2half(static_cast<float>(token + 10)));
+        
+        half *d_new_keys, *d_new_values;
+        cudaMalloc(&d_new_keys, kv_size * sizeof(half));
+        cudaMalloc(&d_new_values, kv_size * sizeof(half));
+        
+        cudaMemcpy(d_new_keys, h_new_keys.data(), kv_size * sizeof(half), 
+                   cudaMemcpyHostToDevice);
+        cudaMemcpy(d_new_values, h_new_values.data(), kv_size * sizeof(half), 
+                   cudaMemcpyHostToDevice);
+        
+        // Update cache at current position
+        kernels::launch_update_kv_cache(
+            cache.keys(0),
+            cache.values(0),
+            d_new_keys,
+            d_new_values,
+            cache.position(),
+            1,  // Single token
+            config.num_kv_heads,
+            config.head_dim
+        );
+        cudaDeviceSynchronize();
+        
+        // Advance position
+        cache.advance_position(1);
+        
+        cudaFree(d_new_keys);
+        cudaFree(d_new_values);
+    }
+    
+    EXPECT_EQ(cache.position(), 5);
+    EXPECT_TRUE(cache.is_full());
+    
+    // Verify all tokens were stored
+    size_t cache_size = config.max_context_length * config.num_kv_heads * config.head_dim;
+    std::vector<half> h_cache_keys(cache_size);
+    
+    cudaMemcpy(h_cache_keys.data(), cache.keys(0), 
+               cache_size * sizeof(half), cudaMemcpyDeviceToHost);
+    
+    // Check each token position
+    for (int token = 0; token < 5; ++token) {
+        for (int head = 0; head < config.num_kv_heads; ++head) {
+            for (int dim = 0; dim < config.head_dim; ++dim) {
+                int idx = (token * config.num_kv_heads + head) * config.head_dim + dim;
+                EXPECT_NEAR(__half2float(h_cache_keys[idx]), static_cast<float>(token), 0.01f)
+                    << "Token " << token << ", head " << head << ", dim " << dim;
+            }
+        }
+    }
+}
+
+TEST(KVCacheUpdateTest, UpdateAtNonZeroPosition) {
+    KVCacheConfig config{
+        .num_layers = 1,
+        .max_context_length = 10,
+        .num_kv_heads = 2,
+        .head_dim = 4,
+    };
+    
+    KVCache cache(config);
+    
+    // Advance to position 3
+    cache.advance_position(3);
+    EXPECT_EQ(cache.position(), 3);
+    
+    // Update at position 3
+    size_t kv_size = 1 * config.num_kv_heads * config.head_dim;
+    std::vector<half> h_new_keys(kv_size, __float2half(99.0f));
+    
+    half* d_new_keys;
+    cudaMalloc(&d_new_keys, kv_size * sizeof(half));
+    cudaMemcpy(d_new_keys, h_new_keys.data(), kv_size * sizeof(half), 
+               cudaMemcpyHostToDevice);
+    
+    half* d_new_values;
+    cudaMalloc(&d_new_values, kv_size * sizeof(half));
+    cudaMemset(d_new_values, 0, kv_size * sizeof(half));
+    
+    kernels::launch_update_kv_cache(
+        cache.keys(0),
+        cache.values(0),
+        d_new_keys,
+        d_new_values,
+        cache.position(),
+        1,
+        config.num_kv_heads,
+        config.head_dim
+    );
+    cudaDeviceSynchronize();
+    
+    // Verify position 3 has our value
+    size_t cache_size = config.max_context_length * config.num_kv_heads * config.head_dim;
+    std::vector<half> h_cache_keys(cache_size);
+    
+    cudaMemcpy(h_cache_keys.data(), cache.keys(0), 
+               cache_size * sizeof(half), cudaMemcpyDeviceToHost);
+    
+    // Position 3 should have 99.0
+    int pos3_start = 3 * config.num_kv_heads * config.head_dim;
+    int pos3_end = pos3_start + config.num_kv_heads * config.head_dim;
+    
+    for (int i = pos3_start; i < pos3_end; ++i) {
+        EXPECT_NEAR(__half2float(h_cache_keys[i]), 99.0f, 0.01f);
+    }
+    
+    // Positions 0-2 should be zero
+    for (int i = 0; i < pos3_start; ++i) {
+        EXPECT_EQ(__half2float(h_cache_keys[i]), 0.0f);
+    }
+    
+    cudaFree(d_new_keys);
+    cudaFree(d_new_values);
+}
+
+TEST(KVCacheUpdateTest, MultipleHeads) {
+    KVCacheConfig config{
+        .num_layers = 1,
+        .max_context_length = 10,
+        .num_kv_heads = 4,  // Multiple heads
+        .head_dim = 8,
+    };
+    
+    KVCache cache(config);
+    
+    // Update with different values per head
+    int num_tokens = 1;
+    size_t kv_size = num_tokens * config.num_kv_heads * config.head_dim;
+    
+    std::vector<half> h_new_keys(kv_size);
+    for (int head = 0; head < config.num_kv_heads; ++head) {
+        for (int dim = 0; dim < config.head_dim; ++dim) {
+            int idx = head * config.head_dim + dim;
+            h_new_keys[idx] = __float2half(static_cast<float>(head * 100 + dim));
+        }
+    }
+    
+    half* d_new_keys;
+    cudaMalloc(&d_new_keys, kv_size * sizeof(half));
+    cudaMemcpy(d_new_keys, h_new_keys.data(), kv_size * sizeof(half), 
+               cudaMemcpyHostToDevice);
+    
+    half* d_new_values;
+    cudaMalloc(&d_new_values, kv_size * sizeof(half));
+    cudaMemset(d_new_values, 0, kv_size * sizeof(half));
+    
+    kernels::launch_update_kv_cache(
+        cache.keys(0),
+        cache.values(0),
+        d_new_keys,
+        d_new_values,
+        0,
+        num_tokens,
+        config.num_kv_heads,
+        config.head_dim
+    );
+    cudaDeviceSynchronize();
+    
+    // Verify each head has correct values
+    size_t cache_size = config.max_context_length * config.num_kv_heads * config.head_dim;
+    std::vector<half> h_cache_keys(cache_size);
+    
+    cudaMemcpy(h_cache_keys.data(), cache.keys(0), 
+               cache_size * sizeof(half), cudaMemcpyDeviceToHost);
+    
+    for (int head = 0; head < config.num_kv_heads; ++head) {
+        for (int dim = 0; dim < config.head_dim; ++dim) {
+            int idx = head * config.head_dim + dim;
+            float expected = static_cast<float>(head * 100 + dim);
+            EXPECT_NEAR(__half2float(h_cache_keys[idx]), expected, 0.01f)
+                << "Head " << head << ", dim " << dim;
+        }
+    }
+    
+    cudaFree(d_new_keys);
+    cudaFree(d_new_values);
+}
+
+TEST(KVCacheUpdateTest, MultipleLayers) {
+    KVCacheConfig config{
+        .num_layers = 3,
+        .max_context_length = 10,
+        .num_kv_heads = 2,
+        .head_dim = 4,
+    };
+    
+    KVCache cache(config);
+    
+    // Update each layer with different values
+    for (int layer = 0; layer < config.num_layers; ++layer) {
+        size_t kv_size = 1 * config.num_kv_heads * config.head_dim;
+        
+        std::vector<half> h_new_keys(kv_size, __float2half(static_cast<float>(layer * 10)));
+        
+        half* d_new_keys;
+        cudaMalloc(&d_new_keys, kv_size * sizeof(half));
+        cudaMemcpy(d_new_keys, h_new_keys.data(), kv_size * sizeof(half), 
+                   cudaMemcpyHostToDevice);
+        
+        half* d_new_values;
+        cudaMalloc(&d_new_values, kv_size * sizeof(half));
+        cudaMemset(d_new_values, 0, kv_size * sizeof(half));
+        
+        kernels::launch_update_kv_cache(
+            cache.keys(layer),
+            cache.values(layer),
+            d_new_keys,
+            d_new_values,
+            0,
+            1,
+            config.num_kv_heads,
+            config.head_dim
+        );
+        cudaDeviceSynchronize();
+        
+        cudaFree(d_new_keys);
+        cudaFree(d_new_values);
+    }
+    
+    // Verify each layer has correct values
+    for (int layer = 0; layer < config.num_layers; ++layer) {
+        size_t cache_size = config.max_context_length * config.num_kv_heads * config.head_dim;
+        std::vector<half> h_cache_keys(cache_size);
+        
+        cudaMemcpy(h_cache_keys.data(), cache.keys(layer), 
+                   cache_size * sizeof(half), cudaMemcpyDeviceToHost);
+        
+        // First token should have layer-specific value
+        float expected = static_cast<float>(layer * 10);
+        for (int i = 0; i < config.num_kv_heads * config.head_dim; ++i) {
+            EXPECT_NEAR(__half2float(h_cache_keys[i]), expected, 0.01f)
+                << "Layer " << layer << ", element " << i;
+        }
+    }
+}
+
+TEST(KVCacheUpdateTest, PrefillThenDecode) {
+    KVCacheConfig config{
+        .num_layers = 1,
+        .max_context_length = 10,
+        .num_kv_heads = 2,
+        .head_dim = 4,
+    };
+    
+    KVCache cache(config);
+    
+    // Phase 1: Prefill with 3 tokens
+    {
+        int num_tokens = 3;
+        size_t kv_size = num_tokens * config.num_kv_heads * config.head_dim;
+        
+        std::vector<half> h_new_keys(kv_size, __float2half(1.0f));
+        
+        half* d_new_keys;
+        cudaMalloc(&d_new_keys, kv_size * sizeof(half));
+        cudaMemcpy(d_new_keys, h_new_keys.data(), kv_size * sizeof(half), 
+                   cudaMemcpyHostToDevice);
+        
+        half* d_new_values;
+        cudaMalloc(&d_new_values, kv_size * sizeof(half));
+        cudaMemset(d_new_values, 0, kv_size * sizeof(half));
+        
+        kernels::launch_update_kv_cache(
+            cache.keys(0),
+            cache.values(0),
+            d_new_keys,
+            d_new_values,
+            cache.position(),
+            num_tokens,
+            config.num_kv_heads,
+            config.head_dim
+        );
+        cudaDeviceSynchronize();
+        
+        cache.advance_position(num_tokens);
+        
+        cudaFree(d_new_keys);
+        cudaFree(d_new_values);
+    }
+    
+    EXPECT_EQ(cache.position(), 3);
+    
+    // Phase 2: Decode 2 more tokens
+    for (int i = 0; i < 2; ++i) {
+        size_t kv_size = 1 * config.num_kv_heads * config.head_dim;
+        
+        std::vector<half> h_new_keys(kv_size, __float2half(2.0f));
+        
+        half* d_new_keys;
+        cudaMalloc(&d_new_keys, kv_size * sizeof(half));
+        cudaMemcpy(d_new_keys, h_new_keys.data(), kv_size * sizeof(half), 
+                   cudaMemcpyHostToDevice);
+        
+        half* d_new_values;
+        cudaMalloc(&d_new_values, kv_size * sizeof(half));
+        cudaMemset(d_new_values, 0, kv_size * sizeof(half));
+        
+        kernels::launch_update_kv_cache(
+            cache.keys(0),
+            cache.values(0),
+            d_new_keys,
+            d_new_values,
+            cache.position(),
+            1,
+            config.num_kv_heads,
+            config.head_dim
+        );
+        cudaDeviceSynchronize();
+        
+        cache.advance_position(1);
+        
+        cudaFree(d_new_keys);
+        cudaFree(d_new_values);
+    }
+    
+    EXPECT_EQ(cache.position(), 5);
+    EXPECT_TRUE(cache.is_full());
+    
+    // Verify cache contents
+    size_t cache_size = config.max_context_length * config.num_kv_heads * config.head_dim;
+    std::vector<half> h_cache_keys(cache_size);
+    
+    cudaMemcpy(h_cache_keys.data(), cache.keys(0), 
+               cache_size * sizeof(half), cudaMemcpyDeviceToHost);
+    
+    // First 3 tokens should be 1.0
+    size_t prefill_size = 3 * config.num_kv_heads * config.head_dim;
+    for (size_t i = 0; i < prefill_size; ++i) {
+        EXPECT_NEAR(__half2float(h_cache_keys[i]), 1.0f, 0.01f);
+    }
+    
+    // Next 2 tokens should be 2.0
+    size_t decode_size = 2 * config.num_kv_heads * config.head_dim;
+    for (size_t i = prefill_size; i < prefill_size + decode_size; ++i) {
+        EXPECT_NEAR(__half2float(h_cache_keys[i]), 2.0f, 0.01f);
+    }
+}
+
+// ============================================================================
+// Integration Tests
+// ============================================================================
+
+TEST(KVCacheIntegrationTest, FullGenerationCycle) {
+    KVCacheConfig config{
+        .num_layers = 2,
+        .max_context_length = 8,
+        .num_kv_heads = 2,
+        .head_dim = 4,
+    };
+    
+    KVCache cache(config);
+    
+    // Simulate full generation: prefill + decode
+    // Prefill: 3 tokens
+    {
+        int num_tokens = 3;
+        size_t kv_size = num_tokens * config.num_kv_heads * config.head_dim;
+        
+        half* d_new_keys;
+        half* d_new_values;
+        cudaMalloc(&d_new_keys, kv_size * sizeof(half));
+        cudaMalloc(&d_new_values, kv_size * sizeof(half));
+        cudaMemset(d_new_keys, 0, kv_size * sizeof(half));
+        cudaMemset(d_new_values, 0, kv_size * sizeof(half));
+        
+        for (int layer = 0; layer < config.num_layers; ++layer) {
+            kernels::launch_update_kv_cache(
+                cache.keys(layer),
+                cache.values(layer),
+                d_new_keys,
+                d_new_values,
+                cache.position(),
+                num_tokens,
+                config.num_kv_heads,
+                config.head_dim
+            );
+        }
+        cudaDeviceSynchronize();
+        
+        cache.advance_position(num_tokens);
+        
+        cudaFree(d_new_keys);
+        cudaFree(d_new_values);
+    }
+    
+    EXPECT_EQ(cache.position(), 3);
+    
+    // Decode: 5 more tokens
+    for (int token = 0; token < 5; ++token) {
+        size_t kv_size = 1 * config.num_kv_heads * config.head_dim;
+        
+        half* d_new_keys;
+        half* d_new_values;
+        cudaMalloc(&d_new_keys, kv_size * sizeof(half));
+        cudaMalloc(&d_new_values, kv_size * sizeof(half));
+        cudaMemset(d_new_keys, 0, kv_size * sizeof(half));
+        cudaMemset(d_new_values, 0, kv_size * sizeof(half));
+        
+        for (int layer = 0; layer < config.num_layers; ++layer) {
+            kernels::launch_update_kv_cache(
+                cache.keys(layer),
+                cache.values(layer),
+                d_new_keys,
+                d_new_values,
+                cache.position(),
+                1,
+                config.num_kv_heads,
+                config.head_dim
+            );
+        }
+        cudaDeviceSynchronize();
+        
+        cache.advance_position(1);
+        
+        cudaFree(d_new_keys);
+        cudaFree(d_new_values);
+    }
+    
+    EXPECT_EQ(cache.position(), 8);
+    EXPECT_TRUE(cache.is_full());
+}
+
+TEST(KVCacheIntegrationTest, ResetAndReuse) {
+    KVCacheConfig config{
+        .num_layers = 1,
+        .max_context_length = 5,
+        .num_kv_heads = 2,
+        .head_dim = 4,
+    };
+    
+    KVCache cache(config);
+    
+    // First generation
+    cache.advance_position(5);
+    EXPECT_TRUE(cache.is_full());
+    
+    // Reset for new generation
+    cache.reset();
+    EXPECT_EQ(cache.position(), 0);
+    EXPECT_FALSE(cache.is_full());
+    
+    // Second generation
+    cache.advance_position(3);
+    EXPECT_EQ(cache.position(), 3);
+    EXPECT_EQ(cache.remaining_capacity(), 2);
+}
+
 // ---
 // Built by Foundation-Alpha 🏗️

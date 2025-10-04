@@ -44,6 +44,7 @@ set(KERNEL_SOURCES
     kernels/rope.cu
     kernels/rmsnorm.cu
     kernels/embedding.cu
+    kernels/kv_cache.cu
 )
 
 # Build static library

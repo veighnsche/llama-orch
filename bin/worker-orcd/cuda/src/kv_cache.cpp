@@ -116,6 +116,29 @@ half* KVCache::values(int layer) {
     return reinterpret_cast<half*>(base + layer * layer_stride_ + keys_size);
 }
 
+void KVCache::advance_position(int num_tokens) {
+    if (num_tokens <= 0) {
+        throw std::invalid_argument("num_tokens must be positive");
+    }
+    
+    position_ += num_tokens;
+    
+    if (position_ > config_.max_context_length) {
+        std::ostringstream err;
+        err << "KV cache overflow: position " << position_ 
+            << " exceeds max context length " << config_.max_context_length
+            << " (tried to advance by " << num_tokens << " tokens)";
+        throw std::runtime_error(err.str());
+    }
+}
+
+void KVCache::reset() {
+    position_ = 0;
+    
+    // Zero out cache memory
+    cache_->zero();
+}
+
 } // namespace worker
 
 // ---
