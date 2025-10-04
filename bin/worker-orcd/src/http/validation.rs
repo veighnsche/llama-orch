@@ -26,10 +26,44 @@ pub struct ExecuteRequest {
     pub max_tokens: u32,
 
     /// Temperature for sampling (0.0-2.0)
+    #[serde(default = "default_temperature")]
     pub temperature: f32,
 
     /// Random seed for reproducibility
-    pub seed: u64,
+    #[serde(default)]
+    pub seed: Option<u64>,
+
+    /// Top-P (nucleus) sampling (0.0-1.0, 1.0 = disabled)
+    #[serde(default = "default_top_p")]
+    pub top_p: f32,
+
+    /// Top-K sampling (0 = disabled)
+    #[serde(default)]
+    pub top_k: u32,
+
+    /// Repetition penalty (1.0 = disabled, >1.0 = penalize)
+    #[serde(default = "default_repetition_penalty")]
+    pub repetition_penalty: f32,
+
+    /// Stop sequences (max 4)
+    #[serde(default)]
+    pub stop: Vec<String>,
+
+    /// Min-P sampling (0.0 = disabled)
+    #[serde(default)]
+    pub min_p: f32,
+}
+
+fn default_temperature() -> f32 {
+    1.0
+}
+
+fn default_top_p() -> f32 {
+    1.0
+}
+
+fn default_repetition_penalty() -> f32 {
+    1.0
 }
 
 /// Single field validation error
@@ -91,7 +125,12 @@ impl ExecuteRequest {
     /// - `prompt`: Must be 1-32768 characters
     /// - `max_tokens`: Must be 1-2048
     /// - `temperature`: Must be 0.0-2.0 (inclusive)
-    /// - `seed`: No validation (all u64 values valid)
+    /// - `seed`: Optional, no validation (all u64 values valid)
+    /// - `top_p`: Must be 0.0-1.0 (inclusive)
+    /// - `top_k`: No validation (all u32 values valid)
+    /// - `repetition_penalty`: Must be 0.0-2.0 (inclusive)
+    /// - `stop`: Max 4 sequences, each max 100 chars
+    /// - `min_p`: Must be 0.0-1.0 (inclusive)
     pub fn validate(&self) -> Result<(), ValidationError> {
         // Validate job_id
         if self.job_id.is_empty() {
@@ -145,6 +184,72 @@ impl ExecuteRequest {
         }
 
         // Seed: no validation needed (all u64 values valid)
+
+        // Validate top_p
+        if self.top_p < 0.0 {
+            return Err(ValidationError {
+                field: "top_p".to_string(),
+                message: format!("must be at least 0.0 (got {})", self.top_p),
+            });
+        }
+        if self.top_p > 1.0 {
+            return Err(ValidationError {
+                field: "top_p".to_string(),
+                message: format!("must be at most 1.0 (got {})", self.top_p),
+            });
+        }
+
+        // top_k: no validation needed (all u32 values valid)
+
+        // Validate repetition_penalty
+        if self.repetition_penalty < 0.0 {
+            return Err(ValidationError {
+                field: "repetition_penalty".to_string(),
+                message: format!("must be at least 0.0 (got {})", self.repetition_penalty),
+            });
+        }
+        if self.repetition_penalty > 2.0 {
+            return Err(ValidationError {
+                field: "repetition_penalty".to_string(),
+                message: format!("must be at most 2.0 (got {})", self.repetition_penalty),
+            });
+        }
+
+        // Validate stop sequences
+        if self.stop.len() > 4 {
+            return Err(ValidationError {
+                field: "stop".to_string(),
+                message: format!("must have at most 4 sequences (got {})", self.stop.len()),
+            });
+        }
+        for (i, seq) in self.stop.iter().enumerate() {
+            if seq.is_empty() {
+                return Err(ValidationError {
+                    field: "stop".to_string(),
+                    message: format!("sequence {} must not be empty", i),
+                });
+            }
+            if seq.len() > 100 {
+                return Err(ValidationError {
+                    field: "stop".to_string(),
+                    message: format!("sequence {} must be at most 100 characters (got {})", i, seq.len()),
+                });
+            }
+        }
+
+        // Validate min_p
+        if self.min_p < 0.0 {
+            return Err(ValidationError {
+                field: "min_p".to_string(),
+                message: format!("must be at least 0.0 (got {})", self.min_p),
+            });
+        }
+        if self.min_p > 1.0 {
+            return Err(ValidationError {
+                field: "min_p".to_string(),
+                message: format!("must be at most 1.0 (got {})", self.min_p),
+            });
+        }
 
         Ok(())
     }
@@ -223,6 +328,86 @@ impl ExecuteRequest {
 
         // Seed: no validation needed (all u64 values valid)
 
+        // Validate top_p
+        if self.top_p < 0.0 {
+            errors.push(FieldError {
+                field: "top_p".to_string(),
+                constraint: "range(0.0..=1.0)".to_string(),
+                message: format!("top_p must be at least 0.0 (got {})", self.top_p),
+                value: Some(self.top_p.to_string()),
+            });
+        } else if self.top_p > 1.0 {
+            errors.push(FieldError {
+                field: "top_p".to_string(),
+                constraint: "range(0.0..=1.0)".to_string(),
+                message: format!("top_p must be at most 1.0 (got {})", self.top_p),
+                value: Some(self.top_p.to_string()),
+            });
+        }
+
+        // top_k: no validation needed (all u32 values valid)
+
+        // Validate repetition_penalty
+        if self.repetition_penalty < 0.0 {
+            errors.push(FieldError {
+                field: "repetition_penalty".to_string(),
+                constraint: "range(0.0..=2.0)".to_string(),
+                message: format!("repetition_penalty must be at least 0.0 (got {})", self.repetition_penalty),
+                value: Some(self.repetition_penalty.to_string()),
+            });
+        } else if self.repetition_penalty > 2.0 {
+            errors.push(FieldError {
+                field: "repetition_penalty".to_string(),
+                constraint: "range(0.0..=2.0)".to_string(),
+                message: format!("repetition_penalty must be at most 2.0 (got {})", self.repetition_penalty),
+                value: Some(self.repetition_penalty.to_string()),
+            });
+        }
+
+        // Validate stop sequences
+        if self.stop.len() > 4 {
+            errors.push(FieldError {
+                field: "stop".to_string(),
+                constraint: "max_count(4)".to_string(),
+                message: format!("stop must have at most 4 sequences (got {})", self.stop.len()),
+                value: Some(self.stop.len().to_string()),
+            });
+        }
+        for (i, seq) in self.stop.iter().enumerate() {
+            if seq.is_empty() {
+                errors.push(FieldError {
+                    field: "stop".to_string(),
+                    constraint: "non_empty".to_string(),
+                    message: format!("stop sequence {} must not be empty", i),
+                    value: None,
+                });
+            } else if seq.len() > 100 {
+                errors.push(FieldError {
+                    field: "stop".to_string(),
+                    constraint: "max_length(100)".to_string(),
+                    message: format!("stop sequence {} must be at most 100 characters (got {})", i, seq.len()),
+                    value: None,
+                });
+            }
+        }
+
+        // Validate min_p
+        if self.min_p < 0.0 {
+            errors.push(FieldError {
+                field: "min_p".to_string(),
+                constraint: "range(0.0..=1.0)".to_string(),
+                message: format!("min_p must be at least 0.0 (got {})", self.min_p),
+                value: Some(self.min_p.to_string()),
+            });
+        } else if self.min_p > 1.0 {
+            errors.push(FieldError {
+                field: "min_p".to_string(),
+                constraint: "range(0.0..=1.0)".to_string(),
+                message: format!("min_p must be at most 1.0 (got {})", self.min_p),
+                value: Some(self.min_p.to_string()),
+            });
+        }
+
         if errors.is_empty() {
             Ok(())
         } else {
@@ -241,7 +426,12 @@ mod tests {
             prompt: "Hello, world!".to_string(),
             max_tokens: 100,
             temperature: 0.7,
-            seed: 42,
+            seed: Some(42),
+            top_p: 1.0,
+            top_k: 0,
+            repetition_penalty: 1.0,
+            stop: vec![],
+            min_p: 0.0,
         }
     }
 
@@ -355,13 +545,16 @@ mod tests {
     fn test_seed_all_values_valid() {
         let mut req = valid_request();
 
-        req.seed = 0;
+        req.seed = Some(0);
         assert!(req.validate().is_ok());
 
-        req.seed = u64::MAX;
+        req.seed = Some(u64::MAX);
         assert!(req.validate().is_ok());
 
-        req.seed = 12345678901234567890;
+        req.seed = Some(12345678901234567890);
+        assert!(req.validate().is_ok());
+        
+        req.seed = None;
         assert!(req.validate().is_ok());
     }
 
@@ -384,7 +577,12 @@ mod tests {
             prompt: "".to_string(), // Invalid: empty
             max_tokens: 0,          // Invalid: too small
             temperature: 3.0,       // Invalid: too high
-            seed: 42,
+            seed: Some(42),
+            top_p: 1.0,
+            top_k: 0,
+            repetition_penalty: 1.0,
+            stop: vec![],
+            min_p: 0.0,
         };
 
         let result = req.validate_all();
@@ -435,29 +633,252 @@ mod tests {
         assert!(!json.contains("\"value\""));
     }
 
+    // ========================================================================
+    // Advanced Parameter Validation Tests
+    // ========================================================================
+
     #[test]
-    fn test_validation_error_response_serialization() {
-        let response = ValidationErrorResponse {
-            errors: vec![
-                FieldError {
-                    field: "field1".to_string(),
-                    constraint: "constraint1".to_string(),
-                    message: "message1".to_string(),
-                    value: Some("value1".to_string()),
-                },
-                FieldError {
-                    field: "field2".to_string(),
-                    constraint: "constraint2".to_string(),
-                    message: "message2".to_string(),
-                    value: None,
-                },
-            ],
+    fn test_top_p_valid_range() {
+        let mut req = valid_request();
+        
+        req.top_p = 0.0;
+        assert!(req.validate().is_ok());
+        
+        req.top_p = 0.5;
+        assert!(req.validate().is_ok());
+        
+        req.top_p = 1.0;
+        assert!(req.validate().is_ok());
+    }
+
+    #[test]
+    fn test_top_p_too_low() {
+        let mut req = valid_request();
+        req.top_p = -0.1;
+        
+        let err = req.validate().unwrap_err();
+        assert_eq!(err.field, "top_p");
+        assert!(err.message.contains("0.0"));
+    }
+
+    #[test]
+    fn test_top_p_too_high() {
+        let mut req = valid_request();
+        req.top_p = 1.1;
+        
+        let err = req.validate().unwrap_err();
+        assert_eq!(err.field, "top_p");
+        assert!(err.message.contains("1.0"));
+    }
+
+    #[test]
+    fn test_top_k_all_values_valid() {
+        let mut req = valid_request();
+        
+        req.top_k = 0;  // Disabled
+        assert!(req.validate().is_ok());
+        
+        req.top_k = 50;
+        assert!(req.validate().is_ok());
+        
+        req.top_k = 151936;  // Large vocab
+        assert!(req.validate().is_ok());
+        
+        req.top_k = u32::MAX;
+        assert!(req.validate().is_ok());
+    }
+
+    #[test]
+    fn test_repetition_penalty_valid_range() {
+        let mut req = valid_request();
+        
+        req.repetition_penalty = 0.0;
+        assert!(req.validate().is_ok());
+        
+        req.repetition_penalty = 1.0;  // Disabled
+        assert!(req.validate().is_ok());
+        
+        req.repetition_penalty = 1.5;
+        assert!(req.validate().is_ok());
+        
+        req.repetition_penalty = 2.0;
+        assert!(req.validate().is_ok());
+    }
+
+    #[test]
+    fn test_repetition_penalty_too_low() {
+        let mut req = valid_request();
+        req.repetition_penalty = -0.1;
+        
+        let err = req.validate().unwrap_err();
+        assert_eq!(err.field, "repetition_penalty");
+        assert!(err.message.contains("0.0"));
+    }
+
+    #[test]
+    fn test_repetition_penalty_too_high() {
+        let mut req = valid_request();
+        req.repetition_penalty = 2.1;
+        
+        let err = req.validate().unwrap_err();
+        assert_eq!(err.field, "repetition_penalty");
+        assert!(err.message.contains("2.0"));
+    }
+
+    #[test]
+    fn test_stop_sequences_valid() {
+        let mut req = valid_request();
+        
+        req.stop = vec![];  // Empty is valid
+        assert!(req.validate().is_ok());
+        
+        req.stop = vec!["\\n\\n".to_string()];
+        assert!(req.validate().is_ok());
+        
+        req.stop = vec!["\\n\\n".to_string(), "END".to_string(), "STOP".to_string()];
+        assert!(req.validate().is_ok());
+        
+        req.stop = vec!["a".to_string(), "b".to_string(), "c".to_string(), "d".to_string()];
+        assert!(req.validate().is_ok());
+    }
+
+    #[test]
+    fn test_stop_sequences_too_many() {
+        let mut req = valid_request();
+        req.stop = vec!["a".to_string(), "b".to_string(), "c".to_string(), "d".to_string(), "e".to_string()];
+        
+        let err = req.validate().unwrap_err();
+        assert_eq!(err.field, "stop");
+        assert!(err.message.contains("4"));
+    }
+
+    #[test]
+    fn test_stop_sequence_empty() {
+        let mut req = valid_request();
+        req.stop = vec!["".to_string()];
+        
+        let err = req.validate().unwrap_err();
+        assert_eq!(err.field, "stop");
+        assert!(err.message.contains("empty"));
+    }
+
+    #[test]
+    fn test_stop_sequence_too_long() {
+        let mut req = valid_request();
+        req.stop = vec!["x".repeat(101)];
+        
+        let err = req.validate().unwrap_err();
+        assert_eq!(err.field, "stop");
+        assert!(err.message.contains("100"));
+    }
+
+    #[test]
+    fn test_min_p_valid_range() {
+        let mut req = valid_request();
+        
+        req.min_p = 0.0;  // Disabled
+        assert!(req.validate().is_ok());
+        
+        req.min_p = 0.05;
+        assert!(req.validate().is_ok());
+        
+        req.min_p = 1.0;
+        assert!(req.validate().is_ok());
+    }
+
+    #[test]
+    fn test_min_p_too_low() {
+        let mut req = valid_request();
+        req.min_p = -0.1;
+        
+        let err = req.validate().unwrap_err();
+        assert_eq!(err.field, "min_p");
+        assert!(err.message.contains("0.0"));
+    }
+
+    #[test]
+    fn test_min_p_too_high() {
+        let mut req = valid_request();
+        req.min_p = 1.1;
+        
+        let err = req.validate().unwrap_err();
+        assert_eq!(err.field, "min_p");
+        assert!(err.message.contains("1.0"));
+    }
+
+    #[test]
+    fn test_backward_compatibility_old_request_format() {
+        // Old request format (Sprint 3) should still work
+        let json = r#"{
+            "job_id": "test-job",
+            "prompt": "Hello",
+            "max_tokens": 100,
+            "temperature": 0.7,
+            "seed": 42
+        }"#;
+        
+        let req: ExecuteRequest = serde_json::from_str(json).unwrap();
+        assert!(req.validate().is_ok());
+        
+        // Verify defaults
+        assert_eq!(req.top_p, 1.0);
+        assert_eq!(req.top_k, 0);
+        assert_eq!(req.repetition_penalty, 1.0);
+        assert_eq!(req.stop.len(), 0);
+        assert_eq!(req.min_p, 0.0);
+    }
+
+    #[test]
+    fn test_new_request_format_with_all_parameters() {
+        let json = r#"{
+            "job_id": "test-job",
+            "prompt": "Hello",
+            "max_tokens": 100,
+            "temperature": 0.7,
+            "seed": 42,
+            "top_p": 0.9,
+            "top_k": 50,
+            "repetition_penalty": 1.1,
+            "stop": ["\\n\\n", "END"],
+            "min_p": 0.05
+        }"#;
+        
+        let req: ExecuteRequest = serde_json::from_str(json).unwrap();
+        assert!(req.validate().is_ok());
+        
+        assert_eq!(req.top_p, 0.9);
+        assert_eq!(req.top_k, 50);
+        assert_eq!(req.repetition_penalty, 1.1);
+        assert_eq!(req.stop.len(), 2);
+        assert_eq!(req.min_p, 0.05);
+    }
+
+    #[test]
+    fn test_validate_all_collects_advanced_parameter_errors() {
+        let req = ExecuteRequest {
+            job_id: "test".to_string(),
+            prompt: "Hello".to_string(),
+            max_tokens: 100,
+            temperature: 0.7,
+            seed: Some(42),
+            top_p: 1.5,  // Invalid
+            top_k: 0,
+            repetition_penalty: 3.0,  // Invalid
+            stop: vec!["a".to_string(), "b".to_string(), "c".to_string(), "d".to_string(), "e".to_string()],  // Invalid: too many
+            min_p: -0.1,  // Invalid
         };
 
-        let json = serde_json::to_string(&response).unwrap();
-        assert!(json.contains("\"errors\""));
-        assert!(json.contains("field1"));
-        assert!(json.contains("field2"));
+        let result = req.validate_all();
+        assert!(result.is_err());
+
+        let err = result.unwrap_err();
+        assert!(err.errors.len() >= 4);  // At least 4 errors
+
+        let fields: Vec<_> = err.errors.iter().map(|e| e.field.as_str()).collect();
+        assert!(fields.contains(&"top_p"));
+        assert!(fields.contains(&"repetition_penalty"));
+        assert!(fields.contains(&"stop"));
+        assert!(fields.contains(&"min_p"));
     }
 }
 

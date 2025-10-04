@@ -10,6 +10,20 @@
 
 use serde::Serialize;
 
+/// Reason for inference termination
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum StopReason {
+    /// Reached max_tokens limit
+    MaxTokens,
+    /// Matched a stop sequence
+    StopSequence,
+    /// Error occurred
+    Error,
+    /// Request cancelled
+    Cancelled,
+}
+
 /// Inference SSE event types
 ///
 /// Events are emitted in strict order:
@@ -52,6 +66,11 @@ pub enum InferenceEvent {
         tokens_out: u32,
         /// Decode time in milliseconds
         decode_time_ms: u64,
+        /// Reason for stopping
+        stop_reason: StopReason,
+        /// Stop sequence that was matched (if stop_reason = StopSequence)
+        #[serde(skip_serializing_if = "Option::is_none")]
+        stop_sequence_matched: Option<String>,
     },
 
     /// Inference failed
@@ -142,12 +161,18 @@ mod tests {
 
     #[test]
     fn test_end_event_serialization() {
-        let event = InferenceEvent::End { tokens_out: 100, decode_time_ms: 5000 };
+        let event = InferenceEvent::End { 
+            tokens_out: 100, 
+            decode_time_ms: 5000,
+            stop_reason: StopReason::MaxTokens,
+            stop_sequence_matched: None,
+        };
 
         let json = serde_json::to_string(&event).unwrap();
         assert!(json.contains("\"type\":\"end\""));
         assert!(json.contains("\"tokens_out\":100"));
         assert!(json.contains("\"decode_time_ms\":5000"));
+        assert!(json.contains("max_tokens"));
     }
 
     #[test]
@@ -178,7 +203,12 @@ mod tests {
         let metrics = InferenceEvent::Metrics { tokens_per_sec: 10.0, vram_bytes: 1024 };
         assert!(!metrics.is_terminal());
 
-        let end = InferenceEvent::End { tokens_out: 10, decode_time_ms: 1000 };
+        let end = InferenceEvent::End { 
+            tokens_out: 10, 
+            decode_time_ms: 1000,
+            stop_reason: StopReason::MaxTokens,
+            stop_sequence_matched: None,
+        };
         assert!(end.is_terminal());
 
         let error = InferenceEvent::Error { code: "TEST".to_string(), message: "test".to_string() };
@@ -197,7 +227,12 @@ mod tests {
         let token = InferenceEvent::Token { t: "test".to_string(), i: 0 };
         assert_eq!(token.event_name(), "token");
 
-        let end = InferenceEvent::End { tokens_out: 10, decode_time_ms: 1000 };
+        let end = InferenceEvent::End { 
+            tokens_out: 10, 
+            decode_time_ms: 1000,
+            stop_reason: StopReason::MaxTokens,
+            stop_sequence_matched: None,
+        };
         assert_eq!(end.event_name(), "end");
     }
 
@@ -215,6 +250,54 @@ mod tests {
 
         let json = serde_json::to_string(&event).unwrap();
         assert!(json.contains("世界"));
+    }
+
+    #[test]
+    fn test_stop_reason_serialization() {
+        let max_tokens = StopReason::MaxTokens;
+        let json = serde_json::to_string(&max_tokens).unwrap();
+        assert_eq!(json, "\"max_tokens\"");
+
+        let stop_seq = StopReason::StopSequence;
+        let json = serde_json::to_string(&stop_seq).unwrap();
+        assert_eq!(json, "\"stop_sequence\"");
+
+        let error = StopReason::Error;
+        let json = serde_json::to_string(&error).unwrap();
+        assert_eq!(json, "\"error\"");
+
+        let cancelled = StopReason::Cancelled;
+        let json = serde_json::to_string(&cancelled).unwrap();
+        assert_eq!(json, "\"cancelled\"");
+    }
+
+    #[test]
+    fn test_end_event_with_stop_sequence() {
+        let event = InferenceEvent::End {
+            tokens_out: 25,
+            decode_time_ms: 750,
+            stop_reason: StopReason::StopSequence,
+            stop_sequence_matched: Some("\n\n".to_string()),
+        };
+
+        let json = serde_json::to_string(&event).unwrap();
+        assert!(json.contains("\"type\":\"end\""));
+        assert!(json.contains("\"stop_reason\":\"stop_sequence\""));
+        assert!(json.contains("\"stop_sequence_matched\":\"\\n\\n\""));
+    }
+
+    #[test]
+    fn test_end_event_omits_none_stop_sequence() {
+        let event = InferenceEvent::End {
+            tokens_out: 100,
+            decode_time_ms: 2000,
+            stop_reason: StopReason::MaxTokens,
+            stop_sequence_matched: None,
+        };
+
+        let json = serde_json::to_string(&event).unwrap();
+        assert!(json.contains("\"stop_reason\":\"max_tokens\""));
+        assert!(!json.contains("stop_sequence_matched"));
     }
 }
 

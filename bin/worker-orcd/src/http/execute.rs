@@ -7,7 +7,7 @@
 //! - M0-W-1302: Request validation
 //! - M0-W-1310: SSE streaming
 
-use crate::http::sse::InferenceEvent;
+use crate::http::sse::{InferenceEvent, StopReason};
 use crate::http::validation::{ExecuteRequest, ValidationError, ValidationErrorResponse};
 use axum::{
     extract::Extension,
@@ -23,7 +23,7 @@ use tracing::{debug, info, warn};
 ///
 /// a placeholder SSE stream. This is a skeleton implementation that
 /// will be wired to CUDA inference in a later story.
-/// # Request Format
+/// # Request Format (Basic - Sprint 3)
 /// ```json
 /// {
 ///   "job_id": "unique-job-id",
@@ -34,11 +34,34 @@ use tracing::{debug, info, warn};
 /// }
 /// ```
 ///
+/// # Request Format (Advanced - Sprint 4)
+/// ```json
+/// {
+///   "job_id": "unique-job-id",
+///   "prompt": "Your prompt text here",
+///   "max_tokens": 100,
+///   "temperature": 0.7,
+///   "seed": 42,
+///   "top_p": 0.9,
+///   "top_k": 50,
+///   "repetition_penalty": 1.1,
+///   "stop": ["\\n\\n", "END"],
+///   "min_p": 0.05
+/// }
+/// ```
+///
 /// # Response Format
 /// SSE stream with events:
 /// - `started`: Inference began
 /// - `token`: Each generated token
-/// - `end`: Inference complete
+/// - `end`: Inference complete (includes stop_reason)
+///
+/// # Stop Reasons
+/// - `max_tokens`: Reached max_tokens limit
+/// - `stop_sequence`: Matched a stop sequence (includes stop_sequence_matched)
+/// - `cancelled`: Request cancelled by client
+/// - `error`: Inference error occurred
+///
 /// # Errors
 /// Returns 400 Bad Request if validation fails, with details about
 /// which field failed and why.
@@ -108,7 +131,12 @@ pub async fn handle_execute(
             started_at: chrono::Utc::now().to_rfc3339(),
         },
         InferenceEvent::Token { t: "test".to_string(), i: 0 },
-        InferenceEvent::End { tokens_out: 1, decode_time_ms: 100 },
+        InferenceEvent::End { 
+            tokens_out: 1, 
+            decode_time_ms: 100,
+            stop_reason: StopReason::MaxTokens,
+            stop_sequence_matched: None,
+        },
     ];
 
     let stream = stream::iter(events)
@@ -150,10 +178,48 @@ mod tests {
 
     #[test]
     fn test_end_event_integration() {
-        let end = InferenceEvent::End { tokens_out: 42, decode_time_ms: 1000 };
+        let end = InferenceEvent::End { 
+            tokens_out: 42, 
+            decode_time_ms: 1000,
+            stop_reason: StopReason::MaxTokens,
+            stop_sequence_matched: None,
+        };
 
         assert_eq!(end.event_name(), "end");
         assert!(end.is_terminal());
+    }
+
+    #[test]
+    fn test_end_event_with_stop_sequence() {
+        let end = InferenceEvent::End { 
+            tokens_out: 20, 
+            decode_time_ms: 500,
+            stop_reason: StopReason::StopSequence,
+            stop_sequence_matched: Some("\n\n".to_string()),
+        };
+
+        assert_eq!(end.event_name(), "end");
+        assert!(end.is_terminal());
+        
+        // Verify serialization includes stop_sequence_matched
+        let json = serde_json::to_string(&end).unwrap();
+        assert!(json.contains("stop_sequence"));
+        assert!(json.contains("\\n\\n"));
+    }
+
+    #[test]
+    fn test_end_event_max_tokens_no_stop_sequence() {
+        let end = InferenceEvent::End { 
+            tokens_out: 100, 
+            decode_time_ms: 2000,
+            stop_reason: StopReason::MaxTokens,
+            stop_sequence_matched: None,
+        };
+        
+        // Verify serialization omits stop_sequence_matched when None
+        let json = serde_json::to_string(&end).unwrap();
+        assert!(json.contains("max_tokens"));
+        assert!(!json.contains("stop_sequence_matched"));
     }
 }
 
