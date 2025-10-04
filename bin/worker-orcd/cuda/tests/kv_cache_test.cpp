@@ -34,8 +34,8 @@ TEST(KVCacheTest, SizeCalculation_SmallModel) {
     
     EXPECT_EQ(actual_size, expected_size);
     
-    // Should be ~25 MB
-    EXPECT_GT(actual_size, 24 * 1024 * 1024);
+    // Should be ~25 MB (24 MB exactly = 25165824 bytes)
+    EXPECT_GE(actual_size, 24 * 1024 * 1024);
     EXPECT_LT(actual_size, 26 * 1024 * 1024);
 }
 
@@ -427,8 +427,8 @@ TEST(KVCacheTest, RealisticModel_Qwen2_5_0_5B) {
     
     size_t size = KVCache::calculate_size(config);
     
-    // Should be ~25 MB
-    EXPECT_GT(size, 24 * 1024 * 1024);
+    // Should be ~25 MB (24 MB exactly = 25165824 bytes)
+    EXPECT_GE(size, 24 * 1024 * 1024);
     EXPECT_LT(size, 26 * 1024 * 1024);
     
     // Allocation should succeed on any modern GPU
