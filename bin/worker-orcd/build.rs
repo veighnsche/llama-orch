@@ -173,25 +173,30 @@ fn build_with_cuda() {
 
     let dst = config.build();
 
-    // Link the static library
-    println!("cargo:rustc-link-search=native={}/lib", dst.display());
-    println!("cargo:rustc-link-lib=static=worker_cuda");
-
-    // Link CUDA runtime
-    println!("cargo:rustc-link-lib=cudart");
-    
-    // FIX (2025-10-04 - Cascade): Link C++ standard library for exception handling and RTTI.
-    // Without this, linking fails with undefined symbols:
-    // - vtable for __cxxabiv1::__si_class_type_info
-    // - __gxx_personality_v0
-    // - typeinfo for std::exception
-    println!("cargo:rustc-link-lib=stdc++");
-
-    // Add CUDA library path using the detected root
+    // Add CUDA library path using the detected root (must be before linking)
     println!("cargo:rustc-link-search=native={}/lib64", cuda_path.display());
     println!("cargo:rustc-link-search=native={}/lib", cuda_path.display());
     // Fallback to system library paths
     println!("cargo:rustc-link-search=native=/usr/lib/x86_64-linux-gnu");
+    
+    // Link the static library
+    let lib_path = dst.join("lib");
+    let worker_cuda_lib = lib_path.join("libworker_cuda.a");
+    
+    println!("cargo:rustc-link-search=native={}", lib_path.display());
+    
+    // FIX (2025-10-04 - Cascade): Link our library first with whole-archive,
+    // then link dependencies. The linker resolves symbols left-to-right.
+    
+    // Link our library with whole-archive to ensure all symbols are included
+    println!("cargo:rustc-link-arg=-Wl,--whole-archive");
+    println!("cargo:rustc-link-arg={}", worker_cuda_lib.display());
+    println!("cargo:rustc-link-arg=-Wl,--no-whole-archive");
+    
+    // Now link dependencies that our library needs
+    println!("cargo:rustc-link-arg=-lstdc++");
+    println!("cargo:rustc-link-arg=-lcudart");
+    println!("cargo:rustc-link-arg=-lcudadevrt");
 
     // Rebuild if CUDA sources change
     println!("cargo:rerun-if-changed=cuda/src");

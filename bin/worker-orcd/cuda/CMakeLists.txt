@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.18)
 project(worker_cuda LANGUAGES CXX CUDA)
 
+# Find CUDA toolkit explicitly
+find_package(CUDAToolkit REQUIRED)
+
 # C++ and CUDA standards
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -48,6 +51,7 @@ add_library(worker_cuda STATIC
 target_include_directories(worker_cuda
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CUDAToolkit_INCLUDE_DIRS}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
@@ -55,13 +59,14 @@ target_include_directories(worker_cuda
 # Link CUDA runtime
 target_link_libraries(worker_cuda
     PUBLIC
-        cudart
+        CUDA::cudart
 )
 
 # Enable position-independent code for static library
 set_target_properties(worker_cuda PROPERTIES
     POSITION_INDEPENDENT_CODE ON
     CUDA_SEPARABLE_COMPILATION ON
+    CUDA_RESOLVE_DEVICE_SYMBOLS ON
 )
 
 # Testing
@@ -85,6 +90,12 @@ if(BUILD_TESTING)
     
     # Build test executable
     add_executable(cuda_tests ${TEST_SOURCES})
+    
+    target_include_directories(cuda_tests
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
     
     target_link_libraries(cuda_tests
         PRIVATE

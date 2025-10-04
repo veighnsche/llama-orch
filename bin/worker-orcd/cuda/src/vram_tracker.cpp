@@ -94,8 +94,15 @@ std::string VramTracker::usage_report() const {
     std::lock_guard<std::mutex> lock(mutex_);
     std::ostringstream oss;
     
-    auto breakdown = usage_breakdown();
-    size_t total = total_usage();
+    // FIX (2025-10-04): Calculate breakdown and total inline to avoid deadlock
+    // Cannot call usage_breakdown() or total_usage() as they acquire the same lock
+    std::unordered_map<VramPurpose, size_t> breakdown;
+    size_t total = 0;
+    
+    for (const auto& [ptr, alloc] : allocations_) {
+        breakdown[alloc.purpose] += alloc.bytes;
+        total += alloc.bytes;
+    }
     
     oss << "VRAM Usage Report:\n";
     oss << "  Total: " << std::fixed << std::setprecision(2) 
