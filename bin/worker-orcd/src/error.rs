@@ -31,11 +31,7 @@ impl WorkerError {
     /// Get stable error code for API responses
     pub fn code(&self) -> &'static str {
         match self {
-            Self::Cuda(CudaError::OutOfMemory(_)) => "VRAM_OOM",
-            Self::Cuda(CudaError::ModelLoadFailed(_)) => "MODEL_LOAD_FAILED",
-            Self::Cuda(CudaError::InferenceFailed(_)) => "INFERENCE_FAILED",
-            Self::Cuda(CudaError::VramResidencyFailed(_)) => "VRAM_RESIDENCY_FAILED",
-            Self::Cuda(_) => "CUDA_ERROR",
+            Self::Cuda(err) => err.code_str(),
             Self::InvalidRequest(_) => "INVALID_REQUEST",
             Self::Timeout => "INFERENCE_TIMEOUT",
             Self::Unhealthy(_) => "WORKER_UNHEALTHY",
@@ -45,18 +41,21 @@ impl WorkerError {
 
     /// Check if error is retriable by orchestrator
     pub fn is_retriable(&self) -> bool {
-        matches!(
-            self,
-            Self::Cuda(CudaError::OutOfMemory(_)) | Self::Timeout | Self::Internal(_)
-        )
+        match self {
+            Self::Cuda(err) => err.is_retriable(),
+            Self::Timeout | Self::Internal(_) => true,
+            _ => false,
+        }
     }
 
     /// Get HTTP status code
     pub fn status_code(&self) -> StatusCode {
         match self {
+            Self::Cuda(err) => err.status_code(),
             Self::InvalidRequest(_) => StatusCode::BAD_REQUEST,
             Self::Unhealthy(_) => StatusCode::SERVICE_UNAVAILABLE,
-            _ => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::Timeout => StatusCode::GATEWAY_TIMEOUT,
+            Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
