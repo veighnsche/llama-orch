@@ -10,6 +10,7 @@
 #include "../include/worker_ffi.h"
 #include "context.h"
 #include "cuda_error.h"
+#include <cuda_runtime.h>
 #include <memory>
 
 using namespace worker;
@@ -258,13 +259,18 @@ extern "C" uint64_t cuda_get_process_vram_usage(CudaContext* ctx) {
     }
     
     try {
-        // TODO: Implement process VRAM usage query
-        // size_t free_bytes, total_bytes;
-        // cudaMemGetInfo(&free_bytes, &total_bytes);
-        // return total_bytes - free_bytes;
+        auto* context = reinterpret_cast<Context*>(ctx);
         
-        // Stub: Return 0 for now
-        return 0;
+        // Query CUDA for memory info
+        size_t free_bytes, total_bytes;
+        cudaError_t err = cudaMemGetInfo(&free_bytes, &total_bytes);
+        
+        if (err != cudaSuccess) {
+            return 0;
+        }
+        
+        // Return used VRAM (total - free)
+        return total_bytes - free_bytes;
     } catch (...) {
         return 0;
     }
@@ -276,11 +282,28 @@ extern "C" bool cuda_check_device_health(CudaContext* ctx, int* error_code) {
             throw CudaError::invalid_parameter("NULL context pointer");
         }
         
-        // TODO: Implement device health check
-        // auto* context = reinterpret_cast<Context*>(ctx);
-        // return context->check_device_health();
+        if (error_code == nullptr) {
+            return false;
+        }
         
-        // Stub: Return true for now
+        auto* context = reinterpret_cast<Context*>(ctx);
+        
+        // Check if device is responsive by querying device properties
+        // This will fail if device has errors or is not responsive
+        cudaError_t err = cudaGetLastError();
+        if (err != cudaSuccess) {
+            *error_code = CUDA_ERROR_INVALID_DEVICE;
+            return false;
+        }
+        
+        // Try to query memory info as a health check
+        size_t free_bytes, total_bytes;
+        err = cudaMemGetInfo(&free_bytes, &total_bytes);
+        if (err != cudaSuccess) {
+            *error_code = CUDA_ERROR_INVALID_DEVICE;
+            return false;
+        }
+        
         *error_code = CUDA_SUCCESS;
         return true;
     } catch (const CudaError& e) {

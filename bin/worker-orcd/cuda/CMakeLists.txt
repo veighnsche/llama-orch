@@ -80,6 +80,7 @@ if(BUILD_TESTING)
         tests/test_inference.cpp
         tests/test_health.cpp
         tests/test_vram_tracker.cpp
+        tests/test_ffi_integration.cpp
     )
     
     # Build test executable
