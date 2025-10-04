@@ -1,27 +1,25 @@
 //! HTTP API for worker-orcd
+//!
+//! This module provides the complete HTTP server infrastructure for worker-orcd,
+//! including:
+//! - Server lifecycle management (`server`)
+//! - Route configuration (`routes`)
+//! - Health endpoint (`health`)
+//! - Execute endpoint (`execute`)
+//!
+//! # Spec References
+//! - M0-W-1110: Server initialization
+//! - M0-W-1320: Health endpoint
+//! - M0-W-1330: Execute endpoint
 
-mod execute;
-mod health;
+pub mod execute;
+pub mod health;
+pub mod routes;
+pub mod server;
 
-use crate::cuda::safe::ModelHandle;
-use axum::{routing::{get, post}, Router};
-use std::sync::Arc;
+// Re-export commonly used types
+pub use server::HttpServer;
+pub use routes::create_router;
 
-/// Shared application state
-pub struct AppState {
-    pub worker_id: String,
-    pub model: Arc<ModelHandle>,
-}
-
-/// Create HTTP router with all endpoints
-pub fn create_router(worker_id: String, model: ModelHandle) -> Router {
-    let state = Arc::new(AppState {
-        worker_id,
-        model: Arc::new(model),
-    });
-    
-    Router::new()
-        .route("/execute", post(execute::handle_execute))
-        .route("/health", get(health::handle_health))
-        .with_state(state)
-}
+// ---
+// Built by Foundation-Alpha 🏗️

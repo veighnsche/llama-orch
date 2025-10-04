@@ -2,7 +2,7 @@
 
 use crate::cuda::safe::InferenceHandle;
 use crate::error::WorkerError;
-use crate::http::AppState;
+use crate::http::routes::AppState;
 use axum::{
     extract::State,
     response::{sse::Event, Sse},
@@ -11,7 +11,6 @@ use axum::{
 use futures::stream::{self, Stream};
 use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
-use std::sync::Arc;
 
 #[derive(Deserialize)]
 pub struct ExecuteRequest {
@@ -49,7 +48,7 @@ struct ErrorEvent {
 #[axum::debug_handler]
 /// Handle POST /execute
 pub async fn handle_execute(
-    State(state): State<Arc<AppState>>,
+    State(state): State<AppState>,
     Json(req): Json<ExecuteRequest>,
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, WorkerError> {
     tracing::info!(
@@ -58,7 +57,7 @@ pub async fn handle_execute(
         max_tokens = req.max_tokens,
         "Starting inference"
     );
-    
+
     // Start inference
     let inference = InferenceHandle::start(
         &state.model,
@@ -67,7 +66,7 @@ pub async fn handle_execute(
         req.temperature,
         req.seed,
     )?;
-    
+
     // Create SSE stream
     let job_id = req.job_id.clone();
     let stream = stream::unfold(
@@ -76,42 +75,28 @@ pub async fn handle_execute(
             if done {
                 return None;
             }
-            
+
             // First event: started
             if count == 0 {
                 let event = StartedEvent {
                     job_id: job_id.clone(),
                     started_at: chrono::Utc::now().to_rfc3339(),
                 };
-                let sse = Event::default()
-                    .event("started")
-                    .json_data(&event)
-                    .ok()?;
+                let sse = Event::default().event("started").json_data(&event).ok()?;
                 return Some((Ok(sse), (inf, 1, false, job_id)));
             }
-            
+
             // Generate next token
             match inf.next_token() {
                 Ok(Some((token, token_index))) => {
-                    let event = TokenEvent {
-                        t: token,
-                        i: token_index,
-                    };
-                    let sse = Event::default()
-                        .event("token")
-                        .json_data(&event)
-                        .ok()?;
+                    let event = TokenEvent { t: token, i: token_index };
+                    let sse = Event::default().event("token").json_data(&event).ok()?;
                     Some((Ok(sse), (inf, count + 1, false, job_id)))
                 }
                 Ok(None) => {
                     // Inference complete
-                    let event = EndEvent {
-                        tokens_out: count - 1,
-                    };
-                    let sse = Event::default()
-                        .event("end")
-                        .json_data(&event)
-                        .ok()?;
+                    let event = EndEvent { tokens_out: count - 1 };
+                    let sse = Event::default().event("end").json_data(&event).ok()?;
                     Some((Ok(sse), (inf, count, true, job_id)))
                 }
                 Err(e) => {
@@ -121,15 +106,15 @@ pub async fn handle_execute(
                         message: e.to_string(),
                         retriable: false,
                     };
-                    let sse = Event::default()
-                        .event("error")
-                        .json_data(&event)
-                        .ok()?;
+                    let sse = Event::default().event("error").json_data(&event).ok()?;
                     Some((Ok(sse), (inf, count, true, job_id)))
                 }
             }
         },
     );
-    
+
     Ok(Sse::new(stream))
 }
+
+// ---
+// Built by Foundation-Alpha 🏗️

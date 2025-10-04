@@ -18,35 +18,24 @@ pub async fn callback_ready(
     port: u16,
 ) -> Result<()> {
     let uri = format!("http://localhost:{}", port);
-    
-    let payload = ReadyCallback {
-        worker_id: worker_id.to_string(),
-        vram_bytes,
-        uri,
-    };
-    
+
+    let payload = ReadyCallback { worker_id: worker_id.to_string(), vram_bytes, uri };
+
     tracing::info!(
         callback_url = %callback_url,
         worker_id = %worker_id,
         vram_bytes,
         "Calling back to pool manager"
     );
-    
+
     let client = reqwest::Client::new();
-    let response = client
-        .post(callback_url)
-        .json(&payload)
-        .send()
-        .await?;
-    
+    let response = client.post(callback_url).json(&payload).send().await?;
+
     if !response.status().is_success() {
-        anyhow::bail!(
-            "Pool manager callback failed: {}",
-            response.status()
-        );
+        anyhow::bail!("Pool manager callback failed: {}", response.status());
     }
-    
+
     tracing::info!("Pool manager callback successful");
-    
+
     Ok(())
 }

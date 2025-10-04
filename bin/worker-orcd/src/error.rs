@@ -13,16 +13,16 @@ use serde::Serialize;
 pub enum WorkerError {
     #[error("CUDA error: {0}")]
     Cuda(#[from] CudaError),
-    
+
     #[error("Invalid request: {0}")]
     InvalidRequest(String),
-    
+
     #[error("Inference timeout")]
     Timeout,
-    
+
     #[error("Worker unhealthy: {0}")]
     Unhealthy(String),
-    
+
     #[error("Internal error: {0}")]
     Internal(String),
 }
@@ -42,17 +42,15 @@ impl WorkerError {
             Self::Internal(_) => "INTERNAL",
         }
     }
-    
+
     /// Check if error is retriable by orchestrator
     pub fn is_retriable(&self) -> bool {
         matches!(
             self,
-            Self::Cuda(CudaError::OutOfMemory { .. })
-                | Self::Timeout
-                | Self::Internal(_)
+            Self::Cuda(CudaError::OutOfMemory { .. }) | Self::Timeout | Self::Internal(_)
         )
     }
-    
+
     /// Get HTTP status code
     pub fn status_code(&self) -> StatusCode {
         match self {
@@ -78,7 +76,7 @@ impl IntoResponse for WorkerError {
             message: self.to_string(),
             retriable: self.is_retriable(),
         };
-        
+
         (status, Json(body)).into_response()
     }
 }
