@@ -24,6 +24,7 @@ cuda/
 │   ├── model.hpp               # Model operations (C++)
 │   ├── inference.hpp           # Inference operations (C++)
 │   ├── health.hpp              # Health checks (C++)
+│   ├── rng.h                   # Seeded RNG for reproducibility (C++)
 │   ├── errors.hpp              # Error codes and handling
 │   └── types.hpp               # Common types
 ├── src/
@@ -32,6 +33,7 @@ cuda/
 │   ├── model.cpp               # Model loading
 │   ├── inference.cu            # Inference kernels (CUDA)
 │   ├── health.cpp              # Health monitoring
+│   ├── rng.cpp                 # Seeded RNG implementation
 │   ├── errors.cpp              # Error handling
 │   └── utils.cpp               # Utility functions
 ├── kernels/
@@ -43,7 +45,11 @@ cuda/
 │   ├── test_context.cpp        # Context tests
 │   ├── test_model.cpp          # Model loading tests
 │   ├── test_inference.cpp      # Inference tests
-│   └── test_health.cpp         # Health check tests
+│   ├── test_health.cpp         # Health check tests
+│   ├── test_rng.cpp            # RNG tests
+│   ├── test_sampling.cu        # Sampling kernel tests
+│   ├── test_embedding.cu       # Embedding kernel tests
+│   └── test_cublas.cu          # cuBLAS wrapper tests
 └── vendor/
     └── ggml/                   # GGML library (if needed)
 ```
@@ -127,6 +133,12 @@ fn main() {
 - KV cache management
 - Kernel orchestration
 - Sampling strategies
+
+### RNG (`rng.cpp`)
+- Seeded random number generation
+- Mersenne Twister (std::mt19937_64)
+- Reproducible stochastic sampling
+- Deterministic with same seed
 
 ### Health Monitoring (`health.cpp`)
 - VRAM residency verification
