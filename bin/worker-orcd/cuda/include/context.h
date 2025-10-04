@@ -11,12 +11,14 @@
 
 #include <cuda_runtime.h>
 #include <cstddef>
+#include <memory>
 #include "vram_tracker.h"
 
 namespace worker {
 
-// Forward declaration
+// Forward declarations
 class CudaError;
+class CublasHandle;
 
 /**
  * CUDA device context with VRAM-only enforcement.
@@ -146,11 +148,33 @@ public:
      * @return Const reference to VRAM tracker
      */
     const VramTracker& vram_tracker() const { return vram_tracker_; }
+    
+    // ========================================================================
+    // cuBLAS Handle
+    // ========================================================================
+    
+    /**
+     * Get cuBLAS handle.
+     * 
+     * Lazily creates cuBLAS handle on first access.
+     * 
+     * @return Reference to cuBLAS handle
+     */
+    CublasHandle& cublas_handle();
+    
+    /**
+     * Get cuBLAS handle (const).
+     * 
+     * @return Const reference to cuBLAS handle
+     * @throws CudaError if handle not yet created
+     */
+    const CublasHandle& cublas_handle() const;
 
 private:
-    int device_;              ///< Device ID
-    cudaDeviceProp props_;    ///< Cached device properties
-    VramTracker vram_tracker_; ///< VRAM allocation tracker
+    int device_;                              ///< Device ID
+    cudaDeviceProp props_;                    ///< Cached device properties
+    VramTracker vram_tracker_;                ///< VRAM allocation tracker
+    std::unique_ptr<CublasHandle> cublas_;    ///< cuBLAS handle (lazy init)
 };
 
 } // namespace worker

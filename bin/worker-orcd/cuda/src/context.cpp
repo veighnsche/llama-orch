@@ -7,6 +7,7 @@
  */
 
 #include "context.h"
+#include "../include/cublas_wrapper.h"
 #include "cuda_error.h"
 #include <cuda_runtime.h>
 #include <string>
@@ -89,6 +90,21 @@ int Context::device_count() {
         return 0;
     }
     return count;
+}
+
+CublasHandle& Context::cublas_handle() {
+    // Lazy initialization of cuBLAS handle
+    if (!cublas_) {
+        cublas_ = std::make_unique<CublasHandle>(true);  // deterministic=true
+    }
+    return *cublas_;
+}
+
+const CublasHandle& Context::cublas_handle() const {
+    if (!cublas_) {
+        throw CudaError::invalid_parameter("cuBLAS handle not initialized");
+    }
+    return *cublas_;
 }
 
 } // namespace worker

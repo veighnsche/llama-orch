@@ -31,6 +31,7 @@ set(CUDA_SOURCES
     src/utils.cpp
     src/vram_tracker.cpp
     src/device_memory.cpp
+    src/cublas_wrapper.cpp
 )
 
 # Kernel files
@@ -58,10 +59,11 @@ target_include_directories(worker_cuda
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-# Link CUDA runtime
+# Link CUDA runtime and cuBLAS
 target_link_libraries(worker_cuda
     PUBLIC
         CUDA::cudart
+        CUDA::cublas
 )
 
 # Enable position-independent code for static library
@@ -90,6 +92,7 @@ if(BUILD_TESTING)
         tests/test_ffi_integration.cpp
         tests/test_device_memory.cpp
         tests/test_embedding.cu
+        tests/test_cublas.cu
     )
     
     # Build test executable
