@@ -34,6 +34,7 @@ set(CUDA_SOURCES
     src/cublas_wrapper.cpp
     src/rng.cpp
     src/kv_cache.cpp
+    src/gguf/header_parser.cpp
 )
 
 # Kernel files
@@ -100,6 +101,8 @@ if(BUILD_TESTING)
         tests/sampling_advanced_test.cu
         tests/test_rng.cpp
         tests/kv_cache_test.cpp
+        tests/test_gguf_header_parser.cpp
+        tests/test_gguf_security_fuzzing.cpp
     )
     
     # Build test executable
