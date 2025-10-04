@@ -61,11 +61,31 @@ static std::vector<uint8_t> create_gguf_with_tensor(
     uint32_t type,
     uint64_t offset
 ) {
-    std::vector<uint8_t> data = create_minimal_gguf();
+    std::vector<uint8_t> data;
     
-    // Update tensor count to 1
+    // Magic bytes: "GGUF" (0x47475546)
+    uint32_t magic = 0x47475546;
+    data.insert(data.end(),
+                reinterpret_cast<uint8_t*>(&magic),
+                reinterpret_cast<uint8_t*>(&magic) + 4);
+    
+    // Version: 3
+    uint32_t version = 3;
+    data.insert(data.end(),
+                reinterpret_cast<uint8_t*>(&version),
+                reinterpret_cast<uint8_t*>(&version) + 4);
+    
+    // Tensor count: 1
     uint64_t tensor_count = 1;
-    std::memcpy(&data[12], &tensor_count, 8);
+    data.insert(data.end(),
+                reinterpret_cast<uint8_t*>(&tensor_count),
+                reinterpret_cast<uint8_t*>(&tensor_count) + 8);
+    
+    // Metadata KV count: 0
+    uint64_t metadata_count = 0;
+    data.insert(data.end(),
+                reinterpret_cast<uint8_t*>(&metadata_count),
+                reinterpret_cast<uint8_t*>(&metadata_count) + 8);
     
     // Tensor name (length + string)
     uint64_t name_len = name.size();

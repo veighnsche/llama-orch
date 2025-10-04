@@ -30,6 +30,7 @@ constexpr uint32_t GGUF_VERSION = 3;
 constexpr uint64_t MAX_TENSOR_COUNT = 10000;
 constexpr size_t MAX_STRING_LENGTH = 1024 * 1024;  // 1MB
 constexpr size_t MAX_ARRAY_LENGTH = 1000000;       // 1M elements
+constexpr uint64_t MAX_TENSOR_ELEMENTS = 10000000000ULL;  // 10 billion elements (reasonable for largest models)
 
 /**
  * GGUF metadata value types

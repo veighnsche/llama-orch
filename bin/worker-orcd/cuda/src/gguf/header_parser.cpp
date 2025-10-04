@@ -67,24 +67,39 @@ size_t calculate_tensor_size(
         return 0;
     }
     
-    // Calculate total elements (product of dimensions)
+    size_t type_size = get_type_size(type);
+    
+    // Calculate total elements (product of dimensions) with overflow detection
     uint64_t total_elements = 1;
     for (uint64_t dim : dimensions) {
-        // Check for overflow
+        // Check for overflow before multiplication
         if (dim > 0 && total_elements > UINT64_MAX / dim) {
             throw CudaError::model_load_failed(
-                "Tensor dimension overflow"
+                "Tensor dimension overflow: dimensions too large"
             );
         }
         total_elements *= dim;
     }
     
-    size_t type_size = get_type_size(type);
+    // Security: Enforce reasonable tensor size limit (10 billion elements)
+    if (total_elements > MAX_TENSOR_ELEMENTS) {
+        throw CudaError::model_load_failed(
+            "Tensor element count exceeds maximum: " + std::to_string(total_elements) +
+            " (max " + std::to_string(MAX_TENSOR_ELEMENTS) + ")"
+        );
+    }
     
-    // Check for overflow in final size calculation
+    // Additional check: ensure total_elements fits in size_t
+    if (total_elements > SIZE_MAX) {
+        throw CudaError::model_load_failed(
+            "Tensor element count exceeds SIZE_MAX"
+        );
+    }
+    
+    // Check for overflow in final size calculation (elements * type_size)
     if (total_elements > SIZE_MAX / type_size) {
         throw CudaError::model_load_failed(
-            "Tensor size overflow"
+            "Tensor size overflow: total size exceeds SIZE_MAX"
         );
     }
     
@@ -291,8 +306,9 @@ GGUFHeader parse_gguf_header(const void* file_data, size_t file_size) {
         );
     }
     
-    const uint8_t* ptr = static_cast<const uint8_t*>(file_data);
-    const uint8_t* end = ptr + file_size;
+    try {
+        const uint8_t* ptr = static_cast<const uint8_t*>(file_data);
+        const uint8_t* end = ptr + file_size;
     
     GGUFHeader header;
     
@@ -378,26 +394,40 @@ GGUFHeader parse_gguf_header(const void* file_data, size_t file_size) {
     
     header.header_size = current_offset;
     
-    // Security: Validate all tensor bounds
-    for (const auto& tensor : header.tensors) {
-        // Convert relative offset to absolute
-        GGUFTensor abs_tensor = tensor;
-        abs_tensor.offset += header.data_start;
-        
-        ValidationResult result = validate_tensor_bounds(
-            abs_tensor,
-            file_size,
-            header.data_start
-        );
-        
-        if (!result.valid) {
-            throw CudaError::model_load_failed(
-                "Tensor bounds validation failed: " + result.error_message
+        // Security: Validate all tensor bounds
+        for (const auto& tensor : header.tensors) {
+            // Convert relative offset to absolute
+            GGUFTensor abs_tensor = tensor;
+            abs_tensor.offset += header.data_start;
+            
+            ValidationResult result = validate_tensor_bounds(
+                abs_tensor,
+                file_size,
+                header.data_start
             );
+            
+            if (!result.valid) {
+                throw CudaError::model_load_failed(
+                    "Tensor bounds validation failed: " + result.error_message
+                );
+            }
         }
+        
+        return header;
+    } catch (const CudaError&) {
+        // Re-throw CudaError as-is
+        throw;
+    } catch (const std::bad_alloc& e) {
+        // Convert allocation failures to CudaError
+        throw CudaError::model_load_failed(
+            "Memory allocation failed during GGUF parsing (file may be corrupted or malicious)"
+        );
+    } catch (const std::exception& e) {
+        // Convert other exceptions to CudaError
+        throw CudaError::model_load_failed(
+            std::string("GGUF parsing failed: ") + e.what()
+        );
     }
-    
-    return header;
 }
 
 } // namespace gguf
