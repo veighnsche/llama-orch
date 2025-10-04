@@ -1,108 +1,194 @@
-// sampling.cu — Token sampling kernels
-//
-// Implements token sampling strategies:
-// - Greedy: argmax (deterministic)
-// - Top-k: sample from top k tokens
-// - Temperature: scale logits before softmax
-//
-// Security: Validates dimensions, prevents buffer overflows
+/**
+ * Sampling Kernels
+ * 
+ * Implements token sampling operations:
+ * - Temperature scaling (controls randomness)
+ * - Greedy sampling (argmax) - TODO
+ * - Top-k sampling - TODO
+ * 
+ * Spec: M0-W-1032, M0-W-1421, KERNEL-SAMPLE-003
+ * Story: FT-017
+ */
 
+#include "sampling.cuh"
 #include <cuda_runtime.h>
-#include <curand_kernel.h>
-#include <math.h>
+#include <cuda_fp16.h>
 #include <stdio.h>
 
-// TODO(ARCH-CHANGE): Implement sampling kernels per ARCHITECTURE_CHANGE_PLAN.md Phase 3:
-// Task Group 3 (Initial Kernel Set):
-// - Implement greedy sampling (argmax)
-// - Add top-k sampling (optional for M0)
-// - Add temperature scaling
-// - Ensure determinism with seeded RNG
-// - Validate dimensions
-//
-// Greedy sampling:
-//   token = argmax(logits)
-//
-// Top-k sampling:
-//   1. Sort logits, keep top k
-//   2. Apply softmax to top k
-//   3. Sample from distribution
-//
-// Temperature:
-//   logits_scaled = logits / temperature
-//   (temperature < 1 = more deterministic, > 1 = more random)
-//
-// See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md Issue #11 (unsafe CUDA FFI)
+namespace worker {
+namespace kernels {
 
-__global__ void greedy_sampling_stub(
-    const float* logits,    // [batch, vocab_size]
-    int* output_tokens,     // [batch]
-    int batch_size,
-    int vocab_size
-) {
-    // TODO: Implement greedy sampling
-    // - Find argmax of logits for each batch
-    // - Store token index in output_tokens
-    
-    int batch_idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (batch_idx < batch_size) {
-        // Placeholder: return token 0
-        output_tokens[batch_idx] = 0;
-        printf("Greedy sampling stub: batch=%d, vocab=%d\n", batch_idx, vocab_size);
-    }
-}
-
-__global__ void temperature_scaling_stub(
-    float* logits,          // [batch, vocab_size] (in-place)
-    int batch_size,
-    int vocab_size,
-    float temperature
-) {
-    // TODO: Implement temperature scaling
-    // - Scale logits by 1/temperature
-    // - Handle temperature = 0 (greedy)
-    
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int total = batch_size * vocab_size;
-    if (idx < total) {
-        // Placeholder: no-op
-        printf("Temperature scaling stub: temp=%f\n", temperature);
-    }
-}
-
-extern "C" {
-
-int cuda_greedy_sampling_stub(
-    const float* logits,
-    int* output_tokens,
-    int batch_size,
-    int vocab_size
-) {
-    // TODO: Validate dimensions
-    // - Check batch_size > 0
-    // - Check vocab_size > 0
-    
-    // TODO: Launch kernel
-    // dim3 block(256);
-    // dim3 grid((batch_size + 255) / 256);
-    // greedy_sampling<<<grid, block>>>(logits, output_tokens, batch_size, vocab_size);
-    
-    return 0;
-}
-
-int cuda_temperature_scaling_stub(
+/**
+ * Temperature scaling kernel (FP32).
+ * 
+ * Divides logits by temperature to control sampling randomness.
+ * Each thread handles one logit value.
+ * 
+ * Special cases:
+ * - temperature = 0.0: No scaling (greedy mode)
+ * - temperature < 0.0 or > 2.0: No scaling (invalid, defensive)
+ * 
+ * @param logits Device pointer to logits [vocab_size] (modified in-place)
+ * @param vocab_size Vocabulary size
+ * @param temperature Sampling temperature (0.0-2.0)
+ */
+__global__ void temperature_scale_fp32(
     float* logits,
-    int batch_size,
     int vocab_size,
     float temperature
 ) {
-    // TODO: Validate dimensions and temperature
-    // - Check temperature > 0
-    // - Check dimensions > 0
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
     
-    // TODO: Launch kernel
+    // Bounds check
+    if (idx >= vocab_size) {
+        return;
+    }
     
-    return 0;
+    // Temperature == 0.0 means greedy sampling (no scaling)
+    if (temperature == 0.0f) {
+        return;
+    }
+    
+    // Validate temperature range (defensive)
+    if (temperature < 0.0f || temperature > 2.0f) {
+        // Invalid temperature, skip scaling
+        return;
+    }
+    
+    // Apply temperature scaling: logits[i] /= temperature
+    logits[idx] /= temperature;
 }
 
-} // extern "C"
+/**
+ * Temperature scaling kernel (FP16).
+ * 
+ * Same as FP32 version but with half precision.
+ * Converts to FP32 for division, then back to FP16.
+ * 
+ * @param logits Device pointer to logits [vocab_size] (modified in-place)
+ * @param vocab_size Vocabulary size
+ * @param temperature Sampling temperature (0.0-2.0)
+ */
+__global__ void temperature_scale_fp16(
+    half* logits,
+    int vocab_size,
+    float temperature
+) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if (idx >= vocab_size) {
+        return;
+    }
+    
+    if (temperature == 0.0f) {
+        return;
+    }
+    
+    if (temperature < 0.0f || temperature > 2.0f) {
+        return;
+    }
+    
+    // Convert to float, scale, convert back
+    float logit_f = __half2float(logits[idx]);
+    logit_f /= temperature;
+    logits[idx] = __float2half(logit_f);
+}
+
+/**
+ * Launch temperature scaling kernel (FP32).
+ * 
+ * Configures grid/block and launches kernel.
+ * 
+ * Grid configuration:
+ * - Grid: ceil(vocab_size / 256)
+ * - Block: 256 threads
+ * 
+ * @param logits Device pointer to logits [vocab_size]
+ * @param vocab_size Vocabulary size
+ * @param temperature Sampling temperature (0.0-2.0)
+ * @param stream CUDA stream (default: 0)
+ */
+void launch_temperature_scale_fp32(
+    float* logits,
+    int vocab_size,
+    float temperature,
+    cudaStream_t stream
+) {
+    // Validate inputs
+    if (vocab_size <= 0) {
+        fprintf(stderr, "Invalid vocab_size: %d\n", vocab_size);
+        return;
+    }
+    
+    if (logits == nullptr) {
+        fprintf(stderr, "Null logits pointer\n");
+        return;
+    }
+    
+    // Kernel launch configuration
+    int threads_per_block = 256;
+    int num_blocks = (vocab_size + threads_per_block - 1) / threads_per_block;
+    
+    // Launch kernel
+    temperature_scale_fp32<<<num_blocks, threads_per_block, 0, stream>>>(
+        logits,
+        vocab_size,
+        temperature
+    );
+    
+    // Check for launch errors
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        fprintf(stderr, "Temperature scale kernel launch failed: %s\n", 
+                cudaGetErrorString(err));
+    }
+}
+
+/**
+ * Launch temperature scaling kernel (FP16).
+ * 
+ * Same as FP32 version but with half precision.
+ * 
+ * @param logits Device pointer to logits [vocab_size]
+ * @param vocab_size Vocabulary size
+ * @param temperature Sampling temperature (0.0-2.0)
+ * @param stream CUDA stream (default: 0)
+ */
+void launch_temperature_scale_fp16(
+    half* logits,
+    int vocab_size,
+    float temperature,
+    cudaStream_t stream
+) {
+    if (vocab_size <= 0) {
+        fprintf(stderr, "Invalid vocab_size: %d\n", vocab_size);
+        return;
+    }
+    
+    if (logits == nullptr) {
+        fprintf(stderr, "Null logits pointer\n");
+        return;
+    }
+    
+    int threads_per_block = 256;
+    int num_blocks = (vocab_size + threads_per_block - 1) / threads_per_block;
+    
+    temperature_scale_fp16<<<num_blocks, threads_per_block, 0, stream>>>(
+        logits,
+        vocab_size,
+        temperature
+    );
+    
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        fprintf(stderr, "Temperature scale kernel launch failed: %s\n", 
+                cudaGetErrorString(err));
+    }
+}
+
+} // namespace kernels
+} // namespace worker
+
+// ---
+// Built by Foundation-Alpha 🏗️
+

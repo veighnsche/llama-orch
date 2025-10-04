@@ -93,6 +93,7 @@ if(BUILD_TESTING)
         tests/test_device_memory.cpp
         tests/test_embedding.cu
         tests/test_cublas.cu
+        tests/test_sampling.cu
     )
     
     # Build test executable
