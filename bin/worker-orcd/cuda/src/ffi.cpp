@@ -8,6 +8,7 @@
  */
 
 #include "../include/worker_ffi.h"
+#include "../include/health.h"
 #include "context.h"
 #include "cuda_error.h"
 #include <cuda_runtime.h>
@@ -217,13 +218,19 @@ extern "C" bool cuda_check_vram_residency(CudaModel* model, int* error_code) {
             throw CudaError::invalid_parameter("NULL model pointer");
         }
         
-        // TODO: Implement VRAM residency check
-        // auto* m = reinterpret_cast<Model*>(model);
-        // return m->check_vram_residency();
+        if (error_code == nullptr) {
+            return false;
+        }
         
-        // Stub: Return false for now
+        // TODO: Once Model class is implemented, use:
+        // auto* m = reinterpret_cast<Model*>(model);
+        // bool resident = Health::check_vram_residency(m->vram_tracker());
+        // *error_code = resident ? CUDA_SUCCESS : CUDA_ERROR_VRAM_RESIDENCY_FAILED;
+        // return resident;
+        
+        // Stub: Return true (assume resident) until Model class is implemented
         *error_code = CUDA_SUCCESS;
-        return false;
+        return true;
     } catch (const CudaError& e) {
         *error_code = e.code();
         return false;
