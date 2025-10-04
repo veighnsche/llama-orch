@@ -315,6 +315,24 @@ The system MUST enforce VRAM-only policy: model weights, KV cache, activations, 
 
 **M0 Execution Policy**: Models execute in their quantized formats (Q4_K_M, MXFP4, Q4_0). NO dequantization to FP32 on load. Per-tile dequantization occurs in registers/shared memory during kernel execution with FP16 accumulation. This aligns with local runtime behavior (LM Studio/llama.cpp GGUF execution) and GPT-OSS-20B guidance (~16 GB VRAM operation in MXFP4).
 
+**Loader Policy** (no dequantize-on-load):
+Model weights remain quantized in VRAM (MXFP4, Q4_K_M, Q4_0). The loader MUST NOT materialize FP32 copies of weight tensors in device memory.
+
+**Compute Policy** (on-the-fly dequantization):
+Kernels dequantize weight tiles to registers/shared memory during compute and accumulate in FP16. This preserves quantized storage while enabling correct math in GEMM/attention.
+
+**Execution Details**:
+- ✅ In-kernel dequantization for MXFP4 tiles/groups → registers/shared memory → FP16 accumulate
+- ✅ FP16 accumulation for all matmul results
+- ✅ FP16 KV cache precision
+
+**MXFP4 Compute Path** (GPT-OSS-20B and other MXFP4 models):
+MXFP4 weights MUST be wired into all weight consumers:
+1. **Embeddings**: MXFP4 embedding matrix lookup
+2. **Attention**: Q/K/V projections, attention matmul, output projection (prefill + decode)
+3. **FFN**: Up projection, activation, down projection
+4. **LM Head**: Final logits projection
+
 ---
 
 ### 2.3 Test Reproducibility Principles [M0+] (SYS-2.3.x)
@@ -855,6 +873,11 @@ POST {worker_uri}/execute
   "job_id": "job-xyz",
   "prompt": "Hello world",
   "max_tokens": 100,
+  "temperature": 0.7,
+  "top_p": 0.9,
+  "top_k": 50,
+  "repetition_penalty": 1.1,
+  "stop": ["\n\n", "END"],
   "seed": 42
 }
 
@@ -865,6 +888,14 @@ Response: SSE stream
 - end
 - error (on failure or cancellation)
 ```
+
+**Advanced Generation Parameters** (M0+):
+- `temperature` (0.0-2.0): Temperature scaling for sampling (default: 1.0)
+- `top_p` (0.0-1.0): Nucleus sampling - keep tokens with cumulative probability >= top_p (default: 1.0, disabled)
+- `top_k` (0-vocab_size): Top-k sampling - keep only top k tokens by probability (default: 0, disabled)
+- `repetition_penalty` (0.0-2.0): Penalize tokens that appear in generation history (default: 1.0, disabled)
+- `stop` (array of strings): Stop generation when any sequence is matched, max 4 sequences, each max 32 tokens (default: [])
+- `seed` (uint64): RNG seed for reproducible sampling (optional, auto-generated if omitted)
 
 **Requirements**:
 - SSE stream event order MUST be: `started` → zero or more `token` → zero or more `metrics` (interleaved as needed) → terminal (`end` or `error`)
@@ -1378,6 +1409,40 @@ Worker-orcd MUST operate as a self-contained process:
 **Requirements**:
 - Worker-orcd MUST load exactly one model at startup and MUST own all VRAM allocations within its process CUDA context
 - All model weights, KV cache, and activations MUST reside in VRAM (no RAM/unified memory fallback)
+
+**Model Loading Strategy**:
+- MUST use memory-mapped I/O (mmap) for host I/O to avoid full RAM copies
+- MUST copy model tensors to VRAM in bounded chunks (default 1MB) to prevent RAM spikes
+- MUST support GGUF format (version 3 for MXFP4 tensor support)
+- MUST validate model before loading (magic bytes, version, tensor count, VRAM fit)
+
+**Architecture Support**:
+- MUST detect model architecture from GGUF metadata (`general.architecture`)
+- MUST support Llama-style architectures (RoPE, GQA, RMSNorm, SwiGLU) for Qwen/Phi-3 models
+- MUST support GPT-style architectures (absolute pos embedding, MHA, LayerNorm, GELU) for GPT-OSS-20B
+- MUST use architecture-specific inference adapters to handle different model families
+
+**Tokenization Strategy**:
+- MUST support two tokenizer backends selected at model load time:
+  - `gguf-bpe`: Pure-Rust GGUF byte-BPE backend (embedded in GGUF) for Qwen/Phi-3
+  - `hf-json`: Hugging Face tokenizers crate loading tokenizer.json for GPT-OSS-20B
+- MUST enforce UTF-8-safe SSE streaming (buffer partial multibyte sequences)
+- MUST expose tokenizer metadata in health endpoint: `tokenizer_kind`, `vocab_size`
+
+**GGUF Format Requirements**:
+- MUST support GGUF version 3 (required for MXFP4 tensor support)
+- MUST parse GGUF header: magic bytes (`0x47475546`), version, tensor count, metadata
+- MUST extract required metadata keys:
+  - `general.architecture`: Model architecture ("llama", "gpt2", etc.)
+  - `general.name`: Model name
+  - Context length, embedding dimensions, layer count (architecture-specific keys)
+- MUST validate tensor format and alignment (256-byte boundaries for optimal GPU access)
+
+**Quantization Format Support**:
+- **MXFP4**: Primary format for GPT-OSS-20B (~16 GB VRAM), fallback for Qwen/Phi-3
+- **Q4_K_M**: Primary format for Qwen2.5-0.5B-Instruct and Phi-3-Mini
+- **Q4_0**: Fallback compatibility format
+- Health endpoint MUST expose `quant_kind` field reflecting actually loaded quantization
 
 ---
 
@@ -2368,11 +2433,24 @@ worker-orcd
 **Deliverables (Hybrid Scope)**:
 - `worker-orcd` binary with:
   - Model loading into VRAM (CUDA FFI)
+    - Memory-mapped I/O (mmap) for host I/O to avoid RAM copies
+    - Chunked VRAM transfer (1MB chunks) to prevent RAM spikes
+    - GGUF v3 format support (MXFP4 tensor blocks)
+    - Architecture detection from GGUF metadata (`general.architecture`)
   - **Quantized-only execution** (Q4_K_M, MXFP4, Q4_0 - NO dequantization to FP32)
+    - In-kernel dequantization to registers/shared memory
+    - FP16 accumulation for all matmul results
+    - FP16 KV cache precision
+  - **Architecture adapters** (InferenceAdapter pattern):
+    - LlamaInferenceAdapter: RoPE, GQA, RMSNorm, SwiGLU (Qwen/Phi-3)
+    - GPTInferenceAdapter: Absolute pos embedding, MHA, LayerNorm, GELU (GPT-OSS-20B)
   - HTTP inference API (`POST /v2/execute`, `GET /health`, `POST /cancel`)
+    - **Advanced generation parameters**: temperature, top_p, top_k, repetition_penalty, stop sequences
   - SSE streaming (token-by-token output with UTF-8 boundary safety)
   - Haiku test endpoint or integration
-  - Rust-side tokenizer (GGUF byte-BPE + tokenizer.json backends)
+  - **Dual tokenizer backends** (runtime selection):
+    - `gguf-bpe`: Pure-Rust GGUF byte-BPE (Qwen/Phi-3)
+    - `hf-json`: Hugging Face tokenizers crate (GPT-OSS-20B)
   - **Model load progress events** (0%, 25%, 50%, 75%, 100%) ← **CRITICAL** (user feedback)
   - **VRAM residency verification** (periodic checks) ← **CRITICAL** (runtime safety)
   - **VRAM OOM handling** (graceful error, not crash) ← **CRITICAL** (safety)
@@ -2396,16 +2474,30 @@ worker-orcd
 **Execution Policy**: All models execute in quantized form (matches LM Studio/llama.cpp behavior). Per-tile dequantization in registers/shared memory during kernel execution; FP16 accumulation.
 
 **Testing (Hybrid Scope)**:
-- CUDA unit tests (functional only, NO performance tests)
-- Rust unit tests
+- CUDA unit tests (functional only, NO performance tests):
+  - GGUF header parsing (magic bytes, version, metadata extraction)
+  - Architecture detection (Llama vs GPT)
+  - VRAM allocation and residency checks
+  - Kernel safety validation (no race conditions)
+  - MXFP4 numerical correctness
+- Rust unit tests:
+  - HTTP request validation
+  - SSE event ordering
+  - Tokenizer conformance test vectors (20-30 pairs per model)
+  - UTF-8 streaming boundary safety
 - E2E haiku test in `test-harness/e2e-haiku/`:
   - Worker loads model (Qwen2.5-0.5B-Instruct)
   - Prompt includes current minute spelled out (e.g., "twenty-nine")
   - Worker generates haiku containing the minute word
   - Functional validation (reproducibility implementation done, validation deferred to M1)
   - Test temperature range 0.0-2.0 for product feature
+  - Test advanced generation parameters (top_p, top_k, repetition_penalty, stop sequences)
   - Human verification (computer checks minute word presence, not haiku quality)
   - Basic test outputs (NO proof bundles - removed from repo)
+- All three M0 models tested sequentially:
+  - Qwen2.5-0.5B-Instruct (Q4_K_M, gguf-bpe tokenizer)
+  - Phi-3-Mini (Q4_K_M, gguf-bpe tokenizer)
+  - GPT-OSS-20B (MXFP4, hf-json tokenizer)
 
 **DEFERRED to M1** (Performance Testing):
 - ❌ Performance test suite (latency, throughput, memory leaks)
@@ -2417,14 +2509,22 @@ worker-orcd
 **Exit Criteria (Hybrid Scope)**:
 - Worker binary runs standalone: `worker-orcd --model <path> --gpu 0 --port 8001`
 - Haiku test passes functionally with real GPU and model (no mocks) for Qwen2.5-0.5B
-- All three M0 models load and execute successfully (sequential testing)
+- All three M0 models load and execute successfully (sequential testing):
+  - Qwen2.5-0.5B-Instruct: Llama-style architecture, Q4_K_M, gguf-bpe tokenizer
+  - Phi-3-Mini: Llama-style architecture, Q4_K_M, gguf-bpe tokenizer
+  - GPT-OSS-20B: GPT-style architecture, MXFP4, hf-json tokenizer
+- Architecture detection works correctly from GGUF metadata
+- Architecture-specific inference adapters execute correctly (Llama vs GPT pipelines)
 - Model load progress events emit (0%, 25%, 50%, 75%, 100%) ← **CRITICAL**
 - VRAM residency verification operational (periodic checks) ← **CRITICAL**
 - VRAM OOM handling works (graceful error, not crash) ← **CRITICAL**
 - VRAM usage tracked and logged (narration-core events)
-- Quantized execution verified (no FP32 dequant on load)
+- Quantized execution verified (no FP32 dequant on load, in-kernel dequant to registers)
+- MXFP4 compute path validated (embeddings, attention, FFN, LM head)
 - UTF-8 streaming validated (no mid-codepoint breaks)
 - Tokenization works for both GGUF byte-BPE and tokenizer.json backends
+- Advanced generation parameters work (top_p, top_k, repetition_penalty, stop sequences)
+- Health endpoint exposes required fields: status, resident, quant_kind, tokenizer_kind, vocab_size
 - Worker shuts down on SIGTERM (graceful shutdown endpoint deferred to M1)
 
 **DEFERRED to M1** (Performance Exit Criteria):
