@@ -329,29 +329,62 @@ Planned by Project Management Team 📋
 
 ---
 
-## 🎀 Narration Opportunities
+## 🎀 Narration Opportunities (v0.1.0)
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team  
+**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
 
-### Events to Narrate
+### Milestone Event to Narrate
 
-1. **FFI interface locked** (milestone event)
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: "ffi_lock",
-       target: "worker_ffi.h".to_string(),
-       human: "FFI interface locked and published to coordination/FFI_INTERFACE_LOCKED.md".to_string(),
-       ..Default::default()
-   });
-   ```
+#### FFI Interface Locked (INFO level) ✅
+```rust
+use observability_narration_core::{narrate, NarrationFields};
 
-**Why this matters**: FFI lock is a critical milestone that unblocks Llama and GPT teams. Narration creates an audit trail of when the interface was finalized.
+narrate(NarrationFields {
+    actor: "worker-orcd",
+    action: "ffi_lock",
+    target: "worker_ffi.h".to_string(),
+    human: "FFI interface locked and published to coordination/FFI_INTERFACE_LOCKED.md".to_string(),
+    ..Default::default()
+});
+```
 
-**Note**: This is a design/documentation story with minimal runtime events. Narration is primarily for milestone tracking.
+**Cute mode** (optional):
+```rust
+cute: Some("Worker and Engine agreed on how to talk! 🤝✨ Contract signed!")
+```
+
+**Story mode** (optional):
+```rust
+story: Some("\"The contract is ready,\" announced Worker. \"Let's build together!\" 📜")
+```
+
+### Why This Matters
+
+**FFI interface lock** is critical for:
+- 🔓 **Milestone tracking** (unblocks Llama and GPT teams)
+- 📝 **Audit trail** (when was interface finalized?)
+- 🤝 **Team coordination** (contract agreement)
+- 📅 **Timeline tracking** (Day 12 milestone)
+
+**Note**: This is a design/documentation story with minimal runtime events. Narration is primarily for milestone tracking and team coordination.
+
+### New in v0.1.0
+- ✅ **7 logging levels** (INFO for milestones)
+- ✅ **Story mode** for team coordination events
+- ✅ **Cute mode** for celebrating milestones
+- ✅ **Auto-injection** of timestamp for audit trail
 
 ---
-*Narration guidance added by Narration-Core Team 🎀*
+
+**Status**: 📋 Ready for execution  
+**Owner**: Foundation-Alpha  
+**Created**: 2025-10-04  
+**Narration Updated**: 2025-10-04 (v0.1.0)
+
+---
+Planned by Project Management Team 📋  
+*Narration guidance updated by Narration-Core Team 🎀*
 
 ---
 

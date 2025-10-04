@@ -138,69 +138,155 @@ pub enum ServerError {
 
 ---
 
-## 🎀 Narration Opportunities
+## 🎀 Narration Opportunities (v0.1.0)
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team  
+**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
 
-### Events to Narrate
+### Critical Events to Narrate
 
-1. **Server startup** (ACTION_SPAWN)
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: ACTION_SPAWN,
-       target: "http-server".to_string(),
-       human: format!("HTTP server listening on {}", addr),
-       ..Default::default()
-   });
-   ```
+#### 1. Server Startup (INFO level) ✅
+```rust
+use observability_narration_core::{narrate, NarrationFields};
 
-2. **Health check requests** (optional, DEBUG level)
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: "health_check",
-       target: "health".to_string(),
-       correlation_id: Some(correlation_id),
-       human: "Health check requested".to_string(),
-       ..Default::default()
-   });
-   ```
+narrate(NarrationFields {
+    actor: "worker-orcd",
+    action: "spawn",
+    target: "http-server".to_string(),
+    human: format!("HTTP server listening on {}", addr),
+    // Auto-injection adds: emitted_by, emitted_at_ms
+    ..Default::default()
+});
+```
 
-3. **Server shutdown** (ACTION_SHUTDOWN)
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: ACTION_SHUTDOWN,
-       target: "http-server".to_string(),
-       human: "HTTP server shutting down gracefully".to_string(),
-       ..Default::default()
-   });
-   ```
+**Cute mode** (optional):
+```rust
+cute: Some(format!("Worker woke up and opened the door at {}! 🏠✨", addr))
+```
 
-4. **Bind failures** (with error context)
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: ACTION_SPAWN,
-       target: "http-server".to_string(),
-       error_kind: Some("bind_failed".to_string()),
-       human: format!("Failed to bind to {}: {}", addr, error),
-       ..Default::default()
-   });
-   ```
+#### 2. Health Check Requests (DEBUG level) 🔍
+```rust
+use observability_narration_core::narrate_debug;
 
-**Why this matters**: Server lifecycle events are critical for debugging deployment issues and tracking worker availability.
+narrate_debug(NarrationFields {
+    actor: "worker-orcd",
+    action: "health_check",
+    target: "health".to_string(),
+    correlation_id: Some(correlation_id),
+    human: "Health check requested".to_string(),
+    ..Default::default()
+});
+```
+
+**Note**: Use DEBUG level to avoid log spam from health checks
+
+#### 3. Server Shutdown (WARN level) ⚠️
+```rust
+use observability_narration_core::narrate_warn;
+
+narrate_warn(NarrationFields {
+    actor: "worker-orcd",
+    action: "shutdown",
+    target: "http-server".to_string(),
+    human: "HTTP server shutting down gracefully".to_string(),
+    duration_ms: Some(shutdown_duration_ms),
+    ..Default::default()
+});
+```
+
+**Story mode** (optional):
+```rust
+story: Some("\"Time to rest,\" whispered the worker, closing the door gently. 👋")
+```
+
+#### 4. Bind Failures (ERROR level) 🚨
+```rust
+use observability_narration_core::narrate_error;
+
+narrate_error(NarrationFields {
+    actor: "worker-orcd",
+    action: "spawn",
+    target: "http-server".to_string(),
+    error_kind: Some("bind_failed".to_string()),
+    human: format!("Failed to bind to {}: {}", addr, error),
+    ..Default::default()
+});
+```
+
+### Testing with CaptureAdapter
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]
+fn test_server_startup_narration() {
+    let adapter = CaptureAdapter::install();
+    
+    // Start server (emits narration)
+    let server = HttpServer::new("127.0.0.1:8080".parse().unwrap()).await?;
+    
+    // Assert narration captured
+    adapter.assert_includes("HTTP server listening");
+    adapter.assert_field("actor", "worker-orcd");
+    adapter.assert_field("action", "spawn");
+    adapter.assert_provenance_present();  // NEW in v0.1.0
+}
+```
+
+### HTTP Context Propagation (NEW) 🌐
+
+Extract correlation IDs from incoming requests:
+
+```rust
+use observability_narration_core::http::{extract_context_from_headers, HeaderLike};
+
+// In your health endpoint
+async fn health_handler(headers: HeaderMap) -> Json<HealthResponse> {
+    let context = extract_context_from_headers(&headers);
+    
+    if let Some(correlation_id) = context.correlation_id {
+        narrate_debug(NarrationFields {
+            actor: "worker-orcd",
+            action: "health_check",
+            target: "health".to_string(),
+            correlation_id: Some(correlation_id),
+            human: "Health check requested".to_string(),
+            ..Default::default()
+        });
+    }
+    
+    Json(HealthResponse { status: "healthy" })
+}
+```
+
+### Why This Matters
+
+**Server lifecycle events** are critical for:
+- 🔍 Debugging deployment issues
+- 📊 Tracking worker availability
+- 🚨 Alerting on bind failures
+- 📈 Measuring startup/shutdown times
+- 🔗 Correlating requests across services
+
+### New in v0.1.0
+- ✅ **7 logging levels** (MUTE, TRACE, DEBUG, INFO, WARN, ERROR, FATAL)
+- ✅ **Auto-injection** of provenance metadata
+- ✅ **HTTP context propagation** for correlation IDs
+- ✅ **Rich test assertions** with `CaptureAdapter`
+- ✅ **100% test coverage** with property tests
 
 ---
 
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
-**Created**: 2025-10-04
+**Created**: 2025-10-04  
+**Narration Updated**: 2025-10-04 (v0.1.0)
 
 ---
 Planned by Project Management Team 📋  
-*Narration guidance added by Narration-Core Team 🎀*
+*Narration guidance updated by Narration-Core Team 🎀*
 
 ---
 

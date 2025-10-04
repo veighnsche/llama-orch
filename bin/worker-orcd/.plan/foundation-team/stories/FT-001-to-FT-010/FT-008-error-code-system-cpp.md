@@ -242,31 +242,77 @@ Planned by Project Management Team 📋
 
 ---
 
-## 🎀 Narration Opportunities
+## 🎀 Narration Opportunities (v0.1.0)
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team  
+**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
 
-### Events to Narrate
+### Critical Events to Narrate
 
-1. **Exception caught at FFI boundary**
-   ```rust
-   // From Rust side after FFI call
-   narrate_auto(NarrationFields {
-       actor: ACTOR_INFERENCE_ENGINE,
-       action: "error_caught",
-       target: function_name.to_string(),
-       error_kind: Some(error_code.to_string()),
-       human: format!("Exception caught in {}: {}", function_name, error_message),
-       ..Default::default()
-   });
-   ```
+#### Exception Caught at FFI Boundary (ERROR level) 🚨
+```rust
+// From Rust side after FFI call
+use observability_narration_core::narrate_error;
 
-**Why this matters**: Exception-to-error-code conversion is critical for FFI safety. Narration helps track which C++ exceptions are most common and where they occur.
+narrate_error(NarrationFields {
+    actor: "inference-engine",
+    action: "error_caught",
+    target: function_name.to_string(),
+    correlation_id: Some(correlation_id),
+    error_kind: Some(error_code.to_string()),
+    human: format!("Exception caught in {}: {}", function_name, error_message),
+    ..Default::default()
+});
+```
 
 **Note**: C++ layer doesn't directly emit narration (no tracing in C++). Narration happens on Rust side after error code conversion.
 
+### Testing with CaptureAdapter
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]
+fn test_exception_to_error_code_narration() {
+    let adapter = CaptureAdapter::install();
+    
+    // Call FFI function that throws exception
+    let result = unsafe { cuda_init(-1, &mut error_code) };
+    
+    // Assert exception narrated
+    adapter.assert_includes("Exception caught");
+    adapter.assert_field("action", "error_caught");
+    adapter.assert_field("error_kind", "INVALID_DEVICE");
+}
+```
+
+### Why This Matters
+
+**Exception-to-error-code conversion** is critical for:
+- 🔒 **FFI safety** (exceptions don't cross boundary)
+- 🐛 **Debugging** C++ exceptions from Rust
+- 📊 **Exception tracking** (which exceptions are most common?)
+- 🚨 **Alerting** on unexpected exceptions
+- 🔍 **Error propagation** (C++ → Rust → HTTP)
+
+### New in v0.1.0
+- ✅ **7 logging levels** (ERROR for exceptions)
+- ✅ **Error code tracking** in `error_kind` field
+- ✅ **Test assertions** for exception events
+- ✅ **Correlation ID propagation** through FFI boundary
+
 ---
-*Narration guidance added by Narration-Core Team 🎀*
+
+**Status**: 📋 Ready for execution  
+**Owner**: Foundation-Alpha  
+**Created**: 2025-10-04  
+**Narration Updated**: 2025-10-04 (v0.1.0)
+
+---
+Planned by Project Management Team 📋  
+*Narration guidance updated by Narration-Core Team 🎀*
 
 ---
 

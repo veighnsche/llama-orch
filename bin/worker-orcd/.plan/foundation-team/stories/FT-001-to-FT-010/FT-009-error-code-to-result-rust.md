@@ -265,42 +265,118 @@ Planned by Project Management Team 📋
 
 ---
 
-## 🎀 Narration Opportunities
+## 🎀 Narration Opportunities (v0.1.0)
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team  
+**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
 
-### Events to Narrate
+### Critical Events to Narrate
 
-1. **CUDA error converted to HTTP response**
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: ACTION_INFERENCE_ERROR,
-       target: job_id.clone(),
-       correlation_id: Some(correlation_id),
-       error_kind: Some(error.code().to_string()),
-       human: format!("CUDA error for job {}: {} (HTTP {})", job_id, error, error.status_code().as_u16()),
-       ..Default::default()
-   });
-   ```
+#### 1. CUDA Error Converted to HTTP Response (ERROR level) 🚨
+```rust
+use observability_narration_core::narrate_error;
 
-2. **Retriable error detected**
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: ACTION_INFERENCE_ERROR,
-       target: job_id.clone(),
-       correlation_id: Some(correlation_id),
-       error_kind: Some("vram_oom".to_string()),
-       human: format!("VRAM OOM for job {} (retriable)", job_id),
-       ..Default::default()
-   });
-   ```
+narrate_error(NarrationFields {
+    actor: "worker-orcd",
+    action: "inference_error",
+    target: job_id.clone(),
+    correlation_id: Some(correlation_id),
+    job_id: Some(job_id.clone()),
+    error_kind: Some(error.code().to_string()),
+    human: format!("CUDA error for job {}: {} (HTTP {})", job_id, error, error.status_code().as_u16()),
+    ..Default::default()
+});
+```
 
-**Why this matters**: Error conversion is where CUDA errors become HTTP responses. Narration helps track error rates, retriable vs. fatal errors, and HTTP status code distribution.
+#### 2. Retriable Error Detected (WARN level) ⚠️
+```rust
+use observability_narration_core::narrate_warn;
+
+narrate_warn(NarrationFields {
+    actor: "worker-orcd",
+    action: "inference_error",
+    target: job_id.clone(),
+    correlation_id: Some(correlation_id),
+    job_id: Some(job_id.clone()),
+    error_kind: Some("vram_oom".to_string()),
+    retry_after_ms: Some(5000),  // Suggest retry delay
+    human: format!("VRAM OOM for job {} (retriable after 5s)", job_id),
+    ..Default::default()
+});
+```
+
+**Cute mode** (optional):
+```rust
+cute: Some("Worker's memory is full! 🧠💎 Need to make room first...")
+```
+
+#### 3. Fatal Error (FATAL level) 🔥
+```rust
+use observability_narration_core::narrate_fatal;
+
+narrate_fatal(NarrationFields {
+    actor: "worker-orcd",
+    action: "inference_error",
+    target: job_id.clone(),
+    correlation_id: Some(correlation_id),
+    job_id: Some(job_id.clone()),
+    error_kind: Some("device_lost".to_string()),
+    human: format!("GPU device lost for job {} (fatal, worker restart required)", job_id),
+    ..Default::default()
+});
+```
+
+### Testing with CaptureAdapter
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]
+fn test_cuda_error_conversion_narration() {
+    let adapter = CaptureAdapter::install();
+    
+    // Trigger CUDA error
+    let result = cuda_context.init(-1);
+    
+    // Assert error narrated
+    adapter.assert_includes("CUDA error");
+    adapter.assert_field("action", "inference_error");
+    adapter.assert_field("error_kind", "INVALID_DEVICE");
+    
+    // Verify HTTP status code in human message
+    let captured = adapter.captured();
+    assert!(captured[0].human.contains("HTTP 400"));
+}
+```
+
+### Why This Matters
+
+**Error conversion events** are critical for:
+- 📈 **Error rate tracking** (CUDA → HTTP)
+- 🔁 **Retry logic** (retriable vs. fatal)
+- 🐛 **Client debugging** (meaningful HTTP errors)
+- 🚨 **Alerting** on fatal errors
+- 📊 **SLO tracking** (error rate by type)
+
+### New in v0.1.0
+- ✅ **7 logging levels** (WARN for retriable, ERROR for failures, FATAL for device loss)
+- ✅ **Retry hints** in `retry_after_ms` field
+- ✅ **HTTP status code** in human message
+- ✅ **Test assertions** for error conversion
+- ✅ **Property tests** for error mapping invariants
 
 ---
-*Narration guidance added by Narration-Core Team 🎀*
+
+**Status**: 📋 Ready for execution  
+**Owner**: Foundation-Alpha  
+**Created**: 2025-10-04  
+**Narration Updated**: 2025-10-04 (v0.1.0)
+
+---
+Planned by Project Management Team 📋  
+*Narration guidance updated by Narration-Core Team 🎀*
 
 ---
 

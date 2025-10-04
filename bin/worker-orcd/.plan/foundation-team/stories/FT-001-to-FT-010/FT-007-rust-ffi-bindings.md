@@ -422,39 +422,105 @@ Planned by Project Management Team 📋
 
 ---
 
-## 🎀 Narration Opportunities
+## 🎀 Narration Opportunities (v0.1.0)
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team  
+**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
 
-### Events to Narrate
+### Critical Events to Narrate
 
-1. **FFI call failure** (with error code)
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: "ffi_call",
-       target: function_name.to_string(),
-       error_kind: Some(error.code().to_string()),
-       human: format!("FFI call to {} failed: {}", function_name, error),
-       ..Default::default()
-   });
-   ```
+#### 1. FFI Call Failure (ERROR level) 🚨
+```rust
+use observability_narration_core::narrate_error;
 
-2. **Resource cleanup on drop**
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: "resource_cleanup",
-       target: resource_type.to_string(),
-       human: format!("Cleaning up {} resource", resource_type),
-       ..Default::default()
-   });
-   ```
+narrate_error(NarrationFields {
+    actor: "worker-orcd",
+    action: "ffi_call",
+    target: function_name.to_string(),
+    correlation_id: Some(correlation_id),
+    error_kind: Some(error.code().to_string()),
+    human: format!("FFI call to {} failed: {}", function_name, error),
+    ..Default::default()
+});
+```
 
-**Why this matters**: FFI boundary is where Rust and C++ meet. Narration helps diagnose FFI-related issues like null pointers, memory leaks, and error propagation.
+#### 2. Resource Cleanup on Drop (DEBUG level) 🔍
+```rust
+use observability_narration_core::narrate_debug;
+
+narrate_debug(NarrationFields {
+    actor: "worker-orcd",
+    action: "resource_cleanup",
+    target: resource_type.to_string(),
+    human: format!("Cleaning up {} resource", resource_type),
+    ..Default::default()
+});
+```
+
+**Note**: Use DEBUG level for cleanup to avoid log spam
+
+#### 3. Null Pointer Detected (ERROR level) 🚨
+```rust
+use observability_narration_core::narrate_error;
+
+narrate_error(NarrationFields {
+    actor: "worker-orcd",
+    action: "ffi_call",
+    target: function_name.to_string(),
+    error_kind: Some("null_pointer".to_string()),
+    human: format!("FFI call to {} returned null pointer", function_name),
+    ..Default::default()
+});
+```
+
+### Testing with CaptureAdapter
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]
+fn test_ffi_error_narration() {
+    let adapter = CaptureAdapter::install();
+    
+    // Call FFI function that fails
+    let result = unsafe { cuda_init(-1, &mut error_code) };
+    
+    // Assert error narrated
+    adapter.assert_includes("FFI call");
+    adapter.assert_includes("failed");
+    adapter.assert_field("action", "ffi_call");
+    adapter.assert_field("error_kind", "INVALID_DEVICE");
+}
+```
+
+### Why This Matters
+
+**FFI boundary events** are critical for:
+- 🐛 **Debugging** Rust ↔ C++ integration issues
+- 💥 **Memory leak detection** (cleanup tracking)
+- 🚨 **Null pointer diagnosis** (FFI safety)
+- 📈 **Error propagation tracking** (C++ → Rust)
+- 🔍 **Resource lifecycle** (allocation → cleanup)
+
+### New in v0.1.0
+- ✅ **7 logging levels** (ERROR for failures, DEBUG for cleanup)
+- ✅ **Error code tracking** in `error_kind` field
+- ✅ **Test assertions** for FFI error events
+- ✅ **Property tests** for FFI invariants
+- ✅ **Serial test execution** to prevent interference
 
 ---
-*Narration guidance added by Narration-Core Team 🎀*
+
+**Status**: 📋 Ready for execution  
+**Owner**: Foundation-Alpha  
+**Created**: 2025-10-04  
+**Narration Updated**: 2025-10-04 (v0.1.0)
+
+---
+Planned by Project Management Team 📋  
+*Narration guidance updated by Narration-Core Team 🎀*
 
 ---
 

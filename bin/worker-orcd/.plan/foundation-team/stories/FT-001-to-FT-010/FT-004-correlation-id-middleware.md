@@ -175,54 +175,140 @@ Planned by Project Management Team 📋
 
 ---
 
-## 🎀 Narration Opportunities
+## 🎀 Narration Opportunities (v0.1.0)
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team  
+**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
 
-### Events to Narrate
+### Critical Events to Narrate
 
-1. **Correlation ID extracted from header**
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: "correlation_id_extract",
-       target: "request".to_string(),
-       correlation_id: Some(correlation_id.clone()),
-       human: format!("Extracted correlation ID from header: {}", correlation_id),
-       ..Default::default()
-   });
-   ```
+#### 1. Correlation ID Extracted (DEBUG level) 🔍
+```rust
+use observability_narration_core::narrate_debug;
 
-2. **Correlation ID generated (header missing)**
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: "correlation_id_generate",
-       target: "request".to_string(),
-       correlation_id: Some(correlation_id.clone()),
-       human: format!("Generated new correlation ID: {}", correlation_id),
-       ..Default::default()
-   });
-   ```
+narrate_debug(NarrationFields {
+    actor: "worker-orcd",
+    action: "correlation_extract",
+    target: "middleware".to_string(),
+    correlation_id: Some(correlation_id.clone()),
+    human: format!("Extracted correlation ID: {}", correlation_id),
+    ..Default::default()
+});
+```
 
-3. **Invalid correlation ID rejected**
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: "correlation_id_generate",
-       target: "request".to_string(),
-       correlation_id: Some(new_correlation_id.clone()),
-       human: format!("Rejected invalid correlation ID '{}', generated new: {}", invalid_id, new_correlation_id),
-       ..Default::default()
-   });
-   ```
+**Note**: Use DEBUG level since this happens on every request
 
-**Why this matters**: Correlation IDs are the foundation of request tracing. Narration helps track ID generation vs. extraction and diagnose ID propagation issues.
+#### 2. Correlation ID Generated (INFO level) ✅
+```rust
+use observability_narration_core::{narrate, NarrationFields};
 
-**Note**: This middleware enables ALL other narration by providing correlation IDs. Every subsequent narration event should include the correlation_id field!
+narrate(NarrationFields {
+    actor: "worker-orcd",
+    action: "correlation_generate",
+    target: "middleware".to_string(),
+    correlation_id: Some(correlation_id.clone()),
+    human: format!("Generated new correlation ID: {}", correlation_id),
+    ..Default::default()
+});
+```
+
+**Cute mode** (optional):
+```rust
+cute: Some(format!("Worker created a new tracking tag! 🏷️ {}", correlation_id))
+```
+
+#### 3. Invalid Correlation ID Rejected (WARN level) ⚠️
+```rust
+use observability_narration_core::narrate_warn;
+
+narrate_warn(NarrationFields {
+    actor: "worker-orcd",
+    action: "correlation_validate",
+    target: "middleware".to_string(),
+    correlation_id: Some(new_correlation_id.clone()),
+    error_kind: Some("invalid_correlation_id".to_string()),
+    human: format!("Rejected invalid correlation ID '{}', generated new: {}", invalid_id, new_correlation_id),
+    ..Default::default()
+});
+```
+
+### Using Built-in HTTP Context Propagation (NEW) 🌐
+
+**narration-core v0.1.0** provides built-in helpers:
+
+```rust
+use observability_narration_core::http::{extract_context_from_headers, inject_context_into_headers};
+use observability_narration_core::{generate_correlation_id, validate_correlation_id};
+
+// Extract from incoming request
+let context = extract_context_from_headers(&headers);
+let correlation_id = context.correlation_id
+    .and_then(|id| validate_correlation_id(&id).map(|_| id))
+    .unwrap_or_else(|| generate_correlation_id());
+
+// Inject into outgoing response
+let mut response_context = NarrationContext {
+    correlation_id: Some(correlation_id.clone()),
+    trace_id: context.trace_id,
+    span_id: Some(generate_span_id()),
+};
+inject_context_into_headers(&response_context, &mut response_headers);
+```
+
+### Testing with CaptureAdapter
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]
+fn test_correlation_id_middleware() {
+    let adapter = CaptureAdapter::install();
+    
+    // Request without correlation ID
+    let response = client.get("/health").send().await?;
+    
+    // Assert correlation ID was generated
+    adapter.assert_includes("Generated new correlation ID");
+    adapter.assert_correlation_id_present();
+    
+    // Verify response header contains correlation ID
+    let correlation_id = response.headers()
+        .get("X-Correlation-Id")
+        .unwrap();
+    assert!(validate_correlation_id(correlation_id).is_some());
+}
+```
+
+### Why This Matters
+
+**Correlation ID middleware** is critical for:
+- 🔗 **Request tracing** across orchestrator → worker → engine
+- 🐛 **Debugging** multi-service workflows
+- 📊 **Metrics aggregation** by request
+- 🚨 **Alerting** on request failures
+- 📈 **Performance tracking** end-to-end
+
+**IMPORTANT**: This middleware enables ALL other narration by providing correlation IDs. Every subsequent narration event should include the `correlation_id` field!
+
+### New in v0.1.0
+- ✅ **Built-in HTTP helpers** (`extract_context_from_headers`, `inject_context_into_headers`)
+- ✅ **Fast validation** (<100ns per correlation ID)
+- ✅ **7 logging levels** (DEBUG for extract, INFO for generate, WARN for invalid)
+- ✅ **Test assertions** (`assert_correlation_id_present()`)
+- ✅ **Property tests** for correlation ID invariants
 
 ---
-*Narration guidance added by Narration-Core Team 🎀*
+
+**Status**: 📋 Ready for execution  
+**Owner**: Foundation-Alpha  
+**Created**: 2025-10-04  
+**Narration Updated**: 2025-10-04 (v0.1.0)
+
+---
+Planned by Project Management Team 📋  
+*Narration guidance updated by Narration-Core Team 🎀*
 
 ---
 

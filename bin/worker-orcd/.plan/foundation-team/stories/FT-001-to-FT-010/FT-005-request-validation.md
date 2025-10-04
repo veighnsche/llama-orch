@@ -228,42 +228,134 @@ Planned by Project Management Team 📋
 
 ---
 
-## 🎀 Narration Opportunities
+## 🎀 Narration Opportunities (v0.1.0)
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team  
+**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
 
-### Events to Narrate
+### Critical Events to Narrate
 
-1. **Validation failure** (with field details)
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: ACTION_INFERENCE_START,
-       target: req.job_id.clone(),
-       correlation_id: Some(correlation_id),
-       error_kind: Some("validation_failed".to_string()),
-       human: format!("Validation failed for job {}: {} must be {}", req.job_id, field, constraint),
-       ..Default::default()
-   });
-   ```
+#### 1. Single Field Validation Failure (WARN level) ⚠️
+```rust
+use observability_narration_core::narrate_warn;
 
-2. **Multiple validation errors**
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: ACTION_INFERENCE_START,
-       target: req.job_id.clone(),
-       correlation_id: Some(correlation_id),
-       error_kind: Some("validation_failed".to_string()),
-       human: format!("Validation failed for job {}: {} errors ({})", req.job_id, error_count, field_list),
-       ..Default::default()
-   });
-   ```
+narrate_warn(NarrationFields {
+    actor: "worker-orcd",
+    action: "validation",
+    target: req.job_id.clone(),
+    correlation_id: Some(correlation_id),
+    job_id: Some(req.job_id.clone()),
+    error_kind: Some("validation_failed".to_string()),
+    human: format!("Validation failed for job {}: {} must be {}", req.job_id, field, constraint),
+    ..Default::default()
+});
+```
 
-**Why this matters**: Validation failures are common client errors. Narration helps identify which fields fail most often and guides API improvements.
+#### 2. Multiple Validation Errors (WARN level) ⚠️
+```rust
+use observability_narration_core::narrate_warn;
+
+narrate_warn(NarrationFields {
+    actor: "worker-orcd",
+    action: "validation",
+    target: req.job_id.clone(),
+    correlation_id: Some(correlation_id),
+    job_id: Some(req.job_id.clone()),
+    error_kind: Some("validation_failed".to_string()),
+    human: format!("Validation failed for job {}: {} errors ({})", req.job_id, error_count, field_list),
+    ..Default::default()
+});
+```
+
+#### 3. Validation Success (DEBUG level) 🔍
+```rust
+use observability_narration_core::narrate_debug;
+
+narrate_debug(NarrationFields {
+    actor: "worker-orcd",
+    action: "validation",
+    target: req.job_id.clone(),
+    correlation_id: Some(correlation_id),
+    job_id: Some(req.job_id.clone()),
+    tokens_in: Some(req.prompt.len() as u64),
+    human: format!("Validated request for job {}: {} tokens", req.job_id, req.prompt.len()),
+    ..Default::default()
+});
+```
+
+### Testing with CaptureAdapter
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]
+fn test_validation_failure_narration() {
+    let adapter = CaptureAdapter::install();
+    
+    // Invalid request
+    let response = client.post("/execute")
+        .json(&invalid_request)
+        .send()
+        .await?;
+    
+    // Assert validation failure narrated
+    adapter.assert_includes("Validation failed");
+    adapter.assert_field("action", "validation");
+    adapter.assert_field("error_kind", "validation_failed");
+    
+    // Verify error details captured
+    let captured = adapter.captured();
+    assert!(captured[0].human.contains("must be"));
+}
+```
+
+### Property Testing for Validation
+
+```rust
+#[test]
+fn property_all_invalid_requests_rejected() {
+    let invalid_cases = vec[
+        ("empty_job_id", ExecuteRequest { job_id: "", .. }),
+        ("empty_prompt", ExecuteRequest { prompt: "", .. }),
+        ("max_tokens_zero", ExecuteRequest { max_tokens: 0, .. }),
+        ("temperature_negative", ExecuteRequest { temperature: -1.0, .. }),
+    ];
+    
+    for (case_name, request) in invalid_cases {
+        let result = validate_request(&request);
+        assert!(result.is_err(), "Case {} should fail validation", case_name);
+    }
+}
+```
+
+### Why This Matters
+
+**Validation events** are critical for:
+- 🐛 **Client debugging** (which field is wrong?)
+- 📊 **API improvement** (which validations fail most?)
+- 🔗 **Request tracing** (validation → execution)
+- 🚨 **Anomaly detection** (unusual validation patterns)
+- 📈 **SLO tracking** (validation failure rate)
+
+### New in v0.1.0
+- ✅ **7 logging levels** (WARN for failures, DEBUG for success)
+- ✅ **Property tests** for validation invariants
+- ✅ **Rich error context** in narration fields
+- ✅ **Test assertions** for validation events
+- ✅ **Secret redaction** in validation error messages
 
 ---
-*Narration guidance added by Narration-Core Team 🎀*
+
+**Status**: 📋 Ready for execution  
+**Owner**: Foundation-Alpha  
+**Created**: 2025-10-04  
+**Narration Updated**: 2025-10-04 (v0.1.0)
+
+---
+Planned by Project Management Team 📋  
+*Narration guidance updated by Narration-Core Team 🎀*
 
 ---
 

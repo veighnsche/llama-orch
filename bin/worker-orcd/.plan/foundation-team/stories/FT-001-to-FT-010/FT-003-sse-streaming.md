@@ -167,52 +167,129 @@ impl Utf8Buffer {
 
 ---
 
-## 🎀 Narration Opportunities
+## 🎀 Narration Opportunities (v0.1.0)
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team  
+**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
 
-### Events to Narrate
+### Critical Events to Narrate
 
-1. **Stream started**
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: "stream_start",
-       target: job_id.clone(),
-       correlation_id: Some(correlation_id),
-       human: format!("SSE stream started for job {}", job_id),
-       ..Default::default()
-   });
-   ```
+#### 1. Stream Started (DEBUG level) 🔍
+```rust
+use observability_narration_core::narrate_debug;
 
-2. **Stream completed** (ACTION_INFERENCE_COMPLETE)
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: ACTION_INFERENCE_COMPLETE,
-       target: job_id.clone(),
-       correlation_id: Some(correlation_id),
-       tokens_out: Some(token_count),
-       duration_ms: Some(elapsed.as_millis() as u64),
-       human: format!("Completed inference: {} tokens in {} ms", token_count, elapsed.as_millis()),
-       ..Default::default()
-   });
-   ```
+narrate_debug(NarrationFields {
+    actor: "worker-orcd",
+    action: "stream_start",
+    target: job_id.clone(),
+    correlation_id: Some(correlation_id),
+    job_id: Some(job_id.clone()),
+    human: format!("SSE stream started for job {}", job_id),
+    ..Default::default()
+});
+```
 
-3. **Stream error**
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: ACTION_INFERENCE_ERROR,
-       target: job_id.clone(),
-       correlation_id: Some(correlation_id),
-       error_kind: Some(error_code.to_string()),
-       human: format!("SSE stream error for job {}: {}", job_id, error_message),
-       ..Default::default()
-   });
-   ```
+#### 2. Stream Completed (INFO level) ✅
+```rust
+use observability_narration_core::{narrate, NarrationFields};
 
-**Why this matters**: SSE streaming is the primary output mechanism. Narration helps track stream lifecycle and diagnose client disconnect issues.
+narrate(NarrationFields {
+    actor: "worker-orcd",
+    action: "inference_complete",
+    target: job_id.clone(),
+    correlation_id: Some(correlation_id),
+    job_id: Some(job_id.clone()),
+    tokens_out: Some(token_count),
+    duration_ms: Some(elapsed.as_millis() as u64),
+    human: format!("Completed inference: {} tokens in {} ms", token_count, elapsed.as_millis()),
+    ..Default::default()
+});
+```
+
+**Cute mode** (optional):
+```rust
+cute: Some(format!("Worker finished the story! 📖✨ {} tokens in {}ms!", token_count, elapsed.as_millis()))
+```
+
+#### 3. Stream Error (ERROR level) 🚨
+```rust
+use observability_narration_core::narrate_error;
+
+narrate_error(NarrationFields {
+    actor: "worker-orcd",
+    action: "stream_error",
+    target: job_id.clone(),
+    correlation_id: Some(correlation_id),
+    job_id: Some(job_id.clone()),
+    error_kind: Some(error_code.to_string()),
+    human: format!("SSE stream error for job {}: {}", job_id, error_message),
+    ..Default::default()
+});
+```
+
+#### 4. Client Disconnect (WARN level) ⚠️
+```rust
+use observability_narration_core::narrate_warn;
+
+narrate_warn(NarrationFields {
+    actor: "worker-orcd",
+    action: "stream_disconnect",
+    target: job_id.clone(),
+    correlation_id: Some(correlation_id),
+    job_id: Some(job_id.clone()),
+    tokens_out: Some(tokens_sent_so_far),
+    human: format!("Client disconnected after {} tokens", tokens_sent_so_far),
+    ..Default::default()
+});
+```
+
+### Testing with CaptureAdapter
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]
+fn test_sse_stream_narration() {
+    let adapter = CaptureAdapter::install();
+    
+    // Start SSE stream
+    let stream = create_sse_stream(job_id, correlation_id);
+    
+    // Consume stream
+    while let Some(event) = stream.next().await {
+        // Process event
+    }
+    
+    // Assert narration captured
+    let captured = adapter.captured();
+    assert!(captured.iter().any(|e| e.action == "stream_start"));
+    assert!(captured.iter().any(|e| e.action == "inference_complete"));
+    
+    // Verify all events have same correlation ID
+    let correlation_ids: Vec<_> = captured.iter()
+        .filter_map(|e| e.correlation_id.as_ref())
+        .collect();
+    assert!(correlation_ids.iter().all(|id| id == &correlation_id));
+}
+```
+
+### Why This Matters
+
+**SSE streaming events** are critical for:
+- 🔍 Tracking stream lifecycle (start → tokens → complete)
+- 🐛 Diagnosing client disconnect issues
+- 📈 Measuring token generation rates
+- 🔗 Correlating streaming across orchestrator → worker
+- 🚨 Alerting on stream error patterns
+
+### New in v0.1.0
+- ✅ **7 logging levels** (DEBUG for stream start, INFO for complete, ERROR for failures)
+- ✅ **Correlation ID propagation** through entire stream lifecycle
+- ✅ **Token counting** in narration fields (`tokens_out`)
+- ✅ **Duration tracking** in narration fields (`duration_ms`)
+- ✅ **Rich test assertions** for stream event sequences
 
 ---
 

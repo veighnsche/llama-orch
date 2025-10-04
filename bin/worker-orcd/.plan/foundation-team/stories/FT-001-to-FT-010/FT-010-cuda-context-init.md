@@ -308,54 +308,134 @@ Planned by Project Management Team 📋
 
 ---
 
-## 🎀 Narration Opportunities
+## 🎀 Narration Opportunities (v0.1.0)
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team  
+**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
 
-### Events to Narrate
+### Critical Events to Narrate
 
-1. **CUDA context initialization**
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_INFERENCE_ENGINE,
-       action: "cuda_init",
-       target: format!("GPU{}", device_id),
-       device: Some(format!("GPU{}", device_id)),
-       human: format!("Initializing CUDA context on GPU{}", device_id),
-       ..Default::default()
-   });
-   ```
+#### 1. CUDA Context Initialization Started (INFO level) ✅
+```rust
+use observability_narration_core::{narrate, NarrationFields};
 
-2. **CUDA context ready**
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_INFERENCE_ENGINE,
-       action: "cuda_init",
-       target: format!("GPU{}", device_id),
-       device: Some(format!("GPU{}", device_id)),
-       duration_ms: Some(elapsed.as_millis() as u64),
-       human: format!("CUDA context ready on GPU{} ({} ms)", device_id, elapsed.as_millis()),
-       ..Default::default()
-   });
-   ```
+narrate(NarrationFields {
+    actor: "inference-engine",
+    action: "cuda_init",
+    target: format!("GPU{}", device_id),
+    device: Some(format!("GPU{}", device_id)),
+    human: format!("Initializing CUDA context on GPU{}", device_id),
+    ..Default::default()
+});
+```
 
-3. **CUDA initialization failure**
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_INFERENCE_ENGINE,
-       action: "cuda_init",
-       target: format!("GPU{}", device_id),
-       device: Some(format!("GPU{}", device_id)),
-       error_kind: Some(error_code.to_string()),
-       human: format!("CUDA initialization failed on GPU{}: {}", device_id, error_message),
-       ..Default::default()
-   });
-   ```
+**Cute mode** (optional):
+```rust
+cute: Some(format!("Worker is waking up GPU{}! 🚀✨", device_id))
+```
 
-**Why this matters**: CUDA initialization is a critical startup step. Failures here block all inference. Narration helps diagnose driver issues, GPU availability, and permission problems.
+#### 2. CUDA Context Ready (INFO level) ✅
+```rust
+use observability_narration_core::{narrate, NarrationFields};
+
+narrate(NarrationFields {
+    actor: "inference-engine",
+    action: "cuda_ready",
+    target: format!("GPU{}", device_id),
+    device: Some(format!("GPU{}", device_id)),
+    vram_total_mb: Some(total_vram_mb),
+    vram_free_mb: Some(free_vram_mb),
+    duration_ms: Some(elapsed.as_millis() as u64),
+    human: format!("CUDA context ready on GPU{}: {} MB free ({} ms)", device_id, free_vram_mb, elapsed.as_millis()),
+    ..Default::default()
+});
+```
+
+**Cute mode** (optional):
+```rust
+cute: Some(format!("GPU{} is awake and ready! 💚 {} MB of cozy memory available!", device_id, free_vram_mb))
+```
+
+#### 3. CUDA Initialization Failure (ERROR level) 🚨
+```rust
+use observability_narration_core::narrate_error;
+
+narrate_error(NarrationFields {
+    actor: "inference-engine",
+    action: "cuda_init",
+    target: format!("GPU{}", device_id),
+    device: Some(format!("GPU{}", device_id)),
+    error_kind: Some(error_code.to_string()),
+    human: format!("CUDA initialization failed on GPU{}: {}", device_id, error_message),
+    ..Default::default()
+});
+```
+
+#### 4. UMA Disabled (DEBUG level) 🔍
+```rust
+use observability_narration_core::narrate_debug;
+
+narrate_debug(NarrationFields {
+    actor: "inference-engine",
+    action: "cuda_config",
+    target: format!("GPU{}", device_id),
+    device: Some(format!("GPU{}", device_id)),
+    human: format!("Disabled UMA on GPU{} (VRAM-only mode)", device_id),
+    ..Default::default()
+});
+```
+
+### Testing with CaptureAdapter
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]
+fn test_cuda_init_narration() {
+    let adapter = CaptureAdapter::install();
+    
+    // Initialize CUDA context
+    let ctx = CudaContext::new(0)?;
+    
+    // Assert initialization narrated
+    adapter.assert_includes("CUDA context ready");
+    adapter.assert_field("action", "cuda_ready");
+    adapter.assert_field("device", "GPU0");
+    
+    // Verify VRAM info captured
+    let captured = adapter.captured();
+    assert!(captured.iter().any(|e| e.vram_free_mb.is_some()));
+}
+```
+
+### Why This Matters
+
+**CUDA initialization events** are critical for:
+- 🚀 **Startup tracking** (worker readiness)
+- 🐛 **Driver debugging** (CUDA version, driver issues)
+- 💾 **VRAM tracking** (available memory)
+- 🚨 **Alerting** on initialization failures
+- 📈 **Performance** (init time tracking)
+
+### New in v0.1.0
+- ✅ **7 logging levels** (INFO for success, ERROR for failures, DEBUG for config)
+- ✅ **VRAM tracking** in narration fields (`vram_total_mb`, `vram_free_mb`)
+- ✅ **Duration tracking** for initialization time
+- ✅ **Device info** in narration fields
+- ✅ **Test assertions** for CUDA events
 
 ---
-*Narration guidance added by Narration-Core Team 🎀*
+
+**Status**: 📋 Ready for execution  
+**Owner**: Foundation-Alpha  
+**Created**: 2025-10-04  
+**Narration Updated**: 2025-10-04 (v0.1.0)
+
+---
+Planned by Project Management Team 📋  
+*Narration guidance updated by Narration-Core Team 🎀*
 
 ---
 

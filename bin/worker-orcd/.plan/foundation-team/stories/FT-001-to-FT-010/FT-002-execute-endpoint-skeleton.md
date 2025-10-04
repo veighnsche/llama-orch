@@ -141,49 +141,119 @@ pub async fn execute_handler(
 
 ---
 
-## 🎀 Narration Opportunities
+## 🎀 Narration Opportunities (v0.1.0)
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team  
+**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
 
-### Events to Narrate
+### Critical Events to Narrate
 
-1. **Request received** (ACTION_INFERENCE_START)
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: ACTION_INFERENCE_START,
-       target: req.job_id.clone(),
-       correlation_id: Some(correlation_id),
-       tokens_in: Some(req.prompt.len() as u64),
-       human: format!("Starting inference for job {}", req.job_id),
-       ..Default::default()
-   });
-   ```
+#### 1. Request Received (INFO level) ✅
+```rust
+use observability_narration_core::{narrate, NarrationFields};
 
-2. **Validation failures** (with specific field)
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: ACTION_INFERENCE_START,
-       target: req.job_id.clone(),
-       correlation_id: Some(correlation_id),
-       error_kind: Some("validation_failed".to_string()),
-       human: format!("Validation failed for job {}: {} must be {}", req.job_id, field, constraint),
-       ..Default::default()
-   });
-   ```
+narrate(NarrationFields {
+    actor: "worker-orcd",
+    action: "inference_start",
+    target: req.job_id.clone(),
+    correlation_id: Some(correlation_id),
+    job_id: Some(req.job_id.clone()),
+    tokens_in: Some(req.prompt.len() as u64),
+    human: format!("Starting inference for job {}", req.job_id),
+    ..Default::default()
+});
+```
 
-**Why this matters**: Request validation failures are common debugging scenarios. Narration helps identify which field failed and why.
+**Cute mode** (optional):
+```rust
+cute: Some(format!("Worker received a story to tell! 📖 Job {} ready to go!", req.job_id))
+```
+
+#### 2. Validation Failures (WARN level) ⚠️
+```rust
+use observability_narration_core::narrate_warn;
+
+narrate_warn(NarrationFields {
+    actor: "worker-orcd",
+    action: "validation",
+    target: req.job_id.clone(),
+    correlation_id: Some(correlation_id),
+    job_id: Some(req.job_id.clone()),
+    error_kind: Some("validation_failed".to_string()),
+    human: format!("Validation failed for job {}: {} must be {}", req.job_id, field, constraint),
+    ..Default::default()
+});
+```
+
+#### 3. SSE Stream Started (DEBUG level) 🔍
+```rust
+use observability_narration_core::narrate_debug;
+
+narrate_debug(NarrationFields {
+    actor: "worker-orcd",
+    action: "stream_start",
+    target: req.job_id.clone(),
+    correlation_id: Some(correlation_id),
+    job_id: Some(req.job_id.clone()),
+    human: format!("SSE stream opened for job {}", req.job_id),
+    ..Default::default()
+});
+```
+
+### Testing with CaptureAdapter
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]
+fn test_execute_endpoint_narration() {
+    let adapter = CaptureAdapter::install();
+    
+    // POST to /execute
+    let response = client.post("/execute")
+        .json(&valid_request)
+        .send()
+        .await?;
+    
+    // Assert narration captured
+    adapter.assert_includes("Starting inference");
+    adapter.assert_field("action", "inference_start");
+    adapter.assert_correlation_id_present();
+    
+    // Verify correlation ID extracted from headers
+    let captured = adapter.captured();
+    assert!(captured[0].correlation_id.is_some());
+}
+```
+
+### Why This Matters
+
+**Request validation events** are critical for:
+- 🐛 Debugging client integration issues
+- 📊 Tracking validation failure patterns
+- 🔗 Correlating requests across orchestrator → worker
+- 📈 Measuring request processing times
+- 🚨 Alerting on unusual validation failure rates
+
+### New in v0.1.0
+- ✅ **7 logging levels** (use WARN for validation failures, not ERROR)
+- ✅ **HTTP context propagation** (extract correlation IDs from `X-Correlation-Id` header)
+- ✅ **Rich test assertions** (`assert_correlation_id_present()`, `assert_field()`)
+- ✅ **Property tests** for validation invariants
+- ✅ **Serial test execution** to prevent test interference
 
 ---
 
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
-**Created**: 2025-10-04
+**Created**: 2025-10-04  
+**Narration Updated**: 2025-10-04 (v0.1.0)
 
 ---
 Planned by Project Management Team 📋  
-*Narration guidance added by Narration-Core Team 🎀*
+*Narration guidance updated by Narration-Core Team 🎀*
 
 ---
 
