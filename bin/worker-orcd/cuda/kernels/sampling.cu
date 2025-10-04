@@ -5,16 +5,21 @@
  * - Temperature scaling (controls randomness)
  * - Greedy sampling (argmax)
  * - Stochastic sampling (probability distribution)
- * - Top-k sampling - TODO
+ * - Top-k sampling (keep top k tokens)
+ * - Top-p sampling (nucleus sampling)
  * 
  * Spec: M0-W-1032, M0-W-1421, KERNEL-SAMPLE-003
- * Story: FT-017, FT-018, FT-019
+ * Story: FT-017, FT-018, FT-019, FT-019-EXT-1
  */
 
 #include "sampling.cuh"
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
 #include <stdio.h>
+#include <thrust/device_vector.h>
+#include <thrust/sort.h>
+#include <thrust/sequence.h>
+#include <thrust/execution_policy.h>
 
 namespace worker {
 namespace kernels {
@@ -575,6 +580,496 @@ int launch_stochastic_sample(
     cudaFree(d_token_id);
     
     return h_token_id;
+}
+
+/**
+ * Top-K filtering kernel using Thrust for sorting.
+ * 
+ * Keeps only the top k tokens by logit value. All other tokens are set to -INFINITY.
+ * 
+ * Algorithm:
+ * 1. Create indices array [0, 1, 2, ..., vocab_size-1]
+ * 2. Sort logits descending (keeping track of indices)
+ * 3. Zero out logits outside top k
+ * 
+ * @param logits Device pointer to logits [vocab_size] (modified in-place)
+ * @param vocab_size Vocabulary size
+ * @param top_k Keep only top k tokens
+ */
+__global__ void apply_top_k(
+    float* logits,
+    int vocab_size,
+    int top_k
+) {
+    // This kernel is a placeholder - actual work done in launch function
+    // using Thrust for sorting efficiency
+}
+
+/**
+ * Launch top-k filtering kernel.
+ * 
+ * Uses Thrust library for efficient sorting.
+ * 
+ * @param logits Device pointer to logits [vocab_size]
+ * @param vocab_size Vocabulary size
+ * @param top_k Keep only top k tokens (0 = disabled)
+ * @param stream CUDA stream
+ */
+void launch_top_k(
+    float* logits,
+    int vocab_size,
+    int top_k,
+    cudaStream_t stream
+) {
+    // Validate inputs
+    if (vocab_size <= 0) {
+        fprintf(stderr, "Invalid vocab_size: %d\n", vocab_size);
+        return;
+    }
+    
+    if (logits == nullptr) {
+        fprintf(stderr, "Null logits pointer\n");
+        return;
+    }
+    
+    // If top_k disabled or >= vocab_size, no filtering
+    if (top_k <= 0 || top_k >= vocab_size) {
+        return;
+    }
+    
+    // Create device vectors for sorting
+    thrust::device_ptr<float> d_logits_ptr(logits);
+    thrust::device_vector<int> indices(vocab_size);
+    thrust::sequence(thrust::device, indices.begin(), indices.end());
+    
+    // Sort by logits descending (keep track of original indices)
+    thrust::device_vector<float> logits_copy(d_logits_ptr, d_logits_ptr + vocab_size);
+    thrust::sort_by_key(
+        thrust::device,
+        logits_copy.begin(),
+        logits_copy.end(),
+        indices.begin(),
+        thrust::greater<float>()
+    );
+    
+    // Zero out logits outside top k
+    // Create a kernel to set filtered logits to -INFINITY
+    int threads_per_block = 256;
+    int num_blocks = (vocab_size + threads_per_block - 1) / threads_per_block;
+    
+    // Lambda kernel to filter
+    auto filter_kernel = [=] __device__ (int idx) {
+        if (idx >= vocab_size) return;
+        
+        // Check if this index is in top k
+        bool in_top_k = false;
+        for (int i = 0; i < top_k; ++i) {
+            if (thrust::raw_pointer_cast(indices.data())[i] == idx) {
+                in_top_k = true;
+                break;
+            }
+        }
+        
+        if (!in_top_k) {
+            logits[idx] = -INFINITY;
+        }
+    };
+    
+    // Alternative: use a simple kernel
+    // For now, copy sorted indices and filter on CPU side is more reliable
+    thrust::host_vector<int> h_top_k_indices(top_k);
+    thrust::copy(indices.begin(), indices.begin() + top_k, h_top_k_indices.begin());
+    
+    // Create a mask on device
+    thrust::device_vector<bool> mask(vocab_size, false);
+    for (int i = 0; i < top_k; ++i) {
+        mask[h_top_k_indices[i]] = true;
+    }
+    
+    // Apply mask to logits
+    thrust::transform(
+        thrust::device,
+        d_logits_ptr,
+        d_logits_ptr + vocab_size,
+        mask.begin(),
+        d_logits_ptr,
+        [] __device__ (float logit, bool keep) {
+            return keep ? logit : -INFINITY;
+        }
+    );
+    
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        fprintf(stderr, "Top-k filtering failed: %s\n", cudaGetErrorString(err));
+    }
+}
+
+/**
+ * Top-P (nucleus) filtering kernel using Thrust.
+ * 
+ * Keeps tokens whose cumulative probability <= top_p.
+ * 
+ * Algorithm:
+ * 1. Sort logits descending
+ * 2. Compute softmax on sorted logits
+ * 3. Compute cumulative sum
+ * 4. Find cutoff where cumsum > top_p
+ * 5. Zero out logits below cutoff
+ * 
+ * @param logits Device pointer to logits [vocab_size] (modified in-place)
+ * @param vocab_size Vocabulary size
+ * @param top_p Cumulative probability threshold (0.0-1.0)
+ */
+__global__ void apply_top_p(
+    float* logits,
+    int vocab_size,
+    float top_p
+) {
+    // Placeholder - actual work done in launch function
+}
+
+/**
+ * Launch top-p (nucleus) filtering kernel.
+ * 
+ * @param logits Device pointer to logits [vocab_size]
+ * @param vocab_size Vocabulary size
+ * @param top_p Cumulative probability threshold (0.0-1.0)
+ * @param stream CUDA stream
+ */
+void launch_top_p(
+    float* logits,
+    int vocab_size,
+    float top_p,
+    cudaStream_t stream
+) {
+    // Validate inputs
+    if (vocab_size <= 0) {
+        fprintf(stderr, "Invalid vocab_size: %d\n", vocab_size);
+        return;
+    }
+    
+    if (logits == nullptr) {
+        fprintf(stderr, "Null logits pointer\n");
+        return;
+    }
+    
+    if (top_p < 0.0f || top_p > 1.0f) {
+        fprintf(stderr, "Invalid top_p: %f (must be in [0.0, 1.0])\n", top_p);
+        return;
+    }
+    
+    // If top_p >= 1.0, no filtering
+    if (top_p >= 1.0f) {
+        return;
+    }
+    
+    // Create device vectors
+    thrust::device_ptr<float> d_logits_ptr(logits);
+    thrust::device_vector<float> sorted_logits(d_logits_ptr, d_logits_ptr + vocab_size);
+    thrust::device_vector<int> indices(vocab_size);
+    thrust::sequence(thrust::device, indices.begin(), indices.end());
+    
+    // Sort logits descending
+    thrust::sort_by_key(
+        thrust::device,
+        sorted_logits.begin(),
+        sorted_logits.end(),
+        indices.begin(),
+        thrust::greater<float>()
+    );
+    
+    // Copy sorted logits to host for softmax computation
+    thrust::host_vector<float> h_sorted_logits = sorted_logits;
+    
+    // Compute softmax on host (for numerical stability)
+    float max_logit = h_sorted_logits[0];
+    float sum = 0.0f;
+    for (int i = 0; i < vocab_size; ++i) {
+        sum += expf(h_sorted_logits[i] - max_logit);
+    }
+    
+    // Find cutoff where cumsum > top_p
+    float cumsum = 0.0f;
+    int cutoff = vocab_size;
+    for (int i = 0; i < vocab_size; ++i) {
+        float prob = expf(h_sorted_logits[i] - max_logit) / sum;
+        cumsum += prob;
+        if (cumsum > top_p) {
+            cutoff = i;
+            break;
+        }
+    }
+    
+    // Create mask: keep tokens in top cutoff positions
+    thrust::host_vector<int> h_indices = indices;
+    thrust::device_vector<bool> mask(vocab_size, false);
+    for (int i = 0; i < cutoff; ++i) {
+        mask[h_indices[i]] = true;
+    }
+    
+    // Apply mask to logits
+    thrust::transform(
+        thrust::device,
+        d_logits_ptr,
+        d_logits_ptr + vocab_size,
+        mask.begin(),
+        d_logits_ptr,
+        [] __device__ (float logit, bool keep) {
+            return keep ? logit : -INFINITY;
+        }
+    );
+    
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        fprintf(stderr, "Top-p filtering failed: %s\n", cudaGetErrorString(err));
+    }
+}
+
+/**
+ * Repetition penalty kernel.
+ * 
+ * Applies penalty to tokens that appear in generation history.
+ * Each thread handles one token in the vocabulary.
+ * 
+ * @param logits Device pointer to logits [vocab_size] (modified in-place)
+ * @param vocab_size Vocabulary size
+ * @param history Device pointer to generated token IDs
+ * @param history_length Number of tokens in history
+ * @param penalty Repetition penalty factor
+ */
+__global__ void apply_repetition_penalty(
+    float* logits,
+    int vocab_size,
+    const int* history,
+    int history_length,
+    float penalty
+) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if (idx >= vocab_size) {
+        return;
+    }
+    
+    // If penalty disabled or no history, skip
+    if (penalty == 1.0f || history == nullptr || history_length == 0) {
+        return;
+    }
+    
+    // Check if this token is in history
+    bool in_history = false;
+    for (int i = 0; i < history_length; ++i) {
+        if (history[i] == idx) {
+            in_history = true;
+            break;
+        }
+    }
+    
+    // Apply penalty if in history
+    if (in_history) {
+        if (logits[idx] > 0.0f) {
+            logits[idx] /= penalty;
+        } else {
+            logits[idx] *= penalty;
+        }
+    }
+}
+
+/**
+ * Launch repetition penalty kernel.
+ * 
+ * @param logits Device pointer to logits [vocab_size]
+ * @param vocab_size Vocabulary size
+ * @param history Device pointer to generated token IDs
+ * @param history_length Number of tokens in history
+ * @param penalty Repetition penalty factor
+ * @param stream CUDA stream
+ */
+void launch_repetition_penalty(
+    float* logits,
+    int vocab_size,
+    const int* history,
+    int history_length,
+    float penalty,
+    cudaStream_t stream
+) {
+    // Validate inputs
+    if (penalty == 1.0f || history == nullptr || history_length == 0) {
+        return;  // No penalty to apply
+    }
+    
+    if (vocab_size <= 0 || logits == nullptr) {
+        fprintf(stderr, "Invalid inputs to repetition penalty\n");
+        return;
+    }
+    
+    // Kernel launch configuration
+    int threads_per_block = 256;
+    int num_blocks = (vocab_size + threads_per_block - 1) / threads_per_block;
+    
+    apply_repetition_penalty<<<num_blocks, threads_per_block, 0, stream>>>(
+        logits, vocab_size, history, history_length, penalty
+    );
+    
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        fprintf(stderr, "Repetition penalty kernel launch failed: %s\n", 
+                cudaGetErrorString(err));
+    }
+}
+
+/**
+ * Min-P filtering kernel.
+ * 
+ * Filters tokens where prob < min_p * max_prob.
+ * Uses parallel reduction to find max logit, then filters.
+ * 
+ * @param logits Device pointer to logits [vocab_size] (modified in-place)
+ * @param vocab_size Vocabulary size
+ * @param min_p Minimum probability threshold
+ */
+__global__ void apply_min_p(
+    float* logits,
+    int vocab_size,
+    float min_p
+) {
+    __shared__ float shared_max[256];
+    
+    int tid = threadIdx.x;
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    // Phase 1: Find max logit
+    float local_max = (idx < vocab_size) ? logits[idx] : -INFINITY;
+    
+    // Grid-stride loop
+    for (int i = idx + blockDim.x * gridDim.x; i < vocab_size; 
+         i += blockDim.x * gridDim.x) {
+        local_max = fmaxf(local_max, logits[i]);
+    }
+    
+    shared_max[tid] = local_max;
+    __syncthreads();
+    
+    // Reduce to find global max
+    for (int s = blockDim.x / 2; s > 0; s >>= 1) {
+        if (tid < s) {
+            shared_max[tid] = fmaxf(shared_max[tid], shared_max[tid + s]);
+        }
+        __syncthreads();
+    }
+    
+    float global_max = shared_max[0];
+    __syncthreads();
+    
+    // Phase 2: Compute threshold and filter
+    // threshold_logit = log(min_p) + max_logit
+    float threshold_logit = logf(min_p) + global_max;
+    
+    // Filter tokens below threshold
+    if (idx < vocab_size) {
+        if (logits[idx] < threshold_logit) {
+            logits[idx] = -INFINITY;
+        }
+    }
+    
+    // Grid-stride loop
+    for (int i = idx + blockDim.x * gridDim.x; i < vocab_size; 
+         i += blockDim.x * gridDim.x) {
+        if (logits[i] < threshold_logit) {
+            logits[i] = -INFINITY;
+        }
+    }
+}
+
+/**
+ * Launch min-p filtering kernel.
+ * 
+ * @param logits Device pointer to logits [vocab_size]
+ * @param vocab_size Vocabulary size
+ * @param min_p Minimum probability threshold (0.0-1.0)
+ * @param stream CUDA stream
+ */
+void launch_min_p(
+    float* logits,
+    int vocab_size,
+    float min_p,
+    cudaStream_t stream
+) {
+    if (min_p <= 0.0f) {
+        return;  // Disabled
+    }
+    
+    if (vocab_size <= 0 || logits == nullptr) {
+        fprintf(stderr, "Invalid inputs to min-p\n");
+        return;
+    }
+    
+    int threads_per_block = 256;
+    int num_blocks = (vocab_size + threads_per_block - 1) / threads_per_block;
+    if (num_blocks > 256) {
+        num_blocks = 256;
+    }
+    
+    apply_min_p<<<num_blocks, threads_per_block, 0, stream>>>(
+        logits, vocab_size, min_p
+    );
+    
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        fprintf(stderr, "Min-p kernel launch failed: %s\n", 
+                cudaGetErrorString(err));
+    }
+}
+
+/**
+ * Check if generated sequence matches any stop sequence.
+ * 
+ * CPU-side implementation for pattern matching.
+ * 
+ * @param generated_tokens Host pointer to generated token IDs
+ * @param num_generated Number of generated tokens
+ * @param stop_sequences Array of stop sequence pointers (up to 4)
+ * @param stop_lengths Array of stop sequence lengths
+ * @param num_stop_sequences Number of stop sequences
+ * @return True if any stop sequence matched
+ */
+bool check_stop_sequences(
+    const int* generated_tokens,
+    int num_generated,
+    const int* stop_sequences[4],
+    const int stop_lengths[4],
+    int num_stop_sequences
+) {
+    // Check each stop sequence
+    for (int seq_idx = 0; seq_idx < num_stop_sequences && seq_idx < 4; ++seq_idx) {
+        const int* seq = stop_sequences[seq_idx];
+        int seq_len = stop_lengths[seq_idx];
+        
+        // Skip if sequence is empty or nullptr
+        if (seq == nullptr || seq_len == 0) {
+            continue;
+        }
+        
+        // Need at least seq_len tokens to match
+        if (num_generated < seq_len) {
+            continue;
+        }
+        
+        // Check if last seq_len tokens match stop sequence
+        bool match = true;
+        for (int i = 0; i < seq_len; ++i) {
+            int gen_idx = num_generated - seq_len + i;
+            if (generated_tokens[gen_idx] != seq[i]) {
+                match = false;
+                break;
+            }
+        }
+        
+        if (match) {
+            return true;  // Stop sequence matched
+        }
+    }
+    
+    return false;  // No match
 }
 
 } // namespace kernels

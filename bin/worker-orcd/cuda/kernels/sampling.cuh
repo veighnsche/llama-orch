@@ -163,6 +163,185 @@ __global__ void sample_from_distribution(
 );
 
 /**
+ * Apply top-k filtering to logits (zero out tokens outside top k).
+ * 
+ * Keeps only the top k tokens by logit value. All other tokens are set to -INFINITY.
+ * Uses partial sort for efficiency.
+ * 
+ * @param logits Device pointer to logits [vocab_size] (modified in-place)
+ * @param vocab_size Vocabulary size
+ * @param top_k Keep only top k tokens (0 = disabled)
+ * */
+__global__ void apply_top_k(
+    float* logits,
+    int vocab_size,
+    int top_k
+);
+
+/**
+ * Apply top-p (nucleus) filtering to logits.
+ * 
+ * Keeps tokens whose cumulative probability <= top_p.
+ * Sorts logits descending, computes cumulative softmax, filters below threshold.
+ * 
+ * @param logits Device pointer to logits [vocab_size] (modified in-place)
+ * @param vocab_size Vocabulary size
+ * @param top_p Cumulative probability threshold (0.0-1.0, 1.0 = disabled)
+ */
+__global__ void apply_top_p(
+    float* logits,
+    int vocab_size,
+    float top_p
+);
+
+/**
+ * Launch top-k filtering kernel.
+ * 
+ * @param logits Device pointer to logits [vocab_size]
+ * @param vocab_size Vocabulary size (must be > 0)
+ * @param top_k Keep only top k tokens (0 = disabled, >vocab_size = no filtering)
+ * @param stream CUDA stream (default: 0)
+ * 
+ * Error handling:
+ * - Validates vocab_size > 0
+ * - Validates logits != nullptr
+ * - top_k = 0 or top_k >= vocab_size: no filtering
+ * - Checks kernel launch errors
+ */
+void launch_top_k(
+    float* logits,
+    int vocab_size,
+    int top_k,
+    cudaStream_t stream = 0
+);
+
+/**
+ * Launch top-p (nucleus) filtering kernel.
+ * 
+ * @param logits Device pointer to logits [vocab_size]
+ * @param vocab_size Vocabulary size (must be > 0)
+ * @param top_p Cumulative probability threshold (0.0-1.0)
+ * @param stream CUDA stream (default: 0)
+ * 
+ * Error handling:
+ * - Validates vocab_size > 0
+ * - Validates logits != nullptr
+ * - Validates top_p in [0.0, 1.0]
+ * - top_p >= 1.0: no filtering
+ * - Checks kernel launch errors
+ */
+void launch_top_p(
+    float* logits,
+    int vocab_size,
+    float top_p,
+    cudaStream_t stream = 0
+);
+
+/**
+ * Apply repetition penalty to logits.
+ * 
+ * Penalizes tokens that appear in generation history.
+ * Formula:
+ * - If logits[token] > 0: logits[token] /= penalty
+ * - If logits[token] <= 0: logits[token] *= penalty
+ * 
+ * @param logits Device pointer to logits [vocab_size] (modified in-place)
+ * @param vocab_size Vocabulary size
+ * @param history Device pointer to generated token IDs
+ * @param history_length Number of tokens in history
+ * @param penalty Repetition penalty factor (>1.0 = penalize, <1.0 = encourage)
+ */
+__global__ void apply_repetition_penalty(
+    float* logits,
+    int vocab_size,
+    const int* history,
+    int history_length,
+    float penalty
+);
+
+/**
+ * Launch repetition penalty kernel.
+ * 
+ * @param logits Device pointer to logits [vocab_size]
+ * @param vocab_size Vocabulary size (must be > 0)
+ * @param history Device pointer to generated token IDs
+ * @param history_length Number of tokens in history
+ * @param penalty Repetition penalty factor (1.0 = disabled, >1.0 = penalize)
+ * @param stream CUDA stream (default: 0)
+ * 
+ * Error handling:
+ * - Validates vocab_size > 0
+ * - Validates logits != nullptr
+ * - penalty = 1.0 or history = nullptr: no penalty
+ * - Checks kernel launch errors
+ */
+void launch_repetition_penalty(
+    float* logits,
+    int vocab_size,
+    const int* history,
+    int history_length,
+    float penalty,
+    cudaStream_t stream = 0
+);
+
+/**
+ * Apply min-p filtering to logits.
+ * 
+ * Filters tokens where prob < min_p * max_prob.
+ * 
+ * @param logits Device pointer to logits [vocab_size] (modified in-place)
+ * @param vocab_size Vocabulary size
+ * @param min_p Minimum probability threshold (0.0-1.0, 0.0 = disabled)
+ */
+__global__ void apply_min_p(
+    float* logits,
+    int vocab_size,
+    float min_p
+);
+
+/**
+ * Launch min-p filtering kernel.
+ * 
+ * @param logits Device pointer to logits [vocab_size]
+ * @param vocab_size Vocabulary size (must be > 0)
+ * @param min_p Minimum probability threshold (0.0-1.0)
+ * @param stream CUDA stream (default: 0)
+ * 
+ * Error handling:
+ * - Validates vocab_size > 0
+ * - Validates logits != nullptr
+ * - min_p <= 0.0: no filtering
+ * - Checks kernel launch errors
+ */
+void launch_min_p(
+    float* logits,
+    int vocab_size,
+    float min_p,
+    cudaStream_t stream = 0
+);
+
+/**
+ * Check if generated sequence matches any stop sequence.
+ * 
+ * Uses sliding window comparison against each stop sequence.
+ * CPU-side implementation for simplicity.
+ * 
+ * @param generated_tokens Host pointer to generated token IDs
+ * @param num_generated Number of generated tokens
+ * @param stop_sequences Array of stop sequence pointers (up to 4)
+ * @param stop_lengths Array of stop sequence lengths
+ * @param num_stop_sequences Number of stop sequences
+ * @return True if any stop sequence matched
+ */
+bool check_stop_sequences(
+    const int* generated_tokens,
+    int num_generated,
+    const int* stop_sequences[4],
+    const int stop_lengths[4],
+    int num_stop_sequences
+);
+
+/**
  * Stochastic sampling: sample token from probability distribution.
  * 
  * Two-phase pipeline:
