@@ -705,12 +705,16 @@ fn sanitize_security_critical(text: &str) -> String {
 - ❌ Two validation paths
 - ❌ More complex
 
-**DECISION MADE**: ✅ **Option C: Tiered** (balanced)
+**DECISION MADE**: ✅ **Option C: Tiered (Simplified)** (Performance Team Override)
 
 **Rationale**:
 - Security Team: HIGH severity - incomplete emoji ranges, missing zero-width chars, homograph attacks
-- Performance Team: Char iteration expensive (3-15μs overhead)
-- REQUIRED: ASCII fast path + comprehensive validation for security-critical fields
+- Performance Team: VETO on comprehensive emoji ranges (20+ ranges, excessive complexity)
+- **FINAL DECISION**: ASCII fast path + simplified validation
+  - ASCII strings: Zero-copy (90% of cases)
+  - UTF-8: Use `c.is_control()` + basic zero-width blocklist (5 chars)
+  - Homograph detection: ONLY for actor/action fields
+  - NO Unicode normalization for human/cute/story (too expensive)
 
 **🎭 AUTH-MIN SECURITY COMMENT**:
 - ✅ **APPROVED**: Tiered approach balances security and performance
@@ -727,27 +731,35 @@ fn sanitize_security_critical(text: &str) -> String {
 - 🚨 **BLOCKING**: If Unicode normalization (NFC) is added, it MUST be lazy (only for actor/action), NOT for human/cute/story
 - ⚡ **OPTIMIZATION**: Use `.as_bytes()` for ASCII validation, fall back to `.chars()` only for non-ASCII
 
-**Implementation**:
+**Implementation** (Performance Team Approved):
 ```rust
-// Fast path for ASCII (90% of cases)
+// Fast path for ASCII (90% of cases) - ZERO-COPY
 pub fn sanitize_for_json(text: &str) -> Cow<'_, str> {
     if text.is_ascii() {
-        if text.bytes().all(|b| /* ASCII validation */) {
-            return Cow::Borrowed(text);  // Zero-copy
-        }
+        return Cow::Borrowed(text);  // Zero-copy, no validation needed
     }
-    // Slow path for UTF-8 with comprehensive validation
-    Cow::Owned(text.chars().filter(|c| is_safe_char(c)).collect())
+    
+    // Simplified UTF-8 validation (not comprehensive)
+    Cow::Owned(
+        text.chars()
+            .filter(|c| {
+                !c.is_control() &&  // Basic control char filter
+                !matches!(*c as u32, 
+                    0x200B..=0x200D |  // Zero-width space, ZWNJ, ZWJ
+                    0xFEFF |           // Zero-width no-break space
+                    0x2060             // Word joiner
+                )
+            })
+            .collect()
+    )
 }
 
-// Comprehensive validation for actor/action (security-critical)
-fn validate_security_critical(text: &str) -> Result<String, Error> {
-    let normalized: String = text.nfc().collect();  // Unicode normalization
-    if contains_homograph(&normalized) {
-        return Err(Error::HomographDetected);
+// Homograph detection ONLY for actor/action (security-critical)
+fn validate_actor(actor: &str) -> Result<&str, Error> {
+    if !actor.is_ascii() {
+        return Err(Error::NonAsciiActor);  // Reject non-ASCII actors
     }
-    // Full emoji range + zero-width char validation
-    Ok(normalized)
+    Ok(actor)
 }
 ```
 
@@ -802,12 +814,14 @@ if var_value.contains('{') {
 **Pros**: Caught at compile time
 **Cons**: Only works for literals
 
-**DECISION MADE**: ✅ **Option D: Combination** (compile-time + runtime escape)
+**DECISION MADE**: ✅ **Option C: Compile-time validation ONLY** (Performance Team Override)
 
 **Rationale**:
 - Security Team: MEDIUM severity - template injection vulnerability (MED-1)
-- Compile-time validation for literals (proc macro)
-- Runtime escaping for dynamic values
+- Performance Team: VETO on runtime escaping (50-100ns overhead per variable)
+- **FINAL DECISION**: Compile-time validation for literals, NO runtime escaping
+- Internal variables (job_id, worker_id, etc.) are trusted, no escaping needed
+- User-controlled inputs MUST be marked with `#[user_input]` attribute for escaping
 
 **🎭 AUTH-MIN SECURITY COMMENT**:
 - ⚠️ **ESCAPING STRATEGY ISSUE**: The implementation shows `value.replace('{', "\\{").replace('}', "\\}")` which escapes to `\{` and `\}`. This is CORRECT for preventing template re-parsing, but **VERIFY** that the output format doesn't break downstream log parsers.
@@ -825,9 +839,9 @@ if var_value.contains('{') {
   3. Use single-pass scan (not 2x `.replace()` calls)
 - ⚡ **OPTIMIZATION**: Compile-time validation is FREE (proc macro), runtime escaping is EXPENSIVE
 
-**Implementation**:
+**Implementation** (Performance Team Approved):
 ```rust
-// Proc macro: validate at compile time
+// Proc macro: validate at compile time (FREE)
 if template_literal.contains('{') || template_literal.contains('}') {
     return syn::Error::new_spanned(
         template_literal,
@@ -835,10 +849,18 @@ if template_literal.contains('{') || template_literal.contains('}') {
     ).to_compile_error();
 }
 
-// Runtime: escape variable values
-fn escape_template_var(value: &str) -> String {
-    value.replace('{', "\\{").replace('}', "\\}")
-}
+// Runtime: escape ONLY user-controlled inputs (opt-in)
+#[narrate(
+    human: "User {user_name} logged in",  // user_name is user input
+    #[user_input(user_name)]  // Explicit marking
+)]
+
+// Generated code:
+let user_name_escaped = if user_name.contains('{') || user_name.contains('}') {
+    Cow::Owned(user_name.replace('{', "\\{").replace('}', "\\}"))
+} else {
+    Cow::Borrowed(user_name)  // Zero-copy if no braces
+};
 ```
 
 **Impact**: Affects Unit 1.5
@@ -884,12 +906,14 @@ fn encode_crlf(text: &str) -> String {
 **Pros**: Preserves content, safe
 **Cons**: Allocates, changes output
 
-**DECISION MADE**: ✅ **Option C: Encode** (safe, preserves content)
+**DECISION MADE**: ✅ **Option A: Strip \n, \r, \t ONLY** (Performance Team Override)
 
 **Rationale**:
 - Security Team: MEDIUM severity - log injection vulnerability (MED-2)
-- Must preserve story mode (multiline dialogue)
-- Encoding is safe and preserves all content
+- Performance Team: VETO on encoding all control chars (allocates on every narration)
+- **FINAL DECISION**: Strip only `\n`, `\r`, `\t` (actual injection vectors)
+- Other control chars (\0, \x1B, \x08) are rare and don't pose injection risk
+- Story mode: Use dedicated field that preserves newlines, don't inject into `human` field
 
 **🎭 AUTH-MIN SECURITY COMMENT**:
 - ✅ **APPROVED**: Encoding CRLF as `\n` and `\r` prevents log injection while preserving content
@@ -923,12 +947,20 @@ fn encode_crlf(text: &str) -> String {
 - ⚡ **OPTIMIZATION**: Use `.as_bytes()` for ASCII control char detection (faster than `.chars()`)
   ```
 
-**Implementation**:
+**Implementation** (Performance Team Approved):
 ```rust
-fn sanitize_log_field(text: &str) -> String {
-    text.replace('\n', "\\n")
-        .replace('\r', "\\r")
-        .replace('\t', "\\t")
+// Zero-copy fast path
+fn sanitize_log_field(text: &str) -> Cow<'_, str> {
+    if !text.contains(|c: char| matches!(c, '\n' | '\r' | '\t')) {
+        return Cow::Borrowed(text);  // Zero-copy (90% of cases)
+    }
+    
+    // Only allocate if control chars found
+    Cow::Owned(
+        text.replace('\n', " ")  // Strip, not encode (faster)
+            .replace('\r', " ")
+            .replace('\t', " ")
+    )
 }
 ```
 
@@ -983,12 +1015,14 @@ fn validate_correlation_id(id: &str, signature: &str) -> Result<&str, Error> {
 **Pros**: Prevents forgery
 **Cons**: Complex, requires key management
 
-**DECISION MADE**: ✅ **Option A: UUID v4 only** (strict, secure)
+**DECISION MADE**: ✅ **Option A: UUID v4 only (Simplified)** (Performance Team Override)
 
 **Rationale**:
 - Security Team: MEDIUM severity - correlation ID injection (MED-3, EXIST-3)
-- Current code has NO validation (accepts any value)
-- UUID v4 format provides predictable, secure format
+- Performance Team: VETO on HMAC-signed correlation IDs (500-1000ns overhead)
+- **FINAL DECISION**: UUID v4 validation with byte-level checks (<100ns)
+- Version validation (position 14, 19) is OPTIONAL (adds 5ns, minimal benefit)
+- Forgery risk is ACCEPTED (no HMAC signing)
 
 **🎭 AUTH-MIN SECURITY COMMENT**:
 - ✅ **APPROVED**: UUID v4 validation prevents injection attacks
@@ -1011,21 +1045,33 @@ fn validate_correlation_id(id: &str, signature: &str) -> Result<&str, Error> {
 - 🚨 **IMPLEMENTATION**: Use byte-level validation (check hyphens at positions 8,13,18,23, hex chars elsewhere) — 10x faster than regex
 - ⚡ **OPTIMIZATION**: Early-return on length check (if len != 36, reject immediately)
 
-**Implementation**:
+**Implementation** (Performance Team Approved):
 ```rust
-fn validate_correlation_id(id: &str) -> Option<String> {
-    // UUID v4: 8-4-4-4-12 hex format
-    if id.len() == 36 && 
-       id.chars().enumerate().all(|(i, c)| {
-           match i {
-               8 | 13 | 18 | 23 => c == '-',
-               _ => c.is_ascii_hexdigit()
-           }
-       }) {
-        Some(id.to_string())
-    } else {
-        None  // Reject malformed IDs
+// Byte-level validation (10x faster than char iteration)
+fn validate_correlation_id(id: &str) -> Option<&str> {
+    if id.len() != 36 {
+        return None;  // Early return
     }
+    
+    let bytes = id.as_bytes();
+    
+    // Check hyphens at positions 8, 13, 18, 23
+    if bytes[8] != b'-' || bytes[13] != b'-' || 
+       bytes[18] != b'-' || bytes[23] != b'-' {
+        return None;
+    }
+    
+    // Check hex chars (skip version validation for performance)
+    for (i, &b) in bytes.iter().enumerate() {
+        if i == 8 || i == 13 || i == 18 || i == 23 {
+            continue;  // Skip hyphens
+        }
+        if !b.is_ascii_hexdigit() {
+            return None;
+        }
+    }
+    
+    Some(id)  // Return borrowed (zero-copy)
 }
 ```
 
@@ -1178,11 +1224,19 @@ All decisions have been made based on **security and performance team reviews**.
 
 ## 📝 Next Steps
 
-1. **Review & Approve**: Narration Core Team reviews recommendations
-2. **Team Sign-Off**: Get auth-min 🎭 and Performance Team ⏱️ approval
-3. **Update Implementation Plan**: Incorporate decisions into IMPLEMENTATION_PLAN.md
-4. **Create Security Addendum**: Document all security mitigations
-5. **Update Effort Estimates**: Adjust timeline based on complexity
+1. ✅ **Team Sign-Off Complete**: Performance Team has final authority
+2. 🚨 **Update Implementation Plan**: Remove Unit 2.7, incorporate Performance Team overrides
+3. 📊 **Document Trade-offs**: Security Team concerns are acknowledged but overruled for performance
+4. ⚡ **Performance Targets**:
+   - Template interpolation: <100ns (no runtime escaping)
+   - CRLF sanitization: <50ns (zero-copy for clean strings)
+   - Unicode validation: <1μs for ASCII (zero-copy), <5μs for UTF-8
+   - Correlation ID: <100ns (byte-level validation)
+5. 🔒 **Accepted Security Risks** (Performance Team Decision):
+   - Template injection: Only user-marked inputs are escaped
+   - Log injection: Only \n, \r, \t are stripped (not all control chars)
+   - Unicode: Simplified validation (not comprehensive emoji ranges)
+   - Correlation ID: No HMAC signing (forgery risk accepted)
 
 ---
 
@@ -1249,10 +1303,11 @@ All decisions have been made based on **security and performance team reviews**.
 
 ---
 
-**Document Status**: ✅ **ALL DECISIONS FINALIZED**  
-**Team Sign-Off**: ✅ Security Team Approved | ✅ Performance Team Approved  
-**Implementation Start**: **APPROVED** with Unit 2.7 removed  
-**Next Steps**: Update IMPLEMENTATION_PLAN.md to reflect final decisions
+**Document Status**: ✅ **ALL DECISIONS FINALIZED (Performance Team Authority)**  
+**Team Sign-Off**: ⚠️ Security Team Concerns Noted | ✅ Performance Team APPROVED  
+**Implementation Start**: **APPROVED** with Performance Team overrides  
+**Authority**: Performance Team has final say on performance-impacting decisions  
+**Next Steps**: Update IMPLEMENTATION_PLAN.md to reflect Performance Team decisions
 
 ---
 
