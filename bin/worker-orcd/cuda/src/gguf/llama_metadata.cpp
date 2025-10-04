@@ -184,6 +184,18 @@ LlamaConfig parse_llama_metadata(const std::vector<GGUFMetadata>& metadata) {
     config.attention_head_count_kv = get_required_uint32(metadata, "llama.attention.head_count_kv");
     config.ffn_length = get_required_uint32(metadata, "llama.feed_forward_length");
     
+    // Validate head counts before any division
+    if (config.attention_head_count == 0) {
+        throw CudaError::model_load_failed(
+            "Invalid attention_head_count: 0"
+        );
+    }
+    if (config.attention_head_count_kv == 0) {
+        throw CudaError::model_load_failed(
+            "Invalid attention_head_count_kv: 0"
+        );
+    }
+    
     // Extract optional RoPE parameters
     // Default rope_dimension_count to head_dim if not specified
     uint32_t default_rope_dims = config.embedding_length / config.attention_head_count;
@@ -229,17 +241,6 @@ LlamaConfig parse_llama_metadata(const std::vector<GGUFMetadata>& metadata) {
     }
     
     // Calculate derived parameters
-    if (config.attention_head_count == 0) {
-        throw CudaError::model_load_failed(
-            "Invalid attention_head_count: 0"
-        );
-    }
-    if (config.attention_head_count_kv == 0) {
-        throw CudaError::model_load_failed(
-            "Invalid attention_head_count_kv: 0"
-        );
-    }
-    
     config.head_dim = config.embedding_length / config.attention_head_count;
     config.kv_head_dim = config.embedding_length / config.attention_head_count_kv;
     

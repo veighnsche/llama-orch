@@ -17,6 +17,7 @@
 #include "gguf/llama_metadata.h"
 #include "cuda_error.h"
 #include <vector>
+#include <algorithm>
 
 using namespace worker::gguf;
 

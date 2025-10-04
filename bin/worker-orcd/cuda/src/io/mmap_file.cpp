@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <cerrno>
 #include <cstring>
+#include <cstdint>
 #include <sstream>
 
 namespace worker {
