@@ -1,6 +1,43 @@
 // trace.rs — Ultra-lightweight TRACE-level narration
 // Optimized for minimal overhead in hot paths
 
+/// Helper function for trace_fn macro: emit function entry trace.
+#[cfg(feature = "trace-enabled")]
+pub fn trace_enter(actor: &'static str, function: &str) {
+    tracing::trace!(
+        actor = actor,
+        action = "enter",
+        target = function,
+        human = format!("ENTER {}", function),
+        "trace_enter"
+    );
+}
+
+#[cfg(not(feature = "trace-enabled"))]
+#[inline(always)]
+pub fn trace_enter(_actor: &'static str, _function: &str) {
+    // No-op in production
+}
+
+/// Helper function for trace_fn macro: emit function exit trace with timing.
+#[cfg(feature = "trace-enabled")]
+pub fn trace_exit(actor: &'static str, function: &str, elapsed_ms: u64) {
+    tracing::trace!(
+        actor = actor,
+        action = "exit",
+        target = function,
+        human = format!("EXIT {} ({}ms)", function, elapsed_ms),
+        duration_ms = elapsed_ms,
+        "trace_exit"
+    );
+}
+
+#[cfg(not(feature = "trace-enabled"))]
+#[inline(always)]
+pub fn trace_exit(_actor: &'static str, _function: &str, _elapsed_ms: u64) {
+    // No-op in production
+}
+
 /// Minimal trace event for ultra-fine-grained logging.
 /// 
 /// **Performance**: ~10x faster than full `narrate()` because:

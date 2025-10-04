@@ -51,9 +51,9 @@ pub fn generate_template_code(template: &LitStr) -> TokenStream {
     // For now, generate a simple format! call
     // In production, this would use ArrayString for stack allocation
     if variables.is_empty() {
-        // No variables, just use the literal string
+        // No variables, convert literal to String
         quote! {
-            #template
+            #template.to_string()
         }
     } else {
         // Generate format string and variable list

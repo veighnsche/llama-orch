@@ -4,7 +4,7 @@ use syn::{parse_macro_input, ItemFn};
 
 /// Implementation of #[trace_fn] attribute macro.
 /// 
-/// Generates entry/exit traces with automatic timing.
+/// Generates entry/exit traces with automatic timing using the narration system.
 pub fn trace_fn_impl(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input_fn = parse_macro_input!(item as ItemFn);
     
@@ -18,6 +18,14 @@ pub fn trace_fn_impl(_attr: TokenStream, item: TokenStream) -> TokenStream {
     // Check if function is async
     let is_async = fn_sig.asyncness.is_some();
     
+    // Infer actor from module path
+    let actor_inference = quote! {
+        {
+            let module = module_path!();
+            observability_narration_core::extract_service_name(module)
+        }
+    };
+    
     // Generate the instrumented function
     let output = if is_async {
         quote! {
@@ -27,20 +35,20 @@ pub fn trace_fn_impl(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 {
                     use std::time::Instant;
                     let __trace_start = Instant::now();
+                    let __actor = #actor_inference;
                     
-                    tracing::trace!(
-                        action = "enter",
-                        target = #fn_name_str,
-                        human = concat!("ENTER ", #fn_name_str),
+                    observability_narration_core::trace::trace_enter(
+                        __actor,
+                        #fn_name_str,
                     );
                     
                     let __result = async move #fn_block.await;
                     
-                    let __elapsed_ms = __trace_start.elapsed().as_millis();
-                    tracing::trace!(
-                        action = "exit",
-                        target = #fn_name_str,
-                        human = format!("EXIT {} ({}ms)", #fn_name_str, __elapsed_ms),
+                    let __elapsed_ms = __trace_start.elapsed().as_millis() as u64;
+                    observability_narration_core::trace::trace_exit(
+                        __actor,
+                        #fn_name_str,
+                        __elapsed_ms,
                     );
                     
                     __result
@@ -60,20 +68,20 @@ pub fn trace_fn_impl(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 {
                     use std::time::Instant;
                     let __trace_start = Instant::now();
+                    let __actor = #actor_inference;
                     
-                    tracing::trace!(
-                        action = "enter",
-                        target = #fn_name_str,
-                        human = concat!("ENTER ", #fn_name_str),
+                    observability_narration_core::trace::trace_enter(
+                        __actor,
+                        #fn_name_str,
                     );
                     
                     let __result = (|| #fn_block)();
                     
-                    let __elapsed_ms = __trace_start.elapsed().as_millis();
-                    tracing::trace!(
-                        action = "exit",
-                        target = #fn_name_str,
-                        human = format!("EXIT {} ({}ms)", #fn_name_str, __elapsed_ms),
+                    let __elapsed_ms = __trace_start.elapsed().as_millis() as u64;
+                    observability_narration_core::trace::trace_exit(
+                        __actor,
+                        #fn_name_str,
+                        __elapsed_ms,
                     );
                     
                     __result
