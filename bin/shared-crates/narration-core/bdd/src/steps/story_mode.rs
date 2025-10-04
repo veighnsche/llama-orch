@@ -1,7 +1,7 @@
 // Step definitions for story mode behaviors
 
 use crate::steps::world::World;
-use cucumber::{gherkin::Table, then, when};
+use cucumber::{gherkin::Step, then, when};
 use observability_narration_core::{narrate, NarrationFields};
 
 #[when(regex = r#"^I narrate with story "(.+)"$"#)]
@@ -29,21 +29,23 @@ pub async fn when_narrate_without_story(_world: &mut World) {
 }
 
 #[when("I narrate with all three modes:")]
-pub async fn when_narrate_with_all_three_modes(_world: &mut World, table: &Table) {
+pub async fn when_narrate_with_all_three_modes(_world: &mut World, step: &Step) {
     let mut human = String::new();
     let mut cute = None;
     let mut story = None;
 
-    for row in table.rows.iter().skip(1) {
-        // Skip header
-        let mode = &row[0];
-        let content = &row[1];
+    if let Some(table) = step.table.as_ref() {
+        for row in table.rows.iter().skip(1) {
+            // Skip header
+            let mode = &row[0];
+            let content = &row[1];
 
-        match mode.as_str() {
-            "human" => human = content.to_string(),
-            "cute" => cute = Some(content.to_string()),
-            "story" => story = Some(content.to_string()),
-            _ => panic!("Unknown mode: {}", mode),
+            match mode.as_str() {
+                "human" => human = content.to_string(),
+                "cute" => cute = Some(content.to_string()),
+                "story" => story = Some(content.to_string()),
+                _ => panic!("Unknown mode: {}", mode),
+            }
         }
     }
 

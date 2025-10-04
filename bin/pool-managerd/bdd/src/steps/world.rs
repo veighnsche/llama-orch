@@ -1,5 +1,6 @@
 use pool_managerd::core::registry::Registry;
-use provisioners_engine_provisioner::PreparedEngine;
+// TODO: Re-enable when engine provisioner is implemented
+// use provisioners_engine_provisioner::PreparedEngine;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -21,7 +22,8 @@ pub struct BddWorld {
     pub last_body: Option<String>,
 
     /// PreparedEngine for current scenario
-    pub prepared_engine: Option<PreparedEngine>,
+    // TODO: Re-enable when engine provisioner is implemented
+    // pub prepared_engine: Option<PreparedEngine>,
 
     /// Test fixtures
     pub pool_id: Option<String>,
@@ -48,7 +50,7 @@ impl Default for BddWorld {
             last_status: None,
             last_headers: None,
             last_body: None,
-            prepared_engine: None,
+            // prepared_engine: None,
             pool_id: None,
             handoff_json: None,
             spawned_pids: Vec::new(),

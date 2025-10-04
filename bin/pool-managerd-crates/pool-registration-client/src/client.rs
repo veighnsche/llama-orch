@@ -1,7 +1,7 @@
 //! HTTP client for registration
 
 use anyhow::{Context, Result};
-use service_registry::{HeartbeatRequest, HeartbeatResponse, RegisterRequest, RegisterResponse};
+use pool_registry::{HeartbeatRequest, HeartbeatResponse, RegisterRequest, RegisterResponse};
 use tracing::debug;
 
 /// Registration client for communicating with orchestratord

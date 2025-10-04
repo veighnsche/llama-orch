@@ -10,18 +10,17 @@
 //! let worker_token = Secret::load_from_file("/etc/llorch/secrets/worker-token")?;
 //! // Use worker_token.expose() for Authorization header
 //! ```
-//! See: `bin/shared-crates/secrets-management/README.md`odic heartbeats.
 
 use anyhow::{Context, Result};
 use pool_registry_types::NodeCapabilities;
-use service_registry::{HeartbeatPoolStatus, HeartbeatRequest, RegisterRequest};
+use pool_registry::{HeartbeatPoolStatus, HeartbeatRequest, RegisterRequest};
 use std::time::Duration;
+use tokio::time::interval;
 use tracing::{info, warn};
 
 pub mod client;
 
 pub use client::RegistrationClient;
-
 /// Configuration for node registration
 #[derive(Debug, Clone)]
 pub struct NodeRegistrationConfig {

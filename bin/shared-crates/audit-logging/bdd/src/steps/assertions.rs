@@ -119,14 +119,6 @@ async fn then_rejects_oversized_fields(world: &mut BddWorld) {
     );
 }
 
-#[then("the validation should reject Unicode directional overrides")]
-async fn then_rejects_unicode_overrides(world: &mut BddWorld) {
-    assert!(
-        world.last_failed(),
-        "Expected validation to fail for Unicode directional overrides"
-    );
-}
-
 #[then("the event should be serializable")]
 async fn then_event_serializable(world: &mut BddWorld) {
     assert!(

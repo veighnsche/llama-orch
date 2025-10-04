@@ -1,6 +1,6 @@
 //! Config schema types (pre-code). Emits deterministic JSON Schema.
 
-use schemars::{schema::RootSchema, JsonSchema};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -191,7 +191,7 @@ pub struct TrustPolicyConfig {
 }
 
 /// Build the JSON Schema for the top-level `Config` type.
-pub fn build_schema() -> RootSchema {
+pub fn build_schema() -> schemars::Schema {
     schemars::schema_for!(Config)
 }
 

@@ -18,7 +18,7 @@ serde = { workspace = true, features = ["derive"] }
 regex = { workspace = true }
 uuid = { workspace = true }
 opentelemetry = { version = "0.21", optional = true }
-axum = { version = "0.7", optional = true }
+axum = { workspace = true, optional = true }
 
 [dev-dependencies]
 tracing-subscriber = { workspace = true }
