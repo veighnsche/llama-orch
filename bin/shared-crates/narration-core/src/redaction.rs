@@ -80,16 +80,17 @@ fn jwt_regex() -> &'static Regex {
 fn private_key_regex() -> &'static Regex {
     PRIVATE_KEY_PATTERN.get_or_init(|| {
         // Match private key blocks (simplified to avoid ReDoS)
-        Regex::new(r"-----BEGIN [A-Z ]+PRIVATE KEY-----[\s\S]{1,4096}?-----END [A-Z ]+PRIVATE KEY-----")
-            .expect("BUG: private key regex pattern is invalid")
+        Regex::new(
+            r"-----BEGIN [A-Z ]+PRIVATE KEY-----[\s\S]{1,4096}?-----END [A-Z ]+PRIVATE KEY-----",
+        )
+        .expect("BUG: private key regex pattern is invalid")
     })
 }
 
 fn url_password_regex() -> &'static Regex {
     URL_PASSWORD_PATTERN.get_or_init(|| {
         // Match passwords in URLs (user:password@host)
-        Regex::new(r"://[^:]+:([^@]+)@")
-            .expect("BUG: URL password regex pattern is invalid")
+        Regex::new(r"://[^:]+:([^@]+)@").expect("BUG: URL password regex pattern is invalid")
     })
 }
 

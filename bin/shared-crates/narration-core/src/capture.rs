@@ -15,14 +15,34 @@ pub struct CapturedNarration {
     pub story: Option<String>,
     pub correlation_id: Option<String>,
     pub session_id: Option<String>,
+    pub job_id: Option<String>,
+    pub task_id: Option<String>,
     pub pool_id: Option<String>,
     pub replica_id: Option<String>,
+    pub worker_id: Option<String>,
+    // Contextual fields
+    pub error_kind: Option<String>,
+    pub retry_after_ms: Option<u64>,
+    pub backoff_ms: Option<u64>,
+    pub duration_ms: Option<u64>,
+    pub queue_position: Option<usize>,
+    pub predicted_start_ms: Option<u64>,
+    // Engine/model context
+    pub engine: Option<String>,
+    pub engine_version: Option<String>,
+    pub model_ref: Option<String>,
+    pub device: Option<String>,
+    // Performance metrics
+    pub tokens_in: Option<u64>,
+    pub tokens_out: Option<u64>,
+    pub decode_time_ms: Option<u64>,
     // Provenance fields
     pub emitted_by: Option<String>,
     pub emitted_at_ms: Option<u64>,
     pub trace_id: Option<String>,
+    pub span_id: Option<String>,
     pub parent_span_id: Option<String>,
-    // Add more fields as needed for assertions
+    pub source_location: Option<String>,
 }
 
 impl From<NarrationFields> for CapturedNarration {
@@ -36,12 +56,30 @@ impl From<NarrationFields> for CapturedNarration {
             story: fields.story,
             correlation_id: fields.correlation_id,
             session_id: fields.session_id,
+            job_id: fields.job_id,
+            task_id: fields.task_id,
             pool_id: fields.pool_id,
             replica_id: fields.replica_id,
+            worker_id: fields.worker_id,
+            error_kind: fields.error_kind,
+            retry_after_ms: fields.retry_after_ms,
+            backoff_ms: fields.backoff_ms,
+            duration_ms: fields.duration_ms,
+            queue_position: fields.queue_position,
+            predicted_start_ms: fields.predicted_start_ms,
+            engine: fields.engine,
+            engine_version: fields.engine_version,
+            model_ref: fields.model_ref,
+            device: fields.device,
+            tokens_in: fields.tokens_in,
+            tokens_out: fields.tokens_out,
+            decode_time_ms: fields.decode_time_ms,
             emitted_by: fields.emitted_by,
             emitted_at_ms: fields.emitted_at_ms,
             trace_id: fields.trace_id,
+            span_id: fields.span_id,
             parent_span_id: fields.parent_span_id,
+            source_location: fields.source_location,
         }
     }
 }
@@ -84,11 +122,11 @@ impl CaptureAdapter {
 
     /// Install this adapter as the global capture target.
     /// Returns the adapter for later assertions.
-    /// 
+    ///
     /// Note: If an adapter is already installed, this will clear its events
     /// and return a reference to the existing adapter.
     pub fn install() -> Self {
-        let adapter = GLOBAL_CAPTURE.get_or_init(|| Self::new()).clone();
+        let adapter = GLOBAL_CAPTURE.get_or_init(Self::new).clone();
         // Always clear events when installing to ensure clean state
         adapter.clear();
         adapter
@@ -96,7 +134,7 @@ impl CaptureAdapter {
 
     /// Uninstall the global capture adapter.
     /// Call this in test teardown to avoid cross-test pollution.
-    /// 
+    ///
     /// Note: OnceLock doesn't support removal, so we clear the events instead.
     pub fn uninstall() {
         if let Some(adapter) = GLOBAL_CAPTURE.get() {
@@ -187,7 +225,7 @@ impl CaptureAdapter {
     pub fn assert_cute_includes(&self, substring: &str) {
         let captured = self.captured();
         let found =
-            captured.iter().any(|n| n.cute.as_ref().map_or(false, |c| c.contains(substring)));
+            captured.iter().any(|n| n.cute.as_ref().is_some_and(|c| c.contains(substring)));
         assert!(
             found,
             "Expected cute narration to include '{}', but found: {:?}",
@@ -207,7 +245,7 @@ impl CaptureAdapter {
     pub fn assert_story_includes(&self, substring: &str) {
         let captured = self.captured();
         let found =
-            captured.iter().any(|n| n.story.as_ref().map_or(false, |s| s.contains(substring)));
+            captured.iter().any(|n| n.story.as_ref().is_some_and(|s| s.contains(substring)));
         assert!(
             found,
             "Expected story narration to include '{}', but found: {:?}",
@@ -221,7 +259,7 @@ impl CaptureAdapter {
         let captured = self.captured();
         let found = captured
             .iter()
-            .any(|n| n.story.as_ref().map_or(false, |s| s.contains('"') || s.contains("'")));
+            .any(|n| n.story.as_ref().is_some_and(|s| s.contains('"') || s.contains("'")));
         assert!(
             found,
             "Expected story narration to include dialogue (quotes), but found: {:?}",

@@ -18,11 +18,14 @@ serde = { workspace = true, features = ["derive"] }
 regex = { workspace = true }
 uuid = { workspace = true }
 opentelemetry = { version = "0.21", optional = true }
+axum = { version = "0.7", optional = true }
 
 [dev-dependencies]
 tracing-subscriber = { workspace = true }
 criterion = "0.5"
 serial_test = "3.0"
+tokio = { version = "1", features = ["macros", "rt"] }
+tower = { version = "0.5", features = ["util"] }
 
 [[bench]]
 name = "narration_benchmarks"
@@ -34,5 +37,6 @@ trace-enabled = []  # Enable trace macros (dev/debug builds only)
 debug-enabled = []  # Enable debug-level narration
 cute-mode = []      # Enable cute narration fields
 otel = ["opentelemetry"]
+axum = ["dep:axum"]
 test-support = []  # Enables test capture adapter in non-test builds
 production = []     # Production profile (all tracing disabled)
