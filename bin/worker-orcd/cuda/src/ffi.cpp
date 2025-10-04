@@ -8,6 +8,7 @@
  */
 
 #include "../include/worker_ffi.h"
+#include "context.h"
 #include "cuda_error.h"
 #include <memory>
 
@@ -19,13 +20,9 @@ using namespace worker;
 
 extern "C" CudaContext* cuda_init(int gpu_device, int* error_code) {
     try {
-        // TODO: Implement Context class
-        // auto ctx = std::make_unique<Context>(gpu_device);
-        // *error_code = CUDA_SUCCESS;
-        // return reinterpret_cast<CudaContext*>(ctx.release());
-        
-        // Stub: Return error for now
-        throw CudaError::device_not_found("Context implementation pending");
+        auto ctx = std::make_unique<Context>(gpu_device);
+        *error_code = CUDA_SUCCESS;
+        return reinterpret_cast<CudaContext*>(ctx.release());
     } catch (const CudaError& e) {
         *error_code = e.code();
         return nullptr;
@@ -44,9 +41,8 @@ extern "C" void cuda_destroy(CudaContext* ctx) {
     }
     
     try {
-        // TODO: Implement Context cleanup
-        // auto* context = reinterpret_cast<Context*>(ctx);
-        // delete context;
+        auto* context = reinterpret_cast<Context*>(ctx);
+        delete context;
     } catch (...) {
         // Suppress exceptions in destructor
     }
@@ -54,13 +50,7 @@ extern "C" void cuda_destroy(CudaContext* ctx) {
 
 extern "C" int cuda_get_device_count(void) {
     try {
-        // TODO: Implement device count query
-        // int count;
-        // cudaGetDeviceCount(&count);
-        // return count;
-        
-        // Stub: Return 0 for now
-        return 0;
+        return Context::device_count();
     } catch (...) {
         return 0;
     }
