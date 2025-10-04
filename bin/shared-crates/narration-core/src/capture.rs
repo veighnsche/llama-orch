@@ -84,20 +84,23 @@ impl CaptureAdapter {
 
     /// Install this adapter as the global capture target.
     /// Returns the adapter for later assertions.
+    /// 
+    /// Note: If an adapter is already installed, this will clear its events
+    /// and return a reference to the existing adapter.
     pub fn install() -> Self {
-        let adapter = Self::new();
-        GLOBAL_CAPTURE.get_or_init(|| adapter.clone());
+        let adapter = GLOBAL_CAPTURE.get_or_init(|| Self::new()).clone();
+        // Always clear events when installing to ensure clean state
+        adapter.clear();
         adapter
     }
 
     /// Uninstall the global capture adapter.
     /// Call this in test teardown to avoid cross-test pollution.
+    /// 
+    /// Note: OnceLock doesn't support removal, so we clear the events instead.
     pub fn uninstall() {
-        // Note: OnceLock doesn't support removal, so we clear the events instead
         if let Some(adapter) = GLOBAL_CAPTURE.get() {
-            if let Ok(mut events) = adapter.events.lock() {
-                events.clear();
-            }
+            adapter.clear();
         }
     }
 

@@ -402,7 +402,14 @@ pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
 
     // Notify capture adapter if active (ORCH-3306)
     #[cfg(any(test, feature = "test-support"))]
-    capture::notify(fields);
+    {
+        // Create redacted fields for capture
+        let mut redacted_fields = fields;
+        redacted_fields.human = human.to_string();
+        redacted_fields.cute = cute.map(|c| c.to_string());
+        redacted_fields.story = story.map(|s| s.to_string());
+        capture::notify(redacted_fields);
+    }
 }
 
 /// Emit INFO-level narration (default)

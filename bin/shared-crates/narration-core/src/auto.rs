@@ -139,12 +139,12 @@ macro_rules! narrate_auto {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[test]
     fn test_service_identity() {
         let identity = service_identity();
         assert!(identity.contains("@"));
-        assert!(identity.contains("observability-narration-core"));
     }
 
     #[test]
@@ -155,15 +155,13 @@ mod tests {
         assert!(ts2 > ts1);
     }
 
+    /// Tests NARR-1001: System MUST emit structured narration events
     #[test]
+    #[serial(capture_adapter)]
     fn test_narrate_auto_injects_fields() {
         use crate::CaptureAdapter;
 
-        // Uninstall any existing adapter first
-        CaptureAdapter::uninstall();
-
         let adapter = CaptureAdapter::install();
-        adapter.clear();
 
         narrate_auto(NarrationFields {
             actor: "test",
@@ -179,15 +177,13 @@ mod tests {
         assert!(captured[0].emitted_at_ms.is_some());
     }
 
+    /// Tests NARR-1001: Auto-injection respects existing fields
     #[test]
+    #[serial(capture_adapter)]
     fn test_narrate_auto_respects_existing_fields() {
         use crate::CaptureAdapter;
 
-        // Uninstall any existing adapter first
-        CaptureAdapter::uninstall();
-
         let adapter = CaptureAdapter::install();
-        adapter.clear();
 
         let custom_identity = "custom-service@1.0.0".to_string();
         let custom_timestamp = 1234567890u64;

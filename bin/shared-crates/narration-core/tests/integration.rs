@@ -4,9 +4,12 @@
 use observability_narration_core::{
     narrate, redact_secrets, CaptureAdapter, NarrationFields, RedactionPolicy,
 };
+use serial_test::serial;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+/// Tests NARR-1001: System MUST emit structured narration events
 #[test]
+#[serial(capture_adapter)]
 fn test_narration_basic() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
@@ -30,7 +33,9 @@ fn test_narration_basic() {
     assert!(captured[0].human.contains("Accepted request"));
 }
 
+/// Tests NARR-2003: System MUST propagate correlation IDs
 #[test]
+#[serial(capture_adapter)]
 fn test_correlation_id_propagation() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
@@ -64,7 +69,9 @@ fn test_correlation_id_propagation() {
     assert_eq!(captured[1].correlation_id, Some(correlation_id));
 }
 
+/// Tests NARR-1003: System MUST automatically redact secrets
 #[test]
+#[serial(capture_adapter)]
 fn test_redaction_in_narration() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
@@ -85,7 +92,9 @@ fn test_redaction_in_narration() {
     assert!(captured[0].human.contains("[REDACTED]"));
 }
 
+/// Tests NARR-6002: Capture adapter MUST support assertions
 #[test]
+#[serial(capture_adapter)]
 fn test_capture_adapter_assertions() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
@@ -108,7 +117,9 @@ fn test_capture_adapter_assertions() {
     adapter.assert_correlation_id_present();
 }
 
+/// Tests NARR-1001: Full field taxonomy
 #[test]
+#[serial(capture_adapter)]
 fn test_full_field_taxonomy() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
@@ -143,7 +154,9 @@ fn test_full_field_taxonomy() {
     assert_eq!(captured[0].pool_id, Some("default".into()));
 }
 
+/// Tests legacy human() function compatibility
 #[test]
+#[serial(capture_adapter)]
 fn test_legacy_human_function() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
@@ -172,7 +185,9 @@ fn test_redaction_policy_custom() {
     assert!(redacted.contains("***"));
 }
 
+/// Tests multiple narration events
 #[test]
+#[serial(capture_adapter)]
 fn test_multiple_narrations() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
@@ -191,7 +206,9 @@ fn test_multiple_narrations() {
     assert_eq!(captured.len(), 5);
 }
 
+/// Tests NARR-6001: Capture adapter clear functionality
 #[test]
+#[serial(capture_adapter)]
 fn test_clear_captured() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
@@ -212,7 +229,9 @@ fn test_clear_captured() {
 // ===== Provenance Tests =====
 // Tests audit trail and debugging metadata
 
+/// Tests NARR-7002: Auto-injection MUST add emitted_by field
 #[test]
+#[serial(capture_adapter)]
 fn test_provenance_emitted_by() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
@@ -231,7 +250,9 @@ fn test_provenance_emitted_by() {
     assert_eq!(captured[0].emitted_by, Some("orchestratord@0.1.0".into()));
 }
 
+/// Tests NARR-7003: Auto-injection MUST add emitted_at_ms field
 #[test]
+#[serial(capture_adapter)]
 fn test_provenance_timestamp() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
@@ -253,7 +274,9 @@ fn test_provenance_timestamp() {
     assert_eq!(captured[0].emitted_at_ms, Some(now));
 }
 
+/// Tests trace context propagation
 #[test]
+#[serial(capture_adapter)]
 fn test_provenance_trace_context() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
@@ -273,7 +296,9 @@ fn test_provenance_trace_context() {
     assert_eq!(captured[0].trace_id, Some("trace-abc123".into()));
 }
 
+/// Tests source location metadata
 #[test]
+#[serial(capture_adapter)]
 fn test_provenance_source_location() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
@@ -292,7 +317,9 @@ fn test_provenance_source_location() {
     // Source location is in fields but not captured (dev-only)
 }
 
+/// Tests NARR-6002: Provenance assertion helpers
 #[test]
+#[serial(capture_adapter)]
 fn test_provenance_assertion_helpers() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
@@ -313,7 +340,9 @@ fn test_provenance_assertion_helpers() {
     adapter.assert_provenance_present();
 }
 
+/// Tests multi-service provenance tracking
 #[test]
+#[serial(capture_adapter)]
 fn test_multi_service_provenance() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
@@ -354,7 +383,9 @@ fn test_multi_service_provenance() {
     assert_eq!(captured[1].emitted_by, Some("pool-managerd@0.1.0".into()));
 }
 
+/// Tests NARR-7004: Auto-injection MUST NOT override existing fields
 #[test]
+#[serial(capture_adapter)]
 fn test_provenance_optional() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
