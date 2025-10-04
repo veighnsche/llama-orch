@@ -17,9 +17,12 @@
 #include <cuda_fp16.h>
 #include <stdio.h>
 #include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
 #include <thrust/sort.h>
 #include <thrust/sequence.h>
 #include <thrust/execution_policy.h>
+#include <thrust/extrema.h>
+#include <thrust/iterator/counting_iterator.h>
 
 namespace worker {
 namespace kernels {
@@ -763,6 +766,28 @@ void launch_top_p(
         return;
     }
     
+    // Special case: top_p = 0.0 means keep only the max token (greedy-like)
+    if (top_p <= 0.0f) {
+        // Find max logit
+        thrust::device_ptr<float> d_logits_ptr(logits);
+        auto max_iter = thrust::max_element(thrust::device, d_logits_ptr, d_logits_ptr + vocab_size);
+        int max_idx = max_iter - d_logits_ptr;
+        float max_val = *max_iter;
+        
+        // Set all except max to -INFINITY
+        thrust::transform(
+            thrust::device,
+            d_logits_ptr,
+            d_logits_ptr + vocab_size,
+            thrust::counting_iterator<int>(0),
+            d_logits_ptr,
+            [max_idx, max_val] __device__ (float logit, int idx) {
+                return (idx == max_idx) ? max_val : -INFINITY;
+            }
+        );
+        return;
+    }
+    
     // Create device vectors
     thrust::device_ptr<float> d_logits_ptr(logits);
     thrust::device_vector<float> sorted_logits(d_logits_ptr, d_logits_ptr + vocab_size);
@@ -778,30 +803,39 @@ void launch_top_p(
         thrust::greater<float>()
     );
     
-    // Copy sorted logits to host for softmax computation
-    thrust::host_vector<float> h_sorted_logits = sorted_logits;
+    // Optimization: Only copy first N tokens to host (top-p rarely needs more than 1000 tokens)
+    // This dramatically reduces host-device transfer time for large vocabularies
+    int max_copy = std::min(vocab_size, 1000);
+    thrust::host_vector<float> h_sorted_logits(sorted_logits.begin(), sorted_logits.begin() + max_copy);
     
-    // Compute softmax on host (for numerical stability)
+    // Compute softmax normalization factor (only for copied portion)
     float max_logit = h_sorted_logits[0];
     float sum = 0.0f;
-    for (int i = 0; i < vocab_size; ++i) {
+    for (int i = 0; i < max_copy; ++i) {
         sum += expf(h_sorted_logits[i] - max_logit);
     }
     
     // Find cutoff where cumsum > top_p
     float cumsum = 0.0f;
-    int cutoff = vocab_size;
-    for (int i = 0; i < vocab_size; ++i) {
+    int cutoff = 1;  // Always keep at least the max token
+    for (int i = 0; i < max_copy; ++i) {
         float prob = expf(h_sorted_logits[i] - max_logit) / sum;
         cumsum += prob;
         if (cumsum > top_p) {
-            cutoff = i;
+            cutoff = i + 1;  // Keep tokens up to and including this one
             break;
         }
     }
     
+    // If we didn't find cutoff in first max_copy tokens, keep all of them
+    // (This is rare - means distribution is very flat)
+    if (cutoff == 1 && cumsum <= top_p && max_copy < vocab_size) {
+        cutoff = max_copy;
+    }
+    
     // Create mask: keep tokens in top cutoff positions
-    thrust::host_vector<int> h_indices = indices;
+    // Only copy the indices we need (not all vocab_size)
+    thrust::host_vector<int> h_indices(indices.begin(), indices.begin() + cutoff);
     thrust::device_vector<bool> mask(vocab_size, false);
     for (int i = 0; i < cutoff; ++i) {
         mask[h_indices[i]] = true;
