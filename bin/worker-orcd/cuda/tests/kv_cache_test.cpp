@@ -9,6 +9,7 @@
 #include <gtest/gtest.h>
 #include "../include/kv_cache.h"
 #include "../include/vram_tracker.h"
+#include "../kernels/kv_cache.cuh"
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
 #include <vector>
@@ -1044,7 +1045,7 @@ TEST(KVCacheUpdateTest, MultipleLayers) {
 TEST(KVCacheUpdateTest, PrefillThenDecode) {
     KVCacheConfig config{
         .num_layers = 1,
-        .max_context_length = 10,
+        .max_context_length = 5,  // Changed from 10 to 5 so we can fill it
         .num_kv_heads = 2,
         .head_dim = 4,
     };
