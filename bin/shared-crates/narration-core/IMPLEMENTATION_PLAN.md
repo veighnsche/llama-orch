@@ -1,9 +1,10 @@
-# 🎯 Custom Narration System — Implementation Plan
+# 🎯 Custom Narration System — Implementation Plan (FINAL)
 
 **Project**: Build Our Own Custom Narration System  
 **Decision**: Cuteness Pays the Bills! 🎀  
-**Timeline**: 4 weeks  
-**Status**: Planning Complete ✅
+**Timeline**: 2.5 weeks (revised from 4 weeks)  
+**Status**: ✅ APPROVED by Performance Team ⏱️  
+**Final Authority**: Performance Team (vetoed 5 security requirements for performance)
 
 ---
 
@@ -21,19 +22,25 @@ We're building a **custom narration system** with proc macros, auto-inferred act
 
 ---
 
-## 🗓️ 4-Week Timeline
+## 🗓️ 2.5-Week Timeline (Revised)
 
-### Week 1: Core Proc Macro Crate
-**Goal**: Create `observability-narration-macros` with basic functionality
+### Week 1: Core Proc Macro Crate (4 days)
+**Goal**: Create `observability-narration-macros` with compile-time template expansion
+**Performance Target**: <100ns template interpolation, zero heap allocations
 
-### Week 2: Narration Core Enhancement
-**Goal**: Add WARN/ERROR/FATAL levels + lightweight trace macros
+### Week 2: Narration Core Enhancement (3 days)
+**Goal**: Add WARN/ERROR/FATAL levels + optimize redaction
+**Performance Target**: <5μs redaction (single-pass regex + Cow strings)
+**🚫 REMOVED**: Unit 2.7 Sampling (Performance Team REJECTED)
 
-### Week 3: Editorial Enforcement & Optimization
-**Goal**: Compile-time validation + conditional compilation
+### Week 3: Editorial Enforcement & Optimization (4 days)
+**Goal**: Conditional compilation + simplified validation
+**Performance Target**: 0ns overhead in production builds
+**Performance Team Override**: Simplified Unicode validation (not comprehensive)
 
-### Week 4: Integration, Testing & Rollout
-**Goal**: Migrate services + BDD tests + proof bundle integration
+### Week 4: Integration, Testing & Rollout (4 days)
+**Goal**: Migrate services + BDD tests + performance benchmarks
+**Performance Target**: All benchmarks MUST pass before merge
 
 ---
 
@@ -54,11 +61,23 @@ We're building a **custom narration system** with proc macros, auto-inferred act
 - ✅ `Cargo.toml` - Basic features (`otel`, `test-support`)
 
 ### **What We Need to Build** 🚧
-- 🚧 **NEW**: `bin/shared-crates/narration-macros/` - Proc macro crate
+- 🚧 **NEW**: `bin/shared-crates/narration-macros/` - Proc macro crate with compile-time template expansion
 - 🚧 **ENHANCE**: Add WARN/ERROR/FATAL levels to `src/lib.rs`
 - 🚧 **ENHANCE**: Add conditional compilation to `src/trace.rs`
-- 🚧 **ENHANCE**: Add feature flags to `Cargo.toml`
+- 🚧 **ENHANCE**: Optimize `src/redaction.rs` (single-pass regex + Cow strings)
+- 🚧 **ENHANCE**: Add simplified Unicode validation to `src/lib.rs`
+- 🚧 **ENHANCE**: Add feature flags to `Cargo.toml` (opt-in tracing)
 - 🚧 **ENHANCE**: Add compile-time validation to proc macros
+- 🚫 **REMOVED**: Unit 2.7 Sampling & Rate Limiting (Performance Team REJECTED)
+
+### **Performance Team Decisions Applied** ⏱️
+- ✅ **Tracing Opt-In**: Zero overhead in production (MANDATORY)
+- ✅ **Template Interpolation**: Compile-time expansion + stack buffers (<100ns)
+- ✅ **Redaction**: Single-pass regex + Cow strings (<5μs)
+- ✅ **Unicode**: Simplified validation (ASCII fast path, not comprehensive)
+- ✅ **CRLF**: Strip `\n`, `\r`, `\t` only (not all control chars)
+- ✅ **Correlation ID**: Byte-level UUID validation (<100ns, no HMAC)
+- 🚫 **Sampling**: REJECTED (use `RUST_LOG` instead)
 
 ---
 
@@ -176,22 +195,36 @@ pub use narrate::narrate;
 
 ---
 
-### **Unit 1.4: Template Interpolation Engine** (Day 3-4)
+### **Unit 1.4: Template Interpolation Engine (COMPILE-TIME)** (Day 3-4)
 **Owner**: Narration Core Team  
-**Effort**: 10 hours
+**Effort**: 8 hours (REDUCED - compile-time only)
+
+**⏱️ PERFORMANCE TEAM DECISION**: Pre-compiled templates at macro expansion time (NOT runtime parsing)
 
 **Tasks**:
-- [ ] Implement template parser (extract `{variable}` placeholders)
-- [ ] Build variable extraction from function context
-- [ ] Generate `format!()` calls with interpolated variables
+- [ ] Parse template at macro expansion time (extract `{variable}` placeholders)
+- [ ] Generate direct `write!()` calls (NOT `format!()`)
+- [ ] Use stack buffers (ArrayString<256>) for templates <256 chars
+- [ ] Fall back to heap allocation ONLY for >256 char templates
 - [ ] Handle nested fields (e.g., `{result.worker_id}`)
 - [ ] Support `{elapsed_ms}` special variable
-- [ ] Write template parsing tests
+- [ ] Write expansion tests (verify generated code)
 - [ ] Document template syntax
 
+**Concrete Implementation**:
+```rust
+// Proc macro generates:
+use arrayvec::ArrayString;
+let mut buf = ArrayString::<256>::new();
+write!(&mut buf, "Dispatched job {} to worker {}", job_id, worker.id)?;
+let human = buf.as_str();
+```
+
+**Performance Target**: <100ns interpolation, ZERO heap allocations for <256 char templates
+
 **Deliverables**:
-- `src/template.rs`
-- Template parsing tests
+- `src/template.rs` (compile-time parser)
+- Expansion tests
 - Template syntax documentation
 
 **Dependencies**: None
@@ -219,14 +252,34 @@ pub use narrate::narrate;
 
 **Dependencies**: Unit 1.2, Unit 1.4
 
-**🎭 AUTH-MIN SECURITY NOTE**:
-- ⚠️ **Template injection vulnerability**: Template interpolation `{variable}` could allow injection if variable values contain `{}` characters. Sanitize variable values before interpolation.
-- ⚠️ **Log injection via templates**: Ensure interpolated values cannot contain CRLF (`\r\n`) to prevent log forgery attacks.
+**⏱️ PERFORMANCE TEAM FINAL DECISION**:
+- ✅ **APPROVED**: Compile-time template expansion (NOT runtime parsing)
+- ✅ **APPROVED**: Stack buffers (ArrayString<256>) MANDATORY
+- 🚫 **REJECTED**: Auth-min's requirement to escape ALL variables (50-100ns overhead)
+- ✅ **FINAL**: Escape ONLY user-marked inputs with `#[user_input]` attribute
 
-**⏱️ PERFORMANCE TEAM COMMENT**:
-- 🚨 **ALLOCATION HOTSPOT**: Template interpolation via `format!()` allocates on every narration call. For high-frequency events (>1000/sec), this creates GC pressure. **RECOMMENDATION**: Use stack-allocated buffers with `write!()` macro for strings <256 bytes, or implement string interning for repeated templates.
-- ⚡ **OPTIMIZATION**: Pre-compile templates at macro expansion time to minimize runtime parsing. Generate direct `write!()` calls instead of runtime template engine.
-- 📊 **TARGET**: <100ns for template interpolation with ≤3 variables, zero heap allocations for templates <256 chars.
+**Implementation**:
+```rust
+// Compile-time validation (FREE)
+if template_literal.contains('{') || template_literal.contains('}') {
+    return compile_error!("Template literal cannot contain braces");
+}
+
+// Runtime escaping ONLY for user inputs (opt-in)
+#[narrate(
+    human: "User {user_name} logged in",
+    #[user_input(user_name)]  // Explicit marking
+)]
+
+// Generated code:
+let user_name_escaped = if user_name.contains('{') || user_name.contains('}') {
+    Cow::Owned(user_name.replace('{', "\\{").replace('}', "\\}"))
+} else {
+    Cow::Borrowed(user_name)  // Zero-copy if no braces
+};
+```
+
+**Performance Target**: <100ns for template interpolation with ≤3 variables, ZERO heap allocations
 
 ---
 
@@ -698,19 +751,34 @@ async fn dispatch_job(job_id: &str, correlation_id: &str) -> Result<WorkerId> {
 
 ---
 
-### **Unit 2.7: 🎯 IMPORTANT - Sampling & Rate Limiting** (Day 10)
-**Owner**: Narration Core Team  
-**Effort**: 4 hours
+### **Unit 2.7: 🚫 REMOVED - Sampling & Rate Limiting**
 
-**Why Important**: Prevent log flooding in production!
+**⏱️ PERFORMANCE TEAM DECISION**: 🔴 **REJECTED - DO NOT IMPLEMENT**
 
-**Tasks**:
-- [ ] Implement sampling for TRACE/DEBUG levels
-- [ ] Add rate limiting per actor/action
-- [ ] Support probabilistic sampling (1%, 10%, 100%)
-- [ ] Add burst protection (max N events per second)
-- [ ] Write sampling tests
-- [ ] Document sampling configuration
+**🎭 SECURITY TEAM FINDINGS**: 5 CRITICAL vulnerabilities
+- CRIT-2: Mutex poisoning DoS
+- CRIT-3: HashMap collision DoS  
+- CRIT-4: Unbounded memory growth
+- CRIT-5: Global mutex contention
+
+**⏱️ PERFORMANCE TEAM FINDINGS**: PERFORMANCE DISASTER
+- Global mutex on EVERY narration call
+- +200-400ns overhead + mutex contention
+- Allocation storm (10k allocations/sec at high frequency)
+- Throughput collapse from 100K/sec to 1K/sec
+
+**ALTERNATIVE SOLUTIONS** (Performance Team Approved):
+1. ✅ Use `RUST_LOG=info` environment variable (zero runtime overhead)
+2. ✅ Use `tracing-subscriber::EnvFilter` (outside hot path)
+3. ✅ If custom sampling required: Lock-free DashMap + AtomicU32 + LRU eviction
+
+**VERDICT**: Unit 2.7 is REMOVED from implementation plan
+
+**🚫 THIS UNIT HAS BEEN REMOVED**
+
+Do NOT implement sampling as originally designed. Use alternatives:
+- `RUST_LOG` for filtering (zero overhead)
+- `tracing-subscriber` for advanced filtering (outside hot path)
 
 **Concrete Code Changes**:
 ```rust
@@ -821,60 +889,83 @@ pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
 
 ---
 
-### **Unit 2.8: 💝 DELIGHTFUL - Emoji & Unicode Safety** (Day 10)
+### **Unit 2.8: 💝 Unicode Safety (SIMPLIFIED)** (Day 10)
 **Owner**: Narration Core Team  
-**Effort**: 2 hours
+**Effort**: 3 hours (INCREASED - add CRLF + correlation ID validation)
 
-**Why Delightful**: Cute mode needs emoji, but they can break logs!
+**⏱️ PERFORMANCE TEAM DECISION**: Simplified validation (NOT comprehensive)
 
 **Tasks**:
-- [ ] Validate emoji in cute/story fields
-- [ ] Strip invalid Unicode from human field
-- [ ] Ensure JSON-safe output
+- [ ] Implement ASCII fast path (zero-copy for 90% of strings)
+- [ ] Simplified UTF-8 validation (`c.is_control()` + 5 zero-width chars)
+- [ ] Homograph detection ONLY for actor/action fields (reject non-ASCII)
+- [ ] CRLF sanitization (strip `\n`, `\r`, `\t` only)
+- [ ] Correlation ID validation (byte-level UUID v4 checks)
 - [ ] Test with various emoji (🎀, 🎭, 🚀, etc.)
-- [ ] Document emoji guidelines
+- [ ] Document validation rules
 
-**Concrete Code Changes**:
+**🚫 REJECTED by Performance Team**:
+- Comprehensive emoji ranges (20+ ranges) - too complex
+- Encode all control chars - allocates on every narration
+- Unicode normalization (NFC) for human/cute/story - too expensive
+- HMAC-signed correlation IDs - 500-1000ns overhead
+
+**Concrete Code Changes** (⏱️ Performance Team Approved):
 ```rust
-// NEW FILE: src/unicode.rs
+// MODIFY: src/lib.rs (simplified validation)
 
-/// Ensure string is JSON-safe and valid UTF-8
-pub fn sanitize_for_json(text: &str) -> String {
-    text.chars()
-        .filter(|c| {
-            // Keep printable chars, whitespace, and emoji
-            c.is_alphanumeric() 
-                || c.is_whitespace() 
-                || c.is_ascii_punctuation()
-                || (*c as u32) >= 0x1F000  // Emoji range
-        })
-        .collect()
-}
-
-/// Validate emoji are safe for logging
-pub fn validate_emoji(text: &str) -> bool {
-    // Check for problematic emoji (zero-width, combining, etc.)
-    !text.chars().any(|c| {
-        matches!(c as u32, 
-            0x200B..=0x200D |  // Zero-width chars
-            0xFE00..=0xFE0F    // Variation selectors
-        )
-    })
-}
-
-// MODIFY: src/lib.rs (add emoji validation)
-pub fn narrate_at_level(mut fields: NarrationFields, level: NarrationLevel) {
-    // Sanitize human field
-    fields.human = sanitize_for_json(&fields.human);
-    
-    // Validate cute/story emoji
-    if let Some(cute) = &fields.cute {
-        if !validate_emoji(cute) {
-            fields.cute = Some(sanitize_for_json(cute));
-        }
+/// ASCII fast path (zero-copy for 90% of cases)
+pub fn sanitize_for_json(text: &str) -> Cow<'_, str> {
+    if text.is_ascii() {
+        return Cow::Borrowed(text);  // Zero-copy, no validation
     }
     
-    // ... rest of narrate_at_level
+    // Simplified UTF-8 validation (not comprehensive)
+    Cow::Owned(
+        text.chars()
+            .filter(|c| {
+                !c.is_control() &&  // Basic control char filter
+                !matches!(*c as u32, 
+                    0x200B..=0x200D |  // Zero-width space, ZWNJ, ZWJ
+                    0xFEFF |           // Zero-width no-break space
+                    0x2060             // Word joiner
+                )
+            })
+            .collect()
+    )
+}
+
+/// CRLF sanitization (strip only \n, \r, \t)
+pub fn sanitize_crlf(text: &str) -> Cow<'_, str> {
+    if !text.contains(|c: char| matches!(c, '\n' | '\r' | '\t')) {
+        return Cow::Borrowed(text);  // Zero-copy (90% of cases)
+    }
+    Cow::Owned(
+        text.replace('\n', " ")  // Strip, not encode (faster)
+            .replace('\r', " ")
+            .replace('\t', " ")
+    )
+}
+
+/// Correlation ID validation (byte-level, <100ns)
+pub fn validate_correlation_id(id: &str) -> Option<&str> {
+    if id.len() != 36 { return None; }
+    let bytes = id.as_bytes();
+    if bytes[8] != b'-' || bytes[13] != b'-' || 
+       bytes[18] != b'-' || bytes[23] != b'-' { return None; }
+    for (i, &b) in bytes.iter().enumerate() {
+        if i == 8 || i == 13 || i == 18 || i == 23 { continue; }
+        if !b.is_ascii_hexdigit() { return None; }
+    }
+    Some(id)  // Return borrowed (zero-copy)
+}
+
+/// Actor validation (reject non-ASCII to prevent homograph attacks)
+pub fn validate_actor(actor: &str) -> Result<&str, Error> {
+    if !actor.is_ascii() {
+        return Err(Error::NonAsciiActor);
+    }
+    Ok(actor)
 }
 ```
 
@@ -1535,7 +1626,69 @@ Before starting Week 1:
 
 ---
 
+---
+
+## 📊 Final Implementation Summary
+
+### **Timeline Revised**: 4 weeks → 2.5 weeks (15 days)
+
+**Savings**: ~60 hours (37.5% reduction) due to:
+- ✅ Existing trace macros, redaction, capture adapter
+- 🚫 Unit 2.7 removed (Performance Team rejection)
+- ⚡ Simplified validation (Performance Team overrides)
+
+### **Performance Targets** (MANDATORY - Blocking for Merge)
+
+| Component | Target | Verification |
+|-----------|--------|--------------|
+| **Template Interpolation** | <100ns | `cargo bench --bench template_interpolation` |
+| **Redaction (clean)** | <1μs | `cargo bench --bench redaction_clean_1000_chars` |
+| **Redaction (with secrets)** | <5μs | `cargo bench --bench redaction_with_secrets` |
+| **CRLF Sanitization** | <50ns | `cargo bench --bench crlf_sanitization_clean` |
+| **Unicode (ASCII)** | <1μs | `cargo bench --bench unicode_validation_ascii` |
+| **Correlation ID** | <100ns | `cargo bench --bench uuid_validation` |
+| **Production Build** | 0ns | `cargo expand --release` (verify ZERO trace code) |
+
+### **Performance Team Vetoes Applied**
+
+1. ✅ **Tracing Opt-In** - Zero overhead in production (MANDATORY)
+2. ✅ **Compile-Time Templates** - Stack buffers, no runtime parsing
+3. ✅ **Single-Pass Redaction** - Cow strings, <5μs target
+4. ✅ **Simplified Unicode** - ASCII fast path, not comprehensive
+5. ✅ **Strip CRLF Only** - `\n`, `\r`, `\t` only (not all control chars)
+6. ✅ **Byte-Level UUID** - No HMAC signing (<100ns)
+7. 🚫 **Sampling REJECTED** - Use `RUST_LOG` instead
+
+### **Accepted Security Risks** (Performance Team Decision)
+
+- ⚠️ Template injection: Only user-marked inputs escaped
+- ⚠️ Log injection: Only `\n`, `\r`, `\t` stripped (not all control chars)
+- ⚠️ Unicode: Simplified validation (not comprehensive emoji ranges)
+- ⚠️ Correlation ID: No HMAC signing (forgery risk accepted)
+- ⚠️ Timing: Dev build timing data is acceptable (not a security issue)
+
+### **CI/CD Requirements**
+
+```yaml
+# .github/workflows/narration-performance.yml
+- name: Run performance benchmarks
+  run: cargo bench --bench narration_performance
+  
+- name: Verify performance targets
+  run: |
+    cargo bench -- --save-baseline main
+    cargo bench -- --baseline main --fail-fast
+    
+- name: Verify zero-overhead production
+  run: |
+    cargo expand --release --features="" | grep -q "Instant::now" && exit 1 || exit 0
+    cargo expand --release --features="" | grep -q "trace_tiny" && exit 1 || exit 0
+```
+
+---
+
 **Implementation Plan Complete** ✅  
 **Verified Against Existing Code** ✅  
+**Performance Team Approved** ⏱️  
 **Ready for Execution** 🚀  
 **Cuteness Pays the Bills** 💝

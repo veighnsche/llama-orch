@@ -1,20 +1,46 @@
-# 🎯 Narration System — Design Decisions Required
+# 🎯 Narration System — Design Decisions FINALIZED
 
-**Status**: Awaiting Decisions  
+**Status**: ✅ ALL DECISIONS FINALIZED (Performance Team Authority)  
 **Date**: 2025-10-04  
-**Teams**: Narration Core, auth-min 🎭, Performance Team ⏱️
+**Teams**: Narration Core, auth-min 🎭, Performance Team ⏱️  
+**Final Authority**: Performance Team ⏱️ (has veto power on performance-impacting decisions)
 
 ---
 
 ## 📋 Executive Summary
 
-Based on security and performance reviews, we have **10 critical design decisions** to make before implementation. These decisions will fundamentally shape the narration system's architecture, performance, and security posture.
+All **10 critical design decisions** have been finalized. Performance Team exercised veto authority on **5 security recommendations** that would have added unacceptable overhead.
 
-**Critical Issues Identified**:
-- 🚨 **7 CRITICAL security vulnerabilities** (ReDoS, DoS, memory exhaustion)
-- 🚨 **5 CRITICAL performance bottlenecks** (mutex contention, allocation storms)
-- ⚠️ **8 HIGH/MEDIUM security concerns** (injection, spoofing, leakage)
-- ⚡ **12 performance optimizations** (lock-free, zero-copy, conditional compilation)
+### 🎯 Performance Team Vetoes Summary
+
+| Decision | Auth-Min Requirement | Performance Team Veto | Final Decision |
+|----------|---------------------|----------------------|----------------|
+| **#3: Templates** | Escape ALL variables | ❌ REJECTED (50-100ns/var) | Escape user inputs only |
+| **#6: Unicode** | 20+ emoji ranges | ❌ REJECTED (excessive) | Simplified: `is_control()` + 5 chars |
+| **#7: Injection** | Escape all variables | ❌ REJECTED (50-100ns/var) | Compile-time validation only |
+| **#8: CRLF** | Encode all control chars | ❌ REJECTED (allocates) | Strip `\n`, `\r`, `\t` only |
+| **#9: Correlation** | HMAC-signed UUIDs | ❌ REJECTED (500-1000ns) | UUID v4 validation only |
+
+### ✅ Approved Decisions
+
+- ✅ **#1: Tracing Opt-In** — Zero overhead in production (MANDATORY)
+- ✅ **#2: Timing Strategy** — Conditional `Instant::now()` (0ns in production)
+- ✅ **#4: Redaction** — Single-pass regex + Cow strings (<5μs target)
+- ✅ **#5: Sampling** — REJECTED (use `RUST_LOG` instead)
+- ✅ **#10: Actor Validation** — Compile-time allowlist (zero runtime cost)
+
+### 🔒 Accepted Security Risks (Performance Team Decision)
+
+1. **Template injection**: Only user-marked inputs are escaped (not all variables)
+2. **Log injection**: Only `\n`, `\r`, `\t` are stripped (not all control chars)
+3. **Unicode**: Simplified validation (not comprehensive emoji ranges)
+4. **Correlation ID**: No HMAC signing (forgery risk accepted)
+5. **Timing side-channels**: Dev build timing data is acceptable (not a security issue)
+
+**Critical Issues Resolved**:
+- 🚨 **7 CRITICAL security vulnerabilities** → Fixed with performance-optimized solutions
+- 🚨 **5 CRITICAL performance bottlenecks** → Eliminated via vetoes and redesigns
+- ⚡ **Performance targets**: <100ns templates, <50ns CRLF, <5μs redaction, <100ns UUID
 
 ---
 
@@ -1308,6 +1334,97 @@ All decisions have been made based on **security and performance team reviews**.
 **Implementation Start**: **APPROVED** with Performance Team overrides  
 **Authority**: Performance Team has final say on performance-impacting decisions  
 **Next Steps**: Update IMPLEMENTATION_PLAN.md to reflect Performance Team decisions
+
+---
+
+## 📊 Performance Verification Requirements
+
+Before merging any implementation, the following benchmarks MUST prove the performance targets are met:
+
+### Mandatory Benchmarks (Blocking)
+
+```rust
+// benches/narration_performance.rs
+#[bench]
+fn bench_template_interpolation_3_vars(b: &mut Bencher) {
+    // TARGET: <100ns
+    b.iter(|| {
+        narrate!(human: "Job {job_id} worker {worker_id} status {status}")
+    });
+}
+
+#[bench]
+fn bench_crlf_sanitization_clean_string(b: &mut Bencher) {
+    // TARGET: <50ns (zero-copy)
+    let text = "Accepted request; queued at position 3";
+    b.iter(|| sanitize_log_field(text));
+}
+
+#[bench]
+fn bench_redaction_clean_string_1000_chars(b: &mut Bencher) {
+    // TARGET: <1μs (zero-copy)
+    let text = "A".repeat(1000);
+    b.iter(|| redact_secrets(&text, RedactionPolicy::default()));
+}
+
+#[bench]
+fn bench_redaction_with_secrets_1000_chars(b: &mut Bencher) {
+    // TARGET: <5μs
+    let text = format!("Bearer abc123 {}", "x".repeat(990));
+    b.iter(|| redact_secrets(&text, RedactionPolicy::default()));
+}
+
+#[bench]
+fn bench_uuid_validation(b: &mut Bencher) {
+    // TARGET: <100ns
+    let uuid = "550e8400-e29b-41d4-a716-446655440000";
+    b.iter(|| validate_correlation_id(uuid));
+}
+
+#[bench]
+fn bench_unicode_validation_ascii(b: &mut Bencher) {
+    // TARGET: <1μs (zero-copy)
+    let text = "Accepted request";
+    b.iter(|| sanitize_for_json(text));
+}
+```
+
+### CI Integration (Required)
+
+```yaml
+# .github/workflows/performance.yml
+- name: Run performance benchmarks
+  run: cargo bench --bench narration_performance
+  
+- name: Verify performance targets
+  run: |
+    # Fail if any benchmark exceeds target by >10%
+    cargo bench --bench narration_performance -- --save-baseline main
+    cargo bench --bench narration_performance -- --baseline main --fail-fast
+```
+
+### Production Verification (Required)
+
+```bash
+# Verify zero-overhead production builds
+cargo expand --release --features="" | grep -q "Instant::now" && exit 1 || exit 0
+cargo expand --release --features="" | grep -q "trace_tiny" && exit 1 || exit 0
+
+# Verify binary size identical with/without trace features
+cargo build --release --no-default-features
+sha256sum target/release/narration-core > /tmp/baseline.sha256
+cargo build --release --features trace-enabled
+sha256sum target/release/narration-core > /tmp/with-trace.sha256
+diff /tmp/baseline.sha256 /tmp/with-trace.sha256 && echo "FAIL: Binary changed" || echo "PASS"
+```
+
+---
+
+**Document Status**: ✅ **ALL DECISIONS FINALIZED (Performance Team Authority)**  
+**Team Sign-Off**: ⚠️ Security Team Concerns Noted | ✅ Performance Team APPROVED  
+**Implementation Start**: **APPROVED** with Performance Team overrides  
+**Authority**: Performance Team has final say on performance-impacting decisions  
+**Verification**: Benchmarks MUST prove all performance targets before merge
 
 ---
 
