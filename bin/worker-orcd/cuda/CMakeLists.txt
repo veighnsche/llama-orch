@@ -29,9 +29,10 @@ set(CUDA_SOURCES
 # Kernel files
 set(KERNEL_SOURCES
     kernels/attention.cu
-    kernels/matmul.cu
+    kernels/gemm.cu
     kernels/sampling.cu
     kernels/rope.cu
+    kernels/rmsnorm.cu
 )
 
 # Build static library
@@ -70,6 +71,7 @@ if(BUILD_TESTING)
     # Test sources
     set(TEST_SOURCES
         tests/test_ffi_interface.cpp
+        tests/test_errors.cpp
         tests/test_context.cpp
         tests/test_model.cpp
         tests/test_inference.cpp
