@@ -69,5 +69,6 @@
         "editor.insertSpaces": true,
         "editor.tabSize": 4,
         "editor.formatOnSave": true
-    }
+    },
+    "cmake.sourceDirectory": "/home/vince/Projects/llama-orch/bin/worker-orcd/cuda"
 }
