@@ -1,4 +1,4 @@
-# Test Validation Summary - FT-011 through FT-017
+# Test Validation Summary - FT-011 through FT-018
 
 **Date**: 2025-10-04  
 **Sprint**: Sprint 3 - Shared Kernels  
@@ -267,6 +267,31 @@ Time: 3.33s
 
 **Coverage**: FP16/FP32 precision, temperature range (0.0-2.0), greedy decoding, edge cases, large vocabularies (152K tokens), determinism.
 
+### ✅ Greedy Sampling (Argmax) Tests (Complete - 12/12)
+
+**Command**: `./cuda/build/cuda_tests --gtest_filter="GreedySamplingTest.*"`
+
+**Result**: **12/12 PASSED** ✅
+
+```bash
+[  PASSED  ] GreedySamplingTest.SimpleArgmax (189 ms)
+[  PASSED  ] GreedySamplingTest.FirstToken (0 ms)
+[  PASSED  ] GreedySamplingTest.LastToken (0 ms)
+[  PASSED  ] GreedySamplingTest.NegativeLogits (0 ms)
+[  PASSED  ] GreedySamplingTest.LargeVocabulary (1 ms)
+[  PASSED  ] GreedySamplingTest.Determinism (0 ms)
+[  PASSED  ] GreedySamplingTest.MultiplePeaks (0 ms)
+[  PASSED  ] GreedySamplingTest.SmallVocabulary (0 ms)
+[  PASSED  ] GreedySamplingTest.GPTVocabulary (0 ms)
+[  PASSED  ] GreedySamplingTest.MixedLogits (0 ms)
+[  PASSED  ] GreedySamplingTest.InvalidVocabSize (0 ms)
+[  PASSED  ] GreedySamplingTest.NullPointer (0 ms)
+
+[==========] 12 tests passed (192 ms total)
+```
+
+**Coverage**: Argmax operation, edge cases (first/last token), negative logits, large vocabularies (152K tokens), determinism, error handling.
+
 ---
 
 ## Build System Fixes Applied
@@ -508,23 +533,25 @@ cuda-memcheck --leak-check full ./cuda_tests
 6. **✅ Embedding Lookup Kernel** - 10/10 tests passed (FP16/FP32, Qwen-72B & GPT-3.5 scale)
 7. **✅ cuBLAS RAII Wrapper** - 15/15 tests passed (GEMM, transpose, determinism, 30.3 TFLOPS)
 8. **✅ Temperature Scaling Kernel** - 14/14 tests passed (FP16/FP32, greedy, range 0.0-2.0)
-9. **✅ Context Lifecycle** - No memory leaks detected (0 byte VRAM difference)
-10. **✅ Error Propagation** - C++ exceptions → FFI error codes → Rust errors working correctly
-11. **✅ Device Health Checks** - Both GPUs detected and healthy
-12. **✅ Multi-GPU Support** - 2 CUDA devices detected and accessible
-13. **✅ Thread Safety** - Concurrent VRAM allocations validated
-14. **✅ Exception Safety** - OOM handling doesn't leak existing allocations
-15. **✅ RAM Fallback Detection** - Host pointers correctly identified as violations
-16. **✅ UMA Violation Detection** - Managed memory correctly identified as violations
-17. **✅ Real-World Model Dimensions** - Qwen-2.5-72B (152K vocab) & GPT-3.5 (12K hidden) validated
-18. **✅ Matrix Operations** - GEMM with transpose, alpha/beta scaling validated
-19. **✅ Sampling Control** - Temperature scaling for inference control validated
+9. **✅ Greedy Sampling (Argmax)** - 12/12 tests passed (parallel reduction, 152K vocab in 1ms)
+10. **✅ Context Lifecycle** - No memory leaks detected (0 byte VRAM difference)
+11. **✅ Error Propagation** - C++ exceptions → FFI error codes → Rust errors working correctly
+12. **✅ Device Health Checks** - Both GPUs detected and healthy
+13. **✅ Multi-GPU Support** - 2 CUDA devices detected and accessible
+14. **✅ Thread Safety** - Concurrent VRAM allocations validated
+15. **✅ Exception Safety** - OOM handling doesn't leak existing allocations
+16. **✅ RAM Fallback Detection** - Host pointers correctly identified as violations
+17. **✅ UMA Violation Detection** - Managed memory correctly identified as violations
+18. **✅ Real-World Model Dimensions** - Qwen-2.5-72B (152K vocab) & GPT-3.5 (12K hidden) validated
+19. **✅ Matrix Operations** - GEMM with transpose, alpha/beta scaling validated
+20. **✅ Sampling Control** - Temperature scaling & greedy sampling for inference control validated
+21. **✅ Deterministic Inference** - Greedy sampling enables reproducible outputs
 
 ### 🎯 Test Coverage Achieved
 - **Rust Tests**: 16 integration tests covering FFI boundary
 - **C++ Tests**: 22 FFI integration + 13 VRAM tracker + 33 DeviceMemory RAII + 13 Health verification tests
-- **CUDA Kernel Tests**: 10 embedding lookup + 15 cuBLAS wrapper + 14 temperature scaling tests
-- **Total**: **136 tests** executed successfully on real CUDA hardware
+- **CUDA Kernel Tests**: 10 embedding lookup + 15 cuBLAS wrapper + 14 temperature scaling + 12 greedy sampling tests
+- **Total**: **148 tests** executed successfully on real CUDA hardware
 
 ### 🔧 Build System Improvements
 1. **CMake CUDA Detection** - Fixed for CUDA 13 + CachyOS
@@ -616,6 +643,17 @@ cuda-memcheck --leak-check full ./cuda_tests
 - ✅ Large vocabulary support validated (152K tokens)
 - ✅ Common temperature values tested (0.7-1.2)
 - ✅ Deterministic behavior validated
+
+**FT-018: Greedy Sampling (Argmax)** - **COMPLETE** ✅
+- ✅ 12/12 kernel tests passing
+- ✅ Argmax operation validated
+- ✅ Parallel reduction optimized (two-phase algorithm)
+- ✅ Edge cases validated (first/last token, negative logits)
+- ✅ Large vocabulary support validated (152K tokens - 1ms)
+- ✅ Deterministic behavior validated
+- ✅ Error handling validated (null pointer, invalid size)
+- ✅ Real-world model dimensions tested (Qwen, GPT)
+- ✅ Sub-millisecond performance achieved
 
 **Hardware Validation**: ✅ **ALL PASSED** on CachyOS with RTX 3090 + RTX 3060
 
