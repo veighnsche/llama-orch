@@ -308,81 +308,61 @@ Planned by Project Management Team 📋
 
 ---
 
-## 🎀 Narration Opportunities (v0.1.0)
+## 🎀 Narration Opportunities (v0.2.0)
 
 **From**: Narration-Core Team  
-**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
+**Updated**: 2025-10-04 (v0.2.0 - Production Ready with Builder Pattern & Axum Middleware)
 
 ### Critical Events to Narrate
 
 #### 1. CUDA Context Initialization Started (INFO level) ✅
 ```rust
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::{Narration, ACTOR_INFERENCE_ENGINE};
 
-narrate(NarrationFields {
-    actor: "inference-engine",
-    action: "cuda_init",
-    target: format!("GPU{}", device_id),
-    device: Some(format!("GPU{}", device_id)),
-    human: format!("Initializing CUDA context on GPU{}", device_id),
-    ..Default::default()
-});
-```
-
-**Cute mode** (optional):
-```rust
-cute: Some(format!("Worker is waking up GPU{}! 🚀✨", device_id))
+// NEW v0.2.0: Builder pattern
+Narration::new(ACTOR_INFERENCE_ENGINE, "cuda_init", &format!("GPU{}", device_id))
+    .human(format!("Initializing CUDA context on GPU{}", device_id))
+    .device(&format!("GPU{}", device_id))
+    .cute(format!("Worker is waking up GPU{}! 🚀✨", device_id))
+    .emit();
 ```
 
 #### 2. CUDA Context Ready (INFO level) ✅
 ```rust
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::{Narration, ACTOR_INFERENCE_ENGINE};
 
-narrate(NarrationFields {
-    actor: "inference-engine",
-    action: "cuda_ready",
-    target: format!("GPU{}", device_id),
-    device: Some(format!("GPU{}", device_id)),
-    vram_total_mb: Some(total_vram_mb),
-    vram_free_mb: Some(free_vram_mb),
-    duration_ms: Some(elapsed.as_millis() as u64),
-    human: format!("CUDA context ready on GPU{}: {} MB free ({} ms)", device_id, free_vram_mb, elapsed.as_millis()),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder pattern
+Narration::new(ACTOR_INFERENCE_ENGINE, "cuda_ready", &format!("GPU{}", device_id))
+    .human(format!("CUDA context ready on GPU{}: {} MB free ({} ms)", device_id, free_vram_mb, elapsed.as_millis()))
+    .device(&format!("GPU{}", device_id))
+    .duration_ms(elapsed.as_millis() as u64)
+    .cute(format!("GPU{} is awake and ready! 💚 {} MB of cozy memory available!", device_id, free_vram_mb))
+    .emit();
 ```
 
-**Cute mode** (optional):
-```rust
-cute: Some(format!("GPU{} is awake and ready! 💚 {} MB of cozy memory available!", device_id, free_vram_mb))
-```
+**Note**: `vram_total_mb` and `vram_free_mb` are not standard fields. Use custom fields or `human` text.
 
 #### 3. CUDA Initialization Failure (ERROR level) 🚨
 ```rust
-use observability_narration_core::narrate_error;
+use observability_narration_core::{Narration, ACTOR_INFERENCE_ENGINE};
 
-narrate_error(NarrationFields {
-    actor: "inference-engine",
-    action: "cuda_init",
-    target: format!("GPU{}", device_id),
-    device: Some(format!("GPU{}", device_id)),
-    error_kind: Some(error_code.to_string()),
-    human: format!("CUDA initialization failed on GPU{}: {}", device_id, error_message),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with error level
+Narration::new(ACTOR_INFERENCE_ENGINE, "cuda_init", &format!("GPU{}", device_id))
+    .human(format!("CUDA initialization failed on GPU{}: {}", device_id, error_message))
+    .device(&format!("GPU{}", device_id))
+    .error_kind(&error_code)
+    .emit_error();  // ← ERROR level
 ```
 
 #### 4. UMA Disabled (DEBUG level) 🔍
 ```rust
-use observability_narration_core::narrate_debug;
+use observability_narration_core::{Narration, ACTOR_INFERENCE_ENGINE};
 
-narrate_debug(NarrationFields {
-    actor: "inference-engine",
-    action: "cuda_config",
-    target: format!("GPU{}", device_id),
-    device: Some(format!("GPU{}", device_id)),
-    human: format!("Disabled UMA on GPU{} (VRAM-only mode)", device_id),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with debug level
+Narration::new(ACTOR_INFERENCE_ENGINE, "cuda_config", &format!("GPU{}", device_id))
+    .human(format!("Disabled UMA on GPU{} (VRAM-only mode)", device_id))
+    .device(&format!("GPU{}", device_id))
+    .emit_debug();  // ← DEBUG level
 ```
 
 ### Testing with CaptureAdapter
@@ -419,7 +399,7 @@ fn test_cuda_init_narration() {
 - 🚨 **Alerting** on initialization failures
 - 📈 **Performance** (init time tracking)
 
-### New in v0.1.0
+### New in v0.2.0
 - ✅ **7 logging levels** (INFO for success, ERROR for failures, DEBUG for config)
 - ✅ **VRAM tracking** in narration fields (`vram_total_mb`, `vram_free_mb`)
 - ✅ **Duration tracking** for initialization time
@@ -431,7 +411,7 @@ fn test_cuda_init_narration() {
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04  
-**Narration Updated**: 2025-10-04 (v0.1.0)
+**Narration Updated**: 2025-10-04 (v0.2.0)
 
 ---
 Planned by Project Management Team 📋  

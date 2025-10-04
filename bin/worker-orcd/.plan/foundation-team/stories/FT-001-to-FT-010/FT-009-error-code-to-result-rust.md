@@ -265,65 +265,52 @@ Planned by Project Management Team 📋
 
 ---
 
-## 🎀 Narration Opportunities (v0.1.0)
+## 🎀 Narration Opportunities (v0.2.0)
 
 **From**: Narration-Core Team  
-**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
+**Updated**: 2025-10-04 (v0.2.0 - Production Ready with Builder Pattern & Axum Middleware)
 
 ### Critical Events to Narrate
 
 #### 1. CUDA Error Converted to HTTP Response (ERROR level) 🚨
 ```rust
-use observability_narration_core::narrate_error;
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD, ACTION_INFERENCE_ERROR};
 
-narrate_error(NarrationFields {
-    actor: "worker-orcd",
-    action: "inference_error",
-    target: job_id.clone(),
-    correlation_id: Some(correlation_id),
-    job_id: Some(job_id.clone()),
-    error_kind: Some(error.code().to_string()),
-    human: format!("CUDA error for job {}: {} (HTTP {})", job_id, error, error.status_code().as_u16()),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with error level
+Narration::new(ACTOR_WORKER_ORCD, ACTION_INFERENCE_ERROR, &job_id)
+    .human(format!("CUDA error for job {}: {} (HTTP {})", job_id, error, error.status_code().as_u16()))
+    .correlation_id(correlation_id)
+    .job_id(&job_id)
+    .error_kind(&error.code())
+    .emit_error();  // ← ERROR level
 ```
 
 #### 2. Retriable Error Detected (WARN level) ⚠️
 ```rust
-use observability_narration_core::narrate_warn;
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD, ACTION_INFERENCE_ERROR};
 
-narrate_warn(NarrationFields {
-    actor: "worker-orcd",
-    action: "inference_error",
-    target: job_id.clone(),
-    correlation_id: Some(correlation_id),
-    job_id: Some(job_id.clone()),
-    error_kind: Some("vram_oom".to_string()),
-    retry_after_ms: Some(5000),  // Suggest retry delay
-    human: format!("VRAM OOM for job {} (retriable after 5s)", job_id),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with warn level
+Narration::new(ACTOR_WORKER_ORCD, ACTION_INFERENCE_ERROR, &job_id)
+    .human(format!("VRAM OOM for job {} (retriable after 5s)", job_id))
+    .correlation_id(correlation_id)
+    .job_id(&job_id)
+    .error_kind("VramOOM")
+    .retry_after_ms(5000)
+    .cute("Worker's memory is full! 🧠💎 Need to make room first...")
+    .emit_warn();  // ← WARN level
 ```
 
-**Cute mode** (optional):
+#### 3. Fatal Error (ERROR level - FATAL maps to ERROR in tracing) 🔥
 ```rust
-cute: Some("Worker's memory is full! 🧠💎 Need to make room first...")
-```
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD, ACTION_INFERENCE_ERROR};
 
-#### 3. Fatal Error (FATAL level) 🔥
-```rust
-use observability_narration_core::narrate_fatal;
-
-narrate_fatal(NarrationFields {
-    actor: "worker-orcd",
-    action: "inference_error",
-    target: job_id.clone(),
-    correlation_id: Some(correlation_id),
-    job_id: Some(job_id.clone()),
-    error_kind: Some("device_lost".to_string()),
-    human: format!("GPU device lost for job {} (fatal, worker restart required)", job_id),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with error level (FATAL maps to ERROR)
+Narration::new(ACTOR_WORKER_ORCD, ACTION_INFERENCE_ERROR, &job_id)
+    .human(format!("GPU device lost for job {} (fatal, worker restart required)", job_id))
+    .correlation_id(correlation_id)
+    .job_id(&job_id)
+    .error_kind("DeviceLost")
+    .emit_error();  // ← ERROR level (tracing doesn't have FATAL)
 ```
 
 ### Testing with CaptureAdapter
@@ -360,7 +347,7 @@ fn test_cuda_error_conversion_narration() {
 - 🚨 **Alerting** on fatal errors
 - 📊 **SLO tracking** (error rate by type)
 
-### New in v0.1.0
+### New in v0.2.0
 - ✅ **7 logging levels** (WARN for retriable, ERROR for failures, FATAL for device loss)
 - ✅ **Retry hints** in `retry_after_ms` field
 - ✅ **HTTP status code** in human message
@@ -372,7 +359,7 @@ fn test_cuda_error_conversion_narration() {
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04  
-**Narration Updated**: 2025-10-04 (v0.1.0)
+**Narration Updated**: 2025-10-04 (v0.2.0)
 
 ---
 Planned by Project Management Team 📋  

@@ -242,27 +242,24 @@ Planned by Project Management Team 📋
 
 ---
 
-## 🎀 Narration Opportunities (v0.1.0)
+## 🎀 Narration Opportunities (v0.2.0)
 
 **From**: Narration-Core Team  
-**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
+**Updated**: 2025-10-04 (v0.2.0 - Production Ready with Builder Pattern & Axum Middleware)
 
 ### Critical Events to Narrate
 
 #### Exception Caught at FFI Boundary (ERROR level) 🚨
 ```rust
 // From Rust side after FFI call
-use observability_narration_core::narrate_error;
+use observability_narration_core::{Narration, ACTOR_INFERENCE_ENGINE};
 
-narrate_error(NarrationFields {
-    actor: "inference-engine",
-    action: "error_caught",
-    target: function_name.to_string(),
-    correlation_id: Some(correlation_id),
-    error_kind: Some(error_code.to_string()),
-    human: format!("Exception caught in {}: {}", function_name, error_message),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with error level
+Narration::new(ACTOR_INFERENCE_ENGINE, "error_caught", function_name)
+    .human(format!("Exception caught in {}: {}", function_name, error_message))
+    .correlation_id(correlation_id)
+    .error_kind(&error_code)
+    .emit_error();  // ← ERROR level
 ```
 
 **Note**: C++ layer doesn't directly emit narration (no tracing in C++). Narration happens on Rust side after error code conversion.
@@ -297,7 +294,7 @@ fn test_exception_to_error_code_narration() {
 - 🚨 **Alerting** on unexpected exceptions
 - 🔍 **Error propagation** (C++ → Rust → HTTP)
 
-### New in v0.1.0
+### New in v0.2.0
 - ✅ **7 logging levels** (ERROR for exceptions)
 - ✅ **Error code tracking** in `error_kind` field
 - ✅ **Test assertions** for exception events
@@ -308,7 +305,7 @@ fn test_exception_to_error_code_narration() {
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04  
-**Narration Updated**: 2025-10-04 (v0.1.0)
+**Narration Updated**: 2025-10-04 (v0.2.0)
 
 ---
 Planned by Project Management Team 📋  

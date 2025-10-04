@@ -46,67 +46,41 @@ Implement middleware that extracts or generates correlation IDs for request trac
 - `bin/worker-orcd/src/http/routes.rs` - Wire middleware to router
 - `bin/worker-orcd/src/types/correlation.rs` - CorrelationId type
 
-### Key Interfaces
+### Key Interfaces (v0.2.0 - USE BUILT-IN MIDDLEWARE!) ✨
+
+**NEW**: narration-core v0.2.0 provides built-in Axum middleware!
+
 ```rust
-use axum::{
-    extract::Request,
-    middleware::Next,
-    response::Response,
-};
-use uuid::Uuid;
+use axum::{Router, routing::post, middleware, extract::Extension};
+use observability_narration_core::axum::correlation_middleware;
 
-#[derive(Debug, Clone)]
-pub struct CorrelationId(String);
+// Foundation engineer: Just use the built-in middleware!
+let app = Router::new()
+    .route("/execute", post(execute_handler))
+    .layer(middleware::from_fn(correlation_middleware));  // ← Built-in!
 
-impl CorrelationId {
-    pub fn new() -> Self {
-        Self(Uuid::new_v4().to_string())
-    }
+// In your handler:
+async fn execute_handler(
+    Extension(correlation_id): Extension<String>,  // ← Auto-extracted!
+) -> impl IntoResponse {
+    // correlation_id is ready to use!
+    Narration::new(ACTOR_WORKER_ORCD, "execute", job_id)
+        .human("Processing request")
+        .correlation_id(&correlation_id)  // ← Use it!
+        .emit();
     
-    pub fn from_header(value: &str) -> Option<Self> {
-        // Validate format (UUID or alphanumeric string)
-        if Self::is_valid(value) {
-            Some(Self(value.to_string()))
-        } else {
-            None
-        }
-    }
-    
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-    
-    fn is_valid(s: &str) -> bool {
-        // Accept UUID v4 or alphanumeric strings (1-64 chars)
-        s.len() >= 1 && s.len() <= 64 && s.chars().all(|c| c.is_alphanumeric() || c == '-')
-    }
-}
-
-pub async fn correlation_middleware(
-    mut req: Request,
-    next: Next,
-) -> Response {
-    // Extract or generate correlation ID
-    let correlation_id = req
-        .headers()
-        .get("X-Correlation-ID")
-        .and_then(|v| v.to_str().ok())
-        .and_then(CorrelationId::from_header)
-        .unwrap_or_else(CorrelationId::new);
-    
-    // Store in request extensions
-    req.extensions_mut().insert(correlation_id.clone());
-    
-    // Add to response headers
-    let mut response = next.run(req).await;
-    response.headers_mut().insert(
-        "X-Correlation-ID",
-        correlation_id.as_str().parse().unwrap(),
-    );
-    
-    response
+    // ... handler logic
 }
 ```
+
+**The middleware automatically**:
+- ✅ Extracts `X-Correlation-ID` from request headers
+- ✅ Validates the ID format (UUID v4)
+- ✅ Generates a new ID if missing or invalid
+- ✅ Stores the ID in request extensions
+- ✅ Adds the ID to response headers
+
+**No custom code needed!** Just add the middleware layer.
 
 ### Implementation Notes
 - Use `axum::middleware::from_fn` to register middleware
@@ -175,84 +149,100 @@ Planned by Project Management Team 📋
 
 ---
 
-## 🎀 Narration Opportunities (v0.1.0)
+## 🎀 Narration Opportunities (v0.2.0)
 
 **From**: Narration-Core Team  
-**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
+**Updated**: 2025-10-04 (v0.2.0 - Production Ready with Builder Pattern & Axum Middleware)
 
 ### Critical Events to Narrate
 
-#### 1. Correlation ID Extracted (DEBUG level) 🔍
-```rust
-use observability_narration_core::narrate_debug;
+#### 1. Using Built-In Middleware (RECOMMENDED) ✨
 
-narrate_debug(NarrationFields {
-    actor: "worker-orcd",
-    action: "correlation_extract",
-    target: "middleware".to_string(),
-    correlation_id: Some(correlation_id.clone()),
-    human: format!("Extracted correlation ID: {}", correlation_id),
-    ..Default::default()
-});
+**NEW v0.2.0**: Just use the built-in middleware - no custom narration needed!
+
+```rust
+use observability_narration_core::axum::correlation_middleware;
+
+let app = Router::new()
+    .route("/execute", post(handler))
+    .layer(middleware::from_fn(correlation_middleware));
 ```
 
-**Note**: Use DEBUG level since this happens on every request
+The middleware handles everything automatically. You only need to narrate in your handlers!
 
-#### 2. Correlation ID Generated (INFO level) ✅
+#### 2. In Your Handlers (Use the Extracted ID) ✅
 ```rust
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
+use axum::extract::Extension;
 
-narrate(NarrationFields {
-    actor: "worker-orcd",
-    action: "correlation_generate",
-    target: "middleware".to_string(),
-    correlation_id: Some(correlation_id.clone()),
-    human: format!("Generated new correlation ID: {}", correlation_id),
-    ..Default::default()
-});
+async fn execute_handler(
+    Extension(correlation_id): Extension<String>,  // ← Auto-extracted by middleware!
+) -> impl IntoResponse {
+    // Use it in your narration:
+    Narration::new(ACTOR_WORKER_ORCD, "execute", job_id)
+        .human("Processing execute request")
+        .correlation_id(&correlation_id)  // ← Pass it through!
+        .job_id(job_id)
+        .emit();
+    
+    // ... handler logic
+}
 ```
 
-**Cute mode** (optional):
-```rust
-cute: Some(format!("Worker created a new tracking tag! 🏷️ {}", correlation_id))
-```
+#### 3. Manual Correlation ID Helpers (If Not Using Middleware)
 
-#### 3. Invalid Correlation ID Rejected (WARN level) ⚠️
-```rust
-use observability_narration_core::narrate_warn;
-
-narrate_warn(NarrationFields {
-    actor: "worker-orcd",
-    action: "correlation_validate",
-    target: "middleware".to_string(),
-    correlation_id: Some(new_correlation_id.clone()),
-    error_kind: Some("invalid_correlation_id".to_string()),
-    human: format!("Rejected invalid correlation ID '{}', generated new: {}", invalid_id, new_correlation_id),
-    ..Default::default()
-});
-```
-
-### Using Built-in HTTP Context Propagation (NEW) 🌐
-
-**narration-core v0.1.0** provides built-in helpers:
+If you need manual control:
 
 ```rust
-use observability_narration_core::http::{extract_context_from_headers, inject_context_into_headers};
 use observability_narration_core::{generate_correlation_id, validate_correlation_id};
 
-// Extract from incoming request
-let context = extract_context_from_headers(&headers);
-let correlation_id = context.correlation_id
-    .and_then(|id| validate_correlation_id(&id).map(|_| id))
-    .unwrap_or_else(|| generate_correlation_id());
+// Generate new ID
+let correlation_id = generate_correlation_id();
 
-// Inject into outgoing response
-let mut response_context = NarrationContext {
-    correlation_id: Some(correlation_id.clone()),
-    trace_id: context.trace_id,
-    span_id: Some(generate_span_id()),
+// Validate existing ID
+if let Some(valid_id) = validate_correlation_id(&header_value) {
+    // Use valid_id
+} else {
+    // Generate new one
+    let correlation_id = generate_correlation_id();
+}
+```
+
+### Complete Example (v0.2.0)
+
+```rust
+use axum::{Router, routing::post, middleware, extract::Extension};
+use observability_narration_core::{
+    Narration,
+    ACTOR_WORKER_ORCD,
+    ACTION_INFERENCE_START,
+    axum::correlation_middleware,  // ← Built-in!
 };
-inject_context_into_headers(&response_context, &mut response_headers);
+
+async fn execute_handler(
+    Extension(correlation_id): Extension<String>,
+) -> impl IntoResponse {
+    Narration::new(ACTOR_WORKER_ORCD, ACTION_INFERENCE_START, job_id)
+        .human("Starting inference")
+        .correlation_id(&correlation_id)
+        .job_id(job_id)
+        .emit();
+    
+    // ... handler logic
+    
+    StatusCode::OK
+}
+
+#[tokio::main]
+async fn main() {
+    let app = Router::new()
+        .route("/execute", post(execute_handler))
+        .layer(middleware::from_fn(correlation_middleware));
+    
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080")
+        .await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
 ```
 
 ### Testing with CaptureAdapter
@@ -292,19 +282,21 @@ fn test_correlation_id_middleware() {
 
 **IMPORTANT**: This middleware enables ALL other narration by providing correlation IDs. Every subsequent narration event should include the `correlation_id` field!
 
-### New in v0.1.0
-- ✅ **Built-in HTTP helpers** (`extract_context_from_headers`, `inject_context_into_headers`)
+### New in v0.2.0
+- ✅ **Built-in Axum middleware** - `correlation_middleware` does everything automatically!
+- ✅ **Builder pattern** - `Narration::new().correlation_id().emit()`
 - ✅ **Fast validation** (<100ns per correlation ID)
-- ✅ **7 logging levels** (DEBUG for extract, INFO for generate, WARN for invalid)
+- ✅ **All constants** - `ACTOR_WORKER_ORCD`, `ACTION_*`
+- ✅ **Level methods** - `.emit()`, `.emit_warn()`, `.emit_error()`
 - ✅ **Test assertions** (`assert_correlation_id_present()`)
-- ✅ **Property tests** for correlation ID invariants
+- ✅ **3 E2E tests** - full Axum integration verified
 
 ---
 
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04  
-**Narration Updated**: 2025-10-04 (v0.1.0)
+**Narration Updated**: 2025-10-04 (v0.2.0)
 
 ---
 Planned by Project Management Team 📋  

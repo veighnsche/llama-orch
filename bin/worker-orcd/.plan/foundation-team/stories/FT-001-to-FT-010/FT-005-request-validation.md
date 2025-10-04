@@ -228,59 +228,50 @@ Planned by Project Management Team 📋
 
 ---
 
-## 🎀 Narration Opportunities (v0.1.0)
+## 🎀 Narration Opportunities (v0.2.0)
 
 **From**: Narration-Core Team  
-**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
+**Updated**: 2025-10-04 (v0.2.0 - Production Ready with Builder Pattern & Axum Middleware)
 
 ### Critical Events to Narrate
 
 #### 1. Single Field Validation Failure (WARN level) ⚠️
 ```rust
-use observability_narration_core::narrate_warn;
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
 
-narrate_warn(NarrationFields {
-    actor: "worker-orcd",
-    action: "validation",
-    target: req.job_id.clone(),
-    correlation_id: Some(correlation_id),
-    job_id: Some(req.job_id.clone()),
-    error_kind: Some("validation_failed".to_string()),
-    human: format!("Validation failed for job {}: {} must be {}", req.job_id, field, constraint),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with warn level
+Narration::new(ACTOR_WORKER_ORCD, "validation", &req.job_id)
+    .human(format!("Validation failed for job {}: {} must be {}", req.job_id, field, constraint))
+    .correlation_id(correlation_id)
+    .job_id(&req.job_id)
+    .error_kind("ValidationFailed")
+    .emit_warn();  // ← WARN level
 ```
 
 #### 2. Multiple Validation Errors (WARN level) ⚠️
 ```rust
-use observability_narration_core::narrate_warn;
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
 
-narrate_warn(NarrationFields {
-    actor: "worker-orcd",
-    action: "validation",
-    target: req.job_id.clone(),
-    correlation_id: Some(correlation_id),
-    job_id: Some(req.job_id.clone()),
-    error_kind: Some("validation_failed".to_string()),
-    human: format!("Validation failed for job {}: {} errors ({})", req.job_id, error_count, field_list),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with warn level
+Narration::new(ACTOR_WORKER_ORCD, "validation", &req.job_id)
+    .human(format!("Validation failed for job {}: {} errors ({})", req.job_id, error_count, field_list))
+    .correlation_id(correlation_id)
+    .job_id(&req.job_id)
+    .error_kind("ValidationFailed")
+    .emit_warn();  // ← WARN level
 ```
 
 #### 3. Validation Success (DEBUG level) 🔍
 ```rust
-use observability_narration_core::narrate_debug;
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
 
-narrate_debug(NarrationFields {
-    actor: "worker-orcd",
-    action: "validation",
-    target: req.job_id.clone(),
-    correlation_id: Some(correlation_id),
-    job_id: Some(req.job_id.clone()),
-    tokens_in: Some(req.prompt.len() as u64),
-    human: format!("Validated request for job {}: {} tokens", req.job_id, req.prompt.len()),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with debug level
+Narration::new(ACTOR_WORKER_ORCD, "validation", &req.job_id)
+    .human(format!("Validated request for job {}: {} tokens", req.job_id, req.prompt.len()))
+    .correlation_id(correlation_id)
+    .job_id(&req.job_id)
+    .tokens_in(req.prompt.len() as u64)
+    .emit_debug();  // ← DEBUG level
 ```
 
 ### Testing with CaptureAdapter
@@ -339,7 +330,7 @@ fn property_all_invalid_requests_rejected() {
 - 🚨 **Anomaly detection** (unusual validation patterns)
 - 📈 **SLO tracking** (validation failure rate)
 
-### New in v0.1.0
+### New in v0.2.0
 - ✅ **7 logging levels** (WARN for failures, DEBUG for success)
 - ✅ **Property tests** for validation invariants
 - ✅ **Rich error context** in narration fields
@@ -351,7 +342,7 @@ fn property_all_invalid_requests_rejected() {
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04  
-**Narration Updated**: 2025-10-04 (v0.1.0)
+**Narration Updated**: 2025-10-04 (v0.2.0)
 
 ---
 Planned by Project Management Team 📋  

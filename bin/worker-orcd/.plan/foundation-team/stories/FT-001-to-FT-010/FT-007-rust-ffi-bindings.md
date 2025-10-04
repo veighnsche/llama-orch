@@ -422,55 +422,44 @@ Planned by Project Management Team 📋
 
 ---
 
-## 🎀 Narration Opportunities (v0.1.0)
+## 🎀 Narration Opportunities (v0.2.0)
 
 **From**: Narration-Core Team  
-**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
+**Updated**: 2025-10-04 (v0.2.0 - Production Ready with Builder Pattern & Axum Middleware)
 
 ### Critical Events to Narrate
 
 #### 1. FFI Call Failure (ERROR level) 🚨
 ```rust
-use observability_narration_core::narrate_error;
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
 
-narrate_error(NarrationFields {
-    actor: "worker-orcd",
-    action: "ffi_call",
-    target: function_name.to_string(),
-    correlation_id: Some(correlation_id),
-    error_kind: Some(error.code().to_string()),
-    human: format!("FFI call to {} failed: {}", function_name, error),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with error level
+Narration::new(ACTOR_WORKER_ORCD, "ffi_call", function_name)
+    .human(format!("FFI call to {} failed: {}", function_name, error))
+    .correlation_id(correlation_id)
+    .error_kind(&error.code())
+    .emit_error();  // ← ERROR level
 ```
 
 #### 2. Resource Cleanup on Drop (DEBUG level) 🔍
 ```rust
-use observability_narration_core::narrate_debug;
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
 
-narrate_debug(NarrationFields {
-    actor: "worker-orcd",
-    action: "resource_cleanup",
-    target: resource_type.to_string(),
-    human: format!("Cleaning up {} resource", resource_type),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with debug level
+Narration::new(ACTOR_WORKER_ORCD, "resource_cleanup", resource_type)
+    .human(format!("Cleaning up {} resource", resource_type))
+    .emit_debug();  // ← DEBUG level to avoid log spam
 ```
-
-**Note**: Use DEBUG level for cleanup to avoid log spam
 
 #### 3. Null Pointer Detected (ERROR level) 🚨
 ```rust
-use observability_narration_core::narrate_error;
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
 
-narrate_error(NarrationFields {
-    actor: "worker-orcd",
-    action: "ffi_call",
-    target: function_name.to_string(),
-    error_kind: Some("null_pointer".to_string()),
-    human: format!("FFI call to {} returned null pointer", function_name),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with error level
+Narration::new(ACTOR_WORKER_ORCD, "ffi_call", function_name)
+    .human(format!("FFI call to {} returned null pointer", function_name))
+    .error_kind("NullPointer")
+    .emit_error();  // ← ERROR level
 ```
 
 ### Testing with CaptureAdapter
@@ -504,7 +493,7 @@ fn test_ffi_error_narration() {
 - 📈 **Error propagation tracking** (C++ → Rust)
 - 🔍 **Resource lifecycle** (allocation → cleanup)
 
-### New in v0.1.0
+### New in v0.2.0
 - ✅ **7 logging levels** (ERROR for failures, DEBUG for cleanup)
 - ✅ **Error code tracking** in `error_kind` field
 - ✅ **Test assertions** for FFI error events
@@ -516,7 +505,7 @@ fn test_ffi_error_narration() {
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04  
-**Narration Updated**: 2025-10-04 (v0.1.0)
+**Narration Updated**: 2025-10-04 (v0.2.0)
 
 ---
 Planned by Project Management Team 📋  

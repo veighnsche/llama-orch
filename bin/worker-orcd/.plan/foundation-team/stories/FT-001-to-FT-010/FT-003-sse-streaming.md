@@ -167,80 +167,64 @@ impl Utf8Buffer {
 
 ---
 
-## 🎀 Narration Opportunities (v0.1.0)
+## 🎀 Narration Opportunities (v0.2.0)
 
 **From**: Narration-Core Team  
-**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
+**Updated**: 2025-10-04 (v0.2.0 - Production Ready with Builder Pattern & Axum Middleware)
 
 ### Critical Events to Narrate
 
 #### 1. Stream Started (DEBUG level) 🔍
 ```rust
-use observability_narration_core::narrate_debug;
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
 
-narrate_debug(NarrationFields {
-    actor: "worker-orcd",
-    action: "stream_start",
-    target: job_id.clone(),
-    correlation_id: Some(correlation_id),
-    job_id: Some(job_id.clone()),
-    human: format!("SSE stream started for job {}", job_id),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with debug level
+Narration::new(ACTOR_WORKER_ORCD, "stream_start", &job_id)
+    .human(format!("SSE stream started for job {}", job_id))
+    .correlation_id(correlation_id)
+    .job_id(&job_id)
+    .emit_debug();  // ← DEBUG level
 ```
 
 #### 2. Stream Completed (INFO level) ✅
 ```rust
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD, ACTION_INFERENCE_COMPLETE};
 
-narrate(NarrationFields {
-    actor: "worker-orcd",
-    action: "inference_complete",
-    target: job_id.clone(),
-    correlation_id: Some(correlation_id),
-    job_id: Some(job_id.clone()),
-    tokens_out: Some(token_count),
-    duration_ms: Some(elapsed.as_millis() as u64),
-    human: format!("Completed inference: {} tokens in {} ms", token_count, elapsed.as_millis()),
-    ..Default::default()
-});
-```
-
-**Cute mode** (optional):
-```rust
-cute: Some(format!("Worker finished the story! 📖✨ {} tokens in {}ms!", token_count, elapsed.as_millis()))
+// NEW v0.2.0: Builder pattern
+Narration::new(ACTOR_WORKER_ORCD, ACTION_INFERENCE_COMPLETE, &job_id)
+    .human(format!("Completed inference: {} tokens in {} ms", token_count, elapsed.as_millis()))
+    .correlation_id(correlation_id)
+    .job_id(&job_id)
+    .tokens_out(token_count)
+    .duration_ms(elapsed.as_millis() as u64)
+    .cute(format!("Worker finished the story! 📖✨ {} tokens in {}ms!", token_count, elapsed.as_millis()))
+    .emit();
 ```
 
 #### 3. Stream Error (ERROR level) 🚨
 ```rust
-use observability_narration_core::narrate_error;
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
 
-narrate_error(NarrationFields {
-    actor: "worker-orcd",
-    action: "stream_error",
-    target: job_id.clone(),
-    correlation_id: Some(correlation_id),
-    job_id: Some(job_id.clone()),
-    error_kind: Some(error_code.to_string()),
-    human: format!("SSE stream error for job {}: {}", job_id, error_message),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with error level
+Narration::new(ACTOR_WORKER_ORCD, "stream_error", &job_id)
+    .human(format!("SSE stream error for job {}: {}", job_id, error_message))
+    .correlation_id(correlation_id)
+    .job_id(&job_id)
+    .error_kind(&error_code)
+    .emit_error();  // ← ERROR level
 ```
 
 #### 4. Client Disconnect (WARN level) ⚠️
 ```rust
-use observability_narration_core::narrate_warn;
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
 
-narrate_warn(NarrationFields {
-    actor: "worker-orcd",
-    action: "stream_disconnect",
-    target: job_id.clone(),
-    correlation_id: Some(correlation_id),
-    job_id: Some(job_id.clone()),
-    tokens_out: Some(tokens_sent_so_far),
-    human: format!("Client disconnected after {} tokens", tokens_sent_so_far),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with warn level
+Narration::new(ACTOR_WORKER_ORCD, "stream_disconnect", &job_id)
+    .human(format!("Client disconnected after {} tokens", tokens_sent_so_far))
+    .correlation_id(correlation_id)
+    .job_id(&job_id)
+    .tokens_out(tokens_sent_so_far)
+    .emit_warn();  // ← WARN level
 ```
 
 ### Testing with CaptureAdapter
@@ -284,7 +268,7 @@ fn test_sse_stream_narration() {
 - 🔗 Correlating streaming across orchestrator → worker
 - 🚨 Alerting on stream error patterns
 
-### New in v0.1.0
+### New in v0.2.0
 - ✅ **7 logging levels** (DEBUG for stream start, INFO for complete, ERROR for failures)
 - ✅ **Correlation ID propagation** through entire stream lifecycle
 - ✅ **Token counting** in narration fields (`tokens_out`)

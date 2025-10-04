@@ -138,79 +138,65 @@ pub enum ServerError {
 
 ---
 
-## 🎀 Narration Opportunities (v0.1.0)
+## 🎀 Narration Opportunities (v0.2.0)
 
 **From**: Narration-Core Team  
-**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
+**Updated**: 2025-10-04 (v0.2.0 - Production Ready with Builder Pattern & Axum Middleware)
 
 ### Critical Events to Narrate
 
 #### 1. Server Startup (INFO level) ✅
 ```rust
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD, ACTION_SPAWN};
 
-narrate(NarrationFields {
-    actor: "worker-orcd",
-    action: "spawn",
-    target: "http-server".to_string(),
-    human: format!("HTTP server listening on {}", addr),
-    // Auto-injection adds: emitted_by, emitted_at_ms
-    ..Default::default()
-});
+// NEW v0.2.0: Builder pattern (43% less boilerplate!)
+Narration::new(ACTOR_WORKER_ORCD, ACTION_SPAWN, "http-server")
+    .human(format!("HTTP server listening on {}", addr))
+    .emit();  // Auto-injects: emitted_by, emitted_at_ms
 ```
 
 **Cute mode** (optional):
 ```rust
-cute: Some(format!("Worker woke up and opened the door at {}! 🏠✨", addr))
+Narration::new(ACTOR_WORKER_ORCD, ACTION_SPAWN, "http-server")
+    .human(format!("HTTP server listening on {}", addr))
+    .cute(format!("Worker woke up and opened the door at {}! 🏠✨", addr))
+    .emit();
 ```
 
 #### 2. Health Check Requests (DEBUG level) 🔍
 ```rust
-use observability_narration_core::narrate_debug;
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
 
-narrate_debug(NarrationFields {
-    actor: "worker-orcd",
-    action: "health_check",
-    target: "health".to_string(),
-    correlation_id: Some(correlation_id),
-    human: "Health check requested".to_string(),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with debug level
+Narration::new(ACTOR_WORKER_ORCD, "health_check", "health")
+    .human("Health check requested")
+    .correlation_id(correlation_id)
+    .emit_debug();  // ← DEBUG level to avoid log spam
 ```
 
-**Note**: Use DEBUG level to avoid log spam from health checks
+**Note**: Use `.emit_debug()` to avoid log spam from health checks
 
 #### 3. Server Shutdown (WARN level) ⚠️
 ```rust
-use observability_narration_core::narrate_warn;
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD, ACTION_SHUTDOWN};
 
-narrate_warn(NarrationFields {
-    actor: "worker-orcd",
-    action: "shutdown",
-    target: "http-server".to_string(),
-    human: "HTTP server shutting down gracefully".to_string(),
-    duration_ms: Some(shutdown_duration_ms),
-    ..Default::default()
-});
-```
-
-**Story mode** (optional):
-```rust
-story: Some("\"Time to rest,\" whispered the worker, closing the door gently. 👋")
+// NEW v0.2.0: Builder with warn level
+Narration::new(ACTOR_WORKER_ORCD, ACTION_SHUTDOWN, "http-server")
+    .human("HTTP server shutting down gracefully")
+    .duration_ms(shutdown_duration_ms)
+    .story("\"Time to rest,\" whispered the worker, closing the door gently. 👋")
+    .emit_warn();  // ← WARN level
 ```
 
 #### 4. Bind Failures (ERROR level) 🚨
 ```rust
-use observability_narration_core::narrate_error;
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD, ACTION_SPAWN};
 
-narrate_error(NarrationFields {
-    actor: "worker-orcd",
-    action: "spawn",
-    target: "http-server".to_string(),
-    error_kind: Some("bind_failed".to_string()),
-    human: format!("Failed to bind to {}: {}", addr, error),
-    ..Default::default()
-});
+// NEW v0.2.0: Builder with error level
+Narration::new(ACTOR_WORKER_ORCD, ACTION_SPAWN, "http-server")
+    .human(format!("Failed to bind to {}: {}", addr, error))
+    .error_kind("BindFailed")
+    .emit_error();  // ← ERROR level
 ```
 
 ### Testing with CaptureAdapter
@@ -231,7 +217,7 @@ fn test_server_startup_narration() {
     adapter.assert_includes("HTTP server listening");
     adapter.assert_field("actor", "worker-orcd");
     adapter.assert_field("action", "spawn");
-    adapter.assert_provenance_present();  // NEW in v0.1.0
+    adapter.assert_provenance_present();  // NEW in v0.2.0
 }
 ```
 
@@ -270,19 +256,20 @@ async fn health_handler(headers: HeaderMap) -> Json<HealthResponse> {
 - 📈 Measuring startup/shutdown times
 - 🔗 Correlating requests across services
 
-### New in v0.1.0
-- ✅ **7 logging levels** (MUTE, TRACE, DEBUG, INFO, WARN, ERROR, FATAL)
-- ✅ **Auto-injection** of provenance metadata
-- ✅ **HTTP context propagation** for correlation IDs
-- ✅ **Rich test assertions** with `CaptureAdapter`
-- ✅ **100% test coverage** with property tests
+### New in v0.2.0
+- ✅ **Builder pattern API** - 43% less boilerplate (7 lines → 4 lines)
+- ✅ **Axum middleware** - built-in correlation ID handling
+- ✅ **All constants** - ACTOR_*, ACTION_* for type safety
+- ✅ **Level methods** - `.emit()`, `.emit_warn()`, `.emit_error()`, `.emit_debug()`
+- ✅ **Auto-injection** - automatic emitted_by, emitted_at_ms
+- ✅ **119 tests passing** - including 24 smoke tests + 3 E2E tests
 
 ---
 
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04  
-**Narration Updated**: 2025-10-04 (v0.1.0)
+**Narration Updated**: 2025-10-04 (v0.2.0)
 
 ---
 Planned by Project Management Team 📋  

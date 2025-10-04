@@ -329,34 +329,23 @@ Planned by Project Management Team 📋
 
 ---
 
-## 🎀 Narration Opportunities (v0.1.0)
+## 🎀 Narration Opportunities (v0.2.0)
 
 **From**: Narration-Core Team  
-**Updated**: 2025-10-04 (v0.1.0 - Production Ready)
+**Updated**: 2025-10-04 (v0.2.0 - Production Ready with Builder Pattern & Axum Middleware)
 
 ### Milestone Event to Narrate
 
 #### FFI Interface Locked (INFO level) ✅
 ```rust
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
 
-narrate(NarrationFields {
-    actor: "worker-orcd",
-    action: "ffi_lock",
-    target: "worker_ffi.h".to_string(),
-    human: "FFI interface locked and published to coordination/FFI_INTERFACE_LOCKED.md".to_string(),
-    ..Default::default()
-});
-```
-
-**Cute mode** (optional):
-```rust
-cute: Some("Worker and Engine agreed on how to talk! 🤝✨ Contract signed!")
-```
-
-**Story mode** (optional):
-```rust
-story: Some("\"The contract is ready,\" announced Worker. \"Let's build together!\" 📜")
+// NEW v0.2.0: Builder pattern with all modes
+Narration::new(ACTOR_WORKER_ORCD, "ffi_lock", "worker_ffi.h")
+    .human("FFI interface locked and published to coordination/FFI_INTERFACE_LOCKED.md")
+    .cute("Worker and Engine agreed on how to talk! 🤝✨ Contract signed!")
+    .story("\"The contract is ready,\" announced Worker. \"Let's build together!\" 📜")
+    .emit();
 ```
 
 ### Why This Matters
@@ -369,7 +358,7 @@ story: Some("\"The contract is ready,\" announced Worker. \"Let's build together
 
 **Note**: This is a design/documentation story with minimal runtime events. Narration is primarily for milestone tracking and team coordination.
 
-### New in v0.1.0
+### New in v0.2.0
 - ✅ **7 logging levels** (INFO for milestones)
 - ✅ **Story mode** for team coordination events
 - ✅ **Cute mode** for celebrating milestones
@@ -380,7 +369,7 @@ story: Some("\"The contract is ready,\" announced Worker. \"Let's build together
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04  
-**Narration Updated**: 2025-10-04 (v0.1.0)
+**Narration Updated**: 2025-10-04 (v0.2.0)
 
 ---
 Planned by Project Management Team 📋  
