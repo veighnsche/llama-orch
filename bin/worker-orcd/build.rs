@@ -1,3 +1,13 @@
+// Build script for worker-orcd with CUDA support
+//
+// FIXES APPLIED (2025-10-04):
+// - Added find_cuda_root() to detect CUDA toolkit at /opt/cuda (not in PATH on CachyOS)
+// - Set CMAKE_CUDA_COMPILER explicitly for CMake CUDA language support
+// - Added stdc++ linking for C++ exception handling and RTTI
+// - Fixed for CUDA 13+ which requires these explicit paths
+//
+// -- Cascade
+
 use std::env;
 use std::path::{Path, PathBuf};
 
@@ -75,29 +85,53 @@ fn determine_cuda_build(config: &BuildConfig) -> bool {
 }
 
 fn detect_cuda() -> bool {
-    // Check for nvcc in PATH
-    if std::process::Command::new("nvcc").arg("--version").output().is_ok() {
-        println!("cargo:warning=CUDA detected via nvcc");
-        return true;
-    }
+    find_cuda_root().is_some()
+}
 
-    // Check CUDA_PATH environment variable
-    if env::var("CUDA_PATH").is_ok() {
-        println!("cargo:warning=CUDA detected via CUDA_PATH");
-        return true;
-    }
-
-    // Check common installation paths
-    let cuda_paths = ["/usr/local/cuda", "/opt/cuda", "/usr/lib/cuda"];
-
-    for path in &cuda_paths {
-        if Path::new(path).exists() {
-            println!("cargo:warning=CUDA detected at {}", path);
-            return true;
+/// Find CUDA toolkit root directory
+/// 
+/// FIX (2025-10-04 - Cascade): This function is critical for systems where nvcc
+/// is not in PATH (e.g., CachyOS with CUDA installed via pacman at /opt/cuda).
+/// CMake's CUDA language support requires either nvcc in PATH or explicit
+/// CMAKE_CUDA_COMPILER setting. This function enables the latter.
+fn find_cuda_root() -> Option<PathBuf> {
+    // Check CUDA_PATH environment variable first
+    if let Ok(cuda_path) = env::var("CUDA_PATH") {
+        let path = PathBuf::from(cuda_path);
+        if path.exists() {
+            println!("cargo:warning=CUDA detected via CUDA_PATH");
+            return Some(path);
         }
     }
 
-    false
+    // Check for nvcc in PATH and derive root from it
+    if let Ok(output) = std::process::Command::new("which").arg("nvcc").output() {
+        if output.status.success() {
+            if let Ok(nvcc_path) = String::from_utf8(output.stdout) {
+                let nvcc_path = nvcc_path.trim();
+                // nvcc is typically at /path/to/cuda/bin/nvcc
+                if let Some(bin_dir) = Path::new(nvcc_path).parent() {
+                    if let Some(cuda_root) = bin_dir.parent() {
+                        println!("cargo:warning=CUDA detected via nvcc at {}", cuda_root.display());
+                        return Some(cuda_root.to_path_buf());
+                    }
+                }
+            }
+        }
+    }
+
+    // Check common installation paths (critical for Arch/CachyOS)
+    let cuda_paths = ["/usr/local/cuda", "/opt/cuda", "/usr/lib/cuda"];
+
+    for path in &cuda_paths {
+        let path_buf = PathBuf::from(path);
+        if path_buf.exists() {
+            println!("cargo:warning=CUDA detected at {}", path);
+            return Some(path_buf);
+        }
+    }
+
+    None
 }
 
 fn build_with_cuda() {
@@ -105,11 +139,39 @@ fn build_with_cuda() {
 
     let cuda_dir = PathBuf::from("cuda");
 
+    // Find CUDA toolkit
+    let cuda_root = find_cuda_root();
+
     // Build CUDA library with CMake
-    let dst = cmake::Config::new(&cuda_dir)
+    let mut config = cmake::Config::new(&cuda_dir);
+    config
         .define("CMAKE_BUILD_TYPE", "Release")
-        .define("BUILD_TESTING", "OFF")
-        .build();
+        .define("BUILD_TESTING", "OFF");
+
+    // Set CUDA toolkit path if found
+    // FIX (2025-10-04 - Cascade): CMAKE_CUDA_COMPILER is REQUIRED when nvcc is not in PATH.
+    // Without this, CMake's CUDA language support fails with "No CMAKE_CUDA_COMPILER could be found"
+    let cuda_path = if let Some(ref cuda_path) = cuda_root {
+        println!("cargo:warning=Using CUDA toolkit at: {}", cuda_path.display());
+        config.define("CUDAToolkit_ROOT", cuda_path.to_str().unwrap());
+
+        // Explicitly set CUDA compiler path (critical for non-PATH installations)
+        let nvcc_path = cuda_path.join("bin").join("nvcc");
+        if nvcc_path.exists() {
+            config.define("CMAKE_CUDA_COMPILER", nvcc_path.to_str().unwrap());
+        }
+        cuda_path.clone()
+    } else {
+        panic!(
+            "CUDA toolkit not found. Please either:\n\
+             1. Install CUDA toolkit and ensure nvcc is in PATH\n\
+             2. Set CUDA_PATH environment variable\n\
+             3. Set auto_detect_cuda = true in .llorch.toml to skip CUDA build when not available\n\
+             4. Set cuda = false in .llorch.toml to disable CUDA support"
+        );
+    };
+
+    let dst = config.build();
 
     // Link the static library
     println!("cargo:rustc-link-search=native={}/lib", dst.display());
@@ -117,15 +179,19 @@ fn build_with_cuda() {
 
     // Link CUDA runtime
     println!("cargo:rustc-link-lib=cudart");
+    
+    // FIX (2025-10-04 - Cascade): Link C++ standard library for exception handling and RTTI.
+    // Without this, linking fails with undefined symbols:
+    // - vtable for __cxxabiv1::__si_class_type_info
+    // - __gxx_personality_v0
+    // - typeinfo for std::exception
+    println!("cargo:rustc-link-lib=stdc++");
 
-    // Add CUDA library path
-    if let Ok(cuda_path) = env::var("CUDA_PATH") {
-        println!("cargo:rustc-link-search=native={}/lib64", cuda_path);
-    } else {
-        // Default CUDA installation paths
-        println!("cargo:rustc-link-search=native=/usr/local/cuda/lib64");
-        println!("cargo:rustc-link-search=native=/usr/lib/x86_64-linux-gnu");
-    }
+    // Add CUDA library path using the detected root
+    println!("cargo:rustc-link-search=native={}/lib64", cuda_path.display());
+    println!("cargo:rustc-link-search=native={}/lib", cuda_path.display());
+    // Fallback to system library paths
+    println!("cargo:rustc-link-search=native=/usr/lib/x86_64-linux-gnu");
 
     // Rebuild if CUDA sources change
     println!("cargo:rerun-if-changed=cuda/src");
