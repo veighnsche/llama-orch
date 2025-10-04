@@ -468,6 +468,160 @@ TEST_F(CublasTest, LargeDimensions) {
 
 ---
 
+## 🔍 Testing Requirements
+
+**Added by**: Testing Team (test-harness/TEAM_RESPONSIBILITIES.md)
+
+### Unit Tests (MUST implement)
+
+**Critical Path Coverage**:
+- **Test handle creation succeeds** (M0-W-1430)
+  - Given: CublasHandle(deterministic=true)
+  - When: Constructor completes
+  - Then: get() returns non-null handle
+  - **Why critical**: Foundation of all GEMM operations
+
+- **Test simple matrix multiply (2x3 * 3x2)** (M0-W-1430)
+  - Given: A=[1,2,3; 4,5,6], B=[1,2; 3,4; 5,6]
+  - When: gemm_simple_fp16(handle, 2, 2, 3, A, B, C)
+  - Then: C=[22,28; 49,64]
+  - **Why critical**: Core GEMM correctness
+
+- **Test identity matrix multiplication**
+  - Given: I (3x3 identity), A (3x3 test matrix)
+  - When: gemm_simple_fp16(handle, 3, 3, 3, I, A, C)
+  - Then: C == A
+  - **Why critical**: Validates GEMM preserves data
+
+- **Test large dimensions (512x512x512)** (M0-W-1430)
+  - Given: Realistic transformer dimensions
+  - When: gemm_simple_fp16(handle, 512, 512, 512, A, B, C)
+  - Then: Completes without error, result numerically stable
+  - **Why critical**: Real-world scale
+
+- **Test deterministic mode (same inputs → same outputs)** (M0-W-1031)
+  - Given: CublasHandle(deterministic=true), same A, B
+  - When: GEMM executed twice
+  - Then: Identical C both times (bit-exact)
+  - **Why critical**: Reproducibility requirement
+
+### Integration Tests (MUST implement)
+
+- **Test with real transformer dimensions (768x768x768)**
+  - Given: Typical BERT/GPT hidden dimension
+  - When: GEMM executed
+  - Then: Correct result, acceptable performance
+  - **Why critical**: Real model validation
+
+- **Test performance benchmarks (TFLOPS)** (M0-W-1430)
+  - Given: 512x512x512 GEMM
+  - When: Profiled with cudaEvent timing
+  - Then: TFLOPS within expected range for GPU
+  - **Why critical**: Performance baseline
+
+- **Test memory efficiency (no unnecessary copies)**
+  - Given: GEMM execution
+  - When: Profiled with nvprof
+  - Then: No unexpected host-device transfers
+  - **Why critical**: Memory optimization
+
+### Property Tests (SHOULD implement)
+
+- **Property: GEMM is associative for matrix dimensions**
+  - Given: Compatible matrix dimensions
+  - When: (A*B)*C vs A*(B*C)
+  - Then: Results numerically equivalent (within FP16 tolerance)
+  - **Why valuable**: Mathematical correctness
+
+### BDD Scenarios (VERY IMPORTANT - MUST implement)
+
+**Feature**: cuBLAS GEMM Wrapper
+
+```gherkin
+Scenario: Worker performs matrix multiplication for attention
+  Given a worker with cuBLAS initialized
+  When the worker computes Q*K^T for attention (512x64 * 64x512)
+  Then the GEMM completes successfully
+  And the result is numerically correct
+  And performance is within expected range
+
+Scenario: Worker ensures deterministic GEMM for reproducibility
+  Given a worker with deterministic mode enabled
+  When the worker performs the same GEMM twice with same inputs
+  Then both results are bit-exact identical
+  And CUBLAS_PEDANTIC_MATH is enabled
+
+Scenario: Worker handles large transformer dimensions
+  Given a worker processing 768-dimensional embeddings
+  When the worker performs FFN projection (768x3072 * 3072x768)
+  Then the GEMM completes without OOM
+  And the result is numerically stable
+```
+
+### Test Artifacts (MUST produce)
+
+- **Unit test report**: Pass/fail for each test
+- **Performance benchmarks**: TFLOPS for common sizes (documented)
+- **Determinism proof**: Bit-exact results across runs
+- **BDD scenario results**: Pass/fail with GEMM traces
+
+### Acceptance Criteria for Testing
+
+- ✅ All unit tests pass (5+ tests covering critical paths)
+- ✅ All integration tests pass (3+ tests with real dimensions)
+- ✅ All BDD scenarios pass (3 scenarios validating GEMM behavior)
+- ✅ Determinism verified (same inputs → same outputs)
+- ✅ Performance benchmarks documented
+- ✅ All tests produce verifiable artifacts
+
+### False Positive Prevention
+
+**CRITICAL**: Tests MUST validate actual GEMM computation, not mock results.
+
+❌ **FORBIDDEN**:
+```cpp
+// Pre-filling result that GEMM should compute
+std::fill(C.begin(), C.end(), 1.0f);
+gemm_simple_fp16(handle, M, N, K, A, B, C);
+assert(C[0] == 1.0f);  // FALSE POSITIVE: GEMM didn't run
+```
+
+✅ **REQUIRED**:
+```cpp
+// Let GEMM compute result, verify correctness
+std::fill(C.begin(), C.end(), -999.0f);  // Sentinel
+gemm_simple_fp16(handle, M, N, K, A, B, C);
+assert(C[0] != -999.0f);  // GEMM ran
+assert(C[0] == expected_value);  // Correct computation
+```
+
+### Test Execution Commands
+
+```bash
+# Unit tests
+./build/tests/cublas_test
+
+# Performance profiling
+nvprof --metrics flop_count_sp ./build/tests/cublas_test
+
+# Integration tests
+cargo test --features cuda --test cublas_integration
+
+# BDD scenarios
+cargo run --bin bdd-runner -- --features cublas_gemm
+```
+
+### Dependencies for Testing
+
+- **Upstream**: FT-013 (DeviceMemory)
+- **Test infrastructure**: Google Test (C++), nvprof, BDD runner
+- **Libraries**: cuBLAS
+
+---
+**Testing requirements added by Testing Team 🔍**
+
+---
+
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04
@@ -479,7 +633,27 @@ Planned by Project Management Team 📋
 
 ## 🎀 Narration Opportunities
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team (v0.2.0)
+
+Hey Foundation Team! 👋 We're here to help you make cuBLAS operations **delightfully debuggable**!
+
+### Quick Start (v0.2.0 Builder API)
+
+We just shipped v0.2.0 with a **builder pattern** that's 43% less boilerplate:
+
+```rust
+use observability_narration_core::{Narration, ACTOR_INFERENCE_ENGINE};
+
+// In your GEMM wrapper:
+Narration::new(ACTOR_INFERENCE_ENGINE, "gemm_complete", format!("{}x{}x{}", M, N, K))
+    .human(format!("GEMM [{}x{}x{}] completed: {} ms ({:.2} TFLOPS)", 
+                   M, N, K, elapsed.as_millis(), tflops))
+    .device(format!("GPU{}", device_id))
+    .duration_ms(elapsed.as_millis() as u64)
+    .emit();
+```
+
+The builder automatically adds `emitted_by`, `emitted_at_ms`, and secret redaction!
 
 ### Events to Narrate
 
@@ -522,5 +696,34 @@ Planned by Project Management Team 📋
 
 **Why this matters**: GEMM is the computational workhorse of transformers. Narration helps track performance (TFLOPS) and diagnose cuBLAS errors.
 
+### Testing Your Narration
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]
+fn test_gemm_narrates() {
+    let adapter = CaptureAdapter::install();
+    
+    // Your GEMM operation
+    gemm_simple_fp16(handle, M, N, K, A, B, C);
+    
+    adapter.assert_includes("GEMM");
+    adapter.assert_field("actor", "inference-engine");
+}
+```
+
+Run with: `cargo test --features test-support`
+
+### Need Help?
+
+- **Full docs**: `bin/shared-crates/narration-core/README.md`
+- **Quick start**: `bin/shared-crates/narration-core/QUICKSTART.md`
+- **Field reference**: See README section "NarrationFields Reference"
+
+We're watching your narration with ❤️!
+
 ---
-*Narration guidance added by Narration-Core Team 🎀*
+*Narration guidance added by Narration-Core Team v0.2.0 🎀*

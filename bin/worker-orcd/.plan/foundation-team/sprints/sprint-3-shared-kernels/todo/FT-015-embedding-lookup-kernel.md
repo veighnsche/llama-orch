@@ -402,6 +402,166 @@ TEST_F(EmbeddingKernelTest, LargeHiddenDim) {
 
 ---
 
+## 🔍 Testing Requirements
+
+**Added by**: Testing Team (test-harness/TEAM_RESPONSIBILITIES.md)
+
+### Unit Tests (MUST implement)
+
+**Critical Path Coverage**:
+- **Test basic embedding lookup with known values** (M0-W-1430)
+  - Given: Weight matrix with token_id i → embedding value i*0.1
+  - When: launch_embedding_lookup([0,1,2,3], weights, embeddings, 4, 128, 1000)
+  - Then: embeddings[0] = 0.0, embeddings[128] = 0.1, embeddings[256] = 0.2, embeddings[384] = 0.3
+  - **Why critical**: Core kernel functionality must be correct
+
+- **Test out-of-bounds token IDs return zero** (M0-W-1430)
+  - Given: vocab_size = 1000, token_ids = [0, 1001, -1, 1]
+  - When: Kernel executes
+  - Then: embeddings[0] valid, embeddings[128] = 0.0 (OOB), embeddings[256] = 0.0 (negative), embeddings[384] valid
+  - **Why critical**: Prevents crashes and undefined behavior
+
+- **Test negative token IDs return zero**
+  - Given: token_ids = [-1, -100]
+  - When: Kernel executes
+  - Then: All embeddings = 0.0
+  - **Why critical**: Defensive programming
+
+- **Test large hidden dimensions (>256)** (M0-W-1430)
+  - Given: hidden_dim = 1024 (requires multiple blocks per token)
+  - When: Kernel executes
+  - Then: All 1024 dimensions populated correctly
+  - **Why critical**: Real models have large hidden dims
+
+- **Test batch size = 1 (single token)**
+  - Given: batch_size = 1
+  - When: Kernel executes
+  - Then: Single embedding retrieved correctly
+  - **Why critical**: Edge case for inference
+
+- **Test empty batch (batch_size = 0)**
+  - Given: batch_size = 0
+  - When: Kernel executes
+  - Then: No crash, no-op
+  - **Why critical**: Defensive programming
+
+### Integration Tests (MUST implement)
+
+- **Test with real model embedding weights** (M0-W-1430)
+  - Given: Qwen2.5-0.5B embedding weights loaded
+  - When: Lookup token IDs from real prompt
+  - Then: Embeddings match expected values (validated against reference)
+  - **Why critical**: Real-world validation
+
+- **Test with Qwen2.5-0.5B vocabulary (151936 tokens)**
+  - Given: vocab_size = 151936, hidden_dim = 896
+  - When: Kernel executes
+  - Then: Correct embeddings retrieved, no crashes
+  - **Why critical**: Real vocabulary size
+
+- **Test memory access pattern is coalesced** (performance)
+  - Given: Kernel execution
+  - When: Profiled with nvprof --metrics gld_efficiency
+  - Then: Global load efficiency > 80%
+  - **Why critical**: Performance optimization validation
+
+### Property Tests (SHOULD implement)
+
+- **Property: Embedding lookup is deterministic**
+  - Given: Same token_ids, same weights
+  - When: Kernel executed multiple times
+  - Then: Identical embeddings every time
+  - **Why valuable**: Validates determinism requirement
+
+### BDD Scenarios (VERY IMPORTANT - MUST implement)
+
+**Feature**: Embedding Lookup Kernel
+
+```gherkin
+Scenario: Worker retrieves token embeddings for inference
+  Given a worker with Qwen2.5-0.5B model loaded
+  When the worker performs embedding lookup for token IDs [1, 2, 3]
+  Then the kernel retrieves 3 embeddings of dimension 896
+  And each embedding matches the model's weight matrix
+  And no out-of-bounds access occurs
+
+Scenario: Worker handles invalid token IDs gracefully
+  Given a worker with vocab_size = 1000
+  When the worker performs embedding lookup with token ID 1500
+  Then the kernel returns zero embedding for invalid token
+  And no crash occurs
+  And valid tokens are processed correctly
+
+Scenario: Worker processes large batches efficiently
+  Given a worker with hidden_dim = 1024
+  When the worker performs embedding lookup for 128 tokens
+  Then all 128 embeddings are retrieved correctly
+  And memory access is coalesced (>80% efficiency)
+```
+
+### Test Artifacts (MUST produce)
+
+- **Unit test report**: Pass/fail for each test
+- **Kernel profiling**: Memory efficiency metrics (gld_efficiency)
+- **BDD scenario results**: Pass/fail with embedding traces
+- **Performance baseline**: Latency for common batch sizes
+
+### Acceptance Criteria for Testing
+
+- ✅ All unit tests pass (6+ tests covering critical paths and edge cases)
+- ✅ All integration tests pass (3+ tests with real model data)
+- ✅ All BDD scenarios pass (3 scenarios validating kernel behavior)
+- ✅ Memory coalescing efficiency > 80% (verified with nvprof)
+- ✅ All tests produce verifiable artifacts
+
+### False Positive Prevention
+
+**CRITICAL**: Tests MUST validate actual kernel output, not mock data.
+
+❌ **FORBIDDEN**:
+```cpp
+// Pre-filling embeddings that kernel should compute
+std::fill(embeddings.begin(), embeddings.end(), 0.5f);
+launch_embedding_lookup(...);
+assert(embeddings[0] == 0.5f);  // FALSE POSITIVE: kernel didn't run
+```
+
+✅ **REQUIRED**:
+```cpp
+// Let kernel compute embeddings, verify correctness
+std::fill(embeddings.begin(), embeddings.end(), -999.0f);  // Sentinel
+launch_embedding_lookup(token_ids, weights, embeddings, ...);
+assert(embeddings[0] != -999.0f);  // Kernel ran
+assert(embeddings[0] == expected_from_weights);  // Correct value
+```
+
+### Test Execution Commands
+
+```bash
+# Unit tests
+./build/tests/embedding_test
+
+# Kernel profiling
+nvprof --metrics gld_efficiency ./build/tests/embedding_test
+
+# Integration tests
+cargo test --features cuda --test embedding_integration
+
+# BDD scenarios
+cargo run --bin bdd-runner -- --features embedding_lookup
+```
+
+### Dependencies for Testing
+
+- **Upstream**: FT-013 (DeviceMemory)
+- **Test infrastructure**: Google Test (C++), nvprof, BDD runner
+- **Test data**: Qwen2.5-0.5B embedding weights (for integration tests)
+
+---
+**Testing requirements added by Testing Team 🔍**
+
+---
+
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04
@@ -413,7 +573,26 @@ Planned by Project Management Team 📋
 
 ## 🎀 Narration Opportunities
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team (v0.2.0)
+
+Hey Foundation Team! 👋 We're here to help you make kernel operations **delightfully debuggable**!
+
+### Quick Start (v0.2.0 Builder API)
+
+We just shipped v0.2.0 with a **builder pattern** that's 43% less boilerplate:
+
+```rust
+use observability_narration_core::{Narration, ACTOR_INFERENCE_ENGINE};
+
+// In your kernel launch code:
+Narration::new(ACTOR_INFERENCE_ENGINE, "kernel_launch", "embedding_lookup")
+    .human(format!("Launching embedding lookup kernel (batch={}, hidden_dim={})", 
+                   batch_size, hidden_dim))
+    .device(format!("GPU{}", device_id))
+    .emit();
+```
+
+The builder automatically adds `emitted_by`, `emitted_at_ms`, and secret redaction!
 
 ### Events to Narrate
 
@@ -456,5 +635,34 @@ Planned by Project Management Team 📋
 
 **Why this matters**: Embedding lookup is the first transformer layer. Narration helps track kernel performance and diagnose invalid token IDs.
 
+### Testing Your Narration
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]
+fn test_kernel_launch_narrates() {
+    let adapter = CaptureAdapter::install();
+    
+    // Your kernel launch
+    launch_embedding_lookup(...);
+    
+    adapter.assert_includes("embedding lookup");
+    adapter.assert_field("actor", "inference-engine");
+}
+```
+
+Run with: `cargo test --features test-support`
+
+### Need Help?
+
+- **Full docs**: `bin/shared-crates/narration-core/README.md`
+- **Quick start**: `bin/shared-crates/narration-core/QUICKSTART.md`
+- **Field reference**: See README section "NarrationFields Reference"
+
+We're watching your narration with ❤️!
+
 ---
-*Narration guidance added by Narration-Core Team 🎀*
+*Narration guidance added by Narration-Core Team v0.2.0 🎀*

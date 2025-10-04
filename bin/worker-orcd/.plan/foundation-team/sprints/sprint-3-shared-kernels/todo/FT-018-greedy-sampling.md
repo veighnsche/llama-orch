@@ -421,6 +421,107 @@ TEST(GreedySamplingTest, Determinism) {
 
 ---
 
+## 🔍 Testing Requirements
+
+**Added by**: Testing Team (test-harness/TEAM_RESPONSIBILITIES.md)
+
+### Unit Tests (MUST implement)
+
+**Critical Path Coverage**:
+- **Test simple argmax (token in middle)** (M0-W-1421)
+  - Given: logits with max at index 500
+  - When: launch_greedy_sample(logits, 1000)
+  - Then: Returns token_id = 500
+  - **Why critical**: Core argmax must work
+
+- **Test first token is max**
+  - Given: logits with max at index 0
+  - When: Kernel executes
+  - Then: Returns token_id = 0
+  - **Why critical**: Edge case (first element)
+
+- **Test last token is max**
+  - Given: logits with max at index vocab_size-1
+  - When: Kernel executes
+  - Then: Returns token_id = vocab_size-1
+  - **Why critical**: Edge case (last element)
+
+- **Test negative logits**
+  - Given: All logits negative, max at index 250
+  - When: Kernel executes
+  - Then: Returns token_id = 250 (least negative)
+  - **Why critical**: Handles negative values
+
+- **Test large vocabulary (151936 tokens)** (M0-W-1421)
+  - Given: vocab_size = 151936, max at index 100000
+  - When: Kernel executes
+  - Then: Returns token_id = 100000
+  - **Why critical**: Real vocabulary size
+
+- **Test determinism (multiple runs → same result)** (M0-W-1032)
+  - Given: Same logits
+  - When: Sampled 3 times
+  - Then: All 3 results identical
+  - **Why critical**: Greedy sampling must be deterministic
+
+### Integration Tests (MUST implement)
+
+- **Test with temperature=0 pipeline** (M0-W-1032)
+  - Given: Temperature scaling (temp=0) → greedy sample
+  - When: Pipeline executes
+  - Then: Deterministic token selection
+  - **Why critical**: End-to-end reproducibility
+
+- **Test reproducibility across multiple inference runs**
+  - Given: Same model, same prompt, temp=0
+  - When: Inference run twice
+  - Then: Identical token sequences
+  - **Why critical**: Testing reproducibility requirement
+
+### BDD Scenarios (VERY IMPORTANT - MUST implement)
+
+**Feature**: Greedy Sampling
+
+```gherkin
+Scenario: Worker performs deterministic greedy sampling
+  Given a worker with temperature = 0.0
+  When the worker samples from logits [0.1, 0.5, 0.3]
+  Then the worker selects token 1 (argmax)
+  And the selection is deterministic
+
+Scenario: Worker ensures reproducibility with greedy sampling
+  Given a worker with same model and prompt
+  And temperature = 0.0
+  When inference is run twice
+  Then both runs produce identical token sequences
+  And greedy sampling is used for both
+
+Scenario: Worker handles large vocabularies efficiently
+  Given a worker with vocab_size = 151936
+  When greedy sampling is performed
+  Then the argmax is found correctly
+  And performance is acceptable
+```
+
+### Test Artifacts (MUST produce)
+
+- **Unit test report**: Pass/fail for each test
+- **Determinism proof**: Same inputs → same outputs across runs
+- **BDD scenario results**: Pass/fail with sampling traces
+
+### Acceptance Criteria for Testing
+
+- ✅ All unit tests pass (6+ tests covering critical paths)
+- ✅ All integration tests pass (2+ tests with temperature=0 pipeline)
+- ✅ All BDD scenarios pass (3 scenarios validating determinism)
+- ✅ Determinism verified (same inputs → same outputs)
+- ✅ All tests produce verifiable artifacts
+
+---
+**Testing requirements added by Testing Team 🔍**
+
+---
+
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04
@@ -432,7 +533,25 @@ Planned by Project Management Team 📋
 
 ## 🎀 Narration Opportunities
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team (v0.2.0)
+
+Hey Foundation Team! 👋 We're here to help you make greedy sampling **delightfully debuggable**!
+
+### Quick Start (v0.2.0 Builder API)
+
+We just shipped v0.2.0 with a **builder pattern** that's 43% less boilerplate:
+
+```rust
+use observability_narration_core::{Narration, ACTOR_INFERENCE_ENGINE};
+
+// In your greedy sampling code:
+Narration::new(ACTOR_INFERENCE_ENGINE, "token_sample", "greedy")
+    .human(format!("Sampled token {} (greedy, logit={})", token_id, max_logit))
+    .device(format!("GPU{}", device_id))
+    .emit();
+```
+
+The builder automatically adds `emitted_by`, `emitted_at_ms`, and secret redaction!
 
 ### Events to Narrate
 
@@ -450,5 +569,34 @@ Planned by Project Management Team 📋
 
 **Why this matters**: Greedy sampling is deterministic. Narration helps verify determinism and track sampled tokens.
 
+### Testing Your Narration
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]
+fn test_greedy_sampling_narrates() {
+    let adapter = CaptureAdapter::install();
+    
+    // Your greedy sampling
+    let token_id = launch_greedy_sample(logits, vocab_size);
+    
+    adapter.assert_includes("Sampled token");
+    adapter.assert_field("actor", "inference-engine");
+}
+```
+
+Run with: `cargo test --features test-support`
+
+### Need Help?
+
+- **Full docs**: `bin/shared-crates/narration-core/README.md`
+- **Quick start**: `bin/shared-crates/narration-core/QUICKSTART.md`
+- **Field reference**: See README section "NarrationFields Reference"
+
+We're watching your narration with ❤️!
+
 ---
-*Narration guidance added by Narration-Core Team 🎀*
+*Narration guidance added by Narration-Core Team v0.2.0 🎀*

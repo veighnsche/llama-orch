@@ -387,6 +387,106 @@ TEST_F(TemperatureScaleTest, LargeVocabulary) {
 
 ---
 
+## 🔍 Testing Requirements
+
+**Added by**: Testing Team (test-harness/TEAM_RESPONSIBILITIES.md)
+
+### Unit Tests (MUST implement)
+
+**Critical Path Coverage**:
+- **Test temperature = 1.0 (no change)** (M0-W-1032)
+  - Given: logits = [1.0, 2.0, 3.0], temperature = 1.0
+  - When: launch_temperature_scale(logits, 3, 1.0)
+  - Then: logits unchanged
+  - **Why critical**: Identity case must work
+
+- **Test temperature = 0.5 (doubles logits)** (M0-W-1032)
+  - Given: logits = [1.0], temperature = 0.5
+  - When: Kernel executes
+  - Then: logits[0] = 2.0
+  - **Why critical**: Scaling math must be correct
+
+- **Test temperature = 2.0 (halves logits)** (M0-W-1032)
+  - Given: logits = [4.0], temperature = 2.0
+  - When: Kernel executes
+  - Then: logits[0] = 2.0
+  - **Why critical**: Scaling math must be correct
+
+- **Test temperature = 0.0 (greedy mode, no change)** (M0-W-1032)
+  - Given: logits = [1.0, 2.0], temperature = 0.0
+  - When: Kernel executes
+  - Then: logits unchanged (greedy sampling, no scaling)
+  - **Why critical**: Special case for testing reproducibility
+
+- **Test negative logits**
+  - Given: logits = [-2.0], temperature = 0.5
+  - When: Kernel executes
+  - Then: logits[0] = -4.0
+  - **Why critical**: Handles negative values correctly
+
+- **Test large vocabulary (151936 tokens)**
+  - Given: vocab_size = 151936, temperature = 0.7
+  - When: Kernel executes
+  - Then: All logits scaled correctly
+  - **Why critical**: Real vocabulary size
+
+### Integration Tests (MUST implement)
+
+- **Test with sampling pipeline (temperature → softmax → sample)**
+  - Given: Temperature scaling followed by sampling
+  - When: Pipeline executes
+  - Then: Sampling distribution reflects temperature
+  - **Why critical**: End-to-end validation
+
+- **Test determinism with temperature = 0.0**
+  - Given: Same logits, temperature = 0.0, same seed
+  - When: Sampled twice
+  - Then: Identical tokens (greedy sampling)
+  - **Why critical**: Reproducibility requirement
+
+### BDD Scenarios (VERY IMPORTANT - MUST implement)
+
+**Feature**: Temperature Scaling
+
+```gherkin
+Scenario: Worker applies temperature scaling for creative generation
+  Given a worker with temperature = 0.7
+  When the worker scales logits before sampling
+  Then logits are divided by 0.7
+  And sampling becomes more random (higher entropy)
+
+Scenario: Worker uses temperature = 0 for deterministic testing
+  Given a worker with temperature = 0.0
+  When the worker scales logits
+  Then logits are unchanged (no scaling)
+  And greedy sampling is used
+  And output is deterministic
+
+Scenario: Worker handles temperature range 0.0-2.0
+  Given a worker with various temperature values
+  When temperatures [0.0, 0.5, 1.0, 1.5, 2.0] are tested
+  Then all values produce valid scaled logits
+  And no crashes occur
+```
+
+### Test Artifacts (MUST produce)
+
+- **Unit test report**: Pass/fail for each test
+- **Scaling verification**: Proof that logits scaled correctly
+- **BDD scenario results**: Pass/fail with temperature traces
+
+### Acceptance Criteria for Testing
+
+- ✅ All unit tests pass (6+ tests covering temperature range)
+- ✅ All integration tests pass (2+ tests with sampling pipeline)
+- ✅ All BDD scenarios pass (3 scenarios validating temperature behavior)
+- ✅ All tests produce verifiable artifacts
+
+---
+**Testing requirements added by Testing Team 🔍**
+
+---
+
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04
@@ -398,7 +498,25 @@ Planned by Project Management Team 📋
 
 ## 🎀 Narration Opportunities
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team (v0.2.0)
+
+Hey Foundation Team! 👋 We're here to help you make temperature scaling **delightfully debuggable**!
+
+### Quick Start (v0.2.0 Builder API)
+
+We just shipped v0.2.0 with a **builder pattern** that's 43% less boilerplate:
+
+```rust
+use observability_narration_core::{Narration, ACTOR_INFERENCE_ENGINE};
+
+// In your temperature scaling code:
+Narration::new(ACTOR_INFERENCE_ENGINE, "kernel_complete", "temperature_scaling")
+    .human(format!("Applied temperature scaling (temp={})", temperature))
+    .device(format!("GPU{}", device_id))
+    .emit();
+```
+
+The builder automatically adds `emitted_by`, `emitted_at_ms`, and secret redaction!
 
 ### Events to Narrate
 
@@ -416,5 +534,34 @@ Planned by Project Management Team 📋
 
 **Why this matters**: Temperature scaling affects sampling randomness. Narration helps track temperature values and kernel performance.
 
+### Testing Your Narration
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]
+fn test_temperature_scaling_narrates() {
+    let adapter = CaptureAdapter::install();
+    
+    // Your temperature scaling
+    launch_temperature_scale(logits, vocab_size, 0.7f);
+    
+    adapter.assert_includes("temperature");
+    adapter.assert_field("actor", "inference-engine");
+}
+```
+
+Run with: `cargo test --features test-support`
+
+### Need Help?
+
+- **Full docs**: `bin/shared-crates/narration-core/README.md`
+- **Quick start**: `bin/shared-crates/narration-core/QUICKSTART.md`
+- **Field reference**: See README section "NarrationFields Reference"
+
+We're watching your narration with ❤️!
+
 ---
-*Narration guidance added by Narration-Core Team 🎀*
+*Narration guidance added by Narration-Core Team v0.2.0 🎀*

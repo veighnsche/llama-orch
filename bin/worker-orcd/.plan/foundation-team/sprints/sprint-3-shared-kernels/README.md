@@ -26,10 +26,10 @@ This sprint establishes the deterministic, VRAM-resident compute foundation that
 | FT-016 | cuBLAS GEMM Wrapper | M | 2 | 30-31 |
 | FT-017 | Temperature Scaling Kernel | S | 1 | 32 |
 | FT-018 | Greedy Sampling | S | 1 | 33 |
-| FT-019 | Stochastic Sampling | M | 2 | 34-35 |
-| FT-020 | Seeded RNG | S | 1 | 36 |
+| FT-019 | Stochastic Sampling (Extended) | L | 3 | 34-36 |
+| FT-020 | Seeded RNG | S | 1 | 37 |
 
-**Total**: 10 stories, 16 agent-days (Days 23-38)
+**Total**: 10 stories, 17 agent-days (Days 23-39) — **EXPANDED by 1 day**
 
 ---
 
@@ -75,12 +75,13 @@ This sprint establishes the deterministic, VRAM-resident compute foundation that
 **Key Deliverable**: Greedy sampling kernel  
 **Blocks**: FT-019 (stochastic sampling)
 
-### Days 34-35: FT-019 - Stochastic Sampling
-**Goal**: Stochastic sampling with top-k/top-p  
-**Key Deliverable**: Stochastic sampling kernel  
+### Days 34-36: FT-019 - Stochastic Sampling (Extended)
+**Goal**: Stochastic sampling with advanced parameters (top-k, top-p, repetition_penalty, stop sequences)  
+**Key Deliverable**: Advanced sampling kernels + HTTP API extension  
+**Expanded Scope**: Added competitive parity with OpenAI/llama.cpp (8 parameters total)  
 **Blocks**: FT-020 (seeded RNG)
 
-### Day 36: FT-020 - Seeded RNG
+### Day 37: FT-020 - Seeded RNG
 **Goal**: Seeded RNG for reproducible sampling  
 **Key Deliverable**: Deterministic RNG with seed control  
 **Blocks**: Sprint 4 (integration tests)
@@ -111,7 +112,8 @@ Sprint is complete when:
 - [ ] cuBLAS GEMM wrapper working in deterministic mode
 - [ ] Temperature scaling kernel implemented
 - [ ] Greedy sampling working
-- [ ] Stochastic sampling working with top-k/top-p
+- [ ] Stochastic sampling working with advanced parameters (top-k, top-p, repetition_penalty, stop sequences)
+- [ ] HTTP API extended with new generation parameters
 - [ ] Seeded RNG providing reproducible results
 - [ ] All unit tests passing
 - [ ] Ready for Sprint 4 (integration)

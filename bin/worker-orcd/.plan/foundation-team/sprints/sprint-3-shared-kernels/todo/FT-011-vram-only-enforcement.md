@@ -322,61 +322,243 @@ private:
 
 ---
 
+## 🔍 Testing Requirements
+
+**Added by**: Testing Team (test-harness/TEAM_RESPONSIBILITIES.md)
+
+### Unit Tests (MUST implement)
+
+**Critical Path Coverage**:
+- **Test VramTracker records allocation correctly** (M0-W-1011)
+  - Given: VramTracker initialized
+  - When: record_allocation() called with 1GB, ModelWeights purpose
+  - Then: total_usage() returns 1GB, allocation_count() returns 1
+  - **Why critical**: Core tracking mechanism must be accurate
+
+- **Test VramTracker records deallocation correctly** (M0-W-1011)
+  - Given: VramTracker with 1GB allocation
+  - When: record_deallocation() called
+  - Then: total_usage() returns 0, allocation_count() returns 0
+  - **Why critical**: Memory leak prevention depends on accurate deallocation tracking
+
+- **Test usage_by_purpose returns correct breakdown** (M0-W-1011)
+  - Given: Allocations for ModelWeights (1GB), KVCache (512MB), IntermediateBuffers (256MB)
+  - When: usage_by_purpose(ModelWeights) called
+  - Then: Returns exactly 1GB
+  - **Why critical**: VRAM breakdown required for OOM diagnostics
+
+- **Test verify_vram_residency with device pointers returns true** (M0-W-1012)
+  - Given: cudaMalloc device pointer tracked
+  - When: verify_vram_residency() called
+  - Then: Returns true (cudaMemoryTypeDevice, no hostPointer)
+  - **Why critical**: VRAM-only policy enforcement (M0-SYS-2.2.1)
+
+- **Test verify_vram_residency with host pointers returns false** (M0-W-1012)
+  - Given: cudaMallocHost host pointer tracked
+  - When: verify_vram_residency() called
+  - Then: Returns false (detects RAM fallback)
+  - **Why critical**: Must detect VRAM-only policy violations
+
+- **Test thread safety with concurrent allocations**
+  - Given: VramTracker shared across threads
+  - When: 10 threads call record_allocation() concurrently
+  - Then: total_usage() equals sum of all allocations, no race conditions
+  - **Why critical**: Future-proofs for multi-stream support
+
+**Edge Cases**:
+- **Test allocation with zero bytes** (defensive)
+  - Given: record_allocation(ptr, 0, purpose)
+  - When: Called
+  - Then: Tracked correctly or rejected with clear error
+
+- **Test deallocation of non-existent pointer** (defensive)
+  - Given: record_deallocation(invalid_ptr)
+  - When: Called
+  - Then: No crash, no-op or logged warning
+
+### Integration Tests (MUST implement)
+
+- **Test VramTracker integrated with Context** (M0-W-1010)
+  - Given: Context initialized with VramTracker
+  - When: Model loaded via Context
+  - Then: VramTracker reports model weight allocation
+  - **Why critical**: Validates tracker wiring into Context
+
+- **Test VRAM usage reported in health endpoint**
+  - Given: Worker with model loaded
+  - When: GET /health called
+  - Then: Response includes vram_bytes_used field
+  - **Why critical**: Health endpoint must expose VRAM metrics
+
+- **Test OOM error includes VRAM breakdown** (M0-W-1021)
+  - Given: Insufficient VRAM for allocation
+  - When: Allocation fails
+  - Then: Error message includes breakdown by purpose (weights, KV, buffers)
+  - **Why critical**: OOM diagnostics require detailed breakdown
+
+### Property Tests (SHOULD implement)
+
+- **Property: total_usage equals sum of all tracked allocations**
+  - Given: Arbitrary sequence of allocations/deallocations
+  - When: Operations complete
+  - Then: total_usage() always equals sum of active allocations
+  - **Why valuable**: Validates accounting invariant
+
+### BDD Scenarios (VERY IMPORTANT - MUST implement)
+
+**Feature**: VRAM Allocation Tracking
+
+```gherkin
+Scenario: Worker tracks VRAM allocation for model weights
+  Given a worker with CUDA context initialized
+  When the worker loads a 1GB model into VRAM
+  Then the VRAM tracker reports 1GB usage for ModelWeights
+  And the health endpoint shows vram_bytes_used >= 1GB
+
+Scenario: Worker detects VRAM OOM and reports breakdown
+  Given a worker with 2GB VRAM available
+  And 1.5GB already allocated for model weights
+  When the worker attempts to allocate 1GB for KV cache
+  Then the allocation fails with VRAM_OOM error
+  And the error message includes "ModelWeights: 1.5GB, requested: 1GB, available: 0.5GB"
+
+Scenario: Worker tracks deallocation correctly
+  Given a worker with 1GB VRAM allocated
+  When the worker deallocates the memory
+  Then the VRAM tracker reports 0GB usage
+  And subsequent allocations succeed
+```
+
+### Test Artifacts (MUST produce)
+
+- **Unit test report**: Pass/fail for each test, coverage metrics
+- **Integration test logs**: VRAM usage at each stage
+- **BDD scenario results**: Pass/fail with step traces
+- **Memory leak report**: VRAM usage before/after test suite (must be equal)
+
+### Acceptance Criteria for Testing
+
+- ✅ All unit tests pass (8+ tests covering critical paths and edge cases)
+- ✅ All integration tests pass (3+ tests validating Context integration)
+- ✅ All BDD scenarios pass (3 scenarios validating user-facing behavior)
+- ✅ No memory leaks detected (verified with cuda-memcheck)
+- ✅ Test coverage ≥ 90% for VramTracker class
+- ✅ All tests produce verifiable artifacts
+
+### False Positive Prevention
+
+**CRITICAL**: Tests MUST observe product behavior, NEVER manipulate product state.
+
+❌ **FORBIDDEN**:
+```cpp
+// Pre-creating VRAM allocation that product should create
+cudaMalloc(&ptr, 1024);
+tracker.record_allocation(ptr, 1024, VramPurpose::ModelWeights);
+assert(tracker.total_usage() == 1024);  // FALSE POSITIVE
+```
+
+✅ **REQUIRED**:
+```cpp
+// Product creates allocation, test observes
+auto mem = DeviceMemory(1024, &tracker, VramPurpose::ModelWeights);
+assert(tracker.total_usage() == 1024);  // Product created allocation
+assert(tracker.allocation_count() == 1);  // Verify tracking happened
+```
+
+### Test Execution Commands
+
+```bash
+# Unit tests
+./build/tests/vram_tracker_test
+
+# Integration tests (with Context)
+cargo test --features cuda --test integration_vram_tracking
+
+# Memory leak detection
+cuda-memcheck --leak-check full ./build/tests/vram_tracker_test
+
+# BDD scenarios
+cargo run --bin bdd-runner -- --features vram_tracking
+```
+
+### Dependencies for Testing
+
+- **Upstream**: FT-010 (CUDA context) must be complete for integration tests
+- **Test infrastructure**: Google Test (C++), Cucumber (BDD), cuda-memcheck
+
+---
+**Testing requirements added by Testing Team 🔍**
+
+---
+
 **Status**: ✅ Complete  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04  
 **Completed**: 2025-10-04
 
----
-Planned by Project Management Team 📋  
-Implemented by Foundation-Alpha 🏗️
-
----
-
-## 🎀 Narration Opportunities
-
-**From**: Narration-Core Team
 
 ### Events to Narrate
 
 1. **VRAM allocation** (ACTION_VRAM_ALLOCATE)
    ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_VRAM_RESIDENCY,
-       action: ACTION_VRAM_ALLOCATE,
-       target: format!("GPU{}", device_id),
-       device: Some(format!("GPU{}", device_id)),
-       human: format!("Allocated {} MB VRAM on GPU{} for {}", bytes / 1024 / 1024, device_id, purpose),
-       ..Default::default()
-   });
+   Narration::new(ACTOR_VRAM_RESIDENCY, "vram_allocate", format!("GPU{}", device_id))
+       .human(format!("Allocated {} MB VRAM on GPU{} for {}", bytes / 1024 / 1024, device_id, purpose))
+       .device(format!("GPU{}", device_id))
+       .emit();
    ```
 
 2. **VRAM deallocation** (ACTION_VRAM_DEALLOCATE)
    ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_VRAM_RESIDENCY,
-       action: ACTION_VRAM_DEALLOCATE,
-       target: format!("GPU{}", device_id),
-       device: Some(format!("GPU{}", device_id)),
-       human: format!("Deallocated {} MB VRAM on GPU{} ({} MB still in use)", bytes / 1024 / 1024, device_id, remaining / 1024 / 1024),
-       ..Default::default()
-   });
+   Narration::new(ACTOR_VRAM_RESIDENCY, "vram_deallocate", format!("GPU{}", device_id))
+       .human(format!("Deallocated {} MB VRAM on GPU{} ({} MB still in use)", 
+                      bytes / 1024 / 1024, device_id, remaining / 1024 / 1024))
+       .device(format!("GPU{}", device_id))
+       .emit();
    ```
 
 3. **VRAM OOM error**
    ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_VRAM_RESIDENCY,
-       action: ACTION_VRAM_ALLOCATE,
-       target: format!("GPU{}", device_id),
-       device: Some(format!("GPU{}", device_id)),
-       error_kind: Some("vram_oom".to_string()),
-       human: format!("VRAM allocation failed on GPU{}: requested {} MB, only {} MB available", device_id, requested / 1024 / 1024, available / 1024 / 1024),
-       ..Default::default()
-   });
+   Narration::new(ACTOR_VRAM_RESIDENCY, "vram_allocate", format!("GPU{}", device_id))
+       .human(format!("VRAM allocation failed on GPU{}: requested {} MB, only {} MB available", 
+                      device_id, requested / 1024 / 1024, available / 1024 / 1024))
+       .device(format!("GPU{}", device_id))
+       .error_kind("vram_oom")
+       .emit_error();  // ← ERROR level
    ```
 
 **Why this matters**: VRAM allocation is a critical resource constraint. Narration helps diagnose OOM issues and track memory usage patterns.
 
+### Testing Your Narration
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]  // ← Required for test isolation!
+fn test_vram_allocation_narrates() {
+    let adapter = CaptureAdapter::install();
+    
+    // Your VRAM allocation code here
+    allocate_vram(1024 * 1024 * 1024);  // 1GB
+    
+    // Assert narration was emitted
+    adapter.assert_includes("Allocated");
+    adapter.assert_field("actor", "vram-residency");
+    adapter.assert_field("device", "GPU0");
+}
+```
+
+Run with: `cargo test --features test-support`
+
+### Need Help?
+
+- **Full docs**: `bin/shared-crates/narration-core/README.md`
+- **Quick start**: `bin/shared-crates/narration-core/QUICKSTART.md`
+- **Field reference**: See README section "NarrationFields Reference"
+- **Our team doc**: `bin/shared-crates/narration-core/TEAM_RESPONSIBILITY.md`
+
+We're watching your narration with ❤️ and will provide feedback if we see opportunities for improvement!
+
 ---
-*Narration guidance added by Narration-Core Team 🎀*
+*Narration guidance added by Narration-Core Team v0.2.0 🎀*

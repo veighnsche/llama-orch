@@ -326,6 +326,172 @@ impl HealthStatus {
 
 ---
 
+## 🔍 Testing Requirements
+
+**Added by**: Testing Team (test-harness/TEAM_RESPONSIBILITIES.md)
+
+### Unit Tests (MUST implement)
+
+**Critical Path Coverage**:
+- **Test check_pointer_residency with device pointer returns true** (M0-W-1012)
+  - Given: cudaMalloc device pointer
+  - When: Health::check_pointer_residency(ptr) called
+  - Then: Returns true (cudaMemoryTypeDevice, no hostPointer)
+  - **Why critical**: Core residency check must work
+
+- **Test check_pointer_residency with host pointer returns false** (M0-W-1012)
+  - Given: cudaMallocHost host pointer
+  - When: Health::check_pointer_residency(ptr) called
+  - Then: Returns false (detects RAM fallback)
+  - **Why critical**: Must detect VRAM-only policy violations
+
+- **Test check_pointer_residency with nullptr returns false**
+  - Given: nullptr
+  - When: Health::check_pointer_residency(nullptr) called
+  - Then: Returns false
+  - **Why critical**: Defensive programming
+
+- **Test get_process_vram_usage returns positive value**
+  - Given: Worker with model loaded
+  - When: Health::get_process_vram_usage() called
+  - Then: Returns > 0 bytes
+  - **Why critical**: VRAM usage query must work
+
+- **Test residency_report generates readable output**
+  - Given: VramTracker with allocations
+  - When: Health::residency_report(tracker) called
+  - Then: Returns formatted string with status, usage, allocation count
+  - **Why critical**: Health endpoint needs human-readable reports
+
+- **Test HealthMonitor tracks healthy/unhealthy state**
+  - Given: HealthMonitor with model
+  - When: Residency check passes/fails
+  - Then: is_healthy() reflects current state
+  - **Why critical**: Worker health status must be accurate
+
+### Integration Tests (MUST implement)
+
+- **Test residency check with real VRAM allocations** (M0-W-1012)
+  - Given: DeviceMemory allocated in VRAM
+  - When: Health::check_vram_residency(tracker) called
+  - Then: Returns true
+  - **Why critical**: Real-world VRAM validation
+
+- **Test residency check detects RAM fallback** (M0-W-1012)
+  - Given: cudaMallocManaged pointer (simulates RAM fallback)
+  - When: Health::check_pointer_residency(ptr) called
+  - Then: Returns false (detects UMA violation)
+  - **Why critical**: Must detect VRAM-only policy violations
+
+- **Test periodic health check runs in background**
+  - Given: HealthMonitor with 1-second interval
+  - When: Monitor runs for 3 seconds
+  - Then: At least 3 checks performed
+  - **Why critical**: Background monitoring must work
+
+- **Test health endpoint exposes residency status**
+  - Given: Worker with HealthMonitor
+  - When: GET /health called
+  - Then: Response includes {"resident": true, "vram_bytes_used": N}
+  - **Why critical**: Health endpoint integration
+
+- **Test worker marks itself unhealthy on residency failure** (M0-W-1012)
+  - Given: Worker with residency violation
+  - When: Health check runs
+  - Then: is_healthy() returns false, logs CRITICAL error
+  - **Why critical**: Worker must self-diagnose policy violations
+
+### BDD Scenarios (VERY IMPORTANT - MUST implement)
+
+**Feature**: VRAM Residency Verification
+
+```gherkin
+Scenario: Worker verifies VRAM residency periodically
+  Given a worker with model loaded in VRAM
+  And residency checks enabled every 60 seconds
+  When 120 seconds elapse
+  Then at least 2 residency checks are performed
+  And all checks report "resident: true"
+  And worker remains healthy
+
+Scenario: Worker detects VRAM residency violation
+  Given a worker with VRAM-only policy enabled
+  When a RAM fallback is detected (simulated with cudaMallocManaged)
+  Then the residency check fails
+  And the worker marks itself unhealthy
+  And a CRITICAL error is logged: "VRAM residency violated"
+  And the health endpoint returns {"status": "unhealthy", "resident": false}
+
+Scenario: Worker health endpoint exposes residency status
+  Given a worker with model loaded
+  When a client queries GET /health
+  Then the response includes residency status
+  And vram_bytes_used is reported
+  And last_check_secs indicates recency
+```
+
+### Test Artifacts (MUST produce)
+
+- **Unit test report**: Pass/fail for each test
+- **Residency check logs**: Timestamps and results of periodic checks
+- **BDD scenario results**: Pass/fail with health status traces
+- **Health endpoint responses**: JSON samples showing residency status
+
+### Acceptance Criteria for Testing
+
+- ✅ All unit tests pass (6+ tests covering critical paths)
+- ✅ All integration tests pass (5+ tests validating residency detection)
+- ✅ All BDD scenarios pass (3 scenarios validating health monitoring)
+- ✅ Residency violations detected correctly (no false negatives)
+- ✅ All tests produce verifiable artifacts
+
+### False Positive Prevention
+
+**CRITICAL**: Tests MUST detect actual residency violations, not assume VRAM.
+
+❌ **FORBIDDEN**:
+```cpp
+// Assuming VRAM without checking
+void* ptr = get_some_pointer();
+assert(true);  // FALSE POSITIVE: not checking residency
+```
+
+✅ **REQUIRED**:
+```cpp
+// Actually checking residency via CUDA API
+void* ptr = get_some_pointer();
+cudaPointerAttributes attrs;
+cudaPointerGetAttributes(&attrs, ptr);
+assert(attrs.type == cudaMemoryTypeDevice);  // Real check
+assert(attrs.hostPointer == nullptr);  // No UMA
+```
+
+### Test Execution Commands
+
+```bash
+# Unit tests
+./build/tests/health_test
+
+# Integration tests
+cargo test --features cuda --test health_integration
+
+# BDD scenarios
+cargo run --bin bdd-runner -- --features vram_residency
+
+# Manual health check
+curl http://localhost:8080/health | jq '.resident'
+```
+
+### Dependencies for Testing
+
+- **Upstream**: FT-011 (VRAM tracking), FT-013 (DeviceMemory)
+- **Test infrastructure**: Google Test (C++), curl, jq, BDD runner
+
+---
+**Testing requirements added by Testing Team 🔍**
+
+---
+
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04
@@ -337,7 +503,26 @@ Planned by Project Management Team 📋
 
 ## 🎀 Narration Opportunities
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team (v0.2.0)
+
+Hey Foundation Team! 👋 We're here to help you make VRAM residency checks **delightfully debuggable**!
+
+### Quick Start (v0.2.0 Builder API)
+
+We just shipped v0.2.0 with a **builder pattern** that's 43% less boilerplate:
+
+```rust
+use observability_narration_core::{Narration, ACTOR_VRAM_RESIDENCY};
+
+// In your residency check code:
+Narration::new(ACTOR_VRAM_RESIDENCY, "verify", format!("GPU{}", device_id))
+    .human(format!("VRAM residency verified on GPU{}: all {} allocations resident", 
+                   device_id, allocation_count))
+    .device(format!("GPU{}", device_id))
+    .emit();
+```
+
+**CRITICAL violations** should use `.emit_error()` for ERROR level!
 
 ### Events to Narrate
 
@@ -379,5 +564,34 @@ Planned by Project Management Team 📋
 
 **Why this matters**: VRAM residency violations are CRITICAL policy failures. Narration ensures these are immediately visible in logs and alerts.
 
+### Testing Your Narration
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]
+fn test_residency_check_narrates() {
+    let adapter = CaptureAdapter::install();
+    
+    // Your residency check
+    check_vram_residency();
+    
+    adapter.assert_includes("residency");
+    adapter.assert_field("actor", "vram-residency");
+}
+```
+
+Run with: `cargo test --features test-support`
+
+### Need Help?
+
+- **Full docs**: `bin/shared-crates/narration-core/README.md`
+- **Quick start**: `bin/shared-crates/narration-core/QUICKSTART.md`
+- **Field reference**: See README section "NarrationFields Reference"
+
+We're watching your narration with ❤️!
+
 ---
-*Narration guidance added by Narration-Core Team 🎀*
+*Narration guidance added by Narration-Core Team v0.2.0 🎀*

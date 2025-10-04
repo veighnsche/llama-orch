@@ -3,7 +3,7 @@
 **Team**: Foundation-Alpha  
 **Sprint**: Sprint 3 - Shared Kernels  
 **Size**: S (1 day)  
-**Days**: 36 - 36  
+**Days**: 37 - 37 — **SHIFTED by 1 day due to FT-019 expansion**  
 **Spec Ref**: M0-W-1030, M0-W-1421
 
 ---
@@ -30,7 +30,7 @@ Implement seeded random number generator (RNG) for reproducible stochastic sampl
 ## Dependencies
 
 ### Upstream (Blocks This Story)
-- FT-019: Stochastic sampling (Expected completion: Day 35)
+- FT-019: Stochastic sampling (Extended) (Expected completion: Day 36)
 
 ### Downstream (This Story Blocks)
 - FT-024: HTTP-FFI-CUDA integration needs seeded RNG
@@ -392,6 +392,127 @@ TEST(RNGTest, LargeSeed) {
 
 ---
 
+## 🔍 Testing Requirements
+
+**Added by**: Testing Team (test-harness/TEAM_RESPONSIBILITIES.md)
+
+### Unit Tests (MUST implement)
+
+**Critical Path Coverage**:
+- **Test RNG initialization with seed** (M0-W-1030)
+  - Given: RNG(42)
+  - When: Constructor completes
+  - Then: seed() returns 42
+  - **Why critical**: Seed must be stored correctly
+
+- **Test uniform() returns values in [0, 1)** (M0-W-1030)
+  - Given: RNG initialized
+  - When: uniform() called 1000 times
+  - Then: All values >= 0.0 and < 1.0
+  - **Why critical**: Range requirement
+
+- **Test determinism (same seed → same sequence)** (M0-W-1030)
+  - Given: RNG rng1(42), RNG rng2(42)
+  - When: next_uint64() called 100 times on each
+  - Then: Identical sequences
+  - **Why critical**: Core reproducibility requirement
+
+- **Test different seeds produce different sequences**
+  - Given: RNG rng1(42), RNG rng2(43)
+  - When: next_uint64() called on each
+  - Then: Sequences differ
+  - **Why critical**: Seeds must affect output
+
+- **Test reseed resets sequence** (M0-W-1030)
+  - Given: RNG rng(42), generate 10 values
+  - When: reseed(42), generate 10 more values
+  - Then: Second sequence matches first
+  - **Why critical**: Reseed must work correctly
+
+- **Test uniform distribution (mean ≈ 0.5)**
+  - Given: RNG rng(42)
+  - When: uniform() called 10000 times
+  - Then: mean ≈ 0.5 (±0.01)
+  - **Why critical**: Statistical correctness
+
+- **Test seed=0 works**
+  - Given: RNG(0)
+  - When: uniform() called
+  - Then: Returns valid value in [0, 1)
+  - **Why critical**: Edge case
+
+- **Test seed=UINT64_MAX works**
+  - Given: RNG(UINT64_MAX)
+  - When: uniform() called
+  - Then: Returns valid value in [0, 1)
+  - **Why critical**: Edge case
+
+### Integration Tests (MUST implement)
+
+- **Test with stochastic sampling (same seed → same tokens)** (M0-W-1421)
+  - Given: Same model, prompt, seed
+  - When: Inference run twice
+  - Then: Identical token sequences
+  - **Why critical**: End-to-end reproducibility
+
+- **Test seed propagation through inference pipeline**
+  - Given: Client provides seed in request
+  - When: Inference executes
+  - Then: RNG initialized with provided seed
+  - **Why critical**: Seed must flow through system
+
+- **Test automatic seed generation when not provided**
+  - Given: Client omits seed in request
+  - When: Inference executes
+  - Then: Seed auto-generated and included in response
+  - **Why critical**: Default behavior
+
+### BDD Scenarios (VERY IMPORTANT - MUST implement)
+
+**Feature**: Seeded RNG
+
+```gherkin
+Scenario: Worker ensures reproducibility with provided seed
+  Given a worker with seed = 42
+  When inference is run twice with same seed and prompt
+  Then both runs produce identical token sequences
+  And RNG is initialized with seed 42
+
+Scenario: Worker generates seed when not provided
+  Given a worker with no seed provided
+  When inference starts
+  Then a seed is auto-generated
+  And the seed is included in the response
+  And the seed can be used for reproducibility
+
+Scenario: Worker produces different outputs with different seeds
+  Given a worker with same model and prompt
+  When inference is run with seed=42 and seed=43
+  Then the outputs differ
+  And both are valid completions
+```
+
+### Test Artifacts (MUST produce)
+
+- **Unit test report**: Pass/fail for each test
+- **Determinism proof**: Same seed → same sequence
+- **Statistical analysis**: Distribution of uniform() values
+- **BDD scenario results**: Pass/fail with seed traces
+
+### Acceptance Criteria for Testing
+
+- ✅ All unit tests pass (8+ tests covering critical paths and edge cases)
+- ✅ All integration tests pass (3+ tests with inference pipeline)
+- ✅ All BDD scenarios pass (3 scenarios validating seeded behavior)
+- ✅ Determinism verified (same seed → same outputs)
+- ✅ Statistical correctness verified (uniform distribution)
+- ✅ All tests produce verifiable artifacts
+
+---
+**Testing requirements added by Testing Team 🔍**
+
+---
+
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04
@@ -403,7 +524,25 @@ Planned by Project Management Team 📋
 
 ## 🎀 Narration Opportunities
 
-**From**: Narration-Core Team
+**From**: Narration-Core Team (v0.2.0)
+
+Hey Foundation Team! 👋 We're here to help you make RNG operations **delightfully debuggable**!
+
+### Quick Start (v0.2.0 Builder API)
+
+We just shipped v0.2.0 with a **builder pattern** that's 43% less boilerplate:
+
+```rust
+use observability_narration_core::{Narration, ACTOR_INFERENCE_ENGINE};
+
+// In your RNG initialization:
+Narration::new(ACTOR_INFERENCE_ENGINE, "rng_init", format!("seed-{}", seed))
+    .human(format!("Initialized RNG with seed {}", seed))
+    .device(format!("GPU{}", device_id))
+    .emit();
+```
+
+The builder automatically adds `emitted_by`, `emitted_at_ms`, and secret redaction!
 
 ### Events to Narrate
 
@@ -432,5 +571,34 @@ Planned by Project Management Team 📋
 
 **Why this matters**: Seeded RNG is critical for reproducibility. Narration creates an audit trail of seeds used and verifies determinism.
 
+### Testing Your Narration
+
+```rust
+use observability_narration_core::CaptureAdapter;
+use serial_test::serial;
+
+#[test]
+#[serial(capture_adapter)]
+fn test_rng_init_narrates() {
+    let adapter = CaptureAdapter::install();
+    
+    // Your RNG initialization
+    let rng = RNG::new(42);
+    
+    adapter.assert_includes("Initialized RNG");
+    adapter.assert_field("actor", "inference-engine");
+}
+```
+
+Run with: `cargo test --features test-support`
+
+### Need Help?
+
+- **Full docs**: `bin/shared-crates/narration-core/README.md`
+- **Quick start**: `bin/shared-crates/narration-core/QUICKSTART.md`
+- **Field reference**: See README section "NarrationFields Reference"
+
+We're watching your narration with ❤️!
+
 ---
-*Narration guidance added by Narration-Core Team 🎀*
+*Narration guidance added by Narration-Core Team v0.2.0 🎀*

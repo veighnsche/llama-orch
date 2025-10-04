@@ -57,6 +57,23 @@
 17. ✅ Kernel safety validation (M0-W-1431)
 18. ✅ Temperature scaling 0.0-2.0 (M0-W-1032)
 
+**ADDED in M0 Sprint 3 (Advanced Generation Parameters - 2025-10-04)**:
+19. ✅ Top-P (nucleus) sampling (M0-W-1421) ← **COMPETITIVE PARITY**
+20. ✅ Top-K sampling (M0-W-1421) ← **COMPETITIVE PARITY**
+21. ✅ Repetition penalty (M0-W-1421) ← **COMPETITIVE PARITY**
+22. ✅ Stop sequences (M0-W-1422) ← **CRITICAL** (structured output)
+23. ✅ Min-P sampling (M0-W-1421, optional) ← **COMPETITIVE PARITY**
+24. ✅ HTTP API extension with 5 new parameters (M0-W-1300)
+
+**Rationale for Sprint 3 Expansion**:
+- User expectations: APIs like OpenAI (10 params), llama.cpp (12 params), LM Studio (13 params) have these as standard
+- Efficiency: Adding during sampling implementation (Sprint 3) is more efficient than deferring to M1
+- Structured output: Stop sequences are critical for JSON, code generation
+- Backward compatible: All new parameters optional with sensible defaults
+- Timeline impact: +1 day to Sprint 3 (16 → 17 days)
+
+**Analysis Reference**: See `bin/.specs/.docs/GENERATION_PARAMETERS_ANALYSIS.md` for comprehensive gap analysis
+
 **REMOVED from Repo**:
 - 🔥 Proof bundles (entire concept - all references to be removed)
 
@@ -1118,6 +1135,10 @@ Content-Type: application/json
   "prompt": "Write a haiku about GPU computing",
   "max_tokens": 100,
   "temperature": 0.7,
+  "top_p": 0.9,
+  "top_k": 50,
+  "repetition_penalty": 1.1,
+  "stop": ["\n\n", "END"],
   "seed": 42
 }
 ```
@@ -1125,11 +1146,23 @@ Content-Type: application/json
 **Response**: SSE stream (see §7.2)
 
 **Validation**:
-- `job_id` — MUST be non-empty string
-- `prompt` — MUST be non-empty, max 32768 characters
-- `max_tokens` — MUST be 1-2048
-- `temperature` — MUST be 0.0-2.0
-- `seed` — MUST be valid uint64
+- `job_id` — MUST be non-empty string (required)
+- `prompt` — MUST be non-empty, max 32768 characters (required)
+- `max_tokens` — MUST be 1-2048 (optional, default: 2048)
+- `temperature` — MUST be 0.0-2.0 (optional, default: 1.0)
+- `top_p` — MUST be 0.0-1.0 (optional, default: 1.0, disabled)
+- `top_k` — MUST be 0-vocab_size (optional, default: 0, disabled)
+- `repetition_penalty` — MUST be 0.0-2.0 (optional, default: 1.0, disabled)
+- `stop` — MUST be array of strings, max 4 sequences, each max 32 tokens (optional, default: [])
+- `seed` — MUST be valid uint64 (optional, auto-generated if omitted)
+
+**Parameter Semantics**:
+- `top_p`: Nucleus sampling - keep tokens with cumulative probability >= top_p (1.0 = disabled)
+- `top_k`: Top-k sampling - keep only top k tokens by probability (0 = disabled)
+- `repetition_penalty`: Penalize tokens that appear in generation history (1.0 = disabled, >1.0 = penalize, <1.0 = encourage)
+- `stop`: Stop generation when any sequence is matched (checked after each token)
+
+**Backward Compatibility**: All new parameters (top_p, top_k, repetition_penalty, stop) are optional with defaults that preserve M0 baseline behavior.
 
 **Spec Reference**: WORK-3040
 
@@ -1942,7 +1975,7 @@ public:
     InferenceResult& operator=(InferenceResult&&) = delete;
     
     bool next_token(std::string& token_out, int& token_index);
-    bool is_done() const { return current_token_ >= config_.max_tokens; }
+    bool is_done() const;
     
 private:
     void tokenize_prompt(const std::string& prompt);
@@ -1950,11 +1983,14 @@ private:
     void run_forward_pass();
     int sample_token();
     std::string detokenize(int token_id);
+    bool check_stop_sequences() const;
     
     const Model& model_;
     InferenceConfig config_;
     std::vector<int> prompt_tokens_;
+    std::vector<int> token_history_;  // For repetition penalty and stop sequences
     int current_token_ = 0;
+    bool stopped_by_sequence_ = false;
     std::unique_ptr<DeviceMemory> kv_cache_;
     std::unique_ptr<DeviceMemory> logits_;
     cudaStream_t stream_;
@@ -1965,45 +2001,152 @@ private:
 **InferenceConfig Structure**:
 ```cpp
 struct InferenceConfig {
+    // Core parameters
     int max_tokens;
-    float temperature;
+    float temperature = 1.0f;
     uint64_t seed;
-    int top_k = 50;      // For future use
-    float top_p = 0.95f; // For future use
+    
+    // Advanced sampling parameters (M0 Sprint 3 expansion)
+    float top_p = 1.0f;              // Nucleus sampling (1.0 = disabled)
+    int top_k = 0;                   // Top-k sampling (0 = disabled)
+    float repetition_penalty = 1.0f; // Repetition penalty (1.0 = disabled)
+    float min_p = 0.0f;              // Min-p sampling (0.0 = disabled, optional)
+    
+    // Stop sequences (tokenized, max 4 sequences)
+    const int* stop_sequences[4] = {nullptr, nullptr, nullptr, nullptr};
+    int stop_sequence_lengths[4] = {0, 0, 0, 0};
 };
 ```
+
+**Parameter Defaults**:
+- All advanced parameters default to "disabled" state
+- `top_p = 1.0` means no nucleus filtering
+- `top_k = 0` means no top-k filtering
+- `repetition_penalty = 1.0` means no penalty
+- `min_p = 0.0` means no minimum probability threshold
 
 **Spec Reference**: CUDA-5321, CUDA-5320
 
 #### [M0-W-1421] Token Sampling
-Worker-orcd MUST sample next token with temperature control:
+Worker-orcd MUST sample next token with advanced sampling parameters:
 
 ```cpp
 int InferenceResult::sample_token() {
-    // Copy logits to host
-    std::vector<float> host_logits(model_.metadata().vocab_size);
-    cudaMemcpy(host_logits.data(), logits_->get(), 
-               host_logits.size() * sizeof(float), cudaMemcpyDeviceToHost);
+    // Copy logits to device-writable buffer (we'll modify them)
+    float* d_logits_temp;
+    cudaMalloc(&d_logits_temp, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits_temp, logits_->get(), 
+               vocab_size * sizeof(float), cudaMemcpyDeviceToDevice);
     
-    // Apply temperature
-    for (float& logit : host_logits) {
-        logit /= config_.temperature;
+    // Apply temperature scaling
+    if (config_.temperature != 1.0f) {
+        temperature_scale_kernel<<<grid, block>>>(d_logits_temp, vocab_size, config_.temperature);
     }
     
-    // Softmax
-    softmax(host_logits);
+    // Apply repetition penalty (if enabled)
+    if (config_.repetition_penalty != 1.0f && !token_history_.empty()) {
+        apply_repetition_penalty_kernel<<<grid, block>>>(
+            d_logits_temp, vocab_size,
+            token_history_.data(), token_history_.size(),
+            config_.repetition_penalty
+        );
+    }
+    
+    // Apply top-k filtering (if enabled)
+    if (config_.top_k > 0) {
+        apply_top_k_kernel<<<grid, block>>>(d_logits_temp, vocab_size, config_.top_k);
+    }
+    
+    // Apply top-p (nucleus) filtering (if enabled)
+    if (config_.top_p < 1.0f) {
+        apply_top_p_kernel<<<grid, block>>>(d_logits_temp, vocab_size, config_.top_p);
+    }
+    
+    // Apply min-p filtering (if enabled, optional)
+    if (config_.min_p > 0.0f) {
+        apply_min_p_kernel<<<grid, block>>>(d_logits_temp, vocab_size, config_.min_p);
+    }
     
     // Sampling strategy based on temperature
+    int token_id;
     if (config_.temperature == 0.0f) {
         // Greedy sampling (for testing reproducibility)
-        return std::distance(host_logits.begin(), 
-                            std::max_element(host_logits.begin(), host_logits.end()));
+        token_id = greedy_sample_kernel(d_logits_temp, vocab_size);
     } else {
         // Stochastic sampling (for production use)
-        return sample_from_distribution(host_logits, rng_);
+        float random_value = rng_.uniform();
+        token_id = stochastic_sample_kernel(d_logits_temp, vocab_size, random_value);
     }
+    
+    cudaFree(d_logits_temp);
+    
+    // Add to history for repetition penalty
+    token_history_.push_back(token_id);
+    
+    return token_id;
 }
 ```
+
+**Sampling Pipeline Order**:
+1. Temperature scaling (always applied if temp != 1.0)
+2. Repetition penalty (applied to history tokens)
+3. Top-k filtering (keep only top k tokens)
+4. Top-p filtering (nucleus sampling)
+5. Min-p filtering (minimum probability threshold, optional)
+6. Final sampling (greedy if temp=0, stochastic otherwise)
+
+**Note**: Filters are applied in sequence. Each filter modifies logits in-place (zeroing out filtered tokens).
+
+#### [M0-W-1422] Stop Sequence Detection
+Worker-orcd MUST check for stop sequences after each token generation:
+
+```cpp
+bool InferenceResult::check_stop_sequences() const {
+    // Check each configured stop sequence
+    for (int seq_idx = 0; seq_idx < 4; ++seq_idx) {
+        if (config_.stop_sequences[seq_idx] == nullptr) continue;
+        
+        int seq_len = config_.stop_sequence_lengths[seq_idx];
+        if (token_history_.size() < seq_len) continue;
+        
+        // Check if last seq_len tokens match stop sequence
+        bool match = true;
+        for (int i = 0; i < seq_len; ++i) {
+            int history_idx = token_history_.size() - seq_len + i;
+            if (token_history_[history_idx] != config_.stop_sequences[seq_idx][i]) {
+                match = false;
+                break;
+            }
+        }
+        
+        if (match) return true;
+    }
+    
+    return false;
+}
+
+bool InferenceResult::is_done() const {
+    // Check max tokens limit
+    if (current_token_ >= config_.max_tokens) return true;
+    
+    // Check stop sequences
+    if (stopped_by_sequence_) return true;
+    
+    return false;
+}
+```
+
+**Stop Sequence Workflow**:
+1. After each token is generated, append to `token_history_`
+2. Call `check_stop_sequences()` to check if any stop sequence matched
+3. If matched, set `stopped_by_sequence_ = true` and terminate generation
+4. Stop sequences are checked against tokenized IDs (not raw strings)
+
+**Tokenization of Stop Sequences**:
+- Client provides stop sequences as strings in HTTP request
+- Worker MUST tokenize stop sequences using same tokenizer as prompt
+- Tokenized sequences stored in `InferenceConfig.stop_sequences`
+- Max 4 stop sequences, each max 32 tokens
 
 **KV Cache Allocation**:
 ```cpp
@@ -2039,22 +2182,49 @@ void InferenceResult::allocate_kv_cache() {
 #### [M0-W-1430] Required Kernels
 Worker-orcd MUST implement M0 kernel set:
 
-**Kernels**:
+**Core Kernels**:
 - cuBLAS GEMM wrapper
 - RoPE (llama variant)
 - Naive attention (prefill + decode)
 - RMSNorm
-- Temperature-based sampling (greedy when temp=0, stochastic otherwise)
+
+**Sampling Kernels** (expanded in Sprint 3):
+- Temperature scaling
+- Greedy sampling (argmax)
+- Stochastic sampling (softmax + CDF sampling)
+- Top-k filtering
+- Top-p (nucleus) filtering
+- Repetition penalty
+- Min-p filtering (optional)
 
 **Kernel Organization**:
 ```
 kernels/
 ├── attention.cu      # Attention mechanism kernels
 ├── matmul.cu         # Matrix multiplication kernels (cuBLAS wrapper)
-├── sampling.cu       # Token sampling kernels
+├── sampling.cu       # Token sampling kernels (temperature, greedy, stochastic, top-k, top-p, repetition, min-p)
 ├── rope.cu           # Rotary position embeddings
 ├── normalization.cu  # RMSNorm, LayerNorm
 └── common.cuh        # Shared kernel utilities
+```
+
+**Sampling Kernel Signatures**:
+```cuda
+// Temperature scaling
+__global__ void temperature_scale_kernel(float* logits, int vocab_size, float temperature);
+
+// Greedy sampling
+__global__ void greedy_sample_kernel(const float* logits, int vocab_size, int* token_id);
+
+// Stochastic sampling (softmax + sample)
+__global__ void softmax_kernel(const float* logits, float* probs, int vocab_size);
+__global__ void sample_from_cdf_kernel(const float* cdf, int vocab_size, float random_value, int* token_id);
+
+// Advanced filters
+__global__ void apply_top_k_kernel(float* logits, int vocab_size, int top_k);
+__global__ void apply_top_p_kernel(float* logits, int vocab_size, float top_p);
+__global__ void apply_repetition_penalty_kernel(float* logits, int vocab_size, const int* history, int history_len, float penalty);
+__global__ void apply_min_p_kernel(float* logits, int vocab_size, float min_p);
 ```
 
 **Kernel Launch Pattern**:
