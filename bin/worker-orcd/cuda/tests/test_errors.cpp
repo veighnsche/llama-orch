@@ -49,7 +49,7 @@ TEST(ErrorCodes, CodesAreSequential) {
 
 TEST(ErrorMessages, SuccessMessage) {
     const char* msg = cuda_error_message(CUDA_SUCCESS);
-    EXPECT_STREQ(msg, "Success");
+    EXPECT_STREQ(msg, "Operation completed successfully");
 }
 
 TEST(ErrorMessages, InvalidDeviceMessage) {

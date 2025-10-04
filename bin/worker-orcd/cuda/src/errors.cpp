@@ -12,7 +12,7 @@
 extern "C" const char* cuda_error_message(int error_code) {
     switch (error_code) {
         case CUDA_SUCCESS:
-            return "Success";
+            return "Operation completed successfully";
             
         case CUDA_ERROR_INVALID_DEVICE:
             return "Invalid CUDA device ID";

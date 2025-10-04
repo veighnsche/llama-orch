@@ -197,6 +197,7 @@ fn build_with_cuda() {
     println!("cargo:rustc-link-arg=-lstdc++");
     println!("cargo:rustc-link-arg=-lcudart");
     println!("cargo:rustc-link-arg=-lcudadevrt");
+    println!("cargo:rustc-link-arg=-lcublas");
 
     // Rebuild if CUDA sources change
     println!("cargo:rerun-if-changed=cuda/src");
