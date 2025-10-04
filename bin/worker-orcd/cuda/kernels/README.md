@@ -8,13 +8,12 @@ Required for M0 pilot (Phase 3 of ARCHITECTURE_CHANGE_PLAN.md):
 
 - **`embedding.cu`** ✅ — Token embedding lookup (FP16/FP32, coalesced access)
 - **`cublas_wrapper`** ✅ — cuBLAS GEMM wrapper (FP16, deterministic, FP32 accumulation)
-- **`sampling.cu`** ✅ — Temperature scaling (FP16/FP32, greedy mode support)
+- **`sampling.cu`** ✅ — Temperature scaling + greedy sampling (FP16/FP32, deterministic argmax)
 - **`gemm.cu`** — Custom GEMM kernels (fallback, not needed for M0)
 - **`rope.cu`** — Rotary Position Embedding (RoPE) for Llama
 - **`attention.cu`** — Naive attention (prefill + decode, GQA support)
 - **`rmsnorm.cu`** — RMSNorm layer normalization
-- **Greedy sampling** — TODO (FT-018)
-- **Stochastic sampling** — TODO (FT-019)
+- **Stochastic sampling** — TODO (FT-019: Top-P, Top-K, repetition penalty)
 
 ## Post-M0 Optimizations
 

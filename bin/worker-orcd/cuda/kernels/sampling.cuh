@@ -4,7 +4,7 @@
  * Public interface for token sampling operations.
  * 
  * Spec: M0-W-1032, M0-W-1421, KERNEL-SAMPLE-003
- * Story: FT-017
+ * Story: FT-017, FT-018
  */
 
 #ifndef WORKER_SAMPLING_CUH
@@ -94,6 +94,37 @@ void launch_temperature_scale_fp16(
     half* logits,
     int vocab_size,
     float temperature,
+    cudaStream_t stream = 0
+);
+
+/**
+ * Greedy sampling: find argmax of logits.
+ * 
+ * Uses two-phase parallel reduction for efficiency:
+ * 1. Parallel reduction within blocks
+ * 2. Final reduction across block results
+ * 
+ * This is deterministic: same logits always produce same token ID.
+ * Used for temperature=0.0 (greedy mode) in testing.
+ * 
+ * @param logits Device pointer to logits [vocab_size]
+ * @param vocab_size Vocabulary size (must be > 0)
+ * @param stream CUDA stream (default: 0)
+ * @return Selected token ID (index of max logit), or -1 on error
+ * 
+ * Error handling:
+ * - Returns -1 if vocab_size <= 0
+ * - Returns -1 if logits is nullptr
+ * - Returns -1 on kernel launch failure
+ * 
+ * Performance:
+ * - Handles large vocabularies efficiently (e.g., 151936 tokens)
+ * - Uses 256 threads per block, up to 256 blocks
+ * - Shared memory reduction for optimal performance
+ */
+int launch_greedy_sample(
+    const float* logits,
+    int vocab_size,
     cudaStream_t stream = 0
 );
 

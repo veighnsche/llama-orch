@@ -1,10 +1,10 @@
 /**
  * Sampling Kernels Unit Tests
  * 
- * Tests temperature scaling kernel correctness and edge cases.
+ * Tests temperature scaling and greedy sampling kernel correctness.
  * 
  * Spec: M0-W-1032, M0-W-1421, KERNEL-SAMPLE-003
- * Story: FT-017
+ * Story: FT-017, FT-018
  */
 
 #include <gtest/gtest.h>
@@ -462,6 +462,308 @@ TEST_F(TemperatureScaleTest, DeterministicScaling) {
                 << "Run " << run << ", index " << i << " differs";
         }
     }
+}
+
+// ============================================================================
+// Greedy Sampling Tests
+// ============================================================================
+
+class GreedySamplingTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Initialize CUDA device
+        int device_count;
+        cudaGetDeviceCount(&device_count);
+        if (device_count == 0) {
+            GTEST_SKIP() << "No CUDA devices available";
+        }
+        cudaSetDevice(0);
+    }
+};
+
+/**
+ * Test: Simple argmax (token in middle)
+ * 
+ * Spec: M0-W-1421 (Token Sampling)
+ * Critical: Core argmax must work
+ */
+TEST_F(GreedySamplingTest, SimpleArgmax) {
+    int vocab_size = 1000;
+    std::vector<float> h_logits(vocab_size, 0.0f);
+    
+    // Set token 500 to highest value
+    h_logits[500] = 10.0f;
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    int token_id = launch_greedy_sample(d_logits, vocab_size);
+    
+    EXPECT_EQ(token_id, 500);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: First token is max
+ * 
+ * Critical: Edge case (first element)
+ */
+TEST_F(GreedySamplingTest, FirstToken) {
+    int vocab_size = 1000;
+    std::vector<float> h_logits(vocab_size, 0.0f);
+    
+    // Set token 0 to highest value
+    h_logits[0] = 10.0f;
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    int token_id = launch_greedy_sample(d_logits, vocab_size);
+    
+    EXPECT_EQ(token_id, 0);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Last token is max
+ * 
+ * Critical: Edge case (last element)
+ */
+TEST_F(GreedySamplingTest, LastToken) {
+    int vocab_size = 1000;
+    std::vector<float> h_logits(vocab_size, 0.0f);
+    
+    // Set last token to highest value
+    h_logits[vocab_size - 1] = 10.0f;
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    int token_id = launch_greedy_sample(d_logits, vocab_size);
+    
+    EXPECT_EQ(token_id, vocab_size - 1);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Negative logits
+ * 
+ * Critical: Handles negative values correctly
+ */
+TEST_F(GreedySamplingTest, NegativeLogits) {
+    int vocab_size = 1000;
+    std::vector<float> h_logits(vocab_size, -10.0f);
+    
+    // Set token 250 to least negative (highest)
+    h_logits[250] = -1.0f;
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    int token_id = launch_greedy_sample(d_logits, vocab_size);
+    
+    EXPECT_EQ(token_id, 250);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Large vocabulary (Qwen 151936)
+ * 
+ * Spec: M0-W-1421 (Token Sampling)
+ * Critical: Real vocabulary size
+ */
+TEST_F(GreedySamplingTest, LargeVocabulary) {
+    // Test with Qwen vocabulary size
+    int vocab_size = 151936;
+    std::vector<float> h_logits(vocab_size, 0.0f);
+    
+    // Set token 100000 to highest value
+    h_logits[100000] = 10.0f;
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    int token_id = launch_greedy_sample(d_logits, vocab_size);
+    
+    EXPECT_EQ(token_id, 100000);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Determinism (multiple runs → same result)
+ * 
+ * Spec: M0-W-1032 (Temperature Scaling)
+ * Critical: Greedy sampling must be deterministic
+ */
+TEST_F(GreedySamplingTest, Determinism) {
+    // Test that greedy sampling is deterministic
+    int vocab_size = 1000;
+    std::vector<float> h_logits(vocab_size);
+    
+    // Random logits
+    for (int i = 0; i < vocab_size; ++i) {
+        h_logits[i] = static_cast<float>(i % 100);
+    }
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    // Run multiple times
+    int token_id1 = launch_greedy_sample(d_logits, vocab_size);
+    int token_id2 = launch_greedy_sample(d_logits, vocab_size);
+    int token_id3 = launch_greedy_sample(d_logits, vocab_size);
+    
+    EXPECT_EQ(token_id1, token_id2);
+    EXPECT_EQ(token_id2, token_id3);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Multiple peaks (tie-breaking)
+ * 
+ * Critical: Consistent tie-breaking behavior
+ */
+TEST_F(GreedySamplingTest, MultiplePeaks) {
+    int vocab_size = 1000;
+    std::vector<float> h_logits(vocab_size, 0.0f);
+    
+    // Set multiple tokens to same max value
+    h_logits[100] = 10.0f;
+    h_logits[500] = 10.0f;
+    h_logits[800] = 10.0f;
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    // Should consistently pick one of them
+    int token_id1 = launch_greedy_sample(d_logits, vocab_size);
+    int token_id2 = launch_greedy_sample(d_logits, vocab_size);
+    
+    // Verify it's one of the max values
+    EXPECT_TRUE(token_id1 == 100 || token_id1 == 500 || token_id1 == 800);
+    // Verify determinism (same result every time)
+    EXPECT_EQ(token_id1, token_id2);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Small vocabulary
+ * 
+ * Critical: Works with small vocab sizes
+ */
+TEST_F(GreedySamplingTest, SmallVocabulary) {
+    int vocab_size = 10;
+    std::vector<float> h_logits = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 
+                                     6.0f, 7.0f, 8.0f, 9.0f, 10.0f};
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    int token_id = launch_greedy_sample(d_logits, vocab_size);
+    
+    EXPECT_EQ(token_id, 9);  // Last element is max
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: GPT-OSS-20B vocabulary (50257)
+ * 
+ * Critical: Real model vocabulary
+ */
+TEST_F(GreedySamplingTest, GPTVocabulary) {
+    int vocab_size = 50257;
+    std::vector<float> h_logits(vocab_size, 0.0f);
+    
+    // Set token 25000 to highest value
+    h_logits[25000] = 5.0f;
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    int token_id = launch_greedy_sample(d_logits, vocab_size);
+    
+    EXPECT_EQ(token_id, 25000);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Mixed positive and negative logits
+ * 
+ * Critical: Realistic logit distribution
+ */
+TEST_F(GreedySamplingTest, MixedLogits) {
+    int vocab_size = 1000;
+    std::vector<float> h_logits(vocab_size);
+    for (int i = 0; i < vocab_size; ++i) {
+        h_logits[i] = static_cast<float>(i - 500);  // Range: -500 to 499
+    }
+    
+    float* d_logits;
+    cudaMalloc(&d_logits, vocab_size * sizeof(float));
+    cudaMemcpy(d_logits, h_logits.data(), vocab_size * sizeof(float), 
+               cudaMemcpyHostToDevice);
+    
+    int token_id = launch_greedy_sample(d_logits, vocab_size);
+    
+    EXPECT_EQ(token_id, 999);  // Last element is max (499)
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Error handling - invalid vocab_size
+ * 
+ * Critical: Defensive programming
+ */
+TEST_F(GreedySamplingTest, InvalidVocabSize) {
+    float* d_logits;
+    cudaMalloc(&d_logits, 1000 * sizeof(float));
+    
+    // Test with invalid vocab_size
+    int token_id = launch_greedy_sample(d_logits, 0);
+    EXPECT_EQ(token_id, -1);
+    
+    token_id = launch_greedy_sample(d_logits, -100);
+    EXPECT_EQ(token_id, -1);
+    
+    cudaFree(d_logits);
+}
+
+/**
+ * Test: Error handling - null pointer
+ * 
+ * Critical: Defensive programming
+ */
+TEST_F(GreedySamplingTest, NullPointer) {
+    int token_id = launch_greedy_sample(nullptr, 1000);
+    EXPECT_EQ(token_id, -1);
 }
 
 // ---
