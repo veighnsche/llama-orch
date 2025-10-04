@@ -223,3 +223,67 @@ impl Utf8Buffer {
 ---
 Planned by Project Management Team 📋  
 *Narration guidance added by Narration-Core Team 🎀*
+
+---
+
+## 🔍 Testing Team Requirements
+
+**From**: Testing Team (Pre-Development Audit)
+
+### Unit Testing Requirements
+- **Test InferenceEvent serializes to correct JSON** (all event types)
+- **Test Utf8Buffer handles complete UTF-8 strings** (ASCII, emoji, CJK)
+- **Test Utf8Buffer buffers partial 2-byte sequences** (split UTF-8)
+- **Test Utf8Buffer buffers partial 3-byte sequences** (emoji split)
+- **Test Utf8Buffer buffers partial 4-byte sequences** (rare chars)
+- **Test Utf8Buffer flush returns buffered bytes** (end of stream)
+- **Test event ordering validation** (started before token, terminal last)
+- **Test exactly one terminal event enforced** (end XOR error)
+- **Property test**: UTF-8 boundary safety with random byte splits
+
+### Integration Testing Requirements
+- **Test SSE stream emits started event first** (event ordering)
+- **Test SSE stream emits multiple token events** (streaming)
+- **Test SSE stream emits end event last** (terminal event)
+- **Test SSE stream closes after terminal event** (connection cleanup)
+- **Test error event terminates stream** (no end after error)
+- **Test UTF-8 safety with emoji** (👋 split across chunks)
+- **Test UTF-8 safety with CJK characters** (世界 split across chunks)
+- **Test stream handles client disconnect gracefully** (broken pipe)
+
+### BDD Testing Requirements (VERY IMPORTANT)
+- **Scenario**: Complete SSE stream lifecycle
+  - Given an inference request
+  - When the stream starts
+  - Then I should receive a started event
+  - And I should receive token events
+  - And I should receive an end event
+  - And the stream should close
+- **Scenario**: UTF-8 emoji handling
+  - Given a prompt with emoji "👋🌍"
+  - When tokens are streamed
+  - Then all emoji should be valid UTF-8
+  - And no partial multibyte sequences should be emitted
+- **Scenario**: Error terminates stream
+  - Given an inference that fails
+  - When an error occurs
+  - Then I should receive an error event
+  - And I should NOT receive an end event
+  - And the stream should close
+
+### Critical Paths to Test
+- Event ordering enforcement (started → token* → terminal)
+- UTF-8 boundary detection and buffering
+- Terminal event exclusivity (end XOR error)
+- Stream cleanup on client disconnect
+
+### Edge Cases
+- Empty token stream (started → end immediately)
+- Single token stream
+- Very long tokens (>256 bytes)
+- Rapid token generation (backpressure)
+- Client disconnect mid-stream
+- Multiple error events (should only emit first)
+
+---
+Test opportunities identified by Testing Team 🔍

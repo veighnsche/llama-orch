@@ -455,3 +455,69 @@ Planned by Project Management Team 📋
 
 ---
 *Narration guidance added by Narration-Core Team 🎀*
+
+---
+
+## 🔍 Testing Team Requirements
+
+**From**: Testing Team (Pre-Development Audit)
+
+### Unit Testing Requirements
+- **Test CudaContext::new() with valid device ID** (happy path)
+- **Test CudaContext::new() with invalid device ID returns error** (error handling)
+- **Test CudaContext::device_count() returns positive number** (device query)
+- **Test CudaModel::vram_usage() returns non-zero** (VRAM tracking)
+- **Test InferenceResult::next_token() returns tokens** (token generation)
+- **Test error code conversion to CudaError variants** (all error codes)
+- **Test Drop implementations** (use miri or valgrind)
+- **Test CString validation prevents null bytes** (safety check)
+- **Property test**: All valid device IDs accepted
+
+### Integration Testing Requirements
+- **Test full inference flow: init → load → infer → next_token → drop** (end-to-end)
+- **Test VRAM residency check** (model loaded in VRAM)
+- **Test process VRAM usage query** (total VRAM used)
+- **Test device health check** (GPU status)
+- **Test error propagation from C++ to Rust** (exception conversion)
+- **Test resource cleanup on panic** (use catch_unwind)
+- **Test concurrent contexts on different devices** (multi-GPU if available)
+
+### BDD Testing Requirements (VERY IMPORTANT)
+- **Scenario**: CUDA context initialization
+  - Given a valid GPU device ID
+  - When I create a CudaContext
+  - Then the context should be initialized successfully
+  - And device properties should be accessible
+- **Scenario**: Model loading
+  - Given a CudaContext and valid model path
+  - When I load the model
+  - Then the model should be loaded to VRAM
+  - And VRAM usage should be reported
+- **Scenario**: Inference execution
+  - Given a loaded model
+  - When I start inference with a prompt
+  - Then I should receive an InferenceResult
+  - And next_token() should return tokens
+- **Scenario**: Error handling
+  - Given an invalid device ID
+  - When I create a CudaContext
+  - Then I should receive CudaError::InvalidDevice
+  - And error message should be descriptive
+
+### Critical Paths to Test
+- FFI call safety (unsafe blocks with safety comments)
+- RAII pattern (Drop implementations)
+- Error code to Result conversion
+- CString validation (null byte prevention)
+- Memory ownership (Rust owns nothing from C++)
+
+### Edge Cases
+- NULL pointers from C++ (handle gracefully)
+- Very long model paths
+- Very long prompts
+- Token buffer overflow
+- Panic during FFI call
+- Double-free prevention (Drop called multiple times)
+
+---
+Test opportunities identified by Testing Team 🔍

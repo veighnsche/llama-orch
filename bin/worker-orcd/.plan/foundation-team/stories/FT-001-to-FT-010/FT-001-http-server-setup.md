@@ -201,3 +201,58 @@ pub enum ServerError {
 ---
 Planned by Project Management Team 📋  
 *Narration guidance added by Narration-Core Team 🎀*
+
+---
+
+## 🔍 Testing Team Requirements
+
+**From**: Testing Team (Pre-Development Audit)
+
+### Unit Testing Requirements
+- **Test health endpoint response structure** (JSON format validation)
+- **Test health endpoint status code** (200 OK)
+- **Test ServerError variants** (all error types format correctly)
+- **Test bind address parsing** (valid and invalid formats)
+- **Test shutdown signal handling** (SIGTERM/SIGINT)
+- **Property test**: Server state transitions (startup → running → shutdown)
+
+### Integration Testing Requirements
+- **Test server startup on available port** (dynamic port allocation)
+- **Test server binds to custom address from env var** (WORKER_ADDR)
+- **Test graceful shutdown completes within timeout** (5 seconds max)
+- **Test bind failure when port already in use** (spawn two servers, second fails)
+- **Test bind failure with invalid address** (malformed IP:PORT)
+- **Test concurrent health checks** (multiple requests during startup)
+
+### BDD Testing Requirements (VERY IMPORTANT)
+- **Scenario**: Server starts successfully
+  - Given no server is running
+  - When I start the server on port 8080
+  - Then the server should bind successfully
+  - And the health endpoint should return 200 OK
+- **Scenario**: Server handles graceful shutdown
+  - Given a running server
+  - When I send SIGTERM
+  - Then the server should complete in-flight requests
+  - And shutdown within 5 seconds
+- **Scenario**: Server rejects invalid bind address
+  - Given an invalid address format
+  - When I attempt to start the server
+  - Then the server should fail with BindFailed error
+  - And log the error with bind address
+
+### Critical Paths to Test
+- Server startup sequence (tokio runtime → bind → route registration)
+- Health endpoint availability immediately after startup
+- Graceful shutdown with in-flight request handling
+- Error propagation from bind failures to caller
+
+### Edge Cases
+- Port 0 (OS-assigned port)
+- IPv6 addresses
+- Localhost vs 0.0.0.0 binding
+- Shutdown during startup
+- Multiple shutdown signals
+
+---
+Test opportunities identified by Testing Team 🔍

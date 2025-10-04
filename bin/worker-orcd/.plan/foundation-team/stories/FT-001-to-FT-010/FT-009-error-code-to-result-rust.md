@@ -301,3 +301,62 @@ Planned by Project Management Team 📋
 
 ---
 *Narration guidance added by Narration-Core Team 🎀*
+
+---
+
+## 🔍 Testing Team Requirements
+
+**From**: Testing Team (Pre-Development Audit)
+
+### Unit Testing Requirements
+- **Test CudaError::from_code() for all error codes** (1-7, 99)
+- **Test CudaError::code() returns correct string codes** ("INVALID_DEVICE", "VRAM_OOM", etc.)
+- **Test CudaError::status_code() returns correct HTTP codes** (400, 500, 503)
+- **Test CudaError::is_retriable() for OOM vs other errors** (only OOM is retriable)
+- **Test ErrorResponse serialization** (JSON format with code, message, retriable)
+- **Test SseError conversion from CudaError** (SSE event format)
+- **Test From<i32> trait implementation** (automatic conversion)
+- **Property test**: All error codes map to valid CudaError variants
+
+### Integration Testing Requirements
+- **Test HTTP endpoint returns correct status code for CUDA errors** (400/500/503)
+- **Test SSE stream emits error event with correct format** (code + message)
+- **Test error logging includes structured fields** (error_code, error_message, status_code)
+- **Test retriable flag in error responses** (only OOM has retriable: true)
+- **Test error context preservation** (original C++ message included)
+
+### BDD Testing Requirements (VERY IMPORTANT)
+- **Scenario**: Invalid parameter error returns 400
+  - Given a CUDA invalid parameter error (code 5)
+  - When converted to HTTP response
+  - Then status code should be 400 Bad Request
+  - And error code should be "INVALID_PARAMETER"
+- **Scenario**: Out of memory error returns 503
+  - Given a CUDA out of memory error (code 2)
+  - When converted to HTTP response
+  - Then status code should be 503 Service Unavailable
+  - And error code should be "VRAM_OOM"
+  - And retriable should be true
+- **Scenario**: Inference failed error returns 500
+  - Given a CUDA inference failed error (code 4)
+  - When converted to HTTP response
+  - Then status code should be 500 Internal Server Error
+  - And error code should be "INFERENCE_FAILED"
+  - And retriable should be absent or false
+
+### Critical Paths to Test
+- Error code to CudaError conversion
+- CudaError to HTTP status code mapping
+- Retriable error detection (OOM only)
+- Error logging with structured fields
+- SSE error event formatting
+
+### Edge Cases
+- Unknown error code (not in enum)
+- Error code 0 (CUDA_SUCCESS, should not happen)
+- Very long error messages from C++
+- NULL error message pointer from C++
+- Multiple error conversions in sequence
+
+---
+Test opportunities identified by Testing Team 🔍

@@ -352,3 +352,59 @@ Planned by Project Management Team 📋
 
 ---
 *Narration guidance added by Narration-Core Team 🎀*
+
+---
+
+## 🔍 Testing Team Requirements
+
+**From**: Testing Team (Pre-Development Audit)
+
+### Unit Testing Requirements
+- **Test header compiles with C compiler** (gcc, clang)
+- **Test header compiles with C++ compiler** (g++, clang++)
+- **Test header has include guards** (no multiple definition errors)
+- **Test all function declarations are syntactically correct** (parse check)
+- **Test error code enum has no gaps** (sequential values)
+- **Test opaque handle types are properly declared** (forward declarations)
+- **Test extern "C" blocks are correct** (C linkage)
+
+### Integration Testing Requirements
+- **None** (interface definition only, no implementation)
+- **Manual review required** (FFI contract is CRITICAL)
+
+### BDD Testing Requirements (VERY IMPORTANT)
+- **Scenario**: FFI interface is locked and published
+  - Given the FFI header is complete
+  - When the interface is reviewed
+  - Then it should be published to coordination/FFI_INTERFACE_LOCKED.md
+  - And Llama and GPT teams should be notified
+- **Scenario**: Header compiles in C mode
+  - Given worker_ffi.h
+  - When compiled with gcc -c -x c
+  - Then compilation should succeed
+- **Scenario**: Header compiles in C++ mode
+  - Given worker_ffi.h
+  - When compiled with g++ -c -x c++
+  - Then compilation should succeed
+
+### Critical Paths to Test
+- Header compilation (C and C++)
+- Include guard correctness
+- Function signature completeness
+- Error code enum completeness
+- Documentation completeness
+
+### Edge Cases
+- Multiple inclusion of header
+- Mixing C and C++ compilation units
+- NULL pointer parameters
+- Error code out of range
+
+### Interface Contract Validation
+- **All functions documented** (parameters, return values, error codes)
+- **All opaque types defined** (CudaContext, CudaModel, InferenceResult)
+- **All error codes defined** (CUDA_SUCCESS through CUDA_ERROR_UNKNOWN)
+- **No breaking changes after lock** (interface is immutable)
+
+---
+Test opportunities identified by Testing Team 🔍

@@ -223,3 +223,62 @@ Planned by Project Management Team 📋
 
 ---
 *Narration guidance added by Narration-Core Team 🎀*
+
+---
+
+## 🔍 Testing Team Requirements
+
+**From**: Testing Team (Pre-Development Audit)
+
+### Unit Testing Requirements
+- **Test CorrelationId::new() generates valid UUID v4** (format validation)
+- **Test CorrelationId::from_header() accepts valid UUID** (parsing)
+- **Test CorrelationId::from_header() accepts alphanumeric strings** (1-64 chars)
+- **Test CorrelationId::from_header() rejects invalid formats** (special chars, too long)
+- **Test CorrelationId::is_valid() validates format constraints** (length, charset)
+- **Test middleware extracts ID from header** (X-Correlation-ID present)
+- **Test middleware generates ID when header missing** (UUID v4)
+- **Property test**: All valid UUID v4 formats accepted
+
+### Integration Testing Requirements
+- **Test request with X-Correlation-ID header preserves ID** (passthrough)
+- **Test request without header generates new ID** (auto-generation)
+- **Test response includes X-Correlation-ID header** (echo back)
+- **Test correlation ID accessible in handler via extensions** (request context)
+- **Test invalid header value triggers ID generation** (fallback)
+- **Test correlation ID appears in logs** (structured logging)
+- **Test correlation ID propagates through middleware chain** (ordering)
+
+### BDD Testing Requirements (VERY IMPORTANT)
+- **Scenario**: Client provides correlation ID
+  - Given a request with X-Correlation-ID header "test-123"
+  - When the request is processed
+  - Then the response should include X-Correlation-ID "test-123"
+  - And logs should include correlation_id "test-123"
+- **Scenario**: Client does not provide correlation ID
+  - Given a request without X-Correlation-ID header
+  - When the request is processed
+  - Then the response should include a generated UUID v4
+  - And logs should include the generated correlation_id
+- **Scenario**: Invalid correlation ID rejected
+  - Given a request with X-Correlation-ID "invalid@#$%"
+  - When the request is processed
+  - Then a new UUID v4 should be generated
+  - And the response should include the new ID
+
+### Critical Paths to Test
+- Correlation ID extraction from header
+- UUID v4 generation when missing
+- ID storage in request extensions
+- ID propagation to response headers
+- ID inclusion in all log statements
+
+### Edge Cases
+- Empty X-Correlation-ID header
+- Very long correlation ID (>64 chars)
+- Unicode characters in correlation ID
+- Multiple X-Correlation-ID headers
+- Correlation ID with null bytes
+
+---
+Test opportunities identified by Testing Team 🔍

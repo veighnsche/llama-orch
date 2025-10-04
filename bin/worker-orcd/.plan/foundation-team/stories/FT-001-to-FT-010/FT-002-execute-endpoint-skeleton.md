@@ -184,3 +184,61 @@ pub async fn execute_handler(
 ---
 Planned by Project Management Team 📋  
 *Narration guidance added by Narration-Core Team 🎀*
+
+---
+
+## 🔍 Testing Team Requirements
+
+**From**: Testing Team (Pre-Development Audit)
+
+### Unit Testing Requirements
+- **Test ExecuteRequest deserializes valid JSON** (all fields present)
+- **Test validation rejects empty job_id** (non-empty constraint)
+- **Test validation rejects prompt >32768 chars** (length constraint)
+- **Test validation rejects max_tokens <1 or >2048** (range constraint)
+- **Test validation rejects temperature <0.0 or >2.0** (range constraint)
+- **Test seed accepts all u64 values** (no validation needed)
+- **Test ValidationError serializes correctly** (JSON format)
+- **Property test**: All invalid parameter combinations rejected
+
+### Integration Testing Requirements
+- **Test POST /execute with valid request returns 200** (happy path)
+- **Test POST /execute with invalid request returns 400** (validation failure)
+- **Test response Content-Type is text/event-stream** (SSE header)
+- **Test placeholder SSE stream emits started, token, end events** (event sequence)
+- **Test validation error includes field name and message** (error details)
+- **Test concurrent requests** (multiple jobs in parallel)
+
+### BDD Testing Requirements (VERY IMPORTANT)
+- **Scenario**: Valid inference request accepted
+  - Given a valid ExecuteRequest with all parameters
+  - When I POST to /execute
+  - Then I should receive 200 OK
+  - And Content-Type should be text/event-stream
+  - And SSE stream should emit started event first
+- **Scenario**: Invalid job_id rejected
+  - Given an ExecuteRequest with empty job_id
+  - When I POST to /execute
+  - Then I should receive 400 Bad Request
+  - And error should indicate "job_id must not be empty"
+- **Scenario**: Temperature out of range rejected
+  - Given an ExecuteRequest with temperature 3.0
+  - When I POST to /execute
+  - Then I should receive 400 Bad Request
+  - And error should indicate "temperature must be 0.0-2.0"
+
+### Critical Paths to Test
+- Request deserialization (JSON → ExecuteRequest struct)
+- Validation logic for all parameters
+- Error response formatting (field + message)
+- SSE stream initialization
+
+### Edge Cases
+- Prompt exactly 32768 chars (boundary)
+- Temperature exactly 0.0 and 2.0 (boundaries)
+- max_tokens exactly 1 and 2048 (boundaries)
+- Malformed JSON (invalid UTF-8, truncated)
+- Missing required fields
+
+---
+Test opportunities identified by Testing Team 🔍

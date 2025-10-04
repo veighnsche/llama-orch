@@ -264,3 +264,66 @@ Planned by Project Management Team 📋
 
 ---
 *Narration guidance added by Narration-Core Team 🎀*
+
+---
+
+## 🔍 Testing Team Requirements
+
+**From**: Testing Team (Pre-Development Audit)
+
+### Unit Testing Requirements
+- **Test job_id validation: empty string rejected** (non-empty constraint)
+- **Test prompt validation: empty rejected** (min length)
+- **Test prompt validation: >32768 chars rejected** (max length)
+- **Test max_tokens validation: <1 rejected** (min range)
+- **Test max_tokens validation: >2048 rejected** (max range)
+- **Test temperature validation: <0.0 rejected** (min range)
+- **Test temperature validation: >2.0 rejected** (max range)
+- **Test seed validation: all u64 values accepted** (no constraints)
+- **Test multiple errors collected together** (not fail-fast)
+- **Test error response JSON format** (field, constraint, message, value)
+- **Test ValidatedJson extractor rejects invalid requests** (Axum integration)
+- **Property test**: All invalid combinations rejected with correct errors
+
+### Integration Testing Requirements
+- **Test POST /execute with all invalid fields returns 400** (multiple errors)
+- **Test POST /execute with valid request returns 200** (happy path)
+- **Test error response includes field names and constraints** (error details)
+- **Test error response does not include sensitive data** (no full prompt)
+- **Test validation errors logged with correlation ID** (observability)
+- **Test malformed JSON returns appropriate error** (JSON parse failure)
+
+### BDD Testing Requirements (VERY IMPORTANT)
+- **Scenario**: All fields invalid
+  - Given a request with empty job_id, empty prompt, max_tokens 0, temperature 3.0
+  - When I POST to /execute
+  - Then I should receive 400 Bad Request
+  - And errors array should contain 4 errors
+  - And each error should have field, constraint, and message
+- **Scenario**: Boundary values accepted
+  - Given a request with prompt exactly 32768 chars, max_tokens 2048, temperature 2.0
+  - When I POST to /execute
+  - Then I should receive 200 OK
+- **Scenario**: Malformed JSON rejected
+  - Given invalid JSON body
+  - When I POST to /execute
+  - Then I should receive 400 Bad Request
+  - And error should indicate "Request body must be valid JSON"
+
+### Critical Paths to Test
+- Validation framework initialization
+- Error collection (not fail-fast)
+- Error response formatting
+- Integration with Axum extractors
+- Logging with correlation ID
+
+### Edge Cases
+- Prompt exactly at boundaries (1, 32768)
+- max_tokens exactly at boundaries (1, 2048)
+- Temperature exactly at boundaries (0.0, 2.0)
+- Null bytes in strings
+- Very large seed values (u64::MAX)
+- Missing optional fields vs invalid values
+
+---
+Test opportunities identified by Testing Team 🔍

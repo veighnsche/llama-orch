@@ -356,3 +356,65 @@ Planned by Project Management Team 📋
 
 ---
 *Narration guidance added by Narration-Core Team 🎀*
+
+---
+
+## 🔍 Testing Team Requirements
+
+**From**: Testing Team (Pre-Development Audit)
+
+### Unit Testing Requirements
+- **Test Context constructor with valid device ID** (device 0)
+- **Test Context constructor with invalid device ID throws error** (device -1, device 999)
+- **Test Context::device() returns correct device ID** (getter)
+- **Test Context::device_name() returns non-empty string** (device properties)
+- **Test Context::compute_capability() returns valid SM version** (e.g., 86 for SM_86)
+- **Test Context::total_vram() returns positive value** (VRAM query)
+- **Test Context::free_vram() returns value <= total_vram** (VRAM availability)
+- **Test Context::device_count() returns positive value** (device enumeration)
+- **Test destructor calls cudaDeviceReset()** (cleanup verification)
+- **Property test**: All valid device IDs (0 to device_count-1) accepted
+
+### Integration Testing Requirements
+- **Test UMA is disabled after context init** (verify with cudaPointerGetAttributes)
+- **Test cache config is set** (query with cudaDeviceGetCacheConfig)
+- **Test multiple contexts on different devices** (multi-GPU if available)
+- **Test context cleanup frees VRAM** (check free_vram before/after)
+- **Test VRAM-only enforcement** (no unified memory allocations)
+
+### BDD Testing Requirements (VERY IMPORTANT)
+- **Scenario**: CUDA context initialization succeeds
+  - Given a valid GPU device ID 0
+  - When I create a Context
+  - Then the context should initialize successfully
+  - And device properties should be accessible
+  - And UMA should be disabled
+  - And cache config should be set to prefer L1
+- **Scenario**: Invalid device ID rejected
+  - Given an invalid device ID 999
+  - When I attempt to create a Context
+  - Then a CudaError should be thrown
+  - And error message should indicate "out of range"
+- **Scenario**: Context cleanup frees VRAM
+  - Given a Context with allocated VRAM
+  - When the Context is destroyed
+  - Then cudaDeviceReset() should be called
+  - And all VRAM should be freed
+
+### Critical Paths to Test
+- CUDA device initialization (cudaSetDevice)
+- UMA disabling (cudaLimitMallocHeapSize = 0)
+- Cache config (cudaFuncCachePreferL1)
+- Device properties query
+- Context cleanup (cudaDeviceReset)
+
+### Edge Cases
+- Device ID 0 (first GPU)
+- Device ID = device_count - 1 (last GPU)
+- Device ID out of range (negative, >= device_count)
+- Multiple contexts on same device (should fail or serialize)
+- Context destruction during CUDA operation
+- VRAM exhaustion during init
+
+---
+Test opportunities identified by Testing Team 🔍

@@ -47,11 +47,20 @@ mod capture;
 pub mod http;
 pub mod otel;
 mod redaction;
+pub mod trace;
 
 pub use auto::{current_timestamp_ms, narrate_auto, narrate_full, service_identity};
 pub use capture::{CaptureAdapter, CapturedNarration};
 pub use otel::narrate_with_otel_context;
 pub use redaction::{redact_secrets, RedactionPolicy};
+
+// Re-export trace macros for convenience
+pub use trace_tiny;
+pub use trace_with_correlation;
+pub use trace_enter;
+pub use trace_exit;
+pub use trace_loop;
+pub use trace_state;
 
 // ============================================================================
 // Taxonomy: Actors

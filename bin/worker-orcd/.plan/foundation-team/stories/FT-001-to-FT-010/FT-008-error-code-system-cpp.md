@@ -267,3 +267,58 @@ Planned by Project Management Team 📋
 
 ---
 *Narration guidance added by Narration-Core Team 🎀*
+
+---
+
+## 🔍 Testing Team Requirements
+
+**From**: Testing Team (Pre-Development Audit)
+
+### Unit Testing Requirements
+- **Test cuda_error_message() for all error codes** (CUDA_SUCCESS through CUDA_ERROR_UNKNOWN)
+- **Test cuda_error_message() with invalid code returns fallback** ("Unrecognized error code")
+- **Test CudaError constructor stores code and message** (state validation)
+- **Test CudaError::what() returns message** (exception interface)
+- **Test CudaError::code() returns correct code** (getter)
+- **Test CudaError factory methods create correct errors** (invalid_device, out_of_memory, etc.)
+- **Test exception-to-error-code wrapper catches CudaError** (typed exception)
+- **Test exception-to-error-code wrapper catches std::exception** (generic exception)
+- **Test exception-to-error-code wrapper catches unknown exceptions** (catch-all)
+
+### Integration Testing Requirements
+- **Test FFI function returns correct error code on failure** (error propagation)
+- **Test error message accessible from Rust via cuda_error_message()** (cross-language)
+- **Test exception thrown in C++ becomes error code in Rust** (FFI boundary)
+
+### BDD Testing Requirements (VERY IMPORTANT)
+- **Scenario**: CudaError exception thrown
+  - Given a CUDA operation that fails
+  - When a CudaError is thrown
+  - Then the error code should be set correctly
+  - And the error message should be descriptive
+- **Scenario**: Exception converted to error code at FFI boundary
+  - Given a C++ function that throws CudaError
+  - When called from FFI wrapper
+  - Then the error code should be returned via out-parameter
+  - And the function should return NULL
+- **Scenario**: Unknown exception caught
+  - Given a C++ function that throws std::runtime_error
+  - When called from FFI wrapper
+  - Then CUDA_ERROR_UNKNOWN should be returned
+  - And the function should return NULL
+
+### Critical Paths to Test
+- Error code enum completeness (all codes defined)
+- Error message quality (descriptive and actionable)
+- Exception-to-error-code conversion (all exception types)
+- FFI boundary safety (no exceptions leak to Rust)
+
+### Edge Cases
+- Error code 0 (CUDA_SUCCESS)
+- Error code out of enum range
+- Very long error messages
+- Nested exceptions
+- Exception during exception handling
+
+---
+Test opportunities identified by Testing Team 🔍
