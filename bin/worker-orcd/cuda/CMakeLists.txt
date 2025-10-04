@@ -32,6 +32,7 @@ set(CUDA_SOURCES
     src/vram_tracker.cpp
     src/device_memory.cpp
     src/cublas_wrapper.cpp
+    src/rng.cpp
 )
 
 # Kernel files
@@ -94,6 +95,7 @@ if(BUILD_TESTING)
         tests/test_embedding.cu
         tests/test_cublas.cu
         tests/test_sampling.cu
+        tests/test_rng.cpp
     )
     
     # Build test executable

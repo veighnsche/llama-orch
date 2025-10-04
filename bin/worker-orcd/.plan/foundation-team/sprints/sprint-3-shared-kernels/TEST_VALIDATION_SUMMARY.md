@@ -1,4 +1,4 @@
-# Test Validation Summary - FT-011 through FT-019
+# Test Validation Summary - FT-011 through FT-020
 
 **Date**: 2025-10-04  
 **Sprint**: Sprint 3 - Shared Kernels  
@@ -317,6 +317,33 @@ Time: 3.33s
 
 **Coverage**: Softmax normalization, CDF sampling, numerical stability (log-sum-exp), reproducibility, large vocabularies (152K tokens), error handling.
 
+### ✅ Seeded RNG Tests (Complete - 14/14)
+
+**Command**: `./cuda/build/cuda_tests --gtest_filter="RNGTest.*"`
+
+**Result**: **14/14 PASSED** ✅
+
+```bash
+[  PASSED  ] RNGTest.Initialization (0 ms)
+[  PASSED  ] RNGTest.UniformRange (0 ms)
+[  PASSED  ] RNGTest.Determinism (0 ms)
+[  PASSED  ] RNGTest.DifferentSeeds (0 ms)
+[  PASSED  ] RNGTest.Reseed (0 ms)
+[  PASSED  ] RNGTest.UniformDistribution (1 ms)
+[  PASSED  ] RNGTest.SeedZero (0 ms)
+[  PASSED  ] RNGTest.LargeSeed (0 ms)
+[  PASSED  ] RNGTest.DeterminismUniform (0 ms)
+[  PASSED  ] RNGTest.ReseedDifferentSeed (0 ms)
+[  PASSED  ] RNGTest.MultipleReseeds (0 ms)
+[  PASSED  ] RNGTest.UniformVariance (1 ms)
+[  PASSED  ] RNGTest.NoObviousPatterns (0 ms)
+[  PASSED  ] RNGTest.SamplingIntegration (1 ms)
+
+[==========] 14 tests passed (5 ms total)
+```
+
+**Coverage**: Seeded initialization, uniform distribution [0,1), determinism, reseeding, statistical properties, integration with stochastic sampling.
+
 ---
 
 ## Build System Fixes Applied
@@ -560,26 +587,29 @@ cuda-memcheck --leak-check full ./cuda_tests
 8. **✅ Temperature Scaling Kernel** - 14/14 tests passed (FP16/FP32, greedy, range 0.0-2.0)
 9. **✅ Greedy Sampling (Argmax)** - 12/12 tests passed (parallel reduction, 152K vocab in 1ms)
 10. **✅ Stochastic Sampling (Softmax + CDF)** - 12/12 tests passed (log-sum-exp, reproducible)
-11. **✅ Context Lifecycle** - No memory leaks detected (0 byte VRAM difference)
-12. **✅ Error Propagation** - C++ exceptions → FFI error codes → Rust errors working correctly
-13. **✅ Device Health Checks** - Both GPUs detected and healthy
-14. **✅ Multi-GPU Support** - 2 CUDA devices detected and accessible
-15. **✅ Thread Safety** - Concurrent VRAM allocations validated
-16. **✅ Exception Safety** - OOM handling doesn't leak existing allocations
-17. **✅ RAM Fallback Detection** - Host pointers correctly identified as violations
-18. **✅ UMA Violation Detection** - Managed memory correctly identified as violations
-19. **✅ Real-World Model Dimensions** - Qwen-2.5-72B (152K vocab) & GPT-3.5 (12K hidden) validated
-20. **✅ Matrix Operations** - GEMM with transpose, alpha/beta scaling validated
-21. **✅ Complete Sampling Pipeline** - Temperature → Softmax → Greedy/Stochastic sampling
-22. **✅ Deterministic Inference** - Greedy sampling enables reproducible outputs
-23. **✅ Creative Generation** - Stochastic sampling enables varied outputs
-24. **✅ Numerical Stability** - Log-sum-exp trick prevents overflow/underflow
+11. **✅ Seeded RNG** - 14/14 tests passed (Mersenne Twister, deterministic, uniform [0,1))
+12. **✅ Context Lifecycle** - No memory leaks detected (0 byte VRAM difference)
+13. **✅ Error Propagation** - C++ exceptions → FFI error codes → Rust errors working correctly
+14. **✅ Device Health Checks** - Both GPUs detected and healthy
+15. **✅ Multi-GPU Support** - 2 CUDA devices detected and accessible
+16. **✅ Thread Safety** - Concurrent VRAM allocations validated
+17. **✅ Exception Safety** - OOM handling doesn't leak existing allocations
+18. **✅ RAM Fallback Detection** - Host pointers correctly identified as violations
+19. **✅ UMA Violation Detection** - Managed memory correctly identified as violations
+20. **✅ Real-World Model Dimensions** - Qwen-2.5-72B (152K vocab) & GPT-3.5 (12K hidden) validated
+21. **✅ Matrix Operations** - GEMM with transpose, alpha/beta scaling validated
+22. **✅ Complete Sampling Pipeline** - Temperature → Softmax → Greedy/Stochastic sampling
+23. **✅ Deterministic Inference** - Greedy sampling enables reproducible outputs
+24. **✅ Creative Generation** - Stochastic sampling enables varied outputs
+25. **✅ Numerical Stability** - Log-sum-exp trick prevents overflow/underflow
+26. **✅ Reproducible Randomness** - Seeded RNG enables deterministic stochastic sampling
 
 ### 🎯 Test Coverage Achieved
 - **Rust Tests**: 16 integration tests covering FFI boundary
 - **C++ Tests**: 22 FFI integration + 13 VRAM tracker + 33 DeviceMemory RAII + 13 Health verification tests
 - **CUDA Kernel Tests**: 10 embedding lookup + 15 cuBLAS wrapper + 14 temperature scaling + 12 greedy sampling + 12 stochastic sampling tests
-- **Total**: **160 tests** executed successfully on real CUDA hardware
+- **C++ Utility Tests**: 14 seeded RNG tests
+- **Total**: **174 tests** executed successfully on real CUDA hardware
 
 ### 🔧 Build System Improvements
 1. **CMake CUDA Detection** - Fixed for CUDA 13 + CachyOS
@@ -693,6 +723,17 @@ cuda-memcheck --leak-check full ./cuda_tests
 - ✅ Error handling validated (null pointer, invalid inputs)
 - ✅ Integration with temperature scaling validated
 - ✅ Sub-millisecond performance achieved
+
+**FT-020: Seeded RNG** - **COMPLETE** ✅
+- ✅ 14/14 utility tests passing
+- ✅ Seeded initialization validated (uint64)
+- ✅ Uniform distribution validated [0, 1)
+- ✅ Determinism validated (same seed → same sequence)
+- ✅ Reseeding capability validated
+- ✅ Statistical properties validated (uniform, variance)
+- ✅ Integration with stochastic sampling validated
+- ✅ Edge cases validated (zero seed, large seed)
+- ✅ Mersenne Twister (std::mt19937_64) implementation
 
 **Hardware Validation**: ✅ **ALL PASSED** on CachyOS with RTX 3090 + RTX 3060
 
