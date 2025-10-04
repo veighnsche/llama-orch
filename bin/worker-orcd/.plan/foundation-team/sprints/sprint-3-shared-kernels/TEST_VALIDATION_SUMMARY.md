@@ -1,4 +1,4 @@
-# Test Validation Summary - FT-011, FT-012 & FT-013
+# Test Validation Summary - FT-011, FT-012, FT-013 & FT-014
 
 **Date**: 2025-10-04  
 **Sprint**: Sprint 3 - Shared Kernels  
@@ -158,6 +158,34 @@ Time: 3.33s
 ```
 
 **Coverage**: RAII lifecycle, move semantics, aligned allocation, zero-init, host-device transfer, VramTracker integration, exception safety, edge cases.
+
+### ✅ C++ VRAM Residency Verification Tests (Complete - 13/13)
+
+**Command**: `./cuda/build/cuda_tests --gtest_filter="HealthTest.*"`
+
+**Result**: **13/13 PASSED** ✅
+
+```bash
+[  PASSED  ] HealthTest.CheckPointerResidencyDevicePointerReturnsTrue (172 ms)
+[  PASSED  ] HealthTest.CheckPointerResidencyHostPointerReturnsFalse (0 ms)
+[  PASSED  ] HealthTest.CheckPointerResidencyNullptrReturnsFalse (0 ms)
+[  PASSED  ] HealthTest.CheckPointerResidencyManagedMemoryReturnsFalse (0 ms)
+[  PASSED  ] HealthTest.GetProcessVramUsageReturnsPositiveValue (0 ms)
+[  PASSED  ] HealthTest.GetProcessVramUsageIncreasesWithAllocations (0 ms)
+[  PASSED  ] HealthTest.CheckVramResidencyDeviceAllocationsReturnsTrue (0 ms)
+[  PASSED  ] HealthTest.CheckVramResidencyEmptyTrackerReturnsTrue (0 ms)
+[  PASSED  ] HealthTest.CheckVramResidencyDetectsManagedMemoryViolation (0 ms)
+[  PASSED  ] HealthTest.ResidencyReportGeneratesReadableOutput (0 ms)
+[  PASSED  ] HealthTest.ResidencyReportShowsWarningOnViolation (0 ms)
+[  PASSED  ] HealthTest.ResidencyReportEmptyTracker (0 ms)
+[  PASSED  ] HealthTest.HealthCheckWorkflowMultipleAllocations (0 ms)
+
+[==========] 13 tests passed (175 ms total)
+```
+
+**Coverage**: Pointer residency verification, RAM fallback detection, UMA violation detection, VramTracker integration, process VRAM usage, residency reporting.
+
+**Bug Fixed**: Off-by-one comparison error (EXPECT_GT → EXPECT_GE) in integration test.
 
 ---
 
@@ -396,17 +424,20 @@ cuda-memcheck --leak-check full ./cuda_tests
 2. **✅ C++ FFI Integration** - 22/22 tests passed on CUDA hardware  
 3. **✅ VRAM Tracker** - 13/13 tests passed (including thread safety & edge cases)
 4. **✅ Device Memory RAII** - 33/33 tests passed (allocation, move semantics, alignment, zero-init)
-5. **✅ Context Lifecycle** - No memory leaks detected (0 byte VRAM difference)
-6. **✅ Error Propagation** - C++ exceptions → FFI error codes → Rust errors working correctly
-7. **✅ Device Health Checks** - Both GPUs detected and healthy
-8. **✅ Multi-GPU Support** - 2 CUDA devices detected and accessible
-9. **✅ Thread Safety** - Concurrent VRAM allocations validated
-10. **✅ Exception Safety** - OOM handling doesn't leak existing allocations
+5. **✅ VRAM Residency Verification** - 13/13 tests passed (RAM fallback & UMA detection)
+6. **✅ Context Lifecycle** - No memory leaks detected (0 byte VRAM difference)
+7. **✅ Error Propagation** - C++ exceptions → FFI error codes → Rust errors working correctly
+8. **✅ Device Health Checks** - Both GPUs detected and healthy
+9. **✅ Multi-GPU Support** - 2 CUDA devices detected and accessible
+10. **✅ Thread Safety** - Concurrent VRAM allocations validated
+11. **✅ Exception Safety** - OOM handling doesn't leak existing allocations
+12. **✅ RAM Fallback Detection** - Host pointers correctly identified as violations
+13. **✅ UMA Violation Detection** - Managed memory correctly identified as violations
 
 ### 🎯 Test Coverage Achieved
 - **Rust Tests**: 16 integration tests covering FFI boundary
-- **C++ Tests**: 22 FFI integration + 13 VRAM tracker + 33 DeviceMemory RAII tests
-- **Total**: **84 tests** executed successfully on real CUDA hardware
+- **C++ Tests**: 22 FFI integration + 13 VRAM tracker + 33 DeviceMemory RAII + 13 Health verification tests
+- **Total**: **97 tests** executed successfully on real CUDA hardware
 
 ### 🔧 Build System Improvements
 1. **CMake CUDA Detection** - Fixed for CUDA 13 + CachyOS
@@ -420,6 +451,12 @@ cuda-memcheck --leak-check full ./cuda_tests
    - **Symptom**: Test hung indefinitely on `UsageReportGeneratesReadableOutput`
    - **Fix**: Calculate breakdown and total inline within the locked section
    - **File**: `cuda/src/vram_tracker.cpp` line 93-130
+
+2. **Off-by-one comparison in Health integration test** ✅ FIXED
+   - **Issue**: Test used `EXPECT_GT()` instead of `EXPECT_GE()` for exact value match
+   - **Symptom**: Test failed when allocations summed to exactly 17MB (10+5+2)
+   - **Fix**: Changed to `EXPECT_GE()` to allow exact match
+   - **File**: `cuda/tests/test_health.cpp` line 345
 
 ### ✅ Story Completion Status
 
@@ -444,6 +481,16 @@ cuda-memcheck --leak-check full ./cuda_tests
 - ✅ Zero-initialization validated
 - ✅ Exception safety validated
 - ✅ VramTracker integration validated
+
+**FT-014: VRAM Residency Verification** - **COMPLETE** ✅
+- ✅ 13/13 unit tests passing
+- ✅ Pointer residency verification validated
+- ✅ RAM fallback detection validated
+- ✅ UMA violation detection validated
+- ✅ VramTracker integration validated
+- ✅ Process VRAM usage query validated
+- ✅ Human-readable reporting validated
+- ✅ Test bug fixed (comparison operator)
 
 **Hardware Validation**: ✅ **ALL PASSED** on CachyOS with RTX 3090 + RTX 3060
 

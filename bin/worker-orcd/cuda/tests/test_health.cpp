@@ -342,7 +342,7 @@ TEST_F(HealthTest, HealthCheckWorkflowMultipleAllocations) {
     
     // Verify all allocations
     EXPECT_EQ(tracker.allocation_count(), 3);
-    EXPECT_GT(tracker.total_usage(), 17 * 1024 * 1024);
+    EXPECT_GE(tracker.total_usage(), 17 * 1024 * 1024);  // >= not > (10+5+2 = exactly 17MB)
     
     // Check residency
     EXPECT_TRUE(Health::check_vram_residency(tracker));
