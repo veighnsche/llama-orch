@@ -40,6 +40,7 @@ set(KERNEL_SOURCES
     kernels/sampling.cu
     kernels/rope.cu
     kernels/rmsnorm.cu
+    kernels/embedding.cu
 )
 
 # Build static library
@@ -88,6 +89,7 @@ if(BUILD_TESTING)
         tests/test_vram_tracker.cpp
         tests/test_ffi_integration.cpp
         tests/test_device_memory.cpp
+        tests/test_embedding.cu
     )
     
     # Build test executable

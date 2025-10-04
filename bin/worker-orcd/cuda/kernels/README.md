@@ -6,6 +6,7 @@ CUDA C++ kernels for worker-orcd inference engine.
 
 Required for M0 pilot (Phase 3 of ARCHITECTURE_CHANGE_PLAN.md):
 
+- **`embedding.cu`** ✅ — Token embedding lookup (FP16/FP32, coalesced access)
 - **`gemm.cu`** — cuBLAS matrix multiplication (SGEMM wrapper)
 - **`rope.cu`** — Rotary Position Embedding (RoPE) for Llama
 - **`attention.cu`** — Naive attention (prefill + decode, GQA support)
