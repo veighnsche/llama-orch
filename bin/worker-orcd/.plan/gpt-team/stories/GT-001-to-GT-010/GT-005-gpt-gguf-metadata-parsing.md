@@ -2,15 +2,18 @@
 
 **Team**: GPT-Gamma  
 **Sprint**: Sprint 1 (HF Tokenizer)  
-**Size**: M (2 days)  
-**Days**: 20-21  
-**Spec Ref**: M0-W-1211, M0-W-1212
+**Size**: M (3 days) ← **+1 day for security**  
+**Days**: 20-22  
+**Spec Ref**: M0-W-1211, M0-W-1211a (security), M0-W-1212  
+**Security Review**: auth-min Team 🎭
 
 ---
 
 ## Story Description
 
 Implement GGUF metadata parsing specific to GPT architecture models. Extract model configuration including layer count, embedding dimensions, attention heads, and architecture type to enable proper GPT-OSS-20B model loading and inference setup.
+
+**Security Enhancement**: Add GGUF bounds validation to prevent heap overflow vulnerabilities (CWE-119/787). Validate all tensor offsets and sizes before memory access to prevent malicious GGUF files from causing worker crashes or arbitrary code execution.
 
 ---
 
@@ -27,6 +30,17 @@ Implement GGUF metadata parsing specific to GPT architecture models. Extract mod
 - [ ] Return structured GPTConfig with all parameters
 - [ ] Unit tests validate metadata extraction for GPT-OSS-20B
 - [ ] Error handling for missing or invalid metadata
+
+**Security Criteria (M0-W-1211a)**:
+- [ ] Validate tensor offset >= header_size + metadata_size
+- [ ] Validate tensor offset < file_size
+- [ ] Validate tensor offset + tensor_size <= file_size
+- [ ] Check for integer overflow (offset + size doesn't wrap)
+- [ ] Validate metadata string lengths < 1MB (sanity check)
+- [ ] Validate array lengths < 1M elements (sanity check)
+- [ ] Fuzzing tests with malformed GGUF files
+- [ ] Property tests for bounds validation (1000+ random inputs)
+- [ ] Edge case tests (boundary conditions, zero-size tensors)
 
 ---
 
@@ -85,6 +99,41 @@ pub struct GPTConfig {
 - Log parsed config at INFO level
 - Support both "gpt2" and "gpt" architecture strings
 
+**Security Implementation**:
+```cpp
+bool validate_tensor_bounds(const GGUFTensor& tensor, size_t file_size, size_t data_start) {
+    // Check offset is after metadata
+    if (tensor.offset < data_start) {
+        tracing::error!("Tensor offset before data section: {}", tensor.offset);
+        return false;
+    }
+    
+    // Check offset is within file
+    if (tensor.offset >= file_size) {
+        tracing::error!("Tensor offset beyond file: {} >= {}", tensor.offset, file_size);
+        return false;
+    }
+    
+    // Calculate tensor size
+    size_t tensor_size = calculate_tensor_size(tensor);
+    
+    // Check for integer overflow (offset + size wraps around)
+    if (tensor_size > SIZE_MAX - tensor.offset) {
+        tracing::error!("Integer overflow: offset={} size={}", tensor.offset, tensor_size);
+        return false;
+    }
+    
+    // Check end is within file
+    if (tensor.offset + tensor_size > file_size) {
+        tracing::error!("Tensor extends beyond file: {}+{} > {}", 
+                       tensor.offset, tensor_size, file_size);
+        return false;
+    }
+    
+    return true;
+}
+```
+
 ---
 
 ## Testing Strategy
@@ -95,6 +144,13 @@ pub struct GPTConfig {
 - Test error handling for invalid architecture type
 - Test derived parameter calculations
 - Test metadata validation logic
+
+**Security Tests**:
+- Test fuzzing with malformed GGUF files (offset beyond file, integer overflow, etc.)
+- Test property-based validation (1000+ random tensor configurations)
+- Test edge cases (offset at file boundary, zero-size tensors, max valid offset)
+- Test malicious GGUF detection (crafted offsets, size mismatches)
+- Test error messages don't leak sensitive information
 
 ### Integration Tests
 - Test full GGUF file metadata extraction
@@ -123,7 +179,9 @@ pub struct GPTConfig {
 ## References
 
 - Spec: `bin/.specs/01_M0_worker_orcd.md` Section 6.2 (Model Validation)
+- Security Alert: `bin/worker-orcd/.security/SECURITY_ALERT_GGUF_PARSING.md`
 - GGUF Spec: https://github.com/ggerganov/ggml/blob/master/docs/gguf.md
+- Security Research: https://blog.huntr.com/gguf-file-format-vulnerabilities-a-guide-for-hackers
 - Related Stories: GT-006, GT-007
 
 ---
@@ -133,4 +191,10 @@ pub struct GPTConfig {
 **Created**: 2025-10-04
 
 ---
-Detailed by Project Management Team — ready to implement 📋
+
+**Security Note**: This story implements critical heap overflow prevention (CWE-119/787) discovered by llama-research team. All GGUF tensor offsets and sizes MUST be validated before memory access to prevent malicious files from compromising the worker.
+
+---
+
+Detailed by Project Management Team — ready to implement 📋  
+Security verified by auth-min Team 🎭

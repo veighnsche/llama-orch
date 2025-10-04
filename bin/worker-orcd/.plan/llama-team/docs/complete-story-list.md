@@ -2,20 +2,22 @@
 
 **Agent**: Llama-Beta (Autonomous Development Agent)  
 **Total Stories**: 38 stories  
-**Total Estimated Effort**: ~72 agent-days (sequential execution)  
-**Timeline**: ~72 calendar days starting after FFI lock (day 15)  
-**Completion**: Day 87 (15 + 72)
+**Total Estimated Effort**: ~73 agent-days (sequential execution)  
+**Timeline**: ~73 calendar days starting after FFI lock (day 15)  
+**Completion**: Day 88 (15 + 73)  
+
+**Security Note**: LT-001 includes +1 day for GGUF bounds validation (M0-W-1211a) to prevent heap overflow vulnerabilities (CWE-119/787). See `SECURITY_ALERT_GGUF_PARSING.md`.
 
 ---
 
-## Sprint 1: GGUF Foundation (6 stories, 11 agent-days)
+## Sprint 1: GGUF Foundation (6 stories, 12 agent-days)
 
 **Starts**: Day 15 (after Foundation-Alpha locks FFI)  
 **Goal**: Parse GGUF format and establish loader infrastructure
 
 | ID | Title | Size | Days | Spec Ref |
 |----|-------|------|------|---------|
-| LT-001 | GGUF Header Parser | M | 2 | M0-W-1211 |
+| LT-001 | GGUF Header Parser | M | 3 | M0-W-1211, M0-W-1211a (security) |
 | LT-002 | GGUF Metadata Extraction (Llama) | M | 2 | M0-W-1211, M0-W-1212 |
 | LT-003 | Memory-Mapped I/O Implementation | M | 2 | M0-W-1221 |
 | LT-004 | Chunked H2D Transfer | M | 2 | M0-W-1222 |
@@ -23,7 +25,7 @@
 | LT-006 | Architecture Detection (Llama) | S | 1 | M0-W-1212 |
 
 **Sequential Execution**: Agent completes LT-001 fully before starting LT-002, etc.  
-**Timeline**: Days 15-25  
+**Timeline**: Days 15-26  
 **Blocks**: None (first sprint after FFI lock)  
 **Dependency**: Requires Foundation-Alpha's FFI interface (locked day 15)
 
@@ -41,7 +43,7 @@
 | LT-010 | Byte-Level BPE Decoder | M | 2 | M0-W-1362 |
 
 **Sequential Execution**: Agent completes each story fully before next  
-**Timeline**: Days 26-34  
+**Timeline**: Days 27-35  
 **Dependency**: Requires LT-001-006 (GGUF loader) to extract vocab/merges
 
 ---
@@ -58,7 +60,7 @@
 | LT-014 | Residual Connection Kernel | S | 1 | M0-W-1214 |
 
 **Sequential Execution**: Agent completes each story fully before next  
-**Timeline**: Days 35-40  
+**Timeline**: Days 36-41  
 **Note**: Tokenizer must be complete before starting Qwen integration
 
 ---
@@ -77,7 +79,7 @@
 | LT-020 | **Gate 1 Participation** | S | 1 | Gate 1 |
 
 **Sequential Execution**: Agent completes each story fully before next  
-**Timeline**: Days 41-53  
+**Timeline**: Days 42-54  
 **Critical Milestone**: Gate 1 validation - Llama kernels complete  
 **Dependency**: Requires Foundation-Alpha's integration framework (day 52)
 
@@ -97,7 +99,7 @@
 | LT-027 | **Gate 2 Checkpoint** | - | - | Gate 2 |
 
 **Sequential Execution**: Agent completes each story fully before next  
-**Timeline**: Days 54-66  
+**Timeline**: Days 55-67  
 **Critical Milestone**: Gate 2 - First Llama model working (Qwen)  
 **Note**: This validates entire Llama pipeline
 
@@ -153,9 +155,9 @@
 - No parallel work across stories
 - No "overcommitment" - agent works until done
 
-**Timeline**: 72 agent-days starting day 15 = completes day 87 (15 + 72)
+**Timeline**: 73 agent-days starting day 15 = completes day 88 (15 + 73)
 
-**Critical Path Position**: Llama-Beta (87 days total) finishes before GPT-Gamma (102 days)
+**Critical Path Position**: Llama-Beta (88 days total) finishes before GPT-Gamma (102 days)
 
 ### Key Milestones
 
@@ -163,19 +165,19 @@
 - **Unblocks**: Llama-Beta can begin GGUF loader work
 - **Action**: Begin LT-001
 
-**Day 53 (After LT-020)**: Gate 1 Complete
+**Day 54 (After LT-020)**: Gate 1 Complete
 - **Validation**: Llama kernels complete and tested
 - **Enables**: Qwen integration can proceed
 
-**Day 66 (After LT-027)**: Gate 2 Complete  
+**Day 67 (After LT-027)**: Gate 2 Complete  
 - **Validation**: First Llama model (Qwen) working end-to-end
 - **Critical**: Proves Llama pipeline works
 
-**Day 77 (After LT-034)**: Gate 3 Complete
+**Day 78 (After LT-034)**: Gate 3 Complete
 - **Validation**: LlamaInferenceAdapter implemented
 - **Enables**: Refactoring to use adapter pattern
 
-**Day 87 (After LT-038)**: Llama-Beta Complete
+**Day 88 (After LT-038)**: Llama-Beta Complete
 - **Note**: GPT-Gamma still working (finishes day 102)
 
 ---
@@ -187,29 +189,29 @@
 ```
 Day 15: FFI Lock (Foundation-Alpha) ← START POINT
   ↓
-Days 15-25: GGUF Loader (LT-001 → LT-006)
+Days 15-26: GGUF Loader (LT-001 → LT-006) [+1 day for security]
   ↓
-Days 26-34: Tokenizer (LT-007 → LT-010)
+Days 27-35: Tokenizer (LT-007 → LT-010)
   ↓
-Days 35-40: UTF-8 + Kernels (LT-011 → LT-014)
+Days 36-41: UTF-8 + Kernels (LT-011 → LT-014)
   ↓
-Days 41-53: GQA + Gate 1 (LT-015 → LT-020)
+Days 42-54: GQA + Gate 1 (LT-015 → LT-020)
   ↓
-Days 54-66: Qwen + Gate 2 (LT-022 → LT-027) ← FIRST MODEL
+Days 55-67: Qwen + Gate 2 (LT-022 → LT-027) ← FIRST MODEL
   ↓
-Days 67-77: Phi-3 + Adapter + Gate 3 (LT-029 → LT-034)
+Days 68-78: Phi-3 + Adapter + Gate 3 (LT-029 → LT-034)
   ↓
-Days 78-87: Final Testing (LT-035 → LT-038)
+Days 79-88: Final Testing (LT-035 → LT-038)
 ```
 
-**Total Duration**: 72 agent-days (starting day 15)
+**Total Duration**: 73 agent-days (starting day 15, includes +1 day for GGUF security)
 
 **Critical Dependencies**:
 - **Day 15**: FFI lock blocks start
-- **Day 25**: GGUF loader blocks tokenizer
-- **Day 34**: Tokenizer blocks Qwen integration
-- **Day 52**: Foundation's integration framework blocks Gate 1
-- **Day 71**: Foundation's adapter pattern blocks Gate 3
+- **Day 26**: GGUF loader blocks tokenizer
+- **Day 35**: Tokenizer blocks Qwen integration
+- **Day 53**: Foundation's integration framework blocks Gate 1
+- **Day 72**: Foundation's adapter pattern blocks Gate 3
 
 **No "Slack Time"**: Agent works sequentially until done
 

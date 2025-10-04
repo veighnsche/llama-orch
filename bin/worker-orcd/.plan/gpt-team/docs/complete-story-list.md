@@ -1,14 +1,16 @@
 # GPT Team - Complete Story List
 
 **Agent**: GPT-Gamma (Autonomous Development Agent)  
-**Total Stories**: 48 stories  
-**Total Estimated Effort**: ~92 agent-days (sequential execution)  
-**Timeline**: ~92 calendar days starting after FFI lock (day 15)  
-**Completion**: Day 107 (15 + 92) ← **CRITICAL PATH FOR M0**
+**Total Stories**: 51 stories (48 original + 3 security)  
+**Total Estimated Effort**: ~95 agent-days (sequential execution)  
+**Timeline**: ~95 calendar days starting after FFI lock (day 15)  
+**Completion**: Day 110 (15 + 95) ← **CRITICAL PATH FOR M0**
+
+**Security Updates**: Added 3 security stories (+3 days) for GGUF parsing bounds validation and MXFP4 quantization attack mitigation.
 
 ---
 
-## Sprint 1: HF Tokenizer + GPT Metadata (7 stories, 12 agent-days)
+## Sprint 1: HF Tokenizer + GPT Metadata (8 stories, 13 agent-days)
 
 **Starts**: Day 15 (after Foundation-Alpha locks FFI)  
 **Goal**: Integrate HuggingFace tokenizers crate and parse GPT GGUF metadata
@@ -20,13 +22,16 @@
 | GT-003 | Tokenizer Metadata Exposure | M | 2 | M0-W-1361 |
 | GT-004 | HF Tokenizer Conformance Tests | M | 2 | M0-W-1363 |
 | GT-005 | GPT GGUF Metadata Parsing | M | 2 | M0-W-1211, M0-W-1212 |
+| GT-005a | GGUF Bounds Validation (Security) | M | 1 | M0-W-1211a (heap overflow fix) |
 | GT-006 | GGUF v3 Tensor Support (MXFP4 Parsing) | M | 2 | M0-W-1201, M0-W-1211 |
 | GT-007 | Architecture Detection (GPT) | S | 1 | M0-W-1212 |
 
 **Sequential Execution**: Agent completes GT-001 fully before starting GT-002, etc.  
-**Timeline**: Days 15-26  
+**Timeline**: Days 15-27  
 **Blocks**: None (first sprint after FFI lock)  
 **Dependency**: Requires Foundation-Alpha's FFI interface (locked day 15)
+
+**Security Note**: GT-005a adds GGUF bounds validation to prevent heap overflow vulnerabilities (CWE-119/787). Includes fuzzing tests, property tests, and edge case validation.
 
 ---
 
@@ -47,7 +52,7 @@
 | GT-016 | Kernel Integration Tests | M | 2 | (Testing) |
 
 **Sequential Execution**: Agent completes each story fully before next  
-**Timeline**: Days 27-41  
+**Timeline**: Days 28-42  
 **Note**: LayerNorm is more complex than Llama's RMSNorm (two reduction passes)
 
 ---
@@ -67,7 +72,7 @@
 | GT-023 | FFI Integration Tests (GPT Kernels) | S | 1 | (Testing) |
 
 **Sequential Execution**: Agent completes each story fully before next  
-**Timeline**: Days 42-55  
+**Timeline**: Days 43-56  
 **Critical Milestone**: Gate 1 validation - GPT kernels complete  
 **Dependency**: Requires Foundation-Alpha's integration framework (day 52)
 
@@ -86,13 +91,13 @@
 | GT-028 | **Gate 2 Checkpoint** | - | - | Gate 2 |
 
 **Sequential Execution**: Agent completes each story fully before next  
-**Timeline**: Days 56-66  
+**Timeline**: Days 57-67  
 **Critical Milestone**: Gate 2 - GPT basic working (Q4_K_M fallback)  
 **Note**: Validates GPT pipeline before tackling MXFP4
 
 ---
 
-## Sprint 5: MXFP4 Dequantization (3 stories, 8 agent-days) 🔴 CRITICAL
+## Sprint 5: MXFP4 Dequantization (4 stories, 9 agent-days) 🔴 CRITICAL
 
 **Goal**: Implement novel MXFP4 dequantization kernel (no reference implementation)
 
@@ -100,11 +105,14 @@
 |----|-------|------|------|---------|
 | GT-029 | MXFP4 Dequantization Kernel | L | 4 | M0-W-1201, M0-W-1820 |
 | GT-030 | MXFP4 Unit Tests (Dequant Correctness) | M | 2 | M0-W-1820 |
+| GT-030a | MXFP4 Behavioral Security Tests | M | 1 | MXFP4_QUANT_ATTACK.md |
 | GT-031 | UTF-8 Streaming Safety Tests | M | 2 | M0-W-1312, M0-W-1361 |
 
 **Sequential Execution**: Agent completes each story fully before next  
-**Timeline**: Days 67-74  
+**Timeline**: Days 68-76  
 **Note**: MXFP4 is novel format - no reference implementation, build validation framework first
+
+**Security Note**: GT-030a adds behavioral testing for quantization attack mitigation. Compares FP32 vs MXFP4 outputs for code generation safety and content integrity. See `.security/MXFP4_QUANT_ATTACK.md`.
 
 ---
 
@@ -122,12 +130,12 @@
 | GT-038 | MXFP4 Numerical Validation (±1%) | M | 3 | M0-W-1820 |
 
 **Sequential Execution**: Agent completes each story fully before next  
-**Timeline**: Days 75-89  
+**Timeline**: Days 77-91  
 **Note**: Must wire MXFP4 into ALL weight consumers sequentially
 
 ---
 
-## Sprint 7: Adapter + End-to-End (2 stories, 7 agent-days)
+## Sprint 7: Adapter + End-to-End (3 stories, 8 agent-days)
 
 **Goal**: Implement GPTInferenceAdapter and validate GPT-OSS-20B with MXFP4
 
@@ -135,11 +143,14 @@
 |----|-------|------|------|---------| 
 | GT-039 | GPTInferenceAdapter Implementation | M | 3 | M0-W-1213, M0-W-1215 |
 | GT-040 | GPT-OSS-20B MXFP4 End-to-End | L | 4 | M0-W-1230, M0-W-1201 |
+| GT-040a | Model Provenance Verification | S | 1 | MXFP4_QUANT_ATTACK.md (supply chain) |
 
 **Sequential Execution**: Agent completes each story fully before next  
-**Timeline**: Days 90-96  
+**Timeline**: Days 92-99  
 **Critical Milestone**: Gate 3 - MXFP4 + Adapter working  
 **Dependency**: Requires Foundation-Alpha's adapter pattern (day 71)
+
+**Security Note**: GT-040a adds model hash verification and provenance logging for supply chain security. Verifies GPT-OSS-20B from official OpenAI source.
 
 ---
 
@@ -159,8 +170,8 @@
 | GT-048 | Performance Baseline (GPT-OSS-20B) | M | 2 | M0-W-1012 (FT-012) |
 
 **Sequential Execution**: Agent completes each story fully before next  
-**Timeline**: Days 97-112  
-**Note**: GPT-Gamma finishes day 107 (last agent) - **M0 CRITICAL PATH**
+**Timeline**: Days 100-115  
+**Note**: GPT-Gamma finishes day 110 (last agent) - **M0 CRITICAL PATH**
 
 ---
 
@@ -177,9 +188,11 @@
 - No parallel work across stories
 - No "overcommitment" - agent works until done
 
-**Timeline**: 92 agent-days starting day 15 = completes day 107 (15 + 92)
+**Timeline**: 95 agent-days starting day 15 = completes day 110 (15 + 95)
 
-**Critical Path Position**: GPT-Gamma (107 days total) is **THE CRITICAL PATH** for M0
+**Critical Path Position**: GPT-Gamma (110 days total) is **THE CRITICAL PATH** for M0
+
+**Security Impact**: +3 days for GGUF bounds validation (GT-005a), MXFP4 behavioral tests (GT-030a), and provenance verification (GT-040a)
 
 ### Key Milestones
 
@@ -187,28 +200,29 @@
 - **Unblocks**: GPT-Gamma can begin HF tokenizer work
 - **Action**: Begin GT-001
 
-**Day 55 (After GT-022)**: Gate 1 Complete
+**Day 56 (After GT-022)**: Gate 1 Complete
 - **Validation**: GPT kernels complete and tested
 - **Enables**: GPT basic pipeline can proceed
 
-**Day 66 (After GT-028)**: Gate 2 Complete  
+**Day 67 (After GT-028)**: Gate 2 Complete  
 - **Validation**: GPT basic working with Q4_K_M fallback
 - **Critical**: Validates GPT pipeline before MXFP4
 
-**Day 74 (After GT-031)**: MXFP4 Dequant Complete
+**Day 76 (After GT-031)**: MXFP4 Dequant Complete
 - **Validation**: Novel MXFP4 kernel working
 - **Enables**: Integration into weight consumers
 
-**Day 89 (After GT-038)**: MXFP4 Integration Complete
+**Day 91 (After GT-038)**: MXFP4 Integration Complete
 - **Validation**: MXFP4 wired into all weight consumers
 - **Critical**: Numerical correctness validated (±1%)
 
-**Day 96 (After GT-040)**: Gate 3 Complete
+**Day 99 (After GT-040a)**: Gate 3 Complete
 - **Validation**: GPT-OSS-20B with MXFP4 working end-to-end
 - **Critical**: Proves MXFP4 path works
 
-**Day 107 (After GT-048)**: GPT-Gamma Complete ← **M0 DELIVERY**
+**Day 110 (After GT-048)**: GPT-Gamma Complete ← **M0 DELIVERY**
 - **Note**: Last agent to finish - determines M0 timeline
+- **Security**: All 3 security stories completed (bounds validation, behavioral tests, provenance)
 
 ---
 
@@ -219,31 +233,31 @@
 ```
 Day 15: FFI Lock (Foundation-Alpha) ← START POINT
   ↓
-Days 15-26: HF Tokenizer + GPT Metadata (GT-001 → GT-007)
+Days 15-27: HF Tokenizer + GPT Metadata (GT-001 → GT-007) [+1 day security]
   ↓
-Days 27-41: GPT Kernels (GT-008 → GT-016)
+Days 28-42: GPT Kernels (GT-008 → GT-016)
   ↓
-Days 42-55: MHA + Gate 1 (GT-017 → GT-023)
+Days 43-56: MHA + Gate 1 (GT-017 → GT-023)
   ↓
-Days 56-66: GPT Basic + Gate 2 (GT-024 → GT-028)
+Days 57-67: GPT Basic + Gate 2 (GT-024 → GT-028)
   ↓
-Days 67-74: MXFP4 Dequant (GT-029 → GT-031) ← NOVEL FORMAT
+Days 68-76: MXFP4 Dequant (GT-029 → GT-031) [+1 day security] ← NOVEL FORMAT
   ↓
-Days 75-89: MXFP4 Integration (GT-033 → GT-038) ← CRITICAL
+Days 77-91: MXFP4 Integration (GT-033 → GT-038) ← CRITICAL
   ↓
-Days 90-96: Adapter + E2E + Gate 3 (GT-039 → GT-040)
+Days 92-99: Adapter + E2E + Gate 3 (GT-039 → GT-040a) [+1 day security]
   ↓
-Days 97-107: Final Testing (GT-041 → GT-048) ← M0 DELIVERY
+Days 100-110: Final Testing (GT-041 → GT-048) ← M0 DELIVERY
 ```
 
-**Total Duration**: 92 agent-days (starting day 15)
+**Total Duration**: 95 agent-days (starting day 15, includes +3 days for security)
 
 **Critical Dependencies**:
 - **Day 15**: FFI lock blocks start
 - **Day 52**: Foundation's integration framework blocks Gate 1
-- **Day 66**: GPT basic validates pipeline before MXFP4
+- **Day 67**: GPT basic validates pipeline before MXFP4
 - **Day 71**: Foundation's adapter pattern blocks Gate 3
-- **Day 89**: MXFP4 integration is sequential (cannot parallelize)
+- **Day 91**: MXFP4 integration is sequential (cannot parallelize)
 
 **No "Slack Time"**: Agent works sequentially until done
 
@@ -290,6 +304,9 @@ Days 97-107: Final Testing (GT-041 → GT-048) ← M0 DELIVERY
 | MHA complexity | Integration delays | Reference llama.cpp, unit tests |
 | LayerNorm numerical stability | Inference errors | Epsilon tuning, reference implementations |
 | MXFP4 no reference implementation | Unknown correctness | Build validation framework first, compare with Q4_K_M |
+| **GGUF heap overflow** | **Worker crash/RCE** | **GT-005a: Bounds validation, fuzzing tests** |
+| **MXFP4 quantization attack** | **Malicious model behavior** | **GT-030a: Behavioral tests, GT-040a: Provenance verification** |
+| **Supply chain compromise** | **Poisoned models** | **Trusted sources only (OpenAI, Qwen, Microsoft)** |
 
 ### ❌ Not Risks (Human Team Assumptions)
 
@@ -328,13 +345,18 @@ Days 97-107: Final Testing (GT-041 → GT-048) ← M0 DELIVERY
 
 ## Timeline Summary
 
-**GPT-Gamma**: 92 agent-days starting day 15 = completes day 107  
+**GPT-Gamma**: 95 agent-days starting day 15 = completes day 110  
 **Critical Dependency**: Day 15 FFI lock  
-**Gate 2**: Day 66 (GPT basic with Q4_K_M)  
-**Gate 3**: Day 96 (MXFP4 + Adapter working)  
-**Completion**: Day 107 ← **M0 CRITICAL PATH**
+**Gate 2**: Day 67 (GPT basic with Q4_K_M)  
+**Gate 3**: Day 99 (MXFP4 + Adapter working)  
+**Completion**: Day 110 ← **M0 CRITICAL PATH**
 
-**M0 Delivery Date**: Day 107 (GPT-Gamma determines M0 timeline)
+**M0 Delivery Date**: Day 110 (GPT-Gamma determines M0 timeline)
+
+**Security Timeline**:
+- Day 27: GGUF bounds validation complete (GT-005a)
+- Day 76: MXFP4 behavioral tests complete (GT-030a)
+- Day 99: Model provenance verification complete (GT-040a)
 
 ---
 
