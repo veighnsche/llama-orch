@@ -18,7 +18,7 @@ set(CMAKE_CUDA_ARCHITECTURES 75 80 86 89 90)
 
 # Compiler flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr --extended-lambda")
 
 # Source files
 set(CUDA_SOURCES
@@ -95,6 +95,7 @@ if(BUILD_TESTING)
         tests/test_embedding.cu
         tests/test_cublas.cu
         tests/test_sampling.cu
+        tests/sampling_advanced_test.cu
         tests/test_rng.cpp
     )
     
