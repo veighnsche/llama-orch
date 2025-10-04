@@ -37,6 +37,9 @@ set(CUDA_SOURCES
     src/gguf/header_parser.cpp
     src/gguf/llama_metadata.cpp
     src/io/mmap_file.cpp
+    src/io/chunked_transfer.cpp
+    src/validation/pre_load.cpp
+    src/model/arch_detect.cpp
 )
 
 # Kernel files
@@ -107,6 +110,9 @@ if(BUILD_TESTING)
         tests/test_gguf_security_fuzzing.cpp
         tests/test_llama_metadata.cpp
         tests/test_mmap_file.cpp
+        tests/test_chunked_transfer.cpp
+        tests/test_pre_load_validation.cpp
+        tests/test_arch_detect.cpp
     )
     
     # Build test executable
