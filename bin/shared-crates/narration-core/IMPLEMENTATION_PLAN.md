@@ -165,6 +165,15 @@ pub use narrate::narrate;
 - Verify timing measurement doesn't add significant latency
 - Approve before merging
 
+**⏱️ PERFORMANCE TEAM COMMENT**:
+- 🚨 **CRITICAL**: `Instant::now()` calls at entry/exit add ~20-50ns overhead per function. For hot-path functions called millions of times, this compounds to milliseconds. **RECOMMENDATION**: Add `#[cfg(feature = "trace-enabled")]` guard around timing code, ensure production builds have ZERO timing overhead.
+- ⚡ **OPTIMIZATION**: Consider using `rdtsc` instruction directly for sub-nanosecond precision on x86_64 (via `core::arch::x86_64::_rdtsc`) instead of `Instant::now()` for ultra-hot paths.
+- 📊 **BENCHMARK REQUIREMENT**: Measure overhead on empty function (baseline), 10-instruction function (typical), and 1000-instruction function (heavy). Target: <1% overhead for functions >100 instructions.
+
+**🎭 AUTH-MIN SECURITY NOTE**:
+- ⚠️ **Timing side-channel risk**: Function timing measurements could leak information about code paths taken (e.g., auth success vs failure paths). Ensure timing data is not exposed in user-facing contexts.
+- ⚠️ **Actor inference spoofing**: Module path parsing via `#[path]` attributes could allow actor identity spoofing. Validate inferred actors against allowlist.
+
 ---
 
 ### **Unit 1.4: Template Interpolation Engine** (Day 3-4)
@@ -209,6 +218,15 @@ pub use narrate::narrate;
 - Documentation with examples
 
 **Dependencies**: Unit 1.2, Unit 1.4
+
+**🎭 AUTH-MIN SECURITY NOTE**:
+- ⚠️ **Template injection vulnerability**: Template interpolation `{variable}` could allow injection if variable values contain `{}` characters. Sanitize variable values before interpolation.
+- ⚠️ **Log injection via templates**: Ensure interpolated values cannot contain CRLF (`\r\n`) to prevent log forgery attacks.
+
+**⏱️ PERFORMANCE TEAM COMMENT**:
+- 🚨 **ALLOCATION HOTSPOT**: Template interpolation via `format!()` allocates on every narration call. For high-frequency events (>1000/sec), this creates GC pressure. **RECOMMENDATION**: Use stack-allocated buffers with `write!()` macro for strings <256 bytes, or implement string interning for repeated templates.
+- ⚡ **OPTIMIZATION**: Pre-compile templates at macro expansion time to minimize runtime parsing. Generate direct `write!()` calls instead of runtime template engine.
+- 📊 **TARGET**: <100ns for template interpolation with ≤3 variables, zero heap allocations for templates <256 chars.
 
 ---
 
@@ -369,6 +387,12 @@ macro_rules! trace_tiny {
 - Verify 0% overhead in production builds (code removed)
 - Benchmark against full `narrate()` (~10x faster target)
 
+**⏱️ PERFORMANCE TEAM COMMENT**:
+- ✅ **APPROVED DESIGN**: Conditional compilation with no-op macros is the correct approach for zero-overhead production builds.
+- 🚨 **VERIFICATION CRITICAL**: Must verify via `cargo expand` that production builds contain ZERO trace code (not even empty function calls). Any residual code is unacceptable.
+- ⚡ **DEV BUILD OPTIMIZATION**: Even 2% overhead compounds in tight loops. Consider `#[cold]` attribute on trace paths to hint branch predictor, keeping hot path optimized.
+- 📊 **ACCEPTANCE CRITERIA**: Production binary size must be identical with/without trace macros (byte-for-byte, verified via `sha256sum`).
+
 ---
 
 ### **Unit 2.3: Secret Redaction Enhancement** (Day 7-8)
@@ -474,6 +498,17 @@ pub fn redact_secrets(text: &str, policy: RedactionPolicy) -> String {
 - Approve redaction algorithm
 - Sign off on security guarantees
 
+**⏱️ PERFORMANCE TEAM COMMENT**:
+- 🚨 **REGEX PERFORMANCE RISK**: Multiple regex passes (6+ patterns) on every narration string is expensive. Each `replace_all()` scans the entire string. **RECOMMENDATION**: Combine patterns into single regex with alternation `(pattern1|pattern2|...)` for one-pass scanning.
+- ⚡ **OPTIMIZATION**: Use `aho-corasick` crate for multi-pattern matching (10-100x faster than multiple regex for literal prefixes like "Bearer ", "-----BEGIN").
+- 📊 **BENCHMARK REQUIREMENT**: Measure redaction overhead on 100-char, 1000-char, and 10000-char strings. Target: <10μs for 1000-char string with 6 patterns.
+- 🔥 **HOT PATH IMPACT**: If redaction runs on EVERY narration (even INFO level), this becomes a critical bottleneck. Consider lazy redaction only for ERROR/FATAL levels, or sampling.
+
+**🎭 AUTH-MIN SECURITY FINDINGS**:
+- 🚨 **ReDoS vulnerability in private key regex**: Pattern `-----BEGIN [A-Z ]+PRIVATE KEY-----[\s\S]+?-----END [A-Z ]+PRIVATE KEY-----` uses lazy quantifier `[\s\S]+?` which can cause catastrophic backtracking on malicious input (e.g., missing END marker). **MITIGATION REQUIRED**: Replace with bounded quantifier or line-by-line parsing.
+- ✅ JWT pattern is safe (no backtracking)
+- ✅ URL password pattern is safe (negated character classes)
+
 ---
 
 ### **Unit 2.4: Correlation ID Helpers** (Day 8-9)
@@ -494,6 +529,15 @@ pub fn redact_secrets(text: &str, policy: RedactionPolicy) -> String {
 - Documentation
 
 **Dependencies**: None
+
+**🎭 AUTH-MIN SECURITY NOTE**:
+- ⚠️ **Correlation ID injection**: If correlation IDs come from user input (HTTP headers), they could inject malicious data into tracing spans. **MITIGATION REQUIRED**: Validate correlation ID format (UUID v4 only) and reject malformed inputs.
+- ⚠️ **Correlation ID forgery**: No authentication/signing of correlation IDs allows attackers to poison distributed traces. Consider HMAC-signed correlation IDs for security-critical flows.
+
+**⏱️ PERFORMANCE TEAM COMMENT**:
+- ⚡ **UUID GENERATION COST**: `uuid::Uuid::new_v4()` uses cryptographic RNG (~500ns). For high-frequency correlation ID generation, this is expensive. **RECOMMENDATION**: Use `uuid::Uuid::now_v7()` (timestamp-based, ~50ns) or pre-generate pool of UUIDs.
+- 🚨 **VALIDATION OVERHEAD**: Regex validation of UUID format on every header extraction adds latency. **OPTIMIZATION**: Use byte-level validation (check hyphens at positions 8,13,18,23, hex chars elsewhere) for 10x speedup.
+- 📊 **TARGET**: <100ns for correlation ID extraction and validation from HTTP headers.
 
 ---
 
@@ -516,6 +560,347 @@ pub fn redact_secrets(text: &str, policy: RedactionPolicy) -> String {
 - Documentation
 
 **Dependencies**: Unit 2.1
+
+**🎭 AUTH-MIN SECURITY NOTE**:
+- ⚠️ **Redaction in async contexts**: Async examples (lines 599-623) show direct narration without explicit redaction calls. Developers might forget to redact secrets in async code. **MITIGATION REQUIRED**: Add explicit redaction examples in async patterns.
+- ⚠️ **Span injection via user input**: `#[instrument(fields(correlation_id = %correlation_id))]` could inject malicious data if correlation_id is user-controlled. Validate before adding to spans.
+
+**⏱️ PERFORMANCE TEAM COMMENT**:
+- ✅ **GOOD**: Using `tracing::event!()` which is lock-free and non-blocking is the correct design.
+- 🚨 **ASYNC OVERHEAD CONCERN**: `tracing::Span::current()` and `span.enter()` have overhead (~100-200ns). If called in tight async loops, this compounds. **RECOMMENDATION**: Hoist span entry outside loops, reuse entered span guard.
+- ⚡ **OPTIMIZATION**: For fire-and-forget narration, avoid `_enter` guard entirely - just emit events, let subscriber handle span context.
+- 📊 **BENCHMARK REQUIREMENT**: Measure narration overhead in async context with 1, 10, 100 concurrent tasks. Verify no executor starvation.
+
+---
+
+### **Unit 2.6: 🚨 CRITICAL - Non-Blocking Narration & Async Support** (Day 10)
+**Owner**: Narration Core Team  
+**Effort**: 8 hours
+
+**Why Critical**: Narration MUST NOT block async functions! All narration must be fire-and-forget.
+
+**Key Design Principle**: 
+- ✅ `narrate()` is **synchronous** but **non-blocking** (uses `tracing` which is already non-blocking)
+- ✅ Context propagation uses `tracing::Span` (already async-safe)
+- ✅ No `.await` in narration calls
+- ✅ No locks, no blocking I/O, no allocations in hot path
+
+**Tasks**:
+- [ ] Verify `narrate()` is non-blocking (uses `tracing::event!` which is lock-free)
+- [ ] Use `tracing::Span::current()` for async context propagation (already works!)
+- [ ] Add `#[instrument]` integration for automatic span propagation
+- [ ] Ensure correlation IDs propagate via `tracing` spans
+- [ ] Write async compatibility tests
+- [ ] Document async patterns
+
+**Concrete Code Changes**:
+```rust
+// MODIFY: src/lib.rs (ensure non-blocking)
+
+/// Emit narration at a specific level (NON-BLOCKING)
+pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
+    let Some(tracing_level) = level.to_tracing_level() else {
+        return; // MUTE - no output
+    };
+    
+    // Apply redaction (pure function, no I/O)
+    let human = redact_secrets(&fields.human, RedactionPolicy::default());
+    let cute = fields.cute.as_ref().map(|c| redact_secrets(c, RedactionPolicy::default()));
+    
+    // Emit via tracing (lock-free, non-blocking)
+    // tracing::event! is designed to be non-blocking
+    match tracing_level {
+        Level::INFO => event!(Level::INFO, 
+            actor = fields.actor,
+            action = fields.action,
+            target = %fields.target,
+            human = %human,
+            cute = cute.as_deref(),
+            correlation_id = fields.correlation_id.as_deref(),
+        ),
+        // ... other levels
+    }
+    
+    // Test capture is also non-blocking (just pushes to Vec)
+    #[cfg(any(test, feature = "test-support"))]
+    capture::notify(fields);
+}
+
+// NEW: Async-friendly narration with automatic span propagation
+pub fn narrate_in_span(fields: NarrationFields) {
+    // Get current span (async-safe, no blocking)
+    let span = tracing::Span::current();
+    
+    // Narrate within span context (correlation ID auto-propagated)
+    let _enter = span.enter();
+    narrate(fields);
+}
+
+// NEW: Integration with #[instrument] for automatic tracing
+#[macro_export]
+macro_rules! narrate_async {
+    ($($field:ident: $value:expr),* $(,)?) => {{
+        // This works in async functions because narrate() is non-blocking
+        $crate::narrate($crate::NarrationFields {
+            $($field: $value,)*
+            ..Default::default()
+        })
+    }};
+}
+```
+
+**Example Usage in Async Code**:
+```rust
+use tracing::instrument;
+
+#[instrument(fields(correlation_id = %correlation_id))]
+async fn dispatch_job(job_id: &str, correlation_id: &str) -> Result<WorkerId> {
+    // Narration is non-blocking, works in async!
+    narrate!(
+        actor: "orchestratord",
+        action: "dispatch",
+        target: job_id,
+        human: "Dispatching job",
+    );
+    
+    let worker = select_worker().await?;
+    
+    // Another non-blocking narration
+    narrate!(
+        actor: "orchestratord",
+        action: "dispatch",
+        target: job_id,
+        human: format!("Dispatched to worker {}", worker.id),
+    );
+    
+    Ok(worker.id)
+}
+```
+
+**Why This Design Works**:
+- ✅ `tracing::event!()` is **lock-free** and **non-blocking** by design
+- ✅ `tracing::Span` automatically propagates across `.await` points
+- ✅ Correlation IDs are in span fields, not thread-local storage
+- ✅ No blocking I/O, no mutexes, no allocations in hot path
+- ✅ Works seamlessly with `tokio`, `async-std`, any async runtime
+
+**Why This Matters**:
+- 🔥 Blocking in async code causes **executor starvation**
+- 🔥 Thread-local storage **doesn't work** across `.await` points
+- 🔥 `tracing` already solved this - we just use it correctly!
+
+**Deliverables**:
+- Non-blocking verification tests
+- Async compatibility tests
+- Documentation with async examples
+
+**Dependencies**: None (uses existing `tracing` infrastructure)
+
+---
+
+### **Unit 2.7: 🎯 IMPORTANT - Sampling & Rate Limiting** (Day 10)
+**Owner**: Narration Core Team  
+**Effort**: 4 hours
+
+**Why Important**: Prevent log flooding in production!
+
+**Tasks**:
+- [ ] Implement sampling for TRACE/DEBUG levels
+- [ ] Add rate limiting per actor/action
+- [ ] Support probabilistic sampling (1%, 10%, 100%)
+- [ ] Add burst protection (max N events per second)
+- [ ] Write sampling tests
+- [ ] Document sampling configuration
+
+**Concrete Code Changes**:
+```rust
+// NEW FILE: src/sampling.rs
+
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
+
+/// Sampling configuration
+#[derive(Clone, Debug)]
+pub struct SamplingConfig {
+    /// Sample rate (0.0 = none, 1.0 = all)
+    pub sample_rate: f64,
+    /// Max events per second per actor/action
+    pub max_per_second: Option<u32>,
+}
+
+impl Default for SamplingConfig {
+    fn default() -> Self {
+        Self {
+            sample_rate: 1.0,  // 100% by default
+            max_per_second: None,
+        }
+    }
+}
+
+/// Sampler for rate limiting narration events
+pub struct Sampler {
+    config: SamplingConfig,
+    counters: Arc<Mutex<HashMap<String, (Instant, u32)>>>,
+}
+
+impl Sampler {
+    pub fn new(config: SamplingConfig) -> Self {
+        Self {
+            config,
+            counters: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+    
+    /// Check if event should be sampled
+    pub fn should_sample(&self, actor: &str, action: &str) -> bool {
+        // Probabilistic sampling
+        if rand::random::<f64>() > self.config.sample_rate {
+            return false;
+        }
+        
+        // Rate limiting
+        if let Some(max_per_sec) = self.config.max_per_second {
+            let key = format!("{}:{}", actor, action);
+            let mut counters = self.counters.lock().unwrap();
+            
+            let now = Instant::now();
+            let (last_reset, count) = counters
+                .entry(key.clone())
+                .or_insert((now, 0));
+            
+            if now.duration_since(*last_reset) > Duration::from_secs(1) {
+                *last_reset = now;
+                *count = 0;
+            }
+            
+            if *count >= max_per_sec {
+                return false;  // Rate limit exceeded
+            }
+            
+            *count += 1;
+        }
+        
+        true
+    }
+}
+
+// MODIFY: src/lib.rs (add sampling check)
+pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
+    // Check sampling
+    if !GLOBAL_SAMPLER.should_sample(fields.actor, fields.action) {
+        return;  // Skip this event
+    }
+    
+    // ... rest of narrate_at_level
+}
+```
+
+**Why This Matters**:
+- 🔥 Prevents log flooding in hot paths
+- 🔥 Reduces storage costs in production
+- 🔥 Maintains observability while controlling volume
+
+**Deliverables**:
+- `src/sampling.rs`
+- Sampling tests
+- Configuration documentation
+
+**Dependencies**: None
+
+**🎭 AUTH-MIN SECURITY FINDINGS**:
+- 🚨 **Mutex poisoning DoS**: Line 711 uses `.unwrap()` on mutex lock, causing panic if poisoned. **ATTACK VECTOR**: Attacker triggers panic in one thread → poisons mutex → DoS all narration. **MITIGATION REQUIRED**: Use `lock().ok()` or `try_lock()` with graceful degradation.
+- 🚨 **HashMap collision DoS**: Line 710 uses `format!("{}:{}", actor, action)` as key. If actor/action are user-controlled, attacker can craft collision-inducing keys to degrade HashMap to O(n). **MITIGATION REQUIRED**: Sanitize actor/action before using as keys.
+- 🚨 **Unbounded memory growth**: No eviction policy for counters HashMap (line 714). **ATTACK VECTOR**: Memory exhaustion via unique actor:action combinations. **MITIGATION REQUIRED**: Add LRU eviction or TTL-based cleanup.
+
+**⏱️ PERFORMANCE TEAM COMMENT**:
+- 🚨 **CRITICAL BOTTLENECK**: Global mutex on EVERY narration call is a massive contention point. With 1000+ narrations/sec across threads, this serializes all logging. **RECOMMENDATION**: Use lock-free atomic counters per actor:action (e.g., `DashMap` or sharded counters).
+- 🚨 **ALLOCATION STORM**: `format!("{}:{}", actor, action)` allocates String on every `should_sample()` call. At 10k narrations/sec, this is 10k allocations/sec. **OPTIMIZATION**: Use `(&str, &str)` tuple as key directly, or pre-intern actor:action pairs.
+- 🚨 **RANDOM NUMBER OVERHEAD**: `rand::random::<f64>()` on every call adds ~50-100ns. For 100% sample rate (default), this is pure waste. **OPTIMIZATION**: Early-return if `sample_rate == 1.0`, skip RNG entirely.
+- 📊 **PERFORMANCE DISASTER**: This design will destroy throughput. **REQUIRED**: Complete redesign using lock-free data structures. Target: <50ns overhead for sampling check.
+
+---
+
+### **Unit 2.8: 💝 DELIGHTFUL - Emoji & Unicode Safety** (Day 10)
+**Owner**: Narration Core Team  
+**Effort**: 2 hours
+
+**Why Delightful**: Cute mode needs emoji, but they can break logs!
+
+**Tasks**:
+- [ ] Validate emoji in cute/story fields
+- [ ] Strip invalid Unicode from human field
+- [ ] Ensure JSON-safe output
+- [ ] Test with various emoji (🎀, 🎭, 🚀, etc.)
+- [ ] Document emoji guidelines
+
+**Concrete Code Changes**:
+```rust
+// NEW FILE: src/unicode.rs
+
+/// Ensure string is JSON-safe and valid UTF-8
+pub fn sanitize_for_json(text: &str) -> String {
+    text.chars()
+        .filter(|c| {
+            // Keep printable chars, whitespace, and emoji
+            c.is_alphanumeric() 
+                || c.is_whitespace() 
+                || c.is_ascii_punctuation()
+                || (*c as u32) >= 0x1F000  // Emoji range
+        })
+        .collect()
+}
+
+/// Validate emoji are safe for logging
+pub fn validate_emoji(text: &str) -> bool {
+    // Check for problematic emoji (zero-width, combining, etc.)
+    !text.chars().any(|c| {
+        matches!(c as u32, 
+            0x200B..=0x200D |  // Zero-width chars
+            0xFE00..=0xFE0F    // Variation selectors
+        )
+    })
+}
+
+// MODIFY: src/lib.rs (add emoji validation)
+pub fn narrate_at_level(mut fields: NarrationFields, level: NarrationLevel) {
+    // Sanitize human field
+    fields.human = sanitize_for_json(&fields.human);
+    
+    // Validate cute/story emoji
+    if let Some(cute) = &fields.cute {
+        if !validate_emoji(cute) {
+            fields.cute = Some(sanitize_for_json(cute));
+        }
+    }
+    
+    // ... rest of narrate_at_level
+}
+```
+
+**Why This Matters**:
+- 🎀 Cute mode is our brand - emoji must work!
+- 🔥 Invalid Unicode breaks JSON parsers
+- 🔥 Zero-width chars can hide malicious content
+
+**Deliverables**:
+- `src/unicode.rs`
+- Emoji safety tests
+- Emoji guidelines
+
+**Dependencies**: None
+
+**🎭 AUTH-MIN SECURITY FINDINGS**:
+- 🚨 **Incomplete emoji range**: Line 783 checks `(*c as u32) >= 0x1F000` but emoji ranges are fragmented (0x1F600-0x1F64F, 0x1F300-0x1F5FF, etc.). **ATTACK VECTOR**: Inject malicious Unicode outside defined range. **MITIGATION REQUIRED**: Use comprehensive emoji range list or Unicode category checks.
+- 🚨 **Incomplete zero-width blocklist**: Line 793 missing U+FEFF (zero-width no-break space), U+2060 (word joiner), U+180E (Mongolian vowel separator). **ATTACK VECTOR**: Hide malicious content in logs. **MITIGATION REQUIRED**: Comprehensive zero-width character blocklist.
+- 🚨 **Homograph attack vulnerability**: No detection of Cyrillic/Greek lookalikes (е vs e, а vs a). **ATTACK VECTOR**: Spoof actor names in logs ("оrchestratord" vs "orchestratord"). **MITIGATION REQUIRED**: Consider homograph detection for security-critical fields (actor, action).
+- ⚠️ **No Unicode normalization**: Missing NFC/NFD normalization before validation allows normalization-based bypasses. **MITIGATION REQUIRED**: Apply Unicode normalization before all validation.
+
+**⏱️ PERFORMANCE TEAM COMMENT**:
+- 🚨 **CHAR ITERATION COST**: `.chars()` iterator allocates for multi-byte UTF-8 sequences. For 1000-char strings, this is expensive. **OPTIMIZATION**: Use `.as_bytes()` for ASCII-only validation, fall back to `.chars()` only for non-ASCII.
+- 🚨 **FILTER ALLOCATION**: `.filter().collect()` allocates new String on every narration. **RECOMMENDATION**: In-place sanitization using `String::retain()` or pre-validate and reject (zero-copy).
+- ⚡ **UNICODE NORMALIZATION COST**: NFC/NFD normalization (if added per auth-min) is expensive (~1-10μs per string). **OPTIMIZATION**: Only normalize security-critical fields (actor, action), skip for human/cute/story.
+- 📊 **TARGET**: <1μs for emoji validation on 100-char string, <5μs for full sanitization with normalization.
 
 ---
 
@@ -564,6 +949,9 @@ pub fn redact_secrets(text: &str, policy: RedactionPolicy) -> String {
 **Dependencies**: None
 
 **Note**: This is ambitious for Week 3. Consider moving to Week 4 if timeline is tight.
+
+**🎭 AUTH-MIN SECURITY NOTE**:
+- ⚠️ **ReDoS risk in passive voice detection**: If using complex regex patterns for SVO validation, could be vulnerable to ReDoS. **MITIGATION REQUIRED**: Review actual regex patterns when implemented; use bounded quantifiers and avoid nested quantifiers.
 
 ---
 
@@ -646,6 +1034,10 @@ pub fn redact_secrets(text: &str, policy: RedactionPolicy) -> String {
 
 **Dependencies**: Unit 1.5, Unit 2.3
 
+**⏱️ PERFORMANCE TEAM COMMENT**:
+- ✅ **NO PERFORMANCE CONCERNS**: BDD tests run in test environment only, performance is not critical.
+- 📊 **RECOMMENDATION**: Ensure `CaptureAdapter` uses efficient data structures (Vec with pre-allocated capacity) to avoid reallocation during test runs.
+
 ---
 
 ### **Unit 4.2: Proof Bundle Integration** (Day 17-18)
@@ -667,6 +1059,14 @@ pub fn redact_secrets(text: &str, policy: RedactionPolicy) -> String {
 - Documentation
 
 **Dependencies**: Unit 4.1
+
+**🎭 AUTH-MIN SECURITY NOTE**:
+- ⚠️ **Proof bundle data leakage**: Proof bundles may contain sensitive narration data including redacted secrets. Ensure `LLORCH_PROOF_DIR` respects file permissions (0600) and doesn't leak to world-readable directories. Add security notice in documentation.
+
+**⏱️ PERFORMANCE TEAM COMMENT**:
+- 🚨 **I/O BLOCKING RISK**: Writing to proof bundles during test runs must NOT block narration in async contexts. **REQUIREMENT**: Use buffered writes or async I/O to prevent blocking.
+- ⚡ **OPTIMIZATION**: Batch narration events in memory, flush to disk at test completion to minimize I/O syscalls.
+- 📊 **TARGET**: Proof bundle writes should add <1% overhead to test execution time.
 
 ---
 
@@ -1000,6 +1400,28 @@ We're building a narration system that:
 ## 🎭 Security Review Section
 
 **For auth-min Team**: Please review and sign off on security-critical units.
+
+### 🚨 CRITICAL SECURITY ISSUES IDENTIFIED
+
+**The following attack surfaces were identified during security review and MUST be addressed before implementation:**
+
+1. **ReDoS in private key regex** (Unit 2.3) - CRITICAL
+2. **Mutex poisoning DoS** (Unit 2.7) - CRITICAL  
+3. **HashMap collision DoS** (Unit 2.7) - CRITICAL
+4. **Unbounded memory growth** (Unit 2.7) - CRITICAL
+5. **Incomplete Unicode validation** (Unit 2.8) - HIGH
+6. **Homograph attacks** (Unit 2.8) - HIGH
+7. **Template injection** (Unit 1.5) - MEDIUM
+8. **Correlation ID injection** (Unit 2.4) - MEDIUM
+9. **Log injection (CRLF)** - MEDIUM (not addressed in plan)
+10. **Timing side-channels** (Unit 1.3) - LOW
+
+**REQUIRED ACTIONS**:
+- [ ] Address all CRITICAL issues before Week 2
+- [ ] Address all HIGH issues before Week 3  
+- [ ] Address all MEDIUM issues before Week 4
+- [ ] Add log injection prevention to implementation plan
+- [ ] Add timing side-channel mitigation guidelines
 
 ### Unit 2.3: Secret Redaction Enhancement
 - [ ] Reviewed by auth-min Team
