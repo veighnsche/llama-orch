@@ -32,6 +32,7 @@ observability-narration-core = { path = "../shared-crates/narration-core", featu
 
 [dev-dependencies]
 serial_test = "3.0"
+uuid = { version = "1.0", features = ["v4"] }
 
 [build-dependencies]
 cmake = "0.1"

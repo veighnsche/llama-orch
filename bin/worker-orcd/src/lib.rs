@@ -8,6 +8,7 @@ pub mod http;
 pub mod inference_executor;
 pub mod inference_result;
 pub mod sampling_config;
+pub mod tests;
 
 // Re-export commonly used types
 pub use cuda::CudaError;

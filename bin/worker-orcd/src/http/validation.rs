@@ -14,7 +14,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 
 /// Execute request parameters
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ExecuteRequest {
     /// Job ID (must be non-empty)
     pub job_id: String,

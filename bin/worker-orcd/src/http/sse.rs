@@ -8,10 +8,10 @@
 //! - M0-W-1311: Event ordering
 //! - M0-W-1312: UTF-8 safety
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 /// Reason for inference termination
-#[derive(Debug, Clone, Serialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum StopReason {
     /// Reached max_tokens limit
@@ -31,7 +31,7 @@ pub enum StopReason {
 /// 2. `Token` (0 or more) - Generated tokens
 /// 3. `Metrics` (optional) - Performance metrics
 /// 4. Terminal event - Either `End` OR `Error` (never both)
-#[derive(Debug, Clone, Serialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum InferenceEvent {
     /// Inference started
