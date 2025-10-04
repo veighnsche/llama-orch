@@ -57,3 +57,29 @@ Create comprehensive API documentation for Foundation layer: HTTP endpoints, FFI
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Documentation generated**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "docs_generate",
+       target: "api-documentation".to_string(),
+       human: "Generated API documentation".to_string(),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: API documentation is a deliverable. Narration tracks documentation generation.
+
+**Note**: This is a documentation story. Minimal runtime narration, primarily for build/CI tracking.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

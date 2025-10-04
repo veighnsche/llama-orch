@@ -76,3 +76,40 @@ std::unique_ptr<InferenceAdapter> create_adapter(Architecture arch) {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Adapter created by factory**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "adapter_create",
+       target: adapter_type.to_string(),
+       model_ref: Some(model_name.clone()),
+       human: format!("Factory created {} adapter for model {}", adapter_type, model_name),
+       ..Default::default()
+   });
+   ```
+
+2. **Architecture detected**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "architecture_detect",
+       target: model_path.to_string(),
+       model_ref: Some(architecture.to_string()),
+       human: format!("Detected architecture: {} from {}", architecture, model_path),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Factory pattern routes models to correct adapters. Narration helps track architecture detection and adapter selection.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

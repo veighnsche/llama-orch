@@ -75,3 +75,39 @@ pub struct BenchmarkHarness {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Baseline preparation started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "baseline_prep",
+       target: "performance".to_string(),
+       human: "Starting performance baseline preparation".to_string(),
+       ..Default::default()
+   });
+   ```
+
+2. **Baseline measurement captured**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "baseline_capture",
+       target: metric_name.to_string(),
+       duration_ms: Some(value_ms),
+       human: format!("Captured baseline: {} = {} ms", metric_name, value_ms),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Performance baselines establish reference points for optimization. Narration creates an audit trail of baseline measurements.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

@@ -262,3 +262,42 @@ impl From<CudaError> for SseError {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **CUDA error converted to HTTP response**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: ACTION_INFERENCE_ERROR,
+       target: job_id.clone(),
+       correlation_id: Some(correlation_id),
+       error_kind: Some(error.code().to_string()),
+       human: format!("CUDA error for job {}: {} (HTTP {})", job_id, error, error.status_code().as_u16()),
+       ..Default::default()
+   });
+   ```
+
+2. **Retriable error detected**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: ACTION_INFERENCE_ERROR,
+       target: job_id.clone(),
+       correlation_id: Some(correlation_id),
+       error_kind: Some("vram_oom".to_string()),
+       human: format!("VRAM OOM for job {} (retriable)", job_id),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Error conversion is where CUDA errors become HTTP responses. Narration helps track error rates, retriable vs. fatal errors, and HTTP status code distribution.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

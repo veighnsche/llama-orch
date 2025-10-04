@@ -55,3 +55,53 @@ Execute performance baseline measurements for all three M0 models: Qwen2.5-0.5B,
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Baseline measurement started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "baseline_measure",
+       target: benchmark_name.to_string(),
+       model_ref: Some(model_name.clone()),
+       human: format!("Starting baseline measurement: {} with {}", benchmark_name, model_name),
+       ..Default::default()
+   });
+   ```
+
+2. **Baseline measurement completed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "baseline_measure",
+       target: benchmark_name.to_string(),
+       model_ref: Some(model_name.clone()),
+       tokens_out: Some(tokens_generated),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("Baseline: {} = {} tokens/sec ({} tokens in {} ms)", benchmark_name, tokens_per_sec, tokens_generated, elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+3. **Baseline comparison**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "baseline_compare",
+       target: benchmark_name.to_string(),
+       human: format!("Baseline comparison: current={} tokens/sec, target={} tokens/sec ({}% of target)", current, target, percentage),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Performance baselines establish optimization targets. Narration tracks measurements and comparisons for performance analysis.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

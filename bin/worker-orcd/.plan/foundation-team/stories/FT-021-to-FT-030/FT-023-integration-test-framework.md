@@ -148,3 +148,52 @@ pub fn extract_tokens(events: &[InferenceEvent]) -> Vec<String>;
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Test harness started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_start",
+       target: "integration-harness".to_string(),
+       human: "Starting integration test harness".to_string(),
+       ..Default::default()
+   });
+   ```
+
+2. **Test fixture setup**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_setup",
+       target: fixture_name.to_string(),
+       human: format!("Setting up test fixture: {}", fixture_name),
+       ..Default::default()
+   });
+   ```
+
+3. **Test fixture teardown**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_teardown",
+       target: fixture_name.to_string(),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("Tore down test fixture: {} ({} ms)", fixture_name, elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Test framework infrastructure is foundational. Narration helps track test execution and diagnose fixture issues.
+
+**Note**: This is infrastructure, not runtime. Narration is primarily for test execution tracking.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

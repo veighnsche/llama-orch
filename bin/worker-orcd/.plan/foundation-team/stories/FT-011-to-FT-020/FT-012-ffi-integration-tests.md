@@ -314,3 +314,51 @@ TEST_F(FFIIntegrationTest, DeviceProperties) {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Test suite started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_start",
+       target: "ffi-integration".to_string(),
+       human: "Starting FFI integration test suite".to_string(),
+       ..Default::default()
+   });
+   ```
+
+2. **Memory leak detected**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_complete",
+       target: "ffi-integration".to_string(),
+       error_kind: Some("memory_leak".to_string()),
+       human: format!("Memory leak detected: {} bytes", diff),
+       ..Default::default()
+   });
+   ```
+
+3. **Test suite completed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_complete",
+       target: "ffi-integration".to_string(),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("FFI integration tests passed ({} ms)", elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Integration tests validate the FFI boundary. Narration creates an audit trail of test runs and helps diagnose FFI-related issues.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

@@ -332,3 +332,52 @@ impl HealthStatus {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Residency check passed** (ACTION_VERIFY)
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_VRAM_RESIDENCY,
+       action: ACTION_VERIFY,
+       target: format!("GPU{}", device_id),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("VRAM residency verified on GPU{}: all {} allocations resident", device_id, allocation_count),
+       ..Default::default()
+   });
+   ```
+
+2. **Residency check FAILED** (CRITICAL)
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_VRAM_RESIDENCY,
+       action: ACTION_VERIFY,
+       target: format!("GPU{}", device_id),
+       device: Some(format!("GPU{}", device_id)),
+       error_kind: Some("residency_violation".to_string()),
+       human: format!("CRITICAL: VRAM residency violated on GPU{}: RAM fallback or UMA detected", device_id),
+       ..Default::default()
+   });
+   ```
+
+3. **Worker marked unhealthy**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "health_status",
+       target: "worker".to_string(),
+       human: "Worker marked unhealthy due to VRAM residency violation".to_string(),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: VRAM residency violations are CRITICAL policy failures. Narration ensures these are immediately visible in logs and alerts.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

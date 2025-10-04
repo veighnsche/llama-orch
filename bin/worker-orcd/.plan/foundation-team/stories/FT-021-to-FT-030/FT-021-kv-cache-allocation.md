@@ -456,3 +456,52 @@ TEST(KVCacheTest, VramTracking) {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **KV cache allocated**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_VRAM_RESIDENCY,
+       action: ACTION_VRAM_ALLOCATE,
+       target: "kv-cache".to_string(),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("Allocated {} MB KV cache (max_tokens={}, layers={})", bytes / 1024 / 1024, max_tokens, num_layers),
+       ..Default::default()
+   });
+   ```
+
+2. **KV cache freed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_VRAM_RESIDENCY,
+       action: ACTION_VRAM_DEALLOCATE,
+       target: "kv-cache".to_string(),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("Freed {} MB KV cache", bytes / 1024 / 1024),
+       ..Default::default()
+   });
+   ```
+
+3. **KV cache OOM**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_VRAM_RESIDENCY,
+       action: ACTION_VRAM_ALLOCATE,
+       target: "kv-cache".to_string(),
+       error_kind: Some("vram_oom".to_string()),
+       human: format!("KV cache allocation failed: requested {} MB, only {} MB available", requested / 1024 / 1024, available / 1024 / 1024),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: KV cache is the largest VRAM consumer in inference. Narration helps track allocation sizes and diagnose OOM issues.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

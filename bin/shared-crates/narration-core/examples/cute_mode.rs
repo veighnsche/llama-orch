@@ -8,10 +8,7 @@ use observability_narration_core::{narrate, NarrationFields};
 
 fn main() {
     // Initialize tracing subscriber for pretty output
-    tracing_subscriber::fmt()
-        .with_target(false)
-        .with_level(true)
-        .init();
+    tracing_subscriber::fmt().with_target(false).with_level(true).init();
 
     println!("🎀 Cute Mode Examples — Children's Book Narration\n");
 
@@ -22,7 +19,9 @@ fn main() {
         action: "seal",
         target: "llama-7b".to_string(),
         human: "Sealed model shard 'llama-7b' in 2048 MB VRAM on GPU 0 (5 ms)".to_string(),
-        cute: Some("Tucked llama-7b safely into GPU0's warm 2GB nest! Sweet dreams! 🛏️✨".to_string()),
+        cute: Some(
+            "Tucked llama-7b safely into GPU0's warm 2GB nest! Sweet dreams! 🛏️✨".to_string(),
+        ),
         device: Some("GPU0".to_string()),
         duration_ms: Some(5),
         ..Default::default()
@@ -66,8 +65,12 @@ fn main() {
         actor: "vram-residency",
         action: "deallocate",
         target: "bert-base".to_string(),
-        human: "Deallocated 512 MB VRAM for shard 'bert-base' on GPU 0 (1536 MB still in use)".to_string(),
-        cute: Some("Said goodbye to bert-base and tidied up 512 MB! Room for new friends! 👋🧹".to_string()),
+        human: "Deallocated 512 MB VRAM for shard 'bert-base' on GPU 0 (1536 MB still in use)"
+            .to_string(),
+        cute: Some(
+            "Said goodbye to bert-base and tidied up 512 MB! Room for new friends! 👋🧹"
+                .to_string(),
+        ),
         device: Some("GPU0".to_string()),
         ..Default::default()
     });
@@ -95,8 +98,12 @@ fn main() {
         actor: "vram-residency",
         action: "verify_failed",
         target: "model-x".to_string(),
-        human: "CRITICAL: Seal verification failed for shard 'model-x' on GPU 0: digest mismatch".to_string(),
-        cute: Some("Uh oh! model-x's safety seal looks different than expected! Time to investigate! 😟🔍".to_string()),
+        human: "CRITICAL: Seal verification failed for shard 'model-x' on GPU 0: digest mismatch"
+            .to_string(),
+        cute: Some(
+            "Uh oh! model-x's safety seal looks different than expected! Time to investigate! 😟🔍"
+                .to_string(),
+        ),
         device: Some("GPU0".to_string()),
         error_kind: Some("digest_mismatch".to_string()),
         ..Default::default()
@@ -111,7 +118,9 @@ fn main() {
         action: "admission",
         target: "session-abc123".to_string(),
         human: "Accepted request; queued at position 3 (ETA 420 ms) on pool 'default'".to_string(),
-        cute: Some("Request joins the queue at spot 3 — should start in about 420 ms! 🎫✨".to_string()),
+        cute: Some(
+            "Request joins the queue at spot 3 — should start in about 420 ms! 🎫✨".to_string(),
+        ),
         pool_id: Some("default".to_string()),
         queue_position: Some(3),
         predicted_start_ms: Some(420),

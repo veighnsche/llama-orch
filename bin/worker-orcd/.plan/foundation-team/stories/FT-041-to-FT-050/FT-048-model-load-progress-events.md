@@ -60,3 +60,53 @@ tracing::info!(
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Model load started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "model_load",
+       target: model_path.to_string(),
+       model_ref: Some(model_name.clone()),
+       human: format!("Loading model: {}", model_name),
+       ..Default::default()
+   });
+   ```
+
+2. **Model load progress**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "model_load_progress",
+       target: model_name.clone(),
+       model_ref: Some(model_name.clone()),
+       human: format!("Model loading: {}% ({} MB / {} MB)", percentage, loaded_mb, total_mb),
+       ..Default::default()
+   });
+   ```
+
+3. **Model load completed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "model_load",
+       target: model_name.clone(),
+       model_ref: Some(model_name.clone()),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("Model loaded: {} ({} MB VRAM, {} ms)", model_name, vram_mb, elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Model loading can take seconds. Progress events provide user feedback and help diagnose slow loads.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

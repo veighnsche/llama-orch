@@ -65,3 +65,29 @@
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Gate 4 checkpoint reached**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "milestone",
+       target: "gate-4-checkpoint".to_string(),
+       human: "Gate 4 checkpoint reached: Production readiness complete".to_string(),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Gate 4 marks production readiness. Narration creates milestone audit trail.
+
+**Note**: Meta-story (checkpoint). Minimal runtime narration.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

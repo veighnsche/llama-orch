@@ -85,3 +85,51 @@ async fn test_cancellation() {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Cancellation test started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_start",
+       target: "cancellation-integration".to_string(),
+       human: "Starting cancellation integration test".to_string(),
+       ..Default::default()
+   });
+   ```
+
+2. **Inference cancelled**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: ACTION_CANCEL,
+       target: job_id.clone(),
+       correlation_id: Some(correlation_id),
+       human: format!("Cancelled inference for job {} (after {} tokens)", job_id, tokens_generated),
+       ..Default::default()
+   });
+   ```
+
+3. **Cancellation test passed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_complete",
+       target: "cancellation-integration".to_string(),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("Cancellation test PASSED: graceful cancellation verified ({} ms)", elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Cancellation is critical for resource management. Narration verifies graceful cancellation and helps diagnose cleanup issues.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

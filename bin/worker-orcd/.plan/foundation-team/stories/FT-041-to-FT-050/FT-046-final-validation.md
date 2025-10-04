@@ -65,3 +65,51 @@ Execute final validation checklist: all tests passing, all documentation complet
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Final validation started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "validation_start",
+       target: "final-validation".to_string(),
+       human: "Starting final validation suite".to_string(),
+       ..Default::default()
+   });
+   ```
+
+2. **Final validation passed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "validation_complete",
+       target: "final-validation".to_string(),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("Final validation PASSED: all {} tests passed ({} ms)", test_count, elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+3. **Final validation failed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "validation_complete",
+       target: "final-validation".to_string(),
+       error_kind: Some("validation_failed".to_string()),
+       human: format!("Final validation FAILED: {}/{} tests failed", failed, total),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Final validation is the go/no-go decision for release. Narration creates audit trail of validation results.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

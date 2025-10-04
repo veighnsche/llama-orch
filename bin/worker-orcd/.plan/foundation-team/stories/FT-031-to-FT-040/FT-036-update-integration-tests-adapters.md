@@ -64,3 +64,39 @@ fn test_gpt_adapter_selection() {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Adapter test started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_start",
+       target: format!("adapter-{}", adapter_type),
+       human: format!("Starting adapter integration test: {}", adapter_type),
+       ..Default::default()
+   });
+   ```
+
+2. **Adapter test passed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_complete",
+       target: format!("adapter-{}", adapter_type),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("Adapter test passed: {} ({} ms)", adapter_type, elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Adapter tests validate multi-architecture support. Narration creates audit trail of adapter test runs.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

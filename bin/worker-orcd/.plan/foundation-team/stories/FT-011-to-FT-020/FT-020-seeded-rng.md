@@ -398,3 +398,39 @@ TEST(RNGTest, LargeSeed) {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **RNG initialized**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "rng_init",
+       target: format!("seed-{}", seed),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("Initialized RNG with seed {}", seed),
+       ..Default::default()
+   });
+   ```
+
+2. **Determinism verified**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "determinism_check",
+       target: "rng".to_string(),
+       human: format!("RNG determinism verified: same seed produced same sequence"),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Seeded RNG is critical for reproducibility. Narration creates an audit trail of seeds used and verifies determinism.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

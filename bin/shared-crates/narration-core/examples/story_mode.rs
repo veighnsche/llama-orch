@@ -10,10 +10,7 @@ use observability_narration_core::{narrate, NarrationFields};
 
 fn main() {
     // Initialize tracing subscriber for pretty output
-    tracing_subscriber::fmt()
-        .with_target(false)
-        .with_level(true)
-        .init();
+    tracing_subscriber::fmt().with_target(false).with_level(true).init();
 
     println!("🎭 Story Mode Examples — Dialogue-Focused Narration\n");
     println!("Watch components talk to each other!\n");
@@ -124,8 +121,13 @@ fn main() {
         action: "seal_verify",
         target: "llama-7b".to_string(),
         human: "Verifying seal for model 'llama-7b' on GPU 0".to_string(),
-        cute: Some("Vram-residency checks on llama-7b — everything looks perfect! 🔍💕".to_string()),
-        story: Some("\"Is the seal intact?\" asked vram-residency. \"Yes, verified!\" confirmed GPU0.".to_string()),
+        cute: Some(
+            "Vram-residency checks on llama-7b — everything looks perfect! 🔍💕".to_string(),
+        ),
+        story: Some(
+            "\"Is the seal intact?\" asked vram-residency. \"Yes, verified!\" confirmed GPU0."
+                .to_string(),
+        ),
         device: Some("GPU0".to_string()),
         model_ref: Some("llama-7b".to_string()),
         ..Default::default()
@@ -140,7 +142,10 @@ fn main() {
         action: "pool_query",
         target: "all-pools".to_string(),
         human: "Querying all pools for available capacity".to_string(),
-        cute: Some("Orchestratord asks everyone for capacity — three pools wave their hands! 🙋".to_string()),
+        cute: Some(
+            "Orchestratord asks everyone for capacity — three pools wave their hands! 🙋"
+                .to_string(),
+        ),
         story: Some(
             "\"Who has capacity?\" asked orchestratord. \
             \"I do!\" said pool-managerd-1. \
@@ -183,7 +188,10 @@ fn main() {
         action: "job_complete",
         target: "job-456".to_string(),
         human: "Completed job 'job-456' successfully (2500 ms, 150 tokens)".to_string(),
-        cute: Some("\"All done!\" cheers worker-gpu0-r1! \"Excellent work!\" says orchestratord! 🎉".to_string()),
+        cute: Some(
+            "\"All done!\" cheers worker-gpu0-r1! \"Excellent work!\" says orchestratord! 🎉"
+                .to_string(),
+        ),
         story: Some(
             "\"Job done!\" announced worker-gpu0-r1 proudly. \
             \"How'd it go?\" asked orchestratord. \

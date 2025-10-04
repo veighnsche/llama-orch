@@ -73,3 +73,51 @@ async fn test_kv_cache_oom() {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **OOM test started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_start",
+       target: "oom-recovery".to_string(),
+       human: "Starting OOM recovery test".to_string(),
+       ..Default::default()
+   });
+   ```
+
+2. **OOM triggered**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_VRAM_RESIDENCY,
+       action: ACTION_VRAM_ALLOCATE,
+       target: "oom-trigger".to_string(),
+       error_kind: Some("vram_oom".to_string()),
+       human: format!("OOM triggered: requested {} MB, only {} MB available", requested / 1024 / 1024, available / 1024 / 1024),
+       ..Default::default()
+   });
+   ```
+
+3. **OOM recovery successful**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_complete",
+       target: "oom-recovery".to_string(),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("OOM recovery test PASSED: graceful error handling verified ({} ms)", elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: OOM recovery is critical for production stability. Narration verifies graceful handling and helps diagnose recovery failures.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

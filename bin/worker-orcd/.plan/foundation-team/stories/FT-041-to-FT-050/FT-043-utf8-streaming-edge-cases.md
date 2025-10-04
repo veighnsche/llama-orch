@@ -75,3 +75,49 @@ async fn test_emoji_streaming() {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **UTF-8 edge case test started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_start",
+       target: "utf8-edge-cases".to_string(),
+       human: "Starting UTF-8 streaming edge case test".to_string(),
+       ..Default::default()
+   });
+   ```
+
+2. **Multibyte character handled**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "utf8_handle",
+       target: format!("char-{}", char_type),
+       human: format!("Handled {} multibyte character correctly", char_type),
+       ..Default::default()
+   });
+   ```
+
+3. **UTF-8 test passed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_complete",
+       target: "utf8-edge-cases".to_string(),
+       human: format!("UTF-8 edge case test PASSED: {} test cases validated", test_count),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: UTF-8 edge cases (emoji, CJK, etc.) are common bugs. Narration verifies correct handling and helps diagnose encoding issues.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

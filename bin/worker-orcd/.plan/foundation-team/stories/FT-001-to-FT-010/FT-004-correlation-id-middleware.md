@@ -172,3 +172,54 @@ pub async fn correlation_middleware(
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Correlation ID extracted from header**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "correlation_id_extract",
+       target: "request".to_string(),
+       correlation_id: Some(correlation_id.clone()),
+       human: format!("Extracted correlation ID from header: {}", correlation_id),
+       ..Default::default()
+   });
+   ```
+
+2. **Correlation ID generated (header missing)**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "correlation_id_generate",
+       target: "request".to_string(),
+       correlation_id: Some(correlation_id.clone()),
+       human: format!("Generated new correlation ID: {}", correlation_id),
+       ..Default::default()
+   });
+   ```
+
+3. **Invalid correlation ID rejected**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "correlation_id_generate",
+       target: "request".to_string(),
+       correlation_id: Some(new_correlation_id.clone()),
+       human: format!("Rejected invalid correlation ID '{}', generated new: {}", invalid_id, new_correlation_id),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Correlation IDs are the foundation of request tracing. Narration helps track ID generation vs. extraction and diagnose ID propagation issues.
+
+**Note**: This middleware enables ALL other narration by providing correlation IDs. Every subsequent narration event should include the correlation_id field!
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

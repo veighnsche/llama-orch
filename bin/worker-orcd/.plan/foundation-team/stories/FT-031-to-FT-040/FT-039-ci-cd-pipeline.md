@@ -69,3 +69,53 @@ jobs:
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **CI pipeline started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "ci_start",
+       target: format!("commit-{}", commit_sha),
+       human: format!("CI pipeline started for commit {}", commit_sha),
+       ..Default::default()
+   });
+   ```
+
+2. **CI pipeline passed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "ci_complete",
+       target: format!("commit-{}", commit_sha),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("CI pipeline PASSED for commit {} ({} ms)", commit_sha, elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+3. **CI pipeline failed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "ci_complete",
+       target: format!("commit-{}", commit_sha),
+       error_kind: Some("ci_failed".to_string()),
+       human: format!("CI pipeline FAILED for commit {}: {}", commit_sha, failure_reason),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: CI/CD pipeline ensures quality. Narration creates audit trail of builds and deployments.
+
+**Note**: This is infrastructure. Narration primarily for CI/CD tracking, not runtime.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

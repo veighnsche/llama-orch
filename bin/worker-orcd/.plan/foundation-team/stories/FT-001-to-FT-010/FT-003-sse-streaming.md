@@ -167,9 +167,59 @@ impl Utf8Buffer {
 
 ---
 
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Stream started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "stream_start",
+       target: job_id.clone(),
+       correlation_id: Some(correlation_id),
+       human: format!("SSE stream started for job {}", job_id),
+       ..Default::default()
+   });
+   ```
+
+2. **Stream completed** (ACTION_INFERENCE_COMPLETE)
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: ACTION_INFERENCE_COMPLETE,
+       target: job_id.clone(),
+       correlation_id: Some(correlation_id),
+       tokens_out: Some(token_count),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("Completed inference: {} tokens in {} ms", token_count, elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+3. **Stream error**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: ACTION_INFERENCE_ERROR,
+       target: job_id.clone(),
+       correlation_id: Some(correlation_id),
+       error_kind: Some(error_code.to_string()),
+       human: format!("SSE stream error for job {}: {}", job_id, error_message),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: SSE streaming is the primary output mechanism. Narration helps track stream lifecycle and diagnose client disconnect issues.
+
+---
+
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04
 
 ---
-Planned by Project Management Team 📋
+Planned by Project Management Team 📋  
+*Narration guidance added by Narration-Core Team 🎀*

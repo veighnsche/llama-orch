@@ -239,3 +239,31 @@ extern "C" CudaContext* cuda_init(int gpu_device, int* error_code) {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Exception caught at FFI boundary**
+   ```rust
+   // From Rust side after FFI call
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "error_caught",
+       target: function_name.to_string(),
+       error_kind: Some(error_code.to_string()),
+       human: format!("Exception caught in {}: {}", function_name, error_message),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Exception-to-error-code conversion is critical for FFI safety. Narration helps track which C++ exceptions are most common and where they occur.
+
+**Note**: C++ layer doesn't directly emit narration (no tracing in C++). Narration happens on Rust side after error code conversion.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

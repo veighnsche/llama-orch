@@ -134,3 +134,55 @@ async fn test_determinism() {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **End-to-end test started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_start",
+       target: "http-ffi-cuda-e2e".to_string(),
+       correlation_id: Some(correlation_id.clone()),
+       human: "Starting HTTP-FFI-CUDA end-to-end test".to_string(),
+       ..Default::default()
+   });
+   ```
+
+2. **Test completed successfully**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_complete",
+       target: "http-ffi-cuda-e2e".to_string(),
+       correlation_id: Some(correlation_id),
+       tokens_out: Some(tokens_generated),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("E2E test passed: {} tokens in {} ms", tokens_generated, elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+3. **Test failed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_complete",
+       target: "http-ffi-cuda-e2e".to_string(),
+       correlation_id: Some(correlation_id),
+       error_kind: Some(error_type.to_string()),
+       human: format!("E2E test failed: {}", error_message),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: End-to-end tests validate the complete stack. Narration creates an audit trail of test runs and helps diagnose integration failures.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

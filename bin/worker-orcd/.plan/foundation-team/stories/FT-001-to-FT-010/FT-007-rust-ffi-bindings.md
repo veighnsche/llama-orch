@@ -419,3 +419,39 @@ impl CudaError {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **FFI call failure** (with error code)
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "ffi_call",
+       target: function_name.to_string(),
+       error_kind: Some(error.code().to_string()),
+       human: format!("FFI call to {} failed: {}", function_name, error),
+       ..Default::default()
+   });
+   ```
+
+2. **Resource cleanup on drop**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "resource_cleanup",
+       target: resource_type.to_string(),
+       human: format!("Cleaning up {} resource", resource_type),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: FFI boundary is where Rust and C++ meet. Narration helps diagnose FFI-related issues like null pointers, memory leaks, and error propagation.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

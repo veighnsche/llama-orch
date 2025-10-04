@@ -73,3 +73,40 @@ adapter_ = create_adapter(arch);
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **GGUF metadata parsed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "metadata_parse",
+       target: model_path.to_string(),
+       model_ref: Some(model_name.clone()),
+       human: format!("Parsed GGUF metadata: {} (arch={})", model_name, architecture),
+       ..Default::default()
+   });
+   ```
+
+2. **Architecture detection failed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "architecture_detect",
+       target: model_path.to_string(),
+       error_kind: Some("unknown_architecture".to_string()),
+       human: format!("Failed to detect architecture from {}", model_path),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Architecture detection is critical for adapter selection. Narration helps diagnose detection failures and track supported architectures.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

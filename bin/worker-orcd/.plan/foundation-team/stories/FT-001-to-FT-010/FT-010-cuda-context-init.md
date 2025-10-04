@@ -305,3 +305,54 @@ extern "C" int cuda_get_device_count() {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **CUDA context initialization**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "cuda_init",
+       target: format!("GPU{}", device_id),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("Initializing CUDA context on GPU{}", device_id),
+       ..Default::default()
+   });
+   ```
+
+2. **CUDA context ready**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "cuda_init",
+       target: format!("GPU{}", device_id),
+       device: Some(format!("GPU{}", device_id)),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("CUDA context ready on GPU{} ({} ms)", device_id, elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+3. **CUDA initialization failure**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "cuda_init",
+       target: format!("GPU{}", device_id),
+       device: Some(format!("GPU{}", device_id)),
+       error_kind: Some(error_code.to_string()),
+       human: format!("CUDA initialization failed on GPU{}: {}", device_id, error_message),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: CUDA initialization is a critical startup step. Failures here block all inference. Narration helps diagnose driver issues, GPU availability, and permission problems.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

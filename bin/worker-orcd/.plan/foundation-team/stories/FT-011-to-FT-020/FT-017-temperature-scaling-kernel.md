@@ -393,3 +393,28 @@ TEST_F(TemperatureScaleTest, LargeVocabulary) {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Temperature scaling applied**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "kernel_complete",
+       target: "temperature_scaling".to_string(),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("Applied temperature scaling (temp={})", temperature),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Temperature scaling affects sampling randomness. Narration helps track temperature values and kernel performance.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

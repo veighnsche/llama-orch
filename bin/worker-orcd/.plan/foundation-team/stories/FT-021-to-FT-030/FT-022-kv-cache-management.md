@@ -444,3 +444,40 @@ TEST(KVCacheManagementTest, UpdateKernel) {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **KV cache updated**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "kv_cache_update",
+       target: format!("layer-{}", layer_idx),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("Updated KV cache for layer {} (token_pos={})", layer_idx, token_pos),
+       ..Default::default()
+   });
+   ```
+
+2. **KV cache cleared**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "kv_cache_clear",
+       target: "all-layers".to_string(),
+       device: Some(format!("GPU{}", device_id)),
+       human: "Cleared KV cache for new sequence".to_string(),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: KV cache management affects inference correctness. Narration helps track cache updates and verify proper clearing between sequences.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

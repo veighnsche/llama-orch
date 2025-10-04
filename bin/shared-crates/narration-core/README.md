@@ -322,6 +322,24 @@ cargo test -p observability-narration-core -- test_narration --nocapture
 
 ---
 
+## Integration Guides
+
+### For Consumer Teams
+
+- **worker-orcd**: See [`docs/WORKER_ORCD_INTEGRATION.md`](docs/WORKER_ORCD_INTEGRATION.md)
+- **orchestratord**: Coming soon
+- **pool-managerd**: Coming soon
+
+Each guide includes:
+- Dependency setup
+- Correlation ID extraction
+- Critical path narrations
+- Editorial guidelines
+- Testing examples
+- Verification commands
+
+---
+
 ## Dependencies
 
 ### Internal

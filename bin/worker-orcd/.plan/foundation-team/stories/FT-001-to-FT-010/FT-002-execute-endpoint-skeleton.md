@@ -141,9 +141,46 @@ pub async fn execute_handler(
 
 ---
 
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Request received** (ACTION_INFERENCE_START)
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: ACTION_INFERENCE_START,
+       target: req.job_id.clone(),
+       correlation_id: Some(correlation_id),
+       tokens_in: Some(req.prompt.len() as u64),
+       human: format!("Starting inference for job {}", req.job_id),
+       ..Default::default()
+   });
+   ```
+
+2. **Validation failures** (with specific field)
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: ACTION_INFERENCE_START,
+       target: req.job_id.clone(),
+       correlation_id: Some(correlation_id),
+       error_kind: Some("validation_failed".to_string()),
+       human: format!("Validation failed for job {}: {} must be {}", req.job_id, field, constraint),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Request validation failures are common debugging scenarios. Narration helps identify which field failed and why.
+
+---
+
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04
 
 ---
-Planned by Project Management Team 📋
+Planned by Project Management Team 📋  
+*Narration guidance added by Narration-Core Team 🎀*

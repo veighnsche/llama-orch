@@ -427,3 +427,28 @@ TEST(GreedySamplingTest, Determinism) {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Token sampled (greedy)**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "token_sample",
+       target: "greedy".to_string(),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("Sampled token {} (greedy, logit={})", token_id, max_logit),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Greedy sampling is deterministic. Narration helps verify determinism and track sampled tokens.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

@@ -387,3 +387,53 @@ void DeviceMemory::zero() {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Device memory allocated**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_VRAM_RESIDENCY,
+       action: ACTION_VRAM_ALLOCATE,
+       target: format!("GPU{}", device_id),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("Allocated {} MB device memory for {}", bytes / 1024 / 1024, purpose),
+       ..Default::default()
+   });
+   ```
+
+2. **Device memory freed (in destructor)**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_VRAM_RESIDENCY,
+       action: ACTION_VRAM_DEALLOCATE,
+       target: format!("GPU{}", device_id),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("Freed {} MB device memory", bytes / 1024 / 1024),
+       ..Default::default()
+   });
+   ```
+
+3. **Allocation failure**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_VRAM_RESIDENCY,
+       action: ACTION_VRAM_ALLOCATE,
+       target: format!("GPU{}", device_id),
+       device: Some(format!("GPU{}", device_id)),
+       error_kind: Some("vram_oom".to_string()),
+       human: format!("Failed to allocate {} MB: {}", bytes / 1024 / 1024, error),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: RAII wrappers manage critical GPU resources. Narration helps track allocation/deallocation patterns and diagnose memory leaks.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

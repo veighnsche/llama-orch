@@ -283,3 +283,52 @@ Located in: `bin/worker-orcd/.proof_bundle/e2e-haiku/<run_id>/`
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Test started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_start",
+       target: "m0-haiku-anti-cheat".to_string(),
+       human: format!("Starting M0 haiku anti-cheat test (minute: {})", minute_word),
+       ..Default::default()
+   });
+   ```
+
+2. **Test passed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_complete",
+       target: "m0-haiku-anti-cheat".to_string(),
+       tokens_out: Some(tokens_generated),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("M0 haiku test PASSED: {} tokens in {} ms", tokens_generated, elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+3. **Anti-cheat validation failed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_complete",
+       target: "m0-haiku-anti-cheat".to_string(),
+       error_kind: Some("anti_cheat_failed".to_string()),
+       human: format!("M0 haiku test FAILED: minute word '{}' not found in output", minute_word),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: The M0 haiku test is the definitive success criteria. Narration creates an audit trail proving real GPU inference occurred.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

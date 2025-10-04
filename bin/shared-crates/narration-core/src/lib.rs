@@ -53,6 +53,54 @@ pub use capture::{CaptureAdapter, CapturedNarration};
 pub use otel::narrate_with_otel_context;
 pub use redaction::{redact_secrets, RedactionPolicy};
 
+// ============================================================================
+// Taxonomy: Actors
+// ============================================================================
+
+/// Core orchestration service
+pub const ACTOR_ORCHESTRATORD: &str = "orchestratord";
+/// GPU pool manager service
+pub const ACTOR_POOL_MANAGERD: &str = "pool-managerd";
+/// Worker daemon (inference service)
+pub const ACTOR_WORKER_ORCD: &str = "worker-orcd";
+/// Inference engine (llama.cpp, vLLM, etc.)
+pub const ACTOR_INFERENCE_ENGINE: &str = "inference-engine";
+/// VRAM residency manager
+pub const ACTOR_VRAM_RESIDENCY: &str = "vram-residency";
+
+// ============================================================================
+// Taxonomy: Actions
+// ============================================================================
+
+/// Admission queue operations
+pub const ACTION_ADMISSION: &str = "admission";
+pub const ACTION_ENQUEUE: &str = "enqueue";
+pub const ACTION_DISPATCH: &str = "dispatch";
+
+/// Worker lifecycle
+pub const ACTION_SPAWN: &str = "spawn";
+pub const ACTION_READY_CALLBACK: &str = "ready_callback";
+pub const ACTION_HEARTBEAT_SEND: &str = "heartbeat_send";
+pub const ACTION_HEARTBEAT_RECEIVE: &str = "heartbeat_receive";
+pub const ACTION_SHUTDOWN: &str = "shutdown";
+
+/// Inference operations
+pub const ACTION_INFERENCE_START: &str = "inference_start";
+pub const ACTION_INFERENCE_COMPLETE: &str = "inference_complete";
+pub const ACTION_INFERENCE_ERROR: &str = "inference_error";
+pub const ACTION_CANCEL: &str = "cancel";
+
+/// VRAM operations
+pub const ACTION_VRAM_ALLOCATE: &str = "vram_allocate";
+pub const ACTION_VRAM_DEALLOCATE: &str = "vram_deallocate";
+pub const ACTION_SEAL: &str = "seal";
+pub const ACTION_VERIFY: &str = "verify";
+
+/// Pool management
+pub const ACTION_REGISTER: &str = "register";
+pub const ACTION_DEREGISTER: &str = "deregister";
+pub const ACTION_PROVISION: &str = "provision";
+
 use serde::{Deserialize, Serialize};
 use tracing::{event, Level};
 
@@ -147,10 +195,10 @@ pub struct NarrationFields {
 pub fn narrate(fields: NarrationFields) {
     // Apply redaction to human text (ORCH-3302)
     let human = redact_secrets(&fields.human, RedactionPolicy::default());
-    
+
     // Apply redaction to cute text if present
     let cute = fields.cute.as_ref().map(|c| redact_secrets(c, RedactionPolicy::default()));
-    
+
     // Apply redaction to story text if present
     let story = fields.story.as_ref().map(|s| redact_secrets(s, RedactionPolicy::default()));
 

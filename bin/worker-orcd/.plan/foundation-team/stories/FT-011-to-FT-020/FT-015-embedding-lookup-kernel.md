@@ -408,3 +408,53 @@ TEST_F(EmbeddingKernelTest, LargeHiddenDim) {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Kernel launched**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "kernel_launch",
+       target: "embedding_lookup".to_string(),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("Launching embedding lookup kernel (batch={}, hidden_dim={})", batch_size, hidden_dim),
+       ..Default::default()
+   });
+   ```
+
+2. **Kernel completed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "kernel_complete",
+       target: "embedding_lookup".to_string(),
+       device: Some(format!("GPU{}", device_id)),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("Embedding lookup completed ({} ms)", elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+3. **Invalid token ID detected**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "kernel_launch",
+       target: "embedding_lookup".to_string(),
+       error_kind: Some("invalid_token_id".to_string()),
+       human: format!("Invalid token ID {} (vocab_size={})", token_id, vocab_size),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Embedding lookup is the first transformer layer. Narration helps track kernel performance and diagnose invalid token IDs.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

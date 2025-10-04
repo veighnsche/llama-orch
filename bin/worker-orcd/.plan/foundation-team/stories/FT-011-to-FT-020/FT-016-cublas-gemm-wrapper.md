@@ -474,3 +474,53 @@ TEST_F(CublasTest, LargeDimensions) {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **cuBLAS handle created**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "cublas_init",
+       target: format!("GPU{}", device_id),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("cuBLAS handle created (deterministic={})", deterministic),
+       ..Default::default()
+   });
+   ```
+
+2. **GEMM operation completed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "gemm_complete",
+       target: format!("{}x{}x{}", M, N, K),
+       device: Some(format!("GPU{}", device_id)),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("GEMM [{}x{}x{}] completed: {} ms ({:.2} TFLOPS)", M, N, K, elapsed.as_millis(), tflops),
+       ..Default::default()
+   });
+   ```
+
+3. **GEMM failure**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "gemm_complete",
+       target: format!("{}x{}x{}", M, N, K),
+       error_kind: Some("cublas_error".to_string()),
+       human: format!("cuBLAS GEMM failed: {}", error),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: GEMM is the computational workhorse of transformers. Narration helps track performance (TFLOPS) and diagnose cuBLAS errors.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

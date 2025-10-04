@@ -138,9 +138,66 @@ pub enum ServerError {
 
 ---
 
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Server startup** (ACTION_SPAWN)
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: ACTION_SPAWN,
+       target: "http-server".to_string(),
+       human: format!("HTTP server listening on {}", addr),
+       ..Default::default()
+   });
+   ```
+
+2. **Health check requests** (optional, DEBUG level)
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "health_check",
+       target: "health".to_string(),
+       correlation_id: Some(correlation_id),
+       human: "Health check requested".to_string(),
+       ..Default::default()
+   });
+   ```
+
+3. **Server shutdown** (ACTION_SHUTDOWN)
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: ACTION_SHUTDOWN,
+       target: "http-server".to_string(),
+       human: "HTTP server shutting down gracefully".to_string(),
+       ..Default::default()
+   });
+   ```
+
+4. **Bind failures** (with error context)
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: ACTION_SPAWN,
+       target: "http-server".to_string(),
+       error_kind: Some("bind_failed".to_string()),
+       human: format!("Failed to bind to {}: {}", addr, error),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Server lifecycle events are critical for debugging deployment issues and tracking worker availability.
+
+---
+
 **Status**: 📋 Ready for execution  
 **Owner**: Foundation-Alpha  
 **Created**: 2025-10-04
 
 ---
-Planned by Project Management Team 📋
+Planned by Project Management Team 📋  
+*Narration guidance added by Narration-Core Team 🎀*

@@ -59,3 +59,29 @@ Finalize all documentation: user guides, operator guides, troubleshooting, archi
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Documentation review completed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "docs_review",
+       target: "documentation-complete".to_string(),
+       human: "Documentation review completed".to_string(),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Documentation completeness is a deliverable. Narration tracks documentation milestones.
+
+**Note**: This is a documentation story. Minimal runtime narration, primarily for milestone tracking.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

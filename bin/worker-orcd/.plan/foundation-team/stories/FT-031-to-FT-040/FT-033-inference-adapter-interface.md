@@ -85,3 +85,39 @@ class GPTInferenceAdapter : public InferenceAdapter { /* ... */ };
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Adapter initialized**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "adapter_init",
+       target: adapter_type.to_string(),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("Initialized {} adapter", adapter_type),
+       ..Default::default()
+   });
+   ```
+
+2. **Adapter method called**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "adapter_call",
+       target: format!("{}.{}", adapter_type, method_name),
+       human: format!("Calling {}.{}()", adapter_type, method_name),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Adapter pattern enables multi-architecture support. Narration helps track which adapter is used and method calls.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

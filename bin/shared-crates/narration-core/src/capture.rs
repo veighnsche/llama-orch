@@ -183,9 +183,8 @@ impl CaptureAdapter {
     /// Assert that cute narration includes a substring.
     pub fn assert_cute_includes(&self, substring: &str) {
         let captured = self.captured();
-        let found = captured.iter().any(|n| {
-            n.cute.as_ref().map_or(false, |c| c.contains(substring))
-        });
+        let found =
+            captured.iter().any(|n| n.cute.as_ref().map_or(false, |c| c.contains(substring)));
         assert!(
             found,
             "Expected cute narration to include '{}', but found: {:?}",
@@ -204,9 +203,8 @@ impl CaptureAdapter {
     /// Assert that story narration includes a substring.
     pub fn assert_story_includes(&self, substring: &str) {
         let captured = self.captured();
-        let found = captured.iter().any(|n| {
-            n.story.as_ref().map_or(false, |s| s.contains(substring))
-        });
+        let found =
+            captured.iter().any(|n| n.story.as_ref().map_or(false, |s| s.contains(substring)));
         assert!(
             found,
             "Expected story narration to include '{}', but found: {:?}",
@@ -218,9 +216,9 @@ impl CaptureAdapter {
     /// Assert that story narration includes dialogue (quoted text).
     pub fn assert_story_has_dialogue(&self) {
         let captured = self.captured();
-        let found = captured.iter().any(|n| {
-            n.story.as_ref().map_or(false, |s| s.contains('"') || s.contains("'"))
-        });
+        let found = captured
+            .iter()
+            .any(|n| n.story.as_ref().map_or(false, |s| s.contains('"') || s.contains("'")));
         assert!(
             found,
             "Expected story narration to include dialogue (quotes), but found: {:?}",

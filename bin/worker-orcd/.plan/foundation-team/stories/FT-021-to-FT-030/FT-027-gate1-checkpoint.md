@@ -68,3 +68,29 @@
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Gate 1 checkpoint reached**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "milestone",
+       target: "gate-1-checkpoint".to_string(),
+       human: "Gate 1 checkpoint reached: HTTP + FFI + CUDA foundation complete".to_string(),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Gate checkpoints are major milestones. Narration creates an audit trail of project progress.
+
+**Note**: This is a meta-story (checkpoint). Minimal runtime narration, primarily for milestone tracking.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

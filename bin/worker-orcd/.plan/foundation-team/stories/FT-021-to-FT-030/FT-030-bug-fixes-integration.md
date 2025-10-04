@@ -51,3 +51,40 @@ Address bugs discovered during Llama/GPT integration, refine interfaces based on
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Bug fix applied**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "bug_fix",
+       target: bug_id.to_string(),
+       human: format!("Applied bug fix: {}", bug_description),
+       ..Default::default()
+   });
+   ```
+
+2. **Regression test passed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_complete",
+       target: format!("regression-{}", bug_id),
+       human: format!("Regression test passed for bug {}", bug_id),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Bug fixes and regression tests ensure stability. Narration creates an audit trail of fixes applied and tests passing.
+
+**Note**: This is a maintenance story. Narration depends on specific bugs encountered.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

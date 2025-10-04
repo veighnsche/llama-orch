@@ -328,3 +328,53 @@ private:
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **VRAM allocation** (ACTION_VRAM_ALLOCATE)
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_VRAM_RESIDENCY,
+       action: ACTION_VRAM_ALLOCATE,
+       target: format!("GPU{}", device_id),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("Allocated {} MB VRAM on GPU{} for {}", bytes / 1024 / 1024, device_id, purpose),
+       ..Default::default()
+   });
+   ```
+
+2. **VRAM deallocation** (ACTION_VRAM_DEALLOCATE)
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_VRAM_RESIDENCY,
+       action: ACTION_VRAM_DEALLOCATE,
+       target: format!("GPU{}", device_id),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("Deallocated {} MB VRAM on GPU{} ({} MB still in use)", bytes / 1024 / 1024, device_id, remaining / 1024 / 1024),
+       ..Default::default()
+   });
+   ```
+
+3. **VRAM OOM error**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_VRAM_RESIDENCY,
+       action: ACTION_VRAM_ALLOCATE,
+       target: format!("GPU{}", device_id),
+       device: Some(format!("GPU{}", device_id)),
+       error_kind: Some("vram_oom".to_string()),
+       human: format!("VRAM allocation failed on GPU{}: requested {} MB, only {} MB available", device_id, requested / 1024 / 1024, available / 1024 / 1024),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: VRAM allocation is a critical resource constraint. Narration helps diagnose OOM issues and track memory usage patterns.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

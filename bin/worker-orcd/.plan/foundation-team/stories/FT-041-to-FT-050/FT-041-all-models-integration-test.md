@@ -82,3 +82,53 @@ async fn test_all_three_models() {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Multi-model test started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_start",
+       target: "all-models-integration".to_string(),
+       human: format!("Starting all-models integration test ({} models)", model_count),
+       ..Default::default()
+   });
+   ```
+
+2. **Model test passed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_complete",
+       target: format!("model-{}", model_name),
+       model_ref: Some(model_name.clone()),
+       tokens_out: Some(tokens_generated),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("Model test passed: {} ({} tokens in {} ms)", model_name, tokens_generated, elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+3. **All models test completed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "test_complete",
+       target: "all-models-integration".to_string(),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("All-models test PASSED: {}/{} models succeeded ({} ms)", passed, total, elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Multi-model testing validates broad compatibility. Narration tracks which models pass/fail and overall test coverage.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

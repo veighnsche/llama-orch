@@ -460,3 +460,28 @@ TEST(StochasticSamplingTest, DeterministicWithSeed) {
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Token sampled (stochastic)**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "token_sample",
+       target: "stochastic".to_string(),
+       device: Some(format!("GPU{}", device_id)),
+       human: format!("Sampled token {} (stochastic, seed={}, temp={})", token_id, seed, temperature),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Stochastic sampling uses RNG. Narration helps verify reproducibility with same seed and track sampling behavior.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

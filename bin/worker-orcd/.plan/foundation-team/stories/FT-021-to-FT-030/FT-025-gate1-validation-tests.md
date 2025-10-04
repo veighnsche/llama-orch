@@ -59,3 +59,51 @@ Implement comprehensive validation tests for Gate 1 checkpoint. These tests veri
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Gate 1 validation started**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "gate_validation",
+       target: "gate-1".to_string(),
+       human: "Starting Gate 1 validation tests".to_string(),
+       ..Default::default()
+   });
+   ```
+
+2. **Gate 1 validation passed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "gate_validation",
+       target: "gate-1".to_string(),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("Gate 1 validation PASSED ({} ms)", elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+3. **Gate 1 validation failed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "gate_validation",
+       target: "gate-1".to_string(),
+       error_kind: Some("gate_failed".to_string()),
+       human: format!("Gate 1 validation FAILED: {}", failure_reason),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Gate validations are critical milestones. Narration creates an audit trail of gate passes/failures.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

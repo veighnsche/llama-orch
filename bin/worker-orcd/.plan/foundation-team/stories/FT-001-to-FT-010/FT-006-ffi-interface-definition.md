@@ -326,3 +326,29 @@ const char* cuda_error_message(int error_code);
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **FFI interface locked** (milestone event)
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: "ffi_lock",
+       target: "worker_ffi.h".to_string(),
+       human: "FFI interface locked and published to coordination/FFI_INTERFACE_LOCKED.md".to_string(),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: FFI lock is a critical milestone that unblocks Llama and GPT teams. Narration creates an audit trail of when the interface was finalized.
+
+**Note**: This is a design/documentation story with minimal runtime events. Narration is primarily for milestone tracking.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

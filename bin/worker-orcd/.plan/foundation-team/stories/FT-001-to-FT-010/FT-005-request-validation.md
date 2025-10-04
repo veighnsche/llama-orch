@@ -225,3 +225,42 @@ where
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **Validation failure** (with field details)
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: ACTION_INFERENCE_START,
+       target: req.job_id.clone(),
+       correlation_id: Some(correlation_id),
+       error_kind: Some("validation_failed".to_string()),
+       human: format!("Validation failed for job {}: {} must be {}", req.job_id, field, constraint),
+       ..Default::default()
+   });
+   ```
+
+2. **Multiple validation errors**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_WORKER_ORCD,
+       action: ACTION_INFERENCE_START,
+       target: req.job_id.clone(),
+       correlation_id: Some(correlation_id),
+       error_kind: Some("validation_failed".to_string()),
+       human: format!("Validation failed for job {}: {} errors ({})", req.job_id, error_count, field_list),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: Validation failures are common client errors. Narration helps identify which fields fail most often and guides API improvements.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*

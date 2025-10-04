@@ -50,3 +50,45 @@ Provide integration support for GPT team as they implement GPT-specific kernels 
 
 ---
 Planned by Project Management Team 📋
+
+---
+
+## 🎀 Narration Opportunities
+
+**From**: Narration-Core Team
+
+### Events to Narrate
+
+1. **GPT model loaded**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: "model_load",
+       target: model_name.clone(),
+       device: Some(format!("GPU{}", device_id)),
+       model_ref: Some(model_name.clone()),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("Loaded GPT model {} ({} MB VRAM, {} ms)", model_name, vram_mb, elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+2. **GPT inference completed**
+   ```rust
+   narrate_auto(NarrationFields {
+       actor: ACTOR_INFERENCE_ENGINE,
+       action: ACTION_INFERENCE_COMPLETE,
+       target: job_id.clone(),
+       correlation_id: Some(correlation_id),
+       model_ref: Some("gpt".to_string()),
+       tokens_out: Some(tokens_generated),
+       duration_ms: Some(elapsed.as_millis() as u64),
+       human: format!("GPT inference complete: {} tokens in {} ms", tokens_generated, elapsed.as_millis()),
+       ..Default::default()
+   });
+   ```
+
+**Why this matters**: GPT integration validates multi-architecture support. Narration helps track model loading and inference performance across architectures.
+
+---
+*Narration guidance added by Narration-Core Team 🎀*
