@@ -35,6 +35,8 @@ set(CUDA_SOURCES
     src/rng.cpp
     src/kv_cache.cpp
     src/gguf/header_parser.cpp
+    src/gguf/llama_metadata.cpp
+    src/io/mmap_file.cpp
 )
 
 # Kernel files
@@ -103,6 +105,8 @@ if(BUILD_TESTING)
         tests/kv_cache_test.cpp
         tests/test_gguf_header_parser.cpp
         tests/test_gguf_security_fuzzing.cpp
+        tests/test_llama_metadata.cpp
+        tests/test_mmap_file.cpp
     )
     
     # Build test executable

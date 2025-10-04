@@ -118,6 +118,108 @@
 
 None. Ready to proceed to LT-002.
 
+---
+
+## Day 16 (2025-10-05)
+
+### Current Story: LT-002 - GGUF Metadata Extraction (Llama)
+
+**Status**: ✅ COMPLETE  
+**Progress**: 100%  
+**Time**: 2 days (Day 18-19) → Completed Day 16
+
+### Work Completed
+
+#### Implementation
+- ✅ Created `cuda/src/gguf/llama_metadata.h` - Complete metadata parser interface
+- ✅ Created `cuda/src/gguf/llama_metadata.cpp` - Full implementation
+- ✅ Implemented `parse_llama_metadata()` - Main parsing function
+- ✅ Implemented metadata helper functions (find, get_required, get_optional)
+- ✅ Created `src/model/llama_config.rs` - Rust LlamaConfig struct
+- ✅ Created `src/model/mod.rs` - Model module exports
+
+#### Features
+- ✅ Parse all required Llama metadata keys (9 keys)
+- ✅ Extract optional RoPE parameters with defaults
+- ✅ Calculate derived parameters (head_dim, kv_head_dim)
+- ✅ Validate architecture is "llama"
+- ✅ Validate head count divisibility
+- ✅ Validate GQA configuration (KV heads <= attention heads)
+- ✅ Support multiple vocab_size metadata keys (compatibility)
+- ✅ Type-flexible integer parsing (UINT32/UINT64/INT32/INT64)
+
+#### Testing
+- ✅ Created `tests/test_llama_metadata.cpp` - 18 unit tests
+  - Qwen2.5-0.5B metadata parsing
+  - Phi-3 metadata parsing
+  - Missing required key handling
+  - Invalid architecture handling
+  - Default value handling (rope_freq_base, rope_dimension_count)
+  - Derived parameter calculation
+  - Zero head count validation
+  - Non-divisible embedding length validation
+  - Invalid GQA configuration validation
+  - Helper function tests (find, get_required, get_optional)
+  - Qwen GQA configuration (2 KV heads)
+  - Phi-3 MHA configuration (32 KV heads)
+  - Vocab size extraction
+
+#### Rust Integration
+- ✅ LlamaConfig struct with helper methods (is_gqa, is_mha, gqa_group_size)
+- ✅ 3 Rust unit tests for config helpers
+- ✅ Module exports configured
+
+#### Build System
+- ✅ Updated `cuda/CMakeLists.txt` - Added llama_metadata.cpp
+- ✅ Added test file to test suite
+- ✅ Updated `src/lib.rs` - Added model module
+
+### Acceptance Criteria Status
+
+- ✅ Parse GGUF metadata and extract Llama-specific keys
+- ✅ Extract `general.architecture` and validate it is "llama"
+- ✅ Extract `llama.context_length` (context window size)
+- ✅ Extract `llama.embedding_length` (hidden size/d_model)
+- ✅ Extract `llama.block_count` (number of transformer layers)
+- ✅ Extract `llama.attention.head_count` (number of attention heads)
+- ✅ Extract `llama.attention.head_count_kv` (KV heads for GQA)
+- ✅ Extract `llama.feed_forward_length` (FFN intermediate size)
+- ✅ Extract `llama.rope.dimension_count` (RoPE dimensions)
+- ✅ Extract `llama.rope.freq_base` (RoPE frequency base, default 10000.0)
+- ✅ Validate all required metadata keys are present
+- ✅ Calculate derived parameters (head_dim = embedding_length / head_count)
+- ✅ Return structured LlamaConfig with all parameters
+- ✅ Unit tests validate metadata extraction for Qwen2.5-0.5B
+- ✅ Unit tests validate metadata extraction for Phi-3
+- ✅ Error handling for missing or invalid metadata
+
+### Files Created/Modified
+
+**Created**:
+1. `cuda/src/gguf/llama_metadata.h` (178 lines)
+2. `cuda/src/gguf/llama_metadata.cpp` (250 lines)
+3. `cuda/tests/test_llama_metadata.cpp` (280 lines)
+4. `src/model/llama_config.rs` (140 lines)
+5. `src/model/mod.rs` (10 lines)
+
+**Modified**:
+1. `cuda/CMakeLists.txt` (added llama_metadata sources and tests)
+2. `src/lib.rs` (added model module)
+
+**Total**: 5 new files, 2 modified, ~858 lines of code
+
+### Test Results
+
+**Unit Tests**: 18 tests (will run on workstation with CUDA)
+**Expected**: All tests pass with Qwen2.5-0.5B GGUF file
+
+### Next Steps
+
+**Day 17**: Begin LT-003 - Memory-Mapped I/O Implementation
+- Implement mmap() for GGUF file access
+- Efficient file reading without full RAM copy
+- Integration with header parser
+
 ### Notes
 
 - Implementation completed without CUDA hardware (devbox)

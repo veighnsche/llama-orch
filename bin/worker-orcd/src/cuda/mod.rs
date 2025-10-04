@@ -32,9 +32,9 @@
 
 mod ffi;
 mod error;
-mod context;
-mod model;
-mod inference;
+pub mod context;
+pub mod inference;
+pub mod model;
 
 pub use error::{CudaError, CudaErrorCode};
 pub use context::Context;
