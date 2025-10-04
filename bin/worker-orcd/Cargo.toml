@@ -28,7 +28,7 @@ reqwest = { workspace = true }
 futures = { workspace = true }
 chrono = { workspace = true }
 thiserror = { workspace = true }
-observability-narration-core = { path = "../shared-crates/narration-core" }
+observability-narration-core = { path = "../shared-crates/narration-core", features = ["axum"] }
 
 [dev-dependencies]
 serial_test = "3.0"

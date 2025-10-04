@@ -6,8 +6,12 @@
 //! - M0-W-1320: Health endpoint returns 200 OK with {"status": "healthy"}
 
 use crate::http::routes::AppState;
-use axum::{extract::State, Json};
+use axum::{
+    extract::{Extension, State},
+    Json,
+};
 use serde::Serialize;
+use tracing::debug;
 
 /// Health check response
 ///
@@ -26,7 +30,15 @@ pub struct HealthResponse {
 /// - VRAM residency check
 /// - Uptime tracking
 /// - Model load status
-pub async fn handle_health(State(_state): State<AppState>) -> Json<HealthResponse> {
+pub async fn handle_health(
+    Extension(correlation_id): Extension<String>,
+    State(_state): State<AppState>,
+) -> Json<HealthResponse> {
+    debug!(
+        correlation_id = %correlation_id,
+        "Health check requested"
+    );
+
     // Per spec: simple health check
     // VRAM checks and detailed status deferred to M1+
     Json(HealthResponse { status: "healthy".to_string() })

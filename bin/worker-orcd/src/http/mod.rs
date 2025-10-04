@@ -16,6 +16,7 @@ pub mod execute;
 pub mod health;
 pub mod routes;
 pub mod server;
+pub mod sse;
 pub mod validation;
 
 // Re-export commonly used types

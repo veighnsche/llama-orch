@@ -1,21 +1,26 @@
 //! HTTP route configuration
 //!
-//! This module defines all HTTP routes for the worker-orcd API.
 //!
 //! # Endpoints
 //! - `GET /health` - Health check endpoint
 //! - `POST /execute` - Execute inference request
 //!
+//! # Middleware
+//! - Correlation ID middleware (extracts/generates X-Correlation-ID)
+//!
 //! # Spec References
 //! - M0-W-1320: Health endpoint
 //! - M0-W-1330: Execute endpoint
+//! - WORK-3040: Correlation ID middleware
 
 use crate::cuda::safe::ModelHandle;
 use crate::http::{execute, health};
 use axum::{
+    middleware,
     routing::{get, post},
     Router,
 };
+use observability_narration_core::axum::correlation_middleware;
 use std::sync::Arc;
 
 /// Shared application state
@@ -28,14 +33,17 @@ pub struct AppState {
     pub model: Arc<ModelHandle>,
 }
 
-/// Create HTTP router with all endpoints
+/// Create HTTP router with all endpoints and middleware
 ///
 /// # Arguments
 /// * `worker_id` - Worker UUID
 /// * `model` - Loaded CUDA model handle
 ///
 /// # Returns
-/// Configured Axum router with all endpoints
+/// Configured Axum router with all endpoints and middleware
+///
+/// # Middleware Chain
+/// 1. Correlation ID middleware (extracts/generates X-Correlation-ID)
 pub fn create_router(worker_id: String, model: ModelHandle) -> Router {
     let state = AppState { worker_id, model: Arc::new(model) };
 
@@ -43,12 +51,12 @@ pub fn create_router(worker_id: String, model: ModelHandle) -> Router {
         .route("/health", get(health::handle_health))
         .route("/execute", post(execute::handle_execute))
         .with_state(state)
+        .layer(middleware::from_fn(correlation_middleware))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::body::Body;
     use axum::http::{Request, StatusCode};
     use tower::ServiceExt;
 
