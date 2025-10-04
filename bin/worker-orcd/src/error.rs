@@ -31,10 +31,10 @@ impl WorkerError {
     /// Get stable error code for API responses
     pub fn code(&self) -> &'static str {
         match self {
-            Self::Cuda(CudaError::OutOfMemory { .. }) => "VRAM_OOM",
+            Self::Cuda(CudaError::OutOfMemory(_)) => "VRAM_OOM",
             Self::Cuda(CudaError::ModelLoadFailed(_)) => "MODEL_LOAD_FAILED",
             Self::Cuda(CudaError::InferenceFailed(_)) => "INFERENCE_FAILED",
-            Self::Cuda(CudaError::VramResidencyFailed) => "VRAM_RESIDENCY_FAILED",
+            Self::Cuda(CudaError::VramResidencyFailed(_)) => "VRAM_RESIDENCY_FAILED",
             Self::Cuda(_) => "CUDA_ERROR",
             Self::InvalidRequest(_) => "INVALID_REQUEST",
             Self::Timeout => "INFERENCE_TIMEOUT",
@@ -47,7 +47,7 @@ impl WorkerError {
     pub fn is_retriable(&self) -> bool {
         matches!(
             self,
-            Self::Cuda(CudaError::OutOfMemory { .. }) | Self::Timeout | Self::Internal(_)
+            Self::Cuda(CudaError::OutOfMemory(_)) | Self::Timeout | Self::Internal(_)
         )
     }
 

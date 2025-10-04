@@ -76,12 +76,12 @@ async fn main() -> anyhow::Result<()> {
     );
 
     // Initialize CUDA context
-    let cuda_ctx = cuda::safe::ContextHandle::new(args.gpu_device)?;
+    let cuda_ctx = cuda::Context::new(args.gpu_device)?;
     tracing::info!(gpu_device = args.gpu_device, "CUDA context initialized");
 
     // Load model to VRAM
     tracing::info!(model = %args.model, "Loading model to VRAM...");
-    let cuda_model = cuda::safe::ModelHandle::load(&cuda_ctx, &args.model)?;
+    let cuda_model = cuda_ctx.load_model(&args.model)?;
     tracing::info!(vram_bytes = cuda_model.vram_bytes(), "Model loaded to VRAM");
 
     // Call back to pool manager

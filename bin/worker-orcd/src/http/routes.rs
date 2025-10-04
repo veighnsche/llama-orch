@@ -13,7 +13,7 @@
 //! - M0-W-1330: Execute endpoint
 //! - WORK-3040: Correlation ID middleware
 
-use crate::cuda::safe::ModelHandle;
+use crate::cuda::Model;
 use crate::http::{execute, health};
 use axum::{
     middleware,
@@ -30,21 +30,21 @@ pub struct AppState {
     pub worker_id: String,
 
     /// Loaded CUDA model
-    pub model: Arc<ModelHandle>,
+    pub model: Arc<Model>,
 }
 
 /// Create HTTP router with all endpoints and middleware
 ///
 /// # Arguments
-/// * `worker_id` - Worker UUID
-/// * `model` - Loaded CUDA model handle
+/// * `worker_id` - Unique worker identifier (UUID)
+/// * `model` - Loaded CUDA model
 ///
 /// # Returns
-/// Configured Axum router with all endpoints and middleware
+/// Router with all endpoints and middleware configured
 ///
 /// # Middleware Chain
 /// 1. Correlation ID middleware (extracts/generates X-Correlation-ID)
-pub fn create_router(worker_id: String, model: ModelHandle) -> Router {
+pub fn create_router(worker_id: String, model: Model) -> Router {
     let state = AppState { worker_id, model: Arc::new(model) };
 
     Router::new()
