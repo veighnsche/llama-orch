@@ -398,7 +398,7 @@ TEST_F(EmbeddingKernelTest, GPTDimensions) {
     for (int i = 0; i < gpt_batch; ++i) {
         float expected = h_token_ids[i] * 0.0001f;
         float actual = __half2float(h_embeddings[i * gpt_hidden_dim]);
-        EXPECT_NEAR(actual, expected, 0.001f) << "Token " << i;
+        EXPECT_NEAR(actual, expected, 0.002f) << "Token " << i;  // FP16 precision tolerance
     }
     
     cudaFree(d_gpt_token_ids);
