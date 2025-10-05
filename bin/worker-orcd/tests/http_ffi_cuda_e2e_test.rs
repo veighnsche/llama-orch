@@ -3,14 +3,12 @@
 //! Tests complete flow: HTTP → Rust → FFI → C++ → CUDA → C++ → FFI → Rust → HTTP
 //!
 //! # Story
-//! FT-024: HTTP-FFI-CUDA Integration Test
 //!
 //! # Spec References
 //! - M0-W-1820: Integration tests
 
 use worker_orcd::tests::integration::{
-    assert_event_order, extract_tokens, make_test_request, TestConfig, TestModel,
-    WorkerTestHarness,
+    assert_event_order, collect_sse_events, extract_tokens, make_test_request, TestModel, WorkerTestHarness,
 };
 use worker_orcd::http::sse::{InferenceEvent, StopReason};
 
@@ -52,7 +50,7 @@ async fn test_complete_inference_flow() {
         .contains("text/event-stream"));
     
     // Collect events
-    let events = harness.collect_sse_events(response).await;
+    let events = collect_sse_events(response).await.unwrap();
     
     // Validate event sequence
     assert_event_order(&events).expect("Invalid event order");
@@ -107,7 +105,7 @@ async fn test_determinism() {
     
     // Run first generation
     let response1 = harness.execute(req1.clone()).await.unwrap();
-    let events1 = harness.collect_sse_events(response1).await;
+    let events1 = collect_sse_events(response1).await.unwrap();
     let tokens1 = extract_tokens(&events1);
     
     // Run second generation with same parameters
@@ -115,7 +113,7 @@ async fn test_determinism() {
     req2.job_id = "det-test-2".to_string();
     
     let response2 = harness.execute(req2).await.unwrap();
-    let events2 = harness.collect_sse_events(response2).await;
+    let events2 = collect_sse_events(response2).await.unwrap();
     let tokens2 = extract_tokens(&events2);
     
     // Same seed + temperature=0 should produce identical tokens
@@ -152,7 +150,7 @@ async fn test_multiple_requests() {
         );
         
         let response = harness.execute(req).await.expect("Execute failed");
-        let events = harness.collect_sse_events(response).await;
+        let events = collect_sse_events(response).await.unwrap();
         
         assert_event_order(&events).expect("Invalid event order");
         
@@ -219,7 +217,7 @@ async fn test_vram_only_operation() {
     let req = make_test_request("vram-test-1", "Test VRAM enforcement", 20);
     
     let response = harness.execute(req).await.expect("Execute failed");
-    let events = harness.collect_sse_events(response).await;
+    let events = collect_sse_events(response).await.unwrap();
     
     assert_event_order(&events).expect("Invalid event order");
     
@@ -309,7 +307,7 @@ async fn test_inference_performance() {
     
     let start = std::time::Instant::now();
     let response = harness.execute(req).await.expect("Execute failed");
-    let events = harness.collect_sse_events(response).await;
+    let events = collect_sse_events(response).await.unwrap();
     let elapsed = start.elapsed();
     
     let tokens = extract_tokens(&events);

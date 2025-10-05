@@ -16,7 +16,7 @@
 //! - Integration tests passing
 
 use worker_orcd::tests::integration::{
-    assert_event_order, extract_tokens, make_test_request, TestModel, WorkerTestHarness,
+    assert_event_order, collect_sse_events, extract_tokens, make_test_request, TestModel, WorkerTestHarness,
 };
 use worker_orcd::http::sse::InferenceEvent;
 
@@ -86,7 +86,7 @@ async fn gate1_sse_streaming() {
     let req = make_test_request("gate1-sse-1", "Test SSE streaming", 10);
     
     let response = harness.execute(req).await.unwrap();
-    let events = harness.collect_sse_events(response).await;
+    let events = collect_sse_events(response).await.unwrap();
     
     // Verify SSE event format
     assert_event_order(&events).expect("Invalid event order");
@@ -123,7 +123,7 @@ async fn gate1_ffi_interface_stable() {
     let req = make_test_request("gate1-ffi-1", "Test FFI interface", 10);
     
     let response = harness.execute(req).await.unwrap();
-    let events = harness.collect_sse_events(response).await;
+    let events = collect_sse_events(response).await.unwrap();
     
     assert_event_order(&events).unwrap();
     
@@ -157,7 +157,7 @@ async fn gate1_cuda_context_initialization() {
     let req = make_test_request("gate1-cuda-1", "Test CUDA context", 5);
     
     let response = harness.execute(req).await.unwrap();
-    let events = harness.collect_sse_events(response).await;
+    let events = collect_sse_events(response).await.unwrap();
     
     assert_event_order(&events).unwrap();
     
@@ -187,7 +187,7 @@ async fn gate1_embedding_lookup_kernel() {
     let req = make_test_request("gate1-embed-1", "Test embedding lookup", 5);
     
     let response = harness.execute(req).await.unwrap();
-    let events = harness.collect_sse_events(response).await;
+    let events = collect_sse_events(response).await.unwrap();
     
     assert_event_order(&events).unwrap();
     
@@ -214,7 +214,7 @@ async fn gate1_sampling_kernels() {
     req.temperature = 0.0; // Greedy
     
     let response = harness.execute(req).await.unwrap();
-    let events = harness.collect_sse_events(response).await;
+    let events = collect_sse_events(response).await.unwrap();
     
     assert_event_order(&events).unwrap();
     
@@ -247,7 +247,7 @@ async fn gate1_vram_only_enforcement() {
     let req = make_test_request("gate1-vram-1", "Test VRAM enforcement", 10);
     
     let response = harness.execute(req).await.unwrap();
-    let events = harness.collect_sse_events(response).await;
+    let events = collect_sse_events(response).await.unwrap();
     
     assert_event_order(&events).unwrap();
     
@@ -301,14 +301,14 @@ async fn gate1_seeded_rng_reproducibility() {
     req1.seed = Some(42);
     
     let response1 = harness.execute(req1.clone()).await.unwrap();
-    let events1 = harness.collect_sse_events(response1).await;
+    let events1 = collect_sse_events(response1).await.unwrap();
     let tokens1 = extract_tokens(&events1);
     
     let mut req2 = req1.clone();
     req2.job_id = "gate1-repro-2".to_string();
     
     let response2 = harness.execute(req2).await.unwrap();
-    let events2 = harness.collect_sse_events(response2).await;
+    let events2 = collect_sse_events(response2).await.unwrap();
     let tokens2 = extract_tokens(&events2);
     
     assert_eq!(tokens1, tokens2, "Reproducibility failed");
@@ -339,7 +339,7 @@ async fn gate1_kv_cache_management() {
     let req = make_test_request("gate1-kv-1", "Test KV cache management", 50);
     
     let response = harness.execute(req).await.unwrap();
-    let events = harness.collect_sse_events(response).await;
+    let events = collect_sse_events(response).await.unwrap();
     
     assert_event_order(&events).unwrap();
     
@@ -398,7 +398,7 @@ async fn gate1_complete_validation() {
     eprintln!("✅ Execute endpoint working");
     
     // 3. SSE streaming
-    let events = harness.collect_sse_events(response).await;
+    let events = collect_sse_events(response).await.unwrap();
     assert_event_order(&events).expect("Invalid event order");
     eprintln!("✅ SSE streaming working");
     
@@ -413,14 +413,14 @@ async fn gate1_complete_validation() {
     req1.seed = Some(42);
     
     let response1 = harness.execute(req1.clone()).await.unwrap();
-    let events1 = harness.collect_sse_events(response1).await;
+    let events1 = collect_sse_events(response1).await.unwrap();
     let tokens1 = extract_tokens(&events1);
     
     let mut req2 = req1.clone();
     req2.job_id = "gate1-repro-b".to_string();
     
     let response2 = harness.execute(req2).await.unwrap();
-    let events2 = harness.collect_sse_events(response2).await;
+    let events2 = collect_sse_events(response2).await.unwrap();
     let tokens2 = extract_tokens(&events2);
     
     assert_eq!(tokens1, tokens2, "Reproducibility failed");

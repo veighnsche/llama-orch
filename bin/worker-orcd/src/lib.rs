@@ -12,6 +12,7 @@ pub mod model;
 pub mod models;
 pub mod sampling_config;
 pub mod startup;
+pub mod tests;
 pub mod tokenizer;
 pub mod util;
 

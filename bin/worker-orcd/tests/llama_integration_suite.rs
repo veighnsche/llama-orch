@@ -20,8 +20,14 @@ fn test_qwen_full_pipeline() {
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
     let adapter = LlamaInferenceAdapter::new_qwen(model);
     
-    // 2. Create tokenizer
-    let tokens = vec!["<BOS>".to_string(), "<EOS>".to_string(), "H".to_string(), "e".to_string()];
+    // 2. Create tokenizer with "He" in vocabulary
+    let tokens = vec![
+        "<BOS>".to_string(), 
+        "<EOS>".to_string(), 
+        "H".to_string(), 
+        "e".to_string(),
+        "He".to_string(),  // Add merged token to vocabulary
+    ];
     let vocab = Vocabulary::new(tokens, 0, 1, None).unwrap();
     let merges = MergeTable::new(vec!["H e".to_string()]).unwrap();
     let encoder = BPEEncoder::new(vocab.clone(), merges);
@@ -59,8 +65,14 @@ fn test_phi3_full_pipeline() {
     let model = Phi3WeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
     let adapter = LlamaInferenceAdapter::new_phi3(model);
     
-    // 2. Create tokenizer
-    let tokens = vec!["<BOS>".to_string(), "<EOS>".to_string(), "H".to_string(), "e".to_string()];
+    // 2. Create tokenizer with "He" in vocabulary
+    let tokens = vec![
+        "<BOS>".to_string(), 
+        "<EOS>".to_string(), 
+        "H".to_string(), 
+        "e".to_string(),
+        "He".to_string(),  // Add merged token to vocabulary
+    ];
     let vocab = Vocabulary::new(tokens, 0, 1, None).unwrap();
     let merges = MergeTable::new(vec!["H e".to_string()]).unwrap();
     let encoder = BPEEncoder::new(vocab.clone(), merges);
