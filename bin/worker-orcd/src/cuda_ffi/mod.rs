@@ -184,34 +184,20 @@ impl CudaContext {
             return Ok(Self { device });
         }
         
-        // Production mode: Validate GPU availability using gpu-info
+        // Production mode: Log GPU initialization
         #[cfg(not(test))]
         {
-            let gpu_info = gpu_info::detect_gpus();
-            if !gpu_info.available {
-                return Err(CudaError::InitFailed(
-                    "No NVIDIA GPU detected. This worker requires GPU.".to_string(),
-                ));
-            }
-            
-            // Validate device index
-            let gpu = gpu_info.validate_device(device).map_err(|_e| {
-                CudaError::InvalidDevice(device)
-            })?;
-            
             tracing::info!(
                 device = %device,
-                name = %gpu.name,
-                vram_gb = %(gpu.vram_total_bytes / 1024 / 1024 / 1024),
-                compute_cap = ?gpu.compute_capability,
-                "Initializing CUDA context"
+                "Initializing CUDA context (stub mode)"
             );
             
             // TODO(ARCH-CHANGE): Implement actual CUDA initialization per ARCHITECTURE_CHANGE_PLAN.md Phase 3:
             // - Use cudaSetDevice to select GPU
             // - Initialize cuBLAS handle
+            // - Validate GPU availability
             // See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md Issue #11 (unsafe CUDA FFI)
-            tracing::info!(device = %device, "CUDA context initialized (stub)");
+            
             Ok(Self { device })
         }
     }

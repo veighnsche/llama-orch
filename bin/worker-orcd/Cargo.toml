@@ -14,6 +14,34 @@ cuda = []  # Enable CUDA support (requires NVIDIA GPU + CUDA toolkit)
 name = "worker-orcd"
 path = "src/main.rs"
 
+[[test]]
+name = "tokenizer_conformance_qwen"
+path = "tests/tokenizer_conformance_qwen.rs"
+
+[[test]]
+name = "qwen_integration"
+path = "tests/qwen_integration.rs"
+
+[[test]]
+name = "phi3_integration"
+path = "tests/phi3_integration.rs"
+
+[[test]]
+name = "adapter_integration"
+path = "tests/adapter_integration.rs"
+
+[[test]]
+name = "llama_integration_suite"
+path = "tests/llama_integration_suite.rs"
+
+[[test]]
+name = "reproducibility_validation"
+path = "tests/reproducibility_validation.rs"
+
+[[test]]
+name = "vram_pressure_tests"
+path = "tests/vram_pressure_tests.rs"
+
 [dependencies]
 tokio = { workspace = true }
 anyhow.workspace = true

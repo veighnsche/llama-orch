@@ -50,6 +50,8 @@ set(KERNEL_SOURCES
     kernels/rope.cu
     kernels/rmsnorm.cu
     kernels/residual.cu
+    kernels/gqa_attention.cu
+    kernels/swiglu.cu
     kernels/embedding.cu
     kernels/kv_cache.cu
 )
@@ -117,6 +119,8 @@ if(BUILD_TESTING)
         tests/test_rope_kernel.cpp
         tests/test_rmsnorm_kernel.cpp
         tests/test_residual_kernel.cpp
+        tests/test_gqa_attention.cpp
+        tests/test_swiglu.cpp
     )
     
     # Build test executable
