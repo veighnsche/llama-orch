@@ -24,8 +24,11 @@
 //!
 //! Spec: FT-035
 
+mod parser;
+
 use std::collections::HashMap;
 use thiserror::Error;
+use parser::GGUFParser;
 
 /// GGUF parsing errors
 #[derive(Debug, Error)]
@@ -69,6 +72,8 @@ pub enum MetadataValue {
     Float(f64),
     /// Boolean value
     Bool(bool),
+    /// Array value (stores element type and count)
+    Array { elem_type: u32, count: u64 },
 }
 
 impl GGUFMetadata {
@@ -86,9 +91,8 @@ impl GGUFMetadata {
     /// - Invalid GGUF format
     /// - Unsupported version
     pub fn from_file(path: &str) -> Result<Self, GGUFError> {
-        // TODO: Implement actual GGUF parsing
-        // For now, return stub metadata based on filename
-        let metadata = Self::stub_metadata_from_filename(path);
+        let mut parser = GGUFParser::new(path)?;
+        let metadata = parser.parse()?;
         Ok(Self { metadata })
     }
 
@@ -101,40 +105,50 @@ impl GGUFMetadata {
     }
 
     /// Get vocabulary size from metadata
+    ///
+    /// Vocab size comes from the tokenizer.ggml.tokens array length
     pub fn vocab_size(&self) -> Result<usize, GGUFError> {
-        match self.metadata.get("llama.vocab_size") {
-            Some(MetadataValue::Int(i)) => Ok(*i as usize),
-            _ => Err(GGUFError::MissingKey("llama.vocab_size".to_string())),
+        match self.metadata.get("tokenizer.ggml.tokens") {
+            Some(MetadataValue::Array { count, .. }) => Ok(*count as usize),
+            _ => Err(GGUFError::MissingKey("tokenizer.ggml.tokens".to_string())),
         }
     }
 
     /// Get hidden dimension from metadata
     pub fn hidden_dim(&self) -> Result<usize, GGUFError> {
-        match self.metadata.get("llama.embedding_length") {
+        let arch = self.architecture()?;
+        let key = format!("{}.embedding_length", arch);
+        match self.metadata.get(&key) {
             Some(MetadataValue::Int(i)) => Ok(*i as usize),
-            _ => Err(GGUFError::MissingKey("llama.embedding_length".to_string())),
+            _ => Err(GGUFError::MissingKey(key)),
         }
     }
 
     /// Get number of layers from metadata
     pub fn num_layers(&self) -> Result<usize, GGUFError> {
-        match self.metadata.get("llama.block_count") {
+        let arch = self.architecture()?;
+        let key = format!("{}.block_count", arch);
+        match self.metadata.get(&key) {
             Some(MetadataValue::Int(i)) => Ok(*i as usize),
-            _ => Err(GGUFError::MissingKey("llama.block_count".to_string())),
+            _ => Err(GGUFError::MissingKey(key)),
         }
     }
 
     /// Get number of attention heads from metadata
     pub fn num_heads(&self) -> Result<usize, GGUFError> {
-        match self.metadata.get("llama.attention.head_count") {
+        let arch = self.architecture()?;
+        let key = format!("{}.attention.head_count", arch);
+        match self.metadata.get(&key) {
             Some(MetadataValue::Int(i)) => Ok(*i as usize),
-            _ => Err(GGUFError::MissingKey("llama.attention.head_count".to_string())),
+            _ => Err(GGUFError::MissingKey(key)),
         }
     }
 
     /// Get number of KV heads from metadata
     pub fn num_kv_heads(&self) -> Result<usize, GGUFError> {
-        match self.metadata.get("llama.attention.head_count_kv") {
+        let arch = self.architecture()?;
+        let key = format!("{}.attention.head_count_kv", arch);
+        match self.metadata.get(&key) {
             Some(MetadataValue::Int(i)) => Ok(*i as usize),
             _ => {
                 // Fallback to num_heads (MHA)
@@ -145,15 +159,19 @@ impl GGUFMetadata {
 
     /// Get context length from metadata
     pub fn context_length(&self) -> Result<usize, GGUFError> {
-        match self.metadata.get("llama.context_length") {
+        let arch = self.architecture()?;
+        let key = format!("{}.context_length", arch);
+        match self.metadata.get(&key) {
             Some(MetadataValue::Int(i)) => Ok(*i as usize),
-            _ => Err(GGUFError::MissingKey("llama.context_length".to_string())),
+            _ => Err(GGUFError::MissingKey(key)),
         }
     }
 
     /// Get RoPE frequency base from metadata
     pub fn rope_freq_base(&self) -> Result<f32, GGUFError> {
-        match self.metadata.get("llama.rope.freq_base") {
+        let arch = self.architecture()?;
+        let key = format!("{}.rope.freq_base", arch);
+        match self.metadata.get(&key) {
             Some(MetadataValue::Float(f)) => Ok(*f as f32),
             _ => Ok(10000.0), // Default
         }
@@ -168,52 +186,6 @@ impl GGUFMetadata {
         }
     }
 
-    /// Stub metadata from filename (fallback when GGUF parsing not implemented)
-    fn stub_metadata_from_filename(path: &str) -> HashMap<String, MetadataValue> {
-        let mut metadata = HashMap::new();
-        let path_lower = path.to_lowercase();
-
-        // Detect architecture
-        let arch = if path_lower.contains("qwen") || path_lower.contains("phi") || path_lower.contains("llama") {
-            "llama"
-        } else if path_lower.contains("gpt") {
-            "gpt"
-        } else {
-            "unknown"
-        };
-        metadata.insert("general.architecture".to_string(), MetadataValue::String(arch.to_string()));
-
-        // Qwen-specific metadata
-        if path_lower.contains("qwen") {
-            metadata.insert("llama.vocab_size".to_string(), MetadataValue::Int(151936));
-            metadata.insert("llama.embedding_length".to_string(), MetadataValue::Int(896));
-            metadata.insert("llama.block_count".to_string(), MetadataValue::Int(24));
-            metadata.insert("llama.attention.head_count".to_string(), MetadataValue::Int(14));
-            metadata.insert("llama.attention.head_count_kv".to_string(), MetadataValue::Int(2));
-            metadata.insert("llama.context_length".to_string(), MetadataValue::Int(32768));
-            metadata.insert("llama.rope.freq_base".to_string(), MetadataValue::Float(1000000.0));
-        }
-        // Phi-3-specific metadata
-        else if path_lower.contains("phi") {
-            metadata.insert("llama.vocab_size".to_string(), MetadataValue::Int(32064));
-            metadata.insert("llama.embedding_length".to_string(), MetadataValue::Int(3072));
-            metadata.insert("llama.block_count".to_string(), MetadataValue::Int(32));
-            metadata.insert("llama.attention.head_count".to_string(), MetadataValue::Int(32));
-            metadata.insert("llama.attention.head_count_kv".to_string(), MetadataValue::Int(32));
-            metadata.insert("llama.context_length".to_string(), MetadataValue::Int(4096));
-            metadata.insert("llama.rope.freq_base".to_string(), MetadataValue::Float(10000.0));
-        }
-        // GPT-2-specific metadata
-        else if path_lower.contains("gpt2") {
-            metadata.insert("llama.vocab_size".to_string(), MetadataValue::Int(50257));
-            metadata.insert("llama.embedding_length".to_string(), MetadataValue::Int(768));
-            metadata.insert("llama.block_count".to_string(), MetadataValue::Int(12));
-            metadata.insert("llama.attention.head_count".to_string(), MetadataValue::Int(12));
-            metadata.insert("llama.context_length".to_string(), MetadataValue::Int(1024));
-        }
-
-        metadata
-    }
 }
 
 #[cfg(test)]
