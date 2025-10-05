@@ -15,7 +15,7 @@ use std::str;
 ///
 /// # Example
 /// ```
-/// use worker_orcd::util::utf8::Utf8Buffer;
+/// use worker_tokenizer::util::utf8::Utf8Buffer;
 ///
 /// let mut buffer = Utf8Buffer::new();
 ///
@@ -48,16 +48,14 @@ impl Utf8Buffer {
     /// # Arguments
     /// * `bytes` - Bytes to push (may contain partial UTF-8 sequences)
     ///
-    /// # Returns
     /// Vector of complete UTF-8 strings that can be safely emitted
     pub fn push(&mut self, bytes: &[u8]) -> Vec<String> {
         self.buffer.extend_from_slice(bytes);
 
         let mut result = Vec::new();
-        let mut valid_up_to = 0;
 
         // Find the last valid UTF-8 boundary
-        match str::from_utf8(&self.buffer) {
+        let valid_up_to = match str::from_utf8(&self.buffer) {
             Ok(s) => {
                 // All bytes are valid UTF-8
                 if !s.is_empty() {
@@ -66,22 +64,15 @@ impl Utf8Buffer {
                 self.buffer.clear();
                 return result;
             }
-            Err(e) => {
-                // Some bytes are invalid or incomplete
-                valid_up_to = e.valid_up_to();
-            }
-        }
+            Err(e) => e.valid_up_to(),
+        };
 
-        // Extract valid UTF-8 prefix
+        // Split at the last valid boundary
         if valid_up_to > 0 {
-            let valid_bytes = &self.buffer[..valid_up_to];
-            if let Ok(s) = str::from_utf8(valid_bytes) {
-                if !s.is_empty() {
-                    result.push(s.to_string());
-                }
+            let valid_bytes = self.buffer[..valid_up_to].to_vec();
+            if let Ok(s) = str::from_utf8(&valid_bytes) {
+                result.push(s.to_string());
             }
-
-            // Keep only the incomplete suffix
             self.buffer.drain(..valid_up_to);
         }
 

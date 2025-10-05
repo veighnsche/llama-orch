@@ -191,8 +191,15 @@ mod tests {
         let model_path = temp_dir.path().join("model.gguf");
         fs::File::create(&model_path).unwrap();
         
+        // Save current directory and change to temp_dir to avoid finding tokenizer.json in project root
+        let original_dir = std::env::current_dir().unwrap();
+        std::env::set_current_dir(temp_dir.path()).unwrap();
+        
         // Don't create tokenizer.json
         let result = TokenizerDiscovery::find_tokenizer_json(&model_path);
+        
+        // Restore original directory
+        std::env::set_current_dir(original_dir).unwrap();
         
         assert!(result.is_err());
         match result {
