@@ -6,7 +6,7 @@
 //!
 //! Spec: M0-W-1361, M0-W-1362
 
-use crate::tokenizer::{BPEEncoder, BPEDecoder, HfJsonTokenizer, TokenizerError};
+use crate::tokenizer::{BPEEncoder, BPEDecoder, hf_json::HfJsonTokenizer, TokenizerError};
 use std::path::Path;
 
 /// Tokenizer backend selection

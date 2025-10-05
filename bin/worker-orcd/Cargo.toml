@@ -66,6 +66,14 @@ path = "tests/utf8_edge_cases.rs"
 name = "cancellation_integration"
 path = "tests/cancellation_integration.rs"
 
+[[test]]
+name = "correlation_id_middleware_test"
+path = "tests/correlation_id_middleware_test.rs"
+
+[[test]]
+name = "phi3_tokenizer_conformance"
+path = "tests/phi3_tokenizer_conformance.rs"
+
 [[bench]]
 name = "performance_baseline"
 harness = false
