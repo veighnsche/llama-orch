@@ -10,7 +10,7 @@
 
 #include "gpt_weights.h"
 #include "../gguf/header_parser.h"
-#include "../device_memory.h"
+#include "device_memory.h"
 #include <cuda_runtime.h>
 #include <stdexcept>
 #include <sstream>

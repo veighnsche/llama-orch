@@ -9,7 +9,8 @@
  */
 
 #include "gpt_model.h"
-#include "../gpt_transformer_layer.h"
+#include "gpt_transformer_layer.h"
+#include <cuda_runtime.h>
 #include <stdexcept>
 #include <cstring>
 

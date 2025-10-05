@@ -4,12 +4,12 @@
 //
 // Story: GT-030
 
+#include <gtest/gtest.h>
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-#include <cassert>
 #include <cstdint>
 
 extern "C" {
@@ -49,48 +49,38 @@ bool approx_equal(float a, float b, float tol = 1e-3f) {
     return fabsf(a - b) <= tol;
 }
 
-void test_storage_size() {
-    printf("Test 1: MXFP4 storage size calculation...\n");
-    
+TEST(MXFP4Dequant, StorageSize) {
     // 32 elements = 1 block = 17 bytes
-    assert(cuda_mxfp4_storage_size(32) == 17);
+    EXPECT_EQ(cuda_mxfp4_storage_size(32), 17);
     
     // 64 elements = 2 blocks = 34 bytes
-    assert(cuda_mxfp4_storage_size(64) == 34);
+    EXPECT_EQ(cuda_mxfp4_storage_size(64), 34);
     
     // 33 elements = 2 blocks = 34 bytes (rounds up)
-    assert(cuda_mxfp4_storage_size(33) == 34);
+    EXPECT_EQ(cuda_mxfp4_storage_size(33), 34);
     
     // 1024 elements = 32 blocks = 544 bytes
-    assert(cuda_mxfp4_storage_size(1024) == 544);
-    
-    printf("  ✓ Storage size calculations correct\n");
+    EXPECT_EQ(cuda_mxfp4_storage_size(1024), 544);
 }
 
-void test_block_validation() {
-    printf("Test 2: MXFP4 block validation...\n");
-    
+TEST(MXFP4Dequant, BlockValidation) {
     uint8_t valid_block[17];
     for (int i = 0; i < 16; i++) {
         valid_block[i] = 0x00;
     }
     valid_block[16] = 0x7F;  // Scale = 2^0 = 1.0
     
-    assert(cuda_mxfp4_validate_block(valid_block, 17) == true);
+    EXPECT_TRUE(cuda_mxfp4_validate_block(valid_block, 17));
     
     // Invalid: wrong size
-    assert(cuda_mxfp4_validate_block(valid_block, 16) == false);
+    EXPECT_FALSE(cuda_mxfp4_validate_block(valid_block, 16));
     
     // Invalid: infinity scale
     valid_block[16] = 0xFF;
-    assert(cuda_mxfp4_validate_block(valid_block, 17) == false);
-    
-    printf("  ✓ Block validation working\n");
+    EXPECT_FALSE(cuda_mxfp4_validate_block(valid_block, 17));
 }
 
-void test_dequant_zero() {
-    printf("Test 3: Dequantize zero values...\n");
-    
+TEST(MXFP4Dequant, DequantZero) {
     // Create MXFP4 block with all zeros
     uint8_t h_input[17];
     for (int i = 0; i < 16; i++) {
@@ -117,18 +107,14 @@ void test_dequant_zero() {
     // Verify all zeros
     for (int i = 0; i < 32; i++) {
         float val = __half2float(h_output[i]);
-        assert(approx_equal(val, 0.0f, 1e-6f));
+        EXPECT_TRUE(approx_equal(val, 0.0f, 1e-6f));
     }
-    
-    printf("  ✓ Zero dequantization correct\n");
     
     CUDA_CHECK(cudaFree(d_input));
     CUDA_CHECK(cudaFree(d_output));
 }
 
-void test_dequant_positive() {
-    printf("Test 4: Dequantize positive values...\n");
-    
+TEST(MXFP4Dequant, DequantPositive) {
     uint8_t h_input[17];
     
     // FP4 values: [1.0, 2.0, 1.5, 3.0, ...]
@@ -156,18 +142,15 @@ void test_dequant_positive() {
     // Verify values are positive and reasonable
     for (int i = 0; i < 32; i++) {
         float val = __half2float(h_output[i]);
-        assert(val >= 0.0f && val <= 4.0f);
+        EXPECT_GE(val, 0.0f);
+        EXPECT_LE(val, 4.0f);
     }
-    
-    printf("  ✓ Positive value dequantization correct\n");
     
     CUDA_CHECK(cudaFree(d_input));
     CUDA_CHECK(cudaFree(d_output));
 }
 
-void test_dequant_negative() {
-    printf("Test 5: Dequantize negative values...\n");
-    
+TEST(MXFP4Dequant, DequantNegative) {
     uint8_t h_input[17];
     
     // FP4 negative values: 1001 (-0.5), 1010 (-1.0), etc.
@@ -192,19 +175,15 @@ void test_dequant_negative() {
     // Verify all values are negative
     for (int i = 0; i < 32; i++) {
         float val = __half2float(h_output[i]);
-        assert(val <= 0.0f);
-        assert(val >= -4.0f);
+        EXPECT_LE(val, 0.0f);
+        EXPECT_GE(val, -4.0f);
     }
-    
-    printf("  ✓ Negative value dequantization correct\n");
     
     CUDA_CHECK(cudaFree(d_input));
     CUDA_CHECK(cudaFree(d_output));
 }
 
-void test_dequant_scaled() {
-    printf("Test 6: Dequantize with different scales...\n");
-    
+TEST(MXFP4Dequant, DequantScaled) {
     uint8_t h_input[17];
     
     // All FP4 = 1.0 (0010)
@@ -231,18 +210,14 @@ void test_dequant_scaled() {
     // All values should be 1.0 * 2.0 = 2.0
     for (int i = 0; i < 32; i++) {
         float val = __half2float(h_output[i]);
-        assert(approx_equal(val, 2.0f, 0.1f));
+        EXPECT_TRUE(approx_equal(val, 2.0f, 0.1f));
     }
-    
-    printf("  ✓ Scaled dequantization correct\n");
     
     CUDA_CHECK(cudaFree(d_input));
     CUDA_CHECK(cudaFree(d_output));
 }
 
-void test_dequant_multiple_blocks() {
-    printf("Test 7: Dequantize multiple blocks...\n");
-    
+TEST(MXFP4Dequant, DequantMultipleBlocks) {
     const int num_blocks = 4;
     const int num_elements = num_blocks * 32;
     const int input_size = num_blocks * 17;
@@ -274,10 +249,8 @@ void test_dequant_multiple_blocks() {
     // Verify all values are finite
     for (int i = 0; i < num_elements; i++) {
         float val = __half2float(h_output[i]);
-        assert(isfinite(val));
+        EXPECT_TRUE(isfinite(val));
     }
-    
-    printf("  ✓ Multiple block dequantization correct\n");
     
     delete[] h_input;
     delete[] h_output;
@@ -285,15 +258,19 @@ void test_dequant_multiple_blocks() {
     CUDA_CHECK(cudaFree(d_output));
 }
 
-void test_dequant_optimized() {
-    printf("Test 8: Optimized dequantization...\n");
-    
+TEST(MXFP4Dequant, DequantOptimized) {
     const int num_elements = 1024;
     const int input_size = cuda_mxfp4_storage_size(num_elements);
     
     uint8_t *h_input = new uint8_t[input_size];
     for (int i = 0; i < input_size; i++) {
         h_input[i] = (uint8_t)(i % 256);
+    }
+    
+    // Fix scale factors (every 17th byte) to avoid infinity
+    int num_blocks = (num_elements + 31) / 32;
+    for (int b = 0; b < num_blocks; b++) {
+        h_input[b * 17 + 16] = 0x7F;  // Scale = 1.0 (valid)
     }
     
     uint8_t *d_input;
@@ -313,10 +290,8 @@ void test_dequant_optimized() {
     // Verify
     for (int i = 0; i < num_elements; i++) {
         float val = __half2float(h_output[i]);
-        assert(isfinite(val));
+        EXPECT_TRUE(isfinite(val));
     }
-    
-    printf("  ✓ Optimized dequantization working\n");
     
     delete[] h_input;
     delete[] h_output;
@@ -324,21 +299,6 @@ void test_dequant_optimized() {
     CUDA_CHECK(cudaFree(d_output));
 }
 
-int main() {
-    printf("=== MXFP4 Dequantization Unit Tests ===\n\n");
-    
-    test_storage_size();
-    test_block_validation();
-    test_dequant_zero();
-    test_dequant_positive();
-    test_dequant_negative();
-    test_dequant_scaled();
-    test_dequant_multiple_blocks();
-    test_dequant_optimized();
-    
-    printf("\n✅ All MXFP4 tests passed!\n");
-    return 0;
-}
-
 // ---
 // Crafted by GPT-Gamma 🤖
+// Converted to GTest by Cascade 🌊

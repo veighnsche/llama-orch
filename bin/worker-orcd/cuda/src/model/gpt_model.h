@@ -12,7 +12,7 @@
 #define WORKER_MODEL_GPT_MODEL_H
 
 #include "gpt_weights.h"
-#include "../kv_cache.h"
+#include "kv_cache.h"
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
 #include <memory>
