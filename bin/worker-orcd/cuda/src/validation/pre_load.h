@@ -94,8 +94,9 @@ public:
         const std::string& gguf_path,
         size_t available_vram
     );
-
-private:
+    
+    // Helper methods (public for testing)
+    
     /**
      * Validate file access
      * 

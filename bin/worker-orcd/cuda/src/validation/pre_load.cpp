@@ -153,105 +153,92 @@ ValidationReport PreLoadValidator::validate(
     const std::string& gguf_path,
     size_t available_vram
 ) {
-    // 1. Validate file access
-    if (!validate_file_access(gguf_path)) {
-        audit_log_rejection("File not found or not readable", gguf_path);
-        return ValidationReport::fail(
-            "File not found or not readable: " + gguf_path,
-            gguf_path
-        );
-    }
-    
-    // 2. Memory-map file
-    io::MmapFile mmap;
     try {
-        mmap = io::MmapFile::open(gguf_path);
-    } catch (const CudaError& e) {
-        audit_log_rejection("Failed to mmap file", gguf_path);
-        return ValidationReport::fail(
-            "Failed to open file: " + std::string(e.what()),
-            gguf_path
-        );
-    }
-    
-    // 3. Parse header
-    gguf::GGUFHeader header;
-    try {
-        header = gguf::parse_gguf_header(mmap.data(), mmap.size());
-    } catch (const CudaError& e) {
-        audit_log_rejection("Invalid GGUF header", gguf_path);
-        return ValidationReport::fail(
-            "Invalid GGUF header: " + std::string(e.what()),
-            gguf_path
-        );
-    }
-    
-    // 4. Validate header
-    if (!validate_header(header)) {
-        audit_log_rejection("Header validation failed", gguf_path);
-        return ValidationReport::fail(
-            "Invalid GGUF header (magic, version, or counts)",
-            gguf_path
-        );
-    }
-    
-    // 5. Validate metadata (Llama-specific)
-    if (!validate_llama_metadata(header.metadata)) {
-        audit_log_rejection("Metadata validation failed", gguf_path);
-        return ValidationReport::fail(
-            "Invalid Llama metadata (missing keys or wrong architecture)",
-            gguf_path
-        );
-    }
-    
-    // 6. Security: Validate tensor bounds
-    if (!validate_tensor_bounds(header.tensors, mmap.size(), header.data_start)) {
-        audit_log_rejection("Tensor bounds validation failed (security)", gguf_path);
-        return ValidationReport::fail(
-            "Security: Invalid tensor offsets or sizes",
-            gguf_path
-        );
-    }
-    
-    // 7. Calculate VRAM requirement
-    size_t vram_required;
-    try {
-        vram_required = calculate_vram_requirement(header.tensors);
-    } catch (const CudaError& e) {
-        audit_log_rejection("VRAM calculation failed", gguf_path);
-        return ValidationReport::fail(
-            "Failed to calculate VRAM requirement: " + std::string(e.what()),
-            gguf_path
-        );
-    }
-    
-    // 8. Validate VRAM availability
-    if (!validate_vram_availability(vram_required, available_vram)) {
-        std::ostringstream oss;
-        oss << "Insufficient VRAM: required " << (vram_required / 1024 / 1024) << " MB"
-            << ", available " << (available_vram / 1024 / 1024) << " MB";
+        // 1. Validate file access
+        if (!validate_file_access(gguf_path)) {
+            audit_log_rejection("File not found or not readable", gguf_path);
+            return ValidationReport::fail(
+                "File not found or not readable: " + gguf_path,
+                gguf_path
+            );
+        }
         
-        audit_log_rejection("Insufficient VRAM", gguf_path);
-        return ValidationReport::fail(oss.str(), gguf_path);
-    }
+        // 2. Memory-map file
+        io::MmapFile mmap = io::MmapFile::open(gguf_path);
+        
+        // 3. Parse header
+        gguf::GGUFHeader header = gguf::parse_gguf_header(mmap.data(), mmap.size());
+        
+        // 4. Validate header
+        if (!validate_header(header)) {
+            audit_log_rejection("Header validation failed", gguf_path);
+            return ValidationReport::fail(
+                "Invalid GGUF header (magic, version, or counts)",
+                gguf_path
+            );
+        }
+        
+        // 5. Validate metadata (Llama-specific)
+        if (!validate_llama_metadata(header.metadata)) {
+            audit_log_rejection("Metadata validation failed", gguf_path);
+            return ValidationReport::fail(
+                "Invalid Llama metadata (missing keys or wrong architecture)",
+                gguf_path
+            );
+        }
+        
+        // 6. Security: Validate tensor bounds
+        if (!validate_tensor_bounds(header.tensors, mmap.size(), header.data_start)) {
+            audit_log_rejection("Tensor bounds validation failed (security)", gguf_path);
+            return ValidationReport::fail(
+                "Security: Invalid tensor offsets or sizes",
+                gguf_path
+            );
+        }
+        
+        // 7. Calculate VRAM requirement
+        size_t vram_required = calculate_vram_requirement(header.tensors);
+        
+        // 8. Validate VRAM availability
+        if (!validate_vram_availability(vram_required, available_vram)) {
+            std::ostringstream oss;
+            oss << "Insufficient VRAM: required " << (vram_required / 1024 / 1024) << " MB"
+                << ", available " << (available_vram / 1024 / 1024) << " MB";
+            
+            audit_log_rejection("Insufficient VRAM", gguf_path);
+            return ValidationReport::fail(oss.str(), gguf_path);
+        }
+        
+        // 9. Extract architecture
+        std::string architecture;
+        try {
+            auto config = gguf::parse_llama_metadata(header.metadata);
+            architecture = config.architecture;
+        } catch (const CudaError&) {
+            architecture = "unknown";
+        }
     
-    // 9. Extract architecture
-    std::string architecture;
-    try {
-        auto config = gguf::parse_llama_metadata(header.metadata);
-        architecture = config.architecture;
-    } catch (const CudaError&) {
-        architecture = "unknown";
+        // All validation passed
+        return ValidationReport::pass(
+            vram_required,
+            available_vram,
+            header.tensor_count,
+            architecture,
+            gguf_path
+        );
+    } catch (const CudaError& e) {
+        audit_log_rejection("Validation failed with exception", gguf_path);
+        return ValidationReport::fail(
+            "Validation error: " + std::string(e.what()),
+            gguf_path
+        );
+    } catch (const std::exception& e) {
+        audit_log_rejection("Validation failed with unexpected exception", gguf_path);
+        return ValidationReport::fail(
+            "Unexpected error: " + std::string(e.what()),
+            gguf_path
+        );
     }
-    
-    // All validation passed
-    return ValidationReport::pass(
-        vram_required,
-        available_vram,
-        header.tensor_count,
-        architecture,
-        gguf_path
-    );
 }
 
 } // namespace validation
