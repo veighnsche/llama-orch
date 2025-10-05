@@ -4,6 +4,7 @@
 //! Tests that both Llama and GPT architectures work correctly.
 
 use worker_orcd::models::{AdapterFactory, AdapterForwardConfig, ModelType};
+use worker_orcd::tests::integration::{collect_sse_events, extract_tokens, make_test_request, WorkerTestHarness};
 
 // FT-041: All Models Integration Test
 // Tests that all supported models work correctly with the adapter pattern
@@ -21,6 +22,38 @@ fn test_all_models_load() {
         assert_eq!(adapter.model_type(), expected_type);
         assert!(adapter.vocab_size().is_ok());
         assert!(adapter.vram_usage().is_ok());
+    }
+}
+
+#[tokio::test]
+#[cfg(feature = "cuda")]
+#[ignore] // Only run with real models
+async fn test_all_models_e2e() {
+    let models = vec![
+        ".test-models/qwen/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        ".test-models/gpt/gpt-oss-20b-mxfp4.gguf",
+    ];
+    
+    for model_path in models {
+        println!("\nTesting model: {}", model_path);
+        
+        let harness = WorkerTestHarness::start(model_path, 0)
+            .await
+            .expect("Failed to start worker");
+        
+        let req = make_test_request(
+            &format!("test-{}", model_path),
+            "Count to three",
+            20
+        );
+        
+        let response = harness.execute(req).await.expect("Execute failed");
+        let events = collect_sse_events(response).await.expect("Failed to collect events");
+        
+        let tokens = extract_tokens(&events);
+        assert!(!tokens.is_empty(), "Model {} generated no tokens", model_path);
+        
+        println!("✅ Model {} generated {} tokens", model_path, tokens.len());
     }
 }
 

@@ -1,39 +1,23 @@
-# FT-050: Haiku Generation Test (M0 Success Criteria - Anti-Cheat)
-**Team**: Foundation-Alpha  
-**Sprint**: Sprint 7 - Final Integration  
-**Size**: M (2 days)  
-**Days**: 75 - 76  
-**Spec Ref**: M0-W-1800, `.docs/testing/types/e2e-haiku.md`
----
-## Story Description
-Implement the canonical M0 success test: anti-cheat haiku generation that proves real GPU inference by requiring the model to include the current minute (in words) within a haiku. This prevents pre-baked outputs and validates genuine token generation.
----
-## Acceptance Criteria
-- [ ] Test loads Qwen2.5-0.5B-Instruct on real GPU
-- [ ] Prompt includes current minute in words (e.g., "twenty-nine")
-- [ ] Optional 8-character nonce for additional cache-busting
-- [ ] Test validates haiku contains the minute word exactly once
-- [ ] Test validates SSE stream format (started → token* → end)
-- [ ] Test validates VRAM-only operation
-- [ ] Test validates metrics delta (tokens_out increases)
-- [ ] Test artifacts saved to `.test-results/haiku/<run_id>/`
-- [ ] Test runs in CI with `REQUIRE_REAL_LLAMA=1`
-- [ ] Finishes within ≤30 seconds
----
-## Dependencies
-**Upstream**: FT-040 (Performance baseline, Day 75)  
-**Downstream**: FT-047 (Gate 4 checkpoint)
----
-## Technical Details
-### Anti-Cheat Design
-```rust
+//! FT-050: Haiku Generation Anti-Cheat Test
+//!
+//! M0 Success Criteria Test - Proves real GPU inference by requiring
+//! the model to include the current minute (in words) within a haiku.
+//! This prevents pre-baked outputs and validates genuine token generation.
+//!
+//! Spec: M0-W-1800, `.docs/testing/types/e2e-haiku.md`
+
 use chrono::Utc;
 use rand::Rng;
+use std::io::Write;
+use worker_orcd::tests::integration::{collect_sse_events, extract_tokens, make_test_request, WorkerTestHarness};
+
+/// Convert minute (0-59) to English words
 fn minute_to_words(minute: u32) -> String {
     let ones = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
     let teens = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", 
                  "sixteen", "seventeen", "eighteen", "nineteen"];
     let tens = ["", "", "twenty", "thirty", "forty", "fifty"];
+    
     match minute {
         0..=9 => ones[minute as usize].to_string(),
         10..=19 => teens[(minute - 10) as usize].to_string(),
@@ -49,55 +33,72 @@ fn minute_to_words(minute: u32) -> String {
         _ => panic!("Invalid minute: {}", minute),
     }
 }
+
 #[tokio::test]
 #[cfg(feature = "cuda")]
+#[ignore] // Only run with REQUIRE_REAL_LLAMA=1
 async fn test_haiku_generation_anti_cheat() {
     // Enforce real GPU requirement
     std::env::set_var("REQUIRE_REAL_LLAMA", "1");
+    
     let harness = WorkerTestHarness::start(
         ".test-models/qwen/qwen2.5-0.5b-instruct-q4_k_m.gguf",
         0
     ).await.expect("Failed to start worker");
+    
     // Generate dynamic minute word
     let now = Utc::now();
     let minute = now.minute();
     let minute_word = minute_to_words(minute);
+    
     // Generate nonce
     let nonce: String = rand::thread_rng()
         .sample_iter(&rand::distributions::Alphanumeric)
         .take(8)
         .map(char::from)
         .collect();
+    
     // Construct anti-cheat prompt
     let prompt = format!(
         "Write a haiku about GPU computing that includes the word \"{}\" (nonce: {})",
         minute_word, nonce
     );
+    
     let run_id = std::env::var("LLORCH_RUN_ID")
         .unwrap_or_else(|_| uuid::Uuid::new_v4().to_string());
-    let req = ExecuteRequest {
-        job_id: format!("m0-haiku-anti-cheat-{}", run_id),
-        prompt: prompt.clone(),
-        max_tokens: 100,
-        temperature: 0.7,
-        seed: now.timestamp() as u64, // Time-based seed
-    };
+    
+    let mut req = make_test_request(
+        &format!("m0-haiku-anti-cheat-{}", run_id),
+        &prompt,
+        100
+    );
+    req.temperature = 0.7;
+    req.seed = Some(now.timestamp() as u64); // Time-based seed
+    
     // Capture metrics before
     let metrics_before = harness.get_metrics().await.expect("Failed to get metrics");
     let tokens_before = metrics_before.tokens_out_total;
+    
     let start_time = std::time::Instant::now();
-    let stream = harness.execute(req).await.expect("Execute failed");
-    let events = collect_sse_events(stream).await;
+    let response = harness.execute(req).await.expect("Execute failed");
+    let events = collect_sse_events(response).await.expect("Failed to collect events");
     let elapsed = start_time.elapsed();
+    
     // Capture metrics after
     let metrics_after = harness.get_metrics().await.expect("Failed to get metrics");
     let tokens_after = metrics_after.tokens_out_total;
+    
     // Validate event sequence
-    assert_event!(events[0], InferenceEvent::Started);
+    assert!(matches!(events.first(), Some(worker_http::sse::InferenceEvent::Started { .. })), 
+        "First event should be Started");
+    
     let tokens = extract_tokens(&events);
     assert!(!tokens.is_empty(), "No tokens generated");
-    assert_event!(events.last().unwrap(), InferenceEvent::End);
+    
+    assert!(events.last().unwrap().is_terminal(), "Last event should be terminal");
+    
     let haiku = tokens.join("");
+    
     // Anti-cheat validation
     let minute_word_count = haiku.matches(&minute_word).count();
     assert_eq!(
@@ -105,6 +106,7 @@ async fn test_haiku_generation_anti_cheat() {
         "Haiku must contain minute word '{}' exactly once, found {} times",
         minute_word, minute_word_count
     );
+    
     // Validate metrics delta
     let tokens_generated = tokens_after - tokens_before;
     assert!(
@@ -112,16 +114,19 @@ async fn test_haiku_generation_anti_cheat() {
         "Metrics show no tokens generated (before: {}, after: {})",
         tokens_before, tokens_after
     );
+    
     // Validate timing
     assert!(
         elapsed.as_secs() <= 30,
         "Test took too long: {:?}",
         elapsed
     );
+    
     // Save test artifacts
     let artifacts_dir = std::path::PathBuf::from(".test-results/haiku")
         .join(&run_id);
     std::fs::create_dir_all(&artifacts_dir).unwrap();
+    
     // Save verification results
     let verification = serde_json::json!({
         "minute": minute,
@@ -134,26 +139,31 @@ async fn test_haiku_generation_anti_cheat() {
         "elapsed_ms": elapsed.as_millis(),
         "timestamp": now.to_rfc3339(),
     });
+    
     std::fs::write(
         artifacts_dir.join("verification.json"),
         serde_json::to_string_pretty(&verification).unwrap()
     ).unwrap();
+    
     // Save SSE transcript
     let transcript_path = artifacts_dir.join("sse_transcript.ndjson");
     let mut transcript = std::fs::File::create(&transcript_path).unwrap();
     for event in &events {
         writeln!(transcript, "{}", serde_json::to_string(event).unwrap()).unwrap();
     }
+    
     // Save metrics snapshot
     let metrics = serde_json::json!({
         "before": { "tokens_out_total": tokens_before },
         "after": { "tokens_out_total": tokens_after },
         "delta": tokens_generated,
     });
+    
     std::fs::write(
         artifacts_dir.join("metrics_snapshot.json"),
         serde_json::to_string_pretty(&metrics).unwrap()
     ).unwrap();
+    
     // Save test report
     let report = format!(
         "# M0 Haiku Anti-Cheat Test Report\n\n\
@@ -172,7 +182,9 @@ async fn test_haiku_generation_anti_cheat() {
         run_id, now.to_rfc3339(), minute, minute_word, nonce,
         tokens_generated, elapsed, haiku, minute_word, tokens_generated, elapsed
     );
+    
     std::fs::write(artifacts_dir.join("test_report.md"), report).unwrap();
+    
     println!("\n🎨 M0 Haiku Anti-Cheat Test PASSED");
     println!("Minute: {} (\"{}\")", minute, minute_word);
     println!("Nonce: {}", nonce);
@@ -181,95 +193,47 @@ async fn test_haiku_generation_anti_cheat() {
     println!("\nHaiku:\n{}\n", haiku);
     println!("Artifacts: {}", artifacts_dir.display());
 }
-```
----
-## Test Artifacts
-Located in: `.test-results/haiku/<run_id>/`
-- **verification.json**: Minute word, nonce, validation results
-- **sse_transcript.ndjson**: Complete SSE event stream
-- **metrics_snapshot.json**: Metrics before/after
-- **test_report.md**: Human-readable summary with haiku output
----
-## Anti-Cheat Guarantees
-1. **No pre-baked outputs**: Minute word changes every minute
-2. **No caching**: Optional nonce adds uniqueness
-3. **Real GPU required**: `REQUIRE_REAL_LLAMA=1` enforced
-4. **Metrics validation**: Must observe token count increase
-5. **Repository scan safe**: No hardcoded minute+nonce combinations
----
-## Testing Strategy
-### Unit Tests
-- Test minute_to_words() for all 60 minutes
-- Test nonce generation (8 chars, alphanumeric)
-- Test artifact directory creation
-### Integration Tests
-- Test with real Qwen2.5-0.5B model
-- Test minute word detection in output
-- Test metrics delta validation
-- Test timing constraint (≤30s)
-### Manual Verification
-1. Run test: `cargo test --features cuda test_haiku_generation_anti_cheat`
-2. Verify minute word in output
-3. Check  artifacts
-4. Validate metrics increased
----
-## Definition of Done
-- [x] Test passes with anti-cheat validation
-- [x] Haiku contains minute word exactly once
-- [x] Metrics delta validated
-- [x] Test artifacts saved correctly
-- [x] Test runs in CI
-- [x] Story marked complete
----
-**Status**: ✅ Complete  
-**Owner**: Foundation-Alpha  
-**Created**: 2025-10-04  
-**Completed**: 2025-10-05  
-**Implementation**: `tests/haiku_generation_anti_cheat.rs`  
-**Note**: 🎨 **M0 SUCCESS CRITERIA** - Anti-cheat definitive test
----
-## References
-- Anti-cheat spec: `.docs/testing/types/e2e-haiku.md`
-- Test types guide: `.docs/testing/TEST_TYPES_GUIDE.md`
----
-Planned by Project Management Team 📋
----
-## 🎀 Narration Opportunities
-**From**: Narration-Core Team
-### Events to Narrate
-1. **Test started**
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: "test_start",
-       target: "m0-haiku-anti-cheat".to_string(),
-       human: format!("Starting M0 haiku anti-cheat test (minute: {})", minute_word),
-       ..Default::default()
-   });
-   ```
-2. **Test passed**
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: "test_complete",
-       target: "m0-haiku-anti-cheat".to_string(),
-       tokens_out: Some(tokens_generated),
-       duration_ms: Some(elapsed.as_millis() as u64),
-       human: format!("M0 haiku test PASSED: {} tokens in {} ms", tokens_generated, elapsed.as_millis()),
-       ..Default::default()
-   });
-   ```
-3. **Anti-cheat validation failed**
-   ```rust
-   narrate_auto(NarrationFields {
-       actor: ACTOR_WORKER_ORCD,
-       action: "test_complete",
-       target: "m0-haiku-anti-cheat".to_string(),
-       error_kind: Some("anti_cheat_failed".to_string()),
-       human: format!("M0 haiku test FAILED: minute word '{}' not found in output", minute_word),
-       ..Default::default()
-   });
-   ```
-**Why this matters**: The M0 haiku test is the definitive success criteria. Narration creates an audit trail proving real GPU inference occurred.
----
-*Narration guidance added by Narration-Core Team 🎀*
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_minute_to_words_ones() {
+        assert_eq!(minute_to_words(0), "zero");
+        assert_eq!(minute_to_words(5), "five");
+        assert_eq!(minute_to_words(9), "nine");
+    }
+
+    #[test]
+    fn test_minute_to_words_teens() {
+        assert_eq!(minute_to_words(10), "ten");
+        assert_eq!(minute_to_words(15), "fifteen");
+        assert_eq!(minute_to_words(19), "nineteen");
+    }
+
+    #[test]
+    fn test_minute_to_words_tens() {
+        assert_eq!(minute_to_words(20), "twenty");
+        assert_eq!(minute_to_words(30), "thirty");
+        assert_eq!(minute_to_words(50), "fifty");
+    }
+
+    #[test]
+    fn test_minute_to_words_compound() {
+        assert_eq!(minute_to_words(21), "twenty-one");
+        assert_eq!(minute_to_words(35), "thirty-five");
+        assert_eq!(minute_to_words(59), "fifty-nine");
+    }
+
+    #[test]
+    fn test_minute_to_words_all() {
+        // Test all 60 minutes
+        for minute in 0..60 {
+            let word = minute_to_words(minute);
+            assert!(!word.is_empty(), "Minute {} should have a word", minute);
+        }
+    }
+}
+
+// Built by Foundation-Alpha 🏗️

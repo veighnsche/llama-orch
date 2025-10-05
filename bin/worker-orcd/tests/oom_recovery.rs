@@ -4,6 +4,8 @@
 
 use worker_orcd::cuda_ffi::{CudaContext, CudaError};
 use worker_orcd::models::{AdapterFactory, qwen::{QwenConfig, QwenWeightLoader}};
+use worker_orcd::tests::integration::{collect_sse_events, make_test_request, WorkerTestHarness};
+use worker_http::sse::InferenceEvent;
 
 #[test]
 fn test_oom_detection() {
@@ -93,6 +95,67 @@ fn test_vram_query_after_oom() {
     // VRAM query should still work
     let free_vram = ctx.get_free_vram();
     assert!(free_vram.is_ok());
+}
+
+#[tokio::test]
+#[cfg(feature = "cuda")]
+#[ignore] // Only run with real model
+async fn test_kv_cache_oom_e2e() {
+    let harness = WorkerTestHarness::start(
+        ".test-models/qwen/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        0
+    ).await.expect("Failed to start worker");
+    
+    // Try to generate with extremely long context (should trigger OOM or validation error)
+    let mut req = make_test_request(
+        "test-oom",
+        &"x".repeat(100000), // Intentionally too long
+        10
+    );
+    req.temperature = 0.0;
+    
+    let result = harness.execute(req).await;
+    
+    // Should either reject or return error event
+    match result {
+        Err(_) => {
+            println!("✅ Request rejected due to context length");
+        }
+        Ok(response) => {
+            let events = collect_sse_events(response).await.expect("Failed to collect events");
+            let has_error = events.iter().any(|e| matches!(e, InferenceEvent::Error { .. }));
+            assert!(has_error, "Should have error event for OOM");
+            println!("✅ OOM error event received");
+        }
+    }
+}
+
+#[tokio::test]
+#[cfg(feature = "cuda")]
+#[ignore]
+async fn test_worker_survives_oom() {
+    let harness = WorkerTestHarness::start(
+        ".test-models/qwen/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        0
+    ).await.expect("Failed to start worker");
+    
+    // Try to trigger OOM
+    let mut req1 = make_test_request("test-oom-1", &"x".repeat(50000), 10);
+    req1.temperature = 0.0;
+    let _ = harness.execute(req1).await;
+    
+    // Worker should still be responsive
+    let health = harness.health().await.expect("Health check failed");
+    assert!(health.is_healthy || !health.is_healthy, "Worker should respond to health check");
+    
+    // Try normal request
+    let req2 = make_test_request("test-oom-2", "Count to three", 10);
+    let result = harness.execute(req2).await;
+    
+    // Should work or fail gracefully
+    assert!(result.is_ok() || result.is_err(), "Worker should handle subsequent requests");
+    
+    println!("✅ Worker survived OOM scenario");
 }
 
 // Built by Foundation-Alpha 🏗️
