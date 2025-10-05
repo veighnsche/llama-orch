@@ -213,22 +213,19 @@ impl InferenceExecutor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use worker_http::validation::ExecuteRequest;
 
     fn make_config(max_tokens: u32, stop: Vec<String>) -> SamplingConfig {
-        let req = ExecuteRequest {
-            job_id: "test".to_string(),
-            prompt: "Hello".to_string(),
-            max_tokens,
+        SamplingConfig {
             temperature: 0.7,
-            seed: Some(42),
             top_p: 1.0,
             top_k: 0,
             repetition_penalty: 1.0,
-            stop,
             min_p: 0.0,
-        };
-        SamplingConfig::from_request(&req)
+            stop_sequences: vec![],
+            stop_strings: stop,
+            seed: 42,
+            max_tokens,
+        }
     }
 
     #[test]
