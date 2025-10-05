@@ -158,51 +158,8 @@ extern "C" void cuda_gpt_ffn_forward(
 //
 // This is a common pattern in transformers where we add the residual
 // connection after the FFN. Fusing saves memory bandwidth.
-extern "C" void cuda_gpt_ffn_forward_residual(
-    const half* input,
-    const half* w_up,
-    const half* b_up,
-    const half* w_down,
-    const half* b_down,
-    half* output,
-    half* workspace,
-    int batch_size,
-    int seq_len,
-    int d_model,
-    int ffn_dim,
-    cublasHandle_t cublas_handle,
-    cudaStream_t stream
-) {
-    // Run standard FFN
-    cuda_gpt_ffn_forward(
-        input, w_up, b_up, w_down, b_down,
-        output, workspace,
-        batch_size, seq_len, d_model, ffn_dim,
-        cublas_handle, stream
-    );
-    
-    // Add residual connection: output = output + input
-    int total_elements = batch_size * seq_len * d_model;
-    int threads_per_block = 256;
-    int num_blocks = (total_elements + threads_per_block - 1) / threads_per_block;
-    
-    // Use a simple element-wise addition kernel
-    auto add_residual = [=] __device__ (int idx) {
-        if (idx < total_elements) {
-            output[idx] = __hadd(output[idx], input[idx]);
-        }
-    };
-    
-    // Launch kernel
-    auto kernel = [=] __global__ () {
-        int idx = blockIdx.x * blockDim.x + threadIdx.x;
-        if (idx < total_elements) {
-            output[idx] = __hadd(output[idx], input[idx]);
-        }
-    };
-    
-    kernel<<<num_blocks, threads_per_block, 0, stream>>>();
-}
+// NOTE: Temporarily disabled due to linkage issues - use separate calls
+// extern "C" void cuda_gpt_ffn_forward_residual(...) { ... }
 
 // Workspace size calculation helper
 // Returns the size in bytes needed for the workspace buffer

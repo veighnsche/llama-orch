@@ -49,10 +49,11 @@ impl HfJsonTokenizer {
         
         // Load tokenizer from file
         let inner = Tokenizer::from_file(path_ref).map_err(|e| {
-            TokenizerError::LoadFailed {
-                path: path_ref.display().to_string(),
-                source: e.to_string(),
-            }
+            TokenizerError::LoadFailed(format!(
+                "Failed to load tokenizer from {}: {}",
+                path_ref.display(),
+                e
+            ))
         })?;
         
         // Extract vocabulary size

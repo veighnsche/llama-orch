@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
+#include <cstdint>
 
 extern "C" {
     void cuda_mxfp4_dequant(

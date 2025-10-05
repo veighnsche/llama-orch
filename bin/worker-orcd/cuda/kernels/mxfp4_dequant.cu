@@ -10,6 +10,7 @@
 
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
+#include <cstdint>
 
 // FP4 mantissa lookup table
 // Maps 4-bit values (0-15) to normalized float values
