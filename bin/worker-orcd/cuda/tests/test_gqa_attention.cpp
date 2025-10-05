@@ -17,6 +17,7 @@
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
 #include <vector>
+#include <cmath>
 
 // External C functions
 extern "C" int cuda_gqa_attention_prefill(

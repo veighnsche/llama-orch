@@ -1,4 +1,23 @@
 cmake_minimum_required(VERSION 3.18)
+
+# Set CUDA paths before project() if not already set
+# Common CUDA installation locations
+if(NOT DEFINED CMAKE_CUDA_COMPILER)
+    if(EXISTS "/opt/cuda/bin/nvcc")
+        set(CMAKE_CUDA_COMPILER "/opt/cuda/bin/nvcc")
+    elseif(EXISTS "/usr/local/cuda/bin/nvcc")
+        set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
+    endif()
+endif()
+
+if(NOT DEFINED CUDAToolkit_ROOT)
+    if(EXISTS "/opt/cuda")
+        set(CUDAToolkit_ROOT "/opt/cuda")
+    elseif(EXISTS "/usr/local/cuda")
+        set(CUDAToolkit_ROOT "/usr/local/cuda")
+    endif()
+endif()
+
 project(worker_cuda LANGUAGES CXX CUDA)
 
 # Find CUDA toolkit explicitly
@@ -6,7 +25,7 @@ find_package(CUDAToolkit REQUIRED)
 
 # C++ and CUDA standards
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
