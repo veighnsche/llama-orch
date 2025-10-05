@@ -1,0 +1,12 @@
+[package]
+name = "worker-compute"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "Platform-agnostic compute trait for llama-orch workers"
+
+[dependencies]
+thiserror = "1.0"
+worker-common = { path = "../worker-common" }
+
+[dev-dependencies]

@@ -1,0 +1,21 @@
+[package]
+name = "worker-http"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "Shared HTTP server and SSE streaming for llama-orch workers"
+
+[dependencies]
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["trace", "cors"] }
+tracing = "0.1"
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+# observability-narration-core = { path = "../../../libs/observability/narration-core" }
+# TODO: Re-enable after extraction from worker-orcd
+
+[dev-dependencies]
+tokio-test = "0.4"

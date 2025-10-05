@@ -1,8 +1,8 @@
 # llama-orch
 
-**Reproducible, VRAM-only, multi-node GPU orchestration for LLM inference**
+**Reproducible, multi-architecture, multi-node GPU orchestration for LLM inference**
 
-llama-orch is a three-binary system that provides test reproducibility, VRAM-only enforcement, and enterprise-grade orchestration across distributed GPU resources. Born from the simple frustration of "why can't I easily choose which GPU runs which model?", it evolved into a reproducible testing platform with a clean intelligence hierarchy.
+llama-orch is a three-binary system that provides test reproducibility, flexible memory architectures, and enterprise-grade orchestration across distributed GPU resources. Born from the simple frustration of "why can't I easily choose which GPU runs which model?", it evolved into a reproducible testing platform with a clean intelligence hierarchy.
 
 **Current version**: `0.1.0` (early development)  
 **License**: GPL-3.0-or-later (free and open source, copyleft)  
@@ -16,10 +16,10 @@ llama-orch is a three-binary system that provides test reproducibility, VRAM-onl
 
 1. **Test Reproducibility**: Same seed + temp=0 → Same output (for testing validation, not a product promise)
 2. **Temperature Control**: Full temperature range 0.0-2.0 for production use (product feature)
-3. **VRAM-Only Policy**: Model fully resident in GPU VRAM (no RAM fallback)
+3. **Multi-Architecture Support**: NVIDIA CUDA (VRAM-only), Apple ARM (unified memory), and extensible worker adapters
 4. **Multi-Node Orchestration**: Distribute models across GPU clusters
 5. **Smart/Dumb Architecture**: Clean separation between decisions and execution
-6. **Process Isolation**: Workers run in separate processes with isolated CUDA contexts
+6. **Process Isolation**: Workers run in separate processes with isolated memory contexts
 
 **Note**: Determinism is a testing tool, not a product guarantee. LLMs cannot guarantee deterministic behavior due to model architecture and hardware variations.
 
@@ -29,7 +29,10 @@ llama-orch consists of three separate binaries that communicate via HTTP:
 
 1. **`orchestratord`** — The Brain (makes ALL intelligent decisions)
 2. **`pool-managerd`** — Control Plane with Levers (executes commands, reports state)
-3. **`worker-orcd`** — Dumb Executor (loads one model, executes inference)
+3. **Workers** — Dumb Executors (load one model, execute inference)
+   - `worker-orcd` — Bespoke NVIDIA CUDA worker (VRAM-only)
+   - `worker-aarmd` — Apple ARM worker (unified memory) [future]
+   - Extensible via worker adapter pattern
 
 ### Intelligence Hierarchy
 
@@ -47,10 +50,11 @@ Worker (Executor)
 ### Why This Architecture?
 
 - **Orchestratord can run without GPUs**: Queries pool managers for state
-- **Workers have isolated CUDA contexts**: Each worker owns its VRAM allocation
-- **Clean FFI boundaries**: Pool manager uses NVML (read-only), workers use CUDA (allocation)
+- **Workers have isolated memory contexts**: Each worker owns its memory allocation (VRAM for NVIDIA, unified for Apple)
+- **Clean FFI boundaries**: Pool manager uses NVML/Metal (read-only), workers use CUDA/Metal (allocation)
 - **Testable components**: Each binary runs standalone for testing
 - **Stateless orchestration**: All state derived from pool manager queries
+- **Multi-architecture**: Worker adapters enable NVIDIA CUDA, Apple Metal, and future backends
 
 ---
 

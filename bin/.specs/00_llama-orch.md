@@ -137,13 +137,15 @@
 - **Token Budget**: Per-tenant quota for maximum tokens that can be generated daily or per request; enforced at admission time to prevent quota exhaustion.
 - **Eviction**: Two types: (1) Model eviction (hot-load eviction) - removing cached model files from pool-managerd RAM to free memory when no longer needed for quick worker startup; (2) Worker eviction - stopping worker processes to free VRAM for higher-priority jobs.
 - **Preflight Validation**: Pre-spawn checks performed by pool-managerd to verify GPU has sufficient free VRAM and model is compatible before spawning a worker.
-- **VRAM-Only Policy**: Requirement that all model weights, KV cache, activations, and intermediate tensors reside entirely in GPU VRAM with no RAM/disk fallback.
+- **VRAM-Only Policy**: Worker-specific requirement for bespoke NVIDIA workers (worker-orcd) that all model weights, KV cache, activations, and intermediate tensors reside entirely in GPU VRAM with no RAM/disk fallback. Other worker types (e.g., Apple ARM workers) may use unified memory architecture as appropriate for their platform.
 - **Test Reproducibility**: Property where same model + same seed + temp=0 + same prompt produces identical output for testing validation; NOT a product guarantee due to model and hardware limitations.
 - **Proof Bundle**: Standardized test artifact directory containing seeds, transcripts, metadata, and outputs for reproducibility (see `libs/proof-bundle`).
 - **Smart/Dumb Boundary**: Architectural principle where orchestratord makes ALL intelligent decisions (smart) while pool-managerd and workers execute commands without policy decisions (dumb).
 - **Model Reference (model_ref)**: Canonical identifier for a model artifact, format: `hf:{org}/{repo}@{rev}::file={path}` or `file:/path/to/model.gguf`.
 - **Model Adapter**: Component within worker-orcd that abstracts architecture-specific inference logic (e.g., Llama-style vs GPT-style models). Distinct from worker adapter (pool-managerd component for worker lifecycle).
-- **Worker Adapter**: Component in pool-managerd that abstracts worker lifecycle for different worker types (bespoke-cuda, llama.cpp, apple-metal). See POOL-1xxx spec. Distinct from model adapter (worker-internal architecture abstraction).
+- **Worker Adapter**: Component in pool-managerd that abstracts worker lifecycle for different worker types (bespoke-cuda, llama.cpp, apple-metal). See `bin/pool-managerd/.specs/10_worker_adapters.md` (POOL-1xxx). Distinct from model adapter (worker-internal architecture abstraction).
+- **Worker Type**: Category of worker implementation (bespoke-cuda, llamacpp, apple-metal, image-gen). Pool manager uses worker type to select appropriate adapter for spawning.
+- **Worker Capability**: Functional capability advertised by worker (text-gen, image-gen, audio-gen, embedding). Orchestrator routes jobs based on capability, not worker type.
 - **Heartbeat**: Periodic state report from pool-managerd to orchestratord (default 15s interval) containing GPU VRAM state and worker status.
 - **SSE (Server-Sent Events)**: HTTP streaming protocol used for token-by-token inference results from worker → orchestrator → client.
 - **Correlation ID**: Unique identifier (`X-Correlation-Id` header) propagated across all service calls for request tracing and log correlation.
@@ -300,40 +302,28 @@ Worker (Executor) → Loads model, executes inference
 
 ---
 
-### 2.2 VRAM-Only Policy [M0+] (SYS-2.2.x)
+### 2.2 Memory Architecture Policy [M0+] (SYS-2.2.x)
 
-#### [SYS-2.2.1] VRAM-Only Enforcement
+#### [SYS-2.2.1] Worker-Specific Memory Requirements
 
-The system MUST enforce VRAM-only policy: model weights, KV cache, activations, and intermediate tensors MUST reside entirely in GPU VRAM.
+Worker implementations MUST declare their memory architecture requirements. The orchestrator and pool manager MUST NOT enforce a specific memory architecture—this is worker-specific.
 
-**Prohibited:**
-- ❌ RAM fallback
-- ❌ Unified memory (CUDA UMA)
-- ❌ Zero-copy mode
-- ❌ CPU inference fallback
-- ❌ Disk swapping
+**Worker types and their memory policies:**
 
-**Rationale**: VRAM-only policy ensures predictable performance and enables test reproducibility by eliminating memory hierarchy variability.
+1. **Bespoke NVIDIA Workers (worker-orcd)**: VRAM-ONLY policy (see `bin/.specs/01_M0_worker_orcd.md`)
+   - Model weights, KV cache, activations, and intermediate tensors MUST reside entirely in GPU VRAM
+   - Prohibited: RAM fallback, Unified memory (CUDA UMA), Zero-copy mode, CPU inference fallback, Disk swapping
+   - Rationale: Ensures predictable performance and enables test reproducibility by eliminating memory hierarchy variability
 
-**M0 Execution Policy**: Models execute in their quantized formats (Q4_K_M, MXFP4, Q4_0). NO dequantization to FP32 on load. Per-tile dequantization occurs in registers/shared memory during kernel execution with FP16 accumulation. This aligns with local runtime behavior (LM Studio/llama.cpp GGUF execution) and GPT-OSS-20B guidance (~16 GB VRAM operation in MXFP4).
+2. **Apple ARM Workers (worker-aarmd)**: UNIFIED MEMORY architecture (future, see `bin/pool-managerd/.specs/10_worker_adapters.md` and `bin/worker-aarmd/.specs/00_worker-aarmd.md`)
+   - MUST use Apple Metal unified memory architecture
+   - Model weights and activations reside in unified memory accessible by both CPU and GPU
+   - Rationale: Leverages Apple Silicon architecture for efficient memory usage
+   - Binary: `bin/worker-aarmd/` (Apple ARM daemon)
 
-**Loader Policy** (no dequantize-on-load):
-Model weights remain quantized in VRAM (MXFP4, Q4_K_M, Q4_0). The loader MUST NOT materialize FP32 copies of weight tensors in device memory.
+3. **Other worker types**: Define memory requirements in their respective specs
 
-**Compute Policy** (on-the-fly dequantization):
-Kernels dequantize weight tiles to registers/shared memory during compute and accumulate in FP16. This preserves quantized storage while enabling correct math in GEMM/attention.
-
-**Execution Details**:
-- ✅ In-kernel dequantization for MXFP4 tiles/groups → registers/shared memory → FP16 accumulate
-- ✅ FP16 accumulation for all matmul results
-- ✅ FP16 KV cache precision
-
-**MXFP4 Compute Path** (GPT-OSS-20B and other MXFP4 models):
-MXFP4 weights MUST be wired into all weight consumers:
-1. **Embeddings**: MXFP4 embedding matrix lookup
-2. **Attention**: Q/K/V projections, attention matmul, output projection (prefill + decode)
-3. **FFN**: Up projection, activation, down projection
-4. **LM Head**: Final logits projection
+**System-level requirement**: Pool manager MUST report worker memory architecture to orchestrator for scheduling decisions. Orchestrator MUST NOT make assumptions about worker memory layout.
 
 ---
 
@@ -425,11 +415,11 @@ The system MUST enforce strict FFI boundaries:
 - MUST NOT allocate VRAM or use CUDA
 - MUST NOT perform compute operations
 
-**Worker** (CUDA only):
-- MUST use CUDA Runtime API for VRAM allocation
-- MUST allocate VRAM within its process CUDA context
-- MUST use CUDA for compute operations
-- MUST own VRAM lifecycle (allocate → use → free)
+**Worker** (architecture-specific):
+- Bespoke NVIDIA workers (worker-orcd): MUST use CUDA Runtime API for VRAM allocation within process CUDA context
+- Apple ARM workers (worker-aarmd): MUST use Metal API for unified memory allocation
+- Other workers: Define FFI boundaries in worker-specific specs
+- All workers MUST own complete memory lifecycle (allocate → use → free)
 
 **Rationale**: Pool manager monitors system-wide GPU state. Worker manages per-process VRAM within its CUDA context. These are orthogonal concerns with different FFI layers.
 
@@ -1298,30 +1288,42 @@ retry:
 #### [SYS-6.2.1] Pool Manager Execution
 
 Pool-managerd MUST execute orchestrator commands without making policy decisions:
-- MUST query GPU state via NVML (read-only)
+- MUST query device state via platform-specific APIs (NVML for NVIDIA, Metal for Apple)
 - MUST download and cache models as commanded
-- MUST validate model-GPU compatibility before worker start (preflight)
-- MUST spawn worker processes as commanded
-- MUST update VRAM accounting when workers start/stop
+- MUST validate model-device compatibility before worker start (preflight)
+- MUST spawn worker processes as commanded via worker adapters
+- MUST update memory accounting when workers start/stop
 - MUST send periodic heartbeats to orchestratord (default 15s interval)
 - MUST perform operational cleanup on worker failures (no retry decisions)
 
 **Requirements**:
 - Pool-managerd MUST NOT perform placement or retry decisions; it MUST execute orchestrator commands and report facts only
-- NVML MUST be used for GPU queries; CUDA allocations MUST NOT be performed by pool-managerd
+- Platform-specific APIs MUST be used for device queries (NVML for NVIDIA, Metal for Apple)
+- Memory allocations MUST NOT be performed by pool-managerd (workers own memory lifecycle)
+
+**Worker Adapter Support** (M3.5+):
+- Pool-managerd MAY use worker adapters to support multiple worker implementations
+- Default adapter MUST support bespoke CUDA worker (backwards compatibility)
+- Additional adapters MAY be configured for llama.cpp, Apple Metal, image generation
+- Adapter selection MUST be based on `worker_type` field in spawn request
+- All workers MUST be normalized to common state format via adapter interface
+- **Spec**: `bin/pool-managerd/.specs/10_worker_adapters.md` (POOL-1xxx)
 
 ---
 
 #### [SYS-6.2.2] State Reporting
 
 Pool-managerd MUST report facts, not decisions:
-- MUST report GPU VRAM state (total, available, allocated)
+- MUST report GPU/device memory state (total, available, allocated)
 - MUST report worker state (running, ready, failed)
+- MUST report worker memory architecture (vram-only, unified)
+- MUST report worker type and capabilities
 - MUST report failures with context (exit code, error message)
 - MUST NOT decide to retry or failover
 
 **Requirements**:
-- Heartbeats MUST include GPU VRAM totals/allocated and worker states
+- Heartbeats MUST include device memory totals/allocated and worker states
+- Heartbeats MUST include worker type and capabilities for each worker
 - Missed heartbeats beyond timeout MUST mark the pool unavailable for scheduling
 
 ---
@@ -1375,23 +1377,38 @@ Pool-managerd MUST perform operational cleanup on worker failures:
 
 ---
 
-### 6.3 Worker-Orcd (Executor) [M0] (SYS-6.3.x)
+### 6.3 Worker Contract (Executor) [M0] (SYS-6.3.x)
 
-**Binary**: `bin/worker-orcd/`  
-**Port**: Dynamic (assigned by pool manager)  
-**Role**: Execute inference on single GPU, or multi-GPU via single process for tensor parallelism
+**Default implementation**: `bin/worker-orcd/` (bespoke CUDA worker)  
+**Extensibility**: Pool manager MAY support alternative worker implementations via adapter pattern (see `bin/pool-managerd/.specs/10_worker_adapters.md` POOL-1xxx spec)
 
-**Crates:**
-- **Integrated binary** — All functionality integrated into single binary due to CUDA context requirements
-- **CUDA modules** — `src/cuda/` (context, model, inference, health) - process-level operations
-- **HTTP handlers** — `src/http/` (execute, health endpoints)
-- **Lifecycle** — `src/startup.rs` (initialization and callbacks)
+**Worker contract requirements** (all workers MUST satisfy):
+- [SYS-6.3.1] Worker self-containment (separate processes)
+- [SYS-6.3.2] Worker isolation (no shared memory)
+- [SYS-6.3.3] Tensor parallelism design (multi-GPU support)
+- [SYS-6.3.4] Ready callback contract
+- [SYS-6.3.5] Cancellation handling
+- [SYS-6.3.6] HTTP API endpoints (/execute, /cancel, /health)
+- [SYS-6.3.7] Memory reporting (VRAM for NVIDIA, unified for Apple)
+- [SYS-6.3.8] Capability advertisement (text-gen, image-gen, etc.)
 
-**Binary structure:**
-- `src/cuda/` — CUDA FFI layer (memory allocation, kernels, enforcement) - process-level
-- `src/main.rs` — Worker entry point and orchestration
+**Bespoke CUDA worker** (`worker-orcd`):
+- **Binary**: `bin/worker-orcd/`
+- **Port**: Dynamic (assigned by pool manager)
+- **Role**: Execute inference on single GPU, or multi-GPU via single process for tensor parallelism
+- **Memory architecture**: VRAM-only policy (NVIDIA CUDA only)
+- **Implementation details**: See `bin/.specs/01_M0_worker_orcd.md`
+- **Crates**: Integrated binary with CUDA modules, HTTP handlers, lifecycle management
 
-**Specs**: `bin/worker-orcd/.specs/00_worker-orcd.md`
+**Apple ARM worker** (`worker-aarmd`) [Future - M3.5+]:
+- **Binary**: `bin/worker-aarmd/` (Apple ARM daemon)
+- **Port**: Dynamic (assigned by pool manager)
+- **Role**: Execute inference on Apple Silicon using Metal backend
+- **Memory architecture**: Unified memory (CPU and GPU share memory)
+- **Implementation details**: See `bin/worker-aarmd/.specs/00_worker-aarmd.md` (future)
+- **Platform**: macOS or Linux on Apple Silicon with Metal framework
+
+**Other worker types**: See `bin/pool-managerd/.specs/10_worker_adapters.md` for llama.cpp, vLLM, and image generation workers.
 
 ---
 
@@ -1399,83 +1416,85 @@ Pool-managerd MUST perform operational cleanup on worker failures:
 
 <!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 SELF-CONTAINMENT PERFORMANCE BENEFIT - Excellent architectural choice! Process isolation enables zero-overhead testing and clean VRAM lifecycle. PERFORMANCE IMPLICATIONS: (1) Each worker owns its CUDA context = no context switching overhead, (2) Standalone testing means we can benchmark worker in isolation (pure GPU performance, no orchestrator noise), (3) Process boundaries enable clean shutdown = guaranteed VRAM cleanup in <5s, (4) One model per worker = no model switching overhead, optimal cache locality. RECOMMENDATION: Add explicit performance requirement: "Worker MUST be benchmarkable in standalone mode with <1% overhead vs direct CUDA inference (measure via microbenchmarks)." This proves our architecture doesn't add latency tax! 🚀 -->
 
-Worker-orcd MUST operate as a self-contained process:
-- MUST load exactly ONE model at startup (from disk to VRAM)
-- MUST own VRAM allocation within its CUDA context
-- MUST allocate all model resources in VRAM only (no RAM fallback)
+All workers MUST operate as self-contained processes:
+- MUST load exactly ONE model at startup (from disk to memory)
+- MUST own memory allocation within its process context
 - MUST execute inference requests received via HTTP
 - MUST stream results via SSE (token-by-token)
-- MUST monitor VRAM residency (self-health checks)
-- MUST report actual VRAM usage to pool manager on ready
+- MUST monitor memory health (self-health checks)
+- MUST report actual memory usage to pool manager on ready
 
-**Requirements**:
-- Worker-orcd MUST load exactly one model at startup and MUST own all VRAM allocations within its process CUDA context
-- All model weights, KV cache, and activations MUST reside in VRAM (no RAM/unified memory fallback)
+**Worker-specific requirements**:
 
-**Model Loading Strategy**:
+**Bespoke NVIDIA workers (worker-orcd)**:
+- MUST allocate all model resources in VRAM only (no RAM fallback)
+- MUST own VRAM allocation within its CUDA context
 - MUST use memory-mapped I/O (mmap) for host I/O to avoid full RAM copies
 - MUST copy model tensors to VRAM in bounded chunks (default 1MB) to prevent RAM spikes
 - MUST support GGUF format (version 3 for MXFP4 tensor support)
 - MUST validate model before loading (magic bytes, version, tensor count, VRAM fit)
-
-**Architecture Support**:
 - MUST detect model architecture from GGUF metadata (`general.architecture`)
 - MUST support Llama-style architectures (RoPE, GQA, RMSNorm, SwiGLU) for Qwen/Phi-3 models
 - MUST support GPT-style architectures (absolute pos embedding, MHA, LayerNorm, GELU) for GPT-OSS-20B
 - MUST use architecture-specific model adapters to handle different model families (see Model Adapter in glossary)
-
-**Tokenization Strategy**:
-- MUST support two tokenizer backends selected at model load time:
-  - `gguf-bpe`: Pure-Rust GGUF byte-BPE backend (embedded in GGUF) for Qwen/Phi-3
-  - `hf-json`: Hugging Face tokenizers crate loading tokenizer.json for GPT-OSS-20B
+- MUST support two tokenizer backends: `gguf-bpe` (Qwen/Phi-3) and `hf-json` (GPT-OSS-20B)
 - MUST enforce UTF-8-safe SSE streaming (buffer partial multibyte sequences)
 - MUST expose tokenizer metadata in health endpoint: `tokenizer_kind`, `vocab_size`
+- Health endpoint MUST expose `quant_kind` field reflecting actually loaded quantization (MXFP4, Q4_K_M, Q4_0)
+- **Spec**: `bin/.specs/01_M0_worker_orcd.md`
 
-**GGUF Format Requirements**:
-- MUST support GGUF version 3 (required for MXFP4 tensor support)
-- MUST parse GGUF header: magic bytes (`0x47475546`), version, tensor count, metadata
-- MUST extract required metadata keys:
-  - `general.architecture`: Model architecture ("llama", "gpt2", etc.)
-  - `general.name`: Model name
-  - Context length, embedding dimensions, layer count (architecture-specific keys)
-- MUST validate tensor format and alignment (256-byte boundaries for optimal GPU access)
+**Apple ARM workers (worker-aarmd)** [Future - M3.5+]:
+- MUST use unified memory architecture (CPU and GPU share memory)
+- MUST allocate model resources in unified memory accessible by both CPU and GPU
+- MUST use Metal API for memory allocation and compute operations
+- MUST support GGUF format with Metal-optimized loading
+- MUST detect model architecture from GGUF metadata
+- MUST use Metal Performance Shaders (MPS) for inference kernels
+- MUST report unified memory usage (not separate VRAM)
+- Health endpoint MUST expose `memory_architecture: "unified"`
+- **Spec**: `bin/worker-aarmd/.specs/00_worker-aarmd.md` (future)
+- **Platform**: macOS or Linux on Apple Silicon with Metal framework
 
-**Quantization Format Support**:
-- **MXFP4**: Primary format for GPT-OSS-20B (~16 GB VRAM), fallback for Qwen/Phi-3
-- **Q4_K_M**: Primary format for Qwen2.5-0.5B-Instruct and Phi-3-Mini
-- **Q4_0**: Fallback compatibility format
-- Health endpoint MUST expose `quant_kind` field reflecting actually loaded quantization
+**Other worker types**: See worker adapter spec for llama.cpp, vLLM, and image generation workers.
 
 ---
 
 #### [SYS-6.3.2] Worker Isolation
 
-Each worker MUST run in a separate OS process. Workers MUST NOT share VRAM or CUDA contexts.
+Each worker MUST run in a separate OS process. Workers MUST NOT share memory or compute contexts.
 
 **Requirements**:
 - Each worker MUST have its own OS process
-- Each worker MUST have its own CUDA context
-- Workers MUST NOT share VRAM pointers
-- Worker MUST own complete VRAM lifecycle (allocate → use → free)
+- Each worker MUST have its own compute context (CUDA context for NVIDIA, Metal context for Apple)
+- Workers MUST NOT share memory pointers across processes
+- Worker MUST own complete memory lifecycle (allocate → use → free)
 
-**Rationale**: CUDA VRAM allocations are per-process. Workers need isolated VRAM ownership.
+**Rationale**: Memory allocations are per-process. Workers need isolated memory ownership.
 
-**Testing benefit**: Enables standalone worker testing (`worker-orcd --model X --gpu 0`).
+**Worker-specific isolation**:
+- **NVIDIA workers (worker-orcd)**: Each worker has its own CUDA context; VRAM allocations are per-process
+- **Apple ARM workers (worker-aarmd)**: Each worker has its own Metal context; unified memory allocations are per-process
+
+**Testing benefit**: Enables standalone worker testing (`worker-orcd --model X --gpu 0` or `worker-aarmd --model X`).
 
 ---
 
 #### [SYS-6.3.3] Tensor Parallelism Design
 
 **Tensor Parallelism Design** (M1+):
-- A single worker process MAY use multiple GPUs via CUDA for large models
-- Worker maintains one CUDA context per GPU device
+- A single worker process MAY use multiple compute devices for large models
+- Worker maintains one compute context per device
 - NOT multiple coordinated workers (maintains isolation principle)
-- Pool-managerd tracks multi-GPU workers with device mask (e.g., GPUs 0,1,2)
+- Pool-managerd tracks multi-device workers with device mask (e.g., GPUs 0,1,2)
 
 **Requirements**:
-- Multi-GPU workers MUST be tracked with device masks in pool-managerd
-- VRAM accounting MUST be per-GPU even for tensor-parallel workers
-- Worker failures MUST release all GPU allocations atomically
+- Multi-device workers MUST be tracked with device masks in pool-managerd
+- Memory accounting MUST be per-device even for tensor-parallel workers
+- Worker failures MUST release all device allocations atomically
+
+**Worker-specific tensor parallelism**:
+- **NVIDIA workers (worker-orcd)**: Use multiple CUDA contexts (one per GPU) for tensor parallelism
+- **Apple ARM workers (worker-aarmd)**: Tensor parallelism not applicable (single unified memory pool)
 
 ---
 
@@ -1483,13 +1502,20 @@ Each worker MUST run in a separate OS process. Workers MUST NOT share VRAM or CU
 
 Worker MUST issue ready callback after initialization:
 - HTTP server MUST start before the ready callback is sent (server-first)
-- Callback MUST include `worker_id`, `model_ref`, `vram_bytes`, and `uri`
+- Callback MUST include `worker_id`, `model_ref`, `memory_bytes`, `memory_architecture`, and `uri`
 - Callback endpoint is provided by pool-managerd at worker startup
 
 **Requirements**:
-- Ready callback to pool-managerd MUST include `worker_id`, `model_ref`, `vram_bytes`, and `uri`
+- Ready callback to pool-managerd MUST include:
+  - `worker_id`: Unique worker identifier
+  - `model_ref`: Resolved model reference
+  - `memory_bytes`: Actual memory usage (VRAM for NVIDIA, unified for Apple)
+  - `memory_architecture`: Memory type (`vram-only` for NVIDIA, `unified` for Apple)
+  - `uri`: Worker HTTP endpoint
+  - `worker_type`: Worker adapter name (e.g., `bespoke-cuda`, `apple-metal`)
+  - `capabilities`: Advertised capabilities (e.g., `["text-gen"]`)
 - Callback failures MUST cause worker to exit with error code
-- Pool-managerd MUST update VRAM accounting and mark worker ready atomically upon receiving callback
+- Pool-managerd MUST update memory accounting and mark worker ready atomically upon receiving callback
 
 ---
 
@@ -1497,7 +1523,7 @@ Worker MUST issue ready callback after initialization:
 
 Worker MUST handle cancellation requests promptly:
 - Upon receiving `POST /cancel`, worker MUST stop decoding
-- Worker MUST free resources (VRAM, buffers)
+- Worker MUST free resources (memory, buffers)
 - Worker MUST emit SSE `error` event with stable code `CANCELLED`
 - Worker SHOULD return HTTP 202 to acknowledge cancellation
 
@@ -1505,6 +1531,35 @@ Worker MUST handle cancellation requests promptly:
 - Cancellation MUST be idempotent (repeated cancels for same job_id are safe)
 - Worker MUST complete cancellation within deadline (default 5s)
 - SSE stream MUST emit terminal `error` event with `CANCELLED` code
+
+#### [SYS-6.3.6] HTTP API Endpoints
+
+All workers MUST expose standard HTTP API endpoints:
+- `POST /execute` — Execute inference request
+- `POST /cancel` — Cancel running inference
+- `GET /health` — Health check and metadata
+
+**Requirements**:
+- Endpoints MUST conform to worker contract defined in worker adapter spec
+- Health endpoint MUST expose worker metadata (model, memory usage, capabilities)
+
+#### [SYS-6.3.7] Memory Reporting
+
+Workers MUST report memory usage to pool manager:
+- **NVIDIA workers (worker-orcd)**: Report VRAM usage via CUDA queries
+- **Apple ARM workers (worker-aarmd)**: Report unified memory usage via Metal queries
+- Memory reporting MUST be accurate and updated in real-time
+
+#### [SYS-6.3.8] Capability Advertisement
+
+Workers MUST advertise capabilities via ready callback and health endpoint:
+- `text-gen` — Text generation (LLMs)
+- `image-gen` — Image generation (Stable Diffusion, DALL-E)
+- `audio-gen` — Audio generation (speech synthesis, music)
+- `embedding` — Text embeddings
+- `multimodal` — Vision-language models
+
+Orchestrator uses capabilities for job routing, not worker types.
 
 ---
 

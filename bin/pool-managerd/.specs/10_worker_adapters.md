@@ -223,24 +223,32 @@ adapters:
 
 **Purpose**: Support Apple Silicon workers using Metal backend
 
+**IMPORTANT**: Apple ARM workers use **UNIFIED MEMORY architecture**, NOT VRAM-only. This is a fundamental architectural difference from bespoke NVIDIA workers.
+
 **Requirements**:
-- [POOL-1030] Adapter MUST spawn `worker-orcd-arm` binary (Metal-enabled variant)
-- [POOL-1031] Adapter MUST use Metal API for VRAM queries (not NVML)
-- [POOL-1032] Adapter MUST support unified memory architecture
+- [POOL-1030] Adapter MUST spawn `worker-armd` binary (Apple Metal worker with unified memory)
+- [POOL-1031] Adapter MUST use Metal API for memory queries (not NVML)
+- [POOL-1032] Adapter MUST support unified memory architecture (CPU and GPU share memory)
 - [POOL-1033] Adapter MUST advertise capability: `text-gen`
+- [POOL-1034] Adapter MUST report memory architecture as `unified` (not `vram-only`)
 
 **Configuration**:
 ```yaml
 adapters:
   - name: "apple-metal"
     type: "AppleMetalAdapter"
-    binary_path: "/usr/local/bin/worker-orcd-arm"
+    binary_path: "/usr/local/bin/worker-aarmd"
     capabilities: ["text-gen"]
+    memory_architecture: "unified"  # NOT vram-only
 ```
 
 **Platform requirements**:
 - Platform MUST be macOS or Linux on Apple Silicon
 - Metal framework MUST be available
+
+**Memory Architecture Note**: 
+- Bespoke NVIDIA workers (`worker-orcd`): VRAM-ONLY policy (see `bin/.specs/01_M0_worker_orcd.md`)
+- Apple ARM workers (`worker-aarmd`): UNIFIED MEMORY policy (see `bin/worker-aarmd/.specs/00_worker-aarmd.md` when created)
 
 ---
 

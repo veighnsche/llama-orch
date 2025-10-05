@@ -1,0 +1,13 @@
+[package]
+name = "worker-models"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "Model adapters (GPT, Llama, Phi-3) for llama-orch workers"
+
+[dependencies]
+worker-gguf = { path = "../worker-gguf" }
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]

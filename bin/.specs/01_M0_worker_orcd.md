@@ -1,10 +1,12 @@
-# M0: Worker-orcd Complete Specification
+# M0: Worker-orcd Complete Specification — Bespoke NVIDIA VRAM-ONLY Worker
 
 **Status**: Draft (Hybrid Scope - Performance Bundle Deferred)  
 **Milestone**: M0 (v0.1.0) — Worker Haiku Test  
 **Version**: 0.1.0  
 **Conformance language**: RFC-2119 (MUST/SHOULD/MAY)  
 **Timeline**: 6-7 weeks (4-5 weeks foundation + 1-2 weeks architecture adapters)
+
+**CRITICAL: This worker implements VRAM-ONLY + NVIDIA CUDA ONLY policy. For other architectures (Apple ARM, AMD), see separate worker specs.**
 
 ---
 
@@ -105,7 +107,9 @@
 
 ### 0.1 Purpose
 
-This specification consolidates **ALL M0 requirements** for the `worker-orcd` binary. M0 is the foundational milestone that delivers a standalone GPU worker capable of loading a single model and executing inference with deterministic, VRAM-only operation.
+This specification consolidates **ALL M0 requirements** for the `worker-orcd` binary. This is the **bespoke NVIDIA CUDA worker** with strict **VRAM-ONLY enforcement**.
+
+**Worker Type**: Bespoke NVIDIA CUDA Worker (VRAM-ONLY)
 
 **M0 Goal**: Prove the worker can load a model, execute inference, and stream results—standalone, without orchestrator or pool-manager dependencies.
 
@@ -113,22 +117,24 @@ This specification consolidates **ALL M0 requirements** for the `worker-orcd` bi
 - Worker loads Qwen2.5-0.5B-Instruct (352MB GGUF) into VRAM
 - Executes a fixed haiku prompt with (seeded RNG, temperature=0) and produces identical token IDs across two runs on the same device
 - Streams tokens via SSE
-- All operations VRAM-only (no RAM fallback)
+- **All operations VRAM-only (no RAM fallback)** — NVIDIA CUDA ONLY
+
+**IMPORTANT**: This worker is NVIDIA-specific. For Apple ARM workers (unified memory), see `bin/worker-armd/` (future). For other worker types, see `bin/pool-managerd/.specs/10_worker_adapters.md`.
 
 ### 0.2 Scope
 
 **In Scope for M0**:
-- ✅ Single worker binary (`worker-orcd`)
+- ✅ Single worker binary (`worker-orcd`) — **NVIDIA CUDA ONLY**
 - ✅ Single model loading (GGUF format)
 - ✅ Single GPU support (no tensor parallelism)
-- ✅ VRAM-only enforcement
+- ✅ **VRAM-only enforcement (NVIDIA CUDA ONLY — no unified memory, no RAM fallback)**
 - ✅ Quantized-only execution (Q4_K_M, MXFP4, Q4_0 - NO dequantization to FP32)
 - ✅ HTTP API (execute, health, cancel)
 - ✅ SSE streaming with UTF-8 boundary safety
 - ✅ Tokenization: Two backends (`hf-json` for GPT-OSS-20B, `gguf-bpe` for Qwen/Phi-3)
 - ✅ Architecture adapters: Llama-style (Qwen/Phi-3) and GPT-style (GPT-OSS-20B) inference pipelines
 - ✅ Test reproducibility (seeded RNG, temp=0 for testing; temp 0.0-2.0 for production)
-- ✅ CUDA FFI boundary (Rust ↔ C++/CUDA)
+- ✅ **CUDA FFI boundary (Rust ↔ C++/CUDA) — NVIDIA ONLY**
 - ✅ Architecture-specific CUDA kernels:
   - Llama-style: RoPE, GQA attention, RMSNorm, SwiGLU
   - GPT-style: Absolute pos embedding, MHA attention, LayerNorm, GELU
@@ -287,14 +293,16 @@ Once loaded, the model MUST remain immutable. Worker-orcd MUST NOT support model
 
 ---
 
-## 2. VRAM-Only Policy
+## 2. VRAM-Only Policy (NVIDIA CUDA ONLY)
+
+**CRITICAL**: This section applies ONLY to worker-orcd (bespoke NVIDIA worker). Other worker types (Apple ARM, AMD) have different memory architectures defined in their respective specs.
 
 ### 2.1 System Requirements
 
-#### [M0-SYS-2.2.1] VRAM-Only Enforcement
+#### [M0-SYS-2.2.1] VRAM-Only Enforcement (NVIDIA CUDA ONLY)
 **Parent**: SYS-2.2.1
 
-The system MUST enforce VRAM-only policy: model weights, KV cache, activations, and intermediate tensors MUST reside entirely in GPU VRAM.
+**This worker-orcd (bespoke NVIDIA worker) MUST enforce VRAM-only policy**: model weights, KV cache, activations, and intermediate tensors MUST reside entirely in GPU VRAM.
 
 **Prohibited**:
 - ❌ RAM fallback

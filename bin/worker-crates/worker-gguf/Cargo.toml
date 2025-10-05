@@ -1,0 +1,12 @@
+[package]
+name = "worker-gguf"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "GGUF file format parser for llama-orch workers"
+
+[dependencies]
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
