@@ -15,7 +15,7 @@ use axum::Router;
 use std::net::SocketAddr;
 use thiserror::Error;
 use tokio::sync::broadcast;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
 /// HTTP server errors
 #[derive(Debug, Error)]
