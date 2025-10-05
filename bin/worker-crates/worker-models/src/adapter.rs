@@ -4,7 +4,6 @@
 //! Enables model-agnostic code and easy model switching.
 //!
 //! # Architecture
-//!
 //! The adapter uses enum dispatch to route calls to model-specific implementations:
 //! - `ModelType` enum identifies which model is loaded
 //! - `Option<ModelImpl>` fields store model instances
@@ -13,33 +12,16 @@
 //! # Example
 //!
 //! ```no_run
-//! use worker_orcd::models::{
-//!     LlamaModelAdapter, AdapterForwardConfig,
-//!     qwen::{QwenConfig, QwenWeightLoader},
-//! };
+//! use worker_models::{LlamaModelAdapter, AdapterForwardConfig, QwenConfig};
 //!
-//! // Load model
+//! // Load model (stub implementation for testing)
 //! let config = QwenConfig::qwen2_5_0_5b();
-//! let model = QwenWeightLoader::load_to_vram("model.gguf", &config)?;
-//!
-//! // Create adapter
-//! let adapter = LlamaModelAdapter::new_qwen(model);
-//!
-//! // Generate tokens
-//! let input_ids = vec![1, 2, 3];
-//! let config = AdapterForwardConfig {
-//!     is_prefill: true,
-//!     batch_size: 1,
-//!     seq_len: input_ids.len(),
-//!     cache_len: 0,
-//!     temperature: 0.7,
-//!     seed: 42,
-//! };
-//! let output = adapter.generate(&input_ids, 50, &config)?;
+//! // In production: let model = QwenWeightLoader::load_to_vram("model.gguf", &config)?;
+//! // let adapter = LlamaModelAdapter::new_qwen(model);
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 //!
-//! # Spec References
+//! # Spec Refs
 //! - M0-W-1214: Adapter pattern specification
 //! - FT-071: Foundation team adapter implementation
 //! - LT-033: Llama team adapter integration

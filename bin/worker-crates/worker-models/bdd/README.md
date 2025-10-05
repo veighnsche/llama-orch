@@ -23,4 +23,4 @@ cargo run --bin bdd-runner -- tests/features/model_adapters.feature
 ## Supported Architectures
 
 - **Llama-style**: Qwen, Phi-3, Llama 2/3
-- **GPT-style**: GPT-2, GPT-OSS-20B
+- **GPT-style**: GPT-OSS-20B (M0 target), GPT-2 (reference)

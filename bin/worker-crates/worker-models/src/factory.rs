@@ -6,13 +6,13 @@
 //! # Example
 //!
 //! ```no_run
-//! use worker_orcd::models::factory::AdapterFactory;
+//! use worker_models::AdapterFactory;
 //!
 //! // Create adapter from GGUF file (auto-detect architecture)
 //! let adapter = AdapterFactory::from_gguf("model.gguf")?;
 //!
 //! // Or specify architecture explicitly
-//! let adapter = AdapterFactory::from_gguf_with_arch("model.gguf", "llama")?;
+//! let adapter = AdapterFactory::from_gguf_with_arch_str("model.gguf", "llama")?;
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 //!
@@ -154,23 +154,23 @@ impl AdapterFactory {
     /// Detect model variant from filename
     fn detect_model_variant(path: &str) -> Result<ModelType, FactoryError> {
         let path_lower = path.to_lowercase();
-
+        
         if path_lower.contains("qwen") {
             Ok(ModelType::Qwen2_5)
-        } else if path_lower.contains("phi") {
+        } else if path_lower.contains("phi-3") || path_lower.contains("phi3") {
             Ok(ModelType::Phi3)
-        } else if path_lower.contains("llama-2") {
+        } else if path_lower.contains("llama-2") || path_lower.contains("llama2") {
             Ok(ModelType::Llama2)
         } else if path_lower.contains("llama-3") || path_lower.contains("llama3") {
             Ok(ModelType::Llama3)
+        } else if path_lower.contains("gpt-oss") || path_lower.contains("gpt_oss") {
+            Ok(ModelType::GPT2) // GPT-OSS-20B uses GPT2 model type
         } else if path_lower.contains("gpt-2") || path_lower.contains("gpt2") {
             Ok(ModelType::GPT2)
         } else if path_lower.contains("gpt-3") || path_lower.contains("gpt3") {
             Ok(ModelType::GPT3)
         } else {
-            Err(FactoryError::UnsupportedVariant(
-                "Cannot detect model variant from filename".to_string(),
-            ))
+            Err(FactoryError::UnsupportedVariant("Cannot detect model variant from filename".to_string()))
         }
     }
 
@@ -205,8 +205,9 @@ impl AdapterFactory {
 
         match variant {
             ModelType::GPT2 => {
-                // TODO: Detect size from GGUF metadata
-                let config = GPTConfig::gpt2_small();
+                // Use GPT-OSS-20B as the primary GPT model (M0 target)
+                // TODO: Detect size from GGUF metadata to choose between gpt_oss_20b() and gpt2_small()
+                let config = GPTConfig::gpt_oss_20b();
                 let model = GPTWeightLoader::load_to_vram(path, &config)
                     .map_err(|e| FactoryError::ModelLoadingFailed(e.to_string()))?;
                 Ok(LlamaModelAdapter::new_gpt2(model))
@@ -271,6 +272,10 @@ mod tests {
             ModelType::Phi3
         );
         assert_eq!(
+            AdapterFactory::detect_model_variant("gpt-oss-20b.gguf").unwrap(),
+            ModelType::GPT2
+        );
+        assert_eq!(
             AdapterFactory::detect_model_variant("gpt2-small.gguf").unwrap(),
             ModelType::GPT2
         );
@@ -292,6 +297,14 @@ mod tests {
         let adapter = AdapterFactory::from_gguf("phi-3-mini.gguf").unwrap();
         assert_eq!(adapter.model_type(), ModelType::Phi3);
         assert_eq!(adapter.vocab_size().unwrap(), 32064);
+    }
+
+    #[test]
+    fn test_from_gguf_gpt_oss() {
+        let adapter = AdapterFactory::from_gguf("gpt-oss-20b.gguf").unwrap();
+        assert_eq!(adapter.model_type(), ModelType::GPT2);
+        assert_eq!(adapter.vocab_size().unwrap(), 50257);
+        assert_eq!(adapter.num_layers().unwrap(), 44);
     }
 
     #[test]

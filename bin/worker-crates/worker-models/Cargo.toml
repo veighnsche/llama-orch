@@ -3,7 +3,7 @@ name = "worker-models"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
-description = "Model adapters (GPT, Llama, Phi-3, Qwen) for llama-orch workers"
+description = "Model adapters (GPT-OSS-20B, Llama, Phi-3, Qwen) for llama-orch workers"
 
 [dependencies]
 worker-gguf = { path = "../worker-gguf" }
@@ -14,3 +14,5 @@ tracing = "0.1"
 
 [dev-dependencies]
 toml = "0.8"
+proptest = "1.0"
+tempfile = "3.0"
