@@ -100,26 +100,27 @@ void GPTModel::apply_output_head(
     const half alpha = 1.0f;
     const half beta = 0.0f;
     
+    // Optimal settings from RESEARCH_RESULTS.md Table 4
     cublasStatus_t status = cublasGemmEx(
         cublas_handle_,
-        CUBLAS_OP_T,  // Transpose lm_head_weight
+        CUBLAS_OP_T,  // Transpose lm_head_weight (from research)
         CUBLAS_OP_N,  // Don't transpose normalized
         cfg.vocab_size,  // M: rows of output
         1,               // N: cols of output (single token)
         cfg.hidden_dim,  // K: shared dimension
         &alpha,
         weights_->lm_head_weight,  // A: [hidden_dim, vocab_size]
-        CUDA_R_16F,
+        CUDA_R_16F,  // FP16 for efficiency
         cfg.hidden_dim,  // lda
         normalized,      // B: [1, hidden_dim]
-        CUDA_R_16F,
+        CUDA_R_16F,  // FP16 for efficiency
         cfg.hidden_dim,  // ldb
         &beta,
         logits,          // C: [1, vocab_size]
-        CUDA_R_16F,
+        CUDA_R_16F,  // FP16 for efficiency
         cfg.vocab_size,  // ldc
-        CUBLAS_COMPUTE_16F,
-        CUBLAS_GEMM_DEFAULT
+        CUBLAS_COMPUTE_32F_FAST_16F,  // Mixed precision with Tensor Cores (from research)
+        CUBLAS_GEMM_DEFAULT_TENSOR_OP  // Enable Tensor Cores (from research)
     );
     
     if (status != CUBLAS_STATUS_SUCCESS) {

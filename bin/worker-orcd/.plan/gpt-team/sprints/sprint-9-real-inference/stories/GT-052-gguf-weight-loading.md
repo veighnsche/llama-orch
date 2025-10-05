@@ -149,6 +149,8 @@ void GPTWeightLoader::load_embeddings(
 
 #### 3. Implement load_layer()
 
+**IMPORTANT**: Research shows Qwen2.5-0.5B has **separate Q/K/V with bias** (not fused QKV)
+
 ```cpp
 void GPTWeightLoader::load_layer(
     GPTLayerWeights* layer,
@@ -159,27 +161,32 @@ void GPTWeightLoader::load_layer(
 ) {
     std::string prefix = "blk." + std::to_string(layer_idx) + ".";
     
-    // Attention norm
+    // Attention norm (RMSNorm - no bias)
     layer->attn_norm_weight = load_tensor(mmap, tensors, prefix + "attn_norm.weight");
-    layer->attn_norm_bias = load_tensor(mmap, tensors, prefix + "attn_norm.bias");
+    // Note: No attn_norm.bias for RMSNorm
     
-    // Attention QKV
-    layer->attn_qkv_weight = load_tensor(mmap, tensors, prefix + "attn_qkv.weight");
-    layer->attn_qkv_bias = load_tensor(mmap, tensors, prefix + "attn_qkv.bias");
+    // Attention Q/K/V (SEPARATE, not fused - from RESEARCH_RESULTS.md Table 1)
+    // CRITICAL: Qwen2.5 has bias for Q/K/V (required for stability)
+    layer->attn_q_weight = load_tensor(mmap, tensors, prefix + "attn_q.weight");
+    layer->attn_q_bias = load_tensor(mmap, tensors, prefix + "attn_q.bias");  // REQUIRED
+    layer->attn_k_weight = load_tensor(mmap, tensors, prefix + "attn_k.weight");
+    layer->attn_k_bias = load_tensor(mmap, tensors, prefix + "attn_k.bias");  // REQUIRED
+    layer->attn_v_weight = load_tensor(mmap, tensors, prefix + "attn_v.weight");
+    layer->attn_v_bias = load_tensor(mmap, tensors, prefix + "attn_v.bias");  // REQUIRED
     
-    // Attention output
+    // Attention output (no bias)
     layer->attn_out_weight = load_tensor(mmap, tensors, prefix + "attn_output.weight");
-    layer->attn_out_bias = load_tensor(mmap, tensors, prefix + "attn_output.bias");
+    // Note: No attn_output.bias
     
-    // FFN norm
+    // FFN norm (RMSNorm - no bias)
     layer->ffn_norm_weight = load_tensor(mmap, tensors, prefix + "ffn_norm.weight");
-    layer->ffn_norm_bias = load_tensor(mmap, tensors, prefix + "ffn_norm.bias");
+    // Note: No ffn_norm.bias for RMSNorm
     
-    // FFN weights
+    // FFN weights (SwiGLU - no bias)
+    layer->ffn_gate_weight = load_tensor(mmap, tensors, prefix + "ffn_gate.weight");
     layer->ffn_up_weight = load_tensor(mmap, tensors, prefix + "ffn_up.weight");
-    layer->ffn_up_bias = load_tensor(mmap, tensors, prefix + "ffn_up.bias");
     layer->ffn_down_weight = load_tensor(mmap, tensors, prefix + "ffn_down.weight");
-    layer->ffn_down_bias = load_tensor(mmap, tensors, prefix + "ffn_down.bias");
+    // Note: No FFN bias terms
     
     // Track VRAM usage
     layer->total_vram_bytes = calculate_layer_vram(layer);

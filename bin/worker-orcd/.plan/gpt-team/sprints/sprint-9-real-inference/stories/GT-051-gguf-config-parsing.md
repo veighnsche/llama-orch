@@ -41,26 +41,23 @@ GPTConfig GPTWeightLoader::parse_config_from_gguf(const std::string& path) {
 
 ---
 
-## Acceptance Criteria
-
 - [ ] Parse GGUF header using existing `parse_gguf_header()` function
 - [ ] Extract config from GGUF metadata using existing `extract_llama_config()` helper
 - [ ] Map GGUF metadata keys to `GPTConfig` struct fields
 - [ ] Detect architecture from `general.architecture` metadata key
 - [ ] Validate extracted config (all required fields present)
-- [ ] Handle missing metadata gracefully with clear error messages
-- [ ] Works for Qwen2.5-0.5B-Instruct (llama architecture)
+- [ ] Works for Qwen2.5-0.5B (llama architecture)
 - [ ] Works for GPT-OSS-20B (gpt2 architecture)
 - [ ] Remove hardcoded config values
 - [ ] Unit test verifies correct config extraction
-
----
 
 ## Technical Details
 
 ### Implementation
 
 **File**: `cuda/src/model/gpt_weights.cpp`
+
+**IMPORTANT**: Research shows Qwen2.5-0.5B uses architecture="qwen2" with metadata keys prefixed `qwen2.*`
 
 ```cpp
 GPTConfig GPTWeightLoader::parse_config_from_gguf(const std::string& path) {
@@ -77,52 +74,38 @@ GPTConfig GPTWeightLoader::parse_config_from_gguf(const std::string& path) {
         }
     }
     
-    // 3. Use existing llama_metadata helper for Llama-style models
-    if (arch == "llama") {
-        auto llama_config = gguf::extract_llama_config(header.metadata);
-        
-        // Map to GPTConfig
-        GPTConfig config;
-        config.vocab_size = llama_config.vocab_size;
-        config.hidden_dim = llama_config.embedding_length;
-        config.num_layers = llama_config.block_count;
-        config.num_heads = llama_config.attention_head_count;
-        config.head_dim = llama_config.head_dim;
-        config.ffn_dim = llama_config.feed_forward_length;
-        config.max_seq_len = llama_config.context_length;
-        config.context_length = llama_config.context_length;
-        
-        // Extract quantization type from first tensor
-        if (!header.tensors.empty()) {
-            config.quant_kind = gguf::tensor_type_to_string(header.tensors[0].type);
-        }
-        
-        return config;
-    }
-    
-    // 4. For GPT-style models, extract directly from metadata
-    if (arch == "gpt2" || arch == "gpt") {
+    // 3. For Qwen2 models (Qwen2.5-0.5B)
+    // Research: architecture="qwen2", keys prefixed with "qwen2."
+    if (arch == "qwen2") {
         GPTConfig config;
         
-        // Extract required fields
+        // Extract required fields (from RESEARCH_RESULTS.md Table 2)
         for (const auto& kv : header.metadata) {
-            if (kv.key == "gpt2.vocab_size" && kv.value_type == gguf::GGUFValueType::UINT32) {
-                config.vocab_size = kv.uint_value;
-            } else if (kv.key == "gpt2.embedding_length") {
-                config.hidden_dim = kv.uint_value;
-            } else if (kv.key == "gpt2.block_count") {
-                config.num_layers = kv.uint_value;
-            } else if (kv.key == "gpt2.attention.head_count") {
-                config.num_heads = kv.uint_value;
-            } else if (kv.key == "gpt2.feed_forward_length") {
-                config.ffn_dim = kv.uint_value;
-            } else if (kv.key == "gpt2.context_length") {
-                config.max_seq_len = kv.uint_value;
+            if (kv.key == "qwen2.vocab_size") {
+                config.vocab_size = kv.uint_value;  // 151,643
+            } else if (kv.key == "qwen2.embedding_length") {
+                config.hidden_dim = kv.uint_value;  // 896
+            } else if (kv.key == "qwen2.block_count") {
+                config.num_layers = kv.uint_value;  // 24
+            } else if (kv.key == "qwen2.attention.head_count") {
+                config.num_heads = kv.uint_value;  // 14
+            } else if (kv.key == "qwen2.attention.head_count_kv") {
+                config.num_kv_heads = kv.uint_value;  // 2 (GQA)
+            } else if (kv.key == "qwen2.feed_forward_length") {
+                config.ffn_dim = kv.uint_value;  // 4,864
+            } else if (kv.key == "qwen2.context_length") {
+                config.max_seq_len = kv.uint_value;  // 32,768
                 config.context_length = kv.uint_value;
+            } else if (kv.key == "qwen2.rope.dimension_count") {
+                config.rope_dim = kv.uint_value;  // 64
+            } else if (kv.key == "qwen2.rope.freq_base") {
+                config.rope_freq_base = kv.float_value;  // 1,000,000.0
+            } else if (kv.key == "qwen2.attention.layer_norm_rms_epsilon") {
+                config.rms_norm_eps = kv.float_value;  // 1e-6
             }
         }
         
-        config.head_dim = config.hidden_dim / config.num_heads;
+        config.head_dim = config.hidden_dim / config.num_heads;  // 896 / 14 = 64
         
         // Extract quantization
         if (!header.tensors.empty()) {
@@ -130,6 +113,17 @@ GPTConfig GPTWeightLoader::parse_config_from_gguf(const std::string& path) {
         }
         
         return config;
+    }
+    
+    // 4. For pure Llama models (if needed later)
+    if (arch == "llama") {
+        auto llama_config = gguf::extract_llama_config(header.metadata);
+        // ... (existing code)
+    }
+    
+    // 5. For GPT-style models (if needed later)
+    if (arch == "gpt2" || arch == "gpt") {
+        // ... (existing code)
     }
     
     throw CudaError::model_load_failed("Unsupported architecture: " + arch);

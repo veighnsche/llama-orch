@@ -100,7 +100,9 @@ std::unique_ptr<BPETokenizer> load_bpe_from_gguf(const gguf::GGUFHeader& header)
 
 ### Implementation
 
-**Key algorithm** (BPE encoding):
+**IMPORTANT**: Research provides complete BPE algorithm (see `RESEARCH_RESULTS.md` lines 97-146)
+
+**Key algorithm** (BPE encoding - adapted from research):
 ```cpp
 std::vector<uint32_t> BPETokenizer::encode(const std::string& text, bool add_bos) {
     std::vector<uint32_t> token_ids;
@@ -109,21 +111,61 @@ std::vector<uint32_t> BPETokenizer::encode(const std::string& text, bool add_bos
         token_ids.push_back(bos_token_id_);
     }
     
-    // Split text into words
-    std::vector<std::string> words = split_into_words(text);
+    // 1. Convert text to UTF-8 bytes (byte-level BPE)
+    std::vector<uint8_t> bytes(text.begin(), text.end());
     
-    for (const auto& word : words) {
-        // Apply BPE merges
-        auto subwords = byte_pair_encode(word);
+    // 2. Initialize tokens as byte strings
+    std::vector<std::string> tokens;
+    for (uint8_t b : bytes) {
+        tokens.push_back(byte_to_token_string(b));
+    }
+    
+    // 3. Iteratively apply BPE merges (from RESEARCH_RESULTS.md)
+    while (true) {
+        // Find adjacent pairs
+        std::map<std::pair<std::string, std::string>, int> pairs;
+        for (size_t i = 0; i < tokens.size() - 1; i++) {
+            pairs[{tokens[i], tokens[i+1]}]++;
+        }
         
-        // Convert to token IDs
-        for (const auto& subword : subwords) {
-            auto it = token_to_id_.find(subword);
-            if (it != token_to_id_.end()) {
-                token_ids.push_back(it->second);
-            } else {
-                token_ids.push_back(unk_token_id_);
+        if (pairs.empty()) break;
+        
+        // Find highest-priority merge
+        std::pair<std::string, std::string> best_pair;
+        int best_rank = INT_MAX;
+        for (const auto& [pair, count] : pairs) {
+            auto it = merges_.find(pair);
+            if (it != merges_.end() && it->second < best_rank) {
+                best_rank = it->second;
+                best_pair = pair;
             }
+        }
+        
+        if (best_rank == INT_MAX) break;
+        
+        // Merge the best pair
+        std::vector<std::string> new_tokens;
+        for (size_t i = 0; i < tokens.size(); ) {
+            if (i < tokens.size() - 1 && 
+                tokens[i] == best_pair.first && 
+                tokens[i+1] == best_pair.second) {
+                new_tokens.push_back(tokens[i] + tokens[i+1]);
+                i += 2;
+            } else {
+                new_tokens.push_back(tokens[i]);
+                i++;
+            }
+        }
+        tokens = std::move(new_tokens);
+    }
+    
+    // 4. Convert tokens to IDs
+    for (const auto& token : tokens) {
+        auto it = token_to_id_.find(token);
+        if (it != token_to_id_.end()) {
+            token_ids.push_back(it->second);
+        } else {
+            token_ids.push_back(unk_token_id_);
         }
     }
     
