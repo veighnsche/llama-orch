@@ -1,0 +1,19 @@
+[package]
+name = "worker-gguf-bdd"
+version = "0.0.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[features]
+default = ["bdd-cucumber"]
+bdd-cucumber = []
+
+[dependencies]
+anyhow = { workspace = true }
+cucumber = "0.20"
+tokio = { workspace = true }
+worker-gguf = { path = ".." }
+
+[[bin]]
+name = "bdd-runner"
+path = "src/main.rs"

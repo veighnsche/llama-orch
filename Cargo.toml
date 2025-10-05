@@ -110,11 +110,16 @@ members = [
     # Shared libraries used across all worker implementations (worker-orcd, worker-aarmd).
     # These crates contain pure Rust code with no platform-specific FFI dependencies.
     
-    "bin/worker-crates/worker-http",       # HTTP server, SSE streaming, route handling
     "bin/worker-crates/worker-gguf",       # GGUF file format parser (pure Rust)
+    "bin/worker-crates/worker-gguf/bdd",   # BDD tests for GGUF parsing
     "bin/worker-crates/worker-tokenizer",  # Tokenization (BPE, HuggingFace)
+    "bin/worker-crates/worker-tokenizer/bdd", # BDD tests for tokenization
     "bin/worker-crates/worker-models",     # Model adapters (GPT, Llama, Phi-3, Qwen)
+    "bin/worker-crates/worker-models/bdd", # BDD tests for model adapters
     "bin/worker-crates/worker-common",     # Common types, errors, sampling config
+    "bin/worker-crates/worker-common/bdd", # BDD tests for common types
+    "bin/worker-crates/worker-http",       # HTTP server, SSE streaming, route handling
+    "bin/worker-crates/worker-http/bdd",   # BDD tests for HTTP server
     "bin/worker-crates/worker-compute",    # Platform-agnostic compute trait
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
