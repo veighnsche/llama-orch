@@ -23,7 +23,7 @@ Implement the canonical M0 success test: anti-cheat haiku generation that proves
 - [ ] Test validates SSE stream format (started → token* → end)
 - [ ] Test validates VRAM-only operation
 - [ ] Test validates metrics delta (tokens_out increases)
-- [ ] Proof bundle artifacts generated (see below)
+- [ ] Test artifacts saved to `.test-results/haiku/<run_id>/`
 - [ ] Test runs in CI with `REQUIRE_REAL_LLAMA=1`
 - [ ] Finishes within ≤30 seconds
 
@@ -150,11 +150,13 @@ async fn test_haiku_generation_anti_cheat() {
         elapsed
     );
     
-    // Generate proof bundle
-    let proof_bundle = ProofBundle::for_type(TestType::E2EHaiku, &run_id);
+    // Save test artifacts
+    let artifacts_dir = std::path::PathBuf::from(".test-results/haiku")
+        .join(&run_id);
+    std::fs::create_dir_all(&artifacts_dir).unwrap();
     
-    // Save artifacts
-    proof_bundle.write_json("verification.json", &serde_json::json!({
+    // Save verification results
+    let verification = serde_json::json!({
         "minute": minute,
         "minute_word": minute_word,
         "nonce": nonce,
@@ -164,27 +166,32 @@ async fn test_haiku_generation_anti_cheat() {
         "tokens_generated": tokens_generated,
         "elapsed_ms": elapsed.as_millis(),
         "timestamp": now.to_rfc3339(),
-    })).unwrap();
+    });
+    std::fs::write(
+        artifacts_dir.join("verification.json"),
+        serde_json::to_string_pretty(&verification).unwrap()
+    ).unwrap();
     
-    proof_bundle.write_ndjson("sse_transcript.ndjson", &events).unwrap();
+    // Save SSE transcript
+    let transcript_path = artifacts_dir.join("sse_transcript.ndjson");
+    let mut transcript = std::fs::File::create(&transcript_path).unwrap();
+    for event in &events {
+        writeln!(transcript, "{}", serde_json::to_string(event).unwrap()).unwrap();
+    }
     
-    proof_bundle.write_json("metrics_snapshot.json", &serde_json::json!({
-        "before": {
-            "tokens_out_total": tokens_before,
-        },
-        "after": {
-            "tokens_out_total": tokens_after,
-        },
+    // Save metrics snapshot
+    let metrics = serde_json::json!({
+        "before": { "tokens_out_total": tokens_before },
+        "after": { "tokens_out_total": tokens_after },
         "delta": tokens_generated,
-    })).unwrap();
+    });
+    std::fs::write(
+        artifacts_dir.join("metrics_snapshot.json"),
+        serde_json::to_string_pretty(&metrics).unwrap()
+    ).unwrap();
     
-    proof_bundle.write_json("gpu_env.json", &serde_json::json!({
-        "device": harness.gpu_device(),
-        "model": harness.model_name(),
-        "vram_bytes": harness.vram_usage(),
-    })).unwrap();
-    
-    proof_bundle.write_markdown("test_report.md", &format!(
+    // Save test report
+    let report = format!(
         "# M0 Haiku Anti-Cheat Test Report\n\n\
          **Run ID**: {}\n\
          **Timestamp**: {}\n\
@@ -200,7 +207,8 @@ async fn test_haiku_generation_anti_cheat() {
          - ✅ Real GPU used (VRAM-only)\n",
         run_id, now.to_rfc3339(), minute, minute_word, nonce,
         tokens_generated, elapsed, haiku, minute_word, tokens_generated, elapsed
-    )).unwrap();
+    );
+    std::fs::write(artifacts_dir.join("test_report.md"), report).unwrap();
     
     println!("\n🎨 M0 Haiku Anti-Cheat Test PASSED");
     println!("Minute: {} (\"{}\")", minute, minute_word);
@@ -208,20 +216,19 @@ async fn test_haiku_generation_anti_cheat() {
     println!("Tokens: {}", tokens_generated);
     println!("Time: {:?}", elapsed);
     println!("\nHaiku:\n{}\n", haiku);
-    println!("Proof bundle: {}", proof_bundle.path().display());
+    println!("Artifacts: {}", artifacts_dir.display());
 }
 ```
 
 ---
 
-## Proof Bundle Artifacts
+## Test Artifacts
 
-Located in: `bin/worker-orcd/.proof_bundle/e2e-haiku/<run_id>/`
+Located in: `.test-results/haiku/<run_id>/`
 
 - **verification.json**: Minute word, nonce, validation results
 - **sse_transcript.ndjson**: Complete SSE event stream
-- **metrics_snapshot.json**: Prometheus metrics before/after
-- **gpu_env.json**: GPU device info, model name, VRAM usage
+- **metrics_snapshot.json**: Metrics before/after
 - **test_report.md**: Human-readable summary with haiku output
 
 ---
@@ -241,7 +248,7 @@ Located in: `bin/worker-orcd/.proof_bundle/e2e-haiku/<run_id>/`
 ### Unit Tests
 - Test minute_to_words() for all 60 minutes
 - Test nonce generation (8 chars, alphanumeric)
-- Test proof bundle artifact creation
+- Test artifact directory creation
 
 ### Integration Tests
 - Test with real Qwen2.5-0.5B model
@@ -262,7 +269,7 @@ Located in: `bin/worker-orcd/.proof_bundle/e2e-haiku/<run_id>/`
 - [ ] Test passes with anti-cheat validation
 - [ ] Haiku contains minute word exactly once
 - [ ] Metrics delta validated
-- [ ] Proof bundle artifacts complete
+- [ ] Test artifacts saved correctly
 - [ ] Test runs in CI
 - [ ] Story marked complete
 
@@ -278,7 +285,6 @@ Located in: `bin/worker-orcd/.proof_bundle/e2e-haiku/<run_id>/`
 ## References
 
 - Anti-cheat spec: `.docs/testing/types/e2e-haiku.md`
-- Proof bundle spec: `.specs/00_proof-bundle.md`
 - Test types guide: `.docs/testing/TEST_TYPES_GUIDE.md`
 
 ---
