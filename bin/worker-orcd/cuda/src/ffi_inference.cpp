@@ -148,8 +148,39 @@ uint32_t cuda_inference_generate_token(
             return 0;
         }
         
+        // Copy token_id to device memory
+        uint32_t* d_token_id;
+        cudaMalloc(&d_token_id, sizeof(uint32_t));
+        cudaMemcpy(d_token_id, &token_id, sizeof(uint32_t), cudaMemcpyHostToDevice);
+        
+        // Debug: Check token ID
+        uint32_t host_token;
+        cudaMemcpy(&host_token, d_token_id, sizeof(uint32_t), cudaMemcpyDeviceToHost);
+        if (host_token >= ctx->model->config.vocab_size) {
+            fprintf(stderr, "❌ Invalid token ID: %u (vocab_size: %u)\n", host_token, ctx->model->config.vocab_size);
+            cudaFree(d_token_id);
+            *error = -1;
+            return 0;
+        }
+        
         // Run transformer forward pass
-        ctx->transformer->forward(&token_id, 1, ctx->logits_buffer);
+        ctx->transformer->forward(d_token_id, 1, ctx->logits_buffer);
+        
+        // Free device memory
+        cudaFree(d_token_id);
+        
+        // Debug: Check first few logits
+        static int token_idx = 0;
+        float host_logits[10];
+        cudaMemcpy(host_logits, ctx->logits_buffer, 10 * sizeof(float), cudaMemcpyDeviceToHost);
+        if (token_idx < 3) {
+            fprintf(stderr, "First 10 logits: ");
+            for (int i = 0; i < 10; i++) {
+                fprintf(stderr, "%.2f ", host_logits[i]);
+            }
+            fprintf(stderr, "\n");
+        }
+        token_idx++;
         
         // Sample next token
         int next_token = cuda_sample_token(
@@ -160,6 +191,8 @@ uint32_t cuda_inference_generate_token(
             top_p,
             seed
         );
+        
+        fprintf(stderr, "Sampled token: %d\n", next_token);
         
         *error = 0;
         return static_cast<uint32_t>(next_token);

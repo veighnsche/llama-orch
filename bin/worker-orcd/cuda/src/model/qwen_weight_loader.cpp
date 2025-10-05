@@ -180,6 +180,11 @@ void* QwenWeightLoader::load_tensor_to_vram(
     // Find tensor in GGUF file
     TensorInfo info = find_tensor(path, tensor_name);
     
+    // WARNING: This is loading quantized weights (Q4_K_M) directly without dequantization!
+    // This will cause NaN and garbage values. Need to implement dequantization.
+    fprintf(stderr, "⚠️  Loading %s: type=%u, size=%zu bytes (QUANTIZED - NOT DEQUANTIZED!)\n",
+            tensor_name.c_str(), info.type, info.size_bytes);
+    
     // Allocate GPU memory
     void* gpu_ptr = nullptr;
     cudaError_t err = cudaMalloc(&gpu_ptr, info.size_bytes);

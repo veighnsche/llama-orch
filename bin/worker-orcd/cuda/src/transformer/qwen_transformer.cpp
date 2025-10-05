@@ -145,6 +145,12 @@ void QwenTransformer::embed_tokens(
     uint32_t batch_size,
     void* output
 ) {
+    if (!model_->weights.token_embd) {
+        fprintf(stderr, "❌ token_embd is NULL!\n");
+        cudaMemset(output, 0, batch_size * config_.hidden_dim * sizeof(half));
+        return;
+    }
+    
     cuda_embedding_lookup(
         token_ids,
         model_->weights.token_embd,
@@ -154,6 +160,19 @@ void QwenTransformer::embed_tokens(
         config_.hidden_dim,
         nullptr  // default stream
     );
+    
+    // Debug: Check first few embedding values
+    static int call_count = 0;
+    if (call_count < 2) {
+        half host_emb[10];
+        cudaMemcpy(host_emb, output, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "First 10 embedding values: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.2f ", __half2float(host_emb[i]));
+        }
+        fprintf(stderr, "\n");
+        call_count++;
+    }
 }
 
 void QwenTransformer::forward_layer(
@@ -330,6 +349,13 @@ void QwenTransformer::project_to_vocab(
     // lm_head: [vocab_size, hidden_dim] (FP16)
     // logits: [batch, vocab_size] (FP32)
     
+    if (!model_->weights.lm_head) {
+        fprintf(stderr, "❌ lm_head is NULL!\n");
+        // Fill with zeros to avoid NaN
+        cudaMemset(logits, 0, batch_size * config_.vocab_size * sizeof(float));
+        return;
+    }
+    
     const half* hidden_half = reinterpret_cast<const half*>(hidden_states);
     const half* lm_head_half = reinterpret_cast<const half*>(model_->weights.lm_head);
     
@@ -337,7 +363,7 @@ void QwenTransformer::project_to_vocab(
     float beta = 0.0f;
     
     // Use FP32 output for logits (better numerical stability for sampling)
-    cublasGemmEx(
+    cublasStatus_t status = cublasGemmEx(
         cublas_handle_,
         CUBLAS_OP_T, CUBLAS_OP_N,
         config_.vocab_size, batch_size, config_.hidden_dim,
@@ -349,6 +375,10 @@ void QwenTransformer::project_to_vocab(
         CUBLAS_COMPUTE_32F_FAST_16F,
         CUBLAS_GEMM_DEFAULT_TENSOR_OP
     );
+    
+    if (status != CUBLAS_STATUS_SUCCESS) {
+        fprintf(stderr, "❌ cuBLAS GEMM failed with status: %d\n", status);
+    }
 }
 
 void QwenTransformer::forward(

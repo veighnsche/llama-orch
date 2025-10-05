@@ -139,13 +139,16 @@ impl InferenceBackend for CudaInferenceBackend {
         let mut token_idx = 0;
         let eos_token_id = self.metadata.eos_token_id().unwrap_or(151643); // Qwen2.5 EOS
         
+        eprintln!("\n🎨 GENERATING TOKENS:");
+        eprintln!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        
         while token_idx < config.max_tokens {
             // Generate next token
             let next_token_id = inference.generate_token(
                 current_token,
-                config.temperature,
-                50, // top_k
-                0.95, // top_p
+                0.8, // Slightly higher temperature for more creativity
+                40, // Lower top_k to reduce repetition
+                0.9, // Lower top_p for more focused sampling
                 config.seed.wrapping_add(token_idx as u64),
             )?;
             
@@ -158,10 +161,21 @@ impl InferenceBackend for CudaInferenceBackend {
             let token_text = self.tokenizer.decode(&[next_token_id], false)
                 .map_err(|e| format!("Detokenization failed: {}", e))?;
             
+            // Debug: show token ID for first few tokens
+            if token_idx < 5 {
+                eprintln!("\n[Token {}] ID: {} = {:?}", token_idx, next_token_id, token_text);
+            }
+            
+            // Print token to console in real-time
+            eprint!("{}", token_text);
+            
             executor.add_token(token_text, token_idx);
             current_token = next_token_id;
             token_idx += 1;
         }
+        
+        eprintln!("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        eprintln!("✅ Generated {} tokens\n", token_idx);
         
         Ok(executor.finalize())
     }

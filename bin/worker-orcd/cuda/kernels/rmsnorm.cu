@@ -9,6 +9,7 @@
 #include <cuda_fp16.h>
 #include <math.h>
 #include <stdio.h>
+#include <cstdint>
 
 /**
  * RMSNorm kernel - normalizes activations using root mean square
@@ -69,7 +70,7 @@ __global__ void rmsnorm_kernel(
 extern "C" {
 
 /**
- * Apply RMSNorm to input tensor
+ * Apply RMSNorm to input tensor (internal implementation)
  * 
  * @param output Output tensor [batch, seq_len, hidden_dim]
  * @param input Input tensor [batch, seq_len, hidden_dim]
@@ -80,7 +81,7 @@ extern "C" {
  * @param eps Epsilon for numerical stability (default 1e-6)
  * @return 0 on success, error code on failure
  */
-int cuda_rmsnorm_forward(
+int cuda_rmsnorm_forward_impl(
     half* output,
     const half* input,
     const half* weight,
@@ -121,13 +122,15 @@ int cuda_rmsnorm_forward(
     return 0;
 }
 
+} // extern "C"
+
 /**
  * Wrapper for transformer - single token inference
  * 
  * This matches the signature expected by QwenTransformer.
  * For single token generation, seq_len = 1.
  */
-void cuda_rmsnorm_forward(
+extern "C" void cuda_rmsnorm_forward(
     const void* input,
     const void* weight,
     void* output,
@@ -139,7 +142,7 @@ void cuda_rmsnorm_forward(
     // For single token generation, seq_len = 1
     const int seq_len = 1;
     
-    cuda_rmsnorm_forward(
+    cuda_rmsnorm_forward_impl(
         reinterpret_cast<half*>(output),
         reinterpret_cast<const half*>(input),
         reinterpret_cast<const half*>(weight),
@@ -151,5 +154,3 @@ void cuda_rmsnorm_forward(
     
     // Note: stream parameter ignored for now (using default stream)
 }
-
-} // extern "C"
