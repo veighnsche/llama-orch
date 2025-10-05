@@ -62,44 +62,42 @@ impl Deadline {
     pub fn from_ms(deadline_ms: u64) -> Self {
         Self { deadline_ms }
     }
-    
+
     /// Create deadline from duration from now
     pub fn from_duration(duration: Duration) -> Result<Self> {
         let now_ms = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .map_err(|e| DeadlineError::InvalidFormat(format!("Time error: {}", e)))?
             .as_millis() as u64;
-        
-        Ok(Self {
-            deadline_ms: now_ms.saturating_add(duration.as_millis() as u64),
-        })
+
+        Ok(Self { deadline_ms: now_ms.saturating_add(duration.as_millis() as u64) })
     }
-    
+
     /// Check if deadline expired
     pub fn is_expired(&self) -> bool {
         let now_ms = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .map(|d| d.as_millis() as u64)
             .unwrap_or(0);
-        
+
         now_ms >= self.deadline_ms
     }
-    
+
     /// Get remaining time in milliseconds
     pub fn remaining_ms(&self) -> u64 {
         let now_ms = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .map(|d| d.as_millis() as u64)
             .unwrap_or(0);
-        
+
         self.deadline_ms.saturating_sub(now_ms)
     }
-    
+
     /// Convert to HTTP header value
     pub fn to_header_value(&self) -> String {
         format!("{}", self.deadline_ms)
     }
-    
+
     // TODO(ARCH-CHANGE): Add deadline propagation helpers:
     // - pub fn from_header(header: &str) -> Result<Self> (parse X-Deadline header)
     // - pub fn to_tokio_timeout(&self) -> Duration (convert to tokio timeout)
@@ -110,12 +108,12 @@ impl Deadline {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_deadline() {
         let deadline = Deadline::from_duration(Duration::from_secs(10)).ok();
         assert!(deadline.is_some());
-        
+
         let deadline = deadline.unwrap();
         assert!(!deadline.is_expired());
         assert!(deadline.remaining_ms() > 0);

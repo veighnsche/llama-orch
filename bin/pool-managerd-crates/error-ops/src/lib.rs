@@ -22,7 +22,7 @@ impl RecoveryManager {
     pub fn new() -> Self {
         Self
     }
-    
+
     // TODO(ARCH-CHANGE): Add recovery methods:
     // - pub async fn recover_worker(&self, worker_id: &str) -> Result<()>
     // - pub async fn restart_with_backoff(&self, worker_id: &str) -> Result<()>

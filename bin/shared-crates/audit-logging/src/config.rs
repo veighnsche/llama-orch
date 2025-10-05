@@ -284,7 +284,7 @@ mod tests {
             AuditMode::Platform(_) => panic!("Expected Local mode"),
         }
     }
-    
+
     #[test]
     fn test_audit_mode_disabled() {
         let mode = AuditMode::Disabled;

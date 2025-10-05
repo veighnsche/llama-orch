@@ -1,11 +1,15 @@
 //! Assertion step definitions
 
-use cucumber::then;
 use super::world::BddWorld;
+use cucumber::then;
 
 #[then("the operation should succeed")]
 async fn then_operation_succeeds(world: &mut BddWorld) {
-    assert!(world.last_succeeded(), "Expected operation to succeed but it failed: {:?}", world.last_error);
+    assert!(
+        world.last_succeeded(),
+        "Expected operation to succeed but it failed: {:?}",
+        world.last_error
+    );
 }
 
 #[then("the operation should fail")]
@@ -27,20 +31,12 @@ async fn then_error_should_be(world: &mut BddWorld, expected_error: String) {
 
 #[then("the verification should succeed")]
 async fn then_verification_succeeds(world: &mut BddWorld) {
-    assert_eq!(
-        world.verify_result,
-        Some(true),
-        "Expected verification to succeed"
-    );
+    assert_eq!(world.verify_result, Some(true), "Expected verification to succeed");
 }
 
 #[then("the verification should fail")]
 async fn then_verification_fails(world: &mut BddWorld) {
-    assert_eq!(
-        world.verify_result,
-        Some(false),
-        "Expected verification to fail"
-    );
+    assert_eq!(world.verify_result, Some(false), "Expected verification to fail");
 }
 
 #[then("the operation should reject world-readable files")]

@@ -73,9 +73,9 @@ pub type Result<T> = std::result::Result<T, CapabilityError>;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelCapabilityDescriptor {
     pub model_id: String,
-    pub positional: String,        // e.g., "rope_llama", "rope_neox", "alibi"
-    pub attention: String,          // e.g., "mha", "gqa", "mqa"
-    pub quant: Vec<String>,         // e.g., ["q4_0", "q8_0"]
+    pub positional: String, // e.g., "rope_llama", "rope_neox", "alibi"
+    pub attention: String,  // e.g., "mha", "gqa", "mqa"
+    pub quant: Vec<String>, // e.g., ["q4_0", "q8_0"]
     pub context_max: usize,
     pub vocab_size: usize,
 }
@@ -99,7 +99,7 @@ impl CapabilityMatcher {
     pub fn new() -> Self {
         Self
     }
-    
+
     /// Check if MCD ⊆ ECP (model capabilities are subset of engine capabilities)
     pub fn check_compatibility(
         &self,
@@ -113,7 +113,7 @@ impl CapabilityMatcher {
                 supported: ecp.supports_positional.clone(),
             });
         }
-        
+
         // Validate attention mechanism
         if !ecp.supports_attention.contains(&mcd.attention) {
             return Err(CapabilityError::IncompatibleAttention {
@@ -121,7 +121,7 @@ impl CapabilityMatcher {
                 supported: ecp.supports_attention.clone(),
             });
         }
-        
+
         // Validate quantization (model needs at least one supported format)
         let has_compatible_quant = mcd.quant.iter().any(|q| ecp.supports_quant.contains(q));
         if !has_compatible_quant {
@@ -130,7 +130,7 @@ impl CapabilityMatcher {
                 supported: ecp.supports_quant.clone(),
             });
         }
-        
+
         // Validate context size
         if mcd.context_max > ecp.max_context {
             return Err(CapabilityError::ContextTooLarge {
@@ -138,21 +138,21 @@ impl CapabilityMatcher {
                 max: ecp.max_context,
             });
         }
-        
+
         tracing::info!(
             model_id = %mcd.model_id,
             worker_id = %ecp.worker_id,
             "Model capabilities compatible with worker"
         );
-        
+
         Ok(())
     }
-    
+
     /// Parse MCD from JSON string
     pub fn parse_mcd(&self, json: &str) -> Result<ModelCapabilityDescriptor> {
         serde_json::from_str(json).map_err(|e| CapabilityError::InvalidMcd(e.to_string()))
     }
-    
+
     /// Parse ECP from JSON string
     pub fn parse_ecp(&self, json: &str) -> Result<EngineCapabilityProfile> {
         serde_json::from_str(json).map_err(|e| CapabilityError::InvalidEcp(e.to_string()))
@@ -168,7 +168,7 @@ impl Default for CapabilityMatcher {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     fn create_test_mcd() -> ModelCapabilityDescriptor {
         ModelCapabilityDescriptor {
             model_id: "meta-llama/Llama-3.1-8B".to_string(),
@@ -179,7 +179,7 @@ mod tests {
             vocab_size: 128256,
         }
     }
-    
+
     fn create_test_ecp() -> EngineCapabilityProfile {
         EngineCapabilityProfile {
             worker_id: "worker-gpu-0".to_string(),
@@ -190,47 +190,47 @@ mod tests {
             vram_bytes: 24_000_000_000,
         }
     }
-    
+
     #[test]
     fn test_compatible_capabilities() {
         let matcher = CapabilityMatcher::new();
         let mcd = create_test_mcd();
         let ecp = create_test_ecp();
-        
+
         assert!(matcher.check_compatibility(&mcd, &ecp).is_ok());
     }
-    
+
     #[test]
     fn test_incompatible_positional() {
         let matcher = CapabilityMatcher::new();
         let mut mcd = create_test_mcd();
         mcd.positional = "alibi".to_string(); // Not supported
         let ecp = create_test_ecp();
-        
+
         let result = matcher.check_compatibility(&mcd, &ecp);
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), CapabilityError::IncompatiblePositional { .. }));
     }
-    
+
     #[test]
     fn test_incompatible_attention() {
         let matcher = CapabilityMatcher::new();
         let mut mcd = create_test_mcd();
         mcd.attention = "mqa".to_string(); // Not supported
         let ecp = create_test_ecp();
-        
+
         let result = matcher.check_compatibility(&mcd, &ecp);
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), CapabilityError::IncompatibleAttention { .. }));
     }
-    
+
     #[test]
     fn test_context_too_large() {
         let matcher = CapabilityMatcher::new();
         let mut mcd = create_test_mcd();
         mcd.context_max = 32768; // Exceeds worker max
         let ecp = create_test_ecp();
-        
+
         let result = matcher.check_compatibility(&mcd, &ecp);
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), CapabilityError::ContextTooLarge { .. }));

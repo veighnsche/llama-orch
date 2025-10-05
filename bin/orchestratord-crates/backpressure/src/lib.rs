@@ -91,11 +91,11 @@ impl BackpressurePolicy {
             reject_threshold: 0.9, // Reject at 90% capacity
         }
     }
-    
+
     /// Decide whether to admit request
     pub fn should_admit(&self, current_depth: usize, _priority: Priority) -> AdmissionDecision {
         let utilization = current_depth as f64 / self.max_depth as f64;
-        
+
         if current_depth >= self.max_depth {
             // Queue full - reject with backoff
             let retry_after_ms = self.calculate_retry_after(current_depth);
@@ -108,7 +108,7 @@ impl BackpressurePolicy {
             AdmissionDecision::Admit
         }
     }
-    
+
     fn calculate_retry_after(&self, queue_depth: usize) -> u64 {
         // Estimate: 100ms per queued item
         let base_ms = 100u64;
@@ -119,27 +119,18 @@ impl BackpressurePolicy {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_backpressure() {
         let policy = BackpressurePolicy::new(100);
-        
+
         // Low utilization - admit
-        assert_eq!(
-            policy.should_admit(50, Priority::Interactive),
-            AdmissionDecision::Admit
-        );
-        
+        assert_eq!(policy.should_admit(50, Priority::Interactive), AdmissionDecision::Admit);
+
         // High utilization - reject
-        matches!(
-            policy.should_admit(95, Priority::Interactive),
-            AdmissionDecision::Reject { .. }
-        );
-        
+        matches!(policy.should_admit(95, Priority::Interactive), AdmissionDecision::Reject { .. });
+
         // Full - reject
-        matches!(
-            policy.should_admit(100, Priority::Interactive),
-            AdmissionDecision::Reject { .. }
-        );
+        matches!(policy.should_admit(100, Priority::Interactive), AdmissionDecision::Reject { .. });
     }
 }

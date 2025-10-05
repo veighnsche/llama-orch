@@ -3,9 +3,9 @@
 //! This module provides Cucumber step definitions for BDD testing of audit event
 //! validation with focus on security (log injection prevention).
 
-use cucumber::{given, when};
 use audit_logging::{ActorInfo, AuditEvent, AuthMethod, ResourceInfo};
 use chrono::Utc;
+use cucumber::{given, when};
 use std::net::IpAddr;
 
 use super::world::BddWorld;
@@ -429,7 +429,7 @@ async fn when_create_gdpr_right_to_erasure(world: &mut BddWorld) {
 async fn when_validate_event(world: &mut BddWorld) {
     if let Some(mut event) = world.current_event.take() {
         let result = audit_logging::validation::validate_event(&mut event);
-        
+
         match result {
             Ok(()) => {
                 world.store_result(Ok(()));

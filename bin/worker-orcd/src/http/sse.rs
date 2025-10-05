@@ -161,8 +161,8 @@ mod tests {
 
     #[test]
     fn test_end_event_serialization() {
-        let event = InferenceEvent::End { 
-            tokens_out: 100, 
+        let event = InferenceEvent::End {
+            tokens_out: 100,
             decode_time_ms: 5000,
             stop_reason: StopReason::MaxTokens,
             stop_sequence_matched: None,
@@ -203,8 +203,8 @@ mod tests {
         let metrics = InferenceEvent::Metrics { tokens_per_sec: 10.0, vram_bytes: 1024 };
         assert!(!metrics.is_terminal());
 
-        let end = InferenceEvent::End { 
-            tokens_out: 10, 
+        let end = InferenceEvent::End {
+            tokens_out: 10,
             decode_time_ms: 1000,
             stop_reason: StopReason::MaxTokens,
             stop_sequence_matched: None,
@@ -227,8 +227,8 @@ mod tests {
         let token = InferenceEvent::Token { t: "test".to_string(), i: 0 };
         assert_eq!(token.event_name(), "token");
 
-        let end = InferenceEvent::End { 
-            tokens_out: 10, 
+        let end = InferenceEvent::End {
+            tokens_out: 10,
             decode_time_ms: 1000,
             stop_reason: StopReason::MaxTokens,
             stop_sequence_matched: None,

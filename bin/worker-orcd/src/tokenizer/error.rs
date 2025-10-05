@@ -27,17 +27,13 @@ pub enum TokenizerError {
 pub enum VocabError {
     #[error("Missing vocabulary metadata: {0}")]
     MissingMetadata(String),
-    
+
     #[error("Invalid vocabulary size: expected {expected}, got {actual}")]
     InvalidSize { expected: usize, actual: usize },
-    
+
     #[error("Invalid special token ID: {token_type} = {id}, vocab_size = {vocab_size}")]
-    InvalidSpecialToken {
-        token_type: String,
-        id: u32,
-        vocab_size: u32,
-    },
-    
+    InvalidSpecialToken { token_type: String, id: u32, vocab_size: u32 },
+
     #[error("Duplicate token at ID {id}: {token}")]
     DuplicateToken { id: u32, token: String },
 }
@@ -46,10 +42,10 @@ pub enum VocabError {
 pub enum MergeError {
     #[error("Missing merges metadata")]
     MissingMetadata,
-    
+
     #[error("Malformed merge line: {line}")]
     MalformedLine { line: String },
-    
+
     #[error("Invalid merge count: {count}")]
     InvalidCount { count: usize },
 }
@@ -58,10 +54,10 @@ pub enum MergeError {
 pub enum EncodeError {
     #[error("Unknown token: {token}")]
     UnknownToken { token: String },
-    
+
     #[error("Empty input")]
     EmptyInput,
-    
+
     #[error("Encoding failed: {reason}")]
     EncodingFailed { reason: String },
 }
@@ -70,13 +66,13 @@ pub enum EncodeError {
 pub enum DecodeError {
     #[error("Unknown token ID: {id}")]
     UnknownTokenId { id: u32 },
-    
+
     #[error("Invalid UTF-8 sequence")]
     InvalidUtf8,
-    
+
     #[error("Empty token sequence")]
     EmptySequence,
-    
+
     #[error("Decoding failed: {reason}")]
     DecodingFailed { reason: String },
 }

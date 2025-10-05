@@ -71,12 +71,9 @@ pub struct PlacementEngine {
 
 impl PlacementEngine {
     pub fn new(strategy: PlacementStrategy) -> Self {
-        Self {
-            strategy,
-            round_robin_index: 0,
-        }
+        Self { strategy, round_robin_index: 0 }
     }
-    
+
     /// Select worker for job
     pub fn select_worker(
         &mut self,
@@ -87,28 +84,27 @@ impl PlacementEngine {
         if workers.is_empty() {
             return Err(PlacementError::NoWorkersAvailable);
         }
-        
+
         let selected = match self.strategy {
             PlacementStrategy::RoundRobin => {
                 let idx = self.round_robin_index % workers.len();
                 self.round_robin_index = self.round_robin_index.wrapping_add(1);
                 workers.get(idx).ok_or(PlacementError::NoWorkersAvailable)?
             }
-            PlacementStrategy::LeastLoaded => {
-                workers.iter()
-                    .max_by_key(|w| w.slots_free)
-                    .ok_or(PlacementError::NoWorkersAvailable)?
-            }
+            PlacementStrategy::LeastLoaded => workers
+                .iter()
+                .max_by_key(|w| w.slots_free)
+                .ok_or(PlacementError::NoWorkersAvailable)?,
             PlacementStrategy::LocalityAware => {
                 // TODO: Implement locality-aware selection
                 workers.get(0).ok_or(PlacementError::NoWorkersAvailable)?
             }
         };
-        
+
         if selected.slots_free == 0 {
             return Err(PlacementError::InsufficientCapacity);
         }
-        
+
         Ok(selected.worker_id.clone())
     }
 }
@@ -116,11 +112,11 @@ impl PlacementEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_placement() {
         let mut engine = PlacementEngine::new(PlacementStrategy::LeastLoaded);
-        
+
         let workers = vec![
             WorkerInfo {
                 worker_id: "worker-1".to_string(),
@@ -139,7 +135,7 @@ mod tests {
                 models_loaded: vec![],
             },
         ];
-        
+
         let selected = engine.select_worker(&workers, "model", 1_000_000_000).ok();
         assert_eq!(selected, Some("worker-2".to_string())); // Least loaded
     }

@@ -1,11 +1,11 @@
+use crate::template::{generate_template_code, validate_template};
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, ItemFn, Expr, Lit, Meta, MetaNameValue};
 use syn::parse::Parser;
-use crate::template::{generate_template_code, validate_template};
+use syn::{parse_macro_input, Expr, ItemFn, Lit, Meta, MetaNameValue};
 
 /// Parse narration attributes from the macro input.
-/// 
+///
 /// Expected format:
 /// ```ignore
 /// #[narrate(
@@ -24,23 +24,19 @@ struct NarrateAttrs {
 
 impl NarrateAttrs {
     fn parse(attr: TokenStream) -> syn::Result<Self> {
-        let mut attrs = NarrateAttrs {
-            action: None,
-            human: None,
-            cute: None,
-            story: None,
-        };
+        let mut attrs = NarrateAttrs { action: None, human: None, cute: None, story: None };
 
         // Parse as TokenStream2 for better error handling
         let attr2: proc_macro2::TokenStream = attr.into();
-        
+
         // Parse comma-separated key: value pairs
-        let parsed = syn::punctuated::Punctuated::<Meta, syn::Token![,]>::parse_terminated
-            .parse2(attr2)?;
+        let parsed =
+            syn::punctuated::Punctuated::<Meta, syn::Token![,]>::parse_terminated.parse2(attr2)?;
 
         for meta in parsed {
             if let Meta::NameValue(MetaNameValue { path, value, .. }) = meta {
-                let key = path.get_ident()
+                let key = path
+                    .get_ident()
                     .ok_or_else(|| syn::Error::new_spanned(&path, "expected identifier"))?
                     .to_string();
 
@@ -51,28 +47,21 @@ impl NarrateAttrs {
                             "human" => attrs.human = Some(lit_str.clone()),
                             "cute" => attrs.cute = Some(lit_str.clone()),
                             "story" => attrs.story = Some(lit_str.clone()),
-                            _ => return Err(syn::Error::new_spanned(
-                                path,
-                                format!("unknown attribute key: {}", key)
-                            )),
+                            _ => {
+                                return Err(syn::Error::new_spanned(
+                                    path,
+                                    format!("unknown attribute key: {}", key),
+                                ))
+                            }
                         }
                     } else {
-                        return Err(syn::Error::new_spanned(
-                            expr_lit,
-                            "expected string literal"
-                        ));
+                        return Err(syn::Error::new_spanned(expr_lit, "expected string literal"));
                     }
                 } else {
-                    return Err(syn::Error::new_spanned(
-                        value,
-                        "expected string literal"
-                    ));
+                    return Err(syn::Error::new_spanned(value, "expected string literal"));
                 }
             } else {
-                return Err(syn::Error::new_spanned(
-                    meta,
-                    "expected key: value pair"
-                ));
+                return Err(syn::Error::new_spanned(meta, "expected key: value pair"));
             }
         }
 
@@ -81,11 +70,11 @@ impl NarrateAttrs {
 }
 
 /// Implementation of #[narrate(...)] attribute macro.
-/// 
+///
 /// Generates narration events with template interpolation.
 pub fn narrate_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
     let input_fn = parse_macro_input!(item as ItemFn);
-    
+
     // Parse attributes
     let attrs = match NarrateAttrs::parse(attr) {
         Ok(attrs) => attrs,
@@ -98,8 +87,10 @@ pub fn narrate_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
         None => {
             return syn::Error::new(
                 proc_macro2::Span::call_site(),
-                "narrate macro requires 'action' attribute"
-            ).to_compile_error().into();
+                "narrate macro requires 'action' attribute",
+            )
+            .to_compile_error()
+            .into();
         }
     };
 
@@ -108,34 +99,33 @@ pub fn narrate_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
         None => {
             return syn::Error::new(
                 proc_macro2::Span::call_site(),
-                "narrate macro requires 'human' attribute"
-            ).to_compile_error().into();
+                "narrate macro requires 'human' attribute",
+            )
+            .to_compile_error()
+            .into();
         }
     };
 
     // Validate templates
     if let Err(err) = validate_template(&human.value()) {
-        return syn::Error::new(
-            human.span(),
-            format!("invalid human template: {}", err)
-        ).to_compile_error().into();
+        return syn::Error::new(human.span(), format!("invalid human template: {}", err))
+            .to_compile_error()
+            .into();
     }
 
     if let Some(ref cute) = attrs.cute {
         if let Err(err) = validate_template(&cute.value()) {
-            return syn::Error::new(
-                cute.span(),
-                format!("invalid cute template: {}", err)
-            ).to_compile_error().into();
+            return syn::Error::new(cute.span(), format!("invalid cute template: {}", err))
+                .to_compile_error()
+                .into();
         }
     }
 
     if let Some(ref story) = attrs.story {
         if let Err(err) = validate_template(&story.value()) {
-            return syn::Error::new(
-                story.span(),
-                format!("invalid story template: {}", err)
-            ).to_compile_error().into();
+            return syn::Error::new(story.span(), format!("invalid story template: {}", err))
+                .to_compile_error()
+                .into();
         }
     }
 

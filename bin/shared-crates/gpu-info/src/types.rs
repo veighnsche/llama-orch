@@ -20,50 +20,32 @@ pub struct GpuInfo {
 impl GpuInfo {
     /// Create empty GpuInfo (no GPUs detected)
     pub fn none() -> Self {
-        Self {
-            available: false,
-            count: 0,
-            devices: Vec::new(),
-        }
+        Self { available: false, count: 0, devices: Vec::new() }
     }
 
     /// Create GpuInfo from device list
     pub fn from_devices(devices: Vec<GpuDevice>) -> Self {
-        Self {
-            available: !devices.is_empty(),
-            count: devices.len(),
-            devices,
-        }
+        Self { available: !devices.is_empty(), count: devices.len(), devices }
     }
 
     /// Get total VRAM across all GPUs (in bytes)
     pub fn total_vram_bytes(&self) -> usize {
-        self.devices
-            .iter()
-            .map(|d| d.vram_total_bytes)
-            .sum()
+        self.devices.iter().map(|d| d.vram_total_bytes).sum()
     }
 
     /// Get total free VRAM across all GPUs (in bytes)
     pub fn total_free_vram_bytes(&self) -> usize {
-        self.devices
-            .iter()
-            .map(|d| d.vram_free_bytes)
-            .sum()
+        self.devices.iter().map(|d| d.vram_free_bytes).sum()
     }
 
     /// Get GPU with most free VRAM
     pub fn best_gpu_for_workload(&self) -> Option<&GpuDevice> {
-        self.devices
-            .iter()
-            .max_by_key(|d| d.vram_free_bytes)
+        self.devices.iter().max_by_key(|d| d.vram_free_bytes)
     }
 
     /// Validate device index and return device
     pub fn validate_device(&self, device: u32) -> Result<&GpuDevice> {
-        self.devices
-            .get(device as usize)
-            .ok_or_else(|| GpuError::InvalidDevice(device, self.count))
+        self.devices.get(device as usize).ok_or_else(|| GpuError::InvalidDevice(device, self.count))
     }
 
     /// Check if GPU is available for operations
@@ -157,10 +139,8 @@ mod tests {
 
     #[test]
     fn test_gpu_info_from_devices() {
-        let devices = vec![
-            create_test_device(0, 24576, 20000),
-            create_test_device(1, 12288, 10000),
-        ];
+        let devices =
+            vec![create_test_device(0, 24576, 20000), create_test_device(1, 12288, 10000)];
 
         let info = GpuInfo::from_devices(devices);
         assert!(info.available);
@@ -193,10 +173,8 @@ mod tests {
 
     #[test]
     fn test_validate_device() {
-        let devices = vec![
-            create_test_device(0, 24576, 20000),
-            create_test_device(1, 12288, 10000),
-        ];
+        let devices =
+            vec![create_test_device(0, 24576, 20000), create_test_device(1, 12288, 10000)];
 
         let info = GpuInfo::from_devices(devices);
 

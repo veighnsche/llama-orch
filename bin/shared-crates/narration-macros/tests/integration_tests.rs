@@ -9,36 +9,22 @@ use observability_narration_macros::{narrate, trace_fn};
 // #[narrate(...)] Macro Tests
 // ============================================================================
 
-#[narrate(
-    action = "basic",
-    human = "Basic narration test"
-)]
+#[narrate(action = "basic", human = "Basic narration test")]
 fn narrate_basic() -> String {
     "basic".to_string()
 }
 
-#[narrate(
-    action = "interpolation",
-    human = "Job {job_id} dispatched to {worker_id}"
-)]
+#[narrate(action = "interpolation", human = "Job {job_id} dispatched to {worker_id}")]
 fn narrate_with_vars(job_id: &str, worker_id: &str) -> String {
     format!("{}:{}", job_id, worker_id)
 }
 
-#[narrate(
-    action = "cute",
-    human = "Spawning {name}",
-    cute = "A new friend {name} is born! 🎉"
-)]
+#[narrate(action = "cute", human = "Spawning {name}", cute = "A new friend {name} is born! 🎉")]
 fn narrate_with_cute(name: &str) -> String {
     name.to_string()
 }
 
-#[narrate(
-    action = "story",
-    human = "Worker {id} registered",
-    story = "'Hello!' said worker {id}"
-)]
+#[narrate(action = "story", human = "Worker {id} registered", story = "'Hello!' said worker {id}")]
 fn narrate_with_story(id: &str) -> String {
     id.to_string()
 }
@@ -53,18 +39,12 @@ fn narrate_all_templates(item: &str) -> String {
     item.to_string()
 }
 
-#[narrate(
-    action = "async_op",
-    human = "Async operation with {param}"
-)]
+#[narrate(action = "async_op", human = "Async operation with {param}")]
 async fn narrate_async(param: &str) -> String {
     format!("async:{}", param)
 }
 
-#[narrate(
-    action = "result",
-    human = "Fallible operation with {input}"
-)]
+#[narrate(action = "result", human = "Fallible operation with {input}")]
 fn narrate_result(input: &str) -> Result<String, String> {
     if input.is_empty() {
         Err("empty".to_string())
@@ -73,26 +53,17 @@ fn narrate_result(input: &str) -> Result<String, String> {
     }
 }
 
-#[narrate(
-    action = "generic",
-    human = "Generic operation"
-)]
+#[narrate(action = "generic", human = "Generic operation")]
 fn narrate_generic<T: ToString>(value: T) -> String {
     value.to_string()
 }
 
-#[narrate(
-    action = "multiple",
-    human = "Multiple params: {a}, {b}, {c}"
-)]
+#[narrate(action = "multiple", human = "Multiple params: {a}, {b}, {c}")]
 fn narrate_multiple(a: &str, b: i32, c: bool) -> String {
     format!("{}:{}:{}", a, b, c)
 }
 
-#[narrate(
-    action = "no_vars",
-    human = "Static message"
-)]
+#[narrate(action = "no_vars", human = "Static message")]
 fn narrate_no_vars() -> String {
     "static".to_string()
 }

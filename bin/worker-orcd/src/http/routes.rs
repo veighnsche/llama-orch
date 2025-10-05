@@ -57,8 +57,8 @@ pub fn create_router(worker_id: String, model: Model) -> Router {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::http::{Request, StatusCode};
-    use tower::ServiceExt;
+    // use axum::http::{Request, StatusCode};  // Unused
+    // use tower::ServiceExt;  // Unused
 
     // Mock ModelHandle for testing
     // Note: In real tests, we'd need to properly mock the CUDA model

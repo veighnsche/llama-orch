@@ -22,7 +22,7 @@ impl ModelCache {
     pub fn new() -> Self {
         Self
     }
-    
+
     // TODO(ARCH-CHANGE): Add cache methods:
     // - pub fn get(&self, model_ref: &str) -> Option<PathBuf>
     // - pub fn put(&mut self, model_ref: &str, path: PathBuf) -> Result<()>

@@ -72,12 +72,7 @@ impl Model {
         // SAFETY: ctx.as_ptr() is valid, path_cstr is valid CString,
         // vram_bytes and error_code are valid pointers
         let ptr = unsafe {
-            ffi::cuda_load_model(
-                ctx.as_ptr(),
-                path_cstr.as_ptr(),
-                &mut vram_bytes,
-                &mut error_code,
-            )
+            ffi::cuda_load_model(ctx.as_ptr(), path_cstr.as_ptr(), &mut vram_bytes, &mut error_code)
         };
 
         if ptr.is_null() {

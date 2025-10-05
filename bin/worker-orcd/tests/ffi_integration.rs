@@ -22,11 +22,11 @@ fn test_context_init_valid_device() {
     }
 
     let ctx = Context::new(0).expect("Failed to initialize CUDA context");
-    
+
     // Verify context is usable
     let vram = ctx.process_vram_usage();
     assert!(vram >= 0, "VRAM usage should be non-negative");
-    
+
     // Context should be dropped here, triggering cleanup
 }
 
@@ -34,7 +34,7 @@ fn test_context_init_valid_device() {
 fn test_context_init_invalid_device() {
     let result = Context::new(999);
     assert!(result.is_err(), "Should fail with invalid device ID");
-    
+
     match result {
         Err(CudaError::InvalidDevice(_)) => {
             // Expected error
@@ -54,7 +54,7 @@ fn test_context_init_negative_device() {
 fn test_device_count() {
     let count = Context::device_count();
     assert!(count >= 0, "Device count should be non-negative");
-    
+
     if count > 0 {
         println!("Found {} CUDA device(s)", count);
     } else {
@@ -75,11 +75,11 @@ fn test_context_device_properties() {
     }
 
     let ctx = Context::new(0).expect("Failed to initialize CUDA context");
-    
+
     // Test process VRAM usage query
     let vram_usage = ctx.process_vram_usage();
     assert!(vram_usage >= 0, "VRAM usage should be non-negative");
-    
+
     println!("Process VRAM usage: {} bytes", vram_usage);
 }
 
@@ -92,10 +92,9 @@ fn test_check_device_health() {
     }
 
     let ctx = Context::new(0).expect("Failed to initialize CUDA context");
-    
-    let healthy = ctx.check_device_health()
-        .expect("Health check should not error");
-    
+
+    let healthy = ctx.check_device_health().expect("Health check should not error");
+
     assert!(healthy, "Device should be healthy");
 }
 
@@ -118,18 +117,18 @@ fn test_context_cleanup_no_leak() {
         drop(ctx); // Explicit drop
         free
     };
-    
+
     // Create new context and measure again
     let ctx2 = Context::new(0).expect("Failed to initialize CUDA context");
     let final_free = ctx2.process_vram_usage();
-    
+
     // Free VRAM should be approximately the same (within 1MB tolerance)
     let diff = if final_free > initial_free {
         final_free - initial_free
     } else {
         initial_free - final_free
     };
-    
+
     assert!(
         diff < 1024 * 1024,
         "VRAM leak detected: {} bytes difference (initial: {}, final: {})",
@@ -137,7 +136,7 @@ fn test_context_cleanup_no_leak() {
         initial_free,
         final_free
     );
-    
+
     println!("VRAM difference: {} bytes (within tolerance)", diff);
 }
 
@@ -151,13 +150,12 @@ fn test_multiple_contexts_sequential() {
 
     // Test creating multiple contexts sequentially
     for i in 0..3 {
-        let ctx = Context::new(0)
-            .expect(&format!("Failed to create context {}", i));
-        
+        let ctx = Context::new(0).expect(&format!("Failed to create context {}", i));
+
         // Verify context is usable
         let vram = ctx.process_vram_usage();
         assert!(vram >= 0, "VRAM usage should be non-negative");
-        
+
         println!("Context {} created successfully", i);
         // Context dropped at end of iteration
     }
@@ -171,10 +169,10 @@ fn test_multiple_contexts_sequential() {
 fn test_error_message_retrieval() {
     let result = Context::new(999);
     assert!(result.is_err());
-    
+
     let err = result.unwrap_err();
     let err_msg = format!("{}", err);
-    
+
     // Error message should contain useful information
     assert!(!err_msg.is_empty(), "Error message should not be empty");
     println!("Error message: {}", err_msg);
@@ -184,10 +182,10 @@ fn test_error_message_retrieval() {
 fn test_error_debug_format() {
     let result = Context::new(999);
     assert!(result.is_err());
-    
+
     let err = result.unwrap_err();
     let debug_msg = format!("{:?}", err);
-    
+
     // Debug format should contain useful information
     assert!(!debug_msg.is_empty(), "Debug message should not be empty");
     println!("Debug format: {}", debug_msg);
@@ -228,13 +226,12 @@ fn test_rapid_context_creation_destruction() {
 
     // Rapidly create and destroy contexts
     for i in 0..10 {
-        let ctx = Context::new(0)
-            .expect(&format!("Failed to create context {} in rapid test", i));
-        
+        let ctx = Context::new(0).expect(&format!("Failed to create context {} in rapid test", i));
+
         // Immediately drop
         drop(ctx);
     }
-    
+
     println!("Rapid context creation/destruction test passed");
 }
 
@@ -247,17 +244,16 @@ fn test_context_outlives_multiple_operations() {
     }
 
     let ctx = Context::new(0).expect("Failed to initialize CUDA context");
-    
+
     // Perform multiple operations on same context
     for i in 0..5 {
         let vram = ctx.process_vram_usage();
         assert!(vram >= 0, "VRAM query {} failed", i);
-        
-        let healthy = ctx.check_device_health()
-            .expect(&format!("Health check {} failed", i));
+
+        let healthy = ctx.check_device_health().expect(&format!("Health check {} failed", i));
         assert!(healthy, "Device unhealthy at iteration {}", i);
     }
-    
+
     println!("Context survived multiple operations");
 }
 
@@ -274,12 +270,11 @@ fn test_context_ready_for_model_loading() {
     }
 
     let ctx = Context::new(0).expect("Failed to initialize CUDA context");
-    
+
     // Verify context is in a state ready for model loading
-    let healthy = ctx.check_device_health()
-        .expect("Health check failed");
+    let healthy = ctx.check_device_health().expect("Health check failed");
     assert!(healthy, "Device must be healthy before model loading");
-    
+
     let vram = ctx.process_vram_usage();
     println!("Context ready for model loading. Current VRAM usage: {} bytes", vram);
 }

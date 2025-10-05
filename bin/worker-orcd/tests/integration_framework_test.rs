@@ -5,11 +5,11 @@
 //! # Spec References
 //! - M0-W-1820: Integration test framework
 
+use worker_orcd::http::sse::{InferenceEvent, StopReason};
 use worker_orcd::tests::integration::{
     assert_event_order, extract_tokens, make_test_request, TestConfig, TestModel, TestPrompts,
     WorkerTestHarness,
 };
-use worker_orcd::http::sse::{InferenceEvent, StopReason};
 
 // ============================================================================
 // Helper Function Tests
@@ -23,14 +23,8 @@ fn test_event_order_validation_valid() {
             model: "test".to_string(),
             started_at: "2025-10-05T00:00:00Z".to_string(),
         },
-        InferenceEvent::Token {
-            t: "Hello".to_string(),
-            i: 0,
-        },
-        InferenceEvent::Token {
-            t: " world".to_string(),
-            i: 1,
-        },
+        InferenceEvent::Token { t: "Hello".to_string(), i: 0 },
+        InferenceEvent::Token { t: " world".to_string(), i: 1 },
         InferenceEvent::End {
             tokens_out: 2,
             decode_time_ms: 100,
@@ -51,10 +45,7 @@ fn test_event_order_validation_empty() {
 #[test]
 fn test_event_order_validation_no_started() {
     let events = vec![
-        InferenceEvent::Token {
-            t: "Hello".to_string(),
-            i: 0,
-        },
+        InferenceEvent::Token { t: "Hello".to_string(), i: 0 },
         InferenceEvent::End {
             tokens_out: 1,
             decode_time_ms: 100,
@@ -74,10 +65,7 @@ fn test_event_order_validation_no_terminal() {
             model: "test".to_string(),
             started_at: "2025-10-05T00:00:00Z".to_string(),
         },
-        InferenceEvent::Token {
-            t: "Hello".to_string(),
-            i: 0,
-        },
+        InferenceEvent::Token { t: "Hello".to_string(), i: 0 },
     ];
 
     assert!(assert_event_order(&events).is_err());
@@ -91,18 +79,9 @@ fn test_extract_tokens_multiple() {
             model: "test".to_string(),
             started_at: "2025-10-05T00:00:00Z".to_string(),
         },
-        InferenceEvent::Token {
-            t: "Hello".to_string(),
-            i: 0,
-        },
-        InferenceEvent::Token {
-            t: " world".to_string(),
-            i: 1,
-        },
-        InferenceEvent::Token {
-            t: "!".to_string(),
-            i: 2,
-        },
+        InferenceEvent::Token { t: "Hello".to_string(), i: 0 },
+        InferenceEvent::Token { t: " world".to_string(), i: 1 },
+        InferenceEvent::Token { t: "!".to_string(), i: 2 },
         InferenceEvent::End {
             tokens_out: 3,
             decode_time_ms: 100,
@@ -142,7 +121,7 @@ fn test_extract_tokens_none() {
 #[test]
 fn test_qwen_model_fixture() {
     let model = TestModel::qwen2_5_0_5b();
-    
+
     assert_eq!(model.name, "Qwen2.5-0.5B");
     assert_eq!(model.num_layers, 24);
     assert_eq!(model.num_kv_heads, 2);
@@ -153,7 +132,7 @@ fn test_qwen_model_fixture() {
 #[test]
 fn test_mock_model_fixture() {
     let model = TestModel::mock();
-    
+
     assert_eq!(model.name, "Mock");
     assert_eq!(model.num_layers, 2);
     assert_eq!(model.num_kv_heads, 2);
@@ -162,7 +141,7 @@ fn test_mock_model_fixture() {
 #[test]
 fn test_default_config() {
     let config = TestConfig::default();
-    
+
     assert_eq!(config.gpu_device, 0);
     assert_eq!(config.timeout_secs, 30);
     assert_eq!(config.max_tokens, 10);
@@ -171,7 +150,7 @@ fn test_default_config() {
 #[test]
 fn test_fast_config() {
     let config = TestConfig::fast();
-    
+
     assert_eq!(config.max_tokens, 5);
     assert!(config.timeout_secs <= 10);
 }
@@ -179,7 +158,7 @@ fn test_fast_config() {
 #[test]
 fn test_long_config() {
     let config = TestConfig::long();
-    
+
     assert_eq!(config.max_tokens, 100);
     assert!(config.timeout_secs >= 60);
 }
@@ -196,7 +175,7 @@ fn test_prompts_not_empty() {
 #[test]
 fn test_make_test_request() {
     let req = make_test_request("test-1", "Hello world", 50);
-    
+
     assert_eq!(req.job_id, "test-1");
     assert_eq!(req.prompt, "Hello world");
     assert_eq!(req.max_tokens, 50);
@@ -221,11 +200,11 @@ fn test_make_test_request() {
 #[ignore = "Requires worker binary"]
 async fn test_harness_start_mock() {
     let harness = WorkerTestHarness::start_mock().await.unwrap();
-    
+
     // Verify health endpoint
     let health = harness.health().await.unwrap();
     assert!(health.get("status").is_some());
-    
+
     // Harness automatically cleaned up on drop
 }
 
@@ -233,16 +212,14 @@ async fn test_harness_start_mock() {
 #[ignore = "Requires worker binary and model"]
 async fn test_harness_start_with_model() {
     let model = TestModel::qwen2_5_0_5b();
-    
+
     if !model.exists() {
         eprintln!("Skipping test: model not found at {:?}", model.path);
         return;
     }
-    
-    let harness = WorkerTestHarness::start(model.path.to_str().unwrap(), 0)
-        .await
-        .unwrap();
-    
+
+    let harness = WorkerTestHarness::start(model.path.to_str().unwrap(), 0).await.unwrap();
+
     // Verify health endpoint
     let health = harness.health().await.unwrap();
     assert!(health.get("status").is_some());
@@ -252,12 +229,12 @@ async fn test_harness_start_with_model() {
 #[ignore = "Requires worker binary"]
 async fn test_harness_execute_request() {
     let harness = WorkerTestHarness::start_mock().await.unwrap();
-    
+
     let req = make_test_request("test-1", TestPrompts::simple(), 5);
-    
+
     // Send execute request
     let response = harness.execute(req).await.unwrap();
-    
+
     // Should get SSE stream
     assert_eq!(response.status(), 200);
     assert!(response

@@ -307,7 +307,7 @@ pub async fn audit_writer_task(
         tracing::debug!("Audit writer task: no-op in home lab mode");
         return;
     }
-    
+
     // Extract base directory
     let base_dir = match &config.mode {
         AuditMode::Disabled => unreachable!("Already handled above"),
@@ -676,7 +676,7 @@ mod tests {
 
         // With Immediate mode, events_since_sync should be reset to 0
         assert_eq!(writer.events_since_sync, 0, "Immediate mode should reset counter");
-        
+
         // Write another event to verify consistent behavior
         let envelope = AuditEventEnvelope::new(
             "audit-002".to_string(),
@@ -686,7 +686,7 @@ mod tests {
             String::new(),
         );
         writer.write_event(envelope, false).unwrap();
-        
+
         // Should still be 0 (flushed immediately)
         assert_eq!(writer.events_since_sync, 0, "Immediate mode should flush every event");
     }

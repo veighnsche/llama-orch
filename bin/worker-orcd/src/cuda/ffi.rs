@@ -44,7 +44,7 @@ extern "C" {
     // ========================================================================
     // Context Management
     // ========================================================================
-    
+
     /// Initialize CUDA context for specified GPU device.
     ///
     /// # Safety
@@ -53,7 +53,7 @@ extern "C" {
     /// - Returned pointer must be freed with `cuda_destroy`
     /// - Caller must check error_code and handle NULL return
     pub fn cuda_init(gpu_device: c_int, error_code: *mut c_int) -> *mut CudaContext;
-    
+
     /// Destroy CUDA context and free all resources.
     ///
     /// # Safety
@@ -62,18 +62,18 @@ extern "C" {
     /// - `ctx` must not be used after this call
     /// - Safe to call with NULL (no-op)
     pub fn cuda_destroy(ctx: *mut CudaContext);
-    
+
     /// Get number of available CUDA devices.
     ///
     /// # Safety
     ///
     /// This function is safe to call (no pointer parameters).
     pub fn cuda_get_device_count() -> c_int;
-    
+
     // ========================================================================
     // Model Loading
     // ========================================================================
-    
+
     /// Load model from GGUF file to VRAM.
     ///
     /// # Safety
@@ -90,7 +90,7 @@ extern "C" {
         vram_bytes_used: *mut u64,
         error_code: *mut c_int,
     ) -> *mut CudaModel;
-    
+
     /// Unload model and free VRAM.
     ///
     /// # Safety
@@ -99,7 +99,7 @@ extern "C" {
     /// - `model` must not be used after this call
     /// - Safe to call with NULL (no-op)
     pub fn cuda_unload_model(model: *mut CudaModel);
-    
+
     /// Get current VRAM usage for model.
     ///
     /// # Safety
@@ -107,11 +107,11 @@ extern "C" {
     /// - `model` must be a valid pointer from `cuda_load_model` or NULL
     /// - Returns 0 if model is NULL
     pub fn cuda_model_get_vram_usage(model: *mut CudaModel) -> u64;
-    
+
     // ========================================================================
     // Inference Execution
     // ========================================================================
-    
+
     /// Start inference job with given prompt and parameters.
     ///
     /// # Safety
@@ -131,7 +131,7 @@ extern "C" {
         seed: u64,
         error_code: *mut c_int,
     ) -> *mut InferenceResult;
-    
+
     /// Generate next token in inference sequence.
     ///
     /// # Safety
@@ -150,7 +150,7 @@ extern "C" {
         token_index: *mut c_int,
         error_code: *mut c_int,
     ) -> bool;
-    
+
     /// Free inference result and associated resources.
     ///
     /// # Safety
@@ -159,11 +159,11 @@ extern "C" {
     /// - `result` must not be used after this call
     /// - Safe to call with NULL (no-op)
     pub fn cuda_inference_free(result: *mut InferenceResult);
-    
+
     // ========================================================================
     // Health & Monitoring
     // ========================================================================
-    
+
     /// Check VRAM residency for model weights.
     ///
     /// # Safety
@@ -172,7 +172,7 @@ extern "C" {
     /// - `error_code` must be a valid pointer to writable i32
     /// - Caller must check error_code
     pub fn cuda_check_vram_residency(model: *mut CudaModel, error_code: *mut c_int) -> bool;
-    
+
     /// Get current VRAM usage for model.
     ///
     /// # Safety
@@ -180,7 +180,7 @@ extern "C" {
     /// - `model` must be a valid pointer from `cuda_load_model` or NULL
     /// - Returns 0 if model is NULL
     pub fn cuda_get_vram_usage(model: *mut CudaModel) -> u64;
-    
+
     /// Get process-wide VRAM usage.
     ///
     /// # Safety
@@ -188,7 +188,7 @@ extern "C" {
     /// - `ctx` must be a valid pointer from `cuda_init` or NULL
     /// - Returns 0 if ctx is NULL
     pub fn cuda_get_process_vram_usage(ctx: *mut CudaContext) -> u64;
-    
+
     /// Check CUDA device health.
     ///
     /// # Safety
@@ -197,11 +197,11 @@ extern "C" {
     /// - `error_code` must be a valid pointer to writable i32
     /// - Caller must check error_code
     pub fn cuda_check_device_health(ctx: *mut CudaContext, error_code: *mut c_int) -> bool;
-    
+
     // ========================================================================
     // Error Handling
     // ========================================================================
-    
+
     /// Get human-readable error message for error code.
     ///
     /// # Safety
@@ -302,7 +302,7 @@ pub unsafe fn cuda_check_device_health(_ctx: *mut CudaContext, error_code: *mut 
 #[cfg(not(feature = "cuda"))]
 pub unsafe fn cuda_error_message(error_code: c_int) -> *const c_char {
     use std::ffi::CString;
-    
+
     let msg = match error_code {
         0 => "Success",
         1 => "Invalid device",
@@ -315,7 +315,7 @@ pub unsafe fn cuda_error_message(error_code: c_int) -> *const c_char {
         8 => "Device not found",
         _ => "Unknown error",
     };
-    
+
     // Leak the CString to get a static pointer (stub only)
     CString::new(msg).unwrap().into_raw()
 }

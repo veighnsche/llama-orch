@@ -143,6 +143,7 @@ impl CaptureAdapter {
     }
 
     /// Capture a narration event.
+    #[allow(dead_code)]
     pub(crate) fn capture(&self, event: CapturedNarration) {
         if let Ok(mut events) = self.events.lock() {
             events.push(event);
@@ -224,8 +225,7 @@ impl CaptureAdapter {
     /// Assert that cute narration includes a substring.
     pub fn assert_cute_includes(&self, substring: &str) {
         let captured = self.captured();
-        let found =
-            captured.iter().any(|n| n.cute.as_ref().is_some_and(|c| c.contains(substring)));
+        let found = captured.iter().any(|n| n.cute.as_ref().is_some_and(|c| c.contains(substring)));
         assert!(
             found,
             "Expected cute narration to include '{}', but found: {:?}",
@@ -279,6 +279,7 @@ static GLOBAL_CAPTURE: OnceLock<CaptureAdapter> = OnceLock::new();
 
 /// Notify the global capture adapter of a narration event.
 /// Called by `narrate()` when a capture adapter is installed.
+#[allow(dead_code)]
 pub(crate) fn notify(fields: NarrationFields) {
     if let Some(adapter) = GLOBAL_CAPTURE.get() {
         adapter.capture(fields.into());

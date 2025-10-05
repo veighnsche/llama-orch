@@ -51,17 +51,17 @@ impl AuditLogger {
         // HOME LAB MODE: Skip all initialization if audit is disabled
         if matches!(config.mode, AuditMode::Disabled) {
             tracing::info!("Audit logging DISABLED (home lab mode) - zero overhead");
-            
+
             // Create dummy channel (never used)
             let (tx, _rx) = tokio::sync::mpsc::channel(1);
-            
+
             return Ok(Self {
                 config: Arc::new(config),
                 tx,
                 event_counter: Arc::new(AtomicU64::new(0)),
             });
         }
-        
+
         // PLATFORM/LOCAL MODE: Full audit logging
         // Validate configuration
         match &config.mode {
@@ -138,7 +138,7 @@ impl AuditLogger {
         if matches!(self.config.mode, AuditMode::Disabled) {
             return Ok(());
         }
-        
+
         // Validate and sanitize event
         validation::validate_event(&mut event)?;
 
@@ -184,7 +184,7 @@ impl AuditLogger {
         if matches!(self.config.mode, AuditMode::Disabled) {
             return Ok(());
         }
-        
+
         let (tx, rx) = tokio::sync::oneshot::channel();
 
         self.tx.send(WriterMessage::Flush(tx)).await.map_err(|_| {
@@ -215,10 +215,10 @@ impl AuditLogger {
             tracing::debug!("Audit logging shutdown (no-op in home lab mode)");
             return Ok(());
         }
-        
+
         // CRITICAL: Flush all buffered events first (prevents data loss)
         self.flush().await?;
-        
+
         // Send shutdown signal
         self.tx.send(WriterMessage::Shutdown).await.map_err(|_| {
             AuditError::Io(std::io::Error::new(
@@ -314,7 +314,7 @@ mod tests {
     async fn test_disabled_mode_no_op() {
         // HOME LAB MODE: Verify zero overhead
         let config = AuditConfig {
-            mode: AuditMode::Disabled,  // ✅ No audit trail
+            mode: AuditMode::Disabled, // ✅ No audit trail
             service_id: "test".to_string(),
             rotation_policy: RotationPolicy::Daily,
             retention_policy: RetentionPolicy::default(),

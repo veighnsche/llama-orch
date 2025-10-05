@@ -22,38 +22,38 @@ pub struct SamplingConfig {
     /// - 1.0 = no scaling
     /// - >1.0 = more random
     pub temperature: f32,
-    
+
     /// Top-P (nucleus) sampling (0.0-1.0)
     /// - 1.0 = disabled (no filtering)
     /// - <1.0 = keep tokens with cumulative prob <= top_p
     pub top_p: f32,
-    
+
     /// Top-K sampling (0 = disabled)
     /// - 0 = disabled (no filtering)
     /// - >0 = keep only top k tokens
     pub top_k: u32,
-    
+
     /// Repetition penalty (1.0 = disabled)
     /// - 1.0 = disabled (no penalty)
     /// - >1.0 = penalize repeated tokens
     /// - <1.0 = encourage repeated tokens
     pub repetition_penalty: f32,
-    
+
     /// Min-P sampling (0.0 = disabled)
     /// - 0.0 = disabled (no filtering)
     /// - >0.0 = filter tokens with prob < min_p * max_prob
     pub min_p: f32,
-    
+
     /// Stop sequences (up to 4)
     /// Tokenized stop sequences for pattern matching
     pub stop_sequences: Vec<Vec<u32>>,
-    
+
     /// Original stop strings (for response)
     pub stop_strings: Vec<String>,
-    
+
     /// Random seed for reproducibility
     pub seed: u64,
-    
+
     /// Maximum tokens to generate
     pub max_tokens: u32,
 }
@@ -70,37 +70,31 @@ impl SamplingConfig {
             top_k: req.top_k,
             repetition_penalty: req.repetition_penalty,
             min_p: req.min_p,
-            stop_sequences: vec![],  // Tokenized later
+            stop_sequences: vec![], // Tokenized later
             stop_strings: req.stop.clone(),
             seed: req.seed.unwrap_or_else(|| {
                 use std::time::{SystemTime, UNIX_EPOCH};
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_nanos() as u64
+                SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos() as u64
             }),
             max_tokens: req.max_tokens,
         }
     }
-    
+
     /// Check if any advanced parameters are enabled
     pub fn has_advanced_sampling(&self) -> bool {
-        self.top_p < 1.0
-            || self.top_k > 0
-            || self.repetition_penalty != 1.0
-            || self.min_p > 0.0
+        self.top_p < 1.0 || self.top_k > 0 || self.repetition_penalty != 1.0 || self.min_p > 0.0
     }
-    
+
     /// Check if stop sequences are configured
     pub fn has_stop_sequences(&self) -> bool {
         !self.stop_strings.is_empty()
     }
-    
+
     /// Check if greedy sampling (temperature = 0.0)
     pub fn is_greedy(&self) -> bool {
         self.temperature == 0.0
     }
-    
+
     /// Get sampling mode description for logging
     pub fn sampling_mode(&self) -> String {
         if self.is_greedy() {
@@ -124,7 +118,7 @@ impl SamplingConfig {
             format!("stochastic(temp={:.2})", self.temperature)
         }
     }
-    
+
     /// Validate configuration consistency
     ///
     /// Checks for conflicting or nonsensical parameter combinations.
@@ -136,7 +130,7 @@ impl SamplingConfig {
                 self.top_k, self.top_p
             ));
         }
-        
+
         // Warn if min_p very high with low temperature
         if self.min_p > 0.5 && self.temperature < 0.5 {
             return Err(format!(
@@ -144,7 +138,7 @@ impl SamplingConfig {
                 self.min_p, self.temperature
             ));
         }
-        
+
         Ok(())
     }
 }
@@ -195,7 +189,7 @@ mod tests {
     fn test_from_request_basic() {
         let req = make_request(0.7, 1.0, 0, 1.0, 0.0, vec![]);
         let config = SamplingConfig::from_request(&req);
-        
+
         assert_eq!(config.temperature, 0.7);
         assert_eq!(config.top_p, 1.0);
         assert_eq!(config.top_k, 0);
@@ -207,16 +201,10 @@ mod tests {
 
     #[test]
     fn test_from_request_advanced() {
-        let req = make_request(
-            0.7,
-            0.9,
-            50,
-            1.1,
-            0.05,
-            vec!["\n\n".to_string(), "END".to_string()],
-        );
+        let req =
+            make_request(0.7, 0.9, 50, 1.1, 0.05, vec!["\n\n".to_string(), "END".to_string()]);
         let config = SamplingConfig::from_request(&req);
-        
+
         assert_eq!(config.temperature, 0.7);
         assert_eq!(config.top_p, 0.9);
         assert_eq!(config.top_k, 50);
@@ -229,10 +217,10 @@ mod tests {
     fn test_seed_generation_when_none() {
         let mut req = make_request(1.0, 1.0, 0, 1.0, 0.0, vec![]);
         req.seed = None;
-        
+
         let config1 = SamplingConfig::from_request(&req);
         let config2 = SamplingConfig::from_request(&req);
-        
+
         // Seeds should be different (time-based)
         assert_ne!(config1.seed, 0);
         assert_ne!(config2.seed, 0);
@@ -243,19 +231,19 @@ mod tests {
         let req_basic = make_request(0.7, 1.0, 0, 1.0, 0.0, vec![]);
         let config_basic = SamplingConfig::from_request(&req_basic);
         assert!(!config_basic.has_advanced_sampling());
-        
+
         let req_top_p = make_request(0.7, 0.9, 0, 1.0, 0.0, vec![]);
         let config_top_p = SamplingConfig::from_request(&req_top_p);
         assert!(config_top_p.has_advanced_sampling());
-        
+
         let req_top_k = make_request(0.7, 1.0, 50, 1.0, 0.0, vec![]);
         let config_top_k = SamplingConfig::from_request(&req_top_k);
         assert!(config_top_k.has_advanced_sampling());
-        
+
         let req_penalty = make_request(0.7, 1.0, 0, 1.2, 0.0, vec![]);
         let config_penalty = SamplingConfig::from_request(&req_penalty);
         assert!(config_penalty.has_advanced_sampling());
-        
+
         let req_min_p = make_request(0.7, 1.0, 0, 1.0, 0.05, vec![]);
         let config_min_p = SamplingConfig::from_request(&req_min_p);
         assert!(config_min_p.has_advanced_sampling());
@@ -266,7 +254,7 @@ mod tests {
         let req_no_stop = make_request(0.7, 1.0, 0, 1.0, 0.0, vec![]);
         let config_no_stop = SamplingConfig::from_request(&req_no_stop);
         assert!(!config_no_stop.has_stop_sequences());
-        
+
         let req_with_stop = make_request(0.7, 1.0, 0, 1.0, 0.0, vec!["\n\n".to_string()]);
         let config_with_stop = SamplingConfig::from_request(&req_with_stop);
         assert!(config_with_stop.has_stop_sequences());
@@ -277,7 +265,7 @@ mod tests {
         let req_greedy = make_request(0.0, 1.0, 0, 1.0, 0.0, vec![]);
         let config_greedy = SamplingConfig::from_request(&req_greedy);
         assert!(config_greedy.is_greedy());
-        
+
         let req_stochastic = make_request(0.7, 1.0, 0, 1.0, 0.0, vec![]);
         let config_stochastic = SamplingConfig::from_request(&req_stochastic);
         assert!(!config_stochastic.is_greedy());
@@ -288,12 +276,12 @@ mod tests {
         let greedy = make_request(0.0, 1.0, 0, 1.0, 0.0, vec![]);
         let config = SamplingConfig::from_request(&greedy);
         assert_eq!(config.sampling_mode(), "greedy");
-        
+
         let basic = make_request(0.7, 1.0, 0, 1.0, 0.0, vec![]);
         let config = SamplingConfig::from_request(&basic);
         assert!(config.sampling_mode().contains("stochastic"));
         assert!(config.sampling_mode().contains("temp=0.70"));
-        
+
         let advanced = make_request(0.7, 0.9, 50, 1.1, 0.05, vec![]);
         let config = SamplingConfig::from_request(&advanced);
         let mode = config.sampling_mode();
@@ -331,7 +319,7 @@ mod tests {
     #[test]
     fn test_default_config() {
         let config = SamplingConfig::default();
-        
+
         assert_eq!(config.temperature, 1.0);
         assert_eq!(config.top_p, 1.0);
         assert_eq!(config.top_k, 0);

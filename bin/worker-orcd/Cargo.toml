@@ -42,6 +42,34 @@ path = "tests/reproducibility_validation.rs"
 name = "vram_pressure_tests"
 path = "tests/vram_pressure_tests.rs"
 
+[[test]]
+name = "gpt_integration"
+path = "tests/gpt_integration.rs"
+
+[[test]]
+name = "adapter_factory_integration"
+path = "tests/adapter_factory_integration.rs"
+
+[[test]]
+name = "all_models_integration"
+path = "tests/all_models_integration.rs"
+
+[[test]]
+name = "oom_recovery"
+path = "tests/oom_recovery.rs"
+
+[[test]]
+name = "utf8_edge_cases"
+path = "tests/utf8_edge_cases.rs"
+
+[[test]]
+name = "cancellation_integration"
+path = "tests/cancellation_integration.rs"
+
+[[bench]]
+name = "performance_baseline"
+harness = false
+
 [dependencies]
 tokio = { workspace = true }
 anyhow.workspace = true
@@ -63,6 +91,7 @@ tokenizers = "0.15"
 serial_test = "3.0"
 uuid = { version = "1.0", features = ["v4"] }
 tempfile = "3.8"
+criterion = { version = "0.5", features = ["html_reports"] }
 
 [build-dependencies]
 cmake = "0.1"

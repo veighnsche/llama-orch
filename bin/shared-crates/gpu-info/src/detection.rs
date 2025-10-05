@@ -65,9 +65,9 @@ fn find_nvidia_smi() -> Result<PathBuf> {
 fn detect_via_nvidia_smi() -> Result<GpuInfo> {
     // Find nvidia-smi with explicit path (security: prevents PATH manipulation)
     let nvidia_smi_path = find_nvidia_smi()?;
-    
+
     tracing::debug!("Found nvidia-smi at: {:?}", nvidia_smi_path);
-    
+
     // Execute nvidia-smi with absolute path
     let output = Command::new(&nvidia_smi_path)
         .args(&[
@@ -95,7 +95,7 @@ fn parse_nvidia_smi_output(output: &str) -> Result<GpuInfo> {
     const MAX_GPU_NAME_LEN: usize = 256;
     const MAX_PCI_BUS_ID_LEN: usize = 32;
     const MAX_REASONABLE_VRAM_MB: usize = 1_000_000; // 1TB is unreasonable
-    
+
     let mut devices = Vec::new();
 
     for line in output.lines() {
@@ -114,15 +114,13 @@ fn parse_nvidia_smi_output(output: &str) -> Result<GpuInfo> {
         let index = parts
             .get(0)
             .and_then(|s| s.parse::<u32>().ok())
-            .ok_or_else(|| {
-                GpuError::NvidiaSmiParseFailed("Invalid GPU index".to_string())
-            })?;
+            .ok_or_else(|| GpuError::NvidiaSmiParseFailed("Invalid GPU index".to_string()))?;
 
         // Parse and validate GPU name (with length limit)
-        let name_raw = parts.get(1).ok_or_else(|| {
-            GpuError::NvidiaSmiParseFailed("Missing GPU name".to_string())
-        })?;
-        
+        let name_raw = parts
+            .get(1)
+            .ok_or_else(|| GpuError::NvidiaSmiParseFailed("Missing GPU name".to_string()))?;
+
         // Security: Limit name length to prevent memory exhaustion
         if name_raw.len() > MAX_GPU_NAME_LEN {
             tracing::warn!(
@@ -131,41 +129,33 @@ fn parse_nvidia_smi_output(output: &str) -> Result<GpuInfo> {
                 MAX_GPU_NAME_LEN
             );
         }
-        let name = name_raw
-            .chars()
-            .take(MAX_GPU_NAME_LEN)
-            .collect::<String>();
-        
+        let name = name_raw.chars().take(MAX_GPU_NAME_LEN).collect::<String>();
+
         // Security: Reject null bytes
         if name.contains('\0') {
-            return Err(GpuError::NvidiaSmiParseFailed(
-                "GPU name contains null byte".to_string()
-            ));
+            return Err(GpuError::NvidiaSmiParseFailed("GPU name contains null byte".to_string()));
         }
 
         // Parse and validate VRAM total
         let vram_total_mb = parts
             .get(2)
             .and_then(|s| s.parse::<usize>().ok())
-            .ok_or_else(|| {
-                GpuError::NvidiaSmiParseFailed("Invalid memory.total".to_string())
-            })?;
-        
+            .ok_or_else(|| GpuError::NvidiaSmiParseFailed("Invalid memory.total".to_string()))?;
+
         // Security: Validate reasonable bounds
         if vram_total_mb > MAX_REASONABLE_VRAM_MB {
-            return Err(GpuError::NvidiaSmiParseFailed(
-                format!("Unreasonable VRAM size: {} MB", vram_total_mb)
-            ));
+            return Err(GpuError::NvidiaSmiParseFailed(format!(
+                "Unreasonable VRAM size: {} MB",
+                vram_total_mb
+            )));
         }
 
         // Parse and validate VRAM free
         let vram_free_mb = parts
             .get(3)
             .and_then(|s| s.parse::<usize>().ok())
-            .ok_or_else(|| {
-                GpuError::NvidiaSmiParseFailed("Invalid memory.free".to_string())
-            })?;
-        
+            .ok_or_else(|| GpuError::NvidiaSmiParseFailed("Invalid memory.free".to_string()))?;
+
         // Security: Validate free <= total
         if vram_free_mb > vram_total_mb {
             tracing::warn!(
@@ -176,40 +166,34 @@ fn parse_nvidia_smi_output(output: &str) -> Result<GpuInfo> {
         }
 
         // Parse compute capability
-        let compute_cap = parts.get(4).ok_or_else(|| {
-            GpuError::NvidiaSmiParseFailed("Missing compute_cap".to_string())
-        })?;
+        let compute_cap = parts
+            .get(4)
+            .ok_or_else(|| GpuError::NvidiaSmiParseFailed("Missing compute_cap".to_string()))?;
         let compute_capability = parse_compute_capability(compute_cap)?;
 
         // Parse and validate PCI bus ID (with length limit)
-        let pci_bus_id_raw = parts.get(5).ok_or_else(|| {
-            GpuError::NvidiaSmiParseFailed("Missing PCI bus ID".to_string())
-        })?;
-        
+        let pci_bus_id_raw = parts
+            .get(5)
+            .ok_or_else(|| GpuError::NvidiaSmiParseFailed("Missing PCI bus ID".to_string()))?;
+
         // Security: Limit PCI bus ID length
         if pci_bus_id_raw.len() > MAX_PCI_BUS_ID_LEN {
-            return Err(GpuError::NvidiaSmiParseFailed(
-                "PCI bus ID too long".to_string()
-            ));
+            return Err(GpuError::NvidiaSmiParseFailed("PCI bus ID too long".to_string()));
         }
-        
+
         let pci_bus_id = pci_bus_id_raw.to_string();
-        
+
         // Security: Reject null bytes
         if pci_bus_id.contains('\0') {
             return Err(GpuError::NvidiaSmiParseFailed(
-                "PCI bus ID contains null byte".to_string()
+                "PCI bus ID contains null byte".to_string(),
             ));
         }
 
         // Security: Use saturating multiplication to prevent overflow
-        let vram_total_bytes = vram_total_mb
-            .saturating_mul(1024)
-            .saturating_mul(1024);
-        let vram_free_bytes = vram_free_mb
-            .saturating_mul(1024)
-            .saturating_mul(1024)
-            .min(vram_total_bytes); // Clamp to total
+        let vram_total_bytes = vram_total_mb.saturating_mul(1024).saturating_mul(1024);
+        let vram_free_bytes =
+            vram_free_mb.saturating_mul(1024).saturating_mul(1024).min(vram_total_bytes); // Clamp to total
 
         devices.push(GpuDevice {
             index,
@@ -244,10 +228,7 @@ fn parse_nvidia_smi_output(output: &str) -> Result<GpuInfo> {
 fn parse_compute_capability(s: &str) -> Result<(u32, u32)> {
     let parts: Vec<&str> = s.split('.').collect();
     if parts.len() != 2 {
-        return Err(GpuError::NvidiaSmiParseFailed(format!(
-            "Invalid compute capability: {}",
-            s
-        )));
+        return Err(GpuError::NvidiaSmiParseFailed(format!("Invalid compute capability: {}", s)));
     }
 
     let major = parts[0].parse::<u32>().map_err(|_| {
@@ -268,9 +249,7 @@ fn detect_via_cuda_runtime() -> Result<GpuInfo> {
     // - cudaGetDeviceCount()
     // - cudaGetDeviceProperties()
     // - cudaMemGetInfo()
-    Err(GpuError::CudaRuntimeError(
-        "CUDA runtime detection not yet implemented".to_string(),
-    ))
+    Err(GpuError::CudaRuntimeError("CUDA runtime detection not yet implemented".to_string()))
 }
 
 #[cfg(test)]

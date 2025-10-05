@@ -89,7 +89,7 @@ fn detect_cuda() -> bool {
 }
 
 /// Find CUDA toolkit root directory
-/// 
+///
 /// FIX (2025-10-04 - Cascade): This function is critical for systems where nvcc
 /// is not in PATH (e.g., CachyOS with CUDA installed via pacman at /opt/cuda).
 /// CMake's CUDA language support requires either nvcc in PATH or explicit
@@ -144,9 +144,7 @@ fn build_with_cuda() {
 
     // Build CUDA library with CMake
     let mut config = cmake::Config::new(&cuda_dir);
-    config
-        .define("CMAKE_BUILD_TYPE", "Release")
-        .define("BUILD_TESTING", "OFF");
+    config.define("CMAKE_BUILD_TYPE", "Release").define("BUILD_TESTING", "OFF");
 
     // Set CUDA toolkit path if found
     // FIX (2025-10-04 - Cascade): CMAKE_CUDA_COMPILER is REQUIRED when nvcc is not in PATH.
@@ -178,21 +176,21 @@ fn build_with_cuda() {
     println!("cargo:rustc-link-search=native={}/lib", cuda_path.display());
     // Fallback to system library paths
     println!("cargo:rustc-link-search=native=/usr/lib/x86_64-linux-gnu");
-    
+
     // Link the static library
     let lib_path = dst.join("lib");
     let worker_cuda_lib = lib_path.join("libworker_cuda.a");
-    
+
     println!("cargo:rustc-link-search=native={}", lib_path.display());
-    
+
     // FIX (2025-10-04 - Cascade): Link our library first with whole-archive,
     // then link dependencies. The linker resolves symbols left-to-right.
-    
+
     // Link our library with whole-archive to ensure all symbols are included
     println!("cargo:rustc-link-arg=-Wl,--whole-archive");
     println!("cargo:rustc-link-arg={}", worker_cuda_lib.display());
     println!("cargo:rustc-link-arg=-Wl,--no-whole-archive");
-    
+
     // Now link dependencies that our library needs
     println!("cargo:rustc-link-arg=-lstdc++");
     println!("cargo:rustc-link-arg=-lcudart");
