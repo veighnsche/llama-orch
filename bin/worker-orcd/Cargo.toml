@@ -90,16 +90,15 @@ serde_json = { workspace = true }
 clap = { workspace = true }
 reqwest = { workspace = true }
 futures = { workspace = true }
-chrono = { workspace = true }
 thiserror = { workspace = true }
 observability-narration-core = { path = "../shared-crates/narration-core", features = ["axum", "cute-mode"] }
 tokenizers = "0.15"
 
 [dev-dependencies]
-serial_test = "3.0"
+criterion = { version = "0.5", features = ["html_reports"] }
+toml = "0.8"
 uuid = { version = "1.0", features = ["v4"] }
 tempfile = "3.8"
-criterion = { version = "0.5", features = ["html_reports"] }
 
 [build-dependencies]
 cmake = "0.1"

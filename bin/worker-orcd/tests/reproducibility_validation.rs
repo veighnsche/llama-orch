@@ -5,6 +5,8 @@
 //
 // Spec: M0-W-1430
 
+mod common;
+
 use worker_orcd::models::{
     phi3::{Phi3Config, Phi3WeightLoader},
     qwen::{QwenConfig, QwenWeightLoader},
@@ -14,6 +16,9 @@ use worker_orcd::models::{
 /// Test: Qwen reproducibility (10 runs)
 #[test]
 fn test_qwen_reproducibility_10_runs() {
+    common::init_test_env();
+    announce_stub_mode!("test_qwen_reproducibility_10_runs");
+    
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
     let adapter = LlamaModelAdapter::new_qwen(model);

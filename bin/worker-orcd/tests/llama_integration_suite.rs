@@ -5,6 +5,8 @@
 //
 // Spec: M0-W-1430
 
+mod common;
+
 use worker_orcd::models::{
     phi3::{Phi3Config, Phi3WeightLoader},
     qwen::{QwenConfig, QwenWeightLoader},
@@ -15,6 +17,9 @@ use worker_orcd::tokenizer::{BPEDecoder, BPEEncoder, MergeTable, Vocabulary};
 /// Integration test: Full pipeline with Qwen
 #[test]
 fn test_qwen_full_pipeline() {
+    common::init_test_env();
+    announce_stub_mode!("test_qwen_full_pipeline");
+    
     // 1. Load model
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();

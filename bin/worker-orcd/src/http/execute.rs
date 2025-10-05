@@ -135,7 +135,11 @@ pub async fn handle_execute(
         InferenceEvent::Started {
             job_id: job_id.clone(),
             model: "placeholder".to_string(),
-            started_at: chrono::Utc::now().to_rfc3339(),
+            started_at: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+                .to_string(),
         },
         InferenceEvent::Token { t: "test".to_string(), i: 0 },
         InferenceEvent::End {
