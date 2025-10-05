@@ -62,26 +62,6 @@ pub struct SamplingConfig {
 }
 
 impl SamplingConfig {
-    /// Create from HTTP request
-    ///
-    /// Converts ExecuteRequest into SamplingConfig, generating seed if needed.
-    /// Stop sequences are NOT tokenized here - that happens in the inference layer.
-    pub fn from_request(req: &ExecuteRequest) -> Self {
-        Self {
-            temperature: req.temperature,
-            top_p: req.top_p,
-            top_k: req.top_k,
-            repetition_penalty: req.repetition_penalty,
-            min_p: req.min_p,
-            stop_sequences: vec![], // Tokenized later
-            stop_strings: req.stop_sequences.clone(),
-            seed: req.seed.unwrap_or_else(|| {
-                use std::time::{SystemTime, UNIX_EPOCH};
-                SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos() as u64
-            }),
-            max_tokens: req.max_tokens,
-        }
-    }
 
     /// Check if any advanced parameters are enabled
     pub fn has_advanced_sampling(&self) -> bool {
