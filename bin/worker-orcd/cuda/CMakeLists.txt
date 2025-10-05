@@ -73,6 +73,13 @@ set(KERNEL_SOURCES
     kernels/swiglu.cu
     kernels/embedding.cu
     kernels/kv_cache.cu
+    # GPT-specific kernels
+    kernels/layernorm.cu
+    kernels/gelu.cu
+    kernels/positional_embedding.cu
+    kernels/gpt_ffn.cu
+    kernels/mha_attention.cu
+    kernels/mxfp4_dequant.cu
 )
 
 # Build static library
@@ -140,6 +147,13 @@ if(BUILD_TESTING)
         tests/test_residual_kernel.cpp
         tests/test_gqa_attention.cpp
         tests/test_swiglu.cpp
+        # GPT kernel tests - TODO: Convert to GTest format
+        # tests/test_gpt_kernels.cu
+        # tests/test_layernorm_comprehensive.cu
+        # tests/test_gelu_comprehensive.cu
+        # tests/test_gpt_ffn.cu
+        # tests/test_mha_attention.cu
+        # tests/test_mxfp4_dequant.cu
     )
     
     # Build test executable

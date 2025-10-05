@@ -1,22 +1,26 @@
-// Tokenizer error types
 //
 // Spec: M0-W-1362
 
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Debug, Error)]
 pub enum TokenizerError {
     #[error("Vocabulary error: {0}")]
     Vocab(#[from] VocabError),
-
     #[error("Merge error: {0}")]
     Merge(#[from] MergeError),
-
     #[error("Encode error: {0}")]
     Encode(#[from] EncodeError),
-
     #[error("Decode error: {0}")]
     Decode(#[from] DecodeError),
+    #[error("Tokenizer not found. Searched paths: {}", searched_paths.join(", "))]
+    NotFound { searched_paths: Vec<String> },
+    #[error("Failed to load tokenizer: {0}")]
+    LoadFailed(String),
+    #[error("Encoding failed: {0}")]
+    EncodeFailed(String),
+    #[error("Decoding failed: {0}")]
+    DecodeFailed(String),
 }
 
 #[derive(Error, Debug)]
