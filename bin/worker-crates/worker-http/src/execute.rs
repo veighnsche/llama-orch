@@ -31,7 +31,17 @@ pub async fn handle_execute<B: InferenceBackend>(
     info!(job_id = %req.job_id, "Inference request validated");
 
     // Convert request to sampling config
-    let config = SamplingConfig::from_request(&req);
+    let config = SamplingConfig {
+        temperature: req.temperature,
+        top_p: req.top_p,
+        top_k: req.top_k,
+        repetition_penalty: req.repetition_penalty,
+        min_p: req.min_p,
+        stop_sequences: vec![],
+        stop_strings: req.stop.clone(),
+        seed: req.seed.unwrap_or(42),
+        max_tokens: req.max_tokens,
+    };
 
     // Execute inference
     let result = match backend.execute(&req.prompt, &config).await {

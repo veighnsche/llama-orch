@@ -11,21 +11,8 @@
 
 use serde::{Deserialize, Serialize};
 
-/// HTTP execute request (stub for now, will be in worker-http)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ExecuteRequest {
-    pub prompt: String,
-    pub max_tokens: u32,
-    pub temperature: f32,
-    pub top_p: f32,
-    pub top_k: u32,
-    pub repetition_penalty: f32,
-    pub seed: Option<u64>,
-    pub stop_sequences: Vec<String>,
-    pub min_p: f32,
-    pub frequency_penalty: f32,
-    pub presence_penalty: f32,
-}
+// ExecuteRequest is defined in worker-http validation.rs
+// This is just a re-export placeholder for compatibility
 
 /// Complete sampling configuration for inference
 ///
