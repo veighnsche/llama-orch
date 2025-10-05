@@ -12,7 +12,7 @@
 //! - M0-W-1422: Stop sequences
 //! - M0-W-1300: HTTP API extension
 
-use crate::http::sse::StopReason;
+use worker_http::sse::StopReason;
 use worker_common::inference_result::InferenceResult;
 use worker_common::sampling_config::SamplingConfig;
 use std::time::Instant;
@@ -207,7 +207,7 @@ impl InferenceExecutor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::http::validation::ExecuteRequest;
+    use worker_http::validation::ExecuteRequest;
 
     fn make_config(max_tokens: u32, stop: Vec<String>) -> SamplingConfig {
         let req = ExecuteRequest {

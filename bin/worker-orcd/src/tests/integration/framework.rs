@@ -6,7 +6,7 @@
 //! # Spec References
 //! - M0-W-1820: Integration test framework
 
-use crate::http::validation::ExecuteRequest;
+use worker_http::validation::ExecuteRequest;
 use std::net::TcpListener;
 use std::process::{Child, Command};
 use std::time::Duration;

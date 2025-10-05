@@ -5,8 +5,8 @@
 //! # Spec References
 //! - M0-W-1820: Integration test framework
 
-use crate::http::sse::InferenceEvent;
-use crate::http::validation::ExecuteRequest;
+use worker_http::sse::InferenceEvent;
+use worker_http::validation::ExecuteRequest;
 use std::time::Duration;
 use tokio::time::timeout;
 
@@ -210,7 +210,7 @@ pub fn assert_token_count(events: &[InferenceEvent], expected: usize) -> Result<
 
 /// Assert that inference completed successfully (not error/cancelled)
 pub fn assert_successful_completion(events: &[InferenceEvent]) -> Result<(), HelperError> {
-    use crate::http::sse::StopReason;
+    use worker_http::sse::StopReason;
     
     let end_event = extract_end_event(events)
         .ok_or_else(|| HelperError::OrderValidationFailed("No End event found".to_string()))?;
@@ -253,7 +253,7 @@ pub fn make_test_request(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::http::sse::StopReason;
+    use worker_http::sse::StopReason;
 
     fn make_started() -> InferenceEvent {
         InferenceEvent::Started {
