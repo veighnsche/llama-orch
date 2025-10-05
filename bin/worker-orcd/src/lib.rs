@@ -10,7 +10,6 @@ pub mod inference;
 pub mod inference_executor;
 pub mod inference_result;
 pub mod model;
-pub mod models;
 pub mod sampling_config;
 pub mod startup;
 pub mod tests;

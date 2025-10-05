@@ -7,7 +7,7 @@
 
 mod common;
 
-use worker_orcd::models::{
+use worker_models::{
     phi3::{Phi3Config, Phi3WeightLoader},
     qwen::{QwenConfig, QwenWeightLoader},
     AdapterForwardConfig, LlamaModelAdapter, ModelType,

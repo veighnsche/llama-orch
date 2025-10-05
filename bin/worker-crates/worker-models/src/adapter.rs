@@ -407,9 +407,9 @@ impl LlamaModelAdapter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::gpt::{GPTConfig, GPTWeightLoader};
-    use crate::models::phi3::{Phi3Config, Phi3WeightLoader};
-    use crate::models::qwen::{QwenConfig, QwenWeightLoader};
+    use crate::gpt::{GPTConfig, GPTWeightLoader};
+    use crate::phi3::{Phi3Config, Phi3WeightLoader};
+    use crate::qwen::{QwenConfig, QwenWeightLoader};
 
     #[test]
     fn test_adapter_qwen() {

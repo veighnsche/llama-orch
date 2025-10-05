@@ -1,35 +1,18 @@
-//! Model adapters for llama-orch workers
-//!
-//! Provides architecture-specific model adapters that handle different
-//! model families (GPT, Llama, Phi-3, Qwen).
-//!
-//! # Architecture Detection
-//!
-//! Model architecture is automatically detected from GGUF metadata:
-//! - `general.architecture = "llama"` → Llama-style (RoPE, GQA, RMSNorm)
-//! - `general.architecture = "gpt2"` → GPT-style (absolute pos, MHA, LayerNorm)
-//!
-//! # Example
-//!
-//! ```no_run
-//! use worker_models::{ModelAdapter, ModelFactory};
-//!
-//! let adapter = ModelFactory::from_gguf("model.gguf")?;
-//! let config = adapter.config();
-//! # Ok::<(), Box<dyn std::error::Error>>(())
-//! ```
+// Model implementations - LT-022 through LT-031
+//
+// Provides model-specific implementations for Llama-family models.
+// Includes Qwen2.5 and Phi-3 support.
+//
+// Spec: M0-W-1230, M0-W-1220, M0-W-1214
 
-// TODO: Extract from worker-orcd/src/models/
-// - adapter.rs
-// - factory.rs
-// - gpt.rs
-// - phi3.rs
-// - qwen.rs
+pub mod adapter;
+pub mod factory;
+pub mod gpt;
+pub mod phi3;
+pub mod qwen;
 
-pub mod placeholder {
-    //! Placeholder module until extraction is complete
-    
-    pub fn version() -> &'static str {
-        "0.1.0"
-    }
-}
+pub use adapter::{AdapterForwardConfig, LlamaModelAdapter, ModelType};
+pub use factory::{AdapterFactory, Architecture, FactoryError};
+pub use gpt::{GPTConfig, GPTModel};
+pub use phi3::{Phi3Config, Phi3Model, Phi3Weights};
+pub use qwen::{QwenConfig, QwenModel, QwenWeights};

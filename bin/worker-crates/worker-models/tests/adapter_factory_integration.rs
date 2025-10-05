@@ -4,7 +4,7 @@
 //!
 //! Spec: FT-036
 
-use worker_orcd::models::{AdapterFactory, AdapterForwardConfig, Architecture, ModelType};
+use worker_models::{AdapterFactory, AdapterForwardConfig, Architecture, ModelType};
 
 /// Test factory with Qwen model
 #[test]
