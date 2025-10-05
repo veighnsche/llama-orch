@@ -1,6 +1,6 @@
 // GPT Inference Adapter
 //
-// Implements GPTInferenceAdapter for GPT-family models (GPT-2, GPT-OSS-20B).
+// Implements GPTModelAdapter for GPT-family models (GPT-2, GPT-OSS-20B).
 // Handles architecture-specific inference logic.
 //
 // Spec: M0-W-1215
@@ -17,12 +17,12 @@ use std::sync::Arc;
 /// - GELU activation (not SwiGLU)
 /// - Absolute positional embeddings (not RoPE)
 /// - Multi-Head Attention (not GQA)
-pub struct GPTInferenceAdapter {
+pub struct GPTModelAdapter {
     config: GPTConfig,
     // CUDA resources would be managed here
 }
 
-impl GPTInferenceAdapter {
+impl GPTModelAdapter {
     /// Create new GPT inference adapter
     pub fn new(config: GPTConfig) -> Result<Self, String> {
         config.validate()?;
@@ -114,14 +114,14 @@ mod tests {
     #[test]
     fn test_adapter_creation() {
         let config = create_test_config();
-        let adapter = GPTInferenceAdapter::new(config);
+        let adapter = GPTModelAdapter::new(config);
         assert!(adapter.is_ok());
     }
     
     #[test]
     fn test_vram_estimation() {
         let config = create_test_config();
-        let adapter = GPTInferenceAdapter::new(config).unwrap();
+        let adapter = GPTModelAdapter::new(config).unwrap();
         
         let vram_fp16 = adapter.estimate_vram_bytes(QuantizationType::FP16);
         let vram_q4 = adapter.estimate_vram_bytes(QuantizationType::Q4_K_M);
@@ -135,7 +135,7 @@ mod tests {
     #[test]
     fn test_vram_validation() {
         let config = create_test_config();
-        let adapter = GPTInferenceAdapter::new(config).unwrap();
+        let adapter = GPTModelAdapter::new(config).unwrap();
         
         // Should fit in 10GB
         assert!(adapter.validate_vram(10 * 1024 * 1024 * 1024, QuantizationType::Q4_K_M).is_ok());
@@ -167,7 +167,7 @@ mod tests {
             50257,    // vocab_size
         );
         
-        let adapter = GPTInferenceAdapter::new(config).unwrap();
+        let adapter = GPTModelAdapter::new(config).unwrap();
         
         // Should fit in 24GB with MXFP4
         let vram_24gb = 24 * 1024 * 1024 * 1024u64;

@@ -1,4 +1,4 @@
-// LlamaInferenceAdapter Integration Tests - LT-033
+// LlamaModelAdapter Integration Tests - LT-033
 //
 // Tests unified adapter pattern for Llama-family models.
 // Validates consistent interface across Qwen and Phi-3.
@@ -8,14 +8,14 @@
 use worker_orcd::models::{
     phi3::{Phi3Config, Phi3WeightLoader},
     qwen::{QwenConfig, QwenWeightLoader},
-    AdapterForwardConfig, LlamaInferenceAdapter, ModelType,
+    AdapterForwardConfig, LlamaModelAdapter, ModelType,
 };
 
 #[test]
 fn test_adapter_unified_interface_qwen() {
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_qwen(model);
+    let adapter = LlamaModelAdapter::new_qwen(model);
 
     // Test unified interface
     assert_eq!(adapter.model_type(), ModelType::Qwen2_5);
@@ -29,7 +29,7 @@ fn test_adapter_unified_interface_qwen() {
 fn test_adapter_unified_interface_phi3() {
     let config = Phi3Config::phi3_mini_4k();
     let model = Phi3WeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_phi3(model);
+    let adapter = LlamaModelAdapter::new_phi3(model);
 
     // Test unified interface
     assert_eq!(adapter.model_type(), ModelType::Phi3);
@@ -43,7 +43,7 @@ fn test_adapter_unified_interface_phi3() {
 fn test_adapter_generation_qwen() {
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_qwen(model);
+    let adapter = LlamaModelAdapter::new_qwen(model);
 
     let input_ids = vec![1, 2, 3];
     let fwd_config = AdapterForwardConfig {
@@ -66,7 +66,7 @@ fn test_adapter_generation_qwen() {
 fn test_adapter_generation_phi3() {
     let config = Phi3Config::phi3_mini_4k();
     let model = Phi3WeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_phi3(model);
+    let adapter = LlamaModelAdapter::new_phi3(model);
 
     let input_ids = vec![1, 2, 3];
     let fwd_config = AdapterForwardConfig {
@@ -90,11 +90,11 @@ fn test_adapter_consistent_interface() {
     // Test that both models expose same interface
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
-    let qwen_adapter = LlamaInferenceAdapter::new_qwen(qwen_model);
+    let qwen_adapter = LlamaModelAdapter::new_qwen(qwen_model);
 
     let phi3_config = Phi3Config::phi3_mini_4k();
     let phi3_model = Phi3WeightLoader::load_to_vram("dummy.gguf", &phi3_config).unwrap();
-    let phi3_adapter = LlamaInferenceAdapter::new_phi3(phi3_model);
+    let phi3_adapter = LlamaModelAdapter::new_phi3(phi3_model);
 
     // Both should support same operations
     assert!(qwen_adapter.vocab_size().is_ok());
@@ -114,11 +114,11 @@ fn test_adapter_consistent_interface() {
 fn test_adapter_model_differences() {
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
-    let qwen_adapter = LlamaInferenceAdapter::new_qwen(qwen_model);
+    let qwen_adapter = LlamaModelAdapter::new_qwen(qwen_model);
 
     let phi3_config = Phi3Config::phi3_mini_4k();
     let phi3_model = Phi3WeightLoader::load_to_vram("dummy.gguf", &phi3_config).unwrap();
-    let phi3_adapter = LlamaInferenceAdapter::new_phi3(phi3_model);
+    let phi3_adapter = LlamaModelAdapter::new_phi3(phi3_model);
 
     // Verify models have different characteristics
     assert_ne!(qwen_adapter.vocab_size().unwrap(), phi3_adapter.vocab_size().unwrap());
@@ -133,7 +133,7 @@ fn test_adapter_model_differences() {
 fn test_adapter_prefill_decode_cycle() {
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_qwen(model);
+    let adapter = LlamaModelAdapter::new_qwen(model);
 
     let input_ids = vec![1, 2, 3];
 
@@ -168,7 +168,7 @@ fn test_adapter_prefill_decode_cycle() {
 fn test_adapter_temperature_control() {
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_qwen(model);
+    let adapter = LlamaModelAdapter::new_qwen(model);
 
     let input_ids = vec![1, 2, 3];
 

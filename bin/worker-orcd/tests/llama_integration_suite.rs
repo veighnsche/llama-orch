@@ -8,7 +8,7 @@
 use worker_orcd::models::{
     phi3::{Phi3Config, Phi3WeightLoader},
     qwen::{QwenConfig, QwenWeightLoader},
-    AdapterForwardConfig, LlamaInferenceAdapter,
+    AdapterForwardConfig, LlamaModelAdapter,
 };
 use worker_orcd::tokenizer::{BPEDecoder, BPEEncoder, MergeTable, Vocabulary};
 
@@ -18,7 +18,7 @@ fn test_qwen_full_pipeline() {
     // 1. Load model
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_qwen(model);
+    let adapter = LlamaModelAdapter::new_qwen(model);
 
     // 2. Create tokenizer with "He" in vocabulary
     let tokens = vec![
@@ -65,7 +65,7 @@ fn test_phi3_full_pipeline() {
     // 1. Load model
     let config = Phi3Config::phi3_mini_4k();
     let model = Phi3WeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_phi3(model);
+    let adapter = LlamaModelAdapter::new_phi3(model);
 
     // 2. Create tokenizer with "He" in vocabulary
     let tokens = vec![
@@ -112,11 +112,11 @@ fn test_adapter_model_switching() {
     // Load both models
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
-    let qwen_adapter = LlamaInferenceAdapter::new_qwen(qwen_model);
+    let qwen_adapter = LlamaModelAdapter::new_qwen(qwen_model);
 
     let phi3_config = Phi3Config::phi3_mini_4k();
     let phi3_model = Phi3WeightLoader::load_to_vram("dummy.gguf", &phi3_config).unwrap();
-    let phi3_adapter = LlamaInferenceAdapter::new_phi3(phi3_model);
+    let phi3_adapter = LlamaModelAdapter::new_phi3(phi3_model);
 
     let input_ids = vec![1, 2, 3];
     let fwd_config = AdapterForwardConfig {
@@ -141,7 +141,7 @@ fn test_adapter_model_switching() {
 fn test_error_propagation() {
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_qwen(qwen_model);
+    let adapter = LlamaModelAdapter::new_qwen(qwen_model);
 
     // Test with empty input (should handle gracefully)
     let empty_ids: Vec<u32> = vec![];
@@ -180,11 +180,11 @@ fn test_configuration_validation() {
 fn test_vram_usage_comparison() {
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
-    let qwen_adapter = LlamaInferenceAdapter::new_qwen(qwen_model);
+    let qwen_adapter = LlamaModelAdapter::new_qwen(qwen_model);
 
     let phi3_config = Phi3Config::phi3_mini_4k();
     let phi3_model = Phi3WeightLoader::load_to_vram("dummy.gguf", &phi3_config).unwrap();
-    let phi3_adapter = LlamaInferenceAdapter::new_phi3(phi3_model);
+    let phi3_adapter = LlamaModelAdapter::new_phi3(phi3_model);
 
     let qwen_vram = qwen_adapter.vram_usage().unwrap();
     let phi3_vram = phi3_adapter.vram_usage().unwrap();
@@ -202,7 +202,7 @@ fn test_vram_usage_comparison() {
 fn test_multi_token_generation() {
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_qwen(model);
+    let adapter = LlamaModelAdapter::new_qwen(model);
 
     let input_ids = vec![1, 2, 3];
 
@@ -227,7 +227,7 @@ fn test_multi_token_generation() {
 fn test_temperature_sweep() {
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_qwen(model);
+    let adapter = LlamaModelAdapter::new_qwen(model);
 
     let input_ids = vec![1, 2, 3];
 
@@ -252,7 +252,7 @@ fn test_temperature_sweep() {
 fn test_seed_determinism() {
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_qwen(model);
+    let adapter = LlamaModelAdapter::new_qwen(model);
 
     let input_ids = vec![1, 2, 3];
     let seed = 42;
@@ -280,12 +280,12 @@ fn test_gqa_attention_patterns() {
     // Test Qwen (GQA with 14 Q heads, 2 KV heads)
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
-    let qwen_adapter = LlamaInferenceAdapter::new_qwen(qwen_model);
+    let qwen_adapter = LlamaModelAdapter::new_qwen(qwen_model);
 
     // Test Phi-3 (MHA with 32 Q heads, 32 KV heads)
     let phi3_config = Phi3Config::phi3_mini_4k();
     let phi3_model = Phi3WeightLoader::load_to_vram("dummy.gguf", &phi3_config).unwrap();
-    let phi3_adapter = LlamaInferenceAdapter::new_phi3(phi3_model);
+    let phi3_adapter = LlamaModelAdapter::new_phi3(phi3_model);
 
     let input_ids = vec![1, 2, 3, 4, 5];
     let fwd_config = AdapterForwardConfig {
@@ -311,12 +311,12 @@ fn test_rope_frequency_variations() {
     // Qwen uses rope_freq_base = 1000000.0
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
-    let qwen_adapter = LlamaInferenceAdapter::new_qwen(qwen_model);
+    let qwen_adapter = LlamaModelAdapter::new_qwen(qwen_model);
 
     // Phi-3 uses rope_freq_base = 10000.0
     let phi3_config = Phi3Config::phi3_mini_4k();
     let phi3_model = Phi3WeightLoader::load_to_vram("dummy.gguf", &phi3_config).unwrap();
-    let phi3_adapter = LlamaInferenceAdapter::new_phi3(phi3_model);
+    let phi3_adapter = LlamaModelAdapter::new_phi3(phi3_model);
 
     let input_ids = vec![1, 2, 3];
     let fwd_config = AdapterForwardConfig {
@@ -341,7 +341,7 @@ fn test_rope_frequency_variations() {
 fn test_long_context_handling() {
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_qwen(model);
+    let adapter = LlamaModelAdapter::new_qwen(model);
 
     // Test with progressively longer contexts
     for seq_len in [128, 512, 1024, 2048, 4096] {

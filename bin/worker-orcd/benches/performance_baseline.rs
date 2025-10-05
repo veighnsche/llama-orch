@@ -12,7 +12,7 @@
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
 use worker_orcd::models::{
-    AdapterForwardConfig, LlamaInferenceAdapter,
+    AdapterForwardConfig, LlamaModelAdapter,
     qwen::{QwenConfig, QwenWeightLoader},
     phi3::{Phi3Config, Phi3WeightLoader},
     gpt::{GPTConfig, GPTWeightLoader},
@@ -56,11 +56,11 @@ fn bench_prefill(c: &mut Criterion) {
     // Setup models
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
-    let qwen_adapter = LlamaInferenceAdapter::new_qwen(qwen_model);
+    let qwen_adapter = LlamaModelAdapter::new_qwen(qwen_model);
     
     let phi3_config = Phi3Config::phi3_mini_4k();
     let phi3_model = Phi3WeightLoader::load_to_vram("dummy.gguf", &phi3_config).unwrap();
-    let phi3_adapter = LlamaInferenceAdapter::new_phi3(phi3_model);
+    let phi3_adapter = LlamaModelAdapter::new_phi3(phi3_model);
     
     // Test different sequence lengths
     for seq_len in [32, 128, 512, 1024] {
@@ -104,11 +104,11 @@ fn bench_decode(c: &mut Criterion) {
     
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
-    let qwen_adapter = LlamaInferenceAdapter::new_qwen(qwen_model);
+    let qwen_adapter = LlamaModelAdapter::new_qwen(qwen_model);
     
     let phi3_config = Phi3Config::phi3_mini_4k();
     let phi3_model = Phi3WeightLoader::load_to_vram("dummy.gguf", &phi3_config).unwrap();
-    let phi3_adapter = LlamaInferenceAdapter::new_phi3(phi3_model);
+    let phi3_adapter = LlamaModelAdapter::new_phi3(phi3_model);
     
     let config = AdapterForwardConfig {
         is_prefill: false,
@@ -141,7 +141,7 @@ fn bench_generation_throughput(c: &mut Criterion) {
     
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
-    let qwen_adapter = LlamaInferenceAdapter::new_qwen(qwen_model);
+    let qwen_adapter = LlamaModelAdapter::new_qwen(qwen_model);
     
     let input_ids = vec![1, 2, 3];
     
@@ -175,7 +175,7 @@ fn bench_vram_queries(c: &mut Criterion) {
     
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
-    let qwen_adapter = LlamaInferenceAdapter::new_qwen(qwen_model);
+    let qwen_adapter = LlamaModelAdapter::new_qwen(qwen_model);
     
     group.bench_function("vram_usage", |b| {
         b.iter(|| {

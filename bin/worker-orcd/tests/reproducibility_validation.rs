@@ -8,7 +8,7 @@
 use worker_orcd::models::{
     phi3::{Phi3Config, Phi3WeightLoader},
     qwen::{QwenConfig, QwenWeightLoader},
-    AdapterForwardConfig, LlamaInferenceAdapter,
+    AdapterForwardConfig, LlamaModelAdapter,
 };
 
 /// Test: Qwen reproducibility (10 runs)
@@ -16,7 +16,7 @@ use worker_orcd::models::{
 fn test_qwen_reproducibility_10_runs() {
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_qwen(model);
+    let adapter = LlamaModelAdapter::new_qwen(model);
 
     let input_ids = vec![1, 2, 3, 4, 5];
     let seed = 42;
@@ -53,7 +53,7 @@ fn test_qwen_reproducibility_10_runs() {
 fn test_phi3_reproducibility_10_runs() {
     let config = Phi3Config::phi3_mini_4k();
     let model = Phi3WeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_phi3(model);
+    let adapter = LlamaModelAdapter::new_phi3(model);
 
     let input_ids = vec![1, 2, 3, 4, 5];
     let seed = 123;
@@ -91,7 +91,7 @@ fn test_cross_model_reproducibility() {
     // Qwen: 10 runs
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
-    let qwen_adapter = LlamaInferenceAdapter::new_qwen(qwen_model);
+    let qwen_adapter = LlamaModelAdapter::new_qwen(qwen_model);
 
     let mut qwen_outputs = Vec::new();
     for _ in 0..10 {
@@ -111,7 +111,7 @@ fn test_cross_model_reproducibility() {
     // Phi-3: 10 runs
     let phi3_config = Phi3Config::phi3_mini_4k();
     let phi3_model = Phi3WeightLoader::load_to_vram("dummy.gguf", &phi3_config).unwrap();
-    let phi3_adapter = LlamaInferenceAdapter::new_phi3(phi3_model);
+    let phi3_adapter = LlamaModelAdapter::new_phi3(phi3_model);
 
     let mut phi3_outputs = Vec::new();
     for _ in 0..10 {
@@ -146,7 +146,7 @@ fn test_cross_model_reproducibility() {
 fn test_seed_variation_qwen() {
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_qwen(model);
+    let adapter = LlamaModelAdapter::new_qwen(model);
 
     let input_ids = vec![1, 2, 3];
 
@@ -180,7 +180,7 @@ fn test_seed_variation_qwen() {
 fn test_temperature_reproducibility() {
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_qwen(model);
+    let adapter = LlamaModelAdapter::new_qwen(model);
 
     let input_ids = vec![1, 2, 3];
 

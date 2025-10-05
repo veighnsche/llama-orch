@@ -1,4 +1,4 @@
-//! LlamaInferenceAdapter - Unified Model Interface
+//! LlamaModelAdapter - Unified Model Interface
 //!
 //! Provides a consistent interface for all Llama-family models (Qwen, Phi-3, Llama 2/3, GPT-2/3).
 //! Enables model-agnostic code and easy model switching.
@@ -14,7 +14,7 @@
 //!
 //! ```no_run
 //! use worker_orcd::models::{
-//!     LlamaInferenceAdapter, AdapterForwardConfig,
+//!     LlamaModelAdapter, AdapterForwardConfig,
 //!     qwen::{QwenConfig, QwenWeightLoader},
 //! };
 //!
@@ -23,7 +23,7 @@
 //! let model = QwenWeightLoader::load_to_vram("model.gguf", &config)?;
 //!
 //! // Create adapter
-//! let adapter = LlamaInferenceAdapter::new_qwen(model);
+//! let adapter = LlamaModelAdapter::new_qwen(model);
 //!
 //! // Generate tokens
 //! let input_ids = vec![1, 2, 3];
@@ -171,17 +171,17 @@ impl AdapterForwardConfig {
 ///
 /// # Thread Safety
 ///
-/// `LlamaInferenceAdapter` is `Send` but not `Sync`. Each adapter instance
+/// `LlamaModelAdapter` is `Send` but not `Sync`. Each adapter instance
 /// should be used from a single thread. Create multiple adapters for
 /// concurrent inference.
-pub struct LlamaInferenceAdapter {
+pub struct LlamaModelAdapter {
     model_type: ModelType,
     qwen_model: Option<QwenModel>,
     phi3_model: Option<Phi3Model>,
     gpt_model: Option<super::gpt::GPTModel>,
 }
 
-impl LlamaInferenceAdapter {
+impl LlamaModelAdapter {
     /// Create adapter for Qwen model
     pub fn new_qwen(model: QwenModel) -> Self {
         Self {
@@ -416,7 +416,7 @@ mod tests {
         let config = QwenConfig::qwen2_5_0_5b();
         let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
 
-        let adapter = LlamaInferenceAdapter::new_qwen(model);
+        let adapter = LlamaModelAdapter::new_qwen(model);
 
         assert_eq!(adapter.model_type(), ModelType::Qwen2_5);
         assert_eq!(adapter.vocab_size().unwrap(), 151936);
@@ -429,7 +429,7 @@ mod tests {
         let config = Phi3Config::phi3_mini_4k();
         let model = Phi3WeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
 
-        let adapter = LlamaInferenceAdapter::new_phi3(model);
+        let adapter = LlamaModelAdapter::new_phi3(model);
 
         assert_eq!(adapter.model_type(), ModelType::Phi3);
         assert_eq!(adapter.vocab_size().unwrap(), 32064);
@@ -441,7 +441,7 @@ mod tests {
     fn test_adapter_prefill_qwen() {
         let config = QwenConfig::qwen2_5_0_5b();
         let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-        let adapter = LlamaInferenceAdapter::new_qwen(model);
+        let adapter = LlamaModelAdapter::new_qwen(model);
 
         let input_ids = vec![1, 2, 3];
         let fwd_config = AdapterForwardConfig {
@@ -461,7 +461,7 @@ mod tests {
     fn test_adapter_prefill_phi3() {
         let config = Phi3Config::phi3_mini_4k();
         let model = Phi3WeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-        let adapter = LlamaInferenceAdapter::new_phi3(model);
+        let adapter = LlamaModelAdapter::new_phi3(model);
 
         let input_ids = vec![1, 2, 3];
         let fwd_config = AdapterForwardConfig {
@@ -481,7 +481,7 @@ mod tests {
     fn test_adapter_generate_qwen() {
         let config = QwenConfig::qwen2_5_0_5b();
         let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-        let adapter = LlamaInferenceAdapter::new_qwen(model);
+        let adapter = LlamaModelAdapter::new_qwen(model);
 
         let input_ids = vec![1, 2, 3];
         let fwd_config = AdapterForwardConfig {
@@ -504,7 +504,7 @@ mod tests {
     fn test_adapter_generate_phi3() {
         let config = Phi3Config::phi3_mini_4k();
         let model = Phi3WeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-        let adapter = LlamaInferenceAdapter::new_phi3(model);
+        let adapter = LlamaModelAdapter::new_phi3(model);
 
         let input_ids = vec![1, 2, 3];
         let fwd_config = AdapterForwardConfig {
@@ -527,11 +527,11 @@ mod tests {
     fn test_adapter_vram_usage() {
         let qwen_config = QwenConfig::qwen2_5_0_5b();
         let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
-        let qwen_adapter = LlamaInferenceAdapter::new_qwen(qwen_model);
+        let qwen_adapter = LlamaModelAdapter::new_qwen(qwen_model);
 
         let phi3_config = Phi3Config::phi3_mini_4k();
         let phi3_model = Phi3WeightLoader::load_to_vram("dummy.gguf", &phi3_config).unwrap();
-        let phi3_adapter = LlamaInferenceAdapter::new_phi3(phi3_model);
+        let phi3_adapter = LlamaModelAdapter::new_phi3(phi3_model);
 
         // Both should report VRAM usage
         assert!(qwen_adapter.vram_usage().unwrap() > 0);
@@ -543,7 +543,7 @@ mod tests {
 
     #[test]
     fn test_adapter_model_not_loaded() {
-        let adapter = LlamaInferenceAdapter {
+        let adapter = LlamaModelAdapter {
             model_type: ModelType::Qwen2_5,
             qwen_model: None,
             phi3_model: None,
@@ -563,7 +563,7 @@ mod tests {
     fn test_adapter_gpt2() {
         let config = GPTConfig::gpt2_small();
         let model = GPTWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-        let adapter = LlamaInferenceAdapter::new_gpt2(model);
+        let adapter = LlamaModelAdapter::new_gpt2(model);
 
         assert_eq!(adapter.model_type(), ModelType::GPT2);
         assert_eq!(adapter.vocab_size().unwrap(), 50257);
@@ -575,7 +575,7 @@ mod tests {
     fn test_adapter_gpt2_generation() {
         let config = GPTConfig::gpt2_small();
         let model = GPTWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-        let adapter = LlamaInferenceAdapter::new_gpt2(model);
+        let adapter = LlamaModelAdapter::new_gpt2(model);
 
         let input_ids = vec![1, 2, 3];
         let fwd_config = AdapterForwardConfig {

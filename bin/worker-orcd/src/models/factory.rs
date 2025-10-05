@@ -19,7 +19,7 @@
 //! Spec: FT-034
 
 use super::{
-    AdapterForwardConfig, LlamaInferenceAdapter, ModelType,
+    AdapterForwardConfig, LlamaModelAdapter, ModelType,
     gpt::{GPTConfig, GPTWeightLoader},
     phi3::{Phi3Config, Phi3WeightLoader},
     qwen::{QwenConfig, QwenWeightLoader},
@@ -90,7 +90,7 @@ impl AdapterFactory {
     /// - GGUF parsing fails
     /// - Architecture not supported
     /// - Model loading fails
-    pub fn from_gguf(path: &str) -> Result<LlamaInferenceAdapter, FactoryError> {
+    pub fn from_gguf(path: &str) -> Result<LlamaModelAdapter, FactoryError> {
         // Parse GGUF metadata
         let metadata = GGUFMetadata::from_file(path)
             .map_err(|e| FactoryError::GGUFParsingFailed(e.to_string()))?;
@@ -114,7 +114,7 @@ impl AdapterFactory {
     pub fn from_gguf_with_arch(
         path: &str,
         arch: Architecture,
-    ) -> Result<LlamaInferenceAdapter, FactoryError> {
+    ) -> Result<LlamaModelAdapter, FactoryError> {
         match arch {
             Architecture::Llama => Self::load_llama_model(path),
             Architecture::GPT => Self::load_gpt_model(path),
@@ -129,7 +129,7 @@ impl AdapterFactory {
     pub fn from_gguf_with_arch_str(
         path: &str,
         arch_str: &str,
-    ) -> Result<LlamaInferenceAdapter, FactoryError> {
+    ) -> Result<LlamaModelAdapter, FactoryError> {
         let arch = Architecture::from_str(arch_str)?;
         Self::from_gguf_with_arch(path, arch)
     }
@@ -175,7 +175,7 @@ impl AdapterFactory {
     }
 
     /// Load Llama-family model (Qwen, Phi-3, Llama 2/3)
-    fn load_llama_model(path: &str) -> Result<LlamaInferenceAdapter, FactoryError> {
+    fn load_llama_model(path: &str) -> Result<LlamaModelAdapter, FactoryError> {
         let variant = Self::detect_model_variant(path)?;
 
         match variant {
@@ -184,13 +184,13 @@ impl AdapterFactory {
                 let config = QwenConfig::qwen2_5_0_5b();
                 let model = QwenWeightLoader::load_to_vram(path, &config)
                     .map_err(|e| FactoryError::ModelLoadingFailed(e.to_string()))?;
-                Ok(LlamaInferenceAdapter::new_qwen(model))
+                Ok(LlamaModelAdapter::new_qwen(model))
             }
             ModelType::Phi3 => {
                 let config = Phi3Config::phi3_mini_4k();
                 let model = Phi3WeightLoader::load_to_vram(path, &config)
                     .map_err(|e| FactoryError::ModelLoadingFailed(e.to_string()))?;
-                Ok(LlamaInferenceAdapter::new_phi3(model))
+                Ok(LlamaModelAdapter::new_phi3(model))
             }
             ModelType::Llama2 | ModelType::Llama3 => {
                 Err(FactoryError::UnsupportedVariant("Llama 2/3 not yet implemented".to_string()))
@@ -200,7 +200,7 @@ impl AdapterFactory {
     }
 
     /// Load GPT-family model (GPT-2, GPT-3)
-    fn load_gpt_model(path: &str) -> Result<LlamaInferenceAdapter, FactoryError> {
+    fn load_gpt_model(path: &str) -> Result<LlamaModelAdapter, FactoryError> {
         let variant = Self::detect_model_variant(path)?;
 
         match variant {
@@ -209,7 +209,7 @@ impl AdapterFactory {
                 let config = GPTConfig::gpt2_small();
                 let model = GPTWeightLoader::load_to_vram(path, &config)
                     .map_err(|e| FactoryError::ModelLoadingFailed(e.to_string()))?;
-                Ok(LlamaInferenceAdapter::new_gpt2(model))
+                Ok(LlamaModelAdapter::new_gpt2(model))
             }
             ModelType::GPT3 => {
                 Err(FactoryError::UnsupportedVariant("GPT-3 not yet implemented".to_string()))
@@ -222,11 +222,11 @@ impl AdapterFactory {
     ///
     /// Creates a Qwen 0.5B adapter with dummy GGUF file.
     /// Useful for tests and examples.
-    pub fn default_for_testing() -> Result<LlamaInferenceAdapter, FactoryError> {
+    pub fn default_for_testing() -> Result<LlamaModelAdapter, FactoryError> {
         let config = QwenConfig::qwen2_5_0_5b();
         let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config)
             .map_err(|e| FactoryError::ModelLoadingFailed(e.to_string()))?;
-        Ok(LlamaInferenceAdapter::new_qwen(model))
+        Ok(LlamaModelAdapter::new_qwen(model))
     }
 }
 

@@ -1,7 +1,7 @@
 //! GPT Model Implementation
 //!
 //! Supports GPT-2 and GPT-3 architectures.
-//! Integrates with Foundation layer via LlamaInferenceAdapter.
+//! Integrates with Foundation layer via LlamaModelAdapter.
 //!
 //! # Architecture
 //!

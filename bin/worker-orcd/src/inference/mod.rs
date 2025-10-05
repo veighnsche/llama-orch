@@ -4,7 +4,7 @@
 
 pub mod gpt_adapter;
 
-pub use gpt_adapter::{GPTInferenceAdapter, QuantizationType};
+pub use gpt_adapter::{GPTModelAdapter, QuantizationType};
 
 // ---
 // Crafted by GPT-Gamma 🤖
