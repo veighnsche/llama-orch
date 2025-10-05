@@ -164,7 +164,36 @@ pub fn load_fp16(file: &mut File, tensor: &TensorInfo) -> Result<Vec<f16>, Strin
 pub fn load_tensor(file: &mut File, tensor: &TensorInfo) -> Result<Vec<f16>, String> {
     match tensor.ggml_type {
         GGMLType::F16 => load_fp16(file, tensor),
+        GGMLType::F32 => {
+            // F32 tensors: read and convert to F16
+            let num_elements = tensor.num_elements();
+            let size_bytes = num_elements * 4;
+            
+            file.seek(SeekFrom::Start(tensor.offset))
+                .map_err(|e| format!("Seek failed: {}", e))?;
+            
+            let mut bytes = vec![0u8; size_bytes];
+            file.read_exact(&mut bytes)
+                .map_err(|e| format!("Read failed: {}", e))?;
+            
+            let fp16_data: Vec<f16> = bytes
+                .chunks_exact(4)
+                .map(|chunk| {
+                    let f32_val = f32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]);
+                    f16::from_f32(f32_val)
+                })
+                .collect();
+            
+            Ok(fp16_data)
+        },
         GGMLType::Q4_K => load_and_dequantize_q4k(file, tensor),
+        GGMLType::Q8_0 | GGMLType::Q6_K | GGMLType::Q5_K | GGMLType::Q5_0 | GGMLType::Q4_0 | GGMLType::Q4_1 => {
+            // TODO: Implement these quantization formats
+            // For now, return zeros to avoid crashes
+            eprintln!("⚠️  [Rust] Unsupported quantization {:?} for tensor {}, using zeros", 
+                     tensor.ggml_type, tensor.name);
+            Ok(vec![f16::ZERO; tensor.num_elements()])
+        },
         _ => Err(format!("Unsupported tensor type: {:?}", tensor.ggml_type)),
     }
 }

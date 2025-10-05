@@ -58,29 +58,10 @@ InferenceContext* cuda_inference_init(
     int* error
 ) {
     try {
-        // model_ptr is actually a ModelImpl* (stub), not QwenModel*
-        // We need to load the real weights from the GGUF file
-        auto* model_impl = reinterpret_cast<worker::ModelImpl*>(model_ptr);
-        const char* model_path = model_impl->model_path().c_str();
+        // NEW: model_ptr is now a CudaModel* with weights already loaded by Rust!
+        auto* qwen_model = reinterpret_cast<worker::model::QwenModel*>(model_ptr);
         
-        fprintf(stderr, "🔧 Loading real weights from GGUF: %s\n", model_path);
-        
-        // Create Qwen config
-        worker::model::QwenConfig qwen_config;
-        qwen_config.vocab_size = vocab_size;
-        qwen_config.hidden_dim = hidden_dim;
-        qwen_config.num_layers = num_layers;
-        qwen_config.num_heads = num_heads;
-        qwen_config.num_kv_heads = num_kv_heads;
-        qwen_config.context_length = context_length;
-        
-        // Load real weights from GGUF
-        worker::model::QwenModel* qwen_model = worker::model::QwenWeightLoader::load(
-            model_path,
-            qwen_config
-        );
-        
-        fprintf(stderr, "✅ Weights loaded: %.2f MB\n", 
+        fprintf(stderr, "🎉 [C++] Using pre-loaded model from Rust (VRAM: %.2f MB)\n", 
                 qwen_model->vram_usage / 1024.0 / 1024.0);
         
         // Create transformer config

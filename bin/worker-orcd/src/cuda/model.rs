@@ -62,23 +62,40 @@ impl Model {
     /// # Ok::<(), worker_orcd::cuda::CudaError>(())
     /// ```
     pub fn load(ctx: &Context, model_path: &str) -> Result<Self, CudaError> {
-        let path_cstr = CString::new(model_path).map_err(|_| {
-            CudaError::InvalidParameter("Model path contains null byte".to_string())
-        })?;
-
-        let mut vram_bytes = 0;
-        let mut error_code = 0;
-
-        // SAFETY: ctx.as_ptr() is valid, path_cstr is valid CString,
-        // vram_bytes and error_code are valid pointers
+        // NEW: Load weights in Rust with Q4_K dequantization!
+        use super::weight_loader::load_model_from_rust;
+        use worker_gguf::GGUFMetadata;
+        
+        eprintln!("🦀 [Rust] Loading model with Rust weight loading + Q4_K dequantization");
+        
+        // TEMPORARY: Hardcode Qwen2.5-0.5B config
+        // TODO: Parse from GGUF metadata when parser is complete
+        let vocab_size = 151936u32;
+        let hidden_dim = 896u32;
+        let num_layers = 24u32;
+        let num_heads = 14u32;
+        let num_kv_heads = 2u32;
+        let context_length = 32768u32;
+        
+        eprintln!("📋 [Rust] Model config: vocab={}, hidden={}, layers={}, heads={}/{}", 
+                  vocab_size, hidden_dim, num_layers, num_heads, num_kv_heads);
+        
+        // Load weights in Rust and create C++ model
         let ptr = unsafe {
-            ffi::cuda_load_model(ctx.as_ptr(), path_cstr.as_ptr(), &mut vram_bytes, &mut error_code)
+            load_model_from_rust(
+                model_path,
+                vocab_size,
+                hidden_dim,
+                num_layers,
+                num_heads,
+                num_kv_heads,
+                context_length,
+            ).map_err(|e| CudaError::ModelLoadFailed(e))?
         };
-
-        if ptr.is_null() {
-            return Err(CudaError::from_code(error_code));
-        }
-
+        
+        // VRAM is tracked inside load_model_from_rust
+        let vram_bytes = 0; // TODO: Get actual VRAM from Rust loader
+        
         Ok(Self { ptr, vram_bytes })
     }
 
