@@ -84,6 +84,11 @@ void cuda_pointer_map_insert(
 ) {
     if (map && name && gpu_ptr) {
         map->pointers[name] = gpu_ptr;
+        
+        // Debug: Log token_embd.weight pointer
+        if (std::string(name) == "token_embd.weight") {
+            fprintf(stderr, "🔍 [C++] Stored token_embd.weight pointer: %p\n", gpu_ptr);
+        }
     }
 }
 

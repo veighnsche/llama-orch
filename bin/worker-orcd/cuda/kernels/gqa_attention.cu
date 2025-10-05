@@ -12,17 +12,149 @@
 #include <stdio.h>
 
 /**
- * GQA Attention Prefill Kernel (Simplified)
+ * GQA Attention Decode Kernel - Single Token Generation
  * 
- * Computes attention for full sequence (prompt processing).
- * Uses naive implementation (no flash attention).
+ * Computes attention for single token using KV cache.
+ * Each block processes one query head for one batch item.
  * 
  * Algorithm:
- *   1. Compute scores = Q @ K^T * scale
- *   2. Apply causal mask (upper triangular)
+ *   1. Load query vector for this head
+ *   2. Compute attention scores with all cached K vectors
  *   3. Apply softmax
- *   4. Compute output = attention @ V
- *   5. Write K, V to cache
+ *   4. Compute weighted sum of V vectors
+ */
+__global__ void gqa_attention_decode_kernel_impl(
+    half* output,
+    const half* q,
+    const half* k_current,
+    const half* v_current,
+    const half* kv_cache_k,
+    const half* kv_cache_v,
+    int batch_size,
+    int cache_len,
+    int num_q_heads,
+    int num_kv_heads,
+    int head_dim,
+    float scale
+) {
+    int batch = blockIdx.y;
+    int q_head = blockIdx.x;
+    int tid = threadIdx.x;
+    
+    if (batch >= batch_size || q_head >= num_q_heads) {
+        return;
+    }
+    
+    // Determine which KV head this Q head uses (GQA grouping)
+    int kv_head = q_head / (num_q_heads / num_kv_heads);
+    
+    // Shared memory for attention scores and reduction
+    extern __shared__ float shared_mem[];
+    float* scores = shared_mem;
+    float* max_val = &shared_mem[cache_len + 1];
+    float* sum_exp = &max_val[1];
+    
+    // Load query vector into registers
+    float q_vec[64];  // Assuming head_dim <= 64
+    for (int d = tid; d < head_dim; d += blockDim.x) {
+        int q_idx = batch * num_q_heads * head_dim + q_head * head_dim + d;
+        q_vec[d] = __half2float(q[q_idx]);
+    }
+    __syncthreads();
+    
+    // Compute attention scores for all positions (including current)
+    for (int pos = tid; pos <= cache_len; pos += blockDim.x) {
+        float score = 0.0f;
+        
+        if (pos < cache_len) {
+            // Score with cached K
+            for (int d = 0; d < head_dim; d++) {
+                int k_cache_idx = batch * cache_len * num_kv_heads * head_dim +
+                                  pos * num_kv_heads * head_dim +
+                                  kv_head * head_dim + d;
+                float k_val = __half2float(kv_cache_k[k_cache_idx]);
+                score += q_vec[d] * k_val;
+            }
+        } else {
+            // Score with current K
+            for (int d = 0; d < head_dim; d++) {
+                int k_idx = batch * num_kv_heads * head_dim + kv_head * head_dim + d;
+                float k_val = __half2float(k_current[k_idx]);
+                score += q_vec[d] * k_val;
+            }
+        }
+        
+        scores[pos] = score * scale;
+    }
+    __syncthreads();
+    
+    // Find max score for numerical stability
+    if (tid == 0) {
+        float max_score = -1e9f;
+        for (int i = 0; i <= cache_len; i++) {
+            max_score = fmaxf(max_score, scores[i]);
+        }
+        max_val[0] = max_score;
+    }
+    __syncthreads();
+    
+    // Compute exp and sum
+    float local_sum = 0.0f;
+    for (int pos = tid; pos <= cache_len; pos += blockDim.x) {
+        float exp_score = expf(scores[pos] - max_val[0]);
+        scores[pos] = exp_score;
+        local_sum += exp_score;
+    }
+    
+    // Reduce sum across threads
+    __shared__ float partial_sums[256];
+    partial_sums[tid] = local_sum;
+    __syncthreads();
+    
+    for (int s = blockDim.x / 2; s > 0; s >>= 1) {
+        if (tid < s) {
+            partial_sums[tid] += partial_sums[tid + s];
+        }
+        __syncthreads();
+    }
+    
+    if (tid == 0) {
+        sum_exp[0] = partial_sums[0];
+    }
+    __syncthreads();
+    
+    // Normalize to get attention weights
+    for (int pos = tid; pos <= cache_len; pos += blockDim.x) {
+        scores[pos] /= sum_exp[0];
+    }
+    __syncthreads();
+    
+    // Compute weighted sum of V vectors
+    for (int d = tid; d < head_dim; d += blockDim.x) {
+        float out_val = 0.0f;
+        
+        for (int pos = 0; pos < cache_len; pos++) {
+            int v_cache_idx = batch * cache_len * num_kv_heads * head_dim +
+                              pos * num_kv_heads * head_dim +
+                              kv_head * head_dim + d;
+            float v_val = __half2float(kv_cache_v[v_cache_idx]);
+            out_val += scores[pos] * v_val;
+        }
+        
+        // Add current V
+        int v_idx = batch * num_kv_heads * head_dim + kv_head * head_dim + d;
+        float v_val = __half2float(v_current[v_idx]);
+        out_val += scores[cache_len] * v_val;
+        
+        int out_idx = batch * num_q_heads * head_dim + q_head * head_dim + d;
+        output[out_idx] = __float2half(out_val);
+    }
+}
+
+/**
+ * GQA Attention Prefill Kernel (Simplified for single token)
+ * 
+ * For seq_len=1, this is essentially the same as decode but without cache.
  */
 __global__ void gqa_attention_prefill_kernel(
     half* output,
@@ -38,53 +170,41 @@ __global__ void gqa_attention_prefill_kernel(
     int head_dim,
     float scale
 ) {
-    // Simplified implementation: Each thread processes one output element
-    // In production, this would use optimized attention (flash attention, etc.)
-    
-    int batch = blockIdx.z;
-    int pos = blockIdx.y;
+    int batch = blockIdx.y;
     int q_head = blockIdx.x;
-    int dim = threadIdx.x;
+    int tid = threadIdx.x;
     
-    if (batch >= batch_size || pos >= seq_len || q_head >= num_q_heads || dim >= head_dim) {
+    if (batch >= batch_size || q_head >= num_q_heads) {
         return;
     }
     
-    // Determine which KV head this Q head uses (GQA grouping)
+    // For seq_len=1, just compute self-attention
+    if (seq_len != 1) {
+        // Multi-token prefill not implemented yet
+        return;
+    }
+    
     int kv_head = q_head / (num_q_heads / num_kv_heads);
     
-    // For simplicity, just copy input to output (stub implementation)
-    // Full implementation would compute attention scores, softmax, and weighted sum
-    int q_idx = batch * seq_len * num_q_heads * head_dim +
-                pos * num_q_heads * head_dim +
-                q_head * head_dim + dim;
-    
-    output[q_idx] = q[q_idx];
-    
-    // Write K, V to cache
-    if (q_head == 0 && dim < head_dim) {
-        int k_idx = batch * seq_len * num_kv_heads * head_dim +
-                    pos * num_kv_heads * head_dim +
-                    kv_head * head_dim + dim;
+    // For single token: attention score is just 1.0 (only attending to itself)
+    // Output = V (after proper projection)
+    for (int d = tid; d < head_dim; d += blockDim.x) {
+        int v_idx = batch * num_kv_heads * head_dim + kv_head * head_dim + d;
+        int k_idx = batch * num_kv_heads * head_dim + kv_head * head_dim + d;
+        int out_idx = batch * num_q_heads * head_dim + q_head * head_dim + d;
+        output[out_idx] = v[v_idx];
         
-        int cache_idx = batch * seq_len * num_kv_heads * head_dim +
-                        pos * num_kv_heads * head_dim +
-                        kv_head * head_dim + dim;
-        
-        if (kv_cache_k != nullptr) {
+        // Write K, V to cache at position 0 (only once per KV head)
+        if (kv_cache_k != nullptr && q_head < num_kv_heads) {
+            int cache_idx = batch * num_kv_heads * head_dim + kv_head * head_dim + d;
             kv_cache_k[cache_idx] = k[k_idx];
-        }
-        if (kv_cache_v != nullptr) {
-            kv_cache_v[cache_idx] = v[k_idx];
+            kv_cache_v[cache_idx] = v[v_idx];
         }
     }
 }
 
 /**
- * GQA Attention Decode Kernel (Simplified)
- * 
- * Computes attention for single token (autoregressive generation).
- * Reads from KV cache for all previous positions.
+ * Legacy wrapper - redirects to new implementation
  */
 __global__ void gqa_attention_decode_kernel(
     half* output,
@@ -100,36 +220,8 @@ __global__ void gqa_attention_decode_kernel(
     int head_dim,
     float scale
 ) {
-    int batch = blockIdx.z;
-    int q_head = blockIdx.x;
-    int dim = threadIdx.x;
-    
-    if (batch >= batch_size || q_head >= num_q_heads || dim >= head_dim) {
-        return;
-    }
-    
-    int kv_head = q_head / (num_q_heads / num_kv_heads);
-    
-    // Append current K, V to cache at position cache_len
-    if (q_head == 0 && dim < head_dim) {
-        int k_current_idx = batch * num_kv_heads * head_dim +
-                            kv_head * head_dim + dim;
-        int cache_idx = batch * (cache_len + 1) * num_kv_heads * head_dim +
-                        cache_len * num_kv_heads * head_dim +
-                        kv_head * head_dim + dim;
-        
-        if (kv_cache_k != nullptr && k_current != nullptr) {
-            kv_cache_k[cache_idx] = k_current[k_current_idx];
-        }
-        if (kv_cache_v != nullptr && v_current != nullptr) {
-            kv_cache_v[cache_idx] = v_current[k_current_idx];
-        }
-    }
-    
-    // Simplified: Copy Q to output (stub)
-    // Full implementation would compute attention over cache
-    int q_idx = batch * num_q_heads * head_dim + q_head * head_dim + dim;
-    output[q_idx] = q[q_idx];
+    // This is now handled by gqa_attention_decode_kernel_impl
+    // This wrapper exists for compatibility
 }
 
 extern "C" {
@@ -178,8 +270,8 @@ int cuda_gqa_attention_prefill(
     }
     
     // Launch kernel
-    dim3 grid(num_q_heads, seq_len, batch_size);
-    dim3 block(head_dim);
+    dim3 grid(num_q_heads, batch_size);
+    dim3 block(256);  // Use 256 threads for better occupancy
     
     gqa_attention_prefill_kernel<<<grid, block>>>(
         output, q, k, v, kv_cache_k, kv_cache_v,
@@ -238,11 +330,12 @@ int cuda_gqa_attention_decode(
         return -1;
     }
     
-    // Launch kernel
-    dim3 grid(num_q_heads, 1, batch_size);
-    dim3 block(head_dim);
+    // Launch kernel with shared memory for scores
+    dim3 grid(num_q_heads, batch_size);
+    dim3 block(256);
+    size_t shared_mem_size = (cache_len + 1 + 2) * sizeof(float) + 256 * sizeof(float);
     
-    gqa_attention_decode_kernel<<<grid, block>>>(
+    gqa_attention_decode_kernel_impl<<<grid, block, shared_mem_size>>>(
         output, q, k_current, v_current, kv_cache_k, kv_cache_v,
         batch_size, cache_len, num_q_heads, num_kv_heads, head_dim, scale
     );
@@ -258,7 +351,7 @@ int cuda_gqa_attention_decode(
 
 /**
  * Unified GQA attention wrapper for transformer
- * Automatically chooses between prefill and decode based on seq_len
+ * Automatically chooses between prefill and decode based on cache_len
  */
 void cuda_gqa_attention_forward(
     const void* q,
@@ -272,6 +365,7 @@ void cuda_gqa_attention_forward(
     uint32_t num_kv_heads,
     uint32_t head_dim,
     uint32_t seq_len,
+    uint32_t cache_len,
     cudaStream_t stream
 ) {
     const half* q_half = reinterpret_cast<const half*>(q);
@@ -283,11 +377,8 @@ void cuda_gqa_attention_forward(
     
     float scale = 1.0f / sqrtf(static_cast<float>(head_dim));
     
-    if (seq_len == 1) {
-        // Decode: single token generation
-        // For decode, we need cache_len (current position in cache)
-        // For now, assume cache_len is passed separately or tracked
-        // Simplified: just use prefill for now
+    if (cache_len == 0) {
+        // First token: use prefill (self-attention only)
         cuda_gqa_attention_prefill(
             output_half,
             q_half,
@@ -303,8 +394,8 @@ void cuda_gqa_attention_forward(
             scale
         );
     } else {
-        // Prefill: process multiple tokens
-        cuda_gqa_attention_prefill(
+        // Subsequent tokens: use decode (attend to cache + current)
+        cuda_gqa_attention_decode(
             output_half,
             q_half,
             k_half,
@@ -312,7 +403,7 @@ void cuda_gqa_attention_forward(
             k_cache_half,
             v_cache_half,
             batch_size,
-            seq_len,
+            cache_len,
             num_q_heads,
             num_kv_heads,
             head_dim,

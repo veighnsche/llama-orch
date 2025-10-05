@@ -2,7 +2,7 @@
 
 **Date**: 2025-10-05  
 **Issue**: `/execute` endpoint connection fails, but `/health` works  
-**Status**: 🔍 INVESTIGATING  
+**Status**: ✅ RESOLVED (22:37)  
 
 ## Symptoms
 
@@ -133,4 +133,28 @@ lsof -i :9999
 
 ---
 
-**Current Status**: Worker runs, health works, execute fails with connection error. Need to isolate whether this is a server-side or client-side issue.
+## RESOLUTION ✅
+
+**Final Root Cause**: Incorrect type cast in `cuda/src/ffi_inference.cpp:62`
+
+The code was casting `CudaModel*` directly to `QwenModel*`:
+```cpp
+auto* qwen_model = reinterpret_cast<worker::model::QwenModel*>(model_ptr);
+```
+
+But `CudaModel*` is actually a `ModelImpl*`, causing it to read from the wrong memory location. This resulted in:
+- All-zero embeddings
+- Inference crash/hang
+- HTTP connection drop
+
+**Fix Applied**:
+```cpp
+auto* model_impl = reinterpret_cast<worker::ModelImpl*>(model_ptr);
+auto* qwen_model = model_impl->get_qwen_model();
+```
+
+**Additional Fix**: Added global GPU pointer registry to prevent use-after-free.
+
+**Result**: ✅ 100 tokens generated successfully, HTTP streaming works!
+
+**See**: `BUG_FIXED_HTTP_CONNECTION.md` for complete details.

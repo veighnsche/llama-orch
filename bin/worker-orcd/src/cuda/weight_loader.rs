@@ -17,6 +17,7 @@ use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 use std::ffi::c_void;
+use std::sync::Mutex;
 use worker_gguf::{
     GGUFMetadata, 
     TensorMetadata
@@ -24,6 +25,26 @@ use worker_gguf::{
 use half::f16;
 use super::ffi;
 use super::gguf_dequant::{dequantize_q4k_gpu, dequantize_q5_0_gpu, dequantize_q6k_gpu, dequantize_q8_0_gpu};
+
+/// Wrapper for GPU pointers that can be sent between threads
+/// 
+/// SAFETY: CUDA device pointers can be safely shared between threads.
+/// The actual GPU memory is managed by the CUDA driver.
+#[derive(Clone, Copy)]
+struct GpuPointer(*mut c_void);
+
+unsafe impl Send for GpuPointer {}
+unsafe impl Sync for GpuPointer {}
+
+/// Global registry for GPU pointers
+/// 
+/// CRITICAL: These pointers must NEVER be freed while C++ code is using them.
+/// The C++ model stores raw pointers to this GPU memory, so we must keep it
+/// alive for the entire program lifetime.
+/// 
+/// This prevents use-after-free bugs where Rust drops the HashMap but C++
+/// still tries to read from the GPU pointers.
+static GPU_POINTER_REGISTRY: Mutex<Option<HashMap<String, GpuPointer>>> = Mutex::new(None);
 
 /// GGML type enumeration
 #[repr(u32)]
@@ -529,6 +550,14 @@ fn load_tensor_to_preallocated_gpu(
             
             // Copy directly to pre-allocated GPU memory
             unsafe {
+                // Debug: Log the copy for token_embd.weight
+                if tensor.name == "token_embd.weight" {
+                    eprintln!("🔍 [Rust] Copying token_embd.weight to GPU");
+                    eprintln!("   GPU pointer: {:?}", gpu_ptr);
+                    eprintln!("   Size: {} bytes", size_bytes);
+                    eprintln!("   First 20 bytes from host: {:?}", &bytes[..20.min(bytes.len())]);
+                }
+                
                 let result = ffi::cuda_memcpy_host_to_device(
                     gpu_ptr,
                     bytes.as_ptr() as *const c_void,
@@ -537,6 +566,10 @@ fn load_tensor_to_preallocated_gpu(
                 
                 if result != 0 {
                     return Err(format!("CUDA memcpy failed: {}", result));
+                }
+                
+                if tensor.name == "token_embd.weight" {
+                    eprintln!("✅ [Rust] token_embd.weight copied to GPU successfully");
                 }
             }
             
@@ -612,24 +645,48 @@ pub unsafe fn load_model_from_rust(
     
     // Step 1: Load weights to GPU (Rust)
     let gpu_pointers = load_weights_to_gpu(path)?;
-    let total_vram = gpu_pointers.values()
-        .map(|_| 0u64) // Size already tracked in load_weights_to_gpu
-        .sum::<u64>();
     
-    // Step 2: Create pointer map for C++
+    // Calculate total VRAM (we need to track this properly)
+    // For now, use a placeholder - the actual size is tracked in load_weights_to_gpu
+    let total_vram = 0u64; // TODO: Return this from load_weights_to_gpu
+    
+    // Step 2: Store pointers in global registry
+    // CRITICAL: This prevents use-after-free bugs. C++ stores raw pointers to this
+    // GPU memory, so we must keep the HashMap alive for the entire program lifetime.
+    {
+        let mut registry = GPU_POINTER_REGISTRY.lock()
+            .map_err(|e| format!("Failed to lock GPU pointer registry: {}", e))?;
+        
+        // Wrap raw pointers in GpuPointer for Send/Sync
+        let wrapped_pointers: HashMap<String, GpuPointer> = gpu_pointers.iter()
+            .map(|(name, ptr)| (name.clone(), GpuPointer(*ptr)))
+            .collect();
+        
+        *registry = Some(wrapped_pointers);
+        eprintln!("🔒 [Rust] Stored {} GPU pointers in global registry (will never be freed)", 
+                  gpu_pointers.len());
+    }
+    
+    // Step 3: Create pointer map for C++
     let pointer_map = ffi::cuda_create_pointer_map(total_vram);
     if pointer_map.is_null() {
         return Err("Failed to create pointer map".to_string());
     }
     
-    // Step 3: Insert all pointers into map
+    // Step 4: Insert all pointers into map
+    eprintln!("🔍 [Rust] Passing {} tensors to C++:", gpu_pointers.len());
     for (name, ptr) in &gpu_pointers {
+        // Debug: Log first few tensor names to verify naming
+        if name.contains("token_embd") || name.contains("output") || name.starts_with("blk.0.") {
+            eprintln!("   - {} -> {:?}", name, ptr);
+        }
+        
         let c_name = CString::new(name.as_str())
             .map_err(|e| format!("Invalid tensor name: {}", e))?;
         ffi::cuda_pointer_map_insert(pointer_map, c_name.as_ptr(), *ptr);
     }
     
-    // Step 4: Create C++ model from pointers
+    // Step 5: Create C++ model from pointers
     let mut error = 0i32;
     let model = ffi::cuda_load_model_from_pointers(
         std::ptr::null_mut(), // ctx (not used)
@@ -643,7 +700,7 @@ pub unsafe fn load_model_from_rust(
         &mut error,
     );
     
-    // Step 5: Clean up pointer map (C++ copied the pointers)
+    // Step 6: Clean up pointer map (C++ has copied the pointer values, not the GPU data)
     ffi::cuda_free_pointer_map(pointer_map);
     
     if model.is_null() {

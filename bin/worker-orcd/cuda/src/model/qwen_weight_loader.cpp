@@ -297,6 +297,7 @@ QwenModel* QwenWeightLoader::load_from_gpu_pointers(
     
     // Wire embeddings
     model->weights.token_embd = get_ptr("token_embd.weight");
+    fprintf(stderr, "🔍 [C++] Retrieved token_embd.weight pointer: %p\n", model->weights.token_embd);
     
     // Wire layers
     model->weights.layers.resize(config.num_layers);

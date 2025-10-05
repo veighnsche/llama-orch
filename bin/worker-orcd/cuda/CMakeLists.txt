@@ -77,6 +77,7 @@ set(KERNEL_SOURCES
     kernels/swiglu_ffn.cu
     kernels/gqa_attention.cu
     kernels/kv_cache.cu
+    kernels/bias_add.cu
     # GPT-specific kernels
     kernels/layernorm.cu
     kernels/gelu.cu

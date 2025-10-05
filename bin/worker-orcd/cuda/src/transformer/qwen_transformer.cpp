@@ -39,6 +39,7 @@ extern "C" {
         uint32_t num_kv_heads,
         uint32_t head_dim,
         uint32_t seq_len,
+        uint32_t cache_len,
         cudaStream_t stream
     );
     
@@ -60,6 +61,15 @@ extern "C" {
         void* output,
         uint32_t batch_size,
         uint32_t hidden_dim,
+        cudaStream_t stream
+    );
+    
+    void cuda_bias_add(
+        void* output,
+        const void* input,
+        const void* bias,
+        uint32_t batch_size,
+        uint32_t dim,
         cudaStream_t stream
     );
     
@@ -151,6 +161,17 @@ void QwenTransformer::embed_tokens(
         return;
     }
     
+    // Debug: Log parameters being passed
+    static int call_count = 0;
+    if (call_count == 0) {
+        fprintf(stderr, "🔍 [C++] Embedding lookup parameters:\n");
+        fprintf(stderr, "   batch_size = %u\n", batch_size);
+        fprintf(stderr, "   vocab_size = %u\n", config_.vocab_size);
+        fprintf(stderr, "   hidden_dim = %u\n", config_.hidden_dim);
+        fprintf(stderr, "   embedding_table = %p\n", model_->weights.token_embd);
+        fprintf(stderr, "   output = %p\n", output);
+    }
+    
     cuda_embedding_lookup(
         token_ids,
         model_->weights.token_embd,
@@ -162,7 +183,6 @@ void QwenTransformer::embed_tokens(
     );
     
     // Debug: Check first few embedding values
-    static int call_count = 0;
     if (call_count < 2) {
         half host_emb[10];
         cudaMemcpy(host_emb, output, 10 * sizeof(half), cudaMemcpyDeviceToHost);
@@ -171,6 +191,16 @@ void QwenTransformer::embed_tokens(
             fprintf(stderr, "%.2f ", __half2float(host_emb[i]));
         }
         fprintf(stderr, "\n");
+        
+        // Also check the embedding table itself
+        half host_table[10];
+        cudaMemcpy(host_table, model_->weights.token_embd, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "First 10 values from embedding table: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.2f ", __half2float(host_table[i]));
+        }
+        fprintf(stderr, "\n");
+        
         call_count++;
     }
 }
@@ -220,7 +250,7 @@ void QwenTransformer::forward_layer(
         CUBLAS_GEMM_DEFAULT_TENSOR_OP
     );
     // Add Q bias
-    // TODO: Implement bias addition kernel (for now, biases are in weights)
+    cuda_bias_add(q_proj_, q_proj_, layer.attn_q_bias, batch_size, q_dim, nullptr);
     
     // K projection: k = normed @ k_weight^T + k_bias
     uint32_t kv_dim = config_.num_kv_heads * config_.head_dim;
@@ -236,6 +266,8 @@ void QwenTransformer::forward_layer(
         CUBLAS_COMPUTE_32F_FAST_16F,
         CUBLAS_GEMM_DEFAULT_TENSOR_OP
     );
+    // Add K bias
+    cuda_bias_add(k_proj_, k_proj_, layer.attn_k_bias, batch_size, kv_dim, nullptr);
     
     // V projection: v = normed @ v_weight^T + v_bias
     cublasGemmEx(
@@ -250,6 +282,8 @@ void QwenTransformer::forward_layer(
         CUBLAS_COMPUTE_32F_FAST_16F,
         CUBLAS_GEMM_DEFAULT_TENSOR_OP
     );
+    // Add V bias
+    cuda_bias_add(v_proj_, v_proj_, layer.attn_v_bias, batch_size, kv_dim, nullptr);
     
     // 3. Apply RoPE to Q and K
     cuda_rope_forward(
@@ -264,18 +298,24 @@ void QwenTransformer::forward_layer(
     );
     
     // 4. GQA Attention with KV cache
+    // Calculate layer-specific cache offset
+    size_t layer_cache_offset = layer_idx * config_.context_length * config_.num_kv_heads * config_.head_dim;
+    half* layer_k_cache = reinterpret_cast<half*>(kv_cache_.k_cache) + layer_cache_offset;
+    half* layer_v_cache = reinterpret_cast<half*>(kv_cache_.v_cache) + layer_cache_offset;
+    
     cuda_gqa_attention_forward(
         q_proj_,
         k_proj_,
         v_proj_,
-        kv_cache_.k_cache,
-        kv_cache_.v_cache,
+        layer_k_cache,
+        layer_v_cache,
         attn_output_,
         batch_size,
         config_.num_heads,
         config_.num_kv_heads,
         config_.head_dim,
-        1,  // seq_len = 1 for single token
+        1,    // seq_len = 1 for single token
+        pos,  // cache_len = current position
         nullptr
     );
     

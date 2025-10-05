@@ -58,8 +58,15 @@ InferenceContext* cuda_inference_init(
     int* error
 ) {
     try {
-        // NEW: model_ptr is now a CudaModel* with weights already loaded by Rust!
-        auto* qwen_model = reinterpret_cast<worker::model::QwenModel*>(model_ptr);
+        // NEW: model_ptr is now a CudaModel* (ModelImpl*) with weights already loaded by Rust!
+        auto* model_impl = reinterpret_cast<worker::ModelImpl*>(model_ptr);
+        auto* qwen_model = model_impl->get_qwen_model();
+        
+        if (!qwen_model) {
+            fprintf(stderr, "❌ QwenModel is null!\n");
+            *error = -1;
+            return nullptr;
+        }
         
         fprintf(stderr, "🎉 [C++] Using pre-loaded model from Rust (VRAM: %.2f MB)\n", 
                 qwen_model->vram_usage / 1024.0 / 1024.0);

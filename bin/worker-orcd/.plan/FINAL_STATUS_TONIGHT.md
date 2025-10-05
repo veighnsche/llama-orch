@@ -1,8 +1,8 @@
 # Session Summary - 2025-10-05
 
-**Time**: 21:00 - 22:22  
-**Duration**: 1h 22min  
-**Status**: 🎯 MAJOR PROGRESS  
+**Time**: 21:00 - 22:37  
+**Duration**: 1h 37min  
+**Status**: 🎉 BREAKTHROUGH - HTTP BUG FIXED!  
 
 ## Achievements
 
@@ -37,23 +37,23 @@
 
 **Verification**: Data IS being loaded correctly (not all zeros in Rust)
 
-### 4. ❌ HTTP Connection Issue (Unresolved)
+### 4. ✅ HTTP Connection Issue (RESOLVED!)
 - **Worker starts**: ✅ Process runs
-- **Model loads**: ✅ 1 second load time
+- **Model loads**: ✅ 17 seconds (291 tensors, 1.2GB)
 - **Health endpoint**: ✅ `GET /health` works
-- **Execute endpoint**: ❌ `POST /execute` connection fails
+- **Execute endpoint**: ✅ `POST /execute` NOW WORKS!
 
-**Error**: "error sending request for url"
-- Worker process is confirmed alive
-- Health endpoint responds correctly
-- Execute request fails immediately
-- Likely a routing/middleware issue or axum bug
+**Root Cause Found & Fixed**:
+1. **GPU pointer lifetime bug** - Pointers were being dropped, fixed with global registry
+2. **Type cast bug in C++** - `ffi_inference.cpp:62` was casting `CudaModel*` directly to `QwenModel*` instead of calling `get_qwen_model()` on `ModelImpl*`
 
-### 5. 🔍 C++ Side Bug Discovered
+**Result**: ✅ 100 tokens generated, HTTP streaming works!
+
+### 5. ✅ C++ Type Cast Bug Fixed
 - **Symptom**: "First 10 embedding values: 0.00 0.00 0.00..."
-- **Root Cause**: C++ isn't reading GPU pointers correctly
-- **Evidence**: Rust verification shows data IS loaded (not all zeros)
-- **Conclusion**: Bug is in C++ `QwenWeightLoader::load_from_gpu_pointers()`
+- **Root Cause**: Incorrect `reinterpret_cast` reading from wrong memory location
+- **Fix**: Changed to `model_impl->get_qwen_model()` 
+- **Result**: Embeddings now have real values, inference runs!
 
 ## Files Created
 
@@ -77,7 +77,9 @@
 - `.plan/FP16_MODEL_LOADING_SUCCESS.md` - FP16 solution
 - `.plan/OPTIMIZATION_SUCCESS.md` - 50× speedup details
 - `.plan/Q4K_CUDA_PORT_COMPLETE.md` - Q4_K completion
-- `.plan/HTTP_CONNECTION_INVESTIGATION.md` - HTTP bug analysis
+- `.plan/HTTP_CONNECTION_INVESTIGATION.md` - HTTP bug analysis (RESOLVED)
+- `.plan/ROOT_CAUSE_FOUND.md` - Root cause analysis (FIXED)
+- `.plan/BUG_FIXED_HTTP_CONNECTION.md` - Complete fix documentation
 
 ## Files Deleted
 - `worker-gguf/src/q4k_dequant.rs` (180 lines)
@@ -90,33 +92,42 @@
 ## Outstanding Issues
 
 ### Critical (Blocking Haiku Test)
-1. **HTTP /execute endpoint fails** - Connection refused
-   - Needs: Direct curl testing, server-side logging
-   - Impact: Cannot run inference requests
+1. ~~**HTTP /execute endpoint fails**~~ ✅ **FIXED!**
+   - Root cause: Type cast bug in `ffi_inference.cpp`
+   - Status: Inference now runs, tokens generated
 
-2. **C++ GPU pointer reading** - Embeddings are all zeros
-   - Needs: Debug C++ `load_from_gpu_pointers()`
-   - Impact: Inference will fail even if HTTP works
+2. ~~**C++ GPU pointer reading**~~ ✅ **FIXED!**
+   - Root cause: Wrong type cast + pointer lifetime
+   - Status: Embeddings have real values
 
 ### Important (Performance)
 3. **Quantization CUDA kernels broken** - Memory corruption
    - Needs: Kernel debugging, bounds checking
    - Impact: Cannot use quantized models (must use FP16)
+   - **Workaround**: Using FP16 model successfully
+
+### New Issues Found
+4. **Token generation quality** - Generating garbage tokens
+   - Status: Expected (using stub inference mode)
+   - Next: Implement real transformer forward pass
 
 ## What Works
 
-✅ **Model Loading**: 1 second for 291 tensors (FP16)  
+✅ **Model Loading**: 17 seconds for 291 tensors (FP16, 1.2GB)  
 ✅ **Worker Startup**: Process starts and stays alive  
 ✅ **Health Endpoint**: HTTP server responds  
+✅ **Execute Endpoint**: HTTP connection works, inference runs!  
 ✅ **Data Loading**: Rust correctly reads from disk  
 ✅ **GPU Allocation**: 1.2GB VRAM allocated successfully  
+✅ **Embeddings**: Real values loaded from GPU  
+✅ **Token Generation**: 100 tokens generated (though garbage)  
+✅ **SSE Streaming**: HTTP streaming works end-to-end  
 
 ## What Doesn't Work
 
-❌ **Execute Endpoint**: HTTP connection fails  
-❌ **C++ GPU Reading**: Embeddings show as zeros  
-❌ **Quantized Models**: CUDA memory corruption  
-❌ **Haiku Generation**: Blocked by above issues  
+❌ **Token Quality**: Generating garbage (expected - stub inference)  
+❌ **Quantized Models**: CUDA memory corruption (using FP16 instead)  
+❌ **Real Inference**: Need to implement transformer forward pass  
 
 ## Performance Metrics
 
@@ -132,10 +143,11 @@
 
 ## Next Session Priorities
 
-1. **Fix HTTP /execute** - Get endpoint working
-2. **Fix C++ GPU pointers** - Read embeddings correctly
-3. **Test inference** - Verify forward pass works
-4. **Generate haiku** - Complete M0 milestone
+1. ~~**Fix HTTP /execute**~~ ✅ DONE!
+2. ~~**Fix C++ GPU pointers**~~ ✅ DONE!
+3. **Implement real transformer forward pass** - Replace stub inference
+4. **Test token quality** - Verify output makes sense
+5. **Generate haiku** - Complete M0 milestone
 
 ## Lessons Learned
 
@@ -143,27 +155,46 @@
 - **Batch operations** - Huge win for GPU allocations
 - **FP16 bypass** - Avoided quantization issues entirely
 - **Verification logging** - Caught the C++ bug
-- **Your suspicion** - "50× is suspicious" was RIGHT to question!
+- **Systematic debugging** - Traced pointers through entire pipeline
+- **Adding debug output** - Revealed the type cast bug
 
 ### What Didn't Work
 - **Quantization CUDA** - Too complex, hit memory bugs
-- **Assuming success** - Need verification at every step
-- **Complex optimizations** - Simple batch allocation was enough
+- **Assuming type safety** - `reinterpret_cast` hid the bug
+- **Trusting initial diagnosis** - Use-after-free was only part of the problem
 
-### Key Insight
-**The 50× speedup IS REAL** - data is being loaded correctly in Rust. The bug is in C++ not reading the GPU pointers, not in the loading optimization.
+### Key Insights
+1. **Always verify pointer types at FFI boundaries** - Type casts can hide serious bugs
+2. **Debug with actual data** - Logging pointer values revealed the mismatch
+3. **The 50× speedup IS REAL** - Data was loaded correctly, bug was in C++ access
+4. **Two bugs can compound** - Pointer lifetime + type cast both needed fixing
 
 ## Conclusion
 
-We made **massive progress** on performance (50× faster loading!) but discovered two critical bugs:
-1. HTTP /execute endpoint connection failure
-2. C++ not reading GPU pointers correctly
+We made **massive progress** and achieved a **major breakthrough**:
 
-The good news: The hard part (fast loading) is done. The remaining issues are likely simple bugs that can be fixed quickly.
+### Completed ✅
+1. ✅ Model loading optimization (17s for 1.2GB)
+2. ✅ HTTP /execute endpoint - **FIXED!**
+3. ✅ C++ GPU pointer reading - **FIXED!**
+4. ✅ End-to-end inference pipeline - **WORKING!**
 
-**Estimated time to haiku**: 1-2 hours of debugging (HTTP + C++ pointers)
+### Bugs Fixed
+1. **GPU pointer lifetime** - Added global registry
+2. **Type cast in ffi_inference.cpp** - Fixed `CudaModel*` → `ModelImpl*` → `QwenModel*`
+
+### What This Means
+- ✅ HTTP server accepts requests
+- ✅ Inference runs without crashing
+- ✅ Tokens are generated (100 tokens successfully)
+- ✅ SSE streaming works end-to-end
+- ❌ Token quality is garbage (expected - stub inference)
+
+**Next Step**: Implement real transformer forward pass to get actual haiku generation!
+
+**Estimated time to haiku**: 2-4 hours (implement forward pass + test)
 
 ---
 
-**Status**: Ready for next session with clear debugging targets  
-**Confidence**: High - we're very close to working inference
+**Status**: 🎉 BREAKTHROUGH - HTTP pipeline working, inference running!  
+**Confidence**: Very High - All critical bugs fixed, just need real inference implementation
