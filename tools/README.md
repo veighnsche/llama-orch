@@ -6,7 +6,7 @@ This directory contains utilities and scripts for working with the llama-orch pr
 
 ## 🚀 Quick Start Scripts
 
-### `setup-dev-workstation.sh`
+### `setup-dev-workstation.sh` (Linux/Ubuntu)
 
 Automated setup script that transforms a fresh Ubuntu system into a complete development and inference workstation.
 
@@ -50,6 +50,91 @@ Automated setup script that transforms a fresh Ubuntu system into a complete dev
 
 ---
 
+### `setup-dev-workstation-macos.sh` (macOS)
+
+Automated setup script for macOS systems (CPU-only, no CUDA support).
+
+**What it installs**:
+- ✅ Xcode Command Line Tools
+- ✅ Homebrew (if not present)
+- ✅ Rust toolchain (rustup, cargo, rustc)
+- ✅ CMake (for future Metal support)
+- ✅ Build tools
+
+**Usage**:
+```bash
+# Full installation
+./setup-dev-workstation-macos.sh
+
+# Skip Homebrew (if already installed)
+./setup-dev-workstation-macos.sh --skip-homebrew
+
+# Skip Rust (if already installed)
+./setup-dev-workstation-macos.sh --skip-rust
+
+# Skip running tests after setup
+./setup-dev-workstation-macos.sh --skip-tests
+
+# Show all options
+./setup-dev-workstation-macos.sh --help
+```
+
+**Requirements**:
+- macOS 12.0+ (Monterey or later)
+- Internet connection
+
+**Duration**: ~10-15 minutes
+
+**Result**:
+- 479 Rust tests passing (CPU-only)
+- System ready for CPU-only inference and development
+- **Note**: For GPU acceleration, Metal backend required (see APPLE_ARM_PORTING_ANALYSIS.md)
+
+---
+
+### `setup-dev-workstation-windows.ps1` (Windows)
+
+Automated setup script for Windows 10/11 systems with optional CUDA support.
+
+**What it installs**:
+- ✅ Chocolatey package manager
+- ✅ CMake
+- ✅ Rust toolchain (rustup, cargo, rustc)
+- ✅ CUDA Toolkit (if NVIDIA GPU present)
+
+**Usage**:
+```powershell
+# Full installation (run in PowerShell)
+.\setup-dev-workstation-windows.ps1
+
+# Skip CUDA (for CPU-only development)
+.\setup-dev-workstation-windows.ps1 -SkipCuda
+
+# Skip Rust (if already installed)
+.\setup-dev-workstation-windows.ps1 -SkipRust
+
+# Skip running tests after setup
+.\setup-dev-workstation-windows.ps1 -SkipTests
+
+# Show all options
+Get-Help .\setup-dev-workstation-windows.ps1 -Detailed
+```
+
+**Requirements**:
+- Windows 10/11
+- PowerShell 5.1+ (or PowerShell 7+)
+- Visual Studio 2019/2022 with C++ workload (will prompt if missing)
+- Internet connection
+
+**Duration**: ~15-20 minutes
+
+**Result**:
+- 479 Rust tests passing
+- 426 CUDA tests built (if CUDA installed)
+- System ready for inference and development
+
+---
+
 ## 🛠️ Development Tools
 
 ### `openapi-client/`
@@ -72,7 +157,7 @@ Tools for migrating worker crates and dependencies.
 
 ## 📝 Examples
 
-### Complete Fresh Install
+### Complete Fresh Install - Linux (Ubuntu)
 
 Starting with a fresh Ubuntu 24.04 server:
 
@@ -108,12 +193,71 @@ cd ~/llama-orch/bin/worker-orcd
 ./target/release/worker-orcd --model ~/models/qwen2.5-0.5b-instruct-q4_k_m.gguf --gpu 0
 ```
 
+### Complete Fresh Install - macOS
+
+Starting with a fresh macOS system:
+
+```bash
+# Clone repository
+git clone https://github.com/your-org/llama-orch.git
+cd llama-orch
+
+# Run setup script
+./tools/setup-dev-workstation-macos.sh
+
+# Build worker (CPU-only)
+cd bin/worker-orcd
+cargo build --release
+
+# Download test model
+mkdir -p ~/models
+cd ~/models
+curl -L -o qwen-0.5b.gguf https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf
+
+# Run worker (CPU-only)
+cd ~/llama-orch/bin/worker-orcd
+./target/release/worker-orcd --model ~/models/qwen-0.5b.gguf
+```
+
+### Complete Fresh Install - Windows
+
+Starting with a fresh Windows 10/11 system:
+
+```powershell
+# Clone repository
+git clone https://github.com/your-org/llama-orch.git
+cd llama-orch
+
+# Run setup script (in PowerShell as Administrator)
+.\tools\setup-dev-workstation-windows.ps1
+
+# Build worker
+cd bin\worker-orcd
+cargo build --release
+
+# Download test model
+mkdir ~\models
+cd ~\models
+Invoke-WebRequest -Uri "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf" -OutFile "qwen-0.5b.gguf"
+
+# Run worker (with GPU if CUDA installed)
+cd ~\llama-orch\bin\worker-orcd
+.\target\release\worker-orcd.exe --model ~\models\qwen-0.5b.gguf --gpu 0
+```
+
 ### CPU-Only Development
 
 For development without GPU:
 
 ```bash
+# Linux
 ./tools/setup-dev-workstation.sh --skip-nvidia
+
+# macOS (always CPU-only)
+./tools/setup-dev-workstation-macos.sh
+
+# Windows
+.\tools\setup-dev-workstation-windows.ps1 -SkipCuda
 
 # All Rust tests will still pass
 cd bin/worker-orcd
@@ -125,8 +269,14 @@ cargo test
 For automated testing in CI/CD pipelines:
 
 ```bash
-# Install only what's needed for testing
+# Linux
 ./tools/setup-dev-workstation.sh --skip-nvidia --skip-tests
+
+# macOS
+./tools/setup-dev-workstation-macos.sh --skip-tests
+
+# Windows
+.\tools\setup-dev-workstation-windows.ps1 -SkipCuda -SkipTests
 
 # Run tests separately
 cd bin/worker-orcd
