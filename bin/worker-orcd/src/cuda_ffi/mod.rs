@@ -51,6 +51,7 @@
 
 use std::ffi::c_void;
 use thiserror::Error;
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
 
 #[derive(Debug, Error)]
 pub enum CudaError {
@@ -92,6 +93,13 @@ impl SafeCudaPtr {
         })?;
 
         if end > self.size {
+            // Narrate bounds check failure
+            Narration::new(ACTOR_WORKER_ORCD, "vram_write", &format!("GPU{}", self.device))
+                .human(format!("VRAM write bounds check failed: offset {} + len {} > size {}", offset, data.len(), self.size))
+                .cute(format!("Oops! Tried to write past the end of GPU{}'s memory! Safety first! 🛑🔒", self.device))
+                .device(&format!("GPU{}", self.device))
+                .error_kind("OutOfBounds")
+                .emit_error();
             return Err(CudaError::OutOfBounds { offset, len: data.len(), size: self.size });
         }
 
@@ -184,6 +192,13 @@ impl CudaContext {
                 "Initializing CUDA context (stub mode)"
             );
 
+            // Narrate CUDA initialization
+            Narration::new(ACTOR_WORKER_ORCD, "cuda_init", &format!("GPU{}", device))
+                .human(format!("Initializing CUDA context on GPU{} (stub mode)", device))
+                .cute(format!("Worker wakes up GPU{} and gets it ready for action! 💪✨", device))
+                .device(&format!("GPU{}", device))
+                .emit();
+
             // TODO(ARCH-CHANGE): Implement actual CUDA initialization per ARCHITECTURE_CHANGE_PLAN.md Phase 3:
             // - Use cudaSetDevice to select GPU
             // - Initialize cuBLAS handle
@@ -197,6 +212,12 @@ impl CudaContext {
     /// Allocate VRAM with bounds checking
     pub fn allocate_vram(&self, size: usize) -> Result<SafeCudaPtr> {
         if size == 0 {
+            Narration::new(ACTOR_WORKER_ORCD, "vram_alloc", &format!("GPU{}", self.device))
+                .human(format!("VRAM allocation failed on GPU{}: requested 0 bytes", self.device))
+                .cute(format!("Can't allocate zero bytes on GPU{}! Need at least a tiny bit! 😅", self.device))
+                .device(&format!("GPU{}", self.device))
+                .error_kind("InvalidSize")
+                .emit_error();
             return Err(CudaError::AllocationFailed(size));
         }
 
@@ -211,6 +232,14 @@ impl CudaContext {
             device = %self.device,
             "CUDA allocate (stub)"
         );
+
+        // Narrate successful allocation
+        let size_mb = size / (1024 * 1024);
+        Narration::new(ACTOR_WORKER_ORCD, "vram_alloc", &format!("GPU{}", self.device))
+            .human(format!("Allocated {} MB VRAM on GPU{} (stub mode)", size_mb, self.device))
+            .cute(format!("Found a cozy {} MB spot on GPU{} for the model! 🏠✨", size_mb, self.device))
+            .device(&format!("GPU{}", self.device))
+            .emit();
 
         Ok(SafeCudaPtr::new(ptr, size, self.device))
     }

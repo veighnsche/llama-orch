@@ -15,7 +15,7 @@ use axum::{
     Json,
 };
 use futures::stream::{self, Stream, StreamExt};
-use observability_narration_core::{Narration, ACTION_INFERENCE_START, ACTOR_WORKER_ORCD};
+use observability_narration_core::{Narration, ACTION_INFERENCE_START, ACTION_INFERENCE_COMPLETE, ACTOR_WORKER_ORCD};
 use std::convert::Infallible;
 use tracing::{debug, info, warn};
 
@@ -92,6 +92,12 @@ pub async fn handle_execute(
                 error_count,
                 field_list.join(", ")
             ))
+            .cute(format!(
+                "Oh no! Job {} has {} validation boo-boos in {}! Let's fix them! 😟🔍",
+                req.job_id,
+                error_count,
+                field_list.join(", ")
+            ))
             .correlation_id(&correlation_id)
             .job_id(&req.job_id)
             .error_kind("ValidationFailed")
@@ -111,7 +117,8 @@ pub async fn handle_execute(
 
     // Narrate inference start
     Narration::new(ACTOR_WORKER_ORCD, ACTION_INFERENCE_START, &req.job_id)
-        .human(format!("Starting inference for job {}", req.job_id))
+        .human(format!("Starting inference for job {} ({} tokens max, temp={})", req.job_id, req.max_tokens, req.temperature))
+        .cute(format!("Worker gets ready to help with job {}! Time to generate some tokens! 🎯✨", req.job_id))
         .correlation_id(&correlation_id)
         .job_id(&req.job_id)
         .emit();
@@ -139,8 +146,25 @@ pub async fn handle_execute(
         },
     ];
 
+    let correlation_id_clone = correlation_id.clone();
+    let job_id_clone = job_id.clone();
+    
     let stream = stream::iter(events)
-        .map(|event| {
+        .map(move |event| {
+            // Narrate completion when we see the End event
+            if matches!(event, InferenceEvent::End { .. }) {
+                if let InferenceEvent::End { tokens_out, decode_time_ms, .. } = &event {
+                    Narration::new(ACTOR_WORKER_ORCD, ACTION_INFERENCE_COMPLETE, &job_id_clone)
+                        .human(format!("Completed inference for job {} ({} tokens in {} ms)", job_id_clone, tokens_out, decode_time_ms))
+                        .cute(format!("All done with job {}! Generated {} tokens! Great work! 🎉✨", job_id_clone, tokens_out))
+                        .correlation_id(&correlation_id_clone)
+                        .job_id(&job_id_clone)
+                        .tokens_out(*tokens_out as u64)
+                        .decode_time_ms(*decode_time_ms as u64)
+                        .emit();
+                }
+            }
+            
             let event_name = event.event_name();
             Event::default().event(event_name).json_data(&event)
         })

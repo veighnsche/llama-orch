@@ -83,6 +83,7 @@ impl HttpServer {
         // Narrate server initialization
         Narration::new(ACTOR_WORKER_ORCD, ACTION_SPAWN, "http-server")
             .human(format!("HTTP server initialized on {}", addr))
+            .cute(format!("Worker's HTTP server is getting ready to listen on {}! 🎉", addr))
             .emit();
 
         Ok(Self { addr, router, shutdown_tx })
@@ -104,6 +105,7 @@ impl HttpServer {
             // Narrate bind failure
             Narration::new(ACTOR_WORKER_ORCD, ACTION_SPAWN, "http-server")
                 .human(format!("Failed to bind to {}: {}", self.addr, source))
+                .cute(format!("Oh no! Couldn't bind to {} - maybe someone else is using that port? 😟", self.addr))
                 .error_kind("BindFailed")
                 .emit_error();
 
@@ -118,6 +120,8 @@ impl HttpServer {
         // Narrate successful server startup
         Narration::new(ACTOR_WORKER_ORCD, ACTION_SPAWN, "http-server")
             .human(format!("HTTP server listening on {}", self.addr))
+            .cute(format!("HTTP server is now listening on {}! Ready to help! 👂✨", self.addr))
+            .story(format!("\"I'm ready to accept requests!\" announced worker-orcd. \"Listening on {}.\"", self.addr))
             .emit();
 
         // Clone shutdown receiver for signal handler
@@ -155,7 +159,9 @@ impl HttpServer {
 
         // Narrate shutdown completion
         Narration::new(ACTOR_WORKER_ORCD, ACTION_SHUTDOWN, "http-server")
-            .human("HTTP server shutdown complete")
+            .human(format!("HTTP server shutdown complete ({} ms)", shutdown_duration_ms))
+            .cute(format!("HTTP server says goodnight after {} ms! Sleep well! 😴👋", shutdown_duration_ms))
+            .story("\"Shutting down now,\" said worker-orcd. \"Goodbye!\"")
             .duration_ms(shutdown_duration_ms)
             .emit_warn();
 
