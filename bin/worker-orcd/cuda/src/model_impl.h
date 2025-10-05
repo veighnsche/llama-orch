@@ -13,7 +13,7 @@
 #define WORKER_MODEL_IMPL_H
 
 #include "context.h"
-#include "gguf/header_parser.h"
+// GGUF parsing now done in Rust
 #include "model/gpt_model.h"
 #include <memory>
 #include <string>

@@ -1,9 +1,9 @@
 // swiglu.cu — SwiGLU Feed-Forward Network - LT-017
 //
-// Implements SwiGLU (Swish-Gated Linear Unit) FFN for Llama models.
-// SwiGLU(x) = (silu(W_gate @ x) * (W_up @ x)) @ W_down
+// Implements SwiGLU activation for Qwen2.5 FFN.
+// SwiGLU: output = silu(gate) * up
 //
-// Spec: M0-W-1214
+// Spec: M0-W-1217
 
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>

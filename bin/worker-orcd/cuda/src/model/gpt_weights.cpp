@@ -9,9 +9,10 @@
  */
 
 #include "gpt_weights.h"
-#include "../gguf/header_parser.h"
-#include "../gguf/llama_metadata.h"
-#include "../io/mmap_file.h"
+// GGUF parsing now done in Rust
+// #include "../gguf/header_parser.h"
+// #include "../gguf/llama_metadata.h"
+// #include "../io/mmap_file.h"
 // #include "device_memory.h"  // TODO: GT-052 - not needed for config parsing
 #include <cuda_runtime.h>
 #include <stdexcept>
@@ -334,7 +335,13 @@ size_t GPTWeightLoader::calculate_vram_usage(const GPTConfig& config) {
     return total;
 }
 
+// DEPRECATED: Config parsing now done in Rust
 GPTConfig GPTWeightLoader::parse_config_from_gguf(const std::string& path) {
+    (void)path;  // Unused
+    throw std::runtime_error("parse_config_from_gguf is deprecated - use Rust worker-gguf instead");
+    
+    /*
+    // OLD CODE - DEPRECATED
     // Open and memory-map the GGUF file
     auto mmap = io::MmapFile::open(path);
     
@@ -413,8 +420,7 @@ GPTConfig GPTWeightLoader::parse_config_from_gguf(const std::string& path) {
             default: config.quant_kind = "UNKNOWN"; break;
         }
     } else {
-        config.quant_kind = "UNKNOWN";
-    }
+        config.quant_kind = quant_kind;
     
     return config;
 }
@@ -422,7 +428,6 @@ GPTConfig GPTWeightLoader::parse_config_from_gguf(const std::string& path) {
 void GPTWeightLoader::load_embeddings(
     GPTModelWeights* model,
     const std::string& path,
-    const std::vector<GGUFTensorInfo>& tensors
 ) {
     // Find token embeddings
     const GGUFTensorInfo* token_emb = find_tensor(tensors, "token_embd.weight");
@@ -554,8 +559,11 @@ const GGUFTensorInfo* GPTWeightLoader::find_tensor(
     return nullptr;
 }
 
+    */
+}
+
 } // namespace model
 } // namespace worker
 
 // ---
-// Crafted by GPT-Gamma 🤖
+// Implemented by Llama-Beta 

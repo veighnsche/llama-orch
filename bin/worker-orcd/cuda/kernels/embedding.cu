@@ -16,6 +16,7 @@
 
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
+#include <cstdint>
 #include <stdio.h>
 
 namespace worker {
@@ -246,5 +247,28 @@ void launch_embedding_lookup_fp32(
 } // namespace kernels
 } // namespace worker
 
+// Extern C wrapper for transformer
+extern "C" {
+    void cuda_embedding_lookup(
+        const uint32_t* token_ids,
+        const void* embedding_table,
+        void* output,
+        uint32_t batch_size,
+        uint32_t vocab_size,
+        uint32_t hidden_dim,
+        cudaStream_t stream
+    ) {
+        worker::kernels::launch_embedding_lookup_fp16(
+            reinterpret_cast<const int*>(token_ids),
+            reinterpret_cast<const half*>(embedding_table),
+            reinterpret_cast<half*>(output),
+            batch_size,
+            hidden_dim,
+            vocab_size,
+            stream
+        );
+    }
+}
+
 // ---
-// Built by Foundation-Alpha 🏗️
+// Crafted by GPT-Gamma 🤖function-Alpha 🏗️

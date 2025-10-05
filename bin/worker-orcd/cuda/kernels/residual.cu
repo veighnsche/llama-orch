@@ -7,6 +7,7 @@
 
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
+#include <cstdint>
 #include <stdio.h>
 
 /**
@@ -118,7 +119,6 @@ int cuda_residual_forward(
         }
     }
     
-    // Check for kernel launch errors
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         fprintf(stderr, "Residual kernel launch failed: %s\n", cudaGetErrorString(err));
@@ -126,6 +126,51 @@ int cuda_residual_forward(
     }
     
     return 0;
+}
+
+/**
+ * Wrapper for transformer compatibility
+ * Maps cuda_residual_add to cuda_residual_forward
+ */
+void cuda_residual_add(
+    const void* input,
+    const void* residual,
+    void* output,
+    uint32_t batch_size,
+    uint32_t hidden_dim,
+    cudaStream_t stream
+) {
+    // Calculate total elements
+    int total_elements = batch_size * hidden_dim;
+    
+    // Cast to half pointers
+    const half* input_half = reinterpret_cast<const half*>(input);
+    const half* residual_half = reinterpret_cast<const half*>(residual);
+    half* output_half = reinterpret_cast<half*>(output);
+    
+    // Use vectorized kernel if possible
+    if (hidden_dim % 2 == 0) {
+        int total_half2 = total_elements / 2;
+        int threads = 256;
+        int blocks = (total_half2 + threads - 1) / threads;
+        
+        residual_kernel_vectorized<<<blocks, threads, 0, stream>>>(
+            (half2*)output_half,
+            (const half2*)input_half,
+            (const half2*)residual_half,
+            total_half2
+        );
+    } else {
+        int threads = 256;
+        int blocks = (total_elements + threads - 1) / threads;
+        
+        residual_kernel<<<blocks, threads, 0, stream>>>(
+            output_half,
+            input_half,
+            residual_half,
+            total_elements
+        );
+    }
 }
 
 } // extern "C"

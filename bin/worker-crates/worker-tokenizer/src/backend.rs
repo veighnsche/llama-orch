@@ -89,6 +89,24 @@ impl Tokenizer {
         }
     }
     
+    /// Load tokenizer from GGUF file
+    ///
+    /// Extracts vocabulary and merges from GGUF metadata.
+    ///
+    /// # Arguments
+    /// * `path` - Path to GGUF file
+    ///
+    /// # Returns
+    /// * `Ok(Tokenizer)` - Successfully loaded tokenizer
+    /// * `Err(TokenizerError)` - Failed to load
+    pub fn from_gguf<P: AsRef<Path>>(path: P) -> Result<Self, TokenizerError> {
+        // TODO: Implement GGUF metadata reading for tokenizer
+        // For now, return a stub error
+        Err(TokenizerError::LoadFailed(
+            "GGUF tokenizer loading not yet implemented - use worker-gguf integration".to_string()
+        ))
+    }
+    
     /// Encode text to token IDs
     pub fn encode(&self, text: &str, add_special_tokens: bool) -> Result<Vec<u32>, TokenizerError> {
         match self {

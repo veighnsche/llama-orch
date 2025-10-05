@@ -41,29 +41,22 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr --extended-la
 
 # Source files
 set(CUDA_SOURCES
-    src/ffi.cpp
     src/context.cpp
     src/model.cpp
-    src/model_impl.cpp
-    src/inference_impl.cpp
     src/inference.cu
     src/health.cpp
-    src/errors.cpp
-    src/utils.cpp
     src/vram_tracker.cpp
     src/device_memory.cpp
     src/cublas_wrapper.cpp
     src/rng.cpp
     src/kv_cache.cpp
-    src/gguf/header_parser.cpp
-    src/gguf/llama_metadata.cpp
-    src/io/mmap_file.cpp
     src/io/chunked_transfer.cpp
-    src/validation/pre_load.cpp
-    src/model/arch_detect.cpp
     src/model/gpt_weights.cpp
     src/model/gpt_model.cpp
+    src/model/qwen_weight_loader.cpp
+    src/ffi_weight_loading.cpp
     src/gpt_transformer_layer.cpp
+    src/transformer/qwen_transformer.cpp
 )
 
 # Kernel files
@@ -74,9 +67,10 @@ set(KERNEL_SOURCES
     kernels/rope.cu
     kernels/rmsnorm.cu
     kernels/residual.cu
-    kernels/gqa_attention.cu
-    kernels/swiglu.cu
     kernels/embedding.cu
+    kernels/swiglu.cu
+    kernels/swiglu_ffn.cu
+    kernels/gqa_attention.cu
     kernels/kv_cache.cu
     # GPT-specific kernels
     kernels/layernorm.cu
