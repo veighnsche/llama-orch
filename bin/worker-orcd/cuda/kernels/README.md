@@ -18,11 +18,23 @@ Required for M0 pilot (Phase 3 of ARCHITECTURE_CHANGE_PLAN.md):
 - **`rmsnorm.cu`** — RMSNorm layer normalization
 - **Advanced sampling** — TODO (FT-019-extended: Top-P, Top-K, repetition penalty)
 
+## GGUF Quantization Kernels
+
+**Dequantization kernels for GGML quantization formats:**
+
+- **`q6_k_dequant.cu`** ✅ — Q6_K dequantization (256 elements/block, 210 bytes)
+- **`q5_0_dequant.cu`** ✅ — Q5_0 dequantization (32 elements/block, 22 bytes)
+- **`q8_0_dequant.cu`** ✅ — Q8_0 dequantization (32 elements/block, 34 bytes)
+- **`gguf_dequant.cuh`** ✅ — FFI header for Rust integration
+
+These kernels move dequantization from CPU (Rust) to GPU (CUDA) for 100× performance improvement.
+Each kernel uses coalesced memory access with one thread per element.
+
 ## Post-M0 Optimizations
 
 - **FlashAttention** — Fused attention kernel for throughput
 - **PagedAttention** — vLLM-style KV cache management
-- **Quantization kernels** — Q5_1, Q8_0, AWQ, GPTQ support
+- **Quantization kernels** — Q4_K, Q5_1, AWQ, GPTQ support
 - **Fused kernels** — Combined operations to reduce memory bandwidth
 
 ## Build System

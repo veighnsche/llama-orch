@@ -84,6 +84,11 @@ set(KERNEL_SOURCES
     kernels/gpt_ffn.cu
     kernels/mha_attention.cu
     kernels/mxfp4_dequant.cu
+    # GGUF dequantization kernels
+    kernels/q4_k_dequant.cu
+    kernels/q5_0_dequant.cu
+    kernels/q6_k_dequant.cu
+    kernels/q8_0_dequant.cu
 )
 
 # Build static library
@@ -159,6 +164,8 @@ if(BUILD_TESTING)
         tests/test_gpt_config_parsing.cpp
         # GPT Sprint 5 tests (GT-030 - MXFP4 Dequantization)
         tests/test_mxfp4_dequant.cu
+        # GGUF dequantization tests
+        tests/test_q6k_dequant.cu
         # GPT kernel tests - TODO: Convert to GTest format
         # tests/test_gpt_kernels.cu
         # tests/test_layernorm_comprehensive.cu

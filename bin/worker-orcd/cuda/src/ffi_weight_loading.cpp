@@ -15,12 +15,20 @@ void* cuda_malloc_device(size_t size) {
         return nullptr;
     }
     
+    // Clear any previous CUDA errors
+    cudaGetLastError();
+    
     void* ptr = nullptr;
     cudaError_t err = cudaMalloc(&ptr, size);
     
     if (err != cudaSuccess) {
         fprintf(stderr, "❌ cudaMalloc failed: %s (size=%zu bytes)\n", 
                 cudaGetErrorString(err), size);
+        // Print any pending errors
+        cudaError_t last_err = cudaGetLastError();
+        if (last_err != cudaSuccess && last_err != err) {
+            fprintf(stderr, "   Previous error: %s\n", cudaGetErrorString(last_err));
+        }
         return nullptr;
     }
     
@@ -32,11 +40,15 @@ int cuda_memcpy_host_to_device(void* dst, const void* src, size_t size) {
         return 1; // Error
     }
     
+    // Clear any previous CUDA errors
+    cudaGetLastError();
+    
     cudaError_t err = cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice);
     
     if (err != cudaSuccess) {
         fprintf(stderr, "❌ cudaMemcpy H2D failed: %s (size=%zu bytes)\n",
                 cudaGetErrorString(err), size);
+        fprintf(stderr, "   dst=%p, src=%p\n", dst, src);
         return 1; // Error
     }
     

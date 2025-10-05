@@ -148,7 +148,7 @@ impl WorkerTestHarness {
             base_url,
         };
         
-        harness.wait_for_ready(Duration::from_secs(10)).await?;
+        harness.wait_for_ready(Duration::from_secs(60)).await?;  // Increased for FP16 model loading
         
         Ok(harness)
     }
@@ -184,15 +184,36 @@ impl WorkerTestHarness {
     /// Send execute request
     ///
     /// Returns SSE event stream for processing.
-    pub async fn execute(&self, req: ExecuteRequest) -> Result<reqwest::Response, TestError> {
-        let client = reqwest::Client::new();
+    pub async fn execute(&mut self, req: ExecuteRequest) -> Result<reqwest::Response, TestError> {
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(120))  // Long timeout for inference
+            .build()
+            .map_err(|e| TestError::HttpFailed(e.to_string()))?;
         
-        client
+        // Check if process is still alive
+        if let Some(ref mut process) = self.process {
+            if let Ok(Some(status)) = process.try_wait() {
+                eprintln!("❌ Worker process died with status: {:?}", status);
+                return Err(TestError::ProcessDied);
+            } else {
+                eprintln!("✅ Worker process is still running");
+            }
+        }
+        
+        eprintln!("🔍 Sending POST to {}/execute", self.base_url);
+        
+        let response = client
             .post(format!("{}/execute", self.base_url))
             .json(&req)
             .send()
             .await
-            .map_err(|e| TestError::HttpFailed(e.to_string()))
+            .map_err(|e| {
+                eprintln!("❌ Request failed: {}", e);
+                TestError::HttpFailed(e.to_string())
+            })?;
+        
+        eprintln!("✅ Got response with status: {}", response.status());
+        Ok(response)
     }
     
     /// Check health endpoint

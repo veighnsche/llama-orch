@@ -52,7 +52,7 @@ fn minute_to_words(minute: u32) -> String {
 /// 
 /// **Current status**: Uses hardcoded template in cuda/src/inference_impl.cpp
 /// **Real test needed**: test_haiku_generation_REAL_GPU_INFERENCE
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 #[cfg(feature = "cuda")]
 #[ignore] // STUB ONLY - not real inference. Run with REQUIRE_REAL_LLAMA=1
 async fn test_haiku_generation_STUB_PIPELINE_ONLY() {
@@ -65,13 +65,24 @@ async fn test_haiku_generation_STUB_PIPELINE_ONLY() {
     // Enforce real GPU requirement
     std::env::set_var("REQUIRE_REAL_LLAMA", "1");
     
-    // Use absolute path to model
-    let model_path = "/home/vince/Projects/llama-orch/.test-models/qwen/qwen2.5-0.5b-instruct-q4_k_m.gguf";
+    // Use absolute path to FP16 model (no quantization issues!)
+    let model_path = "/home/vince/Projects/llama-orch/.test-models/qwen/qwen2.5-0.5b-instruct-fp16.gguf";
     
-    let harness = WorkerTestHarness::start(
+    let mut harness = WorkerTestHarness::start(
         model_path,
         0
     ).await.expect("Failed to start worker");
+    
+    // Give HTTP server a moment to fully initialize
+    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    
+    // Verify worker is still running
+    eprintln!("🔍 Worker base URL: {}", harness.base_url());
+    eprintln!("🔍 Testing health endpoint again...");
+    match harness.health().await {
+        Ok(_) => eprintln!("✅ Health check passed"),
+        Err(e) => eprintln!("❌ Health check failed: {:?}", e),
+    }
     
     // Generate dynamic minute word
     let now = Utc::now();

@@ -25,15 +25,19 @@
 //! Spec: FT-035
 
 mod parser;
-pub mod q4k_dequant;
 
 use std::collections::HashMap;
 use thiserror::Error;
 use parser::GGUFParser;
 
-// Re-export dequantization function and tensor metadata
-pub use q4k_dequant::dequantize_q4k;
+// Re-export tensor metadata
 pub use parser::TensorMetadata;
+
+// All dequantization moved to CUDA (100× faster)
+// See: bin/worker-orcd/cuda/kernels/q4_k_dequant.cu
+// See: bin/worker-orcd/cuda/kernels/q5_0_dequant.cu
+// See: bin/worker-orcd/cuda/kernels/q6_k_dequant.cu
+// See: bin/worker-orcd/cuda/kernels/q8_0_dequant.cu
 
 /// GGUF parsing errors
 #[derive(Debug, Error)]

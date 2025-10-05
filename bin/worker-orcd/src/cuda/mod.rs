@@ -31,12 +31,13 @@
 //! ```
 
 pub mod context;
-mod error;
-mod ffi;  // Keep private for now
-mod inference;
-mod model;
-mod real_inference;
-mod weight_loader;
+pub mod error;
+pub mod ffi;
+pub mod gguf_dequant;
+pub mod inference;
+pub mod model;
+pub mod real_inference;
+pub mod weight_loader;
 
 pub use context::Context;
 pub use error::{CudaError, CudaErrorCode};
@@ -45,7 +46,7 @@ pub use model::Model;
 pub use real_inference::RealInference;
 pub use weight_loader::{
     load_tensor, 
-    load_and_dequantize_q4k, 
+    load_tensor_gpu,
     load_weights_to_gpu, 
     load_model_from_rust,
     TensorInfo, 
