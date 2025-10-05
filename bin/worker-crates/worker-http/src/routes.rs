@@ -13,45 +13,25 @@
 //! - M0-W-1330: Execute endpoint
 //! - WORK-3040: Correlation ID middleware
 
-use crate::cuda::Model;
-use crate::http::{execute, health};
+use crate::{backend::InferenceBackend, execute, health};
 use axum::{
-    middleware,
     routing::{get, post},
     Router,
 };
-use observability_narration_core::axum::correlation_middleware;
 use std::sync::Arc;
-
-/// Shared application state
-#[derive(Clone)]
-pub struct AppState {
-    /// Worker ID (UUID)
-    pub worker_id: String,
-
-    /// Loaded CUDA model
-    pub model: Arc<Model>,
-}
 
 /// Create HTTP router with all endpoints and middleware
 ///
 /// # Arguments
-/// * `worker_id` - Unique worker identifier (UUID)
-/// * `model` - Loaded CUDA model
+/// * `backend` - Platform-specific inference backend
 ///
 /// # Returns
 /// Router with all endpoints and middleware configured
-///
-/// # Middleware Chain
-/// 1. Correlation ID middleware (extracts/generates X-Correlation-ID)
-pub fn create_router(worker_id: String, model: Model) -> Router {
-    let state = AppState { worker_id, model: Arc::new(model) };
-
+pub fn create_router<B: InferenceBackend + 'static>(backend: Arc<B>) -> Router {
     Router::new()
-        .route("/health", get(health::handle_health))
-        .route("/execute", post(execute::handle_execute))
-        .with_state(state)
-        .layer(middleware::from_fn(correlation_middleware))
+        .route("/health", get(health::handle_health::<B>))
+        .route("/execute", post(execute::handle_execute::<B>))
+        .with_state(backend)
 }
 
 #[cfg(test)]

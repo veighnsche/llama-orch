@@ -7,17 +7,20 @@
 //! - M0-W-1302: Request validation
 //! - M0-W-1310: SSE streaming
 
-use crate::http::sse::{InferenceEvent, StopReason};
-use crate::http::validation::{ExecuteRequest, ValidationErrorResponse};
+use crate::{
+    backend::InferenceBackend,
+    sse::InferenceEvent,
+    validation::{ExecuteRequest, ValidationErrorResponse},
+};
 use axum::{
-    extract::Extension,
+    extract::State,
     response::{sse::Event, Sse},
     Json,
 };
 use futures::stream::{self, Stream, StreamExt};
-use observability_narration_core::{Narration, ACTION_INFERENCE_START, ACTION_INFERENCE_COMPLETE, ACTOR_WORKER_ORCD};
-use std::convert::Infallible;
+use std::{convert::Infallible, sync::Arc};
 use tracing::{debug, info, warn};
+use worker_common::{InferenceResult, SamplingConfig};
 
 /// Handle POST /execute
 ///

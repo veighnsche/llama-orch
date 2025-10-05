@@ -5,12 +5,10 @@
 //! # Spec References
 //! - M0-W-1320: Health endpoint returns 200 OK with {"status": "healthy"}
 
-use crate::http::routes::AppState;
-use axum::{
-    extract::{Extension, State},
-    Json,
-};
+use crate::backend::InferenceBackend;
+use axum::{extract::State, Json};
 use serde::Serialize;
+use std::sync::Arc;
 use tracing::debug;
 
 /// Health check response
@@ -20,28 +18,25 @@ use tracing::debug;
 pub struct HealthResponse {
     /// Health status: "healthy" or "unhealthy"
     status: String,
+    /// VRAM usage in bytes
+    vram_bytes: u64,
 }
 
 /// Handle GET /health
 ///
 /// Returns 200 OK with `{"status": "healthy"}` if the worker is operational.
-///
-/// # Future Enhancements (M1+)
-/// - VRAM residency check
-/// - Uptime tracking
-/// - Model load status
-pub async fn handle_health(
-    Extension(correlation_id): Extension<String>,
-    State(_state): State<AppState>,
+pub async fn handle_health<B: InferenceBackend>(
+    State(backend): State<Arc<B>>,
 ) -> Json<HealthResponse> {
-    debug!(
-        correlation_id = %correlation_id,
-        "Health check requested"
-    );
+    debug!("Health check requested");
 
-    // Per spec: simple health check
-    // VRAM checks and detailed status deferred to M1+
-    Json(HealthResponse { status: "healthy".to_string() })
+    let status = if backend.is_healthy() { "healthy" } else { "unhealthy" };
+    let vram_bytes = backend.vram_usage();
+
+    Json(HealthResponse {
+        status: status.to_string(),
+        vram_bytes,
+    })
 }
 
 #[cfg(test)]

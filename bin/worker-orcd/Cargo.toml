@@ -6,6 +6,14 @@ license.workspace = true
 authors.workspace = true
 build = "build.rs"
 
+[dependencies]
+worker-gguf = { path = "../worker-crates/worker-gguf" }
+worker-tokenizer = { path = "../worker-crates/worker-tokenizer" }
+worker-models = { path = "../worker-crates/worker-models" }
+worker-common = { path = "../worker-crates/worker-common" }
+worker-http = { path = "../worker-crates/worker-http" }
+tokio = { workspace = true }
+
 [features]
 default = []
 cuda = []  # Enable CUDA support (requires NVIDIA GPU + CUDA toolkit)

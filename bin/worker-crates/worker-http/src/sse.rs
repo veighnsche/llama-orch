@@ -10,19 +10,8 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Reason for inference termination
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "snake_case")]
-pub enum StopReason {
-    /// Reached max_tokens limit
-    MaxTokens,
-    /// Matched a stop sequence
-    StopSequence,
-    /// Error occurred
-    Error,
-    /// Request cancelled
-    Cancelled,
-}
+// Re-export StopReason from worker-common
+pub use worker_common::inference_result::StopReason;
 
 /// Inference SSE event types
 ///

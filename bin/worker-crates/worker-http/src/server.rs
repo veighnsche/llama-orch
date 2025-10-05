@@ -12,12 +12,10 @@
 //! - WORK-3010: HTTP server foundation
 
 use axum::Router;
-use observability_narration_core::{Narration, ACTION_SHUTDOWN, ACTION_SPAWN, ACTOR_WORKER_ORCD};
 use std::net::SocketAddr;
-use std::time::Instant;
 use thiserror::Error;
 use tokio::sync::broadcast;
-use tracing::{error, info, warn};
+use tracing::{error, info};
 
 /// HTTP server errors
 #[derive(Debug, Error)]
@@ -81,10 +79,6 @@ impl HttpServer {
         );
 
         // Narrate server initialization
-        Narration::new(ACTOR_WORKER_ORCD, ACTION_SPAWN, "http-server")
-            .human(format!("HTTP server initialized on {}", addr))
-            .cute(format!("Worker's HTTP server is getting ready to listen on {}! 🎉", addr))
-            .emit();
 
         Ok(Self { addr, router, shutdown_tx })
     }
@@ -103,11 +97,6 @@ impl HttpServer {
     pub async fn run(self) -> Result<(), ServerError> {
         let listener = tokio::net::TcpListener::bind(self.addr).await.map_err(|source| {
             // Narrate bind failure
-            Narration::new(ACTOR_WORKER_ORCD, ACTION_SPAWN, "http-server")
-                .human(format!("Failed to bind to {}: {}", self.addr, source))
-                .cute(format!("Oh no! Couldn't bind to {} - maybe someone else is using that port? 😟", self.addr))
-                .error_kind("BindFailed")
-                .emit_error();
 
             ServerError::BindFailed { addr: self.addr, source }
         })?;
@@ -118,11 +107,6 @@ impl HttpServer {
         );
 
         // Narrate successful server startup
-        Narration::new(ACTOR_WORKER_ORCD, ACTION_SPAWN, "http-server")
-            .human(format!("HTTP server listening on {}", self.addr))
-            .cute(format!("HTTP server is now listening on {}! Ready to help! 👂✨", self.addr))
-            .story(format!("\"I'm ready to accept requests!\" announced worker-orcd. \"Listening on {}.\"", self.addr))
-            .emit();
 
         // Clone shutdown receiver for signal handler
         let mut shutdown_rx = self.shutdown_tx.subscribe();
@@ -142,7 +126,7 @@ impl HttpServer {
         });
 
         // Track shutdown duration
-        let shutdown_start = Instant::now();
+        
 
         // Run server with graceful shutdown
         axum::serve(listener, self.router)
@@ -153,17 +137,10 @@ impl HttpServer {
             .await
             .map_err(|e| ServerError::Runtime(e.to_string()))?;
 
-        let shutdown_duration_ms = shutdown_start.elapsed().as_millis() as u64;
 
         info!("HTTP server shutdown complete");
 
         // Narrate shutdown completion
-        Narration::new(ACTOR_WORKER_ORCD, ACTION_SHUTDOWN, "http-server")
-            .human(format!("HTTP server shutdown complete ({} ms)", shutdown_duration_ms))
-            .cute(format!("HTTP server says goodnight after {} ms! Sleep well! 😴👋", shutdown_duration_ms))
-            .story("\"Shutting down now,\" said worker-orcd. \"Goodbye!\"")
-            .duration_ms(shutdown_duration_ms)
-            .emit_warn();
 
         Ok(())
     }

@@ -1,25 +1,30 @@
-//! Shared HTTP server and SSE streaming for llama-orch workers
+//! HTTP API for llama-orch workers
 //!
-//! This crate provides common HTTP server infrastructure used by all worker
-//! implementations (worker-orcd, worker-aarmd, etc.).
+//! This module provides platform-agnostic HTTP server infrastructure for workers,
+//! including:
+//! - Server lifecycle management (`server`)
+//! - Route configuration (`routes`)
+//! - Health endpoint (`health`)
+//! - Execute endpoint (`execute`)
+//! - Platform abstraction (`backend`)
 //!
-//! # Components
-//!
-//! - `HttpServer`: Axum-based HTTP server with graceful shutdown
-//! - SSE streaming helpers for token-by-token inference
-//! - Request validation and error handling
-//! - Route definitions
+//! # Spec References
+//! - M0-W-1110: Server initialization
+//! - M0-W-1320: Health endpoint
+//! - M0-W-1330: Execute endpoint
 
-// TODO: Extract from worker-orcd/src/http/
-// - server.rs
-// - sse.rs
-// - routes.rs
-// - validation.rs
+pub mod backend;
+pub mod execute;
+pub mod health;
+pub mod routes;
+pub mod server;
+pub mod sse;
+pub mod validation;
 
-pub mod placeholder {
-    //! Placeholder module until extraction is complete
-    
-    pub fn version() -> &'static str {
-        "0.1.0"
-    }
-}
+// Re-export commonly used types
+pub use backend::{AppState, InferenceBackend};
+pub use routes::create_router;
+pub use server::HttpServer;
+
+// ---
+// Built by Foundation-Alpha 🏗️
