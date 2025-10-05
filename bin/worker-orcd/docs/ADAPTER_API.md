@@ -38,12 +38,12 @@ let output = adapter.generate(&input_ids, 50, &config)?;
 
 ## Core Types
 
-### `LlamaInferenceAdapter`
+### `LlamaModelAdapter`
 
 Unified adapter for all model types.
 
 ```rust
-pub struct LlamaInferenceAdapter { /* private fields */ }
+pub struct LlamaModelAdapter { /* private fields */ }
 ```
 
 **Thread Safety**: `Send` but not `Sync`. Use one adapter per thread.
@@ -166,7 +166,7 @@ pub struct AdapterFactory;
 
 **Methods**:
 
-#### `from_gguf(path: &str) -> Result<LlamaInferenceAdapter, FactoryError>`
+#### `from_gguf(path: &str) -> Result<LlamaModelAdapter, FactoryError>`
 
 Create adapter from GGUF file (auto-detect architecture).
 
@@ -180,7 +180,7 @@ let adapter = AdapterFactory::from_gguf("qwen-2.5-0.5b.gguf")?;
 - Detects model variant (Qwen, Phi-3, GPT-2, etc.)
 - Creates appropriate adapter
 
-#### `from_gguf_with_arch(path: &str, arch: Architecture) -> Result<LlamaInferenceAdapter, FactoryError>`
+#### `from_gguf_with_arch(path: &str, arch: Architecture) -> Result<LlamaModelAdapter, FactoryError>`
 
 Create adapter with explicit architecture.
 
@@ -193,7 +193,7 @@ let adapter = AdapterFactory::from_gguf_with_arch(
 )?;
 ```
 
-#### `from_gguf_with_arch_str(path: &str, arch_str: &str) -> Result<LlamaInferenceAdapter, FactoryError>`
+#### `from_gguf_with_arch_str(path: &str, arch_str: &str) -> Result<LlamaModelAdapter, FactoryError>`
 
 Create adapter with architecture string.
 
@@ -205,7 +205,7 @@ let adapter = AdapterFactory::from_gguf_with_arch_str("model.gguf", "llama")?;
 - `"llama"` → Llama architecture (Qwen, Phi-3, Llama 2/3)
 - `"gpt"` → GPT architecture (GPT-2, GPT-3)
 
-#### `default_for_testing() -> Result<LlamaInferenceAdapter, FactoryError>`
+#### `default_for_testing() -> Result<LlamaModelAdapter, FactoryError>`
 
 Create default adapter for testing (Qwen 0.5B).
 

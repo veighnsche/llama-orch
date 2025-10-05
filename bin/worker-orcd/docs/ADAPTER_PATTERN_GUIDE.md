@@ -1,6 +1,6 @@
 # Adapter Pattern Guide
 
-**Purpose**: Guide for using and extending the `LlamaInferenceAdapter`  
+**Purpose**: Guide for using and extending the `LlamaModelAdapter`  
 **Audience**: Model implementation teams (Llama-Beta, GPT-Gamma)  
 **Owner**: Foundation-Alpha
 
@@ -8,7 +8,7 @@
 
 ## Overview
 
-The `LlamaInferenceAdapter` provides a **unified interface** for all Llama-family models (Qwen, Phi-3, Llama 2/3, GPT-2/3). It abstracts model-specific differences behind a consistent API, enabling:
+The `LlamaModelAdapter` provides a **unified interface** for all Llama-family models (Qwen, Phi-3, Llama 2/3, GPT-2/3). It abstracts model-specific differences behind a consistent API, enabling:
 
 1. **Model-agnostic code**: Write once, run on any model
 2. **Easy model switching**: Change models without code changes
@@ -31,7 +31,7 @@ The `LlamaInferenceAdapter` provides a **unified interface** for all Llama-famil
 ### Components
 
 ```
-LlamaInferenceAdapter
+LlamaModelAdapter
 ├── ModelType (enum)
 │   ├── Qwen2_5
 │   ├── Phi3
@@ -62,7 +62,7 @@ LlamaInferenceAdapter
 
 ```rust
 use worker_orcd::models::{
-    LlamaInferenceAdapter, ModelType, AdapterForwardConfig,
+    LlamaModelAdapter, ModelType, AdapterForwardConfig,
     qwen::{QwenConfig, QwenWeightLoader},
 };
 
@@ -71,7 +71,7 @@ let config = QwenConfig::qwen2_5_0_5b();
 let model = QwenWeightLoader::load_to_vram("model.gguf", &config)?;
 
 // 2. Create adapter
-let adapter = LlamaInferenceAdapter::new_qwen(model);
+let adapter = LlamaModelAdapter::new_qwen(model);
 
 // 3. Configure forward pass
 let fwd_config = AdapterForwardConfig {
@@ -162,7 +162,7 @@ pub enum ModelType {
 
 ```rust
 // In src/models/adapter.rs
-pub struct LlamaInferenceAdapter {
+pub struct LlamaModelAdapter {
     model_type: ModelType,
     qwen_model: Option<QwenModel>,
     phi3_model: Option<Phi3Model>,
@@ -174,7 +174,7 @@ pub struct LlamaInferenceAdapter {
 
 ```rust
 // In src/models/adapter.rs
-impl LlamaInferenceAdapter {
+impl LlamaModelAdapter {
     /// Create adapter for GPT-2 model
     pub fn new_gpt2(model: GPT2Model) -> Self {
         Self {
@@ -262,7 +262,7 @@ impl AdapterForwardConfig {
 fn test_adapter_gpt2() {
     let config = GPT2Config::gpt2_small();
     let model = GPT2WeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_gpt2(model);
+    let adapter = LlamaModelAdapter::new_gpt2(model);
     
     assert_eq!(adapter.model_type(), ModelType::GPT2);
     assert_eq!(adapter.vocab_size().unwrap(), 50257);
@@ -454,7 +454,7 @@ match adapter.generate(&input_ids, 50, &config) {
 fn test_adapter_creation() {
     let config = YourConfig::default();
     let model = YourWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_your_model(model);
+    let adapter = LlamaModelAdapter::new_your_model(model);
     
     assert_eq!(adapter.model_type(), ModelType::YourModel);
 }
@@ -489,7 +489,7 @@ fn test_full_pipeline() {
     // 1. Load model
     let config = YourConfig::default();
     let model = YourWeightLoader::load_to_vram("model.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_your_model(model);
+    let adapter = LlamaModelAdapter::new_your_model(model);
     
     // 2. Create tokenizer
     let tokenizer = create_tokenizer();
@@ -539,7 +539,7 @@ fn test_full_pipeline() {
 
 ```rust
 fn generate_text(
-    adapter: &LlamaInferenceAdapter,
+    adapter: &LlamaModelAdapter,
     prompt: &str,
     max_tokens: usize,
 ) -> Result<String, Box<dyn std::error::Error>> {
@@ -584,7 +584,7 @@ fn compare_models() {
 ### Example 3: Temperature Sweep
 
 ```rust
-fn temperature_sweep(adapter: &LlamaInferenceAdapter) {
+fn temperature_sweep(adapter: &LlamaModelAdapter) {
     let input_ids = vec![1, 2, 3];
     
     for temp in [0.1, 0.5, 0.7, 1.0, 1.5, 2.0] {

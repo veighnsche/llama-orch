@@ -38,7 +38,7 @@ The M0 milestone for worker-orcd is **COMPLETE**. Both Foundation Team and Llama
 - **Error handling**: ✅ Complete
 
 ### ✅ 4. Adapter Pattern
-- **InferenceAdapter trait**: ✅ Defined
+- **ModelAdapter trait**: ✅ Defined
 - **Factory pattern**: ✅ Implemented
 - **Architecture detection**: ✅ Automatic
 - **Model switching**: ✅ Polymorphic
@@ -97,7 +97,7 @@ The M0 milestone for worker-orcd is **COMPLETE**. Both Foundation Team and Llama
 
 #### Sprint 6: Adapter + Gate 3 ✅
 - Performance baseline
-- InferenceAdapter interface
+- ModelAdapter interface
 - Adapter factory pattern
 - Architecture detection
 - Gate 3 validation
@@ -158,7 +158,7 @@ The M0 milestone for worker-orcd is **COMPLETE**. Both Foundation Team and Llama
 - Phi-3 weight loading
 - Phi-3 forward pass
 - Phi-3 tokenizer conformance
-- LlamaInferenceAdapter implementation
+- LlamaModelAdapter implementation
 - Gate 3 participation
 
 #### Sprint 7: Final Integration ✅
@@ -244,7 +244,7 @@ The M0 milestone for worker-orcd is **COMPLETE**. Both Foundation Team and Llama
 **Validator**: Foundation-Alpha & Llama-Beta  
 **Status**: PASSED
 
-- InferenceAdapter pattern implemented
+- ModelAdapter pattern implemented
 - Factory pattern working
 - Architecture detection automatic
 - Phi-3 model integrated

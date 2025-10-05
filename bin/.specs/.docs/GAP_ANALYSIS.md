@@ -854,7 +854,7 @@ Fuse small kernels to reduce launch overhead:
 **M0 Spec** (M0-W-1212):
 - **MUST** detect architecture from GGUF `general.architecture` field
 - Support both Llama and GPT architectures
-- Use InferenceAdapter pattern
+- Use ModelAdapter pattern
 
 **Resolution**: M0 spec is correct. Old specs predate multi-architecture support.
 
@@ -959,7 +959,7 @@ cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
 **Action Items**:
 1. **Update old specs** to align with M0 requirements:
    - Add architecture detection (M0-W-1212)
-   - Add InferenceAdapter pattern (M0-W-1213-1215)
+   - Add ModelAdapter pattern (M0-W-1213-1215)
    - Add MXFP4 support (M0-W-1201, M0-W-1435)
    - Add tokenization references (§8)
    - Clarify test reproducibility scope (§3)
@@ -980,7 +980,7 @@ cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
 ### 📋 **Update Checklist for Old Specs**
 
 #### `00_cuda_overview.md`
-- [ ] Add InferenceAdapter factory pattern
+- [ ] Add ModelAdapter factory pattern
 - [ ] Add architecture detection overview
 - [ ] Add MXFP4 kernel references
 - [ ] Update kernel organization to include GPT-specific kernels
@@ -990,12 +990,12 @@ cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
 
 #### `02_model.md`
 - [ ] Add architecture detection from GGUF metadata
-- [ ] Add InferenceAdapter selection logic
+- [ ] Add ModelAdapter selection logic
 - [ ] Add MXFP4 tensor type handling
 - [ ] Add weight mapping for both Llama and GPT architectures
 
 #### `03_inference.md`
-- [ ] Add InferenceAdapter usage
+- [ ] Add ModelAdapter usage
 - [ ] Add architecture-specific forward pass references
 - [ ] Add MXFP4 dequantization details
 - [ ] Clarify test reproducibility (NOT a product guarantee)

@@ -193,19 +193,19 @@
 - [ ] Runtime backend selection logic
 - [ ] Health endpoint integration (tokenizer_kind, vocab_size)
 
-**Week 6: InferenceAdapter Pattern**
-- [ ] Define InferenceAdapter base class (C++)
+**Week 6: ModelAdapter Pattern**
+- [ ] Define ModelAdapter base class (C++)
 - [ ] Factory pattern for adapter creation
 - [ ] Architecture detection integration
 - [ ] Adapter selection at model load
 - [ ] Unit tests for adapter pattern
 
 **Week 6-7: Architecture Adapters Implementation**
-- [ ] LlamaInferenceAdapter
+- [ ] LlamaModelAdapter
   - Weight loading (token_embd, qkv_proj, gate/up/down)
   - Forward pass (RoPE + GQA + RMSNorm + SwiGLU)
   - Integration with Qwen2.5-0.5B and Phi-3-Mini
-- [ ] GPTInferenceAdapter
+- [ ] GPTModelAdapter
   - Weight loading (wte/wpe, Q/K/V, fc1/fc2)
   - Forward pass (abs pos + MHA + LayerNorm + GELU)
   - Integration with GPT-OSS-20B
@@ -215,7 +215,7 @@
 **Deliverables**:
 - ✅ GGUF loader (mmap + chunked transfer)
 - ✅ Two tokenizer backends (gguf-bpe, hf-json)
-- ✅ InferenceAdapter pattern
+- ✅ ModelAdapter pattern
 - ✅ Llama + GPT adapters
 - ✅ Architecture detection
 - ✅ Conformance test suite
@@ -293,8 +293,8 @@
 - [ ] VRAM-only verification
 - [ ] API contract tests
 
-**Week 6-7: InferenceAdapter Pattern + Coordination**
-- [ ] Define InferenceAdapter interface
+**Week 6-7: ModelAdapter Pattern + Coordination**
+- [ ] Define ModelAdapter interface
 - [ ] Refactor Qwen pipeline into LlamaAdapter
 - [ ] Integration coordination with Teams 2 & 3
 - [ ] Final testing and documentation
@@ -302,7 +302,7 @@
 **Deliverables**:
 - ✅ Complete Qwen2.5-0.5B pipeline (end-to-end)
 - ✅ Core infrastructure (HTTP, FFI, CUDA)
-- ✅ InferenceAdapter pattern
+- ✅ ModelAdapter pattern
 - ✅ Foundation for other teams
 
 ---
@@ -321,8 +321,8 @@
 - [ ] Phi-3 weight mapping
 - [ ] End-to-end Phi-3 pipeline
 
-**Week 5-6: LlamaInferenceAdapter**
-- [ ] Formalize LlamaInferenceAdapter class
+**Week 5-6: LlamaModelAdapter**
+- [ ] Formalize LlamaModelAdapter class
 - [ ] Refactor Qwen + Phi-3 to use adapter
 - [ ] Weight loading abstraction
 - [ ] Forward pass abstraction
@@ -337,7 +337,7 @@
 
 **Deliverables**:
 - ✅ Phi-3-Mini support
-- ✅ LlamaInferenceAdapter (production-ready)
+- ✅ LlamaModelAdapter (production-ready)
 - ✅ Llama-style model validation
 - ✅ Test suite (Qwen + Phi-3)
 
@@ -366,8 +366,8 @@
 - [ ] Numerical correctness validation (±1%)
 - [ ] GGUF v3 tensor support
 
-**Week 6-7: GPTInferenceAdapter + Integration**
-- [ ] Formalize GPTInferenceAdapter class
+**Week 6-7: GPTModelAdapter + Integration**
+- [ ] Formalize GPTModelAdapter class
 - [ ] Architecture-aware weight mapping
 - [ ] End-to-end GPT-OSS-20B pipeline (MXFP4)
 - [ ] Large model testing (24 GB boundary)
@@ -376,7 +376,7 @@
 
 **Deliverables**:
 - ✅ GPT-OSS-20B support (MXFP4)
-- ✅ GPTInferenceAdapter (production-ready)
+- ✅ GPTModelAdapter (production-ready)
 - ✅ HF tokenizer integration
 - ✅ MXFP4 validation
 - ✅ Large model test suite
@@ -492,8 +492,8 @@
 - [ ] End-to-end Phi-3 pipeline
 - [ ] VRAM pressure tests
 
-**Week 6-7: LlamaInferenceAdapter**
-- [ ] Formalize LlamaInferenceAdapter
+**Week 6-7: LlamaModelAdapter**
+- [ ] Formalize LlamaModelAdapter
 - [ ] Refactor Qwen + Phi-3 to use adapter
 - [ ] Integration tests (both models)
 - [ ] Documentation
@@ -503,7 +503,7 @@
 - ✅ GGUF-BPE tokenizer
 - ✅ Llama kernels
 - ✅ Qwen + Phi-3 support
-- ✅ LlamaInferenceAdapter
+- ✅ LlamaModelAdapter
 
 ---
 
@@ -537,8 +537,8 @@
 - [ ] Wire MXFP4 into all weight consumers
 - [ ] Numerical correctness tests (±1%)
 
-**Week 6-7: GPTInferenceAdapter + Final Integration**
-- [ ] Formalize GPTInferenceAdapter
+**Week 6-7: GPTModelAdapter + Final Integration**
+- [ ] Formalize GPTModelAdapter
 - [ ] Architecture-aware weight mapping
 - [ ] End-to-end GPT-OSS-20B (MXFP4)
 - [ ] 24 GB VRAM boundary tests
@@ -550,7 +550,7 @@
 - ✅ GPT kernels
 - ✅ MXFP4 support
 - ✅ GPT-OSS-20B support
-- ✅ GPTInferenceAdapter
+- ✅ GPTModelAdapter
 
 ---
 
@@ -709,7 +709,7 @@
    - **Risk**: Teams implement incompatible adapter interfaces
    - **Mitigation**:
      - Week 5: Joint design session (all teams)
-     - Shared header file (InferenceAdapter.hpp)
+     - Shared header file (ModelAdapter.hpp)
      - Code review before implementation
 
 3. **MXFP4 Complexity (Team 3)**
@@ -769,10 +769,10 @@ If only 3 developers available:
 - Weeks 6-7: Adapter pattern + integration support
 
 ### Team 2: Llama Specialist (Phi-3 + Llama Adapter)
-- Weeks 3-7: Phi-3 + LlamaInferenceAdapter
+- Weeks 3-7: Phi-3 + LlamaModelAdapter
 
 ### Team 3: GPT Specialist (GPT-OSS-20B + GPT Adapter)
-- Weeks 3-7: GPT + MXFP4 + GPTInferenceAdapter
+- Weeks 3-7: GPT + MXFP4 + GPTModelAdapter
 
 **Trade-off**: Longer timeline (8-9 weeks) or reduced scope (defer Phi-3 or GPT to M1)
 
@@ -795,7 +795,7 @@ If only 3 developers available:
 
 3. **Define Interfaces**
    - [ ] FFI interface (Rust ↔ C++)
-   - [ ] InferenceAdapter interface (C++)
+   - [ ] ModelAdapter interface (C++)
    - [ ] TokenizerBackend trait (Rust)
    - [ ] API contract (HTTP endpoints)
 

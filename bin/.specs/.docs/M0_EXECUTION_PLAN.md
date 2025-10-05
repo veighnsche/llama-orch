@@ -149,7 +149,7 @@ diff output1.json output2.json  # No diff allowed
 **Criteria**:
 - [ ] Phi-3-Mini working (Llama adapter)
 - [ ] GPT-OSS-20B working (Q4_K_M fallback, no MXFP4 yet)
-- [ ] InferenceAdapter interface agreed by all teams (header file signed off)
+- [ ] ModelAdapter interface agreed by all teams (header file signed off)
 - [ ] Architecture detection working (GGUF → Llama or GPT)
 - [ ] Factory pattern creates correct adapter
 
@@ -288,7 +288,7 @@ diff output1.json output2.json  # No diff allowed
 ### Sprint 6 (Week 6): All Models + Adapter Design → Gate 3
 
 **Team 1 Focus**: API docs + adapter coordination
-**Team 2 Focus**: Phi-3 + LlamaInferenceAdapter
+**Team 2 Focus**: Phi-3 + LlamaModelAdapter
 **Team 3 Focus**: MXFP4 implementation starts
 
 **Stories** (~10-12 stories):
@@ -296,7 +296,7 @@ diff output1.json output2.json  # No diff allowed
 - T1-017: Adapter pattern coordination (M) ← **all teams**
 - T2-015: Phi-3 weight loading (M)
 - T2-016: Phi-3 integration (M)
-- T2-017: LlamaInferenceAdapter (M)
+- T2-017: LlamaModelAdapter (M)
 - T3-012: MXFP4 dequant kernel (L)
 - T3-013: MXFP4 GEMM integration (M)
 
@@ -316,7 +316,7 @@ diff output1.json output2.json  # No diff allowed
 - T2-018: Llama integration test suite (M)
 - T2-019: Documentation (M)
 - T3-014: GPT MXFP4 end-to-end (L)
-- T3-015: GPTInferenceAdapter (M)
+- T3-015: GPTModelAdapter (M)
 - T3-016: GPT integration tests (M)
 - T3-017: MXFP4 numerical validation (M)
 - ALL: Emergency buffer for Gate 4 blockers

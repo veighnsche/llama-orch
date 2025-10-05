@@ -41,7 +41,7 @@
 1. ✅ All 3 models: Qwen2.5-0.5B, Phi-3-Mini, GPT-OSS-20B
 2. ✅ All 3 quantization formats: Q4_K_M, MXFP4, Q4_0
 3. ✅ 2 tokenizer backends: GGUF byte-BPE, tokenizer.json
-4. ✅ Architecture adapters: LlamaInferenceAdapter + GPTInferenceAdapter (M0-W-1213, M0-W-1214, M0-W-1215)
+4. ✅ Model adapters: LlamaModelAdapter + GPTModelAdapter (M0-W-1213, M0-W-1214, M0-W-1215)
 5. ✅ Architecture detection from GGUF metadata (M0-W-1212)
 6. ✅ GPT-specific kernels: LayerNorm, GELU, absolute pos embedding (M0-W-1432, M0-W-1433, M0-W-1434)
 7. ✅ MXFP4 architecture-aware weight mapping (M0-W-1435)
@@ -84,7 +84,7 @@
 - ✅ Critical safety features retained (VRAM monitoring, OOM handling)
 - ✅ User experience retained (model load progress events)
 - ✅ All 3 quantization formats included (Q4_K_M, MXFP4, Q4_0)
-- ✅ Clean architecture from day 1 (InferenceAdapter pattern)
+- ✅ Clean architecture from day 1 (ModelAdapter pattern)
 
 **Deferred to M1**:
 - ❌ Performance validation and benchmarking
@@ -94,7 +94,7 @@
 
 **Timeline Impact**:
 - Foundation (Weeks 1-5): HTTP server, GGUF loader, tokenization, basic kernels
-- Architecture Adapters (Weeks 6-7): InferenceAdapter pattern, Llama + GPT adapters, GPT-specific kernels
+- Model Adapters (Weeks 6-7): ModelAdapter pattern, Llama + GPT adapters, GPT-specific kernels
 - Total: 6-7 weeks (includes +1-2 weeks for proper architecture support)
 
 **Reference**: See `M0_RESOLUTION_CONTRADICTIONS.md` for full analysis
@@ -864,7 +864,7 @@ struct GGUFTensor {
 
 #### [M0-W-1212] Architecture Detection from GGUF
 
-Worker MUST detect model architecture from GGUF metadata and select appropriate InferenceAdapter.
+Worker MUST detect model architecture from GGUF metadata and select appropriate ModelAdapter.
 
 **Detection Logic**:
 ```cpp
@@ -877,8 +877,8 @@ Architecture detect_architecture(const GGUFMetadata& metadata) {
 ```
 
 **Supported Architectures**:
-- `llama` → LlamaInferenceAdapter (Qwen2.5-0.5B, Phi-3-Mini)
-- `gpt2`/`gpt` → GPTInferenceAdapter (GPT-OSS-20B)
+- `llama` → LlamaModelAdapter (Qwen2.5-0.5B, Phi-3-Mini)
+- `gpt2`/`gpt` → GPTModelAdapter (GPT-OSS-20B)
 
 **Unsupported Architecture**: Worker MUST fail fast with clear error message.
 
@@ -1515,23 +1515,23 @@ Tokenization MUST be self-contained:
 
 ---
 
-## 8.7. Architecture Adapters
+## 8.7. Model Adapters
 
 **Context**: M0 supports three models with fundamentally different architectures (Qwen/Phi-3 are Llama-style, GPT-OSS-20B is GPT-style). This requires architecture-specific inference pipelines.
 
 **Reference**: See `M0_ARCHITECTURAL_GAP_ANALYSIS.md` for detailed analysis.
 
-### 8.7.1 InferenceAdapter Pattern
+### 8.7.1 ModelAdapter Pattern
 
-#### [M0-W-1213] InferenceAdapter Interface
+#### [M0-W-1213] ModelAdapter Interface
 
-Worker MUST implement InferenceAdapter base class to abstract architecture-specific logic.
+Worker MUST implement ModelAdapter base class to abstract architecture-specific logic.
 
 **Interface Design**:
 ```cpp
-class InferenceAdapter {
+class ModelAdapter {
 public:
-    virtual ~InferenceAdapter() = default;
+    virtual ~ModelAdapter() = default;
     
     // Load weights from GGUF with architecture-specific mapping
     virtual void load_weights_from_gguf(
@@ -1555,12 +1555,12 @@ public:
 
 **Factory Pattern**:
 ```cpp
-std::unique_ptr<InferenceAdapter> create_adapter(Architecture arch) {
+std::unique_ptr<ModelAdapter> create_adapter(Architecture arch) {
     switch (arch) {
         case Architecture::Llama:
-            return std::make_unique<LlamaInferenceAdapter>();
+            return std::make_unique<LlamaModelAdapter>();
         case Architecture::GPT:
-            return std::make_unique<GPTInferenceAdapter>();
+            return std::make_unique<GPTModelAdapter>();
         default:
             throw std::runtime_error("Unsupported architecture");
     }
@@ -1569,11 +1569,11 @@ std::unique_ptr<InferenceAdapter> create_adapter(Architecture arch) {
 
 **Spec Reference**: M0_ARCHITECTURAL_GAP_ANALYSIS.md (Gap 2)
 
-### 8.7.2 LlamaInferenceAdapter
+### 8.7.2 LlamaModelAdapter
 
-#### [M0-W-1214] LlamaInferenceAdapter Implementation
+#### [M0-W-1214] LlamaModelAdapter Implementation
 
-Worker MUST implement LlamaInferenceAdapter for Llama-style models (Qwen2.5-0.5B, Phi-3-Mini).
+Worker MUST implement LlamaModelAdapter for Llama-style models (Qwen2.5-0.5B, Phi-3-Mini).
 
 **Architecture Characteristics**:
 - **Position Encoding**: RoPE (Rotary Position Embedding)
@@ -1583,7 +1583,7 @@ Worker MUST implement LlamaInferenceAdapter for Llama-style models (Qwen2.5-0.5B
 
 **Forward Pass Pipeline**:
 ```cpp
-void LlamaInferenceAdapter::run_forward_pass(...) {
+void LlamaModelAdapter::run_forward_pass(...) {
     // 1. Embedding lookup
     embedding_kernel<<<...>>>(input_tokens, embeddings);
     
@@ -1629,11 +1629,11 @@ void LlamaInferenceAdapter::run_forward_pass(...) {
 
 **Spec Reference**: M0_ARCHITECTURAL_GAP_ANALYSIS.md (Gap 2a, Gap 4a)
 
-### 8.7.3 GPTInferenceAdapter
+### 8.7.3 GPTModelAdapter
 
-#### [M0-W-1215] GPTInferenceAdapter Implementation
+#### [M0-W-1215] GPTModelAdapter Implementation
 
-Worker MUST implement GPTInferenceAdapter for GPT-style models (GPT-OSS-20B).
+Worker MUST implement GPTModelAdapter for GPT-style models (GPT-OSS-20B).
 
 **Architecture Characteristics**:
 - **Position Encoding**: Absolute/Learned positional embeddings
@@ -1643,7 +1643,7 @@ Worker MUST implement GPTInferenceAdapter for GPT-style models (GPT-OSS-20B).
 
 **Forward Pass Pipeline**:
 ```cpp
-void GPTInferenceAdapter::run_forward_pass(...) {
+void GPTModelAdapter::run_forward_pass(...) {
     // 1. Token + position embeddings
     embedding_kernel<<<...>>>(input_tokens, token_emb);
     positional_embedding_kernel<<<...>>>(position_ids, pos_emb);

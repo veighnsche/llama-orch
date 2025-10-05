@@ -24,7 +24,7 @@ Gate 2 validates that both Llama and GPT architectures are implemented and worki
 **Evidence**:
 - Model configuration: `QwenConfig::qwen2_5_0_5b()`
 - Model loads successfully via `QwenWeightLoader::load_to_vram()`
-- Adapter created: `LlamaInferenceAdapter::new_qwen()`
+- Adapter created: `LlamaModelAdapter::new_qwen()`
 - Token generation working: `adapter.generate()` returns expected output
 - Test: `tests/llama_integration_suite.rs::test_qwen_full_pipeline`
 
@@ -59,7 +59,7 @@ Gate 2 validates that both Llama and GPT architectures are implemented and worki
 - Both use `CudaContext` for device management
 - Both follow same error handling patterns
 - Both implement same forward pass interface (prefill/decode/generate)
-- Both integrate with `LlamaInferenceAdapter` pattern
+- Both integrate with `LlamaModelAdapter` pattern
 
 **Code Locations**:
 - Qwen: `src/models/qwen.rs`
@@ -287,7 +287,7 @@ $ cargo clippy -- -D warnings
 ### Downstream Dependencies
 
 **This gate unblocks**:
-- FT-033: InferenceAdapter Interface
+- FT-033: ModelAdapter Interface
 - FT-034: Adapter Factory Pattern
 - Sprint 6 continuation
 

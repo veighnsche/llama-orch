@@ -1,7 +1,7 @@
 # Custom Worker-orcd Implementation Strategy
 
 **Date**: 2025-10-03  
-**Decision**: Build custom worker-orcd with InferenceAdapter pattern  
+**Decision**: Build custom worker-orcd with ModelAdapter pattern  
 **Status**: ✅ Approved  
 **Timeline**: 6-7 weeks (M0 foundation + architecture adapters)
 
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-**Decision**: **Build custom worker-orcd with InferenceAdapter pattern**
+**Decision**: **Build custom worker-orcd with ModelAdapter pattern**
 
 **Rationale**: Analysis confirms that building a custom worker is the only path that preserves the system's core value propositions. External engines would sacrifice 8-15 critical features including narration-core logging, proof bundle emission, VRAM-only enforcement, and API contract compliance.
 
@@ -62,7 +62,7 @@ From the specs, the worker MUST:
                │ FFI (unsafe extern "C")
 ┌──────────────▼──────────────────────┐
 │ C++/CUDA Layer                      │
-│ • InferenceAdapter (abstract)       │
+│ • ModelAdapter (abstract)       │
 │   ├─ LlamaAdapter (Qwen/Phi)       │
 │   └─ GPTAdapter (GPT-OSS-20B)      │
 │ • CUDA context management           │
@@ -77,7 +77,7 @@ From the specs, the worker MUST:
 - ✅ **Narration-core integration**: Custom logging with narrative events
 - ✅ **Proof bundle support**: Direct integration with libs/proof-bundle
 - ✅ **VRAM-only enforcement**: Strict control over memory allocation
-- ✅ **Architecture adapters**: Clean InferenceAdapter pattern for multiple model types
+- ✅ **Architecture adapters**: Clean ModelAdapter pattern for multiple model types
 - ✅ **Smart/Dumb boundary**: Worker remains "dumb executor" as designed
 - ✅ **API contract compliance**: Exact HTTP endpoints and SSE streaming as specified
 - ✅ **Correlation ID support**: Full distributed tracing capability
@@ -182,7 +182,7 @@ From the architectural gap analysis research:
 
 ### 4.2 Adapter Pattern Validation
 
-Research confirms that **InferenceAdapter pattern is industry standard**:
+Research confirms that **ModelAdapter pattern is industry standard**:
 
 | Framework | Pattern | Our Approach |
 |-----------|---------|--------------|
@@ -191,7 +191,7 @@ Research confirms that **InferenceAdapter pattern is industry standard**:
 | vLLM | Model registry | ✅ Same pattern |
 | HuggingFace | AutoModel registry | ✅ Same pattern |
 
-**Conclusion**: Building custom worker with InferenceAdapter is **architecturally correct** and follows industry best practices.
+**Conclusion**: Building custom worker with ModelAdapter is **architecturally correct** and follows industry best practices.
 
 ---
 
@@ -235,13 +235,13 @@ Research confirms that **InferenceAdapter pattern is industry standard**:
 8. Proof bundle emission
 
 **Phase 2: Architecture Adapters (+1-2 weeks)**
-1. Define `InferenceAdapter` interface
-2. Implement `LlamaInferenceAdapter` (Qwen/Phi-3)
+1. Define `ModelAdapter` interface
+2. Implement `LlamaModelAdapter` (Qwen/Phi-3)
    - RoPE kernel
    - GQA attention
    - RMSNorm
    - SwiGLU FFN
-3. Implement `GPTInferenceAdapter` (GPT-OSS-20B)
+3. Implement `GPTModelAdapter` (GPT-OSS-20B)
    - Absolute positional embedding
    - MHA attention
    - LayerNorm
@@ -261,8 +261,8 @@ Research confirms that **InferenceAdapter pattern is industry standard**:
 **If** +1-2 weeks is absolutely unacceptable:
 
 **Minimal Viable Adapter** (Option B fallback):
-1. Implement `InferenceAdapter` interface
-2. Implement `LlamaInferenceAdapter` only (Qwen + Phi-3)
+1. Implement `ModelAdapter` interface
+2. Implement `LlamaModelAdapter` only (Qwen + Phi-3)
 3. **Defer** GPT adapter to M1
 4. Accept: Only 2 models in M0 (lose GPT-OSS-20B)
 
@@ -296,7 +296,7 @@ Research confirms that **InferenceAdapter pattern is industry standard**:
 - ❌ **Maintenance burden**: Bug fixes must be applied to all workers
 - ❌ **Violates DRY**: Same HTTP/logging/streaming code in each
 
-**Recommended Approach**: **Single worker binary with InferenceAdapter pattern**
+**Recommended Approach**: **Single worker binary with ModelAdapter pattern**
 
 **Why**:
 - ✅ **Single deployment artifact**: One binary to manage
@@ -305,7 +305,7 @@ Research confirms that **InferenceAdapter pattern is industry standard**:
 - ✅ **Easy to add architectures**: New adapter = new class, no new binary
 - ✅ **Follows industry pattern**: llama.cpp, vLLM, TensorRT all use single binary with dispatch
 
-**Conclusion**: InferenceAdapter pattern gives us **best of both worlds** (isolation + shared infrastructure).
+**Conclusion**: ModelAdapter pattern gives us **best of both worlds** (isolation + shared infrastructure).
 
 ---
 
@@ -365,12 +365,12 @@ Research confirms that **InferenceAdapter pattern is industry standard**:
 
 ### 8.2 Phase 2: Architecture Adapters (Weeks 6-7)
 
-#### Week 6: InferenceAdapter Pattern
+#### Week 6: ModelAdapter Pattern
 **Interface Design**:
 ```cpp
-class InferenceAdapter {
+class ModelAdapter {
 public:
-    virtual ~InferenceAdapter() = default;
+    virtual ~ModelAdapter() = default;
     
     virtual void load_weights_from_gguf(
         const GGUFFile& gguf,
@@ -388,12 +388,12 @@ public:
 ```
 
 **Implementation Tasks**:
-- [ ] Define InferenceAdapter base class
+- [ ] Define ModelAdapter base class
 - [ ] Implement architecture detection from GGUF metadata
 - [ ] Create adapter factory pattern
 - [ ] Add adapter selection logic
 
-#### Week 6-7: LlamaInferenceAdapter
+#### Week 6-7: LlamaModelAdapter
 **Llama-style pipeline** (Qwen/Phi-3):
 - [ ] Implement RoPE kernel integration
 - [ ] Add GQA attention kernel
@@ -402,7 +402,7 @@ public:
 - [ ] Wire up weight loading (Q/K/V, gate/up/down projections)
 - [ ] Test with Qwen2.5-0.5B and Phi-3-Mini
 
-#### Week 7: GPTInferenceAdapter
+#### Week 7: GPTModelAdapter
 **GPT-style pipeline** (GPT-OSS-20B):
 - [ ] Implement absolute positional embedding kernel
 - [ ] Add MHA attention kernel
@@ -638,7 +638,7 @@ if let Err(e) = cuda_load_model(...) {
    - [ ] Set up test infrastructure
 
 4. **Update specifications**
-   - [ ] Add InferenceAdapter requirements to M0 spec
+   - [ ] Add ModelAdapter requirements to M0 spec
    - [ ] Document architecture detection logic
    - [ ] Update API contract with adapter details
    - [ ] Add adapter-specific test requirements
@@ -646,7 +646,7 @@ if let Err(e) = cuda_load_model(...) {
 ### 10.2 Week 1 Kickoff
 
 1. **Architecture review**
-   - Review InferenceAdapter pattern
+   - Review ModelAdapter pattern
    - Discuss CUDA kernel strategy
    - Align on MXFP4 implementation approach
 
@@ -666,7 +666,7 @@ if let Err(e) = cuda_load_model(...) {
 **Week 3**: GGUF loader functional
 **Week 4**: Tokenization backends complete
 **Week 5**: Basic kernels working (Qwen test passing)
-**Week 6**: InferenceAdapter pattern implemented
+**Week 6**: ModelAdapter pattern implemented
 **Week 7**: All 3 models working, tests passing
 
 **Final Deliverable**: worker-orcd binary ready for M1 integration
@@ -675,7 +675,7 @@ if let Err(e) = cuda_load_model(...) {
 
 ## 11. Conclusion
 
-**Decision**: Build custom worker-orcd with InferenceAdapter pattern.
+**Decision**: Build custom worker-orcd with ModelAdapter pattern.
 
 **Key Rationale**:
 1. ✅ **100% spec compliance** (only option that meets all requirements)

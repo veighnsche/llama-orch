@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-Gate 3 validates that the InferenceAdapter pattern is fully operational for both Llama and GPT architectures. This gate confirms that polymorphic model handling, automatic architecture detection, and the factory pattern are working correctly.
+Gate 3 validates that the ModelAdapter pattern is fully operational for both Llama and GPT architectures. This gate confirms that polymorphic model handling, automatic architecture detection, and the factory pattern are working correctly.
 
 **Result**: **PASSED** - All validation criteria met
 
@@ -17,23 +17,23 @@ Gate 3 validates that the InferenceAdapter pattern is fully operational for both
 
 ## Validation Criteria
 
-### ✅ 1. InferenceAdapter Interface Defined
+### ✅ 1. ModelAdapter Interface Defined
 
 **Status**: PASSED
 
 **Evidence**:
-- Interface: `LlamaInferenceAdapter` in `src/models/adapter.rs`
+- Interface: `LlamaModelAdapter` in `src/models/adapter.rs`
 - Unified methods: `prefill()`, `decode()`, `generate()`
 - Query methods: `vocab_size()`, `hidden_dim()`, `num_layers()`, `vram_usage()`
 - Configuration: `AdapterForwardConfig` struct
 
 **API Surface**:
 ```rust
-pub struct LlamaInferenceAdapter {
+pub struct LlamaModelAdapter {
     // Supports: Qwen, Phi-3, Llama 2/3, GPT-2, GPT-3
 }
 
-impl LlamaInferenceAdapter {
+impl LlamaModelAdapter {
     pub fn model_type(&self) -> ModelType;
     pub fn vocab_size(&self) -> Result<usize, AdapterError>;
     pub fn hidden_dim(&self) -> Result<usize, AdapterError>;
@@ -97,10 +97,10 @@ impl LlamaInferenceAdapter {
 **Factory Methods**:
 ```rust
 impl AdapterFactory {
-    pub fn from_gguf(path: &str) -> Result<LlamaInferenceAdapter, FactoryError>;
-    pub fn from_gguf_with_arch(path: &str, arch: Architecture) -> Result<LlamaInferenceAdapter, FactoryError>;
-    pub fn from_gguf_with_arch_str(path: &str, arch_str: &str) -> Result<LlamaInferenceAdapter, FactoryError>;
-    pub fn default_for_testing() -> Result<LlamaInferenceAdapter, FactoryError>;
+    pub fn from_gguf(path: &str) -> Result<LlamaModelAdapter, FactoryError>;
+    pub fn from_gguf_with_arch(path: &str, arch: Architecture) -> Result<LlamaModelAdapter, FactoryError>;
+    pub fn from_gguf_with_arch_str(path: &str, arch_str: &str) -> Result<LlamaModelAdapter, FactoryError>;
+    pub fn default_for_testing() -> Result<LlamaModelAdapter, FactoryError>;
 }
 ```
 
@@ -152,9 +152,9 @@ impl GGUFMetadata {
 
 **Evidence**:
 - Factory automatically selects correct adapter based on architecture
-- Qwen → `LlamaInferenceAdapter::new_qwen()`
-- Phi-3 → `LlamaInferenceAdapter::new_phi3()`
-- GPT-2 → `LlamaInferenceAdapter::new_gpt2()`
+- Qwen → `LlamaModelAdapter::new_qwen()`
+- Phi-3 → `LlamaModelAdapter::new_phi3()`
+- GPT-2 → `LlamaModelAdapter::new_gpt2()`
 
 **Example**:
 ```rust
@@ -175,7 +175,7 @@ let gpt2 = AdapterFactory::from_gguf("gpt2-small.gguf")?;     // → GPT-2 adapt
 
 **Example**:
 ```rust
-fn process_model(adapter: &LlamaInferenceAdapter) {
+fn process_model(adapter: &LlamaModelAdapter) {
     // Works with ANY model type
     let vocab = adapter.vocab_size()?;
     let output = adapter.generate(&input_ids, 50, &config)?;
@@ -391,7 +391,7 @@ test result: ok. 9 passed; 0 failed; 0 ignored
 
 - ✅ FT-031: Performance Baseline Preparation
 - ✅ FT-032: Gate 2 Checkpoint
-- ✅ FT-033: InferenceAdapter Interface
+- ✅ FT-033: ModelAdapter Interface
 - ✅ FT-034: Adapter Factory Pattern
 - ✅ FT-035: Architecture Detection Integration
 - ✅ FT-036: Update Integration Tests
@@ -473,7 +473,7 @@ let adapter = AdapterFactory::from_gguf_with_arch(
 ### Example 3: Polymorphic Handling
 
 ```rust
-fn benchmark(adapter: &LlamaInferenceAdapter) {
+fn benchmark(adapter: &LlamaModelAdapter) {
     let output = adapter.generate(&input_ids, 100, &config)?;
     println!("Generated {} tokens", output.len());
 }

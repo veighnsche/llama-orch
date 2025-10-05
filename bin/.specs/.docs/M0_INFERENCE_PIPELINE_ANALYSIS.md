@@ -10,7 +10,7 @@
 
 ### Architectural Status: ✅ SOUND
 
-The M0 worker spec **correctly addresses** the architectural gaps identified in the gap analysis. The InferenceAdapter pattern provides clean separation between Llama-style (Qwen/Phi-3) and GPT-style (GPT-OSS-20B) execution paths.
+The M0 worker spec **correctly addresses** the architectural gaps identified in the gap analysis. The ModelAdapter pattern provides clean separation between Llama-style (Qwen/Phi-3) and GPT-style (GPT-OSS-20B) execution paths.
 
 **Key Finding**: No critical architectural gaps remain. The spec is implementation-ready with clear execution flows for all three models.
 
@@ -46,7 +46,7 @@ HTTP Request → Tokenization → VRAM Allocation → Forward Pass → Sampling 
 ```cpp
 // From GGUF metadata
 general.architecture = "llama"
-→ Create LlamaInferenceAdapter
+→ Create LlamaModelAdapter
 ```
 
 #### Tokenization
@@ -57,9 +57,9 @@ let token_ids = tokenizer.encode(prompt);
 // BOS/EOS handling from GGUF metadata
 ```
 
-#### Forward Pass (LlamaInferenceAdapter)
+#### Forward Pass (LlamaModelAdapter)
 ```cpp
-void LlamaInferenceAdapter::run_forward_pass(...) {
+void LlamaModelAdapter::run_forward_pass(...) {
     // 1. Embedding lookup
     embedding_kernel<<<...>>>(input_tokens, embeddings);
     
@@ -144,7 +144,7 @@ let token_str = tokenizer.decode(&[token_id]);
 ```cpp
 // From GGUF metadata
 general.architecture = "llama"  // Phi-3 uses Llama-style
-→ Create LlamaInferenceAdapter
+→ Create LlamaModelAdapter
 ```
 
 #### Tokenization
@@ -155,7 +155,7 @@ let token_ids = tokenizer.encode(prompt);
 ```
 
 #### Forward Pass
-**Same as Qwen2.5-0.5B** (LlamaInferenceAdapter)
+**Same as Qwen2.5-0.5B** (LlamaModelAdapter)
 - RoPE position encoding
 - GQA attention
 - RMSNorm normalization
@@ -180,7 +180,7 @@ let token_ids = tokenizer.encode(prompt);
 ```cpp
 // From GGUF metadata
 general.architecture = "gpt2"  // or "gpt"
-→ Create GPTInferenceAdapter
+→ Create GPTModelAdapter
 ```
 
 #### Tokenization

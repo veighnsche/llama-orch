@@ -307,7 +307,7 @@ pub enum ModelType {
 }
 
 // 2. Add GPT model storage
-pub struct LlamaInferenceAdapter {
+pub struct LlamaModelAdapter {
     model_type: ModelType,
     qwen_model: Option<QwenModel>,
     phi3_model: Option<Phi3Model>,
@@ -315,7 +315,7 @@ pub struct LlamaInferenceAdapter {
 }
 
 // 3. Add constructor
-impl LlamaInferenceAdapter {
+impl LlamaModelAdapter {
     pub fn new_gpt2(model: GPTModel) -> Self {
         Self {
             model_type: ModelType::GPT2,
@@ -459,7 +459,7 @@ fn test_layernorm_kernel() {
 fn test_gpt2_full_pipeline() {
     let config = GPTConfig::gpt2_small();
     let model = GPTWeightLoader::load_to_vram("gpt2.gguf", &config).unwrap();
-    let adapter = LlamaInferenceAdapter::new_gpt2(model);
+    let adapter = LlamaModelAdapter::new_gpt2(model);
     
     let tokenizer = create_gpt2_tokenizer();
     let prompt = "Hello, world!";

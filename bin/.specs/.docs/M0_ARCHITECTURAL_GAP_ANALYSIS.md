@@ -244,13 +244,13 @@ match model_metadata.tokenizer_type {
 
 ### 5.1 Inference Adapter Pattern
 
-Introduce an **InferenceAdapter** abstraction:
+Introduce an **ModelAdapter** abstraction:
 
 ```cpp
 // Abstract interface
-class InferenceAdapter {
+class ModelAdapter {
 public:
-    virtual ~InferenceAdapter() = default;
+    virtual ~ModelAdapter() = default;
     
     // Architecture-specific forward pass
     virtual void run_forward_pass(
@@ -269,27 +269,27 @@ public:
 };
 
 // Concrete implementations
-class LlamaInferenceAdapter : public InferenceAdapter {
+class LlamaModelAdapter : public ModelAdapter {
     void run_forward_pass(...) override {
         // RoPE + GQA + RMSNorm + SwiGLU pipeline
     }
 };
 
-class GPTInferenceAdapter : public InferenceAdapter {
+class GPTModelAdapter : public ModelAdapter {
     void run_forward_pass(...) override {
         // Absolute pos + MHA + LayerNorm + GELU pipeline
     }
 };
 
 // Factory
-std::unique_ptr<InferenceAdapter> create_adapter(
+std::unique_ptr<ModelAdapter> create_adapter(
     const GGUFMetadata& metadata
 ) {
     if (metadata.architecture == "llama") {
-        return std::make_unique<LlamaInferenceAdapter>();
+        return std::make_unique<LlamaModelAdapter>();
     }
     if (metadata.architecture == "gpt2") {
-        return std::make_unique<GPTInferenceAdapter>();
+        return std::make_unique<GPTModelAdapter>();
     }
     throw UnsupportedArchitectureError();
 }
@@ -373,9 +373,9 @@ void run_forward_pass() {
 If we add inference adapters:
 
 **New Components**:
-1. `InferenceAdapter` base class
-2. `LlamaInferenceAdapter` implementation
-3. `GPTInferenceAdapter` implementation
+1. `ModelAdapter` base class
+2. `LlamaModelAdapter` implementation
+3. `GPTModelAdapter` implementation
 4. Architecture detection logic
 5. Adapter factory
 
@@ -409,7 +409,7 @@ If we add inference adapters:
 ### 8.1 Immediate Actions (Critical)
 
 1. **Add architecture detection requirement** to spec (M0-W-1211)
-2. **Add InferenceAdapter abstraction** to spec (new section)
+2. **Add ModelAdapter abstraction** to spec (new section)
 3. **Document architecture-specific kernels** (update M0-W-1430)
 4. **Update GGUF metadata parsing** to extract architecture type
 
@@ -438,9 +438,9 @@ If we add inference adapters:
 
 **New Requirements**:
 - `[M0-W-1212]` Architecture Detection from GGUF
-- `[M0-W-1213]` InferenceAdapter Interface
-- `[M0-W-1214]` LlamaInferenceAdapter Implementation
-- `[M0-W-1215]` GPTInferenceAdapter Implementation (if keeping GPT-OSS-20B)
+- `[M0-W-1213]` ModelAdapter Interface
+- `[M0-W-1214]` LlamaModelAdapter Implementation
+- `[M0-W-1215]` GPTModelAdapter Implementation (if keeping GPT-OSS-20B)
 - `[M0-W-1432]` LayerNorm Kernel (for GPT)
 - `[M0-W-1433]` GELU Activation Kernel (for GPT)
 - `[M0-W-1434]` Absolute Positional Embedding Kernel (for GPT)
@@ -453,7 +453,7 @@ If we add inference adapters:
 
 **Status**: **APPROVED - Option A Selected**
 
-**Decision**: Implement InferenceAdapter pattern with full support for all 3 models (Qwen, Phi-3, GPT-OSS-20B)
+**Decision**: Implement ModelAdapter pattern with full support for all 3 models (Qwen, Phi-3, GPT-OSS-20B)
 
 **Timeline**: 6-7 weeks total (4-5 weeks M0 foundation + 1-2 weeks architecture adapters)
 
@@ -471,10 +471,10 @@ All identified architectural gaps are **covered** in the implementation plan:
 
 #### Gap 2: Architecture-Specific Pipelines ✅ COVERED
 - **Gap**: Single universal forward pass assumes all models use same kernels
-- **Solution**: Week 6-7 - Implement InferenceAdapter pattern with Llama and GPT adapters
+- **Solution**: Week 6-7 - Implement ModelAdapter pattern with Llama and GPT adapters
 - **Implementation**: 
-  - `LlamaInferenceAdapter` (Qwen/Phi-3): RoPE + GQA + RMSNorm + SwiGLU
-  - `GPTInferenceAdapter` (GPT-OSS-20B): Absolute pos + MHA + LayerNorm + GELU
+  - `LlamaModelAdapter` (Qwen/Phi-3): RoPE + GQA + RMSNorm + SwiGLU
+  - `GPTModelAdapter` (GPT-OSS-20B): Absolute pos + MHA + LayerNorm + GELU
 - **Spec Update**: Add M0-W-1213, M0-W-1214, M0-W-1215 requirements
 
 #### Gap 3: Missing Kernels for GPT ✅ COVERED
@@ -505,9 +505,9 @@ All identified architectural gaps are **covered** in the implementation plan:
 - ✅ Basic kernels (GEMM, RoPE, attention, RMSNorm, sampling)
 
 **Phase 2: Architecture Adapters (Weeks 6-7)**
-- ✅ InferenceAdapter interface
-- ✅ LlamaInferenceAdapter (Qwen/Phi-3)
-- ✅ GPTInferenceAdapter (GPT-OSS-20B)
+- ✅ ModelAdapter interface
+- ✅ LlamaModelAdapter (Qwen/Phi-3)
+- ✅ GPTModelAdapter (GPT-OSS-20B)
 - ✅ Architecture detection + factory pattern
 
 **Phase 3: Integration & Testing (Week 7)**
@@ -539,7 +539,7 @@ All identified architectural gaps are **covered** in the implementation plan:
 ### 9.5 Success Criteria
 
 **M0 Deliverables** (all gaps addressed):
-- ✅ worker-orcd binary with InferenceAdapter pattern
+- ✅ worker-orcd binary with ModelAdapter pattern
 - ✅ Support for 3 models (Qwen, Phi-3, GPT-OSS-20B)
 - ✅ Support for 3 quantizations (Q4_K_M, MXFP4, Q4_0)
 - ✅ Architecture detection from GGUF metadata
@@ -864,7 +864,7 @@ External research **confirms** the architectural gap identified in this document
 
 ### 11.2 Strong Recommendation: Option A
 
-**Implement InferenceAdapter pattern in M0** (Option A from Section 8.2).
+**Implement ModelAdapter pattern in M0** (Option A from Section 8.2).
 
 **Justification**:
 1. **Correctness**: Aligns with GGUF standard and llama.cpp reference
@@ -883,8 +883,8 @@ External research **confirms** the architectural gap identified in this document
 
 If timeline pressure is severe, **minimally**:
 1. ✅ Add architecture detection (M0-W-1212)
-2. ✅ Add `InferenceAdapter` interface (M0-W-1213)
-3. ✅ Implement `LlamaInferenceAdapter` (M0-W-1214) for Qwen + Phi-3
+2. ✅ Add `ModelAdapter` interface (M0-W-1213)
+3. ✅ Implement `LlamaModelAdapter` (M0-W-1214) for Qwen + Phi-3
 4. ⚠️ Defer GPT adapter to M1 if necessary (Option B fallback)
 
 **Do NOT**: Implement without any adapter abstraction. This will create unfixable technical debt.
@@ -956,8 +956,8 @@ If timeline pressure is severe, **minimally**:
 | Gap ID | Gap Description | Implementation Week | Implementation Details | Status |
 |--------|-----------------|---------------------|------------------------|--------|
 | **Gap 1** | Architecture Detection | Week 6 | `detect_architecture()` from GGUF metadata | ✅ Covered |
-| **Gap 2a** | Llama Pipeline | Week 6-7 | `LlamaInferenceAdapter` with RoPE + GQA + RMSNorm + SwiGLU | ✅ Covered |
-| **Gap 2b** | GPT Pipeline | Week 7 | `GPTInferenceAdapter` with absolute pos + MHA + LayerNorm + GELU | ✅ Covered |
+| **Gap 2a** | Llama Pipeline | Week 6-7 | `LlamaModelAdapter` with RoPE + GQA + RMSNorm + SwiGLU | ✅ Covered |
+| **Gap 2b** | GPT Pipeline | Week 7 | `GPTModelAdapter` with absolute pos + MHA + LayerNorm + GELU | ✅ Covered |
 | **Gap 3a** | LayerNorm Kernel | Week 7 | Two-pass reduction (mean + variance) | ✅ Covered |
 | **Gap 3b** | Absolute Pos Embedding | Week 7 | Learned position embeddings kernel | ✅ Covered |
 | **Gap 3c** | GELU Kernel | Week 7 | GELU activation for GPT FFN | ✅ Covered |
@@ -973,22 +973,22 @@ If timeline pressure is severe, **minimally**:
 ```
 [M0-W-1212] Architecture Detection from GGUF
 Worker MUST detect model architecture from GGUF metadata field `general.architecture`
-and select appropriate InferenceAdapter.
+and select appropriate ModelAdapter.
 
-[M0-W-1213] InferenceAdapter Interface
-Worker MUST implement InferenceAdapter base class with:
+[M0-W-1213] ModelAdapter Interface
+Worker MUST implement ModelAdapter base class with:
 - load_weights_from_gguf() - architecture-specific weight loading
 - run_forward_pass() - architecture-specific inference pipeline
 
-[M0-W-1214] LlamaInferenceAdapter Implementation
-Worker MUST implement LlamaInferenceAdapter for Llama-style models (Qwen, Phi-3):
+[M0-W-1214] LlamaModelAdapter Implementation
+Worker MUST implement LlamaModelAdapter for Llama-style models (Qwen, Phi-3):
 - RoPE positional encoding
 - GQA attention mechanism
 - RMSNorm normalization
 - SwiGLU FFN activation
 
-[M0-W-1215] GPTInferenceAdapter Implementation
-Worker MUST implement GPTInferenceAdapter for GPT-style models (GPT-OSS-20B):
+[M0-W-1215] GPTModelAdapter Implementation
+Worker MUST implement GPTModelAdapter for GPT-style models (GPT-OSS-20B):
 - Absolute positional embeddings
 - MHA attention mechanism
 - LayerNorm normalization
@@ -1064,7 +1064,7 @@ Worker MUST implement absolute positional embedding for GPT models:
 
 **Pre-Implementation** (Week 0):
 - [ ] Update M0 spec with new requirements (M0-W-1212 to M0-W-1434)
-- [ ] Review InferenceAdapter interface design
+- [ ] Review ModelAdapter interface design
 - [ ] Confirm CUDA kernel strategy
 - [ ] Set up test infrastructure
 
@@ -1075,9 +1075,9 @@ Worker MUST implement absolute positional embedding for GPT models:
 - [ ] Validate tokenization backends
 
 **Phase 2: Adapters** (Weeks 6-7):
-- [ ] Implement InferenceAdapter interface
-- [ ] Implement LlamaInferenceAdapter
-- [ ] Implement GPTInferenceAdapter
+- [ ] Implement ModelAdapter interface
+- [ ] Implement LlamaModelAdapter
+- [ ] Implement GPTModelAdapter
 - [ ] Add GPT-specific kernels (LayerNorm, GELU, absolute pos)
 - [ ] Implement architecture detection
 - [ ] Test all 3 models

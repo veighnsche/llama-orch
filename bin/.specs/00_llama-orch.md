@@ -142,6 +142,8 @@
 - **Proof Bundle**: Standardized test artifact directory containing seeds, transcripts, metadata, and outputs for reproducibility (see `libs/proof-bundle`).
 - **Smart/Dumb Boundary**: Architectural principle where orchestratord makes ALL intelligent decisions (smart) while pool-managerd and workers execute commands without policy decisions (dumb).
 - **Model Reference (model_ref)**: Canonical identifier for a model artifact, format: `hf:{org}/{repo}@{rev}::file={path}` or `file:/path/to/model.gguf`.
+- **Model Adapter**: Component within worker-orcd that abstracts architecture-specific inference logic (e.g., Llama-style vs GPT-style models). Distinct from worker adapter (pool-managerd component for worker lifecycle).
+- **Worker Adapter**: Component in pool-managerd that abstracts worker lifecycle for different worker types (bespoke-cuda, llama.cpp, apple-metal). See POOL-1xxx spec. Distinct from model adapter (worker-internal architecture abstraction).
 - **Heartbeat**: Periodic state report from pool-managerd to orchestratord (default 15s interval) containing GPU VRAM state and worker status.
 - **SSE (Server-Sent Events)**: HTTP streaming protocol used for token-by-token inference results from worker → orchestrator → client.
 - **Correlation ID**: Unique identifier (`X-Correlation-Id` header) propagated across all service calls for request tracing and log correlation.
@@ -1420,7 +1422,7 @@ Worker-orcd MUST operate as a self-contained process:
 - MUST detect model architecture from GGUF metadata (`general.architecture`)
 - MUST support Llama-style architectures (RoPE, GQA, RMSNorm, SwiGLU) for Qwen/Phi-3 models
 - MUST support GPT-style architectures (absolute pos embedding, MHA, LayerNorm, GELU) for GPT-OSS-20B
-- MUST use architecture-specific inference adapters to handle different model families
+- MUST use architecture-specific model adapters to handle different model families (see Model Adapter in glossary)
 
 **Tokenization Strategy**:
 - MUST support two tokenizer backends selected at model load time:
@@ -2441,9 +2443,9 @@ worker-orcd
     - In-kernel dequantization to registers/shared memory
     - FP16 accumulation for all matmul results
     - FP16 KV cache precision
-  - **Architecture adapters** (InferenceAdapter pattern):
-    - LlamaInferenceAdapter: RoPE, GQA, RMSNorm, SwiGLU (Qwen/Phi-3)
-    - GPTInferenceAdapter: Absolute pos embedding, MHA, LayerNorm, GELU (GPT-OSS-20B)
+  - **Model adapters** (architecture-specific inference):
+    - LlamaModelAdapter: RoPE, GQA, RMSNorm, SwiGLU (Qwen/Phi-3)
+    - GPTModelAdapter: Absolute pos embedding, MHA, LayerNorm, GELU (GPT-OSS-20B)
   - HTTP inference API (`POST /v2/execute`, `GET /health`, `POST /cancel`)
     - **Advanced generation parameters**: temperature, top_p, top_k, repetition_penalty, stop sequences
   - SSE streaming (token-by-token output with UTF-8 boundary safety)
