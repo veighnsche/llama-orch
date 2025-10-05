@@ -2,10 +2,7 @@
 
 use observability_narration_macros::narrate;
 
-#[narrate(
-    action = "test",
-    human = "Testing"
-)]
+#[narrate(action = "test", human = "Testing")]
 fn test_function() -> String {
     "result".to_string()
 }

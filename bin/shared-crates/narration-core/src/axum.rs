@@ -49,7 +49,8 @@ use axum::{extract::Request, http::HeaderValue, middleware::Next, response::Resp
 /// ```
 pub async fn correlation_middleware(mut req: Request, next: Next) -> Response {
     // Extract and validate correlation ID from header
-    let correlation_id = req.headers()
+    let correlation_id = req
+        .headers()
         .get("X-Correlation-ID")
         .and_then(|v| v.to_str().ok())
         .and_then(|id| validate_correlation_id(id))

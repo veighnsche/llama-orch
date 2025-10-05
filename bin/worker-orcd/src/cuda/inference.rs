@@ -91,9 +91,8 @@ impl Inference {
             )));
         }
 
-        let prompt_cstr = CString::new(prompt).map_err(|_| {
-            CudaError::InvalidParameter("Prompt contains null byte".to_string())
-        })?;
+        let prompt_cstr = CString::new(prompt)
+            .map_err(|_| CudaError::InvalidParameter("Prompt contains null byte".to_string()))?;
 
         let mut error_code = 0;
 
@@ -171,10 +170,7 @@ impl Inference {
         }
 
         // Find null terminator
-        let null_pos = token_buffer
-            .iter()
-            .position(|&b| b == 0)
-            .unwrap_or(TOKEN_BUFFER_SIZE);
+        let null_pos = token_buffer.iter().position(|&b| b == 0).unwrap_or(TOKEN_BUFFER_SIZE);
 
         // Convert to UTF-8 string (lossy to handle invalid UTF-8)
         let token_str = String::from_utf8_lossy(&token_buffer[..null_pos]).into_owned();

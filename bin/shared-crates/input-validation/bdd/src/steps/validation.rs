@@ -36,8 +36,8 @@
 
 use cucumber::{given, when};
 use input_validation::{
-    validate_identifier, validate_model_ref, validate_hex_string,
-    validate_prompt, validate_range, sanitize_string,
+    sanitize_string, validate_hex_string, validate_identifier, validate_model_ref, validate_prompt,
+    validate_range,
 };
 
 use super::world::BddWorld;

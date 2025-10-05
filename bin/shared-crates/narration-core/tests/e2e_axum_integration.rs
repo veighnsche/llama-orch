@@ -19,10 +19,9 @@ mod axum_e2e {
         Router,
     };
     use observability_narration_core::{
-        axum::correlation_middleware,
-        generate_correlation_id, validate_correlation_id,
-        Narration, CaptureAdapter,
-        ACTOR_WORKER_ORCD, ACTION_INFERENCE_START, ACTION_INFERENCE_COMPLETE,
+        axum::correlation_middleware, generate_correlation_id, validate_correlation_id,
+        CaptureAdapter, Narration, ACTION_INFERENCE_COMPLETE, ACTION_INFERENCE_START,
+        ACTOR_WORKER_ORCD,
     };
     use serde::{Deserialize, Serialize};
     use serial_test::serial;
@@ -65,10 +64,7 @@ mod axum_e2e {
             .tokens_out(50)
             .emit();
 
-        Ok(Json(ExecuteResponse {
-            job_id: payload.job_id,
-            result,
-        }))
+        Ok(Json(ExecuteResponse { job_id: payload.job_id, result }))
     }
 
     #[tokio::test]
@@ -88,9 +84,7 @@ mod axum_e2e {
             .method("POST")
             .header("content-type", "application/json")
             .header("X-Correlation-ID", correlation_id)
-            .body(Body::from(
-                r#"{"job_id": "job-123", "prompt": "Hello world"}"#,
-            ))
+            .body(Body::from(r#"{"job_id": "job-123", "prompt": "Hello world"}"#))
             .unwrap();
 
         // Process request
@@ -100,11 +94,8 @@ mod axum_e2e {
         assert_eq!(response.status(), StatusCode::OK);
 
         // Verify correlation ID in response
-        let response_correlation_id = response
-            .headers()
-            .get("X-Correlation-ID")
-            .and_then(|v| v.to_str().ok())
-            .unwrap();
+        let response_correlation_id =
+            response.headers().get("X-Correlation-ID").and_then(|v| v.to_str().ok()).unwrap();
         assert_eq!(response_correlation_id, correlation_id);
 
         // Verify narration events were captured
@@ -144,19 +135,14 @@ mod axum_e2e {
             .uri("/execute")
             .method("POST")
             .header("content-type", "application/json")
-            .body(Body::from(
-                r#"{"job_id": "job-456", "prompt": "Test"}"#,
-            ))
+            .body(Body::from(r#"{"job_id": "job-456", "prompt": "Test"}"#))
             .unwrap();
 
         let response = app.oneshot(request).await.unwrap();
 
         // Middleware should generate a correlation ID
-        let response_correlation_id = response
-            .headers()
-            .get("X-Correlation-ID")
-            .and_then(|v| v.to_str().ok())
-            .unwrap();
+        let response_correlation_id =
+            response.headers().get("X-Correlation-ID").and_then(|v| v.to_str().ok()).unwrap();
 
         // Should be a valid UUID
         assert!(validate_correlation_id(response_correlation_id).is_some());
@@ -174,9 +160,7 @@ mod axum_e2e {
     async fn e2e_error_handling_with_narration() {
         let adapter = CaptureAdapter::install();
 
-        async fn error_handler(
-            Extension(correlation_id): Extension<String>,
-        ) -> impl IntoResponse {
+        async fn error_handler(Extension(correlation_id): Extension<String>) -> impl IntoResponse {
             // Narrate error
             Narration::new(ACTOR_WORKER_ORCD, "error", "job-999")
                 .human("Failed to process request: resource exhausted")
@@ -205,11 +189,8 @@ mod axum_e2e {
         assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         // Verify correlation ID preserved
-        let response_correlation_id = response
-            .headers()
-            .get("X-Correlation-ID")
-            .and_then(|v| v.to_str().ok())
-            .unwrap();
+        let response_correlation_id =
+            response.headers().get("X-Correlation-ID").and_then(|v| v.to_str().ok()).unwrap();
         assert_eq!(response_correlation_id, correlation_id);
 
         // Verify error narration captured

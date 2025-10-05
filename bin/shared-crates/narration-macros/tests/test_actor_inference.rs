@@ -10,10 +10,7 @@ mod orchestratord {
 
     #[test]
     fn test_narrate_in_orchestratord() {
-        #[narrate(
-            action = "test",
-            human = "Testing in orchestratord"
-        )]
+        #[narrate(action = "test", human = "Testing in orchestratord")]
         fn test_function() -> String {
             "orchestratord".to_string()
         }
@@ -36,10 +33,7 @@ mod orchestratord {
 
         #[test]
         fn test_nested_module() {
-            #[narrate(
-                action = "test",
-                human = "Testing in nested module"
-            )]
+            #[narrate(action = "test", human = "Testing in nested module")]
             fn nested_function() -> String {
                 "nested".to_string()
             }
@@ -55,10 +49,7 @@ mod pool_managerd {
 
     #[test]
     fn test_narrate_in_pool_managerd() {
-        #[narrate(
-            action = "test",
-            human = "Testing in pool_managerd"
-        )]
+        #[narrate(action = "test", human = "Testing in pool_managerd")]
         fn test_function() -> String {
             "pool_managerd".to_string()
         }
@@ -83,10 +74,7 @@ mod worker_orcd {
 
     #[test]
     fn test_narrate_in_worker_orcd() {
-        #[narrate(
-            action = "test",
-            human = "Testing in worker_orcd"
-        )]
+        #[narrate(action = "test", human = "Testing in worker_orcd")]
         fn test_function() -> String {
             "worker_orcd".to_string()
         }
@@ -111,10 +99,7 @@ mod vram_residency {
 
     #[test]
     fn test_narrate_in_vram_residency() {
-        #[narrate(
-            action = "test",
-            human = "Testing in vram_residency"
-        )]
+        #[narrate(action = "test", human = "Testing in vram_residency")]
         fn test_function() -> String {
             "vram_residency".to_string()
         }
@@ -139,10 +124,7 @@ mod unknown_service {
 
     #[test]
     fn test_narrate_in_unknown_module() {
-        #[narrate(
-            action = "test",
-            human = "Testing in unknown module"
-        )]
+        #[narrate(action = "test", human = "Testing in unknown module")]
         fn test_function() -> String {
             "unknown".to_string()
         }
@@ -170,10 +152,7 @@ mod deeply {
 
                 #[test]
                 fn test_deeply_nested() {
-                    #[narrate(
-                        action = "test",
-                        human = "Testing deeply nested"
-                    )]
+                    #[narrate(action = "test", human = "Testing deeply nested")]
                     fn deeply_nested_function() -> String {
                         "nested".to_string()
                     }
@@ -194,10 +173,7 @@ mod llama_orch {
             #[test]
             fn test_multiple_services_in_path() {
                 // Should match the first known service found
-                #[narrate(
-                    action = "test",
-                    human = "Testing multiple services"
-                )]
+                #[narrate(action = "test", human = "Testing multiple services")]
                 fn multi_service_function() -> String {
                     "multi".to_string()
                 }

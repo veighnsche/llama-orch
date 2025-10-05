@@ -29,7 +29,7 @@ impl LifecycleManager {
     pub fn new() -> Self {
         Self
     }
-    
+
     pub async fn spawn_worker(&self, _config: &str) -> Result<u32> {
         // TODO(ARCH-CHANGE): Implement worker-orcd spawning per ARCHITECTURE_CHANGE_PLAN.md Phase 3:
         // - Parse worker config (GPU device, model path, etc.)

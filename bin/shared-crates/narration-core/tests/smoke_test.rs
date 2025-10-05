@@ -11,30 +11,44 @@
 //! - All constants and helpers
 
 use observability_narration_core::{
+    // Utilities
+    current_timestamp_ms,
+    // Correlation IDs
+    generate_correlation_id,
+    // HTTP helpers
+    http::{extract_context_from_headers, inject_context_into_headers},
     // Core functions
-    narrate, narrate_auto, narrate_warn,
+    narrate,
+    narrate_auto,
+    narrate_warn,
+    // Redaction
+    redact_secrets,
+    service_identity,
+    validate_correlation_id,
+    // Test support
+    CaptureAdapter,
     // Builder
     Narration,
     // Types
     NarrationFields,
-    // Constants - Actors
-    ACTOR_ORCHESTRATORD, ACTOR_POOL_MANAGERD, ACTOR_WORKER_ORCD,
-    ACTOR_INFERENCE_ENGINE, ACTOR_VRAM_RESIDENCY,
+    RedactionPolicy,
     // Constants - Actions
-    ACTION_ADMISSION, ACTION_ENQUEUE, ACTION_DISPATCH,
-    ACTION_SPAWN, ACTION_READY_CALLBACK, ACTION_HEARTBEAT_SEND,
-    ACTION_INFERENCE_START, ACTION_INFERENCE_COMPLETE,
-    ACTION_CANCEL, ACTION_SEAL,
-    // Correlation IDs
-    generate_correlation_id, validate_correlation_id,
-    // HTTP helpers
-    http::{extract_context_from_headers, inject_context_into_headers},
-    // Redaction
-    redact_secrets, RedactionPolicy,
-    // Test support
-    CaptureAdapter,
-    // Utilities
-    current_timestamp_ms, service_identity,
+    ACTION_ADMISSION,
+    ACTION_CANCEL,
+    ACTION_DISPATCH,
+    ACTION_ENQUEUE,
+    ACTION_HEARTBEAT_SEND,
+    ACTION_INFERENCE_COMPLETE,
+    ACTION_INFERENCE_START,
+    ACTION_READY_CALLBACK,
+    ACTION_SEAL,
+    ACTION_SPAWN,
+    ACTOR_INFERENCE_ENGINE,
+    // Constants - Actors
+    ACTOR_ORCHESTRATORD,
+    ACTOR_POOL_MANAGERD,
+    ACTOR_VRAM_RESIDENCY,
+    ACTOR_WORKER_ORCD,
 };
 use serial_test::serial;
 
@@ -127,10 +141,10 @@ fn smoke_error_narration() {
 fn smoke_correlation_ids() {
     // Foundation engineer writes this:
     let correlation_id = generate_correlation_id();
-    
+
     // Should be valid UUID
     assert!(validate_correlation_id(&correlation_id).is_some());
-    
+
     // Invalid IDs should be rejected
     assert!(validate_correlation_id("invalid").is_none());
 }
@@ -138,30 +152,32 @@ fn smoke_correlation_ids() {
 /// Smoke test: HTTP context propagation
 #[test]
 fn smoke_http_context() {
-    use std::collections::HashMap;
     use observability_narration_core::http::HeaderLike;
-    
+    use std::collections::HashMap;
+
     // Simple HeaderLike implementation for testing
     struct TestHeaders(HashMap<String, String>);
-    
+
     impl HeaderLike for TestHeaders {
         fn get_str(&self, name: &str) -> Option<String> {
             self.0.get(name).cloned()
         }
-        
+
         fn insert_str(&mut self, name: &str, value: &str) {
             self.0.insert(name.to_string(), value.to_string());
         }
     }
-    
+
     // Foundation engineer writes this:
     let mut headers = TestHeaders(HashMap::new());
-    headers.0.insert("X-Correlation-Id".to_string(), "550e8400-e29b-41d4-a716-446655440000".to_string());
-    
+    headers
+        .0
+        .insert("X-Correlation-Id".to_string(), "550e8400-e29b-41d4-a716-446655440000".to_string());
+
     // Extract from incoming request
     let (correlation_id, _, _, _) = extract_context_from_headers(&headers);
     assert!(correlation_id.is_some());
-    
+
     // Inject into outgoing request
     let mut outgoing = TestHeaders(HashMap::new());
     inject_context_into_headers(&mut outgoing, correlation_id.as_deref(), None, None, None);
@@ -174,7 +190,7 @@ fn smoke_secret_redaction() {
     // Foundation engineer writes this:
     let text_with_secret = "Authorization: Bearer abc123xyz";
     let redacted = redact_secrets(text_with_secret, RedactionPolicy::default());
-    
+
     // Secret should be redacted
     assert!(redacted.contains("[REDACTED]"));
     assert!(!redacted.contains("abc123xyz"));
@@ -337,7 +353,7 @@ fn smoke_utilities() {
     // Foundation engineer writes this:
     let timestamp = current_timestamp_ms();
     assert!(timestamp > 0);
-    
+
     let identity = service_identity();
     assert!(identity.contains("@"));
     assert!(identity.contains("observability-narration-core"));
@@ -370,7 +386,7 @@ fn smoke_multiple_narrations() {
     let correlation_id = generate_correlation_id();
 
     // Foundation engineer writes a request lifecycle:
-    
+
     // 1. Request received
     Narration::new(ACTOR_ORCHESTRATORD, ACTION_ADMISSION, "session-123")
         .human("Received inference request")
@@ -409,7 +425,7 @@ fn smoke_multiple_narrations() {
     // Verify complete lifecycle captured
     let captured = adapter.captured();
     assert_eq!(captured.len(), 5);
-    
+
     // All events should have the same correlation ID
     for event in &captured {
         assert_eq!(event.correlation_id, Some(correlation_id.clone()));
@@ -497,7 +513,7 @@ fn smoke_custom_redaction_policy() {
         mask_jwt_tokens: true,
         mask_private_keys: true,
         mask_url_passwords: true,
-        mask_uuids: false,  // Usually safe
+        mask_uuids: false, // Usually safe
         replacement: "[REDACTED]".to_string(),
     };
 
@@ -566,18 +582,18 @@ fn smoke_warn_level() {
 #[serial(capture_adapter)]
 fn smoke_readme_examples() {
     let adapter = CaptureAdapter::install();
-    
+
     // Example from README - Builder pattern:
     let job_id = "job-123";
     let req_id = "req-abc";
     let pool_id = "default";
-    
+
     Narration::new(ACTOR_ORCHESTRATORD, ACTION_ENQUEUE, job_id)
         .human(format!("Enqueued job {job_id}"))
         .correlation_id(req_id)
         .pool_id(pool_id)
         .emit();
-    
+
     // Example from README - Function-based:
     narrate(NarrationFields {
         actor: ACTOR_ORCHESTRATORD,
@@ -588,7 +604,7 @@ fn smoke_readme_examples() {
         pool_id: Some(pool_id.to_string()),
         ..Default::default()
     });
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 2);
 }

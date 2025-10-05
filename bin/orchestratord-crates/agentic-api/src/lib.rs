@@ -58,7 +58,7 @@ impl AgenticWorkflow {
     pub fn new() -> Self {
         Self
     }
-    
+
     // TODO(ARCH-CHANGE): Add agentic workflow methods:
     // - pub async fn execute_tool_call(&self, tool: &str, args: Value) -> Result<Value>
     // - pub fn register_tool(&mut self, name: &str, handler: ToolHandler)

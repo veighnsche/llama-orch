@@ -1,6 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use input_validation::{
-    sanitize_string, validate_hex_string, validate_identifier, validate_model_ref, validate_prompt, validate_range,
+    sanitize_string, validate_hex_string, validate_identifier, validate_model_ref, validate_prompt,
+    validate_range,
 };
 
 fn bench_validate_identifier(c: &mut Criterion) {

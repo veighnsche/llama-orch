@@ -66,33 +66,28 @@ pub struct CancellationManager {
 
 impl CancellationManager {
     pub fn new() -> Self {
-        Self {
-            cancelled: Arc::new(Mutex::new(HashSet::new())),
-        }
+        Self { cancelled: Arc::new(Mutex::new(HashSet::new())) }
     }
-    
+
     pub fn cancel_task(&self, task_id: &str, reason: CancellationReason) -> Result<()> {
-        let mut cancelled = self.cancelled.lock()
-            .map_err(|_| CancellationError::NotFound(task_id.to_string()))?;
-        
+        let mut cancelled =
+            self.cancelled.lock().map_err(|_| CancellationError::NotFound(task_id.to_string()))?;
+
         if !cancelled.insert(task_id.to_string()) {
             return Err(CancellationError::AlreadyCancelled);
         }
-        
+
         tracing::info!(
             task_id = %task_id,
             reason = ?reason,
             "Task cancelled"
         );
-        
+
         Ok(())
     }
-    
+
     pub fn is_cancelled(&self, task_id: &str) -> bool {
-        self.cancelled.lock()
-            .ok()
-            .map(|c| c.contains(task_id))
-            .unwrap_or(false)
+        self.cancelled.lock().ok().map(|c| c.contains(task_id)).unwrap_or(false)
     }
 }
 
@@ -105,16 +100,16 @@ impl Default for CancellationManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_cancellation() {
         let manager = CancellationManager::new();
-        
+
         assert!(!manager.is_cancelled("task-1"));
-        
+
         manager.cancel_task("task-1", CancellationReason::ClientRequest).ok();
         assert!(manager.is_cancelled("task-1"));
-        
+
         // Double cancel fails
         assert!(manager.cancel_task("task-1", CancellationReason::ClientRequest).is_err());
     }

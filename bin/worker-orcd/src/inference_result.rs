@@ -14,19 +14,19 @@ use crate::http::sse::StopReason;
 pub struct InferenceResult {
     /// Generated tokens (UTF-8 strings)
     pub tokens: Vec<String>,
-    
+
     /// Generated token IDs
     pub token_ids: Vec<u32>,
-    
+
     /// Why inference terminated
     pub stop_reason: StopReason,
-    
+
     /// Which stop sequence matched (if stop_reason = StopSequence)
     pub stop_sequence_matched: Option<String>,
-    
+
     /// Actual seed used (generated if not provided)
     pub seed: u64,
-    
+
     /// Total decode time in milliseconds
     pub decode_time_ms: u64,
 }
@@ -48,7 +48,7 @@ impl InferenceResult {
             decode_time_ms,
         }
     }
-    
+
     /// Create result for stop sequence termination
     pub fn stop_sequence(
         tokens: Vec<String>,
@@ -66,7 +66,7 @@ impl InferenceResult {
             decode_time_ms,
         }
     }
-    
+
     /// Create result for cancellation
     pub fn cancelled(
         tokens: Vec<String>,
@@ -83,14 +83,9 @@ impl InferenceResult {
             decode_time_ms,
         }
     }
-    
+
     /// Create result for error
-    pub fn error(
-        tokens: Vec<String>,
-        token_ids: Vec<u32>,
-        seed: u64,
-        decode_time_ms: u64,
-    ) -> Self {
+    pub fn error(tokens: Vec<String>, token_ids: Vec<u32>, seed: u64, decode_time_ms: u64) -> Self {
         Self {
             tokens,
             token_ids,
@@ -100,20 +95,17 @@ impl InferenceResult {
             decode_time_ms,
         }
     }
-    
+
     /// Get total tokens generated
     pub fn token_count(&self) -> u32 {
         self.tokens.len() as u32
     }
-    
+
     /// Check if inference completed successfully (not error/cancelled)
     pub fn is_success(&self) -> bool {
-        matches!(
-            self.stop_reason,
-            StopReason::MaxTokens | StopReason::StopSequence
-        )
+        matches!(self.stop_reason, StopReason::MaxTokens | StopReason::StopSequence)
     }
-    
+
     /// Get human-readable stop reason description
     pub fn stop_reason_description(&self) -> String {
         match &self.stop_reason {
@@ -143,7 +135,7 @@ mod tests {
             42,
             1000,
         );
-        
+
         assert_eq!(result.token_count(), 2);
         assert_eq!(result.stop_reason, StopReason::MaxTokens);
         assert!(result.stop_sequence_matched.is_none());
@@ -160,7 +152,7 @@ mod tests {
             500,
             "\n\n".to_string(),
         );
-        
+
         assert_eq!(result.token_count(), 2);
         assert_eq!(result.stop_reason, StopReason::StopSequence);
         assert_eq!(result.stop_sequence_matched, Some("\n\n".to_string()));
@@ -169,13 +161,8 @@ mod tests {
 
     #[test]
     fn test_cancelled_result() {
-        let result = InferenceResult::cancelled(
-            vec!["Partial".to_string()],
-            vec![100],
-            42,
-            250,
-        );
-        
+        let result = InferenceResult::cancelled(vec!["Partial".to_string()], vec![100], 42, 250);
+
         assert_eq!(result.token_count(), 1);
         assert_eq!(result.stop_reason, StopReason::Cancelled);
         assert!(!result.is_success());
@@ -183,13 +170,8 @@ mod tests {
 
     #[test]
     fn test_error_result() {
-        let result = InferenceResult::error(
-            vec![],
-            vec![],
-            42,
-            0,
-        );
-        
+        let result = InferenceResult::error(vec![], vec![], 42, 0);
+
         assert_eq!(result.token_count(), 0);
         assert_eq!(result.stop_reason, StopReason::Error);
         assert!(!result.is_success());
@@ -199,16 +181,14 @@ mod tests {
     fn test_stop_reason_descriptions() {
         let max_tokens = InferenceResult::max_tokens(vec![], vec![], 42, 0);
         assert!(max_tokens.stop_reason_description().contains("max_tokens"));
-        
-        let stop_seq = InferenceResult::stop_sequence(
-            vec![], vec![], 42, 0, "\n\n".to_string()
-        );
+
+        let stop_seq = InferenceResult::stop_sequence(vec![], vec![], 42, 0, "\n\n".to_string());
         assert!(stop_seq.stop_reason_description().contains("stop sequence"));
         assert!(stop_seq.stop_reason_description().contains("\\n\\n"));
-        
+
         let cancelled = InferenceResult::cancelled(vec![], vec![], 42, 0);
         assert!(cancelled.stop_reason_description().contains("cancelled"));
-        
+
         let error = InferenceResult::error(vec![], vec![], 42, 0);
         assert!(error.stop_reason_description().contains("error"));
     }

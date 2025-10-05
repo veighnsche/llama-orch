@@ -12,8 +12,8 @@
 //! ```
 
 use anyhow::{Context, Result};
-use pool_registry_types::NodeCapabilities;
 use pool_registry::{HeartbeatPoolStatus, HeartbeatRequest, RegisterRequest};
+use pool_registry_types::NodeCapabilities;
 use std::time::Duration;
 use tokio::time::interval;
 use tracing::{info, warn};

@@ -93,8 +93,7 @@ pub fn create_router() -> Router {
     // - .route("/pools/:id/reload", post(reload_handler))
     // - .route("/workers/register", post(register_worker_handler))
     // - .layer(auth_middleware) // Bearer token auth
-    Router::new()
-        .route("/health", get(health))
+    Router::new().route("/health", get(health))
 }
 
 async fn health() -> &'static str {

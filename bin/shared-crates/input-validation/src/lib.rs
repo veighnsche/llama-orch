@@ -61,19 +61,19 @@
 
 // Applet modules
 mod error;
+mod hex_string;
 mod identifier;
 mod model_ref;
-mod hex_string;
 mod path;
 mod prompt;
 mod range;
 mod sanitize;
 
 // Re-export public API
-pub use error::{ValidationError, Result};
+pub use error::{Result, ValidationError};
+pub use hex_string::validate_hex_string;
 pub use identifier::validate_identifier;
 pub use model_ref::validate_model_ref;
-pub use hex_string::validate_hex_string;
 pub use path::validate_path;
 pub use prompt::validate_prompt;
 pub use range::validate_range;

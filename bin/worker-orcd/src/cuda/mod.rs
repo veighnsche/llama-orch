@@ -30,16 +30,16 @@
 //! # Ok::<(), worker_orcd::cuda::CudaError>(())
 //! ```
 
-mod ffi;
-mod error;
 pub mod context;
+mod error;
+mod ffi;
 pub mod inference;
 pub mod model;
 
-pub use error::{CudaError, CudaErrorCode};
 pub use context::Context;
-pub use model::Model;
+pub use error::{CudaError, CudaErrorCode};
 pub use inference::Inference;
+pub use model::Model;
 
 #[cfg(test)]
 mod tests {

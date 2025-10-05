@@ -23,11 +23,9 @@ pub struct TimeoutManager {
 
 impl TimeoutManager {
     pub fn new(timeout: Duration) -> Self {
-        Self {
-            default_timeout: timeout,
-        }
+        Self { default_timeout: timeout }
     }
-    
+
     // TODO(ARCH-CHANGE): Add timeout enforcement methods:
     // - pub async fn with_timeout<F, T>(&self, job_id: &str, fut: F) -> Result<T>
     // - pub fn start_tracking(&mut self, job_id: &str, deadline: Duration)

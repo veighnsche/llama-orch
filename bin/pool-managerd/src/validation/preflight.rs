@@ -62,7 +62,8 @@ mod tests {
     fn create_fake_nvidia_smi(dir: &PathBuf) {
         let file = dir.join(if cfg!(windows) { "nvidia-smi.exe" } else { "nvidia-smi" });
         // Create a fake nvidia-smi that outputs valid CSV
-        let script = b"#!/bin/sh\necho '0, NVIDIA GeForce RTX 3090, 24576, 23456, 8.6, 0000:01:00.0'\n";
+        let script =
+            b"#!/bin/sh\necho '0, NVIDIA GeForce RTX 3090, 24576, 23456, 8.6, 0000:01:00.0'\n";
         let _ = fs::write(&file, script);
         #[cfg(unix)]
         {

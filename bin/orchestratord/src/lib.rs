@@ -21,9 +21,9 @@
 //! - ✅ Comprehensive test coverage (85%)
 //!
 //! See: `bin/shared-crates/audit-logging/README.md`
-//! 
+//!
 //! ---
-//! 
+//!
 //! # Security Notice: Secret Management
 //!
 //! ⚠️ **DO NOT HAND-ROLL SECRET HANDLING** ⚠️

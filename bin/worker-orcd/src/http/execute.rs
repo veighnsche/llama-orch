@@ -8,7 +8,7 @@
 //! - M0-W-1310: SSE streaming
 
 use crate::http::sse::{InferenceEvent, StopReason};
-use crate::http::validation::{ExecuteRequest, ValidationError, ValidationErrorResponse};
+use crate::http::validation::{ExecuteRequest, ValidationErrorResponse};
 use axum::{
     extract::Extension,
     response::{sse::Event, Sse},
@@ -131,8 +131,8 @@ pub async fn handle_execute(
             started_at: chrono::Utc::now().to_rfc3339(),
         },
         InferenceEvent::Token { t: "test".to_string(), i: 0 },
-        InferenceEvent::End { 
-            tokens_out: 1, 
+        InferenceEvent::End {
+            tokens_out: 1,
             decode_time_ms: 100,
             stop_reason: StopReason::MaxTokens,
             stop_sequence_matched: None,
@@ -178,8 +178,8 @@ mod tests {
 
     #[test]
     fn test_end_event_integration() {
-        let end = InferenceEvent::End { 
-            tokens_out: 42, 
+        let end = InferenceEvent::End {
+            tokens_out: 42,
             decode_time_ms: 1000,
             stop_reason: StopReason::MaxTokens,
             stop_sequence_matched: None,
@@ -191,8 +191,8 @@ mod tests {
 
     #[test]
     fn test_end_event_with_stop_sequence() {
-        let end = InferenceEvent::End { 
-            tokens_out: 20, 
+        let end = InferenceEvent::End {
+            tokens_out: 20,
             decode_time_ms: 500,
             stop_reason: StopReason::StopSequence,
             stop_sequence_matched: Some("\n\n".to_string()),
@@ -200,7 +200,7 @@ mod tests {
 
         assert_eq!(end.event_name(), "end");
         assert!(end.is_terminal());
-        
+
         // Verify serialization includes stop_sequence_matched
         let json = serde_json::to_string(&end).unwrap();
         assert!(json.contains("stop_sequence"));
@@ -209,13 +209,13 @@ mod tests {
 
     #[test]
     fn test_end_event_max_tokens_no_stop_sequence() {
-        let end = InferenceEvent::End { 
-            tokens_out: 100, 
+        let end = InferenceEvent::End {
+            tokens_out: 100,
             decode_time_ms: 2000,
             stop_reason: StopReason::MaxTokens,
             stop_sequence_matched: None,
         };
-        
+
         // Verify serialization omits stop_sequence_matched when None
         let json = serde_json::to_string(&end).unwrap();
         assert!(json.contains("max_tokens"));

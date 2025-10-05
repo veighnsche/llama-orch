@@ -5,16 +5,16 @@
 //
 // Spec: M0-W-1362
 
-pub mod vocab;
-pub mod merges;
-pub mod encoder;
 pub mod decoder;
-pub mod streaming;
+pub mod encoder;
 pub mod error;
+pub mod merges;
+pub mod streaming;
+pub mod vocab;
 
-pub use vocab::{Vocabulary, VocabParser};
-pub use merges::{MergeTable, MergePair, MergesParser};
-pub use encoder::BPEEncoder;
 pub use decoder::BPEDecoder;
+pub use encoder::BPEEncoder;
+pub use error::{DecodeError, EncodeError, MergeError, TokenizerError, VocabError};
+pub use merges::{MergePair, MergeTable, MergesParser};
 pub use streaming::StreamingDecoder;
-pub use error::{TokenizerError, VocabError, MergeError, EncodeError, DecodeError};
+pub use vocab::{VocabParser, Vocabulary};

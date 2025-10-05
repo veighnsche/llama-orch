@@ -52,10 +52,9 @@ impl GpuInventory {
 
     /// Get available VRAM on a specific GPU.
     pub fn available_vram(&self, gpu_id: u32) -> Option<u64> {
-        self.gpus.get(&gpu_id).map(|gpu| {
-            gpu.total_vram_bytes
-                .saturating_sub(gpu.allocated_vram_bytes)
-        })
+        self.gpus
+            .get(&gpu_id)
+            .map(|gpu| gpu.total_vram_bytes.saturating_sub(gpu.allocated_vram_bytes))
     }
 
     /// Find a GPU that can fit the given model size.
@@ -64,15 +63,10 @@ impl GpuInventory {
         self.gpus
             .values()
             .filter(|gpu| {
-                let available = gpu
-                    .total_vram_bytes
-                    .saturating_sub(gpu.allocated_vram_bytes);
+                let available = gpu.total_vram_bytes.saturating_sub(gpu.allocated_vram_bytes);
                 available >= model_size
             })
-            .max_by_key(|gpu| {
-                gpu.total_vram_bytes
-                    .saturating_sub(gpu.allocated_vram_bytes)
-            })
+            .max_by_key(|gpu| gpu.total_vram_bytes.saturating_sub(gpu.allocated_vram_bytes))
             .map(|gpu| gpu.device_id)
     }
 
@@ -86,11 +80,7 @@ impl GpuInventory {
     ) {
         if let Some(gpu) = self.gpus.get_mut(&gpu_id) {
             gpu.allocated_vram_bytes = gpu.allocated_vram_bytes.saturating_add(vram_bytes);
-            gpu.workers.push(WorkerAllocation {
-                worker_id,
-                model_ref,
-                vram_bytes,
-            });
+            gpu.workers.push(WorkerAllocation { worker_id, model_ref, vram_bytes });
         }
     }
 

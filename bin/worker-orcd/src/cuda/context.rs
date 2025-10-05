@@ -7,7 +7,7 @@
 use super::error::CudaError;
 use super::ffi;
 use super::model::Model;
-use std::ffi::CString;
+// use std::ffi::CString;  // Unused in stub mode
 
 /// Safe wrapper for CUDA context
 ///

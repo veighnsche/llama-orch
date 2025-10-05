@@ -15,10 +15,7 @@ mod orchestratord {
     use super::*;
 
     /// Foundation engineer writes this - basic narration
-    #[narrate(
-        action = "enqueue",
-        human = "Enqueued job {job_id}"
-    )]
+    #[narrate(action = "enqueue", human = "Enqueued job {job_id}")]
     pub fn enqueue_job(job_id: &str) -> Result<(), String> {
         Ok(())
     }
@@ -34,10 +31,7 @@ mod orchestratord {
     }
 
     /// Foundation engineer writes this - async function
-    #[narrate(
-        action = "complete",
-        human = "Completed job {job_id}"
-    )]
+    #[narrate(action = "complete", human = "Completed job {job_id}")]
     pub async fn complete_job(job_id: &str) -> Result<(), String> {
         Ok(())
     }
@@ -59,10 +53,7 @@ mod orchestratord {
 mod pool_managerd {
     use super::*;
 
-    #[narrate(
-        action = "spawn",
-        human = "Spawning worker on {device}"
-    )]
+    #[narrate(action = "spawn", human = "Spawning worker on {device}")]
     pub fn spawn_worker(device: &str) -> Result<(), String> {
         Ok(())
     }
@@ -77,10 +68,7 @@ mod pool_managerd {
 mod worker_orcd {
     use super::*;
 
-    #[narrate(
-        action = "inference_start",
-        human = "Starting inference for job {job_id}"
-    )]
+    #[narrate(action = "inference_start", human = "Starting inference for job {job_id}")]
     pub async fn start_inference(job_id: &str) -> Result<(), String> {
         Ok(())
     }
@@ -95,13 +83,13 @@ mod worker_orcd {
 fn smoke_macros_compile() {
     // Foundation engineer: Just verify the macros compile and generate valid code
     // The macros wrap the functions, so we test by calling them
-    
+
     // Sync functions
     let _ = orchestratord::enqueue_job("job-123");
     let _ = orchestratord::dispatch_job("job-123", "worker-1");
     let _ = orchestratord::process_request("req-abc");
     let _ = pool_managerd::spawn_worker("GPU0");
     let _ = pool_managerd::register_worker("worker-1");
-    
+
     // Test passes if all functions compile and are callable
 }

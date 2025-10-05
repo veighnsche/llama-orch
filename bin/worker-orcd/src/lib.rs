@@ -5,6 +5,7 @@
 pub mod cuda;
 pub mod cuda_ffi;
 pub mod error;
+pub mod gguf;
 pub mod http;
 pub mod inference_executor;
 pub mod inference_result;

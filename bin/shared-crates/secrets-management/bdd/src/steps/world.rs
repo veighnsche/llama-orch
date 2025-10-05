@@ -1,7 +1,7 @@
 //! BDD World for secrets-management tests
 
 use cucumber::World;
-use secrets_management::{Result, SecretError, Secret};
+use secrets_management::{Result, Secret, SecretError};
 use std::path::PathBuf;
 use tempfile::TempDir;
 
@@ -9,43 +9,43 @@ use tempfile::TempDir;
 pub struct BddWorld {
     /// Last operation result
     pub last_result: Option<Result<()>>,
-    
+
     /// Last error (if any)
     pub last_error: Option<SecretError>,
-    
+
     /// Secret file path
     pub secret_path: Option<PathBuf>,
-    
+
     /// Secret file permissions (Unix mode)
     pub file_mode: Option<u32>,
-    
+
     /// Secret value for verification
     pub secret_value: Option<String>,
-    
+
     /// Loaded secret (actual Secret type)
     pub secret_loaded: Option<Secret>,
-    
+
     /// Input for verification
     pub verify_input: Option<String>,
-    
+
     /// Verification result
     pub verify_result: Option<bool>,
-    
+
     /// Token for key derivation
     pub token: Option<String>,
-    
+
     /// Domain for key derivation
     pub domain: Option<Vec<u8>>,
-    
+
     /// Derived key (stored as hex)
     pub derived_key: Option<String>,
-    
+
     /// Systemd credential name
     pub credential_name: Option<String>,
-    
+
     /// Temporary directory (kept alive during test)
     pub temp_dir: Option<TempDir>,
-    
+
     /// Flag to track if CREDENTIALS_DIRECTORY was set (for cleanup)
     pub credentials_dir_set: bool,
 }
@@ -112,21 +112,22 @@ impl BddWorld {
             Err(e) => {
                 // Store error without cloning (move it)
                 self.last_error = Some(e);
-                self.last_result = Some(Err(secrets_management::SecretError::InvalidFormat("error".to_string())));
+                self.last_result =
+                    Some(Err(secrets_management::SecretError::InvalidFormat("error".to_string())));
             }
         }
     }
-    
+
     /// Check if last operation succeeded
     pub fn last_succeeded(&self) -> bool {
         matches!(self.last_result, Some(Ok(())))
     }
-    
+
     /// Check if last operation failed
     pub fn last_failed(&self) -> bool {
         matches!(self.last_result, Some(Err(_)))
     }
-    
+
     /// Get last error
     pub fn get_last_error(&self) -> Option<&SecretError> {
         self.last_error.as_ref()

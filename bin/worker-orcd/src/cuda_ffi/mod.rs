@@ -82,7 +82,7 @@ impl SafeCudaPtr {
     fn new(ptr: *mut c_void, size: usize, device: u32) -> Self {
         Self { ptr, size, device }
     }
-    
+
     /// Write data at offset with bounds checking
     pub fn write_at(&mut self, offset: usize, data: &[u8]) -> Result<()> {
         let end = offset.checked_add(data.len()).ok_or(CudaError::OutOfBounds {
@@ -90,15 +90,11 @@ impl SafeCudaPtr {
             len: data.len(),
             size: self.size,
         })?;
-        
+
         if end > self.size {
-            return Err(CudaError::OutOfBounds {
-                offset,
-                len: data.len(),
-                size: self.size,
-            });
+            return Err(CudaError::OutOfBounds { offset, len: data.len(), size: self.size });
         }
-        
+
         // TODO(ARCH-CHANGE): Implement actual CUDA memcpy per ARCHITECTURE_CHANGE_PLAN.md Phase 3:
         // - Use cudaMemcpy to copy data to GPU
         // - Handle CUDA errors properly
@@ -110,10 +106,10 @@ impl SafeCudaPtr {
             size = %self.size,
             "CUDA write (stub)"
         );
-        
+
         Ok(())
     }
-    
+
     /// Read data from offset with bounds checking
     pub fn read_at(&self, offset: usize, len: usize) -> Result<Vec<u8>> {
         let end = offset.checked_add(len).ok_or(CudaError::OutOfBounds {
@@ -121,26 +117,22 @@ impl SafeCudaPtr {
             len,
             size: self.size,
         })?;
-        
+
         if end > self.size {
-            return Err(CudaError::OutOfBounds {
-                offset,
-                len,
-                size: self.size,
-            });
+            return Err(CudaError::OutOfBounds { offset, len, size: self.size });
         }
-        
+
         // TODO(ARCH-CHANGE): Implement actual CUDA memcpy from device
         // - Use cudaMemcpy to copy data from GPU
         // - Handle CUDA errors properly
         Ok(vec![0u8; len])
     }
-    
+
     /// Get size of allocated VRAM
     pub fn size(&self) -> usize {
         self.size
     }
-    
+
     /// Get device index
     pub fn device(&self) -> u32 {
         self.device
@@ -183,7 +175,7 @@ impl CudaContext {
             );
             return Ok(Self { device });
         }
-        
+
         // Production mode: Log GPU initialization
         #[cfg(not(test))]
         {
@@ -191,38 +183,38 @@ impl CudaContext {
                 device = %device,
                 "Initializing CUDA context (stub mode)"
             );
-            
+
             // TODO(ARCH-CHANGE): Implement actual CUDA initialization per ARCHITECTURE_CHANGE_PLAN.md Phase 3:
             // - Use cudaSetDevice to select GPU
             // - Initialize cuBLAS handle
             // - Validate GPU availability
             // See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md Issue #11 (unsafe CUDA FFI)
-            
+
             Ok(Self { device })
         }
     }
-    
+
     /// Allocate VRAM with bounds checking
     pub fn allocate_vram(&self, size: usize) -> Result<SafeCudaPtr> {
         if size == 0 {
             return Err(CudaError::AllocationFailed(size));
         }
-        
+
         // TODO(ARCH-CHANGE): Implement actual CUDA allocation
         // - Use cudaMalloc to allocate VRAM
         // - Check for cudaErrorMemoryAllocation
         // - Return SafeCudaPtr wrapper
         let ptr = std::ptr::null_mut(); // Placeholder - REPLACE with cudaMalloc
-        
+
         tracing::debug!(
             size = %size,
             device = %self.device,
             "CUDA allocate (stub)"
         );
-        
+
         Ok(SafeCudaPtr::new(ptr, size, self.device))
     }
-    
+
     /// Get available VRAM on device
     pub fn get_free_vram(&self) -> Result<usize> {
         // TODO(ARCH-CHANGE): Implement VRAM query
@@ -230,7 +222,7 @@ impl CudaContext {
         // - Return free bytes
         Ok(24_000_000_000) // 24GB stub
     }
-    
+
     /// Get total VRAM on device
     pub fn get_total_vram(&self) -> Result<usize> {
         // TODO(ARCH-CHANGE): Implement VRAM query
@@ -242,18 +234,18 @@ impl CudaContext {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_bounds_checking() {
         let ctx = CudaContext::new(0).unwrap();
         let mut ptr = ctx.allocate_vram(1024).unwrap();
-        
+
         // Valid write
         assert!(ptr.write_at(0, &[1, 2, 3, 4]).is_ok());
-        
+
         // Out of bounds write
         assert!(ptr.write_at(1020, &[1, 2, 3, 4, 5]).is_err());
-        
+
         // Overflow check
         assert!(ptr.write_at(usize::MAX, &[1]).is_err());
     }

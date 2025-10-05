@@ -65,10 +65,7 @@ pub async fn then_captured_has_story(world: &mut World) {
     let adapter = world.adapter.as_ref().expect("Adapter not installed");
     let captured = adapter.captured();
     assert!(!captured.is_empty(), "No narration captured");
-    assert!(
-        captured[0].story.is_some(),
-        "Expected story field to be present"
-    );
+    assert!(captured[0].story.is_some(), "Expected story field to be present");
 }
 
 #[then("the captured narration has no story field")]
@@ -76,10 +73,7 @@ pub async fn then_captured_has_no_story(world: &mut World) {
     let adapter = world.adapter.as_ref().expect("Adapter not installed");
     let captured = adapter.captured();
     assert!(!captured.is_empty(), "No narration captured");
-    assert!(
-        captured[0].story.is_none(),
-        "Expected story field to be None"
-    );
+    assert!(captured[0].story.is_none(), "Expected story field to be None");
 }
 
 #[then(regex = r#"^the captured story includes "(.+)"$"#)]
@@ -88,10 +82,7 @@ pub async fn then_captured_story_includes(world: &mut World, substring: String) 
     let captured = adapter.captured();
     assert!(!captured.is_empty(), "No narration captured");
 
-    let story = captured[0]
-        .story
-        .as_ref()
-        .expect("Expected story field to be present");
+    let story = captured[0].story.as_ref().expect("Expected story field to be present");
 
     assert!(
         story.contains(&substring),
@@ -107,10 +98,7 @@ pub async fn then_captured_story_does_not_include(world: &mut World, substring: 
     let captured = adapter.captured();
     assert!(!captured.is_empty(), "No narration captured");
 
-    let story = captured[0]
-        .story
-        .as_ref()
-        .expect("Expected story field to be present");
+    let story = captured[0].story.as_ref().expect("Expected story field to be present");
 
     assert!(
         !story.contains(&substring),
@@ -125,10 +113,7 @@ pub async fn then_captured_has_human(world: &mut World) {
     let adapter = world.adapter.as_ref().expect("Adapter not installed");
     let captured = adapter.captured();
     assert!(!captured.is_empty(), "No narration captured");
-    assert!(
-        !captured[0].human.is_empty(),
-        "Expected human field to be present"
-    );
+    assert!(!captured[0].human.is_empty(), "Expected human field to be present");
 }
 
 #[then("the captured narration has cute field")]
@@ -136,10 +121,7 @@ pub async fn then_captured_has_cute(world: &mut World) {
     let adapter = world.adapter.as_ref().expect("Adapter not installed");
     let captured = adapter.captured();
     assert!(!captured.is_empty(), "No narration captured");
-    assert!(
-        captured[0].cute.is_some(),
-        "Expected cute field to be present"
-    );
+    assert!(captured[0].cute.is_some(), "Expected cute field to be present");
 }
 
 #[then("assert_story_present succeeds")]
@@ -166,10 +148,7 @@ pub async fn then_assert_story_has_dialogue_fails(world: &mut World) {
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         adapter.assert_story_has_dialogue();
     }));
-    assert!(
-        result.is_err(),
-        "assert_story_has_dialogue should have failed"
-    );
+    assert!(result.is_err(), "assert_story_has_dialogue should have failed");
 }
 
 #[then("the tracing event includes story field")]

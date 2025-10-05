@@ -119,9 +119,7 @@ impl CudaError {
             format!("Error code {}", code)
         } else {
             // SAFETY: msg_ptr is valid static string from C
-            unsafe { CStr::from_ptr(msg_ptr) }
-                .to_string_lossy()
-                .into_owned()
+            unsafe { CStr::from_ptr(msg_ptr) }.to_string_lossy().into_owned()
         };
 
         let error_code = CudaErrorCode::from(code);
@@ -235,11 +233,7 @@ impl IntoResponse for CudaError {
             "CUDA error occurred"
         );
 
-        let body = Json(ErrorResponse {
-            code,
-            message,
-            retriable,
-        });
+        let body = Json(ErrorResponse { code, message, retriable });
 
         (status, body).into_response()
     }
@@ -260,10 +254,7 @@ pub struct SseError {
 
 impl From<CudaError> for SseError {
     fn from(err: CudaError) -> Self {
-        Self {
-            code: err.code_str().to_string(),
-            message: err.to_string(),
-        }
+        Self { code: err.code_str().to_string(), message: err.to_string() }
     }
 }
 
@@ -347,35 +338,14 @@ mod tests {
 
     #[test]
     fn test_code_str_returns_stable_codes() {
-        assert_eq!(
-            CudaError::from_code(1).code_str(),
-            "INVALID_DEVICE"
-        );
+        assert_eq!(CudaError::from_code(1).code_str(), "INVALID_DEVICE");
         assert_eq!(CudaError::from_code(2).code_str(), "VRAM_OOM");
-        assert_eq!(
-            CudaError::from_code(3).code_str(),
-            "MODEL_LOAD_FAILED"
-        );
-        assert_eq!(
-            CudaError::from_code(4).code_str(),
-            "INFERENCE_FAILED"
-        );
-        assert_eq!(
-            CudaError::from_code(5).code_str(),
-            "INVALID_PARAMETER"
-        );
-        assert_eq!(
-            CudaError::from_code(6).code_str(),
-            "KERNEL_LAUNCH_FAILED"
-        );
-        assert_eq!(
-            CudaError::from_code(7).code_str(),
-            "VRAM_RESIDENCY_FAILED"
-        );
-        assert_eq!(
-            CudaError::from_code(8).code_str(),
-            "DEVICE_NOT_FOUND"
-        );
+        assert_eq!(CudaError::from_code(3).code_str(), "MODEL_LOAD_FAILED");
+        assert_eq!(CudaError::from_code(4).code_str(), "INFERENCE_FAILED");
+        assert_eq!(CudaError::from_code(5).code_str(), "INVALID_PARAMETER");
+        assert_eq!(CudaError::from_code(6).code_str(), "KERNEL_LAUNCH_FAILED");
+        assert_eq!(CudaError::from_code(7).code_str(), "VRAM_RESIDENCY_FAILED");
+        assert_eq!(CudaError::from_code(8).code_str(), "DEVICE_NOT_FOUND");
         assert_eq!(CudaError::from_code(99).code_str(), "UNKNOWN");
     }
 
@@ -391,11 +361,7 @@ mod tests {
         let non_retriable_codes = vec![1, 3, 4, 5, 6, 7, 8, 99];
         for code in non_retriable_codes {
             let err = CudaError::from_code(code);
-            assert!(
-                !err.is_retriable(),
-                "Error code {} should not be retriable",
-                code
-            );
+            assert!(!err.is_retriable(), "Error code {} should not be retriable", code);
         }
     }
 
@@ -487,8 +453,12 @@ mod tests {
             let err = CudaError::from_code(code);
             let code_str = err.code_str();
             assert!(!code_str.is_empty(), "Error code {} has empty string code", code);
-            assert!(code_str.chars().all(|c| c.is_ascii_uppercase() || c == '_'),
-                "Error code {} has invalid string code: {}", code, code_str);
+            assert!(
+                code_str.chars().all(|c| c.is_ascii_uppercase() || c == '_'),
+                "Error code {} has invalid string code: {}",
+                code,
+                code_str
+            );
         }
     }
 

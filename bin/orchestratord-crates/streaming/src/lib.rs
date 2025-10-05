@@ -68,12 +68,12 @@ impl StreamManager {
     pub fn new() -> Self {
         Self {}
     }
-    
+
     pub fn create_stream(&self, _job_id: &str) -> String {
         // Generate stream ID
         "stream-123".to_string()
     }
-    
+
     pub fn send_event(&self, _stream_id: &str, event: StreamEvent) -> Result<()> {
         tracing::debug!(event = ?event, "Stream event");
         Ok(())

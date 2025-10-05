@@ -56,9 +56,7 @@ pub fn sanitize_crlf(text: &str) -> Cow<'_, str> {
         return Cow::Borrowed(text); // Zero-copy (90% of cases)
     }
 
-    Cow::Owned(
-        text.replace(['\n', '\r', '\t'], " "),
-    )
+    Cow::Owned(text.replace(['\n', '\r', '\t'], " "))
 }
 
 /// Validate actor name (reject non-ASCII to prevent homograph attacks).

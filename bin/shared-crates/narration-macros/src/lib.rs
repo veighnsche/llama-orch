@@ -1,17 +1,17 @@
 extern crate proc_macro;
 
 mod actor_inference;
-mod trace_fn;
 mod narrate;
 mod template;
+mod trace_fn;
 
 use proc_macro::TokenStream;
 
 /// Attribute macro for automatic function tracing with entry/exit narration.
-/// 
+///
 /// Automatically generates narration events at function entry and exit, with timing.
 /// Actor is auto-inferred from module path.
-/// 
+///
 /// # Example
 /// ```ignore
 /// #[trace_fn]
@@ -19,7 +19,7 @@ use proc_macro::TokenStream;
 ///     // Function body
 /// }
 /// ```
-/// 
+///
 /// Generates:
 /// - Entry trace with function name and arguments
 /// - Exit trace with result and elapsed time
@@ -30,9 +30,9 @@ pub fn trace_fn(attr: TokenStream, item: TokenStream) -> TokenStream {
 }
 
 /// Attribute macro for narration with template interpolation.
-/// 
+///
 /// Supports compile-time template expansion with automatic actor inference.
-/// 
+///
 /// # Example
 /// ```ignore
 /// #[narrate(
