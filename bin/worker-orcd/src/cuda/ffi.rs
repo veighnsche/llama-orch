@@ -381,5 +381,42 @@ pub unsafe fn cuda_error_message(error_code: c_int) -> *const c_char {
     CString::new(msg).unwrap().into_raw()
 }
 
+#[cfg(not(feature = "cuda"))]
+pub unsafe fn cuda_inference_init(
+    _model_ptr: *mut std::ffi::c_void,
+    _vocab_size: u32,
+    _hidden_dim: u32,
+    _num_layers: u32,
+    _num_heads: u32,
+    _num_kv_heads: u32,
+    _head_dim: u32,
+    _ffn_dim: u32,
+    _context_length: u32,
+    error: *mut c_int,
+) -> *mut InferenceContext {
+    *error = 4; // CUDA_ERROR_INFERENCE_FAILED
+    std::ptr::null_mut()
+}
+
+#[cfg(not(feature = "cuda"))]
+pub unsafe fn cuda_inference_generate_token(
+    _ctx: *mut InferenceContext,
+    _token_id: u32,
+    _temperature: f32,
+    _top_k: u32,
+    _top_p: f32,
+    _seed: u64,
+    error: *mut c_int,
+) -> u32 {
+    *error = 4; // CUDA_ERROR_INFERENCE_FAILED
+    0
+}
+
+#[cfg(not(feature = "cuda"))]
+pub unsafe fn cuda_inference_reset(_ctx: *mut InferenceContext) {}
+
+#[cfg(not(feature = "cuda"))]
+pub unsafe fn cuda_inference_context_free(_ctx: *mut InferenceContext) {}
+
 // ---
 // Built by Foundation-Alpha 🏗️

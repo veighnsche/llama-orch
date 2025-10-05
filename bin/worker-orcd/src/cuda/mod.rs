@@ -35,11 +35,13 @@ mod error;
 mod ffi;  // Keep private for now
 mod inference;
 mod model;
+mod real_inference;
 
 pub use context::Context;
 pub use error::{CudaError, CudaErrorCode};
 pub use inference::Inference;
 pub use model::Model;
+pub use real_inference::RealInference;
 
 #[cfg(test)]
 mod tests {
