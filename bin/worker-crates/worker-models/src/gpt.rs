@@ -15,8 +15,14 @@
 //! - M0-W-1220: GPT model specification
 //! - GT-XXX: GPT team implementation stories
 
-use crate::cuda_ffi::{CudaContext, CudaError};
+// TODO: Implement actual GPT model (currently stub)
+// use crate::cuda_ffi::{CudaContext, CudaError};
 use thiserror::Error;
+
+// Stub error type until CUDA implementation
+#[derive(Debug, Error)]
+#[error("CUDA error (stub)")]
+pub struct CudaError;
 
 /// GPT model configuration
 #[derive(Debug, Clone)]
