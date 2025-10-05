@@ -3,14 +3,14 @@ name = "worker-common"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
-description = "Common types, errors, and utilities for llama-orch workers"
+description = "Common types and utilities for llama-orch workers"
 
 [dependencies]
 thiserror = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-reqwest = { version = "0.11", features = ["json"] }
-tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", features = ["json"] }
+tokio = { version = "1.0", features = ["full"] }
 tracing = "0.1"
 
 [dev-dependencies]

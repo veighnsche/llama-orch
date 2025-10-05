@@ -13,8 +13,8 @@
 //! - M0-W-1300: HTTP API extension
 
 use crate::http::sse::StopReason;
-use crate::inference_result::InferenceResult;
-use crate::sampling_config::SamplingConfig;
+use worker_common::inference_result::InferenceResult;
+use worker_common::sampling_config::SamplingConfig;
 use std::time::Instant;
 use tracing::{debug, info, warn};
 
