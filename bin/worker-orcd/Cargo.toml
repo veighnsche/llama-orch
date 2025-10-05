@@ -57,10 +57,12 @@ futures = { workspace = true }
 chrono = { workspace = true }
 thiserror = { workspace = true }
 observability-narration-core = { path = "../shared-crates/narration-core", features = ["axum"] }
+tokenizers = "0.15"
 
 [dev-dependencies]
 serial_test = "3.0"
 uuid = { version = "1.0", features = ["v4"] }
+tempfile = "3.8"
 
 [build-dependencies]
 cmake = "0.1"
