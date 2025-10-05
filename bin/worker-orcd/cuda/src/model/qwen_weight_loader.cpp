@@ -1,6 +1,6 @@
 #include "qwen_weight_loader.h"
-#include "../vram_tracker.cpp"
-#include "../device_memory.cpp"
+#include "vram_tracker.h"
+#include "device_memory.h"
 #include "../io/chunked_transfer.h"
 #include <fstream>
 #include <cstring>

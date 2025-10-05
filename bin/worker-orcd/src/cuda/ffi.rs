@@ -35,6 +35,12 @@ pub struct InferenceResult {
     _private: [u8; 0],
 }
 
+/// Opaque handle to inference context (matches C definition)
+#[repr(C)]
+pub struct InferenceContext {
+    _private: [u8; 0],
+}
+
 // ============================================================================
 // Raw FFI Declarations (unsafe)
 // ============================================================================
@@ -208,14 +214,69 @@ extern "C" {
     ///
     /// - Returns pointer to static string (never NULL)
     /// - Returned pointer is valid for program lifetime
-    /// - Caller must NOT free the returned pointer
+    /// - `error_code` must be a valid pointer to writable i32
     pub fn cuda_error_message(error_code: c_int) -> *const c_char;
+
+    // ========================================================================
+    // New Inference API (GT-056)
+    // ========================================================================
+
+    /// Initialize inference context with loaded model.
+    ///
+    /// # Safety
+    ///
+    /// - `model_ptr` must be a valid pointer from `cuda_load_model`
+    /// - All parameters must match the model configuration
+    /// - `error` must be a valid pointer to writable i32
+    /// - Returned pointer must be freed with `cuda_inference_free`
+    pub fn cuda_inference_init(
+        model_ptr: *mut std::ffi::c_void,
+        vocab_size: u32,
+        hidden_dim: u32,
+        num_layers: u32,
+        num_heads: u32,
+        num_kv_heads: u32,
+        head_dim: u32,
+        ffn_dim: u32,
+        context_length: u32,
+        error: *mut c_int,
+    ) -> *mut InferenceContext;
+
+    /// Generate next token from current token.
+    ///
+    /// # Safety
+    ///
+    /// - `ctx` must be a valid pointer from `cuda_inference_init`
+    /// - `error` must be a valid pointer to writable i32
+    pub fn cuda_inference_generate_token(
+        ctx: *mut InferenceContext,
+        token_id: u32,
+        temperature: f32,
+        top_k: u32,
+        top_p: f32,
+        seed: u64,
+        error: *mut c_int,
+    ) -> u32;
+
+    /// Reset KV cache in inference context.
+    ///
+    /// # Safety
+    ///
+    /// - `ctx` must be a valid pointer from `cuda_inference_init`
+    pub fn cuda_inference_reset(ctx: *mut InferenceContext);
+
+    /// Free inference context and all resources.
+    ///
+    /// #Safety
+    ///
+    /// - `ctx` must be a valid pointer from `cuda_inference_init` or NULL
+    /// - `ctx` must not be used after this call
+    pub fn cuda_inference_context_free(ctx: *mut InferenceContext);
 }
 
 // ============================================================================
 // Stub Implementations (when CUDA feature is disabled)
 // ============================================================================
-
 #[cfg(not(feature = "cuda"))]
 pub unsafe fn cuda_init(_gpu_device: c_int, error_code: *mut c_int) -> *mut CudaContext {
     *error_code = 8; // CUDA_ERROR_DEVICE_NOT_FOUND

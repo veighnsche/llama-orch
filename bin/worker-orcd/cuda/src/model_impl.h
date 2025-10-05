@@ -1,10 +1,8 @@
 /**
- * Model Implementation - Wires GGUF parser to model loading
+ * Model Implementation - Simplified stub for FFI
  * 
- * This class integrates:
- * - GGUF header parsing (already implemented)
- * - GPT model loading (already implemented)
- * - VRAM tracking
+ * This is a minimal implementation to make FFI work.
+ * GGUF parsing is now done in Rust.
  * 
  * Spec: M0-W-1211
  */
@@ -13,30 +11,18 @@
 #define WORKER_MODEL_IMPL_H
 
 #include "context.h"
-// GGUF parsing now done in Rust
-#include "model/gpt_model.h"
 #include <memory>
 #include <string>
 
 namespace worker {
 
-// Forward declarations
-namespace model {
-    class GPTModel;
-}
-
-namespace io {
-    class MmapFile;
-}
-
-
 /**
- * Loaded model with VRAM allocation
+ * Loaded model with VRAM allocation (stub)
  */
 class ModelImpl {
 public:
     /**
-     * Load model from GGUF file
+     * Load model from GGUF file (stub - just stores path)
      * 
      * @param ctx CUDA context
      * @param model_path Path to .gguf file
@@ -47,28 +33,18 @@ public:
     ~ModelImpl();
     
     /**
-     * Get VRAM bytes used by model weights
+     * Get VRAM bytes used by model weights (stub)
      */
     uint64_t vram_bytes() const { return vram_bytes_; }
     
     /**
-     * Get GGUF header
+     * Get model path
      */
-    const gguf::GGUFHeader& header() const { return header_; }
-    
-    /**
-     * Get GPT model (if architecture is GPT)
-     */
-    model::GPTModel* gpt_model() { return gpt_model_.get(); }
+    const std::string& model_path() const { return model_path_; }
     
 private:
-    gguf::GGUFHeader header_;
-    std::unique_ptr<model::GPTModel> gpt_model_;
+    std::string model_path_;
     uint64_t vram_bytes_;
-    std::string architecture_;
-    
-    // Keep mmap alive for the lifetime of the model
-    std::unique_ptr<io::MmapFile> mmap_;
 };
 
 } // namespace worker

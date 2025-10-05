@@ -43,7 +43,10 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr --extended-la
 set(CUDA_SOURCES
     src/context.cpp
     src/model.cpp
+    src/model_impl.cpp
     src/inference.cu
+    src/inference_impl.cpp
+    src/ffi.cpp
     src/health.cpp
     src/vram_tracker.cpp
     src/device_memory.cpp
@@ -54,7 +57,6 @@ set(CUDA_SOURCES
     src/model/gpt_weights.cpp
     src/model/gpt_model.cpp
     src/model/qwen_weight_loader.cpp
-    src/ffi_weight_loading.cpp
     src/gpt_transformer_layer.cpp
     src/transformer/qwen_transformer.cpp
 )
@@ -64,6 +66,7 @@ set(KERNEL_SOURCES
     kernels/attention.cu
     kernels/gemm.cu
     kernels/sampling.cu
+    kernels/sampling_wrapper.cu
     kernels/rope.cu
     kernels/rmsnorm.cu
     kernels/residual.cu
@@ -146,6 +149,7 @@ if(BUILD_TESTING)
         tests/test_residual_kernel.cpp
         tests/test_gqa_attention.cpp
         tests/test_swiglu.cpp
+        tests/test_inference_pipeline.cpp
         # GPT Sprint 4 tests (GT-024, GT-025, GT-026) - Disabled: missing kernel implementations
         # tests/test_gpt_weights.cpp
         # tests/test_gpt_model.cpp

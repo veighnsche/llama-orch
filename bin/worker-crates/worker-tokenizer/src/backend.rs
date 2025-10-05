@@ -100,11 +100,44 @@ impl Tokenizer {
     /// * `Ok(Tokenizer)` - Successfully loaded tokenizer
     /// * `Err(TokenizerError)` - Failed to load
     pub fn from_gguf<P: AsRef<Path>>(path: P) -> Result<Self, TokenizerError> {
-        // TODO: Implement GGUF metadata reading for tokenizer
-        // For now, return a stub error
-        Err(TokenizerError::LoadFailed(
-            "GGUF tokenizer loading not yet implemented - use worker-gguf integration".to_string()
-        ))
+        use worker_gguf::GGUFMetadata;
+        use crate::{Vocabulary, MergeTable};
+        
+        // Parse GGUF file
+        let path_str = path.as_ref().to_str()
+            .ok_or_else(|| TokenizerError::LoadFailed("Invalid path".to_string()))?;
+        
+        let metadata = GGUFMetadata::from_file(path_str)
+            .map_err(|e| TokenizerError::LoadFailed(format!("Failed to parse GGUF: {}", e)))?;
+        
+        // Extract tokens
+        let tokens = metadata.tokenizer_tokens()
+            .map_err(|e| TokenizerError::LoadFailed(format!("Failed to extract tokens: {}", e)))?;
+        
+        // Extract merges
+        let merge_strings = metadata.tokenizer_merges()
+            .map_err(|e| TokenizerError::LoadFailed(format!("Failed to extract merges: {}", e)))?;
+        
+        // Extract special token IDs
+        let bos_token_id = metadata.bos_token_id()
+            .map_err(|e| TokenizerError::LoadFailed(format!("Failed to extract BOS token: {}", e)))?;
+        
+        let eos_token_id = metadata.eos_token_id()
+            .map_err(|e| TokenizerError::LoadFailed(format!("Failed to extract EOS token: {}", e)))?;
+        
+        // Build vocabulary
+        let vocab = Vocabulary::new(tokens, bos_token_id, eos_token_id, Some(eos_token_id))
+            .map_err(|e| TokenizerError::LoadFailed(format!("Failed to build vocab: {}", e)))?;
+        
+        // Build merge table
+        let merges = MergeTable::new(merge_strings)
+            .map_err(|e| TokenizerError::LoadFailed(format!("Failed to build merges: {}", e)))?;
+        
+        // Create encoder and decoder
+        let encoder = BPEEncoder::new(vocab.clone(), merges);
+        let decoder = BPEDecoder::new(vocab);
+        
+        Ok(Tokenizer::GgufBpe { encoder, decoder })
     }
     
     /// Encode text to token IDs

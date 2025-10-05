@@ -4,6 +4,7 @@
 
 pub mod cuda_backend;
 pub mod gpt_adapter;
+// pub mod qwen_inference;  // TODO: Complete integration
 pub use gpt_adapter::{GPTModelAdapter, QuantizationType};
 
 // ---

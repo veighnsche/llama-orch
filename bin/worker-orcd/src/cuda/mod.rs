@@ -32,9 +32,9 @@
 
 pub mod context;
 mod error;
-mod ffi;
-pub mod inference;
-pub mod model;
+mod ffi;  // Keep private for now
+mod inference;
+mod model;
 
 pub use context::Context;
 pub use error::{CudaError, CudaErrorCode};

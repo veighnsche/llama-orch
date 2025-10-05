@@ -74,6 +74,8 @@ pub enum MetadataValue {
     Bool(bool),
     /// Array value (stores element type and count)
     Array { elem_type: u32, count: u64 },
+    /// String array (for tokenizer vocab and merges)
+    StringArray(Vec<String>),
 }
 
 impl GGUFMetadata {
@@ -185,7 +187,43 @@ impl GGUFMetadata {
             false
         }
     }
-
+    
+    /// Get tokenizer tokens array
+    ///
+    /// Extracts the vocabulary from GGUF metadata.
+    /// For Qwen2.5-0.5B, this returns 151,936 tokens.
+    pub fn tokenizer_tokens(&self) -> Result<Vec<String>, GGUFError> {
+        match self.metadata.get("tokenizer.ggml.tokens") {
+            Some(MetadataValue::StringArray(tokens)) => Ok(tokens.clone()),
+            _ => Err(GGUFError::MissingKey("tokenizer.ggml.tokens".to_string())),
+        }
+    }
+    
+    /// Get tokenizer merges array
+    ///
+    /// Extracts BPE merge rules from GGUF metadata.
+    pub fn tokenizer_merges(&self) -> Result<Vec<String>, GGUFError> {
+        match self.metadata.get("tokenizer.ggml.merges") {
+            Some(MetadataValue::StringArray(merges)) => Ok(merges.clone()),
+            _ => Err(GGUFError::MissingKey("tokenizer.ggml.merges".to_string())),
+        }
+    }
+    
+    /// Get BOS (Beginning of Sequence) token ID
+    pub fn bos_token_id(&self) -> Result<u32, GGUFError> {
+        match self.metadata.get("tokenizer.ggml.bos_token_id") {
+            Some(MetadataValue::Int(id)) => Ok(*id as u32),
+            _ => Err(GGUFError::MissingKey("tokenizer.ggml.bos_token_id".to_string())),
+        }
+    }
+    
+    /// Get EOS (End of Sequence) token ID
+    pub fn eos_token_id(&self) -> Result<u32, GGUFError> {
+        match self.metadata.get("tokenizer.ggml.eos_token_id") {
+            Some(MetadataValue::Int(id)) => Ok(*id as u32),
+            _ => Err(GGUFError::MissingKey("tokenizer.ggml.eos_token_id".to_string())),
+        }
+    }
 }
 
 #[cfg(test)]

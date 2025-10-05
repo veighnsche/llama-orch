@@ -105,37 +105,40 @@ impl GGUFParser {
             return Err(GGUFError::InvalidValue(format!("Array too large: {} elements", count)));
         }
         
-        // For string arrays (tokenizer vocab), we need to skip the data
-        // For now, just store the count - we can parse array contents later if needed
+        // Parse array contents based on element type
         match elem_type {
             8 => {
-                // String array - skip all strings
+                // String array - read all strings (for tokenizer vocab/merges)
+                let mut strings = Vec::with_capacity(count as usize);
                 for _ in 0..count {
-                    let _ = self.read_string()?;
+                    strings.push(self.read_string()?);
                 }
+                Ok(MetadataValue::StringArray(strings))
             }
             0 | 1 => {
                 // u8/i8 array - skip bytes
                 self.file.seek(SeekFrom::Current(count as i64))?;
+                Ok(MetadataValue::Array { elem_type, count })
             }
             2 | 3 => {
                 // u16/i16 array - skip 2 bytes each
                 self.file.seek(SeekFrom::Current((count * 2) as i64))?;
+                Ok(MetadataValue::Array { elem_type, count })
             }
             4 | 5 | 6 => {
                 // u32/i32/f32 array - skip 4 bytes each
                 self.file.seek(SeekFrom::Current((count * 4) as i64))?;
+                Ok(MetadataValue::Array { elem_type, count })
             }
             10 | 11 | 12 => {
                 // u64/i64/f64 array - skip 8 bytes each
                 self.file.seek(SeekFrom::Current((count * 8) as i64))?;
+                Ok(MetadataValue::Array { elem_type, count })
             }
             _ => {
-                return Err(GGUFError::InvalidValue(format!("Unsupported array element type: {}", elem_type)));
+                Err(GGUFError::InvalidValue(format!("Unsupported array element type: {}", elem_type)))
             }
         }
-        
-        Ok(MetadataValue::Array { elem_type, count })
     }
 }
 
