@@ -10,9 +10,12 @@
 #include "../include/worker_ffi.h"
 #include "../include/health.h"
 #include "context.h"
+#include "model_impl.h"
+#include "inference_impl.h"
 #include "cuda_error.h"
 #include <cuda_runtime.h>
 #include <memory>
+#include <cstdio>
 
 using namespace worker;
 
@@ -73,22 +76,22 @@ extern "C" CudaModel* cuda_load_model(
             throw CudaError::invalid_parameter("NULL pointer provided");
         }
         
-        // TODO: Implement Model class
-        // auto* context = reinterpret_cast<Context*>(ctx);
-        // auto model = std::make_unique<Model>(*context, model_path);
-        // *vram_bytes_used = model->vram_bytes();
-        // *error_code = CUDA_SUCCESS;
-        // return reinterpret_cast<CudaModel*>(model.release());
-        
-        // Stub: Return error for now
-        throw CudaError::model_load_failed("Model implementation pending");
+        // IMPLEMENTED: Use existing GGUF parser and model code!
+        auto* context = reinterpret_cast<Context*>(ctx);
+        auto model = std::make_unique<ModelImpl>(*context, model_path);
+        *vram_bytes_used = model->vram_bytes();
+        *error_code = CUDA_SUCCESS;
+        return reinterpret_cast<CudaModel*>(model.release());
     } catch (const CudaError& e) {
+        fprintf(stderr, "CUDA Error in cuda_load_model: %s (code: %d)\n", e.what(), e.code());
         *error_code = e.code();
         return nullptr;
     } catch (const std::exception& e) {
+        fprintf(stderr, "Exception in cuda_load_model: %s\n", e.what());
         *error_code = CUDA_ERROR_UNKNOWN;
         return nullptr;
     } catch (...) {
+        fprintf(stderr, "Unknown exception in cuda_load_model\n");
         *error_code = CUDA_ERROR_UNKNOWN;
         return nullptr;
     }
@@ -100,9 +103,9 @@ extern "C" void cuda_unload_model(CudaModel* model) {
     }
     
     try {
-        // TODO: Implement Model cleanup
-        // auto* m = reinterpret_cast<Model*>(model);
-        // delete m;
+        // IMPLEMENTED: Clean up model
+        auto* m = reinterpret_cast<ModelImpl*>(model);
+        delete m;
     } catch (...) {
         // Suppress exceptions in destructor
     }
@@ -114,12 +117,9 @@ extern "C" uint64_t cuda_model_get_vram_usage(CudaModel* model) {
     }
     
     try {
-        // TODO: Implement VRAM usage query
-        // auto* m = reinterpret_cast<Model*>(model);
-        // return m->vram_bytes();
-        
-        // Stub: Return 0 for now
-        return 0;
+        // IMPLEMENTED: Return actual VRAM usage
+        auto* m = reinterpret_cast<ModelImpl*>(model);
+        return m->vram_bytes();
     } catch (...) {
         return 0;
     }
@@ -142,14 +142,11 @@ extern "C" InferenceResult* cuda_inference_start(
             throw CudaError::invalid_parameter("NULL pointer provided");
         }
         
-        // TODO: Implement Inference class
-        // auto* m = reinterpret_cast<Model*>(model);
-        // auto inference = std::make_unique<Inference>(*m, prompt, max_tokens, temperature, seed);
-        // *error_code = CUDA_SUCCESS;
-        // return reinterpret_cast<InferenceResult*>(inference.release());
-        
-        // Stub: Return error for now
-        throw CudaError::inference_failed("Inference implementation pending");
+        // IMPLEMENTED: Create inference session
+        auto* m = reinterpret_cast<ModelImpl*>(model);
+        auto inference = std::make_unique<InferenceImpl>(*m, prompt, max_tokens, temperature, seed);
+        *error_code = CUDA_SUCCESS;
+        return reinterpret_cast<InferenceResult*>(inference.release());
     } catch (const CudaError& e) {
         *error_code = e.code();
         return nullptr;
@@ -175,13 +172,11 @@ extern "C" bool cuda_inference_next_token(
             return false;
         }
         
-        // TODO: Implement token generation
-        // auto* inference = reinterpret_cast<Inference*>(result);
-        // return inference->next_token(token_out, token_buffer_size, token_index);
-        
-        // Stub: Return false (no tokens)
+        // IMPLEMENTED: Generate next token
+        auto* inference = reinterpret_cast<InferenceImpl*>(result);
+        bool has_token = inference->next_token(token_out, token_buffer_size, token_index);
         *error_code = CUDA_SUCCESS;
-        return false;
+        return has_token;
     } catch (const CudaError& e) {
         *error_code = e.code();
         return false;
@@ -200,9 +195,9 @@ extern "C" void cuda_inference_free(InferenceResult* result) {
     }
     
     try {
-        // TODO: Implement Inference cleanup
-        // auto* inference = reinterpret_cast<Inference*>(result);
-        // delete inference;
+        // IMPLEMENTED: Clean up inference
+        auto* inference = reinterpret_cast<InferenceImpl*>(result);
+        delete inference;
     } catch (...) {
         // Suppress exceptions in destructor
     }

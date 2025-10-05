@@ -26,17 +26,27 @@ impl CudaInferenceBackend {
 impl InferenceBackend for CudaInferenceBackend {
     async fn execute(
         &self,
-        _prompt: &str,
+        prompt: &str,
         config: &SamplingConfig,
     ) -> Result<InferenceResult, Box<dyn std::error::Error + Send + Sync>> {
-        // Create executor with config
-        let executor = InferenceExecutor::new(config.clone());
+        // Start CUDA inference
+        let mut inference = self.model.start_inference(
+            prompt,
+            config.max_tokens as u32,
+            config.temperature,
+            config.seed,
+        )?;
         
-        // TODO: Implement actual CUDA inference
-        // For now, return a stub result
-        let result = executor.finalize();
+        // Generate tokens
+        let mut executor = InferenceExecutor::new(config.clone());
+        let mut token_idx = 0;
         
-        Ok(result)
+        while let Ok(Some((token, _id))) = inference.next_token() {
+            executor.add_token(token, token_idx);
+            token_idx += 1;
+        }
+        
+        Ok(executor.finalize())
     }
     
     async fn cancel(&self, _job_id: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {

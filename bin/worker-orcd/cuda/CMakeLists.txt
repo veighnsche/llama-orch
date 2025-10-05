@@ -44,6 +44,8 @@ set(CUDA_SOURCES
     src/ffi.cpp
     src/context.cpp
     src/model.cpp
+    src/model_impl.cpp
+    src/inference_impl.cpp
     src/inference.cu
     src/health.cpp
     src/errors.cpp

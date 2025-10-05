@@ -83,14 +83,18 @@ async fn main() -> anyhow::Result<()> {
     let cuda_model = cuda_ctx.load_model(&args.model)?;
     tracing::info!(vram_bytes = cuda_model.vram_bytes(), "Model loaded to VRAM");
 
-    // Call back to pool manager
-    startup::callback_ready(
-        &args.callback_url,
-        &args.worker_id,
-        cuda_model.vram_bytes(),
-        args.port,
-    )
-    .await?;
+    // Call back to pool manager (skip for test mode)
+    if !args.callback_url.contains("localhost:9999") {
+        startup::callback_ready(
+            &args.callback_url,
+            &args.worker_id,
+            cuda_model.vram_bytes(),
+            args.port,
+        )
+        .await?;
+    } else {
+        tracing::info!("Test mode: skipping pool manager callback");
+    }
 
     tracing::info!("Worker ready, starting HTTP server");
 

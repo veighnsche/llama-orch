@@ -1,0 +1,119 @@
+warning: /home/vince/Projects/llama-orch/bin/shared-crates/narration-core/Cargo.toml: unused manifest key: package.autodocs
+warning: /home/vince/Projects/llama-orch/bin/shared-crates/auth-min/Cargo.toml: unused manifest key: package.autodocs
+warning: /home/vince/Projects/llama-orch/xtask/Cargo.toml: unused manifest key: package.autodocs
+warning: unused import: `AdapterForwardConfig`
+  --> bin/worker-crates/worker-models/src/factory.rs:22:5
+   |
+22 |     AdapterForwardConfig, LlamaModelAdapter, M...
+   |     ^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused variable: `model`
+   --> bin/worker-crates/worker-models/src/gpt.rs:273:9
+    |
+273 |         model: &GPTModel,
+    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_model`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `config`
+   --> bin/worker-crates/worker-models/src/gpt.rs:276:9
+    |
+276 |         config: &GPTForwardConfig,
+    |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_config`
+
+warning: associated function `detect_architecture_from_filename` is never used
+   --> bin/worker-crates/worker-models/src/factory.rs:140:8
+    |
+ 78 | impl AdapterFactory {
+    | ------------------- associated function in this implementation
+...
+140 |     fn detect_architecture_from_filename(path...
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: associated function `calculate_layer_params` is never used
+   --> bin/worker-crates/worker-models/src/gpt.rs:202:8
+    |
+140 | impl GPTWeightLoader {
+    | -------------------- associated function in this implementation
+...
+202 |     fn calculate_layer_params(config: &GPTCon...
+    |        ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: worker-orcd@0.0.0: Building WITH CUDA support
+warning: worker-orcd@0.0.0: CUDA detected via nvcc at /usr
+warning: worker-orcd@0.0.0: Using CUDA toolkit at: /usr
+warning: `worker-models` (lib) generated 5 warnings (run `cargo fix --lib -p worker-models` to apply 1 suggestion)
+   Compiling worker-orcd v0.0.0 (/home/vince/Projects/llama-orch/bin/worker-orcd)
+warning: unused import: `crate::cuda_ffi`
+  --> bin/worker-orcd/src/inference/gpt_adapter.rs:10:5
+   |
+10 | use crate::cuda_ffi;
+   |     ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `std::sync::Arc`
+  --> bin/worker-orcd/src/inference/gpt_adapter.rs:11:5
+   |
+11 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+warning: variant `Q4_K_M` should have an upper camel case name
+  --> bin/worker-orcd/src/inference/gpt_adapter.rs:73:5
+   |
+73 |     Q4_K_M,
+   |     ^^^^^^ help: convert the identifier to upper camel case: `Q4KM`
+   |
+   = note: `#[warn(non_camel_case_types)]` on by default
+
+warning: struct `SseError` is never constructed
+   --> bin/worker-orcd/src/cuda/error.rs:248:12
+    |
+248 | pub struct SseError {
+    |            ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: function `cuda_model_get_vram_usage` is never used
+   --> bin/worker-orcd/src/cuda/ffi.rs:109:12
+    |
+109 |     pub fn cuda_model_get_vram_usage(model: *mut CudaModel) -> u64;
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `cuda_get_vram_usage` is never used
+   --> bin/worker-orcd/src/cuda/ffi.rs:182:12
+    |
+182 |     pub fn cuda_get_vram_usage(model: *mut CudaModel) -> u64;
+    |            ^^^^^^^^^^^^^^^^^^^
+
+warning: field `ptr` is never read
+  --> bin/worker-orcd/src/cuda_ffi/mod.rs:76:5
+   |
+75 | pub struct SafeCudaPtr {
+   |            ----------- field in this struct
+76 |     ptr: *mut c_void,
+   |     ^^^
+
+warning: `worker-orcd` (lib) generated 7 warnings (run `cargo fix --lib -p worker-orcd` to apply 2 suggestions)
+    Finished `release` profile [optimized] target(s) in 4.70s
+     Running tests/haiku_generation_anti_cheat.rs (/home/vince/Projects/llama-orch/target/release/deps/haiku_generation_anti_cheat-d64c570c3b2928e9)
+
+running 1 test
+test test_haiku_generation_anti_cheat ... 
+thread 'test_haiku_generation_anti_cheat' panicked at bin/worker-orcd/tests/haiku_generation_anti_cheat.rs:47:13:
+Failed to start worker: SpawnFailed("No such file or directory (os error 2) (binary: target/debug/worker-orcd)")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED
+
+failures:
+
+failures:
+    test_haiku_generation_anti_cheat
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--test haiku_generation_anti_cheat`

@@ -80,15 +80,33 @@ impl WorkerTestHarness {
         let port = find_free_port();
         let worker_id = format!("test-worker-{}", port);
         
-        let process = Command::new("target/debug/worker-orcd")
+        // Try release build first, fall back to debug
+        // Use CARGO_BIN_EXE or find in target directory
+        let binary_path = std::env::var("CARGO_BIN_EXE_worker-orcd")
+            .unwrap_or_else(|_| {
+                // Check workspace root target directories
+                let workspace_root = std::env::var("CARGO_MANIFEST_DIR")
+                    .unwrap_or_else(|_| ".".to_string());
+                let release_path = format!("{}/../../target/release/worker-orcd", workspace_root);
+                let debug_path = format!("{}/../../target/debug/worker-orcd", workspace_root);
+                
+                if std::path::Path::new(&release_path).exists() {
+                    release_path
+                } else {
+                    debug_path
+                }
+            });
+        
+        let process = Command::new(&binary_path)
             .args(&[
                 "--worker-id", &worker_id,
                 "--model", model_path,
                 "--gpu-device", &gpu_device.to_string(),
                 "--port", &port.to_string(),
+                "--callback-url", "http://localhost:9999/callback", // Dummy callback for testing
             ])
             .spawn()
-            .map_err(|e| TestError::SpawnFailed(e.to_string()))?;
+            .map_err(|e| TestError::SpawnFailed(format!("{} (binary: {})", e, binary_path)))?;
         
         let base_url = format!("http://localhost:{}", port);
         

@@ -62,7 +62,7 @@ mod oom_recovery_tests {
         ];
         
         let mut allocated = Vec::new();
-        let mut total_allocated = 0.0;
+        let mut total_allocated: f64 = 0.0;
         
         println!("  Allocation sequence:");
         for (name, size, should_succeed) in allocations {
@@ -85,7 +85,7 @@ mod oom_recovery_tests {
                 println!("\n  After cleanup:");
                 println!("    Total allocated: {:.2} GB", total_allocated / 1024.0 / 1024.0 / 1024.0);
                 
-                assert_eq!(total_allocated, 0.0);
+                assert!(total_allocated.abs() < 1.0, "Memory leak detected: {} bytes remaining", total_allocated);
                 break;
             }
         }

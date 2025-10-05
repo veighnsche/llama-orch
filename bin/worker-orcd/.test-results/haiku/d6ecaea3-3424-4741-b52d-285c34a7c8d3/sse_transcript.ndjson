@@ -1,0 +1,12 @@
+{"type":"started","job_id":"m0-haiku-anti-cheat-d6ecaea3-3424-4741-b52d-285c34a7c8d3","model":"model","started_at":"0"}
+{"type":"token","t":"seventeen ","i":0}
+{"type":"token","t":"threads ","i":1}
+{"type":"token","t":"spin ","i":2}
+{"type":"token","t":"CUDA ","i":3}
+{"type":"token","t":"cores ","i":4}
+{"type":"token","t":"burning ","i":5}
+{"type":"token","t":"bright ","i":6}
+{"type":"token","t":"GPU's ","i":7}
+{"type":"token","t":"warm ","i":8}
+{"type":"token","t":"glow \n","i":9}
+{"type":"end","tokens_out":10,"decode_time_ms":0,"stop_reason":"MAX_TOKENS"}

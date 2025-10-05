@@ -20,8 +20,10 @@
 namespace worker {
 namespace gguf {
 
-// GGUF magic bytes: "GGUF" (0x47475546)
-constexpr uint32_t GGUF_MAGIC = 0x47475546;
+// GGUF magic bytes: "GGUF" in little-endian (0x46554747)
+// In memory: 47 47 55 46 = 'G' 'G' 'U' 'F'
+// As uint32_t (little-endian): 0x46554747
+constexpr uint32_t GGUF_MAGIC = 0x46554747;
 
 // GGUF version 3 (required for MXFP4 support)
 constexpr uint32_t GGUF_VERSION = 3;

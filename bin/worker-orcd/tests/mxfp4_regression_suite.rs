@@ -177,7 +177,7 @@ mod mxfp4_regression_tests {
             println!("  Edge case: {}", name);
             
             // Simulate dequantization
-            let output = vec![0.0; 32];
+            let output: Vec<f32> = vec![0.0; 32];
             
             // Verify output is valid (no NaN, no Inf)
             for (i, &val) in output.iter().enumerate() {
