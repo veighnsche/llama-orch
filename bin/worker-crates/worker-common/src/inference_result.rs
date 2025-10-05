@@ -7,7 +7,23 @@
 //! - M0-W-1422: Stop sequences
 //! - M0-W-1300: HTTP API extension
 
-use crate::http::sse::StopReason;
+use serde::{Deserialize, Serialize};
+
+/// Stop reason for inference termination
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum StopReason {
+    /// Max tokens reached
+    MaxTokens,
+    /// EOS token generated
+    Eos,
+    /// Stop sequence matched
+    StopSequence,
+    /// Inference cancelled
+    Cancelled,
+    /// Error occurred
+    Error,
+}
 
 /// Complete inference result with termination reason
 #[derive(Debug, Clone)]
@@ -103,13 +119,14 @@ impl InferenceResult {
 
     /// Check if inference completed successfully (not error/cancelled)
     pub fn is_success(&self) -> bool {
-        matches!(self.stop_reason, StopReason::MaxTokens | StopReason::StopSequence)
+        matches!(self.stop_reason, StopReason::MaxTokens | StopReason::Eos | StopReason::StopSequence)
     }
 
     /// Get human-readable stop reason description
     pub fn stop_reason_description(&self) -> String {
         match &self.stop_reason {
             StopReason::MaxTokens => "Reached max_tokens limit".to_string(),
+            StopReason::Eos => "End of sequence token generated".to_string(),
             StopReason::StopSequence => {
                 if let Some(seq) = &self.stop_sequence_matched {
                     format!("Matched stop sequence: {:?}", seq)

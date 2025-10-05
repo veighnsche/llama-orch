@@ -1,6 +1,5 @@
 //! Worker error types
 
-use crate::cuda::CudaError;
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
@@ -12,7 +11,7 @@ use serde::Serialize;
 #[derive(Debug, thiserror::Error)]
 pub enum WorkerError {
     #[error("CUDA error: {0}")]
-    Cuda(#[from] CudaError),
+    Cuda(String),
 
     #[error("Invalid request: {0}")]
     InvalidRequest(String),
@@ -31,7 +30,7 @@ impl WorkerError {
     /// Get stable error code for API responses
     pub fn code(&self) -> &'static str {
         match self {
-            Self::Cuda(err) => err.code_str(),
+            Self::Cuda(_) => "CUDA_ERROR",
             Self::InvalidRequest(_) => "INVALID_REQUEST",
             Self::Timeout => "INFERENCE_TIMEOUT",
             Self::Unhealthy(_) => "WORKER_UNHEALTHY",
@@ -42,7 +41,7 @@ impl WorkerError {
     /// Check if error is retriable by orchestrator
     pub fn is_retriable(&self) -> bool {
         match self {
-            Self::Cuda(err) => err.is_retriable(),
+            Self::Cuda(_) => true,
             Self::Timeout | Self::Internal(_) => true,
             _ => false,
         }
@@ -51,10 +50,10 @@ impl WorkerError {
     /// Get HTTP status code
     pub fn status_code(&self) -> StatusCode {
         match self {
-            Self::Cuda(err) => err.status_code(),
+            Self::Cuda(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::InvalidRequest(_) => StatusCode::BAD_REQUEST,
+            Self::Timeout => StatusCode::REQUEST_TIMEOUT,
             Self::Unhealthy(_) => StatusCode::SERVICE_UNAVAILABLE,
-            Self::Timeout => StatusCode::GATEWAY_TIMEOUT,
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

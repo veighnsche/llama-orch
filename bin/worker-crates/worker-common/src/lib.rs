@@ -10,4 +10,4 @@ pub mod startup;
 pub use error::WorkerError;
 pub use inference_result::InferenceResult;
 pub use sampling_config::SamplingConfig;
-pub use startup::send_ready_callback;
+pub use startup::callback_ready;

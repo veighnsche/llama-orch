@@ -9,7 +9,23 @@
 //! - M0-W-1422: Stop sequences
 //! - M0-W-1300: HTTP API extension
 
-use crate::http::validation::ExecuteRequest;
+use serde::{Deserialize, Serialize};
+
+/// HTTP execute request (stub for now, will be in worker-http)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExecuteRequest {
+    pub prompt: String,
+    pub max_tokens: u32,
+    pub temperature: f32,
+    pub top_p: f32,
+    pub top_k: u32,
+    pub repetition_penalty: f32,
+    pub seed: Option<u64>,
+    pub stop_sequences: Vec<String>,
+    pub min_p: f32,
+    pub frequency_penalty: f32,
+    pub presence_penalty: f32,
+}
 
 /// Complete sampling configuration for inference
 ///
@@ -71,7 +87,7 @@ impl SamplingConfig {
             repetition_penalty: req.repetition_penalty,
             min_p: req.min_p,
             stop_sequences: vec![], // Tokenized later
-            stop_strings: req.stop.clone(),
+            stop_strings: req.stop_sequences.clone(),
             seed: req.seed.unwrap_or_else(|| {
                 use std::time::{SystemTime, UNIX_EPOCH};
                 SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos() as u64
@@ -172,7 +188,6 @@ mod tests {
         stop: Vec<String>,
     ) -> ExecuteRequest {
         ExecuteRequest {
-            job_id: "test".to_string(),
             prompt: "Hello".to_string(),
             max_tokens: 100,
             temperature,
@@ -180,8 +195,10 @@ mod tests {
             top_p,
             top_k,
             repetition_penalty,
-            stop,
+            stop_sequences: stop,
             min_p,
+            frequency_penalty: 0.0,
+            presence_penalty: 0.0,
         }
     }
 
