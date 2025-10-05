@@ -5,12 +5,14 @@
  * Supports Q4_K_M and MXFP4 quantization formats.
  * 
  * Spec: M0-W-1220, M0-W-1212, M0-W-1221, M0-W-1222
- * Story: GT-024, GT-025
+ * Story: GT-024, GT-025, GT-051
  */
 
 #include "gpt_weights.h"
 #include "../gguf/header_parser.h"
-#include "device_memory.h"
+#include "../gguf/llama_metadata.h"
+#include "../io/mmap_file.h"
+// #include "device_memory.h"  // TODO: GT-052 - not needed for config parsing
 #include <cuda_runtime.h>
 #include <stdexcept>
 #include <sstream>
@@ -333,18 +335,86 @@ size_t GPTWeightLoader::calculate_vram_usage(const GPTConfig& config) {
 }
 
 GPTConfig GPTWeightLoader::parse_config_from_gguf(const std::string& path) {
-    // TODO: Parse actual GGUF file
-    // For now, return GPT-OSS-20B config as stub
+    // Open and memory-map the GGUF file
+    auto mmap = io::MmapFile::open(path);
+    
+    // Parse GGUF header
+    auto header = gguf::parse_gguf_header(mmap.data(), mmap.size());
+    
+    // Extract architecture string
+    std::string arch = gguf::get_required_string(header.metadata, "general.architecture");
+    
     GPTConfig config;
-    config.vocab_size = 50257;
-    config.hidden_dim = 2048;
-    config.num_layers = 44;
-    config.num_heads = 64;
-    config.head_dim = 32;
-    config.ffn_dim = 8192;
-    config.max_seq_len = 2048;
-    config.context_length = 8192;
-    config.quant_kind = "Q4_K_M";
+    
+    // Handle Qwen2 architecture (Qwen2.5-0.5B)
+    if (arch == "qwen2") {
+        // Extract config from qwen2.* metadata keys
+        // Note: vocab_size comes from tokenizer, not qwen2.vocab_size
+        config.vocab_size = gguf::get_array_length(header.metadata, "tokenizer.ggml.tokens");
+        config.hidden_dim = gguf::get_required_uint32(header.metadata, "qwen2.embedding_length");
+        config.num_layers = gguf::get_required_uint32(header.metadata, "qwen2.block_count");
+        config.num_heads = gguf::get_required_uint32(header.metadata, "qwen2.attention.head_count");
+        config.ffn_dim = gguf::get_required_uint32(header.metadata, "qwen2.feed_forward_length");
+        config.context_length = gguf::get_required_uint32(header.metadata, "qwen2.context_length");
+        config.max_seq_len = config.context_length;  // Use context_length as max_seq_len
+        
+        // Calculate head dimension
+        config.head_dim = config.hidden_dim / config.num_heads;
+    }
+    // Handle Llama architecture (standard Llama, Phi-3, etc.)
+    else if (arch == "llama") {
+        // Use existing llama metadata parser
+        auto llama_config = gguf::parse_llama_metadata(header.metadata);
+        
+        // Map to GPTConfig
+        config.vocab_size = llama_config.vocab_size;
+        config.hidden_dim = llama_config.embedding_length;
+        config.num_layers = llama_config.block_count;
+        config.num_heads = llama_config.attention_head_count;
+        config.head_dim = llama_config.head_dim;
+        config.ffn_dim = llama_config.ffn_length;
+        config.max_seq_len = llama_config.context_length;
+        config.context_length = llama_config.context_length;
+    }
+    // Handle GPT2/GPT architecture (if needed in future)
+    else if (arch == "gpt2" || arch == "gpt") {
+        // Extract config from gpt2.* metadata keys
+        // Note: vocab_size comes from tokenizer, not gpt2.vocab_size
+        config.vocab_size = gguf::get_array_length(header.metadata, "tokenizer.ggml.tokens");
+        config.hidden_dim = gguf::get_required_uint32(header.metadata, "gpt2.embedding_length");
+        config.num_layers = gguf::get_required_uint32(header.metadata, "gpt2.block_count");
+        config.num_heads = gguf::get_required_uint32(header.metadata, "gpt2.attention.head_count");
+        config.ffn_dim = gguf::get_required_uint32(header.metadata, "gpt2.feed_forward_length");
+        config.context_length = gguf::get_required_uint32(header.metadata, "gpt2.context_length");
+        config.max_seq_len = config.context_length;
+        
+        // Calculate head dimension
+        config.head_dim = config.hidden_dim / config.num_heads;
+    }
+    else {
+        throw std::runtime_error("Unsupported architecture: " + arch + 
+                               " (supported: qwen2, llama, gpt2)");
+    }
+    
+    // Extract quantization type from first tensor
+    if (!header.tensors.empty()) {
+        // Map GGML type to quantization string
+        switch (header.tensors[0].type) {
+            case 0:  config.quant_kind = "F32"; break;
+            case 1:  config.quant_kind = "F16"; break;
+            case 2:  config.quant_kind = "Q4_0"; break;
+            case 3:  config.quant_kind = "Q4_1"; break;
+            case 6:  config.quant_kind = "Q5_0"; break;
+            case 7:  config.quant_kind = "Q5_1"; break;
+            case 8:  config.quant_kind = "Q8_0"; break;
+            case 9:  config.quant_kind = "Q8_1"; break;
+            case 12: config.quant_kind = "Q4_K_M"; break;
+            case 20: config.quant_kind = "MXFP4"; break;
+            default: config.quant_kind = "UNKNOWN"; break;
+        }
+    } else {
+        config.quant_kind = "UNKNOWN";
+    }
     
     return config;
 }

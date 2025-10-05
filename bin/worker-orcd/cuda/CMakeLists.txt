@@ -155,6 +155,8 @@ if(BUILD_TESTING)
         # GPT Sprint 4 tests (GT-024, GT-025, GT-026) - Disabled: missing kernel implementations
         # tests/test_gpt_weights.cpp
         # tests/test_gpt_model.cpp
+        # GPT Sprint 9 tests (GT-051 - Config Parsing)
+        tests/test_gpt_config_parsing.cpp
         # GPT Sprint 5 tests (GT-030 - MXFP4 Dequantization)
         tests/test_mxfp4_dequant.cu
         # GPT kernel tests - TODO: Convert to GTest format

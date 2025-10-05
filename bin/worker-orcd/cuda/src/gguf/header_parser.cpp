@@ -251,6 +251,9 @@ static GGUFMetadata read_metadata_value(
                     );
                 }
                 
+                // Store array count in uint_value for get_array_length()
+                metadata.uint_value = count;
+                
                 // For now, skip array data (we'll implement full array parsing if needed)
                 // This is safe because we're just advancing the pointer
                 for (uint64_t i = 0; i < count; ++i) {

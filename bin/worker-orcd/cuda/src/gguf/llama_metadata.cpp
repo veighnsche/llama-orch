@@ -159,10 +159,8 @@ uint32_t get_array_length(
         );
     }
     
-    // Array length is stored in array_value.size() or we need to parse it
-    // For now, we'll need to track this during parsing
-    // This is a simplified implementation - full array parsing needed
-    return static_cast<uint32_t>(kv->array_value.size());
+    // Array length is stored in uint_value by header parser
+    return static_cast<uint32_t>(kv->uint_value);
 }
 
 LlamaConfig parse_llama_metadata(const std::vector<GGUFMetadata>& metadata) {

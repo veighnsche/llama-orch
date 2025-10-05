@@ -155,11 +155,12 @@ public:
         const std::string& context
     );
     
-private:
     /**
-     * Parse GGUF metadata to extract GPT config
+     * Parse GGUF metadata to extract GPT config (public for testing)
      */
     static GPTConfig parse_config_from_gguf(const std::string& path);
+    
+private:
     
     /**
      * Load embeddings from GGUF
