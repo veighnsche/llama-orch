@@ -12,7 +12,7 @@
 //! - M0-W-1422: Stop sequences
 //! - M0-W-1300: HTTP API extension
 
-use worker_http::sse::StopReason;
+use worker_common::inference_result::StopReason;
 use worker_common::inference_result::InferenceResult;
 use worker_common::sampling_config::SamplingConfig;
 use std::time::Instant;
@@ -166,6 +166,12 @@ impl InferenceExecutor {
 
         match stop_reason {
             StopReason::MaxTokens => InferenceResult::max_tokens(
+                self.tokens,
+                self.token_ids,
+                self.config.seed,
+                decode_time_ms,
+            ),
+            StopReason::Eos => InferenceResult::max_tokens(
                 self.tokens,
                 self.token_ids,
                 self.config.seed,

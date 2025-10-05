@@ -26,12 +26,11 @@
 //! See: `.specs/01_cuda_ffi_boundary.md`
 
 mod cuda;
-mod error;
-mod http;
-mod startup;
 
 use clap::Parser;
 use std::net::SocketAddr;
+use worker_common::startup;
+use worker_http::{create_router, HttpServer};
 
 #[derive(Parser, Debug)]
 #[command(name = "worker-orcd")]
@@ -96,8 +95,8 @@ async fn main() -> anyhow::Result<()> {
 
     // Start HTTP server
     let addr = SocketAddr::from(([0, 0, 0, 0], args.port));
-    let router = http::create_router(args.worker_id, cuda_model);
-    let server = http::HttpServer::new(addr, router).await?;
+    let router = create_router(args.worker_id, cuda_model);
+    let server = HttpServer::new(addr, router).await?;
 
     server.run().await?;
 

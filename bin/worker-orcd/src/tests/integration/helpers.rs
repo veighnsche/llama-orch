@@ -210,14 +210,14 @@ pub fn assert_token_count(events: &[InferenceEvent], expected: usize) -> Result<
 
 /// Assert that inference completed successfully (not error/cancelled)
 pub fn assert_successful_completion(events: &[InferenceEvent]) -> Result<(), HelperError> {
-    use worker_http::sse::StopReason;
+    use worker_common::inference_result::StopReason;
     
     let end_event = extract_end_event(events)
         .ok_or_else(|| HelperError::OrderValidationFailed("No End event found".to_string()))?;
     
     if let InferenceEvent::End { stop_reason, .. } = end_event {
         match stop_reason {
-            StopReason::MaxTokens | StopReason::StopSequence => Ok(()),
+            StopReason::MaxTokens | StopReason::Eos | StopReason::StopSequence => Ok(()),
             StopReason::Error => Err(HelperError::OrderValidationFailed(
                 "Inference ended with error".to_string(),
             )),
@@ -253,7 +253,7 @@ pub fn make_test_request(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use worker_http::sse::StopReason;
+    use worker_common::inference_result::StopReason;
 
     fn make_started() -> InferenceEvent {
         InferenceEvent::Started {
