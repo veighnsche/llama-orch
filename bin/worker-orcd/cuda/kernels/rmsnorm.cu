@@ -1,72 +1,124 @@
-// rmsnorm.cu — RMSNorm layer normalization
+// rmsnorm.cu — RMSNorm layer normalization - LT-013
 //
 // Implements RMSNorm used in Llama models (pre/post layer normalization).
 // RMSNorm(x) = x / sqrt(mean(x^2) + eps) * weight
 //
-// Security: Validates dimensions, prevents division by zero
+// Spec: M0-W-1214, M0-W-1430
 
 #include <cuda_runtime.h>
+#include <cuda_fp16.h>
 #include <math.h>
 #include <stdio.h>
 
-// TODO(ARCH-CHANGE): Implement RMSNorm kernel per ARCHITECTURE_CHANGE_PLAN.md Phase 3:
-// Task Group 3 (Initial Kernel Set):
-// - Implement RMSNorm forward pass
-// - Fuse with weight multiplication where possible
-// - Handle epsilon for numerical stability
-// - Validate dimensions
-// - Test against PyTorch reference
-//
-// RMSNorm formula:
-//   rms = sqrt(mean(x^2) + eps)
-//   output = (x / rms) * weight
-//
-// See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md Issue #11 (unsafe CUDA FFI)
-
-__global__ void rmsnorm_kernel_stub(
-    const float* input,     // [batch, seq_len, hidden_dim]
-    const float* weight,    // [hidden_dim]
-    float* output,          // [batch, seq_len, hidden_dim]
+/**
+ * RMSNorm kernel - normalizes activations using root mean square
+ * 
+ * Formula:
+ *   rms = sqrt(mean(x^2) + eps)
+ *   output = (x / rms) * weight
+ */
+__global__ void rmsnorm_kernel(
+    half* output,
+    const half* input,
+    const half* weight,
     int batch_size,
     int seq_len,
     int hidden_dim,
     float eps
 ) {
-    // TODO: Implement RMSNorm
-    // - Calculate thread indices (batch, seq, dim)
-    // - Compute mean(x^2) using reduction
-    // - Calculate rms = sqrt(mean + eps)
-    // - Normalize: x / rms
-    // - Apply weight: normalized * weight
+    int token_idx = blockIdx.x;  // Token index (batch * seq_len)
+    int tid = threadIdx.x;       // Thread index
     
-    printf("RMSNorm stub: batch=%d, seq=%d, dim=%d\n",
-           batch_size, seq_len, hidden_dim);
+    if (token_idx >= batch_size * seq_len) return;
+    
+    const half* x = input + token_idx * hidden_dim;
+    half* y = output + token_idx * hidden_dim;
+    
+    // Shared memory for parallel reduction
+    __shared__ float sum_sq[256];
+    
+    // 1. Compute sum of squares (parallel reduction)
+    float thread_sum = 0.0f;
+    for (int i = tid; i < hidden_dim; i += blockDim.x) {
+        float val = __half2float(x[i]);
+        thread_sum += val * val;
+    }
+    sum_sq[tid] = thread_sum;
+    __syncthreads();
+    
+    // 2. Reduce sum_sq to single value
+    for (int s = blockDim.x / 2; s > 0; s >>= 1) {
+        if (tid < s) {
+            sum_sq[tid] += sum_sq[tid + s];
+        }
+        __syncthreads();
+    }
+    
+    // 3. Compute RMS
+    float mean_sq = sum_sq[0] / hidden_dim;
+    float rms = sqrtf(mean_sq + eps);
+    
+    // 4. Normalize and scale
+    for (int i = tid; i < hidden_dim; i += blockDim.x) {
+        float val = __half2float(x[i]);
+        float w = __half2float(weight[i]);
+        y[i] = __float2half((val / rms) * w);
+    }
 }
 
 extern "C" {
 
-int cuda_rmsnorm_stub(
-    const float* input,
-    const float* weight,
-    float* output,
+/**
+ * Apply RMSNorm to input tensor
+ * 
+ * @param output Output tensor [batch, seq_len, hidden_dim]
+ * @param input Input tensor [batch, seq_len, hidden_dim]
+ * @param weight Weight tensor [hidden_dim]
+ * @param batch_size Batch size
+ * @param seq_len Sequence length
+ * @param hidden_dim Hidden dimension
+ * @param eps Epsilon for numerical stability (default 1e-6)
+ * @return 0 on success, error code on failure
+ */
+int cuda_rmsnorm_forward(
+    half* output,
+    const half* input,
+    const half* weight,
     int batch_size,
     int seq_len,
     int hidden_dim,
     float eps
 ) {
-    // TODO: Validate dimensions
-    // - Check all dimensions > 0
-    // - Check eps > 0 (prevent division by zero)
-    // - Check hidden_dim is reasonable
+    // Validate dimensions
+    if (batch_size <= 0 || seq_len <= 0 || hidden_dim <= 0) {
+        fprintf(stderr, "RMSNorm: Invalid dimensions\n");
+        return -1;
+    }
     
-    // TODO: Launch kernel
-    // dim3 block(256);
-    // dim3 grid((batch_size * seq_len + 255) / 256);
-    // rmsnorm_kernel<<<grid, block>>>(input, weight, output, batch_size, seq_len, hidden_dim, eps);
+    if (eps <= 0.0f) {
+        fprintf(stderr, "RMSNorm: eps must be positive\n");
+        return -1;
+    }
     
-    // TODO: Check for kernel launch errors
+    // Launch kernel
+    // One block per token, 256 threads per block
+    int num_tokens = batch_size * seq_len;
+    dim3 grid(num_tokens);
+    dim3 block(256);
     
-    return 0; // Success
+    rmsnorm_kernel<<<grid, block>>>(
+        output, input, weight,
+        batch_size, seq_len, hidden_dim, eps
+    );
+    
+    // Check for kernel launch errors
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        fprintf(stderr, "RMSNorm kernel launch failed: %s\n", cudaGetErrorString(err));
+        return -1;
+    }
+    
+    return 0;
 }
 
 } // extern "C"

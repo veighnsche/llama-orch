@@ -9,10 +9,12 @@ pub mod vocab;
 pub mod merges;
 pub mod encoder;
 pub mod decoder;
+pub mod streaming;
 pub mod error;
 
 pub use vocab::{Vocabulary, VocabParser};
 pub use merges::{MergeTable, MergePair, MergesParser};
 pub use encoder::BPEEncoder;
 pub use decoder::BPEDecoder;
+pub use streaming::StreamingDecoder;
 pub use error::{TokenizerError, VocabError, MergeError, EncodeError, DecodeError};

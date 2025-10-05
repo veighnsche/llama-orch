@@ -49,6 +49,7 @@ set(KERNEL_SOURCES
     kernels/sampling.cu
     kernels/rope.cu
     kernels/rmsnorm.cu
+    kernels/residual.cu
     kernels/embedding.cu
     kernels/kv_cache.cu
 )
@@ -113,6 +114,9 @@ if(BUILD_TESTING)
         tests/test_chunked_transfer.cpp
         tests/test_pre_load_validation.cpp
         tests/test_arch_detect.cpp
+        tests/test_rope_kernel.cpp
+        tests/test_rmsnorm_kernel.cpp
+        tests/test_residual_kernel.cpp
     )
     
     # Build test executable

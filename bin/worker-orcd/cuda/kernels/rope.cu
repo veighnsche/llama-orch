@@ -1,79 +1,154 @@
-// rope.cu — Rotary Position Embedding (RoPE)
+// rope.cu — Rotary Position Embedding (RoPE) - LT-012
 //
 // Implements RoPE for positional encoding in Llama models.
 // Supports rope_llama (freq_base=10000) and rope_neox variants.
 //
-// Security: Validates tensor dimensions, checks for buffer overflows
+// Spec: M0-W-1214, M0-W-1430
 
 #include <cuda_runtime.h>
+#include <cuda_fp16.h>
 #include <math.h>
 #include <stdio.h>
 
-// TODO(ARCH-CHANGE): Implement RoPE kernel per ARCHITECTURE_CHANGE_PLAN.md Phase 3:
-// Task Group 3 (Initial Kernel Set):
-// - Implement rope_llama variant (freq_base=10000)
-// - Support rope_neox variant for compatibility
-// - Apply rotation to Q and K tensors
-// - Validate dimensions (seq_len, head_dim, num_heads)
-// - Test against PyTorch reference implementation
-//
-// RoPE formula:
-//   theta_i = 10000^(-2i/d) for i in [0, d/2)
-//   x_rotated[2i]   = x[2i] * cos(m*theta_i) - x[2i+1] * sin(m*theta_i)
-//   x_rotated[2i+1] = x[2i] * sin(m*theta_i) + x[2i+1] * cos(m*theta_i)
-//   where m is the position index
-//
-// See: SECURITY_AUDIT_TRIO_BINARY_ARCHITECTURE.md Issue #11 (unsafe CUDA FFI)
-
-__global__ void rope_kernel_stub(
-    float* q,           // [batch, seq_len, num_heads, head_dim]
-    float* k,           // [batch, seq_len, num_kv_heads, head_dim]
+/**
+ * RoPE kernel - applies rotary position embedding to Q and K tensors
+ * 
+ * Formula:
+ *   theta_i = position / (freq_base^(2i / head_dim))
+ *   x[2i]   = x_in[2i]   * cos(theta_i) - x_in[2i+1] * sin(theta_i)
+ *   x[2i+1] = x_in[2i]   * sin(theta_i) + x_in[2i+1] * cos(theta_i)
+ */
+__global__ void rope_kernel(
+    half* q_out,
+    half* k_out,
+    const half* q_in,
+    const half* k_in,
     int batch_size,
     int seq_len,
     int num_heads,
     int num_kv_heads,
     int head_dim,
-    float freq_base
+    float freq_base,
+    int rope_dim
 ) {
-    // TODO: Implement RoPE rotation
-    // - Calculate thread indices (batch, seq, head, dim)
-    // - Compute theta_i = freq_base^(-2i/head_dim)
-    // - Apply rotation formula
-    // - Handle both Q and K tensors
+    int pos = blockIdx.x;              // Position in sequence
+    int head = blockIdx.y;             // Head index
+    int dim_pair = threadIdx.x;        // Dimension pair index (0, 1, 2, ...)
     
-    printf("RoPE stub: batch=%d, seq=%d, heads=%d, dim=%d\n",
-           batch_size, seq_len, num_heads, head_dim);
+    if (pos >= seq_len || dim_pair >= rope_dim / 2) return;
+    
+    int dim = dim_pair * 2;  // Actual dimension (0, 2, 4, ...)
+    
+    // Calculate rotation angle
+    float inv_freq = 1.0f / powf(freq_base, (float)dim / (float)rope_dim);
+    float theta = (float)pos * inv_freq;
+    
+    // Compute sin and cos
+    float cos_theta, sin_theta;
+    sincosf(theta, &sin_theta, &cos_theta);
+    
+    // Apply rotation to Q tensor
+    if (head < num_heads) {
+        int q_idx = pos * num_heads * head_dim + head * head_dim + dim;
+        
+        half q0 = q_in[q_idx];
+        half q1 = q_in[q_idx + 1];
+        
+        float q0_f = __half2float(q0);
+        float q1_f = __half2float(q1);
+        
+        q_out[q_idx]     = __float2half(q0_f * cos_theta - q1_f * sin_theta);
+        q_out[q_idx + 1] = __float2half(q0_f * sin_theta + q1_f * cos_theta);
+    }
+    
+    // Apply rotation to K tensor (with GQA support)
+    if (head < num_kv_heads) {
+        int k_idx = pos * num_kv_heads * head_dim + head * head_dim + dim;
+        
+        half k0 = k_in[k_idx];
+        half k1 = k_in[k_idx + 1];
+        
+        float k0_f = __half2float(k0);
+        float k1_f = __half2float(k1);
+        
+        k_out[k_idx]     = __float2half(k0_f * cos_theta - k1_f * sin_theta);
+        k_out[k_idx + 1] = __float2half(k0_f * sin_theta + k1_f * cos_theta);
+    }
 }
 
 extern "C" {
 
-int cuda_rope_stub(
-    float* q,
-    float* k,
+/**
+ * Apply RoPE to query and key tensors
+ * 
+ * @param q_out Output query tensor [batch, seq_len, num_heads, head_dim]
+ * @param k_out Output key tensor [batch, seq_len, num_kv_heads, head_dim]
+ * @param q_in Input query tensor
+ * @param k_in Input key tensor
+ * @param batch_size Batch size
+ * @param seq_len Sequence length
+ * @param num_heads Number of query heads
+ * @param num_kv_heads Number of key/value heads (for GQA)
+ * @param head_dim Dimension per head
+ * @param freq_base Frequency base (10000.0 or 1000000.0)
+ * @param rope_dim RoPE dimensions (usually head_dim)
+ * @return 0 on success, error code on failure
+ */
+int cuda_rope_forward(
+    half* q_out,
+    half* k_out,
+    const half* q_in,
+    const half* k_in,
     int batch_size,
     int seq_len,
     int num_heads,
     int num_kv_heads,
     int head_dim,
-    float freq_base
+    float freq_base,
+    int rope_dim
 ) {
-    // TODO: Validate dimensions
-    // - Check all dimensions > 0
-    // - Check head_dim is even (required for RoPE)
-    // - Check num_kv_heads divides num_heads (for GQA)
+    // Validate dimensions
+    if (batch_size <= 0 || seq_len <= 0 || num_heads <= 0 || 
+        num_kv_heads <= 0 || head_dim <= 0 || rope_dim <= 0) {
+        fprintf(stderr, "RoPE: Invalid dimensions\n");
+        return -1;
+    }
     
-    // TODO: Calculate grid/block dimensions
-    // dim3 block(256);
-    // dim3 grid((batch_size * seq_len * num_heads * head_dim + 255) / 256);
+    if (head_dim % 2 != 0) {
+        fprintf(stderr, "RoPE: head_dim must be even\n");
+        return -1;
+    }
     
-    // TODO: Launch kernel
-    // rope_kernel<<<grid, block>>>(q, k, batch_size, seq_len, num_heads, num_kv_heads, head_dim, freq_base);
+    if (rope_dim > head_dim) {
+        fprintf(stderr, "RoPE: rope_dim cannot exceed head_dim\n");
+        return -1;
+    }
     
-    // TODO: Check for kernel launch errors
-    // cudaError_t err = cudaGetLastError();
-    // if (err != cudaSuccess) { return error_code; }
+    if (num_heads % num_kv_heads != 0) {
+        fprintf(stderr, "RoPE: num_heads must be divisible by num_kv_heads (GQA)\n");
+        return -1;
+    }
     
-    return 0; // Success
+    // Launch kernel
+    // Grid: (seq_len, max(num_heads, num_kv_heads))
+    // Block: (rope_dim / 2) threads (one thread per dimension pair)
+    dim3 grid(seq_len, (num_heads > num_kv_heads) ? num_heads : num_kv_heads);
+    dim3 block(rope_dim / 2);
+    
+    rope_kernel<<<grid, block>>>(
+        q_out, k_out, q_in, k_in,
+        batch_size, seq_len, num_heads, num_kv_heads,
+        head_dim, freq_base, rope_dim
+    );
+    
+    // Check for kernel launch errors
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        fprintf(stderr, "RoPE kernel launch failed: %s\n", cudaGetErrorString(err));
+        return -1;
+    }
+    
+    return 0;
 }
 
 } // extern "C"
