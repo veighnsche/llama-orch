@@ -19,7 +19,7 @@
 
 ### 2. Foundational Concepts
 - [2.1 Model Reference Format](#21-model-reference-format-sys-21x)
-- [2.2 VRAM-Only Policy](#22-vram-only-policy-sys-22x)
+- [2.2 Memory Architecture Policy](#22-memory-architecture-policy-sys-22x)
 - [2.3 Determinism Principles](#23-determinism-principles-sys-23x)
 - [2.4 Process Isolation Rationale](#24-process-isolation-rationale-sys-24x)
 - [2.5 FFI Boundaries](#25-ffi-boundaries-sys-25x)
@@ -159,7 +159,7 @@
 | ID Range | Section | Description |
 |----------|---------|-------------|
 | SYS-2.1.x | Foundational Concepts | Model Reference Format |
-| SYS-2.2.x | Foundational Concepts | VRAM-Only Policy |
+| SYS-2.2.x | Foundational Concepts | Memory Architecture Policy |
 | SYS-2.3.x | Foundational Concepts | Determinism Principles |
 | SYS-2.4.x | Foundational Concepts | Process Isolation |
 | SYS-2.5.x | Foundational Concepts | FFI Boundaries |
@@ -212,11 +212,11 @@
 
 ### 1.1 Purpose
 
-Llama-Orch is a **VRAM-only, multi-node GPU orchestration system** for large language model inference. It provides test reproducibility, EU-native compliance, and enterprise-grade orchestration across distributed GPU resources.
+Llama-Orch is a **multi-node GPU orchestration system** for large language model inference. It provides test reproducibility, EU-native compliance, and enterprise-grade orchestration across distributed GPU resources with support for multiple worker types and memory architectures.
 
 **Core Value Propositions:**
 1. **Test Reproducibility**: Same seed + temp=0 → Same output (for testing validation only)
-2. **VRAM-Only Policy**: Model fully resident in GPU VRAM (no RAM fallback)
+2. **Multi-Architecture Support**: NVIDIA CUDA workers (VRAM-only), Apple ARM workers (unified memory), and extensible worker types
 3. **Multi-Node Orchestration**: Distribute models across GPU clusters
 4. **EU Compliance**: GDPR-native, EU-only data residency
 5. **Marketplace Ready**: Enable GPU provider ecosystem
@@ -334,7 +334,7 @@ Worker implementations MUST declare their memory architecture requirements. The 
 The system MUST provide reproducibility for testing: same model + same seed + temp=0 + same prompt → same output (for validation only, NOT a product guarantee).
 
 **Requirements:**
-- Sealed VRAM shards (worker-orcd)
+- Sealed memory allocation (worker-specific: VRAM shards for worker-orcd, unified memory for worker-aarmd)
 - Pinned engine versions
 - Temperature-based sampling (M0: 0.0-2.0 supported; temp=0 for testing reproducibility)
 - Batch=1 (single request at a time)
@@ -346,7 +346,7 @@ The system MUST provide reproducibility for testing: same model + same seed + te
 #### [SYS-2.3.2] System-Level Guarantees
 
 **System-level guarantees** (what we control):
-- Worker-orcd MUST allocate and keep all model weights, KV cache, and activations in VRAM only
+- Workers MUST allocate and keep all model weights, KV cache, and activations in their designated memory architecture (VRAM-only for worker-orcd, unified memory for worker-aarmd)
 - Engine versions and kernel parameters MUST be pinned and recorded per job
 - SSE event ordering MUST be stable and reproducible
 - Same seed + same inputs MUST follow identical code paths through the system
@@ -383,7 +383,7 @@ The system MUST provide reproducibility for testing: same model + same seed + te
 
 Workers MUST run in separate processes from pool managers.
 
-**Why**: CUDA allocations are per-process. Workers need self-contained VRAM ownership within their CUDA context.
+**Why**: Hardware-specific memory allocations (e.g., CUDA VRAM, Metal unified memory) are per-process. Workers need self-contained memory ownership within their execution context.
 
 #### [SYS-2.4.2] Worker Process Isolation
 
@@ -391,11 +391,11 @@ Workers MUST run in separate processes:
 
 **Requirements**:
 - Each worker MUST have its own OS process
-- Each worker MUST have its own CUDA context
-- Workers MUST NOT share VRAM pointers
-- Worker MUST own complete VRAM lifecycle (allocate → use → free)
+- Each worker MUST have its own hardware context (e.g., CUDA context for NVIDIA workers, Metal context for Apple ARM workers)
+- Workers MUST NOT share memory pointers across processes
+- Worker MUST own complete memory lifecycle (allocate → use → free)
 
-**Rationale**: CUDA VRAM allocations are per-process. Workers need isolated VRAM ownership.
+**Rationale**: Hardware-specific memory allocations are per-process. Workers need isolated memory ownership within their execution context.
 
 **Testing benefit**: Enables standalone worker testing (`worker-orcd --model X --gpu 0`).
 
@@ -460,7 +460,7 @@ The system supports five distinct deployment modes with different security and o
 **Requirements**:
 - Orchestratord and pool-managerd MUST bind to loopback (127.0.0.1) by default.
 - Authentication MUST be disabled by default for localhost communication.
-- A single worker per GPU MUST be enforced (batch=1) and VRAM-only policy MUST be enabled.
+- A single worker per GPU MUST be enforced (batch=1). Worker-specific memory policies (e.g., VRAM-only for worker-orcd) MUST be enforced by the respective worker implementation.
 - Configuration SHOULD be minimal; sensible defaults MUST be provided for ports and timeouts.
 
 ---
@@ -520,7 +520,7 @@ The system supports five distinct deployment modes with different security and o
 **Requirements**:
 - Orchestratord MUST remain single-instance with persistent state (see SYS-6.1.3); restarts MUST reload queue state and allow SSE reconnection via checkpoints.
 - Pool-managerd MUST manage workers: single-GPU workers map 1:1 to GPUs; multi-GPU workers (tensor parallel) map 1:N and are tracked with device masks.
-- VRAM accounting MUST handle per-GPU allocation and reserved headroom; preflight MUST fail when insufficient free VRAM across required GPUs.
+- Memory accounting MUST handle per-GPU allocation and reserved headroom (VRAM for NVIDIA workers, unified memory for Apple ARM workers); preflight MUST fail when insufficient free memory across required GPUs.
 - Cancellation and timeouts MUST apply per-job; multi-GPU workers MUST release all GPU allocations on job termination.
 
 ---
@@ -555,7 +555,7 @@ The system supports five distinct deployment modes with different security and o
 - Orchestratord MUST manage multiple pool-managerd across nodes and MUST make all placement decisions centrally (no nested orchestrators).
 - Heartbeat aggregation MUST tolerate partial failures; pools missing heartbeats beyond timeout MUST be excluded from scheduling.
 - Network communication between nodes SHOULD use TLS or a trusted network; service discovery MAY be static or registry-based.
-- Scheduling SHOULD prefer locality and capacity signals (e.g., free VRAM); policy MUST be observable via metrics and logs.
+- Scheduling SHOULD prefer locality and capacity signals (e.g., free memory/VRAM); policy MUST be observable via metrics and logs.
 
 ---
 
@@ -1641,9 +1641,10 @@ Orchestrator uses capabilities for job routing, not worker types.
      --port 8001 \
      --callback-url http://pool:9200/v2/internal/workers/ready
 
-5. Worker: Initialize
-   - cuda: Enforce VRAM-only, allocate VRAM
-   - model-lifecycle: Load model to VRAM
+5. Worker: Initialize (worker-specific)
+   - For worker-orcd (NVIDIA): Enforce VRAM-only, allocate VRAM
+   - For worker-aarmd (Apple): Initialize Metal, allocate unified memory
+   - model-lifecycle: Load model to designated memory
    - inference-api: Start HTTP server
    - health-monitor: Start self-monitoring
 
@@ -1819,7 +1820,7 @@ Orchestrator uses capabilities for job routing, not worker types.
 Content already defined in Section 2.3 (Foundational Concepts). Cross-reference: See SYS-2.3.1 through SYS-2.3.5 for complete determinism requirements.
 
 **Summary**:
-- System-level guarantees: VRAM-only, pinned engines, stable event ordering
+- System-level guarantees: Worker-specific memory architecture (VRAM-only for worker-orcd, unified memory for worker-aarmd), pinned engines, stable event ordering
 - Model-level limitations: Engines and hardware may introduce non-determinism
 - Best-effort approach with recording for reproducibility
 
@@ -2509,9 +2510,9 @@ worker-orcd
     - `gguf-bpe`: Pure-Rust GGUF byte-BPE (Qwen/Phi-3)
     - `hf-json`: Hugging Face tokenizers crate (GPT-OSS-20B)
   - **Model load progress events** (0%, 25%, 50%, 75%, 100%) ← **CRITICAL** (user feedback)
-  - **VRAM residency verification** (periodic checks) ← **CRITICAL** (runtime safety)
-  - **VRAM OOM handling** (graceful error, not crash) ← **CRITICAL** (safety)
-- VRAM-only enforcement (no RAM fallback, no UMA)
+  - **Memory residency verification** (periodic checks, worker-specific) ← **CRITICAL** (runtime safety)
+  - **Memory OOM handling** (graceful error, not crash) ← **CRITICAL** (safety)
+- Worker-orcd: VRAM-only enforcement (no RAM fallback, no UMA) - see `bin/.specs/01_M0_worker_orcd.md`
 - Narration-core logging (basic events only, NO performance metrics)
 - Temperature scaling (0.0-2.0 range)
 
@@ -2851,11 +2852,16 @@ worker-orcd
 
 ## 15. Non-Goals / Out of Scope
 
-- RAM fallback for model weights, KV cache, or activations — NOT SUPPORTED (VRAM-only policy applies)
-- CUDA Unified Memory (UMA) and zero-copy modes — NOT SUPPORTED
-- Disk swapping or spill for inference state — NOT SUPPORTED
-- CPU inference fallback — NOT SUPPORTED
+**For worker-orcd (NVIDIA CUDA workers only)**:
+- RAM fallback for model weights, KV cache, or activations — NOT SUPPORTED (VRAM-only policy for worker-orcd)
+- CUDA Unified Memory (UMA) and zero-copy modes — NOT SUPPORTED for worker-orcd
+- Disk swapping or spill for inference state — NOT SUPPORTED for worker-orcd
+- CPU inference fallback — NOT SUPPORTED for worker-orcd
+
+**System-wide**:
 - Nested schedulers/orchestrators — NOT SUPPORTED; platform routing is federated, not nested (see §3.5)
+
+**Note**: Other worker types (e.g., worker-aarmd for Apple ARM) have different memory architectures and constraints defined in their respective specs.
 
 ---
 
