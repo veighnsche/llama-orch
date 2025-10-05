@@ -6,7 +6,6 @@
 use super::error::CudaError;
 use super::ffi;
 use super::model::Model;
-use std::os::raw::c_int;
 
 /// Real inference context using QwenTransformer
 ///

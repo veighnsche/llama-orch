@@ -6,9 +6,11 @@
 
 #include "transformer/qwen_transformer.h"
 #include "model/qwen_weight_loader.h"
+#include "model_impl.h"
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <cstring>
 
 // External sampling function
 extern "C" int cuda_sample_token(
@@ -56,7 +58,30 @@ InferenceContext* cuda_inference_init(
     int* error
 ) {
     try {
-        auto* model = reinterpret_cast<worker::model::QwenModel*>(model_ptr);
+        // model_ptr is actually a ModelImpl* (stub), not QwenModel*
+        // We need to load the real weights from the GGUF file
+        auto* model_impl = reinterpret_cast<worker::ModelImpl*>(model_ptr);
+        const char* model_path = model_impl->model_path().c_str();
+        
+        fprintf(stderr, "🔧 Loading real weights from GGUF: %s\n", model_path);
+        
+        // Create Qwen config
+        worker::model::QwenConfig qwen_config;
+        qwen_config.vocab_size = vocab_size;
+        qwen_config.hidden_dim = hidden_dim;
+        qwen_config.num_layers = num_layers;
+        qwen_config.num_heads = num_heads;
+        qwen_config.num_kv_heads = num_kv_heads;
+        qwen_config.context_length = context_length;
+        
+        // Load real weights from GGUF
+        worker::model::QwenModel* qwen_model = worker::model::QwenWeightLoader::load(
+            model_path,
+            qwen_config
+        );
+        
+        fprintf(stderr, "✅ Weights loaded: %.2f MB\n", 
+                qwen_model->vram_usage / 1024.0 / 1024.0);
         
         // Create transformer config
         worker::transformer::TransformerConfig config;
@@ -71,7 +96,7 @@ InferenceContext* cuda_inference_init(
         config.rope_freq_base = 1000000.0f;  // Qwen2.5 specific
         
         // Create transformer
-        auto* transformer = new worker::transformer::QwenTransformer(model, config);
+        auto* transformer = new worker::transformer::QwenTransformer(qwen_model, config);
         
         // Allocate logits buffer
         float* logits;
@@ -80,7 +105,7 @@ InferenceContext* cuda_inference_init(
         // Create context
         auto* ctx = new InferenceContext();
         ctx->transformer = transformer;
-        ctx->model = model;
+        ctx->model = qwen_model;
         ctx->logits_buffer = logits;
         
         fprintf(stderr, "✅ Inference context initialized\n");
@@ -161,7 +186,7 @@ void cuda_inference_reset(InferenceContext* ctx) {
  * 
  * @param ctx Inference context
  */
-void cuda_inference_free(InferenceContext* ctx) {
+void cuda_inference_context_free(InferenceContext* ctx) {
     if (ctx) {
         if (ctx->logits_buffer) {
             cudaFree(ctx->logits_buffer);

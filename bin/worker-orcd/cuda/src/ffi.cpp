@@ -107,7 +107,9 @@ extern "C" CudaModel* cuda_load_model(
             throw CudaError::invalid_parameter("NULL pointer provided");
         }
         
-        // IMPLEMENTED: Use existing GGUF parser and model code!
+        // NOTE: For now, just create a stub ModelImpl
+        // The real weights will be loaded when inference context is created
+        // This is because we need model config from Rust to load weights properly
         auto* context = reinterpret_cast<Context*>(ctx);
         auto model = std::make_unique<ModelImpl>(*context, model_path);
         *vram_bytes_used = model->vram_bytes();

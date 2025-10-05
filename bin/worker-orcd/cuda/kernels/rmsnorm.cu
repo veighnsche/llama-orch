@@ -121,4 +121,35 @@ int cuda_rmsnorm_forward(
     return 0;
 }
 
+/**
+ * Wrapper for transformer - single token inference
+ * 
+ * This matches the signature expected by QwenTransformer.
+ * For single token generation, seq_len = 1.
+ */
+void cuda_rmsnorm_forward(
+    const void* input,
+    const void* weight,
+    void* output,
+    uint32_t batch_size,
+    uint32_t hidden_dim,
+    float eps,
+    cudaStream_t stream
+) {
+    // For single token generation, seq_len = 1
+    const int seq_len = 1;
+    
+    cuda_rmsnorm_forward(
+        reinterpret_cast<half*>(output),
+        reinterpret_cast<const half*>(input),
+        reinterpret_cast<const half*>(weight),
+        static_cast<int>(batch_size),
+        seq_len,
+        static_cast<int>(hidden_dim),
+        eps
+    );
+    
+    // Note: stream parameter ignored for now (using default stream)
+}
+
 } // extern "C"
