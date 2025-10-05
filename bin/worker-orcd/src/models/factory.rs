@@ -24,7 +24,7 @@ use super::{
     phi3::{Phi3Config, Phi3WeightLoader},
     qwen::{QwenConfig, QwenWeightLoader},
 };
-use crate::gguf::GGUFMetadata;
+use worker_gguf::GGUFMetadata;
 use thiserror::Error;
 
 /// Factory errors

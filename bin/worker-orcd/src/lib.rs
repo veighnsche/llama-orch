@@ -5,7 +5,6 @@
 pub mod cuda;
 pub mod cuda_ffi;
 pub mod error;
-pub mod gguf;
 pub mod http;
 pub mod inference;
 pub mod inference_executor;
@@ -17,6 +16,9 @@ pub mod startup;
 pub mod tests;
 pub mod tokenizer;
 pub mod util;
+
+// Re-export from worker-gguf
+pub use worker_gguf as gguf;
 
 // Re-export commonly used types
 pub use cuda::CudaError;

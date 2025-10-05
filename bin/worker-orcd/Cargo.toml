@@ -79,6 +79,7 @@ name = "performance_baseline"
 harness = false
 
 [dependencies]
+worker-gguf = { path = "../worker-crates/worker-gguf" }
 tokio = { workspace = true }
 anyhow.workspace = true
 tracing.workspace = true
