@@ -10,3 +10,5 @@ thiserror = "1.0"
 worker-common = { path = "../worker-common" }
 
 [dev-dependencies]
+tokio = { version = "1.0", features = ["full"] }
+proptest = "1.0"

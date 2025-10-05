@@ -119,7 +119,10 @@ impl InferenceResult {
 
     /// Check if inference completed successfully (not error/cancelled)
     pub fn is_success(&self) -> bool {
-        matches!(self.stop_reason, StopReason::MaxTokens | StopReason::Eos | StopReason::StopSequence)
+        matches!(
+            self.stop_reason,
+            StopReason::MaxTokens | StopReason::Eos | StopReason::StopSequence
+        )
     }
 
     /// Get human-readable stop reason description
@@ -209,7 +212,185 @@ mod tests {
         let error = InferenceResult::error(vec![], vec![], 42, 0);
         assert!(error.stop_reason_description().contains("error"));
     }
+
+    #[test]
+    fn test_eos_result() {
+        // EOS is not directly constructible but we can test via StopReason
+        let mut result = InferenceResult::max_tokens(vec!["Hello".to_string()], vec![100], 42, 100);
+        result.stop_reason = StopReason::Eos;
+
+        assert_eq!(result.stop_reason, StopReason::Eos);
+        assert!(result.is_success());
+        assert!(result.stop_reason_description().contains("End of sequence"));
+    }
+
+    #[test]
+    fn test_token_count_consistency() {
+        let tokens = vec!["a".to_string(), "b".to_string(), "c".to_string()];
+        let token_ids = vec![1, 2, 3];
+        let result = InferenceResult::max_tokens(tokens.clone(), token_ids.clone(), 42, 100);
+
+        assert_eq!(result.token_count(), 3);
+        assert_eq!(result.tokens.len(), 3);
+        assert_eq!(result.token_ids.len(), 3);
+    }
+
+    #[test]
+    fn test_empty_result() {
+        let result = InferenceResult::error(vec![], vec![], 42, 0);
+        assert_eq!(result.token_count(), 0);
+        assert!(result.tokens.is_empty());
+        assert!(result.token_ids.is_empty());
+    }
+
+    #[test]
+    fn test_large_token_count() {
+        let tokens: Vec<String> = (0..1000).map(|i| format!("token{}", i)).collect();
+        let token_ids: Vec<u32> = (0..1000).collect();
+        let result = InferenceResult::max_tokens(tokens, token_ids, 42, 5000);
+
+        assert_eq!(result.token_count(), 1000);
+    }
+
+    #[test]
+    fn test_stop_sequence_without_match() {
+        let result = InferenceResult::stop_sequence(
+            vec!["test".to_string()],
+            vec![100],
+            42,
+            100,
+            "".to_string(),
+        );
+
+        assert_eq!(result.stop_reason, StopReason::StopSequence);
+        assert_eq!(result.stop_sequence_matched, Some("".to_string()));
+    }
+
+    #[test]
+    fn test_decode_time_tracking() {
+        let result = InferenceResult::max_tokens(vec![], vec![], 42, 12345);
+        assert_eq!(result.decode_time_ms, 12345);
+    }
+
+    #[test]
+    fn test_seed_tracking() {
+        let result = InferenceResult::max_tokens(vec![], vec![], 999, 100);
+        assert_eq!(result.seed, 999);
+    }
+
+    #[test]
+    fn test_stop_reason_serialization() {
+        // Test that StopReason serializes to SCREAMING_SNAKE_CASE
+        let json = serde_json::to_string(&StopReason::MaxTokens).unwrap();
+        assert_eq!(json, "\"MAX_TOKENS\"");
+
+        let json = serde_json::to_string(&StopReason::Eos).unwrap();
+        assert_eq!(json, "\"EOS\"");
+
+        let json = serde_json::to_string(&StopReason::StopSequence).unwrap();
+        assert_eq!(json, "\"STOP_SEQUENCE\"");
+
+        let json = serde_json::to_string(&StopReason::Cancelled).unwrap();
+        assert_eq!(json, "\"CANCELLED\"");
+
+        let json = serde_json::to_string(&StopReason::Error).unwrap();
+        assert_eq!(json, "\"ERROR\"");
+    }
+
+    #[test]
+    fn test_stop_reason_deserialization() {
+        let reason: StopReason = serde_json::from_str("\"MAX_TOKENS\"").unwrap();
+        assert_eq!(reason, StopReason::MaxTokens);
+
+        let reason: StopReason = serde_json::from_str("\"EOS\"").unwrap();
+        assert_eq!(reason, StopReason::Eos);
+
+        let reason: StopReason = serde_json::from_str("\"STOP_SEQUENCE\"").unwrap();
+        assert_eq!(reason, StopReason::StopSequence);
+
+        let reason: StopReason = serde_json::from_str("\"CANCELLED\"").unwrap();
+        assert_eq!(reason, StopReason::Cancelled);
+
+        let reason: StopReason = serde_json::from_str("\"ERROR\"").unwrap();
+        assert_eq!(reason, StopReason::Error);
+    }
+
+    #[test]
+    fn test_is_success_classification() {
+        // Success cases
+        let max_tokens = InferenceResult::max_tokens(vec![], vec![], 42, 0);
+        assert!(max_tokens.is_success());
+
+        let mut eos = InferenceResult::max_tokens(vec![], vec![], 42, 0);
+        eos.stop_reason = StopReason::Eos;
+        assert!(eos.is_success());
+
+        let stop_seq = InferenceResult::stop_sequence(vec![], vec![], 42, 0, "END".to_string());
+        assert!(stop_seq.is_success());
+
+        // Failure cases
+        let cancelled = InferenceResult::cancelled(vec![], vec![], 42, 0);
+        assert!(!cancelled.is_success());
+
+        let error = InferenceResult::error(vec![], vec![], 42, 0);
+        assert!(!error.is_success());
+    }
+
+    #[test]
+    fn test_stop_sequence_description_with_match() {
+        let result = InferenceResult::stop_sequence(vec![], vec![], 42, 0, "###".to_string());
+        let desc = result.stop_reason_description();
+        assert!(desc.contains("stop sequence"));
+        assert!(desc.contains("###"));
+    }
+
+    #[test]
+    fn test_stop_sequence_description_without_match() {
+        let mut result = InferenceResult::max_tokens(vec![], vec![], 42, 0);
+        result.stop_reason = StopReason::StopSequence;
+        result.stop_sequence_matched = None;
+
+        let desc = result.stop_reason_description();
+        assert!(desc.contains("stop sequence"));
+        assert!(!desc.contains(":"));
+    }
+
+    #[test]
+    fn test_unicode_tokens() {
+        let tokens = vec!["Hello".to_string(), " 世界".to_string(), "🌍".to_string()];
+        let token_ids = vec![100, 200, 300];
+        let result = InferenceResult::max_tokens(tokens.clone(), token_ids, 42, 100);
+
+        assert_eq!(result.token_count(), 3);
+        assert_eq!(result.tokens[1], " 世界");
+        assert_eq!(result.tokens[2], "🌍");
+    }
+
+    #[test]
+    fn test_partial_generation_on_error() {
+        let partial_tokens = vec!["Hello".to_string(), " wor".to_string()];
+        let partial_ids = vec![100, 200];
+        let result = InferenceResult::error(partial_tokens.clone(), partial_ids.clone(), 42, 50);
+
+        assert_eq!(result.token_count(), 2);
+        assert_eq!(result.tokens, partial_tokens);
+        assert_eq!(result.token_ids, partial_ids);
+        assert!(!result.is_success());
+    }
+
+    #[test]
+    fn test_partial_generation_on_cancellation() {
+        let partial_tokens = vec!["Partial".to_string()];
+        let partial_ids = vec![100];
+        let result =
+            InferenceResult::cancelled(partial_tokens.clone(), partial_ids.clone(), 42, 25);
+
+        assert_eq!(result.token_count(), 1);
+        assert_eq!(result.tokens, partial_tokens);
+        assert_eq!(result.token_ids, partial_ids);
+        assert!(!result.is_success());
+    }
 }
 
 // ---
-// Built by Foundation-Alpha 🏗️
+// Verified by Testing Team 🔍

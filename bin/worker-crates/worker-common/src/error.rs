@@ -40,11 +40,7 @@ impl WorkerError {
 
     /// Check if error is retriable by orchestrator
     pub fn is_retriable(&self) -> bool {
-        match self {
-            Self::Cuda(_) => true,
-            Self::Timeout | Self::Internal(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::Cuda(_) | Self::Timeout | Self::Internal(_))
     }
 
     /// Get HTTP status code
@@ -78,3 +74,178 @@ impl IntoResponse for WorkerError {
         (status, Json(body)).into_response()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cuda_error_properties() {
+        let err = WorkerError::Cuda("out of memory".to_string());
+        assert_eq!(err.code(), "CUDA_ERROR");
+        assert!(err.is_retriable());
+        assert_eq!(err.status_code(), StatusCode::INTERNAL_SERVER_ERROR);
+        assert!(err.to_string().contains("CUDA error"));
+        assert!(err.to_string().contains("out of memory"));
+    }
+
+    #[test]
+    fn test_invalid_request_error_properties() {
+        let err = WorkerError::InvalidRequest("missing prompt".to_string());
+        assert_eq!(err.code(), "INVALID_REQUEST");
+        assert!(!err.is_retriable());
+        assert_eq!(err.status_code(), StatusCode::BAD_REQUEST);
+        assert!(err.to_string().contains("Invalid request"));
+        assert!(err.to_string().contains("missing prompt"));
+    }
+
+    #[test]
+    fn test_timeout_error_properties() {
+        let err = WorkerError::Timeout;
+        assert_eq!(err.code(), "INFERENCE_TIMEOUT");
+        assert!(err.is_retriable());
+        assert_eq!(err.status_code(), StatusCode::REQUEST_TIMEOUT);
+        assert_eq!(err.to_string(), "Inference timeout");
+    }
+
+    #[test]
+    fn test_unhealthy_error_properties() {
+        let err = WorkerError::Unhealthy("model not loaded".to_string());
+        assert_eq!(err.code(), "WORKER_UNHEALTHY");
+        assert!(!err.is_retriable());
+        assert_eq!(err.status_code(), StatusCode::SERVICE_UNAVAILABLE);
+        assert!(err.to_string().contains("Worker unhealthy"));
+        assert!(err.to_string().contains("model not loaded"));
+    }
+
+    #[test]
+    fn test_internal_error_properties() {
+        let err = WorkerError::Internal("panic in decoder".to_string());
+        assert_eq!(err.code(), "INTERNAL");
+        assert!(err.is_retriable());
+        assert_eq!(err.status_code(), StatusCode::INTERNAL_SERVER_ERROR);
+        assert!(err.to_string().contains("Internal error"));
+        assert!(err.to_string().contains("panic in decoder"));
+    }
+
+    #[test]
+    fn test_retriability_classification() {
+        // Retriable errors
+        assert!(WorkerError::Cuda("test".to_string()).is_retriable());
+        assert!(WorkerError::Timeout.is_retriable());
+        assert!(WorkerError::Internal("test".to_string()).is_retriable());
+
+        // Non-retriable errors
+        assert!(!WorkerError::InvalidRequest("test".to_string()).is_retriable());
+        assert!(!WorkerError::Unhealthy("test".to_string()).is_retriable());
+    }
+
+    #[test]
+    fn test_status_code_mapping() {
+        assert_eq!(
+            WorkerError::Cuda("test".to_string()).status_code(),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
+        assert_eq!(
+            WorkerError::InvalidRequest("test".to_string()).status_code(),
+            StatusCode::BAD_REQUEST
+        );
+        assert_eq!(WorkerError::Timeout.status_code(), StatusCode::REQUEST_TIMEOUT);
+        assert_eq!(
+            WorkerError::Unhealthy("test".to_string()).status_code(),
+            StatusCode::SERVICE_UNAVAILABLE
+        );
+        assert_eq!(
+            WorkerError::Internal("test".to_string()).status_code(),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
+    }
+
+    #[test]
+    fn test_error_code_stability() {
+        // Error codes must be stable for API compatibility
+        assert_eq!(WorkerError::Cuda("".to_string()).code(), "CUDA_ERROR");
+        assert_eq!(WorkerError::InvalidRequest("".to_string()).code(), "INVALID_REQUEST");
+        assert_eq!(WorkerError::Timeout.code(), "INFERENCE_TIMEOUT");
+        assert_eq!(WorkerError::Unhealthy("".to_string()).code(), "WORKER_UNHEALTHY");
+        assert_eq!(WorkerError::Internal("".to_string()).code(), "INTERNAL");
+    }
+
+    #[tokio::test]
+    async fn test_into_response_structure() {
+        let err = WorkerError::Timeout;
+        let response = err.into_response();
+
+        // Verify status code
+        assert_eq!(response.status(), StatusCode::REQUEST_TIMEOUT);
+
+        // Extract and verify body
+        let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to read response body");
+        let body_str = std::str::from_utf8(&body_bytes).expect("Invalid UTF-8");
+        let json: serde_json::Value = serde_json::from_str(body_str).expect("Invalid JSON");
+
+        assert_eq!(json["code"], "INFERENCE_TIMEOUT");
+        assert_eq!(json["message"], "Inference timeout");
+        assert_eq!(json["retriable"], true);
+    }
+
+    #[tokio::test]
+    async fn test_into_response_invalid_request() {
+        let err = WorkerError::InvalidRequest("prompt too long".to_string());
+        let response = err.into_response();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to read response body");
+        let body_str = std::str::from_utf8(&body_bytes).expect("Invalid UTF-8");
+        let json: serde_json::Value = serde_json::from_str(body_str).expect("Invalid JSON");
+
+        assert_eq!(json["code"], "INVALID_REQUEST");
+        assert!(json["message"].as_str().unwrap().contains("prompt too long"));
+        assert_eq!(json["retriable"], false);
+    }
+
+    #[tokio::test]
+    async fn test_into_response_cuda_error() {
+        let err = WorkerError::Cuda("device 0 not found".to_string());
+        let response = err.into_response();
+
+        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+
+        let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to read response body");
+        let body_str = std::str::from_utf8(&body_bytes).expect("Invalid UTF-8");
+        let json: serde_json::Value = serde_json::from_str(body_str).expect("Invalid JSON");
+
+        assert_eq!(json["code"], "CUDA_ERROR");
+        assert!(json["message"].as_str().unwrap().contains("device 0 not found"));
+        assert_eq!(json["retriable"], true);
+    }
+
+    #[test]
+    fn test_error_message_formatting() {
+        // Verify error messages are properly formatted
+        let cuda_err = WorkerError::Cuda("OOM".to_string());
+        assert_eq!(cuda_err.to_string(), "CUDA error: OOM");
+
+        let invalid_err = WorkerError::InvalidRequest("bad param".to_string());
+        assert_eq!(invalid_err.to_string(), "Invalid request: bad param");
+
+        let timeout_err = WorkerError::Timeout;
+        assert_eq!(timeout_err.to_string(), "Inference timeout");
+
+        let unhealthy_err = WorkerError::Unhealthy("not ready".to_string());
+        assert_eq!(unhealthy_err.to_string(), "Worker unhealthy: not ready");
+
+        let internal_err = WorkerError::Internal("crash".to_string());
+        assert_eq!(internal_err.to_string(), "Internal error: crash");
+    }
+}
+
+// ---
+// Verified by Testing Team 🔍

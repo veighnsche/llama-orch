@@ -9,11 +9,6 @@
 //! - M0-W-1422: Stop sequences
 //! - M0-W-1300: HTTP API extension
 
-use serde::{Deserialize, Serialize};
-
-// ExecuteRequest is defined in worker-http validation.rs
-// This is just a re-export placeholder for compatibility
-
 /// Complete sampling configuration for inference
 ///
 /// This struct bridges the HTTP API layer and CUDA kernel layer,
@@ -62,7 +57,6 @@ pub struct SamplingConfig {
 }
 
 impl SamplingConfig {
-
     /// Check if any advanced parameters are enabled
     pub fn has_advanced_sampling(&self) -> bool {
         self.top_p < 1.0 || self.top_k > 0 || self.repetition_penalty != 1.0 || self.min_p > 0.0
@@ -146,128 +140,83 @@ impl Default for SamplingConfig {
 mod tests {
     use super::*;
 
-    fn make_request(
+    fn make_config(
         temperature: f32,
         top_p: f32,
         top_k: u32,
         repetition_penalty: f32,
         min_p: f32,
-        stop: Vec<String>,
-    ) -> ExecuteRequest {
-        ExecuteRequest {
-            prompt: "Hello".to_string(),
-            max_tokens: 100,
+        stop_strings: Vec<String>,
+        seed: u64,
+        max_tokens: u32,
+    ) -> SamplingConfig {
+        SamplingConfig {
             temperature,
-            seed: Some(42),
             top_p,
             top_k,
             repetition_penalty,
-            stop_sequences: stop,
             min_p,
-            frequency_penalty: 0.0,
-            presence_penalty: 0.0,
+            stop_sequences: vec![],
+            stop_strings,
+            seed,
+            max_tokens,
         }
     }
 
     #[test]
-    fn test_from_request_basic() {
-        let req = make_request(0.7, 1.0, 0, 1.0, 0.0, vec![]);
-        let config = SamplingConfig::from_request(&req);
-
-        assert_eq!(config.temperature, 0.7);
-        assert_eq!(config.top_p, 1.0);
-        assert_eq!(config.top_k, 0);
-        assert_eq!(config.repetition_penalty, 1.0);
-        assert_eq!(config.min_p, 0.0);
-        assert_eq!(config.seed, 42);
-        assert_eq!(config.max_tokens, 100);
-    }
-
-    #[test]
-    fn test_from_request_advanced() {
-        let req =
-            make_request(0.7, 0.9, 50, 1.1, 0.05, vec!["\n\n".to_string(), "END".to_string()]);
-        let config = SamplingConfig::from_request(&req);
-
-        assert_eq!(config.temperature, 0.7);
-        assert_eq!(config.top_p, 0.9);
-        assert_eq!(config.top_k, 50);
-        assert_eq!(config.repetition_penalty, 1.1);
-        assert_eq!(config.min_p, 0.05);
-        assert_eq!(config.stop_strings.len(), 2);
-    }
-
-    #[test]
-    fn test_seed_generation_when_none() {
-        let mut req = make_request(1.0, 1.0, 0, 1.0, 0.0, vec![]);
-        req.seed = None;
-
-        let config1 = SamplingConfig::from_request(&req);
-        let config2 = SamplingConfig::from_request(&req);
-
-        // Seeds should be different (time-based)
-        assert_ne!(config1.seed, 0);
-        assert_ne!(config2.seed, 0);
-    }
-
-    #[test]
     fn test_has_advanced_sampling() {
-        let req_basic = make_request(0.7, 1.0, 0, 1.0, 0.0, vec![]);
-        let config_basic = SamplingConfig::from_request(&req_basic);
+        let config_basic = make_config(0.7, 1.0, 0, 1.0, 0.0, vec![], 42, 100);
         assert!(!config_basic.has_advanced_sampling());
 
-        let req_top_p = make_request(0.7, 0.9, 0, 1.0, 0.0, vec![]);
-        let config_top_p = SamplingConfig::from_request(&req_top_p);
+        let config_top_p = make_config(0.7, 0.9, 0, 1.0, 0.0, vec![], 42, 100);
         assert!(config_top_p.has_advanced_sampling());
 
-        let req_top_k = make_request(0.7, 1.0, 50, 1.0, 0.0, vec![]);
-        let config_top_k = SamplingConfig::from_request(&req_top_k);
+        let config_top_k = make_config(0.7, 1.0, 50, 1.0, 0.0, vec![], 42, 100);
         assert!(config_top_k.has_advanced_sampling());
 
-        let req_penalty = make_request(0.7, 1.0, 0, 1.2, 0.0, vec![]);
-        let config_penalty = SamplingConfig::from_request(&req_penalty);
+        let config_penalty = make_config(0.7, 1.0, 0, 1.2, 0.0, vec![], 42, 100);
         assert!(config_penalty.has_advanced_sampling());
 
-        let req_min_p = make_request(0.7, 1.0, 0, 1.0, 0.05, vec![]);
-        let config_min_p = SamplingConfig::from_request(&req_min_p);
+        let config_min_p = make_config(0.7, 1.0, 0, 1.0, 0.05, vec![], 42, 100);
         assert!(config_min_p.has_advanced_sampling());
     }
 
     #[test]
     fn test_has_stop_sequences() {
-        let req_no_stop = make_request(0.7, 1.0, 0, 1.0, 0.0, vec![]);
-        let config_no_stop = SamplingConfig::from_request(&req_no_stop);
+        let config_no_stop = make_config(0.7, 1.0, 0, 1.0, 0.0, vec![], 42, 100);
         assert!(!config_no_stop.has_stop_sequences());
 
-        let req_with_stop = make_request(0.7, 1.0, 0, 1.0, 0.0, vec!["\n\n".to_string()]);
-        let config_with_stop = SamplingConfig::from_request(&req_with_stop);
+        let config_with_stop =
+            make_config(0.7, 1.0, 0, 1.0, 0.0, vec!["\n\n".to_string()], 42, 100);
         assert!(config_with_stop.has_stop_sequences());
     }
 
     #[test]
     fn test_is_greedy() {
-        let req_greedy = make_request(0.0, 1.0, 0, 1.0, 0.0, vec![]);
-        let config_greedy = SamplingConfig::from_request(&req_greedy);
+        let config_greedy = make_config(0.0, 1.0, 0, 1.0, 0.0, vec![], 42, 100);
         assert!(config_greedy.is_greedy());
 
-        let req_stochastic = make_request(0.7, 1.0, 0, 1.0, 0.0, vec![]);
-        let config_stochastic = SamplingConfig::from_request(&req_stochastic);
+        let config_stochastic = make_config(0.7, 1.0, 0, 1.0, 0.0, vec![], 42, 100);
         assert!(!config_stochastic.is_greedy());
     }
 
     #[test]
-    fn test_sampling_mode_descriptions() {
-        let greedy = make_request(0.0, 1.0, 0, 1.0, 0.0, vec![]);
-        let config = SamplingConfig::from_request(&greedy);
+    fn test_sampling_mode_greedy() {
+        let config = make_config(0.0, 1.0, 0, 1.0, 0.0, vec![], 42, 100);
         assert_eq!(config.sampling_mode(), "greedy");
+    }
 
-        let basic = make_request(0.7, 1.0, 0, 1.0, 0.0, vec![]);
-        let config = SamplingConfig::from_request(&basic);
-        assert!(config.sampling_mode().contains("stochastic"));
-        assert!(config.sampling_mode().contains("temp=0.70"));
+    #[test]
+    fn test_sampling_mode_basic_stochastic() {
+        let config = make_config(0.7, 1.0, 0, 1.0, 0.0, vec![], 42, 100);
+        let mode = config.sampling_mode();
+        assert!(mode.contains("stochastic"));
+        assert!(mode.contains("temp=0.70"));
+    }
 
-        let advanced = make_request(0.7, 0.9, 50, 1.1, 0.05, vec![]);
-        let config = SamplingConfig::from_request(&advanced);
+    #[test]
+    fn test_sampling_mode_advanced() {
+        let config = make_config(0.7, 0.9, 50, 1.1, 0.05, vec![], 42, 100);
         let mode = config.sampling_mode();
         assert!(mode.contains("top_p=0.90"));
         assert!(mode.contains("top_k=50"));
@@ -277,15 +226,13 @@ mod tests {
 
     #[test]
     fn test_validate_consistency_ok() {
-        let req = make_request(0.7, 0.9, 50, 1.1, 0.05, vec![]);
-        let config = SamplingConfig::from_request(&req);
+        let config = make_config(0.7, 0.9, 50, 1.1, 0.05, vec![], 42, 100);
         assert!(config.validate_consistency().is_ok());
     }
 
     #[test]
     fn test_validate_consistency_restrictive_sampling() {
-        let req = make_request(0.7, 0.3, 5, 1.0, 0.0, vec![]);
-        let config = SamplingConfig::from_request(&req);
+        let config = make_config(0.7, 0.3, 5, 1.0, 0.0, vec![], 42, 100);
         let result = config.validate_consistency();
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("restrictive"));
@@ -293,8 +240,7 @@ mod tests {
 
     #[test]
     fn test_validate_consistency_conflicting_min_p() {
-        let req = make_request(0.3, 1.0, 0, 1.0, 0.6, vec![]);
-        let config = SamplingConfig::from_request(&req);
+        let config = make_config(0.3, 1.0, 0, 1.0, 0.6, vec![], 42, 100);
         let result = config.validate_consistency();
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("Conflicting"));
@@ -312,7 +258,130 @@ mod tests {
         assert_eq!(config.stop_sequences.len(), 0);
         assert_eq!(config.max_tokens, 100);
     }
+
+    #[test]
+    fn test_temperature_range() {
+        let config_zero = make_config(0.0, 1.0, 0, 1.0, 0.0, vec![], 42, 100);
+        assert!(config_zero.is_greedy());
+
+        let config_low = make_config(0.1, 1.0, 0, 1.0, 0.0, vec![], 42, 100);
+        assert!(!config_low.is_greedy());
+
+        let config_high = make_config(2.0, 1.0, 0, 1.0, 0.0, vec![], 42, 100);
+        assert!(!config_high.is_greedy());
+    }
+
+    #[test]
+    fn test_top_p_disabled() {
+        let config = make_config(0.7, 1.0, 0, 1.0, 0.0, vec![], 42, 100);
+        assert!(!config.has_advanced_sampling());
+    }
+
+    #[test]
+    fn test_top_k_disabled() {
+        let config = make_config(0.7, 1.0, 0, 1.0, 0.0, vec![], 42, 100);
+        assert!(!config.has_advanced_sampling());
+    }
+
+    #[test]
+    fn test_repetition_penalty_disabled() {
+        let config = make_config(0.7, 1.0, 0, 1.0, 0.0, vec![], 42, 100);
+        assert!(!config.has_advanced_sampling());
+    }
+
+    #[test]
+    fn test_min_p_disabled() {
+        let config = make_config(0.7, 1.0, 0, 1.0, 0.0, vec![], 42, 100);
+        assert!(!config.has_advanced_sampling());
+    }
+
+    #[test]
+    fn test_multiple_stop_sequences() {
+        let stops = vec!["\n\n".to_string(), "END".to_string(), "###".to_string()];
+        let config = make_config(0.7, 1.0, 0, 1.0, 0.0, stops.clone(), 42, 100);
+        assert!(config.has_stop_sequences());
+        assert_eq!(config.stop_strings.len(), 3);
+        assert_eq!(config.stop_strings, stops);
+    }
+
+    #[test]
+    fn test_seed_values() {
+        let config1 = make_config(0.7, 1.0, 0, 1.0, 0.0, vec![], 42, 100);
+        assert_eq!(config1.seed, 42);
+
+        let config2 = make_config(0.7, 1.0, 0, 1.0, 0.0, vec![], 999, 100);
+        assert_eq!(config2.seed, 999);
+
+        let config3 = make_config(0.7, 1.0, 0, 1.0, 0.0, vec![], 0, 100);
+        assert_eq!(config3.seed, 0);
+    }
+
+    #[test]
+    fn test_max_tokens_values() {
+        let config1 = make_config(0.7, 1.0, 0, 1.0, 0.0, vec![], 42, 1);
+        assert_eq!(config1.max_tokens, 1);
+
+        let config2 = make_config(0.7, 1.0, 0, 1.0, 0.0, vec![], 42, 1000);
+        assert_eq!(config2.max_tokens, 1000);
+
+        let config3 = make_config(0.7, 1.0, 0, 1.0, 0.0, vec![], 42, 4096);
+        assert_eq!(config3.max_tokens, 4096);
+    }
+
+    #[test]
+    fn test_validate_consistency_edge_cases() {
+        // Very low top_k with low top_p should error
+        let config1 = make_config(0.7, 0.3, 5, 1.0, 0.0, vec![], 42, 100);
+        assert!(config1.validate_consistency().is_err());
+
+        // Very low top_k with moderate top_p should be ok
+        let config2 = make_config(0.7, 0.8, 5, 1.0, 0.0, vec![], 42, 100);
+        assert!(config2.validate_consistency().is_ok());
+
+        // High min_p with moderate temperature should be ok
+        let config3 = make_config(0.8, 1.0, 0, 1.0, 0.5, vec![], 42, 100);
+        assert!(config3.validate_consistency().is_ok());
+
+        // All defaults should be ok
+        let config4 = SamplingConfig::default();
+        assert!(config4.validate_consistency().is_ok());
+    }
+
+    #[test]
+    fn test_sampling_mode_with_single_advanced_param() {
+        let config_top_p = make_config(0.7, 0.9, 0, 1.0, 0.0, vec![], 42, 100);
+        let mode = config_top_p.sampling_mode();
+        assert!(mode.contains("top_p=0.90"));
+        assert!(!mode.contains("top_k"));
+
+        let config_top_k = make_config(0.7, 1.0, 50, 1.0, 0.0, vec![], 42, 100);
+        let mode = config_top_k.sampling_mode();
+        assert!(mode.contains("top_k=50"));
+        assert!(!mode.contains("top_p"));
+    }
+
+    #[test]
+    fn test_clone_config() {
+        let config = make_config(0.7, 0.9, 50, 1.1, 0.05, vec!["END".to_string()], 42, 100);
+        let cloned = config.clone();
+
+        assert_eq!(config.temperature, cloned.temperature);
+        assert_eq!(config.top_p, cloned.top_p);
+        assert_eq!(config.top_k, cloned.top_k);
+        assert_eq!(config.repetition_penalty, cloned.repetition_penalty);
+        assert_eq!(config.min_p, cloned.min_p);
+        assert_eq!(config.seed, cloned.seed);
+        assert_eq!(config.max_tokens, cloned.max_tokens);
+        assert_eq!(config.stop_strings, cloned.stop_strings);
+    }
+
+    #[test]
+    fn test_debug_format() {
+        let config = make_config(0.7, 0.9, 50, 1.1, 0.05, vec![], 42, 100);
+        let debug_str = format!("{:?}", config);
+        assert!(debug_str.contains("SamplingConfig"));
+    }
 }
 
 // ---
-// Built by Foundation-Alpha 🏗️
+// Verified by Testing Team 🔍

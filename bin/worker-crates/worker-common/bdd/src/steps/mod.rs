@@ -5,11 +5,16 @@ mod world;
 pub use world::CommonWorld;
 
 use cucumber::{given, then, when};
+use worker_common::{SamplingConfig, WorkerError};
 
 // Sampling Configuration scenarios
 #[given(expr = "a sampling config with temperature {float}")]
 async fn given_sampling_config(world: &mut CommonWorld, temperature: f32) {
     world.temperature = Some(temperature);
+    world.top_p = Some(1.0);
+    world.top_k = Some(0);
+    world.repetition_penalty = Some(1.0);
+    world.min_p = Some(0.0);
 }
 
 #[given(expr = "top_p is {float}")]
@@ -24,46 +29,70 @@ async fn given_top_k(world: &mut CommonWorld, top_k: u32) {
 
 #[when("I check if advanced sampling is enabled")]
 async fn when_check_advanced_sampling(world: &mut CommonWorld) {
-    // TODO: Create SamplingConfig and check
-    world.has_advanced_sampling = Some(false); // Placeholder
+    let config = SamplingConfig {
+        temperature: world.temperature.unwrap_or(1.0),
+        top_p: world.top_p.unwrap_or(1.0),
+        top_k: world.top_k.unwrap_or(0),
+        repetition_penalty: world.repetition_penalty.unwrap_or(1.0),
+        min_p: world.min_p.unwrap_or(0.0),
+        stop_sequences: vec![],
+        stop_strings: vec![],
+        seed: 42,
+        max_tokens: 100,
+    };
+    
+    world.has_advanced_sampling = Some(config.has_advanced_sampling());
+    world.sampling_mode = Some(config.sampling_mode());
+    world.sampling_config = Some(config);
 }
 
 #[then(expr = "advanced sampling should be {word}")]
 async fn then_advanced_sampling(world: &mut CommonWorld, expected: String) {
     let expected_bool = expected == "enabled";
-    let actual = world.has_advanced_sampling.expect("not checked");
+    let actual = world.has_advanced_sampling.expect("advanced sampling not checked");
     assert_eq!(actual, expected_bool, "advanced sampling mismatch");
 }
 
 #[then(expr = "the sampling mode should be {string}")]
-async fn then_sampling_mode(_world: &mut CommonWorld, expected: String) {
-    // TODO: Check sampling mode
-    let _ = expected; // Placeholder
+async fn then_sampling_mode(world: &mut CommonWorld, expected: String) {
+    let actual = world.sampling_mode.as_ref().expect("sampling mode not set");
+    assert_eq!(actual, &expected, "sampling mode mismatch");
 }
 
 // Error handling scenarios
 #[given(expr = "a worker error {string}")]
 async fn given_worker_error(world: &mut CommonWorld, error_type: String) {
+    let error = match error_type.as_str() {
+        "Timeout" => WorkerError::Timeout,
+        "InvalidRequest" => WorkerError::InvalidRequest("test error".to_string()),
+        "Internal" => WorkerError::Internal("test error".to_string()),
+        "Cuda" => WorkerError::Cuda("test error".to_string()),
+        "Unhealthy" => WorkerError::Unhealthy("test error".to_string()),
+        _ => panic!("Unknown error type: {}", error_type),
+    };
+    
     world.error_type = Some(error_type);
+    world.worker_error = Some(error);
 }
 
 #[when("I check if the error is retriable")]
 async fn when_check_retriable(world: &mut CommonWorld) {
-    // TODO: Check error retriability
-    world.is_retriable = Some(false); // Placeholder
+    let error = world.worker_error.as_ref().expect("error not set");
+    world.is_retriable = Some(error.is_retriable());
+    world.status_code = Some(error.status_code().as_u16());
 }
 
 #[then(expr = "the error should be {word}")]
 async fn then_error_retriable(world: &mut CommonWorld, expected: String) {
     let expected_bool = expected == "retriable";
-    let actual = world.is_retriable.expect("not checked");
+    let actual = world.is_retriable.expect("retriability not checked");
     assert_eq!(actual, expected_bool, "retriability mismatch");
 }
 
 #[then(expr = "the HTTP status code should be {int}")]
-async fn then_status_code(_world: &mut CommonWorld, expected: u16) {
-    // TODO: Check status code
-    let _ = expected; // Placeholder
+async fn then_status_code(world: &mut CommonWorld, expected: u16) {
+    let actual = world.status_code.expect("status code not set");
+    assert_eq!(actual, expected, "status code mismatch");
 }
 
 // Ready callback scenarios

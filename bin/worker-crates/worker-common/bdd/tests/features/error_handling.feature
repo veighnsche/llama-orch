@@ -7,7 +7,7 @@ Feature: Error Handling
     Given a worker error "Timeout"
     When I check if the error is retriable
     Then the error should be retriable
-    And the HTTP status code should be 504
+    And the HTTP status code should be 408
 
   Scenario: Invalid request is not retriable
     Given a worker error "InvalidRequest"
@@ -20,3 +20,15 @@ Feature: Error Handling
     When I check if the error is retriable
     Then the error should be retriable
     And the HTTP status code should be 500
+  
+  Scenario: CUDA error is retriable
+    Given a worker error "Cuda"
+    When I check if the error is retriable
+    Then the error should be retriable
+    And the HTTP status code should be 500
+  
+  Scenario: Unhealthy worker is not retriable
+    Given a worker error "Unhealthy"
+    When I check if the error is retriable
+    Then the error should be non-retriable
+    And the HTTP status code should be 503

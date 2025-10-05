@@ -16,3 +16,6 @@ anyhow = "1.0"
 axum = "0.7"
 
 [dev-dependencies]
+wiremock = "0.6"
+tokio-test = "0.4"
+proptest = "1.0"
