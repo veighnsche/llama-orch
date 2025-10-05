@@ -55,6 +55,7 @@ pub async fn handle_execute<B: InferenceBackend>(
     let mut events = vec![InferenceEvent::Started {
         job_id: req.job_id.clone(),
         model: "model".to_string(),
+        started_at: "0".to_string(),
     }];
 
     for (i, token) in result.tokens.iter().enumerate() {
