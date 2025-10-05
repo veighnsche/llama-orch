@@ -119,7 +119,8 @@
 - **Model Adapter**: Component within worker-orcd that abstracts architecture-specific inference logic (e.g., Llama-style vs GPT-style models). Distinct from worker adapter (pool-managerd component for worker lifecycle).
 - **Worker Adapter**: Component in pool-managerd that abstracts worker lifecycle for different worker types (bespoke-cuda, llama.cpp, apple-metal). See `bin/pool-managerd/.specs/10_worker_adapters.md` (POOL-1xxx). Distinct from model adapter (worker-internal architecture abstraction).
 - **Worker Type**: Category of worker implementation (bespoke-cuda, llamacpp, apple-metal, image-gen). Pool manager uses worker type to select appropriate adapter for spawning.
-- **Worker Capability**: Functional capability advertised by worker (text-gen, image-gen, audio-gen, embedding). Orchestrator routes jobs based on capability, not worker type.
+- **Worker Capability**: Functional capability advertised by worker (text-gen, image-gen, audio-gen, embedding, multimodal). Orchestrator routes jobs based on capability, not worker type.
+- **Streaming Protocol**: Response format used by worker for a given capability (SSE for text-gen, JSON for image-gen/embedding, Binary for audio-gen, Mixed SSE for multimodal). Orchestrator selects relay strategy based on protocol.
 - **Heartbeat**: Periodic state report from pool-managerd to orchestratord (default 15s interval) containing GPU VRAM state and worker status.
 - **SSE (Server-Sent Events)**: HTTP streaming protocol used for token-by-token inference results from worker → orchestrator → client.
 - **Correlation ID**: Unique identifier (`X-Correlation-Id` header) propagated across all service calls for request tracing and log correlation.
@@ -148,6 +149,7 @@
 | SYS-5.2.x | API Contracts | Orchestrator ↔ Pool |
 | SYS-5.3.x | API Contracts | Pool ↔ Worker |
 | SYS-5.4.x | API Contracts | Orchestrator → Worker |
+| SYS-5.7.x | API Contracts | Multi-Modality Protocols |
 | SYS-5.5.x | API Contracts | Error Responses |
 | SYS-5.6.x | API Contracts | Correlation IDs |
 | SYS-6.1.x | Components | Orchestratord |
@@ -664,26 +666,28 @@ POST {worker_uri}/execute
   "stop": ["\n\n", "END"],
   "seed": 42
 }
-Response: SSE stream
-- started
-- token* (multiple)
-- metrics* (periodic)
-- end
-- error (on failure or cancellation)
+Response: Capability-dependent protocol (see SYS-5.7.x)
+
+Text generation (capability: text-gen):
+  SSE stream: started → token* → metrics* → end/error
+
+Other capabilities (image-gen, audio-gen, embedding, multimodal):
+  See SYS-5.7.x for protocol specifications
 ```
-**Advanced Generation Parameters** (M0+):
+**Advanced Generation Parameters** (M0+, text-gen capability):
 - `temperature` (0.0-2.0): Temperature scaling for sampling (default: 1.0)
 - `top_p` (0.0-1.0): Nucleus sampling - keep tokens with cumulative probability >= top_p (default: 1.0, disabled)
 - `top_k` (0-vocab_size): Top-k sampling - keep only top k tokens by probability (default: 0, disabled)
 - `repetition_penalty` (0.0-2.0): Penalize tokens that appear in generation history (default: 1.0, disabled)
 - `stop` (array of strings): Stop generation when any sequence is matched, max 4 sequences, each max 32 tokens (default: [])
 - `seed` (uint64): RNG seed for reproducible sampling (optional, auto-generated if omitted)
-**Requirements**:
+**Requirements** (text-gen capability):
 - SSE stream event order MUST be: `started` → zero or more `token` → zero or more `metrics` (interleaved as needed) → terminal (`end` or `error`)
 - Exactly one terminal event MUST be emitted per job (`end` on success, `error` on failure/cancel)
 - Workers MUST include stable error codes; cancellation MUST use `CANCELLED`
 - Orchestrator MUST propagate `X-Correlation-Id` to worker requests; workers SHOULD echo it in SSE metadata
 - Orchestrator MUST enforce request timeouts per job policy and close SSE cleanly on timeout with a terminal event
+**Multi-modality requirements**: See SYS-5.7.x for protocol requirements for other capabilities
 #### [SYS-5.4.2] Cancellation
 <!-- SECURITY AUDIT [auth-min team]: HIGH SEVERITY - Worker cancel endpoint lacks authentication and authorization. Attack vectors: (1) Unauthorized cancellation - attacker can cancel any job by guessing job_id, causing denial of service, (2) Job ID enumeration - attacker can probe for active jobs by attempting cancellation, (3) Resource manipulation - attacker can cancel high-priority jobs to manipulate scheduling. RECOMMENDATIONS: (1) Cancel endpoint MUST validate bearer token using timing_safe_eq(), (2) MUST verify job_id is currently assigned to this worker (prevent cross-worker cancellation), (3) Use cryptographically random job IDs to prevent enumeration, (4) Rate-limit cancel requests to prevent DoS. Add requirement: "Worker cancel endpoint MUST validate bearer token and verify job_id is assigned to this worker before processing cancellation." -->
 **Cancellation**:
@@ -701,7 +705,59 @@ POST {worker_uri}/cancel
 - Deadline: orchestrator MUST enforce a cancellation deadline (default 5s) after which it treats the job as cancelled and closes client SSE
 **Specs**: `bin/worker-orcd/.specs/00_worker-orcd.md`
 ---
-### 5.5 Error Response Format [M0+] (SYS-5.5.x)
+### 5.5 Multi-Modality Streaming Protocols [M3+] (SYS-5.7.x)
+#### [SYS-5.7.1] Protocol Selection
+Orchestrator MUST select streaming protocol based on worker capability:
+- **text-gen**: SSE protocol (existing, see SYS-5.4.1)
+- **image-gen**: JSON response protocol (future)
+- **audio-gen**: Binary stream protocol (future)
+- **embedding**: JSON response protocol (future)
+- **multimodal**: Mixed SSE protocol (future)
+
+**Orchestrator awareness**:
+- Orchestrator MUST receive worker capability and protocol metadata from pool manager (via heartbeat)
+- Orchestrator MUST map job capability to expected protocol
+- Orchestrator MUST relay worker responses using capability-appropriate strategy
+- Orchestrator does NOT need to understand worker internals (CUDA, Metal, etc.), only protocol contracts
+
+#### [SYS-5.7.2] Protocol Relay Strategies
+**Text generation (SSE relay)**:
+- Orchestrator MUST relay SSE events from worker to client
+- MUST preserve event order (started → token* → metrics* → end/error)
+- MUST add orchestrator metadata (correlation_id, queue_time) without altering payload
+
+**Image generation (JSON relay)** [Future - M3+]:
+- Orchestrator MUST call worker, receive JSON response
+- MUST wrap JSON in SSE `result` event for client
+- Response format: `{"images": [...], "metadata": {...}}`
+
+**Audio generation (Binary relay)** [Future - M3+]:
+- Orchestrator MUST receive binary stream from worker
+- MUST base64-encode and wrap in SSE `audio` event for client
+- Response format: `{"format": "mp3", "data": "base64...", "duration_ms": N}`
+
+**Embedding (JSON relay)** [Future - M3+]:
+- Orchestrator MUST call worker, receive JSON response (non-streaming)
+- MUST wrap JSON in SSE `result` event for client
+- Response format: `{"embedding": [...], "dimensions": N}`
+
+**Multimodal (Mixed SSE relay)** [Future - M4+]:
+- Orchestrator MUST relay mixed SSE events (token, image, audio)
+- MUST preserve generation order
+- Event types: started → (token|image|audio)* → end/error
+
+#### [SYS-5.7.3] Worker Protocol Contract
+Workers MUST implement protocol appropriate for their capability:
+- Workers MUST advertise capability in ready callback and health endpoint
+- Workers MUST implement `/execute` endpoint with capability-specific response format
+- Workers MUST document protocol in worker-specific spec (e.g., `01_worker_orcd.md`)
+- Protocol contracts MUST be defined in `bin/.specs/00_streaming_protocols.md` (future)
+
+**Backward compatibility**:
+- Existing text-gen workers (worker-orcd) continue using SSE protocol unchanged
+- New capabilities are additive; no breaking changes to existing workers
+---
+### 5.6 Error Response Format [M0+] (SYS-5.5.x)
 #### [SYS-5.5.1] Standard Error Response
 <!-- SECURITY AUDIT [auth-min team]: MEDIUM SEVERITY - Error responses may leak sensitive information. Attack vectors: (1) Information disclosure - detailed error messages reveal system internals (GPU IDs, VRAM sizes, model paths), (2) Timing attacks - different error codes may have different response times, (3) Stack trace leakage - errors may include stack traces in development mode. RECOMMENDATIONS: (1) Error messages MUST NOT include raw tokens or bearer tokens (use token_fp6() for any token references), (2) Detailed error information (gpu_id, vram_bytes) SHOULD only be included for authenticated requests, (3) In Platform Mode, error details SHOULD be sanitized to prevent information leakage to untrusted clients, (4) Error responses MUST use timing-safe processing to prevent timing attacks, (5) Stack traces MUST be disabled in production, (6) Error messages MUST NOT reveal file paths, internal IPs, or system architecture details. Add requirement: "Error responses MUST sanitize sensitive information in Platform Mode. Internal details (gpu_id, vram_bytes, worker_id) MUST only be included for authenticated admin requests." -->
 All API errors MUST use a standard JSON error response format:
@@ -726,7 +782,7 @@ All API errors MUST use a standard JSON error response format:
 - `correlation_id` MUST be included for traceability
 - HTTP status codes MUST align with error semantics (400 for client errors, 500 for server errors, 429 for rate limits, 503 for unavailable)
 ---
-### 5.6 Correlation ID Propagation [M0+] (SYS-5.6.x)
+### 5.7 Correlation ID Propagation [M0+] (SYS-5.6.x)
 #### [SYS-5.6.1] Correlation ID Requirements
 <!-- SECURITY AUDIT [auth-min team]: LOW SEVERITY - Correlation ID handling has injection risks. Attack vectors: (1) Header injection - attacker provides malicious correlation ID with newlines or special characters to inject log entries or HTTP headers, (2) Log injection - correlation ID is logged without sanitization, allowing attacker to inject fake log entries, (3) XSS in dashboards - if correlation IDs are displayed in web dashboards without escaping, attacker can inject JavaScript. RECOMMENDATIONS: (1) Correlation IDs MUST be validated against a strict format (e.g., alphanumeric + hyphens only, max 64 chars), (2) Invalid correlation IDs MUST be rejected or replaced with generated ID, (3) Correlation IDs MUST be sanitized before logging (escape newlines, control characters), (4) Generated correlation IDs MUST use cryptographically random UUIDs (UUIDv4), (5) Correlation IDs MUST be HTML-escaped when displayed in dashboards. Add requirement: "Correlation IDs MUST match regex ^[a-zA-Z0-9-]{1,64}$. Invalid correlation IDs MUST be rejected and replaced with generated UUIDv4." -->
 **Correlation**:
@@ -745,7 +801,7 @@ All API errors MUST use a standard JSON error response format:
 - `platform-api` — Marketplace federation facade
 - `agentic-api` — Standard/home orchestrator API
 - `pool-registry` — Track pool managers and state
-- `streaming` — SSE relay with metadata
+- `streaming` — Protocol-aware relay (SSE, JSON, Binary) with metadata
 - `task-cancellation` — Cancellation propagation
 - `job-timeout` — Timeout enforcement
 - `backpressure` — Queue backpressure handling
@@ -760,12 +816,15 @@ Orchestratord MUST implement ALL intelligent decision-making:
 - MUST select next job and target worker (combined scheduling decision)
 - MUST command pool managers to start/stop workers
 - MUST route inference requests to selected workers
-- MUST relay SSE streams from workers to clients
+- MUST relay worker responses to clients using capability-appropriate protocol (see SYS-5.7.x)
 - MUST enforce timeout limits on jobs
 - MUST propagate cancellation requests to workers
 **Requirements**:
 - All intelligent decisions (admission, scheduling, eviction, retry, timeout, cancellation) MUST occur in orchestratord and MUST NOT be delegated
-- SSE relay to clients MUST preserve worker event order and MUST add orchestrator metadata without altering payload semantics
+- Protocol relay to clients MUST preserve worker event order and MUST add orchestrator metadata without altering payload semantics
+- Orchestrator MUST be aware of worker capabilities and their protocol contracts (received via pool manager metadata)
+- Orchestrator MUST select relay strategy based on job capability (text-gen → SSE, image-gen → JSON, etc.)
+- Orchestrator does NOT need to understand worker implementation details (CUDA, Metal, etc.), only protocol contracts
 ---
 #### [SYS-6.1.2] State Management
 Orchestratord MUST maintain persistent state for job tracking, queue management, and operational history to enable intelligent scheduling decisions, graceful restarts, and client reconnection.
@@ -1010,9 +1069,19 @@ Pool-managerd MUST report facts, not decisions:
 - MUST report worker type and capabilities
 - MUST report failures with context (exit code, error message)
 - MUST NOT decide to retry or failover
+**Heartbeat payload MUST include**:
+- `pool_id` — Pool identifier
+- `gpus` — Array of GPU states (id, total_vram_bytes, free_vram_bytes, device_name)
+- `workers` — Array of worker states (id, status, model_ref, vram_bytes, gpu_id, uri, capabilities, protocol)
+
+**Worker state fields** (M3+ for multi-modality support):
+- `capabilities` — Array of capabilities (e.g., `["text-gen"]`, `["image-gen"]`) [REQUIRED]
+- `protocol` — Streaming protocol (e.g., `"sse"`, `"json"`, `"binary"`) [REQUIRED]
+- `worker_type` — Worker implementation type (e.g., `"bespoke-cuda"`, `"llamacpp"`) [OPTIONAL]
+
 **Requirements**:
 - Heartbeats MUST include device memory totals/allocated and worker states
-- Heartbeats MUST include worker type and capabilities for each worker
+- Heartbeats MUST include worker capabilities and protocol for each worker
 - Missed heartbeats beyond timeout MUST mark the pool unavailable for scheduling
 ---
 #### [SYS-6.2.3] Preflight Validation
@@ -1061,7 +1130,8 @@ Pool-managerd MUST perform operational cleanup on worker failures:
 - [SYS-6.3.5] Cancellation handling
 - [SYS-6.3.6] HTTP API endpoints (/execute, /cancel, /health)
 - [SYS-6.3.7] Memory reporting (VRAM for NVIDIA, unified for Apple)
-- [SYS-6.3.8] Capability advertisement (text-gen, image-gen, etc.)
+- [SYS-6.3.8] Capability advertisement (text-gen, image-gen, audio-gen, embedding, multimodal)
+- [SYS-6.3.9] Protocol contract implementation (SSE, JSON, Binary, Mixed SSE)
 **Bespoke CUDA worker** (`worker-orcd`):
 - **Binary**: `bin/worker-orcd/`
 - **Port**: Dynamic (assigned by pool manager)
@@ -1084,7 +1154,7 @@ All workers MUST operate as self-contained processes:
 - MUST load exactly ONE model at startup (from disk to memory)
 - MUST own memory allocation within its process context
 - MUST execute inference requests received via HTTP
-- MUST stream results via SSE (token-by-token)
+- MUST respond with capability-appropriate protocol (SSE for text-gen, JSON for image-gen/embedding, Binary for audio-gen)
 - MUST monitor memory health (self-health checks)
 - MUST report actual memory usage to pool manager on ready
 **Worker-specific requirements**:
@@ -1173,9 +1243,14 @@ Worker MUST handle cancellation requests promptly:
 - SSE stream MUST emit terminal `error` event with `CANCELLED` code
 #### [SYS-6.3.6] HTTP API Endpoints
 All workers MUST expose standard HTTP API endpoints:
-- `POST /execute` — Execute inference request
+- `POST /execute` — Execute inference request (response format depends on capability)
 - `POST /cancel` — Cancel running inference
-- `GET /health` — Health check and metadata
+- `GET /health` — Health check and metadata (MUST include capability and protocol fields)
+
+**Health endpoint requirements**:
+- MUST include `capabilities` array (e.g., `["text-gen"]`, `["image-gen"]`)
+- MUST include `protocol` field (e.g., `"sse"`, `"json"`, `"binary"`, `"mixed-sse"`)
+- MAY include worker-specific metadata (memory architecture, quantization, etc.)
 **Requirements**:
 - Endpoints MUST conform to worker contract defined in worker adapter spec
 - Health endpoint MUST expose worker metadata (model, memory usage, capabilities)
