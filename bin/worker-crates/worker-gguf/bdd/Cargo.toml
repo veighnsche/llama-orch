@@ -9,9 +9,9 @@ default = ["bdd-cucumber"]
 bdd-cucumber = []
 
 [dependencies]
-anyhow = { workspace = true }
+anyhow = "1.0"
 cucumber = "0.20"
-tokio = { workspace = true }
+tokio = { version = "1.0", features = ["full"] }
 worker-gguf = { path = ".." }
 
 [[bin]]

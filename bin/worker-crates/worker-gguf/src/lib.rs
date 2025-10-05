@@ -270,7 +270,174 @@ mod tests {
         let phi3_metadata = GGUFMetadata::from_file("phi-3-mini.gguf").unwrap();
         assert_eq!(phi3_metadata.context_length().unwrap(), 4096);
     }
+
+    #[test]
+    fn test_missing_key_error() {
+        let metadata = GGUFMetadata::from_file("unknown-model.gguf").unwrap();
+        let result = metadata.vocab_size();
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), GGUFError::MissingKey(_)));
+    }
+
+    #[test]
+    fn test_architecture_detection() {
+        let qwen = GGUFMetadata::from_file("qwen-test.gguf").unwrap();
+        assert_eq!(qwen.architecture().unwrap(), "llama");
+
+        let phi = GGUFMetadata::from_file("phi-test.gguf").unwrap();
+        assert_eq!(phi.architecture().unwrap(), "llama");
+
+        let gpt = GGUFMetadata::from_file("gpt2-test.gguf").unwrap();
+        assert_eq!(gpt.architecture().unwrap(), "gpt");
+
+        let llama = GGUFMetadata::from_file("llama-3.1-8b.gguf").unwrap();
+        assert_eq!(llama.architecture().unwrap(), "llama");
+    }
+
+    #[test]
+    fn test_gqa_detection() {
+        // Qwen uses GQA (14 heads, 2 KV heads)
+        let qwen = GGUFMetadata::from_file("qwen-2.5-0.5b.gguf").unwrap();
+        assert!(qwen.is_gqa());
+
+        // Phi-3 uses MHA (32 heads, 32 KV heads)
+        let phi = GGUFMetadata::from_file("phi-3-mini.gguf").unwrap();
+        assert!(!phi.is_gqa());
+    }
+
+    #[test]
+    fn test_metadata_value_types() {
+        let metadata = GGUFMetadata::from_file("qwen-2.5-0.5b.gguf").unwrap();
+
+        // String value
+        assert!(matches!(
+            metadata.metadata.get("general.architecture"),
+            Some(MetadataValue::String(_))
+        ));
+
+        // Int value
+        assert!(matches!(
+            metadata.metadata.get("llama.vocab_size"),
+            Some(MetadataValue::Int(_))
+        ));
+
+        // Float value
+        assert!(matches!(
+            metadata.metadata.get("llama.rope.freq_base"),
+            Some(MetadataValue::Float(_))
+        ));
+    }
+
+    #[test]
+    fn test_kv_heads_fallback() {
+        // Model without explicit KV heads should fall back to num_heads
+        let metadata = GGUFMetadata::from_file("gpt2-small.gguf").unwrap();
+        let num_heads = metadata.num_heads().unwrap();
+        let num_kv_heads = metadata.num_kv_heads().unwrap();
+        assert_eq!(num_heads, num_kv_heads);
+    }
+
+    #[test]
+    fn test_rope_freq_base_default() {
+        // Model without RoPE freq base should use default
+        let metadata = GGUFMetadata::from_file("gpt2-small.gguf").unwrap();
+        assert_eq!(metadata.rope_freq_base().unwrap(), 10000.0);
+    }
+
+    #[test]
+    fn test_case_insensitive_detection() {
+        let upper = GGUFMetadata::from_file("QWEN-2.5-0.5B.GGUF").unwrap();
+        assert_eq!(upper.architecture().unwrap(), "llama");
+
+        let mixed = GGUFMetadata::from_file("Phi-3-Mini.gguf").unwrap();
+        assert_eq!(mixed.architecture().unwrap(), "llama");
+    }
+
+    #[test]
+    fn test_path_with_directories() {
+        let metadata = GGUFMetadata::from_file("/models/qwen/qwen-2.5-0.5b.gguf").unwrap();
+        assert_eq!(metadata.architecture().unwrap(), "llama");
+        assert_eq!(metadata.vocab_size().unwrap(), 151936);
+    }
+
+    #[test]
+    fn test_all_qwen_fields() {
+        let metadata = GGUFMetadata::from_file("qwen-2.5-0.5b.gguf").unwrap();
+        assert!(metadata.architecture().is_ok());
+        assert!(metadata.vocab_size().is_ok());
+        assert!(metadata.hidden_dim().is_ok());
+        assert!(metadata.num_layers().is_ok());
+        assert!(metadata.num_heads().is_ok());
+        assert!(metadata.num_kv_heads().is_ok());
+        assert!(metadata.context_length().is_ok());
+        assert!(metadata.rope_freq_base().is_ok());
+    }
+
+    #[test]
+    fn test_all_phi_fields() {
+        let metadata = GGUFMetadata::from_file("phi-3-mini.gguf").unwrap();
+        assert!(metadata.architecture().is_ok());
+        assert!(metadata.vocab_size().is_ok());
+        assert!(metadata.hidden_dim().is_ok());
+        assert!(metadata.num_layers().is_ok());
+        assert!(metadata.num_heads().is_ok());
+        assert!(metadata.num_kv_heads().is_ok());
+        assert!(metadata.context_length().is_ok());
+        assert!(metadata.rope_freq_base().is_ok());
+    }
+
+    #[test]
+    fn test_all_gpt2_fields() {
+        let metadata = GGUFMetadata::from_file("gpt2-small.gguf").unwrap();
+        assert!(metadata.architecture().is_ok());
+        assert!(metadata.vocab_size().is_ok());
+        assert!(metadata.hidden_dim().is_ok());
+        assert!(metadata.num_layers().is_ok());
+        assert!(metadata.num_heads().is_ok());
+        assert!(metadata.context_length().is_ok());
+    }
+
+    #[test]
+    fn test_metadata_clone() {
+        let metadata = GGUFMetadata::from_file("qwen-2.5-0.5b.gguf").unwrap();
+        let cloned = metadata.clone();
+        assert_eq!(
+            metadata.architecture().unwrap(),
+            cloned.architecture().unwrap()
+        );
+        assert_eq!(metadata.vocab_size().unwrap(), cloned.vocab_size().unwrap());
+    }
+
+    #[test]
+    fn test_error_display() {
+        let err = GGUFError::InvalidMagic;
+        assert_eq!(err.to_string(), "Invalid GGUF magic number");
+
+        let err = GGUFError::UnsupportedVersion(3);
+        assert!(err.to_string().contains("3"));
+
+        let err = GGUFError::MissingKey("test.key".to_string());
+        assert!(err.to_string().contains("test.key"));
+
+        let err = GGUFError::InvalidValue("test.key".to_string());
+        assert!(err.to_string().contains("test.key"));
+    }
+
+    #[test]
+    fn test_metadata_value_debug() {
+        let string_val = MetadataValue::String("test".to_string());
+        assert!(format!("{:?}", string_val).contains("String"));
+
+        let int_val = MetadataValue::Int(42);
+        assert!(format!("{:?}", int_val).contains("Int"));
+
+        let float_val = MetadataValue::Float(3.14);
+        assert!(format!("{:?}", float_val).contains("Float"));
+
+        let bool_val = MetadataValue::Bool(true);
+        assert!(format!("{:?}", bool_val).contains("Bool"));
+    }
 }
 
 // ---
-// Built by Foundation-Alpha 🏗️
+// Verified by Testing Team 🔍
