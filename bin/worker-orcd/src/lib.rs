@@ -11,6 +11,7 @@ pub mod inference_result;
 pub mod model;
 pub mod sampling_config;
 pub mod startup;
+pub mod tokenizer;
 pub mod util;
 
 // Re-export commonly used types
