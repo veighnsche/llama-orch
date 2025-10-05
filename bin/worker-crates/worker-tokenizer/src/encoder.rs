@@ -156,7 +156,7 @@ impl BPEEncoder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tokenizer::{MergeTable, Vocabulary};
+    use crate::{MergeTable, Vocabulary};
 
     fn create_test_encoder() -> BPEEncoder {
         // Simple vocab: individual chars + merged tokens

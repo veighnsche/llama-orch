@@ -3,7 +3,7 @@
 //! Validates that the BPE tokenizer correctly handles Phi-3 vocabulary.
 //! Similar to Qwen conformance tests but for Phi-3-specific patterns.
 
-use worker_orcd::tokenizer::{BPEDecoder, BPEEncoder, MergeTable, Vocabulary};
+use worker_tokenizer::{BPEDecoder, BPEEncoder, MergeTable, Vocabulary};
 
 /// Create a Phi-3-like tokenizer for testing
 fn create_phi3_tokenizer() -> (BPEEncoder, BPEDecoder) {

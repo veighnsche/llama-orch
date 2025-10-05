@@ -67,7 +67,7 @@ impl StreamingDecoder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tokenizer::Vocabulary;
+    use crate::Vocabulary;
 
     fn create_test_streaming_decoder() -> StreamingDecoder {
         // Create tokens with actual byte sequences

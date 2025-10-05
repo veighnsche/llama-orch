@@ -8,7 +8,7 @@
 //
 // Spec: M0-W-1363
 
-use worker_orcd::tokenizer::{BPEDecoder, BPEEncoder, MergeTable, Vocabulary};
+use worker_tokenizer::{BPEDecoder, BPEEncoder, MergeTable, Vocabulary};
 
 #[allow(dead_code)]
 /// Test vector for tokenizer conformance

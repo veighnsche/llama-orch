@@ -14,8 +14,6 @@ pub mod models;
 pub mod sampling_config;
 pub mod startup;
 pub mod tests;
-pub mod tokenizer;
-pub mod util;
 
 // Re-export from worker-gguf
 pub use worker_gguf as gguf;

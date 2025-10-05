@@ -7,7 +7,7 @@
 
 use std::path::Path;
 use tokenizers::Tokenizer;
-use crate::tokenizer::error::TokenizerError;
+use crate::error::TokenizerError;
 
 /// HuggingFace JSON tokenizer backend
 ///
@@ -39,7 +39,7 @@ impl HfJsonTokenizer {
     ///
     /// # Example
     /// ```no_run
-    /// use worker_orcd::tokenizer::hf_json::HfJsonTokenizer;
+    /// use worker_tokenizer::hf_json::HfJsonTokenizer;
     ///
     /// let tokenizer = HfJsonTokenizer::from_file("models/gpt-oss-20b/tokenizer.json")?;
     /// # Ok::<(), Box<dyn std::error::Error>>(())
@@ -80,7 +80,7 @@ impl HfJsonTokenizer {
     ///
     /// # Example
     /// ```no_run
-    /// # use worker_orcd::tokenizer::hf_json::HfJsonTokenizer;
+    /// # use worker_tokenizer::hf_json::HfJsonTokenizer;
     /// # let tokenizer = HfJsonTokenizer::from_file("tokenizer.json")?;
     /// let tokens = tokenizer.encode("Hello, world!", true)?;
     /// # Ok::<(), Box<dyn std::error::Error>>(())
@@ -106,7 +106,7 @@ impl HfJsonTokenizer {
     ///
     /// # Example
     /// ```no_run
-    /// # use worker_orcd::tokenizer::hf_json::HfJsonTokenizer;
+    /// # use worker_tokenizer::hf_json::HfJsonTokenizer;
     /// # let tokenizer = HfJsonTokenizer::from_file("tokenizer.json")?;
     /// let text = tokenizer.decode(&[123, 456, 789], true)?;
     /// # Ok::<(), Box<dyn std::error::Error>>(())

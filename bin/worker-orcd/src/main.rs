@@ -29,7 +29,6 @@ mod cuda;
 mod error;
 mod http;
 mod startup;
-mod util;
 
 use clap::Parser;
 use std::net::SocketAddr;

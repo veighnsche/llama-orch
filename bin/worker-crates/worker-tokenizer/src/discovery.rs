@@ -29,7 +29,7 @@ impl TokenizerDiscovery {
     /// # Example
     /// ```no_run
     /// use std::path::Path;
-    /// use worker_orcd::tokenizer::TokenizerDiscovery;
+    /// use worker_tokenizer::TokenizerDiscovery;
     ///
     /// let model_path = Path::new("/models/gpt-oss-20b/model.gguf");
     /// let tokenizer_path = TokenizerDiscovery::find_tokenizer_json(model_path)?;

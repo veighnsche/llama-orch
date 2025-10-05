@@ -123,7 +123,7 @@ impl BPEDecoder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tokenizer::Vocabulary;
+    use crate::Vocabulary;
 
     fn create_test_decoder() -> BPEDecoder {
         let tokens = vec![
