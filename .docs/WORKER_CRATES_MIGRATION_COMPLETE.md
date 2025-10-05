@@ -1,8 +1,17 @@
-# Worker Crates Migration — COMPLETE ✅
+# Worker Crates Migration — SUPERSEDED ⚠️
 
 **Date**: 2025-10-05  
-**Status**: ✅ Complete (4/5 crates migrated, 80% done)  
-**Remaining**: worker-http (will be done separately)
+**Status**: ⚠️ SUPERSEDED - See WORKER_CRATES_MIGRATION_FINAL.md  
+**Original Status**: ✅ Complete (4/5 crates migrated, 80% done)  
+**Final Status**: ✅ 100% Complete (5/5 crates + worker-orcd integration)
+
+---
+
+**⚠️ This document is outdated. Please refer to `.docs/WORKER_CRATES_MIGRATION_FINAL.md` for the complete and up-to-date migration status.**
+
+---
+
+## Original Summary (80% Milestone)
 
 ---
 
