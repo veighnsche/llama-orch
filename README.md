@@ -1,41 +1,28 @@
 # llama-orch
-
 **Reproducible, multi-architecture, multi-node GPU orchestration for LLM inference**
-
 llama-orch is a three-binary system that provides test reproducibility, flexible memory architectures, and enterprise-grade orchestration across distributed GPU resources. Born from the simple frustration of "why can't I easily choose which GPU runs which model?", it evolved into a reproducible testing platform with a clean intelligence hierarchy.
-
 **Current version**: `0.1.0` (early development)  
 **License**: GPL-3.0-or-later (free and open source, copyleft)  
 **Target platform**: Linux with NVIDIA GPUs
-
 ---
-
 ## What is llama-orch?
-
 ### Core Value Propositions
-
 1. **Test Reproducibility**: Same seed + temp=0 → Same output (for testing validation, not a product promise)
 2. **Temperature Control**: Full temperature range 0.0-2.0 for production use (product feature)
 3. **Multi-Architecture Support**: NVIDIA CUDA (VRAM-only), Apple ARM (unified memory), and extensible worker adapters
 4. **Multi-Node Orchestration**: Distribute models across GPU clusters
 5. **Smart/Dumb Architecture**: Clean separation between decisions and execution
 6. **Process Isolation**: Workers run in separate processes with isolated memory contexts
-
 **Note**: Determinism is a testing tool, not a product guarantee. LLMs cannot guarantee deterministic behavior due to model architecture and hardware variations.
-
 ### The Three-Binary System
-
 llama-orch consists of three separate binaries that communicate via HTTP:
-
 1. **`orchestratord`** — The Brain (makes ALL intelligent decisions)
 2. **`pool-managerd`** — Control Plane with Levers (executes commands, reports state)
 3. **Workers** — Dumb Executors (load one model, execute inference)
    - `worker-orcd` — Bespoke NVIDIA CUDA worker (VRAM-only)
    - `worker-aarmd` — Apple ARM worker (unified memory) [future]
    - Extensible via worker adapter pattern
-
 ### Intelligence Hierarchy
-
 ```
 Orchestratord (Brain)
   ↓ Commands: "Start worker for model X on GPU 0"
@@ -44,24 +31,17 @@ Pool Manager (Levers)
 Worker (Executor)
   ↓ Executes: Inference requests
 ```
-
 **Decision boundary**: Orchestratord makes ALL decisions (admission, scheduling, worker selection, eviction, retry, timeout). Pool managers and workers are dumb executors that report facts and execute commands.
-
 ### Why This Architecture?
-
 - **Orchestratord can run without GPUs**: Queries pool managers for state
 - **Workers have isolated memory contexts**: Each worker owns its memory allocation (VRAM for NVIDIA, unified for Apple)
 - **Clean FFI boundaries**: Pool manager uses NVML/Metal (read-only), workers use CUDA/Metal (allocation)
 - **Testable components**: Each binary runs standalone for testing
 - **Stateless orchestration**: All state derived from pool manager queries
 - **Multi-architecture**: Worker adapters enable NVIDIA CUDA, Apple Metal, and future backends
-
 ---
-
 ## VIBE CODED PROJECT
-
 (THIS PART IS JUST FUTURE COPY PASTA, and something human to read)
-
 > Hi there, My name is veighnsche (pronounced Vince). This project is nearly 99% AI generated I guess. I mean. I don't even know how to write rust before I began with this project. I would say that I take ownership of the very high level specifications and architecture, the crate structure and the code flow, the programming language choices and what you can see in the this [`git's history`](https://github.com/veighnsche/llama-orch/commit/e32cd7660671a74917e882fdfb89c0b994dd1ced). i WANT to take FULL responsibility of any breaking bugs and security failures. However. I cannot give you that guarantee until I have fully reviewed the code details (and peer reviews would be nice.)
 >
 > It goes without saying that I WON'T be offended if you REFUSE to use this project due to ALL the concerns surrounding vibe coding. I understand that you're skeptical and tbh I expect that you are. I hope that the product speaks for itself eventually and feel free to audit the code. I encourage you to audit the code. I am in desperate need of human code reviewers 😓. (I have professional programming experience so I know how to handle reviews, PLUS all the code is AI generated so I won't take nits personally. EXCEPT IF YOU BASELESSLY CRITIQUE THE CODE FLOW AND ARCHITECTURE 😡. But if you spot a critical issue. I will be eternally grateful 😇. (Please read [`./SECURITY.md`](SECURITY.md) for the correct handling of critical issues.))
@@ -73,13 +53,9 @@ Worker (Executor)
 > Please take a look around. If you have some questions. I'm open to hear about it. If you are a hater. I have been a polarizing figure my entire life. I'M SORRY OKAY :P. so yeah. (btw I know this is cringe. But it's a testament about human text in an AI generated repo. Ask an AI to be exactly my level of cringe. An LLM can't do it, because you know it will overdo the cringyness. My level of cringe is PERFECTLY human... for someone with adhd)
 >
 > Byyeee <3
-
 ---
-
 ## Current Status
-
 **Development Progress**: ~40% complete toward v0.2.0
-
 ### ✅ Implemented
 - HTTP API (`orchestratord`) with Axum server on port 8080
 - Task admission, queueing, and placement (round-robin, least-loaded)
@@ -89,26 +65,21 @@ Worker (Executor)
 - Pool management daemon (`pool-managerd`) with readiness tracking
 - Worker adapters: llamacpp, vllm, tgi, openai-http (scaffolds), mock
 - Prometheus metrics aligned to `.specs/metrics/otel-prom.md`
-- Proof bundle infrastructure (`libs/proof-bundle`) for test artifacts
+-  infrastructure (`libs/`) for test artifacts
 - Service registry for multi-node deployments (bearer auth, node heartbeats)
 - BDD test harness with Cucumber + 13 integration tests
-
 ### 🚧 In Progress
 - Full adapter implementations (llamacpp integration, vllm completion)
 - Production hardening and performance optimization
 - Load testing on real GPU hardware
 - Documentation refinements based on real-world usage
-
 ### 📋 Not Yet Implemented
 - Policy engine for outbound HTTP allow/deny rules
 - Advanced placement heuristics (VRAM-aware, session affinity)
 - Callback webhooks for pool readiness
 - Multi-region support
-
 ---
-
 ## Documentation
-
 ### Core Specifications
 - [`.specs/00_llama-orch.md`](.specs/00_llama-orch.md) — Core requirements (ORCH-3xxx)
 - [`.specs/20_orchestratord.md`](.specs/20_orchestratord.md) — Control plane service
@@ -117,84 +88,62 @@ Worker (Executor)
 - [`AGENTS.md`](AGENTS.md) — Repository guidelines, dev loop, coding/testing discipline
 - [`SECURITY.md`](SECURITY.md) — Security policy and Minimal Auth Hooks seam
 - **[`bin/shared-crates/secrets-management/`](bin/shared-crates/secrets-management/)** — ⚠️ **Use this for ALL credentials** (API tokens, seal keys, worker tokens)
-
 ### Operational Guides
 - [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md) — Complete environment variable reference
 - [`docs/MANUAL_MODEL_STAGING.md`](docs/MANUAL_MODEL_STAGING.md) — Model staging guide
-
 ### Development
 - [`.docs/testing/`](.docs/testing/) — Testing strategy, BDD wiring, test types
 - [`CONSUMER_CAPABILITIES.md`](CONSUMER_CAPABILITIES.md) — Consumer-facing API guide
 - [`COMPLIANCE.md`](COMPLIANCE.md) — Requirements traceability (ORCH/OC-* IDs)
-
 ### Security & Compliance
 - [`bin/shared-crates/audit-logging/`](bin/shared-crates/audit-logging/) — **Tamper-evident audit logging** (Security Rating: A-)
 - [`bin/shared-crates/AUDIT_LOGGING_REMINDER.md`](bin/shared-crates/AUDIT_LOGGING_REMINDER.md) — **⚠️ Required reading for all engineers**
 - Use `audit-logging` crate for all security events (auth, authz, resource ops, GDPR compliance)
-
 ---
-
 ## Architecture
-
 llama-orch consists of **two services** that communicate via HTTP:
-
 ### orchestratord (Control Plane)
-
 **Responsibilities**:
 - Accept client requests (HTTP API on port 8080)
 - Task admission, queueing, and placement decisions
 - SSE streaming to clients
 - Model catalog management
 - Service registry (tracks available GPU workers)
-
 **Requirements**: No GPU needed
-
 **Configuration**:
 ```bash
 # Bind address
 ORCHD_BIND_ADDR=0.0.0.0:8080
-
 # pool-managerd endpoints (comma-separated)
 ORCHD_POOL_MANAGERS=http://localhost:9200
 # or for multiple machines:
 # ORCHD_POOL_MANAGERS=http://gpu-1:9200,http://gpu-2:9200
-
 # Optional: Bearer token for authentication
 LLORCH_API_TOKEN=$(openssl rand -hex 32)
 ```
-
 ### pool-managerd (GPU Worker)
-
 **Responsibilities**:
 - GPU discovery and management
 - Engine provisioning (download, compile, start engines)
 - Pool lifecycle (readiness, health monitoring)
 - Report capacity to orchestratord
-
 **Requirements**: NVIDIA GPU with CUDA
-
 **Configuration**:
 ```bash
 # Bind address
 POOL_MANAGERD_BIND_ADDR=0.0.0.0:9200
-
 # Node identifier (for multi-node setups)
 POOL_MANAGERD_NODE_ID=gpu-node-1
-
 # orchestratord endpoint (for registration)
 ORCHESTRATORD_URL=http://localhost:8080
-
 # Optional: Bearer token (must match orchestratord)
 LLORCH_API_TOKEN=<same-token>
 ```
-
 ### Deployment Flexibility
-
 **Single machine** (both services on localhost):
 ```
 orchestratord (localhost:8080) → pool-managerd (localhost:9200) → GPU engines
 ```
-
 **Multiple machines** (distributed):
 ```
 Control Node:  orchestratord (no GPU)
@@ -203,60 +152,46 @@ GPU Node 1:    pool-managerd + engines
 GPU Node 2:    pool-managerd + engines
 GPU Node N:    pool-managerd + engines
 ```
-
 The architecture is the same—only the URLs change.
-
 ---
-
 ## System Flow Diagrams
-
 ### Single-Machine Deployment
-
 ```mermaid
 flowchart TB
     Client[Client] -->|POST /v2/tasks| OD[orchestratord]
     Client -->|GET /v2/tasks/:id/events| OD
-    
     subgraph "Single Machine"
         OD -->|POST /v2/nodes/register| SR[service-registry<br/>localhost]
         OD -->|enqueue| OC[orchestrator-core<br/>Queue]
         OD -->|check nodes| SR
         OD -->|dispatch HTTP| AH[adapter-host]
-        
         PM[pool-managerd<br/>localhost:9200] -->|register + heartbeat| SR
         PM -->|manages| EP[engine-provisioner]
         EP -->|writes local| HF[handoff.json]
         HF -.->|watches locally| HW[handoff-watcher<br/>pool-managerd]
         HW -->|updates| PM
         EP -->|spawns| ENG[llama.cpp]
-        
         AH -->|HTTP| ENG
         ENG -->|SSE tokens| AH
         AH -->|relay| OD
     end
-    
     OD -->|text/event-stream| Client
-    
     style OD fill:#e1f5ff
     style SR fill:#e8eaf6
     style PM fill:#fff4e1
     style ENG fill:#e8f5e9
 ```
-
 ### Multi-Machine Deployment
-
 ```mermaid
 flowchart TB
     Client[Client] -->|POST /v2/tasks| OD[orchestratord<br/>Control Node]
     Client -->|GET /v2/tasks/:id/events| OD
-    
     subgraph "Control Node (no GPU)"
         OD -->|enqueue| OC[orchestrator-core<br/>Queue]
         OD -->|check nodes| SR[service-registry<br/>Node Tracking]
         OD -->|model-aware<br/>placement| PV2[placement_v2<br/>Least-Loaded]
         OD -->|dispatch via HTTP| AH[adapter-host]
     end
-    
     subgraph "GPU Worker Node 1"
         PM1[pool-managerd] -->|POST /v2/nodes/register| OD
         PM1 -->|POST /v2/nodes/:id/heartbeat| SR
@@ -266,7 +201,6 @@ flowchart TB
         HW1 -->|updates| PM1
         EP1 -->|spawns| ENG1[llama.cpp<br/>GPU 0]
     end
-    
     subgraph "GPU Worker Node 2"
         PM2[pool-managerd] -->|POST /v2/nodes/register| OD
         PM2 -->|POST /v2/nodes/:id/heartbeat| SR
@@ -276,14 +210,12 @@ flowchart TB
         HW2 -->|updates| PM2
         EP2 -->|spawns| ENG2[llama.cpp<br/>GPU 1]
     end
-    
     AH -->|HTTP + Bearer| ENG1
     AH -->|HTTP + Bearer| ENG2
     ENG1 -->|SSE tokens| AH
     ENG2 -->|SSE tokens| AH
     AH -->|relay SSE| OD
     OD -->|text/event-stream| Client
-    
     style OD fill:#e1f5ff
     style SR fill:#e1f5ff
     style PM1 fill:#fff4e1
@@ -291,29 +223,24 @@ flowchart TB
     style ENG1 fill:#e8f5e9
     style ENG2 fill:#e8f5e9
 ```
-
 ### Binaries and Libraries Dependency Map
-
 ```mermaid
 graph TB
     subgraph "Binaries"
         ORCHD[bin/orchestratord<br/>HTTP API · SSE · Placement]
         POOLD[bin/pool-managerd<br/>Pool Lifecycle · Registry]
     end
-    
     subgraph "Core Libraries"
         ORCHCORE[libs/orchestrator-core<br/>Queue · Admission]
         CATALOG[libs/catalog-core<br/>Model Registry]
         ADHOST[libs/adapter-host<br/>Adapter Registry]
     end
-    
     subgraph "Multi-Node Libraries"
         SREG[libs/control-plane/<br/>service-registry<br/>Node Tracking]
         NODEREG[libs/gpu-node/<br/>node-registration]
         HANDOFF[libs/gpu-node/<br/>handoff-watcher]
         POOLTYPES[libs/shared/<br/>pool-registry-types]
     end
-    
     subgraph "Worker Adapters"
         ADAPIAPI[libs/worker-adapters/<br/>adapter-api<br/>Trait]
         LLAMA[libs/worker-adapters/<br/>llamacpp-http]
@@ -322,18 +249,15 @@ graph TB
         MOCK[libs/worker-adapters/<br/>mock]
         HTTPUTIL[libs/worker-adapters/<br/>http-util]
     end
-    
     subgraph "Provisioners"
         ENGPROV[libs/provisioners/<br/>engine-provisioner]
         MODPROV[libs/provisioners/<br/>model-provisioner]
     end
-    
     subgraph "Cross-Cutting"
         AUTH[libs/auth-min<br/>Bearer Token]
         NARR[libs/observability/<br/>narration-core]
         APITYPES[contracts/api-types]
     end
-    
     %% orchestratord dependencies
     ORCHD --> ORCHCORE
     ORCHD --> CATALOG
@@ -345,17 +269,14 @@ graph TB
     ORCHD --> APITYPES
     ORCHD -.->|optional| LLAMA
     ORCHD -.->|optional| MOCK
-    
     %% pool-managerd dependencies
     POOLD --> ENGPROV
     POOLD --> AUTH
     POOLD --> POOLTYPES
     POOLD -.->|multi-node| NODEREG
     POOLD -.->|multi-node| HANDOFF
-    
     %% adapter-host dependencies
     ADHOST --> ADAPIAPI
-    
     %% adapter implementations
     LLAMA --> ADAPIAPI
     LLAMA --> HTTPUTIL
@@ -364,16 +285,13 @@ graph TB
     TGI --> ADAPIAPI
     TGI --> HTTPUTIL
     MOCK --> ADAPIAPI
-    
     %% provisioner dependencies
     ENGPROV --> MODPROV
     MODPROV --> CATALOG
-    
     %% multi-node dependencies
     SREG --> POOLTYPES
     NODEREG --> POOLTYPES
     HANDOFF --> POOLTYPES
-    
     style ORCHD fill:#e1f5ff,stroke:#0288d1,stroke-width:3px
     style POOLD fill:#fff4e1,stroke:#f57c00,stroke-width:3px
     style ORCHCORE fill:#f3e5f5
@@ -381,41 +299,33 @@ graph TB
     style LLAMA fill:#e8f5e9
     style ENGPROV fill:#f0f0f0
 ```
-
 ### Key Libraries
-
 #### Core Orchestration
 - `orchestrator-core/` — Queue, placement logic, domain types
 - `bin/orchestratord/` — HTTP server, API routes, streaming
 - `bin/pool-managerd/` — Pool lifecycle, readiness, health checks (binary + lib)
 - `libs/catalog-core/` — Model catalog, verification, lifecycle states
-
 #### Worker Adapters
 - `libs/adapter-host/` — Adapter registry and dispatch facade
 - `libs/worker-adapters/` — Adapter implementations (llamacpp, vllm, tgi, openai-http, triton, mock)
 - `libs/worker-adapters/http-util/` — Shared HTTP client utilities
-
 #### Multi-Node Support
 - `libs/control-plane/service-registry/` — Node tracking, health management
 - `libs/gpu-node/node-registration/` — Node registration with control plane
 - `libs/gpu-node/handoff-watcher/` — Handoff detection on GPU nodes
 - `libs/shared/pool-registry-types/` — Shared types for node communication
-
 #### Observability & Testing
 - `libs/observability/narration-core/` — Human-readable event narration
-- `libs/proof-bundle/` — Test artifact standardization (NDJSON, JSON, Markdown)
+- `libs//` — Test artifact standardization (NDJSON, JSON, Markdown)
 - `test-harness/bdd/` — Cucumber BDD tests
 - `test-harness/determinism-suite/` — Determinism validation
 - `test-harness/chaos/` — Chaos engineering tests
-
 #### Contracts & Tools
 - `contracts/api-types/` — Shared API types
 - `contracts/openapi/` — OpenAPI specifications (data, control, artifacts)
 - `tools/spec-extract/` — Requirement extraction
 - `tools/openapi-client/` — Generated HTTP client
-
 ### Consumer Layering
-
 ```
 llama-orch-utils (applets, guardrails)
      ↓
@@ -423,17 +333,12 @@ llama-orch-sdk (typed API, transport)
      ↓
 orchestratord (HTTP API, ground truth)
 ```
-
 - **Utils** drives requirements; SDK exposes orchestrator capabilities
 - **SDK** mirrors OpenAPI contracts with minimal logic
 - **Orchestrator** defines API ground truth via specs
-
 See [`consumers/.docs/.adr/006-library-split.md`](consumers/.docs/.adr/006-library-split.md) for layering details.
-
 ---
-
 ## Repository Structure
-
 | Path | Contents |
 |------|----------|
 | `.specs/` | Normative specifications (ORCH-3xxx requirements) |
@@ -445,61 +350,45 @@ See [`consumers/.docs/.adr/006-library-split.md`](consumers/.docs/.adr/006-libra
 | `tools/` | Code generation, spec extraction, README indexing |
 | `consumers/` | SDK (`llama-orch-sdk`), Utils (`llama-orch-utils`) |
 | `ci/` | Metrics linting, dashboards, alerts, link checking |
-
 ---
-
 ## API Overview
-
 ### HTTP Endpoints
-
 **Data Plane** (`contracts/openapi/data.yaml`):
 - `POST /v2/tasks` — Enqueue task, returns 202 with `job_id`
 - `GET /v2/tasks/{id}/events` — SSE stream: `started → token → metrics → end`
 - `POST /v2/tasks/{id}/cancel` — Cancel running task
 - `GET /v2/sessions/{id}` — Session status (TTL, budgets, KV warmth)
 - `DELETE /v2/sessions/{id}` — Delete session
-
 **Control Plane** (`contracts/openapi/control.yaml`):
 - `GET /v2/meta/capabilities` — Orchestrator capabilities
 - `GET /v2/pools/{id}/health` — Pool health and readiness
 - `POST /v2/pools/{id}/{drain|reload|purge}` — Pool lifecycle management
-
 **Catalog** (`contracts/openapi/control.yaml`):
 - `POST /v2/catalog/models` — Register model
 - `GET /v2/catalog/models/{id}` — Model metadata
 - `POST /v2/catalog/models/{id}/verify` — Verify model integrity
 - `POST /v2/catalog/models/{id}/state` — Update lifecycle state (Active/Retired)
-
 **Multi-Node Management** (`contracts/openapi/control.yaml`):
 - `POST /v2/nodes/register` — Register GPU node
 - `POST /v2/nodes/{id}/heartbeat` — Heartbeat with pool status
 - `DELETE /v2/nodes/{id}` — Deregister node
 - `GET /v2/catalog/availability` — Model distribution across nodes
-
 **Observability**:
 - `GET /metrics` — Prometheus metrics endpoint
-
 ### SSE Streaming Format
-
 ```typescript
 // Event: started
 {type: "started", job_id: "...", queue_position: 0, predicted_start_ms: 50}
-
 // Event: token
 {type: "token", t: "hello", i: 0}
-
 // Event: metrics (optional)
 {type: "metrics", queue_depth: 0, on_time_probability: 0.95}
-
 // Event: end
 {type: "end", tokens_in: 10, tokens_out: 50, decode_time_ms: 150}
-
 // Event: error (on failure)
 {type: "error", code: "POOL_UNAVAILABLE", message: "..."}
 ```
-
 ### Request Lifecycle
-
 ```mermaid
 sequenceDiagram
   Client->>orchestratord: POST /v2/tasks
@@ -512,105 +401,72 @@ sequenceDiagram
   WorkerAdapter-->>orchestratord: SSE frames
   orchestratord-->>Client: text/event-stream
 ```
-
 ---
-
 ## Developer Quickstart
-
 ### Prerequisites
-
 - Rust toolchain (stable)
 - NVIDIA GPU with drivers + CUDA runtime
 - Linux (Ubuntu 22.04+ recommended)
-
 ### Build & Run
-
 ```bash
 # Clone repository
 git clone https://github.com/your-org/llama-orch
 cd llama-orch
-
 # Format check
 cargo fmt --all -- --check
-
 # Lint
 cargo clippy --all-targets --all-features -- -D warnings
-
 # Run all tests
 cargo test --workspace --all-features -- --nocapture
-
 # Run orchestratord
 cargo run -p orchestratord
 # Binds to 127.0.0.1:8080 by default
 ```
-
 ### Developer Loop
-
 ```bash
 # Full dev loop: fmt, clippy, regen, tests, linkcheck
 cargo xtask dev:loop
 ```
-
 ### Regenerate Contracts
-
 ```bash
 # Regenerate OpenAPI and config schema
 cargo xtask regen-openapi
 cargo xtask regen-schema
-
 # Extract requirements from specs
 cargo run -p tools-spec-extract --quiet
 ```
-
 ### Run Specific Tests
-
 ```bash
 # BDD harness
 cargo test -p test-harness-bdd -- --nocapture
-
 # Run determinism suite
 cargo test -p test-harness-determinism-suite -- --nocapture
-
 # Run service registry integration tests
 cargo test -p orchestratord --test service_registry_integration -- --nocapture
-
 # Run metrics contract validation
 cargo test -p test-harness-metrics-contract -- --nocapture
 ```
-
 ---
-
 ## Development Workflow
-
 llama-orch follows strict **Spec → Contract → Tests → Code** discipline:
-
 1. **Spec**: Define requirements in `.specs/` with stable IDs (ORCH-3xxx)
 2. **Contract**: Update OpenAPI/types in `contracts/`
 3. **Tests**: Write BDD scenarios, unit tests, integration tests
 4. **Code**: Implement to satisfy tests and specs
-
 ### Key Principles
-
 - **No backwards compatibility before v1.0** — Breaking changes are expected
 - **Test reproducibility** — Identical inputs + temp=0 yield identical outputs (for testing only)
-- **Proof bundles** — Tests emit artifacts (NDJSON, JSON, seeds) to `.proof_bundle/`
+- **** — Tests emit artifacts (NDJSON, JSON, seeds) to `.proof_bundle/`
 - **Metrics contract** — All metrics align with `.specs/metrics/otel-prom.md`
 - **Zero dead code** — Remove unused code immediately (see `AGENTS.md`)
-
 See [`AGENTS.md`](AGENTS.md) for complete repository guidelines.
-
 ---
-
 ## Contributing
-
 ### Before You Start
-
 1. Read [`AGENTS.md`](AGENTS.md) — Repository guidelines and dev loop
 2. Read [`.specs/00_llama-orch.md`](.specs/00_llama-orch.md) — Core requirements
 3. Check [`TODO.md`](TODO.md) — Active work tracker
-
 ### Pull Request Checklist
-
 - [ ] Spec updated (if changing behavior)
 - [ ] Contract updated (if changing API)
 - [ ] Tests added/updated
@@ -620,24 +476,17 @@ See [`AGENTS.md`](AGENTS.md) for complete repository guidelines.
 - [ ] `cargo xtask regen-openapi` run (if contracts changed)
 - [ ] Requirement IDs referenced in commits (e.g., `ORCH-3027: Add decode_time_ms to logs`)
 - [ ] `TODO.md` updated
-
 ---
-
 ## License & Security
-
 **License**: GPL-3.0-or-later (see [`LICENSE`](LICENSE))
-
 **Security**: 
 - Localhost defaults to no authentication
 - Multi-node deployments require Bearer token authentication
 - See [`SECURITY.md`](SECURITY.md) for security policy
 - See [`.specs/11_min_auth_hooks.md`](.specs/11_min_auth_hooks.md) for Minimal Auth Hooks seam
-
 ---
-
 <!-- BEGIN WORKSPACE MAP (AUTO-GENERATED) -->
 ## Workspace Map
-
 | Path | Crate | Role | Key APIs/Contracts | Tests | Spec Refs |
 |------|------|------|---------------------|-------|-----------|
 | [`bin/orchestratord/`](bin/orchestratord/README.md) | `orchestratord` | core | OpenAPI |
@@ -725,9 +574,7 @@ OpenAPI | trybuild, ui | — |
 | [`tools/readme-index/`](tools/readme-index/README.md) | `tools-readme-index` | tool | — | — | — |
 | [`tools/spec-extract/`](tools/spec-extract/README.md) | `tools-spec-extract` | tool | — | — | — |
 | [`xtask/`](xtask/README.md) | `xtask` | tool | — | — | — |
-
 ### Glossary
-
 - `orchestratord` — orchestratord (core)
 - `orchestratord-bdd` — orchestratord-bdd (core)
 - `llama-orch-sdk` — Single-source SDK for llama-orch (Rust core, optional WASM for npm)
@@ -764,11 +611,8 @@ OpenAPI | trybuild, ui | — |
 - `tools-readme-index` — tools-readme-index (tool)
 - `tools-spec-extract` — tools-spec-extract (tool)
 - `xtask` — xtask (tool)
-
 ### Getting Started
-
 - Adapter work: see `libs/worker-adapters/*` crates.
 - Contracts: see `contracts/*`.
 - Core scheduling: see `libs/orchestrator-core/` and `bin/orchestratord/`.
-
 <!-- END WORKSPACE MAP (AUTO-GENERATED) -->

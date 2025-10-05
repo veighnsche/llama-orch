@@ -59,6 +59,9 @@ set(CUDA_SOURCES
     src/io/chunked_transfer.cpp
     src/validation/pre_load.cpp
     src/model/arch_detect.cpp
+    src/model/gpt_weights.cpp
+    src/model/gpt_model.cpp
+    src/gpt_transformer_layer.cpp
 )
 
 # Kernel files
@@ -147,6 +150,9 @@ if(BUILD_TESTING)
         tests/test_residual_kernel.cpp
         tests/test_gqa_attention.cpp
         tests/test_swiglu.cpp
+        # GPT Sprint 4 tests (GT-024, GT-025, GT-026)
+        tests/test_gpt_weights.cpp
+        tests/test_gpt_model.cpp
         # GPT kernel tests - TODO: Convert to GTest format
         # tests/test_gpt_kernels.cu
         # tests/test_layernorm_comprehensive.cu

@@ -3,7 +3,7 @@ info:
   title: llama-orch Artifacts API (v2)
   version: 2.0.0
   description: |
-    Store and retrieve artifacts (plans, transcripts, logs, traces) used by proof bundles.
+    Store and retrieve artifacts (plans, transcripts, logs, traces) used by .
 servers:
   - url: /
 paths:
@@ -50,7 +50,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ArtifactV2'
         '404': { description: Not Found }
-
 components:
   parameters:
     XCorrelationId:

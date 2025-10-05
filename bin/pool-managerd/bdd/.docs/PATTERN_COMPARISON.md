@@ -1,11 +1,7 @@
 # BDD Pattern Comparison
-
 This document compares the `pool-managerd-bdd` scaffolding with existing BDD crates in the monorepo to ensure consistency.
-
 ## Structure Comparison
-
 ### Minimal Pattern (catalog-core-bdd, orchestrator-core-bdd)
-
 ```
 libs/{crate}/bdd/
 ├── Cargo.toml
@@ -18,9 +14,7 @@ libs/{crate}/bdd/
 └── tests/
     └── features/
 ```
-
 ### Full Pattern (orchestratord-bdd)
-
 ```
 bin/orchestratord/bdd/
 ├── Cargo.toml
@@ -44,9 +38,7 @@ bin/orchestratord/bdd/
         ├── security/
         └── sse/
 ```
-
 ### pool-managerd-bdd (Current)
-
 ```
 bin/pool-managerd/bdd/
 ├── Cargo.toml                    ✓ Matches pattern
@@ -60,11 +52,8 @@ bin/pool-managerd/bdd/
     └── features/
         └── .gitkeep              ✓ Ready for features
 ```
-
 ## File-by-File Comparison
-
 ### Cargo.toml
-
 | Feature | catalog-core-bdd | orchestratord-bdd | pool-managerd-bdd | Status |
 |---------|------------------|-------------------|-------------------|--------|
 | Package name pattern | `{crate}-bdd` | `{crate}-bdd` | `pool-managerd-bdd` | ✓ |
@@ -73,9 +62,7 @@ bin/pool-managerd/bdd/
 | Binary name | `bdd-runner` | `bdd-runner` | `bdd-runner` | ✓ |
 | Parent crate dep | Yes | Yes | Yes | ✓ |
 | tokio multi-thread | Yes | Yes | Yes | ✓ |
-
 ### main.rs
-
 | Feature | catalog-core-bdd | orchestratord-bdd | pool-managerd-bdd | Status |
 |---------|------------------|-------------------|-------------------|--------|
 | `#[tokio::main]` | ✓ | ✓ | ✓ | ✓ |
@@ -83,28 +70,21 @@ bin/pool-managerd/bdd/
 | Default path | `tests/features` | `tests/features` | `tests/features` | ✓ |
 | Absolute path handling | ✓ | ✓ | ✓ | ✓ |
 | `.run_and_exit()` | ✓ | ✓ | ✓ | ✓ |
-
 ### steps/world.rs
-
 | Feature | catalog-core-bdd | orchestratord-bdd | pool-managerd-bdd | Status |
 |---------|------------------|-------------------|-------------------|--------|
 | `#[derive(cucumber::World)]` | ✓ | ✓ | ✓ | ✓ |
 | `Debug` trait | ✓ | ✓ | ✓ | ✓ |
 | `Default` trait | ✓ | ✓ | ✓ | ✓ |
 | World name | `BddWorld` | `World` | `BddWorld` | ✓ |
-
 **Note**: `pool-managerd-bdd` uses `BddWorld` (like catalog-core) rather than `World` (like orchestratord). This is intentional to avoid naming conflicts and follows the simpler pattern.
-
 ### steps/mod.rs
-
 | Feature | catalog-core-bdd | orchestratord-bdd | pool-managerd-bdd | Status |
 |---------|------------------|-------------------|-------------------|--------|
 | `pub mod world;` | ✓ | ✓ | ✓ | ✓ |
 | Step modules | None | Multiple | None (yet) | ✓ |
 | `registry()` function | No | Yes | No (yet) | ⏳ |
-
 ### README.md
-
 | Section | catalog-core-bdd | orchestratord-bdd | pool-managerd-bdd | Status |
 |---------|------------------|-------------------|-------------------|--------|
 | Name & Purpose | ✓ | ✓ | ✓ | ✓ |
@@ -112,11 +92,8 @@ bin/pool-managerd/bdd/
 | Build & Test | ✓ | ✓ | ✓ | ✓ |
 | Runbook | ✓ | ✓ | ✓ | ✓ |
 | Status & Owners | ✓ | ✓ | ✓ | ✓ |
-
 ## Workspace Integration
-
 ### Cargo.toml workspace members
-
 ```toml
 # All BDD crates follow the same pattern:
 members = [
@@ -130,65 +107,50 @@ members = [
     "libs/catalog-core/bdd",           # ✓ Pattern
 ]
 ```
-
 ## Evolution Path
-
 The `pool-managerd-bdd` scaffolding starts minimal (like catalog-core-bdd) and can evolve toward the full pattern (like orchestratord-bdd) as needed:
-
 ### Phase 1: Minimal (CURRENT)
 - ✓ Basic World struct
 - ✓ No step definitions yet
 - ✓ No features yet
 - ✓ No validation tests yet
-
 ### Phase 2: Basic Features (NEXT)
 - Add first feature file (e.g., `preload_readiness.feature`)
 - Expand World with HTTP client and response tracking
 - Add first step module (e.g., `preload.rs`)
 - Import step module in `steps/mod.rs`
-
 ### Phase 3: Full Coverage
 - Multiple feature files organized by domain
 - Multiple step modules (preload, restart_backoff, device_masks, observability)
 - Add `registry()` function for step validation
 - Add `tests/bdd.rs` for undefined/ambiguous step detection
 - Rich World with domain-specific helpers
-
 ### Phase 4: Advanced (OPTIONAL)
 - Add `lib.rs` if step registry needs to be public
-- Add proof bundle integration
+- Add  integration
 - Add metrics verification helpers
 - Add chaos/fault injection helpers
-
 ## Key Differences from orchestratord-bdd
-
 1. **World naming**: Uses `BddWorld` instead of `World` (simpler, avoids conflicts)
 2. **No lib.rs**: Not needed for basic BDD harness
 3. **Minimal start**: Will grow organically based on actual test needs
 4. **No AppState**: pool-managerd has different state management than orchestratord
-
 ## Verification
-
 ```bash
 # Build check
 cargo check -p pool-managerd-bdd
 # ✓ PASS
-
 # Format check
 cargo fmt --package pool-managerd-bdd -- --check
 # ✓ PASS
-
 # Build binary
 cargo build -p pool-managerd-bdd --bin bdd-runner
 # ✓ PASS
-
 # Run (will fail gracefully with no features)
 cargo run -p pool-managerd-bdd --bin bdd-runner
 # ✓ Expected: exits with no scenarios found
 ```
-
 ## Conclusion
-
 The `pool-managerd-bdd` scaffolding **perfectly matches** the established monorepo patterns:
 - ✓ Directory structure identical to catalog-core-bdd
 - ✓ File naming conventions consistent
@@ -197,5 +159,4 @@ The `pool-managerd-bdd` scaffolding **perfectly matches** the established monore
 - ✓ World struct properly derived
 - ✓ Workspace integration complete
 - ✓ Ready for feature and step implementation
-
 The scaffolding is production-ready and follows spec-first, test-driven development principles from `AGENTS.md`.
