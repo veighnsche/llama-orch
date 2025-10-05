@@ -25,12 +25,13 @@
 //!
 //! See: `.specs/01_cuda_ffi_boundary.md`
 
-mod cuda;
-
 use clap::Parser;
 use std::net::SocketAddr;
+use std::sync::Arc;
 use worker_common::startup;
 use worker_http::{create_router, HttpServer};
+use worker_orcd::cuda;
+use worker_orcd::inference::cuda_backend::CudaInferenceBackend;
 
 #[derive(Parser, Debug)]
 #[command(name = "worker-orcd")]
@@ -95,7 +96,8 @@ async fn main() -> anyhow::Result<()> {
 
     // Start HTTP server
     let addr = SocketAddr::from(([0, 0, 0, 0], args.port));
-    let router = create_router(args.worker_id, cuda_model);
+    let backend = Arc::new(CudaInferenceBackend::new(cuda_model));
+    let router = create_router(backend);
     let server = HttpServer::new(addr, router).await?;
 
     server.run().await?;
