@@ -45,19 +45,60 @@ mod tests {
 
     #[test]
     fn test_health_response_structure() {
-        let response = HealthResponse { status: "healthy".to_string() };
+        let response = HealthResponse { 
+            status: "healthy".to_string(),
+            vram_bytes: 8_000_000_000,
+        };
 
         let json = serde_json::to_string(&response).unwrap();
         assert!(json.contains("\"status\""));
         assert!(json.contains("\"healthy\""));
+        assert!(json.contains("\"vram_bytes\""));
     }
 
     #[test]
     fn test_health_response_serialization() {
-        let response = HealthResponse { status: "healthy".to_string() };
+        let response = HealthResponse { 
+            status: "healthy".to_string(),
+            vram_bytes: 16_000_000_000,
+        };
 
         let json = serde_json::to_value(&response).unwrap();
         assert_eq!(json["status"], "healthy");
+        assert_eq!(json["vram_bytes"], 16_000_000_000u64);
+    }
+
+    #[test]
+    fn test_health_response_unhealthy() {
+        let response = HealthResponse {
+            status: "unhealthy".to_string(),
+            vram_bytes: 0,
+        };
+
+        let json = serde_json::to_value(&response).unwrap();
+        assert_eq!(json["status"], "unhealthy");
+        assert_eq!(json["vram_bytes"], 0);
+    }
+
+    #[test]
+    fn test_health_response_various_vram_sizes() {
+        let sizes = vec![
+            0u64,
+            1_000_000_000,      // 1GB
+            8_000_000_000,      // 8GB
+            16_000_000_000,     // 16GB
+            80_000_000_000,     // 80GB
+        ];
+
+        for vram_bytes in sizes {
+            let response = HealthResponse {
+                status: "healthy".to_string(),
+                vram_bytes,
+            };
+
+            let json = serde_json::to_value(&response).unwrap();
+            assert_eq!(json["vram_bytes"], vram_bytes);
+        }
     }
 }
 

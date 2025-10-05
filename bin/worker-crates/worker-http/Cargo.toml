@@ -20,3 +20,7 @@ futures = "0.3"
 
 [dev-dependencies]
 tokio-test = "0.4"
+axum-test = "15.0"
+tower = "0.4"
+hyper = "1.0"
+proptest = "1.0"

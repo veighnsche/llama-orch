@@ -58,7 +58,7 @@ impl HttpServer {
     ///
     /// # Example
     /// ```no_run
-    /// use worker_orcd::http::server::HttpServer;
+    /// use worker_http::HttpServer;
     /// use std::net::SocketAddr;
     /// use axum::Router;
     ///

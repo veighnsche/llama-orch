@@ -161,7 +161,7 @@ mod tests {
         assert!(json.contains("\"type\":\"end\""));
         assert!(json.contains("\"tokens_out\":100"));
         assert!(json.contains("\"decode_time_ms\":5000"));
-        assert!(json.contains("max_tokens"));
+        assert!(json.contains("MAX_TOKENS"));
     }
 
     #[test]
@@ -245,19 +245,23 @@ mod tests {
     fn test_stop_reason_serialization() {
         let max_tokens = StopReason::MaxTokens;
         let json = serde_json::to_string(&max_tokens).unwrap();
-        assert_eq!(json, "\"max_tokens\"");
+        assert_eq!(json, "\"MAX_TOKENS\"");
 
         let stop_seq = StopReason::StopSequence;
         let json = serde_json::to_string(&stop_seq).unwrap();
-        assert_eq!(json, "\"stop_sequence\"");
+        assert_eq!(json, "\"STOP_SEQUENCE\"");
 
         let error = StopReason::Error;
         let json = serde_json::to_string(&error).unwrap();
-        assert_eq!(json, "\"error\"");
+        assert_eq!(json, "\"ERROR\"");
 
         let cancelled = StopReason::Cancelled;
         let json = serde_json::to_string(&cancelled).unwrap();
-        assert_eq!(json, "\"cancelled\"");
+        assert_eq!(json, "\"CANCELLED\"");
+        
+        let eos = StopReason::Eos;
+        let json = serde_json::to_string(&eos).unwrap();
+        assert_eq!(json, "\"EOS\"");
     }
 
     #[test]
@@ -271,7 +275,7 @@ mod tests {
 
         let json = serde_json::to_string(&event).unwrap();
         assert!(json.contains("\"type\":\"end\""));
-        assert!(json.contains("\"stop_reason\":\"stop_sequence\""));
+        assert!(json.contains("\"stop_reason\":\"STOP_SEQUENCE\""));
         assert!(json.contains("\"stop_sequence_matched\":\"\\n\\n\""));
     }
 
@@ -285,7 +289,7 @@ mod tests {
         };
 
         let json = serde_json::to_string(&event).unwrap();
-        assert!(json.contains("\"stop_reason\":\"max_tokens\""));
+        assert!(json.contains("\"stop_reason\":\"MAX_TOKENS\""));
         assert!(!json.contains("stop_sequence_matched"));
     }
 }

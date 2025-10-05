@@ -9,13 +9,16 @@ default = ["bdd-cucumber"]
 bdd-cucumber = []
 
 [dependencies]
-anyhow = { workspace = true }
+anyhow = "1.0"
 cucumber = "0.20"
-tokio = { workspace = true }
+tokio = { version = "1.0", features = ["full"] }
 worker-http = { path = ".." }
+worker-common = { path = "../../worker-common" }
 axum = "0.7"
 tower = "0.4"
-hyper = { workspace = true }
+hyper = "1.0"
+async-trait = "0.1"
+serde_json = "1.0"
 
 [[bin]]
 name = "bdd-runner"

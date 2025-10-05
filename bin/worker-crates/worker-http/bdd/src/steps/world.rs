@@ -1,20 +1,21 @@
 //! World state for worker-http BDD tests
 
 use cucumber::World;
+use worker_http::validation::ExecuteRequest;
 
 #[derive(Debug, Default, World)]
 pub struct HttpWorld {
-    // Server lifecycle
-    pub port: Option<u16>,
-    pub server_running: bool,
-    pub shutdown_sent: bool,
+    // Request validation
+    pub request: Option<ExecuteRequest>,
+    pub validation_error: Option<String>,
+    pub validation_passed: bool,
     
     // SSE streaming
-    pub has_sse_stream: bool,
-    pub events_sent: usize,
-    pub stream_closed: bool,
+    pub event_count: usize,
+    pub has_terminal_event: bool,
+    pub event_types: Vec<String>,
     
-    // Request validation
-    pub request_headers: Vec<String>,
-    pub validation_passed: bool,
+    // Error handling
+    pub error_code: Option<String>,
+    pub error_message: Option<String>,
 }

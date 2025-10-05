@@ -3,18 +3,32 @@ Feature: SSE Streaming
   I want to stream tokens via SSE
   So that clients can receive real-time inference results
 
-  Scenario: Stream multiple tokens
-    Given an SSE stream
-    When I send a token event
-    And I send a token event
-    And I send a token event
-    Then the client should receive 3 events
-    When I close the stream
-    Then the stream should close cleanly
+  Scenario: Complete inference event stream
+    Given an SSE event stream
+    When I send a "started" event
+    And I send a "token" event
+    And I send a "token" event
+    And I send a "token" event
+    And I send a "end" event
+    Then the stream should have 5 events
+    And the stream should have a terminal event
+    And the event order should be "started -> token -> token -> token -> end"
 
-  Scenario: Handle client disconnect
-    Given an SSE stream
-    When I send a token event
-    And the client disconnects
-    Then the stream should close cleanly
-    And no error should be logged
+  Scenario: Error during inference
+    Given an SSE event stream
+    When I send a "started" event
+    And I send a "token" event
+    And I send a "error" event
+    Then the stream should have 3 events
+    And the stream should have a terminal event
+    And the event order should be "started -> token -> error"
+
+  Scenario: Metrics during inference
+    Given an SSE event stream
+    When I send a "started" event
+    And I send a "token" event
+    And I send a "metrics" event
+    And I send a "token" event
+    And I send a "end" event
+    Then the stream should have 5 events
+    And the event order should be "started -> token -> metrics -> token -> end"

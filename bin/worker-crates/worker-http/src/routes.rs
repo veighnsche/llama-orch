@@ -36,14 +36,6 @@ pub fn create_router<B: InferenceBackend + 'static>(backend: Arc<B>) -> Router {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    // use axum::http::{Request, StatusCode};  // Unused
-    // use tower::ServiceExt;  // Unused
-
-    // Mock ModelHandle for testing
-    // Note: In real tests, we'd need to properly mock the CUDA model
-    // For now, these tests verify route configuration only
-
     #[tokio::test]
     async fn test_router_has_health_route() {
         // This test verifies the router is configured correctly
