@@ -146,6 +146,15 @@ public:
      */
     static size_t calculate_vram_usage(const GPTConfig& config);
     
+    /**
+     * Validate tensor shape (public for testing)
+     */
+    static void validate_tensor_shape(
+        const GGUFTensorInfo& tensor,
+        const std::vector<uint64_t>& expected_shape,
+        const std::string& context
+    );
+    
 private:
     /**
      * Parse GGUF metadata to extract GPT config
@@ -188,15 +197,6 @@ private:
         const void* host_data,
         size_t size_bytes,
         const std::string& tensor_name
-    );
-    
-    /**
-     * Validate tensor shape
-     */
-    static void validate_tensor_shape(
-        const GGUFTensorInfo& tensor,
-        const std::vector<uint64_t>& expected_shape,
-        const std::string& context
     );
     
     /**

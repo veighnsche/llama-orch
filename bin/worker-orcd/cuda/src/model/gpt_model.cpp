@@ -82,12 +82,13 @@ GPTModel::GPTModel(
     cudaStreamCreate(&stream_);
     
     // Create KV cache
-    kv_cache_ = std::make_unique<KVCache>(
-        weights_->config.num_layers,
-        weights_->config.max_seq_len,
-        weights_->config.hidden_dim,
-        1  // batch_size = 1 for M0
-    );
+    KVCacheConfig cache_config{
+        .num_layers = weights_->config.num_layers,
+        .max_context_length = weights_->config.max_seq_len,
+        .num_kv_heads = weights_->config.num_heads,  // MHA: num_kv_heads = num_heads
+        .head_dim = weights_->config.hidden_dim / weights_->config.num_heads
+    };
+    kv_cache_ = std::make_unique<KVCache>(cache_config);
     
     // Allocate workspace
     allocate_workspace();
