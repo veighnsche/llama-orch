@@ -9,6 +9,7 @@ description = "GGUF file format parser for llama-orch workers"
 thiserror = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 byteorder = "1.5"
+half = "2.4"
 
 [dev-dependencies]
 proptest = "1.0"

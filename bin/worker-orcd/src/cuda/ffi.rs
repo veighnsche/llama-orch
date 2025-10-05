@@ -41,6 +41,12 @@ pub struct InferenceContext {
     _private: [u8; 0],
 }
 
+/// Opaque handle to GPU pointer map (for Rust weight loading)
+#[repr(C)]
+pub struct GpuPointerMap {
+    _private: [u8; 0],
+}
+
 // ============================================================================
 // Raw FFI Declarations (unsafe)
 // ============================================================================
@@ -272,6 +278,94 @@ extern "C" {
     /// - `ctx` must be a valid pointer from `cuda_inference_init` or NULL
     /// - `ctx` must not be used after this call
     pub fn cuda_inference_context_free(ctx: *mut InferenceContext);
+    
+    // ========================================================================
+    // CUDA Memory Management (for Rust weight loading)
+    // ========================================================================
+    
+    /// Allocate CUDA device memory.
+    ///
+    /// # Safety
+    ///
+    /// - `size` must be > 0
+    /// - Returned pointer must be freed with `cuda_free_memory`
+    /// - Returns NULL on allocation failure
+    pub fn cuda_malloc_device(size: usize) -> *mut std::ffi::c_void;
+    
+    /// Copy data from host to CUDA device.
+    ///
+    /// # Safety
+    ///
+    /// - `dst` must be a valid device pointer from `cuda_malloc_device`
+    /// - `src` must be a valid host pointer with at least `size` bytes
+    /// - `size` must match allocated size
+    /// - Returns 0 on success, non-zero on error
+    pub fn cuda_memcpy_host_to_device(
+        dst: *mut std::ffi::c_void,
+        src: *const std::ffi::c_void,
+        size: usize,
+    ) -> c_int;
+    
+    /// Free CUDA device memory.
+    ///
+    /// # Safety
+    ///
+    /// - `ptr` must be a valid pointer from `cuda_malloc_device` or NULL
+    /// - `ptr` must not be used after this call
+    /// - Safe to call with NULL (no-op)
+    pub fn cuda_free_memory(ptr: *mut std::ffi::c_void);
+    
+    // ========================================================================
+    // Model Loading from Pre-allocated GPU Pointers (Rust → C++)
+    // ========================================================================
+    
+    /// Create a GPU pointer map for passing pointers from Rust to C++.
+    ///
+    /// # Safety
+    ///
+    /// - Returned pointer must be freed with `cuda_free_pointer_map`
+    pub fn cuda_create_pointer_map(total_vram_bytes: u64) -> *mut GpuPointerMap;
+    
+    /// Insert a GPU pointer into the map.
+    ///
+    /// # Safety
+    ///
+    /// - `map` must be a valid pointer from `cuda_create_pointer_map`
+    /// - `name` must be a valid null-terminated UTF-8 string
+    /// - `gpu_ptr` must be a valid CUDA device pointer
+    pub fn cuda_pointer_map_insert(
+        map: *mut GpuPointerMap,
+        name: *const c_char,
+        gpu_ptr: *mut std::ffi::c_void,
+    );
+    
+    /// Load model from pre-allocated GPU pointers.
+    ///
+    /// # Safety
+    ///
+    /// - `pointer_map` must be a valid pointer from `cuda_create_pointer_map`
+    /// - All parameters must match the model configuration
+    /// - `error` must be a valid pointer to writable i32
+    /// - Returned pointer must be freed with `cuda_free_model`
+    pub fn cuda_load_model_from_pointers(
+        ctx: *mut std::ffi::c_void,
+        pointer_map: *mut GpuPointerMap,
+        vocab_size: u32,
+        hidden_dim: u32,
+        num_layers: u32,
+        num_heads: u32,
+        num_kv_heads: u32,
+        context_length: u32,
+        error: *mut c_int,
+    ) -> *mut CudaModel;
+    
+    /// Free GPU pointer map.
+    ///
+    /// # Safety
+    ///
+    /// - `map` must be a valid pointer from `cuda_create_pointer_map` or NULL
+    /// - `map` must not be used after this call
+    pub fn cuda_free_pointer_map(map: *mut GpuPointerMap);
 }
 
 // ============================================================================
@@ -417,6 +511,54 @@ pub unsafe fn cuda_inference_reset(_ctx: *mut InferenceContext) {}
 
 #[cfg(not(feature = "cuda"))]
 pub unsafe fn cuda_inference_context_free(_ctx: *mut InferenceContext) {}
+
+#[cfg(not(feature = "cuda"))]
+pub unsafe fn cuda_malloc_device(_size: usize) -> *mut std::ffi::c_void {
+    std::ptr::null_mut()
+}
+
+#[cfg(not(feature = "cuda"))]
+pub unsafe fn cuda_memcpy_host_to_device(
+    _dst: *mut std::ffi::c_void,
+    _src: *const std::ffi::c_void,
+    _size: usize,
+) -> c_int {
+    1 // Error
+}
+
+#[cfg(not(feature = "cuda"))]
+pub unsafe fn cuda_free_memory(_ptr: *mut std::ffi::c_void) {}
+
+#[cfg(not(feature = "cuda"))]
+pub unsafe fn cuda_create_pointer_map(_total_vram_bytes: u64) -> *mut GpuPointerMap {
+    std::ptr::null_mut()
+}
+
+#[cfg(not(feature = "cuda"))]
+pub unsafe fn cuda_pointer_map_insert(
+    _map: *mut GpuPointerMap,
+    _name: *const c_char,
+    _gpu_ptr: *mut std::ffi::c_void,
+) {}
+
+#[cfg(not(feature = "cuda"))]
+pub unsafe fn cuda_load_model_from_pointers(
+    _ctx: *mut std::ffi::c_void,
+    _pointer_map: *mut GpuPointerMap,
+    _vocab_size: u32,
+    _hidden_dim: u32,
+    _num_layers: u32,
+    _num_heads: u32,
+    _num_kv_heads: u32,
+    _context_length: u32,
+    error: *mut c_int,
+) -> *mut CudaModel {
+    *error = 3; // CUDA_ERROR_MODEL_LOAD_FAILED
+    std::ptr::null_mut()
+}
+
+#[cfg(not(feature = "cuda"))]
+pub unsafe fn cuda_free_pointer_map(_map: *mut GpuPointerMap) {}
 
 // ---
 // Built by Foundation-Alpha 🏗️

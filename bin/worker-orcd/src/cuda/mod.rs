@@ -36,12 +36,21 @@ mod ffi;  // Keep private for now
 mod inference;
 mod model;
 mod real_inference;
+mod weight_loader;
 
 pub use context::Context;
 pub use error::{CudaError, CudaErrorCode};
 pub use inference::Inference;
 pub use model::Model;
 pub use real_inference::RealInference;
+pub use weight_loader::{
+    load_tensor, 
+    load_and_dequantize_q4k, 
+    load_weights_to_gpu, 
+    load_model_from_rust,
+    TensorInfo, 
+    GGMLType
+};
 
 #[cfg(test)]
 mod tests {

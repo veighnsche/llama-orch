@@ -25,10 +25,15 @@
 //! Spec: FT-035
 
 mod parser;
+pub mod q4k_dequant;
 
 use std::collections::HashMap;
 use thiserror::Error;
 use parser::GGUFParser;
+
+// Re-export dequantization function and tensor metadata
+pub use q4k_dequant::dequantize_q4k;
+pub use parser::TensorMetadata;
 
 /// GGUF parsing errors
 #[derive(Debug, Error)]
@@ -96,6 +101,24 @@ impl GGUFMetadata {
         let mut parser = GGUFParser::new(path)?;
         let metadata = parser.parse()?;
         Ok(Self { metadata })
+    }
+    
+    /// Parse tensor metadata from GGUF file
+    ///
+    /// # Arguments
+    /// - `path`: Path to GGUF file
+    ///
+    /// # Returns
+    /// Vector of tensor metadata (name, type, dimensions, offset)
+    ///
+    /// # Errors
+    /// Returns error if:
+    /// - File not found
+    /// - Invalid GGUF format
+    /// - Unsupported version
+    pub fn parse_tensors(path: &str) -> Result<Vec<TensorMetadata>, GGUFError> {
+        let mut parser = GGUFParser::new(path)?;
+        parser.parse_tensors()
     }
 
     /// Get architecture from metadata

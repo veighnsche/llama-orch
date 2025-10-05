@@ -48,6 +48,7 @@ set(CUDA_SOURCES
     src/inference_impl.cpp
     src/ffi.cpp
     src/ffi_inference.cpp
+    src/ffi_weight_loading.cpp
     src/health.cpp
     src/vram_tracker.cpp
     src/device_memory.cpp

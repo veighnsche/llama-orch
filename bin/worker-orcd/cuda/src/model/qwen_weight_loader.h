@@ -65,6 +65,13 @@ public:
         const QwenConfig& config
     );
     
+    /// Load model from pre-allocated GPU pointers (Rust weight loading)
+    static QwenModel* load_from_gpu_pointers(
+        const std::map<std::string, void*>& gpu_pointers,
+        const QwenConfig& config,
+        uint64_t total_vram_bytes
+    );
+    
 private:
     static std::vector<std::string> get_tensor_names(int num_layers);
     

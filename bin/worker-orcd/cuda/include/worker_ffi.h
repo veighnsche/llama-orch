@@ -23,6 +23,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #include "worker_types.h"
 #include "worker_errors.h"
@@ -342,6 +343,44 @@ uint64_t cuda_get_process_vram_usage(CudaContext* ctx);
  * Spec: M0-W-1012 (VRAM Residency Verification)
  */
 bool cuda_check_device_health(CudaContext* ctx, int* error_code);
+
+// ============================================================================
+// CUDA Memory Management (for Rust weight loading)
+// ============================================================================
+
+/**
+ * Allocate CUDA device memory.
+ * 
+ * @param size Number of bytes to allocate (must be > 0)
+ * @return Device pointer, or NULL on allocation failure
+ * 
+ * Thread safety: Safe to call from multiple threads
+ * Memory ownership: Caller must call cuda_free_memory() to free
+ */
+void* cuda_malloc_device(size_t size);
+
+/**
+ * Copy data from host to CUDA device.
+ * 
+ * @param dst Device pointer from cuda_malloc_device (must not be NULL)
+ * @param src Host pointer with data to copy (must not be NULL)
+ * @param size Number of bytes to copy
+ * @return 0 on success, non-zero on error
+ * 
+ * Thread safety: Safe to call from multiple threads
+ */
+int cuda_memcpy_host_to_device(void* dst, const void* src, size_t size);
+
+/**
+ * Free CUDA device memory.
+ * 
+ * @param ptr Device pointer from cuda_malloc_device (may be NULL)
+ * 
+ * Thread safety: Safe to call from multiple threads
+ * 
+ * Note: Safe to call with NULL (no-op).
+ */
+void cuda_free_memory(void* ptr);
 
 #ifdef __cplusplus
 }

@@ -26,6 +26,7 @@ reqwest = { workspace = true }
 futures = { workspace = true }
 thiserror = { workspace = true }
 observability-narration-core = { path = "../shared-crates/narration-core", features = ["axum", "cute-mode"] }
+half = "2.4"
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }

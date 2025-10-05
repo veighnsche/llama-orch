@@ -274,5 +274,61 @@ QwenModel* QwenWeightLoader::load(
     return model;
 }
 
+QwenModel* QwenWeightLoader::load_from_gpu_pointers(
+    const std::map<std::string, void*>& gpu_pointers,
+    const QwenConfig& config,
+    uint64_t total_vram_bytes
+) {
+    auto model = new QwenModel();
+    model->config = config;
+    model->vram_usage = total_vram_bytes;
+    
+    fprintf(stderr, "🔗 [C++] Wiring %zu pre-loaded GPU pointers...\n", gpu_pointers.size());
+    
+    // Helper to get pointer with error checking
+    auto get_ptr = [&](const std::string& name) -> void* {
+        auto it = gpu_pointers.find(name);
+        if (it == gpu_pointers.end()) {
+            fprintf(stderr, "❌ Missing tensor: %s\n", name.c_str());
+            throw std::runtime_error("Missing tensor: " + name);
+        }
+        return it->second;
+    };
+    
+    // Wire embeddings
+    model->weights.token_embd = get_ptr("token_embd.weight");
+    
+    // Wire layers
+    model->weights.layers.resize(config.num_layers);
+    for (uint32_t i = 0; i < config.num_layers; i++) {
+        std::string prefix = "blk." + std::to_string(i) + ".";
+        
+        auto& layer = model->weights.layers[i];
+        layer.attn_norm = get_ptr(prefix + "attn_norm.weight");
+        layer.attn_q_weight = get_ptr(prefix + "attn_q.weight");
+        layer.attn_q_bias = get_ptr(prefix + "attn_q.bias");
+        layer.attn_k_weight = get_ptr(prefix + "attn_k.weight");
+        layer.attn_k_bias = get_ptr(prefix + "attn_k.bias");
+        layer.attn_v_weight = get_ptr(prefix + "attn_v.weight");
+        layer.attn_v_bias = get_ptr(prefix + "attn_v.bias");
+        layer.attn_output = get_ptr(prefix + "attn_output.weight");
+        
+        layer.ffn_norm = get_ptr(prefix + "ffn_norm.weight");
+        layer.ffn_gate = get_ptr(prefix + "ffn_gate.weight");
+        layer.ffn_up = get_ptr(prefix + "ffn_up.weight");
+        layer.ffn_down = get_ptr(prefix + "ffn_down.weight");
+    }
+    
+    // Wire output
+    model->weights.output_norm = get_ptr("output_norm.weight");
+    model->weights.lm_head = get_ptr("output.weight");
+    
+    fprintf(stderr, "✅ [C++] Wired all %u layers (VRAM: %.2f MB)\n",
+            config.num_layers,
+            total_vram_bytes / 1024.0 / 1024.0);
+    
+    return model;
+}
+
 } // namespace model
 } // namespace worker

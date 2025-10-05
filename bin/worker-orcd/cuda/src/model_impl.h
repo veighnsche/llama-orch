@@ -11,6 +11,7 @@
 #define WORKER_MODEL_IMPL_H
 
 #include "context.h"
+#include "model/qwen_weight_loader.h"
 #include <memory>
 #include <string>
 
@@ -30,6 +31,11 @@ public:
      */
     ModelImpl(Context& ctx, const char* model_path);
     
+    /**
+     * Default constructor for Rust weight loading
+     */
+    ModelImpl() : vram_bytes_(0), qwen_model_(nullptr) {}
+    
     ~ModelImpl();
     
     /**
@@ -42,9 +48,25 @@ public:
      */
     const std::string& model_path() const { return model_path_; }
     
+    /**
+     * Set Qwen model (for Rust weight loading)
+     */
+    void set_qwen_model(model::QwenModel* model) { qwen_model_ = model; }
+    
+    /**
+     * Get Qwen model
+     */
+    model::QwenModel* get_qwen_model() const { return qwen_model_; }
+    
+    /**
+     * Set VRAM bytes (for Rust weight loading)
+     */
+    void set_vram_bytes(uint64_t bytes) { vram_bytes_ = bytes; }
+    
 private:
     std::string model_path_;
     uint64_t vram_bytes_;
+    model::QwenModel* qwen_model_;
 };
 
 } // namespace worker
