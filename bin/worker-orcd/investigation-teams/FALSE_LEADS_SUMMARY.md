@@ -277,6 +277,26 @@ This matches token 151644's embedding exactly!
 
 ---
 
-**Remember:** If you find yourself investigating tokenization, embeddings, causal masking, or prefill logic, STOP and read this document first!
+### FALSE LEAD #8: CUBLAS_OP_T with Corrected lda Parameters
+**Hypothesis:** Team Felicia's CUBLAS_OP_T attempt failed because they used wrong `lda` values
+
+**Why it's wrong:**
+- Team Aurora tested CUBLAS_OP_T with theoretically correct `lda` parameters
+- Changed Q/K/V: CUBLAS_OP_T with lda=hidden_dim (was lda=q_dim/kv_dim)
+- Changed attn_output: CUBLAS_OP_T with lda=q_dim (was lda=hidden_dim)
+- Changed FFN: CUBLAS_OP_T with lda=hidden_dim for gate/up, lda=ffn_dim for down
+- Changed lm_head: CUBLAS_OP_T with lda=hidden_dim (was lda=padded_vocab_size)
+- Result: EXACT SAME stuck repetition as Team Felicia (token 71443 "ĳľ" repeated)
+- cuBLAS verification test FAILED (manual != cuBLAS), proving parameters were wrong
+
+**Time wasted:** Team Aurora spent 30 minutes on this
+
+**Conclusion:** The current CUBLAS_OP_N approach is CORRECT. The bug is NOT in matrix multiplication parameters.
+
+**Location:** `cuda/src/transformer/qwen_transformer.cpp` lines 275-291
+
+---
+
+**Remember:** If you find yourself investigating tokenization, embeddings, causal masking, prefill logic, OR cuBLAS transpose parameters, STOP and read this document first!
 
 ---

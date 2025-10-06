@@ -280,6 +280,14 @@ void QwenTransformer::forward_layer(
     // OBSERVED (after): Repeated tokens [71443, 71443, 71443, 71443, 71443...] → WORSE
     // FALSE_FIX: CUBLAS_OP_T made repetition worse. Reverted. Bug remains unsolved.
     // CONCLUSION: Our weight layout may differ from llama.cpp. Don't blindly copy their params.
+    //
+    // [TEAM AURORA] 2025-10-06T22:17Z
+    // HYPOTHESIS: Team Felicia used wrong lda with CUBLAS_OP_T. Tested with correct lda values.
+    // TESTED: CUBLAS_OP_T with lda=hidden_dim for Q/K/V (was lda=q_dim/kv_dim).
+    // OBSERVED: Exact same stuck repetition as Team Felicia! Token 71443 "ĳľ" repeated 5+ times.
+    // FALSE_FIX: CUBLAS_OP_T approach is definitively WRONG, even with correct lda.
+    // CONCLUSION: Current CUBLAS_OP_N is CORRECT. Bug is elsewhere (RoPE/RMSNorm/SwiGLU?).
+    //   See: investigation-teams/TEAM_AURORA_HANDOFF.md for detailed analysis.
     uint32_t q_dim = config_.num_heads * config_.head_dim;
     cublasGemmEx(cublas_handle_, CUBLAS_OP_N, CUBLAS_OP_N, q_dim, batch_size, config_.hidden_dim, &alpha, layer.attn_q_weight, CUDA_R_16F, q_dim, normed_half, CUDA_R_16F, config_.hidden_dim, &beta, q_half, CUDA_R_16F, q_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
     

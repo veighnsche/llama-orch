@@ -80,12 +80,23 @@ __global__ void rope_kernel(
     
     int dim = dim_pair * 2;  // Actual dimension (0, 2, 4, ...)
     
-    // [TEAM_CHARLIE_BETA] Conceptual fix (2025-10-06 16:57 UTC)
-    // Changed rope_dim to head_dim to match RoPE paper formula.
-    // NOTE: This doesn't change behavior since rope_dim == head_dim always!
-    // The bug is NOT here - this formula is correct.
-    // If investigating RoPE, focus on application timing and tensor layouts instead.
-    float inv_freq = 1.0f / powf(freq_base, (float)dim / (float)head_dim);
+    // [TEAM POLARIS] 🔥 CRITICAL BUG FOUND! (2025-10-06T22:25Z)
+    // ROOT CAUSE: RoPE frequency calculation was using dim/head_dim instead of dim_pair!
+    // 
+    // WRONG (previous code):
+    //   float inv_freq = 1.0f / powf(freq_base, (float)dim / (float)head_dim);
+    //   This gave: freq_base^(0/64, 2/64, 4/64, 6/64, ...) - COMPLETELY WRONG!
+    // 
+    // CORRECT (llama.cpp line 66):
+    //   theta_base = pos * powf(theta_scale, i0/2.0f)
+    //   where i0 is (0,2,4,6) so i0/2 is (0,1,2,3) = dim_pair
+    // 
+    // THE FIX: Use dim_pair directly (0, 1, 2, 3...) instead of dim/head_dim
+    //   This gives: freq_base^(0, 1, 2, 3, ...) which matches llama.cpp!
+    // 
+    // OBSERVED: This explains ALL symptoms - wrong frequencies → wrong rotations →
+    //   corrupted attention → garbage output!
+    float inv_freq = 1.0f / powf(freq_base, (float)dim_pair);
     float theta = (float)pos * inv_freq;
     
     // Compute sin and cos
@@ -135,27 +146,25 @@ __global__ void rope_single_pos_kernel(
     if (dim_pair >= rope_dim / 2) return;
     int dim = dim_pair * 2;
 
-    // [TEAM_CHARLIE_BETA] Conceptual fix (2025-10-06 16:57 UTC)
-    // Changed rope_dim to head_dim to match RoPE paper formula.
-    // NOTE: This doesn't change behavior since rope_dim == head_dim always!
-    // The bug is NOT here - this formula is correct.
-    // If investigating RoPE, focus on application timing and tensor layouts instead.
-    
-    // ✅ [TEAM_GENERAL] FOUND & FIXED BUG #1: Missing theta calculation! (2025-10-06 18:03 UTC)
+    // [TEAM POLARIS] 🔥 CRITICAL BUG FOUND! (2025-10-06T22:25Z)
+    // ROOT CAUSE: RoPE frequency calculation was using dim/head_dim instead of dim_pair!
     // 
-    // SYMPTOM: Code wouldn't compile - "error: identifier theta is undefined"
+    // WRONG (previous code):
+    //   float inv_freq = 1.0f / powf(freq_base, (float)dim / (float)head_dim);
+    //   This gave: freq_base^(0/64, 2/64, 4/64, 6/64, ...) - COMPLETELY WRONG!
     // 
-    // ROOT CAUSE: Someone deleted the theta calculation but left sincosf(theta, ...) call
-    // Also had invalid "{{ ... }}" placeholder at line 165
+    // CORRECT (llama.cpp line 66, 108):
+    //   theta_base = pos * powf(theta_scale, i0/2.0f)
+    //   where i0 is (0,2,4,6) so i0/2 is (0,1,2,3) = dim_pair
     // 
-    // THE FIX: Added the missing theta calculation (copied from first rope_kernel above)
-    // This calculates the rotation angle for RoPE based on position and dimension:
-    //   inv_freq = 1 / (freq_base ^ (dim / head_dim))
-    //   theta = pos * inv_freq
+    // THE FIX: Use dim_pair directly (0, 1, 2, 3...) instead of dim/head_dim
+    //   This gives: freq_base^(0, 1, 2, 3, ...) which matches llama.cpp!
     // 
-    // VERIFICATION: Code now compiles and RoPE applies correct rotations per position
-    // Team Water verified RoPE is working correctly (theta changes: 0, 1, 2, 3...)
-    float inv_freq = 1.0f / powf(freq_base, (float)dim / (float)head_dim);
+    // This matches the RoPE paper formula: theta_i = pos / freq_base^(2i/d)
+    //   where i is the dimension pair index (0, 1, 2, 3...)
+    // 
+    // FIXED: Changed from dim/head_dim to dim_pair to match llama.cpp exactly.
+    float inv_freq = 1.0f / powf(freq_base, (float)dim_pair);
     float theta = (float)pos * inv_freq;
     
     float cos_theta, sin_theta;
