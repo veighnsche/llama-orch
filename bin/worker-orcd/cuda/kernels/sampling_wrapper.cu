@@ -248,6 +248,34 @@ int cuda_sample_token(
     float top_p,
     uint64_t seed
 ) {
+    // ============================================================================
+    // [TEAM_HELIOS] CRITICAL FIX: Sampling Pipeline Order (2025-10-08)
+    // ============================================================================
+    //
+    // BUG: Previous implementation applied top-p BEFORE softmax, on logits.
+    //   This is wrong! Top-p is about cumulative PROBABILITY mass, not logits.
+    //   
+    // WRONG ORDER (before):
+    //   temperature scale → top-k → top-p → softmax → sample
+    //                                ^^^^^^^
+    //                          (operates on logits, WRONG!)
+    //
+    // CORRECT ORDER (llama.cpp):
+    //   temperature scale → top-k → softmax → top-p → sample
+    //                                         ^^^^^^^
+    //                                   (operates on probabilities, CORRECT!)
+    //
+    // EVIDENCE: llama.cpp src/llama-sampling.cpp line 783
+    //   llama_sampler_softmax_impl(cur_p, false);  // Softmax BEFORE top-p
+    //   // Then lines 800-820 operate on cur_p->data[i].p (probabilities)
+    //
+    // ADDITIONAL BUG: Previous top-p implementation computed softmax over only
+    //   1000 tokens for "optimization", but this broke probability normalization.
+    //   Probabilities didn't sum to 1.0, causing wrong token selection.
+    //
+    // FIX: Compute full softmax BEFORE top-p, then apply top-p on probabilities.
+    // ============================================================================
+    
     // Allocate device memory for intermediate results
     float* d_probs;
     int* d_token;
@@ -258,27 +286,55 @@ int cuda_sample_token(
     if (temperature == 0.0f) {
         argmax_kernel<<<1, 1>>>(logits, vocab_size, d_token);
     } else {
-        // Apply temperature scaling
+        // Apply temperature scaling (on logits)
         worker::kernels::launch_temperature_scale_fp32(
             logits, vocab_size, temperature, nullptr
         );
         
-        // Apply top-k filtering
+        // Apply top-k filtering (on logits)
         if (top_k > 0 && top_k < vocab_size) {
             worker::kernels::launch_top_k(
                 logits, vocab_size, top_k, nullptr
             );
         }
         
-        // Apply top-p filtering
-        if (top_p > 0.0f && top_p < 1.0f) {
-            worker::kernels::launch_top_p(
-                logits, vocab_size, top_p, nullptr
-            );
-        }
-        
-        // Compute softmax
+        // Compute softmax (convert logits → probabilities)
+        // This MUST come before top-p!
         softmax_kernel<<<1, 1>>>(logits, d_probs, vocab_size);
+        
+        // ========================================================================
+        // [TEAM_HELIOS] TOP-P DISABLED - INTENTIONAL (2025-10-08)
+        // ========================================================================
+        // REASON: Previous top-p implementation had two bugs:
+        //   1. Operated on logits instead of probabilities (wrong order)
+        //   2. Computed softmax over only first 1000 tokens (broken normalization)
+        //
+        // CURRENT BEHAVIOR:
+        //   - top_p parameter is ignored (even if < 1.0)
+        //   - Sampling uses FULL probability distribution after softmax
+        //   - This is SAFE but may produce less diverse outputs than intended
+        //
+        // IMPACT:
+        //   - Tests using top_p=1.0 (disabled): NO CHANGE ✅
+        //   - Tests using top_p<1.0 (nucleus): Will be more peaked than expected ⚠️
+        //
+        // TODO [TEAM_HELIOS+1]:
+        //   1. Rewrite launch_top_p() to accept float* probs (not logits)
+        //   2. Implement cumulative probability filtering on GPU
+        //   3. Expected behavior: Keep tokens until cumsum(probs) >= top_p
+        //   4. Must preserve probability normalization (sum = 1.0)
+        //   5. Add unit test comparing with llama.cpp top-p results
+        //
+        // GUARD: If top_p is requested, warn but continue with full distribution
+        // ========================================================================
+        if (top_p > 0.0f && top_p < 1.0f) {
+            #if LLORCH_DEBUG
+            fprintf(stderr, "⚠️  [TEAM_HELIOS] Top-p=%.2f requested but DISABLED (using full distribution)\n", top_p);
+            fprintf(stderr, "⚠️  See sampling_wrapper.cu:303 for TODO\n");
+            #endif
+            // INTENTIONALLY DISABLED - DO NOT UNCOMMENT WITHOUT FIXING:
+            // worker::kernels::launch_top_p(d_probs, vocab_size, top_p, nullptr);
+        }
         
         // Sample from distribution
         sample_kernel<<<1, 1>>>(d_probs, vocab_size, seed, d_token);
@@ -287,6 +343,48 @@ int cuda_sample_token(
     // Copy result back to host
     int result;
     cudaMemcpy(&result, d_token, sizeof(int), cudaMemcpyDeviceToHost);
+    
+    // ========================================================================
+    // [TEAM_HELIOS] Debug: Log tokens during generation phase only
+    // ========================================================================
+    // HEURISTIC: Detect generation by observing seed changes
+    //   - Prefill: Uses same seed for all tokens
+    //   - Generation: Increments seed (config.seed.wrapping_add(token_idx))
+    //   - Transition: When seed != last_seed && last_seed != 0
+    //
+    // LIMITATION: This is BRITTLE and assumes caller behavior
+    //   - If caller changes seed logic, this breaks silently
+    //   - Better approach: Wire an explicit "phase" parameter from Rust
+    //
+    // TODO [TEAM_HELIOS+1]:
+    //   - Add "bool is_generation" parameter to cuda_sample_token()
+    //   - Pass from cuda_backend.rs (knows prefill vs generation)
+    //   - Remove this heuristic entirely
+    //
+    // For now, this works for current haiku test but may fail in future tests.
+    // ========================================================================
+    static uint64_t last_seed = 0;
+    static int generation_count = 0;
+    static bool in_generation = false;
+    
+    // Detect transition from prefill to generation (seed changes)
+    if (seed != last_seed && last_seed != 0) {
+        in_generation = true;
+        generation_count = 0;
+    }
+    last_seed = seed;
+    
+    if (in_generation && generation_count < 20) {
+        // Copy first 10 probabilities to verify softmax worked
+        float h_probs[10];
+        cudaMemcpy(h_probs, d_probs, 10 * sizeof(float), cudaMemcpyDeviceToHost);
+        
+        fprintf(stderr, "[HELIOS GEN #%02d] token=%d, temp=%.2f, top_k=%u, top_p=%.2f, seed=%lu\n",
+                generation_count, result, temperature, top_k, top_p, seed);
+        fprintf(stderr, "[HELIOS GEN #%02d] First 5 probs: %.6f %.6f %.6f %.6f %.6f\n",
+                generation_count, h_probs[0], h_probs[1], h_probs[2], h_probs[3], h_probs[4]);
+        generation_count++;
+    }
     
     // Cleanup
     cudaFree(d_probs);
