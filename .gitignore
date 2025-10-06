@@ -52,3 +52,13 @@ __pycache__
 
 # Local build configuration (per-machine settings)
 .llorch.toml
+
+# Reference directory - exclude build artifacts but keep source
+/reference/llama.cpp/build/
+/reference/llama.cpp/build-*/
+/reference/llama.cpp/*.o
+/reference/llama.cpp/*.so
+/reference/llama.cpp/*.a
+/reference/llama.cpp/llama-*
+/reference/llama.cpp/main
+/reference/llama.cpp/server

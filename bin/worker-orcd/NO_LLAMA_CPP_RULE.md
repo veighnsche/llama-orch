@@ -1,6 +1,6 @@
 # ⚠️ CRITICAL RULE: NO LLAMA.CPP DEPENDENCIES
 
-**Date**: 2025-10-05  
+**Date**: 2025-10-06 (Updated)  
 **Priority**: ABSOLUTE - DO NOT VIOLATE  
 **Status**: PERMANENT RULE
 
@@ -12,12 +12,12 @@
 
 ### ❌ NEVER DO THIS
 
-- ❌ Import llama.cpp library
+- ❌ Import llama.cpp library into our build
 - ❌ Link against libllama.so
-- ❌ Use llama.cpp headers
-- ❌ Depend on llama.cpp in any way
+- ❌ Use llama.cpp headers in our code
+- ❌ Depend on llama.cpp in Cargo.toml or CMakeLists.txt
 - ❌ Suggest using llama.cpp as a "quick solution"
-- ❌ Reference llama.cpp except for learning/comparison
+- ❌ Copy-paste llama.cpp code without understanding it
 
 ### ✅ ALWAYS DO THIS
 
@@ -50,7 +50,8 @@
 - ✅ Model architectures (GPT, Llama, etc.)
 - ✅ CUDA best practices
 - ✅ Academic papers on transformers
-- ❌ **NEVER llama.cpp code or libraries**
+- ✅ **llama.cpp source code for LEARNING ONLY** (see exception below)
+- ❌ **NEVER use llama.cpp as a dependency**
 
 ---
 
@@ -135,11 +136,47 @@ We're not just copying llama.cpp - we're building something **better**:
 
 ---
 
-## Exception
+## Exception: Reference-Only Git Submodule
 
-**NONE.** There are no exceptions to this rule.
+### ✅ ALLOWED: Read-Only Reference
 
-If you think you need llama.cpp, you're wrong. Build it ourselves.
+We maintain llama.cpp as a **git submodule in `/reference/llama.cpp/`** for:
+
+- 🔍 **Code inspection** - Understanding their implementation approaches
+- 🐛 **Debugging reference** - Comparing our output to their logic
+- 📚 **Learning** - Studying GGUF parsing, kernel patterns, etc.
+- ⚠️ **Competitive analysis** - Knowing what we're competing against
+
+### ❌ STILL FORBIDDEN
+
+- ❌ Building llama.cpp
+- ❌ Linking to llama.cpp
+- ❌ Including llama.cpp headers in our code
+- ❌ Running llama.cpp binaries in production
+- ❌ Copy-pasting without understanding
+
+### 📁 Submodule Location
+
+```
+/reference/llama.cpp/  # Git submodule (NOT in build path)
+```
+
+**Build System**: The `/reference/` directory is explicitly excluded from all builds.
+
+**Purpose**: Code reading ONLY. We implement everything ourselves.
+
+---
+
+### The Line We Walk
+
+```
+┌─────────────────────────────────────────────────────┐
+│  ✅ Read llama.cpp source to understand algorithms  │
+│  ❌ Use llama.cpp as a dependency                   │
+│                                                     │
+│  We learn from them. We don't depend on them.      │
+└─────────────────────────────────────────────────────┘
+```
 
 ---
 

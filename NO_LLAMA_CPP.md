@@ -5,7 +5,8 @@
 ## The Rule
 
 ❌ **NEVER** import, link, or depend on llama.cpp  
-✅ **ALWAYS** build our own implementation
+✅ **ALWAYS** build our own implementation  
+🔍 **ALLOWED** Read llama.cpp source for learning (see exception)
 
 ## Why
 
@@ -22,6 +23,15 @@ We're building something better:
 We are **so close** to a complete llama.cpp-free engine.
 
 **Don't give up now. Build it ourselves.**
+
+## Exception: Reference-Only Submodule
+
+We maintain llama.cpp as a git submodule in `/reference/llama.cpp/` for:
+- 🔍 Code inspection and debugging reference
+- 📚 Learning implementation patterns
+- ❌ **NOT** for building, linking, or depending on
+
+**The line**: We read their code. We don't use their code.
 
 ---
 
