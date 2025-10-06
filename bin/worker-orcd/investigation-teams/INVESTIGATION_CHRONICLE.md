@@ -524,6 +524,45 @@
 
 ---
 
+### Team HYPERION (2025-10-06 ~22:35 UTC)
+
+**Mission:** Deep investigation of RoPE, RMSNorm, SwiGLU, and KV cache
+
+**Hypotheses Tested:**
+1. RoPE implementation has runtime bugs
+2. RMSNorm epsilon value is wrong
+3. SwiGLU activation has implementation errors
+4. KV cache has subtle bugs
+5. Attention output projection buffer usage causes corruption
+
+**Changes Made:**
+- Added investigation comments in `qwen_transformer.cpp` (lines 457-466)
+- No code changes - all suspects verified correct
+
+**Observations:**
+- RoPE formula: CORRECT (re-confirmed Team Polaris findings) ✅
+- RMSNorm epsilon: `1e-6f` matches llama.cpp ✅
+- SwiGLU activation: CORRECT implementation ✅
+- KV cache: CORRECT (re-confirmed Team Water findings) ✅
+- Attention output projection: Inefficient but not buggy ✅
+- Model still generates garbage: `_STRUCTUREQSëĨįannersĠgeniÅŁCollector...` ❌
+- Logits DO vary across tokens (computation working) ✅
+- Hidden state range: `[-20.4531, 20.7188]` (slightly outside bounds) ⚠️
+
+**Conclusions:**
+- ✅ **VERIFIED:** All four suspect areas (RoPE, RMSNorm, SwiGLU, KV cache) are CORRECT
+- ✅ **VERIFIED:** All formulas match llama.cpp exactly
+- ❌ **REMAINING:** Bug is NOT in algorithms or infrastructure
+- 🔍 **CRITICAL INSIGHT:** Bug must be in DATA, not LOGIC
+- 🎯 **MOST LIKELY:** Weight loading/dequantization differs from llama.cpp
+- Handoff: Focus on weight tensor verification (compare our loaded weights with llama.cpp)
+
+**Files Modified:**
+- `cuda/src/transformer/qwen_transformer.cpp` (investigation comments only)
+- `investigation-teams/TEAM_HYPERION_HANDOFF.md` (comprehensive handoff document)
+
+---
+
 ## 📚 7. Key Documents
 
 - `investigation-teams/FALSE_LEADS_SUMMARY.md` - Comprehensive false leads list

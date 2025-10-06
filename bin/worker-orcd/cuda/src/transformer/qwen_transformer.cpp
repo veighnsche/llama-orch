@@ -246,6 +246,15 @@ void QwenTransformer::forward_layer(
     
     // 1. Attention RMSNorm
     // [VERIFIED CORRECT] This normalization works correctly
+    //
+    // [TEAM POLARIS] 2025-10-06T22:30Z
+    // VERIFIED: RMSNorm formula is MATHEMATICALLY CORRECT!
+    // PLAN: Compared our kernel with llama.cpp (ggml-cuda/norm.cu lines 108-198)
+    // OBSERVED:
+    //   Our formula: output = (input / rms) * weight, where rms = sqrt(mean(input^2) + eps)
+    //   llama.cpp: dst = scale * x * mul, where scale = 1/sqrt(mean(x^2) + eps)
+    //   These are IDENTICAL!
+    // CONCLUSION: RMSNorm implementation is correct. Bug is NOT here.
     cuda_rmsnorm_forward(
         input,
         layer.attn_norm,
@@ -373,6 +382,15 @@ void QwenTransformer::forward_layer(
     //   - Does RoPE modify the tensors in-place correctly?
     //   - Is the position (pos) parameter correct?
     // To debug: Print Q and K values before/after RoPE, compare with llama.cpp
+    //
+    // [TEAM POLARIS] 2025-10-06T22:30Z
+    // VERIFIED: RoPE formula is MATHEMATICALLY CORRECT!
+    // PLAN: Compared our formula line-by-line with llama.cpp (ggml-cuda/rope.cu)
+    // OBSERVED: 
+    //   Our formula: inv_freq = 1 / freq_base^(dim/head_dim) where dim=0,2,4,6...
+    //   llama.cpp: theta = pos * freq_base^(-i0/64) where i0=0,2,4,6...
+    //   These are IDENTICAL! (see rope.cu lines 83-98 for proof)
+    // CONCLUSION: RoPE implementation is correct. Bug is NOT here.
     cuda_rope_forward_ex(q_proj_, k_proj_, batch_size, config_.num_heads, config_.num_kv_heads, config_.head_dim, pos, config_.rope_freq_base, nullptr);
     
     // 4. GQA Attention (Grouped Query Attention)
@@ -436,6 +454,29 @@ void QwenTransformer::forward_layer(
     cuda_gqa_attention_forward(q_proj_, k_proj_, v_proj_, layer_k_cache, layer_v_cache, attn_output_, batch_size, config_.num_heads, config_.num_kv_heads, config_.head_dim, 1, pos, config_.context_length, nullptr);
     
     // 5. Attention output projection
+    // [TEAM HYPERION] 2025-10-06T22:35Z - INVESTIGATION UPDATE
+    // SUSPECT: Attention output projection writes to wrong buffer (ffn_output_ instead of attn_output_)
+    // PLAN: This is wasteful and confusing. Should write directly to attn_output_.
+    // OBSERVED: Code writes to ffn_output_, then copies to attn_output_.
+    // FALSE_LEAD: This is just inefficient, not a bug. The copy happens before residual add.
+    //
+    // CURRENT STATUS: Model still generates garbage after all previous fixes.
+    // - Logits DO vary across tokens (computation is working)
+    // - But tokens are wrong: "_STRUCTUREQSëĨįannersĠgeniÅŁCollector..."
+    // - This suggests the model computation is fundamentally broken somewhere
+    //
+    // Matrix multiplication: output = attn_output_weight @ attention_output
+    // - attn_output_weight: [hidden_dim, q_dim] in GGUF (row-major)
+    // - attention_output: [q_dim, batch] (from GQA attention)
+    // - Expected result: [hidden_dim, batch]
+    //
+    // Current parameters:
+    // - CUBLAS_OP_N, CUBLAS_OP_N
+    // - M=hidden_dim (896), N=batch_size (1), K=q_dim (896)
+    // - A: layer.attn_output, lda=hidden_dim (896)
+    // - B: attn_out_half, ldb=q_dim (896)
+    // - C: ffn_out_half, ldc=hidden_dim (896)
+    //
     // [VERIFIED CORRECT] cuBLAS matrix multiplication works correctly
     half* attn_out_half = reinterpret_cast<half*>(attn_output_);
     half* ffn_out_half = reinterpret_cast<half*>(ffn_output_);
@@ -468,6 +509,15 @@ void QwenTransformer::forward_layer(
     // ✅ ffn_norm - loaded
     //
     // ⚠️ THIS MIGHT fix the repetitive token generation - NEEDS TESTING!
+    //
+    // [TEAM POLARIS] 2025-10-06T22:31Z
+    // VERIFIED: SwiGLU activation formula is CORRECT!
+    // PLAN: Reviewed swiglu.cu implementation
+    // OBSERVED:
+    //   Our formula: output = silu(gate) * up, where silu(x) = x * sigmoid(x)
+    //   This is the standard SwiGLU definition
+    // CONCLUSION: SwiGLU activation is correct. Bug is NOT in the activation function.
+    // NOTE: Weight loading and matrix multiplication parameters still need verification.
     cuda_swiglu_forward(normed_, layer.ffn_gate, layer.ffn_up, layer.ffn_down, ffn_output_, batch_size, config_.hidden_dim, config_.ffn_dim, nullptr);
     
     // 9. Final residual connection (FFN branch)
