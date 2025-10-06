@@ -53,6 +53,23 @@ The Qwen2.5-0.5B model generates the same token repeatedly because specific posi
 
 ---
 
+## Specialized Investigation Teams
+
+### Team PROMPT: Prompt Assembly Audit  
+**Focus**: Compare prompt construction between llama.cpp and our pipeline  
+**File**: `TEAM_PROMPT_INVESTIGATION.md`  
+**Status**: ✅ Complete (2025-10-06)  
+**Handoff**: `TEAM_PROMPT_HANDOFF.md`  
+**Mission**: Map chat template rendering, system/user message assembly, BOS/EOS tokens
+
+**Key Findings**:
+- ❌ We hardcode Qwen chat template instead of reading from GGUF
+- ❌ We hardcode system prompt "You are a helpful assistant"
+- ✅ Template format itself is correct for Qwen2.5-Instruct
+- 📋 Two fix options proposed (minimal for v0.1.0, full for v0.2.0)
+
+---
+
 ## Critical Rules
 
 ### ✅ YOU CAN CHANGE CODE FOR DATA EXTRACTION

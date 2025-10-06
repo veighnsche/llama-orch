@@ -1,8 +1,10 @@
 #include "model/qwen_weight_loader.h"
 #include "model_impl.h"
-#include "../include/worker_ffi.h"
 #include <cstdio>
 #include <cuda_runtime.h>
+
+// Forward declarations for FFI types
+typedef void CudaModel;
 
 extern "C" {
 

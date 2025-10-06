@@ -42,11 +42,7 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr --extended-la
 # Source files
 set(CUDA_SOURCES
     src/context.cpp
-    src/model.cpp
-    src/model_impl.cpp
-    src/inference.cu
-    src/inference_impl.cpp
-    src/ffi.cpp
+    src/ffi_context.cpp
     src/ffi_inference.cpp
     src/ffi_weight_loading.cpp
     src/health.cpp
@@ -56,8 +52,6 @@ set(CUDA_SOURCES
     src/rng.cpp
     src/kv_cache.cpp
     src/io/chunked_transfer.cpp
-    src/model/gpt_weights.cpp
-    src/model/gpt_model.cpp
     src/model/qwen_weight_loader.cpp
     src/gpt_transformer_layer.cpp
     src/transformer/qwen_transformer.cpp
