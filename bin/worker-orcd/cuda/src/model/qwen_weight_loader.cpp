@@ -264,6 +264,7 @@ QwenModel* QwenWeightLoader::load(
     // Load output
     model->weights.output_norm = load_tensor_to_vram(path, "output_norm.weight", tracker);
     model->weights.lm_head = load_tensor_to_vram(path, "output.weight", tracker);
+
     
     model->vram_usage = tracker.total_usage();
     

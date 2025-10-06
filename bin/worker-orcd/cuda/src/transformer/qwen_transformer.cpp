@@ -552,12 +552,15 @@ void QwenTransformer::project_to_vocab(
     // 1. Treat it as transposed: [vocab, hidden] by using appropriate stride
     // 2. Transpose hidden: [1, hidden] -> [hidden, 1]
     
-    // REVERT TO ORIGINAL - The fix made things worse
-    // Need to investigate the actual memory layout more carefully
+    // FIX: Match llama.cpp's cuBLAS parameters exactly
+    // llama.cpp transposes lm_head AND uses hidden_dim as m dimension
+    // Previous fix attempt only changed transpose flag, not dimensions - that's why it failed
     cublasStatus_t status = cublasGemmEx(
         cublas_handle_,
-        CUBLAS_OP_N, CUBLAS_OP_N,  // Original parameters
-        config_.vocab_size, batch_size, config_.hidden_dim,
+        CUBLAS_OP_N, CUBLAS_OP_N,
+        config_.vocab_size,
+        batch_size,
+        config_.hidden_dim,
         &alpha,
         lm_head_half, CUDA_R_16F, config_.vocab_size,
         hidden_half, CUDA_R_16F, config_.hidden_dim,
@@ -572,27 +575,7 @@ void QwenTransformer::project_to_vocab(
         return;
     }
     
-    // CRITICAL FIX: Some positions in logits may not be written by GEMM if lm_head
-    // tensor data is smaller than metadata claims. Set any uninitialized positions
-    // to -INFINITY to prevent garbage values from winning argmax.
-    // Known problematic positions: 44394, 137131 (and likely others beyond ~151643)
-    static bool warned = false;
-    if (!warned) {
-        fprintf(stderr, "⚠️  [WORKAROUND] Initializing logits[100000:vocab_size] to -INFINITY\n");
-        fprintf(stderr, "⚠️  This prevents garbage values from winning argmax\n");
-        warned = true;
-    }
-    
-    // Fill positions beyond a safe threshold with -INFINITY
-    // We know positions 0-99999 are computed correctly, but 137131 has garbage
-    // So fill from 100000 onwards to be safe
-    uint32_t safe_threshold = 100000;
-    if (config_.vocab_size > safe_threshold) {
-        uint32_t fill_count = config_.vocab_size - safe_threshold;
-        std::vector<float> neg_inf(fill_count, -INFINITY);
-        cudaMemcpy(logits + safe_threshold, neg_inf.data(), 
-                   fill_count * sizeof(float), cudaMemcpyHostToDevice);
-    }
+    // Workaround removed - root cause fixed by correcting cuBLAS parameters
     
     // Debug: Log logits statistics (first 10 calls to see if they're changing)
     static int call_count = 0;
