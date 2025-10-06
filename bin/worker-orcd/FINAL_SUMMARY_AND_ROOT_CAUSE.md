@@ -5,19 +5,19 @@
 
 ## 1. Executive Summary
 
-The model generates repetitive tokens because it is using **quantized model weights without dequantization**. The GPU interprets the quantized data as garbage floating-point numbers, leading to extremely high, incorrect logit values for specific tokens.
+The model generates repetitive tokens because of a data corruption issue during the inference forward pass. The test `test_haiku_generation_stub_pipeline_only` uses a **non-quantized FP16 model**, yet the final logits contain garbage values (`~14.0-15.0`). This definitively proves the previous analysis, which blamed a missing dequantization step, was incorrect.
 
-A correct fix has been implemented in the Rust weight loading code (`src/cuda/weight_loader.rs` and `src/cuda/gguf_dequant.rs`), but a **project-specific build system issue** is preventing this fix from being compiled and run in the test environment.
+The root cause is currently **unknown**. The problem occurs somewhere between the input hidden state and the final logit calculation. The implemented "fix" in `gguf_dequant.rs` is irrelevant to this bug.
 
 ## 2. The Root Cause: Missing Dequantization
 
-The core problem is simple:
+The core problem is a data corruption issue within the CUDA forward pass. The test explicitly loads an FP16 model, so quantization is not a factor.
 
-*   The model file (`.gguf`) contains weights in a **quantized** format (e.g., Q4_K). This format uses integers to represent floating-point numbers in a compressed way.
-*   The CUDA kernels for matrix multiplication expect the weights to be in **FP16 (half-precision floating-point)** format.
-*   The current weight loading code in the test harness (`src/cuda/weight_loader.rs`) **fails to dequantize** the weights. It reads the raw, quantized bytes and passes them to the GPU as if they were already FP16.
+1.  **Input Data**: The hidden state entering the final `lm_head` matrix multiplication is correct.
+2.  **Weights**: The `lm_head` weights themselves appear correct when inspected.
+3.  **Output Data**: The resulting logits are corrupted with extremely high values.
 
-This mismatch is the source of the bug. The GPU's matrix multiplication engine misinterprets the integer data, producing garbage outputs that look like massive floating-point numbers (`14.0` to `15.0+`), which then dominate the `argmax` operation and cause the model to output the same token repeatedly.
+This points to a subtle bug in the matrix multiplication or a related data handling step in the CUDA code, not a build or quantization issue.
 
 ## 3. What Didn't Work (and Why)
 
@@ -26,28 +26,17 @@ This mismatch is the source of the bug. The GPU's matrix multiplication engine m
 
 ## 4. The Correct Fix (Already Implemented)
 
-The solution is to dequantize the weights in Rust before they are used by the C++ CUDA code. I have already implemented this fix across two files:
-
-1.  **`bin/worker-orcd/src/cuda/gguf_dequant.rs`**:
-    *   I added new `*_preallocated` functions (`dequantize_q4k_gpu_preallocated`, etc.).
-    *   These functions dequantize data into a GPU buffer that has already been allocated, which matches the existing weight loading pipeline.
-
-2.  **`bin/worker-orcd/src/cuda/weight_loader.rs`**:
-    *   I updated the `load_tensor_to_preallocated_gpu` function to handle quantized tensor types.
-    *   It now calls the new `*_preallocated` dequantization functions to convert the quantized data to FP16.
-
-These changes correctly address the root cause.
+The previously implemented "fix" related to dequantization in `gguf_dequant.rs` and `weight_loader.rs` is **not relevant** to this bug and should be disregarded. The investigation must now focus on the CUDA C++ code.
 
 ## 5. The Final Roadblock: The Build System
 
-The test you are running is **not including these fixes**. Despite my modifications to the Rust source files and clearing the `cargo` cache, the test environment is still using an old, cached version of the compiled code.
-
-This is a build system issue specific to this project. To resolve it, you must force a full, clean rebuild of all components.
+The previous theory about a build system or caching issue is **incorrect**. Cleaning the build and re-running the test had no effect because the underlying code fix was irrelevant to the actual problem. The problem is not in the build, but in the CUDA source code.
 
 ### Action Required By You
 
-1.  **Perform a full project clean.** This is more than `cargo clean`. Look for a top-level script like `clean.sh`, `ci/clean.sh`, or a `make clean` command. If one does not exist, you may need to manually delete all `target/` directories in the workspace.
-2.  **Re-run the test.** After ensuring a complete clean, run the test command again. This will force a rebuild from scratch, which will include the dequantization fixes.
+1.  **Analyze the CUDA forward pass.** The investigation must now shift to the C++ CUDA code in `bin/worker-orcd/cuda/src/transformer/qwen_transformer.cpp`.
+2.  **Verify Matrix Multiplication**: Scrutinize the `cublasGemmEx` call that multiplies the final hidden state by the `lm_head` weight matrix. Check all parameters: transpose operations, matrix dimensions (m, n, k), and pointer arithmetic.
+3.  **Inspect Memory**: Add CUDA-level debugging to print the first few values of the hidden state, the `lm_head` weights, and the output logits directly before and after the `cublasGemmEx` call to pinpoint the exact moment of corruption.
 
 ```bash
 # From the project root: /home/vince/Projects/llama-orch/
