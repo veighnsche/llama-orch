@@ -42,30 +42,24 @@ struct Q4KBlock {
     uint8_t qs[128];      // 256 × 4-bit quantized values (128 bytes)
 } __attribute__((packed));
 
-// Decode 6-bit scale and min indices from packed 12-byte array
+// [TEAM VANGUARD] 2025-10-07T20:20Z - CRITICAL BUG FIX #2
+// OLD decode_scales_and_mins was COMPLETELY WRONG!
+// Tested against llama.cpp: ALL 8 indices had mismatches
+// Example: idx=0 llama(d=60,m=31) vs ours(d=60,m=16) - WRONG!
 //
-// The 12 bytes encode 8 pairs of (scale, min), each 6 bits.
-// Based on GGML's get_scale_min_k4 logic.
-__device__ void decode_scales_and_mins(const uint8_t* scales, uint8_t* sc, uint8_t* m) {
-    // Unpack 6-bit values from the packed byte array
-    // This follows the GGML bit-packing scheme
-    sc[0] = scales[0] & 0x3F;
-    sc[1] = scales[1] & 0x3F;
-    sc[2] = ((scales[2] & 0x0F) << 2) | ((scales[0] >> 6) & 0x03);
-    sc[3] = ((scales[3] & 0x0F) << 2) | ((scales[1] >> 6) & 0x03);
-    sc[4] = ((scales[4] & 0x0F) << 2) | ((scales[2] >> 4) & 0x03);
-    sc[5] = ((scales[5] & 0x0F) << 2) | ((scales[3] >> 4) & 0x03);
-    sc[6] = ((scales[6] & 0x0F) << 2) | ((scales[4] >> 4) & 0x03);
-    sc[7] = ((scales[7] & 0x0F) << 2) | ((scales[5] >> 4) & 0x03);
-    
-    m[0] = ((scales[8] & 0x0F) << 2) | ((scales[6] >> 4) & 0x03);
-    m[1] = ((scales[9] & 0x0F) << 2) | ((scales[7] >> 4) & 0x03);
-    m[2] = ((scales[10] & 0x0F) << 2) | ((scales[8] >> 4) & 0x03);
-    m[3] = ((scales[11] & 0x0F) << 2) | ((scales[9] >> 4) & 0x03);
-    m[4] = (scales[10] >> 4) & 0x0F;
-    m[5] = (scales[11] >> 4) & 0x0F;
-    m[6] = scales[2] >> 4;
-    m[7] = scales[3] >> 4;
+// FIXED: Use llama.cpp's get_scale_min_k4 logic exactly
+// Source: llama.cpp/ggml/src/ggml-cuda/convert.cu lines 189-196
+//
+// Decode 6-bit scale and min for a specific index j (0-7)
+// This matches llama.cpp's get_scale_min_k4 function EXACTLY
+__device__ void get_scale_min_k4(int j, const uint8_t* q, uint8_t& d, uint8_t& m) {
+    if (j < 4) {
+        d = q[j] & 63;
+        m = q[j + 4] & 63;
+    } else {
+        d = (q[j+4] & 0xF) | ((q[j-4] >> 6) << 4);
+        m = (q[j+4] >>  4) | ((q[j-0] >> 6) << 4);
+    }
 }
 
 // Q4_K dequantization kernel
@@ -105,23 +99,19 @@ __global__ void q4k_dequant_kernel(
     // Load super scales (fp16 -> float)
     half d_half = __ushort_as_half(block->d);
     half dmin_half = __ushort_as_half(block->dmin);
-    float d = __half2float(d_half);
+    float dall = __half2float(d_half);
     float dmin = __half2float(dmin_half);
     
-    // Decode scale and min indices (shared across threads in same sub-block)
-    // Use shared memory to avoid redundant computation
-    __shared__ uint8_t sc[Q4K_NUM_SUB_BLOCKS];
-    __shared__ uint8_t m[Q4K_NUM_SUB_BLOCKS];
-    
-    // Only first thread of each sub-block decodes scales
-    if (j == 0) {
-        decode_scales_and_mins(block->scales, sc, m);
-    }
-    __syncthreads();
+    // [TEAM VANGUARD] 2025-10-07T20:22Z
+    // FIXED: Use llama.cpp's get_scale_min_k4 instead of broken decode_scales_and_mins
+    // Get scale and min for this sub-block using llama.cpp's exact logic
+    uint8_t sc, m;
+    get_scale_min_k4(s, block->scales, sc, m);
     
     // Calculate scale and min for this sub-block
-    float scale = d * static_cast<float>(sc[s]);
-    float min_val = dmin * static_cast<float>(m[s]);
+    // Formula from llama.cpp: d1 = dall * sc, m1 = dmin * m
+    float scale = dall * static_cast<float>(sc);
+    float min_val = dmin * static_cast<float>(m);
     
     // Load quantized value (4-bit nibble)
     // Each byte contains 2 nibbles: [high 4 bits | low 4 bits]
@@ -136,8 +126,20 @@ __global__ void q4k_dequant_kernel(
         q = (packed >> 4) & 0x0F;  // High nibble
     }
     
-    // Dequantize: y = scale * q + min
-    float result = scale * static_cast<float>(q) + min_val;
+    // [TEAM VANGUARD] 2025-10-07T20:12Z
+    // CRITICAL BUG FOUND: Dequantization formula was WRONG!
+    // SUSPECT: We used "scale * q + min_val" but llama.cpp uses "scale * q - min_val"
+    // PLAN: Compare our formula with llama.cpp/ggml/src/ggml-cuda/convert.cu line 224
+    // OBSERVED: llama.cpp: y[l + 0] = d1 * (q[l] & 0xF) - m1;
+    // OBSERVED: Our code:  result = scale * q + min_val;
+    // CONTRADICTION: Sign is OPPOSITE! Should be MINUS, not PLUS!
+    // FIXED: Changed + to - to match llama.cpp
+    // 
+    // This bug would cause ALL dequantized weights to be shifted incorrectly,
+    // explaining why the model outputs garbage despite correct algorithms.
+    //
+    // Dequantize: y = scale * q - min  (FIXED: was +, now -)
+    float result = scale * static_cast<float>(q) - min_val;
     
     // Write to output (coalesced access)
     int output_idx = block_idx * Q4K_BLOCK_SIZE + thread_idx;

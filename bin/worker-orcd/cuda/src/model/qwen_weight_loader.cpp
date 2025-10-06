@@ -379,14 +379,63 @@ QwenModel* QwenWeightLoader::load_from_gpu_pointers(
     model->weights.output_norm = get_ptr("output_norm.weight");
     model->weights.lm_head = get_ptr("output.weight");
     
-    // [TEAM_CHARLIE] DISABLE THE "FIX" - llama.cpp works with these weights as-is!
-    // The weights with mean=7.0 and mean=0.033 are CORRECT!
-    // llama.cpp generates perfect haiku with same model file.
-    // The bug is somewhere else in our code!
+    // [TEAM VANGUARD] 2025-10-07T20:04Z
+    // OBJECTIVE 1: Weight Integrity Verification
+    // PLAN: Dump first 100 FP16 values from GPU memory for critical tensors
+    // Compare byte-for-byte with llama.cpp to find dequantization bugs
+    fprintf(stderr, "\n[TEAM VANGUARD] === WEIGHT INTEGRITY VERIFICATION ===\n");
+    fprintf(stderr, "[TEAM VANGUARD] Dumping first 100 FP16 values from GPU memory for layer 0...\n\n");
     
-    fprintf(stderr, "\n[TEAM_CHARLIE] === WEIGHT DIAGNOSTIC (NO FIX APPLIED) ===\n");
-    fprintf(stderr, "[TEAM_CHARLIE] llama.cpp works with this model → weights are CORRECT!\n");
-    fprintf(stderr, "[TEAM_CHARLIE] Bug is in OUR code, not the weights!\n\n");
+    // Helper to dump first N values from GPU pointer
+    auto dump_gpu_weights = [](const char* name, void* gpu_ptr, int count) {
+        half h_weights[100];
+        cudaError_t err = cudaMemcpy(h_weights, gpu_ptr, count * sizeof(half), cudaMemcpyDeviceToHost);
+        if (err != cudaSuccess) {
+            fprintf(stderr, "❌ Failed to copy %s: %s\n", name, cudaGetErrorString(err));
+            return;
+        }
+        
+        fprintf(stderr, "[TEAM VANGUARD] %s (first %d FP16 values):\n", name, count);
+        fprintf(stderr, "  Floats: ");
+        for (int i = 0; i < count; i++) {
+            fprintf(stderr, "%.6f ", __half2float(h_weights[i]));
+            if ((i + 1) % 10 == 0 && i < count - 1) fprintf(stderr, "\n          ");
+        }
+        fprintf(stderr, "\n");
+        
+        // Also dump raw bytes for exact comparison
+        fprintf(stderr, "  Bytes:  ");
+        uint16_t* bytes = reinterpret_cast<uint16_t*>(h_weights);
+        for (int i = 0; i < count; i++) {
+            fprintf(stderr, "%04x ", bytes[i]);
+            if ((i + 1) % 10 == 0 && i < count - 1) fprintf(stderr, "\n          ");
+        }
+        fprintf(stderr, "\n\n");
+        
+        // Calculate stats
+        float sum = 0.0f, min_val = 1e9f, max_val = -1e9f;
+        for (int i = 0; i < count; i++) {
+            float val = __half2float(h_weights[i]);
+            sum += val;
+            min_val = fmin(min_val, val);
+            max_val = fmax(max_val, val);
+        }
+        float mean = sum / count;
+        fprintf(stderr, "  Stats: mean=%.6f, min=%.6f, max=%.6f\n\n", mean, min_val, max_val);
+    };
+    
+    // Dump critical tensors from layer 0
+    dump_gpu_weights("blk.0.attn_q.weight", model->weights.layers[0].attn_q_weight, 100);
+    dump_gpu_weights("blk.0.attn_k.weight", model->weights.layers[0].attn_k_weight, 100);
+    dump_gpu_weights("blk.0.attn_v.weight", model->weights.layers[0].attn_v_weight, 100);
+    dump_gpu_weights("blk.0.attn_output.weight", model->weights.layers[0].attn_output, 100);
+    dump_gpu_weights("blk.0.ffn_gate.weight", model->weights.layers[0].ffn_gate, 100);
+    dump_gpu_weights("blk.0.ffn_up.weight", model->weights.layers[0].ffn_up, 100);
+    dump_gpu_weights("blk.0.ffn_down.weight", model->weights.layers[0].ffn_down, 100);
+    dump_gpu_weights("output.weight", model->weights.lm_head, 100);
+    
+    fprintf(stderr, "[TEAM VANGUARD] Weight dump complete. Compare these with llama.cpp output.\n");
+    fprintf(stderr, "[TEAM VANGUARD] Next: Run llama.cpp with same model and dump same tensors.\n\n");
     
     fprintf(stderr, "✅ [C++] Wired all %u layers (VRAM: %.2f MB)\n",
             config.num_layers,
