@@ -9,8 +9,29 @@
 namespace worker {
 namespace transformer {
 
+// ============================================================================
+// [TEAM_HOTEL] CRITICAL UNDERSTANDING: vocab_size vs padded_vocab_size
+// ============================================================================
+//
+// The output.weight (lm_head) tensor in GGUF has dimensions [896, 151936]:
+//   - dimensions[0] = 896 = hidden_dim (input to matrix multiply)
+//   - dimensions[1] = 151936 = padded_vocab_size (output, includes padding)
+//
+// The tokenizer metadata has vocab_size = 151643 (logical valid tokens)
+//
+// THREE CRITICAL VALUES:
+//   1. vocab_size = 151643 (logical) - Use for argmax to skip 293 padding tokens
+//   2. padded_vocab_size = 151936 (physical) - Use for cuBLAS stride and buffer size
+//   3. hidden_dim = 896 - Use for input dimension
+//
+// USAGE:
+//   - cuBLAS: m=padded_vocab_size, lda=padded_vocab_size, ldc=padded_vocab_size
+//   - Buffer allocation: padded_vocab_size * sizeof(float)
+//   - Argmax: Only scan first vocab_size positions (skip padding)
+//
 struct TransformerConfig {
-    uint32_t vocab_size;
+    uint32_t vocab_size;         // Logical vocab size (actual tokens, e.g., 151643)
+    uint32_t padded_vocab_size;  // Physical storage size (padded, e.g., 151936)
     uint32_t hidden_dim;
     uint32_t num_layers;
     uint32_t num_heads;

@@ -38,6 +38,7 @@ impl RealInference {
     pub fn init(
         model: &Model,
         vocab_size: u32,
+        padded_vocab_size: u32,
         hidden_dim: u32,
         num_layers: u32,
         num_heads: u32,
@@ -54,6 +55,7 @@ impl RealInference {
             ffi::cuda_inference_init(
                 model.as_ptr() as *mut std::ffi::c_void,
                 vocab_size,
+                padded_vocab_size,
                 hidden_dim,
                 num_layers,
                 num_heads,

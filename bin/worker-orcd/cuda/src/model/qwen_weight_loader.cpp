@@ -349,11 +349,15 @@ QwenModel* QwenWeightLoader::load_from_gpu_pointers(
         auto& layer = model->weights.layers[i];
         layer.attn_norm = get_ptr(prefix + "attn_norm.weight");
         layer.attn_q_weight = get_ptr(prefix + "attn_q.weight");
-        layer.attn_q_bias = nullptr;  // Qwen2.5 doesn't use biases
+        // [TEAM GREEN] 2025-10-06T20:43Z - BUG FOUND!
+        // SUSPECT: We were setting biases to nullptr, but the model HAS biases!
+        // OBSERVED: Test output shows "blk.0.attn_q.bias -> 0x7dfbaa5c1200"
+        // FIXED: Load the biases from GPU pointers instead of nullptr
+        layer.attn_q_bias = get_ptr(prefix + "attn_q.bias");
         layer.attn_k_weight = get_ptr(prefix + "attn_k.weight");
-        layer.attn_k_bias = nullptr;  // Qwen2.5 doesn't use biases
+        layer.attn_k_bias = get_ptr(prefix + "attn_k.bias");
         layer.attn_v_weight = get_ptr(prefix + "attn_v.weight");
-        layer.attn_v_bias = nullptr;  // Qwen2.5 doesn't use biases
+        layer.attn_v_bias = get_ptr(prefix + "attn_v.bias");
         layer.attn_output = get_ptr(prefix + "attn_output.weight");
         
         layer.ffn_norm = get_ptr(prefix + "ffn_norm.weight");

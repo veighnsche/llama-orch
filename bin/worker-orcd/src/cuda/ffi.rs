@@ -11,7 +11,7 @@
 //! - Error codes must be checked after every call
 //! - Resources must be freed with corresponding free functions
 
-use std::os::raw::{c_char, c_int};
+use std::os::raw::{c_char, c_int, c_void};
 
 // ============================================================================
 // Opaque Handle Types
@@ -236,8 +236,9 @@ extern "C" {
     /// - `error` must be a valid pointer to writable i32
     /// - Returned pointer must be freed with `cuda_inference_free`
     pub fn cuda_inference_init(
-        model_ptr: *mut std::ffi::c_void,
+        model: *mut c_void,
         vocab_size: u32,
+        padded_vocab_size: u32,
         hidden_dim: u32,
         num_layers: u32,
         num_heads: u32,
@@ -291,7 +292,7 @@ extern "C" {
     /// - `size` must be > 0
     /// - Returned pointer must be freed with `cuda_free_memory`
     /// - Returns NULL on allocation failure
-    pub fn cuda_malloc_device(size: usize) -> *mut std::ffi::c_void;
+    pub fn cuda_malloc_device(size: usize) -> *mut c_void;
 
     /// Copy data from host to CUDA device.
     ///
@@ -302,8 +303,8 @@ extern "C" {
     /// - `size` must match allocated size
     /// - Returns 0 on success, non-zero on error
     pub fn cuda_memcpy_host_to_device(
-        dst: *mut std::ffi::c_void,
-        src: *const std::ffi::c_void,
+        dst: *mut c_void,
+        src: *const c_void,
         size: usize,
     ) -> c_int;
 
@@ -314,7 +315,7 @@ extern "C" {
     /// - `ptr` must be a valid pointer from `cuda_malloc_device` or NULL
     /// - `ptr` must not be used after this call
     /// - Safe to call with NULL (no-op)
-    pub fn cuda_free_memory(ptr: *mut std::ffi::c_void);
+    pub fn cuda_free_memory(ptr: *mut c_void);
 
     // ========================================================================
     // Model Loading from Pre-allocated GPU Pointers (Rust → C++)
@@ -337,7 +338,7 @@ extern "C" {
     pub fn cuda_pointer_map_insert(
         map: *mut GpuPointerMap,
         name: *const c_char,
-        gpu_ptr: *mut std::ffi::c_void,
+        gpu_ptr: *mut c_void,
     );
 
     /// Load model from pre-allocated GPU pointers.
@@ -349,7 +350,7 @@ extern "C" {
     /// - `error` must be a valid pointer to writable i32
     /// - Returned pointer must be freed with `cuda_free_model`
     pub fn cuda_load_model_from_pointers(
-        ctx: *mut std::ffi::c_void,
+        ctx: *mut c_void,
         pointer_map: *mut GpuPointerMap,
         vocab_size: u32,
         hidden_dim: u32,
@@ -478,7 +479,7 @@ pub unsafe fn cuda_error_message(error_code: c_int) -> *const c_char {
 
 #[cfg(not(feature = "cuda"))]
 pub unsafe fn cuda_inference_init(
-    _model_ptr: *mut std::ffi::c_void,
+    _model_ptr: *mut c_void,
     _vocab_size: u32,
     _hidden_dim: u32,
     _num_layers: u32,
@@ -515,21 +516,21 @@ pub unsafe fn cuda_inference_reset(_ctx: *mut InferenceContext) {}
 pub unsafe fn cuda_inference_context_free(_ctx: *mut InferenceContext) {}
 
 #[cfg(not(feature = "cuda"))]
-pub unsafe fn cuda_malloc_device(_size: usize) -> *mut std::ffi::c_void {
+pub unsafe fn cuda_malloc_device(_size: usize) -> *mut c_void {
     std::ptr::null_mut()
 }
 
 #[cfg(not(feature = "cuda"))]
 pub unsafe fn cuda_memcpy_host_to_device(
-    _dst: *mut std::ffi::c_void,
-    _src: *const std::ffi::c_void,
+    _dst: *mut c_void,
+    _src: *const c_void,
     _size: usize,
 ) -> c_int {
     1 // Error
 }
 
 #[cfg(not(feature = "cuda"))]
-pub unsafe fn cuda_free_memory(_ptr: *mut std::ffi::c_void) {}
+pub unsafe fn cuda_free_memory(_ptr: *mut c_void) {}
 
 #[cfg(not(feature = "cuda"))]
 pub unsafe fn cuda_create_pointer_map(_total_vram_bytes: u64) -> *mut GpuPointerMap {
@@ -540,13 +541,13 @@ pub unsafe fn cuda_create_pointer_map(_total_vram_bytes: u64) -> *mut GpuPointer
 pub unsafe fn cuda_pointer_map_insert(
     _map: *mut GpuPointerMap,
     _name: *const c_char,
-    _gpu_ptr: *mut std::ffi::c_void,
+    _gpu_ptr: *mut c_void,
 ) {
 }
 
 #[cfg(not(feature = "cuda"))]
 pub unsafe fn cuda_load_model_from_pointers(
-    _ctx: *mut std::ffi::c_void,
+    _ctx: *mut c_void,
     _pointer_map: *mut GpuPointerMap,
     _vocab_size: u32,
     _hidden_dim: u32,

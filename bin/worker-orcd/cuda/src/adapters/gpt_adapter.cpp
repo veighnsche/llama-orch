@@ -397,7 +397,11 @@ void GPTInferenceAdapter::lm_head(const float* input, float* logits) {
 
 int GPTInferenceAdapter::sample_token(const float* logits, float temperature, uint64_t seed) {
     if (temperature == 0.0f) {
-        // Greedy sampling
+        // Greedy sampling (argmax)
+        // [TEAM_HOTEL] CRITICAL: Only scan vocab_size (151643) positions, not padded_vocab_size!
+        //   The logits buffer has 151936 positions, but the last 293 are padding values.
+        //   Scanning them would potentially pick garbage tokens from the padding region.
+        //   This is CORRECT - we use config_.vocab_size (logical size) for argmax.
         int max_idx = 0;
         float max_val = logits[0];
         for (int i = 1; i < config_.vocab_size; i++) {

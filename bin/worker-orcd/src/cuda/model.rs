@@ -71,10 +71,40 @@ impl Model {
             CudaError::ModelLoadFailed(format!("Failed to parse GGUF metadata: {}", e))
         })?;
 
-        // CRITICAL: Use actual vocab size from output.weight tensor, not padded tokenizer size
-        // The lm_head (output.weight) tensor has dimensions [hidden_dim, actual_vocab]
-        // For Qwen2.5-0.5B: [896, 151643] not [896, 151936]
-        // This prevents argmax from scanning garbage values beyond the actual vocabulary
+        // ============================================================================
+        // [TEAM_HOTEL] ⚠️  WARNING: THIS CODE IS WRONG! (2025-10-06 20:10 UTC)
+        // ============================================================================
+        //
+        // SYMPTOM: This function is called during model loading, but it extracts
+        //   vocab_size incorrectly from the tensor dimensions.
+        //
+        // ROOT CAUSE: Team GEMMA DELTA's comments are INCORRECT!
+        //   CLAIM: "output.weight tensor has dimensions [vocab_size, hidden_dim]"
+        //   ACTUAL: output.weight has dimensions [hidden_dim, vocab_size] = [896, 151936]
+        //
+        // TRACE: See TEAM_BRAVO_RESULTS.md line 79:
+        //   ```
+        //   🔍 [Rust] output.weight dimensions: [896, 151936]
+        //   ```
+        //
+        // CONSEQUENCE:
+        //   - This code reads dimensions[0] = 896 (hidden_dim, not vocab!)
+        //   - Returns 896 as "vocab_size" 
+        //   - Causes downstream bugs in any code that uses this value
+        //
+        // WHY THIS DOESN'T BREAK EVERYTHING:
+        //   - The inference code in cuda_backend.rs RE-EXTRACTS vocab from tokenizer metadata
+        //   - So this wrong value gets overridden before it causes damage
+        //   - But it's still WRONG and confusing!
+        //
+        // CORRECT APPROACH:
+        //   - Get vocab_size from tokenizer metadata (151643 logical tokens)
+        //   - Get padded_vocab_size from tensor dimensions[1] (151936 with padding)
+        //   - DON'T try to extract vocab from dimensions[0] (that's hidden_dim!)
+        //
+        // TODO: This function should be refactored or removed. For now, leaving it
+        //   as-is since cuda_backend.rs doesn't actually use this value.
+        //
         let vocab_size = {
             let tensors = GGUFMetadata::parse_tensors(model_path).map_err(|e| {
                 CudaError::ModelLoadFailed(format!("Failed to parse tensors: {}", e))
@@ -103,14 +133,16 @@ impl Model {
             eprintln!("🔍 [Rust] output.weight expected size: {} bytes ({} MB)", 
                      expected_bytes, expected_bytes / 1024 / 1024);
             
+            // [TEAM_HOTEL] FIXED! Use dimensions[1] for vocab_size (padded)
+            //   Tensor is [896, 151936] = [hidden_dim, padded_vocab_size]
+            //   We need the padded vocab size (151936) for model config
             let actual_vocab = output_tensor.dimensions.get(1)
-                .or_else(|| output_tensor.dimensions.get(0))  // Try first dim if second doesn't exist
                 .map(|&d| d as u32)
                 .ok_or_else(|| {
                     CudaError::ModelLoadFailed("output.weight has no dimensions".to_string())
                 })?;
 
-            eprintln!("✅ [Rust] Actual vocab size from output.weight: {}", actual_vocab);
+            eprintln!("✅ [Rust] Vocab size from output.weight[1]: {} (padded_vocab_size)", actual_vocab);
             
             // Verify against tokenizer vocab (should be padded)
             if let Ok(tokenizer_vocab) = meta.vocab_size() {

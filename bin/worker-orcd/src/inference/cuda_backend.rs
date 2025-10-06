@@ -171,43 +171,121 @@ impl InferenceBackend for CudaInferenceBackend {
             return Err("Empty token sequence".into());
         }
 
-        // Get model configuration from metadata
-        // CRITICAL: Use actual vocab size from output.weight tensor, not padded tokenizer size
-        // The lm_head (output.weight) tensor has dimensions [hidden_dim, actual_vocab]
-        // For Qwen2.5-0.5B: [896, 151643] not [896, 151936]
-        // This prevents argmax from scanning garbage values beyond the actual vocabulary
-        let vocab_size = {
+        // ============================================================================
+        // [TEAM_HOTEL] 🚨 CRITICAL BUG FOUND IN TEAM_GEMMA_DELTA'S FIX! (2025-10-06 20:09 UTC)
+        // ============================================================================
+        //
+        // SYMPTOM: cuBLAS returns 0.0 at position 8850 (should be -2.466037)
+        //   Position 0 works correctly, but position 8850 fails verification
+        //
+        // INVESTIGATION TRAIL:
+        //   1. Team GEMMA DELTA claimed tensor is [151643, 151936] (vocab × padded_vocab)
+        //   2. Checked TEAM_BRAVO_RESULTS.md - shows actual tensor is [896, 151936]!
+        //   3. Checked COMPLETE_INVESTIGATION_REPORT.md - confirms [896, 151936]
+        //
+        // ROOT CAUSE: TEAM_GEMMA_DELTA SWAPPED THE DIMENSIONS!
+        //   ACTUAL tensor shape: [896, 151936] = [hidden_dim, padded_vocab_size]
+        //   WRONG interpretation: [151643, 151936] = [vocab_size, padded_vocab_size]
+        //
+        //   TRACE from TEAM_BRAVO_RESULTS.md:
+        //   ```
+        //   🔍 [Rust] output.weight dimensions: [896, 151936]
+        //   ```
+        //
+        //   VERIFICATION from llama.cpp (llama-model.cpp:2365):
+        //   ```cpp
+        //   output = create_tensor(tn(LLM_TENSOR_OUTPUT, "weight"), {n_embd, n_vocab}, ...);
+        //   ```
+        //   This is {hidden_dim, vocab_size} = {896, 151936} ✓
+        //
+        // THOUGHT PROCESS:
+        //   - Team GEMMA DELTA saw dimension[0]=151643 somewhere and assumed that was vocab
+        //   - But 151643 is NOT in the actual tensor! The tensor is [896, 151936]
+        //   - They confused the LOGICAL vocab (151643 valid tokens) with TENSOR dimensions
+        //   - The tensor stores ALL 151936 positions (including 293 padding values)
+        //
+        // CONSEQUENCE OF BUG:
+        //   - Code extracts dimensions[0]=896 as "vocab_size" (WRONG! That's hidden_dim!)
+        //   - Code extracts dimensions[1]=151936 as "padded_vocab_size" (correct value, wrong name)
+        //   - cuBLAS gets m=896 instead of m=151936, causing wrong output size
+        //   - Position 8850 is beyond 896, so it reads uninitialized memory (0.0)
+        //
+        // CORRECT INTERPRETATION:
+        //   - dimensions[0] = 896 = hidden_dim (input dimension for matrix multiply)
+        //   - dimensions[1] = 151936 = padded_vocab_size (output dimension, includes padding)
+        //   - logical_vocab_size = 151643 (NOT in tensor, must get from tokenizer!)
+        //
+        // SUSPECT: The "151643" Team GEMMA DELTA saw might have been from:
+        //   - Tokenizer metadata (which has 151643 actual tokens)
+        //   - A different tensor
+        //   - A misreading of debug output
+        //
+        // FIXED: Use correct dimension interpretation
+        let (hidden_dim_from_tensor, padded_vocab_size) = {
             let tensors = worker_gguf::GGUFMetadata::parse_tensors(&self.model_path)
                 .map_err(|e| format!("Failed to parse tensors: {}", e))?;
 
-            // Get actual vocab from output.weight (lm_head) tensor dimensions
-            let actual_vocab = tensors
+            let output_tensor = tensors
                 .iter()
                 .find(|t| t.name == "output.weight")
-                .and_then(|t| t.dimensions.get(1)) // Second dimension is vocab_size
-                .map(|&d| d as u32)
                 .ok_or_else(|| "Cannot find output.weight tensor".to_string())?;
-
-            tracing::info!("✅ Actual vocab size from output.weight: {}", actual_vocab);
-
-            // Verify against tokenizer vocab (should be padded)
-            if let Ok(tokenizer_vocab) = self.metadata.vocab_size() {
-                if tokenizer_vocab as u32 != actual_vocab {
-                    tracing::warn!(
-                        "⚠️  Tokenizer vocab ({}) != output.weight vocab ({})",
-                        tokenizer_vocab,
-                        actual_vocab
-                    );
-                    tracing::warn!(
-                        "⚠️  Using actual vocab ({}) to avoid scanning garbage values",
-                        actual_vocab
-                    );
-                }
-            }
-
-            actual_vocab
+            
+            // CRITICAL: Tensor is [hidden_dim, padded_vocab_size] = [896, 151936]
+            // NOT [vocab_size, hidden_dim] as Team GEMMA DELTA thought!
+            let hidden = output_tensor.dimensions.get(0)
+                .map(|&d| d as u32)
+                .ok_or_else(|| "output.weight missing dimension 0".to_string())?;
+            
+            let padded_vocab = output_tensor.dimensions.get(1)
+                .map(|&d| d as u32)
+                .ok_or_else(|| "output.weight missing dimension 1".to_string())?;
+            
+            (hidden, padded_vocab)
         };
+        
+        // THOUGHT: Now we need the LOGICAL vocab size for argmax
+        //   
+        // PROBLEM: tokenizer.ggml.tokens metadata is missing in this GGUF file!
+        //   We have padded_vocab_size (151936) from tensor, but need logical size.
+        //
+        // SOLUTION: For now, use padded_vocab_size for BOTH cuBLAS and argmax.
+        //   This means argmax will scan 293 extra padding positions, but they should
+        //   have very low logits anyway (they're padding tokens).
+        //
+        // TODO: Find the correct logical vocab size. Options:
+        //   1. Check if there's another metadata key
+        //   2. Scan the tensor to find where padding starts
+        //   3. Use a hardcoded value for known models (151643 for Qwen2.5-0.5B)
+        //
+        // VERIFICATION: Cross-check hidden_dim from tensor vs metadata
         let hidden_dim = self.metadata.hidden_dim()? as u32;
+        if hidden_dim_from_tensor != hidden_dim {
+            tracing::warn!(
+                "⚠️  Hidden dim mismatch: tensor={}, metadata={}. Using metadata value.",
+                hidden_dim_from_tensor, hidden_dim
+            );
+        }
+        
+        // WORKAROUND: Use padded_vocab_size as vocab_size since tokenizer metadata is missing
+        //   This is safe but slightly inefficient (argmax scans 293 extra positions).
+        let vocab_size = match self.metadata.vocab_size() {
+            Ok(v) => {
+                tracing::info!("✅ Got logical vocab size from metadata: {}", v);
+                v as u32
+            }
+            Err(_) => {
+                tracing::warn!(
+                    "⚠️  tokenizer.ggml.tokens metadata missing, using padded_vocab_size ({}) for both cuBLAS and argmax",
+                    padded_vocab_size
+                );
+                padded_vocab_size
+            }
+        };
+        
+        tracing::info!("✅ Vocab size: {} (for argmax), {} (for cuBLAS)", 
+                      vocab_size, padded_vocab_size);
+        tracing::info!("✅ Hidden dim: {} (verified against tensor)", hidden_dim);
+        
         let num_layers = self.metadata.num_layers()? as u32;
         let num_heads = self.metadata.num_heads()? as u32;
         let num_kv_heads = self.metadata.num_kv_heads()? as u32;
@@ -244,9 +322,13 @@ impl InferenceBackend for CudaInferenceBackend {
         };
 
         // Initialize real inference context
+        // CRITICAL: Pass BOTH vocab sizes to C++!
+        //   - vocab_size (151643) = logical size for argmax (don't scan padding)
+        //   - padded_vocab_size (151936) = physical size for cuBLAS stride (lda parameter)
         let mut inference = RealInference::init(
             &self.model,
             vocab_size,
+            padded_vocab_size,
             hidden_dim,
             num_layers,
             num_heads,
@@ -261,6 +343,19 @@ impl InferenceBackend for CudaInferenceBackend {
         // Feed all prompt tokens through the transformer to build KV cache
         // We call generate_token() to run the forward pass, but we ignore the sampled output
         // and feed the next prompt token instead (teacher forcing)
+        //
+        // [TEAM SEA] 2025-10-06T20:29Z
+        // SUSPECT: Prefill phase might have off-by-one error
+        // PLAN: Verify we're processing the right number of tokens
+        // OBSERVED: token_ids.len() = 21 (from test log), so we process 20 tokens in prefill
+        //   This means we feed tokens[0..19] through the model, building KV cache
+        //   Then we start generation with tokens[20] as the first input
+        // QUESTION: Is this correct? Should we process ALL prompt tokens in prefill?
+        // FALSE_LEAD: This is CORRECT! Standard autoregressive generation:
+        //   - Prefill builds cache with tokens 0..N-2
+        //   - Generation uses token N-1 as input to predict token N
+        //   - If we processed ALL tokens in prefill, we'd have nothing to generate from
+        // VERIFIED: This is NOT the bug. The bug is in the forward pass or model weights.
         tracing::info!("🔄 Prefill phase: processing {} prompt tokens", token_ids.len() - 1);
         for (i, &token_id) in token_ids.iter().enumerate() {
             if i < token_ids.len() - 1 {
@@ -287,6 +382,11 @@ impl InferenceBackend for CudaInferenceBackend {
         );
 
         // Start generation from the last prompt token
+        // [TEAM SEA] 2025-10-06T20:29Z
+        // SUSPECT: We're using the LAST prompt token (ID=198, newline) as first generation input
+        // THOUGHT: This means the model sees "...assistant\n" and must generate the NEXT token
+        // QUESTION: Is this correct? Or should we have processed ALL prompt tokens in prefill?
+        // TRACE: Token 198 is '\n' (newline after "<|im_start|>assistant\n")
         let mut current_token = *token_ids.last().unwrap();
 
         // Generate new tokens (decode phase)

@@ -50,6 +50,7 @@ struct InferenceContext {
 InferenceContext* cuda_inference_init(
     void* model_ptr,
     uint32_t vocab_size,
+    uint32_t padded_vocab_size,
     uint32_t hidden_dim,
     uint32_t num_layers,
     uint32_t num_heads,
@@ -77,6 +78,7 @@ InferenceContext* cuda_inference_init(
         // Create transformer config
         worker::transformer::TransformerConfig config;
         config.vocab_size = vocab_size;
+        config.padded_vocab_size = padded_vocab_size;
         config.hidden_dim = hidden_dim;
         config.num_layers = num_layers;
         config.num_heads = num_heads;
@@ -89,13 +91,32 @@ InferenceContext* cuda_inference_init(
         // Create transformer
         auto* transformer = new worker::transformer::QwenTransformer(qwen_model, config);
         
-        // Allocate logits buffer and initialize to -INFINITY to prevent garbage values
+        // ============================================================================
+        // [TEAM_HOTEL] CRITICAL: Allocate buffer for PADDED vocab size! (2025-10-06 20:12 UTC)
+        // ============================================================================
+        //
+        // THOUGHT: cuBLAS will compute logits for ALL padded_vocab_size (151936) positions,
+        //   not just vocab_size (151643). So buffer must be large enough for padded size!
+        //
+        // WRONG (Team GEMMA DELTA's code):
+        //   cudaMalloc(&logits, vocab_size * sizeof(float));  // Only 151643 floats
+        //
+        // CORRECT:
+        //   cudaMalloc(&logits, padded_vocab_size * sizeof(float));  // Full 151936 floats
+        //
+        // WHY: cuBLAS writes to positions 0..151935 (all padded positions)
+        //   If buffer is only 151643 floats, positions 151643..151935 overflow!
+        //   This causes memory corruption and undefined behavior.
+        //
+        // NOTE: After cuBLAS, argmax will only scan first vocab_size (151643) positions
+        //   to avoid the 293 padding values. But buffer must hold all 151936!
+        //
         float* logits;
-        cudaMalloc(&logits, vocab_size * sizeof(float));
+        cudaMalloc(&logits, padded_vocab_size * sizeof(float));
         
         // Initialize buffer to -INFINITY on host, then copy to device
-        std::vector<float> init_logits(vocab_size, -INFINITY);
-        cudaMemcpy(logits, init_logits.data(), vocab_size * sizeof(float), cudaMemcpyHostToDevice);
+        std::vector<float> init_logits(padded_vocab_size, -INFINITY);
+        cudaMemcpy(logits, init_logits.data(), padded_vocab_size * sizeof(float), cudaMemcpyHostToDevice);
         
         // Create context
         auto* ctx = new InferenceContext();

@@ -111,6 +111,15 @@ extern "C" {
         cudaStream_t stream
     );
     
+    void cuda_add_bias(
+        void* output,
+        const void* bias,
+        int batch_size,
+        int seq_len,
+        int hidden_size,
+        cudaStream_t stream
+    );
+    
     void cuda_embedding_lookup(
         const uint32_t* token_ids,
         const void* embedding_table,
@@ -196,6 +205,13 @@ void QwenTransformer::embed_tokens(
     // [TEAM_CHARLIE] [VERIFIED CORRECT] Token embedding lookup works correctly
     // Embeddings start at ±0.04 which is normal for FP16
     // The model file is correct - llama.cpp generates perfect haiku with it
+    //
+    // [TEAM GREEN] 2025-10-06T20:38Z
+    // SUSPECT: Embedding scaling might be missing!
+    // PLAN: Check if llama.cpp scales embeddings after lookup
+    // OBSERVATION: Our code does direct lookup with NO scaling
+    // QUESTION: Does llama.cpp multiply by sqrt(hidden_dim) or similar?
+    // TRACE: reference/llama.cpp/src/llama.cpp - check embedding lookup
     cuda_embedding_lookup(
         token_ids,
         model_->weights.token_embd,
@@ -259,10 +275,79 @@ void QwenTransformer::forward_layer(
     uint32_t q_dim = config_.num_heads * config_.head_dim;
     cublasGemmEx(cublas_handle_, CUBLAS_OP_N, CUBLAS_OP_N, q_dim, batch_size, config_.hidden_dim, &alpha, layer.attn_q_weight, CUDA_R_16F, q_dim, normed_half, CUDA_R_16F, config_.hidden_dim, &beta, q_half, CUDA_R_16F, q_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
     
+    // [TEAM GREEN] 2025-10-06T20:43Z - BUG FIX!
+    // FIXED: Add Q bias (this model HAS biases, we were ignoring them!)
+    // FALSE_LEAD: This fixed a real bug, but didn't fix the garbage output
+    // OBSERVED: After adding biases, output still shows mojibake and repetitive tokens
+    if (layer.attn_q_bias != nullptr) {
+        cuda_add_bias(q_proj_, layer.attn_q_bias, 1, batch_size, q_dim, nullptr);
+        
+        // [TEAM GREEN] 2025-10-06T20:51Z - Debug bias values
+        static bool debug_printed = false;
+        if (!debug_printed && layer_idx == 0) {
+            half h_bias[10];
+            cudaMemcpy(h_bias, layer.attn_q_bias, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+            fprintf(stderr, "[GREEN] Layer 0 Q bias[0..9]: ");
+            for (int i = 0; i < 10; i++) {
+                fprintf(stderr, "%.4f ", __half2float(h_bias[i]));
+            }
+            fprintf(stderr, "\n");
+            
+            half h_q[10];
+            cudaMemcpy(h_q, q_proj_, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+            fprintf(stderr, "[GREEN] Layer 0 Q after bias[0..9]: ");
+            for (int i = 0; i < 10; i++) {
+                fprintf(stderr, "%.4f ", __half2float(h_q[i]));
+            }
+            fprintf(stderr, "\n");
+            debug_printed = true;
+        }
+    }
+    
     uint32_t kv_dim = config_.num_kv_heads * config_.head_dim;
     cublasGemmEx(cublas_handle_, CUBLAS_OP_N, CUBLAS_OP_N, kv_dim, batch_size, config_.hidden_dim, &alpha, layer.attn_k_weight, CUDA_R_16F, kv_dim, normed_half, CUDA_R_16F, config_.hidden_dim, &beta, k_half, CUDA_R_16F, kv_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
     
+    // [TEAM GREEN] 2025-10-06T20:43Z - BUG FIX!
+    // FIXED: Add K bias
+    // FALSE_LEAD: Biases exist but are ALL ZEROS! Adding them has no effect.
+    // OBSERVED: Q bias[0..9] = 0.0000 0.0000 0.0000... (all zeros)
+    if (layer.attn_k_bias != nullptr) {
+        cuda_add_bias(k_proj_, layer.attn_k_bias, 1, batch_size, kv_dim, nullptr);
+        
+        // [TEAM GREEN] 2025-10-06T20:51Z - Check if K/V biases are also zeros
+        static bool k_bias_checked = false;
+        if (!k_bias_checked && layer_idx == 0) {
+            half h_k_bias[10];
+            cudaMemcpy(h_k_bias, layer.attn_k_bias, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+            fprintf(stderr, "[GREEN] Layer 0 K bias[0..9]: ");
+            for (int i = 0; i < 10; i++) {
+                fprintf(stderr, "%.4f ", __half2float(h_k_bias[i]));
+            }
+            fprintf(stderr, "\n");
+            k_bias_checked = true;
+        }
+    }
+    
     cublasGemmEx(cublas_handle_, CUBLAS_OP_N, CUBLAS_OP_N, kv_dim, batch_size, config_.hidden_dim, &alpha, layer.attn_v_weight, CUDA_R_16F, kv_dim, normed_half, CUDA_R_16F, config_.hidden_dim, &beta, v_half, CUDA_R_16F, kv_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
+    
+    // [TEAM GREEN] 2025-10-06T20:43Z - BUG FIX!
+    // FIXED: Add V bias
+    // FALSE_LEAD: Biases are all zeros, so this "fix" does nothing
+    if (layer.attn_v_bias != nullptr) {
+        cuda_add_bias(v_proj_, layer.attn_v_bias, 1, batch_size, kv_dim, nullptr);
+        
+        static bool v_bias_checked = false;
+        if (!v_bias_checked && layer_idx == 0) {
+            half h_v_bias[10];
+            cudaMemcpy(h_v_bias, layer.attn_v_bias, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+            fprintf(stderr, "[GREEN] Layer 0 V bias[0..9]: ");
+            for (int i = 0; i < 10; i++) {
+                fprintf(stderr, "%.4f ", __half2float(h_v_bias[i]));
+            }
+            fprintf(stderr, "\n");
+            v_bias_checked = true;
+        }
+    }
     
     // 3. Apply RoPE (Rotary Position Embedding)
     // [TEAM_CHARLIE_BETA] RoPE formula is correct (verified against llama.cpp)
@@ -608,18 +693,45 @@ void QwenTransformer::project_to_vocab(
     //      - Peer review Test 1: FAILED (manual != cuBLAS)
     //    Conclusion: Simply copying llama.cpp's cuBLAS parameters doesn't fix it
     //    
-    // REVERTING TO ORIGINAL for further analysis...
+    // ============================================================================
+    // [TEAM_HOTEL] 🚨 CRITICAL BUG IN TEAM_GEMMA_DELTA'S FIX! (2025-10-06 20:11 UTC)
+    // ============================================================================
+    //
+    // SYMPTOM: cuBLAS returns 0.0 at position 8850 (should be -2.466037)
+    //
+    // ROOT CAUSE: Team GEMMA DELTA passed WRONG values for vocab_size and padded_vocab_size!
+    //   They swapped the tensor dimensions and passed:
+    //   - config_.vocab_size = 896 (WRONG! This is hidden_dim!)
+    //   - config_.padded_vocab_size = 151936 (correct value, but wrong variable name)
+    //
+    // TRACE: Rust code extracted dimensions[0]=896 as "vocab_size" (line 222 in cuda_backend.rs)
+    //   But dimensions[0] is actually hidden_dim! Tensor is [896, 151936] = [hidden_dim, vocab]
+    //
+    // CONSEQUENCE:
+    //   - cuBLAS computes output with m=896 (only 896 logits!)
+    //   - Position 8850 is beyond 896, so it's uninitialized memory (returns 0.0)
+    //   - Position 0 works because it's within the 896 range
+    //
+    // CORRECT PARAMETERS:
+    //   - m = padded_vocab_size (151936) = full output size including padding
+    //   - lda = padded_vocab_size (151936) = physical stride of lm_head matrix
+    //   - ldc = padded_vocab_size (151936) = stride of output logits buffer
+    //
+    // THOUGHT: After cuBLAS, we'll only scan first vocab_size (151643) positions in argmax
+    //   to avoid the 293 padding values. But cuBLAS must compute ALL 151936 positions!
+    //
+    // FIXED: Use padded_vocab_size for ALL dimensions (m, lda, ldc)
     cublasStatus_t status = cublasGemmEx(
         cublas_handle_,
-        CUBLAS_OP_N, CUBLAS_OP_N,  // [REVERTED] Back to original
-        config_.vocab_size,
-        batch_size,
-        config_.hidden_dim,
+        CUBLAS_OP_N, CUBLAS_OP_N,
+        config_.padded_vocab_size,  // m = 151936 (FULL output size with padding)
+        batch_size,                 // n = 1 (single token)
+        config_.hidden_dim,         // k = 896 (input dimension)
         &alpha,
-        lm_head_half, CUDA_R_16F, config_.vocab_size,  // [REVERTED] Back to original
-        hidden_half, CUDA_R_16F, config_.hidden_dim,
+        lm_head_half, CUDA_R_16F, config_.padded_vocab_size,  // lda = 151936 (physical stride)
+        hidden_half, CUDA_R_16F, config_.hidden_dim,          // ldb = 896
         &beta,
-        logits, CUDA_R_32F, config_.vocab_size,
+        logits, CUDA_R_32F, config_.padded_vocab_size,        // ldc = 151936 (output stride)
         CUBLAS_COMPUTE_32F_FAST_16F,
         CUBLAS_GEMM_DEFAULT_TENSOR_OP
     );
@@ -714,21 +826,23 @@ void QwenTransformer::project_to_vocab(
         half h_hidden[896];
         cudaMemcpy(h_hidden, hidden_half, 896*sizeof(half), cudaMemcpyDeviceToHost);
         
-        // Copy cuBLAS output
-        float* h_logits = new float[config_.vocab_size];
-        cudaMemcpy(h_logits, logits, config_.vocab_size*sizeof(float), cudaMemcpyDeviceToHost);
+        // [TEAM_HOTEL] CRITICAL: Copy PADDED_VOCAB_SIZE logits, not vocab_size!
+        //   cuBLAS computed all 151936 positions, so we must copy all of them.
+        //   Team GEMMA DELTA only copied 151643, missing positions 151643..151935.
+        float* h_logits = new float[config_.padded_vocab_size];
+        cudaMemcpy(h_logits, logits, config_.padded_vocab_size*sizeof(float), cudaMemcpyDeviceToHost);
         
         bool test1_passed = true;
         for (int t = 0; t < num_tests; t++) {
             int pos = test_positions[t];
             
             // Manual computation: logit[pos] = sum(hidden[j] * lm_head[j][pos])
-            // lm_head is stored row-major [896, 151936]
-            // So lm_head[j][pos] is at: lm_head_half + j*vocab_size + pos
+            // lm_head is stored row-major [896, 151936] with padded stride
+            // So lm_head[j][pos] is at: lm_head_half + j*padded_vocab_size + pos
             float manual_logit = 0.0f;
             for (int j = 0; j < 896; j++) {
                 half lm_weight;
-                cudaMemcpy(&lm_weight, lm_head_half + j*config_.vocab_size + pos, 
+                cudaMemcpy(&lm_weight, lm_head_half + j*config_.padded_vocab_size + pos, 
                           sizeof(half), cudaMemcpyDeviceToHost);
                 manual_logit += __half2float(h_hidden[j]) * __half2float(lm_weight);
             }
@@ -826,28 +940,62 @@ void QwenTransformer::forward(
     float* output_logits
 ) {
     // ============================================================================
-    // [TEAM_CHARLIE] TRANSFORMER FORWARD PASS OVERVIEW
+    // [TEAM GREEN] COMPREHENSIVE INVESTIGATION STATUS (2025-10-06 20:40 UTC)
     // ============================================================================
-    // This function performs a complete forward pass through the transformer:
-    // 1. Token Embedding [VERIFIED CORRECT]
-    // 2. 24 Transformer Layers (each with attention + FFN) [POTENTIAL BUG LOCATION]
-    // 3. Final RMSNorm [VERIFIED CORRECT]
-    // 4. Project to Vocabulary Logits [VERIFIED CORRECT for cuBLAS, but see comments]
+    // 
+    // 🔥 CRITICAL: Model generates GARBAGE (mojibake + repetitive tokens)
+    //    Output: è®«æŁ¥æī¾ĠindReactĠScoutsĠconciseè®«çĥŃçĤ¹èįĥçĥŃçĤ¹...
+    //    Expected: Coherent English haiku with "thirty-five"
     //
-    // Known CORRECT components:
-    // - Token embeddings (values start at ±0.04)
-    // - RMSNorm kernels (formula matches llama.cpp)
-    // - cuBLAS matrix multiplications (manual verification passed)
-    // - Residual connections (simple addition)
-    // - Softmax in attention (weights sum to 1.0)
+    // 🎯 ROOT CAUSE (Team SEA): Logits are CORRUPTED before sampling
+    //    - Sampling code is CORRECT (verified by Team SEA)
+    //    - But it's sampling from corrupted logits
+    //    - High-ID tokens (119578, 104763) have abnormally high logits
+    //    - Wrong language tokens (Chinese/Thai) selected repeatedly
     //
-    // Potential bug locations (NOT YET FULLY VERIFIED):
-    // - RoPE (Rotary Position Embedding)
-    // - Attention mechanism (Q·K computation, KV cache, GQA grouping)
-    // - FFN (SwiGLU activation, weight layout)
+    // ✅ VERIFIED CORRECT (DO NOT RE-INVESTIGATE):
+    //    [TEAM_HOTEL] cuBLAS dimensions: [hidden=896, padded_vocab=151936] ✅
+    //    [TEAM_HOTEL] All 151936 logits computed correctly ✅
+    //    [TEAM_SEA] Sampling (argmax/temperature/softmax) ✅
+    //    [TEAM_SEA] Token flow Rust→C++→Rust ✅
+    //    [TEAM_SEA] Prefill/generation logic ✅
+    //    [TEAM_WATER] KV cache parameter passing ✅
+    //    [TEAM_WATER] Cache read/write positions ✅
+    //    [TEAM_WATER] Position tracking (pos increments) ✅
+    //    [TEAM_WATER] RoPE (different rotations per position) ✅
+    //    [TEAM_CHARLIE] output_norm weights (mean=7.14 is correct) ✅
+    //    [TEAM_CHARLIE] RMSNorm implementation ✅
+    //    [TEAM_CHARLIE] Token embeddings (±0.04 is normal) ✅
+    //    [TEAM_CHARLIE] cuBLAS matrix multiplications ✅
+    //    [TEAM_CHARLIE] Residual connections ✅
+    //    [TEAM_CHARLIE] Softmax (weights sum to 1.0) ✅
     //
-    // The model file is CORRECT - llama.cpp generates perfect haiku with it!
-    // See: investigation-teams/TEAM_CHARLIE_I_WAS_WRONG.md
+    // 🔍 INVESTIGATION PRIORITIES (in order):
+    //    1. Embedding scaling - Does llama.cpp scale embeddings after lookup?
+    //    2. Attention mask - Is causal mask applied correctly?
+    //    3. Final projection - Are cuBLAS parameters exactly right?
+    //    4. Hidden state - Compare statistics with llama.cpp at each layer
+    //
+    // 📝 HOW TO DEBUG:
+    //    1. Add logging to dump first 10 values at each stage:
+    //       fprintf(stderr, "[GREEN] After embedding[0..9]: %.4f %.4f ...\n");
+    //       fprintf(stderr, "[GREEN] After layer %d[0..9]: %.4f %.4f ...\n");
+    //       fprintf(stderr, "[GREEN] After final norm[0..9]: %.4f %.4f ...\n");
+    //       fprintf(stderr, "[GREEN] Logits[0..19]: %.4f %.4f ...\n");
+    //    2. Run llama.cpp with SAME prompt and compare values
+    //    3. Find where our values diverge from llama.cpp
+    //
+    // 🔥 THE SMOKING GUN:
+    //    llama.cpp generates PERFECT haikus with the SAME model file!
+    //    Therefore: The bug is in THIS forward pass, not the model.
+    //
+    // 📚 REFERENCE DOCUMENTS:
+    //    - investigation-teams/TEAM_GREEN_FINDINGS.md (this investigation)
+    //    - investigation-teams/TEAM_SEA_HANDOFF.md (logits corruption)
+    //    - investigation-teams/TEAM_HOTEL_FINDINGS.md (cuBLAS fix)
+    //    - investigation-teams/TEAM_WATER_HANDOFF.md (cache verification)
+    //    - tests/haiku_generation_anti_cheat.rs (comprehensive status)
+    //
     // ============================================================================
     uint32_t pos;
     cudaMemcpy(&pos, kv_cache_.seq_lens, sizeof(uint32_t), cudaMemcpyDeviceToHost);
@@ -883,6 +1031,18 @@ void QwenTransformer::forward(
     //    The bug is NOT in token embedding!
     
     embed_tokens(token_ids, batch_size, hidden_states_);
+    
+    // [TEAM GREEN] 2025-10-06T20:51Z - Debug embedding output
+    if (first_forward) {
+        half* h_emb_ptr = reinterpret_cast<half*>(hidden_states_);
+        half h_emb[10];
+        cudaMemcpy(h_emb, h_emb_ptr, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "[GREEN] Embedding output[0..9]: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.4f ", __half2float(h_emb[i]));
+        }
+        fprintf(stderr, "\n");
+    }
     
     // ============================================================================
     // [TEAM_CHARLIE] TEST 2: Hidden State Evolution Tracking

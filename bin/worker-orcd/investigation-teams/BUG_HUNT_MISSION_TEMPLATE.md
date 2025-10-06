@@ -1,150 +1,169 @@
-# 🔎 Collaborative Bug & Inconsistency Hunt — Team GEMMA DELTA
+# 🔎 Collaborative Bug & Inconsistency Hunt — Team SEA
 
-**Mission:** Find and fix **defects in code** *or* **contradictions between documents/specs/tests/configs**.
-**Win Condition:** The **Haiku test passes** *and* your investigation is **fully written into the code as comments**, so the next team doesn’t re-think what you already explored.
-
----
-
-## 🎯 Scope (choose what applies)
-
-* **Code Bugs:** Logic, off-by-one, races, unwraps, lifetimes, FFI, build flags.
-* **Spec/Doc Contradictions:** Requirements vs code, tests vs behavior, README vs defaults, ADR vs implementation, CLI help vs flags.
-* **Config/Env Mismatches:** Feature flags, profiles, CUDA/CPU switches, targets, paths, CI matrix vs local scripts.
-
-> Always tie contradictions to a **check** (test, build, lint, schema/contract check).
+**Mission:** Hunt down the **garbage output** bug.
+This is **not** an infra/pipeline issue. Assume weights/VRAM/kernels/IPC are fine unless proven otherwise.
+Your job is to **trace and fix model-logic or prompt/tokenization issues** that yield unreadable tokens.
 
 ---
 
-## 🧪 Verification Standard
+## 🚦 Hard Rules (read first)
 
-* **Primary:**
+1. **APPEND-ONLY COMMENTS**
 
-  ```bash
-  REQUIRE_REAL_LLAMA=1 cargo test --release --features cuda \
-    --test haiku_generation_anti_cheat \
-    test_haiku_generation_stub_pipeline_only \
-    -- --ignored --nocapture --test-threads=1
-  ```
+   * **Never overwrite or delete** any previous team’s comments.
+   * Always **append** your notes **beneath** the prior comment block.
 
-  Only claim **FIXED** if this **passes**.
+2. **COMMENT EVERYTHING YOU THINK**
 
-* **Do NOT use the interactive CLI with `head`/`tail`.**
-  `llama-cli` is conversational and blocks; piping output is unreliable.
+   * Every suspicion you have while reading a line must be **written in the code right there**.
+   * Don’t keep thoughts in your head; **write the hypothesis, how you’ll test it, and what you learned**.
 
-* **Use the HTTP API for runtime checks instead of the CLI.**
-  Example (adjust to your actual endpoint/model):
+3. **CORRECT FALSE CLAIMS WITHOUT EDITING THEM**
 
-  ```bash
-  curl -sS -X POST {HTTP_API_URL}/v1/chat/completions \
-    -H 'content-type: application/json' \
-    -d '{
-      "model": "{MODEL_NAME}",
-      "messages": [
-        {"role":"system","content":"You are a helpful assistant"},
-        {"role":"user","content":"Write a haiku about autumn:"}
-      ],
-      "temperature": 0.7,
-      "max_tokens": 50
-    }'
-  ```
+   * If a prior comment claims “FIXED” but it isn’t, **append** under it with `FALSE_FIX:` + proof.
+   * Do **not** edit their text.
 
-  Use this **only** to confirm behavior once your reasoning is documented.
+4. **NO CLI PIPING / INTERACTIVE SESSIONS**
 
-* **If you “fix” a doc/spec inconsistency**, show the **assertion** that proves alignment (updated test or exact command output).
+   * Do **not** pipe `llama-cli` output into `head`/`tail`. The CLI session is interactive and will hang.
+   * **Use the HTTP API** for probe runs (examples below).
+
+5. **BLOCKING TESTS ONLY (FOREGROUND)**
+
+   * Always run tests **in the foreground** (blocking). **No background jobs**, or you will lose logs.
 
 ---
 
-## 🗒️ Comment-Driven Forensics (MANDATORY)
+## 🎯 Scope (narrow)
 
-**Write what you think, where you think it.**
-Every time you form a hypothesis while reading a line, **leave a comment right there**. Then **edit the same comment** as you learn more. Make your thinking visible so the next team never re-thinks the same thing.
+* **Prompt & tokenization path:** role templating, BOS/EOS, special tokens, whitespace/newlines, chat template selection, tokenizer/model vocab consistency.
+* **Logits & projection correctness:** output_norm, final projection matrix, logits scaling/temperature, invalid byte-BPE handling, Unicode decoding.
+* **Sampling step:** top-k/p/temperature, repetition penalties, bad stop sequences producing junk.
+* **Explicitly out of scope:** pool manager, IPC, HTTP server boot, CUDA context wiring (unless you prove it corrupts logits).
 
-Use these markers (exact words):
+---
 
-* `SUSPECT:` why this might be wrong
-* `THOUGHT:` immediate reasoning or question you’re exploring
-* `TRACE:` observed values/logs relevant to this spot
-* `CONTRADICTION:` what disagrees with what (A vs B, cite lines/sections)
-* `FALSE_LEAD:` why it’s actually fine (how you verified)
-* `FIXED:` code defect fixed and verified (reference passing test/commit)
-* `RESOLVED:` alignment change + how it’s enforced (test/command)
-* `FALSE_FIX:` prior team claimed fixed; your verification shows failing
+## 🧪 Verification (blocking, foreground)
 
-**Examples**
+**Primary (blocking):**
+
+```bash
+REQUIRE_REAL_LLAMA=1 cargo test --release --features cuda \
+  --test haiku_generation_anti_cheat \
+  test_haiku_generation_stub_pipeline_only \
+  -- --ignored --nocapture --test-threads=1
+```
+
+Only mark **FIXED** if this **passes** and the output is **human-readable** (no mojibake / control glyph soup).
+
+**Probe via HTTP API (not CLI):**
+
+```bash
+curl -sS -X POST http://localhost:{PORT}/execute \
+  -H 'content-type: application/json' \
+  -d '{
+    "prompt": "Write a haiku about GPU computing that includes the word \"forty-two\" (nonce: TEST)",
+    "max_tokens": 100,
+    "temperature": 0.7
+  }'
+```
+
+Capture the **exact response text** in your comments when relevant.
+
+---
+
+## 🗒️ Comment Protocol (append-only)
+
+Always tag with team + UTC time. **Never edit or delete earlier lines.**
+
+Use exactly these markers:
+
+* `SUSPECT:` your hypothesis and why (cite code path)
+* `PLAN:` how you’ll verify (what log/add/assert you’ll add)
+* `OBSERVED:` concrete output/logs from your probe/test
+* `FALSE_LEAD:` why the suspicion was wrong (and proof)
+* `CONTRADICTION:` spec/test/docs vs actual behavior
+* `FIXED:` what you changed + the single proof line (test green / decoded text looks human)
+* `FALSE_FIX:` prior team’s fix claim is wrong; attach proof (log excerpt)
+
+**Rust example**
 
 ```rust
-// SUSPECT: Off-by-one: expecting exactly 3 lines in haiku formatter.
-// THOUGHT: Is trailing newline causing a 4th line after split('\n')?
-// TRACE: observed output lines = 4 (last is ""), input endswith('\n') = true
-// CONTRADICTION: README says "no trailing newline", tests tolerate 1.
-// FALSE_LEAD: Adjusting split logic did not change test failure; see run log below.
-// FIXED: Trim trailing newline in render(); test now green (cmd in Verification Standard).
+// [TEAM {TEAM_NAME}] 2025-10-06T17:15Z
+// SUSPECT: Chat template inserts extra BOS and trailing newline → tokenizer emits junk byte-BPE early.
+// PLAN: Log final rendered prompt before tokenization; compare to llama.cpp template text.
+// OBSERVED: Rendered prompt ends with "<|im_start|>assistant\n\n" (double newline).
+// CONTRADICTION: Our README claims single newline before assistant.
+// FALSE_LEAD: Removing one newline did NOT fix mojibake; tokens still map to invalid UTF-8.
+// SUSPECT: Tokenizer/vocab mismatch (Qwen chat template vs loaded GGUF tokenizer metadata).
 ```
+
+**C++ example**
 
 ```cpp
-// SUSPECT: BOS token inserted unconditionally here; may shift structure.
-// THOUGHT: Qwen’s chat template might add BOS already—double BOS?
-// CONTRADICTION: Spec §4.1 says conditional BOS; code always inserts.
-// FALSE_FIX: Previous team marked FIXED at line 88; re-run still fails.
-// RESOLVED: Insert BOS only if tokenizer requires; verified by HTTP API roundtrip.
+// [TEAM {TEAM_NAME}] 2025-10-06T17:22Z
+// SUSPECT: output_norm scale applied twice before final projection.
+// PLAN: Dump pre/post norm ranges; compare to expected RMS ~[2..4] not exploding to ~40.
+// OBSERVED: AFTER norm Std≈7.26 (too high), logits top-10 unstable across steps.
+// FALSE_FIX: Prior team claimed "norm values OK"—HTTP output still mojibake; see curl proof below.
 ```
 
-```yaml
-# SUSPECT: batch_size=4 conflicts with spec §M0 (batch=1)
-# THOUGHT: CI matrix sets BATCH=1 but local default is 4 → mismatch
-# RESOLVED: Set batch_size=1 here; CI + local align; test passes.
-```
+**Markdown (spec) example**
 
 ```md
-<!-- CONTRADICTION: CLI help suggests using -p for system, but llama.cpp expects --system-prompt. -->
-<!-- RESOLVED: Docs updated; examples use --system-prompt. -->
+<!-- [TEAM {TEAM_NAME}] 2025-10-06T17:30Z
+SUSPECT: Spec §4.1 says BOS only if model requires; code path adds BOS unconditionally in chat mode.
+OBSERVED: Token IDs show duplicate BOS at positions 0 and 24.
+CONTRADICTION: GGUF tokenizer.chat_template expects single BOS.
+-->
 ```
 
 ---
 
-## 🔁 Correcting Other Teams’ Premature Claims
+## 🔍 Minimal Workflow (what to actually do)
 
-If a previous comment says **FIXED** but your verification **fails**:
+1. **Open the exact code path** that constructs the final prompt string (before tokenization).
 
-* **Do not delete** their comment. **Append** in place:
+   * Add a **temporary log** that dumps the **verbatim final prompt string**.
+2. **Compare against llama.cpp’s chat template rules** (role order, start/end tags, BOS/EOS, newlines).
 
-```
-// FALSE_FIX: Haiku still failing after this change; see failing cmd/output below.
+   * If you spot a discrepancy, **comment it immediately** (`SUSPECT` + `PLAN`), then check it.
+3. **Trace tokenization**
 
-```
-- Add your own `SUSPECT` / `CONTRADICTION` nearby with your new lead.
+   * Log the **first 50 token IDs** and attempt decoding to text; **paste** short snippets under `OBSERVED`.
+4. **Trace final-projection & sampling**
 
----
+   * Sanity-check logits scale (no wild spikes), temperature application, and decoding path.
+5. **Test in foreground**
 
-## 🧭 Minimal Workflow (follow in order)
+   * Run the primary test. If it’s still garbage, **append** `FALSE_FIX` under any earlier “fixed” claims and continue.
+6. **When you truly fix it**
 
-1. **Alignment Pass (quick):** Decide bug vs contradiction (or both); list files.
-2. **Baseline:** Run the **Primary** command once; paste a **short failing excerpt** under the nearest relevant comment.
-3. **Read & Write:** As you read lines, **leave `THOUGHT` and `SUSPECT`** notes inline—don’t keep ideas in your head.
-4. **Instrument & Narrow:** Add assertions/logs; capture `TRACE` snippets where it matters.
-5. **Fix / Align (smallest change):**
- - Code: minimal, targeted change.
- - Docs/Specs: update the authoritative source and add/adjust a test.
-6. **Verify:** Re-run the **Primary** command (and HTTP API if needed). Only then mark `FIXED`/`RESOLVED`.
-7. **Police Claims:** If you debunk a prior fix, add `FALSE_FIX` with proof.
+   * Append `FIXED:` with **one** proof line (green test or readable HTTP output). Do **not** erase any history.
 
 ---
 
-## 🚫 Don’t Blame the Model (and don’t pipe the CLI)
+## 🧰 Practical probes (safe & quick)
 
-Interactive CLI example (do **not** pipe with `head`/`tail`):
-```
-
-/home/vince/Projects/llama-orch/reference/llama.cpp/build/bin/llama-cli 
--m /home/vince/Projects/llama-orch/.test-models/qwen/qwen2.5-0.5b-instruct-q4_k_m.gguf 
--p "Write a haiku about autumn:" -n 50 --temp 0.7
-
-```
-
-Use the **HTTP API** instead for reproducible, non-interactive checks (see Verification Standard).
+* **Render-only check (no gen):** add a mode/flag that prints the **final prompt string** + **token IDs** and exits.
+* **Tokenizer identity check:** round-trip a small ASCII prompt; ensure IDs decode back to the same text.
+* **Unicode sentinel:** include a known multi-byte char (e.g., “—”, “é”) and ensure decode survives.
+* **BOS/EOS audit:** ensure exactly one BOS at start (if required by template) and controlled EOS insertion.
 
 ---
 
-### Final reminder
-> If you **thought** about it, **write it down in the code**.  
-> Future teams must never have to re-think the same line you just studied.
+## ❗ Common traps (avoid wasting time)
+
+* Don’t assume weights are wrong if llama.cpp runs the same GGUF fine.
+* Don’t tweak CUDA, cuBLAS, or KV cache when the **symptom is mojibake text**.
+* Don’t background tests; you’ll miss the logs you need.
+* Don’t use `llama-cli | head`; **use the HTTP API** for deterministic captures.
+
+---
+
+## ✅ Definition of Done (for this mission only)
+
+* The **garbage output stops**: generated text is readable and contains normal words.
+* The **primary test passes in the foreground**.
+* Your **append-only** comment trail captures your hypotheses, probes, and proof.
+* Any **premature “FIXED”** claims above your section have a **`FALSE_FIX:` append** with concrete evidence.

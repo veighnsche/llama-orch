@@ -38,7 +38,7 @@ __global__ void add_bias_kernel(
 }
 
 // Host function to add bias
-void cuda_add_bias(
+extern "C" void cuda_add_bias(
     half* output,
     const half* bias,
     int batch_size,
