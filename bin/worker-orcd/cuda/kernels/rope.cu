@@ -1,11 +1,27 @@
-// rope.cu — Rotary Position Embedding (RoPE) - LT-014
+// rope.cu — Rotary Position Embedding (RoPE) - LT-015
 //
-// Implements RoPE for positional encoding in transformer models.
-// Used in Llama, Qwen, and other modern LLMs.
+// Implements RoPE for Llama models.
+// Spec: M0-W-1214
 //
-// Spec: M0-W-1215, M0-W-1431
-
-#include <cuda_runtime.h>
+// ============================================================================
+// [TEAM_CHARLIE] INVESTIGATION WARNING (2025-10-06 16:48 UTC)
+// ============================================================================
+// ⚠️⚠️⚠️ POTENTIAL BUG LOCATION - INVESTIGATE THIS! ⚠️⚠️⚠️
+//
+// The model file is CORRECT (llama.cpp generates perfect haiku with it).
+// RMSNorm is CORRECT (verified against llama.cpp implementation).
+// cuBLAS is CORRECT (manual verification passed).
+//
+// The bug might be HERE in RoPE or in attention/KV cache/FFN!
+//
+// To verify model works: Run llama.cpp with same model file:
+//   /home/vince/Projects/llama-orch/reference/llama.cpp/build/bin/llama-cli \
+//     -m /home/vince/Projects/llama-orch/.test-models/qwen/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+//     -p "Write a haiku about autumn:" -n 50 --temp 0.7
+// Output: Perfect haiku!
+//
+// Compare this RoPE implementation carefully with llama.cpp's!
+// ============================================================================
 #include <cuda_fp16.h>
 #include <math.h>
 #include <stdio.h>

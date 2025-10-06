@@ -1,15 +1,12 @@
-/**
- * KV Cache Update Kernels
- * 
- * Kernels for updating KV cache during autoregressive generation.
- * 
- * Spec: M0-W-1421, CUDA-5341
- */
+// kv_cache.cu — KV Cache Management - LT-017
+//
+// Implements KV cache for efficient autoregressive generation.
+// Spec: M0-W-1214, CUDA-5341
+//
 
 #include "kv_cache.cuh"
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
-#include <stdio.h>
 
 namespace worker {
 namespace kernels {

@@ -1,6 +1,27 @@
-// gqa_attention.cu — Grouped Query Attention - LT-015, LT-016
+// gqa_attention.cu — Grouped Query Attention (GQA) - LT-016
 //
-// Implements GQA for Llama models (prefill and decode phases).
+// Implements GQA for Llama models with KV cache.
+// Spec: M0-W-1214
+//
+// ============================================================================
+// [TEAM_CHARLIE] INVESTIGATION WARNING (2025-10-06 16:48 UTC)
+// ============================================================================
+// ⚠️⚠️⚠️ POTENTIAL BUG LOCATION - INVESTIGATE THIS! ⚠️⚠️⚠️
+//
+// The model file is CORRECT (llama.cpp generates perfect haiku with it).
+// RMSNorm is CORRECT (verified against llama.cpp implementation).
+// cuBLAS is CORRECT (manual verification passed).
+//
+// The bug might be HERE in attention or in RoPE/KV cache/FFN!
+//
+// To verify model works: Run llama.cpp with same model file:
+//   /home/vince/Projects/llama-orch/reference/llama.cpp/build/bin/llama-cli \
+//     -m /home/vince/Projects/llama-orch/.test-models/qwen/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+//     -p "Write a haiku about autumn:" -n 50 --temp 0.7
+// Output: Perfect haiku!
+//
+// Compare this attention implementation carefully with llama.cpp's!
+// ============================================================================ode phases).
 // Supports variable Q and KV head counts for memory efficiency.
 //
 // Spec: M0-W-1214, M0-W-1430

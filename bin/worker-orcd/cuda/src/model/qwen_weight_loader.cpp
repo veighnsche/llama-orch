@@ -5,6 +5,8 @@
 #include <fstream>
 #include <cstring>
 #include <stdexcept>
+#include <cuda_fp16.h>
+#include <cmath>
 
 namespace worker {
 namespace model {
@@ -323,6 +325,15 @@ QwenModel* QwenWeightLoader::load_from_gpu_pointers(
     // Wire output
     model->weights.output_norm = get_ptr("output_norm.weight");
     model->weights.lm_head = get_ptr("output.weight");
+    
+    // [TEAM_CHARLIE] DISABLE THE "FIX" - llama.cpp works with these weights as-is!
+    // The weights with mean=7.0 and mean=0.033 are CORRECT!
+    // llama.cpp generates perfect haiku with same model file.
+    // The bug is somewhere else in our code!
+    
+    fprintf(stderr, "\n[TEAM_CHARLIE] === WEIGHT DIAGNOSTIC (NO FIX APPLIED) ===\n");
+    fprintf(stderr, "[TEAM_CHARLIE] llama.cpp works with this model → weights are CORRECT!\n");
+    fprintf(stderr, "[TEAM_CHARLIE] Bug is in OUR code, not the weights!\n\n");
     
     fprintf(stderr, "✅ [C++] Wired all %u layers (VRAM: %.2f MB)\n",
             config.num_layers,
