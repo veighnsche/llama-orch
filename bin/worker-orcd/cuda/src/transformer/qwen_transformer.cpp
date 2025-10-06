@@ -272,6 +272,14 @@ void QwenTransformer::forward_layer(
     float alpha = 1.0f;
     float beta = 0.0f;
     
+    // [TEAM FELICIA] 2025-10-06T21:57Z
+    // SUSPECT: Wrong cuBLAS parameter (CUBLAS_OP_N vs CUBLAS_OP_T) causes garbage output.
+    // HYPOTHESIS: llama.cpp uses CUBLAS_OP_T, maybe we should too.
+    // PLAN: Switch all 8 matrix multiplications to CUBLAS_OP_T and compare output.
+    // OBSERVED (before): Random garbage tokens [109602, 74293, 90046, 149712, 81101...]
+    // OBSERVED (after): Repeated tokens [71443, 71443, 71443, 71443, 71443...] → WORSE
+    // FALSE_FIX: CUBLAS_OP_T made repetition worse. Reverted. Bug remains unsolved.
+    // CONCLUSION: Our weight layout may differ from llama.cpp. Don't blindly copy their params.
     uint32_t q_dim = config_.num_heads * config_.head_dim;
     cublasGemmEx(cublas_handle_, CUBLAS_OP_N, CUBLAS_OP_N, q_dim, batch_size, config_.hidden_dim, &alpha, layer.attn_q_weight, CUDA_R_16F, q_dim, normed_half, CUDA_R_16F, config_.hidden_dim, &beta, q_half, CUDA_R_16F, q_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
     
@@ -721,6 +729,12 @@ void QwenTransformer::project_to_vocab(
     //   to avoid the 293 padding values. But cuBLAS must compute ALL 151936 positions!
     //
     // FIXED: Use padded_vocab_size for ALL dimensions (m, lda, ldc)
+    // [TEAM FELICIA] 2025-10-06T21:57Z
+    // SUSPECT: Final projection might use wrong cuBLAS parameters.
+    // HYPOTHESIS: Should use CUBLAS_OP_T like llama.cpp does.
+    // TESTED: Changed to CUBLAS_OP_T with lda=hidden_dim.
+    // RESULT: Made output WORSE (random garbage → stuck repetition).
+    // FALSE_FIX: Reverted. CUBLAS_OP_N is correct for our weight layout.
     cublasStatus_t status = cublasGemmEx(
         cublas_handle_,
         CUBLAS_OP_N, CUBLAS_OP_N,

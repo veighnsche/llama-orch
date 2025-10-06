@@ -119,6 +119,13 @@ void cuda_swiglu_forward(
     cublasCreate(&cublas_handle);
     cublasSetStream(cublas_handle, stream);
     
+    // [TEAM FELICIA] 2025-10-06T21:57Z
+    // SUSPECT: FFN projections might use wrong cuBLAS parameters.
+    // HYPOTHESIS: Should use CUBLAS_OP_T like llama.cpp does.
+    // TESTED: Changed all 3 FFN projections to CUBLAS_OP_T.
+    // RESULT: Made output WORSE (random garbage → stuck repetition).
+    // FALSE_FIX: Reverted. CUBLAS_OP_N is correct for our weight layout.
+    //
     // 1. Gate projection: gate_out = gate_weight @ input
     //    gate_weight in GGUF: [hidden_dim, ffn_dim] row-major → [ffn_dim, hidden_dim] col-major
     //    input: [hidden_dim, batch] col-major

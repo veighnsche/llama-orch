@@ -1,49 +1,48 @@
-# 🔎 Collaborative Bug & Inconsistency Hunt — Team BYGONE
+# 🔎 Collaborative Bug & Inconsistency Hunt — Team FELICIA
 
 **Mission:** Hunt down the **garbage output** bug.
 This is **not** an infra/pipeline issue. Assume weights/VRAM/kernels/IPC are fine unless proven otherwise.
-Your job is to **trace and fix model-logic or prompt/tokenization issues** that yield unreadable tokens.
+Your job is to **trace and fix any model-logic, tokenization, or other code issues** that produce unreadable output.
+Investigate wherever the evidence leads — just follow the hard rules below and document your thought process in code.
 
 ---
 
-## 🚦 Hard Rules (read first)
+## 🚦 Hard Rules
 
 1. **APPEND-ONLY COMMENTS**
 
-   * **Never overwrite or delete** any previous team’s comments.
-   * Always **append** your notes **beneath** the prior comment block.
+   * Never overwrite or delete previous teams’ comments.
+   * Always **append** your notes **beneath** the existing ones.
 
 2. **COMMENT EVERYTHING YOU THINK**
 
-   * Every suspicion you have while reading a line must be **written in the code right there**.
-   * Don’t keep thoughts in your head; **write the hypothesis, how you’ll test it, and what you learned**.
+   * Every hypothesis, hunch, or “maybe it’s this line” must be written **right there in the code**.
+   * Write what you’re thinking, how you plan to check it, and what you find.
+   * The next team should *never* have to re-think something you already considered.
 
 3. **CORRECT FALSE CLAIMS WITHOUT EDITING THEM**
 
-   * If a prior comment claims “FIXED” but it isn’t, **append** under it with `FALSE_FIX:` + proof.
-   * Do **not** edit their text.
+   * If a previous team claimed “FIXED” and it’s wrong, **append** `FALSE_FIX:` under their comment with proof (logs/test output).
+   * Do not rewrite their text.
 
 4. **NO CLI PIPING / INTERACTIVE SESSIONS**
 
-   * Do **not** pipe `llama-cli` output into `head`/`tail`. The CLI session is interactive and will hang.
-   * **Use the HTTP API** for probe runs (examples below).
+   * Stop doing this:
+
+     ```bash
+     ./build/bin/llama-cli -m ... -p "test" | grep ... | head
+     ```
+
+     It hangs because the CLI is **interactive**. You end up in a conversation loop waiting for user input.
+     → **Use the HTTP API**, not CLI pipes.
 
 5. **BLOCKING TESTS ONLY (FOREGROUND)**
 
-   * Always run tests **in the foreground** (blocking). **No background jobs**, or you will lose logs.
+   * Run tests in the **foreground**. No background jobs, no detached sessions. You’ll lose your logs and conclusions.
 
 ---
 
-## 🎯 Scope (narrow)
-
-* **Prompt & tokenization path:** role templating, BOS/EOS, special tokens, whitespace/newlines, chat template selection, tokenizer/model vocab consistency.
-* **Logits & projection correctness:** output_norm, final projection matrix, logits scaling/temperature, invalid byte-BPE handling, Unicode decoding.
-* **Sampling step:** top-k/p/temperature, repetition penalties, bad stop sequences producing junk.
-* **Explicitly out of scope:** pool manager, IPC, HTTP server boot, CUDA context wiring (unless you prove it corrupts logits).
-
----
-
-## 🧪 Verification (blocking, foreground)
+## 🧪 Verification
 
 **Primary (blocking):**
 
@@ -54,9 +53,9 @@ REQUIRE_REAL_LLAMA=1 cargo test --release --features cuda \
   -- --ignored --nocapture --test-threads=1
 ```
 
-Only mark **FIXED** if this **passes** and the output is **human-readable** (no mojibake / control glyph soup).
+* Only mark `FIXED` if this passes and the generated text is human-readable (no mojibake / control glyphs).
 
-**Probe via HTTP API (not CLI):**
+**HTTP probe (not CLI):**
 
 ```bash
 curl -sS -X POST http://localhost:{PORT}/execute \
@@ -68,113 +67,31 @@ curl -sS -X POST http://localhost:{PORT}/execute \
   }'
 ```
 
-Capture the **exact response text** in your comments when relevant.
+Capture the exact response text under `OBSERVED:` comments when relevant.
 
 ---
 
 ## 🗒️ Comment Protocol (append-only)
 
-Always tag with team + UTC time. **Never edit or delete earlier lines.**
+Tag with team + UTC time. Use these markers exactly:
 
-Use exactly these markers:
-
-* `SUSPECT:` your hypothesis and why (cite code path)
-* `PLAN:` how you’ll verify (what log/add/assert you’ll add)
-* `OBSERVED:` concrete output/logs from your probe/test
-* `FALSE_LEAD:` why the suspicion was wrong (and proof)
+* `SUSPECT:` your hypothesis + why
+* `PLAN:` how you’ll verify
+* `OBSERVED:` relevant logs/output
+* `FALSE_LEAD:` why this wasn’t the issue (and proof)
 * `CONTRADICTION:` spec/test/docs vs actual behavior
-* `FIXED:` what you changed + the single proof line (test green / decoded text looks human)
-* `FALSE_FIX:` prior team’s fix claim is wrong; attach proof (log excerpt)
+* `FIXED:` what you changed + one proof line (green test / human text)
+* `FALSE_FIX:` prior fix claim disproved, with evidence
 
-**Rust example**
-
-```rust
-// [TEAM {TEAM_NAME}] 2025-10-06T17:15Z
-// SUSPECT: Chat template inserts extra BOS and trailing newline → tokenizer emits junk byte-BPE early.
-// PLAN: Log final rendered prompt before tokenization; compare to llama.cpp template text.
-// OBSERVED: Rendered prompt ends with "<|im_start|>assistant\n\n" (double newline).
-// CONTRADICTION: Our README claims single newline before assistant.
-// FALSE_LEAD: Removing one newline did NOT fix mojibake; tokens still map to invalid UTF-8.
-// SUSPECT: Tokenizer/vocab mismatch (Qwen chat template vs loaded GGUF tokenizer metadata).
-```
-
-**C++ example**
-
-```cpp
-// [TEAM {TEAM_NAME}] 2025-10-06T17:22Z
-// SUSPECT: output_norm scale applied twice before final projection.
-// PLAN: Dump pre/post norm ranges; compare to expected RMS ~[2..4] not exploding to ~40.
-// OBSERVED: AFTER norm Std≈7.26 (too high), logits top-10 unstable across steps.
-// FALSE_FIX: Prior team claimed "norm values OK"—HTTP output still mojibake; see curl proof below.
-```
-
-**Markdown (spec) example**
-
-```md
-<!-- [TEAM {TEAM_NAME}] 2025-10-06T17:30Z
-SUSPECT: Spec §4.1 says BOS only if model requires; code path adds BOS unconditionally in chat mode.
-OBSERVED: Token IDs show duplicate BOS at positions 0 and 24.
-CONTRADICTION: GGUF tokenizer.chat_template expects single BOS.
--->
-```
+Never delete or overwrite someone else’s work.
 
 ---
 
-## 🔍 Minimal Workflow (what to actually do)
-
-1. **Open the exact code path** that constructs the final prompt string (before tokenization).
-
-   * Add a **temporary log** that dumps the **verbatim final prompt string**.
-2. **Compare against llama.cpp’s chat template rules** (role order, start/end tags, BOS/EOS, newlines).
-
-   * If you spot a discrepancy, **comment it immediately** (`SUSPECT` + `PLAN`), then check it.
-3. **Trace tokenization**
-
-   * Log the **first 50 token IDs** and attempt decoding to text; **paste** short snippets under `OBSERVED`.
-4. **Trace final-projection & sampling**
-
-   * Sanity-check logits scale (no wild spikes), temperature application, and decoding path.
-5. **Test in foreground**
-
-   * Run the primary test. If it’s still garbage, **append** `FALSE_FIX` under any earlier “fixed” claims and continue.
-6. **When you truly fix it**
-
-   * Append `FIXED:` with **one** proof line (green test or readable HTTP output). Do **not** erase any history.
-
----
-
-## 🧰 Practical probes (safe & quick)
-
-* **Render-only check (no gen):** add a mode/flag that prints the **final prompt string** + **token IDs** and exits.
-* **Tokenizer identity check:** round-trip a small ASCII prompt; ensure IDs decode back to the same text.
-* **Unicode sentinel:** include a known multi-byte char (e.g., “—”, “é”) and ensure decode survives.
-* **BOS/EOS audit:** ensure exactly one BOS at start (if required by template) and controlled EOS insertion.
-
----
-
-## ❗ Common traps (avoid wasting time)
-
-* Don’t assume weights are wrong if llama.cpp runs the same GGUF fine.
-* Don’t tweak CUDA, cuBLAS, or KV cache when the **symptom is mojibake text**.
-* Don’t background tests; you’ll miss the logs you need.
-* Don’t use `llama-cli | head`; **use the HTTP API** for deterministic captures.
-
----
-
-## ✅ Definition of Done (for this mission only)
-
-* The **garbage output stops**: generated text is readable and contains normal words.
-* The **primary test passes in the foreground**.
-* Your **append-only** comment trail captures your hypotheses, probes, and proof.
-* Any **premature “FIXED”** claims above your section have a **`FALSE_FIX:` append** with concrete evidence.
-
-Here’s the angry message you can drop in Slack/PR/issue:
-
----
+## 🔥 Angry PSA
 
 # 🚫 Stop doing `llama-cli | grep | head` — it. does. not. work.
 
-Whoever keeps pasting this:
+This garbage:
 
 ```bash
 ./build/bin/llama-cli \
@@ -182,36 +99,23 @@ Whoever keeps pasting this:
   -p "test" -n 1 --log-disable 2>&1 | grep -E "(im_start|im_end|bos|eos)" | head -20
 ```
 
-**Please stop.** This is why you think things are “broken”:
+**Does. Not. Work.**
+`llama-cli` starts an **interactive chat session**. Your pipe hangs waiting for a “user” reply, nothing flows to `grep`, `head` blocks forever, then you `Ctrl+C` and declare “broken.” You also disable the logs you’re grepping for. This is user error, not model error.
 
-* `llama-cli` starts a **chat session**. It’s an **interactive conversation**.
-  It **waits** for the next user turn. Your pipe is sitting there, and you’re sitting there, and now we’re all sitting there.
-* You keep trying to **grep a live TTY** stream. Guess what? It’s **blocked** waiting for input, so **nothing** reaches `grep`.
-  Then you slap `head` on it, and surprise: you’ve created a dead pipeline.
-* You also pass `--log-disable` and then try to grep for template markers. **You disabled the very logs you’re searching for.**
-* End result: you **Ctrl+C**, get zero output, and then declare, “not working” — and the AI pivots to random guesses.
-  It’s not the model. It’s the tooling misuse. Full stop.
+👉 Use the **HTTP API** for deterministic probe runs. Or add a proper debug print before tokenization.
 
-## ✅ Do this instead (non-interactive, deterministic)
+---
 
-**Use the HTTP API** for probe runs. It’s non-interactive, it returns JSON/text, and it’s scriptable.
+## ✅ Definition of Done
 
-```bash
-curl -sS -X POST http://localhost:<PORT>/execute \
-  -H 'content-type: application/json' \
-  -d '{
-    "prompt": "Write a haiku about GPU computing that includes the word \"forty-two\" (nonce: TEST)",
-    "max_tokens": 50,
-    "temperature": 0.7
-  }'
-```
+* Garbage output is gone → output is human-readable.
+* Primary test passes in the foreground.
+* Your **append-only** comment trail shows what you investigated, how you tested it, and what you found.
+* Any false “FIXED” claims are corrected with `FALSE_FIX:` and proof.
+* You didn’t overwrite anyone’s work.
 
-Want to see the **rendered prompt** and **token IDs**? Add debug logging in our code and **print them** before tokenization. Don’t try to scrape an interactive stream with `grep|head`.
+---
 
-## 🔒 Rules (no exceptions)
-
-* **No CLI piping** of `llama-cli` into `head`/`tail`/`grep` for investigations. It’s interactive; you will hang.
-* **Run tests in the foreground** so logs are captured and visible.
-* **Assume the bug is garbage output**, not infra. Stop “fixing” pool/IPC/KV when the symptom is mojibake text.
-
-If you absolutely must compare with `llama.cpp`, run it cleanly (no pipes), capture output to a file, and then analyze the file. Or better: stick to the HTTP API and our debug logs. This isn’t optional—this is how we stop wasting hours on self-inflicted “it’s not working” mirages.
+No scope narrowing. No artificial limits. Just rules, discipline, and a very clear understanding:
+👉 **Bug = garbage output.**
+👉 **Fix it, document your thought process, don’t erase history.**

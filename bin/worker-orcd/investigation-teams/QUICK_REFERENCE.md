@@ -38,6 +38,9 @@
 - ❌ Token embeddings (they're valid!)
 - ❌ Chat template format (matches llama.cpp!)
 - ❌ Tokenization approach (it's correct!)
+- ❌ Causal masking (already implemented implicitly!)
+- ❌ Prefill logic (processing one-at-a-time is correct!)
+- ❌ Hidden state range (minor deviation is normal!)
 
 ---
 

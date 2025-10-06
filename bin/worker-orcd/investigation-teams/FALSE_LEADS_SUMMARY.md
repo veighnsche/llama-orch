@@ -2,12 +2,13 @@
 
 **Purpose:** Save future teams time by documenting what has been VERIFIED CORRECT and what are FALSE LEADS.
 
-**Last Updated:** 2025-10-06 21:25 UTC (Team Purple)
+**Last Updated:** 2025-10-06 21:57 UTC (Team Felicia)
 
 ---
 
 ## ✅ What's VERIFIED CORRECT (Don't Re-Investigate!)
 
+### 1. cuBLAS Matrix Multiplication (Team Felicia)
 ### 1. Special Token IDs (Team Blue + Team Purple)
 **Status:** ✅ CORRECT
 
@@ -232,6 +233,50 @@ This matches token 151644's embedding exactly!
 
 ---
 
-**Remember:** If you find yourself investigating tokenization or embeddings, STOP and read this document first!
+### FALSE LEAD #5: Missing Causal Mask in Attention
+**Hypothesis:** Attention kernel doesn't implement causal masking, allowing model to see future tokens
+
+**Why it's wrong:**
+- Decode kernel only computes scores for positions 0..cache_len
+- cache_len is the current position
+- This IS causal masking - no future tokens are visible
+- The loop `for (int pos = tid; pos <= cache_len; ...)` only processes past+current
+
+**Time wasted:** Team BYGONE spent 15 minutes on this
+
+**Location:** `cuda/kernels/gqa_attention.cu` lines 253-263
+
+---
+
+### FALSE LEAD #6: Prefill Processing One Token at a Time
+**Hypothesis:** Processing prompt tokens sequentially (not all at once) corrupts context
+
+**Why it's wrong:**
+- This is the CORRECT way to do autoregressive prefill!
+- Each token should only see previous tokens (causal masking)
+- Token 0 sees itself, Token 1 sees 0+itself, Token 2 sees 0-1+itself
+- This is exactly how llama.cpp does it
+- Processing all tokens at once would violate causality
+
+**Time wasted:** Team BYGONE spent 10 minutes on this
+
+**Location:** `src/inference/cuda_backend.rs` lines 469-479
+
+---
+
+### FALSE LEAD #7: Hidden State Range Slightly Outside Bounds
+**Hypothesis:** Hidden state range [-20.4531, 20.7188] is outside expected [-20, 30]
+
+**Why it's wrong:**
+- The deviation is minimal (0.4531 below threshold)
+- This is likely normal variation for this model/prompt
+- llama.cpp probably has similar ranges
+- This alone doesn't explain garbage output (code tokens, foreign language)
+
+**Time wasted:** Team BYGONE spent 5 minutes on this
+
+---
+
+**Remember:** If you find yourself investigating tokenization, embeddings, causal masking, or prefill logic, STOP and read this document first!
 
 ---
