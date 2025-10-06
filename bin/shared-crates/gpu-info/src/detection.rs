@@ -70,7 +70,7 @@ fn detect_via_nvidia_smi() -> Result<GpuInfo> {
 
     // Execute nvidia-smi with absolute path
     let output = Command::new(&nvidia_smi_path)
-        .args(&[
+        .args([
             "--query-gpu=index,name,memory.total,memory.free,compute_cap,pci.bus_id",
             "--format=csv,noheader,nounits",
         ])
@@ -111,8 +111,7 @@ fn parse_nvidia_smi_output(output: &str) -> Result<GpuInfo> {
         }
 
         // Parse and validate index
-        let index = parts
-            .get(0)
+        let index = parts.first()
             .and_then(|s| s.parse::<u32>().ok())
             .ok_or_else(|| GpuError::NvidiaSmiParseFailed("Invalid GPU index".to_string()))?;
 

@@ -34,7 +34,7 @@ pub fn engine_status(config_path: PathBuf, pool_filter: Option<String>) -> Resul
         return Ok(());
     }
     for p in pools {
-        let port = p.provisioning.ports.as_ref().and_then(|v| v.get(0).cloned()).unwrap_or(8080);
+        let port = p.provisioning.ports.as_ref().and_then(|v| v.first().cloned()).unwrap_or(8080);
         let ok = http_health_probe("127.0.0.1", port).unwrap_or(false);
         let pid_path = pid_file_path(&p.id);
         let pid = std::fs::read_to_string(&pid_path).ok();

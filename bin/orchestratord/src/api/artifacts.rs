@@ -14,7 +14,7 @@ pub async fn create_artifact(
     state: State<AppState>,
     Json(doc): Json<serde_json::Value>,
 ) -> Result<impl IntoResponse, ErrO> {
-    let id = crate::services::artifacts::put(&*state, doc).map_err(|_| ErrO::Internal)?;
+    let id = crate::services::artifacts::put(&state, doc).map_err(|_| ErrO::Internal)?;
     let body = json!({
         "id": id,
         "kind": "doc",
@@ -26,7 +26,7 @@ pub async fn get_artifact(
     state: State<AppState>,
     axum::extract::Path(id): axum::extract::Path<String>,
 ) -> Result<impl IntoResponse, ErrO> {
-    if let Ok(Some(doc)) = crate::services::artifacts::get(&*state, &id) {
+    if let Ok(Some(doc)) = crate::services::artifacts::get(&state, &id) {
         let resp = (StatusCode::OK, Json(doc)).into_response();
         return Ok(resp);
     }

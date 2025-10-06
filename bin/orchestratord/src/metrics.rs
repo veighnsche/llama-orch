@@ -83,7 +83,7 @@ pub fn observe_histogram_throttled(
     let mut t = THROTTLE.lock().unwrap();
     let cnt = t.entry(key).or_insert(0);
     *cnt += 1;
-    if *cnt % every_n == 0 {
+    if (*cnt).is_multiple_of(every_n) {
         observe_histogram(name, labels, value_ms);
     }
 }
@@ -106,7 +106,7 @@ pub fn pre_register() {
         "orchd_node_deregistrations_total",
         "orchd_pool_health_checks_total",
     ] {
-        let _ = {
+        {
             let mut c = COUNTERS.lock().unwrap();
             c.entry(name.to_string()).or_default();
         };
@@ -122,7 +122,7 @@ pub fn pre_register() {
         "orchd_nodes_online",
         "orchd_pools_available",
     ] {
-        let _ = {
+        {
             let mut g = GAUGES.lock().unwrap();
             g.entry(name.to_string()).or_default();
         };
@@ -134,7 +134,7 @@ pub fn pre_register() {
         // Cloud profile metrics
         "orchd_pool_health_check_duration_ms",
     ] {
-        let _ = {
+        {
             let mut h = HISTOGRAMS.lock().unwrap();
             h.entry(name.to_string()).or_default();
         };
@@ -167,7 +167,7 @@ pub fn gather_metrics_text() -> String {
     out.push_str("# TYPE latency_first_token_ms histogram\n");
     out.push_str("# TYPE latency_decode_ms histogram\n");
     out.push_str("# TYPE orchd_pool_health_check_duration_ms histogram\n");
-    out.push_str("\n");
+    out.push('\n');
 
     let c = COUNTERS.lock().unwrap();
     for (name, series) in c.iter() {

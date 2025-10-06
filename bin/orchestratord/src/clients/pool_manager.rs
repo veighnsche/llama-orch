@@ -13,6 +13,7 @@ pub struct PoolManagerClient {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct PoolStatus {
     pub pool_id: String,
     pub live: bool,
@@ -28,18 +29,6 @@ pub struct HealthResponse {
     pub version: String,
 }
 
-impl Default for PoolStatus {
-    fn default() -> Self {
-        Self {
-            pool_id: String::new(),
-            live: false,
-            ready: false,
-            active_leases: 0,
-            slots_total: 0,
-            slots_free: 0,
-        }
-    }
-}
 
 impl PoolManagerClient {
     /// Create a new PoolManagerClient

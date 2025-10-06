@@ -41,7 +41,7 @@ impl axum::response::IntoResponse for OrchestratorError {
                 None,
                 None,
                 None,
-                engine_val.clone(),
+                engine_val,
             ),
             OrchestratorError::DeadlineUnmet => (
                 api::ErrorKind::DeadlineUnmet,
@@ -49,7 +49,7 @@ impl axum::response::IntoResponse for OrchestratorError {
                 None,
                 None,
                 None,
-                engine_val.clone(),
+                engine_val,
             ),
             OrchestratorError::PoolUnavailable => (
                 api::ErrorKind::PoolUnavailable,
@@ -57,7 +57,7 @@ impl axum::response::IntoResponse for OrchestratorError {
                 Some(true),
                 Some(1000),
                 Some("retry".to_string()),
-                engine_val.clone(),
+                engine_val,
             ),
             OrchestratorError::Internal => (
                 api::ErrorKind::Internal,
@@ -65,7 +65,7 @@ impl axum::response::IntoResponse for OrchestratorError {
                 None,
                 None,
                 None,
-                engine_val.clone(),
+                engine_val,
             ),
             OrchestratorError::AdmissionReject { policy_label, retry_after_ms } => {
                 if let Some(ms) = retry_after_ms {
@@ -84,7 +84,7 @@ impl axum::response::IntoResponse for OrchestratorError {
                     Some(true),
                     *retry_after_ms,
                     Some(policy_label.clone()),
-                    engine_val.clone(),
+                    engine_val,
                 )
             }
             OrchestratorError::QueueFullDropLru { retry_after_ms } => {
@@ -104,7 +104,7 @@ impl axum::response::IntoResponse for OrchestratorError {
                     Some(true),
                     *retry_after_ms,
                     Some("drop-lru".to_string()),
-                    engine_val.clone(),
+                    engine_val,
                 )
             }
         };

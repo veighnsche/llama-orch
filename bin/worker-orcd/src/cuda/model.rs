@@ -8,7 +8,6 @@ use super::context::Context;
 use super::error::CudaError;
 use super::ffi;
 use super::inference::Inference;
-use std::ffi::CString;
 
 /// Safe wrapper for loaded CUDA model
 ///
@@ -127,7 +126,7 @@ impl Model {
                 num_kv_heads,
                 context_length,
             )
-            .map_err(|e| CudaError::ModelLoadFailed(e))?
+            .map_err(CudaError::ModelLoadFailed)?
         };
 
         // VRAM is tracked inside load_model_from_rust

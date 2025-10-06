@@ -38,7 +38,7 @@
 //! See: `bin/shared-crates/audit-logging/README.md`
 
 use axum::{body::Body, http::Request, middleware::Next, response::Response};
-use http::{HeaderMap, StatusCode};
+use http::StatusCode;
 use tracing::{debug, warn};
 
 #[derive(Clone)]

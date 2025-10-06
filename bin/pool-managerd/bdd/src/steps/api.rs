@@ -50,7 +50,7 @@ pub async fn then_response_includes_field(world: &mut BddWorld, field: String) {
 pub async fn then_field_equals(world: &mut BddWorld, field: String, expected: String) {
     let body = world.last_body.as_ref().expect("no response body");
     let json: serde_json::Value = serde_json::from_str(body).expect("invalid json");
-    let actual = json.get(&field).expect(&format!("missing field: {}", field));
+    let actual = json.get(&field).unwrap_or_else(|| panic!("missing field: {}", field));
     assert_eq!(actual.as_str().unwrap(), expected);
 }
 
@@ -109,7 +109,7 @@ pub async fn then_error_contains(world: &mut BddWorld, expected: String) {
 pub async fn then_field_equals_bool(world: &mut BddWorld, field: String, expected: String) {
     let body = world.last_body.as_ref().expect("no response body");
     let json: serde_json::Value = serde_json::from_str(body).expect("invalid json");
-    let actual = json.get(&field).expect(&format!("missing field: {}", field));
+    let actual = json.get(&field).unwrap_or_else(|| panic!("missing field: {}", field));
 
     let expected_bool = match expected.as_str() {
         "true" => true,
@@ -124,7 +124,7 @@ pub async fn then_field_equals_bool(world: &mut BddWorld, field: String, expecte
 pub async fn then_field_equals_number(world: &mut BddWorld, field: String, expected: i64) {
     let body = world.last_body.as_ref().expect("no response body");
     let json: serde_json::Value = serde_json::from_str(body).expect("invalid json");
-    let actual = json.get(&field).expect(&format!("missing field: {}", field));
+    let actual = json.get(&field).unwrap_or_else(|| panic!("missing field: {}", field));
     assert_eq!(actual.as_i64().unwrap(), expected);
 }
 
@@ -132,6 +132,6 @@ pub async fn then_field_equals_number(world: &mut BddWorld, field: String, expec
 pub async fn then_field_is_null(world: &mut BddWorld, field: String) {
     let body = world.last_body.as_ref().expect("no response body");
     let json: serde_json::Value = serde_json::from_str(body).expect("invalid json");
-    let actual = json.get(&field).expect(&format!("missing field: {}", field));
+    let actual = json.get(&field).unwrap_or_else(|| panic!("missing field: {}", field));
     assert!(actual.is_null(), "field {} is not null", field);
 }

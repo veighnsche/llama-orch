@@ -21,8 +21,7 @@
 use super::{
     gpt::{GPTConfig, GPTWeightLoader},
     phi3::{Phi3Config, Phi3WeightLoader},
-    qwen::{QwenConfig, QwenWeightLoader},
-    AdapterForwardConfig, LlamaModelAdapter, ModelType,
+    qwen::{QwenConfig, QwenWeightLoader}, LlamaModelAdapter, ModelType,
 };
 use thiserror::Error;
 use worker_gguf::GGUFMetadata;

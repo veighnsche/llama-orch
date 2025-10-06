@@ -97,7 +97,7 @@ impl GPTConfig {
         }
 
         // Validate head dimension is integer
-        if self.embedding_length % self.attention_head_count != 0 {
+        if !self.embedding_length.is_multiple_of(self.attention_head_count) {
             return Err(format!(
                 "embedding_length ({}) must be divisible by attention_head_count ({})",
                 self.embedding_length, self.attention_head_count

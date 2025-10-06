@@ -27,7 +27,7 @@
 #![deny(clippy::panic)]
 #![deny(clippy::todo)]
 #![warn(clippy::indexing_slicing)]
-#![warn(clippy::integer_arithmetic)]
+#![warn(clippy::arithmetic_side_effects)]
 #![warn(clippy::cast_possible_truncation)]
 #![warn(clippy::cast_possible_wrap)]
 #![warn(clippy::missing_errors_doc)]
@@ -97,7 +97,7 @@ impl PlacementEngine {
                 .ok_or(PlacementError::NoWorkersAvailable)?,
             PlacementStrategy::LocalityAware => {
                 // TODO: Implement locality-aware selection
-                workers.get(0).ok_or(PlacementError::NoWorkersAvailable)?
+                workers.first().ok_or(PlacementError::NoWorkersAvailable)?
             }
         };
 

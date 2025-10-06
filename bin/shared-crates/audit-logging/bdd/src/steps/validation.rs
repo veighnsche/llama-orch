@@ -3,8 +3,7 @@
 //! This module provides Cucumber step definitions for BDD testing of audit event
 //! validation with focus on security (log injection prevention).
 
-use audit_logging::{ActorInfo, AuditEvent, AuthMethod, ResourceInfo};
-use chrono::Utc;
+use audit_logging::{AuditEvent, AuthMethod};
 use cucumber::{given, when};
 use std::net::IpAddr;
 

@@ -17,7 +17,7 @@ pub async fn get_session(
 ) -> Result<impl IntoResponse, ErrO> {
     let svc = services::session::SessionService::new(
         state.sessions.clone(),
-        std::sync::Arc::new(crate::infra::clock::SystemClock::default()),
+        std::sync::Arc::new(crate::infra::clock::SystemClock),
     );
     let entry = svc.get_or_create(&id);
     let body = json!({
@@ -38,7 +38,7 @@ pub async fn delete_session(
 ) -> Result<impl IntoResponse, ErrO> {
     let svc = services::session::SessionService::new(
         state.sessions.clone(),
-        std::sync::Arc::new(crate::infra::clock::SystemClock::default()),
+        std::sync::Arc::new(crate::infra::clock::SystemClock),
     );
     svc.delete(&id);
     Ok(StatusCode::NO_CONTENT)
@@ -175,7 +175,7 @@ pub async fn create_task(
     // Budget headers based on session info (best-effort)
     let svc = services::session::SessionService::new(
         state.sessions.clone(),
-        std::sync::Arc::new(crate::infra::clock::SystemClock::default()),
+        std::sync::Arc::new(crate::infra::clock::SystemClock),
     );
     let sess = svc.get_or_create(&body.session_id);
     let mut headers = HeaderMap::new();
@@ -209,7 +209,7 @@ pub async fn stream_task(
     // Seed budget headers (unknown session at this layer); consider mapping task->session later
     headers.insert("X-Budget-Time-Remaining-Ms", "0".parse().unwrap());
     headers.insert("X-Budget-Cost-Remaining", "0".parse().unwrap());
-    let sse = services::streaming::render_sse_for_task(&*state, id).await;
+    let sse = services::streaming::render_sse_for_task(&state, id).await;
     Ok((StatusCode::OK, headers, sse))
 }
 

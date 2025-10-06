@@ -43,6 +43,7 @@
 /// - Length check is constant-time (single comparison)
 /// - Byte-by-byte XOR with OR accumulation examines all bytes
 /// - Final comparison is constant-time (single comparison)
+#[must_use] 
 pub fn timing_safe_eq(a: &[u8], b: &[u8]) -> bool {
     // Early length check (constant time - single comparison)
     if a.len() != b.len() {

@@ -6,9 +6,7 @@
 // Spec: M0-W-1215
 // Story: GT-039
 
-use crate::cuda_ffi;
 use crate::model::GPTConfig;
-use std::sync::Arc;
 
 /// GPT inference adapter
 ///

@@ -4,7 +4,7 @@
 use crate::NarrationFields;
 
 #[cfg(feature = "otel")]
-use opentelemetry::trace::{SpanContext, TraceContextExt};
+use opentelemetry::trace::TraceContextExt;
 
 /// Extract trace context from current OpenTelemetry span.
 /// Returns (trace_id, span_id, parent_span_id) as hex strings.

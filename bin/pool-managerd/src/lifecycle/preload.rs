@@ -3,13 +3,8 @@
 //! Responsibility: Spawn engine processes using PreparedEngine from engine-provisioner,
 //! monitor health, write handoff files, and update registry when ready.
 
-use anyhow::{Context, Result};
-use std::fs::OpenOptions;
 use std::path::PathBuf;
-use std::process::{Command, Stdio};
-use std::time::Duration;
 
-use crate::registry::Registry;
 
 /// Outcome of preload operation
 #[derive(Debug, Clone)]

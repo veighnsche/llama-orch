@@ -31,7 +31,7 @@
 #![deny(clippy::expect_used)]
 #![deny(clippy::panic)]
 #![deny(clippy::indexing_slicing)]
-#![deny(clippy::integer_arithmetic)]
+#![deny(clippy::arithmetic_side_effects)]
 #![deny(clippy::cast_ptr_alignment)]
 #![deny(clippy::mem_forget)]
 #![deny(clippy::todo)]
@@ -85,6 +85,7 @@ pub struct BackpressurePolicy {
 }
 
 impl BackpressurePolicy {
+    #[must_use] 
     pub fn new(max_depth: usize) -> Self {
         Self {
             max_depth,
@@ -93,6 +94,7 @@ impl BackpressurePolicy {
     }
 
     /// Decide whether to admit request
+    #[must_use] 
     pub fn should_admit(&self, current_depth: usize, _priority: Priority) -> AdmissionDecision {
         let utilization = current_depth as f64 / self.max_depth as f64;
 

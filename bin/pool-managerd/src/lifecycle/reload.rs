@@ -2,10 +2,7 @@
 //!
 //! Spec: ORCH-3031, ORCH-3038, OC-CTRL-2003
 
-use anyhow::Result;
 
-use crate::lifecycle::{drain, preload};
-use crate::registry::Registry;
 // TODO: Remove PreparedEngine - migrating to worker-orcd
 // use provisioners_engine_provisioner::PreparedEngine;
 

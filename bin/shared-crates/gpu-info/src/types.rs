@@ -45,7 +45,7 @@ impl GpuInfo {
 
     /// Validate device index and return device
     pub fn validate_device(&self, device: u32) -> Result<&GpuDevice> {
-        self.devices.get(device as usize).ok_or_else(|| GpuError::InvalidDevice(device, self.count))
+        self.devices.get(device as usize).ok_or(GpuError::InvalidDevice(device, self.count))
     }
 
     /// Check if GPU is available for operations

@@ -106,7 +106,7 @@ impl InferenceBackend for CudaInferenceBackend {
         let num_heads = self.metadata.num_heads()? as u32;
         let num_kv_heads = self.metadata.num_kv_heads()? as u32;
         let context_length = self.metadata.context_length()? as u32;
-        let rope_freq_base = self.metadata.rope_freq_base().unwrap_or(10000.0) as f32;
+        let rope_freq_base = self.metadata.rope_freq_base().unwrap_or(10000.0);
 
         tracing::info!(
             "Model config: vocab={}, hidden={}, layers={}, heads={}, kv_heads={}",

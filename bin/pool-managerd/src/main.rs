@@ -15,7 +15,7 @@
 #![deny(clippy::expect_used)]
 #![deny(clippy::panic)]
 #![deny(clippy::indexing_slicing)]
-#![deny(clippy::integer_arithmetic)]
+#![deny(clippy::arithmetic_side_effects)]
 #![deny(clippy::cast_ptr_alignment)]
 #![deny(clippy::mem_forget)]
 #![deny(clippy::todo)]

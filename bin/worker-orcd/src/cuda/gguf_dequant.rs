@@ -118,7 +118,7 @@ pub unsafe fn dequantize_q4k_gpu(
     num_elements: usize,
 ) -> Result<*mut c_void, String> {
     // Validate input
-    if num_elements % 256 != 0 {
+    if !num_elements.is_multiple_of(256) {
         return Err(format!("Q4_K num_elements must be multiple of 256, got {}", num_elements));
     }
 
@@ -200,7 +200,7 @@ pub unsafe fn dequantize_q6k_gpu(
     num_elements: usize,
 ) -> Result<*mut c_void, String> {
     // Validate input
-    if num_elements % 256 != 0 {
+    if !num_elements.is_multiple_of(256) {
         return Err(format!("Q6_K num_elements must be multiple of 256, got {}", num_elements));
     }
 
@@ -282,7 +282,7 @@ pub unsafe fn dequantize_q5_0_gpu(
     num_elements: usize,
 ) -> Result<*mut c_void, String> {
     // Validate input
-    if num_elements % 32 != 0 {
+    if !num_elements.is_multiple_of(32) {
         return Err(format!("Q5_0 num_elements must be multiple of 32, got {}", num_elements));
     }
 
@@ -364,7 +364,7 @@ pub unsafe fn dequantize_q8_0_gpu(
     num_elements: usize,
 ) -> Result<*mut c_void, String> {
     // Validate input
-    if num_elements % 32 != 0 {
+    if !num_elements.is_multiple_of(32) {
         return Err(format!("Q8_0 num_elements must be multiple of 32, got {}", num_elements));
     }
 

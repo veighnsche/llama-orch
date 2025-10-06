@@ -2,7 +2,6 @@
 
 use crate::steps::world::BddWorld;
 use cucumber::{given, then, when};
-use pool_managerd::lifecycle::supervision::RestartRateLimiter;
 
 #[given(regex = r"^restart rate limit is (\d+) restarts per (\d+) seconds$")]
 pub async fn given_rate_limit(world: &mut BddWorld, max: u32, window: u64) {

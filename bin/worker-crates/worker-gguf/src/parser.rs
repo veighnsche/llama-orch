@@ -83,7 +83,7 @@ impl GGUFParser {
 
         // Parse tensor info section
         let mut tensors = Vec::with_capacity(tensor_count as usize);
-        let mut alignment_offset = 0u64;
+        let alignment_offset = 0u64;
 
         for _ in 0..tensor_count {
             let name = self.read_string()?;
@@ -104,7 +104,7 @@ impl GGUFParser {
         // aligned to 32 bytes
         let current_pos = self.file.stream_position()?;
         let alignment = 32u64;
-        let aligned_pos = ((current_pos + alignment - 1) / alignment) * alignment;
+        let aligned_pos = current_pos.div_ceil(alignment) * alignment;
 
         // Adjust all tensor offsets to be absolute file positions
         for tensor in &mut tensors {
@@ -121,7 +121,7 @@ impl GGUFParser {
         match value_type {
             0 | 1 => self.file.seek(SeekFrom::Current(1))?,
             2 | 3 => self.file.seek(SeekFrom::Current(2))?,
-            4 | 5 | 6 => self.file.seek(SeekFrom::Current(4))?,
+            4..=6 => self.file.seek(SeekFrom::Current(4))?,
             7 => self.file.seek(SeekFrom::Current(1))?,
             8 => {
                 self.read_string()?;
@@ -140,8 +140,8 @@ impl GGUFParser {
                     }
                     0 | 1 => self.file.seek(SeekFrom::Current(count as i64))?,
                     2 | 3 => self.file.seek(SeekFrom::Current((count * 2) as i64))?,
-                    4 | 5 | 6 => self.file.seek(SeekFrom::Current((count * 4) as i64))?,
-                    10 | 11 | 12 => self.file.seek(SeekFrom::Current((count * 8) as i64))?,
+                    4..=6 => self.file.seek(SeekFrom::Current((count * 4) as i64))?,
+                    10..=12 => self.file.seek(SeekFrom::Current((count * 8) as i64))?,
                     _ => {
                         return Err(GGUFError::InvalidValue(format!(
                             "Unknown array elem type: {}",
@@ -150,7 +150,7 @@ impl GGUFParser {
                     }
                 }
             }
-            10 | 11 | 12 => self.file.seek(SeekFrom::Current(8))?,
+            10..=12 => self.file.seek(SeekFrom::Current(8))?,
             _ => {
                 return Err(GGUFError::InvalidValue(format!("Unknown value type: {}", value_type)))
             }
@@ -239,12 +239,12 @@ impl GGUFParser {
                 self.file.seek(SeekFrom::Current((count * 2) as i64))?;
                 Ok(MetadataValue::Array { elem_type, count })
             }
-            4 | 5 | 6 => {
+            4..=6 => {
                 // u32/i32/f32 array - skip 4 bytes each
                 self.file.seek(SeekFrom::Current((count * 4) as i64))?;
                 Ok(MetadataValue::Array { elem_type, count })
             }
-            10 | 11 | 12 => {
+            10..=12 => {
                 // u64/i64/f64 array - skip 8 bytes each
                 self.file.seek(SeekFrom::Current((count * 8) as i64))?;
                 Ok(MetadataValue::Array { elem_type, count })

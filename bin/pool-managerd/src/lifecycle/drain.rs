@@ -6,7 +6,6 @@
 use anyhow::Result;
 use std::time::{Duration, Instant};
 
-use crate::lifecycle::preload;
 use crate::registry::Registry;
 
 /// Drain request with deadline

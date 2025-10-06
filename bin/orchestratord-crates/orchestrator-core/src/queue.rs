@@ -33,18 +33,22 @@ pub struct InMemoryQueue {
 }
 
 impl InMemoryQueue {
+    #[must_use] 
     pub fn with_capacity_policy(capacity: usize, policy: Policy) -> Self {
         Self { interactive: VecDeque::new(), batch: VecDeque::new(), capacity, policy }
     }
 
+    #[must_use] 
     pub fn len(&self) -> usize {
         self.interactive.len() + self.batch.len()
     }
 
+    #[must_use] 
     pub fn is_empty(&self) -> bool {
         self.interactive.is_empty() && self.batch.is_empty()
     }
 
+    #[must_use] 
     pub fn capacity(&self) -> usize {
         self.capacity
     }
@@ -84,6 +88,7 @@ impl InMemoryQueue {
         false
     }
 
+    #[must_use] 
     pub fn snapshot_priority(&self, prio: Priority) -> Vec<u32> {
         match prio {
             Priority::Interactive => self.interactive.iter().copied().collect(),

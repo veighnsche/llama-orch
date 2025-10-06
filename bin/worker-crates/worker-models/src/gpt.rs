@@ -81,7 +81,7 @@ impl GPTConfig {
         if self.num_heads == 0 {
             return Err(GPTError::InvalidConfig("num_heads must be > 0".to_string()));
         }
-        if self.hidden_dim % self.num_heads != 0 {
+        if !self.hidden_dim.is_multiple_of(self.num_heads) {
             return Err(GPTError::InvalidConfig(
                 "hidden_dim must be divisible by num_heads".to_string(),
             ));

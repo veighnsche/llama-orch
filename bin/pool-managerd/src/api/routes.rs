@@ -5,15 +5,14 @@ use axum::{
     http::StatusCode,
     middleware,
     response::Json,
-    routing::{get, post},
+    routing::get,
     Router,
 };
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::sync::{Arc, Mutex};
 
 use super::auth;
 use crate::core::registry::Registry;
-use crate::lifecycle::preload;
 // TODO: Remove PreparedEngine - migrating to worker-orcd
 // use provisioners_engine_provisioner::PreparedEngine;
 

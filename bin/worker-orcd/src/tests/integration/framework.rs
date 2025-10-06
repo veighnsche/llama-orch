@@ -97,7 +97,7 @@ impl WorkerTestHarness {
         });
 
         let process = Command::new(&binary_path)
-            .args(&[
+            .args([
                 "--worker-id",
                 &worker_id,
                 "--model",
@@ -130,7 +130,7 @@ impl WorkerTestHarness {
         let worker_id = format!("test-worker-mock-{}", port);
 
         let process = Command::new("target/debug/worker-orcd")
-            .args(&[
+            .args([
                 "--worker-id",
                 &worker_id,
                 "--port",

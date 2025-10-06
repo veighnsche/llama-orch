@@ -2,7 +2,6 @@
 
 use crate::steps::world::BddWorld;
 use cucumber::{given, then, when};
-use pool_managerd::lifecycle::supervision::CrashReason;
 
 #[given(regex = r"^supervision is enabled$")]
 pub async fn given_supervision_enabled(_world: &mut BddWorld) {

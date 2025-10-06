@@ -1,6 +1,6 @@
 //! BDD World for audit-logging tests
 
-use audit_logging::{ActorInfo, AuditEvent, AuditResult, AuthMethod};
+use audit_logging::{ActorInfo, AuditEvent, AuthMethod};
 use chrono::{DateTime, Utc};
 use cucumber::World;
 use std::net::IpAddr;

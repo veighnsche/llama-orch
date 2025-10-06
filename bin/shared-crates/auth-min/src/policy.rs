@@ -39,6 +39,7 @@ use crate::error::{AuthError, Result};
 /// assert!(!is_loopback_addr("192.168.1.1"));
 /// assert!(!is_loopback_addr("0.0.0.0:8080"));
 /// ```
+#[must_use] 
 pub fn is_loopback_addr(addr: &str) -> bool {
     // Validate input length to prevent DoS
     const MAX_ADDR_LEN: usize = 256;
@@ -193,6 +194,7 @@ pub fn enforce_startup_bind_policy(bind_addr: &str) -> Result<()> {
 /// // Cleanup
 /// std::env::remove_var("TRUST_PROXY_AUTH");
 /// ```
+#[must_use] 
 pub fn trust_proxy_auth() -> bool {
     std::env::var("TRUST_PROXY_AUTH")
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))

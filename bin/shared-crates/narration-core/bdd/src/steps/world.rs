@@ -5,6 +5,7 @@ use std::collections::HashMap;
 
 // CaptureAdapter doesn't implement Debug, so we manually implement it for World
 #[derive(cucumber::World)]
+#[derive(Default)]
 pub struct World {
     // Capture adapter for assertions
     pub adapter: Option<CaptureAdapter>,
@@ -47,22 +48,3 @@ impl std::fmt::Debug for World {
     }
 }
 
-impl Default for World {
-    fn default() -> Self {
-        Self {
-            adapter: None,
-            fields: NarrationFields::default(),
-            redaction_policy: None,
-            headers: HashMap::new(),
-            extracted_correlation_id: None,
-            extracted_trace_id: None,
-            extracted_span_id: None,
-            extracted_parent_span_id: None,
-            redaction_input: String::new(),
-            redaction_output: String::new(),
-            service_identity: String::new(),
-            timestamp_1: 0,
-            timestamp_2: 0,
-        }
-    }
-}

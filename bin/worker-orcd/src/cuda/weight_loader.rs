@@ -21,7 +21,6 @@ use std::collections::HashMap;
 use std::ffi::c_void;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
-use std::path::Path;
 use std::sync::Mutex;
 use worker_gguf::{GGUFMetadata, TensorMetadata};
 
@@ -126,7 +125,7 @@ impl TensorInfo {
         let num_elements = self.num_elements();
         let block_size = self.ggml_type.block_size();
         let block_bytes = self.ggml_type.block_bytes();
-        let num_blocks = (num_elements + block_size - 1) / block_size;
+        let num_blocks = num_elements.div_ceil(block_size);
         num_blocks * block_bytes
     }
 }

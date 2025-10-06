@@ -1,5 +1,4 @@
 use axum::body::{to_bytes, Body};
-use serde_json::json;
 
 use http::header::HeaderName;
 use orchestratord::state::AppState;

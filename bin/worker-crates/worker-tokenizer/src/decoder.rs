@@ -62,14 +62,13 @@ impl BPEDecoder {
 
         for &id in token_ids {
             // Skip special tokens if requested
-            if skip_special_tokens {
-                if id == self.vocab.bos_token_id
+            if skip_special_tokens
+                && (id == self.vocab.bos_token_id
                     || id == self.vocab.eos_token_id
-                    || Some(id) == self.vocab.pad_token_id
+                    || Some(id) == self.vocab.pad_token_id)
                 {
                     continue;
                 }
-            }
 
             // Lookup token
             match self.vocab.get_token(id) {

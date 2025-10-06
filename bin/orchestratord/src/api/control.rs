@@ -3,9 +3,8 @@
 // See: bin/shared-crates/AUDIT_LOGGING_REMINDER.md
 
 use axum::{extract::State, response::IntoResponse, Json};
-use http::{HeaderMap, StatusCode};
+use http::StatusCode;
 use serde_json::json;
-use std::sync::Arc;
 
 use crate::domain::error::OrchestratorError as ErrO;
 use crate::state::AppState;
@@ -100,7 +99,7 @@ pub async fn register_worker(
     // Authentication already handled by bearer_auth_middleware
     // Log the registration event
     let mut lg = state.logs.lock().unwrap();
-    lg.push(format!("{{\"event\":\"worker_register\"}}"));
+    lg.push("{\"event\":\"worker_register\"}".to_string());
 
     // For scaffolding: bind a mock adapter for the provided pool
     let pool_id =

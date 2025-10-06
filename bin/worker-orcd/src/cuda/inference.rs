@@ -84,7 +84,7 @@ impl Inference {
             )));
         }
 
-        if temperature < 0.0 || temperature > 2.0 {
+        if !(0.0..=2.0).contains(&temperature) {
             return Err(CudaError::InvalidParameter(format!(
                 "temperature must be 0.0-2.0, got {}",
                 temperature

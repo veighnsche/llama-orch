@@ -53,7 +53,7 @@ async fn given_systemd_credential(world: &mut BddWorld, name: String) {
 #[when("I load the secret from file")]
 async fn when_load_secret_from_file(world: &mut BddWorld) {
     // Create a temporary file with the specified content and permissions
-    let content = world.secret_value.as_ref().map(|s| s.as_str()).unwrap_or("default-test-secret");
+    let content = world.secret_value.as_deref().unwrap_or("default-test-secret");
 
     let temp_dir = TempDir::new().unwrap();
     let file_path = temp_dir.path().join("secret");

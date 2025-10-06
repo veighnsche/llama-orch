@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use tempfile::TempDir;
 
 #[derive(World)]
+#[derive(Default)]
 pub struct BddWorld {
     /// Last operation result
     pub last_result: Option<Result<()>>,
@@ -50,26 +51,6 @@ pub struct BddWorld {
     pub credentials_dir_set: bool,
 }
 
-impl Default for BddWorld {
-    fn default() -> Self {
-        Self {
-            last_result: None,
-            last_error: None,
-            secret_path: None,
-            file_mode: None,
-            secret_value: None,
-            secret_loaded: None,
-            verify_input: None,
-            verify_result: None,
-            token: None,
-            domain: None,
-            derived_key: None,
-            credential_name: None,
-            temp_dir: None,
-            credentials_dir_set: false,
-        }
-    }
-}
 
 impl Drop for BddWorld {
     fn drop(&mut self) {

@@ -42,7 +42,7 @@
 #![deny(clippy::panic)]
 #![deny(clippy::todo)]
 #![warn(clippy::indexing_slicing)]
-#![warn(clippy::integer_arithmetic)]
+#![warn(clippy::arithmetic_side_effects)]
 #![warn(clippy::cast_possible_truncation)]
 #![warn(clippy::cast_possible_wrap)]
 #![warn(clippy::missing_errors_doc)]

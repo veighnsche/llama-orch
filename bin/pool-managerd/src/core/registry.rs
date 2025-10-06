@@ -346,12 +346,8 @@ impl Registry {
     /// Explicitly register a pool. Returns true if newly inserted.
     pub fn register(&mut self, pool_id: impl Into<String>) -> bool {
         let id = pool_id.into();
-        if self.pools.contains_key(&id) {
-            false
-        } else {
-            self.pools.insert(
-                id,
-                PoolEntry {
+        if let std::collections::hash_map::Entry::Vacant(e) = self.pools.entry(id) {
+            e.insert(PoolEntry {
                     health: HealthStatus { live: false, ready: false },
                     last_heartbeat_ms: None,
                     version: None,
@@ -365,9 +361,10 @@ impl Registry {
                     slots_free: None,
                     perf_hints: None,
                     draining: false,
-                },
-            );
+                });
             true
+        } else {
+            false
         }
     }
 
