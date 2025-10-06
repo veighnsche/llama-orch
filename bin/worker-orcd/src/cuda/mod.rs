@@ -45,12 +45,7 @@ pub use inference::Inference;
 pub use model::Model;
 pub use real_inference::RealInference;
 pub use weight_loader::{
-    load_tensor, 
-    load_tensor_gpu,
-    load_weights_to_gpu, 
-    load_model_from_rust,
-    TensorInfo, 
-    GGMLType
+    load_model_from_rust, load_tensor, load_tensor_gpu, load_weights_to_gpu, GGMLType, TensorInfo,
 };
 
 #[cfg(test)]

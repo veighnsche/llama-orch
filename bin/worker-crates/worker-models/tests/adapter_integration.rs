@@ -17,7 +17,7 @@ use worker_models::{
 fn test_adapter_unified_interface_qwen() {
     common::init_test_env();
     announce_stub_mode!("test_adapter_unified_interface_qwen");
-    
+
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
     let adapter = LlamaModelAdapter::new_qwen(model);

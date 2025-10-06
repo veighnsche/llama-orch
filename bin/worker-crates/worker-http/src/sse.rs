@@ -258,7 +258,7 @@ mod tests {
         let cancelled = StopReason::Cancelled;
         let json = serde_json::to_string(&cancelled).unwrap();
         assert_eq!(json, "\"CANCELLED\"");
-        
+
         let eos = StopReason::Eos;
         let json = serde_json::to_string(&eos).unwrap();
         assert_eq!(json, "\"EOS\"");

@@ -26,9 +26,9 @@
 
 mod parser;
 
+use parser::GGUFParser;
 use std::collections::HashMap;
 use thiserror::Error;
-use parser::GGUFParser;
 
 // Re-export tensor metadata
 pub use parser::TensorMetadata;
@@ -106,7 +106,7 @@ impl GGUFMetadata {
         let metadata = parser.parse()?;
         Ok(Self { metadata })
     }
-    
+
     /// Parse tensor metadata from GGUF file
     ///
     /// # Arguments
@@ -214,7 +214,7 @@ impl GGUFMetadata {
             false
         }
     }
-    
+
     /// Get tokenizer tokens array
     ///
     /// Extracts the vocabulary from GGUF metadata.
@@ -225,7 +225,7 @@ impl GGUFMetadata {
             _ => Err(GGUFError::MissingKey("tokenizer.ggml.tokens".to_string())),
         }
     }
-    
+
     /// Get tokenizer merges array
     ///
     /// Extracts BPE merge rules from GGUF metadata.
@@ -235,7 +235,7 @@ impl GGUFMetadata {
             _ => Err(GGUFError::MissingKey("tokenizer.ggml.merges".to_string())),
         }
     }
-    
+
     /// Get BOS (Beginning of Sequence) token ID
     pub fn bos_token_id(&self) -> Result<u32, GGUFError> {
         match self.metadata.get("tokenizer.ggml.bos_token_id") {
@@ -243,7 +243,7 @@ impl GGUFMetadata {
             _ => Err(GGUFError::MissingKey("tokenizer.ggml.bos_token_id".to_string())),
         }
     }
-    
+
     /// Get EOS (End of Sequence) token ID
     pub fn eos_token_id(&self) -> Result<u32, GGUFError> {
         match self.metadata.get("tokenizer.ggml.eos_token_id") {
@@ -353,10 +353,7 @@ mod tests {
         ));
 
         // Int value
-        assert!(matches!(
-            metadata.metadata.get("llama.vocab_size"),
-            Some(MetadataValue::Int(_))
-        ));
+        assert!(matches!(metadata.metadata.get("llama.vocab_size"), Some(MetadataValue::Int(_))));
 
         // Float value
         assert!(matches!(
@@ -438,10 +435,7 @@ mod tests {
     fn test_metadata_clone() {
         let metadata = GGUFMetadata::from_file("qwen-2.5-0.5b.gguf").unwrap();
         let cloned = metadata.clone();
-        assert_eq!(
-            metadata.architecture().unwrap(),
-            cloned.architecture().unwrap()
-        );
+        assert_eq!(metadata.architecture().unwrap(), cloned.architecture().unwrap());
         assert_eq!(metadata.vocab_size().unwrap(), cloned.vocab_size().unwrap());
     }
 

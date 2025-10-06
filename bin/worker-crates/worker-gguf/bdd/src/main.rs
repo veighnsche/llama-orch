@@ -9,7 +9,5 @@ use steps::GGUFWorld;
 
 #[tokio::main]
 async fn main() {
-    GGUFWorld::cucumber()
-        .run_and_exit("tests/features")
-        .await;
+    GGUFWorld::cucumber().run_and_exit("tests/features").await;
 }

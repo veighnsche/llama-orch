@@ -7,9 +7,14 @@
 
 use worker_orcd::models::gpt::{GPTConfig, GPTForward, GPTForwardConfig, GPTWeightLoader};
 
+mod common;
+
+
 /// Integration test: GPT-2 model loading
 #[test]
 fn test_gpt2_model_loading() {
+    common::init_test_env();
+    announce_stub_mode!("test_gpt2_model_loading");
     let config = GPTConfig::gpt2_small();
     let model = GPTWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
 
@@ -43,6 +48,8 @@ fn test_gpt2_config_presets() {
 /// Integration test: GPT forward pass (stub)
 #[test]
 fn test_gpt_forward_pass() {
+    common::init_test_env();
+    announce_stub_mode!("test_gpt_forward_pass");
     let config = GPTConfig::gpt2_small();
     let model = GPTWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
 
@@ -63,6 +70,8 @@ fn test_gpt_forward_pass() {
 /// Integration test: GPT generation (stub)
 #[test]
 fn test_gpt_generation() {
+    common::init_test_env();
+    announce_stub_mode!("test_gpt_generation");
     let config = GPTConfig::gpt2_small();
     let model = GPTWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
 
@@ -104,6 +113,8 @@ fn test_gpt_vram_calculation() {
 /// Integration test: GPT decode (stub)
 #[test]
 fn test_gpt_decode() {
+    common::init_test_env();
+    announce_stub_mode!("test_gpt_decode");
     let config = GPTConfig::gpt2_small();
     let model = GPTWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
 
@@ -124,6 +135,8 @@ fn test_gpt_decode() {
 /// Integration test: GPT temperature sweep
 #[test]
 fn test_gpt_temperature_sweep() {
+    common::init_test_env();
+    announce_stub_mode!("test_gpt_temperature_sweep");
     let config = GPTConfig::gpt2_small();
     let model = GPTWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
 

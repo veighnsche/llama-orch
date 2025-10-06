@@ -22,7 +22,7 @@ async fn when_encode(world: &mut TokenizerWorld) {
     // Stub: Encoding would require actual tokenizer
     // For BDD testing without model files, we simulate the behavior
     let text = world.input_text.as_ref().expect("no input text");
-    
+
     // Simulate token count based on text complexity
     let token_count = if text.contains("世界") || text.contains("🌍") {
         // Complex UTF-8 text
@@ -31,7 +31,7 @@ async fn when_encode(world: &mut TokenizerWorld) {
         // Simple text
         3 // "Hello, world!" -> ["Hello", ",", "world", "!"] but simplified to 3
     };
-    
+
     world.encoded_tokens = Some((0..token_count).map(|i| i as u32).collect());
 }
 
@@ -62,7 +62,7 @@ async fn then_utf8_safe(world: &mut TokenizerWorld) {
     let text = world.input_text.as_ref().expect("no input text");
     assert!(text.is_char_boundary(0), "text must start at char boundary");
     assert!(text.is_char_boundary(text.len()), "text must end at char boundary");
-    
+
     // Verify all characters are valid UTF-8
     for c in text.chars() {
         assert!(c.len_utf8() > 0, "invalid UTF-8 character");

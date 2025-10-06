@@ -1,7 +1,7 @@
 //! Correlation ID Middleware Tests - FT-004
 //!
 //! Tests for correlation ID middleware functionality.
-//! 
+//!
 //! Note: These tests validate the correlation ID middleware pattern.
 //! Actual middleware implementation is in src/http/middleware.rs
 
@@ -18,7 +18,7 @@ fn test_correlation_id_uniqueness_pattern() {
     // Test that UUIDs are unique
     use std::collections::HashSet;
     let mut ids = HashSet::new();
-    
+
     // Simulate generating multiple IDs
     for i in 0..100 {
         let id = format!("test-{:032x}", i);
@@ -38,7 +38,7 @@ fn test_correlation_id_preservation_logic() {
     // Test logic for preserving existing IDs
     let existing_id = Some("existing-123");
     let new_id = "new-456";
-    
+
     let result = existing_id.unwrap_or(new_id);
     assert_eq!(result, "existing-123");
 }
@@ -48,7 +48,7 @@ fn test_correlation_id_generation_logic() {
     // Test logic for generating new IDs when missing
     let existing_id: Option<&str> = None;
     let new_id = "new-456";
-    
+
     let result = existing_id.unwrap_or(new_id);
     assert_eq!(result, "new-456");
 }

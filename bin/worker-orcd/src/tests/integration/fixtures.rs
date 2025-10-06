@@ -30,7 +30,7 @@ impl TestModel {
             vocab_size: 151936,
         }
     }
-    
+
     /// Mock model for fast tests (no real file needed)
     pub fn mock() -> Self {
         Self {
@@ -42,7 +42,7 @@ impl TestModel {
             vocab_size: 1000,
         }
     }
-    
+
     /// Check if model file exists
     pub fn exists(&self) -> bool {
         self.path.exists()
@@ -60,29 +60,17 @@ pub struct TestConfig {
 impl TestConfig {
     /// Default test configuration
     pub fn default() -> Self {
-        Self {
-            gpu_device: 0,
-            timeout_secs: 30,
-            max_tokens: 10,
-        }
+        Self { gpu_device: 0, timeout_secs: 30, max_tokens: 10 }
     }
-    
+
     /// Fast test configuration (small max_tokens)
     pub fn fast() -> Self {
-        Self {
-            gpu_device: 0,
-            timeout_secs: 10,
-            max_tokens: 5,
-        }
+        Self { gpu_device: 0, timeout_secs: 10, max_tokens: 5 }
     }
-    
+
     /// Long test configuration (large max_tokens)
     pub fn long() -> Self {
-        Self {
-            gpu_device: 0,
-            timeout_secs: 60,
-            max_tokens: 100,
-        }
+        Self { gpu_device: 0, timeout_secs: 60, max_tokens: 100 }
     }
 }
 
@@ -94,22 +82,22 @@ impl TestPrompts {
     pub fn simple() -> &'static str {
         "Hello"
     }
-    
+
     /// Short prompt that should generate quickly
     pub fn short() -> &'static str {
         "Write a haiku"
     }
-    
+
     /// Longer prompt for prefill testing
     pub fn long() -> &'static str {
         "Write a detailed explanation of how transformers work in machine learning"
     }
-    
+
     /// Prompt for JSON generation (with stop sequences)
     pub fn json() -> &'static str {
         "Generate a JSON object with name and age fields"
     }
-    
+
     /// Prompt for testing stop sequences
     pub fn with_stop() -> &'static str {
         "Count from 1 to 10"

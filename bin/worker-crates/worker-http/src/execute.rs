@@ -52,9 +52,9 @@ pub async fn handle_execute<B: InferenceBackend>(
                 code: "INFERENCE_FAILED".to_string(),
                 message: e.to_string(),
             }];
-            let stream: EventStream = Box::new(stream::iter(events).map(|event| {
-                Ok(Event::default().json_data(&event).unwrap())
-            }));
+            let stream: EventStream = Box::new(
+                stream::iter(events).map(|event| Ok(Event::default().json_data(&event).unwrap())),
+            );
             return Ok(Sse::new(stream));
         }
     };
@@ -69,10 +69,7 @@ pub async fn handle_execute<B: InferenceBackend>(
     }];
 
     for (i, token) in result.tokens.iter().enumerate() {
-        events.push(InferenceEvent::Token {
-            t: token.clone(),
-            i: i as u32,
-        });
+        events.push(InferenceEvent::Token { t: token.clone(), i: i as u32 });
     }
 
     events.push(InferenceEvent::End {
@@ -82,9 +79,8 @@ pub async fn handle_execute<B: InferenceBackend>(
         stop_sequence_matched: result.stop_sequence_matched,
     });
 
-    let stream: EventStream = Box::new(stream::iter(events).map(|event| {
-        Ok(Event::default().json_data(&event).unwrap())
-    }));
+    let stream: EventStream =
+        Box::new(stream::iter(events).map(|event| Ok(Event::default().json_data(&event).unwrap())));
 
     Ok(Sse::new(stream))
 }

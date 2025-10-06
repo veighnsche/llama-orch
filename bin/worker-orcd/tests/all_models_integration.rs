@@ -4,7 +4,9 @@
 //! Tests that both Llama and GPT architectures work correctly.
 
 use worker_orcd::models::{AdapterFactory, AdapterForwardConfig, ModelType};
-use worker_orcd::tests::integration::{collect_sse_events, extract_tokens, make_test_request, WorkerTestHarness};
+use worker_orcd::tests::integration::{
+    collect_sse_events, extract_tokens, make_test_request, WorkerTestHarness,
+};
 
 // FT-041: All Models Integration Test
 // Tests that all supported models work correctly with the adapter pattern
@@ -16,7 +18,7 @@ fn test_all_models_load() {
         ("phi-3-mini.gguf", ModelType::Phi3),
         ("gpt2-small.gguf", ModelType::GPT2),
     ];
-    
+
     for (path, expected_type) in models {
         let adapter = AdapterFactory::from_gguf(path).unwrap();
         assert_eq!(adapter.model_type(), expected_type);
@@ -33,26 +35,21 @@ async fn test_all_models_e2e() {
         ".test-models/qwen/qwen2.5-0.5b-instruct-q4_k_m.gguf",
         ".test-models/gpt/gpt-oss-20b-mxfp4.gguf",
     ];
-    
+
     for model_path in models {
         println!("\nTesting model: {}", model_path);
-        
-        let harness = WorkerTestHarness::start(model_path, 0)
-            .await
-            .expect("Failed to start worker");
-        
-        let req = make_test_request(
-            &format!("test-{}", model_path),
-            "Count to three",
-            20
-        );
-        
+
+        let harness =
+            WorkerTestHarness::start(model_path, 0).await.expect("Failed to start worker");
+
+        let req = make_test_request(&format!("test-{}", model_path), "Count to three", 20);
+
         let response = harness.execute(req).await.expect("Execute failed");
         let events = collect_sse_events(response).await.expect("Failed to collect events");
-        
+
         let tokens = extract_tokens(&events);
         assert!(!tokens.is_empty(), "Model {} generated no tokens", model_path);
-        
+
         println!("✅ Model {} generated {} tokens", model_path, tokens.len());
     }
 }
@@ -64,7 +61,7 @@ fn test_all_models_generate() {
         AdapterFactory::from_gguf("phi-3-mini.gguf").unwrap(),
         AdapterFactory::from_gguf("gpt2-small.gguf").unwrap(),
     ];
-    
+
     let input_ids = vec![1, 2, 3];
     let config = AdapterForwardConfig {
         is_prefill: true,
@@ -74,7 +71,7 @@ fn test_all_models_generate() {
         temperature: 1.0,
         seed: 42,
     };
-    
+
     for adapter in &models {
         let output = adapter.generate(&input_ids, 10, &config).unwrap();
         assert_eq!(output.len(), input_ids.len() + 10);
@@ -88,7 +85,7 @@ fn test_all_models_deterministic() {
         AdapterFactory::from_gguf("phi-3-mini.gguf").unwrap(),
         AdapterFactory::from_gguf("gpt2-small.gguf").unwrap(),
     ];
-    
+
     let input_ids = vec![1, 2, 3];
     let config = AdapterForwardConfig {
         is_prefill: true,
@@ -98,7 +95,7 @@ fn test_all_models_deterministic() {
         temperature: 1.0,
         seed: 42,
     };
-    
+
     for adapter in &models {
         let output1 = adapter.generate(&input_ids, 5, &config).unwrap();
         let output2 = adapter.generate(&input_ids, 5, &config).unwrap();
@@ -108,16 +105,12 @@ fn test_all_models_deterministic() {
 
 #[test]
 fn test_all_models_vram_usage() {
-    let models = vec![
-        "qwen-2.5-0.5b.gguf",
-        "phi-3-mini.gguf",
-        "gpt2-small.gguf",
-    ];
-    
+    let models = vec!["qwen-2.5-0.5b.gguf", "phi-3-mini.gguf", "gpt2-small.gguf"];
+
     for path in models {
         let adapter = AdapterFactory::from_gguf(path).unwrap();
         let vram = adapter.vram_usage().unwrap();
-        
+
         // Just verify VRAM is reported and reasonable (> 0, < 100GB)
         assert!(vram > 0, "VRAM usage should be > 0");
         assert!(vram < 100_000_000_000, "VRAM usage should be < 100GB");
@@ -128,7 +121,7 @@ fn test_all_models_vram_usage() {
 fn test_all_models_temperature_sweep() {
     let adapter = AdapterFactory::from_gguf("qwen-2.5-0.5b.gguf").unwrap();
     let input_ids = vec![1, 2, 3];
-    
+
     for temp in [0.1, 0.5, 1.0, 1.5, 2.0] {
         let config = AdapterForwardConfig {
             is_prefill: true,
@@ -138,7 +131,7 @@ fn test_all_models_temperature_sweep() {
             temperature: temp,
             seed: 42,
         };
-        
+
         let result = adapter.generate(&input_ids, 5, &config);
         assert!(result.is_ok(), "Failed with temperature {}", temp);
     }
@@ -150,7 +143,7 @@ fn test_all_models_long_generation() {
         AdapterFactory::from_gguf("qwen-2.5-0.5b.gguf").unwrap(),
         AdapterFactory::from_gguf("gpt2-small.gguf").unwrap(),
     ];
-    
+
     let input_ids = vec![1, 2, 3];
     let config = AdapterForwardConfig {
         is_prefill: true,
@@ -160,7 +153,7 @@ fn test_all_models_long_generation() {
         temperature: 1.0,
         seed: 42,
     };
-    
+
     for adapter in &models {
         let output = adapter.generate(&input_ids, 100, &config).unwrap();
         assert_eq!(output.len(), input_ids.len() + 100);

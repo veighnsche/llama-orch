@@ -5,8 +5,8 @@ mod world;
 pub use world::ModelsWorld;
 
 use cucumber::{given, then, when};
-use worker_models::{AdapterFactory, ModelType};
 use worker_gguf::GGUFMetadata;
+use worker_models::{AdapterFactory, ModelType};
 
 #[given(expr = "a GGUF file {string}")]
 async fn given_gguf_file(world: &mut ModelsWorld, filename: String) {
@@ -41,15 +41,15 @@ async fn then_architecture_is(world: &mut ModelsWorld, expected: String) {
 async fn then_adapter_is(world: &mut ModelsWorld, expected_type: String) {
     assert!(world.adapter_created, "adapter not created");
     let model_type = world.model_type.expect("model type not set");
-    
+
     // Check if model type matches the architecture family
     match (expected_type.as_str(), model_type) {
-        ("LlamaAdapter", ModelType::Qwen2_5) => {},
-        ("LlamaAdapter", ModelType::Phi3) => {},
-        ("LlamaAdapter", ModelType::Llama2) => {},
-        ("LlamaAdapter", ModelType::Llama3) => {},
-        ("GPTAdapter", ModelType::GPT2) => {},
-        ("GPTAdapter", ModelType::GPT3) => {},
+        ("LlamaAdapter", ModelType::Qwen2_5) => {}
+        ("LlamaAdapter", ModelType::Phi3) => {}
+        ("LlamaAdapter", ModelType::Llama2) => {}
+        ("LlamaAdapter", ModelType::Llama3) => {}
+        ("GPTAdapter", ModelType::GPT2) => {}
+        ("GPTAdapter", ModelType::GPT3) => {}
         _ => panic!("Model type mismatch: expected {} but got {:?}", expected_type, model_type),
     }
 }

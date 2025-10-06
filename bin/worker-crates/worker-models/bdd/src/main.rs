@@ -9,7 +9,5 @@ use steps::ModelsWorld;
 
 #[tokio::main]
 async fn main() {
-    ModelsWorld::cucumber()
-        .run_and_exit("tests/features")
-        .await;
+    ModelsWorld::cucumber().run_and_exit("tests/features").await;
 }

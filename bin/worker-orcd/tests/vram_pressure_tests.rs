@@ -10,9 +10,14 @@ use worker_orcd::models::{
     qwen::{QwenConfig, QwenWeightLoader},
 };
 
+mod common;
+
+
 /// Test: Qwen VRAM allocation
 #[test]
 fn test_qwen_vram_allocation() {
+    common::init_test_env();
+    announce_stub_mode!("test_qwen_vram_allocation");
     let config = QwenConfig::qwen2_5_0_5b();
     let result = QwenWeightLoader::load_to_vram("dummy.gguf", &config);
 
@@ -29,6 +34,8 @@ fn test_qwen_vram_allocation() {
 /// Test: Phi-3 VRAM allocation (large model)
 #[test]
 fn test_phi3_vram_allocation() {
+    common::init_test_env();
+    announce_stub_mode!("test_phi3_vram_allocation");
     let config = Phi3Config::phi3_mini_4k();
     let result = Phi3WeightLoader::load_to_vram("dummy.gguf", &config);
 
@@ -69,6 +76,8 @@ fn test_vram_calculation_accuracy() {
 /// Test: Multiple model loading (VRAM pressure)
 #[test]
 fn test_multiple_model_loading() {
+    common::init_test_env();
+    announce_stub_mode!("test_multiple_model_loading");
     // Load Qwen
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_result = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config);

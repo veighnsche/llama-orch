@@ -10,12 +10,12 @@ use worker_models::{AdapterFactory, AdapterForwardConfig, Architecture, ModelTyp
 #[test]
 fn test_factory_qwen() {
     let adapter = AdapterFactory::from_gguf("qwen-2.5-0.5b.gguf").unwrap();
-    
+
     assert_eq!(adapter.model_type(), ModelType::Qwen2_5);
     assert_eq!(adapter.vocab_size().unwrap(), 151936);
     assert_eq!(adapter.hidden_dim().unwrap(), 896);
     assert_eq!(adapter.num_layers().unwrap(), 24);
-    
+
     // Test generation
     let input_ids = vec![1, 2, 3];
     let config = AdapterForwardConfig {
@@ -26,7 +26,7 @@ fn test_factory_qwen() {
         temperature: 1.0,
         seed: 42,
     };
-    
+
     let output = adapter.generate(&input_ids, 10, &config).unwrap();
     assert_eq!(output.len(), input_ids.len() + 10);
 }
@@ -35,7 +35,7 @@ fn test_factory_qwen() {
 #[test]
 fn test_factory_phi3() {
     let adapter = AdapterFactory::from_gguf("phi-3-mini.gguf").unwrap();
-    
+
     assert_eq!(adapter.model_type(), ModelType::Phi3);
     assert_eq!(adapter.vocab_size().unwrap(), 32064);
     assert_eq!(adapter.hidden_dim().unwrap(), 3072);
@@ -46,7 +46,7 @@ fn test_factory_phi3() {
 #[test]
 fn test_factory_gpt_oss() {
     let adapter = AdapterFactory::from_gguf("gpt-oss-20b.gguf").unwrap();
-    
+
     assert_eq!(adapter.model_type(), ModelType::GPT2);
     assert_eq!(adapter.vocab_size().unwrap(), 50257);
     assert_eq!(adapter.hidden_dim().unwrap(), 2048);
@@ -57,7 +57,7 @@ fn test_factory_gpt_oss() {
 #[test]
 fn test_factory_gpt2() {
     let adapter = AdapterFactory::from_gguf("gpt2-small.gguf").unwrap();
-    
+
     assert_eq!(adapter.model_type(), ModelType::GPT2);
     assert_eq!(adapter.vocab_size().unwrap(), 50257);
     assert_eq!(adapter.hidden_dim().unwrap(), 2048); // Uses gpt_oss_20b config by default
@@ -67,10 +67,12 @@ fn test_factory_gpt2() {
 /// Test factory with explicit architecture
 #[test]
 fn test_factory_explicit_architecture() {
-    let llama_adapter = AdapterFactory::from_gguf_with_arch("qwen-model.gguf", Architecture::Llama).unwrap();
+    let llama_adapter =
+        AdapterFactory::from_gguf_with_arch("qwen-model.gguf", Architecture::Llama).unwrap();
     assert_eq!(llama_adapter.model_type(), ModelType::Qwen2_5);
-    
-    let gpt_adapter = AdapterFactory::from_gguf_with_arch("gpt2-model.gguf", Architecture::GPT).unwrap();
+
+    let gpt_adapter =
+        AdapterFactory::from_gguf_with_arch("gpt2-model.gguf", Architecture::GPT).unwrap();
     assert_eq!(gpt_adapter.model_type(), ModelType::GPT2);
 }
 
@@ -79,7 +81,7 @@ fn test_factory_explicit_architecture() {
 fn test_factory_architecture_string() {
     let adapter = AdapterFactory::from_gguf_with_arch_str("qwen-model.gguf", "llama").unwrap();
     assert_eq!(adapter.model_type(), ModelType::Qwen2_5);
-    
+
     let adapter = AdapterFactory::from_gguf_with_arch_str("gpt2-model.gguf", "gpt").unwrap();
     assert_eq!(adapter.model_type(), ModelType::GPT2);
 }
@@ -90,7 +92,7 @@ fn test_factory_error_handling() {
     // Unknown architecture
     let result = AdapterFactory::from_gguf("unknown-model.gguf");
     assert!(result.is_err());
-    
+
     // Unsupported variant
     let result = AdapterFactory::from_gguf("llama-2-7b.gguf");
     assert!(result.is_err());
@@ -112,7 +114,7 @@ fn test_polymorphic_handling() {
         AdapterFactory::from_gguf("phi-3-mini.gguf").unwrap(),
         AdapterFactory::from_gguf("gpt-oss-20b.gguf").unwrap(),
     ];
-    
+
     for adapter in &models {
         // All adapters support the same interface
         assert!(adapter.vocab_size().is_ok());
@@ -134,17 +136,17 @@ fn test_adapter_switching() {
         temperature: 1.0,
         seed: 42,
     };
-    
+
     // Create different adapters
     let qwen = AdapterFactory::from_gguf("qwen-2.5-0.5b.gguf").unwrap();
     let phi3 = AdapterFactory::from_gguf("phi-3-mini.gguf").unwrap();
     let gpt_oss = AdapterFactory::from_gguf("gpt-oss-20b.gguf").unwrap();
-    
+
     // All should generate with same interface
     let qwen_output = qwen.generate(&input_ids, 5, &config).unwrap();
     let phi3_output = phi3.generate(&input_ids, 5, &config).unwrap();
     let gpt_oss_output = gpt_oss.generate(&input_ids, 5, &config).unwrap();
-    
+
     assert_eq!(qwen_output.len(), input_ids.len() + 5);
     assert_eq!(phi3_output.len(), input_ids.len() + 5);
     assert_eq!(gpt_oss_output.len(), input_ids.len() + 5);

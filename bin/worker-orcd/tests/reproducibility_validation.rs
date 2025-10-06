@@ -18,7 +18,7 @@ use worker_orcd::models::{
 fn test_qwen_reproducibility_10_runs() {
     common::init_test_env();
     announce_stub_mode!("test_qwen_reproducibility_10_runs");
-    
+
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
     let adapter = LlamaModelAdapter::new_qwen(model);
@@ -56,6 +56,8 @@ fn test_qwen_reproducibility_10_runs() {
 /// Test: Phi-3 reproducibility (10 runs)
 #[test]
 fn test_phi3_reproducibility_10_runs() {
+    common::init_test_env();
+    announce_stub_mode!("test_phi3_reproducibility_10_runs");
     let config = Phi3Config::phi3_mini_4k();
     let model = Phi3WeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
     let adapter = LlamaModelAdapter::new_phi3(model);
@@ -93,6 +95,8 @@ fn test_phi3_reproducibility_10_runs() {
 /// Test: Cross-model reproducibility (20 total runs)
 #[test]
 fn test_cross_model_reproducibility() {
+    common::init_test_env();
+    announce_stub_mode!("test_cross_model_reproducibility");
     // Qwen: 10 runs
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
@@ -149,6 +153,8 @@ fn test_cross_model_reproducibility() {
 /// Test: Different seeds produce different outputs
 #[test]
 fn test_seed_variation_qwen() {
+    common::init_test_env();
+    announce_stub_mode!("test_seed_variation_qwen");
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
     let adapter = LlamaModelAdapter::new_qwen(model);
@@ -183,6 +189,8 @@ fn test_seed_variation_qwen() {
 /// Test: Temperature effect on reproducibility
 #[test]
 fn test_temperature_reproducibility() {
+    common::init_test_env();
+    announce_stub_mode!("test_temperature_reproducibility");
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
     let adapter = LlamaModelAdapter::new_qwen(model);

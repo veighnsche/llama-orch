@@ -14,13 +14,13 @@ pub struct CommonWorld {
     pub sampling_config: Option<SamplingConfig>,
     pub sampling_mode: Option<String>,
     pub has_advanced_sampling: Option<bool>,
-    
+
     // Error handling
     pub error_type: Option<String>,
     pub worker_error: Option<WorkerError>,
     pub is_retriable: Option<bool>,
     pub status_code: Option<u16>,
-    
+
     // Ready callback
     pub has_callback: bool,
     pub memory_bytes: Option<u64>,

@@ -2,13 +2,9 @@
 //!
 //! Tests complete HTTP workflows including validation, SSE streaming, and error handling.
 
-use worker_http::{
-    backend::InferenceBackend,
-    sse::InferenceEvent,
-    validation::ExecuteRequest,
-};
-use worker_common::{InferenceResult, SamplingConfig, StopReason};
 use async_trait::async_trait;
+use worker_common::{InferenceResult, SamplingConfig, StopReason};
+use worker_http::{backend::InferenceBackend, sse::InferenceEvent, validation::ExecuteRequest};
 
 // Mock backend for testing
 struct MockBackend {
@@ -18,17 +14,11 @@ struct MockBackend {
 
 impl MockBackend {
     fn new() -> Self {
-        Self {
-            healthy: true,
-            vram: 8_000_000_000,
-        }
+        Self { healthy: true, vram: 8_000_000_000 }
     }
 
     fn unhealthy() -> Self {
-        Self {
-            healthy: false,
-            vram: 0,
-        }
+        Self { healthy: false, vram: 0 }
     }
 }
 
@@ -41,13 +31,8 @@ impl InferenceBackend for MockBackend {
     ) -> Result<InferenceResult, Box<dyn std::error::Error + Send + Sync>> {
         let tokens = vec!["Hello".to_string(), " world".to_string(), "!".to_string()];
         let token_ids = vec![100, 200, 300];
-        
-        Ok(InferenceResult::max_tokens(
-            tokens,
-            token_ids,
-            config.seed,
-            100,
-        ))
+
+        Ok(InferenceResult::max_tokens(tokens, token_ids, config.seed, 100))
     }
 
     async fn cancel(&self, _job_id: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -93,7 +78,13 @@ fn test_execute_request_multiple_validation_errors() {
         top_p: 1.5,
         top_k: 0,
         repetition_penalty: 3.0,
-        stop: vec!["a".to_string(), "b".to_string(), "c".to_string(), "d".to_string(), "e".to_string()],
+        stop: vec![
+            "a".to_string(),
+            "b".to_string(),
+            "c".to_string(),
+            "d".to_string(),
+            "e".to_string(),
+        ],
         min_p: 1.5,
     };
 
@@ -120,10 +111,7 @@ fn test_sse_event_serialization_workflow() {
     assert!(!started.is_terminal());
 
     // Token events
-    let token = InferenceEvent::Token {
-        t: "Hello".to_string(),
-        i: 0,
-    };
+    let token = InferenceEvent::Token { t: "Hello".to_string(), i: 0 };
     let json = serde_json::to_string(&token).unwrap();
     assert!(json.contains("\"type\":\"token\""));
     assert!(!token.is_terminal());
@@ -304,19 +292,10 @@ fn test_inference_event_ordering() {
 
 #[test]
 fn test_unicode_in_tokens() {
-    let unicode_tokens = vec![
-        "Hello",
-        " 世界",
-        "🌍",
-        "مرحبا",
-        "Привет",
-    ];
+    let unicode_tokens = vec!["Hello", " 世界", "🌍", "مرحبا", "Привет"];
 
     for (i, token) in unicode_tokens.iter().enumerate() {
-        let event = InferenceEvent::Token {
-            t: token.to_string(),
-            i: i as u32,
-        };
+        let event = InferenceEvent::Token { t: token.to_string(), i: i as u32 };
 
         let json = serde_json::to_string(&event).unwrap();
         assert!(json.contains(token) || json.contains("\\u"));

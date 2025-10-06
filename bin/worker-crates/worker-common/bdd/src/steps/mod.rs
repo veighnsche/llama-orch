@@ -40,7 +40,7 @@ async fn when_check_advanced_sampling(world: &mut CommonWorld) {
         seed: 42,
         max_tokens: 100,
     };
-    
+
     world.has_advanced_sampling = Some(config.has_advanced_sampling());
     world.sampling_mode = Some(config.sampling_mode());
     world.sampling_config = Some(config);
@@ -70,7 +70,7 @@ async fn given_worker_error(world: &mut CommonWorld, error_type: String) {
         "Unhealthy" => WorkerError::Unhealthy("test error".to_string()),
         _ => panic!("Unknown error type: {}", error_type),
     };
-    
+
     world.error_type = Some(error_type);
     world.worker_error = Some(error);
 }

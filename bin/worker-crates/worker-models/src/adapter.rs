@@ -378,8 +378,13 @@ impl LlamaModelAdapter {
             ModelType::GPT2 | ModelType::GPT3 => {
                 let model = self.gpt_model.as_ref().ok_or(AdapterError::ModelNotLoaded)?;
 
-                super::gpt::GPTForward::generate(model, input_ids, max_tokens, &config.to_gpt_config())
-                    .map_err(|e| AdapterError::ForwardPassFailed(e.to_string()))
+                super::gpt::GPTForward::generate(
+                    model,
+                    input_ids,
+                    max_tokens,
+                    &config.to_gpt_config(),
+                )
+                .map_err(|e| AdapterError::ForwardPassFailed(e.to_string()))
             }
             _ => Err(AdapterError::UnsupportedOperation(self.model_type)),
         }

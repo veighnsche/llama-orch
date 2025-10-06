@@ -4,9 +4,9 @@
 //! to be platform-independent. Different workers (CUDA, Metal, etc.) implement
 //! this trait to provide their specific inference capabilities.
 
-use worker_common::{InferenceResult, SamplingConfig};
 use async_trait::async_trait;
 use std::sync::Arc;
+use worker_common::{InferenceResult, SamplingConfig};
 
 /// Platform-agnostic inference backend
 ///
@@ -22,15 +22,15 @@ pub trait InferenceBackend: Send + Sync {
         prompt: &str,
         config: &SamplingConfig,
     ) -> Result<InferenceResult, Box<dyn std::error::Error + Send + Sync>>;
-    
+
     /// Cancel an in-flight inference by job ID
     ///
     /// This is a best-effort operation - the inference may complete before cancellation.
     async fn cancel(&self, job_id: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
-    
+
     /// Get current VRAM usage in bytes
     fn vram_usage(&self) -> u64;
-    
+
     /// Check if backend is healthy and ready for inference
     fn is_healthy(&self) -> bool;
 }

@@ -49,9 +49,9 @@
 #![warn(clippy::missing_panics_doc)]
 #![warn(clippy::missing_safety_doc)]
 
+use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
 use std::ffi::c_void;
 use thiserror::Error;
-use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
 
 #[derive(Debug, Error)]
 pub enum CudaError {
@@ -95,8 +95,16 @@ impl SafeCudaPtr {
         if end > self.size {
             // Narrate bounds check failure
             Narration::new(ACTOR_WORKER_ORCD, "vram_write", &format!("GPU{}", self.device))
-                .human(format!("VRAM write bounds check failed: offset {} + len {} > size {}", offset, data.len(), self.size))
-                .cute(format!("Oops! Tried to write past the end of GPU{}'s memory! Safety first! 🛑🔒", self.device))
+                .human(format!(
+                    "VRAM write bounds check failed: offset {} + len {} > size {}",
+                    offset,
+                    data.len(),
+                    self.size
+                ))
+                .cute(format!(
+                    "Oops! Tried to write past the end of GPU{}'s memory! Safety first! 🛑🔒",
+                    self.device
+                ))
                 .device(&format!("GPU{}", self.device))
                 .error_kind("OutOfBounds")
                 .emit_error();
@@ -214,7 +222,10 @@ impl CudaContext {
         if size == 0 {
             Narration::new(ACTOR_WORKER_ORCD, "vram_alloc", &format!("GPU{}", self.device))
                 .human(format!("VRAM allocation failed on GPU{}: requested 0 bytes", self.device))
-                .cute(format!("Can't allocate zero bytes on GPU{}! Need at least a tiny bit! 😅", self.device))
+                .cute(format!(
+                    "Can't allocate zero bytes on GPU{}! Need at least a tiny bit! 😅",
+                    self.device
+                ))
                 .device(&format!("GPU{}", self.device))
                 .error_kind("InvalidSize")
                 .emit_error();
@@ -237,7 +248,10 @@ impl CudaContext {
         let size_mb = size / (1024 * 1024);
         Narration::new(ACTOR_WORKER_ORCD, "vram_alloc", &format!("GPU{}", self.device))
             .human(format!("Allocated {} MB VRAM on GPU{} (stub mode)", size_mb, self.device))
-            .cute(format!("Found a cozy {} MB spot on GPU{} for the model! 🏠✨", size_mb, self.device))
+            .cute(format!(
+                "Found a cozy {} MB spot on GPU{} for the model! 🏠✨",
+                size_mb, self.device
+            ))
             .device(&format!("GPU{}", self.device))
             .emit();
 

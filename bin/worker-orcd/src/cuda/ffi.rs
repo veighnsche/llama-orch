@@ -279,11 +279,11 @@ extern "C" {
     /// - `ctx` must be a valid pointer from `cuda_inference_init` or NULL
     /// - `ctx` must not be used after this call
     pub fn cuda_inference_context_free(ctx: *mut InferenceContext);
-    
+
     // ========================================================================
     // CUDA Memory Management (for Rust weight loading)
     // ========================================================================
-    
+
     /// Allocate CUDA device memory.
     ///
     /// # Safety
@@ -292,7 +292,7 @@ extern "C" {
     /// - Returned pointer must be freed with `cuda_free_memory`
     /// - Returns NULL on allocation failure
     pub fn cuda_malloc_device(size: usize) -> *mut std::ffi::c_void;
-    
+
     /// Copy data from host to CUDA device.
     ///
     /// # Safety
@@ -306,7 +306,7 @@ extern "C" {
         src: *const std::ffi::c_void,
         size: usize,
     ) -> c_int;
-    
+
     /// Free CUDA device memory.
     ///
     /// # Safety
@@ -315,18 +315,18 @@ extern "C" {
     /// - `ptr` must not be used after this call
     /// - Safe to call with NULL (no-op)
     pub fn cuda_free_memory(ptr: *mut std::ffi::c_void);
-    
+
     // ========================================================================
     // Model Loading from Pre-allocated GPU Pointers (Rust → C++)
     // ========================================================================
-    
+
     /// Create a GPU pointer map for passing pointers from Rust to C++.
     ///
     /// # Safety
     ///
     /// - Returned pointer must be freed with `cuda_free_pointer_map`
     pub fn cuda_create_pointer_map(total_vram_bytes: u64) -> *mut GpuPointerMap;
-    
+
     /// Insert a GPU pointer into the map.
     ///
     /// # Safety
@@ -339,7 +339,7 @@ extern "C" {
         name: *const c_char,
         gpu_ptr: *mut std::ffi::c_void,
     );
-    
+
     /// Load model from pre-allocated GPU pointers.
     ///
     /// # Safety
@@ -359,7 +359,7 @@ extern "C" {
         context_length: u32,
         error: *mut c_int,
     ) -> *mut CudaModel;
-    
+
     /// Free GPU pointer map.
     ///
     /// # Safety
@@ -541,7 +541,8 @@ pub unsafe fn cuda_pointer_map_insert(
     _map: *mut GpuPointerMap,
     _name: *const c_char,
     _gpu_ptr: *mut std::ffi::c_void,
-) {}
+) {
+}
 
 #[cfg(not(feature = "cuda"))]
 pub unsafe fn cuda_load_model_from_pointers(

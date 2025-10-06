@@ -12,8 +12,13 @@
 
 use worker_orcd::models::qwen::{ForwardPassConfig, QwenConfig, QwenForward, QwenWeightLoader};
 
+mod common;
+
+
 #[test]
 fn test_qwen_model_loading() {
+    common::init_test_env();
+    announce_stub_mode!("test_qwen_model_loading");
     let config = QwenConfig::qwen2_5_0_5b();
 
     // Stub: Load model (would require actual GGUF file)
@@ -33,6 +38,8 @@ fn test_qwen_model_loading() {
 
 #[test]
 fn test_qwen_haiku_generation_stub() {
+    common::init_test_env();
+    announce_stub_mode!("test_qwen_haiku_generation_stub");
     // LT-025: Qwen Haiku Generation Test
     //
     // This test validates that Qwen can generate a haiku.
@@ -73,6 +80,8 @@ fn test_qwen_haiku_generation_stub() {
 
 #[test]
 fn test_qwen_reproducibility_stub() {
+    common::init_test_env();
+    announce_stub_mode!("test_qwen_reproducibility_stub");
     // LT-026: Qwen Reproducibility Validation
     //
     // This test validates that Qwen generates identical outputs
@@ -116,6 +125,8 @@ fn test_qwen_reproducibility_stub() {
 
 #[test]
 fn test_qwen_different_seeds_produce_different_outputs() {
+    common::init_test_env();
+    announce_stub_mode!("test_qwen_different_seeds_produce_different_outputs");
     // Verify that different seeds produce different outputs
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
@@ -152,6 +163,8 @@ fn test_qwen_different_seeds_produce_different_outputs() {
 
 #[test]
 fn test_qwen_temperature_effect() {
+    common::init_test_env();
+    announce_stub_mode!("test_qwen_temperature_effect");
     // Verify that temperature affects generation
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();

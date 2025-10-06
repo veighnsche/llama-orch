@@ -78,26 +78,38 @@ impl Model {
             Err(_) => {
                 // Fallback: derive from token_embd.weight tensor
                 eprintln!("⚠️  [Rust] tokenizer.ggml.tokens not found, deriving vocab_size from token_embd.weight");
-                let tensors = GGUFMetadata::parse_tensors(model_path)
-                    .map_err(|e| CudaError::ModelLoadFailed(format!("Failed to parse tensors: {}", e)))?;
-                
-                tensors.iter()
+                let tensors = GGUFMetadata::parse_tensors(model_path).map_err(|e| {
+                    CudaError::ModelLoadFailed(format!("Failed to parse tensors: {}", e))
+                })?;
+
+                tensors
+                    .iter()
                     .find(|t| t.name == "token_embd.weight")
                     .and_then(|t| t.dimensions.last())
                     .map(|&d| d as u32)
-                    .ok_or_else(|| CudaError::ModelLoadFailed("Cannot determine vocab_size".to_string()))?
+                    .ok_or_else(|| {
+                        CudaError::ModelLoadFailed("Cannot determine vocab_size".to_string())
+                    })?
             }
         };
-        let hidden_dim = meta.hidden_dim()
-            .map_err(|e| CudaError::ModelLoadFailed(format!("Failed to read hidden_dim: {}", e)))? as u32;
-        let num_layers = meta.num_layers()
-            .map_err(|e| CudaError::ModelLoadFailed(format!("Failed to read num_layers: {}", e)))? as u32;
-        let num_heads = meta.num_heads()
-            .map_err(|e| CudaError::ModelLoadFailed(format!("Failed to read num_heads: {}", e)))? as u32;
-        let num_kv_heads = meta.num_kv_heads()
-            .map_err(|e| CudaError::ModelLoadFailed(format!("Failed to read num_kv_heads: {}", e)))? as u32;
-        let context_length = meta.context_length()
-            .map_err(|e| CudaError::ModelLoadFailed(format!("Failed to read context_length: {}", e)))? as u32;
+        let hidden_dim = meta
+            .hidden_dim()
+            .map_err(|e| CudaError::ModelLoadFailed(format!("Failed to read hidden_dim: {}", e)))?
+            as u32;
+        let num_layers = meta
+            .num_layers()
+            .map_err(|e| CudaError::ModelLoadFailed(format!("Failed to read num_layers: {}", e)))?
+            as u32;
+        let num_heads = meta
+            .num_heads()
+            .map_err(|e| CudaError::ModelLoadFailed(format!("Failed to read num_heads: {}", e)))?
+            as u32;
+        let num_kv_heads = meta.num_kv_heads().map_err(|e| {
+            CudaError::ModelLoadFailed(format!("Failed to read num_kv_heads: {}", e))
+        })? as u32;
+        let context_length = meta.context_length().map_err(|e| {
+            CudaError::ModelLoadFailed(format!("Failed to read context_length: {}", e))
+        })? as u32;
 
         eprintln!(
             "📋 [Rust] Model config (from GGUF): vocab={}, hidden={}, layers={}, heads={}/{} ctx={}",

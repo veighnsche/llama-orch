@@ -117,7 +117,7 @@ async fn given_sse_stream(world: &mut HttpWorld) {
 async fn when_send_event(world: &mut HttpWorld, event_type: String) {
     world.event_count += 1;
     world.event_types.push(event_type.clone());
-    
+
     if event_type == "end" || event_type == "error" {
         world.has_terminal_event = true;
     }

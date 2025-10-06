@@ -24,19 +24,19 @@ pub enum ComputeError {
     /// Device not found or unavailable
     #[error("Device not found")]
     DeviceNotFound,
-    
+
     /// Insufficient memory
     #[error("Insufficient memory: required {required}, available {available}")]
     InsufficientMemory { required: u64, available: u64 },
-    
+
     /// Model load failed
     #[error("Model load failed: {0}")]
     ModelLoadFailed(String),
-    
+
     /// Inference failed
     #[error("Inference failed: {0}")]
     InferenceFailed(String),
-    
+
     /// Invalid parameter
     #[error("Invalid parameter: {0}")]
     InvalidParameter(String),
@@ -52,13 +52,13 @@ pub enum ComputeError {
 pub trait ComputeBackend: Sized {
     /// Platform-specific context type (e.g., CudaContext, MetalContext)
     type Context;
-    
+
     /// Platform-specific model type (e.g., CudaModel, MetalModel)
     type Model;
-    
+
     /// Platform-specific inference result type
     type InferenceResult;
-    
+
     /// Initialize compute context for specified device
     ///
     /// # Arguments
@@ -67,7 +67,7 @@ pub trait ComputeBackend: Sized {
     /// # Returns
     /// Initialized context or error if device unavailable
     fn init(device_id: i32) -> Result<Self::Context, ComputeError>;
-    
+
     /// Load model from file path
     ///
     /// # Arguments
@@ -77,7 +77,7 @@ pub trait ComputeBackend: Sized {
     /// # Returns
     /// Loaded model or error if load failed
     fn load_model(ctx: &Self::Context, path: &str) -> Result<Self::Model, ComputeError>;
-    
+
     /// Start inference with given prompt
     ///
     /// # Arguments
@@ -96,7 +96,7 @@ pub trait ComputeBackend: Sized {
         temperature: f32,
         seed: u64,
     ) -> Result<Self::InferenceResult, ComputeError>;
-    
+
     /// Generate next token in inference sequence
     ///
     /// # Arguments
@@ -109,7 +109,7 @@ pub trait ComputeBackend: Sized {
     fn inference_next_token(
         result: &mut Self::InferenceResult,
     ) -> Result<Option<String>, ComputeError>;
-    
+
     /// Get memory usage for model
     ///
     /// # Arguments
@@ -118,7 +118,7 @@ pub trait ComputeBackend: Sized {
     /// # Returns
     /// Memory usage in bytes
     fn get_memory_usage(model: &Self::Model) -> u64;
-    
+
     /// Get memory architecture type
     ///
     /// # Returns
@@ -131,10 +131,7 @@ pub trait ComputeBackend: Sized {
 impl ComputeError {
     /// Check if error is retriable
     pub fn is_retriable(&self) -> bool {
-        matches!(
-            self,
-            ComputeError::InsufficientMemory { .. } | ComputeError::InferenceFailed(_)
-        )
+        matches!(self, ComputeError::InsufficientMemory { .. } | ComputeError::InferenceFailed(_))
     }
 
     /// Get error category for logging/metrics
@@ -193,10 +190,7 @@ mod tests {
             if path.contains("nonexistent") {
                 return Err(ComputeError::ModelLoadFailed("file not found".to_string()));
             }
-            Ok(MockModel {
-                path: path.to_string(),
-                memory_usage: 8_000_000_000,
-            })
+            Ok(MockModel { path: path.to_string(), memory_usage: 8_000_000_000 })
         }
 
         fn inference_start(
@@ -219,11 +213,7 @@ mod tests {
             }
 
             let tokens = vec!["Hello".to_string(), " world".to_string(), "!".to_string()];
-            Ok(MockInferenceResult {
-                tokens,
-                current: 0,
-                max_tokens,
-            })
+            Ok(MockInferenceResult { tokens, current: 0, max_tokens })
         }
 
         fn inference_next_token(
@@ -260,10 +250,8 @@ mod tests {
 
     #[test]
     fn test_insufficient_memory_error() {
-        let err = ComputeError::InsufficientMemory {
-            required: 16_000_000_000,
-            available: 8_000_000_000,
-        };
+        let err =
+            ComputeError::InsufficientMemory { required: 16_000_000_000, available: 8_000_000_000 };
         assert!(err.to_string().contains("16000000000"));
         assert!(err.to_string().contains("8000000000"));
         assert!(err.is_retriable());
@@ -300,11 +288,7 @@ mod tests {
     #[test]
     fn test_error_retriability() {
         // Retriable errors
-        assert!(ComputeError::InsufficientMemory {
-            required: 1,
-            available: 0
-        }
-        .is_retriable());
+        assert!(ComputeError::InsufficientMemory { required: 1, available: 0 }.is_retriable());
         assert!(ComputeError::InferenceFailed("test".to_string()).is_retriable());
 
         // Non-retriable errors
@@ -317,25 +301,12 @@ mod tests {
     fn test_error_categories() {
         assert_eq!(ComputeError::DeviceNotFound.category(), "device");
         assert_eq!(
-            ComputeError::InsufficientMemory {
-                required: 1,
-                available: 0
-            }
-            .category(),
+            ComputeError::InsufficientMemory { required: 1, available: 0 }.category(),
             "memory"
         );
-        assert_eq!(
-            ComputeError::ModelLoadFailed("test".to_string()).category(),
-            "model"
-        );
-        assert_eq!(
-            ComputeError::InferenceFailed("test".to_string()).category(),
-            "inference"
-        );
-        assert_eq!(
-            ComputeError::InvalidParameter("test".to_string()).category(),
-            "parameter"
-        );
+        assert_eq!(ComputeError::ModelLoadFailed("test".to_string()).category(), "model");
+        assert_eq!(ComputeError::InferenceFailed("test".to_string()).category(), "inference");
+        assert_eq!(ComputeError::InvalidParameter("test".to_string()).category(), "parameter");
     }
 
     // Mock backend tests
@@ -368,10 +339,7 @@ mod tests {
         let ctx = MockBackend::init(0).unwrap();
         let result = MockBackend::load_model(&ctx, "");
         assert!(result.is_err());
-        assert!(matches!(
-            result.unwrap_err(),
-            ComputeError::InvalidParameter(_)
-        ));
+        assert!(matches!(result.unwrap_err(), ComputeError::InvalidParameter(_)));
     }
 
     #[test]
@@ -379,10 +347,7 @@ mod tests {
         let ctx = MockBackend::init(0).unwrap();
         let result = MockBackend::load_model(&ctx, "/models/nonexistent.gguf");
         assert!(result.is_err());
-        assert!(matches!(
-            result.unwrap_err(),
-            ComputeError::ModelLoadFailed(_)
-        ));
+        assert!(matches!(result.unwrap_err(), ComputeError::ModelLoadFailed(_)));
     }
 
     #[test]
@@ -400,10 +365,7 @@ mod tests {
         let model = MockBackend::load_model(&ctx, "/models/test.gguf").unwrap();
         let result = MockBackend::inference_start(&model, "", 100, 0.7, 42);
         assert!(result.is_err());
-        assert!(matches!(
-            result.unwrap_err(),
-            ComputeError::InvalidParameter(_)
-        ));
+        assert!(matches!(result.unwrap_err(), ComputeError::InvalidParameter(_)));
     }
 
     #[test]

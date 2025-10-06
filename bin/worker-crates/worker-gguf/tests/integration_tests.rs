@@ -112,54 +112,21 @@ fn test_filename_variations() {
 #[test]
 fn test_architecture_detection_patterns() {
     // Qwen patterns
-    assert_eq!(
-        GGUFMetadata::from_file("qwen-test.gguf")
-            .unwrap()
-            .architecture()
-            .unwrap(),
-        "llama"
-    );
-    assert_eq!(
-        GGUFMetadata::from_file("qwen2.5.gguf")
-            .unwrap()
-            .architecture()
-            .unwrap(),
-        "llama"
-    );
+    assert_eq!(GGUFMetadata::from_file("qwen-test.gguf").unwrap().architecture().unwrap(), "llama");
+    assert_eq!(GGUFMetadata::from_file("qwen2.5.gguf").unwrap().architecture().unwrap(), "llama");
 
     // Phi patterns
-    assert_eq!(
-        GGUFMetadata::from_file("phi-3.gguf")
-            .unwrap()
-            .architecture()
-            .unwrap(),
-        "llama"
-    );
-    assert_eq!(
-        GGUFMetadata::from_file("phi3-mini.gguf")
-            .unwrap()
-            .architecture()
-            .unwrap(),
-        "llama"
-    );
+    assert_eq!(GGUFMetadata::from_file("phi-3.gguf").unwrap().architecture().unwrap(), "llama");
+    assert_eq!(GGUFMetadata::from_file("phi3-mini.gguf").unwrap().architecture().unwrap(), "llama");
 
     // Llama patterns
     assert_eq!(
-        GGUFMetadata::from_file("llama-3.1-8b.gguf")
-            .unwrap()
-            .architecture()
-            .unwrap(),
+        GGUFMetadata::from_file("llama-3.1-8b.gguf").unwrap().architecture().unwrap(),
         "llama"
     );
 
     // GPT patterns
-    assert_eq!(
-        GGUFMetadata::from_file("gpt2-small.gguf")
-            .unwrap()
-            .architecture()
-            .unwrap(),
-        "gpt"
-    );
+    assert_eq!(GGUFMetadata::from_file("gpt2-small.gguf").unwrap().architecture().unwrap(), "gpt");
 }
 
 #[test]
@@ -226,29 +193,14 @@ fn test_metadata_cloning() {
     let cloned = original.clone();
 
     // All fields should match
-    assert_eq!(
-        original.architecture().unwrap(),
-        cloned.architecture().unwrap()
-    );
-    assert_eq!(
-        original.vocab_size().unwrap(),
-        cloned.vocab_size().unwrap()
-    );
+    assert_eq!(original.architecture().unwrap(), cloned.architecture().unwrap());
+    assert_eq!(original.vocab_size().unwrap(), cloned.vocab_size().unwrap());
     assert_eq!(original.hidden_dim().unwrap(), cloned.hidden_dim().unwrap());
     assert_eq!(original.num_layers().unwrap(), cloned.num_layers().unwrap());
     assert_eq!(original.num_heads().unwrap(), cloned.num_heads().unwrap());
-    assert_eq!(
-        original.num_kv_heads().unwrap(),
-        cloned.num_kv_heads().unwrap()
-    );
-    assert_eq!(
-        original.context_length().unwrap(),
-        cloned.context_length().unwrap()
-    );
-    assert_eq!(
-        original.rope_freq_base().unwrap(),
-        cloned.rope_freq_base().unwrap()
-    );
+    assert_eq!(original.num_kv_heads().unwrap(), cloned.num_kv_heads().unwrap());
+    assert_eq!(original.context_length().unwrap(), cloned.context_length().unwrap());
+    assert_eq!(original.rope_freq_base().unwrap(), cloned.rope_freq_base().unwrap());
 }
 
 #[test]

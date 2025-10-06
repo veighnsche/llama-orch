@@ -12,8 +12,13 @@
 
 use worker_orcd::models::phi3::{Phi3Config, Phi3Forward, Phi3ForwardConfig, Phi3WeightLoader};
 
+mod common;
+
+
 #[test]
 fn test_phi3_model_loading() {
+    common::init_test_env();
+    announce_stub_mode!("test_phi3_model_loading");
     let config = Phi3Config::phi3_mini_4k();
 
     // Stub: Load model (would require actual GGUF file)
@@ -33,6 +38,8 @@ fn test_phi3_model_loading() {
 
 #[test]
 fn test_phi3_generation_stub() {
+    common::init_test_env();
+    announce_stub_mode!("test_phi3_generation_stub");
     let config = Phi3Config::phi3_mini_4k();
     let model = Phi3WeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
 
@@ -62,6 +69,8 @@ fn test_phi3_generation_stub() {
 
 #[test]
 fn test_phi3_reproducibility() {
+    common::init_test_env();
+    announce_stub_mode!("test_phi3_reproducibility");
     let config = Phi3Config::phi3_mini_4k();
     let model = Phi3WeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
 

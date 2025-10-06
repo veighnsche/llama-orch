@@ -172,27 +172,28 @@ impl GPTWeightLoader {
     pub fn calculate_vram_usage(config: &GPTConfig) -> usize {
         // Accurate calculation for GPT models
         // For GPT-OSS-20B: ~12-16GB, for GPT-2-small: <1GB
-        
+
         // Embedding: vocab_size * hidden_dim * 2 bytes (FP16)
         let embedding_bytes = config.vocab_size * config.hidden_dim * 2;
-        
+
         // Per layer weights:
         // - Attention: 4 * hidden_dim * hidden_dim (Q, K, V, O projections)
         // - FFN: hidden_dim * ffn_dim + ffn_dim * hidden_dim (up + down)
         // - LayerNorm: 2 * hidden_dim * 2 (2 LayerNorms per layer)
         let attn_params_per_layer = 4 * config.hidden_dim * config.hidden_dim;
-        let ffn_params_per_layer = config.hidden_dim * config.ffn_dim + config.ffn_dim * config.hidden_dim;
+        let ffn_params_per_layer =
+            config.hidden_dim * config.ffn_dim + config.ffn_dim * config.hidden_dim;
         let ln_params_per_layer = 2 * config.hidden_dim * 2;
         let params_per_layer = attn_params_per_layer + ffn_params_per_layer + ln_params_per_layer;
         let layer_bytes = config.num_layers * params_per_layer * 2; // FP16
-        
+
         // Output head: hidden_dim * vocab_size * 2 bytes
         let output_bytes = config.hidden_dim * config.vocab_size * 2;
-        
+
         // KV cache: 2 (K+V) * num_layers * num_heads * head_dim * max_seq_len * 2 bytes (FP16)
         let kv_cache_bytes =
             2 * config.num_layers * config.num_heads * config.head_dim() * config.max_seq_len * 2;
-        
+
         // Activations (conservative estimate for batch=1)
         let activation_bytes = config.max_seq_len * config.hidden_dim * 4 * 10; // ~10 intermediate buffers
 
@@ -333,9 +334,17 @@ mod tests {
         // GPT-OSS-20B: 44 layers, 2048 hidden_dim, 64 heads, 8192 FFN
         // Stub calculation: ~5.75GB (simplified, production will be ~12-16GB with quantization overhead)
         // Verify it's reasonable for model size
-        assert!(vram > 5_000_000_000, "GPT-OSS-20B should use >5GB (stub), got {:.2}GB", vram as f64 / 1_000_000_000.0);
-        assert!(vram < 20_000_000_000, "GPT-OSS-20B should use <20GB, got {:.2}GB", vram as f64 / 1_000_000_000.0);
-        
+        assert!(
+            vram > 5_000_000_000,
+            "GPT-OSS-20B should use >5GB (stub), got {:.2}GB",
+            vram as f64 / 1_000_000_000.0
+        );
+        assert!(
+            vram < 20_000_000_000,
+            "GPT-OSS-20B should use <20GB, got {:.2}GB",
+            vram as f64 / 1_000_000_000.0
+        );
+
         // Verify it's significantly larger than GPT-2
         let gpt2_vram = GPTWeightLoader::calculate_vram_usage(&GPTConfig::gpt2_small());
         assert!(vram > gpt2_vram * 5, "GPT-OSS-20B should use much more VRAM than GPT-2");

@@ -9,7 +9,5 @@ use steps::TokenizerWorld;
 
 #[tokio::main]
 async fn main() {
-    TokenizerWorld::cucumber()
-        .run_and_exit("tests/features")
-        .await;
+    TokenizerWorld::cucumber().run_and_exit("tests/features").await;
 }

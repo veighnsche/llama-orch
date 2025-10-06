@@ -39,17 +39,12 @@ impl ComputeBackend for TestBackend {
         if device_id < 0 || device_id > 7 {
             return Err(ComputeError::DeviceNotFound);
         }
-        Ok(TestContext {
-            device_id,
-            initialized: true,
-        })
+        Ok(TestContext { device_id, initialized: true })
     }
 
     fn load_model(ctx: &Self::Context, path: &str) -> Result<Self::Model, ComputeError> {
         if !ctx.initialized {
-            return Err(ComputeError::InvalidParameter(
-                "context not initialized".to_string(),
-            ));
+            return Err(ComputeError::InvalidParameter("context not initialized".to_string()));
         }
         if path.is_empty() {
             return Err(ComputeError::InvalidParameter("empty path".to_string()));
@@ -66,11 +61,7 @@ impl ComputeBackend for TestBackend {
             16_000_000_000
         };
 
-        Ok(TestModel {
-            path: path.to_string(),
-            memory_usage,
-            loaded: true,
-        })
+        Ok(TestModel { path: path.to_string(), memory_usage, loaded: true })
     }
 
     fn inference_start(
@@ -87,22 +78,14 @@ impl ComputeBackend for TestBackend {
             return Err(ComputeError::InvalidParameter("empty prompt".to_string()));
         }
         if max_tokens == 0 {
-            return Err(ComputeError::InvalidParameter(
-                "max_tokens must be > 0".to_string(),
-            ));
+            return Err(ComputeError::InvalidParameter("max_tokens must be > 0".to_string()));
         }
         if !(0.0..=2.0).contains(&temperature) {
-            return Err(ComputeError::InvalidParameter(
-                "temperature out of range".to_string(),
-            ));
+            return Err(ComputeError::InvalidParameter("temperature out of range".to_string()));
         }
 
-        let tokens = vec![
-            "The".to_string(),
-            " answer".to_string(),
-            " is".to_string(),
-            " 42".to_string(),
-        ];
+        let tokens =
+            vec!["The".to_string(), " answer".to_string(), " is".to_string(), " 42".to_string()];
 
         Ok(TestInferenceResult {
             prompt: prompt.to_string(),
@@ -209,7 +192,8 @@ fn test_inference_parameter_validation() {
 fn test_inference_token_generation() {
     let ctx = TestBackend::init(0).unwrap();
     let model = TestBackend::load_model(&ctx, "/models/test.gguf").unwrap();
-    let mut result = TestBackend::inference_start(&model, "What is the answer?", 100, 0.7, 42).unwrap();
+    let mut result =
+        TestBackend::inference_start(&model, "What is the answer?", 100, 0.7, 42).unwrap();
 
     let mut tokens = vec![];
     while let Some(token) = TestBackend::inference_next_token(&mut result).unwrap() {
@@ -289,10 +273,7 @@ fn test_error_propagation() {
     let model = TestBackend::load_model(&ctx, "/models/test.gguf").unwrap();
     let inference_err = TestBackend::inference_start(&model, "", 100, 0.7, 42);
     assert!(inference_err.is_err());
-    assert!(matches!(
-        inference_err.unwrap_err(),
-        ComputeError::InvalidParameter(_)
-    ));
+    assert!(matches!(inference_err.unwrap_err(), ComputeError::InvalidParameter(_)));
 }
 
 #[test]

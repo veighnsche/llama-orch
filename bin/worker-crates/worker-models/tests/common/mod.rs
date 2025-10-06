@@ -19,23 +19,19 @@ impl TestConfig {
     /// Load test configuration from .llorch.toml
     pub fn load() -> Self {
         let config_path = Path::new("../../.llorch.toml");
-        
+
         if !config_path.exists() {
-            eprintln!("\n⚠️  WARNING: .llorch.toml not found, using defaults (CUDA disabled for safety)");
-            return Self {
-                cuda_enabled: false,
-                skip_cuda_tests: false,
-            };
+            eprintln!(
+                "\n⚠️  WARNING: .llorch.toml not found, using defaults (CUDA disabled for safety)"
+            );
+            return Self { cuda_enabled: false, skip_cuda_tests: false };
         }
 
         let content = match std::fs::read_to_string(config_path) {
             Ok(c) => c,
             Err(e) => {
                 eprintln!("\n⚠️  WARNING: Failed to read .llorch.toml: {}", e);
-                return Self {
-                    cuda_enabled: false,
-                    skip_cuda_tests: false,
-                };
+                return Self { cuda_enabled: false, skip_cuda_tests: false };
             }
         };
 
@@ -43,10 +39,7 @@ impl TestConfig {
             Ok(v) => v,
             Err(e) => {
                 eprintln!("\n⚠️  WARNING: Failed to parse .llorch.toml: {}", e);
-                return Self {
-                    cuda_enabled: false,
-                    skip_cuda_tests: false,
-                };
+                return Self { cuda_enabled: false, skip_cuda_tests: false };
             }
         };
 
@@ -62,10 +55,7 @@ impl TestConfig {
             .and_then(|s| s.as_bool())
             .unwrap_or(false);
 
-        Self {
-            cuda_enabled,
-            skip_cuda_tests,
-        }
+        Self { cuda_enabled, skip_cuda_tests }
     }
 
     /// Check if CUDA tests should run
@@ -78,7 +68,7 @@ impl TestConfig {
 pub fn init_test_env() {
     INIT.call_once(|| {
         let config = TestConfig::load();
-        
+
         unsafe {
             CUDA_ENABLED = config.cuda_enabled;
         }

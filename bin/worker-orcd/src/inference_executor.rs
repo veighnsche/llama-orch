@@ -12,11 +12,11 @@
 //! - M0-W-1422: Stop sequences
 //! - M0-W-1300: HTTP API extension
 
-use worker_common::inference_result::StopReason;
-use worker_common::inference_result::InferenceResult;
-use worker_common::sampling_config::SamplingConfig;
 use std::time::Instant;
 use tracing::{debug, info, warn};
+use worker_common::inference_result::InferenceResult;
+use worker_common::inference_result::StopReason;
+use worker_common::sampling_config::SamplingConfig;
 
 /// Inference execution state
 ///

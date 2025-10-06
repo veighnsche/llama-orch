@@ -19,7 +19,7 @@ use worker_orcd::tokenizer::{BPEDecoder, BPEEncoder, MergeTable, Vocabulary};
 fn test_qwen_full_pipeline() {
     common::init_test_env();
     announce_stub_mode!("test_qwen_full_pipeline");
-    
+
     // 1. Load model
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
@@ -67,6 +67,8 @@ fn test_qwen_full_pipeline() {
 /// Integration test: Full pipeline with Phi-3
 #[test]
 fn test_phi3_full_pipeline() {
+    common::init_test_env();
+    announce_stub_mode!("test_phi3_full_pipeline");
     // 1. Load model
     let config = Phi3Config::phi3_mini_4k();
     let model = Phi3WeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
@@ -114,6 +116,8 @@ fn test_phi3_full_pipeline() {
 /// Integration test: Model switching via adapter
 #[test]
 fn test_adapter_model_switching() {
+    common::init_test_env();
+    announce_stub_mode!("test_adapter_model_switching");
     // Load both models
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
@@ -144,6 +148,8 @@ fn test_adapter_model_switching() {
 /// Integration test: Error propagation
 #[test]
 fn test_error_propagation() {
+    common::init_test_env();
+    announce_stub_mode!("test_error_propagation");
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
     let adapter = LlamaModelAdapter::new_qwen(qwen_model);
@@ -183,6 +189,8 @@ fn test_configuration_validation() {
 /// Integration test: VRAM usage comparison
 #[test]
 fn test_vram_usage_comparison() {
+    common::init_test_env();
+    announce_stub_mode!("test_vram_usage_comparison");
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
     let qwen_adapter = LlamaModelAdapter::new_qwen(qwen_model);
@@ -205,6 +213,8 @@ fn test_vram_usage_comparison() {
 /// Integration test: Multi-token generation
 #[test]
 fn test_multi_token_generation() {
+    common::init_test_env();
+    announce_stub_mode!("test_multi_token_generation");
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
     let adapter = LlamaModelAdapter::new_qwen(model);
@@ -230,6 +240,8 @@ fn test_multi_token_generation() {
 /// Integration test: Temperature sweep
 #[test]
 fn test_temperature_sweep() {
+    common::init_test_env();
+    announce_stub_mode!("test_temperature_sweep");
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
     let adapter = LlamaModelAdapter::new_qwen(model);
@@ -255,6 +267,8 @@ fn test_temperature_sweep() {
 /// Integration test: Seed determinism
 #[test]
 fn test_seed_determinism() {
+    common::init_test_env();
+    announce_stub_mode!("test_seed_determinism");
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
     let adapter = LlamaModelAdapter::new_qwen(model);
@@ -282,6 +296,8 @@ fn test_seed_determinism() {
 /// Integration test: GQA-specific attention patterns
 #[test]
 fn test_gqa_attention_patterns() {
+    common::init_test_env();
+    announce_stub_mode!("test_gqa_attention_patterns");
     // Test Qwen (GQA with 14 Q heads, 2 KV heads)
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
@@ -313,6 +329,8 @@ fn test_gqa_attention_patterns() {
 /// Integration test: RoPE frequency variations
 #[test]
 fn test_rope_frequency_variations() {
+    common::init_test_env();
+    announce_stub_mode!("test_rope_frequency_variations");
     // Qwen uses rope_freq_base = 1000000.0
     let qwen_config = QwenConfig::qwen2_5_0_5b();
     let qwen_model = QwenWeightLoader::load_to_vram("dummy.gguf", &qwen_config).unwrap();
@@ -344,6 +362,8 @@ fn test_rope_frequency_variations() {
 /// Integration test: Long context handling (32K tokens)
 #[test]
 fn test_long_context_handling() {
+    common::init_test_env();
+    announce_stub_mode!("test_long_context_handling");
     let config = QwenConfig::qwen2_5_0_5b();
     let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
     let adapter = LlamaModelAdapter::new_qwen(model);

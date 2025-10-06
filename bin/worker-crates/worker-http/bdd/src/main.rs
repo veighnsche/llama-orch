@@ -9,7 +9,5 @@ use steps::HttpWorld;
 
 #[tokio::main]
 async fn main() {
-    HttpWorld::cucumber()
-        .run_and_exit("tests/features")
-        .await;
+    HttpWorld::cucumber().run_and_exit("tests/features").await;
 }

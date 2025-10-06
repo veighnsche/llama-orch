@@ -19,13 +19,13 @@
 //! Spec: FT-034
 
 use super::{
-    AdapterForwardConfig, LlamaModelAdapter, ModelType,
     gpt::{GPTConfig, GPTWeightLoader},
     phi3::{Phi3Config, Phi3WeightLoader},
     qwen::{QwenConfig, QwenWeightLoader},
+    AdapterForwardConfig, LlamaModelAdapter, ModelType,
 };
-use worker_gguf::GGUFMetadata;
 use thiserror::Error;
+use worker_gguf::GGUFMetadata;
 
 /// Factory errors
 #[derive(Debug, Error)]
@@ -96,8 +96,8 @@ impl AdapterFactory {
             .map_err(|e| FactoryError::GGUFParsingFailed(e.to_string()))?;
 
         // Detect architecture from metadata
-        let arch_str = metadata.architecture()
-            .map_err(|e| FactoryError::GGUFParsingFailed(e.to_string()))?;
+        let arch_str =
+            metadata.architecture().map_err(|e| FactoryError::GGUFParsingFailed(e.to_string()))?;
         let arch = Architecture::from_str(&arch_str)?;
 
         Self::from_gguf_with_arch(path, arch)
@@ -140,7 +140,11 @@ impl AdapterFactory {
     fn detect_architecture_from_filename(path: &str) -> Result<Architecture, FactoryError> {
         let path_lower = path.to_lowercase();
 
-        if path_lower.contains("qwen") || path_lower.contains("phi") || path_lower.contains("llama") || path_lower.contains("mistral") {
+        if path_lower.contains("qwen")
+            || path_lower.contains("phi")
+            || path_lower.contains("llama")
+            || path_lower.contains("mistral")
+        {
             Ok(Architecture::Llama)
         } else if path_lower.contains("gpt") {
             Ok(Architecture::GPT)
@@ -154,7 +158,7 @@ impl AdapterFactory {
     /// Detect model variant from filename
     fn detect_model_variant(path: &str) -> Result<ModelType, FactoryError> {
         let path_lower = path.to_lowercase();
-        
+
         if path_lower.contains("qwen") {
             Ok(ModelType::Qwen2_5)
         } else if path_lower.contains("phi-3") || path_lower.contains("phi3") {
@@ -170,7 +174,9 @@ impl AdapterFactory {
         } else if path_lower.contains("gpt-3") || path_lower.contains("gpt3") {
             Ok(ModelType::GPT3)
         } else {
-            Err(FactoryError::UnsupportedVariant("Cannot detect model variant from filename".to_string()))
+            Err(FactoryError::UnsupportedVariant(
+                "Cannot detect model variant from filename".to_string(),
+            ))
         }
     }
 

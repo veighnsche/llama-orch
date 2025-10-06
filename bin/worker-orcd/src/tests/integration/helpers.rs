@@ -5,23 +5,23 @@
 //! # Spec References
 //! - M0-W-1820: Integration test framework
 
-use worker_http::sse::InferenceEvent;
-use worker_http::validation::ExecuteRequest;
 use std::time::Duration;
 use tokio::time::timeout;
+use worker_http::sse::InferenceEvent;
+use worker_http::validation::ExecuteRequest;
 
 /// Error type for helper functions
 #[derive(Debug, thiserror::Error)]
 pub enum HelperError {
     #[error("SSE parsing failed: {0}")]
     ParseFailed(String),
-    
+
     #[error("Event order validation failed: {0}")]
     OrderValidationFailed(String),
-    
+
     #[error("Timeout waiting for events")]
     Timeout,
-    
+
     #[error("Invalid event: {0}")]
     InvalidEvent(String),
 }
@@ -50,59 +50,61 @@ pub async fn collect_sse_events(
 ) -> Result<Vec<InferenceEvent>, HelperError> {
     let mut events = Vec::new();
     let mut buffer = Vec::new();
-    
+
     let result = timeout(Duration::from_secs(30), async {
-        while let Some(chunk) = response.chunk().await.map_err(|e| HelperError::ParseFailed(e.to_string()))? {
+        while let Some(chunk) =
+            response.chunk().await.map_err(|e| HelperError::ParseFailed(e.to_string()))?
+        {
             buffer.extend_from_slice(&chunk);
-            
+
             // Convert to string for processing
             let text = String::from_utf8_lossy(&buffer);
             let mut text_str = text.to_string();
-            
+
             // Process complete SSE messages
             loop {
                 let pos = match text_str.find("\n\n") {
                     Some(p) => p,
                     None => break,
                 };
-                
+
                 let message = text_str[..pos].to_string();
                 text_str = text_str[pos + 2..].to_string();
-                
+
                 // Parse SSE message
                 if let Some(event) = parse_sse_message(&message)? {
                     let is_terminal = event.is_terminal();
                     events.push(event);
-                    
+
                     // Stop if terminal event
                     if is_terminal {
                         return Ok(events);
                     }
                 }
             }
-            
+
             // Update buffer with remaining text
             buffer = text_str.into_bytes();
         }
-        
+
         Ok(events)
     })
     .await
     .map_err(|_| HelperError::Timeout)??;
-    
+
     Ok(result)
 }
 
 /// Parse single SSE message
 fn parse_sse_message(message: &str) -> Result<Option<InferenceEvent>, HelperError> {
     let mut data = None;
-    
+
     for line in message.lines() {
         if let Some(d) = line.strip_prefix("data: ") {
             data = Some(d.to_string());
         }
     }
-    
+
     if let Some(data_str) = data {
         let event: InferenceEvent = serde_json::from_str(&data_str)
             .map_err(|e| HelperError::ParseFailed(format!("JSON parse error: {}", e)))?;
@@ -129,11 +131,9 @@ fn parse_sse_message(message: &str) -> Result<Option<InferenceEvent>, HelperErro
 /// Ok if order is valid, Err with description if invalid
 pub fn assert_event_order(events: &[InferenceEvent]) -> Result<(), HelperError> {
     if events.is_empty() {
-        return Err(HelperError::OrderValidationFailed(
-            "No events received".to_string(),
-        ));
+        return Err(HelperError::OrderValidationFailed("No events received".to_string()));
     }
-    
+
     // First event must be Started
     if !matches!(events[0], InferenceEvent::Started { .. }) {
         return Err(HelperError::OrderValidationFailed(format!(
@@ -141,7 +141,7 @@ pub fn assert_event_order(events: &[InferenceEvent]) -> Result<(), HelperError> 
             events[0]
         )));
     }
-    
+
     // Last event must be terminal (End or Error)
     let last = events.last().unwrap();
     if !last.is_terminal() {
@@ -150,7 +150,7 @@ pub fn assert_event_order(events: &[InferenceEvent]) -> Result<(), HelperError> 
             last
         )));
     }
-    
+
     // Middle events should be Token or Metrics
     for (i, event) in events.iter().enumerate().skip(1).take(events.len() - 2) {
         match event {
@@ -163,7 +163,7 @@ pub fn assert_event_order(events: &[InferenceEvent]) -> Result<(), HelperError> 
             }
         }
     }
-    
+
     Ok(())
 }
 
@@ -211,19 +211,19 @@ pub fn assert_token_count(events: &[InferenceEvent], expected: usize) -> Result<
 /// Assert that inference completed successfully (not error/cancelled)
 pub fn assert_successful_completion(events: &[InferenceEvent]) -> Result<(), HelperError> {
     use worker_common::inference_result::StopReason;
-    
+
     let end_event = extract_end_event(events)
         .ok_or_else(|| HelperError::OrderValidationFailed("No End event found".to_string()))?;
-    
+
     if let InferenceEvent::End { stop_reason, .. } = end_event {
         match stop_reason {
             StopReason::MaxTokens | StopReason::Eos | StopReason::StopSequence => Ok(()),
-            StopReason::Error => Err(HelperError::OrderValidationFailed(
-                "Inference ended with error".to_string(),
-            )),
-            StopReason::Cancelled => Err(HelperError::OrderValidationFailed(
-                "Inference was cancelled".to_string(),
-            )),
+            StopReason::Error => {
+                Err(HelperError::OrderValidationFailed("Inference ended with error".to_string()))
+            }
+            StopReason::Cancelled => {
+                Err(HelperError::OrderValidationFailed("Inference was cancelled".to_string()))
+            }
         }
     } else {
         Err(HelperError::InvalidEvent("Expected End event".to_string()))
@@ -231,11 +231,7 @@ pub fn assert_successful_completion(events: &[InferenceEvent]) -> Result<(), Hel
 }
 
 /// Create test execute request with defaults
-pub fn make_test_request(
-    job_id: &str,
-    prompt: &str,
-    max_tokens: u32,
-) -> ExecuteRequest {
+pub fn make_test_request(job_id: &str, prompt: &str, max_tokens: u32) -> ExecuteRequest {
     ExecuteRequest {
         job_id: job_id.to_string(),
         prompt: prompt.to_string(),
@@ -264,10 +260,7 @@ mod tests {
     }
 
     fn make_token(t: &str, i: u32) -> InferenceEvent {
-        InferenceEvent::Token {
-            t: t.to_string(),
-            i,
-        }
+        InferenceEvent::Token { t: t.to_string(), i }
     }
 
     fn make_end() -> InferenceEvent {
@@ -281,13 +274,9 @@ mod tests {
 
     #[test]
     fn test_assert_event_order_valid() {
-        let events = vec![
-            make_started(),
-            make_token("Hello", 0),
-            make_token(" world", 1),
-            make_end(),
-        ];
-        
+        let events =
+            vec![make_started(), make_token("Hello", 0), make_token(" world", 1), make_end()];
+
         assert!(assert_event_order(&events).is_ok());
     }
 
@@ -299,21 +288,15 @@ mod tests {
 
     #[test]
     fn test_assert_event_order_no_started() {
-        let events = vec![
-            make_token("Hello", 0),
-            make_end(),
-        ];
-        
+        let events = vec![make_token("Hello", 0), make_end()];
+
         assert!(assert_event_order(&events).is_err());
     }
 
     #[test]
     fn test_assert_event_order_no_terminal() {
-        let events = vec![
-            make_started(),
-            make_token("Hello", 0),
-        ];
-        
+        let events = vec![make_started(), make_token("Hello", 0)];
+
         assert!(assert_event_order(&events).is_err());
     }
 
@@ -326,7 +309,7 @@ mod tests {
             make_token("!", 2),
             make_end(),
         ];
-        
+
         let tokens = extract_tokens(&events);
         assert_eq!(tokens, vec!["Hello", " world", "!"]);
     }
@@ -340,25 +323,16 @@ mod tests {
 
     #[test]
     fn test_assert_token_count() {
-        let events = vec![
-            make_started(),
-            make_token("A", 0),
-            make_token("B", 1),
-            make_end(),
-        ];
-        
+        let events = vec![make_started(), make_token("A", 0), make_token("B", 1), make_end()];
+
         assert!(assert_token_count(&events, 2).is_ok());
         assert!(assert_token_count(&events, 3).is_err());
     }
 
     #[test]
     fn test_assert_successful_completion() {
-        let events = vec![
-            make_started(),
-            make_token("test", 0),
-            make_end(),
-        ];
-        
+        let events = vec![make_started(), make_token("test", 0), make_end()];
+
         assert!(assert_successful_completion(&events).is_ok());
     }
 
@@ -366,19 +340,16 @@ mod tests {
     fn test_assert_successful_completion_error() {
         let events = vec![
             make_started(),
-            InferenceEvent::Error {
-                code: "TEST".to_string(),
-                message: "test error".to_string(),
-            },
+            InferenceEvent::Error { code: "TEST".to_string(), message: "test error".to_string() },
         ];
-        
+
         assert!(assert_successful_completion(&events).is_err());
     }
 
     #[test]
     fn test_make_test_request() {
         let req = make_test_request("test-1", "Hello", 100);
-        
+
         assert_eq!(req.job_id, "test-1");
         assert_eq!(req.prompt, "Hello");
         assert_eq!(req.max_tokens, 100);

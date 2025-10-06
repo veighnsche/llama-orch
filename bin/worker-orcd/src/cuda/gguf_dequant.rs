@@ -16,9 +16,9 @@
 //!
 //! See: bin/worker-orcd/cuda/kernels/gguf_dequant.cuh
 
+use half::f16;
 use std::ffi::c_void;
 use std::os::raw::c_int;
-use half::f16;
 
 // ============================================================================
 // FFI Declarations
@@ -85,11 +85,8 @@ extern "C" {
     fn cuda_malloc_device(size_bytes: usize) -> *mut c_void;
 
     /// Copy host to device
-    fn cuda_memcpy_host_to_device(
-        dst: *mut c_void,
-        src: *const c_void,
-        size_bytes: usize,
-    ) -> c_int;
+    fn cuda_memcpy_host_to_device(dst: *mut c_void, src: *const c_void, size_bytes: usize)
+        -> c_int;
 
     /// Free device memory
     fn cuda_free_memory(ptr: *mut c_void);
@@ -122,10 +119,7 @@ pub unsafe fn dequantize_q4k_gpu(
 ) -> Result<*mut c_void, String> {
     // Validate input
     if num_elements % 256 != 0 {
-        return Err(format!(
-            "Q4_K num_elements must be multiple of 256, got {}",
-            num_elements
-        ));
+        return Err(format!("Q4_K num_elements must be multiple of 256, got {}", num_elements));
     }
 
     let num_blocks = num_elements / 256;
@@ -207,10 +201,7 @@ pub unsafe fn dequantize_q6k_gpu(
 ) -> Result<*mut c_void, String> {
     // Validate input
     if num_elements % 256 != 0 {
-        return Err(format!(
-            "Q6_K num_elements must be multiple of 256, got {}",
-            num_elements
-        ));
+        return Err(format!("Q6_K num_elements must be multiple of 256, got {}", num_elements));
     }
 
     let num_blocks = num_elements / 256;
@@ -292,10 +283,7 @@ pub unsafe fn dequantize_q5_0_gpu(
 ) -> Result<*mut c_void, String> {
     // Validate input
     if num_elements % 32 != 0 {
-        return Err(format!(
-            "Q5_0 num_elements must be multiple of 32, got {}",
-            num_elements
-        ));
+        return Err(format!("Q5_0 num_elements must be multiple of 32, got {}", num_elements));
     }
 
     let num_blocks = num_elements / 32;
@@ -377,10 +365,7 @@ pub unsafe fn dequantize_q8_0_gpu(
 ) -> Result<*mut c_void, String> {
     // Validate input
     if num_elements % 32 != 0 {
-        return Err(format!(
-            "Q8_0 num_elements must be multiple of 32, got {}",
-            num_elements
-        ));
+        return Err(format!("Q8_0 num_elements must be multiple of 32, got {}", num_elements));
     }
 
     let num_blocks = num_elements / 32;
@@ -433,8 +418,11 @@ pub unsafe fn dequantize_q8_0_gpu(
 
     if kernel_result != 0 {
         cuda_free_memory(d_output);
-        return Err(format!("Q8_0 kernel launch failed: error {} ({})", 
-                          kernel_result, get_cuda_error_string(kernel_result)));
+        return Err(format!(
+            "Q8_0 kernel launch failed: error {} ({})",
+            kernel_result,
+            get_cuda_error_string(kernel_result)
+        ));
     }
 
     Ok(d_output)
@@ -456,7 +444,7 @@ fn get_cuda_error_string(code: c_int) -> &'static str {
         13 => "cudaErrorInvalidPitchValue",
         14 => "cudaErrorInvalidSymbol",
         77 => "cudaErrorIllegalAddress",
-        _ => "Unknown CUDA error"
+        _ => "Unknown CUDA error",
     }
 }
 

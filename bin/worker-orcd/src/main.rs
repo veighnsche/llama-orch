@@ -102,7 +102,7 @@ async fn main() -> anyhow::Result<()> {
     let addr = SocketAddr::from(([0, 0, 0, 0], args.port));
     let backend = Arc::new(
         CudaInferenceBackend::new(cuda_model, &args.model)
-            .map_err(|e| anyhow::anyhow!("Failed to create inference backend: {}", e))?
+            .map_err(|e| anyhow::anyhow!("Failed to create inference backend: {}", e))?,
     );
     let router = create_router(backend);
     let server = HttpServer::new(addr, router).await?;

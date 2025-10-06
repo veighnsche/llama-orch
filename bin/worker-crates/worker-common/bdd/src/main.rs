@@ -9,7 +9,5 @@ use steps::CommonWorld;
 
 #[tokio::main]
 async fn main() {
-    CommonWorld::cucumber()
-        .run_and_exit("tests/features")
-        .await;
+    CommonWorld::cucumber().run_and_exit("tests/features").await;
 }

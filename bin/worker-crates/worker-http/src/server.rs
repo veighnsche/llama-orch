@@ -126,7 +126,6 @@ impl HttpServer {
         });
 
         // Track shutdown duration
-        
 
         // Run server with graceful shutdown
         axum::serve(listener, self.router)
@@ -136,7 +135,6 @@ impl HttpServer {
             })
             .await
             .map_err(|e| ServerError::Runtime(e.to_string()))?;
-
 
         info!("HTTP server shutdown complete");
 
