@@ -15,7 +15,7 @@ extern "C" {
         float eps,
         cudaStream_t stream
     );
-    
+
     void cuda_rope_forward(
         void* q,
         void* k,
@@ -26,7 +26,19 @@ extern "C" {
         float rope_freq_base,
         cudaStream_t stream
     );
-    
+
+    void cuda_rope_forward_ex(
+        void* q,
+        void* k,
+        uint32_t batch_size,
+        uint32_t num_heads,
+        uint32_t num_kv_heads,
+        uint32_t head_dim,
+        uint32_t pos,
+        float rope_freq_base,
+        cudaStream_t stream
+    );
+
     void cuda_gqa_attention_forward(
         const void* q,
         const void* k,
@@ -237,14 +249,14 @@ void QwenTransformer::forward_layer(
     float alpha = 1.0f;
     float beta = 0.0f;
     
-    // Q projection: q = normed @ q_weight^T + q_bias
+    // Q projection: q = W_q [q_dim, hidden] * x [hidden, 1]
     uint32_t q_dim = config_.num_heads * config_.head_dim;
     cublasGemmEx(
         cublas_handle_,
-        CUBLAS_OP_T, CUBLAS_OP_N,
+        CUBLAS_OP_N, CUBLAS_OP_N,
         q_dim, batch_size, config_.hidden_dim,
         &alpha,
-        layer.attn_q_weight, CUDA_R_16F, config_.hidden_dim,
+        layer.attn_q_weight, CUDA_R_16F, q_dim,
         normed_half, CUDA_R_16F, config_.hidden_dim,
         &beta,
         q_half, CUDA_R_16F, q_dim,
@@ -254,14 +266,14 @@ void QwenTransformer::forward_layer(
     // Add Q bias
     cuda_bias_add(q_proj_, q_proj_, layer.attn_q_bias, batch_size, q_dim, nullptr);
     
-    // K projection: k = normed @ k_weight^T + k_bias
+    // K projection: k = W_k [kv_dim, hidden] * x [hidden, 1]
     uint32_t kv_dim = config_.num_kv_heads * config_.head_dim;
     cublasGemmEx(
         cublas_handle_,
-        CUBLAS_OP_T, CUBLAS_OP_N,
+        CUBLAS_OP_N, CUBLAS_OP_N,
         kv_dim, batch_size, config_.hidden_dim,
         &alpha,
-        layer.attn_k_weight, CUDA_R_16F, config_.hidden_dim,
+        layer.attn_k_weight, CUDA_R_16F, kv_dim,
         normed_half, CUDA_R_16F, config_.hidden_dim,
         &beta,
         k_half, CUDA_R_16F, kv_dim,
@@ -271,13 +283,13 @@ void QwenTransformer::forward_layer(
     // Add K bias
     cuda_bias_add(k_proj_, k_proj_, layer.attn_k_bias, batch_size, kv_dim, nullptr);
     
-    // V projection: v = normed @ v_weight^T + v_bias
+    // V projection: v = W_v [kv_dim, hidden] * x [hidden, 1]
     cublasGemmEx(
         cublas_handle_,
-        CUBLAS_OP_T, CUBLAS_OP_N,
+        CUBLAS_OP_N, CUBLAS_OP_N,
         kv_dim, batch_size, config_.hidden_dim,
         &alpha,
-        layer.attn_v_weight, CUDA_R_16F, config_.hidden_dim,
+        layer.attn_v_weight, CUDA_R_16F, kv_dim,
         normed_half, CUDA_R_16F, config_.hidden_dim,
         &beta,
         v_half, CUDA_R_16F, kv_dim,
@@ -287,15 +299,16 @@ void QwenTransformer::forward_layer(
     // Add V bias
     cuda_bias_add(v_proj_, v_proj_, layer.attn_v_bias, batch_size, kv_dim, nullptr);
     
-    // 3. Apply RoPE to Q and K
-    cuda_rope_forward(
+    // 3. Apply RoPE to Q and K (explicit position and KV heads)
+    cuda_rope_forward_ex(
         q_proj_,
         k_proj_,
         batch_size,
         config_.num_heads,
+        config_.num_kv_heads,
         config_.head_dim,
         pos,
-        1000000.0f,  // RoPE freq_base for Qwen2.5
+        config_.rope_freq_base,
         nullptr
     );
     
@@ -329,7 +342,7 @@ void QwenTransformer::forward_layer(
     half* ffn_out_half = reinterpret_cast<half*>(ffn_output_);  // Reuse ffn_output_ as temp buffer
     cublasGemmEx(
         cublas_handle_,
-        CUBLAS_OP_T, CUBLAS_OP_N,
+        CUBLAS_OP_N, CUBLAS_OP_N,
         config_.hidden_dim, batch_size, config_.hidden_dim,
         &alpha,
         layer.attn_output, CUDA_R_16F, config_.hidden_dim,
@@ -411,12 +424,13 @@ void QwenTransformer::project_to_vocab(
     float beta = 0.0f;
     
     // Use FP32 output for logits (better numerical stability for sampling)
+    // Compute: logits [vocab, batch] = W_lm [vocab, hidden] * hidden [hidden, batch]
     cublasStatus_t status = cublasGemmEx(
         cublas_handle_,
-        CUBLAS_OP_T, CUBLAS_OP_N,
+        CUBLAS_OP_N, CUBLAS_OP_N,
         config_.vocab_size, batch_size, config_.hidden_dim,
         &alpha,
-        lm_head_half, CUDA_R_16F, config_.hidden_dim,
+        lm_head_half, CUDA_R_16F, config_.vocab_size,
         hidden_half, CUDA_R_16F, config_.hidden_dim,
         &beta,
         logits, CUDA_R_32F, config_.vocab_size,

@@ -55,6 +55,7 @@ InferenceContext* cuda_inference_init(
     uint32_t head_dim,
     uint32_t ffn_dim,
     uint32_t context_length,
+    float rope_freq_base,
     int* error
 ) {
     try {
@@ -81,7 +82,7 @@ InferenceContext* cuda_inference_init(
         config.head_dim = head_dim;
         config.ffn_dim = ffn_dim;
         config.context_length = context_length;
-        config.rope_freq_base = 1000000.0f;  // Qwen2.5 specific
+        config.rope_freq_base = rope_freq_base;
         
         // Create transformer
         auto* transformer = new worker::transformer::QwenTransformer(qwen_model, config);

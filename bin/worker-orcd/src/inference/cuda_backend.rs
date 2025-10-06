@@ -108,9 +108,11 @@ impl InferenceBackend for CudaInferenceBackend {
         let num_heads = self.metadata.num_heads()? as u32;
         let num_kv_heads = self.metadata.num_kv_heads()? as u32;
         let context_length = self.metadata.context_length()? as u32;
+        let rope_freq_base = self.metadata.rope_freq_base().unwrap_or(10000.0) as f32;
         
         tracing::info!("Model config: vocab={}, hidden={}, layers={}, heads={}, kv_heads={}", 
             vocab_size, hidden_dim, num_layers, num_heads, num_kv_heads);
+        tracing::info!("RoPE frequency base: {}", rope_freq_base);
         
         // Calculate head_dim and derive ffn_dim from GGUF tensors (do not assume 4x)
         let head_dim = hidden_dim / num_heads;
@@ -139,6 +141,7 @@ impl InferenceBackend for CudaInferenceBackend {
             head_dim,
             ffn_dim,
             context_length,
+            rope_freq_base,
         )?;
         
         // Process prompt tokens (prefill phase)
@@ -174,9 +177,9 @@ impl InferenceBackend for CudaInferenceBackend {
             // Generate next token
             let next_token_id = inference.generate_token(
                 current_token,
-                0.8, // Slightly higher temperature for more creativity
-                40, // Lower top_k to reduce repetition
-                0.9, // Lower top_p for more focused sampling
+                0.0, // Greedy for debugging
+                0,   // Disable top-k
+                1.0, // Disable top-p filtering
                 config.seed.wrapping_add(token_idx as u64),
             )?;
             
@@ -186,7 +189,7 @@ impl InferenceBackend for CudaInferenceBackend {
             }
             
             // Decode token to text
-            let token_text = self.tokenizer.decode(&[next_token_id], false)
+            let token_text = self.tokenizer.decode(&[next_token_id], true)
                 .map_err(|e| format!("Detokenization failed: {}", e))?;
             
             // Debug: show token ID for first few tokens

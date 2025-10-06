@@ -45,6 +45,7 @@ impl RealInference {
         head_dim: u32,
         ffn_dim: u32,
         context_length: u32,
+        rope_freq_base: f32,
     ) -> Result<Self, CudaError> {
         let mut error_code = 0;
 
@@ -60,6 +61,7 @@ impl RealInference {
                 head_dim,
                 ffn_dim,
                 context_length,
+                rope_freq_base,
                 &mut error_code,
             )
         };

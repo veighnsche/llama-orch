@@ -83,6 +83,7 @@ TEST_F(InferencePipelineTest, InferenceContextInit) {
         64,      // head_dim
         4864,    // ffn_dim
         32768,   // context_length
+        1000000.0f, // rope_freq_base for Qwen2.5
         &error
     );
     
@@ -97,7 +98,7 @@ TEST_F(InferencePipelineTest, InferenceContextInit) {
 TEST_F(InferencePipelineTest, GenerateSingleToken) {
     int error = 0;
     inf_ctx = cuda_inference_init(
-        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, &error
+        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, 1000000.0f, &error
     );
     ASSERT_EQ(error, 0);
     
@@ -123,7 +124,7 @@ TEST_F(InferencePipelineTest, GenerateSingleToken) {
 TEST_F(InferencePipelineTest, GenerateMultipleTokens) {
     int error = 0;
     inf_ctx = cuda_inference_init(
-        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, &error
+        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, 1000000.0f, &error
     );
     ASSERT_EQ(error, 0);
     
@@ -152,7 +153,7 @@ TEST_F(InferencePipelineTest, GenerateMultipleTokens) {
 TEST_F(InferencePipelineTest, KVCacheReset) {
     int error = 0;
     inf_ctx = cuda_inference_init(
-        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, &error
+        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, 1000000.0f, &error
     );
     ASSERT_EQ(error, 0);
     
@@ -182,7 +183,7 @@ TEST_F(InferencePipelineTest, KVCacheReset) {
 TEST_F(InferencePipelineTest, TemperatureSampling) {
     int error = 0;
     inf_ctx = cuda_inference_init(
-        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, &error
+        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, 1000000.0f, &error
     );
     ASSERT_EQ(error, 0);
     
@@ -208,7 +209,7 @@ TEST_F(InferencePipelineTest, TemperatureSampling) {
 TEST_F(InferencePipelineTest, ReproducibilityWithSeed) {
     int error = 0;
     inf_ctx = cuda_inference_init(
-        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, &error
+        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, 1000000.0f, &error
     );
     ASSERT_EQ(error, 0);
     
@@ -245,7 +246,7 @@ TEST_F(InferencePipelineTest, ReproducibilityWithSeed) {
 TEST_F(InferencePipelineTest, TopKSampling) {
     int error = 0;
     inf_ctx = cuda_inference_init(
-        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, &error
+        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, 1000000.0f, &error
     );
     ASSERT_EQ(error, 0);
     
@@ -265,7 +266,7 @@ TEST_F(InferencePipelineTest, TopKSampling) {
 TEST_F(InferencePipelineTest, TopPSampling) {
     int error = 0;
     inf_ctx = cuda_inference_init(
-        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, &error
+        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, 1000000.0f, &error
     );
     ASSERT_EQ(error, 0);
     
@@ -285,7 +286,7 @@ TEST_F(InferencePipelineTest, TopPSampling) {
 TEST_F(InferencePipelineTest, ErrorHandlingInvalidToken) {
     int error = 0;
     inf_ctx = cuda_inference_init(
-        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, &error
+        model, 151936, 896, 24, 14, 2, 64, 4864, 32768, 1000000.0f, &error
     );
     ASSERT_EQ(error, 0);
     
@@ -309,7 +310,7 @@ TEST_F(InferencePipelineTest, MemoryCleanup) {
     // Create and destroy multiple contexts
     for (int i = 0; i < 3; i++) {
         InferenceContext* ctx = cuda_inference_init(
-            model, 151936, 896, 24, 14, 2, 64, 4864, 32768, &error
+            model, 151936, 896, 24, 14, 2, 64, 4864, 32768, 1000000.0f, &error
         );
         EXPECT_EQ(error, 0);
         EXPECT_NE(ctx, nullptr);

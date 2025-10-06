@@ -245,6 +245,7 @@ extern "C" {
         head_dim: u32,
         ffn_dim: u32,
         context_length: u32,
+        rope_freq_base: f32,
         error: *mut c_int,
     ) -> *mut InferenceContext;
 
@@ -486,6 +487,7 @@ pub unsafe fn cuda_inference_init(
     _head_dim: u32,
     _ffn_dim: u32,
     _context_length: u32,
+    _rope_freq_base: f32,
     error: *mut c_int,
 ) -> *mut InferenceContext {
     *error = 4; // CUDA_ERROR_INFERENCE_FAILED
