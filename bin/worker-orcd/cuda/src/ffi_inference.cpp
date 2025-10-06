@@ -11,6 +11,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
+#include <vector>
+#include <cmath>
 
 // External sampling function
 extern "C" int cuda_sample_token(
@@ -87,9 +89,13 @@ InferenceContext* cuda_inference_init(
         // Create transformer
         auto* transformer = new worker::transformer::QwenTransformer(qwen_model, config);
         
-        // Allocate logits buffer
+        // Allocate logits buffer and initialize to -INFINITY to prevent garbage values
         float* logits;
         cudaMalloc(&logits, vocab_size * sizeof(float));
+        
+        // Initialize buffer to -INFINITY on host, then copy to device
+        std::vector<float> init_logits(vocab_size, -INFINITY);
+        cudaMemcpy(logits, init_logits.data(), vocab_size * sizeof(float), cudaMemcpyHostToDevice);
         
         // Create context
         auto* ctx = new InferenceContext();
@@ -172,9 +178,11 @@ uint32_t cuda_inference_generate_token(
         token_idx++;
         
         // Sample next token
+        // NOTE: ctx->transformer->config_.vocab_size is now the ACTUAL vocab from output.weight
+        //       (e.g., 151643 for Qwen2.5-0.5B), not the padded tokenizer vocab (151936)
         int next_token = cuda_sample_token(
             ctx->logits_buffer,
-            ctx->model->config.vocab_size,
+            ctx->model->config.vocab_size,  // Use actual vocab from config
             temperature,
             top_k,
             top_p,

@@ -71,25 +71,63 @@ impl Model {
             CudaError::ModelLoadFailed(format!("Failed to parse GGUF metadata: {}", e))
         })?;
 
-        // Try to get vocab_size from metadata, fallback to tensor dimensions
-        let vocab_size = match meta.vocab_size() {
-            Ok(size) => size as u32,
-            Err(_) => {
-                // Fallback: derive from token_embd.weight tensor
-                eprintln!("⚠️  [Rust] tokenizer.ggml.tokens not found, deriving vocab_size from token_embd.weight");
-                let tensors = GGUFMetadata::parse_tensors(model_path).map_err(|e| {
-                    CudaError::ModelLoadFailed(format!("Failed to parse tensors: {}", e))
+        // CRITICAL: Use actual vocab size from output.weight tensor, not padded tokenizer size
+        // The lm_head (output.weight) tensor has dimensions [hidden_dim, actual_vocab]
+        // For Qwen2.5-0.5B: [896, 151643] not [896, 151936]
+        // This prevents argmax from scanning garbage values beyond the actual vocabulary
+        let vocab_size = {
+            let tensors = GGUFMetadata::parse_tensors(model_path).map_err(|e| {
+                CudaError::ModelLoadFailed(format!("Failed to parse tensors: {}", e))
+            })?;
+
+            // Get actual vocab from output.weight (lm_head) tensor dimensions
+            let output_tensor = tensors
+                .iter()
+                .find(|t| t.name == "output.weight")
+                .ok_or_else(|| {
+                    CudaError::ModelLoadFailed("Cannot find output.weight tensor".to_string())
+                })?;
+            
+            eprintln!("🔍 [Rust] output.weight dimensions: {:?}", output_tensor.dimensions);
+            eprintln!("🔍 [Rust] output.weight ggml_type: {}", output_tensor.ggml_type);
+            eprintln!("🔍 [Rust] output.weight offset: {}", output_tensor.offset);
+            
+            // Calculate expected size
+            let elem_count: u64 = output_tensor.dimensions.iter().product();
+            let bytes_per_elem = match output_tensor.ggml_type {
+                0 => 4,  // F32
+                1 => 2,  // F16
+                _ => 2,  // Assume F16 for others
+            };
+            let expected_bytes = elem_count * bytes_per_elem;
+            eprintln!("🔍 [Rust] output.weight expected size: {} bytes ({} MB)", 
+                     expected_bytes, expected_bytes / 1024 / 1024);
+            
+            let actual_vocab = output_tensor.dimensions.get(1)
+                .or_else(|| output_tensor.dimensions.get(0))  // Try first dim if second doesn't exist
+                .map(|&d| d as u32)
+                .ok_or_else(|| {
+                    CudaError::ModelLoadFailed("output.weight has no dimensions".to_string())
                 })?;
 
-                tensors
-                    .iter()
-                    .find(|t| t.name == "token_embd.weight")
-                    .and_then(|t| t.dimensions.last())
-                    .map(|&d| d as u32)
-                    .ok_or_else(|| {
-                        CudaError::ModelLoadFailed("Cannot determine vocab_size".to_string())
-                    })?
+            eprintln!("✅ [Rust] Actual vocab size from output.weight: {}", actual_vocab);
+            
+            // Verify against tokenizer vocab (should be padded)
+            if let Ok(tokenizer_vocab) = meta.vocab_size() {
+                if tokenizer_vocab as u32 != actual_vocab {
+                    eprintln!(
+                        "⚠️  [Rust] Tokenizer vocab ({}) != output.weight vocab ({})",
+                        tokenizer_vocab,
+                        actual_vocab
+                    );
+                    eprintln!(
+                        "⚠️  [Rust] Using actual vocab ({}) to avoid scanning garbage values",
+                        actual_vocab
+                    );
+                }
             }
+            
+            actual_vocab
         };
         let hidden_dim = meta
             .hidden_dim()

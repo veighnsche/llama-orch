@@ -121,9 +121,37 @@ This is actually good news because:
 The most likely culprit is the **attention mechanism**, specifically how we handle:
 - Grouped-query attention (GQA) with 7 groups
 - KV cache indexing
-- RoPE positional embeddings
 - Attention score computation
 
 ---
 
 **Action**: Focus debugging on attention kernel and compare with llama.cpp implementation.
+
+
+## Update (2025-10-06 12:18): Vocab Handling in llama.cpp and Action Plan
+
+### What llama.cpp does
+
+- **n_vocab source**: `n_vocab = vocab.n_tokens()` from tokenizer/gguf (no padding).
+- **lm_head dimensions**: `output.weight` created as `{n_embd, n_vocab}`.
+- **logits sizing**: All logits buffers sized to `n_vocab` and copied as `n_tokens * n_vocab` floats.
+- **sampling bound**: Candidates built strictly for token IDs `[0, n_vocab)`.
+
+References:
+- `reference/llama.cpp/src/llama-model.cpp`: `const int64_t n_vocab = vocab.n_tokens();` and `{n_embd, n_vocab}` when creating `output`.
+- `reference/llama.cpp/src/llama-context.cpp`: uses `model.vocab.n_tokens()` for logits stride/size.
+- `reference/llama.cpp/src/llama-sampling.cpp`: iterates `token_id < n_vocab` when building candidates.
+
+### Implication for our code
+
+- We must propagate the **actual vocab size** from GGUF/tokenizer and avoid exposing padded columns in logits and sampling.
+
+### Action Plan
+
+- **Rust**: In `src/inference/cuda_backend.rs`, derive `actual_vocab` from tokenizer or `"output.weight"` dims; pass to `ffi::cuda_inference_init()`.
+- **C++ transformer**: In `cuda/src/transformer/qwen_transformer.cpp::project_to_vocab()`, remove hardcoded `151643`; use `config_.vocab_size` for GEMM `m/ldc` and loops.
+- **C++ FFI**: In `cuda/src/ffi_inference.cpp::cuda_inference_generate_token()`, remove `actual_vocab_size = 151643`; call `cuda_sample_token(logits, config.vocab_size, ...)`.
+- **CUDA sampling**: `cuda/kernels/sampling_wrapper.cu` already honors the passed `vocab_size`.
+- **Sanity**: At init, assert LM head leading dim equals `config_.vocab_size` and log mismatches.
+
+Once aligned, argmax will not scan padded garbage and output should diversify under greedy sampling.

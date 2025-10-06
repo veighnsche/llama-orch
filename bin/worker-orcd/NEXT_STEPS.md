@@ -1,25 +1,55 @@
-# Next Steps After KV Cache Fix
+# Next Steps After Vocab Size Bug Discovery
 
-**Last Updated**: 2025-10-06 11:07  
-**Status**: KV cache fixed, attention working, investigating bias corruption
+**Last Updated**: 2025-10-06 12:18  
+**Status**: Core engine working, but vocab size mismatch causes garbage token selection
 
 ---
 
 ## Immediate Actions
 
-### 1. Test the Fix ✅ COMPLETED
-```bash
-cargo test --release haiku_generation_anti_cheat -- --nocapture 2>&1 | tee test_after_fix.log
+### 1. Fix Vocab Size Mismatch 🔴 CRITICAL
+
+**Problem**: lm_head tensor is [896, 151643] but vocab_size is 151936. Argmax finds garbage beyond actual vocab.
+
+**Options**:
+
+**Option A: Mirror llama.cpp — Use Actual Vocab End-to-End** (RECOMMENDED)
+```rust
+// In Rust weight loader, read actual lm_head dimensions from GGUF
+let lm_head_info = metadata.get_tensor_info("output.weight")?;
+let actual_vocab = lm_head_info.dimensions[1]; // Should be 151643
+// Pass actual_vocab to C++ instead of padded vocab_size
 ```
 
-**Result**: 
-- ✅ Q values now in correct range (0.01 to 0.26)
-- ✅ Attention weights vary across positions
-- ✅ KV cache being read correctly
-- ⚠️ Model generates diverse but poor quality output
-- ❌ Bias values contain huge outliers
+Concrete changes:
+- Rust: In `src/inference/cuda_backend.rs`, derive `actual_vocab` from tokenizer or `"output.weight"` dims; pass to `ffi::cuda_inference_init()`.
+- C++: In `cuda/src/transformer/qwen_transformer.cpp::project_to_vocab()`, remove hardcoded `151643`; use `config_.vocab_size` for GEMM `m` and `ldc` and loops.
+- C++: In `cuda/src/ffi_inference.cpp::cuda_inference_generate_token()`, remove hardcoded `actual_vocab_size = 151643`; call `cuda_sample_token(logits, config.vocab_size, ...)`.
+- CUDA: `cuda/kernels/sampling_wrapper.cu` already honors `vocab_size`; no change needed.
+- Sanity: At init, assert LM head leading dim equals `config_.vocab_size` and log mismatch.
 
-**Conclusion**: Core engine working, bias loading is the remaining issue.
+**Option B: CUDA Kernel to Initialize Padding**
+```cuda
+__global__ void fill_padding_kernel(float* logits, int actual_vocab, int total_vocab) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x + actual_vocab;
+    if (idx < total_vocab) {
+        logits[idx] = -INFINITY;
+    }
+}
+```
+
+**Option C: Modify Argmax to Limit Search**
+```cuda
+// In argmax_kernel, change loop:
+for (int i = 0; i < actual_vocab; i++) {  // Not vocab_size!
+    if (logits[i] > max_val) {
+        max_val = logits[i];
+        max_idx = i;
+    }
+}
+```
+
+**Status**: Implement Option A to match llama.cpp behavior
 
 ### 2. Debug Attention Mechanism ✅ COMPLETED
 
@@ -44,31 +74,13 @@ Added comprehensive debug output to `cuda/kernels/gqa_attention.cu`:
 - Verifies weights sum to 1.0
 - Shows number of positions being attended to
 
-### 4. Investigate Bias Loading 🔴 CURRENT PRIORITY
+### 2. Verify Bias Handling ✅ COMPLETED
 
-**Issue**: QKV bias tensors contain huge outlier values that corrupt attention:
+**Issue**: QKV bias tensors appeared to contain huge outlier values
 
-**Evidence**:
-```
-attn_q_bias[0:10]: -0.0150 0.0255 -0.1035 -0.1357 -14.4375 0.2656 0.3242 0.1240 -15.4375 -34.0000
-                                                      ^^^^^^^^                    ^^^^^^^^  ^^^^^^^^
-Q after bias: -0.0364 -0.0335 -0.1520 -0.3208 -14.3438 0.2576 0.4233 0.0889 -15.6797 -34.0312
-Output: ĠsáºµnĠsáºµnĠsáºµnĠsáºµnĠgottaĠgottaĠgotta... (only 2 tokens repeated)
-```
+**Resolution**: Checked llama.cpp reference implementation - confirmed Qwen2.5 architecture does NOT use bias tensors. The code correctly skips bias addition.
 
-**Current Status**: Bias addition disabled in `qwen_transformer.cpp` (lines 300, 329, 357)
-
-**Action Items**:
-1. **Check weight loader** - Verify bias dequantization in `qwen_weight_loader.cpp`
-2. **Compare with llama.cpp** - Run same model file and check if biases are used
-3. **Inspect GGUF file** - Use `gguf-dump` to check bias tensor metadata
-4. **Test without biases** - Verify if Qwen2.5-0.5B actually uses biases (llama.cpp checks `if (model.layers[il].bq)`)
-
-**Possible causes**:
-- Bias tensors quantized but not dequantized during loading
-- Bias tensor dimensions/layout incorrect
-- Model file has corrupted bias data
-- Qwen2.5-0.5B may not use biases at all
+**Status**: No action needed - bias handling is correct
 
 ---
 
@@ -175,10 +187,14 @@ Add comments explaining:
 - [x] Attention scores computed over all positions
 - [x] Attention weights sum to 1.0
 - [x] KV cache working correctly
-- [ ] Model generates coherent text (needs bias fix)
-- [ ] No repetitive output (partial - less repetitive)
+- [x] Bias handling correct (Qwen2.5 doesn't use biases)
+- [x] Hidden states change with different inputs
+- [x] Logits change with different inputs
+- [ ] **Vocab size mismatch fixed** ← BLOCKING
+- [ ] Model generates diverse tokens
+- [ ] Model generates coherent text
+- [ ] No repetitive output
 - [x] Haiku test passes (pipeline validated)
-- [ ] Bias re-enabled (currently disabled due to corruption)
 - [ ] Debug logging removed
 - [ ] Performance is acceptable (>10 tokens/sec)
 
@@ -212,6 +228,15 @@ The fix is successful when:
 4. **Stability**: No crashes or CUDA errors during extended generation
 
 ---
+
+## llama.cpp Reference Summary
+
+- **n_vocab** is derived from tokenizer: `vocab.n_tokens()`.
+- **lm_head** allocated as `{n_embd, n_vocab}` (no padding exposed).
+- **logits** buffers sized to `n_vocab` and copied as `n_tokens * n_vocab`.
+- **sampling** iterates `token_id in [0, n_vocab)` only.
+
+Action: adopt the same constraints throughout our pipeline (Option A above).
 
 ## Contact
 

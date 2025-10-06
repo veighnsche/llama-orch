@@ -110,6 +110,18 @@ __global__ void argmax_kernel(
             }
         }
         
+        // Debug: Print first few logits and max
+        static int call_count = 0;
+        if (call_count < 15) {  // Increased to see generation phase
+            printf("🔍 [ARGMAX DEBUG #%d] First 10 logits: ", call_count);
+            for (int i = 0; i < 10 && i < vocab_size; i++) {
+                printf("%.2f ", logits[i]);
+            }
+            printf("\n");
+            printf("🔍 [ARGMAX DEBUG #%d] Max: %.2f at token_id=%d (vocab_size=%d)\n", call_count, max_val, max_idx, vocab_size);
+            call_count++;
+        }
+        
         *output_token = max_idx;
     }
 }

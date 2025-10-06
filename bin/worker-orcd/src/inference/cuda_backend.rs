@@ -83,23 +83,40 @@ impl InferenceBackend for CudaInferenceBackend {
         }
 
         // Get model configuration from metadata
-        let vocab_size = match self.metadata.vocab_size() {
-            Ok(size) => size as u32,
-            Err(_) => {
-                // Fallback: derive from token_embd.weight tensor
-                tracing::warn!(
-                    "tokenizer.ggml.tokens not found, deriving vocab_size from token_embd.weight"
-                );
-                let tensors = worker_gguf::GGUFMetadata::parse_tensors(&self.model_path)
-                    .map_err(|e| format!("Failed to parse tensors: {}", e))?;
+        // CRITICAL: Use actual vocab size from output.weight tensor, not padded tokenizer size
+        // The lm_head (output.weight) tensor has dimensions [hidden_dim, actual_vocab]
+        // For Qwen2.5-0.5B: [896, 151643] not [896, 151936]
+        // This prevents argmax from scanning garbage values beyond the actual vocabulary
+        let vocab_size = {
+            let tensors = worker_gguf::GGUFMetadata::parse_tensors(&self.model_path)
+                .map_err(|e| format!("Failed to parse tensors: {}", e))?;
 
-                tensors
-                    .iter()
-                    .find(|t| t.name == "token_embd.weight")
-                    .and_then(|t| t.dimensions.last())
-                    .map(|&d| d as u32)
-                    .ok_or_else(|| "Cannot determine vocab_size".to_string())?
+            // Get actual vocab from output.weight (lm_head) tensor dimensions
+            let actual_vocab = tensors
+                .iter()
+                .find(|t| t.name == "output.weight")
+                .and_then(|t| t.dimensions.get(1))  // Second dimension is vocab_size
+                .map(|&d| d as u32)
+                .ok_or_else(|| "Cannot find output.weight tensor".to_string())?;
+
+            tracing::info!("✅ Actual vocab size from output.weight: {}", actual_vocab);
+            
+            // Verify against tokenizer vocab (should be padded)
+            if let Ok(tokenizer_vocab) = self.metadata.vocab_size() {
+                if tokenizer_vocab as u32 != actual_vocab {
+                    tracing::warn!(
+                        "⚠️  Tokenizer vocab ({}) != output.weight vocab ({})",
+                        tokenizer_vocab,
+                        actual_vocab
+                    );
+                    tracing::warn!(
+                        "⚠️  Using actual vocab ({}) to avoid scanning garbage values",
+                        actual_vocab
+                    );
+                }
             }
+            
+            actual_vocab
         };
         let hidden_dim = self.metadata.hidden_dim()? as u32;
         let num_layers = self.metadata.num_layers()? as u32;

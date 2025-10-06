@@ -1,7 +1,7 @@
 # Qwen Model Debug Status - Executive Summary
 
-**Last Updated**: 2025-10-06 11:07  
-**Current Phase**: Bias investigation
+**Last Updated**: 2025-10-06 12:18  
+**Current Phase**: Vocab size mismatch causing garbage token selection
 
 ---
 
@@ -13,8 +13,10 @@
 | **Weight Loading** | ✅ OK | Values in expected range |
 | **KV Cache** | ✅ FIXED | Now properly reading cached positions |
 | **Attention Mechanism** | ✅ WORKING | Computes over all positions, weights sum to 1.0 |
-| **Bias Values** | ❌ CORRUPTED | Huge outliers (-14, -34) - currently disabled |
-| **Model Output** | ❌ POOR | Repetitive but more diverse than before |
+| **Bias Values** | ✅ N/A | Qwen2.5 doesn't use biases (confirmed from llama.cpp) |
+| **Vocab Size** | ❌ CRITICAL | lm_head is [896,151643] but vocab_size=151936 |
+| **Sampling** | ❌ BROKEN | Argmax finds garbage beyond actual vocab |
+| **Model Output** | ❌ BROKEN | Generates same token (ID=76156) repeatedly |
 
 ---
 
@@ -46,11 +48,18 @@
 - **Fix**: Position tracking now working correctly
 - **Document**: This summary
 
-### Phase 6: Current - Bias Investigation (2025-10-06 11:07) 🔄
+### Phase 6: Bias Investigation (2025-10-06 11:07) ✅
 - **Issue**: Bias values contain huge outliers (-14, -34)
-- **Status**: Bias addition disabled, model generates diverse but poor output
-- **Next**: Investigate weight loading/quantization
-- **Document**: `NEXT_STEPS.md`
+- **Resolution**: Confirmed Qwen2.5 doesn't use biases (checked llama.cpp reference)
+- **Status**: Bias correctly disabled in code
+
+### Phase 7: Vocab Size Mismatch (2025-10-06 11:30-11:56) 🔴 CURRENT
+- **Issue**: Model generates same token (ID=76156) repeatedly
+- **Root Cause**: lm_head tensor is [896, 151643] but vocab_size is 151936 (padded)
+- **Problem**: Argmax searches all 151936 positions, finds garbage at positions 151643-151935
+- **Evidence**: Argmax finds token_id=2966 with value 14.24 (beyond actual vocab!)
+- **Status**: Multiple fix attempts failed, need proper solution
+- **Document**: `BUG_STATUS.md`
 
 ---
 
@@ -85,29 +94,55 @@
 
 ## 🐛 What's Still Broken
 
-### Bias Values ❌
+### Vocab Size Mismatch ❌ CRITICAL
 
-**Symptom**: QKV bias tensors contain huge outlier values
+**Symptom**: Model generates same token (ID=76156 "suffice") 100 times in a row
 
 **Evidence**:
 ```
-attn_q_bias[0:10]: -0.0150 0.0255 -0.1035 -0.1357 -14.4375 0.2656 0.3242 0.1240 -15.4375 -34.0000
-                                                      ^^^^^^^^                    ^^^^^^^^  ^^^^^^^^
-Q after bias: -0.0364 -0.0335 -0.1520 -0.3208 -14.3438 0.2576 0.4233 0.0889 -15.6797 -34.0312
+Input tokens: 7985 → 264 → 6386 → 38242 (CHANGING)
+Output tokens: 76156 → 76156 → 76156 → 76156 (STUCK)
+Hidden states: -11.04, -2.41, 8.20... → -11.31, -2.75, 8.28... (CHANGING)
+Logits[0:10]: 0.19, 2.29, 3.11... → 0.33, 2.36, 3.32... (CHANGING)
+Max logit in first 1000: 8.65 at token_id=706 ✅
+Argmax finds: 14.24 at token_id=2966 ❌ (BEYOND VOCAB!)
 ```
 
-**Impact**: With bias enabled, model generates only "Ġsáºµn" and "Ġgotta" tokens
+**Root Cause**: 
+- lm_head tensor in GGUF: [896, 151643]
+- vocab_size parameter: 151936 (padded)
+- Argmax searches all 151936 positions
+- Positions 151643-151935 contain garbage values (~14.0)
+- Garbage values are higher than real logits (~8.0)
 
-**Current Workaround**: Bias addition disabled (llama.cpp checks `if (model.layers[il].bq)` before using)
+**Impact**: Argmax always selects garbage token, model output is useless
 
-**Possible Causes**:
-1. Bias tensors not dequantized correctly during loading
-2. Bias tensors have wrong dimensions/layout
-3. Model file has corrupted bias data
-4. Qwen2.5-0.5B-Instruct may not use biases (need to verify)
+**Attempted Fixes** (all failed):
+1. Initialize logits buffer to -INFINITY at allocation
+2. Initialize logits to -INFINITY before each projection  
+3. Change cuBLAS output stride to actual_vocab
+
+**Why Fixes Failed**: cuBLAS writes with stride 151643, buffer is 151936, garbage persists
 
 ---
 
+## 🧭 llama.cpp Reference Findings
+
+- **[n_vocab source]** `n_vocab = vocab.n_tokens()` from tokenizer/gguf, not a padded config value.
+- **[lm_head dims]** `output.weight` is created as `{n_embd, n_vocab}`. No extra padded columns are exposed.
+- **[logits sizing]** All logits buffers are sized to `n_vocab` and copied as `n_tokens * n_vocab` floats.
+- **[sampling bound]** Samplers iterate strictly `token_id in [0, n_vocab)`.
+
+Implication: llama.cpp never scans padded slots; our implementation must mirror this end-to-end.
+
+## 🚀 Immediate Action Plan (Today)
+
+1. **Propagate actual vocab from GGUF** (Rust): derive `actual_vocab` from `"output.weight"` dims or tokenizer and pass to `cuda_inference_init()`.
+2. **Use actual vocab in C++**: in `project_to_vocab()` and `cuda_inference_generate_token()`, remove hardcoded `151643` and rely on the passed `config_.vocab_size`.
+3. **Sampling bound**: ensure `cuda_sample_token()` receives the actual vocab and kernels iterate only to `vocab_size`.
+4. **Sanity asserts**: at init, assert `lm_head` leading dim == `config_.vocab_size`.
+
+---
 ## 📊 Key Metrics
 
 ### Q Values (After Matrix Fix)
@@ -244,4 +279,9 @@ The model will be considered fixed when:
 
 ---
 
-**Current Focus**: Investigate bias loading/quantization to understand why bias values contain huge outliers.
+**Current Focus**: Fix vocab size mismatch - need to either:
+1. Get actual lm_head dimensions from GGUF and use them
+2. Create CUDA kernel to properly initialize padding region
+3. Modify argmax to only search actual vocab range
+
+**Critical**: The model pipeline works (attention, KV cache, matrix ops all correct) but sampling is selecting garbage tokens beyond the actual vocabulary.

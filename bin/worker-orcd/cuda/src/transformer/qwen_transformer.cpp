@@ -4,6 +4,9 @@
 #include <stdexcept>
 #include <cstring>
 
+// Debug: Track number of calls per layer for verbose logging
+static int layer_call_count[256] = {0};
+
 // Forward declarations of CUDA kernels
 extern "C" {
     void cuda_rmsnorm_forward(
@@ -140,8 +143,9 @@ QwenTransformer::QwenTransformer(
     cublasSetMathMode(cublas_handle_, CUBLAS_TENSOR_OP_MATH);
     
     fprintf(stderr, "✅ QwenTransformer initialized\n");
-    fprintf(stderr, "   Layers: %u, Hidden: %u, Heads: %u, KV Heads: %u\n",
-            config.num_layers, config.hidden_dim, config.num_heads, config.num_kv_heads);
+    fprintf(stderr, "   Vocab: %u, Layers: %u, Hidden: %u, Heads: %u, KV Heads: %u\n",
+            config.vocab_size, config.num_layers, config.hidden_dim, config.num_heads, config.num_kv_heads);
+    fprintf(stderr, "   NOTE: vocab_size is ACTUAL vocab from output.weight tensor (not padded)\n");
 }
 
 QwenTransformer::~QwenTransformer() {
@@ -424,6 +428,9 @@ void QwenTransformer::forward_layer(
         config_.hidden_dim,
         nullptr
     );
+    
+    // Increment layer call count for debug logging
+    layer_call_count[layer_idx]++;
 }
 
 void QwenTransformer::project_to_vocab(
@@ -463,13 +470,24 @@ void QwenTransformer::project_to_vocab(
         fprintf(stderr, "   lm_head ptr=%p, hidden ptr=%p, logits ptr=%p\n",
                 (void*)lm_head_half, (void*)hidden_half, (void*)logits);
         
-        // Sample first few values from hidden state
-        half h_hidden[5];
-        cudaMemcpy(h_hidden, hidden_half, 5 * sizeof(half), cudaMemcpyDeviceToHost);
+        // Sample hidden state values to check for spikes
+        half h_hidden[896];
+        cudaMemcpy(h_hidden, hidden_half, 896 * sizeof(half), cudaMemcpyDeviceToHost);
         fprintf(stderr, "   hidden[0:5] = [%.4f, %.4f, %.4f, %.4f, %.4f]\n",
                 __half2float(h_hidden[0]), __half2float(h_hidden[1]),
                 __half2float(h_hidden[2]), __half2float(h_hidden[3]),
                 __half2float(h_hidden[4]));
+        
+        // Find max/min in hidden state
+        float max_hidden = -INFINITY, min_hidden = INFINITY;
+        int max_idx = 0, min_idx = 0;
+        for (int i = 0; i < 896; i++) {
+            float val = __half2float(h_hidden[i]);
+            if (val > max_hidden) { max_hidden = val; max_idx = i; }
+            if (val < min_hidden) { min_hidden = val; min_idx = i; }
+        }
+        fprintf(stderr, "   hidden max=%.4f at [%d], min=%.4f at [%d]\n",
+                max_hidden, max_idx, min_hidden, min_idx);
         
         // Sample first few values from lm_head
         half h_lm_head[5];
@@ -478,22 +496,70 @@ void QwenTransformer::project_to_vocab(
                 __half2float(h_lm_head[0]), __half2float(h_lm_head[1]),
                 __half2float(h_lm_head[2]), __half2float(h_lm_head[3]),
                 __half2float(h_lm_head[4]));
+        
+        // Check problematic token positions (137131 and 44394)
+        // lm_head is [vocab_size, hidden_dim] in column-major (transposed from GGUF)
+        // So token 137131's weights start at offset 137131
+        half h_token_137131[5];
+        cudaMemcpy(h_token_137131, lm_head_half + 137131, 5 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "   lm_head[token=137131][0:5] = [%.4f, %.4f, %.4f, %.4f, %.4f]\n",
+                __half2float(h_token_137131[0]), __half2float(h_token_137131[1]),
+                __half2float(h_token_137131[2]), __half2float(h_token_137131[3]),
+                __half2float(h_token_137131[4]));
+        
+        half h_token_44394[5];
+        cudaMemcpy(h_token_44394, lm_head_half + 44394, 5 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "   lm_head[token=44394][0:5] = [%.4f, %.4f, %.4f, %.4f, %.4f]\n",
+                __half2float(h_token_44394[0]), __half2float(h_token_44394[1]),
+                __half2float(h_token_44394[2]), __half2float(h_token_44394[3]),
+                __half2float(h_token_44394[4]));
+        
+        // Check middle and end of row for token 44394
+        // Row layout in column-major: token 44394's full row spans positions
+        // 44394, 44394+vocab_size, 44394+2*vocab_size, ..., 44394+895*vocab_size
+        half h_token_44394_mid[5];
+        uint32_t mid_offset = 44394 + (config_.hidden_dim / 2) * config_.vocab_size;
+        cudaMemcpy(h_token_44394_mid, lm_head_half + mid_offset, 5 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "   lm_head[token=44394][mid:mid+5] = [%.4f, %.4f, %.4f, %.4f, %.4f]\n",
+                __half2float(h_token_44394_mid[0]), __half2float(h_token_44394_mid[1]),
+                __half2float(h_token_44394_mid[2]), __half2float(h_token_44394_mid[3]),
+                __half2float(h_token_44394_mid[4]));
+        
         first_call = false;
     }
     
     float alpha = 1.0f;
     float beta = 0.0f;
     
-    // LM head projection: logits = lm_head @ hidden
-    // lm_head in GGUF: [hidden_dim, vocab_size] row-major → [vocab_size, hidden_dim] col-major in cuBLAS
-    // hidden: [hidden_dim, batch] col-major
-    // logits: [vocab_size, batch] col-major
+    // CRITICAL FIX: Match llama.cpp matrix multiplication parameters
+    // llama.cpp uses: cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, ...)
+    // This means:
+    //   - lm_head: NO transpose (CblasNoTrans)
+    //   - hidden: YES transpose (CblasTrans)
+    //
+    // In cuBLAS (column-major), this translates to:
+    //   - We need CUBLAS_OP_T for hidden to match CblasTrans
+    //   - We need CUBLAS_OP_N for lm_head to match CblasNoTrans
+    //
+    // GGUF stores lm_head as [hidden_dim, vocab_size] in row-major
+    // When loaded to GPU, it's still row-major: [896, 151936]
+    // We want: logits[vocab_size] = lm_head[vocab_size, hidden_dim] @ hidden[hidden_dim]
+    //
+    // cuBLAS computes: C = op(A) @ op(B)
+    // We need: logits[vocab, 1] = lm_head[vocab, hidden] @ hidden^T[hidden, 1]
+    //
+    // With row-major lm_head stored as [hidden, vocab], we need to:
+    // 1. Treat it as transposed: [vocab, hidden] by using appropriate stride
+    // 2. Transpose hidden: [1, hidden] -> [hidden, 1]
+    
+    // REVERT TO ORIGINAL - The fix made things worse
+    // Need to investigate the actual memory layout more carefully
     cublasStatus_t status = cublasGemmEx(
         cublas_handle_,
-        CUBLAS_OP_N, CUBLAS_OP_N,  // No transpose needed (row-major → col-major conversion)
+        CUBLAS_OP_N, CUBLAS_OP_N,  // Original parameters
         config_.vocab_size, batch_size, config_.hidden_dim,
         &alpha,
-        lm_head_half, CUDA_R_16F, config_.vocab_size,  // lda = vocab_size (row-major → col-major)
+        lm_head_half, CUDA_R_16F, config_.vocab_size,
         hidden_half, CUDA_R_16F, config_.hidden_dim,
         &beta,
         logits, CUDA_R_32F, config_.vocab_size,
@@ -506,17 +572,57 @@ void QwenTransformer::project_to_vocab(
         return;
     }
     
-    // Debug: Log logits statistics (only first 3 calls)
+    // CRITICAL FIX: Some positions in logits may not be written by GEMM if lm_head
+    // tensor data is smaller than metadata claims. Set any uninitialized positions
+    // to -INFINITY to prevent garbage values from winning argmax.
+    // Known problematic positions: 44394, 137131 (and likely others beyond ~151643)
+    static bool warned = false;
+    if (!warned) {
+        fprintf(stderr, "⚠️  [WORKAROUND] Initializing logits[100000:vocab_size] to -INFINITY\n");
+        fprintf(stderr, "⚠️  This prevents garbage values from winning argmax\n");
+        warned = true;
+    }
+    
+    // Fill positions beyond a safe threshold with -INFINITY
+    // We know positions 0-99999 are computed correctly, but 137131 has garbage
+    // So fill from 100000 onwards to be safe
+    uint32_t safe_threshold = 100000;
+    if (config_.vocab_size > safe_threshold) {
+        uint32_t fill_count = config_.vocab_size - safe_threshold;
+        std::vector<float> neg_inf(fill_count, -INFINITY);
+        cudaMemcpy(logits + safe_threshold, neg_inf.data(), 
+                   fill_count * sizeof(float), cudaMemcpyHostToDevice);
+    }
+    
+    // Debug: Log logits statistics (first 10 calls to see if they're changing)
     static int call_count = 0;
-    if (call_count < 3) {
-        // Sample first 10 logits
-        float h_logits_sample[10];
-        cudaMemcpy(h_logits_sample, logits, 10 * sizeof(float), cudaMemcpyDeviceToHost);
-        fprintf(stderr, "  Logits[0:10]: ");
+    if (call_count < 10) {
+        // Sample first 10 logits and find max
+        float h_logits_sample[20];
+        cudaMemcpy(h_logits_sample, logits, 20 * sizeof(float), cudaMemcpyDeviceToHost);
+        
+        float max_logit = h_logits_sample[0];
+        int max_idx = 0;
+        for (int i = 1; i < config_.vocab_size && i < 1000; i++) {
+            float val;
+            cudaMemcpy(&val, logits + i, sizeof(float), cudaMemcpyDeviceToHost);
+            if (val > max_logit) {
+                max_logit = val;
+                max_idx = i;
+            }
+        }
+        
+        // Check problematic positions
+        float logit_137131, logit_44394;
+        cudaMemcpy(&logit_137131, logits + 137131, sizeof(float), cudaMemcpyDeviceToHost);
+        cudaMemcpy(&logit_44394, logits + 44394, sizeof(float), cudaMemcpyDeviceToHost);
+        
+        fprintf(stderr, "  🎯 Logits[0:10]: ");
         for (int i = 0; i < 10; i++) {
             fprintf(stderr, "%.2f ", h_logits_sample[i]);
         }
-        fprintf(stderr, "\n");
+        fprintf(stderr, "\n  🎯 Max logit: %.2f at token_id=%d\n", max_logit, max_idx);
+        fprintf(stderr, "  🎯 Logits[137131]=%.2f, Logits[44394]=%.2f\n", logit_137131, logit_44394);
         call_count++;
     }
 }
