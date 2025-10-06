@@ -1030,7 +1030,80 @@ void QwenTransformer::forward(
     //    But the token flow from Rust → FFI → here is correct.
     //    The bug is NOT in token embedding!
     
+    // [TEAM PURPLE] 2025-10-06T21:16Z - VERIFIED: Token IDs are correct ✅
+    // SUSPECT: Maybe we're embedding wrong token IDs?
+    // PLAN: Dump first 10 token IDs to verify they match Rust side
+    // OBSERVED: Token IDs are correct!
+    //   [0] = 151644 (im_start special token)
+    //   [1] = 872 (user)
+    //   [2] = 198 (\n)
+    //   [3+] = prompt tokens
+    // CONCLUSION: Token IDs passed from Rust → FFI → C++ are CORRECT!
+    if (first_forward) {
+        uint32_t h_token_ids[32];
+        cudaMemcpy(h_token_ids, token_ids, std::min(batch_size, 32u) * sizeof(uint32_t), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "[TEAM_PURPLE] First %u token IDs being embedded: ", std::min(batch_size, 10u));
+        for (uint32_t i = 0; i < std::min(batch_size, 10u); i++) {
+            fprintf(stderr, "%u ", h_token_ids[i]);
+        }
+        fprintf(stderr, "\n");
+        
+        // Check if we're embedding special tokens (151643-151645)
+        for (uint32_t i = 0; i < std::min(batch_size, 10u); i++) {
+            if (h_token_ids[i] >= 151643 && h_token_ids[i] <= 151645) {
+                fprintf(stderr, "[TEAM_PURPLE] ⚠️  Token[%u] = %u is a SPECIAL TOKEN!\n", i, h_token_ids[i]);
+            }
+        }
+    }
+    
     embed_tokens(token_ids, batch_size, hidden_states_);
+    
+    // [TEAM PURPLE] 2025-10-06T21:17Z - VERIFIED: Special token embeddings are valid ✅
+    // SUSPECT: Special token embeddings might be zeros or garbage!
+    // HYPOTHESIS: Maybe tokens 151643-151645 don't have trained embeddings?
+    //   If embeddings are all zeros, model won't understand special tokens.
+    //   If embeddings are garbage (uninitialized), model will see random input.
+    //
+    // PLAN: Read embeddings directly from weight table and check values
+    // OBSERVED: All special tokens have VALID embeddings!
+    //   Token 151643: 0.0031 0.0067 0.0078 0.0286 -0.0035 ... ✅
+    //   Token 151644: 0.0014 -0.0084 0.0073 -0.0016 -0.0079 ... ✅
+    //   Token 151645: 0.0029 -0.0117 0.0049 0.0008 -0.0058 ... ✅
+    //   Values are in normal FP16 range (~0.01), NOT zeros, NOT garbage!
+    //
+    // VERIFIED: Embedding lookup works correctly
+    //   [GREEN] shows embedding output matches token 151644's embedding exactly
+    //
+    // FALSE_LEAD: Special token embeddings are NOT the problem!
+    // The model HAS trained embeddings for special tokens, and we're looking them up correctly.
+    if (first_forward) {
+        // Check the embedding for token 151644 (im_start) directly from the embedding table
+        const half* emb_table = reinterpret_cast<const half*>(model_->weights.token_embd);
+        uint32_t hidden_dim = config_.hidden_dim;
+        
+        fprintf(stderr, "[TEAM_PURPLE] Checking special token embeddings in weight table:\n");
+        
+        for (uint32_t token_id = 151643; token_id <= 151645; token_id++) {
+            fprintf(stderr, "[TEAM_PURPLE] Token %u embedding[0..9]: ", token_id);
+            
+            const half* token_emb = emb_table + (token_id * hidden_dim);
+            half h_emb[10];
+            cudaMemcpy(h_emb, token_emb, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+            
+            bool all_zeros = true;
+            for (int i = 0; i < 10; i++) {
+                float val = __half2float(h_emb[i]);
+                fprintf(stderr, "%.4f ", val);
+                if (val != 0.0f) all_zeros = false;
+            }
+            
+            if (all_zeros) {
+                fprintf(stderr, " ⚠️  ALL ZEROS!\n");
+            } else {
+                fprintf(stderr, " ✅ Has values\n");
+            }
+        }
+    }
     
     // [TEAM GREEN] 2025-10-06T20:51Z - Debug embedding output
     if (first_forward) {

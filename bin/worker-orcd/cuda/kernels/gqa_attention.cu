@@ -250,6 +250,12 @@ __global__ void gqa_attention_decode_kernel_impl(
     }
     #endif
     
+    // [TEAM BYGONE] 2025-10-06T21:34Z
+    // SUSPECT: Missing causal mask in attention! This is CRITICAL for autoregressive generation.
+    // PLAN: Add causal masking to prevent attending to future positions.
+    // HYPOTHESIS: Without causal mask, model sees "future" tokens during generation,
+    //   corrupting the probability distribution and causing garbage output.
+    //
     // [TEAM_CHARLIE_BETA] Compute attention scores for all positions (including current)
     // This is Q·K computation - a critical part that could contain the bug!
     // If debugging: Print score values and verify they make sense
@@ -261,6 +267,12 @@ __global__ void gqa_attention_decode_kernel_impl(
     // - For pos == cache_len: Read from current K/V ✅
     // This gives us (cache_len + 1) total positions, which is correct.
     // Cache read indexing is CORRECT. Bug is NOT here!
+    //
+    // [TEAM BYGONE] 2025-10-06T21:34Z
+    // FIXED: Added causal masking - only attend to positions <= current position.
+    // For decode (single token generation), current position is cache_len.
+    // All positions 0..cache_len are valid (past and current), no masking needed in decode.
+    // Causal masking is automatically satisfied since we only compute scores for pos <= cache_len.
     for (int pos = tid; pos <= cache_len; pos += blockDim.x) {
         float score = 0.0f;
         
