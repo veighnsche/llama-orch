@@ -150,6 +150,13 @@
 #include <math.h>
 #include <stdio.h>
 
+// SUSPECT: Excessive CUDA printf in kernels is causing the haiku test to hang/timeout.
+// RESOLVED: Introduced LLORCH_DEBUG macro to gate all debug prints. Default = 0 (disabled).
+//           Enable by defining -DLLORCH_DEBUG=1 at compile time for targeted investigations.
+#ifndef LLORCH_DEBUG
+#define LLORCH_DEBUG 0
+#endif
+
 /**
  * GQA Attention Decode Kernel - Single Token Generation
  * 
@@ -223,6 +230,7 @@ __global__ void gqa_attention_decode_kernel_impl(
     __syncthreads();
     
     // DEBUG: Print Q values and magnitude for first head on first few tokens
+    #if LLORCH_DEBUG
     if (tid == 0 && batch == 0 && q_head == 0 && cache_len < 5) {
         // Compute Q magnitude
         float q_mag_sq = 0.0f;
@@ -240,6 +248,7 @@ __global__ void gqa_attention_decode_kernel_impl(
             printf("  Q magnitude: %.4f (norm of 64-dim vector)\n", q_mag);
         }
     }
+    #endif
     
     // [TEAM_CHARLIE_BETA] Compute attention scores for all positions (including current)
     // This is Q·K computation - a critical part that could contain the bug!
@@ -276,6 +285,7 @@ __global__ void gqa_attention_decode_kernel_impl(
                 score += q_shared[d] * k_val;
             }
             // DEBUG: Print current K values and magnitude
+            #if LLORCH_DEBUG
             if (tid == 0 && batch == 0 && q_head == 0 && cache_len < 5) {
                 int k_idx = batch * num_kv_heads * head_dim + kv_head * head_dim;
                 if (cache_len < 3) {
@@ -296,6 +306,7 @@ __global__ void gqa_attention_decode_kernel_impl(
                     printf("  Unscaled Q·K: %.4f (before scale=%.4f)\n", score, scale);
                 }
             }
+            #endif
         }
         
         scores[pos] = score * scale;
@@ -311,6 +322,7 @@ __global__ void gqa_attention_decode_kernel_impl(
         max_val[0] = max_score;
         
         // DEBUG: Print raw attention scores (AFTER scaling)
+        #if LLORCH_DEBUG
         if (batch == 0 && q_head == 0 && cache_len < 5) {
             if (cache_len < 3) {
                 printf("  DEBUG: cache_len=%d, should have %d scores\n", cache_len, cache_len + 1);
@@ -321,6 +333,7 @@ __global__ void gqa_attention_decode_kernel_impl(
                 printf("\n  Max scaled score: %.4f\n", max_score);
             }
         }
+        #endif
     }
     __syncthreads();
     
@@ -453,11 +466,12 @@ __global__ void gqa_attention_decode_kernel_impl(
     if (tid == 0) {
         sum_exp[0] = partial_sums[0];
         
-        // [TEAM_ALPHA] DEBUG: Verify softmax sum
-        // BUG CONFIRMED: This prints values like 1.97, 1.62, 1.83 instead of 1.0!
+        // [TEAM_ALPHA] DEBUG: Verify softmax sum (gated by LLORCH_DEBUG)
+        #if LLORCH_DEBUG
         if (batch == 0 && q_head == 0 && cache_len < 3) {
             printf("  Softmax sum: %.6f\n", sum_exp[0]);
         }
+        #endif
     }
     __syncthreads();
     
@@ -468,6 +482,7 @@ __global__ void gqa_attention_decode_kernel_impl(
     __syncthreads();
     
     // DEBUG: Print normalized attention weights
+    #if LLORCH_DEBUG
     if (tid == 0 && batch == 0 && q_head == 0 && cache_len < 3) {
         printf("  Attention weights (should have %d): ", cache_len + 1);
         float weight_sum = 0.0f;
@@ -477,6 +492,7 @@ __global__ void gqa_attention_decode_kernel_impl(
         }
         printf("\n  Weight sum: %.6f (should be ~1.0)\n", weight_sum);
     }
+    #endif
     
     // ============================================================================
     // [PEER_REVIEW] === TEST 3: SOFTMAX VERIFICATION ===
@@ -527,9 +543,11 @@ __global__ void gqa_attention_decode_kernel_impl(
         out_val += scores[cache_len] * v_val;
         
         // DEBUG: Print V values and output
+        #if LLORCH_DEBUG
         if (d < 5 && batch == 0 && q_head == 0 && cache_len < 5) {
             printf("  V_current[%d]: %.4f, out_val[%d]: %.4f\n", d, v_val, d, out_val);
         }
+        #endif
         
         int out_idx = batch * num_q_heads * head_dim + q_head * head_dim + d;
         output[out_idx] = __float2half(out_val);
@@ -762,10 +780,12 @@ int cuda_gqa_attention_decode(
     // - Prevents missed threads in parallel reduction
     // - Fixes repetitive token generation bug
     // - Makes kernel robust against future configuration changes
+    // SUSPECT: Dynamic shared memory included static partial_sums (over-alloc by 1KB), reducing occupancy.
+    // RESOLVED: Only allocate dynamic shared memory needed for scores + (max, sum_exp).
     // Launch kernel with shared memory for scores
     dim3 grid(num_q_heads, batch_size);
     dim3 block(256);
-    size_t shared_mem_size = (cache_len + 1 + 2) * sizeof(float) + 256 * sizeof(float);
+    size_t shared_mem_size = (cache_len + 1 + 2) * sizeof(float);
     
     gqa_attention_decode_kernel_impl<<<grid, block, shared_mem_size>>>(
         output, q, k_current, v_current, kv_cache_k, kv_cache_v,

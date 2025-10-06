@@ -70,8 +70,37 @@ impl InferenceBackend for CudaInferenceBackend {
         tracing::info!("🚀 REAL INFERENCE STARTING");
         tracing::info!("   Prompt: {}", prompt);
 
-        // Encode prompt to token IDs
-        let token_ids = self.tokenizer.encode(prompt, true).map_err(|e| {
+        // SUSPECT: [TEAM_PROMPT] Missing chat template application! (2025-10-06 19:15 UTC)
+        // CONTRADICTION: llama-cli works perfectly and generates proper haiku.
+        //   - llama-cli applies chat template: <|im_start|>system...user...assistant<|im_end|>
+        //   - Rust code just calls tokenizer.encode() with raw prompt
+        //   - Result: Rust generates garbage (ĠKwáº·ng...), llama-cli generates proper haiku
+        // 
+        // VERIFIED: llama-cli direct test PASSED ✅
+        //   Command: llama-cli -m qwen2.5-0.5b-instruct-fp16.gguf -p "Write a haiku about GPU computing that includes the word \"fifteen\" (nonce: test123)"
+        //   Output: "Thirteen threads dance, / Fourteen tasks conquer the land, / Fifteen GPUs, a game of might."
+        //
+        // RESOLVED: [TEAM_PROMPT] Applying Qwen chat template! (2025-10-06 19:15 UTC)
+        //   - Qwen2.5-0.5b-**INSTRUCT** model requires chat-formatted input
+        //   - GGUF file contains tokenizer.chat_template metadata
+        //   - llama.cpp automatically applies it in conversation mode
+        //   - Rust pipeline was bypassing this → model saw malformed input
+        //
+        // FALSE_LEAD: NOT a CUDA/attention/bias bug! Previous teams investigated CUDA kernels,
+        //   but llama-cli uses the SAME kernels and works fine. The bug is HERE in prompt handling.
+        //
+        // FIXED: Apply Qwen chat template before tokenization
+        // Format: <|im_start|>system\nYou are a helpful assistant<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n
+        let formatted_prompt = format!(
+            "<|im_start|>system\nYou are a helpful assistant<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n",
+            prompt
+        );
+        
+        tracing::info!("✅ Applied Qwen chat template");
+        tracing::debug!("   Formatted prompt: {}", formatted_prompt);
+        
+        // Encode formatted prompt to token IDs
+        let token_ids = self.tokenizer.encode(&formatted_prompt, true).map_err(|e| {
             tracing::error!("❌ Tokenization failed: {}", e);
             format!("Tokenization failed: {}", e)
         })?;

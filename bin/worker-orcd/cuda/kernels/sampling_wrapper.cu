@@ -11,6 +11,12 @@
 #include <stdio.h>
 #include <algorithm>
 
+// SUSPECT: Unconditional printf in kernels floods logs and slows/stalls tests.
+// RESOLVED: Add LLORCH_DEBUG macro to gate debug prints. Default is disabled.
+#ifndef LLORCH_DEBUG
+#define LLORCH_DEBUG 0
+#endif
+
 // Forward declarations from sampling.cu
 namespace worker {
 namespace kernels {
@@ -156,7 +162,8 @@ __global__ void argmax_kernel(
             }
         }
         
-        // Debug: Print first few logits and max
+        // DEBUG: Print first few logits and max
+        #if LLORCH_DEBUG
         static int call_count = 0;
         if (call_count < 15) {  // Increased to see generation phase
             printf("🔍 [ARGMAX DEBUG #%d] First 10 logits: ", call_count);
@@ -167,10 +174,12 @@ __global__ void argmax_kernel(
             printf("🔍 [ARGMAX DEBUG #%d] Max: %.2f at token_id=%d (vocab_size=%d)\n", call_count, max_val, max_idx, vocab_size);
             call_count++;
         }
+        #endif
         
         // ============================================================================
         // [PEER_REVIEW] === TEST 4: ARGMAX VERIFICATION ===
         // ============================================================================
+        #if LLORCH_DEBUG
         static int verification_count = 0;
         if (verification_count == 0) {
             printf("\n[PEER_REVIEW] === TEST 4: ARGMAX VERIFICATION ===\n");
@@ -210,6 +219,7 @@ __global__ void argmax_kernel(
             
             verification_count++;
         }
+        #endif
         
         *output_token = max_idx;
     }

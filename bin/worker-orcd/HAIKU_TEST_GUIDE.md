@@ -30,7 +30,9 @@ Since the minute changes every 60 seconds, the test can't use pre-baked response
 
 ### Prerequisites
 - ✅ CUDA enabled in `.llorch.toml` (cuda = true)
-- ✅ Qwen model downloaded to `.test-models/qwen/qwen2.5-0.5b-instruct-q4_k_m.gguf`
+<!-- CONTRADICTION: Guide required Q4_K_M quantized model, but loader (`cuda/src/model/qwen_weight_loader.cpp`) warns quantized weights are loaded without dequantization → NaN/garbage. Test `tests/haiku_generation_anti_cheat.rs` uses FP16 path. -->
+<!-- RESOLVED: Use FP16 GGUF to avoid dequantization issues. Verified by script `.docs/testing/download_qwen_fp16.sh`. -->
+- ✅ Qwen model downloaded to `.test-models/qwen/qwen2.5-0.5b-instruct-fp16.gguf`
 - ✅ GPU available
 
 ### Run Command
@@ -39,8 +41,10 @@ Since the minute changes every 60 seconds, the test can't use pre-baked response
 cd bin/worker-orcd
 
 # Run the REAL haiku test
+<!-- CONTRADICTION: Filter `test_haiku_generation_anti_cheat` does not exist in `tests/haiku_generation_anti_cheat.rs`. Actual ignored test is `test_haiku_generation_stub_pipeline_only`. -->
+<!-- RESOLVED: Correct the cargo test filter to the actual function name. -->
 REQUIRE_REAL_LLAMA=1 cargo test --test haiku_generation_anti_cheat \
-  test_haiku_generation_anti_cheat \
+  test_haiku_generation_stub_pipeline_only \
   --features cuda --release \
   -- --ignored --nocapture --test-threads=1
 ```

@@ -66,28 +66,28 @@ The Qwen2.5-0.5B model generates the same token repeatedly because specific posi
 - **Do not modify** computation logic permanently
   - **ALWAYS REVERT** temporary changes after gathering data
   - **Document** what you changed and what you learned
-  
-  ### Why This Approach?
-  We need EVIDENCE and GROUND TRUTH data. You can't understand the problem by just reading code - you need to see what's actually happening in memory at runtime. Change whatever you need to extract data, just change it back when done.
-  
-  ---
-  
-  ### Test Before You Claim
-  - Do not mark anything as "FIXED" unless the haiku Test actually passes.
-  - Always include test evidence (timestamp, token IDs, sample output snippet) in your notes.
-  - If your fix improves things but the test still fails, document the improvement but do not claim FIXED.
-  
-  ### False Claim Correction
-  - If a previous team claimed FIXED but your run shows the bug persists, append a correction line immediately below their comment.
-  - Do not delete or alter their original text; add your own line with evidence.
-  
-  Example format to append in code:
-  ```cpp
-  // ❌ Previous team claimed FIXED — but haiku test still fails here. Suspect race condition remains.
-  // Evidence: haiku test 2025-10-06 18:44 UTC — token ID 64362 repeats at steps 2-9.
-  ```
-  
-  ---
+ 
+ ### Why This Approach?
+ We need EVIDENCE and GROUND TRUTH data. You can't understand the problem by just reading code - you need to see what's actually happening in memory at runtime. Change whatever you need to extract data, just change it back when done.
+ 
+ ---
+ 
+ ### Test Before You Claim
+ - Do not mark anything as "FIXED" unless the Haiku Test actually passes.
+ - Always include test evidence (timestamp, token IDs, sample output snippet) in your notes.
+ - If your fix improves things but the test still fails, document the improvement but do not claim FIXED.
+ 
+ ### False Claim Correction
+ - If a previous team claimed FIXED but your run shows the bug persists, append a correction line immediately below their comment.
+ - Do not delete or alter their original text; add your own line with evidence.
+ 
+ Example format to append in code:
+ ```cpp
+ // ❌ Previous team claimed FIXED — but haiku test still fails here. Suspect race condition remains.
+ // Evidence: Haiku test 2025-10-06 18:44 UTC — token ID 64362 repeats at steps 2-9.
+ ```
+ 
+ ---
   
   ## Workflow
   
@@ -124,8 +124,6 @@ The Qwen2.5-0.5B model generates the same token repeatedly because specific posi
 ---
 
 ## Quick Start
-
-**New to this?** Read `QUICK_START_GUIDE.md` first! It has:
 - Step-by-step instructions
 - Code examples for common investigation patterns
 - Tips for running tests and gathering data

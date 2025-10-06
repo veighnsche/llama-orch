@@ -147,7 +147,12 @@ async fn test_haiku_generation_stub_pipeline_only() {
     let minute_word_count = haiku.matches(&minute_word).count();
     
     // Note: Core engine (matrix layout, KV cache, attention) is now working correctly.
-    // Current issue: Bias values appear corrupted, causing poor output quality.
+    // SUSPECT: Bias values appear corrupted, causing poor output quality.
+    // CONTRADICTION: For Qwen2.5 path, biases are not used in the CUDA forward pass:
+    //   - In `cuda/src/transformer/qwen_transformer.cpp`, GEMMs for Q/K/V don't add bias.
+    //   - In `cuda/src/model/qwen_weight_loader.cpp::load_from_gpu_pointers`, biases are set to nullptr
+    //     with a comment "Qwen2.5 doesn't use biases".
+    // FALSE_LEAD: Bias corruption cannot explain output; focus on attention/KV/weight loading instead.
     //
     // [TEAM_WATER] INVESTIGATION STATUS (2025-10-06 17:43 UTC)
     // I verified the following are CORRECT:

@@ -62,26 +62,22 @@ cargo clean -p worker-orcd
 # Run the test
 cargo test --release --test haiku_generation_anti_cheat \
   test_haiku_generation_stub_pipeline_only \
-  --features cuda -- --ignored --nocapture --test-threads=1 \
   2>&1 | tee team_your_name_output.txt
-```
 
 ### Step 4: Analyze Output
 
-Look at the terminal output or `team_your_name_output.txt`:
-- Find your `[TEAM_YOUR_NAME]` log lines
-- Copy relevant data to your RESULTS.md
-- Draw conclusions
+  Look at the terminal output or `team_your_name_output.txt`:
+  - Find your `[TEAM_YOUR_NAME]` log lines
+  - Copy relevant data to your RESULTS.md
+  - Draw conclusions
 
 ### Step 5: Revert Your Changes
 
-```bash
 # Option 1: Use git to revert
 git checkout cuda/src/transformer/qwen_transformer.cpp
 
 # Option 2: Manually remove your test code
 # (Keep the comments explaining what you learned!)
-```
 
 ### Step 6: Document Results
 
@@ -89,47 +85,6 @@ Create `investigation-teams/TEAM_YOUR_NAME_RESULTS.md`:
 
 ```markdown
 # Team Your Name - Investigation Results
-
-## Test Output
-[Paste your terminal output here]
-
-## Key Findings
-
-### Pattern 1: Manual Dot Product Verification
-
-```cpp
-// [TEAM_X] Verify logit computation manually
-if (first_call) {
-    // Copy inputs to host
-    half h_hidden[896], h_lm_head_row[896];
-    cudaMemcpy(h_hidden, hidden_half, 896*sizeof(half), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_lm_head_row, lm_head_half + position*151936, 896*sizeof(half), cudaMemcpyDeviceToHost);
-    
-    // Manual computation
-    float manual = 0.0f;
-    for (int i = 0; i < 896; i++) {
-        manual += __half2float(h_hidden[i]) * __half2float(h_lm_head_row[i]);
-    }
-    
-    // Compare with cuBLAS
-    float cublas;
-    cudaMemcpy(&cublas, logits + position, sizeof(float), cudaMemcpyDeviceToHost);
-    
-    fprintf(stderr, "[TEAM_X] Position %d: Manual=%.6f, cuBLAS=%.6f\n", position, manual, cublas);
-}
-```
-
-### Pattern 2: Test Different cuBLAS Parameters
-
-```cpp
-// [TEAM_X] Test hypothesis: change transpose flag
-if (first_call) {
-    fprintf(stderr, "[TEAM_X] Testing CUBLAS_OP_T...\n");
-    
-    // Try different parameters
-    cublasGemmEx(
-        cublas_handle_,
-        CUBLAS_OP_T, CUBLAS_OP_N,  // Changed from CUBLAS_OP_N
         config_.vocab_size,
         batch_size,
         config_.hidden_dim,
