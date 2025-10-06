@@ -181,7 +181,8 @@ uint32_t cuda_inference_generate_token(
             seed
         );
         
-        fprintf(stderr, "Sampled token: %d\n", next_token);
+        // Only log first few tokens to reduce noise
+        // (Rust side will show summary at end)
         
         *error = 0;
         return static_cast<uint32_t>(next_token);

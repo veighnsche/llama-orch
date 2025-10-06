@@ -155,8 +155,10 @@ impl InferenceBackend for CudaInferenceBackend {
         // Feed all prompt tokens through the transformer to build KV cache
         // We call generate_token() to run the forward pass, but we ignore the sampled output
         // and feed the next prompt token instead (teacher forcing)
+        tracing::info!("🔄 Prefill phase: processing {} prompt tokens", token_ids.len() - 1);
         for (i, &token_id) in token_ids.iter().enumerate() {
             if i < token_ids.len() - 1 {
+                tracing::debug!("  Prefill token {}/{}: ID={}", i + 1, token_ids.len() - 1, token_id);
                 // Prefill: run forward pass with this token, ignore sampled output
                 let _ = inference.generate_token(
                     token_id,
@@ -168,6 +170,7 @@ impl InferenceBackend for CudaInferenceBackend {
                 // Continue with next prompt token (teacher forcing)
             }
         }
+        tracing::info!("✅ Prefill complete, starting generation from token ID={}", token_ids.last().unwrap());
 
         // Start generation from the last prompt token
         let mut current_token = *token_ids.last().unwrap();
@@ -177,8 +180,10 @@ impl InferenceBackend for CudaInferenceBackend {
         let mut token_idx = 0;
         let eos_token_id = self.metadata.eos_token_id().unwrap_or(151643); // Qwen2.5 EOS
 
-        eprintln!("\n🎨 GENERATING TOKENS:");
-        eprintln!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        // Collect debug info for summary at end
+        let mut debug_tokens = Vec::new();
+
+        eprintln!("\n🎨 GENERATING {} TOKENS...", config.max_tokens);
 
         while token_idx < config.max_tokens {
             // Generate next token
@@ -201,21 +206,41 @@ impl InferenceBackend for CudaInferenceBackend {
                 .decode(&[next_token_id], true)
                 .map_err(|e| format!("Detokenization failed: {}", e))?;
 
-            // Debug: show token ID for first few tokens
-            if token_idx < 5 {
-                eprintln!("\n[Token {}] ID: {} = {:?}", token_idx, next_token_id, token_text);
+            // Collect debug info for first 10 tokens
+            if token_idx < 10 {
+                debug_tokens.push((token_idx, next_token_id, token_text.clone()));
             }
 
-            // Print token to console in real-time
-            eprint!("{}", token_text);
+            // Show progress every 20 tokens (less noise)
+            if token_idx % 20 == 0 {
+                eprint!(".");
+            }
 
             executor.add_token(token_text, token_idx);
             current_token = next_token_id;
             token_idx += 1;
         }
 
-        eprintln!("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        eprintln!("✅ Generated {} tokens\n", token_idx);
+        eprintln!("\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        eprintln!("✅ Generated {} tokens", token_idx);
+        
+        // Print debug summary at the END
+        eprintln!("\n📊 DEBUG SUMMARY (First 10 tokens):");
+        eprintln!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        for (idx, token_id, text) in &debug_tokens {
+            eprintln!("  [{}] ID={:6} → {:?}", idx, token_id, text);
+        }
+        
+        // Check for repetitive patterns
+        if debug_tokens.len() >= 3 {
+            let first_id = debug_tokens[0].1;
+            let all_same = debug_tokens.iter().all(|(_, id, _)| *id == first_id);
+            if all_same {
+                eprintln!("\n⚠️  WARNING: All tokens are identical (ID={})", first_id);
+                eprintln!("⚠️  This indicates a broken attention mechanism!");
+            }
+        }
+        eprintln!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
         Ok(executor.finalize())
     }

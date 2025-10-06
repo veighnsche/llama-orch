@@ -55,13 +55,30 @@ __global__ void gqa_attention_decode_kernel_impl(
     float* max_val = &shared_mem[cache_len + 1];
     float* sum_exp = &max_val[1];
     
-    // Load query vector into registers
-    float q_vec[64];  // Assuming head_dim <= 64
+    // Load query vector into shared memory (not registers, since all threads need access)
+    __shared__ float q_shared[64];  // Assuming head_dim <= 64
+    
+    // Each thread loads its portion
     for (int d = tid; d < head_dim; d += blockDim.x) {
         int q_idx = batch * num_q_heads * head_dim + q_head * head_dim + d;
-        q_vec[d] = __half2float(q[q_idx]);
+        q_shared[d] = __half2float(q[q_idx]);
     }
     __syncthreads();
+    
+    // DEBUG: Print Q values and magnitude for first head on first few tokens
+    if (tid == 0 && batch == 0 && q_head == 0 && cache_len < 5) {
+        // Compute Q magnitude
+        float q_mag_sq = 0.0f;
+        for (int d = 0; d < head_dim; d++) {
+            q_mag_sq += q_shared[d] * q_shared[d];
+        }
+        float q_mag = sqrtf(q_mag_sq);
+        
+        printf("\n[ATTENTION DEBUG] cache_len=%d, q_head=%d, kv_head=%d\n", cache_len, q_head, kv_head);
+        printf("  Q[0:5]: %.4f, %.4f, %.4f, %.4f, %.4f\n",
+               q_shared[0], q_shared[1], q_shared[2], q_shared[3], q_shared[4]);
+        printf("  Q magnitude: %.4f (norm of 64-dim vector)\n", q_mag);
+    }
     
     // Compute attention scores for all positions (including current)
     for (int pos = tid; pos <= cache_len; pos += blockDim.x) {
@@ -75,14 +92,31 @@ __global__ void gqa_attention_decode_kernel_impl(
                                   kv_head * max_seq_len * head_dim +
                                   pos * head_dim + d;
                 float k_val = __half2float(kv_cache_k[k_cache_idx]);
-                score += q_vec[d] * k_val;
+                score += q_shared[d] * k_val;
             }
         } else {
             // Score with current K
             for (int d = 0; d < head_dim; d++) {
                 int k_idx = batch * num_kv_heads * head_dim + kv_head * head_dim + d;
                 float k_val = __half2float(k_current[k_idx]);
-                score += q_vec[d] * k_val;
+                score += q_shared[d] * k_val;
+            }
+            // DEBUG: Print current K values and magnitude
+            if (tid == 0 && batch == 0 && q_head == 0 && cache_len < 5) {
+                int k_idx = batch * num_kv_heads * head_dim + kv_head * head_dim;
+                printf("  K_current[0:5]: %.4f, %.4f, %.4f, %.4f, %.4f\n",
+                       __half2float(k_current[k_idx]), __half2float(k_current[k_idx+1]),
+                       __half2float(k_current[k_idx+2]), __half2float(k_current[k_idx+3]),
+                       __half2float(k_current[k_idx+4]));
+                
+                // Compute K magnitude
+                float k_mag_sq = 0.0f;
+                for (int d = 0; d < head_dim; d++) {
+                    float k_val = __half2float(k_current[k_idx + d]);
+                    k_mag_sq += k_val * k_val;
+                }
+                printf("  K magnitude: %.4f\n", sqrtf(k_mag_sq));
+                printf("  Unscaled Q·K: %.4f (before scale=%.4f)\n", score, scale);
             }
         }
         
@@ -97,6 +131,16 @@ __global__ void gqa_attention_decode_kernel_impl(
             max_score = fmaxf(max_score, scores[i]);
         }
         max_val[0] = max_score;
+        
+        // DEBUG: Print raw attention scores (AFTER scaling)
+        if (batch == 0 && q_head == 0 && cache_len < 5) {
+            printf("  DEBUG: cache_len=%d, should have %d scores\n", cache_len, cache_len + 1);
+            printf("  Scaled scores (after scale): ");
+            for (int i = 0; i <= cache_len && i < 8; i++) {
+                printf("[%d]=%.4f ", i, scores[i]);
+            }
+            printf("\n  Max scaled score: %.4f\n", max_score);
+        }
     }
     __syncthreads();
     
@@ -122,6 +166,11 @@ __global__ void gqa_attention_decode_kernel_impl(
     
     if (tid == 0) {
         sum_exp[0] = partial_sums[0];
+        
+        // DEBUG: Verify softmax sum
+        if (batch == 0 && q_head == 0 && cache_len < 5) {
+            printf("  Softmax sum: %.6f (should be ~1.0)\n", sum_exp[0]);
+        }
     }
     __syncthreads();
     
@@ -130,6 +179,17 @@ __global__ void gqa_attention_decode_kernel_impl(
         scores[pos] /= sum_exp[0];
     }
     __syncthreads();
+    
+    // DEBUG: Print normalized attention weights
+    if (tid == 0 && batch == 0 && q_head == 0 && cache_len < 5) {
+        printf("  Attention weights (should have %d): ", cache_len + 1);
+        float weight_sum = 0.0f;
+        for (int i = 0; i <= cache_len && i < 8; i++) {
+            printf("[%d]=%.4f ", i, scores[i]);
+            weight_sum += scores[i];
+        }
+        printf("\n  Weight sum: %.6f (should be ~1.0)\n", weight_sum);
+    }
     
     // Compute weighted sum of V vectors
     for (int d = tid; d < head_dim; d += blockDim.x) {
@@ -148,6 +208,11 @@ __global__ void gqa_attention_decode_kernel_impl(
         int v_idx = batch * num_kv_heads * head_dim + kv_head * head_dim + d;
         float v_val = __half2float(v_current[v_idx]);
         out_val += scores[cache_len] * v_val;
+        
+        // DEBUG: Print V values and output
+        if (d < 5 && batch == 0 && q_head == 0 && cache_len < 5) {
+            printf("  V_current[%d]: %.4f, out_val[%d]: %.4f\n", d, v_val, d, out_val);
+        }
         
         int out_idx = batch * num_q_heads * head_dim + q_head * head_dim + d;
         output[out_idx] = __float2half(out_val);

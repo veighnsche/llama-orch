@@ -1,14 +1,15 @@
 // Build script for worker-orcd with CUDA support
 //
-// FIXES APPLIED (2025-10-04):
-// - Added find_cuda_root() to detect CUDA toolkit at /opt/cuda (not in PATH on CachyOS)
-// - Set CMAKE_CUDA_COMPILER explicitly for CMake CUDA language support
-// - Added stdc++ linking for C++ exception handling and RTTI
-// - Fixed for CUDA 13+ which requires these explicit paths
+// FIXES APPLIED:
+// - 2025-10-04: Added find_cuda_root() to detect CUDA toolkit at /opt/cuda (not in PATH on CachyOS)
+// - 2025-10-04: Set CMAKE_CUDA_COMPILER explicitly for CMake CUDA language support
+// - 2025-10-04: Added stdc++ linking for C++ exception handling and RTTI
+// - 2025-10-06: Walk all CUDA/C++ source files and emit cargo:rerun-if-changed for incremental builds
 //
 // -- Cascade
 
 use std::env;
+use std::fs;
 use std::path::{Path, PathBuf};
 
 fn main() {
@@ -134,6 +135,36 @@ fn find_cuda_root() -> Option<PathBuf> {
     None
 }
 
+/// Walk a directory recursively and emit cargo:rerun-if-changed for all files matching extensions
+fn register_source_files(dir: &Path, extensions: &[&str]) {
+    if !dir.exists() {
+        return;
+    }
+
+    let entries = match fs::read_dir(dir) {
+        Ok(e) => e,
+        Err(_) => return,
+    };
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        
+        if path.is_dir() {
+            // Skip build directories
+            if path.file_name().and_then(|n| n.to_str()) == Some("build") {
+                continue;
+            }
+            register_source_files(&path, extensions);
+        } else if path.is_file() {
+            if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+                if extensions.contains(&ext) {
+                    println!("cargo:rerun-if-changed={}", path.display());
+                }
+            }
+        }
+    }
+}
+
 fn build_with_cuda() {
     println!("cargo:warning=Building WITH CUDA support");
 
@@ -144,7 +175,10 @@ fn build_with_cuda() {
 
     // Build CUDA library with CMake
     let mut config = cmake::Config::new(&cuda_dir);
-    config.define("CMAKE_BUILD_TYPE", "Release").define("BUILD_TESTING", "OFF");
+    config
+        .define("CMAKE_BUILD_TYPE", "Release")
+        .define("BUILD_TESTING", "OFF")
+        .always_configure(false);  // Don't reconfigure CMake unless CMakeLists.txt changes
 
     // Set CUDA toolkit path if found
     // FIX (2025-10-04 - Cascade): CMAKE_CUDA_COMPILER is REQUIRED when nvcc is not in PATH.
@@ -197,11 +231,22 @@ fn build_with_cuda() {
     println!("cargo:rustc-link-arg=-lcudadevrt");
     println!("cargo:rustc-link-arg=-lcublas");
 
-    // Rebuild if CUDA sources change
-    println!("cargo:rerun-if-changed=cuda/src");
-    println!("cargo:rerun-if-changed=cuda/include");
-    println!("cargo:rerun-if-changed=cuda/kernels");
+    // Register all CUDA/C++ source and header files for incremental builds
+    // This ensures Cargo detects changes to individual files, not just directories
+    let cuda_extensions = &["cu", "cpp", "h", "hpp", "cuh"];
+    
+    register_source_files(&cuda_dir.join("src"), cuda_extensions);
+    register_source_files(&cuda_dir.join("include"), cuda_extensions);
+    register_source_files(&cuda_dir.join("kernels"), cuda_extensions);
+    
+    // Also watch CMakeLists.txt files
     println!("cargo:rerun-if-changed=cuda/CMakeLists.txt");
+    if cuda_dir.join("src/CMakeLists.txt").exists() {
+        println!("cargo:rerun-if-changed=cuda/src/CMakeLists.txt");
+    }
+    if cuda_dir.join("kernels/CMakeLists.txt").exists() {
+        println!("cargo:rerun-if-changed=cuda/kernels/CMakeLists.txt");
+    }
 
     // Enable cuda cfg for conditional compilation
     println!("cargo:rustc-cfg=feature=\"cuda\"");

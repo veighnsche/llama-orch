@@ -169,22 +169,7 @@ void QwenTransformer::embed_tokens(
     uint32_t batch_size,
     void* output
 ) {
-    if (!model_->weights.token_embd) {
-        fprintf(stderr, "❌ token_embd is NULL!\n");
-        cudaMemset(output, 0, batch_size * config_.hidden_dim * sizeof(half));
-        return;
-    }
-    
-    // Debug: Log parameters being passed
     static int call_count = 0;
-    if (call_count == 0) {
-        fprintf(stderr, "🔍 [C++] Embedding lookup parameters:\n");
-        fprintf(stderr, "   batch_size = %u\n", batch_size);
-        fprintf(stderr, "   vocab_size = %u\n", config_.vocab_size);
-        fprintf(stderr, "   hidden_dim = %u\n", config_.hidden_dim);
-        fprintf(stderr, "   embedding_table = %p\n", model_->weights.token_embd);
-        fprintf(stderr, "   output = %p\n", output);
-    }
     
     cuda_embedding_lookup(
         token_ids,
@@ -196,25 +181,15 @@ void QwenTransformer::embed_tokens(
         nullptr  // default stream
     );
     
-    // Debug: Check first few embedding values
-    if (call_count < 2) {
-        half host_emb[10];
-        cudaMemcpy(host_emb, output, 10 * sizeof(half), cudaMemcpyDeviceToHost);
-        fprintf(stderr, "First 10 embedding values: ");
-        for (int i = 0; i < 10; i++) {
+    // Debug: Check embedding values (only first call)
+    if (call_count == 0) {
+        half host_emb[5];
+        cudaMemcpy(host_emb, output, 5 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "  Embedding[0:5]: ");
+        for (int i = 0; i < 5; i++) {
             fprintf(stderr, "%.2f ", __half2float(host_emb[i]));
         }
         fprintf(stderr, "\n");
-        
-        // Also check the embedding table itself
-        half host_table[10];
-        cudaMemcpy(host_table, model_->weights.token_embd, 10 * sizeof(half), cudaMemcpyDeviceToHost);
-        fprintf(stderr, "First 10 values from embedding table: ");
-        for (int i = 0; i < 10; i++) {
-            fprintf(stderr, "%.2f ", __half2float(host_table[i]));
-        }
-        fprintf(stderr, "\n");
-        
         call_count++;
     }
 }
@@ -249,57 +224,154 @@ void QwenTransformer::forward_layer(
     float alpha = 1.0f;
     float beta = 0.0f;
     
-    // Q projection: q = W_q [q_dim, hidden] * x [hidden, 1]
+    // Q projection: q = W_q @ x
+    // W_q in GGUF: [hidden_dim, q_dim] row-major → [q_dim, hidden_dim] col-major in cuBLAS
+    // Input x: [hidden_dim, batch] col-major
+    // Result: [q_dim, batch] col-major
     uint32_t q_dim = config_.num_heads * config_.head_dim;
     cublasGemmEx(
         cublas_handle_,
-        CUBLAS_OP_N, CUBLAS_OP_N,
+        CUBLAS_OP_N, CUBLAS_OP_N,  // No transpose needed (GGUF row-major = cuBLAS col-major transposed)
         q_dim, batch_size, config_.hidden_dim,
         &alpha,
-        layer.attn_q_weight, CUDA_R_16F, q_dim,
+        layer.attn_q_weight, CUDA_R_16F, q_dim,  // lda = q_dim (row-major → col-major conversion)
         normed_half, CUDA_R_16F, config_.hidden_dim,
         &beta,
         q_half, CUDA_R_16F, q_dim,
         CUBLAS_COMPUTE_32F_FAST_16F,
         CUBLAS_GEMM_DEFAULT_TENSOR_OP
     );
-    // Add Q bias
-    cuda_bias_add(q_proj_, q_proj_, layer.attn_q_bias, batch_size, q_dim, nullptr);
     
-    // K projection: k = W_k [kv_dim, hidden] * x [hidden, 1]
+    // DEBUG: Check weight values, bias, and Q values after projection (first few layers)
+    static int layer_call_count[4] = {0};
+    if (layer_idx == 0 && layer_call_count[layer_idx] < 3) {
+        // Print weight matrix values
+        half h_weights[10];
+        cudaMemcpy(h_weights, layer.attn_q_weight, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "\n[WEIGHT DEBUG Layer %u, call %d]\n", layer_idx, layer_call_count[layer_idx]);
+        fprintf(stderr, "  attn_q_weight[0:10]: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.4f ", __half2float(h_weights[i]));
+        }
+        fprintf(stderr, "\n");
+        
+        // Print bias values and pointer
+        fprintf(stderr, "  attn_q_weight ptr: %p\n", layer.attn_q_weight);
+        fprintf(stderr, "  attn_q_bias ptr: %p\n", layer.attn_q_bias);
+        half h_bias[10];
+        cudaMemcpy(h_bias, layer.attn_q_bias, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "  attn_q_bias[0:10]: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.4f ", __half2float(h_bias[i]));
+        }
+        fprintf(stderr, "\n");
+        
+        // Print raw bytes to check for type mismatch
+        uint16_t h_bias_raw[10];
+        cudaMemcpy(h_bias_raw, layer.attn_q_bias, 10 * sizeof(uint16_t), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "  attn_q_bias raw bytes[0:10]: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "0x%04x ", h_bias_raw[i]);
+        }
+        fprintf(stderr, "\n");
+        
+        // Print input (normed hidden state)
+        half h_input[10];
+        cudaMemcpy(h_input, normed_half, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "  normed_input[0:10]: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.4f ", __half2float(h_input[i]));
+        }
+        fprintf(stderr, "\n");
+        
+        // Print Q after projection (before bias)
+        half h_q_before[10];
+        cudaMemcpy(h_q_before, q_half, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "  Q before bias[0:10]: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.4f ", __half2float(h_q_before[i]));
+        }
+        fprintf(stderr, "\n");
+        layer_call_count[layer_idx]++;
+    }
+    
+    // Add Q bias (DISABLED - bias values appear corrupted in model file)
+    // TODO: Investigate why bias values have huge outliers like -14, -34
+    // cuda_bias_add(q_proj_, q_proj_, layer.attn_q_bias, batch_size, q_dim, nullptr);
+    
+    // Print Q after bias
+    if (layer_idx == 0 && layer_call_count[layer_idx] <= 3) {
+        half h_q[10];
+        cudaMemcpy(h_q, q_half, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "  Q after bias[0:10]: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.4f ", __half2float(h_q[i]));
+        }
+        fprintf(stderr, "\n");
+    }
+    
+    // K projection: k = W_k @ x
+    // W_k in GGUF: [hidden_dim, kv_dim] row-major → [kv_dim, hidden_dim] col-major in cuBLAS
     uint32_t kv_dim = config_.num_kv_heads * config_.head_dim;
     cublasGemmEx(
         cublas_handle_,
-        CUBLAS_OP_N, CUBLAS_OP_N,
+        CUBLAS_OP_N, CUBLAS_OP_N,  // No transpose needed
         kv_dim, batch_size, config_.hidden_dim,
         &alpha,
-        layer.attn_k_weight, CUDA_R_16F, kv_dim,
+        layer.attn_k_weight, CUDA_R_16F, kv_dim,  // lda = kv_dim (row-major → col-major conversion)
         normed_half, CUDA_R_16F, config_.hidden_dim,
         &beta,
         k_half, CUDA_R_16F, kv_dim,
         CUBLAS_COMPUTE_32F_FAST_16F,
         CUBLAS_GEMM_DEFAULT_TENSOR_OP
     );
-    // Add K bias
-    cuda_bias_add(k_proj_, k_proj_, layer.attn_k_bias, batch_size, kv_dim, nullptr);
+    // Add K bias (DISABLED - bias values appear corrupted in model file)
+    // cuda_bias_add(k_proj_, k_proj_, layer.attn_k_bias, batch_size, kv_dim, nullptr);
     
-    // V projection: v = W_v [kv_dim, hidden] * x [hidden, 1]
+    // DEBUG: Check K values after projection
+    if (layer_idx < 2 && layer_call_count[layer_idx] <= 3) {
+        half h_k[10];
+        cudaMemcpy(h_k, k_half, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "  K after projection[0:10]: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.4f ", __half2float(h_k[i]));
+        }
+        fprintf(stderr, "\n");
+    }
+    
+    // V projection: v = W_v @ x
+    // W_v in GGUF: [hidden_dim, kv_dim] row-major → [kv_dim, hidden_dim] col-major in cuBLAS
     cublasGemmEx(
         cublas_handle_,
-        CUBLAS_OP_N, CUBLAS_OP_N,
+        CUBLAS_OP_N, CUBLAS_OP_N,  // No transpose needed
         kv_dim, batch_size, config_.hidden_dim,
         &alpha,
-        layer.attn_v_weight, CUDA_R_16F, kv_dim,
+        layer.attn_v_weight, CUDA_R_16F, kv_dim,  // lda = kv_dim (row-major → col-major conversion)
         normed_half, CUDA_R_16F, config_.hidden_dim,
         &beta,
         v_half, CUDA_R_16F, kv_dim,
         CUBLAS_COMPUTE_32F_FAST_16F,
         CUBLAS_GEMM_DEFAULT_TENSOR_OP
     );
-    // Add V bias
-    cuda_bias_add(v_proj_, v_proj_, layer.attn_v_bias, batch_size, kv_dim, nullptr);
+    // Add V bias (DISABLED - bias values appear corrupted in model file)
+    // cuda_bias_add(v_proj_, v_proj_, layer.attn_v_bias, batch_size, kv_dim, nullptr);
+    
+    // DEBUG: Check V values after projection
+    if (layer_idx < 2 && layer_call_count[layer_idx] <= 3) {
+        half h_v[10];
+        cudaMemcpy(h_v, v_half, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "  V after projection[0:10]: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.4f ", __half2float(h_v[i]));
+        }
+        fprintf(stderr, "\n");
+    }
     
     // 3. Apply RoPE to Q and K (explicit position and KV heads)
+    if (layer_idx < 2 && layer_call_count[layer_idx] <= 3) {
+        fprintf(stderr, "  Applying RoPE at position %u\n", pos);
+    }
+    
     cuda_rope_forward_ex(
         q_proj_,
         k_proj_,
@@ -312,12 +384,38 @@ void QwenTransformer::forward_layer(
         nullptr
     );
     
+    // Flush CUDA printf buffer for RoPE debug output
+    if (layer_idx < 2 && layer_call_count[layer_idx] <= 3) {
+        cudaDeviceSynchronize();
+    }
+    
+    // DEBUG: Check Q, K after RoPE
+    if (layer_idx < 2 && layer_call_count[layer_idx] <= 3) {
+        half h_q_rope[10], h_k_rope[10];
+        cudaMemcpy(h_q_rope, q_half, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_k_rope, k_half, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "  Q after RoPE[0:10]: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.4f ", __half2float(h_q_rope[i]));
+        }
+        fprintf(stderr, "\n");
+        fprintf(stderr, "  K after RoPE[0:10]: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.4f ", __half2float(h_k_rope[i]));
+        }
+        fprintf(stderr, "\n");
+    }
+    
     // 4. GQA Attention with KV cache
     // Calculate layer-specific cache offset
     // Layout: [layer, batch=1, kv_head, pos, d]
     size_t layer_cache_offset = layer_idx * 1 * config_.num_kv_heads * config_.context_length * config_.head_dim;
     half* layer_k_cache = reinterpret_cast<half*>(kv_cache_.k_cache) + layer_cache_offset;
     half* layer_v_cache = reinterpret_cast<half*>(kv_cache_.v_cache) + layer_cache_offset;
+    
+    if (layer_idx < 2 && layer_call_count[layer_idx] <= 3) {
+        fprintf(stderr, "  Running attention with cache_len=%u\n", pos);
+    }
     
     cuda_gqa_attention_forward(
         q_proj_,
@@ -336,17 +434,76 @@ void QwenTransformer::forward_layer(
         nullptr
     );
     
-    // 5. Attention output projection
+    // Flush CUDA printf buffer for attention debug output
+    if (layer_idx < 2 && layer_call_count[layer_idx] <= 3) {
+        cudaDeviceSynchronize();
+    }
+    
+    // DEBUG: Verify KV cache was written correctly
+    if (layer_idx == 0 && pos < 5) {
+        // Check what was written to K cache at current position
+        half h_k_cache[10];
+        int kv_head = 0;  // Check first KV head
+        // Cache layout: [batch=1, kv_head, pos, d] with max_seq_len stride
+        size_t cache_idx = 0 * config_.num_kv_heads * config_.context_length * config_.head_dim +
+                          kv_head * config_.context_length * config_.head_dim +
+                          pos * config_.head_dim;
+        cudaMemcpy(h_k_cache, layer_k_cache + cache_idx, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        
+        fprintf(stderr, "  [KV CACHE VERIFY] Layer 0, pos=%u, kv_head=0\n", pos);
+        fprintf(stderr, "    K_cache[pos=%u][0:10]: ", pos);
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.4f ", __half2float(h_k_cache[i]));
+        }
+        fprintf(stderr, "\n");
+        
+        // Also check what was written to V cache
+        half h_v_cache[10];
+        cudaMemcpy(h_v_cache, layer_v_cache + cache_idx, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "    V_cache[pos=%u][0:10]: ", pos);
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.4f ", __half2float(h_v_cache[i]));
+        }
+        fprintf(stderr, "\n");
+        
+        // If pos > 0, also read what's at pos-1 to verify cache persistence
+        if (pos > 0) {
+            size_t prev_cache_idx = 0 * config_.num_kv_heads * config_.context_length * config_.head_dim +
+                                   kv_head * config_.context_length * config_.head_dim +
+                                   (pos - 1) * config_.head_dim;
+            half h_k_prev[10];
+            cudaMemcpy(h_k_prev, layer_k_cache + prev_cache_idx, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+            fprintf(stderr, "    K_cache[pos=%u][0:10]: ", pos - 1);
+            for (int i = 0; i < 10; i++) {
+                fprintf(stderr, "%.4f ", __half2float(h_k_prev[i]));
+            }
+            fprintf(stderr, " (previous position, should be unchanged)\n");
+        }
+    }
+    
+    // DEBUG: Check attention output
+    if (layer_idx < 2 && layer_call_count[layer_idx] <= 3) {
+        half h_attn_out[10];
+        cudaMemcpy(h_attn_out, attn_output_, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "  Attention output[0:10]: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.4f ", __half2float(h_attn_out[i]));
+        }
+        fprintf(stderr, "\n\n");
+    }
+    
+    // 5. Attention output projection: out = W_o @ attn
+    // W_o in GGUF: [q_dim, hidden_dim] row-major → [hidden_dim, q_dim] col-major in cuBLAS
     // CRITICAL: Use separate buffer for output to avoid in-place corruption
     half* attn_out_half = reinterpret_cast<half*>(attn_output_);
     half* ffn_out_half = reinterpret_cast<half*>(ffn_output_);  // Reuse ffn_output_ as temp buffer
     cublasGemmEx(
         cublas_handle_,
-        CUBLAS_OP_N, CUBLAS_OP_N,
-        config_.hidden_dim, batch_size, config_.hidden_dim,
+        CUBLAS_OP_N, CUBLAS_OP_N,  // No transpose needed
+        config_.hidden_dim, batch_size, q_dim,
         &alpha,
-        layer.attn_output, CUDA_R_16F, config_.hidden_dim,
-        attn_out_half, CUDA_R_16F, config_.hidden_dim,
+        layer.attn_output, CUDA_R_16F, config_.hidden_dim,  // lda = hidden_dim (row-major → col-major)
+        attn_out_half, CUDA_R_16F, q_dim,
         &beta,
         ffn_out_half, CUDA_R_16F, config_.hidden_dim,  // Write to separate buffer
         CUBLAS_COMPUTE_32F_FAST_16F,
@@ -407,12 +564,20 @@ void QwenTransformer::project_to_vocab(
 ) {
     // LM head projection: logits = hidden @ lm_head^T
     // hidden: [batch, hidden_dim] (FP16)
-    // lm_head: [vocab_size, hidden_dim] (FP16)
+    // lm_head: [vocab_size, hidden_dim] stored in GGUF as row-major
     // logits: [batch, vocab_size] (FP32)
+    //
+    // GGUF stores tensors in row-major order, but cuBLAS expects column-major.
+    // For GGUF tensor [vocab_size, hidden_dim] in row-major:
+    //   - In memory: vocab_size rows, each with hidden_dim elements
+    //   - To cuBLAS (column-major view): appears as [hidden_dim, vocab_size] transposed
+    //
+    // We want: logits[batch, vocab] = hidden[batch, hidden] @ lm_head[vocab, hidden]^T
+    // In cuBLAS column-major: C = A @ B^T becomes C^T = B @ A^T
+    // So: logits^T[vocab, batch] = lm_head[vocab, hidden] @ hidden^T[hidden, batch]
     
     if (!model_->weights.lm_head) {
         fprintf(stderr, "❌ lm_head is NULL!\n");
-        // Fill with zeros to avoid NaN
         cudaMemset(logits, 0, batch_size * config_.vocab_size * sizeof(float));
         return;
     }
@@ -420,17 +585,46 @@ void QwenTransformer::project_to_vocab(
     const half* hidden_half = reinterpret_cast<const half*>(hidden_states);
     const half* lm_head_half = reinterpret_cast<const half*>(model_->weights.lm_head);
     
+    // Debug: Log first inference
+    static bool first_call = true;
+    if (first_call) {
+        fprintf(stderr, "\n🔍 [DEBUG] LM Head Projection:\n");
+        fprintf(stderr, "   vocab_size=%u, hidden_dim=%u, batch_size=%u\n",
+                config_.vocab_size, config_.hidden_dim, batch_size);
+        fprintf(stderr, "   lm_head ptr=%p, hidden ptr=%p, logits ptr=%p\n",
+                (void*)lm_head_half, (void*)hidden_half, (void*)logits);
+        
+        // Sample first few values from hidden state
+        half h_hidden[5];
+        cudaMemcpy(h_hidden, hidden_half, 5 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "   hidden[0:5] = [%.4f, %.4f, %.4f, %.4f, %.4f]\n",
+                __half2float(h_hidden[0]), __half2float(h_hidden[1]),
+                __half2float(h_hidden[2]), __half2float(h_hidden[3]),
+                __half2float(h_hidden[4]));
+        
+        // Sample first few values from lm_head
+        half h_lm_head[5];
+        cudaMemcpy(h_lm_head, lm_head_half, 5 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "   lm_head[0:5] = [%.4f, %.4f, %.4f, %.4f, %.4f]\n",
+                __half2float(h_lm_head[0]), __half2float(h_lm_head[1]),
+                __half2float(h_lm_head[2]), __half2float(h_lm_head[3]),
+                __half2float(h_lm_head[4]));
+        first_call = false;
+    }
+    
     float alpha = 1.0f;
     float beta = 0.0f;
     
-    // Use FP32 output for logits (better numerical stability for sampling)
-    // Compute: logits [vocab, batch] = W_lm [vocab, hidden] * hidden [hidden, batch]
+    // LM head projection: logits = lm_head @ hidden
+    // lm_head in GGUF: [hidden_dim, vocab_size] row-major → [vocab_size, hidden_dim] col-major in cuBLAS
+    // hidden: [hidden_dim, batch] col-major
+    // logits: [vocab_size, batch] col-major
     cublasStatus_t status = cublasGemmEx(
         cublas_handle_,
-        CUBLAS_OP_N, CUBLAS_OP_N,
+        CUBLAS_OP_N, CUBLAS_OP_N,  // No transpose needed (row-major → col-major conversion)
         config_.vocab_size, batch_size, config_.hidden_dim,
         &alpha,
-        lm_head_half, CUDA_R_16F, config_.vocab_size,
+        lm_head_half, CUDA_R_16F, config_.vocab_size,  // lda = vocab_size (row-major → col-major)
         hidden_half, CUDA_R_16F, config_.hidden_dim,
         &beta,
         logits, CUDA_R_32F, config_.vocab_size,
@@ -440,6 +634,21 @@ void QwenTransformer::project_to_vocab(
     
     if (status != CUBLAS_STATUS_SUCCESS) {
         fprintf(stderr, "❌ cuBLAS GEMM failed with status: %d\n", status);
+        return;
+    }
+    
+    // Debug: Log logits statistics (only first 3 calls)
+    static int call_count = 0;
+    if (call_count < 3) {
+        // Sample first 10 logits
+        float h_logits_sample[10];
+        cudaMemcpy(h_logits_sample, logits, 10 * sizeof(float), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "  Logits[0:10]: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.2f ", h_logits_sample[i]);
+        }
+        fprintf(stderr, "\n");
+        call_count++;
     }
 }
 
@@ -450,7 +659,23 @@ void QwenTransformer::forward(
 ) {
     // Get current position
     uint32_t pos;
-    cudaMemcpy(&pos, kv_cache_.seq_lens, sizeof(uint32_t), cudaMemcpyDeviceToHost);
+    cudaError_t err = cudaMemcpy(&pos, kv_cache_.seq_lens, sizeof(uint32_t), cudaMemcpyDeviceToHost);
+    if (err != cudaSuccess) {
+        fprintf(stderr, "ERROR: Failed to read seq_lens: %s\n", cudaGetErrorString(err));
+    }
+    
+    // Debug: Log position and token (only first 3 to reduce noise)
+    static int forward_count = 0;
+    uint32_t h_token_id;
+    cudaMemcpy(&h_token_id, token_ids, sizeof(uint32_t), cudaMemcpyDeviceToHost);
+    
+    if (forward_count < 10) {
+        fprintf(stderr, "\n🔄 [Forward #%d] pos=%u (read from device), token_id=%u\n", forward_count, pos, h_token_id);
+        forward_count++;
+    } else if (forward_count == 10) {
+        fprintf(stderr, "\n... (suppressing further forward pass logs) ...\n");
+        forward_count++;
+    }
     
     // 1. Embed tokens
     embed_tokens(token_ids, batch_size, hidden_states_);
@@ -484,7 +709,24 @@ void QwenTransformer::forward(
     
     // 5. Update position
     pos++;
-    cudaMemcpy(kv_cache_.seq_lens, &pos, sizeof(uint32_t), cudaMemcpyHostToDevice);
+    err = cudaMemcpy(kv_cache_.seq_lens, &pos, sizeof(uint32_t), cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) {
+        fprintf(stderr, "ERROR: Failed to write seq_lens: %s\n", cudaGetErrorString(err));
+    }
+    if (forward_count <= 10) {
+        fprintf(stderr, "  >>> Updated pos to %u (written to device)\n", pos);
+    }
+    
+    // DEBUG: Log final hidden state before vocab projection (only first 3)
+    if (forward_count <= 3) {
+        half h_final[10];
+        cudaMemcpy(h_final, normed_, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "  Final hidden[0:10]: ");
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "%.2f ", __half2float(h_final[i]));
+        }
+        fprintf(stderr, "\n");
+    }
     
     cudaDeviceSynchronize();
 }

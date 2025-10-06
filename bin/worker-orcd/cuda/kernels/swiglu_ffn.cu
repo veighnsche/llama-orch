@@ -87,21 +87,21 @@ void cuda_swiglu_forward(
     cublasCreate(&cublas_handle);
     cublasSetStream(cublas_handle, stream);
     
-    // 1. Gate projection: gate_out = input @ gate_weight^T
-    //    input: [batch, hidden_dim]
-    //    gate_weight: [ffn_dim, hidden_dim]
-    //    gate_out: [batch, ffn_dim]
+    // 1. Gate projection: gate_out = gate_weight @ input
+    //    gate_weight in GGUF: [hidden_dim, ffn_dim] row-major → [ffn_dim, hidden_dim] col-major
+    //    input: [hidden_dim, batch] col-major
+    //    gate_out: [ffn_dim, batch] col-major
     float alpha = 1.0f;
     float beta = 0.0f;
     cublasStatus_t status = cublasGemmEx(
         cublas_handle,
-        CUBLAS_OP_T,  // Transpose gate_weight
+        CUBLAS_OP_N,  // No transpose needed (row-major → col-major)
         CUBLAS_OP_N,  // No transpose input
         ffn_dim,      // M
         batch_size,   // N
         hidden_dim,   // K
         &alpha,
-        gate_weight_half, CUDA_R_16F, hidden_dim,
+        gate_weight_half, CUDA_R_16F, ffn_dim,  // lda = ffn_dim
         input_half, CUDA_R_16F, hidden_dim,
         &beta,
         gate_out, CUDA_R_16F, ffn_dim,
@@ -109,16 +109,17 @@ void cuda_swiglu_forward(
         CUBLAS_GEMM_DEFAULT
     );
     
-    // 2. Up projection: up_out = input @ up_weight^T
+    // 2. Up projection: up_out = up_weight @ input
+    //    up_weight in GGUF: [hidden_dim, ffn_dim] row-major → [ffn_dim, hidden_dim] col-major
     status = cublasGemmEx(
         cublas_handle,
-        CUBLAS_OP_T,
+        CUBLAS_OP_N,  // No transpose needed
         CUBLAS_OP_N,
         ffn_dim,
         batch_size,
         hidden_dim,
         &alpha,
-        up_weight_half, CUDA_R_16F, hidden_dim,
+        up_weight_half, CUDA_R_16F, ffn_dim,  // lda = ffn_dim
         input_half, CUDA_R_16F, hidden_dim,
         &beta,
         up_out, CUDA_R_16F, ffn_dim,
@@ -136,19 +137,19 @@ void cuda_swiglu_forward(
         ffn_dim
     );
     
-    // 4. Down projection: output = swiglu_out @ down_weight^T
-    //    swiglu_out: [batch, ffn_dim]
-    //    down_weight: [hidden_dim, ffn_dim]
-    //    output: [batch, hidden_dim]
+    // 4. Down projection: output = down_weight @ swiglu_out
+    //    down_weight in GGUF: [ffn_dim, hidden_dim] row-major → [hidden_dim, ffn_dim] col-major
+    //    swiglu_out: [ffn_dim, batch] col-major
+    //    output: [hidden_dim, batch] col-major
     status = cublasGemmEx(
         cublas_handle,
-        CUBLAS_OP_T,
+        CUBLAS_OP_N,  // No transpose needed
         CUBLAS_OP_N,
         hidden_dim,
         batch_size,
         ffn_dim,
         &alpha,
-        down_weight_half, CUDA_R_16F, ffn_dim,
+        down_weight_half, CUDA_R_16F, hidden_dim,  // lda = hidden_dim
         swiglu_out, CUDA_R_16F, ffn_dim,
         &beta,
         output_half, CUDA_R_16F, hidden_dim,
