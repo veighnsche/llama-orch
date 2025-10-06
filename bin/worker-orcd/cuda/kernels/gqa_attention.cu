@@ -28,10 +28,11 @@ __global__ void gqa_attention_decode_kernel_impl(
     const half* q,
     const half* k_current,
     const half* v_current,
-    const half* kv_cache_k,
-    const half* kv_cache_v,
+    half* kv_cache_k,
+    half* kv_cache_v,
     int batch_size,
     int cache_len,
+    int max_seq_len,
     int num_q_heads,
     int num_kv_heads,
     int head_dim,
@@ -68,10 +69,11 @@ __global__ void gqa_attention_decode_kernel_impl(
         
         if (pos < cache_len) {
             // Score with cached K
+            // Cache layout: [batch, kv_head, pos, d] with max_seq_len stride
             for (int d = 0; d < head_dim; d++) {
-                int k_cache_idx = batch * cache_len * num_kv_heads * head_dim +
-                                  pos * num_kv_heads * head_dim +
-                                  kv_head * head_dim + d;
+                int k_cache_idx = batch * num_kv_heads * max_seq_len * head_dim +
+                                  kv_head * max_seq_len * head_dim +
+                                  pos * head_dim + d;
                 float k_val = __half2float(kv_cache_k[k_cache_idx]);
                 score += q_vec[d] * k_val;
             }
@@ -134,9 +136,10 @@ __global__ void gqa_attention_decode_kernel_impl(
         float out_val = 0.0f;
         
         for (int pos = 0; pos < cache_len; pos++) {
-            int v_cache_idx = batch * cache_len * num_kv_heads * head_dim +
-                              pos * num_kv_heads * head_dim +
-                              kv_head * head_dim + d;
+            // Cache layout: [batch, kv_head, pos, d] with max_seq_len stride
+            int v_cache_idx = batch * num_kv_heads * max_seq_len * head_dim +
+                              kv_head * max_seq_len * head_dim +
+                              pos * head_dim + d;
             float v_val = __half2float(kv_cache_v[v_cache_idx]);
             out_val += scores[pos] * v_val;
         }
@@ -148,6 +151,18 @@ __global__ void gqa_attention_decode_kernel_impl(
         
         int out_idx = batch * num_q_heads * head_dim + q_head * head_dim + d;
         output[out_idx] = __float2half(out_val);
+        
+        // Write current K, V to cache at position cache_len (only once per KV head)
+        // Use one q_head per KV group to perform the write
+        if (kv_cache_k != nullptr && (q_head % (num_q_heads / num_kv_heads) == 0)) {
+            int k_idx = batch * num_kv_heads * head_dim + kv_head * head_dim + d;
+            // Cache layout: [batch, kv_head, pos, d] with max_seq_len stride
+            int cache_write_idx = batch * num_kv_heads * max_seq_len * head_dim +
+                                  kv_head * max_seq_len * head_dim +
+                                  cache_len * head_dim + d;
+            kv_cache_k[cache_write_idx] = k_current[k_idx];
+            kv_cache_v[cache_write_idx] = v_current[v_idx];
+        }
     }
 }
 
@@ -195,11 +210,10 @@ __global__ void gqa_attention_prefill_kernel(
         output[out_idx] = v[v_idx];
         
         // Write K, V to cache at position 0 (only once per KV head)
-        if (kv_cache_k != nullptr && q_head < num_kv_heads) {
-            int cache_idx = batch * num_kv_heads * head_dim + kv_head * head_dim + d;
-            kv_cache_k[cache_idx] = k[k_idx];
-            kv_cache_v[cache_idx] = v[v_idx];
-        }
+        // Cache layout: [batch, kv_head, pos, d] with max_seq_len stride
+        // NOTE: This function doesn't receive max_seq_len parameter, so we can't write to cache correctly
+        // The prefill kernel should not be used - always use decode kernel even for first token
+        // TODO: Remove this prefill kernel or fix the API to pass max_seq_len
     }
 }
 
@@ -313,6 +327,7 @@ int cuda_gqa_attention_decode(
     half* kv_cache_v,
     int batch_size,
     int cache_len,
+    int max_seq_len,
     int num_q_heads,
     int num_kv_heads,
     int head_dim,
@@ -337,7 +352,7 @@ int cuda_gqa_attention_decode(
     
     gqa_attention_decode_kernel_impl<<<grid, block, shared_mem_size>>>(
         output, q, k_current, v_current, kv_cache_k, kv_cache_v,
-        batch_size, cache_len, num_q_heads, num_kv_heads, head_dim, scale
+        batch_size, cache_len, max_seq_len, num_q_heads, num_kv_heads, head_dim, scale
     );
     
     cudaError_t err = cudaGetLastError();
@@ -366,6 +381,7 @@ void cuda_gqa_attention_forward(
     uint32_t head_dim,
     uint32_t seq_len,
     uint32_t cache_len,
+    uint32_t max_seq_len,
     cudaStream_t stream
 ) {
     const half* q_half = reinterpret_cast<const half*>(q);
@@ -377,39 +393,23 @@ void cuda_gqa_attention_forward(
     
     float scale = 1.0f / sqrtf(static_cast<float>(head_dim));
     
-    if (cache_len == 0) {
-        // First token: use prefill (self-attention only)
-        cuda_gqa_attention_prefill(
-            output_half,
-            q_half,
-            k_half,
-            v_half,
-            k_cache_half,
-            v_cache_half,
-            batch_size,
-            seq_len,
-            num_q_heads,
-            num_kv_heads,
-            head_dim,
-            scale
-        );
-    } else {
-        // Subsequent tokens: use decode (attend to cache + current)
-        cuda_gqa_attention_decode(
-            output_half,
-            q_half,
-            k_half,
-            v_half,
-            k_cache_half,
-            v_cache_half,
-            batch_size,
-            cache_len,
-            num_q_heads,
-            num_kv_heads,
-            head_dim,
-            scale
-        );
-    }
+    // Always use decode kernel (it handles cache_len=0 correctly)
+    // The prefill kernel has a bug where it doesn't use max_seq_len for cache indexing
+    cuda_gqa_attention_decode(
+        output_half,
+        q_half,
+        k_half,
+        v_half,
+        k_cache_half,
+        v_cache_half,
+        batch_size,
+        cache_len,
+        max_seq_len,
+        num_q_heads,
+        num_kv_heads,
+        head_dim,
+        scale
+    );
 }
 
 } // extern "C"

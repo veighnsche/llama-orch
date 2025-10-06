@@ -65,21 +65,45 @@ impl Model {
         // NEW: Load weights in Rust with Q4_K dequantization!
         use super::weight_loader::load_model_from_rust;
         use worker_gguf::GGUFMetadata;
-        
+
         eprintln!("🦀 [Rust] Loading model with Rust weight loading + Q4_K dequantization");
-        
-        // TEMPORARY: Hardcode Qwen2.5-0.5B config
-        // TODO: Parse from GGUF metadata when parser is complete
-        let vocab_size = 151936u32;
-        let hidden_dim = 896u32;
-        let num_layers = 24u32;
-        let num_heads = 14u32;
-        let num_kv_heads = 2u32;
-        let context_length = 32768u32;
-        
-        eprintln!("📋 [Rust] Model config: vocab={}, hidden={}, layers={}, heads={}/{}", 
-                  vocab_size, hidden_dim, num_layers, num_heads, num_kv_heads);
-        
+        // Parse model configuration from GGUF metadata
+        let meta = GGUFMetadata::from_file(model_path).map_err(|e| {
+            CudaError::ModelLoadFailed(format!("Failed to parse GGUF metadata: {}", e))
+        })?;
+
+        // Try to get vocab_size from metadata, fallback to tensor dimensions
+        let vocab_size = match meta.vocab_size() {
+            Ok(size) => size as u32,
+            Err(_) => {
+                // Fallback: derive from token_embd.weight tensor
+                eprintln!("⚠️  [Rust] tokenizer.ggml.tokens not found, deriving vocab_size from token_embd.weight");
+                let tensors = GGUFMetadata::parse_tensors(model_path)
+                    .map_err(|e| CudaError::ModelLoadFailed(format!("Failed to parse tensors: {}", e)))?;
+                
+                tensors.iter()
+                    .find(|t| t.name == "token_embd.weight")
+                    .and_then(|t| t.dimensions.last())
+                    .map(|&d| d as u32)
+                    .ok_or_else(|| CudaError::ModelLoadFailed("Cannot determine vocab_size".to_string()))?
+            }
+        };
+        let hidden_dim = meta.hidden_dim()
+            .map_err(|e| CudaError::ModelLoadFailed(format!("Failed to read hidden_dim: {}", e)))? as u32;
+        let num_layers = meta.num_layers()
+            .map_err(|e| CudaError::ModelLoadFailed(format!("Failed to read num_layers: {}", e)))? as u32;
+        let num_heads = meta.num_heads()
+            .map_err(|e| CudaError::ModelLoadFailed(format!("Failed to read num_heads: {}", e)))? as u32;
+        let num_kv_heads = meta.num_kv_heads()
+            .map_err(|e| CudaError::ModelLoadFailed(format!("Failed to read num_kv_heads: {}", e)))? as u32;
+        let context_length = meta.context_length()
+            .map_err(|e| CudaError::ModelLoadFailed(format!("Failed to read context_length: {}", e)))? as u32;
+
+        eprintln!(
+            "📋 [Rust] Model config (from GGUF): vocab={}, hidden={}, layers={}, heads={}/{} ctx={}",
+            vocab_size, hidden_dim, num_layers, num_heads, num_kv_heads, context_length
+        );
+
         // Load weights in Rust and create C++ model
         let ptr = unsafe {
             load_model_from_rust(
@@ -90,12 +114,13 @@ impl Model {
                 num_heads,
                 num_kv_heads,
                 context_length,
-            ).map_err(|e| CudaError::ModelLoadFailed(e))?
+            )
+            .map_err(|e| CudaError::ModelLoadFailed(e))?
         };
-        
+
         // VRAM is tracked inside load_model_from_rust
         let vram_bytes = 0; // TODO: Get actual VRAM from Rust loader
-        
+
         Ok(Self { ptr, vram_bytes })
     }
 

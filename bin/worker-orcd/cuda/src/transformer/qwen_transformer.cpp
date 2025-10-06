@@ -40,6 +40,7 @@ extern "C" {
         uint32_t head_dim,
         uint32_t seq_len,
         uint32_t cache_len,
+        uint32_t max_seq_len,
         cudaStream_t stream
     );
     
@@ -93,7 +94,8 @@ QwenTransformer::QwenTransformer(
 ) : model_(model), config_(config) {
     
     // Allocate KV cache
-    size_t kv_cache_size = config.num_layers * config.context_length * config.hidden_dim * sizeof(half);
+    // Layout: [num_layers, batch=1, num_kv_heads, context_length, head_dim]
+    size_t kv_cache_size = config.num_layers * 1 * config.num_kv_heads * config.context_length * config.head_dim * sizeof(half);
     cudaMalloc(&kv_cache_.k_cache, kv_cache_size);
     cudaMalloc(&kv_cache_.v_cache, kv_cache_size);
     cudaMalloc(&kv_cache_.seq_lens, sizeof(uint32_t));
@@ -299,7 +301,8 @@ void QwenTransformer::forward_layer(
     
     // 4. GQA Attention with KV cache
     // Calculate layer-specific cache offset
-    size_t layer_cache_offset = layer_idx * config_.context_length * config_.num_kv_heads * config_.head_dim;
+    // Layout: [layer, batch=1, kv_head, pos, d]
+    size_t layer_cache_offset = layer_idx * 1 * config_.num_kv_heads * config_.context_length * config_.head_dim;
     half* layer_k_cache = reinterpret_cast<half*>(kv_cache_.k_cache) + layer_cache_offset;
     half* layer_v_cache = reinterpret_cast<half*>(kv_cache_.v_cache) + layer_cache_offset;
     
@@ -316,11 +319,14 @@ void QwenTransformer::forward_layer(
         config_.head_dim,
         1,    // seq_len = 1 for single token
         pos,  // cache_len = current position
+        config_.context_length,  // max_seq_len
         nullptr
     );
     
     // 5. Attention output projection
+    // CRITICAL: Use separate buffer for output to avoid in-place corruption
     half* attn_out_half = reinterpret_cast<half*>(attn_output_);
+    half* ffn_out_half = reinterpret_cast<half*>(ffn_output_);  // Reuse ffn_output_ as temp buffer
     cublasGemmEx(
         cublas_handle_,
         CUBLAS_OP_T, CUBLAS_OP_N,
@@ -329,10 +335,12 @@ void QwenTransformer::forward_layer(
         layer.attn_output, CUDA_R_16F, config_.hidden_dim,
         attn_out_half, CUDA_R_16F, config_.hidden_dim,
         &beta,
-        attn_out_half, CUDA_R_16F, config_.hidden_dim,
+        ffn_out_half, CUDA_R_16F, config_.hidden_dim,  // Write to separate buffer
         CUBLAS_COMPUTE_32F_FAST_16F,
         CUBLAS_GEMM_DEFAULT_TENSOR_OP
     );
+    // Copy result back
+    cudaMemcpy(attn_output_, ffn_output_, config_.hidden_dim * sizeof(half), cudaMemcpyDeviceToDevice);
     
     // 6. Residual connection
     cuda_residual_add(

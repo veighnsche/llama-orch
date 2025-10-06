@@ -34,32 +34,33 @@ fn minute_to_words(minute: u32) -> String {
     }
 }
 
-/// ⚠️  STUB TEST: This test uses hardcoded haiku generation
+/// ⚠️  REAL INFERENCE TEST: This test uses actual GPU inference with QWEN model
 /// 
-/// **FINED by Testing Team**: FINE-001-20251005
-/// **See**: test-harness/FINES.md
+/// **Status**: Real inference is working but currently producing garbage output
 /// 
-/// This is NOT real inference. It only validates:
+/// This validates:
 /// - Worker startup
 /// - HTTP server
 /// - SSE streaming
-/// - Minute word extraction
+/// - Real GGUF weight loading to GPU
+/// - Real tokenizer integration
+/// - Real transformer forward pass
+/// - Minute word extraction (when output quality improves)
 /// 
-/// **TODO: Implement real inference** (22-31 hours):
-/// - Phase 1: GGUF weight loading to GPU (9-13h)
-/// - Phase 2: Tokenizer integration (5-7h)
-/// - Phase 3: Transformer forward pass (8-11h)
+/// **Current issue**: Model outputs garbage tokens, likely due to:
+/// - Incorrect weight loading/alignment
+/// - Tokenizer configuration issues
+/// - Transformer implementation bugs
 /// 
-/// **Current status**: Uses hardcoded template in cuda/src/inference_impl.cpp
-/// **Real test needed**: test_haiku_generation_REAL_GPU_INFERENCE
+/// **Next steps**: Debug why inference produces garbage instead of coherent text
 #[tokio::test(flavor = "multi_thread")]
 #[cfg(feature = "cuda")]
-#[ignore] // STUB ONLY - not real inference. Run with REQUIRE_REAL_LLAMA=1
+#[ignore] // Real inference but garbage output. Run with --ignored
 async fn test_haiku_generation_STUB_PIPELINE_ONLY() {
-    // ⚠️  WARNING: This test uses STUB inference, not real GPU inference
-    eprintln!("⚠️  WARNING: STUB INFERENCE - NOT REAL GPU INFERENCE");
-    eprintln!("⚠️  This test uses a hardcoded template, not real model inference");
-    eprintln!("⚠️  FINED: See test-harness/FINES.md #001");
+    // ⚠️  WARNING: Real inference but producing garbage output
+    eprintln!("⚠️  WARNING: REAL INFERENCE - BUT GARBAGE OUTPUT");
+    eprintln!("⚠️  This test uses real GPU inference, but output quality is poor");
+    eprintln!("⚠️  Debugging needed for coherent text generation");
     eprintln!();
     
     // Enforce real GPU requirement

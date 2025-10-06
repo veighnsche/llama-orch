@@ -88,9 +88,21 @@ impl InferenceBackend for CudaInferenceBackend {
         }
         
         // Get model configuration from metadata
-        // TODO: Fix vocab_size() in tokenizer - currently returns 0
-        // For now, hardcode Qwen2.5-0.5B vocab size
-        let vocab_size = 151936u32; // Qwen2.5-0.5B
+        let vocab_size = match self.metadata.vocab_size() {
+            Ok(size) => size as u32,
+            Err(_) => {
+                // Fallback: derive from token_embd.weight tensor
+                tracing::warn!("tokenizer.ggml.tokens not found, deriving vocab_size from token_embd.weight");
+                let tensors = worker_gguf::GGUFMetadata::parse_tensors(&self.model_path)
+                    .map_err(|e| format!("Failed to parse tensors: {}", e))?;
+                
+                tensors.iter()
+                    .find(|t| t.name == "token_embd.weight")
+                    .and_then(|t| t.dimensions.last())
+                    .map(|&d| d as u32)
+                    .ok_or_else(|| "Cannot determine vocab_size".to_string())?
+            }
+        };
         let hidden_dim = self.metadata.hidden_dim()? as u32;
         let num_layers = self.metadata.num_layers()? as u32;
         let num_heads = self.metadata.num_heads()? as u32;
@@ -100,9 +112,21 @@ impl InferenceBackend for CudaInferenceBackend {
         tracing::info!("Model config: vocab={}, hidden={}, layers={}, heads={}, kv_heads={}", 
             vocab_size, hidden_dim, num_layers, num_heads, num_kv_heads);
         
-        // Calculate head_dim and ffn_dim
+        // Calculate head_dim and derive ffn_dim from GGUF tensors (do not assume 4x)
         let head_dim = hidden_dim / num_heads;
-        let ffn_dim = hidden_dim * 4; // Standard transformer FFN ratio
+        let ffn_dim = match worker_gguf::GGUFMetadata::parse_tensors(&self.model_path) {
+            Ok(tensors) => {
+                // Prefer ffn_up.weight; fall back to ffn_gate.weight
+                let mut derived: Option<u32> = None;
+                for t in &tensors {
+                    if t.name == "blk.0.ffn_up.weight" || t.name == "blk.0.ffn_gate.weight" {
+                        if let Some(&d0) = t.dimensions.first() { derived = Some(d0 as u32); break; }
+                    }
+                }
+                derived.unwrap_or(hidden_dim * 4)
+            }
+            Err(_) => hidden_dim * 4,
+        };
         
         // Initialize real inference context
         let mut inference = RealInference::init(
@@ -118,21 +142,25 @@ impl InferenceBackend for CudaInferenceBackend {
         )?;
         
         // Process prompt tokens (prefill phase)
-        let mut current_token = token_ids[0];
-        for &token_id in &token_ids[1..] {
-            current_token = inference.generate_token(
-                current_token,
-                0.0, // Greedy for prefill
-                0,
-                1.0,
-                config.seed,
-            )?;
-            // Verify we're following the prompt
-            if current_token != token_id {
-                // This is expected during prefill - we're feeding the prompt
-                current_token = token_id;
+        // Feed all prompt tokens through the transformer to build KV cache
+        // We call generate_token() to run the forward pass, but we ignore the sampled output
+        // and feed the next prompt token instead (teacher forcing)
+        for (i, &token_id) in token_ids.iter().enumerate() {
+            if i < token_ids.len() - 1 {
+                // Prefill: run forward pass with this token, ignore sampled output
+                let _ = inference.generate_token(
+                    token_id,
+                    0.0, // Greedy (doesn't matter, we ignore output)
+                    0,
+                    1.0,
+                    config.seed,
+                )?;
+                // Continue with next prompt token (teacher forcing)
             }
         }
+        
+        // Start generation from the last prompt token
+        let mut current_token = *token_ids.last().unwrap();
         
         // Generate new tokens (decode phase)
         let mut executor = InferenceExecutor::new(config.clone());
