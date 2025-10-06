@@ -528,6 +528,24 @@ fn load_tensor_to_preallocated_gpu(
     tensor: &TensorInfo,
     gpu_ptr: *mut c_void,
 ) -> Result<(), String> {
+    // Skip bias tensors for Qwen2.5 (model doesn't use them)
+    if tensor.name.contains("bias") {
+        // Fill with zeros to avoid uninitialized memory
+        let size_bytes = tensor.num_elements() * 2;
+        let zeros = vec![0u8; size_bytes];
+        unsafe {
+            let result = ffi::cuda_memcpy_host_to_device(
+                gpu_ptr,
+                zeros.as_ptr() as *const c_void,
+                size_bytes,
+            );
+            if result != 0 {
+                return Err(format!("CUDA memcpy failed for bias: {}", result));
+            }
+        }
+        return Ok(());
+    }
+    
     match tensor.ggml_type {
         GGMLType::F16 => {
             // Load FP16 directly

@@ -299,7 +299,7 @@ QwenModel* QwenWeightLoader::load_from_gpu_pointers(
     model->weights.token_embd = get_ptr("token_embd.weight");
     fprintf(stderr, "🔍 [C++] Retrieved token_embd.weight pointer: %p\n", model->weights.token_embd);
     
-    // Wire layers
+    // Load layers
     model->weights.layers.resize(config.num_layers);
     for (uint32_t i = 0; i < config.num_layers; i++) {
         std::string prefix = "blk." + std::to_string(i) + ".";
@@ -307,17 +307,16 @@ QwenModel* QwenWeightLoader::load_from_gpu_pointers(
         auto& layer = model->weights.layers[i];
         layer.attn_norm = get_ptr(prefix + "attn_norm.weight");
         layer.attn_q_weight = get_ptr(prefix + "attn_q.weight");
-        layer.attn_q_bias = get_ptr(prefix + "attn_q.bias");
+        layer.attn_q_bias = nullptr;  // Qwen2.5 doesn't use biases
         layer.attn_k_weight = get_ptr(prefix + "attn_k.weight");
-        layer.attn_k_bias = get_ptr(prefix + "attn_k.bias");
+        layer.attn_k_bias = nullptr;  // Qwen2.5 doesn't use biases
         layer.attn_v_weight = get_ptr(prefix + "attn_v.weight");
-        layer.attn_v_bias = get_ptr(prefix + "attn_v.bias");
+        layer.attn_v_bias = nullptr;  // Qwen2.5 doesn't use biases
         layer.attn_output = get_ptr(prefix + "attn_output.weight");
         
         layer.ffn_norm = get_ptr(prefix + "ffn_norm.weight");
         layer.ffn_gate = get_ptr(prefix + "ffn_gate.weight");
         layer.ffn_up = get_ptr(prefix + "ffn_up.weight");
-        layer.ffn_down = get_ptr(prefix + "ffn_down.weight");
     }
     
     // Wire output

@@ -242,73 +242,8 @@ void QwenTransformer::forward_layer(
         CUBLAS_GEMM_DEFAULT_TENSOR_OP
     );
     
-    // DEBUG: Check weight values, bias, and Q values after projection (first few layers)
-    static int layer_call_count[4] = {0};
-    if (layer_idx == 0 && layer_call_count[layer_idx] < 3) {
-        // Print weight matrix values
-        half h_weights[10];
-        cudaMemcpy(h_weights, layer.attn_q_weight, 10 * sizeof(half), cudaMemcpyDeviceToHost);
-        fprintf(stderr, "\n[WEIGHT DEBUG Layer %u, call %d]\n", layer_idx, layer_call_count[layer_idx]);
-        fprintf(stderr, "  attn_q_weight[0:10]: ");
-        for (int i = 0; i < 10; i++) {
-            fprintf(stderr, "%.4f ", __half2float(h_weights[i]));
-        }
-        fprintf(stderr, "\n");
-        
-        // Print bias values and pointer
-        fprintf(stderr, "  attn_q_weight ptr: %p\n", layer.attn_q_weight);
-        fprintf(stderr, "  attn_q_bias ptr: %p\n", layer.attn_q_bias);
-        half h_bias[10];
-        cudaMemcpy(h_bias, layer.attn_q_bias, 10 * sizeof(half), cudaMemcpyDeviceToHost);
-        fprintf(stderr, "  attn_q_bias[0:10]: ");
-        for (int i = 0; i < 10; i++) {
-            fprintf(stderr, "%.4f ", __half2float(h_bias[i]));
-        }
-        fprintf(stderr, "\n");
-        
-        // Print raw bytes to check for type mismatch
-        uint16_t h_bias_raw[10];
-        cudaMemcpy(h_bias_raw, layer.attn_q_bias, 10 * sizeof(uint16_t), cudaMemcpyDeviceToHost);
-        fprintf(stderr, "  attn_q_bias raw bytes[0:10]: ");
-        for (int i = 0; i < 10; i++) {
-            fprintf(stderr, "0x%04x ", h_bias_raw[i]);
-        }
-        fprintf(stderr, "\n");
-        
-        // Print input (normed hidden state)
-        half h_input[10];
-        cudaMemcpy(h_input, normed_half, 10 * sizeof(half), cudaMemcpyDeviceToHost);
-        fprintf(stderr, "  normed_input[0:10]: ");
-        for (int i = 0; i < 10; i++) {
-            fprintf(stderr, "%.4f ", __half2float(h_input[i]));
-        }
-        fprintf(stderr, "\n");
-        
-        // Print Q after projection (before bias)
-        half h_q_before[10];
-        cudaMemcpy(h_q_before, q_half, 10 * sizeof(half), cudaMemcpyDeviceToHost);
-        fprintf(stderr, "  Q before bias[0:10]: ");
-        for (int i = 0; i < 10; i++) {
-            fprintf(stderr, "%.4f ", __half2float(h_q_before[i]));
-        }
-        fprintf(stderr, "\n");
-        layer_call_count[layer_idx]++;
-    }
-    
-    // Add Q bias (DISABLED - bias values appear corrupted in model file)
-    // TODO: Investigate why bias values have huge outliers like -14, -34
-    // cuda_bias_add(q_proj_, q_proj_, layer.attn_q_bias, batch_size, q_dim, nullptr);
-    
-    // Print Q after bias
-    if (layer_idx == 0 && layer_call_count[layer_idx] <= 3) {
-        half h_q[10];
-        cudaMemcpy(h_q, q_half, 10 * sizeof(half), cudaMemcpyDeviceToHost);
-        fprintf(stderr, "  Q after bias[0:10]: ");
-        for (int i = 0; i < 10; i++) {
-            fprintf(stderr, "%.4f ", __half2float(h_q[i]));
-        }
-        fprintf(stderr, "\n");
-    }
+    // Qwen2.5 doesn't use QKV biases (they're all zeros in the model)
+    // No bias addition needed
     
     // K projection: k = W_k @ x
     // W_k in GGUF: [hidden_dim, kv_dim] row-major → [kv_dim, hidden_dim] col-major in cuBLAS
@@ -325,19 +260,6 @@ void QwenTransformer::forward_layer(
         CUBLAS_COMPUTE_32F_FAST_16F,
         CUBLAS_GEMM_DEFAULT_TENSOR_OP
     );
-    // Add K bias (DISABLED - bias values appear corrupted in model file)
-    // cuda_bias_add(k_proj_, k_proj_, layer.attn_k_bias, batch_size, kv_dim, nullptr);
-    
-    // DEBUG: Check K values after projection
-    if (layer_idx < 2 && layer_call_count[layer_idx] <= 3) {
-        half h_k[10];
-        cudaMemcpy(h_k, k_half, 10 * sizeof(half), cudaMemcpyDeviceToHost);
-        fprintf(stderr, "  K after projection[0:10]: ");
-        for (int i = 0; i < 10; i++) {
-            fprintf(stderr, "%.4f ", __half2float(h_k[i]));
-        }
-        fprintf(stderr, "\n");
-    }
     
     // V projection: v = W_v @ x
     // W_v in GGUF: [hidden_dim, kv_dim] row-major → [kv_dim, hidden_dim] col-major in cuBLAS
@@ -353,24 +275,8 @@ void QwenTransformer::forward_layer(
         CUBLAS_COMPUTE_32F_FAST_16F,
         CUBLAS_GEMM_DEFAULT_TENSOR_OP
     );
-    // Add V bias (DISABLED - bias values appear corrupted in model file)
-    // cuda_bias_add(v_proj_, v_proj_, layer.attn_v_bias, batch_size, kv_dim, nullptr);
-    
-    // DEBUG: Check V values after projection
-    if (layer_idx < 2 && layer_call_count[layer_idx] <= 3) {
-        half h_v[10];
-        cudaMemcpy(h_v, v_half, 10 * sizeof(half), cudaMemcpyDeviceToHost);
-        fprintf(stderr, "  V after projection[0:10]: ");
-        for (int i = 0; i < 10; i++) {
-            fprintf(stderr, "%.4f ", __half2float(h_v[i]));
-        }
-        fprintf(stderr, "\n");
-    }
     
     // 3. Apply RoPE to Q and K (explicit position and KV heads)
-    if (layer_idx < 2 && layer_call_count[layer_idx] <= 3) {
-        fprintf(stderr, "  Applying RoPE at position %u\n", pos);
-    }
     
     cuda_rope_forward_ex(
         q_proj_,
@@ -384,38 +290,12 @@ void QwenTransformer::forward_layer(
         nullptr
     );
     
-    // Flush CUDA printf buffer for RoPE debug output
-    if (layer_idx < 2 && layer_call_count[layer_idx] <= 3) {
-        cudaDeviceSynchronize();
-    }
-    
-    // DEBUG: Check Q, K after RoPE
-    if (layer_idx < 2 && layer_call_count[layer_idx] <= 3) {
-        half h_q_rope[10], h_k_rope[10];
-        cudaMemcpy(h_q_rope, q_half, 10 * sizeof(half), cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_k_rope, k_half, 10 * sizeof(half), cudaMemcpyDeviceToHost);
-        fprintf(stderr, "  Q after RoPE[0:10]: ");
-        for (int i = 0; i < 10; i++) {
-            fprintf(stderr, "%.4f ", __half2float(h_q_rope[i]));
-        }
-        fprintf(stderr, "\n");
-        fprintf(stderr, "  K after RoPE[0:10]: ");
-        for (int i = 0; i < 10; i++) {
-            fprintf(stderr, "%.4f ", __half2float(h_k_rope[i]));
-        }
-        fprintf(stderr, "\n");
-    }
-    
     // 4. GQA Attention with KV cache
     // Calculate layer-specific cache offset
     // Layout: [layer, batch=1, kv_head, pos, d]
     size_t layer_cache_offset = layer_idx * 1 * config_.num_kv_heads * config_.context_length * config_.head_dim;
     half* layer_k_cache = reinterpret_cast<half*>(kv_cache_.k_cache) + layer_cache_offset;
     half* layer_v_cache = reinterpret_cast<half*>(kv_cache_.v_cache) + layer_cache_offset;
-    
-    if (layer_idx < 2 && layer_call_count[layer_idx] <= 3) {
-        fprintf(stderr, "  Running attention with cache_len=%u\n", pos);
-    }
     
     cuda_gqa_attention_forward(
         q_proj_,
@@ -479,17 +359,6 @@ void QwenTransformer::forward_layer(
             }
             fprintf(stderr, " (previous position, should be unchanged)\n");
         }
-    }
-    
-    // DEBUG: Check attention output
-    if (layer_idx < 2 && layer_call_count[layer_idx] <= 3) {
-        half h_attn_out[10];
-        cudaMemcpy(h_attn_out, attn_output_, 10 * sizeof(half), cudaMemcpyDeviceToHost);
-        fprintf(stderr, "  Attention output[0:10]: ");
-        for (int i = 0; i < 10; i++) {
-            fprintf(stderr, "%.4f ", __half2float(h_attn_out[i]));
-        }
-        fprintf(stderr, "\n\n");
     }
     
     // 5. Attention output projection: out = W_o @ attn
