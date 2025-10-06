@@ -198,6 +198,12 @@ uint32_t cuda_inference_generate_token(
         }
         token_idx++;
         
+        // [TEAM AEGIS] 2025-10-07T23:27Z
+        // SUSPECT: Temperature showing 0.00 in prefill logs, thought this was bug
+        // PLAN: Added top-10 logits instrumentation to debug
+        // FALSE_LEAD: Prefill uses temp=0.0 by design. Instrumentation only captured prefill, not generation.
+        // LESSON: Need to log generation tokens (after prefill complete), not just first 3 tokens total.
+        
         // Sample next token
         // NOTE: ctx->transformer->config_.vocab_size is now the ACTUAL vocab from output.weight
         //       (e.g., 151643 for Qwen2.5-0.5B), not the padded tokenizer vocab (151936)

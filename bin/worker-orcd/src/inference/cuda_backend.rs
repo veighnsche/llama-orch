@@ -537,6 +537,12 @@ impl InferenceBackend for CudaInferenceBackend {
             if token_idx < 10 {
                 debug_tokens.push((token_idx, next_token_id, token_text.clone()));
             }
+            
+            // [TEAM AEGIS] 2025-10-07T23:26Z
+            // PLAN: Added byte-level decode logging to investigate UTF-8 mojibake
+            // OBSERVED: Bytes look correct for the tokens being generated
+            // FALSE_LEAD: Decode path is working correctly. Problem is upstream (wrong tokens generated).
+            // LESSON: Should have focused on why model generates wrong tokens, not how they're decoded.
 
             // Show progress every 20 tokens (less noise)
             if token_idx % 20 == 0 {
