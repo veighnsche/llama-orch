@@ -5,6 +5,8 @@
 //
 // Spec: M0-W-1217
 //
+// [APPEND-ONLY GUARD] Do not delete prior teams’ comments. Add new notes below existing blocks.
+//
 // ============================================================================
 // [TEAM_CHARLIE_BETA] 🔥 ROOT CAUSE FOUND! (2025-10-06 17:07 UTC)
 // ============================================================================
@@ -126,21 +128,24 @@ void cuda_swiglu_forward(
     // RESULT: Made output WORSE (random garbage → stuck repetition).
     // FALSE_FIX: Reverted. CUBLAS_OP_N is correct for our weight layout.
     //
+    // [TEAM SENTINEL] 2025-10-07T23:18Z
+    // FALSE_FIX: Team Felicia's conclusion was wrong - needed correct lda values + ALL matmuls.
+    // FIXED: FFN gate/up/down with CUBLAS_OP_T + lda=hidden_dim/ffn_dim (part of 8-matmul fix).
+    //
     // 1. Gate projection: gate_out = gate_weight @ input
-    //    gate_weight in GGUF: [hidden_dim, ffn_dim] row-major → [ffn_dim, hidden_dim] col-major
-    //    input: [hidden_dim, batch] col-major
-    //    gate_out: [ffn_dim, batch] col-major
+    //    gate_weight in GGUF: [hidden_dim, ffn_dim] row-major
+    //    Need CUBLAS_OP_T with lda=hidden_dim (first dimension of row-major array)
     float alpha = 1.0f;
     float beta = 0.0f;
     cublasStatus_t status = cublasGemmEx(
         cublas_handle,
-        CUBLAS_OP_N,  // No transpose needed (row-major → col-major)
+        CUBLAS_OP_T,  // Transpose to match row-major layout
         CUBLAS_OP_N,  // No transpose input
         ffn_dim,      // M
         batch_size,   // N
         hidden_dim,   // K
         &alpha,
-        gate_weight_half, CUDA_R_16F, ffn_dim,  // lda = ffn_dim
+        gate_weight_half, CUDA_R_16F, hidden_dim,  // lda = hidden_dim (FIXED!)
         input_half, CUDA_R_16F, hidden_dim,
         &beta,
         gate_out, CUDA_R_16F, ffn_dim,
@@ -149,16 +154,17 @@ void cuda_swiglu_forward(
     );
     
     // 2. Up projection: up_out = up_weight @ input
-    //    up_weight in GGUF: [hidden_dim, ffn_dim] row-major → [ffn_dim, hidden_dim] col-major
+    //    up_weight in GGUF: [hidden_dim, ffn_dim] row-major
+    //    Same fix as gate - CUBLAS_OP_T with lda=hidden_dim
     status = cublasGemmEx(
         cublas_handle,
-        CUBLAS_OP_N,  // No transpose needed
+        CUBLAS_OP_T,  // Transpose to match row-major layout
         CUBLAS_OP_N,
         ffn_dim,
         batch_size,
         hidden_dim,
         &alpha,
-        up_weight_half, CUDA_R_16F, ffn_dim,  // lda = ffn_dim
+        up_weight_half, CUDA_R_16F, hidden_dim,  // lda = hidden_dim (FIXED!)
         input_half, CUDA_R_16F, hidden_dim,
         &beta,
         up_out, CUDA_R_16F, ffn_dim,
@@ -176,19 +182,19 @@ void cuda_swiglu_forward(
         ffn_dim
     );
     
+    // [TEAM SENTINEL] 2025-10-07T23:18Z
     // 4. Down projection: output = down_weight @ swiglu_out
-    //    down_weight in GGUF: [ffn_dim, hidden_dim] row-major → [hidden_dim, ffn_dim] col-major
-    //    swiglu_out: [ffn_dim, batch] col-major
-    //    output: [hidden_dim, batch] col-major
+    //    down_weight in GGUF: [ffn_dim, hidden_dim] row-major
+    //    Use CUBLAS_OP_T with lda=ffn_dim (part of 8-matmul fix)
     status = cublasGemmEx(
         cublas_handle,
-        CUBLAS_OP_N,  // No transpose needed
+        CUBLAS_OP_T,  // Transpose to match row-major layout
         CUBLAS_OP_N,
         hidden_dim,
         batch_size,
         ffn_dim,
         &alpha,
-        down_weight_half, CUDA_R_16F, hidden_dim,  // lda = hidden_dim
+        down_weight_half, CUDA_R_16F, ffn_dim,  // lda = ffn_dim (FIXED!)
         swiglu_out, CUDA_R_16F, ffn_dim,
         &beta,
         output_half, CUDA_R_16F, hidden_dim,

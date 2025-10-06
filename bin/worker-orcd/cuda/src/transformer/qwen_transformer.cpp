@@ -2,7 +2,9 @@
 #include <cublas_v2.h>
 #include <stdexcept>
 #include <cstring>
-
+//
+// [APPEND-ONLY GUARD] Do not delete prior teams’ comments. Add new notes below existing blocks.
+//
 // ============================================================================
 // [TEAM_CHARLIE_BETA] ⚠️ POTENTIAL FIX - NOT TESTED! (2025-10-06 17:07 UTC)
 // ============================================================================
@@ -244,6 +246,24 @@ void QwenTransformer::forward_layer(
     // Potential bugs: RoPE (step 3), Attention (step 4), KV cache, FFN (step 8)
     // ============================================================================
     
+    // [TEAM SENTINEL] 2025-10-07T23:00Z
+    // OBJECTIVE: Layer-0 forward pass parity verification
+    // PLAN: Log first 10 floats at each computation stage for tokens 0 AND 1
+    // Token 0: attention output should = V (only 1 token, weight=1.0)
+    // Token 1: attention output should != V (2 tokens, aggregates cache + current)
+    static int sentinel_token_count = 0;
+    bool do_sentinel_log = (layer_idx == 0 && sentinel_token_count < 2);
+    
+    if (do_sentinel_log) {
+        fprintf(stderr, "\n[TEAM SENTINEL] === LAYER 0 FORWARD PASS (TOKEN %d, POS %u) ===\n",
+                sentinel_token_count, pos);
+        half h_input[10];
+        cudaMemcpy(h_input, input, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "[SENTINEL] Input to layer 0[0..9]: ");
+        for (int i = 0; i < 10; i++) fprintf(stderr, "%.6f ", __half2float(h_input[i]));
+        fprintf(stderr, "\n");
+    }
+    
     // 1. Attention RMSNorm
     // [VERIFIED CORRECT] This normalization works correctly
     //
@@ -264,6 +284,15 @@ void QwenTransformer::forward_layer(
         1e-6f,
         nullptr
     );
+    
+    // [TEAM SENTINEL] 2025-10-07T22:59Z
+    if (do_sentinel_log) {
+        half h_normed[10];
+        cudaMemcpy(h_normed, normed_, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "[SENTINEL] After attn RMSNorm[0..9]: ");
+        for (int i = 0; i < 10; i++) fprintf(stderr, "%.6f ", __half2float(h_normed[i]));
+        fprintf(stderr, "\n");
+    }
     
     // 2. Q, K, V projections
     // [TEAM_CHARLIE] These matrix multiplications are VERIFIED CORRECT via manual testing
@@ -297,8 +326,24 @@ void QwenTransformer::forward_layer(
     // FALSE_FIX: CUBLAS_OP_T approach is definitively WRONG, even with correct lda.
     // CONCLUSION: Current CUBLAS_OP_N is CORRECT. Bug is elsewhere (RoPE/RMSNorm/SwiGLU?).
     //   See: investigation-teams/TEAM_AURORA_HANDOFF.md for detailed analysis.
+    //
+    // [TEAM SENTINEL] 2025-10-07T23:18Z
+    // FALSE_FIX: Team Aurora's conclusion was wrong - they didn't fix ALL 8 matmuls.
+    // EVIDENCE: Manual Q[0]=-0.043045, cuBLAS Q[0]=0.100159 (BEFORE fix) → reading transposed!
+    // FIXED: Changed CUBLAS_OP_T with lda=hidden_dim for ALL matmuls (Q/K/V + attn_out + FFN + lm_head).
+    // OBSERVED: Manual Q[0]=-0.015185, cuBLAS Q[0]=-0.015182, diff=0.000003 ✅
+    // CAVEAT: Test found "eight" once BUT output still mojibake ("abhängĳľĳľĳľ...").
+    // STATUS: Matmul parity proven, but readability NOT achieved. May be coincidence or partial fix.
+    //
+    // [TEAM SENTINEL] 2025-10-07T23:21Z - REPEATABILITY TEST
+    // PLAN: Ran test 3× at minute 16 to check if fix is real or luck.
+    // OBSERVED: All 3 runs FAILED to find "sixteen" - output still mojibake.
+    // CONTRADICTION: Earlier test found "eight" (minute 8) but minute 16 fails consistently.
+    // CONCLUSION: Fix is INCOMPLETE. Matmul params correct, but output not readable.
+    // HYPOTHESIS: Additional bugs remain (sampling? temperature? other matmuls?).
+    // DO NOT CLAIM FIXED until output is consistently human-readable across multiple test runs.
     uint32_t q_dim = config_.num_heads * config_.head_dim;
-    cublasGemmEx(cublas_handle_, CUBLAS_OP_N, CUBLAS_OP_N, q_dim, batch_size, config_.hidden_dim, &alpha, layer.attn_q_weight, CUDA_R_16F, q_dim, normed_half, CUDA_R_16F, config_.hidden_dim, &beta, q_half, CUDA_R_16F, q_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
+    cublasGemmEx(cublas_handle_, CUBLAS_OP_T, CUBLAS_OP_N, q_dim, batch_size, config_.hidden_dim, &alpha, layer.attn_q_weight, CUDA_R_16F, config_.hidden_dim, normed_half, CUDA_R_16F, config_.hidden_dim, &beta, q_half, CUDA_R_16F, q_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
     
     // [TEAM GREEN] 2025-10-06T20:43Z - BUG FIX!
     // FIXED: Add Q bias (this model HAS biases, we were ignoring them!)
@@ -329,8 +374,10 @@ void QwenTransformer::forward_layer(
         }
     }
     
+    // [TEAM SENTINEL] 2025-10-07T23:18Z
+    // K projection: same fix as Q - use CUBLAS_OP_T with lda=hidden_dim (part of 8-matmul fix)
     uint32_t kv_dim = config_.num_kv_heads * config_.head_dim;
-    cublasGemmEx(cublas_handle_, CUBLAS_OP_N, CUBLAS_OP_N, kv_dim, batch_size, config_.hidden_dim, &alpha, layer.attn_k_weight, CUDA_R_16F, kv_dim, normed_half, CUDA_R_16F, config_.hidden_dim, &beta, k_half, CUDA_R_16F, kv_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
+    cublasGemmEx(cublas_handle_, CUBLAS_OP_T, CUBLAS_OP_N, kv_dim, batch_size, config_.hidden_dim, &alpha, layer.attn_k_weight, CUDA_R_16F, config_.hidden_dim, normed_half, CUDA_R_16F, config_.hidden_dim, &beta, k_half, CUDA_R_16F, kv_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
     
     // [TEAM GREEN] 2025-10-06T20:43Z - BUG FIX!
     // FIXED: Add K bias
@@ -353,7 +400,9 @@ void QwenTransformer::forward_layer(
         }
     }
     
-    cublasGemmEx(cublas_handle_, CUBLAS_OP_N, CUBLAS_OP_N, kv_dim, batch_size, config_.hidden_dim, &alpha, layer.attn_v_weight, CUDA_R_16F, kv_dim, normed_half, CUDA_R_16F, config_.hidden_dim, &beta, v_half, CUDA_R_16F, kv_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
+    // [TEAM SENTINEL] 2025-10-07T23:18Z
+    // V projection: same fix as Q/K - use CUBLAS_OP_T with lda=hidden_dim (part of 8-matmul fix)
+    cublasGemmEx(cublas_handle_, CUBLAS_OP_T, CUBLAS_OP_N, kv_dim, batch_size, config_.hidden_dim, &alpha, layer.attn_v_weight, CUDA_R_16F, config_.hidden_dim, normed_half, CUDA_R_16F, config_.hidden_dim, &beta, v_half, CUDA_R_16F, kv_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
     
     // [TEAM GREEN] 2025-10-06T20:43Z - BUG FIX!
     // FIXED: Add V bias
@@ -374,6 +423,43 @@ void QwenTransformer::forward_layer(
         }
     }
     
+    // [TEAM SENTINEL] 2025-10-07T23:03Z
+    // OBSERVED: Q/K/V projections completed, dump for comparison
+    if (do_sentinel_log) {
+        half h_q[10], h_k[10], h_v[10];
+        cudaMemcpy(h_q, q_proj_, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_k, k_proj_, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_v, v_proj_, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "[SENTINEL] After Q projection[0..9]: ");
+        for (int i = 0; i < 10; i++) fprintf(stderr, "%.6f ", __half2float(h_q[i]));
+        fprintf(stderr, "\n[SENTINEL] After K projection[0..9]: ");
+        for (int i = 0; i < 10; i++) fprintf(stderr, "%.6f ", __half2float(h_k[i]));
+        fprintf(stderr, "\n[SENTINEL] After V projection[0..9]: ");
+        for (int i = 0; i < 10; i++) fprintf(stderr, "%.6f ", __half2float(h_v[i]));
+        fprintf(stderr, "\n");
+        
+        // [TEAM SENTINEL] 2025-10-07T23:03Z
+        // PLAN: Verify cuBLAS Q matmul parameters by computing Q[0] manually
+        // Q = attn_q_weight @ normed, compute Q[0] = dot(weight_row_0, normed)
+        // If manual != cuBLAS → wrong lda or op flags
+        half h_normed[896];
+        half h_q_weight[896];  // First row of Q weight matrix
+        cudaMemcpy(h_normed, normed_, 896 * sizeof(half), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_q_weight, layer.attn_q_weight, 896 * sizeof(half), cudaMemcpyDeviceToHost);
+        
+        float manual_q0 = 0.0f;
+        for (int i = 0; i < 896; i++) {
+            manual_q0 += __half2float(h_normed[i]) * __half2float(h_q_weight[i]);
+        }
+        float cublas_q0 = __half2float(h_q[0]);
+        float diff = fabs(manual_q0 - cublas_q0);
+        
+        fprintf(stderr, "[SENTINEL] Q matmul verification Q[0]:\n");
+        fprintf(stderr, "  Manual (row_0 • normed): %.6f\n", manual_q0);
+        fprintf(stderr, "  cuBLAS output: %.6f\n", cublas_q0);
+        fprintf(stderr, "  Diff: %.6f %s\n", diff, diff < 0.001 ? "✅" : "❌ MISMATCH!");
+    }
+    
     // 3. Apply RoPE (Rotary Position Embedding)
     // [TEAM_CHARLIE_BETA] RoPE formula is correct (verified against llama.cpp)
     // However, verify these if debugging:
@@ -392,6 +478,19 @@ void QwenTransformer::forward_layer(
     //   These are IDENTICAL! (see rope.cu lines 83-98 for proof)
     // CONCLUSION: RoPE implementation is correct. Bug is NOT here.
     cuda_rope_forward_ex(q_proj_, k_proj_, batch_size, config_.num_heads, config_.num_kv_heads, config_.head_dim, pos, config_.rope_freq_base, nullptr);
+    
+    // [TEAM SENTINEL] 2025-10-07T22:59Z
+    // OBSERVED: RoPE applied (modifies Q/K in-place)
+    if (do_sentinel_log) {
+        half h_q_rope[10], h_k_rope[10];
+        cudaMemcpy(h_q_rope, q_proj_, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_k_rope, k_proj_, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "[SENTINEL] After RoPE Q[0..9]: ");
+        for (int i = 0; i < 10; i++) fprintf(stderr, "%.6f ", __half2float(h_q_rope[i]));
+        fprintf(stderr, "\n[SENTINEL] After RoPE K[0..9]: ");
+        for (int i = 0; i < 10; i++) fprintf(stderr, "%.6f ", __half2float(h_k_rope[i]));
+        fprintf(stderr, "\n");
+    }
     
     // 4. GQA Attention (Grouped Query Attention)
     // [TEAM_CHARLIE_BETA] ⚠️ HIGH PRIORITY - LIKELY BUG LOCATION!
@@ -453,6 +552,16 @@ void QwenTransformer::forward_layer(
     // See: investigation-teams/TEAM_WATER_FINDINGS.md
     cuda_gqa_attention_forward(q_proj_, k_proj_, v_proj_, layer_k_cache, layer_v_cache, attn_output_, batch_size, config_.num_heads, config_.num_kv_heads, config_.head_dim, 1, pos, config_.context_length, nullptr);
     
+    // [TEAM SENTINEL] 2025-10-07T22:59Z
+    // OBSERVED: GQA attention completed
+    if (do_sentinel_log) {
+        half h_attn[10];
+        cudaMemcpy(h_attn, attn_output_, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "[SENTINEL] After GQA attention[0..9]: ");
+        for (int i = 0; i < 10; i++) fprintf(stderr, "%.6f ", __half2float(h_attn[i]));
+        fprintf(stderr, "\n");
+    }
+    
     // 5. Attention output projection
     // [TEAM HYPERION] 2025-10-06T22:35Z - INVESTIGATION UPDATE
     // SUSPECT: Attention output projection writes to wrong buffer (ffn_output_ instead of attn_output_)
@@ -477,15 +586,35 @@ void QwenTransformer::forward_layer(
     // - B: attn_out_half, ldb=q_dim (896)
     // - C: ffn_out_half, ldc=hidden_dim (896)
     //
-    // [VERIFIED CORRECT] cuBLAS matrix multiplication works correctly
+    // [TEAM SENTINEL] 2025-10-07T23:18Z
+    // Attention output projection: use CUBLAS_OP_T with lda=q_dim (part of 8-matmul fix)
     half* attn_out_half = reinterpret_cast<half*>(attn_output_);
     half* ffn_out_half = reinterpret_cast<half*>(ffn_output_);
-    cublasGemmEx(cublas_handle_, CUBLAS_OP_N, CUBLAS_OP_N, config_.hidden_dim, batch_size, q_dim, &alpha, layer.attn_output, CUDA_R_16F, config_.hidden_dim, attn_out_half, CUDA_R_16F, q_dim, &beta, ffn_out_half, CUDA_R_16F, config_.hidden_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
+    cublasGemmEx(cublas_handle_, CUBLAS_OP_T, CUBLAS_OP_N, config_.hidden_dim, batch_size, q_dim, &alpha, layer.attn_output, CUDA_R_16F, q_dim, attn_out_half, CUDA_R_16F, q_dim, &beta, ffn_out_half, CUDA_R_16F, config_.hidden_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
     cudaMemcpy(attn_output_, ffn_output_, config_.hidden_dim * sizeof(half), cudaMemcpyDeviceToDevice);
+    
+    // [TEAM SENTINEL] 2025-10-07T22:59Z
+    // OBSERVED: Attention output projection completed
+    if (do_sentinel_log) {
+        half h_attn_proj[10];
+        cudaMemcpy(h_attn_proj, attn_output_, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "[SENTINEL] After attn output proj[0..9]: ");
+        for (int i = 0; i < 10; i++) fprintf(stderr, "%.6f ", __half2float(h_attn_proj[i]));
+        fprintf(stderr, "\n");
+    }
     
     // 6. Residual connection (attention branch)
     // [VERIFIED CORRECT] Simple element-wise addition works correctly
     cuda_residual_add(input, attn_output_, residual_, batch_size, config_.hidden_dim, nullptr);
+    
+    // [TEAM SENTINEL] 2025-10-07T22:59Z
+    if (do_sentinel_log) {
+        half h_resid1[10];
+        cudaMemcpy(h_resid1, residual_, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "[SENTINEL] After attn residual add[0..9]: ");
+        for (int i = 0; i < 10; i++) fprintf(stderr, "%.6f ", __half2float(h_resid1[i]));
+        fprintf(stderr, "\n");
+    }
     
     // 7. FFN RMSNorm
     // [VERIFIED CORRECT] This normalization works correctly
@@ -520,9 +649,30 @@ void QwenTransformer::forward_layer(
     // NOTE: Weight loading and matrix multiplication parameters still need verification.
     cuda_swiglu_forward(normed_, layer.ffn_gate, layer.ffn_up, layer.ffn_down, ffn_output_, batch_size, config_.hidden_dim, config_.ffn_dim, nullptr);
     
+    // [TEAM SENTINEL] 2025-10-07T22:59Z
+    // OBSERVED: SwiGLU FFN completed
+    if (do_sentinel_log) {
+        half h_ffn[10];
+        cudaMemcpy(h_ffn, ffn_output_, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "[SENTINEL] After SwiGLU FFN[0..9]: ");
+        for (int i = 0; i < 10; i++) fprintf(stderr, "%.6f ", __half2float(h_ffn[i]));
+        fprintf(stderr, "\n");
+    }
+    
     // 9. Final residual connection (FFN branch)
     // [VERIFIED CORRECT] Simple element-wise addition works correctly
     cuda_residual_add(residual_, ffn_output_, output, batch_size, config_.hidden_dim, nullptr);
+    
+    // [TEAM SENTINEL] 2025-10-07T23:00Z
+    // OBSERVED: Layer 0 complete, final output
+    if (do_sentinel_log) {
+        half h_final[10];
+        cudaMemcpy(h_final, output, 10 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "[SENTINEL] Layer 0 final output[0..9]: ");
+        for (int i = 0; i < 10; i++) fprintf(stderr, "%.6f ", __half2float(h_final[i]));
+        fprintf(stderr, "\n===END LAYER 0 FORWARD PASS (TOKEN %d)===\n\n", sentinel_token_count);
+        sentinel_token_count++;
+    }
 }
 
 void QwenTransformer::project_to_vocab(
@@ -793,17 +943,22 @@ void QwenTransformer::project_to_vocab(
     // TESTED: Changed to CUBLAS_OP_T with lda=hidden_dim.
     // RESULT: Made output WORSE (random garbage → stuck repetition).
     // FALSE_FIX: Reverted. CUBLAS_OP_N is correct for our weight layout.
+    //
+    // [TEAM SENTINEL] 2025-10-07T23:18Z
+    // FALSE_FIX: Team Felicia's conclusion was wrong - needed ALL 8 matmuls fixed together.
+    // FIXED: lm_head with CUBLAS_OP_T + lda=hidden_dim (part of 8-matmul fix).
+    // OBSERVED: Test found "eight" once, but output still mojibake. Partial fix or coincidence?
     cublasStatus_t status = cublasGemmEx(
         cublas_handle_,
-        CUBLAS_OP_N, CUBLAS_OP_N,
+        CUBLAS_OP_T, CUBLAS_OP_N,  // Transpose lm_head to match row-major layout
         config_.padded_vocab_size,  // m = 151936 (FULL output size with padding)
         batch_size,                 // n = 1 (single token)
         config_.hidden_dim,         // k = 896 (input dimension)
         &alpha,
-        lm_head_half, CUDA_R_16F, config_.padded_vocab_size,  // lda = 151936 (physical stride)
-        hidden_half, CUDA_R_16F, config_.hidden_dim,          // ldb = 896
+        lm_head_half, CUDA_R_16F, config_.hidden_dim,  // lda = 896 (FIXED!)
+        hidden_half, CUDA_R_16F, config_.hidden_dim,   // ldb = 896
         &beta,
-        logits, CUDA_R_32F, config_.padded_vocab_size,        // ldc = 151936 (output stride)
+        logits, CUDA_R_32F, config_.padded_vocab_size, // ldc = 151936 (output stride)
         CUBLAS_COMPUTE_32F_FAST_16F,
         CUBLAS_GEMM_DEFAULT_TENSOR_OP
     );
