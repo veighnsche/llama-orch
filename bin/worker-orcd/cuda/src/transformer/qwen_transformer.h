@@ -84,13 +84,14 @@ private:
         uint32_t batch_size,
         void* output
     );
-    
+
     // LM head projection
     void project_to_vocab(
         const void* hidden_states,
         uint32_t batch_size,
         float* logits
     );
+    
 };
 
 } // namespace transformer

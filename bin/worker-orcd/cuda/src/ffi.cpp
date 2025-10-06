@@ -13,6 +13,7 @@
 #include "model_impl.h"
 #include "inference_impl.h"
 #include "cuda_error.h"
+#include "transformer/qwen_transformer.h"
 #include <cuda_runtime.h>
 #include <memory>
 #include <cstdio>
@@ -355,3 +356,4 @@ extern "C" bool cuda_check_device_health(CudaContext* ctx, int* error_code) {
 
 // ---
 // Built by Foundation-Alpha 🏗️
+

@@ -48,7 +48,6 @@
 #![warn(clippy::missing_errors_doc)]
 #![warn(clippy::missing_panics_doc)]
 #![warn(clippy::missing_safety_doc)]
-
 use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
 use std::ffi::c_void;
 use thiserror::Error;

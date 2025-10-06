@@ -546,6 +546,38 @@ fn load_tensor_to_preallocated_gpu(
         return Ok(());
     }
     
+    // ============================================================================
+    // [TEAM_ALPHA] === GGUF TENSOR LOADING - CRITICAL MEMORY LAYOUT INFO ===
+    // ============================================================================
+    //
+    // [PEER_REVIEWED: 2025-10-06 15:36 UTC] ✅ VERIFIED (by cuBLAS Test 1)
+    //
+    // This function loads tensors from GGUF file to GPU memory.
+    // CRITICAL: The memory layout is preserved EXACTLY as stored in GGUF.
+    //
+    // For output.weight (lm_head) - the tensor used in final logit projection:
+    // - GGUF stores it with dimensions [896, 151936] (hidden_dim, vocab_size)
+    // - GGUF uses ROW-MAJOR storage (C-style)
+    // - Element at (row i, col j) is at: tensor.offset + (i * 151936 + j) * 2 bytes
+    // - We copy this DIRECTLY to GPU with cudaMemcpy
+    // - Result: GPU memory has SAME row-major layout as file
+    //
+    // NO TRANSPOSE occurs during loading!
+    //
+    // INVESTIGATION NOTE (2025-10-06):
+    // Multiple engineers suspected this loading was wrong and tried to:
+    //   ❌ Add explicit transpose during loading
+    //   ❌ Change dimension interpretation
+    //   ❌ Modify memory layout
+    //
+    // ALL ATTEMPTS FAILED. This loading is CORRECT!
+    //
+    // Verification: Manual dot product test confirmed cuBLAS correctly reads
+    // this row-major data as column-major [896, 151936] with lda=151936.
+    // See qwen_transformer.cpp:249-356 for full verification results.
+    // See investigation-teams/PEER_REVIEW_FINAL_REPORT.md for peer review.
+    // ============================================================================
+    
     match tensor.ggml_type {
         GGMLType::F16 => {
             // Load FP16 directly
