@@ -14,7 +14,6 @@ use worker_orcd::models::phi3::{Phi3Config, Phi3Forward, Phi3ForwardConfig, Phi3
 
 mod common;
 
-
 #[test]
 fn test_phi3_model_loading() {
     common::init_test_env();

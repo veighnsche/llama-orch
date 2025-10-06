@@ -12,7 +12,6 @@ use worker_orcd::models::{
 
 mod common;
 
-
 /// Test: Qwen VRAM allocation
 #[test]
 fn test_qwen_vram_allocation() {

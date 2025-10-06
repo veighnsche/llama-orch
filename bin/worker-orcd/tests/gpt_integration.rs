@@ -9,7 +9,6 @@ use worker_orcd::models::gpt::{GPTConfig, GPTForward, GPTForwardConfig, GPTWeigh
 
 mod common;
 
-
 /// Integration test: GPT-2 model loading
 #[test]
 fn test_gpt2_model_loading() {

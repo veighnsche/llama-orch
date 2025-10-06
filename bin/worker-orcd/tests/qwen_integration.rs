@@ -14,7 +14,6 @@ use worker_orcd::models::qwen::{ForwardPassConfig, QwenConfig, QwenForward, Qwen
 
 mod common;
 
-
 #[test]
 fn test_qwen_model_loading() {
     common::init_test_env();
