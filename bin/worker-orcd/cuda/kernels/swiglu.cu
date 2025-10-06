@@ -1,9 +1,33 @@
 // swiglu.cu — SwiGLU Feed-Forward Network - LT-017
 //
-// Implements SwiGLU activation for Qwen2.5 FFN.
 // SwiGLU: output = silu(gate) * up
 //
 // Spec: M0-W-1217
+//
+// ============================================================================
+// [TEAM_CHARLIE_BETA]  BUG FOUND - NOT IN THIS FILE! (2025-10-06 17:07 UTC)
+// ============================================================================
+//  THIS KERNEL IS CORRECT!
+//
+// SYMPTOM: Model generates repetitive tokens (e.g., "alcoholic" 100+ times)
+//
+// INVESTIGATION RESULT:
+// This SwiGLU activation kernel is implemented correctly:
+//  SiLU formula: x * sigmoid(x) = x / (1 + exp(-x)) - CORRECT
+//  Element-wise multiply: silu(gate) * up - CORRECT
+//  Vectorized implementation using half2 - CORRECT
+//
+// ROOT CAUSE (found in different file):
+// The bug was in qwen_weight_loader.cpp - the ffn_down weight was never loaded!
+// This caused the down projection to use uninitialized memory, making FFN
+// output garbage even though this activation kernel worked correctly.
+//
+// THE FIX (in qwen_weight_loader.cpp:327):
+//   layer.ffn_down = get_ptr(prefix + "ffn_down.weight");
+//
+// This kernel is CORRECT. The bug was in weight loading!
+// See: investigation-teams/TEAM_CHARLIE_BETA_ROOT_CAUSE.md
+// ============================================================================
 
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>

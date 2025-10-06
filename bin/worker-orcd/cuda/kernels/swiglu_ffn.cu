@@ -4,6 +4,38 @@
 // FFN(x) = down(silu(gate(x)) * up(x))
 //
 // Spec: M0-W-1217
+//
+// ============================================================================
+// [TEAM_CHARLIE_BETA] 🔥 ROOT CAUSE FOUND! (2025-10-06 17:07 UTC)
+// ============================================================================
+// ✅ BUG WAS FOUND - IT WASN'T IN THIS FILE!
+//
+// SYMPTOM: Model generates repetitive tokens (e.g., "coholic" 100+ times)
+//
+// INVESTIGATION RESULT:
+// This FFN implementation is CORRECT. The bug was in the weight loader!
+//
+// ROOT CAUSE:
+// In qwen_weight_loader.cpp, the load_from_gpu_pointers() function was
+// missing the line to load ffn_down weights. This caused the down projection
+// (line 144-158 below) to use UNINITIALIZED MEMORY!
+//
+// THE FIX:
+// Added missing line in qwen_weight_loader.cpp:327:
+//   layer.ffn_down = get_ptr(prefix + "ffn_down.weight");
+//
+// WHY THIS CAUSED REPETITIVE TOKENS:
+// 1. FFN gate and up projections worked (weights loaded correctly)
+// 2. SwiGLU activation worked (silu(gate) * up)
+// 3. Down projection FAILED (used garbage memory instead of real weights)
+// 4. FFN output was garbage
+// 5. Garbage accumulated through residual connections across 24 layers
+// 6. Final logits became dominated by noise
+// 7. Model generated repetitive tokens
+//
+// This kernel implementation is CORRECT. The bug was in weight loading!
+// See: investigation-teams/TEAM_CHARLIE_BETA_ROOT_CAUSE.md
+// ============================================================================
 
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>

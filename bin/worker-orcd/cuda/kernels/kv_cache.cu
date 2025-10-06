@@ -7,6 +7,7 @@
 #include "kv_cache.cuh"
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
+#include <stdio.h>
 
 namespace worker {
 namespace kernels {

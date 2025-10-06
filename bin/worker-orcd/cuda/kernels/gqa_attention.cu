@@ -4,23 +4,51 @@
 // Spec: M0-W-1214
 //
 // ============================================================================
-// [TEAM_CHARLIE] INVESTIGATION WARNING (2025-10-06 16:48 UTC)
+// [TEAM_CHARLIE_BETA] INVESTIGATION STATUS (2025-10-06 17:03 UTC)
 // ============================================================================
-// ⚠️⚠️⚠️ POTENTIAL BUG LOCATION - INVESTIGATE THIS! ⚠️⚠️⚠️
+// ⚠️⚠️⚠️ POTENTIAL BUG LOCATION - NEEDS RUNTIME DEBUGGING! ⚠️⚠️⚠️
 //
-// The model file is CORRECT (llama.cpp generates perfect haiku with it).
-// RMSNorm is CORRECT (verified against llama.cpp implementation).
-// cuBLAS is CORRECT (manual verification passed).
+// WHAT'S BEEN VERIFIED:
+// ✅ Softmax is correct (weights sum to 1.0) - see lines 168-199
+// ✅ Attention scaling is correct (1/sqrt(64) = 0.125)
+// ✅ KV cache write logic is correct - see lines 309-313
+// ✅ Model file is CORRECT (llama.cpp generates perfect haiku)
 //
-// The bug might be HERE in attention or in RoPE/KV cache/FFN!
+// WHAT STILL NEEDS INVESTIGATION:
+// ❓ Q·K dot product computation (lines 111-124)
+//    - Are we reading Q and K from correct memory locations?
+//    - Is the loop accumulation numerically stable?
+//    - Are tensor layouts correct after RoPE?
 //
-// To verify model works: Run llama.cpp with same model file:
+// ❓ KV cache reading (lines 112-116)
+//    - Is max_seq_len parameter correct?
+//    - Are we reading from the right cache positions?
+//    - Is the cache properly initialized?
+//
+// ❓ V aggregation (lines 287-299)
+//    - Are attention weights applied correctly?
+//    - Is the weighted sum computed correctly?
+//    - Are we reading V from correct locations?
+//
+// ❓ GQA head grouping (line 71)
+//    - Is kv_head calculated correctly?
+//    - For Qwen2.5: 14 Q heads → 2 KV heads (7:1 ratio)
+//    - Are Q heads 0-6 using KV head 0 correctly?
+//    - Are Q heads 7-13 using KV head 1 correctly?
+//
+// HOW TO DEBUG:
+// 1. Add printf statements to print Q, K, V values for first token
+// 2. Compare with llama.cpp's verbose output
+// 3. Check if attention scores make sense (should vary, not all same)
+// 4. Verify KV cache contains expected values after first token
+//
+// To verify model works with llama.cpp:
 //   /home/vince/Projects/llama-orch/reference/llama.cpp/build/bin/llama-cli \
 //     -m /home/vince/Projects/llama-orch/.test-models/qwen/qwen2.5-0.5b-instruct-q4_k_m.gguf \
 //     -p "Write a haiku about autumn:" -n 50 --temp 0.7
 // Output: Perfect haiku!
 //
-// Compare this attention implementation carefully with llama.cpp's!
+// See: investigation-teams/TEAM_CHARLIE_BETA_FINAL_REPORT.md
 // ============================================================================ode phases).
 // Supports variable Q and KV head counts for memory efficiency.
 //
@@ -67,7 +95,10 @@ __global__ void gqa_attention_decode_kernel_impl(
         return;
     }
     
-    // Determine which KV head this Q head uses (GQA grouping)
+    // [TEAM_CHARLIE_BETA] Determine which KV head this Q head uses (GQA grouping)
+    // For Qwen2.5: num_q_heads=14, num_kv_heads=2, group_size=7
+    // q_head 0-6 → kv_head 0, q_head 7-13 → kv_head 1
+    // This formula appears correct, but verify with runtime values if debugging!
     int kv_head = q_head / (num_q_heads / num_kv_heads);
     
     // Shared memory for attention scores and reduction
@@ -101,13 +132,17 @@ __global__ void gqa_attention_decode_kernel_impl(
         printf("  Q magnitude: %.4f (norm of 64-dim vector)\n", q_mag);
     }
     
-    // Compute attention scores for all positions (including current)
+    // [TEAM_CHARLIE_BETA] Compute attention scores for all positions (including current)
+    // This is Q·K computation - a critical part that could contain the bug!
+    // If debugging: Print score values and verify they make sense
     for (int pos = tid; pos <= cache_len; pos += blockDim.x) {
         float score = 0.0f;
         
         if (pos < cache_len) {
             // Score with cached K
             // Cache layout: [batch, kv_head, pos, d] with max_seq_len stride
+            // [TEAM_CHARLIE_BETA] Verify this indexing is correct!
+            // For Qwen2.5: max_seq_len=32768, head_dim=64
             for (int d = 0; d < head_dim; d++) {
                 int k_cache_idx = batch * num_kv_heads * max_seq_len * head_dim +
                                   kv_head * max_seq_len * head_dim +
@@ -116,7 +151,8 @@ __global__ void gqa_attention_decode_kernel_impl(
                 score += q_shared[d] * k_val;
             }
         } else {
-            // Score with current K
+            // Score with current K (the new token being processed)
+            // [TEAM_CHARLIE_BETA] Current K layout: [batch, num_kv_heads, head_dim]
             for (int d = 0; d < head_dim; d++) {
                 int k_idx = batch * num_kv_heads * head_dim + kv_head * head_dim + d;
                 float k_val = __half2float(k_current[k_idx]);
@@ -280,12 +316,17 @@ __global__ void gqa_attention_decode_kernel_impl(
                sum_correct ? "VERIFIED ✅" : "DISPUTED ❌");
     }
     
-    // Compute weighted sum of V vectors
+    // [TEAM_CHARLIE_BETA] Compute weighted sum of V vectors
+    // This aggregates V vectors using attention weights
+    // Formula: output = Σ(attention_weight[pos] * V[pos])
+    // If debugging: Verify attention weights are being applied correctly
     for (int d = tid; d < head_dim; d += blockDim.x) {
         float out_val = 0.0f;
         
+        // Aggregate cached V vectors
         for (int pos = 0; pos < cache_len; pos++) {
             // Cache layout: [batch, kv_head, pos, d] with max_seq_len stride
+            // [TEAM_CHARLIE_BETA] Same indexing as K cache - verify correctness!
             int v_cache_idx = batch * num_kv_heads * max_seq_len * head_dim +
                               kv_head * max_seq_len * head_dim +
                               pos * head_dim + d;
@@ -293,7 +334,8 @@ __global__ void gqa_attention_decode_kernel_impl(
             out_val += scores[pos] * v_val;
         }
         
-        // Add current V
+        // Add current V (the new token being processed)
+        // [TEAM_CHARLIE_BETA] Current V layout: [batch, num_kv_heads, head_dim]
         int v_idx = batch * num_kv_heads * head_dim + kv_head * head_dim + d;
         float v_val = __half2float(v_current[v_idx]);
         out_val += scores[cache_len] * v_val;
@@ -306,8 +348,11 @@ __global__ void gqa_attention_decode_kernel_impl(
         int out_idx = batch * num_q_heads * head_dim + q_head * head_dim + d;
         output[out_idx] = __float2half(out_val);
         
-        // Write current K, V to cache at position cache_len (only once per KV head)
-        // Use one q_head per KV group to perform the write
+        // [TEAM_CHARLIE_BETA] Write current K, V to cache at position cache_len
+        // Only one Q head per KV group should write to avoid duplicate writes
+        // For Qwen2.5: num_q_heads=14, num_kv_heads=2, group_size=7
+        // q_head 0,1,2,3,4,5,6 → kv_head 0 (only q_head 0 writes)
+        // q_head 7,8,9,10,11,12,13 → kv_head 1 (only q_head 7 writes)
         if (kv_cache_k != nullptr && (q_head % (num_q_heads / num_kv_heads) == 0)) {
             int k_idx = batch * num_kv_heads * head_dim + kv_head * head_dim + d;
             // Cache layout: [batch, kv_head, pos, d] with max_seq_len stride

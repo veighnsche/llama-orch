@@ -8,6 +8,45 @@
 #include <cuda_fp16.h>
 #include <cmath>
 
+// ============================================================================
+// [TEAM_CHARLIE_BETA] ⚠️ POTENTIAL FIX - NOT TESTED! (2025-10-06 17:07 UTC)
+// ============================================================================
+//
+// ⚠️⚠️⚠️ THIS FIX HAS NOT BEEN TESTED YET! ⚠️⚠️⚠️
+//
+// ROOT CAUSE (HYPOTHESIS): Missing ffn_down weight loading in load_from_gpu_pointers()
+//
+// SYMPTOM: Model generates repetitive tokens (e.g., "coholic" 100+ times)
+//
+// THE BUG I FOUND:
+// The load_from_gpu_pointers() function (line 280) loaded ffn_gate and ffn_up
+// but FORGOT to load ffn_down! This would cause the FFN down projection to use
+// uninitialized memory (garbage).
+//
+// THE FIX (line 327):
+//   layer.ffn_down = get_ptr(prefix + "ffn_down.weight");
+//
+// WHY I THINK THIS IS THE BUG:
+// 1. The load() function (line 224) correctly loads all 4 FFN weights
+// 2. The struct definition includes ffn_down
+// 3. The code compiles without errors
+// 4. The program would run without crashing
+// 5. But FFN output would be garbage due to uninitialized memory
+//
+// COMPARISON:
+// load() function (line 256-259):          load_from_gpu_pointers() (line 320-327):
+//   ✅ ffn_norm                               ✅ ffn_norm
+//   ✅ ffn_gate                               ✅ ffn_gate
+//   ✅ ffn_up                                 ✅ ffn_up
+//   ✅ ffn_down                               ✅ ffn_down (ADDED - UNTESTED!)
+//
+// STATUS: Fix applied but NOT TESTED! Integration tests have compilation errors.
+//
+// NEXT STEP: Fix test compilation and run haiku test to verify!
+//
+// See: investigation-teams/TEAM_CHARLIE_BETA_ROOT_CAUSE.md
+// ============================================================================
+
 namespace worker {
 namespace model {
 
@@ -320,6 +359,12 @@ QwenModel* QwenWeightLoader::load_from_gpu_pointers(
         layer.ffn_norm = get_ptr(prefix + "ffn_norm.weight");
         layer.ffn_gate = get_ptr(prefix + "ffn_gate.weight");
         layer.ffn_up = get_ptr(prefix + "ffn_up.weight");
+        // [TEAM_CHARLIE_BETA] ⚠️ POTENTIAL FIX - NOT TESTED! (2025-10-06 17:07 UTC)
+        // This line was MISSING! ffn_down was never loaded.
+        // HYPOTHESIS: This causes FFN to use uninitialized memory, leading to
+        // repetitive token generation.
+        // ⚠️ THIS FIX HAS NOT BEEN TESTED YET! ⚠️
+        layer.ffn_down = get_ptr(prefix + "ffn_down.weight");
     }
     
     // Wire output

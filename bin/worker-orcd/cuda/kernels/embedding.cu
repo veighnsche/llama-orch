@@ -12,6 +12,28 @@
  * 
  * Spec: M0-W-1430, CUDA-5030
  * Story: FT-015
+ * 
+ * ============================================================================
+ * [TEAM_CHARLIE] INVESTIGATION NOTE (2025-10-06 16:48 UTC)
+ * ============================================================================
+ * ⚠️⚠️⚠️ THIS KERNEL IS CORRECT - NOT THE BUG LOCATION! ⚠️⚠️⚠️
+ *
+ * This kernel was considered during investigation but is NOT the bug source.
+ *
+ * Verified: Token embeddings are loaded correctly from the model file.
+ * - Embedding values start at ±0.04 (normal range for FP16)
+ * - Memory layout is correct: [vocab_size, hidden_dim] row-major
+ * - Bounds checking prevents invalid token IDs
+ *
+ * The model file is CORRECT. llama.cpp generates perfect haiku with it:
+ *   /home/vince/Projects/llama-orch/reference/llama.cpp/build/bin/llama-cli \
+ *     -m /home/vince/Projects/llama-orch/.test-models/qwen/qwen2.5-0.5b-instruct-q4_k_m.gguf \
+ *     -p "Write a haiku about autumn:" -n 50 --temp 0.7
+ * Output: Perfect haiku every time!
+ *
+ * The bug is NOT in embedding lookup. Investigate attention, RoPE, KV cache, or FFN.
+ * See: investigation-teams/TEAM_CHARLIE_I_WAS_WRONG.md
+ * ============================================================================
  */
 
 #include <cuda_runtime.h>
