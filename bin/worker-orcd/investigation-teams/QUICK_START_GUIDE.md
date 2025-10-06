@@ -94,19 +94,6 @@ Create `investigation-teams/TEAM_YOUR_NAME_RESULTS.md`:
 [Paste your terminal output here]
 
 ## Key Findings
-1. Finding 1 with evidence
-2. Finding 2 with evidence
-
-## Root Cause Hypothesis
-[Your theory based on the data]
-
-## Proposed Fix
-[Specific code change with justification]
-```
-
----
-
-## Common Investigation Patterns
 
 ### Pattern 1: Manual Dot Product Verification
 

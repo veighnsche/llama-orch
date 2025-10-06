@@ -59,26 +59,42 @@ The Qwen2.5-0.5B model generates the same token repeatedly because specific posi
 - **Add extensive logging** with your team name prefix: `// [TEAM_X]`
 - **Add printf/fprintf statements** to extract data
 - **Temporarily modify code** to run custom tests and extract truth data
-- **Copy data to host** for analysis (cudaMemcpy)
 - **Run the test** as many times as needed to gather evidence
 
 ### ❌ BUT DO NOT CHANGE BEHAVIOR PERMANENTLY
 - **Do not modify** cuBLAS parameters (unless testing a hypothesis, then REVERT)
 - **Do not modify** computation logic permanently
-- **ALWAYS REVERT** temporary changes after gathering data
-- **Document** what you changed and what you learned
-
-### Why This Approach?
-We need EVIDENCE and GROUND TRUTH data. You can't understand the problem by just reading code - you need to see what's actually happening in memory at runtime. Change whatever you need to extract data, just change it back when done.
-
----
-
-## Workflow
-
-### Step 1: Each Team Reads Their Brief
-- Read your team's investigation file (`TEAM_*_*.md`)
-- Understand your specific approach
-- Review the key files listed in your brief
+  - **ALWAYS REVERT** temporary changes after gathering data
+  - **Document** what you changed and what you learned
+  
+  ### Why This Approach?
+  We need EVIDENCE and GROUND TRUTH data. You can't understand the problem by just reading code - you need to see what's actually happening in memory at runtime. Change whatever you need to extract data, just change it back when done.
+  
+  ---
+  
+  ### Test Before You Claim
+  - Do not mark anything as "FIXED" unless the haiku Test actually passes.
+  - Always include test evidence (timestamp, token IDs, sample output snippet) in your notes.
+  - If your fix improves things but the test still fails, document the improvement but do not claim FIXED.
+  
+  ### False Claim Correction
+  - If a previous team claimed FIXED but your run shows the bug persists, append a correction line immediately below their comment.
+  - Do not delete or alter their original text; add your own line with evidence.
+  
+  Example format to append in code:
+  ```cpp
+  // ❌ Previous team claimed FIXED — but haiku test still fails here. Suspect race condition remains.
+  // Evidence: haiku test 2025-10-06 18:44 UTC — token ID 64362 repeats at steps 2-9.
+  ```
+  
+  ---
+  
+  ## Workflow
+  
+  ### Step 1: Each Team Reads Their Brief
+  - Read your team's investigation file (`TEAM_*_*.md`)
+  - Understand your specific approach
+  - Review the key files listed in your brief
 
 ### Step 2: Conduct Investigation
 - **Add extensive logging** to extract data
@@ -172,33 +188,29 @@ Based on previous investigations, the issue is almost certainly related to:
 
 ## Communication
 
-### Adding Comments
-Use your team prefix consistently:
-```cpp
-// [TEAM_ALPHA] This is Team Alpha's analysis
-// [TEAM_BRAVO] This is Team Bravo's finding
-// [TEAM_CHARLIE] Manual computation shows...
-```
-
-### Avoiding Conflicts
-If you need to add comments to the same code section:
-- Add your comment on a new line
-- Don't modify other teams' comments
-- Stack comments vertically, don't nest
-
-Example:
-```cpp
-// [TEAM_ALPHA] Memory layout: row-major [896, 151936]
-// [TEAM_ECHO] cuBLAS expects column-major, causing mismatch
-// [TEAM_CHARLIE] Confirmed by manual computation
-cublasGemmEx(...);
-```
-
----
-
-## Timeline
-
-**Investigation Phase**: 1-2 hours per team  
+   ### Adding Comments
+   Use your team prefix consistently:
+   ```cpp
+   // [TEAM_ALPHA] This is Team Alpha's analysis
+   // [TEAM_BRAVO] This is Team Bravo's finding
+   // [TEAM_CHARLIE] Manual computation shows...
+   ```
+   
+   ### Avoiding Conflicts
+   If you need to add comments to the same code section:
+   - Add your comment on a new line
+   - Don't modify other teams' comments, except to append a correction for a false FIXED claim (see "False Claim Correction").
+   - When correcting, do not delete or rewrite their text — append your own line with timestamped evidence.
+   - Stack comments vertically, don't nest
+   
+   Example:
+   ```cpp
+   // [TEAM_ALPHA] Memory layout: row-major [896, 151936]
+   // [TEAM_ECHO] cuBLAS expects column-major, causing mismatch
+   // [TEAM_CHARLIE] Confirmed by manual computation
+   // ❌ Previous team claimed FIXED — but haiku test still fails here. Evidence: 2025-10-06 18:44 UTC run repeats token 64362.
+   cublasGemmEx(...);
+   ```
 **Results Writing**: 30-60 minutes per team  
 **Team Sync**: 1 hour all teams together  
 **Implementation**: After consensus reached  

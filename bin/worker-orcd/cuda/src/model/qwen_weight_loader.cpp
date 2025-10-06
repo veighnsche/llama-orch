@@ -359,11 +359,15 @@ QwenModel* QwenWeightLoader::load_from_gpu_pointers(
         layer.ffn_norm = get_ptr(prefix + "ffn_norm.weight");
         layer.ffn_gate = get_ptr(prefix + "ffn_gate.weight");
         layer.ffn_up = get_ptr(prefix + "ffn_up.weight");
-        // [TEAM_CHARLIE_BETA] ⚠️ POTENTIAL FIX - NOT TESTED! (2025-10-06 17:07 UTC)
-        // This line was MISSING! ffn_down was never loaded.
-        // HYPOTHESIS: This causes FFN to use uninitialized memory, leading to
-        // repetitive token generation.
-        // ⚠️ THIS FIX HAS NOT BEEN TESTED YET! ⚠️
+        // [TEAM_CHARLIE_BETA] EUREKA #1 - WRONG! (2025-10-06 17:07 UTC)
+        // I found this line was MISSING and thought it was THE bug!
+        // HYPOTHESIS: ffn_down not loaded → uninitialized memory → repetitive tokens
+        // TESTED: Added the line and ran haiku test
+        // RESULT: ❌ Still generates repetitive tokens! This wasn't THE bug.
+        // CONCLUSION: This line was genuinely missing (good fix), but the real bug
+        // is elsewhere. The model still outputs: "ĠKwĠKwĠKwĠKw..." after 3 tokens.
+        // NOTE: First 3 tokens DO work ("separately", "epoch", "aws"), then breaks!
+        // → Bug is position-dependent, likely in KV cache or attention!
         layer.ffn_down = get_ptr(prefix + "ffn_down.weight");
     }
     
