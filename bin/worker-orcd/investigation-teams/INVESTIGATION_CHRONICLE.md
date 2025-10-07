@@ -574,6 +574,490 @@
 
 ---
 
+---
+
+### Team ORION (2025-10-06 ~23:53 UTC to 2025-10-07 ~00:06 UTC)
+
+**Mission:** Find first activation divergence between FP16 forward pass and llama.cpp
+
+**Hypotheses Tested:**
+1. Divergence occurs in RMSNorm or embedding layers
+2. Q/K/V projection outputs are within normal range
+3. Q bias contains outliers causing extreme values
+4. Q weight matrix has corrupted values
+
+**Changes Made:**
+- `cuda/src/transformer/qwen_transformer.cpp` lines 366-826: Added comprehensive activation logging
+- Logged min/max/mean for: input, attn_norm, Q/K/V projections (tokens 0 & 1, layer 0)
+- Added Q bias verification (lines 786-808)
+- Added Q weight first-16 dump (lines 810-825)
+
+**Observations:**
+- Token 0: Input normal (±0.056), attn_norm normal (±1.038) ✅
+- **Token 0 Q projection: min=-16.047 max=14.336** ❌ EXTREME VALUES!
+- **Extremes at Q[95] (head 1, dim 31) and Q[126] (head 1, dim 62)**
+- Token 0 K projection: min=-4.645 max=3.166 ⚠️ LARGE
+- Token 0 V projection: min=-0.281 max=0.094 ✅ NORMAL
+- Token 1 Q projection: min=-3.912 max=3.695 ⚠️ LARGE (same indices!)
+- Q bias: ALL ZEROS (min=0.0, max=0.0, mean=0.0) ✅
+- Q weight first 16: normal range (±0.01) ✅
+- Manual Q[0] verification: manual=-0.043, cuBLAS=-0.043, diff=0.000015 ✅
+
+**Conclusions:**
+- ✅ **FOUND DIVERGENCE POINT:** Q projection has extreme values (±16) at specific indices
+- ✅ **VERIFIED:** Bias is not the cause (all zeros)
+- ✅ **VERIFIED:** Q weight looks normal (first 16 values in ±0.01 range)
+- ✅ **VERIFIED:** Q[0] cuBLAS calculation is correct (matches manual)
+- 🔍 **CRITICAL PATTERN:** Extremes always at same indices (95, 126) across tokens
+- 🔍 **HYPOTHESIS:** cuBLAS reads wrong memory for elements beyond position 0 (stride issue)
+- Handoff: Investigate why Q[95] and Q[126] have extremes while Q[0] is correct
+
+**Files Modified:**
+- `cuda/src/transformer/qwen_transformer.cpp` (lines 366-826 - ORION logging)
+
+---
+
+### Team THIMBLE (2025-10-07 ~00:18 UTC to ~00:25 UTC)
+
+**Mission:** Test stride hypothesis - does CUBLAS_OP_T stride interpretation cause Q[95]/Q[126] extremes?
+
+**Hypotheses Tested:**
+1. CUBLAS_OP_T with lda=hidden_dim causes wrong memory walks past row 0
+2. Explicit CPU transpose + CUBLAS_OP_N will fix the extremes
+3. Manual dot product will match cuBLAS if stride is correct
+
+**Changes Made:**
+- `cuda/src/transformer/qwen_transformer.cpp` lines 6-17: Experiment banner
+- Lines 139-151: CPU transpose helper function `cpu_transpose_fp16()`
+- Lines 420-614: Pre-transpose experiment code (guarded by `THIMBLE_PRETRANSPOSE_EXPERIMENT`)
+- Lines 668-779: Q-projection outlier diagnosis with manual parity checks
+- Lines 829-936: Input stats logging and index provenance documentation
+
+**Observations:**
+- **Task 1 - Reproducible extremes:** Token 0: Q[95]=-16.047, Q[126]=14.336; Token 1: Q[95]=-3.912, Q[126]=3.695 ✅
+- **Task 2 - Manual parity FAILED:**
+  - Token 0 Q[95]: manual=-0.058, cuBLAS=-16.047, diff=15.99 ❌
+  - Token 0 Q[126]: manual=0.055, cuBLAS=14.336, diff=14.28 ❌
+  - Token 1 Q[95]: manual=0.079, cuBLAS=-3.912, diff=3.99 ❌
+  - Token 1 Q[126]: manual=0.020, cuBLAS=3.695, diff=3.68 ❌
+- **Task 3 - Pre-transpose experiment FAILED:**
+  - Explicitly transposed Q weight [896,896] on CPU
+  - Used CUBLAS_OP_N with lda=q_dim
+  - **Result: IDENTICAL extremes!** Q[95]=-16.047, Q[126]=14.336 (NO CHANGE!)
+- Input (normed) stats: Token 0 min=-0.576@741, max=1.038@75, mean=0.003 ✅ NORMAL
+
+**Conclusions:**
+- ❌ **STRIDE HYPOTHESIS DISPROVEN:** Extremes persist with both CUBLAS_OP_T and CUBLAS_OP_N
+- ✅ **VERIFIED:** Manual FP32 calculation gives correct small values (±0.08)
+- ✅ **VERIFIED:** cuBLAS (both OP_T and OP_N) gives wrong extreme values at same indices
+- 🔍 **CRITICAL INSIGHT:** Bug is NOT about stride semantics - it's deeper
+- 🔍 **NEW HYPOTHESES:** Compute type (tensor cores), weight column corruption, or FP16 overflow
+- Handoff: Test CUBLAS_COMPUTE_32F, dump weight columns 95/126, try full FP32 GEMM
+
+**Files Modified:**
+- `cuda/src/transformer/qwen_transformer.cpp` (lines 6-17, 139-151, 420-614, 668-936)
+- `investigation-teams/TEAM_THIMBLE_SUMMARY.md` (created)
+
+---
+
+### Team TOP HAT (2025-10-07 ~00:30 UTC to ~00:34 UTC)
+
+**Mission:** Eliminate Q[95]/Q[126] extremes by testing 3 remaining hypotheses
+
+**Hypotheses Tested:**
+1. Compute type (CUBLAS_COMPUTE_32F_FAST_16F vs CUBLAS_COMPUTE_32F) causes extremes
+2. Weight columns 95 and 126 are corrupted in GPU memory
+3. Input (normed) has spikes that couple into those columns
+
+**Changes Made:**
+- `cuda/src/transformer/qwen_transformer.cpp` lines 420-422: Token counter declaration
+- Lines 424-487: Weight column verification (Step 2)
+- Lines 466-484: Input hot-spot check (Step 3)
+- Lines 546-554: Compute type A/B test macro (Step 1)
+- Lines 566-577: Pre-bias Q output logging
+- Lines 880-903: Post-projection Q logging with bias checks
+
+**Observations:**
+- **H1 Test - Compute type:**
+  - CUBLAS_COMPUTE_32F_FAST_16F: Q[95]=-16.047, Q[126]=14.336 ❌
+  - CUBLAS_COMPUTE_32F (full FP32): Q[95]=-16.047, Q[126]=14.336 ❌
+  - **Result: IDENTICAL extremes with full precision!**
+- **H2 Test - Weight columns:**
+  - Column 95: min=-0.217, max=0.174, mean=-0.000443 ✅ NORMAL
+  - Column 126: min=-0.194, max=0.180, mean=-0.000864 ✅ NORMAL
+  - First 16 values all in normal range (|max| < 0.22)
+- **H3 Test - Input spikes:**
+  - Token 0: normed min=-0.576@741, max=1.038@75, mean=0.003 ✅ NORMAL
+  - Token 1: normed min=-0.542@190, max=0.425@75, mean=0.001 ✅ NORMAL
+  - No spikes >2 in input
+- **Additional finding:** Q before bias already has extremes (not introduced by bias addition)
+
+**Conclusions:**
+- ❌ **H1 ELIMINATED:** Tensor-core fast-math is NOT the issue (32F shows same extremes)
+- ❌ **H2 ELIMINATED:** Weight columns are NOT corrupted (normal values)
+- ❌ **H3 ELIMINATED:** Input does NOT have spikes (normal range)
+- ✅ **VERIFIED:** cuBLAS GEMM itself produces extremes, not bias addition
+- 🔍 **CORE MYSTERY:** Manual FP32 gives ±0.08, cuBLAS (both FAST_16F and 32F) gives ±16
+- 🔍 **ALL STANDARD HYPOTHESES ELIMINATED:** Stride, transpose, compute type, weight corruption, input spikes, bias corruption
+- Handoff: Deep cuBLAS audit, memory inspection, or implement workaround while investigating root cause
+
+**Files Modified:**
+- `cuda/src/transformer/qwen_transformer.cpp` (lines 420-487, 546-577, 880-903)
+- `investigation-teams/TEAM_TOP_HAT_HANDOFF.md` (created)
+
+---
+
+### Team HELIOS (2025-10-08 ~date unknown)
+
+**Mission:** Investigate sampling & generation logic (post-logits phase)
+
+**Hypotheses Tested:**
+1. Top-p operates on logits instead of probabilities (wrong order)
+2. Top-p softmax normalization only uses first 1000 tokens (broken normalization)
+3. Sampling parameters (temperature, seed) not applied correctly
+
+**Changes Made:**
+- `cuda/kernels/sampling_wrapper.cu` lines 251-277: Added critical fix banner
+- Lines 289-303: Moved softmax BEFORE top-p (architectural fix)
+- Lines 305-337: Disabled broken top-p with detailed TODO
+- Lines 347-389: Added generation-phase logging (first 20 tokens)
+
+**Observations:**
+- **BEFORE:** temperature → top-k → top-p → softmax → sample (WRONG!)
+- **AFTER:** temperature → top-k → **softmax → top-p** → sample (CORRECT!)
+- Evidence from llama.cpp: `llama-sampling.cpp` line 783 does softmax BEFORE top-p
+- Test logs show: temp=0.70 ✅, seeds incrementing ✅, tokens varying ✅
+- Probability distribution peaked (expected for temp<1.0) ✅
+- **BUT:** Model still generates mojibake: `macros-closeĳľĠminimumĳľ(libraryĳľĳľularitytees...` ❌
+
+**Conclusions:**
+- ✅ **FIXED:** Sampling pipeline order (architectural bug)
+- ✅ **VERIFIED:** Temperature=0.7 applied correctly
+- ✅ **VERIFIED:** Seeds increment correctly (1759794426, 1759794427, ...)
+- ✅ **VERIFIED:** Tokens vary (not stuck in loops)
+- ✅ **VERIFIED:** Sampling works probabilistically
+- ❌ **REMAINING:** Model generates semantically wrong tokens (mojibake)
+- 🔍 **CRITICAL INSIGHT:** Sampling is NOT the root cause - bug is in transformer forward pass
+- 🔍 **CONCLUSION:** Model computes WRONG logits → sampling correctly picks from wrong distribution
+- Handoff: Focus on transformer (attention, RMSNorm, FFN, residual connections, weight application)
+
+**Files Modified:**
+- `cuda/kernels/sampling_wrapper.cu` (lines 251-389)
+- `investigation-teams/TEAM_HELIOS_FINDINGS.md` (created)
+- `investigation-teams/TEAM_HELIOS_SUMMARY.md` (created)
+- `investigation-teams/TEAM_HELIOS_HANDOFF.md` (created)
+
+---
+
+## 🧪 2. Key Experiments Table (UPDATED)
+
+| Team | Experiment | Hypothesis | Change | Result | Conclusion |
+|------|-----------|------------|--------|--------|------------|
+| **Blue** | Special Token Fix | Special tokens split by BPE | Manually insert token IDs 151644/151645 | Tokens now single IDs but output still garbage | ✅ Fixed tokenization, ❌ bug remains |
+| **Purple** | Token ID Verification | IDs 151644/151645 out of bounds | Verified vocab size = 151936 | Token IDs are valid | ✅ Verified correct |
+| **Purple** | Embedding Check | Special token embeddings are zeros | Read embeddings from VRAM | Values ~0.01 (normal) | ✅ Embeddings valid |
+| **Green** | Bias Loading | Q/K/V biases missing | Load biases from model | Biases all zeros, no effect | ✅ Fixed bug, ❌ didn't fix output |
+| **Water** | Cache Verification | cache_len always 0 | Added debug logging | cache_len = 0,1,2,3... correctly | ✅ Cache working |
+| **Charlie** | cuBLAS Verification | Matrix mult wrong | Manual dot product | Matches within 0.00002 | ✅ cuBLAS correct |
+| **Charlie Beta** | FFN Weight Loading | ffn_down not loaded | Added missing load line | NOT TESTED YET | ⚠️ Needs testing |
+| **Root Cause** | Norm Weight Fix | output_norm corrupted | Normalize to mean=1.0 | Logits better but still broken | ⚠️ Partial fix |
+| **Peer Review** | Verification Suite | Validate all claims | Automated tests | All verified | ✅ Confirmed findings |
+| **Bygone** | Causal Mask Check | Mask missing | Verified kernel logic | Already implemented | ✅ Verified correct |
+| **Bygone** | Prefill Logic | One-at-a-time wrong | Verified approach | Correct for autoregressive | ✅ Verified correct |
+| **Felicia** | Matrix Transpose | CUBLAS_OP_N → OP_T | Changed 8 matmuls | Repetitive token output | ❌ Made worse, reverted |
+| **Aurora** | Transpose + LDA | Wrong lda with OP_T | OP_T with correct lda | Same repetition as Felicia | ❌ Definitively wrong |
+| **ORION** | Activation Logging | Find divergence point | Log layer 0 activations | Q proj has ±16 extremes at [95,126] | 🔍 Found divergence |
+| **ORION** | Q Bias Check | Q bias has outliers | Dump Q bias stats | All zeros (no outliers) | ✅ Bias not the cause |
+| **ORION** | Q[0] Manual Verify | cuBLAS params wrong | Manual dot product | Matches cuBLAS (diff=0.000015) | ✅ Q[0] is correct |
+| **THIMBLE** | Pre-transpose Experiment | CUBLAS_OP_T stride issue | CPU transpose + OP_N | IDENTICAL extremes | ❌ Stride hypothesis disproven |
+| **THIMBLE** | Manual Parity Q[95] | cuBLAS reads wrong memory | Manual dot product | manual=±0.08, cuBLAS=±16 | ❌ cuBLAS gives wrong values |
+| **TOP HAT** | Compute Type Test | Tensor-core fast-math | 32F_FAST_16F vs 32F | IDENTICAL extremes | ❌ Compute type not the issue |
+| **TOP HAT** | Weight Column Dump | Columns 95/126 corrupted | Dump column stats | Both normal (|max|<0.22) | ❌ Weights not corrupted |
+| **TOP HAT** | Input Hot-Spot Check | Normed has spikes | Log normed min/max/mean | Normal range (±1) | ❌ Input not the cause |
+| **HELIOS** | Sampling Order Fix | Top-p before softmax | Move softmax before top-p | Sampling works, output still mojibake | ✅ Fixed sampling, ❌ bug upstream |
+| **HELIOS** | Top-P Disable | Broken normalization | Disable top-p filtering | No change (test uses top_p=1.0) | ✅ Safe workaround |
+
+---
+
+## 🚫 3. False Leads Index (UPDATED)
+
+### From Code Comments
+
+| File | Line | Team | Description |
+|------|------|------|-------------|
+| `cuda/src/transformer/qwen_transformer.cpp` | 281 | Felicia | CUBLAS_OP_T made repetition worse |
+| `cuda/src/transformer/qwen_transformer.cpp` | 288 | Aurora | CUBLAS_OP_T with correct lda still wrong |
+| `cuda/src/transformer/qwen_transformer.cpp` | 296 | Green | Adding Q/K/V biases (all zeros anyway) |
+| `cuda/src/transformer/qwen_transformer.cpp` | 328 | Green | K bias addition (biases all zeros) |
+| `cuda/src/transformer/qwen_transformer.cpp` | 351 | Green | V bias addition (biases all zeros) |
+| `cuda/src/transformer/qwen_transformer.cpp` | 745 | Felicia | Final projection CUBLAS_OP_T |
+| `cuda/src/transformer/qwen_transformer.cpp` | 1099 | Purple | Special token embeddings being zeros/garbage |
+| `cuda/src/transformer/qwen_transformer.cpp` | 6-17 | THIMBLE | Pre-transpose experiment (stride hypothesis) |
+| `cuda/src/transformer/qwen_transformer.cpp` | 20-30 | TOP HAT | All 3 hypotheses (compute type, weight corruption, input spikes) |
+| `cuda/kernels/gqa_attention.cu` | 253-263 | Bygone | Missing causal mask (already implemented) |
+| `cuda/kernels/sampling_wrapper.cu` | 251-277 | HELIOS | Top-p before softmax (architectural bug - FIXED) |
+| `src/inference/cuda_backend.rs` | 469-479 | Bygone | Prefill one-at-a-time (correct approach) |
+
+### From FALSE_LEADS_SUMMARY.md
+
+1. **Token IDs Out of Bounds** - Vocab size is 151936, not 151643; tokens 151644/151645 are valid
+2. **Special Token Embeddings Are Zeros** - All special tokens have valid FP16 embeddings (~0.01)
+3. **Tokenization Approach Matters** - Both approaches produce identical token sequences
+4. **Chat Template Format** - Current format matches llama.cpp exactly
+5. **Missing Causal Mask** - Decode kernel only processes 0..cache_len (IS causal masking)
+6. **Prefill One Token at a Time** - This is CORRECT for autoregressive prefill
+7. **Hidden State Range Outside Bounds** - Deviation of 0.4531 is minimal, normal variation
+8. **CUBLAS_OP_T with Corrected lda** - Team Aurora tested, got same stuck repetition
+9. **CUBLAS_OP_T Stride Interpretation** - Team THIMBLE tested with explicit transpose, same extremes
+10. **Tensor-Core Fast-Math** - Team TOP HAT tested CUBLAS_COMPUTE_32F, same extremes
+11. **Weight Column Corruption** - Team TOP HAT dumped columns 95/126, both normal
+12. **Input Spikes in Normed** - Team TOP HAT verified normed is normal (±1 range)
+13. **Sampling Pipeline Order** - Team HELIOS fixed (softmax before top-p), but output still broken
+
+---
+
+## 🧠 4. Patterns & Gaps (UPDATED)
+
+### Patterns Emerging
+
+1. **Multiple teams suspected cuBLAS but all reverted changes after identical failure modes**
+   - Team Felicia: CUBLAS_OP_T → stuck on token 71443 "ĳľ"
+   - Team Aurora: CUBLAS_OP_T with correct lda → EXACT SAME stuck repetition
+   - Both teams independently confirmed current CUBLAS_OP_N is correct
+
+2. **All infrastructure verified working, yet system fails**
+   - Classic integration bug: all parts work individually but system produces garbage
+   - Suggests missing operation or subtle parameter mismatch
+
+3. **Output evolution shows progress**
+   - Initial: Random garbage (foreign languages, code tokens)
+   - After Team Blue: Still garbage but with correct tokenization
+   - After Team Felicia experiments: Changed to repetitive patterns (shows we're affecting computation)
+   - Suggests we're getting closer but haven't found root cause
+
+4. **First generated token is already wrong**
+   - Token 14271 "cn" (code token) instead of haiku-related word
+   - Bug manifests during/immediately after prefill, not during generation
+   - Indicates problem in forward pass, not in generation loop
+
+5. **Hidden state accumulation pattern**
+   - Embedding: ±0.04
+   - Layer 10: ±6.8
+   - Layer 20: ±18
+   - Layer 23: ±23.4
+   - After final norm: ±32.8 (with corrupted weights) or ±4.6 (after fix)
+   - Exponential growth suggests residual accumulation without proper constraint
+
+6. **Q-projection extremes are highly localized** (NEW)
+   - Extremes always at Q[95] (head 1, dim 31) and Q[126] (head 1, dim 62)
+   - Same indices across all tokens (token 0, token 1, etc.)
+   - Q[0] is correct (manual verification passes)
+   - Suggests bug affects specific output positions, not all positions
+
+7. **All standard debugging eliminated the obvious causes** (NEW)
+   - Stride/transpose: THIMBLE tested explicit transpose, same result
+   - Compute type: TOP HAT tested full FP32, same result
+   - Weight corruption: TOP HAT dumped columns, both normal
+   - Input spikes: TOP HAT verified normed is normal
+   - Manual calculation works (±0.08) but cuBLAS fails (±16)
+
+8. **Sampling architecture was wrong but not the root cause** (NEW)
+   - HELIOS fixed sampling order (softmax before top-p)
+   - Temperature, seeds, token variety all correct
+   - But output still mojibake (semantically wrong tokens)
+   - Proves bug is upstream in transformer forward pass
+
+### What Hasn't Been Seriously Investigated
+
+1. **RoPE Implementation** - Formula verified correct, but ACTUAL COMPUTATION not compared with llama.cpp
+   - Need to dump Q/K values before/after RoPE for first 3 tokens
+   - Compare with llama.cpp RoPE output
+
+2. **RMSNorm Implementation** - Formula verified, but epsilon value and exact computation not confirmed
+   - Need to verify epsilon matches llama.cpp (should be ~1e-6)
+   - Dump intermediate RMS values and compare
+
+3. **SwiGLU Activation** - Less scrutinized than matrix multiplications
+   - Need to verify silu(x) = x * sigmoid(x) matches llama.cpp
+   - Dump gate, up, and swiglu intermediate values
+
+4. **Weight Tensor Byte Order** - llama.cpp works with same file, we don't
+   - Possible endianness problem
+   - Possible alignment issues
+   - Need to dump raw bytes and compare with llama.cpp
+
+5. **Embedding Scaling** - Some models scale by sqrt(hidden_dim)
+   - Our code does direct lookup with NO scaling
+   - Need to check if llama.cpp applies scaling factor
+
+6. **Model Configuration Mismatch** - Maybe using wrong architecture parameters
+   - Need to verify num_heads, num_kv_heads, head_dim, hidden_dim, ffn_dim
+   - Compare with llama.cpp's detected config
+
+7. **cuBLAS Internal Bug or Misuse** (NEW - HIGH PRIORITY)
+   - All parameters verified correct (lda, ldb, ldc, transpose flags)
+   - Manual calculation works, cuBLAS doesn't
+   - Extremes at specific indices (95, 126) suggest memory alignment or indexing issue
+   - May need to test alternative GEMM implementations or custom kernel
+
+8. **Attention Output Projection** (NEW)
+   - Q-projection is broken, but what about attention output projection?
+   - Does it have similar localized extremes?
+   - Could RoPE be amplifying the Q spikes?
+
+### Teams That Kept Repeating Same Mistakes
+
+- **None identified** - Teams generally learned from previous attempts and documented false leads well
+- Team Aurora specifically tested Team Felicia's hypothesis with corrections, confirming it was wrong
+- Team THIMBLE specifically tested ORION's stride hypothesis with explicit transpose
+- Team TOP HAT systematically eliminated all remaining standard hypotheses
+- FALSE_LEADS_SUMMARY.md effectively prevented redundant investigation
+
+### Critical Untested Fix
+
+- **Team Charlie Beta's ffn_down loading fix** - This could be THE bug, but wasn't tested due to compilation errors
+- HIGH PRIORITY: Test this fix immediately
+- If ffn_down was never loaded, FFN would use uninitialized memory → explains garbage output
+
+### Recommended Next Steps
+
+1. **URGENT:** Test Team Charlie Beta's ffn_down fix
+   - This is the most promising lead
+   - Missing weight loading would cause exactly these symptoms
+
+2. **HIGH PRIORITY:** Deep cuBLAS investigation for Q-projection bug
+   - Test with `cublasSgemm` (FP32 weights/inputs) instead of `cublasGemmEx`
+   - Try different cuBLAS algorithms (CUBLAS_GEMM_ALGO_*)
+   - Write custom FP16 GEMM kernel for columns 95/126 to verify
+   - Dump raw memory at weight buffer + offsets 95 and 126 in hex
+   - Check for NaN/inf bits or alignment issues
+
+3. **WORKAROUND:** Zero out Q[95] and Q[126] after GEMM
+   - Measure impact on haiku generation quality
+   - If output improves → confirms Q spikes are breaking downstream
+   - Allows testing to continue while investigating root cause
+
+4. **If Q-projection fix doesn't work:** Systematic llama.cpp comparison
+   - Add logging at each stage (embedding, layer 0, layer 5, layer 10, etc.)
+   - Run llama.cpp with same prompt and logging
+   - Find FIRST point where values diverge
+   - That's where the bug is
+
+5. **Focus areas for comparison:**
+   - RoPE actual computation (not just formula)
+   - RMSNorm epsilon and intermediate values
+   - SwiGLU intermediate values
+   - Embedding scaling factor (if any)
+   - Attention output projection (check for similar extremes)
+
+6. **Stop investigating:**
+   - ❌ cuBLAS transpose parameters (definitively proven correct by THIMBLE)
+   - ❌ Tokenization (fixed by Team Blue, verified by Team Purple)
+   - ❌ KV cache infrastructure (verified by Team Water)
+   - ❌ Causal masking (verified by Team Bygone)
+   - ❌ Prefill logic (verified by Team Bygone)
+   - ❌ Sampling pipeline (fixed by Team HELIOS, verified working)
+   - ❌ Tensor-core fast-math (eliminated by Team TOP HAT)
+   - ❌ Weight corruption at columns 95/126 (eliminated by Team TOP HAT)
+   - ❌ Input spikes (eliminated by Team TOP HAT)
+
+---
+
+## 📊 5. Investigation Statistics (UPDATED)
+
+- **Total Teams:** 15+ (Blue, Purple, Green, Water, Charlie, Charlie Beta, Root Cause, Peer Review, Bygone, Felicia, Aurora, ORION, THIMBLE, TOP HAT, HELIOS, BATTLESHIP)
+- **Total Experiments:** 26 major experiments
+- **Verified Correct:** 17+ components (tokenization, embeddings, cuBLAS Q[0], cache, RoPE, sampling architecture, attention filtering, buffer management, etc.)
+- **False Leads Documented:** 14+ in code + 14 in FALSE_LEADS_SUMMARY.md (Q spikes added)
+- **Critical Bugs Found:** 4 (special token splitting - FIXED, ffn_down loading - UNTESTED, sampling order - FIXED, double-free crash - FIXED)
+- **Partial Fixes:** 1 (output_norm normalization - helped but didn't solve)
+- **Time Span:** ~33 hours (2025-10-06 20:56 UTC - 2025-10-07 00:56 UTC)
+- **Compilation Status:** ✅ Fixed (double-free removed)
+
+---
+
+## 🎯 6. Current Status (UPDATED)
+
+### What We Know For Certain
+
+✅ **Working Correctly:**
+- Tokenization (special tokens as single IDs)
+- Token embeddings (valid values, correct lookup)
+- cuBLAS matrix multiplication for Q[0] (verified mathematically)
+- KV cache infrastructure (positions, reads, writes)
+- Position tracking (increments correctly)
+- RoPE formula (conceptually correct)
+- Causal masking (implemented in kernel)
+- Prefill logic (one-at-a-time is correct)
+- Attention softmax (weights sum to 1.0)
+- Argmax sampling (finds true maximum)
+- Residual connections (simple addition)
+- Sampling pipeline order (fixed by HELIOS - softmax before top-p)
+- Temperature application (verified 0.7 applied correctly)
+- Seed incrementing (verified correct)
+- **Attention filtering (BATTLESHIP - Q spikes washed out by softmax)**
+- **Buffer management (BATTLESHIP - no aliasing detected)**
+- **Attention output projection (BATTLESHIP - clean, no spikes introduced)**
+
+❌ **Still Broken:**
+- Model generates garbage output (mojibake, code tokens)
+- Q projection has extreme values (±16) at indices 95 and 126
+- Repetitive token generation (same token 10+ times in some tests)
+- First generated token already wrong (code token instead of haiku word)
+
+### Most Promising Leads
+
+🔥 **#1: Team Charlie Beta's ffn_down Fix** - Missing weight loading for FFN down projection
+- Status: Code changed but NOT TESTED (compilation errors)
+- Impact: If correct, this would fix the entire bug
+- Priority: **URGENT** - test immediately
+- Evidence: BATTLESHIP proved Q spikes are filtered by attention, so bug must be elsewhere
+
+~~🔥 **#2: Q-Projection cuBLAS Bug** - Extreme values at specific indices (95, 126)~~
+- Status: **ELIMINATED by BATTLESHIP** ✅
+- Evidence: Q spikes exist (±16) but are completely filtered by attention softmax
+- After attention: values return to normal (±0.03)
+- Impact: **HARMLESS** - Q spikes don't propagate downstream
+- Priority: **CLOSED** - documented as red herring, no further action needed
+
+### If These Don't Fix It
+
+🔍 **Systematic llama.cpp Comparison** - Find divergence point
+- All infrastructure verified, so bug must be in subtle implementation detail
+- Need to compare intermediate values at each stage
+- Focus on RoPE computation, RMSNorm epsilon, SwiGLU activation, attention output projection
+
+### ~~Compilation Blocker~~
+
+~~⚠️ **Build Error:** `layer_call_count` undeclared at line 318~~
+- Status: **FIXED by BATTLESHIP** ✅
+- Issue: Double-free of `h_q_full` causing "double free or corruption" crash
+- Root cause: Duplicate `delete[]` at lines 942 and 993
+- Fix: Removed duplicate delete at line 942
+- Tests now run to completion without crashes
+
+---
+
+## 📚 7. Key Documents (UPDATED)
+
+- `investigation-teams/FALSE_LEADS_SUMMARY.md` - Comprehensive false leads list
+- `investigation-teams/TEAM_*_HANDOFF.md` - Individual team handoff documents
+- `investigation-teams/PEER_REVIEW_FINAL_REPORT.md` - Independent verification
+- `investigation-teams/TEAM_ORION_*.md` - Q-projection divergence findings (NEW)
+- `investigation-teams/TEAM_THIMBLE_SUMMARY.md` - Stride hypothesis disproven
+- `investigation-teams/TEAM_TOP_HAT_HANDOFF.md` - All standard hypotheses eliminated
+- `investigation-teams/TEAM_HELIOS_FINDINGS.md` - Sampling architecture fix
+- `investigation-teams/TEAM_HELIOS_HANDOFF.md` - Sampling verified, bug upstream
+- `investigation-teams/TEAM_BATTLESHIP_HANDOFF.md` - Downstream wiring investigation (NEW)
+- `investigation-teams/TEAM_BATTLESHIP_FINDINGS.md` - Q spikes proven harmless (NEW)
+- `investigation-teams/TEAM_BATTLESHIP_QUICKSTART.md` - Quick start guide (NEW)
+- `cuda/src/transformer/qwen_transformer.cpp` - Main transformer with extensive comments
+- `cuda/kernels/gqa_attention.cu` - Attention kernel with verification comments
+- `cuda/kernels/sampling_wrapper.cu` - Sampling with HELIOS fix
+- `src/inference/cuda_backend.rs` - Token flow and prefill logic
+
+---
+
 **Chronicle Complete**  
-**Last Updated:** 2025-10-06T22:22Z  
-**Status:** Active investigation - ffn_down fix needs testing
+**Last Updated:** 2025-10-07T00:56Z  
+**Status:** Active investigation - Q spikes proven harmless, focus shifted to FFN

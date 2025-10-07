@@ -41,6 +41,77 @@
 // See: investigation-teams/TEAM_TOP_HAT_HANDOFF.md
 // ============================================================================
 
+// ============================================================================
+// [TEAM BATTLESHIP] 2025-10-07T00:40Z - Downstream Wiring Investigation
+// ============================================================================
+// OBJECTIVE: Prove whether garbled logits come from downstream wiring
+//            (attention out projection, buffer aliasing, residual adds)
+//            rather than Q-projection itself
+// 
+// INVESTIGATION PLAN:
+//   1. Buffer Integrity Tripwires (canaries to detect overwrites)
+//   2. Attention Output Projection Audit (verify GEMM destination/ldc)
+//   3. No-Op Residual Toggles (isolate residual path corruption)
+//   4. Scratch Reuse Audit (verify no buffer aliasing)
+//   5. Minimal Workaround (clamp Q[95]/Q[126] if needed)
+// 
+// GUARD MACROS:
+//   BATTLESHIP_CANARIES=1          -> Enable buffer canary checks
+//   BATTLESHIP_ATTN_PROJ_AUDIT=1   -> Instrument attn output projection
+//   BATTLESHIP_ATTN_PROJ_COMPUTE_32F=1 -> Use FP32 for attn out proj
+//   BATTLESHIP_BYPASS_RESIDUAL1=1  -> Skip first residual add
+//   BATTLESHIP_BYPASS_RESIDUAL2=1  -> Skip second residual add
+//   BATTLESHIP_PTR_TRACE=1         -> Log buffer pointers
+//   BATTLESHIP_MASK_Q_SPIKES=1     -> Clamp Q[95]/Q[126] spikes
+// 
+// RULES: Append-only, foreground, one variable per change
+// ============================================================================
+#ifndef BATTLESHIP_CANARIES
+#define BATTLESHIP_CANARIES 0
+#endif
+#ifndef BATTLESHIP_ATTN_PROJ_AUDIT
+#define BATTLESHIP_ATTN_PROJ_AUDIT 0  // [RACE CAR] Flipped to quiet baseline 2025-10-07T00:59Z
+#endif
+#ifndef BATTLESHIP_ATTN_PROJ_COMPUTE_32F
+#define BATTLESHIP_ATTN_PROJ_COMPUTE_32F 0
+#endif
+#ifndef BATTLESHIP_BYPASS_RESIDUAL1
+#define BATTLESHIP_BYPASS_RESIDUAL1 0
+#endif
+#ifndef BATTLESHIP_BYPASS_RESIDUAL2
+#define BATTLESHIP_BYPASS_RESIDUAL2 0
+#endif
+#ifndef BATTLESHIP_PTR_TRACE
+#define BATTLESHIP_PTR_TRACE 0  // [RACE CAR] Flipped to quiet baseline 2025-10-07T00:59Z
+#endif
+#ifndef BATTLESHIP_MASK_Q_SPIKES
+#define BATTLESHIP_MASK_Q_SPIKES 0
+#endif
+
+// ============================================================================
+// [TEAM RACE CAR] 2025-10-07T00:59Z - FFN Down Projection Investigation
+// ============================================================================
+// OBJECTIVE: Prove or disprove that ffn_down is misloaded/misapplied
+// WHY: Attention path is healthy. Missing/misaligned ffn_down would yield
+//      plausible activations up to SwiGLU, then corrupt layer output.
+// PLAN:
+//   1. Assert non-null and shape-correct weights (ffn_gate/up/down)
+//   2. Parity micro-trace (Layer 0, Tokens 0-1) at 5 checkpoints:
+//      - After FFN RMSNorm
+//      - After gate_proj
+//      - After up_proj
+//      - After SwiGLU
+//      - After down_proj (pre-residual)
+//   3. Weight-loader verification (confirm ffn_down loaded in both paths)
+// SUCCESS CRITERIA:
+//   - Failed assert on ffn_down pointer/dims; OR
+//   - Parity shows healthy pre-down but corrupted post-down; OR
+//   - Bypassing FFN eliminates mojibake
+// ============================================================================
+#ifndef RACECAR_FFN_TRACE
+#define RACECAR_FFN_TRACE 1  // Enable FFN parity logging
+#endif
+
 //
 // [APPEND-ONLY GUARD] Do not delete prior teams' comments. Add new notes below existing blocks.
 //
@@ -287,6 +358,43 @@ void QwenTransformer::forward_layer(
     auto& layer = model_->weights.layers[layer_idx];
     
     // ============================================================================
+    // [TEAM RACE CAR] 2025-10-07T00:59Z - FFN Weight Validation
+    // ============================================================================
+    // OBJECTIVE: Assert non-null and shape-correct FFN weights
+    // Hard guardrails for ffn_gate, ffn_up, ffn_down
+#if RACECAR_FFN_TRACE
+    if (layer_idx == 0) {
+        // Assert non-null pointers
+        if (!layer.ffn_gate) {
+            fprintf(stderr, "[RACE CAR] FATAL: layer.ffn_gate is NULL at layer %u\n", layer_idx);
+            abort();
+        }
+        if (!layer.ffn_up) {
+            fprintf(stderr, "[RACE CAR] FATAL: layer.ffn_up is NULL at layer %u\n", layer_idx);
+            abort();
+        }
+        if (!layer.ffn_down) {
+            fprintf(stderr, "[RACE CAR] FATAL: layer.ffn_down is NULL at layer %u\n", layer_idx);
+            abort();
+        }
+        
+        // Expected shapes (from config):
+        // ffn_gate: [hidden_dim, ffn_dim] = [896, 4864]
+        // ffn_up:   [hidden_dim, ffn_dim] = [896, 4864]
+        // ffn_down: [ffn_dim, hidden_dim] = [4864, 896]
+        // Note: Actual shape validation would require storing dims in layer struct.
+        // For now, we verify pointers are non-null (sufficient to catch load failures).
+        
+        static bool racecar_validated = false;
+        if (!racecar_validated) {
+            fprintf(stderr, "[RACE CAR] FFN weight pointers validated: gate=%p up=%p down=%p\n",
+                    layer.ffn_gate, layer.ffn_up, layer.ffn_down);
+            racecar_validated = true;
+        }
+    }
+#endif
+    
+    // ============================================================================
     // [TEAM_CHARLIE] LAYER PROCESSING OVERVIEW
     // ============================================================================
     // Each transformer layer consists of:
@@ -348,6 +456,38 @@ void QwenTransformer::forward_layer(
         fprintf(stderr, "\n[ORION]   min=%.6f max=%.6f mean=%.6f\n", min_val, max_val, mean);
         delete[] h_data;
     };
+    
+    // [TEAM RACE CAR] 2025-10-07T00:59Z - FFN parity helper
+#if RACECAR_FFN_TRACE
+    static int racecar_token_count = 0;
+    bool do_racecar_log = (layer_idx == 0 && racecar_token_count < 2);
+    
+    auto log_ffn_checkpoint = [](const char* name, const void* data, int size) {
+        half* h_data = new half[size];
+        cudaMemcpy(h_data, data, size * sizeof(half), cudaMemcpyDeviceToHost);
+        
+        fprintf(stderr, "[RACE CAR] %s[0..15]: ", name);
+        int display_count = (size < 16) ? size : 16;
+        for (int i = 0; i < display_count; i++) {
+            fprintf(stderr, "%.6f ", __half2float(h_data[i]));
+        }
+        
+        // Compute min/max/mean
+        float min_val = __half2float(h_data[0]);
+        float max_val = __half2float(h_data[0]);
+        float sum = 0.0f;
+        for (int i = 0; i < size; i++) {
+            float val = __half2float(h_data[i]);
+            if (val < min_val) min_val = val;
+            if (val > max_val) max_val = val;
+            sum += val;
+        }
+        float mean = sum / size;
+        
+        fprintf(stderr, "\n[RACE CAR]   min=%.6f max=%.6f mean=%.6f\n", min_val, max_val, mean);
+        delete[] h_data;
+    };
+#endif
     
     if (do_orion_log) {
         fprintf(stderr, "\n[TEAM ORION] === LAYER 0 FORWARD PASS (TOKEN %d, POS %u) ===\n",
@@ -445,6 +585,14 @@ void QwenTransformer::forward_layer(
     // [TEAM TOP HAT] Token counter for logging (declare early for use throughout)
     static int top_hat_token_count = 0;
     bool do_top_hat_log = (layer_idx == 0 && top_hat_token_count < 2);
+    
+    // [TEAM BATTLESHIP] Token counter for layer 0, first two tokens only
+    static int battleship_token_count = 0;
+    bool do_battleship_log = (layer_idx == 0 && battleship_token_count < 2);
+    
+    if (do_battleship_log) {
+        fprintf(stderr, "\n[TEAM BATTLESHIP] START layer=0 pos=%u\n", pos);
+    }
     
     // ============================================================================
     // [TEAM TOP HAT] 2025-10-07T00:30Z - Q-Projection Anomaly Root Cause Analysis
@@ -600,6 +748,43 @@ void QwenTransformer::forward_layer(
                 __half2float(h_q_pre_bias[1]),
                 __half2float(h_q_pre_bias[2]));
     }
+    
+    // [TEAM BATTLESHIP] Log Q projection output (pre-bias)
+    if (do_battleship_log) {
+        half h_q[3];
+        int idxs[3] = {0, 95, 126};
+        for (int i = 0; i < 3; ++i) {
+            cudaMemcpy(&h_q[i], q_half + idxs[i], sizeof(half), cudaMemcpyDeviceToHost);
+        }
+        fprintf(stderr, "[TEAM BATTLESHIP] Q_pre_bias q[0]=%.4f q[95]=%.4f q[126]=%.4f\n",
+                __half2float(h_q[0]), __half2float(h_q[1]), __half2float(h_q[2]));
+    }
+    
+#if BATTLESHIP_MASK_Q_SPIKES
+    // [TEAM BATTLESHIP] Workaround: clamp Q[95]/Q[126] spikes
+    // This is a containment strategy while root cause is pinned
+    if (layer_idx == 0 && do_battleship_log) {
+        half h_q95, h_q126;
+        cudaMemcpy(&h_q95, q_half + 95, sizeof(half), cudaMemcpyDeviceToHost);
+        cudaMemcpy(&h_q126, q_half + 126, sizeof(half), cudaMemcpyDeviceToHost);
+        
+        float q95_val = __half2float(h_q95);
+        float q126_val = __half2float(h_q126);
+        
+        // Clamp to [-0.5, 0.5] range
+        float q95_clamped = fminf(fmaxf(q95_val, -0.5f), 0.5f);
+        float q126_clamped = fminf(fmaxf(q126_val, -0.5f), 0.5f);
+        
+        h_q95 = __float2half_rn(q95_clamped);
+        h_q126 = __float2half_rn(q126_clamped);
+        
+        cudaMemcpy(q_half + 95, &h_q95, sizeof(half), cudaMemcpyHostToDevice);
+        cudaMemcpy(q_half + 126, &h_q126, sizeof(half), cudaMemcpyHostToDevice);
+        
+        fprintf(stderr, "[TEAM BATTLESHIP] TEMP MASK applied to Q[95]=%.4f->%.4f Q[126]=%.4f->%.4f\n",
+                q95_val, q95_clamped, q126_val, q126_clamped);
+    }
+#endif
     
     // [TEAM GREEN] 2025-10-06T20:43Z - BUG FIX!
     // FIXED: Add Q bias (this model HAS biases, we were ignoring them!)
@@ -847,8 +1032,6 @@ void QwenTransformer::forward_layer(
         fprintf(stderr, "[THIMBLE] Q stats: min=%.6f max=%.6f mean=%.6f\n",
                 q_min, q_max, q_sum / q_dim);
         
-        delete[] h_q_full;
-        
 #if 0  // THIMBLE_DEBUG_QPARITY - Set to 1 to enable manual dot-product verification
         // ========================================================================
         // Task 2: Manual Parity Check for Q[95] and Q[126]
@@ -1066,8 +1249,43 @@ void QwenTransformer::forward_layer(
     // Attention output projection: use CUBLAS_OP_T with lda=q_dim (part of 8-matmul fix)
     half* attn_out_half = reinterpret_cast<half*>(attn_output_);
     half* ffn_out_half = reinterpret_cast<half*>(ffn_output_);
-    cublasGemmEx(cublas_handle_, CUBLAS_OP_T, CUBLAS_OP_N, config_.hidden_dim, batch_size, q_dim, &alpha, layer.attn_output, CUDA_R_16F, q_dim, attn_out_half, CUDA_R_16F, q_dim, &beta, ffn_out_half, CUDA_R_16F, config_.hidden_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
+    
+#if BATTLESHIP_PTR_TRACE
+    if (do_battleship_log) {
+        fprintf(stderr, "[TEAM BATTLESHIP] PTR attn_out_half=%p ffn_out_half=%p attn_output_=%p\n",
+                (void*)attn_out_half, (void*)ffn_out_half, (void*)attn_output_);
+    }
+#endif
+    
+#if BATTLESHIP_ATTN_PROJ_AUDIT
+    // [TEAM BATTLESHIP] Log before attention output projection
+    if (do_battleship_log) {
+        half h_pre[3];
+        int idxs[3] = {0, 95, 126};
+        for (int i = 0; i < 3; i++) {
+            cudaMemcpy(&h_pre[i], attn_out_half + idxs[i], sizeof(half), cudaMemcpyDeviceToHost);
+        }
+        fprintf(stderr, "[TEAM BATTLESHIP] ATTN_PROJ pre: attn_out[0]=%.4f [95]=%.4f [126]=%.4f\n",
+                __half2float(h_pre[0]), __half2float(h_pre[1]), __half2float(h_pre[2]));
+    }
+#endif
+    
+    auto attn_proj_compute = BATTLESHIP_ATTN_PROJ_COMPUTE_32F ? CUBLAS_COMPUTE_32F : CUBLAS_COMPUTE_32F_FAST_16F;
+    
+    cublasGemmEx(cublas_handle_, CUBLAS_OP_T, CUBLAS_OP_N, config_.hidden_dim, batch_size, q_dim, &alpha, layer.attn_output, CUDA_R_16F, q_dim, attn_out_half, CUDA_R_16F, q_dim, &beta, ffn_out_half, CUDA_R_16F, config_.hidden_dim, attn_proj_compute, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
     cudaMemcpy(attn_output_, ffn_output_, config_.hidden_dim * sizeof(half), cudaMemcpyDeviceToDevice);
+    
+#if BATTLESHIP_ATTN_PROJ_AUDIT
+    if (do_battleship_log) {
+        half h_post[3];
+        int idxs[3] = {0, 95, 126};
+        for (int i = 0; i < 3; i++) {
+            cudaMemcpy(&h_post[i], attn_out_half + idxs[i], sizeof(half), cudaMemcpyDeviceToHost);
+        }
+        fprintf(stderr, "[TEAM BATTLESHIP] ATTN_PROJ post: attn_out[0]=%.4f [95]=%.4f [126]=%.4f\n",
+                __half2float(h_post[0]), __half2float(h_post[1]), __half2float(h_post[2]));
+    }
+#endif
     
     // [TEAM SENTINEL] 2025-10-07T22:59Z
     // OBSERVED: Attention output projection completed
@@ -1086,7 +1304,15 @@ void QwenTransformer::forward_layer(
     
     // 6. Residual connection (attention branch)
     // [VERIFIED CORRECT] Simple element-wise addition works correctly
+#if BATTLESHIP_BYPASS_RESIDUAL1
+    // [TEAM BATTLESHIP] Bypass first residual: residual_ <- attn_output_ (no add)
+    if (do_battleship_log) {
+        fprintf(stderr, "[TEAM BATTLESHIP] BYPASS_RESIDUAL1 active: copying attn_output_ to residual_\n");
+    }
+    cudaMemcpy(residual_, attn_output_, config_.hidden_dim * sizeof(half), cudaMemcpyDeviceToDevice);
+#else
     cuda_residual_add(input, attn_output_, residual_, batch_size, config_.hidden_dim, nullptr);
+#endif
     
     // [TEAM SENTINEL] 2025-10-07T22:59Z
     if (do_sentinel_log) {
@@ -1105,6 +1331,14 @@ void QwenTransformer::forward_layer(
     // 7. FFN RMSNorm
     // [VERIFIED CORRECT] This normalization works correctly
     cuda_rmsnorm_forward(residual_, layer.ffn_norm, normed_, batch_size, config_.hidden_dim, 1e-6f, nullptr);
+    
+    // [TEAM RACE CAR] 2025-10-07T00:59Z - Checkpoint 1: After FFN RMSNorm
+#if RACECAR_FFN_TRACE
+    if (do_racecar_log) {
+        fprintf(stderr, "\n[RACE CAR] === FFN PARITY TRACE (TOKEN %d) ===\n", racecar_token_count);
+        log_ffn_checkpoint("Checkpoint 1: After FFN RMSNorm", normed_, config_.hidden_dim);
+    }
+#endif
     
     // [TEAM ORION] 2025-10-06T23:53Z
     if (do_orion_log) {
@@ -1140,6 +1374,13 @@ void QwenTransformer::forward_layer(
     // NOTE: Weight loading and matrix multiplication parameters still need verification.
     cuda_swiglu_forward(normed_, layer.ffn_gate, layer.ffn_up, layer.ffn_down, ffn_output_, batch_size, config_.hidden_dim, config_.ffn_dim, nullptr);
     
+    // [TEAM RACE CAR] 2025-10-07T00:59Z - Checkpoint 5: After down_proj (pre-residual)
+#if RACECAR_FFN_TRACE
+    if (do_racecar_log) {
+        log_ffn_checkpoint("Checkpoint 5: After down_proj (ffn_output)", ffn_output_, config_.hidden_dim);
+    }
+#endif
+    
     // [TEAM SENTINEL] 2025-10-07T22:59Z
     // OBSERVED: SwiGLU FFN completed
     if (do_sentinel_log) {
@@ -1157,7 +1398,15 @@ void QwenTransformer::forward_layer(
     
     // 9. Final residual connection (FFN branch)
     // [VERIFIED CORRECT] Simple element-wise addition works correctly
+#if BATTLESHIP_BYPASS_RESIDUAL2
+    // [TEAM BATTLESHIP] Bypass second residual: output <- ffn_output_ (no add)
+    if (do_battleship_log) {
+        fprintf(stderr, "[TEAM BATTLESHIP] BYPASS_RESIDUAL2 active: copying ffn_output_ to output\n");
+    }
+    cudaMemcpy(output, ffn_output_, config_.hidden_dim * sizeof(half), cudaMemcpyDeviceToDevice);
+#else
     cuda_residual_add(residual_, ffn_output_, output, batch_size, config_.hidden_dim, nullptr);
+#endif
     
     // [TEAM SENTINEL] 2025-10-07T23:00Z
     // OBSERVED: Layer 0 complete, final output
@@ -1180,6 +1429,11 @@ void QwenTransformer::forward_layer(
     // [TEAM THIMBLE] 2025-10-07T00:11Z
     if (do_thimble_log) {
         thimble_token_count++;
+    }
+    
+    // [TEAM BATTLESHIP] Increment token counter
+    if (do_battleship_log) {
+        battleship_token_count++;
     }
 }
 
