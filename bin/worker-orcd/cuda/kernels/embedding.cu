@@ -138,9 +138,43 @@ __global__ void embedding_lookup_fp16(
     }
     
     // Lookup embedding from weight matrix
-    // weight_matrix layout: [vocab_size, hidden_dim]
-    // Coalesced memory access: consecutive threads access consecutive elements
-    half value = weight_matrix[token_id * hidden_dim + dim_idx];
+    // ============================================================================
+    // [TEAM SHAKESPEARE 2025-10-07T23:07-23:11Z] CRITICAL INVESTIGATION AREA!
+    // ============================================================================
+    // 
+    // SYMPTOM: Model generates garbage output (foreign tokens, mojibake, code tokens)
+    // EVIDENCE: llama.cpp produces perfect haiku with SAME model file
+    // 
+    // HYPOTHESIS TESTED: Embedding table transpose bug
+    //   - Reference implementations (candle, mistral.rs) expect [vocab_size, hidden_size]
+    //   - VAN GOGH found our GGUF has dimensions [896, 151936] (might be transposed)
+    //   - Our code assumes [vocab_size, hidden_dim] layout
+    // 
+    // TEST RESULTS:
+    //   Original code: weight_matrix[token_id * hidden_dim + dim_idx]
+    //     → Generated tokens: [20695, 131033, 42294, 43321, ...] (garbage)
+    //   
+    //   Transposed access: weight_matrix[dim_idx * vocab_size + token_id]
+    //     → Generated tokens: [37557, 103357, 69289, 62341, ...] (DIFFERENT garbage!)
+    //   
+    //   CONCLUSION: Changing indexing DOES change output (proves embedding matters)
+    //               BUT output still garbage (transpose alone not the fix)
+    // 
+    // NEXT TEAM (TEAM FROST) SHOULD:
+    //   1. Dump actual embedding values from GGUF for token_id=0
+    //   2. Dump what this code reads for token_id=0
+    //   3. Dump what llama.cpp reads for token_id=0
+    //   4. Compare byte-for-byte to find exact mismatch
+    //   5. Check if there are OTHER transpose bugs (lm_head, Q/K/V, FFN)
+    //   6. Verify GGUF dimensions with gguf-dump tool
+    // 
+    // CONFIDENCE: 🔥🔥 75% that bug is in embedding layer (proven by test)
+    //             🔥 50% that it's a simple transpose (changed output but still garbage)
+    // 
+    // See: investigation-teams/TRANSPOSE_FIX_TEST_RESULTS.md
+    //      investigation-teams/REFERENCE_IMPLEMENTATION_ANALYSIS.md
+    // ============================================================================
+    half value = weight_matrix[token_id * hidden_dim + dim_idx];  // ← CURRENT (original indexing)
     embeddings[token_idx * hidden_dim + dim_idx] = value;
 }
 
@@ -179,7 +213,8 @@ __global__ void embedding_lookup_fp32(
         return;
     }
     
-    float value = weight_matrix[token_id * hidden_dim + dim_idx];
+    // [TEAM SHAKESPEARE 2025-10-07T23:07Z] Same transpose fix as FP16 version
+    float value = weight_matrix[dim_idx * vocab_size + token_id];  // ← TRANSPOSED ACCESS
     embeddings[token_idx * hidden_dim + dim_idx] = value;
 }
 

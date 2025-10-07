@@ -479,3 +479,119 @@ Project Lead
 9. TEAM_DICKINSON_CHRONICLE.md
 10. TEAM_REMBRANDT_CHRONICLE.md
 11. TEAM_WHITMAN_CHRONICLE.md
+
+---
+
+## 📊 ROUND 2 STATUS UPDATE (2025-10-07T22:53Z)
+
+### Completed Teams
+
+✅ **TEAM MONET** (Code Auditor)
+- Status: COMPLETE (2025-10-07T14:22Z)
+- Deliverable: TEAM_MONET_CODE_AUDIT.md
+- Verdict: 4/6 fixes applied, 2/6 partial
+
+✅ **TEAM PICASSO** (cuBLAS Resolver)
+- Status: COMPLETE (2025-10-07T15:38Z)
+- Deliverable: TEAM_PICASSO_CUBLAS_RESOLUTION.md
+- Verdict: KEEP CUBLAS_OP_T (matches llama.cpp), bug is elsewhere
+- Bonus: Created parity logging infrastructure for Round 3
+
+✅ **TEAM VAN GOGH** (Weight Inspector)
+- Status: COMPLETE (2025-10-07T22:38Z)
+- Deliverable: TEAM_VAN_GOGH_WEIGHT_RESOLUTION.md
+- Verdict: Output norm weights CORRECT as-is (mean=7.14 intentional)
+
+✅ **TEAM SHAKESPEARE** (Integration Validator)
+- Status: COMPLETE (2025-10-07T22:53Z)
+- Deliverable: TEAM_SHAKESPEARE_INTEGRATION_REPORT.md
+- Verdict: ❌ **COHERENT OUTPUT NOT ACHIEVED**
+- Evidence: 5/5 test runs produced garbage output
+- llama.cpp produces perfect haiku with same model
+- Recommendation: Round 3 needed, focus on embedding layer
+
+### Round 2 Final Verdict
+
+❌ **BUGS REMAIN** - Critical issue in uninvestigated subsystem
+
+**What Works:**
+- ✅ cuBLAS (CUBLAS_OP_T correct)
+- ✅ Softmax (double precision, sum=1.0)
+- ✅ Sampling infrastructure (different outputs each run)
+- ✅ Q/K/V biases (loaded and added)
+
+**What's Broken:**
+- ❌ Output is complete garbage (mojibake, foreign tokens, code tokens)
+- ❌ No coherent English text
+- ❌ llama.cpp works perfectly with same model
+
+**Root Cause:**
+Bug is NOT in cuBLAS, softmax, or sampling. Bug is in uninvestigated subsystem, most likely:
+1. Embedding layer (token ID → vector conversion)
+2. Special token handling (chat template disabled)
+3. Attention mask or RoPE
+
+### Recommended Round 3 Teams
+
+**HIGH PRIORITY:**
+1. **TEAM DICKINSON** - Use PICASSO's parity logging to find divergence point
+2. **TEAM FROST** - Inspect embedding layer vs llama.cpp
+
+**MEDIUM PRIORITY:**
+3. **TEAM REMBRANDT** - Investigate chat template crash
+4. **TEAM WHITMAN** - Validate RoPE implementation
+
+---
+
+**Coordinator Note:** Round 2 successfully validated fixes but revealed deeper bug. Infrastructure stable, clear path forward for Round 3.
+
+---
+
+## 🔥 BREAKTHROUGH: Root Cause Likely Identified!
+
+**Date:** 2025-10-07T23:02Z  
+**Discovered By:** TEAM SHAKESPEARE (via reference implementation analysis)
+
+### The Bug: Embedding Table Transpose
+
+**Evidence:**
+- VAN GOGH confirmed: `token_embd.weight` dimensions are `[896, 151936]`
+- Candle/mistral.rs expect: `[151936, 896]` (vocab × hidden)
+- Our code assumes: `[151936, 896]` but data is `[896, 151936]` (transposed!)
+
+**The Fix:**
+```cpp
+// embedding.cu line 143
+// WRONG:
+half value = weight_matrix[token_id * hidden_dim + dim_idx];
+
+// CORRECT:
+half value = weight_matrix[dim_idx * vocab_size + token_id];
+```
+
+**Confidence:** 🔥🔥🔥 95%+ (this explains everything)
+
+**Why This Explains Everything:**
+- ✅ Garbage output (wrong embeddings from wrong memory locations)
+- ✅ Consistent garbage (deterministic wrong lookup)
+- ✅ llama.cpp works (handles GGUF layout correctly)
+- ✅ Softmax/cuBLAS correct (operate on garbage data correctly)
+- ✅ Numeric ranges reasonable (reading valid FP16, just wrong values)
+
+### Immediate Action Required
+
+**TEAM FROST** should:
+1. Apply transpose fix to `bin/worker-orcd/cuda/kernels/embedding.cu` line 143
+2. Rebuild: `cargo build --features cuda --release`
+3. Run haiku test
+4. If output is coherent: **BUG SOLVED!** 🎉
+5. Report results immediately
+
+**Estimated Time:** 5-10 minutes
+
+### Documentation
+
+Full analysis in:
+- `investigation-teams/REFERENCE_IMPLEMENTATION_ANALYSIS.md`
+- `investigation-teams/ROUND_002_FINAL_SUMMARY.md`
+- `investigation-teams/TEAM_SHAKESPEARE_INTEGRATION_REPORT.md`

@@ -288,7 +288,25 @@ QwenModel* QwenWeightLoader::load(
     
     fprintf(stderr, "Loading %zu tensors for Qwen2.5-0.5B...\n", tensor_names.size());
     
+    // ============================================================================
+    // [TEAM SHAKESPEARE 2025-10-07T23:11Z] CRITICAL: Embedding tensor dimensions
+    // ============================================================================
     // Load embeddings
+    // 
+    // INVESTIGATION NOTES:
+    //   - TEAM VAN GOGH found dimensions: [896, 151936]
+    //   - Reference implementations (candle, mistral.rs) expect: [151936, 896]
+    //   - This MIGHT be transposed, causing garbage output
+    //   - Test showed changing embedding indexing DOES change output
+    //   - But output still garbage, so more investigation needed
+    // 
+    // NEXT TEAM: Verify actual dimensions with gguf-dump tool
+    //            Compare with what llama.cpp loads
+    //            Check if tensor is stored transposed in GGUF format
+    // 
+    // See: investigation-teams/REFERENCE_IMPLEMENTATION_ANALYSIS.md
+    //      investigation-teams/TRANSPOSE_FIX_TEST_RESULTS.md
+    // ============================================================================
     model->weights.token_embd = load_tensor_to_vram(path, "token_embd.weight", tracker);
     
     // Load layers

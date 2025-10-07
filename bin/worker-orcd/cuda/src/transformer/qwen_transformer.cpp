@@ -2191,6 +2191,27 @@ void QwenTransformer::project_to_vocab(
     // The bug is NOT in cuBLAS parameters. Look elsewhere (weight loading, dequant, etc.).
     // [TEAM MONET 2025-10-07T14:22Z] Checked line 2186: CUBLAS_OP_T lda=896 ✅
     // [TEAM PICASSO 2025-10-07T14:32Z] Read OP_T + lda=hidden_dim (evidence in PICASSO report)
+    // 
+    // ============================================================================
+    // [TEAM SHAKESPEARE 2025-10-07T23:11Z] LM_HEAD - POTENTIAL TRANSPOSE ISSUE
+    // ============================================================================
+    // INVESTIGATION NOTE: If embedding table is transposed, lm_head might be too!
+    // 
+    // CURRENT STATE:
+    //   - Uses CUBLAS_OP_T with lda=hidden_dim (896)
+    //   - TEAM PICASSO confirmed this matches llama.cpp
+    //   - Manual verification passed (TEAM SENTINEL)
+    //   - But output still garbage
+    // 
+    // HYPOTHESIS: If embedding is transposed, lm_head might need different handling
+    //   - Candle shows lm_head can be TIED to embeddings (same weights)
+    //   - If embeddings are transposed, lm_head access might be wrong too
+    // 
+    // NEXT TEAM: After fixing embedding transpose, re-verify lm_head is correct
+    //            Check if model uses tied embeddings (lm_head = embedding^T)
+    // 
+    // See: investigation-teams/REFERENCE_IMPLEMENTATION_ANALYSIS.md (section 6)
+    // ============================================================================
     cublasStatus_t status = cublasGemmEx(
         cublas_handle_,
         CUBLAS_OP_T, CUBLAS_OP_N,  // Transpose lm_head to match row-major layout
@@ -2725,6 +2746,32 @@ void QwenTransformer::forward(
         }
     }
     
+    // ============================================================================
+    // [TEAM SHAKESPEARE 2025-10-07T23:11Z] EMBEDDING LAYER - CRITICAL BUG AREA
+    // ============================================================================
+    // This is where token IDs are converted to embedding vectors.
+    // 
+    // ROUND 2 FINDINGS:
+    //   - Integration tests: 5/5 runs produced garbage output
+    //   - llama.cpp: Perfect haiku with SAME model file
+    //   - Transpose test: Changing embedding indexing CHANGED output (proves it matters)
+    //   - But output still garbage after transpose fix
+    // 
+    // HYPOTHESIS: Embedding table dimensions might be transposed
+    //   - VAN GOGH: dimensions are [896, 151936]
+    //   - Candle/mistral.rs expect: [151936, 896]
+    //   - Our code in embedding.cu assumes: [vocab_size, hidden_dim]
+    // 
+    // NEXT TEAM ACTIONS:
+    //   1. Dump embeddings for token_id=0 from GGUF, our code, and llama.cpp
+    //   2. Compare byte-for-byte
+    //   3. Check if lm_head also has transpose issue
+    //   4. Verify all weight matrix dimensions match expected layout
+    // 
+    // See: investigation-teams/TRANSPOSE_FIX_TEST_RESULTS.md (test results)
+    //      investigation-teams/REFERENCE_IMPLEMENTATION_ANALYSIS.md (detailed analysis)
+    //      cuda/kernels/embedding.cu (where the actual lookup happens)
+    // ============================================================================
     embed_tokens(token_ids, batch_size, hidden_states_);
     
     // [TEAM CHAIR] 2025-10-07T02:43Z - Check for CUDA errors after embedding
