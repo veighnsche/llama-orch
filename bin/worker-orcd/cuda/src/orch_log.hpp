@@ -96,10 +96,16 @@ private:
             return;
         }
 
+        // [TEAM PICASSO 2025-10-07T17:30Z] Generate timestamp once for all entries at flush time
+        std::string flush_timestamp = get_timestamp();
+
         for (const auto& entry : entries) {
+            // Use flush timestamp if entry timestamp is empty
+            const char* ts = entry.ts.empty() ? flush_timestamp.c_str() : entry.ts.c_str();
+            
             // Write JSONL matching llama.cpp schema exactly
             fprintf(f, "{\"ts\":\"%s\",\"team\":\"%s\",\"checkpoint\":\"%s\",\"token_idx\":%d,\"shape\":\"%s\",\"dtype\":\"%s\",\"values\":[",
-                    entry.ts.c_str(), entry.team.c_str(), entry.checkpoint.c_str(), 
+                    ts, entry.team.c_str(), entry.checkpoint.c_str(), 
                     entry.token_idx, entry.shape.c_str(), entry.dtype.c_str());
             
             for (size_t i = 0; i < entry.values.size(); ++i) {
@@ -131,35 +137,45 @@ public:
     void log_values(const char* checkpoint, const float* data, int count, 
                    const char* dtype, const char* shape, int token_idx,
                    const char* file, int line) {
+        // [TEAM PICASSO 2025-10-07T17:31Z] FIX: Write directly to disk, no buffering
+        // The buffering was causing issues - just write immediately
+        
+        if (!enabled) return;  // Fast path
+
         std::lock_guard<std::mutex> lock(mutex_);
         
-        if (!enabled) return;
+        // Open file in append mode
+        FILE* f = fopen(log_file, "a");
+        if (!f) {
+            return;  // Silently fail if can't open
+        }
 
-        LogEntry entry;
-        entry.ts = get_timestamp();
-        entry.team = team_name;
-        entry.checkpoint = checkpoint;
-        entry.token_idx = token_idx;
-        entry.shape = shape;
-        entry.dtype = dtype;
-        entry.source = team_name;
-        entry.file = file;
-        entry.line = line;
+        // Get timestamp
+        time_t now = time(nullptr);
+        struct tm* tm_info = gmtime(&now);
+        char ts_buffer[32];
+        strftime(ts_buffer, sizeof(ts_buffer), "%Y-%m-%dT%H:%M:%SZ", tm_info);
+        
+        // Write JSONL directly
+        fprintf(f, "{\"ts\":\"%s\",\"team\":\"%s\",\"checkpoint\":\"%s\",\"token_idx\":%d,\"shape\":\"%s\",\"dtype\":\"%s\",\"values\":[",
+                ts_buffer, team_name, checkpoint, token_idx, shape, dtype);
         
         int n = std::min(count, max_values);
-        entry.values.reserve(n);
-        
         for (int i = 0; i < n; ++i) {
+            if (i > 0) fprintf(f, ",");
             if (std::isfinite(data[i])) {
-                entry.values.push_back(data[i]);
+                fprintf(f, "%.6f", data[i]);
             } else if (std::isinf(data[i])) {
-                entry.values.push_back(data[i] > 0 ? 1e30f : -1e30f);
+                fprintf(f, "%s", data[i] > 0 ? "1e308" : "-1e308");
             } else {
-                entry.values.push_back(0.0f);
+                fprintf(f, "0.0");
             }
         }
         
-        entries.push_back(entry);
+        fprintf(f, "],\"source\":\"%s\",\"file\":\"%s\",\"line\":%d}\n",
+                team_name, file, line);
+        
+        fclose(f);
     }
     
     // Explicit flush for early-exit scenarios
