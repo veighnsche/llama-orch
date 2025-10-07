@@ -1,3 +1,27 @@
 [submodule "reference/llama.cpp"]
 	path = reference/llama.cpp
 	url = git@github.com:veighnsche/llama.cpp.git
+[submodule "reference/drama_llama"]
+	path = reference/drama_llama
+	url = git@github.com:veighnsche/drama_llama.git
+[submodule "reference/mistral.rs"]
+	path = reference/mistral.rs
+	url = git@github.com:veighnsche/mistral.rs.git
+[submodule "reference/vllm"]
+	path = reference/vllm
+	url = git@github.com:veighnsche/vllm.git
+[submodule "reference/candle"]
+	path = reference/candle
+	url = git@github.com:veighnsche/candle.git
+[submodule "reference/tinygrad"]
+	path = reference/tinygrad
+	url = git@github.com:veighnsche/tinygrad.git
+[submodule "reference/llamafile"]
+	path = reference/llamafile
+	url = git@github.com:veighnsche/llamafile.git
+[submodule "reference/text-generation-inference"]
+	path = reference/text-generation-inference
+	url = git@github.com:veighnsche/text-generation-inference.git
+[submodule "reference/flash-attention"]
+	path = reference/flash-attention
+	url = git@github.com:veighnsche/flash-attention.git

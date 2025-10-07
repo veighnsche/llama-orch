@@ -54,6 +54,7 @@ __pycache__
 .llorch.toml
 
 # Reference directory - exclude build artifacts but keep source
+# llama.cpp
 /reference/llama.cpp/build/
 /reference/llama.cpp/build-*/
 /reference/llama.cpp/*.o
@@ -62,3 +63,56 @@ __pycache__
 /reference/llama.cpp/llama-*
 /reference/llama.cpp/main
 /reference/llama.cpp/server
+
+# vllm
+/reference/vllm/build/
+/reference/vllm/dist/
+/reference/vllm/*.egg-info/
+/reference/vllm/.pytest_cache/
+/reference/vllm/__pycache__/
+
+# llamafile
+/reference/llamafile/build/
+/reference/llamafile/o/
+/reference/llamafile/*.com
+/reference/llamafile/*.exe
+
+# mistral.rs
+/reference/mistral.rs/target/
+/reference/mistral.rs/Cargo.lock
+
+# drama_llama
+/reference/drama_llama/build/
+/reference/drama_llama/target/
+
+# candle
+/reference/candle/target/
+/reference/candle/Cargo.lock
+
+# text-generation-inference
+/reference/text-generation-inference/target/
+/reference/text-generation-inference/Cargo.lock
+/reference/text-generation-inference/server/target/
+
+# tinygrad
+/reference/tinygrad/__pycache__/
+/reference/tinygrad/.pytest_cache/
+/reference/tinygrad/build/
+
+# flash-attention
+/reference/flash-attention/build/
+/reference/flash-attention/dist/
+/reference/flash-attention/*.egg-info/
+/reference/flash-attention/__pycache__/
+
+# Universal reference exclusions
+/reference/**/target/
+/reference/**/build/
+/reference/**/dist/
+/reference/**/*.o
+/reference/**/*.so
+/reference/**/*.a
+/reference/**/*.pyc
+/reference/**/__pycache__/
+/reference/**/.pytest_cache/
+/reference/**/*.egg-info/
