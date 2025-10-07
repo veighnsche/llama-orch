@@ -672,10 +672,21 @@ impl InferenceBackend for CudaInferenceBackend {
             //   llama.cpp uses temperature=0.7 and generates diverse output
             // FIXED: [TEAM_FINNEY] Use config.temperature instead of hardcoded 0.0
             // [TEAM MONET 2025-10-07T14:22Z] Checked line 675: uses config.temperature ✅
+            
+            // [TEAM FROST 2025-10-08] Allow env var override for temperature/top-k testing
+            let temperature = std::env::var("FROST_TEMP")
+                .ok()
+                .and_then(|s| s.parse::<f32>().ok())
+                .unwrap_or(config.temperature);
+            let top_k = std::env::var("FROST_TOPK")
+                .ok()
+                .and_then(|s| s.parse::<u32>().ok())
+                .unwrap_or(config.top_k);
+            
             let next_token_id = inference.generate_token(
                 current_token,
-                config.temperature, // Use configured temperature, not hardcoded 0.0!
-                config.top_k, // 0 = disabled
+                temperature, // Use configured temperature, not hardcoded 0.0!
+                top_k, // 0 = disabled
                 config.top_p, // 1.0 = disabled
                 config.seed.wrapping_add(token_idx as u64),
             )?;

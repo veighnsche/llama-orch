@@ -344,6 +344,12 @@ int cuda_sample_token(
     cudaMalloc(&d_probs, vocab_size * sizeof(float));
     cudaMalloc(&d_token, sizeof(int));
     
+    // [TEAM FROST 2025-10-08] Step 1/5 temperature scale (line 372-375)
+    // [TEAM FROST 2025-10-08] Step 2/5 top-k (line 377-382)
+    // [TEAM FROST 2025-10-08] Step 3/5 softmax (line 384-417)
+    // [TEAM FROST 2025-10-08] Step 4/5 top-p DISABLED (line 445-477)
+    // [TEAM FROST 2025-10-08] Step 5/5 sample (line 479-480)
+    
     // Greedy sampling (temperature = 0)
     if (temperature == 0.0f) {
         fprintf(stderr, "🔍 [BUG DEBUG] Using GREEDY sampling (temp=0)\n");
@@ -369,18 +375,35 @@ int cuda_sample_token(
         argmax_kernel<<<1, 1>>>(logits, vocab_size, d_token);
     } else {
         fprintf(stderr, "🔍 [BUG DEBUG] Using TEMPERATURE sampling (temp=%.2f)\n", temperature);
+        // [TEAM FROST 2025-10-08] Step 1/5 temperature scale (line 373)
         // Apply temperature scaling (on logits)
         worker::kernels::launch_temperature_scale_fp32(
             logits, vocab_size, temperature, nullptr
         );
         
+        // [TEAM FROST 2025-10-08] Step 2/5 top-k (line 378)
         // Apply top-k filtering (on logits)
         if (top_k > 0 && top_k < vocab_size) {
             worker::kernels::launch_top_k(
                 logits, vocab_size, top_k, nullptr
             );
+            
+            // [TEAM FROST 2025-10-08] TOPK metrics
+            float h_logits_sample[10];
+            cudaMemcpy(h_logits_sample, logits, 10 * sizeof(float), cudaMemcpyDeviceToHost);
+            float max_logit = -INFINITY;
+            int max_idx = 0;
+            for (int i = 0; i < 10; i++) {
+                if (h_logits_sample[i] > max_logit && !isinf(h_logits_sample[i])) {
+                    max_logit = h_logits_sample[i];
+                    max_idx = i;
+                }
+            }
+            fprintf(stderr, "[TEAM FROST] TOPK kept=%u max_idx=%u max_logit=%.6f\n", 
+                    top_k, max_idx, max_logit);
         }
         
+        // [TEAM FROST 2025-10-08] Step 3/5 softmax (line 416)
         // Compute softmax (convert logits → probabilities)
         // This MUST come before top-p!
         // [TEAM MONET 2025-10-07T14:22Z] Verified sampling order: temp→top-k→softmax→top-p(disabled)→sample ✅
@@ -416,32 +439,35 @@ int cuda_sample_token(
         softmax_kernel<<<1, 1>>>(logits, d_probs, vocab_size);
         cudaDeviceSynchronize();  // Wait for softmax to complete
         
-        // [DEBUG 2025-10-07] Check probabilities after softmax
+        // [TEAM FROST 2025-10-08] SOFTMAX metrics (token 0)
         {
             // Check FULL sum across all vocab
             float* h_all_probs = (float*)malloc(vocab_size * sizeof(float));
             cudaMemcpy(h_all_probs, d_probs, vocab_size * sizeof(float), cudaMemcpyDeviceToHost);
             
             double total_sum = 0.0;
-            int nonzero_count = 0;
+            unsigned int zero_count = 0;
+            float min_nonzero = INFINITY;
             float max_prob = 0.0f;
-            int max_idx = 0;
             
             for (int i = 0; i < vocab_size; i++) {
                 total_sum += (double)h_all_probs[i];
-                if (h_all_probs[i] > 0.0f) nonzero_count++;
-                if (h_all_probs[i] > max_prob) {
-                    max_prob = h_all_probs[i];
-                    max_idx = i;
+                if (h_all_probs[i] == 0.0f) {
+                    zero_count++;
+                } else {
+                    if (h_all_probs[i] < min_nonzero) min_nonzero = h_all_probs[i];
                 }
+                if (h_all_probs[i] > max_prob) max_prob = h_all_probs[i];
             }
             
-            fprintf(stderr, "🔍 [BUG FIX CHECK] Total sum: %.10f, nonzero: %d/%d, max_prob: %.6f at idx %d\n",
-                    total_sum, nonzero_count, vocab_size, max_prob, max_idx);
+            // [TEAM FROST 2025-10-08] SOFTMAX metrics (token 0)
+            fprintf(stderr, "[TEAM FROST] SOFTMAX sum=%.9f zeros=%u min_nz=%.9e max=%.9e vocab=%u\n",
+                    total_sum, zero_count, min_nonzero, max_prob, vocab_size);
             
             free(h_all_probs);
         }
         
+        // [TEAM FROST 2025-10-08] Step 4/5 top-p DISABLED (line 470)
         // ========================================================================
         // [TEAM_HELIOS] TOP-P DISABLED - INTENTIONAL (2025-10-08)
         // ========================================================================
@@ -476,6 +502,7 @@ int cuda_sample_token(
             // worker::kernels::launch_top_p(d_probs, vocab_size, top_p, nullptr);
         }
         
+        // [TEAM FROST 2025-10-08] Step 5/5 sample (line 480)
         // Sample from distribution
         sample_kernel<<<1, 1>>>(d_probs, vocab_size, seed, d_token);
     }

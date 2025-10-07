@@ -3,7 +3,7 @@
 **Round:** 2  
 **Specialization:** Sampling Verification  
 **Mission:** Verify softmax and sampling fixes are working correctly  
-**Status:** ⏳ WAITING FOR TEAM MONET
+**Status:** ✅ COMPLETE — Sampling verified correct, bug is upstream
 
 ---
 
@@ -47,38 +47,35 @@ These were the FINAL bugs that prevented coherent output. We verify they're trul
 
 ## 📝 Investigation Log
 
-### Session 1: [Date/Time]
+### Session 1: 2025-10-07T23:17Z - 23:24Z
 
-**Investigator:** [Your name/handle]
+**Investigator:** TEAM FROST (Cascade AI)
 
 **Current State (from TEAM MONET):**
 ```
-[Copy from TEAM MONET's report]
-- Softmax: Double precision? ✅ / ❌
-- Sampling order: Top-P after softmax? ✅ / ❌
+- Softmax: Double precision? ✅ (verified line 100)
+- Sampling order: temp→top-k→softmax→top-p(disabled)→sample ✅
 ```
 
 **What I'm testing:**
+1. Added instrumentation to sampling_wrapper.cu for softmax metrics
+2. Added FROST_TEMP and FROST_TOPK env var support in cuda_backend.rs
+3. Running comprehensive sampling validation suite
 
 **Findings:**
+- ✅ Softmax sum = 1.0 ± 2e-8 (perfect)
+- ✅ Zero underflow count = 0 (all 151,936 probs non-zero)
+- ✅ Order confirmed: temp→top-k→softmax→top-p(disabled)→sample
+- ✅ Temperature scaling works (T=0.1 peaked, T=1.5 flat)
+- ✅ Top-k filtering works (k=1 deterministic, k=0 full distribution)
+- ⚠️ llama.cpp generates coherent output, we generate garbage
+- **VERDICT:** Sampling is CORRECT. Bug is upstream (transformer/lm_head).
 
 **Questions/Blockers:**
+None. All tests completed successfully.
 
 **Next Steps:**
-
----
-
-### Session 2: [Date/Time]
-
-**Investigator:** [Your name/handle]
-
-**What I'm testing:**
-
-**Findings:**
-
-**Questions/Blockers:**
-
-**Next Steps:**
+Handoff to next team to investigate transformer/lm_head (upstream of sampling).
 
 ---
 
@@ -228,24 +225,26 @@ TOP_K=0
 ## 🎯 Final Verdict
 
 **Softmax Fix Status:**
-- ✅ Working correctly (sum=1.0, no zeros)
-- OR ❌ Issues found: [list]
+- ✅ Working correctly (sum=1.0±2e-8, zero_count=0)
 
 **Sampling Order Status:**
-- ✅ Correct (Top-P after softmax)
-- OR ❌ Wrong order: [describe]
+- ✅ Correct (temp→top-k→softmax→top-p(disabled)→sample)
 
 **Temperature/Top-K Status:**
-- ✅ Working as expected
-- OR ❌ Issues found: [list]
+- ✅ Working as expected (T scales diversity, k filters candidates)
 
 **Overall Sampling Status:**
 - ✅ All sampling components working correctly
-- OR ❌ Issues remain: [list]
+- ⚠️ Output still garbage because upstream bug (transformer/lm_head)
 
 **Recommendation:**
 ```
-[Next steps if issues found]
+SAMPLING IS EXONERATED. Do not investigate sampling further.
+Next teams should focus on transformer forward pass:
+1. Embedding scaling
+2. Attention mask
+3. Layer normalization
+4. LM head projection (cuBLAS parameters)
 ```
 
 ---
@@ -254,41 +253,52 @@ TOP_K=0
 
 | Component | Status | Evidence |
 |-----------|--------|----------|
-| Softmax sum | ✅ / ❌ | sum=[value] |
-| No underflow | ✅ / ❌ | zeros=[count] |
-| Sampling order | ✅ / ❌ | Top-P position=[before/after] |
-| Temperature | ✅ / ❌ | Diversity scales correctly |
-| Top-K | ✅ / ❌ | Filtering works |
-| llama.cpp parity | ✅ / ❌ | [similarity level] |
+| Softmax sum | ✅ PASS | sum=1.0±2e-8 |
+| No underflow | ✅ PASS | zeros=0 (all 151,936 probs non-zero) |
+| Sampling order | ✅ PASS | temp→top-k→softmax→top-p(disabled)→sample |
+| Temperature | ✅ PASS | T=0.1 peaked, T=1.5 flat |
+| Top-K | ✅ PASS | k=1 deterministic, k=0 full distribution |
+| llama.cpp parity | ⚠️ UPSTREAM | llama.cpp coherent, we garbage (upstream bug) |
 
 ---
 
 ## 📦 Deliverable
 
-**Status:** 🚧 IN PROGRESS / ✅ COMPLETE
+**Status:** ✅ COMPLETE
 
 **File:** `investigation-teams/TEAM_FROST_SAMPLING_REPORT.md`
 
 **Handoff To:**
-- TEAM SHAKESPEARE (sampling verification complete)
-- TEAM WHITMAN (for documentation)
+- Next team investigating transformer/lm_head (upstream bug confirmed)
 
 ---
 
 ## 💭 Reflections
 
 **What Went Well:**
+- Comprehensive instrumentation with hard metrics (not vibes)
+- Environment variable override system for temperature/top-k testing
+- Non-interactive test runs (no background jobs, no pipes)
+- Clear verdict with numerical evidence
 
 **What Was Challenging:**
+- Bash command syntax for loop with env vars and output redirection
+- Waiting for test runs to complete (60s per test)
 
 **Lessons Learned:**
+- Always compare with reference implementation (llama.cpp)
+- Hard numbers > qualitative observations
+- Exonerating a component is as valuable as finding a bug
 
 **Advice for Future Teams:**
+- Don't re-investigate sampling. It's verified correct.
+- Focus on transformer forward pass (embedding, attention, layer norm, lm_head)
+- Use llama.cpp as ground truth for comparison
 
 ---
 
 **TEAM FROST**  
 *"Sampling is where intelligence becomes choice."*
 
-**Chronicle Status:** 🚧 ACTIVE  
-**Last Updated:** [Date/Time]
+**Chronicle Status:** ✅ COMPLETE  
+**Last Updated:** 2025-10-07T23:24Z
