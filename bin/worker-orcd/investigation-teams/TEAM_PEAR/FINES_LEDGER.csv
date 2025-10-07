@@ -1,2 +1,0 @@
-timestamp,team,file,path_or_symbol,lines,issue_type,fine_eur,evidence,pear_reviewer,notes
-2025-10-07T10:26Z,ORION,INVESTIGATION_CHRONICLE.md,Q weight dump claim,603-608,OUTDATED_COMMENT,15,"Chronicle states 'Q weight first 16: normal range (±0.01)' but doesn't link to actual dumped values or code location (qwen_transformer.cpp:810-825)",TEAM_PEAR,"Minor documentation gap - evidence exists in code but not cross-referenced in chronicle"

@@ -1,7 +1,8 @@
 # TEAM PEAR — 10-Phase Peer Review Plan
 **Generated:** 2025-10-07T10:53Z (REBUILT)  
+**Updated:** 2025-10-07T11:10Z (Phase 0 enhanced with complete details)  
 **Mission:** Systematic skeptical peer review of all investigation team claims  
-**Status:** Phase 0 Complete — Ready for Phase 1
+**Status:** Phase 0 Complete — Proceeding to Phase 1
 
 ---
 
@@ -50,6 +51,40 @@ This plan divides the peer review workload into 10 balanced phases. Each phase f
 ## 🎯 10-Phase Plan (Balanced by Effort)
 
 ### Phase 1: Tokenization & Embedding Pipeline (9 claims, 45 min)
+**Goal:** Verify all claims about tokenization, special tokens, embeddings, and token sequence format.
+
+**Inputs:**
+- Team Blue findings (special token fix)
+- Team Purple findings (token ID verification, embedding check)
+- FALSE_LEADS_SUMMARY.md #1-4
+
+**Scope:**
+1. Team Blue: Special tokens split by BPE (FIXED - manually insert IDs 151644/151645)
+2. Team Purple: Vocab size = 151936 (tokens 151644/151645 are valid)
+3. Team Purple: Special token embeddings valid (~0.01 range, not zeros)
+4. Team Purple: Token sequence format matches llama.cpp exactly
+5. Team Purple: Embedding lookup returns correct values
+6. FALSE LEAD #1: Token IDs out of bounds
+7. FALSE LEAD #2: Special token embeddings are zeros
+8. FALSE LEAD #3: Tokenization approach matters
+9. FALSE LEAD #4: Chat template format wrong
+
+**Method:**
+- Replicate: Tokenize test prompt, verify token IDs match llama.cpp
+- Test: Dump embeddings for tokens 151643, 151644, 151645
+- Verify: Token sequence format against llama.cpp logs
+- Evidence: Token ID lists, embedding dumps, sequence comparisons
+
+**Artifacts:**
+- `PHASE1_TOKENIZATION_REPORT.md`
+- `phase1_token_ids.txt` (our engine vs llama.cpp)
+- `phase1_embeddings.csv` (special token embeddings)
+
+**Exit Criteria:**
+- All 9 claims stamped
+- Token IDs verified against llama.cpp
+- Special token embeddings reproduced
+- Sequence format verified
 
 ### Phase 2: cuBLAS Matrix Multiplication Correctness (8 claims, 60 min)
 **Goal:** Verify all claims about cuBLAS matrix multiplication, transpose flags, and manual verification.
