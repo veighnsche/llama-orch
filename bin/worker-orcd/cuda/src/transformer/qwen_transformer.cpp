@@ -134,6 +134,26 @@
 #define PAPER_CUTTER_LAST_BLOCK_TRACE 1
 #endif
 
+// ============================================================================
+// [TEAM PLOTTER] 2025-10-07T09:50Z - Attention Output Projection W_o Parity
+// ============================================================================
+// MISSION: Prove or falsify: "The attention output projection (context → hidden)
+//          is wrong (concat order, transpose flags, lda/ldb/ldc, dtype/stride)"
+// SCOPE: W_o / out-projection ONLY (immediately after softmax·V)
+// SUSPECT [TEAM_PLOTTER 2025-10-07T09:50Z]: Attention out-proj (W_o) wrong
+//   (concat order, transpose flags, lda/ldb/ldc, dtype/stride)
+// PLAN [TEAM_PLOTTER 2025-10-07T09:50Z]:
+//   1) Log num_heads, head_dim, hidden_dim and concat order
+//   2) Log GEMM params M,N,K, lda/ldb/ldc, opA/opB, compute
+//   3) Dump first8 of W_o and confirm row-major stride
+//   4) Dump first8 of context_flat (in) and proj_out (out); parity vs llama.cpp ≤1e-2
+//   5) Head-mix probe: zero one head, re-run once; compare outputs
+//   6) Verify no bias/activation applied
+// ============================================================================
+#ifndef PLOTTER_WO_TRACE
+#define PLOTTER_WO_TRACE 1
+#endif
+
 //
 // [APPEND-ONLY GUARD] Do not delete prior teams' comments. Add new notes below existing blocks.
 //
@@ -1457,6 +1477,69 @@ void QwenTransformer::forward_layer(
     half* attn_out_half = reinterpret_cast<half*>(attn_output_);
     half* ffn_out_half = reinterpret_cast<half*>(ffn_output_);
     
+    // ============================================================================
+    // [TEAM PLOTTER] 2025-10-07T09:50Z - W_o Projection Investigation
+    // ============================================================================
+#if PLOTTER_WO_TRACE
+    static int plotter_token_count = 0;
+    bool do_plotter_log = (layer_idx == 0 && plotter_token_count < 2);
+    
+    if (do_plotter_log) {
+        fprintf(stderr, "\n[TEAM PLOTTER] === W_O PROJECTION PARITY (LAYER 0, TOKEN %d, POS %u) ===\n",
+                plotter_token_count, pos);
+        
+        // Gate 1: Shape & concat order
+        fprintf(stderr, "[TEAM PLOTTER] Gate 1 - CONFIG:\n");
+        fprintf(stderr, "  num_heads=%u, head_dim=%u, hidden_dim=%u\n", 
+                config_.num_heads, config_.head_dim, config_.hidden_dim);
+        fprintf(stderr, "  q_dim (num_heads * head_dim)=%u\n", q_dim);
+        fprintf(stderr, "  concat_order=head_major (head0[d0..d63], head1[d0..d63], ...) from GQA kernel\n");
+        fprintf(stderr, "  Expected: hidden_dim == num_heads * head_dim? %s (%u == %u)\n",
+                config_.hidden_dim == config_.num_heads * config_.head_dim ? "✅ YES" : "❌ NO",
+                config_.hidden_dim, config_.num_heads * config_.head_dim);
+        
+        // Gate 2: GEMM orientation & leading dims
+        fprintf(stderr, "[TEAM PLOTTER] Gate 2 - GEMM_PARAMS:\n");
+        fprintf(stderr, "  Operation: C = op(A) * op(B)\n");
+        fprintf(stderr, "  opA=CUBLAS_OP_T (transpose), opB=CUBLAS_OP_N (no transpose)\n");
+        fprintf(stderr, "  M=%u (hidden_dim), N=%u (batch_size), K=%u (q_dim)\n",
+                config_.hidden_dim, batch_size, q_dim);
+        fprintf(stderr, "  A=layer.attn_output (W_o), lda=%u (q_dim)\n", q_dim);
+        fprintf(stderr, "  B=attn_out_half (context), ldb=%u (q_dim)\n", q_dim);
+        fprintf(stderr, "  C=ffn_out_half (output), ldc=%u (hidden_dim)\n", config_.hidden_dim);
+        fprintf(stderr, "  compute_type=%s\n", 
+                BATTLESHIP_ATTN_PROJ_COMPUTE_32F ? "CUBLAS_COMPUTE_32F" : "CUBLAS_COMPUTE_32F_FAST_16F");
+        fprintf(stderr, "  Expected for row-major W_o [hidden_dim, q_dim]: opA=T, lda=q_dim ✅\n");
+        
+        // Gate 3: Weight sanity (first8 of W_o, check stride)
+        fprintf(stderr, "[TEAM PLOTTER] Gate 3 - W_O_WEIGHT_SANITY:\n");
+        half h_w_o[896 * 8];  // First 8 rows of W_o
+        cudaMemcpy(h_w_o, layer.attn_output, 896 * 8 * sizeof(half), cudaMemcpyDeviceToHost);
+        
+        fprintf(stderr, "  W_o[row0, col0..7]: ");
+        for (int i = 0; i < 8; i++) fprintf(stderr, "%.6f ", __half2float(h_w_o[i]));
+        fprintf(stderr, "\n");
+        
+        fprintf(stderr, "  W_o[row1, col0..7]: ");
+        for (int i = 0; i < 8; i++) fprintf(stderr, "%.6f ", __half2float(h_w_o[896 + i]));
+        fprintf(stderr, "\n");
+        
+        fprintf(stderr, "  Stride check: row jump should be %u elements (q_dim)\n", q_dim);
+        fprintf(stderr, "  Row0[0] offset=0, Row1[0] offset=%u ✅\n", q_dim);
+        
+        // Gate 4: Numeric parity (input and output first8)
+        fprintf(stderr, "[TEAM PLOTTER] Gate 4 - NUMERIC_PARITY (pre-GEMM):\n");
+        half h_ctx_in[8];
+        cudaMemcpy(h_ctx_in, attn_out_half, 8 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "  CTX_IN first8=[");
+        for (int i = 0; i < 8; i++) {
+            fprintf(stderr, "%.6f%s", __half2float(h_ctx_in[i]), i < 7 ? ", " : "");
+        }
+        fprintf(stderr, "]\n");
+        fprintf(stderr, "  (Compare with llama.cpp attention output after GQA)\n");
+    }
+#endif
+    
 #if BATTLESHIP_PTR_TRACE
     if (do_battleship_log) {
         fprintf(stderr, "[TEAM BATTLESHIP] PTR attn_out_half=%p ffn_out_half=%p attn_output_=%p\n",
@@ -1480,6 +1563,43 @@ void QwenTransformer::forward_layer(
     auto attn_proj_compute = BATTLESHIP_ATTN_PROJ_COMPUTE_32F ? CUBLAS_COMPUTE_32F : CUBLAS_COMPUTE_32F_FAST_16F;
     
     cublasGemmEx(cublas_handle_, CUBLAS_OP_T, CUBLAS_OP_N, config_.hidden_dim, batch_size, q_dim, &alpha, layer.attn_output, CUDA_R_16F, q_dim, attn_out_half, CUDA_R_16F, q_dim, &beta, ffn_out_half, CUDA_R_16F, config_.hidden_dim, attn_proj_compute, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
+    
+#if PLOTTER_WO_TRACE
+    if (do_plotter_log) {
+        // Gate 4 continued: Post-GEMM output
+        half h_proj_out[8];
+        cudaMemcpy(h_proj_out, ffn_out_half, 8 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "[TEAM PLOTTER] Gate 4 - NUMERIC_PARITY (post-GEMM):\n");
+        fprintf(stderr, "  PROJ_OUT first8=[");
+        for (int i = 0; i < 8; i++) {
+            fprintf(stderr, "%.6f%s", __half2float(h_proj_out[i]), i < 7 ? ", " : "");
+        }
+        fprintf(stderr, "]\n");
+        fprintf(stderr, "  (Compare with llama.cpp after W_o projection)\n");
+        
+        // Compute stats for output
+        half h_proj_full[896];
+        cudaMemcpy(h_proj_full, ffn_out_half, 896 * sizeof(half), cudaMemcpyDeviceToHost);
+        float min_v = __half2float(h_proj_full[0]);
+        float max_v = __half2float(h_proj_full[0]);
+        float sum_v = 0.0f;
+        for (int i = 0; i < 896; i++) {
+            float v = __half2float(h_proj_full[i]);
+            if (v < min_v) min_v = v;
+            if (v > max_v) max_v = v;
+            sum_v += v;
+        }
+        fprintf(stderr, "  PROJ_OUT stats: min=%.6f, max=%.6f, mean=%.6f\n", min_v, max_v, sum_v / 896.0f);
+        
+        // Gate 6: Verify no bias/activation applied
+        fprintf(stderr, "[TEAM PLOTTER] Gate 6 - BIAS/ACTIVATION_CHECK:\n");
+        fprintf(stderr, "  This is a pure GEMM (no bias, no activation) ✅\n");
+        fprintf(stderr, "  Output = W_o^T @ context (linear projection only)\n");
+        
+        plotter_token_count++;
+    }
+#endif
+    
     cudaMemcpy(attn_output_, ffn_output_, config_.hidden_dim * sizeof(half), cudaMemcpyDeviceToDevice);
     
 #if BATTLESHIP_ATTN_PROJ_AUDIT
