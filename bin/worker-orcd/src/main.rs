@@ -58,7 +58,13 @@ struct Args {
     callback_url: String,
 }
 
-#[tokio::main]
+// [TEAM PICASSO 2025-10-07T17:47Z] BUG FIX: Use single-threaded runtime per M0-W-1301
+// SPEC VIOLATION: M0-W-1301 requires "Worker-orcd MUST process inference requests sequentially"
+// ROOT CAUSE: Multi-threaded tokio runtime was used by default, violating spec and adding complexity
+// IMPACT: Caused logging issues, thread contention, unnecessary overhead
+// FIX: Explicitly use current_thread flavor for single-threaded execution
+// REFERENCE: bin/.specs/01_M0_worker_orcd.md line 901-905
+#[tokio::main(flavor = "current_thread")]
 async fn main() -> anyhow::Result<()> {
     // Initialize tracing
     tracing_subscriber::fmt().with_target(false).json().init();

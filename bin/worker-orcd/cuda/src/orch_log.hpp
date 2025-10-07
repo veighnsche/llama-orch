@@ -1,20 +1,7 @@
-// [TEAM PICASSO 2025-10-07T16:13Z] Numeric parity logging for worker-orcd
-// Header-only JSONL logger matching llama.cpp schema exactly
+// [TEAM PICASSO 2025-10-07T17:47Z] Simple single-threaded parity logger for worker-orcd
+// Architecture: Simple vector buffer + atexit flush (matches llama.cpp)
+// WHY SIMPLE: M0-W-1301 requires single-threaded execution, so no mutex/atomics needed!
 // Usage: ORCH_LOG_LOGITS(logits_ptr, vocab_size, token_idx)
-//
-// JSONL Schema (matches llama.cpp):
-// {
-//   "ts": "<ISO8601Z>",
-//   "team": "worker-orcd",
-//   "checkpoint": "logits",
-//   "token_idx": <int>,
-//   "shape": [1, <vocab_size>],
-//   "dtype": "f32",
-//   "values": [<first N floats>],
-//   "source": "worker-orcd",
-//   "file": "<__FILE__>",
-//   "line": <__LINE__>
-// }
 
 #ifndef WORKER_ORCD_ORCH_LOG_HPP
 #define WORKER_ORCD_ORCH_LOG_HPP
@@ -24,93 +11,84 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <vector>
-#include <string>
 #include <cmath>
 #include <ctime>
-#include <mutex>
+#include <chrono>
+#include <vector>
 
 namespace worker_orch_log {
 
+// Simple log entry (no complex POD, just what we need)
 struct LogEntry {
-    std::string ts;
-    std::string team;
-    std::string checkpoint;
+    float values[10];
     int token_idx;
-    std::string shape;
-    std::string dtype;
-    std::vector<float> values;
-    std::string source;
-    std::string file;
-    int line;
+    const char* checkpoint;
+    uint64_t timestamp_ns;
 };
 
 class Logger {
 private:
-    std::vector<LogEntry> entries;
-    std::mutex mutex_;
-    const char* log_file;
-    const char* team_name;
-    int max_values;
-    bool enabled;
-
+    std::vector<LogEntry> entries_;  // Simple buffer, no background thread
+    const char* log_file_;
+    const char* team_name_;
+    bool enabled_;
+    
     Logger() {
-        log_file = std::getenv("ORCH_LOG_FILE");
-        team_name = std::getenv("ORCH_LOG_TEAM");
-        const char* max_vals = std::getenv("ORCH_LOG_VALUES");
+        log_file_ = std::getenv("ORCH_LOG_FILE");
+        team_name_ = std::getenv("ORCH_LOG_TEAM");
         
-        enabled = (log_file != nullptr);
-        max_values = max_vals ? atoi(max_vals) : 10;
+        enabled_ = (log_file_ != nullptr);
         
-        if (!team_name) {
-            team_name = "worker-orcd";
+        if (!team_name_) {
+            team_name_ = "worker-orcd";
         }
         
-        if (enabled) {
+        if (enabled_) {
+            entries_.reserve(1000);  // Pre-allocate
             std::atexit(flush_all);
         }
     }
     
-    std::string get_timestamp() {
-        time_t now = time(nullptr);
-        struct tm* tm_info = gmtime(&now);
-        char buffer[32];
-        strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%SZ", tm_info);
-        return std::string(buffer);
+    ~Logger() {
+        flush();
     }
-
+    
     static void flush_all() {
         get_instance().flush();
     }
-
+    
     void flush() {
-        std::lock_guard<std::mutex> lock(mutex_);
+        if (!enabled_) {
+            fprintf(stderr, "[ORCH_LOG] Flush called but logging disabled\n");
+            return;
+        }
+        if (entries_.empty()) {
+            fprintf(stderr, "[ORCH_LOG] Flush called but no entries (logged 0 entries)\n");
+            return;
+        }
         
-        if (!enabled || entries.empty()) {
-            return;
-        }
-
-        FILE* f = fopen(log_file, "a");
+        fprintf(stderr, "[ORCH_LOG] Flushing %zu entries to %s\n", entries_.size(), log_file_);
+        
+        FILE* f = fopen(log_file_, "a");
         if (!f) {
-            fprintf(stderr, "[ORCH_LOG] Warning: Could not open %s for writing\n", log_file);
+            fprintf(stderr, "[ORCH_LOG] ERROR: Could not open %s for writing\n", log_file_);
             return;
         }
-
-        // [TEAM PICASSO 2025-10-07T17:30Z] Generate timestamp once for all entries at flush time
-        std::string flush_timestamp = get_timestamp();
-
-        for (const auto& entry : entries) {
-            // Use flush timestamp if entry timestamp is empty
-            const char* ts = entry.ts.empty() ? flush_timestamp.c_str() : entry.ts.c_str();
+        
+        for (const auto& entry : entries_) {
+            // Format timestamp
+            uint64_t sec = entry.timestamp_ns / 1000000000ULL;
+            time_t time_sec = static_cast<time_t>(sec);
+            struct tm* tm_info = gmtime(&time_sec);
+            char ts_buf[32];
+            strftime(ts_buf, sizeof(ts_buf), "%Y-%m-%dT%H:%M:%SZ", tm_info);
             
-            // Write JSONL matching llama.cpp schema exactly
-            fprintf(f, "{\"ts\":\"%s\",\"team\":\"%s\",\"checkpoint\":\"%s\",\"token_idx\":%d,\"shape\":\"%s\",\"dtype\":\"%s\",\"values\":[",
-                    ts, entry.team.c_str(), entry.checkpoint.c_str(), 
-                    entry.token_idx, entry.shape.c_str(), entry.dtype.c_str());
+            // Write JSONL
+            fprintf(f, "{\"ts\":\"%s\",\"team\":\"%s\",\"checkpoint\":\"%s\",\"token_idx\":%d,\"dtype\":\"f32\",\"shape\":\"[1,151936]\",\"values\":[",
+                    ts_buf, team_name_, entry.checkpoint, entry.token_idx);
             
-            for (size_t i = 0; i < entry.values.size(); ++i) {
+            for (int i = 0; i < 10; ++i) {
                 if (i > 0) fprintf(f, ",");
-                // Ensure we write valid JSON numbers
                 if (std::isfinite(entry.values[i])) {
                     fprintf(f, "%.6f", entry.values[i]);
                 } else if (std::isinf(entry.values[i])) {
@@ -120,65 +98,51 @@ private:
                 }
             }
             
-            fprintf(f, "],\"source\":\"%s\",\"file\":\"%s\",\"line\":%d}\n",
-                    entry.source.c_str(), entry.file.c_str(), entry.line);
+            fprintf(f, "],\"source\":\"%s\"}\n", team_name_);
         }
-
+        
         fclose(f);
-        entries.clear();
+        entries_.clear();
     }
-
+    
 public:
     static Logger& get_instance() {
         static Logger instance;
         return instance;
     }
-
+    
+    // HOT PATH - Simple append (no mutex needed, single-threaded!)
     void log_values(const char* checkpoint, const float* data, int count, 
                    const char* dtype, const char* shape, int token_idx,
                    const char* file, int line) {
-        // [TEAM PICASSO 2025-10-07T17:31Z] FIX: Write directly to disk, no buffering
-        // The buffering was causing issues - just write immediately
-        
-        if (!enabled) return;  // Fast path
-
-        std::lock_guard<std::mutex> lock(mutex_);
-        
-        // Open file in append mode
-        FILE* f = fopen(log_file, "a");
-        if (!f) {
-            return;  // Silently fail if can't open
+        if (!enabled_) {
+            fprintf(stderr, "[ORCH_LOG] log_values called but disabled (ORCH_LOG_FILE not set?)\n");
+            return;
         }
-
-        // Get timestamp
-        time_t now = time(nullptr);
-        struct tm* tm_info = gmtime(&now);
-        char ts_buffer[32];
-        strftime(ts_buffer, sizeof(ts_buffer), "%Y-%m-%dT%H:%M:%SZ", tm_info);
         
-        // Write JSONL directly
-        fprintf(f, "{\"ts\":\"%s\",\"team\":\"%s\",\"checkpoint\":\"%s\",\"token_idx\":%d,\"shape\":\"%s\",\"dtype\":\"%s\",\"values\":[",
-                ts_buffer, team_name, checkpoint, token_idx, shape, dtype);
+        fprintf(stderr, "[ORCH_LOG] Logging %s token_idx=%d\n", checkpoint, token_idx);
         
-        int n = std::min(count, max_values);
+        LogEntry entry;
+        entry.checkpoint = checkpoint;
+        entry.token_idx = token_idx;
+        
+        // Copy 10 values
+        int n = (count < 10) ? count : 10;
         for (int i = 0; i < n; ++i) {
-            if (i > 0) fprintf(f, ",");
-            if (std::isfinite(data[i])) {
-                fprintf(f, "%.6f", data[i]);
-            } else if (std::isinf(data[i])) {
-                fprintf(f, "%s", data[i] > 0 ? "1e308" : "-1e308");
-            } else {
-                fprintf(f, "0.0");
-            }
+            entry.values[i] = data[i];
+        }
+        for (int i = n; i < 10; ++i) {
+            entry.values[i] = 0.0f;
         }
         
-        fprintf(f, "],\"source\":\"%s\",\"file\":\"%s\",\"line\":%d}\n",
-                team_name, file, line);
+        // Capture timestamp
+        auto now = std::chrono::high_resolution_clock::now();
+        entry.timestamp_ns = now.time_since_epoch().count();
         
-        fclose(f);
+        // Simple append (single-threaded, no contention!)
+        entries_.push_back(entry);
     }
     
-    // Explicit flush for early-exit scenarios
     void flush_now() {
         flush();
     }
