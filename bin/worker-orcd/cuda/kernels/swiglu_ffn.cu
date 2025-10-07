@@ -5,7 +5,18 @@
 //
 // Spec: M0-W-1217
 //
-// [APPEND-ONLY GUARD] Do not delete prior teams’ comments. Add new notes below existing blocks.
+// [APPEND-ONLY GUARD] Do not delete prior teams' comments. Add new notes below existing blocks.
+//
+// ============================================================================
+// [TEAM RACE CAR] 2025-10-07T01:02Z - FFN Intermediate Checkpoint Logging
+// ============================================================================
+// OBJECTIVE: Log gate_out, up_out, and swiglu_out for parity verification
+// Enable with RACECAR_FFN_TRACE macro (must match transformer definition)
+// Logs first 16 + min/max/mean for tokens 0-1 only
+// ============================================================================
+#ifndef RACECAR_FFN_TRACE
+#define RACECAR_FFN_TRACE 1  // Must match qwen_transformer.cpp
+#endif
 //
 // ============================================================================
 // [TEAM_CHARLIE_BETA] 🔥 ROOT CAUSE FOUND! (2025-10-06 17:07 UTC)
@@ -73,6 +84,37 @@ extern "C" int cuda_swiglu_activation(
 );
 
 extern "C" {
+
+// [TEAM RACE CAR] 2025-10-07T01:02Z - Helper function for FFN parity logging
+#if RACECAR_FFN_TRACE
+static int racecar_ffn_call_count = 0;
+
+static void log_ffn_intermediate(const char* name, const half* data, int size) {
+    half* h_data = new half[size];
+    cudaMemcpy(h_data, data, size * sizeof(half), cudaMemcpyDeviceToHost);
+    
+    fprintf(stderr, "[RACE CAR] %s[0..15]: ", name);
+    int display_count = (size < 16) ? size : 16;
+    for (int i = 0; i < display_count; i++) {
+        fprintf(stderr, "%.6f ", __half2float(h_data[i]));
+    }
+    
+    // Compute min/max/mean
+    float min_val = __half2float(h_data[0]);
+    float max_val = __half2float(h_data[0]);
+    float sum = 0.0f;
+    for (int i = 0; i < size; i++) {
+        float val = __half2float(h_data[i]);
+        if (val < min_val) min_val = val;
+        if (val > max_val) max_val = val;
+        sum += val;
+    }
+    float mean = sum / size;
+    
+    fprintf(stderr, "\n[RACE CAR]   min=%.6f max=%.6f mean=%.6f\n", min_val, max_val, mean);
+    delete[] h_data;
+}
+#endif
 
 /**
  * Full SwiGLU FFN forward pass
@@ -153,6 +195,13 @@ void cuda_swiglu_forward(
         CUBLAS_GEMM_DEFAULT
     );
     
+    // [TEAM RACE CAR] 2025-10-07T01:02Z - Checkpoint 2: After gate_proj
+#if RACECAR_FFN_TRACE
+    if (racecar_ffn_call_count < 2) {
+        log_ffn_intermediate("Checkpoint 2: After gate_proj", gate_out, ffn_dim);
+    }
+#endif
+    
     // 2. Up projection: up_out = up_weight @ input
     //    up_weight in GGUF: [hidden_dim, ffn_dim] row-major
     //    Same fix as gate - CUBLAS_OP_T with lda=hidden_dim
@@ -172,6 +221,13 @@ void cuda_swiglu_forward(
         CUBLAS_GEMM_DEFAULT
     );
     
+    // [TEAM RACE CAR] 2025-10-07T01:02Z - Checkpoint 3: After up_proj
+#if RACECAR_FFN_TRACE
+    if (racecar_ffn_call_count < 2) {
+        log_ffn_intermediate("Checkpoint 3: After up_proj", up_out, ffn_dim);
+    }
+#endif
+    
     // 3. SwiGLU activation: swiglu_out = silu(gate_out) * up_out
     cuda_swiglu_activation(
         swiglu_out,
@@ -181,6 +237,13 @@ void cuda_swiglu_forward(
         1,  // seq_len = 1 for single token
         ffn_dim
     );
+    
+    // [TEAM RACE CAR] 2025-10-07T01:02Z - Checkpoint 4: After SwiGLU activation
+#if RACECAR_FFN_TRACE
+    if (racecar_ffn_call_count < 2) {
+        log_ffn_intermediate("Checkpoint 4: After SwiGLU activation", swiglu_out, ffn_dim);
+    }
+#endif
     
     // [TEAM SENTINEL] 2025-10-07T23:18Z
     // 4. Down projection: output = down_weight @ swiglu_out
@@ -201,6 +264,11 @@ void cuda_swiglu_forward(
         CUBLAS_COMPUTE_32F,
         CUBLAS_GEMM_DEFAULT
     );
+    
+    // [TEAM RACE CAR] 2025-10-07T01:02Z - Increment call counter
+#if RACECAR_FFN_TRACE
+    racecar_ffn_call_count++;
+#endif
     
     // Cleanup
     cudaFree(gate_out);

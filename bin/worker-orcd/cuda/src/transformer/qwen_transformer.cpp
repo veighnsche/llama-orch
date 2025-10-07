@@ -1435,6 +1435,14 @@ void QwenTransformer::forward_layer(
     if (do_battleship_log) {
         battleship_token_count++;
     }
+    
+    // [TEAM RACE CAR] 2025-10-07T00:59Z - Increment token counter
+#if RACECAR_FFN_TRACE
+    if (do_racecar_log) {
+        fprintf(stderr, "===END RACE CAR FFN TRACE (TOKEN %d)===\n\n", racecar_token_count);
+        racecar_token_count++;
+    }
+#endif
 }
 
 void QwenTransformer::project_to_vocab(
