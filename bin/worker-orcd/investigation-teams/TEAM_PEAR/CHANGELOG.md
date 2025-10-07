@@ -52,5 +52,39 @@
 
 ---
 
+## 2025-10-07T10:26Z — Phase 2 Complete
+
+**Action:** Peer-reviewed cuBLAS matrix multiplication correctness (8 claims)
+
+**Claims Verified:** 8 / 8
+- Team Charlie: lm_head manual verification (9 test positions)
+- Team Felicia: CUBLAS_OP_T experiment (stuck repetition)
+- Team Aurora: CUBLAS_OP_T with corrected lda (confirmed failure)
+- Team THIMBLE: Pre-transpose experiment (stride hypothesis disproven)
+- Team ORION: Q[0] correct, Q[95]/Q[126] anomaly discovered
+- Team TOP HAT: All standard hypotheses eliminated
+- Team BATTLESHIP: Q spikes proven harmless (filtered by attention)
+
+**Fines Assessed:** €15 (ORION missing evidence link for Q weight dump)
+
+**Files Created:**
+- `TEAM_PEAR/PHASE2_CUBLAS_REPORT.md` (comprehensive peer review)
+
+**Key Findings:**
+- cuBLAS lm_head projection verified correct (Charlie)
+- CUBLAS_OP_T approach definitively wrong (Felicia, Aurora)
+- Q[95]/Q[126] anomaly real but harmless (ORION, THIMBLE, TOP HAT, BATTLESHIP)
+- Excellent scientific process: multiple teams, independent replication
+- BATTLESHIP's breakthrough: Q spikes filtered by attention softmax (1000x reduction)
+
+**Pattern Identified:**
+- Multiple teams (ORION, THIMBLE, TOP HAT) spent ~3 hours investigating Q anomaly
+- BATTLESHIP's downstream test immediately showed impact was negligible
+- **Lesson:** Test downstream impact before deep-diving into anomalies
+
+**Status:** Phase 2 complete, Phase 3 ready
+
+---
+
 ## Next Entry
-Phase 2 findings will be logged here...
+Phase 3 findings will be logged here...
