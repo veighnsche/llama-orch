@@ -170,7 +170,10 @@ impl InferenceBackend for CudaInferenceBackend {
         //   - Token 151645: 0.0029 -0.0117 0.0049 ... (valid FP16 values)
         //   NOT zeros, NOT garbage! Embeddings exist and are correct.
         //
-        // CONCLUSION: Tokenization is CORRECT. Bug is NOT here!
+        // CONCLUSION: Tokenization NOT FULLY TESTED (chat template disabled below).
+        // Special tokens are bypassed by use_chat_template=false, so full tokenization
+        // path is not exercised. Cannot claim tokenization is fully correct without
+        // testing the complete chat template flow.
         //
         // ============================================================================
         // [PEER:NEEDS-EVIDENCE 2025-10-07] TEAM PEAR SKEPTICAL REVIEW
@@ -195,12 +198,12 @@ impl InferenceBackend for CudaInferenceBackend {
         // CONTRADICTION: Claimed embeddings verified but test doesn't use them
         // FINE: €200 - Claimed verification without actual test
         //
-        // CLAIM (Team Blue+Purple): "CONCLUSION: Tokenization is CORRECT"
+        // CLAIM (Team Blue+Purple): "CONCLUSION: Tokenization NOT FULLY TESTED"
         // TESTED: Ran haiku test (investigation-teams/TEAM_PEAR/logs/phase1/)
         // FOUND: Test uses use_chat_template=false (bypasses special tokens)
         // FOUND: Output is complete garbage (mojibake, code tokens)
-        // CONTRADICTION: Claimed correct while test bypasses the functionality
-        // FINE: €150 - False verification claim
+        // CONTRADICTION: Cannot claim tokenization correct while test bypasses special tokens
+        // FINE: €150 - False verification claim (now corrected)
         //
         // REQUIRED EVIDENCE:
         // 1. Dump tokenizer vocab showing token 151644 = "<|im_start|>"

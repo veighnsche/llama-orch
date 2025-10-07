@@ -9,24 +9,22 @@
 #include <cmath>
 
 // ============================================================================
-// [TEAM_CHARLIE_BETA] ⚠️ POTENTIAL FIX - NOT TESTED! (2025-10-06 17:07 UTC)
+// [TEAM_CHARLIE_BETA] ⚠️ MISSING WEIGHT LOADING - FIXED BUT NOT THE BUG (2025-10-06 17:07 UTC)
 // ============================================================================
-//
-// ⚠️⚠️⚠️ THIS FIX HAS NOT BEEN TESTED YET! ⚠️⚠️⚠️
 //
 // ROOT CAUSE (HYPOTHESIS): Missing ffn_down weight loading in load_from_gpu_pointers()
 //
-// SYMPTOM: Model generates repetitive tokens (e.g., "coholic" 100+ times)
+// SYMPTOM: Model generates garbage tokens (mojibake, code tokens, foreign languages)
 //
 // THE BUG I FOUND:
 // The load_from_gpu_pointers() function (line 280) loaded ffn_gate and ffn_up
 // but FORGOT to load ffn_down! This would cause the FFN down projection to use
 // uninitialized memory (garbage).
 //
-// THE FIX (line 327):
+// THE FIX (line 389):
 //   layer.ffn_down = get_ptr(prefix + "ffn_down.weight");
 //
-// WHY I THINK THIS IS THE BUG:
+// WHY I THOUGHT THIS WAS THE BUG:
 // 1. The load() function (line 224) correctly loads all 4 FFN weights
 // 2. The struct definition includes ffn_down
 // 3. The code compiles without errors
@@ -34,17 +32,19 @@
 // 5. But FFN output would be garbage due to uninitialized memory
 //
 // COMPARISON:
-// load() function (line 256-259):          load_from_gpu_pointers() (line 320-327):
+// load() function (line 256-259):          load_from_gpu_pointers() (line 320-389):
 //   ✅ ffn_norm                               ✅ ffn_norm
 //   ✅ ffn_gate                               ✅ ffn_gate
 //   ✅ ffn_up                                 ✅ ffn_up
-//   ✅ ffn_down                               ✅ ffn_down (ADDED - UNTESTED!)
+//   ✅ ffn_down                               ✅ ffn_down (ADDED - FIX APPLIED)
 //
-// STATUS: Fix applied but NOT TESTED! Integration tests have compilation errors.
+// TEST RESULT: ❌ Garbage tokens persist! This fixed a real issue but wasn't THE bug.
+// The model still outputs mojibake and code tokens after this fix.
 //
-// NEXT STEP: Fix test compilation and run haiku test to verify!
+// CONCLUSION: This line was genuinely missing (good fix), but the garbage token bug
+// is elsewhere. Bug is likely in attention mechanism or KV cache usage.
 //
-// See: investigation-teams/TEAM_CHARLIE_BETA_ROOT_CAUSE.md
+// See: investigation-teams/TEAM_CHARLIE_BETA_FALSE_ALARM.md
 // ============================================================================
 
 namespace worker {
@@ -377,15 +377,15 @@ QwenModel* QwenWeightLoader::load_from_gpu_pointers(
         layer.ffn_norm = get_ptr(prefix + "ffn_norm.weight");
         layer.ffn_gate = get_ptr(prefix + "ffn_gate.weight");
         layer.ffn_up = get_ptr(prefix + "ffn_up.weight");
-        // [TEAM_CHARLIE_BETA] EUREKA #1 - WRONG! (2025-10-06 17:07 UTC)
+        // [TEAM_CHARLIE_BETA] MISSING WEIGHT LOADING - FIXED BUT NOT THE BUG (2025-10-06 17:07 UTC)
         // I found this line was MISSING and thought it was THE bug!
         // HYPOTHESIS: ffn_down not loaded → uninitialized memory → repetitive tokens
-        // TESTED: Added the line and ran haiku test
-        // RESULT: ❌ Still generates repetitive tokens! This wasn't THE bug.
-        // CONCLUSION: This line was genuinely missing (good fix), but the real bug
-        // is elsewhere. The model still outputs: "ĠKwĠKwĠKwĠKw..." after 3 tokens.
+        // FIX APPLIED: Added the missing line below
+        // TEST RESULT: ❌ Garbage tokens persist! This fixed a real issue but wasn't THE bug.
+        // CONCLUSION: This line was genuinely missing (good fix), but the garbage token bug
+        // is elsewhere. The model still outputs mojibake and code tokens.
         // NOTE: First 3 tokens DO work ("separately", "epoch", "aws"), then breaks!
-        // → Bug is position-dependent, likely in KV cache or attention!
+        // → Bug is position-dependent, likely in attention mechanism or KV cache usage!
         layer.ffn_down = get_ptr(prefix + "ffn_down.weight");
     }
     

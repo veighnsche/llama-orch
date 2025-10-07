@@ -4,14 +4,60 @@
 
 ---
 
-## Grand Total: €1,250
+## Grand Total: €4,250
 
 | Phase | Teams Fined | Amount | Verified By |
 |-------|-------------|--------|-------------|
 | **Phase 1: Tokenization** | Blue, Purple | €500 | TEAM_PEAR + Testing Team |
 | **Phase 2: cuBLAS** | Sentinel, Charlie | €300 | TEAM_PEAR + Testing Team |
 | **Additional: False Claims** | Charlie Beta, Top Hat, Thimble | €450 | Testing Team |
-| **TOTAL** | **7 teams** | **€1,250** | |
+| **Stub Integration Tests** | Test Infrastructure Team | €3,000 | Testing Team |
+| **TOTAL** | **7 teams + Infrastructure** | **€4,250** | |
+
+---
+
+## 🚨 NEW: Stub Integration Tests (€3,000)
+
+### Fine #12: Test Infrastructure Team — Systematic False Positives (€3,000)
+
+**Violation:** 40+ tests claiming to be "integration tests" while using stubs
+
+**Files Affected:**
+- `tests/gpt_integration.rs` (€400)
+- `tests/llama_integration_suite.rs` (€500)
+- `tests/qwen_integration.rs` (€400)
+- `tests/vram_pressure_tests.rs` (€300)
+- `tests/reproducibility_validation.rs` (€400)
+- `tests/phi3_integration.rs` (€400)
+- `tests/all_models_integration.rs` (€300)
+- `tests/gpt_comprehensive_integration.rs` (€300)
+
+**Evidence:**
+```rust
+#[test]
+fn test_qwen_full_pipeline() {
+    announce_stub_mode!("test_qwen_full_pipeline");
+    let model = QwenWeightLoader::load_to_vram("dummy.gguf", &config).unwrap();
+    // Tests pass even when product is broken
+}
+```
+
+**Impact:** CRITICAL
+- Tests pass when product is broken
+- Create false confidence at scale
+- Mask real integration bugs
+- Violate "Tests must observe, never manipulate"
+
+**Fine:** €3,000 (€75 per file for systematic false positive generation)
+
+**Remediation Required:**
+- **Option A (Recommended):** DELETE all stub tests
+- **Option B:** Rename to `*_stub.rs` (honest naming)
+- **Option C:** Convert to real integration tests with actual model files
+
+**Status:** UPHELD ✅
+
+See: `test-harness/STUB_INTEGRATION_TESTS_FINES.md` for complete analysis
 
 ---
 
