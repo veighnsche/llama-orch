@@ -1,0 +1,50 @@
+[TEAM_CHARLIE] Loading output_norm.weight:
+  Type: F32
+  Dimensions: [896]
+  Offset: 1266422112
+  Num elements: 896
+  ⚠️  Weights will have mean~7.0 - THIS IS CORRECT!
+  ⚠️  llama.cpp works with these values - DO NOT MODIFY!
+[TEAM_CHARLIE] output_norm.weight F32→F16 conversion:
+  First 10 F32 values: 7.5938 6.8750 7.2500 7.0000 6.6562 6.7500 6.9375 6.7188 7.0000 6.8750 
+  After F16 conversion: 7.5938 6.8750 7.2500 7.0000 6.6562 6.7500 6.9375 6.7188 7.0000 6.8750 
+  ⚠️  These values (mean~7.0) are CORRECT!
+  ⚠️  llama.cpp uses these exact values and works fine!
+  ⚠️  DO NOT modify or normalize these weights!
+  [291/291] 1.6s elapsed, 177 tensors/sec
+✅ [Rust] Loaded 291 tensors to GPU (1201.95 MB total VRAM) in 1.6s (733 MB/s)
+🔒 [Rust] Stored 291 GPU pointers in global registry (will never be freed)
+🔍 [Rust] Passing 291 tensors to C++:
+   - blk.20.attn_output.weight -> 0x708c25e00000
+   - blk.23.attn_output.weight -> 0x708c1fe00000
+   - blk.0.attn_v.weight -> 0x708c4a5c1c00
+   - blk.0.ffn_down.weight -> 0x708c4a600000
+   - output.weight -> 0x708c4c000000
+   - blk.3.attn_output.weight -> 0x708c1de00000
+--
+   - output_norm.weight -> 0x708c5dbfa000
+   - blk.2.attn_output.weight -> 0x708c27400000
+   - blk.0.attn_norm.weight -> 0x708c4a400000
+   - blk.10.attn_output.weight -> 0x708c5d800000
+   - blk.4.attn_output.weight -> 0x708c1be00000
+   - blk.8.attn_output.weight -> 0x708c13e00000
+   - blk.9.attn_output.weight -> 0x708c11e00000
+   - blk.15.attn_output.weight -> 0x708c33e00000
+   - blk.17.attn_output.weight -> 0x708c2fe00000
+   - blk.0.attn_q.weight -> 0x708c4ba00000
+   - blk.0.ffn_up.weight -> 0x708c5c400000
+   - blk.5.attn_output.weight -> 0x708c19e00000
+   - blk.0.attn_k.weight -> 0x708c4a401200
+   - blk.0.attn_v.bias -> 0x708c4a5c1a00
+   - blk.19.attn_output.weight -> 0x708c28a00000
+   - blk.0.attn_k.bias -> 0x708c4a401000
+--
+[TEAM VANGUARD] output_norm.weight (first 100 FP16 values):
+  Floats: 7.593750 6.875000 7.250000 7.000000 6.656250 6.750000 6.937500 6.718750 7.000000 6.875000 
+          7.000000 6.750000 7.062500 6.500000 6.843750 6.937500 6.812500 6.937500 9.250000 7.187500 
+          7.156250 7.468750 7.406250 6.781250 6.781250 6.812500 8.062500 7.750000 6.906250 6.812500 
+          6.812500 5.156250 7.093750 7.187500 6.781250 9.000000 6.843750 6.656250 7.000000 7.000000 
+          7.062500 6.937500 7.531250 7.062500 6.312500 9.437500 7.062500 7.406250 7.218750 6.406250 
+          6.906250 7.250000 6.812500 12.500000 6.843750 7.312500 6.437500 6.812500 11.375000 6.937500 
+          6.281250 6.406250 6.187500 6.843750 6.625000 6.968750 6.687500 6.437500 6.750000 7.250000 
+          6.000000 7.125000 6.875000 6.875000 6.875000 12.750000 7.968750 7.031250 6.875000 6.843750 

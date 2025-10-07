@@ -317,6 +317,8 @@ QwenModel* QwenWeightLoader::load(
     }
     
     // Load output
+    // [TEAM VAN GOGH 2025-10-07] Read output_norm wiring here (evidence in VAN_GOGH report)
+    // This loads output_norm.weight RAW from GGUF file without any normalization
     model->weights.output_norm = load_tensor_to_vram(path, "output_norm.weight", tracker);
     model->weights.lm_head = load_tensor_to_vram(path, "output.weight", tracker);
 
@@ -391,8 +393,69 @@ QwenModel* QwenWeightLoader::load_from_gpu_pointers(
     
     // Wire output
     // [TEAM MONET 2025-10-07T14:22Z] Checked line 393: output_norm loaded raw (no normalization) ⚠️
+    // [TEAM VAN GOGH 2025-10-07] Read output_norm wiring here (evidence in VAN_GOGH report)
+    // This wires pre-loaded output_norm.weight pointer - weights come from Rust loader (RAW, no normalization)
     model->weights.output_norm = get_ptr("output_norm.weight");
     model->weights.lm_head = get_ptr("output.weight");
+    
+    // [TEAM VAN GOGH 2025-10-07T22:43Z] A/B Testing: RAW vs NORMALIZED
+    // Check environment variable to enable weight normalization for testing
+    const char* normalize_env = std::getenv("VAN_GOGH_NORMALIZE_OUTPUT_NORM");
+    if (normalize_env != nullptr && std::string(normalize_env) == "1") {
+        fprintf(stderr, "\n[TEAM VAN GOGH] ⚠️  NORMALIZING output_norm.weight for A/B testing\n");
+        
+        // Copy weights from GPU to host
+        half h_weights[896];
+        cudaError_t err = cudaMemcpy(h_weights, model->weights.output_norm, 
+                                      config.hidden_dim * sizeof(half), 
+                                      cudaMemcpyDeviceToHost);
+        if (err != cudaSuccess) {
+            fprintf(stderr, "[TEAM VAN GOGH] ❌ Failed to copy output_norm for normalization: %s\n", 
+                    cudaGetErrorString(err));
+        } else {
+            // Calculate mean
+            float sum = 0.0f;
+            for (uint32_t i = 0; i < config.hidden_dim; i++) {
+                sum += __half2float(h_weights[i]);
+            }
+            float mean = sum / config.hidden_dim;
+            
+            fprintf(stderr, "[TEAM VAN GOGH] Original mean: %.6f\n", mean);
+            
+            // Normalize to mean=1.0
+            float scale = 1.0f / mean;
+            for (uint32_t i = 0; i < config.hidden_dim; i++) {
+                float val = __half2float(h_weights[i]);
+                h_weights[i] = __float2half(val * scale);
+            }
+            
+            // Calculate new mean
+            sum = 0.0f;
+            for (uint32_t i = 0; i < config.hidden_dim; i++) {
+                sum += __half2float(h_weights[i]);
+            }
+            float new_mean = sum / config.hidden_dim;
+            
+            fprintf(stderr, "[TEAM VAN GOGH] Normalized mean: %.6f (scale factor: %.6f)\n", 
+                    new_mean, scale);
+            fprintf(stderr, "[TEAM VAN GOGH] First 10 normalized values: ");
+            for (int i = 0; i < 10; i++) {
+                fprintf(stderr, "%.4f ", __half2float(h_weights[i]));
+            }
+            fprintf(stderr, "\n");
+            
+            // Copy back to GPU
+            err = cudaMemcpy(model->weights.output_norm, h_weights, 
+                           config.hidden_dim * sizeof(half), 
+                           cudaMemcpyHostToDevice);
+            if (err != cudaSuccess) {
+                fprintf(stderr, "[TEAM VAN GOGH] ❌ Failed to copy normalized weights back: %s\n", 
+                        cudaGetErrorString(err));
+            } else {
+                fprintf(stderr, "[TEAM VAN GOGH] ✅ Normalized weights copied back to GPU\n\n");
+            }
+        }
+    }
     
     // [TEAM VANGUARD] 2025-10-07T20:04Z
     // OBJECTIVE 1: Weight Integrity Verification
@@ -447,6 +510,8 @@ QwenModel* QwenWeightLoader::load_from_gpu_pointers(
     dump_gpu_weights("blk.0.ffn_gate.weight", model->weights.layers[0].ffn_gate, 100);
     dump_gpu_weights("blk.0.ffn_up.weight", model->weights.layers[0].ffn_up, 100);
     dump_gpu_weights("blk.0.ffn_down.weight", model->weights.layers[0].ffn_down, 100);
+    // [TEAM VAN GOGH 2025-10-07] Added output_norm.weight dump to investigate 16.75× amplification
+    dump_gpu_weights("output_norm.weight", model->weights.output_norm, 100);
     dump_gpu_weights("output.weight", model->weights.lm_head, 100);
     
     fprintf(stderr, "[TEAM VANGUARD] Weight dump complete. Compare these with llama.cpp output.\n");

@@ -2243,6 +2243,15 @@ void QwenTransformer::project_to_vocab(
         float* h_logits = new float[config_.padded_vocab_size];
         cudaMemcpy(h_logits, logits, config_.padded_vocab_size * sizeof(float), cudaMemcpyDeviceToHost);
         
+        // [TEAM VAN GOGH 2025-10-07T22:43Z] A/B Testing: Log logit ranges
+        float van_gogh_min_logit = h_logits[0], van_gogh_max_logit = h_logits[0];
+        for (uint32_t i = 0; i < config_.vocab_size; i++) {
+            if (h_logits[i] < van_gogh_min_logit) van_gogh_min_logit = h_logits[i];
+            if (h_logits[i] > van_gogh_max_logit) van_gogh_max_logit = h_logits[i];
+        }
+        fprintf(stderr, "[TEAM VAN GOGH] Logit range: [%.6f, %.6f]\n",
+                van_gogh_min_logit, van_gogh_max_logit);
+        
         // Calculate min/max/mean
         float min_logit = h_logits[0], max_logit = h_logits[0], sum_logit = 0.0f;
         for (uint32_t i = 0; i < config_.vocab_size; i++) {
@@ -3036,6 +3045,22 @@ void QwenTransformer::forward(
         1e-6f,
         nullptr
     );
+    
+    // [TEAM VAN GOGH 2025-10-07T22:43Z] A/B Testing: Log ranges for comparison
+    if (first_forward) {
+        half h_post_norm[896];
+        cudaMemcpy(h_post_norm, normed_, config_.hidden_dim * sizeof(half), cudaMemcpyDeviceToHost);
+        
+        float van_gogh_min = INFINITY, van_gogh_max = -INFINITY;
+        for (uint32_t j = 0; j < config_.hidden_dim; j++) {
+            float val = __half2float(h_post_norm[j]);
+            if (val < van_gogh_min) van_gogh_min = val;
+            if (val > van_gogh_max) van_gogh_max = val;
+        }
+        
+        fprintf(stderr, "[TEAM VAN GOGH] POST-RMSNorm hidden state range: [%.6f, %.6f]\n",
+                van_gogh_min, van_gogh_max);
+    }
     
     // [TEAM_LAMINATOR] Post-RMSNorm diagnostics (token 0 only during prefill)
     if (first_forward) {
