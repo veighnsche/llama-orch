@@ -9,7 +9,10 @@
 
 Worker-orcd is a **hybrid Rust + C++/CUDA binary** that executes LLM inference on a single GPU. It is NOT a collection of Rust crates - it is a single binary with embedded CUDA code.
 
-**Key Principle**: CUDA context is per-process. All GPU operations happen in C++/CUDA within a single context. Rust provides HTTP/orchestration layer.
+**Key Principles**:
+1. **CUDA context is per-process** - All GPU operations happen in C++/CUDA within a single context. Rust provides HTTP/orchestration layer.
+2. **Single-threaded execution** (M0-W-1301) - Worker processes requests sequentially using tokio's `current_thread` runtime. No concurrent inference, no thread pool overhead.
+3. **Async for I/O, not compute** - Tokio provides non-blocking HTTP handling via event loop. CUDA operations remain synchronous and sequential.
 
 ---
 
@@ -52,20 +55,49 @@ Worker-orcd is a **hybrid Rust + C++/CUDA binary** that executes LLM inference o
 
 ## Why This Architecture?
 
-### Problem: CUDA Context is Per-Process
+### Problem 1: CUDA Context is Per-Process
 
 CUDA allocations and operations are tied to a **single CUDA context** per process. You cannot:
 - ❌ Have multiple Rust crates independently calling CUDA
 - ❌ Share CUDA context across crate boundaries
 - ❌ Mix Rust and C++ CUDA calls safely
 
-### Solution: Single Binary with Embedded CUDA
+**Solution**: Single Binary with Embedded CUDA
 
 All CUDA operations happen in **C++/CUDA code** within the binary:
 - ✅ Single CUDA context for entire worker lifetime
 - ✅ All GPU operations in C++ (context, model, inference, health)
 - ✅ Rust calls into C++ via thin FFI layer
 - ✅ Clear ownership: C++ owns GPU memory, Rust owns handles
+
+### Problem 2: M0 Requires Sequential Execution (No Concurrency)
+
+**Spec M0-W-1301**: "Worker-orcd MUST process inference requests sequentially (one at a time)."
+
+Initial implementation violated this by using multi-threaded tokio runtime by default.
+
+**Solution**: Single-Threaded Tokio Runtime
+
+```rust
+// src/main.rs
+#[tokio::main(flavor = "current_thread")]  // ← Single-threaded!
+async fn main() -> anyhow::Result<()> {
+    // ...
+}
+```
+
+**Why this works**:
+- ✅ Tokio event loop handles HTTP I/O without blocking
+- ✅ CUDA operations run sequentially on same thread
+- ✅ No thread pool, no work-stealing, no context switching
+- ✅ Matches spec requirement exactly
+- ✅ Simpler logging (no mutex needed, like llama.cpp)
+
+**What we get**:
+- HTTP server remains responsive (non-blocking I/O via event loop)
+- CUDA inference runs sequentially (one request at a time)
+- Zero threading overhead
+- Spec compliant
 
 ---
 

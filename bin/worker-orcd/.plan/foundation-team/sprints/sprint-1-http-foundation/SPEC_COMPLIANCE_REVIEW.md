@@ -19,7 +19,7 @@ Sprint 1 work is **fully compliant** with M0 specification requirements for HTTP
 
 ### FT-001: HTTP Server Infrastructure ✅
 
-**Spec Requirements**: M0-W-1110 (HTTP server startup)
+**Spec Requirements**: M0-W-1110 (HTTP server startup), M0-W-1301 (sequential execution)
 
 | Requirement | Spec | Implementation | Status |
 |-------------|------|----------------|--------|
@@ -27,9 +27,16 @@ Sprint 1 work is **fully compliant** with M0 specification requirements for HTTP
 | Binds to 0.0.0.0 | M0-W-1110 | ✅ Binds to all interfaces | ✅ COMPLIANT |
 | Graceful shutdown | M0-W-1110 | ✅ SIGTERM/SIGINT handling | ✅ COMPLIANT |
 | Error handling | M0-W-1111 | ✅ Bind failures logged | ✅ COMPLIANT |
+| Sequential execution | M0-W-1301 | ✅ `current_thread` tokio runtime (updated 2025-10-07) | ✅ COMPLIANT |
 
 **Tests**: 9 integration tests  
 **Findings**: No issues. Implementation matches spec exactly.
+
+**Threading Model Update (2025-10-07)**:
+- Initial implementation used multi-threaded tokio runtime (spec violation)
+- Corrected to single-threaded `current_thread` flavor per M0-W-1301
+- Event loop provides non-blocking HTTP I/O while maintaining sequential CUDA execution
+- Zero threading overhead, simpler logging architecture
 
 ---
 

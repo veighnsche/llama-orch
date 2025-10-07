@@ -16,7 +16,7 @@ Initialize Axum HTTP server with tokio runtime, bind to configurable address, an
 
 ## Acceptance Criteria
 
-- [x] Axum HTTP server initialized with tokio runtime (multi-threaded)
+- [x] Axum HTTP server initialized with tokio runtime (single-threaded per M0-W-1301)
 - [x] Server binds to address from configuration (configurable via CLI args)
 - [x] `/health` endpoint returns 200 OK with `{"status": "healthy"}`
 - [x] Server logs startup with `tracing::info` including bind address
@@ -25,6 +25,8 @@ Initialize Axum HTTP server with tokio runtime, bind to configurable address, an
 - [x] Error handling for bind failures (port already in use, permission denied)
 - [x] Graceful shutdown on SIGTERM/SIGINT with cleanup
 - [x] Server state struct holds bind address and shutdown channel
+
+**Note**: Initially implemented with multi-threaded runtime. Updated to `current_thread` flavor on 2025-10-07 per M0-W-1301 (sequential execution requirement).
 
 ---
 
@@ -84,13 +86,20 @@ pub enum ServerError {
 ```
 
 ### Implementation Notes
-- Use `tokio::runtime::Builder::new_multi_thread()` for runtime
+- Use `#[tokio::main(flavor = "current_thread")]` for single-threaded runtime (M0-W-1301)
 - Bind address format: `IP:PORT` (e.g., `127.0.0.1:8080`, `0.0.0.0:3000`)
 - Health endpoint returns JSON: `{"status": "healthy"}` with `Content-Type: application/json`
 - Shutdown channel uses `tokio::sync::broadcast` for multi-subscriber support
 - Log bind address at INFO level: `"HTTP server listening on {addr}"`
 - Handle SIGTERM/SIGINT via `tokio::signal::ctrl_c()`
 - Server should complete graceful shutdown within 5 seconds
+
+**Threading Model** (Updated 2025-10-07):
+- **Spec Requirement (M0-W-1301)**: Sequential execution, one request at a time
+- **Initial Implementation**: Multi-threaded tokio runtime (spec violation)
+- **Corrected Implementation**: Single-threaded `current_thread` runtime
+- **Why Single-Threaded Works**: Tokio event loop handles HTTP I/O without blocking, CUDA operations run sequentially on same thread
+- **Benefits**: No thread pool overhead, simpler logging (no mutex), matches llama.cpp architecture
 
 ---
 

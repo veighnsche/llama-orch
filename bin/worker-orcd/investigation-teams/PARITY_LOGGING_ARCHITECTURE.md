@@ -48,60 +48,73 @@ void log_values(...) {
 2. ✅ **Buffers in memory** - No disk I/O until exit
 3. ✅ **Flushes at exit** - Uses `atexit()`
 
-**worker-orcd is different:**
-- ❌ **Multi-threaded** - Tokio async runtime with thread pool
-- ❌ **Long-running** - HTTP server stays alive, can't rely on `atexit()`
-- ❌ **Concurrent requests** - Multiple inference jobs might run
+**worker-orcd is NOW THE SAME (Updated 2025-10-07):**
+- ✅ **Single-threaded** - Uses `current_thread` tokio runtime per M0-W-1301
+- ✅ **Buffers in memory** - Simple vector append like llama.cpp
+- ✅ **Explicit flush** - Calls `orch_log_flush_now()` after generation
+- ⚠️ **Difference**: HTTP server stays alive, so explicit flush needed (can't rely on `atexit()` alone)
 
 ---
 
 ## ✅ Proper Architecture
 
-### Design Principles
+### Design Principles (UPDATED 2025-10-07)
 
-1. **Zero overhead on hot path** - Logging must not block inference
-2. **Lock-free or minimal locking** - No contention on CUDA thread
-3. **Async I/O** - File writes happen on background thread
-4. **Bounded memory** - Don't accumulate unbounded entries
-5. **Graceful degradation** - If logging fails, inference continues
+**ORIGINAL PLAN** (Over-engineered for multi-threaded runtime):
+1. Lock-free queue with atomic operations
+2. Background thread for async I/O
+3. Complex SPSC queue implementation
+4. Bounded memory with graceful degradation
 
-### Architecture: Lock-Free Queue + Background Thread
+**ACTUAL SOLUTION** (Simple, matches llama.cpp + M0-W-1301):
+1. ✅ **Single-threaded runtime** (`current_thread` tokio) - No mutex needed
+2. ✅ **Simple vector append** - Just `entries.push_back(entry)`
+3. ✅ **Explicit flush** - Call `orch_log_flush_now()` after generation
+4. ✅ **Zero overhead** - Same as llama.cpp (< 0.01 μs/token)
 
+**Why the simple solution works:**
+- M0-W-1301 requires sequential execution (one request at a time)
+- Single-threaded tokio runtime eliminates thread contention
+- HTTP I/O handled by event loop (non-blocking, doesn't interfere)
+- CUDA operations run sequentially on same thread as HTTP handlers
+- No lock-free queue needed, no background thread needed, no atomics needed
+
+### Architecture: Simple Buffer + Explicit Flush (CURRENT IMPLEMENTATION)
+
+**ORIGINAL (Complex lock-free queue + background thread):**
 ```
 ┌─────────────────────────────────────────────────────┐
-│ CUDA Thread (Hot Path)                              │
-│                                                      │
-│  generate_token() {                                 │
-│    // ... CUDA work ...                             │
-│    ORCH_LOG_LOGITS(ptr, count, idx);  // ← Fast!   │
-│  }                                                   │
-│                                                      │
-│  ORCH_LOG_LOGITS macro:                             │
-│    1. Copy 10 floats to stack buffer (fast)         │
-│    2. Push to lock-free queue (atomic op)           │
-│    3. Return immediately (< 1 microsecond)          │
+│ CUDA Thread → Push to lock-free queue (atomic)     │
 └──────────────────┬──────────────────────────────────┘
-                   │ Lock-free queue
-                   │ (bounded, fixed size)
+                   │ Lock-free SPSC queue
                    ▼
 ┌─────────────────────────────────────────────────────┐
-│ Background Thread (Async I/O)                       │
-│                                                      │
-│  while (true) {                                     │
-│    entry = queue.pop_blocking();  // Wait for data │
-│    batch.push(entry);                               │
-│                                                      │
-│    if (batch.size() >= 100 || timeout) {           │
-│      FILE* f = fopen(log_file, "a");               │
-│      for (entry in batch) {                         │
-│        fprintf(f, ...);  // Batch write            │
-│      }                                               │
-│      fclose(f);                                     │
-│      batch.clear();                                 │
-│    }                                                 │
-│  }                                                   │
+│ Background Thread → Batch write to disk            │
 └─────────────────────────────────────────────────────┘
 ```
+**Problems:** Unnecessary complexity for single-threaded execution
+
+**ACTUAL (Simple buffer, like llama.cpp):**
+```
+┌─────────────────────────────────────────────────────┐
+│ Single Thread (Tokio event loop)                    │
+│                                                      │
+│  HTTP Request → Execute endpoint                    │
+│    ↓                                                 │
+│  generate_token() loop:                             │
+│    - CUDA forward pass                              │
+│    - ORCH_LOG_LOGITS(ptr, idx)                      │
+│      └─> entries.push_back(entry)  // Simple!      │
+│    - Sample token                                   │
+│    ↓                                                 │
+│  After generation complete:                         │
+│    - orch_log_flush_now()                           │
+│      └─> Write all entries to JSONL file           │
+│    ↓                                                 │
+│  Return SSE response                                │
+└─────────────────────────────────────────────────────┘
+```
+**Benefits:** No mutex, no atomics, no background thread, zero contention
 
 ### Implementation Plan
 
