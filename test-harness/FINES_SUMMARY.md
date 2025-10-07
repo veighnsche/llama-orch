@@ -1,10 +1,10 @@
 # Testing Team — Complete Fines Summary
-**Date:** 2025-10-07T12:33Z  
-**Status:** 🚨 €1,250 IN FINES ISSUED
+**Date:** 2025-10-07T12:33Z (Updated: 2025-10-07T17:04Z)  
+**Status:** 🚨 €4,550 IN FINES ISSUED
 
 ---
 
-## Grand Total: €4,250
+## Grand Total: €4,550
 
 | Phase | Teams Fined | Amount | Verified By |
 |-------|-------------|--------|-------------|
@@ -12,7 +12,8 @@
 | **Phase 2: cuBLAS** | Sentinel, Charlie | €300 | TEAM_PEAR + Testing Team |
 | **Additional: False Claims** | Charlie Beta, Top Hat, Thimble | €450 | Testing Team |
 | **Stub Integration Tests** | Test Infrastructure Team | €3,000 | Testing Team |
-| **TOTAL** | **7 teams + Infrastructure** | **€4,250** | |
+| **Addendum: Masking HTTP Failure** | Prompt Author (TEAM PICASSO) | €300 | Testing Team |
+| **TOTAL** | **7 teams + Infrastructure + 1 Prompt** | **€4,550** | |
 
 ---
 
@@ -110,31 +111,50 @@ See: `test-harness/STUB_INTEGRATION_TESTS_FINES.md` for complete analysis
 
 ## Additional: False Claims & Insufficient Evidence (€450)
 
-### Fine #8: Team Charlie Beta — False "BUG FIXED" Claim (€200)
+### Fine #9: Team Charlie Beta — False "BUG FIXED" Claim (€200)
 - **Violation:** Document titled "Bug Fixed! 🎉" but content admits fix doesn't work
 - **Location:** `TEAM_CHARLIE_BETA_BUG_FIXED.md` line 147: "doesn't actually change anything"
 - **Impact:** MISLEADING - creates false confidence in non-working fix
 - **Status:** UPHELD ✅
 
-### Fine #9: Team Charlie Beta — Contradictory Test Claim (€100)
+### Fine #10: Team Charlie Beta — Contradictory Test Claim (€100)
 - **Violation:** Claims "TESTED: Added line and ran haiku test" but also says "NOT TESTED! Integration tests have compilation errors"
 - **Location:** `qwen_weight_loader.cpp:380-383` vs line 43
 - **Impact:** FALSE VERIFICATION CLAIM - cannot be both tested and not tested
 - **Status:** UPHELD ✅
 
-### Fine #10: Team Top Hat — Insufficient Elimination Evidence (€100)
+### Fine #11: Team Top Hat — Insufficient Elimination Evidence (€100)
 - **Violation:** Claimed H2/H3 "ELIMINATED" based on sparse verification:
   - H2: Only 2 columns out of 896 (0.22% coverage)
   - H3: Only 2 tokens out of 100 (2% coverage)
 - **Impact:** Cannot claim "ELIMINATED" without comprehensive verification
 - **Status:** UPHELD ✅
 
-### Fine #11: Team Thimble — Sparse Conclusion (€50)
+### Fine #12: Team Thimble — Sparse Conclusion (€50)
 - **Violation:** Claimed definitive conclusion based on only 2 tokens (2% of test data)
 - **Impact:** Should document limited scope of testing
 - **Status:** UPHELD ✅
 
 **Additional Total:** €450
+
+---
+
+## Addendum: Masking HTTP Failure (€300)
+
+### Fine #13: Prompt Author — Guidance to Mask HTTP Failure Instead of Fixing It (€300)
+- **Violation:** Provided TEAM PICASSO with two options (A: offline mode, B: local server) that BOTH mask HTTP failure instead of fixing root cause
+- **Location:** Prompt given to TEAM PICASSO for parity artifact generation
+- **Impact:** CRITICAL
+  - Option A: Conditional bypass (`ORCH_TEST_OFFLINE=1`) - violates "conditional skip = FAILURE"
+  - Option B: Test harness creates HTTP server - violates "tests observe, never manipulate"
+  - Both options would create false positive (test passes, HTTP broken in production)
+  - Directly contradicts Testing Team's core mandate
+- **Status:** UPHELD ✅
+- **Remediation:** IMMEDIATE - retract prompt, issue correct guidance to fix HTTP failure
+
+**Addendum Total:** €300
+
+See: `test-harness/ADDITIONAL_FINES_REPORT.md` (Fine #13) for complete analysis
 
 ---
 
@@ -150,17 +170,19 @@ See: `test-harness/STUB_INTEGRATION_TESTS_FINES.md` for complete analysis
 | **Team Charlie** | €100 | **€100** | 1st offense |
 | **Team Top Hat** | €100 | **€100** | 1st offense |
 | **Team Thimble** | €50 | **€50** | 1st offense |
-| **TOTAL** | | **€1,250** | |
+| **Prompt Author (TEAM PICASSO)** | €300 | **€300** | 1st offense |
+| **TOTAL** | | **€1,550** | |
 
 ---
 
 ## Violation Categories
 
-### Critical False Positives (€650)
+### Critical False Positives (€950)
 1. Test bypasses special tokens while claiming correctness (€150)
 2. Embeddings never dumped but claimed verified (€200)
 3. Document claims "BUG FIXED" when it's not (€200)
 4. Contradictory "TESTED" and "NOT TESTED" claims (€100)
+5. Guidance to mask HTTP failure instead of fixing it (€300)
 
 ### Insufficient Test Coverage (€450)
 1. 0.11% verification presented as comprehensive (€100)
@@ -335,10 +357,10 @@ See: `test-harness/STUB_INTEGRATION_TESTS_FINES.md` for complete analysis
 ---
 
 **Report Complete**  
-**Total Fines Issued:** €1,250  
-**Teams Fined:** 7  
-**Violations:** 11  
-**Remediation Deadline:** 2025-10-08T12:00Z
+**Total Fines Issued:** €1,550 (investigation teams) + €3,000 (stub tests) = **€4,550**  
+**Teams Fined:** 8 (7 investigation teams + 1 prompt author)  
+**Violations:** 13  
+**Remediation Deadline:** 2025-10-08T12:00Z (investigation teams) | IMMEDIATE (prompt author)
 
 ---
 Verified by Testing Team 🔍
