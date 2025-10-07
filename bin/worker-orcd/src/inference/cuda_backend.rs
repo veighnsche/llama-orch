@@ -506,12 +506,21 @@ impl InferenceBackend for CudaInferenceBackend {
         let head_dim = hidden_dim / num_heads;
         let ffn_dim = match worker_gguf::GGUFMetadata::parse_tensors(&self.model_path) {
             Ok(tensors) => {
+                // [TEAM PAPER CUTTER] 2025-10-07T09:04Z - CRITICAL BUG FIX!
+                // SUSPECT: Was taking dimensions.first() = hidden_dim (896), not ffn_dim (4864)
+                // ROOT CAUSE: ffn_up.weight shape is [hidden_dim, ffn_dim] = [896, 4864]
+                //   dimensions[0] = 896 (hidden_dim) ❌
+                //   dimensions[1] = 4864 (ffn_dim)   ✅
+                // OBSERVED: All FFN GEMMs were using M=896 instead of M=4864!
+                // FIXED: Take dimensions[1] (second dimension) for ffn_dim
                 // Prefer ffn_up.weight; fall back to ffn_gate.weight
                 let mut derived: Option<u32> = None;
                 for t in &tensors {
                     if t.name == "blk.0.ffn_up.weight" || t.name == "blk.0.ffn_gate.weight" {
-                        if let Some(&d0) = t.dimensions.first() {
-                            derived = Some(d0 as u32);
+                        // FFN weight shape: [hidden_dim, ffn_dim]
+                        // We want ffn_dim (the second dimension)
+                        if t.dimensions.len() >= 2 {
+                            derived = Some(t.dimensions[1] as u32);
                             break;
                         }
                     }

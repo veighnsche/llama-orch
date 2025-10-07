@@ -113,6 +113,27 @@
 #define RACECAR_FFN_TRACE 1  // Enable FFN parity logging
 #endif
 
+// ============================================================================
+// [TEAM PAPER CUTTER] 2025-10-07T08:59Z - FFN-DOWN Parity (Last Block Only)
+// ============================================================================
+// MISSION: Prove or falsify: "In the last transformer block, the FFN down
+//          projection (and/or the up/gate path feeding it) is numerically wrong"
+// SCOPE: Last block only (layer 23 for 24-layer model)
+// SUSPECT [TEAM_PAPER_CUTTER 2025-10-07T08:59Z]: Last-block FFN DOWN path wrong
+//   (weights/wiring/transpose/stride/dtype)
+// PLAN [TEAM_PAPER_CUTTER 2025-10-07T08:59Z]:
+//   1) Log pointers+names+dims for W_up, W_gate, W_down (last block)
+//   2) For up/gate/down: log GEMM M,N,K, lda/ldb/ldc, opA/opB, compute type
+//   3) Dump first-token activations at checkpoints: after up, after gate,
+//      after SiLU, after elemwise, after down (first8 + min/max/mean)
+//   4) Compare checkpoint first8 vs llama.cpp (tolerance ≤1e-2)
+//   5) If mismatch: dump tiny slices of W_down & W_up (first8) and verify
+//      against GGUF parse
+// ============================================================================
+#ifndef PAPER_CUTTER_LAST_BLOCK_TRACE
+#define PAPER_CUTTER_LAST_BLOCK_TRACE 1
+#endif
+
 //
 // [APPEND-ONLY GUARD] Do not delete prior teams' comments. Add new notes below existing blocks.
 //
@@ -1399,6 +1420,39 @@ void QwenTransformer::forward_layer(
     //   This is the standard SwiGLU definition
     // CONCLUSION: SwiGLU activation is correct. Bug is NOT in the activation function.
     // NOTE: Weight loading and matrix multiplication parameters still need verification.
+    
+    // [TEAM PAPER CUTTER] 2025-10-07T08:59Z - Last block FFN weight pointers
+#if PAPER_CUTTER_LAST_BLOCK_TRACE
+    static int paper_cutter_token_count = 0;
+    bool do_paper_cutter_log = (layer_idx == (config_.num_layers - 1) && paper_cutter_token_count < 2);
+    
+    if (do_paper_cutter_log) {
+        fprintf(stderr, "\n[TEAM PAPER CUTTER] === LAST BLOCK FFN TRACE (LAYER %u, TOKEN %d, POS %u) ===\n",
+                layer_idx, paper_cutter_token_count, pos);
+        
+        // OBSERVED: Log weight pointers and verify non-null
+        fprintf(stderr, "[PAPER CUTTER] W_UP ptr=%p, W_GATE ptr=%p, W_DOWN ptr=%p\n",
+                layer.ffn_up, layer.ffn_gate, layer.ffn_down);
+        
+        // OBSERVED: Expected dims for Qwen2.5-0.5B:
+        // ffn_gate: [hidden_dim, ffn_dim] = [896, 4864]
+        // ffn_up:   [hidden_dim, ffn_dim] = [896, 4864]
+        // ffn_down: [ffn_dim, hidden_dim] = [4864, 896]
+        fprintf(stderr, "[PAPER CUTTER] Expected dims: gate/up=[896,4864], down=[4864,896]\n");
+        
+        // OBSERVED: Log first 8 values of W_down and W_up for byte-level verification
+        half h_w_down[8], h_w_up[8];
+        cudaMemcpy(h_w_down, layer.ffn_down, 8 * sizeof(half), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_w_up, layer.ffn_up, 8 * sizeof(half), cudaMemcpyDeviceToHost);
+        
+        fprintf(stderr, "[PAPER CUTTER] W_DOWN[0..7]: ");
+        for (int i = 0; i < 8; i++) fprintf(stderr, "%.6f ", __half2float(h_w_down[i]));
+        fprintf(stderr, "\n[PAPER CUTTER] W_UP[0..7]: ");
+        for (int i = 0; i < 8; i++) fprintf(stderr, "%.6f ", __half2float(h_w_up[i]));
+        fprintf(stderr, "\n");
+    }
+#endif
+    
     cuda_swiglu_forward(normed_, layer.ffn_gate, layer.ffn_up, layer.ffn_down, ffn_output_, batch_size, config_.hidden_dim, config_.ffn_dim, nullptr);
     
     // [TEAM RACE CAR] 2025-10-07T00:59Z - Checkpoint 5: After down_proj (pre-residual)
@@ -1468,6 +1522,14 @@ void QwenTransformer::forward_layer(
     if (do_racecar_log) {
         fprintf(stderr, "===END RACE CAR FFN TRACE (TOKEN %d)===\n\n", racecar_token_count);
         racecar_token_count++;
+    }
+#endif
+
+    // [TEAM PAPER CUTTER] 2025-10-07T08:59Z - Increment token counter
+#if PAPER_CUTTER_LAST_BLOCK_TRACE
+    if (do_paper_cutter_log) {
+        fprintf(stderr, "===END PAPER CUTTER LAST BLOCK FFN TRACE (TOKEN %d)===\n\n", paper_cutter_token_count);
+        paper_cutter_token_count++;
     }
 #endif
 }

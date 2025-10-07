@@ -17,6 +17,17 @@
 #ifndef RACECAR_FFN_TRACE
 #define RACECAR_FFN_TRACE 1  // Must match qwen_transformer.cpp
 #endif
+
+// ============================================================================
+// [TEAM PAPER CUTTER] 2025-10-07T08:59Z - Last Block FFN GEMM Audit
+// ============================================================================
+// OBJECTIVE: Log GEMM params (M,N,K, lda/ldb/ldc, opA/opB) for last block only
+// PLAN: Log all 3 GEMMs (gate, up, down) with exact parameters
+// OBSERVED: Will log when last_block_mode is enabled
+// ============================================================================
+#ifndef PAPER_CUTTER_LAST_BLOCK_TRACE
+#define PAPER_CUTTER_LAST_BLOCK_TRACE 1
+#endif
 //
 // ============================================================================
 // [TEAM_CHARLIE_BETA] 🔥 ROOT CAUSE FOUND! (2025-10-06 17:07 UTC)
@@ -116,6 +127,39 @@ static void log_ffn_intermediate(const char* name, const half* data, int size) {
 }
 #endif
 
+// [TEAM PAPER CUTTER] 2025-10-07T08:59Z - Last block checkpoint logger
+#if PAPER_CUTTER_LAST_BLOCK_TRACE
+static int paper_cutter_call_count = 0;
+
+static void log_paper_cutter_checkpoint(const char* name, const half* data, int size) {
+    half* h_data = new half[size];
+    cudaMemcpy(h_data, data, size * sizeof(half), cudaMemcpyDeviceToHost);
+    
+    fprintf(stderr, "[PAPER CUTTER] %s first8=[", name);
+    int display_count = (size < 8) ? size : 8;
+    for (int i = 0; i < display_count; i++) {
+        fprintf(stderr, "%.6f", __half2float(h_data[i]));
+        if (i < display_count - 1) fprintf(stderr, ", ");
+    }
+    fprintf(stderr, "]\n");
+    
+    // Compute min/max/mean
+    float min_val = __half2float(h_data[0]);
+    float max_val = __half2float(h_data[0]);
+    float sum = 0.0f;
+    for (int i = 0; i < size; i++) {
+        float val = __half2float(h_data[i]);
+        if (val < min_val) min_val = val;
+        if (val > max_val) max_val = val;
+        sum += val;
+    }
+    float mean = sum / size;
+    
+    fprintf(stderr, "[PAPER CUTTER]   min=%.6f max=%.6f mean=%.6f\n", min_val, max_val, mean);
+    delete[] h_data;
+}
+#endif
+
 /**
  * Full SwiGLU FFN forward pass
  * 
@@ -179,6 +223,16 @@ void cuda_swiglu_forward(
     //    Need CUBLAS_OP_T with lda=hidden_dim (first dimension of row-major array)
     float alpha = 1.0f;
     float beta = 0.0f;
+    
+    // [TEAM PAPER CUTTER] 2025-10-07T08:59Z - OBSERVED: GEMM_GATE params
+#if PAPER_CUTTER_LAST_BLOCK_TRACE
+    bool is_last_block = (paper_cutter_call_count < 2);  // First 2 calls = tokens 0-1 of last block
+    if (is_last_block) {
+        fprintf(stderr, "[PAPER CUTTER] GEMM_GATE M=%u, N=%u, K=%u, lda=%u, ldb=%u, ldc=%u, opA=T, opB=N, compute=32F\n",
+                ffn_dim, batch_size, hidden_dim, hidden_dim, hidden_dim, ffn_dim);
+    }
+#endif
+    
     cublasStatus_t status = cublasGemmEx(
         cublas_handle,
         CUBLAS_OP_T,  // Transpose to match row-major layout
@@ -202,9 +256,25 @@ void cuda_swiglu_forward(
     }
 #endif
     
+    // [TEAM PAPER CUTTER] 2025-10-07T08:59Z - OBSERVED: CHK_GATE
+#if PAPER_CUTTER_LAST_BLOCK_TRACE
+    if (is_last_block) {
+        log_paper_cutter_checkpoint("CHK_GATE", gate_out, ffn_dim);
+    }
+#endif
+    
     // 2. Up projection: up_out = up_weight @ input
     //    up_weight in GGUF: [hidden_dim, ffn_dim] row-major
     //    Same fix as gate - CUBLAS_OP_T with lda=hidden_dim
+    
+    // [TEAM PAPER CUTTER] 2025-10-07T08:59Z - OBSERVED: GEMM_UP params
+#if PAPER_CUTTER_LAST_BLOCK_TRACE
+    if (is_last_block) {
+        fprintf(stderr, "[PAPER CUTTER] GEMM_UP M=%u, N=%u, K=%u, lda=%u, ldb=%u, ldc=%u, opA=T, opB=N, compute=32F\n",
+                ffn_dim, batch_size, hidden_dim, hidden_dim, hidden_dim, ffn_dim);
+    }
+#endif
+    
     status = cublasGemmEx(
         cublas_handle,
         CUBLAS_OP_T,  // Transpose to match row-major layout
@@ -228,6 +298,13 @@ void cuda_swiglu_forward(
     }
 #endif
     
+    // [TEAM PAPER CUTTER] 2025-10-07T08:59Z - OBSERVED: CHK_UP
+#if PAPER_CUTTER_LAST_BLOCK_TRACE
+    if (is_last_block) {
+        log_paper_cutter_checkpoint("CHK_UP", up_out, ffn_dim);
+    }
+#endif
+    
     // 3. SwiGLU activation: swiglu_out = silu(gate_out) * up_out
     cuda_swiglu_activation(
         swiglu_out,
@@ -245,10 +322,27 @@ void cuda_swiglu_forward(
     }
 #endif
     
+    // [TEAM PAPER CUTTER] 2025-10-07T08:59Z - OBSERVED: CHK_SILU and CHK_ELEMWISE
+#if PAPER_CUTTER_LAST_BLOCK_TRACE
+    if (is_last_block) {
+        // Note: SwiGLU combines silu(gate) * up, so log the combined result
+        log_paper_cutter_checkpoint("CHK_ELEMWISE (post-SwiGLU)", swiglu_out, ffn_dim);
+    }
+#endif
+    
     // [TEAM SENTINEL] 2025-10-07T23:18Z
     // 4. Down projection: output = down_weight @ swiglu_out
     //    down_weight in GGUF: [ffn_dim, hidden_dim] row-major
     //    Use CUBLAS_OP_T with lda=ffn_dim (part of 8-matmul fix)
+    
+    // [TEAM PAPER CUTTER] 2025-10-07T08:59Z - OBSERVED: GEMM_DOWN params
+#if PAPER_CUTTER_LAST_BLOCK_TRACE
+    if (is_last_block) {
+        fprintf(stderr, "[PAPER CUTTER] GEMM_DOWN M=%u, N=%u, K=%u, lda=%u, ldb=%u, ldc=%u, opA=T, opB=N, compute=32F\n",
+                hidden_dim, batch_size, ffn_dim, ffn_dim, ffn_dim, hidden_dim);
+    }
+#endif
+    
     status = cublasGemmEx(
         cublas_handle,
         CUBLAS_OP_T,  // Transpose to match row-major layout
@@ -265,9 +359,21 @@ void cuda_swiglu_forward(
         CUBLAS_GEMM_DEFAULT
     );
     
+    // [TEAM PAPER CUTTER] 2025-10-07T08:59Z - OBSERVED: CHK_DOWN
+#if PAPER_CUTTER_LAST_BLOCK_TRACE
+    if (is_last_block) {
+        log_paper_cutter_checkpoint("CHK_DOWN", output_half, hidden_dim);
+    }
+#endif
+    
     // [TEAM RACE CAR] 2025-10-07T01:02Z - Increment call counter
 #if RACECAR_FFN_TRACE
     racecar_ffn_call_count++;
+#endif
+    
+    // [TEAM PAPER CUTTER] 2025-10-07T08:59Z - Increment call counter
+#if PAPER_CUTTER_LAST_BLOCK_TRACE
+    paper_cutter_call_count++;
 #endif
     
     // Cleanup
