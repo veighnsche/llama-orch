@@ -2,6 +2,7 @@
 #include <cublas_v2.h>
 #include <stdexcept>
 #include <cstring>
+#include "../utils/checkpoint_logger.h"
 
 // ============================================================================
 // [TEAM THIMBLE] 2025-10-07T00:18Z - Pre-transpose Experiment
@@ -297,12 +298,18 @@ QwenTransformer::QwenTransformer(
     cublasCreate(&cublas_handle_);
     cublasSetMathMode(cublas_handle_, CUBLAS_TENSOR_OP_MATH);
     
+    // [TEAM PRINTER] Initialize checkpoint logging
+    team_printer::init_checkpoint_logging();
+    
     fprintf(stderr, "✅ QwenTransformer initialized\n");
     fprintf(stderr, "   Vocab: %u, Layers: %u, Hidden: %u, Heads: %u, KV Heads: %u\n",
             config.vocab_size, config.num_layers, config.hidden_dim, config.num_heads, config.num_kv_heads);
 }
 
 QwenTransformer::~QwenTransformer() {
+    // [TEAM PRINTER] Finalize checkpoint logging
+    team_printer::finalize_checkpoint_logging();
+    
     cudaFree(kv_cache_.k_cache);
     cudaFree(kv_cache_.v_cache);
     cudaFree(kv_cache_.seq_lens);

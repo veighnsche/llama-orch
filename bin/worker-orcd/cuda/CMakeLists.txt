@@ -55,6 +55,7 @@ set(CUDA_SOURCES
     src/model/qwen_weight_loader.cpp
     src/gpt_transformer_layer.cpp
     src/transformer/qwen_transformer.cpp
+    src/utils/checkpoint_logger.cpp
 )
 
 # Kernel files

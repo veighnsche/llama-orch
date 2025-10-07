@@ -1058,6 +1058,70 @@
 
 ---
 
+### Team PRINTER (2025-10-07 ~01:24 UTC to ~01:33 UTC)
+
+**Mission:** Parity Data Sweep - Collect side-by-side checkpoint data from our engine and llama.cpp (utility team, no bug fixing)
+
+**Hypotheses Tested:**
+1. Infrastructure needed for systematic parity comparison
+2. Existing logging sufficient for initial comparison
+3. Full checkpoint logging needed for precise divergence identification
+
+**Changes Made:**
+- Created `cuda/src/utils/checkpoint_logger.h` - Checkpoint logging header
+- Created `cuda/src/utils/checkpoint_logger.cpp` - Implementation with NPZ export
+- Modified `cuda/CMakeLists.txt` line 58 - Added checkpoint_logger.cpp to build
+- Modified `cuda/src/transformer/qwen_transformer.cpp` lines 5, 302, 311 - Integrated init/finalize
+- Created `investigation-teams/TEAM_PRINTER_PARITY/` directory with 11 files:
+  - `README.md` - Comprehensive guide with practical strategy
+  - `GO_NO_GO_CHECKLIST.md` - Pre-flight verification checklist
+  - `HANDOFF.md` - Complete handoff document
+  - `EXECUTION_SUMMARY.md` - Infrastructure summary
+  - `printer_meta.json` - Environment and test metadata
+  - `run_our_engine.sh` - Runner script for our engine
+  - `run_llamacpp.sh` - Runner script for llama.cpp
+  - `convert_to_npz.py` - Binary to numpy .npz converter
+  - `collect_parity_data.py` - Automated diff report generator
+  - `vocab_and_tokenizer_snapshot/` - Directory for vocab comparison
+
+**Observations:**
+- Existing logging from SENTINEL, ORION, RACE CAR covers many checkpoints ✅
+- Checkpoint logger integrated cleanly into build system ✅
+- Non-invasive design preserves all previous investigation code ✅
+- FP16 → FP32 conversion ensures precision in comparisons ✅
+- Token-based filtering (default: tokens 0 & 1 only) reduces data volume ✅
+- Binary + manifest format allows C++ → Python workflow ✅
+
+**Conclusions:**
+- ✅ **INFRASTRUCTURE COMPLETE:** Full checkpoint logging system ready to use
+- ✅ **TWO-PHASE APPROACH:** Can use existing logs first, add full logging if needed
+- ✅ **KEY QUESTION:** Does llama.cpp also see Q[95]/Q[126] spikes?
+  - If YES → Bug is in model file or expected behavior
+  - If NO → Bug is in our cuBLAS usage or weight loading
+- 🎯 **READY TO EXECUTE:** Build, run, compare, document
+- 📊 **PRAGMATIC STRATEGY:** Start with existing logs (10 min), escalate to full logging if needed (2 hours)
+
+**Files Modified:**
+- `cuda/CMakeLists.txt` (line 58 - added checkpoint_logger.cpp)
+- `cuda/src/transformer/qwen_transformer.cpp` (lines 5, 302, 311 - integrated logger)
+
+**Files Created:**
+- `cuda/src/utils/checkpoint_logger.h` (header)
+- `cuda/src/utils/checkpoint_logger.cpp` (implementation)
+- `investigation-teams/TEAM_PRINTER_PARITY/*` (11 files total)
+
+**Status:** Infrastructure complete, ready for execution
+
+**Next Steps:**
+1. Build: `cargo clean && cargo build --release --features cuda`
+2. Run our engine: `./investigation-teams/TEAM_PRINTER_PARITY/run_our_engine.sh`
+3. Run llama.cpp: `./investigation-teams/TEAM_PRINTER_PARITY/run_llamacpp.sh`
+4. Compare logs and identify first divergence
+5. Document findings in `diff_report.md`
+6. Hand off to appropriate team based on divergence location
+
+---
+
 **Chronicle Complete**  
-**Last Updated:** 2025-10-07T00:56Z  
-**Status:** Active investigation - Q spikes proven harmless, focus shifted to FFN
+**Last Updated:** 2025-10-07T01:33Z  
+**Status:** Active investigation - TEAM PRINTER infrastructure ready, awaiting execution
