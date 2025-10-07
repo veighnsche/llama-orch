@@ -1842,6 +1842,29 @@ void QwenTransformer::project_to_vocab(
     // ============================================================================
     
     // ============================================================================
+    // [CHECKLIST_BUILDER] 2025-10-07T08:20Z - Top Priority Probe #1
+    // ============================================================================
+    // SUSPECT: LM head output projection may produce wrong logits
+    // WHY: All intermediate activations healthy (RACE CAR verified FFN, BATTLESHIP verified attention)
+    //      but output tokens are wrong → bug must be in final hidden→logits projection
+    // PLAN: Add probe to log first 10 logits for token 0, verify peaked distribution
+    //       Expected: One value >>others (e.g., 2.1 vs -3.4, -1.2...)
+    //       Actual: If flat distribution OR extreme outliers (±100+) → BUG HERE
+    // NEXT_ACTION_IF_FAIL: Compare lm_head dimensions with llama.cpp, verify GEMM params
+    // SEE: Checklist.md Top 5 #1, logs/checklist_index.json "top5-1"
+    //
+    // PROBE CODE (add after line 1761 cuBLAS GEMM call):
+    //   if (pos == 0) {  // First token only
+    //       __half* h_logits = new __half[10];
+    //       cudaMemcpy(h_logits, logits_output_, 10 * sizeof(__half), cudaMemcpyDeviceToHost);
+    //       fprintf(stderr, "[LM_HEAD_PROBE] Token 0 first 10 logits: ");
+    //       for (int i = 0; i < 10; i++) fprintf(stderr, "%.4f ", __half2float(h_logits[i]));
+    //       fprintf(stderr, "\n");
+    //       delete[] h_logits;
+    //   }
+    // ============================================================================
+    
+    // ============================================================================
     // [PEER_REVIEW] === VERIFICATION TEST SUITE ===
     // ============================================================================
     if (first_call) {
@@ -2060,6 +2083,32 @@ void QwenTransformer::forward(
     forward_call_count++;
     
     static bool first_forward = true;
+    
+    // ============================================================================
+    // [CHECKLIST_BUILDER] 2025-10-07T08:20Z - Top Priority Probe #3
+    // ============================================================================
+    // SUSPECT: Config parameters may not match llama.cpp's detected values
+    // WHY: llama.cpp log shows specific config (n_ff=4864, n_head=14, n_head_kv=2, etc.)
+    //      Never explicitly verified our code uses identical values.
+    // PLAN: Log all config parameters on first forward call, compare with llama.cpp
+    //       Expected: num_heads=14 num_kv_heads=2 head_dim=64 hidden_dim=896 
+    //                 ffn_dim=4864 rope_freq_base=1000000.0 rms_norm_eps=1e-06
+    // NEXT_ACTION_IF_FAIL: Fix config parsing in qwen_weight_loader.cpp
+    // SEE: Checklist.md Top 5 #3, logs/checklist_index.json "top5-3"
+    //
+    // PROBE CODE (add here):
+    //   static bool config_logged = false;
+    //   if (!config_logged) {
+    //       fprintf(stderr, "[CONFIG_PROBE] num_layers=%u num_heads=%u num_kv_heads=%u head_dim=%u\n",
+    //               config_.num_layers, config_.num_heads, config_.num_kv_heads, config_.head_dim);
+    //       fprintf(stderr, "[CONFIG_PROBE] hidden_dim=%u ffn_dim=%u vocab_size=%u padded_vocab=%u\n",
+    //               config_.hidden_dim, config_.ffn_dim, config_.vocab_size, config_.padded_vocab_size);
+    //       fprintf(stderr, "[CONFIG_PROBE] rope_freq_base=%.1f rms_norm_eps=%.9f\n",
+    //               config_.rope_freq_base, config_.rms_norm_eps);
+    //       config_logged = true;
+    //   }
+    // OBSERVED: (pending - run probe to collect data)
+    // ============================================================================
     
     // 🕵️ [TEAM_LOVE] INVESTIGATION TRAIL (2025-10-06 18:33-18:40 UTC)
     // ✅ VERIFIED CORRECT: Token embedding is working correctly

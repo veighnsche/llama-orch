@@ -373,6 +373,34 @@ void cuda_rope_forward_ex(
     if (err != cudaSuccess) {
         fprintf(stderr, "RoPE ex kernel execution failed: %s\n", cudaGetErrorString(err));
     }
+    
+    // ============================================================================
+    // [CHECKLIST_BUILDER] 2025-10-07T08:20Z - Top Priority Probe #2
+    // ============================================================================
+    // SUSPECT: RoPE numeric output may differ from llama.cpp despite correct formula
+    // WHY: Chronicle shows RoPE formula verified (POLARIS) but actual rotated Q/K values
+    //      never compared with llama.cpp. Formula vs computation gap.
+    // PLAN: Log Q[0:16] and K[0:16] after RoPE for layer 0, token 0
+    //       Compare with llama.cpp RoPE output for same prompt
+    //       Expected: Values match llama.cpp within ±0.01
+    // NEXT_ACTION_IF_FAIL: Check rope_freq_base (should be 1000000.0), verify head_dim (64)
+    // SEE: Checklist.md Top 5 #2, logs/checklist_index.json "top5-2"
+    //
+    // PROBE CODE (add here in qwen_transformer.cpp after RoPE call):
+    //   if (layer_idx == 0 && pos == 0) {
+    //       __half* h_q = new __half[16];
+    //       __half* h_k = new __half[16];
+    //       cudaMemcpy(h_q, q_proj_, 16 * sizeof(__half), cudaMemcpyDeviceToHost);
+    //       cudaMemcpy(h_k, k_proj_, 16 * sizeof(__half), cudaMemcpyDeviceToHost);
+    //       fprintf(stderr, "[ROPE_PROBE] L0 T0 Q[0:16] after RoPE: ");
+    //       for (int i = 0; i < 16; i++) fprintf(stderr, "%.4f ", __half2float(h_q[i]));
+    //       fprintf(stderr, "\n[ROPE_PROBE] L0 T0 K[0:16] after RoPE: ");
+    //       for (int i = 0; i < 16; i++) fprintf(stderr, "%.4f ", __half2float(h_k[i]));
+    //       fprintf(stderr, "\n");
+    //       delete[] h_q; delete[] h_k;
+    //   }
+    // OBSERVED: (pending - run probe to collect data)
+    // ============================================================================
 }
 
 } // extern "C"
