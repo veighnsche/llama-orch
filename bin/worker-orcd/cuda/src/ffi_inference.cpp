@@ -252,11 +252,19 @@ uint32_t cuda_inference_generate_token(
         //
         // The bug is NOT in this FFI layer!
         
-        // [TEAM PICASSO 2025-10-07T16:13Z] Parity logging: logits captured for token_idx
-        // Evidence in TEAM_PICASSO_CUBLAS_RESOLUTION.md - comparing against llama.cpp ground truth
+        // [TEAM PICASSO 2025-10-07T19:45Z] Parity logging: Copy logits to HOST first!
+        // BUG FIX: ctx->logits_buffer is DEVICE memory, can't read directly from CPU
+        // MUST use cudaMemcpy to copy to host buffer first
+        #ifdef ORCH_LOGGING
         static int generation_token_idx = 0;
-        ORCH_LOG_LOGITS(ctx->logits_buffer, ctx->model->config.vocab_size, generation_token_idx);
-        generation_token_idx++;
+        {
+            // Copy first 10 logits to host memory
+            float host_logits[10];
+            cudaMemcpy(host_logits, ctx->logits_buffer, 10 * sizeof(float), cudaMemcpyDeviceToHost);
+            ORCH_LOG_LOGITS(host_logits, 10, generation_token_idx);
+            generation_token_idx++;
+        }
+        #endif
         
         int next_token = cuda_sample_token(
             ctx->logits_buffer,

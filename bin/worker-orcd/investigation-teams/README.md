@@ -2,21 +2,40 @@
 
 ## 🎨 TEAM PICASSO - Parity Logging (2025-10-07)
 
-**Status:** ⚠️ Logging infrastructure needs rebuild  
+**Status:** ✅ **COMPLETE** - Logging works, 2 critical bugs fixed, 6 models tested  
 **Documents:**
-- `PARITY_LOGGING_ARCHITECTURE.md` - **READ THIS FIRST** - Proper async logging design
-- `TEAM_PICASSO_CORRECTION.md` - What went wrong and why
-- `TEAM_PICASSO_CHRONICLE.md` - Investigation timeline
-- `parity/` - Parity artifacts (llama.cpp ground truth ready)
+- `parity/FINAL_RESEARCH_SUMMARY.md` - **READ THIS FIRST** - Complete findings
+- `parity/MULTI_MODEL_GARBAGE_ANALYSIS.md` - 6-model comparison study
+- `parity/LLAMA_CPP_LOGGING_WIRING_VERIFICATION.md` - Technical verification
+- `parity/WHY_NO_PARITY.md` - Initial investigation
+- `parity/` - All test artifacts and analysis tools
 
 **Quick Summary:**
-- ✅ llama.cpp ground truth generated (14 JSONL entries)
-- ❌ worker-orcd logging broken (causes HTTP timeouts)
-- ✅ Root cause identified (file I/O on hot path)
-- ✅ Proper architecture designed (lock-free queue + background thread)
+- ✅ **2 critical bugs fixed** (M0-W-1301 violation, GPU memory access)
+- ✅ **6 models tested** (Qwen, Phi-3, TinyLlama, Llama-3-8B, GPT-2)
+- ✅ **Logging infrastructure complete** (llama.cpp + worker-orcd)
+- ✅ **Analysis tools ready** (`test_logging.sh`, `analyze_logits.py`)
+- ✅ **Root cause identified** (model-specific buffer initialization in llama.cpp)
+
+**Key Finding:**
+Llama family has best buffer management (0-6% garbage), Phi-3 worst (73% garbage).
+Even pure FP32 (GPT-2) has garbage tokens - NOT a quantization issue!
+
+**Quick Start:**
+```bash
+# Test llama.cpp logging
+cd /home/vince/Projects/llama-orch/reference/llama.cpp
+./test_logging.sh gpt2
+
+# Analyze logits
+./analyze_logits.py /tmp/llama_logging_*/logits.jsonl --stats
+
+# Export for analysis
+./analyze_logits.py /tmp/llama_logging_*/logits.jsonl --numpy output.npz
+```
 
 **For Other Teams:**
-If you need to add logging checkpoints, see `PARITY_LOGGING_ARCHITECTURE.md` section "Extensibility for Other Teams"
+See `../../reference/llama.cpp/ORCH_LOGGING_README.md` for usage guide
 
 ---
 

@@ -41,14 +41,12 @@ echo "Downloading Phi-3-Mini-4K-Instruct (Q4_K_M)..."
 echo "This will take a few minutes depending on your connection."
 echo ""
 
-# Try huggingface-cli first (recommended)
-if command -v huggingface-cli &> /dev/null; then
-    echo "Using huggingface-cli (recommended)..."
-    cd "$MODEL_DIR"
-    huggingface-cli download microsoft/Phi-3-mini-4k-instruct-gguf \
+# Use modern hf command
+if command -v hf &> /dev/null; then
+    echo "Using hf download (modern CLI)..."
+    hf download microsoft/Phi-3-mini-4k-instruct-gguf \
         Phi-3-mini-4k-instruct-q4.gguf \
-        --local-dir . \
-        --local-dir-use-symlinks False
+        --local-dir "$MODEL_DIR"
     
     echo ""
     echo "✅ Download complete!"
@@ -70,12 +68,12 @@ elif command -v curl &> /dev/null; then
     echo "✅ Download complete!"
     
 else
-    echo "❌ Error: No download tool found (huggingface-cli, wget, or curl)"
+    echo "❌ Error: No download tool found (hf, wget, or curl)"
     echo ""
     echo "Install one of:"
-    echo "  - huggingface-cli: pip install huggingface-hub"
-    echo "  - wget: sudo pacman -S wget"
-    echo "  - curl: sudo pacman -S curl"
+    echo "  - hf: pipx install 'huggingface_hub[cli,hf_transfer]'"
+    echo "  - wget: sudo apt install wget"
+    echo "  - curl: sudo apt install curl"
     exit 1
 fi
 

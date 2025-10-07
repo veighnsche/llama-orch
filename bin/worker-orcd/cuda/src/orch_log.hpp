@@ -58,22 +58,10 @@ private:
     }
     
     void flush() {
-        if (!enabled_) {
-            fprintf(stderr, "[ORCH_LOG] Flush called but logging disabled\n");
-            return;
-        }
-        if (entries_.empty()) {
-            fprintf(stderr, "[ORCH_LOG] Flush called but no entries (logged 0 entries)\n");
-            return;
-        }
-        
-        fprintf(stderr, "[ORCH_LOG] Flushing %zu entries to %s\n", entries_.size(), log_file_);
+        if (!enabled_ || entries_.empty()) return;
         
         FILE* f = fopen(log_file_, "a");
-        if (!f) {
-            fprintf(stderr, "[ORCH_LOG] ERROR: Could not open %s for writing\n", log_file_);
-            return;
-        }
+        if (!f) return;
         
         for (const auto& entry : entries_) {
             // Format timestamp
@@ -115,18 +103,17 @@ public:
     void log_values(const char* checkpoint, const float* data, int count, 
                    const char* dtype, const char* shape, int token_idx,
                    const char* file, int line) {
-        if (!enabled_) {
-            fprintf(stderr, "[ORCH_LOG] log_values called but disabled (ORCH_LOG_FILE not set?)\n");
-            return;
-        }
+        if (!enabled_) return;
         
-        fprintf(stderr, "[ORCH_LOG] Logging %s token_idx=%d\n", checkpoint, token_idx);
+        // [TEAM PICASSO 2025-10-07T19:45Z] BUG FIX: data is now HOST memory!
+        // Previous bug: Was passing DEVICE pointer, causing undefined behavior
+        // Now: Caller does cudaMemcpy first, so this is safe
         
         LogEntry entry;
         entry.checkpoint = checkpoint;
         entry.token_idx = token_idx;
         
-        // Copy 10 values
+        // Copy values (now safe - data is in HOST memory)
         int n = (count < 10) ? count : 10;
         for (int i = 0; i < n; ++i) {
             entry.values[i] = data[i];

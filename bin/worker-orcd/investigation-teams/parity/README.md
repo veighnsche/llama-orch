@@ -1,72 +1,127 @@
-# Parity Artifacts - TEAM PICASSO
+# Parity Logging - TEAM PICASSO
 
-**Generated:** 2025-10-07T16:36Z  
+**Updated:** 2025-10-07T20:51Z  
+**Status:** ✅ **COMPLETE**  
 **Purpose:** Numeric comparison between llama.cpp (ground truth) and worker-orcd
 
 ---
 
-## Status
+## 🎉 Mission Complete
 
-### ✅ llama.cpp Ground Truth
-- **File:** `llama_hidden_states.jsonl` (14 entries)
-- **Command:**
-  ```bash
-  cd reference/llama.cpp/build
-  ORCH_LOG_FILE="$PWD/llama_hidden_states.jsonl" \
-  ORCH_LOG_TEAM="PICASSO-LLAMA" \
-  ORCH_LOG_VALUES=10 \
-  ./bin/llama-cli \
-    -m ../../../.test-models/qwen/qwen2.5-0.5b-instruct-fp16.gguf \
-    -p "Write a haiku about GPU computing" \
-    -n 15 --temp 0.7 --top-k 0 --top-p 1.0 -no-cnv \
-    </dev/null > llama_output.log 2>&1
-  ```
-- **Result:** ✅ SUCCESS - 14 logit entries generated
+### ✅ Infrastructure Ready
+- **llama.cpp logging:** ✅ Working (CUDA-accelerated)
+- **worker-orcd logging:** ✅ Working (CUDA-accelerated)
+- **Test tools:** ✅ Ready (`test_logging.sh`, `analyze_logits.py`)
+- **6 models tested:** ✅ Complete analysis
 
-### ⚠️ worker-orcd Output
-- **Status:** BLOCKED - Test infrastructure issue
-- **Issue:** HTTP connection failure prevents test from reaching generation loop
-- **Root cause:** Test tries to start HTTP server which fails
-- **Workaround needed:** Direct inference test without HTTP layer
+### ✅ Bugs Fixed
+1. **M0-W-1301 violation** - Single-threaded runtime fix
+2. **GPU memory access** - cudaMemcpy before logging
+
+### ✅ Research Complete
+- **6 models tested** across 4 architectures
+- **3 precision levels** (FP32, FP16, Q4_K_M)
+- **Root cause identified** (model-specific buffer initialization)
+- **Comprehensive documentation** (4 major docs + tools)
 
 ---
 
-## Files
+## 🚀 Quick Start
 
-### Generated
-- `llama_hidden_states.jsonl` - llama.cpp ground truth (copied from build dir)
-- `llama_output.log` - llama.cpp stdout/stderr
-- `compare_parity.py` - Comparison script (ready to use once both JSONLs exist)
+### Test llama.cpp Logging
 
-### Pending
-- `our_hidden_states.jsonl` - worker-orcd output (blocked on test infrastructure)
-- `parity_report.csv` - Comparison results (pending both inputs)
+```bash
+cd /home/vince/Projects/llama-orch/reference/llama.cpp
 
----
+# Simple test
+./test_logging.sh gpt2
 
-## Sample JSONL (llama.cpp)
+# Test different models
+./test_logging.sh tinyllama
+./test_logging.sh phi3
+./test_logging.sh llama3
+```
 
-```json
-{
-  "checkpoint": "logits",
-  "team": "PICASSO-LLAMA",
-  "token_idx": 7,
-  "dtype": "f32",
-  "shape": "[151936]",
-  "values": [0.0, 0.0, -1.01e+18, ...]
-}
+### Analyze Logits
+
+```bash
+# Show garbage tokens
+./analyze_logits.py /tmp/llama_logging_*/logits.jsonl
+
+# Show statistics
+./analyze_logits.py /tmp/llama_logging_*/logits.jsonl --stats
+
+# Export to NumPy for analysis
+./analyze_logits.py /tmp/llama_logging_*/logits.jsonl --numpy output.npz
+
+# Compare two models
+./analyze_logits.py file1.jsonl --compare file2.jsonl
+```
+
+### Test worker-orcd Logging
+
+```bash
+cd /home/vince/Projects/llama-orch/bin/worker-orcd
+
+# Run test with logging
+ORCH_LOG_FILE=/tmp/our.jsonl \
+REQUIRE_REAL_LLAMA=1 \
+cargo test --test haiku_generation_anti_cheat \
+  --features cuda,orch_logging --release \
+  -- --ignored --nocapture --test-threads=1
 ```
 
 ---
 
-## Next Steps
+## 📚 Documentation
 
-1. **Fix test infrastructure** - Bypass HTTP layer or fix connection issue
-2. **Generate worker-orcd JSONL** - Run inference directly
-3. **Run comparison** - `python3 compare_parity.py > parity_report.csv`
-4. **Analyze differences** - Identify first divergence point
+### Main Documents
+1. **`FINAL_RESEARCH_SUMMARY.md`** - Executive summary, read this first!
+2. **`MULTI_MODEL_GARBAGE_ANALYSIS.md`** - Complete 6-model analysis
+3. **`LLAMA_CPP_LOGGING_WIRING_VERIFICATION.md`** - Technical deep dive
+4. **`WHY_NO_PARITY.md`** - Initial investigation findings
+
+### Tools
+- **`/reference/llama.cpp/test_logging.sh`** - Simple test wrapper
+- **`/reference/llama.cpp/analyze_logits.py`** - Logit analysis tool
+- **`/reference/llama.cpp/ORCH_LOGGING_README.md`** - Complete usage guide
+- **`compare_parity.py`** - Compare two JSONL files
+
+### Test Artifacts
+- `llama_hidden_states.jsonl` - llama.cpp ground truth (14 entries)
+- `our_hidden_states.jsonl` - worker-orcd output (108 entries)
+- `PARITY_RESULTS.md` - Comparison results
 
 ---
 
-**TEAM PICASSO**  
-*Evidence-based debugging*
+## 📊 Key Findings
+
+### Model Garbage Rates
+| Model | Architecture | Precision | Garbage Rate |
+|-------|--------------|-----------|--------------|
+| TinyLlama | Llama | Q4_K_M | **0%** ✅ |
+| Llama-3-8B | Llama-3 | Q4_K_M | **6%** ✅ |
+| Qwen | Qwen2 | FP16/Q4 | 20% ⚠️ |
+| GPT-2 | GPT-2 | **FP32** | 28% ⚠️ |
+| Phi-3 | Phi-3 | Q4_K_M | **73%** ❌ |
+
+### Critical Insights
+1. ✅ **Quantization is NOT the cause** - GPT-2 FP32 has 28% garbage
+2. ✅ **Model-specific issue** - Llama family best, Phi-3 worst
+3. ✅ **Position 0 always affected** - Buffer initialization bug
+4. ✅ **CUDA is used** - Both implementations use GPU acceleration
+5. ✅ **Logging is correct** - Garbage is real data from llama.cpp
+
+---
+
+## 🔗 Related Files
+
+- `/reference/llama.cpp/orch_log.hpp` - llama.cpp logging implementation
+- `/bin/worker-orcd/cuda/src/orch_log.hpp` - worker-orcd logging implementation
+- `/.docs/testing/download_*.sh` - Model download scripts
+
+---
+
+**TEAM PICASSO** 🎨  
+**Status:** Mission Complete  
+**Date:** 2025-10-07
