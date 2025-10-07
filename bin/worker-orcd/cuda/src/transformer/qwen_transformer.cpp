@@ -1379,6 +1379,22 @@ void QwenTransformer::forward_layer(
     half* layer_k_cache = reinterpret_cast<half*>(kv_cache_.k_cache) + layer_cache_offset;
     half* layer_v_cache = reinterpret_cast<half*>(kv_cache_.v_cache) + layer_cache_offset;
     
+    // ============================================================================
+    // [TEAM_DRAWER] Gate 4: Layer isolation (2025-10-07T09:40Z)
+    // ============================================================================
+    // Log layer base pointers for layer 0 and last layer to verify isolation
+    static bool drawer_layer_logged = false;
+    if (!drawer_layer_logged && pos == 0 && (layer_idx == 0 || layer_idx == config_.num_layers - 1)) {
+        fprintf(stderr, "[TEAM_DRAWER] === LAYER BASES (pos=%u) ===\n", pos);
+        fprintf(stderr, "[TEAM_DRAWER] LAYER_%zu: k_cache_base=%p, v_cache_base=%p, offset=%zu\n",
+                layer_idx, (void*)layer_k_cache, (void*)layer_v_cache, layer_cache_offset);
+        fprintf(stderr, "[TEAM_DRAWER] LAYER_%zu: offset_bytes=%zu\n", 
+                layer_idx, layer_cache_offset * sizeof(half));
+        if (layer_idx == config_.num_layers - 1) {
+            drawer_layer_logged = true;
+        }
+    }
+    
     // [TEAM_CHARLIE_GAMMA] CRITICAL BUG LOCATION! (2025-10-06 17:32 UTC)
     // We pass pos as cache_len parameter, but debug shows cache_len=0 always!
     // This means attention kernel receives cache_len=0 even when pos=1,2,3...

@@ -243,6 +243,20 @@ __global__ void gqa_attention_decode_kernel_impl(
                q_head, kv_head);
     }
     
+    // ============================================================================
+    // [TEAM_DRAWER] Gate 1: Log cache layout and strides (2025-10-07T09:40Z)
+    // ============================================================================
+    if (tid == 0 && batch == 0 && q_head == 0 && cache_len == 0) {
+        printf("\n[TEAM_DRAWER] === KV CACHE LAYOUT (batch=%d, cache_len=%d) ===\n", batch, cache_len);
+        printf("[TEAM_DRAWER] Gate 1 - LAYOUT: K=[batch, kv_head, pos, d], V=[batch, kv_head, pos, d]\n");
+        printf("[TEAM_DRAWER] DIMS: num_kv_heads=%d, max_seq_len=%d, head_dim=%d\n",
+               num_kv_heads, max_seq_len, head_dim);
+        printf("[TEAM_DRAWER] STRIDES: per_head=%d, per_pos=%d, per_dim=%d (in half elements)\n",
+               max_seq_len * head_dim, head_dim, 1);
+        printf("[TEAM_DRAWER] STRIDES_BYTES: per_head=%d, per_pos=%d, per_dim=%d\n",
+               max_seq_len * head_dim * 2, head_dim * 2, 2);
+    }
+    
     // Shared memory for attention scores and reduction
     extern __shared__ float shared_mem[];
     float* scores = shared_mem;
@@ -334,6 +348,26 @@ __global__ void gqa_attention_decode_kernel_impl(
     // For decode (single token generation), current position is cache_len.
     // All positions 0..cache_len are valid (past and current), no masking needed in decode.
     // Causal masking is automatically satisfied since we only compute scores for pos <= cache_len.
+    
+    // ============================================================================
+    // [TEAM_DRAWER] Gate 3: Past-read correctness (2025-10-07T09:40Z)
+    // ============================================================================
+    // For token t (t>=1), read K/V at pos=t-1 and log first 8 values
+    if (tid == 0 && batch == 0 && q_head == 0 && cache_len >= 1 && cache_len <= 2) {
+        int past_pos = cache_len - 1;
+        printf("\n[TEAM_DRAWER] === READ t=%d, reading past pos=%d, kv_head=%d ===\n", 
+               cache_len, past_pos, kv_head);
+        for (int i = 0; i < 8; i++) {
+            int k_cache_idx = batch * num_kv_heads * max_seq_len * head_dim +
+                              kv_head * max_seq_len * head_dim +
+                              past_pos * head_dim + i;
+            printf("[TEAM_DRAWER] READ_PAST[%d]: K=%.6f, V=%.6f (pos=%d)\n", 
+                   i, __half2float(kv_cache_k[k_cache_idx]), 
+                   __half2float(kv_cache_v[k_cache_idx]), past_pos);
+        }
+        printf("[TEAM_DRAWER] MATCH? Compare with WRITE t=%d values above\n", past_pos);
+    }
+    
     for (int pos = tid; pos <= cache_len; pos += blockDim.x) {
         float score = 0.0f;
         
@@ -751,6 +785,37 @@ __global__ void gqa_attention_decode_kernel_impl(
                                   cache_len * head_dim + d;
             kv_cache_k[cache_write_idx] = k_current[k_idx];
             kv_cache_v[cache_write_idx] = v_current[v_idx];
+            
+            // ============================================================================
+            // [TEAM_DRAWER] Gate 2: Write-at-pos correctness (2025-10-07T09:40Z)
+            // ============================================================================
+            // Log write address and first 8 values, then immediately read back
+            if (d < 8 && batch == 0 && cache_len <= 2 && (kv_head == 0 || kv_head == 1)) {
+                if (d == 0) {
+                    printf("\n[TEAM_DRAWER] === WRITE t=%d kv_head=%d (q_head=%d) ===\n", 
+                           cache_len, kv_head, q_head);
+                    printf("[TEAM_DRAWER] WRITE_ADDR: cache_write_idx=%d (pos=%d)\n", 
+                           cache_write_idx, cache_len);
+                }
+                // Print values being written
+                float k_write = __half2float(k_current[k_idx]);
+                float v_write = __half2float(v_current[v_idx]);
+                printf("[TEAM_DRAWER] WRITE[%d]: K=%.6f, V=%.6f\n", d, k_write, v_write);
+                
+                // Immediate read-back verification
+                float k_readback = __half2float(kv_cache_k[cache_write_idx]);
+                float v_readback = __half2float(kv_cache_v[cache_write_idx]);
+                
+                if (d == 7) {
+                    printf("[TEAM_DRAWER] READBACK verification:\n");
+                    // Print first 8 readback values
+                    for (int i = 0; i < 8; i++) {
+                        int rb_idx = cache_write_idx - d + i;
+                        printf("[TEAM_DRAWER] READBACK[%d]: K=%.6f, V=%.6f\n", 
+                               i, __half2float(kv_cache_k[rb_idx]), __half2float(kv_cache_v[rb_idx]));
+                    }
+                }
+            }
             
             // 🕵️ [TEAM_GENERAL] SUSPICION #2: Excessive debug output causing test to hang! (2025-10-06 18:09 UTC)
             // This printf (and many others in this file) execute for EVERY token, EVERY layer.
