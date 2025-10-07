@@ -1,14 +1,41 @@
-# TEAM PEAR — Phase 0: Comprehensive Checklist & 10-Phase Plan
-**Generated:** 2025-10-07T10:16Z  
-**Mission:** Skeptical peer review & cleanup of all prior investigation team claims  
-**Scope:** All teams from INVESTIGATION_CHRONICLE.md + FALSE_LEADS_SUMMARY.md + code comments
+# TEAM PEAR — 10-Phase Peer Review Plan
+**Generated:** 2025-10-07T10:53Z (REBUILT)  
+**Mission:** Systematic skeptical peer review of all investigation team claims  
+**Status:** Phase 0 Complete — Ready for Phase 1
 
 ---
 
-## 📋 Claim Inventory Summary
+## 📋 Overview
 
-**Total Claims Analyzed:** 89  
-**Teams Reviewed:** 22 (Blue, Purple, Green, Water, Charlie, Charlie Beta, Root Cause, Peer Review, Bygone, Felicia, Aurora, HYPERION, ORION, THIMBLE, TOP HAT, HELIOS, BATTLESHIP, PRINTER, LAMINATOR, HOLE_PUNCH, SHREDDER, LABEL_MAKER, DRAWER)  
+This plan divides the peer review workload into 10 balanced phases. Each phase focuses on a specific subsystem or investigation area, covering all relevant team claims from the chronicles, code comments, and false leads documentation.
+
+**Total Claims Identified:** ~100+ across 23 teams  
+**Estimated Total Effort:** 12-15 hours  
+**Approach:** Document review → Code inspection → Evidence verification → Stamp verdicts
+
+---
+
+## Phase Definitions
+
+### Phase 0: Setup & Claim Inventory ✅ COMPLETE
+**Goal:** Scan chronicles and code to identify all teams, claims, and build 10-phase structure  
+**Duration:** 30 minutes  
+**Status:** ✅ Complete (2025-10-07T10:53Z)
+
+**Inputs:**
+- `INVESTIGATION_CHRONICLE.md` (1248 lines, 23 teams documented)
+- `FALSE_LEADS_SUMMARY.md` (464 lines, 14 false leads)
+- Code comments across repo (219 in qwen_transformer.cpp alone)
+
+**Deliverables:**
+- ✅ Team roster (23 teams identified)
+- ✅ Claim inventory (~100+ claims mapped)
+- ✅ 10-phase plan structure
+- ✅ Priority ranking (FFN path = highest)
+
+**Exit Criteria:**
+- All teams appear in at least one phase
+- Each phase has roughly balanced effort (45-90 minutes)
 
 **Claim Categories:**
 - ✅ **Verified Correct:** 47 claims (components working as expected)
@@ -22,45 +49,9 @@
 
 ## 🎯 10-Phase Plan (Balanced by Effort)
 
-### **Phase 1: Tokenization & Embedding Pipeline** (Est: 45 min)
-**Goal:** Verify all claims about token IDs, special tokens, embedding lookup, and prompt formatting.
+### Phase 1: Tokenization & Embedding Pipeline (9 claims, 45 min)
 
-**Inputs:**
-- Team Blue findings (special token fix)
-- Team Purple findings (token ID verification, embedding checks)
-- Team Prompt findings (chat template)
-- FALSE_LEADS_SUMMARY.md #1-4
-
-**Scope:**
-1. Team Blue: Special token IDs 151644/151645 manually inserted (lines 153-246 `cuda_backend.rs`)
-2. Team Purple: Vocab size = 151936 (tokens valid)
-3. Team Purple: Special token embeddings exist, values ~0.01
-4. Team Purple: Token sequence format matches llama.cpp
-5. Team Prompt: Chat template format correct
-6. FALSE LEAD #1: Token IDs out of bounds
-7. FALSE LEAD #2: Special token embeddings are zeros
-8. FALSE LEAD #3: Tokenization approach matters
-9. FALSE LEAD #4: Chat template format wrong
-
-**Method:**
-- Replicate: Run same prompt through tokenizer, verify token IDs match Blue's findings
-- Check: Dump embeddings for tokens 151643-151645, verify non-zero
-- Compare: Token sequence against llama.cpp debug logs
-- Evidence: Checksum token IDs, embedding first-16 values
-
-**Artifacts:**
-- `PHASE1_TOKENIZATION_REPORT.md`
-- `phase1_token_ids.txt` (token sequence comparison)
-- `phase1_embeddings.csv` (embedding values for special tokens)
-
-**Exit Criteria:**
-- All 9 claims stamped with [PEER:VERIFIED] or [PEER:FALSIFIED]
-- Evidence files created with checksums
-- Any fines logged to FINES_LEDGER.csv
-
----
-
-### **Phase 2: cuBLAS Matrix Multiplication Correctness** (Est: 60 min)
+### Phase 2: cuBLAS Matrix Multiplication Correctness (8 claims, 60 min)
 **Goal:** Verify all claims about cuBLAS matrix multiplication, transpose flags, and manual verification.
 
 **Inputs:**
