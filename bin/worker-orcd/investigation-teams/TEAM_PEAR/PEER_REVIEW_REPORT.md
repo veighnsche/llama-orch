@@ -7,21 +7,24 @@
 
 ## 📋 Executive Summary
 
-**Claims Reviewed:** 0 / 89  
-**Claims Verified:** 0  
+**Claims Reviewed:** 9 / 89  
+**Claims Verified:** 9  
 **Claims Falsified:** 0  
 **Claims Needing Evidence:** 0  
 **Total Fines Assessed:** €0  
 
-**Current Phase:** Phase 0 Complete — Phase 1 Ready to Start
+**Current Phase:** Phase 1 Complete — Phase 2 Ready to Start
 
 ---
 
 ## 🔍 Phase-by-Phase Findings
 
 ### Phase 1: Tokenization & Embedding Pipeline
-**Status:** Not Started  
-**Claims Reviewed:** 0 / 9
+**Status:** ✅ Complete  
+**Claims Reviewed:** 9 / 9  
+**Claims Verified:** 9 (Team Blue special token fix, Team Purple verifications, 4 false leads confirmed)  
+**Fines:** €0  
+**Report:** `PHASE1_TOKENIZATION_REPORT.md`
 
 ---
 
@@ -82,7 +85,15 @@
 ## 📊 Claim Registry
 
 ### Verified Claims (✅)
-*None yet*
+1. **Team Blue:** Special token IDs 151644/151645 manually inserted (cuda_backend.rs:180-181)
+2. **Team Purple:** Vocab size = 151936 (not 151643)
+3. **Team Purple:** Special token embeddings valid (~0.01 FP16 range)
+4. **Team Purple:** Embedding lookup returns correct values
+5. **Team Purple:** Token sequence format matches llama.cpp template
+6. **FALSE LEAD #1:** Token IDs out of bounds (correctly disproven)
+7. **FALSE LEAD #2:** Special token embeddings are zeros (correctly disproven)
+8. **FALSE LEAD #3:** Tokenization approach matters (correctly disproven)
+9. **FALSE LEAD #4:** Chat template format wrong (correctly disproven)
 
 ### Falsified Claims (❌)
 *None yet*
