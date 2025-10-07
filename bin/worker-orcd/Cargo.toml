@@ -27,6 +27,8 @@ futures = { workspace = true }
 thiserror = { workspace = true }
 observability-narration-core = { path = "../shared-crates/narration-core", features = ["axum", "cute-mode"] }
 half = "2.4"
+# [TEAM PICASSO 2025-10-07T15:36Z] Numeric parity logging
+lazy_static = { version = "1.4", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
@@ -43,6 +45,12 @@ toml = "0.8"
 [features]
 default = []
 cuda = []  # Enable CUDA support (requires NVIDIA GPU + CUDA toolkit)
+# [TEAM PICASSO 2025-10-07T15:38Z] Numeric parity logging feature
+# Enables append-only JSONL logging for comparing with llama.cpp ground truth
+# Usage: cargo test --features cuda,orch_logging ...
+# Env vars: ORCH_LOG_FILE, ORCH_LOG_TEAM, ORCH_LOG_VALUES
+# See: investigation-teams/PARITY_COMPARISON_SPEC.md
+orch_logging = ["lazy_static"]
 
 [[bin]]
 name = "worker-orcd"

@@ -752,8 +752,17 @@ impl InferenceBackend for CudaInferenceBackend {
             token_idx += 1;
         }
 
-        eprintln!("\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        eprintln!("\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         eprintln!("✅ Generated {} tokens", token_idx);
+
+        // [TEAM PICASSO 2025-10-07T16:13Z] Flush ORCH logs immediately after generation
+        // Ensures logs persist even if test framework exits early
+        #[cfg(feature = "orch_logging")]
+        unsafe {
+            eprintln!("[TEAM PICASSO] Flushing ORCH logs to disk...");
+            crate::cuda::ffi::orch_log_flush_now();
+            eprintln!("[TEAM PICASSO] ORCH logs flushed successfully");
+        }
 
         // Print debug summary at the END
         eprintln!("\n📊 DEBUG SUMMARY (First 10 tokens):");

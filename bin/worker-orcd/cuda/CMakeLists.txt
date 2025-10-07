@@ -39,6 +39,13 @@ set(CMAKE_CUDA_ARCHITECTURES 75 80 86 89 90)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr --extended-lambda")
 
+# [TEAM PICASSO 2025-10-07T15:47Z] Enable ORCH_LOGGING for numeric parity comparison
+option(ORCH_LOGGING "Enable ORCH numeric parity logging" OFF)
+if(ORCH_LOGGING)
+    add_compile_definitions(ORCH_LOGGING)
+    message(STATUS "ORCH_LOGGING enabled for numeric parity comparison")
+endif()
+
 # Source files
 set(CUDA_SOURCES
     src/context.cpp

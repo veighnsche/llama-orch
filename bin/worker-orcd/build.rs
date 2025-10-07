@@ -179,6 +179,12 @@ fn build_with_cuda() {
         .define("CMAKE_BUILD_TYPE", "Release")
         .define("BUILD_TESTING", "OFF")
         .always_configure(false);  // Don't reconfigure CMake unless CMakeLists.txt changes
+    
+    // [TEAM PICASSO 2025-10-07T15:47Z] Enable ORCH_LOGGING for parity comparison
+    if cfg!(feature = "orch_logging") {
+        config.define("ORCH_LOGGING", "ON");
+        println!("cargo:warning=ORCH_LOGGING enabled for numeric parity comparison");
+    }
 
     // Set CUDA toolkit path if found
     // FIX (2025-10-04 - Cascade): CMAKE_CUDA_COMPILER is REQUIRED when nvcc is not in PATH.

@@ -871,6 +871,7 @@ void QwenTransformer::forward_layer(
     // CONCLUSION: The bug is NOT here. Don't waste time re-investigating cuBLAS params.
     // See: investigation-teams/TEAM_SENTINEL_VICTORY.md for full explanation.
     // [TEAM MONET 2025-10-07T14:22Z] Checked line 873: CUBLAS_OP_T lda=896 ✅
+    // [TEAM PICASSO 2025-10-07T14:32Z] Read OP_T + lda=hidden_dim (evidence in PICASSO report)
     cublasGemmEx(cublas_handle_, CUBLAS_OP_T, CUBLAS_OP_N, 
                  q_dim, batch_size, config_.hidden_dim, 
                  &alpha, 
@@ -964,6 +965,7 @@ void QwenTransformer::forward_layer(
     // K projection: same fix as Q - use CUBLAS_OP_T with lda=hidden_dim (part of 8-matmul fix)
     // ⚠️ [TEAM PEAR] These parameters are CORRECT. Don't change them. Bug is elsewhere.
     // [TEAM MONET 2025-10-07T14:22Z] Checked line 966: CUBLAS_OP_T lda=896 ✅
+    // [TEAM PICASSO 2025-10-07T14:32Z] Read OP_T + lda=hidden_dim (evidence in PICASSO report)
     uint32_t kv_dim = config_.num_kv_heads * config_.head_dim;
     cublasGemmEx(cublas_handle_, CUBLAS_OP_T, CUBLAS_OP_N, kv_dim, batch_size, config_.hidden_dim, &alpha, layer.attn_k_weight, CUDA_R_16F, config_.hidden_dim, normed_half, CUDA_R_16F, config_.hidden_dim, &beta, k_half, CUDA_R_16F, kv_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
     
@@ -992,6 +994,7 @@ void QwenTransformer::forward_layer(
     // V projection: same fix as Q/K - use CUBLAS_OP_T with lda=hidden_dim (part of 8-matmul fix)
     // ⚠️ [TEAM PEAR] These parameters are CORRECT. Don't change them. Bug is elsewhere.
     // [TEAM MONET 2025-10-07T14:22Z] Checked line 992: CUBLAS_OP_T lda=896 ✅
+    // [TEAM PICASSO 2025-10-07T14:32Z] Read OP_T + lda=hidden_dim (evidence in PICASSO report)
     cublasGemmEx(cublas_handle_, CUBLAS_OP_T, CUBLAS_OP_N, kv_dim, batch_size, config_.hidden_dim, &alpha, layer.attn_v_weight, CUDA_R_16F, config_.hidden_dim, normed_half, CUDA_R_16F, config_.hidden_dim, &beta, v_half, CUDA_R_16F, kv_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
     
     // [TEAM GREEN] 2025-10-06T20:43Z - BUG FIX!
@@ -1645,6 +1648,7 @@ void QwenTransformer::forward_layer(
     
     // ⚠️ [TEAM PEAR] Attention output projection uses CUBLAS_OP_T (CORRECT, don't change)
     // [TEAM MONET 2025-10-07T14:22Z] Checked line 1644: CUBLAS_OP_T lda=q_dim ✅
+    // [TEAM PICASSO 2025-10-07T14:32Z] Read OP_T + lda=q_dim (evidence in PICASSO report)
     cublasGemmEx(cublas_handle_, CUBLAS_OP_T, CUBLAS_OP_N, config_.hidden_dim, batch_size, q_dim, &alpha, layer.attn_output, CUDA_R_16F, q_dim, attn_out_half, CUDA_R_16F, q_dim, &beta, ffn_out_half, CUDA_R_16F, config_.hidden_dim, attn_proj_compute, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
     
 #if PLOTTER_WO_TRACE
@@ -2186,6 +2190,7 @@ void QwenTransformer::project_to_vocab(
     // DO NOT waste time testing CUBLAS_OP_N or different lda values.
     // The bug is NOT in cuBLAS parameters. Look elsewhere (weight loading, dequant, etc.).
     // [TEAM MONET 2025-10-07T14:22Z] Checked line 2186: CUBLAS_OP_T lda=896 ✅
+    // [TEAM PICASSO 2025-10-07T14:32Z] Read OP_T + lda=hidden_dim (evidence in PICASSO report)
     cublasStatus_t status = cublasGemmEx(
         cublas_handle_,
         CUBLAS_OP_T, CUBLAS_OP_N,  // Transpose lm_head to match row-major layout

@@ -282,6 +282,18 @@ extern "C" {
     pub fn cuda_inference_context_free(ctx: *mut InferenceContext);
 
     // ========================================================================
+    // ORCH Logging (TEAM PICASSO 2025-10-07T16:13Z)
+    // ========================================================================
+    
+    /// Flush ORCH parity logs immediately (for early-exit scenarios).
+    ///
+    /// # Safety
+    ///
+    /// - Safe to call at any time
+    /// - No-op when ORCH_LOGGING is not enabled
+    pub fn orch_log_flush_now();
+
+    // ========================================================================
     // CUDA Memory Management (for Rust weight loading)
     // ========================================================================
 
@@ -563,6 +575,12 @@ pub unsafe fn cuda_load_model_from_pointers(
 
 #[cfg(not(feature = "cuda"))]
 pub unsafe fn cuda_free_pointer_map(_map: *mut GpuPointerMap) {}
+
+// [TEAM PICASSO 2025-10-07T16:13Z] ORCH logging stub
+#[cfg(not(feature = "cuda"))]
+pub unsafe fn orch_log_flush_now() {
+    // No-op when CUDA disabled
+}
 
 // ---
 // Built by Foundation-Alpha 🏗️
