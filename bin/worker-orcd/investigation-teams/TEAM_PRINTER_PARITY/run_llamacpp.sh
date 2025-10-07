@@ -34,8 +34,9 @@ echo "  Tokens to generate: 2 (BOS context + 1 new token)"
 echo ""
 
 # Run llama.cpp with greedy sampling
-# Note: llama.cpp doesn't have built-in checkpoint logging, so we'll capture its output
-# and manually extract token IDs and decoded strings
+# CRITICAL: Redirect to file first, then grep afterward to avoid interactive pipe deadlock
+# DO NOT pipe llama-cli directly to grep/head - it launches an interactive REPL
+# DO NOT use --log-disable if you want tokenization/BOS/EOS details
 
 echo "[TEAM PRINTER] Running llama.cpp..."
 cd "$LLAMA_CPP_DIR"
@@ -47,10 +48,9 @@ cd "$LLAMA_CPP_DIR"
     --top-p 1.0 \
     --top-k 0 \
     --seed 12345 \
-    --n-predict 2 \
-    --log-disable \
+    --n-predict 50 \
     --verbose-prompt \
-    2>&1 | tee "$SCRIPT_DIR/llamacpp.run.log"
+    > "$SCRIPT_DIR/llamacpp.run.log" 2>&1
 
 echo ""
 echo "[TEAM PRINTER] ============================================"
@@ -58,13 +58,27 @@ echo "[TEAM PRINTER] llama.cpp run complete"
 echo "[TEAM PRINTER] Log saved to: $SCRIPT_DIR/llamacpp.run.log"
 echo "[TEAM PRINTER] ============================================"
 echo ""
-echo "[TEAM PRINTER] NOTE: llama.cpp does not have built-in checkpoint logging."
-echo "[TEAM PRINTER] To get full parity data, you would need to:"
-echo "[TEAM PRINTER]   1. Modify llama.cpp source to add checkpoint dumps"
-echo "[TEAM PRINTER]   2. Or use llama.cpp's --verbose flag and parse output"
-echo "[TEAM PRINTER]   3. Or use a debugger to extract intermediate values"
+echo "[TEAM PRINTER] Extracting tokenization details..."
 echo ""
-echo "[TEAM PRINTER] For now, we can at least compare:"
-echo "[TEAM PRINTER]   - Token IDs generated"
-echo "[TEAM PRINTER]   - Decoded UTF-8 strings"
-echo "[TEAM PRINTER]   - Final output quality"
+
+# Extract vocab/token info (grep the file, don't pipe the running process)
+grep -E "vocab|token|special|bos|eos" "$SCRIPT_DIR/llamacpp.run.log" | head -30 || echo "(No tokenization details found)"
+
+echo ""
+echo "[TEAM PRINTER] ============================================"
+echo "[TEAM PRINTER] Analysis Commands"
+echo "[TEAM PRINTER] ============================================"
+echo ""
+echo "# Compare token IDs:"
+echo "grep -i 'token' $SCRIPT_DIR/llamacpp.run.log | head -20"
+echo ""
+echo "# Check for special tokens:"
+echo "grep -E '(im_start|im_end|bos|eos)' $SCRIPT_DIR/llamacpp.run.log"
+echo ""
+echo "# View generated text:"
+echo "tail -50 $SCRIPT_DIR/llamacpp.run.log"
+echo ""
+echo "[TEAM PRINTER] NOTE: For full checkpoint parity data:"
+echo "[TEAM PRINTER]   1. Patch llama.cpp to add checkpoint dumps (modify source)"
+echo "[TEAM PRINTER]   2. Use HTTP API for pure batch mode (no interactive REPL)"
+echo "[TEAM PRINTER]   3. Or use GDB to extract intermediate tensor values"

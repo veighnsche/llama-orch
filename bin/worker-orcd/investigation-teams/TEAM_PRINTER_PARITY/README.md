@@ -38,21 +38,14 @@ This will capture:
 
 ### Phase 3: Run llama.cpp
 
-```bash
-cd /home/vince/Projects/llama-orch/reference/llama.cpp
+**IMPORTANT:** Use the provided script to avoid interactive REPL pipe deadlock.
 
-# Run with same prompt, greedy sampling
-./build/bin/llama-cli \
-  --model /home/vince/Projects/llama-orch/.test-models/qwen/qwen2.5-0.5b-instruct-fp16.gguf \
-  --prompt "Write a haiku about GPU computing" \
-  --temp 0.0 \
-  --top-p 1.0 \
-  --top-k 0 \
-  --seed 12345 \
-  --n-predict 50 \
-  --verbose-prompt \
-  2>&1 | tee /home/vince/Projects/llama-orch/bin/worker-orcd/investigation-teams/TEAM_PRINTER_PARITY/llamacpp.run.log
+```bash
+cd /home/vince/Projects/llama-orch/bin/worker-orcd
+./investigation-teams/TEAM_PRINTER_PARITY/run_llamacpp.sh
 ```
+
+**⚠️ Critical:** DO NOT pipe llama-cli directly to grep/head — it launches an interactive REPL and will block forever. See `LLAMA_CPP_PROBING_GUIDE.md` for correct usage patterns.
 
 ### Phase 4: Manual Comparison
 
@@ -185,7 +178,8 @@ We achieve success if we can answer:
 
 - `printer_meta.json` - Environment and test configuration metadata
 - `run_our_engine.sh` - Script to run our engine with logging
-- `run_llamacpp.sh` - Script to run llama.cpp with logging
+- `run_llamacpp.sh` - Script to run llama.cpp with logging (CORRECTED: no pipe deadlock)
+- `LLAMA_CPP_PROBING_GUIDE.md` - Correct usage patterns for llama-cli (avoid pipe deadlock)
 - `ours.run.log` - Our engine output (generated)
 - `llamacpp.run.log` - llama.cpp output (generated)
 - `vocab_and_tokenizer_snapshot/` - Vocab comparison data

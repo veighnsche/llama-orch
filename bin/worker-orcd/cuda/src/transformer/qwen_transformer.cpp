@@ -2072,6 +2072,13 @@ void QwenTransformer::forward(
     
     embed_tokens(token_ids, batch_size, hidden_states_);
     
+    // [TEAM PRINTER] Log embedding output for tokens 0 & 1 (generation tokens only, not prefill)
+    if (batch_size == 1 && forward_call_count > 0 && forward_call_count <= 2) {
+        team_printer::log_checkpoint_fp16("embedding_output", forward_call_count - 1,
+                                          reinterpret_cast<const half*>(hidden_states_),
+                                          config_.hidden_dim);
+    }
+    
     // [TEAM PURPLE] 2025-10-06T21:17Z - VERIFIED: Special token embeddings are valid ✅
     // SUSPECT: Special token embeddings might be zeros or garbage!
     // HYPOTHESIS: Maybe tokens 151643-151645 don't have trained embeddings?
@@ -2228,6 +2235,13 @@ void QwenTransformer::forward(
         void* temp = layer_input;
         layer_input = layer_output;
         layer_output = temp;
+        
+        // [TEAM PRINTER] Log layer 0 output for tokens 0 & 1 (generation only)
+        if (i == 0 && batch_size == 1 && forward_call_count > 0 && forward_call_count <= 2) {
+            team_printer::log_checkpoint_fp16("layer0_output", forward_call_count - 1,
+                                              reinterpret_cast<const half*>(layer_input),
+                                              config_.hidden_dim);
+        }
     }
     
     // ============================================================================
@@ -2250,6 +2264,13 @@ void QwenTransformer::forward(
         1e-6f,
         nullptr
     );
+    
+    // [TEAM PRINTER] Log final hidden state (after output_norm) for tokens 0 & 1 (generation only)
+    if (batch_size == 1 && forward_call_count > 0 && forward_call_count <= 2) {
+        team_printer::log_checkpoint_fp16("final_hidden_normed", forward_call_count - 1,
+                                          reinterpret_cast<const half*>(normed_),
+                                          config_.hidden_dim);
+    }
     
     // ============================================================================
     // [TEAM_CHARLIE] TEST 3: Final RMSNorm Analysis (HISTORICAL - CONCLUSION WAS WRONG!)
@@ -2361,6 +2382,12 @@ void QwenTransformer::forward(
     // The bug is NOT in logits computation!
     
     project_to_vocab(normed_, batch_size, output_logits);
+    
+    // [TEAM PRINTER] Log LM head logits (top 64 values) for tokens 0 & 1 (generation only)
+    if (batch_size == 1 && forward_call_count > 0 && forward_call_count <= 2) {
+        team_printer::log_checkpoint_fp32("lm_head_logits_top64", forward_call_count - 1,
+                                          output_logits, 64);
+    }
     
     // [TEAM_CHARLIE_GAMMA] Increment position and write back
     //

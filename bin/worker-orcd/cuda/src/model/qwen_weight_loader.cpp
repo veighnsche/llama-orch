@@ -198,6 +198,13 @@ TensorInfo find_tensor(const char* path, const std::string& target_name) {
             if (type == 0) bytes_per_elem = 4;  // F32
             else if (type == 1) bytes_per_elem = 2;  // F16
             else if (type >= 2 && type <= 14) bytes_per_elem = 2;  // Quantized (approx)
+            // TEAM FREE [Review]
+            // Category: Data parsing
+            // Hypothesis: GGUF quantized tensor types (e.g., Q4_K_M) use blockwise layouts; treating them as 2 bytes/element miscomputes size_bytes.
+            // Evidence: `type >= 2 && type <= 14` coerced to 2 bytes; QK* formats have headers/scales + packed nibbles → bytes per element varies by block.
+            // Risk: Under/over-read when copying tensor data → corrupted weights or OOB file reads; downstream CUDA copies load garbage.
+            // Confidence: High
+            // Next step: Use GGUF type table to compute exact byte size per tensor (block size × block count) or read recorded byte size from header if available.
             
             TensorInfo info;
             info.name = name;
@@ -225,6 +232,13 @@ void* QwenWeightLoader::load_tensor_to_vram(
     // This will cause NaN and garbage values. Need to implement dequantization.
     fprintf(stderr, "⚠️  Loading %s: type=%u, size=%zu bytes (QUANTIZED - NOT DEQUANTIZED!)\n",
             tensor_name.c_str(), info.type, info.size_bytes);
+    // TEAM FREE [Review]
+    // Category: Numerical correctness
+    // Hypothesis: Copying quantized GGUF weights directly to GPU without dequantization yields invalid activations.
+    // Evidence: Explicit warning above; Q4_K_M requires dequant into FP16/FP32 before GEMMs; downstream code assumes `half*` weights.
+    // Risk: Systematic wrong logits, NaNs, or unstable attention; parity with llama.cpp impossible.
+    // Confidence: High
+    // Next step: Implement dequantization for supported GGUF types or ensure Rust pre-dequantizes before wiring pointers.
     
     // Allocate GPU memory
     void* gpu_ptr = nullptr;

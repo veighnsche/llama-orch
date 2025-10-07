@@ -8,6 +8,7 @@
 #ifndef CHECKPOINT_LOGGER_H
 #define CHECKPOINT_LOGGER_H
 
+#include <cuda_runtime.h>
 #include <cuda_fp16.h>
 #include <vector>
 #include <string>
