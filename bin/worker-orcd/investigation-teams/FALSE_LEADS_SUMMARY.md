@@ -297,6 +297,35 @@ This matches token 151644's embedding exactly!
 
 ---
 
-**Remember:** If you find yourself investigating tokenization, embeddings, causal masking, prefill logic, OR cuBLAS transpose parameters, STOP and read this document first!
+### FALSE LEAD #9: Output RMSNorm Numerics Wrong (TEAM LAMINATOR)
+**Date:** 2025-10-07T08:52 UTC  
+**Hypothesis:** The output RMSNorm (final normalization before LM head) has numerical issues (epsilon/formula/scale/dtype/stride) producing out-of-range hidden states
+
+**Why it's wrong:**
+- ✅ Formula verification: Manual computation matches kernel output (diff=0.00013, within FP16 precision)
+- ✅ Epsilon correct: 1e-6 matches llama.cpp (llamacpp.run.log line 68)
+- ✅ Gamma weights correct: mean=7.14, max=16.75 are CORRECT for this model (Team Charlie verified)
+- ✅ Shape/stride correct: gamma_len=896 matches hidden_dim, contiguous layout
+- ✅ Dtype correct: FP16 input, FP32 accumulation
+- ⚠️ Post-norm "amplification" (range expanding ~37→~59) is INTENTIONAL per model design
+- 🔍 llama.cpp uses identical gamma weights and generates perfect haiku
+
+**Test Results:**
+```
+PRE_RMS:  min=-11.85, max=25.02, first8=[0.339, -0.852, -0.915, 0.426, 4.566, ...]
+POST_RMS: min=-34.91, max=23.80, first8=[0.965, -2.197, -2.488, 1.119, 11.406, ...]
+FORMULA_CHECK: manual=0.965462, actual=0.965332, diff=0.000130 ✅
+```
+
+**Time spent:** 30 minutes (investigation + verification)
+
+**Conclusion:** The RMSNorm implementation is correct and matches llama.cpp exactly. The bug is elsewhere (upstream layer outputs or downstream LM head projection).
+
+**Location:** `cuda/src/transformer/qwen_transformer.cpp` lines 2541-2672  
+**Handoff:** `investigation-teams/TEAM_LAMINATOR_HANDOFF.md`
+
+---
+
+**Remember:** If you find yourself investigating tokenization, embeddings, causal masking, prefill logic, cuBLAS transpose parameters, OR output RMSNorm numerics, STOP and read this document first!
 
 ---

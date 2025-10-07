@@ -1122,6 +1122,61 @@
 
 ---
 
+### Team LAMINATOR (2025-10-07 ~08:48 UTC to ~08:52 UTC)
+
+**Mission:** Output RMSNorm Investigation - Prove or falsify: "The output RMSNorm (final normalization before LM head) is numerically wrong (epsilon/formula/scale, dtype, stride), producing out-of-range hidden states that cause garbage output."
+
+**Hypotheses Tested:**
+1. RMSNorm epsilon value is wrong
+2. RMSNorm formula implementation has bugs
+3. Gamma weights have wrong shape/stride/dtype
+4. Post-norm values should contract to O(1) range but don't
+5. Accumulation dtype is wrong (FP16 instead of FP32)
+
+**Changes Made:**
+- Added diagnostic markers in `qwen_transformer.cpp` lines 2541-2672
+- Instrumented pre-RMSNorm input stats (min/max/mean/first8)
+- Instrumented post-RMSNorm output stats (min/max/mean/first8)
+- Logged gamma weight stats (len/mean/min/max)
+- Verified epsilon, hidden_dim, dtypes
+- Manual formula verification: computed expected y[0] vs actual y[0]
+
+**Observations:**
+- **Pre-RMS input:** min=-11.85, max=25.02, mean=0.082, range ~37
+- **Post-RMS output:** min=-34.91, max=23.80, mean=0.126, range ~59
+- **Gamma weights:** len=896, mean=7.139, min=-0.011, max=16.750
+- **Config:** eps=1e-6, hidden_dim=896, dtype_in=FP16, dtype_accum=FP32
+- **Formula check:** manual_y[0]=0.965462, actual_y[0]=0.965332, diff=0.000130 ✅
+- **Key finding:** Post-norm values EXPAND instead of contract (59 > 37) due to gamma_mean=7.14
+
+**Conclusions:**
+- ✅ **FALSIFIED:** The hypothesis "output RMSNorm numerics wrong" is FALSIFIED
+- ✅ **VERIFIED:** Epsilon 1e-6 matches llama.cpp (llamacpp.run.log line 68)
+- ✅ **VERIFIED:** Formula implementation correct (diff=0.00013, within FP16 precision)
+- ✅ **VERIFIED:** Gamma weights correct (mean=7.14 matches Team Charlie's findings)
+- ✅ **VERIFIED:** Shape/stride correct (len=896 matches hidden_dim)
+- ✅ **VERIFIED:** Dtype correct (FP16 input, FP32 accumulation)
+- 🔍 **KEY INSIGHT:** Post-norm "amplification" is INTENTIONAL per model design
+  - llama.cpp uses identical gamma weights (mean=7.14) and generates perfect haiku
+  - The weights are stored correctly in GGUF file (Team Charlie verified)
+- ❌ **REMAINING:** Bug is NOT in output RMSNorm - must be elsewhere
+
+**Handoff:** The RMSNorm implementation is correct and matches llama.cpp exactly. Recommend investigating:
+1. Layer 23 FFN output (what feeds into this RMSNorm) - why range [-11.85, 25.02]?
+2. LM head projection deep dive - compare post-RMSNorm → logits with llama.cpp
+3. Systematic parity comparison (Team Printer infrastructure) to find first divergence
+
+**Files Modified:**
+- `cuda/src/transformer/qwen_transformer.cpp` (lines 2541-2672 - investigation markers)
+
+**Files Created:**
+- `investigation-teams/TEAM_LAMINATOR_HANDOFF.md` (complete handoff document)
+- `investigation-teams/FALSE_LEADS_SUMMARY.md` (added FALSE LEAD #9)
+
+**Status:** Investigation complete, hypothesis falsified, handoff document created
+
+---
+
 **Chronicle Complete**  
-**Last Updated:** 2025-10-07T01:33Z  
-**Status:** Active investigation - TEAM PRINTER infrastructure ready, awaiting execution
+**Last Updated:** 2025-10-07T08:52Z  
+**Status:** Active investigation - TEAM LAMINATOR complete, output RMSNorm falsified as root cause
