@@ -136,6 +136,17 @@ impl Model {
             // [TEAM_HOTEL] FIXED! Use dimensions[1] for vocab_size (padded)
             //   Tensor is [896, 151936] = [hidden_dim, padded_vocab_size]
             //   We need the padded vocab size (151936) for model config
+            //
+            // [PEER:NEEDS-EVIDENCE 2025-10-07] TEAM PEAR SKEPTICAL REVIEW
+            // CLAIM (Team Hotel): "Vocab size from output.weight[1]: 151936 (padded_vocab_size)"
+            // TESTED: Checked where 151936 comes from
+            // FOUND: Value extracted from tensor dimensions[1] (correct approach)
+            // FOUND: This is PADDED vocab size, not logical vocab size
+            // QUESTION: What is the logical vocab size? (151643? 151936?)
+            // MISSING: Distinction between logical vocab and padded vocab not documented
+            // MISSING: No proof that tokens 151644/151645 are in logical vocab range
+            // NOTE: Tests hardcode 151936 everywhere (see cuda/tests/*.cpp)
+            // STATUS: Extraction method correct, but vocab size semantics unclear
             let actual_vocab = output_tensor.dimensions.get(1)
                 .map(|&d| d as u32)
                 .ok_or_else(|| {

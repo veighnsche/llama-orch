@@ -1,0 +1,35 @@
+team,file,line,issue_type,fine_eur,notes
+# TEAM PEAR Fines Ledger
+# Date: 2025-10-07T11:40Z (CORRECTED)
+# Phase 1 Total: €500
+# Phase 2 Total: €300
+# Grand Total: €800
+
+# Phase 1: Tokenization & Embedding Pipeline
+Team Purple,cuda_backend.rs,158,cited_nonexistent_file,50,"Claimed verification against .archive/llama_cpp_debug.log which does not exist"
+Team Blue,cuda_backend.rs,180-181,hardcoded_magic_numbers,100,"Hardcoded token IDs 151644/151645 without source verification or tokenizer vocab dump"
+Team Purple,cuda_backend.rs,169,unverified_embeddings,200,"Claimed embedding verification but values only exist in comments; never dumped from VRAM; test bypasses special tokens"
+Team Blue+Purple,cuda_backend.rs,173,false_verification,150,"Claimed 'tokenization is correct' while test uses use_chat_template=false bypassing special tokens entirely"
+
+# Phase 2: cuBLAS Matrix Multiplication
+Team Sentinel,qwen_transformer.cpp,640,incomplete_verification,100,"Claimed 'mathematically correct' based on 0.11% coverage (1 element out of 896)"
+Team Sentinel,qwen_transformer.cpp,637,unproven_difference,100,"Claimed fix differs from Felicia/Aurora without side-by-side parameter comparison"
+Team Charlie,qwen_transformer.cpp,various,sparse_verification,100,"Manual verification only 4 positions out of 151936 (0.0026% coverage)"
+
+# TESTING TEAM VERIFICATION (2025-10-07T12:27Z)
+# ✅ All fines VERIFIED and UPHELD by Testing Team
+# ✅ Total: €800 (Phase 1: €500, Phase 2: €300)
+# ✅ Remediation required by 2025-10-08T12:00Z
+# See: test-harness/TEAM_PEAR_VERIFICATION.md
+# Verified by Testing Team 🔍
+
+# TESTING TEAM ADDITIONAL FINES (2025-10-07T12:33Z)
+# Additional investigation found more false positives
+Team Charlie Beta,TEAM_CHARLIE_BETA_BUG_FIXED.md,1-4,false_fixed_claim,200,"Document title claims 'Bug Fixed! 🎉' but content admits fix doesn't work (line 147: 'doesn't actually change anything')"
+Team Charlie Beta,qwen_weight_loader.cpp,380-383,contradictory_test_claim,100,"Claims 'TESTED: Added the line and ran haiku test' but line 43 says 'NOT TESTED! Integration tests have compilation errors'"
+Team Top Hat,qwen_transformer.cpp,24-26,insufficient_elimination_evidence,100,"Claimed H2/H3 'ELIMINATED' based on 0.22% column verification and 2% token verification (sparse sampling)"
+Team Thimble,qwen_transformer.cpp,13-15,sparse_conclusion,50,"Claimed definitive conclusion 'Bug is NOT stride-related' based on only 2 tokens (2% of test data)"
+
+# GRAND TOTAL: €1,250 (Phase 1: €500, Phase 2: €300, Additional: €450)
+# See: test-harness/ADDITIONAL_FINES_REPORT.md
+# Verified by Testing Team 🔍

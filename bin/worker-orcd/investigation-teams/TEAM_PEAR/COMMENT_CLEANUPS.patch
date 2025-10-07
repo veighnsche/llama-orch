@@ -1,0 +1,73 @@
+# TEAM PEAR — Comment Cleanups (Code Stamps)
+# Date: 2025-10-07T11:33Z
+# Purpose: Document all code comments added during Phase 1 peer review
+
+## Files Modified
+
+### 1. src/inference/cuda_backend.rs (lines 175-214)
+**Location:** After Team Purple's "CONCLUSION: Tokenization is CORRECT"
+**Stamp Type:** [PEER:NEEDS-EVIDENCE 2025-10-07]
+**Summary:** Added skeptical review block challenging 4 claims:
+- Team Purple: Non-existent reference file (€50 fine)
+- Team Blue: Hardcoded magic numbers (€100 fine)
+- Team Purple: Unverified embeddings (€200 fine)
+- Team Blue+Purple: False verification (€150 fine)
+**Total Fines:** €500
+
+### 2. src/cuda/model.rs (lines 140-149)
+**Location:** After Team Hotel's vocab size extraction
+**Stamp Type:** [PEER:NEEDS-EVIDENCE 2025-10-07]
+**Summary:** Added review noting:
+- Extraction method is correct (dimensions[1])
+- Value is PADDED vocab size (151936)
+- Logical vs padded vocab distinction unclear
+- No proof tokens 151644/151645 in logical vocab range
+
+### 3. tests/haiku_generation_anti_cheat.rs (lines 119-129)
+**Location:** After Team Chair's simplified prompt comment
+**Stamp Type:** [PEER:FALSIFIED 2025-10-07]
+**Summary:** Added review showing:
+- Test bypasses chat template (use_chat_template=false)
+- Output is complete garbage
+- Minute word not found (count=0)
+- Cannot claim tokenization correct without testing it
+**Fine:** €150
+
+## Stamp Format Used
+
+```
+// [PEER:VERDICT YYYY-MM-DD] TEAM PEAR SKEPTICAL REVIEW
+// CLAIM (Team X): "..."
+// TESTED: <method>
+// FOUND: <findings>
+// CONTRADICTION: <if any>
+// FINE: €XXX - <reason>
+// STATUS: <verdict>
+```
+
+## Preservation of History
+
+✅ All original team comments preserved
+✅ PEAR stamps added AFTER original comments
+✅ No deletion of investigation history
+✅ Clear separation between original and peer review
+
+## Evidence Links
+
+All stamps reference:
+- investigation-teams/TEAM_PEAR/reports/phase1_SKEPTICAL_FINDINGS.md
+- investigation-teams/TEAM_PEAR/logs/phase1/ (artifacts)
+- investigation-teams/TEAM_PEAR/FINES_LEDGER.csv
+
+## Summary
+
+**Files Stamped:** 3
+**Total Lines Added:** ~50
+**Fines Documented in Code:** €500
+**Claims Challenged:** 5
+**Verdicts:** 1 FALSIFIED, 4 NEEDS-EVIDENCE
+
+---
+
+**Status:** Phase 1 code stamps complete
+**Next:** Phase 2 code review and stamping
