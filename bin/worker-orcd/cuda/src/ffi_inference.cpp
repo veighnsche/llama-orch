@@ -199,18 +199,27 @@ uint32_t cuda_inference_generate_token(
         // Free device memory
         cudaFree(d_token_id);
         
+        fprintf(stderr, "[TEAM CHAIR] Checkpoint G: After forward, before logits debug\n");
+        fflush(stderr);
+        
         // Debug: Check first few logits
+        // [TEAM CHAIR] 2025-10-07T02:52Z - Disabled to fix crash
         static int token_idx = 0;
-        float host_logits[10];
-        cudaMemcpy(host_logits, ctx->logits_buffer, 10 * sizeof(float), cudaMemcpyDeviceToHost);
-        if (token_idx < 3) {
-            fprintf(stderr, "First 10 logits: ");
-            for (int i = 0; i < 10; i++) {
-                fprintf(stderr, "%.2f ", host_logits[i]);
+        if (false) {
+            float host_logits[10];
+            cudaMemcpy(host_logits, ctx->logits_buffer, 10 * sizeof(float), cudaMemcpyDeviceToHost);
+            if (token_idx < 3) {
+                fprintf(stderr, "First 10 logits: ");
+                for (int i = 0; i < 10; i++) {
+                    fprintf(stderr, "%.2f ", host_logits[i]);
+                }
+                fprintf(stderr, "\n");
             }
-            fprintf(stderr, "\n");
         }
         token_idx++;
+        
+        fprintf(stderr, "[TEAM CHAIR] Checkpoint H: Before sampling\n");
+        fflush(stderr);
         
         // [TEAM AEGIS] 2025-10-07T23:27Z
         // SUSPECT: Temperature showing 0.00 in prefill logs, thought this was bug

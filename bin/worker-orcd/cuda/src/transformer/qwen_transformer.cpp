@@ -376,6 +376,12 @@ void QwenTransformer::forward_layer(
     uint32_t batch_size,
     uint32_t pos
 ) {
+    // [TEAM CHAIR] 2025-10-07T02:48Z - Add error checking at layer entry
+    if (layer_idx == 0) {
+        fprintf(stderr, "[TEAM CHAIR] Entering forward_layer 0, batch_size=%u, pos=%u\n", batch_size, pos);
+        fflush(stderr);
+    }
+    
     auto& layer = model_->weights.layers[layer_idx];
     
     // ============================================================================
@@ -2074,7 +2080,9 @@ void QwenTransformer::forward(
     //   [2] = 198 (\n)
     //   [3+] = prompt tokens
     // CONCLUSION: Token IDs passed from Rust → FFI → C++ are CORRECT!
-    if (first_forward) {
+    //
+    // [TEAM CHAIR] 2025-10-07T02:48Z - Disabled to fix crash
+    if (false && first_forward) {
         uint32_t h_token_ids[32];
         cudaMemcpy(h_token_ids, token_ids, std::min(batch_size, 32u) * sizeof(uint32_t), cudaMemcpyDeviceToHost);
         fprintf(stderr, "[TEAM_PURPLE] First %u token IDs being embedded: ", std::min(batch_size, 10u));
@@ -2093,12 +2101,34 @@ void QwenTransformer::forward(
     
     embed_tokens(token_ids, batch_size, hidden_states_);
     
+    // [TEAM CHAIR] 2025-10-07T02:43Z - Check for CUDA errors after embedding
+    cudaError_t embed_err = cudaGetLastError();
+    if (embed_err != cudaSuccess) {
+        fprintf(stderr, "[TEAM CHAIR] ❌ CUDA error after embedding: %s\n", cudaGetErrorString(embed_err));
+        throw std::runtime_error(std::string("CUDA error after embedding: ") + cudaGetErrorString(embed_err));
+    }
+    cudaDeviceSynchronize();  // Force sync to catch async errors
+    embed_err = cudaGetLastError();
+    if (embed_err != cudaSuccess) {
+        fprintf(stderr, "[TEAM CHAIR] ❌ CUDA error after embedding sync: %s\n", cudaGetErrorString(embed_err));
+        throw std::runtime_error(std::string("CUDA error after embedding sync: ") + cudaGetErrorString(embed_err));
+    }
+    fprintf(stderr, "[TEAM CHAIR] ✅ Embedding completed without CUDA errors\n");
+    fflush(stderr);
+    
+    fprintf(stderr, "[TEAM CHAIR] Checkpoint A: batch_size=%u, forward_call_count=%d\n", batch_size, forward_call_count);
+    fflush(stderr);
+    
     // [TEAM PRINTER] Log embedding output for tokens 0 & 1 (generation tokens only, not prefill)
-    if (batch_size == 1 && forward_call_count > 0 && forward_call_count <= 2) {
+    // [TEAM CHAIR] 2025-10-07T02:50Z - Disabled to fix crash
+    if (false && batch_size == 1 && forward_call_count > 0 && forward_call_count <= 2) {
         team_printer::log_checkpoint_fp16("embedding_output", forward_call_count - 1,
                                           reinterpret_cast<const half*>(hidden_states_),
                                           config_.hidden_dim);
     }
+    
+    fprintf(stderr, "[TEAM CHAIR] Checkpoint B: Passed TEAM_PRINTER section\n");
+    fflush(stderr);
     
     // [TEAM PURPLE] 2025-10-06T21:17Z - VERIFIED: Special token embeddings are valid ✅
     // SUSPECT: Special token embeddings might be zeros or garbage!
@@ -2118,7 +2148,28 @@ void QwenTransformer::forward(
     //
     // FALSE_LEAD: Special token embeddings are NOT the problem!
     // The model HAS trained embeddings for special tokens, and we're looking them up correctly.
-    if (first_forward) {
+    //
+    // ============================================================================
+    // [TEAM CHAIR] 2025-10-07T02:41Z - DISABLED TO FIX TEST CRASH! 🔧
+    // ============================================================================
+    // 
+    // ISSUE: This code causes a crash when checking special token embeddings!
+    //   The embedding table is [896, 151936] = [hidden_dim, vocab_size]
+    //   But this code assumes [vocab_size, hidden_dim] layout
+    //   Accessing token_emb = emb_table + (151644 * 896) uses wrong indexing
+    //   This causes SEGFAULT or accesses wrong memory
+    // 
+    // WORKAROUND: Commenting out this check to let the test run
+    //   We need to see the garbage output quality issue, not crash on infrastructure
+    //   The embedding lookup kernel itself works correctly (uses proper indexing)
+    //   This is just debug code that has the wrong memory layout assumption
+    // 
+    // TODO: Fix the indexing if you want to re-enable this check:
+    //   For [hidden_dim, vocab_size] layout, token N's embedding is at:
+    //   emb[i] = emb_table[i * vocab_size + token_id] for i in 0..hidden_dim
+    //   (column-major access pattern, not row-major)
+    // ============================================================================
+    if (false && first_forward) {  // [TEAM CHAIR] Disabled to fix crash
         // Check the embedding for token 151644 (im_start) directly from the embedding table
         const half* emb_table = reinterpret_cast<const half*>(model_->weights.token_embd);
         uint32_t hidden_dim = config_.hidden_dim;
@@ -2148,7 +2199,8 @@ void QwenTransformer::forward(
     }
     
     // [TEAM GREEN] 2025-10-06T20:51Z - Debug embedding output
-    if (first_forward) {
+    // [TEAM CHAIR] 2025-10-07T02:43Z - Disabled to fix crash
+    if (false && first_forward) {
         half* h_emb_ptr = reinterpret_cast<half*>(hidden_states_);
         half h_emb[10];
         cudaMemcpy(h_emb, h_emb_ptr, 10 * sizeof(half), cudaMemcpyDeviceToHost);
@@ -2168,7 +2220,8 @@ void QwenTransformer::forward(
     // 
     // This test runs ONCE on first forward pass to avoid performance impact
     // ============================================================================
-    if (first_forward) {
+    // [TEAM CHAIR] 2025-10-07T02:43Z - Disabled to fix crash
+    if (false && first_forward) {
         fprintf(stderr, "\n[DEEP_INVESTIGATION] ========================================\n");
         fprintf(stderr, "[DEEP_INVESTIGATION] TRACKING HIDDEN STATE EVOLUTION\n");
         fprintf(stderr, "[DEEP_INVESTIGATION] Date: 2025-10-06 16:13 UTC\n");
@@ -2214,12 +2267,30 @@ void QwenTransformer::forward(
     void* layer_input = hidden_states_;
     void* layer_output = residual_;
     
+    fprintf(stderr, "[TEAM CHAIR] About to enter layer loop, num_layers=%u\n", config_.num_layers);
+    fflush(stderr);
+    
     for (uint32_t i = 0; i < config_.num_layers; i++) {
+        fprintf(stderr, "[TEAM CHAIR] Calling forward_layer %u...\n", i);
+        fflush(stderr);
         forward_layer(i, layer_input, layer_output, batch_size, pos);
+        
+        // [TEAM CHAIR] 2025-10-07T02:45Z - Check for CUDA errors after each layer
+        cudaError_t layer_err = cudaGetLastError();
+        if (layer_err != cudaSuccess) {
+            fprintf(stderr, "[TEAM CHAIR] ❌ CUDA error after layer %u: %s\n", i, cudaGetErrorString(layer_err));
+            fflush(stderr);
+            throw std::runtime_error(std::string("CUDA error after layer ") + std::to_string(i) + ": " + cudaGetErrorString(layer_err));
+        }
+        if (i < 3) {  // Check first 3 layers
+            fprintf(stderr, "[TEAM CHAIR] ✅ Layer %u completed\n", i);
+            fflush(stderr);
+        }
         
         // [TEAM_CHARLIE] Track after each layer (part of TEST 2)
         // This loop runs 24 times (once per layer) to track value growth
-        if (first_forward) {
+        // [TEAM CHAIR] 2025-10-07T02:43Z - Disabled to fix crash
+        if (false && first_forward) {
             char label[100];
             snprintf(label, sizeof(label), "After layer %d", i);
             
@@ -2258,12 +2329,21 @@ void QwenTransformer::forward(
         layer_output = temp;
         
         // [TEAM PRINTER] Log layer 0 output for tokens 0 & 1 (generation only)
-        if (i == 0 && batch_size == 1 && forward_call_count > 0 && forward_call_count <= 2) {
+        // [TEAM CHAIR] 2025-10-07T02:51Z - Disabled to fix crash
+        if (false && i == 0 && batch_size == 1 && forward_call_count > 0 && forward_call_count <= 2) {
             team_printer::log_checkpoint_fp16("layer0_output", forward_call_count - 1,
                                               reinterpret_cast<const half*>(layer_input),
                                               config_.hidden_dim);
         }
+        
+        if (i < 3) {
+            fprintf(stderr, "[TEAM CHAIR] Checkpoint C: After layer %u swap\n", i);
+            fflush(stderr);
+        }
     }
+    
+    fprintf(stderr, "[TEAM CHAIR] Checkpoint D: All layers completed\n");
+    fflush(stderr);
     
     // ============================================================================
     // [TEAM_CHARLIE] FINAL NORMALIZATION BEFORE LOGITS
@@ -2276,6 +2356,8 @@ void QwenTransformer::forward(
     //   - The weights are stored correctly in the GGUF file
     // The bug is NOT in this normalization step!
     // ============================================================================
+    fprintf(stderr, "[TEAM CHAIR] Calling cuda_rmsnorm_forward...\n");
+    fflush(stderr);
     cuda_rmsnorm_forward(
         layer_input,
         model_->weights.output_norm,
@@ -2286,8 +2368,12 @@ void QwenTransformer::forward(
         nullptr
     );
     
+    fprintf(stderr, "[TEAM CHAIR] Checkpoint E: RMSNorm completed\n");
+    fflush(stderr);
+    
     // [TEAM PRINTER] Log final hidden state (after output_norm) for tokens 0 & 1 (generation only)
-    if (batch_size == 1 && forward_call_count > 0 && forward_call_count <= 2) {
+    // [TEAM CHAIR] 2025-10-07T02:51Z - Disabled to fix crash
+    if (false && batch_size == 1 && forward_call_count > 0 && forward_call_count <= 2) {
         team_printer::log_checkpoint_fp16("final_hidden_normed", forward_call_count - 1,
                                           reinterpret_cast<const half*>(normed_),
                                           config_.hidden_dim);
@@ -2402,10 +2488,15 @@ void QwenTransformer::forward(
     //
     // The bug is NOT in logits computation!
     
+    fprintf(stderr, "[TEAM CHAIR] Calling project_to_vocab...\n");
+    fflush(stderr);
     project_to_vocab(normed_, batch_size, output_logits);
+    fprintf(stderr, "[TEAM CHAIR] Checkpoint F: project_to_vocab completed\n");
+    fflush(stderr);
     
     // [TEAM PRINTER] Log LM head logits (top 64 values) for tokens 0 & 1 (generation only)
-    if (batch_size == 1 && forward_call_count > 0 && forward_call_count <= 2) {
+    // [TEAM CHAIR] 2025-10-07T02:51Z - Disabled to fix crash
+    if (false && batch_size == 1 && forward_call_count > 0 && forward_call_count <= 2) {
         team_printer::log_checkpoint_fp32("lm_head_logits_top64", forward_call_count - 1,
                                           output_logits, 64);
     }

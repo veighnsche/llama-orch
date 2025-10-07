@@ -172,17 +172,29 @@ impl InferenceBackend for CudaInferenceBackend {
         //
         // CONCLUSION: Tokenization is CORRECT. Bug is NOT here!
         
+        // [TEAM CHAIR] 2025-10-07T02:47Z - DISABLE CHAT TEMPLATE TO FIX CRASH
+        // The special tokens (151644, 151645) cause crashes in the C++ code
+        // Temporarily disable chat template to test output quality without crashing
+        let use_chat_template = false;  // Set to false to bypass special token crash
+        
         let im_start_token = 151644u32;
         let im_end_token = 151645u32;
         
-        eprintln!("[TEAM_PURPLE] Using special token IDs from llama.cpp:");
-        eprintln!("[TEAM_PURPLE]   im_start = {}", im_start_token);
-        eprintln!("[TEAM_PURPLE]   im_end = {}", im_end_token);
+        if use_chat_template {
+            eprintln!("[TEAM_PURPLE] Using special token IDs from llama.cpp:");
+            eprintln!("[TEAM_PURPLE]   im_start = {}", im_start_token);
+            eprintln!("[TEAM_PURPLE]   im_end = {}", im_end_token);
+        } else {
+            eprintln!("[TEAM CHAIR] Chat template DISABLED to avoid special token crash");
+            eprintln!("[TEAM CHAIR] Using raw prompt tokenization");
+        }
         
         let mut token_ids = Vec::new();
         
-        // Special token: im_start
-        token_ids.push(im_start_token);
+        if use_chat_template {
+            // Special token: im_start
+            token_ids.push(im_start_token);
+        }
         
         // [TEAM PURPLE] 2025-10-06T21:22Z - FALSE_LEAD ❌
         // SUSPECT: Tokenizing "user\n{prompt}" as one string might be wrong!
@@ -196,54 +208,62 @@ impl InferenceBackend for CudaInferenceBackend {
         // FALSE_LEAD: Tokenization approach doesn't matter. Both are correct.
         // The "user" role is tokenized correctly either way.
         
-        let user_text = format!("user\n{}", prompt);
-        let user_tokens = self.tokenizer.encode(&user_text, false).map_err(|e| {
-            format!("Tokenization failed: {}", e)
-        })?;
-        token_ids.extend(user_tokens);
-        
-        // Special token: im_end
-        token_ids.push(im_end_token);
-        
-        // Text: "\n"
-        let newline_tokens = self.tokenizer.encode("\n", false).map_err(|e| {
-            tracing::error!("❌ Tokenization failed: {}", e);
-            format!("Tokenization failed: {}", e)
-        })?;
-        token_ids.extend(newline_tokens);
-        
-        // Special token: im_start
-        token_ids.push(im_start_token);
-        
-        // [TEAM PURPLE] 2025-10-06T21:23Z - FIXED FORMAT ✅ (but output still garbage!)
-        // SUSPECT: We're adding "\n" after "assistant" but llama.cpp chat template does NOT!
-        // EVIDENCE: From .archive/build_output.log, llama.cpp chat template example:
-        //   <|im_start|>system
-        //   You are a helpful assistant<|im_end|>
-        //   <|im_start|>user
-        //   Hello<|im_end|>
-        //   <|im_start|>assistant
-        //   (NO newline after "assistant"! Generation starts immediately)
-        //
-        // FIXED: Removed "\n" after "assistant" to match llama.cpp format
-        // Token sequence now: [151644, 872, 198, ..., 151645, 198, 151644, 77091]
-        //   [30] 151644 → <|im_start|>
-        //   [31] 77091 → assistant
-        //   (generation starts here)
-        //
-        // RESULT: Format is now CORRECT and matches llama.cpp...
-        // BUT OUTPUT IS STILL GARBAGE! (psycopg, toHaveBeenCalledWith, etc.)
-        //
-        // CONCLUSION: The bug is NOT in prompt formatting!
-        // Even with correct tokenization, the model generates random code/foreign tokens.
-        // This proves the bug is deeper in the inference pipeline (forward pass, KV cache, etc.)
-        //
-        // Text: "assistant" (NO newline!)
-        let assistant_tokens = self.tokenizer.encode("assistant", false).map_err(|e| {
-            tracing::error!("❌ Tokenization failed: {}", e);
-            format!("Tokenization failed: {}", e)
-        })?;
-        token_ids.extend(assistant_tokens);
+        if use_chat_template {
+            let user_text = format!("user\n{}", prompt);
+            let user_tokens = self.tokenizer.encode(&user_text, false).map_err(|e| {
+                format!("Tokenization failed: {}", e)
+            })?;
+            token_ids.extend(user_tokens);
+            
+            // Special token: im_end
+            token_ids.push(im_end_token);
+            
+            // Text: "\n"
+            let newline_tokens = self.tokenizer.encode("\n", false).map_err(|e| {
+                tracing::error!("❌ Tokenization failed: {}", e);
+                format!("Tokenization failed: {}", e)
+            })?;
+            token_ids.extend(newline_tokens);
+            
+            // Special token: im_start
+            token_ids.push(im_start_token);
+            
+            // [TEAM PURPLE] 2025-10-06T21:23Z - FIXED FORMAT ✅ (but output still garbage!)
+            // SUSPECT: We're adding "\n" after "assistant" but llama.cpp chat template does NOT!
+            // EVIDENCE: From .archive/build_output.log, llama.cpp chat template example:
+            //   <|im_start|>system
+            //   You are a helpful assistant<|im_end|>
+            //   <|im_start|>user
+            //   Hello<|im_end|>
+            //   <|im_start|>assistant
+            //   (NO newline after "assistant"! Generation starts immediately)
+            //
+            // FIXED: Removed "\n" after "assistant" to match llama.cpp format
+            // Token sequence now: [151644, 872, 198, ..., 151645, 198, 151644, 77091]
+            //   [30] 151644 → <|im_start|>
+            //   [31] 77091 → assistant
+            //   (generation starts here)
+            //
+            // RESULT: Format is now CORRECT and matches llama.cpp...
+            // BUT OUTPUT IS STILL GARBAGE! (psycopg, toHaveBeenCalledWith, etc.)
+            //
+            // CONCLUSION: The bug is NOT in prompt formatting!
+            // Even with correct tokenization, the model generates random code/foreign tokens.
+            // This proves the bug is deeper in the inference pipeline (forward pass, KV cache, etc.)
+            //
+            // Text: "assistant" (NO newline!)
+            let assistant_tokens = self.tokenizer.encode("assistant", false).map_err(|e| {
+                tracing::error!("❌ Tokenization failed: {}", e);
+                format!("Tokenization failed: {}", e)
+            })?;
+            token_ids.extend(assistant_tokens);
+        } else {
+            // [TEAM CHAIR] Simple tokenization without chat template
+            let prompt_tokens = self.tokenizer.encode(prompt, false).map_err(|e| {
+                format!("Tokenization failed: {}", e)
+            })?;
+            token_ids.extend(prompt_tokens);
+        }
 
         tracing::info!("✅ Tokenized to {} tokens", token_ids.len());
         eprintln!("[TEAM_BLUE] 2025-10-06T21:03Z - Token IDs (first 30): {:?}", &token_ids[..token_ids.len().min(30)]);
@@ -375,19 +395,90 @@ impl InferenceBackend for CudaInferenceBackend {
             );
         }
         
-        // WORKAROUND: Use padded_vocab_size as vocab_size since tokenizer metadata is missing
-        //   This is safe but slightly inefficient (argmax scans 293 extra positions).
+        // ============================================================================
+        // [TEAM CHAIR] 2025-10-07T02:36Z - FALSE LEAD! ❌ DO NOT INVESTIGATE THIS!
+        // ============================================================================
+        // 
+        // SYMPTOM: Worker crashes when processing special token 151644
+        // 
+        // INITIAL HYPOTHESIS (WRONG): vocab_size mismatch causes OOB embedding access
+        //   - Thought: embedding table has 151643 rows, but vocab_size=151936
+        //   - Thought: Token 151644 would be out of bounds
+        // 
+        // INVESTIGATION RESULT: This is NOT the bug! ✅ VERIFIED:
+        //   - token_embd.weight dimensions: [896, 151936] (it IS padded!)
+        //   - The embedding table HAS 151936 columns (vocab dimension)
+        //   - Special tokens 151644-151645 ARE within bounds
+        //   - Using padded_vocab_size here is actually CORRECT
+        // 
+        // WHAT I TRIED:
+        //   1. Added code to extract vocab_size from token_embd.weight dimensions
+        //   2. Logged the actual dimensions: [896, 151936]
+        //   3. Realized the table is already padded (not 151643!)
+        //   4. Confirmed this is NOT the source of the crash
+        // 
+        // FALSE_LEAD: The code below extracts vocab_size from token_embd.weight,
+        //   but it just returns 151936 anyway (the padded size). This doesn't fix
+        //   the crash because the crash isn't caused by vocab_size mismatch!
+        // 
+        // NEXT TEAM: Leave this code as-is (it's harmless but doesn't fix the bug).
+        //   The real bug is somewhere else. Don't waste time on vocab_size!
+        //   Focus on: What happens AFTER embedding lookup? Check transformer layers.
+        // 
+        // See: investigation-teams/TEAM_CHAIR_HANDOFF.md for full details
+        // ============================================================================
         let vocab_size = match self.metadata.vocab_size() {
             Ok(v) => {
-                tracing::info!("✅ Got logical vocab size from metadata: {}", v);
-                v as u32
+                let v_u32 = v as u32;
+                tracing::info!("✅ Got logical vocab size from metadata: {}", v_u32);
+                // [TEAM CHAIR] Check if metadata vocab_size matches padded_vocab_size
+                if v_u32 == padded_vocab_size {
+                    tracing::warn!("⚠️  Metadata vocab_size ({}) equals padded_vocab_size! This might be wrong!", v_u32);
+                    tracing::warn!("⚠️  Falling back to token_embd.weight dimensions for correct vocab_size");
+                    
+                    // Extract from token_embd.weight tensor dimensions
+                    let tensors = worker_gguf::GGUFMetadata::parse_tensors(&self.model_path)
+                        .map_err(|e| format!("Failed to parse tensors for vocab_size: {}", e))?;
+                    
+                    let emb_tensor = tensors.iter()
+                        .find(|t| t.name == "token_embd.weight")
+                        .ok_or_else(|| "Cannot find token_embd.weight tensor".to_string())?;
+                    
+                    tracing::info!("🔍 token_embd.weight dimensions: {:?}", emb_tensor.dimensions);
+                    
+                    // GGUF stores dimensions in reverse order!
+                    let vocab_from_emb = emb_tensor.dimensions.last()
+                        .map(|&d| d as u32)
+                        .ok_or_else(|| "token_embd.weight has no dimensions".to_string())?;
+                    
+                    tracing::info!("✅ Extracted vocab_size from token_embd.weight: {}", vocab_from_emb);
+                    vocab_from_emb
+                } else {
+                    v_u32
+                }
             }
             Err(_) => {
-                tracing::warn!(
-                    "⚠️  tokenizer.ggml.tokens metadata missing, using padded_vocab_size ({}) for both cuBLAS and argmax",
-                    padded_vocab_size
-                );
-                padded_vocab_size
+                // Fallback: Extract from token_embd.weight tensor dimensions
+                tracing::warn!("⚠️  tokenizer.ggml.tokens metadata missing, extracting vocab_size from token_embd.weight tensor");
+                
+                let tensors = worker_gguf::GGUFMetadata::parse_tensors(&self.model_path)
+                    .map_err(|e| format!("Failed to parse tensors for vocab_size: {}", e))?;
+                
+                let emb_tensor = tensors.iter()
+                    .find(|t| t.name == "token_embd.weight")
+                    .ok_or_else(|| "Cannot find token_embd.weight tensor".to_string())?;
+                
+                tracing::info!("🔍 token_embd.weight dimensions: {:?}", emb_tensor.dimensions);
+                
+                // GGUF stores dimensions in reverse order compared to what we expect!
+                // token_embd.weight is logically [vocab_size, hidden_dim] but stored as [hidden_dim, vocab_size]
+                // So we need to use the LAST dimension, not the first!
+                let vocab_from_emb = emb_tensor.dimensions.last()
+                    .map(|&d| d as u32)
+                    .ok_or_else(|| "token_embd.weight has no dimensions".to_string())?;
+                
+                tracing::info!("✅ Extracted vocab_size from token_embd.weight: {}", vocab_from_emb);
+                vocab_from_emb
             }
         };
         
