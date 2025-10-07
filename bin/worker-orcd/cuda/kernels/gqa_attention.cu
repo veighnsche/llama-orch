@@ -218,9 +218,23 @@ __global__ void gqa_attention_decode_kernel_impl(
     float* scores = shared_mem;
     float* max_val = &shared_mem[cache_len + 1];
     float* sum_exp = &max_val[1];
+    // TEAM FREE [Review]
+    // Category: Memory safety
+    // Hypothesis: shared_mem size computed as (cache_len+1+2)*sizeof(float) on line 800; if cache_len exceeds max_seq_len, OOB write.
+    // Evidence: No bounds check on cache_len parameter; caller could pass corrupted value; scores[cache_len] write on line 324.
+    // Risk: Shared memory corruption → wrong softmax → garbage attention; potential kernel crash if exceeds 48KB limit.
+    // Confidence: Medium
+    // Next step: Add assert(cache_len < max_seq_len) or clamp cache_len at kernel entry.
     
     // Load query vector into shared memory (not registers, since all threads need access)
     __shared__ float q_shared[64];  // Assuming head_dim <= 64
+    // TEAM FREE [Review]
+    // Category: Numeric overflow
+    // Hypothesis: Static q_shared[64] assumes head_dim<=64; if model uses head_dim=128, OOB write on line 228.
+    // Evidence: Qwen2.5-0.5B uses head_dim=64 (safe), but larger models (Llama-3-8B) use head_dim=128.
+    // Risk: Stack corruption → undefined behavior; kernel crash or wrong attention output.
+    // Confidence: High
+    // Next step: Use dynamic shared memory for q_shared or add compile-time assert on head_dim.
     
     // Each thread loads its portion
     for (int d = tid; d < head_dim; d += blockDim.x) {
@@ -408,6 +422,13 @@ __global__ void gqa_attention_decode_kernel_impl(
     partial_sums[tid] = local_sum;
     __syncthreads();
     
+    // TEAM FREE [Review]
+    // Category: Concurrency
+    // Hypothesis: Tree reduction (line 471) with s/=2 works for power-of-2 blocks but wastes threads for non-power-of-2 (e.g., 384 threads).
+    // Evidence: blockDim.x=256 (power-of-2) is safe; but if changed to 384, threads 256-383 idle after first iteration.
+    // Risk: Suboptimal occupancy for non-power-of-2 blocks; no correctness issue but performance loss.
+    // Confidence: Low (current config safe)
+    // Next step: Use warp-level primitives (__shfl_down_sync) for reduction to handle arbitrary block sizes efficiently.
     // [TEAM_ALPHA] Tree reduction pattern - BUG FOUND! ⚠️ CRITICAL BUG ⚠️ (2025-10-06 17:53 UTC)
     // POTENTIAL BUG: If blockDim.x is not a power of 2, this might miss some threads!
     //
@@ -771,6 +792,13 @@ int cuda_gqa_attention_decode(
     if (batch_size <= 0 || cache_len < 0 || num_q_heads <= 0 ||
         num_kv_heads <= 0 || head_dim <= 0) {
         fprintf(stderr, "GQA Decode: Invalid dimensions\n");
+        // TEAM FREE [Review]
+        // Category: API contract
+        // Hypothesis: Missing validation for max_seq_len vs cache_len; if cache_len > max_seq_len, cache indexing on line 285 OOB.
+        // Evidence: No check that cache_len <= max_seq_len; caller could pass inconsistent values.
+        // Risk: OOB read from kv_cache → garbage attention weights → wrong tokens.
+        // Confidence: High
+        // Next step: Add validation: if (cache_len > max_seq_len) { fprintf(stderr, "cache_len exceeds max_seq_len"); return -1; }
         return -1;
     }
     

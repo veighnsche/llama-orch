@@ -6,6 +6,13 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# TEAM FREE [Review]
+# Category: Security
+# Hypothesis: Hardcoded absolute paths (lines 9-10) break portability; if user clones to different location, script fails.
+# Evidence: /home/vince/Projects/llama-orch hardcoded; no fallback or relative path resolution.
+# Risk: Script fails for other users; CI/CD breaks if workspace path differs.
+# Confidence: High
+# Next step: Use relative paths from SCRIPT_DIR or env vars (LLAMA_CPP_DIR=${LLAMA_CPP_DIR:-"../../reference/llama.cpp"}).
 LLAMA_CPP_DIR="/home/vince/Projects/llama-orch/reference/llama.cpp"
 MODEL_PATH="/home/vince/Projects/llama-orch/.test-models/qwen/qwen2.5-0.5b-instruct-fp16.gguf"
 
@@ -45,18 +52,22 @@ cd "$LLAMA_CPP_DIR"
     --model "$MODEL_PATH" \
     --prompt "Write a haiku about GPU computing" \
     --temp 0.0 \
-    --top-p 1.0 \
     --top-k 0 \
     --seed 12345 \
     --n-predict 50 \
     --verbose-prompt \
     > "$SCRIPT_DIR/llamacpp.run.log" 2>&1
 
+if [ $? -ne 0 ]; then
+    echo "[TEAM PRINTER] ❌ ERROR: llama-cli failed"
+    exit 1
+fi
+
 echo ""
 echo "[TEAM PRINTER] ============================================"
 echo "[TEAM PRINTER] llama.cpp run complete"
 echo "[TEAM PRINTER] Log saved to: $SCRIPT_DIR/llamacpp.run.log"
-echo "[TEAM PRINTER] ============================================"
+{{ ... }}
 echo ""
 echo "[TEAM PRINTER] Extracting tokenization details..."
 echo ""

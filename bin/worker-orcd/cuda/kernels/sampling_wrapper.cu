@@ -279,11 +279,25 @@ int cuda_sample_token(
     // Allocate device memory for intermediate results
     float* d_probs;
     int* d_token;
+    // TEAM FREE [Review]
+    // Category: Memory management
+    // Hypothesis: cudaMalloc per sample call (line 282-283) without error checks; if allocation fails, nullptr deref in kernel → crash.
+    // Evidence: No cudaError_t check; called per token (1000 tokens = 2000 allocations); vocab_size=151936 → 608KB per call.
+    // Risk: Crash if VRAM exhausted mid-generation; allocator thrashing reduces throughput.
+    // Confidence: High
+    // Next step: Check cudaMalloc return; pre-allocate persistent buffers; or use memory pool.
     cudaMalloc(&d_probs, vocab_size * sizeof(float));
     cudaMalloc(&d_token, sizeof(int));
     
     // Greedy sampling (temperature = 0)
     if (temperature == 0.0f) {
+        // TEAM FREE [Review]
+        // Category: Performance
+        // Hypothesis: argmax_kernel<<<1,1>>> (line 287) uses single thread to scan vocab_size=151936 elements; ~150μs latency.
+        // Evidence: Serial loop in argmax_kernel line 158-162; no parallelism; 1 thread does all work.
+        // Risk: Sampling bottleneck; 10-20% of total inference time wasted on argmax.
+        // Confidence: High
+        // Next step: Parallelize argmax with reduction (256 threads, tree reduce to find max).
         argmax_kernel<<<1, 1>>>(logits, vocab_size, d_token);
     } else {
         // Apply temperature scaling (on logits)
@@ -300,6 +314,13 @@ int cuda_sample_token(
         
         // Compute softmax (convert logits → probabilities)
         // This MUST come before top-p!
+        // TEAM FREE [Review]
+        // Category: Performance
+        // Hypothesis: softmax_kernel<<<1,1>>> (line 303) single-threaded; scans vocab_size=151936 twice (max+exp+sum); ~200μs.
+        // Evidence: Lines 38-64 use single thread (if threadIdx.x==0); no parallelism.
+        // Risk: Sampling bottleneck; 15-25% of inference time on softmax.
+        // Confidence: High
+        // Next step: Parallelize softmax (parallel max reduction, parallel exp+sum, parallel normalize).
         softmax_kernel<<<1, 1>>>(logits, d_probs, vocab_size);
         
         // ========================================================================

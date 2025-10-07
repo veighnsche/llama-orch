@@ -267,6 +267,13 @@ QwenTransformer::QwenTransformer(
     
     // Allocate KV cache
     size_t kv_cache_size = config.num_layers * 1 * config.num_kv_heads * config.context_length * config.head_dim * sizeof(half);
+    // TEAM FREE [Review]
+    // Category: Memory management
+    // Hypothesis: Three separate cudaMalloc calls (lines 270-272) without error checks; if middle allocation fails, k_cache leaks.
+    // Evidence: No cudaError_t check after each malloc; destructor frees all three but doesn't track which succeeded.
+    // Risk: VRAM leak if partial allocation; potential double-free or invalid free in destructor.
+    // Confidence: High
+    // Next step: Check each cudaMalloc return; if any fails, free already-allocated buffers before throwing.
     cudaMalloc(&kv_cache_.k_cache, kv_cache_size);
     cudaMalloc(&kv_cache_.v_cache, kv_cache_size);
     cudaMalloc(&kv_cache_.seq_lens, sizeof(uint32_t));
@@ -277,6 +284,13 @@ QwenTransformer::QwenTransformer(
     
     // Initialize seq_len to 0
     uint32_t zero = 0;
+    // TEAM FREE [Review]
+    // Category: Concurrency
+    // Hypothesis: cudaMemcpy H2D for single uint32_t (line 280) forces sync; called in constructor → blocks initialization.
+    // Evidence: No stream parameter → default stream sync; 1-word copy has ~5μs overhead vs <1μs for async.
+    // Risk: Minor latency increase on model load; not critical but inefficient.
+    // Confidence: Low
+    // Next step: Use cudaMemcpyAsync or cudaMemset (device-side) to avoid host-device sync.
     cudaMemcpy(kv_cache_.seq_lens, &zero, sizeof(uint32_t), cudaMemcpyHostToDevice);
     
     // Allocate intermediate buffers
@@ -2012,6 +2026,13 @@ void QwenTransformer::forward(
     //
     // ============================================================================
     uint32_t pos;
+    // TEAM FREE [Review]
+    // Category: Concurrency
+    // Hypothesis: D2H memcpy for pos (line 2015) forces GPU-CPU sync every forward call; blocks async kernel execution.
+    // Evidence: Called per token; 1000 tokens = 1000 forced syncs; cudaMemcpy without stream → implicit sync.
+    // Risk: 20-40% throughput loss; prevents overlapping compute and memory ops.
+    // Confidence: High
+    // Next step: Store pos on host; increment in forward(); only sync to device when needed (or use device-side atomic counter).
     cudaMemcpy(&pos, kv_cache_.seq_lens, sizeof(uint32_t), cudaMemcpyDeviceToHost);
     
     // [TEAM_CHARLIE_GAMMA] EUREKA #2 - INVESTIGATING! (2025-10-06 17:32 UTC)
@@ -2403,6 +2424,13 @@ void QwenTransformer::forward(
         fprintf(stderr, "[FORWARD DEBUG #%d] Incrementing pos to %u (writing to kv_cache_.seq_lens)\n", 
                 forward_call_count - 1, pos);
     }
+    // TEAM FREE [Review]
+    // Category: Numeric overflow
+    // Hypothesis: pos++ (line 2374) unbounded; if generation exceeds context_length (32768), pos wraps or cache indexing OOB.
+    // Evidence: No check that pos < config_.context_length before increment; attention kernel uses pos as cache_len.
+    // Risk: Cache corruption after context_length tokens; OOB writes to kv_cache; potential crash.
+    // Confidence: High
+    // Next step: Add check: if (pos >= config_.context_length) { throw std::runtime_error("Context length exceeded"); }
     cudaMemcpy(kv_cache_.seq_lens, &pos, sizeof(uint32_t), cudaMemcpyHostToDevice);
     
     cudaDeviceSynchronize();

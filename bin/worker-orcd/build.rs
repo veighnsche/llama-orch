@@ -192,6 +192,13 @@ fn build_with_cuda() {
         if nvcc_path.exists() {
             config.define("CMAKE_CUDA_COMPILER", nvcc_path.to_str().unwrap());
         }
+        // TEAM FREE [Review]
+        // Category: Build configuration
+        // Hypothesis: nvcc_path.exists() check (line 192) passes but nvcc not executable; CMake configure fails with cryptic error.
+        // Evidence: No check for execute permission; symlink or permission issue → exists() true but unusable.
+        // Risk: Build failure on some systems (e.g., NFS mounts with noexec); hard to diagnose.
+        // Confidence: Low
+        // Next step: Add executable check or let CMake fail with clear error (current behavior acceptable).
         cuda_path.clone()
     } else {
         panic!(
@@ -221,6 +228,13 @@ fn build_with_cuda() {
     // then link dependencies. The linker resolves symbols left-to-right.
 
     // Link our library with whole-archive to ensure all symbols are included
+    // TEAM FREE [Review]
+    // Category: Build configuration
+    // Hypothesis: --whole-archive (line 224) forces all .o files into binary; if libworker_cuda.a has unused code, bloats binary size.
+    // Evidence: Whole-archive prevents linker from dead-code elimination; necessary for C++ static init but increases size.
+    // Risk: Larger binary (~10-30% bloat); slower link times; not a bug but suboptimal.
+    // Confidence: Low
+    // Next step: Profile binary size; if bloat significant, use selective symbol export instead of whole-archive.
     println!("cargo:rustc-link-arg=-Wl,--whole-archive");
     println!("cargo:rustc-link-arg={}", worker_cuda_lib.display());
     println!("cargo:rustc-link-arg=-Wl,--no-whole-archive");

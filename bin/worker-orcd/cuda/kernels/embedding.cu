@@ -92,6 +92,13 @@ __global__ void embedding_lookup_fp16(
     // Validate token ID (bounds check)
     if (token_id < 0 || token_id >= vocab_size) {
         // Invalid token ID, set to zero
+        // TEAM FREE [Review]
+        // Category: Error handling
+        // Hypothesis: Silent zero-fill for OOB token IDs masks upstream bugs; no error signal propagates to host.
+        // Evidence: Line 95 returns silently; caller has no way to detect invalid token_id was passed.
+        // Risk: Debugging difficulty when wrong tokens fed; zero embeddings cause subtle model drift vs crash.
+        // Confidence: Medium
+        // Next step: Add atomic error counter or return error code via separate device buffer for host to check.
         embeddings[token_idx * hidden_dim + dim_idx] = __float2half(0.0f);
         return;
     }
@@ -178,6 +185,13 @@ void launch_embedding_lookup_fp16(
     if (batch_size <= 0 || hidden_dim <= 0 || vocab_size <= 0) {
         fprintf(stderr, "Invalid dimensions: batch_size=%d, hidden_dim=%d, vocab_size=%d\n",
                 batch_size, hidden_dim, vocab_size);
+        // TEAM FREE [Review]
+        // Category: Error handling
+        // Hypothesis: Early return after fprintf leaves kernel unlaunched; caller assumes success, proceeds with uninitialized embeddings buffer.
+        // Evidence: No error code returned; cudaGetLastError() on line 209 only catches launch failures, not pre-launch validation failures.
+        // Risk: Downstream NaNs/garbage if embeddings buffer not pre-zeroed; silent failure mode.
+        // Confidence: Medium
+        // Next step: Return error code or use cudaMemset to zero output buffer before returning.
         return;
     }
     

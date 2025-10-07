@@ -166,12 +166,26 @@ uint32_t cuda_inference_generate_token(
         
         // Copy token_id to device memory
         uint32_t* d_token_id;
+        // TEAM FREE [Review]
+        // Category: Memory management
+        // Hypothesis: cudaMalloc/cudaFree per token (line 168-186) causes allocator thrashing; 1000 tokens = 2000 malloc/free calls.
+        // Evidence: No error check on cudaMalloc; if allocation fails mid-generation, nullptr deref in forward() → crash.
+        // Risk: Performance degradation (malloc overhead); potential crash if VRAM fragmented.
+        // Confidence: High
+        // Next step: Pre-allocate persistent d_token_id buffer in InferenceContext; reuse across generate_token calls.
         cudaMalloc(&d_token_id, sizeof(uint32_t));
         cudaMemcpy(d_token_id, &token_id, sizeof(uint32_t), cudaMemcpyHostToDevice);
         
         // Debug: Check token ID
         uint32_t host_token;
         cudaMemcpy(&host_token, d_token_id, sizeof(uint32_t), cudaMemcpyDeviceToHost);
+        // TEAM FREE [Review]
+        // Category: Concurrency
+        // Hypothesis: D2H memcpy for debug check (line 174) forces GPU-CPU sync every token; blocks async execution pipeline.
+        // Evidence: cudaMemcpy without stream parameter → implicit sync; 1000 tokens = 1000 forced syncs.
+        // Risk: 10-50% throughput loss vs async validation; latency spike per token.
+        // Confidence: High
+        // Next step: Remove debug check in production or use cudaMemcpyAsync + separate validation stream.
         if (host_token >= ctx->model->config.vocab_size) {
             fprintf(stderr, "❌ Invalid token ID: %u (vocab_size: %u)\n", host_token, ctx->model->config.vocab_size);
             cudaFree(d_token_id);
