@@ -264,6 +264,47 @@ void QwenTransformer::forward_layer(
         fprintf(stderr, "\n");
     }
     
+    // [TEAM ORION] 2025-10-06T23:53Z
+    // OBJECTIVE: Find first activation divergence vs llama.cpp
+    // PLAN: Log first 16 floats + min/max/mean at each checkpoint for tokens 0 AND 1
+    // RULES: APPEND-ONLY, one change at a time, foreground only
+    static int orion_token_count = 0;
+    bool do_orion_log = (layer_idx == 0 && orion_token_count < 2);
+    
+    auto log_activation = [](const char* name, const void* data, int size) {
+        half* h_data = new half[size];
+        cudaMemcpy(h_data, data, size * sizeof(half), cudaMemcpyDeviceToHost);
+        
+        fprintf(stderr, "[ORION] %s[0..15]: ", name);
+        int display_count = (size < 16) ? size : 16;
+        for (int i = 0; i < display_count; i++) {
+            fprintf(stderr, "%.6f ", __half2float(h_data[i]));
+        }
+        
+        // Compute min/max/mean
+        float min_val = __half2float(h_data[0]);
+        float max_val = __half2float(h_data[0]);
+        float sum = 0.0f;
+        for (int i = 0; i < size; i++) {
+            float val = __half2float(h_data[i]);
+            if (val < min_val) min_val = val;
+            if (val > max_val) max_val = val;
+            sum += val;
+        }
+        float mean = sum / size;
+        
+        fprintf(stderr, "\n[ORION]   min=%.6f max=%.6f mean=%.6f\n", min_val, max_val, mean);
+        delete[] h_data;
+    };
+    
+    if (do_orion_log) {
+        fprintf(stderr, "\n[TEAM ORION] === LAYER 0 FORWARD PASS (TOKEN %d, POS %u) ===\n",
+                orion_token_count, pos);
+        fprintf(stderr, "[ORION] Scale = 1/sqrt(%u) = %.6f, RoPE base = %.1f\n",
+                config_.head_dim, 1.0f/sqrtf(config_.head_dim), config_.rope_freq_base);
+        log_activation("Input", input, config_.hidden_dim);
+    }
+    
     // 1. Attention RMSNorm
     // [VERIFIED CORRECT] This normalization works correctly
     //
@@ -292,6 +333,11 @@ void QwenTransformer::forward_layer(
         fprintf(stderr, "[SENTINEL] After attn RMSNorm[0..9]: ");
         for (int i = 0; i < 10; i++) fprintf(stderr, "%.6f ", __half2float(h_normed[i]));
         fprintf(stderr, "\n");
+    }
+    
+    // [TEAM ORION] 2025-10-06T23:53Z
+    if (do_orion_log) {
+        log_activation("After attn RMSNorm", normed_, config_.hidden_dim);
     }
     
     // 2. Q, K, V projections
@@ -460,6 +506,68 @@ void QwenTransformer::forward_layer(
         fprintf(stderr, "  Diff: %.6f %s\n", diff, diff < 0.001 ? "✅" : "❌ MISMATCH!");
     }
     
+    // [TEAM ORION] 2025-10-06T23:53Z
+    // OBSERVED: Q/K/V projections completed (pre-RoPE)
+    if (do_orion_log) {
+        log_activation("After Q proj (pre-RoPE)", q_proj_, q_dim);
+        
+        // [TEAM ORION] Find location of extreme Q values
+        half* h_q_full = new half[q_dim];
+        cudaMemcpy(h_q_full, q_proj_, q_dim * sizeof(half), cudaMemcpyDeviceToHost);
+        float q_min = __half2float(h_q_full[0]);
+        float q_max = __half2float(h_q_full[0]);
+        int q_min_idx = 0, q_max_idx = 0;
+        for (int i = 0; i < (int)q_dim; i++) {
+            float val = __half2float(h_q_full[i]);
+            if (val < q_min) { q_min = val; q_min_idx = i; }
+            if (val > q_max) { q_max = val; q_max_idx = i; }
+        }
+        fprintf(stderr, "[ORION] Q extreme values: min=%.6f at Q[%d] (head %d, dim %d), max=%.6f at Q[%d] (head %d, dim %d)\n",
+                q_min, q_min_idx, q_min_idx / config_.head_dim, q_min_idx % config_.head_dim,
+                q_max, q_max_idx, q_max_idx / config_.head_dim, q_max_idx % config_.head_dim);
+        
+        // [TEAM ORION] 2025-10-07T00:06Z - Bias Investigation
+        // HYPOTHESIS: Q bias may contain outliers causing extreme values
+        if (layer.attn_q_bias != nullptr) {
+            half h_q_bias[16];
+            cudaMemcpy(h_q_bias, layer.attn_q_bias, 16 * sizeof(half), cudaMemcpyDeviceToHost);
+            fprintf(stderr, "[ORION] Q bias[0..15]: ");
+            for (int i = 0; i < 16; i++) fprintf(stderr, "%.6f ", __half2float(h_q_bias[i]));
+            
+            // Compute bias stats
+            half h_q_bias_full[896];
+            cudaMemcpy(h_q_bias_full, layer.attn_q_bias, 896 * sizeof(half), cudaMemcpyDeviceToHost);
+            float bias_min = __half2float(h_q_bias_full[0]);
+            float bias_max = __half2float(h_q_bias_full[0]);
+            float bias_sum = 0.0f;
+            for (int i = 0; i < 896; i++) {
+                float val = __half2float(h_q_bias_full[i]);
+                if (val < bias_min) bias_min = val;
+                if (val > bias_max) bias_max = val;
+                bias_sum += val;
+            }
+            fprintf(stderr, "\n[ORION] Q bias stats: min=%.6f max=%.6f mean=%.6f\n",
+                    bias_min, bias_max, bias_sum / 896.0f);
+        }
+        
+        // [TEAM ORION] Q weight stats
+        half h_q_weight_16[16];
+        cudaMemcpy(h_q_weight_16, layer.attn_q_weight, 16 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "[ORION] Q weight[0..15]: ");
+        for (int i = 0; i < 16; i++) fprintf(stderr, "%.6f ", __half2float(h_q_weight_16[i]));
+        fprintf(stderr, "\n[ORION] Q weight hex[0..15]: ");
+        for (int i = 0; i < 16; i++) {
+            uint16_t* p = (uint16_t*)&h_q_weight_16[i];
+            fprintf(stderr, "%04x ", *p);
+        }
+        fprintf(stderr, "\n");
+        
+        delete[] h_q_full;
+        
+        log_activation("After K proj (pre-RoPE)", k_proj_, kv_dim);
+        log_activation("After V proj (pre-RoPE)", v_proj_, kv_dim);
+    }
+    
     // 3. Apply RoPE (Rotary Position Embedding)
     // [TEAM_CHARLIE_BETA] RoPE formula is correct (verified against llama.cpp)
     // However, verify these if debugging:
@@ -490,6 +598,12 @@ void QwenTransformer::forward_layer(
         fprintf(stderr, "\n[SENTINEL] After RoPE K[0..9]: ");
         for (int i = 0; i < 10; i++) fprintf(stderr, "%.6f ", __half2float(h_k_rope[i]));
         fprintf(stderr, "\n");
+    }
+    
+    // [TEAM ORION] 2025-10-06T23:53Z
+    if (do_orion_log) {
+        log_activation("After RoPE Q", q_proj_, q_dim);
+        log_activation("After RoPE K", k_proj_, kv_dim);
     }
     
     // 4. GQA Attention (Grouped Query Attention)
@@ -562,6 +676,11 @@ void QwenTransformer::forward_layer(
         fprintf(stderr, "\n");
     }
     
+    // [TEAM ORION] 2025-10-06T23:53Z
+    if (do_orion_log) {
+        log_activation("After GQA attention output", attn_output_, q_dim);
+    }
+    
     // 5. Attention output projection
     // [TEAM HYPERION] 2025-10-06T22:35Z - INVESTIGATION UPDATE
     // SUSPECT: Attention output projection writes to wrong buffer (ffn_output_ instead of attn_output_)
@@ -603,6 +722,11 @@ void QwenTransformer::forward_layer(
         fprintf(stderr, "\n");
     }
     
+    // [TEAM ORION] 2025-10-06T23:53Z
+    if (do_orion_log) {
+        log_activation("After attn out proj", attn_output_, config_.hidden_dim);
+    }
+    
     // 6. Residual connection (attention branch)
     // [VERIFIED CORRECT] Simple element-wise addition works correctly
     cuda_residual_add(input, attn_output_, residual_, batch_size, config_.hidden_dim, nullptr);
@@ -616,9 +740,19 @@ void QwenTransformer::forward_layer(
         fprintf(stderr, "\n");
     }
     
+    // [TEAM ORION] 2025-10-06T23:53Z
+    if (do_orion_log) {
+        log_activation("After residual #1 (attn)", residual_, config_.hidden_dim);
+    }
+    
     // 7. FFN RMSNorm
     // [VERIFIED CORRECT] This normalization works correctly
     cuda_rmsnorm_forward(residual_, layer.ffn_norm, normed_, batch_size, config_.hidden_dim, 1e-6f, nullptr);
+    
+    // [TEAM ORION] 2025-10-06T23:53Z
+    if (do_orion_log) {
+        log_activation("After FFN RMSNorm", normed_, config_.hidden_dim);
+    }
     
     // 8. SwiGLU FFN (Feed-Forward Network)
     // [TEAM_CHARLIE_BETA] ⚠️ POTENTIAL FIX - NOT TESTED! (2025-10-06 17:07 UTC)
@@ -659,6 +793,11 @@ void QwenTransformer::forward_layer(
         fprintf(stderr, "\n");
     }
     
+    // [TEAM ORION] 2025-10-06T23:53Z
+    if (do_orion_log) {
+        log_activation("After SwiGLU FFN (down proj)", ffn_output_, config_.hidden_dim);
+    }
+    
     // 9. Final residual connection (FFN branch)
     // [VERIFIED CORRECT] Simple element-wise addition works correctly
     cuda_residual_add(residual_, ffn_output_, output, batch_size, config_.hidden_dim, nullptr);
@@ -672,6 +811,13 @@ void QwenTransformer::forward_layer(
         for (int i = 0; i < 10; i++) fprintf(stderr, "%.6f ", __half2float(h_final[i]));
         fprintf(stderr, "\n===END LAYER 0 FORWARD PASS (TOKEN %d)===\n\n", sentinel_token_count);
         sentinel_token_count++;
+    }
+    
+    // [TEAM ORION] 2025-10-06T23:53Z
+    if (do_orion_log) {
+        log_activation("After residual #2 (layer output)", output, config_.hidden_dim);
+        fprintf(stderr, "===END LAYER 0 FORWARD PASS (TOKEN %d)===\n\n", orion_token_count);
+        orion_token_count++;
     }
 }
 
