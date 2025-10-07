@@ -209,6 +209,16 @@ __global__ void rope_single_pos_kernel(
     //     printf("[ROPE DEBUG] pos=%u, dim_pair=%d, theta=%.6f, cos=%.6f, sin=%.6f\n", 
     //            pos, dim_pair, theta, cos_theta, sin_theta);
     // }
+    //
+    // ============================================================================
+    // [TEAM_HOLE_PUNCH 2025-10-07T09:10Z] Gate 4: Angle generation logging
+    // ============================================================================
+    // Log first 4 cos/sin angle pairs for head 0, tokens 0-1
+    if (head == 0 && dim_pair < 4 && pos < 2) {
+        printf("[TEAM_HOLE_PUNCH] ANGLES pos=%u, dim_pair=%d, theta=%.6f, cos=%.6f, sin=%.6f, dim=%d, inv_freq=%.6f\n",
+               pos, dim_pair, theta, cos_theta, sin_theta, dim, inv_freq);
+    }
+    // ============================================================================
     // Apply to Q: layout [batch=1, num_heads, head_dim]
     if (head < num_heads) {
         int q_idx = head * head_dim + dim;

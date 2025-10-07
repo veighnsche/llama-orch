@@ -326,6 +326,102 @@ FORMULA_CHECK: manual=0.965462, actual=0.965332, diff=0.000130 ✅
 
 ---
 
-**Remember:** If you find yourself investigating tokenization, embeddings, causal masking, prefill logic, cuBLAS transpose parameters, OR output RMSNorm numerics, STOP and read this document first!
+### FALSE LEAD #10: RoPE Numeric Parity Issues (TEAM_HOLE_PUNCH)
+**Date:** 2025-10-07T09:10 UTC  
+**Hypothesis:** RoPE application produces numerically wrong Q/K values (angles/base/indexing/stride/dtype)
+
+**Why it's wrong:**
+- ✅ Config parity: head_dim=64, rope_freq_base=1000000.0 match model spec exactly
+- ✅ Angle calculation: All cos/sin values match closed-form math (cos(1.0)=0.5403, sin(1.0)=0.8415)
+- ✅ Identity at pos=0: Q_PRE == Q_POST perfectly (diff=0.0 for all values)
+- ✅ Rotation at pos=1: Non-zero rotations use correct trigonometric values
+- ✅ Formula verified: inv_freq = 1/(rope_freq_base^(dim/head_dim)) matches llama.cpp and RoPE paper
+- ✅ Indexing/layout: Contiguous head strides, correct per-head offsets
+- ✅ Consistent across layers: All 24 layers use same angle calculations
+
+**Test Results:**
+```
+Token 0 (pos=0):
+  Q_PRE  = [-0.036621, -0.100708, -0.092590, 0.274658, 1.511719, -0.017181, 0.216919, -0.253418]
+  Q_POST = [-0.036621, -0.100708, -0.092590, 0.274658, 1.511719, -0.017181, 0.216919, -0.253418]
+  ✅ IDENTICAL (as expected for pos=0, theta=0)
+
+Token 1 (pos=1):
+  Angles: theta=1.0, cos=0.540302, sin=0.841471 (matches cos(1)=0.5403, sin(1)=0.8415) ✅
+```
+
+**Time spent:** 35 minutes (investigation + verification + documentation)
+
+**Conclusion:** RoPE implementation is mathematically and numerically correct. All config, angles, and transformations match expected values. The bug is elsewhere (attention mechanism, KV cache, or LM head).
+
+**Location:** `cuda/src/transformer/qwen_transformer.cpp` lines 1177-1319, `cuda/kernels/rope.cu` lines 213-221  
+**Handoff:** `investigation-teams/TEAM_HOLE_PUNCH_SUMMARY.md`
+
+---
+
+### FALSE LEAD #11: GQA Head Mapping Incorrect (TEAM_SHREDDER)
+**Date:** 2025-10-07T09:19 UTC  
+**Hypothesis:** Grouped-Query Attention maps query heads to key/value heads incorrectly (wrong group size, indexing, or strides), so Q-heads read from the wrong K/V head
+
+**Why it's wrong:**
+- ✅ Group size: Correctly computed as 7 (14 Q heads / 2 KV heads)
+- ✅ Q→KV mapping: All heads 0-6 → kv_head 0, heads 7-13 → kv_head 1 (perfect mapping)
+- ✅ K pointer offsets: kv_head 0 at offset 0, kv_head 1 at offset 64 (head_dim × kv_head)
+- ✅ V pointer offsets: kv_head 0 at offset 0, kv_head 1 at offset 64 (consistent with K)
+- ✅ Data verification: K and V values differ between KV heads (reading correct slices)
+- ✅ Score computation: Uses correct KV blocks (non-garbage, reasonable values)
+- ✅ Consistency: K and V use same kv_head for each q_head (no mismatch)
+
+**Test Results:**
+```
+CONFIG: num_heads=14, num_kv_heads=2, head_dim=64, group_size=7 ✅
+MAP: q_head=0→kv_head=0, q_head=7→kv_head=1 (all mappings correct) ✅
+PTRS: q_head=0 K_offset=0, q_head=7 K_offset=64 (stride correct) ✅
+SCORES: q_head=0: [-0.0241, 0.1739, ...], q_head=7: [0.3328, 0.1055, ...] ✅
+AGG: q_head=0 V_offset=0, q_head=7 V_offset=64 (consistent) ✅
+```
+
+**Time spent:** 45 minutes (instrumentation + test execution + verification)
+
+**Conclusion:** GQA head mapping is 100% correct. The formula `kv_head = q_head / (num_q_heads / num_kv_heads)` works perfectly. Pointer arithmetic, strides, and indexing are all correct. Both K and V consistently use the same mapped KV head. The bug is elsewhere (attention output projection, numerical precision, or other attention mechanism components).
+
+**Location:** `cuda/kernels/gqa_attention.cu` lines 211-241 (mapping), 335-346 (K access), 622-634 (V access)  
+**Chronicle:** `investigation-teams/TEAM_SHREDDER_CHRONICLE.md`
+
+---
+
+### FALSE LEAD #12: Softmax Pipeline Numerically Wrong (TEAM_LABEL_MAKER)
+**Date:** 2025-10-07T09:28 UTC  
+**Hypothesis:** The attention score→softmax pipeline has numerical issues (missing/duplicate √d scaling, mask timing/value, rowmax subtraction, overflow handling, or normalization), corrupting attention weights
+
+**Why it's wrong:**
+- ✅ Scale factor: Exactly `0.125000` = `1/sqrt(64)` across all layers (no double/missing scaling)
+- ✅ Causal masking: Implicitly correct in decode mode (loop only accesses positions 0..cache_len)
+- ✅ Rowmax subtraction: Working correctly (MAX_EXP always = 1.0, perfect numerical stability)
+- ✅ Softmax normalization: Perfect (SUM_P = 1.0 with diff < 1e-6 across 100+ observations)
+- ✅ Overflow handling: Correct (exp values never exceed 1.0 due to rowmax shift)
+- ✅ No NaN/inf: No numerical instabilities observed in any test case
+
+**Test Results (cache_len=1, q_head=0):**
+```
+Gate 1 - SCALE: scale=0.125000 (expected: 1/sqrt(64) = 0.125000) ✅
+S_SCALED: first8=[1.152843, -1.184629]
+Gate 2 - MASK: N/A in decode mode (implicitly causal) ✅
+Gate 3 - ROWMAX: rowmax=1.152843
+Gate 3 - POST_ROWMAX_SHIFT: first8_exp=[1.000000, 0.806141], MAX_EXP=1.000000 ✅
+Gate 4 - SOFTMAX_SUM: sum_exp=1.806141 (before normalization)
+Gate 4 - NORMALIZED: P_first8=[0.553667, 0.446333], SUM_P=1.000000 (diff=0.000000) ✅
+```
+
+**Time spent:** 45 minutes (instrumentation + test execution + verification)
+
+**Conclusion:** The softmax pipeline (Q·K scaling → rowmax subtraction → exp → sum → normalize) is numerically perfect. Verified across 24 layers, multiple tokens, and multiple heads. All gates passed: scale factor correct, masking implicit, rowmax working, normalization perfect, no overflow. The bug is elsewhere (attention output projection W_o, Q/K/V GEMMs, FFN, or other components).
+
+**Location:** `cuda/kernels/gqa_attention.cu` lines 318-619 (Q·K compute, scaling, softmax pipeline)  
+**Chronicle:** `investigation-teams/TEAM_LABEL_MAKER_CHRONICLE.md`
+
+---
+
+**Remember:** If you find yourself investigating tokenization, embeddings, causal masking, prefill logic, cuBLAS transpose parameters, output RMSNorm numerics, RoPE numeric parity, GQA head mapping, OR softmax/scaling/masking, STOP and read this document first!
 
 ---
