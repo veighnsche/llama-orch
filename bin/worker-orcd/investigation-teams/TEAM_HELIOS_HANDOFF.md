@@ -510,3 +510,88 @@ Suggests **the matmul is reading the wrong memory locations for elements beyond 
 **Next Action**: Need to verify the weight matrix layout in GGUF. Is Q weight stored as [hidden_dim, q_dim] = [896, 896] or [q_dim, hidden_dim] = [896, 896]? Even though dimensions are the same, the semantic meaning affects how cuBLAS interprets lda with CUBLAS_OP_T.
 
 ---
+
+## [TEAM THIMBLE] 2025-10-07T00:25Z - Stride Hypothesis Disproven
+
+**See:** `investigation-teams/TEAM_THIMBLE_SUMMARY.md`
+
+**FINDINGS:**
+
+✅ **Pre-transpose experiment completed**:
+- Explicitly transposed Q weight on CPU [896,896] → [896,896]^T
+- Used CUBLAS_OP_N with lda=q_dim instead of CUBLAS_OP_T
+- Result: **IDENTICAL extremes** (Q[95]=-16.047, Q[126]=14.336)
+- **Conclusion**: Bug is NOT stride-related
+
+✅ **Manual parity check confirmed**:
+- Token 0: Q[95] manual=-0.058, cuBLAS=-16.047, diff=15.99 ❌
+- Token 1: Q[126] manual=0.020, cuBLAS=3.695, diff=3.68 ❌
+- **Conclusion**: Manual FP32 calc gives correct values, cuBLAS gives extremes
+
+**Stride hypothesis ELIMINATED.** Bug persists with both CUBLAS_OP_T and CUBLAS_OP_N.
+
+---
+
+## [TEAM TOP HAT] 2025-10-07T00:34Z - All Standard Hypotheses Eliminated
+
+**See:** `investigation-teams/TEAM_TOP_HAT_HANDOFF.md`
+
+**MISSION:** Test 3 hypotheses for Q[95]/Q[126] extremes:
+- H1: Compute type/tensor-core fast-math
+- H2: Weight column corruption at columns 95/126
+- H3: Input spikes in normed that couple to those columns
+
+**FINDINGS:**
+
+❌ **H1 ELIMINATED - Compute type is NOT the issue**:
+- Tested CUBLAS_COMPUTE_32F_FAST_16F (baseline): Q[95]=-16.047, Q[126]=14.336
+- Tested CUBLAS_COMPUTE_32F (full precision): Q[95]=-16.047, Q[126]=14.336
+- **Result**: IDENTICAL extremes with full FP32 compute
+- **Conclusion**: Bug is NOT tensor-core fast-math
+
+❌ **H2 ELIMINATED - Weight columns are normal**:
+- Column 95: min=-0.217, max=0.174, mean=-0.000443
+- Column 126: min=-0.194, max=0.180, mean=-0.000864
+- **Result**: Both columns have normal values (|max| < 0.22)
+- **Conclusion**: No weight corruption
+
+❌ **H3 ELIMINATED - Input is normal**:
+- Token 0: normed min=-0.576@741, max=1.038@75, mean=0.003
+- Token 1: normed min=-0.542@190, max=0.425@75, mean=0.001
+- **Result**: Input in normal range (±1), no spikes
+- **Conclusion**: Input is NOT causing extremes
+
+✅ **Additional finding - Extremes before bias**:
+- Q before bias: Q[0]=-0.043, Q[95]=-16.047, Q[126]=14.336
+- Q bias[95]=0.0, bias[126]=0.0 (all biases are zero)
+- **Conclusion**: cuBLAS GEMM itself produces extremes, not bias addition
+
+### The Core Mystery
+
+**What we've eliminated:**
+- ✅ Stride/transpose issues (TEAM THIMBLE)
+- ✅ Tensor-core fast-math (TEAM TOP HAT H1)
+- ✅ Weight corruption (TEAM TOP HAT H2)
+- ✅ Input spikes (TEAM TOP HAT H3)
+- ✅ Bias corruption (TEAM ORION, TEAM TOP HAT)
+- ✅ Manual FP32 calculation works correctly
+
+**The contradiction:**
+- Manual FP32: Q[95]≈±0.08 ✅
+- cuBLAS (FAST_16F): Q[95]≈-16 ❌
+- cuBLAS (32F): Q[95]≈-16 ❌
+
+**What remains unexplained:**
+- Why does cuBLAS produce extremes at specific indices?
+- Why does manual calculation work but cuBLAS doesn't?
+- Why are the indices always 95 and 126 (head 1, dims 31 & 62)?
+
+**Next Actions:**
+1. Deep cuBLAS audit: verify ALL parameters, test alternative algorithms
+2. Memory inspection: dump raw weight memory in hex, check for NaN bits
+3. Workaround: zero out Q[95]/Q[126] and measure impact on generation
+4. Alternative: implement custom FP16 GEMM for columns 95/126 only
+
+**STATUS**: All standard hypotheses eliminated. Bug is deeper than expected. Recommend moving to TEAM BATTLESHIP (attention output) or implementing workaround while investigating root cause.
+
+---

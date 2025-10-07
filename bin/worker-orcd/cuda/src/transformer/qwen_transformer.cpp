@@ -16,6 +16,31 @@
 // ============================================================================
 #define THIMBLE_PRETRANSPOSE_EXPERIMENT 0  // Set to 1 to enable; prints "[THIMBLE EXPERIMENT]" when active
 
+// ============================================================================
+// [TEAM TOP HAT] 2025-10-07T00:34Z - Root Cause Investigation Complete
+// ============================================================================
+// MISSION: Eliminate Q[95]/Q[126] extremes by testing 3 hypotheses
+// H1. Compute type (FAST_16F vs 32F): ELIMINATED ❌ (extremes persist with 32F)
+// H2. Weight corruption: ELIMINATED ❌ (columns 95/126 are normal, |max|<0.22)
+// H3. Input spikes: ELIMINATED ❌ (normed is normal, range ±1)
+// 
+// ADDITIONAL FINDINGS:
+// - Extremes appear BEFORE bias addition (in raw cuBLAS GEMM output)
+// - Manual FP32 calculation gives correct values (Q[95]≈±0.08)
+// - cuBLAS gives extremes with BOTH FAST_16F and 32F compute types
+// 
+// CONTRADICTION: Manual calc works, cuBLAS doesn't, at SAME indices
+// 
+// STATUS: All standard hypotheses eliminated. Bug is deeper than expected.
+// RECOMMENDATION: 
+//   1. Deep cuBLAS audit (verify ALL params, test alternative algorithms)
+//   2. Memory inspection (dump raw weights in hex, check for NaN bits)
+//   3. Workaround (zero Q[95]/Q[126] and measure impact on generation)
+//   4. Move to TEAM BATTLESHIP (investigate attention output projection)
+// 
+// See: investigation-teams/TEAM_TOP_HAT_HANDOFF.md
+// ============================================================================
+
 //
 // [APPEND-ONLY GUARD] Do not delete prior teams' comments. Add new notes below existing blocks.
 //
@@ -417,6 +442,72 @@ void QwenTransformer::forward_layer(
     // DO NOT CLAIM FIXED until output is consistently human-readable across multiple test runs.
     uint32_t q_dim = config_.num_heads * config_.head_dim;
     
+    // [TEAM TOP HAT] Token counter for logging (declare early for use throughout)
+    static int top_hat_token_count = 0;
+    bool do_top_hat_log = (layer_idx == 0 && top_hat_token_count < 2);
+    
+    // ============================================================================
+    // [TEAM TOP HAT] 2025-10-07T00:30Z - Q-Projection Anomaly Root Cause Analysis
+    // ============================================================================
+    // MISSION: Eliminate ±16 spikes at Q[95] & Q[126] by testing 3 hypotheses:
+    // H1. Compute type/tensor-core behavior (FAST_16F vs 32F)
+    // H2. Localized weight corruption at W[:,95] and/or W[:,126]
+    // H3. Bad inputs leaking into Q (spikes in normed that couple to those columns)
+    // 
+    // METHOD: Single-variable experiments with macro guards (append-only, foreground)
+    // OBSERVED (TEAM THIMBLE): Manual FP32 calc gives ±0.08, cuBLAS gives ±16 at same indices
+    //                          Pre-transpose with OP_N gives SAME extremes → NOT stride bug
+    // NEXT ACTION: Test compute type, verify weights, check input hot-spots
+    // ============================================================================
+    
+    // [TEAM TOP HAT] Step 2: Weight Column Verification
+#ifndef TOP_HAT_DUMP_Q_COLS
+#define TOP_HAT_DUMP_Q_COLS 1
+#endif
+    
+    if (TOP_HAT_DUMP_Q_COLS && layer_idx == 0) {
+        const int cols_to_check[2] = {95, 126};
+        // W is row-major [hidden_dim, q_dim] = [896, 896]
+        std::vector<half> hW(896 * 896);
+        cudaMemcpy(hW.data(), layer.attn_q_weight, hW.size()*sizeof(half), cudaMemcpyDeviceToHost);
+        
+        for (int c = 0; c < 2; ++c) {
+            int col = cols_to_check[c];
+            float minv = 1e30f, maxv = -1e30f, sum = 0.f;
+            for (int r = 0; r < 896; ++r) {
+                float v = __half2float(hW[r*896 + col]);
+                if (v < minv) minv = v;
+                if (v > maxv) maxv = v;
+                sum += v;
+            }
+            fprintf(stderr, "[TEAM TOP HAT] Q weight col %d stats: min=%.6f max=%.6f mean=%.6f\n",
+                    col, minv, maxv, sum/896.f);
+            fprintf(stderr, "[TEAM TOP HAT] Q weight col %d first16: ", col);
+            for (int r = 0; r < 16; ++r) fprintf(stderr, "%.6f ", __half2float(hW[r*896 + col]));
+            fprintf(stderr, "\n");
+        }
+    }
+    
+    // [TEAM TOP HAT] Step 3: Input Hot-Spot Check
+#ifndef TOP_HAT_NORMED_HOTSPOTS
+#define TOP_HAT_NORMED_HOTSPOTS 1
+#endif
+    
+    if (TOP_HAT_NORMED_HOTSPOTS && layer_idx == 0) {
+        std::vector<half> hN(896);
+        cudaMemcpy(hN.data(), normed_, 896*sizeof(half), cudaMemcpyDeviceToHost);
+        float minv = 1e30f, maxv = -1e30f, sum = 0.f;
+        int min_i = 0, max_i = 0;
+        for (int i = 0; i < 896; ++i) {
+            float v = __half2float(hN[i]);
+            if (v < minv) { minv = v; min_i = i; }
+            if (v > maxv) { maxv = v; max_i = i; }
+            sum += v;
+        }
+        fprintf(stderr, "[TEAM TOP HAT] normed stats: min=%.6f@%d max=%.6f@%d mean=%.6f\n",
+                minv, min_i, maxv, max_i, sum/896.f);
+    }
+    
     // [TEAM THIMBLE] 2025-10-07T00:18Z - Pre-transpose experiment (see top of file for banner)
 #if THIMBLE_PRETRANSPOSE_EXPERIMENT
     // Experiment-scope static allocation (intentionally leaked for session; safe to remove post-fix)
@@ -476,8 +567,17 @@ void QwenTransformer::forward_layer(
     }
 #else
     // Default path: CUBLAS_OP_T (current code)
-    // Compute type: CUBLAS_COMPUTE_32F_FAST_16F (tensor cores enabled)
-    // TODO [NEXT TEAM]: Try CUBLAS_COMPUTE_32F to disable fast math and test if extremes disappear
+    // [TEAM TOP HAT] Step 1: Compute Type A/B Test
+#ifndef TOP_HAT_Q_GEMM_COMPUTE_32F
+#define TOP_HAT_Q_GEMM_COMPUTE_32F 0
+#endif
+    
+    if (layer_idx == 0) {
+        fprintf(stderr, "[TEAM TOP HAT] TOP_HAT_Q_GEMM_COMPUTE_32F=%d\n", TOP_HAT_Q_GEMM_COMPUTE_32F);
+    }
+    
+    auto compute_type = TOP_HAT_Q_GEMM_COMPUTE_32F ? CUBLAS_COMPUTE_32F : CUBLAS_COMPUTE_32F_FAST_16F;
+    
     cublasGemmEx(cublas_handle_, CUBLAS_OP_T, CUBLAS_OP_N, 
                  q_dim, batch_size, config_.hidden_dim, 
                  &alpha, 
@@ -485,8 +585,21 @@ void QwenTransformer::forward_layer(
                  normed_half, CUDA_R_16F, config_.hidden_dim, 
                  &beta, 
                  q_half, CUDA_R_16F, q_dim, 
-                 CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
+                 compute_type, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
 #endif
+    
+    // [TEAM TOP HAT] Check Q output BEFORE bias (to confirm GEMM is producing extremes)
+    if (do_top_hat_log) {
+        half h_q_pre_bias[3];
+        int idxs[3] = {0, 95, 126};
+        for (int i = 0; i < 3; ++i) {
+            cudaMemcpy(&h_q_pre_bias[i], q_half + idxs[i], sizeof(half), cudaMemcpyDeviceToHost);
+        }
+        fprintf(stderr, "[TEAM TOP HAT] Q before bias: Q[0]=%.6f Q[95]=%.6f Q[126]=%.6f\n",
+                __half2float(h_q_pre_bias[0]),
+                __half2float(h_q_pre_bias[1]),
+                __half2float(h_q_pre_bias[2]));
+    }
     
     // [TEAM GREEN] 2025-10-06T20:43Z - BUG FIX!
     // FIXED: Add Q bias (this model HAS biases, we were ignoring them!)
@@ -680,6 +793,11 @@ void QwenTransformer::forward_layer(
     static int thimble_token_count = 0;
     bool do_thimble_log = (layer_idx == 0 && thimble_token_count < 2);
     
+    if (do_top_hat_log) {
+        fprintf(stderr, "\n[TEAM TOP HAT] START layer=0 pos=%u head_dim=%u q_dim=%u compute32f=%d\n",
+                pos, config_.head_dim, q_dim, TOP_HAT_Q_GEMM_COMPUTE_32F);
+    }
+    
     if (do_thimble_log) {
         fprintf(stderr, "\n[TEAM THIMBLE] === Q-PROJECTION OUTLIER DIAGNOSIS (TOKEN %d, POS %u) ===\n",
                 thimble_token_count, pos);
@@ -728,6 +846,8 @@ void QwenTransformer::forward_layer(
         }
         fprintf(stderr, "[THIMBLE] Q stats: min=%.6f max=%.6f mean=%.6f\n",
                 q_min, q_max, q_sum / q_dim);
+        
+        delete[] h_q_full;
         
 #if 0  // THIMBLE_DEBUG_QPARITY - Set to 1 to enable manual dot-product verification
         // ========================================================================
@@ -779,6 +899,30 @@ void QwenTransformer::forward_layer(
 #endif
         
         delete[] h_q_full;
+        thimble_token_count++;
+    }
+    
+    // [TEAM TOP HAT] Log Q indices after projection
+    if (do_top_hat_log) {
+        half* h_q_top_hat = new half[q_dim];
+        cudaMemcpy(h_q_top_hat, q_proj_, q_dim * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "[TEAM TOP HAT] Q[0]=%.6f Q[95]=%.6f Q[126]=%.6f\n",
+                __half2float(h_q_top_hat[0]),
+                __half2float(h_q_top_hat[95]),
+                __half2float(h_q_top_hat[126]));
+        delete[] h_q_top_hat;
+        
+        // [TEAM TOP HAT] Check bias at anomaly indices
+        if (layer.attn_q_bias != nullptr) {
+            half h_bias_check[896];
+            cudaMemcpy(h_bias_check, layer.attn_q_bias, 896 * sizeof(half), cudaMemcpyDeviceToHost);
+            fprintf(stderr, "[TEAM TOP HAT] Q bias[0]=%.6f bias[95]=%.6f bias[126]=%.6f\n",
+                    __half2float(h_bias_check[0]),
+                    __half2float(h_bias_check[95]),
+                    __half2float(h_bias_check[126]));
+        }
+        
+        top_hat_token_count++;
     }
     
     // 3. Apply RoPE (Rotary Position Embedding)
