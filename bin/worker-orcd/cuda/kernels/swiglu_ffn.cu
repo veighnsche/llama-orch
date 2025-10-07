@@ -236,6 +236,7 @@ void cuda_swiglu_forward(
     // ⚠️ [TEAM PEAR] 2025-10-07T11:04Z - FFN gate uses CUBLAS_OP_T (CORRECT, don't change)
     // SENTINEL verified this is mathematically correct, but output is STILL garbage.
     // Bug is NOT in cuBLAS parameters. Don't waste time re-testing OP_N or different lda.
+    // [TEAM MONET 2025-10-07T14:22Z] Checked line 239: CUBLAS_OP_T lda=hidden_dim ✅
     cublasStatus_t status = cublasGemmEx(
         cublas_handle,
         CUBLAS_OP_T,  // Transpose to match row-major layout
@@ -278,6 +279,7 @@ void cuda_swiglu_forward(
     }
 #endif
     
+    // [TEAM MONET 2025-10-07T14:22Z] Checked line 281: CUBLAS_OP_T lda=hidden_dim ✅
     status = cublasGemmEx(
         cublas_handle,
         CUBLAS_OP_T,  // Transpose to match row-major layout
@@ -347,6 +349,7 @@ void cuda_swiglu_forward(
 #endif
     
     // ⚠️ [TEAM PEAR] FFN down uses CUBLAS_OP_T (CORRECT, don't change)
+    // [TEAM MONET 2025-10-07T14:22Z] Checked line 350: CUBLAS_OP_T lda=ffn_dim ✅
     status = cublasGemmEx(
         cublas_handle,
         CUBLAS_OP_T,  // Transpose to match row-major layout

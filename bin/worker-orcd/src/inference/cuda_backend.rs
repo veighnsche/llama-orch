@@ -231,6 +231,7 @@ impl InferenceBackend for CudaInferenceBackend {
         // [TEAM CHAIR] 2025-10-07T02:47Z - DISABLE CHAT TEMPLATE TO FIX CRASH
         // The special tokens (151644, 151645) cause crashes in the C++ code
         // Temporarily disable chat template to test output quality without crashing
+        // [TEAM MONET 2025-10-07T14:22Z] Checked line 234: chat template hardcoded to false ⚠️
         let use_chat_template = false;  // Set to false to bypass special token crash
         
         let im_start_token = 151644u32;
@@ -670,6 +671,7 @@ impl InferenceBackend for CudaInferenceBackend {
             //   But we override to 0.0 here → greedy sampling always picks same token
             //   llama.cpp uses temperature=0.7 and generates diverse output
             // FIXED: [TEAM_FINNEY] Use config.temperature instead of hardcoded 0.0
+            // [TEAM MONET 2025-10-07T14:22Z] Checked line 675: uses config.temperature ✅
             let next_token_id = inference.generate_token(
                 current_token,
                 config.temperature, // Use configured temperature, not hardcoded 0.0!

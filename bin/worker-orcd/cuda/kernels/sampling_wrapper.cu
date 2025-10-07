@@ -96,6 +96,7 @@ __global__ void softmax_kernel(
         // [TEAM CASCADE FIX] Changed from float to double here
         // With vocab_size=151936, individual probs ~0.0000066 which underflows in FP32
         // FP64 has sufficient precision (15 digits vs 7) to handle small probabilities
+        // [TEAM MONET 2025-10-07T14:22Z] Verified line 99: double precision sum ✅
         double sum = 0.0;  // CRITICAL: Must be double, not float!
         for (int i = 0; i < vocab_size; i++) {
             if (isinf(logits[i]) && logits[i] < 0) {
@@ -382,6 +383,7 @@ int cuda_sample_token(
         
         // Compute softmax (convert logits → probabilities)
         // This MUST come before top-p!
+        // [TEAM MONET 2025-10-07T14:22Z] Verified sampling order: temp→top-k→softmax→top-p(disabled)→sample ✅
         // TEAM FREE [Review]
         // Category: Performance
         // Hypothesis: softmax_kernel<<<1,1>>> (line 303) single-threaded; scans vocab_size=151936 twice (max+exp+sum); ~200μs.

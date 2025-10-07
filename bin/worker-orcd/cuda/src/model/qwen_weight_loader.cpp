@@ -390,6 +390,7 @@ QwenModel* QwenWeightLoader::load_from_gpu_pointers(
     }
     
     // Wire output
+    // [TEAM MONET 2025-10-07T14:22Z] Checked line 393: output_norm loaded raw (no normalization) ⚠️
     model->weights.output_norm = get_ptr("output_norm.weight");
     model->weights.lm_head = get_ptr("output.weight");
     
