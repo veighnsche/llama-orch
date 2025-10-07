@@ -233,6 +233,131 @@ macros-closeĳľĠminimumĳľ(libraryĳľĳľularityteesncyĳľĳľĠoriginallyn
 
 ---
 
+## [TEAM THIMBLE] 2025-10-07T00:18Z
+
+**OBJECTIVE**: Q-Projection Stride Bug - Find and fix ±16 spikes at Q[95], Q[126]
+
+**STATUS**: ❌ ROOT CAUSE NOT STRIDE - DIFFERENT BUG!
+
+### Critical Finding: Stride Hypothesis DISPROVEN
+
+**Initial Hypothesis**: CUBLAS_OP_T stride interpretation causes wrong memory walks past row 0.
+
+**Evidence Collected**:
+
+1. **Reproducible extremes** (Task 1 ✅):
+   - Token 0: Q[0]=-0.043 ✅, Q[95]=-16.047 ❌, Q[126]=14.336 ❌
+   - Token 1: Q[0]=-0.015 ✅, Q[95]=-3.912 ❌, Q[126]=3.695 ❌
+   - Same indices (head 1, dims 31 & 62) across tokens
+
+2. **Manual parity FAILED** (Task 2 ✅):
+   ```
+   Token 0:
+   - Q[95]: manual=-0.058, cuBLAS=-16.047, diff=15.99 ❌
+   - Q[126]: manual=0.055, cuBLAS=14.336, diff=14.28 ❌
+   
+   Token 1:
+   - Q[95]: manual=0.079, cuBLAS=-3.912, diff=3.99 ❌
+   - Q[126]: manual=0.020, cuBLAS=3.695, diff=3.68 ❌
+   ```
+   Manual dot products are normal, cuBLAS outputs are extreme!
+
+3. **Pre-transpose experiment FAILED** (Task 3 ✅):
+   - Explicitly transposed Q weight [896,896] on CPU
+   - Used CUBLAS_OP_N with lda=q_dim
+   - **RESULT**: SAME extreme values at SAME indices!
+   - Token 0: Q[95]=-16.047, Q[126]=14.336 (NO CHANGE!)
+   - Token 1: Q[95]=-3.912, Q[126]=3.695 (NO CHANGE!)
+
+### Conclusion
+
+**The bug is NOT about CUBLAS_OP_T stride semantics.**
+
+Even with explicit transpose + CUBLAS_OP_N, the extremes persist. This eliminates the stride hypothesis.
+
+### What This Means
+
+1. Manual calculation gives correct small values (±0.08)
+2. cuBLAS (both OP_T and OP_N with transposed matrix) gives wrong extreme values
+3. The extremes always appear at **the same output indices** (95, 126)
+4. These indices map to head 1, dimensions 31 and 62
+
+### New Hypotheses to Investigate
+
+1. **Weight corruption in GPU memory**:
+   - Weight loads correctly (VANGUARD verified first 100 values)
+   - But maybe specific rows/columns are corrupted?
+   - Check weights at positions that would contribute to Q[95], Q[126]
+
+2. **cuBLAS configuration issue beyond stride**:
+   - Maybe compute type (CUBLAS_COMPUTE_32F_FAST_16F)?
+   - Maybe tensor cores introduce errors for this specific case?
+   - Try CUBLAS_COMPUTE_32F (no fast math)?
+
+3. **Input (normed) has issues**:
+   - ORION logs show normed is normal (±1.0 range)
+   - But maybe specific positions have extreme values?
+   - Check normed[j] for all j that contribute to outliers
+
+4. **Bias addition bug** (unlikely):
+   - Bias is all zeros (ORION verified)
+   - But cuda_add_bias might write to wrong locations?
+
+5. **FP16 overflow/underflow in accumulation**:
+   - Maybe intermediate products overflow FP16?
+   - But manual calc in FP32 also gives small values...
+
+### TODO for Next Team (Crisp Action Items)
+
+Execute these in order to isolate the root cause:
+
+1. **Test CUBLAS_COMPUTE_32F (disable tensor cores)**:
+   - In `qwen_transformer.cpp` line 488, replace `CUBLAS_COMPUTE_32F_FAST_16F` with `CUBLAS_COMPUTE_32F`
+   - Re-run test and log Q[0], Q[95], Q[126] for tokens 0 & 1
+   - **Expected**: If tensor core fast-math causes the bug, extremes should disappear
+   - **If extremes persist**: Tensor cores are not the issue, proceed to step 2
+
+2. **Dump Q weight columns 95 and 126**:
+   ```cpp
+   // Add after line 700 in qwen_transformer.cpp:
+   half h_w_col95[896], h_w_col126[896];
+   for (int j = 0; j < 896; j++) {
+       cudaMemcpy(&h_w_col95[j], layer.attn_q_weight + j * 896 + 95, sizeof(half), cudaMemcpyDeviceToHost);
+       cudaMemcpy(&h_w_col126[j], layer.attn_q_weight + j * 896 + 126, sizeof(half), cudaMemcpyDeviceToHost);
+   }
+   // Log first 16 + min/max/mean for each column
+   ```
+   - **Expected**: If weight corruption, columns will have extreme values (>10)
+   - **If columns are normal**: Weights are fine, proceed to step 3
+
+3. **Test FP32 GEMM**:
+   - Allocate FP32 buffer for Q weight on GPU
+   - Convert Q weight from FP16 to FP32 (use `__half2float` in a kernel)
+   - Run `cublasGemmEx` with `CUDA_R_32F` for all matrices
+   - Log Q[0], Q[95], Q[126]
+   - **Expected**: If FP16 accumulation causes overflow, FP32 should fix it
+   - **If extremes persist**: The bug is deeper (cuBLAS itself or memory corruption)
+
+4. **Verify normed input** (already logged in current code):
+   - Check `[THIMBLE] Input (normed) stats` in test output
+   - Look for extreme values (>5 or <-5) at any index
+   - **If normed has spikes**: Bug is upstream (RMSNorm or residual add)
+   - **If normed is normal**: Bug is in Q GEMM or bias add
+
+### Files Modified
+
+1. `cuda/src/transformer/qwen_transformer.cpp`:
+   - Lines 6-9: Experiment flags and results
+   - Lines 139-151: CPU transpose helper
+   - Lines 393-474: Pre-transpose experiment code (now disabled)
+   - Lines 643-713: Task 1 & 2 instrumentation (THIMBLE logs)
+
+### Code Cleanup Note
+
+The experiment code is disabled but left in place for future reference. It can be removed once the real bug is found.
+
+---
+
 ## [TEAM ORION] 2025-10-06T23:58Z
 
 **OBJECTIVE**: Find first activation divergence between our FP16 forward pass and llama.cpp

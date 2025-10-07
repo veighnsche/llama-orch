@@ -2,13 +2,26 @@
 #include <cublas_v2.h>
 #include <stdexcept>
 #include <cstring>
+
+// ============================================================================
+// [TEAM THIMBLE] 2025-10-07T00:18Z - Pre-transpose Experiment
+// ============================================================================
+// OBJECTIVE: Test if CUBLAS_OP_T stride semantics cause Q[95]/Q[126] extremes
+// METHOD: Explicitly transpose Q weight on CPU, use CUBLAS_OP_N with lda=q_dim
+// EXPECTED: If stride bug, extremes disappear with OP_N
+// OBSERVED: Token 0: Q[95]=-16.047, Q[126]=14.336 (NO CHANGE from OP_T!)
+//           Token 1: Q[95]=-3.912, Q[126]=3.695 (NO CHANGE from OP_T!)
+// CONCLUSION: Bug is NOT stride-related. Extremes persist with both OP_T and OP_N.
+// NEXT ACTION: Investigate cuBLAS compute type, weight corruption, or input spikes.
+// ============================================================================
+#define THIMBLE_PRETRANSPOSE_EXPERIMENT 0  // Set to 1 to enable; prints "[THIMBLE EXPERIMENT]" when active
+
 //
-// [APPEND-ONLY GUARD] Do not delete prior teams’ comments. Add new notes below existing blocks.
+// [APPEND-ONLY GUARD] Do not delete prior teams' comments. Add new notes below existing blocks.
 //
 // ============================================================================
 // [TEAM_CHARLIE_BETA] ⚠️ POTENTIAL FIX - NOT TESTED! (2025-10-06 17:07 UTC)
 // ============================================================================
-//
 // BUG: Model generates same token repeatedly (e.g., "coholic" 100+ times)
 //
 // ⚠️⚠️⚠️ THIS FIX HAS NOT BEEN TESTED YET! ⚠️⚠️⚠️
@@ -132,6 +145,20 @@ extern "C" {
         cudaStream_t stream
     );
 }
+
+// [TEAM THIMBLE] 2025-10-07T00:18Z - Helper for Task 3
+#if THIMBLE_PRETRANSPOSE_EXPERIMENT
+namespace {
+void cpu_transpose_fp16(const half* src, half* dst, int rows, int cols) {
+    // Transpose [rows, cols] row-major to [cols, rows] row-major
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            dst[j * rows + i] = src[i * cols + j];
+        }
+    }
+}
+}
+#endif
 
 namespace worker {
 namespace transformer {
@@ -389,7 +416,77 @@ void QwenTransformer::forward_layer(
     // HYPOTHESIS: Additional bugs remain (sampling? temperature? other matmuls?).
     // DO NOT CLAIM FIXED until output is consistently human-readable across multiple test runs.
     uint32_t q_dim = config_.num_heads * config_.head_dim;
-    cublasGemmEx(cublas_handle_, CUBLAS_OP_T, CUBLAS_OP_N, q_dim, batch_size, config_.hidden_dim, &alpha, layer.attn_q_weight, CUDA_R_16F, config_.hidden_dim, normed_half, CUDA_R_16F, config_.hidden_dim, &beta, q_half, CUDA_R_16F, q_dim, CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
+    
+    // [TEAM THIMBLE] 2025-10-07T00:18Z - Pre-transpose experiment (see top of file for banner)
+#if THIMBLE_PRETRANSPOSE_EXPERIMENT
+    // Experiment-scope static allocation (intentionally leaked for session; safe to remove post-fix)
+    static void* q_weight_transposed = nullptr;
+    static bool q_transpose_done = false;
+    
+    // Always log experiment state for clarity
+    if (layer_idx == 0) {
+        fprintf(stderr, "[THIMBLE EXPERIMENT] enabled=%d, q_transpose_done=%d\n", 
+                THIMBLE_PRETRANSPOSE_EXPERIMENT, q_transpose_done);
+    }
+    
+    if (!q_transpose_done && layer_idx == 0) {
+        fprintf(stderr, "[THIMBLE EXPERIMENT] Pre-transposing Q weight [896,896] -> [896,896]^T\n");
+        
+        // Allocate scratch buffer for transposed weight
+        cudaMalloc(&q_weight_transposed, 896 * 896 * sizeof(half));
+        
+        // Copy weight to host, transpose, copy back
+        half* h_q_weight = new half[896 * 896];
+        half* h_q_weight_t = new half[896 * 896];
+        cudaMemcpy(h_q_weight, layer.attn_q_weight, 896 * 896 * sizeof(half), cudaMemcpyDeviceToHost);
+        cpu_transpose_fp16(h_q_weight, h_q_weight_t, 896, 896);
+        cudaMemcpy(q_weight_transposed, h_q_weight_t, 896 * 896 * sizeof(half), cudaMemcpyHostToDevice);
+        delete[] h_q_weight;
+        delete[] h_q_weight_t;
+        
+        q_transpose_done = true;
+        fprintf(stderr, "[THIMBLE EXPERIMENT] Q weight transpose complete\n");
+    }
+    
+    // Use CUBLAS_OP_N with transposed weight (Q = W^T @ normed, where W^T is already transposed)
+    const half* q_weight_to_use = (layer_idx == 0 && q_weight_transposed) ? 
+        reinterpret_cast<const half*>(q_weight_transposed) : 
+        reinterpret_cast<const half*>(layer.attn_q_weight);
+    
+    if (layer_idx == 0 && q_weight_transposed) {
+        // Experiment path: CUBLAS_OP_N with pre-transposed matrix
+        cublasGemmEx(cublas_handle_, CUBLAS_OP_N, CUBLAS_OP_N, 
+                     q_dim, batch_size, config_.hidden_dim, 
+                     &alpha, 
+                     q_weight_to_use, CUDA_R_16F, q_dim,        // lda = q_dim (leading dim of transposed)
+                     normed_half, CUDA_R_16F, config_.hidden_dim, 
+                     &beta, 
+                     q_half, CUDA_R_16F, q_dim, 
+                     CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
+    } else {
+        // Default path: CUBLAS_OP_T (current code)
+        cublasGemmEx(cublas_handle_, CUBLAS_OP_T, CUBLAS_OP_N, 
+                     q_dim, batch_size, config_.hidden_dim, 
+                     &alpha, 
+                     layer.attn_q_weight, CUDA_R_16F, config_.hidden_dim, 
+                     normed_half, CUDA_R_16F, config_.hidden_dim, 
+                     &beta, 
+                     q_half, CUDA_R_16F, q_dim, 
+                     CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
+    }
+#else
+    // Default path: CUBLAS_OP_T (current code)
+    // Compute type: CUBLAS_COMPUTE_32F_FAST_16F (tensor cores enabled)
+    // TODO [NEXT TEAM]: Try CUBLAS_COMPUTE_32F to disable fast math and test if extremes disappear
+    cublasGemmEx(cublas_handle_, CUBLAS_OP_T, CUBLAS_OP_N, 
+                 q_dim, batch_size, config_.hidden_dim, 
+                 &alpha, 
+                 layer.attn_q_weight, CUDA_R_16F, config_.hidden_dim, 
+                 normed_half, CUDA_R_16F, config_.hidden_dim, 
+                 &beta, 
+                 q_half, CUDA_R_16F, q_dim, 
+                 CUBLAS_COMPUTE_32F_FAST_16F, CUBLAS_GEMM_DEFAULT_TENSOR_OP);
+#endif
     
     // [TEAM GREEN] 2025-10-06T20:43Z - BUG FIX!
     // FIXED: Add Q bias (this model HAS biases, we were ignoring them!)
@@ -566,6 +663,122 @@ void QwenTransformer::forward_layer(
         
         log_activation("After K proj (pre-RoPE)", k_proj_, kv_dim);
         log_activation("After V proj (pre-RoPE)", v_proj_, kv_dim);
+    }
+    
+    // ============================================================================
+    // [TEAM THIMBLE] 2025-10-07T00:18Z - Q-Projection Outlier Diagnosis
+    // ============================================================================
+    // OBJECTIVE: Identify root cause of ±16 spikes at Q[95], Q[126]
+    // HYPOTHESIS (DISPROVEN): CUBLAS_OP_T stride causes wrong memory walks past row 0
+    // METHOD: 1) Reproducible logging of Q[0], Q[95], Q[126] for tokens 0 & 1
+    //         2) Manual dot-product parity check (see #if THIMBLE_DEBUG_QPARITY below)
+    //         3) Pre-transpose experiment with CUBLAS_OP_N (see top of file)
+    // OBSERVED: Manual calc gives ±0.08, cuBLAS gives ±16 at SAME indices
+    //           Pre-transpose with OP_N gives SAME extremes → NOT a stride bug
+    // NEXT ACTION: Test CUBLAS_COMPUTE_32F, check weight columns, verify normed input
+    // ============================================================================
+    static int thimble_token_count = 0;
+    bool do_thimble_log = (layer_idx == 0 && thimble_token_count < 2);
+    
+    if (do_thimble_log) {
+        fprintf(stderr, "\n[TEAM THIMBLE] === Q-PROJECTION OUTLIER DIAGNOSIS (TOKEN %d, POS %u) ===\n",
+                thimble_token_count, pos);
+        
+        // Log normed input stats to rule out input spikes
+        half* h_normed_check = new half[config_.hidden_dim];
+        cudaMemcpy(h_normed_check, normed_, config_.hidden_dim * sizeof(half), cudaMemcpyDeviceToHost);
+        float normed_min = __half2float(h_normed_check[0]);
+        float normed_max = __half2float(h_normed_check[0]);
+        float normed_sum = 0.0f;
+        int normed_max_idx = 0, normed_min_idx = 0;
+        for (int i = 0; i < (int)config_.hidden_dim; i++) {
+            float val = __half2float(h_normed_check[i]);
+            if (val < normed_min) { normed_min = val; normed_min_idx = i; }
+            if (val > normed_max) { normed_max = val; normed_max_idx = i; }
+            normed_sum += val;
+        }
+        fprintf(stderr, "[THIMBLE] Input (normed) stats: min=%.6f@[%d], max=%.6f@[%d], mean=%.6f\n",
+                normed_min, normed_min_idx, normed_max, normed_max_idx, normed_sum / config_.hidden_dim);
+        delete[] h_normed_check;
+        
+        // Task 1: Reproducible micro-check of Q output
+        half* h_q_full = new half[q_dim];
+        cudaMemcpy(h_q_full, q_proj_, q_dim * sizeof(half), cudaMemcpyDeviceToHost);
+        
+        // Index provenance: 0=baseline, 95/126=head 1 dims 31/62 (repeat offenders across tokens)
+        // Chosen to stress suspected mis-index/stride behavior (hypothesis now disproven)
+        int indices[3] = {0, 95, 126};
+        for (int idx : indices) {
+            float val = __half2float(h_q_full[idx]);
+            int head = idx / config_.head_dim;
+            int dim = idx % config_.head_dim;
+            fprintf(stderr, "[THIMBLE] Q[%d] = %.6f (head %d, dim %d)\n",
+                    idx, val, head, dim);
+        }
+        
+        // Compute and print Q stats
+        float q_min = __half2float(h_q_full[0]);
+        float q_max = __half2float(h_q_full[0]);
+        float q_sum = 0.0f;
+        for (int i = 0; i < (int)q_dim; i++) {
+            float val = __half2float(h_q_full[i]);
+            if (val < q_min) q_min = val;
+            if (val > q_max) q_max = val;
+            q_sum += val;
+        }
+        fprintf(stderr, "[THIMBLE] Q stats: min=%.6f max=%.6f mean=%.6f\n",
+                q_min, q_max, q_sum / q_dim);
+        
+#if 0  // THIMBLE_DEBUG_QPARITY - Set to 1 to enable manual dot-product verification
+        // ========================================================================
+        // Task 2: Manual Parity Check for Q[95] and Q[126]
+        // ========================================================================
+        // OBJECTIVE: Verify if cuBLAS computes correct dot products for outlier indices
+        // METHOD: Manual host-side dot product using same weights & inputs as cuBLAS
+        // MEMORY MODEL:
+        //   - W is row-major [hidden_dim, q_dim] = [896, 896]
+        //   - CUBLAS_OP_T implies Q = W^T @ normed
+        //   - So Q[i] = column_i of W dot normed
+        //   - In row-major: W[j][i] is at offset j * q_dim + i
+        // EXPECTED: If cuBLAS is correct, manual ≈ cuBLAS (diff < 0.001)
+        // OBSERVED: Token 0: Q[95] manual=-0.058, cuBLAS=-16.047 (diff=15.99) ❌
+        //           Token 0: Q[126] manual=0.055, cuBLAS=14.336 (diff=14.28) ❌
+        //           Token 1: Q[95] manual=0.079, cuBLAS=-3.912 (diff=3.99) ❌
+        //           Token 1: Q[126] manual=0.020, cuBLAS=3.695 (diff=3.68) ❌
+        // CONCLUSION: Manual calc is normal, cuBLAS output is wrong at these indices
+        // ========================================================================
+        
+        half h_normed[896];
+        cudaMemcpy(h_normed, normed_, 896 * sizeof(half), cudaMemcpyDeviceToHost);
+        
+        // Allocate for full Q weight matrix
+        half* h_q_weight_full = new half[896 * 896];
+        cudaMemcpy(h_q_weight_full, layer.attn_q_weight, 896 * 896 * sizeof(half), cudaMemcpyDeviceToHost);
+        
+        for (int idx : {95, 126}) {
+            // Compute manual dot product: sum(W[j, idx] * normed[j]) for j=0..895
+            
+            float manual = 0.0f;
+            for (int j = 0; j < 896; j++) {
+                // Extract column idx from row-major weight matrix
+                int offset = j * 896 + idx;  // lda = 896 (q_dim)
+                float w_val = __half2float(h_q_weight_full[offset]);
+                float n_val = __half2float(h_normed[j]);
+                manual += w_val * n_val;
+            }
+            
+            float cublas = __half2float(h_q_full[idx]);
+            float diff = fabs(manual - cublas);
+            bool match = diff < 0.001;
+            
+            fprintf(stderr, "[THIMBLE] Q[%d] parity: manual=%.6f, cuBLAS=%.6f, diff=%.6f %s\n",
+                    idx, manual, cublas, diff, match ? "✅" : "❌");
+        }
+        
+        delete[] h_q_weight_full;
+#endif
+        
+        delete[] h_q_full;
     }
     
     // 3. Apply RoPE (Rotary Position Embedding)
@@ -818,6 +1031,11 @@ void QwenTransformer::forward_layer(
         log_activation("After residual #2 (layer output)", output, config_.hidden_dim);
         fprintf(stderr, "===END LAYER 0 FORWARD PASS (TOKEN %d)===\n\n", orion_token_count);
         orion_token_count++;
+    }
+    
+    // [TEAM THIMBLE] 2025-10-07T00:11Z
+    if (do_thimble_log) {
+        thimble_token_count++;
     }
 }
 
