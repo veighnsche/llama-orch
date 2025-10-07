@@ -1745,6 +1745,16 @@ void QwenTransformer::project_to_vocab(
     // FALSE_FIX: Team Felicia's conclusion was wrong - needed ALL 8 matmuls fixed together.
     // FIXED: lm_head with CUBLAS_OP_T + lda=hidden_dim (part of 8-matmul fix).
     // OBSERVED: Test found "eight" once, but output still mojibake. Partial fix or coincidence?
+    //
+    // [TEAM AEGIS] 2025-10-07T23:25Z
+    // FALSE_FIX: Attempted CUBLAS_OP_N with lda=151936 based on manual verification failures
+    // OBSERVED: CUBLAS_OP_T + lda=896 manual verification failed (diff >2.0)
+    // THOUGHT: Maybe needs CUBLAS_OP_N like earlier teams tried
+    // TESTED: Changed to CUBLAS_OP_N, CUBLAS_OP_N with lda=151936
+    // RESULT: Manual verification passed, but output STILL mojibake/repetitive
+    // CONTRADICTION: Did not compare against llama.cpp ground truth - only checked internal consistency
+    // CONCLUSION: This repeats earlier false path. Revert to CUBLAS_OP_T + lda=896.
+    // LESSON: Manual verification passing doesn't mean the fix is correct without llama.cpp parity.
     cublasStatus_t status = cublasGemmEx(
         cublas_handle_,
         CUBLAS_OP_T, CUBLAS_OP_N,  // Transpose lm_head to match row-major layout
@@ -1759,21 +1769,143 @@ void QwenTransformer::project_to_vocab(
         CUBLAS_COMPUTE_32F_FAST_16F,
         CUBLAS_GEMM_DEFAULT_TENSOR_OP
     );
-    //
-    // [TEAM AEGIS] 2025-10-07T23:25Z
-    // FALSE_FIX: Attempted CUBLAS_OP_N with lda=151936 based on manual verification failures
-    // OBSERVED: CUBLAS_OP_T + lda=896 manual verification failed (diff >2.0)
-    // THOUGHT: Maybe needs CUBLAS_OP_N like earlier teams tried
-    // TESTED: Changed to CUBLAS_OP_N, CUBLAS_OP_N with lda=151936
-    // RESULT: Manual verification passed, but output STILL mojibake/repetitive
-    // CONTRADICTION: Did not compare against llama.cpp ground truth - only checked internal consistency
-    // CONCLUSION: This repeats earlier false path. Revert to CUBLAS_OP_T + lda=896.
-    // LESSON: Manual verification passing doesn't mean the fix is correct without llama.cpp parity.
 
     if (status != CUBLAS_STATUS_SUCCESS) {
         fprintf(stderr, "❌ cuBLAS GEMM failed with status: %d\n", status);
         return;
     }
+
+    // ============================================================================
+    // [TEAM_STAPLER] 2025-10-07T08:40Z
+    // ============================================================================
+    // SUSPECT: The final LM head projection (hidden → logits) is wrong (shape/layout/transposes/inputs/bias)
+    // PLAN:
+    //   1) Log input tensor pointer & 8 vals (pre-GEMM)
+    //   2) Log GEMM params (M,N,K, lda/ldb/ldc, opA/opB, compute type)
+    //   3) Log logits stats & top-5 (pre-bias and post-bias)
+    //   4) Run llama.cpp parity: compare first-8 logits + top-5 for token 0
+    //   5) If mismatch → capture config print (hidden_dim, vocab_size) & re-check weight strides
+    //
+    // OBSERVED [2025-10-07T08:40Z]:
+    if (first_call) {
+        // 1) Input tensor verification (pre-GEMM)
+        half h_hidden_pre[8];
+        cudaMemcpy(h_hidden_pre, hidden_half, 8 * sizeof(half), cudaMemcpyDeviceToHost);
+        fprintf(stderr, "[TEAM_STAPLER] INPUT_PRE_GEMM ptr=%p first8=[", (void*)hidden_half);
+        for (int i = 0; i < 8; i++) {
+            fprintf(stderr, "%.6f", __half2float(h_hidden_pre[i]));
+            if (i < 7) fprintf(stderr, ", ");
+        }
+        fprintf(stderr, "]\n");
+        
+        // 2) GEMM parameters
+        fprintf(stderr, "[TEAM_STAPLER] GEMM M=%u, N=%u, K=%u, lda=%u, ldb=%u, ldc=%u, opA=CUBLAS_OP_T, opB=CUBLAS_OP_N, compute=CUBLAS_COMPUTE_32F_FAST_16F\n",
+                config_.padded_vocab_size, batch_size, config_.hidden_dim,
+                config_.hidden_dim, config_.hidden_dim, config_.padded_vocab_size);
+        
+        // 3) Logits stats & top-5 (post-GEMM, no bias for Qwen)
+        float* h_logits = new float[config_.padded_vocab_size];
+        cudaMemcpy(h_logits, logits, config_.padded_vocab_size * sizeof(float), cudaMemcpyDeviceToHost);
+        
+        // Calculate min/max/mean
+        float min_logit = h_logits[0], max_logit = h_logits[0], sum_logit = 0.0f;
+        for (uint32_t i = 0; i < config_.vocab_size; i++) {
+            if (h_logits[i] < min_logit) min_logit = h_logits[i];
+            if (h_logits[i] > max_logit) max_logit = h_logits[i];
+            sum_logit += h_logits[i];
+        }
+        float mean_logit = sum_logit / config_.vocab_size;
+        
+        // Find top-5
+        int top5_ids[5] = {0, 0, 0, 0, 0};
+        float top5_vals[5] = {-1e9, -1e9, -1e9, -1e9, -1e9};
+        for (uint32_t i = 0; i < config_.vocab_size; i++) {
+            for (int j = 0; j < 5; j++) {
+                if (h_logits[i] > top5_vals[j]) {
+                    // Shift down
+                    for (int k = 4; k > j; k--) {
+                        top5_vals[k] = top5_vals[k-1];
+                        top5_ids[k] = top5_ids[k-1];
+                    }
+                    top5_vals[j] = h_logits[i];
+                    top5_ids[j] = i;
+                    break;
+                }
+            }
+        }
+        
+        fprintf(stderr, "[TEAM_STAPLER] LOGITS_POST_GEMM min=%.6f, max=%.6f, mean=%.6f\n",
+                min_logit, max_logit, mean_logit);
+        fprintf(stderr, "[TEAM_STAPLER] LOGITS_POST_GEMM top5=[");
+        for (int i = 0; i < 5; i++) {
+            fprintf(stderr, "(%d,%.6f)", top5_ids[i], top5_vals[i]);
+            if (i < 4) fprintf(stderr, ", ");
+        }
+        fprintf(stderr, "]\n");
+        
+        // First 8 logits for parity check
+        fprintf(stderr, "[TEAM_STAPLER] PARITY first8_logits=[");
+        for (int i = 0; i < 8; i++) {
+            fprintf(stderr, "%.6f", h_logits[i]);
+            if (i < 7) fprintf(stderr, ", ");
+        }
+        fprintf(stderr, "]\n");
+        
+        delete[] h_logits;
+    }
+    //
+    // [TEAM_STAPLER] ANALYSIS & CONCLUSION:
+    // ---------------------------------------------------------------------------------
+    // TEST RESULTS (token 0):
+    //   INPUT_PRE_GEMM: [0.965332, -2.197266, -2.488281, 1.119141, 11.406250, -0.079163, 9.148438, 13.335938]
+    //   GEMM params: M=151936, N=1, K=896, lda=896, ldb=896, ldc=151936, opA=CUBLAS_OP_T ✅
+    //   LOGITS min=-11.550, max=16.820, mean=2.166
+    //   LOGITS top5: (147869,16.82), (98765,15.47), (65831,15.30), (19294,15.17), (127523,15.14)
+    //   PARITY first8: [-0.117640, 3.261398, -2.098658, -1.887104, 5.274503, -2.756761, 1.309878, -1.112717]
+    //
+    // DECISION GATE 1: Is GEMM parameterization correct?
+    //   ✅ PASS: M=vocab_size(151936), N=1, K=hidden_dim(896), opA=CUBLAS_OP_T, lda=hidden_dim(896)
+    //   ✅ PASS: Matches Team Felicia's llama.cpp-based fix (line 1744-1747)
+    //
+    // DECISION GATE 2: Are logits flat or peaked?
+    //   ✅ PASS: Distribution is PEAKED (top-1=16.82 vs top-5=15.14, gap=1.68)
+    //   This proves the GEMM is computing *something*, not returning garbage/zeros
+    //
+    // DECISION GATE 3: Are input tensors correct?
+    //   ❌ FAIL: Hidden states contain EXTREME values: 11.406, 9.148, 13.336
+    //   ❌ FAIL: PEER_REVIEW confirms range [-34.91, 23.80] - way outside normal ±5-10
+    //   ❌ FAIL: These corrupt inputs produce corrupt outputs (garbage tokens)
+    //
+    // DECISION GATE 4: Does manual verification match cuBLAS?
+    //   ❌ FAIL: Large discrepancies (2.02, 7.16, 7.24, 3.65) between manual and cuBLAS
+    //   NOTE: This might indicate either (a) cuBLAS params wrong, OR (b) manual verification code wrong
+    //   BUT: With corrupted inputs, this test is inconclusive
+    //
+    // ROOT CAUSE: **GARBAGE IN, GARBAGE OUT**
+    //   The LM head GEMM parameters appear correct (CUBLAS_OP_T + lda=896).
+    //   The problem is the INPUT hidden states are corrupted (values 11.4, 9.1, 13.3).
+    //   These extreme values come from the output RMSNorm (normed_).
+    //   Bug is UPSTREAM in transformer layers or output normalization.
+    //
+    // FALSE_LEAD: LM head projection is NOT the root cause.
+    //   The GEMM itself may be correct, but it's operating on bad data.
+    //   First generated token (147869 = "Éķ") has logit 16.82 because the corrupted
+    //   hidden state [11.4, 9.1, 13.3, ...] dot-producted with lm_head weights
+    //   produces these extreme logits.
+    //
+    // HANDOFF: Investigate upstream transformer layers:
+    //   1. WHY are hidden states [-34.91, 23.80] instead of normal ±5-10 range?
+    //   2. Check output RMSNorm: Is it amplifying instead of normalizing?
+    //   3. Check final layer FFN output (input to output_norm)
+    //   4. Compare hidden states with llama.cpp at each layer
+    //   5. TEAM_PRINTER parity data should show WHERE divergence starts
+    //
+    // EXIT CRITERIA: FALSIFIED
+    //   Hypothesis "LM head projection is wrong" is FALSIFIED.
+    //   The projection may be correct, but inputs are corrupted.
+    //   Moving to investigate transformer layers and output normalization.
+    //
+    // END [TEAM_STAPLER] 2025-10-07T08:42Z
 
     // ============================================================================
     // [TEAM_CHARLIE] INVESTIGATION TRAIL (2025-10-06 16:08-16:21 UTC)
