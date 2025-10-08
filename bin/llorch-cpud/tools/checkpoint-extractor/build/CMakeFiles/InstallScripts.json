@@ -1,7 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/home/vince/Projects/llama-orch/bin/llorch-cpud/tools/checkpoint-extractor/build/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
