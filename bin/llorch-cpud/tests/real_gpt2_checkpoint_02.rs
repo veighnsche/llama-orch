@@ -54,15 +54,11 @@ fn test_checkpoint_02_real_gpt2() {
     println!("  c_attn.bias shape: {:?}", c_attn_bias.shape());
     println!("  ln_output shape: {:?}", ln_output.shape());
     
-    // PyTorch Conv1D stores as [out, in] = [2304, 768]
-    // We need [in, out] = [768, 2304] for ndarray matmul
-    let weight_t = c_attn_weight.t().to_owned();
-    
-    println!("\n📊 After transpose:");
-    println!("  weight_t shape: {:?}", weight_t.shape());
+    // PyTorch stores c_attn as [768, 2304] which is already correct for our matmul
+    // No transpose needed!
     
     // GPT-2 base: 12 heads, 64 dim per head
-    let qkv = QKVProjection::new(weight_t, c_attn_bias, 12);
+    let qkv = QKVProjection::new(c_attn_weight, c_attn_bias, 12);
     let (q, k, v) = qkv.forward(&ln_output);
     
     println!("\n📊 Our Outputs:");
@@ -175,20 +171,22 @@ fn test_checkpoint_02_determinism() {
     }
     
     // Load inputs and weights
-    let ln_output: Array2<f32> = File::open(dir.join("checkpoint_01_ln1_output.npy"))
-        .and_then(|mut f| Array2::read_npy(&mut f))
+    let mut ln_file = File::open(dir.join("checkpoint_01_ln1_output.npy"))
+        .expect("Failed to open checkpoint_01_ln1_output.npy");
+    let ln_output: Array2<f32> = Array2::read_npy(&mut ln_file)
         .expect("Failed to load ln output");
     
-    let c_attn_weight: Array2<f32> = File::open(dir.join("h0_c_attn_weight.npy"))
-        .and_then(|mut f| Array2::read_npy(&mut f))
+    let mut weight_file = File::open(dir.join("h0_c_attn_weight.npy"))
+        .expect("Failed to open h0_c_attn_weight.npy");
+    let c_attn_weight: Array2<f32> = Array2::read_npy(&mut weight_file)
         .expect("Failed to load weight");
     
-    let c_attn_bias: Array1<f32> = File::open(dir.join("h0_c_attn_bias.npy"))
-        .and_then(|mut f| Array1::read_npy(&mut f))
+    let mut bias_file = File::open(dir.join("h0_c_attn_bias.npy"))
+        .expect("Failed to open h0_c_attn_bias.npy");
+    let c_attn_bias: Array1<f32> = Array1::read_npy(&mut bias_file)
         .expect("Failed to load bias");
     
-    let weight_t = c_attn_weight.t().to_owned();
-    let qkv = QKVProjection::new(weight_t, c_attn_bias, 12);
+    let qkv = QKVProjection::new(c_attn_weight, c_attn_bias, 12);
     
     // Run 3 times
     let (q1, k1, v1) = qkv.forward(&ln_output);

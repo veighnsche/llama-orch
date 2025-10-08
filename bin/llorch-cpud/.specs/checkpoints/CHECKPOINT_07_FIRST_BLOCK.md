@@ -61,10 +61,15 @@ Validate complete transformer block: attention + FFN + residuals + layer norms. 
 - [ ] No NaN/Inf
 - [ ] Variance preserved (not collapsed)
 
-### ✓ Cross-Reference
-- [ ] Compare output[0, 0, :5] with tinygrad
-- [ ] Compare output[0, 0, :5] with Candle
+### ✓ Cross-Reference (Real GPT-2 Validation)
+- [ ] Load ALL REAL GPT-2 weights for first transformer block from HuggingFace
+- [ ] Use REAL embeddings from "Hello." tokens [15496, 13]
+- [ ] Compare complete block output with HuggingFace transformers reference
 - [ ] Difference within 1e-4
+- [ ] Run negative tests: wrong residual order should fail
+- [ ] Run negative tests: post-norm instead of pre-norm should fail
+- [ ] Run determinism test: bit-exact across runs
+- [ ] **MAJOR MILESTONE:** If this passes with real weights, architecture is validated!
 
 ## Reference Locations
 
@@ -189,30 +194,74 @@ impl TransformerBlock {
 }
 ```
 
-### Step 3: Write Test
+### Step 3: Write Tests (Positive + Negative)
+
+**Positive Test:**
 ```rust
-// tests/checkpoint_07_first_block.rs
+// tests/real_gpt2_checkpoint_07.rs
 #[test]
-fn checkpoint_07_matches_reference() {
-    // Load reference
-    let reference = load_reference("checkpoint_07_block.npy");
+fn test_checkpoint_07_real_gpt2() {
+    let dir = weights_dir();
+    
+    // Load ALL REAL weights for first transformer block
+    let ln_1 = load_layer_norm(&dir, "h0_ln_1");
+    let attn = load_attention(&dir, "h0_attn");
+    let ln_2 = load_layer_norm(&dir, "h0_ln_2");
+    let ffn = load_ffn(&dir, "h0");
+    
+    // Load REAL embeddings
+    let embeddings: Array2<f32> = load_npy(dir.join("embeddings.npy"));
+    
+    // Load HuggingFace reference for complete block output
+    let expected: Array2<f32> = load_npy(dir.join("checkpoint_07_block_output.npy"));
     
     // Create transformer block
     let mut block = TransformerBlock::new(ln_1, attn, ln_2, ffn);
-    let mut cache = KVCache::new(2048, 16, 64);
+    let mut cache = KVCache::new(2048, 12, 64);
     
     // Run our implementation
-    let output = block.forward(&input, &mut cache, 0);
+    let output = block.forward(&embeddings, &mut cache, 0);
     
     // Compare
-    assert_tensors_close(&output, &reference, 1e-4);
+    let max_diff = compare_tensors(&output, &expected);
+    assert!(max_diff < 1e-4, "Max diff {} exceeds 1e-4", max_diff);
+    
+    println!("✅ PASS: First transformer block matches HuggingFace with REAL GPT-2!");
+    println!("   ✅ ARCHITECTURE VALIDATED!");
 }
 ```
 
-### Step 4: Validate
-```bash
-cargo test checkpoint_07
+**Negative Tests:**
+```rust
+#[test]
+#[should_panic(expected = "Max difference")]
+fn test_post_norm_fails() {
+    // Apply LayerNorm AFTER sublayer instead of BEFORE (wrong architecture)
+    let output = x + &ln_1.forward(&attn.forward(&x));  // WRONG: post-norm
+    assert!(compare_tensors(&output, &expected) < 1e-4);
+}
+
+#[test]
+#[should_panic(expected = "Max difference")]
+fn test_missing_residual_fails() {
+    // Don't add residual connection
+    let output = attn.forward(&ln_1.forward(&x));  // WRONG: no residual
+    assert!(compare_tensors(&output, &expected) < 1e-4);
+}
 ```
+
+### Step 4: Validate with Real GPT-2
+```bash
+# Positive test (MAJOR MILESTONE)
+cargo test --test real_gpt2_checkpoint_07 -- --nocapture
+
+# Negative tests
+cargo test --test proof_negative_checkpoint_07 -- --nocapture
+```
+
+**Expected:**
+- Positive test: ✅ PASS (max diff < 1e-4) → **ARCHITECTURE VALIDATED!**
+- Negative tests: ❌ All should panic with large errors
 
 ---
 

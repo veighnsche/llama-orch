@@ -52,9 +52,13 @@ Validate complete attention mechanism output after projection. Errors here accum
 - [ ] Not all zeros
 - [ ] Different from input (attention changed values)
 
-### ✓ Cross-Reference
-- [ ] Compare output[0, 0, :5] with reference
+### ✓ Cross-Reference (Real GPT-2 Validation)
+- [ ] Load REAL GPT-2 c_proj weights from HuggingFace
+- [ ] Use REAL attention scores and V from previous checkpoints
+- [ ] Compare attention output with HuggingFace transformers reference
 - [ ] Difference within 1e-4
+- [ ] Run negative tests: wrong projection weights should fail
+- [ ] Run determinism test: bit-exact across runs
 
 ## Reference Locations
 
@@ -165,27 +169,63 @@ impl AttentionOutput {
 }
 ```
 
-### Step 3: Write Test
+### Step 3: Write Tests (Positive + Negative)
+
+**Positive Test:**
 ```rust
-// tests/checkpoint_05_attention_output.rs
+// tests/real_gpt2_checkpoint_05.rs
 #[test]
-fn checkpoint_05_matches_reference() {
-    // Load reference
-    let reference = load_reference("checkpoint_05_output.npy");
+fn test_checkpoint_05_real_gpt2() {
+    let dir = weights_dir();
+    
+    // Load REAL c_proj weights
+    let c_proj_weight: Array2<f32> = load_npy(dir.join("h0_c_proj_weight.npy"));
+    let c_proj_bias: Array1<f32> = load_npy(dir.join("h0_c_proj_bias.npy"));
+    
+    // Load attention scores and V from previous checkpoints
+    let attn_weights: Array4<f32> = load_npy(dir.join("checkpoint_04_scores.npy"));
+    let v: Array3<f32> = load_npy(dir.join("checkpoint_02_v.npy"));
+    
+    // Load HuggingFace reference
+    let expected: Array2<f32> = load_npy(dir.join("checkpoint_05_output.npy"));
     
     // Run our implementation
-    let output_layer = AttentionOutput::new(weight, bias);
+    let output_layer = AttentionOutput::new(c_proj_weight, c_proj_bias);
     let output = output_layer.forward(&attn_weights, &v);
     
     // Compare
-    assert_tensors_close(&output, &reference, 1e-4);
+    let max_diff = compare_tensors(&output, &expected);
+    assert!(max_diff < 1e-4, "Max diff {} exceeds 1e-4", max_diff);
+    
+    println!("✅ PASS: Attention output matches HuggingFace with REAL GPT-2");
 }
 ```
 
-### Step 4: Validate
-```bash
-cargo test checkpoint_05
+**Negative Test:**
+```rust
+#[test]
+#[should_panic(expected = "Max difference")]
+fn test_zeroed_c_proj_fails() {
+    // Zero c_proj weights should produce wrong output
+    let c_proj_weight = Array2::zeros((768, 768));
+    let output_layer = AttentionOutput::new(c_proj_weight, c_proj_bias);
+    let output = output_layer.forward(&attn_weights, &v);
+    assert!(compare_tensors(&output, &expected) < 1e-4);
+}
 ```
+
+### Step 4: Validate with Real GPT-2
+```bash
+# Positive test
+cargo test --test real_gpt2_checkpoint_05 -- --nocapture
+
+# Negative tests
+cargo test --test proof_negative_checkpoint_05 -- --nocapture
+```
+
+**Expected:**
+- Positive test: ✅ PASS (max diff < 1e-4)
+- Negative tests: ❌ All should panic with large errors
 
 ---
 

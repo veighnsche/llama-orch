@@ -98,11 +98,11 @@ def main():
         # Get embeddings
         inputs_embeds = model.transformer.wte(tokens) + model.transformer.wpe(torch.arange(tokens.shape[1]))
         
-        # First LayerNorm
+        # CHECKPOINT 1: LayerNorm
         ln_1_output = block_0.ln_1(inputs_embeds)
         
-        # QKV projection
-        qkv = torch.nn.functional.linear(ln_1_output, c_attn_weight.T, torch.from_numpy(c_attn_bias))
+        # CHECKPOINT 2: QKV projection
+        qkv = torch.nn.functional.linear(ln_1_output, torch.from_numpy(c_attn_weight).T, torch.from_numpy(c_attn_bias))
         
         # Reshape and split
         batch, seq, _ = qkv.shape
@@ -111,20 +111,80 @@ def main():
         q = qkv_reshaped[:, :, 0, :, :]
         k = qkv_reshaped[:, :, 1, :, :]
         v = qkv_reshaped[:, :, 2, :, :]
+        
+        # CHECKPOINT 3: KV Cache (just validates storage, no new computation)
+        
+        # CHECKPOINT 4: Attention Scores
+        # Q @ K.T / sqrt(head_dim)
+        q_t = q.transpose(1, 2)  # [batch, n_heads, seq, head_dim]
+        k_t = k.transpose(1, 2)  # [batch, n_heads, seq, head_dim]
+        scores = torch.matmul(q_t, k_t.transpose(-2, -1)) / (64 ** 0.5)
+        
+        # CHECKPOINT 5: Attention Output
+        # Softmax + weighted sum + output projection
+        attn_weights = torch.nn.functional.softmax(scores, dim=-1)
+        v_t = v.transpose(1, 2)  # [batch, n_heads, seq, head_dim]
+        attn_output = torch.matmul(attn_weights, v_t)  # [batch, n_heads, seq, head_dim]
+        attn_output = attn_output.transpose(1, 2).contiguous()  # [batch, seq, n_heads, head_dim]
+        attn_output = attn_output.view(batch, seq, -1)  # [batch, seq, 768]
+        
+        # Load c_proj weights
+        c_proj_weight = block_0.attn.c_proj.weight.detach().numpy()
+        c_proj_bias = block_0.attn.c_proj.bias.detach().numpy()
+        attn_output = torch.nn.functional.linear(attn_output, torch.from_numpy(c_proj_weight).T, torch.from_numpy(c_proj_bias))
+        
+        # First residual
+        h = inputs_embeds + attn_output
+        
+        # CHECKPOINT 6: FFN
+        ln_2_output = block_0.ln_2(h)
+        
+        # Load FFN weights
+        c_fc_weight = block_0.mlp.c_fc.weight.detach().numpy()
+        c_fc_bias = block_0.mlp.c_fc.bias.detach().numpy()
+        c_proj_ffn_weight = block_0.mlp.c_proj.weight.detach().numpy()
+        c_proj_ffn_bias = block_0.mlp.c_proj.bias.detach().numpy()
+        
+        # FFN forward
+        hidden = torch.nn.functional.linear(ln_2_output, torch.from_numpy(c_fc_weight).T, torch.from_numpy(c_fc_bias))
+        hidden = torch.nn.functional.gelu(hidden)
+        ffn_output = torch.nn.functional.linear(hidden, torch.from_numpy(c_proj_ffn_weight).T, torch.from_numpy(c_proj_ffn_bias))
+        
+        # CHECKPOINT 7: Complete block output
+        block_output = h + ffn_output
     
-    # Save reference outputs
-    np.save(output_dir / "embeddings.npy", inputs_embeds.numpy())
-    np.save(output_dir / "checkpoint_01_ln1_output.npy", ln_1_output.numpy())
-    np.save(output_dir / "checkpoint_02_q.npy", q.numpy())
-    np.save(output_dir / "checkpoint_02_k.npy", k.numpy())
-    np.save(output_dir / "checkpoint_02_v.npy", v.numpy())
+    # Save reference outputs (squeeze batch dimension for 2D arrays)
+    np.save(output_dir / "embeddings.npy", inputs_embeds.squeeze(0).numpy())
+    np.save(output_dir / "checkpoint_01_ln1_output.npy", ln_1_output.squeeze(0).numpy())
+    np.save(output_dir / "checkpoint_02_q.npy", q.squeeze(0).numpy())
+    np.save(output_dir / "checkpoint_02_k.npy", k.squeeze(0).numpy())
+    np.save(output_dir / "checkpoint_02_v.npy", v.squeeze(0).numpy())
+    np.save(output_dir / "checkpoint_04_scores.npy", scores.squeeze(0).numpy())
+    np.save(output_dir / "checkpoint_05_output.npy", attn_output.squeeze(0).numpy())
+    np.save(output_dir / "checkpoint_06_ffn.npy", ffn_output.squeeze(0).numpy())
+    np.save(output_dir / "checkpoint_07_block_output.npy", block_output.squeeze(0).numpy())
+    
+    # Save FFN weights
+    np.save(output_dir / "h0_c_fc_weight.npy", c_fc_weight)
+    np.save(output_dir / "h0_c_fc_bias.npy", c_fc_bias)
+    np.save(output_dir / "h0_ffn_c_proj_weight.npy", c_proj_ffn_weight)
+    np.save(output_dir / "h0_ffn_c_proj_bias.npy", c_proj_ffn_bias)
+    np.save(output_dir / "h0_c_proj_weight.npy", c_proj_weight)
+    np.save(output_dir / "h0_c_proj_bias.npy", c_proj_bias)
+    
+    # Save ln_2 weights
+    ln_2_weight = block_0.ln_2.weight.detach().numpy()
+    ln_2_bias = block_0.ln_2.bias.detach().numpy()
+    np.save(output_dir / "h0_ln_2_weight.npy", ln_2_weight)
+    np.save(output_dir / "h0_ln_2_bias.npy", ln_2_bias)
     
     print("✅ Reference outputs generated:")
-    print(f"  embeddings: {inputs_embeds.shape}")
-    print(f"  checkpoint_01_ln1_output: {ln_1_output.shape}")
-    print(f"  checkpoint_02_q: {q.shape}")
-    print(f"  checkpoint_02_k: {k.shape}")
-    print(f"  checkpoint_02_v: {v.shape}")
+    print(f"  Checkpoint 01 - LayerNorm: {ln_1_output.shape}")
+    print(f"  Checkpoint 02 - Q/K/V: {q.shape}")
+    print(f"  Checkpoint 04 - Attention Scores: {scores.shape}")
+    print(f"  Checkpoint 05 - Attention Output: {attn_output.shape}")
+    print(f"  Checkpoint 06 - FFN Output: {ffn_output.shape}")
+    print(f"  Checkpoint 07 - Block Output: {block_output.shape}")
     print()
     
     # Metadata

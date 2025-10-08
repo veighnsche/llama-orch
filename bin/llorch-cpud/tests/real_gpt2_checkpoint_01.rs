@@ -119,16 +119,19 @@ fn test_checkpoint_01_determinism() {
     }
     
     // Load weights
-    let embeddings: Array2<f32> = File::open(dir.join("embeddings.npy"))
-        .and_then(|mut f| Array2::read_npy(&mut f))
+    let mut emb_file = File::open(dir.join("embeddings.npy"))
+        .expect("Failed to open embeddings.npy");
+    let embeddings: Array2<f32> = Array2::read_npy(&mut emb_file)
         .expect("Failed to load embeddings");
     
-    let ln_weight: Array1<f32> = File::open(dir.join("h0_ln_1_weight.npy"))
-        .and_then(|mut f| Array1::read_npy(&mut f))
+    let mut weight_file = File::open(dir.join("h0_ln_1_weight.npy"))
+        .expect("Failed to open h0_ln_1_weight.npy");
+    let ln_weight: Array1<f32> = Array1::read_npy(&mut weight_file)
         .expect("Failed to load weight");
     
-    let ln_bias: Array1<f32> = File::open(dir.join("h0_ln_1_bias.npy"))
-        .and_then(|mut f| Array1::read_npy(&mut f))
+    let mut bias_file = File::open(dir.join("h0_ln_1_bias.npy"))
+        .expect("Failed to open h0_ln_1_bias.npy");
+    let ln_bias: Array1<f32> = Array1::read_npy(&mut bias_file)
         .expect("Failed to load bias");
     
     let layer_norm = LayerNorm::new(ln_weight, ln_bias, 1e-5);

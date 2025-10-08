@@ -15,15 +15,24 @@ WEIGHTS_DIR="$REPO_ROOT/.test-models/gpt2/extracted_weights"
 
 # Step 1: Check Python dependencies
 echo "[1/4] Checking Python dependencies..."
-if ! python3 -c "import torch, transformers, numpy" 2>/dev/null; then
+# Try venv first, then system Python
+if [ -f "$REPO_ROOT/.venv-testing/bin/python" ]; then
+    PYTHON="$REPO_ROOT/.venv-testing/bin/python"
+elif python3 -c "import torch, transformers, numpy" 2>/dev/null; then
+    PYTHON="python3"
+else
     echo "❌ Missing Python dependencies"
     echo ""
     echo "Please install:"
     echo "  pip install torch transformers numpy"
     echo ""
+    echo "Or create a venv:"
+    echo "  python -m venv .venv-testing"
+    echo "  .venv-testing/bin/pip install torch transformers numpy"
+    echo ""
     exit 1
 fi
-echo "✅ Python dependencies OK"
+echo "✅ Python dependencies OK (using $PYTHON)"
 echo ""
 
 # Step 2: Extract GPT-2 weights if needed
@@ -31,7 +40,7 @@ echo "[2/4] Checking GPT-2 weights..."
 if [ ! -d "$WEIGHTS_DIR" ] || [ ! -f "$WEIGHTS_DIR/metadata.json" ]; then
     echo "Extracting GPT-2 weights from HuggingFace..."
     cd "$REPO_ROOT"
-    python3 .docs/testing/extract_gpt2_weights.py
+    $PYTHON .docs/testing/extract_gpt2_weights.py
     echo ""
 else
     echo "✅ GPT-2 weights already extracted"

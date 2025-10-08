@@ -51,10 +51,13 @@ Validate that KV cache is correctly initialized, updated, and retrieved. Cache e
 - [ ] Contains all previous tokens
 - [ ] No data corruption
 
-### ✓ Cross-Reference
-- [ ] Cache state matches tinygrad
-- [ ] Cache state matches Candle
-- [ ] First token K/V values exact match
+### ✓ Cross-Reference (Real GPT-2 Validation)
+- [ ] Load REAL GPT-2 weights from HuggingFace
+- [ ] Use REAL embeddings from "Hello." tokens [15496, 13]
+- [ ] Compare cached K/V with HuggingFace transformers reference
+- [ ] Cache state exact match (no tolerance for cache)
+- [ ] Run negative tests: wrong cache indexing should fail
+- [ ] Run determinism test: bit-exact across runs
 
 ## Reference Locations
 
@@ -189,30 +192,58 @@ impl KVCache {
 }
 ```
 
-### Step 3: Write Test
+### Step 3: Write Tests (Positive + Negative)
+
+**Positive Test:**
 ```rust
-// tests/checkpoint_03_kv_cache.rs
+// tests/real_gpt2_checkpoint_03.rs
 #[test]
-fn checkpoint_03_matches_reference() {
-    // Load reference K, V
-    let reference_k = load_reference("checkpoint_03_k.npy");
-    let reference_v = load_reference("checkpoint_03_v.npy");
+fn test_checkpoint_03_real_gpt2() {
+    let dir = weights_dir();
+    
+    // Load REAL K, V from Checkpoint 2
+    let k: Array3<f32> = load_npy(dir.join("checkpoint_02_k.npy"));
+    let v: Array3<f32> = load_npy(dir.join("checkpoint_02_v.npy"));
     
     // Create cache and update
-    let mut cache = KVCache::new(2048, 16, 64);
+    let mut cache = KVCache::new(2048, 12, 64);  // GPT-2 base: 12 heads
     cache.update(&k, &v, 0);
     
-    // Retrieve and compare
+    // Retrieve
     let (cached_k, cached_v) = cache.get(2);
-    assert_tensors_exact(&cached_k, &reference_k);
-    assert_tensors_exact(&cached_v, &reference_v);
+    
+    // Compare with original (should be exact)
+    assert_tensors_exact(&cached_k, &k);
+    assert_tensors_exact(&cached_v, &v);
+    
+    println!("✅ PASS: KV cache stores and retrieves correctly");
 }
 ```
 
-### Step 4: Validate
-```bash
-cargo test checkpoint_03
+**Negative Test:**
+```rust
+#[test]
+#[should_panic]
+fn test_wrong_cache_indexing_fails() {
+    // Wrong start_pos should produce wrong output
+    cache.update(&k, &v, 1);  // WRONG: should be 0
+    let (cached_k, _) = cache.get(2);
+    assert_tensors_exact(&cached_k, &k);  // Should fail
+}
 ```
+
+### Step 4: Validate with Real GPT-2
+```bash
+# Positive test
+cargo test --test real_gpt2_checkpoint_03 -- --nocapture
+
+# Negative tests
+cargo test --test proof_negative_checkpoint_03 -- --nocapture
+```
+
+**Expected:**
+- Positive test: ✅ PASS (exact match)
+- Negative tests: ❌ All should panic/fail
 
 ---
 

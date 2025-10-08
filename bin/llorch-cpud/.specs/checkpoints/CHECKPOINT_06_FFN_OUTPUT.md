@@ -53,9 +53,14 @@ Validate feedforward network computation. FFN is the other half of each transfor
 - [ ] Final output: values in range (typically [-2, 2])
 - [ ] No NaN/Inf
 
-### ✓ Cross-Reference
-- [ ] Compare output[0, 0, :5] with reference
+### ✓ Cross-Reference (Real GPT-2 Validation)
+- [ ] Load REAL GPT-2 c_fc and c_proj weights from HuggingFace
+- [ ] Use REAL input from previous checkpoint
+- [ ] Compare FFN output with HuggingFace transformers reference
 - [ ] Difference within 1e-4
+- [ ] Run negative tests: wrong GELU formula should fail
+- [ ] Run negative tests: wrong expansion factor should fail
+- [ ] Run determinism test: bit-exact across runs
 
 ## Reference Locations
 
@@ -188,27 +193,72 @@ fn gelu(x: &Array2<f32>) -> Array2<f32> {
 }
 ```
 
-### Step 3: Write Test
+### Step 3: Write Tests (Positive + Negative)
+
+**Positive Test:**
 ```rust
-// tests/checkpoint_06_ffn.rs
+// tests/real_gpt2_checkpoint_06.rs
 #[test]
-fn checkpoint_06_matches_reference() {
-    // Load reference
-    let reference = load_reference("checkpoint_06_ffn.npy");
+fn test_checkpoint_06_real_gpt2() {
+    let dir = weights_dir();
+    
+    // Load REAL FFN weights
+    let c_fc_weight: Array2<f32> = load_npy(dir.join("h0_c_fc_weight.npy"));
+    let c_fc_bias: Array1<f32> = load_npy(dir.join("h0_c_fc_bias.npy"));
+    let c_proj_weight: Array2<f32> = load_npy(dir.join("h0_ffn_c_proj_weight.npy"));
+    let c_proj_bias: Array1<f32> = load_npy(dir.join("h0_ffn_c_proj_bias.npy"));
+    
+    // Load input from previous checkpoint
+    let input: Array2<f32> = load_npy(dir.join("checkpoint_05_output.npy"));
+    
+    // Load HuggingFace reference
+    let expected: Array2<f32> = load_npy(dir.join("checkpoint_06_ffn.npy"));
     
     // Run our implementation
-    let ffn = FFN::new(fc_weight, fc_bias, proj_weight, proj_bias);
+    let ffn = FFN::new(c_fc_weight, c_fc_bias, c_proj_weight, c_proj_bias);
     let output = ffn.forward(&input);
     
     // Compare
-    assert_tensors_close(&output, &reference, 1e-4);
+    let max_diff = compare_tensors(&output, &expected);
+    assert!(max_diff < 1e-4, "Max diff {} exceeds 1e-4", max_diff);
+    
+    println!("✅ PASS: FFN output matches HuggingFace with REAL GPT-2");
 }
 ```
 
-### Step 4: Validate
-```bash
-cargo test checkpoint_06
+**Negative Tests:**
+```rust
+#[test]
+#[should_panic(expected = "Max difference")]
+fn test_wrong_gelu_fails() {
+    // Use tanh approximation instead of exact GELU
+    let ffn = FFN::new_with_gelu_approx(...);
+    let output = ffn.forward(&input);
+    assert!(compare_tensors(&output, &expected) < 1e-4);
+}
+
+#[test]
+#[should_panic]
+fn test_wrong_expansion_fails() {
+    // Use 2x expansion instead of 4x
+    let wrong_fc_weight = Array2::zeros((768, 1536));  // WRONG: should be 3072
+    let ffn = FFN::new(wrong_fc_weight, ...);
+    // Should panic with dimension mismatch
+}
 ```
+
+### Step 4: Validate with Real GPT-2
+```bash
+# Positive test
+cargo test --test real_gpt2_checkpoint_06 -- --nocapture
+
+# Negative tests
+cargo test --test proof_negative_checkpoint_06 -- --nocapture
+```
+
+**Expected:**
+- Positive test: ✅ PASS (max diff < 1e-4)
+- Negative tests: ❌ All should panic with large errors
 
 ---
 
