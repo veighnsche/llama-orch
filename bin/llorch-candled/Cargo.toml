@@ -6,6 +6,114 @@ authors = ["TEAM-000 Foundation"]
 description = "Candle-based Llama-2 inference worker daemon with CUDA acceleration"
 license = "GPL-3.0-or-later"
 
+[lints.clippy]
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CLIPPY LINTS — Strict quality enforcement for inference engine
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Correctness (deny - these are bugs)
+correctness = "deny"
+
+# Suspicious patterns (deny - likely bugs)
+suspicious = "deny"
+
+# Complexity (warn - code smell)
+complexity = "warn"
+
+# Performance (warn - optimization opportunities)
+perf = "warn"
+
+# Style (warn - consistency)
+style = "warn"
+
+# Pedantic (warn - best practices)
+pedantic = "warn"
+
+# Nursery (allow - experimental lints)
+nursery = "allow"
+
+# Cargo (warn - manifest issues)
+cargo = "warn"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SPECIFIC LINTS — Fine-tuned for ML/inference workloads
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Deny unsafe without explicit justification
+undocumented_unsafe_blocks = "deny"
+
+# Deny unwrap/expect in production code paths
+unwrap_used = "warn"
+expect_used = "warn"
+
+# Deny panics in library code
+panic = "warn"
+
+# Require error handling
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+
+# Require safety documentation
+missing_safety_doc = "deny"
+
+# Floating point comparisons (critical for ML)
+float_cmp = "warn"
+float_cmp_const = "warn"
+
+# Integer arithmetic (overflow protection)
+arithmetic_side_effects = "allow"  # Too restrictive for ML math
+integer_division = "allow"
+
+# Indexing (bounds checking)
+indexing_slicing = "allow"  # Common in tensor ops, but be careful
+
+# String operations
+string_add = "warn"
+string_add_assign = "warn"
+
+# Cloning
+clone_on_ref_ptr = "warn"
+redundant_clone = "warn"
+
+# Memory efficiency
+large_stack_arrays = "warn"
+large_types_passed_by_value = "warn"
+
+# Error handling
+result_large_err = "warn"
+
+# Documentation
+missing_docs_in_private_items = "allow"  # Too strict
+doc_markdown = "warn"
+
+# Cognitive complexity
+cognitive_complexity = "warn"
+
+# Too many arguments
+too_many_arguments = "warn"
+too_many_lines = "warn"
+
+# Naming conventions
+module_name_repetitions = "allow"  # Common in our structure
+similar_names = "allow"  # x, y, z are fine in ML
+
+# Allow some pedantic lints that conflict with ML patterns
+must_use_candidate = "allow"
+return_self_not_must_use = "allow"
+cast_possible_truncation = "allow"  # Common in tensor indexing
+cast_precision_loss = "allow"  # Intentional in ML
+cast_sign_loss = "allow"  # Intentional in ML
+cast_possible_wrap = "allow"  # Intentional in ML
+
+# Allow inline assembly for SIMD (if needed)
+inline_asm_x86_att_syntax = "allow"
+
+# Wildcard imports (useful for prelude patterns)
+wildcard_imports = "allow"
+
+# Enum glob use (useful for error types)
+enum_glob_use = "allow"
+
 [dependencies]
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # HTTP SERVER DEPENDENCIES (integrated from worker-http)
@@ -79,7 +187,8 @@ criterion = "0.5"
 wiremock = "0.6"
 
 [features]
-default = []
+# Default to CPU for development (most compatible)
+default = ["cpu", "cuda", "accelerate"]
 
 # Backend features (mutually exclusive at build time)
 # Modified by: TEAM-007

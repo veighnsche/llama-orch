@@ -1,0 +1,45 @@
+# Clippy configuration for llorch-candled
+# High-quality inference engine with strict linting
+
+# Cognitive complexity threshold - keep functions simple
+cognitive-complexity-threshold = 15
+
+# Documentation requirements
+# Enforce comprehensive docs for public APIs
+missing-docs-in-crate-items = true
+
+# Type complexity threshold
+type-complexity-threshold = 250
+
+# Literal representation
+literal-representation-threshold = 10000
+
+# Array size threshold for stack allocation warnings
+array-size-threshold = 512000
+
+# Vector size threshold
+vec-box-size-threshold = 4096
+
+# Struct field threshold (max bools in struct)
+max-struct-bools = 3
+
+# Enum variant threshold
+enum-variant-size-threshold = 200
+
+# Too many arguments
+too-many-arguments-threshold = 7
+
+# Too many lines
+too-many-lines-threshold = 150
+
+# Single char binding names to allow (common in ML: x, y, i, j, k, n, t)
+single-char-binding-names-threshold = 4
+
+# Suppress false positives for common ML patterns
+allow-mixed-uninlined-format-args = true
+
+# Stack size threshold (bytes)
+stack-size-threshold = 512000
+
+# Large error threshold
+large-error-threshold = 128
