@@ -136,7 +136,7 @@ def main():
         # First residual
         h = inputs_embeds + attn_output
         
-        # CHECKPOINT 6: FFN
+        # CHECKPOINT 6: FFN (input is ln_2 output, not raw attention output)
         ln_2_output = block_0.ln_2(h)
         
         # Load FFN weights
@@ -149,6 +149,9 @@ def main():
         hidden = torch.nn.functional.linear(ln_2_output, torch.from_numpy(c_fc_weight).T, torch.from_numpy(c_fc_bias))
         hidden = torch.nn.functional.gelu(hidden)
         ffn_output = torch.nn.functional.linear(hidden, torch.from_numpy(c_proj_ffn_weight).T, torch.from_numpy(c_proj_ffn_bias))
+        
+        # Save ln_2 output for FFN input validation
+        np.save(output_dir / "checkpoint_05b_ln2_output.npy", ln_2_output.squeeze(0).numpy())
         
         # CHECKPOINT 7: Complete block output
         block_output = h + ffn_output
