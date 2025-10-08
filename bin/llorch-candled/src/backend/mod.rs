@@ -1,7 +1,10 @@
 //! Inference backend implementation
 //!
 //! Created by: TEAM-000
+//! Refactored by: TEAM-015 (split into focused modules)
 
-mod candle_backend;
+mod model_loader;
+mod sampling;
+mod inference;
 
-pub use candle_backend::CandleInferenceBackend;
+pub use inference::CandleInferenceBackend;
