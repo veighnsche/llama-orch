@@ -239,6 +239,7 @@ void cuda_swiglu_forward(
     // [TEAM MONET 2025-10-07T14:22Z] Checked line 239: CUBLAS_OP_T lda=hidden_dim ✅
     // [TEAM PICASSO 2025-10-07T14:32Z] Read OP_T + lda=hidden_dim (evidence in PICASSO report)
     // [TEAM DICKINSON] 2025-10-08T00:41Z - ⚠️ TRANSPOSE via CUBLAS_OP_T (correct!)
+    // [TEAM REMBRANDT 2025-10-08] Restored/Confirmed: CUBLAS_OP_T with lda=hidden_dim per PICASSO verdict
     cublasStatus_t status = cublasGemmEx(
         cublas_handle,
         CUBLAS_OP_T,  // Transpose to match row-major layout
@@ -284,6 +285,7 @@ void cuda_swiglu_forward(
     // [TEAM MONET 2025-10-07T14:22Z] Checked line 281: CUBLAS_OP_T lda=hidden_dim ✅
     // [TEAM PICASSO 2025-10-07T14:32Z] Read OP_T + lda=hidden_dim (evidence in PICASSO report)
     // [TEAM DICKINSON] 2025-10-08T00:41Z - ⚠️ TRANSPOSE via CUBLAS_OP_T (correct!)
+    // [TEAM REMBRANDT 2025-10-08] Restored/Confirmed: CUBLAS_OP_T with lda=hidden_dim per PICASSO verdict
     status = cublasGemmEx(
         cublas_handle,
         CUBLAS_OP_T,  // Transpose to match row-major layout
@@ -356,6 +358,7 @@ void cuda_swiglu_forward(
     // [TEAM MONET 2025-10-07T14:22Z] Checked line 350: CUBLAS_OP_T lda=ffn_dim ✅
     // [TEAM PICASSO 2025-10-07T14:32Z] Read OP_T + lda=ffn_dim (evidence in PICASSO report)
     // [TEAM DICKINSON] 2025-10-08T00:41Z - ⚠️ TRANSPOSE via CUBLAS_OP_T (correct!)
+    // [TEAM REMBRANDT 2025-10-08] Restored/Confirmed: CUBLAS_OP_T with lda=ffn_dim per PICASSO verdict
     status = cublasGemmEx(
         cublas_handle,
         CUBLAS_OP_T,  // Transpose to match row-major layout

@@ -3,7 +3,7 @@
 **Round:** 2  
 **Specialization:** Reverted Fix Re-Application  
 **Mission:** Re-apply fixes that were incorrectly reverted  
-**Status:** ⏳ WAITING FOR TEAM PICASSO & TEAM VAN GOGH
+**Status:** ✅ COMPLETE - All fixes already correct, breadcrumbs added
 
 ---
 
@@ -47,26 +47,56 @@ Now that we know the bug was a CONSTELLATION (multiple bugs needed fixing), we n
 
 ## 📝 Investigation Log
 
-### Session 1: [Date/Time]
+### Session 1: 2025-10-08T00:46Z
 
-**Investigator:** [Your name/handle]
+**Investigator:** TEAM REMBRANDT (Cascade AI)
 
 **Verdicts from other teams:**
 ```
-[Copy from TEAM PICASSO's report]
-- cuBLAS verdict: CUBLAS_OP_T / CUBLAS_OP_N
+[TEAM PICASSO's report - TEAM_PICASSO_CUBLAS_RESOLUTION.md]
+- cuBLAS verdict: CUBLAS_OP_T is CORRECT (matches llama.cpp)
+- Recommendation: KEEP CUBLAS_OP_T for all 8 matmuls
+- Evidence: llama.cpp uses CUBLAS_OP_T and produces perfect output
 
-[Copy from TEAM VAN GOGH's report]
-- Weight verdict: Normalized / Raw
+[TEAM VAN GOGH's report - TEAM_VAN_GOGH_WEIGHT_RESOLUTION.md]
+- Weight verdict: RAW weights (mean=7.14, max=16.75) are INTENTIONAL
+- Recommendation: DO NOT MODIFY these weights
+- Evidence: llama.cpp uses identical weights and works perfectly
 ```
 
 **What I'm restoring:**
+Nothing! After audit, current code already has:
+- ✅ All 8 matmuls using CUBLAS_OP_T with correct lda
+- ✅ output_norm.weight loaded RAW (no normalization by default)
 
 **Findings:**
+1. **cuBLAS Parameters:** All 8 matmuls already use CUBLAS_OP_T
+   - Q proj: qwen_transformer.cpp:891 (CUBLAS_OP_T, lda=hidden_dim)
+   - K proj: qwen_transformer.cpp:987 (CUBLAS_OP_T, lda=hidden_dim)
+   - V proj: qwen_transformer.cpp:1016 (CUBLAS_OP_T, lda=hidden_dim)
+   - Attn out: qwen_transformer.cpp:1671 (CUBLAS_OP_T, lda=q_dim)
+   - lm_head: qwen_transformer.cpp:2235 (CUBLAS_OP_T, lda=hidden_dim)
+   - FFN gate: swiglu_ffn.cu:242 (CUBLAS_OP_T, lda=hidden_dim)
+   - FFN up: swiglu_ffn.cu:287 (CUBLAS_OP_T, lda=hidden_dim)
+   - FFN down: swiglu_ffn.cu:359 (CUBLAS_OP_T, lda=ffn_dim)
+
+2. **output_norm.weight:** Already loaded RAW
+   - Direct load: qwen_weight_loader.cpp:389
+   - Pre-loaded wire: qwen_weight_loader.cpp:465
+   - A/B test option available via VAN_GOGH_NORMALIZE_OUTPUT_NORM env var
+
+3. **Git History:** No relevant reverts found
+   - revert: Only RoPE frequency calculation (unrelated)
+   - rollback: Only migration plan doc (unrelated)
+   - undo: None found
 
 **Questions/Blockers:**
+None! Everything is already in the correct state.
 
 **Next Steps:**
+1. ✅ Add REMBRANDT breadcrumbs to lock in current state
+2. ✅ Create restoration report documenting no-op restoration
+3. Consider adding guardrails (compile-time checks) to prevent regression
 
 ---
 
@@ -201,22 +231,26 @@ cargo test --features cuda --release
 ## 🎯 Final Verdict
 
 **Fixes Restored:**
-- cuBLAS: ✅ Restored / ⚠️ Not needed / ❌ Failed
-- Weights: ✅ Restored / ⚠️ Not needed / ❌ Failed
-- Other: [list]
+- cuBLAS: ⚠️ Not needed - Already correct (CUBLAS_OP_T for all 8 matmuls)
+- Weights: ⚠️ Not needed - Already correct (RAW output_norm)
+- Other: None found in git history
 
 **Test Status:**
-- Haiku test: ✅ PASS / ❌ FAIL
-- Full suite: ✅ PASS / ❌ FAIL
-- Regressions: ✅ None / ❌ Found: [list]
+- Haiku test: ⏸️ Not run (no code changes, only breadcrumbs)
+- Full suite: ⏸️ Not run (no code changes)
+- Regressions: ✅ None (no code changes)
 
 **Ready for Production:**
-- ✅ Yes - All fixes applied, tests pass
-- ❌ No - Issues: [list]
+- ❌ No - Output still garbage (but not due to cuBLAS/weights)
+- Issues: Root bug remains in uninvestigated subsystem (embedding/RoPE/attention)
 
 **Recommendation:**
 ```
-[Next steps]
+Next investigation round should focus on:
+1. Embedding layer (SHAKESPEARE suspects transpose bug)
+2. RoPE implementation
+3. Attention mask / KV cache
+4. Use PICASSO's parity logging to find exact divergence point
 ```
 
 ---
@@ -246,17 +280,34 @@ cargo test --features cuda --release
 ## 💭 Reflections
 
 **What Went Well:**
+- Efficient audit - found all fixes already correct within minutes
+- Clear verdicts from PICASSO and VAN GOGH made verification straightforward
+- Breadcrumbs added provide institutional memory for future teams
+- No thrashing - codebase stable, teams didn't revert correct fixes
 
 **What Was Challenging:**
+- Initially expected to find reverted code to restore
+- Had to shift mindset from "restoration" to "validation and lock-in"
+- Git history had few relevant commits (good news, but unexpected)
 
 **Lessons Learned:**
+1. "No restoration needed" is a valid and positive outcome
+2. Breadcrumbs serve as paper trail to prevent re-investigation
+3. Multiple teams reaching same conclusion = high confidence
+4. "Partial fix is worse than no fix" explains FELICIA/AURORA failures
+5. Trust the evidence: If 3+ teams verified something, it's likely correct
 
 **Advice for Future Teams:**
+- Read team reports BEFORE attempting to "fix" something already validated
+- Compare against llama.cpp ground truth, not just internal consistency
+- Add breadcrumbs when you verify something is correct
+- Don't cargo cult fixes - understand the WHY
+- "Still broken after fix" ≠ "Fix was wrong" (multiple bugs can coexist)
 
 ---
 
 **TEAM REMBRANDT**  
 *"Sometimes the right answer was there all along—it just got painted over."*
 
-**Chronicle Status:** 🚧 ACTIVE  
-**Last Updated:** [Date/Time]
+**Chronicle Status:** ✅ COMPLETE  
+**Last Updated:** 2025-10-08T00:46Z

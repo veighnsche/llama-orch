@@ -386,6 +386,7 @@ QwenModel* QwenWeightLoader::load(
     // Load output
     // [TEAM VAN GOGH 2025-10-07] Read output_norm wiring here (evidence in VAN_GOGH report)
     // This loads output_norm.weight RAW from GGUF file without any normalization
+    // [TEAM REMBRANDT 2025-10-08] Confirmed RAW output_norm (mean≈7.14) per VAN GOGH verdict
     model->weights.output_norm = load_tensor_to_vram(path, "output_norm.weight", tracker);
     model->weights.lm_head = load_tensor_to_vram(path, "output.weight", tracker);
 
@@ -462,6 +463,7 @@ QwenModel* QwenWeightLoader::load_from_gpu_pointers(
     // [TEAM MONET 2025-10-07T14:22Z] Checked line 393: output_norm loaded raw (no normalization) ⚠️
     // [TEAM VAN GOGH 2025-10-07] Read output_norm wiring here (evidence in VAN_GOGH report)
     // This wires pre-loaded output_norm.weight pointer - weights come from Rust loader (RAW, no normalization)
+    // [TEAM REMBRANDT 2025-10-08] Confirmed RAW output_norm (mean≈7.14) per VAN GOGH verdict
     model->weights.output_norm = get_ptr("output_norm.weight");
     model->weights.lm_head = get_ptr("output.weight");
     
