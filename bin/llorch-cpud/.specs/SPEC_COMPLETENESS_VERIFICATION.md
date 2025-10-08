@@ -128,6 +128,9 @@ The following are in tinygrad but NOT in spec (by design):
 - [x] Edge cases covered
 - [x] Tinygrad-specific items marked
 - [x] Framework-agnostic guidance provided
+- [x] **12 validation checkpoints with exact tolerances**
+- [x] **Reference line numbers for all phases**
+- [x] **Debug guidance for each checkpoint**
 
 ## Framework Comparison Added
 
@@ -186,3 +189,42 @@ The spec can be used to implement a fully compatible GPT-2 inference engine in *
 - **Production server:** Follow Mistral.rs patterns (~thousands of lines with advanced features)
 
 All three are valid; choose based on your requirements for features vs complexity.
+
+---
+
+## Validation Checkpoints Added (2025-10-08)
+
+**12 Critical Checkpoints** integrated throughout the spec to ensure implementation correctness:
+
+### Checkpoint Coverage
+
+1. **Layer Normalization** (Phase 5.1) - Validates normalization logic
+2. **QKV Projection** (Phase 5.2) - Validates attention input preparation
+3. **KV Cache State** (Phase 5.3) - Validates cache management
+4. **Attention Scores** (Phase 5.4) - Validates scaled dot-product
+5. **Attention Output** (Phase 5.5) - Validates attention projection
+6. **FFN Output** (Phase 6.1) - Validates feedforward network
+7. **First Block Output** (Phase 4.2) - Validates entire transformer block
+8. **Full Logits** (Phase 7.2) - Validates all 12 layers
+9. **Selected Logits** (Phase 7.3) - Validates token selection
+10. **Argmax Sampling** (Phase 8.1) - Validates deterministic sampling
+11. **Softmax Probabilities** (Phase 8.2) - Validates stochastic sampling
+12. **End-to-End Generation** (Phase 11.1) - **FINAL VALIDATION**
+
+### Checkpoint Features
+
+- **Exact tolerances** specified (1e-5 to 1e-3 depending on accumulation)
+- **Test inputs** defined (prompt: "Hello.", tokens: [15496, 13])
+- **Expected outputs** documented for each checkpoint
+- **Debug guidance** provided for common failure modes
+- **Sequential validation** strategy (fix checkpoint N before N+1)
+
+### Test Case
+
+**Standard Test:**
+- Input: "Hello."
+- Model: GPT-2 Medium
+- Temperature: 0 (deterministic)
+- Expected: "Hello. I'm a little late to the party, but"
+
+**If Checkpoint 12 passes with exact match, implementation is verified correct.**

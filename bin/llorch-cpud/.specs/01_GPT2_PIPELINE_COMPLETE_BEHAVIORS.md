@@ -53,6 +53,48 @@ This document specifies ALL behaviors in the GPT-2 inference pipeline in code fl
 
 ---
 
+## Validation Checkpoints Summary
+
+**12 Critical Checkpoints for Implementation Verification**
+
+These checkpoints ensure your implementation matches reference implementations. **All checkpoints use temperature=0 for deterministic validation.**
+
+| # | Checkpoint | Phase | Tolerance | Failure Impact |
+|---|------------|-------|-----------|----------------|
+| **1** | Layer Normalization Output | 5.1 | 1e-5 | Errors propagate to all layers |
+| **2** | QKV Projection | 5.2 | 1e-4 | Attention completely broken |
+| **3** | KV Cache State | 5.3 | Exact | Generation breaks after first token |
+| **4** | Attention Scores | 5.4 | 1e-4 | Wrong attention patterns |
+| **5** | Attention Output | 5.5 | 1e-4 | Errors accumulate in residuals |
+| **6** | FFN Output | 6.1 | 1e-4 | Half of each block broken |
+| **7** | First Block Output | 4.2 | 1e-4 | Architecture validation |
+| **8** | Full Logits | 7.2 | 1e-3 | All 12 layers validation |
+| **9** | Selected Logits | 7.3 | Exact | Wrong token selection |
+| **10** | Argmax Sampling | 8.1 | Exact | Non-deterministic output |
+| **11** | Softmax Probabilities | 8.2 | 1e-6 | Sampling distribution wrong |
+| **12** | End-to-End Generation | 11.1 | Exact | **FINAL VALIDATION** |
+
+**Checkpoint Strategy:**
+1. **Start with Checkpoint 1** - If this fails, fix LayerNorm first
+2. **Progress sequentially** - Each checkpoint builds on previous ones
+3. **Checkpoint 7** validates entire block architecture
+4. **Checkpoint 12** is the final proof of correctness
+
+**Test Input for All Checkpoints:**
+- **Prompt:** "Hello." 
+- **Tokens:** `[15496, 13]` (from tiktoken GPT-2 encoding)
+- **Model:** GPT-2 Medium (350M parameters)
+- **Temperature:** 0 (deterministic)
+
+**Expected Final Output (Checkpoint 12):**
+```
+"Hello. I'm a little late to the party, but"
+```
+
+**If Checkpoint 12 passes, your implementation is correct.**
+
+---
+
 ## RFC 2119 Keywords
 
 - **MUST**: Absolute requirement
@@ -427,6 +469,13 @@ output = normalized * weight + bias
 **NOTE - Not RmsNorm:**
 GPT-2 uses full LayerNorm (with mean removal). Some models like LLaMA use RmsNorm (no mean removal). Do not confuse the two.
 
+**✓ VALIDATION CHECKPOINT 1: Layer Normalization Output**
+- **When:** After first layer norm in first transformer block
+- **Input:** Known embedding tensor (e.g., first token of "Hello world")
+- **Expected:** Output tensor should match reference implementations within epsilon=1e-5
+- **Why Critical:** LayerNorm is used throughout; errors here propagate to all layers
+- **Debug:** If mismatch, check variance calculation (biased vs unbiased), epsilon value, scale/bias application
+
 ### 5.2 QKV Projection (Lines 17, 29-30)
 
 **Reference Locations:**
@@ -454,6 +503,13 @@ xv = xqkv[:, :, 2, :, :]  # [batch, seq, 12, 64]
 - After projection: `[batch_size, seq_len, 2304]`
 - After reshape: `[batch_size, seq_len, 3, 12, 64]`
 - Q, K, V each: `[batch_size, seq_len, 12, 64]`
+
+**✓ VALIDATION CHECKPOINT 2: QKV Projection**
+- **When:** After QKV projection and split in first attention layer
+- **Input:** Output from checkpoint 1 (normalized embeddings)
+- **Expected:** Q, K, V tensors match reference within 1e-4 tolerance
+- **Why Critical:** Incorrect split or weight transpose causes attention to fail
+- **Debug:** Check weight transpose (Conv1D format), reshape dimensions, indexing for Q/K/V split
 
 ### 5.3 KV Cache Management (Lines 34-45)
 
@@ -514,6 +570,13 @@ cache_kv[1, :, start_pos:start_pos+seq_len, :, :] = values
 - In eager frameworks (PyTorch, Candle), tensors are already materialized
 - **For standard implementations**: Ignore all `.realize()` calls
 
+**✓ VALIDATION CHECKPOINT 3: KV Cache State**
+- **When:** After first token generation (start_pos=1)
+- **Input:** Prompt "Hello" (token 15496)
+- **Expected:** Cache contains K,V for first token; shapes `[batch, 1, heads, head_dim]`
+- **Why Critical:** Cache errors compound over generation; wrong retrieval breaks attention
+- **Debug:** Check cache indexing `[start_pos:start_pos+seq_len]`, contiguous memory, cache retrieval logic
+
 ### 5.4 Attention Computation (Lines 47-48)
 
 **Reference Locations:**
@@ -548,6 +611,13 @@ cache_kv[1, :, start_pos:start_pos+seq_len, :, :] = values
 - Attention scores: `[batch, 12, seq_q, seq_k]`
 - Output: `[batch, 12, seq_q, 64]`
 
+**✓ VALIDATION CHECKPOINT 4: Attention Scores**
+- **When:** After computing attention scores (before softmax) in first layer
+- **Input:** Q, K from checkpoint 2
+- **Expected:** Scores = (Q @ K.T) / 8.0, match reference within 1e-4
+- **Why Critical:** Wrong scale factor or matmul breaks attention patterns
+- **Debug:** Verify scale=sqrt(64)=8.0, check transpose of K, verify mask application
+
 ### 5.5 Output Projection (Lines 18, 48)
 
 **Reference Locations:**
@@ -573,6 +643,13 @@ output = Linear(768, 768)(attn_out)
 - After transpose: `[batch, seq, 12, 64]`
 - After reshape: `[batch, seq, 768]`
 - After projection: `[batch, seq, 768]`
+
+**✓ VALIDATION CHECKPOINT 5: Attention Output**
+- **When:** After attention output projection in first layer
+- **Input:** Attention-weighted values from checkpoint 4
+- **Expected:** Output matches reference within 1e-4 after c_proj
+- **Why Critical:** This feeds into residual connection; errors accumulate
+- **Debug:** Check transpose order, reshape dimensions, c_proj weight/bias
 
 ---
 
@@ -603,6 +680,13 @@ output = Linear(3072, 768)(activated)
 - After up projection: `[batch, seq, 3072]`
 - After GELU: `[batch, seq, 3072]`
 - After down projection: `[batch, seq, 768]`
+
+**✓ VALIDATION CHECKPOINT 6: FFN Output**
+- **When:** After FFN in first transformer block
+- **Input:** Output from checkpoint 5 (after residual + layer norm)
+- **Expected:** FFN output matches reference within 1e-4
+- **Why Critical:** FFN is half of each transformer block; wrong GELU breaks everything
+- **Debug:** Verify GELU formula (exact vs tanh approx), check c_fc/c_proj weights, verify 4x expansion
 
 ### 6.2 GELU Activation (Line 56)
 
@@ -666,6 +750,13 @@ GELU(x) = x * 0.5 * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))
 - Input: `[batch, seq, 768]`
 - Output: `[batch, seq, 768]`
 
+**✓ VALIDATION CHECKPOINT 7: First Block Output**
+- **When:** After complete first transformer block (attention + FFN + residuals)
+- **Input:** Embeddings from Phase 2
+- **Expected:** Block output matches reference within 1e-4
+- **Why Critical:** Validates entire block; if this matches, architecture is correct
+- **Debug:** Check residual connections, layer norm order (pre-norm), contiguous memory
+
 ### 7.2 Language Model Head (Lines 76, 100)
 
 **Reference Locations:**
@@ -688,6 +779,13 @@ logits = Linear(768, 50257, bias=False)(h)
 - Input: `[batch, seq, 768]`
 - Output: `[batch, seq, 50257]` (logits for each position)
 
+**✓ VALIDATION CHECKPOINT 8: Logits (Full Sequence)**
+- **When:** After LM head, before selecting last token
+- **Input:** Final layer norm output from all 12 blocks
+- **Expected:** Full logit tensor matches reference within 1e-3 (looser tolerance due to accumulation)
+- **Why Critical:** Validates entire forward pass through all layers
+- **Debug:** Check weight tying (lm_head uses wte.weight), verify no bias, check all 12 blocks processed
+
 ### 7.3 Logit Selection (Lines 102-106)
 
 **Reference Locations:**
@@ -703,6 +801,13 @@ logits = Linear(768, 50257, bias=False)(h)
 **Tensor Shapes:**
 - Full logits: `[batch, seq, 50257]`
 - Selected logits: `[batch, 50257]`
+
+**✓ VALIDATION CHECKPOINT 9: Selected Logits (Last Token)**
+- **When:** After selecting last token logits
+- **Input:** Full logits from checkpoint 8
+- **Expected:** Last token logits `[:, -1, :]` match reference exactly
+- **Why Critical:** This determines next token; wrong selection breaks generation
+- **Debug:** Verify indexing `[:, -1, :]`, check edge case handling (empty sequence)
 
 ---
 
@@ -730,6 +835,13 @@ if temperature < 1e-6:
 - Input logits: `[batch, 50257]`
 - Output token: `[batch]` (single token ID per batch item)
 
+**✓ VALIDATION CHECKPOINT 10: Argmax Sampling (Temperature=0)**
+- **When:** After argmax on logits (deterministic sampling)
+- **Input:** Logits from checkpoint 9
+- **Expected:** Token ID matches reference exactly (deterministic)
+- **Why Critical:** Temperature=0 must be deterministic; any difference indicates error
+- **Debug:** Verify temperature check `< 1e-6`, ensure argmax on correct dimension (-1)
+
 ### 8.2 Temperature>0 Sampling (Lines 110-111)
 
 **Reference Locations:**
@@ -752,6 +864,14 @@ next_token = multinomial(probs, num_samples=1)
 - temperature < 1.0: Sharper distribution (more confident)
 - temperature = 1.0: Unchanged distribution
 - temperature > 1.0: Flatter distribution (more random)
+
+**✓ VALIDATION CHECKPOINT 11: Softmax Probabilities (Temperature>0)**
+- **When:** After temperature scaling and softmax (if temperature > 0)
+- **Input:** Logits from checkpoint 9, temperature=0.8
+- **Expected:** Probabilities sum to 1.0, distribution matches reference
+- **Why Critical:** Validates sampling correctness for non-deterministic generation
+- **Debug:** Check division by temperature, verify softmax dimension, ensure probabilities sum to 1.0
+- **Note:** Token sampling will differ (stochastic), but probability distribution must match
 
 ### 8.3 Output Finalization (Line 112)
 
@@ -873,6 +993,23 @@ output_text = tokenizer.decode(token_ids)
 **Known Test Cases:**
 - Prompt: "What is the answer to life, the universe, and everything?"
 - Expected (10 tokens, temp=0, gpt2-medium): "What is the answer to life, the universe, and everything?\n\nThe answer is that we are all one"
+
+**✓ VALIDATION CHECKPOINT 12: End-to-End Generation (CRITICAL)**
+- **When:** After complete generation loop (final validation)
+- **Input:** Prompt "Hello." (tokens: [15496, 13])
+- **Expected (GPT-2 Medium, temp=0, 10 tokens):** "Hello. I'm a little late to the party, but"
+- **Why Critical:** Validates entire pipeline; if this matches, implementation is correct
+- **Debug:** If output differs:
+  1. Check all previous checkpoints in order
+  2. Verify start_pos tracking
+  3. Check cache management across iterations
+  4. Ensure deterministic sampling (temp=0)
+  5. Verify tokenizer encoding/decoding
+
+**Additional End-to-End Test Cases:**
+- Prompt: "The quick brown" → Should generate consistent completion
+- Prompt: "Once upon a time" → Should generate consistent story start
+- **All tests must use temperature=0 for deterministic validation**
 
 ---
 
@@ -1557,6 +1694,7 @@ This document captures ALL behaviors in the tinygrad GPT-2 inference pipeline.
 - ✅ Framework comparison (Tinygrad vs Candle vs Mistral.rs)
 - ✅ Reference line numbers for each phase across all frameworks
 - ✅ Quick reference table for navigation
+- ✅ **12 validation checkpoints with tolerances and debug guidance**
 
 **Scope:**
 - Primary: Temperature=0, CPU, FP32, batch_size=1 (deterministic inference)
