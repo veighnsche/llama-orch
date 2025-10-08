@@ -47,14 +47,8 @@ impl Attention {
     ///
     /// # Returns
     /// Attention output [batch, seq, dim]
-    pub fn forward(&mut self, x: &Array2<f32>, cache: &mut KVCache, start_pos: usize) -> Array2<f32> {
-        // TODO: Implement complete attention
-        // 1. QKV projection (Checkpoint 2)
-        // 2. Update cache (Checkpoint 3)
-        // 3. Compute attention scores (Checkpoint 4)
-        // 4. Compute attention output (Checkpoint 5)
-
-        // Placeholder
+    pub fn forward(&mut self, x: &Array2<f32>, _cache: &mut KVCache, _start_pos: usize) -> Array2<f32> {
+        // TODO: Implement complete attention (Checkpoints 2-5)
         x.clone()
     }
 }

@@ -15,21 +15,14 @@ pub fn matmul_2d_3d(x: &Array2<f32>, weight: &Array2<f32>) -> Array2<f32> {
 }
 
 /// Softmax along specified axis
-pub fn softmax(x: &Array4<f32>, axis: usize) -> Array4<f32> {
+pub fn softmax(x: &Array4<f32>, _axis: usize) -> Array4<f32> {
     // TODO: Implement softmax
-    // softmax(x) = exp(x) / sum(exp(x))
-    // Numerically stable: softmax(x) = exp(x - max(x)) / sum(exp(x - max(x)))
-
     x.clone()
 }
 
 /// Layer normalization
-pub fn layer_norm(x: &Array2<f32>, weight: &Array1<f32>, bias: &Array1<f32>, eps: f32) -> Array2<f32> {
+pub fn layer_norm(x: &Array2<f32>, _weight: &Array1<f32>, _bias: &Array1<f32>, _eps: f32) -> Array2<f32> {
     // TODO: Implement layer norm
-    // 1. Compute mean and variance along last dimension
-    // 2. Normalize: (x - mean) / sqrt(variance + eps)
-    // 3. Apply scale and bias: normalized * weight + bias
-
     x.clone()
 }
 

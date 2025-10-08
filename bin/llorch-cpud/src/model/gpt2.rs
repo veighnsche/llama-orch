@@ -44,61 +44,26 @@ impl GPT2Model {
     ///
     /// # Arguments
     /// * `input_tokens` - Input token IDs
-    /// * `config` - Sampling configuration
+    /// * `_config` - Sampling configuration
     ///
     /// # Returns
     /// Generated token IDs
-    pub fn generate(&self, input_tokens: &[usize], config: &SamplingConfig) -> Result<Vec<usize>> {
-        tracing::debug!("Generating with {} input tokens", input_tokens.len());
-
-        // TODO: Implement generation loop
-        // 1. Initialize cache
-        // 2. Process prompt (all tokens at once)
-        // 3. Generate tokens one by one (autoregressive)
-        // 4. Apply sampling (temperature, top_k, top_p)
-        // 5. Stop at max_tokens or EOS
-
-        // CHECKPOINTS:
-        // - Checkpoint 8: Full logits after all blocks
-        // - Checkpoint 9: Selected logits (last position)
-        // - Checkpoint 10: Argmax sampling (temperature=0)
-        // - Checkpoint 11: Softmax probabilities (temperature>0)
-        // - Checkpoint 12: End-to-end generation
-
-        // Placeholder
+    pub fn generate(&self, input_tokens: &[usize], _config: &SamplingConfig) -> Result<Vec<usize>> {
+        // TODO: Implement generation loop (Checkpoints 8-12)
         Ok(input_tokens.to_vec())
     }
 
     /// Forward pass (single step)
-    ///
-    /// # Arguments
-    /// * `token_ids` - Token IDs [seq]
-    /// * `cache` - KV cache
-    /// * `start_pos` - Starting position
-    ///
-    /// # Returns
-    /// Logits [seq, vocab_size]
-    fn forward(&mut self, token_ids: &Array1<usize>, cache: &mut KVCache, start_pos: usize) -> Array2<f32> {
-        // TODO: Implement forward pass
-        // 1. Embeddings (token + position)
-        // 2. Pass through all transformer blocks
-        // 3. Final layer norm
-        // 4. LM head projection
-
-        // Placeholder
+    fn forward(&mut self, token_ids: &Array1<usize>, _cache: &mut KVCache, _start_pos: usize) -> Array2<f32> {
+        // TODO: Implement forward pass (Checkpoints 8-9)
         let seq_len = token_ids.len();
         let vocab_size = self.config.vocab_size;
         Array2::zeros((seq_len, vocab_size))
     }
 
     /// Sample next token
-    fn sample(&self, logits: &Array1<f32>, config: &SamplingConfig) -> usize {
-        // TODO: Implement sampling
-        // - temperature=0: argmax (deterministic)
-        // - temperature>0: sample from softmax distribution
-        // - Apply top_k, top_p if specified
-
-        // Placeholder: return first token
+    fn sample(&self, _logits: &Array1<f32>, _config: &SamplingConfig) -> usize {
+        // TODO: Implement sampling (Checkpoints 10-11)
         0
     }
 }

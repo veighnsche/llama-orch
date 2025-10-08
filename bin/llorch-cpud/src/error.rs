@@ -28,5 +28,11 @@ pub enum Error {
     Io(#[from] std::io::Error),
 
     #[error("Worker error: {0}")]
-    Worker(#[from] worker_common::WorkerError),
+    Worker(String),
+}
+
+impl From<worker_common::WorkerError> for Error {
+    fn from(e: worker_common::WorkerError) -> Self {
+        Error::Worker(e.to_string())
+    }
 }

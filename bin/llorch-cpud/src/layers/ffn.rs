@@ -45,12 +45,7 @@ impl FFN {
     /// # Returns
     /// Output [batch, seq, dim]
     pub fn forward(&self, x: &Array2<f32>) -> Array2<f32> {
-        // TODO: Implement FFN
-        // 1. Up projection: x @ c_fc_weight + c_fc_bias → [batch, seq, 4*dim]
-        // 2. GELU activation
-        // 3. Down projection: hidden @ c_proj_weight + c_proj_bias → [batch, seq, dim]
-
-        // Placeholder
+        // TODO: Implement FFN (Checkpoint 6)
         x.clone()
     }
 }
@@ -79,7 +74,7 @@ mod tests {
 
         let ffn = FFN::new(fc_weight, fc_bias, proj_weight, proj_bias);
 
-        let input = Array2::zeros((1, 2, dim));
+        let input = Array2::zeros((2, dim)); // [batch*seq, dim]
         let output = ffn.forward(&input);
 
         assert_eq!(output.shape(), input.shape());

@@ -18,19 +18,9 @@ pub struct CpuInferenceBackend {
 
 impl CpuInferenceBackend {
     /// Load model from path
-    pub fn load(model_path: &str) -> Result<Self> {
-        tracing::info!("Loading GPT-2 model from: {}", model_path);
-
-        // TODO: Load tokenizer from GGUF or HuggingFace
-        let tokenizer = Tokenizer::from_gguf(model_path)
-            .map_err(|e| Error::ModelLoad(format!("Failed to load tokenizer: {}", e)))?;
-
-        // TODO: Load model weights
-        let model = GPT2Model::load(model_path)?;
-
-        tracing::info!("Model loaded successfully");
-
-        Ok(Self { model, tokenizer })
+    pub fn load(_model_path: &str) -> Result<Self> {
+        // TODO: Implement model loading
+        Err(Error::ModelLoad("Not implemented yet".to_string()))
     }
 
     /// Get memory usage in bytes
@@ -43,38 +33,16 @@ impl CpuInferenceBackend {
 
 #[async_trait]
 impl InferenceBackend for CpuInferenceBackend {
-    async fn execute(&self, prompt: &str, config: &SamplingConfig) -> Result<InferenceResult> {
-        tracing::debug!("Executing inference for prompt: {}", prompt);
-
-        // 1. Tokenize (worker-tokenizer)
-        let tokens = self
-            .tokenizer
-            .encode(prompt)
-            .map_err(|e| Error::Inference(format!("Tokenization failed: {}", e)))?;
-
-        tracing::debug!("Tokenized to {} tokens", tokens.len());
-
-        // 2. Generate (YOUR implementation via checkpoints)
-        let output_tokens = self.model.generate(&tokens, config)?;
-
-        tracing::debug!("Generated {} tokens", output_tokens.len());
-
-        // 3. Decode (worker-tokenizer)
-        let text = self
-            .tokenizer
-            .decode(&output_tokens)
-            .map_err(|e| Error::Inference(format!("Decoding failed: {}", e)))?;
-
-        // 4. Return (worker-common)
-        Ok(InferenceResult::max_tokens(
-            tokens,
-            output_tokens,
-            config.seed.unwrap_or(0),
-            0, // generation_time_ms - TODO: track actual time
-        ))
+    async fn execute(
+        &self,
+        _prompt: &str,
+        _config: &SamplingConfig,
+    ) -> std::result::Result<InferenceResult, Box<dyn std::error::Error + Send + Sync>> {
+        // TODO: Implement inference
+        Err(Box::new(Error::Inference("Not implemented yet".to_string())))
     }
 
-    async fn cancel(&self, _request_id: &str) -> Result<()> {
+    async fn cancel(&self, _job_id: &str) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // CPU worker doesn't support cancellation (single-threaded)
         Ok(())
     }

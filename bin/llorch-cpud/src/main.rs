@@ -51,9 +51,9 @@ async fn main() -> Result<()> {
 
     // Start HTTP server (worker-http)
     tracing::info!("Starting HTTP server on port {}", args.port);
-    let addr = format!("0.0.0.0:{}", args.port);
+    let addr: std::net::SocketAddr = format!("0.0.0.0:{}", args.port).parse()?;
     let router = create_router(backend);
-    let server = HttpServer::new(&addr, router).await?;
+    let server = HttpServer::new(addr, router).await?;
 
     tracing::info!("llorch-cpud ready!");
     server.run().await?;

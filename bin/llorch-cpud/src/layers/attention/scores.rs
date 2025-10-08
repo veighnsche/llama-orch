@@ -36,22 +36,14 @@ impl AttentionScores {
         &self,
         q: &Array3<f32>,
         k: &Array3<f32>,
-        mask: Option<&Array4<f32>>,
+        _mask: Option<&Array4<f32>>,
     ) -> Array4<f32> {
-        // TODO: Implement attention scores
-        // 1. Transpose Q, K to [batch, n_heads, seq, head_dim]
-        // 2. Transpose K to [batch, n_heads, head_dim, seq_k] for matmul
-        // 3. Compute Q @ K^T → [batch, n_heads, seq_q, seq_k]
-        // 4. Scale by 1/sqrt(head_dim)
-        // 5. Apply causal mask if provided (add mask, where mask has -inf for future positions)
-
+        // TODO: Implement attention scores (Checkpoint 4)
         // Placeholder
-        let batch = q.shape()[0];
-        let n_heads = q.shape()[2];
-        let seq_q = q.shape()[1];
-        let seq_k = k.shape()[1];
+        let batch_seq = q.shape()[0];
+        let n_heads = q.shape()[1];
 
-        Array4::zeros((batch, n_heads, seq_q, seq_k))
+        Array4::zeros((1, n_heads, batch_seq, batch_seq))
     }
 }
 

@@ -30,15 +30,10 @@ impl Embedding {
     ///
     /// # Returns
     /// Embeddings [batch, seq, dim]
-    pub fn forward(&self, token_ids: &Array1<usize>, start_pos: usize) -> Array2<f32> {
-        // TODO: Implement embeddings
-        // 1. Look up token embeddings
-        // 2. Look up position embeddings (start_pos..start_pos+seq_len)
-        // 3. Add them together
-
-        // Placeholder
+    pub fn forward(&self, token_ids: &Array1<usize>, _start_pos: usize) -> Array2<f32> {
+        // TODO: Implement embeddings (Phase 2)
         let seq_len = token_ids.len();
         let dim = self.token_embeddings.shape()[1];
-        Array2::zeros((1, seq_len, dim))
+        Array2::zeros((seq_len, dim))
     }
 }

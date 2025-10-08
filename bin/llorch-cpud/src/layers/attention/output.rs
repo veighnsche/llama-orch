@@ -33,20 +33,12 @@ impl AttentionOutput {
     /// # Returns
     /// Attention output [batch, seq_q, dim]
     pub fn forward(&self, attn_scores: &Array4<f32>, v: &Array3<f32>) -> Array2<f32> {
-        // TODO: Implement attention output
-        // 1. Apply softmax to attention scores (last dimension)
-        // 2. Transpose V to [batch, n_heads, seq_k, head_dim]
-        // 3. Apply attention: attn_weights @ V → [batch, n_heads, seq_q, head_dim]
-        // 4. Transpose to [batch, seq_q, n_heads, head_dim]
-        // 5. Reshape to merge heads: [batch, seq_q, dim]
-        // 6. Output projection: output @ c_proj_weight + c_proj_bias
-
+        // TODO: Implement attention output (Checkpoint 5)
         // Placeholder
-        let batch = v.shape()[0];
-        let seq_q = attn_scores.shape()[2];
+        let batch_seq = v.shape()[0];
         let dim = self.c_proj_weight.shape()[0];
 
-        Array2::zeros((batch, seq_q, dim))
+        Array2::zeros((batch_seq, dim))
     }
 }
 
@@ -72,10 +64,11 @@ mod tests {
         let output_layer = AttentionOutput::new(weight, bias);
 
         let attn_scores = Array4::zeros((1, 16, 2, 2));
-        let v = Array3::zeros((1, 2, 16, 64));
+        let v = Array3::zeros((2, 16, 64)); // [batch*seq, n_heads, head_dim]
 
         let output = output_layer.forward(&attn_scores, &v);
 
-        assert_eq!(output.shape(), &[1, 2, dim]);
+        assert_eq!(output.shape()[0], 2); // batch*seq
+        assert_eq!(output.shape()[1], dim);
     }
 }
