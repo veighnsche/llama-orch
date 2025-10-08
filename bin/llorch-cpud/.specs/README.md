@@ -2,7 +2,24 @@
 
 This directory contains the complete behavioral specifications for the llorch-cpud CPU inference engine.
 
+## 🚨 IMPORTANT: Strategic Pivot (2025-10-08)
+
+**We've changed our foundation model from GPT-2 to Llama-2 7B.**
+
+📄 **READ FIRST:** `FOUNDATION_RESET_HANDOFF.md` - Complete handoff explaining the change  
+📄 **Quick Summary:** `STRATEGIC_PIVOT_SUMMARY.md` - Why this is better
+
+**New Foundation Model:** Llama-2 7B GGUF FP16  
+**Download:** `/.docs/testing/download_llama2_7b_fp16.sh`
+
+---
+
 ## Documents
+
+### 🔴 Critical Reading (Start Here)
+- **`FOUNDATION_RESET_HANDOFF.md`** - Strategic pivot explanation and new roadmap
+- **`STRATEGIC_PIVOT_SUMMARY.md`** - Quick summary of the change
+- **Rules:** `/.windsurf/rules/llorch-cpud-rules.md` - Team signatures, testing standards
 
 ### Process Documentation
 - **`SPEC_DEVELOPMENT_PROCESS.md`** - The 5-phase development process for llorch-cpud
@@ -10,13 +27,19 @@ This directory contains the complete behavioral specifications for the llorch-cp
   - Emphasizes NO code copying, only learning from references
 
 ### Behavioral Specifications
-- **`01_GPT2_PIPELINE_COMPLETE_BEHAVIORS.md`** - Complete GPT-2 inference pipeline behaviors
+
+#### Current (Being Updated)
+- **`01_GPT2_PIPELINE_COMPLETE_BEHAVIORS.md`** - ⚠️ OUTDATED - GPT-2 specific
   - **568 lines** of comprehensive behavioral specifications
-  - **ALL behaviors** documented in RFC 2119 language (MUST/SHOULD/COULD)
-  - **Code flow order** from tokenization to output
-  - **10 phases** covering entire pipeline
-  - **All tensor shapes** at each step
-  - Based on `tinygrad/examples/gpt2.py` (simplest reference)
+  - **Being replaced with Llama-2 spec**
+  - Keep for reference only
+
+#### Coming Soon
+- **`02_LLAMA2_PIPELINE_COMPLETE_BEHAVIORS.md`** - 🚧 TO BE CREATED
+  - Llama-2 7B architecture
+  - RoPE, RMSNorm, SwiGLU components
+  - GGUF format support
+  - Based on llama.cpp reference
 
 ## What's Been Completed
 

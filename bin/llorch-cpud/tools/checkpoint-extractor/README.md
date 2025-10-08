@@ -1,18 +1,29 @@
 # llorch-checkpoint-extractor
 
 **Created by:** TEAM-006  
-**Based on:** TEAM-005 comprehensive analysis
+**Based on:** TEAM-005 comprehensive analysis  
+**Fixed by:** TEAM-007 - Layer filtering and documentation
 
 ## Purpose
 
 Standalone tool that extracts intermediate tensor checkpoints from llama.cpp inference using the official eval callback API.
+
+## Prerequisites
+
+**IMPORTANT:** This tool requires llama.cpp with 3 checkpoint callbacks added by TEAM-006:
+
+1. `src/llama-graph.cpp:1556` - `cb(k, "cache_k", il);`
+2. `src/llama-graph.cpp:1557` - `cb(v, "cache_v", il);`  
+3. `src/llama-graph.cpp:1578` - `cb(cur, "attn_out_proj", il);`
+
+These modifications are minimal but **required** for the tool to extract all 9 checkpoints.
 
 ## Approach
 
 Uses llama.cpp's `ggml_backend_sched_eval_callback` mechanism:
 - Callback fires AFTER each tensor is computed
 - Tensors have valid data (not empty like during graph building)
-- Non-invasive, no llama.cpp source modifications needed
+- Minimal llama.cpp modifications (3 callbacks added)
 - Official, documented API
 
 ## Usage

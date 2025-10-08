@@ -1,12 +1,27 @@
 // TEAM-006: Implementation of checkpoint extraction callback
 // Created by: TEAM-006
 // Based on: TEAM-005 comprehensive analysis
+// Modified by: TEAM-007 - Fixed layer filtering bug
 
 #include "checkpoint_callback.h"
 #include <cstdio>
 #include <cstring>
 
 namespace llorch {
+
+// TEAM-007: Extract layer number from tensor name (e.g., "blk.0.attn_norm" -> 0)
+static int get_layer_from_tensor(struct ggml_tensor * t) {
+    const char* name = ggml_get_name(t);
+    if (!name) return -1;
+    
+    // Check for layer-specific tensors: "blk.N.xxx"
+    if (strncmp(name, "blk.", 4) == 0) {
+        return atoi(name + 4);
+    }
+    
+    // Non-layer tensors (embeddings, output, etc.)
+    return -1;
+}
 
 // Checkpoint name mapping (from Phase 2)
 static const char* CHECKPOINT_NAMES[] = {
@@ -44,6 +59,12 @@ bool checkpoint_eval_callback(
     
     if (!name || !is_checkpoint_tensor(name)) {
         return true;
+    }
+    
+    // TEAM-007: Filter by layer (only extract from specified layer)
+    int layer = get_layer_from_tensor(t);
+    if (layer != state->layer_filter) {
+        return true;  // Skip other layers
     }
     
     // Check if already extracted (avoid duplicates)
