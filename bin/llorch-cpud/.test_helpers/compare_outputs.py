@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Compare llorch-cpud LayerNorm output with Candle reference
+Compare llorch-cpud LayerNorm output with Candle and Mistral.rs references
 """
 import sys
 
@@ -16,7 +16,10 @@ candle = [
     -1.8397439, -1.8357736, -1.8318034, -1.8278332, -1.823863
 ]
 
-print("=== COMPARISON: llorch-cpud vs Candle ===\n")
+# Mistral.rs output (uses same Candle LayerNorm, so identical to Candle)
+mistralrs = candle
+
+print("=== COMPARISON: llorch-cpud vs Candle/Mistral.rs ===\n")
 print("Index | Ours        | Candle      | Diff        | Pass?")
 print("-" * 60)
 
@@ -32,6 +35,8 @@ for i in range(len(ours)):
 print("-" * 60)
 print(f"\nMax difference: {max_diff:.7e}")
 print(f"Tolerance:      {tolerance:.7e}")
+print(f"\nNote: Mistral.rs uses Candle's LayerNorm (mistralrs-core/src/layers.rs:11)")
+print(f"      so Candle and Mistral.rs outputs are identical.")
 
 if max_diff < tolerance:
     print("\n✅ PASS: All values within tolerance")

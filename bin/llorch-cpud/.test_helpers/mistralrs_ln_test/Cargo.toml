@@ -1,0 +1,11 @@
+[package]
+name = "mistralrs_ln_test"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[dependencies]
+# Use the same Candle version as Mistral.rs (see mistral.rs/Cargo.toml line 30-31)
+candle-core = { git = "https://github.com/EricLBuehler/candle.git", version = "0.9.1", rev = "7511e510" }
+candle-nn = { git = "https://github.com/EricLBuehler/candle.git", version = "0.9.1", rev = "7511e510" }

@@ -37,7 +37,12 @@ See **[QUICKSTART_VALIDATION.md](QUICKSTART_VALIDATION.md)** for details.
    - Candle reference test details
    - Comparison methodology
 
-4. **[STAKEHOLDER_SUMMARY.md](STAKEHOLDER_SUMMARY.md)**
+4. **[MISTRALRS_VALIDATION_COMPLETE.md](MISTRALRS_VALIDATION_COMPLETE.md)** ⭐
+   - Mistral.rs validation details
+   - Why Mistral.rs = Candle
+   - Production framework validation
+
+5. **[STAKEHOLDER_SUMMARY.md](STAKEHOLDER_SUMMARY.md)**
    - Determinism proof summary
    - How to verify yourself
    - Test output examples

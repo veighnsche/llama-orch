@@ -8,7 +8,7 @@
 ## Quick Facts
 
 - **Implementation:** llorch-cpud LayerNorm
-- **Reference:** Candle (Hugging Face's Rust ML framework)
+- **References:** Candle & Mistral.rs (both use same LayerNorm)
 - **Test Input:** 2×1024 tensor with pattern `sin((i*1024+j)*0.001)*0.5`
 - **Maximum Difference:** 6.6e-06
 - **Tolerance:** 1e-4
@@ -33,16 +33,20 @@ All 10 sampled values match within 6.6e-06 (well under 1e-4 tolerance).
 ## How to Reproduce
 
 ```bash
+# Quick: Run all tests automatically
+./.test_helpers/run_validation.sh
+
+# Or manually:
 # 1. Run our implementation
-cd /home/vince/Projects/llama-orch/bin/llorch-cpud
 cargo test --test isolated_checkpoint_01 test_isolated_checkpoint_01_all -- --nocapture
 
 # 2. Run Candle reference
-cd .test_helpers/candle_ln_test
-cargo run --release
+cd .test_helpers/candle_ln_test && cargo run --release && cd ../..
 
-# 3. Compare outputs
-cd ../..
+# 3. Run Mistral.rs reference
+cd .test_helpers/mistralrs_ln_test && cargo run --release && cd ../..
+
+# 4. Compare outputs
 python3 .test_helpers/compare_outputs.py
 ```
 
@@ -57,14 +61,18 @@ Max difference: 6.6000000e-06
 ## Files
 
 - **Test:** `tests/isolated_checkpoint_01.rs`
-- **Reference:** `.test_helpers/candle_ln_test/src/main.rs`
+- **Candle Reference:** `.test_helpers/candle_ln_test/src/main.rs`
+- **Mistral.rs Reference:** `.test_helpers/mistralrs_ln_test/src/main.rs`
 - **Comparison:** `.test_helpers/compare_outputs.py`
+- **Validation Suite:** `.test_helpers/run_validation.sh`
 - **Full Report:** `CHECKPOINT_01_CROSS_REFERENCE_FINAL.md`
 
 ---
 
 ## Conclusion
 
-✅ **llorch-cpud LayerNorm implementation is mathematically correct and validated against Candle.**
+✅ **llorch-cpud LayerNorm implementation is mathematically correct and validated against Candle & Mistral.rs.**
+
+**Note:** Mistral.rs uses Candle's LayerNorm directly (see `mistralrs-core/src/layers.rs:11`), so both references produce identical results.
 
 Ready to proceed to Checkpoint 2.

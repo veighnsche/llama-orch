@@ -41,34 +41,35 @@ impl QKVProjection {
     /// Forward pass
     ///
     /// # Arguments
-    /// * `x` - Input [batch, seq, dim]
+    /// * `x` - Input [batch*seq, dim] (flattened batch and sequence dimensions)
     ///
     /// # Returns
-    /// (Q, K, V) each [batch, seq, n_heads, head_dim]
+    /// (Q, K, V) each [batch*seq, n_heads, head_dim]
     pub fn forward(&self, x: &Array2<f32>) -> (Array3<f32>, Array3<f32>, Array3<f32>) {
-        // TODO: Implement QKV projection
-        // 1. Linear projection: x @ weight + bias → [batch, seq, 3*dim]
-        // 2. Reshape to [batch, seq, 3, n_heads, head_dim]
-        // 3. Split into Q, K, V along dim=2
-        //    Q = qkv[:, :, 0, :, :]
-        //    K = qkv[:, :, 1, :, :]
-        //    V = qkv[:, :, 2, :, :]
-
-        // IMPORTANT: Handle Conv1D weight transpose if needed!
-
-        // TODO: Implement QKV projection (Checkpoint 2)
-        // Placeholder - return empty arrays with correct shape
-        use ndarray::Array4;
-        let batch = x.shape()[0];
-        let seq = x.shape()[1];
+        // 1. Linear projection: x @ weight + bias → [batch*seq, 3*dim]
+        let qkv_combined = x.dot(&self.weight) + &self.bias;
         
-        // Note: QKV should be [batch, seq, n_heads, head_dim] but Array3 can't hold 4D
-        // For now, flatten batch*seq dimension
-        let combined_batch_seq = batch * seq;
-        let q = Array3::zeros((combined_batch_seq, self.n_heads, self.head_dim));
-        let k = Array3::zeros((combined_batch_seq, self.n_heads, self.head_dim));
-        let v = Array3::zeros((combined_batch_seq, self.n_heads, self.head_dim));
-
+        // 2. Reshape to [batch*seq, 3*dim] → [batch*seq, 3, n_heads, head_dim]
+        let batch_seq = qkv_combined.shape()[0];
+        let total_dim = qkv_combined.shape()[1];
+        
+        // Verify dimensions
+        assert_eq!(
+            total_dim,
+            3 * self.n_heads * self.head_dim,
+            "QKV combined dimension mismatch"
+        );
+        
+        // Reshape: [batch*seq, 3*dim] → [batch*seq, 3, n_heads, head_dim]
+        let qkv_reshaped = qkv_combined
+            .into_shape((batch_seq, 3, self.n_heads, self.head_dim))
+            .expect("Failed to reshape QKV");
+        
+        // 3. Split into Q, K, V along dim=1 (the '3' dimension)
+        let q = qkv_reshaped.slice(s![.., 0, .., ..]).to_owned();
+        let k = qkv_reshaped.slice(s![.., 1, .., ..]).to_owned();
+        let v = qkv_reshaped.slice(s![.., 2, .., ..]).to_owned();
+        
         (q, k, v)
     }
 }
