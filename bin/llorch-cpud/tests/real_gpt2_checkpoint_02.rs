@@ -103,6 +103,11 @@ fn test_checkpoint_02_real_gpt2() {
     println!("  K first 10: {:?}", ref_k_sample);
     println!("  V first 10: {:?}", ref_v_sample);
     
+    // Validate no NaN/Inf
+    for val in q.iter().chain(k.iter()).chain(v.iter()) {
+        assert!(val.is_finite(), "QKV output contains NaN or Inf: {}", val);
+    }
+    
     // Compare
     let q_diff = compare(&q, &ref_q, "Q");
     let k_diff = compare(&k, &ref_k, "K");
@@ -157,7 +162,6 @@ fn compare(ours: &Array3<f32>, reference: &Array3<f32>, name: &str) -> f32 {
 }
 
 #[test]
-#[ignore] // Run with: cargo test --test real_gpt2_checkpoint_02 -- --ignored
 fn test_checkpoint_02_determinism() {
     println!("\n╔══════════════════════════════════════════════════════════╗");
     println!("║  Checkpoint 2: Determinism with Real Weights            ║");

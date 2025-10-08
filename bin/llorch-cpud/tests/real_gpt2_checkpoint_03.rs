@@ -50,12 +50,24 @@ fn test_checkpoint_03_real_gpt2() {
     let mut cache = KVCache::new(2048, 12, 64);  // GPT-2 base: 12 heads, 64 dim
     cache.update(&k, &v, 0);
     
-    // Retrieve
-    let (cached_k, cached_v) = cache.get(k.shape()[0]);
+    // Retrieve - get up to seq_len (which is 2 for "Hello.")
+    let seq_len = k.shape()[0];  // FIXED: Use first dimension (seq), not second (n_heads)
+    let (cached_k, cached_v) = cache.get(seq_len);
     
     println!("\n📊 Retrieved from cache:");
     println!("  K shape: {:?}", cached_k.shape());
     println!("  V shape: {:?}", cached_v.shape());
+    
+    // CRITICAL: Validate shapes before comparing values
+    assert_eq!(cached_k.shape(), k.shape(), 
+        "K shape mismatch: cached={:?} vs input={:?}", cached_k.shape(), k.shape());
+    assert_eq!(cached_v.shape(), v.shape(), 
+        "V shape mismatch: cached={:?} vs input={:?}", cached_v.shape(), v.shape());
+    
+    // Validate no NaN/Inf
+    for val in cached_k.iter().chain(cached_v.iter()) {
+        assert!(val.is_finite(), "Cache contains NaN or Inf: {}", val);
+    }
     
     // Compare with original (should be exact)
     let mut k_diff = 0.0f32;
@@ -84,7 +96,6 @@ fn test_checkpoint_03_real_gpt2() {
 }
 
 #[test]
-#[ignore]
 fn test_checkpoint_03_determinism() {
     println!("\n╔══════════════════════════════════════════════════════════╗");
     println!("║  Checkpoint 3: Determinism with Real K/V                ║");
@@ -98,26 +109,30 @@ fn test_checkpoint_03_determinism() {
     }
     
     // Load K, V
-    let k: Array3<f32> = File::open(dir.join("checkpoint_02_k.npy"))
-        .and_then(|mut f| Array3::read_npy(&mut f))
+    let mut k_file = File::open(dir.join("checkpoint_02_k.npy"))
+        .expect("Failed to open K file");
+    let k: Array3<f32> = Array3::read_npy(&mut k_file)
         .expect("Failed to load K");
     
-    let v: Array3<f32> = File::open(dir.join("checkpoint_02_v.npy"))
-        .and_then(|mut f| Array3::read_npy(&mut f))
+    let mut v_file = File::open(dir.join("checkpoint_02_v.npy"))
+        .expect("Failed to open V file");
+    let v: Array3<f32> = Array3::read_npy(&mut v_file)
         .expect("Failed to load V");
+    
+    let seq_len = k.shape()[1];
     
     // Run 3 times
     let mut cache1 = KVCache::new(2048, 12, 64);
     cache1.update(&k, &v, 0);
-    let (k1, v1) = cache1.get(k.shape()[0]);
+    let (k1, v1) = cache1.get(seq_len);
     
     let mut cache2 = KVCache::new(2048, 12, 64);
     cache2.update(&k, &v, 0);
-    let (k2, v2) = cache2.get(k.shape()[0]);
+    let (k2, v2) = cache2.get(seq_len);
     
     let mut cache3 = KVCache::new(2048, 12, 64);
     cache3.update(&k, &v, 0);
-    let (k3, v3) = cache3.get(k.shape()[0]);
+    let (k3, v3) = cache3.get(seq_len);
     
     // Must be bit-exact
     for (i, ((v1, v2), v3)) in k1.iter().zip(k2.iter()).zip(k3.iter()).enumerate() {

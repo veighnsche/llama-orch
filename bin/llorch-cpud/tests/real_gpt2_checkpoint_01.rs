@@ -90,6 +90,11 @@ fn test_checkpoint_01_real_gpt2() {
         max_rel_diff = max_rel_diff.max(rel_diff);
     }
     
+    // Validate no NaN/Inf
+    for val in output.iter() {
+        assert!(val.is_finite(), "Output contains NaN or Inf: {}", val);
+    }
+    
     println!("\n📊 Comparison:");
     println!("  Max absolute difference: {:.6e}", max_diff);
     println!("  Max relative difference: {:.6e}", max_rel_diff);
@@ -105,7 +110,6 @@ fn test_checkpoint_01_real_gpt2() {
 }
 
 #[test]
-#[ignore] // Run with: cargo test --test real_gpt2_checkpoint_01 -- --ignored
 fn test_checkpoint_01_determinism() {
     println!("\n╔══════════════════════════════════════════════════════════╗");
     println!("║  Checkpoint 1: Determinism with Real Weights            ║");

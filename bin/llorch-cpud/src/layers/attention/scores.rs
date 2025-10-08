@@ -3,14 +3,15 @@
 //! IMPORTS: ndarray only (NO worker-crates)
 //! CHECKPOINT: 4 (Attention Scores)
 
-use ndarray::{Array2, Array3, Array4};
+use ndarray::{s, Array2, Array3, Array4, Axis};
 
 /// Attention Scores
 ///
 /// Computes scaled dot-product attention scores: (Q @ K^T) / sqrt(head_dim)
 pub struct AttentionScores {
     /// Scale factor: 1 / sqrt(head_dim)
-    _scale: f32,
+    scale: f32,
+    head_dim: usize,
 }
 
 impl AttentionScores {
@@ -19,31 +20,70 @@ impl AttentionScores {
     /// # Arguments
     /// * `head_dim` - Dimension per head (e.g., 64)
     pub fn new(head_dim: usize) -> Self {
-        let scale = 1.0 / (head_dim as f32).sqrt();
-        Self { _scale: scale }
+        let scale = (head_dim as f32).sqrt();
+        Self { scale, head_dim }
     }
 
     /// Forward pass
     ///
     /// # Arguments
-    /// * `q` - Query [batch, seq_q, n_heads, head_dim]
-    /// * `k` - Key [batch, seq_k, n_heads, head_dim]
-    /// * `mask` - Optional causal mask [batch, n_heads, seq_q, seq_k]
+    /// * `q` - Query [seq_q, n_heads, head_dim]
+    /// * `k` - Key [seq_k, n_heads, head_dim]
+    /// * `mask` - Optional causal mask [1, 1, seq_q, seq_k]
     ///
     /// # Returns
-    /// Attention scores [batch, n_heads, seq_q, seq_k]
+    /// Attention scores [n_heads, seq_q, seq_k]
     pub fn forward(
         &self,
         q: &Array3<f32>,
-        _k: &Array3<f32>,
-        _mask: Option<&Array4<f32>>,
-    ) -> Array4<f32> {
-        // TODO: Implement attention scores (Checkpoint 4)
-        // Placeholder
-        let batch_seq = q.shape()[0];
+        k: &Array3<f32>,
+        mask: Option<&Array2<f32>>,
+    ) -> Array3<f32> {
+        let seq_q = q.shape()[0];
+        let seq_k = k.shape()[0];
         let n_heads = q.shape()[1];
-
-        Array4::zeros((1, n_heads, batch_seq, batch_seq))
+        
+        // Validate dimensions
+        assert_eq!(q.shape()[2], self.head_dim, "Q head_dim mismatch");
+        assert_eq!(k.shape()[2], self.head_dim, "K head_dim mismatch");
+        assert_eq!(q.shape()[1], k.shape()[1], "Q and K must have same n_heads");
+        
+        // Compute attention scores for each head
+        // Q: [seq_q, n_heads, head_dim]
+        // K: [seq_k, n_heads, head_dim]
+        // Result: [n_heads, seq_q, seq_k]
+        let mut scores = Array3::zeros((n_heads, seq_q, seq_k));
+        
+        for h in 0..n_heads {
+            // Extract Q and K for this head
+            let q_head = q.slice(s![.., h, ..]);  // [seq_q, head_dim]
+            let k_head = k.slice(s![.., h, ..]);  // [seq_k, head_dim]
+            
+            // Compute Q @ K.T for this head
+            // q_head: [seq_q, head_dim] @ k_head.T: [head_dim, seq_k] -> [seq_q, seq_k]
+            for i in 0..seq_q {
+                for j in 0..seq_k {
+                    let mut dot = 0.0f32;
+                    for d in 0..self.head_dim {
+                        dot += q_head[[i, d]] * k_head[[j, d]];
+                    }
+                    scores[[h, i, j]] = dot / self.scale;
+                }
+            }
+        }
+        
+        // Apply causal mask if provided
+        if let Some(mask) = mask {
+            for h in 0..n_heads {
+                for i in 0..seq_q {
+                    for j in 0..seq_k {
+                        scores[[h, i, j]] += mask[[i, j]];
+                    }
+                }
+            }
+        }
+        
+        scores
     }
 }
 
