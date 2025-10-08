@@ -75,6 +75,7 @@ rand = "0.8"
 # Testing utilities
 approx = "0.5"
 chrono = "0.4"
+criterion = "0.5"
 
 [features]
 default = []
@@ -91,6 +92,10 @@ benchmark = []
 [[bin]]
 name = "llorch-candled"
 path = "src/main.rs"
+
+[[bench]]
+name = "inference_bench"
+harness = false
 
 [lib]
 name = "llorch_candled"
