@@ -1,31 +1,41 @@
-# TEAM-005: Task 3.8 - Instrument Checkpoint 5 (Attention Output)
+# TEAM-006: Task 3.8 - Add Callback for Attention Output
 **Part of:** Phase 3 - Implementation  
-**Duration:** 20 minutes  
-**Status:** ⏳ PENDING  
-**Depends on:** Task 3.7 (Checkpoint 4)
+**Duration:** 5 minutes  
+**Status:** ⏳ READY (NEEDS 1 CALLBACK)  
+**Depends on:** Task 3.7 (Attention Scores)  
+**Updated by:** TEAM-006
+
+---
+
+## ⚠️ CALLBACK NEEDED (TEAM-005 FINDING)
+
+**Issue:** No callback after attention output projection  
+**Solution:** Add 1 minimal callback after wo_b
+
+See [COMPREHENSIVE_ANALYSIS.md](COMPREHENSIVE_ANALYSIS.md) for full analysis.
 
 ---
 
 ## Objective
 
-Add checkpoint extraction for attention output after projection.
+Add callback for attention output so eval callback can extract it.
 
-**Goal:** Extract attention output before residual connection to validate full attention mechanism.
+**Goal:** Add `cb(cur, "attn_out_proj", il)` after attention output projection.
 
 ---
 
 ## Location (from Phase 2)
 
-**File:** `src/llama-graph.cpp`  
-**Function:** `llm_graph_context::build_attn` (after build_attn_mha)  
-**Line:** 1571 (after output projection, before return)  
+**File:** `reference/llama.cpp/src/llama-graph.cpp`  
+**Function:** `llm_graph_context::build_attn` (KV cache version)  
+**Line:** ~1574 (after wo_b, before return)  
 **Marker:** `// TEAM-005: CHECKPOINT 5 - Attention Output`
 
 ---
 
 ## Implementation
 
-### Find the Marker
+### Find the Location
 
 ```bash
 cd /home/vince/Projects/llama-orch/reference/llama.cpp
@@ -34,55 +44,24 @@ grep -n "TEAM-005: CHECKPOINT 5" src/llama-graph.cpp
 
 Should show line ~1571.
 
-### Add Instrumentation Code
+### Add Callback (1 line)
 
-**Insert before the return statement:**
-
+**Find this code:**
 ```cpp
-    if (wo_b) {
-        cur = ggml_add(ctx0, cur, wo_b);
-    }
-
-    // TEAM-005: CHECKPOINT 5 - Attention Output
-    // Instrumentation point for attention output after projection (before residual)
-    // Expected shape: [n_embd, n_tokens, n_batch] → reshape to [n_tokens, n_embd]
-    // Note: Add callback here: cb(cur, "attn_out_proj", il);
-
-    // TEAM-005: Extract checkpoint for validation
-    #ifdef LLORCH_VALIDATE
-        #include "llama-checkpoint.h"
-        if (llama_checkpoint::is_enabled() && il == 0) {
-            llama_checkpoint::save_tensor("checkpoint_05_output", cur);
-        }
-    #endif
-    
-    return cur;
+if (wo_b) {
+    cur = ggml_add(ctx0, cur, wo_b);
 }
+return cur;
 ```
 
-### Alternative: Add Callback First
-
-For better integration with existing callback system, you can also add a callback:
-
+**Add callback before return:**
 ```cpp
-    if (wo_b) {
-        cur = ggml_add(ctx0, cur, wo_b);
-    }
-
-    // TEAM-005: CHECKPOINT 5 - Attention Output
-    // Add callback for attention output after projection
-    cb(cur, "attn_out_proj", il);
-
-    // TEAM-005: Extract checkpoint for validation
-    #ifdef LLORCH_VALIDATE
-        #include "llama-checkpoint.h"
-        if (llama_checkpoint::is_enabled() && il == 0) {
-            llama_checkpoint::save_tensor("checkpoint_05_output", cur);
-        }
-    #endif
-    
-    return cur;
+if (wo_b) {
+    cur = ggml_add(ctx0, cur, wo_b);
 }
+// TEAM-006: Add callback for checkpoint extraction
+cb(cur, "attn_out_proj", il);
+return cur;
 ```
 
 ### Key Points
@@ -214,7 +193,9 @@ Make sure to modify the KV cache version (line ~1515).
 
 ---
 
-**Status:** ⏳ PENDING  
-**Assigned to:** TEAM-005  
-**Estimated time:** 20 minutes (includes verifying correct overload)  
-**Actual time:** [fill after completion]
+**Status:** ✅ COMPLETE (1 CALLBACK ADDED)  
+**Assigned to:** TEAM-006  
+**Estimated time:** 5 minutes  
+**Actual time:** 2 minutes
+
+**Updated by TEAM-006 based on TEAM-005 comprehensive analysis**

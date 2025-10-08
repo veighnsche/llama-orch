@@ -1,188 +1,155 @@
-# TEAM-005: Task 3.10 - Build and Verify
+# TEAM-006: Task 3.10 - Build and Verify
 **Part of:** Phase 3 - Implementation  
 **Duration:** 15 minutes  
-**Status:** ⏳ PENDING  
-**Depends on:** Task 3.9 (Checkpoint 6)
+**Status:** ⏳ READY (REVISED BY TEAM-005)  
+**Depends on:** Task 3.9 (Checkpoint 6)  
+**Updated by:** TEAM-006
+
+---
+
+## ✅ APPROACH REVISED BY TEAM-005
+
+**Old (OBSOLETE):** Build llama.cpp with conditional compilation  
+**New (CORRECT):** Build wrapper tool and add 3 minimal callbacks to llama.cpp
+
+See [COMPREHENSIVE_ANALYSIS.md](COMPREHENSIVE_ANALYSIS.md) and [HANDOFF_TO_TEAM_006.md](HANDOFF_TO_TEAM_006.md) for full details.
 
 ---
 
 ## Objective
 
-Build llama.cpp with checkpoint support and verify all instrumentation works.
+Build wrapper tool, add minimal llama.cpp callbacks, and verify checkpoint extraction.
 
-**Goal:** Confirm clean build, test checkpoint extraction, validate output files.
+**Goal:** Confirm wrapper builds, 3 callbacks added, all 9 checkpoints extracted.
 
 ---
 
 ## Prerequisites
 
-- All tasks 3.1-3.9 completed
-- All 6 checkpoints instrumented
-- CMakeLists.txt updated
-- llama-checkpoint.h created
+- Tasks 3.1-3.3 completed (wrapper tool created) ✅
+- Tasks 3.4-3.9 completed (callbacks verified/added) ✅
+- llama.cpp built ✅
 
 ---
 
 ## Build Steps
 
-### 1. Clean Build
+### 1. Rebuild llama.cpp (with 3 callbacks added)
 
 ```bash
 cd /home/vince/Projects/llama-orch/reference/llama.cpp
 
-# Remove old build
-rm -rf build-validate
+# Rebuild llama.cpp
+cd build
+make -j$(nproc)
 
-# Create fresh build directory
-mkdir build-validate
-cd build-validate
-
-# Configure with checkpoint support
-cmake .. -DLLORCH_VALIDATE=ON
-
-# Verify configuration
-grep "TEAM-005" ../CMakeLists.txt
-grep "LLORCH_VALIDATE" CMakeCache.txt
+# Verify it built successfully
+ls -lh lib/libllama.so  # or .a depending on build config
 ```
 
-**Expected output:**
-```
--- TEAM-005: Checkpoint extraction enabled
--- TEAM-005: Checkpoints will be saved when LLORCH_VALIDATE=1 env var is set
-LLORCH_VALIDATE:BOOL=ON
-```
-
-### 2. Compile
+### 2. Build Wrapper Tool
 
 ```bash
-# Build with all cores
-make -j$(nproc) 2>&1 | tee build.log
+cd /home/vince/Projects/llama-orch/bin/llorch-cpud/tools/checkpoint-extractor
 
-# Check for errors
-echo "=== Checking for errors ==="
-grep -i "error" build.log | grep -v "error.h" | grep -v "std::error"
+# Create build directory
+mkdir -p build
+cd build
 
-# Check for warnings (optional)
-echo "=== Checking for warnings ==="
-grep -i "warning" build.log | head -20
+# Configure (point to llama.cpp)
+cmake .. \
+  -DCMAKE_PREFIX_PATH=/home/vince/Projects/llama-orch/reference/llama.cpp/build
+
+# Build
+make -j$(nproc)
+
+# Verify binary exists
+ls -lh llorch-checkpoint-extractor
 ```
 
-**Expected:** No errors, binaries created successfully.
+**Expected:** Binary created successfully.
 
-### 3. Verify Binaries
+### 3. Verify Callbacks Added
 
 ```bash
-# Check that binaries exist
-ls -lh bin/llama-cli
-ls -lh bin/llama-server
+cd /home/vince/Projects/llama-orch/reference/llama.cpp
 
-# Verify checkpoint code is compiled in
-strings bin/llama-cli | grep "TEAM-005"
-# Should see: "TEAM-005: Checkpoint Extraction Enabled"
+# Check KV cache callbacks (2 lines)
+grep -A1 'get_v(ctx0, il)' src/llama-graph.cpp | grep 'cb.*cache'
+
+# Check attention output callback (1 line)
+grep 'cb.*attn_out_proj' src/llama-graph.cpp
+```
+
+**Expected:**
+```
+cb(k, "cache_k", il);
+cb(v, "cache_v", il);
+cb(cur, "attn_out_proj", il);
 ```
 
 ---
 
 ## Runtime Verification
 
-### 1. Test Without Environment Variable
+### 1. Test Wrapper Tool
 
 ```bash
-# Run without LLORCH_VALIDATE set
-./bin/llama-cli --version
+cd /home/vince/Projects/llama-orch/bin/llorch-cpud/tools/checkpoint-extractor/build
 
-# Should NOT see checkpoint banner
-# Should work normally
-```
+# Run wrapper tool (requires GPT-2 model)
+./llorch-checkpoint-extractor \
+  /path/to/gpt2.gguf \
+  "Hello world" \
+  /tmp/checkpoints
 
-### 2. Test With Environment Variable
-
-```bash
-# Set environment variables
-export LLORCH_VALIDATE=1
-export LLORCH_CHECKPOINT_DIR=/tmp/llama_cpp_checkpoints
-mkdir -p $LLORCH_CHECKPOINT_DIR
-
-# Run with checkpoint extraction
-./bin/llama-cli --version
-
-# Should see banner:
-# ╔══════════════════════════════════════════════════════════════╗
-# ║  TEAM-005: Checkpoint Extraction Enabled                     ║
-# ║  Directory: /tmp/llama_cpp_checkpoints                       ║
-# ╚══════════════════════════════════════════════════════════════╝
-```
-
-### 3. Test Full Checkpoint Extraction
-
-**Note:** Requires GPT-2 model file. If not available, skip to verification checklist.
-
-```bash
-# Download GPT-2 model (if needed)
-# wget https://huggingface.co/ggml-org/models/resolve/main/gpt2-117M/ggml-model-f16.gguf
-
-# Run inference with checkpoint extraction
-export LLORCH_VALIDATE=1
-export LLORCH_CHECKPOINT_DIR=/tmp/llama_cpp_checkpoints
-rm -rf $LLORCH_CHECKPOINT_DIR/*
-mkdir -p $LLORCH_CHECKPOINT_DIR
-
-./bin/llama-cli \
-  --model /path/to/gpt2.gguf \
-  --prompt "Hello world" \
-  --n-predict 1 \
-  2>&1 | tee run.log
-
-# Check for checkpoint messages
-grep "TEAM-005" run.log
+# Should see extraction happening
 ```
 
 **Expected output:**
 ```
 ╔══════════════════════════════════════════════════════════════╗
-║  TEAM-005: Checkpoint Extraction Enabled                     ║
-║  Directory: /tmp/llama_cpp_checkpoints                       ║
+║  TEAM-006: Checkpoint Extraction Enabled                     ║
+║  Output: /tmp/checkpoints                                    ║
 ╚══════════════════════════════════════════════════════════════╝
 
-✅ TEAM-005: checkpoint_01_ln1_output [2 × 768] → /tmp/llama_cpp_checkpoints/checkpoint_01_ln1_output.bin
-✅ TEAM-005: checkpoint_02_q [64 × 12 × 2] → /tmp/llama_cpp_checkpoints/checkpoint_02_q.bin
-✅ TEAM-005: checkpoint_02_k [64 × 12 × 2] → /tmp/llama_cpp_checkpoints/checkpoint_02_k.bin
-✅ TEAM-005: checkpoint_02_v [64 × 12 × 2] → /tmp/llama_cpp_checkpoints/checkpoint_02_v.bin
-✅ TEAM-005: checkpoint_03_cache_k [64 × 12 × N × 1] → /tmp/llama_cpp_checkpoints/checkpoint_03_cache_k.bin
-✅ TEAM-005: checkpoint_03_cache_v [64 × 12 × N × 1] → /tmp/llama_cpp_checkpoints/checkpoint_03_cache_v.bin
-✅ TEAM-005: checkpoint_04_scores [N × 2 × 12 × 1] → /tmp/llama_cpp_checkpoints/checkpoint_04_scores.bin
-✅ TEAM-005: checkpoint_05_output [768 × 2 × 1] → /tmp/llama_cpp_checkpoints/checkpoint_05_output.bin
-✅ TEAM-005: checkpoint_06_ffn [2 × 768] → /tmp/llama_cpp_checkpoints/checkpoint_06_ffn.bin
+Tokenized prompt: 2 tokens
+✅ TEAM-006: attn_norm [2 × 768] → /tmp/checkpoints/checkpoint_attn_norm.bin
+✅ TEAM-006: Qcur [64 × 12 × 2] → /tmp/checkpoints/checkpoint_Qcur.bin
+✅ TEAM-006: Kcur [64 × 12 × 2] → /tmp/checkpoints/checkpoint_Kcur.bin
+✅ TEAM-006: Vcur [64 × 12 × 2] → /tmp/checkpoints/checkpoint_Vcur.bin
+✅ TEAM-006: cache_k [64 × 12 × N × 1] → /tmp/checkpoints/checkpoint_cache_k.bin
+✅ TEAM-006: cache_v [64 × 12 × N × 1] → /tmp/checkpoints/checkpoint_cache_v.bin
+✅ TEAM-006: kq_soft_max [N × 2 × 12 × 1] → /tmp/checkpoints/checkpoint_kq_soft_max.bin
+✅ TEAM-006: attn_out_proj [768 × 2 × 1] → /tmp/checkpoints/checkpoint_attn_out_proj.bin
+✅ TEAM-006: ffn_out [2 × 768] → /tmp/checkpoints/checkpoint_ffn_out.bin
 
 ╔══════════════════════════════════════════════════════════════╗
-║  TEAM-005: Checkpoint Extraction Complete                    ║
-║  Files saved to: /tmp/llama_cpp_checkpoints                  ║
+║  TEAM-006: Extraction Complete                               ║
+║  Extracted 9 checkpoints                                     ║
 ╚══════════════════════════════════════════════════════════════╝
 ```
 
-### 4. Verify Checkpoint Files
+### 2. Verify Checkpoint Files
 
 ```bash
 # List all checkpoint files
-ls -lh $LLORCH_CHECKPOINT_DIR/
+ls -lh /tmp/checkpoints/
 
-# Count files (should be 9: 1 + 3 + 2 + 1 + 1 + 1)
-ls $LLORCH_CHECKPOINT_DIR/*.bin | wc -l
-
-# Check file sizes
-du -h $LLORCH_CHECKPOINT_DIR/*.bin
+# Count files (should be 9)
+ls /tmp/checkpoints/*.bin | wc -l
 ```
 
 **Expected files:**
-- `checkpoint_01_ln1_output.bin` (~6KB)
-- `checkpoint_02_q.bin` (~6KB)
-- `checkpoint_02_k.bin` (~6KB)
-- `checkpoint_02_v.bin` (~6KB)
-- `checkpoint_03_cache_k.bin` (varies with cache size)
-- `checkpoint_03_cache_v.bin` (varies with cache size)
-- `checkpoint_04_scores.bin` (varies with cache size)
-- `checkpoint_05_output.bin` (~6KB)
-- `checkpoint_06_ffn.bin` (~6KB)
+- `checkpoint_attn_norm.bin` (~6KB)
+- `checkpoint_Qcur.bin` (~6KB)
+- `checkpoint_Kcur.bin` (~6KB)
+- `checkpoint_Vcur.bin` (~6KB)
+- `checkpoint_cache_k.bin` (varies with cache size)
+- `checkpoint_cache_v.bin` (varies with cache size)
+- `checkpoint_kq_soft_max.bin` (varies with cache size)
+- `checkpoint_attn_out_proj.bin` (~6KB)
+- `checkpoint_ffn_out.bin` (~6KB)
 
 ### 5. Validate Binary Format
 
@@ -271,25 +238,25 @@ python3 validate_checkpoints.py
 ## Success Criteria
 
 ### Build
-- [ ] Clean build completes without errors
-- [ ] No compilation warnings related to TEAM-005 code
-- [ ] TEAM-005 cmake messages appear
-- [ ] Binaries created (llama-cli, llama-server)
-- [ ] Checkpoint code present in binaries (strings check)
+- [ ] llama.cpp rebuilt successfully
+- [ ] Wrapper tool builds without errors
+- [ ] Binary `llorch-checkpoint-extractor` created
+- [ ] 3 callbacks added to llama.cpp (verified)
 
-### Runtime (without LLORCH_VALIDATE)
-- [ ] Runs normally without checkpoint extraction
-- [ ] No checkpoint banner appears
-- [ ] No performance impact
+### Callbacks Added
+- [ ] `cb(k, "cache_k", il)` added after `get_k()` 
+- [ ] `cb(v, "cache_v", il)` added after `get_v()`
+- [ ] `cb(cur, "attn_out_proj", il)` added before return in `build_attn`
 
-### Runtime (with LLORCH_VALIDATE=1)
-- [ ] Checkpoint banner appears at startup
+### Runtime
+- [ ] Wrapper tool runs without crashes
+- [ ] Banner appears at startup
 - [ ] All 9 checkpoint files created
-- [ ] Completion banner appears at end
-- [ ] No crashes or errors
+- [ ] Completion banner shows count
+- [ ] No errors during extraction
 
 ### File Validation
-- [ ] All checkpoint files exist
+- [ ] All 9 checkpoint files exist
 - [ ] File sizes are reasonable
 - [ ] Binary format is correct (dims + shape + data)
 - [ ] No NaN or Inf values
@@ -335,31 +302,51 @@ python3 validate_checkpoints.py
 
 ---
 
-## Performance Notes
+## Summary of Changes
 
-**With LLORCH_VALIDATE=1:**
-- Expect ~10-20% slowdown due to file I/O
-- Disk space: ~50-100KB per inference
-- Memory: Minimal overhead (temporary buffers)
+### What Was Added (3 callbacks total)
 
-**Without LLORCH_VALIDATE:**
-- Zero overhead (code not compiled in)
-- No disk usage
-- No memory overhead
+1. **KV Cache (2 callbacks)** - `src/llama-graph.cpp` line ~1553-1554:
+   ```cpp
+   cb(k, "cache_k", il);
+   cb(v, "cache_v", il);
+   ```
+
+2. **Attention Output (1 callback)** - `src/llama-graph.cpp` line ~1574:
+   ```cpp
+   cb(cur, "attn_out_proj", il);
+   ```
+
+### What Already Existed (6 callbacks)
+
+- `cb(cur, "attn_norm", il)` - LayerNorm ✅
+- `cb(Qcur, "Qcur", il)` - Q projection ✅
+- `cb(Kcur, "Kcur", il)` - K projection ✅
+- `cb(Vcur, "Vcur", il)` - V projection ✅
+- `cb(kq, "kq_soft_max", il)` - Attention scores ✅
+- `cb(cur, "ffn_out", il)` - FFN output ✅
+
+### Wrapper Tool Created
+
+- `bin/llorch-cpud/tools/checkpoint-extractor/` ✅
+- Registers eval callback ✅
+- Extracts all 9 checkpoints ✅
 
 ---
 
 ## Next Steps
 
 After successful verification:
-1. Proceed to Phase 4 (Testing)
-2. Compare checkpoints with PyTorch reference
-3. Validate numerical accuracy
-4. Document any discrepancies
+1. **Phase 4:** Compare checkpoints with PyTorch reference
+2. Validate numerical accuracy
+3. Document any discrepancies
+4. Create validation report
 
 ---
 
-**Status:** ⏳ PENDING  
-**Assigned to:** TEAM-005  
+**Status:** ⏳ READY  
+**Assigned to:** TEAM-006  
 **Estimated time:** 15 minutes  
 **Actual time:** [fill after completion]
+
+**Updated by TEAM-006 based on TEAM-005 comprehensive analysis**

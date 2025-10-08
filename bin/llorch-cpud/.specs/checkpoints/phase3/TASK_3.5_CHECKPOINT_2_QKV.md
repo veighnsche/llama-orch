@@ -1,25 +1,39 @@
-# TEAM-005: Task 3.5 - Instrument Checkpoint 2 (QKV Projection)
+# TEAM-006: Task 3.5 - Verify Checkpoint 2 (QKV Projection)
 **Part of:** Phase 3 - Implementation  
-**Duration:** 15 minutes  
-**Status:** ⏳ PENDING  
-**Depends on:** Task 3.4 (Checkpoint 1)
+**Duration:** 5 minutes  
+**Status:** ✅ VERIFIED (NO CHANGES NEEDED)  
+**Depends on:** Task 3.4 (Checkpoint 1)  
+**Updated by:** TEAM-006
+
+---
+
+## ✅ APPROACH REVISED BY TEAM-005
+
+**Old (OBSOLETE):** Add inline extraction code  
+**New (CORRECT):** Verify existing `cb()` calls are present
+
+See [COMPREHENSIVE_ANALYSIS.md](COMPREHENSIVE_ANALYSIS.md) for full analysis.
 
 ---
 
 ## Objective
 
-Add checkpoint extraction for Q, K, V tensors after projection and split.
+Verify that QKV checkpoint callbacks already exist in llama.cpp.
 
-**Goal:** Extract query, key, value tensors before attention computation.
+**Goal:** Confirm `cb(Qcur/Kcur/Vcur, ...)` calls are present - no changes needed.
 
 ---
 
 ## Location (from Phase 2)
 
-**File:** `src/llama-model.cpp`  
-**Function:** `llm_build_gpt2::llm_build_gpt2` (constructor)  
-**Lines:** 9915-9921 (after `cb(Qcur/Kcur/Vcur, ...)`)  
-**Marker:** `// TEAM-005: CHECKPOINT 2 - QKV Projection`
+**File:** `reference/llama.cpp/src/llama-model.cpp`  
+**Lines:** ~9912-9914  
+**Existing code:**
+```cpp
+cb(Qcur, "Qcur", il);
+cb(Kcur, "Kcur", il);
+cb(Vcur, "Vcur", il);
+```
 
 ---
 
@@ -170,7 +184,9 @@ When running with LLORCH_VALIDATE=1:
 
 ---
 
-**Status:** ⏳ PENDING  
-**Assigned to:** TEAM-005  
-**Estimated time:** 15 minutes  
+**Status:** ✅ VERIFIED (NO CHANGES NEEDED)  
+**Assigned to:** TEAM-006  
+**Estimated time:** 5 minutes  
 **Actual time:** [fill after completion]
+
+**Updated by TEAM-006 based on TEAM-005 comprehensive analysis**

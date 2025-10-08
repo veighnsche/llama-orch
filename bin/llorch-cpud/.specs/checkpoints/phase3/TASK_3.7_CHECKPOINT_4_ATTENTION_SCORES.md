@@ -1,16 +1,26 @@
-# TEAM-005: Task 3.7 - Instrument Checkpoint 4 (Attention Scores)
+# TEAM-006: Task 3.7 - Verify Checkpoint 4 (Attention Scores)
 **Part of:** Phase 3 - Implementation  
-**Duration:** 15 minutes  
-**Status:** ⏳ PENDING  
-**Depends on:** Task 3.6 (Checkpoint 3)
+**Duration:** 5 minutes  
+**Status:** ✅ VERIFIED (NO CHANGES NEEDED)  
+**Depends on:** Task 3.6 (KV Cache)  
+**Updated by:** TEAM-006
+
+---
+
+## ✅ APPROACH REVISED BY TEAM-005
+
+**Old (OBSOLETE):** Add inline extraction code  
+**New (CORRECT):** Verify existing `cb()` call is present
+
+See [COMPREHENSIVE_ANALYSIS.md](COMPREHENSIVE_ANALYSIS.md) for full analysis.
 
 ---
 
 ## Objective
 
-Add checkpoint extraction for attention scores after softmax.
+Verify that attention scores checkpoint callback already exists in llama.cpp.
 
-**Goal:** Extract attention weights to validate attention mechanism.
+**Goal:** Confirm `cb(kq, "kq_soft_max", il)` is present - no changes needed.
 
 ---
 
@@ -183,7 +193,9 @@ Where N = n_kv (cache size + current tokens).
 
 ---
 
-**Status:** ⏳ PENDING  
-**Assigned to:** TEAM-005  
-**Estimated time:** 15 minutes  
-**Actual time:** [fill after completion]
+**Status:** ✅ VERIFIED (NO CHANGES NEEDED)  
+**Assigned to:** TEAM-006  
+**Estimated time:** 5 minutes  
+**Actual time:** 1 minute (verification only)
+
+**Updated by TEAM-006 based on TEAM-005 comprehensive analysis**

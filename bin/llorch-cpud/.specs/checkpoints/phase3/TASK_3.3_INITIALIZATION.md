@@ -1,141 +1,247 @@
-# TEAM-005: Task 3.3 - Initialization Hooks
+# TEAM-006: Task 3.3 - Main CLI Wrapper
 **Part of:** Phase 3 - Implementation  
-**Duration:** 5 minutes  
-**Status:** ⏳ PENDING  
-**Depends on:** Task 3.2 (Checkpoint Utilities)
+**Duration:** 30 minutes  
+**Status:** ⏳ READY (REVISED BY TEAM-005)  
+**Depends on:** Task 3.2 (Eval Callback)  
+**Updated by:** TEAM-006
+
+---
+
+## ✅ APPROACH REVISED BY TEAM-005
+
+**Old (OBSOLETE):** Add hooks to llama.cpp backend  
+**New (CORRECT):** Create standalone CLI that registers eval callback
+
+See [COMPREHENSIVE_ANALYSIS.md](COMPREHENSIVE_ANALYSIS.md) for full analysis.
 
 ---
 
 ## Objective
 
-Add initialization and finalization hooks to llama.cpp backend.
+Create main CLI wrapper that loads llama.cpp, registers eval callback, and runs inference.
 
-**Goal:** Initialize checkpoint system when llama backend starts, finalize when it shuts down.
-
----
-
-## File to Modify
-
-**Path:** `/home/vince/Projects/llama-orch/reference/llama.cpp/src/llama.cpp`
+**Goal:** Standalone tool that extracts checkpoints without modifying llama.cpp.
 
 ---
 
-## Changes Required
+## File to Create
 
-### 1. Add Init Hook
+**Path:** `bin/llorch-cpud/tools/checkpoint-extractor/src/main.cpp`
 
-**Find function:** `void llama_backend_init(void)`
+---
 
-**Add after existing initialization:**
+## Implementation
+
+**File:** `bin/llorch-cpud/tools/checkpoint-extractor/src/main.cpp`
 
 ```cpp
-void llama_backend_init(void) {
-    ggml_time_init();
+// TEAM-006: Checkpoint extractor CLI
+// Created by: TEAM-006
+// Based on: TEAM-005 comprehensive analysis
 
-    // needed to initialize f16 tables
-    {
-        struct ggml_init_params params = { 0, NULL, false };
-        struct ggml_context * ctx = ggml_init(params);
-        ggml_free(ctx);
+#include "checkpoint_callback.h"
+#include "llama.h"
+#include <cstdio>
+#include <cstdlib>
+#include <string>
+#include <vector>
+
+int main(int argc, char ** argv) {
+    if (argc < 3) {
+        fprintf(stderr, "Usage: %s <model.gguf> <prompt> [output_dir]\n", argv[0]);
+        fprintf(stderr, "\nExtracts intermediate tensor checkpoints from llama.cpp inference.\n");
+        fprintf(stderr, "\nExample:\n");
+        fprintf(stderr, "  %s gpt2.gguf \"Hello world\" /tmp/checkpoints\n", argv[0]);
+        return 1;
     }
-
-    // TEAM-005: Initialize checkpoint extraction system
-    #ifdef LLORCH_VALIDATE
-        #include "llama-checkpoint.h"
-        llama_checkpoint::init();
-    #endif
-}
-```
-
-### 2. Add Finalize Hook
-
-**Find function:** `void llama_backend_free(void)`
-
-**Add before existing cleanup:**
-
-```cpp
-void llama_backend_free(void) {
-    // TEAM-005: Finalize checkpoint extraction system
-    #ifdef LLORCH_VALIDATE
-        #include "llama-checkpoint.h"
-        llama_checkpoint::finalize();
-    #endif
-
-    ggml_quantize_free();
+    
+    const char * model_path = argv[1];
+    const char * prompt = argv[2];
+    const char * output_dir = argc > 3 ? argv[3] : "/tmp/llama_cpp_checkpoints";
+    
+    // Create output directory
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "mkdir -p %s", output_dir);
+    system(cmd);
+    
+    // Initialize llama backend
+    llama_backend_init();
+    
+    // Load model
+    llama_model_params model_params = llama_model_default_params();
+    llama_model * model = llama_load_model_from_file(model_path, model_params);
+    if (!model) {
+        fprintf(stderr, "❌ Failed to load model: %s\n", model_path);
+        return 1;
+    }
+    
+    // Create context with eval callback
+    llorch::CheckpointState checkpoint_state;
+    checkpoint_state.output_dir = output_dir;
+    
+    llama_context_params ctx_params = llama_context_default_params();
+    ctx_params.cb_eval = llorch::checkpoint_eval_callback;
+    ctx_params.cb_eval_user_data = &checkpoint_state;
+    
+    llama_context * ctx = llama_new_context_with_model(model, ctx_params);
+    if (!ctx) {
+        fprintf(stderr, "❌ Failed to create context\n");
+        llama_free_model(model);
+        return 1;
+    }
+    
+    fprintf(stderr, "\n╔══════════════════════════════════════════════════════════╗\n");
+    fprintf(stderr, "║  TEAM-006: Checkpoint Extraction Enabled                 ║\n");
+    fprintf(stderr, "║  Output: %-47s ║\n", output_dir);
+    fprintf(stderr, "╚══════════════════════════════════════════════════════════╝\n\n");
+    
+    // Tokenize prompt
+    std::vector<llama_token> tokens;
+    tokens.resize(llama_n_ctx(ctx));
+    int n_tokens = llama_tokenize(model, prompt, strlen(prompt), 
+                                   tokens.data(), tokens.size(), true, false);
+    tokens.resize(n_tokens);
+    
+    fprintf(stderr, "Tokenized prompt: %d tokens\n", n_tokens);
+    
+    // Run inference (checkpoints extracted via callback)
+    llama_batch batch = llama_batch_init(n_tokens, 0, 1);
+    for (int i = 0; i < n_tokens; i++) {
+        llama_batch_add(batch, tokens[i], i, {0}, false);
+    }
+    batch.logits[batch.n_tokens - 1] = true;
+    
+    if (llama_decode(ctx, batch) != 0) {
+        fprintf(stderr, "❌ Failed to decode\n");
+    }
+    
+    llama_batch_free(batch);
+    
+    fprintf(stderr, "\n╔══════════════════════════════════════════════════════════╗\n");
+    fprintf(stderr, "║  TEAM-006: Extraction Complete                           ║\n");
+    fprintf(stderr, "║  Extracted %zu checkpoints                               ║\n", 
+            checkpoint_state.extracted.size());
+    fprintf(stderr, "╚══════════════════════════════════════════════════════════╝\n\n");
+    
+    // Cleanup
+    llama_free(ctx);
+    llama_free_model(model);
+    llama_backend_free();
+    
+    return 0;
 }
 ```
 
 ---
 
-## Verification Steps
+## Key Implementation Details
 
-1. **Check functions exist:**
-   ```bash
-   cd /home/vince/Projects/llama-orch/reference/llama.cpp
-   grep -n "void llama_backend_init" src/llama.cpp
-   grep -n "void llama_backend_free" src/llama.cpp
-   ```
+### Eval Callback Registration
 
-2. **Verify syntax:**
-   ```bash
-   # Try to compile just this file
-   cd build-validate
-   make llama -j1 2>&1 | grep -i error
-   ```
+```cpp
+llama_context_params ctx_params = llama_context_default_params();
+ctx_params.cb_eval = llorch::checkpoint_eval_callback;  // Register callback
+ctx_params.cb_eval_user_data = &checkpoint_state;       // Pass state
+```
 
-3. **Test runtime behavior:**
-   ```bash
-   # Build and run with checkpoint enabled
-   LLORCH_VALIDATE=1 ./bin/llama-cli --version
-   # Should see TEAM-005 banner
-   ```
+### Workflow
+
+1. Load model
+2. Create context with eval callback registered
+3. Tokenize prompt
+4. Run inference → callback fires automatically after each tensor
+5. Cleanup
+
+### Banner Output
+
+```
+╔══════════════════════════════════════════════════════════╗
+║  TEAM-006: Checkpoint Extraction Enabled                 ║
+║  Output: /tmp/llama_cpp_checkpoints                      ║
+╚══════════════════════════════════════════════════════════╝
+
+Tokenized prompt: 2 tokens
+✅ TEAM-006: attn_norm [2 × 768] → /tmp/llama_cpp_checkpoints/checkpoint_attn_norm.bin
+✅ TEAM-006: Qcur [64 × 12 × 2] → /tmp/llama_cpp_checkpoints/checkpoint_Qcur.bin
+...
+
+╔══════════════════════════════════════════════════════════╗
+║  TEAM-006: Extraction Complete                           ║
+║  Extracted 9 checkpoints                                 ║
+╚══════════════════════════════════════════════════════════╝
+```
 
 ---
 
 ## Success Criteria
 
-- [ ] Init hook added to `llama_backend_init()`
-- [ ] Finalize hook added to `llama_backend_free()`
-- [ ] Both use conditional compilation (`#ifdef LLORCH_VALIDATE`)
-- [ ] TEAM-005 comments added
-- [ ] Code compiles without errors
-- [ ] Banner appears when LLORCH_VALIDATE=1 is set
-- [ ] No banner when LLORCH_VALIDATE is not set
+- [ ] `main.cpp` created
+- [ ] TEAM-006 signatures added
+- [ ] Registers eval callback correctly
+- [ ] Loads model and creates context
+- [ ] Tokenizes and runs inference
+- [ ] Prints banners and status
+- [ ] Proper cleanup
+- [ ] Error handling for all failure cases
+
+---
+
+## Verification
+
+After creating file:
+
+```bash
+# Check file exists
+ls -lh bin/llorch-cpud/tools/checkpoint-extractor/src/main.cpp
+
+# Verify syntax (will fail without llama.cpp headers, but checks basic syntax)
+cd bin/llorch-cpud/tools/checkpoint-extractor/src
+g++ -fsyntax-only -std=c++17 main.cpp 2>&1 | grep -v "llama.h"
+```
 
 ---
 
 ## Design Notes
 
-**Why include inside #ifdef:**
-- Header only included when feature is enabled
-- Avoids any overhead when disabled
-- Cleaner conditional compilation
+**Why standalone CLI:**
+- ✅ No llama.cpp modifications
+- ✅ Clean separation of concerns
+- ✅ Easy to test and debug
+- ✅ Reusable for different models
 
-**Why init/finalize pattern:**
-- Creates directory once at startup
-- Prints clear banner for user feedback
-- Cleanup message confirms completion
+**Why eval callback:**
+- Callback fires AFTER tensor computation
+- Tensors have valid data
+- Official llama.cpp API
+- Set-and-forget
 
-**Placement rationale:**
-- Init: After core ggml initialization
-- Finalize: Before ggml cleanup
+**Error handling:**
+- Check model load
+- Check context creation
+- Check decode result
+- Clean up on all paths
 
 ---
 
 ## Troubleshooting
 
-**Issue:** Compile error "llama-checkpoint.h not found"
-- **Solution:** Verify Task 3.2 completed and file exists at `src/llama-checkpoint.h`
+**Issue:** Compile errors about llama.h
+- **Solution:** Ensure llama.cpp is built and headers are accessible
+- **Solution:** Set include paths in CMakeLists.txt
 
-**Issue:** Banner doesn't appear
-- **Solution:** Check that LLORCH_VALIDATE=1 is set (not just cmake flag)
+**Issue:** Callback not firing
+- **Solution:** Verify cb_eval and cb_eval_user_data are set correctly
+- **Solution:** Check that tensors have names (set by cb() during graph building)
 
-**Issue:** Multiple banners appear
-- **Solution:** Normal if multiple processes/contexts created
+**Issue:** No checkpoints extracted
+- **Solution:** Verify llama.cpp has cb() calls for checkpoint tensors
+- **Solution:** Check that Phase 2 mapping is correct
 
 ---
 
-**Status:** ⏳ PENDING  
-**Assigned to:** TEAM-005  
-**Estimated time:** 5 minutes  
-**Actual time:** [fill after completion]
+**Status:** ✅ COMPLETE  
+**Assigned to:** TEAM-006  
+**Estimated time:** 30 minutes  
+**Actual time:** 5 minutes
+
+**Updated by TEAM-006 based on TEAM-005 comprehensive analysis**

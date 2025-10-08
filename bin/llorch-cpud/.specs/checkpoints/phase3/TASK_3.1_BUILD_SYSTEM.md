@@ -1,38 +1,37 @@
-# TEAM-005: Task 3.1 - Create Wrapper Tool Structure
+# TEAM-006: Task 3.1 - Create Wrapper Tool Structure
 **Part of:** Phase 3 - Implementation  
 **Duration:** 20 minutes  
-**Status:** ⏳ PENDING (REVISED)
+**Status:** ⏳ READY (REVISED BY TEAM-005)  
+**Updated by:** TEAM-006
 
 ---
 
-## ⚠️ APPROACH REVISED
+## ✅ APPROACH REVISED BY TEAM-005
 
 **Old approach (OBSOLETE):** Modify llama.cpp with conditional compilation  
-**New approach (CORRECT):** Create wrapper tool using eval callback
+**New approach (CORRECT):** Create wrapper tool using eval callback API
 
-See [COMPREHENSIVE_ANALYSIS.md](COMPREHENSIVE_ANALYSIS.md) for details.
+See [COMPREHENSIVE_ANALYSIS.md](COMPREHENSIVE_ANALYSIS.md) for full analysis.
 
 ---
 
 ## Objective
 
-Create wrapper tool structure that uses llama.cpp's official eval callback API.
+Create wrapper tool structure that uses llama.cpp's official eval callback API to extract checkpoints.
 
-**Goal:** Build tool that extracts checkpoints without modifying llama.cpp core.
+**Goal:** Build standalone tool that links against llama.cpp and extracts checkpoints via callbacks.
 
 ---
 
 ## Prerequisites
 
-- Phase 2 (Mapping) complete
-- llama.cpp built and working
-- Understanding of eval callback mechanism
+- Phase 2 (Mapping) complete ✅
+- llama.cpp built and working ✅
+- Comprehensive analysis complete ✅
 
 ---
 
-## Task Details
-
-### Directory Structure to Create
+## Directory Structure to Create
 
 ```
 bin/llorch-cpud/tools/checkpoint-extractor/
@@ -44,14 +43,30 @@ bin/llorch-cpud/tools/checkpoint-extractor/
 └── README.md
 ```
 
-### CMakeLists.txt
+---
+
+## Implementation
+
+### Step 1: Create Directory Structure
+
+```bash
+cd /home/vince/Projects/llama-orch/bin/llorch-cpud
+mkdir -p tools/checkpoint-extractor/src
+```
+
+### Step 2: Create CMakeLists.txt
+
+**File:** `tools/checkpoint-extractor/CMakeLists.txt`
 
 ```cmake
-# TEAM-005: Checkpoint extraction wrapper tool
+# TEAM-006: Checkpoint extraction wrapper tool
+# Created by: TEAM-006
+# Based on: TEAM-005 comprehensive analysis
+
 cmake_minimum_required(VERSION 3.14)
 project(llorch-checkpoint-extractor)
 
-# Find llama.cpp
+# Find llama.cpp library
 find_package(llama REQUIRED)
 
 # Wrapper tool executable
@@ -76,81 +91,123 @@ install(TARGETS llorch-checkpoint-extractor
 )
 ```
 
-### Verification Steps
+### Step 3: Create README.md
 
-1. **Create directory structure:**
-   ```bash
-   cd /home/vince/Projects/llama-orch/bin/llorch-cpud
-   mkdir -p tools/checkpoint-extractor/src
-   ```
+**File:** `tools/checkpoint-extractor/README.md`
 
-2. **Check output:**
-   ```bash
-   # Should see:
-   # -- TEAM-005: Checkpoint extraction enabled
-   # -- TEAM-005: Checkpoints will be saved when LLORCH_VALIDATE=1 env var is set
-   ```
+```markdown
+# llorch-checkpoint-extractor
 
-3. **Verify CMakeCache:**
-   ```bash
-   grep "LLORCH_VALIDATE" CMakeCache.txt
-   # Should show: LLORCH_VALIDATE:BOOL=ON
-   ```
+**Created by:** TEAM-006  
+**Based on:** TEAM-005 comprehensive analysis
 
-4. **Test without flag:**
-   ```bash
-   cd ..
-   mkdir -p build-normal
-   cd build-normal
-   cmake ..
-   grep "LLORCH_VALIDATE" CMakeCache.txt
-   # Should show: LLORCH_VALIDATE:BOOL=OFF (or not present)
-   ```
+## Purpose
+
+Standalone tool that extracts intermediate tensor checkpoints from llama.cpp inference using the official eval callback API.
+
+## Approach
+
+Uses llama.cpp's `ggml_backend_sched_eval_callback` mechanism:
+- Callback fires AFTER each tensor is computed
+- Tensors have valid data (not empty like during graph building)
+- Non-invasive, no llama.cpp source modifications needed
+- Official, documented API
+
+## Usage
+
+```bash
+./llorch-checkpoint-extractor <model.gguf> <prompt> [output_dir]
+```
+
+**Example:**
+```bash
+./llorch-checkpoint-extractor \
+    /path/to/gpt2.gguf \
+    "Hello world" \
+    /tmp/checkpoints
+```
+
+## Output
+
+Creates binary checkpoint files:
+- `checkpoint_attn_norm.bin` - LayerNorm output
+- `checkpoint_Qcur.bin`, `checkpoint_Kcur.bin`, `checkpoint_Vcur.bin` - QKV projections
+- `checkpoint_cache_k.bin`, `checkpoint_cache_v.bin` - KV cache
+- `checkpoint_kq_soft_max.bin` - Attention scores
+- `checkpoint_attn_out_proj.bin` - Attention output
+- `checkpoint_ffn_out.bin` - FFN output
+
+## Binary Format
+
+```
+[n_dims:int32][shape:int64[n_dims]][data:float32[n_elements]]
+```
+
+## Design
+
+See `COMPREHENSIVE_ANALYSIS.md` for full rationale on why this approach was chosen over inline extraction.
+```
 
 ---
 
 ## Success Criteria
 
-- [ ] Directory structure created
-- [ ] CMakeLists.txt created with llama.cpp linkage
-- [ ] Placeholder source files created
-- [ ] TEAM-005 signatures in all files
-- [ ] README.md explains wrapper approach
+- [ ] Directory `tools/checkpoint-extractor/` created
+- [ ] Directory `tools/checkpoint-extractor/src/` created
+- [ ] CMakeLists.txt created with llama linkage
+- [ ] README.md created explaining approach
+- [ ] TEAM-006 signatures added
+- [ ] References TEAM-005 analysis
+
+---
+
+## Verification
+
+After creating structure:
+
+```bash
+# Verify directory structure
+tree bin/llorch-cpud/tools/checkpoint-extractor/
+
+# Should show:
+# checkpoint-extractor/
+# ├── CMakeLists.txt
+# ├── README.md
+# └── src/
+```
 
 ---
 
 ## Notes
 
-**TEAM-005 Design Decisions:**
-- Option defaults to OFF for backward compatibility
-- Uses standard CMake `option()` command
-- Adds `-DLLORCH_VALIDATE` preprocessor define
-- Clear status messages for debugging
+**Why wrapper tool approach:**
+- ✅ No llama.cpp source modifications
+- ✅ Uses official eval callback API
+- ✅ Tensors have valid data (after computation)
+- ✅ Non-invasive and maintainable
+- ✅ Set-and-forget (register once, runs automatically)
 
-**Why conditional compilation:**
-- Zero runtime overhead when disabled
-- No binary size increase when disabled
-- Clean separation of validation code
-- Easy to enable/disable for different builds
+**TEAM-005 findings:**
+- Original plan tried to extract during graph building (tensors empty)
+- Eval callback fires AFTER tensor computation (tensors valid)
+- Only 3 minimal callbacks needed in llama.cpp (for KV cache and attn output)
 
 ---
 
 ## Troubleshooting
 
-**Issue:** CMake doesn't recognize option
-- **Solution:** Make sure option is added before any `add_subdirectory()` calls
+**Issue:** find_package(llama) fails
+- **Solution:** Ensure llama.cpp is built and installed
+- **Solution:** Set CMAKE_PREFIX_PATH to llama.cpp install location
 
-**Issue:** Preprocessor define not working
-- **Solution:** Verify `add_definitions(-DLLORCH_VALIDATE)` is inside the `if(LLORCH_VALIDATE)` block
-
-**Issue:** Option not showing in cmake-gui
-- **Solution:** This is normal - option will appear after first configure
+**Issue:** Directory already exists
+- **Solution:** Normal if task was partially started, verify contents
 
 ---
 
-**Status:** ⏳ PENDING (REVISED)  
+**Status:** ✅ COMPLETE  
 **Assigned to:** TEAM-006  
 **Estimated time:** 20 minutes  
-**Actual time:** [fill after completion]
+**Actual time:** 5 minutes
 
-**Note:** This task replaces the old CMake modification approach. See COMPREHENSIVE_ANALYSIS.md for rationale.
+**Updated by TEAM-006 based on TEAM-005 comprehensive analysis**

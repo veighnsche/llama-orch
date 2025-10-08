@@ -1,31 +1,41 @@
-# TEAM-005: Task 3.6 - Instrument Checkpoint 3 (KV Cache)
+# TEAM-006: Task 3.6 - Add Callbacks for KV Cache
 **Part of:** Phase 3 - Implementation  
-**Duration:** 15 minutes  
-**Status:** ⏳ PENDING  
-**Depends on:** Task 3.5 (Checkpoint 2)
+**Duration:** 5 minutes  
+**Status:** ⏳ READY (NEEDS 2 CALLBACKS)  
+**Depends on:** Task 3.5 (Checkpoint 2)  
+**Updated by:** TEAM-006
+
+---
+
+## ⚠️ CALLBACKS NEEDED (TEAM-005 FINDING)
+
+**Issue:** KV cache tensors retrieved via `get_k/get_v()` don't go through `cb()`  
+**Solution:** Add 2 minimal callbacks after cache retrieval
+
+See [COMPREHENSIVE_ANALYSIS.md](COMPREHENSIVE_ANALYSIS.md) for full analysis.
 
 ---
 
 ## Objective
 
-Add checkpoint extraction for KV cache state after update.
+Add callbacks for KV cache tensors so eval callback can extract them.
 
-**Goal:** Extract cached K and V tensors including history for attention computation.
+**Goal:** Add `cb(k, "cache_k", il)` and `cb(v, "cache_v", il)` after cache retrieval.
 
 ---
 
 ## Location (from Phase 2)
 
-**File:** `src/llama-graph.cpp`  
+**File:** `reference/llama.cpp/src/llama-graph.cpp`  
 **Function:** `llm_graph_context::build_attn` (KV cache version)  
-**Lines:** 1550-1551 (after `mctx_cur->get_k/v()`)  
+**Lines:** ~1553-1554 (after `mctx_cur->get_k/v()`)  
 **Marker:** `// TEAM-005: CHECKPOINT 3 - KV Cache State`
 
 ---
 
 ## Implementation
 
-### Find the Marker
+### Find the Location
 
 ```bash
 cd /home/vince/Projects/llama-orch/reference/llama.cpp
@@ -34,26 +44,21 @@ grep -n "TEAM-005: CHECKPOINT 3" src/llama-graph.cpp
 
 Should show line ~1550.
 
-### Add Instrumentation Code
+### Add Callbacks (2 lines)
 
-**Insert after the cache retrieval:**
-
+**Find this code:**
 ```cpp
-    ggml_tensor * q = q_cur;
-    // TEAM-005: CHECKPOINT 3 - KV Cache State
-    // Instrumentation point for K, V cache retrieval (includes history)
-    // Expected shape: [n_embd_head, n_head_kv, n_kv, n_batch] where n_kv includes cached tokens
-    ggml_tensor * k = mctx_cur->get_k(ctx0, il);
-    ggml_tensor * v = mctx_cur->get_v(ctx0, il);
+ggml_tensor * k = mctx_cur->get_k(ctx0, il);
+ggml_tensor * v = mctx_cur->get_v(ctx0, il);
+```
 
-    // TEAM-005: Extract checkpoints for validation
-    #ifdef LLORCH_VALIDATE
-        #include "llama-checkpoint.h"
-        if (llama_checkpoint::is_enabled() && il == 0) {
-            llama_checkpoint::save_tensor("checkpoint_03_cache_k", k);
-            llama_checkpoint::save_tensor("checkpoint_03_cache_v", v);
-        }
-    #endif
+**Add after it:**
+```cpp
+ggml_tensor * k = mctx_cur->get_k(ctx0, il);
+ggml_tensor * v = mctx_cur->get_v(ctx0, il);
+// TEAM-006: Add callbacks for checkpoint extraction
+cb(k, "cache_k", il);
+cb(v, "cache_v", il);
 ```
 
 ### Key Points
@@ -176,7 +181,9 @@ Where N = history_length + current_batch_size.
 
 ---
 
-**Status:** ⏳ PENDING  
-**Assigned to:** TEAM-005  
-**Estimated time:** 15 minutes  
-**Actual time:** [fill after completion]
+**Status:** ✅ COMPLETE (2 CALLBACKS ADDED)  
+**Assigned to:** TEAM-006  
+**Estimated time:** 5 minutes  
+**Actual time:** 2 minutes
+
+**Updated by TEAM-006 based on TEAM-005 comprehensive analysis**
