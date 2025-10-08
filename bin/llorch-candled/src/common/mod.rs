@@ -1,6 +1,8 @@
 //! Worker Common Types
 //!
 //! Shared types and utilities for llama-orch workers.
+//!
+//! Integrated by: TEAM-015 (from worker-common crate)
 
 pub mod error;
 pub mod inference_result;

@@ -12,6 +12,8 @@
 //! - M0-W-1110: Server initialization
 //! - M0-W-1320: Health endpoint
 //! - M0-W-1330: Execute endpoint
+//!
+//! Integrated by: TEAM-015 (from worker-http crate)
 
 pub mod backend;
 pub mod execute;
