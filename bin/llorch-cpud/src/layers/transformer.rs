@@ -4,7 +4,7 @@
 //! CHECKPOINT: 7 (First Block)
 
 use crate::cache::KVCache;
-use crate::layers::{Attention, FFN, LayerNorm};
+use crate::layers::{Attention, LayerNorm, FFN};
 use ndarray::Array2;
 
 /// Transformer Block
@@ -26,12 +26,7 @@ pub struct TransformerBlock {
 impl TransformerBlock {
     /// Create new transformer block
     pub fn new(ln_1: LayerNorm, attn: Attention, ln_2: LayerNorm, ffn: FFN) -> Self {
-        Self {
-            ln_1,
-            attn,
-            ln_2,
-            ffn,
-        }
+        Self { ln_1, attn, ln_2, ffn }
     }
 
     /// Forward pass
@@ -43,7 +38,12 @@ impl TransformerBlock {
     ///
     /// # Returns
     /// Output [batch, seq, dim]
-    pub fn forward(&mut self, x: &Array2<f32>, _cache: &mut KVCache, _start_pos: usize) -> Array2<f32> {
+    pub fn forward(
+        &mut self,
+        x: &Array2<f32>,
+        _cache: &mut KVCache,
+        _start_pos: usize,
+    ) -> Array2<f32> {
         // TODO: Implement transformer block (Checkpoint 7)
         x.clone()
     }
@@ -51,7 +51,6 @@ impl TransformerBlock {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_transformer_block_shape() {

@@ -6,19 +6,18 @@
 use ndarray::{Array1, Array2};
 
 /// Feedforward Network
-///
 /// Two linear layers with GELU activation:
 /// - Up projection (c_fc): dim → 4*dim
 /// - Down projection (c_proj): 4*dim → dim
 pub struct FFN {
     /// Up projection weight [dim, 4*dim]
-    c_fc_weight: Array2<f32>,
+    _c_fc_weight: Array2<f32>,
     /// Up projection bias [4*dim]
-    c_fc_bias: Array1<f32>,
+    _c_fc_bias: Array1<f32>,
     /// Down projection weight [4*dim, dim]
-    c_proj_weight: Array2<f32>,
+    _c_proj_weight: Array2<f32>,
     /// Down projection bias [dim]
-    c_proj_bias: Array1<f32>,
+    _c_proj_bias: Array1<f32>,
 }
 
 impl FFN {
@@ -30,10 +29,10 @@ impl FFN {
         proj_bias: Array1<f32>,
     ) -> Self {
         Self {
-            c_fc_weight: fc_weight,
-            c_fc_bias: fc_bias,
-            c_proj_weight: proj_weight,
-            c_proj_bias: proj_bias,
+            _c_fc_weight: fc_weight,
+            _c_fc_bias: fc_bias,
+            _c_proj_weight: proj_weight,
+            _c_proj_bias: proj_bias,
         }
     }
 
@@ -53,7 +52,7 @@ impl FFN {
 /// GELU activation (exact formula)
 ///
 /// GELU(x) = x * 0.5 * (1 + erf(x / sqrt(2)))
-fn gelu(x: &Array2<f32>) -> Array2<f32> {
+fn _gelu(x: &Array2<f32>) -> Array2<f32> {
     // TODO: Implement GELU
     // Use exact formula, not tanh approximation
 

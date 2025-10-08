@@ -14,15 +14,15 @@ use ndarray::{Array1, Array2};
 /// GPT-2 Model
 pub struct GPT2Model {
     /// Model configuration
-    config: GPTConfig,
+    _config: GPTConfig,
     /// Token and position embeddings
-    embedding: Embedding,
+    _embedding: Embedding,
     /// Transformer blocks (24 for GPT-2 Medium)
-    blocks: Vec<TransformerBlock>,
+    _blocks: Vec<TransformerBlock>,
     /// Final layer norm
-    ln_f: LayerNorm,
+    _ln_f: LayerNorm,
     /// Language model head (weight tied with token embeddings)
-    lm_head: Array2<f32>,
+    _lm_head: Array2<f32>,
 }
 
 impl GPT2Model {
@@ -54,10 +54,15 @@ impl GPT2Model {
     }
 
     /// Forward pass (single step)
-    fn forward(&mut self, token_ids: &Array1<usize>, _cache: &mut KVCache, _start_pos: usize) -> Array2<f32> {
+    fn forward(
+        &mut self,
+        token_ids: &Array1<usize>,
+        _cache: &mut KVCache,
+        _start_pos: usize,
+    ) -> Array2<f32> {
         // TODO: Implement forward pass (Checkpoints 8-9)
         let seq_len = token_ids.len();
-        let vocab_size = self.config.vocab_size;
+        let vocab_size = self._config.vocab_size;
         Array2::zeros((seq_len, vocab_size))
     }
 
@@ -70,7 +75,6 @@ impl GPT2Model {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_model_load() {

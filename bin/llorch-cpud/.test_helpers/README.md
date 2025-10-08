@@ -14,8 +14,16 @@ This directory contains reference implementations and comparison tools for valid
 ├── mistralrs_ln_test/       ✅ Mistral.rs LayerNorm reference (WORKING)
 │   ├── Cargo.toml
 │   └── src/main.rs
-├── compare_outputs.py       ✅ Automated comparison script
-├── run_validation.sh        ✅ Complete validation suite
+├── candle_qkv_test/         ✅ Candle QKV reference (NEW)
+│   ├── Cargo.toml
+│   └── src/main.rs
+├── mistralrs_qkv_test/      ✅ Mistral.rs QKV reference (NEW)
+│   ├── Cargo.toml
+│   └── src/main.rs
+├── compare_outputs.py       ✅ LayerNorm comparison script
+├── compare_qkv_outputs.py   ✅ QKV comparison script (NEW)
+├── run_validation.sh        ✅ LayerNorm validation suite
+├── run_qkv_validation.sh    ✅ QKV validation suite (NEW)
 ├── test_tinygrad_ln.py      ⚠️  Tinygrad test (segfaults)
 └── test_tinygrad_ln_simple.py ⚠️ Simplified tinygrad test (segfaults)
 ```
@@ -175,10 +183,27 @@ Tinygrad environment issue on this system. Not needed since Candle and Mistral.r
 
 ## Validation Results
 
+### Checkpoint 1: LayerNorm ✅
+
 ✅ **llorch-cpud LayerNorm validated against Candle & Mistral.rs**
 - Maximum difference: 6.6e-06
 - Tolerance: 1e-4
 - Status: **PASS**
 - Note: Mistral.rs uses Candle's LayerNorm, so both references are identical
 
-See `../VALIDATION_SUMMARY.md` for full details.
+See `../CHECKPOINT_01_VALIDATION_COMPLETE.md` for full details.
+
+### Checkpoint 2: QKV Projection 🚧
+
+**Status:** Implementation complete, validation pending
+
+**Quick validation:**
+```bash
+./run_qkv_validation.sh
+```
+
+**Manual steps:**
+1. Run our test: `cargo test --test isolated_checkpoint_02 -- --nocapture`
+2. Run Candle reference: `cd candle_qkv_test && cargo run --release`
+3. Run Mistral.rs reference: `cd mistralrs_qkv_test && cargo run --release`
+4. Compare: `python3 compare_qkv_outputs.py`

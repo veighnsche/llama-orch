@@ -12,8 +12,8 @@ use crate::error::{Error, Result};
 use crate::model::GPT2Model;
 
 pub struct CpuInferenceBackend {
-    model: GPT2Model,
-    tokenizer: Tokenizer,
+    _model: GPT2Model,
+    _tokenizer: Tokenizer,
 }
 
 impl CpuInferenceBackend {
@@ -42,7 +42,10 @@ impl InferenceBackend for CpuInferenceBackend {
         Err(Box::new(Error::Inference("Not implemented yet".to_string())))
     }
 
-    async fn cancel(&self, _job_id: &str) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn cancel(
+        &self,
+        _job_id: &str,
+    ) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // CPU worker doesn't support cancellation (single-threaded)
         Ok(())
     }

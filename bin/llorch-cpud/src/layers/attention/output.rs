@@ -12,38 +12,33 @@ pub struct AttentionOutput {
     /// Output projection weight [dim, dim]
     c_proj_weight: Array2<f32>,
     /// Output projection bias [dim]
-    c_proj_bias: Array1<f32>,
+    _c_proj_bias: Array1<f32>,
 }
 
 impl AttentionOutput {
     /// Create new attention output layer
     pub fn new(weight: Array2<f32>, bias: Array1<f32>) -> Self {
-        Self {
-            c_proj_weight: weight,
-            c_proj_bias: bias,
-        }
+        Self { c_proj_weight: weight, _c_proj_bias: bias }
     }
 
     /// Forward pass
     ///
     /// # Arguments
-    /// * `attn_scores` - Attention scores [batch, n_heads, seq_q, seq_k]
     /// * `v` - Values [batch, seq_k, n_heads, head_dim]
     ///
     /// # Returns
     /// Attention output [batch, seq_q, dim]
-    pub fn forward(&self, attn_scores: &Array4<f32>, v: &Array3<f32>) -> Array2<f32> {
+    pub fn forward(&self, v: &Array3<f32>) -> Array2<f32> {
         // TODO: Implement attention output (Checkpoint 5)
         // Placeholder
         let batch_seq = v.shape()[0];
         let dim = self.c_proj_weight.shape()[0];
-
         Array2::zeros((batch_seq, dim))
     }
 }
 
 /// Softmax along last dimension
-fn softmax(x: &Array4<f32>) -> Array4<f32> {
+fn _softmax(x: &Array4<f32>) -> Array4<f32> {
     // TODO: Implement softmax
     // softmax(x) = exp(x) / sum(exp(x))
     // Apply along last dimension (seq_k)

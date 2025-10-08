@@ -23,19 +23,15 @@ use ndarray::Array2;
 ///
 /// Combines QKV projection, cache, scores, and output projection.
 pub struct Attention {
-    qkv: QKVProjection,
-    scores: AttentionScores,
-    output: AttentionOutput,
+    _qkv: QKVProjection,
+    _scores: AttentionScores,
+    _output: AttentionOutput,
 }
 
 impl Attention {
     /// Create new attention layer
     pub fn new(qkv: QKVProjection, scores: AttentionScores, output: AttentionOutput) -> Self {
-        Self {
-            qkv,
-            scores,
-            output,
-        }
+        Self { _qkv: qkv, _scores: scores, _output: output }
     }
 
     /// Forward pass
@@ -47,7 +43,12 @@ impl Attention {
     ///
     /// # Returns
     /// Attention output [batch, seq, dim]
-    pub fn forward(&mut self, x: &Array2<f32>, _cache: &mut KVCache, _start_pos: usize) -> Array2<f32> {
+    pub fn forward(
+        &mut self,
+        x: &Array2<f32>,
+        _cache: &mut KVCache,
+        _start_pos: usize,
+    ) -> Array2<f32> {
         // TODO: Implement complete attention (Checkpoints 2-5)
         x.clone()
     }

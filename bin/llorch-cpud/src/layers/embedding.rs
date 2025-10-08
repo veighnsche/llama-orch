@@ -10,16 +10,13 @@ pub struct Embedding {
     /// Token embedding table [vocab_size, dim]
     token_embeddings: Array2<f32>,
     /// Position embedding table [max_seq_len, dim]
-    position_embeddings: Array2<f32>,
+    _position_embeddings: Array2<f32>,
 }
 
 impl Embedding {
     /// Create new embedding layer
     pub fn new(token_embeddings: Array2<f32>, position_embeddings: Array2<f32>) -> Self {
-        Self {
-            token_embeddings,
-            position_embeddings,
-        }
+        Self { token_embeddings, _position_embeddings: position_embeddings }
     }
 
     /// Forward pass

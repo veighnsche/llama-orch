@@ -16,10 +16,7 @@ pub enum Error {
     TensorOp(String),
 
     #[error("Shape mismatch: expected {expected:?}, got {actual:?}")]
-    ShapeMismatch {
-        expected: Vec<usize>,
-        actual: Vec<usize>,
-    },
+    ShapeMismatch { expected: Vec<usize>, actual: Vec<usize> },
 
     #[error("Invalid configuration: {0}")]
     Config(String),

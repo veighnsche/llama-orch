@@ -3,7 +3,7 @@
 //! IMPORTS: ndarray only
 //! Helper functions for tensor operations
 
-use ndarray::{Array1, Array2, Array3, Array4, Axis};
+use ndarray::{Array1, Array2, Array4};
 
 /// Matrix multiplication: [batch, seq, dim1] @ [dim1, dim2] → [batch, seq, dim2]
 pub fn matmul_2d_3d(x: &Array2<f32>, weight: &Array2<f32>) -> Array2<f32> {
@@ -21,7 +21,12 @@ pub fn softmax(x: &Array4<f32>, _axis: usize) -> Array4<f32> {
 }
 
 /// Layer normalization
-pub fn layer_norm(x: &Array2<f32>, _weight: &Array1<f32>, _bias: &Array1<f32>, _eps: f32) -> Array2<f32> {
+pub fn layer_norm(
+    x: &Array2<f32>,
+    _weight: &Array1<f32>,
+    _bias: &Array1<f32>,
+    _eps: f32,
+) -> Array2<f32> {
     // TODO: Implement layer norm
     x.clone()
 }

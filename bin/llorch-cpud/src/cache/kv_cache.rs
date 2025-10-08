@@ -3,7 +3,7 @@
 //! IMPORTS: ndarray only (NO worker-crates)
 //! CHECKPOINT: 3 (KV Cache)
 
-use ndarray::{Array3, Array4, s};
+use ndarray::{Array3, Array4};
 
 /// KV Cache for autoregressive generation
 ///
@@ -13,7 +13,7 @@ pub struct KVCache {
     /// Cache storage: [2, batch, max_seq, n_heads, head_dim]
     /// Index 0 = keys, Index 1 = values
     cache: Option<Array4<f32>>,
-    max_seq_len: usize,
+    _max_seq_len: usize,
     n_heads: usize,
     head_dim: usize,
 }
@@ -21,12 +21,7 @@ pub struct KVCache {
 impl KVCache {
     /// Create new KV cache
     pub fn new(max_seq_len: usize, n_heads: usize, head_dim: usize) -> Self {
-        Self {
-            cache: None,
-            max_seq_len,
-            n_heads,
-            head_dim,
-        }
+        Self { cache: None, _max_seq_len: max_seq_len, n_heads, head_dim }
     }
 
     /// Update cache with new K, V at position start_pos
@@ -66,7 +61,7 @@ mod tests {
     fn test_cache_initialization() {
         let cache = KVCache::new(2048, 16, 64);
         let (cached_k, cached_v) = cache.get(2);
-        
+
         // Placeholder returns simple shape
         assert_eq!(cached_k.shape()[1], 16); // n_heads
         assert_eq!(cached_v.shape()[2], 64); // head_dim

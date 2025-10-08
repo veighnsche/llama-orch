@@ -3,14 +3,14 @@
 //! IMPORTS: ndarray only (NO worker-crates)
 //! CHECKPOINT: 4 (Attention Scores)
 
-use ndarray::{Array3, Array4};
+use ndarray::{Array2, Array3, Array4};
 
 /// Attention Scores
 ///
 /// Computes scaled dot-product attention scores: (Q @ K^T) / sqrt(head_dim)
 pub struct AttentionScores {
     /// Scale factor: 1 / sqrt(head_dim)
-    scale: f32,
+    _scale: f32,
 }
 
 impl AttentionScores {
@@ -20,7 +20,7 @@ impl AttentionScores {
     /// * `head_dim` - Dimension per head (e.g., 64)
     pub fn new(head_dim: usize) -> Self {
         let scale = 1.0 / (head_dim as f32).sqrt();
-        Self { scale }
+        Self { _scale: scale }
     }
 
     /// Forward pass
@@ -35,7 +35,7 @@ impl AttentionScores {
     pub fn forward(
         &self,
         q: &Array3<f32>,
-        k: &Array3<f32>,
+        _k: &Array3<f32>,
         _mask: Option<&Array4<f32>>,
     ) -> Array4<f32> {
         // TODO: Implement attention scores (Checkpoint 4)
@@ -50,12 +50,12 @@ impl AttentionScores {
 /// Create causal mask
 ///
 /// Returns mask [1, 1, seq, seq] where future positions are -inf
-pub fn create_causal_mask(seq_len: usize) -> Array4<f32> {
-    let mut mask = Array4::zeros((1, 1, seq_len, seq_len));
+pub fn _create_causal_mask(seq_len: usize) -> Array2<f32> {
+    let mut mask = Array2::zeros((seq_len, seq_len));
 
     for i in 0..seq_len {
         for j in (i + 1)..seq_len {
-            mask[[0, 0, i, j]] = f32::NEG_INFINITY;
+            mask[[i, j]] = f32::NEG_INFINITY;
         }
     }
 
@@ -68,16 +68,16 @@ mod tests {
 
     #[test]
     fn test_causal_mask() {
-        let mask = create_causal_mask(3);
+        let mask = _create_causal_mask(3);
 
         // Diagonal and lower triangle should be 0
-        assert_eq!(mask[[0, 0, 0, 0]], 0.0);
-        assert_eq!(mask[[0, 0, 1, 0]], 0.0);
-        assert_eq!(mask[[0, 0, 1, 1]], 0.0);
+        assert_eq!(mask[[0, 0]], 0.0);
+        assert_eq!(mask[[1, 0]], 0.0);
+        assert_eq!(mask[[1, 1]], 0.0);
 
         // Upper triangle should be -inf
-        assert_eq!(mask[[0, 0, 0, 1]], f32::NEG_INFINITY);
-        assert_eq!(mask[[0, 0, 0, 2]], f32::NEG_INFINITY);
-        assert_eq!(mask[[0, 0, 1, 2]], f32::NEG_INFINITY);
+        assert_eq!(mask[[0, 1]], f32::NEG_INFINITY);
+        assert_eq!(mask[[0, 2]], f32::NEG_INFINITY);
+        assert_eq!(mask[[1, 2]], f32::NEG_INFINITY);
     }
 }

@@ -42,7 +42,12 @@ See **[QUICKSTART_VALIDATION.md](QUICKSTART_VALIDATION.md)** for details.
    - Why Mistral.rs = Candle
    - Production framework validation
 
-5. **[STAKEHOLDER_SUMMARY.md](STAKEHOLDER_SUMMARY.md)**
+5. **[PROOF_BUNDLE_SUMMARY.md](PROOF_BUNDLE_SUMMARY.md)** ⭐
+   - Proof bundle implementation
+   - Human-readable test artifacts
+   - Usage and examples
+
+6. **[STAKEHOLDER_SUMMARY.md](STAKEHOLDER_SUMMARY.md)**
    - Determinism proof summary
    - How to verify yourself
    - Test output examples

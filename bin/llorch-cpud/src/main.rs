@@ -24,10 +24,7 @@ use backend::CpuInferenceBackend;
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
     // Initialize tracing
-    tracing_subscriber::fmt()
-        .with_target(false)
-        .with_level(true)
-        .init();
+    tracing_subscriber::fmt().with_target(false).with_level(true).init();
 
     tracing::info!("Starting llorch-cpud...");
 
@@ -41,13 +38,8 @@ async fn main() -> Result<()> {
 
     // Callback to pool manager (worker-common)
     tracing::info!("Notifying pool manager at: {}", args.callback_url);
-    startup::callback_ready(
-        &args.callback_url,
-        &args.worker_id,
-        backend.memory_bytes(),
-        args.port,
-    )
-    .await?;
+    startup::callback_ready(&args.callback_url, &args.worker_id, backend.memory_bytes(), args.port)
+        .await?;
 
     // Start HTTP server (worker-http)
     tracing::info!("Starting HTTP server on port {}", args.port);
@@ -73,12 +65,11 @@ fn parse_args() -> Args {
     // TODO: Use clap for proper CLI parsing
     // For now, use environment variables
     Args {
-        model_path: std::env::var("MODEL_PATH").unwrap_or_else(|_| "./models/gpt2-medium".to_string()),
-        callback_url: std::env::var("CALLBACK_URL").unwrap_or_else(|_| "http://localhost:8080".to_string()),
+        model_path: std::env::var("MODEL_PATH")
+            .unwrap_or_else(|_| "./models/gpt2-medium".to_string()),
+        callback_url: std::env::var("CALLBACK_URL")
+            .unwrap_or_else(|_| "http://localhost:8080".to_string()),
         worker_id: std::env::var("WORKER_ID").unwrap_or_else(|_| "llorch-cpud-0".to_string()),
-        port: std::env::var("PORT")
-            .ok()
-            .and_then(|p| p.parse().ok())
-            .unwrap_or(3000),
+        port: std::env::var("PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(3000),
     }
 }

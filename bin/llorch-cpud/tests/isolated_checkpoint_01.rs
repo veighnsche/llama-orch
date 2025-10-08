@@ -8,18 +8,18 @@
 
 use llorch_cpud::layers::LayerNorm;
 use ndarray::{Array1, Array2};
-use std::process::Command;
 use std::fs;
 use std::path::Path;
+use std::process::Command;
 
 /// Get proof bundle directory for checkpoint 01
 fn get_proof_bundle_dir() -> String {
     let run_id = std::env::var("LLORCH_RUN_ID")
         .unwrap_or_else(|_| chrono::Local::now().format("%Y%m%d_%H%M%S").to_string());
-    
-    let base_dir = std::env::var("LLORCH_PROOF_DIR")
-        .unwrap_or_else(|_| ".proof_bundle".to_string());
-    
+
+    let base_dir =
+        std::env::var("LLORCH_PROOF_DIR").unwrap_or_else(|_| ".proof_bundle".to_string());
+
     format!("{}/checkpoint_01/{}", base_dir, run_id)
 }
 
@@ -37,18 +37,14 @@ fn generate_test_input() -> Array2<f32> {
     // Pattern: sequential values scaled to realistic magnitude
     Array2::from_shape_fn((2, 1024), |(i, j)| {
         let idx = (i * 1024 + j) as f32;
-        (idx * 0.001).sin() * 0.5  // Range: [-0.5, 0.5]
+        (idx * 0.001).sin() * 0.5 // Range: [-0.5, 0.5]
     })
 }
 
 /// Our LayerNorm implementation
 fn run_our_layernorm(input: &Array2<f32>) -> Array2<f32> {
     let dim = input.shape()[1];
-    let ln = LayerNorm::new(
-        Array1::ones(dim),
-        Array1::zeros(dim),
-        1e-5,
-    );
+    let ln = LayerNorm::new(Array1::ones(dim), Array1::zeros(dim), 1e-5);
     ln.forward(input)
 }
 
@@ -58,9 +54,10 @@ fn run_tinygrad_layernorm(input: &Array2<f32>) -> Result<Array2<f32>, String> {
     // Write input to temp file
     let input_path = "/tmp/llorch_test_input.npy";
     save_array_to_npy(input, input_path)?;
-    
+
     // Create Python script that runs ONLY LayerNorm
-    let script = format!(r#"
+    let script = format!(
+        r#"
 import numpy as np
 import sys
 sys.path.insert(0, '/home/vince/Projects/llama-orch/reference/tinygrad')
@@ -91,18 +88,19 @@ print(f"Output sample: {{output_np[0, :5]}}", file=sys.stderr)
 
 np.save('/tmp/llorch_test_output_tinygrad.npy', output_np)
 print("SUCCESS", file=sys.stderr)
-"#);
-    
+"#
+    );
+
     fs::write("/tmp/test_tinygrad_ln.py", script)
         .map_err(|e| format!("Failed to write script: {}", e))?;
-    
+
     // Run Python script
     let output = Command::new("python3")
         .arg("/tmp/test_tinygrad_ln.py")
         .env("PYTHONPATH", "/home/vince/Projects/llama-orch/reference/tinygrad")
         .output()
         .map_err(|e| format!("Failed to run tinygrad: {}", e))?;
-    
+
     if !output.status.success() {
         return Err(format!(
             "Tinygrad failed:\nstdout: {}\nstderr: {}",
@@ -110,7 +108,7 @@ print("SUCCESS", file=sys.stderr)
             String::from_utf8_lossy(&output.stderr)
         ));
     }
-    
+
     // Load output
     load_array_from_npy("/tmp/llorch_test_output_tinygrad.npy")
 }
@@ -119,7 +117,8 @@ print("SUCCESS", file=sys.stderr)
 /// This runs ONLY the LayerNorm component
 fn run_candle_layernorm(input: &Array2<f32>) -> Result<Array2<f32>, String> {
     // Create Rust test program that uses Candle's LayerNorm
-    let test_code = format!(r#"
+    let test_code = format!(
+        r#"
 use candle_core::{{Tensor, Device, DType}};
 use candle_nn::LayerNorm;
 use std::fs;
@@ -151,8 +150,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {{
     
     Ok(())
 }}
-"#);
-    
+"#
+    );
+
     // For now, return error indicating manual setup needed
     Err("Candle test requires compilation - see ISOLATED_CHECKPOINT_01_SETUP.md".to_string())
 }
@@ -162,64 +162,64 @@ fn save_array_to_npy(arr: &Array2<f32>, path: &str) -> Result<(), String> {
     // Simple NPY format writer
     let shape = arr.shape();
     let data: Vec<f32> = arr.iter().copied().collect();
-    
+
     // NPY header (simplified)
     let header = format!(
         "{{'descr': '<f4', 'fortran_order': False, 'shape': ({}, {}), }}",
         shape[0], shape[1]
     );
-    
+
     let mut bytes = Vec::new();
-    bytes.extend_from_slice(b"\x93NUMPY");  // Magic
-    bytes.push(1);  // Major version
-    bytes.push(0);  // Minor version
-    
+    bytes.extend_from_slice(b"\x93NUMPY"); // Magic
+    bytes.push(1); // Major version
+    bytes.push(0); // Minor version
+
     let header_len = header.len() as u16;
     bytes.extend_from_slice(&header_len.to_le_bytes());
     bytes.extend_from_slice(header.as_bytes());
-    
+
     // Pad to 64-byte boundary
     while (bytes.len() + 10) % 64 != 0 {
         bytes.push(b' ');
     }
     bytes.push(b'\n');
-    
+
     // Data
     for &val in &data {
         bytes.extend_from_slice(&val.to_le_bytes());
     }
-    
+
     fs::write(path, bytes).map_err(|e| format!("Failed to write NPY: {}", e))
 }
 
 /// Load array from NumPy format
 fn load_array_from_npy(path: &str) -> Result<Array2<f32>, String> {
     let bytes = fs::read(path).map_err(|e| format!("Failed to read NPY: {}", e))?;
-    
+
     // Skip header (simplified parser)
     let header_len = u16::from_le_bytes([bytes[8], bytes[9]]) as usize;
     let data_start = 10 + header_len;
-    
+
     // Parse shape from header
     let header = String::from_utf8_lossy(&bytes[10..data_start]);
-    let shape_str = header.split("'shape': (").nth(1)
+    let shape_str = header
+        .split("'shape': (")
+        .nth(1)
         .and_then(|s| s.split(')').next())
         .ok_or("Failed to parse shape")?;
-    
-    let dims: Vec<usize> = shape_str.split(',')
-        .filter_map(|s| s.trim().parse().ok())
-        .collect();
-    
+
+    let dims: Vec<usize> = shape_str.split(',').filter_map(|s| s.trim().parse().ok()).collect();
+
     if dims.len() != 2 {
         return Err(format!("Expected 2D array, got {:?}", dims));
     }
-    
+
     // Read data
     let data: Vec<f32> = bytes[data_start..]
         .chunks_exact(4)
         .map(|chunk| f32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]))
         .collect();
-    
+
     Array2::from_shape_vec((dims[0], dims[1]), data)
         .map_err(|e| format!("Failed to create array: {}", e))
 }
@@ -235,60 +235,63 @@ fn compare_outputs(
     if ours.shape() != reference.shape() {
         return Err(format!(
             "{}: Shape mismatch: {:?} vs {:?}",
-            name, ours.shape(), reference.shape()
+            name,
+            ours.shape(),
+            reference.shape()
         ));
     }
-    
+
     // Element-wise comparison
     let mut max_diff = 0.0f32;
     let mut max_rel_diff = 0.0f32;
     let mut failures = Vec::new();
-    
+
     for (i, (&our_val, &ref_val)) in ours.iter().zip(reference.iter()).enumerate() {
         let abs_diff = (our_val - ref_val).abs();
-        let rel_diff = if ref_val.abs() > 1e-10 {
-            abs_diff / ref_val.abs()
-        } else {
-            abs_diff
-        };
-        
+        let rel_diff = if ref_val.abs() > 1e-10 { abs_diff / ref_val.abs() } else { abs_diff };
+
         if abs_diff > max_diff {
             max_diff = abs_diff;
         }
         if rel_diff > max_rel_diff {
             max_rel_diff = rel_diff;
         }
-        
+
         if abs_diff > tolerance {
-            if failures.len() < 10 {  // Limit output
+            if failures.len() < 10 {
+                // Limit output
                 failures.push((i, our_val, ref_val, abs_diff, rel_diff));
             }
         }
     }
-    
+
     println!("\n=== {} Comparison ===", name);
     println!("Shape: {:?}", ours.shape());
     println!("Max absolute difference: {:.6e}", max_diff);
     println!("Max relative difference: {:.6e}", max_rel_diff);
     println!("Tolerance: {:.6e}", tolerance);
-    
+
     // Show sample values
     let our_sample: Vec<f32> = ours.iter().take(5).copied().collect();
     let ref_sample: Vec<f32> = reference.iter().take(5).copied().collect();
     println!("Our output (first 5):  {:?}", our_sample);
     println!("Ref output (first 5):  {:?}", ref_sample);
-    
+
     if !failures.is_empty() {
         println!("\n❌ {} elements exceed tolerance:", failures.len());
         for (i, our_val, ref_val, abs_diff, rel_diff) in failures.iter().take(5) {
             println!(
                 "  Element {}: ours={:.6}, ref={:.6}, diff={:.6e} ({:.2}%)",
-                i, our_val, ref_val, abs_diff, rel_diff * 100.0
+                i,
+                our_val,
+                ref_val,
+                abs_diff,
+                rel_diff * 100.0
             );
         }
         return Err(format!("{} elements exceed tolerance", failures.len()));
     }
-    
+
     println!("✅ PASS: All elements within tolerance");
     Ok(())
 }
@@ -298,43 +301,37 @@ fn test_isolated_checkpoint_01_our_determinism() {
     println!("\n╔══════════════════════════════════════════════════════════╗");
     println!("║  Isolated Checkpoint 1: Our Implementation Baseline     ║");
     println!("╚══════════════════════════════════════════════════════════╝");
-    
+
     let input = generate_test_input();
-    
+
     // Run 3 times
     let out1 = run_our_layernorm(&input);
     let out2 = run_our_layernorm(&input);
     let out3 = run_our_layernorm(&input);
-    
+
     // Must be bit-exact
     for (i, ((v1, v2), v3)) in out1.iter().zip(out2.iter()).zip(out3.iter()).enumerate() {
-        assert_eq!(
-            v1.to_bits(), v2.to_bits(),
-            "Run 1 vs 2 differ at element {}", i
-        );
-        assert_eq!(
-            v2.to_bits(), v3.to_bits(),
-            "Run 2 vs 3 differ at element {}", i
-        );
+        assert_eq!(v1.to_bits(), v2.to_bits(), "Run 1 vs 2 differ at element {}", i);
+        assert_eq!(v2.to_bits(), v3.to_bits(), "Run 2 vs 3 differ at element {}", i);
     }
-    
+
     let sample: Vec<f32> = out1.iter().take(5).copied().collect();
     println!("Our LayerNorm output (first 5): {:?}", sample);
     println!("✅ Our implementation is deterministic");
 }
 
 #[test]
-#[ignore]  // Run manually: cargo test --test isolated_checkpoint_01 test_isolated_checkpoint_01_vs_tinygrad -- --ignored --nocapture
+#[ignore] // Run manually: cargo test --test isolated_checkpoint_01 test_isolated_checkpoint_01_vs_tinygrad -- --ignored --nocapture
 fn test_isolated_checkpoint_01_vs_tinygrad() {
     println!("\n╔══════════════════════════════════════════════════════════╗");
     println!("║  Isolated Checkpoint 1: vs Tinygrad                     ║");
     println!("╚══════════════════════════════════════════════════════════╝");
-    
+
     let input = generate_test_input();
-    
+
     // Run ours
     let our_output = run_our_layernorm(&input);
-    
+
     // Run tinygrad
     match run_tinygrad_layernorm(&input) {
         Ok(tinygrad_output) => {
@@ -356,10 +353,10 @@ fn test_isolated_checkpoint_01_vs_candle() {
     println!("\n╔══════════════════════════════════════════════════════════╗");
     println!("║  Isolated Checkpoint 1: vs Candle                       ║");
     println!("╚══════════════════════════════════════════════════════════╝");
-    
+
     let input = generate_test_input();
     let our_output = run_our_layernorm(&input);
-    
+
     match run_candle_layernorm(&input) {
         Ok(candle_output) => {
             compare_outputs("Candle", &our_output, &candle_output, 1e-3)
@@ -379,20 +376,20 @@ fn test_isolated_checkpoint_01_all() {
     println!("\n╔══════════════════════════════════════════════════════════╗");
     println!("║  Isolated Checkpoint 1: Complete Validation             ║");
     println!("╚══════════════════════════════════════════════════════════╝");
-    
+
     let input = generate_test_input();
     let our_output = run_our_layernorm(&input);
-    
+
     println!("\n📊 Test Input:");
     println!("  Shape: {:?}", input.shape());
     let input_sample: Vec<f32> = input.iter().take(5).copied().collect();
     println!("  Sample (first 5): {:?}", input_sample);
-    
+
     println!("\n📊 Our Output:");
     println!("  Shape: {:?}", our_output.shape());
     let output_sample: Vec<f32> = our_output.iter().take(10).copied().collect();
     println!("  Sample (first 10): {:?}", output_sample);
-    
+
     // Verify normalization properties
     // Note: After weight/bias application, mean won't be 0 and variance won't be 1
     // We're checking that the output is reasonable
@@ -402,41 +399,45 @@ fn test_isolated_checkpoint_01_all() {
         let mean = row.mean().unwrap();
         let variance = row.mapv(|x| (x - mean).powi(2)).mean().unwrap();
         let std = variance.sqrt();
-        
+
         println!("\n  Row {}: mean={:.6}, std={:.6}, variance={:.6}", row_idx, mean, std, variance);
-        
+
         // Check for NaN/Inf
         assert!(mean.is_finite(), "Mean should be finite");
         assert!(variance.is_finite(), "Variance should be finite");
-        
+
         // Check reasonable range (normalized values typically in [-3, 3])
         let min = row.iter().copied().fold(f32::INFINITY, f32::min);
         let max = row.iter().copied().fold(f32::NEG_INFINITY, f32::max);
         println!("       Range: [{:.6}, {:.6}]", min, max);
         assert!(min > -10.0 && max < 10.0, "Values should be in reasonable range");
-        
+
         row_stats.push((mean, std, variance, min, max));
     }
-    
+
     println!("\n✅ Our LayerNorm is mathematically correct");
-    
+
     // Generate proof bundle
     if let Ok(proof_dir) = ensure_proof_bundle_dir() {
         let proof_path = format!("{}/checkpoint_01_validation.md", proof_dir);
         let mut proof_content = String::new();
-        
+
         proof_content.push_str("# Checkpoint 01: LayerNorm Validation Proof Bundle\n\n");
-        proof_content.push_str(&format!("**Generated:** {}\n", chrono::Local::now().format("%Y-%m-%d %H:%M:%S")));
+        proof_content.push_str(&format!(
+            "**Generated:** {}\n",
+            chrono::Local::now().format("%Y-%m-%d %H:%M:%S")
+        ));
         proof_content.push_str(&format!("**Test:** `test_isolated_checkpoint_01_all`\n"));
         proof_content.push_str(&format!("**Status:** ✅ PASS\n\n"));
-        
+
         proof_content.push_str("---\n\n");
         proof_content.push_str("## Test Configuration\n\n");
         proof_content.push_str(&format!("- **Input Shape:** {:?}\n", input.shape()));
         proof_content.push_str(&format!("- **Output Shape:** {:?}\n", our_output.shape()));
-        proof_content.push_str(&format!("- **LayerNorm Config:** weight=ones, bias=zeros, eps=1e-5\n"));
+        proof_content
+            .push_str(&format!("- **LayerNorm Config:** weight=ones, bias=zeros, eps=1e-5\n"));
         proof_content.push_str(&format!("- **Input Pattern:** `sin((i*1024+j)*0.001)*0.5`\n\n"));
-        
+
         proof_content.push_str("---\n\n");
         proof_content.push_str("## Input Sample\n\n");
         proof_content.push_str("First 5 values:\n```\n");
@@ -444,7 +445,7 @@ fn test_isolated_checkpoint_01_all() {
             proof_content.push_str(&format!("[{}] {:.10}\n", i, val));
         }
         proof_content.push_str("```\n\n");
-        
+
         proof_content.push_str("---\n\n");
         proof_content.push_str("## Output Sample\n\n");
         proof_content.push_str("First 10 values:\n```\n");
@@ -452,7 +453,7 @@ fn test_isolated_checkpoint_01_all() {
             proof_content.push_str(&format!("[{}] {:.10}\n", i, val));
         }
         proof_content.push_str("```\n\n");
-        
+
         proof_content.push_str("---\n\n");
         proof_content.push_str("## Statistical Analysis\n\n");
         proof_content.push_str("| Row | Mean | Std Dev | Variance | Min | Max |\n");
@@ -464,14 +465,15 @@ fn test_isolated_checkpoint_01_all() {
             ));
         }
         proof_content.push_str("\n");
-        
+
         proof_content.push_str("---\n\n");
         proof_content.push_str("## Validation Checks\n\n");
         proof_content.push_str("- ✅ **Determinism:** Bit-exact across multiple runs\n");
-        proof_content.push_str("- ✅ **Finite Values:** All means and variances are finite (no NaN/Inf)\n");
+        proof_content
+            .push_str("- ✅ **Finite Values:** All means and variances are finite (no NaN/Inf)\n");
         proof_content.push_str("- ✅ **Reasonable Range:** All values in [-10, 10] range\n");
         proof_content.push_str("- ✅ **Normalization:** Mean ≈ 0, Std ≈ 1 per row\n\n");
-        
+
         proof_content.push_str("---\n\n");
         proof_content.push_str("## Reference Validation\n\n");
         proof_content.push_str("This implementation has been validated against:\n\n");
@@ -483,27 +485,30 @@ fn test_isolated_checkpoint_01_all() {
         proof_content.push_str("   - Uses Candle's LayerNorm\n");
         proof_content.push_str("   - Max difference: 6.6e-06\n");
         proof_content.push_str("   - Status: ✅ PASS\n\n");
-        
-        proof_content.push_str("See `.test_helpers/run_validation.sh` for complete validation suite.\n\n");
-        
+
+        proof_content
+            .push_str("See `.test_helpers/run_validation.sh` for complete validation suite.\n\n");
+
         proof_content.push_str("---\n\n");
         proof_content.push_str("## Conclusion\n\n");
-        proof_content.push_str("✅ **LayerNorm implementation is mathematically correct and production-ready.**\n\n");
+        proof_content.push_str(
+            "✅ **LayerNorm implementation is mathematically correct and production-ready.**\n\n",
+        );
         proof_content.push_str("- Deterministic across runs\n");
         proof_content.push_str("- Matches reference implementations within tolerance\n");
         proof_content.push_str("- All statistical properties verified\n");
         proof_content.push_str("- Ready for Checkpoint 2\n\n");
-        
+
         proof_content.push_str("---\n\n");
         proof_content.push_str("*Generated by llorch-cpud test suite*\n");
-        
+
         if let Err(e) = fs::write(&proof_path, proof_content) {
             eprintln!("⚠️  Failed to write proof bundle: {}", e);
         } else {
             println!("\n📝 Proof bundle written to: {}", proof_path);
         }
     }
-    
+
     println!("\n📝 Next Steps:");
     println!("  1. Run: cargo test --test isolated_checkpoint_01 test_isolated_checkpoint_01_vs_tinygrad -- --ignored --nocapture");
     println!("  2. Compare outputs manually if automated test fails");
