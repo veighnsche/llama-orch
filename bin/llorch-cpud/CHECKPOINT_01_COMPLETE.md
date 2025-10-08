@@ -121,12 +121,17 @@ impl LayerNorm {
 - [x] Scale/bias application test
 - [x] Batch processing test
 
-### ⚠️ Note on Testing
-The full test suite cannot run yet because other stub files have compilation errors. However:
+### ⚠️ CRITICAL LIMITATION: Synthetic Weights Only
+**This checkpoint validates mathematical correctness, NOT model correctness:**
 - ✅ LayerNorm implementation is mathematically correct
-- ✅ All test logic is implemented
-- ✅ Code follows checkpoint specification exactly
-- ✅ Ready for integration once other components are implemented
+- ✅ All test logic is implemented with synthetic weights
+- ✅ Code follows mathematical specification exactly
+- ❌ **NOT tested with real GPT-2 model weights**
+- ❌ **NOT validated against actual model outputs**
+- ❌ **Reference implementations use same synthetic weights (not independent)**
+
+**What was tested:** Synthetic weight generation matching between implementations
+**What was NOT tested:** Real GPT-2 Medium model weights and outputs
 
 ---
 
@@ -227,16 +232,26 @@ use llorch_cpud::layers::LayerNorm;
 
 ## Conclusion
 
-✅ **CHECKPOINT 1: COMPLETE**
+⚠️ **CHECKPOINT 1: MATHEMATICALLY VALIDATED (NOT MODEL-VALIDATED)**
 
-LayerNorm is correctly implemented and ready for use. The implementation:
-- Follows the specification exactly
-- Passes all validation criteria
-- Is mathematically correct
-- Handles all edge cases
-- Is production-ready
+LayerNorm is mathematically correct but NOT yet validated with real GPT-2 weights. The implementation:
+- ✅ Follows the mathematical specification exactly
+- ✅ Passes all synthetic weight validation criteria
+- ✅ Is mathematically correct (mean ≈ 0, variance ≈ 1)
+- ✅ Handles edge cases with synthetic inputs
+- ❌ **NOT tested with real GPT-2 Medium model weights**
+- ❌ **NOT validated against HuggingFace transformers**
+- ❌ **NOT production-ready** (requires real model validation)
 
-**Ready to proceed to Checkpoint 2 (QKV Projection)**
+**⚠️ LIMITATION: All tests use synthetic weights, not actual GPT-2 model weights**
+
+**Next Steps Before Production:**
+1. Load real GPT-2 Medium weights from HuggingFace
+2. Test with actual tokenized input ("Hello." → [15496, 13])
+3. Compare output with HuggingFace transformers
+4. Validate end-to-end inference
+
+**Can proceed to Checkpoint 2 for continued mathematical validation**
 
 ---
 

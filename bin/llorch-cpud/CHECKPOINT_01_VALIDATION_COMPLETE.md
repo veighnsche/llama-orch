@@ -1,15 +1,23 @@
-# ✅ Checkpoint 1: LayerNorm Validation Complete
+# ⚠️ Checkpoint 1: LayerNorm Mathematical Validation Complete
 
 **Date:** 2025-10-08  
-**Status:** **VALIDATED AGAINST CANDLE & MISTRAL.RS**
+**Status:** **MATHEMATICALLY VALIDATED (SYNTHETIC WEIGHTS ONLY)**  
+**❌ NOT VALIDATED WITH REAL GPT-2 MODEL WEIGHTS**
 
 ---
 
 ## Executive Summary
 
-The llorch-cpud LayerNorm implementation has been **successfully validated** against both Candle and Mistral.rs reference implementations.
+The llorch-cpud LayerNorm implementation has been **mathematically validated** using synthetic weights that match test harness implementations.
 
-**Note:** Mistral.rs uses Candle's LayerNorm directly (`mistralrs-core/src/layers.rs:11`), so both references produce identical results.
+**⚠️ CRITICAL LIMITATION:**
+- ❌ **NOT validated with real GPT-2 Medium model weights**
+- ❌ **NOT compared against HuggingFace transformers**
+- ❌ **Reference implementations are test harnesses, not actual models**
+- ✅ Mathematical correctness verified (mean ≈ 0, variance ≈ 1)
+- ✅ Synthetic weight generation matches between implementations
+
+**Note:** The "Candle" and "Mistral.rs" references are test harnesses written by the same team using identical synthetic weight generation, not independent model implementations.
 
 ### Key Results
 
@@ -90,12 +98,20 @@ Ready to proceed to:
 The llorch-cpud LayerNorm implementation:
 1. ✅ Is **mathematically correct** (mean ≈ 0, std ≈ 1)
 2. ✅ Is **deterministic** (bit-exact across runs)
-3. ✅ **Matches Candle & Mistral.rs** within 6.6e-06 (well under 1e-4 tolerance)
+3. ✅ **Matches synthetic test harnesses** within 6.6e-06 (well under 1e-4 tolerance)
 4. ✅ Uses **isolated component testing** (not end-to-end)
-5. ✅ Has **automated validation** (reproducible)
-6. ✅ **Validated against production ML frameworks** (Candle used by Mistral.rs)
+5. ✅ Has **automated validation** (reproducible with synthetic weights)
+6. ❌ **NOT validated against real GPT-2 model weights**
+7. ❌ **NOT validated against HuggingFace transformers**
+8. ❌ **Reference implementations are test harnesses, not production models**
 
-**We are confident this implementation is production-ready for LayerNorm.**
+**⚠️ This implementation is mathematically correct but NOT production-ready.**
+
+**Required before production:**
+- Load real GPT-2 Medium weights from HuggingFace/safetensors
+- Test with actual tokenized inputs
+- Compare outputs with HuggingFace transformers
+- Validate end-to-end inference
 
 ---
 

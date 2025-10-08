@@ -1,14 +1,38 @@
-# 🌊 llorch-cpud - Post-Mortem & Foundation
+# llorch-cpud - CPU-based GPT-2 Inference
 
-**Date:** 2025-10-08T01:15Z  
-**Status:** Post-Mortem Phase  
-**Investigator:** TEAM CASCADE 🌊
+**Status:** Checkpoints 1 & 2 mathematically validated (synthetic weights)  
+**Production:** ❌ NOT validated with real GPT-2 weights yet
 
 ---
 
-## Mission
+## Quick Start - Real Model Validation
 
-Complete post-mortem of `worker-orcd` failure and build foundation for `llorch-cpud` (CPU-based GPT-2 inference).
+```bash
+# Install Python dependencies
+pip install torch transformers numpy
+
+# Run real GPT-2 validation
+./RUN_REAL_VALIDATION.sh
+```
+
+See **[REAL_GPT2_VALIDATION.md](REAL_GPT2_VALIDATION.md)** for details.
+
+---
+
+## Current Implementation Status
+
+### ✅ Checkpoints Completed
+- **Checkpoint 1:** LayerNorm - Mathematically correct with synthetic weights
+- **Checkpoint 2:** QKV Projection - Mathematically correct with synthetic weights
+
+### ⚠️ Validation Status
+- **Synthetic weights:** ✅ Validated against test harnesses (Candle, Mistral.rs)
+- **Real GPT-2 weights:** ❌ NOT YET VALIDATED (implementation ready, needs execution)
+
+### 📋 Key Documents
+- **[REAL_GPT2_VALIDATION.md](REAL_GPT2_VALIDATION.md)** - How to validate with real GPT-2
+- **[CHECKPOINT_01_COMPLETE.md](CHECKPOINT_01_COMPLETE.md)** - LayerNorm implementation
+- **[CHECKPOINT_02_COMPLETE.md](CHECKPOINT_02_COMPLETE.md)** - QKV implementation
 
 ---
 

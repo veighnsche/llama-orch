@@ -48,6 +48,7 @@ serde = { version = "1.0", features = ["derive"] }
 # Testing utilities
 approx = "0.5"
 chrono = "0.4"
+ndarray-npy = "0.8"  # For loading real GPT-2 weights from numpy
 
 [features]
 default = []
