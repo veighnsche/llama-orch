@@ -4,7 +4,9 @@
 //! Tests generation quality, sampling, and performance.
 //!
 //! Created by: TEAM-011
+//! Modified by: TEAM-013 - Added feature gates for CPU tests
 
+#[cfg(feature = "cpu")]
 use llorch_candled::device::init_cpu_device;
 use llorch_candled::backend::CandleInferenceBackend;
 use worker_common::SamplingConfig;
@@ -12,6 +14,7 @@ use worker_http::InferenceBackend;
 use anyhow::Result;
 
 /// Test basic generation with greedy sampling
+#[cfg(feature = "cpu")]
 #[test]
 #[ignore]
 fn test_greedy_generation() -> Result<()> {
@@ -49,6 +52,7 @@ fn test_greedy_generation() -> Result<()> {
 }
 
 /// Test temperature sampling produces varied output
+#[cfg(feature = "cpu")]
 #[test]
 #[ignore]
 fn test_temperature_sampling() -> Result<()> {
@@ -90,6 +94,7 @@ fn test_temperature_sampling() -> Result<()> {
 }
 
 /// Test longer generation
+#[cfg(feature = "cpu")]
 #[test]
 #[ignore]
 fn test_long_generation() -> Result<()> {
@@ -126,6 +131,7 @@ fn test_long_generation() -> Result<()> {
 }
 
 /// Test EOS detection
+#[cfg(feature = "cpu")]
 #[test]
 #[ignore]
 fn test_eos_detection() -> Result<()> {
@@ -158,6 +164,7 @@ fn test_eos_detection() -> Result<()> {
 }
 
 /// Test multiple prompts in sequence
+#[cfg(feature = "cpu")]
 #[test]
 #[ignore]
 fn test_multiple_prompts() -> Result<()> {
@@ -202,6 +209,7 @@ fn test_multiple_prompts() -> Result<()> {
 ///
 /// Note: Debug builds are VERY slow (~0.06 tok/s = ~17s per token).
 /// This test uses only 5 tokens to keep runtime under 2 minutes.
+#[cfg(feature = "cpu")]
 #[test]
 #[ignore]
 fn test_story_generation() -> Result<()> {
@@ -266,6 +274,7 @@ fn test_story_generation() -> Result<()> {
 /// 1. Verify sustained performance over more tokens
 /// 2. Show actual story coherence with more context
 /// 3. Benchmark release build performance
+#[cfg(feature = "cpu")]
 #[test]
 #[ignore]
 fn test_extended_story_generation() -> Result<()> {

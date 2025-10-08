@@ -117,9 +117,11 @@ path = "src/bin/accelerate.rs"
 required-features = ["accelerate"]
 
 # Legacy binary (for backward compatibility during migration)
+# TEAM-013: Requires CPU feature
 [[bin]]
 name = "llorch-candled"
 path = "src/main.rs"
+required-features = ["cpu"]
 
 [lib]
 name = "llorch_candled"

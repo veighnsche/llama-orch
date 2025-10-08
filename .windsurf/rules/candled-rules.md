@@ -8,6 +8,20 @@ This project is heavily documented in .md files. please consult them before maki
 Please consider updating an existing .md file before creating a new one.
 It's really annoying if you make countless of repeating .md file. Because if you were inaccurate once, and repeat that inaccuracy across multiple .md files. Then we need to update ALL the .md documents you made. which is wasting our time.
 
+
+NO BACKGROUND TESTING
+
+* Don't detach or background jobs. You must see full, blocking output.
+* ❌ `cargo test ... &` / `nohup ... &`
+* ✅ `cargo test -- --nocapture` (foreground only)
+
+NO CLI PIPING INTO INTERACTIVE TOOLS
+
+* Don't pipe *into* interactive CLIs; they hang and you lose logs.
+* ❌ `./llama-cli ... | grep ...`
+* ✅ `./llama-cli ... > run.log 2>&1` then `grep ... run.log > grep.out 2>&1`
+```
+
 DOCUMENTATION RULES
 
 * ❌ NEVER create multiple .md files for ONE task/feature
@@ -42,15 +56,26 @@ CODE SIGNATURE RULES
   }
   ```
 
-NO BACKGROUND TESTING
+COMPLETE THE FULL TASK LIST RULE
 
-* Don't detach or background jobs. You must see full, blocking output.
-* ❌ `cargo test ... &` / `nohup ... &`
-* ✅ `cargo test -- --nocapture` (foreground only)
+* ✅ ALWAYS read the ENTIRE handoff document before starting
+* ✅ ALWAYS complete ALL items in the "Next Steps" or "TODO" list
+* ❌ NEVER pick just ONE item from a list and then write a new handoff
+* ❌ NEVER ignore outstanding work items from previous handoffs
+* ✅ If a handoff says "Priority 1, 2, 3" - do ALL of them, not just Priority 1
+* ✅ Your handoff should say "ALL ITEMS COMPLETE" not "did item 1, here's the rest again"
+* ✅ If you can't finish everything, explain WHY (blocked, needs user input, etc.)
+* ❌ NEVER leave work undone just because you "finished your part"
+* ✅ Show ENTHUSIASM to tackle the full list: "Let me knock out all 5 items!"
 
-NO CLI PIPING INTO INTERACTIVE TOOLS
+Example BAD behavior:
+- Handoff says: "TODO: 1) Add warmup, 2) Fix bug, 3) Add tests"
+- Team does: Item 1
+- Team writes: "Added warmup. Next team should do items 2 and 3."
 
-* Don't pipe *into* interactive CLIs; they hang and you lose logs.
-* ❌ `./llama-cli ... | grep ...`
-* ✅ `./llama-cli ... > run.log 2>&1` then `grep ... run.log > grep.out 2>&1`
-```
+Example GOOD behavior:
+- Handoff says: "TODO: 1) Add warmup, 2) Fix bug, 3) Add tests"
+- Team does: ALL THREE ITEMS
+- Team writes: "✅ All items complete! Added warmup, fixed bug, added tests. Ready for next phase."
+
+The goal is to FINISH WORK, not pass it along.

@@ -7,10 +7,13 @@
 //!
 //! Created by: TEAM-009
 
-use llorch_candled::device::{init_cpu_device, verify_device};
+#[cfg(feature = "cpu")]
+use llorch_candled::device::init_cpu_device;
+use llorch_candled::device::verify_device;
 use llorch_candled::backend::CandleInferenceBackend;
 use anyhow::Result;
 
+#[cfg(feature = "cpu")]
 #[test]
 fn test_cpu_device_init() -> Result<()> {
     // TEAM-009: Verify CPU device can be initialized
@@ -53,6 +56,7 @@ fn test_accelerate_device_init() -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 #[test]
 fn test_backend_requires_model_file() {
     // TEAM-009: Verify backend fails gracefully without model
@@ -62,6 +66,7 @@ fn test_backend_requires_model_file() {
     assert!(result.is_err(), "Should fail with nonexistent model");
 }
 
+#[cfg(feature = "cpu")]
 #[test]
 fn test_backend_rejects_gguf() {
     // TEAM-009: Verify GGUF is properly rejected (not yet implemented)
@@ -83,6 +88,7 @@ fn test_backend_rejects_gguf() {
 ///
 /// This test would require an actual model file, so it's marked as ignored.
 /// Run with: cargo test test_device_residency_enforcement -- --ignored
+#[cfg(feature = "cpu")]
 #[test]
 #[ignore]
 fn test_device_residency_enforcement() -> Result<()> {
