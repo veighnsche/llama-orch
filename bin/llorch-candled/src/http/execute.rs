@@ -1,6 +1,6 @@
 //! POST /execute endpoint - Execute inference
 
-use crate::{
+use super::{
     backend::InferenceBackend,
     sse::InferenceEvent,
     validation::{ExecuteRequest, ValidationErrorResponse},
@@ -13,7 +13,7 @@ use axum::{
 use futures::stream::{self, Stream, StreamExt};
 use std::{convert::Infallible, sync::Arc};
 use tracing::{info, warn};
-use worker_common::SamplingConfig;
+use crate::common::SamplingConfig;
 
 type EventStream = Box<dyn Stream<Item = Result<Event, Infallible>> + Send + Unpin>;
 

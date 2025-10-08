@@ -10,8 +10,8 @@
 
 use serde::{Deserialize, Serialize};
 
-// Re-export StopReason from worker-common
-pub use worker_common::inference_result::StopReason;
+// Re-export StopReason from common
+pub use crate::common::inference_result::StopReason;
 
 /// Inference SSE event types
 ///

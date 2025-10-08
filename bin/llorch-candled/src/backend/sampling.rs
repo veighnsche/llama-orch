@@ -4,7 +4,7 @@
 //! Original code by: TEAM-014
 
 use candle_transformers::generation::{LogitsProcessor, Sampling};
-use worker_common::SamplingConfig;
+use crate::common::SamplingConfig;
 
 /// Create LogitsProcessor from SamplingConfig
 ///

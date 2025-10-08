@@ -4,8 +4,8 @@
 //! Original code by: TEAM-000, TEAM-009, TEAM-011, TEAM-014
 
 use async_trait::async_trait;
-use worker_http::InferenceBackend;
-use worker_common::{InferenceResult, SamplingConfig};
+use crate::http::InferenceBackend;
+use crate::common::{InferenceResult, SamplingConfig};
 use anyhow::{Result, Context};
 use candle_core::{Device, DType, Tensor};
 use candle_transformers::models::llama::{Llama, Config, Cache};

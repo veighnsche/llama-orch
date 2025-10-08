@@ -6,7 +6,7 @@
 
 use async_trait::async_trait;
 use std::sync::Arc;
-use worker_common::{InferenceResult, SamplingConfig};
+use crate::common::{InferenceResult, SamplingConfig};
 
 /// Platform-agnostic inference backend
 ///

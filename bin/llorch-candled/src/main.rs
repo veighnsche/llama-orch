@@ -14,9 +14,7 @@
 use clap::Parser;
 use std::net::SocketAddr;
 use std::sync::Arc;
-use worker_common::startup;
-use worker_http::{create_router, HttpServer};
-use llorch_candled::backend::CandleInferenceBackend;
+use llorch_candled::{backend::CandleInferenceBackend, callback_ready, create_router, HttpServer};
 
 /// CLI arguments for worker daemon
 ///
@@ -95,7 +93,7 @@ async fn main() -> anyhow::Result<()> {
     // - Worker has loaded X bytes of memory
     // - Worker type and capabilities
     if !args.callback_url.contains("localhost:9999") {
-        startup::callback_ready(
+        callback_ready(
             &args.callback_url,
             &args.worker_id,
             backend.memory_bytes(),

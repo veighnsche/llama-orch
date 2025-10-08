@@ -8,26 +8,15 @@ license = "GPL-3.0-or-later"
 
 [dependencies]
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# WORKER CRATES — Shared Infrastructure (100% reusable)
+# HTTP SERVER DEPENDENCIES (integrated from worker-http)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# TEAM-015: Integrated worker-common and worker-http directly into binary
 
-# worker-common: SamplingConfig, InferenceResult, WorkerError, startup callbacks
-worker-common = { path = "../worker-crates/worker-common" }
-
-# worker-http: HTTP server, routes, SSE streaming, InferenceBackend trait
-worker-http = { path = "../worker-crates/worker-http" }
-
-# DEPRECATED by TEAM-009: Using HuggingFace tokenizers instead
-# Reason: Half-baked, incomplete, not production-ready
-# worker-tokenizer = { path = "../worker-crates/worker-tokenizer" }
-
-# DEPRECATED by TEAM-009: Using candle-transformers model adapters
-# Reason: Half-baked, incomplete, not production-ready
-# worker-models = { path = "../worker-crates/worker-models" }
-
-# DEPRECATED by TEAM-009: Using VarBuilder for SafeTensors, GGUF deferred
-# Reason: Half-baked, incomplete, not production-ready
-# worker-gguf = { path = "../worker-crates/worker-gguf" }
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["trace", "cors"] }
+futures = "0.3"
+reqwest = { version = "0.12", features = ["json"] }
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # CANDLE INTEGRATION — Hybrid Approach (Math Functions + Kernels)
@@ -64,8 +53,9 @@ ndarray = "0.15"
 # ASYNC RUNTIME
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # CRITICAL: Single-threaded runtime for optimal CPU performance
+# TEAM-015: Added signal feature for graceful shutdown
 
-tokio = { version = "1", features = ["rt", "macros", "sync", "time"] }
+tokio = { version = "1", features = ["rt", "macros", "sync", "time", "signal"] }
 async-trait = "0.1"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -5,7 +5,7 @@
 //! # Spec References
 //! - M0-W-1320: Health endpoint returns 200 OK with {"status": "healthy"}
 
-use crate::backend::InferenceBackend;
+use super::backend::InferenceBackend;
 use axum::{extract::State, Json};
 use serde::Serialize;
 use std::sync::Arc;

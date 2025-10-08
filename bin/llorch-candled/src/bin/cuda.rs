@@ -9,11 +9,9 @@
 use anyhow::Result;
 use clap::Parser;
 use llorch_candled::device::{init_cuda_device, verify_device};
-use llorch_candled::backend::CandleInferenceBackend;
+use llorch_candled::{backend::CandleInferenceBackend, callback_ready, create_router, HttpServer};
 use std::net::SocketAddr;
 use std::sync::Arc;
-use worker_common::startup;
-use worker_http::{create_router, HttpServer};
 
 /// CLI arguments for CUDA worker daemon
 #[derive(Parser, Debug)]
@@ -87,7 +85,7 @@ async fn main() -> Result<()> {
     // STEP 3: Call back to pool-managerd (worker ready)
     // ============================================================
     if !args.callback_url.contains("localhost:9999") {
-        startup::callback_ready(
+        callback_ready(
             &args.callback_url,
             &args.worker_id,
             backend.memory_bytes(),

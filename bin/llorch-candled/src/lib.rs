@@ -12,12 +12,17 @@
 //! Created by: TEAM-000 (Foundation)
 //! Modified by: TEAM-010 (Removed all deprecated modules)
 //! Modified by: TEAM-014 (Added token_output_stream module)
+//! Modified by: TEAM-015 (Integrated worker-common and worker-http)
 
 pub mod backend;
+pub mod common;
 pub mod device;
 pub mod error;
+pub mod http;
 pub mod token_output_stream;
 
 // Re-export commonly used types
 pub use backend::CandleInferenceBackend;
+pub use common::{InferenceResult, SamplingConfig, StopReason, WorkerError, callback_ready};
 pub use error::LlorchError;
+pub use http::{HttpServer, InferenceBackend, create_router};
