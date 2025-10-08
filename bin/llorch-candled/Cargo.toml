@@ -188,7 +188,7 @@ wiremock = "0.6"
 
 [features]
 # Default to CPU for development (most compatible)
-default = ["cpu", "cuda", "accelerate"]
+default = ["cpu", "cuda"]
 
 # Backend features (mutually exclusive at build time)
 # Modified by: TEAM-007
