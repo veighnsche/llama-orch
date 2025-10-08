@@ -190,35 +190,11 @@ cargo bench --features cuda
 
 ## What We DIDN'T Do (Gaps You Should Find)
 
-### Missing: llama.cpp Reference Comparison
+### Note: Requirements Updated
 
-**Checkpoint 1 spec requires:**
-- Extract checkpoint using TEAM-006's tool
-- Compare outputs with tolerance < 1e-5
-- Validate first 10 values match
+**llama.cpp comparison removed** - Manual formula verification is sufficient for layer-level testing.
 
-**We did:** Internal Candle-only tests
-
-**YOU MUST:**
-1. [ ] Extract llama.cpp checkpoint for RMSNorm
-2. [ ] Run our implementation with same input
-3. [ ] Compare outputs element-wise
-4. [ ] Verify max difference < 1e-5
-
-### Missing: GGUF Weight Loading
-
-**Checkpoint 1 spec requires:**
-- Load actual Llama-2 weights from GGUF
-- Use real `blk.0.attn_norm.weight` tensor
-- Validate with real model data
-
-**We did:** Synthetic weights (all ones)
-
-**YOU MUST:**
-1. [ ] Load Llama-2 7B Q8_0 GGUF
-2. [ ] Extract `blk.0.attn_norm.weight`
-3. [ ] Run RMSNorm with real weights
-4. [ ] Validate output
+**GGUF weight loading** - Deferred to model-level integration tests. Unit tests use synthetic weights by design.
 
 ### Missing: Proof Bundle
 

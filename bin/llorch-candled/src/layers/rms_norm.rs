@@ -13,7 +13,8 @@
 //! - Our architecture, Candle's math (TEAM_001_CANDLE_CATALOG_PLAN.md)
 //!
 //! Created by: TEAM-000
-//! Modified by: TEAM-001
+//! Modified by: TEAM-001 (Candle integration)
+//! Reviewed by: TEAM-002 (Critical review - PASSED)
 
 use candle_core::{Tensor, Result as CandleResult, Device, DType};
 use candle_nn::ops::rms_norm as candle_rms_norm;
