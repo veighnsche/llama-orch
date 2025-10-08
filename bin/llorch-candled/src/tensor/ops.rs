@@ -4,7 +4,7 @@
 //!
 //! Created by: TEAM-000
 
-use ndarray::{Array2, Array3};
+use ndarray::Array2;
 
 /// Softmax along last dimension
 pub fn softmax(_x: &Array2<f32>) -> Array2<f32> {

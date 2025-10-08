@@ -17,14 +17,17 @@ worker-common = { path = "../worker-crates/worker-common" }
 # worker-http: HTTP server, routes, SSE streaming, InferenceBackend trait
 worker-http = { path = "../worker-crates/worker-http" }
 
-# worker-tokenizer: Pure Rust BPE tokenization, GGUF and HuggingFace support
-worker-tokenizer = { path = "../worker-crates/worker-tokenizer" }
+# DEPRECATED by TEAM-009: Using HuggingFace tokenizers instead
+# Reason: Half-baked, incomplete, not production-ready
+# worker-tokenizer = { path = "../worker-crates/worker-tokenizer" }
 
-# worker-models: ModelAdapter trait, architecture configs
-worker-models = { path = "../worker-crates/worker-models" }
+# DEPRECATED by TEAM-009: Using candle-transformers model adapters
+# Reason: Half-baked, incomplete, not production-ready
+# worker-models = { path = "../worker-crates/worker-models" }
 
-# worker-gguf: GGUF file format parser
-worker-gguf = { path = "../worker-crates/worker-gguf" }
+# DEPRECATED by TEAM-009: Using VarBuilder for SafeTensors, GGUF deferred
+# Reason: Half-baked, incomplete, not production-ready
+# worker-gguf = { path = "../worker-crates/worker-gguf" }
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # CANDLE INTEGRATION — Hybrid Approach (Math Functions + Kernels)

@@ -4,25 +4,12 @@
 //! unified Cache implementation that matches what we need. Using theirs
 //! instead of maintaining our own.
 //!
-//! This is a TOP-LEVEL module to signal that cache will need
-//! significant optimization work in the future (paged attention,
-//! memory pooling, etc.). For MVP, keep implementation simple.
-//!
-//! Checkpoint 3 validation target
+//! TEAM-010: Removed deprecated kv_cache.rs. All cache logic now handled
+//! by candle-transformers::models::llama::Cache.
 //!
 //! Created by: TEAM-000
-//! Modified by: TEAM-005 (Using candle_nn::kv_cache)
-//! Modified by: TEAM-008 (Using candle-transformers Cache)
+//! Modified by: TEAM-010 (Removed deprecated KvCache implementation)
 
 // TEAM-008: Use Candle's unified cache from transformers library
 // This provides: kvs (per-layer KV), cos/sin (RoPE), masks (causal)
 pub use candle_transformers::models::llama::Cache;
-
-// Keep KV cache module for reference/compatibility
-mod kv_cache;
-pub use kv_cache::KvCache;
-
-// Future: Add more cache strategies here
-// mod paged_cache;
-// mod rotating_cache;
-// mod memory_pool;

@@ -1,25 +1,26 @@
 //! llorch-candled - Candle-based Llama-2 inference library
 //!
-//! This library implements Llama-2 inference using a hybrid approach:
-//! - Pure ndarray for CPU (checkpoint validation)
-//! - Candle kernels for CUDA acceleration (optional)
+//! TEAM-009 rewrite: Uses candle-transformers::models::llama::Llama directly
+//! instead of custom layer implementations.
 //!
-//! Architecture follows CANDLE_INTEGRATION_HANDOFF.md:
-//! - Use Candle's kernels, NOT the framework
-//! - Keep checkpoint-driven validation
-//! - Maintain educational value
+//! Architecture:
+//! - SafeTensors model loading via VarBuilder
+//! - HuggingFace tokenizers integration
+//! - Multi-backend support (CPU, CUDA, Accelerate)
+//! - Worker integration via InferenceBackend trait
 //!
 //! Created by: TEAM-000 (Foundation)
+//! Modified by: TEAM-010 (Cleanup deprecated modules)
 
 pub mod backend;
 pub mod cache;
 pub mod device; // TEAM-007: Multi-backend device initialization
 pub mod error;
-pub mod layers;
-pub mod model;
+pub mod layers; // TEAM-010: Deprecated, kept as placeholder
+pub mod model;  // TEAM-010: Deprecated, kept as placeholder
 pub mod tensor;
 
 // Re-export commonly used types
 pub use backend::CandleInferenceBackend;
-pub use cache::{Cache, KvCache};
+pub use cache::Cache;
 pub use error::LlorchError;

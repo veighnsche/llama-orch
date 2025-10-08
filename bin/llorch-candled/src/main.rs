@@ -78,8 +78,12 @@ async fn main() -> anyhow::Result<()> {
     // ============================================================
     // STEP 1: Load model to memory
     // ============================================================
-    tracing::info!(model = %args.model, "Loading Llama-2 model...");
-    let backend = CandleInferenceBackend::load(&args.model)?;
+    // TEAM-009: Initialize device and pass to backend
+    use llorch_candled::device::init_cpu_device;
+    let device = init_cpu_device()?;
+    
+    tracing::info!(model = %args.model, "Loading Llama model...");
+    let backend = CandleInferenceBackend::load(&args.model, device)?;
     tracing::info!("Model loaded successfully");
 
     // ============================================================
