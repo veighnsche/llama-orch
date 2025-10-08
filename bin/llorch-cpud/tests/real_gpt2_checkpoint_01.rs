@@ -32,10 +32,12 @@ fn weights_dir() -> PathBuf {
         .join("../../.test-models/gpt2/extracted_weights")
 }
 
+// TEAM-003: Added multi-reference validation (PyTorch + Candle cross-validation)
 #[test]
-fn test_checkpoint_01_real_gpt2() {
+fn test_checkpoint_01_multi_reference() {
     println!("\n╔══════════════════════════════════════════════════════════╗");
-    println!("║  Checkpoint 1: LayerNorm with REAL GPT-2 Weights        ║");
+    println!("║  Checkpoint 1: Multi-Reference Validation                ║");
+    println!("║  PyTorch + Candle Cross-Validation                       ║");
     println!("╚══════════════════════════════════════════════════════════╝");
     
     let dir = weights_dir();
@@ -121,12 +123,58 @@ fn test_checkpoint_01_real_gpt2() {
     println!("  Max relative difference: {:.6e}", max_rel_diff);
     println!("  Tolerance: 1e-4");
     
+    // TEAM-003: Validate against PyTorch
     if max_diff < 1e-4 {
-        println!("\n✅ PASS: LayerNorm matches HuggingFace with REAL GPT-2 weights!");
-        println!("   This validates mathematical correctness with actual model weights.");
+        println!("\n✅ PYTORCH: LayerNorm matches HuggingFace (max diff {:.6e})", max_diff);
     } else {
-        println!("\n❌ FAIL: Difference exceeds tolerance");
-        panic!("Max difference {} exceeds 1e-4", max_diff);
+        println!("\n❌ PYTORCH: Difference exceeds tolerance");
+        panic!("PyTorch max difference {} exceeds 1e-4", max_diff);
+    }
+    
+    // TEAM-003: Validate against Candle (if available)
+    let candle_path = dir.join("checkpoint_01_ln1_output_candle.npy");
+    if candle_path.exists() {
+        let mut candle_file = File::open(&candle_path)
+            .expect("Failed to open Candle reference");
+        let candle_ref: Array2<f32> = Array2::read_npy(&mut candle_file)
+            .expect("Failed to read Candle reference");
+        
+        let mut candle_diff = 0.0f32;
+        for (our, candle) in output.iter().zip(candle_ref.iter()) {
+            candle_diff = candle_diff.max((our - candle).abs());
+        }
+        
+        println!("\n📊 Candle Comparison:");
+        println!("  Max absolute difference: {:.6e}", candle_diff);
+        
+        if candle_diff < 1e-4 {
+            println!("✅ CANDLE: Matches within tolerance");
+        } else {
+            println!("❌ CANDLE: Difference exceeds tolerance");
+            panic!("Candle max difference {} exceeds 1e-4", candle_diff);
+        }
+        
+        // TEAM-003: Cross-validate references against each other
+        let mut cross_diff = 0.0f32;
+        for (pytorch, candle) in expected.iter().zip(candle_ref.iter()) {
+            cross_diff = cross_diff.max((pytorch - candle).abs());
+        }
+        
+        println!("\n📊 Cross-Validation (PyTorch vs Candle):");
+        println!("  Max difference: {:.6e}", cross_diff);
+        
+        if cross_diff < 1e-3 {
+            println!("✅ CROSS-VALIDATION: References agree");
+        } else {
+            println!("⚠️  WARNING: References disagree by {:.6e}", cross_diff);
+        }
+        
+        println!("\n🎉 MULTI-REFERENCE VALIDATION PASSED!");
+        println!("   Our implementation matches BOTH PyTorch and Candle");
+    } else {
+        println!("\n⚠️  Candle reference not available");
+        println!("   Run: cd .test_helpers/candle_gpt2_reference && cargo run --release");
+        println!("   Single-reference validation only (PyTorch)");
     }
 }
 
