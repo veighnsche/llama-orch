@@ -2,6 +2,28 @@
 //!
 //! This test validates attention score computation against HuggingFace transformers
 //! using REAL GPT-2 base (124M) model weights.
+//!
+//! ## Python Virtual Environment Required
+//!
+//! **IMPORTANT FOR ENGINEERS:** This test requires Python dependencies to generate
+//! reference data. A dedicated virtual environment is available at:
+//!
+//! ```bash
+//! source ../../.venv-testing/bin/activate
+//! ```
+//!
+//! To generate the required reference data:
+//! ```bash
+//! cd .docs/testing
+//! source ../../.venv-testing/bin/activate
+//! python3 extract_gpt2_weights.py
+//! ```
+//!
+//! **CRITICAL:** This test requires `checkpoint_04_scores.npy` to validate correctness.
+//! The extraction script generates this file. Without it, the test will only perform
+//! weak sanity checks that may not catch implementation errors.
+//!
+//! Modified by: TEAM-001
 
 use llorch_cpud::layers::attention::AttentionScores;
 use ndarray::Array3;
@@ -23,9 +45,13 @@ fn test_checkpoint_04_real_gpt2() {
     let dir = weights_dir();
     
     // Check if weights exist
+    // TEAM-001: Added venv instructions for engineers - CRITICAL for checkpoint 4
     if !dir.exists() {
         eprintln!("\n❌ GPT-2 weights not found at: {}", dir.display());
-        eprintln!("\nPlease run:");
+        eprintln!("\n⚠️  VENV REQUIRED: Activate the testing environment first:");
+        eprintln!("  source ../../.venv-testing/bin/activate");
+        eprintln!("\n⚠️  CRITICAL: This test needs checkpoint_04_scores.npy for validation!");
+        eprintln!("\nThen run:");
         eprintln!("  cd .docs/testing");
         eprintln!("  python3 extract_gpt2_weights.py");
         eprintln!();
@@ -107,9 +133,13 @@ fn test_checkpoint_04_real_gpt2() {
             panic!("Max difference {} exceeds 1e-4", max_diff);
         }
     } else {
+        // TEAM-001: Enhanced warning about missing ground truth
         println!("\n⚠️  WARNING: Reference file not found: {}", ref_path.display());
+        println!("\n❌ CRITICAL ISSUE: Cannot validate correctness without ground truth!");
+        println!("   This is a FALSE POSITIVE - test passes but correctness is NOT verified.");
+        println!("\n   Activate venv: source ../../.venv-testing/bin/activate");
         println!("   Run: cd .docs/testing && python3 extract_gpt2_weights.py");
-        println!("   Skipping comparison, but validating basic properties...");
+        println!("\n   Skipping comparison, but validating basic properties...");
         
         // Validate no NaN/Inf
         for val in scores.iter() {
@@ -145,8 +175,10 @@ fn test_checkpoint_04_determinism() {
     
     let dir = weights_dir();
     
+    // TEAM-001: Added venv instructions
     if !dir.exists() {
         eprintln!("\n❌ GPT-2 weights not found");
+        eprintln!("⚠️  Activate venv: source ../../.venv-testing/bin/activate");
         panic!("Run extract_gpt2_weights.py first");
     }
     

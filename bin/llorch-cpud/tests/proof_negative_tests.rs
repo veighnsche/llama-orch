@@ -2,6 +2,24 @@
 //!
 //! These tests intentionally break the implementation to prove
 //! that our validation is not giving false positives.
+//!
+//! ## Python Virtual Environment Required
+//!
+//! **IMPORTANT FOR ENGINEERS:** These tests require Python dependencies to generate
+//! reference data. A dedicated virtual environment is available at:
+//!
+//! ```bash
+//! source ../../.venv-testing/bin/activate
+//! ```
+//!
+//! To generate the required reference data:
+//! ```bash
+//! cd .docs/testing
+//! source ../../.venv-testing/bin/activate
+//! python3 extract_gpt2_weights.py
+//! ```
+//!
+//! Modified by: TEAM-001
 
 use llorch_cpud::layers::LayerNorm;
 use llorch_cpud::layers::attention::QKVProjection;
@@ -19,8 +37,10 @@ fn weights_dir() -> PathBuf {
 #[test]
 #[should_panic(expected = "Max difference")]
 fn test_wrong_epsilon_fails() {
+    // TEAM-001: Added venv instructions
     let dir = weights_dir();
     if !dir.exists() {
+        eprintln!("⚠️  Activate venv: source ../../.venv-testing/bin/activate");
         panic!("GPT-2 weights not found - run extract_gpt2_weights.py first");
     }
     
@@ -56,8 +76,10 @@ fn test_wrong_epsilon_fails() {
 #[test]
 #[should_panic]
 fn test_swapped_weight_bias_fails() {
+    // TEAM-001: Added venv instructions
     let dir = weights_dir();
     if !dir.exists() {
+        eprintln!("⚠️  Activate venv: source ../../.venv-testing/bin/activate");
         panic!("GPT-2 weights not found");
     }
     
@@ -90,8 +112,10 @@ fn test_swapped_weight_bias_fails() {
 #[test]
 #[should_panic(expected = "Max difference")]
 fn test_scaled_weights_fail() {
+    // TEAM-001: Added venv instructions
     let dir = weights_dir();
     if !dir.exists() {
+        eprintln!("⚠️  Activate venv: source ../../.venv-testing/bin/activate");
         panic!("GPT-2 weights not found");
     }
     
@@ -126,8 +150,10 @@ fn test_scaled_weights_fail() {
 #[test]
 #[should_panic]
 fn test_wrong_qkv_shape_fails() {
+    // TEAM-001: Added venv instructions
     let dir = weights_dir();
     if !dir.exists() {
+        eprintln!("⚠️  Activate venv: source ../../.venv-testing/bin/activate");
         panic!("GPT-2 weights not found");
     }
     
@@ -153,8 +179,10 @@ fn test_wrong_qkv_shape_fails() {
 #[test]
 #[should_panic]
 fn test_wrong_heads_fails() {
+    // TEAM-001: Added venv instructions
     let dir = weights_dir();
     if !dir.exists() {
+        eprintln!("⚠️  Activate venv: source ../../.venv-testing/bin/activate");
         panic!("GPT-2 weights not found");
     }
     
@@ -193,8 +221,10 @@ fn test_wrong_heads_fails() {
 #[test]
 #[should_panic(expected = "Max difference")]
 fn test_zeroed_bias_fails() {
+    // TEAM-001: Added venv instructions
     let dir = weights_dir();
     if !dir.exists() {
+        eprintln!("⚠️  Activate venv: source ../../.venv-testing/bin/activate");
         panic!("GPT-2 weights not found");
     }
     
@@ -228,8 +258,10 @@ fn test_zeroed_bias_fails() {
 fn test_wrong_cache_start_pos_fails() {
     use llorch_cpud::cache::KVCache;
     
+    // TEAM-001: Added venv instructions
     let dir = weights_dir();
     if !dir.exists() {
+        eprintln!("⚠️  Activate venv: source ../../.venv-testing/bin/activate");
         panic!("GPT-2 weights not found");
     }
     
@@ -263,8 +295,10 @@ fn test_wrong_cache_start_pos_fails() {
 fn test_wrong_cache_end_pos_fails() {
     use llorch_cpud::cache::KVCache;
     
+    // TEAM-001: Added venv instructions
     let dir = weights_dir();
     if !dir.exists() {
+        eprintln!("⚠️  Activate venv: source ../../.venv-testing/bin/activate");
         panic!("GPT-2 weights not found");
     }
     

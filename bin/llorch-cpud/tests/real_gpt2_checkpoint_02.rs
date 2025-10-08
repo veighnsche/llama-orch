@@ -2,6 +2,24 @@
 //!
 //! This test validates llorch-cpud QKV projection against HuggingFace transformers
 //! using REAL GPT-2 base (124M) model weights.
+//!
+//! ## Python Virtual Environment Required
+//!
+//! **IMPORTANT FOR ENGINEERS:** This test requires Python dependencies to generate
+//! reference data. A dedicated virtual environment is available at:
+//!
+//! ```bash
+//! source ../../.venv-testing/bin/activate
+//! ```
+//!
+//! To generate the required reference data:
+//! ```bash
+//! cd .docs/testing
+//! source ../../.venv-testing/bin/activate
+//! python3 extract_gpt2_weights.py
+//! ```
+//!
+//! Modified by: TEAM-001
 
 use llorch_cpud::layers::attention::QKVProjection;
 use ndarray::{Array1, Array2, Array3};
@@ -23,9 +41,12 @@ fn test_checkpoint_02_real_gpt2() {
     let dir = weights_dir();
     
     // Check if weights exist
+    // TEAM-001: Added venv instructions for engineers
     if !dir.exists() {
         eprintln!("\n❌ GPT-2 weights not found at: {}", dir.display());
-        eprintln!("\nPlease run:");
+        eprintln!("\n⚠️  VENV REQUIRED: Activate the testing environment first:");
+        eprintln!("  source ../../.venv-testing/bin/activate");
+        eprintln!("\nThen run:");
         eprintln!("  cd .docs/testing");
         eprintln!("  python3 extract_gpt2_weights.py");
         eprintln!();
@@ -169,8 +190,10 @@ fn test_checkpoint_02_determinism() {
     
     let dir = weights_dir();
     
+    // TEAM-001: Added venv instructions
     if !dir.exists() {
         eprintln!("\n❌ GPT-2 weights not found");
+        eprintln!("⚠️  Activate venv: source ../../.venv-testing/bin/activate");
         panic!("Run extract_gpt2_weights.py first");
     }
     

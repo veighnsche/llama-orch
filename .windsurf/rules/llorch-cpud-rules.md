@@ -18,14 +18,39 @@ DOCUMENTATION RULES
 
 If you create more than 2 .md files for a single task, YOU FUCKED UP.
 
+CODE SIGNATURE RULES
+
+* ✅ ALWAYS add your team signature at code changes in comments
+* ✅ For new files: Add `// Created by: TEAM-XXX` at the top (after file docstring)
+* ✅ For code modifications: Add `// Modified by: TEAM-XXX` or `// TEAM-XXX: <description>` at the change
+* ❌ NEVER remove signatures from other teams - maintain full history
+* ✅ Example for new file:
+  ```rust
+  //! Module description
+  //!
+  //! Created by: TEAM-001
+  
+  use ndarray::Array2;
+  // ... code ...
+  ```
+* ✅ Example for modification:
+  ```rust
+  pub fn forward(&self, x: &Array2<f32>) -> Array2<f32> {
+      // TEAM-001: Fixed transpose issue to match PyTorch convention
+      let output = x.dot(&self.weight); // Changed from .t()
+      output
+  }
+  ```
+
 NO BACKGROUND TESTING
 
-* Don’t detach or background jobs. You must see full, blocking output.
+* Don't detach or background jobs. You must see full, blocking output.
 * ❌ `cargo test ... &` / `nohup ... &`
 * ✅ `cargo test -- --nocapture` (foreground only)
 
 NO CLI PIPING INTO INTERACTIVE TOOLS
 
-* Don’t pipe *into* interactive CLIs; they hang and you lose logs.
+* Don't pipe *into* interactive CLIs; they hang and you lose logs.
 * ❌ `./llama-cli ... | grep ...`
 * ✅ `./llama-cli ... > run.log 2>&1` then `grep ... run.log > grep.out 2>&1`
+```
