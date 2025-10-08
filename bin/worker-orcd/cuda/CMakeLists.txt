@@ -75,6 +75,7 @@ set(KERNEL_SOURCES
     kernels/rmsnorm.cu
     kernels/residual.cu
     kernels/embedding.cu
+    kernels/transpose.cu
     kernels/swiglu.cu
     kernels/swiglu_ffn.cu
     kernels/gqa_attention.cu
