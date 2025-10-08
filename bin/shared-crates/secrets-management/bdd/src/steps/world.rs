@@ -5,8 +5,7 @@ use secrets_management::{Result, Secret, SecretError};
 use std::path::PathBuf;
 use tempfile::TempDir;
 
-#[derive(World)]
-#[derive(Default)]
+#[derive(World, Default)]
 pub struct BddWorld {
     /// Last operation result
     pub last_result: Option<Result<()>>,
@@ -50,7 +49,6 @@ pub struct BddWorld {
     /// Flag to track if CREDENTIALS_DIRECTORY was set (for cleanup)
     pub credentials_dir_set: bool,
 }
-
 
 impl Drop for BddWorld {
     fn drop(&mut self) {

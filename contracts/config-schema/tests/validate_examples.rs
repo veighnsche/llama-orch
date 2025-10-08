@@ -1,5 +1,5 @@
 use contracts_config_schema::build_schema;
-use jsonschema::{Validator, Draft};
+use jsonschema::{Draft, Validator};
 use serde_json::json;
 
 #[test]

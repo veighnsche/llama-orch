@@ -424,7 +424,7 @@ impl AuditEvent {
     /// - `TaskSubmitted`, `TaskCompleted`, `TaskCanceled` — Normal operation
     /// - `PoolCreated`, `PoolDeleted`, `PoolModified` — Admin action
     /// - `VramSealed`, `SealVerified`, `VramAllocated`, `VramDeallocated` — Normal operation
-    #[must_use] 
+    #[must_use]
     pub fn is_critical(&self) -> bool {
         matches!(
             self,

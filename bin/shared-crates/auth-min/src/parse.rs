@@ -51,7 +51,7 @@
 ///
 /// - `Some(token)` if the header is valid and contains a non-empty token
 /// - `None` if the header is missing, malformed, or contains an empty token
-#[must_use] 
+#[must_use]
 pub fn parse_bearer(header_val: Option<&str>) -> Option<String> {
     let s = header_val?;
 

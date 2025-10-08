@@ -37,10 +37,7 @@ struct Args {
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
     // Initialize tracing (JSON format for structured logging)
-    tracing_subscriber::fmt()
-        .with_target(false)
-        .json()
-        .init();
+    tracing_subscriber::fmt().with_target(false).json().init();
 
     let args = Args::parse();
 
@@ -72,14 +69,9 @@ async fn main() -> Result<()> {
     // STEP 3: Call back to pool-managerd (worker ready)
     // ============================================================
     if !args.callback_url.contains("localhost:9999") {
-        callback_ready(
-            &args.callback_url,
-            &args.worker_id,
-            backend.memory_bytes(),
-            args.port,
-        )
-        .await?;
-        
+        callback_ready(&args.callback_url, &args.worker_id, backend.memory_bytes(), args.port)
+            .await?;
+
         tracing::info!("Callback sent to pool-managerd");
     } else {
         tracing::info!("Test mode: skipping pool manager callback");
@@ -92,7 +84,7 @@ async fn main() -> Result<()> {
 
     let addr = SocketAddr::from(([0, 0, 0, 0], args.port));
     let backend = Arc::new(backend);
-    
+
     let router = create_router(backend);
     let server = HttpServer::new(addr, router).await?;
 

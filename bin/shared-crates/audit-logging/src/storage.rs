@@ -43,7 +43,7 @@ pub struct AuditEventEnvelope {
 
 impl AuditEventEnvelope {
     /// Create new envelope (hash will be computed by writer)
-    #[must_use] 
+    #[must_use]
     pub fn new(
         audit_id: String,
         timestamp: DateTime<Utc>,

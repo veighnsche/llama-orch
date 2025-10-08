@@ -40,8 +40,7 @@ pub fn compute_event_hash(envelope: &AuditEventEnvelope) -> Result<String> {
 
     // Hash event (JSON serialized)
     // Note: serde_json serialization is deterministic for our event types
-    let event_json =
-        serde_json::to_string(&envelope.event).map_err(AuditError::Serialization)?;
+    let event_json = serde_json::to_string(&envelope.event).map_err(AuditError::Serialization)?;
     hasher.update(event_json.as_bytes());
 
     // Hash prev_hash

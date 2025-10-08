@@ -49,7 +49,7 @@ use sha2::{Digest, Sha256};
 /// # Format
 ///
 /// Returns a 6-character lowercase hexadecimal string (e.g., "a3f2c1").
-#[must_use] 
+#[must_use]
 pub fn token_fp6(token: &str) -> String {
     // Validate input length to prevent DoS via extremely long tokens
     const MAX_TOKEN_LEN: usize = 8192; // 8KB max token size

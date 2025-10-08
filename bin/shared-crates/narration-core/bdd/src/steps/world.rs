@@ -4,8 +4,7 @@ use observability_narration_core::{CaptureAdapter, NarrationFields, RedactionPol
 use std::collections::HashMap;
 
 // CaptureAdapter doesn't implement Debug, so we manually implement it for World
-#[derive(cucumber::World)]
-#[derive(Default)]
+#[derive(cucumber::World, Default)]
 pub struct World {
     // Capture adapter for assertions
     pub adapter: Option<CaptureAdapter>,
@@ -47,4 +46,3 @@ impl std::fmt::Debug for World {
             .finish()
     }
 }
-

@@ -23,6 +23,6 @@ pub mod token_output_stream;
 
 // Re-export commonly used types
 pub use backend::CandleInferenceBackend;
-pub use common::{InferenceResult, SamplingConfig, StopReason, WorkerError, callback_ready};
+pub use common::{callback_ready, InferenceResult, SamplingConfig, StopReason, WorkerError};
 pub use error::LlorchError;
-pub use http::{HttpServer, InferenceBackend, create_router};
+pub use http::{create_router, HttpServer, InferenceBackend};

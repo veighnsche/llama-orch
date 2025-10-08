@@ -111,7 +111,8 @@ fn parse_nvidia_smi_output(output: &str) -> Result<GpuInfo> {
         }
 
         // Parse and validate index
-        let index = parts.first()
+        let index = parts
+            .first()
             .and_then(|s| s.parse::<u32>().ok())
             .ok_or_else(|| GpuError::NvidiaSmiParseFailed("Invalid GPU index".to_string()))?;
 

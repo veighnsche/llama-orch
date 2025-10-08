@@ -18,12 +18,7 @@ pub struct TokenOutputStream {
 
 impl TokenOutputStream {
     pub fn new(tokenizer: tokenizers::Tokenizer) -> Self {
-        Self {
-            tokenizer,
-            tokens: Vec::new(),
-            prev_index: 0,
-            current_index: 0,
-        }
+        Self { tokenizer, tokens: Vec::new(), prev_index: 0, current_index: 0 }
     }
 
     fn decode(&self, tokens: &[u32]) -> Result<String> {

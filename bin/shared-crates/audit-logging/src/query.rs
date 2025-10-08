@@ -85,34 +85,34 @@ pub struct ChecksumVerifyResult {
 
 impl AuditQuery {
     /// Create new query
-    #[must_use] 
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Set actor filter
-    #[must_use] 
+    #[must_use]
     pub fn actor(mut self, actor: String) -> Self {
         self.actor = Some(actor);
         self
     }
 
     /// Set resource filter
-    #[must_use] 
+    #[must_use]
     pub fn resource_id(mut self, resource_id: String) -> Self {
         self.resource_id = Some(resource_id);
         self
     }
 
     /// Set event type filter
-    #[must_use] 
+    #[must_use]
     pub fn event_types(mut self, event_types: Vec<String>) -> Self {
         self.event_types = event_types;
         self
     }
 
     /// Set time range
-    #[must_use] 
+    #[must_use]
     pub fn time_range(mut self, start: DateTime<Utc>, end: DateTime<Utc>) -> Self {
         self.start_time = Some(start);
         self.end_time = Some(end);
@@ -120,7 +120,7 @@ impl AuditQuery {
     }
 
     /// Set limit
-    #[must_use] 
+    #[must_use]
     pub fn limit(mut self, limit: usize) -> Self {
         self.limit = limit;
         self

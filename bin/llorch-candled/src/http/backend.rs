@@ -4,9 +4,9 @@
 //! to be platform-independent. Different workers (CUDA, Metal, etc.) implement
 //! this trait to provide their specific inference capabilities.
 
+use crate::common::{InferenceResult, SamplingConfig};
 use async_trait::async_trait;
 use std::sync::Arc;
-use crate::common::{InferenceResult, SamplingConfig};
 
 /// Platform-agnostic inference backend
 ///

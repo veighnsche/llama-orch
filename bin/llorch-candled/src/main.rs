@@ -12,9 +12,9 @@
 //! Created by: TEAM-000 (Foundation)
 
 use clap::Parser;
+use llorch_candled::{backend::CandleInferenceBackend, callback_ready, create_router, HttpServer};
 use std::net::SocketAddr;
 use std::sync::Arc;
-use llorch_candled::{backend::CandleInferenceBackend, callback_ready, create_router, HttpServer};
 
 /// CLI arguments for worker daemon
 ///
@@ -55,13 +55,10 @@ struct Args {
 /// 3. Call back to pool-managerd (worker ready)
 /// 4. Start HTTP server
 /// 5. Run forever (until killed by pool-managerd)
-#[tokio::main(flavor = "current_thread")]  // CRITICAL: Single-threaded!
+#[tokio::main(flavor = "current_thread")] // CRITICAL: Single-threaded!
 async fn main() -> anyhow::Result<()> {
     // Initialize tracing (JSON format for structured logging)
-    tracing_subscriber::fmt()
-        .with_target(false)
-        .json()
-        .init();
+    tracing_subscriber::fmt().with_target(false).json().init();
 
     // Parse CLI arguments (from pool-managerd)
     let args = Args::parse();
@@ -79,7 +76,7 @@ async fn main() -> anyhow::Result<()> {
     // TEAM-009: Initialize device and pass to backend
     use llorch_candled::device::init_cpu_device;
     let device = init_cpu_device()?;
-    
+
     tracing::info!(model = %args.model, "Loading Llama model...");
     let backend = CandleInferenceBackend::load(&args.model, device)?;
     tracing::info!("Model loaded successfully");
@@ -93,14 +90,9 @@ async fn main() -> anyhow::Result<()> {
     // - Worker has loaded X bytes of memory
     // - Worker type and capabilities
     if !args.callback_url.contains("localhost:9999") {
-        callback_ready(
-            &args.callback_url,
-            &args.worker_id,
-            backend.memory_bytes(),
-            args.port,
-        )
-        .await?;
-        
+        callback_ready(&args.callback_url, &args.worker_id, backend.memory_bytes(), args.port)
+            .await?;
+
         tracing::info!("Callback sent to pool-managerd");
     } else {
         tracing::info!("Test mode: skipping pool manager callback");
@@ -113,13 +105,13 @@ async fn main() -> anyhow::Result<()> {
 
     let addr = SocketAddr::from(([0, 0, 0, 0], args.port));
     let backend = Arc::new(backend);
-    
+
     // Create router with our backend (worker-http)
     // This wires up:
     // - GET /health -> backend.is_healthy()
     // - POST /execute -> backend.execute()
     let router = create_router(backend);
-    
+
     // Start HTTP server (worker-http)
     let server = HttpServer::new(addr, router).await?;
 

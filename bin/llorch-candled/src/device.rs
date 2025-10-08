@@ -34,11 +34,11 @@ pub fn init_accelerate_device() -> CandleResult<Device> {
 /// Performs a simple smoke test: create tensor and verify operations
 pub fn verify_device(device: &Device) -> CandleResult<()> {
     use candle_core::Tensor;
-    
+
     // Simple smoke test: create tensor and verify
     let test = Tensor::zeros((2, 2), candle_core::DType::F32, device)?;
     let _sum = test.sum_all()?; // TEAM-010: Verify tensor operations work
-    
+
     tracing::info!("Device verification passed: {:?}", device);
     Ok(())
 }

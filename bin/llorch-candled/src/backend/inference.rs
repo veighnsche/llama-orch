@@ -3,17 +3,17 @@
 //! Created by: TEAM-015 (refactored from candle_backend.rs)
 //! Original code by: TEAM-000, TEAM-009, TEAM-011, TEAM-014
 
-use async_trait::async_trait;
-use crate::http::InferenceBackend;
-use crate::common::{InferenceResult, SamplingConfig};
-use anyhow::{Result, Context};
-use candle_core::{Device, DType, Tensor};
-use candle_transformers::models::llama::{Llama, Config, Cache};
-use tokenizers::Tokenizer;
-use std::path::Path;
-use crate::token_output_stream::TokenOutputStream;
 use super::model_loader;
 use super::sampling;
+use crate::common::{InferenceResult, SamplingConfig};
+use crate::http::InferenceBackend;
+use crate::token_output_stream::TokenOutputStream;
+use anyhow::{Context, Result};
+use async_trait::async_trait;
+use candle_core::{DType, Device, Tensor};
+use candle_transformers::models::llama::{Cache, Config, Llama};
+use std::path::Path;
+use tokenizers::Tokenizer;
 
 /// Candle inference backend using candle-transformers Llama
 ///
@@ -35,7 +35,7 @@ impl CandleInferenceBackend {
     /// TEAM-015: Delegates to model_loader module
     pub fn load(model_path: &str, device: Device) -> Result<Self> {
         let path = Path::new(model_path);
-        
+
         // Load model using model_loader module
         let (model, config, model_size_bytes) = model_loader::load_model(model_path, &device)?;
 
@@ -43,13 +43,12 @@ impl CandleInferenceBackend {
         let tokenizer_path = if path.is_dir() {
             path.join("tokenizer.json")
         } else {
-            path.parent()
-                .unwrap_or_else(|| Path::new("."))
-                .join("tokenizer.json")
+            path.parent().unwrap_or_else(|| Path::new(".")).join("tokenizer.json")
         };
-        
-        let tokenizer = Tokenizer::from_file(&tokenizer_path)
-            .map_err(|e| anyhow::anyhow!("Failed to load tokenizer from {:?}: {}", tokenizer_path, e))?;
+
+        let tokenizer = Tokenizer::from_file(&tokenizer_path).map_err(|e| {
+            anyhow::anyhow!("Failed to load tokenizer from {:?}: {}", tokenizer_path, e)
+        })?;
 
         tracing::info!(
             vocab_size = tokenizer.get_vocab_size(true),
@@ -57,13 +56,7 @@ impl CandleInferenceBackend {
             "Model and tokenizer loaded successfully"
         );
 
-        Ok(Self {
-            model,
-            tokenizer,
-            device,
-            config,
-            model_size_bytes,
-        })
+        Ok(Self { model, tokenizer, device, config, model_size_bytes })
     }
 
     /// Get memory usage in bytes
@@ -81,32 +74,31 @@ impl CandleInferenceBackend {
 
         // Use a simple prompt for warmup
         let warmup_prompt = "Hello";
-        
+
         // Tokenize
-        let encoding = self.tokenizer.encode(warmup_prompt, true)
+        let encoding = self
+            .tokenizer
+            .encode(warmup_prompt, true)
             .map_err(|e| anyhow::anyhow!("Warmup tokenization failed: {}", e))?;
         let tokens = encoding.get_ids();
-        
+
         // Create input tensor
         let input_ids = Tensor::new(tokens, &self.device)
             .context("Failed to create warmup tensor")?
             .unsqueeze(0)
             .context("Failed to unsqueeze warmup tensor")?;
-        
+
         // Initialize cache
         let mut cache = Cache::new(true, DType::F32, &self.config, &self.device)
             .context("Failed to create warmup cache")?;
-        
+
         // Single forward pass
-        let _logits = self.model.forward(&input_ids, 0, &mut cache)
-            .context("Warmup forward pass failed")?;
-        
+        let _logits =
+            self.model.forward(&input_ids, 0, &mut cache).context("Warmup forward pass failed")?;
+
         let duration = start.elapsed();
-        tracing::info!(
-            duration_ms = duration.as_millis(),
-            "GPU warmup complete"
-        );
-        
+        tracing::info!(duration_ms = duration.as_millis(), "GPU warmup complete");
+
         Ok(())
     }
 }
@@ -131,14 +123,13 @@ impl InferenceBackend for CandleInferenceBackend {
         );
 
         // Tokenize prompt
-        let encoding = self.tokenizer.encode(prompt, true)
+        let encoding = self
+            .tokenizer
+            .encode(prompt, true)
             .map_err(|e| format!("Tokenization failed: {}", e))?;
         let mut tokens = encoding.get_ids().to_vec();
-        
-        tracing::debug!(
-            prompt_tokens = tokens.len(),
-            "Prompt tokenized"
-        );
+
+        tracing::debug!(prompt_tokens = tokens.len(), "Prompt tokenized");
 
         // Initialize cache
         let mut cache = Cache::new(true, DType::F32, &self.config, &self.device)
@@ -158,19 +149,19 @@ impl InferenceBackend for CandleInferenceBackend {
 
         for pos in 0..config.max_tokens {
             let pos_usize = pos as usize;
-            
+
             // TEAM-011: Prepare input tensor with correct shape [batch_size, seq_len]
             let input_ids = if pos == 0 {
                 // First iteration: use all prompt tokens
                 Tensor::new(&tokens[..], &self.device)
                     .map_err(|e| format!("Failed to create input tensor: {}", e))?
-                    .unsqueeze(0)  // Add batch dimension: [seq_len] -> [1, seq_len]
+                    .unsqueeze(0) // Add batch dimension: [seq_len] -> [1, seq_len]
                     .map_err(|e| format!("Failed to unsqueeze input tensor: {}", e))?
             } else {
                 // Subsequent iterations: only last token
                 Tensor::new(&[tokens[tokens.len() - 1]], &self.device)
                     .map_err(|e| format!("Failed to create input tensor: {}", e))?
-                    .unsqueeze(0)  // Add batch dimension: [1] -> [1, 1]
+                    .unsqueeze(0) // Add batch dimension: [1] -> [1, 1]
                     .map_err(|e| format!("Failed to unsqueeze input tensor: {}", e))?
             };
 
@@ -184,9 +175,11 @@ impl InferenceBackend for CandleInferenceBackend {
             }
 
             // Forward pass
-            let logits = self.model.forward(&input_ids, pos_usize, &mut cache)
+            let logits = self
+                .model
+                .forward(&input_ids, pos_usize, &mut cache)
                 .map_err(|e| format!("Forward pass failed: {}", e))?;
-            
+
             // TEAM-009: Log output device residency
             if pos == 0 {
                 tracing::debug!(
@@ -197,18 +190,19 @@ impl InferenceBackend for CandleInferenceBackend {
             }
 
             // Get logits for last position
-            let logits = logits.squeeze(0)
-                .map_err(|e| format!("Failed to squeeze logits: {}", e))?;
+            let logits =
+                logits.squeeze(0).map_err(|e| format!("Failed to squeeze logits: {}", e))?;
             let logits = if logits.dims().len() > 1 {
-                logits.get(logits.dims()[0] - 1)
+                logits
+                    .get(logits.dims()[0] - 1)
                     .map_err(|e| format!("Failed to get last logits: {}", e))?
             } else {
                 logits
             };
 
             // TEAM-014: Sample next token using Candle's LogitsProcessor
-            let next_token = logits_processor.sample(&logits)
-                .map_err(|e| format!("Sampling failed: {}", e))?;
+            let next_token =
+                logits_processor.sample(&logits).map_err(|e| format!("Sampling failed: {}", e))?;
 
             // Check for EOS
             if next_token == self.tokenizer.token_to_id("</s>").unwrap_or(2) {
@@ -217,8 +211,10 @@ impl InferenceBackend for CandleInferenceBackend {
             }
 
             // TEAM-014: Use TokenOutputStream for proper streaming decode with spaces
-            if let Some(token_str) = token_stream.next_token(next_token)
-                .map_err(|e| format!("Detokenization failed: {}", e))? {
+            if let Some(token_str) = token_stream
+                .next_token(next_token)
+                .map_err(|e| format!("Detokenization failed: {}", e))?
+            {
                 generated_text.push(token_str);
             }
 
@@ -227,25 +223,20 @@ impl InferenceBackend for CandleInferenceBackend {
 
             // Log progress
             if (pos + 1) % 10 == 0 {
-                tracing::debug!(
-                    tokens_generated = pos + 1,
-                    "Generation progress"
-                );
+                tracing::debug!(tokens_generated = pos + 1, "Generation progress");
             }
         }
 
         // TEAM-014: Get any remaining decoded bytes from token stream
-        if let Some(rest) = token_stream.decode_rest()
-            .map_err(|e| format!("Failed to decode rest: {}", e))? {
+        if let Some(rest) =
+            token_stream.decode_rest().map_err(|e| format!("Failed to decode rest: {}", e))?
+        {
             generated_text.push(rest);
         }
 
         let duration_ms = start_time.elapsed().as_millis() as u64;
-        let tokens_per_sec = if duration_ms > 0 {
-            (generated_tokens.len() as u64 * 1000) / duration_ms
-        } else {
-            0
-        };
+        let tokens_per_sec =
+            if duration_ms > 0 { (generated_tokens.len() as u64 * 1000) / duration_ms } else { 0 };
 
         tracing::info!(
             tokens_generated = generated_tokens.len(),
@@ -254,12 +245,7 @@ impl InferenceBackend for CandleInferenceBackend {
             "Inference completed"
         );
 
-        Ok(InferenceResult::max_tokens(
-            generated_text,
-            generated_tokens,
-            config.seed,
-            duration_ms,
-        ))
+        Ok(InferenceResult::max_tokens(generated_text, generated_tokens, config.seed, duration_ms))
     }
 
     /// Cancel inference (not implemented for single-threaded)
@@ -273,7 +259,7 @@ impl InferenceBackend for CandleInferenceBackend {
         {
             self.model_size_bytes
         }
-        
+
         #[cfg(not(feature = "cuda"))]
         {
             0
