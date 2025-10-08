@@ -13,7 +13,7 @@
 //! - M0-W-1330: Execute endpoint
 //! - WORK-3040: Correlation ID middleware
 
-use super::{backend::InferenceBackend, execute, health};
+use crate::http::{backend::InferenceBackend, execute, health};
 use axum::{
     routing::{get, post},
     Router,

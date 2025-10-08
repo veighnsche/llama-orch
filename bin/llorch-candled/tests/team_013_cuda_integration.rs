@@ -5,10 +5,10 @@
 //!
 //! Created by: TEAM-013
 
+#[cfg(feature = "cuda")]
 use llorch_candled::device::init_cuda_device;
 use llorch_candled::backend::CandleInferenceBackend;
-use worker_common::SamplingConfig;
-use worker_http::InferenceBackend;
+use llorch_candled::{SamplingConfig, InferenceBackend};
 use anyhow::Result;
 
 /// TEAM-013: Validate CUDA story generation performance
@@ -20,6 +20,7 @@ use anyhow::Result;
 /// 4. Performance is significantly faster than CPU
 ///
 /// Expected: 30-150 tok/s (10-50x faster than CPU's 3.23 tok/s)
+#[cfg(feature = "cuda")]
 #[test]
 #[ignore]
 fn test_cuda_story_generation() -> Result<()> {
@@ -93,6 +94,7 @@ fn test_cuda_story_generation() -> Result<()> {
 ///
 /// CPU baseline: 3.23 tok/s (from TEAM-012)
 /// Expected CUDA: 30-150 tok/s
+#[cfg(feature = "cuda")]
 #[test]
 #[ignore]
 fn test_cuda_extended_story_generation() -> Result<()> {
@@ -159,6 +161,7 @@ fn test_cuda_extended_story_generation() -> Result<()> {
 /// 
 /// Generates 50 tokens to get a robust performance measurement.
 /// Compares against TEAM-012's CPU baseline.
+#[cfg(feature = "cuda")]
 #[test]
 #[ignore]
 fn test_cuda_performance_benchmark() -> Result<()> {
@@ -222,6 +225,7 @@ fn test_cuda_performance_benchmark() -> Result<()> {
 /// TEAM-013: Test CUDA device 1 (RTX 3090) if available
 /// 
 /// Tests the second GPU to verify multi-GPU support.
+#[cfg(feature = "cuda")]
 #[test]
 #[ignore]
 fn test_cuda_device_1_story_generation() -> Result<()> {

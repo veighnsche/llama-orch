@@ -92,8 +92,7 @@ fn test_backend_rejects_gguf() {
 #[test]
 #[ignore]
 fn test_device_residency_enforcement() -> Result<()> {
-    use worker_common::SamplingConfig;
-    use worker_http::InferenceBackend;
+    use llorch_candled::{SamplingConfig, InferenceBackend};
     
     // This test requires a real model file
     // Set LLORCH_TEST_MODEL_PATH to run this test

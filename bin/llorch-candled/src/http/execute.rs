@@ -1,6 +1,6 @@
 //! POST /execute endpoint - Execute inference
 
-use super::{
+use crate::http::{
     backend::InferenceBackend,
     sse::InferenceEvent,
     validation::{ExecuteRequest, ValidationErrorResponse},

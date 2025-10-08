@@ -9,8 +9,7 @@
 #[cfg(feature = "cpu")]
 use llorch_candled::device::init_cpu_device;
 use llorch_candled::backend::CandleInferenceBackend;
-use worker_common::SamplingConfig;
-use worker_http::InferenceBackend;
+use llorch_candled::{SamplingConfig, InferenceBackend};
 use anyhow::Result;
 
 /// Test basic generation with greedy sampling

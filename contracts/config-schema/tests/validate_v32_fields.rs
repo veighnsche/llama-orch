@@ -1,13 +1,13 @@
 use contracts_config_schema::build_schema;
-use jsonschema::{Draft, JSONSchema};
+use jsonschema::{Validator, Draft};
 use serde_json::json;
 
 #[test]
 fn v32_fields_validate() {
     let schema = build_schema();
-    let compiled = JSONSchema::options()
+    let compiled = Validator::options()
         .with_draft(Draft::Draft7)
-        .compile(&serde_json::to_value(&schema).unwrap())
+        .build(&serde_json::to_value(&schema).unwrap())
         .expect("schema compiles");
 
     let cfg = json!({
@@ -37,11 +37,8 @@ fn v32_fields_validate() {
         ]
     });
 
-    let result = compiled.validate(&cfg);
-    if let Err(errors) = result {
-        for e in errors {
-            eprintln!("schema error: {}", e);
-        }
+    if let Err(error) = compiled.validate(&cfg) {
+        eprintln!("Validation error: {}", error);
         panic!("v3.2 example config failed schema validation");
     }
 }

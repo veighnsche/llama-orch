@@ -1,14 +1,14 @@
 use contracts_config_schema::build_schema;
-use jsonschema::{Draft, JSONSchema};
+use jsonschema::{Validator, Draft};
 use serde_json::json;
 
 #[test]
 fn example_config_validates() {
     // Build the schema
     let schema = build_schema();
-    let compiled = JSONSchema::options()
+    let compiled = Validator::options()
         .with_draft(Draft::Draft7)
-        .compile(&serde_json::to_value(&schema).unwrap())
+        .build(&serde_json::to_value(&schema).unwrap())
         .expect("schema compiles");
 
     // Example config from SPEC §8 (simplified)
@@ -29,11 +29,8 @@ fn example_config_validates() {
         ]
     });
 
-    let result = compiled.validate(&cfg);
-    if let Err(errors) = result {
-        for e in errors {
-            eprintln!("schema error: {}", e);
-        }
+    if let Err(error) = compiled.validate(&cfg) {
+        eprintln!("Validation error: {}", error);
         panic!("example config failed schema validation");
     }
 }
