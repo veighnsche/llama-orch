@@ -56,26 +56,29 @@ CODE SIGNATURE RULES
   }
   ```
 
-COMPLETE THE FULL TASK LIST RULE
+COMPLETE THE ACTUAL TODO LIST RULE
 
-* ✅ ALWAYS read the ENTIRE handoff document before starting
-* ✅ ALWAYS complete ALL items in the "Next Steps" or "TODO" list
-* ❌ NEVER pick just ONE item from a list and then write a new handoff
-* ❌ NEVER ignore outstanding work items from previous handoffs
-* ✅ If a handoff says "Priority 1, 2, 3" - do ALL of them, not just Priority 1
-* ✅ Your handoff should say "ALL ITEMS COMPLETE" not "did item 1, here's the rest again"
-* ✅ If you can't finish everything, explain WHY (blocked, needs user input, etc.)
-* ❌ NEVER leave work undone just because you "finished your part"
-* ✅ Show ENTHUSIASM to tackle the full list: "Let me knock out all 5 items!"
+* ✅ ALWAYS read the "Next Steps" section from the previous handoff
+* ✅ ALWAYS complete ALL priorities in order (Priority 1, 2, 3, etc.)
+* ❌ NEVER do just Priority 1 and then write a new handoff
+* ❌ NEVER ignore the existing TODO list and make up your own priorities
+* ❌ NEVER invent new work items that derail the plan
+* ✅ If you finish Priority 1, immediately start Priority 2
+* ✅ If you finish Priority 2, immediately start Priority 3
+* ✅ Only hand off when ALL priorities are complete
+* ✅ If you discover bugs during work, fix them AND continue with the plan
+* ❌ NEVER use "discovered a bug" as an excuse to abandon the TODO list
 
-Example BAD behavior:
-- Handoff says: "TODO: 1) Add warmup, 2) Fix bug, 3) Add tests"
-- Team does: Item 1
-- Team writes: "Added warmup. Next team should do items 2 and 3."
+Example of BAD behavior (what TEAM-013 actually did):
+- TEAM-012 handoff: "Priority 1: CUDA, Priority 2: Sampling, Priority 3: Production"
+- TEAM-013 does: Priority 1 only
+- TEAM-013 writes: "Priority 1: GPU Warmup, Priority 2: SSE, Priority 3: Multi-GPU"
+- Result: Completely derailed! Priorities 2 & 3 ignored, new random work invented
 
-Example GOOD behavior:
-- Handoff says: "TODO: 1) Add warmup, 2) Fix bug, 3) Add tests"
-- Team does: ALL THREE ITEMS
-- Team writes: "✅ All items complete! Added warmup, fixed bug, added tests. Ready for next phase."
+Example of GOOD behavior:
+- TEAM-012 handoff: "Priority 1: CUDA, Priority 2: Sampling, Priority 3: Production"
+- TEAM-013 does: ALL THREE priorities
+- TEAM-013 writes: "✅ All priorities complete: CUDA validated, sampling optimized, production ready"
+- Result: Work actually progresses, no derailment
 
-The goal is to FINISH WORK, not pass it along.
+The handoff TODO list is THE PLAN. Follow it. Don't make up your own plan.

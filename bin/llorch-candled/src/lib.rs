@@ -11,10 +11,12 @@
 //!
 //! Created by: TEAM-000 (Foundation)
 //! Modified by: TEAM-010 (Removed all deprecated modules)
+//! Modified by: TEAM-014 (Added token_output_stream module)
 
 pub mod backend;
-pub mod device; // TEAM-007: Multi-backend device initialization
+pub mod device;
 pub mod error;
+pub mod token_output_stream;
 
 // Re-export commonly used types
 pub use backend::CandleInferenceBackend;

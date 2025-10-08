@@ -4,6 +4,7 @@
 //! This binary is feature-gated to CUDA backend only.
 //!
 //! Created by: TEAM-007
+//! Modified by: TEAM-014 (Added GPU warmup)
 
 use anyhow::Result;
 use clap::Parser;
@@ -74,6 +75,13 @@ async fn main() -> Result<()> {
     tracing::info!(model = %args.model, "Loading Llama model to GPU...");
     let backend = CandleInferenceBackend::load(&args.model, device)?;
     tracing::info!("Model loaded successfully on GPU");
+
+    // ============================================================
+    // STEP 2.5: GPU Warmup
+    // ============================================================
+    // TEAM-014: Warmup GPU to eliminate cold start overhead
+    backend.warmup()?;
+    tracing::info!("GPU warmup complete - ready for inference");
 
     // ============================================================
     // STEP 3: Call back to pool-managerd (worker ready)

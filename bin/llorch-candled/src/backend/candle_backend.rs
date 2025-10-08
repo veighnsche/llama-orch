@@ -5,6 +5,7 @@
 //!
 //! Created by: TEAM-000
 //! Modified by: TEAM-009
+//! Modified by: TEAM-014 (GPU warmup, LogitsProcessor, TokenOutputStream)
 
 use async_trait::async_trait;
 use worker_http::InferenceBackend;
@@ -13,9 +14,10 @@ use anyhow::{Result, Context, bail};
 use candle_core::{Device, DType, Tensor};
 use candle_nn::VarBuilder;
 use candle_transformers::models::llama::{Llama, Config, Cache, LlamaEosToks};
+use candle_transformers::generation::{LogitsProcessor, Sampling}; // TEAM-014: For proper sampling
 use tokenizers::Tokenizer;
 use std::path::Path;
-use rand::Rng;
+use crate::token_output_stream::TokenOutputStream; // TEAM-014: For proper space handling
 
 /// Candle inference backend using candle-transformers Llama
 ///
@@ -200,53 +202,69 @@ impl CandleInferenceBackend {
         Ok((model, config, model_size_bytes))
     }
 
-    /// Sample next token from logits
+    /// Create LogitsProcessor from SamplingConfig
     ///
-    /// TEAM-009: Simple sampling implementation
-    fn sample_token(&self, logits: &Tensor, config: &SamplingConfig) -> Result<u32> {
-        let logits = logits.to_vec1::<f32>()?;
-        
-        if config.temperature == 0.0 {
-            // Greedy sampling
-            let token = logits.iter()
-                .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx, _)| idx as u32)
-                .unwrap_or(0);
-            return Ok(token);
-        }
+    /// TEAM-014: Use Candle's battle-tested LogitsProcessor instead of custom sampling
+    fn create_logits_processor(&self, config: &SamplingConfig) -> LogitsProcessor {
+        let temperature = if config.temperature == 0.0 {
+            None
+        } else {
+            Some(config.temperature as f64)
+        };
 
-        // Temperature sampling
-        let logits: Vec<f32> = logits.iter()
-            .map(|&l| l / config.temperature)
-            .collect();
+        let sampling = match (temperature, config.top_k, config.top_p) {
+            (None, _, _) => Sampling::ArgMax,
+            (Some(temp), 0, p) if p >= 1.0 => Sampling::All { temperature: temp },
+            (Some(temp), 0, p) => Sampling::TopP { p: p as f64, temperature: temp },
+            (Some(temp), k, p) if p >= 1.0 => Sampling::TopK { k: k as usize, temperature: temp },
+            (Some(temp), k, p) => Sampling::TopKThenTopP { k: k as usize, p: p as f64, temperature: temp },
+        };
 
-        // Softmax
-        let max_logit = logits.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
-        let exp_logits: Vec<f32> = logits.iter()
-            .map(|&l| (l - max_logit).exp())
-            .collect();
-        let sum: f32 = exp_logits.iter().sum();
-        let probs: Vec<f32> = exp_logits.iter().map(|&e| e / sum).collect();
-
-        // Sample from distribution
-        let mut rng = rand::thread_rng();
-        let sample: f32 = rng.gen();
-        let mut cumsum = 0.0;
-        
-        for (idx, &prob) in probs.iter().enumerate() {
-            cumsum += prob;
-            if sample < cumsum {
-                return Ok(idx as u32);
-            }
-        }
-
-        Ok((probs.len() - 1) as u32)
+        LogitsProcessor::from_sampling(config.seed, sampling)
     }
 
     /// Get memory usage in bytes
     pub fn memory_bytes(&self) -> u64 {
         self.model_size_bytes
+    }
+
+    /// Warmup GPU with dummy inference
+    ///
+    /// TEAM-014: Eliminates cold start by running a single token generation.
+    /// This initializes CUDA kernels and caches, preventing 9s overhead on first request.
+    pub fn warmup(&self) -> Result<()> {
+        tracing::info!("Starting GPU warmup...");
+        let start = std::time::Instant::now();
+
+        // Use a simple prompt for warmup
+        let warmup_prompt = "Hello";
+        
+        // Tokenize
+        let encoding = self.tokenizer.encode(warmup_prompt, true)
+            .map_err(|e| anyhow::anyhow!("Warmup tokenization failed: {}", e))?;
+        let tokens = encoding.get_ids();
+        
+        // Create input tensor
+        let input_ids = Tensor::new(tokens, &self.device)
+            .context("Failed to create warmup tensor")?
+            .unsqueeze(0)
+            .context("Failed to unsqueeze warmup tensor")?;
+        
+        // Initialize cache
+        let mut cache = Cache::new(true, DType::F32, &self.config, &self.device)
+            .context("Failed to create warmup cache")?;
+        
+        // Single forward pass
+        let _logits = self.model.forward(&input_ids, 0, &mut cache)
+            .context("Warmup forward pass failed")?;
+        
+        let duration = start.elapsed();
+        tracing::info!(
+            duration_ms = duration.as_millis(),
+            "GPU warmup complete"
+        );
+        
+        Ok(())
     }
 }
 
@@ -255,6 +273,7 @@ impl InferenceBackend for CandleInferenceBackend {
     /// Execute inference with streaming token generation
     ///
     /// TEAM-009: Complete implementation using candle-transformers
+    /// TEAM-014: Added warmup support
     async fn execute(
         &self,
         prompt: &str,
@@ -280,6 +299,12 @@ impl InferenceBackend for CandleInferenceBackend {
         // Initialize cache
         let mut cache = Cache::new(true, DType::F32, &self.config, &self.device)
             .map_err(|e| format!("Failed to create cache: {}", e))?;
+
+        // TEAM-014: Create LogitsProcessor for proper sampling
+        let mut logits_processor = self.create_logits_processor(config);
+
+        // TEAM-014: Create TokenOutputStream for proper space handling
+        let mut token_stream = TokenOutputStream::new(self.tokenizer.clone());
 
         // Generate tokens
         let mut generated_tokens = Vec::new();
@@ -336,8 +361,8 @@ impl InferenceBackend for CandleInferenceBackend {
                 logits
             };
 
-            // Sample next token
-            let next_token = self.sample_token(&logits, config)
+            // TEAM-014: Sample next token using Candle's LogitsProcessor
+            let next_token = logits_processor.sample(&logits)
                 .map_err(|e| format!("Sampling failed: {}", e))?;
 
             // Check for EOS
@@ -346,12 +371,13 @@ impl InferenceBackend for CandleInferenceBackend {
                 break;
             }
 
-            // Decode token
-            let token_str = self.tokenizer.decode(&[next_token], true)
-                .map_err(|e| format!("Detokenization failed: {}", e))?;
+            // TEAM-014: Use TokenOutputStream for proper streaming decode with spaces
+            if let Some(token_str) = token_stream.next_token(next_token)
+                .map_err(|e| format!("Detokenization failed: {}", e))? {
+                generated_text.push(token_str);
+            }
 
             generated_tokens.push(next_token);
-            generated_text.push(token_str);
             tokens.push(next_token);
 
             // Log progress
@@ -361,6 +387,12 @@ impl InferenceBackend for CandleInferenceBackend {
                     "Generation progress"
                 );
             }
+        }
+
+        // TEAM-014: Get any remaining decoded bytes from token stream
+        if let Some(rest) = token_stream.decode_rest()
+            .map_err(|e| format!("Failed to decode rest: {}", e))? {
+            generated_text.push(rest);
         }
 
         let duration_ms = start_time.elapsed().as_millis() as u64;
