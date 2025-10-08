@@ -350,76 +350,13 @@ QwenModel* QwenWeightLoader::load(
     // See: investigation-teams/TRANSPOSE_FALSE_LEAD.md (full explanation)
     //      ROOT_CAUSE_ANALYSIS.md (row-major vs column-major)
     //      src/cuda/weight_loader.rs:560 (NO TRANSPOSE during loading)
-    // ============================================================================
     // 
-    // EVIDENCE FOR HYPOTHESIS:
-    //   1. gguf_dump.py shows: token_embd.weight = [896, 151936]
-    //   2. Candle expects: [vocab_size, hidden_size] = [151936, 896]
-    //   3. Candle source (candle-nn/src/linear.rs:49): `let w = self.weight.t()?;`
-    //      → Candle transposes weights in EVERY linear layer!
-    // 
-    // TEST IMPLEMENTATION: Transpose embedding matrix at load time
-    // 
-    // TEST RESULT: ❓ **NOT EXECUTED**
-    //   - This code path (load()) is NOT used by the test!
-    //   - Test uses load_from_gpu_pointers() where Rust pre-loads weights
-    //   - Transpose code below never ran (no log messages appeared)
-    //   - Checkpoint values UNCHANGED: C0 still [0.012, 0.007, -0.020, ...]
-    // 
-    // CONCLUSION: Cannot confirm or deny transpose hypothesis from this test
-    //   - Need to implement transpose in Rust weight loader OR
-    //   - Need to implement transpose in load_from_gpu_pointers() OR
-    //   - Need different test that uses load() path
-    // 
-    // NEXT TEAM OPTIONS:
-    //   A) Implement transpose in Rust (bin/worker-orcd/src/cuda_ffi/gguf_loader.rs)
-    //   B) Implement transpose in load_from_gpu_pointers() below (line 427)
-    //   C) Test with standalone C++ program that calls load() directly
-    //   D) Investigate OTHER theories (attention, FFN, RMSNorm bugs)
-    // 
-    // IMPORTANT: This transpose theory is STILL VALID! Just not tested yet.
-    //   - GGUF dimensions ARE transposed (verified with gguf_dump)
-    //   - Candle DOES transpose (verified in source code)
-    //   - We DON'T transpose (verified by unchanged checkpoint values)
-    //   - Therefore: We're likely reading transposed data!
-    // 
-    // BUT: Could be combined with OTHER bugs:
-    //   - Maybe transpose helps but attention is also broken
-    //   - Maybe transpose helps but FFN is also broken
-    //   - Maybe transpose helps but cuBLAS params need adjustment
-    //   - Maybe GGUF is actually row-major despite dimensions (unlikely)
-    // 
-    // See: investigation-teams/ROOT_CAUSE_FOUND.md (transpose analysis)
-    //      investigation-teams/GGUF_TRANSPOSE_ANALYSIS.md (all matrix dims)
-    //      investigation-teams/SMOKING_GUN_DEEP_DIVE.md (Candle analysis)
+    // ⚠️⚠️⚠️ DO NOT IMPLEMENT TRANSPOSE! ⚠️⚠️⚠️
+    // The code below was written based on wrong hypothesis.
+    // It's kept for reference but should NOT be used.
     // ============================================================================
     
-    // TRANSPOSE CODE (not executed in current test, but ready for future use)
-    fprintf(stderr, "[DICKINSON] Loading and transposing embedding matrix...\n");
-    void* original_embd = load_tensor_to_vram(path, "token_embd.weight", tracker);
-    
-    // Allocate transposed buffer
-    // Original: [896, 151936] = 896 * 151936 * 2 bytes (FP16)
-    // Transposed: [151936, 896] = same size, different layout
-    size_t embd_size = 896 * 151936 * sizeof(half);
-    void* transposed_embd;
-    cudaMalloc(&transposed_embd, embd_size);
-    tracker.record_allocation(transposed_embd, embd_size, VramPurpose::ModelWeights, "token_embd.weight (transposed)");
-    
-    // Transpose: [896, 151936] -> [151936, 896]
-    fprintf(stderr, "[DICKINSON] Transposing embedding [896, 151936] -> [151936, 896]...\n");
-    cuda_transpose_fp16(
-        reinterpret_cast<const half*>(original_embd),
-        reinterpret_cast<half*>(transposed_embd),
-        896,      // rows in original (column-major)
-        151936    // cols in original (column-major)
-    );
-    cudaDeviceSynchronize();
-    
-    // Free original, use transposed
-    cudaFree(original_embd);
-    model->weights.token_embd = transposed_embd;
-    fprintf(stderr, "[DICKINSON] Embedding transposed successfully\n");
+    model->weights.token_embd = load_tensor_to_vram(path, "token_embd.weight", tracker);
     
     // Load layers
     model->weights.layers.resize(config.num_layers);
