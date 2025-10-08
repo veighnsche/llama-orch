@@ -14,8 +14,10 @@
 //!
 //! Created by: TEAM-000
 //! Modified by: TEAM-003 (RoPE implementation)
+//! Modified by: TEAM-005 (Optimized with candle_nn::rotary_emb)
 
-use candle_core::{Tensor, Result as CandleResult, Device, DType};
+use candle_core::{Tensor, Result as CandleResult, Device};
+use candle_nn::rotary_emb::rope_i;
 
 /// RoPE (Rotary Position Embedding) for Llama-2
 ///
@@ -67,7 +69,7 @@ impl RoPE {
         })
     }
 
-    /// Apply RoPE rotation to Q and K tensors
+    /// Apply RoPE rotation to Q and K tensors using Candle's optimized implementation
     ///
     /// # Arguments
     /// * `q` - Query tensor [batch, seq_len, n_heads, head_dim]
@@ -78,70 +80,36 @@ impl RoPE {
     /// * `(q_rotated, k_rotated)` - Rotated Q and K tensors (same shapes)
     ///
     /// Note: V is NOT rotated (returned unchanged elsewhere)
+    /// 
+    /// TEAM-005: Now uses candle_nn::rotary_emb::rope_i for GPU-accelerated rotation
     pub fn forward(
         &self,
         q: &Tensor,
         k: &Tensor,
         position: usize,
     ) -> CandleResult<(Tensor, Tensor)> {
-        let q_rot = self.apply_rotation(q, position)?;
-        let k_rot = self.apply_rotation(k, position)?;
-        Ok((q_rot, k_rot))
-    }
-
-    /// Apply rotation to a single tensor (Q or K)
-    fn apply_rotation(&self, x: &Tensor, position: usize) -> CandleResult<Tensor> {
-        // x shape: [batch, seq_len, n_heads, head_dim]
-        let shape = x.dims();
-        let batch = shape[0];
-        let seq_len = shape[1];
-        let n_heads = shape[2];
+        // Get sequence length from input
+        let seq_len = q.dim(1)?;
         
-        // Reshape to [batch * seq_len * n_heads, head_dim]
-        let x_flat = x.flatten(0, 2)?;
-        let total_tokens = batch * seq_len * n_heads;
-        
-        // Split into even and odd dimensions by striding
-        // We need to interleave: [0,1], [2,3], [4,5], ... -> separate into [0,2,4,...] and [1,3,5,...]
-        let mut x_even_parts = Vec::new();
-        let mut x_odd_parts = Vec::new();
-        for i in 0..(self.head_dim / 2) {
-            x_even_parts.push(x_flat.narrow(1, i * 2, 1)?);
-            x_odd_parts.push(x_flat.narrow(1, i * 2 + 1, 1)?);
-        }
-        let x_even = Tensor::cat(&x_even_parts, 1)?;
-        let x_odd = Tensor::cat(&x_odd_parts, 1)?;
-        
-        // Get cos/sin for positions [position..position+seq_len]
+        // Extract cos/sin for current position range
         let cos = self.cos_cache.narrow(0, position, seq_len)?;
         let sin = self.sin_cache.narrow(0, position, seq_len)?;
         
-        // Repeat cos/sin for each head: [seq_len, dim/2] -> [batch * seq_len * n_heads, dim/2]
-        // First repeat for batch
-        let cos_batch = cos.repeat((batch, 1))?;
-        let sin_batch = sin.repeat((batch, 1))?;
+        // rope_i expects [batch, n_heads, seq_len, head_dim]
+        // Our input is [batch, seq_len, n_heads, head_dim]
+        // Transpose: (0, 1, 2, 3) -> (0, 2, 1, 3) and make contiguous
+        let q_transposed = q.transpose(1, 2)?.contiguous()?;
+        let k_transposed = k.transpose(1, 2)?.contiguous()?;
         
-        // Then repeat for heads
-        let cos_expanded = cos_batch.unsqueeze(1)?.repeat((1, n_heads, 1))?.flatten(0, 1)?;
-        let sin_expanded = sin_batch.unsqueeze(1)?.repeat((1, n_heads, 1))?.flatten(0, 1)?;
+        // Apply Candle's optimized RoPE (GPU kernel on CUDA/Metal, parallel CPU)
+        let q_rot = rope_i(&q_transposed, &cos, &sin)?;
+        let k_rot = rope_i(&k_transposed, &cos, &sin)?;
         
-        // Apply rotation:
-        // x_even' = x_even * cos - x_odd * sin
-        // x_odd'  = x_even * sin + x_odd * cos
-        let x_even_rot = x_even.mul(&cos_expanded)?.sub(&x_odd.mul(&sin_expanded)?)?;
-        let x_odd_rot = x_even.mul(&sin_expanded)?.add(&x_odd.mul(&cos_expanded)?)?;
+        // Transpose back: (0, 2, 1, 3) -> (0, 1, 2, 3) and make contiguous
+        let q_rot = q_rot.transpose(1, 2)?.contiguous()?;
+        let k_rot = k_rot.transpose(1, 2)?.contiguous()?;
         
-        // Interleave back: [even[0], odd[0], even[1], odd[1], ...]
-        let mut rotated_parts = Vec::new();
-        for i in 0..(self.head_dim / 2) {
-            rotated_parts.push(x_even_rot.narrow(1, i, 1)?);
-            rotated_parts.push(x_odd_rot.narrow(1, i, 1)?);
-        }
-        
-        let x_rot_flat = Tensor::cat(&rotated_parts, 1)?;
-        
-        // Reshape back to original shape
-        x_rot_flat.reshape(shape)
+        Ok((q_rot, k_rot))
     }
 
     /// Get the device this layer is on

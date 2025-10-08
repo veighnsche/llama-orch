@@ -20,5 +20,5 @@ pub mod tensor;
 
 // Re-export commonly used types
 pub use backend::CandleInferenceBackend;
-pub use cache::KVCache;
+pub use cache::{Cache, KvCache};
 pub use error::LlorchError;

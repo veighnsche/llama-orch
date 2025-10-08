@@ -15,8 +15,10 @@
 //!
 //! Created by: TEAM-000
 //! Modified by: TEAM-004 (QKV projection)
+//! Modified by: TEAM-005 (Attention scores computation)
 
-use candle_core::{Tensor, Result as CandleResult, Device};
+use candle_core::{Tensor, Result as CandleResult, Device, D};
+use candle_nn::ops::softmax;
 
 /// QKV Projection for Llama-2 attention
 ///
@@ -108,6 +110,128 @@ impl QKVProjection {
     /// Get the device this layer is on
     pub fn device(&self) -> &Device {
         &self.device
+    }
+}
+
+/// Attention mechanism for Llama-2
+/// 
+/// Combines QKV projection, RoPE, and scaled dot-product attention
+/// TEAM-005: Implements Checkpoint 3 (Attention Scores)
+pub struct Attention {
+    qkv: QKVProjection,
+    n_heads: usize,
+    head_dim: usize,
+    scale: f64,
+    device: Device,
+}
+
+impl Attention {
+    /// Create new attention layer
+    pub fn new(
+        q_weight: Tensor,
+        k_weight: Tensor,
+        v_weight: Tensor,
+        n_heads: usize,
+        device: &Device,
+    ) -> CandleResult<Self> {
+        let qkv = QKVProjection::new(q_weight, k_weight, v_weight, n_heads, device)?;
+        let hidden_size = qkv.q_proj.dim(0)?;
+        let head_dim = hidden_size / n_heads;
+        let scale = (head_dim as f64).sqrt();
+        
+        Ok(Self {
+            qkv,
+            n_heads,
+            head_dim,
+            scale,
+            device: device.clone(),
+        })
+    }
+    
+    /// Compute attention scores (Q @ K^T / sqrt(head_dim))
+    /// 
+    /// # Arguments
+    /// * `q` - Query tensor [batch, seq_len, n_heads, head_dim]
+    /// * `k` - Key tensor [batch, seq_len, n_heads, head_dim]
+    /// 
+    /// # Returns
+    /// * Attention scores [batch, n_heads, seq_q, seq_k]
+    /// 
+    /// TEAM-005: Checkpoint 3 - Scaled dot-product attention scores
+    pub fn compute_scores(&self, q: &Tensor, k: &Tensor) -> CandleResult<Tensor> {
+        // q, k shape: [batch, seq_len, n_heads, head_dim]
+        // Transpose to [batch, n_heads, seq_len, head_dim]
+        let q = q.transpose(1, 2)?.contiguous()?;
+        let k = k.transpose(1, 2)?.contiguous()?;
+        
+        // Compute Q @ K^T: [batch, n_heads, seq_q, head_dim] @ [batch, n_heads, head_dim, seq_k]
+        // Result: [batch, n_heads, seq_q, seq_k]
+        let scores = q.matmul(&k.transpose(2, 3)?)?;
+        
+        // Scale by 1/sqrt(head_dim)
+        let scores = (scores / self.scale)?;
+        
+        Ok(scores)
+    }
+    
+    /// Apply causal mask to attention scores
+    /// 
+    /// Masks future positions with -inf so they get 0 attention after softmax
+    pub fn apply_causal_mask(&self, scores: &Tensor) -> CandleResult<Tensor> {
+        let (batch, n_heads, seq_q, seq_k) = scores.dims4()?;
+        
+        // Create causal mask: upper triangular matrix of -inf
+        let mask = if seq_q == seq_k {
+            // Standard causal mask for prompt processing
+            let mut mask_data = vec![0.0f32; seq_q * seq_k];
+            for i in 0..seq_q {
+                for j in (i + 1)..seq_k {
+                    mask_data[i * seq_k + j] = f32::NEG_INFINITY;
+                }
+            }
+            Tensor::from_vec(mask_data, (seq_q, seq_k), &self.device)?
+        } else {
+            // For generation (seq_q=1), no masking needed
+            Tensor::zeros((seq_q, seq_k), candle_core::DType::F32, &self.device)?
+        };
+        
+        // Broadcast mask to [batch, n_heads, seq_q, seq_k]
+        let mask = mask.unsqueeze(0)?.unsqueeze(0)?;
+        let mask = mask.broadcast_as(scores.shape())?;
+        
+        // Apply mask: scores + mask (where mask is 0 or -inf)
+        scores.broadcast_add(&mask)
+    }
+    
+    /// Compute attention output
+    /// 
+    /// Full attention: scores -> softmax -> weighted sum with V
+    pub fn forward(&self, q: &Tensor, k: &Tensor, v: &Tensor, use_causal_mask: bool) -> CandleResult<Tensor> {
+        // Compute scores
+        let mut scores = self.compute_scores(q, k)?;
+        
+        // Apply causal mask if requested
+        if use_causal_mask {
+            scores = self.apply_causal_mask(&scores)?;
+        }
+        
+        // Apply softmax: [batch, n_heads, seq_q, seq_k]
+        let attn_weights = softmax(&scores, D::Minus1)?;
+        
+        // Transpose V to [batch, n_heads, seq_len, head_dim]
+        let v = v.transpose(1, 2)?.contiguous()?;
+        
+        // Weighted sum: [batch, n_heads, seq_q, seq_k] @ [batch, n_heads, seq_k, head_dim]
+        // Result: [batch, n_heads, seq_q, head_dim]
+        let output = attn_weights.matmul(&v)?;
+        
+        // Transpose back to [batch, seq_q, n_heads, head_dim]
+        let output = output.transpose(1, 2)?.contiguous()?;
+        
+        // Reshape to [batch, seq_q, hidden_size]
+        let (batch, seq_q, _, _) = output.dims4()?;
+        let hidden_size = self.n_heads * self.head_dim;
+        output.reshape((batch, seq_q, hidden_size))
     }
 }
 

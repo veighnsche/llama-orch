@@ -7,10 +7,12 @@
 //! Checkpoint 3 validation target
 //!
 //! Created by: TEAM-000
+//! Modified by: TEAM-005 (Using candle_nn::kv_cache)
 
 mod kv_cache;
 
-pub use kv_cache::KVCache;
+// Re-export Candle's KV cache types
+pub use kv_cache::{Cache, KvCache};
 
 // Future: Add more cache strategies here
 // mod paged_cache;

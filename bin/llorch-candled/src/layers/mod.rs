@@ -20,6 +20,6 @@ pub mod transformer;
 pub use rms_norm::RMSNorm;
 pub use rope::RoPE;
 pub use embedding::Embedding;
-pub use attention::QKVProjection;
+pub use attention::{QKVProjection, Attention};
 pub use swiglu::SwiGLU;
 pub use transformer::TransformerBlock;

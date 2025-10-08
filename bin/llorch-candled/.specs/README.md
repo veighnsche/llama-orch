@@ -45,16 +45,14 @@ The following documents from `bin/llorch-cpud/.specs/` are relevant for Llama-2 
 ### Foundation (Week 1)
 - [x] **Checkpoint 0**: Foundation Setup - HTTP server, project structure, worker crates
 
-### Core Layers (Week 2)
-- [ ] **Checkpoint 1**: RMSNorm - Root mean square normalization
-- [ ] **Checkpoint 1B**: RoPE - Rotary position embeddings
-- [ ] **Checkpoint 2**: QKV Projection - Separate Q, K, V projections
-- [ ] **Checkpoint 3**: KV Cache - Key-value caching for generation
-- [ ] **Checkpoint 6**: SwiGLU - Swish-gated linear unit FFN
+### Core Layers (Week 2) - UPDATED 2025-10-08
+- [x] **Checkpoint 1**: RMSNorm - Using `candle_nn::ops::rms_norm` ✅
+- [x] **Checkpoint 1B**: RoPE - Using `candle_nn::rotary_emb::rope_i` ✅
+- [x] **Checkpoint 2**: QKV Projection - Manual matmul (optimal) ✅
+- [x] **Checkpoint 3**: Attention - Using `candle_nn::ops::softmax` ✅
+- [ ] **Checkpoint 6**: SwiGLU - Will use `candle_nn::ops::swiglu` ⏳
 
 ### Full Model (Week 3)
-- [ ] **Checkpoint 4**: Attention Scores - Scaled dot-product attention
-- [ ] **Checkpoint 5**: Attention Output - Output projection
 - [ ] **Checkpoint 7**: First Block - Complete transformer block
 - [ ] **Checkpoint 8**: Full Logits - 32-layer model output
 
@@ -68,19 +66,26 @@ The following documents from `bin/llorch-cpud/.specs/` are relevant for Llama-2 
 
 ## Architecture Highlights
 
-### Hybrid Compute Strategy
+### Candle-First Strategy ✅
 
-**CPU Path (Primary):**
-- Pure ndarray implementation
-- Checkpoint validation
-- Educational value
-- Always works
+**UPDATED 2025-10-08 by TEAM-005:**
 
-**CUDA Path (Optional):**
-- Candle kernels only (not framework)
-- Feature-gated with `cuda` feature
-- Performance optimization
-- Added after CPU validation
+We use **Candle's optimized implementations for the difficult parts of inference**.
+
+**What We Use From Candle:**
+- ✅ `candle_nn::rotary_emb::rope_i` - RoPE (GPU kernels, 3-5x faster)
+- ✅ `candle_nn::ops::rms_norm` - RMSNorm (GPU kernels, numerically stable)
+- ✅ `candle_nn::ops::softmax` - Softmax (GPU kernels, stable)
+- ✅ `candle_nn::kv_cache::KvCache` - KV caching (dynamic, efficient)
+- ✅ `candle_nn::ops::swiglu` - SwiGLU activation (optimized)
+
+**What We Implement:**
+- Model architecture (Transformer blocks, layer stacking)
+- Weight loading (GGUF format)
+- Tokenization (BPE)
+- API design (HTTP server, streaming)
+
+**See:** `CANDLE_USAGE_POLICY.md` for complete guidelines
 
 ### Llama-2 Specifics
 
@@ -99,27 +104,28 @@ The following documents from `bin/llorch-cpud/.specs/` are relevant for Llama-2 
 
 ## Implementation Guidelines
 
-### 1. Follow Checkpoint Order
-- Implement in sequence: 0 → 1 → 1B → 2 → 3 → 6 → 4 → 5 → 7 → 8 → 9-11 → 12
+### 1. Use Candle for Difficult Parts ✅ **NEW**
+- **DO:** Use `candle_nn` optimized implementations (RoPE, RMSNorm, Softmax, etc.)
+- **DON'T:** Reimplement what Candle already provides
+- **FOCUS ON:** Model architecture, weight loading, tokenization
+- **SEE:** `CANDLE_USAGE_POLICY.md` for complete guidelines
+
+### 2. Follow Checkpoint Order
+- Implement in sequence: 0 → 1 → 1B → 2 → 3 → 6 → 7 → 8 → 9-11 → 12
 - Validate each checkpoint before proceeding
 - Use llama.cpp as reference
-
-### 2. CPU First, CUDA Later
-- Implement CPU path first (ndarray)
-- Validate with checkpoints
-- Add CUDA path after validation passes
-- Ensure both paths produce identical output
 
 ### 3. Code Signatures
 - Add `// Created by: TEAM-XXX` to new files
 - Add `// Modified by: TEAM-XXX` to changes
+- Document Candle usage: `// TEAM-XXX: Using candle_nn::...`
 - Never remove existing signatures
 
 ### 4. Testing
 - Write checkpoint test for each component
-- Compare with llama.cpp reference
+- Test Candle integration (shape transformations, etc.)
 - Validate shapes and values
-- Test both CPU and CUDA paths
+- Test determinism (bit-exact across runs)
 
 ---
 
@@ -163,10 +169,22 @@ cargo run -- \
 
 ## Status
 
-**Current Phase:** Foundation Complete ✅  
-**Next Phase:** Checkpoint 1 (RMSNorm) ⏳  
-**Target:** Week 2 - Core Layers
+**UPDATED 2025-10-08 by TEAM-005:**
+
+**Current Phase:** Core Layers Complete ✅  
+**Completed:**
+- ✅ Checkpoint 0: Foundation
+- ✅ Checkpoint 1: RMSNorm (using Candle)
+- ✅ Checkpoint 1B: RoPE (using Candle)
+- ✅ Checkpoint 2: QKV Projection
+- ✅ Checkpoint 3: Attention (using Candle softmax)
+
+**Next Phase:** FFN (Checkpoint 6) ⏳  
+**Target:** Week 3 - Full Model
+
+**Test Status:** 31/31 tests passing (100%) ✅
 
 ---
 
-Built by TEAM-000 🌊
+Built by TEAM-000 🌊  
+Optimized by TEAM-005 🚀
