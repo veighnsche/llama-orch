@@ -10,17 +10,12 @@
 //! - Worker integration via InferenceBackend trait
 //!
 //! Created by: TEAM-000 (Foundation)
-//! Modified by: TEAM-010 (Cleanup deprecated modules)
+//! Modified by: TEAM-010 (Removed all deprecated modules)
 
 pub mod backend;
-pub mod cache;
 pub mod device; // TEAM-007: Multi-backend device initialization
 pub mod error;
-pub mod layers; // TEAM-010: Deprecated, kept as placeholder
-pub mod model;  // TEAM-010: Deprecated, kept as placeholder
-pub mod tensor;
 
 // Re-export commonly used types
 pub use backend::CandleInferenceBackend;
-pub use cache::Cache;
 pub use error::LlorchError;

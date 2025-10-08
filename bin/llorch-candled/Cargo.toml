@@ -121,10 +121,6 @@ required-features = ["accelerate"]
 name = "llorch-candled"
 path = "src/main.rs"
 
-[[bench]]
-name = "inference_bench"
-harness = false
-
 [lib]
 name = "llorch_candled"
 path = "src/lib.rs"
