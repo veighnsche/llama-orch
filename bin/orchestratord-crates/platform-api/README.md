@@ -1,1 +1,0 @@
-so the endpoint if you want your cluster to participate in the llama-orch platform

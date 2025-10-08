@@ -1,1 +1,0 @@
-the orchestratord receives from the nodes a list of all the pools and their replicas and the VRAM on each GPU and available RAM on the node. with that information the orchestord can decide smarties where to place the task.
