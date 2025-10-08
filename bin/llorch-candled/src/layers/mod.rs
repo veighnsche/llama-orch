@@ -9,6 +9,7 @@
 //! - TransformerBlock (Checkpoint 7)
 //!
 //! Created by: TEAM-000
+//! Modified by: TEAM-008 (Removed RoPE struct, now uses apply_rope function)
 
 pub mod rms_norm;
 pub mod rope;
@@ -18,7 +19,7 @@ pub mod swiglu;
 pub mod transformer;
 
 pub use rms_norm::RMSNorm;
-pub use rope::RoPE;
+pub use rope::apply_rope;  // TEAM-008: Changed from RoPE struct to function
 pub use embedding::Embedding;
 pub use attention::{QKVProjection, Attention};
 pub use swiglu::SwiGLU;

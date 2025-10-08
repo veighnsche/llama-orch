@@ -43,9 +43,16 @@ candle-core = "0.9"
 # Candle neural network functions (rms_norm, silu, softmax, linear_no_bias)
 candle-nn = "0.9"
 
+# TEAM-008: Use candle-transformers for complete model implementations
+candle-transformers = "0.9"
+
 # Candle kernels for CUDA acceleration (optional, feature-gated)
+# TEAM-007: Added CUDA version feature for cudarc
 candle-kernels = { version = "0.9", optional = true }
-cudarc = { version = "0.11", optional = true }
+cudarc = { version = "0.11", optional = true, features = ["cuda-12050"] }
+
+# HuggingFace tokenizers (used by Candle examples)
+tokenizers = "0.15"
 
 # CPU tensor operations (keep for conversion helpers and legacy code)
 ndarray = "0.15"
@@ -80,15 +87,33 @@ criterion = "0.5"
 [features]
 default = []
 
-# CUDA acceleration using Candle kernels
-# Enables optimized CUDA kernels for RmsNorm, SiLU, etc.
-# CPU fallback still available for validation
-# Modified by: TEAM-001
+# Backend features (mutually exclusive at build time)
+# Modified by: TEAM-007
+cpu = []
 cuda = ["candle-kernels", "cudarc", "candle-core/cuda", "candle-nn/cuda"]
+accelerate = ["candle-core/accelerate", "candle-nn/accelerate"]
 
 # Performance benchmarking
 benchmark = []
 
+# TEAM-007: Multi-backend binaries
+# Each binary is feature-gated to a specific backend
+[[bin]]
+name = "llorch-cpu-candled"
+path = "src/bin/cpu.rs"
+required-features = ["cpu"]
+
+[[bin]]
+name = "llorch-cuda-candled"
+path = "src/bin/cuda.rs"
+required-features = ["cuda"]
+
+[[bin]]
+name = "llorch-accelerate-candled"
+path = "src/bin/accelerate.rs"
+required-features = ["accelerate"]
+
+# Legacy binary (for backward compatibility during migration)
 [[bin]]
 name = "llorch-candled"
 path = "src/main.rs"

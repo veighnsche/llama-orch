@@ -1,0 +1,5 @@
+# Proof bundles (generated during tests)
+.proof_bundle/
+
+# Machine-specific test configuration (TEAM-007)
+.llorch-test.toml

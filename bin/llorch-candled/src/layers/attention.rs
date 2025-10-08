@@ -16,10 +16,11 @@
 //! Created by: TEAM-000
 //! Modified by: TEAM-004 (QKV projection)
 //! Modified by: TEAM-005 (Attention scores computation)
+//! Modified by: TEAM-008 (Refactored to use unified cache)
 
 use candle_core::{Tensor, Result as CandleResult, Device, D};
 use candle_nn::ops::softmax;
-use std::collections::HashMap;
+use candle_transformers::models::llama::Cache;
 
 /// QKV Projection for Llama-2 attention
 ///
@@ -119,13 +120,13 @@ impl QKVProjection {
 /// Combines QKV projection, RoPE, and scaled dot-product attention
 /// TEAM-005: Implements Checkpoint 3 (Attention Scores)
 /// TEAM-006: Added mask caching optimization
+/// TEAM-008: Refactored to use unified cache for masks
 pub struct Attention {
     qkv: QKVProjection,
     n_heads: usize,
     head_dim: usize,
     scale: f64,
     device: Device,
-    mask_cache: HashMap<usize, Tensor>,  // TEAM-006: Cache masks by sequence length
 }
 
 impl Attention {
@@ -148,8 +149,12 @@ impl Attention {
             head_dim,
             scale,
             device: device.clone(),
-            mask_cache: HashMap::new(),  // TEAM-006: Initialize empty cache
         })
+    }
+    
+    /// Get QKV projection (for testing)
+    pub fn qkv(&self) -> &QKVProjection {
+        &self.qkv
     }
     
     /// Compute attention scores (Q @ K^T / sqrt(head_dim))
@@ -178,36 +183,21 @@ impl Attention {
         Ok(scores)
     }
     
-    /// Get cached causal mask for sequence length
-    /// 
-    /// TEAM-006: Cache masks to avoid recreation (58ms → 0.1ms at seq_len=512)
-    fn get_mask(&mut self, seq_len: usize) -> CandleResult<&Tensor> {
-        if !self.mask_cache.contains_key(&seq_len) {
-            // Create mask only if not cached
-            let mut mask_data = vec![0.0f32; seq_len * seq_len];
-            for i in 0..seq_len {
-                for j in (i + 1)..seq_len {
-                    mask_data[i * seq_len + j] = f32::NEG_INFINITY;
-                }
-            }
-            let mask = Tensor::from_vec(mask_data, (seq_len, seq_len), &self.device)?;
-            self.mask_cache.insert(seq_len, mask);
-        }
-        Ok(self.mask_cache.get(&seq_len).unwrap())
-    }
     
     /// Apply causal mask to attention scores
     /// 
     /// Masks future positions with -inf so they get 0 attention after softmax
-    /// TEAM-006: Now uses cached masks for 99% speedup
-    pub fn apply_causal_mask(&mut self, scores: &Tensor) -> CandleResult<Tensor> {
+    /// TEAM-008: Simplified - create mask directly (Candle's mask() is private)
+    pub fn apply_causal_mask(scores: &Tensor) -> CandleResult<Tensor> {
         let (_batch, _n_heads, seq_q, seq_k) = scores.dims4()?;
         
         if seq_q == seq_k {
-            // Use cached mask
-            let mask = self.get_mask(seq_q)?;
+            // Create causal mask directly
+            let mask = (1.0 - Tensor::tril2(seq_q, scores.dtype(), scores.device())?)?;
+            let mask = mask.to_dtype(scores.dtype())?;
+            let neg_inf = Tensor::new(f32::NEG_INFINITY, scores.device())?;
+            let mask = mask.broadcast_mul(&neg_inf)?;
             let mask = mask.unsqueeze(0)?.unsqueeze(0)?;
-            let mask = mask.broadcast_as(scores.shape())?;
             scores.broadcast_add(&mask)
         } else {
             // For generation (seq_q=1), no masking needed
@@ -218,14 +208,14 @@ impl Attention {
     /// Compute attention output
     /// 
     /// Full attention: scores -> softmax -> weighted sum with V
-    /// TEAM-006: Changed to &mut self for mask caching
-    pub fn forward(&mut self, q: &Tensor, k: &Tensor, v: &Tensor, use_causal_mask: bool) -> CandleResult<Tensor> {
+    /// TEAM-008: Simplified mask handling
+    pub fn forward(&self, q: &Tensor, k: &Tensor, v: &Tensor, use_causal_mask: bool) -> CandleResult<Tensor> {
         // Compute scores
         let mut scores = self.compute_scores(q, k)?;
         
         // Apply causal mask if requested
         if use_causal_mask {
-            scores = self.apply_causal_mask(&scores)?;
+            scores = Self::apply_causal_mask(&scores)?;
         }
         
         // Apply softmax: [batch, n_heads, seq_q, seq_k]

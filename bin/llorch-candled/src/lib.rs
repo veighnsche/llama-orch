@@ -13,6 +13,7 @@
 
 pub mod backend;
 pub mod cache;
+pub mod device; // TEAM-007: Multi-backend device initialization
 pub mod error;
 pub mod layers;
 pub mod model;
