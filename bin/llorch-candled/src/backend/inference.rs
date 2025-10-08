@@ -1,6 +1,6 @@
 //! Main inference backend implementation
 //!
-//! Created by: TEAM-015 (refactored from candle_backend.rs)
+//! Created by: TEAM-015 (refactored from `candle_backend.rs`)
 //! Original code by: TEAM-000, TEAM-009, TEAM-011, TEAM-014
 
 use super::model_loader;
@@ -29,10 +29,10 @@ pub struct CandleInferenceBackend {
 }
 
 impl CandleInferenceBackend {
-    /// Load Llama model from SafeTensors or GGUF
+    /// Load Llama model from `SafeTensors` or GGUF
     ///
     /// TEAM-009: Uses candle-transformers Llama directly
-    /// TEAM-015: Delegates to model_loader module
+    /// TEAM-015: Delegates to `model_loader` module
     pub fn load(model_path: &str, device: Device) -> Result<Self> {
         let path = Path::new(model_path);
 
@@ -47,7 +47,7 @@ impl CandleInferenceBackend {
         };
 
         let tokenizer = Tokenizer::from_file(&tokenizer_path).map_err(|e| {
-            anyhow::anyhow!("Failed to load tokenizer from {:?}: {}", tokenizer_path, e)
+            anyhow::anyhow!("Failed to load tokenizer from {tokenizer_path:?}: {e}")
         })?;
 
         tracing::info!(
@@ -79,7 +79,7 @@ impl CandleInferenceBackend {
         let encoding = self
             .tokenizer
             .encode(warmup_prompt, true)
-            .map_err(|e| anyhow::anyhow!("Warmup tokenization failed: {}", e))?;
+            .map_err(|e| anyhow::anyhow!("Warmup tokenization failed: {e}"))?;
         let tokens = encoding.get_ids();
 
         // Create input tensor
@@ -108,7 +108,7 @@ impl InferenceBackend for CandleInferenceBackend {
     /// Execute inference with streaming token generation
     ///
     /// TEAM-009: Complete implementation using candle-transformers
-    /// TEAM-014: Added warmup support, LogitsProcessor, TokenOutputStream
+    /// TEAM-014: Added warmup support, `LogitsProcessor`, `TokenOutputStream`
     /// TEAM-015: Refactored into focused modules
     async fn execute(
         &self,
@@ -126,14 +126,14 @@ impl InferenceBackend for CandleInferenceBackend {
         let encoding = self
             .tokenizer
             .encode(prompt, true)
-            .map_err(|e| format!("Tokenization failed: {}", e))?;
+            .map_err(|e| format!("Tokenization failed: {e}"))?;
         let mut tokens = encoding.get_ids().to_vec();
 
         tracing::debug!(prompt_tokens = tokens.len(), "Prompt tokenized");
 
         // Initialize cache
         let mut cache = Cache::new(true, DType::F32, &self.config, &self.device)
-            .map_err(|e| format!("Failed to create cache: {}", e))?;
+            .map_err(|e| format!("Failed to create cache: {e}"))?;
 
         // TEAM-014: Create LogitsProcessor for proper sampling
         // TEAM-015: Delegates to sampling module
@@ -154,15 +154,15 @@ impl InferenceBackend for CandleInferenceBackend {
             let input_ids = if pos == 0 {
                 // First iteration: use all prompt tokens
                 Tensor::new(&tokens[..], &self.device)
-                    .map_err(|e| format!("Failed to create input tensor: {}", e))?
+                    .map_err(|e| format!("Failed to create input tensor: {e}"))?
                     .unsqueeze(0) // Add batch dimension: [seq_len] -> [1, seq_len]
-                    .map_err(|e| format!("Failed to unsqueeze input tensor: {}", e))?
+                    .map_err(|e| format!("Failed to unsqueeze input tensor: {e}"))?
             } else {
                 // Subsequent iterations: only last token
                 Tensor::new(&[tokens[tokens.len() - 1]], &self.device)
-                    .map_err(|e| format!("Failed to create input tensor: {}", e))?
+                    .map_err(|e| format!("Failed to create input tensor: {e}"))?
                     .unsqueeze(0) // Add batch dimension: [1] -> [1, 1]
-                    .map_err(|e| format!("Failed to unsqueeze input tensor: {}", e))?
+                    .map_err(|e| format!("Failed to unsqueeze input tensor: {e}"))?
             };
 
             // TEAM-009: Verify device residency (log only, no comparison since Device doesn't impl PartialEq)
@@ -178,7 +178,7 @@ impl InferenceBackend for CandleInferenceBackend {
             let logits = self
                 .model
                 .forward(&input_ids, pos_usize, &mut cache)
-                .map_err(|e| format!("Forward pass failed: {}", e))?;
+                .map_err(|e| format!("Forward pass failed: {e}"))?;
 
             // TEAM-009: Log output device residency
             if pos == 0 {
@@ -191,18 +191,18 @@ impl InferenceBackend for CandleInferenceBackend {
 
             // Get logits for last position
             let logits =
-                logits.squeeze(0).map_err(|e| format!("Failed to squeeze logits: {}", e))?;
+                logits.squeeze(0).map_err(|e| format!("Failed to squeeze logits: {e}"))?;
             let logits = if logits.dims().len() > 1 {
                 logits
                     .get(logits.dims()[0] - 1)
-                    .map_err(|e| format!("Failed to get last logits: {}", e))?
+                    .map_err(|e| format!("Failed to get last logits: {e}"))?
             } else {
                 logits
             };
 
             // TEAM-014: Sample next token using Candle's LogitsProcessor
             let next_token =
-                logits_processor.sample(&logits).map_err(|e| format!("Sampling failed: {}", e))?;
+                logits_processor.sample(&logits).map_err(|e| format!("Sampling failed: {e}"))?;
 
             // Check for EOS
             if next_token == self.tokenizer.token_to_id("</s>").unwrap_or(2) {
@@ -213,7 +213,7 @@ impl InferenceBackend for CandleInferenceBackend {
             // TEAM-014: Use TokenOutputStream for proper streaming decode with spaces
             if let Some(token_str) = token_stream
                 .next_token(next_token)
-                .map_err(|e| format!("Detokenization failed: {}", e))?
+                .map_err(|e| format!("Detokenization failed: {e}"))?
             {
                 generated_text.push(token_str);
             }
@@ -229,7 +229,7 @@ impl InferenceBackend for CandleInferenceBackend {
 
         // TEAM-014: Get any remaining decoded bytes from token stream
         if let Some(rest) =
-            token_stream.decode_rest().map_err(|e| format!("Failed to decode rest: {}", e))?
+            token_stream.decode_rest().map_err(|e| format!("Failed to decode rest: {e}"))?
         {
             generated_text.push(rest);
         }

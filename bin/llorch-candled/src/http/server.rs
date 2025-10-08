@@ -155,7 +155,7 @@ impl HttpServer {
         self.shutdown_tx
             .send(())
             .map(|_| ())
-            .map_err(|e| ServerError::Shutdown(format!("No receivers: {}", e)))
+            .map_err(|e| ServerError::Shutdown(format!("No receivers: {e}")))
     }
 
     /// Get the bind address

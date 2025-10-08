@@ -1,17 +1,17 @@
 //! llorch-candled - Candle-based Llama-2 inference library
 //!
-//! TEAM-009 rewrite: Uses candle-transformers::models::llama::Llama directly
+//! TEAM-009 rewrite: Uses `candle-transformers::models::llama::Llama` directly
 //! instead of custom layer implementations.
 //!
 //! Architecture:
-//! - SafeTensors model loading via VarBuilder
-//! - HuggingFace tokenizers integration
+//! - `SafeTensors` model loading via `VarBuilder`
+//! - `HuggingFace` tokenizers integration
 //! - Multi-backend support (CPU, CUDA, Accelerate)
-//! - Worker integration via InferenceBackend trait
+//! - Worker integration via `InferenceBackend` trait
 //!
 //! Created by: TEAM-000 (Foundation)
 //! Modified by: TEAM-010 (Removed all deprecated modules)
-//! Modified by: TEAM-014 (Added token_output_stream module)
+//! Modified by: TEAM-014 (Added `token_output_stream` module)
 //! Modified by: TEAM-015 (Integrated worker-common and worker-http)
 
 pub mod backend;

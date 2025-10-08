@@ -151,7 +151,7 @@ impl ExecuteRequest {
         if prompt_len > 32768 {
             return Err(ValidationError {
                 field: "prompt".to_string(),
-                message: format!("must be at most 32768 characters (got {})", prompt_len),
+                message: format!("must be at most 32768 characters (got {prompt_len})"),
             });
         }
 
@@ -226,7 +226,7 @@ impl ExecuteRequest {
             if seq.is_empty() {
                 return Err(ValidationError {
                     field: "stop".to_string(),
-                    message: format!("sequence {} must not be empty", i),
+                    message: format!("sequence {i} must not be empty"),
                 });
             }
             if seq.len() > 100 {
@@ -291,7 +291,7 @@ impl ExecuteRequest {
             errors.push(FieldError {
                 field: "prompt".to_string(),
                 constraint: "length(1..=32768)".to_string(),
-                message: format!("prompt must be at most 32768 characters (got {})", prompt_len),
+                message: format!("prompt must be at most 32768 characters (got {prompt_len})"),
                 value: None, // Don't include prompt in error
             });
         }
@@ -388,7 +388,7 @@ impl ExecuteRequest {
                 errors.push(FieldError {
                     field: "stop".to_string(),
                     constraint: "non_empty".to_string(),
-                    message: format!("stop sequence {} must not be empty", i),
+                    message: format!("stop sequence {i} must not be empty"),
                     value: None,
                 });
             } else if seq.len() > 100 {

@@ -23,7 +23,7 @@ pub struct SamplingConfig {
 
     /// Top-P (nucleus) sampling (0.0-1.0)
     /// - 1.0 = disabled (no filtering)
-    /// - <1.0 = keep tokens with cumulative prob <= top_p
+    /// - <1.0 = keep tokens with cumulative prob <= `top_p`
     pub top_p: f32,
 
     /// Top-K sampling (0 = disabled)

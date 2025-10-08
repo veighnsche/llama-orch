@@ -22,7 +22,7 @@ struct Args {
     #[arg(long)]
     worker_id: String,
 
-    /// Model file path (GGUF or SafeTensors format)
+    /// Model file path (GGUF or `SafeTensors` format)
     #[arg(long)]
     model: String,
 
@@ -81,13 +81,13 @@ async fn main() -> Result<()> {
     // ============================================================
     // STEP 3: Call back to pool-managerd (worker ready)
     // ============================================================
-    if !args.callback_url.contains("localhost:9999") {
+    if args.callback_url.contains("localhost:9999") {
+        tracing::info!("Test mode: skipping pool manager callback");
+    } else {
         callback_ready(&args.callback_url, &args.worker_id, backend.memory_bytes(), args.port)
             .await?;
 
         tracing::info!("Callback sent to pool-managerd");
-    } else {
-        tracing::info!("Test mode: skipping pool manager callback");
     }
 
     // ============================================================

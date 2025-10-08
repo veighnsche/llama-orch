@@ -57,7 +57,7 @@ pub enum InferenceEvent {
         decode_time_ms: u64,
         /// Reason for stopping
         stop_reason: StopReason,
-        /// Stop sequence that was matched (if stop_reason = StopSequence)
+        /// Stop sequence that was matched (if `stop_reason` = `StopSequence`)
         #[serde(skip_serializing_if = "Option::is_none")]
         stop_sequence_matched: Option<String>,
     },

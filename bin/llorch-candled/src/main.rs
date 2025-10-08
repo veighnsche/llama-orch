@@ -4,7 +4,7 @@
 //! - Pure ndarray for CPU (checkpoint validation)
 //! - Candle kernels for CUDA acceleration (optional)
 //!
-//! Architecture follows CANDLE_INTEGRATION_HANDOFF.md:
+//! Architecture follows `CANDLE_INTEGRATION_HANDOFF.md`:
 //! - Use Candle's kernels, NOT the framework
 //! - Keep checkpoint-driven validation
 //! - Maintain educational value
@@ -44,7 +44,7 @@ struct Args {
 /// Main entry point
 ///
 /// CRITICAL: Uses single-threaded tokio runtime for SPEED
-/// - flavor = "current_thread" ensures NO thread pool
+/// - flavor = "`current_thread`" ensures NO thread pool
 /// - All async operations run on ONE thread
 /// - No context switching overhead
 /// - Optimal for CPU-bound inference
@@ -89,13 +89,13 @@ async fn main() -> anyhow::Result<()> {
     // - Worker is listening on args.port
     // - Worker has loaded X bytes of memory
     // - Worker type and capabilities
-    if !args.callback_url.contains("localhost:9999") {
+    if args.callback_url.contains("localhost:9999") {
+        tracing::info!("Test mode: skipping pool manager callback");
+    } else {
         callback_ready(&args.callback_url, &args.worker_id, backend.memory_bytes(), args.port)
             .await?;
 
         tracing::info!("Callback sent to pool-managerd");
-    } else {
-        tracing::info!("Test mode: skipping pool manager callback");
     }
 
     // ============================================================

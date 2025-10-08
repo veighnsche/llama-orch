@@ -37,7 +37,7 @@ pub struct InferenceResult {
     /// Why inference terminated
     pub stop_reason: StopReason,
 
-    /// Which stop sequence matched (if stop_reason = StopSequence)
+    /// Which stop sequence matched (if `stop_reason` = `StopSequence`)
     pub stop_sequence_matched: Option<String>,
 
     /// Actual seed used (generated if not provided)
@@ -48,7 +48,7 @@ pub struct InferenceResult {
 }
 
 impl InferenceResult {
-    /// Create result for max_tokens termination
+    /// Create result for `max_tokens` termination
     pub fn max_tokens(
         tokens: Vec<String>,
         token_ids: Vec<u32>,
@@ -132,7 +132,7 @@ impl InferenceResult {
             StopReason::Eos => "End of sequence token generated".to_string(),
             StopReason::StopSequence => {
                 if let Some(seq) = &self.stop_sequence_matched {
-                    format!("Matched stop sequence: {:?}", seq)
+                    format!("Matched stop sequence: {seq:?}")
                 } else {
                     "Matched stop sequence".to_string()
                 }

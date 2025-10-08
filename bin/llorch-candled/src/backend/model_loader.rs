@@ -1,6 +1,6 @@
-//! Model loading utilities for SafeTensors and GGUF formats
+//! Model loading utilities for `SafeTensors` and GGUF formats
 //!
-//! Created by: TEAM-015 (refactored from candle_backend.rs)
+//! Created by: TEAM-015 (refactored from `candle_backend.rs`)
 //! Original code by: TEAM-000, TEAM-009, TEAM-011
 
 use anyhow::{bail, Context, Result};
@@ -9,7 +9,7 @@ use candle_nn::VarBuilder;
 use candle_transformers::models::llama::{Config, Llama, LlamaEosToks};
 use std::path::Path;
 
-/// Load Llama model from SafeTensors or GGUF
+/// Load Llama model from `SafeTensors` or GGUF
 ///
 /// TEAM-009: Uses candle-transformers Llama directly
 pub fn load_model(model_path: &str, device: &Device) -> Result<(Llama, Config, u64)> {
@@ -19,8 +19,7 @@ pub fn load_model(model_path: &str, device: &Device) -> Result<(Llama, Config, u
     let is_gguf = path
         .extension()
         .and_then(|e| e.to_str())
-        .map(|e| e.eq_ignore_ascii_case("gguf"))
-        .unwrap_or(false);
+        .is_some_and(|e| e.eq_ignore_ascii_case("gguf"));
 
     tracing::info!(
         path = %model_path,
@@ -39,14 +38,14 @@ pub fn load_model(model_path: &str, device: &Device) -> Result<(Llama, Config, u
 
 /// Load GGUF format model
 ///
-/// TEAM-009: GGUF support deferred - use SafeTensors for now
+/// TEAM-009: GGUF support deferred - use `SafeTensors` for now
 fn load_gguf(_path: &str, _device: &Device) -> Result<(Llama, Config, u64)> {
     bail!("GGUF support not yet implemented - use SafeTensors format instead");
 }
 
-/// Load SafeTensors format model
+/// Load `SafeTensors` format model
 ///
-/// TEAM-009: Uses VarBuilder + candle-transformers Llama
+/// TEAM-009: Uses `VarBuilder` + candle-transformers Llama
 /// TEAM-011: Fixed directory scanning bug
 fn load_safetensors(path: &str, device: &Device) -> Result<(Llama, Config, u64)> {
     let path = Path::new(path);
@@ -84,7 +83,7 @@ fn load_safetensors(path: &str, device: &Device) -> Result<(Llama, Config, u64)>
     let config_path = parent.join("config.json");
     let config_json: serde_json::Value = serde_json::from_reader(
         std::fs::File::open(&config_path)
-            .with_context(|| format!("Failed to open config.json at {:?}", config_path))?,
+            .with_context(|| format!("Failed to open config.json at {config_path:?}"))?,
     )?;
 
     // Parse config manually since Config doesn't implement Deserialize

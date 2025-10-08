@@ -17,7 +17,7 @@ pub async fn callback_ready(
     vram_bytes: u64,
     port: u16,
 ) -> Result<()> {
-    let uri = format!("http://localhost:{}", port);
+    let uri = format!("http://localhost:{port}");
 
     let payload = ReadyCallback { worker_id: worker_id.to_string(), vram_bytes, uri };
 
