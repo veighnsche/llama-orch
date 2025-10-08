@@ -27,6 +27,8 @@ members = [
     "bin/worker-orcd",            # Worker: inference execution, model loading, streaming
     "bin/worker-orcd/bdd",
 
+    "bin/llorch-candled",         # Candle-based Llama-2 worker (TEAM-000 Foundation)
+
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # SHARED CRATES — Cross-Service Utilities
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

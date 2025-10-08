@@ -1,0 +1,107 @@
+[package]
+name = "llorch-candled"
+version = "0.1.0"
+edition = "2021"
+authors = ["TEAM-000 Foundation"]
+description = "Candle-based Llama-2 inference worker daemon with CUDA acceleration"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# WORKER CRATES — Shared Infrastructure (100% reusable)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# worker-common: SamplingConfig, InferenceResult, WorkerError, startup callbacks
+worker-common = { path = "../worker-crates/worker-common" }
+
+# worker-http: HTTP server, routes, SSE streaming, InferenceBackend trait
+worker-http = { path = "../worker-crates/worker-http" }
+
+# worker-tokenizer: Pure Rust BPE tokenization, GGUF and HuggingFace support
+worker-tokenizer = { path = "../worker-crates/worker-tokenizer" }
+
+# worker-models: ModelAdapter trait, architecture configs
+worker-models = { path = "../worker-crates/worker-models" }
+
+# worker-gguf: GGUF file format parser
+worker-gguf = { path = "../worker-crates/worker-gguf" }
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CANDLE INTEGRATION — Hybrid Approach (Math Functions + Kernels)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Following TEAM_001_CANDLE_CATALOG_PLAN.md: Use Candle for math, our architecture
+# - candle-core: Tensor operations, Device abstraction
+# - candle-nn: Neural network functions (rms_norm, silu, softmax, etc.)
+# - candle-kernels: Optimized CUDA kernels (automatic when CUDA enabled)
+# - cudarc: CUDA runtime for kernel invocation
+# Modified by: TEAM-001
+# Note: Using published versions from crates.io (workspace inheritance incompatible)
+
+# Candle core for tensor operations
+candle-core = "0.9"
+
+# Candle neural network functions (rms_norm, silu, softmax, linear_no_bias)
+candle-nn = "0.9"
+
+# Candle kernels for CUDA acceleration (optional, feature-gated)
+candle-kernels = { version = "0.9", optional = true }
+cudarc = { version = "0.11", optional = true }
+
+# CPU tensor operations (keep for conversion helpers and legacy code)
+ndarray = "0.15"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ASYNC RUNTIME
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CRITICAL: Single-threaded runtime for optimal CPU performance
+
+tokio = { version = "1", features = ["rt", "macros", "sync", "time"] }
+async-trait = "0.1"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# UTILITIES
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rand = "0.8"
+
+[dev-dependencies]
+# Testing utilities
+approx = "0.5"
+chrono = "0.4"
+
+[features]
+default = []
+
+# CUDA acceleration using Candle kernels
+# Enables optimized CUDA kernels for RmsNorm, SiLU, etc.
+# CPU fallback still available for validation
+# Modified by: TEAM-001
+cuda = ["candle-kernels", "cudarc", "candle-core/cuda", "candle-nn/cuda"]
+
+# Performance benchmarking
+benchmark = []
+
+[[bin]]
+name = "llorch-candled"
+path = "src/main.rs"
+
+[lib]
+name = "llorch_candled"
+path = "src/lib.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true
