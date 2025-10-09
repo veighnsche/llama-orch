@@ -113,15 +113,15 @@ impl LlamaModel {
             "Llama forward pass starting"
         );
         
-        // TEAM-019: Clear KV cache on position=0 to prevent mask broadcasting issues
+        // TEAM-019: Recreate KV cache on position=0 to prevent mask broadcasting issues
         // The Candle llama implementation has a bug where the mask shape doesn't account
         // for KV cache growth, causing broadcast errors on Metal/CUDA.
-        // Workaround: Reset cache at start of each sequence.
+        // Workaround: Recreate cache at start of each sequence.
         if position == 0 {
-            for kv in self.cache.kvs.iter_mut() {
-                *kv = None;
-            }
-            tracing::debug!("KV cache cleared for new sequence");
+            let device = input_ids.device();
+            self.cache = Cache::new(true, DType::F32, &self.config, device)
+                .context("Failed to recreate cache")?;
+            tracing::debug!("KV cache recreated for new sequence");
         }
         
         // Attempt forward pass with detailed error capture
