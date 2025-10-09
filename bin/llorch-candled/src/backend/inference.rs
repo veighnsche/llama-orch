@@ -2,61 +2,58 @@
 //!
 //! Created by: TEAM-015 (refactored from `candle_backend.rs`)
 //! Original code by: TEAM-000, TEAM-009, TEAM-011, TEAM-014
+//! Modified by: TEAM-017 (added multi-model support with enum pattern)
 
-use super::model_loader;
+use super::models::{self, Model};
 use super::sampling;
+use super::tokenizer_loader;
 use crate::common::{InferenceResult, SamplingConfig};
 use crate::http::InferenceBackend;
 use crate::token_output_stream::TokenOutputStream;
 use anyhow::{Context, Result};
 use async_trait::async_trait;
-use candle_core::{DType, Device, Tensor};
-use candle_transformers::models::llama::{Cache, Config, Llama};
+use candle_core::{Device, Tensor};
 use std::path::Path;
 use tokenizers::Tokenizer;
 
-/// Candle inference backend using candle-transformers Llama
+/// Candle inference backend using candle-transformers models
 ///
-/// TEAM-009: Complete rewrite to use Candle's Llama directly
+/// TEAM-009: Complete rewrite to use Candle's models directly
 /// instead of building layers from scratch.
 /// TEAM-015: Refactored into focused modules
+/// TEAM-017: Changed to enum pattern for Candle idiomaticity
 pub struct CandleInferenceBackend {
-    model: Llama,
+    model: Model,
     tokenizer: Tokenizer,
     device: Device,
-    config: Config,
     model_size_bytes: u64,
 }
 
 impl CandleInferenceBackend {
-    /// Load Llama model from `SafeTensors` or GGUF
+    /// Load model from `SafeTensors` with auto-detected architecture
     ///
-    /// TEAM-009: Uses candle-transformers Llama directly
+    /// TEAM-009: Uses candle-transformers models directly
     /// TEAM-015: Delegates to `model_loader` module
+    /// TEAM-017: Uses model factory with enum pattern (Candle-idiomatic)
     pub fn load(model_path: &str, device: Device) -> Result<Self> {
         let path = Path::new(model_path);
 
-        // Load model using model_loader module
-        let (model, config, model_size_bytes) = model_loader::load_model(model_path, &device)?;
+        // TEAM-017: Load model using model factory (returns Model enum)
+        let model = models::load_model(model_path, &device)?;
+        let model_size_bytes = models::calculate_model_size(model_path)?;
 
-        // TEAM-011: Load tokenizer from model directory (not path.parent())
-        let tokenizer_path = if path.is_dir() {
-            path.join("tokenizer.json")
-        } else {
-            path.parent().unwrap_or_else(|| Path::new(".")).join("tokenizer.json")
-        };
-
-        let tokenizer = Tokenizer::from_file(&tokenizer_path).map_err(|e| {
-            anyhow::anyhow!("Failed to load tokenizer from {tokenizer_path:?}: {e}")
-        })?;
+        // TEAM-017: Load tokenizer with auto-detection
+        let tokenizer = tokenizer_loader::load_tokenizer(path)?;
 
         tracing::info!(
-            vocab_size = tokenizer.get_vocab_size(true),
+            architecture = model.architecture(),
+            vocab_size = model.vocab_size(),
+            tokenizer_vocab = tokenizer.get_vocab_size(true),
             model_size_mb = model_size_bytes / 1_000_000,
             "Model and tokenizer loaded successfully"
         );
 
-        Ok(Self { model, tokenizer, device, config, model_size_bytes })
+        Ok(Self { model, tokenizer, device, model_size_bytes })
     }
 
     /// Get memory usage in bytes
@@ -68,7 +65,8 @@ impl CandleInferenceBackend {
     ///
     /// TEAM-014: Eliminates cold start by running a single token generation.
     /// This initializes CUDA kernels and caches, preventing 9s overhead on first request.
-    pub fn warmup(&self) -> Result<()> {
+    /// TEAM-017: Updated to use Model enum
+    pub fn warmup(&mut self) -> Result<()> {
         tracing::info!("Starting GPU warmup...");
         let start = std::time::Instant::now();
 
@@ -88,13 +86,8 @@ impl CandleInferenceBackend {
             .unsqueeze(0)
             .context("Failed to unsqueeze warmup tensor")?;
 
-        // Initialize cache
-        let mut cache = Cache::new(true, DType::F32, &self.config, &self.device)
-            .context("Failed to create warmup cache")?;
-
-        // Single forward pass
-        let _logits =
-            self.model.forward(&input_ids, 0, &mut cache).context("Warmup forward pass failed")?;
+        // TEAM-017: Single forward pass using Model enum (delegates to specific model)
+        let _logits = self.model.forward(&input_ids, 0).context("Warmup forward pass failed")?;
 
         let duration = start.elapsed();
         tracing::info!(duration_ms = duration.as_millis(), "GPU warmup complete");
@@ -110,8 +103,9 @@ impl InferenceBackend for CandleInferenceBackend {
     /// TEAM-009: Complete implementation using candle-transformers
     /// TEAM-014: Added warmup support, `LogitsProcessor`, `TokenOutputStream`
     /// TEAM-015: Refactored into focused modules
+    /// TEAM-017: Updated to use Model enum (Candle-idiomatic)
     async fn execute(
-        &self,
+        &mut self,
         prompt: &str,
         config: &SamplingConfig,
     ) -> Result<InferenceResult, Box<dyn std::error::Error + Send + Sync>> {
@@ -130,10 +124,6 @@ impl InferenceBackend for CandleInferenceBackend {
         let mut tokens = encoding.get_ids().to_vec();
 
         tracing::debug!(prompt_tokens = tokens.len(), "Prompt tokenized");
-
-        // Initialize cache
-        let mut cache = Cache::new(true, DType::F32, &self.config, &self.device)
-            .map_err(|e| format!("Failed to create cache: {e}"))?;
 
         // TEAM-014: Create LogitsProcessor for proper sampling
         // TEAM-015: Delegates to sampling module
@@ -174,11 +164,9 @@ impl InferenceBackend for CandleInferenceBackend {
                 );
             }
 
-            // Forward pass
-            let logits = self
-                .model
-                .forward(&input_ids, pos_usize, &mut cache)
-                .map_err(|e| format!("Forward pass failed: {e}"))?;
+            // TEAM-017: Forward pass using Model enum (delegates to specific model)
+            let logits =
+                self.model.forward(&input_ids, pos_usize).map_err(|e| format!("Forward pass failed: {e}"))?;
 
             // TEAM-009: Log output device residency
             if pos == 0 {
@@ -204,8 +192,14 @@ impl InferenceBackend for CandleInferenceBackend {
             let next_token =
                 logits_processor.sample(&logits).map_err(|e| format!("Sampling failed: {e}"))?;
 
-            // Check for EOS
-            if next_token == self.tokenizer.token_to_id("</s>").unwrap_or(2) {
+            // TEAM-017: Check for EOS - try tokenizer first (Candle-idiomatic), fallback to model
+            let is_eos = self
+                .tokenizer
+                .token_to_id("</s>")
+                .map(|eos_id| next_token == eos_id)
+                .unwrap_or_else(|| next_token == self.model.eos_token_id());
+
+            if is_eos {
                 tracing::debug!("EOS token generated");
                 break;
             }

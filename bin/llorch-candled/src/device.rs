@@ -1,9 +1,10 @@
 //! Device initialization and management
 //!
 //! Provides backend-specific device initialization with strict residency.
-//! Each backend (CPU, CUDA, Accelerate) has its own initialization path.
+//! Each backend (CPU, CUDA, Metal) has its own initialization path.
 //!
 //! Created by: TEAM-007
+//! Modified by: TEAM-018 (Removed Accelerate, added Metal)
 
 use candle_core::{Device, Result as CandleResult};
 
@@ -21,13 +22,12 @@ pub fn init_cuda_device(gpu_id: usize) -> CandleResult<Device> {
     Device::new_cuda(gpu_id)
 }
 
-/// Initialize Apple Accelerate device
-/// Note: Accelerate is CPU-based with Apple framework optimizations, NOT Metal (GPU)
-#[cfg(feature = "accelerate")]
-pub fn init_accelerate_device() -> CandleResult<Device> {
-    tracing::info!("Initializing Apple Accelerate device (CPU-optimized)");
-    // Accelerate is CPU-based, not Metal
-    Ok(Device::Cpu)
+/// Initialize Apple Metal device (GPU)
+/// Note: Metal is Apple's GPU API, equivalent to CUDA for NVIDIA
+#[cfg(feature = "metal")]
+pub fn init_metal_device(gpu_id: usize) -> CandleResult<Device> {
+    tracing::info!("Initializing Apple Metal device (GPU) {}", gpu_id);
+    Device::new_metal(gpu_id)
 }
 
 /// Verify device is available and working
@@ -64,9 +64,11 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "accelerate")]
-    fn test_accelerate_device_init() {
-        let device = init_accelerate_device().unwrap();
-        verify_device(&device).unwrap();
+    #[cfg(feature = "metal")]
+    fn test_metal_device_init() {
+        // Only run if Metal is available
+        if let Ok(device) = init_metal_device(0) {
+            verify_device(&device).unwrap();
+        }
     }
 }

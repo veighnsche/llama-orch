@@ -13,7 +13,7 @@ Created by: **TEAM-000** (Foundation)
 
 ### TEAM-009 Implementation (Current)
 - ✅ Uses `candle-transformers::models::llama::Llama` directly
-- ✅ Three binaries: CPU, CUDA, Accelerate
+- ✅ Three binaries: CPU, CUDA, Metal
 - ✅ SafeTensors model loading with VarBuilder
 - ✅ HuggingFace tokenizers integration
 - ✅ Streaming token generation with sampling
@@ -50,7 +50,7 @@ Created by: **TEAM-000** (Foundation)
 │  CandleInferenceBackend (TEAM-009)      │
 │  ├─ candle-transformers::Llama          │
 │  ├─ tokenizers::Tokenizer              │
-│  ├─ Device (CPU/CUDA/Accelerate)        │
+│  ├─ Device (CPU/CUDA/Metal)             │
 │  └─ Sampling (greedy/temperature)       │
 ├─────────────────────────────────────────┤
 │  Model Loading                          │
@@ -61,7 +61,7 @@ Created by: **TEAM-000** (Foundation)
 │  Compute Backend (feature-gated)        │
 │  ├─ CPU: Device::Cpu                    │
 │  ├─ CUDA: Device::new_cuda(idx)         │
-│  └─ Accelerate: Device::Cpu (macOS)     │
+│  └─ Metal: Device::Metal(id) (macOS)    │
 └─────────────────────────────────────────┘
 ```
 
@@ -71,7 +71,7 @@ Created by: **TEAM-000** (Foundation)
 |--------|---------|--------|----------|
 | `llorch-cpu-candled` | `cpu` | CPU | x86 Linux/Windows, macOS CPU |
 | `llorch-cuda-candled` | `cuda` | CUDA | NVIDIA GPU |
-| `llorch-accelerate-candled` | `accelerate` | CPU | Apple Accelerate (macOS) |
+| `llorch-metal-candled` | `metal` | Metal GPU | Apple Silicon GPU (macOS) |
 
 ### Key Differences from llorch-cpud
 
@@ -81,7 +81,7 @@ Created by: **TEAM-000** (Foundation)
 | **Implementation** | Custom layers | candle-transformers |
 | **Format** | GGUF | SafeTensors (GGUF TODO) |
 | **Tokenizer** | worker-tokenizer | HuggingFace tokenizers |
-| **Backends** | CPU only | CPU/CUDA/Accelerate |
+| **Backends** | CPU only | CPU/CUDA/Metal |
 | **Code size** | ~2000 lines | ~340 lines |
 
 ---
@@ -89,7 +89,7 @@ Created by: **TEAM-000** (Foundation)
 ## Features
 
 ### TEAM-009 Implementation
-- ✅ **Three backends**: CPU, CUDA, Accelerate (feature-gated)
+- ✅ **Three backends**: CPU, CUDA, Metal (feature-gated)
 - ✅ **SafeTensors loading**: Memory-mapped for efficiency
 - ✅ **Streaming generation**: Token-by-token with sampling
 - ✅ **Device residency**: Logging to prevent RAM↔VRAM leaks
@@ -109,7 +109,7 @@ Created by: **TEAM-000** (Foundation)
 
 ### Build
 
-**CPU-only (x86, or Accelerate on macOS):**
+**CPU-only (x86, or fallback on macOS):**
 ```bash
 cd bin/llorch-candled
 cargo build --release --features cpu --bin llorch-cpu-candled
@@ -120,9 +120,9 @@ cargo build --release --features cpu --bin llorch-cpu-candled
 cargo build --release --features cuda --bin llorch-cuda-candled
 ```
 
-**Accelerate (Apple CPU-optimized):**
+**Metal (Apple Silicon GPU):**
 ```bash
-cargo build --release --features accelerate --bin llorch-accelerate-candled
+cargo build --release --features metal --bin llorch-metal-candled
 ```
 
 ### Run
@@ -151,12 +151,13 @@ cargo build --release --features accelerate --bin llorch-accelerate-candled
   --callback-url http://localhost:9999
 ```
 
-**Accelerate:**
+**Metal:**
 ```bash
-./target/release/llorch-accelerate-candled \
+./target/release/llorch-metal-candled \
   --worker-id test-worker \
   --model /path/to/llama-2-7b/ \
   --port 8080 \
+  --metal-device 0 \
   --callback-url http://localhost:9999
 ```
 

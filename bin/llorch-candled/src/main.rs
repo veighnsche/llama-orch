@@ -104,7 +104,8 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!("Worker ready, starting HTTP server");
 
     let addr = SocketAddr::from(([0, 0, 0, 0], args.port));
-    let backend = Arc::new(backend);
+    // TEAM-017: Wrap backend in Mutex for stateful inference
+    let backend = Arc::new(tokio::sync::Mutex::new(backend));
 
     // Create router with our backend (worker-http)
     // This wires up:

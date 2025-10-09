@@ -1,4 +1,6 @@
 //! POST /execute endpoint - Execute inference
+//!
+//! Modified by: TEAM-017 (updated to use Mutex-wrapped backend)
 
 use crate::common::SamplingConfig;
 use crate::http::{
@@ -13,13 +15,16 @@ use axum::{
 };
 use futures::stream::{self, Stream, StreamExt};
 use std::{convert::Infallible, sync::Arc};
+use tokio::sync::Mutex;
 use tracing::{info, warn};
 
 type EventStream = Box<dyn Stream<Item = Result<Event, Infallible>> + Send + Unpin>;
 
 /// Handle POST /execute
+///
+/// TEAM-017: Updated to use Mutex-wrapped backend for &mut self
 pub async fn handle_execute<B: InferenceBackend>(
-    State(backend): State<Arc<B>>,
+    State(backend): State<Arc<Mutex<B>>>,
     Json(req): Json<ExecuteRequest>,
 ) -> Result<Sse<EventStream>, ValidationErrorResponse> {
     // Validate request
@@ -43,8 +48,8 @@ pub async fn handle_execute<B: InferenceBackend>(
         max_tokens: req.max_tokens,
     };
 
-    // Execute inference
-    let result = match backend.execute(&req.prompt, &config).await {
+    // TEAM-017: Execute inference with mutex lock
+    let result = match backend.lock().await.execute(&req.prompt, &config).await {
         Ok(r) => r,
         Err(e) => {
             warn!(job_id = %req.job_id, error = %e, "Inference failed");

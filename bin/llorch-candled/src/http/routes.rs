@@ -1,5 +1,6 @@
 //! HTTP route configuration
 //!
+//! Modified by: TEAM-017 (updated to use Mutex-wrapped backend)
 //!
 //! # Endpoints
 //! - `GET /health` - Health check endpoint
@@ -19,15 +20,18 @@ use axum::{
     Router,
 };
 use std::sync::Arc;
+use tokio::sync::Mutex;
 
 /// Create HTTP router with all endpoints and middleware
 ///
 /// # Arguments
-/// * `backend` - Platform-specific inference backend
+/// * `backend` - Platform-specific inference backend (Mutex-wrapped)
 ///
 /// # Returns
 /// Router with all endpoints and middleware configured
-pub fn create_router<B: InferenceBackend + 'static>(backend: Arc<B>) -> Router {
+///
+/// TEAM-017: Updated to accept Mutex-wrapped backend
+pub fn create_router<B: InferenceBackend + 'static>(backend: Arc<Mutex<B>>) -> Router {
     Router::new()
         .route("/health", get(health::handle_health::<B>))
         .route("/execute", post(execute::handle_execute::<B>))

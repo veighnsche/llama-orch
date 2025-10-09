@@ -5,6 +5,7 @@
 //!
 //! Created by: TEAM-007
 //! Modified by: TEAM-014 (Added GPU warmup)
+//! Modified by: TEAM-017 (updated for multi-model support)
 
 use anyhow::Result;
 use clap::Parser;
@@ -12,11 +13,12 @@ use llorch_candled::device::{init_cuda_device, verify_device};
 use llorch_candled::{backend::CandleInferenceBackend, callback_ready, create_router, HttpServer};
 use std::net::SocketAddr;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 
 /// CLI arguments for CUDA worker daemon
 #[derive(Parser, Debug)]
 #[command(name = "llorch-cuda-candled")]
-#[command(about = "CUDA GPU Candle-based Llama-2 worker daemon")]
+#[command(about = "CUDA GPU Candle-based multi-model worker daemon")]
 struct Args {
     /// Worker ID (UUID) - assigned by pool-managerd
     #[arg(long)]
@@ -67,8 +69,9 @@ async fn main() -> Result<()> {
     // STEP 2: Load model to memory (on CUDA device)
     // ============================================================
     // TEAM-009: Pass device to backend
-    tracing::info!(model = %args.model, "Loading Llama model to GPU...");
-    let backend = CandleInferenceBackend::load(&args.model, device)?;
+    // TEAM-017: Load model with auto-detected architecture
+    tracing::info!(model = %args.model, "Loading model to GPU...");
+    let mut backend = CandleInferenceBackend::load(&args.model, device)?;
     tracing::info!("Model loaded successfully on GPU");
 
     // ============================================================
@@ -96,7 +99,8 @@ async fn main() -> Result<()> {
     tracing::info!("Worker ready, starting HTTP server");
 
     let addr = SocketAddr::from(([0, 0, 0, 0], args.port));
-    let backend = Arc::new(backend);
+    // TEAM-017: Wrap backend in Mutex for stateful inference
+    let backend = Arc::new(Mutex::new(backend));
 
     let router = create_router(backend);
     let server = HttpServer::new(addr, router).await?;

@@ -2,6 +2,8 @@
 //!
 //! Returns a simple health status for the worker.
 //!
+//! Modified by: TEAM-017 (updated to use Mutex-wrapped backend)
+//!
 //! # Spec References
 //! - M0-W-1320: Health endpoint returns 200 OK with {"status": "healthy"}
 
@@ -9,6 +11,7 @@ use crate::http::backend::InferenceBackend;
 use axum::{extract::State, Json};
 use serde::Serialize;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 use tracing::debug;
 
 /// Health check response
@@ -25,11 +28,13 @@ pub struct HealthResponse {
 /// Handle GET /health
 ///
 /// Returns 200 OK with `{"status": "healthy"}` if the worker is operational.
+/// TEAM-017: Updated to use Mutex-wrapped backend
 pub async fn handle_health<B: InferenceBackend>(
-    State(backend): State<Arc<B>>,
+    State(backend): State<Arc<Mutex<B>>>,
 ) -> Json<HealthResponse> {
     debug!("Health check requested");
 
+    let backend = backend.lock().await;
     let status = if backend.is_healthy() { "healthy" } else { "unhealthy" };
     let vram_bytes = backend.vram_usage();
 

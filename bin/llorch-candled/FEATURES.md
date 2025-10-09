@@ -44,15 +44,15 @@ cargo run --bin llorch-cuda-candled --features cuda
 
 **When to use**: Production inference on NVIDIA GPUs (RTX 3060, 3090, etc.)
 
-### 🍎 Accelerate (Apple Silicon)
+### 🍎 Metal (Apple Silicon GPU)
 ```bash
-# Explicitly enable Accelerate:
-cargo build --features accelerate --no-default-features
-cargo test --features accelerate --no-default-features
-cargo run --bin llorch-accelerate-candled --features accelerate
+# Explicitly enable Metal:
+cargo build --features metal --no-default-features
+cargo test --features metal --no-default-features
+cargo run --bin llorch-metal-candled --features metal
 ```
 
-**When to use**: Running on Mac with M1/M2/M3 chips.
+**When to use**: GPU inference on Mac with M1/M2/M3/M4 chips (pre-release).
 
 ## How Feature Flags Work
 
@@ -117,8 +117,8 @@ cargo test --features cpu
 # Test CUDA code (requires NVIDIA GPU)
 cargo test --features cuda --no-default-features
 
-# Test Accelerate code (requires Apple Silicon)
-cargo test --features accelerate --no-default-features
+# Test Metal code (requires Apple Silicon)
+cargo test --features metal --no-default-features
 ```
 
 ### Building Specific Binary
@@ -129,8 +129,8 @@ cargo build --bin llorch-candled
 # CUDA binary
 cargo build --bin llorch-cuda-candled --features cuda
 
-# Accelerate binary
-cargo build --bin llorch-accelerate-candled --features accelerate
+# Metal binary
+cargo build --bin llorch-metal-candled --features metal
 ```
 
 ## Why Multiple Backends?
@@ -138,7 +138,7 @@ cargo build --bin llorch-accelerate-candled --features accelerate
 Different hardware needs different code:
 - **CPU**: Pure Rust, works everywhere, slower
 - **CUDA**: NVIDIA GPU kernels, 10-50x faster, needs NVIDIA GPU
-- **Accelerate**: Apple's Metal framework, fast on M-series Macs
+- **Metal**: Apple's GPU API, fast on M-series Macs
 
 We can't enable all at once because they have conflicting dependencies.
 
@@ -170,7 +170,7 @@ We can't enable all at once because they have conflicting dependencies.
 | Normal development | `cargo build` (uses CPU) |
 | Test everything | `cargo test` (uses CPU) |
 | Run on NVIDIA GPU | `cargo run --features cuda --no-default-features` |
-| Run on Apple Silicon | `cargo run --features accelerate --no-default-features` |
+| Run on Apple Silicon GPU | `cargo run --features metal --no-default-features` |
 | Check all features | `cargo check --all-features` |
 
 ## Summary

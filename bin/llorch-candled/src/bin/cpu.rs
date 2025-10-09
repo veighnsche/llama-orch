@@ -4,6 +4,7 @@
 //! This binary is feature-gated to CPU backend only.
 //!
 //! Created by: TEAM-007
+//! Modified by: TEAM-017 (updated for multi-model support)
 
 use anyhow::Result;
 use clap::Parser;
@@ -11,11 +12,12 @@ use llorch_candled::device::{init_cpu_device, verify_device};
 use llorch_candled::{backend::CandleInferenceBackend, callback_ready, create_router, HttpServer};
 use std::net::SocketAddr;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 
 /// CLI arguments for CPU worker daemon
 #[derive(Parser, Debug)]
 #[command(name = "llorch-cpu-candled")]
-#[command(about = "CPU-only Candle-based Llama-2 worker daemon")]
+#[command(about = "CPU-only Candle-based multi-model worker daemon")]
 struct Args {
     /// Worker ID (UUID) - assigned by pool-managerd
     #[arg(long)]
@@ -61,7 +63,8 @@ async fn main() -> Result<()> {
     // STEP 2: Load model to memory
     // ============================================================
     // TEAM-009: Pass device to backend
-    tracing::info!(model = %args.model, "Loading Llama model...");
+    // TEAM-017: Load model with auto-detected architecture
+    tracing::info!(model = %args.model, "Loading model...");
     let backend = CandleInferenceBackend::load(&args.model, device)?;
     tracing::info!("Model loaded successfully");
 
@@ -83,7 +86,8 @@ async fn main() -> Result<()> {
     tracing::info!("Worker ready, starting HTTP server");
 
     let addr = SocketAddr::from(([0, 0, 0, 0], args.port));
-    let backend = Arc::new(backend);
+    // TEAM-017: Wrap backend in Mutex for stateful inference
+    let backend = Arc::new(Mutex::new(backend));
 
     let router = create_router(backend);
     let server = HttpServer::new(addr, router).await?;
