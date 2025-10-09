@@ -259,7 +259,7 @@ let ctx = CudaContext::new(best_gpu.index)?;
 
 ---
 
-### orchestratord Team
+### rbees-orcd Team
 
 **Optional integration**:
 

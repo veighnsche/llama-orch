@@ -40,9 +40,9 @@ Added **audit logging reminders** across the codebase to ensure engineers use th
 
 ---
 
-### 2. orchestratord/src/lib.rs ✅
+### 2. rbees-orcd/src/lib.rs ✅
 
-**File**: `/bin/orchestratord/src/lib.rs`  
+**File**: `/bin/rbees-orcd/src/lib.rs`  
 **Lines**: 1-23  
 **Audience**: Orchestrator engineers
 
@@ -73,7 +73,7 @@ Added **audit logging reminders** across the codebase to ensure engineers use th
 //! See: `bin/shared-crates/audit-logging/README.md`
 ```
 
-**Impact**: Visible when opening orchestratord crate
+**Impact**: Visible when opening rbees-orcd crate
 
 ---
 
@@ -109,9 +109,9 @@ Added **audit logging reminders** across the codebase to ensure engineers use th
 
 ---
 
-### 4. orchestratord/src/app/auth_min.rs ✅
+### 4. rbees-orcd/src/app/auth_min.rs ✅
 
-**File**: `/bin/orchestratord/src/app/auth_min.rs`  
+**File**: `/bin/rbees-orcd/src/app/auth_min.rs`  
 **Lines**: 11-38  
 **Audience**: Authentication engineers
 
@@ -130,7 +130,7 @@ Added **audit logging reminders** across the codebase to ensure engineers use th
 //!     actor: ActorInfo { user_id: token_fingerprint, ip, auth_method, session_id },
 //!     method: AuthMethod::BearerToken,
 //!     path: req.uri().path().to_string(),
-//!     service_id: "orchestratord".to_string(),
+//!     service_id: "rbees-orcd".to_string(),
 //! }).await?;
 //!
 //! // ✅ Log failed authentication
@@ -140,7 +140,7 @@ Added **audit logging reminders** across the codebase to ensure engineers use th
 //!     ip,
 //!     reason: "invalid_token".to_string(),
 //!     path: req.uri().path().to_string(),
-//!     service_id: "orchestratord".to_string(),
+//!     service_id: "rbees-orcd".to_string(),
 //! }).await?;
 //! ```
 //!
@@ -151,9 +151,9 @@ Added **audit logging reminders** across the codebase to ensure engineers use th
 
 ---
 
-### 5. orchestratord/src/api/control.rs ✅
+### 5. rbees-orcd/src/api/control.rs ✅
 
-**File**: `/bin/orchestratord/src/api/control.rs`  
+**File**: `/bin/rbees-orcd/src/api/control.rs`  
 **Lines**: 1-3  
 **Audience**: Control API engineers
 
@@ -168,9 +168,9 @@ Added **audit logging reminders** across the codebase to ensure engineers use th
 
 ---
 
-### 6. orchestratord/src/api/data.rs ✅
+### 6. rbees-orcd/src/api/data.rs ✅
 
-**File**: `/bin/orchestratord/src/api/data.rs`  
+**File**: `/bin/rbees-orcd/src/api/data.rs`  
 **Lines**: 1-4  
 **Audience**: Data API engineers
 
@@ -208,13 +208,13 @@ Added **audit logging reminders** across the codebase to ensure engineers use th
 
 ### Teams Covered ✅
 
-1. **Orchestrator Team** → `orchestratord/src/lib.rs`
+1. **Orchestrator Team** → `rbees-orcd/src/lib.rs`
 2. **Pool Manager Team** → `pool-managerd/src/lib.rs`
 3. **Worker Daemon Team** → `worker-orcd/src/main.rs`
-4. **Authentication Team** → `orchestratord/src/app/auth_min.rs`
-5. **Control API Team** → `orchestratord/src/api/control.rs`
-6. **Data API Team** → `orchestratord/src/api/data.rs`
-7. **Node Registry Team** → `orchestratord-crates/node-registry/src/lib.rs`
+4. **Authentication Team** → `rbees-orcd/src/app/auth_min.rs`
+5. **Control API Team** → `rbees-orcd/src/api/control.rs`
+6. **Data API Team** → `rbees-orcd/src/api/data.rs`
+7. **Node Registry Team** → `rbees-orcd-crates/node-registry/src/lib.rs`
 8. **Pool API Team** → `pool-managerd-crates/api/src/lib.rs`
 9. **VRAM Team** → `worker-orcd-crates/vram-residency/src/lib.rs`
 10. **All Engineers** → Root `README.md` + `AUDIT_LOGGING_REMINDER.md`
@@ -263,7 +263,7 @@ Consider adding reminders to:
 To ensure reminders are effective:
 
 - [x] Added to main README.md (visible to all)
-- [x] Added to orchestratord lib.rs (control plane)
+- [x] Added to rbees-orcd lib.rs (control plane)
 - [x] Added to pool-managerd lib.rs (worker nodes)
 - [x] Added to authentication module (critical)
 - [x] Added to API modules (control + data)
@@ -313,7 +313,7 @@ To ensure reminders are effective:
 - ⚠️ Implementation: Pending (requires integration work)
 
 **Next Steps**:
-1. Integrate `audit-logging` into orchestratord
+1. Integrate `audit-logging` into rbees-orcd
 2. Integrate `audit-logging` into pool-managerd
 3. Add CI checks for hand-rolled logging
 4. Update code review process

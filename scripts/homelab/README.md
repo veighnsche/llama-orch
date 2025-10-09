@@ -449,7 +449,7 @@ New CLI equivalent:
 
 - `.specs/TEAM_018_HANDOFF.md` - Metal migration details
 - `.specs/TEAM_019_HANDOFF.md` - Observability roadmap
-- `bin/llorch-candled/docs/metal.md` - Metal backend guide
+- `bin/rbees-workerd/docs/metal.md` - Metal backend guide
 - `.specs/BACKEND_ARCHITECTURE_RESEARCH.md` - Multi-backend architecture
 
 ---

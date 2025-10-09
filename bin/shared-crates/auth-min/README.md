@@ -15,7 +15,7 @@ auth-min provides basic authentication primitives:
 - **Bearer token parsing** — RFC 6750 compliant
 - **Bind policy** — Loopback detection and startup validation
 
-**Used by**: orchestratord, pool-managerd, http-util, audit-logging
+**Used by**: rbees-orcd, pool-managerd, http-util, audit-logging
 
 ---
 

@@ -265,7 +265,7 @@ narrate(NarrationFields {
 
 **vram-residency**: "This is ADORABLE! We're adding cute fields to all 13 of our narration functions!" ⭐⭐⭐⭐⭐
 
-**orchestratord**: "Finally, debugging feels less stressful. Love the queue admission cute messages!" ⭐⭐⭐⭐
+**rbees-orcd**: "Finally, debugging feels less stressful. Love the queue admission cute messages!" ⭐⭐⭐⭐
 
 **pool-managerd**: "Wait, we can make logs cute? Why didn't we do this sooner?!" ⭐⭐⭐⭐
 

@@ -89,7 +89,7 @@
 
 **Unit 8: Use Constants in Examples**
 - **Location**: README examples
-- **Fix**: Replace `"orchestratord"` with `ACTOR_ORCHESTRATORD`
+- **Fix**: Replace `"rbees-orcd"` with `ACTOR_ORCHESTRATORD`
 - **Effort**: 30 minutes
 - **Impact**: Type safety, discoverability
 

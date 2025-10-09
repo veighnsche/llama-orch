@@ -84,7 +84,7 @@ struct Config {
 - **Anything a user might want to change without recompiling**
 
 **Policy formats**: YAML (declarative), Rhai (programmable), env vars (simple)  
-**Policy location**: `bin/orchestratord/src/config.rs` (centralized)
+**Policy location**: `bin/rbees-orcd/src/config.rs` (centralized)
 
 **Our question**: "Should this be a policy?"
 
@@ -163,12 +163,12 @@ fn process(status: Status) -> Result<(), Error> {
 - Audit crates for verbose code, bad structure, hardcoded values
 - Refactor to idiomatic Rust (traits, enums, type system)
 - Reorganize folders (domain-driven or layer-driven, never `utils/`)
-- Extract policies (hardcoded → `orchestratord/src/config.rs`)
+- Extract policies (hardcoded → `rbees-orcd/src/config.rs`)
 - Enforce style (rustfmt + clippy, zero warnings)
 
 **Folder Structure** (3-click rule):
 ```
-✅ Domain-driven: orchestratord/src/queue/, orchestratord/src/scheduling/
+✅ Domain-driven: rbees-orcd/src/queue/, rbees-orcd/src/scheduling/
 ✅ Layer-driven: sdk/src/client/, sdk/src/models/, sdk/src/errors/
 ❌ Utils hell: src/utils/, src/helpers/, src/common/ (we delete these)
 ```
@@ -203,7 +203,7 @@ Type-safe, async/sync, actionable errors, copy-paste examples.
 
 ### For All Users
 
-**Policy System** (`bin/orchestratord/src/config.rs`):
+**Policy System** (`bin/rbees-orcd/src/config.rs`):
 ```rust
 // Queue policies
 pub struct AdmissionConfig {
@@ -345,7 +345,7 @@ fn handle_auth(req: &Request) -> Result<Token, AuthError> {
 - Hunt hardcoded values (turn them into policies)
 - Own rustfmt and clippy rules (code style is DX)
 - Enforce 3-click rule (find files fast)
-- Centralize policies in orchestratord (YAML, Rhai, env vars)
+- Centralize policies in rbees-orcd (YAML, Rhai, env vars)
 - Obsess over OpenAPI (every endpoint perfect)
 - Use every Rust feature (traits, macros, types)
 - Speak better in code than meetings

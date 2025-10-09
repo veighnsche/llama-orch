@@ -97,9 +97,9 @@ Audit logging **must not block operations**:
 |----------|-------------|----------|-----------|
 | **Authentication** | 4 | P0 | All services |
 | **Authorization** | 3 | P0 | All services |
-| **Resource Operations** | 8 | P1 | orchestratord, pool-managerd |
+| **Resource Operations** | 8 | P1 | rbees-orcd, pool-managerd |
 | **VRAM Operations** | 6 | P0 | worker-orcd, vram-residency |
-| **Data Access** | 3 | P1 | orchestratord (GDPR) |
+| **Data Access** | 3 | P1 | rbees-orcd (GDPR) |
 | **Security Incidents** | 5 | P0 | All services |
 | **Compliance** | 3 | P2 | Platform mode |
 
@@ -114,7 +114,7 @@ See **[10-event-types.md](./10-event-types.md)** for complete list.
 ### Local Mode (Single-Node)
 
 ```
-orchestratord/pool-managerd/worker-orcd
+rbees-orcd/pool-managerd/worker-orcd
          ↓
     audit-logging crate
          ↓
@@ -224,9 +224,9 @@ use audit_logging::{AuditLogger, AuditConfig};
 
 let logger = AuditLogger::new(AuditConfig {
     mode: AuditMode::Local {
-        base_dir: PathBuf::from("/var/lib/llorch/audit/orchestratord"),
+        base_dir: PathBuf::from("/var/lib/llorch/audit/rbees-orcd"),
     },
-    service_id: "orchestratord".to_string(),
+    service_id: "rbees-orcd".to_string(),
     rotation_policy: RotationPolicy::Daily,
     retention_policy: RetentionPolicy::default(),
 })?;
@@ -245,7 +245,7 @@ logger.emit(AuditEvent::AuthSuccess {
     },
     method: AuthMethod::BearerToken,
     path: "/v2/tasks".to_string(),
-    service_id: "orchestratord".to_string(),
+    service_id: "rbees-orcd".to_string(),
 }).await?;
 ```
 
@@ -298,7 +298,7 @@ See **[30-security-and-api.md](./30-security-and-api.md)** for complete API.
 
 ## Consumer Integration
 
-### orchestratord
+### rbees-orcd
 
 **Events to emit**:
 - `auth.success`, `auth.failure` (authentication)

@@ -6,7 +6,7 @@
 ## 0. Overview
 This document catalogs the expectations and dependencies that other llama-orch crates have on `audit-logging`. It serves as a contract specification to guide implementation priorities and API stability.
 **Consuming crates**:
-- `orchestratord` — Authentication, task lifecycle, node management
+- `rbees-orcd` — Authentication, task lifecycle, node management
 - `pool-managerd` — Pool lifecycle, resource operations
 - `worker-orcd` — VRAM operations, security incidents
 - `vram-residency` — VRAM seal/verify operations (detailed in `11_worker_vram_residency.md`)
@@ -157,9 +157,9 @@ pub enum AuditResult {
 }
 ```
 ---
-## 2. orchestratord Expectations
+## 2. rbees-orcd Expectations
 ### 2.1 Authentication Middleware Integration
-**Required by**: `bin/orchestratord/src/app/auth_min.rs`
+**Required by**: `bin/rbees-orcd/src/app/auth_min.rs`
 **Expected usage**:
 ```rust
 pub async fn bearer_auth_middleware(
@@ -181,7 +181,7 @@ pub async fn bearer_auth_middleware(
             reason: "invalid_token".to_string(),
             ip: extract_ip(&req),
             path: req.uri().path().to_string(),
-            service_id: "orchestratord".to_string(),
+            service_id: "rbees-orcd".to_string(),
         }).await.ok();  // Don't block on audit failure
         return Err(StatusCode::UNAUTHORIZED);
     }
@@ -197,7 +197,7 @@ pub async fn bearer_auth_middleware(
         },
         method: AuthMethod::BearerToken,
         path: req.uri().path().to_string(),
-        service_id: "orchestratord".to_string(),
+        service_id: "rbees-orcd".to_string(),
     }).await.ok();
     Ok(next.run(req).await)
 }
@@ -209,7 +209,7 @@ pub async fn bearer_auth_middleware(
 - Non-blocking emission (use `.ok()` to ignore errors)
 ---
 ### 2.2 Task Lifecycle Events
-**Required by**: `bin/orchestratord/src/api/data.rs`
+**Required by**: `bin/rbees-orcd/src/api/data.rs`
 **Expected usage**:
 ```rust
 pub async fn create_task(
@@ -245,7 +245,7 @@ pub async fn create_task(
 - Sanitize task_id and model_ref with `input-validation`
 ---
 ### 2.3 Node Management Events
-**Required by**: `bin/orchestratord/src/api/nodes.rs`
+**Required by**: `bin/rbees-orcd/src/api/nodes.rs`
 **Expected usage**:
 ```rust
 pub async fn register_node(
@@ -336,10 +336,10 @@ pub async fn delete_pool(
 ---
 ### 3.2 Authentication Events
 **Required by**: `bin/pool-managerd/src/api/auth.rs`
-**Expected usage**: Same pattern as orchestratord (see §2.1)
+**Expected usage**: Same pattern as rbees-orcd (see §2.1)
 **Status**: ⚠️ pool-managerd authentication not yet implemented (per SEC-AUTH-3002)
 **When implementing**:
-- Add auth middleware (pattern exists in orchestratord)
+- Add auth middleware (pattern exists in rbees-orcd)
 - Emit `AuthSuccess` and `AuthFailure` events
 - Use token fingerprints
 ---
@@ -597,10 +597,10 @@ async fn main() -> Result<()> {
         mode: AuditMode::Local {
             base_dir: PathBuf::from(
                 std::env::var("LLORCH_AUDIT_DIR")
-                    .unwrap_or("/var/lib/llorch/audit/orchestratord".to_string())
+                    .unwrap_or("/var/lib/llorch/audit/rbees-orcd".to_string())
             ),
         },
-        service_id: "orchestratord".to_string(),
+        service_id: "rbees-orcd".to_string(),
         rotation_policy: RotationPolicy::Daily,
         retention_policy: RetentionPolicy::default(),
     })?;
@@ -703,8 +703,8 @@ pub fn metrics(&self) -> AuditMetrics;
 6. ⬜ Integration with `input-validation` for sanitization
 7. ⬜ VRAM operation events (for vram-residency)
 ### Phase 2: Service Integration (Next)
-8. ⬜ Wire into orchestratord authentication middleware
-9. ⬜ Wire into orchestratord task handlers
+8. ⬜ Wire into rbees-orcd authentication middleware
+9. ⬜ Wire into rbees-orcd task handlers
 10. ⬜ Wire into pool-managerd pool handlers
 11. ⬜ Wire into worker-orcd VRAM operations
 12. ⬜ Add structured logging for all operations

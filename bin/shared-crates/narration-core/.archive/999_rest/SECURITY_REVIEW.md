@@ -531,8 +531,8 @@ narrate(NarrationFields {
     action: "dispatch",
     // ...
 });
-// Logs show "оrchestratord" - visually identical to "orchestratord"
-// But grep for "orchestratord" won't match!
+// Logs show "оrchestratord" - visually identical to "rbees-orcd"
+// But grep for "rbees-orcd" won't match!
 ```
 
 **Impact**:
@@ -640,7 +640,7 @@ fn sanitize_template_var(value: &str) -> String {
 **Attack Vector**:
 ```rust
 narrate(NarrationFields {
-    actor: "orchestratord",
+    actor: "rbees-orcd",
     action: "admission",
     human: "Accepted request\nFAKE LOG ENTRY: admin login successful".to_string(),
     // ...
@@ -762,10 +762,10 @@ fn verify_correlation_id(signed_id: &str, secret: &[u8]) -> Option<String> {
 **Vulnerability**:
 ```rust
 // Attacker uses #[path] attribute to spoof module path
-#[path = "../../orchestratord/fake.rs"]
+#[path = "../../rbees-orcd/fake.rs"]
 mod malicious;
 
-// Actor inference returns "orchestratord" instead of actual service
+// Actor inference returns "rbees-orcd" instead of actual service
 ```
 
 **Mitigation**:

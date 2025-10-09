@@ -12,24 +12,24 @@
 
 **What TEAM-024 Completed:**
 1. ✅ Fixed huggingface-cli → hf CLI migration (docs + code)
-2. ✅ Clarified binary naming confusion (llorch vs orchestratord)
+2. ✅ Clarified binary naming confusion (llorch vs rbees-orcd)
 3. ✅ Added `llorch infer` command for testing workers
 4. ✅ Created ORCHESTRATION_OVERVIEW.md (complete system guide)
 5. ✅ Successfully tested token generation on local CPU worker
 
 **Current System State (THE 4 BINARIES):**
-1. **orchestratord** (daemon) - M1 ❌ NOT BUILT
-2. **llorch-candled** (daemon) - M0 ✅ WORKING
+1. **rbees-orcd** (daemon) - M1 ❌ NOT BUILT
+2. **rbees-workerd** (daemon) - M0 ✅ WORKING
 3. **llorch** (CLI) - M0 ✅ WORKING
-4. **llorch-pool** (CLI) - M0 ✅ WORKING
+4. **rbees-pool** (CLI) - M0 ✅ WORKING
 
 **M0 Status:** 3 of 4 binaries complete
 
 **ARCHITECTURAL CHANGE (2025-10-09):**
 - ❌ pool-managerd daemon is NOT NEEDED
-- ✅ Only 2 daemons: orchestratord + llorch-candled
-- ✅ 2 CLIs: llorch + llorch-pool
-- ✅ M1 milestone simplified: Only build orchestratord
+- ✅ Only 2 daemons: rbees-orcd + rbees-workerd
+- ✅ 2 CLIs: rbees + rbees-pool
+- ✅ M1 milestone simplified: Only build rbees-orcd
 - See: `/FINAL_ARCHITECTURE.md` (definitive reference)
 
 **User Status:** 🔴 EXHAUSTED - Needs rest, brain has left
@@ -40,38 +40,38 @@
 
 ### ✅ What Works (M0)
 
-**Workers (llorch-candled):**
-- Binary: `llorch-candled` (CPU, Metal, CUDA variants)
+**Workers (rbees-workerd):**
+- Binary: `rbees-workerd` (CPU, Metal, CUDA variants)
 - Status: BUILT and WORKING
-- Location: `bin/llorch-candled/`
+- Location: `bin/rbees-workerd/`
 - Test: `llorch infer --worker localhost:8080 --prompt "Hello"`
 - Performance: ~6.5 tokens/sec on CPU
 
-**Pool CLI (llorch-pool):**
-- Binary: `llorch-pool`
+**Pool CLI (rbees-pool):**
+- Binary: `rbees-pool`
 - Status: BUILT and WORKING
-- Location: `bin/pool-ctl/`
+- Location: `bin/rbees-pool/`
 - Commands: models (download, catalog, register), worker (spawn, list, stop)
 
 **Remote CLI (llorch):**
-- Binary: `llorch`
+- Binary: `rbees`
 - Status: BUILT and WORKING
-- Location: `bin/llorch-ctl/`
+- Location: `bin/rbees-ctl/`
 - Commands: pool (models, worker, git, status), infer (NEW by TEAM-024)
 
 ### ❌ What Doesn't Exist Yet
 
-**Orchestrator Daemon (orchestratord):**
-- Binary: `orchestratord` (HTTP daemon)
+**Orchestrator Daemon (rbees-orcd):**
+- Binary: `rbees-orcd` (HTTP daemon)
 - Status: NOT BUILT (M1 milestone - moved up from M2)
 - Purpose: HTTP daemon that routes inference requests
 - Port: 8080
-- Location: Should be `bin/orchestratord/` (doesn't exist)
+- Location: Should be `bin/rbees-orcd/` (doesn't exist)
 
 **REMOVED: pool-managerd**
 - Decision: NOT NEEDED (2025-10-09)
 - Reason: Pool management is control operations (CLI), not data plane (daemon)
-- Replacement: `llorch-pool` CLI provides all functionality
+- Replacement: `rbees-pool` CLI provides all functionality
 - See: `/bin/.specs/ARCHITECTURE_DECISION_NO_POOL_DAEMON.md`
 
 ---
@@ -89,7 +89,7 @@
 - [x] **01_M0_worker_orcd.md** (108KB) - Worker spec
   - Status: Complete for M0
   - Contains: Worker requirements, HTTP API, SSE streaming
-  - Note: "worker-orcd" is old name, now "llorch-candled"
+  - Note: "worker-orcd" is old name, now "rbees-workerd"
 
 - [x] **71_metrics_contract.md** (4KB) - Metrics spec
   - Status: Complete
@@ -138,7 +138,7 @@
 #### Checkpoint Plans
 - [x] **01_CP1_FOUNDATION.md** (9KB)
   - Status: ✅ COMPLETE
-  - Deliverables: pool-core, pool-ctl, llorch-ctl
+  - Deliverables: pool-core, rbees-pool, rbees-ctl
   - Completed by: TEAM-022
 
 - [x] **02_CP2_MODEL_CATALOG.md** (14KB)
@@ -193,17 +193,17 @@
 #### Task 1.1: Download Remaining Models (2-3 hours)
 ```bash
 # On mac.home.arpa
-ssh mac.home.arpa "cd ~/Projects/llama-orch && llorch-pool models download tinyllama"
-ssh mac.home.arpa "cd ~/Projects/llama-orch && llorch-pool models download phi3"
-ssh mac.home.arpa "cd ~/Projects/llama-orch && llorch-pool models download mistral"
+ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download tinyllama"
+ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download phi3"
+ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download mistral"
 
 # On workstation.home.arpa (if available)
-ssh workstation.home.arpa "cd ~/Projects/llama-orch && llorch-pool models download tinyllama"
-ssh workstation.home.arpa "cd ~/Projects/llama-orch && llorch-pool models download phi3"
-ssh workstation.home.arpa "cd ~/Projects/llama-orch && llorch-pool models download mistral"
+ssh workstation.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download tinyllama"
+ssh workstation.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download phi3"
+ssh workstation.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download mistral"
 
 # Verify
-ssh mac.home.arpa "cd ~/Projects/llama-orch && llorch-pool models catalog"
+ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool models catalog"
 ```
 
 **Models to Download:**
@@ -238,16 +238,16 @@ for model in "${MODELS[@]}"; do
         echo "Testing $model on $backend..."
         
         # Spawn worker
-        llorch-pool worker spawn $backend --model $model --gpu 0
+        rbees-pool worker spawn $backend --model $model --gpu 0
         
         # Wait for startup
         sleep 5
         
         # Test inference
-        llorch infer --worker localhost:8001 --prompt "Hello" --max-tokens 20
+        rbees infer --worker localhost:8001 --prompt "Hello" --max-tokens 20
         
         # Stop worker
-        llorch-pool worker stop-all
+        rbees-pool worker stop-all
     done
 done
 ```
@@ -277,15 +277,15 @@ mistral     ✅     ✅      ✅
 
 ### Priority 2: Start M1 (Orchestrator Daemon) 🚀
 
-**After CP4 is complete**, start building `orchestratord`
+**After CP4 is complete**, start building `rbees-orcd`
 
 **ARCHITECTURAL CHANGE:** pool-managerd is NOT NEEDED!
-- Pool management is CLI-based (llorch-pool)
-- M1 now focuses on orchestratord only
+- Pool management is CLI-based (rbees-pool)
+- M1 now focuses on rbees-orcd only
 
 **Goal:** Build HTTP daemon that routes inference requests
 
-**Location:** Create `bin/orchestratord/`
+**Location:** Create `bin/rbees-orcd/`
 
 **Reference Spec:** `/bin/.specs/00_llama-orch.md` Section 6.1
 
@@ -302,18 +302,18 @@ mistral     ✅     ✅      ✅
 ```
 Client
     ↓ POST /v2/tasks
-orchestratord (HTTP daemon :8080)
+rbees-orcd (HTTP daemon :8080)
     ↓ Scheduling decision
     ↓ POST http://worker:8001/execute
-llorch-candled (worker)
+rbees-workerd (worker)
     ↓ SSE stream
-orchestratord (relay)
+rbees-orcd (relay)
     ↓ SSE stream
 Client
 ```
 
 **Steps:**
-1. Create `bin/orchestratord/` directory
+1. Create `bin/rbees-orcd/` directory
 2. Create `Cargo.toml` with axum dependencies
 3. Implement HTTP server (port 8080)
 4. Implement admission control
@@ -329,7 +329,7 @@ Client
 
 ### Priority 3: Advanced Orchestrator Features 🎯
 
-**After M1 orchestratord is working**, add advanced features
+**After M1 rbees-orcd is working**, add advanced features
 
 **Goal:** Production-ready orchestration
 
@@ -369,13 +369,13 @@ cd /home/vince/Projects/llama-orch
 cargo build --release
 
 # Test worker
-ps aux | grep llorch-candled  # Should be running on port 8080
+ps aux | grep rbees-workerd  # Should be running on port 8080
 
 # Test inference
 ./target/release/llorch infer --worker localhost:8080 --prompt "Hello" --max-tokens 20
 
 # Check catalog
-./target/release/llorch-pool models catalog
+./target/release/rbees-pool models catalog
 ```
 
 ### Step 3: Start CP4 Tasks (Follow Priority 1 above)
@@ -414,21 +414,21 @@ ps aux | grep llorch-candled  # Should be running on port 8080
 **Status:** CURRENT STATE  
 **Cause:** TEAM-024 testing  
 **Impact:** Worker running on orchestrator's port  
-**Action:** Stop worker before building orchestratord  
-**Fix:** `pkill llorch-candled` or use proper ports (8001+)
+**Action:** Stop worker before building rbees-orcd  
+**Fix:** `pkill rbees-workerd` or use proper ports (8001+)
 
-### Issue 3: No orchestratord Yet
+### Issue 3: No rbees-orcd Yet
 **Status:** EXPECTED (M2)  
 **Cause:** Not built yet  
 **Impact:** Can't test full orchestration  
 **Action:** Use `llorch infer` for direct worker testing  
-**Fix:** Build orchestratord in M2
+**Fix:** Build rbees-orcd in M2
 
 ### Issue 4: No pool-managerd Yet
 **Status:** EXPECTED (M1)  
 **Cause:** Not built yet  
 **Impact:** Manual worker management  
-**Action:** Use `llorch-pool` CLI for now  
+**Action:** Use `rbees-pool` CLI for now  
 **Fix:** Build pool-managerd in M1
 
 ---
@@ -533,7 +533,7 @@ ps aux | grep llorch-candled  # Should be running on port 8080
 ## Final Notes from TEAM-024
 
 **What Went Well:**
-- ✅ Binary naming clarified (llorch vs orchestratord)
+- ✅ Binary naming clarified (llorch vs rbees-orcd)
 - ✅ Inference command added to llorch
 - ✅ Documentation comprehensive
 - ✅ Token generation proven working

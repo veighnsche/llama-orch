@@ -64,7 +64,7 @@ Audit logging provides an **immutable record of security events** for compliance
 For personal/home deployments where you own the hardware and trust all users:
 
 ```
-orchestratord/pool-managerd
+rbees-orcd/pool-managerd
          ↓
     audit-log crate (DISABLED)
          ↓
@@ -90,7 +90,7 @@ let config = AuditConfig {
 In single-node deployments where you need compliance but don't have a platform:
 
 ```
-orchestratord/pool-managerd
+rbees-orcd/pool-managerd
          ↓
     audit-log crate
          ↓
@@ -111,7 +111,7 @@ orchestratord/pool-managerd
 In platform/marketplace mode, providers selling GPU capacity to strangers emit audit events to the central platform:
 
 ```
-Provider's orchestratord
+Provider's rbees-orcd
          ↓
     audit-log crate
          ↓
@@ -168,7 +168,7 @@ Platform Audit Service (audit.llama-orch-platform.com)
 
 ### 📦 What You Get
 
-**For orchestratord**:
+**For rbees-orcd**:
 ```rust
 // Authentication events
 AuditEvent::AuthSuccess { actor, method, ip, path }
@@ -228,7 +228,7 @@ use audit_logging::{AuditLogger, AuditConfig, AuditMode};
 // HOME LAB: Disable audit logging (zero overhead)
 let audit_logger = AuditLogger::new(AuditConfig {
     mode: AuditMode::Disabled,  // ✅ No audit trail, no overhead
-    service_id: "orchestratord".to_string(),
+    service_id: "rbees-orcd".to_string(),
     rotation_policy: RotationPolicy::Daily,  // Ignored in Disabled mode
     retention_policy: RetentionPolicy::default(),  // Ignored
     flush_mode: FlushMode::Immediate,  // Ignored
@@ -240,9 +240,9 @@ let audit_logger = AuditLogger::new(AuditConfig {
 // SINGLE-NODE: Local audit logging (compliance-safe)
 let audit_logger = AuditLogger::new(AuditConfig {
     mode: AuditMode::Local {
-        base_dir: PathBuf::from("/var/lib/llorch/audit/orchestratord"),
+        base_dir: PathBuf::from("/var/lib/llorch/audit/rbees-orcd"),
     },
-    service_id: "orchestratord".to_string(),
+    service_id: "rbees-orcd".to_string(),
     rotation_policy: RotationPolicy::Daily,
     retention_policy: RetentionPolicy::default(),
     flush_mode: FlushMode::Immediate,  // Default (compliance-safe)
@@ -260,7 +260,7 @@ let audit_logger = AuditLogger::new(AuditConfig {
         batch_size: 100,
         flush_interval_secs: 5,
     }),
-    service_id: "orchestratord".to_string(),
+    service_id: "rbees-orcd".to_string(),
     rotation_policy: RotationPolicy::Daily,
     retention_policy: RetentionPolicy::default(),
     flush_mode: FlushMode::Hybrid {  // Batched for performance
@@ -293,7 +293,7 @@ if let Err(e) = audit_logger.emit(AuditEvent::AuthSuccess {
     },
     method: AuthMethod::BearerToken,
     path: req.uri().path().to_string(),
-    service_id: "orchestratord".to_string(),
+    service_id: "rbees-orcd".to_string(),
 }) {
     tracing::error!(error = %e, "Failed to emit audit event");
     // Don't fail the operation if audit fails

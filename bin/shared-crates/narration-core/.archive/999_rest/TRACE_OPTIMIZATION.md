@@ -58,7 +58,7 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
 ```
 
 **What our custom macro does**:
-- ✅ Auto-infers actor from module path (e.g., "orchestratord")
+- ✅ Auto-infers actor from module path (e.g., "rbees-orcd")
 - ✅ Emits entry trace with all parameters
 - ✅ Emits exit trace with result/error
 - ✅ Automatic timing
@@ -68,8 +68,8 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
 
 **Output**:
 ```
-TRACE orchestratord dispatch_job job_id="job-123" pool_id="default" "dispatch_job started"
-TRACE orchestratord dispatch_job result="worker-gpu0-r1" elapsed_ms=15 "dispatch_job completed"
+TRACE rbees-orcd dispatch_job job_id="job-123" pool_id="default" "dispatch_job started"
+TRACE rbees-orcd dispatch_job result="worker-gpu0-r1" elapsed_ms=15 "dispatch_job completed"
 ```
 
 ---
@@ -89,7 +89,7 @@ for (i, token) in tokens.iter().enumerate() {
     // ... actual work ...
 
 trace_with_correlation!(
-    "orchestratord", 
+    "rbees-orcd", 
     "select_worker", 
     "worker-gpu0-r1",
     format!("Evaluating worker-gpu0-r1: load={}/8, latency={}ms", load, latency),
@@ -113,7 +113,7 @@ trace_with_correlation!(
 use observability_narration_core::trace_enter;
 
 fn dispatch_job(job_id: &str, pool_id: &str) -> Result<()> {
-    trace_enter!("orchestratord", "dispatch_job", 
+    trace_enter!("rbees-orcd", "dispatch_job", 
                  format!("job_id={}, pool_id={}", job_id, pool_id));
     
     // ... function body ...
@@ -122,7 +122,7 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<()> {
 
 **Output**:
 ```
-TRACE orchestratord enter dispatch_job "ENTER dispatch_job(job_id=job-123, pool_id=default)"
+TRACE rbees-orcd enter dispatch_job "ENTER dispatch_job(job_id=job-123, pool_id=default)"
 ```
 
 ---
@@ -135,14 +135,14 @@ TRACE orchestratord enter dispatch_job "ENTER dispatch_job(job_id=job-123, pool_
 use observability_narration_core::trace_exit;
 
 fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
-    trace_enter!("orchestratord", "dispatch_job", 
+    trace_enter!("rbees-orcd", "dispatch_job", 
                  format!("job_id={}, pool_id={}", job_id, pool_id));
     
     // ... function body ...
     
     let worker_id = select_worker(pool_id)?;
     
-    trace_exit!("orchestratord", "dispatch_job", 
+    trace_exit!("rbees-orcd", "dispatch_job", 
                 format!("→ {} ({}ms)", worker_id, elapsed_ms));
     
     Ok(worker_id)
@@ -151,7 +151,7 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
 
 **Output**:
 ```
-TRACE orchestratord exit dispatch_job "EXIT dispatch_job → worker-gpu0-r1 (15ms)"
+TRACE rbees-orcd exit dispatch_job "EXIT dispatch_job → worker-gpu0-r1 (15ms)"
 ```
 
 ---
@@ -164,7 +164,7 @@ TRACE orchestratord exit dispatch_job "EXIT dispatch_job → worker-gpu0-r1 (15m
 use observability_narration_core::trace_loop;
 
 for (i, worker) in workers.iter().enumerate() {
-    trace_loop!("orchestratord", "select_worker", i, workers.len(),
+    trace_loop!("rbees-orcd", "select_worker", i, workers.len(),
                 format!("worker={}, load={}/8", worker.id, worker.load));
     
     // ... evaluation logic ...
@@ -173,8 +173,8 @@ for (i, worker) in workers.iter().enumerate() {
 
 **Output**:
 ```
-TRACE orchestratord select_worker iter_0/8 "Iteration 0/8: worker=worker-gpu0-r1, load=2/8"
-TRACE orchestratord select_worker iter_1/8 "Iteration 1/8: worker=worker-gpu1-r1, load=5/8"
+TRACE rbees-orcd select_worker iter_0/8 "Iteration 0/8: worker=worker-gpu0-r1, load=2/8"
+TRACE rbees-orcd select_worker iter_1/8 "Iteration 1/8: worker=worker-gpu1-r1, load=5/8"
 ...
 ```
 
@@ -187,14 +187,14 @@ TRACE orchestratord select_worker iter_1/8 "Iteration 1/8: worker=worker-gpu1-r1
 ```rust
 use observability_narration_core::trace_state;
 
-trace_state!("orchestratord", "queue_depth", 
+trace_state!("rbees-orcd", "queue_depth", 
              format!("{} → {}", old_depth, new_depth),
              format!("Queue depth changed: {} → {} (added job-{})", old_depth, new_depth, job_id));
 ```
 
 **Output**:
 ```
-TRACE orchestratord state_change queue_depth transition="5 → 6" "Queue depth changed: 5 → 6 (added job-123)"
+TRACE rbees-orcd state_change queue_depth transition="5 → 6" "Queue depth changed: 5 → 6 (added job-123)"
 ```
 
 ---
@@ -257,11 +257,11 @@ TRACE orchestratord state_change queue_depth transition="5 → 6" "Queue depth c
 1. **Production code** (use INFO/DEBUG instead)
    ```rust
    // ❌ WRONG: TRACE in production
-   trace_tiny!("orchestratord", "dispatch", job_id, "Dispatching job");
+   trace_tiny!("rbees-orcd", "dispatch", job_id, "Dispatching job");
    
    // ✅ CORRECT: INFO for production
    narrate(NarrationFields {
-       actor: "orchestratord",
+       actor: "rbees-orcd",
        action: "dispatch",
        target: job_id.to_string(),
        human: format!("Dispatching job to worker-{}", worker_id),
@@ -289,11 +289,11 @@ TRACE orchestratord state_change queue_depth transition="5 → 6" "Queue depth c
 3. **User-facing events** (use INFO)
    ```rust
    // ❌ WRONG: User event at TRACE
-   trace_tiny!("orchestratord", "accept", job_id, "Job accepted");
+   trace_tiny!("rbees-orcd", "accept", job_id, "Job accepted");
    
    // ✅ CORRECT: INFO for user-facing events
    narrate(NarrationFields {
-       actor: "orchestratord",
+       actor: "rbees-orcd",
        action: "accept",
        target: job_id.to_string(),
        human: "Accepted request; queued at position 3 (ETA 420 ms)".to_string(),
@@ -453,7 +453,7 @@ If you want cute narration, use INFO/DEBUG with full `narrate()`:
 ```rust
 // ✅ CORRECT: Cute mode for INFO
 narrate(NarrationFields {
-    actor: "orchestratord",
+    actor: "rbees-orcd",
     action: "dispatch",
     target: job_id.to_string(),
     human: "Dispatching job to worker-gpu0-r1".to_string(),

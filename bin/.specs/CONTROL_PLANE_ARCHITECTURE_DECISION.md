@@ -80,15 +80,15 @@ while let Some(event) = stream.next().await {
 
 **Purpose:** CONTROL PLANE operations
 ```bash
-# llorch-ctl (orchestrator control)
+# rbees-ctl (orchestrator control)
 llorch pool models download tinyllama --host mac
 llorch pool worker spawn metal --host mac
 llorch pool status --host workstation
 
-# llorch-pool (pool manager control)
-llorch-pool models download tinyllama
-llorch-pool worker spawn metal --model tinyllama
-llorch-pool git pull
+# rbees-pool (pool manager control)
+rbees-pool models download tinyllama
+rbees-pool worker spawn metal --model tinyllama
+rbees-pool git pull
 ```
 
 **Used by:**
@@ -107,13 +107,13 @@ llorch-pool git pull
 ### Architecture
 
 ```
-llorch-ctl (CLI)
+rbees-ctl (CLI)
     ↓ HTTP
-orchestratord (daemon :8080)
+rbees-orcd (daemon :8080)
     ↓ HTTP
 pool-managerd (daemon :9200)
     ↓ spawn
-llorch-candled (worker)
+rbees-workerd (worker)
 ```
 
 ### Pros
@@ -165,15 +165,15 @@ llorch-candled (worker)
 ### Architecture
 
 ```
-llorch-ctl (CLI)
+rbees-ctl (CLI)
     ↓ SSH
-pool-ctl (on pool host)
+rbees-pool (on pool host)
     ↓ direct execution
-hf download, git pull, llorch-candled spawn
+hf download, git pull, rbees-workerd spawn
 
-orchestratord (daemon, M2+)
+rbees-orcd (daemon, M2+)
     ↓ HTTP (inference only)
-llorch-candled (worker)
+rbees-workerd (worker)
     ↑ HTTP (inference only)
 llama-orch-sdk (client)
 ```
@@ -206,7 +206,7 @@ llama-orch-sdk (client)
 **✅ Progressive Enhancement**
 - M0: SSH only (simple)
 - M1: Add pool-managerd daemon (optional)
-- M2: Add orchestratord daemon (optional)
+- M2: Add rbees-orcd daemon (optional)
 - Can mix modes (some pools SSH, some HTTP)
 
 ### Cons
@@ -233,15 +233,15 @@ llama-orch-sdk (client)
 ### Architecture
 
 ```
-llorch-ctl (CLI)
+rbees-ctl (CLI)
     ↓ SSH
-pool-ctl (on pool host)
+rbees-pool (on pool host)
     ↓ direct execution
 Everything (models, git, workers)
 
-NO orchestratord daemon
+NO rbees-orcd daemon
 NO pool-managerd daemon
-Just CLIs + SSH + llorch-candled workers
+Just CLIs + SSH + rbees-workerd workers
 ```
 
 ### Pros
@@ -265,7 +265,7 @@ Just CLIs + SSH + llorch-candled workers
 ### Cons
 
 **❌ Major Spec Deviation**
-- Specs define orchestratord/pool-managerd as daemons
+- Specs define rbees-orcd/pool-managerd as daemons
 - Would need major spec rewrite
 - Loses future scalability
 
@@ -291,14 +291,14 @@ Just CLIs + SSH + llorch-candled workers
 ### Rationale
 
 **For M0 (Homelab):**
-- Use SSH for control plane (llorch-ctl → pool-ctl)
+- Use SSH for control plane (rbees-ctl → rbees-pool)
 - No pool-managerd daemon needed yet
 - Simple, secure, works with existing SSH setup
 - Direct execution on pool hosts
 
 **For M2+ (Production):**
 - Add HTTP APIs for control plane
-- Add orchestratord daemon (HTTP server)
+- Add rbees-orcd daemon (HTTP server)
 - Add pool-managerd daemon (HTTP server)
 - Keep SSH as fallback/alternative
 
@@ -309,17 +309,17 @@ Just CLIs + SSH + llorch-candled workers
 │ CONTROL PLANE (Operator → System)                               │
 ├─────────────────────────────────────────────────────────────────┤
 │ M0: SSH-based                                                    │
-│   llorch-ctl → SSH → pool-ctl → direct execution                │
+│   rbees-ctl → SSH → rbees-pool → direct execution                │
 │                                                                   │
 │ M2+: HTTP-based (optional)                                       │
-│   llorch-ctl → HTTP → orchestratord → HTTP → pool-managerd      │
+│   rbees-ctl → HTTP → rbees-orcd → HTTP → pool-managerd      │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
 │ DATA PLANE (Client → Inference)                                 │
 ├─────────────────────────────────────────────────────────────────┤
 │ Always HTTP-based                                                │
-│   llama-orch-sdk → HTTP → orchestratord → HTTP → worker         │
+│   llama-orch-sdk → HTTP → rbees-orcd → HTTP → worker         │
 │   (SSE streaming for tokens)                                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -330,24 +330,24 @@ Just CLIs + SSH + llorch-candled workers
 ```bash
 # Orchestrator CLI (on blep)
 llorch pool models download tinyllama --host mac
-  → ssh mac.home.arpa "cd ~/Projects/llama-orch && llorch-pool models download tinyllama"
+  → ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download tinyllama"
   → hf download TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF ...
 
 llorch pool worker spawn metal --host mac --model tinyllama
-  → ssh mac.home.arpa "cd ~/Projects/llama-orch && llorch-pool worker spawn metal --model tinyllama"
-  → llorch-candled --backend metal --model .test-models/tinyllama/... &
+  → ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool worker spawn metal --model tinyllama"
+  → rbees-workerd --backend metal --model .test-models/tinyllama/... &
 ```
 
 **M2+: HTTP Control Plane (Optional)**
 ```bash
 # Start daemons
-orchestratord --config orchestrator.toml  # HTTP server :8080
+rbees-orcd --config orchestrator.toml  # HTTP server :8080
 pool-managerd --config pool.toml          # HTTP server :9200
 
 # CLI calls HTTP APIs
 llorch pool worker spawn metal --host mac --model tinyllama
   → HTTP: POST http://localhost:8080/pools/mac/workers/spawn
-  → orchestratord: POST http://mac.home.arpa:9200/workers/spawn
+  → rbees-orcd: POST http://mac.home.arpa:9200/workers/spawn
   → pool-managerd spawns worker
 ```
 
@@ -382,13 +382,13 @@ In Home Mode, orchestrator MAY control pool managers via SSH:
 
 **Requirements:**
 - SSH MUST use public/private key authentication
-- SSH commands MUST execute pool-ctl binary on remote host
+- SSH commands MUST execute rbees-pool binary on remote host
 - SSH MUST change to repo directory before execution
 - SSH MUST stream stdout/stderr back to orchestrator
 - SSH MUST preserve exit codes
 
 **Example:**
-ssh mac.home.arpa "cd ~/Projects/llama-orch && llorch-pool models download tinyllama"
+ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download tinyllama"
 
 **Limitations:**
 - SSH is for control operations only (not inference)
@@ -422,7 +422,7 @@ ssh mac.home.arpa "cd ~/Projects/llama-orch && llorch-pool models download tinyl
 **SSH advantages:**
 - ✅ Already configured (mac.home.arpa, workstation.home.arpa)
 - ✅ No daemon required on pools (M0)
-- ✅ Direct execution (pool-ctl)
+- ✅ Direct execution (rbees-pool)
 - ✅ No port forwarding needed
 - ✅ Works through firewalls (SSH port usually open)
 
@@ -460,22 +460,22 @@ ssh mac.home.arpa "cd ~/Projects/llama-orch && llorch-pool models download tinyl
 
 **M0 (Homelab):**
 ```
-llorch-ctl (blep)
+rbees-ctl (blep)
     ↓ SSH (control operations)
-pool-ctl (mac/workstation)
+rbees-pool (mac/workstation)
     ↓ direct execution
-hf download, git pull, llorch-candled spawn
+hf download, git pull, rbees-workerd spawn
 ```
 
 **M2+ (Production):**
 ```
-llorch-ctl (blep)
+rbees-ctl (blep)
     ↓ HTTP (control operations)
-orchestratord (daemon :8080)
+rbees-orcd (daemon :8080)
     ↓ HTTP (control operations)
 pool-managerd (daemon :9200)
     ↓ spawn
-llorch-candled (worker)
+rbees-workerd (worker)
 ```
 
 ### Data Plane: Always HTTP
@@ -484,9 +484,9 @@ llorch-candled (worker)
 ```
 llama-orch-sdk (client)
     ↓ HTTP POST /v2/tasks
-orchestratord (daemon :8080)
+rbees-orcd (daemon :8080)
     ↓ HTTP POST /execute
-llorch-candled (worker :8001)
+rbees-workerd (worker :8001)
     ↓ SSE stream
 llama-orch-sdk (client)
 ```
@@ -498,21 +498,21 @@ llama-orch-sdk (client)
 ### M0: SSH Control + Direct Execution
 
 **Binaries:**
-1. `llorch-ctl` (CLI on blep)
+1. `rbees-ctl` (CLI on blep)
    - Commands pools via SSH
    - No HTTP client for control
    - Uses: orchestrator-core (shared types)
 
-2. `pool-ctl` (CLI on pools)
+2. `rbees-pool` (CLI on pools)
    - Executes directly (no daemon)
    - Model downloads (hf CLI)
    - Git operations (git CLI)
    - Worker spawn (direct process spawn)
    - Uses: pool-core (shared types)
 
-3. `llorch-candled` (worker daemon)
+3. `rbees-workerd` (worker daemon)
    - HTTP server for inference
-   - Spawned by pool-ctl
+   - Spawned by rbees-pool
 
 **No daemons for control plane in M0.**
 
@@ -526,24 +526,24 @@ llama-orch-sdk (client)
    - Uses: pool-core
 
 **Update:**
-- `pool-ctl` can call pool-managerd HTTP API (optional)
-- `llorch-ctl` can call pool-managerd HTTP API via SSH tunnel (optional)
+- `rbees-pool` can call pool-managerd HTTP API (optional)
+- `rbees-ctl` can call pool-managerd HTTP API via SSH tunnel (optional)
 
 **Still supports SSH fallback.**
 
 ### M2: Add Orchestrator Daemon
 
 **Add:**
-5. `orchestratord` (daemon on blep)
+5. `rbees-orcd` (daemon on blep)
    - HTTP server :8080
    - Job scheduling
    - SQLite state
    - Uses: orchestrator-core
 
 **Update:**
-- `llorch-ctl` calls orchestratord HTTP API for jobs
-- `orchestratord` calls pool-managerd HTTP API
-- `llama-orch-sdk` calls orchestratord HTTP API for inference
+- `rbees-ctl` calls rbees-orcd HTTP API for jobs
+- `rbees-orcd` calls pool-managerd HTTP API
+- `llama-orch-sdk` calls rbees-orcd HTTP API for inference
 
 **SSH still available for direct pool control.**
 
@@ -582,10 +582,10 @@ llama-orch-sdk (client)
 │ CONTROL PLANE (Operator Control)                                │
 ├─────────────────────────────────────────────────────────────────┤
 │ M0: SSH-based (homelab)                                          │
-│   llorch-ctl → SSH → pool-ctl → direct execution                │
+│   rbees-ctl → SSH → rbees-pool → direct execution                │
 │                                                                   │
 │ M2+: HTTP-based (production, optional)                           │
-│   llorch-ctl → HTTP → orchestratord → HTTP → pool-managerd      │
+│   rbees-ctl → HTTP → rbees-orcd → HTTP → pool-managerd      │
 │                                                                   │
 │ Security: SSH keys (M0), Bearer tokens + TLS (M2+)              │
 └─────────────────────────────────────────────────────────────────┘
@@ -594,7 +594,7 @@ llama-orch-sdk (client)
 │ DATA PLANE (Inference API)                                      │
 ├─────────────────────────────────────────────────────────────────┤
 │ Always HTTP-based (all modes)                                    │
-│   llama-orch-sdk → HTTP → orchestratord → HTTP → worker         │
+│   llama-orch-sdk → HTTP → rbees-orcd → HTTP → worker         │
 │   (SSE streaming for tokens)                                     │
 │                                                                   │
 │ Security: API tokens (M3+), localhost trust (M0)                │
@@ -612,32 +612,32 @@ llama-orch-sdk (client)
 ```bash
 # On blep (orchestrator host)
 llorch pool models download tinyllama --host mac
-  → ssh mac.home.arpa "cd ~/Projects/llama-orch && llorch-pool models download tinyllama"
+  → ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download tinyllama"
   → hf download TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF ...
 
 llorch pool worker spawn metal --host mac --model tinyllama
-  → ssh mac.home.arpa "cd ~/Projects/llama-orch && llorch-pool worker spawn metal --model tinyllama"
-  → llorch-candled --backend metal ... &
+  → ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool worker spawn metal --model tinyllama"
+  → rbees-workerd --backend metal ... &
 
 # On mac (pool host)
-llorch-pool models download tinyllama
+rbees-pool models download tinyllama
   → hf download ...
 
-llorch-pool worker spawn metal --model tinyllama
-  → llorch-candled --backend metal ... &
+rbees-pool worker spawn metal --model tinyllama
+  → rbees-workerd --backend metal ... &
 ```
 
 ### M2+: HTTP Control (Optional)
 
 ```bash
 # Start daemons
-orchestratord --config orch.toml    # :8080
+rbees-orcd --config orch.toml    # :8080
 pool-managerd --config pool.toml    # :9200
 
 # CLI calls HTTP
 llorch pool worker spawn metal --host mac --model tinyllama
   → HTTP: POST http://localhost:8080/pools/mac/workers/spawn
-  → orchestratord: POST http://mac.home.arpa:9200/workers/spawn
+  → rbees-orcd: POST http://mac.home.arpa:9200/workers/spawn
   → pool-managerd spawns worker
 ```
 
@@ -679,8 +679,8 @@ while let Some(event) = stream.next().await {
 
 **Action items:**
 1. Update specs to allow SSH control in M0
-2. Implement pool-ctl with direct execution
-3. Implement llorch-ctl with SSH client
+2. Implement rbees-pool with direct execution
+3. Implement rbees-ctl with SSH client
 4. Keep HTTP APIs in specs for M2+
 5. llama-orch-sdk remains HTTP-only (inference)
 

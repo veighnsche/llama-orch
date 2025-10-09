@@ -297,7 +297,7 @@ cargo test -p observability-narration-core --test integration
 7. **Add property tests** — Verify invariants (redaction, correlation IDs)
 8. **CI integration** — Add to CI pipeline with  validation
 ### Medium-term (Next Month)
-9. **Service migrations** — Migrate orchestratord, pool-managerd, worker-orcd
+9. **Service migrations** — Migrate rbees-orcd, pool-managerd, worker-orcd
 10. **Coverage enforcement** — Add coverage gates to CI
 11. **Test catalog** — Map tests to requirements
 ---
@@ -309,7 +309,7 @@ cargo test -p observability-narration-core --test integration
    - Unicode sanitization never corrupts valid UTF-8
    - CRLF sanitization is idempotent
 2. **Integration Tests**:
-   - Multi-service correlation ID propagation (orchestratord → pool-managerd → worker-orcd)
+   - Multi-service correlation ID propagation (rbees-orcd → pool-managerd → worker-orcd)
    - Cute/story mode end-to-end
    - OTEL context propagation with real OTEL collector
 3. **Smoke Tests**:

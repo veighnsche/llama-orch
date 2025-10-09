@@ -25,7 +25,7 @@ We've successfully implemented a **custom narration system** with proc macros, a
   - Variable extraction from `{placeholder}` syntax
   - Ready for full implementation
 - **Actor Inference** - Auto-detect service from module path
-  - Recognizes: orchestratord, pool-managerd, worker-orcd, vram-residency
+  - Recognizes: rbees-orcd, pool-managerd, worker-orcd, vram-residency
   - Fallback logic for unknown modules
 ### Week 2: Narration Core Enhancement ✅
 **Enhanced**: `observability-narration-core`
@@ -111,7 +111,7 @@ All 6 trace macros have zero-overhead production builds:
 - Configurable via `RedactionPolicy`
 ### Homograph Attack Prevention ✅
 ```rust
-validate_actor("orchestratord")  // ✅ OK
+validate_actor("rbees-orcd")  // ✅ OK
 validate_actor("оrchestratord")  // ❌ Error (Cyrillic 'о')
 ```
 ### Zero-Width Character Filtering ✅
@@ -165,7 +165,7 @@ narrate_error(NarrationFields {
 use observability_narration_core::{generate_correlation_id, narrate, NarrationFields};
 let correlation_id = generate_correlation_id();
 narrate(NarrationFields {
-    actor: "orchestratord",
+    actor: "rbees-orcd",
     action: "dispatch",
     target: "job-456".to_string(),
     human: "Dispatching job to worker-gpu0-r1".to_string(),
@@ -181,7 +181,7 @@ narrate(NarrationFields {
     target: "llama-7b".to_string(),
     human: "Sealed model shard 'llama-7b' in 2048 MB VRAM on GPU 0 (5 ms)".to_string(),
     cute: Some("Tucked llama-7b safely into GPU0's warm 2GB nest! Sweet dreams! 🛏️✨".to_string()),
-    story: Some("\"Is the model ready?\" asked orchestratord. \"Yes, safely sealed!\" replied vram-residency.".to_string()),
+    story: Some("\"Is the model ready?\" asked rbees-orcd. \"Yes, safely sealed!\" replied vram-residency.".to_string()),
     ..Default::default()
 });
 ```
@@ -190,9 +190,9 @@ narrate(NarrationFields {
 use observability_narration_core::{trace_enter, trace_exit};
 #[cfg(feature = "trace-enabled")]
 fn process_request(job_id: &str) -> Result<()> {
-    trace_enter!("orchestratord", "process_request", format!("job_id={}", job_id));
+    trace_enter!("rbees-orcd", "process_request", format!("job_id={}", job_id));
     // ... processing logic ...
-    trace_exit!("orchestratord", "process_request", "→ Ok (5ms)");
+    trace_exit!("rbees-orcd", "process_request", "→ Ok (5ms)");
     Ok(())
 }
 ```
@@ -245,7 +245,7 @@ cargo expand --release --features="" | grep -q "trace_tiny" && echo "FAIL" || ec
 - [ ] **BDD Tests** - Cute/story mode coverage
 - [ ] **Proof Bundle Integration** - Test artifacts
 - [ ] **Service Migrations**:
-  - [ ] orchestratord
+  - [ ] rbees-orcd
   - [ ] pool-managerd
   - [ ] worker-orcd
 - [ ] **CI/CD Updates** - Multi-profile builds, benchmarks

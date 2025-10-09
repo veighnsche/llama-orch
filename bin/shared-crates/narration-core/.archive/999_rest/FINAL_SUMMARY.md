@@ -45,7 +45,7 @@ for (i, token) in tokens.iter().enumerate() {
 ### Option 3: Full `narrate()` — Maximum Power (user-facing)
 ```rust
 narrate(NarrationFields {
-    actor: "orchestratord",
+    actor: "rbees-orcd",
     action: "accept",
     target: job_id.to_string(),
     human: "Accepted request; queued at position 3 (ETA 420 ms)".to_string(),
@@ -130,7 +130,7 @@ cargo build --release --no-default-features --features production
 - [ ] BDD tests for cute/story modes
 - [ ]  integration tests
 - [ ] Editorial enforcement tests
-- [ ] Migrate `orchestratord` (add `#[trace_fn]` everywhere)
+- [ ] Migrate `rbees-orcd` (add `#[trace_fn]` everywhere)
 - [ ] Migrate `pool-managerd`
 - [ ] Migrate `worker-orcd`
 - [ ] Update CI/CD pipelines for multi-profile builds
@@ -159,16 +159,16 @@ RUST_LOG=trace cargo run
 ## 🎨 Example Output
 ### Development Build (RUST_LOG=trace):
 ```
-TRACE orchestratord dispatch_job job_id="job-123" pool_id="default" "dispatch_job started"
-TRACE orchestratord select_worker pool_id="default" "select_worker started"
-DEBUG orchestratord select_worker "Evaluating 3 workers for pool 'default'"
-TRACE orchestratord select_worker result="worker-gpu0-r1" elapsed_ms=5 "select_worker completed"
-INFO orchestratord dispatch job-123 "Dispatched job to worker-gpu0-r1 (15ms)"
-TRACE orchestratord dispatch_job result="worker-gpu0-r1" elapsed_ms=15 "dispatch_job completed"
+TRACE rbees-orcd dispatch_job job_id="job-123" pool_id="default" "dispatch_job started"
+TRACE rbees-orcd select_worker pool_id="default" "select_worker started"
+DEBUG rbees-orcd select_worker "Evaluating 3 workers for pool 'default'"
+TRACE rbees-orcd select_worker result="worker-gpu0-r1" elapsed_ms=5 "select_worker completed"
+INFO rbees-orcd dispatch job-123 "Dispatched job to worker-gpu0-r1 (15ms)"
+TRACE rbees-orcd dispatch_job result="worker-gpu0-r1" elapsed_ms=15 "dispatch_job completed"
 ```
 ### Production Build (RUST_LOG=info):
 ```
-INFO orchestratord dispatch job-123 "Dispatched job to worker-gpu0-r1 (15ms)"
+INFO rbees-orcd dispatch job-123 "Dispatched job to worker-gpu0-r1 (15ms)"
 ```
 **Note**: TRACE/DEBUG lines don't exist in production binary!
 ---
@@ -199,7 +199,7 @@ fn authenticate(token: &str) -> Result<User> {
 ❌ **Wrong**: No request tracking
 ```rust
 narrate(NarrationFields {
-    actor: "orchestratord",
+    actor: "rbees-orcd",
     action: "dispatch",
     target: job_id.to_string(),
     human: "Dispatching job".to_string(),
@@ -210,7 +210,7 @@ narrate(NarrationFields {
 ✅ **Fix**: Always propagate correlation IDs
 ```rust
 narrate(NarrationFields {
-    actor: "orchestratord",
+    actor: "rbees-orcd",
     action: "dispatch",
     target: job_id.to_string(),
     human: "Dispatching job".to_string(),
@@ -244,7 +244,7 @@ fn decode_tokens(tokens: &[i32]) -> Result<String> {
 ## 📊 Migration Effort
 | Service | Functions | Effort | Impact |
 |---------|-----------|--------|--------|
-| **orchestratord** | ~50 | 45 min | Full TRACE visibility |
+| **rbees-orcd** | ~50 | 45 min | Full TRACE visibility |
 | **pool-managerd** | ~40 | 35 min | Full TRACE visibility |
 | **worker-orcd** | ~60 | 50 min | Full TRACE visibility |
 | **Total** | ~150 | **~2 hours** | Complete observability |
@@ -330,7 +330,7 @@ We're not using generic `tracing::instrument` because:
 ### Week 4: Integration & Rollout
 1. **BDD tests** (cute/story modes, editorial enforcement)
 2. ** integration** tests
-3. **Migrate services** (orchestratord → pool-managerd → worker-orcd)
+3. **Migrate services** (rbees-orcd → pool-managerd → worker-orcd)
 4. **Update CI/CD** for multi-profile builds
 5. **Document** and **train** teams
 **Estimated timeline**: **4 weeks** for a world-class narration system that's uniquely ours! 🎀

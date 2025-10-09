@@ -10,7 +10,7 @@
 
 `pool-core` is a shared library crate containing logic used by BOTH:
 - `pool-managerd` (daemon) - Uses for runtime worker management, GPU inventory
-- `pool-ctl` (CLI) - Uses for types, validation, spawning logic
+- `rbees-pool` (CLI) - Uses for types, validation, spawning logic
 
 **Key Principle:** Shared logic, separate execution contexts.
 
@@ -143,7 +143,7 @@ impl PoolManagerd {
 }
 ```
 
-### In pool-ctl (CLI)
+### In rbees-pool (CLI)
 
 ```rust
 use pool_core::{WorkerSpawnRequest, ModelCatalog};
@@ -202,7 +202,7 @@ pub struct HeartbeatTask { /* ... */ }
 pub struct MetricsEmitter { /* ... */ }
 ```
 
-### CLI-specific (pool-ctl)
+### CLI-specific (rbees-pool)
 
 ```rust
 // CLI only: Argument parsing, colored output, progress

@@ -18,11 +18,11 @@ Changed from over-escaped patterns to simple regex strings:
 Simplified Gherkin scenarios to match the regex patterns:
 **❌ Before**:
 ```gherkin
-When I narrate with actor "orchestratord", action "admission"
+When I narrate with actor "rbees-orcd", action "admission"
 ```
 **✅ After**:
 ```gherkin
-When I narrate with actor orchestratord, action admission
+When I narrate with actor rbees-orcd, action admission
 ```
 ### 3. **World Struct** - Manual Debug Implementation
 Fixed the `CaptureAdapter` Debug issue:
@@ -55,7 +55,7 @@ Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.11s
 ```
 **Status**: ✅ **CLEAN BUILD** (only minor unused variable warnings)
 ## The Pattern (from BDD_WIRING.md)
-Based on orchestratord and  examples:
+Based on rbees-orcd and  examples:
 1. **Regex**: Plain strings, simple capture groups `(.+)`
 2. **Functions**: `pub async fn`  
 3. **World**: Derive `cucumber::World`, manual `Debug` if needed
@@ -79,7 +79,7 @@ Based on orchestratord and  examples:
 ## Lessons Applied
 From LESSONS_LEARNED.md:
 - ✅ Used plain regex strings without escaping
-- ✅ Followed orchestratord/ World pattern
+- ✅ Followed rbees-orcd/ World pattern
 - ✅ Made all step functions `pub async fn`
 - ✅ Manual Debug implementation for non-Debug fields
 - ✅ Simplified Gherkin to match regex patterns

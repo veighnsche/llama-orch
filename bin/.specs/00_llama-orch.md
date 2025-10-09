@@ -37,7 +37,7 @@
 - [5.5 Error Response Format](#55-error-response-format-sys-55x)
 - [5.6 Correlation ID Propagation](#56-correlation-id-propagation-sys-56x)
 ### 6. Component Architecture
-- [6.1 Orchestratord (The Brain) [M2]](#61-orchestratord-the-brain-sys-61x)
+- [6.1 Orchestratord (The Brain) [M2]](#61-rbees-orcd-the-brain-sys-61x)
   - [6.1.1 Orchestrator Intelligence](#611-orchestrator-intelligence-sys-611)
   - [6.1.2 State Management](#612-state-management-sys-612)
   - [6.1.3 Persistent State Store](#613-persistent-state-store-sys-613)
@@ -114,14 +114,14 @@
 - **VRAM-Only Policy**: Worker-specific requirement for bespoke NVIDIA workers (worker-orcd) that all model weights, KV cache, activations, and intermediate tensors reside entirely in GPU VRAM with no RAM/disk fallback. Other worker types (e.g., Apple ARM workers) may use unified memory architecture as appropriate for their platform.
 - **Test Reproducibility**: Property where same model + same seed + temp=0 + same prompt produces identical output for testing validation; NOT a product guarantee due to model and hardware limitations.
 - **Proof Bundle**: Standardized test artifact directory containing seeds, transcripts, metadata, and outputs for reproducibility (see `libs/`).
-- **Smart/Dumb Boundary**: Architectural principle where orchestratord makes ALL intelligent decisions (smart) while pool-managerd and workers execute commands without policy decisions (dumb).
+- **Smart/Dumb Boundary**: Architectural principle where rbees-orcd makes ALL intelligent decisions (smart) while pool-managerd and workers execute commands without policy decisions (dumb).
 - **Model Reference (model_ref)**: Canonical identifier for a model artifact, format: `hf:{org}/{repo}@{rev}::file={path}` or `file:/path/to/model.gguf`.
 - **Model Adapter**: Component within worker-orcd that abstracts architecture-specific inference logic (e.g., Llama-style vs GPT-style models). Distinct from worker adapter (pool-managerd component for worker lifecycle).
 - **Worker Adapter**: Component in pool-managerd that abstracts worker lifecycle for different worker types (bespoke-cuda, llama.cpp, apple-metal). See `bin/pool-managerd/.specs/10_worker_adapters.md` (POOL-1xxx). Distinct from model adapter (worker-internal architecture abstraction).
 - **Worker Type**: Category of worker implementation (bespoke-cuda, llamacpp, apple-metal, image-gen). Pool manager uses worker type to select appropriate adapter for spawning.
 - **Worker Capability**: Functional capability advertised by worker (text-gen, image-gen, audio-gen, embedding, multimodal). Orchestrator routes jobs based on capability, not worker type.
 - **Streaming Protocol**: Response format used by worker for a given capability (SSE for text-gen, JSON for image-gen/embedding, Binary for audio-gen, Mixed SSE for multimodal). Orchestrator selects relay strategy based on protocol.
-- **Heartbeat**: Periodic state report from pool-managerd to orchestratord (default 15s interval) containing GPU VRAM state and worker status.
+- **Heartbeat**: Periodic state report from pool-managerd to rbees-orcd (default 15s interval) containing GPU VRAM state and worker status.
 - **SSE (Server-Sent Events)**: HTTP streaming protocol used for token-by-token inference results from worker → orchestrator → client.
 - **Correlation ID**: Unique identifier (`X-Correlation-Id` header) propagated across all service calls for request tracing and log correlation.
 - **Tenant**: Isolated customer/user in platform mode with separate quotas, billing, and resource allocation.
@@ -465,8 +465,8 @@ The system supports five distinct deployment modes with different security and o
 ## 4. System-Level Requirements [All Milestones]
 ### 4.1 Intelligence Boundary [M2] (SYS-4.1.x)
 #### [SYS-4.1.1] Intelligence Centralization
-The system MUST centralize ALL intelligent decisions in orchestratord. Pool managers and workers MUST be dumb executors.
-**Intelligent decisions** (orchestratord only):
+The system MUST centralize ALL intelligent decisions in rbees-orcd. Pool managers and workers MUST be dumb executors.
+**Intelligent decisions** (rbees-orcd only):
 - Admission (accept/reject requests)
 - Scheduling (which job next)
 - Worker selection (where to run)
@@ -482,7 +482,7 @@ The system MUST centralize ALL intelligent decisions in orchestratord. Pool mana
 ### 4.2 Smart vs Dumb Architecture [M2] (SYS-4.2.x)
 #### [SYS-4.2.1] Smart vs Dumb Boundary
 The system MUST enforce a strict smart/dumb boundary:
-**Smart components** (orchestratord only):
+**Smart components** (rbees-orcd only):
 - MUST make ALL policy decisions (admission, scheduling, eviction, retry, timeout)
 - MUST use configured policies (no hardcoded decisions)
 - MUST decide actions based on aggregated state
@@ -494,9 +494,9 @@ The system MUST enforce a strict smart/dumb boundary:
 ---
 ### 4.3 Component Separation [M0+] (SYS-4.3.x)
 #### [SYS-4.3.1] Binary Separation
-The system MUST implement three separate binaries: orchestratord, pool-managerd, and worker-orcd. Each component MUST communicate via HTTP APIs only.
+The system MUST implement three separate binaries: rbees-orcd, pool-managerd, and worker-orcd. Each component MUST communicate via HTTP APIs only.
 #### [SYS-4.3.2] No Direct Client→Worker Communication
-Clients MUST NOT communicate directly with workers. All client requests MUST go through orchestratord.
+Clients MUST NOT communicate directly with workers. All client requests MUST go through rbees-orcd.
 **Clarification**: The orchestrator directly calls worker endpoints to proxy/relay requests, but clients never communicate with workers directly. This maintains the control plane boundary.
 ---
 ### 4.4 State Propagation [M1+] (SYS-4.4.x)
@@ -581,7 +581,7 @@ Events:
 - Event order MUST be: `queued` (orchestrator-level) → `started` (worker execution begins) → zero or more `token` → zero or more `metrics` (interleaved) → terminal (`end` or `error`)
 - Exactly one terminal event MUST be emitted per job
 - Note: Worker-to-orchestrator SSE streams omit the `queued` event as workers only emit execution-level events
-**Specs**: `bin/orchestratord-crates/agentic-api/.specs/00_agentic_api.md`
+**Specs**: `bin/rbees-orcd-crates/agentic-api/.specs/00_agentic_api.md`
 ---
 ### 5.2 Orchestrator ↔ Pool Manager [M2] (SYS-5.2.x)
 #### [SYS-5.2.1] Pool Registration
@@ -793,7 +793,7 @@ All API errors MUST use a standard JSON error response format:
 ---
 ## 6. Component Architecture
 ### 6.1 Orchestratord (The Brain) [M2] (SYS-6.1.x)
-**Binary**: `bin/orchestratord/`  
+**Binary**: `bin/rbees-orcd/`  
 **Port**: 8080 (default)  
 **Role**: Centralized intelligence for all decisions
 **Crates:**
@@ -807,7 +807,7 @@ All API errors MUST use a standard JSON error response format:
 - `backpressure` — Queue backpressure handling
 - `state-store` — Persistent state management (see SYS-6.1.3)
 - `queue-optimizer` — Background optimization cron job (see SYS-6.1.4)
-**Specs**: `bin/orchestratord/.specs/00_orchestratord.md`
+**Specs**: `bin/rbees-orcd/.specs/00_rbees-orcd.md`
 ---
 #### [SYS-6.1.1] Orchestrator Intelligence
 Orchestratord MUST implement ALL intelligent decision-making:
@@ -820,7 +820,7 @@ Orchestratord MUST implement ALL intelligent decision-making:
 - MUST enforce timeout limits on jobs
 - MUST propagate cancellation requests to workers
 **Requirements**:
-- All intelligent decisions (admission, scheduling, eviction, retry, timeout, cancellation) MUST occur in orchestratord and MUST NOT be delegated
+- All intelligent decisions (admission, scheduling, eviction, retry, timeout, cancellation) MUST occur in rbees-orcd and MUST NOT be delegated
 - Protocol relay to clients MUST preserve worker event order and MUST add orchestrator metadata without altering payload semantics
 - Orchestrator MUST be aware of worker capabilities and their protocol contracts (received via pool manager metadata)
 - Orchestrator MUST select relay strategy based on job capability (text-gen → SSE, image-gen → JSON, etc.)
@@ -948,7 +948,7 @@ CREATE TABLE config (
    - Orchestrator queries `sse_checkpoints` table for last sent event
    - If job still active, resume streaming from checkpoint
    - If job completed, send cached terminal event from `jobs` table
-**Specs**: `bin/orchestratord-crates/state-store/.specs/00_state_store.md`
+**Specs**: `bin/rbees-orcd-crates/state-store/.specs/00_state_store.md`
 ---
 #### [SYS-6.1.4] Queue Optimizer
 Orchestratord MUST run a background optimizer to re-evaluate queue and pool states for potential improvements when queue depth exceeds threshold.
@@ -977,7 +977,7 @@ queue_optimizer:
   interval_ms: 30000  # run every 30s while active
   max_runtime_ms: 5000  # abort if cycle exceeds 5s
 ```
-**Specs**: `bin/orchestratord-crates/queue-optimizer/.specs/00_queue_optimizer.md`
+**Specs**: `bin/rbees-orcd-crates/queue-optimizer/.specs/00_queue_optimizer.md`
 ---
 #### [SYS-6.1.5] Programmable Scheduler
 Orchestratord scheduler is designed as a **policy execution engine** that can run user-defined scheduling logic while maintaining a high-performance default.
@@ -995,12 +995,12 @@ Orchestratord scheduler is designed as a **policy execution engine** that can ru
 - Real-time pool state from heartbeats
 - Sandboxed execution with 50ms timeout and memory limits
 **Platform scheduler** (reference implementation):
-- Location: `bin/orchestratord-crates/scheduling/platform-scheduler.rhai`
+- Location: `bin/rbees-orcd-crates/scheduling/platform-scheduler.rhai`
 - Immutable in platform mode, copyable in home/lab mode
 - Optimized for priority-based scheduling, quota enforcement, resource utilization, and queue capacity management (may reject with 429 when thresholds exceeded)
 **Specs**: 
-- `bin/orchestratord-crates/scheduling/.specs/00_programmable_scheduler.md` — Overall design and architecture
-- `bin/orchestratord-crates/scheduling/.specs/01_rhai_scheduler_runtime.md` — Rhai runtime environment and API reference
+- `bin/rbees-orcd-crates/scheduling/.specs/00_programmable_scheduler.md` — Overall design and architecture
+- `bin/rbees-orcd-crates/scheduling/.specs/01_rhai_scheduler_runtime.md` — Rhai runtime environment and API reference
 ---
 #### [SYS-6.1.6] Retry & Backoff Policy
 Orchestratord MUST implement configurable retry and backoff policies for failed jobs and worker operations.
@@ -1047,7 +1047,7 @@ Pool-managerd MUST execute orchestrator commands without making policy decisions
 - MUST validate model-device compatibility before worker start (preflight)
 - MUST spawn worker processes as commanded via worker adapters
 - MUST update memory accounting when workers start/stop
-- MUST send periodic heartbeats to orchestratord (default 15s interval)
+- MUST send periodic heartbeats to rbees-orcd (default 15s interval)
 - MUST perform operational cleanup on worker failures (no retry decisions)
 **Requirements**:
 - Pool-managerd MUST NOT perform placement or retry decisions; it MUST execute orchestrator commands and report facts only
@@ -1098,7 +1098,7 @@ Pool-managerd MUST perform preflight validation before spawning workers:
 ---
 #### [SYS-6.2.4] Heartbeat Protocol
 <!-- PERFORMANCE AUDIT [deadline-propagation team]: 🎯 HEARTBEAT PERFORMANCE - Heartbeats are overhead, minimize them! CRITICAL PERFORMANCE REQUIREMENTS: (1) Heartbeat generation MUST complete in <5ms (don't block pool manager operations), (2) Heartbeat payload MUST be <10KB (minimize network overhead, use compact JSON), (3) Heartbeat HTTP request MUST use persistent connections (avoid TCP handshake every 15s), (4) Orchestrator heartbeat processing MUST be <10ms (update in-memory state, don't block scheduling), (5) Heartbeat failures MUST NOT retry immediately (use exponential backoff to avoid thundering herd). OPTIMIZATION: (1) Pool-managerd SHOULD only send delta updates (only changed GPU/worker states, not full state every time), (2) Orchestrator SHOULD process heartbeats asynchronously (don't block admission/scheduling), (3) Use HTTP/2 for heartbeats (multiplexing reduces connection overhead). TRADE-OFF: 15s interval balances freshness vs overhead. Faster heartbeats = fresher state but more CPU/network. 15s is good default. TARGET: Heartbeat overhead <0.1% of pool manager CPU. 🚀 -->
-Pool-managerd MUST send periodic heartbeats to orchestratord:
+Pool-managerd MUST send periodic heartbeats to rbees-orcd:
 - Default interval: 15 seconds (configurable)
 - Payload MUST include: pool_id, timestamp, GPU states, worker states
 - Heartbeat MUST be sent even if no state changes occurred
@@ -1113,10 +1113,10 @@ Pool-managerd MUST perform operational cleanup on worker failures:
 - MUST release VRAM accounting for failed worker
 - MUST kill zombie processes
 - MUST close file handles
-- MUST report failure to orchestratord with exit code and context
+- MUST report failure to rbees-orcd with exit code and context
 **Requirements**:
 - Cleanup MUST be prompt (within 5 seconds of detection)
-- Cleanup MUST NOT make retry decisions (orchestratord decides)
+- Cleanup MUST NOT make retry decisions (rbees-orcd decides)
 - Cleanup failures MUST be logged and MAY trigger pool-level alerts
 ---
 ### 6.3 Worker Contract (Executor) [M0] (SYS-6.3.x)
@@ -1591,7 +1591,7 @@ Authentication requirements vary by deployment mode following the principle: **P
 **Future provisions**:
 - OAuth2/OpenID Connect MAY be added in future milestones (NOT REQUIRED for M0)
 - API key authentication MAY be supported as alternative to bearer tokens
-- If OAuth2/OIDC is configured, orchestratord SHOULD validate audience/scope claims and enforce token expiry
+- If OAuth2/OIDC is configured, rbees-orcd SHOULD validate audience/scope claims and enforce token expiry
 ---
 ### 9.2 EU Compliance (GDPR) [M3] (SYS-9.2.x)
 #### [SYS-9.2.1] Data Residency
@@ -1655,7 +1655,7 @@ Authentication requirements vary by deployment mode following the principle: **P
 - Usage accounting MUST be recorded per tenant for tokens generated, inference duration, and VRAM occupancy-time
 - Billing data MUST be stored separately from observability metrics with appropriate access controls
 - Home/Lab modes: Tenancy overhead is disabled (single-user assumption)
-**Specs**: `bin/orchestratord-crates/platform-api/.specs/00_platform_api.md`
+**Specs**: `bin/rbees-orcd-crates/platform-api/.specs/00_platform_api.md`
 ---
 ## 10. Metrics & Observability [M-1+]
 ### 10.1 Metrics Contract [M0+] (SYS-10.1.x)
@@ -1727,7 +1727,7 @@ Content already defined in Section 5.6. Cross-reference: See SYS-5.6.1 for compl
 ### 11.1 Orchestrator Config [M2] (SYS-11.1.x)
 #### [SYS-11.1.1] Orchestrator Configuration Schema
 ```yaml
-orchestratord:
+rbees-orcd:
   bind: "0.0.0.0:8080"
   mode: "agentic"  # or "platform"
   queue:
@@ -1867,7 +1867,7 @@ LLORCH_WORKER_GPU_DEVICE="0"
 ## 13. Crate Dependency Graph
 ### 13.1 Dependency Overview
 ```
-orchestratord
+rbees-orcd
 ├── scheduling (admission, queue, job-tracker, scheduler, eviction)
 ├── platform-api (marketplace facade)
 ├── agentic-api (standard API)
@@ -2101,12 +2101,12 @@ worker-orcd
 ---
 ### 14.3 M2: Orchestrator Scheduling (v0.3.0)
 **Goal**: Orchestrator reads Rhai scheduler script and makes intelligent scheduling decisions
-**Scope**: `orchestratord` binary with full orchestration intelligence
+**Scope**: `rbees-orcd` binary with full orchestration intelligence
 **Architecture**:
 - **Performance > Security**: Optional auth, focus on scheduling correctness
 - **Mode**: Home mode or Lab mode (orchestrator + multiple pool managers)
 **Deliverables**:
-- `orchestratord` binary with:
+- `rbees-orcd` binary with:
   - Agentic API: `POST /v2/tasks`, `GET /v2/tasks/{job_id}/events` (SSE)
   - Admission control: validate requests, check quotas
   - Queue management: priority queues (`interactive`, `batch`)
@@ -2141,7 +2141,7 @@ worker-orcd
   - SSE stream delivers tokens to client
   - Metrics show scheduling latency and queue depth
 **Exit Criteria**:
-- Orchestrator binary runs: `orchestratord --config orch.yaml`
+- Orchestrator binary runs: `rbees-orcd --config orch.yaml`
 - Agentic API accepts tasks and streams results
 - Rhai scheduler executes custom policies (e.g., FIFO, priority, capacity-based)
 - Multiple pool managers registered and heartbeating
@@ -2254,7 +2254,7 @@ worker-orcd
 ## 16. References
 ### 16.1 Specifications
 **Component specs**:
-- `bin/orchestratord/.specs/00_orchestratord.md` (ORCH-1xxx)
+- `bin/rbees-orcd/.specs/00_rbees-orcd.md` (ORCH-1xxx)
 - `bin/pool-managerd/.specs/00_pool-managerd.md` (POOL-2xxx)
 - `bin/worker-orcd/.specs/00_worker-orcd.md` (WORK-3xxx)
 **Crate specs**: See individual crate `.specs/` directories
@@ -2319,7 +2319,7 @@ This section documents clarifications that were originally inline HTML comments,
    - Simplifies VRAM accounting
    - Note: Pool-managerd MAY cache model files in RAM for hot-loading (faster worker startup), but workers MUST load models into VRAM for inference
 5. **Smart/Dumb Boundary** (SYS-4.1.1, SYS-4.2.1):
-   - All intelligence in orchestratord
+   - All intelligence in rbees-orcd
    - Pool managers and workers are dumb executors
    - Enables centralized policy control
 ---
@@ -2332,7 +2332,7 @@ This section documents clarifications that were originally inline HTML comments,
 | SYS-2.3.x | Determinism | Cross-cutting | Property + BDD |
 | SYS-4.x | System Requirements | Cross-cutting | BDD |
 | SYS-5.x | API Contracts | `contracts/openapi/*.yaml` | Contract |
-| SYS-6.1.x | Orchestratord | `bin/orchestratord/src/` | Unit + Integration + BDD |
+| SYS-6.1.x | Orchestratord | `bin/rbees-orcd/src/` | Unit + Integration + BDD |
 | SYS-6.2.x | Pool-Managerd | `bin/pool-managerd/src/` | Unit + Integration |
 | SYS-6.3.x | Worker-Orcd | `bin/worker-orcd/src/` | Unit + Integration |
 | SYS-7.x | Data Flows | Cross-cutting | BDD + Integration |

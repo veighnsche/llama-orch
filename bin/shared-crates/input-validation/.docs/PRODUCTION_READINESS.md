@@ -322,10 +322,10 @@ cargo test -p input-validation --lib
 - ✅ Function mapping table
 
 **Crates with Reminders**:
-- ✅ orchestratord-crates/agentic-api
+- ✅ rbees-orcd-crates/agentic-api
 - ✅ pool-managerd-crates/model-provisioner
 - ✅ pool-managerd-crates/api
-- ✅ orchestratord-crates/platform-api
+- ✅ rbees-orcd-crates/platform-api
 - ✅ pool-managerd-crates/model-catalog
 - ✅ worker-orcd-crates/model-loader
 - ✅ pool-managerd-crates/pool-registry
@@ -430,20 +430,20 @@ cargo test -p input-validation --lib
 **Status**: ⚠️ **PARTIAL** (reminders added, integration pending)
 
 **Crates with Reminders** (10+):
-- ✅ orchestratord-crates/agentic-api
+- ✅ rbees-orcd-crates/agentic-api
 - ✅ pool-managerd-crates/model-provisioner
 - ✅ pool-managerd-crates/api
-- ✅ orchestratord-crates/platform-api
+- ✅ rbees-orcd-crates/platform-api
 - ✅ pool-managerd-crates/model-catalog
 - ✅ worker-orcd-crates/model-loader
 - ✅ pool-managerd-crates/pool-registry
 - ✅ shared-crates/audit-logging
 
 **Crates Still Needing Integration** (High Priority):
-- [ ] orchestratord/src/lib.rs
+- [ ] rbees-orcd/src/lib.rs
 - [ ] pool-managerd/src/lib.rs
 - [ ] worker-orcd/src/lib.rs
-- [ ] orchestratord-crates/node-registry
+- [ ] rbees-orcd-crates/node-registry
 - [ ] pool-managerd-crates/router
 - [ ] worker-orcd-crates/api
 

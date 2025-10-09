@@ -426,7 +426,7 @@ rg 'unsafe' bin/shared-crates/secrets-management/src/
 
 ### ✅ Integration Pattern
 
-**Correct Usage** (from `orchestratord/src/app/auth_min.rs`):
+**Correct Usage** (from `rbees-orcd/src/app/auth_min.rs`):
 ```rust
 // 1. Load secret using secrets-management
 let expected_token = Secret::load_from_file("/etc/llorch/secrets/api-token")?;

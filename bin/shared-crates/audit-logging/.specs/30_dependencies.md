@@ -325,7 +325,7 @@ use tracing_appender::rolling::{RollingFileAppender, Rotation};
 
 let file_appender = RollingFileAppender::new(
     Rotation::DAILY,
-    "/var/lib/llorch/audit/orchestratord",
+    "/var/lib/llorch/audit/rbees-orcd",
     "audit.log"
 );
 ```
@@ -752,7 +752,7 @@ cargo tree
 pub struct AuditEventEnvelope {
     pub audit_id: String,           // Unique ID
     pub timestamp: DateTime<Utc>,   // When
-    pub service_id: String,         // Who (orchestratord, pool-managerd, worker-gpu-0)
+    pub service_id: String,         // Who (rbees-orcd, pool-managerd, worker-gpu-0)
     pub event: AuditEvent,
     pub prev_hash: String,
     pub hash: String,
@@ -784,7 +784,7 @@ pub struct AuditEventEnvelope {
 }
 
 pub struct ProvenanceInfo {
-    pub service_name: String,     // "orchestratord"
+    pub service_name: String,     // "rbees-orcd"
     pub service_version: String,  // "0.1.0"
     pub hostname: String,         // "gpu-node-1"
     pub process_id: u32,          // 12345

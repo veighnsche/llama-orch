@@ -12,7 +12,7 @@
 
 **pool-managerd (daemon) is NOT needed.**
 
-The pool manager functionality is fully provided by `pool-ctl` CLI (`llorch-pool` binary).
+The pool manager functionality is fully provided by `rbees-pool` CLI (`rbees-pool` binary).
 
 ---
 
@@ -35,17 +35,17 @@ The pool manager functionality is fully provided by `pool-ctl` CLI (`llorch-pool
 
 | Component | Type | Why |
 |-----------|------|-----|
-| **orchestratord** | Daemon | Accepts inference requests 24/7, routes to workers |
-| **llorch-candled** (worker) | Daemon | Keeps model in VRAM, accepts inference requests |
-| **pool-ctl** (llorch-pool) | CLI | Control operations on-demand via SSH |
-| **llorch-ctl** (llorch) | CLI | Remote control operations via SSH |
+| **rbees-orcd** | Daemon | Accepts inference requests 24/7, routes to workers |
+| **rbees-workerd** (worker) | Daemon | Keeps model in VRAM, accepts inference requests |
+| **rbees-pool** (rbees-pool) | CLI | Control operations on-demand via SSH |
+| **rbees-ctl** (llorch) | CLI | Remote control operations via SSH |
 
 ### The Correct Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ ORCHESTRATORD (HTTP Daemon) - M2                                │
-│ Binary: orchestratord                                            │
+│ Binary: rbees-orcd                                            │
 │ Port: 8080                                                       │
 │ Purpose: Routes inference requests to workers                    │
 │ Runs: 24/7 as daemon                                             │
@@ -56,7 +56,7 @@ The pool manager functionality is fully provided by `pool-ctl` CLI (`llorch-pool
                      │
 ┌────────────────────┴────────────────────────────────────────────┐
 │ WORKERS (HTTP Daemons) - M0 ✅                                   │
-│ Binary: llorch-candled                                           │
+│ Binary: rbees-workerd                                           │
 │ Ports: 8001, 8002, 8003, etc.                                    │
 │ Purpose: Execute inference, stream tokens                        │
 │ Runs: 24/7 as daemon (one per model)                             │
@@ -65,29 +65,29 @@ The pool manager functionality is fully provided by `pool-ctl` CLI (`llorch-pool
 
 ┌─────────────────────────────────────────────────────────────────┐
 │ POOL MANAGER (CLI Tool) - M0 ✅                                  │
-│ Binary: llorch-pool                                              │
+│ Binary: rbees-pool                                              │
 │ Purpose: Local pool operations (models, workers)                 │
 │ Runs: On-demand when operator calls it                           │
 │ Why CLI: Control operations don't need 24/7 daemon               │
 │                                                                   │
 │ Commands:                                                        │
-│ - llorch-pool models download <model>                            │
-│ - llorch-pool worker spawn <backend> --model <model>             │
-│ - llorch-pool worker list                                        │
-│ - llorch-pool worker stop <id>                                   │
+│ - rbees-pool models download <model>                            │
+│ - rbees-pool worker spawn <backend> --model <model>             │
+│ - rbees-pool worker list                                        │
+│ - rbees-pool worker stop <id>                                   │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
 │ ORCHESTRATOR CLI (CLI Tool) - M0 ✅                              │
-│ Binary: llorch                                                   │
+│ Binary: rbees                                                   │
 │ Purpose: Remote pool control via SSH                             │
 │ Runs: On-demand when operator calls it                           │
 │ Why CLI: Control operations don't need 24/7 daemon               │
 │                                                                   │
 │ Commands:                                                        │
-│ - llorch pool models download <model> --host <pool>              │
-│ - llorch pool worker spawn <backend> --host <pool> --model <m>   │
-│ - llorch infer --worker <host:port> --prompt <text>              │
+│ - rbees pool models download <model> --host <pool>              │
+│ - rbees pool worker spawn <backend> --host <pool> --model <m>   │
+│ - rbees infer --worker <host:port> --prompt <text>              │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -100,21 +100,21 @@ The pool manager functionality is fully provided by `pool-ctl` CLI (`llorch-pool
 **Old Plan:**
 - M0: Workers + CLIs
 - M1: Build pool-managerd daemon (HTTP server)
-- M2: Build orchestratord daemon
+- M2: Build rbees-orcd daemon
 
 **New Plan:**
 - M0: Workers + CLIs ✅ COMPLETE
 - ~~M1: pool-managerd~~ ❌ NOT NEEDED
-- M1: Build orchestratord daemon (moved up from M2)
+- M1: Build rbees-orcd daemon (moved up from M2)
 
 ### ✅ SIMPLIFIED: Two-Binary System
 
 **Only 2 daemon binaries needed:**
-1. **orchestratord** - Routes inference requests
-2. **llorch-candled** - Executes inference
+1. **rbees-orcd** - Routes inference requests
+2. **rbees-workerd** - Executes inference
 
 **Plus 2 CLI tools:**
-1. **llorch-pool** - Local pool management
+1. **rbees-pool** - Local pool management
 2. **llorch** - Remote pool control
 
 ---
@@ -123,16 +123,16 @@ The pool manager functionality is fully provided by `pool-ctl` CLI (`llorch-pool
 
 ### Old (Incorrect) Architecture
 ```
-Client → orchestratord → pool-managerd → worker
+Client → rbees-orcd → pool-managerd → worker
          (daemon)        (daemon)         (daemon)
 ```
 
 ### New (Correct) Architecture
 ```
-Client → orchestratord → worker
+Client → rbees-orcd → worker
          (daemon)         (daemon)
 
-Operator → llorch → llorch-pool → spawn worker
+Operator → rbees → rbees-pool → spawn worker
            (CLI)    (CLI via SSH)
 ```
 
@@ -193,9 +193,9 @@ Operator → llorch → llorch-pool → spawn worker
 
 ### M0: Foundation ✅ COMPLETE
 **Deliverables:**
-- ✅ llorch-candled (worker daemon)
-- ✅ llorch-pool (local pool CLI)
-- ✅ llorch (remote control CLI)
+- ✅ rbees-workerd (worker daemon)
+- ✅ rbees-pool (local pool CLI)
+- ✅ rbees (remote control CLI)
 - ✅ Model catalog system
 - ✅ Worker spawning
 - ✅ Token generation
@@ -212,7 +212,7 @@ Operator → llorch → llorch-pool → spawn worker
 
 ### M1: Orchestrator Daemon 🔜 AFTER CP4
 **Deliverables:**
-- [ ] orchestratord binary (HTTP daemon)
+- [ ] rbees-orcd binary (HTTP daemon)
 - [ ] Client API (`POST /v2/tasks`)
 - [ ] Admission control
 - [ ] Queue management
@@ -228,12 +228,12 @@ Operator → llorch → llorch-pool → spawn worker
 ## Updated System Architecture
 
 ### Two Daemons (HTTP)
-1. **orchestratord** (port 8080) - Routes inference
-2. **llorch-candled** (ports 8001+) - Executes inference
+1. **rbees-orcd** (port 8080) - Routes inference
+2. **rbees-workerd** (ports 8001+) - Executes inference
 
 ### Two CLIs (SSH/Local)
 1. **llorch** - Remote control via SSH
-2. **llorch-pool** - Local pool operations
+2. **rbees-pool** - Local pool operations
 
 ### Communication Flow
 
@@ -243,20 +243,20 @@ Operator (human)
     ↓ runs
 llorch (CLI)
     ↓ SSH
-llorch-pool (CLI on remote machine)
+rbees-pool (CLI on remote machine)
     ↓ spawns
-llorch-candled (daemon)
+rbees-workerd (daemon)
 ```
 
 **Data Plane (Inference):**
 ```
 Client (SDK)
     ↓ HTTP POST /v2/tasks
-orchestratord (daemon)
+rbees-orcd (daemon)
     ↓ HTTP POST /execute
-llorch-candled (daemon)
+rbees-workerd (daemon)
     ↓ SSE stream
-orchestratord (relay)
+rbees-orcd (relay)
     ↓ SSE stream
 Client
 ```
@@ -275,7 +275,7 @@ Client
 
 ### Then Proceed With:
 1. [ ] CP4: Multi-model testing (as planned)
-2. [ ] M1: Build orchestratord (not pool-managerd!)
+2. [ ] M1: Build rbees-orcd (not pool-managerd!)
 
 ---
 
@@ -306,9 +306,9 @@ Client
 ## Migration Notes
 
 ### Code That Doesn't Need to Change
-- ✅ llorch-candled (workers) - No changes
-- ✅ llorch-pool (pool CLI) - No changes
-- ✅ llorch (remote CLI) - No changes
+- ✅ rbees-workerd (workers) - No changes
+- ✅ rbees-pool (pool CLI) - No changes
+- ✅ rbees (remote CLI) - No changes
 
 ### Code That Never Needs to Be Written
 - ❌ pool-managerd HTTP server
@@ -317,11 +317,11 @@ Client
 - ❌ pool-managerd GPU discovery API
 
 ### Code That Still Needs to Be Written
-- ⏳ orchestratord HTTP server (M1)
-- ⏳ orchestratord admission control
-- ⏳ orchestratord queue management
-- ⏳ orchestratord scheduling
-- ⏳ orchestratord SSE relay
+- ⏳ rbees-orcd HTTP server (M1)
+- ⏳ rbees-orcd admission control
+- ⏳ rbees-orcd queue management
+- ⏳ rbees-orcd scheduling
+- ⏳ rbees-orcd SSE relay
 
 ---
 
@@ -330,13 +330,13 @@ Client
 ### Test Current Architecture Works:
 ```bash
 # 1. Spawn worker (CLI)
-llorch-pool worker spawn cpu --model qwen-0.5b
+rbees-pool worker spawn cpu --model qwen-0.5b
 
 # 2. Test inference (CLI)
 llorch infer --worker localhost:8001 --prompt "Hello" --max-tokens 20
 
 # 3. Stop worker (CLI)
-llorch-pool worker stop-all
+rbees-pool worker stop-all
 ```
 
 **Result:** ✅ Everything works without pool-managerd!
@@ -362,12 +362,12 @@ llorch pool worker stop-all --host mac.home.arpa
 **pool-managerd is NOT needed.**
 
 The pool manager functionality is fully provided by:
-- `llorch-pool` (local CLI)
-- `llorch` (remote CLI via SSH)
+- `rbees-pool` (local CLI)
+- `rbees` (remote CLI via SSH)
 
 This simplifies the architecture and removes an entire milestone (M1).
 
-**Next milestone is now building orchestratord (M1, was M2).**
+**Next milestone is now building rbees-orcd (M1, was M2).**
 
 ---
 

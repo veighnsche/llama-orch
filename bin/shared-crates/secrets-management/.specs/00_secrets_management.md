@@ -12,7 +12,7 @@
 This specification defines the **secrets-management** shared crate, which provides secure credential loading, storage, and management for the llama-orch orchestration system. This crate is **security-critical** (Tier 1) and implements defense-in-depth against credential exposure, timing attacks, and memory dumps.
 
 **Primary Consumers**:
-- `bin/orchestratord` — API token loading
+- `bin/rbees-orcd` — API token loading
 - `bin/pool-managerd` — API token loading
 - `bin/worker-orcd-crates/vram-residency` — Seal key management
 - All services requiring secure credential handling
@@ -695,7 +695,7 @@ sudo mkdir -p /etc/llorch/secrets
 sudo chmod 0700 /etc/llorch/secrets
 sudo touch /etc/llorch/secrets/api-token
 sudo chmod 0600 /etc/llorch/secrets/api-token
-sudo chown orchestratord:orchestratord /etc/llorch/secrets/api-token
+sudo chown rbees-orcd:rbees-orcd /etc/llorch/secrets/api-token
 ```
 
 ---
@@ -742,7 +742,7 @@ fn validate_path(path: &Path) -> Result<PathBuf, SecretError> {
 
 ## 6. Integration Requirements
 
-### 6.1 orchestratord Integration (SM-INTEG-6001)
+### 6.1 rbees-orcd Integration (SM-INTEG-6001)
 
 **Current State**: Uses environment variable (vulnerable)
 
@@ -781,7 +781,7 @@ let token = Secret::load_from_file(&token_path)
 
 **SM-INTEG-6002-R1**: Add `secrets-management` dependency
 
-**SM-INTEG-6002-R2**: Load API token from file (same pattern as orchestratord)
+**SM-INTEG-6002-R2**: Load API token from file (same pattern as rbees-orcd)
 
 **SM-INTEG-6002-R3**: Implement Bearer token validation middleware
 
@@ -919,7 +919,7 @@ tracing = "0.1"
 
 **Required Integration Tests**:
 
-1. **orchestratord Integration**
+1. **rbees-orcd Integration**
    - Load token from file
    - Verify authentication works
    - Reject invalid token
@@ -1015,7 +1015,7 @@ tracing = "0.1"
 2. ⬜ File permission validation on all platforms
 3. ⬜ Path canonicalization and validation
 4. ⬜ Comprehensive security tests
-5. ⬜ Integration with orchestratord (replace env var)
+5. ⬜ Integration with rbees-orcd (replace env var)
 6. ⬜ Integration with pool-managerd (add auth)
 7. ⬜ Integration with vram-residency (seal keys)
 
@@ -1041,7 +1041,7 @@ tracing = "0.1"
 - ✅ All Phase 1 features implemented
 - ✅ All unit tests passing
 - ✅ All integration tests passing
-- ✅ orchestratord loads token from file (not env)
+- ✅ rbees-orcd loads token from file (not env)
 - ✅ pool-managerd loads token from file
 - ✅ vram-residency loads seal key from file or derives from token
 

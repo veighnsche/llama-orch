@@ -95,7 +95,7 @@ We are **siblings, not competitors**. We serve different masters:
 
 ### Event Types We Offer
 
-**For orchestratord**:
+**For rbees-orcd**:
 - `AuthSuccess`, `AuthFailure` — Authentication events
 - `TaskSubmitted`, `TaskCompleted`, `TaskCanceled` — Task lifecycle
 - `NodeRegistered`, `NodeDeregistered` — Node management
@@ -120,9 +120,9 @@ use audit_logging::{AuditLogger, AuditConfig, AuditMode};
 
 let audit_logger = AuditLogger::new(AuditConfig {
     mode: AuditMode::Local {
-        base_dir: PathBuf::from("/var/lib/llorch/audit/orchestratord"),
+        base_dir: PathBuf::from("/var/lib/llorch/audit/rbees-orcd"),
     },
-    service_id: "orchestratord".to_string(),
+    service_id: "rbees-orcd".to_string(),
     rotation_policy: RotationPolicy::Daily,
     retention_policy: RetentionPolicy::default(),
 })?;
@@ -141,7 +141,7 @@ audit_logger.emit(AuditEvent::AuthSuccess {
     },
     method: AuthMethod::BearerToken,
     path: req.uri().path().to_string(),
-    service_id: "orchestratord".to_string(),
+    service_id: "rbees-orcd".to_string(),
 })?;
 ```
 
@@ -417,7 +417,7 @@ Regulatory requirements are **hard constraints**, not suggestions:
 
 ## Our Message to Other Teams
 
-### Dear orchestratord, pool-managerd, worker-orcd, and vram-residency,
+### Dear rbees-orcd, pool-managerd, worker-orcd, and vram-residency,
 
 We built you the **legally defensible audit trail** you need for compliance and security. Please use it correctly:
 
@@ -458,7 +458,7 @@ With vigilance and zero tolerance for shortcuts,
 
 ### Next Steps
 
-- ⬜ **Service Integration**: orchestratord, pool-managerd, worker-orcd
+- ⬜ **Service Integration**: rbees-orcd, pool-managerd, worker-orcd
 - ⬜ **VRAM Events**: Full integration with vram-residency
 - ⬜ **Platform Mode**: Centralized audit service, signatures
 - ⬜ **Query API**: REST API for compliance reports

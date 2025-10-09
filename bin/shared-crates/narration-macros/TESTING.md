@@ -50,7 +50,7 @@ Main integration test suite covering:
 ### `tests/test_actor_inference.rs`
 Actor inference from module paths:
 
-- ✅ `orchestratord` module detection
+- ✅ `rbees-orcd` module detection
 - ✅ `pool_managerd` module detection
 - ✅ `worker_orcd` module detection
 - ✅ `vram_residency` module detection
@@ -111,7 +111,7 @@ Minimal smoke test for basic macro functionality.
 
 | Module | Detection |
 |--------|-----------|
-| `orchestratord` | ✅ |
+| `rbees-orcd` | ✅ |
 | `pool_managerd` | ✅ |
 | `worker_orcd` | ✅ |
 | `vram_residency` | ✅ |
@@ -164,7 +164,7 @@ The macros use `key = value` syntax (not `key: value`):
 ### Actor Inference
 
 - Automatically infers actor from module path using `module_path!()`
-- Matches known service names: `orchestratord`, `pool_managerd`, `worker_orcd`, `vram_residency`
+- Matches known service names: `rbees-orcd`, `pool_managerd`, `worker_orcd`, `vram_residency`
 - Falls back to `"unknown"` for unrecognized modules
 
 ## Future Enhancements

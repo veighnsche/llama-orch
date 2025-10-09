@@ -1,0 +1,21 @@
+# rbees-workerd Test Configuration
+# This file is machine-specific and should be in .gitignore
+# Created by: TEAM-007
+
+[backend]
+# Specify which backend to test on this machine
+# Options: "cpu", "cuda", "metal"
+# This machine: CPU only (no CUDA, no Metal)
+test_backend = "cpu"
+
+[features]
+# Features to enable during testing
+# This will be used by test scripts to run: cargo test --features <backend>
+enabled = ["cpu"]
+
+[build]
+# Build configuration for this machine
+# Set to false to skip building binaries that require unavailable backends
+build_cuda = false
+build_metal = false
+build_cpu = true
