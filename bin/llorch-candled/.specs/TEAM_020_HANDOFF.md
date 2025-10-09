@@ -75,25 +75,30 @@ TEAM-019 fixed the Metal/CUDA inference bug (cache recreation workaround). All t
    - 4 architectures × 3 backends = 12 test cases
    - Run on: CPU (local), Metal (mac.home.arpa), CUDA (workstation.home.arpa)
 
-### Priority 3: Fix Cache Bug for All Models
+### Priority 3: Use Our Candle Fork with Proper Fix
 
-**If Mistral/Phi/Qwen fail with cache bug:**
+**IMPORTANT:** We're NOT fixing models individually. We're fixing Candle itself.
 
-Check if they need the same fix as Llama:
-```rust
-// TEAM-019 fix in llama.rs
-if position == 0 {
-    let device = input_ids.device();
-    self.cache = Cache::new(true, DType::F32, &self.config, device)?;
-}
-```
+**Strategy:**
+1. Create branch in `reference/candle/` with mask broadcasting fix
+2. Update `llorch-candled` to use our Candle fork
+3. Remove TEAM-019's workaround (cache recreation)
+4. Test all models on all backends
 
-**Files to check:**
-- `mistral.rs` - Uses `candle_transformers::models::mistral`
-- `phi.rs` - Uses `candle_transformers::models::phi`
-- `qwen.rs` - Uses `candle_transformers::models::qwen2`
+**Why this approach:**
+- ✅ Fixes root cause, not symptoms
+- ✅ All models benefit automatically
+- ✅ No per-model workarounds needed
+- ✅ Proper solution we can upstream later
 
-**Note:** Each model may use different cache types. Check Candle's implementation.
+**See:** `.specs/CANDLE_UPSTREAM_OPPORTUNITIES.md` for implementation details
+
+**Your tasks:**
+- [ ] Create `llorch/metal-bugfixes` branch in `reference/candle/`
+- [ ] Apply mask fix from candle-vllm
+- [ ] Update `Cargo.toml` to use fork
+- [ ] Remove workaround from `llama.rs`
+- [ ] Test all models work with fork
 
 ### Priority 4: Document Model Support Matrix
 
@@ -108,7 +113,28 @@ Create `docs/MODEL_SUPPORT.md` with:
 
 ## Recommended Approach
 
-### Week 1: Discovery & Setup
+### Week 1: Candle Fork Setup
+
+**Day 1-2: Create Fork Branch**
+- [ ] Create `llorch/metal-bugfixes` branch in `reference/candle/`
+- [ ] Study mask fix in `reference/candle-vllm/src/openai/models/layers/mask.rs`
+- [ ] Apply fix to `candle-transformers/src/models/llama.rs`
+- [ ] Update Cache::mask() signature
+- [ ] Add tests for mask broadcasting
+
+**Day 3: Integrate Fork**
+- [ ] Update `llorch-candled/Cargo.toml` to use fork
+- [ ] Remove TEAM-019 workaround from `llama.rs`
+- [ ] Rebuild all backends
+- [ ] Verify compilation
+
+**Day 4-5: Initial Testing**
+- [ ] Test Llama on CPU (should still work)
+- [ ] Test Llama on Metal (should work without workaround)
+- [ ] Test Llama on CUDA (should work without workaround)
+- [ ] Debug any issues
+
+### Week 2: Model Downloads & Multi-Model Setup
 
 **Day 1-2: Model Research**
 - [ ] Research small models for each architecture
@@ -127,28 +153,51 @@ Create `docs/MODEL_SUPPORT.md` with:
 - [ ] Add to homelab CLI: `llorch-remote <host> <backend> test-models`
 - [ ] Define success criteria (tokens generated, no errors)
 
-### Week 2: Testing & Fixes
+### Week 3: Multi-Model Testing with Fork
 
 **Day 1-2: CPU Backend Testing**
-- [ ] Test Mistral on CPU
-- [ ] Test Phi on CPU
-- [ ] Test Qwen on CPU
+- [ ] Test Mistral on CPU with fork
+- [ ] Test Phi on CPU with fork
+- [ ] Test Qwen on CPU with fork
 - [ ] Document any failures
 
 **Day 3: Metal Backend Testing**
-- [ ] Test all models on Metal (mac.home.arpa)
-- [ ] If cache bug appears, apply TEAM-019 fix
+- [ ] Test all models on Metal (mac.home.arpa) with fork
+- [ ] Verify no broadcasting errors
 - [ ] Verify all models work
+- [ ] Benchmark performance
 
 **Day 4: CUDA Backend Testing**
-- [ ] Test all models on CUDA (workstation.home.arpa)
-- [ ] If cache bug appears, apply TEAM-019 fix
+- [ ] Test all models on CUDA (workstation.home.arpa) with fork
+- [ ] Verify no broadcasting errors
 - [ ] Verify all models work
+- [ ] Benchmark performance
 
 **Day 5: Documentation & Cleanup**
 - [ ] Create MODEL_SUPPORT.md
 - [ ] Update README with model support info
+- [ ] Document fork usage in README
 - [ ] Add test results to handoff document
+
+### Week 4: Validation & Production Readiness
+
+**Day 1-2: Performance Benchmarks**
+- [ ] Compare fork vs. workaround performance
+- [ ] Test with long contexts (>1000 tokens)
+- [ ] Measure memory usage
+- [ ] Document improvements
+
+**Day 3-4: Stability Testing**
+- [ ] Run extended inference tests
+- [ ] Test edge cases (very long sequences)
+- [ ] Test rapid request sequences
+- [ ] Verify no memory leaks
+
+**Day 5: Handoff Preparation**
+- [ ] Document fork branch usage
+- [ ] Update TEAM_021_HANDOFF.md
+- [ ] List any remaining issues
+- [ ] Recommend when to upstream
 
 ---
 

@@ -222,86 +222,236 @@ Benchmarks show 20-30% improvement on M1/M2/M3/M4 chips.
 
 ---
 
-## Recommended Upstream PR Strategy
+## Our Strategy: Fork, Fix, Test, Then Upstream
 
-### Phase 1: Quick Win (Week 1)
+### Why Fork First
 
-**PR #1: Mask Broadcasting Fix**
-- Small, focused change
-- Fixes critical bug
-- Easy to review and test
-- High impact for all users
+**We have:**
+- `reference/candle/` - Our fork of candle-rs
+- `reference/candle-vllm/` - Our fork of candle-vllm
 
-**Steps:**
-1. Create minimal reproducer in Candle repo
-2. Submit PR with fix from candle-vllm
-3. Add tests for Metal/CUDA backends
-4. Reference our bug report as evidence
+**Strategy:**
+1. ✅ Create branch in our Candle fork with fixes
+2. ✅ Use our fork in llorch-candled
+3. ✅ Test extensively on all backends
+4. ✅ Keep fixes private until proven
+5. ⏳ Upstream to candle-rs when validated
 
-### Phase 2: Performance Win (Month 1-2)
+**Benefits:**
+- 🔒 Control our own timeline
+- 🧪 Extensive testing before upstream
+- 🚀 Immediate fixes for our use case
+- 🤝 Proven code for upstream PR
 
-**PR #2: Metal Kernel Optimizations**
-- Medium-sized change
-- Clear performance benefit
-- Apple Silicon is important market
-- Can be reviewed independently
+### Phase 1: Fork and Fix (Week 1)
 
-**Steps:**
-1. Benchmark current Metal performance
-2. Submit optimized kernels
-3. Show before/after benchmarks
-4. Provide M1/M2/M3/M4 test results
+**Create branch in `reference/candle/`:**
 
-### Phase 3: Major Feature (Month 3-6)
+```bash
+cd reference/candle
+git checkout -b llorch/metal-bugfixes
+```
 
-**PR #3: PagedAttention Support**
-- Large architectural change
-- Requires design discussion
-- Needs custom kernel maintenance plan
-- High value for production users
+**Apply fixes from candle-vllm:**
+1. Mask broadcasting fix (Priority 1)
+2. Metal kernel optimizations (Priority 2)
+3. **NOT** continuous batching (too complex, not needed yet)
 
-**Steps:**
-1. Open RFC/discussion issue first
-2. Get Candle team feedback on architecture
-3. Submit PR with full implementation
-4. Provide comprehensive benchmarks
-5. Offer to maintain kernels
+**Files to modify:**
+- `candle-transformers/src/models/llama.rs` - Mask fix
+- `candle-core/src/metal_backend.rs` - Metal optimizations (if needed)
+- Add tests for Metal/CUDA mask broadcasting
+
+### Phase 2: Integrate Fork (Week 1-2)
+
+**Update `llorch-candled/Cargo.toml`:**
+
+```toml
+[dependencies]
+# Use our fork with fixes
+candle-core = { git = "https://github.com/veighnsche/candle.git", branch = "llorch/metal-bugfixes" }
+candle-nn = { git = "https://github.com/veighnsche/candle.git", branch = "llorch/metal-bugfixes" }
+candle-transformers = { git = "https://github.com/veighnsche/candle.git", branch = "llorch/metal-bugfixes" }
+```
+
+**Remove our workaround:**
+- Delete cache recreation code in `src/backend/models/llama.rs:116-125`
+- Test that mask fix works without workaround
+
+### Phase 3: Extensive Testing (Week 2-3)
+
+**Test matrix:**
+- 4 architectures (Llama, Mistral, Phi, Qwen)
+- 3 backends (CPU, CUDA, Metal)
+- Multiple sequence lengths (1, 10, 100, 1000 tokens)
+- With and without KV cache
+
+**Success criteria:**
+- [ ] All models work on all backends
+- [ ] No broadcasting errors
+- [ ] Performance equal or better than workaround
+- [ ] No regressions on CPU backend
+
+### Phase 4: Keep Private Until Proven (Month 1-2)
+
+**Why keep private:**
+- ⏰ Don't want to wait for upstream review
+- 🧪 Need extensive validation first
+- 🔒 Control our own release timeline
+- 🚀 Ship to production faster
+
+**When to upstream:**
+- After 1-2 months of production use
+- After multi-model testing (TEAM-020 work)
+- After performance benchmarks
+- When we're confident it's bulletproof
+
+### Phase 5: Upstream When Ready (Month 3+)
+
+**Only after we've proven it works:**
+1. Create detailed PR to candle-rs
+2. Include our test results and benchmarks
+3. Reference our production usage
+4. Offer to maintain if needed
+
+**PR will be stronger because:**
+- ✅ Proven in production
+- ✅ Extensive test coverage
+- ✅ Performance data from real usage
+- ✅ Multiple model architectures validated
 
 ---
 
-## How We Can Help
+## Implementation Plan for Our Fork
 
-### 1. Create Detailed Bug Report for Candle
+### Step 1: Create Fork Branch (TEAM-020 or TEAM-021)
 
-**File:** `candle/issues/MASK_BROADCASTING_BUG.md`
+**In `reference/candle/`:**
 
-Include:
-- Minimal reproducer
-- Error messages
-- Affected backends (Metal, CUDA)
-- Proposed fix from candle-vllm
-- Our workaround and why it's suboptimal
+```bash
+cd reference/candle
+git checkout -b llorch/metal-bugfixes
+git push -u origin llorch/metal-bugfixes
+```
 
-### 2. Benchmark Performance Improvements
+**Apply mask fix from candle-vllm:**
 
-**Before/After Metrics:**
-- Tokens/sec on CPU, CUDA, Metal
-- Memory usage with/without paged attention
-- Latency for different sequence lengths
+File: `candle-transformers/src/models/llama.rs`
 
-### 3. Contribute Test Cases
+```rust
+// Replace Cache::mask() method with:
+fn mask(&mut self, t: usize, seqlen_offset: usize) -> Result<Tensor> {
+    let cache_key = (t, seqlen_offset);
+    if let Some(mask) = self.masks.get(&cache_key) {
+        Ok(mask.clone())
+    } else {
+        // Create base mask
+        let mask: Vec<_> = (0..t)
+            .flat_map(|i| (0..t).map(move |j| if j > i { f32::NEG_INFINITY } else { 0f32 }))
+            .collect();
+        let mask = Tensor::from_slice(&mask, (t, t), &self.device)?;
+        
+        // Add zeros for KV cache offset (THE FIX!)
+        let mask = if seqlen_offset > 0 {
+            let mask0 = Tensor::zeros((t, seqlen_offset), DType::F32, &self.device)?;
+            Tensor::cat(&[&mask0, &mask], D::Minus1)?
+        } else {
+            mask
+        };
+        
+        // Expand to broadcast shape
+        let mask = mask.expand((1, 1, t, t + seqlen_offset))?.to_dtype(DType::F32)?;
+        self.masks.insert(cache_key, mask.clone());
+        Ok(mask)
+    }
+}
+```
 
-**Add to Candle test suite:**
-- Test KV cache with multiple sequence lengths
-- Test mask broadcasting on all backends
-- Test with different model architectures
+**Update forward() to pass seqlen_offset:**
 
-### 4. Documentation
+```rust
+// In CausalSelfAttention::forward()
+let kv_len = if cache.use_kv_cache {
+    cache.kvs[block_idx].as_ref().map(|(k, _)| k.dims()[2]).unwrap_or(0) + seq_len
+} else {
+    seq_len
+};
+let seqlen_offset = kv_len - seq_len;
+let mask = cache.mask(seq_len, seqlen_offset)?;
+```
 
-**Improve Candle docs:**
-- Document KV cache behavior
-- Explain mask broadcasting requirements
-- Provide examples of proper cache usage
+### Step 2: Update llorch-candled Dependencies
+
+**File:** `bin/llorch-candled/Cargo.toml`
+
+```toml
+[dependencies]
+# Use our fork with Metal bugfixes
+candle-core = { git = "https://github.com/veighnsche/candle.git", branch = "llorch/metal-bugfixes" }
+candle-nn = { git = "https://github.com/veighnsche/candle.git", branch = "llorch/metal-bugfixes" }
+candle-transformers = { git = "https://github.com/veighnsche/candle.git", branch = "llorch/metal-bugfixes" }
+
+# Keep other dependencies as-is
+tokenizers = { version = "0.15", default-features = false, features = ["onig"] }
+# ...
+```
+
+### Step 3: Remove Our Workaround
+
+**File:** `src/backend/models/llama.rs`
+
+```diff
+- // TEAM-019: Recreate KV cache on position=0 to prevent mask broadcasting issues
+- if position == 0 {
+-     let device = input_ids.device();
+-     self.cache = Cache::new(true, DType::F32, &self.config, device)?;
+-     tracing::debug!("KV cache recreated for new sequence");
+- }
+```
+
+**Replace with:**
+
+```rust
+// TEAM-020: Using our Candle fork with proper mask broadcasting fix
+// No workaround needed - mask now handles KV cache growth correctly
+```
+
+### Step 4: Test Extensively
+
+**Use existing test infrastructure:**
+
+```bash
+# Test Metal with fork
+./llorch-remote mac.home.arpa metal all
+
+# Test CUDA with fork
+./llorch-remote workstation.home.arpa cuda all
+
+# Test CPU (should still work)
+cargo test --features cpu
+
+# Debug inference on all backends
+./llorch-remote mac.home.arpa metal debug-inference
+./llorch-remote workstation.home.arpa cuda debug-inference
+```
+
+### Step 5: Benchmark Performance
+
+**Compare fork vs. workaround:**
+
+```bash
+# With workaround (current)
+time ./llorch-remote mac.home.arpa metal inference
+
+# With fork (new)
+time ./llorch-remote mac.home.arpa metal inference
+
+# Measure:
+# - Tokens/sec
+# - Latency
+# - Memory usage
+# - KV cache efficiency
+```
 
 ---
 
@@ -329,20 +479,44 @@ Include:
 
 ## Action Items for TEAM-020 or Later
 
-### Immediate (This Week)
-- [ ] Create GitHub issue in candle-rs for mask broadcasting bug
-- [ ] Link to our bug report and candle-vllm fix
-- [ ] Offer to submit PR if maintainers are interested
+### Phase 1: Fork Setup (Week 1)
+- [ ] Create `llorch/metal-bugfixes` branch in `reference/candle/`
+- [ ] Apply mask broadcasting fix from candle-vllm
+- [ ] Update Cache::mask() signature to accept seqlen_offset
+- [ ] Update all call sites to pass KV cache length
+- [ ] Add tests for mask broadcasting with KV cache
 
-### Short-term (This Month)
-- [ ] Benchmark Metal kernel performance (current vs. candle-vllm)
-- [ ] Create minimal PR for mask fix
-- [ ] Write tests for mask broadcasting
+### Phase 2: Integration (Week 1-2)
+- [ ] Update `llorch-candled/Cargo.toml` to use fork
+- [ ] Remove TEAM-019 workaround (cache recreation)
+- [ ] Rebuild all backends with fork
+- [ ] Verify compilation on CPU, CUDA, Metal
 
-### Long-term (Next Quarter)
-- [ ] Discuss paged attention with Candle team
-- [ ] Prepare comprehensive PR if approved
-- [ ] Offer to maintain Metal/CUDA kernels
+### Phase 3: Testing (Week 2-3)
+- [ ] Test Llama on all backends with fork
+- [ ] Test Mistral, Phi, Qwen on all backends
+- [ ] Run debug-inference on all backends
+- [ ] Verify no broadcasting errors
+- [ ] Check KV cache works correctly
+
+### Phase 4: Validation (Week 3-4)
+- [ ] Benchmark performance vs. workaround
+- [ ] Test with multiple sequence lengths
+- [ ] Test with long contexts (>1000 tokens)
+- [ ] Document any issues found
+- [ ] Fix any regressions
+
+### Phase 5: Production Use (Month 2-3)
+- [ ] Use fork in production
+- [ ] Monitor for issues
+- [ ] Collect performance data
+- [ ] Validate stability
+
+### Phase 6: Upstream (Month 3+)
+- [ ] Create detailed PR to candle-rs
+- [ ] Include test results and benchmarks
+- [ ] Reference production usage
+- [ ] Offer to maintain if needed
 
 ---
 
