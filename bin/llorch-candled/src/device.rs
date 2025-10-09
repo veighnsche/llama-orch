@@ -6,9 +6,9 @@
 //! Created by: TEAM-007
 //! Modified by: TEAM-018 (Removed Accelerate, added Metal)
 
+use crate::narration::*;
 use candle_core::{Device, Result as CandleResult};
 use observability_narration_core::{narrate, NarrationFields};
-use crate::narration::*;
 
 /// Initialize CPU device
 #[cfg(feature = "cpu")]

@@ -31,7 +31,7 @@ impl Model {
         match self {
             Model::Llama(m) => m.forward(input_ids, position),
             Model::Mistral(m) => m.forward(input_ids, position),
-            Model::Phi(m) => m.forward(input_ids),  // Phi doesn't use position
+            Model::Phi(m) => m.forward(input_ids), // Phi doesn't use position
             Model::Qwen(m) => m.forward(input_ids, position),
         }
     }
@@ -127,7 +127,9 @@ pub fn detect_architecture(config_json: &Value) -> Result<String> {
 /// Scan for safetensors files
 ///
 /// TEAM-017: Candle-idiomatic helper to find safetensors files
-pub(super) fn find_safetensors_files(path: &Path) -> Result<(std::path::PathBuf, Vec<std::path::PathBuf>)> {
+pub(super) fn find_safetensors_files(
+    path: &Path,
+) -> Result<(std::path::PathBuf, Vec<std::path::PathBuf>)> {
     if path.is_file() && path.extension().and_then(|e| e.to_str()) == Some("safetensors") {
         let parent = path.parent().unwrap_or_else(|| Path::new("."));
         Ok((parent.to_path_buf(), vec![path.to_path_buf()]))
@@ -210,23 +212,22 @@ pub fn load_model(model_path: &str, device: &Device) -> Result<Model> {
 pub fn calculate_model_size(model_path: &str) -> Result<u64> {
     let path = Path::new(model_path);
 
-    let safetensor_files = if path.is_file()
-        && path.extension().and_then(|e| e.to_str()) == Some("safetensors")
-    {
-        vec![path.to_path_buf()]
-    } else if path.is_dir() {
-        let mut files = Vec::new();
-        for entry in std::fs::read_dir(path)? {
-            let entry = entry?;
-            let entry_path = entry.path();
-            if entry_path.extension().and_then(|e| e.to_str()) == Some("safetensors") {
-                files.push(entry_path);
+    let safetensor_files =
+        if path.is_file() && path.extension().and_then(|e| e.to_str()) == Some("safetensors") {
+            vec![path.to_path_buf()]
+        } else if path.is_dir() {
+            let mut files = Vec::new();
+            for entry in std::fs::read_dir(path)? {
+                let entry = entry?;
+                let entry_path = entry.path();
+                if entry_path.extension().and_then(|e| e.to_str()) == Some("safetensors") {
+                    files.push(entry_path);
+                }
             }
-        }
-        files
-    } else {
-        bail!("Path must be a .safetensors file or directory");
-    };
+            files
+        } else {
+            bail!("Path must be a .safetensors file or directory");
+        };
 
     if safetensor_files.is_empty() {
         bail!("No safetensors files found at {}", path.display());

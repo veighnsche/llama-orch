@@ -10,6 +10,8 @@ members = [
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
     "bin/llorch-candled",         # Candle-based Llama-2 worker (TEAM-000 Foundation)
+    "bin/llorch-ctl",             # TEAM-022: Orchestrator control CLI
+    "bin/pool-ctl",               # TEAM-022: Pool management CLI
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # SHARED CRATES — Cross-Service Utilities
@@ -25,6 +27,7 @@ members = [
     "bin/shared-crates/narration-core",
     "bin/shared-crates/narration-core/bdd",
     "bin/shared-crates/narration-macros",
+    "bin/shared-crates/pool-core",         # TEAM-022: Pool management shared types
     "bin/shared-crates/pool-registry-types",
     "bin/shared-crates/secrets-management",
     "bin/shared-crates/secrets-management/bdd",

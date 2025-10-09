@@ -81,13 +81,13 @@ impl LlamaModel {
         // TEAM-019: Use F32 for all backends (Metal F16 causes forward pass failures)
         let dtype = DType::F32;
         tracing::info!(dtype = ?dtype, device = ?device, "Loading model with dtype");
-        
+
         let vb = unsafe { VarBuilder::from_mmaped_safetensors(&safetensor_files, dtype, device)? };
         let model = Llama::load(vb, &config).context("Failed to load Llama model")?;
 
         // Create cache with same dtype
-        let cache = Cache::new(true, dtype, &config, device)
-            .context("Failed to create Llama cache")?;
+        let cache =
+            Cache::new(true, dtype, &config, device).context("Failed to create Llama cache")?;
 
         tracing::info!(
             architecture = "llama",
@@ -97,13 +97,7 @@ impl LlamaModel {
             "Loaded Llama model"
         );
 
-        Ok(Self { 
-            model, 
-            cache, 
-            config, 
-            vocab_size: vocab_size as usize,
-            device: device.clone(),
-        })
+        Ok(Self { model, cache, config, vocab_size: vocab_size as usize, device: device.clone() })
     }
 
     /// Forward pass using Llama's natural interface
@@ -121,11 +115,11 @@ impl LlamaModel {
             input_dtype = ?input_ids.dtype(),
             "Llama forward pass starting"
         );
-        
+
         // TEAM-020: Workaround removed - using Candle fork with proper mask broadcasting fix
         // The mask now correctly handles KV cache growth by accounting for seqlen_offset
         // See: reference/candle branch llorch/metal-bugfixes
-        
+
         // Attempt forward pass with detailed error capture
         match self.model.forward(input_ids, position, &mut self.cache) {
             Ok(logits) => {
@@ -147,7 +141,7 @@ impl LlamaModel {
                     input_device = ?input_ids.device(),
                     "Llama forward pass failed - Candle error details"
                 );
-                
+
                 // Check for common issues
                 if format!("{:?}", e).contains("shape") {
                     tracing::error!("Shape mismatch detected in forward pass");
@@ -156,7 +150,7 @@ impl LlamaModel {
                 } else if format!("{:?}", e).contains("dtype") {
                     tracing::error!("DType mismatch detected in forward pass");
                 }
-                
+
                 Err(e).context("Llama forward pass failed")
             }
         }
@@ -181,14 +175,14 @@ impl LlamaModel {
     /// TEAM-021: Required to clear state between HTTP requests
     /// Candle's Cache doesn't expose clear(), so we recreate it
     /// Uses F32 dtype per TEAM-019 (Metal F16 causes issues)
-    /// 
+    ///
     /// 🎯 TEAM-021 Victory: Proper cache lifecycle management!
     pub fn reset_cache(&mut self) -> Result<()> {
         let dtype = DType::F32; // TEAM-019: F32 for all backends
-        
+
         self.cache = Cache::new(true, dtype, &self.config, &self.device)
             .context("Failed to recreate cache")?;
-        
+
         tracing::debug!("Cache reset complete - ready for new request");
         Ok(())
     }

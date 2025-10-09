@@ -11,9 +11,9 @@
 //! - M0-W-1320: Health endpoint
 //! - WORK-3010: HTTP server foundation
 
+use crate::narration::*;
 use axum::Router;
 use observability_narration_core::{narrate, NarrationFields};
-use crate::narration::*;
 use std::net::SocketAddr;
 use thiserror::Error;
 use tokio::sync::broadcast;
@@ -110,7 +110,10 @@ impl HttpServer {
                 action: ACTION_ERROR,
                 target: self.addr.to_string(),
                 human: format!("Failed to bind to {}: {}", self.addr, source),
-                cute: Some(format!("Oh dear! Can't bind to {} — address already in use? 😟", self.addr)),
+                cute: Some(format!(
+                    "Oh dear! Can't bind to {} — address already in use? 😟",
+                    self.addr
+                )),
                 error_kind: Some("bind_failed".to_string()),
                 ..Default::default()
             });
@@ -162,7 +165,9 @@ impl HttpServer {
                     action: ACTION_SERVER_SHUTDOWN,
                     target: "graceful".to_string(),
                     human: "HTTP server shutting down gracefully".to_string(),
-                    cute: Some("Server saying goodnight and tucking in connections! 🌙".to_string()),
+                    cute: Some(
+                        "Server saying goodnight and tucking in connections! 🌙".to_string(),
+                    ),
                     ..Default::default()
                 });
             })

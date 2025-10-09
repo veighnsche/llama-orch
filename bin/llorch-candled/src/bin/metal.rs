@@ -103,7 +103,11 @@ async fn main() -> Result<()> {
     let router = create_router(backend);
     let server = HttpServer::new(addr, router).await?;
 
-    tracing::info!("llorch-metal-candled ready on port {} (Metal GPU {})", args.port, args.metal_device);
+    tracing::info!(
+        "llorch-metal-candled ready on port {} (Metal GPU {})",
+        args.port,
+        args.metal_device
+    );
 
     // Run forever (until killed by pool-managerd)
     server.run().await?;

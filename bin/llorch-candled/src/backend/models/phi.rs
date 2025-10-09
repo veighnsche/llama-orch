@@ -42,10 +42,13 @@ impl PhiModel {
             std::fs::File::open(&config_path)
                 .with_context(|| format!("Failed to reopen config.json at {config_path:?}"))?,
         )?;
-        
+
         let vocab_size = config_json["vocab_size"].as_u64().context("missing vocab_size")? as usize;
-        let hidden_size = config_json["hidden_size"].as_u64().context("missing hidden_size")? as usize;
-        let num_hidden_layers = config_json["num_hidden_layers"].as_u64().context("missing num_hidden_layers")? as usize;
+        let hidden_size =
+            config_json["hidden_size"].as_u64().context("missing hidden_size")? as usize;
+        let num_hidden_layers = config_json["num_hidden_layers"]
+            .as_u64()
+            .context("missing num_hidden_layers")? as usize;
 
         tracing::info!(
             architecture = "phi",

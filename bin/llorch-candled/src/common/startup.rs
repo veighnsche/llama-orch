@@ -1,9 +1,9 @@
 //! Worker startup and pool manager callback
 
+use crate::narration::*;
 use anyhow::Result;
 use observability_narration_core::{narrate, NarrationFields};
 use serde::{Deserialize, Serialize};
-use crate::narration::*;
 
 #[derive(Serialize, Deserialize)]
 struct ReadyCallback {
@@ -34,9 +34,18 @@ pub async fn callback_ready(
         actor: ACTOR_LLORCH_CANDLED,
         action: ACTION_CALLBACK_READY,
         target: callback_url.to_string(),
-        human: format!("Calling pool-managerd at {} (worker: {}, VRAM: {} MB)", callback_url, worker_id, vram_bytes / 1_000_000),
+        human: format!(
+            "Calling pool-managerd at {} (worker: {}, VRAM: {} MB)",
+            callback_url,
+            worker_id,
+            vram_bytes / 1_000_000
+        ),
         cute: Some(format!("Sending ready signal with {} MB of VRAM! 📞", vram_bytes / 1_000_000)),
-        story: Some(format!("\"I have {} MB VRAM ready!\" said worker-{}.", vram_bytes / 1_000_000, worker_id)),
+        story: Some(format!(
+            "\"I have {} MB VRAM ready!\" said worker-{}.",
+            vram_bytes / 1_000_000,
+            worker_id
+        )),
         worker_id: Some(worker_id.to_string()),
         ..Default::default()
     });

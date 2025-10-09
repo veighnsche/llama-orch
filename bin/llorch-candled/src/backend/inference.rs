@@ -59,8 +59,17 @@ impl CandleInferenceBackend {
             actor: ACTOR_MODEL_LOADER,
             action: ACTION_MODEL_LOAD,
             target: model.architecture().to_string(),
-            human: format!("Loaded {} model ({} MB, vocab: {})", model.architecture(), model_size_bytes / 1_000_000, model.vocab_size()),
-            cute: Some(format!("{} model tucked into memory! {} MB cozy! 🛏️", model.architecture(), model_size_bytes / 1_000_000)),
+            human: format!(
+                "Loaded {} model ({} MB, vocab: {})",
+                model.architecture(),
+                model_size_bytes / 1_000_000,
+                model.vocab_size()
+            ),
+            cute: Some(format!(
+                "{} model tucked into memory! {} MB cozy! 🛏️",
+                model.architecture(),
+                model_size_bytes / 1_000_000
+            )),
             model_ref: Some(model.architecture().to_string()),
             ..Default::default()
         });
@@ -79,7 +88,7 @@ impl CandleInferenceBackend {
     /// This initializes CUDA kernels and caches, preventing 9s overhead on first request.
     /// TEAM-017: Updated to use Model enum
     /// TEAM-021: Warmup uses inference cache, will be reset before actual inference
-    /// 
+    ///
     /// 🎯 TEAM-021: Warmup doesn't pollute inference - cache reset handles it!
     pub fn warmup(&mut self) -> Result<()> {
         tracing::info!("Starting GPU warmup...");
@@ -117,7 +126,7 @@ impl CandleInferenceBackend {
 
         let duration = start.elapsed();
         tracing::info!(
-            duration_ms = duration.as_millis(), 
+            duration_ms = duration.as_millis(),
             "GPU warmup complete (cache will be reset before inference)"
         );
 
@@ -126,7 +135,10 @@ impl CandleInferenceBackend {
             action: ACTION_WARMUP,
             target: "complete".to_string(),
             human: format!("GPU warmup complete ({} ms)", duration.as_millis()),
-            cute: Some(format!("GPU all warmed up in {} ms! Ready to zoom! ⚡", duration.as_millis())),
+            cute: Some(format!(
+                "GPU all warmed up in {} ms! Ready to zoom! ⚡",
+                duration.as_millis()
+            )),
             duration_ms: Some(duration.as_millis() as u64),
             ..Default::default()
         });
@@ -159,16 +171,19 @@ impl InferenceBackend for CandleInferenceBackend {
             actor: ACTOR_CANDLE_BACKEND,
             action: ACTION_INFERENCE_START,
             target: format!("prompt-{}-chars", prompt.len()),
-            human: format!("Starting inference (prompt: {} chars, max_tokens: {}, temp: {})", prompt.len(), config.max_tokens, config.temperature),
+            human: format!(
+                "Starting inference (prompt: {} chars, max_tokens: {}, temp: {})",
+                prompt.len(),
+                config.max_tokens,
+                config.temperature
+            ),
             cute: Some(format!("Time to generate {} tokens! Let's go! 🚀", config.max_tokens)),
             ..Default::default()
         });
 
         // Tokenize prompt
-        let encoding = self
-            .tokenizer
-            .encode(prompt, true)
-            .map_err(|e| format!("Tokenization failed: {e}"))?;
+        let encoding =
+            self.tokenizer.encode(prompt, true).map_err(|e| format!("Tokenization failed: {e}"))?;
         let mut tokens = encoding.get_ids().to_vec();
 
         tracing::debug!(prompt_tokens = tokens.len(), "Prompt tokenized");
@@ -238,8 +253,10 @@ impl InferenceBackend for CandleInferenceBackend {
             }
 
             // TEAM-017: Forward pass using Model enum (delegates to specific model)
-            let logits =
-                self.model.forward(&input_ids, pos_usize).map_err(|e| format!("Forward pass failed: {e}"))?;
+            let logits = self
+                .model
+                .forward(&input_ids, pos_usize)
+                .map_err(|e| format!("Forward pass failed: {e}"))?;
 
             // TEAM-009: Log output device residency
             if pos == 0 {
@@ -251,8 +268,7 @@ impl InferenceBackend for CandleInferenceBackend {
             }
 
             // Get logits for last position
-            let logits =
-                logits.squeeze(0).map_err(|e| format!("Failed to squeeze logits: {e}"))?;
+            let logits = logits.squeeze(0).map_err(|e| format!("Failed to squeeze logits: {e}"))?;
             let logits = if logits.dims().len() > 1 {
                 logits
                     .get(logits.dims()[0] - 1)
@@ -326,8 +342,18 @@ impl InferenceBackend for CandleInferenceBackend {
             actor: ACTOR_CANDLE_BACKEND,
             action: ACTION_INFERENCE_COMPLETE,
             target: format!("{}-tokens", generated_tokens.len()),
-            human: format!("Inference completed ({} tokens in {} ms, {} tok/s)", generated_tokens.len(), duration_ms, tokens_per_sec),
-            cute: Some(format!("Generated {} tokens in {} ms! {} tok/s! 🎉", generated_tokens.len(), duration_ms, tokens_per_sec)),
+            human: format!(
+                "Inference completed ({} tokens in {} ms, {} tok/s)",
+                generated_tokens.len(),
+                duration_ms,
+                tokens_per_sec
+            ),
+            cute: Some(format!(
+                "Generated {} tokens in {} ms! {} tok/s! 🎉",
+                generated_tokens.len(),
+                duration_ms,
+                tokens_per_sec
+            )),
             tokens_out: Some(generated_tokens.len() as u64),
             decode_time_ms: Some(duration_ms),
             ..Default::default()

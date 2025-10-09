@@ -122,7 +122,10 @@ async fn main() -> anyhow::Result<()> {
             target: args.callback_url.clone(),
             human: format!("Reporting ready to pool-managerd at {}", args.callback_url),
             cute: Some("Waving hello to pool-managerd: 'I'm ready to work!' 👋".to_string()),
-            story: Some(format!("\"I'm ready!\" announced worker-{}. \"Great!\" replied pool-managerd.", args.worker_id)),
+            story: Some(format!(
+                "\"I'm ready!\" announced worker-{}. \"Great!\" replied pool-managerd.",
+                args.worker_id
+            )),
             worker_id: Some(args.worker_id.clone()),
             ..Default::default()
         });
