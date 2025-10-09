@@ -41,14 +41,12 @@ echo "Downloading Qwen2.5-0.5B-Instruct (Q4_K_M)..."
 echo "This will take a few minutes depending on your connection."
 echo ""
 
-# Try huggingface-cli first (recommended)
-if command -v huggingface-cli &> /dev/null; then
-    echo "Using huggingface-cli (recommended)..."
-    cd "$MODEL_DIR"
-    huggingface-cli download Qwen/Qwen2.5-0.5B-Instruct-GGUF \
+# Use modern hf command
+if command -v hf &> /dev/null; then
+    echo "Using hf download (modern CLI)..."
+    hf download Qwen/Qwen2.5-0.5B-Instruct-GGUF \
         qwen2.5-0.5b-instruct-q4_k_m.gguf \
-        --local-dir . \
-        --local-dir-use-symlinks False
+        --local-dir "$MODEL_DIR"
     
     echo ""
     echo "✅ Download complete!"
@@ -70,10 +68,10 @@ elif command -v curl &> /dev/null; then
     echo "✅ Download complete!"
     
 else
-    echo "❌ Error: No download tool found (huggingface-cli, wget, or curl)"
+    echo "❌ Error: No download tool found (hf, wget, or curl)"
     echo ""
     echo "Install one of:"
-    echo "  - huggingface-cli: pip install huggingface-hub"
+    echo "  - hf: pipx install 'huggingface_hub[cli,hf_transfer]'"
     echo "  - wget: sudo pacman -S wget"
     echo "  - curl: sudo pacman -S curl"
     exit 1

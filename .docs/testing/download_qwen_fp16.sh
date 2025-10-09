@@ -34,18 +34,17 @@ echo ""
 HF_REPO="Qwen/Qwen2.5-0.5B-Instruct-GGUF"
 HF_FILE="qwen2.5-0.5b-instruct-fp16.gguf"
 
-if command -v huggingface-cli &> /dev/null; then
-    echo "Using huggingface-cli..."
-    huggingface-cli download "$HF_REPO" "$HF_FILE" \
-        --local-dir "$MODEL_DIR" \
-        --local-dir-use-symlinks False
+if command -v hf &> /dev/null; then
+    echo "Using hf download (modern CLI)..."
+    hf download "$HF_REPO" "$HF_FILE" \
+        --local-dir "$MODEL_DIR"
     
     # Rename if needed
     if [ -f "$MODEL_DIR/$HF_FILE" ] && [ ! -f "$MODEL_PATH" ]; then
         mv "$MODEL_DIR/$HF_FILE" "$MODEL_PATH"
     fi
 else
-    echo "Using wget (huggingface-cli not found)..."
+    echo "Using wget (hf command not found)..."
     
     # Construct HuggingFace URL
     HF_URL="https://huggingface.co/$HF_REPO/resolve/main/$HF_FILE"

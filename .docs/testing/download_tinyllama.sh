@@ -34,18 +34,17 @@ echo ""
 HF_REPO="TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF"
 HF_FILE="tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
 
-if command -v huggingface-cli &> /dev/null; then
-    echo "Using huggingface-cli..."
-    huggingface-cli download "$HF_REPO" "$HF_FILE" \
-        --local-dir "$MODEL_DIR" \
-        --local-dir-use-symlinks False
+if command -v hf &> /dev/null; then
+    echo "Using hf download (modern CLI)..."
+    hf download "$HF_REPO" "$HF_FILE" \
+        --local-dir "$MODEL_DIR"
     
     # Rename if needed
     if [ -f "$MODEL_DIR/$HF_FILE" ] && [ ! -f "$MODEL_PATH" ]; then
         mv "$MODEL_DIR/$HF_FILE" "$MODEL_PATH"
     fi
 else
-    echo "Using wget (huggingface-cli not found)..."
+    echo "Using wget (hf command not found)..."
     
     # Construct HuggingFace URL
     HF_URL="https://huggingface.co/$HF_REPO/resolve/main/$HF_FILE"
