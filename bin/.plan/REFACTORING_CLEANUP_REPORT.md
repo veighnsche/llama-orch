@@ -298,3 +298,55 @@ llorch-pool worker spawn metal --model qwen
 
 **Signed:** TEAM-022  
 **Date:** 2025-10-09T16:10:00+02:00
+
+---
+
+## TEAM-024 Addendum: HuggingFace CLI Migration Completion
+
+**Date:** 2025-10-09T16:24:00+02:00  
+**Team:** TEAM-024
+
+### Issue Found
+
+TEAM-023 completed code migration from `huggingface-cli` → `hf` CLI but left documentation inconsistencies:
+- ✅ Code already uses `Command::new("hf")` 
+- ✅ Script already checks for `hf` command
+- ❌ 6 .md files still referenced deprecated `huggingface-cli`
+
+### Documentation Fixed (6 files)
+
+1. `bin/.plan/TEAM_023_SSH_FIX_REPORT.md` - 7 replacements
+2. `bin/.plan/TEAM_022_COMPLETION_SUMMARY.md` - 2 replacements + hf-hub note
+3. `bin/.plan/03_CP3_AUTOMATION.md` - 1 code example
+4. `bin/llorch-candled/.specs/TEAM_022_HANDOFF.md` - 1 code example
+5. `bin/llorch-candled/.specs/TEAM_021_HANDOFF.md` - 3 bash commands
+6. `bin/llorch-candled/.specs/TEAM_010_HANDOFF.md` - 2 bash commands
+
+### Remaining References (Appropriate)
+
+All remaining `huggingface-cli` references are deprecation warnings:
+- Comments explaining why we use `hf` instead
+- Historical context in TEAM reports
+- Warnings to future engineers
+
+### Future Consideration: hf-hub Rust Crate
+
+**Discovered:** `hf-hub` v0.4.3 exists and is used by candle/mistral.rs
+
+**Current approach (CLI):**
+- ✅ Simple, delegates auth to official tooling
+- ❌ Requires Python dependency
+
+**Alternative (Rust crate):**
+- ✅ Pure Rust, no Python dependency
+- ✅ Better error handling, programmatic progress
+- ❌ Need to handle HF token manually
+
+**Recommendation:** Keep CLI for M0, evaluate `hf-hub` crate for M1+ daemon.
+
+**See:** `bin/.plan/TEAM_024_HUGGINGFACE_CLI_CLEANUP.md` for full analysis.
+
+---
+
+**Signed:** TEAM-024  
+**Status:** Documentation migration complete ✅

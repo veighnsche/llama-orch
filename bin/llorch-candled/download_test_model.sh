@@ -38,26 +38,27 @@ if [ -f "$MODEL_DIR/model.safetensors" ] && [ -f "$MODEL_DIR/tokenizer.json" ]; 
     echo "To re-download, delete the directory first:"
     echo "  rm -rf $MODEL_DIR"
     exit 0
-fi
 
 echo "Downloading TinyLlama 1.1B (SafeTensors)..."
 echo "This will take 2-5 minutes depending on your connection."
 echo ""
 
-# Check for huggingface-cli
-if ! command -v huggingface-cli &> /dev/null; then
-    echo "❌ Error: huggingface-cli not found"
+# TEAM-023: DEPRECATED - huggingface-cli is deprecated, use `hf` CLI instead!
+# Check for hf CLI (modern replacement for huggingface-cli)
+if ! command -v hf &> /dev/null; then
+    echo "❌ Error: hf CLI not found"
     echo ""
     echo "Install with:"
-    echo "  pip install huggingface_hub"
-    echo "  # or"
-    echo "  pipx install huggingface_hub"
+    echo "  pip install huggingface_hub[cli]"
+    echo ""
+    echo "NOTE: 'huggingface-cli' is DEPRECATED. Use 'hf' instead!"
+    echo ""
     exit 1
 fi
 
 # Download model files
-echo "Using huggingface-cli..."
-huggingface-cli download "$HF_REPO" \
+echo "Using hf CLI (modern replacement for deprecated huggingface-cli)..."
+hf download "$HF_REPO" \
     --include "*.safetensors" "tokenizer.json" "config.json" "tokenizer_config.json" \
     --local-dir "$MODEL_DIR" \
     --local-dir-use-symlinks False

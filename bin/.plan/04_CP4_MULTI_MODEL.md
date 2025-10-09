@@ -34,6 +34,7 @@ Complete multi-model testing infrastructure:
 
 **Commands:**
 ```bash
+# TEAM-023: Use 'hf' CLI not 'huggingface-cli' (deprecated)
 # On each pool (mac.home.arpa, workstation.home.arpa)
 
 # TinyLlama (2.2 GB)
@@ -416,7 +417,7 @@ All models tested on llorch-candled with cache lifecycle fix from TEAM-021.
 
 **Test Flow:**
 1. Register model in catalog
-2. Download model via huggingface-cli
+2. Download model via hf CLI (TEAM-023: NOT huggingface-cli - that's deprecated!)
 3. Spawn worker via pool-ctl
 4. Execute inference request
 5. Verify tokens generated
@@ -520,7 +521,7 @@ rm -rf .runtime/workers/*.log
 2. **pool-ctl** - Local pool management CLI
 3. **llorch-ctl** - Remote pool control CLI
 4. **Model Catalog System** - Track available models per pool
-5. **Automated Downloads** - Download models via huggingface-cli
+5. **Automated Downloads** - Download models via hf CLI (TEAM-023: NOT huggingface-cli!)
 6. **Worker Spawning** - Spawn llorch-candled workers
 7. **Multi-Model Testing** - Test all models on all backends
 

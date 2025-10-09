@@ -37,38 +37,8 @@ wget https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5
 ### TinyLlama-1.1B-Chat
 ```bash
 mkdir -p .test-models/tinyllama
-cd .test-models/tinyllama
 wget https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
 ```
-
----
-
-## Using huggingface-cli (Faster, Resumable)
-
-### Install
-```bash
-pip install huggingface-hub
-```
-
-### Download Phi-3
-```bash
-cd .test-models/phi3
-huggingface-cli download microsoft/Phi-3-mini-4k-instruct-gguf \
-  Phi-3-mini-4k-instruct-q4.gguf \
-  --local-dir . \
-  --local-dir-use-symlinks False
-```
-
-### Download Qwen
-```bash
-cd .test-models/qwen
-huggingface-cli download Qwen/Qwen2.5-0.5B-Instruct-GGUF \
-  qwen2.5-0.5b-instruct-q4_k_m.gguf \
-  --local-dir . \
-  --local-dir-use-symlinks False
-```
-
----
 
 ## Model Comparison
 

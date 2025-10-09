@@ -20,7 +20,7 @@ Built complete CLI infrastructure for multi-model testing across pools.
 
 **2. pool-ctl (CLI: `llorch-pool`)**
 - Model catalog management (register, unregister, catalog)
-- Model downloads via huggingface-cli
+- Model downloads via hf CLI (modern replacement for deprecated huggingface-cli)
 - Worker spawning with background process management
 - Worker lifecycle (list, stop)
 - Process tracking with PID files
@@ -119,10 +119,10 @@ llorch pool worker --host mac.home.arpa stop worker-metal-0
 - ✅ serde_json: Standard, integrates with serde ecosystem
 - **Verdict:** Perfect choice
 
-#### 6. **File Downloads** (Current: `huggingface-cli` subprocess)
+#### 6. **File Downloads** (Current: `hf` CLI subprocess)
 **Could Use:**
 - `reqwest` - HTTP client (already in workspace!)
-- `hf-hub` - Hugging Face Rust SDK
+- `hf-hub` - Hugging Face Rust SDK (v0.4.3 available, used in candle/mistral.rs references)
 - `tokio` + `reqwest` - Async downloads with progress
 
 **Trade-offs:**

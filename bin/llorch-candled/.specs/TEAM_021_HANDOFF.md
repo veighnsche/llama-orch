@@ -225,18 +225,20 @@ candle-kernels = { git = "https://github.com/veighnsche/candle.git", branch = "l
 **Recommended SafeTensors Sources:**
 
 ```bash
+# TEAM-024: Use modern hf CLI (huggingface-cli is deprecated)
+
 # Qwen2.5-0.5B-Instruct (SafeTensors)
-huggingface-cli download Qwen/Qwen2.5-0.5B-Instruct \
+hf download Qwen/Qwen2.5-0.5B-Instruct \
     --include "*.safetensors" "*.json" \
     --local-dir .test-models/qwen-safetensors
 
 # Phi-3-Mini-4K-Instruct (SafeTensors)
-huggingface-cli download microsoft/Phi-3-mini-4k-instruct \
+hf download microsoft/Phi-3-mini-4k-instruct \
     --include "*.safetensors" "*.json" \
     --local-dir .test-models/phi3-safetensors
 
 # Mistral-7B-Instruct-v0.2 (SafeTensors)
-huggingface-cli download mistralai/Mistral-7B-Instruct-v0.2 \
+hf download mistralai/Mistral-7B-Instruct-v0.2 \
     --include "*.safetensors" "*.json" \
     --local-dir .test-models/mistral-safetensors
 ```

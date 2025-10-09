@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# TEAM-023: DEPRECATED - huggingface-cli is deprecated, use `hf` CLI instead!
+# If this script uses huggingface-cli, replace with 'hf' command
+# Install: pip install huggingface_hub[cli]
 set -euo pipefail
 
 : "${HF_HUB_ENABLE_HF_TRANSFER:=1}"

@@ -56,8 +56,11 @@ fn download(model_id: String) -> Result<()> {
     // Create target directory
     std::fs::create_dir_all(&model_path)?;
 
-    // Download using huggingface-cli
-    let status = std::process::Command::new("huggingface-cli")
+    // TEAM-023: DEPRECATED - huggingface-cli is deprecated, use `hf` CLI instead!
+    // TODO: Replace with: Command::new("hf").args(["download", ...])
+    // Install with: pip install huggingface_hub[cli]
+    // The `hf` command is the modern replacement for `huggingface-cli`
+    let status = std::process::Command::new("hf")
         .args([
             "download",
             &repo,

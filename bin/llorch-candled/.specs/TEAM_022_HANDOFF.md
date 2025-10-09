@@ -488,8 +488,8 @@ pub fn download_model(model_id: &str) -> anyhow::Result<()> {
     
     println!("📥 Downloading {} from {}", model.name, model.metadata["repo"]);
     
-    // Download using huggingface-cli
-    let status = Command::new("huggingface-cli")
+    // TEAM-024: Use modern hf CLI (huggingface-cli is deprecated)
+    let status = Command::new("hf")
         .args(&[
             "download",
             model.metadata["repo"].as_str().unwrap(),

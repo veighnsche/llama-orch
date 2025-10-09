@@ -10,8 +10,11 @@
 
 ## Objective
 
+<!-- TEAM-023: DEPRECATED - huggingface-cli is deprecated, use `hf` CLI instead! -->
+**⚠️ WARNING: `huggingface-cli` is DEPRECATED. Use `hf` instead!**
+
 Implement automation for:
-1. Model downloads via huggingface-cli
+1. Model downloads via hf CLI (NOT deprecated huggingface-cli)
 2. Worker spawning via llorch-candled
 3. Download Qwen (smallest model) on all pools
 4. Test Qwen on Metal and CUDA backends
@@ -27,7 +30,7 @@ Implement automation for:
 **Location:** `bin/pool-ctl/src/commands/models.rs`
 
 **Tasks:**
-1. Implement huggingface-cli wrapper
+1. Implement hf CLI wrapper (TEAM-023: NOT huggingface-cli - that's deprecated!)
 2. Wire download command
 3. Update catalog after download
 4. Add progress indicators
@@ -60,8 +63,8 @@ pub fn handle_download_command(model_id: String) -> Result<()> {
     // Create target directory
     std::fs::create_dir_all(&model.path)?;
     
-    // Download using huggingface-cli
-    let status = Command::new("huggingface-cli")
+    // TEAM-024: Use modern hf CLI (huggingface-cli is deprecated)
+    let status = Command::new("hf")
         .args(&[
             "download",
             repo,
@@ -559,7 +562,8 @@ nix = { version = "0.27", features = ["signal", "process"] }
 ```
 
 **System Requirements:**
-- `huggingface-cli` installed on all pools
+- `hf` CLI installed on all pools (TEAM-023: NOT huggingface-cli - that's deprecated!)
+  - Install: `pip install huggingface_hub[cli]`
 - SSH access to all pools
 - llorch-candled binary built for each backend
 

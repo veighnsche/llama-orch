@@ -303,13 +303,14 @@ fn test_device_residency_enforcement() {
 
 1. **Download Llama-2 7B SafeTensors** (recommended)
    ```bash
-   # Using huggingface-cli
-   huggingface-cli download meta-llama/Llama-2-7b-hf --local-dir /path/to/llama-2-7b
+   # TEAM-024: Use modern hf CLI (huggingface-cli is deprecated)
+   hf download meta-llama/Llama-2-7b-hf --local-dir /path/to/llama-2-7b
    ```
 
 2. **Use TinyLlama-1.1B** (faster for testing)
    ```bash
-   huggingface-cli download TinyLlama/TinyLlama-1.1B-Chat-v1.0 --local-dir /path/to/tinyllama
+   # TEAM-024: Use modern hf CLI
+   hf download TinyLlama/TinyLlama-1.1B-Chat-v1.0 --local-dir /path/to/tinyllama
    ```
 
 3. **Convert existing GGUF to SafeTensors** (if available)
