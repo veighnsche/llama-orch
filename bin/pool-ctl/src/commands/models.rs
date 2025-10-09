@@ -20,10 +20,87 @@ pub fn handle(action: ModelsAction) -> Result<()> {
     }
 }
 
-fn download(_model: String) -> Result<()> {
-    println!("{}", "Model download not yet implemented".yellow());
-    println!("This will be implemented in CP3");
+fn download(model_id: String) -> Result<()> {
+    // TEAM-022: CP3 - Model download implementation
+    let catalog_path = PathBuf::from(".test-models/catalog.json");
+    let mut catalog = ModelCatalog::load(&catalog_path)?;
+
+    // Find model in catalog and extract needed info
+    let (repo, model_name, model_path) = {
+        let model = catalog
+            .find_model(&model_id)
+            .ok_or_else(|| anyhow::anyhow!("Model {} not in catalog", model_id))?;
+
+        if model.downloaded {
+            println!("{}", format!("✅ Model {} already downloaded", model_id).green());
+            return Ok(());
+        }
+
+        let repo = model.metadata["repo"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("No repo in metadata"))?
+            .to_string();
+
+        (repo, model.name.clone(), model.path.clone())
+    };
+
+    println!("{}", format!("📥 Downloading {} from {}", model_name, repo).cyan());
+    println!("   Target: {}", model_path.display());
+
+    // Create target directory
+    std::fs::create_dir_all(&model_path)?;
+
+    // Download using huggingface-cli
+    let status = std::process::Command::new("huggingface-cli")
+        .args([
+            "download",
+            &repo,
+            "--include",
+            "*.safetensors",
+            "*.json",
+            "tokenizer.model",
+            "--local-dir",
+            model_path.to_str().unwrap(),
+        ])
+        .status()?;
+
+    if !status.success() {
+        anyhow::bail!("Download failed for {}", model_id);
+    }
+
+    // Calculate actual size
+    let size_bytes = calculate_dir_size(&model_path)?;
+    let size_gb = size_bytes as f64 / 1_000_000_000.0;
+
+    // Update catalog
+    let model = catalog
+        .find_model_mut(&model_id)
+        .ok_or_else(|| anyhow::anyhow!("Model {} not in catalog", model_id))?;
+    model.downloaded = true;
+    model.size_gb = size_gb;
+
+    catalog.save(&catalog_path)?;
+
+    println!(
+        "{}",
+        format!("✅ Model {} downloaded successfully ({:.1} GB)", model_id, size_gb).green()
+    );
+
     Ok(())
+}
+
+fn calculate_dir_size(path: &std::path::Path) -> Result<u64> {
+    let mut total = 0;
+    for entry in std::fs::read_dir(path)? {
+        let entry = entry?;
+        let metadata = entry.metadata()?;
+        if metadata.is_file() {
+            total += metadata.len();
+        } else if metadata.is_dir() {
+            total += calculate_dir_size(&entry.path())?;
+        }
+    }
+    Ok(total)
 }
 
 fn list() -> Result<()> {

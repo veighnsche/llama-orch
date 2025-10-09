@@ -13,6 +13,7 @@ pub enum Backend {
 }
 
 impl Backend {
+    #[allow(clippy::should_implement_trait)] // TEAM-022: Not implementing FromStr trait to keep simple API
     pub fn from_str(s: &str) -> crate::Result<Self> {
         match s.to_lowercase().as_str() {
             "cpu" => Ok(Backend::Cpu),
