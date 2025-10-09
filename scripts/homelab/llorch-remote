@@ -70,15 +70,18 @@ ${YELLOW}ACTIONS:${NC}
 | Action | Description |
 |--------|-------------|
 | `clone` | Clone repository to remote host |
+| `pull` | Pull latest changes from origin/main |
 | `status` | Show git status and system info |
 | `build` | Build backend binary (release mode) |
 | `test` | Run all tests for backend |
 | `smoke` | Run smoke tests only |
-| `unit`        Run unit tests only |
-| `integration`    Run integration tests only |
+| `unit` | Run unit tests only |
+| `integration` | Run integration tests only |
 | `download-model` | Download test model (tinyllama by default) |
-| `inference`   | Generate a test story with actual model |
-| `clean`       | Clean build artifacts |
+| `inference` | Generate a test story with actual model |
+| `debug-inference` | Run inference with detailed logging and diagnostics |
+| `logs` | Show worker logs from last run |
+| `clean` | Clean build artifacts |
 | `info` | Show backend and hardware info |
 | `all` | Run: pull → build → test → download-model → inference |
 
@@ -110,8 +113,14 @@ ${YELLOW}EXAMPLES:${NC}
     # Full workflow: pull, build, test, inference
     llorch-remote mac.home.arpa metal all
 
+    # Debug inference with detailed logs
+    llorch-remote mac.home.arpa metal debug-inference
+
     # Check system info
     llorch-remote mac.home.arpa metal info
+
+    # View logs from last run
+    llorch-remote mac.home.arpa metal logs
 
 ${YELLOW}BACKEND-SPECIFIC BINARIES:${NC}
     cpu   → llorch-cpu-candled
@@ -336,6 +345,143 @@ EOF
     log_success "Model download complete"
 }
 
+action_debug_inference() {
+    log_section "🐛 Debug Inference Test ($BACKEND)"
+    log_info "Host: $HOST"
+    log_info "Backend: $BACKEND"
+    log_info "Mode: Detailed logging enabled"
+    
+    local remote_model_path="${MODEL_PATH:-.test-models/tinyllama}"
+    log_info "Model: $remote_model_path"
+    
+    ssh_exec "$HOST" bash <<EOF
+set -euo pipefail
+cd $REMOTE_PATH/bin/llorch-candled
+
+echo "Running debug inference with detailed logging..."
+echo "─────────────────────────────────────────────────────────"
+
+# Check if model exists
+MODEL_FULL_PATH="\$HOME/Projects/llama-orch/$remote_model_path"
+if [[ ! -d "\$MODEL_FULL_PATH" ]]; then
+    echo "❌ Model directory not found: \$MODEL_FULL_PATH"
+    echo ""
+    echo "Download model first:"
+    echo "  llorch-remote $HOST $BACKEND download-model"
+    exit 1
+fi
+
+# Start worker with debug logging
+echo "Starting $BACKEND worker with debug logging..."
+RUST_LOG=debug ../../target/release/llorch-${BACKEND}-candled \\
+    --worker-id debug-test \\
+    --model "\$MODEL_FULL_PATH" \\
+    --port 9876 \\
+    --callback-url http://localhost:9999 > /tmp/${BACKEND}_debug.log 2>&1 &
+
+WORKER_PID=\$!
+echo "Worker PID: \$WORKER_PID"
+
+# Wait for worker
+echo "Waiting for worker to be ready..."
+for i in {1..30}; do
+    sleep 1
+    if curl -s http://localhost:9876/health > /dev/null 2>&1; then
+        echo "Worker ready after \${i}s"
+        break
+    fi
+    if ! kill -0 \$WORKER_PID 2>/dev/null; then
+        echo "❌ Worker died during startup"
+        echo "Last 30 lines of log:"
+        tail -30 /tmp/${BACKEND}_debug.log
+        exit 1
+    fi
+done
+
+# Send inference request
+echo ""
+echo "Sending inference request..."
+curl -s -N -X POST http://localhost:9876/execute \\
+    -H "Content-Type: application/json" \\
+    -d '{"job_id":"debug-test","prompt":"Once upon a time","max_tokens":20,"temperature":0.7,"seed":42}' \\
+    > /tmp/${BACKEND}_response.txt 2>&1 &
+
+CURL_PID=\$!
+sleep 10
+kill \$CURL_PID 2>/dev/null || true
+kill \$WORKER_PID 2>/dev/null || true
+wait \$WORKER_PID 2>/dev/null || true
+
+# Analyze results
+echo ""
+echo "═══════════════════════════════════════════════════════════"
+if grep -q '"t":' /tmp/${BACKEND}_response.txt; then
+    echo "✅ Inference SUCCESS"
+    echo ""
+    echo "Generated tokens:"
+    grep '"t":' /tmp/${BACKEND}_response.txt | head -5
+    echo ""
+    echo "Full response saved to: /tmp/${BACKEND}_response.txt"
+    echo "Full worker log saved to: /tmp/${BACKEND}_debug.log"
+else
+    echo "❌ Inference FAILED"
+    echo ""
+    echo "Response:"
+    cat /tmp/${BACKEND}_response.txt
+    echo ""
+    echo "Worker log (last 30 lines):"
+    tail -30 /tmp/${BACKEND}_debug.log
+    echo ""
+    echo "Full logs at: /tmp/${BACKEND}_debug.log"
+    exit 1
+fi
+EOF
+    
+    log_success "Debug inference complete"
+}
+
+action_logs() {
+    log_section "📋 Viewing Worker Logs ($BACKEND)"
+    log_info "Host: $HOST"
+    log_info "Backend: $BACKEND"
+    
+    ssh_exec "$HOST" bash <<EOF
+set -euo pipefail
+
+echo "Recent worker logs:"
+echo "═══════════════════════════════════════════════════════════"
+
+if [[ -f /tmp/${BACKEND}_debug.log ]]; then
+    echo "Debug log (last 50 lines):"
+    echo "─────────────────────────────────────────────────────────"
+    tail -50 /tmp/${BACKEND}_debug.log
+    echo ""
+fi
+
+if [[ -f /tmp/${BACKEND}_response.txt ]]; then
+    echo "Last response:"
+    echo "─────────────────────────────────────────────────────────"
+    cat /tmp/${BACKEND}_response.txt
+    echo ""
+fi
+
+if [[ -f /tmp/worker.log ]]; then
+    echo "Worker log (last 50 lines):"
+    echo "─────────────────────────────────────────────────────────"
+    tail -50 /tmp/worker.log
+    echo ""
+fi
+
+if [[ ! -f /tmp/${BACKEND}_debug.log ]] && [[ ! -f /tmp/${BACKEND}_response.txt ]] && [[ ! -f /tmp/worker.log ]]; then
+    echo "No logs found. Run inference first:"
+    echo "  llorch-remote $HOST $BACKEND inference"
+    echo "  llorch-remote $HOST $BACKEND debug-inference"
+fi
+EOF
+    
+    log_success "Logs retrieved"
+}
+
 action_inference() {
     log_section "📖 Running Inference Test ($BACKEND)"
     log_info "Host: $HOST"
@@ -551,6 +697,12 @@ case "$ACTION" in
         ;;
     inference)
         action_inference
+        ;;
+    debug-inference)
+        action_debug_inference
+        ;;
+    logs)
+        action_logs
         ;;
     clean)
         action_clean

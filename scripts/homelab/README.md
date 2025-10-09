@@ -60,10 +60,13 @@ llorch-remote <HOST> <BACKEND> <ACTION> [OPTIONS]
 | `smoke` | Run smoke tests only |
 | `unit` | Run unit tests only |
 | `integration` | Run integration tests only |
-| `inference` | Generate a test story (requires model) |
+| `download-model` | Download test model (tinyllama by default) |
+| `inference` | Generate a test story with actual model |
+| `debug-inference` | Run inference with detailed logging and diagnostics |
+| `logs` | Show worker logs from last run |
 | `clean` | Clean build artifacts |
 | `info` | Show backend and hardware info |
-| `all` | Run: pull → build → test → inference |
+| `all` | Run: pull → build → test → download-model → inference |
 
 ### Options
 
@@ -107,11 +110,17 @@ llorch-remote <HOST> <BACKEND> <ACTION> [OPTIONS]
 ### Inference
 
 ```bash
-# Generate test story (placeholder)
+# Download test model first
+./llorch-remote mac.home.arpa metal download-model
+
+# Generate test story
 ./llorch-remote mac.home.arpa metal inference
 
-# With actual model (future)
-./llorch-remote mac.home.arpa metal inference --model /path/to/model
+# Debug inference with detailed logs
+./llorch-remote mac.home.arpa metal debug-inference
+
+# View logs from last run
+./llorch-remote mac.home.arpa metal logs
 ```
 
 ### Full Workflow
@@ -201,32 +210,52 @@ ssh -o BatchMode=yes -o ConnectTimeout=10 mac.home.arpa echo "OK"
 ssh-add -l
 ```
 
-### Build Failed
-
-```bash
-# Check remote Rust toolchain
-./llorch-remote mac.home.arpa metal info
-
-# Clean and rebuild
-./llorch-remote mac.home.arpa metal clean
-./llorch-remote mac.home.arpa metal build
-```
-
-### Tests Failed
+{{ ... }}
 
 ```bash
 # Run smoke tests only
 ./llorch-remote mac.home.arpa metal smoke
 
-# Check logs
-ssh mac.home.arpa "cd ~/Projects/llama-orch && cargo test --features metal 2>&1 | tail -100"
+# View test logs
+./llorch-remote mac.home.arpa metal logs
 ```
+
+### Inference Failed
+
+```bash
+# Run debug inference with detailed logging
+./llorch-remote mac.home.arpa metal debug-inference
+
+# View worker logs
+./llorch-remote mac.home.arpa metal logs
+
+# Check if model exists
+./llorch-remote mac.home.arpa metal download-model
+```
+
+### Common Issues
+
+**Model not found:**
+```bash
+./llorch-remote mac.home.arpa metal download-model
+```
+
+**Worker crashes on startup:**
+```bash
+# Check detailed logs
+./llorch-remote mac.home.arpa metal debug-inference
+./llorch-remote mac.home.arpa metal logs
+```
+
+**Broadcasting errors (Metal/CUDA):**
+- Fixed in TEAM-019 (cache recreation workaround)
+- See `.specs/METAL_CUDA_INFERENCE_BUG_REPORT.md` for details
 
 ## Migration from Old Scripts
 
 Old hardcoded scripts:
 ```bash
-./scripts/homelab/mac-build.sh
+{{ ... }}
 ./scripts/homelab/mac-test.sh
 ```
 
