@@ -20,17 +20,17 @@
 **Current System State (THE 4 BINARIES):**
 1. **rbees-orcd** (daemon) - M1 ❌ NOT BUILT
 2. **rbees-workerd** (daemon) - M0 ✅ WORKING
-3. **llorch** (CLI) - M0 ✅ WORKING
-4. **rbees-pool** (CLI) - M0 ✅ WORKING
+3. **rbees-pool** (daemon) - M1 ❌ NOT BUILT (currently CLI only, needs daemon features)
+4. **rbees-ctl** (CLI) - M0 ✅ WORKING
 
 **M0 Status:** 3 of 4 binaries complete
 
-**ARCHITECTURAL CHANGE (2025-10-09):**
-- ❌ pool-managerd daemon is NOT NEEDED
-- ✅ Only 2 daemons: rbees-orcd + rbees-workerd
-- ✅ 2 CLIs: rbees + rbees-pool
-- ✅ M1 milestone simplified: Only build rbees-orcd
-- See: `/FINAL_ARCHITECTURE.md` (definitive reference)
+**⚠️ ARCHITECTURAL CORRECTION (2025-10-09 - TEAM-025):**
+- ✅ pool-managerd daemon IS REQUIRED (per MVP test-001-mvp.md)
+- ✅ 3 daemons: rbees-orcd + rbees-workerd + rbees-pool (daemon)
+- ✅ 1 CLI: rbees-ctl
+- ✅ M1 milestone: Build rbees-orcd AND rbees-pool daemon
+- See: `bin/.specs/.gherkin/test-001-mvp.md` (NORMATIVE reference)
 
 **User Status:** 🔴 EXHAUSTED - Needs rest, brain has left
 
@@ -68,11 +68,11 @@
 - Port: 8080
 - Location: Should be `bin/rbees-orcd/` (doesn't exist)
 
-**REMOVED: pool-managerd**
-- Decision: NOT NEEDED (2025-10-09)
-- Reason: Pool management is control operations (CLI), not data plane (daemon)
-- Replacement: `rbees-pool` CLI provides all functionality
-- See: `/bin/.specs/ARCHITECTURE_DECISION_NO_POOL_DAEMON.md`
+**REQUIRED: rbees-pool daemon**
+- Status: NEEDED (per MVP test-001-mvp.md)
+- Reason: Must monitor worker health every 30s and enforce idle timeouts
+- Current: CLI exists, daemon features needed
+- See: `bin/.specs/.gherkin/test-001-mvp.md` Phase 5 (lines 169-173)
 
 ---
 

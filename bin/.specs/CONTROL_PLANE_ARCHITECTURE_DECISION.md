@@ -1,8 +1,10 @@
 # Control Plane Architecture Decision: SSH vs HTTP
 
-**Status**: Decision Required  
+**Status**: OUTDATED - See test-001-mvp.md for normative architecture  
 **Date**: 2025-10-09  
 **Context**: How should orchestrator control pool managers?
+
+⚠️ **WARNING**: This document contains outdated conclusions. The MVP (test-001-mvp.md) is normative and requires pool-managerd as a persistent daemon.
 
 ---
 
@@ -286,7 +288,9 @@ Just CLIs + SSH + rbees-workerd workers
 
 ---
 
-## Recommendation: Option 2 (SSH for Control, HTTP for Inference)
+## ⚠️ OUTDATED RECOMMENDATION: Option 2 (SSH for Control, HTTP for Inference)
+
+**NOTE**: The MVP requires pool-managerd as a persistent daemon (test-001-mvp.md Phase 5, lines 169-173).
 
 ### Rationale
 
@@ -514,7 +518,7 @@ llama-orch-sdk (client)
    - HTTP server for inference
    - Spawned by rbees-pool
 
-**No daemons for control plane in M0.**
+**⚠️ OUTDATED**: The MVP requires pool-managerd as a persistent daemon to monitor worker health and enforce idle timeouts.
 
 ### M1: Add Pool Manager Daemon (Optional)
 

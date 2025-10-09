@@ -1,20 +1,35 @@
 # Final Architecture: SSH Control + HTTP Inference
 
-**Status**: Normative  
+**Status**: ⚠️ PARTIALLY OUTDATED - See test-001-mvp.md for pool manager requirements  
 **Version**: 1.0  
 **Date**: 2025-10-09
 
 ---
 
+## ⚠️ IMPORTANT CORRECTION
+
+**The MVP (test-001-mvp.md) requires pool-managerd as a persistent daemon.**
+
+This document is correct about workers being HTTP daemons, but incorrectly suggests pool managers don't need to be daemons.
+
+**From MVP Phase 5 (lines 169-173):**
+- Pool manager **remains running as persistent daemon**
+- Monitors worker health every 30s
+- Enforces idle timeout (5 minutes)
+
+---
+
 ## Executive Summary
 
-**Control Plane:** SSH (operator → pools)  
+**Control Plane:** SSH (operator → pools) + HTTP (pool manager daemon)  
 **Data Plane:** HTTP (orchestrator → workers for inference)
 
 **Key Insight:** Workers MUST be HTTP daemons because they need to:
 1. Stay running with model loaded in VRAM
 2. Accept inference requests from orchestrator
 3. Be directly accessible over network (not through pool manager)
+
+**Additional Insight:** Pool managers MUST be daemons to monitor worker health and enforce timeouts.
 
 ---
 
@@ -478,11 +493,17 @@ POST /workers/register
 - Spawning itself (rbees-pool does this)
 - Scheduling (orchestrator does this)
 
-### rbees-pool (CLI)
+### rbees-pool (daemon + CLI)
 
-**Uses SSH for control, spawns HTTP daemons:**
+**MUST be a daemon (per MVP) with CLI interface:**
 
-**Responsibilities:**
+**Daemon Responsibilities:**
+- Monitor worker health every 30s
+- Enforce idle timeout (5 minutes)
+- Track worker lifecycle state
+- Respond to orchestrator health checks
+
+**CLI Responsibilities:**
 - Download models (hf CLI)
 - Git operations (git CLI)
 - Spawn workers (rbees-workerd as background process)
@@ -492,7 +513,6 @@ POST /workers/register
 **NOT responsible for:**
 - Inference (workers do this)
 - Scheduling (orchestrator does this)
-- Keeping workers alive (systemd/launchd does this in production)
 
 ### rbees-ctl (CLI)
 

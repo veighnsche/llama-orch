@@ -3,16 +3,32 @@
 **Date:** 2025-10-09T17:17:00+02:00  
 **Decision By:** User (Vince)  
 **Documented By:** TEAM-024  
-**Status:** NORMATIVE  
+**Status:** ⚠️ SUPERSEDED BY MVP - See test-001-mvp.md  
 **Impact:** HIGH - Changes M1 milestone
 
 ---
 
-## Decision
+## ⚠️ THIS DECISION WAS INCORRECT
 
-**pool-managerd (daemon) is NOT needed.**
+**The MVP (test-001-mvp.md) is normative and requires pool-managerd as a persistent daemon.**
 
-The pool manager functionality is fully provided by `rbees-pool` CLI (`rbees-pool` binary).
+From test-001-mvp.md Phase 5 (lines 169-173):
+```
+**Pool manager lifecycle:**
+- **Remains running as persistent daemon**
+- Monitors worker health every 30s
+- Enforces idle timeout (5 minutes)
+```
+
+**TEAM-025 NOTE**: This document contradicts the MVP. Ignore this decision and follow test-001-mvp.md.
+
+---
+
+## ~~Decision~~ (OUTDATED)
+
+~~**pool-managerd (daemon) is NOT needed.**~~
+
+~~The pool manager functionality is fully provided by `rbees-pool` CLI (`rbees-pool` binary).~~
 
 ---
 
