@@ -5,7 +5,6 @@
 use crate::cli::{GitAction, ModelsAction, PoolAction, WorkerAction};
 use crate::ssh;
 use anyhow::Result;
-use colored::Colorize;
 
 pub fn handle(action: PoolAction) -> Result<()> {
     match action {
@@ -38,7 +37,7 @@ fn handle_models(action: ModelsAction, host: &str) -> Result<()> {
         }
     };
 
-    println!("{}", format!("→ SSH to {}", host).cyan());
+    // ssh2 now handles the "→ SSH to host" message with spinner
     ssh::execute_remote_command_streaming(host, &command)?;
     Ok(())
 }
@@ -62,7 +61,6 @@ fn handle_worker(action: WorkerAction, host: &str) -> Result<()> {
         }
     };
 
-    println!("{}", format!("→ SSH to {}", host).cyan());
     ssh::execute_remote_command_streaming(host, &command)?;
     Ok(())
 }
@@ -76,7 +74,6 @@ fn handle_git(action: GitAction, host: &str) -> Result<()> {
         }
     };
 
-    println!("{}", format!("→ SSH to {}", host).cyan());
     ssh::execute_remote_command_streaming(host, &command)?;
     Ok(())
 }
@@ -84,7 +81,6 @@ fn handle_git(action: GitAction, host: &str) -> Result<()> {
 fn handle_status(host: &str) -> Result<()> {
     let command = "cd ~/Projects/llama-orch && ./target/release/llorch-pool status";
 
-    println!("{}", format!("→ SSH to {}", host).cyan());
     ssh::execute_remote_command_streaming(host, command)?;
     Ok(())
 }

@@ -12,3 +12,5 @@ path = "src/main.rs"
 clap = { version = "4.5", features = ["derive"] }
 anyhow = "1.0"
 colored = "2.0"
+ssh2 = { workspace = true }
+indicatif = { workspace = true }

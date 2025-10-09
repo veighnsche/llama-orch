@@ -1,10 +1,12 @@
 //! Model management commands
 //!
 //! Created by: TEAM-022
+//! Refactored by: TEAM-022 (using indicatif for progress)
 
 use crate::cli::ModelsAction;
 use anyhow::Result;
 use colored::Colorize;
+use indicatif::{ProgressBar, ProgressStyle};
 use pool_core::catalog::{ModelCatalog, ModelEntry};
 use std::path::PathBuf;
 
@@ -44,7 +46,11 @@ fn download(model_id: String) -> Result<()> {
         (repo, model.name.clone(), model.path.clone())
     };
 
-    println!("{}", format!("📥 Downloading {} from {}", model_name, repo).cyan());
+    // Create progress spinner
+    let spinner = ProgressBar::new_spinner();
+    spinner.set_style(ProgressStyle::default_spinner().template("{spinner:.cyan} {msg}").unwrap());
+    spinner.set_message(format!("📥 Downloading {} from {}", model_name, repo));
+
     println!("   Target: {}", model_path.display());
 
     // Create target directory
@@ -63,6 +69,8 @@ fn download(model_id: String) -> Result<()> {
             model_path.to_str().unwrap(),
         ])
         .status()?;
+
+    spinner.finish_and_clear();
 
     if !status.success() {
         anyhow::bail!("Download failed for {}", model_id);

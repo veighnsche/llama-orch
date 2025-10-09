@@ -1,12 +1,14 @@
 //! Worker management commands
 //!
 //! Created by: TEAM-022
+//! Refactored by: TEAM-022 (using daemonize and sysinfo)
 
 use crate::cli::WorkerAction;
 use anyhow::Result;
 use colored::Colorize;
 use pool_core::catalog::ModelCatalog;
 use std::path::PathBuf;
+use sysinfo::System;
 
 pub fn handle(action: WorkerAction) -> Result<()> {
     match action {
@@ -77,19 +79,6 @@ fn spawn(backend: String, model_id: String, gpu: u32) -> Result<()> {
         cmd.args(["--gpu", &gpu.to_string()]);
     }
 
-    // Spawn as background process
-    #[cfg(unix)]
-    {
-        use std::os::unix::process::CommandExt;
-        unsafe {
-            cmd.pre_exec(|| {
-                // Create new session to detach from terminal
-                nix::libc::setsid();
-                Ok(())
-            });
-        }
-    }
-
     // Redirect stdout/stderr to log file
     let log_path = format!(".runtime/workers/{}.log", worker_id);
     std::fs::create_dir_all(".runtime/workers")?;
@@ -97,6 +86,16 @@ fn spawn(backend: String, model_id: String, gpu: u32) -> Result<()> {
     cmd.stdout(log_file.try_clone()?);
     cmd.stderr(log_file);
 
+    // Use daemonize for proper daemon creation
+    let daemon = daemonize::Daemonize::new()
+        .pid_file(format!(".runtime/workers/{}.pid", worker_id))
+        .working_directory(std::env::current_dir()?)
+        .umask(0o027);
+
+    // Fork and daemonize
+    daemon.start()?;
+
+    // In the daemon process, spawn the worker
     let child = cmd.spawn()?;
 
     println!("{}", format!("✅ Worker spawned (PID: {})", child.id()).green());
@@ -153,18 +152,22 @@ fn list() -> Result<()> {
         return Ok(());
     }
 
+    // Use sysinfo to get process information
+    let sys = System::new_all();
+
     println!();
     println!("{}", "Running Workers".bold());
-    println!("{}", "=".repeat(80));
+    println!("{}", "=".repeat(90));
     println!(
-        "{:<20} {:<10} {:<15} {:<10} {:<10}",
+        "{:<20} {:<10} {:<15} {:<10} {:<10} {:<10}",
         "Worker ID".bold(),
         "PID".bold(),
         "Model".bold(),
         "Backend".bold(),
-        "Port".bold()
+        "Port".bold(),
+        "Memory".bold()
     );
-    println!("{}", "-".repeat(80));
+    println!("{}", "-".repeat(90));
 
     for entry in std::fs::read_dir(&workers_dir)? {
         let entry = entry?;
@@ -180,18 +183,25 @@ fn list() -> Result<()> {
             let backend = info["backend"].as_str().unwrap_or("unknown");
             let port = info["port"].as_u64().unwrap_or(0);
 
-            // Check if process is still running
-            let running = is_process_running(pid as u32);
-            let status = if running { "✅" } else { "❌" };
+            // Use sysinfo to check if process is running and get memory
+            let pid_obj = sysinfo::Pid::from_u32(pid as u32);
+            let (status, memory) = if let Some(process) = sys.process(pid_obj) {
+                let mem_mb = process.memory() / 1024 / 1024;
+                ("✅".green(), format!("{} MB", mem_mb))
+            } else {
+                ("❌".red(), "-".to_string())
+            };
 
             println!(
-                "{:<20} {:<10} {:<15} {:<10} {:<10} {}",
-                worker_id, pid, model_id, backend, port, status
+                "{:<20} {:<10} {:<15} {:<10} {:<10} {:<10}",
+                worker_id, pid, model_id, backend, port, memory
             );
+            print!("   Status: {}", status);
+            println!();
         }
     }
 
-    println!("{}", "=".repeat(80));
+    println!("{}", "=".repeat(90));
     println!();
 
     Ok(())
@@ -206,46 +216,41 @@ fn stop(worker_id: String) -> Result<()> {
 
     let content = std::fs::read_to_string(&info_path)?;
     let info: serde_json::Value = serde_json::from_str(&content)?;
-    let pid = info["pid"].as_u64().unwrap_or(0) as i32;
+    let pid = info["pid"].as_u64().unwrap_or(0);
 
     println!("🛑 Stopping worker {} (PID: {})", worker_id, pid);
 
-    // Send SIGTERM
-    #[cfg(unix)]
-    {
-        use nix::sys::signal::{kill, Signal};
-        use nix::unistd::Pid;
+    // Use sysinfo to kill the process
+    let mut sys = System::new_all();
 
-        kill(Pid::from_raw(pid), Signal::SIGTERM)?;
-    }
-
-    // Wait a bit for graceful shutdown
-    std::thread::sleep(std::time::Duration::from_secs(2));
-
-    // Check if still running
-    if is_process_running(pid as u32) {
-        println!("   Worker still running, sending SIGKILL");
-        #[cfg(unix)]
-        {
-            use nix::sys::signal::{kill, Signal};
-            use nix::unistd::Pid;
-            kill(Pid::from_raw(pid), Signal::SIGKILL)?;
+    let pid_obj = sysinfo::Pid::from_u32(pid as u32);
+    if let Some(process) = sys.process(pid_obj) {
+        // Try graceful shutdown first
+        if !process.kill() {
+            anyhow::bail!("Failed to kill process {}", pid);
         }
+
+        // Wait a bit for graceful shutdown
+        std::thread::sleep(std::time::Duration::from_secs(2));
+
+        // Check if still running
+        sys.refresh_processes();
+        if sys.process(pid_obj).is_some() {
+            println!("   Worker still running, forcing kill");
+            if let Some(proc) = sys.process(pid_obj) {
+                proc.kill();
+            }
+        }
+    } else {
+        println!("   Process not found (may have already exited)");
     }
 
-    // Remove worker info
+    // Remove worker info and PID file
     std::fs::remove_file(&info_path)?;
+    let pid_file = format!(".runtime/workers/{}.pid", worker_id);
+    let _ = std::fs::remove_file(pid_file); // Ignore error if doesn't exist
 
     println!("{}", format!("✅ Worker {} stopped", worker_id).green());
 
     Ok(())
-}
-
-#[cfg(unix)]
-fn is_process_running(pid: u32) -> bool {
-    use nix::sys::signal::kill;
-    use nix::unistd::Pid;
-
-    // Signal 0 is used to check if process exists
-    kill(Pid::from_raw(pid as i32), None).is_ok()
 }
