@@ -100,36 +100,51 @@ impl LlamaModel {
     /// Forward pass using Llama's natural interface
     ///
     /// TEAM-017: Uses position and mutable cache
+    /// TEAM-018: Added detailed error logging
     pub fn forward(&mut self, input_ids: &Tensor, position: usize) -> Result<Tensor> {
-        tracing::debug!(
+        // Log input details
+        tracing::info!(
             position = position,
             input_shape = ?input_ids.dims(),
             input_device = ?input_ids.device(),
+            input_dtype = ?input_ids.dtype(),
             "Llama forward pass starting"
         );
         
-        let result = self.model
-            .forward(input_ids, position, &mut self.cache)
-            .map_err(|e| {
+        // Attempt forward pass with detailed error capture
+        match self.model.forward(input_ids, position, &mut self.cache) {
+            Ok(logits) => {
+                tracing::info!(
+                    output_shape = ?logits.dims(),
+                    output_device = ?logits.device(),
+                    output_dtype = ?logits.dtype(),
+                    "Llama forward pass completed successfully"
+                );
+                Ok(logits)
+            }
+            Err(e) => {
+                // Log the full error chain
                 tracing::error!(
                     error = %e,
+                    error_debug = ?e,
                     position = position,
                     input_shape = ?input_ids.dims(),
-                    "Llama forward pass failed with Candle error"
+                    input_device = ?input_ids.device(),
+                    "Llama forward pass failed - Candle error details"
                 );
-                e
-            })
-            .context("Llama forward pass failed");
-        
-        if let Ok(ref logits) = result {
-            tracing::debug!(
-                output_shape = ?logits.dims(),
-                output_device = ?logits.device(),
-                "Llama forward pass completed"
-            );
+                
+                // Check for common issues
+                if format!("{:?}", e).contains("shape") {
+                    tracing::error!("Shape mismatch detected in forward pass");
+                } else if format!("{:?}", e).contains("device") {
+                    tracing::error!("Device mismatch detected in forward pass");
+                } else if format!("{:?}", e).contains("dtype") {
+                    tracing::error!("DType mismatch detected in forward pass");
+                }
+                
+                Err(e).context("Llama forward pass failed")
+            }
         }
-        
-        result
     }
 
     /// Get EOS token ID from config
