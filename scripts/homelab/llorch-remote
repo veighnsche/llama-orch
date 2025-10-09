@@ -184,29 +184,28 @@ case "$BACKEND" in
     *)
         log_error "Invalid backend: $BACKEND"
         log_error "Valid backends: cpu, cuda, metal"
-        exit 1
         ;;
 esac
 
 # Action implementations
 action_clone() {
-    log_section "📥 Cloning Repository"
+    log_section "📦 Cloning Repository"
     log_info "Host: $HOST"
-    log_info "Repo: $REPO_URL"
+    log_info "URL: $REPO_URL"
     log_info "Path: $REMOTE_PATH"
     
-    ssh_exec "$HOST" "git clone $REPO_URL $REMOTE_PATH"
+    ssh_exec "$HOST" "git clone --recurse-submodules $REPO_URL $REMOTE_PATH"
     
-    log_success "Repository cloned successfully"
+    log_success "Repository cloned successfully (including submodules)"
 }
 
 action_pull() {
     log_section "🔄 Pulling Latest Changes"
     log_info "Host: $HOST"
     
-    ssh_exec "$HOST" "cd $REMOTE_PATH && git fetch --all && git reset --hard origin/main"
+    ssh_exec "$HOST" "cd $REMOTE_PATH && git fetch --all && git reset --hard origin/main && git submodule update --init --recursive"
     
-    log_success "Repository updated to latest main"
+    log_success "Repository updated to latest main (including submodules)"
 }
 
 action_status() {
