@@ -368,8 +368,9 @@ echo "Starting $BACKEND worker..."
 WORKER_PID=\$!
 echo "Worker PID: \$WORKER_PID"
 
-# Wait for worker to be ready
-sleep 3
+# Wait for worker to be ready (longer for model loading)
+echo "Waiting for worker to load model..."
+sleep 10
 
 # Send inference request
 echo ""
