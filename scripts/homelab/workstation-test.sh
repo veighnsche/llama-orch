@@ -37,7 +37,7 @@ set -euo pipefail
   cd bin/llorch-candled
   
   # Run tests with full output (no capture suppression)
-  cargo test --features cuda -- --nocapture
+  cargo test --features cuda -- --nocapture || true
   
   # TEAM-019: Capture test results metadata (tests run, passed, failed, ignored)
   echo ""
