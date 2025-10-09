@@ -357,39 +357,39 @@ if [[ ! -d "\$MODEL_FULL_PATH" ]]; then
     exit 1
 fi
 
-# Start the worker in background
+# Start the worker in background with output redirection
 echo "Starting $BACKEND worker..."
 ../../target/release/llorch-${BACKEND}-candled \\
     --worker-id test-inference \\
     --model "\$MODEL_FULL_PATH" \\
     --port 9876 \\
-    --callback-url http://localhost:9999 &
+    --callback-url http://localhost:9999 > /tmp/worker.log 2>&1 &
 
 WORKER_PID=\$!
 echo "Worker PID: \$WORKER_PID"
 
 # Wait for worker to be ready (longer for model loading)
 echo "Waiting for worker to load model..."
-sleep 15
-
-# Check if worker is still running
-if ! kill -0 \$WORKER_PID 2>/dev/null; then
-    echo "❌ Worker process died"
-    exit 1
-fi
+for i in {1..30}; do
+    sleep 1
+    if curl -s http://localhost:9876/health > /dev/null 2>&1; then
+        echo "Worker is ready!"
+        break
+    fi
+    if ! kill -0 \$WORKER_PID 2>/dev/null; then
+        echo "❌ Worker process died"
+        echo "Last 20 lines of worker log:"
+        tail -20 /tmp/worker.log
+        exit 1
+    fi
+done
 
 # Send inference request
 echo ""
 echo "Sending inference request..."
 RESPONSE=\$(curl -s -X POST http://localhost:9876/v1/execute \\
     -H "Content-Type: application/json" \\
-    -d '{
-        "job_id": "test-story",
-        "prompt": "Once upon a time",
-        "max_tokens": 50,
-        "temperature": 0.7,
-        "seed": 42
-    }' || echo "")
+    -d '{"job_id":"test-story","prompt":"Once upon a time","max_tokens":50,"temperature":0.7,"seed":42}')
 
 # Kill worker
 kill \$WORKER_PID 2>/dev/null || true
