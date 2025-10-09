@@ -98,9 +98,35 @@ impl LlamaModel {
     ///
     /// TEAM-017: Uses position and mutable cache
     pub fn forward(&mut self, input_ids: &Tensor, position: usize) -> Result<Tensor> {
-        self.model
+        tracing::debug!(
+            position = position,
+            input_shape = ?input_ids.dims(),
+            input_device = ?input_ids.device(),
+            "Llama forward pass starting"
+        );
+        
+        let result = self.model
             .forward(input_ids, position, &mut self.cache)
-            .context("Llama forward pass failed")
+            .map_err(|e| {
+                tracing::error!(
+                    error = %e,
+                    position = position,
+                    input_shape = ?input_ids.dims(),
+                    "Llama forward pass failed with Candle error"
+                );
+                e
+            })
+            .context("Llama forward pass failed");
+        
+        if let Ok(ref logits) = result {
+            tracing::debug!(
+                output_shape = ?logits.dims(),
+                output_device = ?logits.device(),
+                "Llama forward pass completed"
+            );
+        }
+        
+        result
     }
 
     /// Get EOS token ID from config
