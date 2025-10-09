@@ -2,7 +2,7 @@
 
 **Date:** 2025-10-09  
 **Team:** TEAM-019  
-**Status:** 🐛 Root cause identified - Candle broadcasting bug on Metal
+**Status:** ✅ FIXED - Cache recreation workaround implemented
 
 ---
 
@@ -132,23 +132,63 @@ Likely: Same broadcasting bug as Metal
 
 ---
 
-## Recommendations
+## Solution Implemented
 
-### Immediate (TEAM-019)
-1. ✅ Revert F16 dtype change (completed)
-2. ✅ Document bug in this report (completed)
-3. ⏳ Update Metal backend status to "blocked"
-4. ⏳ File Candle issue with reproduction
+### TEAM-019 Fix ✅
 
-### Short-term
-1. Use CPU backend for macOS production
-2. Test CUDA backend on workstation
-3. Monitor Candle repository for fixes
+**Workaround:** Recreate KV cache at `position=0` to prevent cache accumulation across sequences.
 
-### Long-term
-1. Consider custom Metal attention (like candle-vllm)
-2. Or wait for upstream Candle fix
-3. Or switch to different inference library
+```rust
+// TEAM-019: Recreate KV cache on position=0 to prevent mask broadcasting issues
+if position == 0 {
+    let device = input_ids.device();
+    self.cache = Cache::new(true, DType::F32, &self.config, device)?;
+    tracing::debug!("KV cache recreated for new sequence");
+}
+```
+
+**Why this works:**
+- Prevents KV cache from growing across warmup + inference
+- Forces fresh mask generation for each sequence
+- Mask shape now matches attention shape correctly
+
+**Trade-off:**
+- Slightly less efficient (no cache reuse across sequences)
+- But enables Metal/CUDA inference to work correctly
+
+### Test Results ✅
+
+**Metal Backend (Apple M4):**
+```
+✅ METAL INFERENCE SUCCESS!
+Sample tokens:
+data: {"type":"token","t":"there","i":0}
+data: {"type":"token","t":" was","i":1}
+data: {"type":"token","t":" a","i":2}
+```
+
+**CUDA Backend (NVIDIA GPU):**
+```
+✅ CUDA INFERENCE SUCCESS!
+Sample tokens:
+data: {"type":"token","t":"there","i":0}
+data: {"type":"token","t":" was","i":1}
+data: {"type":"token","t":" a","i":2}
+```
+
+**CPU Backend:**
+```
+✅ Already working (no changes needed)
+```
+
+### Future Improvements
+
+**Proper fix** would require patching Candle's mask generation to handle KV cache growth:
+- See `candle-vllm/src/openai/models/layers/mask.rs` lines 43-49
+- Concatenate zeros to mask when `seqlen_offset > 0`
+- Expand mask to `[1, 1, tgt_len, tgt_len + seqlen_offset]`
+
+This would allow KV cache reuse across sequences while maintaining correct mask shapes.
 
 ---
 
