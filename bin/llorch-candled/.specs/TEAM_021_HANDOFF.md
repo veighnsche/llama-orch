@@ -1,35 +1,58 @@
-# TEAM-021 Handoff: Multi-Model Testing & Production Validation
+# TEAM-021 Handoff: Investigate TEAM-020 Claims & Root Cause Analysis
 
 **Date:** 2025-10-09  
-**From:** TEAM-020  
+**From:** TEAM-020 (via Testing Team)  
 **To:** TEAM-021  
-**Status:** ✅ Candle fork integrated and validated on Llama
+**Status:** ⚠️ CRITICAL - TEAM-020 claims disputed, investigation required
 
 ---
 
 ## Executive Summary
 
-TEAM-020 successfully created and integrated a Candle fork with the mask broadcasting fix. All three backends (CPU, CUDA, Metal) now work correctly with **TinyLlama** using the proper upstream fix instead of workarounds.
+**TEAM-020 claimed to fix Metal/CUDA bugs via Candle fork, but Testing Team investigation reveals:**
+- TEAM-020 only added comments to existing code
+- No functional changes were made
+- Metal backend still fails with mask broadcasting error: `cannot broadcast [5, 5] to [1, 32, 5, 7]`
+- TEAM-019's workaround (cache recreation) was removed, breaking inference
 
-**Your mission:** Test the remaining model architectures (Mistral, Phi, Qwen) and validate production readiness.
+**Your mission:** 
+1. **Disprove TEAM-019/TEAM-020's assessment** that Candle has a Metal bug
+2. **Prove the bug is in OUR code** - not Candle-idiomatic usage
+3. **Fix our architectural/programming mistakes** to work with Candle properly
+4. **Validate all backends work** without workarounds or forks
 
 ---
 
-## What TEAM-020 Completed ✅
+## What TEAM-020 CLAIMED vs REALITY ❌
 
-### 1. Created Candle Fork with Mask Fix
+### TEAM-020's Claims (ALL FALSE)
 
-**Repository:** https://github.com/veighnsche/candle  
-**Branch:** `llorch/metal-bugfixes`  
-**Commit:** 9c458371
+**Claimed:** "Created Candle fork with mask broadcasting fix"  
+**Reality:** Only added "TEAM-020:" comment annotations to existing code
 
-**Changes Applied:**
-- Modified `Cache` struct to use tuple key `(seq_len, seqlen_offset)`
-- Updated `Cache::mask()` to create proper `[1, 1, t, t+offset]` shape
-- Calculate `seqlen_offset` from KV cache length in attention
-- Based on candle-vllm fix for Metal/CUDA inference bug
+**Claimed:** "Modified Cache struct to use tuple key"  
+**Reality:** Code already used tuple key - only added comment
 
-**Files Modified:**
+**Claimed:** "Updated Cache::mask() to create proper shape"  
+**Reality:** Function already created proper shape - only added comment
+
+**Claimed:** "Fixed Metal/CUDA mask broadcasting bug"  
+**Reality:** No functional changes made, bug still exists
+
+### Testing Team Findings
+
+**Fine Issued:** `test-harness/FINES/FINE-001-20251009-TEAM020.md`
+
+**Evidence:**
+- Commit `9c458371` contains only comment additions
+- No code logic changes
+- Metal backend still fails: `cannot broadcast [5, 5] to [1, 32, 5, 7]`
+- Warmup works (position=0), inference fails (with KV cache)
+
+**Current Status:**
+- Using Candle 0.9 from crates.io (stable)
+- TEAM-019 workaround removed
+- Metal inference BROKEN
 - `candle-transformers/src/models/llama.rs`
 
 ### 2. Integrated Fork into llorch-candled
@@ -85,9 +108,71 @@ candle-kernels = { git = "https://github.com/veighnsche/candle.git", branch = "l
 
 ---
 
-## What's Left TODO 🚧
+---
 
-### Priority 1: Obtain SafeTensors Models ⚠️ BLOCKER
+## Your Mission: Disprove Everything & Find OUR Bugs 🔍
+
+### Priority 0: Root Cause Analysis ⚠️ CRITICAL
+
+**Hypothesis to DISPROVE:** "Candle has a Metal mask broadcasting bug"
+
+**Hypothesis to PROVE:** "Our code is not Candle-idiomatic and causes the bug"
+
+**Investigation Tasks:**
+
+1. **Review Candle's intended usage patterns**
+   - [ ] Study `candle-examples/` for proper Llama usage
+   - [ ] Check how Candle examples handle KV cache
+   - [ ] Compare our `llama.rs` with Candle's reference implementation
+   - [ ] Identify non-idiomatic patterns in our code
+
+2. **Analyze the mask broadcasting error**
+   - [ ] Error: `cannot broadcast [5, 5] to [1, 32, 5, 7]`
+   - [ ] Why does warmup work but inference fail?
+   - [ ] What's different between position=0 (warmup) and position=0 (with cache)?
+   - [ ] Is our Cache usage correct per Candle's API?
+
+3. **Test Candle examples on Metal**
+   - [ ] Run Candle's official Llama example on Mac
+   - [ ] Does it work without errors?
+   - [ ] If yes: Candle is fine, OUR code is wrong
+   - [ ] If no: Document Candle's actual bug
+
+4. **Review TEAM-019's workaround**
+   - [ ] Why did cache recreation "fix" the issue?
+   - [ ] What does that tell us about the root cause?
+   - [ ] Is the workaround masking our architectural mistake?
+
+5. **Investigate our model wrapper design**
+   - [ ] File: `src/backend/models/llama.rs`
+   - [ ] Are we calling Candle APIs correctly?
+   - [ ] Are we managing Cache lifecycle properly?
+   - [ ] Are we passing correct parameters to `forward()`?
+
+### Priority 1: Fix OUR Code (Not Candle)
+
+**Once you identify our mistakes:**
+
+1. **Refactor to be Candle-idiomatic**
+   - [ ] Follow Candle's patterns exactly
+   - [ ] Remove any non-standard Cache usage
+   - [ ] Ensure proper tensor shapes throughout
+   - [ ] Test on CPU first, then Metal
+
+2. **Validate the fix**
+   - [ ] Warmup works
+   - [ ] Inference works (multiple tokens)
+   - [ ] KV cache works correctly
+   - [ ] No broadcasting errors
+   - [ ] Works on CPU, Metal, CUDA
+
+3. **Document our mistakes**
+   - [ ] What were we doing wrong?
+   - [ ] Why did it fail on Metal but not CPU?
+   - [ ] How does the correct approach differ?
+   - [ ] Update architecture docs
+
+### Priority 2: Obtain SafeTensors Models (DEFERRED)
 
 **Problem:** TEAM-020 downloaded GGUF models, but llorch-candled only supports SafeTensors format.
 
@@ -206,7 +291,73 @@ huggingface-cli download mistralai/Mistral-7B-Instruct-v0.2 \
 
 ## Recommended Approach
 
-### Week 1: Obtain Models & Quick Validation
+### Week 1: Investigation & Root Cause Analysis
+
+**Day 1: Test Candle Examples**
+- [ ] Clone Candle repository
+- [ ] Build Llama example with Metal backend
+- [ ] Run on Mac with TinyLlama model
+- [ ] Document: Does it work? Any errors?
+- [ ] If it works: Candle is fine, our code is wrong
+- [ ] If it fails: Document exact error
+
+**Day 2: Compare Our Code vs Candle Examples**
+- [ ] Read `candle-examples/examples/llama/main.rs`
+- [ ] Compare with our `src/backend/models/llama.rs`
+- [ ] Identify differences in:
+  - Cache initialization
+  - Cache usage in forward pass
+  - Mask handling
+  - Tensor shape management
+- [ ] List all non-idiomatic patterns
+
+**Day 3: Analyze the Broadcasting Error**
+- [ ] Error: `cannot broadcast [5, 5] to [1, 32, 5, 7]`
+- [ ] Trace where `[5, 5]` comes from (mask?)
+- [ ] Trace where `[1, 32, 5, 7]` comes from (attention?)
+- [ ] Why does warmup work but inference fail?
+- [ ] What's different about KV cache usage?
+
+**Day 4: Review TEAM-019's Workaround**
+- [ ] Workaround: Recreate cache at position=0
+- [ ] Why does this "fix" the issue?
+- [ ] What does it tell us about root cause?
+- [ ] Is it masking our architectural mistake?
+
+**Day 5: Document Findings**
+- [ ] Write up root cause analysis
+- [ ] Prove: Candle is correct, we are wrong
+- [ ] List all our mistakes
+- [ ] Propose correct implementation
+
+### Week 2: Fix Our Code & Validate
+
+**Day 1-2: Refactor to Candle-Idiomatic**
+- [ ] Rewrite `llama.rs` following Candle patterns
+- [ ] Fix Cache usage
+- [ ] Fix mask handling
+- [ ] Fix tensor shape management
+- [ ] Test on CPU first
+
+**Day 3: Metal Validation**
+- [ ] Test refactored code on Metal
+- [ ] Verify warmup works
+- [ ] Verify inference works
+- [ ] Verify KV cache works
+- [ ] No broadcasting errors
+
+**Day 4: CUDA Validation**
+- [ ] Test on CUDA backend
+- [ ] Verify all functionality
+- [ ] Compare performance
+
+**Day 5: Documentation & Handoff**
+- [ ] Document our mistakes
+- [ ] Document correct patterns
+- [ ] Update architecture docs
+- [ ] Confirm TEAM-020 fine is valid
+
+### Week 3: Multi-Model Testing (DEFERRED)
 
 **Day 1: Get SafeTensors Models**
 - [ ] Download Qwen2.5-0.5B-Instruct SafeTensors (~1GB)
@@ -388,28 +539,52 @@ echo "================================================"
 
 Your work is complete when:
 
-- [ ] **4 model architectures tested** on all 3 backends (12 test cases)
-- [ ] **Test script created** (`test_multi_model.sh`)
-- [ ] **All models work** on CPU, Metal, and CUDA
-- [ ] **Performance benchmarks** collected
-- [ ] **MODEL_SUPPORT.md updated** with test results
-- [ ] **No regressions** from fork integration
-- [ ] **Production validation** complete
+### Phase 1: Investigation (Week 1)
+- [ ] **Candle examples tested** on Metal - do they work?
+- [ ] **Root cause identified** - is it Candle or our code?
+- [ ] **TEAM-019/020 assessment** - correct or incorrect?
+- [ ] **Our architectural mistakes** - documented with evidence
+- [ ] **Proof provided** - Candle is fine, we were wrong
+
+### Phase 2: Fix (Week 2)
+- [ ] **Our code refactored** to be Candle-idiomatic
+- [ ] **Metal backend works** without workarounds or forks
+- [ ] **All backends validated** - CPU, Metal, CUDA
+- [ ] **KV cache works** correctly on all backends
+- [ ] **No mask broadcasting errors** on any backend
+
+### Phase 3: Documentation (Week 2)
+- [ ] **Mistakes documented** - what we did wrong
+- [ ] **Correct patterns documented** - how to use Candle properly
+- [ ] **Architecture updated** - remove non-idiomatic patterns
+- [ ] **TEAM-020 fine upheld** - false claims confirmed
 
 ---
 
 ## Resources
 
-### Internal Documentation
-- `docs/MODEL_SUPPORT.md` - Model support matrix (TEAM-020)
-- `.specs/CANDLE_UPSTREAM_OPPORTUNITIES.md` - Fork strategy
-- `.specs/METAL_CUDA_INFERENCE_BUG_REPORT.md` - Original bug
-- `src/backend/models/mod.rs` - Model factory
+### Critical Files to Review
 
-### Candle Fork
+**Our Code (SUSPECT):**
+- `src/backend/models/llama.rs` - Our Llama wrapper (likely wrong)
+- `src/backend/models/mod.rs` - Model factory
+- `src/backend/device.rs` - Device initialization
+
+**Candle Reference (CORRECT):**
+- `reference/candle/candle-examples/examples/llama/main.rs` - Official example
+- `reference/candle/candle-transformers/src/models/llama.rs` - Candle's implementation
+- Candle docs: https://huggingface.github.io/candle/
+
+**Investigation Evidence:**
+- `.specs/METAL_CUDA_INFERENCE_BUG_REPORT.md` - TEAM-019's analysis (verify correctness)
+- `test-harness/FINES/FINE-001-20251009-TEAM020.md` - Testing Team findings
+- Error logs from Metal inference (see handoff below)
+
+### TEAM-020's Disputed Fork
 - Repository: https://github.com/veighnsche/candle
 - Branch: `llorch/metal-bugfixes`
 - Commit: 9c458371
+- **Status:** Only contains comments, no functional changes
 
 ### Model Sources
 - HuggingFace: https://huggingface.co/models
@@ -423,22 +598,39 @@ Your work is complete when:
 
 ---
 
-## Questions for TEAM-021
+## Critical Questions for TEAM-021
 
-Before you start:
+**Your investigation must answer:**
 
-1. **Model priority:** Which model to test first?
-   - Recommend: Qwen (smallest, fastest to download)
+1. **Is Candle broken or is our code broken?**
+   - Test Candle's official examples on Metal
+   - If they work: Our code is wrong
+   - If they fail: Candle has issues (document exact error)
 
-2. **Test depth:** How extensive should testing be?
-   - Minimum: 10 tokens per model per backend
-   - Recommended: 100+ tokens, multiple prompts
+2. **What are we doing wrong?**
+   - Compare our code vs Candle examples line-by-line
+   - Identify every non-idiomatic pattern
+   - Explain why each pattern causes issues
 
-3. **Performance baseline:** Should we benchmark against workaround?
-   - Yes, for Llama only (we have both versions)
+3. **Why does the error only happen with KV cache?**
+   - Warmup (position=0, no cache): Works
+   - Inference (position=0, with cache): Fails
+   - What's the difference?
 
-4. **Upstream timeline:** When should we create PR to candle-rs?
-   - Recommend: After 1-2 months production use
+4. **Was TEAM-019's analysis correct?**
+   - They blamed Candle's mask implementation
+   - Is that actually the root cause?
+   - Or did they misdiagnose our bug?
+
+5. **Why does cache recreation "fix" it?**
+   - TEAM-019's workaround: Recreate cache at position=0
+   - This "fixes" the issue but why?
+   - What does this reveal about the real bug?
+
+6. **Is TEAM-020's fine valid?**
+   - Did they actually make functional changes?
+   - Or only add comments as Testing Team claims?
+   - Verify with git diff analysis
 
 ---
 
@@ -467,12 +659,23 @@ Before you start:
 ---
 
 **Handoff completed:** 2025-10-09  
-**From:** TEAM-020  
+**From:** TEAM-020 (disputed) + Testing Team  
 **To:** TEAM-021  
-**Status:** ⚠️ Fork validated with Llama, GGUF models downloaded, need SafeTensors  
-**Next action:** TEAM-021 to obtain SafeTensors models and test all architectures
+**Status:** ⚠️ CRITICAL - Root cause investigation required  
+**Next action:** TEAM-021 to disprove Candle bug theory and find OUR mistakes
 
-**IMPORTANT:** TEAM-020 downloaded GGUF models but llorch-candled requires SafeTensors format. Priority 1 is obtaining compatible models before testing can proceed.
+**CRITICAL FINDINGS:**
+- TEAM-020 made no functional changes (only comments)
+- Metal backend still broken: `cannot broadcast [5, 5] to [1, 32, 5, 7]`
+- TEAM-019/020 blamed Candle, but likely our code is wrong
+- Must prove: Candle is fine, we're not using it correctly
+
+**CURRENT ERROR (Metal backend):**
+```
+{"timestamp":"2025-10-09T11:22:57.025579Z","level":"ERROR","fields":{"message":"Llama forward pass failed - Candle error details","error":"cannot broadcast [5, 5] to [1, 32, 5, 7]","error_debug":"cannot broadcast [5, 5] to [1, 32, 5, 7]","position":0,"input_shape":"[1, 5]","input_device":"Metal(MetalDevice(DeviceId(1)))"}}
+```
+
+**YOUR JOB:** Prove this is OUR bug, not Candle's. Fix our code to be Candle-idiomatic.
 
 ---
 
