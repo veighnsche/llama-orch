@@ -6,6 +6,7 @@
 //! - GET /v1/workers/list - List all workers
 //!
 //! Created by: TEAM-026
+//! Modified by: TEAM-027
 
 use crate::registry::{WorkerInfo, WorkerRegistry, WorkerState};
 use axum::{extract::State, http::StatusCode, Json};
@@ -84,18 +85,38 @@ pub async fn handle_spawn_worker(
         "Spawning worker"
     );
 
-    // Generate worker ID
+    // TEAM-027: Generate worker ID
     let worker_id = format!("worker-{}", Uuid::new_v4());
 
-    // Determine port (simple allocation: start at 8081)
-    // TODO: Proper port allocation
+    // TEAM-027: Determine port (simple allocation: start at 8081)
+    // For MVP, use simple sequential allocation
+    // Production should use proper port allocation or OS-assigned ports
     let workers = registry.list().await;
     let port = 8081 + workers.len() as u16;
-    let url = format!("http://localhost:{}", port);
+    
+    // TEAM-027: Get hostname for URL
+    let hostname = hostname::get()
+        .ok()
+        .and_then(|h| h.into_string().ok())
+        .unwrap_or_else(|| "localhost".to_string());
+    let url = format!("http://{}:{}", hostname, port);
+
+    // TEAM-027: Get worker binary path (same directory as rbee-hive)
+    let worker_binary = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.join("llm-worker-rbee")))
+        .unwrap_or_else(|| std::path::PathBuf::from("llm-worker-rbee"));
+
+    // TEAM-027: Generate API key
+    let api_key = format!("key-{}", Uuid::new_v4());
+
+    // TEAM-027: Callback URL (this server's address)
+    // For MVP, assume we're listening on the same hostname
+    let callback_url = format!("http://{}:8080/v1/workers/ready", hostname);
 
     // Spawn worker process
-    // Per test-001-mvp.md lines 108-115
-    let spawn_result = tokio::process::Command::new("llm-worker-rbee")
+    // Per test-001-mvp.md lines 136-143
+    let spawn_result = tokio::process::Command::new(worker_binary)
         .arg("--worker-id")
         .arg(&worker_id)
         .arg("--model")
@@ -107,7 +128,9 @@ pub async fn handle_spawn_worker(
         .arg("--port")
         .arg(port.to_string())
         .arg("--api-key")
-        .arg("dummy-key") // TODO: Generate API key
+        .arg(&api_key)
+        .arg("--callback-url")
+        .arg(&callback_url)
         .spawn();
 
     match spawn_result {

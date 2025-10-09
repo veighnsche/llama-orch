@@ -10,13 +10,19 @@
 //! Location: Runs on pool machines
 //!
 //! Created by: TEAM-022
+//! Modified by: TEAM-027
 
 mod cli;
 mod commands;
+mod http;
+mod monitor;
+mod registry;
+mod timeout;
 
 use anyhow::Result;
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let cli = cli::Cli::parse_args();
-    cli::handle_command(cli)
+    cli::handle_command(cli).await
 }

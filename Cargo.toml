@@ -27,10 +27,10 @@ members = [
     "bin/shared-crates/narration-core",
     "bin/shared-crates/narration-core/bdd",
     "bin/shared-crates/narration-macros",
-    "bin/shared-crates/pool-core",         # TEAM-022: Pool management shared types
-    "bin/shared-crates/pool-registry-types",
+    "bin/shared-crates/hive-core",         # TEAM-027: Renamed from pool-core - Hive management shared types
     "bin/shared-crates/secrets-management",
     "bin/shared-crates/secrets-management/bdd",
+    "bin/shared-crates/worker-registry",   # TEAM-027: Shared worker registry for queen-rbee and rbee-keeper
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # CONSUMER LIBRARIES — External SDKs

@@ -6,7 +6,7 @@
 use crate::cli::WorkerAction;
 use anyhow::Result;
 use colored::Colorize;
-use pool_core::catalog::ModelCatalog;
+use hive_core::catalog::ModelCatalog;
 use std::path::PathBuf;
 use sysinfo::System;
 

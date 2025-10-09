@@ -1,6 +1,7 @@
 //! CLI argument parsing
 //!
 //! Created by: TEAM-022
+//! Modified by: TEAM-027
 
 use clap::{Parser, Subcommand};
 
@@ -20,15 +21,19 @@ pub enum Commands {
         action: PoolAction,
     },
     /// Test inference on a worker (TEAM-024)
+    /// TEAM-027: Updated for MVP cross-node inference per test-001-mvp.md
     Infer {
-        /// Worker host:port (e.g., localhost:8080)
+        /// Node name (e.g., "mac", "workstation")
         #[arg(long)]
-        worker: String,
+        node: String,
+        /// Model reference (e.g., "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF")
+        #[arg(long)]
+        model: String,
         /// Prompt text
         #[arg(long)]
         prompt: String,
         /// Maximum tokens to generate
-        #[arg(long, default_value = "50")]
+        #[arg(long, default_value = "20")]
         max_tokens: u32,
         /// Temperature (0.0-2.0)
         #[arg(long, default_value = "0.7")]
@@ -118,11 +123,11 @@ impl Cli {
     }
 }
 
-pub fn handle_command(cli: Cli) -> anyhow::Result<()> {
+pub async fn handle_command(cli: Cli) -> anyhow::Result<()> {
     match cli.command {
         Commands::Pool { action } => crate::commands::pool::handle(action),
-        Commands::Infer { worker, prompt, max_tokens, temperature } => {
-            crate::commands::infer::handle(worker, prompt, max_tokens, temperature)
+        Commands::Infer { node, model, prompt, max_tokens, temperature } => {
+            crate::commands::infer::handle(node, model, prompt, max_tokens, temperature).await
         }
     }
 }

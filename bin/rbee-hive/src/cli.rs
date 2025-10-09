@@ -1,6 +1,7 @@
 //! CLI argument parsing
 //!
 //! Created by: TEAM-022
+//! Modified by: TEAM-027
 
 use clap::{Parser, Subcommand};
 
@@ -26,6 +27,12 @@ pub enum Commands {
     },
     /// Show pool status
     Status,
+    /// Start HTTP daemon (pool manager)
+    /// TEAM-027: Per test-001-mvp.md Phase 2
+    Daemon {
+        #[arg(long, default_value = "0.0.0.0:8080")]
+        addr: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -72,10 +79,11 @@ impl Cli {
     }
 }
 
-pub fn handle_command(cli: Cli) -> anyhow::Result<()> {
+pub async fn handle_command(cli: Cli) -> anyhow::Result<()> {
     match cli.command {
         Commands::Models { action } => crate::commands::models::handle(action),
         Commands::Worker { action } => crate::commands::worker::handle(action),
         Commands::Status => crate::commands::status::handle(),
+        Commands::Daemon { addr } => crate::commands::daemon::handle(addr).await,
     }
 }

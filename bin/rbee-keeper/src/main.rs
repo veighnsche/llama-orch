@@ -18,14 +18,17 @@
 //! Protocol: HTTP
 //!
 //! Created by: TEAM-022
+//! Modified by: TEAM-027
 
 mod cli;
 mod commands;
+mod pool_client;
 mod ssh;
 
 use anyhow::Result;
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let cli = cli::Cli::parse_args();
-    cli::handle_command(cli)
+    cli::handle_command(cli).await
 }

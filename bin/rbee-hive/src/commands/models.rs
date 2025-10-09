@@ -7,7 +7,7 @@ use crate::cli::ModelsAction;
 use anyhow::Result;
 use colored::Colorize;
 use indicatif::{ProgressBar, ProgressStyle};
-use pool_core::catalog::{ModelCatalog, ModelEntry};
+use hive_core::catalog::{ModelCatalog, ModelEntry};
 use std::path::PathBuf;
 
 pub fn handle(action: ModelsAction) -> Result<()> {

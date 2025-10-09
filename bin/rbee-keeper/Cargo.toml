@@ -22,3 +22,10 @@ indicatif = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 chrono = { workspace = true }
+# TEAM-027: HTTP client for pool manager communication
+reqwest = { workspace = true, features = ["json", "stream"] }
+tokio = { workspace = true, features = ["full"] }
+futures = { workspace = true }
+dirs = "5.0"
+# TEAM-027: Shared worker registry
+worker-registry = { path = "../shared-crates/worker-registry" }
