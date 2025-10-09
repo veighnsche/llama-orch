@@ -19,6 +19,21 @@ pub enum Commands {
         #[command(subcommand)]
         action: PoolAction,
     },
+    /// Test inference on a worker (TEAM-024)
+    Infer {
+        /// Worker host:port (e.g., localhost:8080)
+        #[arg(long)]
+        worker: String,
+        /// Prompt text
+        #[arg(long)]
+        prompt: String,
+        /// Maximum tokens to generate
+        #[arg(long, default_value = "50")]
+        max_tokens: u32,
+        /// Temperature (0.0-2.0)
+        #[arg(long, default_value = "0.7")]
+        temperature: f32,
+    },
 }
 
 #[derive(Subcommand)]
@@ -106,5 +121,8 @@ impl Cli {
 pub fn handle_command(cli: Cli) -> anyhow::Result<()> {
     match cli.command {
         Commands::Pool { action } => crate::commands::pool::handle(action),
+        Commands::Infer { worker, prompt, max_tokens, temperature } => {
+            crate::commands::infer::handle(worker, prompt, max_tokens, temperature)
+        }
     }
 }

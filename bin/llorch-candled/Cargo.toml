@@ -6,6 +6,13 @@ authors = ["TEAM-000 Foundation"]
 description = "Candle-based Llama-2 inference worker daemon with CUDA acceleration"
 license = "GPL-3.0-or-later"
 
+# TEAM-024 CLARIFICATION:
+# This is the WORKER daemon (HTTP server)
+# Binary name: `llorch-candled` (and backend-specific variants)
+# Purpose: Loads ONE model, executes inference, streams tokens via SSE
+# Protocol: HTTP (listens on assigned port)
+# Spawned by: `llorch-pool` (pool manager CLI)
+
 [lints.clippy]
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # CLIPPY LINTS — Strict quality enforcement for inference engine

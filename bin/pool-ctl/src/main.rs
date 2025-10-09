@@ -1,5 +1,14 @@
 //! Pool Control CLI - Local pool management
 //!
+//! TEAM-024 CLARIFICATION:
+//! This is `llorch-pool` - the LOCAL pool management CLI
+//! It runs ON the pool machine (mac.home.arpa, workstation.home.arpa, etc.)
+//! Called by `llorch` (remote CLI) via SSH
+//!
+//! Binary: `llorch-pool` (this file)
+//! Purpose: Local pool operations (models, workers, status)
+//! Location: Runs on pool machines
+//!
 //! Created by: TEAM-022
 
 mod cli;

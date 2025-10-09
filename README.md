@@ -14,31 +14,40 @@ llama-orch is a three-binary system that provides test reproducibility, flexible
 5. **Smart/Dumb Architecture**: Clean separation between decisions and execution
 6. **Process Isolation**: Workers run in separate processes with isolated memory contexts
 **Note**: Determinism is a testing tool, not a product guarantee. LLMs cannot guarantee deterministic behavior due to model architecture and hardware variations.
-### The Three-Binary System
-llama-orch consists of three separate binaries that communicate via HTTP:
-1. **`orchestratord`** — The Brain (makes ALL intelligent decisions)
-2. **`pool-managerd`** — Control Plane with Levers (executes commands, reports state)
-3. **Workers** — Dumb Executors (load one model, execute inference)
-   - `worker-orcd` — Bespoke NVIDIA CUDA worker (VRAM-only)
-   - `worker-aarmd` — Apple ARM worker (unified memory) [future]
-   - Extensible via worker adapter pattern
+### The Two-Daemon System (SIMPLIFIED 2025-10-09)
+llama-orch consists of two daemon binaries plus two CLI tools:
+
+**Daemons (HTTP):**
+1. **`orchestratord`** — The Brain (makes ALL intelligent decisions) [M1]
+2. **`llorch-candled`** — Workers (load one model, execute inference) [M0 ✅]
+   - Variants: llorch-cpu-candled, llorch-cuda-candled, llorch-metal-candled
+   - Future: worker-orcd (bespoke NVIDIA), worker-aarmd (Apple ARM)
+
+**CLI Tools (SSH/Local):**
+1. **`llorch`** — Remote control via SSH (operator tool) [M0 ✅]
+2. **`llorch-pool`** — Local pool management (replaces pool-managerd daemon) [M0 ✅]
+
+**Note:** pool-managerd daemon is NOT NEEDED - pool management is CLI-based!
 ### Intelligence Hierarchy
 ```
-Orchestratord (Brain)
-  ↓ Commands: "Start worker for model X on GPU 0"
-Pool Manager (Levers)
-  ↓ Spawns: worker-orcd --model X --gpu 0
-Worker (Executor)
+Orchestratord (Brain - HTTP daemon)
+  ↓ Routes: POST /execute to worker
+Worker (Executor - HTTP daemon)
   ↓ Executes: Inference requests
+
+Operator (Human)
+  ↓ SSH: llorch pool worker spawn
+llorch-pool (CLI on pool machine)
+  ↓ Spawns: llorch-candled --model X --gpu 0
 ```
-**Decision boundary**: Orchestratord makes ALL decisions (admission, scheduling, worker selection, eviction, retry, timeout). Pool managers and workers are dumb executors that report facts and execute commands.
+**Decision boundary**: Orchestratord makes ALL decisions (admission, scheduling, worker selection, eviction, retry, timeout). Workers are dumb executors. Pool management is CLI-based (no daemon needed).
 ### Why This Architecture?
-- **Orchestratord can run without GPUs**: Queries pool managers for state
+- **Simplified**: Only 2 daemons (orchestratord + workers), not 3
+- **Orchestratord can run without GPUs**: Routes to remote workers via HTTP
 - **Workers have isolated memory contexts**: Each worker owns its memory allocation (VRAM for NVIDIA, unified for Apple)
-- **Clean FFI boundaries**: Pool manager uses NVML/Metal (read-only), workers use CUDA/Metal (allocation)
+- **Pool management is CLI-based**: No daemon overhead for control operations
 - **Testable components**: Each binary runs standalone for testing
-- **Stateless orchestration**: All state derived from pool manager queries
-- **Multi-architecture**: Worker adapters enable NVIDIA CUDA, Apple Metal, and future backends
+- **Multi-architecture**: Worker variants for NVIDIA CUDA, Apple Metal, CPU
 ---
 ## VIBE CODED PROJECT
 (THIS PART IS JUST FUTURE COPY PASTA, and something human to read)
@@ -100,57 +109,123 @@ Worker (Executor)
 - [`bin/shared-crates/AUDIT_LOGGING_REMINDER.md`](bin/shared-crates/AUDIT_LOGGING_REMINDER.md) — **⚠️ Required reading for all engineers**
 - Use `audit-logging` crate for all security events (auth, authz, resource ops, GDPR compliance)
 ---
-## Architecture
-llama-orch consists of **two services** that communicate via HTTP:
-### orchestratord (Control Plane)
+## Architecture (SIMPLIFIED 2025-10-09)
+
+### orchestratord (The Brain) - HTTP Daemon [M1]
 **Responsibilities**:
 - Accept client requests (HTTP API on port 8080)
 - Task admission, queueing, and placement decisions
 - SSE streaming to clients
-- Model catalog management
-- Service registry (tracks available GPU workers)
+- Worker registry (tracks available workers)
+- Routes requests directly to workers
+
 **Requirements**: No GPU needed
+
 **Configuration**:
 ```bash
 # Bind address
 ORCHD_BIND_ADDR=0.0.0.0:8080
-# pool-managerd endpoints (comma-separated)
-ORCHD_POOL_MANAGERS=http://localhost:9200
-# or for multiple machines:
-# ORCHD_POOL_MANAGERS=http://gpu-1:9200,http://gpu-2:9200
+# Worker endpoints (discovered dynamically or configured)
+ORCHD_WORKERS=http://mac.home.arpa:8001,http://workstation.home.arpa:8002
 # Optional: Bearer token for authentication
 LLORCH_API_TOKEN=$(openssl rand -hex 32)
 ```
-### pool-managerd (GPU Worker)
+
+**Status:** M1 (not built yet)
+
+---
+
+### llorch-candled (Workers) - HTTP Daemons [M0 ✅]
 **Responsibilities**:
-- GPU discovery and management
-- Engine provisioning (download, compile, start engines)
-- Pool lifecycle (readiness, health monitoring)
-- Report capacity to orchestratord
-**Requirements**: NVIDIA GPU with CUDA
+- Load ONE model into VRAM/RAM
+- Execute inference requests
+- Stream tokens via SSE
+- Report health and VRAM usage
+
+**Requirements**: GPU (CUDA/Metal) or CPU
+
 **Configuration**:
 ```bash
-# Bind address
-POOL_MANAGERD_BIND_ADDR=0.0.0.0:9200
-# Node identifier (for multi-node setups)
-POOL_MANAGERD_NODE_ID=gpu-node-1
-# orchestratord endpoint (for registration)
-ORCHESTRATORD_URL=http://localhost:8080
-# Optional: Bearer token (must match orchestratord)
-LLORCH_API_TOKEN=<same-token>
+# Spawned by llorch-pool with these args:
+llorch-candled \
+  --worker-id <uuid> \
+  --model .test-models/qwen-0.5b \
+  --port 8001 \
+  --callback-url http://orchestrator:8080/callback
 ```
+
+**Status:** M0 COMPLETE and WORKING ✅
+
+---
+
+### llorch-pool (Pool Manager) - CLI Tool [M0 ✅]
+**Responsibilities**:
+- Model management (download, catalog, register)
+- Worker lifecycle (spawn, list, stop)
+- Local pool operations
+
+**Requirements**: Runs on pool machines
+
+**Usage**:
+```bash
+# Download model
+llorch-pool models download qwen-0.5b
+
+# Spawn worker
+llorch-pool worker spawn metal --model qwen-0.5b --gpu 0
+
+# List workers
+llorch-pool worker list
+```
+
+**Status:** M0 COMPLETE and WORKING ✅
+
+**Note:** This REPLACES pool-managerd daemon! No HTTP daemon needed for pool management.
+
+---
+
+### llorch (Orchestrator CLI) - Remote Control Tool [M0 ✅]
+**Responsibilities**:
+- Remote pool control via SSH
+- Model management on remote pools
+- Worker management on remote pools
+- Git operations on remote pools
+- Inference testing
+
+**Requirements**: SSH access to pools
+
+**Usage**:
+```bash
+# Remote model download
+llorch pool models download qwen-0.5b --host mac.home.arpa
+
+# Remote worker spawn
+llorch pool worker spawn metal --host mac.home.arpa --model qwen-0.5b --gpu 0
+
+# Test inference
+llorch infer --worker mac.home.arpa:8001 --prompt "Hello" --max-tokens 50
+```
+
+**Status:** M0 COMPLETE and WORKING ✅
+
+---
+
 ### Deployment Flexibility
-**Single machine** (both services on localhost):
+**Single machine** (orchestrator + workers on localhost):
 ```
-orchestratord (localhost:8080) → pool-managerd (localhost:9200) → GPU engines
+Client → orchestratord (localhost:8080) → llorch-candled (localhost:8001)
 ```
+
 **Multiple machines** (distributed):
 ```
 Control Node:  orchestratord (no GPU)
      ↓ HTTP
-GPU Node 1:    pool-managerd + engines
-GPU Node 2:    pool-managerd + engines
-GPU Node N:    pool-managerd + engines
+GPU Node 1:    llorch-candled workers (ports 8001, 8002, ...)
+GPU Node 2:    llorch-candled workers (ports 8001, 8002, ...)
+GPU Node N:    llorch-candled workers (ports 8001, 8002, ...)
+
+Operator uses SSH + llorch CLI to manage pools:
+  llorch pool worker spawn metal --host gpu-node-1 --model qwen
 ```
 The architecture is the same—only the URLs change.
 ---
