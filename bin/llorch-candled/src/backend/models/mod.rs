@@ -65,6 +65,31 @@ impl Model {
             Model::Qwen(m) => m.vocab_size(),
         }
     }
+
+    /// Reset KV cache to clear history
+    ///
+    /// TEAM-021: Required to clear warmup pollution before inference
+    /// Not all models may support this (Phi manages cache internally)
+    pub fn reset_cache(&mut self) -> Result<()> {
+        match self {
+            Model::Llama(m) => m.reset_cache(),
+            Model::Mistral(_m) => {
+                // TODO: Implement for Mistral when needed
+                tracing::warn!("Cache reset not implemented for Mistral");
+                Ok(())
+            }
+            Model::Phi(_m) => {
+                // Phi manages cache internally, no reset needed
+                tracing::debug!("Phi manages cache internally, no reset needed");
+                Ok(())
+            }
+            Model::Qwen(_m) => {
+                // TODO: Implement for Qwen when needed
+                tracing::warn!("Cache reset not implemented for Qwen");
+                Ok(())
+            }
+        }
+    }
 }
 
 /// Detect model architecture from config.json

@@ -1,74 +1,131 @@
 # Homelab Remote Testing CLI
 
-**Created by:** TEAM-018  
-**Version:** 0.1.0
+**Created by:** TEAM-018, TEAM-022  
+**Version:** 0.2.0
 
 ## Overview
 
-`llorch-remote` is a comprehensive CLI tool for managing remote builds, tests, and inference across different backends (CPU, CUDA, Metal) via SSH.
+**Architecture:** Local-only management scripts that can be called remotely via SSH.
+
+**Local scripts** (in `scripts/`):
+- **`llorch-models`** - Model download, verification, and management
+- **`llorch-git`** - Git operations with submodule support
+
+**Remote wrapper** (in `scripts/homelab/`):
+- **`llorch-remote`** - Calls local scripts on remote hosts via SSH
 
 ## Installation
 
 ```bash
-# Add to PATH (optional)
+# Local scripts (from repo root)
+cd /path/to/llama-orch
+ln -s $(pwd)/scripts/llorch-models ~/.local/bin/llorch-models
+ln -s $(pwd)/scripts/llorch-git ~/.local/bin/llorch-git
+
+# Remote wrapper
+cd scripts/homelab
 ln -s $(pwd)/llorch-remote ~/.local/bin/llorch-remote
 
 # Or use directly
-./llorch-remote --help
+./scripts/llorch-models --help
+./scripts/llorch-git --help
+./scripts/homelab/llorch-remote --help
 ```
 
 ## Quick Start
 
+### Local Usage
+
 ```bash
-# Clone repository to remote host
-./llorch-remote mac.home.arpa metal clone
+# Model management (local)
+llorch-models list
+llorch-models download tinyllama
+llorch-models info tinyllama
 
-# Build Metal backend
-./llorch-remote mac.home.arpa metal build
+# Git management (local)
+llorch-git status
+llorch-git pull
+llorch-git submodules
+```
 
-# Run tests
-./llorch-remote mac.home.arpa metal test
+### Remote Usage
 
-# Generate test story
-./llorch-remote mac.home.arpa metal inference
+```bash
+# Git operations on remote
+llorch-remote mac.home.arpa status
+llorch-remote mac.home.arpa pull
 
-# Full workflow (pull → build → test → inference)
-./llorch-remote mac.home.arpa metal all
+# Model management on remote
+llorch-remote mac.home.arpa models-list
+llorch-remote mac.home.arpa models-download tinyllama
+
+# Build and test on remote
+llorch-remote mac.home.arpa build metal
+llorch-remote mac.home.arpa test metal
+
+# Full workflow
+llorch-remote mac.home.arpa all metal
 ```
 
 ## Usage
 
+### llorch-models (local)
+
 ```
-llorch-remote <HOST> <BACKEND> <ACTION> [OPTIONS]
+llorch-models <ACTION> [MODEL] [OPTIONS]
 ```
 
-### Arguments
+**Arguments:**
+- **ACTION**: list, catalog, download, info, verify, delete, disk-usage
+- **MODEL**: Model identifier (required for download/info/verify/delete)
 
+**Available models:** tinyllama, qwen, qwen-fp16, phi3, llama3, llama32, llama2, mistral, gpt2, granite
+
+### llorch-git (local)
+
+```
+llorch-git <ACTION> [OPTIONS]
+```
+
+**Arguments:**
+- **ACTION**: status, pull, sync, submodules, submodule-branch, submodule-update, submodule-reset, clean, branches, log
+
+**Submodules:** reference/candle, reference/candle-vllm, reference/llama.cpp, reference/mistral.rs
+
+### llorch-remote (remote wrapper)
+
+```
+llorch-remote <HOST> <ACTION> [BACKEND] [OPTIONS]
+```
+
+**Arguments:**
 - **HOST**: Remote host (e.g., `mac.home.arpa`, `workstation.home.arpa`)
-- **BACKEND**: Backend type (`cpu`, `cuda`, `metal`)
 - **ACTION**: Action to perform (see below)
+- **BACKEND**: Backend type (`cpu`, `cuda`, `metal`) - required for build/test/inference actions
 
-### Actions
+### llorch-remote Actions
 
-| Action | Description |
-|--------|-------------|
-| `clone` | Clone repository to remote host |
-| `pull` | Pull latest changes from origin/main |
-| `status` | Show git status and system info |
-| `build` | Build backend binary (release mode) |
-| `test` | Run all tests for backend |
-| `smoke` | Run smoke tests only |
-| `unit` | Run unit tests only |
-| `integration` | Run integration tests only |
-| `download-model` | Download test model (tinyllama by default) |
-| `inference` | Generate a test story with actual model |
-| `debug-inference` | Run inference with detailed logging and diagnostics |
-| `logs` | Show worker logs from last run |
-| `clean` | Clean build artifacts |
-| `info` | Show backend and hardware info |
-| `all` | Run: pull → build → test → download-model → inference |
+| Action | Backend Required? | Description |
+|--------|------------------|-------------|
+| `status` | No | Show git status and system info (calls llorch-git) |
+| `pull` | No | Pull latest changes and update submodules (calls llorch-git) |
+| `sync` | No | Sync to origin/main hard reset (calls llorch-git) |
+| `models-list` | No | List all models on remote (calls llorch-models) |
+| `models-download` | No | Download model on remote (calls llorch-models) |
+| `models-info` | No | Show model info on remote (calls llorch-models) |
+| `build` | Yes | Build backend binary (release mode) |
+| `test` | Yes | Run all tests for backend |
+| `smoke` | Yes | Run smoke tests only |
+| `unit` | Yes | Run unit tests only |
+| `integration` | Yes | Run integration tests only |
+| `inference` | Yes | Generate a test story with actual model |
+| `debug-inference` | Yes | Run inference with detailed logging |
+| `logs` | Yes | Show worker logs from last run |
+| `info` | Yes | Show backend and hardware info |
+| `clean` | No | Clean build artifacts |
+| `all` | Yes | Run: pull → build → test → inference |
 
-### Options
+### llorch-remote Options
 
 - `--model PATH` - Model path for inference (default: `$LLORCH_TEST_MODEL_PATH`)
 - `--port PORT` - Port for worker (default: 8080)
@@ -76,67 +133,169 @@ llorch-remote <HOST> <BACKEND> <ACTION> [OPTIONS]
 - `--help, -h` - Show help message
 - `--version, -v` - Show version
 
+### llorch-models Options
+
+- `--force` - Force re-download even if model exists
+- `--help, -h` - Show help message
+- `--version, -v` - Show version
+
+### llorch-git Options
+
+- `--submodule NAME` - Submodule name (for submodule-* actions)
+- `--branch NAME` - Branch name (for submodule-branch)
+- `--all` - Apply to all submodules
+- `--force` - Force operation (skip confirmations)
+- `--help, -h` - Show help message
+- `--version, -v` - Show version
+
 ## Examples
 
-### Basic Operations
+### Local Model Management
 
 ```bash
-# Check system info
-./llorch-remote mac.home.arpa metal info
+# View catalog with verified HuggingFace repos
+llorch-models catalog
 
-# Pull latest code
-./llorch-remote mac.home.arpa metal pull
+# Download TinyLlama (669 MB)
+llorch-models download tinyllama
 
-# Build CUDA backend on workstation
-./llorch-remote workstation.home.arpa cuda build
+# Download Llama-3 8B (4.9 GB)
+llorch-models download llama3
+
+# List downloaded models
+llorch-models list
+
+# Show model info
+llorch-models info tinyllama
+
+# Verify model integrity
+llorch-models verify tinyllama
+
+# Delete model
+llorch-models delete phi3
+
+# Show disk usage
+llorch-models disk-usage
+```
+
+### Local Git Management
+
+```bash
+# Show status with submodules
+llorch-git status
+
+# Pull latest changes
+llorch-git pull
+
+# Hard reset to origin/main
+llorch-git sync
+
+# List all submodules
+llorch-git submodules
+
+# Show candle submodule branch
+llorch-git submodule-branch --submodule reference/candle
+
+# Switch candle to metal-fixes branch
+llorch-git submodule-branch --submodule reference/candle --branch metal-fixes
+
+# Update candle to latest on current branch
+llorch-git submodule-update --submodule reference/candle
+
+# Reset candle to committed version
+llorch-git submodule-reset --submodule reference/candle
+
+# Update all submodules
+llorch-git submodule-update --all
+```
+
+### Remote Operations
+
+```bash
+# Git operations on remote
+llorch-remote mac.home.arpa status
+llorch-remote mac.home.arpa pull
+llorch-remote mac.home.arpa sync
+
+# Model management on remote
+llorch-remote mac.home.arpa models-list
+llorch-remote mac.home.arpa models-download tinyllama
+llorch-remote mac.home.arpa models-info tinyllama
+
+# Build and test
+llorch-remote workstation.home.arpa build cuda
+llorch-remote mac.home.arpa test metal
 ```
 
 ### Testing
 
 ```bash
 # Run all tests
-./llorch-remote mac.home.arpa metal test
+./llorch-remote mac.home.arpa test metal
 
 # Run smoke tests only
-./llorch-remote mac.home.arpa metal smoke
+./llorch-remote mac.home.arpa smoke metal
 
 # Run unit tests only
-./llorch-remote workstation.home.arpa cuda unit
+./llorch-remote workstation.home.arpa unit cuda
 
 # Run integration tests
-./llorch-remote mac.home.arpa metal integration
+./llorch-remote mac.home.arpa integration metal
+```
+
+### Model Management
+
+```bash
+# List all models
+./llorch-models mac.home.arpa list
+
+# Download TinyLlama
+./llorch-models mac.home.arpa download tinyllama
+
+# Download Mistral with Q5 quantization
+./llorch-models workstation.home.arpa download mistral --quant Q5_K_M
+
+# Show model info
+./llorch-models mac.home.arpa info tinyllama
+
+# Verify model integrity
+./llorch-models mac.home.arpa verify tinyllama
+
+# Delete a model
+./llorch-models mac.home.arpa delete phi2
+
+# Show disk usage
+./llorch-models mac.home.arpa disk-usage
 ```
 
 ### Inference
 
 ```bash
-# Download test model first
-./llorch-remote mac.home.arpa metal download-model
-
 # Generate test story
-./llorch-remote mac.home.arpa metal inference
+./llorch-remote mac.home.arpa inference metal
 
 # Debug inference with detailed logs
-./llorch-remote mac.home.arpa metal debug-inference
+./llorch-remote mac.home.arpa debug-inference metal
 
 # View logs from last run
-./llorch-remote mac.home.arpa metal logs
+./llorch-remote mac.home.arpa logs metal
 ```
 
 ### Full Workflow
 
 ```bash
 # Pull, build, test, and run inference
-./llorch-remote mac.home.arpa metal all
+./llorch-remote mac.home.arpa all metal
 ```
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `LLORCH_REPO_URL` | Repository URL | `https://github.com/veighnsche/llama-orch.git` |
-| `LLORCH_REMOTE_PATH` | Remote path | `~/Projects/llama-orch` |
-| `LLORCH_TEST_MODEL_PATH` | Model path for inference tests | - |
+| Variable | Tool | Description | Default |
+|----------|------|-------------|---------|
+| `LLORCH_REPO_URL` | llorch-remote | Repository URL | `https://github.com/veighnsche/llama-orch.git` |
+| `LLORCH_REMOTE_PATH` | Both | Remote path | `~/Projects/llama-orch` |
+| `LLORCH_TEST_MODEL_PATH` | llorch-remote | Model path for inference tests | - |
+| `LLORCH_MODEL_BASE_DIR` | llorch-models | Model base directory | `.test-models` |
 
 ## Backend-Specific Binaries
 
@@ -214,37 +373,37 @@ ssh-add -l
 
 ```bash
 # Run smoke tests only
-./llorch-remote mac.home.arpa metal smoke
+./llorch-remote mac.home.arpa smoke metal
 
 # View test logs
-./llorch-remote mac.home.arpa metal logs
+./llorch-remote mac.home.arpa logs metal
 ```
 
 ### Inference Failed
 
 ```bash
 # Run debug inference with detailed logging
-./llorch-remote mac.home.arpa metal debug-inference
+./llorch-remote mac.home.arpa debug-inference metal
 
 # View worker logs
-./llorch-remote mac.home.arpa metal logs
+./llorch-remote mac.home.arpa logs metal
 
 # Check if model exists
-./llorch-remote mac.home.arpa metal download-model
+./llorch-models mac.home.arpa list
 ```
 
 ### Common Issues
 
 **Model not found:**
 ```bash
-./llorch-remote mac.home.arpa metal download-model
+./llorch-models mac.home.arpa download tinyllama
 ```
 
 **Worker crashes on startup:**
 ```bash
 # Check detailed logs
-./llorch-remote mac.home.arpa metal debug-inference
-./llorch-remote mac.home.arpa metal logs
+./llorch-remote mac.home.arpa debug-inference metal
+./llorch-remote mac.home.arpa logs metal
 ```
 
 **Broadcasting errors (Metal/CUDA):**
@@ -261,13 +420,21 @@ Old hardcoded scripts:
 
 New CLI equivalent:
 ```bash
-./llorch-remote mac.home.arpa metal build
-./llorch-remote mac.home.arpa metal test
+./llorch-remote mac.home.arpa build metal
+./llorch-remote mac.home.arpa test metal
 ```
+
+## Available Models
+
+| Model | Parameters | Size (Q4_K_M) | Description |
+|-------|-----------|---------------|-------------|
+| `tinyllama` | 1.1B | 669 MB | Standard Llama architecture, simplest for testing |
+| `phi2` | 2.7B | 1.6 GB | Microsoft's efficient model, good quality |
+| `mistral` | 7B | 4.1 GB | High quality instruction following |
 
 ## Future Enhancements
 
-- [ ] Model download/staging
+- [x] Model download/staging (llorch-models)
 - [ ] Benchmark mode
 - [ ] Parallel execution (multiple hosts)
 - [ ] JSON output mode
@@ -275,6 +442,8 @@ New CLI equivalent:
 - [ ] Metrics export (Prometheus)
 - [ ] Real-time log streaming
 - [ ] Interactive mode (TUI)
+- [ ] Model conversion utilities
+- [ ] Automatic quantization selection
 
 ## See Also
 

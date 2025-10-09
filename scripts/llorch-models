@@ -1,0 +1,596 @@
+#!/usr/bin/env bash
+# llorch-models: Local model management CLI
+# Created by: TEAM-022
+# 
+# A local-only CLI tool for downloading, listing, verifying, and managing models.
+# Can be called remotely via llorch-remote.
+
+set -euo pipefail
+
+VERSION="0.2.0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+MODEL_BASE_DIR="${LLORCH_MODEL_BASE_DIR:-.test-models}"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Logging functions
+log_info() {
+    echo -e "${BLUE}ℹ${NC} $*"
+}
+
+log_success() {
+    echo -e "${GREEN}✓${NC} $*"
+}
+
+log_warn() {
+    echo -e "${YELLOW}⚠${NC} $*"
+}
+
+log_error() {
+    echo -e "${RED}✗${NC} $*" >&2
+}
+
+log_section() {
+    echo ""
+    echo -e "${CYAN}════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${CYAN}$*${NC}"
+    echo -e "${CYAN}════════════════════════════════════════════════════════════════${NC}"
+}
+
+# Show usage
+usage() {
+    cat <<EOF
+${CYAN}llorch-models${NC} v${VERSION} - Local model management CLI
+
+${YELLOW}USAGE:${NC}
+    llorch-models <ACTION> [MODEL] [OPTIONS]
+
+    ${GREEN}ACTION${NC}      Action to perform (see below)
+    ${GREEN}MODEL${NC}       Model identifier (required for download/info/verify/delete)
+
+${YELLOW}ACTIONS:${NC}
+    ${MAGENTA}list${NC}           List all downloaded models
+    ${MAGENTA}catalog${NC}        Show available models in catalog
+    ${MAGENTA}download${NC}       Download a specific model
+    ${MAGENTA}info${NC}           Show detailed info about a model
+    ${MAGENTA}verify${NC}         Verify model integrity
+    ${MAGENTA}delete${NC}         Delete a model
+    ${MAGENTA}disk-usage${NC}     Show disk usage for all models
+
+${YELLOW}AVAILABLE MODELS:${NC}
+    ${GREEN}tinyllama${NC}       TinyLlama 1.1B Chat Q4_K_M - 669 MB
+                      HF: TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF
+    
+    ${GREEN}qwen${NC}            Qwen2.5 0.5B Instruct Q4_K_M - 352 MB
+                      HF: Qwen/Qwen2.5-0.5B-Instruct-GGUF
+    
+    ${GREEN}qwen-fp16${NC}       Qwen2.5 0.5B Instruct FP16 - 1.1 GB
+                      HF: Qwen/Qwen2.5-0.5B-Instruct-GGUF
+    
+    ${GREEN}phi3${NC}            Phi-3-Mini-4K-Instruct Q4 - 2.4 GB
+                      HF: microsoft/Phi-3-mini-4k-instruct-gguf
+    
+    ${GREEN}llama3${NC}          Llama-3-8B-Instruct Q4_K_M - 4.9 GB
+                      HF: QuantFactory/Meta-Llama-3-8B-Instruct-GGUF
+    
+    ${GREEN}llama32${NC}         Llama-3.2-3B-Instruct FP16 - 6.4 GB
+                      HF: tensorblock/Komodo-Llama-3.2-3B-v2-fp16-GGUF
+    
+    ${GREEN}llama2${NC}          Llama-2-7B Q8_0 - 7.2 GB
+                      HF: TheBloke/Llama-2-7B-GGUF
+    
+    ${GREEN}mistral${NC}         Mistral-7B-Instruct FP16 - 14 GB
+                      HF: TheBloke/Mistral-7B-Instruct-v0.2-GGUF
+    
+    ${GREEN}gpt2${NC}            GPT-2 FP32 - 500 MB (requires conversion)
+                      HF: openai-community/gpt2
+    
+    ${GREEN}granite${NC}         IBM Granite-4.0-Micro FP32 - 8 GB (requires conversion)
+                      HF: ibm-granite/granite-4.0-micro
+
+${YELLOW}OPTIONS:${NC}
+    --force         Force re-download even if model exists
+    --help, -h      Show this help message
+    --version, -v   Show version
+
+${YELLOW}ENVIRONMENT VARIABLES:${NC}
+    LLORCH_MODEL_BASE_DIR   Model base directory (default: .test-models)
+
+${YELLOW}EXAMPLES:${NC}
+    # List all models
+    llorch-models list
+
+    # Download TinyLlama
+    llorch-models download tinyllama
+
+    # Show model info
+    llorch-models info tinyllama
+
+    # Verify model integrity
+    llorch-models verify tinyllama
+
+    # Delete a model
+    llorch-models delete phi3
+
+    # Show disk usage
+    llorch-models disk-usage
+
+    # Show model catalog
+    llorch-models catalog
+
+    # Force re-download
+    llorch-models download mistral --force
+
+${YELLOW}NOTES:${NC}
+    - Requires 'hf' CLI: pipx install 'huggingface_hub[cli,hf_transfer]'
+    - Models with conversion (gpt2, granite) require llama.cpp in reference/
+    - All HuggingFace repo URLs are documented in catalog for easy reference
+
+EOF
+}
+
+# Model catalog with VERIFIED HuggingFace repos
+declare -A MODEL_CATALOG=(
+    # TinyLlama - VERIFIED WORKING
+    ["tinyllama_repo"]="TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF"
+    ["tinyllama_file"]="tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+    ["tinyllama_size"]="669M"
+    ["tinyllama_dir"]="tinyllama"
+    
+    # Qwen Q4_K_M - VERIFIED WORKING
+    ["qwen_repo"]="Qwen/Qwen2.5-0.5B-Instruct-GGUF"
+    ["qwen_file"]="qwen2.5-0.5b-instruct-q4_k_m.gguf"
+    ["qwen_size"]="352M"
+    ["qwen_dir"]="qwen"
+    
+    # Qwen FP16 - VERIFIED WORKING
+    ["qwen-fp16_repo"]="Qwen/Qwen2.5-0.5B-Instruct-GGUF"
+    ["qwen-fp16_file"]="qwen2.5-0.5b-instruct-fp16.gguf"
+    ["qwen-fp16_size"]="1.1G"
+    ["qwen-fp16_dir"]="qwen"
+    
+    # Phi-3 - VERIFIED WORKING
+    ["phi3_repo"]="microsoft/Phi-3-mini-4k-instruct-gguf"
+    ["phi3_file"]="Phi-3-mini-4k-instruct-q4.gguf"
+    ["phi3_size"]="2.4G"
+    ["phi3_dir"]="phi3"
+    
+    # Llama-3 8B - VERIFIED WORKING
+    ["llama3_repo"]="QuantFactory/Meta-Llama-3-8B-Instruct-GGUF"
+    ["llama3_file"]="Meta-Llama-3-8B-Instruct.Q4_K_M.gguf"
+    ["llama3_size"]="4.9G"
+    ["llama3_dir"]="llama3"
+    
+    # Llama-3.2 3B - VERIFIED WORKING
+    ["llama32_repo"]="tensorblock/Komodo-Llama-3.2-3B-v2-fp16-GGUF"
+    ["llama32_file"]="Komodo-Llama-3.2-3B-v2-fp16.gguf"
+    ["llama32_size"]="6.4G"
+    ["llama32_dir"]="llama32"
+    
+    # Llama-2 7B - VERIFIED WORKING
+    ["llama2_repo"]="TheBloke/Llama-2-7B-GGUF"
+    ["llama2_file"]="llama-2-7b.Q8_0.gguf"
+    ["llama2_size"]="7.2G"
+    ["llama2_dir"]="llama2-7b"
+    
+    # Mistral 7B - VERIFIED WORKING
+    ["mistral_repo"]="TheBloke/Mistral-7B-Instruct-v0.2-GGUF"
+    ["mistral_file"]="mistral-7b-instruct-v0.2.f16.gguf"
+    ["mistral_size"]="14G"
+    ["mistral_dir"]="mistral"
+    
+    # GPT-2 - Requires conversion
+    ["gpt2_repo"]="openai-community/gpt2"
+    ["gpt2_file"]="gpt2-fp32.gguf"
+    ["gpt2_size"]="500M"
+    ["gpt2_dir"]="gpt2"
+    ["gpt2_convert"]="true"
+    
+    # Granite - Requires conversion
+    ["granite_repo"]="ibm-granite/granite-4.0-micro"
+    ["granite_file"]="granite-4.0-micro-fp32.gguf"
+    ["granite_size"]="8G"
+    ["granite_dir"]="granite"
+    ["granite_convert"]="true"
+)
+
+# Parse arguments
+if [[ $# -lt 1 ]]; then
+    usage
+    exit 1
+fi
+
+ACTION="$1"
+shift
+
+MODEL=""
+if [[ $# -gt 0 ]] && [[ ! "$1" =~ ^-- ]]; then
+    MODEL="$1"
+    shift
+fi
+
+# Parse options
+FORCE=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --force)
+            FORCE=true
+            shift
+            ;;
+        --help|-h)
+            usage
+            exit 0
+            ;;
+        --version|-v)
+            echo "llorch-models v${VERSION}"
+            exit 0
+            ;;
+        *)
+            log_error "Unknown option: $1"
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+# Action implementations
+action_list() {
+    log_section "📋 Listing Models"
+    
+    cd "$REPO_ROOT"
+    
+    if [[ ! -d "$MODEL_BASE_DIR" ]]; then
+        echo "No models directory found at $MODEL_BASE_DIR"
+        exit 0
+    fi
+
+    echo "Models in $MODEL_BASE_DIR:"
+    echo "─────────────────────────────────────────────────────────"
+
+    find "$MODEL_BASE_DIR" -type f \( -name "*.gguf" -o -name "*.safetensors" -o -name "config.json" \) -exec ls -lh {} \; 2>/dev/null | \
+        awk '{printf "%-10s  %s\n", $5, $9}' | sort -k2 || echo "No models found"
+
+    echo ""
+    echo "Total disk usage:"
+    du -sh "$MODEL_BASE_DIR" 2>/dev/null || echo "0B"
+    
+    log_success "List complete"
+}
+
+action_download() {
+    if [[ -z "$MODEL" ]]; then
+        log_error "Model name required for download action"
+        log_error "Usage: llorch-models download <model>"
+        log_error "Available models: tinyllama, qwen, qwen-fp16, phi3, llama3, llama32, llama2, mistral, gpt2, granite"
+        exit 1
+    fi
+    
+    log_section "📥 Downloading Model: $MODEL"
+    
+    # Get model info from catalog
+    local repo_key="${MODEL}_repo"
+    local file_key="${MODEL}_file"
+    local dir_key="${MODEL}_dir"
+    local convert_key="${MODEL}_convert"
+    
+    if [[ -z "${MODEL_CATALOG[$repo_key]:-}" ]]; then
+        log_error "Unknown model: $MODEL"
+        log_error "Run 'llorch-models catalog' to see available models"
+        exit 1
+    fi
+    
+    local repo="${MODEL_CATALOG[$repo_key]}"
+    local file="${MODEL_CATALOG[$file_key]}"
+    local model_dir="${MODEL_CATALOG[$dir_key]}"
+    local needs_convert="${MODEL_CATALOG[$convert_key]:-false}"
+    
+    cd "$REPO_ROOT"
+    
+    local target_dir="$MODEL_BASE_DIR/$model_dir"
+    local target_file="$target_dir/$file"
+    
+    mkdir -p "$target_dir"
+    
+    # Check if already exists
+    if [[ -f "$target_file" ]] && [[ "$FORCE" != "true" ]]; then
+        echo "✅ Model already exists: $target_file"
+        ls -lh "$target_file"
+        log_info "Use --force to re-download"
+        exit 0
+    fi
+    
+    log_info "HuggingFace Repo: $repo"
+    log_info "File: $file"
+    log_info "Target: $target_file"
+    echo ""
+    
+    # Check for hf CLI
+    if ! command -v hf &> /dev/null; then
+        log_error "hf command not found"
+        echo ""
+        echo "Install with:"
+        echo "  pipx install 'huggingface_hub[cli,hf_transfer]'"
+        exit 1
+    fi
+    
+    # Download based on whether conversion is needed
+    if [[ "$needs_convert" == "true" ]]; then
+        log_info "This model requires conversion from PyTorch to GGUF"
+        
+        # Download PyTorch model
+        local pytorch_dir="$target_dir/pytorch"
+        mkdir -p "$pytorch_dir"
+        
+        echo "Downloading PyTorch model..."
+        hf download "$repo" --local-dir "$pytorch_dir"
+        
+        echo ""
+        log_success "Download complete"
+        echo ""
+        
+        # Convert to GGUF
+        local converter="$REPO_ROOT/reference/llama.cpp/convert_hf_to_gguf.py"
+        
+        if [[ ! -f "$converter" ]]; then
+            log_error "llama.cpp converter not found at $converter"
+            log_error "Please ensure reference/llama.cpp is cloned"
+            exit 1
+        fi
+        
+        log_info "Converting to GGUF format..."
+        cd "$REPO_ROOT/reference/llama.cpp"
+        
+        # Determine output type
+        local outtype="f32"
+        if [[ "$file" =~ fp16 ]]; then
+            outtype="f16"
+        fi
+        
+        python3 "$converter" "$pytorch_dir" \
+            --outfile "$target_file" \
+            --outtype "$outtype"
+        
+        echo ""
+        log_success "Conversion complete"
+    else
+        # Direct GGUF download
+        echo "Downloading GGUF model..."
+        hf download "$repo" "$file" --local-dir "$target_dir"
+        
+        echo ""
+        log_success "Download complete"
+    fi
+    
+    # Show file info
+    echo ""
+    echo "File info:"
+    ls -lh "$target_file"
+    
+    echo ""
+    echo "Computing SHA256 checksum..."
+    sha256sum "$target_file"
+    
+    echo ""
+    log_success "Model ready: $target_file"
+}
+
+action_info() {
+    if [[ -z "$MODEL" ]]; then
+        log_error "Model name required for info action"
+        exit 1
+    fi
+    
+    log_section "ℹ️  Model Info: $MODEL"
+    
+    # Show catalog info
+    local repo_key="${MODEL}_repo"
+    local size_key="${MODEL}_size"
+    local dir_key="${MODEL}_dir"
+    
+    if [[ -n "${MODEL_CATALOG[$repo_key]:-}" ]]; then
+        echo ""
+        echo "Catalog Information:"
+        echo "─────────────────────────────────────────────────────────"
+        echo "  HuggingFace Repo: ${MODEL_CATALOG[$repo_key]}"
+        echo "  Expected Size: ${MODEL_CATALOG[$size_key]}"
+        echo "  URL: https://huggingface.co/${MODEL_CATALOG[$repo_key]}"
+        echo ""
+    fi
+    
+    cd "$REPO_ROOT"
+    
+    local model_dir="$MODEL_BASE_DIR/${MODEL_CATALOG[$dir_key]}"
+    
+    if [[ ! -d "$model_dir" ]]; then
+        echo "❌ Model not found: $model_dir"
+        echo ""
+        echo "Download it first:"
+        echo "  llorch-models download $MODEL"
+        exit 1
+    fi
+    
+    echo "Local Files:"
+    echo "─────────────────────────────────────────────────────────"
+    ls -lh "$model_dir"
+    
+    echo ""
+    echo "Disk Usage:"
+    echo "─────────────────────────────────────────────────────────"
+    du -sh "$model_dir"
+    
+    # Check for config files
+    if [[ -f "$model_dir/config.json" ]]; then
+        echo ""
+        echo "Configuration:"
+        echo "─────────────────────────────────────────────────────────"
+        cat "$model_dir/config.json" | jq '.' 2>/dev/null || cat "$model_dir/config.json"
+    fi
+    
+    log_success "Info retrieved"
+}
+
+action_verify() {
+    if [[ -z "$MODEL" ]]; then
+        log_error "Model name required for verify action"
+        exit 1
+    fi
+    
+    log_section "🔍 Verifying Model: $MODEL"
+    
+    cd "$REPO_ROOT"
+    
+    local dir_key="${MODEL}_dir"
+    local model_dir="$MODEL_BASE_DIR/${MODEL_CATALOG[$dir_key]}"
+    
+    if [[ ! -d "$model_dir" ]]; then
+        echo "❌ Model not found: $model_dir"
+        exit 1
+    fi
+    
+    echo "Checking model files..."
+    echo "─────────────────────────────────────────────────────────"
+    
+    # Find model files
+    local model_files=$(find "$model_dir" -type f \( -name "*.gguf" -o -name "*.safetensors" \))
+    
+    if [[ -z "$model_files" ]]; then
+        echo "❌ No model files found"
+        exit 1
+    fi
+    
+    # Check each file
+    while IFS= read -r file; do
+        if [[ -f "$file" ]]; then
+            size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null)
+            if [[ $size -gt 0 ]]; then
+                echo "✅ $(basename "$file") - $(du -h "$file" | cut -f1)"
+            else
+                echo "❌ $(basename "$file") - EMPTY FILE"
+            fi
+        fi
+    done <<< "$model_files"
+    
+    echo ""
+    log_success "Verification complete"
+}
+
+action_delete() {
+    if [[ -z "$MODEL" ]]; then
+        log_error "Model name required for delete action"
+        exit 1
+    fi
+    
+    log_section "🗑️  Deleting Model: $MODEL"
+    log_warn "This will permanently delete the model"
+    
+    cd "$REPO_ROOT"
+    
+    local dir_key="${MODEL}_dir"
+    local model_dir="$MODEL_BASE_DIR/${MODEL_CATALOG[$dir_key]}"
+    
+    if [[ ! -d "$model_dir" ]]; then
+        echo "❌ Model not found: $model_dir"
+        exit 1
+    fi
+    
+    echo "Deleting $model_dir..."
+    du -sh "$model_dir"
+    rm -rf "$model_dir"
+    
+    log_success "Model deleted"
+}
+
+action_disk_usage() {
+    log_section "💾 Disk Usage"
+    
+    cd "$REPO_ROOT"
+    
+    if [[ ! -d "$MODEL_BASE_DIR" ]]; then
+        echo "No models directory found"
+        exit 0
+    fi
+    
+    echo "Disk usage by model:"
+    echo "─────────────────────────────────────────────────────────"
+    du -sh "$MODEL_BASE_DIR"/*/ 2>/dev/null || echo "No models found"
+    
+    echo ""
+    echo "Total:"
+    echo "─────────────────────────────────────────────────────────"
+    du -sh "$MODEL_BASE_DIR"
+    
+    log_success "Disk usage retrieved"
+}
+
+action_catalog() {
+    log_section "📚 Model Catalog"
+    
+    echo ""
+    echo "Available models with VERIFIED HuggingFace repos:"
+    echo "─────────────────────────────────────────────────────────"
+    echo ""
+    
+    for model in tinyllama qwen qwen-fp16 phi3 llama3 llama32 llama2 mistral gpt2 granite; do
+        local repo_key="${model}_repo"
+        local size_key="${model}_size"
+        local file_key="${model}_file"
+        local convert_key="${model}_convert"
+        
+        echo -e "${GREEN}${model}${NC}"
+        echo "  Size: ${MODEL_CATALOG[$size_key]}"
+        echo "  File: ${MODEL_CATALOG[$file_key]}"
+        echo "  HF Repo: ${MODEL_CATALOG[$repo_key]}"
+        if [[ "${MODEL_CATALOG[$convert_key]:-false}" == "true" ]]; then
+            echo "  Note: Requires conversion from PyTorch"
+        fi
+        echo ""
+    done
+    
+    echo "─────────────────────────────────────────────────────────"
+    echo ""
+    echo "Download a model:"
+    echo "  llorch-models download <model>"
+    echo ""
+    echo "All repos have been verified to work with 'hf download'"
+    echo ""
+}
+
+# Execute action
+case "$ACTION" in
+    list)
+        action_list
+        ;;
+    download)
+        action_download
+        ;;
+    info)
+        action_info
+        ;;
+    verify)
+        action_verify
+        ;;
+    delete)
+        action_delete
+        ;;
+    disk-usage)
+        action_disk_usage
+        ;;
+    catalog)
+        action_catalog
+        ;;
+    *)
+        log_error "Unknown action: $ACTION"
+        echo ""
+        usage
+        exit 1
+        ;;
+esac

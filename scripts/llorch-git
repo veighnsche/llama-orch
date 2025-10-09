@@ -1,0 +1,444 @@
+#!/usr/bin/env bash
+# llorch-git: Local git management CLI with submodule support
+# Created by: TEAM-022
+# 
+# A local-only CLI tool for git operations with easy submodule management.
+# Can be called remotely via llorch-remote.
+
+set -euo pipefail
+
+VERSION="0.1.0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Logging functions
+log_info() {
+    echo -e "${BLUE}ℹ${NC} $*"
+}
+
+log_success() {
+    echo -e "${GREEN}✓${NC} $*"
+}
+
+log_warn() {
+    echo -e "${YELLOW}⚠${NC} $*"
+}
+
+log_error() {
+    echo -e "${RED}✗${NC} $*" >&2
+}
+
+log_section() {
+    echo ""
+    echo -e "${CYAN}════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${CYAN}$*${NC}"
+    echo -e "${CYAN}════════════════════════════════════════════════════════════════${NC}"
+}
+
+# Show usage
+usage() {
+    cat <<EOF
+${CYAN}llorch-git${NC} v${VERSION} - Local git management with submodule support
+
+${YELLOW}USAGE:${NC}
+    llorch-git <ACTION> [OPTIONS]
+
+${YELLOW}ACTIONS:${NC}
+    ${MAGENTA}status${NC}          Show git status and submodule info
+    ${MAGENTA}pull${NC}            Pull latest changes and update submodules
+    ${MAGENTA}sync${NC}            Sync to origin/main (hard reset + submodule update)
+    ${MAGENTA}submodules${NC}      List all submodules with status
+    ${MAGENTA}submodule-branch${NC} Show/switch submodule branches
+    ${MAGENTA}submodule-update${NC} Update specific submodule to latest
+    ${MAGENTA}submodule-reset${NC}  Reset submodule to committed version
+    ${MAGENTA}clean${NC}           Clean untracked files (interactive)
+    ${MAGENTA}branches${NC}        List local and remote branches
+    ${MAGENTA}log${NC}             Show recent commit log
+
+${YELLOW}OPTIONS:${NC}
+    --submodule NAME    Submodule name (for submodule-* actions)
+    --branch NAME       Branch name (for submodule-branch)
+    --all               Apply to all submodules
+    --force             Force operation (skip confirmations)
+    --help, -h          Show this help message
+    --version, -v       Show version
+
+${YELLOW}SUBMODULES IN THIS REPO:${NC}
+    ${GREEN}reference/candle${NC}        Candle ML framework
+    ${GREEN}reference/candle-vllm${NC}   Candle-vLLM integration
+    ${GREEN}reference/llama.cpp${NC}     llama.cpp reference
+    ${GREEN}reference/mistral.rs${NC}    Mistral.rs reference
+
+${YELLOW}EXAMPLES:${NC}
+    # Show status with submodule info
+    llorch-git status
+
+    # Pull latest changes and update all submodules
+    llorch-git pull
+
+    # Hard reset to origin/main (including submodules)
+    llorch-git sync
+
+    # List all submodules with their status
+    llorch-git submodules
+
+    # Show current branch of candle submodule
+    llorch-git submodule-branch --submodule reference/candle
+
+    # Switch candle submodule to metal-fixes branch
+    llorch-git submodule-branch --submodule reference/candle --branch metal-fixes
+
+    # Update candle submodule to latest on current branch
+    llorch-git submodule-update --submodule reference/candle
+
+    # Reset candle submodule to committed version
+    llorch-git submodule-reset --submodule reference/candle
+
+    # Update all submodules to latest
+    llorch-git submodule-update --all
+
+    # Show recent commits
+    llorch-git log
+
+    # List all branches
+    llorch-git branches
+
+${YELLOW}COMMON WORKFLOWS:${NC}
+    # Testing a special Metal branch in candle:
+    llorch-git submodule-branch --submodule reference/candle --branch metal-fixes
+    llorch-git submodule-update --submodule reference/candle
+    
+    # Resetting everything to clean state:
+    llorch-git sync
+    
+    # Checking if submodules are up to date:
+    llorch-git submodules
+
+EOF
+}
+
+# Parse arguments
+if [[ $# -lt 1 ]]; then
+    usage
+    exit 1
+fi
+
+ACTION="$1"
+shift
+
+# Parse options
+SUBMODULE=""
+BRANCH=""
+ALL=false
+FORCE=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --submodule)
+            SUBMODULE="$2"
+            shift 2
+            ;;
+        --branch)
+            BRANCH="$2"
+            shift 2
+            ;;
+        --all)
+            ALL=true
+            shift
+            ;;
+        --force)
+            FORCE=true
+            shift
+            ;;
+        --help|-h)
+            usage
+            exit 0
+            ;;
+        --version|-v)
+            echo "llorch-git v${VERSION}"
+            exit 0
+            ;;
+        *)
+            log_error "Unknown option: $1"
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+# Action implementations
+action_status() {
+    log_section "📊 Repository Status"
+    
+    cd "$REPO_ROOT"
+    
+    echo "Main Repository:"
+    echo "─────────────────────────────────────────────────────────"
+    git log -1 --oneline
+    echo "Branch: $(git branch --show-current)"
+    echo "Remote: $(git remote get-url origin)"
+    
+    # Check for uncommitted changes
+    if [[ -n $(git status --porcelain) ]]; then
+        echo ""
+        log_warn "Uncommitted changes:"
+        git status --short
+    fi
+    
+    echo ""
+    echo "Submodules:"
+    echo "─────────────────────────────────────────────────────────"
+    git submodule status
+    
+    log_success "Status retrieved"
+}
+
+action_pull() {
+    log_section "🔄 Pulling Latest Changes"
+    
+    cd "$REPO_ROOT"
+    
+    log_info "Pulling main repository..."
+    git pull --rebase
+    
+    echo ""
+    log_info "Updating submodules..."
+    git submodule update --init --recursive
+    
+    log_success "Pull complete"
+}
+
+action_sync() {
+    log_section "🔄 Syncing to Origin/Main"
+    log_warn "This will hard reset to origin/main and update all submodules"
+    
+    if [[ "$FORCE" != "true" ]]; then
+        read -p "Continue? (y/N) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            log_info "Cancelled"
+            exit 0
+        fi
+    fi
+    
+    cd "$REPO_ROOT"
+    
+    log_info "Fetching from origin..."
+    git fetch --all
+    
+    log_info "Resetting to origin/main..."
+    git reset --hard origin/main
+    
+    log_info "Updating submodules..."
+    git submodule update --init --recursive
+    
+    log_success "Sync complete"
+}
+
+action_submodules() {
+    log_section "📦 Submodule Status"
+    
+    cd "$REPO_ROOT"
+    
+    echo "Submodules:"
+    echo "─────────────────────────────────────────────────────────"
+    
+    git submodule foreach --quiet '
+        echo ""
+        echo "📦 $name"
+        echo "   Path: $sm_path"
+        echo "   Branch: $(git branch --show-current || echo "detached HEAD")"
+        echo "   Commit: $(git log -1 --oneline)"
+        echo "   Status: $(git status --short | wc -l) uncommitted changes"
+    '
+    
+    echo ""
+    log_success "Submodule status retrieved"
+}
+
+action_submodule_branch() {
+    if [[ -z "$SUBMODULE" ]]; then
+        log_error "Submodule name required"
+        log_error "Usage: llorch-git submodule-branch --submodule <name> [--branch <branch>]"
+        exit 1
+    fi
+    
+    cd "$REPO_ROOT"
+    
+    if [[ ! -d "$SUBMODULE" ]]; then
+        log_error "Submodule not found: $SUBMODULE"
+        exit 1
+    fi
+    
+    cd "$SUBMODULE"
+    
+    if [[ -z "$BRANCH" ]]; then
+        # Show current branch
+        log_section "📦 Submodule Branch: $SUBMODULE"
+        echo "Current branch: $(git branch --show-current || echo "detached HEAD")"
+        echo "Commit: $(git log -1 --oneline)"
+        echo ""
+        echo "Available branches:"
+        git branch -a
+    else
+        # Switch branch
+        log_section "📦 Switching Submodule Branch"
+        log_info "Submodule: $SUBMODULE"
+        log_info "Branch: $BRANCH"
+        
+        git fetch
+        git checkout "$BRANCH"
+        
+        log_success "Switched to branch: $BRANCH"
+    fi
+}
+
+action_submodule_update() {
+    if [[ "$ALL" == "true" ]]; then
+        log_section "📦 Updating All Submodules"
+        
+        cd "$REPO_ROOT"
+        
+        git submodule update --remote --recursive
+        
+        log_success "All submodules updated"
+    elif [[ -n "$SUBMODULE" ]]; then
+        log_section "📦 Updating Submodule: $SUBMODULE"
+        
+        cd "$REPO_ROOT"
+        
+        if [[ ! -d "$SUBMODULE" ]]; then
+            log_error "Submodule not found: $SUBMODULE"
+            exit 1
+        fi
+        
+        git submodule update --remote "$SUBMODULE"
+        
+        log_success "Submodule updated: $SUBMODULE"
+    else
+        log_error "Specify --submodule <name> or --all"
+        exit 1
+    fi
+}
+
+action_submodule_reset() {
+    if [[ -z "$SUBMODULE" ]]; then
+        log_error "Submodule name required"
+        log_error "Usage: llorch-git submodule-reset --submodule <name>"
+        exit 1
+    fi
+    
+    log_section "📦 Resetting Submodule: $SUBMODULE"
+    log_warn "This will reset submodule to committed version"
+    
+    cd "$REPO_ROOT"
+    
+    if [[ ! -d "$SUBMODULE" ]]; then
+        log_error "Submodule not found: $SUBMODULE"
+        exit 1
+    fi
+    
+    git submodule update --init "$SUBMODULE"
+    
+    log_success "Submodule reset: $SUBMODULE"
+}
+
+action_clean() {
+    log_section "🧹 Clean Untracked Files"
+    log_warn "This will remove untracked files"
+    
+    cd "$REPO_ROOT"
+    
+    echo "Untracked files:"
+    git clean -n -d
+    
+    echo ""
+    if [[ "$FORCE" != "true" ]]; then
+        read -p "Remove these files? (y/N) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            log_info "Cancelled"
+            exit 0
+        fi
+    fi
+    
+    git clean -f -d
+    
+    log_success "Clean complete"
+}
+
+action_branches() {
+    log_section "🌿 Branches"
+    
+    cd "$REPO_ROOT"
+    
+    echo "Local branches:"
+    echo "─────────────────────────────────────────────────────────"
+    git branch -vv
+    
+    echo ""
+    echo "Remote branches:"
+    echo "─────────────────────────────────────────────────────────"
+    git branch -r
+    
+    log_success "Branches listed"
+}
+
+action_log() {
+    log_section "📜 Recent Commits"
+    
+    cd "$REPO_ROOT"
+    
+    git log --oneline --graph --decorate -20
+    
+    log_success "Log retrieved"
+}
+
+# Execute action
+case "$ACTION" in
+    status)
+        action_status
+        ;;
+    pull)
+        action_pull
+        ;;
+    sync)
+        action_sync
+        ;;
+    submodules)
+        action_submodules
+        ;;
+    submodule-branch)
+        action_submodule_branch
+        ;;
+    submodule-update)
+        action_submodule_update
+        ;;
+    submodule-reset)
+        action_submodule_reset
+        ;;
+    clean)
+        action_clean
+        ;;
+    branches)
+        action_branches
+        ;;
+    log)
+        action_log
+        ;;
+    *)
+        log_error "Unknown action: $ACTION"
+        echo ""
+        usage
+        exit 1
+        ;;
+esac

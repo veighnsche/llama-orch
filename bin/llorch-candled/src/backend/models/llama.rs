@@ -13,12 +13,14 @@ use std::path::Path;
 /// Llama model wrapper
 ///
 /// TEAM-017: Wraps candle-transformers Llama with its natural interface
+/// TEAM-021: Added device field to support cache reset
 #[derive(Debug)]
 pub struct LlamaModel {
     model: Llama,
     cache: Cache,
     config: Config,
     vocab_size: usize,
+    device: Device,
 }
 
 impl LlamaModel {
@@ -95,7 +97,13 @@ impl LlamaModel {
             "Loaded Llama model"
         );
 
-        Ok(Self { model, cache, config, vocab_size: vocab_size as usize })
+        Ok(Self { 
+            model, 
+            cache, 
+            config, 
+            vocab_size: vocab_size as usize,
+            device: device.clone(),
+        })
     }
 
     /// Forward pass using Llama's natural interface
@@ -166,5 +174,22 @@ impl LlamaModel {
     /// Get vocab size
     pub fn vocab_size(&self) -> usize {
         self.vocab_size
+    }
+
+    /// Reset cache to clear KV history between requests
+    ///
+    /// TEAM-021: Required to clear state between HTTP requests
+    /// Candle's Cache doesn't expose clear(), so we recreate it
+    /// Uses F32 dtype per TEAM-019 (Metal F16 causes issues)
+    /// 
+    /// 🎯 TEAM-021 Victory: Proper cache lifecycle management!
+    pub fn reset_cache(&mut self) -> Result<()> {
+        let dtype = DType::F32; // TEAM-019: F32 for all backends
+        
+        self.cache = Cache::new(true, dtype, &self.config, &self.device)
+            .context("Failed to recreate cache")?;
+        
+        tracing::debug!("Cache reset complete - ready for new request");
+        Ok(())
     }
 }

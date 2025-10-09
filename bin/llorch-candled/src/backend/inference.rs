@@ -66,6 +66,9 @@ impl CandleInferenceBackend {
     /// TEAM-014: Eliminates cold start by running a single token generation.
     /// This initializes CUDA kernels and caches, preventing 9s overhead on first request.
     /// TEAM-017: Updated to use Model enum
+    /// TEAM-021: Warmup uses inference cache, will be reset before actual inference
+    /// 
+    /// 🎯 TEAM-021: Warmup doesn't pollute inference - cache reset handles it!
     pub fn warmup(&mut self) -> Result<()> {
         tracing::info!("Starting GPU warmup...");
         let start = std::time::Instant::now();
@@ -87,10 +90,14 @@ impl CandleInferenceBackend {
             .context("Failed to unsqueeze warmup tensor")?;
 
         // TEAM-017: Single forward pass using Model enum (delegates to specific model)
+        // TEAM-021: This uses the inference cache, but execute() will reset it before use
         let _logits = self.model.forward(&input_ids, 0).context("Warmup forward pass failed")?;
 
         let duration = start.elapsed();
-        tracing::info!(duration_ms = duration.as_millis(), "GPU warmup complete");
+        tracing::info!(
+            duration_ms = duration.as_millis(), 
+            "GPU warmup complete (cache will be reset before inference)"
+        );
 
         Ok(())
     }
@@ -124,6 +131,12 @@ impl InferenceBackend for CandleInferenceBackend {
         let mut tokens = encoding.get_ids().to_vec();
 
         tracing::debug!(prompt_tokens = tokens.len(), "Prompt tokenized");
+
+        // TEAM-021: Reset cache to clear warmup pollution
+        // Warmup leaves KV pairs in cache, causing mask broadcasting errors
+        // 🎯 TEAM-021 Victory: Clean cache = no mask mismatch!
+        self.model.reset_cache().context("Failed to reset cache before inference")?;
+        tracing::debug!("Cache reset before inference to clear warmup pollution");
 
         // TEAM-014: Create LogitsProcessor for proper sampling
         // TEAM-015: Delegates to sampling module

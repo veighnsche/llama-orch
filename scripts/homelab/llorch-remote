@@ -7,10 +7,11 @@
 
 set -euo pipefail
 
-VERSION="0.1.0"
+VERSION="0.2.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_URL="${LLORCH_REPO_URL:-https://github.com/veighnsche/llama-orch.git}"
 REMOTE_PATH="${LLORCH_REMOTE_PATH:-~/Projects/llama-orch}"
+LOCAL_SCRIPTS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Colors for output
 RED='\033[0;31m'
@@ -58,32 +59,39 @@ usage() {
 ${CYAN}llorch-remote${NC} v${VERSION} - Remote testing CLI for llama-orch
 
 ${YELLOW}USAGE:${NC}
-    llorch-remote <HOST> <BACKEND> <ACTION> [OPTIONS]
+    llorch-remote <HOST> <ACTION> [BACKEND] [OPTIONS]
 
     ${GREEN}HOST${NC}        Remote host (e.g., mac.home.arpa, workstation.home.arpa)
-    ${GREEN}BACKEND${NC}     Backend type: cpu, cuda, metal
     ${GREEN}ACTION${NC}      Action to perform (see below)
+    ${GREEN}BACKEND${NC}     Backend type: cpu, cuda, metal (required for build/test/inference actions)
 
 ${YELLOW}ACTIONS:${NC}
-    ${MAGENT### Actions
-
-| Action | Description |
-|--------|-------------|
-| `clone` | Clone repository to remote host |
-| `pull` | Pull latest changes from origin/main |
-| `status` | Show git status and system info |
-| `build` | Build backend binary (release mode) |
-| `test` | Run all tests for backend |
-| `smoke` | Run smoke tests only |
-| `unit` | Run unit tests only |
-| `integration` | Run integration tests only |
-| `download-model` | Download test model (tinyllama by default) |
-| `inference` | Generate a test story with actual model |
-| `debug-inference` | Run inference with detailed logging and diagnostics |
-| `logs` | Show worker logs from last run |
-| `clean` | Clean build artifacts |
-| `info` | Show backend and hardware info |
-| `all` | Run: pull → build → test → download-model → inference |
+    ${MAGENTA}Git Management (calls llorch-git remotely):${NC}
+    status          Show git status and system info
+    pull            Pull latest changes and update submodules
+    sync            Sync to origin/main (hard reset)
+    
+    ${MAGENTA}Model Management (calls llorch-models remotely):${NC}
+    models-list     List all models on remote
+    models-download Download a model on remote
+    models-info     Show model info on remote
+    
+    ${MAGENTA}Build & Test (requires BACKEND):${NC}
+    build           Build backend binary (release mode)
+    test            Run all tests for backend
+    smoke           Run smoke tests only
+    unit            Run unit tests only
+    integration     Run integration tests only
+    
+    ${MAGENTA}Inference (requires BACKEND):${NC}
+    inference       Generate a test story with actual model
+    debug-inference Run inference with detailed logging
+    logs            Show worker logs from last run
+    info            Show backend and hardware info
+    
+    ${MAGENTA}Utilities:${NC}
+    clean           Clean build artifacts
+    all             Run: pull → build → test → inference
 
 ${YELLOW}OPTIONS:${NC}
     --model PATH    Model path for inference (default: \$LLORCH_TEST_MODEL_PATH)
@@ -98,29 +106,27 @@ ${YELLOW}ENVIRONMENT VARIABLES:${NC}
     LLORCH_TEST_MODEL_PATH  Model path for inference tests
 
 ${YELLOW}EXAMPLES:${NC}
-    # Clone repo to Mac
-    llorch-remote mac.home.arpa metal clone
+    # Git operations
+    llorch-remote mac.home.arpa status
+    llorch-remote mac.home.arpa pull
+    llorch-remote mac.home.arpa sync
 
-    # Build CUDA backend on workstation
-    llorch-remote workstation.home.arpa cuda build
+    # Model management
+    llorch-remote mac.home.arpa models-list
+    llorch-remote mac.home.arpa models-download tinyllama
+    llorch-remote mac.home.arpa models-info tinyllama
 
-    # Run tests on Mac Metal backend
-    llorch-remote mac.home.arpa metal test
+    # Build and test
+    llorch-remote workstation.home.arpa build cuda
+    llorch-remote mac.home.arpa test metal
 
-    # Generate test story (inference)
-    llorch-remote mac.home.arpa metal inference --model /path/to/model
+    # Inference
+    llorch-remote mac.home.arpa inference metal
+    llorch-remote mac.home.arpa debug-inference metal
+    llorch-remote mac.home.arpa logs metal
 
-    # Full workflow: pull, build, test, inference
-    llorch-remote mac.home.arpa metal all
-
-    # Debug inference with detailed logs
-    llorch-remote mac.home.arpa metal debug-inference
-
-    # Check system info
-    llorch-remote mac.home.arpa metal info
-
-    # View logs from last run
-    llorch-remote mac.home.arpa metal logs
+    # Full workflow
+    llorch-remote mac.home.arpa all metal
 
 ${YELLOW}BACKEND-SPECIFIC BINARIES:${NC}
     cpu   → llorch-cpu-candled
@@ -131,15 +137,21 @@ EOF
 }
 
 # Parse arguments
-if [[ $# -lt 3 ]]; then
+if [[ $# -lt 2 ]]; then
     usage
     exit 1
 fi
 
 HOST="$1"
-BACKEND="$2"
-ACTION="$3"
-shift 3
+ACTION="$2"
+shift 2
+
+# Backend is optional - will be validated later if needed
+BACKEND=""
+if [[ $# -gt 0 ]] && [[ "$1" =~ ^(cpu|cuda|metal)$ ]]; then
+    BACKEND="$1"
+    shift
+fi
 
 # Parse options
 MODEL_PATH="${LLORCH_TEST_MODEL_PATH:-}"
@@ -176,65 +188,122 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate backend
-case "$BACKEND" in
-    cpu|cuda|metal)
-        BINARY_NAME="llorch-${BACKEND}-candled"
-        ;;
-    *)
-        log_error "Invalid backend: $BACKEND"
-        log_error "Valid backends: cpu, cuda, metal"
-        ;;
-esac
+# Actions that require backend
+BACKEND_REQUIRED_ACTIONS=("build" "test" "smoke" "unit" "integration" "inference" "debug-inference" "logs" "info" "all")
+
+# Parse model argument for model actions
+MODEL_ARG=""
+if [[ "$ACTION" =~ ^models- ]]; then
+    if [[ -n "$BACKEND" ]]; then
+        MODEL_ARG="$BACKEND"
+        BACKEND=""
+    fi
+fi
+
+# Validate backend if required
+requires_backend() {
+    local action="$1"
+    for required_action in "${BACKEND_REQUIRED_ACTIONS[@]}"; do
+        if [[ "$action" == "$required_action" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+if requires_backend "$ACTION"; then
+    if [[ -z "$BACKEND" ]]; then
+        log_error "Action '$ACTION' requires a backend argument"
+        log_error "Usage: llorch-remote $HOST $ACTION <cpu|cuda|metal> [OPTIONS]"
+        exit 1
+    fi
+    case "$BACKEND" in
+        cpu|cuda|metal)
+            BINARY_NAME="llorch-${BACKEND}-candled"
+            ;;
+        *)
+            log_error "Invalid backend: $BACKEND"
+            log_error "Valid backends: cpu, cuda, metal"
+            exit 1
+            ;;
+    esac
+fi
 
 # Action implementations
-action_clone() {
-    log_section "📦 Cloning Repository"
+action_status() {
+    log_section "📊 Repository Status"
     log_info "Host: $HOST"
-    log_info "URL: $REPO_URL"
-    log_info "Path: $REMOTE_PATH"
     
-    ssh_exec "$HOST" "git clone --recurse-submodules $REPO_URL $REMOTE_PATH"
+    ssh_exec "$HOST" "cd $REMOTE_PATH && ./scripts/llorch-git status"
     
-    log_success "Repository cloned successfully (including submodules)"
+    echo ""
+    echo "System Info:"
+    echo "─────────────────────────────────────────────────────────"
+    ssh_exec "$HOST" "uname -a"
+    
+    echo ""
+    echo "Rust Toolchain:"
+    echo "─────────────────────────────────────────────────────────"
+    ssh_exec "$HOST" "rustc --version && cargo --version"
+    
+    log_success "Status retrieved"
 }
 
 action_pull() {
     log_section "🔄 Pulling Latest Changes"
     log_info "Host: $HOST"
     
-    ssh_exec "$HOST" "cd $REMOTE_PATH && git fetch --all && git reset --hard origin/main && git submodule update --init --recursive"
+    ssh_exec "$HOST" "cd $REMOTE_PATH && ./scripts/llorch-git pull"
     
-    log_success "Repository updated to latest main (including submodules)"
+    log_success "Pull complete"
 }
 
-action_status() {
-    log_section "📊 Repository Status"
+action_sync() {
+    log_section "🔄 Syncing to Origin/Main"
     log_info "Host: $HOST"
     
-    ssh_exec "$HOST" bash <<EOF
-set -euo pipefail
-cd $REMOTE_PATH
-
-echo "Git Status:"
-echo "─────────────────────────────────────────────────────────"
-git log -1 --oneline
-echo "Branch: \$(git branch --show-current)"
-echo "Remote: \$(git remote get-url origin)"
-echo ""
-
-echo "System Info:"
-echo "─────────────────────────────────────────────────────────"
-uname -a
-echo ""
-
-echo "Rust Toolchain:"
-echo "─────────────────────────────────────────────────────────"
-rustc --version
-cargo --version
-EOF
+    ssh_exec "$HOST" "cd $REMOTE_PATH && ./scripts/llorch-git sync --force"
     
-    log_success "Status retrieved"
+    log_success "Sync complete"
+}
+
+action_models_list() {
+    log_section "📋 Listing Models"
+    log_info "Host: $HOST"
+    
+    ssh_exec "$HOST" "cd $REMOTE_PATH && ./scripts/llorch-models list"
+    
+    log_success "List complete"
+}
+
+action_models_download() {
+    if [[ -z "$MODEL_ARG" ]]; then
+        log_error "Model name required"
+        log_error "Usage: llorch-remote $HOST models-download <model>"
+        exit 1
+    fi
+    
+    log_section "📥 Downloading Model: $MODEL_ARG"
+    log_info "Host: $HOST"
+    
+    ssh_exec "$HOST" "cd $REMOTE_PATH && ./scripts/llorch-models download $MODEL_ARG"
+    
+    log_success "Download complete"
+}
+
+action_models_info() {
+    if [[ -z "$MODEL_ARG" ]]; then
+        log_error "Model name required"
+        log_error "Usage: llorch-remote $HOST models-info <model>"
+        exit 1
+    fi
+    
+    log_section "ℹ️  Model Info: $MODEL_ARG"
+    log_info "Host: $HOST"
+    
+    ssh_exec "$HOST" "cd $REMOTE_PATH && ./scripts/llorch-models info $MODEL_ARG"
+    
+    log_success "Info retrieved"
 }
 
 action_build() {
@@ -328,21 +397,6 @@ EOF
     log_success "Integration tests complete"
 }
 
-action_download_model() {
-    log_section "📥 Downloading Test Model"
-    log_info "Host: $HOST"
-    log_info "Model: TinyLlama 1.1B Chat (Q4_K_M)"
-    
-    ssh_exec "$HOST" bash <<EOF
-set -euo pipefail
-cd $REMOTE_PATH
-
-# Run the download script
-bash .docs/testing/download_tinyllama.sh
-EOF
-    
-    log_success "Model download complete"
-}
 
 action_debug_inference() {
     log_section "🐛 Debug Inference Test ($BACKEND)"
@@ -654,12 +708,11 @@ action_all() {
     log_section "🚀 Running Full Workflow"
     log_info "Host: $HOST"
     log_info "Backend: $BACKEND"
-    log_info "Steps: pull → build → test → download-model → inference"
+    log_info "Steps: pull → build → test → inference"
     
     action_pull
     action_build
     action_test
-    action_download_model
     action_inference
     
     log_section "✅ Full Workflow Complete"
@@ -667,14 +720,23 @@ action_all() {
 
 # Execute action
 case "$ACTION" in
-    clone)
-        action_clone
+    status)
+        action_status
         ;;
     pull)
         action_pull
         ;;
-    status)
-        action_status
+    sync)
+        action_sync
+        ;;
+    models-list)
+        action_models_list
+        ;;
+    models-download)
+        action_models_download
+        ;;
+    models-info)
+        action_models_info
         ;;
     build)
         action_build
@@ -690,9 +752,6 @@ case "$ACTION" in
         ;;
     integration)
         action_integration
-        ;;
-    download-model)
-        action_download_model
         ;;
     inference)
         action_inference
