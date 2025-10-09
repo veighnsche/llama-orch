@@ -28,3 +28,6 @@
 [submodule "reference/candle-vllm"]
 	path = reference/candle-vllm
 	url = https://github.com/veighnsche/candle-vllm.git
+[submodule "reference/ollama"]
+	path = reference/ollama
+	url = https://github.com/veighnsche/ollama
