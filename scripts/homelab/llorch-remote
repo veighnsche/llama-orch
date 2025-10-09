@@ -387,26 +387,33 @@ done
 # Send inference request
 echo ""
 echo "Sending inference request..."
-RESPONSE=\$(curl -s -X POST http://localhost:9876/v1/execute \\
+
+# Use a temp file to capture response
+curl -s -X POST http://localhost:9876/v1/execute \\
     -H "Content-Type: application/json" \\
-    -d '{"job_id":"test-story","prompt":"Once upon a time","max_tokens":50,"temperature":0.7,"seed":42}')
+    -d '{"job_id":"test-story","prompt":"Once upon a time","max_tokens":50,"temperature":0.7,"seed":42}' \\
+    -o /tmp/response.json
 
 # Kill worker
 kill \$WORKER_PID 2>/dev/null || true
 wait \$WORKER_PID 2>/dev/null || true
 
 # Parse and display response
-if [[ -n "\$RESPONSE" ]]; then
+if [[ -f /tmp/response.json ]] && [[ -s /tmp/response.json ]]; then
     echo ""
     echo "📖 Generated Story:"
     echo "─────────────────────────────────────────────────────────"
-    echo "\$RESPONSE" | jq -r '.text // .error // "No text in response"' 2>/dev/null || echo "\$RESPONSE"
+    cat /tmp/response.json | jq -r '.text // .error // "No text in response"' 2>/dev/null || cat /tmp/response.json
+    echo ""
     echo "─────────────────────────────────────────────────────────"
     echo ""
     echo "Backend: $BACKEND"
     echo "Status: ✅ Inference test complete"
+    rm -f /tmp/response.json
 else
     echo "❌ No response from worker"
+    echo "Worker log:"
+    tail -30 /tmp/worker.log
     exit 1
 fi
 EOF
