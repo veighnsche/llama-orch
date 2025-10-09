@@ -9,10 +9,12 @@ use super::sampling;
 use super::tokenizer_loader;
 use crate::common::{InferenceResult, SamplingConfig};
 use crate::http::InferenceBackend;
+use crate::narration::*;
 use crate::token_output_stream::TokenOutputStream;
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use candle_core::{Device, Tensor};
+use observability_narration_core::{narrate, NarrationFields};
 use std::path::Path;
 use tokenizers::Tokenizer;
 
@@ -53,6 +55,16 @@ impl CandleInferenceBackend {
             "Model and tokenizer loaded successfully"
         );
 
+        narrate(NarrationFields {
+            actor: ACTOR_MODEL_LOADER,
+            action: ACTION_MODEL_LOAD,
+            target: model.architecture().to_string(),
+            human: format!("Loaded {} model ({} MB, vocab: {})", model.architecture(), model_size_bytes / 1_000_000, model.vocab_size()),
+            cute: Some(format!("{} model tucked into memory! {} MB cozy! 🛏️", model.architecture(), model_size_bytes / 1_000_000)),
+            model_ref: Some(model.architecture().to_string()),
+            ..Default::default()
+        });
+
         Ok(Self { model, tokenizer, device, model_size_bytes })
     }
 
@@ -71,6 +83,16 @@ impl CandleInferenceBackend {
     /// 🎯 TEAM-021: Warmup doesn't pollute inference - cache reset handles it!
     pub fn warmup(&mut self) -> Result<()> {
         tracing::info!("Starting GPU warmup...");
+
+        narrate(NarrationFields {
+            actor: ACTOR_CANDLE_BACKEND,
+            action: ACTION_WARMUP,
+            target: "gpu".to_string(),
+            human: "Starting GPU warmup".to_string(),
+            cute: Some("Stretching GPU muscles before the big workout! 🏋️".to_string()),
+            ..Default::default()
+        });
+
         let start = std::time::Instant::now();
 
         // Use a simple prompt for warmup
@@ -99,6 +121,16 @@ impl CandleInferenceBackend {
             "GPU warmup complete (cache will be reset before inference)"
         );
 
+        narrate(NarrationFields {
+            actor: ACTOR_CANDLE_BACKEND,
+            action: ACTION_WARMUP,
+            target: "complete".to_string(),
+            human: format!("GPU warmup complete ({} ms)", duration.as_millis()),
+            cute: Some(format!("GPU all warmed up in {} ms! Ready to zoom! ⚡", duration.as_millis())),
+            duration_ms: Some(duration.as_millis() as u64),
+            ..Default::default()
+        });
+
         Ok(())
     }
 }
@@ -123,6 +155,15 @@ impl InferenceBackend for CandleInferenceBackend {
             "Starting inference"
         );
 
+        narrate(NarrationFields {
+            actor: ACTOR_CANDLE_BACKEND,
+            action: ACTION_INFERENCE_START,
+            target: format!("prompt-{}-chars", prompt.len()),
+            human: format!("Starting inference (prompt: {} chars, max_tokens: {}, temp: {})", prompt.len(), config.max_tokens, config.temperature),
+            cute: Some(format!("Time to generate {} tokens! Let's go! 🚀", config.max_tokens)),
+            ..Default::default()
+        });
+
         // Tokenize prompt
         let encoding = self
             .tokenizer
@@ -132,11 +173,30 @@ impl InferenceBackend for CandleInferenceBackend {
 
         tracing::debug!(prompt_tokens = tokens.len(), "Prompt tokenized");
 
+        narrate(NarrationFields {
+            actor: ACTOR_TOKENIZER,
+            action: ACTION_TOKENIZE,
+            target: format!("{}-tokens", tokens.len()),
+            human: format!("Tokenized prompt ({} tokens)", tokens.len()),
+            cute: Some(format!("Chopped prompt into {} tasty tokens! 🍰", tokens.len())),
+            tokens_in: Some(tokens.len() as u64),
+            ..Default::default()
+        });
+
         // TEAM-021: Reset cache to clear warmup pollution
         // Warmup leaves KV pairs in cache, causing mask broadcasting errors
         // 🎯 TEAM-021 Victory: Clean cache = no mask mismatch!
         self.model.reset_cache().context("Failed to reset cache before inference")?;
         tracing::debug!("Cache reset before inference to clear warmup pollution");
+
+        narrate(NarrationFields {
+            actor: ACTOR_CANDLE_BACKEND,
+            action: ACTION_CACHE_RESET,
+            target: "kv-cache".to_string(),
+            human: "Reset KV cache before inference to clear warmup pollution".to_string(),
+            cute: Some("Tidying up the cache for a fresh start! 🧹".to_string()),
+            ..Default::default()
+        });
 
         // TEAM-014: Create LogitsProcessor for proper sampling
         // TEAM-015: Delegates to sampling module
@@ -231,6 +291,16 @@ impl InferenceBackend for CandleInferenceBackend {
             // Log progress
             if (pos + 1) % 10 == 0 {
                 tracing::debug!(tokens_generated = pos + 1, "Generation progress");
+
+                narrate(NarrationFields {
+                    actor: ACTOR_CANDLE_BACKEND,
+                    action: ACTION_TOKEN_GENERATE,
+                    target: format!("token-{}", pos + 1),
+                    human: format!("Generated {} tokens", pos + 1),
+                    cute: Some(format!("{} tokens and counting! 🎯", pos + 1)),
+                    tokens_out: Some((pos + 1) as u64),
+                    ..Default::default()
+                });
             }
         }
 
@@ -251,6 +321,17 @@ impl InferenceBackend for CandleInferenceBackend {
             tokens_per_sec = tokens_per_sec,
             "Inference completed"
         );
+
+        narrate(NarrationFields {
+            actor: ACTOR_CANDLE_BACKEND,
+            action: ACTION_INFERENCE_COMPLETE,
+            target: format!("{}-tokens", generated_tokens.len()),
+            human: format!("Inference completed ({} tokens in {} ms, {} tok/s)", generated_tokens.len(), duration_ms, tokens_per_sec),
+            cute: Some(format!("Generated {} tokens in {} ms! {} tok/s! 🎉", generated_tokens.len(), duration_ms, tokens_per_sec)),
+            tokens_out: Some(generated_tokens.len() as u64),
+            decode_time_ms: Some(duration_ms),
+            ..Default::default()
+        });
 
         Ok(InferenceResult::max_tokens(generated_text, generated_tokens, config.seed, duration_ms))
     }
