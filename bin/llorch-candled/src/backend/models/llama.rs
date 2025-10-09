@@ -2,6 +2,7 @@
 //!
 //! Created by: TEAM-017
 //! Refactored by: TEAM-017 (removed trait, using enum pattern)
+//! Modified by: TEAM-019 (fixed Metal/CUDA F16 dtype bug)
 
 use anyhow::{Context, Result};
 use candle_core::{DType, Device, Tensor};
@@ -75,8 +76,8 @@ impl LlamaModel {
         };
 
         // Create VarBuilder and load model
-        // TEAM-018: Use F16 for Metal backend (better support), F32 for others
-        let dtype = if device.is_metal() { DType::F16 } else { DType::F32 };
+        // TEAM-019: Use F32 for all backends (Metal F16 causes forward pass failures)
+        let dtype = DType::F32;
         tracing::info!(dtype = ?dtype, device = ?device, "Loading model with dtype");
         
         let vb = unsafe { VarBuilder::from_mmaped_safetensors(&safetensor_files, dtype, device)? };
