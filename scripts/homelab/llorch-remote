@@ -370,7 +370,13 @@ echo "Worker PID: \$WORKER_PID"
 
 # Wait for worker to be ready (longer for model loading)
 echo "Waiting for worker to load model..."
-sleep 10
+sleep 15
+
+# Check if worker is still running
+if ! kill -0 \$WORKER_PID 2>/dev/null; then
+    echo "❌ Worker process died"
+    exit 1
+fi
 
 # Send inference request
 echo ""
