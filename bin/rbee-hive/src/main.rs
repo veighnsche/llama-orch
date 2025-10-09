@@ -10,12 +10,13 @@
 //! Location: Runs on pool machines
 //!
 //! Created by: TEAM-022
-//! Modified by: TEAM-027
+//! Modified by: TEAM-027, TEAM-029
 
 mod cli;
 mod commands;
 mod http;
 mod monitor;
+mod provisioner;  // TEAM-029: Model provisioner
 mod registry;
 mod timeout;
 

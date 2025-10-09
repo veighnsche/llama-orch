@@ -11,23 +11,47 @@
 //! - `GET /v1/models/download/progress` - SSE progress stream
 //!
 //! Created by: TEAM-026
+//! Modified by: TEAM-029
 
 use crate::http::{health, models, workers};
+use crate::provisioner::ModelProvisioner;
 use crate::registry::WorkerRegistry;
 use axum::{
     routing::{get, post},
     Router,
 };
+use model_catalog::ModelCatalog;
 use std::sync::Arc;
+
+/// Shared application state
+/// TEAM-029: Added model catalog and provisioner
+#[derive(Clone)]
+pub struct AppState {
+    pub registry: Arc<WorkerRegistry>,
+    pub model_catalog: Arc<ModelCatalog>,
+    pub provisioner: Arc<ModelProvisioner>,
+}
 
 /// Create HTTP router with all endpoints
 ///
 /// # Arguments
 /// * `registry` - Worker registry (shared state)
+/// * `model_catalog` - Model catalog (shared state)
+/// * `provisioner` - Model provisioner (shared state)
 ///
 /// # Returns
 /// Router with all endpoints configured
-pub fn create_router(registry: Arc<WorkerRegistry>) -> Router {
+pub fn create_router(
+    registry: Arc<WorkerRegistry>,
+    model_catalog: Arc<ModelCatalog>,
+    provisioner: Arc<ModelProvisioner>,
+) -> Router {
+    let state = AppState {
+        registry,
+        model_catalog,
+        provisioner,
+    };
+
     Router::new()
         // Health endpoint
         .route("/v1/health", get(health::handle_health))
@@ -41,7 +65,7 @@ pub fn create_router(registry: Arc<WorkerRegistry>) -> Router {
             "/v1/models/download/progress",
             get(models::handle_download_progress),
         )
-        .with_state(registry)
+        .with_state(state)
 }
 
 #[cfg(test)]
@@ -50,8 +74,14 @@ mod tests {
 
     #[test]
     fn test_router_creation() {
+        use crate::provisioner::ModelProvisioner;
+        use model_catalog::ModelCatalog;
+        use std::path::PathBuf;
+
         let registry = Arc::new(WorkerRegistry::new());
-        let _router = create_router(registry);
+        let catalog = Arc::new(ModelCatalog::new(":memory:".to_string()));
+        let provisioner = Arc::new(ModelProvisioner::new(PathBuf::from("/tmp")));
+        let _router = create_router(registry, catalog, provisioner);
         // Router creation should not panic
     }
 }

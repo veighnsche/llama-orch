@@ -6,12 +6,13 @@
 //! - GET /v1/workers/list - List all workers
 //!
 //! Created by: TEAM-026
-//! Modified by: TEAM-027
+//! Modified by: TEAM-027, TEAM-029
 
-use crate::registry::{WorkerInfo, WorkerRegistry, WorkerState};
+use crate::http::routes::AppState;
+use crate::registry::{WorkerInfo, WorkerState};
 use axum::{extract::State, http::StatusCode, Json};
+use model_catalog::ModelInfo;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use std::time::SystemTime;
 use tracing::{error, info};
 use uuid::Uuid;
@@ -74,8 +75,9 @@ pub struct ListWorkersResponse {
 /// Handle POST /v1/workers/spawn
 ///
 /// Spawns a new worker process
+/// TEAM-029: Added model provisioning
 pub async fn handle_spawn_worker(
-    State(registry): State<Arc<WorkerRegistry>>,
+    State(state): State<AppState>,
     Json(request): Json<SpawnWorkerRequest>,
 ) -> Result<Json<SpawnWorkerResponse>, (StatusCode, String)> {
     info!(
@@ -85,13 +87,67 @@ pub async fn handle_spawn_worker(
         "Spawning worker"
     );
 
+    // TEAM-029: Phase 3 - Check model catalog and provision if needed
+    let (provider, reference) = parse_model_ref(&request.model_ref)
+        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid model_ref: {}", e)))?;
+
+    info!("Checking model catalog for {}/{}", provider, reference);
+    
+    let model_path = match state
+        .model_catalog
+        .find_model(&reference, &provider)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Catalog error: {}", e)))?
+    {
+        Some(model_info) => {
+            info!("Model found in catalog: {}", model_info.local_path);
+            model_info.local_path
+        }
+        None => {
+            info!("Model not found in catalog, provisioning...");
+            
+            // Download model
+            let downloaded_path = state
+                .provisioner
+                .download_model(&reference, &provider)
+                .await
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Download failed: {}", e)))?;
+
+            let path_str = downloaded_path.to_string_lossy().to_string();
+            
+            // Register in catalog
+            let model_info = ModelInfo {
+                reference: reference.clone(),
+                provider: provider.clone(),
+                local_path: path_str.clone(),
+                size_bytes: state
+                    .provisioner
+                    .get_model_size(&downloaded_path)
+                    .unwrap_or(0),
+                downloaded_at: SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs() as i64,
+            };
+
+            state
+                .model_catalog
+                .register_model(&model_info)
+                .await
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Catalog registration failed: {}", e)))?;
+
+            info!("Model provisioned and registered: {}", path_str);
+            path_str
+        }
+    };
+
     // TEAM-027: Generate worker ID
     let worker_id = format!("worker-{}", Uuid::new_v4());
 
     // TEAM-027: Determine port (simple allocation: start at 8081)
     // For MVP, use simple sequential allocation
     // Production should use proper port allocation or OS-assigned ports
-    let workers = registry.list().await;
+    let workers = state.registry.list().await;
     let port = 8081 + workers.len() as u16;
     
     // TEAM-027: Get hostname for URL
@@ -116,11 +172,12 @@ pub async fn handle_spawn_worker(
 
     // Spawn worker process
     // Per test-001-mvp.md lines 136-143
+    // TEAM-029: Use model_path from catalog/provisioner instead of request.model_path
     let spawn_result = tokio::process::Command::new(worker_binary)
         .arg("--worker-id")
         .arg(&worker_id)
         .arg("--model")
-        .arg(&request.model_path)
+        .arg(&model_path)  // TEAM-029: Use provisioned model path
         .arg("--backend")
         .arg(&request.backend)
         .arg("--device")
@@ -148,7 +205,7 @@ pub async fn handle_spawn_worker(
                 slots_available: 0,
             };
 
-            registry.register(worker).await;
+            state.registry.register(worker).await;
 
             info!(
                 worker_id = %worker_id,
@@ -172,11 +229,21 @@ pub async fn handle_spawn_worker(
     }
 }
 
+/// Parse model reference into provider and reference
+/// TEAM-029: Helper function
+fn parse_model_ref(model_ref: &str) -> Result<(String, String), String> {
+    if let Some((provider, reference)) = model_ref.split_once(':') {
+        Ok((provider.to_string(), reference.to_string()))
+    } else {
+        Err(format!("Invalid model_ref format: expected 'provider:reference', got '{}'", model_ref))
+    }
+}
+
 /// Handle POST /v1/workers/ready
 ///
 /// Worker ready callback - worker reports it's ready to accept requests
 pub async fn handle_worker_ready(
-    State(registry): State<Arc<WorkerRegistry>>,
+    State(state): State<AppState>,
     Json(request): Json<WorkerReadyRequest>,
 ) -> Json<WorkerReadyResponse> {
     info!(
@@ -186,7 +253,7 @@ pub async fn handle_worker_ready(
     );
 
     // Update worker state to idle
-    registry
+    state.registry
         .update_state(&request.worker_id, WorkerState::Idle)
         .await;
 
@@ -199,9 +266,9 @@ pub async fn handle_worker_ready(
 ///
 /// List all workers
 pub async fn handle_list_workers(
-    State(registry): State<Arc<WorkerRegistry>>,
+    State(state): State<AppState>,
 ) -> Json<ListWorkersResponse> {
-    let workers = registry.list().await;
+    let workers = state.registry.list().await;
 
     Json(ListWorkersResponse { workers })
 }

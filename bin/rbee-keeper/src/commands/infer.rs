@@ -58,7 +58,12 @@ pub async fn handle(
 
     // PHASE 2: Pool Preflight
     println!("{}", "[Phase 2] Pool preflight check...".yellow());
-    let pool_url = format!("http://{}.home.arpa:8080", node);
+    // TEAM-029: Handle localhost specially (don't append .home.arpa)
+    let pool_url = if node == "localhost" || node == "127.0.0.1" {
+        format!("http://{}:8080", node)
+    } else {
+        format!("http://{}.home.arpa:8080", node)
+    };
     let pool_client = PoolClient::new(pool_url.clone(), "api-key".to_string());
 
     let health = pool_client.health_check().await?;
@@ -66,12 +71,13 @@ pub async fn handle(
     println!();
 
     // PHASE 3-5: Spawn Worker
+    // TEAM-029: Pool will resolve model_path from catalog
     println!("{}", "[Phase 3-5] Spawning worker...".yellow());
     let spawn_request = SpawnWorkerRequest {
         model_ref: model.clone(),
         backend: "cpu".to_string(), // TODO: Detect backend from node capabilities
         device: 0,
-        model_path: "/models/model.gguf".to_string(), // TODO: Get from catalog
+        model_path: String::new(), // TEAM-029: Pool resolves this from catalog
     };
 
     let worker = pool_client.spawn_worker(spawn_request).await?;
@@ -112,7 +118,7 @@ pub async fn handle(
 /// Per test-001-mvp.md Phase 7: Worker Health Check
 /// Polls GET /v1/ready until ready=true or timeout (5 minutes)
 ///
-/// Modified by: TEAM-028
+/// Modified by: TEAM-028, TEAM-029
 async fn wait_for_worker_ready(worker_url: &str) -> Result<()> {
     use std::io::Write;
 
@@ -126,6 +132,8 @@ async fn wait_for_worker_ready(worker_url: &str) -> Result<()> {
     let client = reqwest::Client::new();
     let start = std::time::Instant::now();
     let timeout = std::time::Duration::from_secs(300); // 5 minutes
+    let mut consecutive_failures = 0;
+    const MAX_CONSECUTIVE_FAILURES: u32 = 10; // Fail fast after 10 connection errors
 
     print!("Waiting for worker ready");
     std::io::stdout().flush()?;
@@ -138,14 +146,41 @@ async fn wait_for_worker_ready(worker_url: &str) -> Result<()> {
             .await
         {
             Ok(response) if response.status().is_success() => {
+                // Reset failure counter on successful connection
+                consecutive_failures = 0;
+                
                 if let Ok(ready) = response.json::<ReadyResponse>().await {
                     if ready.ready {
                         println!(" {}", "✓".green());
                         return Ok(());
                     }
+                    // Worker responded but not ready yet - keep waiting
                 }
             }
-            _ => {}
+            Ok(response) => {
+                // TEAM-029: Worker responded with error status
+                consecutive_failures += 1;
+                if consecutive_failures >= MAX_CONSECUTIVE_FAILURES {
+                    println!(" {}", "✗".red());
+                    anyhow::bail!(
+                        "Worker returned HTTP {} after {} attempts - worker may have failed to start",
+                        response.status(),
+                        consecutive_failures
+                    );
+                }
+            }
+            Err(e) => {
+                // TEAM-029: Connection error - worker may not be running
+                consecutive_failures += 1;
+                if consecutive_failures >= MAX_CONSECUTIVE_FAILURES {
+                    println!(" {}", "✗".red());
+                    anyhow::bail!(
+                        "Failed to connect to worker after {} attempts: {} - worker binary may not be running",
+                        consecutive_failures,
+                        e
+                    );
+                }
+            }
         }
 
         if start.elapsed() > timeout {

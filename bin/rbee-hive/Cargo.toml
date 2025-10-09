@@ -15,6 +15,7 @@ path = "src/main.rs"
 
 [dependencies]
 hive-core = { path = "../shared-crates/hive-core" }
+model-catalog = { path = "../shared-crates/model-catalog" }  # TEAM-029: Model catalog
 clap = { version = "4.5", features = ["derive"] }
 anyhow = "1.0"
 thiserror = { workspace = true }
@@ -22,6 +23,7 @@ colored = "2.0"
 serde_json = "1.0"
 hostname = "0.4"
 chrono = { version = "0.4", features = ["serde"] }
+dirs = "5.0"  # TEAM-029: For home directory detection
 # TEAM-022: nix removed - replaced with sysinfo for cross-platform process management
 daemonize = { workspace = true }
 indicatif = { workspace = true }

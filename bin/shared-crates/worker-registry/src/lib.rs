@@ -38,11 +38,28 @@ impl WorkerRegistry {
         Self { db_path }
     }
 
+    /// Get connection string with sqlite:// prefix
+    /// Modified by: TEAM-029
+    fn connection_string(&self) -> String {
+        if self.db_path.starts_with("sqlite://") || self.db_path.starts_with(":memory:") || self.db_path.starts_with("file:") {
+            self.db_path.clone()
+        } else {
+            // TEAM-029: Add ?mode=rwc to create database if it doesn't exist
+            format!("sqlite://{}?mode=rwc", self.db_path)
+        }
+    }
+
     /// Initialize database schema
     ///
     /// Creates workers table if it doesn't exist
+    /// Modified by: TEAM-029
     pub async fn init(&self) -> Result<()> {
-        let mut conn = SqliteConnection::connect(&self.db_path).await?;
+        // TEAM-029: Ensure parent directory exists
+        if let Some(parent) = std::path::Path::new(&self.db_path).parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        
+        let mut conn = SqliteConnection::connect(&self.connection_string()).await?;
 
         sqlx::query(
             r#"
@@ -73,7 +90,7 @@ impl WorkerRegistry {
     /// # Returns
     /// Worker info if found and healthy (checked within last 60 seconds)
     pub async fn find_worker(&self, node: &str, model_ref: &str) -> Result<Option<WorkerInfo>> {
-        let mut conn = SqliteConnection::connect(&self.db_path).await?;
+        let mut conn = SqliteConnection::connect(&self.connection_string()).await?;
 
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)?
@@ -110,7 +127,7 @@ impl WorkerRegistry {
     /// # Arguments
     /// * `worker` - Worker info to register
     pub async fn register_worker(&self, worker: &WorkerInfo) -> Result<()> {
-        let mut conn = SqliteConnection::connect(&self.db_path).await?;
+        let mut conn = SqliteConnection::connect(&self.connection_string()).await?;
 
         sqlx::query(
             r#"
@@ -137,7 +154,7 @@ impl WorkerRegistry {
     /// * `worker_id` - Worker ID
     /// * `state` - New state
     pub async fn update_state(&self, worker_id: &str, state: &str) -> Result<()> {
-        let mut conn = SqliteConnection::connect(&self.db_path).await?;
+        let mut conn = SqliteConnection::connect(&self.connection_string()).await?;
 
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)?
@@ -164,7 +181,7 @@ impl WorkerRegistry {
     /// # Arguments
     /// * `worker_id` - Worker ID
     pub async fn remove_worker(&self, worker_id: &str) -> Result<()> {
-        let mut conn = SqliteConnection::connect(&self.db_path).await?;
+        let mut conn = SqliteConnection::connect(&self.connection_string()).await?;
 
         sqlx::query(
             r#"
@@ -183,7 +200,7 @@ impl WorkerRegistry {
     /// # Returns
     /// All workers in the registry
     pub async fn list_workers(&self) -> Result<Vec<WorkerInfo>> {
-        let mut conn = SqliteConnection::connect(&self.db_path).await?;
+        let mut conn = SqliteConnection::connect(&self.connection_string()).await?;
 
         let rows = sqlx::query_as::<_, (String, String, String, String, String, i64)>(
             r#"

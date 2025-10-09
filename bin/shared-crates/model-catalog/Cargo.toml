@@ -1,0 +1,17 @@
+[package]
+name = "model-catalog"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+# Model catalog for tracking downloaded models
+# Per test-001-mvp.md Phase 3: Model Provisioning
+
+[dependencies]
+anyhow = { workspace = true }
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite"] }
+serde = { workspace = true, features = ["derive"] }
+tracing = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["full"] }
