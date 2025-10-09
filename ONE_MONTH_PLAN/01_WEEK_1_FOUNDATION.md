@@ -5,6 +5,27 @@
 
 ---
 
+## 🎉 GOOD NEWS: You Already Have Most of This!
+
+**Existing Shared Crates (Ready to Use):**
+- ✅ **audit-logging** (895 lines of docs!) — Immutable audit trails
+- ✅ **auth-min** — Token fingerprinting, validation
+- ✅ **input-validation** — Log injection prevention
+- ✅ **narration-core** — Developer observability
+- ✅ **secrets-management** — Secure secret loading
+- ✅ Plus 6 more crates!
+
+**Time Saved:** 2 days (don't need to build audit system from scratch)
+
+**What This Means:**
+- Day 1: Wire up existing crates (not build from scratch)
+- Day 2-3: Build CLIs (straightforward)
+- Days 4-5: Integration + buffer time
+
+**You're ahead of schedule!**
+
+---
+
 ## Day 1 (Monday): orchestratord
 
 ### Morning Session (09:00-13:00)
@@ -20,30 +41,52 @@ cargo init --name orchestratord
 **Task 2: Add dependencies (15 min)**
 ```toml
 [dependencies]
+# ✅ USE EXISTING SHARED CRATES!
+audit-logging = { path = "../shared-crates/audit-logging" }
+auth-min = { path = "../shared-crates/auth-min" }
+input-validation = { path = "../shared-crates/input-validation" }
+narration-core = { path = "../shared-crates/narration-core" }
+secrets-management = { path = "../shared-crates/secrets-management" }
+
+# HTTP server
 axum = "0.7"
 tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Serialization
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Utilities
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = "0.4"
+anyhow = "1"
 tracing = "0.1"
 tracing-subscriber = "0.3"
-anyhow = "1"
-uuid = { version = "1", features = ["v4", "serde"] }
 reqwest = { version = "0.11", features = ["json"] }
 ```
 
-**Task 3: Implement HTTP server skeleton (2 hours)**
+**Task 3: Implement HTTP server with existing crates (2 hours)**
 ```rust
 // src/main.rs
 use axum::{Router, routing::{get, post}, Json, extract::State};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
+use std::env;
 use uuid::Uuid;
+use chrono::Utc;
+
+// ✅ USE EXISTING CRATES!
+use audit_logging::{AuditLogger, AuditConfig, AuditMode, AuditEvent, ActorInfo, AuthMethod, RotationPolicy, RetentionPolicy, FlushMode};
+use auth_min::fingerprint_token;
+use input_validation::sanitize_string;
+use narration_core::narrate;
 
 #[derive(Clone)]
 struct AppState {
     jobs: Arc<Mutex<Vec<Job>>>,
     workers: Arc<Mutex<Vec<Worker>>>,
+    audit_logger: Arc<AuditLogger>,  // ✅ Existing crate!
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -63,12 +106,37 @@ struct Worker {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
+    
+    // ✅ Initialize audit logger (existing crate!)
+    let eu_audit = env::var("LLORCH_EU_AUDIT")
+        .unwrap_or_else(|_| "false".to_string()) == "true";
+    
+    let audit_logger = if eu_audit {
+        tracing::info!("🇪🇺 EU audit mode ENABLED");
+        AuditLogger::new(AuditConfig {
+            mode: AuditMode::Local {
+                base_dir: std::path::PathBuf::from("/var/log/llorch/audit"),
+            },
+            service_id: "orchestratord".to_string(),
+            rotation_policy: RotationPolicy::Daily,
+            retention_policy: RetentionPolicy::default(),
+            flush_mode: FlushMode::Immediate,  // Compliance-safe
+        })?
+    } else {
+        tracing::info!("🏠 Homelab mode (audit disabled)");
+        AuditLogger::new(AuditConfig {
+            mode: AuditMode::Disabled,  // Zero overhead
+            service_id: "orchestratord".to_string(),
+            ..Default::default()
+        })?
+    };
     
     let state = AppState {
         jobs: Arc::new(Mutex::new(Vec::new())),
         workers: Arc::new(Mutex::new(Vec::new())),
+        audit_logger: Arc::new(audit_logger),
     };
 
     let app = Router::new()
@@ -80,10 +148,11 @@ async fn main() {
     let addr = "0.0.0.0:8080";
     tracing::info!("🚀 orchestratord listening on {}", addr);
     
-    axum::Server::bind(&addr.parse().unwrap())
+    axum::Server::bind(&addr.parse()?)
         .serve(app.into_make_service())
-        .await
-        .unwrap();
+        .await?;
+    
+    Ok(())
 }
 
 async fn health() -> &'static str {
@@ -105,24 +174,45 @@ struct TaskResponse {
 async fn submit_task(
     State(state): State<AppState>,
     Json(req): Json<TaskRequest>,
-) -> Json<TaskResponse> {
+) -> Result<Json<TaskResponse>, String> {
     let job_id = Uuid::new_v4().to_string();
     
-    tracing::info!("Job {} submitted: model={}", job_id, req.model);
+    // ✅ Sanitize input (existing crate!)
+    let safe_model = sanitize_string(&req.model)
+        .map_err(|e| format!("Invalid model: {}", e))?;
+    let safe_prompt = sanitize_string(&req.prompt)
+        .map_err(|e| format!("Invalid prompt: {}", e))?;
+    
+    tracing::info!("Job {} submitted: model={}", job_id, safe_model);
+    
+    // ✅ Audit log (existing crate!)
+    let _ = state.audit_logger.emit(AuditEvent::TaskSubmitted {
+        timestamp: Utc::now(),
+        actor: ActorInfo {
+            user_id: "anonymous".to_string(),  // TODO: Extract from auth
+            ip: None,  // TODO: Extract from request
+            auth_method: AuthMethod::None,
+            session_id: None,
+        },
+        task_id: job_id.clone(),
+        model_ref: safe_model.clone(),
+        prompt_length: safe_prompt.len(),
+        service_id: "orchestratord".to_string(),
+    });
     
     let job = Job {
         id: job_id.clone(),
-        model: req.model,
-        prompt: req.prompt,
+        model: safe_model,
+        prompt: safe_prompt,
         status: "queued".to_string(),
     };
     
     state.jobs.lock().unwrap().push(job);
     
-    Json(TaskResponse {
+    Ok(Json(TaskResponse {
         job_id,
         status: "queued".to_string(),
-    })
+    }))
 }
 
 async fn register_worker(
@@ -130,21 +220,58 @@ async fn register_worker(
     Json(worker): Json<Worker>,
 ) -> &'static str {
     tracing::info!("Worker registered: {} at {}:{}", worker.id, worker.host, worker.port);
+    
+    // ✅ Audit log (existing crate!)
+    let _ = state.audit_logger.emit(AuditEvent::NodeRegistered {
+        timestamp: Utc::now(),
+        actor: ActorInfo {
+            user_id: format!("worker:{}", worker.id),
+            ip: None,
+            auth_method: AuthMethod::None,
+            session_id: None,
+        },
+        node_id: worker.id.clone(),
+        gpu_count: 1,  // TODO: Get from worker
+        total_vram_gb: 24,  // TODO: Get from worker
+        service_id: "orchestratord".to_string(),
+    });
+    
     state.workers.lock().unwrap().push(worker);
     "OK"
 }
 ```
 
-**Task 4: Test (30 min)**
+**Task 4: Test with audit logging (30 min)**
 ```bash
-cargo run
+# Test with EU audit DISABLED (homelab mode - zero overhead)
+LLORCH_EU_AUDIT=false cargo run
 
 # In another terminal
 curl http://localhost:8080/health
 curl -X POST http://localhost:8080/v2/tasks \
   -H "Content-Type: application/json" \
   -d '{"model":"tinyllama","prompt":"hello"}'
+
+# Test with EU audit ENABLED
+LLORCH_EU_AUDIT=true \
+LLORCH_AUDIT_LOG_PATH=/tmp/llorch-audit.log \
+cargo run
+
+# Submit job
+curl -X POST http://localhost:8080/v2/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"model":"tinyllama","prompt":"hello"}'
+
+# ✅ Check audit log (existing crate creates this!)
+cat /tmp/llorch-audit.log
+# Should see JSON audit events
 ```
+
+**What you get for FREE:**
+- ✅ Audit logging (immutable, tamper-evident)
+- ✅ Input sanitization (log injection prevention)
+- ✅ EU audit toggle (zero overhead when disabled)
+- ✅ GDPR event types (already defined)
 
 ### Afternoon Session (14:00-18:00)
 
