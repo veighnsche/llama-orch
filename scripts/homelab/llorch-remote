@@ -384,32 +384,43 @@ for i in {1..30}; do
     fi
 done
 
-# Send inference request
+# Send inference request (SSE stream)
 echo ""
 echo "Sending inference request..."
 
-# Use a temp file to capture response
-curl -s -X POST http://localhost:9876/v1/execute \\
+# Capture SSE stream
+curl -s -N -X POST http://localhost:9876/execute \\
     -H "Content-Type: application/json" \\
     -d '{"job_id":"test-story","prompt":"Once upon a time","max_tokens":50,"temperature":0.7,"seed":42}' \\
-    -o /tmp/response.json
+    > /tmp/sse_response.txt
 
 # Kill worker
 kill \$WORKER_PID 2>/dev/null || true
 wait \$WORKER_PID 2>/dev/null || true
 
-# Parse and display response
-if [[ -f /tmp/response.json ]] && [[ -s /tmp/response.json ]]; then
+# Parse SSE response and extract tokens
+if [[ -f /tmp/sse_response.txt ]] && [[ -s /tmp/sse_response.txt ]]; then
     echo ""
     echo "📖 Generated Story:"
     echo "─────────────────────────────────────────────────────────"
-    cat /tmp/response.json | jq -r '.text // .error // "No text in response"' 2>/dev/null || cat /tmp/response.json
+    
+    # Extract token events and concatenate text
+    STORY=\$(grep '^data:' /tmp/sse_response.txt | sed 's/^data: //' | jq -r 'select(.t != null) | .t' | tr -d '\\n')
+    
+    if [[ -n "\$STORY" ]]; then
+        echo "Once upon a time\$STORY"
+    else
+        echo "❌ No tokens generated"
+        echo "Raw SSE response:"
+        cat /tmp/sse_response.txt
+    fi
+    
     echo ""
     echo "─────────────────────────────────────────────────────────"
     echo ""
     echo "Backend: $BACKEND"
     echo "Status: ✅ Inference test complete"
-    rm -f /tmp/response.json
+    rm -f /tmp/sse_response.txt
 else
     echo "❌ No response from worker"
     echo "Worker log:"
