@@ -137,18 +137,22 @@ reqwest = { version = "0.12", features = ["json"] }
 # Modified by: TEAM-001
 # Note: Using published versions from crates.io (workspace inheritance incompatible)
 
-# Candle core for tensor operations
-candle-core = "0.9"
+# TEAM-020: Use our Candle fork with Metal/CUDA mask broadcasting fix
+# Fork branch: llorch/metal-bugfixes
+# Fixes: KV cache mask shape mismatch causing broadcast errors on Metal/CUDA
+candle-core = { git = "https://github.com/veighnsche/candle.git", branch = "llorch/metal-bugfixes" }
 
 # Candle neural network functions (rms_norm, silu, softmax, linear_no_bias)
-candle-nn = "0.9"
+candle-nn = { git = "https://github.com/veighnsche/candle.git", branch = "llorch/metal-bugfixes" }
 
 # TEAM-008: Use candle-transformers for complete model implementations
-candle-transformers = "0.9"
+# TEAM-020: Using fork with mask fix
+candle-transformers = { git = "https://github.com/veighnsche/candle.git", branch = "llorch/metal-bugfixes" }
 
 # Candle kernels for CUDA acceleration (optional, feature-gated)
 # TEAM-007: Added CUDA version feature for cudarc
-candle-kernels = { version = "0.9", optional = true }
+# TEAM-020: Using fork for consistency
+candle-kernels = { git = "https://github.com/veighnsche/candle.git", branch = "llorch/metal-bugfixes", optional = true }
 cudarc = { version = "0.11", optional = true, features = ["cuda-12050"] }
 
 # HuggingFace tokenizers (used by Candle examples)
