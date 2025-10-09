@@ -237,6 +237,7 @@ action_build() {
     
     ssh_exec "$HOST" bash <<EOF
 set -euo pipefail
+export PATH="\$HOME/.cargo/bin:\$PATH"
 cd $REMOTE_PATH/bin/llorch-candled
 
 echo "Building release binary..."
@@ -258,6 +259,7 @@ action_test() {
     
     ssh_exec "$HOST" bash <<EOF
 set -euo pipefail
+export PATH="\$HOME/.cargo/bin:\$PATH"
 cd $REMOTE_PATH/bin/llorch-candled
 
 echo "Running all tests..."
@@ -274,6 +276,7 @@ action_smoke() {
     
     ssh_exec "$HOST" bash <<EOF
 set -euo pipefail
+export PATH="\$HOME/.cargo/bin:\$PATH"
 cd $REMOTE_PATH/bin/llorch-candled
 
 echo "Running smoke tests..."
@@ -290,6 +293,7 @@ action_unit() {
     
     ssh_exec "$HOST" bash <<EOF
 set -euo pipefail
+export PATH="\$HOME/.cargo/bin:\$PATH"
 cd $REMOTE_PATH/bin/llorch-candled
 
 echo "Running unit tests..."
@@ -306,6 +310,7 @@ action_integration() {
     
     ssh_exec "$HOST" bash <<EOF
 set -euo pipefail
+export PATH="\$HOME/.cargo/bin:\$PATH"
 cd $REMOTE_PATH/bin/llorch-candled
 
 echo "Running integration tests..."
@@ -438,6 +443,7 @@ action_clean() {
     
     ssh_exec "$HOST" bash <<EOF
 set -euo pipefail
+export PATH="\$HOME/.cargo/bin:\$PATH"
 cd $REMOTE_PATH
 
 echo "Cleaning Cargo build artifacts..."
