@@ -11,7 +11,7 @@
 set -e
 
 MODEL_DIR=".test-models/tinyllama"
-MODEL_FILE="tinyllama-1.1b-chat-v1.0.F16.gguf"
+MODEL_FILE="tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
 MODEL_PATH="$MODEL_DIR/$MODEL_FILE"
 
 # Create directory
@@ -24,15 +24,15 @@ if [ -f "$MODEL_PATH" ]; then
     exit 0
 fi
 
-echo "📥 Downloading TinyLlama 1.1B Chat (FP16)..."
-echo "   Size: ~2.2 GB"
-echo "   Format: FP16 (unquantized)"
+echo "📥 Downloading TinyLlama 1.1B Chat (Q4_K_M)..."
+echo "   Size: ~669 MB"
+echo "   Format: Q4_K_M quantized (good balance)"
 echo "   Architecture: Standard Llama (simplest possible)"
 echo ""
 
 # Download from HuggingFace
 HF_REPO="TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF"
-HF_FILE="tinyllama-1.1b-chat-v1.0.F16.gguf"
+HF_FILE="tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
 
 if command -v huggingface-cli &> /dev/null; then
     echo "Using huggingface-cli..."
@@ -80,7 +80,7 @@ if [ -f "$MODEL_PATH" ]; then
     echo "  - Hidden: 2048"
     echo "  - Layers: 22"
     echo "  - Context: 2048"
-    echo "  - Format: FP16 (unquantized)"
+    echo "  - Format: Q4_K_M quantized"
     echo ""
     echo "Why TinyLlama?"
     echo "  ✓ Most basic/standard architecture"

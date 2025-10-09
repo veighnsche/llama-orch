@@ -318,7 +318,7 @@ EOF
 action_download_model() {
     log_section "📥 Downloading Test Model"
     log_info "Host: $HOST"
-    log_info "Model: TinyLlama 1.1B Chat (FP16)"
+    log_info "Model: TinyLlama 1.1B Chat (Q4_K_M)"
     
     ssh_exec "$HOST" bash <<EOF
 set -euo pipefail
@@ -337,7 +337,7 @@ action_inference() {
     log_info "Backend: $BACKEND"
     
     # Determine model path
-    local remote_model_path="${MODEL_PATH:-$REMOTE_PATH/.test-models/tinyllama/tinyllama-1.1b-chat-v1.0.F16.gguf}"
+    local remote_model_path="${MODEL_PATH:-$REMOTE_PATH/.test-models/tinyllama/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf}"
     log_info "Model: $remote_model_path"
     
     ssh_exec "$HOST" bash <<EOF
