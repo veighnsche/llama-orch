@@ -3,6 +3,7 @@
 **Date:** 2025-10-09  
 **Team:** TEAM-018  
 **Status:** 🐛 Known Issue - Metal forward pass failing
+**Updated:** 2025-10-09 by TEAM-019 - Root cause identified as Candle library bug
 
 ---
 
@@ -218,6 +219,20 @@ Metal backend infrastructure is complete but has a runtime issue in the forward 
 
 ---
 
+## TEAM-019 Update
+
+**Root Cause Identified:** This is a **Candle library bug** in Metal's attention broadcasting, not our code.
+
+**TEAM-018's F16 hypothesis was incorrect.** TEAM-019 reverted to F32 for all backends, but the bug persists because it's in Candle's Metal attention implementation.
+
+**See:** `.specs/METAL_CUDA_INFERENCE_BUG_REPORT.md` for full analysis.
+
+**Workaround:** Use CPU backend on macOS (fully functional).
+
+---
+
 **Created:** 2025-10-09  
 **Team:** TEAM-018  
-**Priority:** Medium (CPU backend works as fallback)
+**Updated:** 2025-10-09 by TEAM-019  
+**Priority:** Medium (CPU backend works as fallback)  
+**Blocked on:** Upstream Candle fix

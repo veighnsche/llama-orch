@@ -25,3 +25,6 @@
 [submodule "reference/flash-attention"]
 	path = reference/flash-attention
 	url = git@github.com:veighnsche/flash-attention.git
+[submodule "reference/candle-vllm"]
+	path = reference/candle-vllm
+	url = https://github.com/veighnsche/candle-vllm.git

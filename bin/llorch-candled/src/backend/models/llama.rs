@@ -102,6 +102,7 @@ impl LlamaModel {
     ///
     /// TEAM-017: Uses position and mutable cache
     /// TEAM-018: Added detailed error logging
+    /// TEAM-019: Fixed Metal/CUDA mask broadcasting bug
     pub fn forward(&mut self, input_ids: &Tensor, position: usize) -> Result<Tensor> {
         // Log input details
         tracing::info!(
@@ -111,6 +112,17 @@ impl LlamaModel {
             input_dtype = ?input_ids.dtype(),
             "Llama forward pass starting"
         );
+        
+        // TEAM-019: Clear KV cache on position=0 to prevent mask broadcasting issues
+        // The Candle llama implementation has a bug where the mask shape doesn't account
+        // for KV cache growth, causing broadcast errors on Metal/CUDA.
+        // Workaround: Reset cache at start of each sequence.
+        if position == 0 {
+            for kv in self.cache.kvs.iter_mut() {
+                *kv = None;
+            }
+            tracing::debug!("KV cache cleared for new sequence");
+        }
         
         // Attempt forward pass with detailed error capture
         match self.model.forward(input_ids, position, &mut self.cache) {
