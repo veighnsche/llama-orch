@@ -336,8 +336,8 @@ action_inference() {
     log_info "Host: $HOST"
     log_info "Backend: $BACKEND"
     
-    # Determine model path
-    local remote_model_path="${MODEL_PATH:-$REMOTE_PATH/.test-models/tinyllama/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf}"
+    # Determine model path (expand ~ on remote)
+    local remote_model_path="${MODEL_PATH:-.test-models/tinyllama/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf}"
     log_info "Model: $remote_model_path"
     
     ssh_exec "$HOST" bash <<EOF
@@ -347,9 +347,10 @@ cd $REMOTE_PATH/bin/llorch-candled
 echo "Running inference with actual model..."
 echo "─────────────────────────────────────────────────────────"
 
-# Check if model exists
-if [[ ! -f "$remote_model_path" ]]; then
-    echo "❌ Model not found: $remote_model_path"
+# Check if model exists (use absolute path from REMOTE_PATH)
+MODEL_FULL_PATH="$REMOTE_PATH/$remote_model_path"
+if [[ ! -f "\$MODEL_FULL_PATH" ]]; then
+    echo "❌ Model not found: \$MODEL_FULL_PATH"
     echo ""
     echo "Download model first:"
     echo "  llorch-remote $HOST $BACKEND download-model"
@@ -360,7 +361,7 @@ fi
 echo "Starting $BACKEND worker..."
 ../../target/release/llorch-${BACKEND}-candled \\
     --worker-id test-inference \\
-    --model "$remote_model_path" \\
+    --model "\$MODEL_FULL_PATH" \\
     --port 9876 \\
     --callback-url http://localhost:9999 &
 
