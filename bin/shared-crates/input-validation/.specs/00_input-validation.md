@@ -23,7 +23,7 @@ This specification defines requirements for the `input-validation` shared crate,
 
 **Consumers**:
 - `bin/worker-orcd-crates/vram-residency` — Shard IDs, digests, GPU indices
-- `bin/rbees-orcd` — model_ref, task_id, prompts
+- `bin/queen-rbee` — model_ref, task_id, prompts
 - `bin/pool-managerd` — pool_id, node_id, paths
 - `libs/catalog-core` — Model references, file paths
 - All services — General string sanitization
@@ -764,7 +764,7 @@ fuzz_target!(|data: &[u8]| {
 
 ## 8. Integration with Services
 
-### 8.1 rbees-orcd
+### 8.1 queen-rbee
 
 **Validate task creation**:
 ```rust

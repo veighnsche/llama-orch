@@ -24,7 +24,7 @@ The **CLOUD_PROFILE migration** (v0.2.0) introduces **distributed, multi-machine
 ### Service Topology
 
 ```
-Control Plane Node (rbees-orcd)
+Control Plane Node (queen-rbee)
     ↓ HTTP
 GPU Worker Node 1 (pool-managerd + engine-provisioner + engines)
     ↓ HTTP
@@ -40,14 +40,14 @@ GPU Worker Node N (pool-managerd + engine-provisioner + engines)
 **User Request**: "Generate text with model X"
 
 **Service Hops**:
-1. Client → rbees-orcd (control plane)
-2. rbees-orcd → pool-managerd (GPU worker 1) - health check
-3. rbees-orcd → adapter → engine (GPU worker 1) - dispatch
-4. engine → rbees-orcd → client - SSE stream
+1. Client → queen-rbee (control plane)
+2. queen-rbee → pool-managerd (GPU worker 1) - health check
+3. queen-rbee → adapter → engine (GPU worker 1) - dispatch
+4. engine → queen-rbee → client - SSE stream
 
 **Without Narration-Core**:
 ```
-# rbees-orcd.log (machine 1)
+# queen-rbee.log (machine 1)
 {"level":"info","msg":"task created"}
 
 # pool-managerd.log (machine 2)
@@ -60,10 +60,10 @@ println!("Building llama.cpp")
 
 **With Narration-Core** (as specified):
 ```
-# rbees-orcd.log (machine 1)
-{"level":"info","actor":"rbees-orcd","action":"admission","target":"session-abc123",
+# queen-rbee.log (machine 1)
+{"level":"info","actor":"queen-rbee","action":"admission","target":"session-abc123",
  "human":"Accepted request; queued at position 3 on pool 'default'",
- "correlation_id":"req-xyz","trace_id":"otel-trace-123","emitted_by":"rbees-orcd@0.2.0",
+ "correlation_id":"req-xyz","trace_id":"otel-trace-123","emitted_by":"queen-rbee@0.2.0",
  "session_id":"session-abc123","pool_id":"default"}
 
 # pool-managerd.log (machine 2)
@@ -132,7 +132,7 @@ pub fn narrate_with_otel_context(fields: NarrationFields) {
 **From `.specs/01_cloud_profile.md` (lines 723-733)**:
 ```rust
 tracing::info!(
-    target: "rbees-orcd::dispatch",
+    target: "queen-rbee::dispatch",
     task_id = %task_id,
     pool_id = %pool_id,
     correlation_id = %corr_id,  // ← Already in spec!
@@ -174,7 +174,7 @@ pub fn narrate_auto(fields: NarrationFields) {
 
 **Implementation**:
 ```rust
-// In rbees-orcd (client)
+// In queen-rbee (client)
 async fn poll_pool_status(pool_id: &str, correlation_id: &str) {
     let client = reqwest::Client::new();
     let resp = client
@@ -186,7 +186,7 @@ async fn poll_pool_status(pool_id: &str, correlation_id: &str) {
     
     // Narrate the call
     narrate(NarrationFields {
-        actor: "rbees-orcd",
+        actor: "queen-rbee",
         action: "pool_health_check",
         target: pool_id.to_string(),
         human: format!("Polling pool '{}' status", pool_id),
@@ -249,9 +249,9 @@ async fn get_pool_status(
 {
   "timestamp": "2025-09-30T22:46:33.123Z",
   "level": "info",
-  "service": "rbees-orcd",
+  "service": "queen-rbee",
   "version": "0.2.0",
-  "actor": "rbees-orcd",
+  "actor": "queen-rbee",
   "action": "admission",
   "target": "session-abc123",
   "human": "Accepted request; queued at position 3",
@@ -267,7 +267,7 @@ async fn get_pool_status(
 
 **Loki Query Example**:
 ```logql
-{service="rbees-orcd"} |= "req-xyz" | json
+{service="queen-rbee"} |= "req-xyz" | json
 ```
 
 **Elasticsearch Query Example**:
@@ -294,25 +294,25 @@ async fn get_pool_status(
 
 **Usage in BDD**:
 ```rust
-#[given(regex = "^rbees-orcd and pool-managerd are running$")]
+#[given(regex = "^queen-rbee and pool-managerd are running$")]
 async fn given_services_running(world: &mut World) {
     // Install capture adapters in both services
-    world.rbees-orcd_capture = CaptureAdapter::install();
+    world.queen-rbee_capture = CaptureAdapter::install();
     world.pool_managerd_capture = CaptureAdapter::install();
 }
 
 #[then(regex = "^narration shows request flow across services$")]
 async fn then_narration_shows_flow(world: &mut World) {
-    // Assert on rbees-orcd narration
-    world.rbees-orcd_capture.assert_includes("Accepted request");
-    world.rbees-orcd_capture.assert_field("correlation_id", "req-xyz");
+    // Assert on queen-rbee narration
+    world.queen-rbee_capture.assert_includes("Accepted request");
+    world.queen-rbee_capture.assert_field("correlation_id", "req-xyz");
     
     // Assert on pool-managerd narration
     world.pool_managerd_capture.assert_includes("Spawning engine");
     world.pool_managerd_capture.assert_field("correlation_id", "req-xyz");
     
     // Verify same correlation ID across services
-    let orch_corr = world.rbees-orcd_capture.captured()[0].correlation_id.clone();
+    let orch_corr = world.queen-rbee_capture.captured()[0].correlation_id.clone();
     let pool_corr = world.pool_managerd_capture.captured()[0].correlation_id.clone();
     assert_eq!(orch_corr, pool_corr, "Correlation ID must propagate across services");
 }
@@ -402,7 +402,7 @@ For distributed deployments (CLOUD_PROFILE), narration-core MUST:
 
 ### Phase 2: Cross-Service Adoption (Week 2) - BLOCKING v0.2.0
 
-1. **rbees-orcd** (2 days)
+1. **queen-rbee** (2 days)
    - Replace all `tracing::info!` with `narrate()`
    - Add correlation ID propagation to pool-managerd calls
    - Update BDD tests

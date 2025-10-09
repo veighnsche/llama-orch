@@ -47,7 +47,7 @@ When a client sets a 5-second deadline and we're already at 6 seconds, continuin
 ### Every Hop Is a Tax
 
 ```
-Client → rbees-orcd (50ms) → pool-managerd (30ms) → worker-orcd (20ms) → inference (4800ms)
+Client → queen-rbee (50ms) → pool-managerd (30ms) → worker-orcd (20ms) → inference (4800ms)
 Total: 4900ms
 
 Client deadline: 5000ms
@@ -116,7 +116,7 @@ if remaining < min_required {
 ```
 
 **Use cases**:
-- rbees-orcd: Before enqueuing job
+- queen-rbee: Before enqueuing job
 - pool-managerd: Before spawning engine
 - worker-orcd: Before loading model into VRAM
 
@@ -188,7 +188,7 @@ X-Deadline-Exceeded-By-Ms: 250
 
 | Crate | How They Use Us |
 |-------|-----------------|
-| **rbees-orcd** | Parse client deadlines, enforce before enqueue, forward to pool-managerd |
+| **queen-rbee** | Parse client deadlines, enforce before enqueue, forward to pool-managerd |
 | **pool-managerd** | Check deadline before spawning engine, forward to worker-orcd |
 | **worker-orcd** | Check deadline before loading model, abort inference if exceeded |
 | **backpressure** | Use our timeout responses for admission control |
@@ -279,7 +279,7 @@ let remaining = (deadline - Instant::now()).as_secs() + 1;
 
 **Same deadline, every hop**:
 - Client sends: `X-Deadline: 2025-10-02T20:59:12Z`
-- rbees-orcd forwards: `X-Deadline: 2025-10-02T20:59:12Z` (same)
+- queen-rbee forwards: `X-Deadline: 2025-10-02T20:59:12Z` (same)
 - pool-managerd forwards: `X-Deadline: 2025-10-02T20:59:12Z` (same)
 - worker-orcd checks: `X-Deadline: 2025-10-02T20:59:12Z` (same)
 
@@ -387,7 +387,7 @@ PERFORMANCE_AUDIT.md
 
 ## Our Responsibilities to Other Teams
 
-### Dear rbees-orcd, pool-managerd, worker-orcd,
+### Dear queen-rbee, pool-managerd, worker-orcd,
 
 We built you the **deadline enforcement primitives** you need to stop wasting cycles. Please use them correctly:
 
@@ -477,7 +477,7 @@ We track (via `narration-core`):
 
 - ⬜ **Implement core APIs**: `parse_deadline`, `enforce_deadline`, `forward_deadline`
 - ⬜ **Write unit tests**: Deadline parsing, time calculation, enforcement logic
-- ⬜ **Integration with rbees-orcd**: Parse client deadlines, enforce before enqueue
+- ⬜ **Integration with queen-rbee**: Parse client deadlines, enforce before enqueue
 - ⬜ **Integration with pool-managerd**: Check deadline before spawning engine
 - ⬜ **Integration with worker-orcd**: Check deadline before loading model
 - ⬜ **BDD scenarios**: End-to-end deadline propagation tests

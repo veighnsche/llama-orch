@@ -23,9 +23,9 @@ Added input-validation reminders to **10+ critical crates** to ensure developers
 
 ### 🔴 Critical (API-Facing / Model Handling)
 
-#### 1. **rbees-orcd-crates/agentic-api**
+#### 1. **queen-rbee-crates/agentic-api**
 
-- **Location**: `/home/vince/Projects/llama-orch/bin/rbees-orcd-crates/agentic-api/src/lib.rs`
+- **Location**: `/home/vince/Projects/llama-orch/bin/queen-rbee-crates/agentic-api/src/lib.rs`
 - **Reminder Added**: Lines 12-38
 - **Key Functions**: `validate_identifier`, `validate_prompt`, `validate_model_ref`, `sanitize_string`
 - **Use Cases**: workflow_id, tool_name, function_name, user messages
@@ -46,9 +46,9 @@ Added input-validation reminders to **10+ critical crates** to ensure developers
 - **Use Cases**: pool_id, model_ref, error messages
 - **Risk Level**: ⚠️ **CRITICAL** - Primary HTTP attack surface
 
-#### 4. **rbees-orcd-crates/platform-api**
+#### 4. **queen-rbee-crates/platform-api**
 
-- **Location**: `/home/vince/Projects/llama-orch/bin/rbees-orcd-crates/platform-api/src/lib.rs`
+- **Location**: `/home/vince/Projects/llama-orch/bin/queen-rbee-crates/platform-api/src/lib.rs`
 - **Reminder Added**: Lines 12-27
 - **Key Functions**: `validate_identifier`, `validate_range`, `sanitize_string`
 - **Use Cases**: Query parameters, service names, limits
@@ -119,16 +119,16 @@ Added input-validation reminders to **10+ critical crates** to ensure developers
 
 ### High Priority
 
-- [ ] `rbees-orcd/src/lib.rs` - Main orchestrator service
+- [ ] `queen-rbee/src/lib.rs` - Main orchestrator service
 - [ ] `pool-managerd/src/lib.rs` - Main pool manager service
 - [ ] `worker-orcd/src/lib.rs` - Worker orchestrator
-- [ ] `rbees-orcd-crates/node-registry/src/lib.rs` - Node registration
+- [ ] `queen-rbee-crates/node-registry/src/lib.rs` - Node registration
 - [ ] `pool-managerd-crates/router/src/lib.rs` - Request routing
 - [ ] `worker-orcd-crates/api/src/lib.rs` - Worker API
 
 ### Medium Priority
 
-- [ ] `rbees-orcd-crates/streaming/src/lib.rs` - Streaming responses
+- [ ] `queen-rbee-crates/streaming/src/lib.rs` - Streaming responses
 - [ ] `pool-managerd-crates/lifecycle/src/lib.rs` - Pool lifecycle
 - [ ] `pool-managerd-crates/health-monitor/src/lib.rs` - Health monitoring
 - [ ] `worker-orcd-crates/scheduler/src/lib.rs` - Task scheduling

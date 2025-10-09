@@ -41,11 +41,11 @@ This document is correct about workers being HTTP daemons, but incorrectly sugge
 │ Protocol: SSH                                                    │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                   │
-│ rbees-ctl (blep)                                                │
+│ rbee-keeper (blep)                                                │
 │     ↓ SSH (control operations)                                   │
-│ rbees-pool (mac/workstation)                                       │
+│ rbee-hive (mac/workstation)                                       │
 │     ↓ spawn process                                              │
-│ rbees-workerd (worker daemon, HTTP server)                      │
+│ llm-worker-rbee (worker daemon, HTTP server)                      │
 │                                                                   │
 └─────────────────────────────────────────────────────────────────┘
 
@@ -56,11 +56,11 @@ This document is correct about workers being HTTP daemons, but incorrectly sugge
 │                                                                   │
 │ llama-orch-sdk (client)                                          │
 │     ↓ HTTP POST /v2/tasks                                        │
-│ rbees-orcd (daemon :8080)                                     │
+│ queen-rbee (daemon :8080)                                     │
 │     ↓ HTTP POST /execute (DIRECT to worker, not via pool)       │
-│ rbees-workerd (worker daemon :8001)                             │
+│ llm-worker-rbee (worker daemon :8001)                             │
 │     ↓ SSE stream                                                 │
-│ rbees-orcd (relays)                                           │
+│ queen-rbee (relays)                                           │
 │     ↓ SSE stream                                                 │
 │ llama-orch-sdk (client)                                          │
 │                                                                   │
@@ -77,8 +77,8 @@ This document is correct about workers being HTTP daemons, but incorrectly sugge
 
 **Solution:** Worker daemon keeps model loaded
 ```rust
-// rbees-workerd lifecycle
-1. Spawn: rbees-workerd --model tinyllama.gguf --gpu 0 --port 8001
+// llm-worker-rbee lifecycle
+1. Spawn: llm-worker-rbee --model tinyllama.gguf --gpu 0 --port 8001
 2. Load model into VRAM (30 seconds)
 3. HTTP server starts, listens on :8001
 4. Ready callback: POST http://pool-manager:9200/workers/ready
@@ -107,7 +107,7 @@ Client (llama-orch-sdk)
 Orchestratord (makes scheduling decision)
     ↓ Selects worker: worker-metal-0 at mac.home.arpa:8001
     ↓ POST http://mac.home.arpa:8001/execute (DIRECT, not via pool)
-Worker (rbees-workerd)
+Worker (llm-worker-rbee)
     ↓ Executes inference
     ↓ SSE stream tokens
 Orchestratord (relays stream)
@@ -161,7 +161,7 @@ let response = client.enqueue(request).await?;
 
 **2. Orchestrator → Worker (Direct)**
 ```rust
-// rbees-orcd makes HTTP call to worker
+// queen-rbee makes HTTP call to worker
 let response = reqwest::Client::new()
     .post("http://mac.home.arpa:8001/execute")
     .json(&inference_request)
@@ -171,7 +171,7 @@ let response = reqwest::Client::new()
 
 **3. Worker → Orchestrator (Callback)**
 ```rust
-// rbees-workerd calls back when ready
+// llm-worker-rbee calls back when ready
 reqwest::Client::new()
     .post("http://orchestrator:8080/workers/ready")
     .json(&ready_payload)
@@ -190,19 +190,19 @@ reqwest::Client::new()
 
 **1. Orchestrator → Pool (Control)**
 ```bash
-# rbees-ctl uses SSH to control pools
+# rbee-keeper uses SSH to control pools
 llorch pool models download tinyllama --host mac
-  → ssh mac.home.arpa "rbees-pool models download tinyllama"
+  → ssh mac.home.arpa "rbee-hive models download tinyllama"
 
 llorch pool worker spawn metal --host mac --model tinyllama
-  → ssh mac.home.arpa "rbees-pool worker spawn metal --model tinyllama"
+  → ssh mac.home.arpa "rbee-hive worker spawn metal --model tinyllama"
 ```
 
 **2. Pool → Worker (Spawn)**
 ```bash
-# rbees-pool spawns worker as background process
-rbees-pool worker spawn metal --model tinyllama
-  → rbees-workerd --model tinyllama.gguf --gpu 0 --port 8001 &
+# rbee-hive spawns worker as background process
+rbee-hive worker spawn metal --model tinyllama
+  → llm-worker-rbee --model tinyllama.gguf --gpu 0 --port 8001 &
   → Worker starts HTTP server
   → Worker loads model into VRAM
   → Worker calls ready callback
@@ -232,7 +232,7 @@ rbees-pool worker spawn metal --model tinyllama
 
 **When worker starts:**
 ```rust
-// rbees-workerd startup
+// llm-worker-rbee startup
 1. Load model into VRAM
 2. Start HTTP server on :8001
 3. Call ready callback:
@@ -253,7 +253,7 @@ rbees-pool worker spawn metal --model tinyllama
 
 **When orchestrator needs to dispatch job:**
 ```rust
-// rbees-orcd scheduling
+// queen-rbee scheduling
 1. Receive job: POST /v2/tasks
 2. Look up workers in registry
 3. Find worker with:
@@ -305,11 +305,11 @@ repo_path = "~/Projects/llama-orch"
 
 **Option 2: Dynamic Registration (SSH probe)**
 ```bash
-# rbees-ctl discovers pools
+# rbee-keeper discovers pools
 llorch pool register mac --host mac.home.arpa --user vinceliem
 
 # Orchestrator probes pool via SSH
-ssh mac.home.arpa "rbees-pool info"
+ssh mac.home.arpa "rbee-hive info"
   → Returns: GPUs, models, disk space, etc.
   → Orchestrator stores in registry
 ```
@@ -317,7 +317,7 @@ ssh mac.home.arpa "rbees-pool info"
 **Option 3: Heartbeat (SSH-based, M1+)**
 ```bash
 # Orchestrator polls pools periodically
-ssh mac.home.arpa "rbees-pool status"
+ssh mac.home.arpa "rbee-hive status"
   → Returns: Workers running, GPU usage, models available
   → Orchestrator updates registry
 ```
@@ -341,7 +341,7 @@ const response = await client.enqueue({
 
 **Step 2: Orchestrator receives job**
 ```rust
-// rbees-orcd (HTTP server on blep:8080)
+// queen-rbee (HTTP server on blep:8080)
 POST /v2/tasks
   → Parse request
   → Validate model exists
@@ -352,7 +352,7 @@ POST /v2/tasks
 
 **Step 3: Orchestrator dispatches to worker (DIRECT)**
 ```rust
-// rbees-orcd makes HTTP call to worker
+// queen-rbee makes HTTP call to worker
 POST http://mac.home.arpa:8001/execute
 {
   "job_id": "job-123",
@@ -365,7 +365,7 @@ POST http://mac.home.arpa:8001/execute
 
 **Step 4: Worker executes inference**
 ```rust
-// rbees-workerd (HTTP server on mac:8001)
+// llm-worker-rbee (HTTP server on mac:8001)
 POST /execute
   → Model already loaded in VRAM (fast)
   → Execute inference
@@ -374,7 +374,7 @@ POST /execute
 
 **Step 5: Orchestrator relays stream**
 ```rust
-// rbees-orcd relays SSE stream
+// queen-rbee relays SSE stream
 Worker SSE stream → Orchestrator → Client
   data: {"type":"token","text":"Hello"}
   data: {"type":"token","text":" there"}
@@ -405,13 +405,13 @@ llorch pool models download tinyllama --host mac
 
 **Step 2: SSH to pool, execute download**
 ```bash
-# rbees-ctl executes via SSH
-ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download tinyllama"
+# rbee-keeper executes via SSH
+ssh mac.home.arpa "cd ~/Projects/llama-orch && rbee-hive models download tinyllama"
 ```
 
-**Step 3: rbees-pool downloads model**
+**Step 3: rbee-hive downloads model**
 ```bash
-# rbees-pool (on mac) executes
+# rbee-hive (on mac) executes
 hf download TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
   tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf \
   --local-dir .test-models/tinyllama
@@ -425,14 +425,14 @@ llorch pool worker spawn metal --host mac --model tinyllama
 
 **Step 5: SSH to pool, spawn worker**
 ```bash
-# rbees-ctl executes via SSH
-ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool worker spawn metal --model tinyllama"
+# rbee-keeper executes via SSH
+ssh mac.home.arpa "cd ~/Projects/llama-orch && rbee-hive worker spawn metal --model tinyllama"
 ```
 
-**Step 6: rbees-pool spawns worker daemon**
+**Step 6: rbee-hive spawns worker daemon**
 ```bash
-# rbees-pool (on mac) spawns background process
-rbees-workerd \
+# rbee-hive (on mac) spawns background process
+llm-worker-rbee \
   --worker-id worker-metal-0 \
   --model .test-models/tinyllama/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf \
   --backend metal \
@@ -443,7 +443,7 @@ rbees-workerd \
 
 **Step 7: Worker starts and registers**
 ```rust
-// rbees-workerd (on mac)
+// llm-worker-rbee (on mac)
 1. Load model into VRAM (30 seconds)
 2. Start HTTP server on :8001
 3. Register with orchestrator:
@@ -462,7 +462,7 @@ rbees-workerd \
 
 **Step 8: Orchestrator adds worker to registry**
 ```rust
-// rbees-orcd (on blep)
+// queen-rbee (on blep)
 POST /workers/register
   → Add worker to in-memory registry
   → Worker is now available for scheduling
@@ -472,7 +472,7 @@ POST /workers/register
 
 ## Binary Responsibilities
 
-### rbees-workerd (Worker Daemon)
+### llm-worker-rbee (Worker Daemon)
 
 **MUST be HTTP daemon because:**
 - Keeps model loaded in VRAM
@@ -489,11 +489,11 @@ POST /workers/register
 - Report status (slots available)
 
 **NOT responsible for:**
-- Downloading models (rbees-pool does this)
-- Spawning itself (rbees-pool does this)
+- Downloading models (rbee-hive does this)
+- Spawning itself (rbee-hive does this)
 - Scheduling (orchestrator does this)
 
-### rbees-pool (daemon + CLI)
+### rbee-hive (daemon + CLI)
 
 **MUST be a daemon (per MVP) with CLI interface:**
 
@@ -506,7 +506,7 @@ POST /workers/register
 **CLI Responsibilities:**
 - Download models (hf CLI)
 - Git operations (git CLI)
-- Spawn workers (rbees-workerd as background process)
+- Spawn workers (llm-worker-rbee as background process)
 - Stop workers (kill process)
 - List workers (ps/pidof)
 
@@ -514,7 +514,7 @@ POST /workers/register
 - Inference (workers do this)
 - Scheduling (orchestrator does this)
 
-### rbees-ctl (CLI)
+### rbee-keeper (CLI)
 
 **Uses SSH for control:**
 
@@ -526,9 +526,9 @@ POST /workers/register
 
 **NOT responsible for:**
 - Inference (workers do this)
-- Spawning workers directly (rbees-pool does this)
+- Spawning workers directly (rbee-hive does this)
 
-### rbees-orcd (Daemon, M2+)
+### queen-rbee (Daemon, M2+)
 
 **HTTP daemon for scheduling:**
 
@@ -541,8 +541,8 @@ POST /workers/register
 - Maintain job queue (SQLite)
 
 **NOT responsible for:**
-- Spawning workers (rbees-pool does this)
-- Downloading models (rbees-pool does this)
+- Spawning workers (rbee-hive does this)
+- Downloading models (rbee-hive does this)
 - Executing inference (workers do this)
 
 ---
@@ -553,28 +553,28 @@ POST /workers/register
 ┌─────────────────────────────────────────────────────────────────┐
 │ blep.home.arpa (Orchestrator + Pool)                             │
 ├─────────────────────────────────────────────────────────────────┤
-│ rbees-orcd :8080 (HTTP server, M2+)                           │
+│ queen-rbee :8080 (HTTP server, M2+)                           │
 │   ├─ Worker registry (in-memory)                                 │
 │   ├─ Pool registry (in-memory)                                   │
 │   └─ Job queue (SQLite)                                          │
 │                                                                   │
-│ rbees-ctl (CLI)                                                 │
+│ rbee-keeper (CLI)                                                 │
 │   └─ SSH client → pools                                          │
 │                                                                   │
-│ rbees-pool (CLI)                                                   │
+│ rbee-hive (CLI)                                                   │
 │   └─ Spawns workers locally                                      │
 │                                                                   │
-│ rbees-workerd :8003 (HTTP server, CPU worker)                   │
+│ llm-worker-rbee :8003 (HTTP server, CPU worker)                   │
 └─────────────────────────────────────────────────────────────────┘
          ↑ SSH (control)                    ↓ HTTP (inference)
          │                                  │
 ┌────────┴──────────────────────────────────┴─────────────────────┐
 │ mac.home.arpa (Pool)                                             │
 ├─────────────────────────────────────────────────────────────────┤
-│ rbees-pool (CLI)                                                   │
+│ rbee-hive (CLI)                                                   │
 │   └─ Spawns workers locally                                      │
 │                                                                   │
-│ rbees-workerd :8001 (HTTP server, Metal worker)                 │
+│ llm-worker-rbee :8001 (HTTP server, Metal worker)                 │
 │   └─ Model loaded in VRAM                                        │
 └─────────────────────────────────────────────────────────────────┘
          ↑ SSH (control)                    ↓ HTTP (inference)
@@ -582,16 +582,16 @@ POST /workers/register
 ┌────────┴──────────────────────────────────┴─────────────────────┐
 │ workstation.home.arpa (Pool)                                     │
 ├─────────────────────────────────────────────────────────────────┤
-│ rbees-pool (CLI)                                                   │
+│ rbee-hive (CLI)                                                   │
 │   └─ Spawns workers locally                                      │
 │                                                                   │
-│ rbees-workerd :8002 (HTTP server, CUDA worker)                  │
+│ llm-worker-rbee :8002 (HTTP server, CUDA worker)                  │
 │   └─ Model loaded in VRAM                                        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Control plane:** SSH (rbees-ctl → rbees-pool)  
-**Data plane:** HTTP (rbees-orcd → workers, clients → rbees-orcd)
+**Control plane:** SSH (rbee-keeper → rbee-hive)  
+**Data plane:** HTTP (queen-rbee → workers, clients → queen-rbee)
 
 ---
 
@@ -639,14 +639,14 @@ POST /workers/register
 
 ### Registries
 
-**Worker Registry (in rbees-orcd):**
+**Worker Registry (in queen-rbee):**
 - Which workers exist
 - Where they are (host:port)
 - What models loaded
 - Slots available
 - Updated via HTTP callbacks
 
-**Pool Registry (in rbees-orcd):**
+**Pool Registry (in queen-rbee):**
 - Which pools exist
 - Where they are (for SSH)
 - What GPUs available

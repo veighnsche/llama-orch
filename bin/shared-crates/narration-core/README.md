@@ -65,7 +65,7 @@ narration-core provides **production-ready structured observability** for llama-
 - ✅ **Property tests** for security invariants
 - ✅ **Integration tests** for multi-service workflows
 
-**Used by**: All services (rbees-orcd, pool-managerd, worker-orcd, provisioners)
+**Used by**: All services (queen-rbee, pool-managerd, worker-orcd, provisioners)
 
 ---
 
@@ -75,7 +75,7 @@ narration-core provides **production-ready structured observability** for llama-
 
 Every event includes:
 
-- **actor** — Who performed the action (rbees-orcd, pool-managerd, etc.)
+- **actor** — Who performed the action (queen-rbee, pool-managerd, etc.)
 - **action** — What was done (enqueue, provision, register, etc.)
 - **target** — What was acted upon (job_id, pool_id, model_id, etc.)
 - **human** — Plain English description for humans
@@ -228,7 +228,7 @@ narrate(NarrationFields {
 {
   "timestamp": "2025-10-01T00:00:00Z",
   "level": "INFO",
-  "actor": "rbees-orcd",
+  "actor": "queen-rbee",
   "action": "enqueue",
   "target": "job-123",
   "correlation_id": "req-abc",
@@ -240,7 +240,7 @@ narrate(NarrationFields {
 ### Console Format (Development)
 
 ```
-2025-10-01T00:00:00Z INFO rbees-orcd enqueue job-123 [req-abc] Enqueued job job-123 for pool default
+2025-10-01T00:00:00Z INFO queen-rbee enqueue job-123 [req-abc] Enqueued job job-123 for pool default
 ```
 
 ---
@@ -260,7 +260,7 @@ fn test_narration() {
     
     // Perform actions that emit narration
     narrate(NarrationFields {
-        actor: "rbees-orcd",
+        actor: "queen-rbee",
         action: "enqueue",
         target: "job-123".to_string(),
         human: "Enqueued job".to_string(),
@@ -270,7 +270,7 @@ fn test_narration() {
     // Assert narration was emitted
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
-    assert_eq!(captured[0].actor, "rbees-orcd");
+    assert_eq!(captured[0].actor, "queen-rbee");
     assert_eq!(captured[0].action, "enqueue");
 }
 ```
@@ -330,7 +330,7 @@ fn test_correlation_id_propagation() {
 
     // Service 1
     narrate(NarrationFields {
-        actor: "rbees-orcd",
+        actor: "queen-rbee",
         action: "dispatch",
         target: "job-1".to_string(),
         human: "Dispatching".to_string(),
@@ -381,7 +381,7 @@ cargo test -p observability-narration-core --features test-support -- --test-thr
 ### Across Services
 
 ```rust
-// rbees-orcd generates correlation ID
+// queen-rbee generates correlation ID
 let correlation_id = CorrelationId::new();
 
 narrate!(
@@ -440,7 +440,7 @@ Output:
 
 ```json
 {
-  "actor": "rbees-orcd",
+  "actor": "queen-rbee",
   "action": "authenticate",
   "authorization": "[REDACTED]",
   "human": "Authenticated request"
@@ -559,7 +559,7 @@ let sanitized = sanitize_crlf(input);
 use observability_narration_core::{validate_actor, validate_action};
 
 // Rejects non-ASCII to prevent homograph attacks
-assert!(validate_actor("rbees-orcd").is_ok());
+assert!(validate_actor("queen-rbee").is_ok());
 assert!(validate_actor("оrchestratord").is_err());  // Cyrillic 'о'
 ```
 
@@ -570,7 +570,7 @@ assert!(validate_actor("оrchestratord").is_err());  // Cyrillic 'о'
 ### For Consumer Teams
 
 - **worker-orcd**: See [`docs/WORKER_ORCD_INTEGRATION.md`](docs/WORKER_ORCD_INTEGRATION.md)
-- **rbees-orcd**: Coming soon
+- **queen-rbee**: Coming soon
 - **pool-managerd**: Coming soon
 
 Each guide includes:

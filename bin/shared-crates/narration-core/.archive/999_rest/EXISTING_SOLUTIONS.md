@@ -73,7 +73,7 @@ use tracing::instrument;
 #[instrument(
     name = "dispatch_job",
     fields(
-        actor = "rbees-orcd",
+        actor = "queen-rbee",
         action = "dispatch",
         job_id = %job_id,
         pool_id = %pool_id
@@ -87,7 +87,7 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
 ```
 **Output**:
 ```
-TRACE rbees-orcd dispatch_job actor="rbees-orcd" action="dispatch" job_id="job-123" pool_id="default"
+TRACE queen-rbee dispatch_job actor="queen-rbee" action="dispatch" job_id="job-123" pool_id="default"
 ```
 ---
 ## 🔧 How to Adapt `#[instrument]` for Our Needs
@@ -109,7 +109,7 @@ macro_rules! trace_fn {
     };
 }
 // Usage:
-#[trace_fn!("rbees-orcd", "dispatch")]
+#[trace_fn!("queen-rbee", "dispatch")]
 fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
     let worker = select_worker(pool_id)?;
     Ok(worker.id)
@@ -159,7 +159,7 @@ pub fn trace_fn(_attr: TokenStream, item: TokenStream) -> TokenStream {
 ```rust
 use tracing::instrument;
 #[instrument(
-    fields(actor = "rbees-orcd", action = "dispatch"),
+    fields(actor = "queen-rbee", action = "dispatch"),
     level = "trace"
 )]
 fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
@@ -180,7 +180,7 @@ macro_rules! trace_fn {
     };
 }
 // Usage:
-#[trace_fn!("rbees-orcd", "dispatch")]
+#[trace_fn!("queen-rbee", "dispatch")]
 fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
     // ...
 }
@@ -189,7 +189,7 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
 ```rust
 // For user-facing events with cute mode
 narrate(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "accept",
     target: job_id.to_string(),
     human: "Accepted request; queued at position 3".to_string(),
@@ -346,7 +346,7 @@ macro_rules! trace_state { /* ... */ }
 ```rust
 // Proc macro validates at compile time
 #[narrate(
-    actor = "rbees-orcd",
+    actor = "queen-rbee",
     action = "accept",
     human = "This message is way too long and will fail to compile because it exceeds 100 characters",
     cute = "..."

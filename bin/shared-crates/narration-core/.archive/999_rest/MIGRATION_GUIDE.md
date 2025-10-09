@@ -2,7 +2,7 @@
 
 **Guide for migrating services to the new narration system**
 
-**Target Services**: rbees-orcd, pool-managerd, worker-orcd  
+**Target Services**: queen-rbee, pool-managerd, worker-orcd  
 **Timeline**: Week 4  
 **Effort**: ~8 hours per service
 
@@ -54,7 +54,7 @@ tracing::info!("Dispatching job {} to worker {}", job_id, worker_id);
 use observability_narration_core::{narrate, NarrationFields};
 
 narrate(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "dispatch",
     target: job_id.to_string(),
     human: format!("Dispatching job {} to worker {}", job_id, worker_id),
@@ -104,7 +104,7 @@ req.headers_mut().insert(
 use observability_narration_core::narrate;
 
 narrate(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "enqueue",
     target: job_id.to_string(),
     human: "Enqueued job successfully".to_string(),
@@ -180,12 +180,12 @@ narrate(NarrationFields {
 
 ```rust
 narrate(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "vram_request",
     target: "pool-managerd-3".to_string(),
     human: "Requesting 2048 MB VRAM on GPU 0 for model 'llama-7b'".to_string(),
     cute: Some("Orchestratord politely asks pool-managerd-3 for a cozy 2GB spot! 🏠".to_string()),
-    story: Some("\"Do you have 2GB VRAM on GPU0?\" asked rbees-orcd. \"Yes!\" replied pool-managerd-3, \"Allocating now.\"".to_string()),
+    story: Some("\"Do you have 2GB VRAM on GPU0?\" asked queen-rbee. \"Yes!\" replied pool-managerd-3, \"Allocating now.\"".to_string()),
     ..Default::default()
 });
 ```
@@ -212,12 +212,12 @@ use observability_narration_core::{trace_enter, trace_exit, trace_tiny};
 
 fn process_request(job_id: &str) -> Result<()> {
     #[cfg(feature = "trace-enabled")]
-    trace_enter!("rbees-orcd", "process_request", format!("job_id={}", job_id));
+    trace_enter!("queen-rbee", "process_request", format!("job_id={}", job_id));
     
     // ... processing logic ...
     
     #[cfg(feature = "trace-enabled")]
-    trace_exit!("rbees-orcd", "process_request", "→ Ok (5ms)");
+    trace_exit!("queen-rbee", "process_request", "→ Ok (5ms)");
     
     Ok(())
 }
@@ -228,7 +228,7 @@ fn process_request(job_id: &str) -> Result<()> {
 ```rust
 #[cfg(feature = "trace-enabled")]
 for (i, worker) in workers.iter().enumerate() {
-    trace_loop!("rbees-orcd", "select_worker", i, workers.len(),
+    trace_loop!("queen-rbee", "select_worker", i, workers.len(),
                 format!("worker={}, load={}/8", worker.id, worker.load));
     // ... evaluation logic ...
 }
@@ -238,7 +238,7 @@ for (i, worker) in workers.iter().enumerate() {
 
 ## 📊 Service-Specific Migration
 
-### rbees-orcd
+### queen-rbee
 
 **Key narration points**:
 1. **Admission** - Request accepted, queued
@@ -251,7 +251,7 @@ for (i, worker) in workers.iter().enumerate() {
 ```rust
 // Admission
 narrate(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "admission",
     target: session_id.to_string(),
     human: format!("Accepted request; queued at position {} (ETA {} ms) on pool '{}'", 
@@ -266,7 +266,7 @@ narrate(NarrationFields {
 
 // Dispatch
 narrate(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "dispatch",
     target: job_id.to_string(),
     human: format!("Dispatching job {} to worker {}", job_id, worker_id),
@@ -370,7 +370,7 @@ mod tests {
         
         let captured = capture.captured();
         assert_eq!(captured.len(), 1);
-        assert_eq!(captured[0].actor, "rbees-orcd");
+        assert_eq!(captured[0].actor, "queen-rbee");
         assert_eq!(captured[0].action, "dispatch");
         assert!(captured[0].human.contains("job-123"));
     }
@@ -460,7 +460,7 @@ See `bdd/features/` for comprehensive BDD scenarios.
 
 ## 📊 Migration Timeline
 
-### rbees-orcd (Day 19)
+### queen-rbee (Day 19)
 - **Effort**: 8 hours
 - **Priority**: High (most narration points)
 - **Focus**: Admission, dispatch, completion flows

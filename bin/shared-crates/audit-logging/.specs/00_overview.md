@@ -98,7 +98,7 @@ Audit logging provides an **immutable record of security-critical events** for:
 In single-node deployments, audit logs are stored locally:
 
 ```
-rbees-orcd/pool-managerd/worker-orcd
+queen-rbee/pool-managerd/worker-orcd
          ↓
     audit-logging crate
          ↓
@@ -115,7 +115,7 @@ rbees-orcd/pool-managerd/worker-orcd
 In platform/marketplace mode, providers emit audit events to the central platform:
 
 ```
-Provider's rbees-orcd
+Provider's queen-rbee
          ↓
     audit-logging crate
          ↓
@@ -266,7 +266,7 @@ pub struct AuditEventEnvelope {
     pub audit_id: String,           // Unique ID: "audit-2025-1001-164805-abc123"
     pub timestamp: DateTime<Utc>,   // ISO 8601 UTC
     pub event_type: String,         // "vram.sealed", "auth.success", etc.
-    pub service_id: String,         // "rbees-orcd", "worker-gpu-0"
+    pub service_id: String,         // "queen-rbee", "worker-gpu-0"
     pub event: AuditEvent,          // Event-specific data
     pub prev_hash: String,          // SHA-256 of previous event (tamper evidence)
     pub hash: String,               // SHA-256 of this event
@@ -495,7 +495,7 @@ logger.verify_signatures().await?;
 
 ### 12.1 Immediate Improvements
 
-1. **Add structured event types** for all services (rbees-orcd, pool-managerd, worker-orcd)
+1. **Add structured event types** for all services (queen-rbee, pool-managerd, worker-orcd)
 2. **Implement file-based storage** with append-only guarantees
 3. **Add hash chain verification** to detect tampering
 4. **Integrate with input-validation** to prevent log injection

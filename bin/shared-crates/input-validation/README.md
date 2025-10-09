@@ -274,7 +274,7 @@ impl VramManager {
 
 ---
 
-### In rbees-orcd
+### In queen-rbee
 
 ```rust
 use input_validation::{validate_model_ref, validate_prompt, validate_identifier};

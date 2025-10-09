@@ -148,7 +148,7 @@ cute: "Worker-gpu0-r1 is running a bit slow today (500ms). Might need a checkup!
 // VRAM exhaustion
 human: "VRAM allocation failed on GPU0: requested 4096MB, only 2048MB available"
 cute: "Oh no! GPU0 doesn't have enough room (need 4GB, only 2GB free). 😟"
-story: "\"Do you have 4GB?\" asked rbees-orcd. \"No,\" replied GPU0 sadly, \"only 2GB free.\""
+story: "\"Do you have 4GB?\" asked queen-rbee. \"No,\" replied GPU0 sadly, \"only 2GB free.\""
 // Network failure
 human: "Failed to connect to pool-managerd at localhost:8080: connection refused (retry in 1s)"
 cute: "Couldn't reach pool-managerd! They might be napping. Trying again in 1s... 😴"
@@ -158,7 +158,7 @@ cute: "Couldn't reach pool-managerd! They might be napping. Trying again in 1s..
 // Policy violation
 human: "CRITICAL: VRAM-only policy violated on GPU0: UMA detected. Worker startup aborted."
 cute: "STOP! GPU0 shares memory with CPU (UMA) — we need dedicated VRAM! Shutting down. 🛑"
-story: "\"UMA detected!\" cried worker. \"We can't continue,\" said rbees-orcd gravely. \"Abort.\""
+story: "\"UMA detected!\" cried worker. \"We can't continue,\" said queen-rbee gravely. \"Abort.\""
 // Data corruption
 human: "CRITICAL: Seal verification failed for shard 'llama-7b' on GPU0: digest mismatch (expected: abc123, got: def456)"
 cute: "DANGER! llama-7b's safety seal is wrong! This could be corruption! Stopping everything! 🚨"
@@ -178,7 +178,7 @@ narrate_debug!(human = "Processing worker 47/100: worker-gpu2-r1 (status=idle)")
 ❌ **WRONG**: No correlation_id
 ```rust
 narrate_info!(
-    actor = "rbees-orcd",
+    actor = "queen-rbee",
     action = "dispatch",
     target = "job-123",
     human = "Dispatching job to worker"
@@ -187,7 +187,7 @@ narrate_info!(
 ✅ **CORRECT**: Always propagate
 ```rust
 narrate_info!(
-    actor = "rbees-orcd",
+    actor = "queen-rbee",
     action = "dispatch",
     target = "job-123",
     correlation_id = req_id,  // ALWAYS!
@@ -277,7 +277,7 @@ export RUST_LOG=info
 # Incident investigation
 export RUST_LOG=debug
 # Targeted deep dive
-export RUST_LOG=info,llama_orch::rbees-orcd::admission=trace
+export RUST_LOG=info,llama_orch::queen-rbee::admission=trace
 # Show only errors and above
 export RUST_LOG=error
 ```

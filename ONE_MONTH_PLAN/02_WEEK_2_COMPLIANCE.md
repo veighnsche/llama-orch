@@ -14,7 +14,7 @@
 - ✅ **Query API** for data export (no need to parse logs manually)
 - ✅ **Hash chain integrity** (tamper-evident)
 - ✅ **Flush modes** (Immediate, Batched, Hybrid)
-- ✅ **Already integrated** in rbees-orcd (Week 1)
+- ✅ **Already integrated** in queen-rbee (Week 1)
 
 **Time Saved:** 3 days (audit system + query API ready)
 
@@ -66,7 +66,7 @@ curl -X POST http://localhost:8080/v2/tasks \
   -d '{"model":"tinyllama","prompt":"test"}'
 
 # ✅ Verify: Audit log created with events
-cat /var/log/llorch/audit/rbees-orcd/*.audit
+cat /var/log/llorch/audit/queen-rbee/*.audit
 ```
 
 **Task 3: Document what you already have (30 min)**
@@ -81,7 +81,7 @@ cat /var/log/llorch/audit/rbees-orcd/*.audit
 ✅ Query API for GDPR exports
 ✅ Hash chain integrity
 ✅ Flush modes (Immediate, Batched, Hybrid)
-✅ Integrated in rbees-orcd (Week 1)
+✅ Integrated in queen-rbee (Week 1)
 
 ## Usage
 
@@ -96,7 +96,7 @@ cargo run
 
 **Task 4: Add audit middleware (OPTIONAL - 1 hour)**
 ```rust
-// In rbees-orcd/src/middleware.rs
+// In queen-rbee/src/middleware.rs
 use axum::{
     extract::Request,
     middleware::Next,
@@ -141,7 +141,7 @@ pub async fn audit_middleware(
 
 **Task 4: Wire up middleware (1 hour)**
 ```rust
-// In rbees-orcd/src/main.rs
+// In queen-rbee/src/main.rs
 use axum::middleware;
 use std::sync::Arc;
 
@@ -242,7 +242,7 @@ Each line is a JSON object:
 
 **Task 1: Use existing query API (1 hour)**
 ```rust
-// In rbees-orcd/src/gdpr.rs
+// In queen-rbee/src/gdpr.rs
 use axum::{Json, extract::Query};
 use serde::{Deserialize, Serialize};
 use audit_logging::{AuditLogger, AuditQuery};  // ✅ Existing crate!
@@ -297,7 +297,7 @@ pub async fn gdpr_export(
 
 **Task 2: Data deletion endpoint (1 hour)**
 ```rust
-// In rbees-orcd/src/gdpr.rs
+// In queen-rbee/src/gdpr.rs
 #[derive(Deserialize)]
 pub struct DeleteRequest {
     user_id: String,
@@ -353,7 +353,7 @@ pub async fn gdpr_delete(
 
 **Task 3: Consent endpoint (1 hour)**
 ```rust
-// In rbees-orcd/src/gdpr.rs
+// In queen-rbee/src/gdpr.rs
 #[derive(Deserialize)]
 pub struct ConsentRequest {
     user_id: String,
@@ -385,7 +385,7 @@ pub async fn gdpr_consent(
 
 **Task 4: Wire up GDPR endpoints (1 hour)**
 ```rust
-// In rbees-orcd/src/main.rs
+// In queen-rbee/src/main.rs
 if eu_audit_enabled {
     app = app
         .route("/gdpr/export", get(gdpr_export))
@@ -461,7 +461,7 @@ fn detect_region(host: &str) -> Option<String> {
 
 **Task 2: Add EU-only filtering (2 hours)**
 ```rust
-// In rbees-orcd/src/main.rs
+// In queen-rbee/src/main.rs
 async fn submit_task(
     State(state): State<AppState>,
     Json(req): Json<TaskRequest>,
@@ -501,9 +501,9 @@ async fn submit_task(
 
 ### Afternoon Session (14:00-18:00)
 
-**Task 3: Update rbees-workerd registration (1 hour)**
+**Task 3: Update llm-worker-rbee registration (1 hour)**
 ```rust
-// In rbees-workerd/src/main.rs
+// In llm-worker-rbee/src/main.rs
 async fn register_with_orchestrator(config: &Config) -> Result<()> {
     let client = reqwest::Client::new();
     
@@ -530,10 +530,10 @@ async fn register_with_orchestrator(config: &Config) -> Result<()> {
 LLORCH_EU_AUDIT=true cargo run
 
 # Spawn EU worker
-LLORCH_REGION=EU rbees pool worker spawn metal --model tinyllama --host mac.home.arpa
+LLORCH_REGION=EU rbee pool worker spawn metal --model tinyllama --host mac.home.arpa
 
 # Spawn US worker (for testing)
-LLORCH_REGION=US rbees pool worker spawn metal --model tinyllama --host workstation.home.arpa
+LLORCH_REGION=US rbee pool worker spawn metal --model tinyllama --host workstation.home.arpa
 
 # Submit job - should only go to EU worker
 llorch jobs submit --model tinyllama --prompt "test"
@@ -559,7 +559,7 @@ cargo run
 Workers must specify their region:
 
 export LLORCH_REGION=EU
-rbees-workerd --worker-id worker-1 --model model.gguf
+llm-worker-rbee --worker-id worker-1 --model model.gguf
 
 ### Supported Regions
 
@@ -732,7 +732,7 @@ const tokens = ref<string[]>([])
 const streaming = ref(false)
 const complete = ref(false)
 
-// TODO: Wire up SSE streaming from rbees-orcd
+// TODO: Wire up SSE streaming from queen-rbee
 // For now, mock data
 function startStreaming() {
   streaming.value = true
@@ -949,9 +949,9 @@ function getStatusClass(status: string) {
 
 ### Afternoon Session (14:00-18:00)
 
-**Task 3: Add CORS to rbees-orcd (30 min)**
+**Task 3: Add CORS to queen-rbee (30 min)**
 ```rust
-// In rbees-orcd/src/main.rs
+// In queen-rbee/src/main.rs
 use tower_http::cors::{CorsLayer, Any};
 
 let app = Router::new()
@@ -1021,12 +1021,12 @@ function onJobSubmitted(job: any) {
 # Build for production
 npm run build
 
-# Serve static files from rbees-orcd
-# Add static file serving to rbees-orcd
+# Serve static files from queen-rbee
+# Add static file serving to queen-rbee
 ```
 
 ```rust
-// In rbees-orcd/src/main.rs
+// In queen-rbee/src/main.rs
 use tower_http::services::ServeDir;
 
 let app = Router::new()

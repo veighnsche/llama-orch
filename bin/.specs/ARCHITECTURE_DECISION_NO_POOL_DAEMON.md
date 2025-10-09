@@ -28,7 +28,7 @@ From test-001-mvp.md Phase 5 (lines 169-173):
 
 ~~**pool-managerd (daemon) is NOT needed.**~~
 
-~~The pool manager functionality is fully provided by `rbees-pool` CLI (`rbees-pool` binary).~~
+~~The pool manager functionality is fully provided by `rbee-hive` CLI (`rbee-hive` binary).~~
 
 ---
 
@@ -51,17 +51,17 @@ From test-001-mvp.md Phase 5 (lines 169-173):
 
 | Component | Type | Why |
 |-----------|------|-----|
-| **rbees-orcd** | Daemon | Accepts inference requests 24/7, routes to workers |
-| **rbees-workerd** (worker) | Daemon | Keeps model in VRAM, accepts inference requests |
-| **rbees-pool** (rbees-pool) | CLI | Control operations on-demand via SSH |
-| **rbees-ctl** (llorch) | CLI | Remote control operations via SSH |
+| **queen-rbee** | Daemon | Accepts inference requests 24/7, routes to workers |
+| **llm-worker-rbee** (worker) | Daemon | Keeps model in VRAM, accepts inference requests |
+| **rbee-hive** (rbee-hive) | CLI | Control operations on-demand via SSH |
+| **rbee-keeper** (llorch) | CLI | Remote control operations via SSH |
 
 ### The Correct Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ ORCHESTRATORD (HTTP Daemon) - M2                                │
-│ Binary: rbees-orcd                                            │
+│ Binary: queen-rbee                                            │
 │ Port: 8080                                                       │
 │ Purpose: Routes inference requests to workers                    │
 │ Runs: 24/7 as daemon                                             │
@@ -72,7 +72,7 @@ From test-001-mvp.md Phase 5 (lines 169-173):
                      │
 ┌────────────────────┴────────────────────────────────────────────┐
 │ WORKERS (HTTP Daemons) - M0 ✅                                   │
-│ Binary: rbees-workerd                                           │
+│ Binary: llm-worker-rbee                                           │
 │ Ports: 8001, 8002, 8003, etc.                                    │
 │ Purpose: Execute inference, stream tokens                        │
 │ Runs: 24/7 as daemon (one per model)                             │
@@ -81,29 +81,29 @@ From test-001-mvp.md Phase 5 (lines 169-173):
 
 ┌─────────────────────────────────────────────────────────────────┐
 │ POOL MANAGER (CLI Tool) - M0 ✅                                  │
-│ Binary: rbees-pool                                              │
+│ Binary: rbee-hive                                              │
 │ Purpose: Local pool operations (models, workers)                 │
 │ Runs: On-demand when operator calls it                           │
 │ Why CLI: Control operations don't need 24/7 daemon               │
 │                                                                   │
 │ Commands:                                                        │
-│ - rbees-pool models download <model>                            │
-│ - rbees-pool worker spawn <backend> --model <model>             │
-│ - rbees-pool worker list                                        │
-│ - rbees-pool worker stop <id>                                   │
+│ - rbee-hive models download <model>                            │
+│ - rbee-hive worker spawn <backend> --model <model>             │
+│ - rbee-hive worker list                                        │
+│ - rbee-hive worker stop <id>                                   │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
 │ ORCHESTRATOR CLI (CLI Tool) - M0 ✅                              │
-│ Binary: rbees                                                   │
+│ Binary: rbee                                                   │
 │ Purpose: Remote pool control via SSH                             │
 │ Runs: On-demand when operator calls it                           │
 │ Why CLI: Control operations don't need 24/7 daemon               │
 │                                                                   │
 │ Commands:                                                        │
-│ - rbees pool models download <model> --host <pool>              │
-│ - rbees pool worker spawn <backend> --host <pool> --model <m>   │
-│ - rbees infer --worker <host:port> --prompt <text>              │
+│ - rbee pool models download <model> --host <pool>              │
+│ - rbee pool worker spawn <backend> --host <pool> --model <m>   │
+│ - rbee infer --worker <host:port> --prompt <text>              │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -116,21 +116,21 @@ From test-001-mvp.md Phase 5 (lines 169-173):
 **Old Plan:**
 - M0: Workers + CLIs
 - M1: Build pool-managerd daemon (HTTP server)
-- M2: Build rbees-orcd daemon
+- M2: Build queen-rbee daemon
 
 **New Plan:**
 - M0: Workers + CLIs ✅ COMPLETE
 - ~~M1: pool-managerd~~ ❌ NOT NEEDED
-- M1: Build rbees-orcd daemon (moved up from M2)
+- M1: Build queen-rbee daemon (moved up from M2)
 
 ### ✅ SIMPLIFIED: Two-Binary System
 
 **Only 2 daemon binaries needed:**
-1. **rbees-orcd** - Routes inference requests
-2. **rbees-workerd** - Executes inference
+1. **queen-rbee** - Routes inference requests
+2. **llm-worker-rbee** - Executes inference
 
 **Plus 2 CLI tools:**
-1. **rbees-pool** - Local pool management
+1. **rbee-hive** - Local pool management
 2. **llorch** - Remote pool control
 
 ---
@@ -139,16 +139,16 @@ From test-001-mvp.md Phase 5 (lines 169-173):
 
 ### Old (Incorrect) Architecture
 ```
-Client → rbees-orcd → pool-managerd → worker
+Client → queen-rbee → pool-managerd → worker
          (daemon)        (daemon)         (daemon)
 ```
 
 ### New (Correct) Architecture
 ```
-Client → rbees-orcd → worker
+Client → queen-rbee → worker
          (daemon)         (daemon)
 
-Operator → rbees → rbees-pool → spawn worker
+Operator → rbee → rbee-hive → spawn worker
            (CLI)    (CLI via SSH)
 ```
 
@@ -209,9 +209,9 @@ Operator → rbees → rbees-pool → spawn worker
 
 ### M0: Foundation ✅ COMPLETE
 **Deliverables:**
-- ✅ rbees-workerd (worker daemon)
-- ✅ rbees-pool (local pool CLI)
-- ✅ rbees (remote control CLI)
+- ✅ llm-worker-rbee (worker daemon)
+- ✅ rbee-hive (local pool CLI)
+- ✅ rbee (remote control CLI)
 - ✅ Model catalog system
 - ✅ Worker spawning
 - ✅ Token generation
@@ -228,7 +228,7 @@ Operator → rbees → rbees-pool → spawn worker
 
 ### M1: Orchestrator Daemon 🔜 AFTER CP4
 **Deliverables:**
-- [ ] rbees-orcd binary (HTTP daemon)
+- [ ] queen-rbee binary (HTTP daemon)
 - [ ] Client API (`POST /v2/tasks`)
 - [ ] Admission control
 - [ ] Queue management
@@ -244,12 +244,12 @@ Operator → rbees → rbees-pool → spawn worker
 ## Updated System Architecture
 
 ### Two Daemons (HTTP)
-1. **rbees-orcd** (port 8080) - Routes inference
-2. **rbees-workerd** (ports 8001+) - Executes inference
+1. **queen-rbee** (port 8080) - Routes inference
+2. **llm-worker-rbee** (ports 8001+) - Executes inference
 
 ### Two CLIs (SSH/Local)
 1. **llorch** - Remote control via SSH
-2. **rbees-pool** - Local pool operations
+2. **rbee-hive** - Local pool operations
 
 ### Communication Flow
 
@@ -259,20 +259,20 @@ Operator (human)
     ↓ runs
 llorch (CLI)
     ↓ SSH
-rbees-pool (CLI on remote machine)
+rbee-hive (CLI on remote machine)
     ↓ spawns
-rbees-workerd (daemon)
+llm-worker-rbee (daemon)
 ```
 
 **Data Plane (Inference):**
 ```
 Client (SDK)
     ↓ HTTP POST /v2/tasks
-rbees-orcd (daemon)
+queen-rbee (daemon)
     ↓ HTTP POST /execute
-rbees-workerd (daemon)
+llm-worker-rbee (daemon)
     ↓ SSE stream
-rbees-orcd (relay)
+queen-rbee (relay)
     ↓ SSE stream
 Client
 ```
@@ -291,7 +291,7 @@ Client
 
 ### Then Proceed With:
 1. [ ] CP4: Multi-model testing (as planned)
-2. [ ] M1: Build rbees-orcd (not pool-managerd!)
+2. [ ] M1: Build queen-rbee (not pool-managerd!)
 
 ---
 
@@ -322,9 +322,9 @@ Client
 ## Migration Notes
 
 ### Code That Doesn't Need to Change
-- ✅ rbees-workerd (workers) - No changes
-- ✅ rbees-pool (pool CLI) - No changes
-- ✅ rbees (remote CLI) - No changes
+- ✅ llm-worker-rbee (workers) - No changes
+- ✅ rbee-hive (pool CLI) - No changes
+- ✅ rbee (remote CLI) - No changes
 
 ### Code That Never Needs to Be Written
 - ❌ pool-managerd HTTP server
@@ -333,11 +333,11 @@ Client
 - ❌ pool-managerd GPU discovery API
 
 ### Code That Still Needs to Be Written
-- ⏳ rbees-orcd HTTP server (M1)
-- ⏳ rbees-orcd admission control
-- ⏳ rbees-orcd queue management
-- ⏳ rbees-orcd scheduling
-- ⏳ rbees-orcd SSE relay
+- ⏳ queen-rbee HTTP server (M1)
+- ⏳ queen-rbee admission control
+- ⏳ queen-rbee queue management
+- ⏳ queen-rbee scheduling
+- ⏳ queen-rbee SSE relay
 
 ---
 
@@ -346,13 +346,13 @@ Client
 ### Test Current Architecture Works:
 ```bash
 # 1. Spawn worker (CLI)
-rbees-pool worker spawn cpu --model qwen-0.5b
+rbee-hive worker spawn cpu --model qwen-0.5b
 
 # 2. Test inference (CLI)
 llorch infer --worker localhost:8001 --prompt "Hello" --max-tokens 20
 
 # 3. Stop worker (CLI)
-rbees-pool worker stop-all
+rbee-hive worker stop-all
 ```
 
 **Result:** ✅ Everything works without pool-managerd!
@@ -378,12 +378,12 @@ llorch pool worker stop-all --host mac.home.arpa
 **pool-managerd is NOT needed.**
 
 The pool manager functionality is fully provided by:
-- `rbees-pool` (local CLI)
-- `rbees` (remote CLI via SSH)
+- `rbee-hive` (local CLI)
+- `rbee` (remote CLI via SSH)
 
 This simplifies the architecture and removes an entire milestone (M1).
 
-**Next milestone is now building rbees-orcd (M1, was M2).**
+**Next milestone is now building queen-rbee (M1, was M2).**
 
 ---
 

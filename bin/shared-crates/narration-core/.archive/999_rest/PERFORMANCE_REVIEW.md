@@ -110,7 +110,7 @@ pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
 ```rust
 // Unit 1.5: #[narrate(...)] Proc Macro with Template Interpolation
 #[narrate(
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "dispatch",
     human: "Dispatched job {job_id} to worker {worker.id} ({elapsed_ms}ms)",
     cute: "Sent job {job_id} to worker {worker.id}! 🚀"
@@ -425,13 +425,13 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
 // Generated code:
 fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
     let __start = std::time::Instant::now();  // 🚨 Entry timing
-    trace_enter!("rbees-orcd", "dispatch_job", 
+    trace_enter!("queen-rbee", "dispatch_job", 
                  format!("job_id={}, pool_id={}", job_id, pool_id));
     let __result = (|| {
         // ... original function body
     })();
     let __elapsed = __start.elapsed();  // 🚨 Exit timing
-    trace_exit!("rbees-orcd", "dispatch_job", 
+    trace_exit!("queen-rbee", "dispatch_job", 
                 format!("→ {:?} ({}ms)", __result, __elapsed.as_millis()));
     __result
 }
@@ -468,7 +468,7 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
    - **Speedup**: ~10x faster than `Instant::now()`
 3. **Lazy Formatting** (RECOMMENDED)
    ```rust
-   trace_enter!("rbees-orcd", "dispatch_job", || {
+   trace_enter!("queen-rbee", "dispatch_job", || {
        format!("job_id={}, pool_id={}", job_id, pool_id)
    });
    ```

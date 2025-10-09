@@ -121,7 +121,7 @@ Requirements:
 
 ## 6. Traceability
 
-- Orchestrator spec: `bin/rbees-orcd/.specs/00_rbees-orcd.md` (§9)
+- Orchestrator spec: `bin/queen-rbee/.specs/00_queen-rbee.md` (§9)
 - Pool-managerd spec: `bin/pool-managerd/.specs/00_pool-managerd.md` (§8)
 - Worker-orcd spec: `bin/worker-orcd/.specs/00_worker-orcd.md` (§9)
 

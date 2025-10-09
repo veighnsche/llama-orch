@@ -53,7 +53,7 @@ LLORCH_BDD_FEATURE_PATH=tests/features/core_narration.feature \
 Feature: Core Narration
 
   Scenario: Emit basic narration event
-    Given an actor "rbees-orcd"
+    Given an actor "queen-rbee"
     And an action "enqueue"
     And a target "job-123"
     When I emit narration

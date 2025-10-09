@@ -12,24 +12,24 @@
 
 **What TEAM-024 Completed:**
 1. ✅ Fixed huggingface-cli → hf CLI migration (docs + code)
-2. ✅ Clarified binary naming confusion (llorch vs rbees-orcd)
+2. ✅ Clarified binary naming confusion (llorch vs queen-rbee)
 3. ✅ Added `llorch infer` command for testing workers
 4. ✅ Created ORCHESTRATION_OVERVIEW.md (complete system guide)
 5. ✅ Successfully tested token generation on local CPU worker
 
 **Current System State (THE 4 BINARIES):**
-1. **rbees-orcd** (daemon) - M1 ❌ NOT BUILT
-2. **rbees-workerd** (daemon) - M0 ✅ WORKING
-3. **rbees-pool** (daemon) - M1 ❌ NOT BUILT (currently CLI only, needs daemon features)
-4. **rbees-ctl** (CLI) - M0 ✅ WORKING
+1. **queen-rbee** (daemon) - M1 ❌ NOT BUILT
+2. **llm-worker-rbee** (daemon) - M0 ✅ WORKING
+3. **rbee-hive** (daemon) - M1 ❌ NOT BUILT (currently CLI only, needs daemon features)
+4. **rbee-keeper** (CLI) - M0 ✅ WORKING
 
 **M0 Status:** 3 of 4 binaries complete
 
 **⚠️ ARCHITECTURAL CORRECTION (2025-10-09 - TEAM-025):**
 - ✅ pool-managerd daemon IS REQUIRED (per MVP test-001-mvp.md)
-- ✅ 3 daemons: rbees-orcd + rbees-workerd + rbees-pool (daemon)
-- ✅ 1 CLI: rbees-ctl
-- ✅ M1 milestone: Build rbees-orcd AND rbees-pool daemon
+- ✅ 3 daemons: queen-rbee + llm-worker-rbee + rbee-hive (daemon)
+- ✅ 1 CLI: rbee-keeper
+- ✅ M1 milestone: Build queen-rbee AND rbee-hive daemon
 - See: `bin/.specs/.gherkin/test-001-mvp.md` (NORMATIVE reference)
 
 **User Status:** 🔴 EXHAUSTED - Needs rest, brain has left
@@ -40,35 +40,35 @@
 
 ### ✅ What Works (M0)
 
-**Workers (rbees-workerd):**
-- Binary: `rbees-workerd` (CPU, Metal, CUDA variants)
+**Workers (llm-worker-rbee):**
+- Binary: `llm-worker-rbee` (CPU, Metal, CUDA variants)
 - Status: BUILT and WORKING
-- Location: `bin/rbees-workerd/`
+- Location: `bin/llm-worker-rbee/`
 - Test: `llorch infer --worker localhost:8080 --prompt "Hello"`
 - Performance: ~6.5 tokens/sec on CPU
 
-**Pool CLI (rbees-pool):**
-- Binary: `rbees-pool`
+**Pool CLI (rbee-hive):**
+- Binary: `rbee-hive`
 - Status: BUILT and WORKING
-- Location: `bin/rbees-pool/`
+- Location: `bin/rbee-hive/`
 - Commands: models (download, catalog, register), worker (spawn, list, stop)
 
 **Remote CLI (llorch):**
-- Binary: `rbees`
+- Binary: `rbee`
 - Status: BUILT and WORKING
-- Location: `bin/rbees-ctl/`
+- Location: `bin/rbee-keeper/`
 - Commands: pool (models, worker, git, status), infer (NEW by TEAM-024)
 
 ### ❌ What Doesn't Exist Yet
 
-**Orchestrator Daemon (rbees-orcd):**
-- Binary: `rbees-orcd` (HTTP daemon)
+**Orchestrator Daemon (queen-rbee):**
+- Binary: `queen-rbee` (HTTP daemon)
 - Status: NOT BUILT (M1 milestone - moved up from M2)
 - Purpose: HTTP daemon that routes inference requests
 - Port: 8080
-- Location: Should be `bin/rbees-orcd/` (doesn't exist)
+- Location: Should be `bin/queen-rbee/` (doesn't exist)
 
-**REQUIRED: rbees-pool daemon**
+**REQUIRED: rbee-hive daemon**
 - Status: NEEDED (per MVP test-001-mvp.md)
 - Reason: Must monitor worker health every 30s and enforce idle timeouts
 - Current: CLI exists, daemon features needed
@@ -89,7 +89,7 @@
 - [x] **01_M0_worker_orcd.md** (108KB) - Worker spec
   - Status: Complete for M0
   - Contains: Worker requirements, HTTP API, SSE streaming
-  - Note: "worker-orcd" is old name, now "rbees-workerd"
+  - Note: "worker-orcd" is old name, now "llm-worker-rbee"
 
 - [x] **71_metrics_contract.md** (4KB) - Metrics spec
   - Status: Complete
@@ -138,7 +138,7 @@
 #### Checkpoint Plans
 - [x] **01_CP1_FOUNDATION.md** (9KB)
   - Status: ✅ COMPLETE
-  - Deliverables: pool-core, rbees-pool, rbees-ctl
+  - Deliverables: pool-core, rbee-hive, rbee-keeper
   - Completed by: TEAM-022
 
 - [x] **02_CP2_MODEL_CATALOG.md** (14KB)
@@ -193,17 +193,17 @@
 #### Task 1.1: Download Remaining Models (2-3 hours)
 ```bash
 # On mac.home.arpa
-ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download tinyllama"
-ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download phi3"
-ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download mistral"
+ssh mac.home.arpa "cd ~/Projects/llama-orch && rbee-hive models download tinyllama"
+ssh mac.home.arpa "cd ~/Projects/llama-orch && rbee-hive models download phi3"
+ssh mac.home.arpa "cd ~/Projects/llama-orch && rbee-hive models download mistral"
 
 # On workstation.home.arpa (if available)
-ssh workstation.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download tinyllama"
-ssh workstation.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download phi3"
-ssh workstation.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download mistral"
+ssh workstation.home.arpa "cd ~/Projects/llama-orch && rbee-hive models download tinyllama"
+ssh workstation.home.arpa "cd ~/Projects/llama-orch && rbee-hive models download phi3"
+ssh workstation.home.arpa "cd ~/Projects/llama-orch && rbee-hive models download mistral"
 
 # Verify
-ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool models catalog"
+ssh mac.home.arpa "cd ~/Projects/llama-orch && rbee-hive models catalog"
 ```
 
 **Models to Download:**
@@ -238,16 +238,16 @@ for model in "${MODELS[@]}"; do
         echo "Testing $model on $backend..."
         
         # Spawn worker
-        rbees-pool worker spawn $backend --model $model --gpu 0
+        rbee-hive worker spawn $backend --model $model --gpu 0
         
         # Wait for startup
         sleep 5
         
         # Test inference
-        rbees infer --worker localhost:8001 --prompt "Hello" --max-tokens 20
+        rbee infer --worker localhost:8001 --prompt "Hello" --max-tokens 20
         
         # Stop worker
-        rbees-pool worker stop-all
+        rbee-hive worker stop-all
     done
 done
 ```
@@ -277,15 +277,15 @@ mistral     ✅     ✅      ✅
 
 ### Priority 2: Start M1 (Orchestrator Daemon) 🚀
 
-**After CP4 is complete**, start building `rbees-orcd`
+**After CP4 is complete**, start building `queen-rbee`
 
 **ARCHITECTURAL CHANGE:** pool-managerd is NOT NEEDED!
-- Pool management is CLI-based (rbees-pool)
-- M1 now focuses on rbees-orcd only
+- Pool management is CLI-based (rbee-hive)
+- M1 now focuses on queen-rbee only
 
 **Goal:** Build HTTP daemon that routes inference requests
 
-**Location:** Create `bin/rbees-orcd/`
+**Location:** Create `bin/queen-rbee/`
 
 **Reference Spec:** `/bin/.specs/00_llama-orch.md` Section 6.1
 
@@ -302,18 +302,18 @@ mistral     ✅     ✅      ✅
 ```
 Client
     ↓ POST /v2/tasks
-rbees-orcd (HTTP daemon :8080)
+queen-rbee (HTTP daemon :8080)
     ↓ Scheduling decision
     ↓ POST http://worker:8001/execute
-rbees-workerd (worker)
+llm-worker-rbee (worker)
     ↓ SSE stream
-rbees-orcd (relay)
+queen-rbee (relay)
     ↓ SSE stream
 Client
 ```
 
 **Steps:**
-1. Create `bin/rbees-orcd/` directory
+1. Create `bin/queen-rbee/` directory
 2. Create `Cargo.toml` with axum dependencies
 3. Implement HTTP server (port 8080)
 4. Implement admission control
@@ -329,7 +329,7 @@ Client
 
 ### Priority 3: Advanced Orchestrator Features 🎯
 
-**After M1 rbees-orcd is working**, add advanced features
+**After M1 queen-rbee is working**, add advanced features
 
 **Goal:** Production-ready orchestration
 
@@ -369,13 +369,13 @@ cd /home/vince/Projects/llama-orch
 cargo build --release
 
 # Test worker
-ps aux | grep rbees-workerd  # Should be running on port 8080
+ps aux | grep llm-worker-rbee  # Should be running on port 8080
 
 # Test inference
 ./target/release/llorch infer --worker localhost:8080 --prompt "Hello" --max-tokens 20
 
 # Check catalog
-./target/release/rbees-pool models catalog
+./target/release/rbee-hive models catalog
 ```
 
 ### Step 3: Start CP4 Tasks (Follow Priority 1 above)
@@ -414,21 +414,21 @@ ps aux | grep rbees-workerd  # Should be running on port 8080
 **Status:** CURRENT STATE  
 **Cause:** TEAM-024 testing  
 **Impact:** Worker running on orchestrator's port  
-**Action:** Stop worker before building rbees-orcd  
-**Fix:** `pkill rbees-workerd` or use proper ports (8001+)
+**Action:** Stop worker before building queen-rbee  
+**Fix:** `pkill llm-worker-rbee` or use proper ports (8001+)
 
-### Issue 3: No rbees-orcd Yet
+### Issue 3: No queen-rbee Yet
 **Status:** EXPECTED (M2)  
 **Cause:** Not built yet  
 **Impact:** Can't test full orchestration  
 **Action:** Use `llorch infer` for direct worker testing  
-**Fix:** Build rbees-orcd in M2
+**Fix:** Build queen-rbee in M2
 
 ### Issue 4: No pool-managerd Yet
 **Status:** EXPECTED (M1)  
 **Cause:** Not built yet  
 **Impact:** Manual worker management  
-**Action:** Use `rbees-pool` CLI for now  
+**Action:** Use `rbee-hive` CLI for now  
 **Fix:** Build pool-managerd in M1
 
 ---
@@ -533,7 +533,7 @@ ps aux | grep rbees-workerd  # Should be running on port 8080
 ## Final Notes from TEAM-024
 
 **What Went Well:**
-- ✅ Binary naming clarified (llorch vs rbees-orcd)
+- ✅ Binary naming clarified (llorch vs queen-rbee)
 - ✅ Inference command added to llorch
 - ✅ Documentation comprehensive
 - ✅ Token generation proven working

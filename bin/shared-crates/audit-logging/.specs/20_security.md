@@ -155,7 +155,7 @@ let config = AuditConfig {
 **B. Symlink Attack**:
 ```bash
 # Attacker creates symlink
-ln -s /etc/passwd /var/lib/llorch/audit/rbees-orcd/2025-10-01.audit
+ln -s /etc/passwd /var/lib/llorch/audit/queen-rbee/2025-10-01.audit
 
 # Audit logger overwrites /etc/passwd
 ```

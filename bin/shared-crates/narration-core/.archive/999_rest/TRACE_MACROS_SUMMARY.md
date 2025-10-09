@@ -32,7 +32,7 @@ trace_with_correlation!("actor", "action", "target", "human", correlation_id);
 **Example**:
 ```rust
 trace_with_correlation!(
-    "rbees-orcd", "select_worker", "worker-gpu0-r1",
+    "queen-rbee", "select_worker", "worker-gpu0-r1",
     format!("Evaluating worker: load={}/8", load),
     req_id
 );
@@ -50,7 +50,7 @@ trace_enter!("actor", "function_name", "args");
 **Example**:
 ```rust
 fn dispatch_job(job_id: &str, pool_id: &str) -> Result<()> {
-    trace_enter!("rbees-orcd", "dispatch_job", 
+    trace_enter!("queen-rbee", "dispatch_job", 
                  format!("job_id={}, pool_id={}", job_id, pool_id));
     // ...
 }
@@ -65,7 +65,7 @@ trace_exit!("actor", "function_name", "result");
 
 **Example**:
 ```rust
-trace_exit!("rbees-orcd", "dispatch_job", 
+trace_exit!("queen-rbee", "dispatch_job", 
             format!("→ {} ({}ms)", worker_id, elapsed_ms));
 ```
 
@@ -79,7 +79,7 @@ trace_loop!("actor", "action", index, total, "detail");
 **Example**:
 ```rust
 for (i, worker) in workers.iter().enumerate() {
-    trace_loop!("rbees-orcd", "select_worker", i, workers.len(),
+    trace_loop!("queen-rbee", "select_worker", i, workers.len(),
                 format!("worker={}, load={}/8", worker.id, worker.load));
     // ...
 }
@@ -94,7 +94,7 @@ trace_state!("actor", "state_name", "transition", "human");
 
 **Example**:
 ```rust
-trace_state!("rbees-orcd", "queue_depth", 
+trace_state!("queen-rbee", "queue_depth", 
              format!("{} → {}", old_depth, new_depth),
              format!("Queue depth changed: {} → {}", old_depth, new_depth));
 ```

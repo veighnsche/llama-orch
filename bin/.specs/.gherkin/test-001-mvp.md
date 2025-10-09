@@ -2,15 +2,15 @@
 
 ## Topology
 
-- **blep** (`blep.home.arpa`): Control node with `rbees-ctl`, `rbees-orcd`, `rbees-pool`. Can run CPU workers.
-- **workstation** (`workstation.home.arpa`): Compute node with `rbees-pool`, `rbees-workerd`. CUDA devices 0, 1, CPU.
-- **mac** (`mac.home.arpa`): Compute node with `rbees-pool`, `rbees-workerd`. Metal backend only.
+- **blep** (`blep.home.arpa`): Control node with `rbee-keeper`, `queen-rbee`, `rbee-hive`. Can run CPU workers.
+- **workstation** (`workstation.home.arpa`): Compute node with `rbee-hive`, `llm-worker-rbee`. CUDA devices 0, 1, CPU.
+- **mac** (`mac.home.arpa`): Compute node with `rbee-hive`, `llm-worker-rbee`. Metal backend only.
 
 ## Test Objective
 
 From `blep`, run inference on `mac` using:
 ```bash
-rbees-ctl infer --node mac --model hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
+rbee-keeper infer --node mac --model hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
   --prompt "write a short story" --max-tokens 20 --temperature 0.7
 ```
 
@@ -20,7 +20,7 @@ rbees-ctl infer --node mac --model hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
 
 ### **Phase 1: Worker Registry Check**
 
-**rbees-ctl** queries local SQLite registry:
+**rbee-keeper** queries local SQLite registry:
 ```sql
 SELECT * FROM workers 
 WHERE node = 'mac' 
@@ -39,7 +39,7 @@ WHERE node = 'mac'
 
 ### **Phase 2: Pool Preflight**
 
-**rbees-ctl** → **rbees-pool** on `mac`:
+**rbee-keeper** → **rbee-hive** on `mac`:
 
 **2.1 Version Check**
 ```
@@ -65,7 +65,7 @@ Response:
 
 ### **Phase 3: Model Provisioning**
 
-**rbees-pool** checks local model catalog:
+**rbee-hive** checks local model catalog:
 ```sql
 SELECT local_path FROM models 
 WHERE reference = 'TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF'
@@ -76,8 +76,8 @@ WHERE reference = 'TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF'
 
 **3.1 Download Model**
 ```
-rbees-pool → Hugging Face API
-Stream progress via SSE to rbees-ctl
+rbee-hive → Hugging Face API
+Stream progress via SSE to rbee-keeper
 ```
 
 **SSE Stream:**
@@ -93,7 +93,7 @@ data: {"stage": "complete", "local_path": "/models/tinyllama-q4.gguf"}
 data: [DONE]
 ```
 
-**rbees-ctl** displays:
+**rbee-keeper** displays:
 ```
 Downloading model... [████████████████████----] 80% (4.0 MB / 5.0 MB) @ 45.2 MB/s
 ```
@@ -109,7 +109,7 @@ VALUES ('tinyllama-q4', 'hf', 'TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF',
 
 ### **Phase 4: Worker Preflight**
 
-**rbees-pool** checks resources:
+**rbee-hive** checks resources:
 
 **4.1 RAM Check**
 ```rust
@@ -132,9 +132,9 @@ if !metal_available() {
 
 ### **Phase 5: Worker Startup**
 
-**rbees-pool** spawns worker:
+**rbee-hive** spawns worker:
 ```bash
-rbees-workerd \
+llm-worker-rbee \
   --model /models/tinyllama-q4.gguf \
   --backend metal \
   --device 0 \
@@ -157,7 +157,7 @@ rbees-workerd \
    ```
 3. Model loading begins (async)
 
-**rbees-pool** returns to **rbees-ctl**:
+**rbee-hive** returns to **rbee-keeper**:
 ```json
 {
   "worker_id": "worker-abc123",
@@ -175,7 +175,7 @@ rbees-workerd \
 
 ### **Phase 6: Worker Registration**
 
-**rbees-ctl** updates local registry:
+**rbee-keeper** updates local registry:
 ```sql
 INSERT OR REPLACE INTO workers 
   (id, node, url, model_ref, backend, device, state, created_at_unix, last_health_check_unix)
@@ -189,7 +189,7 @@ VALUES
 
 ### **Phase 7: Worker Health Check**
 
-**rbees-ctl** polls worker:
+**rbee-keeper** polls worker:
 ```
 GET http://mac.home.arpa:8081/v1/ready
 Authorization: Bearer <worker_api_key>
@@ -204,7 +204,7 @@ Authorization: Bearer <worker_api_key>
 }
 ```
 
-**rbees-ctl** streams loading progress:
+**rbee-keeper** streams loading progress:
 ```
 GET http://mac.home.arpa:8081/v1/loading/progress
 
@@ -217,7 +217,7 @@ data: {"stage": "ready"}
 data: [DONE]
 ```
 
-**rbees-ctl** displays:
+**rbee-keeper** displays:
 ```
 Loading model to VRAM... [████████████████████----] 75% (24/32 layers)
 Model ready!
@@ -237,7 +237,7 @@ GET /v1/ready
 
 ### **Phase 8: Inference Execution**
 
-**rbees-ctl** sends inference request:
+**rbee-keeper** sends inference request:
 ```
 POST http://mac.home.arpa:8081/v1/inference
 Authorization: Bearer <worker_api_key>
@@ -271,7 +271,7 @@ data: {"done": true, "total_tokens": 20, "duration_ms": 1234}
 data: [DONE]
 ```
 
-**rbees-ctl** streams to stdout:
+**rbee-keeper** streams to stdout:
 ```
 Once upon a time, in a small village, there lived a curious cat named Whiskers who loved to explore.
 ```
@@ -294,14 +294,14 @@ Once upon a time, in a small village, there lived a curious cat named Whiskers w
 
 **Scenario:** `mac` is unreachable
 
-**rbees-ctl** behavior:
+**rbee-keeper** behavior:
 ```
 Attempt 1: Connecting to mac.home.arpa:8080... (timeout 10s)
 Attempt 2: Connecting to mac.home.arpa:8080... (timeout 10s, delay 200ms)
 Attempt 3: Connecting to mac.home.arpa:8080... (timeout 10s, delay 400ms)
 
 Error: Cannot connect to mac.home.arpa:8080 after 3 attempts
-Suggestion: Check if rbees-pool is running on mac
+Suggestion: Check if rbee-hive is running on mac
 ```
 
 **Exit code:** 1
@@ -312,7 +312,7 @@ Suggestion: Check if rbees-pool is running on mac
 
 **Scenario:** Network failure during download
 
-**rbees-pool** behavior:
+**rbee-hive** behavior:
 ```
 Downloading model... [████████------------] 40% (2.0 MB / 5.0 MB)
 Error: Connection reset by peer
@@ -327,7 +327,7 @@ Error: Failed to download model after 6 attempts
 Last error: Connection timeout
 ```
 
-**rbees-ctl** receives error and displays to user.
+**rbee-keeper** receives error and displays to user.
 
 ---
 
@@ -335,7 +335,7 @@ Last error: Connection timeout
 
 **Scenario:** Model requires 6 GB, only 4 GB available
 
-**rbees-pool** preflight check:
+**rbee-hive** preflight check:
 ```rust
 let required_vram = 6000;
 let available_vram = get_available_vram();  // 4000
@@ -350,7 +350,7 @@ if available_vram < required_vram {
 }
 ```
 
-**rbees-ctl** displays:
+**rbee-keeper** displays:
 ```
 Error: Insufficient VRAM on mac
   Required: 6000 MB
@@ -365,12 +365,12 @@ Suggestion: Try a smaller quantized model (Q4 instead of Q8)
 
 **Scenario:** Worker process dies mid-generation
 
-**rbees-ctl** behavior:
+**rbee-keeper** behavior:
 ```
 Once upon a time, in a small village, there lived a curious cat
 Error: SSE stream closed unexpectedly
 
-Partial result saved to: /tmp/rbees-partial-abc123.txt
+Partial result saved to: /tmp/rbee-partial-abc123.txt
 Tokens generated: 12 / 20
 ```
 
@@ -385,7 +385,7 @@ Tokens generated: 12 / 20
 
 **Scenario:** User presses Ctrl+C during inference
 
-**rbees-ctl** behavior:
+**rbee-keeper** behavior:
 ```rust
 // Signal handler
 signal::ctrl_c().await?;
@@ -413,7 +413,7 @@ exit(130);  // 128 + SIGINT
 
 **Scenario:** Worker already processing a request
 
-**rbees-ctl** sends inference request:
+**rbee-keeper** sends inference request:
 ```
 POST /v1/inference
 ```
@@ -433,7 +433,7 @@ Content-Type: application/json
 }
 ```
 
-**rbees-ctl** behavior:
+**rbee-keeper** behavior:
 ```
 Worker is busy, retrying in 1 second...
 Worker is busy, retrying in 2 seconds...
@@ -449,7 +449,7 @@ Suggestion: Wait for current request to complete or use a different node
 
 **Scenario:** Model takes too long to load (>5 minutes)
 
-**rbees-ctl** polling loop:
+**rbee-keeper** polling loop:
 ```rust
 let start = Instant::now();
 let timeout = Duration::from_secs(300);  // 5 minutes
@@ -481,9 +481,9 @@ Suggestion: Check worker logs on mac for errors
 
 ### **EC8: Version Mismatch**
 
-**Scenario:** `rbees-ctl` v0.1.0, `rbees-pool` v0.2.0
+**Scenario:** `rbee-keeper` v0.1.0, `rbee-hive` v0.2.0
 
-**rbees-ctl** version check:
+**rbee-keeper** version check:
 ```rust
 let ctl_version = "0.1.0";
 let pool_version = response.version;  // "0.2.0"
@@ -492,7 +492,7 @@ if ctl_version != pool_version {
     return Err(VersionError {
         code: "VERSION_MISMATCH",
         message: format!(
-            "Version mismatch: rbees-ctl={}, rbees-pool={}",
+            "Version mismatch: rbee-keeper={}, rbee-hive={}",
             ctl_version, pool_version
         ),
         ctl_version,
@@ -504,11 +504,11 @@ if ctl_version != pool_version {
 **Error displayed:**
 ```
 Error: Version mismatch
-  rbees-ctl: v0.1.0
-  rbees-pool: v0.2.0
+  rbee-keeper: v0.1.0
+  rbee-hive: v0.2.0
   
-Please upgrade rbees-ctl to v0.2.0:
-  cargo install rbees-ctl --version 0.2.0
+Please upgrade rbee-keeper to v0.2.0:
+  cargo install rbee-keeper --version 0.2.0
 ```
 
 ---
@@ -517,13 +517,13 @@ Please upgrade rbees-ctl to v0.2.0:
 
 **Scenario:** Wrong API key configured
 
-**rbees-ctl** request:
+**rbee-keeper** request:
 ```
 GET /v1/health
 Authorization: Bearer wrong_key
 ```
 
-**rbees-pool** response:
+**rbee-hive** response:
 ```
 HTTP/1.1 401 Unauthorized
 Content-Type: application/json
@@ -536,13 +536,13 @@ Content-Type: application/json
 }
 ```
 
-**rbees-ctl** displays:
+**rbee-keeper** displays:
 ```
 Error: Authentication failed
   Invalid API key for mac.home.arpa
   
 Check your configuration:
-  ~/.rbees/config.yaml
+  ~/.rbee/config.yaml
 ```
 
 ---
@@ -565,7 +565,7 @@ T+5:03  - User launches game → VRAM available ✓
 
 **Next inference request:**
 ```
-rbees-ctl infer --node mac --model ...
+rbee-keeper infer --node mac --model ...
 
 No idle worker found, starting new worker...
 Downloading model... (already cached, skip)
@@ -613,7 +613,7 @@ All errors follow this structure:
 
 ```bash
 # Basic inference
-rbees-ctl infer \
+rbee-keeper infer \
   --node mac \
   --model hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
   --prompt "write a short story" \
@@ -621,22 +621,22 @@ rbees-ctl infer \
   --temperature 0.7
 
 # With timeout
-rbees-ctl infer ... --timeout 300
+rbee-keeper infer ... --timeout 300
 
 # With retry
-rbees-ctl infer ... --retry 3
+rbee-keeper infer ... --retry 3
 
 # List available workers
-rbees-ctl workers list
+rbee-keeper workers list
 
 # Check worker health
-rbees-ctl workers health --node mac
+rbee-keeper workers health --node mac
 
 # Manually shutdown worker
-rbees-ctl workers shutdown --id worker-abc123
+rbee-keeper workers shutdown --id worker-abc123
 
 # View logs
-rbees-ctl logs --node mac --follow
+rbee-keeper logs --node mac --follow
 ```
 
 ---

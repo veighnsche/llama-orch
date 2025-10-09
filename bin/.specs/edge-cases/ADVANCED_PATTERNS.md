@@ -1,6 +1,6 @@
 # Advanced Patterns from Production LLM Engines
 
-Analysis of candle-vllm, mistral.rs, Ollama, and llama.cpp for rbees architecture.
+Analysis of candle-vllm, mistral.rs, Ollama, and llama.cpp for rbee architecture.
 
 ---
 
@@ -55,7 +55,7 @@ fn preempt(&mut self, seq: Sequence, method: PreemptionMethod) {
 }
 ```
 
-**For rbees:**
+**For rbee:**
 - **MVP:** Preempt by recompute only (simpler)
 - **Post-MVP:** Add swap support for long-running requests
 
@@ -109,7 +109,7 @@ impl Sequence {
 }
 ```
 
-**For rbees:**
+**For rbee:**
 - Track sequence arrival time
 - Increment urgency when waitlisted
 - Prevent starvation of long-waiting requests
@@ -151,7 +151,7 @@ fn filter_prefill_finished(
 }
 ```
 
-**For rbees:**
+**For rbee:**
 - Chunk prompts > 8K tokens
 - Stream progress during chunked prefill
 - Prevents head-of-line blocking
@@ -193,7 +193,7 @@ impl PrefixCache {
 }
 ```
 
-**For rbees:**
+**For rbee:**
 - Cache common prompt prefixes (system prompts, few-shot examples)
 - Evict to CPU when GPU memory pressure
 - Restore from CPU when needed
@@ -244,7 +244,7 @@ impl BlockEngine {
 }
 ```
 
-**For rbees (post-MVP):**
+**For rbee (post-MVP):**
 - Implement PagedAttention with block-level KV cache
 - Enables efficient memory sharing and swapping
 - Reduces fragmentation
@@ -287,7 +287,7 @@ fn schedule(&mut self) -> SchedulerOutput {
 }
 ```
 
-**For rbees:**
+**For rbee:**
 - Prevent indefinite waiting
 - Evict idle workers to make room for new requests
 - Configurable timeout threshold
@@ -321,7 +321,7 @@ async fn generate_parallel(
 }
 ```
 
-**For rbees (post-MVP):**
+**For rbee (post-MVP):**
 - Distribute large models across multiple GPUs
 - Use NCCL for tensor parallelism
 - Coordinate via daemon manager
@@ -362,7 +362,7 @@ fn schedule(&mut self) -> SchedulerOutput {
 }
 ```
 
-**For rbees:**
+**For rbee:**
 - Don't wait for batch to finish before adding new requests
 - Maximize GPU utilization
 - Reduces average latency
@@ -382,7 +382,7 @@ struct SpeculativeParams {
 };
 ```
 
-**For rbees (post-MVP):**
+**For rbee (post-MVP):**
 - Implement speculative decoding for faster generation
 - Use TinyLlama as draft model for Llama-7B
 - 2-3x speedup for compatible models
@@ -429,14 +429,14 @@ impl CompletionMetrics {
   (avg tps 45.2 tokens/s, throughput 226.0 tokens/s)
 ```
 
-**For rbees:**
+**For rbee:**
 - Expose prefill vs decode metrics separately
 - Track per-request and aggregate throughput
 - Helps identify bottlenecks
 
 ---
 
-## 6. Recommended Additions to rbees
+## 6. Recommended Additions to rbee
 
 ### **High Priority**
 

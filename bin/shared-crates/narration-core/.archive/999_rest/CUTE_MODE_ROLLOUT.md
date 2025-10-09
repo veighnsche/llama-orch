@@ -173,7 +173,7 @@ $ cargo check -p vram-residency -p model-provisioner
 ## 📝 Next Steps
 
 ### Phase 2: Remaining Crates
-- [ ] **rbees-orcd** — Admission, dispatch, completion
+- [ ] **queen-rbee** — Admission, dispatch, completion
 - [ ] **pool-managerd** — Pool management, replica lifecycle
 - [ ] **worker-orcd** — Worker operations
 - [ ] **engine-provisioner** — Engine provisioning
@@ -213,7 +213,7 @@ $ cargo check -p vram-residency -p model-provisioner
 ---
 
 **Status**: 🎀 **PHASE 1 COMPLETE — ADORABLE!** 🎀  
-**Next**: Phase 2 — rbees-orcd, pool-managerd, worker-orcd  
+**Next**: Phase 2 — queen-rbee, pool-managerd, worker-orcd  
 **Maintainer**: The Narration Core Team (cutest team in the monorepo!)
 
 ---

@@ -92,7 +92,7 @@ Platform Audit Service (audit.llama-orch-platform.com)
 **Format**:
 ```json
 {
-  "service_id": "rbees-orcd",
+  "service_id": "queen-rbee",
   "created_at": "2025-10-01T00:00:00Z",
   "files": [
     {

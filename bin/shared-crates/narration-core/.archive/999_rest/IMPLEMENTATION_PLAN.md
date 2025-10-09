@@ -110,7 +110,7 @@ pub use narrate::narrate;
 **Tasks**:
 - [ ] Implement `infer_actor_from_module_path()` function
 - [ ] Parse module path from `ItemFn` context
-- [ ] Extract service name (e.g., `llama_orch::rbees-orcd` → `"rbees-orcd"`)
+- [ ] Extract service name (e.g., `llama_orch::queen-rbee` → `"queen-rbee"`)
 - [ ] Handle edge cases (nested modules, tests, examples)
 - [ ] Write unit tests for actor inference
 - [ ] Document inference algorithm
@@ -573,7 +573,7 @@ use tracing::instrument;
 async fn dispatch_job(job_id: &str, correlation_id: &str) -> Result<WorkerId> {
     // Narration is non-blocking, works in async!
     narrate!(
-        actor: "rbees-orcd",
+        actor: "queen-rbee",
         action: "dispatch",
         target: job_id,
         human: "Dispatching job",
@@ -581,7 +581,7 @@ async fn dispatch_job(job_id: &str, correlation_id: &str) -> Result<WorkerId> {
     let worker = select_worker().await?;
     // Another non-blocking narration
     narrate!(
-        actor: "rbees-orcd",
+        actor: "queen-rbee",
         action: "dispatch",
         target: job_id,
         human: format!("Dispatched to worker {}", worker.id),
@@ -796,7 +796,7 @@ pub fn validate_actor(actor: &str) -> Result<&str, Error> {
 **🎭 AUTH-MIN SECURITY FINDINGS**:
 - 🚨 **Incomplete emoji range**: Line 783 checks `(*c as u32) >= 0x1F000` but emoji ranges are fragmented (0x1F600-0x1F64F, 0x1F300-0x1F5FF, etc.). **ATTACK VECTOR**: Inject malicious Unicode outside defined range. **MITIGATION REQUIRED**: Use comprehensive emoji range list or Unicode category checks.
 - 🚨 **Incomplete zero-width blocklist**: Line 793 missing U+FEFF (zero-width no-break space), U+2060 (word joiner), U+180E (Mongolian vowel separator). **ATTACK VECTOR**: Hide malicious content in logs. **MITIGATION REQUIRED**: Comprehensive zero-width character blocklist.
-- 🚨 **Homograph attack vulnerability**: No detection of Cyrillic/Greek lookalikes (е vs e, а vs a). **ATTACK VECTOR**: Spoof actor names in logs ("оrchestratord" vs "rbees-orcd"). **MITIGATION REQUIRED**: Consider homograph detection for security-critical fields (actor, action).
+- 🚨 **Homograph attack vulnerability**: No detection of Cyrillic/Greek lookalikes (е vs e, а vs a). **ATTACK VECTOR**: Spoof actor names in logs ("оrchestratord" vs "queen-rbee"). **MITIGATION REQUIRED**: Consider homograph detection for security-critical fields (actor, action).
 - ⚠️ **No Unicode normalization**: Missing NFC/NFD normalization before validation allows normalization-based bypasses. **MITIGATION REQUIRED**: Apply Unicode normalization before all validation.
 **⏱️ PERFORMANCE TEAM COMMENT**:
 - 🚨 **CHAR ITERATION COST**: `.chars()` iterator allocates for multi-byte UTF-8 sequences. For 1000-char strings, this is expensive. **OPTIMIZATION**: Use `.as_bytes()` for ASCII-only validation, fall back to `.chars()` only for non-ASCII.
@@ -947,8 +947,8 @@ pub fn validate_actor(actor: &str) -> Result<&str, Error> {
 - Enforcement checklist
 **Dependencies**: Unit 3.1, Unit 3.2
 ---
-### **Unit 4.4: Service Migration — rbees-orcd** (Day 19)
-**Owner**: Narration Core Team + rbees-orcd Team  
+### **Unit 4.4: Service Migration — queen-rbee** (Day 19)
+**Owner**: Narration Core Team + queen-rbee Team  
 **Effort**: 8 hours
 **Tasks**:
 - [ ] Add `#[trace_fn]` to all functions
@@ -959,7 +959,7 @@ pub fn validate_actor(actor: &str) -> Result<&str, Error> {
 - [ ] Run BDD suite
 - [ ] Document migration patterns
 **Deliverables**:
-- Updated rbees-orcd with narration
+- Updated queen-rbee with narration
 - Migration documentation
 - BDD test results
 **Dependencies**: All Week 1-3 units
@@ -1094,7 +1094,7 @@ pub fn validate_actor(actor: &str) -> Result<&str, Error> {
 - ✅ Performance benchmarks approved by Performance Team
 - ✅ Binary size reduced by ~5 MB
 ### **Week 4 Success**:
-- ✅ All three services migrated (rbees-orcd, pool-managerd, worker-orcd)
+- ✅ All three services migrated (queen-rbee, pool-managerd, worker-orcd)
 - ✅ BDD tests pass for cute/story modes
 - ✅  integration working
 - ✅ CI/CD pipelines updated
@@ -1108,7 +1108,7 @@ pub fn validate_actor(actor: &str) -> Result<&str, Error> {
 - **Mitigation**: Make it optional (feature flag), focus on length validation first
 - **Fallback**: Move to Week 5 if needed
 ### **Risk 3: Service Migration Takes Longer**
-- **Mitigation**: Prioritize rbees-orcd, defer worker-orcd if needed
+- **Mitigation**: Prioritize queen-rbee, defer worker-orcd if needed
 - **Fallback**: Extend timeline by 2-3 days
 ### **Risk 4: Performance Regression**
 - **Mitigation**: Continuous benchmarking, Performance Team reviews
@@ -1159,7 +1159,7 @@ pub fn validate_actor(actor: &str) -> Result<&str, Error> {
 - Signs off on performance characteristics
 - **Signature Required**: `Optimized by Performance Team ⏱️`
 ### **Service Teams** (Migration Support)
-- rbees-orcd Team: Supports Unit 4.4
+- queen-rbee Team: Supports Unit 4.4
 - pool-managerd Team: Supports Unit 4.5
 - worker-orcd Team: Supports Unit 4.6
 ---
@@ -1205,7 +1205,7 @@ We're building a narration system that:
 - [ ] No timing attack vectors identified
 - [ ] Redaction algorithm approved
 - [ ] **Signature**: ___________________________
-### Unit 4.4: rbees-orcd Migration
+### Unit 4.4: queen-rbee Migration
 - [ ] Reviewed by auth-min Team
 - [ ] No secrets in narration events
 - [ ] Timing-safe operations maintained
@@ -1243,7 +1243,7 @@ We're building a narration system that:
 - [ ] Benchmark methodology approved
 - [ ] Performance characteristics verified
 - [ ] **Signature**: ___________________________
-### Unit 4.4: rbees-orcd Migration
+### Unit 4.4: queen-rbee Migration
 - [ ] Reviewed by Performance Team
 - [ ] No performance regression
 - [ ] Production overhead measured

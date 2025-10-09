@@ -102,7 +102,7 @@ The narration-core crate has **excellent documentation and testing intent**, but
 - [ ] Add property tests for invariants
 - [ ] Add contract tests for JSON schema
 - [ ] Add smoke tests with real services
-- [ ] Migrate services (rbees-orcd, pool-managerd, worker-orcd)
+- [ ] Migrate services (queen-rbee, pool-managerd, worker-orcd)
 ---
 ## Production Readiness
 **Status**: ❌ **NOT READY**

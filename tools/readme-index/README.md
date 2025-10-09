@@ -45,7 +45,7 @@ This updates the root `README.md` with:
 
 ### Binaries
 
-- **[rbees-orcd](./bin/rbees-orcd/README.md)** — Main orchestrator service
+- **[queen-rbee](./bin/queen-rbee/README.md)** — Main orchestrator service
 - **[pool-managerd](./bin/pool-managerd/README.md)** — GPU node pool manager
 
 ### Libraries

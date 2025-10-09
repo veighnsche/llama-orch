@@ -2,7 +2,7 @@
 
 **Shared API types and contracts for HTTP endpoints**
 
-`contracts/api-types` — Rust types for rbees-orcd HTTP API (requests, responses, enums).
+`contracts/api-types` — Rust types for queen-rbee HTTP API (requests, responses, enums).
 
 ---
 
@@ -16,7 +16,7 @@ api-types provides **API contracts** for llama-orch:
 - **Serialization** — serde-based JSON serialization
 - **OpenAPI generation** — Types annotated for schema generation
 
-**Used by**: rbees-orcd, clients, test harness
+**Used by**: queen-rbee, clients, test harness
 
 ---
 
@@ -111,13 +111,13 @@ Generate OpenAPI schema:
 cargo xtask regen-openapi
 ```
 
-Output: `contracts/openapi/rbees-orcd.yaml`
+Output: `contracts/openapi/queen-rbee.yaml`
 
 ---
 
 ## Usage
 
-### In rbees-orcd
+### In queen-rbee
 
 ```rust
 use api_types::{EnqueueRequest, EnqueueResponse, JobState};
@@ -210,7 +210,7 @@ cargo run -p tools-openapi-client -- validate
 # Regenerate OpenAPI schema from types
 cargo xtask regen-openapi
 
-# Output: contracts/openapi/rbees-orcd.yaml
+# Output: contracts/openapi/queen-rbee.yaml
 ```
 
 ### JSON Schema

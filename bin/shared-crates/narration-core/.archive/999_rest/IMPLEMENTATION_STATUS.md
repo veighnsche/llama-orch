@@ -13,7 +13,7 @@
 - Created `README.md` with API overview
 ### Unit 1.2: Actor Inference Module ✅
 - Implemented `extract_service_name()` function
-- Handles known service names (rbees-orcd, pool-managerd, worker-orcd, vram-residency)
+- Handles known service names (queen-rbee, pool-managerd, worker-orcd, vram-residency)
 - Fallback logic for unknown modules
 - Unit tests for actor inference
 ### Unit 1.3: `#[trace_fn]` Proc Macro ✅
@@ -119,7 +119,7 @@
 - Compile-fail tests for SVO violations
 - Test helpful error messages
 ### Unit 4.4-4.6: Service Migrations ⏳
-- **PENDING** - rbees-orcd migration
+- **PENDING** - queen-rbee migration
 - **PENDING** - pool-managerd migration
 - **PENDING** - worker-orcd migration
 ### Unit 4.7: CI/CD Pipeline Updates ⏳
@@ -160,7 +160,7 @@
 3. **Performance Benchmarks** - Criterion suite
 4. **BDD Tests** - Cute/story mode coverage
 5. **Proof Bundle Integration** - Test artifacts
-6. **Service Migrations** - rbees-orcd, pool-managerd, worker-orcd
+6. **Service Migrations** - queen-rbee, pool-managerd, worker-orcd
 7. **CI/CD Updates** - Multi-profile builds, benchmarks
 ### Deferred/Optional Features 🔄
 1. **SVO Structure Validation** - May be moved to future release
@@ -186,7 +186,7 @@
 ### Short-term (Week 4)
 1. Write BDD tests for cute/story modes
 2. Integrate with  system
-3. Migrate rbees-orcd to new narration system
+3. Migrate queen-rbee to new narration system
 4. Update CI/CD pipelines
 ### Future Enhancements
 1. SVO structure validation (if needed)

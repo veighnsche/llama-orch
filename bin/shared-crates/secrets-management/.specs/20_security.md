@@ -15,7 +15,7 @@
 **Rationale**:
 - Handles all authentication credentials (API tokens, seal keys)
 - Compromise enables complete system takeover
-- Used by all services (rbees-orcd, pool-managerd, worker-orcd)
+- Used by all services (queen-rbee, pool-managerd, worker-orcd)
 - Foundation for authentication, encryption, and integrity
 - Single point of failure for credential security
 
@@ -94,10 +94,10 @@
 std::env::set_var("LLORCH_API_TOKEN", "secret-abc123");
 
 // Attack
-$ ps auxe | grep rbees-orcd
+$ ps auxe | grep queen-rbee
 # Output: LLORCH_API_TOKEN=secret-abc123
 
-$ cat /proc/$(pidof rbees-orcd)/environ
+$ cat /proc/$(pidof queen-rbee)/environ
 # LLORCH_API_TOKEN=secret-abc123
 ```
 
@@ -413,8 +413,8 @@ let token = Secret::from_systemd_credential("../../../etc/passwd")?;
 **Symlink in Credentials Directory**:
 ```bash
 # Attack: Replace credentials directory with symlink
-rm -rf /run/credentials/rbees-orcd.service
-ln -s /etc /run/credentials/rbees-orcd.service
+rm -rf /run/credentials/queen-rbee.service
+ln -s /etc /run/credentials/queen-rbee.service
 
 # Expected: Validate credentials directory is not symlink
 # Risk if bypassed**: Read arbitrary files

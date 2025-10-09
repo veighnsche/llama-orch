@@ -190,7 +190,7 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
 fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
     let _span = tracing::trace_span!(
         "dispatch_job",
-        actor = "rbees-orcd",  // Auto-inferred!
+        actor = "queen-rbee",  // Auto-inferred!
         job_id = %job_id,
         pool_id = %pool_id
     ).entered();
@@ -261,12 +261,12 @@ cargo build --release --no-default-features --features production
 ```bash
 # Development build
 cargo build
-nm target/debug/rbees-orcd | grep trace
+nm target/debug/queen-rbee | grep trace
 # Shows: trace_tiny, trace_enter, trace_exit, etc.
 
 # Production build
 cargo build --release --no-default-features --features production
-nm target/release/rbees-orcd | grep trace
+nm target/release/queen-rbee | grep trace
 # Shows: (nothing — trace code removed!)
 ```
 
@@ -275,12 +275,12 @@ nm target/release/rbees-orcd | grep trace
 ```bash
 # Development build
 cargo build
-ls -lh target/debug/rbees-orcd
+ls -lh target/debug/queen-rbee
 # Size: ~50 MB (includes tracing)
 
 # Production build
 cargo build --release --no-default-features --features production
-ls -lh target/release/rbees-orcd
+ls -lh target/release/queen-rbee
 # Size: ~45 MB (5 MB smaller — tracing removed!)
 ```
 
@@ -326,7 +326,7 @@ jobs:
       # Verify trace code is removed
       - name: Verify no trace symbols
         run: |
-          ! nm target/release/rbees-orcd | grep trace_tiny
+          ! nm target/release/queen-rbee | grep trace_tiny
 ```
 
 ---
@@ -432,7 +432,7 @@ trace_tiny!("actor", "action", "target", "message");
 ```toml
 [workspace]
 members = [
-    "bin/rbees-orcd",
+    "bin/queen-rbee",
     "bin/pool-managerd",
     "bin/worker-orcd",
     "bin/shared-crates/narration-core",

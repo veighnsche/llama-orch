@@ -14,7 +14,7 @@ This document catalogs the expectations and dependencies that other llama-orch c
 - `bin/worker-orcd-crates/vram-residency` — Shard IDs, digests, GPU indices
 - `bin/worker-orcd-crates/api` — Request validation (prompts, params)
 - `bin/worker-orcd-crates/model-loader` — Model paths, GGUF validation
-- `bin/rbees-orcd` — Task requests (model_ref, task_id, prompts)
+- `bin/queen-rbee` — Task requests (model_ref, task_id, prompts)
 - `bin/pool-managerd` — Pool/node IDs, configuration paths
 - `libs/catalog-core` — Model references, file paths
 - `bin/shared-crates/secrets-management` — File path validation
@@ -26,7 +26,7 @@ This document catalogs the expectations and dependencies that other llama-orch c
 
 ### 1.1 Identifier Validation
 
-**Required by**: All services (rbees-orcd, pool-managerd, worker-orcd, vram-residency)
+**Required by**: All services (queen-rbee, pool-managerd, worker-orcd, vram-residency)
 
 **Expected function**:
 ```rust
@@ -35,7 +35,7 @@ pub fn validate_identifier(s: &str, max_len: usize) -> Result<(), ValidationErro
 
 **Use cases**:
 - **vram-residency**: Validate `shard_id` before sealing (max 256 chars)
-- **rbees-orcd**: Validate `task_id`, `session_id`, `correlation_id` (max 256 chars)
+- **queen-rbee**: Validate `task_id`, `session_id`, `correlation_id` (max 256 chars)
 - **pool-managerd**: Validate `pool_id`, `node_id`, `worker_id` (max 256 chars)
 - **worker-orcd**: Validate `job_id`, `handle_id` (max 256 chars)
 
@@ -58,7 +58,7 @@ pub fn validate_identifier(s: &str, max_len: usize) -> Result<(), ValidationErro
 
 ### 1.2 Model Reference Validation
 
-**Required by**: rbees-orcd, catalog-core, pool-managerd
+**Required by**: queen-rbee, catalog-core, pool-managerd
 
 **Expected function**:
 ```rust
@@ -66,7 +66,7 @@ pub fn validate_model_ref(s: &str) -> Result<(), ValidationError>;
 ```
 
 **Use cases**:
-- **rbees-orcd**: Validate `model_ref` in task creation (SECURITY_AUDIT #10)
+- **queen-rbee**: Validate `model_ref` in task creation (SECURITY_AUDIT #10)
 - **catalog-core**: Validate model references before catalog operations
 - **pool-managerd**: Validate model references in pool configuration
 
@@ -146,7 +146,7 @@ pub fn validate_path(
 
 ### 1.5 Prompt Validation
 
-**Required by**: worker-orcd (api crate), rbees-orcd
+**Required by**: worker-orcd (api crate), queen-rbee
 
 **Expected function**:
 ```rust
@@ -155,7 +155,7 @@ pub fn validate_prompt(s: &str, max_len: usize) -> Result<(), ValidationError>;
 
 **Use cases**:
 - **worker-orcd/api**: Validate prompts in Execute endpoint (SECURITY_AUDIT #12)
-- **rbees-orcd**: Validate prompts in task creation
+- **queen-rbee**: Validate prompts in task creation
 
 **Validation rules expected**:
 1. Length <= max_len (default 100,000 chars)
@@ -171,7 +171,7 @@ pub fn validate_prompt(s: &str, max_len: usize) -> Result<(), ValidationError>;
 
 ### 1.6 Integer Range Validation
 
-**Required by**: worker-orcd (api, vram-residency), rbees-orcd
+**Required by**: worker-orcd (api, vram-residency), queen-rbee
 
 **Expected function**:
 ```rust
@@ -185,7 +185,7 @@ pub fn validate_range<T: PartialOrd + Display>(
 **Use cases**:
 - **vram-residency**: Validate GPU device indices (0 to N-1)
 - **worker-orcd/api**: Validate `max_tokens` parameter (0 to 4096)
-- **rbees-orcd**: Validate `ctx` (context length), `deadline_ms`
+- **queen-rbee**: Validate `ctx` (context length), `deadline_ms`
 
 **Validation rules expected**:
 1. `min <= value < max` (inclusive lower, exclusive upper)
@@ -337,7 +337,7 @@ impl VramManager {
 
 ---
 
-### 4.2 rbees-orcd Integration
+### 4.2 queen-rbee Integration
 
 **Expected usage**:
 ```rust
@@ -691,7 +691,7 @@ ValidationError::Invalid { content: "secret-api-key-abc123" }
 ### Phase 3: Worker Integration (Week 2)
 11. ⬜ `validate_prompt()` — Fixes SECURITY_AUDIT #12
 12. ⬜ Integration with vram-residency
-13. ⬜ Integration with rbees-orcd
+13. ⬜ Integration with queen-rbee
 14. ⬜ Integration with catalog-core
 
 ### Phase 4: Hardening (Week 3+)

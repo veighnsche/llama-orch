@@ -1,0 +1,252 @@
+[package]
+name = "llm-worker-rbee"
+version = "0.1.0"
+edition = "2021"
+authors = ["TEAM-000 Foundation"]
+description = "Candle-based LLM inference worker daemon with CUDA/Metal/CPU acceleration"
+license = "GPL-3.0-or-later"
+
+# LLM Worker daemon (HTTP server)
+# Binary name: `llm-worker-rbee` (and backend-specific variants)
+# Purpose: Loads ONE model, executes inference, streams tokens via SSE
+# Protocol: HTTP (listens on assigned port)
+# Spawned by: `rbee-hive` (pool manager)
+
+[lints.clippy]
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CLIPPY LINTS — Strict quality enforcement for inference engine
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Correctness (deny - these are bugs)
+correctness = "deny"
+
+# Suspicious patterns (deny - likely bugs)
+suspicious = "deny"
+
+# Complexity (warn - code smell)
+complexity = "warn"
+
+# Performance (warn - optimization opportunities)
+perf = "warn"
+
+# Style (warn - consistency)
+style = "warn"
+
+# Pedantic (warn - best practices)
+pedantic = "warn"
+
+# Nursery (allow - experimental lints)
+nursery = "allow"
+
+# Cargo (warn - manifest issues)
+cargo = "warn"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SPECIFIC LINTS — Fine-tuned for ML/inference workloads
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Deny unsafe without explicit justification
+undocumented_unsafe_blocks = "deny"
+
+# Deny unwrap/expect in production code paths
+unwrap_used = "warn"
+expect_used = "warn"
+
+# Deny panics in library code
+panic = "warn"
+
+# Require error handling
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+
+# Require safety documentation
+missing_safety_doc = "deny"
+
+# Floating point comparisons (critical for ML)
+float_cmp = "warn"
+float_cmp_const = "warn"
+
+# Integer arithmetic (overflow protection)
+arithmetic_side_effects = "allow"  # Too restrictive for ML math
+integer_division = "allow"
+
+# Indexing (bounds checking)
+indexing_slicing = "allow"  # Common in tensor ops, but be careful
+
+# String operations
+string_add = "warn"
+string_add_assign = "warn"
+
+# Cloning
+clone_on_ref_ptr = "warn"
+redundant_clone = "warn"
+
+# Memory efficiency
+large_stack_arrays = "warn"
+large_types_passed_by_value = "warn"
+
+# Error handling
+result_large_err = "warn"
+
+# Documentation
+missing_docs_in_private_items = "allow"  # Too strict
+doc_markdown = "warn"
+
+# Cognitive complexity
+cognitive_complexity = "warn"
+
+# Too many arguments
+too_many_arguments = "warn"
+too_many_lines = "warn"
+
+# Naming conventions
+module_name_repetitions = "allow"  # Common in our structure
+similar_names = "allow"  # x, y, z are fine in ML
+
+# Allow some pedantic lints that conflict with ML patterns
+must_use_candidate = "allow"
+return_self_not_must_use = "allow"
+cast_possible_truncation = "allow"  # Common in tensor indexing
+cast_precision_loss = "allow"  # Intentional in ML
+cast_sign_loss = "allow"  # Intentional in ML
+cast_possible_wrap = "allow"  # Intentional in ML
+
+# Allow inline assembly for SIMD (if needed)
+inline_asm_x86_att_syntax = "allow"
+
+# Wildcard imports (useful for prelude patterns)
+wildcard_imports = "allow"
+
+# Enum glob use (useful for error types)
+enum_glob_use = "allow"
+
+[dependencies]
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# HTTP SERVER DEPENDENCIES (integrated from worker-http)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# TEAM-015: Integrated worker-common and worker-http directly into binary
+
+axum = "0.8"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace", "cors"] }
+futures = "0.3"
+reqwest = { version = "0.12", features = ["json"] }
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CANDLE INTEGRATION — Hybrid Approach (Math Functions + Kernels)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Following TEAM_001_CANDLE_CATALOG_PLAN.md: Use Candle for math, our architecture
+# - candle-core: Tensor operations, Device abstraction
+# - candle-nn: Neural network functions (rms_norm, silu, softmax, etc.)
+# - candle-kernels: Optimized CUDA kernels (automatic when CUDA enabled)
+# - cudarc: CUDA runtime for kernel invocation
+# Modified by: TEAM-001
+# Note: Using published versions from crates.io (workspace inheritance incompatible)
+
+# Use published Candle from crates.io (stable)
+candle-core = "0.9"
+
+# Candle neural network functions (rms_norm, silu, softmax, linear_no_bias)
+candle-nn = "0.9"
+
+# TEAM-008: Use candle-transformers for complete model implementations
+candle-transformers = "0.9"
+
+# Candle kernels for CUDA acceleration (optional, feature-gated)
+# TEAM-007: Added CUDA version feature for cudarc
+candle-kernels = { version = "0.9", optional = true }
+cudarc = { version = "0.11", optional = true, features = ["cuda-12050"] }
+
+# HuggingFace tokenizers (used by Candle examples)
+tokenizers = "0.15"
+
+# CPU tensor operations (keep for conversion helpers and legacy code)
+ndarray = "0.15"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ASYNC RUNTIME
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CRITICAL: Single-threaded runtime for optimal CPU performance
+# TEAM-015: Added signal feature for graceful shutdown
+
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "sync", "time", "signal"] }
+async-trait = "0.1"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# OBSERVABILITY
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Narration Core Team: Triple-narration observability (human, cute, story)
+
+observability-narration-core = { path = "../shared-crates/narration-core", features = ["axum", "cute-mode"] }
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# UTILITIES
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+# TEAM-014: Removed rand = "0.8" (no longer needed, using Candle's LogitsProcessor)
+
+[dev-dependencies]
+# Testing utilities
+approx = "0.5"
+chrono = "0.4"
+criterion = "0.5"
+wiremock = "0.6"
+tempfile = "3.0"
+
+[features]
+# Default to CPU for development (most compatible)
+# TEAM-017: Removed cuda from default to allow CPU-only builds
+default = ["cpu"]
+
+# Backend features (mutually exclusive at build time)
+# Modified by: TEAM-007, TEAM-018
+cpu = []
+cuda = ["candle-kernels", "cudarc", "candle-core/cuda", "candle-nn/cuda"]
+metal = ["candle-core/metal", "candle-nn/metal"]
+
+# Performance benchmarking
+benchmark = []
+
+# Multi-backend binaries
+# Each binary is feature-gated to a specific backend
+[[bin]]
+name = "llm-worker-rbee-cpu"
+path = "src/bin/cpu.rs"
+required-features = ["cpu"]
+
+[[bin]]
+name = "llm-worker-rbee-cuda"
+path = "src/bin/cuda.rs"
+required-features = ["cuda"]
+
+[[bin]]
+name = "llm-worker-rbee-metal"
+path = "src/bin/metal.rs"
+required-features = ["metal"]
+
+# Main binary (CPU by default)
+[[bin]]
+name = "llm-worker-rbee"
+path = "src/main.rs"
+required-features = ["cpu"]
+
+[lib]
+name = "llm_worker_rbee"
+path = "src/lib.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true

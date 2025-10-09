@@ -16,7 +16,7 @@ config-schema provides **configuration contracts** for llama-orch:
 - **JSON Schema** — Generate schema.json for validation
 - **Defaults** — Sensible defaults for optional fields
 
-**Used by**: rbees-orcd, pool-managerd, provisioners
+**Used by**: queen-rbee, pool-managerd, provisioners
 
 ---
 

@@ -188,7 +188,7 @@ production = []
 **Current API** (only option):
 ```rust
 narrate_auto(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "enqueue",
     target: job_id.to_string(),
     human: format!("Enqueued job {job_id}"),
@@ -227,7 +227,7 @@ $ grep -n "macro_rules!" src/auto.rs
 
 **Evidence**: `src/lib.rs:68-76`
 ```rust
-pub const ACTOR_ORCHESTRATORD: &str = "rbees-orcd";
+pub const ACTOR_ORCHESTRATORD: &str = "queen-rbee";
 pub const ACTOR_POOL_MANAGERD: &str = "pool-managerd";
 pub const ACTOR_WORKER_ORCD: &str = "worker-orcd";
 pub const ACTOR_INFERENCE_ENGINE: &str = "inference-engine";
@@ -236,7 +236,7 @@ pub const ACTOR_VRAM_RESIDENCY: &str = "vram-residency";
 
 **But examples use** (README line 94):
 ```rust
-actor: "rbees-orcd",  // ← Should use ACTOR_ORCHESTRATORD
+actor: "queen-rbee",  // ← Should use ACTOR_ORCHESTRATORD
 ```
 
 **Status**: ✅ Valid issue, documentation update needed
@@ -483,7 +483,7 @@ $ grep -r "pub struct Narration" src/
 ```rust
 // Verbose: 7 lines
 narrate_auto(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "enqueue",
     target: job_id.to_string(),
     human: format!("Enqueued job {job_id}"),
@@ -495,7 +495,7 @@ narrate_auto(NarrationFields {
 **Proposed API** (builder):
 ```rust
 // Concise: 4 lines
-Narration::new("rbees-orcd", "enqueue", job_id)
+Narration::new("queen-rbee", "enqueue", job_id)
     .human(format!("Enqueued job {job_id}"))
     .correlation_id(req_id)
     .emit();
@@ -513,7 +513,7 @@ Narration::new("rbees-orcd", "enqueue", job_id)
 
 **Constants exist**:
 ```rust
-pub const ACTOR_ORCHESTRATORD: &str = "rbees-orcd";
+pub const ACTOR_ORCHESTRATORD: &str = "queen-rbee";
 pub const ACTOR_POOL_MANAGERD: &str = "pool-managerd";
 pub const ACTOR_WORKER_ORCD: &str = "worker-orcd";
 pub const ACTOR_INFERENCE_ENGINE: &str = "inference-engine";
@@ -527,7 +527,7 @@ pub const ACTION_DISPATCH: &str = "dispatch";
 
 **But examples use literals**:
 ```rust
-actor: "rbees-orcd",  // Should be: ACTOR_ORCHESTRATORD
+actor: "queen-rbee",  // Should be: ACTOR_ORCHESTRATORD
 action: "enqueue",       // Should be: ACTION_ENQUEUE
 ```
 

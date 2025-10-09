@@ -8,7 +8,7 @@
 
 ## Overview
 
-This runbook provides troubleshooting procedures for common cloud profile incidents. Cloud profile enables distributed deployment with rbees-orcd (control plane) and multiple pool-managerd instances (GPU workers).
+This runbook provides troubleshooting procedures for common cloud profile incidents. Cloud profile enables distributed deployment with queen-rbee (control plane) and multiple pool-managerd instances (GPU workers).
 
 **Prerequisites**:
 - Access to Grafana dashboard: `Cloud Profile Overview`
@@ -52,18 +52,18 @@ This runbook provides troubleshooting procedures for common cloud profile incide
 #### Symptoms
 - `sum(orchd_nodes_online) == 0`
 - All task submissions fail with placement errors
-- rbees-orcd logs show no registered nodes
+- queen-rbee logs show no registered nodes
 
 #### Diagnosis
 
-1. **Check rbees-orcd logs**:
+1. **Check queen-rbee logs**:
    ```bash
-   journalctl -u rbees-orcd -n 100 --no-pager | grep -i "node"
+   journalctl -u queen-rbee -n 100 --no-pager | grep -i "node"
    ```
 
 2. **Check service registry state**:
    ```bash
-   curl http://rbees-orcd:8080/v2/nodes
+   curl http://queen-rbee:8080/v2/nodes
    ```
 
 3. **Check pool-managerd processes on GPU nodes**:
@@ -74,7 +74,7 @@ This runbook provides troubleshooting procedures for common cloud profile incide
 
 4. **Check network connectivity**:
    ```bash
-   ssh gpu-node-1 'curl -v http://rbees-orcd:8080/health'
+   ssh gpu-node-1 'curl -v http://queen-rbee:8080/health'
    ```
 
 #### Resolution
@@ -91,16 +91,16 @@ ssh gpu-node-1 'systemctl restart pool-managerd'
 
 **If authentication is failing**:
 - Verify `LLORCH_API_TOKEN` matches on both sides
-- Check rbees-orcd logs for `auth_failed` events
+- Check queen-rbee logs for `auth_failed` events
 - Regenerate token if compromised
 
 #### Verification
 ```bash
 # Should show online nodes
-curl http://rbees-orcd:8080/v2/nodes | jq '.count'
+curl http://queen-rbee:8080/v2/nodes | jq '.count'
 
 # Metric should be > 0
-curl http://rbees-orcd:8080/metrics | grep orchd_nodes_online
+curl http://queen-rbee:8080/metrics | grep orchd_nodes_online
 ```
 
 ---
@@ -120,7 +120,7 @@ curl http://rbees-orcd:8080/metrics | grep orchd_nodes_online
 
 1. **Identify missing nodes**:
    ```bash
-   curl http://rbees-orcd:8080/v2/nodes | jq '.nodes[] | select(.online == false)'
+   curl http://queen-rbee:8080/v2/nodes | jq '.nodes[] | select(.online == false)'
    ```
 
 2. **Check why nodes went offline**:
@@ -165,7 +165,7 @@ ssh gpu-node-X 'systemctl restart pool-managerd'
 
 1. **Check pool status**:
    ```bash
-   curl http://rbees-orcd:8080/v2/nodes | jq '.nodes[].pools[] | select(.ready == false)'
+   curl http://queen-rbee:8080/v2/nodes | jq '.nodes[].pools[] | select(.ready == false)'
    ```
 
 2. **Check pool-managerd registry**:
@@ -272,13 +272,13 @@ ssh gpu-node-1 'systemctl restart pool-managerd'
    ```bash
    # Should return 200
    curl -H "Authorization: Bearer $LLORCH_API_TOKEN" \
-     http://rbees-orcd:8080/v2/nodes/gpu-node-1/heartbeat \
+     http://queen-rbee:8080/v2/nodes/gpu-node-1/heartbeat \
      -X POST -d '{"timestamp":"2025-10-01T00:00:00Z","pools":[]}'
    ```
 
 3. **Check network connectivity**:
    ```bash
-   ssh gpu-node-1 'curl -v http://rbees-orcd:8080/health'
+   ssh gpu-node-1 'curl -v http://queen-rbee:8080/health'
    ```
 
 #### Resolution
@@ -364,20 +364,20 @@ ssh gpu-node-1 'chown pool-managerd:pool-managerd /var/lib/llama-orch/engines/*.
 #### Symptoms
 - Registration failure rate > 20%
 - New nodes fail to register
-- rbees-orcd logs show auth failures
+- queen-rbee logs show auth failures
 
 #### Diagnosis
 
-1. **Check rbees-orcd logs**:
+1. **Check queen-rbee logs**:
    ```bash
-   journalctl -u rbees-orcd -n 100 --no-pager | grep register
+   journalctl -u queen-rbee -n 100 --no-pager | grep register
    ```
 
 2. **Check authentication**:
    ```bash
    # Should return 200
    curl -H "Authorization: Bearer $LLORCH_API_TOKEN" \
-     http://rbees-orcd:8080/v2/nodes/register \
+     http://queen-rbee:8080/v2/nodes/register \
      -X POST -d '{"node_id":"test","machine_id":"test","address":"http://test:9200","pools":[],"capabilities":{},"version":"0.1.0"}'
    ```
 
@@ -391,7 +391,7 @@ ssh gpu-node-1 'chown pool-managerd:pool-managerd /var/lib/llama-orch/engines/*.
 **If cloud profile is disabled**:
 ```bash
 export ORCHESTRATORD_CLOUD_PROFILE=true
-systemctl restart rbees-orcd
+systemctl restart queen-rbee
 ```
 
 **If authentication is failing**:
@@ -474,32 +474,32 @@ systemctl restart rbees-orcd
 
 ### Check System Health
 ```bash
-# rbees-orcd health
-curl http://rbees-orcd:8080/health
+# queen-rbee health
+curl http://queen-rbee:8080/health
 
 # pool-managerd health
 curl http://gpu-node-1:9200/health
 
 # Metrics snapshot
-curl http://rbees-orcd:8080/metrics | grep orchd_
+curl http://queen-rbee:8080/metrics | grep orchd_
 ```
 
 ### Check Logs
 ```bash
-# rbees-orcd logs (last hour)
-journalctl -u rbees-orcd --since "1 hour ago" --no-pager
+# queen-rbee logs (last hour)
+journalctl -u queen-rbee --since "1 hour ago" --no-pager
 
 # pool-managerd logs (last hour)
 ssh gpu-node-1 'journalctl -u pool-managerd --since "1 hour ago" --no-pager'
 
 # Filter for errors
-journalctl -u rbees-orcd -p err --no-pager
+journalctl -u queen-rbee -p err --no-pager
 ```
 
 ### Manual Operations
 ```bash
 # Force node deregistration
-curl -X DELETE http://rbees-orcd:8080/v2/nodes/gpu-node-1 \
+curl -X DELETE http://queen-rbee:8080/v2/nodes/gpu-node-1 \
   -H "Authorization: Bearer $LLORCH_API_TOKEN"
 
 # Trigger pool preload

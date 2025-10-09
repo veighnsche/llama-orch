@@ -141,7 +141,7 @@ fn select_worker(job: &Job) -> Result<Worker> {
 
 ### Implementation
 
-**In rbees-orcd:**
+**In queen-rbee:**
 ```rust
 // src/main.rs
 use std::env;
@@ -250,13 +250,13 @@ LLORCH_UPDATE_METHOD=binary   # Update via binary download (future)
 
 **Update process:**
 ```bash
-# rbees-ctl update
+# rbee-keeper update
 cd ~/Projects/llama-orch
 git pull origin main
 git submodule update --init --recursive
-cargo build --release --bin rbees-orcd
-cargo build --release --bin rbees-pool
-cargo build --release --bin rbees-ctl
+cargo build --release --bin queen-rbee
+cargo build --release --bin rbee-hive
+cargo build --release --bin rbee-keeper
 ```
 
 **Advantages:**
@@ -274,18 +274,18 @@ cargo build --release --bin rbees-ctl
 
 **Update process:**
 ```bash
-# rbees-ctl update
-curl -L https://releases.llama-orch.com/latest/rbees-orcd -o /tmp/rbees-orcd
-chmod +x /tmp/rbees-orcd
-mv /tmp/rbees-orcd ~/.local/bin/rbees-orcd
+# rbee-keeper update
+curl -L https://releases.llama-orch.com/latest/queen-rbee -o /tmp/queen-rbee
+chmod +x /tmp/queen-rbee
+mv /tmp/queen-rbee ~/.local/bin/queen-rbee
 
-curl -L https://releases.llama-orch.com/latest/rbees-pool -o /tmp/rbees-pool
-chmod +x /tmp/rbees-pool
-mv /tmp/rbees-pool ~/.local/bin/rbees-pool
+curl -L https://releases.llama-orch.com/latest/rbee-hive -o /tmp/rbee-hive
+chmod +x /tmp/rbee-hive
+mv /tmp/rbee-hive ~/.local/bin/rbee-hive
 
-curl -L https://releases.llama-orch.com/latest/rbees-ctl -o /tmp/rbees-ctl
-chmod +x /tmp/rbees-ctl
-mv /tmp/rbees-ctl ~/.local/bin/rbees-ctl
+curl -L https://releases.llama-orch.com/latest/rbee-keeper -o /tmp/rbee-keeper
+chmod +x /tmp/rbee-keeper
+mv /tmp/rbee-keeper ~/.local/bin/rbee-keeper
 ```
 
 **Advantages:**
@@ -301,7 +301,7 @@ mv /tmp/rbees-ctl ~/.local/bin/rbees-ctl
 
 ### Implementation
 
-**In rbees-ctl:**
+**In rbee-keeper:**
 ```rust
 // src/commands/update.rs
 
@@ -339,17 +339,17 @@ async fn update_via_git() -> Result<()> {
     println!("Building binaries...");
     Command::new("cargo")
         .current_dir(&repo_root)
-        .args(&["build", "--release", "--bin", "rbees-orcd"])
+        .args(&["build", "--release", "--bin", "queen-rbee"])
         .status()?;
     
     Command::new("cargo")
         .current_dir(&repo_root)
-        .args(&["build", "--release", "--bin", "rbees-pool"])
+        .args(&["build", "--release", "--bin", "rbee-hive"])
         .status()?;
     
     Command::new("cargo")
         .current_dir(&repo_root)
-        .args(&["build", "--release", "--bin", "rbees-ctl"])
+        .args(&["build", "--release", "--bin", "rbee-keeper"])
         .status()?;
     
     println!("✅ Update complete");
@@ -362,7 +362,7 @@ async fn update_via_binary() -> Result<()> {
     let base_url = env::var("LLORCH_RELEASE_URL")
         .unwrap_or_else(|_| "https://releases.llama-orch.com".to_string());
     
-    let binaries = vec!["rbees-orcd", "rbees-pool", "rbees-ctl"];
+    let binaries = vec!["queen-rbee", "rbee-hive", "rbee-keeper"];
     
     for binary in binaries {
         println!("Downloading {}...", binary);
@@ -611,8 +611,8 @@ impl Config {
 
 ### Implementation Status
 
-- [ ] EU audit toggle (rbees-orcd, audit-logging crate)
-- [ ] Update method toggle (rbees-ctl)
+- [ ] EU audit toggle (queen-rbee, audit-logging crate)
+- [ ] Update method toggle (rbee-keeper)
 - [ ] Development mode toggle (all binaries)
 - [ ] Config file support (.llorch.toml)
 - [ ] Documentation (README, website)

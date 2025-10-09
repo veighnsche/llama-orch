@@ -15,7 +15,7 @@
 
 Implement automation for:
 1. Model downloads via hf CLI (NOT deprecated huggingface-cli)
-2. Worker spawning via rbees-workerd
+2. Worker spawning via llm-worker-rbee
 3. Download Qwen (smallest model) on all pools
 4. Test Qwen on Metal and CUDA backends
 
@@ -27,7 +27,7 @@ Implement automation for:
 
 ### WU3.1: Implement Model Download (Day 1-2)
 
-**Location:** `bin/rbees-pool/src/commands/models.rs`
+**Location:** `bin/rbee-hive/src/commands/models.rs`
 
 **Tasks:**
 1. Implement hf CLI wrapper (TEAM-023: NOT huggingface-cli - that's deprecated!)
@@ -108,7 +108,7 @@ fn calculate_dir_size(path: &Path) -> Result<u64> {
 ```
 
 **Success Criteria:**
-- [ ] `rbees-pool models download <model>` works
+- [ ] `rbee-hive models download <model>` works
 - [ ] Downloads SafeTensors format
 - [ ] Updates catalog automatically
 - [ ] Handles already-downloaded models
@@ -118,13 +118,13 @@ fn calculate_dir_size(path: &Path) -> Result<u64> {
 
 ### WU3.2: Implement Worker Spawning (Day 2-3)
 
-**Location:** `bin/rbees-pool/src/commands/worker.rs`
+**Location:** `bin/rbee-hive/src/commands/worker.rs`
 
 **Tasks:**
 1. Implement worker spawn logic
 2. Validate model is downloaded
 3. Check backend compatibility
-4. Spawn rbees-workerd as background process
+4. Spawn llm-worker-rbee as background process
 
 **Implementation:**
 ```rust
@@ -147,7 +147,7 @@ pub fn handle_spawn_command(
     // Validate model is downloaded
     if !model.downloaded {
         anyhow::bail!(
-            "Model {} not downloaded. Run: rbees-pool models download {}", 
+            "Model {} not downloaded. Run: rbee-hive models download {}", 
             model_id, model_id
         );
     }
@@ -174,7 +174,7 @@ pub fn handle_spawn_command(
     let model_path = find_model_file(&model.path)?;
     
     // Build command
-    let binary = format!("rbees-workerd");
+    let binary = format!("llm-worker-rbee");
     let mut cmd = Command::new(&binary);
     
     cmd.args(&[
@@ -258,7 +258,7 @@ fn save_worker_info(
 ```
 
 **Success Criteria:**
-- [ ] `rbees-pool worker spawn <backend> --model <model>` works
+- [ ] `rbee-hive worker spawn <backend> --model <model>` works
 - [ ] Checks model is downloaded
 - [ ] Checks backend compatibility
 - [ ] Spawns worker as background process
@@ -269,12 +269,12 @@ fn save_worker_info(
 
 ### WU3.3: Implement Worker Management (Day 3)
 
-**Location:** `bin/rbees-pool/src/commands/worker.rs`
+**Location:** `bin/rbee-hive/src/commands/worker.rs`
 
 **Tasks:**
-1. Implement `rbees-pool worker list`
-2. Implement `rbees-pool worker stop`
-3. Implement `rbees-pool worker logs`
+1. Implement `rbee-hive worker list`
+2. Implement `rbee-hive worker stop`
+3. Implement `rbee-hive worker logs`
 4. Add worker status checks
 
 **Implementation:**
@@ -378,8 +378,8 @@ fn is_process_running(pid: u32) -> bool {
 ```
 
 **Success Criteria:**
-- [ ] `rbees-pool worker list` shows running workers
-- [ ] `rbees-pool worker stop <id>` stops worker
+- [ ] `rbee-hive worker list` shows running workers
+- [ ] `rbee-hive worker stop <id>` stops worker
 - [ ] Process status is accurate
 - [ ] Graceful shutdown works
 
@@ -396,13 +396,13 @@ fn is_process_running(pid: u32) -> bool {
 **Commands:**
 ```bash
 # On mac.home.arpa
-rbees-pool models download qwen-0.5b
+rbee-hive models download qwen-0.5b
 
 # On workstation.home.arpa
-rbees-pool models download qwen-0.5b
+rbee-hive models download qwen-0.5b
 
 # Verify
-rbees-pool models catalog
+rbee-hive models catalog
 ```
 
 **Expected Output:**
@@ -433,7 +433,7 @@ Downloading model.safetensors: 100%|████████| 1.0GB/1.0GB [00:30
 **Test Commands:**
 ```bash
 # On mac.home.arpa (Metal)
-rbees-pool worker spawn metal --model qwen-0.5b --gpu 0
+rbee-hive worker spawn metal --model qwen-0.5b --gpu 0
 
 # Wait for worker to start
 sleep 10
@@ -450,12 +450,12 @@ curl -X POST http://localhost:8000/execute \
     }'
 
 # Stop worker
-rbees-pool worker stop worker-metal-0
+rbee-hive worker stop worker-metal-0
 ```
 
 ```bash
 # On workstation.home.arpa (CUDA)
-rbees-pool worker spawn cuda --model qwen-0.5b --gpu 0
+rbee-hive worker spawn cuda --model qwen-0.5b --gpu 0
 
 # Wait for worker to start
 sleep 10
@@ -472,7 +472,7 @@ curl -X POST http://localhost:8000/execute \
     }'
 
 # Stop worker
-rbees-pool worker stop worker-cuda-0
+rbee-hive worker stop worker-cuda-0
 ```
 
 **Expected Results:**
@@ -497,21 +497,21 @@ rbees-pool worker stop worker-cuda-0
 **Before proceeding to CP4, verify:**
 
 ### Model Downloads
-- [ ] `rbees-pool models download` works
+- [ ] `rbee-hive models download` works
 - [ ] Qwen downloaded on mac.home.arpa
 - [ ] Qwen downloaded on workstation.home.arpa
 - [ ] Catalog updated correctly
 - [ ] File sizes are accurate
 
 ### Worker Spawning
-- [ ] `rbees-pool worker spawn` works
+- [ ] `rbee-hive worker spawn` works
 - [ ] Workers spawn as background processes
 - [ ] Logs are written to files
 - [ ] Worker info is saved
 
 ### Worker Management
-- [ ] `rbees-pool worker list` shows workers
-- [ ] `rbees-pool worker stop` stops workers
+- [ ] `rbee-hive worker list` shows workers
+- [ ] `rbee-hive worker stop` stops workers
 - [ ] Process status is accurate
 - [ ] Cleanup works correctly
 
@@ -538,9 +538,9 @@ rbees-pool worker stop worker-cuda-0
 ## Deliverables
 
 **Code:**
-- `bin/rbees-pool/src/commands/models.rs` (download command)
-- `bin/rbees-pool/src/commands/worker.rs` (spawn/list/stop commands)
-- `bin/rbees-ctl/src/commands/pool.rs` (remote commands)
+- `bin/rbee-hive/src/commands/models.rs` (download command)
+- `bin/rbee-hive/src/commands/worker.rs` (spawn/list/stop commands)
+- `bin/rbee-keeper/src/commands/pool.rs` (remote commands)
 
 **Downloaded Models:**
 - `.test-models/qwen-0.5b/` on mac.home.arpa
@@ -557,7 +557,7 @@ rbees-pool worker stop worker-cuda-0
 
 **Additional Cargo.toml dependencies:**
 ```toml
-# rbees-pool
+# rbee-hive
 nix = { version = "0.27", features = ["signal", "process"] }
 ```
 
@@ -565,7 +565,7 @@ nix = { version = "0.27", features = ["signal", "process"] }
 - `hf` CLI installed on all pools (TEAM-023: NOT huggingface-cli - that's deprecated!)
   - Install: `pip install huggingface_hub[cli]`
 - SSH access to all pools
-- rbees-workerd binary built for each backend
+- llm-worker-rbee binary built for each backend
 
 ---
 

@@ -101,7 +101,7 @@ fn test_vram_operations() {
 }
 ```
 
-### For rbees-orcd (Node Registration)
+### For queen-rbee (Node Registration)
 
 ```rust
 use gpu_info::GpuInfo;

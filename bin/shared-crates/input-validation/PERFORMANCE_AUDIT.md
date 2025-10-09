@@ -51,7 +51,7 @@ Implement proposed optimizations to achieve **40-80% performance improvement** w
 - **Target latency**: <1μs per validation (sub-microsecond overhead)
 - **Allocation budget**: Zero allocations for validation (only for errors)
 - **Complexity**: O(n) or better with early termination
-- **Hot path**: Request handlers in rbees-orcd, pool-managerd, worker-orcd
+- **Hot path**: Request handlers in queen-rbee, pool-managerd, worker-orcd
 
 ---
 
@@ -513,7 +513,7 @@ pub fn validate_range<T: PartialOrd + Display>(value: T, min: T, max: T) -> Resu
 
 ### Real-World Impact
 
-**Typical request validation chain** (rbees-orcd):
+**Typical request validation chain** (queen-rbee):
 - `validate_identifier("task-abc123")` — 5μs → 0.75μs
 - `validate_model_ref("meta-llama/Llama-3.1-8B")` — 8μs → 2.6μs
 - `validate_prompt("Write a story...")` — 15μs → 3μs
@@ -1051,7 +1051,7 @@ criterion_main!(benches);
 1. **Regression tests**: All existing tests MUST pass (100% pass rate)
 2. **Performance tests**: Verify speedup matches predictions (±10%)
 3. **Fuzzing verification**: Run `cargo-fuzz` for 24 hours, compare to baseline
-4. **Integration tests**: Verify behavior in real request handlers (rbees-orcd, pool-managerd)
+4. **Integration tests**: Verify behavior in real request handlers (queen-rbee, pool-managerd)
 5. **Security review**: Auth-min sign-off on all changes
 
 ---

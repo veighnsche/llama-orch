@@ -144,7 +144,7 @@ drwx------  2 llorch-audit llorch-audit  4096 Oct  1 16:48 /var/lib/llorch/audit
 ```
 
 **Service User**:
-- Services run as `rbees` user
+- Services run as `rbee` user
 - Audit files owned by `llorch-audit` user
 - Services can write but not read (write-only permissions)
 - Administrators can read but not write (read-only permissions)
@@ -287,9 +287,9 @@ use audit_logging::{AuditLogger, AuditConfig};
 
 let config = AuditConfig {
     mode: AuditMode::Local {
-        base_dir: PathBuf::from("/var/lib/llorch/audit/rbees-orcd"),
+        base_dir: PathBuf::from("/var/lib/llorch/audit/queen-rbee"),
     },
-    service_id: "rbees-orcd".to_string(),
+    service_id: "queen-rbee".to_string(),
     rotation_policy: RotationPolicy::Daily,
     retention_policy: RetentionPolicy::default(),  // 7 years
 };
@@ -309,7 +309,7 @@ let config = AuditConfig {
         batch_size: 100,
         flush_interval: Duration::from_secs(10),
     }),
-    service_id: "rbees-orcd".to_string(),
+    service_id: "queen-rbee".to_string(),
     rotation_policy: RotationPolicy::Daily,
     retention_policy: RetentionPolicy::default(),
 };
@@ -333,7 +333,7 @@ logger.emit(AuditEvent::AuthSuccess {
     },
     method: AuthMethod::BearerToken,
     path: "/v2/tasks".to_string(),
-    service_id: "rbees-orcd".to_string(),
+    service_id: "queen-rbee".to_string(),
 }).await?;
 ```
 
@@ -482,11 +482,11 @@ println!("Security incidents: {}", report.security_incidents);
 
 ## 3. Integration Patterns
 
-### 3.1 rbees-orcd Integration
+### 3.1 queen-rbee Integration
 
 **Initialization**:
 ```rust
-// bin/rbees-orcd/src/main.rs
+// bin/queen-rbee/src/main.rs
 use audit_logging::{AuditLogger, AuditConfig};
 
 #[tokio::main]
@@ -494,9 +494,9 @@ async fn main() -> Result<()> {
     // Initialize audit logger
     let audit_logger = AuditLogger::new(AuditConfig {
         mode: AuditMode::Local {
-            base_dir: PathBuf::from("/var/lib/llorch/audit/rbees-orcd"),
+            base_dir: PathBuf::from("/var/lib/llorch/audit/queen-rbee"),
         },
-        service_id: "rbees-orcd".to_string(),
+        service_id: "queen-rbee".to_string(),
         rotation_policy: RotationPolicy::Daily,
         retention_policy: RetentionPolicy::default(),
     })?;
@@ -514,7 +514,7 @@ async fn main() -> Result<()> {
 
 **Authentication Middleware**:
 ```rust
-// bin/rbees-orcd/src/app/auth_min.rs
+// bin/queen-rbee/src/app/auth_min.rs
 pub async fn bearer_auth_middleware(
     State(state): State<Arc<AppState>>,
     mut req: Request<Body>,
@@ -537,7 +537,7 @@ pub async fn bearer_auth_middleware(
             reason: "invalid_token".to_string(),
             ip: extract_ip(&req),
             path: req.uri().path().to_string(),
-            service_id: "rbees-orcd".to_string(),
+            service_id: "queen-rbee".to_string(),
         }).await.ok();  // Don't block on audit failure
         
         return Err(StatusCode::UNAUTHORIZED);
@@ -555,7 +555,7 @@ pub async fn bearer_auth_middleware(
         },
         method: AuthMethod::BearerToken,
         path: req.uri().path().to_string(),
-        service_id: "rbees-orcd".to_string(),
+        service_id: "queen-rbee".to_string(),
     }).await.ok();
     
     Ok(next.run(req).await)
@@ -696,7 +696,7 @@ async fn test_tampering_detection() {
 ```rust
 #[tokio::test]
 async fn test_e2e_audit_flow() {
-    // Start rbees-orcd with audit logging
+    // Start queen-rbee with audit logging
     let server = start_test_server().await;
     
     // Make authenticated request

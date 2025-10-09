@@ -10,7 +10,7 @@
 
 ### 1. **nix Crate Dependency** ✅ REMOVED
 
-**Location:** `bin/rbees-pool/Cargo.toml`
+**Location:** `bin/rbee-hive/Cargo.toml`
 
 **Before:**
 ```toml
@@ -39,7 +39,7 @@ nix = { version = "0.27", features = ["signal", "process"] }
 **To:** `ssh2::Session`
 
 **Files Changed:**
-- `bin/rbees-ctl/src/ssh.rs` - Complete rewrite
+- `bin/rbee-keeper/src/ssh.rs` - Complete rewrite
 
 **Benefits:**
 - Native SSH library
@@ -57,7 +57,7 @@ nix = { version = "0.27", features = ["signal", "process"] }
 **To:** `sysinfo::System` + `Process::kill()`
 
 **Files Changed:**
-- `bin/rbees-pool/src/commands/worker.rs`
+- `bin/rbee-hive/src/commands/worker.rs`
 
 **Removed Functions:**
 ```rust
@@ -92,7 +92,7 @@ if let Some(process) = sys.process(pid_obj) {
 **To:** `daemonize::Daemonize`
 
 **Files Changed:**
-- `bin/rbees-pool/src/commands/worker.rs`
+- `bin/rbee-hive/src/commands/worker.rs`
 
 **Removed Code:**
 ```rust
@@ -130,8 +130,8 @@ daemon.start()?;
 **New:** `indicatif` crate for progress bars and spinners
 
 **Files Changed:**
-- `bin/rbees-pool/src/commands/models.rs` - Download spinner
-- `bin/rbees-ctl/src/ssh.rs` - SSH connection spinner
+- `bin/rbee-hive/src/commands/models.rs` - Download spinner
+- `bin/rbee-keeper/src/ssh.rs` - SSH connection spinner
 
 **Added Features:**
 - Spinner during model downloads
@@ -154,7 +154,7 @@ daemon.start()?;
 ### Before Refactoring
 
 ```toml
-# rbees-pool
+# rbee-hive
 clap = "4.5"
 anyhow = "1.0"
 colored = "2.0"
@@ -167,7 +167,7 @@ nix = "0.27"  # ← DEPRECATED
 ### After Refactoring
 
 ```toml
-# rbees-pool
+# rbee-hive
 clap = "4.5"
 anyhow = "1.0"
 colored = "2.0"
@@ -205,21 +205,21 @@ All new dependencies are:
 
 ### Build Status
 ```bash
-cargo build --release -p rbees-pool
-cargo build --release -p rbees-ctl
+cargo build --release -p rbee-hive
+cargo build --release -p rbee-keeper
 ```
 ✅ Both compile without warnings
 
 ### Clippy Status
 ```bash
-cargo clippy -p rbees-pool -p rbees-ctl -- -D warnings
+cargo clippy -p rbee-hive -p rbee-keeper -- -D warnings
 ```
 ✅ Zero warnings
 
 ### Functionality Test
 ```bash
-./target/release/rbees-pool --version
-./target/release/rbees-pool models catalog
+./target/release/rbee-hive --version
+./target/release/rbee-hive models catalog
 ./target/release/llorch --version
 ```
 ✅ All commands work
@@ -228,7 +228,7 @@ cargo clippy -p rbees-pool -p rbees-ctl -- -D warnings
 
 ## Migration Checklist
 
-- [x] Remove `nix` dependency from rbees-pool
+- [x] Remove `nix` dependency from rbee-hive
 - [x] Replace signal handling with sysinfo
 - [x] Replace manual daemon creation with daemonize
 - [x] Add progress indicators with indicatif
@@ -243,12 +243,12 @@ cargo clippy -p rbees-pool -p rbees-ctl -- -D warnings
 ## Files Modified
 
 1. `Cargo.toml` - Added workspace dependencies
-2. `bin/rbees-pool/Cargo.toml` - Removed nix, added new deps
-3. `bin/rbees-ctl/Cargo.toml` - Added ssh2, indicatif
-4. `bin/rbees-ctl/src/ssh.rs` - Complete rewrite with ssh2
-5. `bin/rbees-ctl/src/commands/pool.rs` - Removed manual SSH messages
-6. `bin/rbees-pool/src/commands/worker.rs` - Replaced nix with sysinfo
-7. `bin/rbees-pool/src/commands/models.rs` - Added progress spinner
+2. `bin/rbee-hive/Cargo.toml` - Removed nix, added new deps
+3. `bin/rbee-keeper/Cargo.toml` - Added ssh2, indicatif
+4. `bin/rbee-keeper/src/ssh.rs` - Complete rewrite with ssh2
+5. `bin/rbee-keeper/src/commands/pool.rs` - Removed manual SSH messages
+6. `bin/rbee-hive/src/commands/worker.rs` - Replaced nix with sysinfo
+7. `bin/rbee-hive/src/commands/models.rs` - Added progress spinner
 
 **Total:** 7 files modified, 0 files deleted, 0 deprecated code remaining
 
@@ -278,7 +278,7 @@ The public API remains identical:
 ```bash
 llorch pool git --host mac pull
 llorch pool models --host mac catalog
-rbees-pool worker spawn metal --model qwen
+rbee-hive worker spawn metal --model qwen
 ```
 
 ---
@@ -318,9 +318,9 @@ TEAM-023 completed code migration from `huggingface-cli` → `hf` CLI but left d
 1. `bin/.plan/TEAM_023_SSH_FIX_REPORT.md` - 7 replacements
 2. `bin/.plan/TEAM_022_COMPLETION_SUMMARY.md` - 2 replacements + hf-hub note
 3. `bin/.plan/03_CP3_AUTOMATION.md` - 1 code example
-4. `bin/rbees-workerd/.specs/TEAM_022_HANDOFF.md` - 1 code example
-5. `bin/rbees-workerd/.specs/TEAM_021_HANDOFF.md` - 3 bash commands
-6. `bin/rbees-workerd/.specs/TEAM_010_HANDOFF.md` - 2 bash commands
+4. `bin/llm-worker-rbee/.specs/TEAM_022_HANDOFF.md` - 1 code example
+5. `bin/llm-worker-rbee/.specs/TEAM_021_HANDOFF.md` - 3 bash commands
+6. `bin/llm-worker-rbee/.specs/TEAM_010_HANDOFF.md` - 2 bash commands
 
 ### Remaining References (Appropriate)
 

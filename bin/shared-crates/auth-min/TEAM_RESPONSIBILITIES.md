@@ -251,7 +251,7 @@ let fp6 = token_fp6(&safe_token);
 
 ### Integration Pattern
 
-**1. Service Startup (rbees-orcd, pool-managerd, worker-orcd)**:
+**1. Service Startup (queen-rbee, pool-managerd, worker-orcd)**:
 ```rust
 use auth_min::{enforce_startup_bind_policy, token_fp6};
 
@@ -487,7 +487,7 @@ If your service:
 ### What We Do NOT Own
 
 **1. Authorization Logic**
-- Owned by individual services (rbees-orcd, pool-managerd)
+- Owned by individual services (queen-rbee, pool-managerd)
 - We **authenticate**, they **authorize**
 
 **2. Rate Limiting**
@@ -585,7 +585,7 @@ We operate on **zero-trust principles**:
 
 ## Our Responsibilities to Other Teams
 
-### Dear rbees-orcd, pool-managerd, worker-orcd, and all services,
+### Dear queen-rbee, pool-managerd, worker-orcd, and all services,
 
 We built you the **security primitives** you need to protect llama-orch. Please use them correctly:
 
@@ -643,7 +643,7 @@ We are the **invisible wall** between you and the system. You cannot bypass what
 
 ### Integration Status
 
-- ✅ **rbees-orcd**: Uses bind policy, timing-safe comparison, fingerprinting
+- ✅ **queen-rbee**: Uses bind policy, timing-safe comparison, fingerprinting
 - ✅ **pool-managerd**: Uses bind policy, timing-safe comparison, fingerprinting
 - ✅ **http-util**: Uses `parse_bearer()`, timing-safe comparison
 - ✅ **audit-logging**: Uses `token_fp6()` for actor identity

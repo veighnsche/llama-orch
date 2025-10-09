@@ -188,7 +188,7 @@ use audit_logging::{AuditLogger, AuditConfig, AuditMode};
 // HOME LAB: Disable audit logging
 let audit_logger = AuditLogger::new(AuditConfig {
     mode: AuditMode::Disabled,  // ✅ Zero overhead
-    service_id: "rbees-orcd".to_string(),
+    service_id: "queen-rbee".to_string(),
     rotation_policy: RotationPolicy::Daily,  // Ignored
     retention_policy: RetentionPolicy::default(),  // Ignored
     flush_mode: FlushMode::Immediate,  // Ignored
@@ -214,7 +214,7 @@ let audit_logger = AuditLogger::new(AuditConfig {
         batch_size: 100,
         flush_interval_secs: 5,
     }),
-    service_id: "rbees-orcd".to_string(),
+    service_id: "queen-rbee".to_string(),
     rotation_policy: RotationPolicy::Daily,
     retention_policy: RetentionPolicy::default(),
     flush_mode: FlushMode::Hybrid {

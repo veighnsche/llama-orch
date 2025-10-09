@@ -40,7 +40,7 @@ pub fn narrate_impl(_attr: TokenStream, item: TokenStream) -> TokenStream {
 **Current API**:
 ```rust
 narrate(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "enqueue",
     target: job_id.to_string(),
     human: format!("Enqueued job {job_id}"),
@@ -57,7 +57,7 @@ narrate(NarrationFields {
 
 **Better API** (builder pattern):
 ```rust
-Narration::new("rbees-orcd", "enqueue", &job_id)
+Narration::new("queen-rbee", "enqueue", &job_id)
     .human(format!("Enqueued job {job_id}"))
     .correlation_id(&req_id)
     .emit();
@@ -125,7 +125,7 @@ let correlation_id = extract_correlation_id(&headers);
 
 **Source**: `lib.rs:68-109`
 ```rust
-pub const ACTOR_ORCHESTRATORD: &str = "rbees-orcd";
+pub const ACTOR_ORCHESTRATORD: &str = "queen-rbee";
 pub const ACTOR_POOL_MANAGERD: &str = "pool-managerd";
 pub const ACTION_ENQUEUE: &str = "enqueue";
 pub const ACTION_DISPATCH: &str = "dispatch";
@@ -133,7 +133,7 @@ pub const ACTION_DISPATCH: &str = "dispatch";
 
 **README examples use string literals**:
 ```rust
-actor: "rbees-orcd",  // ← Should use ACTOR_ORCHESTRATORD
+actor: "queen-rbee",  // ← Should use ACTOR_ORCHESTRATORD
 action: "enqueue",       // ← Should use ACTION_ENQUEUE
 ```
 
@@ -405,7 +405,7 @@ impl NarrationBuilder {
 }
 
 // Usage
-Narration::new("rbees-orcd", "enqueue", job_id)
+Narration::new("queen-rbee", "enqueue", job_id)
     .human(format!("Enqueued job {job_id}"))
     .correlation_id(req_id)
     .emit();
@@ -448,7 +448,7 @@ Narration::new("rbees-orcd", "enqueue", job_id)
 **9. Consider Enums Instead of Constants**
 ```rust
 // Instead of constants
-pub const ACTOR_ORCHESTRATORD: &str = "rbees-orcd";
+pub const ACTOR_ORCHESTRATORD: &str = "queen-rbee";
 
 // Use enums
 pub enum Actor {
@@ -460,7 +460,7 @@ pub enum Actor {
 impl Actor {
     pub fn as_str(&self) -> &'static str {
         match self {
-            Actor::Orchestratord => "rbees-orcd",
+            Actor::Orchestratord => "queen-rbee",
             Actor::PoolManagerd => "pool-managerd",
             Actor::WorkerOrcd => "worker-orcd",
         }
@@ -558,7 +558,7 @@ pub use builder::Narration;
 ```rust
 use observability_narration_core::Narration;
 
-Narration::new("rbees-orcd", "enqueue", job_id)
+Narration::new("queen-rbee", "enqueue", job_id)
     .human(format!("Enqueued job {job_id}"))
     .correlation_id(req_id)
     .emit();

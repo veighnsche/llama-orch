@@ -26,16 +26,16 @@
 
 ---
 
-## Day 1 (Monday): rbees-orcd
+## Day 1 (Monday): queen-rbee
 
 ### Morning Session (09:00-13:00)
 
 **Task 1: Create binary (30 min)**
 ```bash
 cd /home/vince/Projects/llama-orch/bin
-mkdir rbees-orcd
-cd rbees-orcd
-cargo init --name rbees-orcd
+mkdir queen-rbee
+cd queen-rbee
+cargo init --name queen-rbee
 ```
 
 **Task 2: Add dependencies (15 min)**
@@ -119,7 +119,7 @@ async fn main() -> anyhow::Result<()> {
             mode: AuditMode::Local {
                 base_dir: std::path::PathBuf::from("/var/log/llorch/audit"),
             },
-            service_id: "rbees-orcd".to_string(),
+            service_id: "queen-rbee".to_string(),
             rotation_policy: RotationPolicy::Daily,
             retention_policy: RetentionPolicy::default(),
             flush_mode: FlushMode::Immediate,  // Compliance-safe
@@ -128,7 +128,7 @@ async fn main() -> anyhow::Result<()> {
         tracing::info!("🏠 Homelab mode (audit disabled)");
         AuditLogger::new(AuditConfig {
             mode: AuditMode::Disabled,  // Zero overhead
-            service_id: "rbees-orcd".to_string(),
+            service_id: "queen-rbee".to_string(),
             ..Default::default()
         })?
     };
@@ -146,7 +146,7 @@ async fn main() -> anyhow::Result<()> {
         .with_state(state);
 
     let addr = "0.0.0.0:8080";
-    tracing::info!("🚀 rbees-orcd listening on {}", addr);
+    tracing::info!("🚀 queen-rbee listening on {}", addr);
     
     axum::Server::bind(&addr.parse()?)
         .serve(app.into_make_service())
@@ -197,7 +197,7 @@ async fn submit_task(
         task_id: job_id.clone(),
         model_ref: safe_model.clone(),
         prompt_length: safe_prompt.len(),
-        service_id: "rbees-orcd".to_string(),
+        service_id: "queen-rbee".to_string(),
     });
     
     let job = Job {
@@ -233,7 +233,7 @@ async fn register_worker(
         node_id: worker.id.clone(),
         gpu_count: 1,  // TODO: Get from worker
         total_vram_gb: 24,  // TODO: Get from worker
-        service_id: "rbees-orcd".to_string(),
+        service_id: "queen-rbee".to_string(),
     });
     
     state.workers.lock().unwrap().push(worker);
@@ -345,20 +345,20 @@ impl IntoResponse for AppError {
 }
 ```
 
-**Day 1 Deliverable**: rbees-orcd accepts jobs and dispatches to workers
+**Day 1 Deliverable**: queen-rbee accepts jobs and dispatches to workers
 
 ---
 
-## Day 2 (Tuesday): rbees-pool
+## Day 2 (Tuesday): rbee-hive
 
 ### Morning Session (09:00-13:00)
 
 **Task 1: Create binary (30 min)**
 ```bash
 cd /home/vince/Projects/llama-orch/bin
-mkdir rbees-pool
-cd rbees-pool
-cargo init --name rbees-pool
+mkdir rbee-hive
+cd rbee-hive
+cargo init --name rbee-hive
 ```
 
 **Task 2: Add dependencies (15 min)**
@@ -379,7 +379,7 @@ use clap::{Parser, Subcommand};
 use colored::*;
 
 #[derive(Parser)]
-#[command(name = "rbees-pool")]
+#[command(name = "rbee-hive")]
 #[command(about = "Pool manager control CLI")]
 struct Cli {
     #[command(subcommand)]
@@ -541,8 +541,8 @@ pub fn spawn_worker(backend: &str, model: &str, gpu: u32, port: u16) -> anyhow::
     println!("   GPU: {}", gpu);
     println!("   Port: {}", port);
     
-    // Spawn rbees-workerd
-    let mut cmd = Command::new("rbees-workerd");
+    // Spawn llm-worker-rbee
+    let mut cmd = Command::new("llm-worker-rbee");
     cmd.args(&[
         "--worker-id", &worker_id,
         "--model", model_file_path.to_str().unwrap(),
@@ -579,7 +579,7 @@ pub fn list_workers() -> anyhow::Result<()> {
     
     let stdout = String::from_utf8_lossy(&output.stdout);
     for line in stdout.lines() {
-        if line.contains("rbees-workerd") {
+        if line.contains("llm-worker-rbee") {
             println!("   {}", line);
         }
     }
@@ -588,20 +588,20 @@ pub fn list_workers() -> anyhow::Result<()> {
 }
 ```
 
-**Day 2 Deliverable**: rbees-pool can download models and spawn workers
+**Day 2 Deliverable**: rbee-hive can download models and spawn workers
 
 ---
 
-## Day 3 (Wednesday): rbees-ctl
+## Day 3 (Wednesday): rbee-keeper
 
 ### Morning Session (09:00-13:00)
 
 **Task 1: Create binary (30 min)**
 ```bash
 cd /home/vince/Projects/llama-orch/bin
-mkdir rbees-ctl
-cd rbees-ctl
-cargo init --name rbees-ctl
+mkdir rbee-keeper
+cd rbee-keeper
+cargo init --name rbee-keeper
 ```
 
 **Task 2: Add dependencies (15 min)**
@@ -708,7 +708,7 @@ pub async fn download_model_on_pool(model: &str, host: &str) -> anyhow::Result<(
     println!("{} Downloading {} on {}", "📥".green(), model.bold(), host.bold());
     
     let ssh_cmd = format!(
-        "cd ~/Projects/llama-orch && rbees-pool models download {}",
+        "cd ~/Projects/llama-orch && rbee-hive models download {}",
         model
     );
     
@@ -728,7 +728,7 @@ pub async fn spawn_worker_on_pool(backend: &str, model: &str, host: &str) -> any
     println!("{} Spawning worker on {}", "🚀".green(), host.bold());
     
     let ssh_cmd = format!(
-        "cd ~/Projects/llama-orch && rbees-pool worker spawn {} --model {}",
+        "cd ~/Projects/llama-orch && rbee-hive worker spawn {} --model {}",
         backend, model
     );
     
@@ -800,7 +800,7 @@ pub async fn list_jobs() -> anyhow::Result<()> {
 }
 ```
 
-**Day 3 Deliverable**: rbees-ctl can command pools via SSH and submit jobs
+**Day 3 Deliverable**: rbee-keeper can command pools via SSH and submit jobs
 
 ---
 
@@ -808,9 +808,9 @@ pub async fn list_jobs() -> anyhow::Result<()> {
 
 ### Full Day Session (09:00-18:00)
 
-**Task 1: Add worker registration to rbees-workerd (2 hours)**
+**Task 1: Add worker registration to llm-worker-rbee (2 hours)**
 ```rust
-// In rbees-workerd/src/main.rs
+// In llm-worker-rbee/src/main.rs
 async fn register_with_orchestrator(config: &Config) -> Result<()> {
     let client = reqwest::Client::new();
     
@@ -867,8 +867,8 @@ fn extract_model_name(path: &str) -> String {
 
 **Task 2: End-to-end testing (4 hours)**
 ```bash
-# Terminal 1: Start rbees-orcd
-cd bin/rbees-orcd
+# Terminal 1: Start queen-rbee
+cd bin/queen-rbee
 cargo run
 
 # Terminal 2: Download model on mac
@@ -881,7 +881,7 @@ llorch pool worker spawn metal --model tinyllama --host mac.home.arpa
 llorch jobs submit --model tinyllama --prompt "Write a haiku about Rust"
 
 # Verify:
-# - Worker registered with rbees-orcd
+# - Worker registered with queen-rbee
 # - Job dispatched to worker
 # - Tokens stream back
 ```
@@ -915,13 +915,13 @@ impl std::fmt::Display for AppError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             AppError::NoWorkerAvailable(model) => {
-                write!(f, "No worker available for model '{}'. Try spawning a worker first:\n  rbees pool worker spawn <backend> --model {} --host <host>", model, model)
+                write!(f, "No worker available for model '{}'. Try spawning a worker first:\n  rbee pool worker spawn <backend> --model {} --host <host>", model, model)
             }
             AppError::WorkerDispatchFailed(err) => {
                 write!(f, "Failed to dispatch job to worker: {}\nCheck worker logs for details.", err)
             }
             AppError::ModelNotFound(model) => {
-                write!(f, "Model '{}' not found. Download it first:\n  rbees pool models download {} --host <host>", model, model)
+                write!(f, "Model '{}' not found. Download it first:\n  rbee pool models download {} --host <host>", model, model)
             }
             AppError::SSHCommandFailed(cmd) => {
                 write!(f, "SSH command failed: {}\nCheck SSH connectivity and permissions.", cmd)
@@ -936,12 +936,12 @@ impl std::fmt::Display for AppError {
 // Add structured logging
 use tracing::{info, error, warn, debug};
 
-// In rbees-orcd
+// In queen-rbee
 info!(job_id = %job.id, model = %job.model, "Job submitted");
 info!(worker_id = %worker.id, host = %worker.host, "Worker registered");
 error!(job_id = %job.id, error = %err, "Job dispatch failed");
 
-// In rbees-pool
+// In rbee-hive
 println!("{} {}", "INFO".blue(), "Downloading model...");
 println!("{} {}", "ERROR".red(), "Download failed");
 println!("{} {}", "SUCCESS".green(), "Model downloaded");
@@ -951,7 +951,7 @@ println!("{} {}", "SUCCESS".green(), "Model downloaded");
 
 **Task 3: Progress indicators (2 hours)**
 ```rust
-// In rbees-pool
+// In rbee-hive
 use indicatif::{ProgressBar, ProgressStyle};
 
 pub fn download_model(model: &str) -> anyhow::Result<()> {
@@ -980,7 +980,7 @@ EU-Native LLM Inference with Full Audit Trails
 ## Quick Start
 
 ### 1. Start orchestrator
-cd bin/rbees-orcd
+cd bin/queen-rbee
 cargo run
 
 ### 2. Download a model
@@ -994,20 +994,20 @@ llorch jobs submit --model tinyllama --prompt "Hello world"
 
 ## Architecture
 
-- **rbees-orcd**: Job scheduling and worker management
-- **rbees-pool**: Pool manager operations (local)
-- **rbees-ctl**: Orchestrator operations (remote)
-- **rbees-workerd**: Worker daemon (inference)
+- **queen-rbee**: Job scheduling and worker management
+- **rbee-hive**: Pool manager operations (local)
+- **rbee-keeper**: Orchestrator operations (remote)
+- **llm-worker-rbee**: Worker daemon (inference)
 
 ## Commands
 
-### rbees-pool (local pool operations)
-rbees-pool models download <model>
-rbees-pool models list
-rbees-pool worker spawn <backend> --model <model>
-rbees-pool worker list
+### rbee-hive (local pool operations)
+rbee-hive models download <model>
+rbee-hive models list
+rbee-hive worker spawn <backend> --model <model>
+rbee-hive worker list
 
-### rbees-ctl (orchestrator operations)
+### rbee-keeper (orchestrator operations)
 llorch pool models download <model> --host <host>
 llorch pool worker spawn <backend> --model <model> --host <host>
 llorch jobs submit --model <model> --prompt <prompt>
@@ -1045,7 +1045,7 @@ GPL-3.0-or-later
 ```bash
 # Clean everything
 rm -rf .test-models
-pkill rbees-workerd
+pkill llm-worker-rbee
 
 # Full flow from scratch
 llorch pool models download tinyllama --host mac.home.arpa
@@ -1074,10 +1074,10 @@ llorch jobs submit --model tinyllama --prompt "Test"
 
 ## Week 1 Success Criteria
 
-- [ ] rbees-orcd accepts jobs and dispatches to workers
-- [ ] rbees-pool downloads models and spawns workers
-- [ ] rbees-ctl commands pools via SSH and submits jobs
-- [ ] rbees-workerd registers with orchestrator
+- [ ] queen-rbee accepts jobs and dispatches to workers
+- [ ] rbee-hive downloads models and spawns workers
+- [ ] rbee-keeper commands pools via SSH and submits jobs
+- [ ] llm-worker-rbee registers with orchestrator
 - [ ] End-to-end flow works: submit job → worker executes → tokens stream back
 - [ ] Basic error handling and logging
 - [ ] README with quick start guide

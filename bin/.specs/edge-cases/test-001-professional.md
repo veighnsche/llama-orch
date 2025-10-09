@@ -3,9 +3,9 @@
 ## Test Scenario Overview
 
 **Topology:**
-- **blep** (`blep.home.arpa`): Control plane node running `rbees-ctl`, `rbees-orcd`, and `rbees-pool`. Can run workers on CPU.
-- **workstation** (`workstation.home.arpa`): Compute node running `rbees-pool` and `rbees-workerd`. Can run workers on CUDA devices 0, 1, and CPU.
-- **mac** (`mac.home.arpa`): Compute node running `rbees-pool` and `rbees-workerd`. Can run workers on Metal backend only.
+- **blep** (`blep.home.arpa`): Control plane node running `rbee-keeper`, `queen-rbee`, and `rbee-hive`. Can run workers on CPU.
+- **workstation** (`workstation.home.arpa`): Compute node running `rbee-hive` and `llm-worker-rbee`. Can run workers on CUDA devices 0, 1, and CPU.
+- **mac** (`mac.home.arpa`): Compute node running `rbee-hive` and `llm-worker-rbee`. Can run workers on Metal backend only.
 
 **Test Objective:**  
 From `blep`, initiate an inference request targeting the `mac` node using a user-friendly CLI command.
@@ -22,9 +22,9 @@ From `blep`, initiate an inference request targeting the `mac` node using a user
 
 ## Expected Process Flow
 
-### Phase 1: Worker Registry Check (rbees-ctl)
+### Phase 1: Worker Registry Check (rbee-keeper)
 
-**Step 1.1:** `rbees-ctl` queries local worker registry (SQLite).
+**Step 1.1:** `rbee-keeper` queries local worker registry (SQLite).
 
 **Decision Point:**
 - **IF** a worker on `mac` with the requested model (`TinyLlama-1.1B-Chat-v1.0-GGUF`) is:
@@ -36,43 +36,43 @@ From `blep`, initiate an inference request targeting the `mac` node using a user
 
 ---
 
-### Phase 2: Pool Preflight (rbees-ctl → rbees-pool on mac)
+### Phase 2: Pool Preflight (rbee-keeper → rbee-hive on mac)
 
-**Step 2.1:** `rbees-ctl` initiates preflight check with `rbees-pool` on `mac`.
+**Step 2.1:** `rbee-keeper` initiates preflight check with `rbee-hive` on `mac`.
 
-**Step 2.2:** Verify `rbees-pool` version and health:
+**Step 2.2:** Verify `rbee-hive` version and health:
 - Check connectivity to `mac.home.arpa`
   - **IF** connection fails → **ABORT** with error message
-- Check installed `rbees-pool` version against latest
+- Check installed `rbee-hive` version against latest
   - **IF** version mismatch → trigger update process
   - **IF** update fails → **ABORT** with error message
 - Perform additional preflight checks (TBD)
 
 ---
 
-### Phase 3: Model Provisioning (rbees-pool on mac)
+### Phase 3: Model Provisioning (rbee-hive on mac)
 
-**Step 3.1:** `rbees-pool` queries local model catalog for `hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF`.
+**Step 3.1:** `rbee-hive` queries local model catalog for `hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF`.
 
 **Decision Point:**
 - **IF** model found in catalog → skip to Step 3.5
 - **ELSE** proceed to Step 3.2
 
-**Step 3.2:** `rbees-pool` delegates model download to model provisioner.
+**Step 3.2:** `rbee-hive` delegates model download to model provisioner.
 
 **Step 3.3:** Model provisioner downloads model from Hugging Face:
 - Stream download progress (loading bar) to `blep` stdout via SSE or similar
 - Handle download errors (network failure, disk space, etc.)
 
-**Step 3.4:** Model provisioner notifies `rbees-pool` of successful download with local path.
+**Step 3.4:** Model provisioner notifies `rbee-hive` of successful download with local path.
 
-**Step 3.5:** `rbees-pool` registers model in local catalog with filesystem path.
+**Step 3.5:** `rbee-hive` registers model in local catalog with filesystem path.
 
 ---
 
-### Phase 4: Worker Preflight (rbees-pool on mac)
+### Phase 4: Worker Preflight (rbee-hive on mac)
 
-**Step 4.1:** `rbees-pool` performs resource availability checks:
+**Step 4.1:** `rbee-hive` performs resource availability checks:
 - Check available RAM against model requirements
   - **IF** insufficient RAM → **ABORT** with error message
 - Check Metal backend availability
@@ -80,40 +80,40 @@ From `blep`, initiate an inference request targeting the `mac` node using a user
 
 ---
 
-### Phase 5: Worker Startup (rbees-pool on mac)
+### Phase 5: Worker Startup (rbee-hive on mac)
 
-**Step 5.1:** `rbees-pool` spawns `rbees-workerd` process with:
+**Step 5.1:** `rbee-hive` spawns `llm-worker-rbee` process with:
 - Backend: Metal
 - Device: 0
 - Model path: (from catalog)
 
-**Step 5.2:** `rbees-workerd` initializes:
+**Step 5.2:** `llm-worker-rbee` initializes:
 - HTTP server starts and binds to port
-- Worker notifies `rbees-pool` that HTTP server is ready
+- Worker notifies `rbee-hive` that HTTP server is ready
 - Model loading begins (asynchronous, may take time)
 
-**Step 5.3:** `rbees-pool` returns worker details to `rbees-ctl`:
+**Step 5.3:** `rbee-hive` returns worker details to `rbee-keeper`:
 - Worker URL (e.g., `http://mac.home.arpa:<port>`)
 - Worker ID
 - Status: `initializing`
 
-**Step 5.4:** `rbees-pool` process lifecycle:
-- **QUESTION:** Does `rbees-pool` terminate after worker handoff, or does it remain running to manage worker lifecycle?
+**Step 5.4:** `rbee-hive` process lifecycle:
+- **QUESTION:** Does `rbee-hive` terminate after worker handoff, or does it remain running to manage worker lifecycle?
 
 ---
 
-### Phase 6: Worker Registration (rbees-ctl)
+### Phase 6: Worker Registration (rbee-keeper)
 
-**Step 6.1:** `rbees-ctl` updates local worker registry:
+**Step 6.1:** `rbee-keeper` updates local worker registry:
 - Add/update worker entry with URL, ID, model, backend, device
 - Set `last_seen_alive` timestamp
 - Set status: `initializing`
 
 ---
 
-### Phase 7: Worker Health Check (rbees-ctl → rbees-workerd)
+### Phase 7: Worker Health Check (rbee-keeper → llm-worker-rbee)
 
-**Step 7.1:** `rbees-ctl` polls worker health endpoint.
+**Step 7.1:** `rbee-keeper` polls worker health endpoint.
 
 **Response Handling:**
 - **IF** status = `loading`:
@@ -128,17 +128,17 @@ From `blep`, initiate an inference request targeting the `mac` node using a user
 
 ---
 
-### Phase 8: Inference Execution (rbees-ctl → rbees-workerd)
+### Phase 8: Inference Execution (rbee-keeper → llm-worker-rbee)
 
-**Step 8.1:** `rbees-ctl` sends inference request to worker:
+**Step 8.1:** `rbee-keeper` sends inference request to worker:
 - Endpoint: `POST /inference` (or similar)
 - Payload: `{ "prompt": "write a short story", "max_tokens": 20, "temperature": 0.7 }`
 
-**Step 8.2:** `rbees-workerd` executes inference:
-- Stream generated tokens via SSE to `rbees-ctl`
+**Step 8.2:** `llm-worker-rbee` executes inference:
+- Stream generated tokens via SSE to `rbee-keeper`
 - Worker remains alive after completion
 
-**Step 8.3:** `rbees-ctl` streams tokens to stdout in real-time.
+**Step 8.3:** `rbee-keeper` streams tokens to stdout in real-time.
 
 **Step 8.4:** Inference completes:
 - Worker returns final status/metadata
@@ -163,7 +163,7 @@ From `blep`, initiate an inference request targeting the `mac` node using a user
 - Stops streaming immediately when client disconnects
 - Supports explicit task cancellation via `SERVER_TASK_TYPE_CANCEL`
 
-**Required for rbees:**
+**Required for rbee:**
 ```yaml
 # Worker API
 POST /inference
@@ -206,9 +206,9 @@ Response: 204 No Content
 - Deferred task queue for requests that can't be scheduled immediately
 - Metrics expose: `n_idle_slots`, `n_processing_slots`, `n_tasks_deferred`
 
-**Required for rbees:**
+**Required for rbee:**
 
-**rbees-ctl (global queue):**
+**rbee-keeper (global queue):**
 ```yaml
 ctl:
   max_pending_requests: 100
@@ -217,7 +217,7 @@ ctl:
 
 **Behavior:**
 ```
-Request arrives at rbees-ctl:
+Request arrives at rbee-keeper:
   IF queue.size < max_pending_requests:
     - Add to queue
     - Return 202 Accepted with request_id
@@ -260,7 +260,7 @@ rbees_worker_slots_busy
 - Simple progress percentage during model load
 - No parallel downloads
 
-**Required for rbees:**
+**Required for rbee:**
 
 **Model download progress (pool → ctl):**
 ```
@@ -290,7 +290,7 @@ SSE stream from pool manager:
 **Implementation:**
 - Pool manager exposes SSE endpoint: `GET /models/{model_id}/download/progress`
 - Worker exposes SSE endpoint: `GET /loading/progress`
-- rbees-ctl aggregates and streams to user's stdout
+- rbee-keeper aggregates and streams to user's stdout
 
 ---
 
@@ -319,7 +319,7 @@ Response:
   503 Service Unavailable - loading model, not ready
 ```
 
-**Required for rbees:**
+**Required for rbee:**
 
 **Worker endpoints:**
 ```
@@ -371,7 +371,7 @@ GET /metrics
 }
 ```
 
-**Required for rbees (Prometheus format):**
+**Required for rbee (Prometheus format):**
 
 **Worker metrics:**
 ```
@@ -413,7 +413,7 @@ rbees_pool_vram_total_bytes{device="0"} 8589934592
 rbees_pool_vram_allocated_bytes{device="0"} 4294967296
 ```
 
-**rbees-ctl metrics:**
+**rbee-keeper metrics:**
 ```
 # HELP rbees_ctl_queue_size Current queue size
 # TYPE rbees_ctl_queue_size gauge
@@ -451,7 +451,7 @@ ERROR_TYPE_PERMISSION
 ERROR_TYPE_UNAVAILABLE
 ```
 
-**Required for rbees:**
+**Required for rbee:**
 
 **Error response format:**
 ```json
@@ -507,9 +507,9 @@ func newBackoff(maxBackoff time.Duration) func(ctx context.Context) error {
 }
 ```
 
-**Required for rbees:**
+**Required for rbee:**
 
-**rbees-ctl retry policy (for pool/worker communication):**
+**rbee-keeper retry policy (for pool/worker communication):**
 ```yaml
 retry:
   max_attempts: 3
@@ -554,7 +554,7 @@ def retry_with_backoff(func, max_attempts=3):
 - Digest-based versioning for reproducibility
 - Model name parsing with validation
 
-**Required for rbees:**
+**Required for rbee:**
 
 **Model reference format:**
 ```
@@ -596,7 +596,7 @@ CREATE TABLE models (
 - Unloads all runners
 - Closes database connections
 
-**Required for rbees:**
+**Required for rbee:**
 
 **Worker shutdown sequence:**
 ```
@@ -620,7 +620,7 @@ CREATE TABLE models (
 7. Exit with code 0
 ```
 
-**rbees-ctl shutdown:**
+**rbee-keeper shutdown:**
 ```
 1. Receive SIGINT (Ctrl+C)
 2. Cancel active request context
@@ -643,23 +643,23 @@ CREATE TABLE models (
 - Worker cleanup on failure?
 - Worker shutdown on idle timeout?
 
-**Resolution Needed:** Clarify whether `rbees-pool` is:
-- A short-lived orchestrator that hands off to `rbees-ctl` for lifecycle management, OR
+**Resolution Needed:** Clarify whether `rbee-hive` is:
+- A short-lived orchestrator that hands off to `rbee-keeper` for lifecycle management, OR
 - A persistent daemon that continues managing local workers
 
 ---
 
 ### C2: Worker Health Check Responsibility
-**Lines 37-40:** `rbees-ctl` performs worker preflight health checks  
-**Lines 28-31:** `rbees-pool` performs worker preflight resource checks
+**Lines 37-40:** `rbee-keeper` performs worker preflight health checks  
+**Lines 28-31:** `rbee-hive` performs worker preflight resource checks
 
-**Overlap:** Both `rbees-ctl` and `rbees-pool` perform preflight checks. This creates ambiguity:
+**Overlap:** Both `rbee-keeper` and `rbee-hive` perform preflight checks. This creates ambiguity:
 - Who is authoritative for resource availability?
-- What happens if `rbees-pool` says "OK" but `rbees-ctl` health check fails?
+- What happens if `rbee-hive` says "OK" but `rbee-keeper` health check fails?
 
 **Resolution Needed:** Define clear separation of concerns:
-- `rbees-pool`: Local resource checks (RAM, GPU, disk)
-- `rbees-ctl`: Network reachability and worker API health
+- `rbee-hive`: Local resource checks (RAM, GPU, disk)
+- `rbee-keeper`: Network reachability and worker API health
 
 ---
 
@@ -667,9 +667,9 @@ CREATE TABLE models (
 **Line 33:** "http server is loaded says the worker to the pool (but model is still loading to ram)"  
 **Lines 38-40:** Health check returns loading status with SSE URL
 
-**Ambiguity:** The flow suggests the worker notifies `rbees-pool` that HTTP is ready, but then `rbees-ctl` must poll to discover loading status. This creates a race condition:
-- What if `rbees-ctl` polls before the worker transitions from `initializing` to `loading`?
-- Should `rbees-pool` wait for model loading to complete before returning worker details?
+**Ambiguity:** The flow suggests the worker notifies `rbee-hive` that HTTP is ready, but then `rbee-keeper` must poll to discover loading status. This creates a race condition:
+- What if `rbee-keeper` polls before the worker transitions from `initializing` to `loading`?
+- Should `rbee-hive` wait for model loading to complete before returning worker details?
 
 **Resolution Needed:** Define explicit state machine for worker lifecycle:
 - `starting` → `http_ready` → `loading_model` → `ready` → `busy` → `idle`
@@ -707,7 +707,7 @@ CREATE TABLE models (
 - Context size divided by parallel count: `n_ctx_slot = n_ctx / n_parallel`
 - Batch processing: `max(n_batch, n_parallel)` tokens per step
 
-**Required for rbees:**
+**Required for rbee:**
 
 **Worker configuration:**
 ```yaml
@@ -765,7 +765,7 @@ models:
 
 **Load balancing (multiple workers):**
 ```
-rbees-ctl has multiple workers with same model:
+rbee-keeper has multiple workers with same model:
   1. Query each worker's available slots
   2. Select worker with most idle slots
   3. If all workers full, queue or return 503
@@ -792,7 +792,7 @@ rbees-ctl has multiple workers with same model:
 
 ### G4: Authentication and Authorization
 **Missing:** No specification for:
-- How `rbees-ctl` authenticates to `rbees-pool` and `rbees-workerd`
+- How `rbee-keeper` authenticates to `rbee-hive` and `llm-worker-rbee`
 - Authorization model (who can request inference on which nodes)
 - API key management or mTLS
 
@@ -810,7 +810,7 @@ rbees-ctl has multiple workers with same model:
 - Returns 401 with `ERROR_TYPE_AUTHENTICATION` on failure
 - CORS-aware: OPTIONS requests skip auth (browser preflight)
 
-**Required for rbees (MVP: Simple API Key):**
+**Required for rbee (MVP: Simple API Key):**
 
 **Configuration:**
 ```yaml
@@ -834,7 +834,7 @@ ctl:
 
 **Authentication flow:**
 ```
-rbees-ctl → rbees-pool:
+rbee-keeper → rbee-hive:
   Request:
     POST /workers HTTP/1.1
     Authorization: Bearer rbees_pool_secret_abc123
@@ -960,7 +960,7 @@ fn validate_api_key(req: &Request, configured_key: &Option<String>) -> Result<()
 - No catalog concept (stateless server)
 - Model specified at startup via `--model` flag
 
-**Required for rbees (MVP: Independent Catalogs):**
+**Required for rbee (MVP: Independent Catalogs):**
 
 **Per-node model catalog:**
 ```sql
@@ -981,14 +981,14 @@ CREATE TABLE models (
 
 **No synchronization (MVP):**
 - Each node downloads models independently
-- `rbees-ctl` queries each pool for available models
+- `rbee-keeper` queries each pool for available models
 - User explicitly targets node or lets ctl choose
 - Models cached locally, no cross-node sharing
 
 **Model eviction (manual for MVP):**
 ```bash
 # User manually removes models
-rbees-ctl models rm hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF --node mac
+rbee-keeper models rm hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF --node mac
 
 # Pool manager deletes from disk and catalog
 ```
@@ -1016,7 +1016,7 @@ rbees-ctl models rm hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF --node mac
 - No distributed system features
 - Single-node design
 
-**Required for rbees (MVP: Fail Fast):**
+**Required for rbee (MVP: Fail Fast):**
 
 **Network failure detection:**
 ```yaml
@@ -1027,7 +1027,7 @@ ctl:
 
 **Behavior on network partition:**
 ```
-rbees-ctl → rbees-pool (connection fails):
+rbee-keeper → rbee-hive (connection fails):
   1. Retry with exponential backoff (3 attempts)
   2. If all retries fail:
      - Mark node as unreachable in local cache
@@ -1036,7 +1036,7 @@ rbees-ctl → rbees-pool (connection fails):
      
 Mid-inference network failure:
   1. SSE stream breaks
-  2. rbees-ctl detects EOF or timeout
+  2. rbee-keeper detects EOF or timeout
   3. Return error to user with partial results (if any)
   4. Worker continues processing (orphaned request)
   5. Worker eventually times out or completes
@@ -1054,7 +1054,7 @@ Pool manager tracks worker health:
 
 **No automatic failover (MVP):**
 - User must manually retry
-- `rbees-ctl` can suggest alternative nodes
+- `rbee-keeper` can suggest alternative nodes
 - No request migration between workers
 
 **Deferred to post-MVP:**
@@ -1082,7 +1082,7 @@ Pool manager tracks worker health:
 - FIFO queue
 - No priority levels
 
-**Required for rbees (MVP: Single User, FIFO):**
+**Required for rbee (MVP: Single User, FIFO):**
 
 **No quotas for MVP:**
 ```yaml
@@ -1143,7 +1143,7 @@ priorities:
 - Detects client disconnect via callback
 - No resume capability
 
-**Required for rbees:**
+**Required for rbee:**
 
 **SSE format:**
 ```
@@ -1226,7 +1226,7 @@ checkpoints:
 
 ### G10: Version Compatibility Matrix
 **Missing:** No specification for:
-- Minimum compatible versions across `rbees-ctl`, `rbees-pool`, `rbees-workerd`
+- Minimum compatible versions across `rbee-keeper`, `rbee-hive`, `llm-worker-rbee`
 - Upgrade path and backward compatibility guarantees
 - Protocol versioning (API contracts)
 
@@ -1241,14 +1241,14 @@ checkpoints:
 - API is relatively stable
 - Breaking changes communicated via release notes
 
-**Required for rbees (MVP: Strict Version Match):**
+**Required for rbee (MVP: Strict Version Match):**
 
 **Version format (SemVer):**
 ```
-rbees v0.1.0
-  ├─ rbees-ctl v0.1.0
-  ├─ rbees-pool v0.1.0
-  └─ rbees-workerd v0.1.0
+rbee v0.1.0
+  ├─ rbee-keeper v0.1.0
+  ├─ rbee-hive v0.1.0
+  └─ llm-worker-rbee v0.1.0
 ```
 
 **Version exchange:**
@@ -1286,12 +1286,12 @@ fn check_compatibility(ctl_version: &str, remote_version: &str) -> Result<(), Ve
 
 **Error on mismatch:**
 ```
-rbees-ctl v0.1.0 → rbees-pool v0.2.0:
+rbee-keeper v0.1.0 → rbee-hive v0.2.0:
   Error: Version mismatch
-    rbees-ctl: v0.1.0
-    rbees-pool: v0.2.0
+    rbee-keeper: v0.1.0
+    rbee-hive: v0.2.0
   
-  Please upgrade rbees-ctl to v0.2.0 or downgrade rbees-pool to v0.1.0
+  Please upgrade rbee-keeper to v0.2.0 or downgrade rbee-hive to v0.1.0
 ```
 
 **API versioning:**
@@ -1310,12 +1310,12 @@ POST /v1/inference  # Deprecated but supported
 ```yaml
 # Compatibility matrix
 compatibility:
-  rbees-ctl:
+  rbee-keeper:
     - version: "0.3.0"
       compatible_pool: ["0.3.0", "0.2.0"]  # Backward compatible
       compatible_worker: ["0.3.0", "0.2.0"]
   
-  rbees-pool:
+  rbee-hive:
     - version: "0.3.0"
       compatible_worker: ["0.3.0", "0.2.0", "0.1.0"]
       
@@ -1397,7 +1397,7 @@ llama.cpp uses a **slot-based system**:
    - Server process must be explicitly stopped to release VRAM
    - No automatic idle timeout
 
-### **Recommended Architecture for rbees**
+### **Recommended Architecture for rbee**
 
 **Decision: Pool Manager MUST be a persistent daemon** (resolves C1)
 
@@ -1434,7 +1434,7 @@ starting → http_ready → loading_model → ready → busy → idle → (timeo
 - Track worker idle time
 - Trigger graceful shutdown on timeout
 - Wait for VRAM recovery before marking resources available
-- Report worker state to `rbees-ctl` via heartbeat
+- Report worker state to `rbee-keeper` via heartbeat
 
 **Registry Schema Update:**
 ```sql
@@ -1535,7 +1535,7 @@ def wait_for_vram_recovery(device_id: int, expected_free_mb: int, timeout: float
 
 ## Recommendations
 
-1. **Define Component Lifecycle:** ✅ **RESOLVED** - `rbees-pool` MUST be a persistent daemon with worker lifecycle management responsibilities.
+1. **Define Component Lifecycle:** ✅ **RESOLVED** - `rbee-hive` MUST be a persistent daemon with worker lifecycle management responsibilities.
 
 2. **State Machine Documentation:** Create explicit state diagrams for worker lifecycle with transitions and error states.
 

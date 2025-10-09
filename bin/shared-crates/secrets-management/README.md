@@ -18,7 +18,7 @@ secrets-management provides **security-hardened credential handling** for llama-
 - **Timing-safe verification** — Constant-time comparison for tokens
 - **Logging safety** — Never logs secret values (only paths/metadata)
 
-**Used by**: rbees-orcd, pool-managerd, vram-residency, worker-orcd
+**Used by**: queen-rbee, pool-managerd, vram-residency, worker-orcd
 
 ---
 
@@ -134,7 +134,7 @@ sudo chmod 0700 /etc/llorch/secrets
 # Generate API token
 openssl rand -hex 32 | sudo tee /etc/llorch/secrets/api-token
 sudo chmod 0600 /etc/llorch/secrets/api-token
-sudo chown rbees-orcd:rbees-orcd /etc/llorch/secrets/api-token
+sudo chown queen-rbee:queen-rbee /etc/llorch/secrets/api-token
 
 # Generate seal key (32 bytes hex)
 openssl rand -hex 32 | sudo tee /etc/llorch/secrets/seal-key
@@ -149,7 +149,7 @@ sudo chown worker-orcd:worker-orcd /etc/llorch/secrets/seal-key
 ls -la /etc/llorch/secrets/
 
 # Output should show:
-# -rw------- 1 rbees-orcd rbees-orcd 65 Oct  1 21:00 api-token
+# -rw------- 1 queen-rbee queen-rbee 65 Oct  1 21:00 api-token
 # -rw------- 1 worker-orcd   worker-orcd   65 Oct  1 21:00 seal-key
 ```
 
@@ -161,7 +161,7 @@ ls -la /etc/llorch/secrets/
 |----------|---------|---------|
 | `LLORCH_API_TOKEN_FILE` | Path to API token file | `/etc/llorch/secrets/api-token` |
 | `WORKER_SEAL_KEY_FILE` | Path to seal key file | `/etc/llorch/secrets/seal-key` |
-| `CREDENTIALS_DIRECTORY` | Systemd credentials directory | `/run/credentials/rbees-orcd.service` |
+| `CREDENTIALS_DIRECTORY` | Systemd credentials directory | `/run/credentials/queen-rbee.service` |
 
 **Deprecated** (insecure):
 - `LLORCH_API_TOKEN` — Token value in environment (visible in process listings)
@@ -206,7 +206,7 @@ ls -la /etc/llorch/secrets/
 
 ## Use Cases
 
-### 1. rbees-orcd: API Token Authentication
+### 1. queen-rbee: API Token Authentication
 
 ```rust
 use secrets_management::Secret;
@@ -408,7 +408,7 @@ Addresses security vulnerabilities:
 - ⬜ Systemd credential support
 - ⬜ Path validation and canonicalization
 - ⬜ Comprehensive security tests
-- ⬜ Integration with rbees-orcd/pool-managerd
+- ⬜ Integration with queen-rbee/pool-managerd
 
 ### Phase 3: Advanced Features (Post-M0)
 - ⬜ HashiCorp Vault integration

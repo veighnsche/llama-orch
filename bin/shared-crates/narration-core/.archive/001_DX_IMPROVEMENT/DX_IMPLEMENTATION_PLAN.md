@@ -272,7 +272,7 @@ pub trait HeaderLike {
 Current API requires 7 lines + boilerplate:
 ```rust
 narrate_auto(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "enqueue",
     target: job_id.to_string(),
     human: format!("Enqueued job {job_id}"),
@@ -364,7 +364,7 @@ pub use builder::Narration;
 
 **Usage**:
 ```rust
-Narration::new("rbees-orcd", "enqueue", job_id)
+Narration::new("queen-rbee", "enqueue", job_id)
     .human(format!("Enqueued job {job_id}"))
     .correlation_id(req_id)
     .emit();
@@ -784,7 +784,7 @@ Constants exported but not used in examples:
 
 **Constants exist** (`src/lib.rs:68-76`):
 ```rust
-pub const ACTOR_ORCHESTRATORD: &str = "rbees-orcd";
+pub const ACTOR_ORCHESTRATORD: &str = "queen-rbee";
 pub const ACTOR_POOL_MANAGERD: &str = "pool-managerd";
 pub const ACTOR_WORKER_ORCD: &str = "worker-orcd";
 pub const ACTOR_INFERENCE_ENGINE: &str = "inference-engine";
@@ -793,7 +793,7 @@ pub const ACTOR_VRAM_RESIDENCY: &str = "vram-residency";
 
 **But examples use literals** (README):
 ```rust
-actor: "rbees-orcd",  // ← Should use ACTOR_ORCHESTRATORD
+actor: "queen-rbee",  // ← Should use ACTOR_ORCHESTRATORD
 action: "enqueue",       // ← Should use ACTION_ENQUEUE
 ```
 

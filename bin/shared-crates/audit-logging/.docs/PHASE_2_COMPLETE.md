@@ -165,7 +165,7 @@ let config = AuditConfig {
     mode: AuditMode::Local {
         base_dir: PathBuf::from("/var/lib/llorch/audit"),
     },
-    service_id: "rbees-orcd".to_string(),
+    service_id: "queen-rbee".to_string(),
     rotation_policy: RotationPolicy::Daily,
     retention_policy: RetentionPolicy::default(),
     flush_mode: FlushMode::Immediate,  // Zero data loss
@@ -178,7 +178,7 @@ let config = AuditConfig {
     mode: AuditMode::Local {
         base_dir: PathBuf::from("/var/lib/llorch/audit"),
     },
-    service_id: "rbees-orcd".to_string(),
+    service_id: "queen-rbee".to_string(),
     rotation_policy: RotationPolicy::Daily,
     retention_policy: RetentionPolicy::default(),
     flush_mode: FlushMode::Hybrid {
@@ -195,7 +195,7 @@ let config = AuditConfig {
     mode: AuditMode::Local {
         base_dir: PathBuf::from("/var/lib/llorch/audit"),
     },
-    service_id: "rbees-orcd".to_string(),
+    service_id: "queen-rbee".to_string(),
     rotation_policy: RotationPolicy::Daily,
     retention_policy: RetentionPolicy::default(),
     flush_mode: FlushMode::Batched {

@@ -87,7 +87,7 @@ for (i, token) in tokens.iter().enumerate() {
     // ... decode token ...
 }
 // TRACE: State change (use trace_state!)
-trace_state!("rbees-orcd", "queue_depth", 
+trace_state!("queen-rbee", "queue_depth", 
              format!("{} → {}", old_depth, new_depth),
              format!("Queue depth changed: {} → {} (added job-{})", old_depth, new_depth, job_id));
 ```
@@ -178,7 +178,7 @@ cute: "Tucked llama-7b safely into GPU0's warm 2GB nest! Sweet dreams! 🛏️�
 // WARN: Retry attempt
 human: "Retrying job-123 after timeout (attempt 2/5, backoff: 200ms)"
 cute: "Job-123 didn't make it through. Let's try again! Attempt 2... 🔄"
-story: "\"Timeout!\" said worker. \"Let me try again,\" offered rbees-orcd."
+story: "\"Timeout!\" said worker. \"Let me try again,\" offered queen-rbee."
 // WARN: Deprecated flag
 human: "Using deprecated flag --legacy-mode; migrate to --compat-mode by v2.0"
 cute: "Psst! --legacy-mode is getting old. Switch to --compat-mode soon! 📢"
@@ -212,7 +212,7 @@ cute: "Haven't heard from worker-gpu0-r1 in 5 seconds. Are they okay? 😟"
 // ERROR: VRAM allocation failure
 human: "VRAM allocation failed on GPU0: requested 4096MB, only 2048MB available"
 cute: "Oh no! GPU0 doesn't have enough room (need 4GB, only 2GB free). 😟"
-story: "\"Do you have 4GB?\" asked rbees-orcd. \"No,\" replied GPU0 sadly, \"only 2GB free.\""
+story: "\"Do you have 4GB?\" asked queen-rbee. \"No,\" replied GPU0 sadly, \"only 2GB free.\""
 // ERROR: Validation failure
 human: "Job validation failed: model 'gpt-5' not found in catalog (available: llama-7b, phi-3)"
 cute: "Hmm, 'gpt-5' isn't in our catalog. We have llama-7b and phi-3 though! 🔍"
@@ -246,7 +246,7 @@ cute: "Job-123 took too long (30s limit). Worker-gpu0-r1 might be stuck! ⏰"
 // FATAL: Policy violation
 human: "CRITICAL: VRAM-only policy violated on GPU0: UMA detected. Worker startup aborted."
 cute: "STOP! GPU0 shares memory with CPU (UMA) — we need dedicated VRAM! Shutting down. 🛑"
-story: "\"UMA detected!\" cried worker. \"We can't continue,\" said rbees-orcd gravely. \"Abort.\""
+story: "\"UMA detected!\" cried worker. \"We can't continue,\" said queen-rbee gravely. \"Abort.\""
 // FATAL: Data corruption
 human: "CRITICAL: Seal verification failed for shard 'llama-7b' on GPU0: digest mismatch (expected: abc123, got: def456)"
 cute: "DANGER! llama-7b's safety seal is wrong! This could be corruption! Stopping everything! 🚨"
@@ -276,7 +276,7 @@ We're **building custom proc macros** that integrate with `tracing` as a backend
 **How it works**: Narration fields become structured fields on tracing events.
 ```rust
 tracing::info!(
-    actor = "rbees-orcd",
+    actor = "queen-rbee",
     action = "accept",
     target = "job-123",
     correlation_id = "req-abc",
@@ -328,7 +328,7 @@ pub fn narrate(fields: NarrationFields) {
 ```rust
 // Narration event
 narrate(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "accept",
     target: "job-123".to_string(),
     human: "Accepted request".to_string(),
@@ -457,7 +457,7 @@ narrate_info!(human = "Job completed in 2500 ms (150 tokens, 60 tokens/sec)");
 ```rust
 // ❌ No correlation_id!
 narrate_info!(
-    actor = "rbees-orcd",
+    actor = "queen-rbee",
     action = "dispatch",
     target = "job-123",
     human = "Dispatching job to worker"
@@ -467,7 +467,7 @@ narrate_info!(
 ```rust
 // ✅ CORRECT: Correlation ID propagated
 narrate_info!(
-    actor = "rbees-orcd",
+    actor = "queen-rbee",
     action = "dispatch",
     target = "job-123",
     correlation_id = req_id, // ALWAYS INCLUDE THIS!
@@ -549,7 +549,7 @@ narrate_info!(
 **Week 4**: Integration & testing
 - BDD tests for cute/story modes
 -  integration
-- Migrate services (rbees-orcd → pool-managerd → worker-orcd)
+- Migrate services (queen-rbee → pool-managerd → worker-orcd)
 - Update CI/CD pipelines
 ### What We'll Deliver
 #### 1. Editorial Annotations
@@ -579,7 +579,7 @@ For every WARN/ERROR case you define, we'll provide:
 // WARN: Retry attempt
 human: "Retrying job-123 after timeout (attempt 2/5, backoff: 200ms)"
 cute: "Job-123 didn't make it through. Let's try again! Attempt 2... 🔄"
-story: "\"Timeout!\" said worker. \"Let me try again,\" offered rbees-orcd patiently."
+story: "\"Timeout!\" said worker. \"Let me try again,\" offered queen-rbee patiently."
 ```
 **Performance degradation**:
 ```rust
@@ -593,7 +593,7 @@ story: "\"You're slower than usual,\" observed pool-managerd. \"I know,\" sighed
 // WARN: Deprecated flag
 human: "Using deprecated flag --legacy-mode; migrate to --compat-mode by v2.0"
 cute: "Psst! --legacy-mode is getting old. Switch to --compat-mode soon! 📢"
-story: "\"Still using --legacy-mode?\" asked rbees-orcd. \"Yeah, I should update,\" admitted the config."
+story: "\"Still using --legacy-mode?\" asked queen-rbee. \"Yeah, I should update,\" admitted the config."
 ```
 ### ERROR Examples
 **VRAM exhaustion**:
@@ -601,21 +601,21 @@ story: "\"Still using --legacy-mode?\" asked rbees-orcd. \"Yeah, I should update
 // ERROR: Out of memory
 human: "VRAM allocation failed on GPU0: requested 4096MB, only 2048MB available"
 cute: "Oh no! GPU0 doesn't have enough room (need 4GB, only 2GB free). 😟"
-story: "\"Do you have 4GB?\" asked rbees-orcd. \"No,\" replied GPU0 sadly, \"only 2GB free.\""
+story: "\"Do you have 4GB?\" asked queen-rbee. \"No,\" replied GPU0 sadly, \"only 2GB free.\""
 ```
 **Model not found**:
 ```rust
 // ERROR: Validation failure
 human: "Job validation failed: model 'gpt-5' not found in catalog (available: llama-7b, phi-3)"
 cute: "Hmm, 'gpt-5' isn't in our catalog. We have llama-7b and phi-3 though! 🔍"
-story: "\"Do you have gpt-5?\" asked the client. \"No,\" replied rbees-orcd, \"but I have llama-7b and phi-3!\""
+story: "\"Do you have gpt-5?\" asked the client. \"No,\" replied queen-rbee, \"but I have llama-7b and phi-3!\""
 ```
 **Network failure**:
 ```rust
 // ERROR: Connection refused
 human: "Failed to connect to pool-managerd at localhost:8080: connection refused (retry in 1s)"
 cute: "Couldn't reach pool-managerd! They might be napping. Trying again in 1s... 😴"
-story: "\"Hello?\" called rbees-orcd. Silence. \"I'll try again soon,\" it decided."
+story: "\"Hello?\" called queen-rbee. Silence. \"I'll try again soon,\" it decided."
 ```
 ### FATAL Examples
 **Policy violation**:
@@ -623,14 +623,14 @@ story: "\"Hello?\" called rbees-orcd. Silence. \"I'll try again soon,\" it decid
 // FATAL: VRAM-only violation
 human: "CRITICAL: VRAM-only policy violated on GPU0: UMA detected. Worker startup aborted."
 cute: "STOP! GPU0 shares memory with CPU (UMA) — we need dedicated VRAM! Shutting down. 🛑"
-story: "\"UMA detected!\" cried worker. \"We can't continue,\" said rbees-orcd gravely. \"Abort.\""
+story: "\"UMA detected!\" cried worker. \"We can't continue,\" said queen-rbee gravely. \"Abort.\""
 ```
 **Data corruption**:
 ```rust
 // FATAL: Seal verification failed
 human: "CRITICAL: Seal verification failed for shard 'llama-7b' on GPU0: digest mismatch (expected: abc123, got: def456)"
 cute: "DANGER! llama-7b's safety seal is wrong! This could be corruption! Stopping everything! 🚨"
-story: "\"The seal doesn't match!\" gasped worker. \"Corruption?\" asked rbees-orcd. \"Possibly. Abort!\""
+story: "\"The seal doesn't match!\" gasped worker. \"Corruption?\" asked queen-rbee. \"Possibly. Abort!\""
 ```
 ---
 ## ✅ Our Recommendations Summary
@@ -671,7 +671,7 @@ story: "\"The seal doesn't match!\" gasped worker. \"Corruption?\" asked rbees-o
    - What output format? (JSON, console, NDJSON?)
    - Any custom fields beyond our taxonomy?
 3. **Rollout Plan**
-   - Which services first? (rbees-orcd, pool-managerd, worker-orcd?)
+   - Which services first? (queen-rbee, pool-managerd, worker-orcd?)
    - Timeline for migration?
    - Backward compatibility needs?
 ### What We'll Provide

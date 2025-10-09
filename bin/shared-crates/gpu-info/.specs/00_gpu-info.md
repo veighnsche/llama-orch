@@ -10,7 +10,7 @@
 
 This crate provides runtime GPU detection and information for all llama-orch services. It enforces GPU-only policy and provides device information for CUDA initialization.
 
-**Used by**: pool-managerd, worker-orcd, vram-residency, rbees-orcd
+**Used by**: pool-managerd, worker-orcd, vram-residency, queen-rbee
 
 ---
 

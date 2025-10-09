@@ -2,7 +2,7 @@
 ## What
 Lock API shapes and error mappings to the spec. Includes SSE frame schemas and pact verifications.
 ## Where
-- `contracts/**`, provider verify tests under `rbees-orcd/tests/` and related crates.
+- `contracts/**`, provider verify tests under `queen-rbee/tests/` and related crates.
 - : `<crate>/.proof_bundle/contract/<run_id>/`.
 ## When
 - Changing API types, SSE frame structure, or error taxonomy.

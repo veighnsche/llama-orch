@@ -84,7 +84,7 @@ pub const ACTION_CANCEL: &str = "cancel";
 
 ### 6. No Correlation ID Propagation Spec
 
-**Missing**: How do correlation IDs flow rbees-orcd → worker-orcd → pool-managerd?
+**Missing**: How do correlation IDs flow queen-rbee → worker-orcd → pool-managerd?
 
 **Fixed**: Integration guide includes:
 - HTTP header extraction: `X-Correlation-Id`
@@ -174,7 +174,7 @@ pub const ACTION_CANCEL: &str = "cancel";
 4. ✅ **Updated README** (`README.md`)
    - Added "Integration Guides" section
    - Linked to worker-orcd guide
-   - Placeholder for future guides (rbees-orcd, pool-managerd)
+   - Placeholder for future guides (queen-rbee, pool-managerd)
 
 5. ✅ **Created planning doc** (`.plan/FT-049-worker-orcd-integration.md`)
    - Narration-core perspective on the story
@@ -243,7 +243,7 @@ These are **worker-orcd Foundation-Alpha's** responsibilities:
 
 ### Medium-Term (Sprint 8)
 
-1. **Narration-Core**: Create integration guides for rbees-orcd and pool-managerd
+1. **Narration-Core**: Create integration guides for queen-rbee and pool-managerd
 2. **All teams**: Adopt narration-core consistently
 3. **PM**: Learn from this experience for future library integration stories
 
@@ -269,7 +269,7 @@ These are **worker-orcd Foundation-Alpha's** responsibilities:
 
 ### Project
 
-- ⏳ Distributed tracing works end-to-end (rbees-orcd → worker-orcd → pool-managerd)
+- ⏳ Distributed tracing works end-to-end (queen-rbee → worker-orcd → pool-managerd)
 - ⏳ Correlation IDs traceable across services
 - ⏳ Debugging is delightful (human-readable stories)
 

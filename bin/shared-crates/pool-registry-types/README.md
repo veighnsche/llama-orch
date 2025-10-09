@@ -2,7 +2,7 @@
 
 **Shared types for pool registry communication in multi-node deployments**
 
-`libs/shared/pool-registry-types` — Common data types used by rbees-orcd (control plane) and pool-managerd (GPU nodes).
+`libs/shared/pool-registry-types` — Common data types used by queen-rbee (control plane) and pool-managerd (GPU nodes).
 
 ---
 
@@ -17,7 +17,7 @@ pool-registry-types provides **shared type definitions** for llama-orch:
 - **Serializable** — All types support serde for HTTP/JSON transport
 - **No business logic** — Pure data types only
 
-**Used by**: `rbees-orcd`, `pool-managerd`, `service-registry`, `node-registration`, `handoff-watcher`
+**Used by**: `queen-rbee`, `pool-managerd`, `service-registry`, `node-registration`, `handoff-watcher`
 
 ---
 

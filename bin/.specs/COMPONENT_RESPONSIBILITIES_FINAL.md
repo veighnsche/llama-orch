@@ -11,23 +11,23 @@
 
 | Binary | Crate | Type | Purpose | Status |
 |--------|-------|------|---------|--------|
-| **rbees-orcd** | bin/rbees-orcd | Daemon (HTTP) | THE BRAIN - routes, schedules, Rhai scripting | M1 ❌ |
-| **rbees-workerd** | bin/rbees-workerd | Daemon (HTTP) | WORKER - loads model, generates tokens | M0 ✅ |
-| **llorch** | bin/rbees-ctl | CLI (SSH) | REMOTE CONTROL - SSH to pools, precise commands | M0 ✅ |
-| **rbees-pool** | bin/rbees-pool | CLI (local) | LOCAL POOL - model catalog, worker spawning | M0 ✅ |
+| **queen-rbee** | bin/queen-rbee | Daemon (HTTP) | THE BRAIN - routes, schedules, Rhai scripting | M1 ❌ |
+| **llm-worker-rbee** | bin/llm-worker-rbee | Daemon (HTTP) | WORKER - loads model, generates tokens | M0 ✅ |
+| **llorch** | bin/rbee-keeper | CLI (SSH) | REMOTE CONTROL - SSH to pools, precise commands | M0 ✅ |
+| **rbee-hive** | bin/rbee-hive | CLI (local) | LOCAL POOL - model catalog, worker spawning | M0 ✅ |
 
 ## Component Responsibilities
 
 | Component | Type | Has Registry? | Has Catalog? | Stateful? |
 |-----------|------|---------------|--------------|-----------|
-| **rbees-orcd** | Daemon | ✅ Worker Registry (global) | ❌ | ✅ YES (SQLite) |
-| **rbees-workerd** | Daemon | ❌ | ❌ | ❌ NO (stateless) |
+| **queen-rbee** | Daemon | ✅ Worker Registry (global) | ❌ | ✅ YES (SQLite) |
+| **llm-worker-rbee** | Daemon | ❌ | ❌ | ❌ NO (stateless) |
 | **llorch** | CLI | ❌ | ❌ | ❌ NO |
-| **rbees-pool** | CLI | ✅ Worker metadata (local) | ✅ Model + Backend Catalog | ❌ NO (filesystem) |
+| **rbee-hive** | CLI | ✅ Worker metadata (local) | ✅ Model + Backend Catalog | ❌ NO (filesystem) |
 
 ---
 
-## rbees-pool (rbees-pool) - Local Pool CLI
+## rbee-hive (rbee-hive) - Local Pool CLI
 
 ### What It Needs (M0):
 
@@ -121,7 +121,7 @@ fn detect_backends() -> Vec<Backend> {
 **Location:** `.runtime/workers/` (PID files + JSON metadata)
 
 **Purpose:**
-- Track workers spawned by THIS rbees-pool
+- Track workers spawned by THIS rbee-hive
 - Kill workers when requested
 - **Kill orphaned workers** (M0 requirement!)
 
@@ -179,13 +179,13 @@ fn kill_orphaned_workers() -> Result<()> {
 **Commands:**
 ```bash
 # List workers (including orphaned)
-rbees-pool worker list
+rbee-hive worker list
 
 # Kill orphaned workers
-rbees-pool worker cleanup
+rbee-hive worker cleanup
 
 # Kill all workers
-rbees-pool worker stop-all
+rbee-hive worker stop-all
 ```
 
 **Status:** ⚠️ PARTIAL (has spawn/stop, needs orphan cleanup)
@@ -243,26 +243,26 @@ async fn handle_cancel(job_id: String) -> Result<()> {
 
 ---
 
-### rbees-pool Summary
+### rbee-hive Summary
 
-**What rbees-pool HAS:**
+**What rbee-hive HAS:**
 - ✅ Model catalog (tracks models)
 - ⏳ Backend catalog (needs implementation)
 - ⏳ Worker registry (local, needs orphan cleanup)
 
-**What rbees-pool DOES NOT HAVE:**
+**What rbee-hive DOES NOT HAVE:**
 - ❌ Global worker registry (that's orchestrator's job)
 - ❌ Stateful database (uses filesystem)
 - ❌ HTTP server (it's a CLI)
 
-**Why rbees-pool is stateless:**
+**Why rbee-hive is stateless:**
 - CLI runs on-demand, exits after command
 - All state in filesystem (catalog.json, worker files)
 - No long-running process
 
 ---
 
-## rbees-orcd - The Brain (HTTP Daemon)
+## queen-rbee - The Brain (HTTP Daemon)
 
 ### What It Needs (M1):
 
@@ -316,7 +316,7 @@ async fn health_check_workers() {
                 if worker.unhealthy_duration() > Duration::from_secs(300) {
                     db.update_worker_status(&worker.id, "dead").await?;
                     
-                    // Optionally: Call rbees-pool to cleanup orphan
+                    // Optionally: Call rbee-hive to cleanup orphan
                     cleanup_orphaned_worker(&worker).await?;
                 }
             }
@@ -324,12 +324,12 @@ async fn health_check_workers() {
     }
 }
 
-// Cleanup orphaned worker via rbees-pool
+// Cleanup orphaned worker via rbee-hive
 async fn cleanup_orphaned_worker(worker: &Worker) -> Result<()> {
     // SSH to pool and run cleanup
     ssh_exec(
         &worker.pool_host,
-        "rbees-pool worker cleanup"
+        "rbee-hive worker cleanup"
     ).await
 }
 ```
@@ -525,7 +525,7 @@ pub enum Role {
 }
 ```
 
-**Usage in rbees-orcd:**
+**Usage in queen-rbee:**
 ```rust
 // When routing to worker
 let constructor = PromptConstructor::new(ChatTemplate::Qwen);
@@ -535,7 +535,7 @@ let formatted_prompt = constructor.format_chat(&request.messages);
 worker.execute(formatted_prompt).await?;
 ```
 
-**Usage in rbees-pool:**
+**Usage in rbee-hive:**
 ```rust
 // When testing locally
 let constructor = PromptConstructor::new(ChatTemplate::Qwen);
@@ -552,27 +552,27 @@ llorch_infer(formatted_prompt).await?;
 
 **Status:** ❌ NOT IMPLEMENTED (M1 task)
 
-**Note:** Both rbees-orcd AND rbees-pool need this!
+**Note:** Both queen-rbee AND rbee-hive need this!
 
 ---
 
-### rbees-orcd Summary
+### queen-rbee Summary
 
-**What rbees-orcd HAS:**
+**What queen-rbee HAS:**
 - ✅ Worker Registry (global, SQLite)
 - ✅ Rhai scripting (user-defined orchestration)
-- ✅ Prompt constructor (shared with rbees-pool)
+- ✅ Prompt constructor (shared with rbee-hive)
 - ✅ HTTP server (client API)
 - ✅ Queue management
 - ✅ Scheduling
 - ✅ SSE relay
 
-**What rbees-orcd DOES NOT HAVE:**
-- ❌ Model catalog (that's rbees-pool's job)
-- ❌ Worker spawning (that's rbees-pool's job)
-- ❌ Model downloads (that's rbees-pool's job)
+**What queen-rbee DOES NOT HAVE:**
+- ❌ Model catalog (that's rbee-hive's job)
+- ❌ Worker spawning (that's rbee-hive's job)
+- ❌ Model downloads (that's rbee-hive's job)
 
-**Why rbees-orcd is stateful:**
+**Why queen-rbee is stateful:**
 - Long-running daemon
 - Maintains worker registry
 - Maintains queue state
@@ -580,7 +580,7 @@ llorch_infer(formatted_prompt).await?;
 
 ---
 
-## rbees-workerd - Worker (HTTP Daemon)
+## llm-worker-rbee - Worker (HTTP Daemon)
 
 ### What It Needs (M0):
 
@@ -702,33 +702,33 @@ async fn handle_cancel(
 
 **WRONG:**
 ```
-rbees-pool has worker registry → tracks all workers
+rbee-hive has worker registry → tracks all workers
 ```
 
 **CORRECT:**
 ```
-rbees-orcd has worker registry → tracks all workers (global)
-rbees-pool has worker metadata → tracks local workers only (for cleanup)
+queen-rbee has worker registry → tracks all workers (global)
+rbee-hive has worker metadata → tracks local workers only (for cleanup)
 ```
 
 **Why:**
-- rbees-orcd is stateful (SQLite)
-- rbees-orcd needs to route requests
-- rbees-pool is stateless (filesystem)
-- rbees-pool only needs to kill local workers
+- queen-rbee is stateful (SQLite)
+- queen-rbee needs to route requests
+- rbee-hive is stateless (filesystem)
+- rbee-hive only needs to kill local workers
 
 ---
 
 ### 2. Orchestrator vs CLI
 
-**rbees-orcd (THE BRAIN):**
+**queen-rbee (THE BRAIN):**
 - ✅ Makes intelligent decisions
 - ✅ Schedules jobs
 - ✅ Routes to workers
 - ✅ User-scriptable (Rhai)
 - ✅ Stateful (SQLite)
 
-**rbees-ctl (PRECISE COMMANDS):**
+**rbee-keeper (PRECISE COMMANDS):**
 - ✅ Executes specific commands
 - ✅ No intelligence
 - ✅ No scheduling
@@ -737,10 +737,10 @@ rbees-pool has worker metadata → tracks local workers only (for cleanup)
 
 **Example:**
 ```bash
-# rbees-ctl: Precise command
+# rbee-keeper: Precise command
 llorch pool worker spawn metal --host mac --model qwen --gpu 0
 
-# rbees-orcd: Smart decision (via Rhai script)
+# queen-rbee: Smart decision (via Rhai script)
 # User writes script:
 fn schedule_job(job, workers) {
     // Orchestrator decides which worker based on:
@@ -762,19 +762,19 @@ fn schedule_job(job, workers) {
 ```
 1. Worker crashes (process dies)
 2. Metadata file remains in .runtime/workers/
-3. rbees-orcd health check fails
-4. rbees-orcd marks worker as "dead" in registry
-5. rbees-orcd calls rbees-pool to cleanup:
-   ssh mac.home.arpa "rbees-pool worker cleanup"
-6. rbees-pool finds orphaned workers (PID dead, file exists)
-7. rbees-pool removes metadata files
-8. rbees-orcd removes worker from registry
+3. queen-rbee health check fails
+4. queen-rbee marks worker as "dead" in registry
+5. queen-rbee calls rbee-hive to cleanup:
+   ssh mac.home.arpa "rbee-hive worker cleanup"
+6. rbee-hive finds orphaned workers (PID dead, file exists)
+7. rbee-hive removes metadata files
+8. queen-rbee removes worker from registry
 ```
 
 **Commands:**
 ```bash
 # Manual cleanup on pool
-rbees-pool worker cleanup
+rbee-hive worker cleanup
 
 # Orchestrator triggers cleanup
 # (happens automatically via health checks)
@@ -788,10 +788,10 @@ rbees-pool worker cleanup
 1. ✅ Model catalog (DONE)
 2. ⏳ Backend catalog (detect available backends)
 3. ⏳ Worker cancellation (POST /cancel endpoint)
-4. ⏳ Orphaned worker cleanup (rbees-pool worker cleanup)
+4. ⏳ Orphaned worker cleanup (rbee-hive worker cleanup)
 
 ### MEDIUM PRIORITY (M1 - After CP4):
-1. ⏳ rbees-orcd HTTP server
+1. ⏳ queen-rbee HTTP server
 2. ⏳ Worker registry (SQLite)
 3. ⏳ Rhai scripting engine
 4. ⏳ Prompt constructor (shared crate)
@@ -805,7 +805,7 @@ rbees-pool worker cleanup
 
 ## Summary Table
 
-| Feature | rbees-pool | rbees-orcd | worker |
+| Feature | rbee-hive | queen-rbee | worker |
 |---------|----------|---------------|--------|
 | Model Catalog | ✅ YES | ❌ NO | ❌ NO |
 | Backend Catalog | ✅ YES | ❌ NO | ❌ NO |
@@ -827,12 +827,12 @@ rbees-pool worker cleanup
 2. ✅ **All machines have CPU**
 3. ✅ **Orphaned workers will happen a lot** (need cleanup)
 4. ✅ **Workers don't have cancellation** (need to add)
-5. ✅ **rbees-orcd needs Rhai** (user-scriptable)
-6. ✅ **rbees-orcd is THE BRAIN** (makes decisions)
-7. ✅ **rbees-ctl has precise commands** (no intelligence)
+5. ✅ **queen-rbee needs Rhai** (user-scriptable)
+6. ✅ **queen-rbee is THE BRAIN** (makes decisions)
+7. ✅ **rbee-keeper has precise commands** (no intelligence)
 8. ✅ **Prompt constructor needed** (chat templates)
-9. ✅ **Worker registry in rbees-orcd ONLY** (not rbees-pool)
-10. ✅ **rbees-orcd is stateful** (SQLite for persistence)
+9. ✅ **Worker registry in queen-rbee ONLY** (not rbee-hive)
+10. ✅ **queen-rbee is stateful** (SQLite for persistence)
 
 ---
 

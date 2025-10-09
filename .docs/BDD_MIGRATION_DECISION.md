@@ -29,10 +29,10 @@ bin/<crate>/
 ```
 
 **Current BDD crates in workspace:**
-- `bin/rbees-orcd/bdd`
+- `bin/queen-rbee/bdd`
 - `bin/pool-managerd/bdd`
 - `bin/worker-orcd/bdd`
-- `bin/rbees-orcd-crates/orchestrator-core/bdd`
+- `bin/queen-rbee-crates/orchestrator-core/bdd`
 - `bin/pool-managerd-crates/model-catalog/bdd`
 - `bin/pool-managerd-crates/model-provisioner/bdd`
 - `bin/shared-crates/audit-logging/bdd`
@@ -85,7 +85,7 @@ Each BDD crate requires:
 Looking at existing patterns:
 
 ```
-bin/rbees-orcd/bdd/           ✅ Tests rbees-orcd binary
+bin/queen-rbee/bdd/           ✅ Tests queen-rbee binary
 bin/pool-managerd/bdd/           ✅ Tests pool-managerd binary
 bin/worker-orcd/bdd/             ✅ Tests worker-orcd binary
 
@@ -94,7 +94,7 @@ bin/shared-crates/input-validation/bdd/ ✅ Tests input-validation library
 ```
 
 **Pattern**: BDD tests exist for:
-- ✅ **Binaries** (rbees-orcd, pool-managerd, worker-orcd)
+- ✅ **Binaries** (queen-rbee, pool-managerd, worker-orcd)
 - ✅ **Critical shared libraries** (audit-logging, input-validation)
 - ❌ **Not for every crate**
 
@@ -252,7 +252,7 @@ Feature: Worker Model Loading
 ## When to Create BDD Tests
 
 ### ✅ Create BDD for:
-- **Binaries** (rbees-orcd, pool-managerd, worker-orcd)
+- **Binaries** (queen-rbee, pool-managerd, worker-orcd)
 - **Critical shared libraries** (audit-logging, input-validation)
 - **Complex workflows** (multi-step processes)
 - **User-facing behavior** (API contracts, error messages)

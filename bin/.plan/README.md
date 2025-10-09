@@ -10,7 +10,7 @@
 
 This directory contains the checkpoint-based work breakdown for TEAM-022's mission to build CLI infrastructure for multi-model testing.
 
-**Context:** TEAM-021 fixed the Metal broadcasting bug. rbees-workerd works correctly. Now we need infrastructure to test multiple models across pools.
+**Context:** TEAM-021 fixed the Metal broadcasting bug. llm-worker-rbee works correctly. Now we need infrastructure to test multiple models across pools.
 
 ---
 
@@ -43,8 +43,8 @@ Each checkpoint represents **1 week of equal work** and ends with a **testable m
 
 ### CP1 Gate
 - [ ] pool-core crate compiles
-- [ ] rbees-pool binary works
-- [ ] rbees-ctl binary works
+- [ ] rbee-hive binary works
+- [ ] rbee-keeper binary works
 - [ ] SSH connectivity verified
 
 ### CP2 Gate
@@ -75,11 +75,11 @@ Each checkpoint represents **1 week of equal work** and ends with a **testable m
 **Data Plane:** HTTP (orchestrator → workers)
 
 **Binaries:**
-- `rbees-pool` - Local pool management (command: `rbees-pool`)
-- `rbees-ctl` - Remote pool control via SSH (command: `rbees`)
-- `rbees-workerd` - Worker daemon (HTTP server, already exists)
+- `rbee-hive` - Local pool management (command: `rbee-hive`)
+- `rbee-keeper` - Remote pool control via SSH (command: `rbee`)
+- `llm-worker-rbee` - Worker daemon (HTTP server, already exists)
 
-**Note:** `worker-orcd` is **DEPRECATED**. We use `rbees-workerd` now.
+**Note:** `worker-orcd` is **DEPRECATED**. We use `llm-worker-rbee` now.
 
 ---
 
@@ -131,7 +131,7 @@ Model Support Matrix
 - `/bin/.specs/COMPLETE_BINARY_ARCHITECTURE.md` - Binary structure
 
 **Handoff:**
-- `/bin/rbees-workerd/.specs/TEAM_022_HANDOFF.md` - Detailed task breakdown from TEAM-021
+- `/bin/llm-worker-rbee/.specs/TEAM_022_HANDOFF.md` - Detailed task breakdown from TEAM-021
 
 **Rules:**
 - `/.windsurf/rules/candled-rules.md` - Team coding standards

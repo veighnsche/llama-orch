@@ -11,8 +11,8 @@
 
 Build the foundational infrastructure:
 1. Create `pool-core` shared crate
-2. Create `rbees-pool` CLI binary
-3. Create `rbees-ctl` CLI binary (minimal SSH wrapper)
+2. Create `rbee-hive` CLI binary
+3. Create `rbee-keeper` CLI binary (minimal SSH wrapper)
 
 **Why This First:** Need basic CLI structure before implementing catalog and automation.
 
@@ -88,9 +88,9 @@ pub struct ModelEntry {
 
 ---
 
-### WU1.2: Create rbees-pool CLI Binary (Day 2-3)
+### WU1.2: Create rbee-hive CLI Binary (Day 2-3)
 
-**Location:** `bin/rbees-pool/`
+**Location:** `bin/rbee-hive/`
 
 **Tasks:**
 1. Create binary structure with clap
@@ -100,26 +100,26 @@ pub struct ModelEntry {
 
 **Files to Create:**
 ```
-bin/rbees-pool/
+bin/rbee-hive/
 ├── Cargo.toml
 ├── README.md
 ├── .specs/
-│   └── 00_rbees-pool.md
+│   └── 00_rbee-hive.md
 └── src/
     ├── main.rs
     ├── cli.rs             # Clap definitions
     └── commands/
         ├── mod.rs
-        ├── models.rs      # rbees-pool models ...
-        ├── worker.rs      # rbees-pool worker ...
-        └── status.rs      # rbees-pool status
+        ├── models.rs      # rbee-hive models ...
+        ├── worker.rs      # rbee-hive worker ...
+        └── status.rs      # rbee-hive status
 ```
 
 **CLI Structure:**
 ```rust
 // cli.rs
 #[derive(Parser)]
-#[command(name = "rbees-pool")]
+#[command(name = "rbee-hive")]
 #[command(about = "Pool manager control CLI")]
 struct Cli {
     #[command(subcommand)]
@@ -162,16 +162,16 @@ enum WorkerAction {
 
 **Success Criteria:**
 - [ ] Binary compiles
-- [ ] `rbees-pool --help` works
-- [ ] `rbees-pool --version` works
-- [ ] `rbees-pool status` shows placeholder message
+- [ ] `rbee-hive --help` works
+- [ ] `rbee-hive --version` works
+- [ ] `rbee-hive status` shows placeholder message
 - [ ] All subcommands show help
 
 ---
 
-### WU1.3: Create rbees-ctl CLI Binary (Day 3-4)
+### WU1.3: Create rbee-keeper CLI Binary (Day 3-4)
 
-**Location:** `bin/rbees-ctl/`
+**Location:** `bin/rbee-keeper/`
 
 **Tasks:**
 1. Create binary structure with clap
@@ -181,18 +181,18 @@ enum WorkerAction {
 
 **Files to Create:**
 ```
-bin/rbees-ctl/
+bin/rbee-keeper/
 ├── Cargo.toml
 ├── README.md
 ├── .specs/
-│   └── 00_rbees-ctl.md
+│   └── 00_rbee-keeper.md
 └── src/
     ├── main.rs
     ├── cli.rs             # Clap definitions
     ├── ssh.rs             # SSH client wrapper
     └── commands/
         ├── mod.rs
-        └── pool.rs        # rbees pool ...
+        └── pool.rs        # rbee pool ...
 ```
 
 **CLI Structure:**
@@ -265,21 +265,21 @@ pub fn execute_remote_command(host: &str, command: &str) -> Result<String> {
 ### WU1.4: Integration Testing (Day 4-5)
 
 **Tasks:**
-1. Test rbees-pool locally
-2. Test rbees-ctl remote execution
+1. Test rbee-hive locally
+2. Test rbee-keeper remote execution
 3. Verify SSH connectivity to all pools
 4. Document usage
 
 **Test Cases:**
 ```bash
-# Local rbees-pool
-rbees-pool --help
-rbees-pool --version
-rbees-pool status
-rbees-pool models --help
-rbees-pool worker --help
+# Local rbee-hive
+rbee-hive --help
+rbee-hive --version
+rbee-hive status
+rbee-hive models --help
+rbee-hive worker --help
 
-# Remote rbees-ctl
+# Remote rbee-keeper
 llorch --help
 llorch --version
 llorch pool status --host mac.home.arpa
@@ -298,8 +298,8 @@ llorch pool status --host workstation.home.arpa
 
 **Tasks:**
 1. Write pool-core README
-2. Write rbees-pool README
-3. Write rbees-ctl README
+2. Write rbee-hive README
+3. Write rbee-keeper README
 4. Update bin/.specs with implementation notes
 
 **Documentation Requirements:**
@@ -323,12 +323,12 @@ llorch pool status --host workstation.home.arpa
 
 ### Compilation
 - [ ] `cargo build --release -p pool-core` succeeds
-- [ ] `cargo build --release -p rbees-pool` succeeds
-- [ ] `cargo build --release -p rbees-ctl` succeeds
+- [ ] `cargo build --release -p rbee-hive` succeeds
+- [ ] `cargo build --release -p rbee-keeper` succeeds
 
 ### Functionality
-- [ ] `rbees-pool --help` shows all commands
-- [ ] `rbees-pool status` runs without error
+- [ ] `rbee-hive --help` shows all commands
+- [ ] `rbee-hive status` runs without error
 - [ ] `llorch --help` shows all commands
 - [ ] `llorch pool status --host mac` executes via SSH
 
@@ -352,15 +352,15 @@ llorch pool status --host workstation.home.arpa
 ## Deliverables
 
 **Binaries:**
-- `target/release/rbees-pool` (rbees-pool)
-- `target/release/llorch` (rbees-ctl)
+- `target/release/rbee-hive` (rbee-hive)
+- `target/release/llorch` (rbee-keeper)
 
 **Crates:**
 - `bin/shared-crates/pool-core/`
 
 **Documentation:**
-- `bin/rbees-pool/README.md`
-- `bin/rbees-ctl/README.md`
+- `bin/rbee-hive/README.md`
+- `bin/rbee-keeper/README.md`
 - `bin/shared-crates/pool-core/README.md`
 
 ---
@@ -381,15 +381,15 @@ anyhow = "1.0"
 thiserror = "1.0"
 ```
 
-**Cargo.toml for rbees-pool:**
+**Cargo.toml for rbee-hive:**
 ```toml
 [package]
-name = "rbees-pool"
+name = "rbee-hive"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "rbees-pool"
+name = "rbee-hive"
 path = "src/main.rs"
 
 [dependencies]
@@ -399,10 +399,10 @@ anyhow = "1.0"
 colored = "2.0"
 ```
 
-**Cargo.toml for rbees-ctl:**
+**Cargo.toml for rbee-keeper:**
 ```toml
 [package]
-name = "rbees-ctl"
+name = "rbee-keeper"
 version = "0.1.0"
 edition = "2021"
 

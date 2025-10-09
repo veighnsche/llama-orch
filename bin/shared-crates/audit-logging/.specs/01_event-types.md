@@ -18,11 +18,11 @@ This document specifies all audit event types that `audit-logging` must support 
 
 | Category | Event Count | Priority | Consumers |
 |----------|-------------|----------|-----------|
-| **Authentication** | 4 | P0 | rbees-orcd, pool-managerd, worker-orcd |
-| **Authorization** | 3 | P0 | rbees-orcd, pool-managerd |
-| **Resource Operations** | 8 | P1 | rbees-orcd, pool-managerd |
+| **Authentication** | 4 | P0 | queen-rbee, pool-managerd, worker-orcd |
+| **Authorization** | 3 | P0 | queen-rbee, pool-managerd |
+| **Resource Operations** | 8 | P1 | queen-rbee, pool-managerd |
 | **VRAM Operations** | 6 | P0 | worker-orcd, vram-residency |
-| **Data Access** | 3 | P1 | rbees-orcd (GDPR) |
+| **Data Access** | 3 | P1 | queen-rbee (GDPR) |
 | **Security Incidents** | 5 | P0 | All services |
 | **Compliance** | 3 | P2 | Platform mode |
 
@@ -43,7 +43,7 @@ pub struct AuthSuccess {
     pub actor: ActorInfo,
     pub method: AuthMethod,  // BearerToken, ApiKey, mTLS
     pub path: String,        // Endpoint accessed
-    pub service_id: String,  // "rbees-orcd", "pool-managerd"
+    pub service_id: String,  // "queen-rbee", "pool-managerd"
 }
 ```
 
@@ -53,7 +53,7 @@ pub struct AuthSuccess {
   "audit_id": "audit-2025-1001-164805-abc123",
   "timestamp": "2025-10-01T16:48:05Z",
   "event_type": "auth.success",
-  "service_id": "rbees-orcd",
+  "service_id": "queen-rbee",
   "event": {
     "actor": {
       "user_id": "admin@llorch.io",
@@ -93,7 +93,7 @@ pub struct AuthFailure {
   "audit_id": "audit-2025-1001-164810-def456",
   "timestamp": "2025-10-01T16:48:10Z",
   "event_type": "auth.failure",
-  "service_id": "rbees-orcd",
+  "service_id": "queen-rbee",
   "event": {
     "attempted_user": null,
     "reason": "invalid_token",
@@ -130,7 +130,7 @@ pub struct TokenCreated {
   "audit_id": "audit-2025-1001-164815-ghi789",
   "timestamp": "2025-10-01T16:48:15Z",
   "event_type": "token.created",
-  "service_id": "rbees-orcd",
+  "service_id": "queen-rbee",
   "event": {
     "actor": {
       "user_id": "admin@llorch.io",
@@ -755,19 +755,19 @@ pub struct GdprRightToErasure {
 |------------|----------|----------|----------|
 | `auth.success` | Authentication | P0 | All services |
 | `auth.failure` | Authentication | P0 | All services |
-| `token.created` | Authentication | P1 | rbees-orcd |
-| `token.revoked` | Authentication | P1 | rbees-orcd |
+| `token.created` | Authentication | P1 | queen-rbee |
+| `token.revoked` | Authentication | P1 | queen-rbee |
 | `authz.granted` | Authorization | P1 | All services |
 | `authz.denied` | Authorization | P0 | All services |
-| `authz.permission_changed` | Authorization | P1 | rbees-orcd |
+| `authz.permission_changed` | Authorization | P1 | queen-rbee |
 | `pool.created` | Resource Ops | P1 | pool-managerd |
 | `pool.deleted` | Resource Ops | P1 | pool-managerd |
 | `pool.modified` | Resource Ops | P2 | pool-managerd |
-| `node.registered` | Resource Ops | P1 | rbees-orcd |
-| `node.deregistered` | Resource Ops | P1 | rbees-orcd |
-| `task.submitted` | Resource Ops | P1 | rbees-orcd |
-| `task.completed` | Resource Ops | P1 | rbees-orcd |
-| `task.canceled` | Resource Ops | P2 | rbees-orcd |
+| `node.registered` | Resource Ops | P1 | queen-rbee |
+| `node.deregistered` | Resource Ops | P1 | queen-rbee |
+| `task.submitted` | Resource Ops | P1 | queen-rbee |
+| `task.completed` | Resource Ops | P1 | queen-rbee |
+| `task.canceled` | Resource Ops | P2 | queen-rbee |
 | `vram.sealed` | VRAM Ops | P0 | worker-orcd |
 | `seal.verified` | VRAM Ops | P0 | worker-orcd |
 | `seal.verification_failed` | VRAM Ops | P0 | worker-orcd |
@@ -779,9 +779,9 @@ pub struct GdprRightToErasure {
 | `security.invalid_token_used` | Security | P0 | All services |
 | `security.policy_violation` | Security | P0 | worker-orcd |
 | `security.suspicious_activity` | Security | P1 | All services |
-| `data.inference_executed` | GDPR | P1 | rbees-orcd |
-| `data.model_accessed` | GDPR | P1 | rbees-orcd |
-| `data.deleted` | GDPR | P1 | rbees-orcd |
+| `data.inference_executed` | GDPR | P1 | queen-rbee |
+| `data.model_accessed` | GDPR | P1 | queen-rbee |
+| `data.deleted` | GDPR | P1 | queen-rbee |
 | `compliance.gdpr_data_access_request` | Compliance | P2 | Platform |
 | `compliance.gdpr_data_export` | Compliance | P2 | Platform |
 | `compliance.gdpr_right_to_erasure` | Compliance | P2 | Platform |

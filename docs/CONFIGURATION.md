@@ -28,7 +28,7 @@ ORCHESTRATORD_CLOUD_PROFILE=true
 
 ---
 
-## rbees-orcd Configuration
+## queen-rbee Configuration
 
 ### Core Settings
 
@@ -105,7 +105,7 @@ ORCHESTRATORD_CLOUD_PROFILE=true
 - **Type**: String (path)
 - **Default**: `.runtime/engines`
 - **Description**: Directory where engine handoff files are written
-- **Notes**: Must be accessible to both rbees-orcd and engine-provisioner
+- **Notes**: Must be accessible to both queen-rbee and engine-provisioner
 - **Example**:
   ```bash
   ORCHD_RUNTIME_DIR=/var/lib/llama-orch/engines
@@ -182,7 +182,7 @@ ORCHESTRATORD_CLOUD_PROFILE=true
 - **Description**: Logging verbosity
 - **Example**:
   ```bash
-  RUST_LOG=info,rbees-orcd=debug
+  RUST_LOG=info,queen-rbee=debug
   ```
 
 ---
@@ -217,26 +217,26 @@ ORCHESTRATORD_CLOUD_PROFILE=true
 - **Type**: String (URL)
 - **Default**: None
 - **Required**: Yes (for CLOUD_PROFILE)
-- **Description**: URL of rbees-orcd control plane
+- **Description**: URL of queen-rbee control plane
 - **Example**:
   ```bash
-  ORCHESTRATORD_URL=http://rbees-orcd:8080
+  ORCHESTRATORD_URL=http://queen-rbee:8080
   ```
 
 #### LLORCH_API_TOKEN
 - **Type**: String
 - **Default**: None
 - **Required**: Yes (for CLOUD_PROFILE)
-- **Description**: Same Bearer token as rbees-orcd
+- **Description**: Same Bearer token as queen-rbee
 - **Example**:
   ```bash
-  LLORCH_API_TOKEN=<same-token-as-rbees-orcd>
+  LLORCH_API_TOKEN=<same-token-as-queen-rbee>
   ```
 
 #### POOL_MANAGERD_HEARTBEAT_INTERVAL_SECS
 - **Type**: Integer (seconds)
 - **Default**: `10`
-- **Description**: Interval for sending heartbeats to rbees-orcd
+- **Description**: Interval for sending heartbeats to queen-rbee
 - **Range**: `1` to `60`
 - **Notes**: Should be less than `ORCHESTRATORD_NODE_TIMEOUT_MS / 1000`
 - **Example**:
@@ -371,7 +371,7 @@ ORCHESTRATORD_CLOUD_PROFILE=true
 ### HOME_PROFILE (Single Machine)
 
 ```bash
-# rbees-orcd
+# queen-rbee
 ORCHD_ADDR=127.0.0.1:8080
 ORCHD_RUNTIME_DIR=.runtime/engines
 ORCHD_ADMISSION_CAPACITY=100
@@ -390,7 +390,7 @@ ENGINE_PROVISIONER_HANDOFF_DIR=.runtime/engines
 
 **Control Plane Node** (no GPU):
 ```bash
-# rbees-orcd
+# queen-rbee
 ORCHESTRATORD_CLOUD_PROFILE=true
 ORCHESTRATORD_BIND_ADDR=0.0.0.0:8080
 LLORCH_API_TOKEN=abc123def456789...
@@ -399,7 +399,7 @@ ORCHESTRATORD_PLACEMENT_STRATEGY=least-loaded
 ORCHD_ADMISSION_CAPACITY=500
 OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4317
 PROMETHEUS_METRICS_PORT=9090
-RUST_LOG=info,rbees-orcd=debug
+RUST_LOG=info,queen-rbee=debug
 ```
 
 **GPU Worker Node 1**:
@@ -436,7 +436,7 @@ ENGINE_PROVISIONER_GPU_MASK=1
 
 ### Startup Validation
 
-rbees-orcd and pool-managerd validate configuration on startup and will refuse to start if:
+queen-rbee and pool-managerd validate configuration on startup and will refuse to start if:
 
 - Required environment variables are missing (CLOUD_PROFILE mode)
 - Invalid values for type or range
@@ -462,7 +462,7 @@ Configuration is immutable after startup. Changes require service restart.
    - Never commit tokens to version control
    - Rotate tokens periodically
 
-3. **Distribution**: Same token must be configured on rbees-orcd and all pool-managerd instances
+3. **Distribution**: Same token must be configured on queen-rbee and all pool-managerd instances
 
 ### Network Binding
 
@@ -497,8 +497,8 @@ Configuration is immutable after startup. Changes require service restart.
 echo $LLORCH_API_TOKEN  # on control plane
 echo $LLORCH_API_TOKEN  # on worker node
 
-# Check rbees-orcd logs for token fingerprint
-journalctl -u rbees-orcd | grep token_fp6
+# Check queen-rbee logs for token fingerprint
+journalctl -u queen-rbee | grep token_fp6
 ```
 
 **Solution**: Ensure same token is configured on all nodes
@@ -512,13 +512,13 @@ journalctl -u rbees-orcd | grep token_fp6
 # Check if node is attempting registration
 journalctl -u pool-managerd | grep registration
 
-# Check rbees-orcd received registration
-journalctl -u rbees-orcd | grep node_registration
+# Check queen-rbee received registration
+journalctl -u queen-rbee | grep node_registration
 ```
 
 **Solution**: 
 - Verify `ORCHESTRATORD_URL` is correct
-- Check network connectivity: `curl http://rbees-orcd:8080/v2/meta/capabilities`
+- Check network connectivity: `curl http://queen-rbee:8080/v2/meta/capabilities`
 - Verify API token matches
 
 ---

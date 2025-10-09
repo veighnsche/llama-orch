@@ -1819,7 +1819,7 @@ Worker-orcd MUST return errors via SSE `error` event:
 **Fields**:
 - `code` — Stable error code
 - `message` — Human-readable description
-- `retriable` — Boolean (true if rbees-orcd can retry)
+- `retriable` — Boolean (true if queen-rbee can retry)
 **Spec Reference**: WORK-3091
 ---
 ## 10. Performance Requirements

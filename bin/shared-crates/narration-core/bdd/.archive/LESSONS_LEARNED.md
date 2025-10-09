@@ -2,9 +2,9 @@
 **Date**: 2025-09-30 23:17  
 **Source**: Analysis of BDD_WIRING.md and existing BDD implementations
 ## Key Discovery: The World Struct Pattern
-### ✅ Correct Pattern (from rbees-orcd and )
+### ✅ Correct Pattern (from queen-rbee and )
 ```rust
-// rbees-orcd/bdd/src/steps/world.rs
+// queen-rbee/bdd/src/steps/world.rs
 #[derive(cucumber::World)]
 pub struct World {
     facts: Vec<serde_json::Value>,
@@ -34,7 +34,7 @@ pub struct BddWorld {
 ```
 ## Critical Rules for Regex in Step Definitions
 ### ✅ CORRECT: Plain regex strings (no escaping needed)
-From rbees-orcd/bdd examples:
+From queen-rbee/bdd examples:
 ```rust
 #[when(regex = "^I create a model with id (.+) and digest (.+)$")]
 pub async fn when_create_model_with_digest(world: &mut World, id: String, digest: String) {
@@ -88,7 +88,7 @@ async fn main() {
 ### Problem
 `CaptureAdapter` doesn't implement `Debug`, so we can't use `#[derive(Debug)]` on World.
 ### Solution Options
-**Option 1**: Manual Debug Implementation (rbees-orcd pattern)
+**Option 1**: Manual Debug Implementation (queen-rbee pattern)
 ```rust
 #[derive(cucumber::World)]
 pub struct World {
@@ -188,6 +188,6 @@ Just use **plain strings with capture groups** - no quotes around the captured v
 1. ✅ Fix World struct: Add manual Debug impl
 2. ✅ Fix all regex patterns: Use plain strings, remove quotes from regex
 3. ✅ Update Cargo.toml: Add tokio features
-4. ✅ Verify against working examples (rbees-orcd, )
+4. ✅ Verify against working examples (queen-rbee, )
 5. ✅ Run `cargo build` to confirm compilation
 6. ✅ Run `cargo run -p observability-narration-core-bdd` to execute tests

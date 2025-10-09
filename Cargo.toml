@@ -8,10 +8,10 @@ members = [
     # MAIN SERVICES — Core Binaries
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
-    "bin/rbees-workerd",          # Worker daemon (inference execution)
-    "bin/rbees-ctl",              # Orchestrator CLI (remote control)
-    "bin/rbees-pool",             # Pool CLI (local pool management)
-    "bin/rbees-orcd",             # Orchestrator daemon (M1+)
+    "bin/llm-worker-rbee",        # LLM worker daemon (inference execution)
+    "bin/rbee-keeper",            # Orchestrator CLI (remote control, binary: rbee)
+    "bin/rbee-hive",              # Pool manager (local pool management)
+    "bin/queen-rbee",             # Orchestrator daemon (M1+)
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # SHARED CRATES — Cross-Service Utilities

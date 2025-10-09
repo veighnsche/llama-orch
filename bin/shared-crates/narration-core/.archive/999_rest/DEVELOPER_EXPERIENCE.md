@@ -23,7 +23,7 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
 ```
 
 **What our custom macro does automatically**:
-- ✅ Auto-infers actor from module path (e.g., "rbees-orcd")
+- ✅ Auto-infers actor from module path (e.g., "queen-rbee")
 - ✅ Traces function entry with all parameters
 - ✅ Traces function exit with result/error
 - ✅ Measures execution time
@@ -33,8 +33,8 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
 
 **Output**:
 ```
-TRACE rbees-orcd dispatch_job job_id="job-123" pool_id="default" "dispatch_job started"
-TRACE rbees-orcd dispatch_job result="worker-gpu0-r1" elapsed_ms=15 "dispatch_job completed"
+TRACE queen-rbee dispatch_job job_id="job-123" pool_id="default" "dispatch_job started"
+TRACE queen-rbee dispatch_job result="worker-gpu0-r1" elapsed_ms=15 "dispatch_job completed"
 ```
 
 ---
@@ -76,7 +76,7 @@ fn accept_job(job_id: &str, correlation_id: &str) -> Result<()> {
     queue.push(job_id)?;
     
     narrate(NarrationFields {
-        actor: "rbees-orcd",
+        actor: "queen-rbee",
         action: "accept",
         target: job_id.to_string(),
         human: "Accepted request; queued at position 3 (ETA 420 ms)".to_string(),
@@ -164,7 +164,7 @@ fn accept_job(job: Job, correlation_id: &str) -> Result<()> {
     
     // Full narration with cute mode
     narrate(NarrationFields {
-        actor: "rbees-orcd",
+        actor: "queen-rbee",
         action: "accept",
         target: job.id.to_string(),
         human: format!("Accepted request; queued at position {} (ETA {} ms)", position, eta_ms),
@@ -225,7 +225,7 @@ for worker in workers {
 
 // After
 for (i, worker) in workers.iter().enumerate() {
-    trace_loop!("rbees-orcd", "select_worker", i, workers.len(),
+    trace_loop!("queen-rbee", "select_worker", i, workers.len(),
                 format!("worker={}, available={}", worker.id, worker.is_available()));
     
     if worker.is_available() {
@@ -247,7 +247,7 @@ log::info!("Job accepted: {}", job_id);
 
 // After
 narrate(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "accept",
     target: job_id.to_string(),
     human: format!("Accepted request; queued at position {}", position),
@@ -261,7 +261,7 @@ narrate(NarrationFields {
 
 ## 📏 Guidelines by Service
 
-### rbees-orcd
+### queen-rbee
 
 **Use `#[trace_fn]` for**:
 - ✅ `dispatch_job()`
@@ -324,13 +324,13 @@ narrate(NarrationFields {
 **Before** (manual tracing):
 ```rust
 fn dispatch_job(job_id: &str) -> Result<WorkerId> {
-    trace_enter!("rbees-orcd", "dispatch_job", format!("job_id={}", job_id));
+    trace_enter!("queen-rbee", "dispatch_job", format!("job_id={}", job_id));
     
     let start = Instant::now();
     let worker = select_worker()?;
     let elapsed_ms = start.elapsed().as_millis();
     
-    trace_exit!("rbees-orcd", "dispatch_job", 
+    trace_exit!("queen-rbee", "dispatch_job", 
                 format!("→ {} ({}ms)", worker.id, elapsed_ms));
     
     Ok(worker.id)
@@ -360,10 +360,10 @@ fn dispatch_job(job_id: &str) -> Result<WorkerId> {
 
 ```bash
 $ RUST_LOG=trace cargo run
-TRACE rbees-orcd dispatch_job job_id="job-123" "dispatch_job started"
-TRACE rbees-orcd select_worker pool_id="default" "select_worker started"
-TRACE rbees-orcd select_worker result="worker-gpu0-r1" elapsed_ms=5 "select_worker completed"
-TRACE rbees-orcd dispatch_job result="worker-gpu0-r1" elapsed_ms=15 "dispatch_job completed"
+TRACE queen-rbee dispatch_job job_id="job-123" "dispatch_job started"
+TRACE queen-rbee select_worker pool_id="default" "select_worker started"
+TRACE queen-rbee select_worker result="worker-gpu0-r1" elapsed_ms=5 "select_worker completed"
+TRACE queen-rbee dispatch_job result="worker-gpu0-r1" elapsed_ms=15 "dispatch_job completed"
 ```
 
 **Developer reaction**: 🤯 "This is amazing!"
@@ -436,7 +436,7 @@ fn decode_tokens(tokens: &[i32]) -> Result<String> {
 ```rust
 // ❌ WRONG: No correlation ID
 narrate(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "dispatch",
     target: job_id.to_string(),
     human: "Dispatching job".to_string(),
@@ -448,7 +448,7 @@ narrate(NarrationFields {
 **Fix**: Always propagate correlation IDs
 ```rust
 narrate(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "dispatch",
     target: job_id.to_string(),
     human: "Dispatching job".to_string(),

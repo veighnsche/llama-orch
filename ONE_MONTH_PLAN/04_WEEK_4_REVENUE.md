@@ -658,9 +658,9 @@ Vince
 30-Day Results:
 
 Technical:
-- rbees-orcd: ✅ Working
-- rbees-pool: ✅ Working
-- rbees-ctl: ✅ Working
+- queen-rbee: ✅ Working
+- rbee-hive: ✅ Working
+- rbee-keeper: ✅ Working
 - EU audit: ✅ Working
 - Web UI: ✅ Working
 
@@ -748,7 +748,7 @@ Keep shipping. 🚀
 
 ## 30-Day Success Criteria
 
-- [ ] Working product (rbees-orcd + CLIs + UI)
+- [ ] Working product (queen-rbee + CLIs + UI)
 - [ ] EU compliance (audit toggle, GDPR endpoints)
 - [ ] Landing page live
 - [ ] 30+ outreach emails sent

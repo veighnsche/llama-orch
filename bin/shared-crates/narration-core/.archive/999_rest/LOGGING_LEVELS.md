@@ -69,7 +69,7 @@ NarrationPolicy::set_level(NarrationLevel::Mute);
 
 // All narration calls are now no-ops
 narrate(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "process",
     target: "secret-job".to_string(),
     human: "Processing sensitive data".to_string(),
@@ -131,7 +131,7 @@ buggy_function_that_logs_too_much().await?;
 ```rust
 // INFO is the default level
 narrate(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "accept",
     target: "job-123".to_string(),
     human: "Accepted request; queued at position 3 (ETA 420 ms) on pool 'default'".to_string(),
@@ -213,7 +213,7 @@ human: "Error occurred"
 ```rust
 // WARN-level narration
 narrate_warn(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "retry",
     target: "job-123".to_string(),
     human: "Retrying job-123 after timeout (attempt 2/5, backoff: 200ms)".to_string(),
@@ -314,7 +314,7 @@ narrate_error(NarrationFields {
 // VRAM allocation failure
 human: "VRAM allocation failed on GPU0: requested 4096MB, only 2048MB available"
 cute: "Oh no! GPU0 doesn't have enough room (need 4GB, only 2GB free). 😟"
-story: "\"Do you have 4GB?\" asked rbees-orcd. \"No,\" replied GPU0 sadly, \"only 2GB free.\""
+story: "\"Do you have 4GB?\" asked queen-rbee. \"No,\" replied GPU0 sadly, \"only 2GB free.\""
 
 // Validation failure
 human: "Job validation failed: model 'gpt-5' not found in catalog (available: llama-7b, phi-3)"
@@ -390,7 +390,7 @@ narrate_fatal(NarrationFields {
 // Policy violation
 human: "CRITICAL: VRAM-only policy violated on GPU0: UMA detected. Worker startup aborted."
 cute: "STOP! GPU0 shares memory with CPU (UMA) — we need dedicated VRAM! Shutting down. 🛑"
-story: "\"UMA detected!\" cried worker. \"We can't continue,\" said rbees-orcd gravely. \"Abort.\""
+story: "\"UMA detected!\" cried worker. \"We can't continue,\" said queen-rbee gravely. \"Abort.\""
 
 // Data corruption
 human: "CRITICAL: Seal verification failed for shard 'llama-7b' on GPU0: digest mismatch (expected: abc123, got: def456)"
@@ -440,7 +440,7 @@ cute: "SECURITY ALERT! Someone tried to access us without permission! Shutting d
 ```rust
 // DEBUG-level narration
 narrate_debug(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "select_pool",
     target: "default".to_string(),
     human: "Choosing pool 'default' (3 workers available, 1 busy, 2 idle)".to_string(),
@@ -521,7 +521,7 @@ human: "Job completed successfully"
 ```rust
 // TRACE-level narration
 narrate_trace(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "validate",
     target: "job-123".to_string(),
     human: "Validating job field 'model_ref': value='llama-7b', result=OK".to_string(),
@@ -733,7 +733,7 @@ let _guard = NarrationPolicy::with_level(NarrationLevel::Trace, || {
 
 ```rust
 // Enable DEBUG for specific module
-narration_core::module_level("rbees-orcd::admission", NarrationLevel::Debug);
+narration_core::module_level("queen-rbee::admission", NarrationLevel::Debug);
 
 // Enable TRACE for specific function
 narration_core::function_level("dispatch_job", NarrationLevel::Trace);
@@ -822,7 +822,7 @@ fn test_trace_level_events() {
 
 ## 📚 Examples by Service
 
-### rbees-orcd
+### queen-rbee
 
 **INFO**:
 ```rust
@@ -1041,7 +1041,7 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
 
 // User-facing events: use #[narrate(...)] with templates!
 #[narrate(
-    actor = "rbees-orcd",  // Or auto-inferred!
+    actor = "queen-rbee",  // Or auto-inferred!
     action = "accept",
     human = "Accepted job {job_id} at position {position}",
     cute = "Orchestratord welcomes job-{job_id}! 🎫"

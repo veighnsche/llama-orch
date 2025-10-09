@@ -50,7 +50,7 @@ test result: ok. 47 passed; 0 failed; 0 ignored
 - ✅ Visibility preservation (2 tests)
 - ✅ Complex types (2 tests)
 #### `tests/test_actor_inference.rs` (13 tests)
-- ✅ `rbees-orcd` module detection (2 tests)
+- ✅ `queen-rbee` module detection (2 tests)
 - ✅ `pool_managerd` module detection (2 tests)
 - ✅ `worker_orcd` module detection (2 tests)
 - ✅ `vram_residency` module detection (2 tests)
@@ -207,7 +207,7 @@ Create `.specs/00_narration-macros.md`:
 **NM-2003**: Templates MUST be validated at compile time.
 ### Actor Inference (NM-3000 series)
 **NM-3001**: The system MUST infer actor from module path using `module_path!()`.
-**NM-3002**: The system MUST recognize `rbees-orcd`, `pool_managerd`, `worker_orcd`, `vram_residency`.
+**NM-3002**: The system MUST recognize `queen-rbee`, `pool_managerd`, `worker_orcd`, `vram_residency`.
 **NM-3003**: The system MUST fall back to `"unknown"` for unrecognized modules.
 ```
 **Severity**: MEDIUM (monorepo standard, but not critical)

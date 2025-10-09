@@ -19,7 +19,7 @@ You have **11 shared crates** ready to use:
 - Hash chain integrity
 - Async, non-blocking
 
-**Use in rbees-orcd:**
+**Use in queen-rbee:**
 ```rust
 use audit_logging::{AuditLogger, AuditConfig, AuditMode, FlushMode};
 
@@ -29,7 +29,7 @@ let audit_logger = if env::var("LLORCH_EU_AUDIT")? == "true" {
         mode: AuditMode::Local {
             base_dir: PathBuf::from("/var/log/llorch/audit"),
         },
-        service_id: "rbees-orcd".to_string(),
+        service_id: "queen-rbee".to_string(),
         rotation_policy: RotationPolicy::Daily,
         retention_policy: RetentionPolicy::default(),
         flush_mode: FlushMode::Immediate,  // Compliance-safe
@@ -38,7 +38,7 @@ let audit_logger = if env::var("LLORCH_EU_AUDIT")? == "true" {
     // Homelab mode - zero overhead
     AuditLogger::new(AuditConfig {
         mode: AuditMode::Disabled,
-        service_id: "rbees-orcd".to_string(),
+        service_id: "queen-rbee".to_string(),
         ..Default::default()
     })?
 };
@@ -54,7 +54,7 @@ audit_logger.emit(AuditEvent::TaskSubmitted {
     task_id: job_id.clone(),
     model_ref: req.model.clone(),
     prompt_length: req.prompt.len(),
-    service_id: "rbees-orcd".to_string(),
+    service_id: "queen-rbee".to_string(),
 })?;
 ```
 
@@ -66,7 +66,7 @@ audit_logger.emit(AuditEvent::TaskSubmitted {
 - Timing-safe comparisons
 - Token validation
 
-**Use in rbees-orcd:**
+**Use in queen-rbee:**
 ```rust
 use auth_min::{fingerprint_token, validate_bearer_token};
 
@@ -94,7 +94,7 @@ if !validate_bearer_token(&bearer_token, &expected_token) {
 - Path validation
 - SQL injection prevention
 
-**Use in rbees-orcd:**
+**Use in queen-rbee:**
 ```rust
 use input_validation::sanitize_string;
 
@@ -117,7 +117,7 @@ audit_logger.emit(AuditEvent::TaskSubmitted {
 - File-based secrets
 - Encryption at rest
 
-**Use in rbees-orcd:**
+**Use in queen-rbee:**
 ```rust
 use secrets_management::load_secret;
 
@@ -133,7 +133,7 @@ let api_key = load_secret("LLORCH_API_KEY")?;
 - Correlation IDs
 - Performance tracking
 
-**Use in rbees-orcd:**
+**Use in queen-rbee:**
 ```rust
 use narration_core::{narrate, NarrationEvent};
 
@@ -186,7 +186,7 @@ narrate(NarrationEvent::JobDispatched {
 
 ## Week 1 Implementation (Using Existing Crates)
 
-### Day 1: rbees-orcd
+### Day 1: queen-rbee
 
 **Add dependencies:**
 ```toml
@@ -244,7 +244,7 @@ async fn main() -> Result<()> {
             mode: AuditMode::Local {
                 base_dir: PathBuf::from("/var/log/llorch/audit"),
             },
-            service_id: "rbees-orcd".to_string(),
+            service_id: "queen-rbee".to_string(),
             rotation_policy: RotationPolicy::Daily,
             retention_policy: RetentionPolicy::default(),
             flush_mode: FlushMode::Immediate,
@@ -253,7 +253,7 @@ async fn main() -> Result<()> {
         tracing::info!("🏠 Homelab mode (audit disabled)");
         AuditLogger::new(AuditConfig {
             mode: AuditMode::Disabled,
-            service_id: "rbees-orcd".to_string(),
+            service_id: "queen-rbee".to_string(),
             ..Default::default()
         })?
     };
@@ -299,7 +299,7 @@ async fn submit_task(
         task_id: job_id.clone(),
         model_ref: safe_model.clone(),
         prompt_length: safe_prompt.len(),
-        service_id: "rbees-orcd".to_string(),
+        service_id: "queen-rbee".to_string(),
     })?;
     
     // Narration (existing crate!)
@@ -386,7 +386,7 @@ pub async fn gdpr_delete(
         customer_id: req.user_id.clone(),
         reason: req.reason.clone(),
         completed_at: Utc::now(),
-        service_id: "rbees-orcd".to_string(),
+        service_id: "queen-rbee".to_string(),
     })?;
     
     Ok(Json(DeleteResponse {
@@ -409,7 +409,7 @@ pub async fn gdpr_delete(
 
 ### Week 1: Foundation
 
-**Day 1: rbees-orcd**
+**Day 1: queen-rbee**
 - ✅ Use `audit-logging` crate (already exists!)
 - ✅ Use `auth-min` crate (already exists!)
 - ✅ Use `input-validation` crate (already exists!)
@@ -418,12 +418,12 @@ pub async fn gdpr_delete(
 - ⬜ Implement job queue (in-memory)
 - ⬜ Implement worker registry (in-memory)
 
-**Day 2: rbees-pool**
+**Day 2: rbee-hive**
 - ⬜ Implement CLI (clap)
 - ⬜ Implement model download (hf CLI wrapper)
 - ⬜ Implement worker spawn
 
-**Day 3: rbees-ctl**
+**Day 3: rbee-keeper**
 - ⬜ Implement CLI (clap)
 - ⬜ Implement SSH commands
 - ⬜ Implement job submission
@@ -432,7 +432,7 @@ pub async fn gdpr_delete(
 
 **Day 8: Audit Toggle**
 - ✅ Already implemented in `audit-logging` crate!
-- ⬜ Wire up to rbees-orcd
+- ⬜ Wire up to queen-rbee
 - ⬜ Test Disabled vs Local modes
 
 **Day 9: GDPR Endpoints**
@@ -485,9 +485,9 @@ pub async fn gdpr_delete(
 ## Updated Timeline (Faster!)
 
 ### Week 1: 3 days instead of 5
-- Day 1: rbees-orcd (use existing crates)
-- Day 2: rbees-pool
-- Day 3: rbees-ctl
+- Day 1: queen-rbee (use existing crates)
+- Day 2: rbee-hive
+- Day 3: rbee-keeper
 - Days 4-5: Integration + buffer
 
 ### Week 2: 2 days instead of 5
@@ -523,9 +523,9 @@ pub async fn gdpr_delete(
 - ❌ Observability
 
 **You ONLY need to build:**
-- ✅ rbees-orcd HTTP server
-- ✅ rbees-pool CLI
-- ✅ rbees-ctl CLI
+- ✅ queen-rbee HTTP server
+- ✅ rbee-hive CLI
+- ✅ rbee-keeper CLI
 - ✅ Web UI
 - ✅ Wire up existing crates
 

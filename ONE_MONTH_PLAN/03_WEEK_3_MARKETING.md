@@ -498,7 +498,7 @@ useHead({
 npm run build
 
 # Deploy to Netlify/Vercel
-# Or serve from rbees-orcd
+# Or serve from queen-rbee
 ```
 
 **Task 5: Final polish (1 hour)**

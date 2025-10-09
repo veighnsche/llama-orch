@@ -97,9 +97,9 @@ Audit logging **must not block operations**:
 |----------|-------------|----------|-----------|
 | **Authentication** | 4 | P0 | All services |
 | **Authorization** | 3 | P0 | All services |
-| **Resource Operations** | 8 | P1 | rbees-orcd, pool-managerd |
+| **Resource Operations** | 8 | P1 | queen-rbee, pool-managerd |
 | **VRAM Operations** | 6 | P0 | worker-orcd, vram-residency |
-| **Data Access** | 3 | P1 | rbees-orcd (GDPR) |
+| **Data Access** | 3 | P1 | queen-rbee (GDPR) |
 | **Security Incidents** | 5 | P0 | All services |
 | **Compliance** | 3 | P2 | Platform mode |
 
@@ -114,7 +114,7 @@ See **[10-event-types.md](./10-event-types.md)** for complete list.
 ### Local Mode (Single-Node)
 
 ```
-rbees-orcd/pool-managerd/worker-orcd
+queen-rbee/pool-managerd/worker-orcd
          ↓
     audit-logging crate
          ↓
@@ -224,9 +224,9 @@ use audit_logging::{AuditLogger, AuditConfig};
 
 let logger = AuditLogger::new(AuditConfig {
     mode: AuditMode::Local {
-        base_dir: PathBuf::from("/var/lib/llorch/audit/rbees-orcd"),
+        base_dir: PathBuf::from("/var/lib/llorch/audit/queen-rbee"),
     },
-    service_id: "rbees-orcd".to_string(),
+    service_id: "queen-rbee".to_string(),
     rotation_policy: RotationPolicy::Daily,
     retention_policy: RetentionPolicy::default(),
 })?;
@@ -245,7 +245,7 @@ logger.emit(AuditEvent::AuthSuccess {
     },
     method: AuthMethod::BearerToken,
     path: "/v2/tasks".to_string(),
-    service_id: "rbees-orcd".to_string(),
+    service_id: "queen-rbee".to_string(),
 }).await?;
 ```
 
@@ -298,7 +298,7 @@ See **[30-security-and-api.md](./30-security-and-api.md)** for complete API.
 
 ## Consumer Integration
 
-### rbees-orcd
+### queen-rbee
 
 **Events to emit**:
 - `auth.success`, `auth.failure` (authentication)

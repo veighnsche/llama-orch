@@ -18,14 +18,14 @@ Built complete CLI infrastructure for multi-model testing across pools.
 - Comprehensive error handling
 - 7 passing unit tests
 
-**2. rbees-pool (CLI: `rbees-pool`)**
+**2. rbee-hive (CLI: `rbee-hive`)**
 - Model catalog management (register, unregister, catalog)
 - Model downloads via hf CLI (modern replacement for deprecated huggingface-cli)
 - Worker spawning with background process management
 - Worker lifecycle (list, stop)
 - Process tracking with PID files
 
-**3. rbees-ctl (CLI: `rbees`)**
+**3. rbee-keeper (CLI: `rbee`)**
 - SSH wrapper for remote pool control
 - Remote model management
 - Remote worker management
@@ -175,7 +175,7 @@ chrono = { version = "0.4", features = ["serde"] }
 ```
 ✅ All standard, well-maintained
 
-**rbees-pool:**
+**rbee-hive:**
 ```toml
 clap = { version = "4.5", features = ["derive"] }
 anyhow = "1.0"
@@ -189,7 +189,7 @@ nix = { version = "0.27", features = ["signal", "process"] }
 - `indicatif = "0.17"` - Progress bars
 - `hf-hub = "0.3"` - HF downloads (if exists)
 
-**rbees-ctl:**
+**rbee-keeper:**
 ```toml
 clap = { version = "4.5", features = ["derive"] }
 anyhow = "1.0"
@@ -254,8 +254,8 @@ colored = "2.0"
 
 **Lines of Code:**
 - pool-core: ~250 lines
-- rbees-pool: ~400 lines
-- rbees-ctl: ~150 lines
+- rbee-hive: ~400 lines
+- rbee-keeper: ~150 lines
 - **Total:** ~800 lines
 
 **Time to Implement:**

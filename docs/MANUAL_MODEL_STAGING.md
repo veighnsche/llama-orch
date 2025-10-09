@@ -26,7 +26,7 @@ This document describes how to stage models across multiple nodes and verify ava
 ### Placement Behavior
 
 When a task requires a specific model:
-1. **rbees-orcd** queries all online nodes for pool status
+1. **queen-rbee** queries all online nodes for pool status
 2. Pools report `models_available` in heartbeat
 3. **Placement filters** to only pools that have the required model
 4. If no pools have the model → task is rejected
@@ -40,8 +40,8 @@ When a task requires a specific model:
 Check which models are needed for your workload:
 
 ```bash
-# List models in rbees-orcd catalog
-curl http://rbees-orcd:8080/v2/catalog/models \
+# List models in queen-rbee catalog
+curl http://queen-rbee:8080/v2/catalog/models \
   -H "Authorization: Bearer $LLORCH_API_TOKEN"
 ```
 
@@ -50,7 +50,7 @@ curl http://rbees-orcd:8080/v2/catalog/models \
 Query catalog availability across all nodes:
 
 ```bash
-curl http://rbees-orcd:8080/v2/catalog/availability \
+curl http://queen-rbee:8080/v2/catalog/availability \
   -H "Authorization: Bearer $LLORCH_API_TOKEN" | jq .
 ```
 
@@ -140,7 +140,7 @@ ssh gpu-node-2 '
 '
 ```
 
-**Note**: If pool-managerd doesn't expose catalog endpoints, use rbees-orcd's catalog API (models are per-node).
+**Note**: If pool-managerd doesn't expose catalog endpoints, use queen-rbee's catalog API (models are per-node).
 
 ### Step 5: Trigger Pool Preload
 
@@ -167,10 +167,10 @@ This will:
 
 ### Step 6: Verify Availability
 
-Check that rbees-orcd sees the model:
+Check that queen-rbee sees the model:
 
 ```bash
-curl http://rbees-orcd:8080/v2/catalog/availability \
+curl http://queen-rbee:8080/v2/catalog/availability \
   -H "Authorization: Bearer $LLORCH_API_TOKEN" | jq '.nodes["gpu-node-2"].models'
 ```
 
@@ -253,12 +253,12 @@ Example Ansible playbook:
 
 ### 5. Pre-warm on Deployment
 
-Stage models **before** registering nodes with rbees-orcd:
+Stage models **before** registering nodes with queen-rbee:
 
 1. Deploy pool-managerd
 2. Stage all required models
 3. Preload models into pools
-4. Register node with rbees-orcd
+4. Register node with queen-rbee
 
 This prevents tasks from being routed to nodes without models.
 
@@ -276,7 +276,7 @@ This prevents tasks from being routed to nodes without models.
 ssh gpu-node-2 'ls -lh ~/.cache/llama-orch/models/'
 
 # Check if pool is ready
-curl http://rbees-orcd:8080/v2/nodes | jq '.nodes[] | select(.node_id == "gpu-node-2") | .pools'
+curl http://queen-rbee:8080/v2/nodes | jq '.nodes[] | select(.node_id == "gpu-node-2") | .pools'
 
 # Check pool-managerd logs
 ssh gpu-node-2 'journalctl -u pool-managerd -n 100 --no-pager | grep model'
@@ -295,7 +295,7 @@ ssh gpu-node-2 'journalctl -u pool-managerd -n 100 --no-pager | grep model'
 **Diagnosis**:
 ```bash
 # Check which models are available
-curl http://rbees-orcd:8080/v2/catalog/availability \
+curl http://queen-rbee:8080/v2/catalog/availability \
   -H "Authorization: Bearer $LLORCH_API_TOKEN" | jq '.nodes[].models'
 
 # Check task model requirement

@@ -18,23 +18,23 @@ llama-orch is a three-binary system that provides test reproducibility, flexible
 llama-orch consists of **4 binaries** (2 daemons + 2 CLIs):
 
 **Daemons (HTTP servers, long-running):**
-1. **`rbees-orcd`** — The Brain (makes ALL intelligent decisions) [M1 - not built]
+1. **`queen-rbee`** — The Brain (makes ALL intelligent decisions) [M1 - not built]
    - Port 8080, routes inference requests, Rhai scripting, worker registry (SQLite)
-2. **`rbees-workerd`** — Workers (load one model, execute inference) [M0 ✅ DONE]
+2. **`llm-worker-rbee`** — Workers (load one model, execute inference) [M0 ✅ DONE]
    - Ports 8001+, one per model, stateless, HTTP server
    - Variants: llorch-cpu-candled, llorch-cuda-candled, llorch-metal-candled
 
 **CLI Tools (run on-demand, exit after command):**
-3. **`rbees`** (from rbees-ctl crate) — Remote control via SSH [M0 ✅ DONE]
+3. **`rbee`** (from rbee-keeper crate) — Remote control via SSH [M0 ✅ DONE]
    - Operator tool, SSH to pools, precise commands, stateless
-4. **`rbees-pool`** (from rbees-pool crate) — Local pool management [M0 ✅ DONE]
+4. **`rbee-hive`** (from rbee-hive crate) — Local pool management [M0 ✅ DONE]
    - Model catalog, worker spawning, backend detection, orphan cleanup
 
 **Note:** pool-managerd daemon is NOT NEEDED - pool management is CLI-based!
 ### Intelligence Hierarchy
 ```
 ┌─────────────────────────────────────┐
-│ rbees-orcd (THE BRAIN - daemon)  │
+│ queen-rbee (THE BRAIN - daemon)  │
 │ - Rhai scripting (user-defined)     │
 │ - Worker registry (SQLite)          │
 │ - Scheduling, routing, admission    │
@@ -42,7 +42,7 @@ llama-orch consists of **4 binaries** (2 daemons + 2 CLIs):
            │ HTTP POST /execute
            ↓
 ┌─────────────────────────────────────┐
-│ rbees-workerd (EXECUTOR - daemon)  │
+│ llm-worker-rbee (EXECUTOR - daemon)  │
 │ - Loads ONE model                   │
 │ - Generates tokens                  │
 │ - Stateless                         │
@@ -54,26 +54,26 @@ llama-orch consists of **4 binaries** (2 daemons + 2 CLIs):
            │ runs
            ↓
 ┌─────────────────────────────────────┐
-│ rbees (REMOTE CLI)                 │
+│ rbee (REMOTE CLI)                 │
 │ - SSH to pools                      │
 │ - Precise commands                  │
 └──────────┬──────────────────────────┘
            │ SSH
            ↓
 ┌─────────────────────────────────────┐
-│ rbees-pool (LOCAL CLI)             │
+│ rbee-hive (LOCAL CLI)             │
 │ - Model catalog                     │
 │ - Worker spawning                   │
 │ - Backend detection                 │
 └─────────────────────────────────────┘
 ```
-**4 binaries total:** 2 daemons (rbees-orcd, rbees-workerd) + 2 CLIs (llorch, rbees-pool)
+**4 binaries total:** 2 daemons (queen-rbee, llm-worker-rbee) + 2 CLIs (llorch, rbee-hive)
 
-**Decision boundary**: rbees-orcd makes ALL intelligent decisions. Workers are dumb executors. CLIs execute precise commands.
+**Decision boundary**: queen-rbee makes ALL intelligent decisions. Workers are dumb executors. CLIs execute precise commands.
 ### Why This Architecture?
 - **4 binaries, clear separation**: 2 daemons (data plane) + 2 CLIs (control plane)
-- **rbees-orcd is THE BRAIN**: Rhai scripting for user-defined orchestration logic
-- **rbees-pool is NOT a daemon**: CLI-based pool management (no HTTP server needed)
+- **queen-rbee is THE BRAIN**: Rhai scripting for user-defined orchestration logic
+- **rbee-hive is NOT a daemon**: CLI-based pool management (no HTTP server needed)
 - **Workers are stateless**: Each worker loads ONE model, can be killed anytime
 - **Orchestratord can run without GPUs**: Routes to remote workers via HTTP
 - **Workers have isolated memory contexts**: Each worker owns its memory allocation
@@ -97,7 +97,7 @@ llama-orch consists of **4 binaries** (2 daemons + 2 CLIs):
 ## Current Status
 **Development Progress**: ~40% complete toward v0.2.0
 ### ✅ Implemented
-- HTTP API (`rbees-orcd`) with Axum server on port 8080
+- HTTP API (`queen-rbee`) with Axum server on port 8080
 - Task admission, queueing, and placement (round-robin, least-loaded)
 - SSE streaming: `started` → `token` → `metrics` → `end` frames
 - Session service with TTL, budget tracking, KV warmth metadata
@@ -122,7 +122,7 @@ llama-orch consists of **4 binaries** (2 daemons + 2 CLIs):
 ## Documentation
 ### Core Specifications
 - [`.specs/00_llama-orch.md`](.specs/00_llama-orch.md) — Core requirements (ORCH-3xxx)
-- [`.specs/20_rbees-orcd.md`](.specs/20_rbees-orcd.md) — Control plane service
+- [`.specs/20_queen-rbee.md`](.specs/20_queen-rbee.md) — Control plane service
 - [`.specs/30_pool_managerd.md`](.specs/30_pool_managerd.md) — GPU worker service
 - [`.specs/metrics/otel-prom.md`](.specs/metrics/otel-prom.md) — Metrics contract
 - [`AGENTS.md`](AGENTS.md) — Repository guidelines, dev loop, coding/testing discipline
@@ -142,7 +142,7 @@ llama-orch consists of **4 binaries** (2 daemons + 2 CLIs):
 ---
 ## Architecture (SIMPLIFIED 2025-10-09)
 
-### rbees-orcd (The Brain) - HTTP Daemon [M1]
+### queen-rbee (The Brain) - HTTP Daemon [M1]
 **Responsibilities**:
 - Accept client requests (HTTP API on port 8080)
 - Task admission, queueing, and placement decisions
@@ -166,7 +166,7 @@ LLORCH_API_TOKEN=$(openssl rand -hex 32)
 
 ---
 
-### rbees-workerd (Workers) - HTTP Daemons [M0 ✅]
+### llm-worker-rbee (Workers) - HTTP Daemons [M0 ✅]
 **Responsibilities**:
 - Load ONE model into VRAM/RAM
 - Execute inference requests
@@ -177,8 +177,8 @@ LLORCH_API_TOKEN=$(openssl rand -hex 32)
 
 **Configuration**:
 ```bash
-# Spawned by rbees-pool with these args:
-rbees-workerd \
+# Spawned by rbee-hive with these args:
+llm-worker-rbee \
   --worker-id <uuid> \
   --model .test-models/qwen-0.5b \
   --port 8001 \
@@ -189,7 +189,7 @@ rbees-workerd \
 
 ---
 
-### rbees-pool (Pool Manager) - CLI Tool [M0 ✅]
+### rbee-hive (Pool Manager) - CLI Tool [M0 ✅]
 **Responsibilities**:
 - Model management (download, catalog, register)
 - Worker lifecycle (spawn, list, stop)
@@ -200,13 +200,13 @@ rbees-workerd \
 **Usage**:
 ```bash
 # Download model
-rbees-pool models download qwen-0.5b
+rbee-hive models download qwen-0.5b
 
 # Spawn worker
-rbees-pool worker spawn metal --model qwen-0.5b --gpu 0
+rbee-hive worker spawn metal --model qwen-0.5b --gpu 0
 
 # List workers
-rbees-pool worker list
+rbee-hive worker list
 ```
 
 **Status:** M0 COMPLETE and WORKING ✅
@@ -215,7 +215,7 @@ rbees-pool worker list
 
 ---
 
-### rbees (Orchestrator CLI) - Remote Control Tool [M0 ✅]
+### rbee (Orchestrator CLI) - Remote Control Tool [M0 ✅]
 **Responsibilities**:
 - Remote pool control via SSH
 - Model management on remote pools
@@ -244,19 +244,19 @@ llorch infer --worker mac.home.arpa:8001 --prompt "Hello" --max-tokens 50
 ### Deployment Flexibility
 **Single machine** (orchestrator + workers on localhost):
 ```
-Client → rbees-orcd (localhost:8080) → rbees-workerd (localhost:8001)
+Client → queen-rbee (localhost:8080) → llm-worker-rbee (localhost:8001)
 ```
 
 **Multiple machines** (distributed):
 ```
-Control Node:  rbees-orcd (no GPU)
+Control Node:  queen-rbee (no GPU)
      ↓ HTTP
-GPU Node 1:    rbees-workerd workers (ports 8001, 8002, ...)
-GPU Node 2:    rbees-workerd workers (ports 8001, 8002, ...)
-GPU Node N:    rbees-workerd workers (ports 8001, 8002, ...)
+GPU Node 1:    llm-worker-rbee workers (ports 8001, 8002, ...)
+GPU Node 2:    llm-worker-rbee workers (ports 8001, 8002, ...)
+GPU Node N:    llm-worker-rbee workers (ports 8001, 8002, ...)
 
-Operator uses SSH + rbees CLI to manage pools:
-  rbees pool worker spawn metal --host gpu-node-1 --model qwen
+Operator uses SSH + rbee CLI to manage pools:
+  rbee pool worker spawn metal --host gpu-node-1 --model qwen
 ```
 The architecture is the same—only the URLs change.
 ---
@@ -264,7 +264,7 @@ The architecture is the same—only the URLs change.
 ### Single-Machine Deployment
 ```mermaid
 flowchart TB
-    Client[Client] -->|POST /v2/tasks| OD[rbees-orcd]
+    Client[Client] -->|POST /v2/tasks| OD[queen-rbee]
     Client -->|GET /v2/tasks/:id/events| OD
     subgraph "Single Machine"
         OD -->|POST /v2/nodes/register| SR[service-registry<br/>localhost]
@@ -290,7 +290,7 @@ flowchart TB
 ### Multi-Machine Deployment
 ```mermaid
 flowchart TB
-    Client[Client] -->|POST /v2/tasks| OD[rbees-orcd<br/>Control Node]
+    Client[Client] -->|POST /v2/tasks| OD[queen-rbee<br/>Control Node]
     Client -->|GET /v2/tasks/:id/events| OD
     subgraph "Control Node (no GPU)"
         OD -->|enqueue| OC[orchestrator-core<br/>Queue]
@@ -333,7 +333,7 @@ flowchart TB
 ```mermaid
 graph TB
     subgraph "Binaries"
-        ORCHD[bin/rbees-orcd<br/>HTTP API · SSE · Placement]
+        ORCHD[bin/queen-rbee<br/>HTTP API · SSE · Placement]
         POOLD[bin/pool-managerd<br/>Pool Lifecycle · Registry]
     end
     subgraph "Core Libraries"
@@ -364,7 +364,7 @@ graph TB
         NARR[libs/observability/<br/>narration-core]
         APITYPES[contracts/api-types]
     end
-    %% rbees-orcd dependencies
+    %% queen-rbee dependencies
     ORCHD --> ORCHCORE
     ORCHD --> CATALOG
     ORCHD --> ADHOST
@@ -408,7 +408,7 @@ graph TB
 ### Key Libraries
 #### Core Orchestration
 - `orchestrator-core/` — Queue, placement logic, domain types
-- `bin/rbees-orcd/` — HTTP server, API routes, streaming
+- `bin/queen-rbee/` — HTTP server, API routes, streaming
 - `bin/pool-managerd/` — Pool lifecycle, readiness, health checks (binary + lib)
 - `libs/catalog-core/` — Model catalog, verification, lifecycle states
 #### Worker Adapters
@@ -437,7 +437,7 @@ llama-orch-utils (applets, guardrails)
      ↓
 llama-orch-sdk (typed API, transport)
      ↓
-rbees-orcd (HTTP API, ground truth)
+queen-rbee (HTTP API, ground truth)
 ```
 - **Utils** drives requirements; SDK exposes orchestrator capabilities
 - **SDK** mirrors OpenAPI contracts with minimal logic
@@ -449,7 +449,7 @@ See [`consumers/.docs/.adr/006-library-split.md`](consumers/.docs/.adr/006-libra
 |------|----------|
 | `.specs/` | Normative specifications (ORCH-3xxx requirements) |
 | `.docs/` | Guides, ADRs, testing strategy, archived TODOs |
-| `bin/` | Binaries: `rbees-orcd`, `pool-managerd` |
+| `bin/` | Binaries: `queen-rbee`, `pool-managerd` |
 | `libs/` | Core libraries (45+ crates) |
 | `contracts/` | OpenAPI specs, API types, config schema |
 | `test-harness/` | BDD, determinism, chaos, E2E test suites |
@@ -497,15 +497,15 @@ See [`consumers/.docs/.adr/006-library-split.md`](consumers/.docs/.adr/006-libra
 ### Request Lifecycle
 ```mermaid
 sequenceDiagram
-  Client->>rbees-orcd: POST /v2/tasks
-  rbees-orcd->>orchestrator-core: Admission check
-  orchestrator-core-->>rbees-orcd: Accepted (job_id) or 429
-  rbees-orcd-->>Client: 202 AdmissionResponse
-  Client->>rbees-orcd: GET /v2/tasks/{id}/events
-  rbees-orcd->>WorkerAdapter: Dispatch when slot available
+  Client->>queen-rbee: POST /v2/tasks
+  queen-rbee->>orchestrator-core: Admission check
+  orchestrator-core-->>queen-rbee: Accepted (job_id) or 429
+  queen-rbee-->>Client: 202 AdmissionResponse
+  Client->>queen-rbee: GET /v2/tasks/{id}/events
+  queen-rbee->>WorkerAdapter: Dispatch when slot available
   WorkerAdapter->>Engine: generate()
-  WorkerAdapter-->>rbees-orcd: SSE frames
-  rbees-orcd-->>Client: text/event-stream
+  WorkerAdapter-->>queen-rbee: SSE frames
+  queen-rbee-->>Client: text/event-stream
 ```
 ---
 ## Developer Quickstart
@@ -524,8 +524,8 @@ cargo fmt --all -- --check
 cargo clippy --all-targets --all-features -- -D warnings
 # Run all tests
 cargo test --workspace --all-features -- --nocapture
-# Run rbees-orcd
-cargo run -p rbees-orcd
+# Run queen-rbee
+cargo run -p queen-rbee
 # Binds to 127.0.0.1:8080 by default
 ```
 ### Developer Loop
@@ -548,7 +548,7 @@ cargo test -p test-harness-bdd -- --nocapture
 # Run determinism suite
 cargo test -p test-harness-determinism-suite -- --nocapture
 # Run service registry integration tests
-cargo test -p rbees-orcd --test service_registry_integration -- --nocapture
+cargo test -p queen-rbee --test service_registry_integration -- --nocapture
 # Run metrics contract validation
 cargo test -p test-harness-metrics-contract -- --nocapture
 ```
@@ -595,11 +595,11 @@ See [`AGENTS.md`](AGENTS.md) for complete repository guidelines.
 ## Workspace Map
 | Path | Crate | Role | Key APIs/Contracts | Tests | Spec Refs |
 |------|------|------|---------------------|-------|-----------|
-| [`bin/rbees-orcd/`](bin/rbees-orcd/README.md) | `rbees-orcd` | core | OpenAPI |
+| [`bin/queen-rbee/`](bin/queen-rbee/README.md) | `queen-rbee` | core | OpenAPI |
 admission_metrics, api_types, domain_error_mapping, middleware, provider_verify, session_service,
 storage, streaming | ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017,
 ORCH-3027, ORCH-3028, ORCH-3044, ORCH-3045, ORCH-2002, ORCH-2101, ORCH-2102, ORCH-2103, ORCH-2104 |
-| [`bin/rbees-orcd/bdd/`](bin/rbees-orcd/bdd/README.md) | `rbees-orcd-bdd` | core |
+| [`bin/queen-rbee/bdd/`](bin/queen-rbee/bdd/README.md) | `queen-rbee-bdd` | core |
 OpenAPI | bdd, features, steps | ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016,
 ORCH-3017, ORCH-3027, ORCH-3028, ORCH-3044, ORCH-3045 |
 | [`consumers/llama-orch-sdk/`](consumers/llama-orch-sdk/README.md) | `llama-orch-sdk` | tool | — |
@@ -681,8 +681,8 @@ OpenAPI | trybuild, ui | — |
 | [`tools/spec-extract/`](tools/spec-extract/README.md) | `tools-spec-extract` | tool | — | — | — |
 | [`xtask/`](xtask/README.md) | `xtask` | tool | — | — | — |
 ### Glossary
-- `rbees-orcd` — rbees-orcd (core)
-- `rbees-orcd-bdd` — rbees-orcd-bdd (core)
+- `queen-rbee` — queen-rbee (core)
+- `queen-rbee-bdd` — queen-rbee-bdd (core)
 - `llama-orch-sdk` — Single-source SDK for llama-orch (Rust core, optional WASM for npm)
 - `llama-orch-utils` — Utils applets for composing Blueprint pipelines for llama-orch (M2).
 - `contracts-api-types` — contracts-api-types (contracts)
@@ -720,5 +720,5 @@ OpenAPI | trybuild, ui | — |
 ### Getting Started
 - Adapter work: see `libs/worker-adapters/*` crates.
 - Contracts: see `contracts/*`.
-- Core scheduling: see `libs/orchestrator-core/` and `bin/rbees-orcd/`.
+- Core scheduling: see `libs/orchestrator-core/` and `bin/queen-rbee/`.
 <!-- END WORKSPACE MAP (AUTO-GENERATED) -->

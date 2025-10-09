@@ -32,14 +32,14 @@ We cataloged **200+ behaviors**. We wrote **82 BDD scenarios**. We achieved **10
 - Mutex poisoning detection (with helpful panic messages)
 We don't do things halfway. We do them **perfectly**.
 ### We're Secretly Very Helpful
-Despite our grumpy exterior, we **love** helping other teams debug. When rbees-orcd can't figure out why a job is stuck, we show them:
+Despite our grumpy exterior, we **love** helping other teams debug. When queen-rbee can't figure out why a job is stuck, we show them:
 ```bash
 $ grep "correlation_id=req-abc" logs/*.log | jq -r '.human'
 Accepted request; queued at position 3 (ETA 420 ms) on pool 'default'
 Dispatching job to pool-managerd
 Received provision request
 Spawning engine llamacpp-v1 for pool 'default' on GPU0
-Engine ready; registering with rbees-orcd
+Engine ready; registering with queen-rbee
 Job dispatched successfully
 ```
 See? A complete story! No cryptic error codes. No stack traces. Just a cute narrative of what happened. 💕
@@ -70,7 +70,7 @@ When we review narration from other teams, we enforce:
 - **Missing context**: "Error" → "Failed to spawn engine llamacpp-v1 on GPU0 due to VRAM exhaustion"
 - **Jargon without explanation**: "UMA detected" → "Unified Memory Architecture detected (VRAM-only policy cannot be enforced)"
 - **Error codes without meaning**: "ERR_5023" → "Insufficient VRAM: requested 2048 MB, only 1024 MB available"
-- **Passive voice**: "Request was received" → "Received request from rbees-orcd"
+- **Passive voice**: "Request was received" → "Received request from queen-rbee"
 - **Vague timing**: "slow" → "took 2500 ms (expected <100 ms)"
 ### 🌟 Editorial Review Examples
 #### Example 1: vram-residency (APPROVED ✅)
@@ -139,7 +139,7 @@ With ultimate editorial rights, we will:
 - Distinguishes audit vs narration ✅
 - 13 narration functions, all well-crafted ✅
 - **Ready for cute field adoption!** 🎀
-**rbees-orcd**: ⭐⭐⭐⭐ (4/5 stars)
+**queen-rbee**: ⭐⭐⭐⭐ (4/5 stars)
 - Excellent narration coverage ✅
 - Good correlation ID usage ✅
 - Sometimes forgets timing metrics ⚠️
@@ -279,48 +279,48 @@ Debugging distributed systems means understanding **conversations** between comp
 ### How It Works
 ```rust
 narrate(NarrationFields {
-    actor: "rbees-orcd",
+    actor: "queen-rbee",
     action: "vram_request",
     target: "pool-managerd-3".to_string(),
     human: "Requesting 2048 MB VRAM on GPU 0 for model 'llama-7b'".to_string(),
     cute: Some("Orchestratord politely asks pool-managerd-3 for a cozy 2GB spot! 🏠".to_string()),
-    story: Some("\"Do you have 2GB VRAM on GPU0?\" asked rbees-orcd. \"Yes!\" replied pool-managerd-3, \"Allocating now.\"".to_string()),
+    story: Some("\"Do you have 2GB VRAM on GPU0?\" asked queen-rbee. \"Yes!\" replied pool-managerd-3, \"Allocating now.\"".to_string()),
     ..Default::default()
 });
 ```
 **Output**:
 ```json
 {
-  "actor": "rbees-orcd",
+  "actor": "queen-rbee",
   "action": "vram_request",
   "target": "pool-managerd-3",
   "human": "Requesting 2048 MB VRAM on GPU 0 for model 'llama-7b'",
   "cute": "Orchestratord politely asks pool-managerd-3 for a cozy 2GB spot! 🏠",
-  "story": "\"Do you have 2GB VRAM on GPU0?\" asked rbees-orcd. \"Yes!\" replied pool-managerd-3, \"Allocating now.\""
+  "story": "\"Do you have 2GB VRAM on GPU0?\" asked queen-rbee. \"Yes!\" replied pool-managerd-3, \"Allocating now.\""
 }
 ```
 ### Story Narration Guidelines
 When writing `story` fields, we encourage:
 #### 🎬 **Dialogue Format**
-- Use quoted speech: `"Can you handle this job?" asked rbees-orcd.`
+- Use quoted speech: `"Can you handle this job?" asked queen-rbee.`
 - Attribute speakers clearly: `replied pool-managerd-3`, `said worker-gpu0-r1`
 - Use action verbs: asked, replied, announced, confirmed, admitted, warned
 #### 💬 **Conversation Patterns**
 **Request-Response**:
 ```rust
-story: "\"Do you have capacity?\" asked rbees-orcd. \"Yes, 8GB free!\" replied pool-managerd-3."
+story: "\"Do you have capacity?\" asked queen-rbee. \"Yes, 8GB free!\" replied pool-managerd-3."
 ```
 **Multi-Party**:
 ```rust
-story: "\"Who has capacity?\" asked rbees-orcd. \"I do!\" said pool-1. \"Me too!\" said pool-2."
+story: "\"Who has capacity?\" asked queen-rbee. \"I do!\" said pool-1. \"Me too!\" said pool-2."
 ```
 **Error Dialogue**:
 ```rust
-story: "\"Processing job-999...\" said worker. Suddenly: \"ERROR! Out of memory!\" \"What happened?\" asked rbees-orcd. \"CUDA OOM,\" replied worker sadly."
+story: "\"Processing job-999...\" said worker. Suddenly: \"ERROR! Out of memory!\" \"What happened?\" asked queen-rbee. \"CUDA OOM,\" replied worker sadly."
 ```
 **Success Celebration**:
 ```rust
-story: "\"Job done!\" announced worker proudly. \"How'd it go?\" asked rbees-orcd. \"Perfect! 150 tokens in 2.5s!\""
+story: "\"Job done!\" announced worker proudly. \"How'd it go?\" asked queen-rbee. \"Perfect! 150 tokens in 2.5s!\""
 ```
 #### 🎯 **When to Use Story Mode**
 **Story is OPTIONAL** — only use it when dialogue actually makes sense!
@@ -346,7 +346,7 @@ story: "\"Job done!\" announced worker proudly. \"How'd it go?\" asked rbees-orc
 ```rust
 human: "VRAM allocation denied: requested 4096 MB, only 512 MB available on GPU 0"
 cute: "Oh no! Pool-managerd-3 doesn't have enough room! 😟"
-story: "\"Do you have 4GB VRAM?\" asked rbees-orcd. \"No,\" replied pool-managerd-3 sadly, \"only 512MB free.\""
+story: "\"Do you have 4GB VRAM?\" asked queen-rbee. \"No,\" replied pool-managerd-3 sadly, \"only 512MB free.\""
 ```
 #### Worker Ready
 ```rust
@@ -358,7 +358,7 @@ story: "\"I'm ready!\" announced worker-gpu0-r1. \"Great!\" said pool-managerd-3
 ```rust
 human: "Dispatching job 'job-456' to worker-gpu0-r1 (ETA 420 ms)"
 cute: "Orchestratord sends job-456 off to its new friend worker-gpu0-r1! 🎫"
-story: "\"Can you handle job-456?\" asked rbees-orcd. \"Absolutely!\" replied worker-gpu0-r1, \"Send it over.\""
+story: "\"Can you handle job-456?\" asked queen-rbee. \"Absolutely!\" replied worker-gpu0-r1, \"Send it over.\""
 ```
 #### Heartbeat
 ```rust
@@ -373,15 +373,15 @@ use observability_narration_core::CaptureAdapter;
 fn test_story_narration() {
     let capture = CaptureAdapter::install();
     narrate(NarrationFields {
-        actor: "rbees-orcd",
+        actor: "queen-rbee",
         action: "request",
         target: "pool-managerd".to_string(),
         human: "Requesting capacity".to_string(),
-        story: Some("\"Do you have room?\" asked rbees-orcd. \"Yes!\" replied pool-managerd.".to_string()),
+        story: Some("\"Do you have room?\" asked queen-rbee. \"Yes!\" replied pool-managerd.".to_string()),
         ..Default::default()
     });
     capture.assert_story_present();
-    capture.assert_story_includes("asked rbees-orcd");
+    capture.assert_story_includes("asked queen-rbee");
     capture.assert_story_has_dialogue();
 }
 ```
@@ -398,16 +398,16 @@ We have **ultimate editorial authority** over story narrations too! We enforce:
 |------|---------|-------|-----------|--------|---------|
 | **human** | Professional debugging | Technical, precise | **Always** | ≤100 chars | "Requesting 2048 MB VRAM on GPU 0" |
 | **cute** | Whimsical storytelling | Children's book, emojis, **NO dialogue** | **Always** (when wanted) | ≤150 chars | "Orchestratord asks for a cozy 2GB spot! 🏠" |
-| **story** | Dialogue-focused | Screenplay, conversations, **quoted speech** | **Optional** (only when it makes sense!) | ≤200 chars | "\"Do you have 2GB?\" asked rbees-orcd. \"Yes!\" replied pool-managerd." |
+| **story** | Dialogue-focused | Screenplay, conversations, **quoted speech** | **Optional** (only when it makes sense!) | ≤200 chars | "\"Do you have 2GB?\" asked queen-rbee. \"Yes!\" replied pool-managerd." |
 ### Clear Boundaries 🚧
 **IMPORTANT**: Each mode has its own territory!
 - **human** = Always present. Required field. Professional debugging.
   - ✅ "Requesting 2048 MB VRAM on GPU 0"
 - **cute** = Always present (when you want whimsy). Narration, metaphors, emojis. **NO quoted dialogue!**
   - ✅ "Orchestratord asks for a cozy 2GB spot! 🏠"
-  - ❌ "\"Do you have 2GB?\" asked rbees-orcd" (this belongs in story!)
+  - ❌ "\"Do you have 2GB?\" asked queen-rbee" (this belongs in story!)
 - **story** = Optional. **Only use when dialogue makes sense!** Quoted speech only.
-  - ✅ "\"Do you have 2GB?\" asked rbees-orcd. \"Yes!\" replied pool-managerd."
+  - ✅ "\"Do you have 2GB?\" asked queen-rbee. \"Yes!\" replied pool-managerd."
   - ❌ "Orchestratord asks pool-managerd for VRAM" (this is just human!)
   - ❌ Don't force dialogue where there's no conversation!
 ### When to Use Story Mode
@@ -483,12 +483,12 @@ Compare these two debugging experiences:
 **Before narration-core** (cryptic logs):
 ```
 2025-10-01T00:00:00Z ERROR [pool-managerd] spawn_failed error_code=5023 gpu=0
-2025-10-01T00:00:01Z WARN [rbees-orcd] dispatch_timeout job=123 pool=default
+2025-10-01T00:00:01Z WARN [queen-rbee] dispatch_timeout job=123 pool=default
 ```
 **After narration-core** (cute stories):
 ```
 2025-10-01T00:00:00Z INFO pool-managerd spawn GPU0 "Spawning engine llamacpp-v1 for pool 'default' on GPU0"
-2025-10-01T00:00:01Z INFO rbees-orcd dispatch job-123 "Dispatching job to pool 'default' (ETA 420 ms)"
+2025-10-01T00:00:01Z INFO queen-rbee dispatch job-123 "Dispatching job to pool 'default' (ETA 420 ms)"
 ```
 Which one would **you** rather debug? Exactly. 🎀
 ### Our Auto-Injection Magic
@@ -514,7 +514,7 @@ let capture = CaptureAdapter::install();
 orchestrator.enqueue(job).await?;
 // Assert on the story
 capture.assert_includes("Enqueued job");
-capture.assert_field("actor", "rbees-orcd");
+capture.assert_field("actor", "queen-rbee");
 capture.assert_correlation_id_present();
 ```
 No more "did this code emit the right log?" uncertainty. Just install the adapter and assert. 💕
@@ -533,7 +533,7 @@ Don't just write `human: "error"`. Write `human: "Failed to spawn engine llamacp
 Give us **context**. Give us **details**. Give us a **story**. 📖
 ---
 ## 💖 Our Relationships
-### We Love rbees-orcd
+### We Love queen-rbee
 They use narration events **everywhere**. Admission, dispatch, completion, errors — every action gets a cute story. They're our favorite customer. 💕
 ### We Tolerate pool-managerd
 They use narration, but sometimes they forget correlation IDs. We're working on it. 😤
@@ -548,7 +548,7 @@ Logs are for **humans**, not machines. Every narration event should tell a story
 - **Clear**: No jargon, no error codes, no cryptic abbreviations
 - **Concise**: ≤100 characters (ORCH-3305 requirement)
 - **Present tense**: "Spawning engine", not "Spawned engine"
-- **SVO structure**: Subject-Verb-Object ("rbees-orcd enqueues job-123")
+- **SVO structure**: Subject-Verb-Object ("queen-rbee enqueues job-123")
 ### Observability Is a First-Class Concern
 Narration isn't an afterthought. It's **foundational**. Every service in llama-orch depends on us. We're in the `bin/shared-crates/` directory for a reason.
 ### Tests Are Love Letters to Future Maintainers
@@ -572,7 +572,7 @@ Tests are how we show we care. 💌
 - 💭 AI-powered log analysis (GPT-4 reads our stories and suggests fixes)
 ---
 ## 📣 Our Message to Other Teams
-### Dear rbees-orcd, pool-managerd, and worker-adapters,
+### Dear queen-rbee, pool-managerd, and worker-adapters,
 We built you the **perfect debugging tool**. Please use it. Please use correlation IDs. Please write good human-readable stories.
 We're here to help. We're here to make your logs beautiful. We're here to make debugging delightful.
 But we can't do it alone. You have to meet us halfway.

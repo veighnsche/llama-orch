@@ -94,7 +94,7 @@ production = []     # Production profile (all tracing disabled)
 ### Homograph Attack Prevention ✅
 ```rust
 // Prevents spoofing via lookalike characters
-validate_actor("rbees-orcd")  // ✅ OK
+validate_actor("queen-rbee")  // ✅ OK
 validate_actor("оrchestratord")  // ❌ Error (Cyrillic 'о')
 ```
 ### Zero-Width Character Filtering ✅
@@ -159,7 +159,7 @@ let sanitized = sanitize_for_json(text);  // Cow::Borrowed (no allocation)
 let text = "Line 1\nLine 2";
 let sanitized = sanitize_crlf(text);  // → "Line 1 Line 2"
 // Actor validation (homograph prevention)
-validate_actor("rbees-orcd")?;  // OK
+validate_actor("queen-rbee")?;  // OK
 validate_actor("оrchestratord")?;  // Error (Cyrillic 'о')
 ```
 ### Performance Benchmarking
@@ -185,7 +185,7 @@ criterion_main!(benches);
 - [ ] **Run Benchmarks** - Verify performance targets
 - [ ] **BDD Tests** - Cute/story mode coverage
 - [ ] **Proof Bundle Integration** - Test artifacts
-- [ ] **Service Migrations** - rbees-orcd, pool-managerd, worker-orcd
+- [ ] **Service Migrations** - queen-rbee, pool-managerd, worker-orcd
 ### Week 4 Focus
 1. Run benchmarks and verify all performance targets
 2. Write BDD tests for cute/story modes

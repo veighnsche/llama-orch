@@ -9,11 +9,11 @@
 
 ## Executive Summary
 
-**Context:** TEAM-021 fixed the Metal broadcasting bug (cache pollution). rbees-workerd works correctly on all backends.
+**Context:** TEAM-021 fixed the Metal broadcasting bug (cache pollution). llm-worker-rbee works correctly on all backends.
 
 **Blocker:** No infrastructure to test multiple models across multiple pools.
 
-**Mission:** Build `rbees-pool` and `rbees-ctl` binaries to enable automated multi-model testing.
+**Mission:** Build `rbee-hive` and `rbee-keeper` binaries to enable automated multi-model testing.
 
 ---
 
@@ -25,10 +25,10 @@
 **Data Plane:** HTTP (orchestrator → workers)
 
 **Binaries to Build:**
-1. `rbees-pool` (local pool management CLI)
-2. `rbees-ctl` (remote pool control via SSH)
+1. `rbee-hive` (local pool management CLI)
+2. `rbee-keeper` (remote pool control via SSH)
 
-**Note:** `worker-orcd` is **DEPRECATED**. We now use `rbees-workerd` for all worker operations.
+**Note:** `worker-orcd` is **DEPRECATED**. We now use `llm-worker-rbee` for all worker operations.
 
 ---
 
@@ -59,19 +59,19 @@
 
 **CP1 Complete:**
 - [ ] `pool-core` crate compiles
-- [ ] `rbees-pool` binary compiles and runs
-- [ ] `rbees-ctl` binary compiles and runs
+- [ ] `rbee-hive` binary compiles and runs
+- [ ] `rbee-keeper` binary compiles and runs
 - [ ] Basic commands work (help, version)
 
 **CP2 Complete:**
 - [ ] Catalog format defined (JSON schema)
 - [ ] Catalog can be created/loaded/saved
 - [ ] Models can be registered/unregistered
-- [ ] `rbees-pool models catalog` shows models
+- [ ] `rbee-hive models catalog` shows models
 
 **CP3 Complete:**
-- [ ] `rbees-pool models download <model>` works
-- [ ] `rbees-pool worker spawn <backend> --model <model>` works
+- [ ] `rbee-hive models download <model>` works
+- [ ] `rbee-hive worker spawn <backend> --model <model>` works
 - [ ] Qwen downloaded on all pools
 - [ ] Qwen tested on Metal and CUDA
 
@@ -100,7 +100,7 @@
 - `/bin/.specs/COMPLETE_BINARY_ARCHITECTURE.md` - Binary structure
 
 **Handoff:**
-- `/bin/rbees-workerd/.specs/TEAM_022_HANDOFF.md` - Detailed task breakdown
+- `/bin/llm-worker-rbee/.specs/TEAM_022_HANDOFF.md` - Detailed task breakdown
 
 **Rules:**
 - `/.windsurf/rules/candled-rules.md` - Team coding standards

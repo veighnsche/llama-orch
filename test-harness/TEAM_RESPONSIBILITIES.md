@@ -127,11 +127,11 @@ rg 'SkipDir' --type go        # Find discovery-time exclusions
 **Issued**: 2025-10-02T21:30:00Z
 **Severity**: CRITICAL
 **Team**: Orchestrator Team
-**Crate**: bin/rbees-orcd-crates/orchestrator-core
+**Crate**: bin/queen-rbee-crates/orchestrator-core
 ## Violation
 Test `test_queue_enqueue` passes when product is broken.
 ## Evidence
-File: `bin/rbees-orcd-crates/orchestrator-core/tests/queue_tests.rs:42`
+File: `bin/queen-rbee-crates/orchestrator-core/tests/queue_tests.rs:42`
 ```rust
 #[test]
 fn test_queue_enqueue() {
@@ -313,7 +313,7 @@ rg 'SkipDir|skip.*dir' --type go
 - Potential crate quarantine
 ---
 ## Our Responsibilities to Other Teams
-### Dear rbees-orcd, pool-managerd, worker-orcd, and all component teams,
+### Dear queen-rbee, pool-managerd, worker-orcd, and all component teams,
 We built you the **testing standards** and **quality infrastructure** you need to ship with confidence. Please use them correctly:
 **DO**:
 - ✅ Review story cards for our test requirements BEFORE coding

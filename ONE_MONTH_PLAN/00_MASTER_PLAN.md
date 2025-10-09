@@ -38,7 +38,7 @@
 
 ### Days 1-7: Foundation Week
 
-**Day 1 (Monday): rbees-orcd**
+**Day 1 (Monday): queen-rbee**
 - [ ] Create binary skeleton
 - [ ] HTTP server (axum)
 - [ ] In-memory job queue
@@ -47,14 +47,14 @@
 - [ ] Worker registration endpoint
 - **Test:** Submit job via curl
 
-**Day 2 (Tuesday): rbees-pool**
+**Day 2 (Tuesday): rbee-hive**
 - [ ] Create CLI binary
 - [ ] Model download command (hf CLI wrapper)
 - [ ] Worker spawn command
 - [ ] Model list command
 - **Test:** Download tinyllama, spawn worker
 
-**Day 3 (Wednesday): rbees-ctl**
+**Day 3 (Wednesday): rbee-keeper**
 - [ ] Create CLI binary
 - [ ] SSH command forwarding
 - [ ] Job submission command
@@ -62,8 +62,8 @@
 - **Test:** Command pool via SSH
 
 **Day 4 (Thursday): Integration**
-- [ ] Worker registration in rbees-workerd
-- [ ] Job dispatch from rbees-orcd
+- [ ] Worker registration in llm-worker-rbee
+- [ ] Job dispatch from queen-rbee
 - [ ] End-to-end flow testing
 - **Test:** Full flow works
 
@@ -229,19 +229,19 @@
 
 ### Binaries (3)
 
-1. **rbees-orcd** (Daemon)
+1. **queen-rbee** (Daemon)
    - HTTP server :8080
    - In-memory job queue
    - Worker registry
    - Job dispatch
    - SSE streaming
 
-2. **rbees-pool** (CLI)
+2. **rbee-hive** (CLI)
    - Model downloads
    - Worker spawn
    - Git operations
 
-3. **rbees-ctl** (CLI)
+3. **rbee-keeper** (CLI)
    - SSH forwarding
    - Job submission
    - Pool commands
@@ -268,7 +268,7 @@
 
 ### What We're NOT Building
 
-❌ pool-managerd daemon (use rbees-pool + SSH)  
+❌ pool-managerd daemon (use rbee-hive + SSH)  
 ❌ SQLite persistence (in-memory is fine)  
 ❌ Multi-tenancy (single customer per instance)  
 ❌ Marketplace (M5 is too far)  
@@ -374,7 +374,7 @@ Each section has detailed implementation plan:
 ## The Promise
 
 **In 30 days you will have:**
-- Working product (rbees-orcd + CLIs + web UI)
+- Working product (queen-rbee + CLIs + web UI)
 - EU compliance (audit logs, GDPR endpoints)
 - Marketing site (landing page, demo)
 - First customer ($200 MRR)

@@ -11,7 +11,7 @@ Date: 2025-09-19
 ## Test Catalog
 
 - Init Wiring
-  - GIVEN rbees-orcd initializes narration with capture adapter
+  - GIVEN queen-rbee initializes narration with capture adapter
   - WHEN emitting events during admission/streaming
   - THEN capture receives entries with required fields (correlation id, job/session ids, engine, tokens metrics when present)
 
