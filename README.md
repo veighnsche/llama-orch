@@ -14,38 +14,69 @@ llama-orch is a three-binary system that provides test reproducibility, flexible
 5. **Smart/Dumb Architecture**: Clean separation between decisions and execution
 6. **Process Isolation**: Workers run in separate processes with isolated memory contexts
 **Note**: Determinism is a testing tool, not a product guarantee. LLMs cannot guarantee deterministic behavior due to model architecture and hardware variations.
-### The Two-Daemon System (SIMPLIFIED 2025-10-09)
-llama-orch consists of two daemon binaries plus two CLI tools:
+### The Four-Binary System
+llama-orch consists of **4 binaries** (2 daemons + 2 CLIs):
 
-**Daemons (HTTP):**
-1. **`orchestratord`** — The Brain (makes ALL intelligent decisions) [M1]
-2. **`llorch-candled`** — Workers (load one model, execute inference) [M0 ✅]
+**Daemons (HTTP servers, long-running):**
+1. **`orchestratord`** — The Brain (makes ALL intelligent decisions) [M1 - not built]
+   - Port 8080, routes inference requests, Rhai scripting, worker registry (SQLite)
+2. **`llorch-candled`** — Workers (load one model, execute inference) [M0 ✅ DONE]
+   - Ports 8001+, one per model, stateless, HTTP server
    - Variants: llorch-cpu-candled, llorch-cuda-candled, llorch-metal-candled
-   - Future: worker-orcd (bespoke NVIDIA), worker-aarmd (Apple ARM)
 
-**CLI Tools (SSH/Local):**
-1. **`llorch`** — Remote control via SSH (operator tool) [M0 ✅]
-2. **`llorch-pool`** — Local pool management (replaces pool-managerd daemon) [M0 ✅]
+**CLI Tools (run on-demand, exit after command):**
+3. **`llorch`** (from llorch-ctl crate) — Remote control via SSH [M0 ✅ DONE]
+   - Operator tool, SSH to pools, precise commands, stateless
+4. **`llorch-pool`** (from pool-ctl crate) — Local pool management [M0 ✅ DONE]
+   - Model catalog, worker spawning, backend detection, orphan cleanup
 
 **Note:** pool-managerd daemon is NOT NEEDED - pool management is CLI-based!
 ### Intelligence Hierarchy
 ```
-Orchestratord (Brain - HTTP daemon)
-  ↓ Routes: POST /execute to worker
-Worker (Executor - HTTP daemon)
-  ↓ Executes: Inference requests
+┌─────────────────────────────────────┐
+│ orchestratord (THE BRAIN - daemon)  │
+│ - Rhai scripting (user-defined)     │
+│ - Worker registry (SQLite)          │
+│ - Scheduling, routing, admission    │
+└──────────┬──────────────────────────┘
+           │ HTTP POST /execute
+           ↓
+┌─────────────────────────────────────┐
+│ llorch-candled (EXECUTOR - daemon)  │
+│ - Loads ONE model                   │
+│ - Generates tokens                  │
+│ - Stateless                         │
+└─────────────────────────────────────┘
 
-Operator (Human)
-  ↓ SSH: llorch pool worker spawn
-llorch-pool (CLI on pool machine)
-  ↓ Spawns: llorch-candled --model X --gpu 0
+┌─────────────────────────────────────┐
+│ Operator (Human)                    │
+└──────────┬──────────────────────────┘
+           │ runs
+           ↓
+┌─────────────────────────────────────┐
+│ llorch (REMOTE CLI)                 │
+│ - SSH to pools                      │
+│ - Precise commands                  │
+└──────────┬──────────────────────────┘
+           │ SSH
+           ↓
+┌─────────────────────────────────────┐
+│ llorch-pool (LOCAL CLI)             │
+│ - Model catalog                     │
+│ - Worker spawning                   │
+│ - Backend detection                 │
+└─────────────────────────────────────┘
 ```
-**Decision boundary**: Orchestratord makes ALL decisions (admission, scheduling, worker selection, eviction, retry, timeout). Workers are dumb executors. Pool management is CLI-based (no daemon needed).
+**4 binaries total:** 2 daemons (orchestratord, llorch-candled) + 2 CLIs (llorch, llorch-pool)
+
+**Decision boundary**: orchestratord makes ALL intelligent decisions. Workers are dumb executors. CLIs execute precise commands.
 ### Why This Architecture?
-- **Simplified**: Only 2 daemons (orchestratord + workers), not 3
+- **4 binaries, clear separation**: 2 daemons (data plane) + 2 CLIs (control plane)
+- **orchestratord is THE BRAIN**: Rhai scripting for user-defined orchestration logic
+- **llorch-pool is NOT a daemon**: CLI-based pool management (no HTTP server needed)
+- **Workers are stateless**: Each worker loads ONE model, can be killed anytime
 - **Orchestratord can run without GPUs**: Routes to remote workers via HTTP
-- **Workers have isolated memory contexts**: Each worker owns its memory allocation (VRAM for NVIDIA, unified for Apple)
-- **Pool management is CLI-based**: No daemon overhead for control operations
+- **Workers have isolated memory contexts**: Each worker owns its memory allocation
 - **Testable components**: Each binary runs standalone for testing
 - **Multi-architecture**: Worker variants for NVIDIA CUDA, Apple Metal, CPU
 ---

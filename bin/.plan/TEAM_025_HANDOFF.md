@@ -17,17 +17,20 @@
 4. ✅ Created ORCHESTRATION_OVERVIEW.md (complete system guide)
 5. ✅ Successfully tested token generation on local CPU worker
 
-**Current System State:**
-- **M0 Complete:** Workers (llorch-candled) ✅ WORKING
-- **M0 Complete:** Pool CLI (llorch-pool) ✅ WORKING
-- **M0 Complete:** Remote CLI (llorch) ✅ WORKING
-- **M1 Next:** Orchestrator daemon (orchestratord) ❌ NOT BUILT
+**Current System State (THE 4 BINARIES):**
+1. **orchestratord** (daemon) - M1 ❌ NOT BUILT
+2. **llorch-candled** (daemon) - M0 ✅ WORKING
+3. **llorch** (CLI) - M0 ✅ WORKING
+4. **llorch-pool** (CLI) - M0 ✅ WORKING
+
+**M0 Status:** 3 of 4 binaries complete
 
 **ARCHITECTURAL CHANGE (2025-10-09):**
 - ❌ pool-managerd daemon is NOT NEEDED
-- ✅ pool-ctl CLI (`llorch-pool`) provides all pool management
+- ✅ Only 2 daemons: orchestratord + llorch-candled
+- ✅ 2 CLIs: llorch + llorch-pool
 - ✅ M1 milestone simplified: Only build orchestratord
-- See: `/bin/.specs/ARCHITECTURE_DECISION_NO_POOL_DAEMON.md`
+- See: `/FINAL_ARCHITECTURE.md` (definitive reference)
 
 **User Status:** 🔴 EXHAUSTED - Needs rest, brain has left
 

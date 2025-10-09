@@ -8,13 +8,20 @@
 
 ## TL;DR
 
-✅ **M0 Complete** - Workers, CLIs working  
+✅ **M0 Complete** - 3 of 4 binaries working (llorch-candled, llorch, llorch-pool)
 ⏳ **CP4 Next** - Download & test all models  
-🔜 **M1 After** - Build orchestratord daemon  
+🔜 **M1 After** - Build orchestratord daemon (4th binary)
+
+**THE 4 BINARIES:**
+1. orchestratord (daemon) - M1 ❌ not built
+2. llorch-candled (daemon) - M0 ✅ DONE
+3. llorch (CLI) - M0 ✅ DONE
+4. llorch-pool (CLI) - M0 ✅ DONE
 
 **ARCHITECTURAL CHANGE (2025-10-09):**
-❌ pool-managerd daemon NOT NEEDED (pool-ctl CLI is enough)
-✅ Only 2 daemons: orchestratord + workers
+❌ pool-managerd daemon NOT NEEDED
+✅ Only 2 daemons: orchestratord + llorch-candled
+✅ 2 CLIs: llorch + llorch-pool
 
 ---
 

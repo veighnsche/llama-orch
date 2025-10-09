@@ -20,21 +20,30 @@
 
 ## System Architecture
 
-### IMPORTANT: Binary Name Clarification (TEAM-024)
+### IMPORTANT: The Four Binaries (TEAM-024)
 
-**DO NOT CONFUSE:**
-- **`llorch`** = CLI tool for operators (SSH-based remote control) - `bin/llorch-ctl/`
-- **`orchestratord`** = HTTP daemon that routes inference (M1, not built yet) - `bin/orchestratord/`
+**llama-orch has 4 binaries:**
 
-These are TWO DIFFERENT binaries with different purposes!
+1. **`orchestratord`** = HTTP daemon (THE BRAIN) - `bin/orchestratord/` [M1 - not built]
+   - Rhai scripting, worker registry (SQLite), scheduling, routing
+   
+2. **`llorch-candled`** = HTTP daemon (WORKER) - `bin/llorch-candled/` [M0 ✅ DONE]
+   - Loads ONE model, generates tokens, stateless
+   
+3. **`llorch`** = CLI tool (REMOTE CONTROL) - `bin/llorch-ctl/` [M0 ✅ DONE]
+   - SSH to pools, precise commands, operator tool
+   
+4. **`llorch-pool`** = CLI tool (LOCAL POOL) - `bin/pool-ctl/` [M0 ✅ DONE]
+   - Model catalog, worker spawning, backend detection
 
 **ARCHITECTURAL CHANGE (2025-10-09):**
 - ❌ **pool-managerd daemon is NOT NEEDED**
 - ✅ Pool management is CLI-based (`llorch-pool`)
-- ✅ Only 2 daemons: orchestratord + workers
+- ✅ Only 2 daemons: orchestratord + llorch-candled
+- ✅ 2 CLIs: llorch + llorch-pool
 - See: `/bin/.specs/ARCHITECTURE_DECISION_NO_POOL_DAEMON.md`
 
-### The Two-Daemon System (SIMPLIFIED!)
+### The Four-Binary System
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -83,19 +92,20 @@ These are TWO DIFFERENT binaries with different purposes!
 
 ### Two Communication Channels
 
-**Control Plane (SSH + CLI):**
+**Control Plane (SSH + CLI - 2 binaries):**
 - Operator → Pools (via SSH)
-- Model management (llorch-pool)
-- Worker lifecycle (llorch-pool)
-- System updates (llorch)
+- Model management (llorch-pool CLI)
+- Worker lifecycle (llorch-pool CLI)
+- System updates (llorch CLI)
 - NO DAEMON NEEDED!
+- **Binaries:** llorch + llorch-pool
 
-**Data Plane (HTTP + Daemons):**
+**Data Plane (HTTP + Daemons - 2 binaries):**
 - Client → Orchestrator → Worker
 - Inference requests (orchestratord routes)
-- Token streaming (workers generate)
+- Token streaming (llorch-candled generates)
 - Health checks (both daemons)
-- 2 DAEMONS: orchestratord + workers
+- **Binaries:** orchestratord + llorch-candled
 
 ---
 
