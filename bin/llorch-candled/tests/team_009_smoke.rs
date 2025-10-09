@@ -43,15 +43,15 @@ fn test_cuda_device_init() -> Result<()> {
 
 #[cfg(feature = "metal")]
 #[test]
-fn test_accelerate_device_init() -> Result<()> {
-    use llorch_candled::device::init_accelerate_device;
+fn test_metal_device_init() -> Result<()> {
+    use llorch_candled::device::init_metal_device;
 
-    // TEAM-009: Verify Accelerate device can be initialized
-    let device = init_accelerate_device()?;
+    // TEAM-018: Verify Metal device can be initialized
+    let device = init_metal_device(0)?;
     verify_device(&device)?;
 
-    // Verify it's CPU with Accelerate
-    assert!(device.is_cpu(), "Accelerate device should be CPU");
+    // Verify it's Metal GPU
+    assert!(device.is_metal(), "Metal device should be Metal GPU");
 
     Ok(())
 }
