@@ -1,7 +1,6 @@
 # llama-orch Workspace
 #
 # This workspace contains all crates that make up the llama-orch distributed inference system.
-# Organized by purpose with inline descriptions for easy navigation.
 
 [workspace]
 members = [
@@ -9,9 +8,10 @@ members = [
     # MAIN SERVICES — Core Binaries
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
-    "bin/llorch-candled",         # Candle-based Llama-2 worker (TEAM-000 Foundation)
-    "bin/llorch-ctl",             # TEAM-022: Orchestrator control CLI
-    "bin/pool-ctl",               # TEAM-022: Pool management CLI
+    "bin/rbees-workerd",          # Worker daemon (inference execution)
+    "bin/rbees-ctl",              # Orchestrator CLI (remote control)
+    "bin/rbees-pool",             # Pool CLI (local pool management)
+    "bin/rbees-orcd",             # Orchestrator daemon (M1+)
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # SHARED CRATES — Cross-Service Utilities

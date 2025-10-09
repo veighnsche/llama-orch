@@ -1,17 +1,16 @@
 [package]
-name = "llorch-candled"
+name = "rbees-workerd"
 version = "0.1.0"
 edition = "2021"
 authors = ["TEAM-000 Foundation"]
-description = "Candle-based Llama-2 inference worker daemon with CUDA acceleration"
+description = "Candle-based inference worker daemon with CUDA/Metal/CPU acceleration"
 license = "GPL-3.0-or-later"
 
-# TEAM-024 CLARIFICATION:
-# This is the WORKER daemon (HTTP server)
-# Binary name: `llorch-candled` (and backend-specific variants)
+# Worker daemon (HTTP server)
+# Binary name: `rbees-workerd` (and backend-specific variants)
 # Purpose: Loads ONE model, executes inference, streams tokens via SSE
 # Protocol: HTTP (listens on assigned port)
-# Spawned by: `llorch-pool` (pool manager CLI)
+# Spawned by: `rbees-pool` (pool manager CLI)
 
 [lints.clippy]
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -215,32 +214,31 @@ metal = ["candle-core/metal", "candle-nn/metal"]
 # Performance benchmarking
 benchmark = []
 
-# TEAM-007: Multi-backend binaries
+# Multi-backend binaries
 # Each binary is feature-gated to a specific backend
 [[bin]]
-name = "llorch-cpu-candled"
+name = "rbees-cpu-workerd"
 path = "src/bin/cpu.rs"
 required-features = ["cpu"]
 
 [[bin]]
-name = "llorch-cuda-candled"
+name = "rbees-cuda-workerd"
 path = "src/bin/cuda.rs"
 required-features = ["cuda"]
 
 [[bin]]
-name = "llorch-metal-candled"
+name = "rbees-metal-workerd"
 path = "src/bin/metal.rs"
 required-features = ["metal"]
 
-# Legacy binary (for backward compatibility during migration)
-# TEAM-013: Requires CPU feature
+# Main binary (CPU by default)
 [[bin]]
-name = "llorch-candled"
+name = "rbees-workerd"
 path = "src/main.rs"
 required-features = ["cpu"]
 
 [lib]
-name = "llorch_candled"
+name = "rbees_workerd"
 path = "src/lib.rs"
 
 [profile.release]

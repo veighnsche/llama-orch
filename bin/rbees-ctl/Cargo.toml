@@ -1,17 +1,16 @@
 [package]
-name = "llorch-ctl"
+name = "rbees-ctl"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
 
-# TEAM-024 CLARIFICATION:
-# This is the CLI tool for OPERATORS (humans)
-# Binary name: `llorch` (SSH-based remote control)
+# Orchestrator CLI for operators (humans)
+# Binary name: `rbees` (SSH-based remote control)
 # NOT the orchestrator daemon!
-# The orchestrator HTTP daemon is: `orchestratord` (separate binary, M2)
+# The orchestrator HTTP daemon is: `rbees-orcd` (separate binary, M1+)
 
 [[bin]]
-name = "llorch"
+name = "rbees"
 path = "src/main.rs"
 
 [dependencies]

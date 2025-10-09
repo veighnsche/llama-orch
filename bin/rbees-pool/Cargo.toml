@@ -1,17 +1,16 @@
 [package]
-name = "pool-ctl"
+name = "rbees-pool"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
 
-# TEAM-024 CLARIFICATION:
-# This is the LOCAL pool management CLI
-# Binary name: `llorch-pool`
+# Local pool management CLI
+# Binary name: `rbees-pool`
 # Runs ON the pool machine (not remote)
-# Called by `llorch` via SSH for remote operations
+# Called by `rbees` via SSH for remote operations
 
 [[bin]]
-name = "llorch-pool"
+name = "rbees-pool"
 path = "src/main.rs"
 
 [dependencies]
