@@ -320,7 +320,7 @@ action_download_model() {
     log_info "Host: $HOST"
     log_info "Model: TinyLlama 1.1B Chat (FP16)"
     
-    ssh_exec "$HOST" bash <<'EOF'
+    ssh_exec "$HOST" bash <<EOF
 set -euo pipefail
 cd $REMOTE_PATH
 
