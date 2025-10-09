@@ -41,7 +41,7 @@ fn test_cuda_device_init() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "accelerate")]
+#[cfg(feature = "metal")]
 #[test]
 fn test_accelerate_device_init() -> Result<()> {
     use llorch_candled::device::init_accelerate_device;
@@ -100,7 +100,7 @@ fn test_device_residency_enforcement() -> Result<()> {
         .expect("Set LLORCH_TEST_MODEL_PATH to run this test");
 
     let device = init_cpu_device()?;
-    let backend = CandleInferenceBackend::load(&model_path, device)?;
+    let mut backend = CandleInferenceBackend::load(&model_path, device)?;
 
     // Try a simple generation
     let config = SamplingConfig { max_tokens: 5, temperature: 0.0, seed: 42, ..Default::default() };

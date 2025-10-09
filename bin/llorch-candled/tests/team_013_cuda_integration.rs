@@ -29,7 +29,7 @@ fn test_cuda_story_generation() -> Result<()> {
 
     // TEAM-013: Initialize CUDA device 0 (RTX 3060 or RTX 3090)
     let device = init_cuda_device(0)?;
-    let backend = CandleInferenceBackend::load(&model_path, device)?;
+    let mut backend = CandleInferenceBackend::load(&model_path, device)?;
 
     let config = SamplingConfig { max_tokens: 5, temperature: 0.7, seed: 42, ..Default::default() };
 
@@ -100,7 +100,7 @@ fn test_cuda_extended_story_generation() -> Result<()> {
 
     // TEAM-013: Initialize CUDA device 0
     let device = init_cuda_device(0)?;
-    let backend = CandleInferenceBackend::load(&model_path, device)?;
+    let mut backend = CandleInferenceBackend::load(&model_path, device)?;
 
     let config =
         SamplingConfig { max_tokens: 20, temperature: 0.7, seed: 42, ..Default::default() };
@@ -169,7 +169,7 @@ fn test_cuda_performance_benchmark() -> Result<()> {
 
     // TEAM-013: Initialize CUDA device 0
     let device = init_cuda_device(0)?;
-    let backend = CandleInferenceBackend::load(&model_path, device)?;
+    let mut backend = CandleInferenceBackend::load(&model_path, device)?;
 
     let config =
         SamplingConfig { max_tokens: 50, temperature: 0.7, seed: 42, ..Default::default() };
@@ -242,7 +242,7 @@ fn test_cuda_device_1_story_generation() -> Result<()> {
         }
     };
 
-    let backend = CandleInferenceBackend::load(&model_path, device)?;
+    let mut backend = CandleInferenceBackend::load(&model_path, device)?;
 
     let config =
         SamplingConfig { max_tokens: 20, temperature: 0.7, seed: 42, ..Default::default() };

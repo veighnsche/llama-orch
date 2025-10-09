@@ -16,8 +16,8 @@ echo "Status: Pre-release (runtime validation in progress)"
 echo "Started: $(date -Iseconds)"
 echo "════════════════════════════════════════════════════════════════"
 
-ssh mac.home.arpa <<'EOF'
-  set -euo pipefail
+ssh -o BatchMode=yes -o ConnectTimeout=10 mac.home.arpa 'bash -s' <<'EOF'
+set -euo pipefail
   
   cd ~/Projects/llama-orch
   

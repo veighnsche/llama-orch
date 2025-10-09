@@ -15,8 +15,8 @@ echo "Backend: CUDA (NVIDIA GPU)"
 echo "Started: $(date -Iseconds)"
 echo "════════════════════════════════════════════════════════════════"
 
-ssh workstation.home.arpa <<'EOF'
-  set -euo pipefail
+ssh -o BatchMode=yes -o ConnectTimeout=10 workstation.home.arpa 'bash -s' <<'EOF'
+set -euo pipefail
   
   cd ~/Projects/llama-orch
   
