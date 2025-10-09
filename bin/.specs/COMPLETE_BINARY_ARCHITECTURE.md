@@ -1,63 +1,65 @@
-# Complete Binary Architecture — 6 Binaries + 2 Shared Crates
+# Complete Binary Architecture — 4 Binaries + 2 Shared Crates
 
-**Status**: Normative  
-**Version**: 1.0  
-**Date**: 2025-10-09
+**Status**: Normative (Updated post-rebranding)  
+**Version**: 2.0  
+**Date**: 2025-10-09  
+**Updated**: 2025-10-09T23:00 (TEAM-025)
 
 ---
 
 ## The Complete Picture
 
-### 6 Binaries
+### 4 Binaries (THE FUNDAMENTAL ARCHITECTURE)
 
 **Orchestrator (blep.home.arpa):**
-1. **`queen-rbee`** - Daemon (HTTP server :8080)
+1. **`queen-rbee`** - HTTP Daemon (:8080) - M1
    - Scheduling, admission, job queue
    - SQLite state store
    - Makes ALL intelligent decisions
+   - Routes inference requests to workers
    - Uses: `orchestrator-core`
-
-2. **`rbee-keeper`** (command: `rbee`) - CLI
-   - Controls queen-rbee daemon (M2+)
-   - Commands pools via SSH (M0) or HTTP (M2+)
-   - Job submission, listing, cancellation
-   - Uses: `orchestrator-core`
-   - **NO REPL, NO CONVERSATION**
 
 **Pool Manager (mac.home.arpa, workstation.home.arpa, blep.home.arpa):**
-3. **`pool-managerd`** - Daemon (HTTP server :9200)
-   - Worker lifecycle management
+2. **`rbee-hive`** - HTTP Daemon (:8080 or :9200) - M1
+   - Worker lifecycle management via HTTP API
+   - Model downloads (hf CLI in background)
+   - Git operations (submodules in background)
+   - Worker spawn (process spawn)
+   - Health monitoring (every 30s)
+   - Idle timeout enforcement (5 minutes)
    - GPU inventory (NVML)
-   - Heartbeat to orchestrator
    - Uses: `pool-core`
 
-4. **`rbee-hive`** (command: `rbee-hive`) - CLI
-   - Controls pool-managerd daemon (M1+)
-   - Model downloads (hf CLI)
-   - Git operations (submodules)
-   - Worker spawn (direct or via daemon)
-   - Uses: `pool-core`
-   - **NO REPL, NO CONVERSATION**
-
-**Worker (spawned by pool-managerd):**
-5. **`llm-worker-rbee`** - Daemon (HTTP server :8001-8999)
+**Worker (spawned by rbee-hive):**
+3. **`llm-worker-rbee`** - HTTP Daemon (:8001-8999) - M0 ✅
    - Inference execution
    - CUDA/Metal/CPU backends
-   - No CLI (controlled by pool-managerd)
+   - Keeps model in VRAM
+   - SSE streaming
+   - Controlled by rbee-hive
+
+**CLI Tool:**
+4. **`rbee-keeper`** - CLI - M0 ✅
+   - Calls HTTP APIs of queen-rbee and rbee-hive
+   - Job submission, listing, cancellation
+   - Pool operations (models, workers)
+   - Can use SSH tunneling for remote access
+   - Uses: `orchestrator-core`
+   - **NO REPL, NO CONVERSATION**
 
 **Test Harness:**
-6. **`bdd-runner`** - BDD test runner (already exists)
+5. **`bdd-runner`** - BDD test runner (already exists)
 
 ### 2 Shared Crates
 
-7. **`orchestrator-core`** - Shared between queen-rbee + rbee-keeper
+6. **`orchestrator-core`** - Shared between queen-rbee + rbee-keeper
    - Job queue types
    - Scheduling algorithms
    - Pool registry types
    - API types
    - Configuration
 
-8. **`pool-core`** - Shared between pool-managerd + rbee-hive
+7. **`pool-core`** - Shared between rbee-hive (daemon) + rbee-keeper (CLI)
    - Worker registry types
    - GPU inventory types
    - Model catalog types

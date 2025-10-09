@@ -3,24 +3,25 @@
 **Date:** 2025-10-09T17:17:00+02:00  
 **Decision By:** User (Vince)  
 **Documented By:** TEAM-024  
-**Status:** ⚠️ SUPERSEDED BY MVP - See test-001-mvp.md  
+**Status:** ⚠️ COMPLETELY WRONG - SUPERSEDED BY MVP  
 **Impact:** HIGH - Changes M1 milestone
 
 ---
 
-## ⚠️ THIS DECISION WAS INCORRECT
+## ⚠️ THIS DECISION WAS COMPLETELY INCORRECT
 
-**The MVP (test-001-mvp.md) is normative and requires pool-managerd as a persistent daemon.**
+**The MVP (test-001-mvp.md) is normative and requires rbee-hive as a persistent HTTP daemon.**
 
-From test-001-mvp.md Phase 5 (lines 169-173):
-```
-**Pool manager lifecycle:**
-- **Remains running as persistent daemon**
-- Monitors worker health every 30s
-- Enforces idle timeout (5 minutes)
-```
+From test-001-mvp.md:
+- **Phase 2 (lines 42-55)**: rbee-hive has HTTP API at `GET http://mac.home.arpa:8080/v1/health`
+- **Phase 5 (lines 169-173)**: Pool manager remains running as persistent daemon, monitors worker health every 30s, enforces idle timeout
 
-**TEAM-025 NOTE**: This document contradicts the MVP. Ignore this decision and follow test-001-mvp.md.
+**CORRECT ARCHITECTURE:**
+- **rbee-hive** is an **HTTP daemon** (not a CLI)
+- **rbee-keeper** calls rbee-hive's HTTP API
+- **SSH is only used** to start/stop the rbee-hive daemon remotely or for SSH tunneling
+
+**TEAM-025 NOTE**: This entire document is wrong. Ignore it completely and follow test-001-mvp.md.
 
 ---
 
@@ -45,26 +46,25 @@ From test-001-mvp.md Phase 5 (lines 169-173):
 - Check status
 - Git operations
 
-**These are all CLI commands, not long-running services!**
 
 ### What Needs to Be a Daemon vs CLI
 
 | Component | Type | Why |
 |-----------|------|-----|
-| **queen-rbee** | Daemon | Accepts inference requests 24/7, routes to workers |
-| **llm-worker-rbee** (worker) | Daemon | Keeps model in VRAM, accepts inference requests |
-| **rbee-hive** (rbee-hive) | CLI | Control operations on-demand via SSH |
-| **rbee-keeper** (llorch) | CLI | Remote control operations via SSH |
+| **queen-rbee** | HTTP Daemon | Accepts inference requests 24/7, routes to workers |
+| **llm-worker-rbee** | HTTP Daemon | Keeps model in VRAM, accepts inference requests |
+| **rbee-hive** | HTTP Daemon | Pool management HTTP API, monitors workers, enforces timeouts |
+| **rbee-keeper** | CLI | Calls HTTP APIs of queen-rbee and rbee-hive |
 
-### The Correct Architecture
+### The CORRECT Architecture (Per MVP)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ ORCHESTRATORD (HTTP Daemon) - M2                                │
-│ Binary: queen-rbee                                            │
+│ ORCHESTRATOR (HTTP Daemon) - M1                                 │
+│ Binary: queen-rbee                                              │
 │ Port: 8080                                                       │
 │ Purpose: Routes inference requests to workers                    │
-│ Runs: 24/7 as daemon                                             │
+│ Runs: 24/7 as HTTP daemon                                        │
 │ Why daemon: Accepts client requests continuously                 │
 └────────────────────┬────────────────────────────────────────────┘
                      │
@@ -72,38 +72,42 @@ From test-001-mvp.md Phase 5 (lines 169-173):
                      │
 ┌────────────────────┴────────────────────────────────────────────┐
 │ WORKERS (HTTP Daemons) - M0 ✅                                   │
-│ Binary: llm-worker-rbee                                           │
+│ Binary: llm-worker-rbee                                         │
 │ Ports: 8001, 8002, 8003, etc.                                    │
 │ Purpose: Execute inference, stream tokens                        │
-│ Runs: 24/7 as daemon (one per model)                             │
+│ Runs: 24/7 as HTTP daemon (one per model)                        │
 │ Why daemon: Keep model loaded in VRAM                            │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ POOL MANAGER (CLI Tool) - M0 ✅                                  │
-│ Binary: rbee-hive                                              │
-│ Purpose: Local pool operations (models, workers)                 │
-│ Runs: On-demand when operator calls it                           │
-│ Why CLI: Control operations don't need 24/7 daemon               │
+│ POOL MANAGER (HTTP Daemon) - M1 ❌ NOT BUILT YET                │
+│ Binary: rbee-hive                                               │
+│ Port: 8080 or 9200                                               │
+│ Purpose: Pool management HTTP API                                │
+│ Runs: 24/7 as HTTP daemon                                        │
+│ Why daemon: Monitors worker health (30s), enforces timeouts      │
 │                                                                   │
-│ Commands:                                                        │
-│ - rbee-hive models download <model>                            │
-│ - rbee-hive worker spawn <backend> --model <model>             │
-│ - rbee-hive worker list                                        │
-│ - rbee-hive worker stop <id>                                   │
+│ HTTP API:                                                        │
+│ - GET  /v1/health                                                │
+│ - POST /v1/models/download                                       │
+│ - POST /v1/workers/spawn                                         │
+│ - GET  /v1/workers/list                                          │
+│ - POST /v1/workers/ready (callback from workers)                 │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ ORCHESTRATOR CLI (CLI Tool) - M0 ✅                              │
-│ Binary: rbee                                                   │
-│ Purpose: Remote pool control via SSH                             │
+│ CLI TOOL - M0 ✅                                                 │
+│ Binary: rbee-keeper                                             │
+│ Purpose: Calls HTTP APIs of queen-rbee and rbee-hive            │
 │ Runs: On-demand when operator calls it                           │
-│ Why CLI: Control operations don't need 24/7 daemon               │
 │                                                                   │
-│ Commands:                                                        │
-│ - rbee pool models download <model> --host <pool>              │
-│ - rbee pool worker spawn <backend> --host <pool> --model <m>   │
-│ - rbee infer --worker <host:port> --prompt <text>              │
+│ Commands (via HTTP):                                             │
+│ - rbee-keeper pool models download <model> --host <pool>        │
+│   → POST http://mac.home.arpa:8080/v1/models/download           │
+│ - rbee-keeper pool worker spawn <backend> --host <pool>         │
+│   → POST http://mac.home.arpa:8080/v1/workers/spawn             │
+│ - rbee-keeper infer --worker <host:port> --prompt <text>        │
+│   → POST http://worker:8001/v1/inference                        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

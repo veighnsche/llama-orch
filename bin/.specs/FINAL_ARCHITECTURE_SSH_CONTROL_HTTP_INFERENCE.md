@@ -1,35 +1,47 @@
-# Final Architecture: SSH Control + HTTP Inference
+# Final Architecture: All HTTP Daemons
 
-**Status**: ⚠️ PARTIALLY OUTDATED - See test-001-mvp.md for pool manager requirements  
-**Version**: 1.0  
-**Date**: 2025-10-09
-
----
-
-## ⚠️ IMPORTANT CORRECTION
-
-**The MVP (test-001-mvp.md) requires pool-managerd as a persistent daemon.**
-
-This document is correct about workers being HTTP daemons, but incorrectly suggests pool managers don't need to be daemons.
-
-**From MVP Phase 5 (lines 169-173):**
-- Pool manager **remains running as persistent daemon**
-- Monitors worker health every 30s
-- Enforces idle timeout (5 minutes)
+**Status**: NORMATIVE - Aligned with test-001-mvp.md  
+**Version**: 2.0  
+**Date**: 2025-10-09  
+**Updated**: 2025-10-09T23:00 (TEAM-025 - Post-rebranding)
 
 ---
 
 ## Executive Summary
 
-**Control Plane:** SSH (operator → pools) + HTTP (pool manager daemon)  
-**Data Plane:** HTTP (orchestrator → workers for inference)
+**ALL components use HTTP for communication.**
 
-**Key Insight:** Workers MUST be HTTP daemons because they need to:
-1. Stay running with model loaded in VRAM
+**3 HTTP Daemons:**
+1. **queen-rbee** (orchestrator) - Routes inference requests
+2. **llm-worker-rbee** (workers) - Execute inference, keep models in VRAM
+3. **rbee-hive** (pool manager) - Pool management API, worker health monitoring
+
+**1 CLI Tool:**
+- **rbee-keeper** - Calls HTTP APIs of all daemons
+
+**SSH is ONLY used for:**
+- Starting/stopping daemons remotely
+- SSH tunneling to reach HTTP endpoints
+- NOT for executing pool operations (those use HTTP)
+
+---
+
+## Key Insights
+
+**Workers MUST be HTTP daemons:**
+1. Keep model loaded in VRAM (expensive to reload)
 2. Accept inference requests from orchestrator
-3. Be directly accessible over network (not through pool manager)
+3. Be directly accessible over network
 
-**Additional Insight:** Pool managers MUST be daemons to monitor worker health and enforce timeouts.
+**Pool managers MUST be HTTP daemons:**
+1. Monitor worker health every 30s (per MVP Phase 5)
+2. Enforce idle timeout (5 minutes)
+3. Provide HTTP API for pool operations
+
+**rbee-keeper is a CLI that calls HTTP APIs:**
+1. No SSH command execution for pool operations
+2. Direct HTTP calls to rbee-hive and queen-rbee
+3. Can use SSH tunneling for remote access
 
 ---
 
@@ -38,14 +50,14 @@ This document is correct about workers being HTTP daemons, but incorrectly sugge
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ CONTROL PLANE (Operator → System)                               │
-│ Protocol: SSH                                                    │
+│ Protocol: HTTP                                                   │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                   │
-│ rbee-keeper (blep)                                                │
-│     ↓ SSH (control operations)                                   │
-│ rbee-hive (mac/workstation)                                       │
+│ rbee-keeper (CLI on blep)                                       │
+│     ↓ HTTP (control operations)                                  │
+│ rbee-hive (HTTP daemon on mac/workstation :8080)                │
 │     ↓ spawn process                                              │
-│ llm-worker-rbee (worker daemon, HTTP server)                      │
+│ llm-worker-rbee (HTTP daemon :8001)                             │
 │                                                                   │
 └─────────────────────────────────────────────────────────────────┘
 
@@ -56,11 +68,11 @@ This document is correct about workers being HTTP daemons, but incorrectly sugge
 │                                                                   │
 │ llama-orch-sdk (client)                                          │
 │     ↓ HTTP POST /v2/tasks                                        │
-│ queen-rbee (daemon :8080)                                     │
+│ queen-rbee (HTTP daemon :8080)                                  │
 │     ↓ HTTP POST /execute (DIRECT to worker, not via pool)       │
-│ llm-worker-rbee (worker daemon :8001)                             │
+│ llm-worker-rbee (HTTP daemon :8001)                             │
 │     ↓ SSE stream                                                 │
-│ queen-rbee (relays)                                           │
+│ queen-rbee (relays)                                             │
 │     ↓ SSE stream                                                 │
 │ llama-orch-sdk (client)                                          │
 │                                                                   │
@@ -81,7 +93,7 @@ This document is correct about workers being HTTP daemons, but incorrectly sugge
 1. Spawn: llm-worker-rbee --model tinyllama.gguf --gpu 0 --port 8001
 2. Load model into VRAM (30 seconds)
 3. HTTP server starts, listens on :8001
-4. Ready callback: POST http://pool-manager:9200/workers/ready
+4. Ready callback: POST http://rbee-hive:8080/v1/workers/ready
 5. Wait for inference requests (model stays in VRAM)
 6. Receive: POST http://worker:8001/execute
 7. Execute inference (model already loaded, fast)
@@ -493,22 +505,25 @@ POST /workers/register
 - Spawning itself (rbee-hive does this)
 - Scheduling (orchestrator does this)
 
-### rbee-hive (daemon + CLI)
+### rbee-hive (HTTP Daemon)
 
-**MUST be a daemon (per MVP) with CLI interface:**
+**MUST be an HTTP daemon (per MVP):**
 
-**Daemon Responsibilities:**
+**HTTP API Responsibilities:**
+- GET /v1/health - Health check endpoint
+- POST /v1/models/download - Download models via hf CLI
+- POST /v1/workers/spawn - Spawn worker processes
+- GET /v1/workers/list - List running workers
+- POST /v1/workers/ready - Callback from workers when ready
 - Monitor worker health every 30s
 - Enforce idle timeout (5 minutes)
 - Track worker lifecycle state
-- Respond to orchestrator health checks
 
-**CLI Responsibilities:**
+**Background Tasks:**
 - Download models (hf CLI)
 - Git operations (git CLI)
 - Spawn workers (llm-worker-rbee as background process)
 - Stop workers (kill process)
-- List workers (ps/pidof)
 
 **NOT responsible for:**
 - Inference (workers do this)
@@ -516,13 +531,14 @@ POST /workers/register
 
 ### rbee-keeper (CLI)
 
-**Uses SSH for control:**
+**Calls HTTP APIs (not SSH command execution):**
 
 **Responsibilities:**
-- Command pools via SSH
-- Query pool status (via SSH)
-- Query worker registry (via orchestrator HTTP API, M2+)
-- Submit jobs (via orchestrator HTTP API, M2+)
+- Call rbee-hive HTTP API for pool operations
+- Call queen-rbee HTTP API for inference
+- Can use SSH tunneling for remote access
+- Query worker registry (via orchestrator HTTP API)
+- Submit jobs (via orchestrator HTTP API)
 
 **NOT responsible for:**
 - Inference (workers do this)

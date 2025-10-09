@@ -1,10 +1,16 @@
 # Control Plane Architecture Decision: SSH vs HTTP
 
-**Status**: OUTDATED - See test-001-mvp.md for normative architecture  
+**Status**: COMPLETELY OUTDATED - See test-001-mvp.md for normative architecture  
 **Date**: 2025-10-09  
+**Updated**: 2025-10-09T23:00 (TEAM-025)
 **Context**: How should orchestrator control pool managers?
 
-⚠️ **WARNING**: This document contains outdated conclusions. The MVP (test-001-mvp.md) is normative and requires pool-managerd as a persistent daemon.
+⚠️ **CRITICAL**: This document is WRONG. The correct architecture:
+- **rbee-hive is an HTTP daemon** (not SSH-controlled CLI)
+- **rbee-keeper calls HTTP APIs** (not SSH command execution)
+- **SSH is only for starting daemons remotely** (not for pool operations)
+
+See `test-001-mvp.md` Phase 2 (lines 42-55) for HTTP API proof.
 
 ---
 
@@ -288,9 +294,17 @@ Just CLIs + SSH + llm-worker-rbee workers
 
 ---
 
-## ⚠️ OUTDATED RECOMMENDATION: Option 2 (SSH for Control, HTTP for Inference)
+## ⚠️ COMPLETELY WRONG RECOMMENDATION: Option 2 (SSH for Control, HTTP for Inference)
 
-**NOTE**: The MVP requires pool-managerd as a persistent daemon (test-001-mvp.md Phase 5, lines 169-173).
+**CORRECT ARCHITECTURE**: ALL HTTP (3 daemons + 1 CLI)
+- queen-rbee (HTTP daemon)
+- llm-worker-rbee (HTTP daemon)
+- rbee-hive (HTTP daemon)
+- rbee-keeper (CLI that calls HTTP APIs)
+
+**MVP PROOF**:
+- Phase 2 (lines 42-55): `GET http://mac.home.arpa:8080/v1/health` - rbee-hive HTTP API
+- Phase 5 (lines 169-173): Pool manager remains running as persistent daemon
 
 ### Rationale
 
@@ -499,26 +513,28 @@ llama-orch-sdk (client)
 
 ## Implementation Plan
 
-### M0: SSH Control + Direct Execution
+### CORRECT M0/M1 Architecture
 
 **Binaries:**
 1. `rbee-keeper` (CLI on blep)
-   - Commands pools via SSH
-   - No HTTP client for control
-   - Uses: orchestrator-core (shared types)
+   - Calls HTTP APIs (not SSH commands)
+   - HTTP client for rbee-hive and queen-rbee
+   - Uses: Orchestrator-core (shared types)
 
-2. `rbee-hive` (CLI on pools)
-   - Executes directly (no daemon)
-   - Model downloads (hf CLI)
-   - Git operations (git CLI)
-   - Worker spawn (direct process spawn)
+2. `rbee-hive` (HTTP daemon on pools)
+   - HTTP server with API endpoints
+   - Model downloads (hf CLI in background)
+   - Git operations (git CLI in background)
+   - Worker spawn (process spawn in background)
+   - Health monitoring (every 30s)
+   - Idle timeout enforcement (5 minutes)
    - Uses: pool-core (shared types)
 
-3. `llm-worker-rbee` (worker daemon)
+3. `llm-worker-rbee` (HTTP daemon)
    - HTTP server for inference
    - Spawned by rbee-hive
 
-**⚠️ OUTDATED**: The MVP requires pool-managerd as a persistent daemon to monitor worker health and enforce idle timeouts.
+**NO SSH command execution for pool operations. rbee-keeper calls HTTP APIs directly.**
 
 ### M1: Add Pool Manager Daemon (Optional)
 
