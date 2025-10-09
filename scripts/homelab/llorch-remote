@@ -60,24 +60,27 @@ ${CYAN}llorch-remote${NC} v${VERSION} - Remote testing CLI for llama-orch
 ${YELLOW}USAGE:${NC}
     llorch-remote <HOST> <BACKEND> <ACTION> [OPTIONS]
 
-${YELLOW}ARGUMENTS:${NC}
     ${GREEN}HOST${NC}        Remote host (e.g., mac.home.arpa, workstation.home.arpa)
     ${GREEN}BACKEND${NC}     Backend type: cpu, cuda, metal
     ${GREEN}ACTION${NC}      Action to perform (see below)
 
 ${YELLOW}ACTIONS:${NC}
-    ${MAGENTA}clone${NC}       Clone repository to remote host
-    ${MAGENTA}pull${NC}        Pull latest changes from origin/main
-    ${MAGENTA}status${NC}      Show git status and system info
-    ${MAGENTA}build${NC}       Build backend binary (release mode)
-    ${MAGENTA}test${NC}        Run all tests for backend
-    ${MAGENTA}smoke${NC}       Run smoke tests only
-    ${MAGENTA}unit${NC}        Run unit tests only
-    ${MAGENTA}integration${NC} Run integration tests only
-    ${MAGENTA}inference${NC}   Generate a test story (requires model)
-    ${MAGENTA}clean${NC}       Clean build artifacts
-    ${MAGENTA}info${NC}        Show backend and hardware info
-    ${MAGENTA}all${NC}         Run: pull → build → test → inference
+    ${MAGENT### Actions
+
+| Action | Description |
+|--------|-------------|
+| `clone` | Clone repository to remote host |
+| `status` | Show git status and system info |
+| `build` | Build backend binary (release mode) |
+| `test` | Run all tests for backend |
+| `smoke` | Run smoke tests only |
+| `unit`        Run unit tests only |
+| `integration`    Run integration tests only |
+| `download-model` | Download test model (tinyllama by default) |
+| `inference`   | Generate a test story with actual model |
+| `clean`       | Clean build artifacts |
+| `info` | Show backend and hardware info |
+| `all` | Run: pull → build → test → download-model → inference |
 
 ${YELLOW}OPTIONS:${NC}
     --model PATH    Model path for inference (default: \$LLORCH_TEST_MODEL_PATH)
@@ -312,60 +315,92 @@ EOF
     log_success "Integration tests complete"
 }
 
+action_download_model() {
+    log_section "📥 Downloading Test Model"
+    log_info "Host: $HOST"
+    log_info "Model: TinyLlama 1.1B Chat (FP16)"
+    
+    ssh_exec "$HOST" bash <<'EOF'
+set -euo pipefail
+cd $REMOTE_PATH
+
+# Run the download script
+bash .docs/testing/download_tinyllama.sh
+EOF
+    
+    log_success "Model download complete"
+}
+
 action_inference() {
     log_section "📖 Running Inference Test ($BACKEND)"
     log_info "Host: $HOST"
     log_info "Backend: $BACKEND"
     
-    if [[ -z "$MODEL_PATH" ]]; then
-        log_warn "No model path provided, generating placeholder story"
-    else
-        log_info "Model: $MODEL_PATH"
-    fi
+    # Determine model path
+    local remote_model_path="${MODEL_PATH:-$REMOTE_PATH/.test-models/tinyllama/tinyllama-1.1b-chat-v1.0.F16.gguf}"
+    log_info "Model: $remote_model_path"
     
     ssh_exec "$HOST" bash <<EOF
 set -euo pipefail
 cd $REMOTE_PATH/bin/llorch-candled
 
-echo "Generating test story..."
+echo "Running inference with actual model..."
 echo "─────────────────────────────────────────────────────────"
 
-# Create a simple story generator
-cat > /tmp/story_gen.sh <<'STORY_SCRIPT'
-#!/usr/bin/env bash
-set -euo pipefail
+# Check if model exists
+if [[ ! -f "$remote_model_path" ]]; then
+    echo "❌ Model not found: $remote_model_path"
+    echo ""
+    echo "Download model first:"
+    echo "  llorch-remote $HOST $BACKEND download-model"
+    exit 1
+fi
 
-# Placeholder story (actual inference would require model)
-case "$BACKEND" in
-    cpu)
-        echo "📖 Story: In the realm of pure computation..."
-        echo "   The CPU backend awakened, processing each token with precision."
-        echo "   Though slower than its GPU cousins, it ran anywhere, on any machine."
-        echo "   And the tests passed. The End. ✨"
-        ;;
-    cuda)
-        echo "📖 Story: Deep in the datacenter, CUDA cores ignited..."
-        echo "   Thousands of parallel threads computed in harmony."
-        echo "   The NVIDIA GPU blazed through inference at lightning speed."
-        echo "   And the tokens flowed like a river. The End. 🚀"
-        ;;
-    metal)
-        echo "📖 Story: On the shores of Cupertino, Metal was forged..."
-        echo "   Apple Silicon unified memory and compute as one."
-        echo "   The M-series chip hummed with efficiency and power."
-        echo "   And the inference was swift and beautiful. The End. ⚡"
-        ;;
-esac
+# Start the worker in background
+echo "Starting $BACKEND worker..."
+../../target/release/llorch-${BACKEND}-candled \\
+    --worker-id test-inference \\
+    --model "$remote_model_path" \\
+    --port 9876 \\
+    --callback-url http://localhost:9999 &
 
+WORKER_PID=\$!
+echo "Worker PID: \$WORKER_PID"
+
+# Wait for worker to be ready
+sleep 3
+
+# Send inference request
 echo ""
-echo "Backend: $BACKEND"
-echo "Status: ✅ Inference test complete"
-STORY_SCRIPT
+echo "Sending inference request..."
+RESPONSE=\$(curl -s -X POST http://localhost:9876/v1/execute \\
+    -H "Content-Type: application/json" \\
+    -d '{
+        "job_id": "test-story",
+        "prompt": "Once upon a time",
+        "max_tokens": 50,
+        "temperature": 0.7,
+        "seed": 42
+    }' || echo "")
 
-chmod +x /tmp/story_gen.sh
-BACKEND=$BACKEND /tmp/story_gen.sh
+# Kill worker
+kill \$WORKER_PID 2>/dev/null || true
+wait \$WORKER_PID 2>/dev/null || true
 
-echo "─────────────────────────────────────────────────────────"
+# Parse and display response
+if [[ -n "\$RESPONSE" ]]; then
+    echo ""
+    echo "📖 Generated Story:"
+    echo "─────────────────────────────────────────────────────────"
+    echo "\$RESPONSE" | jq -r '.text // .error // "No text in response"' 2>/dev/null || echo "\$RESPONSE"
+    echo "─────────────────────────────────────────────────────────"
+    echo ""
+    echo "Backend: $BACKEND"
+    echo "Status: ✅ Inference test complete"
+else
+    echo "❌ No response from worker"
+    exit 1
+fi
 EOF
     
     log_success "Inference test complete"
@@ -442,11 +477,12 @@ action_all() {
     log_section "🚀 Running Full Workflow"
     log_info "Host: $HOST"
     log_info "Backend: $BACKEND"
-    log_info "Steps: pull → build → test → inference"
+    log_info "Steps: pull → build → test → download-model → inference"
     
     action_pull
     action_build
     action_test
+    action_download_model
     action_inference
     
     log_section "✅ Full Workflow Complete"
@@ -477,6 +513,9 @@ case "$ACTION" in
         ;;
     integration)
         action_integration
+        ;;
+    download-model)
+        action_download_model
         ;;
     inference)
         action_inference
