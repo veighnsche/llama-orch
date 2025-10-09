@@ -75,12 +75,15 @@ impl LlamaModel {
         };
 
         // Create VarBuilder and load model
-        let dtype = DType::F32;
+        // TEAM-018: Use F16 for Metal backend (better support), F32 for others
+        let dtype = if device.is_metal() { DType::F16 } else { DType::F32 };
+        tracing::info!(dtype = ?dtype, device = ?device, "Loading model with dtype");
+        
         let vb = unsafe { VarBuilder::from_mmaped_safetensors(&safetensor_files, dtype, device)? };
         let model = Llama::load(vb, &config).context("Failed to load Llama model")?;
 
-        // Create cache
-        let cache = Cache::new(true, DType::F32, &config, device)
+        // Create cache with same dtype
+        let cache = Cache::new(true, dtype, &config, device)
             .context("Failed to create Llama cache")?;
 
         tracing::info!(
