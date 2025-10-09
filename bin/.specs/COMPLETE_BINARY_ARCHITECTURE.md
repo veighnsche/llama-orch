@@ -11,14 +11,14 @@
 ### 6 Binaries
 
 **Orchestrator (blep.home.arpa):**
-1. **`orchestratord`** - Daemon (HTTP server :8080)
+1. **`rbees-orcd`** - Daemon (HTTP server :8080)
    - Scheduling, admission, job queue
    - SQLite state store
    - Makes ALL intelligent decisions
    - Uses: `orchestrator-core`
 
-2. **`llorch-ctl`** (command: `llorch`) - CLI
-   - Controls orchestratord daemon (M2+)
+2. **`rbees-ctl`** (command: `rbees`) - CLI
+   - Controls rbees-orcd daemon (M2+)
    - Commands pools via SSH (M0) or HTTP (M2+)
    - Job submission, listing, cancellation
    - Uses: `orchestrator-core`
@@ -31,7 +31,7 @@
    - Heartbeat to orchestrator
    - Uses: `pool-core`
 
-4. **`pool-ctl`** (command: `llorch-pool`) - CLI
+4. **`rbees-pool`** (command: `rbees-pool`) - CLI
    - Controls pool-managerd daemon (M1+)
    - Model downloads (hf CLI)
    - Git operations (submodules)
@@ -40,7 +40,7 @@
    - **NO REPL, NO CONVERSATION**
 
 **Worker (spawned by pool-managerd):**
-5. **`llorch-candled`** - Daemon (HTTP server :8001-8999)
+5. **`rbees-workerd`** - Daemon (HTTP server :8001-8999)
    - Inference execution
    - CUDA/Metal/CPU backends
    - No CLI (controlled by pool-managerd)
@@ -50,14 +50,14 @@
 
 ### 2 Shared Crates
 
-7. **`orchestrator-core`** - Shared between orchestratord + llorch-ctl
+7. **`orchestrator-core`** - Shared between rbees-orcd + rbees-ctl
    - Job queue types
    - Scheduling algorithms
    - Pool registry types
    - API types
    - Configuration
 
-8. **`pool-core`** - Shared between pool-managerd + pool-ctl
+8. **`pool-core`** - Shared between pool-managerd + rbees-pool
    - Worker registry types
    - GPU inventory types
    - Model catalog types
@@ -77,9 +77,9 @@ bin/
 │   ├── BINARY_STRUCTURE_CLARIFICATION.md
 │   └── COMPLETE_BINARY_ARCHITECTURE.md     # This document
 │
-├── orchestratord/                           # Daemon (M2+)
+├── rbees-orcd/                           # Daemon (M2+)
 │   ├── .specs/
-│   │   └── 00_orchestratord.md
+│   │   └── 00_rbees-orcd.md
 │   ├── src/
 │   │   ├── main.rs                         # HTTP server
 │   │   ├── api/                            # HTTP endpoints
@@ -88,16 +88,16 @@ bin/
 │   │   └── state/                          # SQLite store
 │   └── Cargo.toml
 │
-├── llorch-ctl/                              # CLI (M0+)
+├── rbees-ctl/                              # CLI (M0+)
 │   ├── .specs/
 │   │   └── 00_llorch-cli.md
 │   ├── catalog.toml                        # Model catalog (shared)
 │   ├── src/
 │   │   ├── main.rs                         # CLI entry (command: llorch)
 │   │   ├── commands/
-│   │   │   ├── jobs.rs                     # llorch jobs ...
-│   │   │   ├── pools.rs                    # llorch pool ...
-│   │   │   └── dev.rs                      # llorch dev ...
+│   │   │   ├── jobs.rs                     # rbees jobs ...
+│   │   │   ├── pools.rs                    # rbees pool ...
+│   │   │   └── dev.rs                      # rbees dev ...
 │   │   ├── ssh.rs                          # SSH client
 │   │   └── http_client.rs                  # HTTP client
 │   └── Cargo.toml
@@ -113,22 +113,22 @@ bin/
 │   │   └── heartbeat.rs                    # Heartbeat to orchestrator
 │   └── Cargo.toml
 │
-├── pool-ctl/                                # CLI (M0+)
+├── rbees-pool/                                # CLI (M0+)
 │   ├── .specs/
-│   │   └── 00_pool-ctl.md
+│   │   └── 00_rbees-pool.md
 │   ├── catalog.toml                        # Model catalog (shared)
 │   ├── src/
-│   │   ├── main.rs                         # CLI entry (command: llorch-pool)
+│   │   ├── main.rs                         # CLI entry (command: rbees-pool)
 │   │   ├── commands/
-│   │   │   ├── models.rs                   # llorch-pool models ...
-│   │   │   ├── git.rs                      # llorch-pool git ...
-│   │   │   ├── worker.rs                   # llorch-pool worker ...
-│   │   │   └── dev.rs                      # llorch-pool dev ...
+│   │   │   ├── models.rs                   # rbees-pool models ...
+│   │   │   ├── git.rs                      # rbees-pool git ...
+│   │   │   ├── worker.rs                   # rbees-pool worker ...
+│   │   │   └── dev.rs                      # rbees-pool dev ...
 │   │   ├── hf_wrapper.rs                   # hf CLI wrapper
 │   │   └── git_wrapper.rs                  # git CLI wrapper
 │   └── Cargo.toml
 │
-├── llorch-candled/                          # Worker daemon (M0+, exists)
+├── rbees-workerd/                          # Worker daemon (M0+, exists)
 │   └── ...
 │
 └── shared-crates/
@@ -167,9 +167,9 @@ bin/
 
 ## Control Relationships
 
-### llorch-ctl Controls
+### rbees-ctl Controls
 
-**1. orchestratord daemon (M2+)**
+**1. rbees-orcd daemon (M2+)**
 ```bash
 llorch orchestrator start [--config PATH]
 llorch orchestrator stop
@@ -185,7 +185,7 @@ llorch pool models download tinyllama --host mac
 llorch pool worker spawn metal --host mac
 llorch pool git pull --host workstation
 ```
-**How**: SSH to pool host, executes `llorch-pool` command
+**How**: SSH to pool host, executes `rbees-pool` command
 
 **3. Jobs (M2+)**
 ```bash
@@ -194,31 +194,31 @@ llorch jobs list
 llorch jobs cancel job-123
 llorch jobs status job-123
 ```
-**How**: HTTP calls to orchestratord API
+**How**: HTTP calls to rbees-orcd API
 
-### pool-ctl Controls
+### rbees-pool Controls
 
 **1. pool-managerd daemon (M1+)**
 ```bash
-llorch-pool daemon start [--config PATH]
-llorch-pool daemon stop
-llorch-pool daemon status
+rbees-pool daemon start [--config PATH]
+rbees-pool daemon stop
+rbees-pool daemon status
 ```
 **How**: Spawns/stops process, queries HTTP API
 
 **2. Local operations (M0)**
 ```bash
-llorch-pool models download tinyllama
-llorch-pool git pull
-llorch-pool worker spawn metal --model tinyllama
+rbees-pool models download tinyllama
+rbees-pool git pull
+rbees-pool worker spawn metal --model tinyllama
 ```
 **How**: Direct execution (hf CLI, git CLI, process spawn)
 
 **3. Workers (M0+)**
 ```bash
-llorch-pool worker spawn metal --model tinyllama --gpu 0
-llorch-pool worker stop worker-metal-0
-llorch-pool worker list
+rbees-pool worker spawn metal --model tinyllama --gpu 0
+rbees-pool worker stop worker-metal-0
+rbees-pool worker list
 ```
 **How**: Direct spawn (M0) or HTTP call to pool-managerd (M1+)
 
@@ -230,7 +230,7 @@ llorch-pool worker list
 
 **Job Queue:**
 ```rust
-// Used by BOTH orchestratord and llorch-ctl
+// Used by BOTH rbees-orcd and rbees-ctl
 pub struct Job {
     pub id: String,
     pub model_ref: String,
@@ -247,7 +247,7 @@ pub trait JobQueue {
 
 **Daemon uses it:**
 ```rust
-// orchestratord/src/main.rs
+// rbees-orcd/src/main.rs
 use orchestrator_core::{JobQueue, Job};
 
 struct Orchestratord {
@@ -258,7 +258,7 @@ struct Orchestratord {
 
 **CLI uses it:**
 ```rust
-// llorch-ctl/src/commands/jobs.rs
+// rbees-ctl/src/commands/jobs.rs
 use orchestrator_core::{Job, TaskSubmitRequest};
 
 fn submit_job(model: &str, prompt: &str) -> Result<()> {
@@ -276,7 +276,7 @@ fn submit_job(model: &str, prompt: &str) -> Result<()> {
 
 **Worker Spawn Logic:**
 ```rust
-// Used by BOTH pool-managerd and pool-ctl
+// Used by BOTH pool-managerd and rbees-pool
 pub fn spawn_worker(req: &WorkerSpawnRequest) -> Result<WorkerInfo> {
     // Shared validation
     validate_backend(&req.backend)?;
@@ -285,7 +285,7 @@ pub fn spawn_worker(req: &WorkerSpawnRequest) -> Result<WorkerInfo> {
     
     // Shared spawn logic
     let cmd = build_worker_command(req)?;
-    let child = Command::new("llorch-candled")
+    let child = Command::new("rbees-workerd")
         .args(&cmd.args)
         .spawn()?;
     
@@ -315,7 +315,7 @@ async fn handle_spawn_request(&self, req: WorkerSpawnRequest) -> Result<()> {
 
 **CLI uses it:**
 ```rust
-// pool-ctl/src/commands/worker.rs
+// rbees-pool/src/commands/worker.rs
 use pool_core::{spawn_worker, WorkerSpawnRequest};
 
 fn spawn_worker_cmd(backend: &str, model: &str, gpu: u32) -> Result<()> {
@@ -337,28 +337,28 @@ fn spawn_worker_cmd(backend: &str, model: &str, gpu: u32) -> Result<()> {
 ### M0 (Current)
 
 **What exists:**
-- `llorch-candled` (worker daemon)
+- `rbees-workerd` (worker daemon)
 - Bash scripts (being replaced)
 
 **What we build:**
 1. `pool-core` (shared crate)
-2. `pool-ctl` (CLI)
+2. `rbees-pool` (CLI)
    - Direct model downloads
    - Direct git operations
    - Direct worker spawning
 3. `orchestrator-core` (shared crate)
-4. `llorch-ctl` (CLI)
+4. `rbees-ctl` (CLI)
    - SSH to pools
-   - Commands pool-ctl remotely
+   - Commands rbees-pool remotely
    - No daemon yet (CLI does scheduling)
 
 **Architecture:**
 ```
-llorch-ctl (on blep)
+rbees-ctl (on blep)
     ↓ SSH
-pool-ctl (on mac/workstation)
+rbees-pool (on mac/workstation)
     ↓ spawn
-llorch-candled (worker)
+rbees-workerd (worker)
 ```
 
 ### M1 (Future)
@@ -371,40 +371,40 @@ llorch-candled (worker)
    - Uses: pool-core
 
 **What changes:**
-- `pool-ctl` can call pool-managerd HTTP API
-- `llorch-ctl` can call pool-managerd HTTP API (via SSH tunnel or direct)
+- `rbees-pool` can call pool-managerd HTTP API
+- `rbees-ctl` can call pool-managerd HTTP API (via SSH tunnel or direct)
 
 **Architecture:**
 ```
-llorch-ctl (on blep)
+rbees-ctl (on blep)
     ↓ SSH or HTTP
 pool-managerd (daemon on mac/workstation)
     ↓ spawn
-llorch-candled (worker)
+rbees-workerd (worker)
 ```
 
 ### M2 (Future)
 
 **What we add:**
-6. `orchestratord` (daemon)
+6. `rbees-orcd` (daemon)
    - HTTP server
    - Job scheduling via HTTP
    - State persistence
    - Uses: orchestrator-core
 
 **What changes:**
-- `llorch-ctl` calls orchestratord HTTP API
-- `orchestratord` calls pool-managerd HTTP API
+- `rbees-ctl` calls rbees-orcd HTTP API
+- `rbees-orcd` calls pool-managerd HTTP API
 
 **Architecture:**
 ```
-llorch-ctl (CLI)
+rbees-ctl (CLI)
     ↓ HTTP
-orchestratord (daemon on blep)
+rbees-orcd (daemon on blep)
     ↓ HTTP
 pool-managerd (daemon on mac/workstation)
     ↓ spawn
-llorch-candled (worker)
+rbees-workerd (worker)
 ```
 
 ---
@@ -417,23 +417,23 @@ llorch-candled (worker)
 ```bash
 # Command pool to download model
 llorch pool models download tinyllama --host mac
-  → SSH: ssh mac "llorch-pool models download tinyllama"
+  → SSH: ssh mac "rbees-pool models download tinyllama"
   → Executes: hf download TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF ...
 
 # Command pool to spawn worker
 llorch pool worker spawn metal --host mac --model tinyllama
-  → SSH: ssh mac "llorch-pool worker spawn metal --model tinyllama"
-  → Executes: llorch-candled --backend metal --model .test-models/tinyllama/...
+  → SSH: ssh mac "rbees-pool worker spawn metal --model tinyllama"
+  → Executes: rbees-workerd --backend metal --model .test-models/tinyllama/...
 ```
 
 **On mac (pool host):**
 ```bash
 # Local pool operations
-llorch-pool models download tinyllama
+rbees-pool models download tinyllama
   → Executes: hf download ...
 
-llorch-pool worker spawn metal --model tinyllama
-  → Executes: llorch-candled --backend metal ...
+rbees-pool worker spawn metal --model tinyllama
+  → Executes: rbees-workerd --backend metal ...
 ```
 
 ### M1: Pool Daemon Mode
@@ -449,10 +449,10 @@ llorch pool worker spawn metal --host mac --model tinyllama
 **On mac (pool host):**
 ```bash
 # Start pool daemon
-llorch-pool daemon start
+rbees-pool daemon start
 
 # CLI can still work directly OR via daemon
-llorch-pool worker spawn metal --model tinyllama
+rbees-pool worker spawn metal --model tinyllama
   → Option 1: Direct spawn (if no daemon)
   → Option 2: HTTP POST http://localhost:9200/workers/spawn (if daemon running)
 ```
@@ -467,11 +467,11 @@ llorch orchestrator start
 # Submit job via daemon
 llorch jobs submit --model llama3 --prompt "hello"
   → HTTP: POST http://localhost:8080/v2/tasks
-  → orchestratord schedules job
-  → orchestratord calls pool-managerd: POST http://mac:9200/workers/spawn
+  → rbees-orcd schedules job
+  → rbees-orcd calls pool-managerd: POST http://mac:9200/workers/spawn
   → pool-managerd spawns worker
-  → orchestratord dispatches job to worker
-  → llorch-ctl streams SSE response
+  → rbees-orcd dispatches job to worker
+  → rbees-ctl streams SSE response
 ```
 
 ---
@@ -480,7 +480,7 @@ llorch jobs submit --model llama3 --prompt "hello"
 
 ### [RULE-001] NO REPL, NO CONVERSATION
 
-**FORBIDDEN in llorch-ctl:**
+**FORBIDDEN in rbees-ctl:**
 ```bash
 # ❌ NEVER
 llorch chat
@@ -493,12 +493,12 @@ $ llorch
 > list jobs
 ```
 
-**FORBIDDEN in pool-ctl:**
+**FORBIDDEN in rbees-pool:**
 ```bash
 # ❌ NEVER
-llorch-pool chat
-llorch-pool repl
-llorch-pool interactive
+rbees-pool chat
+rbees-pool repl
+rbees-pool interactive
 ```
 
 **WHY:**
@@ -517,21 +517,21 @@ llorch jobs cancel job-123
 
 # ✅ Scripting
 for job in $(llorch jobs list --format json | jq -r '.[].id'); do
-  llorch jobs cancel $job
+  rbees jobs cancel $job
 done
 ```
 
 ### [RULE-002] CTL Can Control Daemon
 
-**llorch-ctl MUST be able to:**
-- Start/stop orchestratord daemon
-- Query orchestratord status
+**rbees-ctl MUST be able to:**
+- Start/stop rbees-orcd daemon
+- Query rbees-orcd status
 - Submit jobs (via HTTP API)
 - List jobs (via HTTP API)
 - Cancel jobs (via HTTP API)
 - Command pools (via SSH or HTTP)
 
-**pool-ctl MUST be able to:**
+**rbees-pool MUST be able to:**
 - Start/stop pool-managerd daemon
 - Query pool-managerd status
 - Spawn workers (direct or via HTTP)
@@ -547,13 +547,13 @@ done
 - API types (requests, responses, errors)
 - Configuration types
 
-**orchestratord adds:**
+**rbees-orcd adds:**
 - HTTP server (axum/actix)
 - SQLite persistence
 - Background tasks
 - Metrics emission
 
-**llorch-ctl adds:**
+**rbees-ctl adds:**
 - Clap CLI parsing
 - SSH client
 - HTTP client
@@ -573,7 +573,7 @@ done
 - Background GPU monitoring
 - Metrics emission
 
-**pool-ctl adds:**
+**rbees-pool adds:**
 - Clap CLI parsing
 - hf CLI wrapper
 - git CLI wrapper
@@ -585,13 +585,13 @@ done
 ## Dependency Graph
 
 ```
-orchestratord
+rbees-orcd
     ├── orchestrator-core
     ├── axum (HTTP server)
     ├── sqlx (SQLite)
     └── prometheus (metrics)
 
-llorch-ctl
+rbees-ctl
     ├── orchestrator-core
     ├── clap (CLI)
     ├── reqwest (HTTP client)
@@ -609,7 +609,7 @@ pool-managerd
     ├── nvml-wrapper (GPU)
     └── prometheus (metrics)
 
-pool-ctl
+rbees-pool
     ├── pool-core
     ├── clap (CLI)
     ├── reqwest (HTTP client, optional)
@@ -620,7 +620,7 @@ pool-core
     ├── nvml-wrapper (GPU)
     └── anyhow (errors)
 
-llorch-candled
+rbees-workerd
     ├── candle (inference)
     ├── axum (HTTP server)
     └── cuda/metal (backends)
@@ -639,7 +639,7 @@ llorch-candled
    - Model catalog types
    - Worker spawn logic
 
-2. Create `pool-ctl` CLI
+2. Create `rbees-pool` CLI
    - Model downloads (hf CLI)
    - Git operations (submodules)
    - Worker spawn (direct)
@@ -651,9 +651,9 @@ llorch-candled
    - Scheduling algorithms
    - Pool registry types
 
-4. Create `llorch-ctl` CLI
+4. Create `rbees-ctl` CLI
    - Pool commands via SSH
-   - Calls pool-ctl remotely
+   - Calls rbees-pool remotely
    - Uses: orchestrator-core
 
 **Deliverable:** Working CLIs that replace bash scripts
@@ -667,7 +667,7 @@ llorch-candled
    - Heartbeat protocol
    - Uses: pool-core
 
-6. Update `pool-ctl` to support HTTP mode
+6. Update `rbees-pool` to support HTTP mode
    - Can call pool-managerd API
    - Fallback to direct execution
 
@@ -676,14 +676,14 @@ llorch-candled
 ### Phase 3: Orchestrator Daemon (M2)
 
 **Week 7-8:**
-7. Create `orchestratord` daemon
+7. Create `rbees-orcd` daemon
    - HTTP server :8080
    - Job scheduling
    - SQLite state store
    - Uses: orchestrator-core
 
-8. Update `llorch-ctl` to support HTTP mode
-   - Call orchestratord API for jobs
+8. Update `rbees-ctl` to support HTTP mode
+   - Call rbees-orcd API for jobs
    - Call pool-managerd API via orchestrator
 
 **Deliverable:** Full orchestrator daemon with HTTP API
@@ -693,11 +693,11 @@ llorch-candled
 ## Summary
 
 **6 Binaries:**
-1. `orchestratord` - Daemon (M2+)
-2. `llorch-ctl` - CLI (M0+)
+1. `rbees-orcd` - Daemon (M2+)
+2. `rbees-ctl` - CLI (M0+)
 3. `pool-managerd` - Daemon (M1+)
-4. `pool-ctl` - CLI (M0+)
-5. `llorch-candled` - Worker daemon (M0+, exists)
+4. `rbees-pool` - CLI (M0+)
+5. `rbees-workerd` - Worker daemon (M0+, exists)
 6. `bdd-runner` - Test runner (exists)
 
 **2 Shared Crates:**
@@ -713,15 +713,15 @@ llorch-candled
 - ❌ Terminal is not the UX for LLM interactions
 
 **Current bash scripts map to:**
-- `llorch-remote` → `llorch-ctl` (orchestrator CLI)
-- `llorch-models` → `pool-ctl` (pool CLI)
-- `llorch-git` → `pool-ctl` (pool CLI)
+- `llorch-remote` → `rbees-ctl` (orchestrator CLI)
+- `llorch-models` → `rbees-pool` (pool CLI)
+- `llorch-git` → `rbees-pool` (pool CLI)
 
 **Implementation order:**
-1. M0: pool-core + pool-ctl (local operations)
-2. M0: orchestrator-core + llorch-ctl (SSH to pools)
+1. M0: pool-core + rbees-pool (local operations)
+2. M0: orchestrator-core + rbees-ctl (SSH to pools)
 3. M1: pool-managerd (daemon)
-4. M2: orchestratord (daemon)
+4. M2: rbees-orcd (daemon)
 
 ---
 

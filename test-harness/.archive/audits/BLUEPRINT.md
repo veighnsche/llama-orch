@@ -34,7 +34,7 @@ The v0.1.0 test-harness was a monolithic, centralized testing structure that has
 ### 1. Decentralized Testing
 **Each crate owns its own tests.**
 ```
-bin/orchestratord/
+bin/rbees-orcd/
 ├── src/           # Production code
 ├── tests/         # Unit & integration tests
 └── bdd/           # BDD subcrate (optional)
@@ -53,7 +53,7 @@ bin/orchestratord/
 **Testing follows crate ownership:**
 | Team | Crates | Test Responsibility |
 |------|--------|---------------------|
-| Orchestrator Team | `bin/orchestratord`, `bin/orchestratord-crates/*` | Unit, BDD, integration tests for orchestrator logic |
+| Orchestrator Team | `bin/rbees-orcd`, `bin/rbees-orcd-crates/*` | Unit, BDD, integration tests for orchestrator logic |
 | Pool Manager Team | `bin/pool-managerd`, `bin/pool-managerd-crates/*` | Unit, BDD, integration tests for pool management |
 | Worker Team | `bin/worker-orcd`, `bin/worker-orcd-crates/*` | Unit, BDD, integration tests for worker logic |
 | Shared Libs Team | `bin/shared-crates/*` | Unit, BDD tests for shared utilities |
@@ -130,15 +130,15 @@ use test_harness_utils::harness::TestOrchestrator;
 **Goal**: Move specialized tests to appropriate crates
 #### Determinism Tests
 - **Old**: `test-harness/determinism-suite/`
-- **New**: `bin/orchestratord/tests/determinism/`
+- **New**: `bin/rbees-orcd/tests/determinism/`
 - **Rationale**: Determinism is an orchestrator property
 #### Chaos Tests
 - **Old**: `test-harness/chaos/`
-- **New**: `bin/orchestratord/tests/chaos/` or `bin/pool-managerd/tests/chaos/`
+- **New**: `bin/rbees-orcd/tests/chaos/` or `bin/pool-managerd/tests/chaos/`
 - **Rationale**: Chaos tests target specific components
 #### E2E Haiku Tests
 - **Old**: `test-harness/e2e-haiku/`
-- **New**: `bin/orchestratord/tests/e2e/` or dedicated `e2e-tests/` crate
+- **New**: `bin/rbees-orcd/tests/e2e/` or dedicated `e2e-tests/` crate
 - **Rationale**: E2E tests exercise full stack, could be separate
 #### Metrics Contract Tests
 - **Old**: `test-harness/metrics-contract/`
@@ -189,7 +189,7 @@ fn test_queue_capacity() {
 **Example Cargo.toml:**
 ```toml
 [package]
-name = "orchestratord-bdd"
+name = "rbees-orcd-bdd"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -198,21 +198,21 @@ name = "bdd-runner"
 path = "src/main.rs"
 [dependencies]
 cucumber = { version = "0.20", features = ["macros"] }
-orchestratord = { path = ".." }
+rbees-orcd = { path = ".." }
 ```
 **Run BDD tests:**
 ```bash
 # All features
-cargo run -p orchestratord-bdd --bin bdd-runner
+cargo run -p rbees-orcd-bdd --bin bdd-runner
 # Specific feature
 LLORCH_BDD_FEATURE_PATH=tests/features/enqueue.feature \
-  cargo run -p orchestratord-bdd --bin bdd-runner
+  cargo run -p rbees-orcd-bdd --bin bdd-runner
 ```
 ### Integration Tests
 **Location**: `<crate>/tests/`
 ```rust
 // <crate>/tests/integration_test.rs
-use orchestratord::Orchestrator;
+use rbees-orcd::Orchestrator;
 use pool_managerd::PoolManager;
 #[tokio::test]
 async fn test_full_workflow() {
@@ -302,7 +302,7 @@ jobs:
     strategy:
       matrix:
         crate:
-          - orchestratord-bdd
+          - rbees-orcd-bdd
           - pool-managerd-bdd
           - orchestrator-core-bdd
           - model-catalog-bdd
@@ -342,12 +342,12 @@ cargo test --workspace --tests -- --ignored smoke_test
 ### Running Tests Locally
 ```bash
 # Run all tests for a single crate
-cd bin/orchestratord
+cd bin/rbees-orcd
 cargo test
 # Run BDD tests for a crate
-cargo run -p orchestratord-bdd --bin bdd-runner
+cargo run -p rbees-orcd-bdd --bin bdd-runner
 # Run specific test
-cargo test -p orchestratord -- test_enqueue
+cargo test -p rbees-orcd -- test_enqueue
 # Run with 
 LLORCH_PROOF_DIR=.proof_bundle cargo test
 # Run smoke tests (requires GPU)
@@ -448,9 +448,9 @@ async fn when_action(world: &mut MyWorld) {
 - [ ]  spec documented in `test-harness//README.md`
 - [ ] CI runs  validation
 ### Phase 2 Complete When:
-- [ ] Determinism tests moved to `bin/orchestratord/tests/determinism/`
+- [ ] Determinism tests moved to `bin/rbees-orcd/tests/determinism/`
 - [ ] Chaos tests moved to appropriate component crates
-- [ ] E2E tests moved to `bin/orchestratord/tests/e2e/` or dedicated crate
+- [ ] E2E tests moved to `bin/rbees-orcd/tests/e2e/` or dedicated crate
 - [ ] Metrics contract tests in `bin/shared-crates/metrics-validation/`
 - [ ] Old `test-harness/` directory deleted (except )
 ### Phase 3 Complete When:
@@ -460,8 +460,8 @@ async fn when_action(world: &mut MyWorld) {
 - [ ] All teams trained on new patterns
 ---
 ## Open Questions
-1. **E2E Test Location**: Should E2E tests live in `bin/orchestratord/tests/e2e/` or a dedicated top-level `e2e-tests/` crate?
-   - **Recommendation**: Start in `bin/orchestratord/tests/e2e/`, extract if it grows large
+1. **E2E Test Location**: Should E2E tests live in `bin/rbees-orcd/tests/e2e/` or a dedicated top-level `e2e-tests/` crate?
+   - **Recommendation**: Start in `bin/rbees-orcd/tests/e2e/`, extract if it grows large
 2. **Test Utils Necessity**: Do we need `test-harness/test-utils/`?
    - **Recommendation**: Wait until 3+ crates need the same helper, then extract
 3. **Performance Tests**: Where do performance/load tests live?
@@ -497,7 +497,7 @@ test-harness/
 ├── BLUEPRINT.md            # This file
 ├── README.md               # Testing overview
 └── /           # Shared  tooling
-bin/orchestratord/
+bin/rbees-orcd/
 ├── src/
 ├── tests/                  # Unit, integration, determinism, chaos, e2e
 └── bdd/                    # BDD subcrate

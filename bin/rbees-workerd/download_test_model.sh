@@ -1,8 +1,8 @@
 #!/bin/bash
-# Download TinyLlama 1.1B SafeTensors for llorch-candled testing
+# Download TinyLlama 1.1B SafeTensors for rbees-workerd testing
 # Created by: TEAM-010
 #
-# llorch-candled requires SafeTensors format (not GGUF)
+# rbees-workerd requires SafeTensors format (not GGUF)
 # TinyLlama is perfect for testing:
 # - Small size (~2.2 GB)
 # - Standard Llama architecture
@@ -21,7 +21,7 @@ echo "=========================================="
 echo ""
 echo "Target: $MODEL_DIR"
 echo "Size: ~2.2 GB (FP16 SafeTensors)"
-echo "Purpose: Test llorch-candled inference"
+echo "Purpose: Test rbees-workerd inference"
 echo "Architecture: Standard Llama (7B compatible)"
 echo ""
 

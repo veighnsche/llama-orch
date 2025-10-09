@@ -2,16 +2,16 @@
 
 **Status**: Decision Required  
 **Date**: 2025-10-09  
-**Context**: Determining control interface for orchestratord, pool-managerd, and llorch-candled
+**Context**: Determining control interface for rbees-orcd, pool-managerd, and rbees-workerd
 
 ---
 
 ## Executive Summary
 
 We need to decide how operators interact with the three runtime binaries:
-- **orchestratord** - The brain (scheduling, admission, job management)
+- **rbees-orcd** - The brain (scheduling, admission, job management)
 - **pool-managerd** - Control plane (worker lifecycle, GPU inventory)
-- **llorch-candled** - Worker (inference execution)
+- **rbees-workerd** - Worker (inference execution)
 
 **Options:**
 1. **HTTP APIs only** - All control via HTTP endpoints
@@ -41,7 +41,7 @@ We need to decide how operators interact with the three runtime binaries:
       │ Process spawn
       ↓
 ┌──────┐
-│WORKER│ (llorch-candled)
+│WORKER│ (rbees-workerd)
 │ • HTTP API: POST /execute                                       │
 │ • HTTP API: POST /cancel                                        │
 │ • Callback: POST pool-manager/workers/ready                     │
@@ -59,11 +59,11 @@ We need to decide how operators interact with the three runtime binaries:
 ```
 Operator
     ↓ curl/httpie/custom client
-orchestratord HTTP API (:8080)
+rbees-orcd HTTP API (:8080)
     ↓ HTTP
 pool-managerd HTTP API (:9200)
     ↓ spawn
-llorch-candled HTTP API (:8001)
+rbees-workerd HTTP API (:8001)
 ```
 
 ### Pros
@@ -154,21 +154,21 @@ curl -X POST http://localhost:9200/workers/spawn \
 ```
 Operator
     ↓ CLI commands
-orchestratord-cli (separate binary)
+rbees-orcd-cli (separate binary)
     ↓ HTTP calls
-orchestratord HTTP API (:8080)
+rbees-orcd HTTP API (:8080)
     ↓ HTTP
 pool-managerd HTTP API (:9200)
     ↓ spawn
-llorch-candled HTTP API (:8001)
+rbees-workerd HTTP API (:8001)
 ```
 
 **Binaries:**
-- `orchestratord` - Daemon (HTTP server)
-- `orchestratord-cli` - CLI client (HTTP client)
+- `rbees-orcd` - Daemon (HTTP server)
+- `rbees-orcd-cli` - CLI client (HTTP client)
 - `pool-managerd` - Daemon (HTTP server)
 - `pool-managerd-cli` - CLI client (HTTP client)
-- `llorch-candled` - Worker daemon (HTTP server)
+- `rbees-workerd` - Worker daemon (HTTP server)
 
 ### Pros
 
@@ -264,14 +264,14 @@ llorch pool git pull --host workstation
 ```
 Operator
     ↓ CLI mode OR HTTP mode
-orchestratord (single binary)
-    ├─ CLI mode: orchestratord jobs submit ...
-    └─ Daemon mode: orchestratord serve
+rbees-orcd (single binary)
+    ├─ CLI mode: rbees-orcd jobs submit ...
+    └─ Daemon mode: rbees-orcd serve
 ```
 
 **Single binary with dual modes:**
-- `orchestratord serve` - Run as HTTP daemon
-- `orchestratord jobs submit` - CLI client mode (calls HTTP API)
+- `rbees-orcd serve` - Run as HTTP daemon
+- `rbees-orcd jobs submit` - CLI client mode (calls HTTP API)
 
 ### Pros
 
@@ -321,10 +321,10 @@ orchestratord (single binary)
 
 ```bash
 # Start daemon
-orchestratord serve --config /etc/llorch/orchestrator.toml
+rbees-orcd serve --config /etc/llorch/orchestrator.toml
 
 # CLI client mode (calls HTTP API)
-orchestratord jobs submit \
+rbees-orcd jobs submit \
   --model llama3 \
   --prompt "Hello world" \
   --endpoint http://localhost:8080
@@ -432,7 +432,7 @@ curl http://localhost:9090/api/v1/query?query=up  # HTTP only
 
 ```
 bin/
-├── orchestratord/           # Daemon (HTTP server)
+├── rbees-orcd/           # Daemon (HTTP server)
 │   ├── src/
 │   │   ├── main.rs         # HTTP server only
 │   │   ├── api/            # HTTP endpoints
@@ -440,13 +440,13 @@ bin/
 │   │   └── state/          # State management
 │   └── Cargo.toml
 │
-├── orchestratord-cli/       # CLI client (HTTP client)
+├── rbees-orcd-cli/       # CLI client (HTTP client)
 │   ├── src/
 │   │   ├── main.rs         # CLI entry point
 │   │   ├── commands/       # CLI commands
-│   │   │   ├── jobs.rs     # llorch jobs ...
-│   │   │   ├── pools.rs    # llorch pool ...
-│   │   │   └── dev.rs      # llorch dev ...
+│   │   │   ├── jobs.rs     # rbees jobs ...
+│   │   │   ├── pools.rs    # rbees pool ...
+│   │   │   └── dev.rs      # rbees dev ...
 │   │   └── client.rs       # HTTP client
 │   └── Cargo.toml
 │
@@ -456,7 +456,7 @@ bin/
 ├── pool-managerd-cli/       # CLI client (HTTP client)
 │   └── ...
 │
-└── llorch-candled/          # Worker daemon (HTTP server)
+└── rbees-workerd/          # Worker daemon (HTTP server)
     └── ...                  # No CLI needed (controlled by pool-managerd)
 ```
 
@@ -464,7 +464,7 @@ bin/
 
 ```bash
 # Orchestrator daemon (systemd manages this)
-orchestratord --config /etc/llorch/orchestrator.toml
+rbees-orcd --config /etc/llorch/orchestrator.toml
 
 # Orchestrator CLI (operators use this)
 llorch jobs submit --model llama3 --prompt "hello"
@@ -479,13 +479,13 @@ llorch dev doctor
 pool-managerd --config /etc/llorch/pool-manager.toml
 
 # Pool manager CLI (local operations on pool host)
-llorch-pool models download tinyllama
-llorch-pool models list
-llorch-pool git pull
-llorch-pool worker spawn metal --model tinyllama --gpu 0
+rbees-pool models download tinyllama
+rbees-pool models list
+rbees-pool git pull
+rbees-pool worker spawn metal --model tinyllama --gpu 0
 
 # Worker daemon (pool-managerd spawns this)
-llorch-candled \
+rbees-workerd \
   --worker-id worker-1 \
   --model /path/to/model.gguf \
   --gpu 0 \

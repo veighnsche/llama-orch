@@ -1,4 +1,4 @@
-# Backend Architecture Research: Multi-Binary Pattern in llorch-candled
+# Backend Architecture Research: Multi-Binary Pattern in rbees-workerd
 
 **Research Date:** 2025-10-09T09:14:22+02:00  
 **Researcher:** TEAM-CASCADE  
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-`llorch-candled` uses a **feature-gated multi-binary pattern** to support different compute backends (CPU, CUDA, Metal) from a single codebase. This research documents:
+`rbees-workerd` uses a **feature-gated multi-binary pattern** to support different compute backends (CPU, CUDA, Metal) from a single codebase. This research documents:
 
 1. **Current architecture** - How we build backend-specific binaries
 2. **Backend abstraction pattern** - Device initialization and model loading
@@ -223,7 +223,7 @@ cuda = ["candle-kernels/cuda", "dep:cudarc"]  # NVIDIA CUDA
 metal = ["dep:metal", "dep:objc"]              # Apple Metal (GPU)
 ```
 
-**Current llorch-candled support:**
+**Current rbees-workerd support:**
 - ✅ **CPU** - Plain CPU (no acceleration)
 - ✅ **CUDA** - NVIDIA GPU
 - ✅ **Metal** - Apple GPU (TEAM-018: Pre-release)
@@ -465,7 +465,7 @@ cargo build --release --features metal --bin llorch-metal-candled
 2. **Testing matrix** - Need hardware for each backend
 3. **Code duplication** - Binary entry points are similar (mitigated by shared functions)
 
-### 6.3 Why This Pattern Works for llorch-candled
+### 6.3 Why This Pattern Works for rbees-workerd
 
 **Context:**
 - Worker daemons are **deployed to specific hardware**
@@ -607,7 +607,7 @@ pub fn load_model(model_path: &str, device: &Device) -> Result<Model> {
 
 ### 9.1 Current Architecture Summary
 
-`llorch-candled` uses a **feature-gated multi-binary pattern** where:
+`rbees-workerd` uses a **feature-gated multi-binary pattern** where:
 
 1. **Single codebase** with shared core logic
 2. **Multiple binaries** for different backends (CPU, CUDA, Metal)

@@ -1,4 +1,4 @@
-# llorch-candled Specifications
+# rbees-workerd Specifications
 
 **Created by:** TEAM-000 (Foundation)  
 **Date:** 2025-10-08
@@ -7,7 +7,7 @@
 
 ## Overview
 
-This directory contains all specifications and documentation for `llorch-candled`, the Candle-based Llama-2 inference worker.
+This directory contains all specifications and documentation for `rbees-workerd`, the Candle-based Llama-2 inference worker.
 
 ---
 
@@ -133,7 +133,7 @@ We use **Candle's optimized implementations for the difficult parts of inference
 
 ### Build
 ```bash
-cd bin/llorch-candled
+cd bin/rbees-workerd
 cargo build
 ```
 

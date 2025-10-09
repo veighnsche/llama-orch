@@ -1,8 +1,8 @@
-# 🎀 Narration-Core Integration Plan for llorch-candled
+# 🎀 Narration-Core Integration Plan for rbees-workerd
 
-**Mission**: Make llorch-candled cute and observable with triple-narration! 🎭✨  
+**Mission**: Make rbees-workerd cute and observable with triple-narration! 🎭✨  
 **Team**: Narration Core Team (with adorable exasperation)  
-**Target**: `/home/vince/Projects/llama-orch/bin/llorch-candled`  
+**Target**: `/home/vince/Projects/llama-orch/bin/rbees-workerd`  
 **Status**: 📋 Planning Complete, Ready for Implementation
 
 ---
@@ -75,10 +75,10 @@ observability-narration-core = { path = "../shared-crates/narration-core" }
 
 #### 1.2 Create Narration Constants Module
 **File**: `src/narration.rs` (NEW)  
-**Action**: Define all actor/action constants for llorch-candled
+**Action**: Define all actor/action constants for rbees-workerd
 
 **Actors**:
-- `llorch-candled` - Main worker daemon
+- `rbees-workerd` - Main worker daemon
 - `candle-backend` - Inference backend
 - `http-server` - HTTP server
 - `device-manager` - Device initialization
@@ -543,7 +543,7 @@ fn test_device_init_narrates() {
 
 ## 🎀 Cute Metaphor Guide
 
-**Consistent metaphors for llorch-candled**:
+**Consistent metaphors for rbees-workerd**:
 
 | Concept | Metaphor | Example |
 |---------|----------|---------|
@@ -614,7 +614,7 @@ fn test_device_init_narrates() {
 
 ## 🎓 Learning Outcomes
 
-After this integration, llorch-candled will:
+After this integration, rbees-workerd will:
 1. ✅ Be **fully observable** with correlation IDs
 2. ✅ Have **delightful debugging** with cute stories
 3. ✅ Demonstrate **best practices** for narration-core adoption
@@ -627,7 +627,7 @@ After this integration, llorch-candled will:
 
 - **Narration Core Team Responsibility**: `/home/vince/Projects/llama-orch/bin/shared-crates/narration-core/TEAM_RESPONSIBILITY.md`
 - **Narration Core README**: `/home/vince/Projects/llama-orch/bin/shared-crates/narration-core/README.md`
-- **llorch-candled README**: `/home/vince/Projects/llama-orch/bin/llorch-candled/README.md`
+- **rbees-workerd README**: `/home/vince/Projects/llama-orch/bin/rbees-workerd/README.md`
 
 ---
 

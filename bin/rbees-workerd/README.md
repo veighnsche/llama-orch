@@ -1,4 +1,4 @@
-# llorch-candled
+# rbees-workerd
 
 **Candle-based Llama inference worker daemon**
 
@@ -9,7 +9,7 @@ Created by: **TEAM-000** (Foundation)
 
 ## Overview
 
-`llorch-candled` is a Llama inference worker with **three feature-gated binaries**:
+`rbees-workerd` is a Llama inference worker with **three feature-gated binaries**:
 
 ### TEAM-009 Implementation (Current)
 - ✅ Uses `candle-transformers::models::llama::Llama` directly
@@ -41,7 +41,7 @@ Created by: **TEAM-000** (Foundation)
 
 ```
 ┌─────────────────────────────────────────┐
-│         llorch-candled Worker           │
+│         rbees-workerd Worker           │
 ├─────────────────────────────────────────┤
 │  HTTP Server (worker-http)              │
 │  ├─ GET /health                         │
@@ -75,7 +75,7 @@ Created by: **TEAM-000** (Foundation)
 
 ### Key Differences from llorch-cpud
 
-| Aspect | llorch-cpud | llorch-candled (TEAM-009) |
+| Aspect | llorch-cpud | rbees-workerd (TEAM-009) |
 |--------|-------------|---------------------------|
 | **Model** | GPT-2 Medium | Llama (any size) |
 | **Implementation** | Custom layers | candle-transformers |
@@ -111,7 +111,7 @@ Created by: **TEAM-000** (Foundation)
 
 **CPU-only (x86, or fallback on macOS):**
 ```bash
-cd bin/llorch-candled
+cd bin/rbees-workerd
 cargo build --release --features cpu --bin llorch-cpu-candled
 ```
 

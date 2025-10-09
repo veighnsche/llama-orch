@@ -53,7 +53,7 @@ half = "2.4"
 
 **Integration:**
 ```rust
-// In llorch-candled
+// In rbees-workerd
 use worker_gguf::GGUFMetadata;
 
 let metadata = GGUFMetadata::from_file("model.gguf")?;
@@ -94,7 +94,7 @@ worker-gguf = { path = "../worker-gguf" }
 
 **Integration:**
 ```rust
-// In llorch-candled
+// In rbees-workerd
 use worker_tokenizer::{TokenizerBackend, EncoderConfig};
 
 let tokenizer = TokenizerBackend::from_hf_json("tokenizer.json")?;
@@ -139,7 +139,7 @@ serde = { version = "1.0", features = ["derive"] }
 
 **Integration:**
 ```rust
-// In llorch-candled
+// In rbees-workerd
 use worker_models::{AdapterFactory, Architecture};
 
 let arch = AdapterFactory::detect_from_gguf("model.gguf")?;
@@ -175,7 +175,7 @@ match arch {
 - Health checks
 - Callback support
 
-**Can we reuse?** ✅ **YES** - Already using in llorch-candled
+**Can we reuse?** ✅ **YES** - Already using in rbees-workerd
 
 ---
 
@@ -220,7 +220,7 @@ match arch {
 ### Where Candle Belongs
 
 **Candle is ONLY for inference:**
-- ✅ llorch-candled (our project)
+- ✅ rbees-workerd (our project)
 - ✅ Tensor operations
 - ✅ Model forward passes
 - ✅ GPU acceleration
@@ -236,7 +236,7 @@ match arch {
 
 ### Phase 1: Reuse Worker Crates ✅
 
-**Add to llorch-candled/Cargo.toml:**
+**Add to rbees-workerd/Cargo.toml:**
 ```toml
 [dependencies]
 # Worker crates (reuse existing)
@@ -393,7 +393,7 @@ let text = tokenizer.decode(&[next_token])?;
 ### Final Structure
 
 ```
-llorch-candled/
+rbees-workerd/
 ├── src/
 │   ├── model/
 │   │   ├── llama2.rs        ✅ Single file (Candle pattern)

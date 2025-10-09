@@ -177,7 +177,7 @@ worker-gguf = { path = "../worker-crates/worker-gguf" }  # OPTIONAL
 ### Step 1: Add candle-transformers (10 min)
 
 ```bash
-cd bin/llorch-candled
+cd bin/rbees-workerd
 # Add to Cargo.toml
 ```
 

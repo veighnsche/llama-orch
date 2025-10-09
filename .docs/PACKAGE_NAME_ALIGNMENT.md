@@ -9,7 +9,7 @@ Several Cargo.toml files had package names that didn't match their directory nam
 
 ## Changes Made
 
-### orchestratord-crates
+### rbees-orcd-crates
 
 | Directory | Old Package Name | New Package Name |
 |-----------|-----------------|------------------|

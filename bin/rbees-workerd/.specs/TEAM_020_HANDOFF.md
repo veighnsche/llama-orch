@@ -81,7 +81,7 @@ TEAM-019 fixed the Metal/CUDA inference bug (cache recreation workaround). All t
 
 **Strategy:**
 1. Create branch in `reference/candle/` with mask broadcasting fix
-2. Update `llorch-candled` to use our Candle fork
+2. Update `rbees-workerd` to use our Candle fork
 3. Remove TEAM-019's workaround (cache recreation)
 4. Test all models on all backends
 
@@ -123,7 +123,7 @@ Create `docs/MODEL_SUPPORT.md` with:
 - [ ] Add tests for mask broadcasting
 
 **Day 3: Integrate Fork**
-- [ ] Update `llorch-candled/Cargo.toml` to use fork
+- [ ] Update `rbees-workerd/Cargo.toml` to use fork
 - [ ] Remove TEAM-019 workaround from `llama.rs`
 - [ ] Rebuild all backends
 - [ ] Verify compilation

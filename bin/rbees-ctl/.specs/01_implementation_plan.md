@@ -11,7 +11,7 @@
 This document outlines the implementation plan for `llorch-cli`, a unified Rust CLI tool that replaces bash scripts with type-safe, testable tooling.
 
 **Key Constraints:**
-- MUST align with triple binary architecture (orchestratord, pool-managerd, worker-orcd)
+- MUST align with triple binary architecture (rbees-orcd, pool-managerd, worker-orcd)
 - MUST NOT embed binary logic (CLI is tooling, not runtime)
 - MUST be future-proof for M0→M5 milestones
 - MUST maintain separation of concerns
@@ -26,9 +26,9 @@ This document outlines the implementation plan for `llorch-cli`, a unified Rust 
 ┌─────────────────────────────────────────────────────────────┐
 │ RUNTIME BINARIES (Not in llorch-cli)                        │
 ├─────────────────────────────────────────────────────────────┤
-│ bin/orchestratord/     → Orchestrator daemon (M2+)          │
+│ bin/rbees-orcd/     → Orchestrator daemon (M2+)          │
 │ bin/pool-managerd/     → Pool manager daemon (M1+)          │
-│ bin/llorch-candled/    → Worker daemon (M0+)                │
+│ bin/rbees-workerd/    → Worker daemon (M0+)                │
 │   (replaces deprecated worker-orcd)                         │
 └─────────────────────────────────────────────────────────────┘
 
@@ -113,8 +113,8 @@ tools/llorch-cli/
 │   │
 │   ├── build/                         # Build operations
 │   │   ├── mod.rs
-│   │   ├── worker.rs                  # Build llorch-candled
-│   │   ├── orchestrator.rs            # Build orchestratord (future)
+│   │   ├── worker.rs                  # Build rbees-workerd
+│   │   ├── orchestrator.rs            # Build rbees-orcd (future)
 │   │   └── pool_manager.rs            # Build pool-managerd (future)
 │   │
 │   ├── test/                          # Test operations
@@ -265,7 +265,7 @@ tools/llorch-cli/
 - Migration guide
 
 **Acceptance Criteria:**
-- [ ] `llorch build worker cuda` builds llorch-candled
+- [ ] `llorch build worker cuda` builds rbees-workerd
 - [ ] `llorch test unit` runs all unit tests
 - [ ] `llorch dev doctor` checks environment
 - [ ] `llorch dev setup` configures new dev environment
@@ -396,33 +396,33 @@ rm -rf .docs/testing/download_*.sh
 ```bash
 # Git operations
 scripts/llorch-git status
-→ llorch git status
+→ rbees git status
 
 scripts/llorch-git pull
-→ llorch git pull
+→ rbees git pull
 
 scripts/llorch-git submodules
-→ llorch git submodules list
+→ rbees git submodules list
 
 # Model operations
 scripts/llorch-models catalog
-→ llorch models catalog
+→ rbees models catalog
 
 scripts/llorch-models download tinyllama
-→ llorch models download tinyllama
+→ rbees models download tinyllama
 
 .docs/testing/download_tinyllama.sh
-→ llorch models download tinyllama
+→ rbees models download tinyllama
 
 # Remote operations
 scripts/homelab/llorch-remote mac.home.arpa status
-→ llorch git status --remote mac
+→ rbees git status --remote mac
 
 scripts/homelab/llorch-remote mac.home.arpa models-list
-→ llorch models list --remote mac
+→ rbees models list --remote mac
 
 scripts/homelab/llorch-remote workstation.home.arpa build cuda
-→ llorch build worker cuda --remote workstation
+→ rbees build worker cuda --remote workstation
 ```
 
 ---

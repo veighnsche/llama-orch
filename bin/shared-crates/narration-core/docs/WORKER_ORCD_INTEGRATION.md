@@ -44,7 +44,7 @@ use observability_narration_core::{
 
 ## Step 3: Extract Correlation IDs
 
-Extract correlation IDs from HTTP headers (orchestratord → worker):
+Extract correlation IDs from HTTP headers (rbees-orcd → worker):
 
 ```rust
 use axum::{

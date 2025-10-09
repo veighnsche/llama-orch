@@ -89,15 +89,15 @@ Narration events serve **two different purposes** at **two different times** in 
 
 | File | Line | Actor | Action | Event | Why Stdout? |
 |------|------|-------|--------|-------|-------------|
-| `main.rs` | 76-84 | `llorch-candled` | `startup` | "Starting Candle worker on port 8080" | Binary just started, no HTTP yet |
+| `main.rs` | 76-84 | `rbees-workerd` | `startup` | "Starting Candle worker on port 8080" | Binary just started, no HTTP yet |
 | `device.rs` | 18-25 | `device-manager` | `device_init` | "Initialized CPU device" | During startup, before HTTP |
 | `device.rs` | 37-45 | `device-manager` | `device_init` | "Initialized CUDA device 0" | During startup, before HTTP |
 | `device.rs` | 58-66 | `device-manager` | `device_init` | "Initialized Apple Metal device 0" | During startup, before HTTP |
 | `main.rs` | 95-103 | `model-loader` | `model_load` | "Loading Llama model from /models/..." | During startup, before HTTP |
 | `inference.rs` | 58-66 | `model-loader` | `model_load` | "Loaded Llama model (7000 MB, vocab: 32000)" | During startup, before HTTP |
-| `main.rs` | 119-128 | `llorch-candled` | `callback_ready` | "Reporting ready to pool-managerd" | During startup, callback to pool-manager |
-| `startup.rs` | 33-42 | `llorch-candled` | `callback_ready` | "Calling pool-managerd at http://..." | During startup, callback to pool-manager |
-| `startup.rs` | 48-57 | `llorch-candled` | `error` | "Pool manager callback failed: 500" | During startup, callback error |
+| `main.rs` | 119-128 | `rbees-workerd` | `callback_ready` | "Reporting ready to pool-managerd" | During startup, callback to pool-manager |
+| `startup.rs` | 33-42 | `rbees-workerd` | `callback_ready` | "Calling pool-managerd at http://..." | During startup, callback to pool-manager |
+| `startup.rs` | 48-57 | `rbees-workerd` | `error` | "Pool manager callback failed: 500" | During startup, callback error |
 | `server.rs` | 83-90 | `http-server` | `server_start` | "HTTP server initialized on 0.0.0.0:8080" | Server lifecycle, not request-specific |
 | `server.rs` | 126-133 | `http-server` | `server_bind` | "HTTP server listening on 0.0.0.0:8080" | Server lifecycle, not request-specific |
 | `server.rs` | 108-116 | `http-server` | `error` | "Failed to bind to 0.0.0.0:8080" | Server lifecycle error |

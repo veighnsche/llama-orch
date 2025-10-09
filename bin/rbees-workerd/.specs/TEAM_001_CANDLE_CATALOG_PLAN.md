@@ -3,7 +3,7 @@
 **Created by:** TEAM-000 (Foundation)  
 **For:** TEAM-001 (Math Integration)  
 **Date:** 2025-10-08  
-**Purpose:** Catalog and selectively import Candle's math internals for llorch-candled worker
+**Purpose:** Catalog and selectively import Candle's math internals for rbees-workerd worker
 
 ---
 
@@ -161,7 +161,7 @@ use candle_nn::{
 **Import Strategy:** Direct kernel access (already in our Cargo.toml)
 
 ```rust
-// Already configured in llorch-candled/Cargo.toml
+// Already configured in rbees-workerd/Cargo.toml
 candle-kernels = { path = "../../reference/candle/candle-kernels", optional = true }
 ```
 
@@ -206,7 +206,7 @@ pub fn rms_norm(xs: &Tensor, alpha: &Tensor, eps: f32) -> Result<Tensor> {
 **Goal:** Get working quickly with Candle's safe abstractions
 
 ```rust
-// In llorch-candled/src/layers/rms_norm.rs
+// In rbees-workerd/src/layers/rms_norm.rs
 
 use candle_core::{Tensor, Result, Module};
 use candle_nn::RmsNorm as CandleRmsNorm;
@@ -286,7 +286,7 @@ fn forward_cuda(&self, x: &Tensor) -> Result<Tensor> {
 ### Current Setup (Already Done by TEAM-000)
 
 ```toml
-# bin/llorch-candled/Cargo.toml
+# bin/rbees-workerd/Cargo.toml
 
 [dependencies]
 # Candle kernels for CUDA acceleration (optional, feature-gated)

@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-**Goal:** Optimize llorch-candled to align with Candle's design patterns while maximizing reuse of existing worker-crates.
+**Goal:** Optimize rbees-workerd to align with Candle's design patterns while maximizing reuse of existing worker-crates.
 
 **Key Changes:**
 1. ✅ Reuse worker-crates (GGUF, tokenizer, models, HTTP)
@@ -58,7 +58,7 @@ tracing = "0.1"
 ### 1.2 Verify Build
 
 ```bash
-cd bin/llorch-candled
+cd bin/rbees-workerd
 cargo build
 ```
 
@@ -573,7 +573,7 @@ pub use embedding::Embedding;
 **File:** `src/main.rs`
 
 ```rust
-//! llorch-candled - Candle-based Llama 2 inference worker
+//! rbees-workerd - Candle-based Llama 2 inference worker
 //!
 //! Created by: TEAM-000
 //! Optimized by: TEAM-005
@@ -678,7 +678,7 @@ fn test_full_pipeline() -> anyhow::Result<()> {
 **File:** `README.md`
 
 ```markdown
-# llorch-candled
+# rbees-workerd
 
 Candle-based Llama 2 inference worker.
 

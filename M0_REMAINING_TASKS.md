@@ -9,7 +9,7 @@
 ## Critical M0 Tasks (Before CP4)
 
 ### 1. Backend Catalog Detection ⏳
-**File:** `bin/pool-ctl/src/commands/backends.rs` (new)
+**File:** `bin/rbees-pool/src/commands/backends.rs` (new)
 
 **Task:** Detect available backends on pool
 
@@ -34,7 +34,7 @@ pub fn detect_backends() -> Vec<Backend> {
 
 **Command:**
 ```bash
-llorch-pool backends list
+rbees-pool backends list
 ```
 
 **Output:**
@@ -51,7 +51,7 @@ Available Backends on mac.home.arpa
 ---
 
 ### 2. Worker Cancellation Support ⏳
-**File:** `bin/llorch-candled/src/http/cancel.rs` (new)
+**File:** `bin/rbees-workerd/src/http/cancel.rs` (new)
 
 **Task:** Add POST /cancel endpoint to worker
 
@@ -76,13 +76,13 @@ Response:
 ---
 
 ### 3. Orphaned Worker Cleanup ⏳
-**File:** `bin/pool-ctl/src/commands/worker.rs`
+**File:** `bin/rbees-pool/src/commands/worker.rs`
 
 **Task:** Add `cleanup` subcommand
 
 **Command:**
 ```bash
-llorch-pool worker cleanup
+rbees-pool worker cleanup
 ```
 
 **Implementation:**
@@ -115,9 +115,9 @@ pub fn cleanup_orphaned_workers() -> Result<()> {
 
 ### 1. Download Remaining Models
 ```bash
-llorch-pool models download tinyllama
-llorch-pool models download phi3
-llorch-pool models download mistral
+rbees-pool models download tinyllama
+rbees-pool models download phi3
+rbees-pool models download mistral
 ```
 
 **Priority:** HIGH (CP4 requirement)
@@ -141,8 +141,8 @@ llorch-pool models download mistral
 ## M0 Completion Checklist
 
 ### Core Features:
-- [x] Workers (llorch-candled) ✅
-- [x] Pool CLI (llorch-pool) ✅
+- [x] Workers (rbees-workerd) ✅
+- [x] Pool CLI (rbees-pool) ✅
 - [x] Remote CLI (llorch) ✅
 - [x] Model catalog ✅
 - [x] Worker spawning ✅
@@ -163,7 +163,7 @@ llorch-pool models download mistral
 
 ## After M0 Complete → Start M1
 
-### M1 Tasks (orchestratord):
+### M1 Tasks (rbees-orcd):
 1. HTTP server (port 8080)
 2. Worker registry (SQLite)
 3. Rhai scripting engine
@@ -188,16 +188,16 @@ cargo build --release
 llorch infer --worker localhost:8080 --prompt "Hello" --max-tokens 20
 
 # Check catalog
-llorch-pool models catalog
+rbees-pool models catalog
 
 # List workers
-llorch-pool worker list
+rbees-pool worker list
 ```
 
 ### Cleanup Orphans (Manual):
 ```bash
 # Find orphaned workers
-ps aux | grep llorch-candled
+ps aux | grep rbees-workerd
 
 # Kill manually
 kill <PID>
@@ -222,7 +222,7 @@ curl -X POST http://localhost:8080/cancel -d '{"job_id":"<job-id>"}'
 2. Orphaned worker cleanup
 3. Worker cancellation
 4. Backend catalog detection
-5. M1 (orchestratord)
+5. M1 (rbees-orcd)
 
 ---
 

@@ -1,9 +1,9 @@
-# pool-ctl SPEC — Pool Manager Control CLI
+# rbees-pool SPEC — Pool Manager Control CLI
 
 **Status**: Draft  
 **Version**: 0.1.0  
 **Conformance language**: RFC-2119 (MUST/SHOULD/MAY)  
-**Binary Name**: `pool-ctl` (produces `llorch-pool` command)
+**Binary Name**: `rbees-pool` (produces `rbees-pool` command)
 
 ---
 
@@ -34,7 +34,7 @@
 
 ### 1.1 Purpose
 
-`pool-ctl` (command: `llorch-pool`) is the pool manager control CLI. It runs locally on pool manager hosts (mac.home.arpa, workstation.home.arpa, blep.home.arpa) and provides:
+`rbees-pool` (command: `rbees-pool`) is the pool manager control CLI. It runs locally on pool manager hosts (mac.home.arpa, workstation.home.arpa, blep.home.arpa) and provides:
 
 1. **Model Provisioning**: Download models from HuggingFace
 2. **Git Operations**: Manage repo and submodules
@@ -49,10 +49,10 @@
 
 ```
 Pool Manager Host (mac.home.arpa)
-├── llorch-pool (this CLI)
+├── rbees-pool (this CLI)
 │   ├── models download tinyllama    → hf download ...
 │   ├── git pull                     → git pull && git submodule update
-│   ├── worker spawn metal           → llorch-candled --backend metal ...
+│   ├── worker spawn metal           → rbees-workerd --backend metal ...
 │   └── dev setup                    → Install deps, configure env
 │
 └── pool-managerd (daemon, M1+)
@@ -63,8 +63,8 @@ Pool Manager Host (mac.home.arpa)
 ```
 
 **Called by:**
-- Local operators on pool host: `llorch-pool models download tinyllama`
-- Remote orchestrator via SSH: `ssh mac "llorch-pool models download tinyllama"`
+- Local operators on pool host: `rbees-pool models download tinyllama`
+- Remote orchestrator via SSH: `ssh mac "rbees-pool models download tinyllama"`
 - Orchestrator CLI: `llorch pool models download tinyllama --host mac`
 
 **Replaces:**
@@ -112,7 +112,7 @@ The CLI MUST provide git operations:
 
 #### [POOL-F-003] Worker Lifecycle
 The CLI MUST provide worker management:
-- **MUST**: Spawn worker locally (llorch-candled)
+- **MUST**: Spawn worker locally (rbees-workerd)
 - **MUST**: Stop worker by ID
 - **MUST**: List running workers
 - **SHOULD**: Show worker logs
@@ -150,7 +150,7 @@ The CLI MUST provide dev utilities:
 
 #### [POOL-CMD-M-001] Catalog
 ```bash
-llorch-pool models catalog
+rbees-pool models catalog
 ```
 **MUST**:
 - Display all 10 models with metadata
@@ -160,7 +160,7 @@ llorch-pool models catalog
 
 #### [POOL-CMD-M-002] List
 ```bash
-llorch-pool models list
+rbees-pool models list
 ```
 **MUST**:
 - List all downloaded models in `.test-models/`
@@ -169,7 +169,7 @@ llorch-pool models list
 
 #### [POOL-CMD-M-003] Download
 ```bash
-llorch-pool models download <MODEL> [--force]
+rbees-pool models download <MODEL> [--force]
 ```
 **MUST**:
 - Verify `hf` command exists
@@ -193,7 +193,7 @@ llorch-pool models download <MODEL> [--force]
 
 #### [POOL-CMD-M-004] Info
 ```bash
-llorch-pool models info <MODEL>
+rbees-pool models info <MODEL>
 ```
 **MUST**:
 - Show catalog metadata
@@ -203,7 +203,7 @@ llorch-pool models info <MODEL>
 
 #### [POOL-CMD-M-005] Verify
 ```bash
-llorch-pool models verify <MODEL>
+rbees-pool models verify <MODEL>
 ```
 **MUST**:
 - Check if model files exist
@@ -212,7 +212,7 @@ llorch-pool models verify <MODEL>
 
 #### [POOL-CMD-M-006] Delete
 ```bash
-llorch-pool models delete <MODEL> [--force]
+rbees-pool models delete <MODEL> [--force]
 ```
 **MUST**:
 - Show disk usage before deletion
@@ -223,7 +223,7 @@ llorch-pool models delete <MODEL> [--force]
 
 #### [POOL-CMD-G-001] Status
 ```bash
-llorch-pool git status
+rbees-pool git status
 ```
 **MUST**:
 - Show current branch and commit
@@ -233,7 +233,7 @@ llorch-pool git status
 
 #### [POOL-CMD-G-002] Pull
 ```bash
-llorch-pool git pull
+rbees-pool git pull
 ```
 **MUST**:
 - Pull latest changes from origin
@@ -242,7 +242,7 @@ llorch-pool git pull
 
 #### [POOL-CMD-G-003] Sync
 ```bash
-llorch-pool git sync [--force]
+rbees-pool git sync [--force]
 ```
 **MUST**:
 - Hard reset to origin/main
@@ -251,11 +251,11 @@ llorch-pool git sync [--force]
 
 #### [POOL-CMD-G-004] Submodules
 ```bash
-llorch-pool git submodules list
-llorch-pool git submodules status
-llorch-pool git submodules update [--all | --name NAME]
-llorch-pool git submodules reset --name NAME
-llorch-pool git submodules branch --name NAME [--branch BRANCH]
+rbees-pool git submodules list
+rbees-pool git submodules status
+rbees-pool git submodules update [--all | --name NAME]
+rbees-pool git submodules reset --name NAME
+rbees-pool git submodules branch --name NAME [--branch BRANCH]
 ```
 **MUST**:
 - List all submodules: reference/candle, reference/candle-vllm, reference/llama.cpp, reference/mistral.rs
@@ -268,23 +268,23 @@ llorch-pool git submodules branch --name NAME [--branch BRANCH]
 
 #### [POOL-CMD-W-001] Spawn
 ```bash
-llorch-pool worker spawn <BACKEND> [--model MODEL] [--gpu ID] [--port PORT]
+rbees-pool worker spawn <BACKEND> [--model MODEL] [--gpu ID] [--port PORT]
 ```
 **MUST**:
 - Validate backend (cpu, cuda, metal)
 - Validate model exists locally
-- Spawn llorch-candled process
+- Spawn rbees-workerd process
 - Show worker PID and port
 - Wait for ready callback (optional)
 
 **Example:**
 ```bash
-llorch-pool worker spawn metal --model tinyllama --gpu 0 --port 8001
+rbees-pool worker spawn metal --model tinyllama --gpu 0 --port 8001
 ```
 
 **Spawns:**
 ```bash
-llorch-candled \
+rbees-workerd \
   --worker-id worker-metal-0 \
   --model .test-models/tinyllama/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf \
   --gpu 0 \
@@ -294,7 +294,7 @@ llorch-candled \
 
 #### [POOL-CMD-W-002] Stop
 ```bash
-llorch-pool worker stop <WORKER_ID>
+rbees-pool worker stop <WORKER_ID>
 ```
 **MUST**:
 - Find worker process by ID
@@ -304,10 +304,10 @@ llorch-pool worker stop <WORKER_ID>
 
 #### [POOL-CMD-W-003] List
 ```bash
-llorch-pool worker list
+rbees-pool worker list
 ```
 **MUST**:
-- List all running llorch-candled processes
+- List all running rbees-workerd processes
 - Show worker ID, backend, model, GPU, port, PID
 - Show uptime
 
@@ -315,7 +315,7 @@ llorch-pool worker list
 
 #### [POOL-CMD-D-001] Doctor
 ```bash
-llorch-pool dev doctor
+rbees-pool dev doctor
 ```
 **MUST** check:
 - Rust toolchain (rustc, cargo)
@@ -327,7 +327,7 @@ llorch-pool dev doctor
 
 #### [POOL-CMD-D-002] Setup
 ```bash
-llorch-pool dev setup
+rbees-pool dev setup
 ```
 **MUST**:
 - Install `hf` CLI if missing
@@ -343,11 +343,11 @@ llorch-pool dev setup
 ### 4.1 Crate Structure
 
 ```
-bin/pool-ctl/
+bin/rbees-pool/
 ├── .specs/
-│   └── 00_pool-ctl.md
+│   └── 00_rbees-pool.md
 ├── Cargo.toml
-├── catalog.toml                    # Model catalog (shared with llorch-ctl)
+├── catalog.toml                    # Model catalog (shared with rbees-ctl)
 ├── src/
 │   ├── main.rs                     # Entry point
 │   ├── cli.rs                      # Clap CLI definitions
@@ -379,7 +379,7 @@ bin/pool-ctl/
 │   │
 │   ├── worker/
 │   │   ├── mod.rs
-│   │   ├── spawn.rs                # Spawn llorch-candled
+│   │   ├── spawn.rs                # Spawn rbees-workerd
 │   │   ├── lifecycle.rs            # Stop/list workers
 │   │   └── process.rs              # Process management
 │   │
@@ -425,7 +425,7 @@ predicates = "3"
 ### Catalog Format
 
 ```toml
-# bin/pool-ctl/catalog.toml (shared with llorch-ctl)
+# bin/rbees-pool/catalog.toml (shared with rbees-ctl)
 
 [[models]]
 id = "tinyllama"
@@ -463,28 +463,28 @@ converter_args = ["--outtype", "f32"]
 
 ```bash
 # Model management
-llorch-pool models catalog
-llorch-pool models download tinyllama
-llorch-pool models list
-llorch-pool models verify tinyllama
-llorch-pool models delete phi3
+rbees-pool models catalog
+rbees-pool models download tinyllama
+rbees-pool models list
+rbees-pool models verify tinyllama
+rbees-pool models delete phi3
 
 # Git operations
-llorch-pool git status
-llorch-pool git pull
-llorch-pool git sync
-llorch-pool git submodules list
-llorch-pool git submodules branch --name reference/candle --branch metal-fixes
-llorch-pool git submodules update --name reference/candle
+rbees-pool git status
+rbees-pool git pull
+rbees-pool git sync
+rbees-pool git submodules list
+rbees-pool git submodules branch --name reference/candle --branch metal-fixes
+rbees-pool git submodules update --name reference/candle
 
 # Worker lifecycle
-llorch-pool worker spawn metal --model tinyllama --gpu 0
-llorch-pool worker list
-llorch-pool worker stop worker-metal-0
+rbees-pool worker spawn metal --model tinyllama --gpu 0
+rbees-pool worker list
+rbees-pool worker stop worker-metal-0
 
 # Development
-llorch-pool dev doctor
-llorch-pool dev setup
+rbees-pool dev doctor
+rbees-pool dev setup
 ```
 
 ### Remote Operations (called by orchestrator)
@@ -492,10 +492,10 @@ llorch-pool dev setup
 ```bash
 # From blep (orchestrator host)
 llorch pool models download tinyllama --host mac
-  → SSH: ssh mac.home.arpa "cd ~/Projects/llama-orch && llorch-pool models download tinyllama"
+  → SSH: ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download tinyllama"
 
 llorch pool worker spawn metal --host mac --model tinyllama
-  → SSH: ssh mac.home.arpa "cd ~/Projects/llama-orch && llorch-pool worker spawn metal --model tinyllama"
+  → SSH: ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool worker spawn metal --model tinyllama"
 ```
 
 ---

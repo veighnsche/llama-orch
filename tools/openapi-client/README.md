@@ -85,7 +85,7 @@ This generates:
 ### Source Files
 
 OpenAPI specifications:
-- `contracts/openapi/orchestratord.yaml` — Orchestrator API
+- `contracts/openapi/rbees-orcd.yaml` — Orchestrator API
 - `contracts/openapi/pool-managerd.yaml` — Pool manager API
 
 ---

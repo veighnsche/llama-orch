@@ -1,4 +1,4 @@
-//! llorch-candled - Candle-based Llama-2 inference library
+//! rbees-workerd - Candle-based Llama-2 inference library
 //!
 //! TEAM-009 rewrite: Uses `candle-transformers::models::llama::Llama` directly
 //! instead of custom layer implementations.

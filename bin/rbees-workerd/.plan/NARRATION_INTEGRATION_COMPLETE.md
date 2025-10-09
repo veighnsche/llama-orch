@@ -1,4 +1,4 @@
-# ✅ Narration-Core Integration Complete for llorch-candled
+# ✅ Narration-Core Integration Complete for rbees-workerd
 
 **Status**: 🎉 **COMPLETE**  
 **Date**: 2025-10-09  
@@ -8,7 +8,7 @@
 
 ## 📊 Summary
 
-Successfully integrated **narration-core** into **llorch-candled** with **25 narration points** across all critical paths, providing triple-narration observability (human, cute, story) for delightful debugging! 
+Successfully integrated **narration-core** into **rbees-workerd** with **25 narration points** across all critical paths, providing triple-narration observability (human, cute, story) for delightful debugging! 
 
 ---
 
@@ -149,7 +149,7 @@ All narrations include relevant context:
 ### Worker Startup
 ```json
 {
-  "actor": "llorch-candled",
+  "actor": "rbees-workerd",
   "action": "startup",
   "target": "worker-abc123",
   "human": "Starting Candle worker on port 8080",
@@ -185,7 +185,7 @@ All narrations include relevant context:
 ### Pool Manager Callback (with Story!)
 ```json
 {
-  "actor": "llorch-candled",
+  "actor": "rbees-workerd",
   "action": "callback_ready",
   "target": "http://pool-managerd:8080/ready",
   "human": "Reporting ready to pool-managerd at http://pool-managerd:8080/ready",
@@ -216,13 +216,13 @@ All narrations include relevant context:
 
 - **Narration Core README**: `/home/vince/Projects/llama-orch/bin/shared-crates/narration-core/README.md`
 - **Team Responsibility**: `/home/vince/Projects/llama-orch/bin/shared-crates/narration-core/TEAM_RESPONSIBILITY.md`
-- **Integration Plan**: `/home/vince/Projects/llama-orch/bin/llorch-candled/.plan/NARRATION_INTEGRATION_PLAN.md`
+- **Integration Plan**: `/home/vince/Projects/llama-orch/bin/rbees-workerd/.plan/NARRATION_INTEGRATION_PLAN.md`
 
 ---
 
 ## 🎓 Learning Outcomes
 
-llorch-candled is now:
+rbees-workerd is now:
 1. ✅ **Fully observable** with correlation IDs
 2. ✅ **Delightfully debuggable** with cute stories
 3. ✅ **Best practice example** for narration-core adoption

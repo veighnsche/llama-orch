@@ -11,8 +11,8 @@
 
 Build the foundational infrastructure:
 1. Create `pool-core` shared crate
-2. Create `pool-ctl` CLI binary
-3. Create `llorch-ctl` CLI binary (minimal SSH wrapper)
+2. Create `rbees-pool` CLI binary
+3. Create `rbees-ctl` CLI binary (minimal SSH wrapper)
 
 **Why This First:** Need basic CLI structure before implementing catalog and automation.
 
@@ -88,9 +88,9 @@ pub struct ModelEntry {
 
 ---
 
-### WU1.2: Create pool-ctl CLI Binary (Day 2-3)
+### WU1.2: Create rbees-pool CLI Binary (Day 2-3)
 
-**Location:** `bin/pool-ctl/`
+**Location:** `bin/rbees-pool/`
 
 **Tasks:**
 1. Create binary structure with clap
@@ -100,26 +100,26 @@ pub struct ModelEntry {
 
 **Files to Create:**
 ```
-bin/pool-ctl/
+bin/rbees-pool/
 ├── Cargo.toml
 ├── README.md
 ├── .specs/
-│   └── 00_pool-ctl.md
+│   └── 00_rbees-pool.md
 └── src/
     ├── main.rs
     ├── cli.rs             # Clap definitions
     └── commands/
         ├── mod.rs
-        ├── models.rs      # llorch-pool models ...
-        ├── worker.rs      # llorch-pool worker ...
-        └── status.rs      # llorch-pool status
+        ├── models.rs      # rbees-pool models ...
+        ├── worker.rs      # rbees-pool worker ...
+        └── status.rs      # rbees-pool status
 ```
 
 **CLI Structure:**
 ```rust
 // cli.rs
 #[derive(Parser)]
-#[command(name = "llorch-pool")]
+#[command(name = "rbees-pool")]
 #[command(about = "Pool manager control CLI")]
 struct Cli {
     #[command(subcommand)]
@@ -162,16 +162,16 @@ enum WorkerAction {
 
 **Success Criteria:**
 - [ ] Binary compiles
-- [ ] `llorch-pool --help` works
-- [ ] `llorch-pool --version` works
-- [ ] `llorch-pool status` shows placeholder message
+- [ ] `rbees-pool --help` works
+- [ ] `rbees-pool --version` works
+- [ ] `rbees-pool status` shows placeholder message
 - [ ] All subcommands show help
 
 ---
 
-### WU1.3: Create llorch-ctl CLI Binary (Day 3-4)
+### WU1.3: Create rbees-ctl CLI Binary (Day 3-4)
 
-**Location:** `bin/llorch-ctl/`
+**Location:** `bin/rbees-ctl/`
 
 **Tasks:**
 1. Create binary structure with clap
@@ -181,18 +181,18 @@ enum WorkerAction {
 
 **Files to Create:**
 ```
-bin/llorch-ctl/
+bin/rbees-ctl/
 ├── Cargo.toml
 ├── README.md
 ├── .specs/
-│   └── 00_llorch-ctl.md
+│   └── 00_rbees-ctl.md
 └── src/
     ├── main.rs
     ├── cli.rs             # Clap definitions
     ├── ssh.rs             # SSH client wrapper
     └── commands/
         ├── mod.rs
-        └── pool.rs        # llorch pool ...
+        └── pool.rs        # rbees pool ...
 ```
 
 **CLI Structure:**
@@ -265,21 +265,21 @@ pub fn execute_remote_command(host: &str, command: &str) -> Result<String> {
 ### WU1.4: Integration Testing (Day 4-5)
 
 **Tasks:**
-1. Test pool-ctl locally
-2. Test llorch-ctl remote execution
+1. Test rbees-pool locally
+2. Test rbees-ctl remote execution
 3. Verify SSH connectivity to all pools
 4. Document usage
 
 **Test Cases:**
 ```bash
-# Local pool-ctl
-llorch-pool --help
-llorch-pool --version
-llorch-pool status
-llorch-pool models --help
-llorch-pool worker --help
+# Local rbees-pool
+rbees-pool --help
+rbees-pool --version
+rbees-pool status
+rbees-pool models --help
+rbees-pool worker --help
 
-# Remote llorch-ctl
+# Remote rbees-ctl
 llorch --help
 llorch --version
 llorch pool status --host mac.home.arpa
@@ -298,8 +298,8 @@ llorch pool status --host workstation.home.arpa
 
 **Tasks:**
 1. Write pool-core README
-2. Write pool-ctl README
-3. Write llorch-ctl README
+2. Write rbees-pool README
+3. Write rbees-ctl README
 4. Update bin/.specs with implementation notes
 
 **Documentation Requirements:**
@@ -323,12 +323,12 @@ llorch pool status --host workstation.home.arpa
 
 ### Compilation
 - [ ] `cargo build --release -p pool-core` succeeds
-- [ ] `cargo build --release -p pool-ctl` succeeds
-- [ ] `cargo build --release -p llorch-ctl` succeeds
+- [ ] `cargo build --release -p rbees-pool` succeeds
+- [ ] `cargo build --release -p rbees-ctl` succeeds
 
 ### Functionality
-- [ ] `llorch-pool --help` shows all commands
-- [ ] `llorch-pool status` runs without error
+- [ ] `rbees-pool --help` shows all commands
+- [ ] `rbees-pool status` runs without error
 - [ ] `llorch --help` shows all commands
 - [ ] `llorch pool status --host mac` executes via SSH
 
@@ -352,15 +352,15 @@ llorch pool status --host workstation.home.arpa
 ## Deliverables
 
 **Binaries:**
-- `target/release/llorch-pool` (pool-ctl)
-- `target/release/llorch` (llorch-ctl)
+- `target/release/rbees-pool` (rbees-pool)
+- `target/release/llorch` (rbees-ctl)
 
 **Crates:**
 - `bin/shared-crates/pool-core/`
 
 **Documentation:**
-- `bin/pool-ctl/README.md`
-- `bin/llorch-ctl/README.md`
+- `bin/rbees-pool/README.md`
+- `bin/rbees-ctl/README.md`
 - `bin/shared-crates/pool-core/README.md`
 
 ---
@@ -381,15 +381,15 @@ anyhow = "1.0"
 thiserror = "1.0"
 ```
 
-**Cargo.toml for pool-ctl:**
+**Cargo.toml for rbees-pool:**
 ```toml
 [package]
-name = "pool-ctl"
+name = "rbees-pool"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "llorch-pool"
+name = "rbees-pool"
 path = "src/main.rs"
 
 [dependencies]
@@ -399,10 +399,10 @@ anyhow = "1.0"
 colored = "2.0"
 ```
 
-**Cargo.toml for llorch-ctl:**
+**Cargo.toml for rbees-ctl:**
 ```toml
 [package]
-name = "llorch-ctl"
+name = "rbees-ctl"
 version = "0.1.0"
 edition = "2021"
 

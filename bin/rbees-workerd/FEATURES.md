@@ -1,4 +1,4 @@
-# Feature Flags Guide for llorch-candled
+# Feature Flags Guide for rbees-workerd
 
 ## What Are Feature Flags?
 
@@ -124,7 +124,7 @@ cargo test --features metal --no-default-features
 ### Building Specific Binary
 ```bash
 # CPU binary (default)
-cargo build --bin llorch-candled
+cargo build --bin rbees-workerd
 
 # CUDA binary
 cargo build --bin llorch-cuda-candled --features cuda
@@ -150,7 +150,7 @@ We can't enable all at once because they have conflicting dependencies.
 3. Check IDE settings (see above)
 
 ### "Feature 'cpu' not found"
-- Make sure you're in the right directory: `cd bin/llorch-candled`
+- Make sure you're in the right directory: `cd bin/rbees-workerd`
 - Check `Cargo.toml` has the features section
 
 ### "CUDA errors"

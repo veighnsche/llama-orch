@@ -19,7 +19,7 @@ We claim Checkpoint 1 (RMSNorm) is complete. **Prove us wrong.**
 
 ### 1. Added Candle Dependencies ✅ (We Say)
 
-**File:** `bin/llorch-candled/Cargo.toml`
+**File:** `bin/rbees-workerd/Cargo.toml`
 
 **Our Claims:**
 - Added `candle-core = "0.9"`
@@ -37,7 +37,7 @@ We claim Checkpoint 1 (RMSNorm) is complete. **Prove us wrong.**
 
 **How to Disprove:**
 ```bash
-cd bin/llorch-candled
+cd bin/rbees-workerd
 cargo clean
 cargo build 2>&1 | tee build.log
 # Look for errors, warnings, version conflicts
@@ -47,7 +47,7 @@ cargo build 2>&1 | tee build.log
 
 ### 2. Implemented RMSNorm Using Candle ✅ (We Say)
 
-**File:** `bin/llorch-candled/src/layers/rms_norm.rs`
+**File:** `bin/rbees-workerd/src/layers/rms_norm.rs`
 
 **Our Claims:**
 - Uses `candle_nn::ops::rms_norm` for the math
@@ -83,7 +83,7 @@ let weight = vec![-1.0f32; 4096];
 
 ### 3. Created Comprehensive Tests ✅ (We Say)
 
-**File:** `bin/llorch-candled/tests/checkpoint_01_rms_norm.rs`
+**File:** `bin/rbees-workerd/tests/checkpoint_01_rms_norm.rs`
 
 **Our Claims:**
 - 7 tests, all passing
@@ -303,7 +303,7 @@ let cpu_norm = RMSNorm::from_array(&weight, 1e-5, &cpu_device)?;
 
 ### Step 1: Verify Build & Dependencies
 ```bash
-cd bin/llorch-candled
+cd bin/rbees-workerd
 cargo clean
 cargo build 2>&1 | tee review_build.log
 cargo build --features cuda 2>&1 | tee review_build_cuda.log
@@ -502,11 +502,11 @@ ls -la .proof_bundle/checkpoint_01/
 - **Proof Bundle:** `libs/proof-bundle/.specs/00_proof-bundle.md`
 
 ### Our Work
-- **Implementation:** `bin/llorch-candled/src/layers/rms_norm.rs`
-- **Tests:** `bin/llorch-candled/tests/checkpoint_01_rms_norm.rs`
-- **Dependencies:** `bin/llorch-candled/Cargo.toml`
-- **Catalog:** `bin/llorch-candled/.specs/TEAM_001_CANDLE_CATALOG_PLAN.md`
-- **Report:** `bin/llorch-candled/.specs/TEAM_001_COMPLETION_REPORT.md`
+- **Implementation:** `bin/rbees-workerd/src/layers/rms_norm.rs`
+- **Tests:** `bin/rbees-workerd/tests/checkpoint_01_rms_norm.rs`
+- **Dependencies:** `bin/rbees-workerd/Cargo.toml`
+- **Catalog:** `bin/rbees-workerd/.specs/TEAM_001_CANDLE_CATALOG_PLAN.md`
+- **Report:** `bin/rbees-workerd/.specs/TEAM_001_COMPLETION_REPORT.md`
 
 ### Tools
 - **Checkpoint Extractor:** `bin/llorch-cpud/tools/checkpoint-extractor`

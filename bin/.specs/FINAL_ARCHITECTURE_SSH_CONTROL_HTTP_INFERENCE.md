@@ -26,11 +26,11 @@
 │ Protocol: SSH                                                    │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                   │
-│ llorch-ctl (blep)                                                │
+│ rbees-ctl (blep)                                                │
 │     ↓ SSH (control operations)                                   │
-│ pool-ctl (mac/workstation)                                       │
+│ rbees-pool (mac/workstation)                                       │
 │     ↓ spawn process                                              │
-│ llorch-candled (worker daemon, HTTP server)                      │
+│ rbees-workerd (worker daemon, HTTP server)                      │
 │                                                                   │
 └─────────────────────────────────────────────────────────────────┘
 
@@ -41,11 +41,11 @@
 │                                                                   │
 │ llama-orch-sdk (client)                                          │
 │     ↓ HTTP POST /v2/tasks                                        │
-│ orchestratord (daemon :8080)                                     │
+│ rbees-orcd (daemon :8080)                                     │
 │     ↓ HTTP POST /execute (DIRECT to worker, not via pool)       │
-│ llorch-candled (worker daemon :8001)                             │
+│ rbees-workerd (worker daemon :8001)                             │
 │     ↓ SSE stream                                                 │
-│ orchestratord (relays)                                           │
+│ rbees-orcd (relays)                                           │
 │     ↓ SSE stream                                                 │
 │ llama-orch-sdk (client)                                          │
 │                                                                   │
@@ -62,8 +62,8 @@
 
 **Solution:** Worker daemon keeps model loaded
 ```rust
-// llorch-candled lifecycle
-1. Spawn: llorch-candled --model tinyllama.gguf --gpu 0 --port 8001
+// rbees-workerd lifecycle
+1. Spawn: rbees-workerd --model tinyllama.gguf --gpu 0 --port 8001
 2. Load model into VRAM (30 seconds)
 3. HTTP server starts, listens on :8001
 4. Ready callback: POST http://pool-manager:9200/workers/ready
@@ -92,7 +92,7 @@ Client (llama-orch-sdk)
 Orchestratord (makes scheduling decision)
     ↓ Selects worker: worker-metal-0 at mac.home.arpa:8001
     ↓ POST http://mac.home.arpa:8001/execute (DIRECT, not via pool)
-Worker (llorch-candled)
+Worker (rbees-workerd)
     ↓ Executes inference
     ↓ SSE stream tokens
 Orchestratord (relays stream)
@@ -146,7 +146,7 @@ let response = client.enqueue(request).await?;
 
 **2. Orchestrator → Worker (Direct)**
 ```rust
-// orchestratord makes HTTP call to worker
+// rbees-orcd makes HTTP call to worker
 let response = reqwest::Client::new()
     .post("http://mac.home.arpa:8001/execute")
     .json(&inference_request)
@@ -156,7 +156,7 @@ let response = reqwest::Client::new()
 
 **3. Worker → Orchestrator (Callback)**
 ```rust
-// llorch-candled calls back when ready
+// rbees-workerd calls back when ready
 reqwest::Client::new()
     .post("http://orchestrator:8080/workers/ready")
     .json(&ready_payload)
@@ -175,19 +175,19 @@ reqwest::Client::new()
 
 **1. Orchestrator → Pool (Control)**
 ```bash
-# llorch-ctl uses SSH to control pools
+# rbees-ctl uses SSH to control pools
 llorch pool models download tinyllama --host mac
-  → ssh mac.home.arpa "llorch-pool models download tinyllama"
+  → ssh mac.home.arpa "rbees-pool models download tinyllama"
 
 llorch pool worker spawn metal --host mac --model tinyllama
-  → ssh mac.home.arpa "llorch-pool worker spawn metal --model tinyllama"
+  → ssh mac.home.arpa "rbees-pool worker spawn metal --model tinyllama"
 ```
 
 **2. Pool → Worker (Spawn)**
 ```bash
-# pool-ctl spawns worker as background process
-llorch-pool worker spawn metal --model tinyllama
-  → llorch-candled --model tinyllama.gguf --gpu 0 --port 8001 &
+# rbees-pool spawns worker as background process
+rbees-pool worker spawn metal --model tinyllama
+  → rbees-workerd --model tinyllama.gguf --gpu 0 --port 8001 &
   → Worker starts HTTP server
   → Worker loads model into VRAM
   → Worker calls ready callback
@@ -217,7 +217,7 @@ llorch-pool worker spawn metal --model tinyllama
 
 **When worker starts:**
 ```rust
-// llorch-candled startup
+// rbees-workerd startup
 1. Load model into VRAM
 2. Start HTTP server on :8001
 3. Call ready callback:
@@ -238,7 +238,7 @@ llorch-pool worker spawn metal --model tinyllama
 
 **When orchestrator needs to dispatch job:**
 ```rust
-// orchestratord scheduling
+// rbees-orcd scheduling
 1. Receive job: POST /v2/tasks
 2. Look up workers in registry
 3. Find worker with:
@@ -290,11 +290,11 @@ repo_path = "~/Projects/llama-orch"
 
 **Option 2: Dynamic Registration (SSH probe)**
 ```bash
-# llorch-ctl discovers pools
+# rbees-ctl discovers pools
 llorch pool register mac --host mac.home.arpa --user vinceliem
 
 # Orchestrator probes pool via SSH
-ssh mac.home.arpa "llorch-pool info"
+ssh mac.home.arpa "rbees-pool info"
   → Returns: GPUs, models, disk space, etc.
   → Orchestrator stores in registry
 ```
@@ -302,7 +302,7 @@ ssh mac.home.arpa "llorch-pool info"
 **Option 3: Heartbeat (SSH-based, M1+)**
 ```bash
 # Orchestrator polls pools periodically
-ssh mac.home.arpa "llorch-pool status"
+ssh mac.home.arpa "rbees-pool status"
   → Returns: Workers running, GPU usage, models available
   → Orchestrator updates registry
 ```
@@ -326,7 +326,7 @@ const response = await client.enqueue({
 
 **Step 2: Orchestrator receives job**
 ```rust
-// orchestratord (HTTP server on blep:8080)
+// rbees-orcd (HTTP server on blep:8080)
 POST /v2/tasks
   → Parse request
   → Validate model exists
@@ -337,7 +337,7 @@ POST /v2/tasks
 
 **Step 3: Orchestrator dispatches to worker (DIRECT)**
 ```rust
-// orchestratord makes HTTP call to worker
+// rbees-orcd makes HTTP call to worker
 POST http://mac.home.arpa:8001/execute
 {
   "job_id": "job-123",
@@ -350,7 +350,7 @@ POST http://mac.home.arpa:8001/execute
 
 **Step 4: Worker executes inference**
 ```rust
-// llorch-candled (HTTP server on mac:8001)
+// rbees-workerd (HTTP server on mac:8001)
 POST /execute
   → Model already loaded in VRAM (fast)
   → Execute inference
@@ -359,7 +359,7 @@ POST /execute
 
 **Step 5: Orchestrator relays stream**
 ```rust
-// orchestratord relays SSE stream
+// rbees-orcd relays SSE stream
 Worker SSE stream → Orchestrator → Client
   data: {"type":"token","text":"Hello"}
   data: {"type":"token","text":" there"}
@@ -390,13 +390,13 @@ llorch pool models download tinyllama --host mac
 
 **Step 2: SSH to pool, execute download**
 ```bash
-# llorch-ctl executes via SSH
-ssh mac.home.arpa "cd ~/Projects/llama-orch && llorch-pool models download tinyllama"
+# rbees-ctl executes via SSH
+ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool models download tinyllama"
 ```
 
-**Step 3: pool-ctl downloads model**
+**Step 3: rbees-pool downloads model**
 ```bash
-# pool-ctl (on mac) executes
+# rbees-pool (on mac) executes
 hf download TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
   tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf \
   --local-dir .test-models/tinyllama
@@ -410,14 +410,14 @@ llorch pool worker spawn metal --host mac --model tinyllama
 
 **Step 5: SSH to pool, spawn worker**
 ```bash
-# llorch-ctl executes via SSH
-ssh mac.home.arpa "cd ~/Projects/llama-orch && llorch-pool worker spawn metal --model tinyllama"
+# rbees-ctl executes via SSH
+ssh mac.home.arpa "cd ~/Projects/llama-orch && rbees-pool worker spawn metal --model tinyllama"
 ```
 
-**Step 6: pool-ctl spawns worker daemon**
+**Step 6: rbees-pool spawns worker daemon**
 ```bash
-# pool-ctl (on mac) spawns background process
-llorch-candled \
+# rbees-pool (on mac) spawns background process
+rbees-workerd \
   --worker-id worker-metal-0 \
   --model .test-models/tinyllama/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf \
   --backend metal \
@@ -428,7 +428,7 @@ llorch-candled \
 
 **Step 7: Worker starts and registers**
 ```rust
-// llorch-candled (on mac)
+// rbees-workerd (on mac)
 1. Load model into VRAM (30 seconds)
 2. Start HTTP server on :8001
 3. Register with orchestrator:
@@ -447,7 +447,7 @@ llorch-candled \
 
 **Step 8: Orchestrator adds worker to registry**
 ```rust
-// orchestratord (on blep)
+// rbees-orcd (on blep)
 POST /workers/register
   → Add worker to in-memory registry
   → Worker is now available for scheduling
@@ -457,7 +457,7 @@ POST /workers/register
 
 ## Binary Responsibilities
 
-### llorch-candled (Worker Daemon)
+### rbees-workerd (Worker Daemon)
 
 **MUST be HTTP daemon because:**
 - Keeps model loaded in VRAM
@@ -474,18 +474,18 @@ POST /workers/register
 - Report status (slots available)
 
 **NOT responsible for:**
-- Downloading models (pool-ctl does this)
-- Spawning itself (pool-ctl does this)
+- Downloading models (rbees-pool does this)
+- Spawning itself (rbees-pool does this)
 - Scheduling (orchestrator does this)
 
-### pool-ctl (CLI)
+### rbees-pool (CLI)
 
 **Uses SSH for control, spawns HTTP daemons:**
 
 **Responsibilities:**
 - Download models (hf CLI)
 - Git operations (git CLI)
-- Spawn workers (llorch-candled as background process)
+- Spawn workers (rbees-workerd as background process)
 - Stop workers (kill process)
 - List workers (ps/pidof)
 
@@ -494,7 +494,7 @@ POST /workers/register
 - Scheduling (orchestrator does this)
 - Keeping workers alive (systemd/launchd does this in production)
 
-### llorch-ctl (CLI)
+### rbees-ctl (CLI)
 
 **Uses SSH for control:**
 
@@ -506,9 +506,9 @@ POST /workers/register
 
 **NOT responsible for:**
 - Inference (workers do this)
-- Spawning workers directly (pool-ctl does this)
+- Spawning workers directly (rbees-pool does this)
 
-### orchestratord (Daemon, M2+)
+### rbees-orcd (Daemon, M2+)
 
 **HTTP daemon for scheduling:**
 
@@ -521,8 +521,8 @@ POST /workers/register
 - Maintain job queue (SQLite)
 
 **NOT responsible for:**
-- Spawning workers (pool-ctl does this)
-- Downloading models (pool-ctl does this)
+- Spawning workers (rbees-pool does this)
+- Downloading models (rbees-pool does this)
 - Executing inference (workers do this)
 
 ---
@@ -533,28 +533,28 @@ POST /workers/register
 ┌─────────────────────────────────────────────────────────────────┐
 │ blep.home.arpa (Orchestrator + Pool)                             │
 ├─────────────────────────────────────────────────────────────────┤
-│ orchestratord :8080 (HTTP server, M2+)                           │
+│ rbees-orcd :8080 (HTTP server, M2+)                           │
 │   ├─ Worker registry (in-memory)                                 │
 │   ├─ Pool registry (in-memory)                                   │
 │   └─ Job queue (SQLite)                                          │
 │                                                                   │
-│ llorch-ctl (CLI)                                                 │
+│ rbees-ctl (CLI)                                                 │
 │   └─ SSH client → pools                                          │
 │                                                                   │
-│ pool-ctl (CLI)                                                   │
+│ rbees-pool (CLI)                                                   │
 │   └─ Spawns workers locally                                      │
 │                                                                   │
-│ llorch-candled :8003 (HTTP server, CPU worker)                   │
+│ rbees-workerd :8003 (HTTP server, CPU worker)                   │
 └─────────────────────────────────────────────────────────────────┘
          ↑ SSH (control)                    ↓ HTTP (inference)
          │                                  │
 ┌────────┴──────────────────────────────────┴─────────────────────┐
 │ mac.home.arpa (Pool)                                             │
 ├─────────────────────────────────────────────────────────────────┤
-│ pool-ctl (CLI)                                                   │
+│ rbees-pool (CLI)                                                   │
 │   └─ Spawns workers locally                                      │
 │                                                                   │
-│ llorch-candled :8001 (HTTP server, Metal worker)                 │
+│ rbees-workerd :8001 (HTTP server, Metal worker)                 │
 │   └─ Model loaded in VRAM                                        │
 └─────────────────────────────────────────────────────────────────┘
          ↑ SSH (control)                    ↓ HTTP (inference)
@@ -562,16 +562,16 @@ POST /workers/register
 ┌────────┴──────────────────────────────────┴─────────────────────┐
 │ workstation.home.arpa (Pool)                                     │
 ├─────────────────────────────────────────────────────────────────┤
-│ pool-ctl (CLI)                                                   │
+│ rbees-pool (CLI)                                                   │
 │   └─ Spawns workers locally                                      │
 │                                                                   │
-│ llorch-candled :8002 (HTTP server, CUDA worker)                  │
+│ rbees-workerd :8002 (HTTP server, CUDA worker)                  │
 │   └─ Model loaded in VRAM                                        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Control plane:** SSH (llorch-ctl → pool-ctl)  
-**Data plane:** HTTP (orchestratord → workers, clients → orchestratord)
+**Control plane:** SSH (rbees-ctl → rbees-pool)  
+**Data plane:** HTTP (rbees-orcd → workers, clients → rbees-orcd)
 
 ---
 
@@ -619,14 +619,14 @@ POST /workers/register
 
 ### Registries
 
-**Worker Registry (in orchestratord):**
+**Worker Registry (in rbees-orcd):**
 - Which workers exist
 - Where they are (host:port)
 - What models loaded
 - Slots available
 - Updated via HTTP callbacks
 
-**Pool Registry (in orchestratord):**
+**Pool Registry (in rbees-orcd):**
 - Which pools exist
 - Where they are (for SSH)
 - What GPUs available

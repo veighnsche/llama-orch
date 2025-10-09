@@ -5,7 +5,7 @@
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(name = "llorch-pool")]
+#[command(name = "rbees-pool")]
 #[command(about = "Pool manager control CLI", version, long_about = None)]
 pub struct Cli {
     #[command(subcommand)]

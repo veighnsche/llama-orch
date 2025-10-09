@@ -6,10 +6,10 @@
 //! Created by: TEAM-013
 
 use anyhow::Result;
-use llorch_candled::backend::CandleInferenceBackend;
+use rbees_workerd::backend::CandleInferenceBackend;
 #[cfg(feature = "cuda")]
-use llorch_candled::device::init_cuda_device;
-use llorch_candled::{InferenceBackend, SamplingConfig};
+use rbees_workerd::device::init_cuda_device;
+use rbees_workerd::{InferenceBackend, SamplingConfig};
 
 /// TEAM-013: Validate CUDA story generation performance
 ///

@@ -6,16 +6,16 @@
 
 ---
 
-## Monday: orchestratord Skeleton
+## Monday: rbees-orcd Skeleton
 
 ### Morning (4 hours)
 
-**Create orchestratord binary:**
+**Create rbees-orcd binary:**
 ```bash
 cd bin
-mkdir orchestratord
-cd orchestratord
-cargo init --name orchestratord
+mkdir rbees-orcd
+cd rbees-orcd
+cargo init --name rbees-orcd
 ```
 
 **Add dependencies:**
@@ -76,7 +76,7 @@ async fn main() {
         .route("/workers/register", post(register_worker))
         .with_state(state);
 
-    println!("🚀 orchestratord listening on :8080");
+    println!("🚀 rbees-orcd listening on :8080");
     
     axum::Server::bind(&"0.0.0.0:8080".parse().unwrap())
         .serve(app.into_make_service())
@@ -189,20 +189,20 @@ async fn submit_task(
 }
 ```
 
-**Deliverable:** orchestratord accepts jobs and dispatches to workers
+**Deliverable:** rbees-orcd accepts jobs and dispatches to workers
 
 ---
 
-## Tuesday: pool-ctl CLI
+## Tuesday: rbees-pool CLI
 
 ### Morning (4 hours)
 
-**Create pool-ctl binary:**
+**Create rbees-pool binary:**
 ```bash
 cd bin
-mkdir pool-ctl
-cd pool-ctl
-cargo init --name pool-ctl
+mkdir rbees-pool
+cd rbees-pool
+cargo init --name rbees-pool
 ```
 
 **Add dependencies:**
@@ -222,7 +222,7 @@ use clap::{Parser, Subcommand};
 use colored::*;
 
 #[derive(Parser)]
-#[command(name = "llorch-pool")]
+#[command(name = "rbees-pool")]
 #[command(about = "Pool manager control CLI")]
 struct Cli {
     #[command(subcommand)]
@@ -299,14 +299,14 @@ fn spawn_worker(backend: &str, model: &str, gpu: u32, port: u16) -> anyhow::Resu
     println!("  GPU: {}", gpu);
     println!("  Port: {}", port);
     
-    // TODO: Spawn llorch-candled
+    // TODO: Spawn rbees-workerd
     println!("{} Worker spawned", "✅".green());
     Ok(())
 }
 
 fn list_workers() -> anyhow::Result<()> {
     println!("{} Running workers:", "📋".cyan());
-    // TODO: List running llorch-candled processes
+    // TODO: List running rbees-workerd processes
     Ok(())
 }
 ```
@@ -389,8 +389,8 @@ pub fn spawn_worker(backend: &str, model: &str, gpu: u32, port: u16) -> anyhow::
     println!("   GPU: {}", gpu);
     println!("   Port: {}", port);
     
-    // Spawn llorch-candled
-    let mut cmd = Command::new("llorch-candled");
+    // Spawn rbees-workerd
+    let mut cmd = Command::new("rbees-workerd");
     cmd.args(&[
         "--worker-id", &worker_id,
         "--model", model_file_path.to_str().unwrap(),
@@ -423,20 +423,20 @@ pub fn spawn_worker(backend: &str, model: &str, gpu: u32, port: u16) -> anyhow::
 }
 ```
 
-**Deliverable:** pool-ctl can download models and spawn workers
+**Deliverable:** rbees-pool can download models and spawn workers
 
 ---
 
-## Wednesday: llorch-ctl CLI
+## Wednesday: rbees-ctl CLI
 
 ### Morning (4 hours)
 
-**Create llorch-ctl binary:**
+**Create rbees-ctl binary:**
 ```bash
 cd bin
-mkdir llorch-ctl
-cd llorch-ctl
-cargo init --name llorch-ctl
+mkdir rbees-ctl
+cd rbees-ctl
+cargo init --name rbees-ctl
 ```
 
 **Add dependencies:**
@@ -563,7 +563,7 @@ pub async fn download_model_on_pool(model: &str, host: &str) -> anyhow::Result<(
     println!("📥 Downloading {} on {}", model, host);
     
     let ssh_cmd = format!(
-        "cd ~/Projects/llama-orch && llorch-pool models download {}",
+        "cd ~/Projects/llama-orch && rbees-pool models download {}",
         model
     );
     
@@ -583,7 +583,7 @@ pub async fn spawn_worker_on_pool(backend: &str, model: &str, host: &str) -> any
     println!("🚀 Spawning worker on {}", host);
     
     let ssh_cmd = format!(
-        "cd ~/Projects/llama-orch && llorch-pool worker spawn {} --model {}",
+        "cd ~/Projects/llama-orch && rbees-pool worker spawn {} --model {}",
         backend, model
     );
     
@@ -651,7 +651,7 @@ pub async fn list_jobs() -> anyhow::Result<()> {
 }
 ```
 
-**Deliverable:** llorch-ctl can command pools via SSH and submit jobs
+**Deliverable:** rbees-ctl can command pools via SSH and submit jobs
 
 ---
 
@@ -661,8 +661,8 @@ pub async fn list_jobs() -> anyhow::Result<()> {
 
 **End-to-end test:**
 ```bash
-# Terminal 1: Start orchestratord
-cd bin/orchestratord
+# Terminal 1: Start rbees-orcd
+cd bin/rbees-orcd
 cargo run
 
 # Terminal 2: Download model on mac
@@ -682,9 +682,9 @@ llorch jobs submit --model tinyllama --prompt "Write a haiku about Rust"
 
 ### Afternoon (4 hours)
 
-**Add worker registration to llorch-candled:**
+**Add worker registration to rbees-workerd:**
 ```rust
-// In llorch-candled (existing binary)
+// In rbees-workerd (existing binary)
 // Add registration callback after model loads
 
 async fn register_with_orchestrator(config: &Config) -> Result<()> {
@@ -726,7 +726,7 @@ async fn register_with_orchestrator(config: &Config) -> Result<()> {
 
 **Add logging:**
 ```rust
-// In orchestratord
+// In rbees-orcd
 use tracing::{info, error};
 
 info!("Job {} submitted", job_id);
@@ -735,7 +735,7 @@ error!("Worker {} failed: {}", worker_id, err);
 
 **Add progress indicators:**
 ```rust
-// In pool-ctl
+// In rbees-pool
 use indicatif::ProgressBar;
 
 let pb = ProgressBar::new_spinner();
@@ -765,10 +765,10 @@ llorch jobs submit --model tinyllama --prompt "Hello world"
 
 ## Architecture
 
-- orchestratord: Job scheduling and worker management
-- pool-ctl: Pool manager operations (local)
-- llorch-ctl: Orchestrator operations (remote)
-- llorch-candled: Worker daemon (inference)
+- rbees-orcd: Job scheduling and worker management
+- rbees-pool: Pool manager operations (local)
+- rbees-ctl: Orchestrator operations (remote)
+- rbees-workerd: Worker daemon (inference)
 ```
 
 **Test everything one more time:**
@@ -790,10 +790,10 @@ llorch jobs submit --model tinyllama --prompt "Write a haiku"
 
 By end of Friday:
 
-- [ ] orchestratord accepts jobs and dispatches to workers
-- [ ] pool-ctl downloads models and spawns workers
-- [ ] llorch-ctl commands pools via SSH and submits jobs
-- [ ] llorch-candled registers with orchestrator
+- [ ] rbees-orcd accepts jobs and dispatches to workers
+- [ ] rbees-pool downloads models and spawns workers
+- [ ] rbees-ctl commands pools via SSH and submits jobs
+- [ ] rbees-workerd registers with orchestrator
 - [ ] End-to-end flow works: submit job → worker executes → tokens stream back
 - [ ] Basic error handling and logging
 - [ ] README with quick start guide

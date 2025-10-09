@@ -173,7 +173,7 @@ All performance targets exceeded.
 - [x] **OpenTelemetry 0.21** - distributed tracing (optional)
 
 ### Used By
-- [x] **orchestratord** - admission, dispatch, completion
+- [x] **rbees-orcd** - admission, dispatch, completion
 - [x] **pool-managerd** - worker lifecycle, heartbeats
 - [x] **worker-orcd** - inference execution
 - [x] **vram-residency** - VRAM operations

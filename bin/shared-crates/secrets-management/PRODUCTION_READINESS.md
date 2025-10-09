@@ -530,13 +530,13 @@ called `Result::unwrap()` on an `Err` value: SystemdCredentialNotFound("CREDENTI
 **Status**: ⚠️ **PENDING**
 
 **Documented Use Cases**:
-- ⬜ orchestratord — API token authentication
+- ⬜ rbees-orcd — API token authentication
 - ⬜ pool-managerd — Systemd credentials
 - ⬜ vram-residency — Seal key management
 - ⬜ worker-orcd — Worker registration
 
 **Requirements** (P1):
-- [ ] Integrate with orchestratord
+- [ ] Integrate with rbees-orcd
 - [ ] Integrate with pool-managerd
 - [ ] Integrate with vram-residency
 - [ ] Integrate with worker-orcd
@@ -647,7 +647,7 @@ called `Result::unwrap()` on an `Err` value: SystemdCredentialNotFound("CREDENTI
 **Day 2: Integration & Specs (P1)**
 1. Create `.specs/` directory with standard documentation (2 hours)
 2. Integrate with vram-residency (2 hours)
-3. Integrate with orchestratord (2 hours)
+3. Integrate with rbees-orcd (2 hours)
 4. Add CI pipeline jobs (1 hour)
 
 ---
@@ -716,7 +716,7 @@ called `Result::unwrap()` on an `Err` value: SystemdCredentialNotFound("CREDENTI
 
 2. **Integrate with production crates** (4-6 hours)
    - vram-residency seal key management
-   - orchestratord API token authentication
+   - rbees-orcd API token authentication
    - pool-managerd systemd credentials
    - worker-orcd worker registration
 

@@ -34,7 +34,7 @@
 use observability_narration_core::{narrate, NarrationFields};
 
 narrate(NarrationFields {
-    actor: "orchestratord",
+    actor: "rbees-orcd",
     action: "enqueue",
     target: job_id.to_string(),
     human: format!("Enqueued job {job_id}"),
@@ -243,7 +243,7 @@ narration_core::narrate_with_correlation  // Different prefix!
 
 ```rust
 // String literals
-actor: "orchestratord"
+actor: "rbees-orcd"
 
 // Enums (in macro example)
 actor = Actor::Orchestratord

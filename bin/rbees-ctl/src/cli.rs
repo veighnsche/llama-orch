@@ -5,7 +5,7 @@
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(name = "llorch")]
+#[command(name = "rbees")]
 #[command(about = "Orchestrator control CLI", version, long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
@@ -108,7 +108,7 @@ pub enum GitAction {
     Pull,
     /// Show git status on remote pool
     Status,
-    /// Build pool-ctl on remote pool
+    /// Build rbees-pool on remote pool
     Build,
 }
 

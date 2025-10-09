@@ -42,7 +42,7 @@ narrate() → tracing::event!() → tracing-subscriber → stdout/stderr → log
 {
   "timestamp": "2025-10-09T13:10:16Z",
   "level": "INFO",
-  "actor": "llorch-candled",
+  "actor": "rbees-workerd",
   "action": "inference_complete",
   "target": "50-tokens",
   "human": "Inference completed (50 tokens in 250 ms, 200 tok/s)",
@@ -244,7 +244,7 @@ grep 'req-abc123' /var/log/llama-orch/*.log | jq .
 
 ---
 
-## 🚀 Implementation Status for llorch-candled
+## 🚀 Implementation Status for rbees-workerd
 
 ### ✅ What We Implemented:
 
@@ -314,7 +314,7 @@ The SSE streaming is **already implemented** in:
        │ X-Correlation-Id: req-abc123
        ▼
 ┌─────────────────────┐
-│  llorch-candled     │  ← Narration: "Starting inference (50 tokens)"
+│  rbees-workerd     │  ← Narration: "Starting inference (50 tokens)"
 │  (Worker)           │  ← Logs to: stdout → Loki
 │                     │  
 │  ┌───────────────┐  │  ← SSE: event: token, data: {"t":"Hello"}

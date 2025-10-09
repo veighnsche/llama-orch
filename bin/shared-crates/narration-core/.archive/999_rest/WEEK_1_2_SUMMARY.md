@@ -15,7 +15,7 @@
   - Variable extraction from `{placeholder}` syntax
   - Ready for full implementation in Week 3
 - **Actor Inference** - Auto-detect service from module path
-  - Recognizes: orchestratord, pool-managerd, worker-orcd, vram-residency
+  - Recognizes: rbees-orcd, pool-managerd, worker-orcd, vram-residency
   - Fallback logic for unknown modules
 ### 2. Enhanced Narration Core
 #### New Logging Levels ✅
@@ -136,7 +136,7 @@ production = []     # Production profile (all tracing disabled)
 ### Week 4: Integration & Rollout
 - [ ] BDD tests for cute/story modes
 - [ ]  integration
-- [ ] Service migrations (orchestratord, pool-managerd, worker-orcd)
+- [ ] Service migrations (rbees-orcd, pool-managerd, worker-orcd)
 - [ ] CI/CD pipeline updates
 ---
 ## 🎯 Performance Targets
@@ -199,7 +199,7 @@ narrate_error(NarrationFields {
 use observability_narration_core::{generate_correlation_id, narrate, NarrationFields};
 let correlation_id = generate_correlation_id();
 narrate(NarrationFields {
-    actor: "orchestratord",
+    actor: "rbees-orcd",
     action: "dispatch",
     target: "job-456".to_string(),
     human: "Dispatching job to worker-gpu0-r1".to_string(),
@@ -211,9 +211,9 @@ narrate(NarrationFields {
 ```rust
 use observability_narration_core::{trace_enter, trace_exit};
 fn process_request(job_id: &str) -> Result<()> {
-    trace_enter!("orchestratord", "process_request", format!("job_id={}", job_id));
+    trace_enter!("rbees-orcd", "process_request", format!("job_id={}", job_id));
     // ... processing logic ...
-    trace_exit!("orchestratord", "process_request", "→ Ok (5ms)");
+    trace_exit!("rbees-orcd", "process_request", "→ Ok (5ms)");
     Ok(())
 }
 ```

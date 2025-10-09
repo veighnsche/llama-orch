@@ -15,7 +15,7 @@
 
 Implement automation for:
 1. Model downloads via hf CLI (NOT deprecated huggingface-cli)
-2. Worker spawning via llorch-candled
+2. Worker spawning via rbees-workerd
 3. Download Qwen (smallest model) on all pools
 4. Test Qwen on Metal and CUDA backends
 
@@ -27,7 +27,7 @@ Implement automation for:
 
 ### WU3.1: Implement Model Download (Day 1-2)
 
-**Location:** `bin/pool-ctl/src/commands/models.rs`
+**Location:** `bin/rbees-pool/src/commands/models.rs`
 
 **Tasks:**
 1. Implement hf CLI wrapper (TEAM-023: NOT huggingface-cli - that's deprecated!)
@@ -108,7 +108,7 @@ fn calculate_dir_size(path: &Path) -> Result<u64> {
 ```
 
 **Success Criteria:**
-- [ ] `llorch-pool models download <model>` works
+- [ ] `rbees-pool models download <model>` works
 - [ ] Downloads SafeTensors format
 - [ ] Updates catalog automatically
 - [ ] Handles already-downloaded models
@@ -118,13 +118,13 @@ fn calculate_dir_size(path: &Path) -> Result<u64> {
 
 ### WU3.2: Implement Worker Spawning (Day 2-3)
 
-**Location:** `bin/pool-ctl/src/commands/worker.rs`
+**Location:** `bin/rbees-pool/src/commands/worker.rs`
 
 **Tasks:**
 1. Implement worker spawn logic
 2. Validate model is downloaded
 3. Check backend compatibility
-4. Spawn llorch-candled as background process
+4. Spawn rbees-workerd as background process
 
 **Implementation:**
 ```rust
@@ -147,7 +147,7 @@ pub fn handle_spawn_command(
     // Validate model is downloaded
     if !model.downloaded {
         anyhow::bail!(
-            "Model {} not downloaded. Run: llorch-pool models download {}", 
+            "Model {} not downloaded. Run: rbees-pool models download {}", 
             model_id, model_id
         );
     }
@@ -174,7 +174,7 @@ pub fn handle_spawn_command(
     let model_path = find_model_file(&model.path)?;
     
     // Build command
-    let binary = format!("llorch-candled");
+    let binary = format!("rbees-workerd");
     let mut cmd = Command::new(&binary);
     
     cmd.args(&[
@@ -258,7 +258,7 @@ fn save_worker_info(
 ```
 
 **Success Criteria:**
-- [ ] `llorch-pool worker spawn <backend> --model <model>` works
+- [ ] `rbees-pool worker spawn <backend> --model <model>` works
 - [ ] Checks model is downloaded
 - [ ] Checks backend compatibility
 - [ ] Spawns worker as background process
@@ -269,12 +269,12 @@ fn save_worker_info(
 
 ### WU3.3: Implement Worker Management (Day 3)
 
-**Location:** `bin/pool-ctl/src/commands/worker.rs`
+**Location:** `bin/rbees-pool/src/commands/worker.rs`
 
 **Tasks:**
-1. Implement `llorch-pool worker list`
-2. Implement `llorch-pool worker stop`
-3. Implement `llorch-pool worker logs`
+1. Implement `rbees-pool worker list`
+2. Implement `rbees-pool worker stop`
+3. Implement `rbees-pool worker logs`
 4. Add worker status checks
 
 **Implementation:**
@@ -378,8 +378,8 @@ fn is_process_running(pid: u32) -> bool {
 ```
 
 **Success Criteria:**
-- [ ] `llorch-pool worker list` shows running workers
-- [ ] `llorch-pool worker stop <id>` stops worker
+- [ ] `rbees-pool worker list` shows running workers
+- [ ] `rbees-pool worker stop <id>` stops worker
 - [ ] Process status is accurate
 - [ ] Graceful shutdown works
 
@@ -396,13 +396,13 @@ fn is_process_running(pid: u32) -> bool {
 **Commands:**
 ```bash
 # On mac.home.arpa
-llorch-pool models download qwen-0.5b
+rbees-pool models download qwen-0.5b
 
 # On workstation.home.arpa
-llorch-pool models download qwen-0.5b
+rbees-pool models download qwen-0.5b
 
 # Verify
-llorch-pool models catalog
+rbees-pool models catalog
 ```
 
 **Expected Output:**
@@ -433,7 +433,7 @@ Downloading model.safetensors: 100%|████████| 1.0GB/1.0GB [00:30
 **Test Commands:**
 ```bash
 # On mac.home.arpa (Metal)
-llorch-pool worker spawn metal --model qwen-0.5b --gpu 0
+rbees-pool worker spawn metal --model qwen-0.5b --gpu 0
 
 # Wait for worker to start
 sleep 10
@@ -450,12 +450,12 @@ curl -X POST http://localhost:8000/execute \
     }'
 
 # Stop worker
-llorch-pool worker stop worker-metal-0
+rbees-pool worker stop worker-metal-0
 ```
 
 ```bash
 # On workstation.home.arpa (CUDA)
-llorch-pool worker spawn cuda --model qwen-0.5b --gpu 0
+rbees-pool worker spawn cuda --model qwen-0.5b --gpu 0
 
 # Wait for worker to start
 sleep 10
@@ -472,7 +472,7 @@ curl -X POST http://localhost:8000/execute \
     }'
 
 # Stop worker
-llorch-pool worker stop worker-cuda-0
+rbees-pool worker stop worker-cuda-0
 ```
 
 **Expected Results:**
@@ -497,21 +497,21 @@ llorch-pool worker stop worker-cuda-0
 **Before proceeding to CP4, verify:**
 
 ### Model Downloads
-- [ ] `llorch-pool models download` works
+- [ ] `rbees-pool models download` works
 - [ ] Qwen downloaded on mac.home.arpa
 - [ ] Qwen downloaded on workstation.home.arpa
 - [ ] Catalog updated correctly
 - [ ] File sizes are accurate
 
 ### Worker Spawning
-- [ ] `llorch-pool worker spawn` works
+- [ ] `rbees-pool worker spawn` works
 - [ ] Workers spawn as background processes
 - [ ] Logs are written to files
 - [ ] Worker info is saved
 
 ### Worker Management
-- [ ] `llorch-pool worker list` shows workers
-- [ ] `llorch-pool worker stop` stops workers
+- [ ] `rbees-pool worker list` shows workers
+- [ ] `rbees-pool worker stop` stops workers
 - [ ] Process status is accurate
 - [ ] Cleanup works correctly
 
@@ -538,9 +538,9 @@ llorch-pool worker stop worker-cuda-0
 ## Deliverables
 
 **Code:**
-- `bin/pool-ctl/src/commands/models.rs` (download command)
-- `bin/pool-ctl/src/commands/worker.rs` (spawn/list/stop commands)
-- `bin/llorch-ctl/src/commands/pool.rs` (remote commands)
+- `bin/rbees-pool/src/commands/models.rs` (download command)
+- `bin/rbees-pool/src/commands/worker.rs` (spawn/list/stop commands)
+- `bin/rbees-ctl/src/commands/pool.rs` (remote commands)
 
 **Downloaded Models:**
 - `.test-models/qwen-0.5b/` on mac.home.arpa
@@ -557,7 +557,7 @@ llorch-pool worker stop worker-cuda-0
 
 **Additional Cargo.toml dependencies:**
 ```toml
-# pool-ctl
+# rbees-pool
 nix = { version = "0.27", features = ["signal", "process"] }
 ```
 
@@ -565,7 +565,7 @@ nix = { version = "0.27", features = ["signal", "process"] }
 - `hf` CLI installed on all pools (TEAM-023: NOT huggingface-cli - that's deprecated!)
   - Install: `pip install huggingface_hub[cli]`
 - SSH access to all pools
-- llorch-candled binary built for each backend
+- rbees-workerd binary built for each backend
 
 ---
 

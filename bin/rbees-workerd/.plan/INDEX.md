@@ -1,4 +1,4 @@
-# 📑 Complete Document Index - llorch-candled Planning
+# 📑 Complete Document Index - rbees-workerd Planning
 
 **Last Synchronized**: 2025-10-09 15:37:39Z  
 **Total Documents**: 11  
@@ -218,7 +218,7 @@
 
 ## ✅ Certification
 
-**All documents in `/home/vince/Projects/llama-orch/bin/llorch-candled/.plan/` are:**
+**All documents in `/home/vince/Projects/llama-orch/bin/rbees-workerd/.plan/` are:**
 
 - ✅ Synchronized as of 2025-10-09 15:37:39Z
 - ✅ Free of contradictions

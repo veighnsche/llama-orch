@@ -12,7 +12,7 @@
 
 **✅ Solid Foundation:**
 - Comprehensive specs (bin/.specs/00_llama-orch.md - 2350 lines)
-- Working worker (llorch-candled - M0 complete)
+- Working worker (rbees-workerd - M0 complete)
 - Clear architecture (SSH control + HTTP inference)
 - Testing infrastructure (BDD, property tests, proof bundles)
 - Shared crates (auth-min, audit-logging, deadline-propagation, proof-bundle)
@@ -20,9 +20,9 @@
 - OpenAPI contracts (contracts/openapi/)
 
 **❌ What's Missing:**
-- orchestratord daemon (scheduling, job queue, SQLite state)
+- rbees-orcd daemon (scheduling, job queue, SQLite state)
 - pool-managerd daemon (worker lifecycle, GPU inventory)
-- CLI tools (llorch-ctl, pool-ctl to replace bash scripts)
+- CLI tools (rbees-ctl, rbees-pool to replace bash scripts)
 - Frontend (web UI for conversations)
 - Marketing website
 - Revenue model implementation
@@ -100,19 +100,19 @@
 **Goal:** Get to $1000 MRR (Monthly Recurring Revenue)
 
 **Build:**
-1. **orchestratord** (minimal)
+1. **rbees-orcd** (minimal)
    - HTTP API for job submission
    - In-memory job queue (no SQLite yet)
    - Worker registry (in-memory)
    - Direct worker dispatch
    - SSE streaming relay
 
-2. **pool-ctl** (CLI)
+2. **rbees-pool** (CLI)
    - Model downloads (hf CLI)
-   - Worker spawn (llorch-candled)
+   - Worker spawn (rbees-workerd)
    - Replace bash scripts
 
-3. **llorch-ctl** (CLI)
+3. **rbees-ctl** (CLI)
    - SSH to pools
    - Job submission via HTTP
    - Status queries
@@ -137,14 +137,14 @@
    - Sign-up form
 
 **Don't build:**
-- ❌ pool-managerd daemon (use pool-ctl + SSH)
+- ❌ pool-managerd daemon (use rbees-pool + SSH)
 - ❌ SQLite state (in-memory is fine for MVP)
 - ❌ Multi-tenancy (single customer per instance)
 - ❌ Marketplace (M5 is too far)
 - ❌ Fancy frontend (basic is fine)
 
 **Timeline:**
-- Week 1-4: orchestratord + CLIs
+- Week 1-4: rbees-orcd + CLIs
 - Week 5-6: EU compliance toggle
 - Week 7-8: Basic web UI
 - Week 9-10: Marketing site
@@ -237,7 +237,7 @@ LLORCH_EU_AUDIT=false  # Disable (homelab mode)
 
 **Implementation:**
 ```rust
-// In orchestratord
+// In rbees-orcd
 if std::env::var("LLORCH_EU_AUDIT").unwrap_or_default() == "true" {
     // Enable audit logging
     let audit_logger = AuditLogger::new()?;
@@ -269,13 +269,13 @@ cargo build --release
 **When binary:**
 ```bash
 # Update via binary download (future)
-curl -L https://releases.llama-orch.com/latest/llorch-ctl -o llorch-ctl
-chmod +x llorch-ctl
+curl -L https://releases.llama-orch.com/latest/rbees-ctl -o rbees-ctl
+chmod +x rbees-ctl
 ```
 
 **Implementation:**
 ```rust
-// In llorch-ctl
+// In rbees-ctl
 match std::env::var("LLORCH_UPDATE_METHOD").unwrap_or("git".to_string()).as_str() {
     "git" => {
         // git pull + cargo build
@@ -284,7 +284,7 @@ match std::env::var("LLORCH_UPDATE_METHOD").unwrap_or("git".to_string()).as_str(
     }
     "binary" => {
         // Download latest binary
-        let url = "https://releases.llama-orch.com/latest/llorch-ctl";
+        let url = "https://releases.llama-orch.com/latest/rbees-ctl";
         download_and_replace(url, current_exe()?)?;
     }
     _ => return Err("Invalid LLORCH_UPDATE_METHOD"),
@@ -298,28 +298,28 @@ match std::env::var("LLORCH_UPDATE_METHOD").unwrap_or("git".to_string()).as_str(
 ### This Week (Week 1)
 
 **Monday-Tuesday:**
-1. Create `orchestratord` skeleton
+1. Create `rbees-orcd` skeleton
    - HTTP server (axum)
    - In-memory job queue
    - Worker registry (in-memory)
    - Job submission endpoint
 
 **Wednesday-Thursday:**
-2. Create `pool-ctl` CLI
+2. Create `rbees-pool` CLI
    - Model download (hf CLI wrapper)
-   - Worker spawn (llorch-candled)
+   - Worker spawn (rbees-workerd)
    - Git operations
 
 **Friday:**
-3. Create `llorch-ctl` CLI
+3. Create `rbees-ctl` CLI
    - SSH client
    - Job submission
    - Status queries
 
 **Weekend:**
 4. Test end-to-end
-   - Submit job via llorch-ctl
-   - orchestratord dispatches to worker
+   - Submit job via rbees-ctl
+   - rbees-orcd dispatches to worker
    - Worker executes inference
    - Tokens stream back
 
@@ -568,12 +568,12 @@ EU-only data residency. Immutable audit logs. No US servers.
 
 ### Do Build Now
 
-**✅ orchestratord (minimal):**
+**✅ rbees-orcd (minimal):**
 - Job submission
 - Worker dispatch
 - SSE streaming
 
-**✅ CLIs (pool-ctl, llorch-ctl):**
+**✅ CLIs (rbees-pool, rbees-ctl):**
 - Replace bash scripts
 - Better DX
 - Foundation for automation
@@ -638,9 +638,9 @@ EU-only data residency. Immutable audit logs. No US servers.
 ### This Month (October 2025)
 
 **Week 1 (Now):**
-- [ ] Create orchestratord skeleton
-- [ ] Create pool-ctl CLI
-- [ ] Create llorch-ctl CLI
+- [ ] Create rbees-orcd skeleton
+- [ ] Create rbees-pool CLI
+- [ ] Create rbees-ctl CLI
 - [ ] Test end-to-end
 
 **Week 2:**
@@ -699,7 +699,7 @@ EU-only data residency. Immutable audit logs. No US servers.
 ### The Plan
 
 1. **Build MVP** (3 months)
-   - orchestratord + CLIs
+   - rbees-orcd + CLIs
    - EU compliance toggle
    - Basic web UI
    - Landing page

@@ -12,7 +12,7 @@ Checkpoint 1B (RoPE - Rotary Position Embeddings) has been successfully implemen
 
 ## Implementation
 
-**File:** `bin/llorch-candled/src/layers/rope.rs`
+**File:** `bin/rbees-workerd/src/layers/rope.rs`
 
 **Approach:** Using Candle's optimized RoPE implementation ✅
 - Uses `candle_nn::rotary_emb::rope_i` for GPU acceleration

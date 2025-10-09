@@ -9,8 +9,8 @@
 ## Purpose
 
 `orchestrator-core` is a shared library crate containing logic used by BOTH:
-- `orchestratord` (daemon) - Uses for runtime scheduling, state management
-- `llorch-ctl` (CLI) - Uses for types, validation, client logic
+- `rbees-orcd` (daemon) - Uses for runtime scheduling, state management
+- `rbees-ctl` (CLI) - Uses for types, validation, client logic
 
 **Key Principle:** Shared logic, separate execution contexts.
 
@@ -96,7 +96,7 @@ bin/shared-crates/orchestrator-core/
 
 ## Usage Examples
 
-### In orchestratord (daemon)
+### In rbees-orcd (daemon)
 
 ```rust
 use orchestrator_core::{JobQueue, Job, Scheduler};
@@ -121,7 +121,7 @@ impl Orchestratord {
 }
 ```
 
-### In llorch-ctl (CLI)
+### In rbees-ctl (CLI)
 
 ```rust
 use orchestrator_core::{Job, TaskSubmitRequest};

@@ -18,7 +18,7 @@
 
 ### 3. Documentation Examples (3 files)
 - `bin/pool-managerd-crates/api/src/lib.rs:64` — Update example
-- `bin/orchestratord-crates/platform-api/src/lib.rs:33` — Update example
+- `bin/rbees-orcd-crates/platform-api/src/lib.rs:33` — Update example
 - `bin/shared-crates/audit-logging/src/lib.rs:20-21` — Update example
 
 ---

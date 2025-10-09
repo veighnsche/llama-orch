@@ -34,7 +34,7 @@ Validate that the foundational infrastructure is correctly set up before impleme
 ### Directory Layout
 
 ```
-llorch-candled/
+rbees-workerd/
 ├── Cargo.toml                          # Dependencies (worker-crates + ndarray + candle-kernels)
 ├── src/
 │   ├── main.rs                         # HTTP server entry point
@@ -109,7 +109,7 @@ use crate::cache::KVCache;  // Internal import, not worker-crate
 
 ### ✓ Cargo.toml Setup
 
-- [ ] Package name: `llorch-candled`
+- [ ] Package name: `rbees-workerd`
 - [ ] Edition: 2021
 - [ ] All worker-crates dependencies added:
   - [ ] worker-common
@@ -172,7 +172,7 @@ Process requests via InferenceBackend trait
 ```
 pool-managerd
   ↓ (spawns process)
-llorch-candled --worker-id=... --model=... --port=8080 --callback-url=...
+rbees-workerd --worker-id=... --model=... --port=8080 --callback-url=...
   ↓ (loads model)
 CandleInferenceBackend::load()
   ↓ (calls back)
@@ -180,7 +180,7 @@ POST http://pool-managerd/workers/{worker_id}/ready
   ↓ (starts server)
 HTTP server listening on :8080
   ↓ (waits for requests)
-orchestratord → POST http://worker:8080/execute
+rbees-orcd → POST http://worker:8080/execute
   ↓ (processes)
 backend.execute(prompt, config)
   ↓ (returns)

@@ -658,9 +658,9 @@ Vince
 30-Day Results:
 
 Technical:
-- orchestratord: ✅ Working
-- pool-ctl: ✅ Working
-- llorch-ctl: ✅ Working
+- rbees-orcd: ✅ Working
+- rbees-pool: ✅ Working
+- rbees-ctl: ✅ Working
 - EU audit: ✅ Working
 - Web UI: ✅ Working
 
@@ -748,7 +748,7 @@ Keep shipping. 🚀
 
 ## 30-Day Success Criteria
 
-- [ ] Working product (orchestratord + CLIs + UI)
+- [ ] Working product (rbees-orcd + CLIs + UI)
 - [ ] EU compliance (audit toggle, GDPR endpoints)
 - [ ] Landing page live
 - [ ] 30+ outreach emails sent

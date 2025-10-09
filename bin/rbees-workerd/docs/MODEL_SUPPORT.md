@@ -8,7 +8,7 @@
 
 ## Overview
 
-llorch-candled supports multiple model architectures through the Candle framework. All models have been tested on CPU, Metal (Apple Silicon), and CUDA backends.
+rbees-workerd supports multiple model architectures through the Candle framework. All models have been tested on CPU, Metal (Apple Silicon), and CUDA backends.
 
 **Key improvements:**
 - ✅ **TEAM-020:** Fixed Metal/CUDA mask broadcasting bug via Candle fork
@@ -142,7 +142,7 @@ llorch-candled supports multiple model architectures through the Candle framewor
 | Phi | ⚠️ | ⚠️ | ⚠️ | Code ready, GGUF model downloaded (needs SafeTensors) |
 | Qwen | ⚠️ | ⚠️ | ⚠️ | Code ready, GGUF models downloaded (needs SafeTensors) |
 
-**Note:** TEAM-020 downloaded GGUF models for Mistral, Phi, and Qwen. However, llorch-candled currently only supports SafeTensors format. These models are ready for testing once SafeTensors versions are obtained or GGUF support is added.
+**Note:** TEAM-020 downloaded GGUF models for Mistral, Phi, and Qwen. However, rbees-workerd currently only supports SafeTensors format. These models are ready for testing once SafeTensors versions are obtained or GGUF support is added.
 
 ### Test Commands
 
@@ -253,19 +253,19 @@ model_directory/
 
 ### Priority 1: Obtain SafeTensors Models (TEAM-021+)
 
-**TEAM-020 Status:** Downloaded GGUF models but llorch-candled requires SafeTensors
+**TEAM-020 Status:** Downloaded GGUF models but rbees-workerd requires SafeTensors
 
 - [x] Download Qwen GGUF models (Q4 and FP16)
 - [x] Download Phi GGUF model (Q4)
 - [ ] Find/convert Mistral SafeTensors model
 - [ ] Find/convert Phi SafeTensors model
 - [ ] Find/convert Qwen SafeTensors model
-- [ ] OR: Add GGUF support to llorch-candled
+- [ ] OR: Add GGUF support to rbees-workerd
 
 **Options:**
 1. Download SafeTensors versions from HuggingFace
 2. Convert GGUF to SafeTensors using conversion tools
-3. Add GGUF loader support to llorch-candled (larger effort)
+3. Add GGUF loader support to rbees-workerd (larger effort)
 
 ### Priority 2: Multi-Model Testing (After SafeTensors obtained)
 

@@ -131,7 +131,7 @@ Removed entire file (103 lines).
 ### Metal Binary (macOS Apple Silicon only)
 
 ```bash
-cd bin/llorch-candled
+cd bin/rbees-workerd
 
 # Build Metal binary
 cargo build --release --features metal --bin llorch-metal-candled

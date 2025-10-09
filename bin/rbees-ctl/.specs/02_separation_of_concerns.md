@@ -7,7 +7,7 @@
 
 ## Overview
 
-This document defines the strict separation of concerns between `llorch-cli` (developer tooling) and the runtime binaries (orchestratord, pool-managerd, worker-orcd/llorch-candled).
+This document defines the strict separation of concerns between `llorch-cli` (developer tooling) and the runtime binaries (rbees-orcd, pool-managerd, worker-orcd/rbees-workerd).
 
 **Key Principle:** llorch-cli is TOOLING, not RUNTIME.
 
@@ -17,7 +17,7 @@ This document defines the strict separation of concerns between `llorch-cli` (de
 
 ### Runtime Binaries (bin/)
 
-**Location:** `bin/{orchestratord,pool-managerd,llorch-candled}/`
+**Location:** `bin/{rbees-orcd,pool-managerd,rbees-workerd}/`
 
 **Responsibilities:**
 - Daemon lifecycle management
@@ -90,7 +90,7 @@ This document defines the strict separation of concerns between `llorch-cli` (de
 
 ## Responsibility Matrix
 
-| Responsibility | llorch-cli | orchestratord | pool-managerd | worker-orcd |
+| Responsibility | llorch-cli | rbees-orcd | pool-managerd | worker-orcd |
 |----------------|------------|---------------|---------------|-------------|
 | **Development** |
 | Git operations | ✅ | ❌ | ❌ | ❌ |
@@ -154,7 +154,7 @@ llorch dev check
 
 ```bash
 # Worker daemon (runtime)
-llorch-candled \
+rbees-workerd \
   --worker-id worker-1 \
   --model /path/to/model.gguf \
   --gpu 0 \
@@ -167,7 +167,7 @@ pool-managerd \
   --orchestrator-url http://orchestrator:8080
 
 # Orchestrator daemon (runtime)
-orchestratord \
+rbees-orcd \
   --config /etc/llorch/orchestrator.toml \
   --bind 0.0.0.0:8080
 ```
@@ -195,12 +195,12 @@ Filesystem / Remote host
 - No persistent state
 - No daemon management
 
-### Runtime (orchestratord/pool-managerd/worker-orcd)
+### Runtime (rbees-orcd/pool-managerd/worker-orcd)
 
 ```
 Client
     ↓ (HTTP POST /v2/tasks)
-orchestratord
+rbees-orcd
     ↓ (HTTP POST /pools/{id}/workers/spawn)
 pool-managerd
     ↓ (process spawn)
@@ -234,7 +234,7 @@ llorch worker logs <id>
 ```
 
 **Implementation:**
-- Wrapper around `llorch-candled` binary
+- Wrapper around `rbees-workerd` binary
 - For development/testing ONLY
 - NOT for production use
 - Delegates to systemd/launchd for production
@@ -267,7 +267,7 @@ llorch orchestrator jobs list
 ```
 
 **Implementation:**
-- Wrapper around `orchestratord` binary
+- Wrapper around `rbees-orcd` binary
 - For development/testing ONLY
 - NOT for production use
 - Delegates to systemd/launchd for production
@@ -305,8 +305,8 @@ impl Commands {
 // ✅ Correct: Spawn the daemon binary
 impl Commands {
     fn start_orchestrator(&self) -> Result<()> {
-        // ✅ Spawn the orchestratord binary
-        Command::new("orchestratord")
+        // ✅ Spawn the rbees-orcd binary
+        Command::new("rbees-orcd")
             .arg("--config")
             .arg(&self.config_path)
             .spawn()?;
@@ -385,7 +385,7 @@ impl Commands {
         // ✅ Use systemd for lifecycle management
         Command::new("systemctl")
             .arg("restart")
-            .arg("orchestratord")
+            .arg("rbees-orcd")
             .status()?;
         
         println!("Orchestrator restarted via systemd");

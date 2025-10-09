@@ -3,19 +3,19 @@ This document audits the happy-path pipeline and lists concrete tasks to pass th
 **Updated for Cloud Profile**: This checklist now reflects both HOME_PROFILE (single-machine) and CLOUD_PROFILE (distributed) architectures.
 ## Happy Path Timeline (Current)
 ### CLOUD_PROFILE (Current - Distributed)
-0. Control plane (orchestratord) starts, validates config
+0. Control plane (rbees-orcd) starts, validates config
 1. GPU worker (pool-managerd) registers via `POST /v2/nodes/register` with Bearer token
 2. pool-managerd sends periodic heartbeats (`POST /v2/nodes/{id}/heartbeat`) with pool status
-3. Client sends `POST /v2/tasks` to orchestratord
-4. orchestratord checks service registry for healthy nodes with model availability
-5. orchestratord performs model-aware placement (least-loaded, model filter)
-6. orchestratord dispatches to pool via HTTP (adapter binds to remote pool URL)
+3. Client sends `POST /v2/tasks` to rbees-orcd
+4. rbees-orcd checks service registry for healthy nodes with model availability
+5. rbees-orcd performs model-aware placement (least-loaded, model filter)
+6. rbees-orcd dispatches to pool via HTTP (adapter binds to remote pool URL)
 7. On GPU worker: pool-managerd watches local handoff files, manages engine lifecycle
-8. Adapter (on orchestratord or worker) streams tokens via SSE back through orchestratord
-9. orchestratord relays SSE stream to client
+8. Adapter (on rbees-orcd or worker) streams tokens via SSE back through rbees-orcd
+9. rbees-orcd relays SSE stream to client
 ### Legacy HOME_PROFILE (Deprecated - Removed)
 **Note**: HOME_PROFILE handoff watcher was removed as part of cloud profile migration.
-The project is now cloud-first. For single-machine deployments, run orchestratord and pool-managerd
+The project is now cloud-first. For single-machine deployments, run rbees-orcd and pool-managerd
 on the same node with CLOUD_PROFILE mode.
 ## Client Call Sequence (spec-confirmed, v2)
 - **[enqueue]** `POST /v2/tasks` → returns `202 Accepted` with `AdmissionResponseV2 { task_id, queue_position, predicted_start_ms, backoff_ms, streams?, preparation? }`.
@@ -27,31 +27,31 @@ on the same node with CLOUD_PROFILE mode.
 ## Findings and Gaps (by step)
 - 0 — Config validation
   - Current: Config module loads and validates orchestrator configuration at startup with fail-fast semantics.
-  - Implementation: `bin/orchestratord/src/config.rs` provides `Config::load()` with validation for admission capacity, queue policy, placement strategy, and cloud profile settings. Bootstrap calls `Config::load()` and panics on validation failure per OC-CONFIG-6001.
-  - Code: `bin/orchestratord/src/app/bootstrap.rs`, `bin/orchestratord/src/config.rs`.
+  - Implementation: `bin/rbees-orcd/src/config.rs` provides `Config::load()` with validation for admission capacity, queue policy, placement strategy, and cloud profile settings. Bootstrap calls `Config::load()` and panics on validation failure per OC-CONFIG-6001.
+  - Code: `bin/rbees-orcd/src/app/bootstrap.rs`, `bin/rbees-orcd/src/config.rs`.
   - TODO: ORCHD-CONFIG-VALIDATE-0001.
   - Status: ✅ Implemented
 - 1 — Request ingress
   - Current: `POST /v2/tasks` returns `202 Accepted` with `AdmissionResponseV2` (includes the same `task_id`). Enqueue admits into the queue and seeds data for `started` SSE.
   - Gap: Sentinel validations used; need policy-backed checks and budgets.
-  - Code: `bin/orchestratord/src/api/data.rs` (`create_task()`). Spec: `contracts/openapi/data.yaml`.
+  - Code: `bin/rbees-orcd/src/api/data.rs` (`create_task()`). Spec: `contracts/openapi/data.yaml`.
   - Status: ✅ Basic admission done, ⚠️ needs sentinel removal & budget enforcement
 - 2 — Pool-manager check for running model/engine
   - Current: `AppState.pool_manager` holds a `pool_managerd::registry::Registry`, streaming path checks health via `should_dispatch()`.
   - Gap: Admission path doesn't check pool health before enqueue.
-  - Code: `bin/orchestratord/src/api/data.rs`, `bin/orchestratord/src/services/streaming.rs`.
+  - Code: `bin/rbees-orcd/src/api/data.rs`, `bin/rbees-orcd/src/services/streaming.rs`.
   - TODOs: to be added when wiring real placement/health gating.
   - Status: ✅ Streaming has health gate (ORCHD-POOL-HEALTH-GATE-0010 done), ⚠️ admission needs it
 - 2.5 — Catalog check
   - Current: `catalog-core` fully implemented with FsCatalog, ModelRef parsing, verify_digest. HTTP endpoints exist.
   - Gap: Admission doesn't call catalog to verify model presence.
-  - Code: `bin/orchestratord/src/api/data.rs`, `libs/catalog-core/src/lib.rs`.
+  - Code: `bin/rbees-orcd/src/api/data.rs`, `libs/catalog-core/src/lib.rs`.
   - TODO: ORCHD-CATALOG-CHECK-0006.
   - Status: ✅ Infrastructure complete, ❌ integration in admission missing
 - 3 — Provisioning policy
   - Current: No policy layer to auto-provision engine/model; admission ignores model presence.
   - Gap: Policy to authorize provisioning and choose pool.
-  - Code: `bin/orchestratord/src/api/data.rs`.
+  - Code: `bin/rbees-orcd/src/api/data.rs`.
   - TODO: ORCHD-PROVISION-POLICY-0005.
   - Status: ❌ Not implemented
 - 4 — Engine provision
@@ -69,12 +69,12 @@ on the same node with CLOUD_PROFILE mode.
   - Current: pool-managerd watches handoffs locally, reports readiness via heartbeats
   - Code: `libs/gpu-node/handoff-watcher/` (CLOUD_PROFILE), `bin/pool-managerd/` (registry + heartbeat)
   - Status: ✅ CLOUD_PROFILE heartbeat reporting complete, ✅ Handoff watcher moved to pool-managerd
-  - **Removed**: `bin/orchestratord/src/services/handoff.rs` (HOME_PROFILE handoff watcher deleted)
+  - **Removed**: `bin/rbees-orcd/src/services/handoff.rs` (HOME_PROFILE handoff watcher deleted)
 - 7 — Orchestrator binds adapter and dispatches
   - **CLOUD_PROFILE**: Adapter binds to remote pool URL from service registry
-  - Current: Model-aware placement in `bin/orchestratord/src/services/placement_v2.rs`
+  - Current: Model-aware placement in `bin/rbees-orcd/src/services/placement_v2.rs`
   - Current: Placement strategies: round-robin, least-loaded (filters by model availability)
-  - Code: `bin/orchestratord/src/app/bootstrap.rs`, `bin/orchestratord/src/services/placement_v2.rs`
+  - Code: `bin/rbees-orcd/src/app/bootstrap.rs`, `bin/rbees-orcd/src/services/placement_v2.rs`
   - Status: ✅ Model-aware placement done (CLOUD_PROFILE), ⚠️ pin override enforcement missing
 - 8 — Streaming tokens SSE
   - Current: `services/streaming.rs` tries adapter with health gate, falls back to deterministic SSE. Request built from admission snapshot.
@@ -87,13 +87,13 @@ on the same node with CLOUD_PROFILE mode.
   - Code: `services/placement.rs` uses default route.
   - Status: ⚠️ Contract exists (`TaskRequest.placement.pin_pool_id`), enforcement missing
 - Catalog infrastructure complete, integration in admission missing.
-  - Code: `libs/catalog-core/src/lib.rs` ✅, `bin/orchestratord/src/api/data.rs` ❌
+  - Code: `libs/catalog-core/src/lib.rs` ✅, `bin/rbees-orcd/src/api/data.rs` ❌
 - Worker registration flow with AUTH token exists, but engine-provisioner doesn't call it.
-  - Code: `bin/orchestratord/src/api/control.rs::register_worker()` ✅
+  - Code: `bin/rbees-orcd/src/api/control.rs::register_worker()` ✅
 ## TODO Markers Added in Code
-- `bin/orchestratord/src/app/bootstrap.rs`
+- `bin/rbees-orcd/src/app/bootstrap.rs`
   - ORCHD-CONFIG-VALIDATE-0001: validate config at startup ✅ DONE
-- `bin/orchestratord/src/api/data.rs`
+- `bin/rbees-orcd/src/api/data.rs`
   - ORCHD-CATALOG-CHECK-0006: catalog existence/state check ❌
   - ORCHD-PROVISION-POLICY-0005: invoke provisioning per policy ❌
   - ORCHD-ADMISSION-STREAMS-0008: populate `AdmissionResponse.streams` ✅ DONE
@@ -102,10 +102,10 @@ on the same node with CLOUD_PROFILE mode.
   - ENGINE-PROV-POOL-NOTIFY-0003: notify pool-manager/orchestrator on readiness
   - ENGINE-PROV-CLEANUP-0004: cleanup on failures to avoid stale state
   - ENGINE-PROV-GPU-ENFORCE-0007: enforce GPU-only per workspace policy (to add)
- - `bin/orchestratord/src/api/data.rs::stream_task` and `services/streaming.rs`
+ - `bin/rbees-orcd/src/api/data.rs::stream_task` and `services/streaming.rs`
   - ORCHD-STREAM-VERBOSE-0011: accept `?verbose=true` and emit narration in some `metrics` frames
 These complement existing TODOs:
-- `bin/orchestratord/src/services/streaming.rs`: ORCHD-STREAM-1101..1103 and ORCHD-REQUEST-STUB
+- `bin/rbees-orcd/src/services/streaming.rs`: ORCHD-STREAM-1101..1103 and ORCHD-REQUEST-STUB
 - `libs/worker-adapters/llamacpp-http/src/lib.rs`: health/props/stream/cancel/version TODOs
 ## Minimal Work to Pass e2e-haiku (near-term)
 - [x] 1. Orchestrator returns 202 for enqueue and 200 for stream (already true).
@@ -115,7 +115,7 @@ These complement existing TODOs:
   - haiku anti-stub rule: include the current minute spelled out (client derives the minute at stream start and verifies it appears exactly once in the generated text).
 - 3. For real-run gate (REQUIRE_REAL_LLAMA=1):
   - Option A (fast path): start llama-server manually and export `ORCHD_LLAMACPP_URL`, build with feature `llamacpp-adapter`. This satisfies streaming via adapter without provisioning.
-  - Option B (target path): ORCHD-HANDOFF-AUTOBIND-0002 watcher implemented in `bin/orchestratord/src/services/handoff.rs`
+  - Option B (target path): ORCHD-HANDOFF-AUTOBIND-0002 watcher implemented in `bin/rbees-orcd/src/services/handoff.rs`
 - See `consumers/llama-orch-sdk/CLIENT_HANDBOOK.md` for SDK instructions and example sequences.
 Verification commands:
 - `cargo test -p test-harness-e2e-haiku -- --ignored --nocapture` (with REQUIRE_REAL_LLAMA=1)
@@ -135,15 +135,15 @@ Verification commands:
 - Test harness: add assertion on tokens_out delta and started/token/end order for real engine runs.
 ## Cloud Profile Architecture References
 **CLOUD_PROFILE (Current Architecture)**:
-- Orchestrator router: `bin/orchestratord/src/app/router.rs`
-- Streaming: `bin/orchestratord/src/services/streaming.rs`
+- Orchestrator router: `bin/rbees-orcd/src/app/router.rs`
+- Streaming: `bin/rbees-orcd/src/services/streaming.rs`
 - Pool registry: `bin/pool-managerd/src/core/registry.rs`
-- Node endpoints: `bin/orchestratord/src/api/nodes.rs` (register, heartbeat, deregister)
+- Node endpoints: `bin/rbees-orcd/src/api/nodes.rs` (register, heartbeat, deregister)
 - Service registry: `libs/control-plane/service-registry/` (node tracking, health)
 - Node registration: `libs/gpu-node/node-registration/` (GPU worker registration)
 - Handoff watcher: `libs/gpu-node/handoff-watcher/` (local filesystem watch on GPU node)
-- Placement v2: `bin/orchestratord/src/services/placement_v2.rs` (model-aware, least-loaded)
-- Catalog availability: `bin/orchestratord/src/api/catalog_availability.rs`
+- Placement v2: `bin/rbees-orcd/src/services/placement_v2.rs` (model-aware, least-loaded)
+- Catalog availability: `bin/rbees-orcd/src/api/catalog_availability.rs`
 **Common**:
 - Engine provisioning: `libs/provisioners/engine-provisioner/src/providers/llamacpp/mod.rs`
 - Model provisioning: `libs/provisioners/model-provisioner/src/lib.rs`

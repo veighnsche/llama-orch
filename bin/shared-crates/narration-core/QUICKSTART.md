@@ -108,7 +108,7 @@ The middleware automatically:
 
 ```rust
 use observability_narration_core::{
-    ACTOR_ORCHESTRATORD,      // "orchestratord"
+    ACTOR_ORCHESTRATORD,      // "rbees-orcd"
     ACTOR_POOL_MANAGERD,      // "pool-managerd"
     ACTOR_WORKER_ORCD,        // "worker-orcd"
     ACTOR_INFERENCE_ENGINE,   // "inference-engine"
@@ -325,7 +325,7 @@ Narration::new(actor, action, target)
 
 When you use `.emit()` or `narrate_auto()`, these fields are automatically added:
 
-- `emitted_by`: Service name and version (e.g., "orchestratord@0.1.0")
+- `emitted_by`: Service name and version (e.g., "rbees-orcd@0.1.0")
 - `emitted_at_ms`: Unix timestamp in milliseconds
 
 You don't need to set these manually!

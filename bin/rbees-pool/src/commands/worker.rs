@@ -31,7 +31,7 @@ fn spawn(backend: String, model_id: String, gpu: u32) -> Result<()> {
     // Validate model is downloaded
     if !model.downloaded {
         anyhow::bail!(
-            "Model {} not downloaded. Run: llorch-pool models download {}",
+            "Model {} not downloaded. Run: rbees-pool models download {}",
             model_id,
             model_id
         );
@@ -61,7 +61,7 @@ fn spawn(backend: String, model_id: String, gpu: u32) -> Result<()> {
     let model_path = find_model_file(&model.path)?;
 
     // Build command
-    let binary = "llorch-candled";
+    let binary = "rbees-workerd";
     let mut cmd = std::process::Command::new(binary);
 
     cmd.args([

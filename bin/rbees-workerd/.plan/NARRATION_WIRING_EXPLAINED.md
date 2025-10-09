@@ -282,7 +282,7 @@ pub enum InferenceEvent {
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    llorch-candled Worker                     │
+│                    rbees-workerd Worker                     │
 │                                                              │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  HTTP Handler: handle_execute()                        │ │

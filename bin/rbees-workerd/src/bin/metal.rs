@@ -7,8 +7,8 @@
 
 use anyhow::Result;
 use clap::Parser;
-use llorch_candled::device::{init_metal_device, verify_device};
-use llorch_candled::{backend::CandleInferenceBackend, callback_ready, create_router, HttpServer};
+use rbees_workerd::device::{init_metal_device, verify_device};
+use rbees_workerd::{backend::CandleInferenceBackend, callback_ready, create_router, HttpServer};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::Mutex;

@@ -1114,7 +1114,7 @@ fn validate_correlation_id(id: &str) -> Option<&str> {
 #### **Option A: Allowlist Validation**
 ```rust
 const ALLOWED_ACTORS: &[&str] = &[
-    "orchestratord",
+    "rbees-orcd",
     "pool-managerd",
     "worker-orcd",
     "inference-engine",
@@ -1174,7 +1174,7 @@ fn infer_actor(module_path: &str) -> &str {
       .collect::<Vec<_>>();
   // Generate const ALLOWED_ACTORS at compile time
   ```
-- ⚠️ **CASE SENSITIVITY**: The allowlist comparison should be case-sensitive to prevent bypasses like "Orchestratord" vs "orchestratord".
+- ⚠️ **CASE SENSITIVITY**: The allowlist comparison should be case-sensitive to prevent bypasses like "Orchestratord" vs "rbees-orcd".
 - 🚨 **COMPILE-TIME vs RUNTIME**: The validation happens at macro expansion (compile-time). If actor inference fails validation, should it be a compile error or runtime error? **RECOMMENDATION**: Compile error is safer - prevents deployment of code with invalid actors.
 
 **⏱️ PERFORMANCE TEAM FINAL VERDICT**:
@@ -1187,7 +1187,7 @@ fn infer_actor(module_path: &str) -> &str {
 **Implementation**:
 ```rust
 const ALLOWED_ACTORS: &[&str] = &[
-    "orchestratord",
+    "rbees-orcd",
     "pool-managerd",
     "worker-orcd",
     "inference-engine",

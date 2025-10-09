@@ -319,7 +319,7 @@ let v = v.reshape((batch, seq_len, self.n_heads, self.head_dim))?;
    - `DType` imported but not used in `rope.rs` and `rms_norm.rs`
    - `Array3` imported but not used in `tensor/ops.rs`
    - **Impact:** None (compiler warnings only)
-   - **Fix:** Run `cargo fix --lib -p llorch-candled` (optional)
+   - **Fix:** Run `cargo fix --lib -p rbees-workerd` (optional)
 
 2. **Unused Variable in RoPE (Non-blocking)**
    - `total_tokens` calculated but not used (line 102 in `rope.rs`)

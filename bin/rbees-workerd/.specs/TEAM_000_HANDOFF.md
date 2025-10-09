@@ -2,14 +2,14 @@
 
 **Created by:** TEAM-000 (Foundation)  
 **Date:** 2025-10-08  
-**Purpose:** Handoff of llorch-candled scaffolding to implementation teams  
+**Purpose:** Handoff of rbees-workerd scaffolding to implementation teams  
 **Status:** ✅ Scaffolding Complete
 
 ---
 
 ## What We Built
 
-TEAM-000 has created the **complete scaffolding** for `llorch-candled`, a Candle-based Llama-2 inference worker following the hybrid approach recommended in `CANDLE_INTEGRATION_HANDOFF.md`.
+TEAM-000 has created the **complete scaffolding** for `rbees-workerd`, a Candle-based Llama-2 inference worker following the hybrid approach recommended in `CANDLE_INTEGRATION_HANDOFF.md`.
 
 ### Deliverables
 
@@ -61,7 +61,7 @@ Week 4 (Validation & CUDA):
 ## File Structure
 
 ```
-bin/llorch-candled/
+bin/rbees-workerd/
 ├── Cargo.toml                          # ✅ Complete with all deps
 ├── README.md                           # ✅ Full documentation
 ├── src/
@@ -198,7 +198,7 @@ bin/llorch-candled/
 ### Step 1: Validate Foundation (Checkpoint 0)
 
 ```bash
-cd bin/llorch-candled
+cd bin/rbees-workerd
 
 # Build
 cargo build
@@ -399,7 +399,7 @@ cuda = ["candle-kernels", "cudarc"]
 
 ## Files to Reference
 
-### In llorch-candled:
+### In rbees-workerd:
 - `README.md`: Overview and quick start
 - `.specs/checkpoints/CHECKPOINT_00_FOUNDATION.md`: Foundation spec
 - `Cargo.toml`: Dependencies and features

@@ -1,4 +1,4 @@
-# Clippy configuration for llorch-candled
+# Clippy configuration for rbees-workerd
 # High-quality inference engine with strict linting
 
 # Cognitive complexity threshold - keep functions simple

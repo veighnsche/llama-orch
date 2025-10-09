@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-TEAM-018 has created 4 homelab automation scripts for building and testing llorch-candled on remote machines (CUDA workstation, Metal Mac). These scripts currently provide human-readable terminal output but lack structured logging, metrics collection, and observability infrastructure.
+TEAM-018 has created 4 homelab automation scripts for building and testing rbees-workerd on remote machines (CUDA workstation, Metal Mac). These scripts currently provide human-readable terminal output but lack structured logging, metrics collection, and observability infrastructure.
 
 **Your mission:** Add observability to these scripts so we can:
 1. Track build/test success rates over time
@@ -437,7 +437,7 @@ SLACK_WEBHOOK_URL="${SLACK_WEBHOOK_URL:-}"
 
 ### Internal Documentation
 - `/scripts/homelab/` - Scripts created by TEAM-018
-- `bin/llorch-candled/docs/metal.md` - Metal backend guide
+- `bin/rbees-workerd/docs/metal.md` - Metal backend guide
 - `.specs/TEAM_018_HANDOFF.md` - Metal migration handoff
 
 ### External Resources

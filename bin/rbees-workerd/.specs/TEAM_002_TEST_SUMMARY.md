@@ -99,7 +99,7 @@ test result: ok. 4 passed; 0 failed  (team_002_llama_cpp_comparison)
 
 ### Run All Tests
 ```bash
-cd bin/llorch-candled
+cd bin/rbees-workerd
 cargo test --lib --test checkpoint_01_rms_norm --test team_002_edge_cases --test team_002_llama_cpp_comparison
 ```
 

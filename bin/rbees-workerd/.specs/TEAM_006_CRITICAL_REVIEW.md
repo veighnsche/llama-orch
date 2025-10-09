@@ -356,7 +356,7 @@ worker-gguf = { path = "../worker-crates/worker-gguf" }
 ```bash
 # 1. Profile current implementation
 cargo build --release
-perf record --call-graph dwarf ./target/release/llorch-candled
+perf record --call-graph dwarf ./target/release/rbees-workerd
 perf report
 
 # 2. Benchmark current performance
@@ -471,7 +471,7 @@ cargo bench
 2. **Profile current implementation**
    ```bash
    cargo build --release --features benchmark
-   perf record ./target/release/llorch-candled
+   perf record ./target/release/rbees-workerd
    cargo flamegraph
    ```
 
@@ -590,7 +590,7 @@ sudo apt-get install linux-tools-generic
 
 # Profile
 cargo build --release
-perf record --call-graph dwarf ./target/release/llorch-candled
+perf record --call-graph dwarf ./target/release/rbees-workerd
 perf report
 ```
 

@@ -1,4 +1,4 @@
-//! Error types for llorch-candled
+//! Error types for rbees-workerd
 //!
 //! Created by: TEAM-000
 

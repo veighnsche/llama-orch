@@ -8,10 +8,10 @@
 ```rust
 // ❌ TERRIBLE: Manual trace calls everywhere
 fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
-    trace_enter!("orchestratord", "dispatch_job", 
+    trace_enter!("rbees-orcd", "dispatch_job", 
                  format!("job_id={}, pool_id={}", job_id, pool_id));
     let worker = select_worker(pool_id)?;
-    trace_exit!("orchestratord", "dispatch_job", 
+    trace_exit!("rbees-orcd", "dispatch_job", 
                 format!("→ {} ({}ms)", worker.id, elapsed_ms));
     Ok(worker.id)
 }
@@ -33,7 +33,7 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
 }
 ```
 **Our custom macro auto-generates**:
-- ✅ Auto-inferred actor from module path (e.g., "orchestratord")
+- ✅ Auto-inferred actor from module path (e.g., "rbees-orcd")
 - ✅ Entry trace with args
 - ✅ Exit trace with result
 - ✅ Automatic timing
@@ -58,7 +58,7 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
     // Auto-inferred actor from module path!
     let _span = tracing::trace_span!(
         "dispatch_job",
-        actor = "orchestratord",  // ← Auto-inferred!
+        actor = "rbees-orcd",  // ← Auto-inferred!
         job_id = %job_id,
         pool_id = %pool_id
     ).entered();
@@ -156,7 +156,7 @@ fn llama_eval(ctx: *mut LlamaContext, tokens: &[i32]) -> Result<()> {
 **Usage**:
 ```rust
 #[narrate(
-    actor = "orchestratord",  // Or auto-inferred from module path!
+    actor = "rbees-orcd",  // Or auto-inferred from module path!
     action = "dispatch",
     human = "Dispatched job {job_id} to worker {worker_id} ({elapsed_ms}ms)",
     cute = "Orchestratord sends job-{job_id} to worker-{worker_id}! 🎫"
@@ -179,7 +179,7 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
         Ok(worker_id) => {
             // Template interpolation happens here!
             narrate(NarrationFields {
-                actor: "orchestratord",
+                actor: "rbees-orcd",
                 action: "dispatch",
                 target: job_id.to_string(),
                 human: format!("Dispatched job {} to worker {} ({}ms)", job_id, worker_id, elapsed_ms),
@@ -190,7 +190,7 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
         }
         Err(e) => {
             narrate(NarrationFields {
-                actor: "orchestratord",
+                actor: "rbees-orcd",
                 action: "dispatch",
                 target: job_id.to_string(),
                 human: format!("Failed to dispatch job {}: {}", job_id, e),
@@ -225,7 +225,7 @@ fn llama_eval(ctx: *mut LlamaContext, tokens: &[i32]) -> Result<()> {
 ```rust
 // Use #[narrate] with cute mode
 #[narrate(
-    actor = "orchestratord",
+    actor = "rbees-orcd",
     action = "accept",
     cute = "Orchestratord welcomes job-{job_id} to the queue! 🎫"
 )]
@@ -332,9 +332,9 @@ pub fn trace_fn(_attr: TokenStream, item: TokenStream) -> TokenStream {
 }
 // Helper to infer actor from module path
 fn infer_actor_from_module_path() -> String {
-    // Extract from module path (e.g., "llama_orch::orchestratord" -> "orchestratord")
+    // Extract from module path (e.g., "llama_orch::rbees-orcd" -> "rbees-orcd")
     // Implementation details...
-    "orchestratord".to_string()
+    "rbees-orcd".to_string()
 }
 ```
 ### Phase 3: Implement `#[narrate(...)]` with Template Interpolation (Week 2)
@@ -380,10 +380,10 @@ pub const CUTE_MODE_ENABLED: bool = false;
 ### Before (Manual Tracing):
 ```rust
 fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
-    trace_enter!("orchestratord", "dispatch_job", 
+    trace_enter!("rbees-orcd", "dispatch_job", 
                  format!("job_id={}, pool_id={}", job_id, pool_id));
     let worker = select_worker(pool_id)?;
-    trace_exit!("orchestratord", "dispatch_job", 
+    trace_exit!("rbees-orcd", "dispatch_job", 
                 format!("→ {} ({}ms)", worker.id, elapsed_ms));
     Ok(worker.id)
 }
@@ -415,7 +415,7 @@ fn hot_path_function() -> Result<()> {
 ### Template-Based Cute Messages:
 ```rust
 #[narrate(
-    actor = "orchestratord",
+    actor = "rbees-orcd",
     action = "dispatch",
     human = "Dispatched job {job_id} to worker {worker_id} ({elapsed_ms}ms)",
     cute = "Orchestratord sends job-{job_id} to worker-{worker_id}! 🎫"
@@ -441,7 +441,7 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
 2. **User-facing operations** → `#[narrate(...)]` (with templates!)
    ```rust
    #[narrate(
-       actor = "orchestratord",  // Or auto-inferred!
+       actor = "rbees-orcd",  // Or auto-inferred!
        action = "accept",
        human = "Accepted job {job_id} at position {position}",
        cute = "Orchestratord welcomes job-{job_id}! 🎫"
@@ -451,7 +451,7 @@ fn dispatch_job(job_id: &str, pool_id: &str) -> Result<WorkerId> {
 3. **Loops** → `trace_loop!()` macro
    ```rust
    for (i, worker) in workers.iter().enumerate() {
-       trace_loop!("orchestratord", "select", i, workers.len(),
+       trace_loop!("rbees-orcd", "select", i, workers.len(),
                    format!("worker={}", worker.id));
    }
    ```
@@ -470,7 +470,7 @@ observability-narration-core = { version = "0.1", features = ["trace-macros"] }
 ### Control via Environment:
 ```bash
 # Enable TRACE for specific module
-export RUST_LOG=info,llama_orch::orchestratord=trace
+export RUST_LOG=info,llama_orch::rbees-orcd=trace
 # Disable all tracing
 export RUST_LOG=info
 ```
@@ -490,9 +490,9 @@ export RUST_LOG=info
 ```rust
 // 😤 UGH, so much boilerplate!
 fn dispatch_job(job_id: &str) -> Result<WorkerId> {
-    trace_enter!("orchestratord", "dispatch_job", format!("job_id={}", job_id));
+    trace_enter!("rbees-orcd", "dispatch_job", format!("job_id={}", job_id));
     let worker = select_worker()?;
-    trace_exit!("orchestratord", "dispatch_job", format!("→ {}", worker.id));
+    trace_exit!("rbees-orcd", "dispatch_job", format!("→ {}", worker.id));
     Ok(worker.id)
 }
 ```

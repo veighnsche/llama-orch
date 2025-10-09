@@ -19,19 +19,19 @@ fn handle_models(action: ModelsAction, host: &str) -> Result<()> {
     let command = match action {
         ModelsAction::Download { model } => {
             format!(
-                "cd ~/Projects/llama-orch && ./target/release/llorch-pool models download {}",
+                "cd ~/Projects/llama-orch && ./target/release/rbees-pool models download {}",
                 model
             )
         }
         ModelsAction::List => {
-            "cd ~/Projects/llama-orch && ./target/release/llorch-pool models list".to_string()
+            "cd ~/Projects/llama-orch && ./target/release/rbees-pool models list".to_string()
         }
         ModelsAction::Catalog => {
-            "cd ~/Projects/llama-orch && ./target/release/llorch-pool models catalog".to_string()
+            "cd ~/Projects/llama-orch && ./target/release/rbees-pool models catalog".to_string()
         }
         ModelsAction::Register { id, name, repo, architecture } => {
             format!(
-                "cd ~/Projects/llama-orch && ./target/release/llorch-pool models register {} --name '{}' --repo '{}' --architecture {}",
+                "cd ~/Projects/llama-orch && ./target/release/rbees-pool models register {} --name '{}' --repo '{}' --architecture {}",
                 id, name, repo, architecture
             )
         }
@@ -46,16 +46,16 @@ fn handle_worker(action: WorkerAction, host: &str) -> Result<()> {
     let command = match action {
         WorkerAction::Spawn { backend, model, gpu } => {
             format!(
-                "cd ~/Projects/llama-orch && ./target/release/llorch-pool worker spawn {} --model {} --gpu {}",
+                "cd ~/Projects/llama-orch && ./target/release/rbees-pool worker spawn {} --model {} --gpu {}",
                 backend, model, gpu
             )
         }
         WorkerAction::List => {
-            "cd ~/Projects/llama-orch && ./target/release/llorch-pool worker list".to_string()
+            "cd ~/Projects/llama-orch && ./target/release/rbees-pool worker list".to_string()
         }
         WorkerAction::Stop { worker_id } => {
             format!(
-                "cd ~/Projects/llama-orch && ./target/release/llorch-pool worker stop {}",
+                "cd ~/Projects/llama-orch && ./target/release/rbees-pool worker stop {}",
                 worker_id
             )
         }
@@ -70,7 +70,7 @@ fn handle_git(action: GitAction, host: &str) -> Result<()> {
         GitAction::Pull => "cd ~/Projects/llama-orch && git pull".to_string(),
         GitAction::Status => "cd ~/Projects/llama-orch && git status".to_string(),
         GitAction::Build => {
-            "cd ~/Projects/llama-orch && cargo build --release -p pool-ctl".to_string()
+            "cd ~/Projects/llama-orch && cargo build --release -p rbees-pool".to_string()
         }
     };
 
@@ -79,7 +79,7 @@ fn handle_git(action: GitAction, host: &str) -> Result<()> {
 }
 
 fn handle_status(host: &str) -> Result<()> {
-    let command = "cd ~/Projects/llama-orch && ./target/release/llorch-pool status";
+    let command = "cd ~/Projects/llama-orch && ./target/release/rbees-pool status";
 
     ssh::execute_remote_command_streaming(host, command)?;
     Ok(())

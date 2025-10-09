@@ -9,7 +9,7 @@
 ### 1. Add Dependencies (5 minutes)
 
 ```toml
-# bin/llorch-candled/Cargo.toml
+# bin/rbees-workerd/Cargo.toml
 
 [dependencies]
 # Add these two lines:

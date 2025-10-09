@@ -55,9 +55,9 @@
 - Metal inference BROKEN
 - `candle-transformers/src/models/llama.rs`
 
-### 2. Integrated Fork into llorch-candled
+### 2. Integrated Fork into rbees-workerd
 
-**Updated:** `bin/llorch-candled/Cargo.toml`
+**Updated:** `bin/rbees-workerd/Cargo.toml`
 
 **Dependencies Changed:**
 ```toml
@@ -174,7 +174,7 @@ candle-kernels = { git = "https://github.com/veighnsche/candle.git", branch = "l
 
 ### Priority 2: Obtain SafeTensors Models (DEFERRED)
 
-**Problem:** TEAM-020 downloaded GGUF models, but llorch-candled only supports SafeTensors format.
+**Problem:** TEAM-020 downloaded GGUF models, but rbees-workerd only supports SafeTensors format.
 
 **Current Status:**
 - ✅ Llama: Tested on all backends (SafeTensors)
@@ -197,7 +197,7 @@ candle-kernels = { git = "https://github.com/veighnsche/candle.git", branch = "l
 1. **Obtain SafeTensors models** for Mistral, Phi, and Qwen
    - Option A: Download SafeTensors versions from HuggingFace
    - Option B: Convert GGUF to SafeTensors
-   - Option C: Add GGUF support to llorch-candled (larger effort)
+   - Option C: Add GGUF support to rbees-workerd (larger effort)
 2. Test on CPU first (fastest iteration)
 3. Test on Metal and CUDA
 4. Document any architecture-specific issues
@@ -640,7 +640,7 @@ Your work is complete when:
 
 ### TEAM-020 Completed ✅
 - [x] Candle fork created with mask fix
-- [x] Fork integrated into llorch-candled
+- [x] Fork integrated into rbees-workerd
 - [x] TEAM-019 workaround removed
 - [x] Llama tested on all backends (CPU, Metal, CUDA)
 - [x] MODEL_SUPPORT.md documentation created

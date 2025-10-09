@@ -1,9 +1,9 @@
-# llorch-ctl SPEC — Orchestrator Control CLI
+# rbees-ctl SPEC — Orchestrator Control CLI
 
 **Status**: Draft  
 **Version**: 0.1.0  
 **Conformance language**: RFC-2119 (MUST/SHOULD/MAY)  
-**Binary Name**: `llorch-ctl` (produces `llorch` command)
+**Binary Name**: `rbees-ctl` (produces `rbees` command)
 
 ---
 
@@ -59,55 +59,55 @@
 
 ### 1.1 Purpose
 
-`llorch-ctl` (command: `llorch`) is the orchestrator control CLI for the llama-orch system. It is a CLI client that will call the `orchestratord` daemon HTTP API (M2+) and provides development tooling for commanding pool managers (M0).
+`rbees-ctl` (command: `rbees`) is the orchestrator control CLI for the llama-orch system. It is a CLI client that will call the `rbees-orcd` daemon HTTP API (M2+) and provides development tooling for commanding pool managers (M0).
 
 **Core Value Propositions:**
-1. **Orchestrator Control**: CLI client for orchestratord daemon (M2+) and direct pool control (M0)
+1. **Orchestrator Control**: CLI client for rbees-orcd daemon (M2+) and direct pool control (M0)
 2. **Pool Manager Commands**: Commands pool managers (mac.home.arpa, workstation.home.arpa) via SSH
 3. **Development Tooling**: Git operations, model downloads, environment setup
 4. **Type Safety**: Rust guarantees eliminate shell script pitfalls
 
 **Evolution Path:**
-- **M0**: CLI directly commands pools via SSH (no orchestratord daemon yet)
-- **M2+**: CLI calls orchestratord HTTP API, which commands pools via HTTP
+- **M0**: CLI directly commands pools via SSH (no rbees-orcd daemon yet)
+- **M2+**: CLI calls rbees-orcd HTTP API, which commands pools via HTTP
 
 **Architecture Realization:**
 ```
 blep.home.arpa (orchestrator)
-    ↓ llorch pool <command> --host mac
+    ↓ rbees pool <command> --host mac
 mac.home.arpa (pool manager - Metal)
     ↓ executes locally
-llorch-candled (worker - Metal backend)
+rbees-workerd (worker - Metal backend)
 
 blep.home.arpa (orchestrator)
-    ↓ llorch pool <command> --host workstation
+    ↓ rbees pool <command> --host workstation
 workstation.home.arpa (pool manager - CUDA)
     ↓ executes locally
-llorch-candled (worker - CUDA backend)
+rbees-workerd (worker - CUDA backend)
 
 blep.home.arpa (orchestrator + pool manager - CPU)
-    ↓ llorch pool <command> (local)
-llorch-candled (worker - CPU backend)
+    ↓ rbees pool <command> (local)
+rbees-workerd (worker - CPU backend)
 ```
 
 **Replaces:**
-- `scripts/homelab/llorch-remote` → `llorch` commands (orchestrator → pools)
+- `scripts/homelab/llorch-remote` → `rbees` commands (orchestrator → pools)
 
 **Works with:**
-- `bin/pool-ctl/` → `llorch-pool` commands (local pool operations)
-- `bin/orchestratord/` → Daemon (M2+, HTTP server)
+- `bin/rbees-pool/` → `rbees-pool` commands (local pool operations)
+- `bin/rbees-orcd/` → Daemon (M2+, HTTP server)
 - `bin/pool-managerd/` → Daemon (M1+, HTTP server)
 
 ### 1.2 Design Principles
 
-**CLI-001**: The CLI MUST be a single binary (`llorch`) with subcommands  
+**CLI-001**: The CLI MUST be a single binary (`rbees`) with subcommands  
 **CLI-002**: Commands MUST follow the pattern: `llorch <domain> <action> [args]`  
 **CLI-003**: The CLI MUST work locally and remotely (via `--remote` flag)  
 **CLI-004**: The CLI MUST be self-documenting (comprehensive `--help`)  
 **CLI-005**: The CLI MUST provide rich, colored output with progress indicators  
 **CLI-006**: The CLI MUST handle errors gracefully with actionable messages  
 **CLI-007**: The CLI MUST support both interactive and CI/CD modes  
-**CLI-008**: The CLI MUST be future-proof for orchestratord/pool-managerd/worker-orcd operations
+**CLI-008**: The CLI MUST be future-proof for rbees-orcd/pool-managerd/worker-orcd operations
 
 ### 1.2 Architecture Realization
 
@@ -155,11 +155,11 @@ llorch (orchestrator CLI on blep)
 
 ### 1.3 Design Principles
 
-**ORCH-001**: This CLI controls orchestratord daemon (M2+) and pools (M0+)  
-**ORCH-002**: Shares logic with orchestratord via orchestrator-core crate  
+**ORCH-001**: This CLI controls rbees-orcd daemon (M2+) and pools (M0+)  
+**ORCH-002**: Shares logic with rbees-orcd via orchestrator-core crate  
 **ORCH-003**: Commands to pool managers use SSH (M0) or HTTP (M2+)  
 **ORCH-004**: The CLI makes intelligent decisions (scheduling, admission) in M0  
-**ORCH-005**: The orchestratord daemon makes decisions in M2+ (CLI calls HTTP API)  
+**ORCH-005**: The rbees-orcd daemon makes decisions in M2+ (CLI calls HTTP API)  
 **ORCH-006**: The CLI MUST NEVER start REPL or conversation (HARD RULE)  
 **ORCH-007**: The CLI MUST be self-documenting (comprehensive `--help`)  
 **ORCH-008**: The CLI MUST provide rich, colored output with progress indicators  
@@ -233,11 +233,11 @@ The CLI MUST support remote execution via SSH:
 
 #### [CLI-F-004] Build & Test
 The CLI MUST provide build and test operations:
-- **MUST**: build worker-orcd (llorch-candled) with backend selection
+- **MUST**: build worker-orcd (rbees-workerd) with backend selection
 - **MUST**: run unit tests
 - **MUST**: run integration tests
 - **MUST**: run smoke tests
-- **SHOULD**: build orchestratord (future)
+- **SHOULD**: build rbees-orcd (future)
 - **SHOULD**: build pool-managerd (future)
 - **MAY**: support custom test filters
 
@@ -277,7 +277,7 @@ The CLI MUST provide development utilities:
 
 ### 2.3 Out of Scope
 
-**CLI-OOS-001**: The CLI MUST NOT embed orchestratord/pool-managerd/worker-orcd binaries  
+**CLI-OOS-001**: The CLI MUST NOT embed rbees-orcd/pool-managerd/worker-orcd binaries  
 **CLI-OOS-002**: The CLI MUST NOT manage runtime daemons (use systemd/launchd)  
 **CLI-OOS-003**: The CLI MUST NOT provide a TUI (terminal UI) in v0.1.0  
 **CLI-OOS-004**: The CLI MUST NOT support Windows natively (WSL only)
@@ -449,7 +449,7 @@ llorch build worker cuda --remote workstation.home.arpa
 ```
 **MUST**:
 - Forward command to remote host via SSH
-- Execute `llorch` binary on remote
+- Execute `rbees` binary on remote
 - Stream output back to local terminal
 - Handle SSH connection failures gracefully
 
@@ -472,7 +472,7 @@ llorch remote hosts remove <NAME>
 llorch build worker <BACKEND> [--remote HOST] [--release]
 ```
 **MUST**:
-- Build llorch-candled with specified backend
+- Build rbees-workerd with specified backend
 - Support backends: cpu, cuda, metal
 - Default to release mode
 - Show build progress
@@ -674,7 +674,7 @@ The CLI MUST:
 ssh -o BatchMode=yes \
     -o ConnectTimeout=10 \
     -o StrictHostKeyChecking=no \
-    user@host "cd /path/to/repo && llorch <command>"
+    user@host "cd /path/to/repo && rbees <command>"
 ```
 
 ### 6.2 Host Profiles

@@ -9,8 +9,8 @@
 ## Executive Summary
 
 TEAM-023 **partially** completed the `huggingface-cli` → `hf` CLI migration:
-- ✅ **Code updated** - `bin/pool-ctl/src/commands/models.rs` uses `hf` CLI
-- ✅ **Script updated** - `bin/llorch-candled/download_test_model.sh` uses `hf` CLI
+- ✅ **Code updated** - `bin/rbees-pool/src/commands/models.rs` uses `hf` CLI
+- ✅ **Script updated** - `bin/rbees-workerd/download_test_model.sh` uses `hf` CLI
 - ❌ **Documentation incomplete** - 6 .md files still referenced deprecated `huggingface-cli`
 
 TEAM-024 completed the migration and investigated native Rust alternatives.
@@ -20,11 +20,11 @@ TEAM-024 completed the migration and investigated native Rust alternatives.
 ## What TEAM-023 Did
 
 ### ✅ Code Changes (Correct)
-1. **bin/pool-ctl/src/commands/models.rs:63**
+1. **bin/rbees-pool/src/commands/models.rs:63**
    - Changed `Command::new("huggingface-cli")` → `Command::new("hf")`
    - Added deprecation comment
 
-2. **bin/llorch-candled/download_test_model.sh**
+2. **bin/rbees-workerd/download_test_model.sh**
    - Added check for `hf` command instead of `huggingface-cli`
    - Added deprecation warning message
 
@@ -33,9 +33,9 @@ Left 6 .md files with outdated `huggingface-cli` references:
 - `bin/.plan/TEAM_023_SSH_FIX_REPORT.md` (7 occurrences)
 - `bin/.plan/03_CP3_AUTOMATION.md` (code example)
 - `bin/.plan/TEAM_022_COMPLETION_SUMMARY.md` (2 occurrences)
-- `bin/llorch-candled/.specs/TEAM_022_HANDOFF.md` (code example)
-- `bin/llorch-candled/.specs/TEAM_021_HANDOFF.md` (3 bash commands)
-- `bin/llorch-candled/.specs/TEAM_010_HANDOFF.md` (2 bash commands)
+- `bin/rbees-workerd/.specs/TEAM_022_HANDOFF.md` (code example)
+- `bin/rbees-workerd/.specs/TEAM_021_HANDOFF.md` (3 bash commands)
+- `bin/rbees-workerd/.specs/TEAM_010_HANDOFF.md` (2 bash commands)
 
 ---
 
@@ -56,15 +56,15 @@ Left 6 .md files with outdated `huggingface-cli` references:
    - Updated code example to use `Command::new("hf")`
    - Added TEAM-024 signature
 
-4. **bin/llorch-candled/.specs/TEAM_022_HANDOFF.md**
+4. **bin/rbees-workerd/.specs/TEAM_022_HANDOFF.md**
    - Updated code example to use `Command::new("hf")`
    - Added TEAM-024 signature
 
-5. **bin/llorch-candled/.specs/TEAM_021_HANDOFF.md**
+5. **bin/rbees-workerd/.specs/TEAM_021_HANDOFF.md**
    - Updated 3 download commands: `huggingface-cli download` → `hf download`
    - Added TEAM-024 signature
 
-6. **bin/llorch-candled/.specs/TEAM_010_HANDOFF.md**
+6. **bin/rbees-workerd/.specs/TEAM_010_HANDOFF.md**
    - Updated 2 download commands to use `hf download`
    - Added TEAM-024 signature
 
@@ -76,7 +76,7 @@ Left 6 .md files with outdated `huggingface-cli` references:
 
 **Answer:** Because TEAM-022 implemented model downloads as a subprocess call to the HuggingFace CLI.
 
-**Location:** `bin/pool-ctl/src/commands/models.rs:63-74`
+**Location:** `bin/rbees-pool/src/commands/models.rs:63-74`
 
 ```rust
 let status = std::process::Command::new("hf")
@@ -160,9 +160,9 @@ let status = std::process::Command::new("hf")
 1. `bin/.plan/TEAM_023_SSH_FIX_REPORT.md` - 7 replacements
 2. `bin/.plan/TEAM_022_COMPLETION_SUMMARY.md` - 2 replacements + hf-hub note
 3. `bin/.plan/03_CP3_AUTOMATION.md` - 1 code example
-4. `bin/llorch-candled/.specs/TEAM_022_HANDOFF.md` - 1 code example
-5. `bin/llorch-candled/.specs/TEAM_021_HANDOFF.md` - 3 bash commands
-6. `bin/llorch-candled/.specs/TEAM_010_HANDOFF.md` - 2 bash commands
+4. `bin/rbees-workerd/.specs/TEAM_022_HANDOFF.md` - 1 code example
+5. `bin/rbees-workerd/.specs/TEAM_021_HANDOFF.md` - 3 bash commands
+6. `bin/rbees-workerd/.specs/TEAM_010_HANDOFF.md` - 2 bash commands
 
 **Total:** 6 files updated, 16 occurrences fixed, 0 code changes needed
 
@@ -172,8 +172,8 @@ let status = std::process::Command::new("hf")
 
 ### ✅ Code Already Correct
 ```bash
-# Verify pool-ctl uses hf CLI
-rg 'Command::new\("hf"\)' bin/pool-ctl/src/commands/models.rs
+# Verify rbees-pool uses hf CLI
+rg 'Command::new\("hf"\)' bin/rbees-pool/src/commands/models.rs
 # ✅ Found at line 63
 ```
 
@@ -195,7 +195,7 @@ pip install huggingface_hub[cli]  # Installs 'hf' command
 ## Answer to User's Questions
 
 ### Q1: "Why did I get error that huggingface-cli could not be found?"
-**A:** Because `pool-ctl` calls the `hf` CLI as a subprocess, and it's not installed on `mac.home.arpa`.
+**A:** Because `rbees-pool` calls the `hf` CLI as a subprocess, and it's not installed on `mac.home.arpa`.
 
 **Solution:**
 ```bash

@@ -116,7 +116,7 @@ cargo build --workspace
 cargo test --workspace
 
 # 5. Check binary sizes
-ls -lh target/release/worker-orcd target/release/orchestratord target/release/pool-managerd
+ls -lh target/release/worker-orcd target/release/rbees-orcd target/release/pool-managerd
 ```
 
 ---

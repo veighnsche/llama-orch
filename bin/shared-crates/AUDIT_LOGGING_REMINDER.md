@@ -79,7 +79,7 @@ let config = AuditConfig {
     mode: AuditMode::Local {
         base_dir: PathBuf::from("/var/log/llama-orch/audit"),
     },
-    service_id: "orchestratord".to_string(),
+    service_id: "rbees-orcd".to_string(),
     rotation_policy: RotationPolicy::Daily,
     retention_policy: RetentionPolicy::Days(2555), // 7 years for compliance
 };
@@ -104,7 +104,7 @@ audit_logger.emit(AuditEvent::AuthSuccess {
     },
     method: AuthMethod::BearerToken,
     path: "/v2/tasks".to_string(),
-    service_id: "orchestratord".to_string(),
+    service_id: "rbees-orcd".to_string(),
 }).await?;
 
 // Pool creation
@@ -202,7 +202,7 @@ audit_logger.emit(AuditEvent::AuthSuccess {
     actor: ActorInfo { user_id, ip, auth_method, session_id },
     method: AuthMethod::BearerToken,
     path: "/v2/tasks".to_string(),
-    service_id: "orchestratord".to_string(),
+    service_id: "rbees-orcd".to_string(),
 }).await?;
 ```
 

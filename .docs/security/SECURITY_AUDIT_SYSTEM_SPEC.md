@@ -600,7 +600,7 @@ rg 'format!.*SELECT|format!.*INSERT|format!.*UPDATE' --type rust && exit 1
 ### Stage 2: Bind Policy Enforcement
 ```bash
 # Ensure all binaries call enforce_startup_bind_policy (MUST pass CI)
-rg 'enforce_startup_bind_policy' bin/orchestratord/src/main.rs || exit 1
+rg 'enforce_startup_bind_policy' bin/rbees-orcd/src/main.rs || exit 1
 rg 'enforce_startup_bind_policy' bin/pool-managerd/src/main.rs || exit 1
 rg 'enforce_startup_bind_policy' bin/worker-orcd/src/main.rs || exit 1
 ```
@@ -608,7 +608,7 @@ rg 'enforce_startup_bind_policy' bin/worker-orcd/src/main.rs || exit 1
 ### Stage 3: Timing-Safe Comparison
 ```bash
 # Ensure all token comparisons use timing_safe_eq (MUST pass CI)
-rg 'timing_safe_eq' bin/orchestratord/src/ || exit 1
+rg 'timing_safe_eq' bin/rbees-orcd/src/ || exit 1
 ```
 
 ---

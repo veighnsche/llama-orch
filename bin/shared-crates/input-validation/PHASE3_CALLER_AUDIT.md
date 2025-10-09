@@ -111,7 +111,7 @@ let safe_path = sanitize_string(model_path_str)
 
 ### Documentation
 - `bin/pool-managerd-crates/api/src/lib.rs` — Example code in doc comment
-- `bin/orchestratord-crates/platform-api/src/lib.rs` — Example code in doc comment
+- `bin/rbees-orcd-crates/platform-api/src/lib.rs` — Example code in doc comment
 - `bin/shared-crates/audit-logging/src/lib.rs` — Example code in doc comment
 
 **Action**: Update doc examples to show `.to_string()` if owned `String` is needed
@@ -176,7 +176,7 @@ let safe_path = sanitize_string(model_path_str)
 
 **Files**: 
 - `bin/pool-managerd-crates/api/src/lib.rs:64`
-- `bin/orchestratord-crates/platform-api/src/lib.rs:33`
+- `bin/rbees-orcd-crates/platform-api/src/lib.rs:33`
 - `bin/shared-crates/audit-logging/src/lib.rs:20-21`
 
 ```rust

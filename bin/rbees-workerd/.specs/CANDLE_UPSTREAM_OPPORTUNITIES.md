@@ -232,7 +232,7 @@ Benchmarks show 20-30% improvement on M1/M2/M3/M4 chips.
 
 **Strategy:**
 1. ✅ Create branch in our Candle fork with fixes
-2. ✅ Use our fork in llorch-candled
+2. ✅ Use our fork in rbees-workerd
 3. ✅ Test extensively on all backends
 4. ✅ Keep fixes private until proven
 5. ⏳ Upstream to candle-rs when validated
@@ -264,7 +264,7 @@ git checkout -b llorch/metal-bugfixes
 
 ### Phase 2: Integrate Fork (Week 1-2)
 
-**Update `llorch-candled/Cargo.toml`:**
+**Update `rbees-workerd/Cargo.toml`:**
 
 ```toml
 [dependencies]
@@ -380,9 +380,9 @@ let seqlen_offset = kv_len - seq_len;
 let mask = cache.mask(seq_len, seqlen_offset)?;
 ```
 
-### Step 2: Update llorch-candled Dependencies
+### Step 2: Update rbees-workerd Dependencies
 
-**File:** `bin/llorch-candled/Cargo.toml`
+**File:** `bin/rbees-workerd/Cargo.toml`
 
 ```toml
 [dependencies]
@@ -487,7 +487,7 @@ time ./llorch-remote mac.home.arpa metal inference
 - [ ] Add tests for mask broadcasting with KV cache
 
 ### Phase 2: Integration (Week 1-2)
-- [ ] Update `llorch-candled/Cargo.toml` to use fork
+- [ ] Update `rbees-workerd/Cargo.toml` to use fork
 - [ ] Remove TEAM-019 workaround (cache recreation)
 - [ ] Rebuild all backends with fork
 - [ ] Verify compilation on CPU, CUDA, Metal

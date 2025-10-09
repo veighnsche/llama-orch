@@ -1,19 +1,19 @@
-# llorch-ctl
+# rbees-ctl
 
 **Created by:** TEAM-022  
-**Binary:** `llorch`  
+**Binary:** `rbees`  
 **Status:** Active (CP1 complete)
 
 Orchestrator control CLI - Remote pool control via SSH.
 
 ## Overview
 
-`llorch-ctl` provides command-line tools for controlling pools remotely via SSH. It wraps `pool-ctl` commands and executes them on remote hosts.
+`rbees-ctl` provides command-line tools for controlling pools remotely via SSH. It wraps `rbees-pool` commands and executes them on remote hosts.
 
 ## Installation
 
 ```bash
-cargo build --release -p llorch-ctl
+cargo build --release -p rbees-ctl
 ```
 
 Binary will be at: `target/release/llorch`
@@ -62,7 +62,7 @@ llorch pool git pull --host mac.home.arpa
 # Show git status on remote pool
 llorch pool git status --host mac.home.arpa
 
-# Build pool-ctl on remote pool
+# Build rbees-pool on remote pool
 llorch pool git build --host mac.home.arpa
 ```
 
@@ -77,7 +77,7 @@ llorch pool status --host mac.home.arpa
 
 - SSH access to all pool hosts
 - SSH keys configured (no password prompts)
-- `llorch-pool` binary built on remote hosts
+- `rbees-pool` binary built on remote hosts
 - Repository cloned at `~/Projects/llama-orch` on remote hosts
 
 ## Architecture
@@ -85,9 +85,9 @@ llorch pool status --host mac.home.arpa
 ```
 llorch (on blep)
     ↓ SSH
-pool-ctl (on mac/workstation)
+rbees-pool (on mac/workstation)
     ↓ spawn
-llorch-candled (worker)
+rbees-workerd (worker)
 ```
 
 **Control Plane:** SSH  
@@ -99,7 +99,7 @@ llorch-candled (worker)
 # 1. Update git on remote pool
 llorch pool git pull --host mac.home.arpa
 
-# 2. Build pool-ctl on remote
+# 2. Build rbees-pool on remote
 llorch pool git build --host mac.home.arpa
 
 # 3. Register model

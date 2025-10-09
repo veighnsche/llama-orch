@@ -33,7 +33,7 @@ We claim Checkpoints 1B (RoPE) and 2 (QKV) are complete. **Prove us right or wro
 
 ### Checkpoint 1B: RoPE (Rotary Position Embeddings) ✅
 
-**File:** `bin/llorch-candled/src/layers/rope.rs`
+**File:** `bin/rbees-workerd/src/layers/rope.rs`
 
 **Our Claims:**
 - Implemented RoPE using Candle tensors
@@ -80,7 +80,7 @@ pub struct RoPE {
 
 ### Checkpoint 2: QKV Projection ✅
 
-**File:** `bin/llorch-candled/src/layers/attention.rs`
+**File:** `bin/rbees-workerd/src/layers/attention.rs`
 
 **Our Claims:**
 - Implemented separate Q, K, V projections (Llama-2 style)
@@ -147,7 +147,7 @@ pub struct QKVProjection {
 ### 1. Build & Compile ✅
 
 ```bash
-cd bin/llorch-candled
+cd bin/rbees-workerd
 cargo clean
 cargo build 2>&1 | tee /tmp/team005_build.log
 ```
@@ -464,12 +464,12 @@ cargo test --release --test checkpoint_02_qkv -- --nocapture
 - **Checkpoint 2:** `bin/llorch-cpud/.specs/checkpoints/CHECKPOINT_02_QKV_PROJECTION.md`
 
 ### Previous Reviews
-- **TEAM-002 Review:** `bin/llorch-candled/.specs/TEAM_002_REVIEW_REPORT.md`
-- **Checkpoint 1 Complete:** `bin/llorch-candled/.specs/checkpoints/CHECKPOINT_00_FOUNDATION.md`
+- **TEAM-002 Review:** `bin/rbees-workerd/.specs/TEAM_002_REVIEW_REPORT.md`
+- **Checkpoint 1 Complete:** `bin/rbees-workerd/.specs/checkpoints/CHECKPOINT_00_FOUNDATION.md`
 
 ### Completion Reports
-- **Checkpoint 1B:** `bin/llorch-candled/.specs/checkpoints/CHECKPOINT_01B_ROPE_COMPLETE.md`
-- **Checkpoint 2:** `bin/llorch-candled/.specs/checkpoints/CHECKPOINT_02_QKV_COMPLETE.md`
+- **Checkpoint 1B:** `bin/rbees-workerd/.specs/checkpoints/CHECKPOINT_01B_ROPE_COMPLETE.md`
+- **Checkpoint 2:** `bin/rbees-workerd/.specs/checkpoints/CHECKPOINT_02_QKV_COMPLETE.md`
 
 ---
 

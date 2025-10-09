@@ -1,4 +1,4 @@
-# OUTSTANDING WORK CHECKLIST - llorch-candled
+# OUTSTANDING WORK CHECKLIST - rbees-workerd
 
 **Compiled by:** TEAM-007  
 **Updated by:** TEAM-009  
@@ -508,7 +508,7 @@ let logits = model.forward(&input_ids, pos, &mut cache)?;
    - Unused imports
 
 2. [ ] **Fix warnings** (30 min)
-   - Run `cargo fix --lib -p llorch-candled`
+   - Run `cargo fix --lib -p rbees-workerd`
    - Remove unused variables
 
 3. [ ] **Documentation** (1 hour)

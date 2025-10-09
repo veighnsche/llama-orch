@@ -303,7 +303,7 @@ let output = attn_weights.matmul(&v)?;
 
 ### Build Status ✅
 ```
-Compiling llorch-candled v0.1.0
+Compiling rbees-workerd v0.1.0
 Finished `test` profile [unoptimized + debuginfo] target(s) in 9.50s
 ```
 

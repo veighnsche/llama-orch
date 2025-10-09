@@ -184,7 +184,7 @@
 
 ## ✅ Alignment Certification
 
-**I certify that all 9 documents in `/home/vince/Projects/llama-orch/bin/llorch-candled/.plan/` are:**
+**I certify that all 9 documents in `/home/vince/Projects/llama-orch/bin/rbees-workerd/.plan/` are:**
 
 - ✅ **Consistent** - No contradictions
 - ✅ **Accurate** - Reflect correct architecture

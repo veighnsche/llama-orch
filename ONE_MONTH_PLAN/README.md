@@ -52,9 +52,9 @@ You have **30 days** to go from code to revenue. This is your complete execution
 **Deliverable:** Submit job → worker executes → tokens stream back
 
 **What to Build:**
-- orchestratord (HTTP server, job queue, worker registry)
-- pool-ctl (CLI for model downloads, worker spawn)
-- llorch-ctl (CLI for SSH commands, job submission)
+- rbees-orcd (HTTP server, job queue, worker registry)
+- rbees-pool (CLI for model downloads, worker spawn)
+- rbees-ctl (CLI for SSH commands, job submission)
 
 **What to Use:**
 - ✅ audit-logging crate (already exists!)
@@ -203,7 +203,7 @@ You have **30 days** to go from code to revenue. This is your complete execution
 ## Success Criteria
 
 ### Technical (Week 1-2)
-- [ ] orchestratord accepts jobs
+- [ ] rbees-orcd accepts jobs
 - [ ] Workers execute inference
 - [ ] Tokens stream back
 - [ ] EU audit toggle works
@@ -244,7 +244,7 @@ You have **30 days** to go from code to revenue. This is your complete execution
 ## What to Cut
 
 ### Don't Build (Yet)
-- ❌ pool-managerd daemon (use pool-ctl + SSH)
+- ❌ pool-managerd daemon (use rbees-pool + SSH)
 - ❌ SQLite persistence (in-memory is fine)
 - ❌ Multi-tenancy (single customer per instance)
 - ❌ Marketplace (M5 is too far)
@@ -252,9 +252,9 @@ You have **30 days** to go from code to revenue. This is your complete execution
 - ❌ Mobile apps (web only)
 
 ### Do Build (Now)
-- ✅ orchestratord (minimal HTTP server)
-- ✅ pool-ctl (CLI)
-- ✅ llorch-ctl (CLI)
+- ✅ rbees-orcd (minimal HTTP server)
+- ✅ rbees-pool (CLI)
+- ✅ rbees-ctl (CLI)
 - ✅ EU audit toggle (use existing crate!)
 - ✅ Web UI (basic)
 - ✅ Landing page (simple)
@@ -300,7 +300,7 @@ You have **30 days** to go from code to revenue. This is your complete execution
 
 ### Monday (Day 1)
 1. Start `01_WEEK_1_FOUNDATION.md`
-2. Create orchestratord binary
+2. Create rbees-orcd binary
 3. Wire up audit-logging crate
 4. Test basic HTTP server
 
@@ -328,7 +328,7 @@ You have **30 days** to go from code to revenue. This is your complete execution
 ## The Promise
 
 **In 30 days you will have:**
-- ✅ Working product (orchestratord + CLIs + web UI)
+- ✅ Working product (rbees-orcd + CLIs + web UI)
 - ✅ EU compliance (audit logs, GDPR endpoints)
 - ✅ Marketing site (landing page, demo)
 - ✅ First customer (€200 MRR)
@@ -342,7 +342,7 @@ You have **30 days** to go from code to revenue. This is your complete execution
 1. **Read this README** ✅ (you're here!)
 2. **Read `00_MASTER_PLAN.md`** (30-day overview)
 3. **Read `01_WEEK_1_FOUNDATION.md`** (Day 1-7 details)
-4. **Start Monday** (Day 1: orchestratord)
+4. **Start Monday** (Day 1: rbees-orcd)
 
 ---
 

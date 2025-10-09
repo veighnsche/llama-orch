@@ -1,6 +1,6 @@
-# Clippy Configuration for llorch-candled
+# Clippy Configuration for rbees-workerd
 
-This document explains the clippy linting strategy for the llorch-candled inference engine.
+This document explains the clippy linting strategy for the rbees-workerd inference engine.
 
 ## Philosophy
 

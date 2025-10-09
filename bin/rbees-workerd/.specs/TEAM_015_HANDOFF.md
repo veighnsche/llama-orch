@@ -194,7 +194,7 @@ fn test_proper_spacing_in_output() {
 - How to use `candle_nn::ops` for GPU-accelerated operations
 - Reference to `reference/candle/candle-examples/` for patterns
 
-**Location:** `bin/llorch-candled/.docs/CANDLE_INTEGRATION.md`
+**Location:** `bin/rbees-workerd/.docs/CANDLE_INTEGRATION.md`
 
 ---
 

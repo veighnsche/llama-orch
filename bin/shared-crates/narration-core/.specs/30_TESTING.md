@@ -16,7 +16,7 @@ Date: 2025-09-19
   - Sampling controls honor rates/thresholds deterministically in tests
 
 - Integration
-  - Capture adapter wiring collects narration events from `orchestratord` init path
+  - Capture adapter wiring collects narration events from `rbees-orcd` init path
   - Pretty vs JSON toggle produces expected output formats
 
 ## Execution & Tooling

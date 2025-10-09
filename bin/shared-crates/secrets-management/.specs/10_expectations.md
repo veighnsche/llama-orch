@@ -21,7 +21,7 @@ This document specifies what **consumers** of the `secrets-management` crate exp
 
 **Active consumers requiring migration**:
 
-1. **orchestratord** (`bin/orchestratord`)
+1. **rbees-orcd** (`bin/rbees-orcd`)
    - Current: Loads API token from `LLORCH_API_TOKEN` environment variable
    - Need: Load from file with permission validation
    - Priority: **P0** (critical security vulnerability)
@@ -54,11 +54,11 @@ This document specifies what **consumers** of the `secrets-management` crate exp
 
 ---
 
-## 2. orchestratord Expectations
+## 2. rbees-orcd Expectations
 
 ### 2.1 Current State (EXP-ORCH-2001)
 
-**Current Implementation** (`bin/orchestratord/src/app/auth_min.rs:41`):
+**Current Implementation** (`bin/rbees-orcd/src/app/auth_min.rs:41`):
 ```rust
 let expected_token = std::env::var("LLORCH_API_TOKEN").ok().filter(|t| !t.is_empty());
 ```
@@ -66,12 +66,12 @@ let expected_token = std::env::var("LLORCH_API_TOKEN").ok().filter(|t| !t.is_emp
 **Security Issue**: Environment variables visible in process listings (`ps auxe`, `/proc/PID/environ`)
 
 **Also Used In**:
-- `bin/orchestratord/src/api/nodes.rs:26` — Duplicate auth logic
-- `bin/orchestratord/src/clients/pool_manager.rs:49` — Outbound client auth
+- `bin/rbees-orcd/src/api/nodes.rs:26` — Duplicate auth logic
+- `bin/rbees-orcd/src/clients/pool_manager.rs:49` — Outbound client auth
 
 ### 2.2 Expected API (EXP-ORCH-2002)
 
-**What orchestratord expects from secrets-management**:
+**What rbees-orcd expects from secrets-management**:
 
 **EXP-ORCH-2002-R1**: Load API token from file path
 
@@ -209,13 +209,13 @@ let expected_token = std::env::var("LLORCH_API_TOKEN")
     })?;
 ```
 
-**Security Issue**: Same as orchestratord (environment variable exposure)
+**Security Issue**: Same as rbees-orcd (environment variable exposure)
 
 ### 3.2 Expected API (EXP-POOL-3002)
 
 **What pool-managerd expects from secrets-management**:
 
-**EXP-POOL-3002-R1**: Identical API to orchestratord (consistency)
+**EXP-POOL-3002-R1**: Identical API to rbees-orcd (consistency)
 
 **EXP-POOL-3002-R2**: Load API token from file path
 
@@ -680,7 +680,7 @@ pub mod test_helpers {
 
 ### 9.1 Feature Priority (EXP-PRIORITY-9001)
 
-| Feature | orchestratord | pool-managerd | vram-residency | worker-orcd | Priority |
+| Feature | rbees-orcd | pool-managerd | vram-residency | worker-orcd | Priority |
 |---------|---------------|---------------|----------------|-------------|----------|
 | `Secret::load_from_file()` | ✅ Required | ✅ Required | ❌ Not needed | ✅ Required | **P0** |
 | `Secret::verify()` | ✅ Required | ✅ Required | ❌ Not needed | ❌ Not needed | **P0** |
@@ -695,7 +695,7 @@ pub mod test_helpers {
 
 ### 9.2 Implementation Phases (EXP-PRIORITY-9002)
 
-**Phase 1 (M0)**: Core functionality for orchestratord/pool-managerd
+**Phase 1 (M0)**: Core functionality for rbees-orcd/pool-managerd
 - `Secret` type with `load_from_file()`, `verify()`, `expose()`
 - File permission validation
 - Timing-safe comparison
@@ -719,7 +719,7 @@ pub mod test_helpers {
 
 ### 10.1 Consumer Acceptance (EXP-ACCEPT-10001)
 
-**orchestratord**:
+**rbees-orcd**:
 - ✅ Loads token from file (not environment)
 - ✅ Validates file permissions
 - ✅ Uses timing-safe verification
@@ -748,8 +748,8 @@ pub mod test_helpers {
 ### 10.2 Integration Acceptance (EXP-ACCEPT-10002)
 
 **End-to-End Tests**:
-- ✅ orchestratord authenticates pool-managerd requests
-- ✅ pool-managerd authenticates orchestratord requests
+- ✅ rbees-orcd authenticates pool-managerd requests
+- ✅ pool-managerd authenticates rbees-orcd requests
 - ✅ worker-orcd registers with pool-managerd
 - ✅ vram-residency seals shards with HMAC signatures
 - ✅ All services start with file-based tokens
@@ -784,7 +784,7 @@ pub mod test_helpers {
 - `.docs/security/SECURITY_AUDIT_EXISTING_CODEBASE.md` — Vulnerability #3
 
 **Current Implementations**:
-- `bin/orchestratord/src/app/auth_min.rs` — Current token loading
+- `bin/rbees-orcd/src/app/auth_min.rs` — Current token loading
 - `bin/pool-managerd/src/api/auth.rs` — Current token loading
 - `bin/shared-crates/auth-min/src/policy.rs` — Bind policy enforcement
 

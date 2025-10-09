@@ -20,7 +20,7 @@ The Metal backend enables GPU-accelerated inference on Apple Silicon Macs using 
 | **Use Case** | CPU-optimized | GPU inference |
 | **Binary** | ❌ Removed | `llorch-metal-candled` |
 
-**Key Point:** Accelerate has been **removed** from llorch-candled as of TEAM-018. It was CPU-bound and too slow for production inference. Metal is the recommended backend for Apple Silicon.
+**Key Point:** Accelerate has been **removed** from rbees-workerd as of TEAM-018. It was CPU-bound and too slow for production inference. Metal is the recommended backend for Apple Silicon.
 
 ---
 
@@ -45,7 +45,7 @@ The Metal backend enables GPU-accelerated inference on Apple Silicon Macs using 
 ### Build Metal Binary
 
 ```bash
-cd bin/llorch-candled
+cd bin/rbees-workerd
 
 # Build release binary with Metal support
 cargo build --release --features metal --bin llorch-metal-candled

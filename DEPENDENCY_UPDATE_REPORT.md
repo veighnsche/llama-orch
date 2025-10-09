@@ -153,7 +153,7 @@ Two crates still use `reqwest = "0.11"` instead of workspace version `0.12.23`:
    ```
    **Recommendation**: Update to workspace version or pin to 0.11.27
 
-2. **bin/orchestratord/Cargo.toml** (line 56)
+2. **bin/rbees-orcd/Cargo.toml** (line 56)
    ```toml
    reqwest = { version = "0.11", features = ["json"] }
    ```

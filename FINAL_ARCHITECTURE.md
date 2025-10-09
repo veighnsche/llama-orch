@@ -10,9 +10,9 @@
 
 llama-orch consists of **exactly 4 binaries**:
 
-### 1. orchestratord (Daemon - HTTP)
-**Crate:** `bin/orchestratord/`  
-**Binary:** `orchestratord`  
+### 1. rbees-orcd (Daemon - HTTP)
+**Crate:** `bin/rbees-orcd/`  
+**Binary:** `rbees-orcd`  
 **Status:** M1 ❌ NOT BUILT  
 **Port:** 8080
 
@@ -29,9 +29,9 @@ llama-orch consists of **exactly 4 binaries**:
 
 ---
 
-### 2. llorch-candled (Daemon - HTTP)
-**Crate:** `bin/llorch-candled/`  
-**Binary:** `llorch-candled` (and variants: llorch-cpu-candled, llorch-cuda-candled, llorch-metal-candled)  
+### 2. rbees-workerd (Daemon - HTTP)
+**Crate:** `bin/rbees-workerd/`  
+**Binary:** `rbees-workerd` (and variants: llorch-cpu-candled, llorch-cuda-candled, llorch-metal-candled)  
 **Status:** M0 ✅ DONE  
 **Ports:** 8001, 8002, 8003, etc.
 
@@ -46,9 +46,9 @@ llama-orch consists of **exactly 4 binaries**:
 
 ---
 
-### 3. llorch (CLI - SSH)
-**Crate:** `bin/llorch-ctl/`  
-**Binary:** `llorch`  
+### 3. rbees (CLI - SSH)
+**Crate:** `bin/rbees-ctl/`  
+**Binary:** `rbees`  
 **Status:** M0 ✅ DONE
 
 **Purpose:** REMOTE CONTROL (operator tool)
@@ -68,9 +68,9 @@ llorch infer --worker <host:port> --prompt <text>
 
 ---
 
-### 4. llorch-pool (CLI - Local)
-**Crate:** `bin/pool-ctl/`  
-**Binary:** `llorch-pool`  
+### 4. rbees-pool (CLI - Local)
+**Crate:** `bin/rbees-pool/`  
+**Binary:** `rbees-pool`  
 **Status:** M0 ✅ DONE
 
 **Purpose:** LOCAL POOL MANAGEMENT
@@ -83,9 +83,9 @@ llorch infer --worker <host:port> --prompt <text>
 
 **Commands:**
 ```bash
-llorch-pool models download <model>
-llorch-pool worker spawn <backend> --model <model>
-llorch-pool worker cleanup
+rbees-pool models download <model>
+rbees-pool worker spawn <backend> --model <model>
+rbees-pool worker cleanup
 ```
 
 **Why CLI:** Pool operations are on-demand, no daemon needed
@@ -103,7 +103,7 @@ llorch-pool worker cleanup
              │ HTTP POST /v2/tasks
              ↓
 ┌─────────────────────────────────────────┐
-│ 1. orchestratord (DAEMON)                │
+│ 1. rbees-orcd (DAEMON)                │
 │    THE BRAIN                             │
 │    - Rhai scripting                      │
 │    - Worker registry (SQLite)            │
@@ -113,7 +113,7 @@ llorch-pool worker cleanup
              │ HTTP POST /execute
              ↓
 ┌─────────────────────────────────────────┐
-│ 2. llorch-candled (DAEMON)               │
+│ 2. rbees-workerd (DAEMON)               │
 │    WORKER                                │
 │    - Loads ONE model                     │
 │    - Generates tokens                    │
@@ -127,7 +127,7 @@ llorch-pool worker cleanup
              │ runs
              ↓
 ┌─────────────────────────────────────────┐
-│ 3. llorch (CLI)                          │
+│ 3. rbees (CLI)                          │
 │    REMOTE CONTROL                        │
 │    - SSH to pools                        │
 │    - Precise commands                    │
@@ -136,7 +136,7 @@ llorch-pool worker cleanup
              │ SSH
              ↓
 ┌─────────────────────────────────────────┐
-│ 4. llorch-pool (CLI)                     │
+│ 4. rbees-pool (CLI)                     │
 │    LOCAL POOL                            │
 │    - Model catalog                       │
 │    - Worker spawning                     │
@@ -151,43 +151,43 @@ llorch-pool worker cleanup
 
 | Component | Type | Registry? | Catalog? | Stateful? | Scripting? |
 |-----------|------|-----------|----------|-----------|------------|
-| orchestratord | Daemon | ✅ Global (SQLite) | ❌ | ✅ YES | ✅ Rhai |
-| llorch-candled | Daemon | ❌ | ❌ | ❌ NO | ❌ |
-| llorch | CLI | ❌ | ❌ | ❌ NO | ❌ |
-| llorch-pool | CLI | ✅ Local (files) | ✅ Model + Backend | ❌ NO | ❌ |
+| rbees-orcd | Daemon | ✅ Global (SQLite) | ❌ | ✅ YES | ✅ Rhai |
+| rbees-workerd | Daemon | ❌ | ❌ | ❌ NO | ❌ |
+| rbees | CLI | ❌ | ❌ | ❌ NO | ❌ |
+| rbees-pool | CLI | ✅ Local (files) | ✅ Model + Backend | ❌ NO | ❌ |
 
 ---
 
 ## Key Clarifications
 
 ### 1. Only 2 Daemons
-- orchestratord (THE BRAIN)
-- llorch-candled (WORKER)
+- rbees-orcd (THE BRAIN)
+- rbees-workerd (WORKER)
 
 **NOT 3!** pool-managerd is NOT a daemon!
 
 ### 2. Only 2 CLIs
-- llorch (remote control via SSH)
-- llorch-pool (local pool management)
+- rbees (remote control via SSH)
+- rbees-pool (local pool management)
 
-### 3. orchestratord is THE BRAIN
+### 3. rbees-orcd is THE BRAIN
 - Rhai scripting for user-defined logic
 - Makes ALL intelligent decisions
 - Stateful (SQLite)
 
-### 4. llorch-ctl has PRECISE COMMANDS
+### 4. rbees-ctl has PRECISE COMMANDS
 - No intelligence
 - No scheduling
 - No scripting
 - Stateless
 
 ### 5. Worker Registry Ownership
-- **orchestratord:** Global worker registry (SQLite)
-- **llorch-pool:** Local worker metadata (files, for cleanup only)
+- **rbees-orcd:** Global worker registry (SQLite)
+- **rbees-pool:** Local worker metadata (files, for cleanup only)
 
 ### 6. Prompt Constructor
 - Shared crate: `bin/shared-crates/prompt-constructor/`
-- Used by: orchestratord + llorch-pool
+- Used by: rbees-orcd + rbees-pool
 - Formats chat templates (Qwen, Llama, Mistral, Phi)
 
 ---
@@ -195,23 +195,23 @@ llorch-pool worker cleanup
 ## M0 Status (3 of 4 binaries done)
 
 ### ✅ DONE:
-1. llorch-candled (worker daemon) ✅
-2. llorch (remote CLI) ✅
-3. llorch-pool (local CLI) ✅
+1. rbees-workerd (worker daemon) ✅
+2. rbees (remote CLI) ✅
+3. rbees-pool (local CLI) ✅
 
 ### ❌ NOT DONE:
-1. orchestratord (brain daemon) ❌
+1. rbees-orcd (brain daemon) ❌
 
 ### M0 Remaining Tasks:
-- Backend catalog detection (llorch-pool)
-- Worker cancellation (llorch-candled)
-- Orphan cleanup (llorch-pool)
+- Backend catalog detection (rbees-pool)
+- Worker cancellation (rbees-workerd)
+- Orphan cleanup (rbees-pool)
 
 ---
 
 ## M1 Goal
 
-Build orchestratord (4th binary):
+Build rbees-orcd (4th binary):
 - HTTP server (port 8080)
 - Worker registry (SQLite)
 - Rhai scripting engine
@@ -227,12 +227,12 @@ Build orchestratord (4th binary):
 ## Why This Architecture Works
 
 ### 2 Daemons (Data Plane)
-- orchestratord: Routes requests, maintains state
-- llorch-candled: Executes inference, keeps model in memory
+- rbees-orcd: Routes requests, maintains state
+- rbees-workerd: Executes inference, keeps model in memory
 
 ### 2 CLIs (Control Plane)
 - llorch: Remote control via SSH
-- llorch-pool: Local pool operations
+- rbees-pool: Local pool operations
 
 ### Clear Separation
 - Daemons: Long-running, HTTP servers
@@ -249,12 +249,12 @@ Build orchestratord (4th binary):
 ## Summary
 
 **4 binaries total:**
-- 2 daemons: orchestratord + llorch-candled
-- 2 CLIs: llorch + llorch-pool
+- 2 daemons: rbees-orcd + rbees-workerd
+- 2 CLIs: rbees + rbees-pool
 
-**M0 complete:** 3 of 4 (missing orchestratord)
+**M0 complete:** 3 of 4 (missing rbees-orcd)
 
-**Next:** CP4 (test models), then M1 (build orchestratord)
+**Next:** CP4 (test models), then M1 (build rbees-orcd)
 
 ---
 

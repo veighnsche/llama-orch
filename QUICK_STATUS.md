@@ -8,42 +8,42 @@
 
 ## TL;DR
 
-✅ **M0 Complete** - 3 of 4 binaries working (llorch-candled, llorch, llorch-pool)
+✅ **M0 Complete** - 3 of 4 binaries working (rbees-workerd, llorch, rbees-pool)
 ⏳ **CP4 Next** - Download & test all models  
-🔜 **M1 After** - Build orchestratord daemon (4th binary)
+🔜 **M1 After** - Build rbees-orcd daemon (4th binary)
 
 **THE 4 BINARIES:**
-1. orchestratord (daemon) - M1 ❌ not built
-2. llorch-candled (daemon) - M0 ✅ DONE
-3. llorch (CLI) - M0 ✅ DONE
-4. llorch-pool (CLI) - M0 ✅ DONE
+1. rbees-orcd (daemon) - M1 ❌ not built
+2. rbees-workerd (daemon) - M0 ✅ DONE
+3. rbees (CLI) - M0 ✅ DONE
+4. rbees-pool (CLI) - M0 ✅ DONE
 
 **ARCHITECTURAL CHANGE (2025-10-09):**
 ❌ pool-managerd daemon NOT NEEDED
-✅ Only 2 daemons: orchestratord + llorch-candled
-✅ 2 CLIs: llorch + llorch-pool
+✅ Only 2 daemons: rbees-orcd + rbees-workerd
+✅ 2 CLIs: rbees + rbees-pool
 
 ---
 
 ## What Works Right Now ✅
 
-### 1. Workers (llorch-candled)
+### 1. Workers (rbees-workerd)
 ```bash
 # Test inference
 ./target/release/llorch infer --worker localhost:8080 --prompt "Hello" --max-tokens 20
 ```
 **Status:** ✅ WORKING (6.5 tokens/sec on CPU)
 
-### 2. Pool CLI (llorch-pool)
+### 2. Pool CLI (rbees-pool)
 ```bash
 # Download model
-llorch-pool models download qwen-0.5b
+rbees-pool models download qwen-0.5b
 
 # Spawn worker
-llorch-pool worker spawn cpu --model qwen-0.5b
+rbees-pool worker spawn cpu --model qwen-0.5b
 
 # List workers
-llorch-pool worker list
+rbees-pool worker list
 ```
 **Status:** ✅ WORKING
 
@@ -64,7 +64,7 @@ llorch infer --worker localhost:8080 --prompt "Hello"
 
 ## What Doesn't Exist Yet ❌
 
-### 1. Orchestrator Daemon (orchestratord)
+### 1. Orchestrator Daemon (rbees-orcd)
 **Status:** ❌ NOT BUILT (M1 milestone)  
 **Purpose:** HTTP daemon that routes inference  
 **Port:** 8080  
@@ -73,7 +73,7 @@ llorch infer --worker localhost:8080 --prompt "Hello"
 ### REMOVED: pool-managerd
 **Decision:** NOT NEEDED (2025-10-09)  
 **Reason:** Pool management is CLI-based, not daemon  
-**Replacement:** `llorch-pool` CLI provides all functionality  
+**Replacement:** `rbees-pool` CLI provides all functionality  
 **See:** `/bin/.specs/ARCHITECTURE_DECISION_NO_POOL_DAEMON.md`
 
 ---
@@ -83,16 +83,16 @@ llorch infer --worker localhost:8080 --prompt "Hello"
 ### Step 1: Download Remaining Models (2-3 hours)
 ```bash
 # TinyLlama (2.2 GB)
-llorch-pool models download tinyllama
+rbees-pool models download tinyllama
 
 # Phi-3 (5 GB)
-llorch-pool models download phi3
+rbees-pool models download phi3
 
 # Mistral (14 GB)
-llorch-pool models download mistral
+rbees-pool models download mistral
 
 # Verify
-llorch-pool models catalog
+rbees-pool models catalog
 ```
 
 ### Step 2: Create Test Script (1-2 hours)
@@ -154,17 +154,17 @@ llorch-pool models catalog
 ### Binaries (Built):
 ```
 target/release/
-├── llorch              # Remote CLI (SSH)
-├── llorch-pool         # Local pool CLI
-└── llorch-candled      # Worker daemon
+├── rbees              # Remote CLI (SSH)
+├── rbees-pool         # Local pool CLI
+└── rbees-workerd      # Worker daemon
 ```
 
 ### Source Code:
 ```
 bin/
-├── llorch-ctl/         # Remote CLI source
-├── pool-ctl/           # Pool CLI source
-├── llorch-candled/     # Worker source
+├── rbees-ctl/         # Remote CLI source
+├── rbees-pool/           # Pool CLI source
+├── rbees-workerd/     # Worker source
 └── shared-crates/      # Shared libraries
 ```
 
@@ -187,8 +187,8 @@ bin/
 **Action:** Ignore for now, fix in M3
 
 ### 2. Worker on Port 8080
-**Impact:** Medium (conflicts with orchestratord)  
-**Action:** Stop before building orchestratord
+**Impact:** Medium (conflicts with rbees-orcd)  
+**Action:** Stop before building rbees-orcd
 
 ### 3. Filename Collision Warnings
 **Impact:** None (safe to ignore)  
@@ -210,17 +210,17 @@ llorch infer --worker localhost:8080 --prompt "Hello" --max-tokens 20
 
 ### Check Catalog:
 ```bash
-llorch-pool models catalog
+rbees-pool models catalog
 ```
 
 ### List Workers:
 ```bash
-llorch-pool worker list
+rbees-pool worker list
 ```
 
 ### Stop All Workers:
 ```bash
-llorch-pool worker stop-all
+rbees-pool worker stop-all
 ```
 
 ---
@@ -228,8 +228,8 @@ llorch-pool worker stop-all
 ## Milestones
 
 ### ✅ M0 (Complete)
-- Workers (llorch-candled)
-- Pool CLI (llorch-pool)
+- Workers (rbees-workerd)
+- Pool CLI (rbees-pool)
 - Remote CLI (llorch)
 - Model downloads
 - Worker spawning
@@ -241,7 +241,7 @@ llorch-pool worker stop-all
 - Document results
 
 ### 🔜 M1 (Next) - SIMPLIFIED!
-- Build orchestratord daemon
+- Build rbees-orcd daemon
 - Admission control
 - Queue management
 - Scheduling
@@ -265,7 +265,7 @@ llorch-pool worker stop-all
 - [ ] Results documented
 
 ### M1 Complete When:
-- [ ] orchestratord HTTP server working
+- [ ] rbees-orcd HTTP server working
 - [ ] Client API working (`POST /v2/tasks`)
 - [ ] Admission control working
 - [ ] Queue management working

@@ -1,4 +1,4 @@
-//! Narration constants for llorch-candled
+//! Narration constants for rbees-workerd
 //!
 //! Defines all actor and action constants for triple-narration observability.
 //! Following the Narration Core Team's editorial standards.
@@ -10,7 +10,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /// Main worker daemon
-pub const ACTOR_LLORCH_CANDLED: &str = "llorch-candled";
+pub const ACTOR_RBEES_WORKERD: &str = "rbees-workerd";
 
 /// Inference backend (Candle)
 pub const ACTOR_CANDLE_BACKEND: &str = "candle-backend";

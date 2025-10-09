@@ -279,7 +279,7 @@ Several unused imports in old layer code:
 - `src/layers/attention.rs` - unused `Cache` import
 - `src/device.rs` - unused `sum` variable
 
-**Fix:** Run `cargo fix --lib -p llorch-candled` or manually remove.
+**Fix:** Run `cargo fix --lib -p rbees-workerd` or manually remove.
 
 ### 2. Old Layer Code Still Present
 
@@ -639,7 +639,7 @@ tests/multi_backend.rs                 # DEPRECATED: Tests old device API
 - [ ] Delete `tests/team_002_*.rs` files
 - [ ] Delete `tests/multi_backend.rs`
 - [ ] Comment out unused worker-crates dependencies
-- [ ] Run `cargo fix --lib -p llorch-candled` to fix warnings
+- [ ] Run `cargo fix --lib -p rbees-workerd` to fix warnings
 - [ ] Remove unused imports from remaining files
 - [ ] Update `src/lib.rs` to remove references to deleted modules
 - [ ] Verify all tests still pass after cleanup

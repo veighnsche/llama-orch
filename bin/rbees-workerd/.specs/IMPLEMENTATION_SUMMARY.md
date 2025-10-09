@@ -1,4 +1,4 @@
-# llorch-candled Implementation Summary
+# rbees-workerd Implementation Summary
 
 **Project:** Candle-based Llama-2 Inference Worker  
 **Last Updated:** 2025-10-08  

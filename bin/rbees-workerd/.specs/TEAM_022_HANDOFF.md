@@ -13,14 +13,14 @@
 
 **Root Cause:** Cache pollution from warmup phase (OUR architectural bug, NOT Candle)  
 **Solution:** Proper cache lifecycle management - reset cache before each inference request  
-**Result:** llorch-candled works correctly on all backends (CPU, Metal, CUDA)
+**Result:** rbees-workerd works correctly on all backends (CPU, Metal, CUDA)
 
 **THE REAL GOAL:** Multi-model testing across the entire infrastructure
 
 **THE BLOCKER:** We don't have the infrastructure yet!
 
 **Your Mission:**
-1. **Port bash scripts to Rust** - llorch-ctl and pool-ctl binaries
+1. **Port bash scripts to Rust** - rbees-ctl and rbees-pool binaries
 2. **Build model catalog system** - Each pool manager tracks available models
 3. **Implement pool management** - Model downloads, worker spawning
 4. **Enable multi-model testing** - Test Llama, Mistral, Phi, Qwen across pools
@@ -104,9 +104,9 @@ pub async fn execute(&mut self, request: InferenceRequest) -> Result<()> {
 ## The Real Problem: No Infrastructure Yet! 🚧
 
 **Current State:**
-- ✅ llorch-candled works (single worker, single model)
-- ❌ No llorch-ctl (orchestrator CLI)
-- ❌ No pool-ctl (pool manager CLI)
+- ✅ rbees-workerd works (single worker, single model)
+- ❌ No rbees-ctl (orchestrator CLI)
+- ❌ No rbees-pool (pool manager CLI)
 - ❌ No model catalog system
 - ❌ No pool management
 - ❌ Can't test multiple models across pools
@@ -118,7 +118,7 @@ pub async fn execute(&mut self, request: InferenceRequest) -> Result<()> {
 - No automation
 
 **What We Need:**
-- Rust binaries: `llorch-ctl` and `pool-ctl`
+- Rust binaries: `rbees-ctl` and `rbees-pool`
 - Model catalog per pool
 - Automated model downloads
 - Automated worker spawning
@@ -130,7 +130,7 @@ pub async fn execute(&mut self, request: InferenceRequest) -> Result<()> {
 
 ### Priority 0: Port Bash Scripts to Rust (FOUNDATION)
 
-**Goal:** Create llorch-ctl and pool-ctl binaries to replace bash scripts
+**Goal:** Create rbees-ctl and rbees-pool binaries to replace bash scripts
 
 **Current Bash Script:** `scripts/homelab/llorch-remote`
 ```bash
@@ -147,36 +147,36 @@ ssh "$HOST" "cd ~/Projects/llama-orch && ./target/release/llorch-${BACKEND}-cand
 
 **Target Rust Implementation:**
 
-#### Task 0.1: Create pool-ctl Binary
+#### Task 0.1: Create rbees-pool Binary
 
-**Location:** `bin/pool-ctl/`
+**Location:** `bin/rbees-pool/`
 
 **Purpose:** Local pool management (runs on pool manager host)
 
 **Commands:**
 ```bash
 # Model management
-llorch-pool models download <model>
-llorch-pool models list
-llorch-pool models catalog
+rbees-pool models download <model>
+rbees-pool models list
+rbees-pool models catalog
 
 # Worker management
-llorch-pool worker spawn <backend> --model <model> --gpu <id>
-llorch-pool worker list
-llorch-pool worker stop <worker-id>
+rbees-pool worker spawn <backend> --model <model> --gpu <id>
+rbees-pool worker list
+rbees-pool worker stop <worker-id>
 
 # Pool status
-llorch-pool status
-llorch-pool health
+rbees-pool status
+rbees-pool health
 ```
 
 **Implementation:**
 ```rust
-// bin/pool-ctl/src/main.rs
+// bin/rbees-pool/src/main.rs
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(name = "llorch-pool")]
+#[command(name = "rbees-pool")]
 #[command(about = "Pool manager control CLI")]
 struct Cli {
     #[command(subcommand)]
@@ -227,9 +227,9 @@ fn main() -> anyhow::Result<()> {
 }
 ```
 
-#### Task 0.2: Create llorch-ctl Binary
+#### Task 0.2: Create rbees-ctl Binary
 
-**Location:** `bin/llorch-ctl/`
+**Location:** `bin/rbees-ctl/`
 
 **Purpose:** Orchestrator control (runs on orchestrator host, commands pools via SSH)
 
@@ -240,7 +240,7 @@ llorch pool models download <model> --host <host>
 llorch pool models list --host <host>
 llorch pool worker spawn <backend> --model <model> --host <host>
 
-# Job management (future - HTTP to orchestratord)
+# Job management (future - HTTP to rbees-orcd)
 llorch jobs submit --model <model> --prompt <prompt>
 llorch jobs list
 llorch jobs cancel <job-id>
@@ -248,7 +248,7 @@ llorch jobs cancel <job-id>
 
 **Implementation:**
 ```rust
-// bin/llorch-ctl/src/main.rs
+// bin/rbees-ctl/src/main.rs
 use clap::{Parser, Subcommand};
 use std::process::Command;
 
@@ -285,13 +285,13 @@ enum PoolAction {
 }
 
 fn handle_pool_models(action: ModelsAction, host: &str) -> anyhow::Result<()> {
-    // SSH to pool and run llorch-pool command
+    // SSH to pool and run rbees-pool command
     let ssh_cmd = match action {
         ModelsAction::Download { model } => {
-            format!("cd ~/Projects/llama-orch && llorch-pool models download {}", model)
+            format!("cd ~/Projects/llama-orch && rbees-pool models download {}", model)
         }
         ModelsAction::List => {
-            "cd ~/Projects/llama-orch && llorch-pool models list".to_string()
+            "cd ~/Projects/llama-orch && rbees-pool models list".to_string()
         }
     };
     
@@ -309,10 +309,10 @@ fn handle_pool_models(action: ModelsAction, host: &str) -> anyhow::Result<()> {
 ```
 
 **Success Criteria:**
-- [ ] pool-ctl binary compiles
-- [ ] llorch-ctl binary compiles
-- [ ] Can run commands locally (pool-ctl)
-- [ ] Can run commands remotely via SSH (llorch-ctl)
+- [ ] rbees-pool binary compiles
+- [ ] rbees-ctl binary compiles
+- [ ] Can run commands locally (rbees-pool)
+- [ ] Can run commands remotely via SSH (rbees-ctl)
 
 ---
 
@@ -366,29 +366,29 @@ fn handle_pool_models(action: ModelsAction, host: &str) -> anyhow::Result<()> {
 }
 ```
 
-#### Task 1.2: Implement Catalog Management in pool-ctl
+#### Task 1.2: Implement Catalog Management in rbees-pool
 
 **Commands:**
 ```bash
 # Show catalog
-llorch-pool models catalog
+rbees-pool models catalog
 
 # Add model to catalog (before download)
-llorch-pool models register <model-id> \
+rbees-pool models register <model-id> \
     --name "TinyLlama 1.1B" \
     --repo "TinyLlama/TinyLlama-1.1B-Chat-v1.0" \
     --architecture llama
 
 # Update catalog after download
-llorch-pool models update <model-id> --downloaded true
+rbees-pool models update <model-id> --downloaded true
 
 # Remove from catalog
-llorch-pool models unregister <model-id>
+rbees-pool models unregister <model-id>
 ```
 
 **Implementation:**
 ```rust
-// bin/pool-ctl/src/catalog.rs
+// bin/rbees-pool/src/catalog.rs
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -447,29 +447,29 @@ impl ModelCatalog {
 **Success Criteria:**
 - [ ] Catalog format defined
 - [ ] Catalog can be loaded/saved
-- [ ] `llorch-pool models catalog` shows models
+- [ ] `rbees-pool models catalog` shows models
 - [ ] Models can be registered/unregistered
 
 ---
 
 ### Priority 2: Automated Model Downloads
 
-**Goal:** Implement `llorch-pool models download <model>` command
+**Goal:** Implement `rbees-pool models download <model>` command
 
 #### Task 2.1: Model Download Implementation
 
 **Commands:**
 ```bash
 # Download a model (updates catalog automatically)
-llorch-pool models download tinyllama
-llorch-pool models download qwen-0.5b
-llorch-pool models download phi3
-llorch-pool models download mistral
+rbees-pool models download tinyllama
+rbees-pool models download qwen-0.5b
+rbees-pool models download phi3
+rbees-pool models download mistral
 ```
 
 **Implementation:**
 ```rust
-// bin/pool-ctl/src/commands/models.rs
+// bin/rbees-pool/src/commands/models.rs
 use std::process::Command;
 
 pub fn download_model(model_id: &str) -> anyhow::Result<()> {
@@ -512,7 +512,7 @@ pub fn download_model(model_id: &str) -> anyhow::Result<()> {
 ```
 
 **Success Criteria:**
-- [ ] `llorch-pool models download <model>` works
+- [ ] `rbees-pool models download <model>` works
 - [ ] Downloads SafeTensors format
 - [ ] Updates catalog automatically
 - [ ] Handles already-downloaded models
@@ -521,27 +521,27 @@ pub fn download_model(model_id: &str) -> anyhow::Result<()> {
 
 ### Priority 3: Worker Spawning
 
-**Goal:** Implement `llorch-pool worker spawn` command
+**Goal:** Implement `rbees-pool worker spawn` command
 
 #### Task 3.1: Worker Spawn Implementation
 
 **Commands:**
 ```bash
 # Spawn a worker for a specific model
-llorch-pool worker spawn metal --model tinyllama --gpu 0
-llorch-pool worker spawn cuda --model qwen-0.5b --gpu 0
-llorch-pool worker spawn cpu --model phi3
+rbees-pool worker spawn metal --model tinyllama --gpu 0
+rbees-pool worker spawn cuda --model qwen-0.5b --gpu 0
+rbees-pool worker spawn cpu --model phi3
 
 # List running workers
-llorch-pool worker list
+rbees-pool worker list
 
 # Stop a worker
-llorch-pool worker stop worker-metal-0
+rbees-pool worker stop worker-metal-0
 ```
 
 **Implementation:**
 ```rust
-// bin/pool-ctl/src/commands/worker.rs
+// bin/rbees-pool/src/commands/worker.rs
 use std::process::Command;
 
 pub fn spawn_worker(backend: &str, model_id: &str, gpu: u32) -> anyhow::Result<()> {
@@ -554,7 +554,7 @@ pub fn spawn_worker(backend: &str, model_id: &str, gpu: u32) -> anyhow::Result<(
         .ok_or_else(|| anyhow::anyhow!("Model {} not found", model_id))?;
     
     if !model.downloaded {
-        anyhow::bail!("Model {} not downloaded. Run: llorch-pool models download {}", 
+        anyhow::bail!("Model {} not downloaded. Run: rbees-pool models download {}", 
             model_id, model_id);
     }
     
@@ -571,7 +571,7 @@ pub fn spawn_worker(backend: &str, model_id: &str, gpu: u32) -> anyhow::Result<(
     println!("   Model: {} ({})", model.name, model_id);
     println!("   GPU: {}", gpu);
     
-    // Spawn llorch-candled
+    // Spawn rbees-workerd
     let binary = format!("llorch-{}-candled", backend);
     let mut cmd = Command::new(&binary);
     cmd.args(&[
@@ -606,7 +606,7 @@ pub fn spawn_worker(backend: &str, model_id: &str, gpu: u32) -> anyhow::Result<(
 ```
 
 **Success Criteria:**
-- [ ] `llorch-pool worker spawn` works
+- [ ] `rbees-pool worker spawn` works
 - [ ] Checks model is downloaded
 - [ ] Checks backend compatibility
 - [ ] Spawns worker as background process
@@ -631,31 +631,31 @@ pub fn spawn_worker(backend: &str, model_id: &str, gpu: u32) -> anyhow::Result<(
 # On each pool (mac.home.arpa, workstation.home.arpa)
 
 # Register models in catalog
-llorch-pool models register tinyllama \
+rbees-pool models register tinyllama \
     --name "TinyLlama 1.1B Chat" \
     --repo "TinyLlama/TinyLlama-1.1B-Chat-v1.0" \
     --architecture llama
 
-llorch-pool models register qwen-0.5b \
+rbees-pool models register qwen-0.5b \
     --name "Qwen2.5 0.5B Instruct" \
     --repo "Qwen/Qwen2.5-0.5B-Instruct" \
     --architecture qwen
 
-llorch-pool models register phi3 \
+rbees-pool models register phi3 \
     --name "Phi-3 Mini 4K Instruct" \
     --repo "microsoft/Phi-3-mini-4k-instruct" \
     --architecture phi
 
-llorch-pool models register mistral \
+rbees-pool models register mistral \
     --name "Mistral 7B Instruct v0.2" \
     --repo "mistralai/Mistral-7B-Instruct-v0.2" \
     --architecture mistral
 
 # Download models (start with smallest!)
-llorch-pool models download qwen-0.5b    # 1GB - fastest
-llorch-pool models download tinyllama    # 2.2GB
-llorch-pool models download phi3         # 5GB
-llorch-pool models download mistral      # 14GB - slowest
+rbees-pool models download qwen-0.5b    # 1GB - fastest
+rbees-pool models download tinyllama    # 2.2GB
+rbees-pool models download phi3         # 5GB
+rbees-pool models download mistral      # 14GB - slowest
 ```
 
 #### Task 4.2: Multi-Model Test Script
@@ -692,8 +692,8 @@ for pool in "${POOLS[@]}"; do
             echo ""
             echo "Testing $model on $backend @ $pool"
             
-            # Spawn worker via llorch-ctl
-            llorch pool worker spawn $backend \
+            # Spawn worker via rbees-ctl
+            rbees pool worker spawn $backend \
                 --model $model \
                 --host $pool \
                 --gpu 0
@@ -706,7 +706,7 @@ for pool in "${POOLS[@]}"; do
                 -d '{"job_id":"test","prompt":"Hello","max_tokens":10}'
             
             # Stop worker
-            llorch pool worker stop worker-$backend-0 --host $pool
+            rbees pool worker stop worker-$backend-0 --host $pool
             
             echo "✅ $model works on $backend @ $pool"
         done
@@ -917,7 +917,7 @@ sudo powermetrics --samplers gpu_power -i 1000 -n 10
 nvidia-smi --query-gpu=memory.used --format=csv -l 1
 
 # System RAM
-top -l 1 | grep llorch-candled
+top -l 1 | grep rbees-workerd
 ```
 
 **Document:**
@@ -1098,7 +1098,7 @@ This ensures:
 **File:** `.docs/RUNBOOK.md`
 
 ```markdown
-# llorch-candled Production Runbook
+# rbees-workerd Production Runbook
 
 ## Starting the Worker
 
@@ -1157,8 +1157,8 @@ curl http://localhost:8001/health
 Your work is complete when:
 
 ### Phase 1: CLI Infrastructure (Week 1)
-- [ ] **pool-ctl binary** - Compiles and runs locally
-- [ ] **llorch-ctl binary** - Compiles and runs remotely via SSH
+- [ ] **rbees-pool binary** - Compiles and runs locally
+- [ ] **rbees-ctl binary** - Compiles and runs remotely via SSH
 - [ ] **Basic commands work** - models list, worker list, status
 - [ ] **Tested on all pools** - mac.home.arpa, workstation.home.arpa
 
@@ -1169,8 +1169,8 @@ Your work is complete when:
 - [ ] **Catalog persistence** - Survives restarts
 
 ### Phase 3: Automation (Week 3)
-- [ ] **Model downloads work** - `llorch-pool models download <model>`
-- [ ] **Worker spawning works** - `llorch-pool worker spawn <backend> --model <model>`
+- [ ] **Model downloads work** - `rbees-pool models download <model>`
+- [ ] **Worker spawning works** - `rbees-pool worker spawn <backend> --model <model>`
 - [ ] **Qwen downloaded** - On all pools (1GB each)
 - [ ] **Qwen tested** - Works on Metal and CUDA
 
@@ -1197,13 +1197,13 @@ Model Support Matrix
 ## Timeline
 
 ### Week 1: CLI Infrastructure (Foundation)
-- **Day 1-2:** Create pool-ctl binary (skeleton + commands)
-- **Day 3-4:** Create llorch-ctl binary (SSH wrapper)
+- **Day 1-2:** Create rbees-pool binary (skeleton + commands)
+- **Day 3-4:** Create rbees-ctl binary (SSH wrapper)
 - **Day 5:** Test CLIs locally and remotely
 
 ### Week 2: Model Catalog System
 - **Day 1:** Design catalog format
-- **Day 2-3:** Implement catalog management in pool-ctl
+- **Day 2-3:** Implement catalog management in rbees-pool
 - **Day 4:** Test catalog on all pools
 - **Day 5:** Register all models in catalogs
 
@@ -1271,13 +1271,13 @@ Model Support Matrix
 ### TEAM-022 TODO 🚀 (Infrastructure for Multi-Model Testing)
 
 **Week 1: CLI Foundation**
-- [ ] Create pool-ctl binary (local pool management)
-- [ ] Create llorch-ctl binary (remote pool control via SSH)
+- [ ] Create rbees-pool binary (local pool management)
+- [ ] Create rbees-ctl binary (remote pool control via SSH)
 - [ ] Test CLIs on all pools
 
 **Week 2: Model Catalog**
 - [ ] Design catalog format (JSON schema)
-- [ ] Implement catalog management in pool-ctl
+- [ ] Implement catalog management in rbees-pool
 - [ ] Create catalogs on all pools
 - [ ] Register all 4 models in catalogs
 
@@ -1300,7 +1300,7 @@ Model Support Matrix
 **From:** TEAM-021 (Root Cause Analysis)  
 **To:** TEAM-022 (Infrastructure Team)  
 **Status:** ✅ BUG FIXED - Ready to build infrastructure  
-**Next action:** Build llorch-ctl and pool-ctl to enable multi-model testing
+**Next action:** Build rbees-ctl and rbees-pool to enable multi-model testing
 
 **CRITICAL SUCCESS:**
 - ✅ Bug was in OUR code (cache pollution)
@@ -1311,8 +1311,8 @@ Model Support Matrix
 **THE REAL GOAL:** Multi-model testing across the entire infrastructure
 
 **THE PATH:**
-1. Build pool-ctl (local pool management)
-2. Build llorch-ctl (remote pool control)
+1. Build rbees-pool (local pool management)
+2. Build rbees-ctl (remote pool control)
 3. Implement model catalog system
 4. Automate model downloads
 5. Automate worker spawning

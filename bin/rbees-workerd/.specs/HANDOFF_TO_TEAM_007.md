@@ -30,7 +30,7 @@ TEAM-006 completed critical review, profiling, and mask caching optimization. No
 
 ## 🎯 Your Mission
 
-**Objective:** Implement multi-hardware support in `llorch-candled` via feature gates, producing three separate binaries from a single crate.
+**Objective:** Implement multi-hardware support in `rbees-workerd` via feature gates, producing three separate binaries from a single crate.
 
 ### Three Backends Required
 
@@ -104,7 +104,7 @@ required-features = ["accelerate"]
 
 ```toml
 [package]
-name = "llorch-candled"
+name = "rbees-workerd"
 version = "0.1.0"
 edition = "2021"
 
@@ -909,7 +909,7 @@ Don't skip sections. We've documented everything you need.
 ### Step 2: Set Up Your Environment
 
 ```bash
-cd /home/vince/Projects/llama-orch/bin/llorch-candled
+cd /home/vince/Projects/llama-orch/bin/rbees-workerd
 
 # Verify current state
 cargo test --lib

@@ -306,7 +306,7 @@ axum = { version = "=0.7.9", features = ["macros", "json"] }
 6. `bin/shared-crates/audit-logging/bdd/src/steps/assertions.rs` - removed duplicate
 7. `bin/pool-managerd-crates/pool-registration-client/src/lib.rs` - fixed imports
 8. `bin/pool-managerd-crates/pool-registration-client/src/client.rs` - fixed imports
-9. `bin/orchestratord/bdd/src/steps/background.rs` - commented unimplemented code
+9. `bin/rbees-orcd/bdd/src/steps/background.rs` - commented unimplemented code
 10. `bin/pool-managerd/bdd/src/steps/world.rs` - commented unimplemented type
 
 ### Breaking Changes Handled

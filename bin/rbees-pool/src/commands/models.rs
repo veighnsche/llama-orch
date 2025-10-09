@@ -128,7 +128,7 @@ fn catalog() -> Result<()> {
         Err(_) => {
             println!(
                 "{}",
-                "No catalog found. Create one with 'llorch-pool models register'".yellow()
+                "No catalog found. Create one with 'rbees-pool models register'".yellow()
             );
             return Ok(());
         }

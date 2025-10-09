@@ -68,7 +68,7 @@ TEAM-001's RMSNorm implementation is **mathematically correct** and uses Candle'
 
 ### ✅ Implementation Review (PASSED)
 
-**File:** `bin/llorch-candled/src/layers/rms_norm.rs`
+**File:** `bin/rbees-workerd/src/layers/rms_norm.rs`
 
 **Architecture:**
 ```rust
@@ -179,7 +179,7 @@ pub fn rms_norm(xs: &Tensor, alpha: &Tensor, eps: f32) -> Result<Tensor> {
 
 **Spec Requirement (PB-1012):**
 ```
-Location: bin/llorch-candled/.proof_bundle/checkpoint_01/<run_id>/
+Location: bin/rbees-workerd/.proof_bundle/checkpoint_01/<run_id>/
 Files:
   - checkpoint_01_input.ndjson
   - checkpoint_01_output.ndjson
@@ -263,7 +263,7 @@ Files:
 1. **⚠️ Compiler Warnings**
    - 12 warnings (unused imports, dead code)
    - Not critical but should be cleaned
-   - **Needs:** `cargo fix --lib -p llorch-candled`
+   - **Needs:** `cargo fix --lib -p rbees-workerd`
 
 ---
 
@@ -370,7 +370,7 @@ Files:
    - Validate quantized weights (Q8_0)
 
 3. **Clean Up Warnings**
-   - Run `cargo fix --lib -p llorch-candled`
+   - Run `cargo fix --lib -p rbees-workerd`
    - Remove unused imports
    - Fix dead code warnings
 

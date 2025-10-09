@@ -1,7 +1,7 @@
-# 📋 OpenAPI Spec Plan for llorch-candled Worker
+# 📋 OpenAPI Spec Plan for rbees-workerd Worker
 
 **Date**: 2025-10-09  
-**Target**: llorch-candled worker HTTP API  
+**Target**: rbees-workerd worker HTTP API  
 **Spec Version**: OpenAPI 3.1.0
 
 ---
@@ -285,7 +285,7 @@ worker_uptime_seconds 3600
 ```yaml
 openapi: 3.1.0
 info:
-  title: llorch-candled Worker API
+  title: rbees-workerd Worker API
   version: 0.1.0
   description: |
     Candle-based Llama inference worker for llama-orch.
@@ -626,7 +626,7 @@ components:
 
 ### Step 1: Create OpenAPI Spec File
 
-**Location**: `bin/llorch-candled/openapi.yaml`
+**Location**: `bin/rbees-workerd/openapi.yaml`
 
 **Tools**:
 - Use [Swagger Editor](https://editor.swagger.io/) for validation

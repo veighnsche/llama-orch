@@ -19,24 +19,24 @@
 1. `/home/vince/Projects/llama-orch/Cargo.toml` ⭐ **WORKSPACE ROOT**
 
 ### Main Services (6)
-2. `/home/vince/Projects/llama-orch/bin/orchestratord/Cargo.toml`
-3. `/home/vince/Projects/llama-orch/bin/orchestratord/bdd/Cargo.toml`
+2. `/home/vince/Projects/llama-orch/bin/rbees-orcd/Cargo.toml`
+3. `/home/vince/Projects/llama-orch/bin/rbees-orcd/bdd/Cargo.toml`
 4. `/home/vince/Projects/llama-orch/bin/pool-managerd/Cargo.toml`
 5. `/home/vince/Projects/llama-orch/bin/pool-managerd/bdd/Cargo.toml`
 6. `/home/vince/Projects/llama-orch/bin/worker-orcd/Cargo.toml`
 7. `/home/vince/Projects/llama-orch/bin/worker-orcd/bdd/Cargo.toml`
 
 ### Orchestratord Crates (9)
-8. `/home/vince/Projects/llama-orch/bin/orchestratord-crates/agentic-api/Cargo.toml`
-9. `/home/vince/Projects/llama-orch/bin/orchestratord-crates/backpressure/Cargo.toml`
-10. `/home/vince/Projects/llama-orch/bin/orchestratord-crates/job-timeout/Cargo.toml`
-11. `/home/vince/Projects/llama-orch/bin/orchestratord-crates/orchestrator-core/Cargo.toml`
-12. `/home/vince/Projects/llama-orch/bin/orchestratord-crates/orchestrator-core/bdd/Cargo.toml`
-13. `/home/vince/Projects/llama-orch/bin/orchestratord-crates/platform-api/Cargo.toml`
-14. `/home/vince/Projects/llama-orch/bin/orchestratord-crates/pool-registry/Cargo.toml`
-15. `/home/vince/Projects/llama-orch/bin/orchestratord-crates/scheduling/Cargo.toml`
-16. `/home/vince/Projects/llama-orch/bin/orchestratord-crates/streaming/Cargo.toml`
-17. `/home/vince/Projects/llama-orch/bin/orchestratord-crates/task-cancellation/Cargo.toml`
+8. `/home/vince/Projects/llama-orch/bin/rbees-orcd-crates/agentic-api/Cargo.toml`
+9. `/home/vince/Projects/llama-orch/bin/rbees-orcd-crates/backpressure/Cargo.toml`
+10. `/home/vince/Projects/llama-orch/bin/rbees-orcd-crates/job-timeout/Cargo.toml`
+11. `/home/vince/Projects/llama-orch/bin/rbees-orcd-crates/orchestrator-core/Cargo.toml`
+12. `/home/vince/Projects/llama-orch/bin/rbees-orcd-crates/orchestrator-core/bdd/Cargo.toml`
+13. `/home/vince/Projects/llama-orch/bin/rbees-orcd-crates/platform-api/Cargo.toml`
+14. `/home/vince/Projects/llama-orch/bin/rbees-orcd-crates/pool-registry/Cargo.toml`
+15. `/home/vince/Projects/llama-orch/bin/rbees-orcd-crates/scheduling/Cargo.toml`
+16. `/home/vince/Projects/llama-orch/bin/rbees-orcd-crates/streaming/Cargo.toml`
+17. `/home/vince/Projects/llama-orch/bin/rbees-orcd-crates/task-cancellation/Cargo.toml`
 
 ### Pool-Managerd Crates (10)
 18. `/home/vince/Projects/llama-orch/bin/pool-managerd-crates/capability-matcher/Cargo.toml`

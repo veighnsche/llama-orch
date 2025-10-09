@@ -8,7 +8,7 @@
 
 ## Mission Accomplished
 
-Successfully integrated Candle's optimized math functions into llorch-candled while maintaining our architecture and educational goals.
+Successfully integrated Candle's optimized math functions into rbees-workerd while maintaining our architecture and educational goals.
 
 ---
 
@@ -16,7 +16,7 @@ Successfully integrated Candle's optimized math functions into llorch-candled wh
 
 ### 1. Dependencies Added ✅
 
-**File:** `bin/llorch-candled/Cargo.toml`
+**File:** `bin/rbees-workerd/Cargo.toml`
 
 ```toml
 # Candle core for tensor operations
@@ -36,7 +36,7 @@ cuda = ["candle-kernels", "cudarc", "candle-core/cuda", "candle-nn/cuda"]
 
 ### 2. RMSNorm Implementation ✅
 
-**File:** `bin/llorch-candled/src/layers/rms_norm.rs`
+**File:** `bin/rbees-workerd/src/layers/rms_norm.rs`
 
 **Key Features:**
 - Uses `candle_nn::ops::rms_norm` for optimized math
@@ -66,7 +66,7 @@ impl RMSNorm {
 
 ### 3. Checkpoint Tests ✅
 
-**File:** `bin/llorch-candled/tests/checkpoint_01_rms_norm.rs`
+**File:** `bin/rbees-workerd/tests/checkpoint_01_rms_norm.rs`
 
 **Test Coverage:**
 - ✅ Shape validation
@@ -257,14 +257,14 @@ let output = hidden.matmul(&w_down)?;
 
 ### Build Status
 ```bash
-$ cargo build --manifest-path bin/llorch-candled/Cargo.toml
-   Compiling llorch-candled v0.1.0
+$ cargo build --manifest-path bin/rbees-workerd/Cargo.toml
+   Compiling rbees-workerd v0.1.0
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 26.77s
 ```
 
 ### Test Status
 ```bash
-$ cargo test --manifest-path bin/llorch-candled/Cargo.toml --test checkpoint_01_rms_norm
+$ cargo test --manifest-path bin/rbees-workerd/Cargo.toml --test checkpoint_01_rms_norm
     Finished `test` profile [unoptimized + debuginfo] target(s) in 13.69s
      Running tests/checkpoint_01_rms_norm.rs
 

@@ -14,7 +14,7 @@ Checkpoint 2 (QKV Projection) has been successfully implemented and validated us
 
 ## Implementation
 
-**File:** `bin/llorch-candled/src/layers/attention.rs`
+**File:** `bin/rbees-workerd/src/layers/attention.rs`
 
 **Approach:** Hybrid Candle implementation
 - Uses Candle tensors for GPU acceleration

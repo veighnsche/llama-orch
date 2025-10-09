@@ -60,11 +60,11 @@ test_model() {
 
 # Test each architecture
 # Note: These are GGUF models, not SafeTensors
-# llorch-candled currently only supports SafeTensors
+# rbees-workerd currently only supports SafeTensors
 # This script is for future use when GGUF support is added
 
 echo ""
-echo "⚠️  NOTE: llorch-candled currently only supports SafeTensors format"
+echo "⚠️  NOTE: rbees-workerd currently only supports SafeTensors format"
 echo "    The downloaded models are GGUF format and won't work yet"
 echo "    This script is prepared for future GGUF support"
 echo ""

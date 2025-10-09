@@ -7,10 +7,10 @@
 //! Modified by: TEAM-013 - Added feature gates for CPU tests
 
 use anyhow::Result;
-use llorch_candled::backend::CandleInferenceBackend;
+use rbees_workerd::backend::CandleInferenceBackend;
 #[cfg(feature = "cpu")]
-use llorch_candled::device::init_cpu_device;
-use llorch_candled::{InferenceBackend, SamplingConfig};
+use rbees_workerd::device::init_cpu_device;
+use rbees_workerd::{InferenceBackend, SamplingConfig};
 
 /// Test basic generation with greedy sampling
 #[cfg(feature = "cpu")]

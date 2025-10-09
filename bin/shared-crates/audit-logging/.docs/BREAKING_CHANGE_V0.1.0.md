@@ -173,7 +173,7 @@ For each crate using `audit-logging`:
 
 ### Internal Crates (need migration)
 
-1. **orchestratord** — If using audit logging
+1. **rbees-orcd** — If using audit logging
 2. **pool-managerd** — If using audit logging
 3. **worker-orcd** — If using audit logging
 4. **vram-residency** — Will use new API (not yet integrated)

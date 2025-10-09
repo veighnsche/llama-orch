@@ -2,7 +2,7 @@
 //!
 //! Created by: TEAM-017
 
-use llorch_candled::backend::models::detect_architecture;
+use rbees_workerd::backend::models::detect_architecture;
 use serde_json::json;
 
 #[cfg(test)]

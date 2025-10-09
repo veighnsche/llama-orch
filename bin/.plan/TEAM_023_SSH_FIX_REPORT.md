@@ -8,7 +8,7 @@
 
 ## Problem Found
 
-TEAM-022 left dead code in `bin/llorch-ctl/src/ssh.rs` with missing imports that prevented compilation:
+TEAM-022 left dead code in `bin/rbees-ctl/src/ssh.rs` with missing imports that prevented compilation:
 - `Session`, `TcpStream`, `Path` types were referenced but not imported
 - The dead code used `$USER` env var which would be wrong (vince vs vinceliem)
 - Functions `get_session()`, `execute_remote_command()`, and `upload_file()` were unused
@@ -33,7 +33,7 @@ The dead ssh2 code was trying to use `std::env::var("USER")` which returns `vinc
 2. Kept only `execute_remote_command_streaming()` which uses system `ssh` command
 3. System SSH correctly respects `~/.ssh/config` User directive
 
-**File Modified:** `bin/llorch-ctl/src/ssh.rs`
+**File Modified:** `bin/rbees-ctl/src/ssh.rs`
 - Reduced from 110 lines to 34 lines
 - Removed 3 unused functions with missing imports
 - Added TEAM-023 signature
@@ -44,7 +44,7 @@ The dead ssh2 code was trying to use `std::env::var("USER")` which returns `vinc
 
 ### ✅ Build Status
 ```bash
-cargo build --release -p llorch-ctl
+cargo build --release -p rbees-ctl
 ```
 **Result:** SUCCESS (1.15s)
 
@@ -94,7 +94,7 @@ Total models: 4
 1. No models are downloaded on mac.home.arpa
 2. `hf` CLI is not installed on mac.home.arpa
 3. Worker spawn requires a downloaded model
-4. Neither `llorch` nor `llorch-pool` CLI has a test/inference command
+4. Neither `rbees` nor `rbees-pool` CLI has a test/inference command
 
 **To unblock, need to either:**
 
@@ -117,7 +117,7 @@ Check if models exist elsewhere on mac.home.arpa
 ## What Works Now
 
 ✅ **SSH authentication** - Correctly uses vinceliem@mac.home.arpa  
-✅ **Remote command execution** - Can run pool-ctl commands remotely  
+✅ **Remote command execution** - Can run rbees-pool commands remotely  
 ✅ **Catalog management** - Can view/register models  
 ✅ **Worker management** - Can list workers (none running)  
 ✅ **Git operations** - Can pull/status/build remotely  
@@ -133,13 +133,13 @@ Check if models exist elsewhere on mac.home.arpa
 ## CLI Architecture Notes
 
 **Current CLI structure:**
-- `llorch` (orchestrator CLI) - Runs on workstation, SSHs to pools
+- `rbees` (orchestrator CLI) - Runs on workstation, SSHs to pools
   - `pool models` - Model management on remote pool
   - `pool worker` - Worker management on remote pool
   - `pool git` - Git operations on remote pool
   - `pool status` - Pool status check
 
-- `llorch-pool` (pool manager CLI) - Runs on pool machines (mac, workstation)
+- `rbees-pool` (pool manager CLI) - Runs on pool machines (mac, workstation)
   - `models` - Local model management
   - `worker` - Local worker management
   - `status` - Local pool status
@@ -150,14 +150,14 @@ Check if models exist elsewhere on mac.home.arpa
 ```bash
 llorch pool test --host mac.home.arpa --model qwen-0.5b --prompt "Hello"
 # or
-llorch-pool test --model qwen-0.5b --prompt "Hello"
+rbees-pool test --model qwen-0.5b --prompt "Hello"
 ```
 
 ---
 
 ## Files Modified
 
-1. `bin/llorch-ctl/src/ssh.rs` - Removed dead code, fixed imports
+1. `bin/rbees-ctl/src/ssh.rs` - Removed dead code, fixed imports
 
 **Total:** 1 file modified, 76 lines removed, 0 bugs introduced
 

@@ -13,7 +13,7 @@
 Implement the model catalog system:
 1. Define catalog JSON schema
 2. Implement catalog management in pool-core
-3. Wire catalog commands in pool-ctl
+3. Wire catalog commands in rbees-pool
 4. Create catalogs on all pools
 5. Register all test models
 
@@ -213,14 +213,14 @@ mod tests {
 
 ---
 
-### WU2.3: Wire Catalog Commands in pool-ctl (Day 3)
+### WU2.3: Wire Catalog Commands in rbees-pool (Day 3)
 
-**Location:** `bin/pool-ctl/src/commands/models.rs`
+**Location:** `bin/rbees-pool/src/commands/models.rs`
 
 **Tasks:**
-1. Implement `llorch-pool models catalog`
-2. Implement `llorch-pool models register`
-3. Implement `llorch-pool models unregister`
+1. Implement `rbees-pool models catalog`
+2. Implement `rbees-pool models register`
+3. Implement `rbees-pool models unregister`
 4. Add colored output
 
 **Commands:**
@@ -235,7 +235,7 @@ pub fn handle_catalog_command() -> Result<()> {
     let catalog = match ModelCatalog::load(&catalog_path) {
         Ok(c) => c,
         Err(_) => {
-            println!("{}", "No catalog found. Create one with 'llorch-pool models register'".yellow());
+            println!("{}", "No catalog found. Create one with 'rbees-pool models register'".yellow());
             return Ok(());
         }
     };
@@ -299,9 +299,9 @@ pub fn handle_register_command(
 ```
 
 **Success Criteria:**
-- [ ] `llorch-pool models catalog` displays catalog
-- [ ] `llorch-pool models register` adds model
-- [ ] `llorch-pool models unregister` removes model
+- [ ] `rbees-pool models catalog` displays catalog
+- [ ] `rbees-pool models register` adds model
+- [ ] `rbees-pool models unregister` removes model
 - [ ] Output is colored and formatted
 
 ---
@@ -323,28 +323,28 @@ pub fn handle_register_command(
 **Commands to Run:**
 ```bash
 # On mac.home.arpa
-llorch-pool models register tinyllama \
+rbees-pool models register tinyllama \
     --name "TinyLlama 1.1B Chat" \
     --repo "TinyLlama/TinyLlama-1.1B-Chat-v1.0" \
     --architecture llama
 
-llorch-pool models register qwen-0.5b \
+rbees-pool models register qwen-0.5b \
     --name "Qwen2.5 0.5B Instruct" \
     --repo "Qwen/Qwen2.5-0.5B-Instruct" \
     --architecture qwen
 
-llorch-pool models register phi3 \
+rbees-pool models register phi3 \
     --name "Phi-3 Mini 4K Instruct" \
     --repo "microsoft/Phi-3-mini-4k-instruct" \
     --architecture phi
 
-llorch-pool models register mistral \
+rbees-pool models register mistral \
     --name "Mistral 7B Instruct v0.2" \
     --repo "mistralai/Mistral-7B-Instruct-v0.2" \
     --architecture mistral
 
 # Verify
-llorch-pool models catalog
+rbees-pool models catalog
 ```
 
 **Expected Output:**
@@ -369,9 +369,9 @@ Total models: 4
 
 ---
 
-### WU2.5: Remote Catalog Access via llorch-ctl (Day 5)
+### WU2.5: Remote Catalog Access via rbees-ctl (Day 5)
 
-**Location:** `bin/llorch-ctl/src/commands/pool.rs`
+**Location:** `bin/rbees-ctl/src/commands/pool.rs`
 
 **Tasks:**
 1. Implement `llorch pool models catalog --host <host>`
@@ -385,7 +385,7 @@ Total models: 4
 use crate::ssh::execute_remote_command;
 
 pub fn handle_remote_catalog(host: &str) -> Result<()> {
-    let command = "cd ~/Projects/llama-orch && llorch-pool models catalog";
+    let command = "cd ~/Projects/llama-orch && rbees-pool models catalog";
     let output = execute_remote_command(host, command)?;
     println!("{}", output);
     Ok(())
@@ -399,7 +399,7 @@ pub fn handle_remote_register(
     architecture: &str,
 ) -> Result<()> {
     let command = format!(
-        "cd ~/Projects/llama-orch && llorch-pool models register {} --name '{}' --repo '{}' --architecture {}",
+        "cd ~/Projects/llama-orch && rbees-pool models register {} --name '{}' --repo '{}' --architecture {}",
         id, name, repo, architecture
     );
     let output = execute_remote_command(host, &command)?;
@@ -441,9 +441,9 @@ llorch pool models register qwen-0.5b \
 - [ ] Unit tests pass
 
 ### Local Commands
-- [ ] `llorch-pool models catalog` works
-- [ ] `llorch-pool models register` works
-- [ ] `llorch-pool models unregister` works
+- [ ] `rbees-pool models catalog` works
+- [ ] `rbees-pool models register` works
+- [ ] `rbees-pool models unregister` works
 - [ ] Output is formatted and colored
 
 ### Remote Commands
@@ -469,8 +469,8 @@ llorch pool models register qwen-0.5b \
 
 **Code:**
 - `bin/shared-crates/pool-core/src/catalog.rs` (enhanced)
-- `bin/pool-ctl/src/commands/models.rs` (catalog commands)
-- `bin/llorch-ctl/src/commands/pool.rs` (remote catalog)
+- `bin/rbees-pool/src/commands/models.rs` (catalog commands)
+- `bin/rbees-ctl/src/commands/pool.rs` (remote catalog)
 
 **Catalogs:**
 - `.test-models/catalog.json` on mac.home.arpa
@@ -491,7 +491,7 @@ llorch pool models register qwen-0.5b \
 chrono = { version = "0.4", features = ["serde"] }
 hostname = "0.4"
 
-# pool-ctl
+# rbees-pool
 tempfile = "3.0"  # For tests
 ```
 

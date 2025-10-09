@@ -47,7 +47,7 @@ Blend all characteristics into personality traits:
 **We Are Policy Hunters**
 - Everything configurable should be configured
 - Hunt hardcoded values like bugs
-- Centralize in orchestratord/config.rs
+- Centralize in rbees-orcd/config.rs
 - YAML, Rhai, env vars - user's choice
 
 **We Are Style Enforcers**
@@ -94,7 +94,7 @@ Instead of 6 separate sections, organize by **impact area**:
 
 **For All Users**:
 - Policy system (YAML, Rhai, env vars)
-- Configuration schema (orchestratord/config.rs)
+- Configuration schema (rbees-orcd/config.rs)
 - Documentation (code-heavy, word-light)
 
 ### 5. **How We Work** (Consolidate workflows)

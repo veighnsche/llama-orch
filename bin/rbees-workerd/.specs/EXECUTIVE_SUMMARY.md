@@ -1,4 +1,4 @@
-# Executive Summary: llorch-candled Optimization
+# Executive Summary: rbees-workerd Optimization
 
 **Date:** 2025-10-08  
 **Team:** TEAM-005  

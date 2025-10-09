@@ -31,7 +31,7 @@ pub async fn callback_ready(
     );
 
     narrate(NarrationFields {
-        actor: ACTOR_LLORCH_CANDLED,
+        actor: ACTOR_RBEES_WORKERD,
         action: ACTION_CALLBACK_READY,
         target: callback_url.to_string(),
         human: format!(
@@ -55,7 +55,7 @@ pub async fn callback_ready(
 
     if !response.status().is_success() {
         narrate(NarrationFields {
-            actor: ACTOR_LLORCH_CANDLED,
+            actor: ACTOR_RBEES_WORKERD,
             action: ACTION_ERROR,
             target: callback_url.to_string(),
             human: format!("Pool manager callback failed: {}", response.status()),

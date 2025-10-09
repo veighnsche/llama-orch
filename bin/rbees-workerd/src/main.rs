@@ -1,4 +1,4 @@
-//! llorch-candled - Candle-based Llama-2 inference worker daemon
+//! rbees-workerd - Candle-based Llama-2 inference worker daemon
 //!
 //! This worker implements Llama-2 inference using a hybrid approach:
 //! - Pure ndarray for CPU (checkpoint validation)
@@ -12,7 +12,7 @@
 //! Created by: TEAM-000 (Foundation)
 
 use clap::Parser;
-use llorch_candled::{
+use rbees_workerd::{
     backend::CandleInferenceBackend, callback_ready, create_router, narration::*, HttpServer,
 };
 use observability_narration_core::{narrate, NarrationFields};
@@ -24,7 +24,7 @@ use std::sync::Arc;
 /// These are provided by pool-managerd when spawning the worker.
 /// This is NOT a user-facing CLI - it's for orchestration.
 #[derive(Parser, Debug)]
-#[command(name = "llorch-candled")]
+#[command(name = "rbees-workerd")]
 #[command(about = "Candle-based Llama-2 worker daemon for llama-orch")]
 struct Args {
     /// Worker ID (UUID) - assigned by pool-managerd
@@ -74,7 +74,7 @@ async fn main() -> anyhow::Result<()> {
     );
 
     narrate(NarrationFields {
-        actor: ACTOR_LLORCH_CANDLED,
+        actor: ACTOR_RBEES_WORKERD,
         action: ACTION_STARTUP,
         target: args.worker_id.clone(),
         human: format!("Starting Candle worker on port {}", args.port),
@@ -87,7 +87,7 @@ async fn main() -> anyhow::Result<()> {
     // STEP 1: Load model to memory
     // ============================================================
     // TEAM-009: Initialize device and pass to backend
-    use llorch_candled::device::init_cpu_device;
+    use rbees_workerd::device::init_cpu_device;
     let device = init_cpu_device()?;
 
     tracing::info!(model = %args.model, "Loading Llama model...");
@@ -117,7 +117,7 @@ async fn main() -> anyhow::Result<()> {
         tracing::info!("Test mode: skipping pool manager callback");
     } else {
         narrate(NarrationFields {
-            actor: ACTOR_LLORCH_CANDLED,
+            actor: ACTOR_RBEES_WORKERD,
             action: ACTION_CALLBACK_READY,
             target: args.callback_url.clone(),
             human: format!("Reporting ready to pool-managerd at {}", args.callback_url),

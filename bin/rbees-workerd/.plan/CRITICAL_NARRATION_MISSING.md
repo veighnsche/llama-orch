@@ -74,7 +74,7 @@ event: end
 **Correct (WHAT YOU WANT):**
 ```
 event: narration
-data: {"actor":"llorch-candled","action":"startup","human":"Starting Candle worker on port 8080","cute":"Worker waking up! 🌅"}
+data: {"actor":"rbees-workerd","action":"startup","human":"Starting Candle worker on port 8080","cute":"Worker waking up! 🌅"}
 
 event: narration
 data: {"actor":"model-loader","action":"model_load","human":"Loading Llama model from /models/llama-7b.gguf","cute":"Fetching the sleepy Llama model! 📦"}

@@ -1,4 +1,4 @@
-# Candle Usage Policy for llorch-candled
+# Candle Usage Policy for rbees-workerd
 
 **Established:** 2025-10-08  
 **Team:** TEAM-005  

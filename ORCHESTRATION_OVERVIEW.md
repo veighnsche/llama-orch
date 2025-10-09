@@ -24,23 +24,23 @@
 
 **llama-orch has 4 binaries:**
 
-1. **`orchestratord`** = HTTP daemon (THE BRAIN) - `bin/orchestratord/` [M1 - not built]
+1. **`rbees-orcd`** = HTTP daemon (THE BRAIN) - `bin/rbees-orcd/` [M1 - not built]
    - Rhai scripting, worker registry (SQLite), scheduling, routing
    
-2. **`llorch-candled`** = HTTP daemon (WORKER) - `bin/llorch-candled/` [M0 ✅ DONE]
+2. **`rbees-workerd`** = HTTP daemon (WORKER) - `bin/rbees-workerd/` [M0 ✅ DONE]
    - Loads ONE model, generates tokens, stateless
    
-3. **`llorch`** = CLI tool (REMOTE CONTROL) - `bin/llorch-ctl/` [M0 ✅ DONE]
+3. **`rbees`** = CLI tool (REMOTE CONTROL) - `bin/rbees-ctl/` [M0 ✅ DONE]
    - SSH to pools, precise commands, operator tool
    
-4. **`llorch-pool`** = CLI tool (LOCAL POOL) - `bin/pool-ctl/` [M0 ✅ DONE]
+4. **`rbees-pool`** = CLI tool (LOCAL POOL) - `bin/rbees-pool/` [M0 ✅ DONE]
    - Model catalog, worker spawning, backend detection
 
 **ARCHITECTURAL CHANGE (2025-10-09):**
 - ❌ **pool-managerd daemon is NOT NEEDED**
-- ✅ Pool management is CLI-based (`llorch-pool`)
-- ✅ Only 2 daemons: orchestratord + llorch-candled
-- ✅ 2 CLIs: llorch + llorch-pool
+- ✅ Pool management is CLI-based (`rbees-pool`)
+- ✅ Only 2 daemons: rbees-orcd + rbees-workerd
+- ✅ 2 CLIs: rbees + rbees-pool
 - See: `/bin/.specs/ARCHITECTURE_DECISION_NO_POOL_DAEMON.md`
 
 ### The Four-Binary System
@@ -48,7 +48,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ ORCHESTRATORD (The Brain) - HTTP DAEMON                         │
-│ Binary: orchestratord (NOT llorch!)                             │
+│ Binary: rbees-orcd (NOT llorch!)                             │
 │ Location: blep.home.arpa:8080                                    │
 │ Makes ALL intelligent decisions                                  │
 │ - Admission, Queue, Scheduling, Worker Selection                 │
@@ -62,8 +62,8 @@
                      │
 ┌────────────────────┴────────────────────────────────────────────┐
 │ WORKERS (Dumb Executors) - HTTP DAEMONS                         │
-│ Binary: llorch-candled (and variants)                            │
-│ - llorch-candled (NVIDIA CUDA, Metal, CPU)                       │
+│ Binary: rbees-workerd (and variants)                            │
+│ - rbees-workerd (NVIDIA CUDA, Metal, CPU)                       │
 │ - worker-orcd (Bespoke NVIDIA - future)                          │
 │ - worker-aarmd (Apple ARM - future)                              │
 │ Each worker:                                                     │
@@ -77,14 +77,14 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │ OPERATOR TOOLS (CLI for humans) - SSH-BASED                     │
 │                                                                   │
-│ llorch (remote control) - bin/llorch-ctl/                        │
+│ rbees (remote control) - bin/rbees-ctl/                        │
 │   Purpose: SSH to pools, control remotely                        │
-│   Usage: llorch pool worker spawn metal --host mac ...           │
+│   Usage: rbees pool worker spawn metal --host mac ...           │
 │   Status: M0 (BUILT and WORKING)                                 │
 │                                                                   │
-│ llorch-pool (local control) - bin/pool-ctl/                      │
+│ rbees-pool (local control) - bin/rbees-pool/                      │
 │   Purpose: Local pool operations (models, workers, catalog)      │
-│   Usage: llorch-pool models download qwen-0.5b                   │
+│   Usage: rbees-pool models download qwen-0.5b                   │
 │   Status: M0 (BUILT and WORKING)                                 │
 │   Note: This REPLACES pool-managerd daemon!                      │
 └─────────────────────────────────────────────────────────────────┘
@@ -94,18 +94,18 @@
 
 **Control Plane (SSH + CLI - 2 binaries):**
 - Operator → Pools (via SSH)
-- Model management (llorch-pool CLI)
-- Worker lifecycle (llorch-pool CLI)
+- Model management (rbees-pool CLI)
+- Worker lifecycle (rbees-pool CLI)
 - System updates (llorch CLI)
 - NO DAEMON NEEDED!
-- **Binaries:** llorch + llorch-pool
+- **Binaries:** rbees + rbees-pool
 
 **Data Plane (HTTP + Daemons - 2 binaries):**
 - Client → Orchestrator → Worker
-- Inference requests (orchestratord routes)
-- Token streaming (llorch-candled generates)
+- Inference requests (rbees-orcd routes)
+- Token streaming (rbees-workerd generates)
 - Health checks (both daemons)
-- **Binaries:** orchestratord + llorch-candled
+- **Binaries:** rbees-orcd + rbees-workerd
 
 ---
 
@@ -125,7 +125,7 @@ llorch pool status --host workstation.home.arpa
 
 **What happens:**
 - SSH to pool machine
-- Run `llorch-pool status`
+- Run `rbees-pool status`
 - Report GPU info, workers, models
 
 #### 1.2 Update Pool Software
@@ -153,7 +153,7 @@ llorch pool git build --host mac.home.arpa
 #### 2.1 Register Model in Catalog
 ```bash
 # Register a model (local pool)
-llorch-pool models register \
+rbees-pool models register \
   --id qwen-0.5b \
   --name "Qwen2.5 0.5B Instruct" \
   --repo "Qwen/Qwen2.5-0.5B-Instruct" \
@@ -176,7 +176,7 @@ llorch pool models register \
 #### 2.2 Download Model
 ```bash
 # Download model (local pool)
-llorch-pool models download qwen-0.5b
+rbees-pool models download qwen-0.5b
 
 # Download on remote pool
 llorch pool models download qwen-0.5b --host mac.home.arpa
@@ -191,7 +191,7 @@ llorch pool models download qwen-0.5b --host mac.home.arpa
 #### 2.3 View Model Catalog
 ```bash
 # View catalog (local)
-llorch-pool models catalog
+rbees-pool models catalog
 
 # View catalog (remote)
 llorch pool models catalog --host mac.home.arpa
@@ -214,7 +214,7 @@ Total models: 4
 #### 2.4 List Downloaded Models
 ```bash
 # List models (local)
-llorch-pool models list
+rbees-pool models list
 
 # List models (remote)
 llorch pool models list --host mac.home.arpa
@@ -223,7 +223,7 @@ llorch pool models list --host mac.home.arpa
 #### 2.5 Unregister Model
 ```bash
 # Remove model from catalog
-llorch-pool models unregister qwen-0.5b
+rbees-pool models unregister qwen-0.5b
 
 # Remote
 llorch pool models unregister qwen-0.5b --host mac.home.arpa
@@ -238,7 +238,7 @@ llorch pool models unregister qwen-0.5b --host mac.home.arpa
 #### 3.1 Spawn Worker
 ```bash
 # Spawn worker on local pool
-llorch-pool worker spawn metal \
+rbees-pool worker spawn metal \
   --model qwen-0.5b \
   --gpu 0
 
@@ -266,7 +266,7 @@ llorch pool worker spawn cpu \
 3. Assign port (8001, 8002, etc.)
 4. Spawn background process:
    ```bash
-   llorch-candled \
+   rbees-workerd \
      --worker-id <uuid> \
      --model .test-models/qwen-0.5b \
      --port 8001 \
@@ -280,7 +280,7 @@ llorch pool worker spawn cpu \
 #### 3.2 List Workers
 ```bash
 # List workers (local)
-llorch-pool worker list
+rbees-pool worker list
 
 # List workers (remote)
 llorch pool worker list --host mac.home.arpa
@@ -301,7 +301,7 @@ Total workers: 2
 #### 3.3 Stop Worker
 ```bash
 # Stop worker (local)
-llorch-pool worker stop worker-metal-abc123
+rbees-pool worker stop worker-metal-abc123
 
 # Stop worker (remote)
 llorch pool worker stop worker-metal-abc123 --host mac.home.arpa
@@ -318,7 +318,7 @@ llorch pool worker stop worker-metal-abc123 --host mac.home.arpa
 #### 3.4 Stop All Workers
 ```bash
 # Stop all workers on pool
-llorch-pool worker stop-all
+rbees-pool worker stop-all
 
 # Remote
 llorch pool worker stop-all --host mac.home.arpa
@@ -661,7 +661,7 @@ curl -X POST http://blep.home.arpa:8001/execute \
 
 **Executes commands, reports state (DUMB):**
 - ✅ GPU discovery (NVML, Metal)
-- ✅ Worker spawning (start llorch-candled process)
+- ✅ Worker spawning (start rbees-workerd process)
 - ✅ Worker monitoring (PID, health checks)
 - ✅ Worker stopping (SIGTERM, SIGKILL)
 - ✅ Model provisioning (download via hf CLI)
@@ -793,14 +793,14 @@ curl http://<pool>:<port>/health
 ## Current Status (M0)
 
 ### ✅ Implemented
-- ✅ Worker spawning (llorch-candled)
+- ✅ Worker spawning (rbees-workerd)
 - ✅ Model downloads (hf CLI)
 - ✅ Token generation (CPU, Metal, CUDA)
 - ✅ SSE streaming
 - ✅ Health checks
 - ✅ Model catalog
 - ✅ Worker lifecycle
-- ✅ SSH control (llorch-ctl)
+- ✅ SSH control (rbees-ctl)
 
 ### 🚧 In Progress (M1)
 - 🚧 Pool-managerd daemon

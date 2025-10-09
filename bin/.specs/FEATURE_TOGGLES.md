@@ -141,7 +141,7 @@ fn select_worker(job: &Job) -> Result<Worker> {
 
 ### Implementation
 
-**In orchestratord:**
+**In rbees-orcd:**
 ```rust
 // src/main.rs
 use std::env;
@@ -250,13 +250,13 @@ LLORCH_UPDATE_METHOD=binary   # Update via binary download (future)
 
 **Update process:**
 ```bash
-# llorch-ctl update
+# rbees-ctl update
 cd ~/Projects/llama-orch
 git pull origin main
 git submodule update --init --recursive
-cargo build --release --bin orchestratord
-cargo build --release --bin pool-ctl
-cargo build --release --bin llorch-ctl
+cargo build --release --bin rbees-orcd
+cargo build --release --bin rbees-pool
+cargo build --release --bin rbees-ctl
 ```
 
 **Advantages:**
@@ -274,18 +274,18 @@ cargo build --release --bin llorch-ctl
 
 **Update process:**
 ```bash
-# llorch-ctl update
-curl -L https://releases.llama-orch.com/latest/orchestratord -o /tmp/orchestratord
-chmod +x /tmp/orchestratord
-mv /tmp/orchestratord ~/.local/bin/orchestratord
+# rbees-ctl update
+curl -L https://releases.llama-orch.com/latest/rbees-orcd -o /tmp/rbees-orcd
+chmod +x /tmp/rbees-orcd
+mv /tmp/rbees-orcd ~/.local/bin/rbees-orcd
 
-curl -L https://releases.llama-orch.com/latest/pool-ctl -o /tmp/pool-ctl
-chmod +x /tmp/pool-ctl
-mv /tmp/pool-ctl ~/.local/bin/pool-ctl
+curl -L https://releases.llama-orch.com/latest/rbees-pool -o /tmp/rbees-pool
+chmod +x /tmp/rbees-pool
+mv /tmp/rbees-pool ~/.local/bin/rbees-pool
 
-curl -L https://releases.llama-orch.com/latest/llorch-ctl -o /tmp/llorch-ctl
-chmod +x /tmp/llorch-ctl
-mv /tmp/llorch-ctl ~/.local/bin/llorch-ctl
+curl -L https://releases.llama-orch.com/latest/rbees-ctl -o /tmp/rbees-ctl
+chmod +x /tmp/rbees-ctl
+mv /tmp/rbees-ctl ~/.local/bin/rbees-ctl
 ```
 
 **Advantages:**
@@ -301,7 +301,7 @@ mv /tmp/llorch-ctl ~/.local/bin/llorch-ctl
 
 ### Implementation
 
-**In llorch-ctl:**
+**In rbees-ctl:**
 ```rust
 // src/commands/update.rs
 
@@ -339,17 +339,17 @@ async fn update_via_git() -> Result<()> {
     println!("Building binaries...");
     Command::new("cargo")
         .current_dir(&repo_root)
-        .args(&["build", "--release", "--bin", "orchestratord"])
+        .args(&["build", "--release", "--bin", "rbees-orcd"])
         .status()?;
     
     Command::new("cargo")
         .current_dir(&repo_root)
-        .args(&["build", "--release", "--bin", "pool-ctl"])
+        .args(&["build", "--release", "--bin", "rbees-pool"])
         .status()?;
     
     Command::new("cargo")
         .current_dir(&repo_root)
-        .args(&["build", "--release", "--bin", "llorch-ctl"])
+        .args(&["build", "--release", "--bin", "rbees-ctl"])
         .status()?;
     
     println!("✅ Update complete");
@@ -362,7 +362,7 @@ async fn update_via_binary() -> Result<()> {
     let base_url = env::var("LLORCH_RELEASE_URL")
         .unwrap_or_else(|_| "https://releases.llama-orch.com".to_string());
     
-    let binaries = vec!["orchestratord", "pool-ctl", "llorch-ctl"];
+    let binaries = vec!["rbees-orcd", "rbees-pool", "rbees-ctl"];
     
     for binary in binaries {
         println!("Downloading {}...", binary);
@@ -611,8 +611,8 @@ impl Config {
 
 ### Implementation Status
 
-- [ ] EU audit toggle (orchestratord, audit-logging crate)
-- [ ] Update method toggle (llorch-ctl)
+- [ ] EU audit toggle (rbees-orcd, audit-logging crate)
+- [ ] Update method toggle (rbees-ctl)
 - [ ] Development mode toggle (all binaries)
 - [ ] Config file support (.llorch.toml)
 - [ ] Documentation (README, website)

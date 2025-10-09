@@ -42,7 +42,7 @@ fn main() {
 use observability_narration_core::{narrate, NarrationFields};
 
 narrate(NarrationFields {
-    actor: "orchestratord",
+    actor: "rbees-orcd",
     action: "dispatch",
     target: "job-123".to_string(),
     human: "Dispatched job to worker-gpu0-r1".to_string(),
@@ -189,12 +189,12 @@ narrate(NarrationFields {
 ### Story Mode (Dialogue)
 ```rust
 narrate(NarrationFields {
-    actor: "orchestratord",
+    actor: "rbees-orcd",
     action: "vram_request",
     target: "pool-managerd-3".to_string(),
     human: "Requesting 2048 MB VRAM on GPU 0 for model 'llama-7b'".to_string(),
     cute: Some("Orchestratord politely asks pool-managerd-3 for a cozy 2GB spot! 🏠".to_string()),
-    story: Some("\"Do you have 2GB VRAM on GPU0?\" asked orchestratord. \"Yes!\" replied pool-managerd-3, \"Allocating now.\"".to_string()),
+    story: Some("\"Do you have 2GB VRAM on GPU0?\" asked rbees-orcd. \"Yes!\" replied pool-managerd-3, \"Allocating now.\"".to_string()),
     ..Default::default()
 });
 ```
@@ -214,11 +214,11 @@ observability-narration-core = { path = "../narration-core", features = ["trace-
 use observability_narration_core::{trace_enter, trace_exit};
 
 fn process_request(job_id: &str) -> Result<()> {
-    trace_enter!("orchestratord", "process_request", format!("job_id={}", job_id));
+    trace_enter!("rbees-orcd", "process_request", format!("job_id={}", job_id));
     
     // ... processing logic ...
     
-    trace_exit!("orchestratord", "process_request", "→ Ok (5ms)");
+    trace_exit!("rbees-orcd", "process_request", "→ Ok (5ms)");
     Ok(())
 }
 ```
@@ -238,7 +238,7 @@ for (i, token) in tokens.iter().enumerate() {
 use observability_narration_core::trace_loop;
 
 for (i, worker) in workers.iter().enumerate() {
-    trace_loop!("orchestratord", "select_worker", i, workers.len(),
+    trace_loop!("rbees-orcd", "select_worker", i, workers.len(),
                 format!("worker={}, load={}/8", worker.id, worker.load));
 }
 ```
@@ -283,7 +283,7 @@ capture.assert_story_present();
 ## 🎯 Field Taxonomy
 
 ### Required Fields
-- `actor` - Who performed the action (e.g., "orchestratord")
+- `actor` - Who performed the action (e.g., "rbees-orcd")
 - `action` - What action was performed (e.g., "dispatch")
 - `target` - What was acted upon (e.g., "job-123")
 - `human` - Human-readable description (≤100 chars)

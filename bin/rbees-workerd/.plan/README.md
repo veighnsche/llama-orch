@@ -1,4 +1,4 @@
-# 📚 llorch-candled Planning Documents
+# 📚 rbees-workerd Planning Documents
 
 **Last Updated**: 2025-10-09 15:37:39Z  
 **Status**: Narration integration in progress  
@@ -203,15 +203,15 @@ This document:
 
 | Event | File | Line | Actor | Action | Stdout | SSE | Audience |
 |-------|------|------|-------|--------|--------|-----|----------|
-| Worker startup | main.rs | 76-84 | llorch-candled | startup | ✅ | ❌ | Pool-manager |
+| Worker startup | main.rs | 76-84 | rbees-workerd | startup | ✅ | ❌ | Pool-manager |
 | Device init (CPU) | device.rs | 18-25 | device-manager | device_init | ✅ | ❌ | Pool-manager |
 | Device init (CUDA) | device.rs | 37-45 | device-manager | device_init | ✅ | ❌ | Pool-manager |
 | Device init (Metal) | device.rs | 58-66 | device-manager | device_init | ✅ | ❌ | Pool-manager |
 | Model load (start) | main.rs | 95-103 | model-loader | model_load | ✅ | ❌ | Pool-manager |
 | Model load (complete) | inference.rs | 58-66 | model-loader | model_load | ✅ | ❌ | Pool-manager |
-| Callback ready | main.rs | 119-128 | llorch-candled | callback_ready | ✅ | ❌ | Pool-manager |
-| Callback attempt | startup.rs | 33-42 | llorch-candled | callback_ready | ✅ | ❌ | Pool-manager |
-| Callback failed | startup.rs | 48-57 | llorch-candled | error | ✅ | ❌ | Pool-manager |
+| Callback ready | main.rs | 119-128 | rbees-workerd | callback_ready | ✅ | ❌ | Pool-manager |
+| Callback attempt | startup.rs | 33-42 | rbees-workerd | callback_ready | ✅ | ❌ | Pool-manager |
+| Callback failed | startup.rs | 48-57 | rbees-workerd | error | ✅ | ❌ | Pool-manager |
 | Server start | server.rs | 83-90 | http-server | server_start | ✅ | ❌ | Pool-manager |
 | Server bind | server.rs | 126-133 | http-server | server_bind | ✅ | ❌ | Pool-manager |
 | Bind failed | server.rs | 108-116 | http-server | error | ✅ | ❌ | Pool-manager |

@@ -8,10 +8,10 @@
 //! Created by: TEAM-009
 
 use anyhow::Result;
-use llorch_candled::backend::CandleInferenceBackend;
+use rbees_workerd::backend::CandleInferenceBackend;
 #[cfg(feature = "cpu")]
-use llorch_candled::device::init_cpu_device;
-use llorch_candled::device::verify_device;
+use rbees_workerd::device::init_cpu_device;
+use rbees_workerd::device::verify_device;
 
 #[cfg(feature = "cpu")]
 #[test]
@@ -29,7 +29,7 @@ fn test_cpu_device_init() -> Result<()> {
 #[cfg(feature = "cuda")]
 #[test]
 fn test_cuda_device_init() -> Result<()> {
-    use llorch_candled::device::init_cuda_device;
+    use rbees_workerd::device::init_cuda_device;
 
     // TEAM-009: Verify CUDA device can be initialized
     let device = init_cuda_device(0)?;
@@ -44,7 +44,7 @@ fn test_cuda_device_init() -> Result<()> {
 #[cfg(feature = "metal")]
 #[test]
 fn test_metal_device_init() -> Result<()> {
-    use llorch_candled::device::init_metal_device;
+    use rbees_workerd::device::init_metal_device;
 
     // TEAM-018: Verify Metal device can be initialized
     let device = init_metal_device(0)?;
@@ -92,7 +92,7 @@ fn test_backend_rejects_gguf() {
 #[test]
 #[ignore]
 fn test_device_residency_enforcement() -> Result<()> {
-    use llorch_candled::{InferenceBackend, SamplingConfig};
+    use rbees_workerd::{InferenceBackend, SamplingConfig};
 
     // This test requires a real model file
     // Set LLORCH_TEST_MODEL_PATH to run this test

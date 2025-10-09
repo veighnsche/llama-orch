@@ -40,7 +40,7 @@
 **Comprehensive guide covering**:
 - Pre-migration checklist
 - Step-by-step migration process
-- Service-specific examples (orchestratord, pool-managerd, worker-orcd)
+- Service-specific examples (rbees-orcd, pool-managerd, worker-orcd)
 - Correlation ID tracking
 - Cute/story mode integration
 - Trace macro usage
@@ -146,7 +146,7 @@
 ---
 ## 🎯 Migration Readiness
 ### Services Ready to Migrate
-1. **orchestratord** - Admission, dispatch, completion flows
+1. **rbees-orcd** - Admission, dispatch, completion flows
 2. **pool-managerd** - Worker lifecycle, heartbeats
 3. **worker-orcd** - Startup, inference execution
 ### Migration Support
@@ -157,7 +157,7 @@
 - ✅ Best practices documented
 - ✅ Common pitfalls identified
 ### Migration Timeline
-- **orchestratord**: Day 19 (8 hours)
+- **rbees-orcd**: Day 19 (8 hours)
 - **pool-managerd**: Day 19-20 (8 hours)
 - **worker-orcd**: Day 20 (8 hours)
 - **Total**: 24 hours across 3 services
@@ -235,7 +235,7 @@
 - [ ] Fix flaky test (capture adapter parallel execution)
 - [ ] Run BDD test suite
 ### Short-term (Next Sprint)
-- [ ] Migrate orchestratord
+- [ ] Migrate rbees-orcd
 - [ ] Migrate pool-managerd
 - [ ] Migrate worker-orcd
 - [ ] Update CI/CD pipelines

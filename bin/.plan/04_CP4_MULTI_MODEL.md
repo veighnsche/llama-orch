@@ -38,16 +38,16 @@ Complete multi-model testing infrastructure:
 # On each pool (mac.home.arpa, workstation.home.arpa)
 
 # TinyLlama (2.2 GB)
-llorch-pool models download tinyllama
+rbees-pool models download tinyllama
 
 # Phi-3 Mini (5 GB)
-llorch-pool models download phi3
+rbees-pool models download phi3
 
 # Mistral 7B (14 GB)
-llorch-pool models download mistral
+rbees-pool models download mistral
 
 # Verify all downloads
-llorch-pool models catalog
+rbees-pool models catalog
 ```
 
 **Expected Final Catalog:**
@@ -121,8 +121,8 @@ test_model() {
     
     echo -e "${CYAN}Testing: ${model} on ${backend} @ ${pool}${NC}"
     
-    # Spawn worker via llorch-ctl
-    if ! llorch pool worker spawn "$backend" \
+    # Spawn worker via rbees-ctl
+    if ! rbees pool worker spawn "$backend" \
         --model "$model" \
         --host "$pool" \
         --gpu "$gpu" 2>&1; then
@@ -151,7 +151,7 @@ test_model() {
             \"seed\": 42
         }" 2>&1); then
         echo -e "${RED}✗ Inference failed${NC}"
-        llorch pool worker stop "worker-${backend}-${gpu}" --host "$pool" 2>/dev/null || true
+        rbees pool worker stop "worker-${backend}-${gpu}" --host "$pool" 2>/dev/null || true
         ((FAILED++))
         return 1
     fi
@@ -160,13 +160,13 @@ test_model() {
     if echo "$response" | grep -q "error"; then
         echo -e "${RED}✗ Inference returned error${NC}"
         echo "  Response: $response"
-        llorch pool worker stop "worker-${backend}-${gpu}" --host "$pool" 2>/dev/null || true
+        rbees pool worker stop "worker-${backend}-${gpu}" --host "$pool" 2>/dev/null || true
         ((FAILED++))
         return 1
     fi
     
     # Stop worker
-    if ! llorch pool worker stop "worker-${backend}-${gpu}" --host "$pool" 2>&1; then
+    if ! rbees pool worker stop "worker-${backend}-${gpu}" --host "$pool" 2>&1; then
         echo -e "${YELLOW}⚠ Failed to stop worker${NC}"
     fi
     
@@ -321,7 +321,7 @@ Testing: mistral on cuda @ workstation.home.arpa
 
 ### WU4.4: Document Results (Day 4-5)
 
-**Location:** `bin/llorch-candled/docs/MODEL_SUPPORT.md`
+**Location:** `bin/rbees-workerd/docs/MODEL_SUPPORT.md`
 
 **Tasks:**
 1. Create MODEL_SUPPORT.md
@@ -341,7 +341,7 @@ Testing: mistral on cuda @ workstation.home.arpa
 
 ## Tested Models
 
-All models tested on llorch-candled with cache lifecycle fix from TEAM-021.
+All models tested on rbees-workerd with cache lifecycle fix from TEAM-021.
 
 | Model | Architecture | Size | Metal (Mac) | CUDA (Workstation) | Notes |
 |-------|-------------|------|-------------|-------------------|-------|
@@ -418,7 +418,7 @@ All models tested on llorch-candled with cache lifecycle fix from TEAM-021.
 **Test Flow:**
 1. Register model in catalog
 2. Download model via hf CLI (TEAM-023: NOT huggingface-cli - that's deprecated!)
-3. Spawn worker via pool-ctl
+3. Spawn worker via rbees-pool
 4. Execute inference request
 5. Verify tokens generated
 6. Stop worker
@@ -493,10 +493,10 @@ All models tested on llorch-candled with cache lifecycle fix from TEAM-021.
 4. Celebrate! 🎉
 
 **Documentation Updates:**
-- `bin/pool-ctl/README.md` - Final usage guide
-- `bin/llorch-ctl/README.md` - Final usage guide
+- `bin/rbees-pool/README.md` - Final usage guide
+- `bin/rbees-ctl/README.md` - Final usage guide
 - `bin/.specs/` - Implementation notes
-- `bin/llorch-candled/README.md` - Add multi-model support section
+- `bin/rbees-workerd/README.md` - Add multi-model support section
 
 **Cleanup:**
 ```bash
@@ -518,11 +518,11 @@ rm -rf .runtime/workers/*.log
 ## What We Built
 
 1. **pool-core** - Shared crate for pool management
-2. **pool-ctl** - Local pool management CLI
-3. **llorch-ctl** - Remote pool control CLI
+2. **rbees-pool** - Local pool management CLI
+3. **rbees-ctl** - Remote pool control CLI
 4. **Model Catalog System** - Track available models per pool
 5. **Automated Downloads** - Download models via hf CLI (TEAM-023: NOT huggingface-cli!)
-6. **Worker Spawning** - Spawn llorch-candled workers
+6. **Worker Spawning** - Spawn rbees-workerd workers
 7. **Multi-Model Testing** - Test all models on all backends
 
 ## What Works
@@ -537,7 +537,7 @@ rm -rf .runtime/workers/*.log
 ## Next Steps
 
 **For TEAM-023:**
-1. Implement orchestratord daemon (M2)
+1. Implement rbees-orcd daemon (M2)
 2. Add job scheduling
 3. Add worker registry
 4. Add SSE streaming relay
@@ -551,21 +551,21 @@ rm -rf .runtime/workers/*.log
 ## Files Created
 
 - `bin/shared-crates/pool-core/`
-- `bin/pool-ctl/`
-- `bin/llorch-ctl/`
+- `bin/rbees-pool/`
+- `bin/rbees-ctl/`
 - `bin/.plan/` (this directory)
 - `.docs/testing/test_all_models.sh`
-- `bin/llorch-candled/docs/MODEL_SUPPORT.md`
+- `bin/rbees-workerd/docs/MODEL_SUPPORT.md`
 
 ## Commands Reference
 
 ```bash
 # Local pool management
-llorch-pool models catalog
-llorch-pool models download <model>
-llorch-pool worker spawn <backend> --model <model>
-llorch-pool worker list
-llorch-pool worker stop <worker-id>
+rbees-pool models catalog
+rbees-pool models download <model>
+rbees-pool worker spawn <backend> --model <model>
+rbees-pool worker list
+rbees-pool worker stop <worker-id>
 
 # Remote pool control
 llorch pool models catalog --host <host>
@@ -631,7 +631,7 @@ llorch pool worker spawn <backend> --model <model> --host <host>
 - `.docs/testing/test_all_models.sh`
 
 **Documentation:**
-- `bin/llorch-candled/docs/MODEL_SUPPORT.md`
+- `bin/rbees-workerd/docs/MODEL_SUPPORT.md`
 - Updated READMEs
 - Handoff document
 

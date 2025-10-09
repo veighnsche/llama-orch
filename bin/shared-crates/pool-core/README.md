@@ -7,7 +7,7 @@ Shared types and logic for pool management.
 
 ## Overview
 
-`pool-core` provides the foundational types and utilities used by both `pool-ctl` (local pool management CLI) and `pool-managerd` (pool manager daemon, future).
+`pool-core` provides the foundational types and utilities used by both `rbees-pool` (local pool management CLI) and `pool-managerd` (pool manager daemon, future).
 
 ## Features
 

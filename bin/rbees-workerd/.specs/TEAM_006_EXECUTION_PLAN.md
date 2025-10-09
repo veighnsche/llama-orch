@@ -496,7 +496,7 @@ cargo test --lib
 **File:** `README.md`
 
 ```markdown
-# llorch-candled
+# rbees-workerd
 
 Candle-based Llama-2 inference worker with GPU acceleration.
 
@@ -625,7 +625,7 @@ cargo bench --bench inference_bench
 cargo flamegraph --bench inference_bench
 
 # Perf (Linux)
-perf record --call-graph dwarf ./target/release/llorch-candled
+perf record --call-graph dwarf ./target/release/rbees-workerd
 perf report
 ```
 
