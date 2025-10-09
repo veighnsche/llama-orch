@@ -16,9 +16,11 @@
 
 use crate::http::{backend::InferenceBackend, execute, health};
 use axum::{
+    middleware,
     routing::{get, post},
     Router,
 };
+use observability_narration_core::axum::correlation_middleware;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -35,6 +37,7 @@ pub fn create_router<B: InferenceBackend + 'static>(backend: Arc<Mutex<B>>) -> R
     Router::new()
         .route("/health", get(health::handle_health::<B>))
         .route("/execute", post(execute::handle_execute::<B>))
+        .layer(middleware::from_fn(correlation_middleware))
         .with_state(backend)
 }
 

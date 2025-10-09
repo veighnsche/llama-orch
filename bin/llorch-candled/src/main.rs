@@ -12,7 +12,10 @@
 //! Created by: TEAM-000 (Foundation)
 
 use clap::Parser;
-use llorch_candled::{backend::CandleInferenceBackend, callback_ready, create_router, HttpServer};
+use llorch_candled::{
+    backend::CandleInferenceBackend, callback_ready, create_router, narration::*, HttpServer,
+};
+use observability_narration_core::{narrate, NarrationFields};
 use std::net::SocketAddr;
 use std::sync::Arc;
 
@@ -70,6 +73,16 @@ async fn main() -> anyhow::Result<()> {
         "Candle worker starting"
     );
 
+    narrate(NarrationFields {
+        actor: ACTOR_LLORCH_CANDLED,
+        action: ACTION_STARTUP,
+        target: args.worker_id.clone(),
+        human: format!("Starting Candle worker on port {}", args.port),
+        cute: Some(format!("Worker {} waking up to help with inference! 🌅", args.worker_id)),
+        worker_id: Some(args.worker_id.clone()),
+        ..Default::default()
+    });
+
     // ============================================================
     // STEP 1: Load model to memory
     // ============================================================
@@ -78,6 +91,17 @@ async fn main() -> anyhow::Result<()> {
     let device = init_cpu_device()?;
 
     tracing::info!(model = %args.model, "Loading Llama model...");
+
+    narrate(NarrationFields {
+        actor: ACTOR_MODEL_LOADER,
+        action: ACTION_MODEL_LOAD,
+        target: args.model.clone(),
+        human: format!("Loading Llama model from {}", args.model),
+        cute: Some("Fetching the sleepy Llama model from its cozy home! 📦".to_string()),
+        worker_id: Some(args.worker_id.clone()),
+        ..Default::default()
+    });
+
     let backend = CandleInferenceBackend::load(&args.model, device)?;
     tracing::info!("Model loaded successfully");
 
@@ -92,6 +116,17 @@ async fn main() -> anyhow::Result<()> {
     if args.callback_url.contains("localhost:9999") {
         tracing::info!("Test mode: skipping pool manager callback");
     } else {
+        narrate(NarrationFields {
+            actor: ACTOR_LLORCH_CANDLED,
+            action: ACTION_CALLBACK_READY,
+            target: args.callback_url.clone(),
+            human: format!("Reporting ready to pool-managerd at {}", args.callback_url),
+            cute: Some("Waving hello to pool-managerd: 'I'm ready to work!' 👋".to_string()),
+            story: Some(format!("\"I'm ready!\" announced worker-{}. \"Great!\" replied pool-managerd.", args.worker_id)),
+            worker_id: Some(args.worker_id.clone()),
+            ..Default::default()
+        });
+
         callback_ready(&args.callback_url, &args.worker_id, backend.memory_bytes(), args.port)
             .await?;
 

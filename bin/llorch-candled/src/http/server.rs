@@ -12,6 +12,8 @@
 //! - WORK-3010: HTTP server foundation
 
 use axum::Router;
+use observability_narration_core::{narrate, NarrationFields};
+use crate::narration::*;
 use std::net::SocketAddr;
 use thiserror::Error;
 use tokio::sync::broadcast;
@@ -78,7 +80,14 @@ impl HttpServer {
             "HTTP server initialized"
         );
 
-        // Narrate server initialization
+        narrate(NarrationFields {
+            actor: ACTOR_HTTP_SERVER,
+            action: ACTION_SERVER_START,
+            target: addr.to_string(),
+            human: format!("HTTP server initialized on {}", addr),
+            cute: Some(format!("HTTP server ready to greet requests at {}! 🚺", addr)),
+            ..Default::default()
+        });
 
         Ok(Self { addr, router, shutdown_tx })
     }
@@ -96,7 +105,15 @@ impl HttpServer {
     /// * `Err(ServerError)` - Server encountered an error
     pub async fn run(self) -> Result<(), ServerError> {
         let listener = tokio::net::TcpListener::bind(self.addr).await.map_err(|source| {
-            // Narrate bind failure
+            narrate(NarrationFields {
+                actor: ACTOR_HTTP_SERVER,
+                action: ACTION_ERROR,
+                target: self.addr.to_string(),
+                human: format!("Failed to bind to {}: {}", self.addr, source),
+                cute: Some(format!("Oh dear! Can't bind to {} — address already in use? 😟", self.addr)),
+                error_kind: Some("bind_failed".to_string()),
+                ..Default::default()
+            });
 
             ServerError::BindFailed { addr: self.addr, source }
         })?;
@@ -106,7 +123,14 @@ impl HttpServer {
             "HTTP server listening"
         );
 
-        // Narrate successful server startup
+        narrate(NarrationFields {
+            actor: ACTOR_HTTP_SERVER,
+            action: ACTION_SERVER_BIND,
+            target: self.addr.to_string(),
+            human: format!("HTTP server listening on {}", self.addr),
+            cute: Some(format!("Server ears perked up, listening at {}! 👂", self.addr)),
+            ..Default::default()
+        });
 
         // Clone shutdown receiver for signal handler
         let mut shutdown_rx = self.shutdown_tx.subscribe();
@@ -132,13 +156,20 @@ impl HttpServer {
             .with_graceful_shutdown(async move {
                 let _ = shutdown_rx.recv().await;
                 warn!("HTTP server shutting down gracefully");
+
+                narrate(NarrationFields {
+                    actor: ACTOR_HTTP_SERVER,
+                    action: ACTION_SERVER_SHUTDOWN,
+                    target: "graceful".to_string(),
+                    human: "HTTP server shutting down gracefully".to_string(),
+                    cute: Some("Server saying goodnight and tucking in connections! 🌙".to_string()),
+                    ..Default::default()
+                });
             })
             .await
             .map_err(|e| ServerError::Runtime(e.to_string()))?;
 
         info!("HTTP server shutdown complete");
-
-        // Narrate shutdown completion
 
         Ok(())
     }

@@ -7,11 +7,23 @@
 //! Modified by: TEAM-018 (Removed Accelerate, added Metal)
 
 use candle_core::{Device, Result as CandleResult};
+use observability_narration_core::{narrate, NarrationFields};
+use crate::narration::*;
 
 /// Initialize CPU device
 #[cfg(feature = "cpu")]
 pub fn init_cpu_device() -> CandleResult<Device> {
     tracing::info!("Initializing CPU device");
+
+    narrate(NarrationFields {
+        actor: ACTOR_DEVICE_MANAGER,
+        action: ACTION_DEVICE_INIT,
+        target: "cpu".to_string(),
+        human: "Initialized CPU device".to_string(),
+        cute: Some("CPU device ready to crunch numbers! 💻".to_string()),
+        ..Default::default()
+    });
+
     Ok(Device::Cpu)
 }
 
@@ -19,7 +31,20 @@ pub fn init_cpu_device() -> CandleResult<Device> {
 #[cfg(feature = "cuda")]
 pub fn init_cuda_device(gpu_id: usize) -> CandleResult<Device> {
     tracing::info!("Initializing CUDA device {}", gpu_id);
-    Device::new_cuda(gpu_id)
+
+    let device = Device::new_cuda(gpu_id)?;
+
+    narrate(NarrationFields {
+        actor: ACTOR_DEVICE_MANAGER,
+        action: ACTION_DEVICE_INIT,
+        target: format!("cuda-{}", gpu_id),
+        human: format!("Initialized CUDA device {}", gpu_id),
+        cute: Some(format!("GPU{} warmed up and ready to zoom! ⚡", gpu_id)),
+        device: Some(format!("cuda-{}", gpu_id)),
+        ..Default::default()
+    });
+
+    Ok(device)
 }
 
 /// Initialize Apple Metal device (GPU)
@@ -27,7 +52,20 @@ pub fn init_cuda_device(gpu_id: usize) -> CandleResult<Device> {
 #[cfg(feature = "metal")]
 pub fn init_metal_device(gpu_id: usize) -> CandleResult<Device> {
     tracing::info!("Initializing Apple Metal device (GPU) {}", gpu_id);
-    Device::new_metal(gpu_id)
+
+    let device = Device::new_metal(gpu_id)?;
+
+    narrate(NarrationFields {
+        actor: ACTOR_DEVICE_MANAGER,
+        action: ACTION_DEVICE_INIT,
+        target: format!("metal-{}", gpu_id),
+        human: format!("Initialized Apple Metal device {}", gpu_id),
+        cute: Some(format!("Apple GPU{} polished and ready to shine! ✨", gpu_id)),
+        device: Some(format!("metal-{}", gpu_id)),
+        ..Default::default()
+    });
+
+    Ok(device)
 }
 
 /// Verify device is available and working

@@ -8,12 +8,14 @@ use crate::http::{
     sse::InferenceEvent,
     validation::{ExecuteRequest, ValidationErrorResponse},
 };
+use crate::narration::*;
 use axum::{
     extract::State,
     response::{sse::Event, Sse},
     Json,
 };
 use futures::stream::{self, Stream, StreamExt};
+use observability_narration_core::{narrate, NarrationFields};
 use std::{convert::Infallible, sync::Arc};
 use tokio::sync::Mutex;
 use tracing::{info, warn};
@@ -30,10 +32,32 @@ pub async fn handle_execute<B: InferenceBackend>(
     // Validate request
     if let Err(validation_errors) = req.validate_all() {
         warn!(job_id = %req.job_id, "Validation failed");
+
+        narrate(NarrationFields {
+            actor: ACTOR_HTTP_SERVER,
+            action: ACTION_ERROR,
+            target: req.job_id.clone(),
+            human: format!("Validation failed for job {}", req.job_id),
+            cute: Some(format!("Job {} has invalid parameters! 😟", req.job_id)),
+            error_kind: Some("validation_failed".to_string()),
+            job_id: Some(req.job_id.clone()),
+            ..Default::default()
+        });
+
         return Err(validation_errors);
     }
 
     info!(job_id = %req.job_id, "Inference request validated");
+
+    narrate(NarrationFields {
+        actor: ACTOR_HTTP_SERVER,
+        action: ACTION_EXECUTE_REQUEST,
+        target: req.job_id.clone(),
+        human: format!("Inference request validated for job {}", req.job_id),
+        cute: Some(format!("Job {} looks good, let's go! ✅", req.job_id)),
+        job_id: Some(req.job_id.clone()),
+        ..Default::default()
+    });
 
     // Convert request to sampling config
     let config = SamplingConfig {
@@ -53,6 +77,18 @@ pub async fn handle_execute<B: InferenceBackend>(
         Ok(r) => r,
         Err(e) => {
             warn!(job_id = %req.job_id, error = %e, "Inference failed");
+
+            narrate(NarrationFields {
+                actor: ACTOR_CANDLE_BACKEND,
+                action: ACTION_ERROR,
+                target: req.job_id.clone(),
+                human: format!("Inference failed for job {}: {}", req.job_id, e),
+                cute: Some(format!("Oh no! Job {} hit a snag: {} 😟", req.job_id, e)),
+                error_kind: Some("inference_failed".to_string()),
+                job_id: Some(req.job_id.clone()),
+                ..Default::default()
+            });
+
             let events = vec![InferenceEvent::Error {
                 code: "INFERENCE_FAILED".to_string(),
                 message: e.to_string(),

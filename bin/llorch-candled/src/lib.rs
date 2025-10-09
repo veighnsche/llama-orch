@@ -19,6 +19,7 @@ pub mod common;
 pub mod device;
 pub mod error;
 pub mod http;
+pub mod narration;
 pub mod token_output_stream;
 
 // Re-export commonly used types
