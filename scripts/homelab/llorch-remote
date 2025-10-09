@@ -348,7 +348,7 @@ echo "Running inference with actual model..."
 echo "─────────────────────────────────────────────────────────"
 
 # Check if model exists (use absolute path from REMOTE_PATH)
-MODEL_FULL_PATH="$REMOTE_PATH/$remote_model_path"
+MODEL_FULL_PATH="\$HOME/Projects/llama-orch/$remote_model_path"
 if [[ ! -f "\$MODEL_FULL_PATH" ]]; then
     echo "❌ Model not found: \$MODEL_FULL_PATH"
     echo ""
