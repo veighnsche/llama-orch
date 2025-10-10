@@ -4,8 +4,8 @@
 mod steps;
 
 use cucumber::World as _;
-use steps::world::World;
 use std::path::PathBuf;
+use steps::world::World;
 
 #[tokio::main]
 async fn main() {
@@ -15,8 +15,7 @@ async fn main() {
     // Initialize tracing for debugging
     tracing_subscriber::fmt()
         .with_env_filter(
-            std::env::var("RUST_LOG")
-                .unwrap_or_else(|_| "info,test_harness_bdd=debug".to_string()),
+            std::env::var("RUST_LOG").unwrap_or_else(|_| "info,test_harness_bdd=debug".to_string()),
         )
         .init();
 
@@ -37,8 +36,5 @@ async fn main() {
 
     tracing::info!("Running BDD tests from: {}", features.display());
 
-    World::cucumber()
-        .fail_on_skipped()
-        .run_and_exit(features)
-        .await;
+    World::cucumber().fail_on_skipped().run_and_exit(features).await;
 }

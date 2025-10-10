@@ -41,9 +41,9 @@ impl ModelCatalog {
     /// Get connection string with sqlite:// prefix
     /// TEAM-029: Same pattern as worker-registry
     fn connection_string(&self) -> String {
-        if self.db_path.starts_with("sqlite://") 
-            || self.db_path.starts_with(":memory:") 
-            || self.db_path.starts_with("file:") 
+        if self.db_path.starts_with("sqlite://")
+            || self.db_path.starts_with(":memory:")
+            || self.db_path.starts_with("file:")
         {
             self.db_path.clone()
         } else {
@@ -223,13 +223,11 @@ mod tests {
 
         catalog.register_model(&model).await.unwrap();
 
-        let found = catalog
-            .find_model("TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF", "hf")
-            .await
-            .unwrap();
+        let found =
+            catalog.find_model("TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF", "hf").await.unwrap();
         assert!(found.is_some());
         assert_eq!(found.unwrap().local_path, "/models/tinyllama.gguf");
-        
+
         // TEAM-033: Cleanup temp file
         let _ = std::fs::remove_file(&temp_file);
     }
@@ -244,7 +242,7 @@ mod tests {
 
         let found = catalog.find_model("nonexistent/model", "hf").await.unwrap();
         assert!(found.is_none());
-        
+
         // TEAM-033: Cleanup temp file
         let _ = std::fs::remove_file(&temp_file);
     }
@@ -269,7 +267,7 @@ mod tests {
 
         catalog.remove_model("test/model", "hf").await.unwrap();
         assert!(catalog.find_model("test/model", "hf").await.unwrap().is_none());
-        
+
         // TEAM-033: Cleanup temp file
         let _ = std::fs::remove_file(&temp_file);
     }
@@ -302,7 +300,7 @@ mod tests {
 
         let models = catalog.list_models().await.unwrap();
         assert_eq!(models.len(), 2);
-        
+
         // TEAM-033: Cleanup temp file
         let _ = std::fs::remove_file(&temp_file);
     }
@@ -316,7 +314,7 @@ mod tests {
 
         let models = catalog.list_models().await.unwrap();
         assert_eq!(models.len(), 0);
-        
+
         // TEAM-033: Cleanup temp file
         let _ = std::fs::remove_file(&temp_file);
     }
@@ -353,7 +351,7 @@ mod tests {
 
         let models = catalog.list_models().await.unwrap();
         assert_eq!(models.len(), 1); // Should replace, not duplicate
-        
+
         // TEAM-033: Cleanup temp file
         let _ = std::fs::remove_file(&temp_file);
     }
@@ -392,7 +390,7 @@ mod tests {
 
         let models = catalog.list_models().await.unwrap();
         assert_eq!(models.len(), 2);
-        
+
         // TEAM-033: Cleanup temp file
         let _ = std::fs::remove_file(&temp_file);
     }

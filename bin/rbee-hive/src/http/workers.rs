@@ -94,7 +94,7 @@ pub async fn handle_spawn_worker(
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid model_ref: {}", e)))?;
 
     info!("Checking model catalog for {}/{}", provider, reference);
-    
+
     let model_path = match state
         .model_catalog
         .find_model(&reference, &provider)
@@ -107,36 +107,30 @@ pub async fn handle_spawn_worker(
         }
         None => {
             info!("Model not found in catalog, provisioning...");
-            
+
             // Download model
-            let downloaded_path = state
-                .provisioner
-                .download_model(&reference, &provider)
-                .await
-                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Download failed: {}", e)))?;
+            let downloaded_path =
+                state.provisioner.download_model(&reference, &provider).await.map_err(|e| {
+                    (StatusCode::INTERNAL_SERVER_ERROR, format!("Download failed: {}", e))
+                })?;
 
             let path_str = downloaded_path.to_string_lossy().to_string();
-            
+
             // Register in catalog
             let model_info = ModelInfo {
                 reference: reference.clone(),
                 provider: provider.clone(),
                 local_path: path_str.clone(),
-                size_bytes: state
-                    .provisioner
-                    .get_model_size(&downloaded_path)
-                    .unwrap_or(0),
+                size_bytes: state.provisioner.get_model_size(&downloaded_path).unwrap_or(0),
                 downloaded_at: SystemTime::now()
                     .duration_since(SystemTime::UNIX_EPOCH)
                     .unwrap()
                     .as_secs() as i64,
             };
 
-            state
-                .model_catalog
-                .register_model(&model_info)
-                .await
-                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Catalog registration failed: {}", e)))?;
+            state.model_catalog.register_model(&model_info).await.map_err(|e| {
+                (StatusCode::INTERNAL_SERVER_ERROR, format!("Catalog registration failed: {}", e))
+            })?;
 
             info!("Model provisioned and registered: {}", path_str);
             path_str
@@ -151,16 +145,15 @@ pub async fn handle_spawn_worker(
     // Production should use proper port allocation or OS-assigned ports
     let workers = state.registry.list().await;
     let port = 8081 + workers.len() as u16;
-    
+
     // TEAM-027: Get hostname for URL
     // TEAM-035: For localhost testing, use 127.0.0.1 to avoid hostname resolution issues
-    let hostname = std::env::var("RBEE_WORKER_HOST")
-        .unwrap_or_else(|_| {
-            hostname::get()
-                .ok()
-                .and_then(|h| h.into_string().ok())
-                .unwrap_or_else(|| "127.0.0.1".to_string())
-        });
+    let hostname = std::env::var("RBEE_WORKER_HOST").unwrap_or_else(|_| {
+        hostname::get()
+            .ok()
+            .and_then(|h| h.into_string().ok())
+            .unwrap_or_else(|| "127.0.0.1".to_string())
+    });
     let url = format!("http://{}:{}", hostname, port);
 
     // TEAM-027: Get worker binary path (same directory as rbee-hive)
@@ -184,7 +177,7 @@ pub async fn handle_spawn_worker(
         .arg("--worker-id")
         .arg(&worker_id)
         .arg("--model")
-        .arg(&model_path)  // TEAM-029: Use provisioned model path
+        .arg(&model_path) // TEAM-029: Use provisioned model path
         .arg("--port")
         .arg(port.to_string())
         .arg("--callback-url")
@@ -214,18 +207,11 @@ pub async fn handle_spawn_worker(
                 "Worker spawned successfully"
             );
 
-            Ok(Json(SpawnWorkerResponse {
-                worker_id,
-                url,
-                state: "loading".to_string(),
-            }))
+            Ok(Json(SpawnWorkerResponse { worker_id, url, state: "loading".to_string() }))
         }
         Err(e) => {
             error!(error = %e, "Failed to spawn worker");
-            Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to spawn worker: {}", e),
-            ))
+            Err((StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to spawn worker: {}", e)))
         }
     }
 }
@@ -254,21 +240,15 @@ pub async fn handle_worker_ready(
     );
 
     // Update worker state to idle
-    state.registry
-        .update_state(&request.worker_id, WorkerState::Idle)
-        .await;
+    state.registry.update_state(&request.worker_id, WorkerState::Idle).await;
 
-    Json(WorkerReadyResponse {
-        message: "Worker registered as ready".to_string(),
-    })
+    Json(WorkerReadyResponse { message: "Worker registered as ready".to_string() })
 }
 
 /// Handle GET /v1/workers/list
 ///
 /// List all workers
-pub async fn handle_list_workers(
-    State(state): State<AppState>,
-) -> Json<ListWorkersResponse> {
+pub async fn handle_list_workers(State(state): State<AppState>) -> Json<ListWorkersResponse> {
     let workers = state.registry.list().await;
 
     Json(ListWorkersResponse { workers })
@@ -350,9 +330,7 @@ mod tests {
 
     #[test]
     fn test_worker_ready_response_serialization() {
-        let response = WorkerReadyResponse {
-            message: "Worker registered as ready".to_string(),
-        };
+        let response = WorkerReadyResponse { message: "Worker registered as ready".to_string() };
 
         let json = serde_json::to_value(&response).unwrap();
         assert_eq!(json["message"], "Worker registered as ready");
@@ -375,9 +353,7 @@ mod tests {
             slots_available: 1,
         };
 
-        let response = ListWorkersResponse {
-            workers: vec![worker],
-        };
+        let response = ListWorkersResponse { workers: vec![worker] };
 
         let json = serde_json::to_value(&response).unwrap();
         assert!(json["workers"].is_array());

@@ -1,8 +1,8 @@
 // Lifecycle step definitions
 // Created by: TEAM-040
 
-use cucumber::{given, when, then};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 
 #[given(expr = "rbee-hive is started as HTTP daemon on port {int}")]
 pub async fn given_hive_started_daemon(world: &mut World, port: u16) {
@@ -124,7 +124,9 @@ pub async fn then_if_no_response_mark_unhealthy(world: &mut World) {
     tracing::debug!("If no response, mark worker as unhealthy");
 }
 
-#[then(expr = "if worker is unhealthy for {int} consecutive checks, rbee-hive removes it from registry")]
+#[then(
+    expr = "if worker is unhealthy for {int} consecutive checks, rbee-hive removes it from registry"
+)]
 pub async fn then_if_unhealthy_remove(world: &mut World, checks: u32) {
     tracing::debug!("If unhealthy for {} checks, remove from registry", checks);
 }

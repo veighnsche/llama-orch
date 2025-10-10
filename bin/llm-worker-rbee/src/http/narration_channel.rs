@@ -5,7 +5,7 @@
 
 use crate::http::sse::InferenceEvent;
 use std::cell::RefCell;
-use tokio::sync::mpsc::{unbounded_channel, UnboundedSender, UnboundedReceiver};
+use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
 thread_local! {
     /// Thread-local storage for the current request's narration sender
@@ -19,11 +19,11 @@ thread_local! {
 /// The sender is automatically cleaned up when the receiver is dropped.
 pub fn create_channel() -> UnboundedReceiver<InferenceEvent> {
     let (tx, rx) = unbounded_channel();
-    
+
     NARRATION_SENDER.with(|sender| {
         *sender.borrow_mut() = Some(tx);
     });
-    
+
     rx
 }
 
@@ -62,10 +62,10 @@ mod tests {
     #[test]
     fn test_channel_creation() {
         let mut rx = create_channel();
-        
+
         // Sender should be available
         assert!(get_sender().is_some());
-        
+
         // Send a test event
         let sent = send_narration(InferenceEvent::Narration {
             actor: "test".to_string(),
@@ -78,7 +78,7 @@ mod tests {
             job_id: None,
         });
         assert!(sent);
-        
+
         // Receive the event
         let event = rx.try_recv().unwrap();
         assert!(matches!(event, InferenceEvent::Narration { .. }));
@@ -88,10 +88,10 @@ mod tests {
     fn test_clear_sender() {
         let _rx = create_channel();
         assert!(get_sender().is_some());
-        
+
         clear_sender();
         assert!(get_sender().is_none());
-        
+
         // Sending should fail after clear
         let sent = send_narration(InferenceEvent::Narration {
             actor: "test".to_string(),
@@ -110,9 +110,9 @@ mod tests {
     fn test_no_sender_by_default() {
         // Clear any existing sender from previous tests
         clear_sender();
-        
+
         assert!(get_sender().is_none());
-        
+
         let sent = send_narration(InferenceEvent::Narration {
             actor: "test".to_string(),
             action: "test".to_string(),

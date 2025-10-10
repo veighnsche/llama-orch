@@ -1,8 +1,8 @@
 // Edge case step definitions
 // Created by: TEAM-040
 
-use cucumber::{given, when, then};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 
 #[given(expr = "model download fails at {int}% with {string}")]
 pub async fn given_download_fails_at(world: &mut World, progress: u32, error: String) {

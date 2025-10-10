@@ -124,7 +124,7 @@ async fn wait_for_worker_ready(worker_url: &str) -> Result<()> {
             Ok(response) if response.status().is_success() => {
                 // Reset failure counter on successful connection
                 consecutive_failures = 0;
-                
+
                 if let Ok(ready) = response.json::<ReadyResponse>().await {
                     if ready.ready {
                         println!(" {}", "✓".green());
@@ -191,9 +191,9 @@ async fn execute_inference(
         event_type: String,
         // Token event fields
         #[serde(default)]
-        t: String,  // token text
+        t: String, // token text
         #[serde(default)]
-        i: u32,     // token index
+        i: u32, // token index
         // End event fields
         #[serde(default)]
         tokens_out: u32,
@@ -210,11 +210,8 @@ async fn execute_inference(
         "stream": true
     });
 
-    let response = client
-        .post(&format!("{}/v1/inference", worker_url))
-        .json(&request)
-        .send()
-        .await?;
+    let response =
+        client.post(&format!("{}/v1/inference", worker_url)).json(&request).send().await?;
 
     if !response.status().is_success() {
         anyhow::bail!("Inference request failed: HTTP {}", response.status());
@@ -252,7 +249,10 @@ async fn execute_inference(
                             println!();
                             println!("{} Inference complete!", "✓".green().bold());
                             println!("Total tokens: {}", token_event.tokens_out.to_string().cyan());
-                            println!("Duration: {} ms", token_event.decode_time_ms.to_string().cyan());
+                            println!(
+                                "Duration: {} ms",
+                                token_event.decode_time_ms.to_string().cyan()
+                            );
 
                             if token_event.decode_time_ms > 0 && token_event.tokens_out > 0 {
                                 let tokens_per_sec = (token_event.tokens_out as f64

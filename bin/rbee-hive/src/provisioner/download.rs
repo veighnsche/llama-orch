@@ -75,7 +75,7 @@ impl ModelProvisioner {
     }
 
     /// Extract model name from reference
-        /// Maps HuggingFace references to rbee-models names
+    /// Maps HuggingFace references to rbee-models names
     pub(super) fn extract_model_name(&self, reference: &str) -> Result<String> {
         // TEAM-029: Map known references to llorch-models names
         let name = match reference {
@@ -104,16 +104,12 @@ mod tests {
         let provisioner = ModelProvisioner::new(PathBuf::from("/tmp"));
 
         assert_eq!(
-            provisioner
-                .extract_model_name("TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF")
-                .unwrap(),
+            provisioner.extract_model_name("TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF").unwrap(),
             "tinyllama"
         );
 
         assert_eq!(
-            provisioner
-                .extract_model_name("Qwen/Qwen2.5-0.5B-Instruct-GGUF")
-                .unwrap(),
+            provisioner.extract_model_name("Qwen/Qwen2.5-0.5B-Instruct-GGUF").unwrap(),
             "qwen"
         );
     }
@@ -130,10 +126,7 @@ mod tests {
             provisioner.extract_model_name("QuantFactory/Meta-Llama-3-8B-Instruct-GGUF").unwrap(),
             "llama3"
         );
-        assert_eq!(
-            provisioner.extract_model_name("TheBloke/Llama-2-7B-GGUF").unwrap(),
-            "llama2"
-        );
+        assert_eq!(provisioner.extract_model_name("TheBloke/Llama-2-7B-GGUF").unwrap(), "llama2");
         assert_eq!(
             provisioner.extract_model_name("TheBloke/Mistral-7B-Instruct-v0.2-GGUF").unwrap(),
             "mistral"
@@ -144,10 +137,7 @@ mod tests {
     fn test_extract_model_name_unknown() {
         let provisioner = ModelProvisioner::new(PathBuf::from("/tmp"));
         // Unknown models default to tinyllama
-        assert_eq!(
-            provisioner.extract_model_name("unknown/model").unwrap(),
-            "tinyllama"
-        );
+        assert_eq!(provisioner.extract_model_name("unknown/model").unwrap(), "tinyllama");
     }
 
     #[test]
@@ -156,7 +146,7 @@ mod tests {
         // We test the error message format instead
         let provisioner = ModelProvisioner::new(PathBuf::from("/tmp/nonexistent"));
         let result = provisioner.find_rbee_models_script();
-        
+
         // If script doesn't exist, should error with specific message
         if result.is_err() {
             assert!(result.unwrap_err().to_string().contains("llorch-models script not found"));
@@ -167,17 +157,17 @@ mod tests {
     #[test]
     fn test_extract_model_name_case_sensitivity() {
         let provisioner = ModelProvisioner::new(PathBuf::from("/tmp"));
-        
+
         // Exact match should work
         assert_eq!(
             provisioner.extract_model_name("TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF").unwrap(),
             "tinyllama"
         );
-        
+
         // Different case should fall back to default
         assert_eq!(
             provisioner.extract_model_name("thebloke/tinyllama-1.1b-chat-v1.0-gguf").unwrap(),
-            "tinyllama"  // Falls back to default
+            "tinyllama" // Falls back to default
         );
     }
 }

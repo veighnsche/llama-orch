@@ -7,7 +7,7 @@
 use anyhow::{Context, Result};
 use std::process::Stdio;
 use tokio::process::Command;
-use tracing::{info, error};
+use tracing::{error, info};
 
 /// Test SSH connection to a remote host
 pub async fn test_ssh_connection(
@@ -19,24 +19,27 @@ pub async fn test_ssh_connection(
     info!("🔌 Testing SSH connection to {}@{}:{}", user, host, port);
 
     let mut cmd = Command::new("ssh");
-    
+
     // Add key if provided
     if let Some(key) = key_path {
         cmd.arg("-i").arg(key);
     }
 
     // SSH options
-    cmd.arg("-o").arg("ConnectTimeout=10")
-        .arg("-o").arg("BatchMode=yes")
-        .arg("-o").arg("StrictHostKeyChecking=no")
-        .arg("-p").arg(port.to_string())
+    cmd.arg("-o")
+        .arg("ConnectTimeout=10")
+        .arg("-o")
+        .arg("BatchMode=yes")
+        .arg("-o")
+        .arg("StrictHostKeyChecking=no")
+        .arg("-p")
+        .arg(port.to_string())
         .arg(format!("{}@{}", user, host))
         .arg("echo 'connection test'")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
 
-    let output = cmd.output().await
-        .context("Failed to execute SSH command")?;
+    let output = cmd.output().await.context("Failed to execute SSH command")?;
 
     if output.status.success() {
         info!("✅ SSH connection successful!");
@@ -59,22 +62,25 @@ pub async fn execute_remote_command(
     info!("📡 Executing remote command on {}@{}: {}", user, host, command);
 
     let mut cmd = Command::new("ssh");
-    
+
     if let Some(key) = key_path {
         cmd.arg("-i").arg(key);
     }
 
-    cmd.arg("-o").arg("ConnectTimeout=10")
-        .arg("-o").arg("BatchMode=yes")
-        .arg("-o").arg("StrictHostKeyChecking=no")
-        .arg("-p").arg(port.to_string())
+    cmd.arg("-o")
+        .arg("ConnectTimeout=10")
+        .arg("-o")
+        .arg("BatchMode=yes")
+        .arg("-o")
+        .arg("StrictHostKeyChecking=no")
+        .arg("-p")
+        .arg(port.to_string())
         .arg(format!("{}@{}", user, host))
         .arg(command)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
 
-    let output = cmd.output().await
-        .context("Failed to execute SSH command")?;
+    let output = cmd.output().await.context("Failed to execute SSH command")?;
 
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();

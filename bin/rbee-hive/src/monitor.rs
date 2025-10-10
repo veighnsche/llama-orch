@@ -83,7 +83,7 @@ mod tests {
     #[tokio::test]
     async fn test_health_monitor_with_workers() {
         let registry = Arc::new(WorkerRegistry::new());
-        
+
         let worker = WorkerInfo {
             id: "worker-1".to_string(),
             url: "http://localhost:8081".to_string(),
@@ -95,7 +95,7 @@ mod tests {
             slots_total: 1,
             slots_available: 1,
         };
-        
+
         registry.register(worker).await;
         let workers = registry.list().await;
         assert_eq!(workers.len(), 1);

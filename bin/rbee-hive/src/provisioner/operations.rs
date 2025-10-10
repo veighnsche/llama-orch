@@ -28,7 +28,7 @@ impl ModelProvisioner {
 
         info!("Deleting model directory: {:?}", model_dir);
         std::fs::remove_dir_all(&model_dir)?;
-        
+
         Ok(())
     }
 
@@ -50,7 +50,7 @@ impl ModelProvisioner {
         for entry in std::fs::read_dir(&model_dir)? {
             let entry = entry?;
             let path = entry.path();
-            
+
             if path.is_file() {
                 file_count += 1;
                 let metadata = std::fs::metadata(&path)?;
@@ -88,9 +88,12 @@ impl ModelProvisioner {
             }
         }
 
-        info!("Model verified: {} .gguf files, {} total bytes", 
-              info.gguf_files.len(), info.total_size);
-        
+        info!(
+            "Model verified: {} .gguf files, {} total bytes",
+            info.gguf_files.len(),
+            info.total_size
+        );
+
         Ok(())
     }
 
@@ -135,13 +138,13 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_ops_size");
         let _ = fs::remove_dir_all(&temp_dir);
         fs::create_dir_all(&temp_dir).unwrap();
-        
+
         let test_file = temp_dir.join("test.gguf");
         fs::write(&test_file, b"test data content").unwrap();
-        
+
         let provisioner = ModelProvisioner::new(temp_dir.clone());
         let size = provisioner.get_model_size(&test_file).unwrap();
-        
+
         assert_eq!(size, 17);
         let _ = fs::remove_dir_all(&temp_dir);
     }
@@ -151,15 +154,15 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_ops_delete");
         let _ = fs::remove_dir_all(&temp_dir);
         fs::create_dir_all(&temp_dir).unwrap();
-        
+
         let model_dir = temp_dir.join("testmodel");
         fs::create_dir_all(&model_dir).unwrap();
         fs::write(model_dir.join("model.gguf"), b"test").unwrap();
-        
+
         let provisioner = ModelProvisioner::new(temp_dir.clone());
         assert!(provisioner.delete_model("testmodel").is_ok());
         assert!(!model_dir.exists());
-        
+
         let _ = fs::remove_dir_all(&temp_dir);
     }
 
@@ -168,14 +171,14 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_ops_info");
         let _ = fs::remove_dir_all(&temp_dir);
         fs::create_dir_all(&temp_dir).unwrap();
-        
+
         let model_dir = temp_dir.join("testmodel");
         fs::create_dir_all(&model_dir).unwrap();
         fs::write(model_dir.join("model.gguf"), b"test data").unwrap();
-        
+
         let provisioner = ModelProvisioner::new(temp_dir.clone());
         let info = provisioner.get_model_info("testmodel").unwrap();
-        
+
         assert_eq!(info.file_count, 1);
         assert_eq!(info.gguf_files.len(), 1);
         let _ = fs::remove_dir_all(&temp_dir);
@@ -186,11 +189,11 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_ops_verify");
         let _ = fs::remove_dir_all(&temp_dir);
         fs::create_dir_all(&temp_dir).unwrap();
-        
+
         let model_dir = temp_dir.join("testmodel");
         fs::create_dir_all(&model_dir).unwrap();
         fs::write(model_dir.join("model.gguf"), b"test data").unwrap();
-        
+
         let provisioner = ModelProvisioner::new(temp_dir.clone());
         assert!(provisioner.verify_model("testmodel").is_ok());
         let _ = fs::remove_dir_all(&temp_dir);
@@ -201,15 +204,15 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_ops_disk");
         let _ = fs::remove_dir_all(&temp_dir);
         fs::create_dir_all(&temp_dir).unwrap();
-        
+
         let model_dir = temp_dir.join("model1");
         fs::create_dir_all(&model_dir).unwrap();
         fs::write(model_dir.join("file.gguf"), b"12345").unwrap();
-        
+
         let provisioner = ModelProvisioner::new(temp_dir.clone());
         let usage = provisioner.get_total_disk_usage().unwrap();
         assert_eq!(usage, 5);
-        
+
         let _ = fs::remove_dir_all(&temp_dir);
     }
 }

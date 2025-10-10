@@ -3,8 +3,8 @@
 // Modified by: TEAM-042 (implemented step definitions with mock behavior)
 // Modified by: TEAM-043 (replaced mocks with real process execution)
 
-use cucumber::{given, when, then};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -16,25 +16,25 @@ pub async fn given_queen_rbee_running(world: &mut World) {
         // Create temp directory for test database
         let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
         let db_path = temp_dir.path().join("test_beehives.db");
-        
+
         // TEAM-044: Use pre-built binary instead of cargo run to avoid compilation timeouts
         let workspace_dir = std::env::var("CARGO_MANIFEST_DIR")
             .map(|p| std::path::PathBuf::from(p).parent().unwrap().parent().unwrap().to_path_buf())
             .unwrap_or_else(|_| std::path::PathBuf::from("/home/vince/Projects/llama-orch"));
-        
+
         let binary_path = workspace_dir.join("target/debug/queen-rbee");
-        
+
         tracing::info!("🐝 Starting queen-rbee process at {:?}...", binary_path);
         let mut child = tokio::process::Command::new(&binary_path)
             .args(["--port", "8080", "--database"])
             .arg(&db_path)
-            .env("MOCK_SSH", "true")  // TEAM-044: Skip SSH validation for tests
+            .env("MOCK_SSH", "true") // TEAM-044: Skip SSH validation for tests
             .current_dir(&workspace_dir)
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped())
             .spawn()
             .expect("Failed to start queen-rbee");
-        
+
         // TEAM-044: Increased timeout to 60 seconds for first build
         // Wait for server to be ready
         let client = reqwest::Client::new();
@@ -53,12 +53,12 @@ pub async fn given_queen_rbee_running(world: &mut World) {
             }
             sleep(Duration::from_millis(100)).await;
         }
-        
+
         // If we get here, startup failed
         let _ = child.kill().await;
         panic!("queen-rbee failed to start within 60 seconds");
     }
-    
+
     tracing::info!("✅ queen-rbee is running at: {:?}", world.queen_rbee_url);
 }
 
@@ -74,10 +74,12 @@ pub async fn given_registry_empty(world: &mut World) {
 pub async fn given_node_in_registry(world: &mut World, node: String) {
     // TEAM-044: Actually register the node in queen-rbee via HTTP API
     let client = reqwest::Client::new();
-    let url = world.queen_rbee_url.as_ref()
+    let url = world
+        .queen_rbee_url
+        .as_ref()
         .map(|u| format!("{}/v2/registry/beehives/add", u))
         .unwrap_or_else(|| "http://localhost:8080/v2/registry/beehives/add".to_string());
-    
+
     let payload = serde_json::json!({
         "node_name": node,
         "ssh_host": format!("{}.home.arpa", node),
@@ -88,13 +90,14 @@ pub async fn given_node_in_registry(world: &mut World, node: String) {
         "git_branch": "main",
         "install_path": "/home/vince/rbee"
     });
-    
-    let _resp = client.post(&url)
+
+    let _resp = client
+        .post(&url)
         .json(&payload)
         .send()
         .await
         .expect("Failed to register node in queen-rbee");
-    
+
     // Also add to mock world state for compatibility
     world.beehive_nodes.insert(
         node.clone(),
@@ -167,7 +170,7 @@ pub async fn then_ssh_connection_fails(world: &mut World) {
 #[then(expr = "queen-rbee saves node to rbee-hive registry:")]
 pub async fn then_save_node_to_registry(world: &mut World, step: &cucumber::gherkin::Step) {
     let table = step.table.as_ref().expect("Expected a table");
-    
+
     // Parse table and create node entry
     let mut node_data = std::collections::HashMap::new();
     for row in table.rows.iter().skip(1) {
@@ -175,7 +178,7 @@ pub async fn then_save_node_to_registry(world: &mut World, step: &cucumber::gher
             node_data.insert(row[0].clone(), row[1].clone());
         }
     }
-    
+
     let node_name = node_data.get("node_name").unwrap().clone();
     world.beehive_nodes.insert(
         node_name.clone(),
@@ -192,8 +195,12 @@ pub async fn then_save_node_to_registry(world: &mut World, step: &cucumber::gher
             status: node_data.get("status").unwrap().clone(),
         },
     );
-    
-    tracing::info!("✅ Node '{}' saved to registry with {} fields", node_name, table.rows.len() - 1);
+
+    tracing::info!(
+        "✅ Node '{}' saved to registry with {} fields",
+        node_name,
+        table.rows.len() - 1
+    );
 }
 
 #[then(expr = "queen-rbee does NOT save node to registry")]
@@ -206,7 +213,7 @@ pub async fn then_do_not_save_node(world: &mut World) {
 pub async fn then_display_output(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
     let expected_output = docstring.trim();
-    
+
     // Mock: store expected output in world state
     world.last_stdout = expected_output.to_string();
     tracing::info!("✅ Mock display output:\n{}", expected_output);
@@ -216,8 +223,12 @@ pub async fn then_display_output(world: &mut World, step: &cucumber::gherkin::St
 pub async fn then_load_ssh_details(world: &mut World) {
     // Mock: load SSH details from registry
     if let Some(node) = world.beehive_nodes.values().next() {
-        tracing::info!("✅ Loaded SSH details for node '{}': {}@{}", 
-            node.node_name, node.ssh_user, node.ssh_host);
+        tracing::info!(
+            "✅ Loaded SSH details for node '{}': {}@{}",
+            node.node_name,
+            node.ssh_user,
+            node.ssh_host
+        );
     }
 }
 
@@ -225,7 +236,7 @@ pub async fn then_load_ssh_details(world: &mut World) {
 pub async fn then_execute_installation(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
     let ssh_commands = docstring.trim();
-    
+
     // Mock: simulate SSH installation
     tracing::info!("✅ Mock SSH installation executed:\n{}", ssh_commands);
     world.last_exit_code = Some(0);

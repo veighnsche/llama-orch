@@ -122,13 +122,15 @@ async fn handle_add_node(
         .context("Failed to send request to queen-rbee")?;
 
     let status = response.status();
-    let result: AddNodeResponse = response
-        .json()
-        .await
-        .context("Failed to parse response from queen-rbee")?;
+    let result: AddNodeResponse =
+        response.json().await.context("Failed to parse response from queen-rbee")?;
 
     if status.is_success() && result.success {
-        println!("{} ✅ SSH connection successful! Node '{}' saved to registry", "[queen-rbee]".cyan(), name);
+        println!(
+            "{} ✅ SSH connection successful! Node '{}' saved to registry",
+            "[queen-rbee]".cyan(),
+            name
+        );
         Ok(())
     } else {
         println!("{} ❌ SSH connection failed: {}", "[queen-rbee]".cyan(), result.message);
@@ -140,16 +142,10 @@ async fn handle_list_nodes() -> Result<()> {
     let client = reqwest::Client::new();
     let url = format!("{}/v2/registry/beehives/list", QUEEN_RBEE_URL);
 
-    let response = client
-        .get(&url)
-        .send()
-        .await
-        .context("Failed to send request to queen-rbee")?;
+    let response = client.get(&url).send().await.context("Failed to send request to queen-rbee")?;
 
-    let result: ListNodesResponse = response
-        .json()
-        .await
-        .context("Failed to parse response from queen-rbee")?;
+    let result: ListNodesResponse =
+        response.json().await.context("Failed to parse response from queen-rbee")?;
 
     if result.nodes.is_empty() {
         println!("{}", "No nodes registered".yellow());
@@ -167,11 +163,14 @@ async fn handle_list_nodes() -> Result<()> {
         }
         println!("  Git: {} ({})", node.git_repo_url, node.git_branch);
         println!("  Install: {}", node.install_path);
-        println!("  Status: {}", match node.status.as_str() {
-            "reachable" => node.status.green(),
-            "offline" => node.status.red(),
-            _ => node.status.yellow(),
-        });
+        println!(
+            "  Status: {}",
+            match node.status.as_str() {
+                "reachable" => node.status.green(),
+                "offline" => node.status.red(),
+                _ => node.status.yellow(),
+            }
+        );
         if let Some(ts) = node.last_connected_unix {
             let dt = chrono::DateTime::from_timestamp(ts, 0)
                 .map(|dt| dt.format("%Y-%m-%d %H:%M:%S").to_string())
@@ -197,10 +196,8 @@ async fn handle_remove_node(name: String) -> Result<()> {
         .await
         .context("Failed to send request to queen-rbee")?;
 
-    let result: RemoveNodeResponse = response
-        .json()
-        .await
-        .context("Failed to parse response from queen-rbee")?;
+    let result: RemoveNodeResponse =
+        response.json().await.context("Failed to parse response from queen-rbee")?;
 
     if result.success {
         println!("{} ✅ Node '{}' removed successfully", "[queen-rbee]".cyan(), name);
@@ -218,16 +215,11 @@ async fn handle_install(node: String) -> Result<()> {
     let client = reqwest::Client::new();
     let url = format!("{}/v2/registry/beehives/list", QUEEN_RBEE_URL);
 
-    let response = client
-        .get(&url)
-        .send()
-        .await
-        .context("Failed to get node list from queen-rbee")?;
+    let response =
+        client.get(&url).send().await.context("Failed to get node list from queen-rbee")?;
 
-    let result: ListNodesResponse = response
-        .json()
-        .await
-        .context("Failed to parse response from queen-rbee")?;
+    let result: ListNodesResponse =
+        response.json().await.context("Failed to parse response from queen-rbee")?;
 
     let node_info = result
         .nodes
@@ -235,7 +227,12 @@ async fn handle_install(node: String) -> Result<()> {
         .find(|n| n.node_name == node)
         .context(format!("Node '{}' not found in registry", node))?;
 
-    println!("{} 📡 Connecting to {}@{}", "[queen-rbee]".cyan(), node_info.ssh_user, node_info.ssh_host);
+    println!(
+        "{} 📡 Connecting to {}@{}",
+        "[queen-rbee]".cyan(),
+        node_info.ssh_user,
+        node_info.ssh_host
+    );
 
     // Execute installation commands via SSH
     let install_script = format!(

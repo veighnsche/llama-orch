@@ -88,7 +88,7 @@ mod tests {
     #[tokio::test]
     async fn test_timeout_with_idle_workers() {
         let registry = Arc::new(WorkerRegistry::new());
-        
+
         let worker = WorkerInfo {
             id: "worker-1".to_string(),
             url: "http://localhost:8081".to_string(),
@@ -100,7 +100,7 @@ mod tests {
             slots_total: 1,
             slots_available: 1,
         };
-        
+
         registry.register(worker).await;
         let idle_workers = registry.get_idle_workers().await;
         assert_eq!(idle_workers.len(), 1);
@@ -110,7 +110,7 @@ mod tests {
     async fn test_timeout_duration_check() {
         let now = SystemTime::now();
         let past = now - Duration::from_secs(400); // 6 minutes 40 seconds ago
-        
+
         let duration = now.duration_since(past).unwrap();
         assert!(duration > Duration::from_secs(300)); // More than 5 minutes
     }
@@ -119,7 +119,7 @@ mod tests {
     async fn test_timeout_duration_not_exceeded() {
         let now = SystemTime::now();
         let recent = now - Duration::from_secs(200); // 3 minutes 20 seconds ago
-        
+
         let duration = now.duration_since(recent).unwrap();
         assert!(duration < Duration::from_secs(300)); // Less than 5 minutes
     }

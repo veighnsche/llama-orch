@@ -2,8 +2,8 @@
 // Created by: TEAM-040
 // Modified by: TEAM-043 (added real command execution)
 
-use cucumber::{given, when, then};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 
 #[given(expr = "the following config files exist:")]
 pub async fn given_config_files_exist(world: &mut World, step: &cucumber::gherkin::Step) {
@@ -21,27 +21,27 @@ pub async fn given_config_contains(world: &mut World, step: &cucumber::gherkin::
 pub async fn when_i_run_command_string(world: &mut World, command: String) {
     // TEAM-044: Execute the command for real, not just store it
     tracing::info!("🚀 Executing command: {}", command);
-    
+
     // Parse command line into parts
     let parts: Vec<&str> = command.split_whitespace().collect();
     if parts.is_empty() {
         panic!("Empty command");
     }
-    
+
     // Extract binary name and args
     let binary = parts[0];
     let args: Vec<&str> = parts[1..].to_vec();
-    
+
     // Map command names to actual binary names
     let actual_binary = if binary == "rbee-keeper" { "rbee" } else { binary };
-    
+
     // Use pre-built binaries
     let workspace_dir = std::env::var("CARGO_MANIFEST_DIR")
         .map(|p| std::path::PathBuf::from(p).parent().unwrap().parent().unwrap().to_path_buf())
         .unwrap_or_else(|_| std::path::PathBuf::from("/home/vince/Projects/llama-orch"));
-    
+
     let binary_path = workspace_dir.join("target/debug").join(actual_binary);
-    
+
     // Execute command
     let output = tokio::process::Command::new(&binary_path)
         .args(&args)
@@ -49,12 +49,12 @@ pub async fn when_i_run_command_string(world: &mut World, command: String) {
         .output()
         .await
         .expect("Failed to execute command");
-    
+
     world.last_command = Some(command.clone());
     world.last_exit_code = output.status.code();
     world.last_stdout = String::from_utf8_lossy(&output.stdout).to_string();
     world.last_stderr = String::from_utf8_lossy(&output.stderr).to_string();
-    
+
     tracing::info!("✅ Command completed with exit code: {:?}", world.last_exit_code);
     if !world.last_stdout.is_empty() {
         tracing::info!("stdout: {}", world.last_stdout);
@@ -69,33 +69,34 @@ pub async fn when_i_run_command_string(world: &mut World, command: String) {
 pub async fn when_i_run_command_docstring(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
     let command_line = docstring.trim();
-    
+
     tracing::info!("🚀 Executing command: {}", command_line);
-    
+
     // Parse command line into parts
     let parts: Vec<&str> = command_line.split_whitespace().collect();
     if parts.is_empty() {
         panic!("Empty command");
     }
-    
+
     // Extract binary name and args
     let binary = parts[0];
-    let args: Vec<&str> = parts[1..].iter()
+    let args: Vec<&str> = parts[1..]
+        .iter()
         .filter(|s| !s.starts_with('\\')) // Filter out line continuations
         .copied()
         .collect();
-    
+
     // TEAM-044: Map command names to actual binary names
     // rbee-keeper -> rbee (the actual binary name)
     let actual_binary = if binary == "rbee-keeper" { "rbee" } else { binary };
-    
+
     // TEAM-044: Use pre-built binaries instead of cargo run to avoid compilation timeouts
     let workspace_dir = std::env::var("CARGO_MANIFEST_DIR")
         .map(|p| std::path::PathBuf::from(p).parent().unwrap().parent().unwrap().to_path_buf())
         .unwrap_or_else(|_| std::path::PathBuf::from("/home/vince/Projects/llama-orch"));
-    
+
     let binary_path = workspace_dir.join("target/debug").join(actual_binary);
-    
+
     // Execute command using pre-built binary
     let output = tokio::process::Command::new(&binary_path)
         .args(&args)
@@ -103,12 +104,12 @@ pub async fn when_i_run_command_docstring(world: &mut World, step: &cucumber::gh
         .output()
         .await
         .expect("Failed to execute command");
-    
+
     world.last_command = Some(command_line.to_string());
     world.last_exit_code = output.status.code();
     world.last_stdout = String::from_utf8_lossy(&output.stdout).to_string();
     world.last_stderr = String::from_utf8_lossy(&output.stderr).to_string();
-    
+
     tracing::info!("✅ Command completed with exit code: {:?}", world.last_exit_code);
     if !world.last_stdout.is_empty() {
         tracing::info!("stdout: {}", world.last_stdout);

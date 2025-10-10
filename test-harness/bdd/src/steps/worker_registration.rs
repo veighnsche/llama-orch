@@ -1,8 +1,8 @@
 // Worker registration step definitions
 // Created by: TEAM-040
 
-use cucumber::{when, then};
 use crate::steps::world::World;
+use cucumber::{then, when};
 
 #[when(expr = "rbee-hive registers the worker")]
 pub async fn when_register_worker(world: &mut World) {

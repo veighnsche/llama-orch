@@ -19,8 +19,8 @@ mod monitor;
 mod timeout;
 
 // TEAM-032: Use library modules for testing
-use rbee_hive::{provisioner, registry};
 use anyhow::Result;
+use rbee_hive::{provisioner, registry};
 
 #[tokio::main]
 async fn main() -> Result<()> {

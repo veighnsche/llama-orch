@@ -59,9 +59,7 @@ pub struct WorkerRegistry {
 impl WorkerRegistry {
     /// Create new empty registry
     pub fn new() -> Self {
-        Self {
-            workers: Arc::new(RwLock::new(HashMap::new())),
-        }
+        Self { workers: Arc::new(RwLock::new(HashMap::new())) }
     }
 
     /// Register a new worker
@@ -100,40 +98,26 @@ impl WorkerRegistry {
     /// Find idle workers for a specific model
     pub async fn find_idle_worker(&self, model_ref: &str) -> Option<WorkerInfo> {
         let workers = self.workers.read().await;
-        workers
-            .values()
-            .find(|w| w.model_ref == model_ref && w.state == WorkerState::Idle)
-            .cloned()
+        workers.values().find(|w| w.model_ref == model_ref && w.state == WorkerState::Idle).cloned()
     }
 
     /// Get idle workers (for timeout enforcement)
     pub async fn get_idle_workers(&self) -> Vec<WorkerInfo> {
         let workers = self.workers.read().await;
-        workers
-            .values()
-            .filter(|w| w.state == WorkerState::Idle)
-            .cloned()
-            .collect()
+        workers.values().filter(|w| w.state == WorkerState::Idle).cloned().collect()
     }
 
     /// Find worker by node and model (TEAM-030: For ephemeral mode compatibility)
-    /// 
+    ///
     /// # Arguments
     /// * `node` - Node identifier (not used in current implementation, for future multi-node)
     /// * `model_ref` - Model reference to match
-    /// 
+    ///
     /// # Returns
     /// First idle worker with matching model, if any
-    pub async fn find_by_node_and_model(
-        &self,
-        _node: &str,
-        model_ref: &str,
-    ) -> Option<WorkerInfo> {
+    pub async fn find_by_node_and_model(&self, _node: &str, model_ref: &str) -> Option<WorkerInfo> {
         let workers = self.workers.read().await;
-        workers
-            .values()
-            .find(|w| w.model_ref == model_ref && w.state == WorkerState::Idle)
-            .cloned()
+        workers.values().find(|w| w.model_ref == model_ref && w.state == WorkerState::Idle).cloned()
     }
 
     /// Clear all workers (TEAM-030: For shutdown cleanup)

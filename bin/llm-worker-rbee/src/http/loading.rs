@@ -34,11 +34,7 @@ use crate::http::backend::InferenceBackend;
 pub enum LoadingEvent {
     /// Model is loading layers into VRAM
     #[serde(rename = "loading_to_vram")]
-    LoadingToVram {
-        layers_loaded: u32,
-        layers_total: u32,
-        vram_mb: u64,
-    },
+    LoadingToVram { layers_loaded: u32, layers_total: u32, vram_mb: u64 },
     /// Model is ready for inference
     #[serde(rename = "ready")]
     Ready,
@@ -47,9 +43,9 @@ pub enum LoadingEvent {
 /// Stream state machine (mistral.rs pattern)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum LoadingState {
-    Running,      // Actively streaming
-    SendingDone,  // About to send [DONE]
-    Done,         // Completed
+    Running,     // Actively streaming
+    SendingDone, // About to send [DONE]
+    Done,        // Completed
 }
 
 /// Handle GET /v1/loading/progress
@@ -79,10 +75,7 @@ pub async fn handle_loading_progress<B: InferenceBackend>(
         .lock()
         .await
         .loading_progress_channel()
-        .ok_or((
-            StatusCode::SERVICE_UNAVAILABLE,
-            "Model not loading".to_string(),
-        ))?;
+        .ok_or((StatusCode::SERVICE_UNAVAILABLE, "Model not loading".to_string()))?;
 
     // Create SSE stream with industry-standard pattern
     let stream = async_stream::stream! {
@@ -133,11 +126,8 @@ mod tests {
 
     #[test]
     fn test_loading_event_serialization() {
-        let event = LoadingEvent::LoadingToVram {
-            layers_loaded: 12,
-            layers_total: 32,
-            vram_mb: 2048,
-        };
+        let event =
+            LoadingEvent::LoadingToVram { layers_loaded: 12, layers_total: 32, vram_mb: 2048 };
         let json = serde_json::to_string(&event).unwrap();
         assert!(json.contains("\"stage\":\"loading_to_vram\""));
         assert!(json.contains("\"layers_loaded\":12"));
@@ -157,22 +147,14 @@ mod tests {
         let (tx, mut rx) = broadcast::channel::<LoadingEvent>(100);
 
         // Send loading event
-        tx.send(LoadingEvent::LoadingToVram {
-            layers_loaded: 10,
-            layers_total: 32,
-            vram_mb: 1024,
-        })
-        .unwrap();
+        tx.send(LoadingEvent::LoadingToVram { layers_loaded: 10, layers_total: 32, vram_mb: 1024 })
+            .unwrap();
 
         // Receive event
         let event = rx.recv().await.unwrap();
         assert!(matches!(
             event,
-            LoadingEvent::LoadingToVram {
-                layers_loaded: 10,
-                layers_total: 32,
-                vram_mb: 1024
-            }
+            LoadingEvent::LoadingToVram { layers_loaded: 10, layers_total: 32, vram_mb: 1024 }
         ));
     }
 

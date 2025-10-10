@@ -2,8 +2,8 @@
 // Created by: TEAM-040
 // Modified by: TEAM-042 (implemented step definitions with mock behavior)
 
-use cucumber::{given, when, then};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 
 #[given(expr = "no workers are registered for model {string}")]
 pub async fn given_no_workers_for_model(world: &mut World, model_ref: String) {
@@ -30,11 +30,7 @@ pub async fn given_node_ram(world: &mut World, node: String, ram_mb: usize) {
 
 #[given(expr = "node {string} has Metal backend available")]
 pub async fn given_node_metal_backend(world: &mut World, node: String) {
-    world
-        .node_backends
-        .entry(node.clone())
-        .or_insert_with(Vec::new)
-        .push("metal".to_string());
+    world.node_backends.entry(node.clone()).or_insert_with(Vec::new).push("metal".to_string());
     tracing::debug!("Node {} has Metal backend", node);
 }
 
@@ -75,7 +71,8 @@ pub async fn then_pool_preflight_check(world: &mut World, url: String) {
             "status": "alive",
             "version": "0.1.0",
             "api_version": "v1"
-        }).to_string(),
+        })
+        .to_string(),
     });
     tracing::info!("✅ Mock preflight check at: {}", url);
 }
@@ -324,7 +321,11 @@ pub async fn then_query_beehive_registry(world: &mut World, node: String) {
 #[then(expr = "the registry returns SSH details for node {string}")]
 pub async fn then_registry_returns_ssh_details(world: &mut World, node: String) {
     if let Some(node_info) = world.beehive_nodes.get(&node) {
-        tracing::info!("✅ Registry returned SSH details: {}@{}", node_info.ssh_user, node_info.ssh_host);
+        tracing::info!(
+            "✅ Registry returned SSH details: {}@{}",
+            node_info.ssh_user,
+            node_info.ssh_host
+        );
     }
 }
 

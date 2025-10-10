@@ -17,8 +17,8 @@ use axum::{
     response::{sse::Event, Sse},
     Json,
 };
-use futures::stream::{self, Stream, StreamExt};
 use futures::future;
+use futures::stream::{self, Stream, StreamExt};
 use observability_narration_core::NarrationFields;
 use std::{convert::Infallible, sync::Arc};
 use tokio::sync::Mutex;
@@ -40,7 +40,7 @@ pub async fn handle_execute<B: InferenceBackend>(
 ) -> Result<Sse<EventStream>, ValidationErrorResponse> {
     // TEAM-039: Create narration channel for this request
     let narration_rx = narration_channel::create_channel();
-    
+
     // Validate request
     if let Err(validation_errors) = req.validate_all() {
         warn!(job_id = %req.job_id, "Validation failed");
@@ -109,7 +109,7 @@ pub async fn handle_execute<B: InferenceBackend>(
             let stream: EventStream = Box::new(
                 stream::iter(events)
                     .map(|event| Ok(Event::default().json_data(&event).unwrap()))
-                    .chain(stream::once(future::ready(Ok(Event::default().data("[DONE]")))))
+                    .chain(stream::once(future::ready(Ok(Event::default().data("[DONE]"))))),
             );
             return Ok(Sse::new(stream));
         }
@@ -138,10 +138,10 @@ pub async fn handle_execute<B: InferenceBackend>(
     // TEAM-039: Merge narration events with token events
     // Convert narration receiver to stream
     let narration_stream = UnboundedReceiverStream::new(narration_rx);
-    
+
     // Convert token events to stream
     let token_stream = stream::iter(events);
-    
+
     // Interleave narration and token events
     // Note: Since inference is synchronous, narration events will be buffered
     // and emitted before token events. For true real-time streaming, we'd need
@@ -149,10 +149,10 @@ pub async fn handle_execute<B: InferenceBackend>(
     let merged_stream = narration_stream
         .chain(token_stream)
         .map(|event| Ok(Event::default().json_data(&event).unwrap()));
-    
+
     // TEAM-035: Add [DONE] marker after all events (OpenAI compatible)
     let stream_with_done: EventStream = Box::new(
-        merged_stream.chain(stream::once(future::ready(Ok(Event::default().data("[DONE]")))))
+        merged_stream.chain(stream::once(future::ready(Ok(Event::default().data("[DONE]"))))),
     );
 
     // TEAM-039: Clean up narration channel when stream is dropped

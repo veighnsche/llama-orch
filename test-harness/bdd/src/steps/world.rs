@@ -9,119 +9,108 @@ pub struct World {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Topology & Configuration
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
     /// Node topology: node_name -> (hostname, components, capabilities)
     pub topology: HashMap<String, NodeInfo>,
-    
+
     /// Current node we're operating from
     pub current_node: Option<String>,
-    
+
     /// queen-rbee URL
     pub queen_rbee_url: Option<String>,
-    
+
     /// Model catalog path
     pub model_catalog_path: Option<PathBuf>,
-    
+
     /// rbee-hive registry database path
     pub registry_db_path: Option<String>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // rbee-hive Registry State (TEAM-041)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
     /// Registered rbee-hive nodes: node_name -> BeehiveNode
     pub beehive_nodes: HashMap<String, BeehiveNode>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Worker Registry State
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
     /// Registered workers: worker_id -> WorkerInfo
     pub workers: HashMap<String, WorkerInfo>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Model Catalog State
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
     /// Model catalog entries: model_ref -> ModelCatalogEntry
     pub model_catalog: HashMap<String, ModelCatalogEntry>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Node Resources
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
     /// Available RAM per node: node_name -> MB
     pub node_ram: HashMap<String, usize>,
-    
+
     /// Available backends per node: node_name -> Vec<backend>
     pub node_backends: HashMap<String, Vec<String>>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Command Execution State
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
     /// Last command executed
     pub last_command: Option<String>,
-    
+
     /// Last command exit code
     pub last_exit_code: Option<i32>,
-    
+
     /// Last command stdout
     pub last_stdout: String,
-    
+
     /// Last command stderr
     pub last_stderr: String,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // HTTP Request/Response State
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
     /// Last HTTP request sent
     pub last_http_request: Option<HttpRequest>,
-    
+
     /// Last HTTP response received
     pub last_http_response: Option<HttpResponse>,
-    
+
     /// SSE events received
     pub sse_events: Vec<SseEvent>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Inference State
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
     /// Tokens generated during inference
     pub tokens_generated: Vec<String>,
-    
+
     /// Narration messages received
     pub narration_messages: Vec<NarrationMessage>,
-    
+
     /// Inference metrics
     pub inference_metrics: Option<InferenceMetrics>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Error State
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
     /// Last error received
     pub last_error: Option<ErrorResponse>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Temporary Resources
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
     /// Temporary directory for test artifacts
     pub temp_dir: Option<tempfile::TempDir>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Process Management (TEAM-043)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
     /// Running queen-rbee process
     pub queen_rbee_process: Option<tokio::process::Child>,
-    
+
     /// Running rbee-hive processes
     pub rbee_hive_processes: Vec<tokio::process::Child>,
-    
+
     /// Running worker processes
     pub worker_processes: Vec<tokio::process::Child>,
 }
@@ -251,15 +240,15 @@ impl Drop for World {
             let _ = proc.start_kill();
             tracing::debug!("Killed queen-rbee process");
         }
-        
+
         for mut proc in self.rbee_hive_processes.drain(..) {
             let _ = proc.start_kill();
         }
-        
+
         for mut proc in self.worker_processes.drain(..) {
             let _ = proc.start_kill();
         }
-        
+
         tracing::debug!("World dropped, cleaning up resources");
     }
 }

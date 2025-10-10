@@ -1,30 +1,23 @@
 // Background step definitions
 // Created by: TEAM-040
 
+use crate::steps::world::{NodeInfo, World};
 use cucumber::given;
-use crate::steps::world::{World, NodeInfo};
 
 #[given(expr = "the following topology:")]
 pub async fn given_topology(world: &mut World, step: &cucumber::gherkin::Step) {
     let table = step.table.as_ref().expect("Expected a data table");
-    
+
     for row in table.rows.iter().skip(1) {
         // Skip header row
         let node = row[0].clone();
         let hostname = row[1].clone();
         let components = row[2].split(',').map(|s| s.trim().to_string()).collect();
         let capabilities = row[3].split(',').map(|s| s.trim().to_string()).collect();
-        
-        world.topology.insert(
-            node.clone(),
-            NodeInfo {
-                hostname,
-                components,
-                capabilities,
-            },
-        );
+
+        world.topology.insert(node.clone(), NodeInfo { hostname, components, capabilities });
     }
-    
+
     tracing::debug!("Topology configured with {} nodes", world.topology.len());
 }
 

@@ -8,7 +8,6 @@
 //! Implemented by: TEAM-033
 //! SSE streaming by: TEAM-034
 
-use rbee_hive::download_tracker::{DownloadEvent, DownloadState};
 use crate::http::routes::AppState;
 use axum::{
     extract::{Query, State},
@@ -16,6 +15,7 @@ use axum::{
     response::sse::{Event, KeepAlive, Sse},
     Json,
 };
+use rbee_hive::download_tracker::{DownloadEvent, DownloadState};
 use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
 use std::time::Duration;
@@ -59,10 +59,10 @@ pub async fn handle_download_model(
             format!("Invalid model reference format: {}", request.model_ref),
         ));
     }
-    
+
     let provider = parts[0];
     let reference = parts[1];
-    
+
     // TEAM-033: Phase 3.1 - Check model catalog (SQLite)
     info!(provider = %provider, reference = %reference, "Checking model catalog");
     match state.model_catalog.find_model(reference, provider).await {
@@ -78,38 +78,26 @@ pub async fn handle_download_model(
         }
         Err(e) => {
             error!(error = %e, "Failed to query model catalog");
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Catalog error: {}", e),
-            ));
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, format!("Catalog error: {}", e)));
         }
     }
-    
+
     // TEAM-034: Start download tracking
     let download_id = state.download_tracker.start_download().await;
     info!(download_id = %download_id, "Download tracking started");
-    
+
     // Spawn download task with progress updates
     let state_clone = state.clone();
     let reference = reference.to_string();
     let provider = provider.to_string();
     let download_id_clone = download_id.clone();
-    
+
     tokio::spawn(async move {
-        download_with_progress(
-            state_clone,
-            &reference,
-            &provider,
-            &download_id_clone,
-        )
-        .await
+        download_with_progress(state_clone, &reference, &provider, &download_id_clone).await
     });
-    
+
     // Return immediately with download ID
-    Ok(Json(DownloadModelResponse {
-        download_id,
-        local_path: None,
-    }))
+    Ok(Json(DownloadModelResponse { download_id, local_path: None }))
 }
 
 /// Download model with progress tracking
@@ -126,7 +114,7 @@ async fn download_with_progress(
     match state.provisioner.download_model(reference, provider).await {
         Ok(local_path) => {
             info!(local_path = ?local_path, "Model downloaded successfully");
-            
+
             // Send complete event
             let _ = state
                 .download_tracker
@@ -137,43 +125,35 @@ async fn download_with_progress(
                     },
                 )
                 .await;
-            
+
             // Register in catalog
             let model_info = model_catalog::ModelInfo {
                 reference: reference.to_string(),
                 provider: provider.to_string(),
                 local_path: local_path.to_string_lossy().to_string(),
-                size_bytes: state
-                    .provisioner
-                    .get_model_size(&local_path)
-                    .unwrap_or(0),
+                size_bytes: state.provisioner.get_model_size(&local_path).unwrap_or(0),
                 downloaded_at: std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .unwrap()
                     .as_secs() as i64,
             };
-            
+
             if let Err(e) = state.model_catalog.register_model(&model_info).await {
                 error!(error = %e, "Failed to register model in catalog");
             }
-            
+
             // Cleanup tracker
             state.download_tracker.complete_download(download_id).await;
         }
         Err(e) => {
             error!(error = %e, "Model download failed");
-            
+
             // Send error event
             let _ = state
                 .download_tracker
-                .send_progress(
-                    download_id,
-                    DownloadEvent::Error {
-                        message: e.to_string(),
-                    },
-                )
+                .send_progress(download_id, DownloadEvent::Error { message: e.to_string() })
                 .await;
-            
+
             // Cleanup tracker
             state.download_tracker.complete_download(download_id).await;
         }
@@ -203,10 +183,7 @@ pub async fn handle_download_progress(
         .download_tracker
         .subscribe(&params.id)
         .await
-        .ok_or((
-            StatusCode::NOT_FOUND,
-            format!("Download {} not found", params.id),
-        ))?;
+        .ok_or((StatusCode::NOT_FOUND, format!("Download {} not found", params.id)))?;
 
     // Create SSE stream with industry-standard pattern (mistral.rs)
     let stream = async_stream::stream! {
@@ -279,10 +256,8 @@ mod tests {
 
     #[test]
     fn test_download_model_response_serialization_no_path() {
-        let response = DownloadModelResponse {
-            download_id: "download-123".to_string(),
-            local_path: None,
-        };
+        let response =
+            DownloadModelResponse { download_id: "download-123".to_string(), local_path: None };
 
         let json = serde_json::to_value(&response).unwrap();
         assert_eq!(json["download_id"], "download-123");

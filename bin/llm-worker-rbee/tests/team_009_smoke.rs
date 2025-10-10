@@ -78,10 +78,10 @@ fn test_backend_rejects_gguf() {
         let err_msg = e.to_string();
         // TEAM-033: Accept file-not-found errors for non-existent paths
         assert!(
-            err_msg.contains("GGUF") 
-            || err_msg.contains("SafeTensors")
-            || err_msg.contains("config.json")
-            || err_msg.contains("Failed to open"),
+            err_msg.contains("GGUF")
+                || err_msg.contains("SafeTensors")
+                || err_msg.contains("config.json")
+                || err_msg.contains("Failed to open"),
             "Error should indicate rejection or file not found: {}",
             err_msg
         );

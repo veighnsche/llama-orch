@@ -1,8 +1,8 @@
 // Worker preflight step definitions
 // Created by: TEAM-040
 
-use cucumber::{given, when, then};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 
 #[given(expr = "the model size is {int} MB")]
 pub async fn given_model_size_mb(world: &mut World, size_mb: usize) {

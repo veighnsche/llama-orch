@@ -1,7 +1,7 @@
 //! HTTP server initialization and lifecycle management
 //!
 //! Mirrors the pattern from llm-worker-rbee/src/http/server.rs
-//! 
+//!
 //! Created by: TEAM-026
 
 use axum::Router;
@@ -15,10 +15,7 @@ use tracing::{error, info, warn};
 pub enum ServerError {
     /// Failed to bind to the specified address
     #[error("Failed to bind to {addr}: {source}")]
-    BindFailed {
-        addr: SocketAddr,
-        source: std::io::Error,
-    },
+    BindFailed { addr: SocketAddr, source: std::io::Error },
 
     /// Server runtime error
     #[error("Server runtime error: {0}")]
@@ -60,11 +57,7 @@ impl HttpServer {
             "rbee-hive HTTP server initialized"
         );
 
-        Ok(Self {
-            addr,
-            router,
-            shutdown_tx,
-        })
+        Ok(Self { addr, router, shutdown_tx })
     }
 
     /// Run server until shutdown signal received
@@ -79,19 +72,14 @@ impl HttpServer {
     /// * `Ok(())` - Server shut down gracefully
     /// * `Err(ServerError)` - Server encountered an error
     pub async fn run(self) -> Result<(), ServerError> {
-        let listener = tokio::net::TcpListener::bind(self.addr)
-            .await
-            .map_err(|source| {
-                error!(
-                    addr = %self.addr,
-                    error = %source,
-                    "Failed to bind to address"
-                );
-                ServerError::BindFailed {
-                    addr: self.addr,
-                    source,
-                }
-            })?;
+        let listener = tokio::net::TcpListener::bind(self.addr).await.map_err(|source| {
+            error!(
+                addr = %self.addr,
+                error = %source,
+                "Failed to bind to address"
+            );
+            ServerError::BindFailed { addr: self.addr, source }
+        })?;
 
         info!(
             addr = %self.addr,
@@ -162,9 +150,7 @@ mod tests {
     }
 
     async fn test_handler() -> Json<TestResponse> {
-        Json(TestResponse {
-            status: "ok".to_string(),
-        })
+        Json(TestResponse { status: "ok".to_string() })
     }
 
     #[tokio::test]
@@ -181,10 +167,7 @@ mod tests {
         let addr: SocketAddr = "127.0.0.1:8080".parse().unwrap();
         let io_error = std::io::Error::new(std::io::ErrorKind::AddrInUse, "port in use");
 
-        let error = ServerError::BindFailed {
-            addr,
-            source: io_error,
-        };
+        let error = ServerError::BindFailed { addr, source: io_error };
 
         let error_msg = error.to_string();
         assert!(error_msg.contains("127.0.0.1:8080"));

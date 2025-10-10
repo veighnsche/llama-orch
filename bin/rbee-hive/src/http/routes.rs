@@ -13,7 +13,6 @@
 //! Created by: TEAM-026
 //! Modified by: TEAM-029, TEAM-030, TEAM-034
 
-use rbee_hive::download_tracker::DownloadTracker;
 use crate::http::{health, models, workers};
 use crate::provisioner::ModelProvisioner;
 use crate::registry::WorkerRegistry;
@@ -22,6 +21,7 @@ use axum::{
     Router,
 };
 use model_catalog::ModelCatalog;
+use rbee_hive::download_tracker::DownloadTracker;
 use std::sync::Arc;
 
 /// Shared application state
@@ -51,12 +51,7 @@ pub fn create_router(
     provisioner: Arc<ModelProvisioner>,
     download_tracker: Arc<DownloadTracker>,
 ) -> Router {
-    let state = AppState {
-        registry,
-        model_catalog,
-        provisioner,
-        download_tracker,
-    };
+    let state = AppState { registry, model_catalog, provisioner, download_tracker };
 
     Router::new()
         // Health endpoint
@@ -67,10 +62,7 @@ pub fn create_router(
         .route("/v1/workers/list", get(workers::handle_list_workers))
         // Model management
         .route("/v1/models/download", post(models::handle_download_model))
-        .route(
-            "/v1/models/download/progress",
-            get(models::handle_download_progress),
-        )
+        .route("/v1/models/download/progress", get(models::handle_download_progress))
         .with_state(state)
 }
 
@@ -80,9 +72,9 @@ mod tests {
 
     #[test]
     fn test_router_creation() {
-        use rbee_hive::download_tracker::DownloadTracker;
         use crate::provisioner::ModelProvisioner;
         use model_catalog::ModelCatalog;
+        use rbee_hive::download_tracker::DownloadTracker;
         use std::path::PathBuf;
 
         let registry = Arc::new(WorkerRegistry::new());

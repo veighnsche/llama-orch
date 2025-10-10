@@ -6,14 +6,14 @@
 // TEAM-043: Implemented dual registry system (beehive + worker)
 
 mod beehive_registry;
-mod worker_registry;
-mod ssh;
 mod http;
+mod ssh;
+mod worker_registry;
 
 use anyhow::Result;
 use clap::Parser;
 use std::sync::Arc;
-use tracing::{info, error};
+use tracing::{error, info};
 
 #[derive(Parser, Debug)]
 #[command(name = "queen-rbee")]
@@ -36,11 +36,7 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<()> {
     // Initialize tracing
-    tracing_subscriber::fmt()
-        .with_target(false)
-        .with_thread_ids(true)
-        .with_level(true)
-        .init();
+    tracing_subscriber::fmt().with_target(false).with_thread_ids(true).with_level(true).init();
 
     let args = Args::parse();
 
@@ -51,7 +47,7 @@ async fn main() -> Result<()> {
     let db_path = args.database.map(std::path::PathBuf::from);
     let beehive_registry = beehive_registry::BeehiveRegistry::new(db_path).await?;
     info!("✅ Beehive registry initialized (SQLite)");
-    
+
     let worker_registry = worker_registry::WorkerRegistry::new();
     info!("✅ Worker registry initialized (in-memory)");
 
@@ -71,7 +67,7 @@ async fn main() -> Result<()> {
 
     // TEAM-030: Setup shutdown handler
     let server = axum::serve(listener, app);
-    
+
     tokio::select! {
         result = server => {
             if let Err(e) = result {
@@ -123,9 +119,12 @@ mod tests {
     fn test_args_all_options() {
         let args = Args::parse_from(&[
             "queen-rbee",
-            "--port", "9090",
-            "--database", "custom.db",
-            "--config", "/path/to/config.toml"
+            "--port",
+            "9090",
+            "--database",
+            "custom.db",
+            "--config",
+            "/path/to/config.toml",
         ]);
         assert_eq!(args.port, 9090);
         assert_eq!(args.database, "custom.db");
@@ -136,9 +135,12 @@ mod tests {
     fn test_args_short_flags() {
         let args = Args::parse_from(&[
             "queen-rbee",
-            "-p", "9090",
-            "-d", "custom.db",
-            "-c", "/path/to/config.toml"
+            "-p",
+            "9090",
+            "-d",
+            "custom.db",
+            "-c",
+            "/path/to/config.toml",
         ]);
         assert_eq!(args.port, 9090);
         assert_eq!(args.database, "custom.db");

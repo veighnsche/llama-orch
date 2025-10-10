@@ -44,8 +44,7 @@ impl BeehiveRegistry {
         }
 
         // Open database (creates if not exists)
-        let conn = rusqlite::Connection::open(&db_path)
-            .context("Failed to open beehives.db")?;
+        let conn = rusqlite::Connection::open(&db_path).context("Failed to open beehives.db")?;
 
         // Create table if not exists
         conn.execute(
@@ -66,10 +65,7 @@ impl BeehiveRegistry {
             [],
         )?;
 
-        Ok(Self {
-            db_path,
-            conn: tokio::sync::Mutex::new(conn),
-        })
+        Ok(Self { db_path, conn: tokio::sync::Mutex::new(conn) })
     }
 
     /// Add or update a node in the registry
@@ -104,23 +100,25 @@ impl BeehiveRegistry {
         let mut stmt = conn.prepare(
             "SELECT node_name, ssh_host, ssh_port, ssh_user, ssh_key_path, \
              git_repo_url, git_branch, install_path, last_connected_unix, status \
-             FROM beehives WHERE node_name = ?1"
+             FROM beehives WHERE node_name = ?1",
         )?;
 
-        let node = stmt.query_row([node_name], |row| {
-            Ok(BeehiveNode {
-                node_name: row.get(0)?,
-                ssh_host: row.get(1)?,
-                ssh_port: row.get(2)?,
-                ssh_user: row.get(3)?,
-                ssh_key_path: row.get(4)?,
-                git_repo_url: row.get(5)?,
-                git_branch: row.get(6)?,
-                install_path: row.get(7)?,
-                last_connected_unix: row.get(8)?,
-                status: row.get(9)?,
+        let node = stmt
+            .query_row([node_name], |row| {
+                Ok(BeehiveNode {
+                    node_name: row.get(0)?,
+                    ssh_host: row.get(1)?,
+                    ssh_port: row.get(2)?,
+                    ssh_user: row.get(3)?,
+                    ssh_key_path: row.get(4)?,
+                    git_repo_url: row.get(5)?,
+                    git_branch: row.get(6)?,
+                    install_path: row.get(7)?,
+                    last_connected_unix: row.get(8)?,
+                    status: row.get(9)?,
+                })
             })
-        }).optional()?;
+            .optional()?;
 
         Ok(node)
     }
@@ -131,23 +129,25 @@ impl BeehiveRegistry {
         let mut stmt = conn.prepare(
             "SELECT node_name, ssh_host, ssh_port, ssh_user, ssh_key_path, \
              git_repo_url, git_branch, install_path, last_connected_unix, status \
-             FROM beehives ORDER BY node_name"
+             FROM beehives ORDER BY node_name",
         )?;
 
-        let nodes = stmt.query_map([], |row| {
-            Ok(BeehiveNode {
-                node_name: row.get(0)?,
-                ssh_host: row.get(1)?,
-                ssh_port: row.get(2)?,
-                ssh_user: row.get(3)?,
-                ssh_key_path: row.get(4)?,
-                git_repo_url: row.get(5)?,
-                git_branch: row.get(6)?,
-                install_path: row.get(7)?,
-                last_connected_unix: row.get(8)?,
-                status: row.get(9)?,
-            })
-        })?.collect::<Result<Vec<_>, _>>()?;
+        let nodes = stmt
+            .query_map([], |row| {
+                Ok(BeehiveNode {
+                    node_name: row.get(0)?,
+                    ssh_host: row.get(1)?,
+                    ssh_port: row.get(2)?,
+                    ssh_user: row.get(3)?,
+                    ssh_key_path: row.get(4)?,
+                    git_repo_url: row.get(5)?,
+                    git_branch: row.get(6)?,
+                    install_path: row.get(7)?,
+                    last_connected_unix: row.get(8)?,
+                    status: row.get(9)?,
+                })
+            })?
+            .collect::<Result<Vec<_>, _>>()?;
 
         Ok(nodes)
     }
@@ -155,15 +155,18 @@ impl BeehiveRegistry {
     /// Remove a node from the registry
     pub async fn remove_node(&self, node_name: &str) -> Result<bool> {
         let conn = self.conn.lock().await;
-        let rows_affected = conn.execute(
-            "DELETE FROM beehives WHERE node_name = ?1",
-            [node_name],
-        )?;
+        let rows_affected =
+            conn.execute("DELETE FROM beehives WHERE node_name = ?1", [node_name])?;
         Ok(rows_affected > 0)
     }
 
     /// Update node status
-    pub async fn update_status(&self, node_name: &str, status: &str, last_connected: Option<i64>) -> Result<()> {
+    pub async fn update_status(
+        &self,
+        node_name: &str,
+        status: &str,
+        last_connected: Option<i64>,
+    ) -> Result<()> {
         let conn = self.conn.lock().await;
         conn.execute(
             "UPDATE beehives SET status = ?1, last_connected_unix = ?2 WHERE node_name = ?3",
@@ -188,7 +191,7 @@ mod tests {
     async fn test_registry_crud() {
         let temp_dir = tempfile::tempdir().unwrap();
         let db_path = temp_dir.path().join("test_beehives.db");
-        
+
         let registry = BeehiveRegistry::new(Some(db_path)).await.unwrap();
 
         // Add node

@@ -1,8 +1,8 @@
 // Worker startup step definitions
 // Created by: TEAM-040
 
-use cucumber::{given, when, then};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 
 #[when(expr = "rbee-hive spawns worker process")]
 pub async fn when_spawn_worker_process(world: &mut World) {

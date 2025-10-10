@@ -17,11 +17,7 @@ use uuid::Uuid;
 #[serde(tag = "stage")]
 pub enum DownloadEvent {
     #[serde(rename = "downloading")]
-    Downloading {
-        bytes_downloaded: u64,
-        bytes_total: u64,
-        speed_mbps: f64,
-    },
+    Downloading { bytes_downloaded: u64, bytes_total: u64, speed_mbps: f64 },
     #[serde(rename = "complete")]
     Complete { local_path: String },
     #[serde(rename = "error")]
@@ -46,9 +42,7 @@ pub struct DownloadTracker {
 
 impl DownloadTracker {
     pub fn new() -> Self {
-        Self {
-            downloads: Arc::new(RwLock::new(HashMap::new())),
-        }
+        Self { downloads: Arc::new(RwLock::new(HashMap::new())) }
     }
 
     /// Start tracking a new download
@@ -207,9 +201,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_download_event_complete_serialization() {
-        let event = DownloadEvent::Complete {
-            local_path: "/models/test.gguf".to_string(),
-        };
+        let event = DownloadEvent::Complete { local_path: "/models/test.gguf".to_string() };
 
         let json = serde_json::to_value(&event).unwrap();
         assert_eq!(json["stage"], "complete");
@@ -218,9 +210,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_download_event_error_serialization() {
-        let event = DownloadEvent::Error {
-            message: "Download failed".to_string(),
-        };
+        let event = DownloadEvent::Error { message: "Download failed".to_string() };
 
         let json = serde_json::to_value(&event).unwrap();
         assert_eq!(json["stage"], "error");

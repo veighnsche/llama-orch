@@ -10,10 +10,10 @@
 //! Modified by: TEAM-030
 //! Refactored by: TEAM-033
 
-mod types;
 mod catalog;
 mod download;
 mod operations;
+mod types;
 
 // Re-export public types
 pub use types::{DownloadProgress, ModelInfo, ModelProvisioner};

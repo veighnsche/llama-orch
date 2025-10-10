@@ -43,18 +43,15 @@ pub async fn handle(addr: String) -> Result<()> {
     tracing::info!("Worker registry initialized (in-memory, ephemeral)");
 
     // TEAM-029: Initialize model catalog (SQLite, persistent)
-    let model_catalog_path = dirs::home_dir()
-        .unwrap_or_default()
-        .join(".rbee/models.db")
-        .to_string_lossy()
-        .to_string();
+    let model_catalog_path =
+        dirs::home_dir().unwrap_or_default().join(".rbee/models.db").to_string_lossy().to_string();
     let model_catalog = Arc::new(ModelCatalog::new(model_catalog_path));
     model_catalog.init().await?;
     tracing::info!("Model catalog initialized (SQLite, persistent)");
 
     // TEAM-029: Initialize model provisioner
-    let model_base_dir = std::env::var("RBEE_MODEL_BASE_DIR")
-        .unwrap_or_else(|_| ".test-models".to_string());
+    let model_base_dir =
+        std::env::var("RBEE_MODEL_BASE_DIR").unwrap_or_else(|_| ".test-models".to_string());
     tracing::info!("Model provisioner initialized (base_dir: {})", model_base_dir);
     let provisioner = Arc::new(ModelProvisioner::new(model_base_dir.into()));
 
@@ -109,7 +106,7 @@ async fn shutdown_all_workers(registry: Arc<WorkerRegistry>) {
 
     for worker in workers {
         tracing::info!("Sending shutdown to worker {}", worker.id);
-        
+
         // Try to gracefully shutdown worker via HTTP
         if let Err(e) = shutdown_worker(&worker.url).await {
             tracing::warn!("Failed to shutdown worker {} gracefully: {}", worker.id, e);
@@ -124,7 +121,7 @@ async fn shutdown_all_workers(registry: Arc<WorkerRegistry>) {
 /// Shutdown a single worker via HTTP
 async fn shutdown_worker(worker_url: &str) -> Result<()> {
     let client = reqwest::Client::new();
-    
+
     // Try POST /v1/shutdown endpoint
     let response = client
         .post(&format!("{}/v1/shutdown", worker_url))

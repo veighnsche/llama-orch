@@ -1,8 +1,8 @@
 // Worker registry step definitions
 // Created by: TEAM-040
 
-use cucumber::{given, when, then};
-use crate::steps::world::{World, WorkerInfo};
+use crate::steps::world::{WorkerInfo, World};
+use cucumber::{given, then, when};
 
 #[given(expr = "no workers are registered")]
 pub async fn given_no_workers(world: &mut World) {
@@ -13,7 +13,7 @@ pub async fn given_no_workers(world: &mut World) {
 #[given(expr = "a worker is registered with:")]
 pub async fn given_worker_registered_table(world: &mut World, step: &cucumber::gherkin::Step) {
     let table = step.table.as_ref().expect("Expected a data table");
-    
+
     let mut worker = WorkerInfo {
         id: String::new(),
         url: String::new(),
@@ -24,11 +24,11 @@ pub async fn given_worker_registered_table(world: &mut World, step: &cucumber::g
         slots_total: 1,
         slots_available: 1,
     };
-    
+
     for row in table.rows.iter().skip(1) {
         let field = &row[0];
         let value = &row[1];
-        
+
         match field.as_str() {
             "id" => worker.id = value.clone(),
             "url" => worker.url = value.clone(),
@@ -38,7 +38,7 @@ pub async fn given_worker_registered_table(world: &mut World, step: &cucumber::g
             _ => {}
         }
     }
-    
+
     world.workers.insert(worker.id.clone(), worker);
     tracing::debug!("Registered worker from table");
 }
@@ -50,7 +50,7 @@ pub async fn given_worker_with_model_and_state(
     state: String,
 ) {
     let slots_available = if state == "idle" { 1 } else { 0 };
-    
+
     let worker = WorkerInfo {
         id: format!("worker-{}", uuid::Uuid::new_v4()),
         url: "http://localhost:8001".to_string(),
@@ -61,7 +61,7 @@ pub async fn given_worker_with_model_and_state(
         slots_total: 1,
         slots_available,
     };
-    
+
     world.workers.insert(worker.id.clone(), worker);
     tracing::debug!("Registered worker with model_ref and state");
 }
@@ -88,7 +88,7 @@ pub async fn when_query_worker_registry(world: &mut World) {
 pub async fn then_response_is(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
     let expected_json = docstring.trim();
-    
+
     // TODO: Verify response matches expected JSON
     tracing::debug!("Expected response: {}", expected_json);
 }

@@ -1,8 +1,8 @@
 // Inference execution step definitions
 // Created by: TEAM-040
 
-use cucumber::{given, when, then};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 
 #[given(expr = "the worker is ready and idle")]
 pub async fn given_worker_ready_idle(world: &mut World) {

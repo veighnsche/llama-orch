@@ -12,8 +12,8 @@ use std::path::Path;
 pub mod llama;
 pub mod mistral;
 pub mod phi;
-pub mod qwen;
 pub mod quantized_llama;
+pub mod qwen;
 
 /// Multi-model enum using Candle's idiomatic pattern
 ///

@@ -1,8 +1,8 @@
 // Error response step definitions
 // Created by: TEAM-040
 
-use cucumber::{given, when, then};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 
 #[given(expr = "an error occurs with code {string}")]
 pub async fn given_error_occurs(world: &mut World, code: String) {

@@ -13,7 +13,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tracing::{info, error};
+use tracing::{error, info};
 
 use crate::beehive_registry::{BeehiveNode, BeehiveRegistry};
 use crate::worker_registry::WorkerRegistry;
@@ -89,7 +89,7 @@ async fn add_node(
     // - "unreachable" in hostname -> fail (to test error handling)
     // - other hostnames -> succeed (for normal test nodes)
     let mock_ssh = std::env::var("MOCK_SSH").is_ok();
-    
+
     let ssh_success = if mock_ssh {
         // Smart mock: fail for "unreachable" hosts, succeed for others
         if req.ssh_host.contains("unreachable") {
@@ -169,10 +169,7 @@ async fn list_nodes(State(state): State<AppState>) -> impl IntoResponse {
         Ok(nodes) => (StatusCode::OK, Json(ListNodesResponse { nodes })),
         Err(e) => {
             error!("Failed to list nodes: {}", e);
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ListNodesResponse { nodes: vec![] }),
-            )
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(ListNodesResponse { nodes: vec![] }))
         }
     }
 }

@@ -1,8 +1,8 @@
 // Pool preflight step definitions
 // Created by: TEAM-040
 
-use cucumber::{given, when, then};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 
 #[given(expr = "node {string} is reachable")]
 pub async fn given_node_reachable(world: &mut World, node: String) {

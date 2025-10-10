@@ -1,8 +1,8 @@
 // Worker health check step definitions
 // Created by: TEAM-040
 
-use cucumber::{given, when, then};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 
 #[given(expr = "the worker is in state {string}")]
 pub async fn given_worker_in_state(world: &mut World, state: String) {

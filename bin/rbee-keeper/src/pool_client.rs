@@ -53,11 +53,7 @@ impl PoolClient {
     /// * `base_url` - Pool manager base URL (e.g., "http://mac.home.arpa:8080")
     /// * `api_key` - API key for authentication
     pub fn new(base_url: String, api_key: String) -> Self {
-        Self {
-            base_url,
-            api_key,
-            client: reqwest::Client::new(),
-        }
+        Self { base_url, api_key, client: reqwest::Client::new() }
     }
 
     /// Health check
@@ -76,10 +72,7 @@ impl PoolClient {
             .await?;
 
         if !response.status().is_success() {
-            anyhow::bail!(
-                "Health check failed: HTTP {}",
-                response.status()
-            );
+            anyhow::bail!("Health check failed: HTTP {}", response.status());
         }
 
         Ok(response.json().await?)
@@ -107,11 +100,7 @@ impl PoolClient {
         if !response.status().is_success() {
             let status = response.status();
             let body = response.text().await.unwrap_or_default();
-            anyhow::bail!(
-                "Failed to spawn worker: HTTP {} - {}",
-                status,
-                body
-            );
+            anyhow::bail!("Failed to spawn worker: HTTP {} - {}", status, body);
         }
 
         Ok(response.json().await?)
@@ -124,10 +113,7 @@ mod tests {
 
     #[test]
     fn test_pool_client_creation() {
-        let client = PoolClient::new(
-            "http://localhost:8080".to_string(),
-            "test-key".to_string(),
-        );
+        let client = PoolClient::new("http://localhost:8080".to_string(), "test-key".to_string());
         assert_eq!(client.base_url, "http://localhost:8080");
         assert_eq!(client.api_key, "test-key");
     }
@@ -179,16 +165,10 @@ mod tests {
 
     #[test]
     fn test_pool_client_with_different_urls() {
-        let client1 = PoolClient::new(
-            "http://localhost:8080".to_string(),
-            "key1".to_string(),
-        );
+        let client1 = PoolClient::new("http://localhost:8080".to_string(), "key1".to_string());
         assert_eq!(client1.base_url, "http://localhost:8080");
 
-        let client2 = PoolClient::new(
-            "http://mac.home.arpa:8080".to_string(),
-            "key2".to_string(),
-        );
+        let client2 = PoolClient::new("http://mac.home.arpa:8080".to_string(), "key2".to_string());
         assert_eq!(client2.base_url, "http://mac.home.arpa:8080");
     }
 }

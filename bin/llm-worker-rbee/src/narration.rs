@@ -99,7 +99,7 @@ use observability_narration_core::NarrationFields;
 pub fn narrate_dual(fields: NarrationFields) {
     // 1. ALWAYS emit to tracing (for operators/developers)
     observability_narration_core::narrate(fields.clone());
-    
+
     // 2. IF in HTTP request context, ALSO emit to SSE (for users)
     let sse_event = InferenceEvent::Narration {
         actor: fields.actor.to_string(),
@@ -111,7 +111,7 @@ pub fn narrate_dual(fields: NarrationFields) {
         correlation_id: fields.correlation_id.clone(),
         job_id: fields.job_id.clone(),
     };
-    
+
     // Send to SSE channel (returns false if no active request)
     let _ = narration_channel::send_narration(sse_event);
 }

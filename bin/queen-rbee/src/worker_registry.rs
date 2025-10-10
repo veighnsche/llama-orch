@@ -39,9 +39,7 @@ pub struct WorkerRegistry {
 impl WorkerRegistry {
     /// Create a new empty worker registry
     pub fn new() -> Self {
-        Self {
-            workers: Arc::new(RwLock::new(HashMap::new())),
-        }
+        Self { workers: Arc::new(RwLock::new(HashMap::new())) }
     }
 
     /// Register a new worker

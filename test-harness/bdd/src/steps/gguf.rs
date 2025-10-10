@@ -1,8 +1,8 @@
 // GGUF model support step definitions
 // Created by: TEAM-040
 
-use cucumber::{given, when, then};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 
 #[given(regex = r#"^a model file at "(.+)"$"#)]
 pub async fn given_model_file_at(world: &mut World, path: String) {

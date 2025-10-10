@@ -58,11 +58,8 @@ impl ModelProvisioner {
             let path = entry.path();
 
             if path.is_dir() {
-                let model_name = path
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or("unknown")
-                    .to_string();
+                let model_name =
+                    path.file_name().and_then(|n| n.to_str()).unwrap_or("unknown").to_string();
 
                 // Find .gguf files in this directory
                 if let Ok(files) = std::fs::read_dir(&path) {
@@ -94,7 +91,7 @@ mod tests {
     fn test_find_local_model_nonexistent() {
         let temp_dir = std::env::temp_dir().join("test_catalog_nonexistent");
         let provisioner = ModelProvisioner::new(temp_dir);
-        
+
         let result = provisioner.find_local_model("nonexistent/model");
         assert!(result.is_none());
     }
@@ -104,19 +101,19 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_catalog_find");
         let _ = fs::remove_dir_all(&temp_dir);
         fs::create_dir_all(&temp_dir).unwrap();
-        
+
         // Create model directory with .gguf file
         let model_dir = temp_dir.join("tinyllama-1.1b-chat-v1.0-gguf");
         fs::create_dir_all(&model_dir).unwrap();
         let model_file = model_dir.join("model.gguf");
         fs::write(&model_file, b"test").unwrap();
-        
+
         let provisioner = ModelProvisioner::new(temp_dir.clone());
         let found = provisioner.find_local_model("TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF");
-        
+
         assert!(found.is_some());
         assert!(found.unwrap().ends_with("model.gguf"));
-        
+
         // Cleanup
         let _ = fs::remove_dir_all(&temp_dir);
     }
@@ -126,7 +123,7 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_catalog_empty");
         let _ = std::fs::remove_dir_all(&temp_dir);
         let provisioner = ModelProvisioner::new(temp_dir);
-        
+
         let models = provisioner.list_models().unwrap();
         assert_eq!(models.len(), 0);
     }
@@ -136,20 +133,20 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_catalog_list");
         let _ = fs::remove_dir_all(&temp_dir);
         fs::create_dir_all(&temp_dir).unwrap();
-        
+
         // Create model directory with .gguf file
         let model_dir = temp_dir.join("testmodel");
         fs::create_dir_all(&model_dir).unwrap();
         let model_file = model_dir.join("model.gguf");
         fs::write(&model_file, b"test").unwrap();
-        
+
         let provisioner = ModelProvisioner::new(temp_dir.clone());
         let models = provisioner.list_models().unwrap();
-        
+
         assert_eq!(models.len(), 1);
         assert_eq!(models[0].0, "testmodel");
         assert!(models[0].1.ends_with("model.gguf"));
-        
+
         // Cleanup
         let _ = fs::remove_dir_all(&temp_dir);
     }
@@ -159,18 +156,18 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_catalog_multiple");
         let _ = fs::remove_dir_all(&temp_dir);
         fs::create_dir_all(&temp_dir).unwrap();
-        
+
         // Create model directory with multiple .gguf files
         let model_dir = temp_dir.join("multimodel");
         fs::create_dir_all(&model_dir).unwrap();
         fs::write(model_dir.join("model1.gguf"), b"test1").unwrap();
         fs::write(model_dir.join("model2.gguf"), b"test2").unwrap();
-        
+
         let provisioner = ModelProvisioner::new(temp_dir.clone());
         let models = provisioner.list_models().unwrap();
-        
+
         assert_eq!(models.len(), 2);
-        
+
         // Cleanup
         let _ = fs::remove_dir_all(&temp_dir);
     }
@@ -180,20 +177,20 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_catalog_ignore");
         let _ = fs::remove_dir_all(&temp_dir);
         fs::create_dir_all(&temp_dir).unwrap();
-        
+
         let model_dir = temp_dir.join("testmodel");
         fs::create_dir_all(&model_dir).unwrap();
         fs::write(model_dir.join("model.gguf"), b"test").unwrap();
         fs::write(model_dir.join("config.json"), b"{}").unwrap();
         fs::write(model_dir.join("readme.txt"), b"readme").unwrap();
-        
+
         let provisioner = ModelProvisioner::new(temp_dir.clone());
         let models = provisioner.list_models().unwrap();
-        
+
         // Should only find the .gguf file
         assert_eq!(models.len(), 1);
         assert!(models[0].1.to_str().unwrap().ends_with(".gguf"));
-        
+
         // Cleanup
         let _ = fs::remove_dir_all(&temp_dir);
     }

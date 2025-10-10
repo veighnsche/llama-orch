@@ -19,11 +19,7 @@ pub fn handle(system: bool) -> Result<()> {
     let (bin_dir, config_dir, data_dir) = match target {
         InstallTarget::User => {
             let home = dirs::home_dir().context("Could not determine home directory")?;
-            (
-                home.join(".local/bin"),
-                home.join(".config/rbee"),
-                home.join(".local/share/rbee"),
-            )
+            (home.join(".local/bin"), home.join(".config/rbee"), home.join(".local/share/rbee"))
         }
         InstallTarget::System => (
             PathBuf::from("/usr/local/bin"),
@@ -46,9 +42,7 @@ pub fn handle(system: bool) -> Result<()> {
 
     // 2. Copy binaries
     let current_exe = std::env::current_exe().context("Could not determine current executable")?;
-    let exe_dir = current_exe
-        .parent()
-        .context("Could not determine executable directory")?;
+    let exe_dir = current_exe.parent().context("Could not determine executable directory")?;
 
     println!("\n📋 Installing binaries:");
     copy_binary(exe_dir, &bin_dir, "rbee")?;

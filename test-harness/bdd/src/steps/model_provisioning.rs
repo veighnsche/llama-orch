@@ -1,30 +1,30 @@
 // Model provisioning step definitions
 // Created by: TEAM-040
 
-use cucumber::{given, when, then};
-use crate::steps::world::{World, ModelCatalogEntry};
+use crate::steps::world::{ModelCatalogEntry, World};
+use cucumber::{given, then, when};
 use std::path::PathBuf;
 
 #[given(expr = "the model catalog contains:")]
 pub async fn given_model_catalog_contains(world: &mut World, step: &cucumber::gherkin::Step) {
     let table = step.table.as_ref().expect("Expected a data table");
-    
+
     for row in table.rows.iter().skip(1) {
         let provider = row[0].clone();
         let reference = row[1].clone();
         let local_path = row[2].clone();
-        
+
         let entry = ModelCatalogEntry {
             provider: provider.clone(),
             reference: reference.clone(),
             local_path: PathBuf::from(local_path),
             size_bytes: 5_242_880, // Default size
         };
-        
+
         let model_ref = format!("{}:{}", provider, reference);
         world.model_catalog.insert(model_ref, entry);
     }
-    
+
     tracing::debug!("Model catalog populated with {} entries", world.model_catalog.len());
 }
 
