@@ -1,4 +1,8 @@
-# HANDOFF TO TEAM-048: Complete Inference Integration
+# HANDOFF TO TEAM-048
+
+**CORRECTION (TEAM-054):** This document originally stated rbee-hive uses port 8080.
+The correct port is **9200** per the normative spec. All rbee-hive references have been updated.
+queen-rbee remains on port 8080.: Complete Inference Integration
 
 **From:** TEAM-047  
 **To:** TEAM-048  
@@ -509,8 +513,8 @@ By the time you hand off to TEAM-049:
 
 ### If Inference Fails
 1. Check queen-rbee is running: `curl http://localhost:8080/health`
-2. Check rbee-hive is accessible: `curl http://mac.home.arpa:8080/health`
-3. Check worker spawned: `curl http://mac.home.arpa:8080/v1/workers/list`
+2. Check rbee-hive is accessible: `curl http://mac.home.arpa:9200/health`
+3. Check worker spawned: `curl http://mac.home.arpa:9200/v1/workers/list`
 4. Check MOCK_SSH is set in tests
 5. Check logs: `RUST_LOG=info ./target/debug/queen-rbee`
 

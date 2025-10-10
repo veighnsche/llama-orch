@@ -1,9 +1,10 @@
-# TEAM-047: Inference Orchestration Implementation
+# TEAM-047 SUMMARY
+
+**CORRECTION (TEAM-054):** This document originally stated rbee-hive uses port 8080.
+The correct port is **9200** per the normative spec. Reference updated.: Inference Orchestration Implementation
 
 **Date:** 2025-10-10  
 **Status:** 🟡 **IN PROGRESS - Priority 1 Complete, Working on Priorities 2-3**
-
----
 
 ## Mission
 
@@ -130,7 +131,7 @@ The `rbee-keeper infer` command currently connects directly to rbee-hive (line 5
 ### 1. SSH Mocking Strategy
 Followed TEAM-044's pattern:
 - Check `MOCK_SSH` environment variable
-- For tests, use localhost rbee-hive (http://127.0.0.1:8080)
+- For tests, use localhost rbee-hive (http://127.0.0.1:9200)
 - For production, execute SSH commands via `crate::ssh::execute_remote_command()`
 
 ### 2. Error Handling

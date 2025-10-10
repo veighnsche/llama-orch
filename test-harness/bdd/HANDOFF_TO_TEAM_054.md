@@ -1,5 +1,8 @@
 # HANDOFF TO TEAM-054
 
+**CORRECTION (TEAM-054):** This document originally stated rbee-hive uses port 8090.
+The correct port is **9200** per the normative spec. All references have been updated.
+
 **From:** TEAM-053  
 **Date:** 2025-10-10T20:00:00+02:00  
 **Status:** 🟢 42/62 SCENARIOS PASSING (+11 from TEAM-052)
@@ -90,13 +93,13 @@ pub mod lifecycle;
 // bin/queen-rbee/src/http/inference.rs
 // TEAM-053: Fixed port conflict
 let rbee_hive_url = if mock_ssh {
-    "http://127.0.0.1:8090".to_string()  // Changed from 8080
+    "http://127.0.0.1:9200".to_string()  // Changed from 8080
 } else {
     establish_rbee_hive_connection(&node).await?
 };
 ```
 
-**Note:** Tests now expect rbee-hive on port 8090, but no mock server exists yet.
+**Note:** Tests now expect rbee-hive on port 9200, but no mock server exists yet.
 
 ### 3. Analyzed Remaining 20 Failures ✅
 **Impact:** Clear roadmap for TEAM-054
@@ -294,7 +297,7 @@ pub async fn start_mock_rbee_hive() -> Result<()> {
         .route("/v1/workers/spawn", post(handle_spawn_worker))
         .route("/v1/workers/ready", post(handle_worker_ready));
     
-    let addr: SocketAddr = "127.0.0.1:8090".parse()?;
+    let addr: SocketAddr = "127.0.0.1:9200".parse()?;
     tracing::info!("🐝 Starting mock rbee-hive on {}", addr);
     
     let listener = tokio::net::TcpListener::bind(addr).await?;
@@ -463,7 +466,7 @@ RUST_LOG=debug ./target/debug/rbee infer --node workstation --model tinyllama --
 
 ### Insight 2: Port Conflict Was Subtle
 **Problem:** Queen-rbee tried to connect to itself
-**Solution:** Changed mock rbee-hive port from 8080 to 8090
+**Solution:** Changed mock rbee-hive port from 8080 to 9200
 **Lesson:** Always document port allocations
 
 ### Insight 3: HTTP Errors Are Timing Issues
@@ -478,7 +481,7 @@ RUST_LOG=debug ./target/debug/rbee infer --node workstation --model tinyllama --
 ### Working Infrastructure
 - ✅ Global queen-rbee instance (no port conflicts)
 - ✅ All step definitions exported and matched
-- ✅ Port conflict fixed (8090 for rbee-hive)
+- ✅ Port conflict fixed (9200 for rbee-hive)
 - ✅ 42/62 scenarios passing
 - ✅ Clear analysis of remaining failures
 

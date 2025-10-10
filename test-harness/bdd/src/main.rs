@@ -1,8 +1,10 @@
 // BDD runner for llama-orch system tests
 // Created by: TEAM-040
 // Modified by: TEAM-051 (added global queen-rbee instance)
+// Modified by: TEAM-054 (added mock rbee-hive on port 9200)
 
 mod steps;
+mod mock_rbee_hive;
 
 use cucumber::World as _;
 use std::path::PathBuf;
@@ -39,6 +41,20 @@ async fn main() {
 
     // TEAM-051: Start global queen-rbee instance before running tests
     steps::global_queen::start_global_queen_rbee().await;
+
+    // TEAM-054: Start mock rbee-hive on port 9200 (NOT 8080 or 8090!)
+    tokio::spawn(async {
+        if let Err(e) = mock_rbee_hive::start_mock_rbee_hive().await {
+            tracing::error!("Mock rbee-hive failed: {}", e);
+        }
+    });
+    
+    // Wait for mock servers to start
+    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    
+    tracing::info!("✅ Mock servers ready:");
+    tracing::info!("   - queen-rbee: http://127.0.0.1:8080");
+    tracing::info!("   - rbee-hive:  http://127.0.0.1:9200");
 
     World::cucumber().fail_on_skipped().run_and_exit(features).await;
     

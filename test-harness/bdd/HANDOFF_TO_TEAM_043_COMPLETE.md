@@ -1,4 +1,11 @@
-# HANDOFF TO TEAM-043: Complete BDD Implementation Guide
+# HANDOFF TO TEAM-043 (COMPLETE)
+
+**HISTORICAL NOTE (TEAM-054):** This document describes the architecture BEFORE TEAM-037/TEAM-038
+introduced queen-rbee orchestration. At that time, rbee-hive used port 8080 and rbee-keeper
+connected directly to rbee-hive. This architecture is NO LONGER VALID.
+
+**Current architecture:** queen-rbee (8080) → rbee-hive (9200) → workers (8001+)
+**See:** `bin/.specs/.gherkin/test-001.md` for current normative spec.
 
 **From:** TEAM-042  
 **To:** TEAM-043  

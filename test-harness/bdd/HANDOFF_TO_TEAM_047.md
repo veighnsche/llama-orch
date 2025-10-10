@@ -1,4 +1,8 @@
-# HANDOFF TO TEAM-047: Implement Inference Orchestration
+# HANDOFF TO TEAM-047
+
+**CORRECTION (TEAM-054):** This document originally stated rbee-hive uses port 8080.
+The correct port is **9200** per the normative spec (updated by TEAM-037/TEAM-038).
+All rbee-hive references have been updated. queen-rbee remains on port 8080.: Implement Inference Orchestration
 
 **From:** TEAM-046  
 **To:** TEAM-047  
@@ -149,18 +153,18 @@ if !mock_ssh {
 // Execute remote command via SSH
 let rbee_hive_url = if mock_ssh {
     // For tests, assume rbee-hive is already running
-    format!("http://{}:8080", node.ssh_host)
+    format!("http://{}:9200", node.ssh_host)
 } else {
     // Real SSH: start rbee-hive daemon
     ssh::execute_remote_command(
         &ssh_session,
-        &format!("{}/rbee-hive daemon --addr 0.0.0.0:8080 &", node.install_path)
+        &format!("{}/rbee-hive daemon --addr 0.0.0.0:9200 &", node.install_path)
     ).await?;
     
     // Wait for rbee-hive to be ready
-    wait_for_rbee_hive_ready(&format!("http://{}:8080", node.ssh_host)).await?;
+    wait_for_rbee_hive_ready(&format!("http://{}:9200", node.ssh_host)).await?;
     
-    format!("http://{}:8080", node.ssh_host)
+    format!("http://{}:9200", node.ssh_host)
 };
 ```
 
@@ -406,7 +410,7 @@ async fn create_inference_task(
     // Step 2: Establish SSH connection (or mock)
     let mock_ssh = std::env::var("MOCK_SSH").is_ok();
     let rbee_hive_url = if mock_ssh {
-        format!("http://{}:8080", node.ssh_host)
+        format!("http://{}:9200", node.ssh_host)
     } else {
         // Real SSH implementation
         match establish_rbee_hive_connection(&node).await {

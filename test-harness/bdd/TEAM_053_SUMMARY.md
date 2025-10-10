@@ -1,5 +1,8 @@
 # TEAM-053 SUMMARY
 
+**CORRECTION (TEAM-054):** This document originally stated rbee-hive uses port 8090.
+The correct port is **9200** per the normative spec. All references have been updated.
+
 **Date:** 2025-10-10T19:54:00+02:00  
 **Status:** ✅ 42/62 SCENARIOS PASSING (+11 from baseline)  
 **Progress:** Fixed missing step definitions and port conflict bug
@@ -57,19 +60,19 @@ cargo run --bin bdd-runner
 **Solution:**
 ```rust
 // bin/queen-rbee/src/http/inference.rs
-// TEAM-053: Fixed port conflict - rbee-hive uses 8090, not 8080
+// TEAM-053: Fixed port conflict - rbee-hive uses 9200, not 8080
 let rbee_hive_url = if mock_ssh {
-    info!("🔌 Mock SSH: Using localhost rbee-hive at port 8090");
-    "http://127.0.0.1:8090".to_string()  // Changed from 8080
+    info!("🔌 Mock SSH: Using localhost rbee-hive at port 9200");
+    "http://127.0.0.1:9200".to_string()  // Changed from 8080
 } else {
     // Real SSH connection...
 }
 ```
 
 **Files Modified:**
-- `bin/queen-rbee/src/http/inference.rs` - Changed mock rbee-hive port from 8080 to 8090
+- `bin/queen-rbee/src/http/inference.rs` - Changed mock rbee-hive port from 8080 to 9200
 
-**Note:** Tests still need a mock rbee-hive instance running on port 8090 for full orchestration tests.
+**Note:** Tests still need a mock rbee-hive instance running on port 9200 for full orchestration tests.
 
 ### 3. Analyzed Remaining 20 Failures ✅
 **Impact:** Clear roadmap for future teams
@@ -206,7 +209,7 @@ for attempt in 0..3 {
 **Goal:** Enable full orchestration tests
 
 **Tasks:**
-1. Create mock rbee-hive server on port 8090
+1. Create mock rbee-hive server on port 9200
 2. Implement minimal endpoints: `/v1/workers/spawn`, `/v1/workers/ready`
 3. Start mock server before tests
 
@@ -270,7 +273,7 @@ LLORCH_BDD_FEATURE_PATH="tests/features/test-001.feature" cargo run --bin bdd-ru
 **Fix:** Review error handling (see Priority 2)
 
 ### Issue 3: Missing Mock rbee-hive
-**Symptoms:** Inference orchestration fails (no rbee-hive on port 8090)
+**Symptoms:** Inference orchestration fails (no rbee-hive on port 9200)
 **Frequency:** Affects inference tests
 **Workaround:** Tests skip orchestration
 **Fix:** Add mock server (see Priority 3)
@@ -291,7 +294,7 @@ pub mod lifecycle;
 ```rust
 // TEAM-053: Fixed port conflict
 let rbee_hive_url = if mock_ssh {
-    "http://127.0.0.1:8090".to_string()  // Separate port from queen-rbee
+    "http://127.0.0.1:9200".to_string()  // Separate port from queen-rbee
 } else {
     establish_rbee_hive_connection(&node).await?
 };
