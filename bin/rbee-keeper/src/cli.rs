@@ -15,6 +15,12 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
+    /// Install rbee binaries to standard paths (TEAM-036)
+    Install {
+        /// Install to system paths (requires sudo)
+        #[arg(long)]
+        system: bool,
+    },
     /// Pool management commands
     Pool {
         #[command(subcommand)]
@@ -125,6 +131,7 @@ impl Cli {
 
 pub async fn handle_command(cli: Cli) -> anyhow::Result<()> {
     match cli.command {
+        Commands::Install { system } => crate::commands::install::handle(system),
         Commands::Pool { action } => crate::commands::pool::handle(action),
         Commands::Infer { node, model, prompt, max_tokens, temperature } => {
             crate::commands::infer::handle(node, model, prompt, max_tokens, temperature).await

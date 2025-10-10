@@ -1,9 +1,18 @@
 # Final Architecture: All HTTP Daemons
 
 **Status**: NORMATIVE - Aligned with test-001-mvp.md  
-**Version**: 2.0  
+**Version**: 3.0  
 **Date**: 2025-10-09  
-**Updated**: 2025-10-09T23:00 (TEAM-025 - Post-rebranding)
+**Updated**: 2025-10-10T14:02 (TEAM-037 - queen-rbee orchestration + rbee-keeper testing tool)
+
+---
+
+## 🚨 CRITICAL: rbee-keeper is a TESTING TOOL 🚨
+
+**rbee-keeper is NOT for production! It's an integration testing tool.**
+
+- **Testing:** rbee-keeper spawns queen-rbee, runs test, kills everything
+- **Production:** llama-orch SDK → queen-rbee directly
 
 ---
 
@@ -11,18 +20,17 @@
 
 **ALL components use HTTP for communication.**
 
-**3 HTTP Daemons:**
-1. **queen-rbee** (orchestrator) - Routes inference requests
+**3 HTTP Daemons (Production):**
+1. **queen-rbee** (orchestrator) - Routes inference, controls hives via SSH
 2. **llm-worker-rbee** (workers) - Execute inference, keep models in VRAM
 3. **rbee-hive** (pool manager) - Pool management API, worker health monitoring
 
-**1 CLI Tool:**
-- **rbee-keeper** - Calls HTTP APIs of all daemons
+**1 CLI Tool (Testing Only):**
+- **rbee-keeper** - Integration tester, spawns queen-rbee for testing
 
-**SSH is ONLY used for:**
-- Starting/stopping daemons remotely
-- SSH tunneling to reach HTTP endpoints
-- NOT for executing pool operations (those use HTTP)
+**SSH is used by queen-rbee for:**
+- Starting/stopping rbee-hive daemons remotely
+- Cascading shutdown (queen-rbee dies → ALL hives die → ALL workers die)
 
 ---
 
@@ -37,32 +45,57 @@
 1. Monitor worker health every 30s (per MVP Phase 5)
 2. Enforce idle timeout (5 minutes)
 3. Provide HTTP API for pool operations
+4. Die when queen-rbee dies (cascading shutdown)
 
-**rbee-keeper is a CLI that calls HTTP APIs:**
-1. No SSH command execution for pool operations
-2. Direct HTTP calls to rbee-hive and queen-rbee
-3. Can use SSH tunneling for remote access
+**queen-rbee MUST be HTTP daemon:**
+1. Orchestrates everything
+2. Uses SSH to control rbee-hive on remote nodes
+3. Relays SSE streams from workers
+4. When it dies, ALL hives and workers die gracefully
 
 ---
 
 ## The Correct Architecture
 
+### Testing Mode (rbee-keeper)
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ CONTROL PLANE (Operator → System)                               │
-│ Protocol: HTTP                                                   │
+│ TESTING (rbee-keeper → queen-rbee)                              │
+│ Protocol: Spawn + HTTP                                           │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                   │
-│ rbee-keeper (CLI on blep)                                       │
-│     ↓ HTTP (control operations)                                  │
-│ rbee-hive (HTTP daemon on mac/workstation :8080)                │
+│ rbee-keeper (CLI - TESTING TOOL)                                │
+│     ↓ spawns as child process                                    │
+│ queen-rbee (HTTP daemon :8080)                                  │
+│     ↓ SSH to remote node                                         │
+│ rbee-hive (HTTP daemon :9200)                                   │
 │     ↓ spawn process                                              │
-│ llm-worker-rbee (HTTP daemon :8001)                             │
+│ llm-worker-rbee (starts HTTP daemon :8001)                      │
+│     ↓ loads model to VRAM                                        │
+│     ↓ ready callback (HTTP POST /v1/workers/ready)              │
+│ rbee-hive (registers worker locally)                            │
+│     ↓ notifies queen (HTTP POST /v1/orchestrator/worker-ready)  │
+│ queen-rbee (adds worker to global registry)                     │
+│     ↓ looks up worker URL from registry                          │
+│     ↓ inference request DIRECTLY to worker (bypasses hive)      │
+│ queen-rbee → llm-worker-rbee (HTTP POST http://mac:8001/execute)│
+│     ↓ SSE stream                                                 │
+│ llm-worker-rbee → queen-rbee → rbee-keeper (stdout)            │
+│                                                                   │
+│ SHUTDOWN: rbee-keeper kills queen-rbee                          │
+│           queen-rbee SSH kills ALL hives                         │
+│           hives kill ALL workers                                 │
+│           Everything dies gracefully                             │
 │                                                                   │
 └─────────────────────────────────────────────────────────────────┘
+```
 
+### Production Mode (SDK → queen-rbee)
+
+```
 ┌─────────────────────────────────────────────────────────────────┐
-│ DATA PLANE (Inference Requests)                                 │
+│ PRODUCTION (llama-orch SDK → queen-rbee)                        │
 │ Protocol: HTTP                                                   │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                   │

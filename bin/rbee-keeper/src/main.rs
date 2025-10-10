@@ -22,6 +22,7 @@
 
 mod cli;
 mod commands;
+mod config;
 mod pool_client;
 mod ssh;
 

@@ -1,8 +1,10 @@
 //! Pool management commands (via SSH)
 //!
 //! Created by: TEAM-022
+//! Modified by: TEAM-036 (removed hardcoded paths, use binaries from PATH)
 
 use crate::cli::{GitAction, ModelsAction, PoolAction, WorkerAction};
+use crate::config::Config;
 use crate::ssh;
 use anyhow::Result;
 
@@ -16,23 +18,23 @@ pub fn handle(action: PoolAction) -> Result<()> {
 }
 
 fn handle_models(action: ModelsAction, host: &str) -> Result<()> {
+    // TEAM-036: Use binary from PATH, with optional config override
+    let binary = get_remote_binary_path();
+
     let command = match action {
         ModelsAction::Download { model } => {
-            format!(
-                "cd ~/Projects/llama-orch && ./target/release/rbee-hive models download {}",
-                model
-            )
+            format!("{} models download {}", binary, model)
         }
         ModelsAction::List => {
-            "cd ~/Projects/llama-orch && ./target/release/rbee-hive models list".to_string()
+            format!("{} models list", binary)
         }
         ModelsAction::Catalog => {
-            "cd ~/Projects/llama-orch && ./target/release/rbee-hive models catalog".to_string()
+            format!("{} models catalog", binary)
         }
         ModelsAction::Register { id, name, repo, architecture } => {
             format!(
-                "cd ~/Projects/llama-orch && ./target/release/rbee-hive models register {} --name '{}' --repo '{}' --architecture {}",
-                id, name, repo, architecture
+                "{} models register {} --name '{}' --repo '{}' --architecture {}",
+                binary, id, name, repo, architecture
             )
         }
     };
@@ -43,21 +45,18 @@ fn handle_models(action: ModelsAction, host: &str) -> Result<()> {
 }
 
 fn handle_worker(action: WorkerAction, host: &str) -> Result<()> {
+    // TEAM-036: Use binary from PATH, with optional config override
+    let binary = get_remote_binary_path();
+
     let command = match action {
         WorkerAction::Spawn { backend, model, gpu } => {
-            format!(
-                "cd ~/Projects/llama-orch && ./target/release/rbee-hive worker spawn {} --model {} --gpu {}",
-                backend, model, gpu
-            )
+            format!("{} worker spawn {} --model {} --gpu {}", binary, backend, model, gpu)
         }
         WorkerAction::List => {
-            "cd ~/Projects/llama-orch && ./target/release/rbee-hive worker list".to_string()
+            format!("{} worker list", binary)
         }
         WorkerAction::Stop { worker_id } => {
-            format!(
-                "cd ~/Projects/llama-orch && ./target/release/rbee-hive worker stop {}",
-                worker_id
-            )
+            format!("{} worker stop {}", binary, worker_id)
         }
     };
 
@@ -66,11 +65,15 @@ fn handle_worker(action: WorkerAction, host: &str) -> Result<()> {
 }
 
 fn handle_git(action: GitAction, host: &str) -> Result<()> {
+    // TEAM-036: Use configurable repo directory, default to ~/llama-orch
+    let repo_dir = get_remote_repo_dir();
+    let binary = get_remote_binary_path();
+
     let command = match action {
-        GitAction::Pull => "cd ~/Projects/llama-orch && git pull".to_string(),
-        GitAction::Status => "cd ~/Projects/llama-orch && git status".to_string(),
+        GitAction::Pull => format!("cd {} && git pull", repo_dir),
+        GitAction::Status => format!("cd {} && git status", repo_dir),
         GitAction::Build => {
-            "cd ~/Projects/llama-orch && cargo build --release -p rbee-hive".to_string()
+            format!("cd {} && cargo build --release -p rbee-hive", repo_dir)
         }
     };
 
@@ -79,8 +82,33 @@ fn handle_git(action: GitAction, host: &str) -> Result<()> {
 }
 
 fn handle_status(host: &str) -> Result<()> {
-    let command = "cd ~/Projects/llama-orch && ./target/release/rbee-hive status";
+    // TEAM-036: Use binary from PATH, with optional config override
+    let binary = get_remote_binary_path();
+    let command = format!("{} status", binary);
 
-    ssh::execute_remote_command_streaming(host, command)?;
+    ssh::execute_remote_command_streaming(host, &command)?;
     Ok(())
+}
+
+/// Get the remote binary path from config, or default to PATH
+///
+/// TEAM-036: Allows custom binary paths via config, defaults to rbee-hive in PATH
+fn get_remote_binary_path() -> String {
+    Config::load()
+        .ok()
+        .and_then(|config| config.remote)
+        .and_then(|remote| remote.binary_path)
+        .unwrap_or_else(|| "rbee-hive".to_string())
+}
+
+/// Get the remote repository directory from config, or default to ~/llama-orch
+///
+/// TEAM-036: Allows custom repo paths via config, defaults to ~/llama-orch
+fn get_remote_repo_dir() -> String {
+    Config::load()
+        .ok()
+        .and_then(|config| config.remote)
+        .and_then(|remote| remote.git_repo_dir)
+        .and_then(|path| path.to_str().map(String::from))
+        .unwrap_or_else(|| "~/llama-orch".to_string())
 }

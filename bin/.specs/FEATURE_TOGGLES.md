@@ -2,7 +2,8 @@
 
 **Status**: Normative  
 **Version**: 1.0  
-**Date**: 2025-10-09
+**Date**: 2025-10-09  
+**Architecture**: See CRITICAL_RULES.md for latest architecture (queen-rbee orchestration)
 
 ---
 

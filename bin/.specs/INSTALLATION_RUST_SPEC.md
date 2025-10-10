@@ -1,7 +1,13 @@
-# Installation System - Rust Implementation Spec
+# Installation Specification - Rust Binary Distribution
 
-**TEAM-035**  
-**Date:** 2025-10-10  
+**Status:** Normative  
+**Version:** 1.0  
+**Date:** 2025-10-09  
+**Architecture:** See CRITICAL_RULES.md for latest architecture (queen-rbee orchestration)
+
+---
+
+## Overview
 **Status:** SPECIFICATION ONLY - NOT IMPLEMENTED
 
 ## Problem Statement

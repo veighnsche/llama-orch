@@ -2,6 +2,7 @@
 //!
 //! Created by: TEAM-017
 //! Refactored by: TEAM-017 (switched to enum pattern for Candle idiomaticity)
+//! Modified by: TEAM-036 (added GGUF support for quantized models)
 
 use anyhow::{bail, Context, Result};
 use candle_core::{Device, Tensor};
@@ -12,63 +13,75 @@ pub mod llama;
 pub mod mistral;
 pub mod phi;
 pub mod qwen;
+pub mod quantized_llama;
 
 /// Multi-model enum using Candle's idiomatic pattern
 ///
 /// TEAM-017: Each variant wraps a specific model type with its natural interface
+/// TEAM-036: Added QuantizedLlama for GGUF support
 pub enum Model {
     Llama(llama::LlamaModel),
     Mistral(mistral::MistralModel),
     Phi(phi::PhiModel),
     Qwen(qwen::QwenModel),
+    QuantizedLlama(quantized_llama::QuantizedLlamaModel),
 }
 
 impl Model {
     /// Forward pass - delegates to the specific model
     ///
     /// TEAM-017: Each model uses its natural interface
+    /// TEAM-036: Added QuantizedLlama support
     pub fn forward(&mut self, input_ids: &Tensor, position: usize) -> Result<Tensor> {
         match self {
             Model::Llama(m) => m.forward(input_ids, position),
             Model::Mistral(m) => m.forward(input_ids, position),
             Model::Phi(m) => m.forward(input_ids), // Phi doesn't use position
             Model::Qwen(m) => m.forward(input_ids, position),
+            Model::QuantizedLlama(m) => m.forward(input_ids, position),
         }
     }
 
     /// Get EOS token ID
+    /// TEAM-036: Added QuantizedLlama support
     pub fn eos_token_id(&self) -> u32 {
         match self {
             Model::Llama(m) => m.eos_token_id(),
             Model::Mistral(m) => m.eos_token_id(),
             Model::Phi(m) => m.eos_token_id(),
             Model::Qwen(m) => m.eos_token_id(),
+            Model::QuantizedLlama(m) => m.eos_token_id(),
         }
     }
 
     /// Get model architecture name
+    /// TEAM-036: Added QuantizedLlama support
     pub fn architecture(&self) -> &str {
         match self {
             Model::Llama(_) => "llama",
             Model::Mistral(_) => "mistral",
             Model::Phi(_) => "phi",
             Model::Qwen(_) => "qwen",
+            Model::QuantizedLlama(_) => "llama-quantized",
         }
     }
 
     /// Get vocab size
+    /// TEAM-036: Added QuantizedLlama support
     pub fn vocab_size(&self) -> usize {
         match self {
             Model::Llama(m) => m.vocab_size(),
             Model::Mistral(m) => m.vocab_size(),
             Model::Phi(m) => m.vocab_size(),
             Model::Qwen(m) => m.vocab_size(),
+            Model::QuantizedLlama(m) => m.vocab_size(),
         }
     }
 
     /// Reset KV cache to clear history
     ///
     /// TEAM-021: Required to clear warmup pollution before inference
+    /// TEAM-036: Added QuantizedLlama support
     /// Not all models may support this (Phi manages cache internally)
     pub fn reset_cache(&mut self) -> Result<()> {
         match self {
@@ -88,6 +101,7 @@ impl Model {
                 tracing::warn!("Cache reset not implemented for Qwen");
                 Ok(())
             }
+            Model::QuantizedLlama(m) => m.reset_cache(),
         }
     }
 }
@@ -174,8 +188,21 @@ fn load_config_json(model_path: &Path) -> Result<Value> {
 /// Load model based on detected architecture
 ///
 /// TEAM-017: Factory function that returns Model enum (Candle-idiomatic pattern)
+/// TEAM-036: Added GGUF support - detects .gguf files and loads quantized models
 pub fn load_model(model_path: &str, device: &Device) -> Result<Model> {
     let path = Path::new(model_path);
+
+    // TEAM-036: Check if this is a GGUF file (quantized model)
+    if model_path.ends_with(".gguf") {
+        tracing::info!(
+            path = %model_path,
+            "Detected GGUF file, loading quantized model"
+        );
+        let model = quantized_llama::QuantizedLlamaModel::load(path, device)?;
+        return Ok(Model::QuantizedLlama(model));
+    }
+
+    // Otherwise, load from safetensors with config.json
     let config_json = load_config_json(path)?;
     let architecture = detect_architecture(&config_json)?;
 
@@ -206,12 +233,20 @@ pub fn load_model(model_path: &str, device: &Device) -> Result<Model> {
     }
 }
 
-/// Calculate model size in bytes from safetensors files
+/// Calculate model size in bytes from safetensors or GGUF files
 ///
 /// TEAM-017: Helper to calculate total model size
+/// TEAM-036: Added GGUF support
 pub fn calculate_model_size(model_path: &str) -> Result<u64> {
     let path = Path::new(model_path);
 
+    // TEAM-036: Handle GGUF files
+    if model_path.ends_with(".gguf") {
+        let metadata = std::fs::metadata(path)?;
+        return Ok(metadata.len());
+    }
+
+    // Handle safetensors files
     let safetensor_files =
         if path.is_file() && path.extension().and_then(|e| e.to_str()) == Some("safetensors") {
             vec![path.to_path_buf()]
@@ -226,7 +261,7 @@ pub fn calculate_model_size(model_path: &str) -> Result<u64> {
             }
             files
         } else {
-            bail!("Path must be a .safetensors file or directory");
+            bail!("Path must be a .safetensors, .gguf file or directory");
         };
 
     if safetensor_files.is_empty() {

@@ -1,34 +1,71 @@
 # Architecture: Two Usage Modes
 
 **Created by:** TEAM-030  
+**Updated by:** TEAM-037 (2025-10-10T14:02)  
 **Date:** 2025-10-10  
 **Status:** Implemented
+
+---
+
+## 🚨 CRITICAL: rbee-keeper is a TESTING TOOL 🚨
+
+**rbee-keeper is NOT for production!**
+- Testing: rbee-keeper spawns queen-rbee, runs test, kills everything
+- Production: llama-orch SDK → queen-rbee directly
+
+**WHENEVER queen-rbee DIES, ALL hives and workers DIE gracefully!**
+
+---
 
 ## Overview
 
 The llama-orch system supports two distinct usage modes:
 
-1. **Ephemeral Mode** - Single inference, everything dies after (testing/development)
-2. **Persistent Mode** - Long-running, worker reuse (production - M1+)
+1. **Ephemeral Mode (Testing)** - rbee-keeper spawns queen-rbee, everything dies after
+2. **Persistent Mode (Production)** - queen-rbee pre-started, long-running
 
-## Mode 1: Ephemeral (rbee-keeper → rbee-hive)
+## Mode 1: Ephemeral (rbee-keeper → queen-rbee → rbee-hive)
 
-**Purpose:** Testing, single inference, clean environment
+**Purpose:** Testing, integration validation, development
 
 ### Lifecycle
 
 ```
-User runs: rbee infer --node localhost --model tinyllama --prompt "hello"
+Developer runs: rbee-keeper infer --node mac --model tinyllama --prompt "hello"
 
-1. rbee-keeper connects to rbee-hive (pool manager) via HTTP
-2. rbee-hive spawns llm-worker-rbee process
-3. Worker loads model and becomes ready
-4. rbee-keeper streams inference via SSE
-5. User gets result
-6. User sends SIGTERM to rbee-hive (Ctrl+C)
-7. rbee-hive cascades shutdown to all workers
-8. All processes exit, VRAM cleaned
+1. rbee-keeper spawns queen-rbee as child process
+2. queen-rbee starts HTTP daemon on port 8080
+3. queen-rbee uses SSH to start rbee-hive on mac
+4. rbee-hive starts HTTP daemon on port 9200
+5. rbee-hive spawns llm-worker-rbee process
+6. Worker starts HTTP daemon on port 8001
+7. Worker loads model into VRAM
+8. Worker becomes ready
+9. Worker sends ready callback to rbee-hive (HTTP POST /v1/workers/ready)
+   - Includes: worker_id, url (http://mac:8001), model_ref, backend, device
+10. rbee-hive registers worker locally (in-memory)
+11. rbee-hive notifies queen-rbee (HTTP POST /v1/orchestrator/worker-ready)
+    - Includes: worker_id, url, model_ref, backend, device
+12. queen-rbee adds worker to global worker registry
+13. queen-rbee looks up worker in registry (gets url: http://mac:8001)
+14. queen-rbee sends inference request DIRECTLY to worker (HTTP POST http://mac:8001/execute)
+    - Bypasses rbee-hive for inference (by design)
+15. Worker streams tokens via SSE to queen-rbee
+16. queen-rbee relays SSE stream to rbee-keeper stdout
+17. User gets result
+18. User sends SIGTERM to rbee-keeper (Ctrl+C)
+19. rbee-keeper sends SIGTERM to queen-rbee
+20. queen-rbee uses SSH to send SIGTERM to ALL rbee-hive instances
+21. rbee-hive cascades shutdown to all workers
+22. All processes exit, VRAM cleaned
 ```
+
+**Key Points:**
+- rbee-keeper controls queen-rbee lifecycle
+- queen-rbee controls ALL hives via SSH
+- **Worker HTTP server must start BEFORE ready callback**
+- **rbee-hive is bypassed for inference** - queen-rbee connects directly to worker
+- Worker registry in queen-rbee contains worker URLs for direct connection
 
 ### Storage
 
@@ -55,24 +92,39 @@ User runs: rbee infer --node localhost --model tinyllama --prompt "hello"
 - queen-rbee spawning (M1+ feature)
 - Automatic cleanup on rbee-keeper exit
 
-## Mode 2: Persistent (queen-rbee daemon)
+## Mode 2: Persistent (queen-rbee pre-started)
 
 **Purpose:** Production, worker reuse, performance
 
 ### Lifecycle
 
 ```
-# On control node
+# Operator starts queen-rbee
 queen-rbee daemon &
 
+# Operator starts rbee-hive on each node
+ssh mac "rbee-hive daemon &"
+ssh workstation "rbee-hive daemon &"
+
+# Production application uses SDK
+llama-orch-sdk → queen-rbee (HTTP POST /v2/tasks)
+    ↓
+queen-rbee → rbee-hive (check workers)
+    ↓
+queen-rbee → worker (HTTP POST /execute)
+    ↓
+worker → queen-rbee (SSE stream)
+    ↓
+queen-rbee → SDK (SSE stream)
+
 # Workers stay alive, reused across requests
-# User manages lifecycle manually
+# Operator manages lifecycle manually
 ```
 
 ### Storage
 
-- **Worker registry:** In-memory HashMap (ephemeral - lost on restart)
-- **Model catalog:** SQLite database (persistent - shared across restarts)
+- **Worker registry:** In-memory HashMap in queen-rbee (ephemeral - lost on restart)
+- **Model catalog:** SQLite database in rbee-hive (persistent - survives restarts)
 - **Database file:** `~/.rbee/models.db` (tracks downloaded models)
 
 ### Use Cases
@@ -81,14 +133,15 @@ queen-rbee daemon &
 - Multi-tenant systems
 - High-throughput inference
 - Long-running services
+- **NOT rbee-keeper** - use SDK instead
 
-### Future Implementation (M1+)
+### Implementation Status (M1+)
 
 ⏳ **Planned:**
 - queen-rbee HTTP daemon
-- Multi-hive coordination
+- Multi-hive coordination via SSH
 - Worker reuse across requests
-- Graceful shutdown cascade (queen → hives → workers)
+- Graceful shutdown cascade (queen → ALL hives → ALL workers)
 
 ## Design Decisions
 

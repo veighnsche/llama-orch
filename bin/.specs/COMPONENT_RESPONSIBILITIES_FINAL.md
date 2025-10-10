@@ -1,20 +1,31 @@
 # Component Responsibilities - FINAL CLARIFICATION
 
 **Date:** 2025-10-09T17:34:00+02:00  
-**By:** User (Vince) + TEAM-024  
+**Updated:** 2025-10-10T14:02 (TEAM-037 - queen-rbee orchestration)  
+**By:** User (Vince) + TEAM-024 + TEAM-037  
 **Status:** NORMATIVE  
 **Priority:** CRITICAL - Read before building anything!
 
 ---
 
+## 🚨 CRITICAL: rbee-keeper is a TESTING TOOL 🚨
+
+**rbee-keeper is NOT for production!**
+- Testing: rbee-keeper spawns queen-rbee, runs test, kills everything
+- Production: llama-orch SDK → queen-rbee directly
+
+**WHENEVER queen-rbee DIES, ALL hives and workers DIE gracefully!**
+
+---
+
 ## TL;DR - The 4 Binaries
 
-| Binary | Crate | Type | Purpose | Status |
-|--------|-------|------|---------|--------|
-| **queen-rbee** | bin/queen-rbee | Daemon (HTTP) | THE BRAIN - routes, schedules, Rhai scripting | M1 ❌ |
-| **llm-worker-rbee** | bin/llm-worker-rbee | Daemon (HTTP) | WORKER - loads model, generates tokens | M0 ✅ |
-| **llorch** | bin/rbee-keeper | CLI (SSH) | REMOTE CONTROL - SSH to pools, precise commands | M0 ✅ |
-| **rbee-hive** | bin/rbee-hive | CLI (local) | LOCAL POOL - model catalog, worker spawning | M0 ✅ |
+| Binary | Crate | Type | Purpose | Production? | Status |
+|--------|-------|------|---------|-------------|--------|
+| **queen-rbee** | bin/queen-rbee | Daemon (HTTP) | THE BRAIN - orchestrates, controls hives via SSH | ✅ YES | M1 ❌ |
+| **llm-worker-rbee** | bin/llm-worker-rbee | Daemon (HTTP) | WORKER - loads model, generates tokens | ✅ YES | M0 ✅ |
+| **rbee-keeper** | bin/rbee-keeper | CLI | **TESTING TOOL** - integration tester | ❌ NO | M0 ✅ |
+| **rbee-hive** | bin/rbee-hive | Daemon (HTTP) | POOL MANAGER - spawns workers, health monitoring | ✅ YES | M0 ✅ |
 
 ## Component Responsibilities
 
