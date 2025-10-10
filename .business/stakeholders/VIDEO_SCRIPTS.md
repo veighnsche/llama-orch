@@ -3,7 +3,11 @@
 **Date:** 2025-10-10  
 **Project:** rbee (pronounced "are-bee")
 
-**🎯 PRIMARY USE CASE:** Power Zed IDE's AI agents with your homelab GPUs. OpenAI-compatible API = drop-in replacement.
+**🎯 PRIMARY TARGET AUDIENCE:** Developers who build with AI but don't want to depend on big AI providers.
+
+**THE FEAR:** Building complex codebases with AI assistance. What if the AI provider changes, shuts down, or changes pricing? Your codebase becomes unmaintainable.
+
+**THE SOLUTION:** rbee = your own AI infrastructure using ALL your home network hardware. Build AI coders from scratch with agentic API. Never depend on external providers again.
 
 ---
 
@@ -13,7 +17,7 @@
 
 **Script:**
 ```
-rbee (pronounced "are-bee"): GPU marketplace like Airbnb for AI. PRIMARY USE CASE: Power Zed IDE's AI agents with your homelab GPUs via OpenAI-compatible API. Task-based pricing disrupts hourly rentals. Platform mode: built-in Rhai scheduler for multi-tenant fairness. Home/Lab mode: custom Rhai scripts for your routing logic. 30-40% platform margins. $6M/year revenue potential with 50 enterprise customers. Network effects: more GPU providers attract more customers, which attracts more providers. Open source (GPL-3.0) with commercial marketplace. EU-compliant from day 1. Multi-modal: LLMs, Stable Diffusion, TTS, embeddings—all unified. 🐝🍯
+rbee (pronounced "are-bee"): Build your own AI infrastructure to escape dependency on big AI providers. THE PROBLEM: You're building complex codebases with AI (Claude, GPT-4). What if they change models, shut down, or change pricing? Your code becomes unmaintainable. THE SOLUTION: rbee lets you build AI coders from scratch using ALL your home network hardware. Agentic API with task-based streaming. llama-orch-utils: TypeScript library for building AI agents. OpenAI-compatible = drop-in replacement. Use with Zed IDE or build custom AI coders. Year 1: 35 customers, €70K. Year 2: 100 customers, €360K. Independence from external providers. Open source (GPL-3.0). Multi-modal: LLMs, SD, TTS, embeddings. 🐝🍯
 ```
 
 ---
@@ -35,7 +39,7 @@ Enterprise-grade AI orchestration built on smart/dumb architecture. 4-binary sys
 
 **Script:**
 ```
-rbee (pronounced "are-bee"): OpenAI-compatible API means drop-in replacement for any AI coding tool. Power Zed IDE's AI agents with YOUR homelab GPUs. Write custom Rhai schedulers in Home/Lab mode—40+ helper functions for worker selection, GPU queries, quota checks, eviction policies. Platform mode uses immutable built-in scheduler for marketplace. Multi-modal unified API: LLMs, Stable Diffusion, TTS, embeddings. Candle-powered (Rust ML framework). TypeScript and Rust SDKs. SSE streaming for real-time tokens. One SDK, one API, multiple modalities. Open source (GPL-3.0). Zero recompilation needed—update Rhai scripts live. 🐝💪
+rbee (pronounced "are-bee"): Escape dependency on big AI providers. Build AI coders from scratch using YOUR home network hardware. THE FEAR: Complex codebases with AI assistance become unmaintainable if provider changes. THE SOLUTION: llama-orch-utils TypeScript library for building AI agents (file ops, LLM invocation, prompt management, response extraction). Agentic API with task-based streaming. OpenAI-compatible = drop-in replacement. Use with Zed IDE or build custom AI coders. Write custom Rhai schedulers (40+ helper functions). Multi-modal: LLMs, Stable Diffusion, TTS, embeddings. Candle-powered (Rust). Your models, your rules, never change without permission. Independence from external providers. Open source (GPL-3.0). 🐝💪
 ```
 
 ---
@@ -46,7 +50,7 @@ rbee (pronounced "are-bee"): OpenAI-compatible API means drop-in replacement for
 
 **Script:**
 ```
-rbee (pronounced "are-bee"): THE MAIN GOAL is to power Zed IDE's AI agents with YOUR homelab GPUs. OpenAI-compatible API = drop-in replacement. Run AI coding on YOUR hardware. Zero cloud dependencies. Zero API costs. SSH-based control (homelab-friendly). Pick which GPU runs which model, even across remote computers in your network. Multi-backend: CUDA for NVIDIA, Metal for Apple Silicon, CPU fallback. Web UI for visual management + CLI for power users. Model catalog with auto-download from HuggingFace. Idle timeout automatically frees VRAM after 5 minutes. Cascading shutdown prevents orphaned processes. Complete control, complete privacy. Use ALL your computers' GPU power for AI coding. 🐝🏠
+rbee (pronounced "are-bee"): Build your own AI infrastructure to escape dependency on big providers. THE FEAR: Building complex codebases with AI assistance (Claude, GPT-4). What if they change, shut down, or change pricing? Your code becomes unmaintainable. THE SOLUTION: Use ALL your home network hardware to build AI coders from scratch. Agentic API with llama-orch-utils. OpenAI-compatible = drop-in replacement. SSH-based control (homelab-friendly). Pick which GPU runs which model across all your computers. Multi-backend: CUDA, Metal, CPU. Web UI + CLI. Model catalog with auto-download. Idle timeout frees VRAM. Cascading shutdown. Complete control, complete privacy. Your models, your rules, always available. Zero external dependencies. 🐝🏠
 ```
 
 ---
@@ -57,7 +61,7 @@ rbee (pronounced "are-bee"): THE MAIN GOAL is to power Zed IDE's AI agents with 
 
 **Script:**
 ```
-Task-based GPU marketplace disrupting $10B+ hourly rental market (Vast.ai, Runpod). 30-40% platform margins. $6M/year revenue potential with just 50 enterprise customers at $10K/month. Network effects: more GPU providers → more capacity → more customers → more providers. EU-compliance is competitive moat (GDPR-native). 50% complete (31/62 BDD tests passing). Open source community (GPL-3.0) drives adoption. Proven AI development methodology (99% AI-generated code). Perfect timing: AI boom + GPU shortage. Fundable with clear path to profitability. 🚀💰
+Escape dependency on big AI providers. Build your own AI infrastructure using home network hardware. TARGET: Developers scared of building complex codebases with AI assistance—what if provider changes/shuts down? Solution: Build AI coders from scratch with agentic API. Conservative projections: Year 1 (35 customers, €10K MRR, €70K revenue), Year 2 (100 customers, €30K MRR, €360K revenue), Year 3 (€1M+ revenue). Pricing: €99-299/month. EU-compliance moat (GDPR-native). 68% complete (42/62 BDD tests). Open source (GPL-3.0). 99% AI-generated code. Perfect timing: AI coding boom + fear of provider dependency. Bootstrap-friendly. 🚀💰
 ```
 
 ---
@@ -142,6 +146,18 @@ Production-ready orchestration. Cascading shutdown prevents orphaned processes (
 - **Demo:** Try the platform
 - **Contribute:** Review code, test backends, join community
 - **Invest:** Pitch deck available for qualified investors
+
+---
+
+## Quick Reference
+
+**Pronunciation:** rbee (pronounced "are-bee")  
+**Target Audience:** Developers who build with AI but fear provider dependency  
+**The Fear:** Complex codebases become unmaintainable if provider changes/shuts down  
+**The Solution:** Build your own AI infrastructure using home network hardware  
+**Key Advantage:** 11 shared crates already built (saves 5 days)  
+**30-Day Plan:** Detailed execution plan to first customer (€200 MRR)  
+**Year 1 Goal:** 35 customers, €10K MRR, €70K revenue
 
 ---
 

@@ -1,14 +1,21 @@
 # 🔐 rbee Security Architecture: Defense in Depth
 
+**Pronunciation:** rbee (pronounced "are-bee")  
 **Date:** 2025-10-10  
 **Status:** Production-Ready Security Hardening  
 **Audience:** CTOs, Security Officers, Compliance Teams, Enterprise Customers
+
+**🎯 PRIMARY TARGET AUDIENCE:** Developers who build with AI but don't want to depend on big AI providers.
+
+**THE FEAR:** Building complex codebases with AI assistance. What if the provider changes, shuts down, or changes pricing? Your codebase becomes unmaintainable.
+
+**THE SOLUTION:** Build your own AI infrastructure using ALL your home network hardware. Never depend on external providers again.
 
 ---
 
 ## Executive Summary
 
-**rbee is built with security-first principles** from day one. We don't bolt on security as an afterthought—it's woven into every layer of the architecture through **five specialized security crates** that work together to create defense-in-depth.
+**rbee (pronounced "are-bee") is built with security-first principles** from day one. We don't bolt on security as an afterthought—it's woven into every layer of the architecture through **six specialized security crates** that work together to create defense-in-depth.
 
 **Our Security Posture:**
 - ✅ **Zero-trust authentication** (timing-safe token comparison)
@@ -47,6 +54,7 @@
 | **input-validation** 🛡️ | Injection prevention | Path traversal, SQL injection, log injection prevention | "Trust no input" |
 | **secrets-management** 🔑 | Credential handling | File-based secrets, zeroization, timing-safe verification | "Never in environment, always protected" |
 | **deadline-propagation** ⏱️ | Resource protection | Deadline enforcement, timeout handling, waste prevention | "Every millisecond counts" |
+| **narration-core** 🎀 | Observability & redaction | Human-readable narration, correlation IDs, secret redaction | "Cuteness pays the bills!" |
 
 **Together, they create defense-in-depth:** Multiple layers of security, each catching what others might miss.
 

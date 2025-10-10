@@ -1,8 +1,15 @@
 # 🎭 Rhai Programmable Scheduler: The Smart Brain
 
+**Pronunciation:** rbee (pronounced "are-bee")  
 **Date:** 2025-10-10  
 **Status:** M2 Feature (Planned)  
 **Spec:** `bin/.specs/00_llama-orch.md` [SYS-6.1.5]
+
+**🎯 PRIMARY TARGET AUDIENCE:** Developers who build with AI but don't want to depend on big AI providers.
+
+**THE FEAR:** Building complex codebases with AI assistance. What if the provider changes, shuts down, or changes pricing? Your codebase becomes unmaintainable.
+
+**THE SOLUTION:** Build your own AI infrastructure using ALL your home network hardware. Never depend on external providers again.
 
 ---
 

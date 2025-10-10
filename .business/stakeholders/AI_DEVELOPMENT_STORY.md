@@ -5,9 +5,16 @@
 **Date:** 2025-10-10  
 **Project:** rbee (pronounced "are-bee", formerly llama-orch)  
 **Development Method:** Character-Driven Development (CDD) + BDD + AI Engineering Teams  
-**Status:** 50% Complete (31/62 BDD scenarios passing)
+**Status:** 68% Complete (42/62 BDD scenarios passing)
 
-**🎯 PRIMARY USE CASE:** Power Zed IDE's AI agents with your homelab GPUs. OpenAI-compatible API means drop-in replacement for any AI coding tool.
+**🎯 PRIMARY TARGET AUDIENCE:** Developers who build with AI but don't want to depend on big AI providers.
+
+**THE PROBLEM:** You're building complex codebases with AI assistance. What happens when:
+- OpenAI/Anthropic changes their models?
+- They shut down or change pricing?
+- You can't maintain your AI-generated code without AI?
+
+**THE SOLUTION:** rbee gives you a local AI infrastructure using ALL your home network hardware. Build your own AI coders from scratch with agentic API. Never depend on external providers again.
 
 ---
 
@@ -24,29 +31,64 @@
 
 This is **Character-Driven Development (CDD)**: Where AI teams with different priorities fight over solutions, ensuring well-thought-out designs looked at from multiple angles.
 
-### 🎯 The Main Goal: AI Coding with Your Own GPUs
+### 🎯 The Main Goal: Independence from Big AI Providers
 
-**rbee powers Zed IDE (and other AI coding tools) with your homelab GPUs:**
+**The Fear:**
 
-- **Zed IDE integration** - Use Zed's built-in AI agents powered by YOUR hardware
-- **OpenAI-compatible API** - Drop-in replacement for OpenAI SDK
-- **Homelab GPU power** - Use all your computers' GPU power for AI coding
-- **No cloud costs** - Your hardware, your control, zero API fees
-- **Agentic API** - Start AI coders from your own home GPU infrastructure
+You're building complex codebases with AI assistance (Claude, GPT-4, etc.). But:
 
-**Example workflow:**
+- **What if the AI changes?** Model updates break your workflow
+- **What if they shut down?** Your codebase becomes unmaintainable
+- **What if pricing changes?** $20/month becomes $200/month
+- **What if they change terms?** Commercial use restricted
+
+**You've created a dependency you can't control.**
+
+**The Solution: rbee**
+
+**Build your own AI infrastructure using ALL your home network hardware:**
+
+- **Independence** - Never depend on external providers again
+- **Control** - Your models, your rules, your hardware
+- **Agentic API** - Build AI coders from scratch with task-based API
+- **OpenAI-compatible** - Drop-in replacement, switch anytime
+- **llama-orch-utils** - TypeScript library for building AI agents
+- **Home network power** - Use every GPU across all your computers
+
+**Example: Build Your Own AI Coder**
+
 ```bash
-# Start rbee on your homelab
+# 1. Start rbee infrastructure on your home network
 rbee-keeper daemon start
 rbee-keeper hive start --pool default
-rbee-keeper worker start --gpu 0 --backend cuda
+rbee-keeper worker start --gpu 0 --backend cuda  # Computer 1
+rbee-keeper worker start --gpu 1 --backend cuda  # Computer 2
+rbee-keeper worker start --gpu 0 --backend metal # Mac
 
-# Configure Zed IDE to use rbee instead of OpenAI
+# 2. Build your AI coder with llama-orch-utils
+import { invoke, FileReader, FileWriter } from '@llama-orch/utils';
+
+// Your AI coder that NEVER depends on external APIs
+const code = await invoke({
+  prompt: 'Generate TypeScript API from schema',
+  model: 'llama-3.1-70b',  // Running on YOUR hardware
+  maxTokens: 4000
+});
+
+await FileWriter.write('src/api.ts', code.text);
+
+# 3. Use with Zed IDE (optional)
 export OPENAI_API_BASE=http://localhost:8080/v1
 export OPENAI_API_KEY=your-rbee-token
-
-# Now Zed's AI agents run on YOUR GPUs!
+# Now Zed's AI agents run on YOUR infrastructure
 ```
+
+**The Result:**
+- ✅ No external dependencies
+- ✅ Models never change without your permission
+- ✅ Always available (your hardware, your uptime)
+- ✅ Zero ongoing costs (electricity only)
+- ✅ Complete control over your AI tooling
 
 ---
 
@@ -930,10 +972,10 @@ We study these projects in `/reference/` but **never depend on them**:
    - **rbee:** LLMs, Stable Diffusion, TTS, embeddings unified
    - **Advantage:** One API, one SDK, one orchestrator
 
-8. **Task-Based Pricing** 💰
-   - **Competitors:** Hourly GPU rental (Vast.ai, Runpod)
-   - **rbee:** Pay per task, not per hour
-   - **Advantage:** Fairer pricing, better resource utilization
+8. **Task-Based API** 💰
+   - **Competitors:** Token-based billing only
+   - **rbee:** Task-based API with preparation tracking, SSE streaming, human-readable narration
+   - **Advantage:** Better observability, clearer cost attribution
 
 9. **EU-Native Compliance** 🇪🇺
    - **Competitors:** US-based, GDPR as afterthought
@@ -1018,19 +1060,37 @@ We study these projects in `/reference/` but **never depend on them**:
 
 ### The Vision
 
-**Short-term (2026):**
-- Prove multi-modal AI orchestration works
-- Launch Rhai scripting for custom routing
-- Build web UI for visual management
-- Establish EU compliance as competitive advantage
+**Short-term (2026 - Year 1):**
 
-**Long-term (2027+):**
-- Global GPU marketplace with 1000+ providers
-- Task-based pricing disrupts hourly rental model
+**30-Day Plan to First Customer (Detailed Execution Plan):**
+- **Week 1 (Days 1-7):** Working end-to-end system
+- **Week 2 (Days 8-14):** EU compliance + basic web UI
+- **Week 3 (Days 15-21):** Marketing + 10 qualified leads
+- **Week 4 (Days 22-30):** First customer (€200 MRR)
+
+**Key Advantage:** 11 shared crates already built (audit-logging with 895 lines of docs, auth-min, input-validation, secrets-management, narration-core, deadline-propagation, gpu-info, and more) — saves 5 days of development time!
+
+**Year 1 Milestones:**
+- Month 1: 1 customer (€200 MRR) — 30-day plan in place
+- Month 3: 5 customers (€1,500 MRR)
+- Month 6: 20 customers (€6,000 MRR)
+- Month 12: 35 customers (€10,000 MRR, €70K revenue)
+- Prove independence from big AI providers
+- Launch llama-orch-utils for agentic AI development
+- Establish EU compliance as competitive advantage (already 90% built!)
+
+**Medium-term (2027 - Year 2):**
+- 100 customers (€30,000 MRR)
+- Year 2 revenue: ~€360,000
 - Platform mode: multi-tenant with immutable Rhai scheduler
+- Web UI for visual management
+
+**Long-term (2028+ - Year 3+):**
+- GPU marketplace with distributed providers
 - Home/Lab mode: custom Rhai scripts for self-hosters
-- EU-native platform captures B2B market
-- $6M+ annual revenue from platform fees
+- Multi-modal: LLMs, Stable Diffusion, TTS, embeddings
+- Agentic AI development platform
+- Year 3 target: €1M+ annual revenue
 
 **The Result:**
 - ✅ Better architecture (orchestrator-first)
@@ -1065,6 +1125,18 @@ When you see these signatures, you know:
 - Developer Experience Team: Readable, structured, configurable
 
 **This document verified by all six teams.**
+
+---
+
+## Quick Reference
+
+**Target Audience:** Developers who build with AI but fear provider dependency  
+**The Fear:** Complex codebases become unmaintainable if provider changes/shuts down  
+**The Solution:** Build your own AI infrastructure using home network hardware  
+**Key Advantage:** 11 shared crates already built (saves 5 days)  
+**30-Day Plan:** Detailed execution plan to first customer (€200 MRR)  
+**Year 1 Goal:** 35 customers, €10K MRR, €70K revenue  
+**Pronunciation:** rbee (pronounced "are-bee")
 
 ---
 

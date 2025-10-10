@@ -14,13 +14,15 @@
 
 ---
 
-## Primary Use Case
+## Primary Target Audience
 
 ### 🎯 THE MAIN GOAL
 
-**Power Zed IDE's AI agents with your homelab GPUs**
+**Developers who build with AI but don't want to depend on big AI providers**
 
-rbee provides an **OpenAI-compatible API** that lets you use **ALL your computers' GPU power** for AI coding instead of paying for cloud APIs.
+**THE FEAR:** You're building complex codebases with AI assistance (Claude, GPT-4). What if the AI provider changes their models, shuts down, or changes pricing? Your codebase becomes unmaintainable without AI. You've created a dependency you can't control.
+
+**THE SOLUTION:** rbee provides an **OpenAI-compatible API** that lets you build your own AI infrastructure using **ALL your home network hardware**. Build AI coders from scratch with agentic API. Never depend on external providers again.
 
 ### How It Works
 
@@ -40,7 +42,10 @@ export OPENAI_API_KEY=your-rbee-token
 
 ### Benefits
 
-- ✅ **Zero API costs** - Your hardware, your control
+- ✅ **Independence** - Never depend on external providers again
+- ✅ **Control** - Your models, your rules, never change without permission
+- ✅ **Always available** - Your hardware, your uptime
+- ✅ **Zero ongoing costs** - Electricity only (no API fees)
 - ✅ **Full privacy** - Code never leaves your network
 - ✅ **Use all your GPUs** - Across multiple computers
 - ✅ **Drop-in replacement** - OpenAI-compatible API
@@ -71,26 +76,35 @@ When writing about rbee, always include:
 
 ### Short Version
 ```
-rbee (pronounced "are-bee"): Power Zed IDE's AI agents with your homelab GPUs. 
-OpenAI-compatible API = drop-in replacement.
+rbee (pronounced "are-bee"): Build your own AI infrastructure to escape 
+dependency on big AI providers. Never depend on external providers again.
 ```
 
 ### Medium Version
 ```
-rbee (pronounced "are-bee") is an OpenAI-compatible AI orchestration platform 
-that lets you use ALL your computers' GPU power for AI coding. Drop-in 
-replacement for OpenAI API. Primary use case: Run Zed IDE's AI agents on YOUR 
-homelab GPUs instead of paying for cloud APIs.
+rbee (pronounced "are-bee"): Developers building complex codebases with AI 
+assistance fear provider dependency. What if the AI changes, shuts down, or 
+changes pricing? Your code becomes unmaintainable. rbee lets you build your 
+own AI infrastructure using ALL your home network hardware. Build AI coders 
+from scratch with agentic API. llama-orch-utils provides TypeScript utilities 
+for building AI agents. OpenAI-compatible = drop-in replacement. Independence 
+from external providers.
 ```
 
 ### Long Version
 ```
-rbee (pronounced "are-bee", formerly llama-orch) is an OpenAI-compatible AI 
-orchestration platform. THE MAIN GOAL: Power Zed IDE's AI agents with your 
-homelab GPUs. Use ALL your computers' GPU power for AI coding instead of 
-paying for cloud APIs. OpenAI-compatible API means drop-in replacement for 
-Zed IDE, Cursor, Continue.dev, or any tool using OpenAI SDK. Zero API costs. 
-Full control. Complete privacy.
+rbee (pronounced "are-bee", formerly llama-orch): Escape dependency on big AI 
+providers. THE PROBLEM: You're building complex codebases with AI assistance 
+(Claude, GPT-4). What if they change models, shut down, or change pricing? 
+Your codebase becomes unmaintainable without AI. You've created a dependency 
+you can't control. THE SOLUTION: Build your own AI infrastructure using ALL 
+your home network hardware. rbee provides OpenAI-compatible API + agentic API 
+for building AI coders from scratch. llama-orch-utils: TypeScript library for 
+building LLM pipelines and AI agents (file ops, LLM invocation, prompt 
+management, response extraction). Your models, your rules, never change without 
+permission. Always available. Zero ongoing costs (electricity only). Complete 
+control. Full privacy. Conservative projections: Year 1 (€70K, 35 customers), 
+Year 2 (€360K, 100 customers), Year 3 (€1M+, 200+ customers).
 ```
 
 ---
@@ -103,4 +117,17 @@ Full control. Complete privacy.
 
 ---
 
-*Always emphasize: rbee (pronounced "are-bee") powers Zed IDE with your homelab GPUs* 🐝
+## Summary
+
+**Pronunciation:** rbee (pronounced "are-bee")  
+**Target Audience:** Developers who build with AI but fear provider dependency  
+**The Fear:** Complex codebases become unmaintainable if provider changes/shuts down  
+**The Solution:** Build your own AI infrastructure using home network hardware  
+**Key Advantage:** 11 shared crates already built (saves 5 days)  
+**30-Day Plan:** Detailed execution plan to first customer (€200 MRR)  
+**Year 1 Goal:** 35 customers, €10K MRR, €70K revenue  
+**Status:** 68% complete (42/62 BDD scenarios passing)
+
+---
+
+*Always emphasize: rbee (pronounced "are-bee") helps developers escape dependency on big AI providers* 🐝

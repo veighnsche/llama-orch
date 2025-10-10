@@ -2,10 +2,17 @@
 
 > **A deep technical exploration of the bee-inspired AI orchestration platform** 🍯
 
+**Pronunciation:** rbee (pronounced "are-bee")  
 **Version:** 0.1.0  
 **Date:** 2025-10-10  
 **Audience:** Technical stakeholders, architects, senior engineers  
 **Website:** https://rbee.dev
+
+**🎯 PRIMARY TARGET AUDIENCE:** Developers who build with AI but don't want to depend on big AI providers.
+
+**THE FEAR:** Building complex codebases with AI assistance. What if the provider changes, shuts down, or changes pricing? Your codebase becomes unmaintainable.
+
+**THE SOLUTION:** Build your own AI infrastructure using ALL your home network hardware. Never depend on external providers again.
 
 ---
 
@@ -14,10 +21,11 @@
 This document provides a comprehensive technical overview of rbee's architecture for stakeholders who want to understand **how the system actually works** under the hood.
 
 **Current Development Status (October 2025):**
-- ✅ **31/62 BDD scenarios passing** (50% complete)
+- ✅ **42/62 BDD scenarios passing** (68% complete)
 - ✅ Backend detection system operational (CUDA, Metal, CPU)
 - ✅ Registry schema with backend capabilities
-- 🚧 Lifecycle management in progress (TEAM-053)
+- ✅ OpenAI-compatible API (v1 completion endpoints)
+- 🚧 Lifecycle management in progress (TEAM-057)
 - 🚧 Cascading shutdown implementation pending
 
 **What You'll Learn:**

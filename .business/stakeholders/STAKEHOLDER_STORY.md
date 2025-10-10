@@ -2,38 +2,63 @@
 
 > **Building the future of AI orchestration, one bee at a time** 🍯
 
+**Pronunciation:** rbee (pronounced "are-bee")  
 **Version:** 0.1.0 (Pre-Release)  
 **Date:** 2025-10-10  
 **Status:** Architecture Complete, M0 Implementation In Progress  
 **License:** GPL-3.0-or-later (Free & Open Source, Copyleft)  
 **Website:** https://rbee.dev
 
+**🎯 PRIMARY TARGET AUDIENCE:** Developers who build with AI but don't want to depend on big AI providers.
+
+**THE FEAR:** You're building complex codebases with AI assistance. What if OpenAI/Anthropic changes their models, shuts down, or changes pricing? Your codebase becomes unmaintainable without AI.
+
+**THE SOLUTION:** rbee gives you a local AI infrastructure using ALL your home network hardware. Build your own AI coders from scratch with agentic API. Never depend on external providers again.
+
 ---
 
 ## Executive Summary
 
-**rbee is a multi-modal AI orchestration platform that gives you complete control over which GPU runs which AI task (LLM inference, image generation, audio synthesis, embeddings) across every machine in your network—and connects you to a global marketplace of GPU providers.**
-
-Born from a simple frustration—"Why can't I easily choose which GPU runs which model, even on a remote computer?"—rbee evolved into a revolutionary platform with:
-
-- **Multi-Modal AI:** Not just LLMs—Stable Diffusion, TTS, embeddings, and more (powered by Candle)
-- **User-Scriptable Routing:** Write Rhai scripts to control how AI tasks are routed
-- **Global GPU Marketplace:** Connect to queen-rbees worldwide for task-based GPU access
-- **Task-Based, Not Stable:** GPUs don't need to be always-on—perfect for idle capacity monetization
-- **Web UI + SDK:** Frontend for visual management, SDK for programmatic access
+**rbee (pronounced "are-bee") is an OpenAI-compatible AI orchestration platform that lets you build your own AI infrastructure using ALL your home network hardware. Never depend on external AI providers again.**
 
 **Core Problem We Solve:**
-> "How hard it is to pick which model runs on which GPU, even on a remote computer. And not being able to have control over all the computer power in your network for AI tasks."
+
+> **"I'm building complex codebases with AI assistance (Claude, GPT-4, etc.). But what happens when the AI provider changes their models, shuts down, or changes pricing? My codebase becomes unmaintainable without AI. I've created a dependency I can't control."**
+
+**Our Solution:**
+
+- **Independence:** Build AI coders that run on YOUR hardware
+- **Control:** Your models, your rules, never change without permission
+- **Agentic API:** Task-based API with SSE streaming for building AI agents
+- **llama-orch-utils:** TypeScript library for building LLM pipelines
+- **Home Network Power:** Use every GPU across all your computers
+- **OpenAI-compatible:** Drop-in replacement, switch anytime
+- **Multi-Modal AI:** LLMs, Stable Diffusion, TTS, embeddings (powered by Candle)
+- **User-Scriptable Routing:** Write Rhai scripts to control how AI tasks are routed
 
 **Our Solution:**
 A complete AI orchestration ecosystem with 4 binaries (queen-rbee, [ai-type]-[backend]-worker-rbee, rbee-keeper, rbee-hive), web UI, SDK, marketplace integration, and support for multiple AI modalities (text, image, audio, embeddings).
 
+**Why This Matters:**
+
+Developers are scared of building heavy, complicated codebases with AI assistance because:
+- **Dependency risk:** What if the AI provider changes or disappears?
+- **Maintenance nightmare:** Can't maintain AI-generated code without AI
+- **Cost uncertainty:** Pricing can change overnight
+- **Loss of control:** External providers control your tooling
+
+**rbee solves this:** Your own AI infrastructure, your own models, always available.
+
 **Current Status (Oct 2025):**
-- ✅ **31/62 BDD scenarios passing** (50% complete)
+- ✅ **42/62 BDD scenarios passing** (68% complete)
+- ✅ **11 shared crates already built** (audit-logging, auth-min, input-validation, secrets-management, narration-core, deadline-propagation, gpu-info, and more)
+- ✅ **GDPR compliance ready** (895 lines of audit-logging docs, 32 pre-defined event types)
 - ✅ Backend detection system operational (CUDA, Metal, CPU)
 - ✅ Multi-backend worker support
+- ✅ OpenAI-compatible API (v1 completion endpoints)
+- ✅ llama-orch-utils (TypeScript library for agentic AI)
+- 🚧 **30-day plan to first revenue** (detailed day-by-day execution plan)
 - 🚧 Lifecycle management in progress (daemon/hive/worker commands)
-- 🚧 SSH configuration management pending
 
 ---
 
@@ -801,41 +826,67 @@ const result = await client.enqueue({
 - No usage fees, no restrictions
 - Build community and prove product value
 
-### Phase 1: Platform MVP (M5 - Q1 2026)
+### Phase 1: Bootstrap (2026 - Year 1)
 
-**Goal:** Prove marketplace model with 10 providers, 50 customers
+**Goal:** First paying customers, prove independence from big AI providers
 
-**Features:**
-- Provider registration API
-- Federated placement (simple routing)
-- Basic billing tracking
-- Customer API (queen-rbee facade)
+**30-Day Plan to First Customer:**
+- **Week 1 (Days 1-7):** Working end-to-end system (submit job → worker executes → tokens stream back)
+- **Week 2 (Days 8-14):** EU compliance (GDPR endpoints, audit logs, basic web UI)
+- **Week 3 (Days 15-21):** Marketing (landing page, outreach, 10 qualified leads)
+- **Week 4 (Days 22-30):** Revenue (demos, close deal, onboard customer, €200 MRR)
 
-**Revenue:** $0 (focus on adoption)
+**Key Advantage:** Already have 11 shared crates built (audit-logging, auth-min, etc.) — saves 5 days of development time!
 
-### Phase 2: Scale (Q2-Q3 2026)
-
-**Goal:** 100 providers, 500 customers, $100k MRR
-
-**Features:**
-- Dynamic pricing engine
-- SLA enforcement & monitoring
-- Advanced billing (invoices, reports)
-- Multi-region support (expand beyond EU)
-
-**Revenue:** $100k/month
-
-### Phase 3: Enterprise (Q4 2026)
-
-**Goal:** 50 enterprise customers, $500k MRR
+**Milestones:**
+- Month 1: 1 customer (€200 MRR) — **30-day plan in place**
+- Month 3: 5 customers (€1,500 MRR)
+- Month 6: 20 customers (€6,000 MRR)
+- Month 12: 35 customers (€10,000 MRR)
 
 **Features:**
-- Dedicated capacity pools
-- Custom SLAs
-- Compliance certifications (SOC2, ISO27001)
-- White-label platform (resellers)
+- OpenAI-compatible API
+- Agentic API for building AI coders
+- llama-orch-utils (TypeScript library)
+- Basic web UI
+- EU compliance (GDPR) — **already 90% built!**
 
-**Revenue:** $500k/month ($6M/year)
+**Revenue:** €70K Year 1
+
+### Phase 2: Scale (2027 - Year 2)
+
+**Goal:** 100 customers, platform mode
+
+**Milestones:**
+- Q1: 50 customers (€15,000 MRR)
+- Q2: 70 customers (€21,000 MRR)
+- Q3: 85 customers (€25,500 MRR)
+- Q4: 100 customers (€30,000 MRR)
+
+**Features:**
+- Platform mode (multi-tenant)
+- Enterprise tier (dedicated instances)
+- Advanced web UI
+- Multi-modal (LLMs, SD, TTS, embeddings)
+
+**Revenue:** €360K Year 2
+
+### Phase 3: Marketplace (2028 - Year 3)
+
+**Goal:** €1M+ annual revenue, GPU marketplace
+
+**Milestones:**
+- 200+ customers
+- €83K+ MRR
+- Marketplace with distributed providers
+
+**Features:**
+- GPU marketplace (provider network)
+- Rhai script marketplace
+- Enterprise features (SLAs, white-label)
+- SOC2, ISO27001 certifications
+
+**Revenue:** €1M+ Year 3
 
 ---
 
@@ -931,31 +982,43 @@ cargo build --release
 
 ### The Business Model
 
-**Phase 1 (Now):** Open source (GPL-3.0) - Build community  
-**Phase 2 (M5):** Platform marketplace - Prove model  
-**Phase 3 (2027):** Scale to $6M/year - 50 enterprise customers
+**Phase 1 (2026):** Bootstrap - €70K Year 1 (35 customers)  
+**Phase 2 (2027):** Scale - €360K Year 2 (100 customers)  
+**Phase 3 (2028):** Marketplace - €1M+ Year 3 (200+ customers)
 
 **Revenue Streams:**
-1. Platform fees (30-40% on marketplace transactions)
-2. Enterprise support (SLA guarantees)
-3. Managed hosting (fully managed clusters)
-4. Premium features (advanced Rhai helpers, priority support)
+1. SaaS subscriptions (€99-299/month per customer)
+2. Enterprise tier (custom pricing, €2K+/month)
+3. Marketplace fees (30-40% on transactions - Year 3)
+4. Professional services (integrations, training - Year 2+)
+
+**Pricing Tiers:**
+- Starter: €99/month (500K tokens, basic features)
+- Professional: €299/month (2M tokens, GDPR endpoints) ⭐ Most Popular
+- Enterprise: Custom (€2K+/month, dedicated instances, SLAs)
 
 ### The Vision
 
-**Short-term (2026):**
-- Prove multi-modal AI orchestration works
-- Launch Rhai scripting for custom routing
-- Build web UI for visual management
+**Short-term (2026 - Year 1):**
+- Month 1: First paying customer (€200 MRR)
+- Month 3: 5 customers (€1,500 MRR)
+- Month 12: 35 customers (€10,000 MRR, €70K revenue)
+- Prove Zed IDE integration works
+- Launch llama-orch-utils for agentic AI development
 - Establish EU compliance as competitive advantage
 
-**Long-term (2027+):**
-- Global GPU marketplace with 1000+ providers
-- Task-based pricing disrupts hourly rental model
+**Medium-term (2027 - Year 2):**
+- 100 customers (€30,000 MRR, €360K revenue)
 - Platform mode: multi-tenant with immutable Rhai scheduler
+- Enterprise tier: dedicated instances
+- Web UI for visual management
+
+**Long-term (2028+ - Year 3+):**
+- 200+ customers (€83K+ MRR, €1M+ revenue)
+- GPU marketplace with distributed providers
 - Home/Lab mode: custom Rhai scripts for self-hosters
-- EU-native platform captures B2B market
-- $6M+ annual revenue from platform fees
+- Multi-modal: LLMs, Stable Diffusion, TTS, embeddings
+- Agentic AI development platform
 
 ### Why This Will Win
 
@@ -998,30 +1061,42 @@ cargo build --release
 - 🌍 Join global network
 
 **For Investors:**
-- 💼 Reach out for pitch deck
-- 📊 Review revenue projections
+- 📊 Review pitch deck
+- 💬 Schedule call
 - 🚀 Join the revolution
 
 ---
 
-## Final Thoughts
+## Quick Reference
 
-**This is not just another LLM platform.**
+**Pronunciation:** rbee (pronounced "are-bee")  
+**Target Audience:** Developers who build with AI but fear provider dependency  
+**The Fear:** Complex codebases become unmaintainable if provider changes/shuts down  
+**The Solution:** Build your own AI infrastructure using home network hardware  
+**Key Advantage:** 11 shared crates already built (saves 5 days of development)  
+**30-Day Plan:** Week 1 (system), Week 2 (compliance), Week 3 (marketing), Week 4 (revenue)  
+**Status:** 68% complete (42/62 BDD scenarios passing)  
+**Year 1 Goal:** 35 customers, €10K MRR, €70K revenue  
+**Current Version:** 0.1.0 (Pre-Release)  
+**License:** GPL-3.0-or-later  
+**Website:** https://rbee.dev  
+**Repository:** https://github.com/veighnsche/llama-orch
 
-This is a **multi-modal AI orchestration ecosystem** with:
-- Global GPU marketplace
-- User-scriptable routing
-- Task-based pricing
-- EU-native compliance
-- Complete tooling (CLI, Web UI, SDK)
+---
 
-**This is not just open source.**
+Verified by Testing Team 🔍  
+Guarded by auth-min Team 🎭  
+Optimized by Performance Team ⏱️  
+Secured by Audit Logging Team 🔒  
+Narrated by Narration Core Team 🎀  
+Crafted with love by Developer Experience Team 🎨  
+Orchestrated by Human 🧑‍🌾🐝  
+Built by AI Engineering Teams 🐝💪is not just open source.**
 
 This is a **sustainable business model** with:
 - 30-40% platform margins
 - Network effects
 - Platform mode for marketplace (immutable scheduler)
-- Home/Lab mode for self-hosters (custom scripts)
 - Enterprise revenue streams
 
 **This is not just vibe-coded.**
