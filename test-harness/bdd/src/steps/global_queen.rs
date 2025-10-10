@@ -74,13 +74,14 @@ pub async fn start_global_queen_rbee() {
     tracing::info!("🐝 Starting GLOBAL queen-rbee process at {:?}...", binary_path);
     
     let child = {
+        // TEAM-058: Changed to inherit stdio to see panic messages
         let mut child = tokio::process::Command::new(&binary_path)
                 .args(["--port", "8080", "--database"])
                 .arg(&db_path)
                 .env("MOCK_SSH", "true")
                 .current_dir(&workspace_dir)
-                .stdout(std::process::Stdio::piped())
-                .stderr(std::process::Stdio::piped())
+                .stdout(std::process::Stdio::inherit())  // Print to console
+                .stderr(std::process::Stdio::inherit())  // Print to console
                 .spawn()
                 .expect("Failed to start global queen-rbee");
 

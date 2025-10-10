@@ -50,7 +50,8 @@ async fn main() {
     });
     
     // Wait for mock servers to start
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    // TEAM-058: Increased from 500ms to 1000ms per TEAM-057 recommendation for better reliability
+    tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
     
     tracing::info!("✅ Mock servers ready:");
     tracing::info!("   - queen-rbee: http://127.0.0.1:8080");

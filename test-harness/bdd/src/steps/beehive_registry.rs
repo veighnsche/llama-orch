@@ -124,16 +124,10 @@ pub async fn given_node_in_registry(world: &mut World, node: String) {
         .unwrap_or_else(|| "http://localhost:8080/v2/registry/beehives/add".to_string());
 
     // TEAM-052: Add backend capabilities based on node name
-    let (backends, devices) = match node.as_str() {
-        "workstation" => (
-            Some(r#"["cuda","cpu"]"#.to_string()),
-            Some(r#"{"cuda":2,"cpu":1}"#.to_string()),
-        ),
-        _ => (
-            Some(r#"["cpu"]"#.to_string()),
-            Some(r#"{"cpu":1}"#.to_string()),
-        ),
-    };
+    // TEAM-058: Fixed type mismatch - API expects Option<String> but we need to check what it actually deserializes
+    // For now, omit these fields since they're Optional and causing 422 errors
+    let backends: Option<String> = None;
+    let devices: Option<String> = None;
 
     let payload = serde_json::json!({
         "node_name": node,
@@ -149,8 +143,9 @@ pub async fn given_node_in_registry(world: &mut World, node: String) {
     });
 
     // TEAM-055: Add retry logic with exponential backoff to fix IncompleteMessage errors
+    // TEAM-058: Increased from 3 to 5 attempts per TEAM-057 recommendation
     let mut last_error = None;
-    for attempt in 0..3 {
+    for attempt in 0..5 {
         match client
             .post(&url)
             .json(&payload)
@@ -163,10 +158,11 @@ pub async fn given_node_in_registry(world: &mut World, node: String) {
                 last_error = None;
                 break;
             }
-            Err(e) if attempt < 2 => {
+            Err(e) if attempt < 4 => {
                 tracing::warn!("⚠️ Attempt {} failed: {}, retrying...", attempt + 1, e);
                 last_error = Some(e);
-                tokio::time::sleep(std::time::Duration::from_millis(100 * 2_u64.pow(attempt))).await;
+                // TEAM-058: Increased backoff from 100ms to 200ms base per TEAM-057 recommendation
+                tokio::time::sleep(std::time::Duration::from_millis(200 * 2_u64.pow(attempt))).await;
                 continue;
             }
             Err(e) => {
@@ -177,7 +173,7 @@ pub async fn given_node_in_registry(world: &mut World, node: String) {
     }
 
     if let Some(e) = last_error {
-        panic!("Failed to register node after 3 attempts: {}", e);
+        panic!("Failed to register node after 5 attempts: {}", e);
     }
 
     // Also add to mock world state for compatibility

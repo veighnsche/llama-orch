@@ -52,11 +52,9 @@ pub async fn then_queen_rbee_ssh_query(world: &mut World, node: String, hostname
 #[then(expr = "queen-rbee queries rbee-hive worker registry at {string}")]
 pub async fn then_query_worker_registry(world: &mut World, url: String) {
     // Mock: simulate HTTP request to worker registry
-    world.last_http_response = Some(crate::steps::world::HttpResponse {
-        status: 200,
-        headers: std::collections::HashMap::new(),
-        body: serde_json::json!({"workers": []}).to_string(),
-    });
+    // TEAM-058: Updated to match new world.last_http_response type (String)
+    world.last_http_response = Some(serde_json::json!({"workers": []}).to_string());
+    world.last_http_status = Some(200);
     tracing::info!("✅ Mock query worker registry at: {}", url);
 }
 
@@ -69,17 +67,13 @@ pub async fn then_registry_returns_empty(world: &mut World) {
 
 #[then(expr = "queen-rbee performs pool preflight check at {string}")]
 pub async fn then_pool_preflight_check(world: &mut World, url: String) {
-    // Mock: simulate preflight check
-    world.last_http_response = Some(crate::steps::world::HttpResponse {
-        status: 200,
-        headers: std::collections::HashMap::new(),
-        body: serde_json::json!({
+    // TEAM-058: Updated to match new world.last_http_response type (String)
+    world.last_http_response = Some(serde_json::json!({
             "status": "alive",
             "version": "0.1.0",
             "api_version": "v1"
-        })
-        .to_string(),
-    });
+        }).to_string());
+    world.last_http_status = Some(200);
     tracing::info!("✅ Mock preflight check at: {}", url);
 }
 

@@ -72,11 +72,20 @@ pub struct World {
     /// Last HTTP request sent
     pub last_http_request: Option<HttpRequest>,
 
-    /// Last HTTP response received
-    pub last_http_response: Option<HttpResponse>,
+    /// Last HTTP response received (body as String)
+    /// TEAM-058: Changed from HttpResponse to Option<String> for simpler access
+    pub last_http_response: Option<String>,
+    
+    /// Last HTTP status code
+    /// TEAM-058: Added for status code tracking
+    pub last_http_status: Option<u16>,
 
     /// SSE events received
     pub sse_events: Vec<SseEvent>,
+    
+    /// Start time for latency tracking
+    /// TEAM-058: Added for latency verification
+    pub start_time: Option<std::time::Instant>,
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Inference State
@@ -221,7 +230,9 @@ impl World {
         self.last_stderr.clear();
         self.last_http_request = None;
         self.last_http_response = None;
+        self.last_http_status = None;
         self.sse_events.clear();
+        self.start_time = None;
         self.tokens_generated.clear();
         self.narration_messages.clear();
         self.inference_metrics = None;
