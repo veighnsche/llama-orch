@@ -51,6 +51,13 @@ members = [
     "tools/spec-extract",    # Spec extraction & validation
     "xtask",                 # Workspace automation (cargo xtask)
     
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # TEST HARNESS — BDD & Integration Tests
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # TEAM-040: System-level BDD tests
+    
+    "test-harness/bdd",      # BDD test harness (binary: bdd-runner)
+    
 ]
 
 resolver = "2"

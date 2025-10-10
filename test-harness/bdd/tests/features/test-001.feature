@@ -1,7 +1,8 @@
 # Traceability: TEST-001
 # Architecture: TEAM-037 (queen-rbee orchestration, in-memory worker registry, SQLite model catalog)
-# Components: rbee-keeper (testing tool), queen-rbee (orchestrator), rbee-hive (pool manager), llm-worker-rbee (worker)
+# Components: rbee-keeper (config + testing tool), queen-rbee (orchestrator), rbee-hive (pool manager), llm-worker-rbee (worker)
 # Updated by: TEAM-038 (aligned with queen-rbee orchestration and GGUF support)
+# Updated by: TEAM-041 (added rbee-hive Registry module, SSH setup flow, rbee-keeper configuration mode)
 
 Feature: Cross-Node Inference Request Flow
   As a user on the control node
@@ -18,6 +19,155 @@ Feature: Cross-Node Inference Request Flow
     And queen-rbee is running at "http://localhost:8080"
     And the model catalog is SQLite at "~/.rbee/models.db"
     And the worker registry is in-memory ephemeral per node
+    And the rbee-hive registry is SQLite at "~/.rbee/beehives.db"
+
+  # ============================================================================
+  # PREREQUISITES: rbee-hive Registry Setup (TEAM-041)
+  # ============================================================================
+  # CRITICAL: Before any inference can happen, remote rbee-hive nodes must be
+  # configured through rbee-keeper. The queen-rbee maintains a persistent
+  # rbee-hive Registry with SSH connection details.
+  # ============================================================================
+
+  @setup @critical
+  Scenario: Add remote rbee-hive node to registry
+    Given queen-rbee is running
+    And the rbee-hive registry is empty
+    When I run:
+      """
+      rbee-keeper setup add-node \
+        --name mac \
+        --ssh-host mac.home.arpa \
+        --ssh-user vince \
+        --ssh-key ~/.ssh/id_ed25519 \
+        --git-repo https://github.com/user/llama-orch.git \
+        --git-branch main \
+        --install-path ~/rbee
+      """
+    Then rbee-keeper sends request to queen-rbee at "http://localhost:8080/v2/registry/beehives/add"
+    And queen-rbee validates SSH connection with:
+      """
+      ssh -i /home/vince/.ssh/id_ed25519 vince@mac.home.arpa "echo 'connection test'"
+      """
+    And the SSH connection succeeds
+    And queen-rbee saves node to rbee-hive registry:
+      | field              | value                                      |
+      | node_name          | mac                                        |
+      | ssh_host           | mac.home.arpa                              |
+      | ssh_port           | 22                                         |
+      | ssh_user           | vince                                      |
+      | ssh_key_path       | /home/vince/.ssh/id_ed25519                |
+      | git_repo_url       | https://github.com/user/llama-orch.git     |
+      | git_branch         | main                                       |
+      | install_path       | /home/vince/rbee                           |
+      | last_connected_unix| 1728508603                                 |
+      | status             | reachable                                  |
+    And rbee-keeper displays:
+      """
+      [queen-rbee] 🔌 Testing SSH connection to mac.home.arpa
+      [queen-rbee] ✅ SSH connection successful! Node 'mac' saved to registry
+      """
+    And the exit code is 0
+
+  @setup
+  Scenario: Add node with SSH connection failure
+    When I run:
+      """
+      rbee-keeper setup add-node \
+        --name unreachable \
+        --ssh-host unreachable.home.arpa \
+        --ssh-user vince \
+        --ssh-key ~/.ssh/id_ed25519 \
+        --git-repo https://github.com/user/llama-orch.git \
+        --install-path ~/rbee
+      """
+    Then queen-rbee attempts SSH connection
+    And the SSH connection fails with timeout
+    And queen-rbee does NOT save node to registry
+    And rbee-keeper displays:
+      """
+      [queen-rbee] 🔌 Testing SSH connection to unreachable.home.arpa
+      [queen-rbee] ❌ SSH connection failed: Connection timeout
+      """
+    And the exit code is 1
+
+  @setup
+  Scenario: Install rbee-hive on remote node
+    Given node "mac" is registered in rbee-hive registry
+    When I run:
+      """
+      rbee-keeper setup install --node mac
+      """
+    Then queen-rbee loads SSH details from registry
+    And queen-rbee executes installation via SSH:
+      """
+      ssh -i /home/vince/.ssh/id_ed25519 vince@mac.home.arpa << 'EOF'
+        cd /home/vince/rbee
+        git clone https://github.com/user/llama-orch.git .
+        git checkout main
+        cargo build --release --bin rbee-hive
+        cargo build --release --bin llm-worker-rbee
+      EOF
+      """
+    And rbee-keeper displays:
+      """
+      [queen-rbee] 📦 Cloning repository on mac
+      [queen-rbee] 🔨 Building rbee-hive and llm-worker-rbee
+      [queen-rbee] ✅ Installation complete on mac!
+      """
+    And the exit code is 0
+
+  @setup
+  Scenario: List registered rbee-hive nodes
+    Given multiple nodes are registered in rbee-hive registry
+    When I run "rbee-keeper setup list-nodes"
+    Then rbee-keeper displays:
+      """
+      Registered rbee-hive Nodes:
+      
+      mac (mac.home.arpa)
+        Status: reachable
+        Last connected: 2024-10-09 15:30:03
+        Install path: /home/vince/rbee
+      
+      workstation (workstation.home.arpa)
+        Status: reachable
+        Last connected: 2024-10-09 14:22:15
+        Install path: /home/vince/rbee
+      """
+    And the exit code is 0
+
+  @setup
+  Scenario: Remove node from rbee-hive registry
+    Given node "mac" is registered in rbee-hive registry
+    When I run "rbee-keeper setup remove-node --name mac"
+    Then queen-rbee removes node from registry
+    And rbee-keeper displays:
+      """
+      [queen-rbee] ✅ Node 'mac' removed from registry
+      """
+    And the exit code is 0
+
+  @setup @critical
+  Scenario: Inference fails when node not in registry
+    Given the rbee-hive registry does not contain node "mac"
+    When I run:
+      """
+      rbee-keeper infer \
+        --node mac \
+        --model hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
+        --prompt "test"
+      """
+    Then queen-rbee queries rbee-hive registry for node "mac"
+    And the query returns no results
+    And rbee-keeper displays:
+      """
+      [queen-rbee] ❌ ERROR: Node 'mac' not found in rbee-hive registry
+      
+      To add this node, run:
+        rbee-keeper setup add-node --name mac --ssh-host mac.home.arpa ...
+      """
+    And the exit code is 1
 
   # ============================================================================
   # HAPPY PATH: Full inference flow from cold start
@@ -25,6 +175,7 @@ Feature: Cross-Node Inference Request Flow
 
   Scenario: Happy path - cold start inference on remote node
     Given no workers are registered for model "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF"
+    And node "mac" is registered in rbee-hive registry with SSH details
     And node "mac" is reachable at "http://mac.home.arpa:8080"
     And node "mac" has 8000 MB of available RAM
     And node "mac" has Metal backend available
@@ -38,7 +189,11 @@ Feature: Cross-Node Inference Request Flow
         --temperature 0.7
       """
     Then rbee-keeper sends request to queen-rbee at "http://localhost:8080/v2/tasks"
-    And queen-rbee queries node "mac" via SSH at "mac.home.arpa"
+    And queen-rbee queries rbee-hive registry for node "mac"
+    And the registry returns SSH details for node "mac"
+    And queen-rbee establishes SSH connection using registry details
+    And queen-rbee starts rbee-hive via SSH at "mac.home.arpa"
+    And queen-rbee updates registry with last_connected_unix
     And queen-rbee queries rbee-hive worker registry at "http://mac.home.arpa:9200/v1/workers/list"
     And the worker registry returns an empty list
     And queen-rbee performs pool preflight check at "http://mac.home.arpa:9200/v1/health"
@@ -71,7 +226,8 @@ Feature: Cross-Node Inference Request Flow
     And the exit code is 0
 
   Scenario: Warm start - reuse existing idle worker
-    Given a worker is registered with:
+    Given node "mac" is registered in rbee-hive registry with SSH details
+    And a worker is registered with:
       | field      | value                                           |
       | id         | worker-abc123                                   |
       | url        | http://mac.home.arpa:8001                       |
@@ -312,7 +468,7 @@ Feature: Cross-Node Inference Request Flow
         --api-key <worker_api_key>
       """
     And the worker HTTP server binds to port 8081
-    And the worker sends ready callback to pool manager
+    And the worker sends ready callback to rbee-hive
     And the ready callback includes worker_id, url, model_ref, backend, device
     And model loading begins asynchronously
     And rbee-hive returns worker details to rbee-keeper with state "loading"
@@ -521,8 +677,8 @@ Feature: Cross-Node Inference Request Flow
       Partial result saved to: /tmp/rbee-partial-abc123.txt
       Tokens generated: 12 / 20
       """
-    And pool manager removes worker from registry
-    And pool manager logs crash event
+    And rbee-hive removes worker from registry
+    And rbee-hive logs crash event
     And the exit code is 1
 
   Scenario: EC5 - Client cancellation with Ctrl+C
@@ -610,19 +766,19 @@ Feature: Cross-Node Inference Request Flow
     Given inference completed at T+0:00
     And the worker is idle
     When 5 minutes elapse
-    Then pool manager sends "POST /v1/admin/shutdown" at T+5:00
+    Then rbee-hive sends "POST /v1/admin/shutdown" at T+5:00
     And the worker unloads model from VRAM at T+5:01
     And the worker exits cleanly at T+5:02
-    And pool manager removes worker from registry at T+5:02
+    And rbee-hive removes worker from registry at T+5:02
     And VRAM is available for other applications
     And the next inference request triggers cold start
 
   # ============================================================================
-  # POOL MANAGER LIFECYCLE
+  # RBEE-HIVE LIFECYCLE
   # ============================================================================
 
   @lifecycle @critical
-  Scenario: Pool manager remains running as persistent HTTP daemon
+  Scenario: Rbee-hive remains running as persistent HTTP daemon
     Given rbee-hive is started as HTTP daemon on port 8080
     And rbee-hive spawned a worker
     When the worker sends ready callback
@@ -633,23 +789,23 @@ Feature: Cross-Node Inference Request Flow
     And rbee-hive HTTP API remains accessible
 
   @lifecycle
-  Scenario: Pool manager monitors worker health
+  Scenario: Rbee-hive monitors worker health
     Given rbee-hive is running as persistent daemon
     And a worker is registered
     When 30 seconds elapse
-    Then pool manager sends health check to worker
-    And if worker responds, pool manager updates last_activity
-    And if worker does not respond, pool manager marks worker as unhealthy
-    And if worker is unhealthy for 3 consecutive checks, pool manager removes it from registry
+    Then rbee-hive sends health check to worker
+    And if worker responds, rbee-hive updates last_activity
+    And if worker does not respond, rbee-hive marks worker as unhealthy
+    And if worker is unhealthy for 3 consecutive checks, rbee-hive removes it from registry
     And rbee-hive continues running (does NOT exit)
 
   @lifecycle @critical
-  Scenario: Pool manager enforces idle timeout (worker dies, pool lives)
+  Scenario: Rbee-hive enforces idle timeout (worker dies, pool lives)
     Given rbee-hive is running as persistent daemon
     And a worker completed inference and is idle
     When 5 minutes elapse without new requests
-    Then pool manager sends shutdown command to worker
-    And pool manager removes worker from in-memory registry
+    Then rbee-hive sends shutdown command to worker
+    And rbee-hive removes worker from in-memory registry
     And worker releases resources and exits
     And rbee-hive continues running as daemon (does NOT exit)
 
@@ -827,12 +983,15 @@ Feature: Cross-Node Inference Request Flow
   # LIFECYCLE RULES - CRITICAL UNDERSTANDING
   # ============================================================================
   #
-  # RULE 1: rbee-keeper is a TESTING TOOL (EPHEMERAL CLI)
+  # RULE 1: rbee-keeper is a CONFIGURATION + TESTING TOOL (EPHEMERAL CLI)
+  #   - Purpose: Configure rbee-hive nodes + run inference for testing
+  #   - Commands: `setup add-node`, `setup install`, `setup list-nodes`, `infer`, etc.
   #   - Starts: User runs command
   #   - Runs: Only during command execution
   #   - Dies: After command completes (exit code 0 or 1)
   #   - Does NOT die: Never stays running
   #   - Production: Use llama-orch SDK → queen-rbee directly
+  #   - CRITICAL: NOT just for testing - also manages rbee-hive registry via queen-rbee
   #
   # RULE 2: queen-rbee is a PERSISTENT HTTP DAEMON (ORCHESTRATOR)
   #   - Starts: `queen-rbee daemon` or spawned by rbee-keeper
@@ -840,8 +999,10 @@ Feature: Cross-Node Inference Request Flow
   #   - Dies: ONLY when receiving SIGTERM or explicit shutdown
   #   - Does NOT die: After inference completes
   #   - Controls: ALL rbee-hive instances via SSH
+  #   - Maintains: rbee-hive Registry (SQLite at ~/.rbee/beehives.db)
+  #   - Registry stores: SSH connection details for all remote nodes
   #
-  # RULE 3: rbee-hive is a PERSISTENT HTTP DAEMON (POOL MANAGER)
+  # RULE 3: rbee-hive is a PERSISTENT HTTP DAEMON (RBEE-HIVE)
   #   - Starts: Spawned by queen-rbee via SSH
   #   - Runs: Continuously as HTTP server on port 9200
   #   - Dies: When queen-rbee sends SIGTERM via SSH
@@ -900,15 +1061,24 @@ Feature: Cross-Node Inference Request Flow
 
 # Created by: TEAM-037 (Testing Team)
 # Updated by: TEAM-038 (aligned with queen-rbee orchestration)
+# Updated by: TEAM-041 (added rbee-hive Registry, SSH setup, configuration mode)
 # 
 # LIFECYCLE SUMMARY:
-# - rbee-keeper: EPHEMERAL CLI (testing tool, dies after command completes)
+# - rbee-keeper: EPHEMERAL CLI (config + testing tool, dies after command completes)
 # - queen-rbee: PERSISTENT HTTP DAEMON (orchestrator, dies only on SIGTERM)
+#   - Maintains rbee-hive Registry (SQLite at ~/.rbee/beehives.db)
+#   - Registry stores SSH connection details for all remote nodes
 # - rbee-hive: PERSISTENT HTTP DAEMON (pool manager, dies when queen-rbee sends SIGTERM)
 # - llm-worker-rbee: PERSISTENT HTTP DAEMON (worker, dies on idle timeout or shutdown)
 # - Ephemeral mode: rbee-keeper spawns queen-rbee, controls lifecycle
 # - Persistent mode: queen-rbee pre-started, rbee-keeper just connects
 # - Cascading shutdown: queen-rbee → rbee-hive → workers
+#
+# CONFIGURATION FLOW (TEAM-041):
+# - rbee-keeper setup add-node: Add remote node with SSH validation
+# - rbee-keeper setup install: Remote installation via SSH (git clone + cargo build)
+# - rbee-keeper setup list-nodes: List all registered rbee-hive nodes
+# - queen-rbee uses registry to establish SSH connections for inference
 #
 # GGUF Support: TEAM-036 added quantized model support (Q4_K_M, Q5_K_M, etc.)
 # Installation: TEAM-036 added XDG-compliant installation system

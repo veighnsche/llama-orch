@@ -39,7 +39,7 @@ test-harness/bdd/
 - Worker health check (Phase 7)
 - Inference execution (Phase 8)
 - Edge cases (EC1-EC10)
-- Pool manager lifecycle
+- Rbee-hive lifecycle
 - Error response format
 - CLI commands
 
@@ -52,7 +52,7 @@ test-harness/bdd/
 - Critical happy paths (MVP-001, MVP-002)
 - Essential model provisioning (MVP-003, MVP-004)
 - Worker lifecycle (MVP-005, MVP-006, MVP-007)
-- Pool manager daemon behavior (MVP-008, MVP-009)
+- Rbee-hive daemon behavior (MVP-008, MVP-009)
 - **Lifecycle rules** (MVP-010 through MVP-013)
 - 10 critical edge cases (MVP-EC1 through MVP-EC10)
 - Error format validation
