@@ -99,11 +99,7 @@ pub async fn when_minutes_elapse(world: &mut World, minutes: u64) {
     tracing::debug!("{} minutes elapse", minutes);
 }
 
-#[then(expr = "rbee-keeper displays:")]
-pub async fn then_display(world: &mut World, step: &cucumber::gherkin::Step) {
-    let docstring = step.docstring.as_ref().expect("Expected a docstring");
-    tracing::debug!("Should display: {}", docstring.trim());
-}
+// TEAM-042: Removed duplicate step definition - now in beehive_registry.rs
 
 #[then(expr = "if all {int} attempts fail, error {string} is returned")]
 pub async fn then_if_attempts_fail(world: &mut World, attempts: u32, error: String) {
@@ -151,23 +147,15 @@ pub async fn then_display_message(world: &mut World, message: String) {
 pub async fn then_stop_token_generation(world: &mut World) {
     tracing::debug!("Worker should stop token generation");
 }
-
 #[then(expr = "the worker releases slot and returns to idle")]
 pub async fn then_release_slot(world: &mut World) {
     tracing::debug!("Worker should release slot and return to idle");
-}
-
-#[then(expr = "the exit code is {int}")]
-pub async fn then_exit_code_edge(world: &mut World, code: i32) {
-    world.last_exit_code = Some(code);
-    tracing::debug!("Exit code should be: {}", code);
 }
 
 #[then(expr = "the worker returns {int} {string}")]
 pub async fn then_worker_returns_status(world: &mut World, status: u16, error_code: String) {
     tracing::debug!("Worker should return {} {}", status, error_code);
 }
-
 #[then(expr = "rbee-hive returns:")]
 pub async fn then_hive_returns(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");

@@ -1,5 +1,6 @@
 // CLI command step definitions
 // Created by: TEAM-040
+// Modified by: TEAM-043 (added real command execution)
 
 use cucumber::{given, when, then};
 use crate::steps::world::World;
@@ -20,6 +21,53 @@ pub async fn given_config_contains(world: &mut World, step: &cucumber::gherkin::
 pub async fn when_i_run_command_string(world: &mut World, command: String) {
     world.last_command = Some(command.clone());
     tracing::debug!("Running command: {}", command);
+}
+
+// TEAM-043: Real command execution with docstring
+#[when(expr = "I run:")]
+pub async fn when_i_run_command_docstring(world: &mut World, step: &cucumber::gherkin::Step) {
+    let docstring = step.docstring.as_ref().expect("Expected a docstring");
+    let command_line = docstring.trim();
+    
+    tracing::info!("🚀 Executing command: {}", command_line);
+    
+    // Parse command line into parts
+    let parts: Vec<&str> = command_line.split_whitespace().collect();
+    if parts.is_empty() {
+        panic!("Empty command");
+    }
+    
+    // Extract binary name and args
+    let binary = parts[0];
+    let args: Vec<&str> = parts[1..].iter()
+        .filter(|s| !s.starts_with('\\')) // Filter out line continuations
+        .copied()
+        .collect();
+    
+    // Execute command
+    let output = tokio::process::Command::new("cargo")
+        .arg("run")
+        .arg("--bin")
+        .arg(binary)
+        .arg("--")
+        .args(&args)
+        .current_dir("../../bin/rbee-keeper")
+        .output()
+        .await
+        .expect("Failed to execute command");
+    
+    world.last_command = Some(command_line.to_string());
+    world.last_exit_code = output.status.code();
+    world.last_stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    world.last_stderr = String::from_utf8_lossy(&output.stderr).to_string();
+    
+    tracing::info!("✅ Command completed with exit code: {:?}", world.last_exit_code);
+    if !world.last_stdout.is_empty() {
+        tracing::debug!("stdout: {}", world.last_stdout);
+    }
+    if !world.last_stderr.is_empty() {
+        tracing::debug!("stderr: {}", world.last_stderr);
+    }
 }
 
 #[when(expr = "RBEE_CONFIG={string} is set")]
@@ -126,4 +174,17 @@ pub async fn then_output_shows_health_status(world: &mut World) {
 #[then(expr = "logs from mac are streamed to stdout")]
 pub async fn then_logs_streamed(world: &mut World) {
     tracing::debug!("Logs should be streamed to stdout");
+}
+
+// TEAM-043: Exit code verification
+#[then(expr = "the exit code is {int}")]
+pub async fn then_exit_code_is(world: &mut World, expected_code: i32) {
+    assert_eq!(
+        world.last_exit_code,
+        Some(expected_code),
+        "Expected exit code {}, got {:?}",
+        expected_code,
+        world.last_exit_code
+    );
+    tracing::info!("✅ Exit code is {}", expected_code);
 }

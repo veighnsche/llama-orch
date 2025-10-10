@@ -3,9 +3,16 @@
 // Purpose: Job scheduling, admission control, worker registry, SSE relay
 //
 // TEAM-030: Added shutdown handler scaffold for cascading shutdown
+// TEAM-043: Implemented dual registry system (beehive + worker)
+
+mod beehive_registry;
+mod worker_registry;
+mod ssh;
+mod http;
 
 use anyhow::Result;
 use clap::Parser;
+use std::sync::Arc;
 use tracing::{info, error};
 
 #[derive(Parser, Debug)]
@@ -21,9 +28,9 @@ struct Args {
     #[arg(short, long)]
     config: Option<String>,
 
-    /// Database path (SQLite)
-    #[arg(short, long, default_value = "rbee-orchestrator.db")]
-    database: String,
+    /// Database path (SQLite) for beehive registry
+    #[arg(short, long)]
+    database: Option<String>,
 }
 
 #[tokio::main]
@@ -37,31 +44,46 @@ async fn main() -> Result<()> {
 
     let args = Args::parse();
 
-    info!("🐝 rbee Orchestrator Daemon starting...");
+    info!("🐝 queen-rbee Orchestrator Daemon starting...");
     info!("Port: {}", args.port);
-    info!("Database: {}", args.database);
 
-    // TEAM-030: Setup shutdown handler for future implementation
-    tokio::spawn(async move {
-        tokio::signal::ctrl_c().await.ok();
-        info!("Shutdown signal received");
-        // TODO: M1 implementation - cascade shutdown to all hives
-        // - Send shutdown signal to all connected hives
-        // - Wait for acknowledgment
-        // - Clean up resources
-        std::process::exit(0);
-    });
-
-    // TODO: M1 implementation
-    // - Remove SQLite database (use in-memory registry)
-    // - Create in-memory worker registry
-    // - Create job queue
-    // - Start HTTP server
-    // - Track hive connections for cascading shutdown
-
-    error!("❌ Orchestrator daemon not yet implemented (M1 milestone)");
-    error!("This is a scaffold for the rbee rebrand");
+    // TEAM-043: Initialize dual registry system
+    let db_path = args.database.map(std::path::PathBuf::from);
+    let beehive_registry = beehive_registry::BeehiveRegistry::new(db_path).await?;
+    info!("✅ Beehive registry initialized (SQLite)");
     
+    let worker_registry = worker_registry::WorkerRegistry::new();
+    info!("✅ Worker registry initialized (in-memory)");
+
+    // Create HTTP server state
+    let state = http::AppState {
+        beehive_registry: Arc::new(beehive_registry),
+        worker_registry: Arc::new(worker_registry),
+    };
+
+    // Create router
+    let app = http::create_router(state);
+
+    // Start HTTP server
+    let addr = format!("0.0.0.0:{}", args.port);
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+    info!("🚀 HTTP server listening on {}", addr);
+
+    // TEAM-030: Setup shutdown handler
+    let server = axum::serve(listener, app);
+    
+    tokio::select! {
+        result = server => {
+            if let Err(e) = result {
+                error!("Server error: {}", e);
+            }
+        }
+        _ = tokio::signal::ctrl_c() => {
+            info!("Shutdown signal received");
+        }
+    }
+
+    info!("👋 queen-rbee shutting down");
     Ok(())
 }
 

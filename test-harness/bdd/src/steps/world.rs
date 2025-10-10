@@ -111,6 +111,19 @@ pub struct World {
     
     /// Temporary directory for test artifacts
     pub temp_dir: Option<tempfile::TempDir>,
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Process Management (TEAM-043)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    /// Running queen-rbee process
+    pub queen_rbee_process: Option<tokio::process::Child>,
+    
+    /// Running rbee-hive processes
+    pub rbee_hive_processes: Vec<tokio::process::Child>,
+    
+    /// Running worker processes
+    pub worker_processes: Vec<tokio::process::Child>,
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -225,12 +238,28 @@ impl World {
         self.inference_metrics = None;
         self.last_error = None;
         self.temp_dir = None;
+        self.queen_rbee_process = None;
+        self.rbee_hive_processes.clear();
+        self.worker_processes.clear();
     }
 }
 
 impl Drop for World {
     fn drop(&mut self) {
-        // Cleanup happens automatically via Drop impls
+        // TEAM-043: Kill all running processes
+        if let Some(mut proc) = self.queen_rbee_process.take() {
+            let _ = proc.start_kill();
+            tracing::debug!("Killed queen-rbee process");
+        }
+        
+        for mut proc in self.rbee_hive_processes.drain(..) {
+            let _ = proc.start_kill();
+        }
+        
+        for mut proc in self.worker_processes.drain(..) {
+            let _ = proc.start_kill();
+        }
+        
         tracing::debug!("World dropped, cleaning up resources");
     }
 }

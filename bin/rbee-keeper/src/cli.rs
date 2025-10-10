@@ -22,6 +22,11 @@ pub enum Commands {
         #[arg(long)]
         system: bool,
     },
+    /// Setup and manage rbee-hive nodes (TEAM-043)
+    Setup {
+        #[command(subcommand)]
+        action: SetupAction,
+    },
     /// Pool management commands
     Pool {
         #[command(subcommand)]
@@ -45,6 +50,51 @@ pub enum Commands {
         /// Temperature (0.0-2.0)
         #[arg(long, default_value = "0.7")]
         temperature: f32,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum SetupAction {
+    /// Add a remote rbee-hive node to the registry
+    AddNode {
+        /// Node name (e.g., "mac", "workstation")
+        #[arg(long)]
+        name: String,
+        /// SSH hostname
+        #[arg(long)]
+        ssh_host: String,
+        /// SSH port
+        #[arg(long, default_value = "22")]
+        ssh_port: u16,
+        /// SSH username
+        #[arg(long)]
+        ssh_user: String,
+        /// Path to SSH private key
+        #[arg(long)]
+        ssh_key: Option<String>,
+        /// Git repository URL
+        #[arg(long)]
+        git_repo: String,
+        /// Git branch
+        #[arg(long, default_value = "main")]
+        git_branch: String,
+        /// Installation path on remote node
+        #[arg(long)]
+        install_path: String,
+    },
+    /// List registered rbee-hive nodes
+    ListNodes,
+    /// Remove a node from the registry
+    RemoveNode {
+        /// Node name to remove
+        #[arg(long)]
+        name: String,
+    },
+    /// Install rbee-hive on a remote node
+    Install {
+        /// Node name to install on
+        #[arg(long)]
+        node: String,
     },
 }
 
@@ -133,6 +183,7 @@ impl Cli {
 pub async fn handle_command(cli: Cli) -> anyhow::Result<()> {
     match cli.command {
         Commands::Install { system } => crate::commands::install::handle(system),
+        Commands::Setup { action } => crate::commands::setup::handle(action).await,
         Commands::Pool { action } => crate::commands::pool::handle(action),
         Commands::Infer { node, model, prompt, max_tokens, temperature } => {
             crate::commands::infer::handle(node, model, prompt, max_tokens, temperature).await
