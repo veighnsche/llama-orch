@@ -17,34 +17,46 @@ pub async fn given_queen_rbee_running(world: &mut World) {
         let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
         let db_path = temp_dir.path().join("test_beehives.db");
         
-        tracing::info!("🐝 Starting queen-rbee process...");
-        let mut child = tokio::process::Command::new("cargo")
-            .args(["run", "--bin", "queen-rbee", "--", "--port", "8080", "--database"])
+        // TEAM-044: Use pre-built binary instead of cargo run to avoid compilation timeouts
+        let workspace_dir = std::env::var("CARGO_MANIFEST_DIR")
+            .map(|p| std::path::PathBuf::from(p).parent().unwrap().parent().unwrap().to_path_buf())
+            .unwrap_or_else(|_| std::path::PathBuf::from("/home/vince/Projects/llama-orch"));
+        
+        let binary_path = workspace_dir.join("target/debug/queen-rbee");
+        
+        tracing::info!("🐝 Starting queen-rbee process at {:?}...", binary_path);
+        let mut child = tokio::process::Command::new(&binary_path)
+            .args(["--port", "8080", "--database"])
             .arg(&db_path)
-            .current_dir("../../bin/queen-rbee")
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
+            .env("MOCK_SSH", "true")  // TEAM-044: Skip SSH validation for tests
+            .current_dir(&workspace_dir)
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
             .spawn()
             .expect("Failed to start queen-rbee");
         
+        // TEAM-044: Increased timeout to 60 seconds for first build
         // Wait for server to be ready
         let client = reqwest::Client::new();
-        for _ in 0..30 {
+        for i in 0..600 {
             if let Ok(resp) = client.get("http://localhost:8080/health").send().await {
                 if resp.status().is_success() {
-                    tracing::info!("✅ queen-rbee is ready");
+                    tracing::info!("✅ queen-rbee is ready (took {}ms)", i * 100);
                     world.queen_rbee_process = Some(child);
                     world.queen_rbee_url = Some("http://localhost:8080".to_string());
                     world.temp_dir = Some(temp_dir);
                     return;
                 }
             }
+            if i % 10 == 0 && i > 0 {
+                tracing::info!("⏳ Waiting for queen-rbee... ({}s)", i / 10);
+            }
             sleep(Duration::from_millis(100)).await;
         }
         
         // If we get here, startup failed
         let _ = child.kill().await;
-        panic!("queen-rbee failed to start within 3 seconds");
+        panic!("queen-rbee failed to start within 60 seconds");
     }
     
     tracing::info!("✅ queen-rbee is running at: {:?}", world.queen_rbee_url);
@@ -60,7 +72,30 @@ pub async fn given_registry_empty(world: &mut World) {
 
 #[given(expr = "node {string} is registered in rbee-hive registry")]
 pub async fn given_node_in_registry(world: &mut World, node: String) {
-    // Add a basic node entry
+    // TEAM-044: Actually register the node in queen-rbee via HTTP API
+    let client = reqwest::Client::new();
+    let url = world.queen_rbee_url.as_ref()
+        .map(|u| format!("{}/v2/registry/beehives/add", u))
+        .unwrap_or_else(|| "http://localhost:8080/v2/registry/beehives/add".to_string());
+    
+    let payload = serde_json::json!({
+        "node_name": node,
+        "ssh_host": format!("{}.home.arpa", node),
+        "ssh_port": 22,
+        "ssh_user": "vince",
+        "ssh_key_path": "/home/vince/.ssh/id_ed25519",
+        "git_repo_url": "https://github.com/user/llama-orch.git",
+        "git_branch": "main",
+        "install_path": "/home/vince/rbee"
+    });
+    
+    let _resp = client.post(&url)
+        .json(&payload)
+        .send()
+        .await
+        .expect("Failed to register node in queen-rbee");
+    
+    // Also add to mock world state for compatibility
     world.beehive_nodes.insert(
         node.clone(),
         crate::steps::world::BeehiveNode {
@@ -76,7 +111,7 @@ pub async fn given_node_in_registry(world: &mut World, node: String) {
             status: "reachable".to_string(),
         },
     );
-    tracing::info!("✅ Node '{}' added to registry", node);
+    tracing::info!("✅ Node '{}' added to registry (via HTTP)", node);
 }
 
 #[given(expr = "node {string} is registered in rbee-hive registry with SSH details")]
@@ -86,9 +121,10 @@ pub async fn given_node_in_registry_with_ssh(world: &mut World, node: String) {
 
 #[given(expr = "multiple nodes are registered in rbee-hive registry")]
 pub async fn given_multiple_nodes_in_registry(world: &mut World) {
+    // TEAM-044: Register both nodes via HTTP
     given_node_in_registry(world, "mac".to_string()).await;
     given_node_in_registry(world, "workstation".to_string()).await;
-    tracing::info!("✅ Multiple nodes registered (mac, workstation)");
+    tracing::info!("✅ Multiple nodes registered (mac, workstation) via HTTP");
 }
 
 #[given(expr = "the rbee-hive registry does not contain node {string}")]

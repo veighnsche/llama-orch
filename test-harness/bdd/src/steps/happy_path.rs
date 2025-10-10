@@ -38,43 +38,8 @@ pub async fn given_node_metal_backend(world: &mut World, node: String) {
     tracing::debug!("Node {} has Metal backend", node);
 }
 
-#[when(expr = "I run:")]
-pub async fn when_i_run_command(world: &mut World, step: &cucumber::gherkin::Step) {
-    let docstring = step.docstring.as_ref().expect("Expected a docstring");
-    let command = docstring.trim();
-    
-    world.last_command = Some(command.to_string());
-    tracing::info!("📝 Command to run: {}", command);
-    
-    // Mock: simulate command execution
-    // Parse command to determine behavior
-    if command.contains("rbee-keeper setup add-node") {
-        // Simulate add-node command
-        world.last_exit_code = Some(0);
-        world.last_stdout = "[queen-rbee] 🔌 Testing SSH connection to mac.home.arpa\n[queen-rbee] ✅ SSH connection successful! Node 'mac' saved to registry\n".to_string();
-    } else if command.contains("rbee-keeper setup install") {
-        // Simulate install command
-        world.last_exit_code = Some(0);
-        world.last_stdout = "[queen-rbee] 📦 Cloning repository on mac\n[queen-rbee] 🔨 Building rbee-hive and llm-worker-rbee\n[queen-rbee] ✅ Installation complete on mac!\n".to_string();
-    } else if command.contains("rbee-keeper setup list-nodes") {
-        // Simulate list-nodes command
-        world.last_exit_code = Some(0);
-        world.last_stdout = "Registered rbee-hive Nodes:\n\nmac (mac.home.arpa)\n  Status: reachable\n  Last connected: 2024-10-09 15:30:03\n  Install path: /home/vince/rbee\n".to_string();
-    } else if command.contains("rbee-keeper setup remove-node") {
-        // Simulate remove-node command
-        world.last_exit_code = Some(0);
-        world.last_stdout = "[queen-rbee] ✅ Node 'mac' removed from registry\n".to_string();
-    } else if command.contains("rbee-keeper infer") {
-        // Simulate inference command
-        world.last_exit_code = Some(0);
-        world.last_stdout = "Once upon a time in a small village there lived a curious cat\n".to_string();
-    }
-    
-    tracing::info!("✅ Command executed (mocked)");
-}
-
-// TEAM-042: Removed duplicate - registry-specific version in beehive_registry.rs
-// This was for inference requests, but the step text is ambiguous
+// TEAM-044: Removed duplicate "I run:" step - real implementation is in cli_commands.rs
+// TEAM-042 had created a mock version here that conflicted with the real execution
 
 #[then(expr = "queen-rbee queries node {string} via SSH at {string}")]
 pub async fn then_queen_rbee_ssh_query(world: &mut World, node: String, hostname: String) {
@@ -339,11 +304,7 @@ pub async fn then_worker_transitions_to_state(world: &mut World, state: String) 
     tracing::info!("✅ Worker transitioned to state: {}", state);
 }
 
-#[then(expr = "the exit code is {int}")]
-pub async fn then_exit_code(world: &mut World, code: i32) {
-    world.last_exit_code = Some(code);
-    tracing::debug!("Exit code should be: {}", code);
-}
+// TEAM-044: Removed duplicate "the exit code is" step - real implementation is in cli_commands.rs
 
 #[then(expr = "rbee-keeper connects to the progress SSE stream")]
 pub async fn then_connect_to_progress_sse(world: &mut World) {

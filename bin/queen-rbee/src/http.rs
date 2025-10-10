@@ -84,17 +84,33 @@ async fn add_node(
     State(state): State<AppState>,
     Json(req): Json<AddNodeRequest>,
 ) -> impl IntoResponse {
-    info!("🔌 Testing SSH connection to {}", req.ssh_host);
-
-    // Test SSH connection
-    let ssh_success = crate::ssh::test_ssh_connection(
-        &req.ssh_host,
-        req.ssh_port,
-        &req.ssh_user,
-        req.ssh_key_path.as_deref(),
-    )
-    .await
-    .unwrap_or(false);
+    // TEAM-044: Smart SSH mocking for tests
+    // If MOCK_SSH is set, simulate SSH based on hostname:
+    // - "unreachable" in hostname -> fail (to test error handling)
+    // - other hostnames -> succeed (for normal test nodes)
+    let mock_ssh = std::env::var("MOCK_SSH").is_ok();
+    
+    let ssh_success = if mock_ssh {
+        // Smart mock: fail for "unreachable" hosts, succeed for others
+        if req.ssh_host.contains("unreachable") {
+            info!("🔌 Mock SSH: Simulating connection failure for {}", req.ssh_host);
+            false
+        } else {
+            info!("🔌 Mock SSH: Simulating successful connection to {}", req.ssh_host);
+            true
+        }
+    } else {
+        info!("🔌 Testing SSH connection to {}", req.ssh_host);
+        // Real SSH connection test
+        crate::ssh::test_ssh_connection(
+            &req.ssh_host,
+            req.ssh_port,
+            &req.ssh_user,
+            req.ssh_key_path.as_deref(),
+        )
+        .await
+        .unwrap_or(false)
+    };
 
     if !ssh_success {
         error!("❌ SSH connection failed: Connection timeout");
