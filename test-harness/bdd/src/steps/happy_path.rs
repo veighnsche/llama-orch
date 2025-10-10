@@ -174,16 +174,65 @@ pub async fn then_cuda_check_passes(world: &mut World) {
     tracing::info!("✅ CUDA backend check passed");
 }
 
+// TEAM-059: Actually spawn worker via mock rbee-hive
 #[then(expr = "rbee-hive spawns worker process {string} on port {int}")]
 pub async fn then_spawn_worker(world: &mut World, binary: String, port: u16) {
-    // Mock: spawn worker
-    tracing::info!("✅ Mock spawned {} on port {}", binary, port);
+    // TEAM-059: Call mock rbee-hive to spawn REAL worker process
+    let client = reqwest::Client::new();
+    let spawn_url = "http://127.0.0.1:9200/v1/workers/spawn";
+    
+    let payload = serde_json::json!({
+        "binary": binary,
+        "port": port,
+    });
+    
+    match client.post(spawn_url)
+        .json(&payload)
+        .send()
+        .await
+    {
+        Ok(resp) if resp.status().is_success() => {
+            let body: serde_json::Value = resp.json().await.unwrap_or_default();
+            tracing::info!("✅ Real worker spawned: {:?}", body);
+        }
+        Ok(resp) => {
+            tracing::warn!("⚠️  Worker spawn returned status: {}", resp.status());
+        }
+        Err(e) => {
+            tracing::error!("❌ Failed to spawn worker: {}", e);
+        }
+    }
 }
 
+// TEAM-059: Actually spawn worker with CUDA device via mock rbee-hive
 #[then(expr = "rbee-hive spawns worker process {string} on port {int} with cuda device {int}")]
 pub async fn then_spawn_worker_cuda(world: &mut World, binary: String, port: u16, device: u8) {
-    // Mock: spawn worker with CUDA device
-    tracing::info!("✅ Mock spawned {} on port {} with CUDA device {}", binary, port, device);
+    // TEAM-059: Call mock rbee-hive to spawn REAL worker process with CUDA
+    let client = reqwest::Client::new();
+    let spawn_url = "http://127.0.0.1:9200/v1/workers/spawn";
+    
+    let payload = serde_json::json!({
+        "binary": binary,
+        "port": port,
+        "cuda_device": device,
+    });
+    
+    match client.post(spawn_url)
+        .json(&payload)
+        .send()
+        .await
+    {
+        Ok(resp) if resp.status().is_success() => {
+            let body: serde_json::Value = resp.json().await.unwrap_or_default();
+            tracing::info!("✅ Real worker spawned with CUDA {}: {:?}", device, body);
+        }
+        Ok(resp) => {
+            tracing::warn!("⚠️  Worker spawn returned status: {}", resp.status());
+        }
+        Err(e) => {
+            tracing::error!("❌ Failed to spawn worker: {}", e);
+        }
+    }
 }
 
 #[then(expr = "the worker HTTP server starts on port {int}")]

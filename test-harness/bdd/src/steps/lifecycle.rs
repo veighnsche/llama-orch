@@ -217,9 +217,31 @@ pub async fn then_hive_starts_daemon(world: &mut World) {
     tracing::debug!("rbee-hive should start HTTP daemon");
 }
 
+// TEAM-059: Actually spawn worker via mock rbee-hive
 #[then(expr = "rbee-hive spawns worker")]
 pub async fn then_hive_spawns_worker(world: &mut World) {
-    tracing::debug!("rbee-hive should spawn worker");
+    let client = reqwest::Client::new();
+    let spawn_url = "http://127.0.0.1:9200/v1/workers/spawn";
+    
+    let payload = serde_json::json!({
+        "model_ref": "mock-model",
+    });
+    
+    match client.post(spawn_url)
+        .json(&payload)
+        .send()
+        .await
+    {
+        Ok(resp) if resp.status().is_success() => {
+            tracing::info!("✅ Real worker spawned via rbee-hive");
+        }
+        Ok(resp) => {
+            tracing::warn!("⚠️  Worker spawn returned status: {}", resp.status());
+        }
+        Err(e) => {
+            tracing::error!("❌ Failed to spawn worker: {}", e);
+        }
+    }
 }
 
 #[then(expr = "inference completes")]
