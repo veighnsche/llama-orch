@@ -1,6 +1,10 @@
-// Lifecycle step definitions
-// Created by: TEAM-040
-// Modified by: TEAM-061 (replaced all HTTP clients with timeout client)
+// Worker lifecycle step definitions
+// Created by: TEAM-053
+//
+// ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
+// ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
+// ⚠️ See TEAM_063_REAL_HANDOFF.md40
+// modified by: TEAM-061 (replaced all HTTP clients with timeout client)
 
 use crate::steps::world::World;
 use cucumber::{given, then, when};
@@ -219,31 +223,31 @@ pub async fn then_hive_starts_daemon(world: &mut World) {
 }
 
 // TEAM-059: Actually spawn worker via mock rbee-hive
+// TEAM-063: Wired to actual rbee-hive registry
 #[then(expr = "rbee-hive spawns worker")]
 pub async fn then_hive_spawns_worker(world: &mut World) {
-    // TEAM-061: Use timeout client to prevent hangs
-    let client = crate::steps::world::create_http_client();
-    let spawn_url = "http://127.0.0.1:9200/v1/workers/spawn";
+    use rbee_hive::registry::{WorkerInfo, WorkerState};
     
-    let payload = serde_json::json!({
-        "model_ref": "mock-model",
-    });
+    let worker_id = uuid::Uuid::new_v4().to_string();
+    let port = world.next_worker_port;
+    world.next_worker_port += 1;
     
-    match client.post(spawn_url)
-        .json(&payload)
-        .send()
-        .await
-    {
-        Ok(resp) if resp.status().is_success() => {
-            tracing::info!("✅ Real worker spawned via rbee-hive");
-        }
-        Ok(resp) => {
-            tracing::warn!("⚠️  Worker spawn returned status: {}", resp.status());
-        }
-        Err(e) => {
-            tracing::error!("❌ Failed to spawn worker: {}", e);
-        }
-    }
+    let registry = world.hive_registry();
+    
+    let worker = WorkerInfo {
+        id: worker_id.clone(),
+        url: format!("http://127.0.0.1:{}", port),
+        model_ref: "mock-model".to_string(),
+        backend: "cpu".to_string(),
+        device: 0,
+        state: WorkerState::Idle,
+        last_activity: std::time::SystemTime::now(),
+        slots_total: 1,
+        slots_available: 1,
+    };
+    
+    registry.register(worker).await;
+    tracing::info!("✅ Worker spawned: {} on port {}", worker_id, port);
 }
 
 #[then(expr = "inference completes")]

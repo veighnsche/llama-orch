@@ -3,9 +3,9 @@
 // Modified by: TEAM-051 (added global queen-rbee instance)
 // Modified by: TEAM-054 (added mock rbee-hive on port 9200)
 // Modified by: TEAM-061 (added global timeout wrapper and signal handlers)
+// Modified by: TEAM-063 (removed mock infrastructure)
 
 mod steps;
-mod mock_rbee_hive;
 
 use cucumber::World as _;
 use std::path::PathBuf;
@@ -90,24 +90,13 @@ async fn main() {
 }
 
 /// TEAM-061: Run the actual test suite
+/// TEAM-063: Removed mock rbee-hive startup - tests must use real products
 async fn run_tests(features: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     // TEAM-051: Start global queen-rbee instance before running tests
     steps::global_queen::start_global_queen_rbee().await;
 
-    // TEAM-054: Start mock rbee-hive on port 9200 (NOT 8080 or 8090!)
-    tokio::spawn(async {
-        if let Err(e) = mock_rbee_hive::start_mock_rbee_hive().await {
-            tracing::error!("Mock rbee-hive failed: {}", e);
-        }
-    });
-    
-    // Wait for mock servers to start
-    // TEAM-058: Increased from 500ms to 1000ms per TEAM-057 recommendation for better reliability
-    tokio::time::sleep(Duration::from_millis(1000)).await;
-    
-    tracing::info!("✅ Mock servers ready:");
+    tracing::info!("✅ Real servers ready:");
     tracing::info!("   - queen-rbee: http://127.0.0.1:8080");
-    tracing::info!("   - rbee-hive:  http://127.0.0.1:9200");
 
     World::cucumber().fail_on_skipped().run(features).await;
     

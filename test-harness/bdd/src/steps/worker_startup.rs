@@ -1,5 +1,9 @@
 // Worker startup step definitions
-// Created by: TEAM-040
+// Created by: TEAM-053
+//
+// ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
+// ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
+// ⚠️ See TEAM_063_REAL_HANDOFF.md40
 
 use crate::steps::world::World;
 use cucumber::{given, then, when};

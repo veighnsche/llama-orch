@@ -3,6 +3,10 @@
 # Components: rbee-keeper (config + testing tool), queen-rbee (orchestrator), rbee-hive (pool manager), llm-worker-rbee (worker)
 # Updated by: TEAM-038 (aligned with queen-rbee orchestration and GGUF support)
 # Updated by: TEAM-041 (added rbee-hive Registry module, SSH setup flow, rbee-keeper configuration mode)
+#
+# ⚠️ CRITICAL: Step definitions MUST import and test REAL product code from /bin/
+# ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee libraries
+# ⚠️ See TEAM_063_REAL_HANDOFF.md for implementation requirements
 
 Feature: Cross-Node Inference Request Flow
   As a user on the control node

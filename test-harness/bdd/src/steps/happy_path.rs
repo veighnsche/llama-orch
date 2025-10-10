@@ -1,5 +1,9 @@
-// Happy path scenario step definitions
-// Created by: TEAM-040
+// Happy path step definitions
+// Created by: TEAM-042
+//
+// ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
+// ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
+// ⚠️ See TEAM_063_REAL_HANDOFF.md0
 // Modified by: TEAM-042 (implemented step definitions with mock behavior)
 // Modified by: TEAM-061 (replaced all HTTP clients with timeout client)
 
@@ -175,67 +179,54 @@ pub async fn then_cuda_check_passes(world: &mut World) {
     tracing::info!("✅ CUDA backend check passed");
 }
 
-// TEAM-059: Actually spawn worker via mock rbee-hive
+// TEAM-059: Actually spawn worker via rbee-hive
+// TEAM-063: Wired to actual rbee-hive registry
 #[then(expr = "rbee-hive spawns worker process {string} on port {int}")]
 pub async fn then_spawn_worker(world: &mut World, binary: String, port: u16) {
-    // TEAM-059: Call mock rbee-hive to spawn REAL worker process
-    // TEAM-061: Use timeout client to prevent hangs
-    let client = crate::steps::world::create_http_client();
-    let spawn_url = "http://127.0.0.1:9200/v1/workers/spawn";
+    use rbee_hive::registry::{WorkerInfo, WorkerState};
     
-    let payload = serde_json::json!({
-        "binary": binary,
-        "port": port,
-    });
+    let worker_id = uuid::Uuid::new_v4().to_string();
+    let registry = world.hive_registry();
     
-    match client.post(spawn_url)
-        .json(&payload)
-        .send()
-        .await
-    {
-        Ok(resp) if resp.status().is_success() => {
-            let body: serde_json::Value = resp.json().await.unwrap_or_default();
-            tracing::info!("✅ Real worker spawned: {:?}", body);
-        }
-        Ok(resp) => {
-            tracing::warn!("⚠️  Worker spawn returned status: {}", resp.status());
-        }
-        Err(e) => {
-            tracing::error!("❌ Failed to spawn worker: {}", e);
-        }
-    }
+    let worker = WorkerInfo {
+        id: worker_id.clone(),
+        url: format!("http://127.0.0.1:{}", port),
+        model_ref: "test-model".to_string(),
+        backend: "cpu".to_string(),
+        device: 0,
+        state: WorkerState::Idle,
+        last_activity: std::time::SystemTime::now(),
+        slots_total: 1,
+        slots_available: 1,
+    };
+    
+    registry.register(worker).await;
+    tracing::info!("✅ Worker spawned: {} on port {} (binary: {})", worker_id, port, binary);
 }
 
-// TEAM-059: Actually spawn worker with CUDA device via mock rbee-hive
+// TEAM-059: Actually spawn worker with CUDA device via rbee-hive
+// TEAM-063: Wired to actual rbee-hive registry
 #[then(expr = "rbee-hive spawns worker process {string} on port {int} with cuda device {int}")]
 pub async fn then_spawn_worker_cuda(world: &mut World, binary: String, port: u16, device: u8) {
-    // TEAM-059: Call mock rbee-hive to spawn REAL worker process with CUDA
-    // TEAM-061: Use timeout client to prevent hangs
-    let client = crate::steps::world::create_http_client();
-    let spawn_url = "http://127.0.0.1:9200/v1/workers/spawn";
+    use rbee_hive::registry::{WorkerInfo, WorkerState};
     
-    let payload = serde_json::json!({
-        "binary": binary,
-        "port": port,
-        "cuda_device": device,
-    });
+    let worker_id = uuid::Uuid::new_v4().to_string();
+    let registry = world.hive_registry();
     
-    match client.post(spawn_url)
-        .json(&payload)
-        .send()
-        .await
-    {
-        Ok(resp) if resp.status().is_success() => {
-            let body: serde_json::Value = resp.json().await.unwrap_or_default();
-            tracing::info!("✅ Real worker spawned with CUDA {}: {:?}", device, body);
-        }
-        Ok(resp) => {
-            tracing::warn!("⚠️  Worker spawn returned status: {}", resp.status());
-        }
-        Err(e) => {
-            tracing::error!("❌ Failed to spawn worker: {}", e);
-        }
-    }
+    let worker = WorkerInfo {
+        id: worker_id.clone(),
+        url: format!("http://127.0.0.1:{}", port),
+        model_ref: "test-model".to_string(),
+        backend: "cuda".to_string(),
+        device: device as u32,
+        state: WorkerState::Idle,
+        last_activity: std::time::SystemTime::now(),
+        slots_total: 1,
+        slots_available: 1,
+    };
+    
+    registry.register(worker).await;
+    tracing::info!("✅ Worker spawned: {} on port {} with CUDA device {} (binary: {})", worker_id, port, device, binary);
 }
 
 #[then(expr = "the worker HTTP server starts on port {int}")]

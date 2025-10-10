@@ -2,6 +2,10 @@
 // Created by: TEAM-051
 // Modified by: TEAM-061 (added startup timeout to prevent hangs)
 //
+// ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
+// ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
+// ⚠️ See TEAM_063_REAL_HANDOFF.md
+//
 // This module manages a single queen-rbee process that is started once
 // before all tests and cleaned up at the end. This prevents port conflicts
 // and improves test performance.

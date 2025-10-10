@@ -1,5 +1,9 @@
 // Background step definitions
 // Created by: TEAM-040
+//
+// ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
+// ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
+// ⚠️ See TEAM_063_REAL_HANDOFF.md
 // Modified by: TEAM-056 (attempted auto-registration, reverted due to timing issues)
 
 use crate::steps::world::{NodeInfo, World};

@@ -1,5 +1,9 @@
 // rbee-hive Registry setup step definitions
 // Created by: TEAM-041
+//
+// ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
+// ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
+// ⚠️ See TEAM_063_REAL_HANDOFF.md
 // Modified by: TEAM-042 (implemented step definitions with mock behavior)
 // Modified by: TEAM-043 (replaced mocks with real process execution)
 // Modified by: TEAM-055 (added HTTP retry logic with exponential backoff)

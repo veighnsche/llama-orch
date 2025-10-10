@@ -1,12 +1,17 @@
 // World state for BDD tests
 // Created by: TEAM-040
 // Modified by: TEAM-061 (added HTTP client factory with timeouts)
+//
+// ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
+// ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
+// ⚠️ See TEAM_063_REAL_HANDOFF.md
 
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
+use rbee_hive::registry::WorkerRegistry;
 
-#[derive(Debug, Default, cucumber::World)]
+#[derive(Debug, cucumber::World)]
 pub struct World {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Topology & Configuration
@@ -124,6 +129,15 @@ pub struct World {
 
     /// Running worker processes
     pub worker_processes: Vec<tokio::process::Child>,
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Product Integration (TEAM-063)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// rbee-hive worker registry (actual product code)
+    pub hive_registry: Option<WorkerRegistry>,
+    
+    /// Next available port for workers
+    pub next_worker_port: u16,
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -213,7 +227,51 @@ pub struct ErrorResponse {
     pub details: Option<serde_json::Value>,
 }
 
+impl Default for World {
+    fn default() -> Self {
+        Self {
+            topology: HashMap::new(),
+            current_node: None,
+            queen_rbee_url: None,
+            model_catalog_path: None,
+            registry_db_path: None,
+            beehive_nodes: HashMap::new(),
+            workers: HashMap::new(),
+            model_catalog: HashMap::new(),
+            node_ram: HashMap::new(),
+            node_backends: HashMap::new(),
+            last_command: None,
+            last_exit_code: None,
+            last_stdout: String::new(),
+            last_stderr: String::new(),
+            last_http_request: None,
+            last_http_response: None,
+            last_http_status: None,
+            sse_events: Vec::new(),
+            start_time: None,
+            tokens_generated: Vec::new(),
+            narration_messages: Vec::new(),
+            inference_metrics: None,
+            last_error: None,
+            temp_dir: None,
+            queen_rbee_process: None,
+            rbee_hive_processes: Vec::new(),
+            worker_processes: Vec::new(),
+            hive_registry: Some(WorkerRegistry::new()),
+            next_worker_port: 8001,
+        }
+    }
+}
+
 impl World {
+    /// Get or create the hive registry
+    pub fn hive_registry(&mut self) -> &mut WorkerRegistry {
+        if self.hive_registry.is_none() {
+            self.hive_registry = Some(WorkerRegistry::new());
+        }
+        self.hive_registry.as_mut().unwrap()
+    }
+
     /// Clear all state for a fresh scenario
     pub fn clear(&mut self) {
         self.topology.clear();

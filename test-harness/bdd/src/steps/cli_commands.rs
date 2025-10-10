@@ -1,5 +1,9 @@
-// CLI command step definitions
-// Created by: TEAM-040
+// CLI command execution step definitions
+// Created by: TEAM-042
+//
+// ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
+// ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
+// ⚠️ See TEAM_063_REAL_HANDOFF.md0
 // Modified by: TEAM-043 (added real command execution)
 
 use crate::steps::world::World;

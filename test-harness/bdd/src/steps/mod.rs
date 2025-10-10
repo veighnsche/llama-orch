@@ -9,6 +9,7 @@ pub mod beehive_registry;
 pub mod cli_commands;
 pub mod edge_cases;
 pub mod error_handling;
+pub mod error_helpers; // TEAM-062: Error verification helpers
 pub mod error_responses;
 pub mod gguf;
 pub mod global_queen;
