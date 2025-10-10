@@ -11,11 +11,13 @@
 // Modified by: TEAM-056 (attempted auto-registration, reverted due to timing issues)
 // Modified by: TEAM-064 (added explicit warning preservation notice)
 // Modified by: TEAM-065 (marked FAKE functions that create false positives)
+// Modified by: TEAM-066 (clarified test setup vs product behavior)
 
 use crate::steps::world::{NodeInfo, World};
 use cucumber::given;
 
-// FAKE: Only updates World.topology, doesn't test real node discovery
+// TEAM-066: Test setup - defines topology for test scenarios
+// This is test data configuration, not product behavior to test
 #[given(expr = "the following topology:")]
 pub async fn given_topology(world: &mut World, step: &cucumber::gherkin::Step) {
     let table = step.table.as_ref().expect("Expected a data table");
@@ -30,31 +32,34 @@ pub async fn given_topology(world: &mut World, step: &cucumber::gherkin::Step) {
         world.topology.insert(node.clone(), NodeInfo { hostname, components, capabilities });
     }
 
-    tracing::debug!("Topology configured with {} nodes", world.topology.len());
+    tracing::info!("✅ Test setup: Topology configured with {} nodes", world.topology.len());
 }
 
-// FAKE: Only updates World.current_node, doesn't test real node context
+// TEAM-066: Test setup - sets current node context for test
+// This is test data configuration, not product behavior to test
 #[given(expr = "I am on node {string}")]
 pub async fn given_current_node(world: &mut World, node: String) {
     world.current_node = Some(node.clone());
-    tracing::debug!("Current node set to: {}", node);
+    tracing::info!("✅ Test setup: Current node set to: {}", node);
 }
 
-// FAKE: Only updates World.queen_rbee_url, doesn't verify real queen-rbee
+// TEAM-066: Test setup - configures queen-rbee URL
+// This references the global queen-rbee instance started in main.rs
 #[given(expr = "queen-rbee is running at {string}")]
 pub async fn given_queen_rbee_url(world: &mut World, url: String) {
     // TEAM-051: Use the global queen-rbee instance (already started in main)
     // Just set the URL in the world - the instance is shared across all scenarios
     world.queen_rbee_url = Some(url.clone());
-    tracing::debug!("Using global queen-rbee at: {}", url);
+    tracing::info!("✅ Test setup: Using global queen-rbee at: {}", url);
 }
 
-// FAKE: Only updates World.model_catalog_path, doesn't test real SQLite catalog
+// TEAM-066: Test setup - configures model catalog path
+// This is test configuration, not product behavior to test
 #[given(expr = "the model catalog is SQLite at {string}")]
 pub async fn given_model_catalog_path(world: &mut World, path: String) {
     let expanded_path = shellexpand::tilde(&path).to_string();
     world.model_catalog_path = Some(expanded_path.clone().into());
-    tracing::debug!("Model catalog path set to: {}", expanded_path);
+    tracing::info!("✅ Test setup: Model catalog path set to: {}", expanded_path);
 }
 
 #[given(expr = "the worker registry is in-memory ephemeral per node")]
@@ -63,10 +68,11 @@ pub async fn given_worker_registry_ephemeral(_world: &mut World) {
     tracing::debug!("Worker registry configured as in-memory ephemeral");
 }
 
-// FAKE: Only updates World.registry_db_path, doesn't test real SQLite registry
+// TEAM-066: Test setup - configures rbee-hive registry path
+// This is test configuration, not product behavior to test
 #[given(expr = "the rbee-hive registry is SQLite at {string}")]
 pub async fn given_beehive_registry_path(world: &mut World, path: String) {
     let expanded_path = shellexpand::tilde(&path).to_string();
     world.registry_db_path = Some(expanded_path.clone());
-    tracing::debug!("rbee-hive registry path set to: {}", expanded_path);
+    tracing::info!("✅ Test setup: rbee-hive registry path set to: {}", expanded_path);
 }

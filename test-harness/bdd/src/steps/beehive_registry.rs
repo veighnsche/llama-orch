@@ -14,6 +14,7 @@
 // Modified by: TEAM-055 (added HTTP retry logic with exponential backoff)
 // Modified by: TEAM-061 (replaced all HTTP clients with timeout client)
 // Modified by: TEAM-065 (marked FAKE functions that create false positives)
+// Modified by: TEAM-066 (clarified test setup vs product behavior)
 
 use crate::steps::world::World;
 use cucumber::{given, then};
@@ -111,13 +112,14 @@ pub async fn given_queen_rbee_running_OLD(world: &mut World) {
 }
 */
 
-// FAKE: Only clears World.beehive_nodes, doesn't test real registry
+// TEAM-066: Test setup - ensures clean state for test
+// This is test precondition setup, not product behavior to test
 #[given(expr = "the rbee-hive registry is empty")]
 pub async fn given_registry_empty(world: &mut World) {
     // TEAM-043: Clear real registry via HTTP
     // Since we use a fresh temp database per test, it's already empty
     world.beehive_nodes.clear();
-    tracing::info!("✅ rbee-hive registry is empty (fresh database)");
+    tracing::info!("✅ Test setup: rbee-hive registry is empty (fresh database)");
 }
 
 #[given(expr = "node {string} is registered in rbee-hive registry")]
@@ -189,7 +191,7 @@ pub async fn given_node_in_registry(world: &mut World, node: String) {
         panic!("Failed to register node after 5 attempts: {}", e);
     }
 
-    // FAKE: Also add to mock world state for compatibility
+    // TEAM-066: Also add to World state for test assertions
     world.beehive_nodes.insert(
         node.clone(),
         crate::steps::world::BeehiveNode {
