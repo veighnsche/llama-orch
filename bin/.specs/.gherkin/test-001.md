@@ -1,6 +1,7 @@
 # Test-001: Cross-Node Inference Request Flow (CORRECTED)
 
 **Updated by:** TEAM-038 (aligned with queen-rbee orchestration and narration architecture)  
+**Updated by:** TEAM-052 (added backend detection and registry schema enhancements)  
 **Date:** 2025-10-10
 
 ---
@@ -9,7 +10,6 @@
 
 - **blep** = blep.home.arpa (with rbee-keeper and queen-rbee, can run workers on cpu)
 - **workstation** = workstation.home.arpa (only rbee-hive and llm-worker-rbee, can run workers on cuda device 0, 1 and cpu)
-- **mac** = mac.home.arpa (only rbee-hive and llm-worker-rbee, can only run workers on metal)
 
 **Note:** This test uses **workstation** node with **cuda** backend on **device 1**.
 
@@ -52,7 +52,9 @@ CREATE TABLE beehives (
     install_path TEXT NOT NULL,
     last_connected_unix INTEGER,
     last_error TEXT,
-    status TEXT DEFAULT 'unknown'  -- unknown, reachable, unreachable
+    status TEXT DEFAULT 'unknown',  -- unknown, reachable, unreachable
+    backends TEXT,  -- TEAM-052: JSON array: ["cuda", "metal", "cpu"]
+    devices TEXT    -- TEAM-052: JSON object: {"cuda": 2, "metal": 1, "cpu": 1}
 );
 ```
 
@@ -81,7 +83,9 @@ POST http://localhost:8080/v2/registry/beehives/add
   "ssh_key_path": "/home/vince/.ssh/id_ed25519",
   "git_repo_url": "https://github.com/user/llama-orch.git",
   "git_branch": "main",
-  "install_path": "/home/vince/rbee"
+  "install_path": "/home/vince/rbee",
+  "backends": "[\"cuda\",\"cpu\"]",
+  "devices": "{\"cuda\":2,\"cpu\":1}"
 }
 ```
 
@@ -94,10 +98,10 @@ ssh -i ~/.ssh/id_ed25519 vince@workstation.home.arpa "echo 'connection test'"
 ```sql
 INSERT INTO beehives (node_name, ssh_host, ssh_port, ssh_user, ssh_key_path, 
                       git_repo_url, git_branch, install_path, 
-                      last_connected_unix, status)
+                      last_connected_unix, status, backends, devices)
 VALUES ('workstation', 'workstation.home.arpa', 22, 'vince', '/home/vince/.ssh/id_ed25519',
         'https://github.com/user/llama-orch.git', 'main', '/home/vince/rbee',
-        1728508603, 'reachable');
+        1728508603, 'reachable', '["cuda","cpu"]', '{"cuda":2,"cpu":1}');
 ```
 
 **Narration:**
@@ -110,6 +114,32 @@ narrate("SSH connection successful! Saving to registry")
   → stdout → rbee-keeper shell
   → USER SEES: [queen-rbee] ✅ SSH connection successful! Node 'workstation' saved to registry
 ```
+
+### Backend Detection (TEAM-052)
+
+**On the remote node, detect available backends:**
+```bash
+# On workstation.home.arpa
+rbee-hive detect
+```
+
+**Output:**
+```
+Backend Detection Results:
+==========================
+
+Available backends: 2
+  - cpu: 1 device(s)
+  - cuda: 2 device(s)
+
+Total devices: 3
+
+Registry format:
+  backends: ["cpu","cuda"]
+  devices:  {"cpu":1,"cuda":2}
+```
+
+**These backend capabilities are stored in the registry during node registration.**
 
 ### Optional: Initial Installation
 
