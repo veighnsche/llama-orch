@@ -6,6 +6,27 @@
 
 ---
 
+## 🚨 CRITICAL: PORT CONFUSION DISCOVERED!
+
+**STOP! READ THIS FIRST:**
+
+TEAM-053 discovered that **multiple teams made port-related mistakes** including ourselves!
+This document originally stated rbee-hive uses port **8090**, but the correct port is **9200**.
+
+**YOU MUST READ:**
+1. **`HANDOFF_TO_TEAM_054_PORT_FIXES.md`** ← START HERE! Complete port fix plan
+2. **`HISTORICAL_MISTAKES_ANALYSIS.md`** ← Why multiple teams got this wrong
+3. **`MISTAKES_AND_CORRECTIONS.md`** ← TEAM-053's specific mistakes
+
+**Correct port allocation:**
+- queen-rbee: 8080
+- rbee-hive: **9200** (NOT 8080 or 8090!)
+- workers: 8001+
+
+**Your first priority is fixing all port references across handoff documents!**
+
+---
+
 ## 🔍 CRITICAL: Review Previous Handoffs
 
 **IMPORTANT:** Before starting work, review:
