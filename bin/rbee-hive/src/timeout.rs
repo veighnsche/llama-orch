@@ -40,7 +40,7 @@ pub async fn idle_timeout_loop(registry: Arc<WorkerRegistry>) {
                     // Send shutdown request: POST {worker.url}/v1/admin/shutdown
                     let client = reqwest::Client::new();
                     match client
-                        .post(&format!("{}/v1/admin/shutdown", worker.url))
+                        .post(format!("{}/v1/admin/shutdown", worker.url))
                         .timeout(Duration::from_secs(10))
                         .send()
                         .await

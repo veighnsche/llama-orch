@@ -9,8 +9,8 @@ use tokenizers::Tokenizer;
 /// Load tokenizer with auto-detection
 ///
 /// TEAM-017: Tries multiple tokenizer formats in order:
-/// 1. tokenizer.json (HuggingFace format)
-/// 2. tokenizer.model (SentencePiece format - future support)
+/// 1. tokenizer.json (`HuggingFace` format)
+/// 2. tokenizer.model (`SentencePiece` format - future support)
 pub fn load_tokenizer(model_path: &Path) -> Result<Tokenizer> {
     let parent = if model_path.is_dir() {
         model_path

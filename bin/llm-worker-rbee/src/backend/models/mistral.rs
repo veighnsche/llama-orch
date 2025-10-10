@@ -19,7 +19,7 @@ pub struct MistralModel {
 }
 
 impl MistralModel {
-    /// Load Mistral model from SafeTensors
+    /// Load Mistral model from `SafeTensors`
     ///
     /// TEAM-017: Candle-idiomatic pattern
     pub fn load(path: &Path, device: &Device) -> Result<Self> {

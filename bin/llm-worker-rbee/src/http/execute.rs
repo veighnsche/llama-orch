@@ -11,7 +11,7 @@ use crate::http::{
     sse::InferenceEvent,
     validation::{ExecuteRequest, ValidationErrorResponse},
 };
-use crate::narration::{self, *};
+use crate::narration::{self, ACTOR_HTTP_SERVER, ACTION_ERROR, ACTION_EXECUTE_REQUEST, ACTOR_CANDLE_BACKEND};
 use axum::{
     extract::State,
     response::{sse::Event, Sse},
@@ -32,7 +32,7 @@ type EventStream = Box<dyn Stream<Item = Result<Event, Infallible>> + Send + Unp
 /// Streams inference results via SSE with OpenAI-compatible [DONE] marker.
 ///
 /// TEAM-017: Updated to use Mutex-wrapped backend for &mut self
-/// TEAM-035: Added [DONE] marker for OpenAI compatibility
+/// TEAM-035: Added [DONE] marker for `OpenAI` compatibility
 /// TEAM-039: Added narration channel for real-time user visibility
 pub async fn handle_execute<B: InferenceBackend>(
     State(backend): State<Arc<Mutex<B>>>,

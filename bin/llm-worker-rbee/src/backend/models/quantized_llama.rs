@@ -1,7 +1,7 @@
 //! Quantized Llama model wrapper for GGUF files
 //!
 //! Created by: TEAM-036
-//! Purpose: Load and run GGUF quantized models (Q4_K_M, Q5_K_M, etc.)
+//! Purpose: Load and run GGUF quantized models (`Q4_K_M`, `Q5_K_M`, etc.)
 
 use anyhow::{Context, Result};
 use candle_core::{Device, Tensor};
@@ -10,7 +10,7 @@ use std::path::Path;
 
 /// Quantized Llama model wrapper for GGUF files
 ///
-/// TEAM-036: Wraps candle-transformers quantized_llama with GGUF support
+/// TEAM-036: Wraps candle-transformers `quantized_llama` with GGUF support
 #[derive(Debug)]
 pub struct QuantizedLlamaModel {
     model: ModelWeights,
@@ -27,11 +27,11 @@ impl QuantizedLlamaModel {
 
         // Open GGUF file
         let mut file = std::fs::File::open(path)
-            .with_context(|| format!("Failed to open GGUF file at {:?}", path))?;
+            .with_context(|| format!("Failed to open GGUF file at {path:?}"))?;
 
         // Read GGUF content
         let content = candle_core::quantized::gguf_file::Content::read(&mut file)
-            .with_context(|| format!("Failed to read GGUF content from {:?}", path))?;
+            .with_context(|| format!("Failed to read GGUF content from {path:?}"))?;
 
         // Extract metadata
         let vocab_size = content

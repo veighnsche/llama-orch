@@ -13,7 +13,7 @@
 //! - M0-W-1110: Server initialization
 //! - M0-W-1320: Health endpoint
 //! - M0-W-1330: Execute endpoint
-//! - SSE_IMPLEMENTATION_PLAN.md Phase 2: Loading progress
+//! - `SSE_IMPLEMENTATION_PLAN.md` Phase 2: Loading progress
 //!
 //! Integrated by: TEAM-015 (from worker-http crate)
 //! Modified by: TEAM-035 (added loading progress)

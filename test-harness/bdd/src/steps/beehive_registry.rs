@@ -4,7 +4,7 @@
 // Modified by: TEAM-043 (replaced mocks with real process execution)
 
 use crate::steps::world::World;
-use cucumber::{given, then, when};
+use cucumber::{given, then};
 use std::time::Duration;
 use tokio::time::sleep;
 

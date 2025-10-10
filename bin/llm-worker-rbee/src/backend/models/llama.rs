@@ -24,7 +24,7 @@ pub struct LlamaModel {
 }
 
 impl LlamaModel {
-    /// Load Llama model from SafeTensors
+    /// Load Llama model from `SafeTensors`
     ///
     /// TEAM-017: Candle-idiomatic pattern
     pub fn load(path: &Path, device: &Device) -> Result<Self> {
@@ -143,11 +143,11 @@ impl LlamaModel {
                 );
 
                 // Check for common issues
-                if format!("{:?}", e).contains("shape") {
+                if format!("{e:?}").contains("shape") {
                     tracing::error!("Shape mismatch detected in forward pass");
-                } else if format!("{:?}", e).contains("device") {
+                } else if format!("{e:?}").contains("device") {
                     tracing::error!("Device mismatch detected in forward pass");
-                } else if format!("{:?}", e).contains("dtype") {
+                } else if format!("{e:?}").contains("dtype") {
                     tracing::error!("DType mismatch detected in forward pass");
                 }
 
@@ -173,7 +173,7 @@ impl LlamaModel {
     /// Reset cache to clear KV history between requests
     ///
     /// TEAM-021: Required to clear state between HTTP requests
-    /// Candle's Cache doesn't expose clear(), so we recreate it
+    /// Candle's Cache doesn't expose `clear()`, so we recreate it
     /// Uses F32 dtype per TEAM-019 (Metal F16 causes issues)
     ///
     /// 🎯 TEAM-021 Victory: Proper cache lifecycle management!

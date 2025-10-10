@@ -116,7 +116,7 @@ async fn wait_for_worker_ready(worker_url: &str) -> Result<()> {
 
     loop {
         match client
-            .get(&format!("{}/v1/ready", worker_url))
+            .get(format!("{}/v1/ready", worker_url))
             .timeout(std::time::Duration::from_secs(5))
             .send()
             .await
@@ -211,7 +211,7 @@ async fn execute_inference(
     });
 
     let response =
-        client.post(&format!("{}/v1/inference", worker_url)).json(&request).send().await?;
+        client.post(format!("{}/v1/inference", worker_url)).json(&request).send().await?;
 
     if !response.status().is_success() {
         anyhow::bail!("Inference request failed: HTTP {}", response.status());

@@ -19,7 +19,7 @@ pub struct QwenModel {
 }
 
 impl QwenModel {
-    /// Load Qwen model from SafeTensors
+    /// Load Qwen model from `SafeTensors`
     ///
     /// TEAM-017: Candle-idiomatic pattern
     pub fn load(path: &Path, device: &Device) -> Result<Self> {

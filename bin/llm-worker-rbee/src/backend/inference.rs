@@ -9,7 +9,7 @@ use super::sampling;
 use super::tokenizer_loader;
 use crate::common::{InferenceResult, SamplingConfig};
 use crate::http::InferenceBackend;
-use crate::narration::*;
+use crate::narration::{ACTOR_MODEL_LOADER, ACTION_MODEL_LOAD, ACTOR_CANDLE_BACKEND, ACTION_WARMUP, ACTION_INFERENCE_START, ACTOR_TOKENIZER, ACTION_TOKENIZE, ACTION_CACHE_RESET, ACTION_TOKEN_GENERATE, ACTION_INFERENCE_COMPLETE};
 use crate::token_output_stream::TokenOutputStream;
 use anyhow::{Context, Result};
 use async_trait::async_trait;
@@ -284,9 +284,7 @@ impl InferenceBackend for CandleInferenceBackend {
             // TEAM-017: Check for EOS - try tokenizer first (Candle-idiomatic), fallback to model
             let is_eos = self
                 .tokenizer
-                .token_to_id("</s>")
-                .map(|eos_id| next_token == eos_id)
-                .unwrap_or_else(|| next_token == self.model.eos_token_id());
+                .token_to_id("</s>").map_or_else(|| next_token == self.model.eos_token_id(), |eos_id| next_token == eos_id);
 
             if is_eos {
                 tracing::debug!("EOS token generated");
@@ -314,7 +312,7 @@ impl InferenceBackend for CandleInferenceBackend {
                     target: format!("token-{}", pos + 1),
                     human: format!("Generated {} tokens", pos + 1),
                     cute: Some(format!("{} tokens and counting! 🎯", pos + 1)),
-                    tokens_out: Some((pos + 1) as u64),
+                    tokens_out: Some(u64::from(pos + 1)),
                     ..Default::default()
                 });
             }

@@ -15,8 +15,8 @@
 //! - M0-W-1320: Health endpoint
 //! - M0-W-1330: Execute endpoint (now /v1/inference)
 //! - WORK-3040: Correlation ID middleware
-//! - SSE_IMPLEMENTATION_PLAN.md Phase 2: Loading progress
-//! - SSE_IMPLEMENTATION_PLAN.md Phase 3: Inference streaming
+//! - `SSE_IMPLEMENTATION_PLAN.md` Phase 2: Loading progress
+//! - `SSE_IMPLEMENTATION_PLAN.md` Phase 3: Inference streaming
 
 use crate::http::{backend::InferenceBackend, execute, health, loading};
 use axum::{

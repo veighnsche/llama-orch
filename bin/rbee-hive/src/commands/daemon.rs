@@ -124,7 +124,7 @@ async fn shutdown_worker(worker_url: &str) -> Result<()> {
 
     // Try POST /v1/shutdown endpoint
     let response = client
-        .post(&format!("{}/v1/shutdown", worker_url))
+        .post(format!("{}/v1/shutdown", worker_url))
         .timeout(std::time::Duration::from_secs(5))
         .send()
         .await?;

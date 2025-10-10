@@ -10,7 +10,7 @@ use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 thread_local! {
     /// Thread-local storage for the current request's narration sender
     /// TEAM-039: Allows narrate() to send events into the SSE stream
-    static NARRATION_SENDER: RefCell<Option<UnboundedSender<InferenceEvent>>> = RefCell::new(None);
+    static NARRATION_SENDER: RefCell<Option<UnboundedSender<InferenceEvent>>> = const { RefCell::new(None) };
 }
 
 /// Create a new narration channel and store the sender in thread-local storage

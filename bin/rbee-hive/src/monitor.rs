@@ -28,7 +28,7 @@ pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
             // Check worker health: GET {worker.url}/v1/health
             let client = reqwest::Client::new();
             match client
-                .get(&format!("{}/v1/health", worker.url))
+                .get(format!("{}/v1/health", worker.url))
                 .timeout(Duration::from_secs(5))
                 .send()
                 .await

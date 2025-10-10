@@ -21,7 +21,7 @@ pub async fn given_requested_backend(world: &mut World, backend: String) {
 
 #[given(expr = "node {string} has CUDA available")]
 pub async fn given_node_has_cuda(world: &mut World, node: String) {
-    world.node_backends.entry(node.clone()).or_insert_with(Vec::new).push("cuda".to_string());
+    world.node_backends.entry(node.clone()).or_default().push("cuda".to_string());
     tracing::debug!("Node {} has CUDA", node);
 }
 

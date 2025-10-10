@@ -55,9 +55,9 @@ pub enum InferenceEvent {
     Narration {
         /// Component emitting the narration (e.g., "candle-backend", "model-loader")
         actor: String,
-        /// Action being performed (e.g., "inference_start", "model_load")
+        /// Action being performed (e.g., "`inference_start`", "`model_load`")
         action: String,
-        /// Target of the action (e.g., job_id, model_ref)
+        /// Target of the action (e.g., `job_id`, `model_ref`)
         target: String,
         /// Human-readable message
         human: String,

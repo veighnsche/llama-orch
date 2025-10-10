@@ -8,7 +8,7 @@
 //! - M0-W-1320: Health endpoint returns 200 OK with {"status": "healthy"}
 
 use crate::http::backend::InferenceBackend;
-use crate::narration::*;
+use crate::narration::{ACTOR_HTTP_SERVER, ACTION_HEALTH_CHECK};
 use axum::{extract::State, Json};
 use observability_narration_core::{narrate, NarrationFields};
 use serde::Serialize;
@@ -45,7 +45,7 @@ pub async fn handle_health<B: InferenceBackend>(
         action: ACTION_HEALTH_CHECK,
         target: status.to_string(),
         human: format!("Health check: {} (VRAM: {} MB)", status, vram_bytes / 1_000_000),
-        cute: Some(format!("Feeling {}! 💪", status)),
+        cute: Some(format!("Feeling {status}! 💪")),
         ..Default::default()
     });
 

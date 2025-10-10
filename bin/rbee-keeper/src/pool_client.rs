@@ -65,7 +65,7 @@ impl PoolClient {
     pub async fn health_check(&self) -> Result<HealthResponse> {
         let response = self
             .client
-            .get(&format!("{}/v1/health", self.base_url))
+            .get(format!("{}/v1/health", self.base_url))
             .header("Authorization", format!("Bearer {}", self.api_key))
             .timeout(std::time::Duration::from_secs(10))
             .send()
@@ -90,7 +90,7 @@ impl PoolClient {
     pub async fn spawn_worker(&self, request: SpawnWorkerRequest) -> Result<SpawnWorkerResponse> {
         let response = self
             .client
-            .post(&format!("{}/v1/workers/spawn", self.base_url))
+            .post(format!("{}/v1/workers/spawn", self.base_url))
             .header("Authorization", format!("Bearer {}", self.api_key))
             .json(&request)
             .timeout(std::time::Duration::from_secs(30))

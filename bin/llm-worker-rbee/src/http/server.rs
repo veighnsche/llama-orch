@@ -11,7 +11,7 @@
 //! - M0-W-1320: Health endpoint
 //! - WORK-3010: HTTP server foundation
 
-use crate::narration::*;
+use crate::narration::{ACTOR_HTTP_SERVER, ACTION_SERVER_START, ACTION_ERROR, ACTION_SERVER_BIND, ACTION_SERVER_SHUTDOWN};
 use axum::Router;
 use observability_narration_core::{narrate, NarrationFields};
 use std::net::SocketAddr;
@@ -84,8 +84,8 @@ impl HttpServer {
             actor: ACTOR_HTTP_SERVER,
             action: ACTION_SERVER_START,
             target: addr.to_string(),
-            human: format!("HTTP server initialized on {}", addr),
-            cute: Some(format!("HTTP server ready to greet requests at {}! 🚺", addr)),
+            human: format!("HTTP server initialized on {addr}"),
+            cute: Some(format!("HTTP server ready to greet requests at {addr}! 🚺")),
             ..Default::default()
         });
 

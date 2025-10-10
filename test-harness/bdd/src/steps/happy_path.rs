@@ -3,7 +3,7 @@
 // Modified by: TEAM-042 (implemented step definitions with mock behavior)
 
 use crate::steps::world::World;
-use cucumber::{given, then, when};
+use cucumber::{given, then};
 
 #[given(expr = "no workers are registered for model {string}")]
 pub async fn given_no_workers_for_model(world: &mut World, model_ref: String) {
@@ -30,7 +30,7 @@ pub async fn given_node_ram(world: &mut World, node: String, ram_mb: usize) {
 
 #[given(expr = "node {string} has Metal backend available")]
 pub async fn given_node_metal_backend(world: &mut World, node: String) {
-    world.node_backends.entry(node.clone()).or_insert_with(Vec::new).push("metal".to_string());
+    world.node_backends.entry(node.clone()).or_default().push("metal".to_string());
     tracing::debug!("Node {} has Metal backend", node);
 }
 

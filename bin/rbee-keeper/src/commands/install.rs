@@ -33,7 +33,7 @@ pub fn handle(system: bool) -> Result<()> {
     // 1. Create directories
     fs::create_dir_all(&bin_dir).context("Failed to create bin directory")?;
     fs::create_dir_all(&config_dir).context("Failed to create config directory")?;
-    fs::create_dir_all(&data_dir.join("models")).context("Failed to create models directory")?;
+    fs::create_dir_all(data_dir.join("models")).context("Failed to create models directory")?;
 
     println!("✅ Created directories:");
     println!("   Binaries: {}", bin_dir.display());

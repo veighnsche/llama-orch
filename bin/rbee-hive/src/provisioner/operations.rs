@@ -19,7 +19,7 @@ impl ModelProvisioner {
     ///
     /// TEAM-032: Equivalent to `llorch-models delete`
     pub fn delete_model(&self, reference: &str) -> Result<()> {
-        let model_name = reference.split('/').last().unwrap_or(reference);
+        let model_name = reference.split('/').next_back().unwrap_or(reference);
         let model_dir = self.base_dir.join(model_name.to_lowercase());
 
         if !model_dir.exists() {
@@ -36,7 +36,7 @@ impl ModelProvisioner {
     ///
     /// TEAM-032: Equivalent to `llorch-models info`
     pub fn get_model_info(&self, reference: &str) -> Result<ModelInfo> {
-        let model_name = reference.split('/').last().unwrap_or(reference);
+        let model_name = reference.split('/').next_back().unwrap_or(reference);
         let model_dir = self.base_dir.join(model_name.to_lowercase());
 
         if !model_dir.exists() {

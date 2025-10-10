@@ -7,13 +7,13 @@
 //! from mistral.rs and llama.cpp.
 //!
 //! # Spec References
-//! - SSE_IMPLEMENTATION_PLAN.md Phase 2: Model Loading Progress
+//! - `SSE_IMPLEMENTATION_PLAN.md` Phase 2: Model Loading Progress
 //! - test-001-mvp.md Lines 243-254: Loading progress events
 //!
 //! # Industry Standards
-//! - [DONE] marker (OpenAI compatible)
+//! - [DONE] marker (`OpenAI` compatible)
 //! - 10-second keep-alive interval (mistral.rs pattern)
-//! - Three-state machine: Running → SendingDone → Done
+//! - Three-state machine: Running → `SendingDone` → Done
 //! - Broadcast channels with 100 buffer size
 
 use axum::{
@@ -66,7 +66,7 @@ enum LoadingState {
 /// - Graceful handling of connection drops
 ///
 /// # Errors
-/// - 503 SERVICE_UNAVAILABLE: Model not currently loading
+/// - 503 `SERVICE_UNAVAILABLE`: Model not currently loading
 pub async fn handle_loading_progress<B: InferenceBackend>(
     State(backend): State<Arc<Mutex<B>>>,
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, (StatusCode, String)> {

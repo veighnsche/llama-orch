@@ -13,7 +13,7 @@
 
 use clap::Parser;
 use llm_worker_rbee::{
-    backend::CandleInferenceBackend, callback_ready, create_router, narration::*, HttpServer,
+    backend::CandleInferenceBackend, callback_ready, create_router, narration::{ACTOR_LLM_WORKER_RBEE, ACTION_STARTUP, ACTOR_MODEL_LOADER, ACTION_MODEL_LOAD, ACTION_CALLBACK_READY}, HttpServer,
 };
 use observability_narration_core::{narrate, NarrationFields};
 use std::net::SocketAddr;

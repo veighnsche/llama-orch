@@ -18,7 +18,7 @@ pub mod qwen;
 /// Multi-model enum using Candle's idiomatic pattern
 ///
 /// TEAM-017: Each variant wraps a specific model type with its natural interface
-/// TEAM-036: Added QuantizedLlama for GGUF support
+/// TEAM-036: Added `QuantizedLlama` for GGUF support
 pub enum Model {
     Llama(llama::LlamaModel),
     Mistral(mistral::MistralModel),
@@ -31,7 +31,7 @@ impl Model {
     /// Forward pass - delegates to the specific model
     ///
     /// TEAM-017: Each model uses its natural interface
-    /// TEAM-036: Added QuantizedLlama support
+    /// TEAM-036: Added `QuantizedLlama` support
     pub fn forward(&mut self, input_ids: &Tensor, position: usize) -> Result<Tensor> {
         match self {
             Model::Llama(m) => m.forward(input_ids, position),
@@ -43,7 +43,7 @@ impl Model {
     }
 
     /// Get EOS token ID
-    /// TEAM-036: Added QuantizedLlama support
+    /// TEAM-036: Added `QuantizedLlama` support
     pub fn eos_token_id(&self) -> u32 {
         match self {
             Model::Llama(m) => m.eos_token_id(),
@@ -55,7 +55,7 @@ impl Model {
     }
 
     /// Get model architecture name
-    /// TEAM-036: Added QuantizedLlama support
+    /// TEAM-036: Added `QuantizedLlama` support
     pub fn architecture(&self) -> &str {
         match self {
             Model::Llama(_) => "llama",
@@ -67,7 +67,7 @@ impl Model {
     }
 
     /// Get vocab size
-    /// TEAM-036: Added QuantizedLlama support
+    /// TEAM-036: Added `QuantizedLlama` support
     pub fn vocab_size(&self) -> usize {
         match self {
             Model::Llama(m) => m.vocab_size(),
@@ -81,7 +81,7 @@ impl Model {
     /// Reset KV cache to clear history
     ///
     /// TEAM-021: Required to clear warmup pollution before inference
-    /// TEAM-036: Added QuantizedLlama support
+    /// TEAM-036: Added `QuantizedLlama` support
     /// Not all models may support this (Phi manages cache internally)
     pub fn reset_cache(&mut self) -> Result<()> {
         match self {
@@ -108,7 +108,7 @@ impl Model {
 
 /// Detect model architecture from config.json
 ///
-/// TEAM-017: Checks model_type and architectures fields
+/// TEAM-017: Checks `model_type` and architectures fields
 pub fn detect_architecture(config_json: &Value) -> Result<String> {
     // Check "model_type" field
     if let Some(model_type) = config_json.get("model_type").and_then(|v| v.as_str()) {

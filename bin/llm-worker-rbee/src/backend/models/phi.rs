@@ -18,7 +18,7 @@ pub struct PhiModel {
 }
 
 impl PhiModel {
-    /// Load Phi model from SafeTensors
+    /// Load Phi model from `SafeTensors`
     ///
     /// TEAM-017: Candle-idiomatic pattern
     pub fn load(path: &Path, device: &Device) -> Result<Self> {
