@@ -16,7 +16,7 @@ use std::sync::Arc;
 use tracing::{error, info};
 
 use crate::beehive_registry::{BeehiveNode, BeehiveRegistry};
-use crate::worker_registry::WorkerRegistry;
+use crate::worker_registry::{WorkerRegistry, WorkerInfoExtended};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -67,6 +67,55 @@ pub struct RemoveNodeResponse {
 pub struct HealthResponse {
     pub status: String,
     pub version: String,
+}
+
+// TEAM-046: Worker management types
+#[derive(Debug, Serialize)]
+pub struct WorkerInfo {
+    pub worker_id: String,
+    pub node: String,
+    pub state: String,
+    pub model_ref: Option<String>,
+    pub url: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct WorkersListResponse {
+    pub workers: Vec<WorkerInfo>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct WorkerHealthInfo {
+    pub worker_id: String,
+    pub state: String,
+    pub ready: bool,
+}
+
+#[derive(Debug, Serialize)]
+pub struct WorkersHealthResponse {
+    pub status: String,
+    pub workers: Vec<WorkerHealthInfo>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ShutdownWorkerRequest {
+    pub worker_id: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ShutdownWorkerResponse {
+    pub success: bool,
+    pub message: String,
+}
+
+// TEAM-046: Inference task types
+#[derive(Debug, Deserialize)]
+pub struct InferenceTaskRequest {
+    pub node: String,
+    pub model: String,
+    pub prompt: String,
+    pub max_tokens: u32,
+    pub temperature: f32,
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -208,6 +257,105 @@ async fn remove_node(
     }
 }
 
+// TEAM-046: Worker management handlers
+async fn list_workers(State(state): State<AppState>) -> impl IntoResponse {
+    match state.worker_registry.list_workers().await {
+        Ok(workers) => {
+            let worker_infos: Vec<WorkerInfo> = workers
+                .into_iter()
+                .map(|w: WorkerInfoExtended| WorkerInfo {
+                    worker_id: w.worker_id,
+                    node: w.node_name,
+                    state: w.state,
+                    model_ref: w.model_ref,
+                    url: w.url,
+                })
+                .collect();
+            (StatusCode::OK, Json(WorkersListResponse { workers: worker_infos }))
+        }
+        Err(e) => {
+            error!("Failed to list workers: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(WorkersListResponse { workers: vec![] }))
+        }
+    }
+}
+
+async fn workers_health(
+    State(state): State<AppState>,
+    axum::extract::Query(params): axum::extract::Query<std::collections::HashMap<String, String>>,
+) -> impl IntoResponse {
+    let node = params.get("node").map(|s| s.as_str()).unwrap_or("");
+
+    match state.worker_registry.get_workers_by_node(node).await {
+        Ok(workers) => {
+            let health_infos: Vec<WorkerHealthInfo> = workers
+                .into_iter()
+                .map(|w: WorkerInfoExtended| WorkerHealthInfo {
+                    worker_id: w.worker_id,
+                    state: w.state.clone(),
+                    ready: w.state == "idle" || w.state == "ready",
+                })
+                .collect();
+            (
+                StatusCode::OK,
+                Json(WorkersHealthResponse { status: "ok".to_string(), workers: health_infos }),
+            )
+        }
+        Err(e) => {
+            error!("Failed to get worker health: {}", e);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(WorkersHealthResponse { status: "error".to_string(), workers: vec![] }),
+            )
+        }
+    }
+}
+
+async fn shutdown_worker(
+    State(state): State<AppState>,
+    Json(req): Json<ShutdownWorkerRequest>,
+) -> impl IntoResponse {
+    match state.worker_registry.shutdown_worker(&req.worker_id).await {
+        Ok(_) => (
+            StatusCode::OK,
+            Json(ShutdownWorkerResponse {
+                success: true,
+                message: format!("Worker '{}' shutdown command sent", req.worker_id),
+            }),
+        ),
+        Err(e) => {
+            error!("Failed to shutdown worker: {}", e);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ShutdownWorkerResponse {
+                    success: false,
+                    message: format!("Failed to shutdown worker: {}", e),
+                }),
+            )
+        }
+    }
+}
+
+// TEAM-046: Inference task handler (stub for now)
+async fn create_inference_task(
+    State(_state): State<AppState>,
+    Json(req): Json<InferenceTaskRequest>,
+) -> impl IntoResponse {
+    info!("Received inference task: node={}, model={}", req.node, req.model);
+    
+    // TODO: Implement full orchestration flow
+    // 1. Query rbee-hive registry for node SSH details
+    // 2. Establish SSH connection
+    // 3. Start rbee-hive on remote node
+    // 4. Request worker from rbee-hive
+    // 5. Stream inference results
+    
+    (
+        StatusCode::NOT_IMPLEMENTED,
+        "Inference orchestration not yet implemented",
+    )
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Router Setup
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -218,5 +366,11 @@ pub fn create_router(state: AppState) -> Router {
         .route("/v2/registry/beehives/add", post(add_node))
         .route("/v2/registry/beehives/list", get(list_nodes))
         .route("/v2/registry/beehives/remove", post(remove_node))
+        // TEAM-046: Worker management endpoints
+        .route("/v2/workers/list", get(list_workers))
+        .route("/v2/workers/health", get(workers_health))
+        .route("/v2/workers/shutdown", post(shutdown_worker))
+        // TEAM-046: Inference task endpoint
+        .route("/v2/tasks", post(create_inference_task))
         .with_state(state)
 }

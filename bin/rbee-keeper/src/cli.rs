@@ -51,6 +51,20 @@ pub enum Commands {
         #[arg(long, default_value = "0.7")]
         temperature: f32,
     },
+    /// Worker management commands (TEAM-046)
+    Workers {
+        #[command(subcommand)]
+        action: WorkersAction,
+    },
+    /// View logs from remote nodes (TEAM-046)
+    Logs {
+        /// Node name
+        #[arg(long)]
+        node: String,
+        /// Follow log output
+        #[arg(long)]
+        follow: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -174,6 +188,25 @@ pub enum GitAction {
     Build,
 }
 
+// TEAM-046: Worker management commands
+#[derive(Subcommand)]
+pub enum WorkersAction {
+    /// List all registered workers
+    List,
+    /// Check worker health on a specific node
+    Health {
+        /// Node name
+        #[arg(long)]
+        node: String,
+    },
+    /// Manually shutdown a worker
+    Shutdown {
+        /// Worker ID
+        #[arg(long)]
+        id: String,
+    },
+}
+
 impl Cli {
     pub fn parse_args() -> Self {
         Self::parse()
@@ -188,5 +221,7 @@ pub async fn handle_command(cli: Cli) -> anyhow::Result<()> {
         Commands::Infer { node, model, prompt, max_tokens, temperature } => {
             crate::commands::infer::handle(node, model, prompt, max_tokens, temperature).await
         }
+        Commands::Workers { action } => crate::commands::workers::handle(action).await,
+        Commands::Logs { node, follow } => crate::commands::logs::handle(node, follow).await,
     }
 }

@@ -21,6 +21,8 @@ pub struct WorkerInfo {
     pub slots_total: u32,
     pub slots_available: u32,
     pub vram_bytes: Option<u64>,
+    // TEAM-046: Added for worker management
+    pub node_name: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -89,6 +91,70 @@ impl WorkerRegistry {
         let workers = self.workers.read().await;
         workers.len()
     }
+
+    // TEAM-046: Additional methods for worker management
+    
+    /// List all workers with extended info for API
+    pub async fn list_workers(&self) -> anyhow::Result<Vec<WorkerInfoExtended>> {
+        let workers = self.workers.read().await;
+        Ok(workers
+            .values()
+            .map(|w| WorkerInfoExtended {
+                worker_id: w.id.clone(),
+                node_name: w.node_name.clone(),
+                state: format!("{:?}", w.state).to_lowercase(),
+                model_ref: Some(w.model_ref.clone()),
+                url: w.url.clone(),
+            })
+            .collect())
+    }
+
+    /// Get workers by node name
+    pub async fn get_workers_by_node(&self, node: &str) -> anyhow::Result<Vec<WorkerInfoExtended>> {
+        let workers = self.workers.read().await;
+        Ok(workers
+            .values()
+            .filter(|w| w.node_name == node)
+            .map(|w| WorkerInfoExtended {
+                worker_id: w.id.clone(),
+                node_name: w.node_name.clone(),
+                state: format!("{:?}", w.state).to_lowercase(),
+                model_ref: Some(w.model_ref.clone()),
+                url: w.url.clone(),
+            })
+            .collect())
+    }
+
+    /// Shutdown a worker
+    pub async fn shutdown_worker(&self, worker_id: &str) -> anyhow::Result<()> {
+        let workers = self.workers.read().await;
+        if let Some(worker) = workers.get(worker_id) {
+            // Send shutdown request to worker
+            let client = reqwest::Client::new();
+            let response = client
+                .post(format!("{}/v1/admin/shutdown", worker.url))
+                .send()
+                .await?;
+
+            if !response.status().is_success() {
+                anyhow::bail!("Worker shutdown failed: HTTP {}", response.status());
+            }
+
+            Ok(())
+        } else {
+            anyhow::bail!("Worker not found: {}", worker_id)
+        }
+    }
+}
+
+// TEAM-046: Extended worker info for API responses
+#[derive(Debug, Clone, Serialize)]
+pub struct WorkerInfoExtended {
+    pub worker_id: String,
+    pub node_name: String,
+    pub state: String,
+    pub model_ref: Option<String>,
+    pub url: String,
 }
 
 impl Default for WorkerRegistry {
@@ -116,6 +182,7 @@ mod tests {
             slots_total: 4,
             slots_available: 4,
             vram_bytes: Some(8_000_000_000),
+            node_name: "test-node".to_string(),
         };
 
         registry.register(worker.clone()).await;
