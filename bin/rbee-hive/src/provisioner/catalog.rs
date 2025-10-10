@@ -16,9 +16,9 @@ impl ModelProvisioner {
     /// # Returns
     /// Local path if model exists
     pub fn find_local_model(&self, reference: &str) -> Option<PathBuf> {
-        // TEAM-029: Simple heuristic - look for .gguf files in model directory
-        let model_name = reference.split('/').last().unwrap_or(reference);
-        let model_dir = self.base_dir.join(model_name.to_lowercase());
+        // TEAM-035: Use mapped model name from extract_model_name
+        let model_name = self.extract_model_name(reference).ok()?;
+        let model_dir = self.base_dir.join(&model_name);
 
         if !model_dir.exists() {
             return None;

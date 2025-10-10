@@ -153,10 +153,14 @@ pub async fn handle_spawn_worker(
     let port = 8081 + workers.len() as u16;
     
     // TEAM-027: Get hostname for URL
-    let hostname = hostname::get()
-        .ok()
-        .and_then(|h| h.into_string().ok())
-        .unwrap_or_else(|| "localhost".to_string());
+    // TEAM-035: For localhost testing, use 127.0.0.1 to avoid hostname resolution issues
+    let hostname = std::env::var("LLORCH_WORKER_HOST")
+        .unwrap_or_else(|_| {
+            hostname::get()
+                .ok()
+                .and_then(|h| h.into_string().ok())
+                .unwrap_or_else(|| "127.0.0.1".to_string())
+        });
     let url = format!("http://{}:{}", hostname, port);
 
     // TEAM-027: Get worker binary path (same directory as rbee-hive)
@@ -169,25 +173,20 @@ pub async fn handle_spawn_worker(
     let api_key = format!("key-{}", Uuid::new_v4());
 
     // TEAM-027: Callback URL (this server's address)
-    // For MVP, assume we're listening on the same hostname
+    // TEAM-035: For localhost testing, use 127.0.0.1
     let callback_url = format!("http://{}:8080/v1/workers/ready", hostname);
 
     // Spawn worker process
     // Per test-001-mvp.md lines 136-143
     // TEAM-029: Use model_path from catalog/provisioner instead of request.model_path
+    // TEAM-035: Worker only accepts: --worker-id, --model, --port, --callback-url
     let spawn_result = tokio::process::Command::new(worker_binary)
         .arg("--worker-id")
         .arg(&worker_id)
         .arg("--model")
         .arg(&model_path)  // TEAM-029: Use provisioned model path
-        .arg("--backend")
-        .arg(&request.backend)
-        .arg("--device")
-        .arg(request.device.to_string())
         .arg("--port")
         .arg(port.to_string())
-        .arg("--api-key")
-        .arg(&api_key)
         .arg("--callback-url")
         .arg(&callback_url)
         .spawn();

@@ -184,18 +184,21 @@ async fn execute_inference(
 ) -> Result<()> {
     use std::io::Write;
 
+    // TEAM-035: Match worker SSE event format from src/http/sse.rs
     #[derive(Deserialize)]
     struct TokenEvent {
         #[serde(rename = "type")]
         event_type: String,
+        // Token event fields
         #[serde(default)]
-        token: String,
+        t: String,  // token text
         #[serde(default)]
-        done: bool,
+        i: u32,     // token index
+        // End event fields
         #[serde(default)]
-        total_tokens: u32,
+        tokens_out: u32,
         #[serde(default)]
-        duration_ms: u64,
+        decode_time_ms: u64,
     }
 
     let client = reqwest::Client::new();
@@ -237,22 +240,23 @@ async fn execute_inference(
                     break;
                 }
 
+                // TEAM-035: Parse worker SSE events
                 if let Ok(token_event) = serde_json::from_str::<TokenEvent>(json_str) {
                     match token_event.event_type.as_str() {
                         "token" => {
-                            print!("{}", token_event.token);
+                            print!("{}", token_event.t);
                             std::io::stdout().flush()?;
                         }
                         "end" => {
                             println!();
                             println!();
                             println!("{} Inference complete!", "✓".green().bold());
-                            println!("Total tokens: {}", token_event.total_tokens.to_string().cyan());
-                            println!("Duration: {} ms", token_event.duration_ms.to_string().cyan());
+                            println!("Total tokens: {}", token_event.tokens_out.to_string().cyan());
+                            println!("Duration: {} ms", token_event.decode_time_ms.to_string().cyan());
 
-                            if token_event.duration_ms > 0 && token_event.total_tokens > 0 {
-                                let tokens_per_sec = (token_event.total_tokens as f64
-                                    / token_event.duration_ms as f64)
+                            if token_event.decode_time_ms > 0 && token_event.tokens_out > 0 {
+                                let tokens_per_sec = (token_event.tokens_out as f64
+                                    / token_event.decode_time_ms as f64)
                                     * 1000.0;
                                 println!("Speed: {:.2} tokens/sec", tokens_per_sec);
                             }

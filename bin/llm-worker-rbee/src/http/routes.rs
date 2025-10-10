@@ -1,20 +1,24 @@
 //! HTTP route configuration
 //!
 //! Modified by: TEAM-017 (updated to use Mutex-wrapped backend)
+//! Modified by: TEAM-035 (added loading progress, renamed inference endpoint)
 //!
 //! # Endpoints
 //! - `GET /health` - Health check endpoint
-//! - `POST /execute` - Execute inference request
+//! - `POST /v1/inference` - Execute inference request (SSE) - TEAM-035
+//! - `GET /v1/loading/progress` - Model loading progress (SSE) - TEAM-035
 //!
 //! # Middleware
 //! - Correlation ID middleware (extracts/generates X-Correlation-ID)
 //!
 //! # Spec References
 //! - M0-W-1320: Health endpoint
-//! - M0-W-1330: Execute endpoint
+//! - M0-W-1330: Execute endpoint (now /v1/inference)
 //! - WORK-3040: Correlation ID middleware
+//! - SSE_IMPLEMENTATION_PLAN.md Phase 2: Loading progress
+//! - SSE_IMPLEMENTATION_PLAN.md Phase 3: Inference streaming
 
-use crate::http::{backend::InferenceBackend, execute, health};
+use crate::http::{backend::InferenceBackend, execute, health, loading};
 use axum::{
     middleware,
     routing::{get, post},
@@ -33,10 +37,12 @@ use tokio::sync::Mutex;
 /// Router with all endpoints and middleware configured
 ///
 /// TEAM-017: Updated to accept Mutex-wrapped backend
+/// TEAM-035: Added /v1/loading/progress and renamed /execute to /v1/inference
 pub fn create_router<B: InferenceBackend + 'static>(backend: Arc<Mutex<B>>) -> Router {
     Router::new()
         .route("/health", get(health::handle_health::<B>))
-        .route("/execute", post(execute::handle_execute::<B>))
+        .route("/v1/inference", post(execute::handle_execute::<B>))
+        .route("/v1/loading/progress", get(loading::handle_loading_progress::<B>))
         .layer(middleware::from_fn(correlation_middleware))
         .with_state(backend)
 }

@@ -125,12 +125,14 @@ enum_glob_use = "allow"
 # HTTP SERVER DEPENDENCIES (integrated from worker-http)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # TEAM-015: Integrated worker-common and worker-http directly into binary
+# TEAM-035: Added async-stream for SSE loading progress
 
 axum = "0.8"
 tower = "0.5"
 tower-http = { version = "0.6", features = ["trace", "cors"] }
 futures = "0.3"
 reqwest = { version = "0.12", features = ["json"] }
+async-stream = "0.3"  # TEAM-035: SSE streaming support
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # CANDLE INTEGRATION — Hybrid Approach (Math Functions + Kernels)

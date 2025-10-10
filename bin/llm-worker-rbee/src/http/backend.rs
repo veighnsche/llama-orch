@@ -5,11 +5,13 @@
 //! this trait to provide their specific inference capabilities.
 //!
 //! Modified by: TEAM-017 (changed to &mut self for stateful models)
+//! Modified by: TEAM-035 (added loading progress channel)
 
 use crate::common::{InferenceResult, SamplingConfig};
+use crate::http::loading::LoadingEvent;
 use async_trait::async_trait;
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use tokio::sync::{broadcast, Mutex};
 
 /// Platform-agnostic inference backend
 ///
@@ -39,6 +41,25 @@ pub trait InferenceBackend: Send + Sync {
 
     /// Check if backend is healthy and ready for inference
     fn is_healthy(&self) -> bool;
+
+    /// Get loading progress channel (if model is currently loading)
+    ///
+    /// Returns a broadcast receiver for loading progress events.
+    /// Returns None if model is not loading or backend doesn't support progress tracking.
+    ///
+    /// # TEAM-035: Added for SSE loading progress (Phase 2)
+    fn loading_progress_channel(&self) -> Option<broadcast::Receiver<LoadingEvent>> {
+        None // Default: no loading progress
+    }
+
+    /// Check if model is ready for inference
+    ///
+    /// Returns true if model is fully loaded and ready to accept inference requests.
+    ///
+    /// # TEAM-035: Added for readiness checks
+    fn is_ready(&self) -> bool {
+        true // Default: always ready
+    }
 }
 
 /// Shared application state for HTTP handlers

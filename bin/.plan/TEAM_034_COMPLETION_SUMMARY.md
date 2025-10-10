@@ -375,6 +375,308 @@ data: [DONE]
 
 ---
 
+## Additional Industry Patterns to Consider
+
+### 1. **Model Loading Progress Reporting** 📊
+
+**Sources:**
+- `reference/candle-vllm/src/backend/progress.rs`
+- `reference/mistral.rs/mistralrs-core/src/utils/progress.rs`
+- `reference/llama.cpp/src/llama-model.h` (lines 459-463)
+
+**Key Patterns:**
+
+#### A. Progress Callback Pattern (llama.cpp)
+```cpp
+// llama.cpp common/common.h line 502-505
+// Optional callback for model loading progress and cancellation:
+// Called with a progress value between 0.0 and 1.0.
+// Return false from callback to abort model loading or true to continue
+llama_progress_callback load_progress_callback = NULL;
+```
+
+**Benefits:**
+- Cancellable loading (return false to abort)
+- Progress value 0.0 to 1.0 (normalized)
+- Simple callback interface
+
+**Application to our worker:**
+```rust
+pub trait InferenceBackend {
+    /// Load model with progress callback
+    /// Callback receives (current, total) and returns true to continue
+    async fn load_model_with_progress<F>(
+        &mut self,
+        model_path: &str,
+        progress_callback: F,
+    ) -> Result<(), String>
+    where
+        F: Fn(usize, usize) -> bool + Send;
+}
+```
+
+#### B. Multi-Progress Bar (candle-vllm)
+```rust
+// candle-vllm/src/backend/progress.rs lines 37-92
+pub struct Progress {
+    m: MultiProgress,
+    bars: Vec<ProgressBar>,
+    size: usize,
+}
+
+impl Progress {
+    pub fn new(n: usize, size: usize) -> Progress {
+        // Creates n progress bars for multi-GPU/multi-rank loading
+        // Uses indicatif crate for terminal UI
+    }
+    
+    pub fn update(&self, idx: usize, progress: usize) {
+        // Update specific rank/device progress
+    }
+}
+```
+
+**Benefits:**
+- Multi-GPU/multi-device support
+- Rank-based progress tracking
+- Terminal UI with indicatif
+
+**Application to our worker:**
+- For multi-GPU setups, track per-device loading
+- Send per-device progress events via SSE
+- Aggregate progress for overall completion
+
+#### C. Layer-by-Layer Progress (mistral.rs)
+```rust
+// mistral.rs/mistralrs-core/src/utils/progress.rs lines 27-62
+pub struct NiceProgressBar<'a, T: ExactSizeIterator, const COLOR: char = 'b'>(
+    pub T,
+    pub &'static str,
+    pub &'a MultiProgress,
+);
+
+// Usage: iterate over layers with progress
+for layer in NiceProgressBar(layers.iter(), "Loading layers", &multi_progress) {
+    // Load layer
+}
+```
+
+**Benefits:**
+- Iterator-based progress (Rust idiomatic)
+- Colored progress bars
+- Message customization
+
+**Application to our worker:**
+- Track layer loading in Candle backend
+- Send layer-by-layer events via SSE
+- Match our spec: `{"stage": "loading_to_vram", "layers_loaded": 12, "layers_total": 32}`
+
+### 2. **Progress Worker Pattern** (candle-vllm)
+
+**Source:** `reference/candle-vllm/src/backend/progress.rs` lines 95-188
+
+**Key Pattern:**
+```rust
+pub async fn progress_worker(
+    num_subprocess: Option<usize>,
+    length: usize,
+    progress_reporter: Arc<RwLock<ProgressReporter>>,
+) -> std::thread::JoinHandle<()> {
+    let handle = thread::spawn(move || {
+        loop {
+            let (rank, progress) = reporter.read().unwrap().get_progress();
+            // Update progress bars
+            // Check for completion
+            if progress >= length { break; }
+            thread::sleep(Duration::from_millis(500));
+        }
+    });
+    handle
+}
+```
+
+**Benefits:**
+- Separate thread for progress reporting
+- 500ms polling interval
+- Multi-process coordination (NCCL feature)
+
+**Application to our worker:**
+- Spawn progress worker thread during model loading
+- Poll backend for layer loading progress
+- Send SSE events from main thread via broadcast channel
+
+### 3. **Cancellable Operations** (llama.cpp)
+
+**Source:** `reference/llama.cpp/src/llama-model.h` line 462
+
+```cpp
+bool load_tensors(llama_model_loader & ml); // returns false if cancelled by progress_callback
+```
+
+**Benefits:**
+- User can cancel long-running operations
+- Clean resource cleanup
+- Better UX for large models
+
+**Application to our worker:**
+- Add cancellation token to loading
+- Client can disconnect SSE stream to cancel
+- Backend checks cancellation between layers
+
+### 4. **Recommended Implementation for Phase 2**
+
+Based on industry patterns, here's the recommended approach:
+
+#### A. Backend Progress Reporter
+```rust
+// bin/llm-worker-rbee/src/backend/progress.rs (NEW)
+use tokio::sync::broadcast;
+
+pub struct LoadingProgress {
+    tx: broadcast::Sender<LoadingEvent>,
+}
+
+impl LoadingProgress {
+    pub fn new() -> Self {
+        let (tx, _) = broadcast::channel(100);
+        Self { tx }
+    }
+    
+    pub fn subscribe(&self) -> broadcast::Receiver<LoadingEvent> {
+        self.tx.subscribe()
+    }
+    
+    pub fn report_layer(&self, layers_loaded: u32, layers_total: u32, vram_mb: u64) {
+        let _ = self.tx.send(LoadingEvent::LoadingToVram {
+            layers_loaded,
+            layers_total,
+            vram_mb,
+        });
+    }
+    
+    pub fn report_ready(&self) {
+        let _ = self.tx.send(LoadingEvent::Ready);
+    }
+}
+```
+
+#### B. Candle Backend Integration
+```rust
+// bin/llm-worker-rbee/src/backend/candle.rs
+impl CandleBackend {
+    pub fn load_model_with_progress(&mut self, model_path: &str) -> Result<()> {
+        let progress = self.loading_progress.clone();
+        
+        // Load model config
+        let config = load_config(model_path)?;
+        let total_layers = config.num_hidden_layers;
+        
+        // Load layers one by one
+        for i in 0..total_layers {
+            // Load layer i
+            load_layer(i)?;
+            
+            // Report progress
+            let vram_mb = get_vram_usage()?;
+            progress.report_layer(i + 1, total_layers, vram_mb);
+        }
+        
+        progress.report_ready();
+        Ok(())
+    }
+}
+```
+
+#### C. SSE Endpoint (already planned)
+```rust
+// bin/llm-worker-rbee/src/http/loading.rs
+pub async fn handle_loading_progress(
+    State(backend): State<Arc<Mutex<dyn InferenceBackend>>>,
+) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, (StatusCode, String)> {
+    let mut rx = backend.lock().await.loading_progress_channel()
+        .ok_or((StatusCode::SERVICE_UNAVAILABLE, "Model not loading"))?;
+    
+    let stream = async_stream::stream! {
+        let mut done_state = LoadingState::Running;
+        loop {
+            match done_state {
+                LoadingState::SendingDone => {
+                    yield Ok(Event::default().data("[DONE]"));
+                    done_state = LoadingState::Done;
+                }
+                LoadingState::Done => break,
+                LoadingState::Running => {
+                    match rx.recv().await {
+                        Ok(event) => {
+                            let is_ready = matches!(event, LoadingEvent::Ready);
+                            yield Ok(Event::default().json_data(&event).unwrap());
+                            if is_ready {
+                                done_state = LoadingState::SendingDone;
+                            }
+                        }
+                        Err(_) => done_state = LoadingState::SendingDone,
+                    }
+                }
+            }
+        }
+    };
+    
+    Ok(Sse::new(stream).keep_alive(KeepAlive::new().interval(Duration::from_secs(10))))
+}
+```
+
+### 5. **Future Enhancements**
+
+#### A. Multi-GPU Support (candle-vllm pattern)
+- Track per-device loading progress
+- Aggregate across devices
+- Event format: `{"stage": "loading_to_vram", "device": 0, "layers_loaded": 12, ...}`
+
+#### B. Cancellation Support (llama.cpp pattern)
+- Add cancellation token to loading
+- Check between layers
+- Clean shutdown on cancel
+
+#### C. Download + Loading Pipeline
+- Combine download progress with loading progress
+- Unified progress bar in client
+- Event format: `{"stage": "downloading", ...}` → `{"stage": "loading_to_vram", ...}` → `{"stage": "ready"}`
+
+#### D. Progress Persistence
+- Store loading progress in case of restart
+- Resume from last loaded layer
+- Useful for very large models (70B+)
+
+---
+
+## Reference Files for TEAM-035
+
+### Industry Patterns
+1. **candle-vllm progress:** `reference/candle-vllm/src/backend/progress.rs`
+   - Multi-progress bars
+   - Progress worker thread
+   - Multi-rank coordination
+
+2. **mistral.rs progress:** `reference/mistral.rs/mistralrs-core/src/utils/progress.rs`
+   - Iterator-based progress
+   - Colored progress bars
+   - Parallel progress tracking
+
+3. **llama.cpp loading:** `reference/llama.cpp/src/llama-model.h` (lines 459-463)
+   - Progress callback pattern
+   - Cancellable loading
+   - Normalized progress (0.0-1.0)
+
+4. **llama.cpp common:** `reference/llama.cpp/common/common.h` (lines 502-505)
+   - Callback interface definition
+
+### Our Existing Code
+1. **Worker execute (SSE):** `bin/llm-worker-rbee/src/http/execute.rs`
+2. **Download tracker (SSE):** `bin/rbee-hive/src/download_tracker.rs`
+3. **Backend trait:** `bin/llm-worker-rbee/src/http/backend.rs`
+
+---
+
 ## Statistics
 
 **Time Spent:** ~60 minutes  

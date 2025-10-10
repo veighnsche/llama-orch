@@ -1,6 +1,7 @@
-//! POST /execute endpoint - Execute inference
+//! POST /v1/inference endpoint - Execute inference
 //!
 //! Modified by: TEAM-017 (updated to use Mutex-wrapped backend)
+//! Modified by: TEAM-035 (renamed to /v1/inference, added [DONE] marker)
 
 use crate::common::SamplingConfig;
 use crate::http::{
@@ -15,6 +16,7 @@ use axum::{
     Json,
 };
 use futures::stream::{self, Stream, StreamExt};
+use futures::future;
 use observability_narration_core::{narrate, NarrationFields};
 use std::{convert::Infallible, sync::Arc};
 use tokio::sync::Mutex;
@@ -22,9 +24,12 @@ use tracing::{info, warn};
 
 type EventStream = Box<dyn Stream<Item = Result<Event, Infallible>> + Send + Unpin>;
 
-/// Handle POST /execute
+/// Handle POST /v1/inference
+///
+/// Streams inference results via SSE with OpenAI-compatible [DONE] marker.
 ///
 /// TEAM-017: Updated to use Mutex-wrapped backend for &mut self
+/// TEAM-035: Added [DONE] marker for OpenAI compatibility
 pub async fn handle_execute<B: InferenceBackend>(
     State(backend): State<Arc<Mutex<B>>>,
     Json(req): Json<ExecuteRequest>,
@@ -93,8 +98,11 @@ pub async fn handle_execute<B: InferenceBackend>(
                 code: "INFERENCE_FAILED".to_string(),
                 message: e.to_string(),
             }];
+            // TEAM-035: Add [DONE] marker after error (OpenAI compatible)
             let stream: EventStream = Box::new(
-                stream::iter(events).map(|event| Ok(Event::default().json_data(&event).unwrap())),
+                stream::iter(events)
+                    .map(|event| Ok(Event::default().json_data(&event).unwrap()))
+                    .chain(stream::once(future::ready(Ok(Event::default().data("[DONE]")))))
             );
             return Ok(Sse::new(stream));
         }
@@ -120,8 +128,12 @@ pub async fn handle_execute<B: InferenceBackend>(
         stop_sequence_matched: result.stop_sequence_matched,
     });
 
-    let stream: EventStream =
-        Box::new(stream::iter(events).map(|event| Ok(Event::default().json_data(&event).unwrap())));
+    // TEAM-035: Add [DONE] marker after all events (OpenAI compatible)
+    let stream: EventStream = Box::new(
+        stream::iter(events)
+            .map(|event| Ok(Event::default().json_data(&event).unwrap()))
+            .chain(stream::once(future::ready(Ok(Event::default().data("[DONE]")))))
+    );
 
     Ok(Sse::new(stream))
 }
