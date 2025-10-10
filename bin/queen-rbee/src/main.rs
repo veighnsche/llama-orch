@@ -51,14 +51,9 @@ async fn main() -> Result<()> {
     let worker_registry = worker_registry::WorkerRegistry::new();
     info!("✅ Worker registry initialized (in-memory)");
 
-    // Create HTTP server state
-    let state = http::AppState {
-        beehive_registry: Arc::new(beehive_registry),
-        worker_registry: Arc::new(worker_registry),
-    };
-
-    // Create router
-    let app = http::create_router(state);
+    // Create router with registries
+    // TEAM-052: Updated to use refactored http module
+    let app = http::create_router(Arc::new(beehive_registry), Arc::new(worker_registry));
 
     // Start HTTP server
     let addr = format!("0.0.0.0:{}", args.port);
