@@ -133,8 +133,9 @@ async fn handle_add_node(
         );
         Ok(())
     } else {
+        // TEAM-047: Fixed exit code - use anyhow::bail instead of std::process::exit
         println!("{} ❌ SSH connection failed: {}", "[queen-rbee]".cyan(), result.message);
-        std::process::exit(1);
+        anyhow::bail!("SSH connection failed: {}", result.message)
     }
 }
 
@@ -203,8 +204,9 @@ async fn handle_remove_node(name: String) -> Result<()> {
         println!("{} ✅ Node '{}' removed successfully", "[queen-rbee]".cyan(), name);
         Ok(())
     } else {
+        // TEAM-047: Fixed exit code - use anyhow::bail instead of std::process::exit
         println!("{} ❌ {}", "[queen-rbee]".cyan(), result.message);
-        std::process::exit(1);
+        anyhow::bail!("{}", result.message)
     }
 }
 

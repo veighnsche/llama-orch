@@ -17,23 +17,26 @@ pub async fn given_config_contains(world: &mut World, step: &cucumber::gherkin::
     tracing::debug!("Config contains: {}", docstring.trim());
 }
 
+// TEAM-049: Fixed quote handling using shell-aware parsing
 #[when(expr = "I run {string}")]
 pub async fn when_i_run_command_string(world: &mut World, command: String) {
     // TEAM-044: Execute the command for real, not just store it
     tracing::info!("🚀 Executing command: {}", command);
 
-    // Parse command line into parts
-    let parts: Vec<&str> = command.split_whitespace().collect();
+    // TEAM-049: Use shell-aware parsing to handle quotes properly
+    let parts = shlex::split(&command)
+        .unwrap_or_else(|| panic!("Failed to parse command: {}", command));
+    
     if parts.is_empty() {
         panic!("Empty command");
     }
 
     // Extract binary name and args
-    let binary = parts[0];
-    let args: Vec<&str> = parts[1..].to_vec();
+    let binary = &parts[0];
+    let args: Vec<&str> = parts[1..].iter().map(|s| s.as_str()).collect();
 
     // Map command names to actual binary names
-    let actual_binary = if binary == "rbee-keeper" { "rbee" } else { binary };
+    let actual_binary = if binary == "rbee-keeper" { "rbee" } else { binary.as_str() };
 
     // Use pre-built binaries
     let workspace_dir = std::env::var("CARGO_MANIFEST_DIR")
@@ -65,30 +68,36 @@ pub async fn when_i_run_command_string(world: &mut World, command: String) {
 }
 
 // TEAM-043: Real command execution with docstring
+// TEAM-048: Fixed multi-line command parsing (remove backslash line continuations)
+// TEAM-049: Fixed quote handling using shell-aware parsing
 #[when(expr = "I run:")]
 pub async fn when_i_run_command_docstring(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
-    let command_line = docstring.trim();
+    
+    // TEAM-048: Remove backslash line continuations (\ followed by newline and whitespace)
+    let command_line = docstring.lines()
+        .map(|line| line.trim_end_matches('\\').trim())
+        .collect::<Vec<_>>()
+        .join(" ");
 
     tracing::info!("🚀 Executing command: {}", command_line);
 
-    // Parse command line into parts
-    let parts: Vec<&str> = command_line.split_whitespace().collect();
+    // TEAM-049: Use shell-aware parsing to handle quotes properly
+    // This fixes: --prompt "write a short story" being split incorrectly
+    let parts = shlex::split(&command_line)
+        .unwrap_or_else(|| panic!("Failed to parse command: {}", command_line));
+    
     if parts.is_empty() {
         panic!("Empty command");
     }
 
     // Extract binary name and args
-    let binary = parts[0];
-    let args: Vec<&str> = parts[1..]
-        .iter()
-        .filter(|s| !s.starts_with('\\')) // Filter out line continuations
-        .copied()
-        .collect();
+    let binary = &parts[0];
+    let args: Vec<&str> = parts[1..].iter().map(|s| s.as_str()).collect();
 
     // TEAM-044: Map command names to actual binary names
     // rbee-keeper -> rbee (the actual binary name)
-    let actual_binary = if binary == "rbee-keeper" { "rbee" } else { binary };
+    let actual_binary = if binary == "rbee-keeper" { "rbee" } else { binary.as_str() };
 
     // TEAM-044: Use pre-built binaries instead of cargo run to avoid compilation timeouts
     let workspace_dir = std::env::var("CARGO_MANIFEST_DIR")
@@ -96,6 +105,10 @@ pub async fn when_i_run_command_docstring(world: &mut World, step: &cucumber::gh
         .unwrap_or_else(|_| std::path::PathBuf::from("/home/vince/Projects/llama-orch"));
 
     let binary_path = workspace_dir.join("target/debug").join(actual_binary);
+
+    // TEAM-048: Debug logging
+    tracing::debug!("Binary: {}", binary_path.display());
+    tracing::debug!("Args: {:?}", args);
 
     // Execute command using pre-built binary
     let output = tokio::process::Command::new(&binary_path)
@@ -212,15 +225,23 @@ pub async fn given_workers_on_multiple_nodes(world: &mut World) {
 
 #[given(regex = r#"^a worker with id "(.+)" is running$"#)]
 pub async fn given_worker_with_id_running(world: &mut World, worker_id: String) {
-    tracing::debug!("Worker {} is running", worker_id);
+    // TEAM-048: Start queen-rbee for worker shutdown tests
+    tracing::info!("Starting queen-rbee for worker shutdown test");
+    
+    // Ensure queen-rbee is running (reuse topology setup)
+    if world.queen_rbee_process.is_none() {
+        crate::steps::beehive_registry::given_queen_rbee_running(world).await;
+    }
+    
+    tracing::debug!("Worker {} is running (queen-rbee ready)", worker_id);
 }
 
-#[then(expr = "the output shows health status of workers on mac")]
+#[then(expr = "the output shows health status of workers on workstation")]
 pub async fn then_output_shows_health_status(world: &mut World) {
     tracing::debug!("Output should show health status");
 }
 
-#[then(expr = "logs from mac are streamed to stdout")]
+#[then(expr = "logs from workstation are streamed to stdout")]
 pub async fn then_logs_streamed(world: &mut World) {
     tracing::debug!("Logs should be streamed to stdout");
 }

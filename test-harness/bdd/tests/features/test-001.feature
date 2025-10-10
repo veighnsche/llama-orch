@@ -15,6 +15,7 @@ Feature: Cross-Node Inference Request Flow
       | blep        | blep.home.arpa        | rbee-keeper, queen-rbee                         | cpu                    |
       | workstation | workstation.home.arpa | rbee-hive, llm-worker-rbee                      | cuda:0, cuda:1, cpu    |
       | mac         | mac.home.arpa         | rbee-hive, llm-worker-rbee                      | metal:0                |
+    # NOTE: This test suite uses workstation node with cuda backend on device 1
     And I am on node "blep"
     And queen-rbee is running at "http://localhost:8080"
     And the model catalog is SQLite at "~/.rbee/models.db"
@@ -36,8 +37,8 @@ Feature: Cross-Node Inference Request Flow
     When I run:
       """
       rbee-keeper setup add-node \
-        --name mac \
-        --ssh-host mac.home.arpa \
+        --name workstation \
+        --ssh-host workstation.home.arpa \
         --ssh-user vince \
         --ssh-key ~/.ssh/id_ed25519 \
         --git-repo https://github.com/user/llama-orch.git \
@@ -47,13 +48,13 @@ Feature: Cross-Node Inference Request Flow
     Then rbee-keeper sends request to queen-rbee at "http://localhost:8080/v2/registry/beehives/add"
     And queen-rbee validates SSH connection with:
       """
-      ssh -i /home/vince/.ssh/id_ed25519 vince@mac.home.arpa "echo 'connection test'"
+      ssh -i /home/vince/.ssh/id_ed25519 vince@workstation.home.arpa "echo 'connection test'"
       """
     And the SSH connection succeeds
     And queen-rbee saves node to rbee-hive registry:
       | field              | value                                      |
-      | node_name          | mac                                        |
-      | ssh_host           | mac.home.arpa                              |
+      | node_name          | workstation                                |
+      | ssh_host           | workstation.home.arpa                      |
       | ssh_port           | 22                                         |
       | ssh_user           | vince                                      |
       | ssh_key_path       | /home/vince/.ssh/id_ed25519                |
@@ -64,8 +65,8 @@ Feature: Cross-Node Inference Request Flow
       | status             | reachable                                  |
     And rbee-keeper displays:
       """
-      [queen-rbee] 🔌 Testing SSH connection to mac.home.arpa
-      [queen-rbee] ✅ SSH connection successful! Node 'mac' saved to registry
+      [queen-rbee] 🔌 Testing SSH connection to workstation.home.arpa
+      [queen-rbee] ✅ SSH connection successful! Node 'workstation' saved to registry
       """
     And the exit code is 0
 
@@ -93,15 +94,15 @@ Feature: Cross-Node Inference Request Flow
 
   @setup
   Scenario: Install rbee-hive on remote node
-    Given node "mac" is registered in rbee-hive registry
+    Given node "workstation" is registered in rbee-hive registry
     When I run:
       """
-      rbee-keeper setup install --node mac
+      rbee-keeper setup install --node workstation
       """
     Then queen-rbee loads SSH details from registry
     And queen-rbee executes installation via SSH:
       """
-      ssh -i /home/vince/.ssh/id_ed25519 vince@mac.home.arpa << 'EOF'
+      ssh -i /home/vince/.ssh/id_ed25519 vince@workstation.home.arpa << 'EOF'
         cd /home/vince/rbee
         git clone https://github.com/user/llama-orch.git .
         git checkout main
@@ -111,9 +112,9 @@ Feature: Cross-Node Inference Request Flow
       """
     And rbee-keeper displays:
       """
-      [queen-rbee] 📦 Cloning repository on mac
+      [queen-rbee] 📦 Cloning repository on workstation
       [queen-rbee] 🔨 Building rbee-hive and llm-worker-rbee
-      [queen-rbee] ✅ Installation complete on mac!
+      [queen-rbee] ✅ Installation complete on workstation!
       """
     And the exit code is 0
 
@@ -125,12 +126,12 @@ Feature: Cross-Node Inference Request Flow
       """
       Registered rbee-hive Nodes:
       
-      mac (mac.home.arpa)
+      workstation (workstation.home.arpa)
         Status: reachable
-        Last connected: 2024-10-09 15:30:03
+        Last connected: 2024-10-09 14:22:15
         Install path: /home/vince/rbee
       
-      workstation (workstation.home.arpa)
+      blep (blep.home.arpa)
         Status: reachable
         Last connected: 2024-10-09 14:22:15
         Install path: /home/vince/rbee
@@ -139,33 +140,33 @@ Feature: Cross-Node Inference Request Flow
 
   @setup
   Scenario: Remove node from rbee-hive registry
-    Given node "mac" is registered in rbee-hive registry
-    When I run "rbee-keeper setup remove-node --name mac"
+    Given node "workstation" is registered in rbee-hive registry
+    When I run "rbee-keeper setup remove-node --name workstation"
     Then queen-rbee removes node from registry
     And rbee-keeper displays:
       """
-      [queen-rbee] ✅ Node 'mac' removed from registry
+      [queen-rbee] ✅ Node 'workstation' removed from registry
       """
     And the exit code is 0
 
   @setup @critical
   Scenario: Inference fails when node not in registry
-    Given the rbee-hive registry does not contain node "mac"
+    Given the rbee-hive registry does not contain node "workstation"
     When I run:
       """
       rbee-keeper infer \
-        --node mac \
+        --node workstation \
         --model hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
         --prompt "test"
       """
-    Then queen-rbee queries rbee-hive registry for node "mac"
+    Then queen-rbee queries rbee-hive registry for node "workstation"
     And the query returns no results
     And rbee-keeper displays:
       """
-      [queen-rbee] ❌ ERROR: Node 'mac' not found in rbee-hive registry
+      [queen-rbee] ❌ ERROR: Node 'workstation' not found in rbee-hive registry
       
       To add this node, run:
-        rbee-keeper setup add-node --name mac --ssh-host mac.home.arpa ...
+        rbee-keeper setup add-node --name workstation --ssh-host workstation.home.arpa ...
       """
     And the exit code is 1
 
@@ -175,28 +176,30 @@ Feature: Cross-Node Inference Request Flow
 
   Scenario: Happy path - cold start inference on remote node
     Given no workers are registered for model "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF"
-    And node "mac" is registered in rbee-hive registry with SSH details
-    And node "mac" is reachable at "http://mac.home.arpa:8080"
-    And node "mac" has 8000 MB of available RAM
-    And node "mac" has Metal backend available
+    And node "workstation" is registered in rbee-hive registry with SSH details
+    And node "workstation" is reachable at "http://workstation.home.arpa:8080"
+    And node "workstation" has 8000 MB of available RAM
+    And node "workstation" has CUDA backend available
     When I run:
       """
       rbee-keeper infer \
-        --node mac \
+        --node workstation \
         --model hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
         --prompt "write a short story" \
         --max-tokens 20 \
-        --temperature 0.7
+        --temperature 0.7 \
+        --backend cuda \
+        --device 1
       """
     Then rbee-keeper sends request to queen-rbee at "http://localhost:8080/v2/tasks"
-    And queen-rbee queries rbee-hive registry for node "mac"
-    And the registry returns SSH details for node "mac"
+    And queen-rbee queries rbee-hive registry for node "workstation"
+    And the registry returns SSH details for node "workstation"
     And queen-rbee establishes SSH connection using registry details
-    And queen-rbee starts rbee-hive via SSH at "mac.home.arpa"
+    And queen-rbee starts rbee-hive via SSH at "workstation.home.arpa"
     And queen-rbee updates registry with last_connected_unix
-    And queen-rbee queries rbee-hive worker registry at "http://mac.home.arpa:9200/v1/workers/list"
+    And queen-rbee queries rbee-hive worker registry at "http://workstation.home.arpa:9200/v1/workers/list"
     And the worker registry returns an empty list
-    And queen-rbee performs pool preflight check at "http://mac.home.arpa:9200/v1/health"
+    And queen-rbee performs pool preflight check at "http://workstation.home.arpa:9200/v1/health"
     And the health check returns version "0.1.0" and status "alive"
     And rbee-hive checks the model catalog for "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF"
     And the model is not found in the catalog
@@ -207,18 +210,18 @@ Feature: Cross-Node Inference Request Flow
     And rbee-hive registers the model in SQLite catalog with local_path "/models/tinyllama-q4.gguf"
     And rbee-hive performs worker preflight checks
     And RAM check passes with 8000 MB available
-    And Metal backend check passes
-    And rbee-hive spawns worker process "llm-worker-rbee" on port 8001
+    And CUDA backend check passes
+    And rbee-hive spawns worker process "llm-worker-rbee" on port 8001 with cuda device 1
     And the worker HTTP server starts on port 8001
-    And the worker sends ready callback to "http://mac.home.arpa:9200/v1/workers/ready"
+    And the worker sends ready callback to "http://workstation.home.arpa:9200/v1/workers/ready"
     And rbee-hive registers the worker in the in-memory registry
     And rbee-hive returns worker details to queen-rbee
     And queen-rbee returns worker URL to rbee-keeper
-    And rbee-keeper polls worker readiness at "http://mac.home.arpa:8001/v1/ready"
+    And rbee-keeper polls worker readiness at "http://workstation.home.arpa:8001/v1/ready"
     And the worker returns state "loading" with progress_url
     And rbee-keeper streams loading progress showing layers loaded
     And the worker completes loading and returns state "ready"
-    And rbee-keeper sends inference request to "http://mac.home.arpa:8001/v1/inference"
+    And rbee-keeper sends inference request to "http://workstation.home.arpa:8001/v1/inference"
     And the worker streams tokens via SSE
     And rbee-keeper displays tokens to stdout in real-time
     And the inference completes with 20 tokens generated
@@ -226,27 +229,30 @@ Feature: Cross-Node Inference Request Flow
     And the exit code is 0
 
   Scenario: Warm start - reuse existing idle worker
-    Given node "mac" is registered in rbee-hive registry with SSH details
+    Given node "workstation" is registered in rbee-hive registry with SSH details
     And a worker is registered with:
       | field      | value                                           |
       | id         | worker-abc123                                   |
-      | url        | http://mac.home.arpa:8001                       |
+      | url        | http://workstation.home.arpa:8001               |
       | model_ref  | hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF       |
       | state      | idle                                            |
-      | backend    | metal                                           |
+      | backend    | cuda                                            |
+      | device     | 1                                               |
     And the worker is healthy
     When I run:
       """
       rbee-keeper infer \
-        --node mac \
+        --node workstation \
         --model hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
         --prompt "write a poem" \
-        --max-tokens 20
+        --max-tokens 20 \
+        --backend cuda \
+        --device 1
       """
     Then rbee-keeper queries the worker registry
     And the registry returns worker "worker-abc123" with state "idle"
     And queen-rbee skips pool preflight and model provisioning
-    And rbee-keeper sends inference request directly to "http://mac.home.arpa:8001/v1/inference"
+    And rbee-keeper sends inference request directly to "http://workstation.home.arpa:8001/v1/inference"
     And the worker streams tokens via SSE
     And the inference completes successfully
     And the total latency is under 5 seconds
@@ -258,7 +264,7 @@ Feature: Cross-Node Inference Request Flow
 
   Scenario: Worker registry returns empty list
     Given no workers are registered
-    When queen-rbee queries "http://mac.home.arpa:9200/v1/workers/list"
+    When queen-rbee queries "http://workstation.home.arpa:9200/v1/workers/list"
     Then the response is:
       """
       {
@@ -282,8 +288,8 @@ Feature: Cross-Node Inference Request Flow
   # ============================================================================
 
   Scenario: Pool preflight health check succeeds
-    Given node "mac" is reachable
-    When rbee-keeper sends GET to "http://mac.home.arpa:8080/v1/health"
+    Given node "workstation" is reachable
+    When rbee-keeper sends GET to "http://workstation.home.arpa:8080/v1/health"
     Then the response status is 200
     And the response body contains:
       """
@@ -305,7 +311,7 @@ Feature: Cross-Node Inference Request Flow
     And the exit code is 1
 
   Scenario: Pool preflight connection timeout with retry
-    Given node "mac" is unreachable
+    Given node "workstation" is unreachable
     When rbee-keeper attempts to connect with timeout 10s
     Then rbee-keeper retries 3 times with exponential backoff
     And attempt 1 has delay 0ms
@@ -436,15 +442,15 @@ Feature: Cross-Node Inference Request Flow
     And the exit code is 1
 
   Scenario: Worker preflight backend check passes
-    Given the requested backend is "metal"
-    And node "mac" has Metal backend available
+    Given the requested backend is "cuda"
+    And node "workstation" has CUDA backend available
     When rbee-hive performs backend check
     Then the check passes
     And rbee-hive proceeds to worker startup
 
   Scenario: Worker preflight backend check fails
-    Given the requested backend is "cuda"
-    And node "mac" does not have CUDA available
+    Given the requested backend is "metal"
+    And node "workstation" does not have Metal available
     When rbee-hive performs backend check
     Then the check fails
     And rbee-hive returns error "BACKEND_UNAVAILABLE"
@@ -462,8 +468,8 @@ Feature: Cross-Node Inference Request Flow
       """
       llm-worker-rbee \
         --model /models/tinyllama-q4.gguf \
-        --backend metal \
-        --device 0 \
+        --backend cuda \
+        --device 1 \
         --port 8081 \
         --api-key <worker_api_key>
       """
@@ -478,13 +484,13 @@ Feature: Cross-Node Inference Request Flow
     When the worker sends ready callback
     Then the request is:
       """
-      POST http://mac.home.arpa:8080/v1/workers/ready
+      POST http://workstation.home.arpa:8080/v1/workers/ready
       {
         "worker_id": "worker-abc123",
-        "url": "http://mac.home.arpa:8081",
+        "url": "http://workstation.home.arpa:8081",
         "model_ref": "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
-        "backend": "metal",
-        "device": 0
+        "backend": "cuda",
+        "device": 1
       }
       """
     And rbee-hive acknowledges the callback
@@ -500,10 +506,10 @@ Feature: Cross-Node Inference Request Flow
     Then the in-memory HashMap is updated with:
       | field            | value                                           |
       | id               | worker-abc123                                   |
-      | url              | http://mac.home.arpa:8081                       |
+      | url              | http://workstation.home.arpa:8081               |
       | model_ref        | hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF       |
-      | backend          | metal                                           |
-      | device           | 0                                               |
+      | backend          | cuda                                            |
+      | device           | 1                                               |
       | state            | loading                                         |
       | slots_total      | 1                                               |
       | slots_available  | 0                                               |
@@ -515,13 +521,13 @@ Feature: Cross-Node Inference Request Flow
 
   Scenario: Worker health check while loading
     Given the worker is in state "loading"
-    When rbee-keeper polls "http://mac.home.arpa:8081/v1/ready"
+    When rbee-keeper polls "http://workstation.home.arpa:8081/v1/ready"
     Then the response is:
       """
       {
         "ready": false,
         "state": "loading",
-        "progress_url": "http://mac.home.arpa:8081/v1/loading/progress"
+        "progress_url": "http://workstation.home.arpa:8081/v1/loading/progress"
       }
       """
     And rbee-keeper connects to the progress SSE stream
@@ -569,7 +575,7 @@ Feature: Cross-Node Inference Request Flow
     Given the worker is ready and idle
     When rbee-keeper sends inference request:
       """
-      POST http://mac.home.arpa:8081/v1/inference
+      POST http://workstation.home.arpa:8081/v1/inference
       Authorization: Bearer <worker_api_key>
       Content-Type: application/json
 
@@ -626,15 +632,15 @@ Feature: Cross-Node Inference Request Flow
   # ============================================================================
 
   Scenario: EC1 - Connection timeout with retry and backoff
-    Given node "mac" is unreachable
+    Given node "workstation" is unreachable
     When rbee-keeper attempts connection
     Then rbee-keeper displays:
       """
-      Attempt 1: Connecting to mac.home.arpa:8080... (timeout 10s)
-      Attempt 2: Connecting to mac.home.arpa:8080... (timeout 10s, delay 200ms)
-      Attempt 3: Connecting to mac.home.arpa:8080... (timeout 10s, delay 400ms)
-      Error: Cannot connect to mac.home.arpa:8080 after 3 attempts
-      Suggestion: Check if rbee-hive is running on mac
+      Attempt 1: Connecting to workstation.home.arpa:8080... (timeout 10s)
+      Attempt 2: Connecting to workstation.home.arpa:8080... (timeout 10s, delay 200ms)
+      Attempt 3: Connecting to workstation.home.arpa:8080... (timeout 10s, delay 400ms)
+      Error: Cannot connect to workstation.home.arpa:8080 after 3 attempts
+      Suggestion: Check if rbee-hive is running on workstation
       """
     And the exit code is 1
 
@@ -657,7 +663,7 @@ Feature: Cross-Node Inference Request Flow
     When rbee-hive performs VRAM check
     Then rbee-keeper displays:
       """
-      Error: Insufficient VRAM on mac
+      Error: Insufficient VRAM on workstation
         Required: 6000 MB
         Available: 4000 MB
         
@@ -686,7 +692,7 @@ Feature: Cross-Node Inference Request Flow
     When the user presses Ctrl+C
     Then rbee-keeper sends:
       """
-      DELETE http://mac.home.arpa:8081/v1/inference/<request_id>
+      DELETE http://workstation.home.arpa:8081/v1/inference/<request_id>
       """
     And rbee-keeper waits for acknowledgment with timeout 5s
     And rbee-keeper displays "\nCanceled."
@@ -718,7 +724,7 @@ Feature: Cross-Node Inference Request Flow
       Error: Model loading timeout after 5 minutes
       Worker state: loading (stuck at 28/32 layers)
       
-      Suggestion: Check worker logs on mac for errors
+      Suggestion: Check worker logs on workstation for errors
       """
     And the exit code is 1
 
@@ -755,7 +761,7 @@ Feature: Cross-Node Inference Request Flow
     And rbee-keeper displays:
       """
       Error: Authentication failed
-        Invalid API key for mac.home.arpa
+        Invalid API key for workstation.home.arpa
         
       Check your configuration:
         ~/.rbee/config.yaml
@@ -933,7 +939,7 @@ Feature: Cross-Node Inference Request Flow
       binary_path = "/opt/rbee/bin/rbee-hive"
       git_repo_dir = "/opt/rbee/repo"
       """
-    When rbee-keeper executes remote command on "mac"
+    When rbee-keeper executes remote command on "workstation"
     Then the command uses "/opt/rbee/bin/rbee-hive" instead of "rbee-hive"
     And git commands use "/opt/rbee/repo" instead of "~/llama-orch"
 
@@ -945,11 +951,13 @@ Feature: Cross-Node Inference Request Flow
     When I run:
       """
       rbee-keeper infer \
-        --node mac \
+        --node workstation \
         --model hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
         --prompt "write a short story" \
         --max-tokens 20 \
-        --temperature 0.7
+        --temperature 0.7 \
+        --backend cuda \
+        --device 1
       """
     Then the command executes the full inference flow
     And tokens are streamed to stdout
@@ -962,8 +970,8 @@ Feature: Cross-Node Inference Request Flow
     And the exit code is 0
 
   Scenario: CLI command - check worker health
-    When I run "rbee-keeper workers health --node mac"
-    Then the output shows health status of workers on mac
+    When I run "rbee-keeper workers health --node workstation"
+    Then the output shows health status of workers on workstation
     And the exit code is 0
 
   Scenario: CLI command - manually shutdown worker
@@ -974,8 +982,8 @@ Feature: Cross-Node Inference Request Flow
     And the exit code is 0
 
   Scenario: CLI command - view logs
-    When I run "rbee-keeper logs --node mac --follow"
-    Then logs from mac are streamed to stdout
+    When I run "rbee-keeper logs --node workstation --follow"
+    Then logs from workstation are streamed to stdout
     And the stream continues until Ctrl+C
     And the exit code is 0 or 130
 

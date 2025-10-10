@@ -1,5 +1,6 @@
 // BDD runner for llama-orch system tests
 // Created by: TEAM-040
+// Modified by: TEAM-051 (added global queen-rbee instance)
 
 mod steps;
 
@@ -36,5 +37,10 @@ async fn main() {
 
     tracing::info!("Running BDD tests from: {}", features.display());
 
+    // TEAM-051: Start global queen-rbee instance before running tests
+    steps::global_queen::start_global_queen_rbee().await;
+
     World::cucumber().fail_on_skipped().run_and_exit(features).await;
+    
+    // TEAM-051: Cleanup happens automatically via Drop in global_queen module
 }

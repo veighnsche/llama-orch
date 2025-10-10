@@ -11,7 +11,22 @@ use tokio::time::sleep;
 // Setup scenarios
 #[given(expr = "queen-rbee is running")]
 pub async fn given_queen_rbee_running(world: &mut World) {
+    // TEAM-051: Use the global queen-rbee instance (already started in main)
+    // Just set the URL - don't start a new process
+    if world.queen_rbee_url.is_none() {
+        world.queen_rbee_url = Some("http://localhost:8080".to_string());
+        tracing::info!("✅ Using global queen-rbee at: http://localhost:8080");
+        return;
+    }
+    
+    tracing::info!("✅ queen-rbee is running at: {:?}", world.queen_rbee_url);
+}
+
+// TEAM-051: Keep the old implementation commented out for reference
+/*
+pub async fn given_queen_rbee_running_OLD(world: &mut World) {
     // TEAM-043: Start real queen-rbee process
+    // TEAM-051: Ensure clean startup - kill any existing process first
     if world.queen_rbee_process.is_none() {
         // Create temp directory for test database
         let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
@@ -36,9 +51,30 @@ pub async fn given_queen_rbee_running(world: &mut World) {
             .expect("Failed to start queen-rbee");
 
         // TEAM-044: Increased timeout to 60 seconds for first build
-        // Wait for server to be ready
+        // TEAM-051: Wait for server to be ready, but verify it's OUR process
         let client = reqwest::Client::new();
+        let mut process_started = false;
+        
         for i in 0..600 {
+            // Check if our process is still alive
+            match child.try_wait() {
+                Ok(Some(status)) => {
+                    // Process exited - likely port conflict
+                    let _ = child.kill().await;
+                    panic!("queen-rbee exited during startup with status: {} (likely port 8080 already in use)", status);
+                }
+                Ok(None) => {
+                    // Process still running - good
+                    if !process_started {
+                        process_started = true;
+                        tracing::debug!("queen-rbee process started, waiting for HTTP server...");
+                    }
+                }
+                Err(e) => {
+                    tracing::warn!("Failed to check process status: {}", e);
+                }
+            }
+            
             if let Ok(resp) = client.get("http://localhost:8080/health").send().await {
                 if resp.status().is_success() {
                     tracing::info!("✅ queen-rbee is ready (took {}ms)", i * 100);
@@ -61,6 +97,7 @@ pub async fn given_queen_rbee_running(world: &mut World) {
 
     tracing::info!("✅ queen-rbee is running at: {:?}", world.queen_rbee_url);
 }
+*/
 
 #[given(expr = "the rbee-hive registry is empty")]
 pub async fn given_registry_empty(world: &mut World) {

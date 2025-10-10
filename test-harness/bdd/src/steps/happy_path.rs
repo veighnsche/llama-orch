@@ -34,6 +34,12 @@ pub async fn given_node_metal_backend(world: &mut World, node: String) {
     tracing::debug!("Node {} has Metal backend", node);
 }
 
+#[given(expr = "node {string} has CUDA backend available")]
+pub async fn given_node_cuda_backend(world: &mut World, node: String) {
+    world.node_backends.entry(node.clone()).or_default().push("cuda".to_string());
+    tracing::debug!("Node {} has CUDA backend", node);
+}
+
 // TEAM-044: Removed duplicate "I run:" step - real implementation is in cli_commands.rs
 // TEAM-042 had created a mock version here that conflicted with the real execution
 
@@ -168,10 +174,22 @@ pub async fn then_metal_check_passes(world: &mut World) {
     tracing::info!("✅ Metal backend check passed");
 }
 
+#[then(expr = "CUDA backend check passes")]
+pub async fn then_cuda_check_passes(world: &mut World) {
+    // Mock: backend check passes
+    tracing::info!("✅ CUDA backend check passed");
+}
+
 #[then(expr = "rbee-hive spawns worker process {string} on port {int}")]
 pub async fn then_spawn_worker(world: &mut World, binary: String, port: u16) {
     // Mock: spawn worker
     tracing::info!("✅ Mock spawned {} on port {}", binary, port);
+}
+
+#[then(expr = "rbee-hive spawns worker process {string} on port {int} with cuda device {int}")]
+pub async fn then_spawn_worker_cuda(world: &mut World, binary: String, port: u16, device: u8) {
+    // Mock: spawn worker with CUDA device
+    tracing::info!("✅ Mock spawned {} on port {} with CUDA device {}", binary, port, device);
 }
 
 #[then(expr = "the worker HTTP server starts on port {int}")]
@@ -187,11 +205,11 @@ pub async fn then_worker_ready_callback(world: &mut World, url: String) {
         "worker-abc123".to_string(),
         crate::steps::world::WorkerInfo {
             id: "worker-abc123".to_string(),
-            url: "http://mac.home.arpa:8001".to_string(),
+            url: "http://workstation.home.arpa:8001".to_string(),
             model_ref: "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF".to_string(),
             state: "loading".to_string(),
-            backend: "metal".to_string(),
-            device: 0,
+            backend: "cuda".to_string(),
+            device: 1,
             slots_total: 1,
             slots_available: 0,
         },

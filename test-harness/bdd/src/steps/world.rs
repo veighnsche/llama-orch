@@ -235,10 +235,12 @@ impl World {
 
 impl Drop for World {
     fn drop(&mut self) {
-        // TEAM-043: Kill all running processes
-        if let Some(mut proc) = self.queen_rbee_process.take() {
-            let _ = proc.start_kill();
-            tracing::debug!("Killed queen-rbee process");
+        // TEAM-051: DON'T kill queen-rbee - it's a shared global instance
+        // Only kill scenario-specific processes (rbee-hive, workers)
+        
+        if let Some(_proc) = self.queen_rbee_process.take() {
+            // Just drop the reference - the global instance will be cleaned up at the end
+            tracing::debug!("Released reference to global queen-rbee");
         }
 
         for mut proc in self.rbee_hive_processes.drain(..) {
@@ -249,6 +251,6 @@ impl Drop for World {
             let _ = proc.start_kill();
         }
 
-        tracing::debug!("World dropped, cleaning up resources");
+        tracing::debug!("World dropped, cleaning up scenario-specific resources");
     }
 }

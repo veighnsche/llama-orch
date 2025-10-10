@@ -116,3 +116,6 @@ __pycache__
 /reference/**/__pycache__/
 /reference/**/.pytest_cache/
 /reference/**/*.egg-info/
+
+# Team message archives (copies)
+/.team-messages/

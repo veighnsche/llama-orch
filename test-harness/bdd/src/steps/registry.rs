@@ -35,6 +35,7 @@ pub async fn given_worker_registered_table(world: &mut World, step: &cucumber::g
             "model_ref" => worker.model_ref = value.clone(),
             "state" => worker.state = value.clone(),
             "backend" => worker.backend = value.clone(),
+            "device" => worker.device = value.parse().unwrap_or(0),
             _ => {}
         }
     }
@@ -53,11 +54,11 @@ pub async fn given_worker_with_model_and_state(
 
     let worker = WorkerInfo {
         id: format!("worker-{}", uuid::Uuid::new_v4()),
-        url: "http://localhost:8001".to_string(),
+        url: "http://workstation.home.arpa:8001".to_string(),
         model_ref,
         state,
-        backend: "metal".to_string(),
-        device: 0,
+        backend: "cuda".to_string(),
+        device: 1,
         slots_total: 1,
         slots_available,
     };

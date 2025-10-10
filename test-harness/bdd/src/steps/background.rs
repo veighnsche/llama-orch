@@ -29,8 +29,10 @@ pub async fn given_current_node(world: &mut World, node: String) {
 
 #[given(expr = "queen-rbee is running at {string}")]
 pub async fn given_queen_rbee_url(world: &mut World, url: String) {
+    // TEAM-051: Use the global queen-rbee instance (already started in main)
+    // Just set the URL in the world - the instance is shared across all scenarios
     world.queen_rbee_url = Some(url.clone());
-    tracing::debug!("queen-rbee URL set to: {}", url);
+    tracing::debug!("Using global queen-rbee at: {}", url);
 }
 
 #[given(expr = "the model catalog is SQLite at {string}")]

@@ -11,21 +11,23 @@
 - **workstation** = workstation.home.arpa (only rbee-hive and llm-worker-rbee, can run workers on cuda device 0, 1 and cpu)
 - **mac** = mac.home.arpa (only rbee-hive and llm-worker-rbee, can only run workers on metal)
 
+**Note:** This test uses **workstation** node with **cuda** backend on **device 1**.
+
 ---
 
 ## Test Objective
 
-On **blep**, I want to run inference on **mac**:
+On **blep**, I want to run inference on **workstation**:
 - **Model:** hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF
 - **Prompt:** "write a short story"
 - **Max tokens:** 20
 - **Temperature:** 0.7
-- **Backend:** metal, device: 0
+- **Backend:** cuda, device: 1
 
 **Command:**
 ```bash
-rbee-keeper infer --node mac --model hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
-  --prompt "write a short story" --max-tokens 20 --temperature 0.7
+rbee-keeper infer --node workstation --model hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
+  --prompt "write a short story" --max-tokens 20 --temperature 0.7 --backend cuda --device 1
 ```
 
 ---
@@ -59,8 +61,8 @@ CREATE TABLE beehives (
 **User runs configuration command:**
 ```bash
 rbee-keeper setup add-node \
-  --name mac \
-  --ssh-host mac.home.arpa \
+  --name workstation \
+  --ssh-host workstation.home.arpa \
   --ssh-user vince \
   --ssh-key ~/.ssh/id_ed25519 \
   --git-repo https://github.com/user/llama-orch.git \
@@ -72,8 +74,8 @@ rbee-keeper setup add-node \
 ```
 POST http://localhost:8080/v2/registry/beehives/add
 {
-  "node_name": "mac",
-  "ssh_host": "mac.home.arpa",
+  "node_name": "workstation",
+  "ssh_host": "workstation.home.arpa",
   "ssh_port": 22,
   "ssh_user": "vince",
   "ssh_key_path": "/home/vince/.ssh/id_ed25519",
@@ -85,7 +87,7 @@ POST http://localhost:8080/v2/registry/beehives/add
 
 **queen-rbee** validates SSH connection:
 ```bash
-ssh -i ~/.ssh/id_ed25519 vince@mac.home.arpa "echo 'connection test'"
+ssh -i ~/.ssh/id_ed25519 vince@workstation.home.arpa "echo 'connection test'"
 ```
 
 **If successful, queen-rbee saves to registry:**
@@ -93,32 +95,32 @@ ssh -i ~/.ssh/id_ed25519 vince@mac.home.arpa "echo 'connection test'"
 INSERT INTO beehives (node_name, ssh_host, ssh_port, ssh_user, ssh_key_path, 
                       git_repo_url, git_branch, install_path, 
                       last_connected_unix, status)
-VALUES ('mac', 'mac.home.arpa', 22, 'vince', '/home/vince/.ssh/id_ed25519',
+VALUES ('workstation', 'workstation.home.arpa', 22, 'vince', '/home/vince/.ssh/id_ed25519',
         'https://github.com/user/llama-orch.git', 'main', '/home/vince/rbee',
         1728508603, 'reachable');
 ```
 
 **Narration:**
 ```
-narrate("Testing SSH connection to mac.home.arpa")
+narrate("Testing SSH connection to workstation.home.arpa")
   → stdout → rbee-keeper shell
-  → USER SEES: [queen-rbee] 🔌 Testing SSH connection to mac.home.arpa
+  → USER SEES: [queen-rbee] 🔌 Testing SSH connection to workstation.home.arpa
 
 narrate("SSH connection successful! Saving to registry")
   → stdout → rbee-keeper shell
-  → USER SEES: [queen-rbee] ✅ SSH connection successful! Node 'mac' saved to registry
+  → USER SEES: [queen-rbee] ✅ SSH connection successful! Node 'workstation' saved to registry
 ```
 
 ### Optional: Initial Installation
 
 **User can trigger initial installation:**
 ```bash
-rbee-keeper setup install --node mac
+rbee-keeper setup install --node workstation
 ```
 
 **queen-rbee** performs installation via SSH:
 ```bash
-ssh vince@mac.home.arpa << 'EOF'
+ssh vince@workstation.home.arpa << 'EOF'
   cd ~/rbee
   git clone https://github.com/user/llama-orch.git .
   git checkout main
@@ -129,9 +131,9 @@ EOF
 
 **Narration:**
 ```
-narrate("Cloning repository on mac")
+narrate("Cloning repository on workstation")
   → stdout → rbee-keeper shell
-  → USER SEES: [queen-rbee] 📦 Cloning repository on mac
+  → USER SEES: [queen-rbee] 📦 Cloning repository on workstation
 
 narrate("Building rbee-hive and llm-worker-rbee")
   → stdout → rbee-keeper shell
@@ -139,7 +141,7 @@ narrate("Building rbee-hive and llm-worker-rbee")
 
 narrate("Installation complete!")
   → stdout → rbee-keeper shell
-  → USER SEES: [queen-rbee] ✅ Installation complete on mac!
+  → USER SEES: [queen-rbee] ✅ Installation complete on workstation!
 ```
 
 ---
@@ -150,13 +152,13 @@ narrate("Installation complete!")
 
 **Before any inference, queen-rbee loads registry:**
 ```sql
-SELECT * FROM beehives WHERE node_name = 'mac';
+SELECT * FROM beehives WHERE node_name = 'workstation';
 ```
 
 **Result:**
 ```
-node_name: mac
-ssh_host: mac.home.arpa
+node_name: workstation
+ssh_host: workstation.home.arpa
 ssh_user: vince
 ssh_key_path: /home/vince/.ssh/id_ed25519
 install_path: /home/vince/rbee
@@ -165,8 +167,8 @@ status: reachable
 
 **If node not found in registry:**
 ```
-ERROR: Node 'mac' not found in rbee-hive registry.
-Run: rbee-keeper setup add-node --name mac ...
+ERROR: Node 'workstation' not found in rbee-hive registry.
+Run: rbee-keeper setup add-node --name workstation ...
 ```
 
 ---
@@ -177,11 +179,13 @@ Run: rbee-keeper setup add-node --name mac ...
 ```
 POST http://localhost:8080/v2/tasks
 {
-  "node": "mac",
+  "node": "workstation",
   "model": "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
   "prompt": "write a short story",
   "max_tokens": 20,
-  "temperature": 0.7
+  "temperature": 0.7,
+  "backend": "cuda",
+  "device": 1
 }
 ```
 
@@ -191,17 +195,17 @@ POST http://localhost:8080/v2/tasks
 
 ### Phase 2: queen-rbee → rbee-hive (SSH)
 
-**queen-rbee** looks up SSH details from rbee-hive registry and starts **rbee-hive** on mac via SSH:
+**queen-rbee** looks up SSH details from rbee-hive registry and starts **rbee-hive** on workstation via SSH:
 ```bash
 # Using registry data: ssh_user@ssh_host with ssh_key_path
-ssh -i /home/vince/.ssh/id_ed25519 vince@mac.home.arpa "cd /home/vince/rbee && ./target/release/rbee-hive daemon --port 9200"
+ssh -i /home/vince/.ssh/id_ed25519 vince@workstation.home.arpa "cd /home/vince/rbee && ./target/release/rbee-hive daemon --port 9200"
 ```
 
 **queen-rbee updates registry with last_connected_unix:**
 ```sql
 UPDATE beehives 
 SET last_connected_unix = 1728508603, status = 'reachable'
-WHERE node_name = 'mac';
+WHERE node_name = 'workstation';
 ```
 
 **rbee-hive startup narration:**
@@ -226,7 +230,7 @@ narrate("HTTP server listening on 0.0.0.0:9200")
 
 **queen-rbee** queries **rbee-hive** worker registry:
 ```
-GET http://mac.home.arpa:9200/v1/workers/list
+GET http://workstation.home.arpa:9200/v1/workers/list
 ```
 
 **Response:** Empty (no workers yet)
@@ -239,11 +243,11 @@ GET http://mac.home.arpa:9200/v1/workers/list
 
 **queen-rbee** sends task to **rbee-hive**:
 ```
-POST http://mac.home.arpa:9200/v1/workers/spawn
+POST http://workstation.home.arpa:9200/v1/workers/spawn
 {
   "model": "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
-  "backend": "metal",
-  "device": 0
+  "backend": "cuda",
+  "device": 1
 }
 ```
 
@@ -320,10 +324,10 @@ if available_ram_mb < required_ram_mb {
 
 **Narration:** None (internal check, only narrates if error)
 
-**rbee-hive** checks Metal backend:
+**rbee-hive** checks CUDA backend:
 ```rust
-if !metal_available() {
-    return Err("Metal backend not available");
+if !cuda_available() {
+    return Err("CUDA backend not available");
 }
 ```
 
@@ -337,8 +341,8 @@ if !metal_available() {
 ```bash
 llm-worker-rbee \
   --model /models/tinyllama-q4.gguf \
-  --backend metal \
-  --device 0 \
+  --backend cuda \
+  --device 1 \
   --port 8001 \
   --api-key <worker_api_key>
 ```
@@ -354,11 +358,11 @@ worker narrate("Worker starting on port 8001")
 
 **Device initialization:**
 ```
-worker narrate("Initialized Metal device 0")
+worker narrate("Initialized CUDA device 1")
   → stdout → rbee-hive captures
   → rbee-hive → SSE → queen-rbee
   → queen-rbee → stdout → rbee-keeper shell
-  → USER SEES: [device-manager] 🖥️ Initialized Metal device 0
+  → USER SEES: [device-manager] 🖥️ Initialized CUDA device 1
 ```
 
 **Model loading:**
@@ -390,13 +394,13 @@ worker narrate("HTTP server listening on 0.0.0.0:8001")
 
 **Worker ready callback:**
 ```
-worker → POST http://mac.home.arpa:9200/v1/workers/ready
+worker → POST http://workstation.home.arpa:9200/v1/workers/ready
 {
   "worker_id": "worker-abc123",
-  "url": "http://mac.home.arpa:8001",
+  "url": "http://workstation.home.arpa:8001",
   "model_ref": "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
-  "backend": "metal",
-  "device": 0
+  "backend": "cuda",
+  "device": 1
 }
 ```
 
@@ -417,10 +421,10 @@ worker narrate("Calling rbee-hive ready callback")
 ```rust
 registry.register(WorkerInfo {
     id: "worker-abc123",
-    url: "http://mac.home.arpa:8001",
+    url: "http://workstation.home.arpa:8001",
     model_ref: "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
-    backend: "metal",
-    device: 0,
+    backend: "cuda",
+    device: 1,
     state: WorkerState::Idle,
     last_activity: SystemTime::now(),
 });
@@ -436,7 +440,7 @@ registry.register(WorkerInfo {
 ```json
 {
   "worker_id": "worker-abc123",
-  "url": "http://mac.home.arpa:8001",
+  "url": "http://workstation.home.arpa:8001",
   "state": "idle"
 }
 ```
@@ -450,7 +454,7 @@ registry.register(WorkerInfo {
 **queen-rbee** responds to rbee-keeper:
 ```json
 {
-  "worker_url": "http://mac.home.arpa:8001",
+  "worker_url": "http://workstation.home.arpa:8001",
   "worker_id": "worker-abc123"
 }
 ```
@@ -463,7 +467,7 @@ registry.register(WorkerInfo {
 
 **rbee-keeper** sends inference request to **worker** (DIRECT, bypassing rbee-hive):
 ```
-POST http://mac.home.arpa:8001/execute
+POST http://workstation.home.arpa:8001/execute
 {
   "job_id": "job-123",
   "prompt": "write a short story",
@@ -556,7 +560,7 @@ queen-rbee exits
 **3. rbee-hive shuts down:**
 ```
 rbee-hive receives shutdown signal via SSH
-rbee-hive sends POST http://mac.home.arpa:8001/shutdown to all workers
+rbee-hive sends POST http://workstation.home.arpa:8001/shutdown to all workers
 rbee-hive waits for workers to exit
 rbee-hive exits
 ```
