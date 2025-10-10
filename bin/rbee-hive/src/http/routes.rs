@@ -11,7 +11,7 @@
 //! - `GET /v1/models/download/progress` - SSE progress stream
 //!
 //! Created by: TEAM-026
-//! Modified by: TEAM-029
+//! Modified by: TEAM-029, TEAM-030
 
 use crate::http::{health, models, workers};
 use crate::provisioner::ModelProvisioner;
@@ -24,7 +24,7 @@ use model_catalog::ModelCatalog;
 use std::sync::Arc;
 
 /// Shared application state
-/// TEAM-029: Added model catalog and provisioner
+/// TEAM-030: Worker registry is ephemeral, model catalog is persistent (SQLite)
 #[derive(Clone)]
 pub struct AppState {
     pub registry: Arc<WorkerRegistry>,

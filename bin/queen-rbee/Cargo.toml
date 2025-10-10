@@ -27,8 +27,9 @@ futures = "0.3"
 # HTTP client (for calling workers)
 reqwest = { version = "0.12", features = ["json", "stream"] }
 
+# TEAM-030: Removed SQLite - using in-memory storage for ephemeral mode
 # Database (SQLite for state persistence)
-sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
+# sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

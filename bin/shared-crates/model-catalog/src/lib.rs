@@ -226,4 +226,173 @@ mod tests {
         assert!(found.is_some());
         assert_eq!(found.unwrap().local_path, "/models/tinyllama.gguf");
     }
+
+    // TEAM-031: Additional comprehensive tests
+    #[tokio::test]
+    async fn test_catalog_find_nonexistent() {
+        let catalog = ModelCatalog::new(":memory:".to_string());
+        catalog.init().await.unwrap();
+
+        let found = catalog.find_model("nonexistent/model", "hf").await.unwrap();
+        assert!(found.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_catalog_remove_model() {
+        let catalog = ModelCatalog::new(":memory:".to_string());
+        catalog.init().await.unwrap();
+
+        let model = ModelInfo {
+            reference: "test/model".to_string(),
+            provider: "hf".to_string(),
+            local_path: "/models/test.gguf".to_string(),
+            size_bytes: 1000,
+            downloaded_at: 1234567890,
+        };
+
+        catalog.register_model(&model).await.unwrap();
+        assert!(catalog.find_model("test/model", "hf").await.unwrap().is_some());
+
+        catalog.remove_model("test/model", "hf").await.unwrap();
+        assert!(catalog.find_model("test/model", "hf").await.unwrap().is_none());
+    }
+
+    #[tokio::test]
+    async fn test_catalog_list_models() {
+        let catalog = ModelCatalog::new(":memory:".to_string());
+        catalog.init().await.unwrap();
+
+        let model1 = ModelInfo {
+            reference: "model1".to_string(),
+            provider: "hf".to_string(),
+            local_path: "/models/model1.gguf".to_string(),
+            size_bytes: 1000,
+            downloaded_at: 1234567890,
+        };
+
+        let model2 = ModelInfo {
+            reference: "model2".to_string(),
+            provider: "hf".to_string(),
+            local_path: "/models/model2.gguf".to_string(),
+            size_bytes: 2000,
+            downloaded_at: 1234567891,
+        };
+
+        catalog.register_model(&model1).await.unwrap();
+        catalog.register_model(&model2).await.unwrap();
+
+        let models = catalog.list_models().await.unwrap();
+        assert_eq!(models.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_catalog_list_models_empty() {
+        let catalog = ModelCatalog::new(":memory:".to_string());
+        catalog.init().await.unwrap();
+
+        let models = catalog.list_models().await.unwrap();
+        assert_eq!(models.len(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_catalog_replace_model() {
+        let catalog = ModelCatalog::new(":memory:".to_string());
+        catalog.init().await.unwrap();
+
+        let model1 = ModelInfo {
+            reference: "test/model".to_string(),
+            provider: "hf".to_string(),
+            local_path: "/models/old.gguf".to_string(),
+            size_bytes: 1000,
+            downloaded_at: 1234567890,
+        };
+
+        let model2 = ModelInfo {
+            reference: "test/model".to_string(),
+            provider: "hf".to_string(),
+            local_path: "/models/new.gguf".to_string(),
+            size_bytes: 2000,
+            downloaded_at: 1234567900,
+        };
+
+        catalog.register_model(&model1).await.unwrap();
+        catalog.register_model(&model2).await.unwrap();
+
+        let found = catalog.find_model("test/model", "hf").await.unwrap().unwrap();
+        assert_eq!(found.local_path, "/models/new.gguf");
+        assert_eq!(found.size_bytes, 2000);
+
+        let models = catalog.list_models().await.unwrap();
+        assert_eq!(models.len(), 1); // Should replace, not duplicate
+    }
+
+    #[tokio::test]
+    async fn test_catalog_different_providers() {
+        let catalog = ModelCatalog::new(":memory:".to_string());
+        catalog.init().await.unwrap();
+
+        let model_hf = ModelInfo {
+            reference: "test/model".to_string(),
+            provider: "hf".to_string(),
+            local_path: "/models/hf.gguf".to_string(),
+            size_bytes: 1000,
+            downloaded_at: 1234567890,
+        };
+
+        let model_other = ModelInfo {
+            reference: "test/model".to_string(),
+            provider: "other".to_string(),
+            local_path: "/models/other.gguf".to_string(),
+            size_bytes: 2000,
+            downloaded_at: 1234567890,
+        };
+
+        catalog.register_model(&model_hf).await.unwrap();
+        catalog.register_model(&model_other).await.unwrap();
+
+        let found_hf = catalog.find_model("test/model", "hf").await.unwrap().unwrap();
+        assert_eq!(found_hf.local_path, "/models/hf.gguf");
+
+        let found_other = catalog.find_model("test/model", "other").await.unwrap().unwrap();
+        assert_eq!(found_other.local_path, "/models/other.gguf");
+
+        let models = catalog.list_models().await.unwrap();
+        assert_eq!(models.len(), 2);
+    }
+
+    #[test]
+    fn test_model_info_serialization() {
+        let model = ModelInfo {
+            reference: "test/model".to_string(),
+            provider: "hf".to_string(),
+            local_path: "/models/test.gguf".to_string(),
+            size_bytes: 1000,
+            downloaded_at: 1234567890,
+        };
+
+        let json = serde_json::to_value(&model).unwrap();
+        assert_eq!(json["reference"], "test/model");
+        assert_eq!(json["provider"], "hf");
+        assert_eq!(json["local_path"], "/models/test.gguf");
+        assert_eq!(json["size_bytes"], 1000);
+        assert_eq!(json["downloaded_at"], 1234567890);
+    }
+
+    #[test]
+    fn test_connection_string_memory() {
+        let catalog = ModelCatalog::new(":memory:".to_string());
+        assert_eq!(catalog.connection_string(), ":memory:");
+    }
+
+    #[test]
+    fn test_connection_string_file() {
+        let catalog = ModelCatalog::new("/tmp/test.db".to_string());
+        assert_eq!(catalog.connection_string(), "sqlite:///tmp/test.db?mode=rwc");
+    }
+
+    #[test]
+    fn test_connection_string_already_prefixed() {
+        let catalog = ModelCatalog::new("sqlite:///tmp/test.db".to_string());
+        assert_eq!(catalog.connection_string(), "sqlite:///tmp/test.db");
+    }
 }

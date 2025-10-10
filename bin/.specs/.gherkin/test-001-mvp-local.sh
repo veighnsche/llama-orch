@@ -2,7 +2,12 @@
 # Test-001 MVP: Cross-Node Inference (Local Version)
 # Per test-001-mvp.md
 #
+# ARCHITECTURE (TEAM-030):
+#   - Worker registry: In-memory (ephemeral, no SQLite)
+#   - Model catalog: SQLite (persistent, ~/.rbee/models.db)
+#
 # Created by: TEAM-029
+# Modified by: TEAM-030
 
 set -euo pipefail
 

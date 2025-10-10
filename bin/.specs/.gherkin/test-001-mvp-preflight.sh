@@ -2,7 +2,12 @@
 # Test-001 MVP: Preflight Checks
 # Verifies all prerequisites before running e2e test
 #
+# ARCHITECTURE (TEAM-030):
+#   - Worker registry: In-memory (ephemeral, no SQLite)
+#   - Model catalog: SQLite (persistent, ~/.rbee/models.db)
+#
 # Created by: TEAM-029
+# Modified by: TEAM-030
 
 set -euo pipefail
 
@@ -100,13 +105,14 @@ else
 fi
 echo ""
 
-# Check 7: SQLite
-echo "[Check 7] Checking SQLite..."
+# Check 7: SQLite (for model catalog)
+echo "[Check 7] Checking SQLite (for model catalog)..."
 if command -v sqlite3 &> /dev/null; then
     SQLITE_VERSION=$(sqlite3 --version | cut -d' ' -f1)
     echo "  ✓ SQLite $SQLITE_VERSION"
+    echo "     (Used for model catalog at ~/.rbee/models.db)"
 else
-    echo "  ⚠ sqlite3 command not found (not required, but useful for debugging)"
+    echo "  ⚠ sqlite3 command not found (not required for runtime, but useful for debugging model catalog)"
 fi
 echo ""
 

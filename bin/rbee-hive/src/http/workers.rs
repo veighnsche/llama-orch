@@ -5,8 +5,10 @@
 //! - POST /v1/workers/ready - Worker ready callback
 //! - GET /v1/workers/list - List all workers
 //!
+//! TEAM-030: Worker registry is ephemeral, model catalog is persistent (SQLite)
+//!
 //! Created by: TEAM-026
-//! Modified by: TEAM-027, TEAM-029
+//! Modified by: TEAM-027, TEAM-029, TEAM-030
 
 use crate::http::routes::AppState;
 use crate::registry::{WorkerInfo, WorkerState};
@@ -75,7 +77,7 @@ pub struct ListWorkersResponse {
 /// Handle POST /v1/workers/spawn
 ///
 /// Spawns a new worker process
-/// TEAM-029: Added model provisioning
+/// TEAM-029: Added model provisioning with catalog
 pub async fn handle_spawn_worker(
     State(state): State<AppState>,
     Json(request): Json<SpawnWorkerRequest>,
@@ -305,5 +307,81 @@ mod tests {
         let request: WorkerReadyRequest = serde_json::from_str(json).unwrap();
         assert_eq!(request.worker_id, "worker-123");
         assert_eq!(request.url, "http://localhost:8081");
+    }
+
+    // TEAM-031: Additional comprehensive tests
+    #[test]
+    fn test_parse_model_ref_valid() {
+        let result = parse_model_ref("hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF");
+        assert!(result.is_ok());
+        let (provider, reference) = result.unwrap();
+        assert_eq!(provider, "hf");
+        assert_eq!(reference, "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF");
+    }
+
+    #[test]
+    fn test_parse_model_ref_invalid() {
+        let result = parse_model_ref("invalid-format");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Invalid model_ref format"));
+    }
+
+    #[test]
+    fn test_parse_model_ref_multiple_colons() {
+        let result = parse_model_ref("hf:org:model:version");
+        assert!(result.is_ok());
+        let (provider, reference) = result.unwrap();
+        assert_eq!(provider, "hf");
+        assert_eq!(reference, "org:model:version");
+    }
+
+    #[test]
+    fn test_spawn_worker_response_serialization() {
+        let response = SpawnWorkerResponse {
+            worker_id: "worker-123".to_string(),
+            url: "http://localhost:8081".to_string(),
+            state: "loading".to_string(),
+        };
+
+        let json = serde_json::to_value(&response).unwrap();
+        assert_eq!(json["worker_id"], "worker-123");
+        assert_eq!(json["url"], "http://localhost:8081");
+        assert_eq!(json["state"], "loading");
+    }
+
+    #[test]
+    fn test_worker_ready_response_serialization() {
+        let response = WorkerReadyResponse {
+            message: "Worker registered as ready".to_string(),
+        };
+
+        let json = serde_json::to_value(&response).unwrap();
+        assert_eq!(json["message"], "Worker registered as ready");
+    }
+
+    #[test]
+    fn test_list_workers_response_serialization() {
+        use crate::registry::{WorkerInfo, WorkerState};
+        use std::time::SystemTime;
+
+        let worker = WorkerInfo {
+            id: "worker-1".to_string(),
+            url: "http://localhost:8081".to_string(),
+            model_ref: "hf:test/model".to_string(),
+            backend: "cpu".to_string(),
+            device: 0,
+            state: WorkerState::Idle,
+            last_activity: SystemTime::now(),
+            slots_total: 1,
+            slots_available: 1,
+        };
+
+        let response = ListWorkersResponse {
+            workers: vec![worker],
+        };
+
+        let json = serde_json::to_value(&response).unwrap();
+        assert!(json["workers"].is_array());
+        assert_eq!(json["workers"].as_array().unwrap().len(), 1);
     }
 }

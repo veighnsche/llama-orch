@@ -27,5 +27,4 @@ reqwest = { workspace = true, features = ["json", "stream"] }
 tokio = { workspace = true, features = ["full"] }
 futures = { workspace = true }
 dirs = "5.0"
-# TEAM-027: Shared worker registry
-worker-registry = { path = "../shared-crates/worker-registry" }
+# TEAM-030: Removed worker-registry dependency (ephemeral mode doesn't need persistence)

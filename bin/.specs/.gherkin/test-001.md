@@ -10,7 +10,7 @@ I use a command that is reasonably easy to remember
 
 process I had in mind:
 at rbee ctl
-    ctl check the worker registry (sqlite)
+    ctl check the worker registry (in-memory, ephemeral - TEAM-030: no SQLite for workers)
         if worker on mac with llama2 model loaded, is healthy and not doing inference right now
             then immediately start inference
     ctl -> pool preflight:
@@ -19,12 +19,12 @@ at rbee ctl
             if not the latest version (then update)
             maybe other preflight stuff
     sends the task to the mac rbee-hive:
-        pool asks the model catalog if the model is installed:
+        pool asks the model catalog (SQLite, persistent - TEAM-030) if the model is installed:
             no says the model catalog
         pool tells the model provisioner to download the model from hf
             streams loading bar through stdout to blep
             done dowloading says the model provisioner to the pool
-        pool tells the model catalog that the model is now at x
+        pool tells the model catalog (SQLite) that the model is now at x
         pool -> worker preflight
             is there enough ram available?
                 if not (then oops)
@@ -33,7 +33,7 @@ at rbee ctl
             http server is loaded says the worker to the pool (but model is still loading to ram)
         pool manager returns the worker details with url back to the rbee-keeper on blep
         pool manager dies, worker lives
-    ctl adds the worker details is last seen alive in the worker registry
+    ctl adds the worker details is last seen alive in the worker registry (in-memory, ephemeral)
     ctl -> workerd preflight:
         ctl runs a health check
             if still loading (then return a url for the sse for the loading bar)

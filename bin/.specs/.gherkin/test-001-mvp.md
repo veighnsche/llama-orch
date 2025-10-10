@@ -1,5 +1,18 @@
 # Test-001: Cross-Node Inference Request Flow (MVP with Edge Cases)
 
+## Architecture (TEAM-030)
+
+**Storage Strategy:**
+- **Worker Registry:** In-memory HashMap (ephemeral - no SQLite)
+  - Location: `rbee-hive` process memory
+  - Lifecycle: Lost on rbee-hive restart
+  - Rationale: Workers are transient, no persistence needed
+  
+- **Model Catalog:** SQLite database (persistent)
+  - Location: `~/.rbee/models.db`
+  - Lifecycle: Survives rbee-hive restarts
+  - Rationale: Models are large files, track downloads to prevent re-downloading
+
 ## Topology
 
 - **blep** (`blep.home.arpa`): Control node with `rbee-keeper`, `queen-rbee`, `rbee-hive`. Can run CPU workers.
@@ -20,17 +33,28 @@ rbee-keeper infer --node mac --model hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
 
 ### **Phase 1: Worker Registry Check**
 
-**rbee-keeper** queries local SQLite registry:
-```sql
-SELECT * FROM workers 
-WHERE node = 'mac' 
-  AND model_ref = 'hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF'
-  AND state IN ('idle', 'ready')
-  AND last_health_check_unix > (NOW() - 60);
+**TEAM-030:** Worker registry is now **in-memory** (ephemeral), not SQLite.
+
+**rbee-keeper** queries in-memory registry in pool manager:
+```
+GET http://mac.home.arpa:8080/v1/workers/list
+
+Response:
+{
+  "workers": [
+    {
+      "id": "worker-abc123",
+      "url": "http://mac.home.arpa:8081",
+      "model_ref": "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
+      "state": "idle",
+      "last_activity": "2025-10-10T00:50:00Z"
+    }
+  ]
+}
 ```
 
 **IF** worker found and healthy:
-- Skip to **Phase 6** (direct inference)
+- Skip to **Phase 8** (direct inference)
 
 **ELSE**:
 - Proceed to **Phase 2**
@@ -65,7 +89,9 @@ Response:
 
 ### **Phase 3: Model Provisioning**
 
-**rbee-hive** checks local model catalog:
+**TEAM-030:** Model catalog is **SQLite** (persistent) - tracks downloaded models.
+
+**rbee-hive** checks local model catalog (SQLite at `~/.rbee/models.db`):
 ```sql
 SELECT local_path FROM models 
 WHERE reference = 'TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF'
@@ -175,15 +201,25 @@ llm-worker-rbee \
 
 ### **Phase 6: Worker Registration**
 
-**rbee-keeper** updates local registry:
-```sql
-INSERT OR REPLACE INTO workers 
-  (id, node, url, model_ref, backend, device, state, created_at_unix, last_health_check_unix)
-VALUES 
-  ('worker-abc123', 'mac', 'http://mac.home.arpa:8081', 
-   'hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF', 'metal', 0, 'loading', 
-   1728508603, 1728508603);
+**TEAM-030:** Worker registry is now **in-memory** in rbee-hive (no SQLite).
+
+**rbee-hive** updates in-memory registry:
+```rust
+// In-memory HashMap in rbee-hive
+registry.register(WorkerInfo {
+    id: "worker-abc123".to_string(),
+    url: "http://mac.home.arpa:8081".to_string(),
+    model_ref: "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF".to_string(),
+    backend: "metal".to_string(),
+    device: 0,
+    state: WorkerState::Loading,
+    last_activity: SystemTime::now(),
+    slots_total: 1,
+    slots_available: 0,
+}).await;
 ```
+
+**Note:** Worker state is ephemeral - lost on rbee-hive restart (by design).
 
 ---
 

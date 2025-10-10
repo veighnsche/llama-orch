@@ -3,8 +3,10 @@
 //! Per test-001-mvp.md Phase 2: Pool Preflight
 //! Runs persistent HTTP server for worker management
 //!
+//! TEAM-030: Worker registry is ephemeral (in-memory), model catalog is persistent (SQLite)
+//!
 //! Created by: TEAM-027
-//! Modified by: TEAM-029
+//! Modified by: TEAM-029, TEAM-030
 
 use anyhow::Result;
 use model_catalog::ModelCatalog;
@@ -34,11 +36,11 @@ pub async fn handle(addr: String) -> Result<()> {
     let addr: SocketAddr = addr.parse()?;
     tracing::info!("Binding to {}", addr);
 
-    // Create worker registry
+    // Create worker registry (TEAM-030: In-memory, ephemeral)
     let registry = Arc::new(WorkerRegistry::new());
-    tracing::info!("Worker registry initialized");
+    tracing::info!("Worker registry initialized (in-memory, ephemeral)");
 
-    // TEAM-029: Initialize model catalog
+    // TEAM-029: Initialize model catalog (SQLite, persistent)
     let model_catalog_path = dirs::home_dir()
         .unwrap_or_default()
         .join(".rbee/models.db")
@@ -46,7 +48,7 @@ pub async fn handle(addr: String) -> Result<()> {
         .to_string();
     let model_catalog = Arc::new(ModelCatalog::new(model_catalog_path));
     model_catalog.init().await?;
-    tracing::info!("Model catalog initialized");
+    tracing::info!("Model catalog initialized (SQLite, persistent)");
 
     // TEAM-029: Initialize model provisioner
     let model_base_dir = std::env::var("LLORCH_MODEL_BASE_DIR")
@@ -75,8 +77,53 @@ pub async fn handle(addr: String) -> Result<()> {
     });
     tracing::info!("Idle timeout loop started (5min threshold)");
 
+    // TEAM-030: Setup graceful shutdown handler
+    let registry_shutdown = registry.clone();
+    tokio::spawn(async move {
+        tokio::signal::ctrl_c().await.ok();
+        tracing::info!("Shutdown signal received - cleaning up workers");
+        shutdown_all_workers(registry_shutdown).await;
+    });
+
     // Run server
     server.run().await?;
+
+    Ok(())
+}
+
+/// Shutdown all workers (TEAM-030: Cascading shutdown)
+async fn shutdown_all_workers(registry: Arc<WorkerRegistry>) {
+    let workers = registry.list().await;
+    tracing::info!("Shutting down {} workers", workers.len());
+
+    for worker in workers {
+        tracing::info!("Sending shutdown to worker {}", worker.id);
+        
+        // Try to gracefully shutdown worker via HTTP
+        if let Err(e) = shutdown_worker(&worker.url).await {
+            tracing::warn!("Failed to shutdown worker {} gracefully: {}", worker.id, e);
+        }
+    }
+
+    // Clear registry
+    registry.clear().await;
+    tracing::info!("All workers shutdown complete");
+}
+
+/// Shutdown a single worker via HTTP
+async fn shutdown_worker(worker_url: &str) -> Result<()> {
+    let client = reqwest::Client::new();
+    
+    // Try POST /v1/shutdown endpoint
+    let response = client
+        .post(&format!("{}/v1/shutdown", worker_url))
+        .timeout(std::time::Duration::from_secs(5))
+        .send()
+        .await?;
+
+    if response.status().is_success() {
+        tracing::info!("Worker at {} acknowledged shutdown", worker_url);
+    }
 
     Ok(())
 }

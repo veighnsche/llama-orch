@@ -1,27 +1,34 @@
 //! Inference command - MVP cross-node inference
 //!
-//! Per test-001-mvp.md: 8-phase flow
-//! - Phase 1: Worker Registry Check
+//! Per test-001-mvp.md: 8-phase flow (simplified for ephemeral mode)
+//! - Phase 1: Worker Registry Check (SKIPPED - ephemeral mode)
 //! - Phase 2: Pool Preflight
 //! - Phase 3-5: Spawn Worker
-//! - Phase 6: Worker Registration
+//! - Phase 6: Worker Registration (in pool manager)
 //! - Phase 7: Worker Health Check
 //! - Phase 8: Inference Execution
 //!
+//! TEAM-030: Removed local worker registry - ephemeral mode doesn't need persistence
+//!
 //! Created by: TEAM-024
-//! Modified by: TEAM-027
+//! Modified by: TEAM-027, TEAM-030
 
 use anyhow::Result;
 use colored::Colorize;
 use futures::StreamExt;
 use serde::Deserialize;
-use worker_registry::{WorkerInfo, WorkerRegistry};
 
 use crate::pool_client::{PoolClient, SpawnWorkerRequest};
 
 /// Handle infer command
 ///
-/// Implements the 8-phase MVP flow from test-001-mvp.md
+/// Implements the 8-phase MVP flow from test-001-mvp.md (ephemeral mode)
+///
+/// TEAM-030: Ephemeral mode lifecycle
+/// - Connects directly to rbee-hive (pool manager)
+/// - No queen-rbee spawning (for now - M1+ feature)
+/// - No local worker registry (pool manager handles it)
+/// - Worker cleanup happens via pool manager shutdown
 pub async fn handle(
     node: String,
     model: String,
@@ -29,32 +36,14 @@ pub async fn handle(
     max_tokens: u32,
     temperature: f32,
 ) -> Result<()> {
-    println!("{}", "=== MVP Cross-Node Inference ===".cyan().bold());
+    println!("{}", "=== MVP Cross-Node Inference (Ephemeral Mode) ===".cyan().bold());
     println!("Node: {}", node.cyan());
     println!("Model: {}", model.cyan());
     println!("Prompt: {}", prompt);
     println!();
 
-    // PHASE 1: Worker Registry Check
-    println!("{}", "[Phase 1] Checking local worker registry...".yellow());
-    let registry = WorkerRegistry::new(
-        dirs::home_dir()
-            .unwrap_or_default()
-            .join(".rbee/workers.db")
-            .to_string_lossy()
-            .to_string(),
-    );
-    registry.init().await?;
-
-    if let Some(worker) = registry.find_worker(&node, &model).await? {
-        println!("{} Found existing worker: {}", "✓".green(), worker.url);
-        println!();
-        println!("{}", "[Phase 8] Executing inference...".yellow());
-        execute_inference(&worker.url, prompt, max_tokens, temperature).await?;
-        return Ok(());
-    }
-    println!("{} No existing worker found", "✗".red());
-    println!();
+    // TEAM-030: Phase 1 skipped in ephemeral mode - always spawn fresh worker
+    println!("{}", "[Phase 1] Skipped (ephemeral mode - no worker reuse)".yellow());
 
     // PHASE 2: Pool Preflight
     println!("{}", "[Phase 2] Pool preflight check...".yellow());
@@ -84,21 +73,8 @@ pub async fn handle(
     println!("{} Worker spawned: {} (state: {})", "✓".green(), worker.worker_id, worker.state);
     println!();
 
-    // PHASE 6: Worker Registration
-    println!("{}", "[Phase 6] Registering worker...".yellow());
-    let worker_info = WorkerInfo {
-        id: worker.worker_id.clone(),
-        node: node.clone(),
-        url: worker.url.clone(),
-        model_ref: model,
-        state: worker.state,
-        last_health_check_unix: std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)?
-            .as_secs() as i64,
-    };
-    registry.register_worker(&worker_info).await?;
-    println!("{} Worker registered in local registry", "✓".green());
-    println!();
+    // TEAM-030: Phase 6 - Worker registration happens in pool manager (in-memory)
+    println!("{}", "[Phase 6] Worker registered in pool manager".yellow());
 
     // PHASE 7: Worker Health Check
     println!("{}", "[Phase 7] Waiting for worker ready...".yellow());

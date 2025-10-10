@@ -131,4 +131,64 @@ mod tests {
         assert_eq!(client.base_url, "http://localhost:8080");
         assert_eq!(client.api_key, "test-key");
     }
+
+    // TEAM-031: Additional comprehensive tests
+    #[test]
+    fn test_health_response_deserialization() {
+        let json = r#"{
+            "status": "alive",
+            "version": "0.1.0",
+            "api_version": "v1"
+        }"#;
+
+        let response: HealthResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(response.status, "alive");
+        assert_eq!(response.version, "0.1.0");
+        assert_eq!(response.api_version, "v1");
+    }
+
+    #[test]
+    fn test_spawn_worker_request_serialization() {
+        let request = SpawnWorkerRequest {
+            model_ref: "hf:test/model".to_string(),
+            backend: "cpu".to_string(),
+            device: 0,
+            model_path: "/models/test.gguf".to_string(),
+        };
+
+        let json = serde_json::to_value(&request).unwrap();
+        assert_eq!(json["model_ref"], "hf:test/model");
+        assert_eq!(json["backend"], "cpu");
+        assert_eq!(json["device"], 0);
+        assert_eq!(json["model_path"], "/models/test.gguf");
+    }
+
+    #[test]
+    fn test_spawn_worker_response_deserialization() {
+        let json = r#"{
+            "worker_id": "worker-123",
+            "url": "http://localhost:8081",
+            "state": "loading"
+        }"#;
+
+        let response: SpawnWorkerResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(response.worker_id, "worker-123");
+        assert_eq!(response.url, "http://localhost:8081");
+        assert_eq!(response.state, "loading");
+    }
+
+    #[test]
+    fn test_pool_client_with_different_urls() {
+        let client1 = PoolClient::new(
+            "http://localhost:8080".to_string(),
+            "key1".to_string(),
+        );
+        assert_eq!(client1.base_url, "http://localhost:8080");
+
+        let client2 = PoolClient::new(
+            "http://mac.home.arpa:8080".to_string(),
+            "key2".to_string(),
+        );
+        assert_eq!(client2.base_url, "http://mac.home.arpa:8080");
+    }
 }

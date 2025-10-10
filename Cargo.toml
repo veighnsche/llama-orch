@@ -30,7 +30,7 @@ members = [
     "bin/shared-crates/hive-core",         # TEAM-027: Renamed from pool-core - Hive management shared types
     "bin/shared-crates/secrets-management",
     "bin/shared-crates/secrets-management/bdd",
-    "bin/shared-crates/worker-registry",   # TEAM-027: Shared worker registry for queen-rbee and rbee-keeper
+    # TEAM-030: Removed worker-registry (ephemeral), kept model-catalog (persistent SQLite)
     "bin/shared-crates/model-catalog",     # TEAM-029: Model catalog for tracking downloaded models
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

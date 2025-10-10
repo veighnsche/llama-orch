@@ -52,3 +52,40 @@ pub async fn handle_download_progress() -> Result<String, (StatusCode, String)> 
         "Download progress not yet implemented".to_string(),
     ))
 }
+
+// TEAM-031: Unit tests for models module
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_download_model_request_deserialization() {
+        let json = r#"{"model_ref": "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF"}"#;
+        let request: DownloadModelRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(request.model_ref, "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF");
+    }
+
+    #[test]
+    fn test_download_model_response_serialization() {
+        let response = DownloadModelResponse {
+            download_id: "download-123".to_string(),
+            local_path: Some("/models/tinyllama.gguf".to_string()),
+        };
+
+        let json = serde_json::to_value(&response).unwrap();
+        assert_eq!(json["download_id"], "download-123");
+        assert_eq!(json["local_path"], "/models/tinyllama.gguf");
+    }
+
+    #[test]
+    fn test_download_model_response_serialization_no_path() {
+        let response = DownloadModelResponse {
+            download_id: "download-123".to_string(),
+            local_path: None,
+        };
+
+        let json = serde_json::to_value(&response).unwrap();
+        assert_eq!(json["download_id"], "download-123");
+        assert!(json["local_path"].is_null());
+    }
+}
