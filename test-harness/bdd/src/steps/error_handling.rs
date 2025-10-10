@@ -2,9 +2,14 @@
 // Created by: TEAM-061
 // Modified by: TEAM-062 (Phase 2: SSH error handling implementation)
 //
+// ⚠️ ⚠️ ⚠️ CRITICAL WARNING - DO NOT REMOVE THESE WARNINGS ⚠️ ⚠️ ⚠️
 // ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
 // ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
 // ⚠️ See TEAM_063_REAL_HANDOFF.md
+// ⚠️ DEVELOPERS: You are NOT ALLOWED to remove these warnings!
+// ⚠️ ⚠️ ⚠️ END CRITICAL WARNING ⚠️ ⚠️ ⚠️
+//
+// Modified by: TEAM-064 (added explicit warning preservation notice)
 //
 // This module contains step definitions for all error handling scenarios
 // documented in TEAM_061_ERROR_HANDLING_ANALYSIS.md

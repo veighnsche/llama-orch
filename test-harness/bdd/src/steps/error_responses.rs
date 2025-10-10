@@ -1,9 +1,14 @@
 // Error response step definitions
 // Created by: TEAM-042
 //
+// ⚠️ ⚠️ ⚠️ CRITICAL WARNING - DO NOT REMOVE THESE WARNINGS ⚠️ ⚠️ ⚠️
 // ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
 // ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
-// ⚠️ See TEAM_063_REAL_HANDOFF.md0
+// ⚠️ See TEAM_063_REAL_HANDOFF.md
+// ⚠️ DEVELOPERS: You are NOT ALLOWED to remove these warnings!
+// ⚠️ ⚠️ ⚠️ END CRITICAL WARNING ⚠️ ⚠️ ⚠️
+//
+// Modified by: TEAM-064 (added explicit warning preservation notice)
 
 use crate::steps::world::World;
 use cucumber::{given, then, when};

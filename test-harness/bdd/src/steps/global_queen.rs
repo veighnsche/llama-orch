@@ -1,16 +1,18 @@
-// Global queen-rbee instance shared across all BDD scenarios
+// Global queen-rbee instance management
 // Created by: TEAM-051
 // Modified by: TEAM-061 (added startup timeout to prevent hangs)
+// Modified by: TEAM-064 (added explicit warning preservation notice)
 //
+// ⚠️ ⚠️ ⚠️ CRITICAL WARNING - DO NOT REMOVE THESE WARNINGS ⚠️ ⚠️ ⚠️
 // ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
 // ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
 // ⚠️ See TEAM_063_REAL_HANDOFF.md
+// ⚠️ DEVELOPERS: You are NOT ALLOWED to remove these warnings!
+// ⚠️ ⚠️ ⚠️ END CRITICAL WARNING ⚠️ ⚠️ ⚠️
 //
 // This module manages a single queen-rbee process that is started once
 // before all tests and cleaned up at the end. This prevents port conflicts
 // and improves test performance.
-
-use std::sync::OnceLock;
 use std::time::Duration;
 use tokio::process::Child;
 use tokio::time::sleep;

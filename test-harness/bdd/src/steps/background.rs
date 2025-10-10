@@ -1,10 +1,15 @@
 // Background step definitions
 // Created by: TEAM-040
 //
+// ⚠️ ⚠️ ⚠️ CRITICAL WARNING - DO NOT REMOVE THESE WARNINGS ⚠️ ⚠️ ⚠️
 // ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
 // ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
 // ⚠️ See TEAM_063_REAL_HANDOFF.md
+// ⚠️ DEVELOPERS: You are NOT ALLOWED to remove these warnings!
+// ⚠️ ⚠️ ⚠️ END CRITICAL WARNING ⚠️ ⚠️ ⚠️
+//
 // Modified by: TEAM-056 (attempted auto-registration, reverted due to timing issues)
+// Modified by: TEAM-064 (added explicit warning preservation notice)
 
 use crate::steps::world::{NodeInfo, World};
 use cucumber::given;

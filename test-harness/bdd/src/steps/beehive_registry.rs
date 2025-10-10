@@ -1,10 +1,15 @@
 // rbee-hive Registry setup step definitions
 // Created by: TEAM-041
 //
+// ⚠️ ⚠️ ⚠️ CRITICAL WARNING - DO NOT REMOVE THESE WARNINGS ⚠️ ⚠️ ⚠️
 // ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
 // ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
 // ⚠️ See TEAM_063_REAL_HANDOFF.md
+// ⚠️ DEVELOPERS: You are NOT ALLOWED to remove these warnings!
+// ⚠️ ⚠️ ⚠️ END CRITICAL WARNING ⚠️ ⚠️ ⚠️
+//
 // Modified by: TEAM-042 (implemented step definitions with mock behavior)
+// Modified by: TEAM-064 (added explicit warning preservation notice)
 // Modified by: TEAM-043 (replaced mocks with real process execution)
 // Modified by: TEAM-055 (added HTTP retry logic with exponential backoff)
 // Modified by: TEAM-061 (replaced all HTTP clients with timeout client)
