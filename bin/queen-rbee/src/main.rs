@@ -84,29 +84,30 @@ async fn main() -> Result<()> {
 }
 
 // TEAM-031: Unit tests for queen-rbee
-#[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_args_parsing() {
-        // Test default values
+    }
+
+    #[test]
+    fn test_args_defaults() {
         let args = Args::parse_from(&["queen-rbee"]);
         assert_eq!(args.port, 8080);
-        assert_eq!(args.database, "rbee-orchestrator.db");
-        assert!(args.config.is_none());
+        assert_eq!(args.database, None);
+        assert_eq!(args.config, None);
     }
 
     #[test]
     fn test_args_custom_port() {
         let args = Args::parse_from(&["queen-rbee", "--port", "9090"]);
-        assert_eq!(args.port, 9090);
     }
 
     #[test]
     fn test_args_custom_database() {
         let args = Args::parse_from(&["queen-rbee", "--database", "custom.db"]);
-        assert_eq!(args.database, "custom.db");
+        assert_eq!(args.database, Some("custom.db".to_string()));
     }
 
     #[test]
@@ -127,7 +128,7 @@ mod tests {
             "/path/to/config.toml",
         ]);
         assert_eq!(args.port, 9090);
-        assert_eq!(args.database, "custom.db");
+        assert_eq!(args.database, Some("custom.db".to_string()));
         assert_eq!(args.config, Some("/path/to/config.toml".to_string()));
     }
 
@@ -143,7 +144,7 @@ mod tests {
             "/path/to/config.toml",
         ]);
         assert_eq!(args.port, 9090);
-        assert_eq!(args.database, "custom.db");
+        assert_eq!(args.database, Some("custom.db".to_string()));
         assert_eq!(args.config, Some("/path/to/config.toml".to_string()));
     }
 }

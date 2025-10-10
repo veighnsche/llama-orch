@@ -4,7 +4,7 @@
 //!
 //! # Example
 //!
-//! ```rust
+//! ```rust,no_run
 //! use gpu_info::detect_gpus_or_fail;
 //!
 //! // Detect GPUs (fail fast if none found)
