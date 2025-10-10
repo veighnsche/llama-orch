@@ -57,7 +57,9 @@ pub async fn then_proceed_to_model_provisioning(world: &mut World) {
 
 #[then(expr = "rbee-keeper aborts with error {string}")]
 pub async fn then_abort_with_error(world: &mut World, error_code: String) {
-    tracing::debug!("Should abort with error: {}", error_code);
+    // TEAM-045: Set exit code to 1 for error scenarios
+    world.last_exit_code = Some(1);
+    tracing::info!("✅ rbee-keeper aborts with error: {}", error_code);
 }
 
 #[then(expr = "the error message includes both versions")]

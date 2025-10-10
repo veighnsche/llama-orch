@@ -7,6 +7,7 @@
 //! - Health endpoint (`health`)
 //! - Execute endpoint (`execute`)
 //! - Loading progress endpoint (`loading`) - TEAM-035
+//! - Ready endpoint (`ready`) - TEAM-045
 //! - Platform abstraction (`backend`)
 //!
 //! # Spec References
@@ -23,6 +24,7 @@ pub mod execute;
 pub mod health;
 pub mod loading;
 pub mod narration_channel; // TEAM-039: Narration SSE channel
+pub mod ready; // TEAM-045: Worker readiness endpoint
 pub mod routes;
 pub mod server;
 pub mod sse;

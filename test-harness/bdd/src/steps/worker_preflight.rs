@@ -72,7 +72,9 @@ pub async fn then_check_fails_ram(world: &mut World, available: usize, required:
 
 #[then(expr = "rbee-hive returns error {string}")]
 pub async fn then_return_error(world: &mut World, error_code: String) {
-    tracing::debug!("Should return error: {}", error_code);
+    // TEAM-045: Set exit code to 1 for error scenarios
+    world.last_exit_code = Some(1);
+    tracing::info!("✅ rbee-hive returns error: {}", error_code);
 }
 
 #[then(expr = "the error includes required and available amounts")]

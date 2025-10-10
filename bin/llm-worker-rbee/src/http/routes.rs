@@ -5,6 +5,7 @@
 //!
 //! # Endpoints
 //! - `GET /health` - Health check endpoint
+//! - `GET /v1/ready` - Worker readiness check - TEAM-045
 //! - `POST /v1/inference` - Execute inference request (SSE) - TEAM-035
 //! - `GET /v1/loading/progress` - Model loading progress (SSE) - TEAM-035
 //!
@@ -18,7 +19,7 @@
 //! - `SSE_IMPLEMENTATION_PLAN.md` Phase 2: Loading progress
 //! - `SSE_IMPLEMENTATION_PLAN.md` Phase 3: Inference streaming
 
-use crate::http::{backend::InferenceBackend, execute, health, loading};
+use crate::http::{backend::InferenceBackend, execute, health, loading, ready};
 use axum::{
     middleware,
     routing::{get, post},
@@ -38,9 +39,11 @@ use tokio::sync::Mutex;
 ///
 /// TEAM-017: Updated to accept Mutex-wrapped backend
 /// TEAM-035: Added /v1/loading/progress and renamed /execute to /v1/inference
+/// TEAM-045: Added /v1/ready endpoint
 pub fn create_router<B: InferenceBackend + 'static>(backend: Arc<Mutex<B>>) -> Router {
     Router::new()
         .route("/health", get(health::handle_health::<B>))
+        .route("/v1/ready", get(ready::handle_ready::<B>))
         .route("/v1/inference", post(execute::handle_execute::<B>))
         .route("/v1/loading/progress", get(loading::handle_loading_progress::<B>))
         .layer(middleware::from_fn(correlation_middleware))

@@ -72,6 +72,11 @@ pub async fn given_registry_empty(world: &mut World) {
 
 #[given(expr = "node {string} is registered in rbee-hive registry")]
 pub async fn given_node_in_registry(world: &mut World, node: String) {
+    // TEAM-045: Ensure queen-rbee is running before making HTTP calls
+    if world.queen_rbee_process.is_none() {
+        given_queen_rbee_running(world).await;
+    }
+    
     // TEAM-044: Actually register the node in queen-rbee via HTTP API
     let client = reqwest::Client::new();
     let url = world
@@ -124,6 +129,9 @@ pub async fn given_node_in_registry_with_ssh(world: &mut World, node: String) {
 
 #[given(expr = "multiple nodes are registered in rbee-hive registry")]
 pub async fn given_multiple_nodes_in_registry(world: &mut World) {
+    // TEAM-045: Ensure queen-rbee is running before registering nodes
+    given_queen_rbee_running(world).await;
+    
     // TEAM-044: Register both nodes via HTTP
     given_node_in_registry(world, "mac".to_string()).await;
     given_node_in_registry(world, "workstation".to_string()).await;

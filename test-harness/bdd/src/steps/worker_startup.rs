@@ -9,10 +9,7 @@ pub async fn when_spawn_worker_process(world: &mut World) {
     tracing::debug!("Spawning worker process");
 }
 
-#[when(expr = "the worker sends ready callback")]
-pub async fn when_worker_sends_ready_callback(world: &mut World) {
-    tracing::debug!("Worker sends ready callback");
-}
+// TEAM-045: Removed duplicate step - defined in lifecycle.rs
 
 #[given(expr = "the worker HTTP server started successfully")]
 pub async fn given_worker_http_started(world: &mut World) {

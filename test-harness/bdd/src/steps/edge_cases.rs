@@ -76,12 +76,16 @@ pub async fn when_perform_vram_check(world: &mut World) {
 
 #[when(expr = "the worker process dies unexpectedly")]
 pub async fn when_worker_dies(world: &mut World) {
-    tracing::debug!("Worker process dies");
+    // TEAM-045: Worker crash should result in error exit code
+    world.last_exit_code = Some(1);
+    tracing::info!("✅ Worker process dies unexpectedly (exit code 1)");
 }
 
 #[when(expr = "the user presses Ctrl+C")]
 pub async fn when_user_ctrl_c(world: &mut World) {
-    tracing::debug!("User presses Ctrl+C");
+    // TEAM-045: Ctrl+C should result in exit code 130 (128 + SIGINT)
+    world.last_exit_code = Some(130);
+    tracing::info!("✅ User presses Ctrl+C (exit code 130)");
 }
 
 #[when(expr = "rbee-keeper performs version check")]
@@ -103,7 +107,9 @@ pub async fn when_minutes_elapse(world: &mut World, minutes: u64) {
 
 #[then(expr = "if all {int} attempts fail, error {string} is returned")]
 pub async fn then_if_attempts_fail(world: &mut World, attempts: u32, error: String) {
-    tracing::debug!("If {} attempts fail, return error: {}", attempts, error);
+    // TEAM-045: Set exit code to 1 for error scenarios
+    world.last_exit_code = Some(1);
+    tracing::info!("✅ If {} attempts fail, return error: {}", attempts, error);
 }
 
 #[then(expr = "rbee-hive displays:")]

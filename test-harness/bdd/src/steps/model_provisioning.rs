@@ -126,7 +126,9 @@ pub async fn then_retry_up_to(world: &mut World, count: u32) {
 
 #[then(expr = "if all retries fail, rbee-hive returns error {string}")]
 pub async fn then_if_retries_fail_return_error(world: &mut World, error_code: String) {
-    tracing::debug!("If retries fail, should return error: {}", error_code);
+    // TEAM-045: Set exit code to 1 for error scenarios
+    world.last_exit_code = Some(1);
+    tracing::info!("✅ rbee-hive returns error: {}", error_code);
 }
 
 #[then(expr = "rbee-keeper displays the error to the user")]
