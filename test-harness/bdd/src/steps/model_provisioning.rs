@@ -9,11 +9,13 @@
 // ⚠️ ⚠️ ⚠️ END CRITICAL WARNING ⚠️ ⚠️ ⚠️
 //
 // Modified by: TEAM-064 (added explicit warning preservation notice)
+// Modified by: TEAM-065 (marked FAKE functions that create false positives)
 
 use crate::steps::world::{ModelCatalogEntry, World};
 use cucumber::{given, then, when};
 use std::path::PathBuf;
 
+// FAKE: Only updates World.model_catalog, doesn't test real SQLite catalog
 #[given(expr = "the model catalog contains:")]
 pub async fn given_model_catalog_contains(world: &mut World, step: &cucumber::gherkin::Step) {
     let table = step.table.as_ref().expect("Expected a data table");
@@ -133,6 +135,7 @@ pub async fn then_retry_up_to(world: &mut World, count: u32) {
     tracing::debug!("Should retry up to {} times", count);
 }
 
+// FAKE: Only updates World.last_exit_code, doesn't test real error handling
 #[then(expr = "if all retries fail, rbee-hive returns error {string}")]
 pub async fn then_if_retries_fail_return_error(world: &mut World, error_code: String) {
     // TEAM-045: Set exit code to 1 for error scenarios

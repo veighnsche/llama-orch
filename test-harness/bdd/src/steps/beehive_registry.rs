@@ -13,6 +13,7 @@
 // Modified by: TEAM-043 (replaced mocks with real process execution)
 // Modified by: TEAM-055 (added HTTP retry logic with exponential backoff)
 // Modified by: TEAM-061 (replaced all HTTP clients with timeout client)
+// Modified by: TEAM-065 (marked FAKE functions that create false positives)
 
 use crate::steps::world::World;
 use cucumber::{given, then};
@@ -110,6 +111,7 @@ pub async fn given_queen_rbee_running_OLD(world: &mut World) {
 }
 */
 
+// FAKE: Only clears World.beehive_nodes, doesn't test real registry
 #[given(expr = "the rbee-hive registry is empty")]
 pub async fn given_registry_empty(world: &mut World) {
     // TEAM-043: Clear real registry via HTTP
@@ -187,7 +189,7 @@ pub async fn given_node_in_registry(world: &mut World, node: String) {
         panic!("Failed to register node after 5 attempts: {}", e);
     }
 
-    // Also add to mock world state for compatibility
+    // FAKE: Also add to mock world state for compatibility
     world.beehive_nodes.insert(
         node.clone(),
         crate::steps::world::BeehiveNode {
@@ -222,6 +224,7 @@ pub async fn given_multiple_nodes_in_registry(world: &mut World) {
     tracing::info!("✅ Multiple nodes registered (mac, workstation) via HTTP");
 }
 
+// FAKE: Only removes from World.beehive_nodes, doesn't test real registry
 #[given(expr = "the rbee-hive registry does not contain node {string}")]
 pub async fn given_node_not_in_registry(world: &mut World, node: String) {
     world.beehive_nodes.remove(&node);
@@ -259,6 +262,7 @@ pub async fn then_ssh_connection_fails(world: &mut World) {
     tracing::info!("✅ SSH connection failed with timeout");
 }
 
+// FAKE: Only updates World.beehive_nodes, doesn't test real registry save
 #[then(expr = "queen-rbee saves node to rbee-hive registry:")]
 pub async fn then_save_node_to_registry(world: &mut World, step: &cucumber::gherkin::Step) {
     let table = step.table.as_ref().expect("Expected a table");
@@ -301,6 +305,7 @@ pub async fn then_do_not_save_node(world: &mut World) {
     tracing::info!("✅ Node NOT saved to registry (as expected)");
 }
 
+// FAKE: Only updates World.last_stdout, doesn't verify real output
 #[then(expr = "rbee-keeper displays:")]
 pub async fn then_display_output(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
@@ -334,6 +339,7 @@ pub async fn then_execute_installation(world: &mut World, step: &cucumber::gherk
     world.last_exit_code = Some(0);
 }
 
+// FAKE: Only removes from World.beehive_nodes, doesn't test real registry
 #[then(expr = "queen-rbee removes node from registry")]
 pub async fn then_remove_node_from_registry(world: &mut World) {
     // Mock: remove a node from registry

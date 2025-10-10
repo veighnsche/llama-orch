@@ -82,4 +82,4 @@ Example of GOOD behavior:
 - TEAM-013 writes: "✅ All priorities complete: CUDA validated, sampling optimized, production ready"
 - Result: Work actually progresses, no derailment
 
-The handoff TODO list is THE PLAN. Follow it. Don't make up your own plan.
+The handoff TODO list OF THE PREVIOUS TEAM is YOUR PLAN. Follow it. Don't make up your own plan.

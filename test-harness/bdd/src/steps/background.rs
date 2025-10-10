@@ -10,10 +10,12 @@
 //
 // Modified by: TEAM-056 (attempted auto-registration, reverted due to timing issues)
 // Modified by: TEAM-064 (added explicit warning preservation notice)
+// Modified by: TEAM-065 (marked FAKE functions that create false positives)
 
 use crate::steps::world::{NodeInfo, World};
 use cucumber::given;
 
+// FAKE: Only updates World.topology, doesn't test real node discovery
 #[given(expr = "the following topology:")]
 pub async fn given_topology(world: &mut World, step: &cucumber::gherkin::Step) {
     let table = step.table.as_ref().expect("Expected a data table");
@@ -31,12 +33,14 @@ pub async fn given_topology(world: &mut World, step: &cucumber::gherkin::Step) {
     tracing::debug!("Topology configured with {} nodes", world.topology.len());
 }
 
+// FAKE: Only updates World.current_node, doesn't test real node context
 #[given(expr = "I am on node {string}")]
 pub async fn given_current_node(world: &mut World, node: String) {
     world.current_node = Some(node.clone());
     tracing::debug!("Current node set to: {}", node);
 }
 
+// FAKE: Only updates World.queen_rbee_url, doesn't verify real queen-rbee
 #[given(expr = "queen-rbee is running at {string}")]
 pub async fn given_queen_rbee_url(world: &mut World, url: String) {
     // TEAM-051: Use the global queen-rbee instance (already started in main)
@@ -45,6 +49,7 @@ pub async fn given_queen_rbee_url(world: &mut World, url: String) {
     tracing::debug!("Using global queen-rbee at: {}", url);
 }
 
+// FAKE: Only updates World.model_catalog_path, doesn't test real SQLite catalog
 #[given(expr = "the model catalog is SQLite at {string}")]
 pub async fn given_model_catalog_path(world: &mut World, path: String) {
     let expanded_path = shellexpand::tilde(&path).to_string();
@@ -58,6 +63,7 @@ pub async fn given_worker_registry_ephemeral(_world: &mut World) {
     tracing::debug!("Worker registry configured as in-memory ephemeral");
 }
 
+// FAKE: Only updates World.registry_db_path, doesn't test real SQLite registry
 #[given(expr = "the rbee-hive registry is SQLite at {string}")]
 pub async fn given_beehive_registry_path(world: &mut World, path: String) {
     let expanded_path = shellexpand::tilde(&path).to_string();

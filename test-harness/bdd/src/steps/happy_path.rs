@@ -11,10 +11,12 @@
 // Modified by: TEAM-042 (implemented step definitions with mock behavior)
 // Modified by: TEAM-061 (replaced all HTTP clients with timeout client)
 // Modified by: TEAM-064 (added explicit warning preservation notice)
+// Modified by: TEAM-065 (marked FAKE functions that create false positives)
 
 use crate::steps::world::World;
 use cucumber::{given, then};
 
+// FAKE: Only updates World.workers, doesn't test real registry
 #[given(expr = "no workers are registered for model {string}")]
 pub async fn given_no_workers_for_model(world: &mut World, model_ref: String) {
     // Remove any workers with this model_ref
@@ -32,18 +34,21 @@ pub async fn given_node_reachable(world: &mut World, node: String, url: String) 
     }
 }
 
+// FAKE: Only updates World.node_ram, doesn't test real node resources
 #[given(expr = "node {string} has {int} MB of available RAM")]
 pub async fn given_node_ram(world: &mut World, node: String, ram_mb: usize) {
     world.node_ram.insert(node.clone(), ram_mb);
     tracing::debug!("Node {} has {} MB RAM", node, ram_mb);
 }
 
+// FAKE: Only updates World.node_backends, doesn't test real backend detection
 #[given(expr = "node {string} has Metal backend available")]
 pub async fn given_node_metal_backend(world: &mut World, node: String) {
     world.node_backends.entry(node.clone()).or_default().push("metal".to_string());
     tracing::debug!("Node {} has Metal backend", node);
 }
 
+// FAKE: Only updates World.node_backends, doesn't test real backend detection
 #[given(expr = "node {string} has CUDA backend available")]
 pub async fn given_node_cuda_backend(world: &mut World, node: String) {
     world.node_backends.entry(node.clone()).or_default().push("cuda".to_string());
@@ -59,6 +64,7 @@ pub async fn then_queen_rbee_ssh_query(world: &mut World, node: String, hostname
     tracing::info!("✅ Mock SSH query to {} at {}", node, hostname);
 }
 
+// FAKE: Only updates World state, doesn't query real registry
 #[then(expr = "queen-rbee queries rbee-hive worker registry at {string}")]
 pub async fn then_query_worker_registry(world: &mut World, url: String) {
     // Mock: simulate HTTP request to worker registry
@@ -68,6 +74,7 @@ pub async fn then_query_worker_registry(world: &mut World, url: String) {
     tracing::info!("✅ Mock query worker registry at: {}", url);
 }
 
+// FAKE: Only clears World.workers, doesn't verify real registry
 #[then(expr = "the worker registry returns an empty list")]
 pub async fn then_registry_returns_empty(world: &mut World) {
     // Mock: verify empty worker list
@@ -75,6 +82,7 @@ pub async fn then_registry_returns_empty(world: &mut World) {
     tracing::info!("✅ Worker registry returns empty list");
 }
 
+// FAKE: Only updates World state, doesn't perform real preflight check
 #[then(expr = "queen-rbee performs pool preflight check at {string}")]
 pub async fn then_pool_preflight_check(world: &mut World, url: String) {
     // TEAM-058: Updated to match new world.last_http_response type (String)
@@ -111,6 +119,7 @@ pub async fn then_download_from_hf(world: &mut World) {
     tracing::info!("✅ Mock download initiated from Hugging Face");
 }
 
+// FAKE: Only updates World.sse_events, doesn't test real SSE stream
 #[then(expr = "a download progress SSE stream is available at {string}")]
 pub async fn then_download_progress_stream(world: &mut World, url: String) {
     // Mock: SSE stream for download progress
@@ -132,6 +141,7 @@ pub async fn then_display_progress_bar(world: &mut World) {
     tracing::info!("✅ Mock progress bar: [████████----] 40% (2.0 MB / 5.0 MB) @ 48.1 Mbps");
 }
 
+// FAKE: Only updates World.sse_events, doesn't test real download
 #[then(expr = "the model download completes successfully")]
 pub async fn then_download_completes(world: &mut World) {
     // Mock: download complete
@@ -145,6 +155,7 @@ pub async fn then_download_completes(world: &mut World) {
     tracing::info!("✅ Model download completed");
 }
 
+// FAKE: Only updates World.model_catalog, doesn't test real SQLite catalog
 #[then(expr = "rbee-hive registers the model in SQLite catalog with local_path {string}")]
 pub async fn then_register_model_in_catalog(world: &mut World, local_path: String) {
     // Mock: register model in catalog
@@ -240,6 +251,7 @@ pub async fn then_worker_http_starts(world: &mut World, port: u16) {
     tracing::info!("✅ Worker HTTP server started on port {}", port);
 }
 
+// FAKE: Only updates World.workers, doesn't test real callback
 #[then(expr = "the worker sends ready callback to {string}")]
 pub async fn then_worker_ready_callback(world: &mut World, url: String) {
     // Mock: ready callback sent
@@ -289,6 +301,7 @@ pub async fn then_worker_state_with_progress(world: &mut World, state: String) {
     tracing::info!("✅ Worker returned state: {}", state);
 }
 
+// FAKE: Only updates World.sse_events, doesn't test real loading progress
 #[then(expr = "rbee-keeper streams loading progress showing layers loaded")]
 pub async fn then_stream_loading_progress(world: &mut World) {
     // Mock: stream loading progress
@@ -304,6 +317,7 @@ pub async fn then_stream_loading_progress(world: &mut World) {
     tracing::info!("✅ Mock loading progress: 24/32 layers loaded");
 }
 
+// FAKE: Only updates World.workers, doesn't test real worker state
 #[then(expr = "the worker completes loading and returns state {string}")]
 pub async fn then_worker_completes_loading(world: &mut World, state: String) {
     // Mock: loading complete
@@ -320,6 +334,7 @@ pub async fn then_send_inference_request(world: &mut World, url: String) {
     tracing::info!("✅ Mock inference request sent to: {}", url);
 }
 
+// FAKE: Only updates World.tokens_generated and World.sse_events, doesn't test real streaming
 #[then(expr = "the worker streams tokens via SSE")]
 pub async fn then_stream_tokens(world: &mut World) {
     // Mock: stream tokens
@@ -334,6 +349,7 @@ pub async fn then_stream_tokens(world: &mut World) {
     tracing::info!("✅ Mock token streaming: {} tokens", world.tokens_generated.len());
 }
 
+// FAKE: Only updates World.last_stdout, doesn't test real stdout
 #[then(expr = "rbee-keeper displays tokens to stdout in real-time")]
 pub async fn then_display_tokens(world: &mut World) {
     // Mock: display tokens
@@ -342,6 +358,7 @@ pub async fn then_display_tokens(world: &mut World) {
     tracing::info!("✅ Mock token display: {}", output);
 }
 
+// FAKE: Only updates World.inference_metrics, doesn't test real inference
 #[then(expr = "the inference completes with {int} tokens generated")]
 pub async fn then_inference_completes(world: &mut World, token_count: u32) {
     // Mock: inference complete
@@ -352,6 +369,7 @@ pub async fn then_inference_completes(world: &mut World, token_count: u32) {
     tracing::info!("✅ Inference completed: {} tokens in 150ms", token_count);
 }
 
+// FAKE: Only updates World.workers, doesn't test real worker state
 #[then(expr = "the worker transitions to state {string}")]
 pub async fn then_worker_transitions_to_state(world: &mut World, state: String) {
     // Mock: state transition
@@ -399,6 +417,7 @@ pub async fn then_start_beehive_via_ssh(world: &mut World, hostname: String) {
     tracing::info!("✅ Mock started rbee-hive via SSH at: {}", hostname);
 }
 
+// FAKE: Only updates World.beehive_nodes, doesn't test real registry
 #[then(expr = "queen-rbee updates registry with last_connected_unix")]
 pub async fn then_update_last_connected(world: &mut World) {
     let timestamp = 1728508603;
