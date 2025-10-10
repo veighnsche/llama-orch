@@ -82,7 +82,7 @@ data: [DONE]
 
 ```bash
 # Start rbee-hive on the remote machine
-cargo run -p rbee-hive -- daemon --addr 0.0.0.0:8080
+RBEE_WORKER_HOST=mac.home.arpa cargo run -p rbee-hive -- daemon --addr 0.0.0.0:8080
 ```
 
 ### From Control Node (blep)
@@ -138,7 +138,7 @@ cargo run --release -p rbee-keeper -- infer \
 
 ```
 ┌─────────────┐
-│ rbee-keeper │  (CLI on blep)
+│    rbee     │  (CLI on blep)
 │   (client)  │
 └──────┬──────┘
        │ HTTP

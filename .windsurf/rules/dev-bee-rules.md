@@ -8,6 +8,7 @@ This project is heavily documented in .md files. please consult them before maki
 Please consider updating an existing .md file before creating a new one.
 It's really annoying if you make countless of repeating .md file. Because if you were inaccurate once, and repeat that inaccuracy across multiple .md files. Then we need to update ALL the .md documents you made. which is wasting our time.
 
+**WE DO NOT SHIP SHELL SCRIPTS INTO PRODUCTION**
 
 NO BACKGROUND TESTING
 

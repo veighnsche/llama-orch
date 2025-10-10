@@ -15,7 +15,7 @@ sleep 2
 
 # Start rbee-hive (pool manager) in background
 echo "Starting rbee-hive on localhost:8080..."
-cargo run -p rbee-hive -- daemon --addr 127.0.0.1:8080 > /tmp/rbee-hive.log 2>&1 &
+RBEE_WORKER_HOST=127.0.0.1 cargo run -p rbee-hive -- daemon --addr 127.0.0.1:8080 > /tmp/rbee-hive.log 2>&1 &
 HIVE_PID=$!
 echo "rbee-hive PID: $HIVE_PID"
 sleep 3

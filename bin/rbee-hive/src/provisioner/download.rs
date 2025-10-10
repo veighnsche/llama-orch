@@ -27,22 +27,22 @@ impl ModelProvisioner {
 
         info!("Downloading model from HuggingFace: {}", reference);
 
-        // TEAM-029: Use llorch-models script for now
+        // TEAM-029: Use rbee-models script for now
         // TODO: Implement native Rust download with hf_hub crate for better progress tracking
-        let script_path = self.find_llorch_models_script()?;
+        let script_path = self.find_rbee_models_script()?;
 
         // Extract model name from reference
         let model_name = self.extract_model_name(reference)?;
 
-        info!("Using llorch-models script to download: {}", model_name);
+        info!("Using rbee-models script to download: {}", model_name);
 
-        // Run llorch-models download
+        // Run rbee-models download
         let output = Command::new(&script_path)
             .arg("download")
             .arg(&model_name)
-            .env("LLORCH_MODEL_BASE_DIR", &self.base_dir)
+            .env("RBEE_MODEL_BASE_DIR", &self.base_dir)
             .output()
-            .context("Failed to execute llorch-models script")?;
+            .context("Failed to execute rbee-models script")?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -56,13 +56,13 @@ impl ModelProvisioner {
             .ok_or_else(|| anyhow::anyhow!("Model downloaded but not found in expected location"))
     }
 
-    /// Find llorch-models script
-    pub(super) fn find_llorch_models_script(&self) -> Result<PathBuf> {
+    /// Find rbee-models script
+    pub(super) fn find_rbee_models_script(&self) -> Result<PathBuf> {
         // TEAM-029: Look for script in standard locations
         let candidates = vec![
-            PathBuf::from("./scripts/llorch-models"),
-            PathBuf::from("../scripts/llorch-models"),
-            PathBuf::from("../../scripts/llorch-models"),
+            PathBuf::from("./scripts/rbee-models"),
+            PathBuf::from("../scripts/rbee-models"),
+            PathBuf::from("../../scripts/rbee-models"),
         ];
 
         for path in candidates {
@@ -71,12 +71,11 @@ impl ModelProvisioner {
             }
         }
 
-        anyhow::bail!("llorch-models script not found. Please ensure scripts/llorch-models exists.")
+        anyhow::bail!("rbee-models script not found. Please ensure scripts/rbee-models exists.")
     }
 
     /// Extract model name from reference
-    ///
-    /// Maps HuggingFace references to llorch-models names
+        /// Maps HuggingFace references to rbee-models names
     pub(super) fn extract_model_name(&self, reference: &str) -> Result<String> {
         // TEAM-029: Map known references to llorch-models names
         let name = match reference {
@@ -152,11 +151,11 @@ mod tests {
     }
 
     #[test]
-    fn test_find_llorch_models_script_not_found() {
+    fn test_find_rbee_models_script_not_found() {
         // TEAM-033: This test may pass if the script exists in the workspace
         // We test the error message format instead
         let provisioner = ModelProvisioner::new(PathBuf::from("/tmp/nonexistent"));
-        let result = provisioner.find_llorch_models_script();
+        let result = provisioner.find_rbee_models_script();
         
         // If script doesn't exist, should error with specific message
         if result.is_err() {

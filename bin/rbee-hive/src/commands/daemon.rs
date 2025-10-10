@@ -53,7 +53,7 @@ pub async fn handle(addr: String) -> Result<()> {
     tracing::info!("Model catalog initialized (SQLite, persistent)");
 
     // TEAM-029: Initialize model provisioner
-    let model_base_dir = std::env::var("LLORCH_MODEL_BASE_DIR")
+    let model_base_dir = std::env::var("RBEE_MODEL_BASE_DIR")
         .unwrap_or_else(|_| ".test-models".to_string());
     tracing::info!("Model provisioner initialized (base_dir: {})", model_base_dir);
     let provisioner = Arc::new(ModelProvisioner::new(model_base_dir.into()));

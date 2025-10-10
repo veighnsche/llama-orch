@@ -154,7 +154,7 @@ pub async fn handle_spawn_worker(
     
     // TEAM-027: Get hostname for URL
     // TEAM-035: For localhost testing, use 127.0.0.1 to avoid hostname resolution issues
-    let hostname = std::env::var("LLORCH_WORKER_HOST")
+    let hostname = std::env::var("RBEE_WORKER_HOST")
         .unwrap_or_else(|_| {
             hostname::get()
                 .ok()

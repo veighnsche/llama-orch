@@ -554,6 +554,9 @@ cargo test -p test-harness-metrics-contract -- --nocapture
 ```
 ---
 ## Development Workflow
+
+**⚠️ CRITICAL:** This is a Rust project. Do NOT write shell scripts for product features. See [NO_SHELL_SCRIPTS.md](NO_SHELL_SCRIPTS.md).
+
 llama-orch follows strict **Spec → Contract → Tests → Code** discipline:
 1. **Spec**: Define requirements in `.specs/` with stable IDs (ORCH-3xxx)
 2. **Contract**: Update OpenAPI/types in `contracts/`

@@ -2,6 +2,14 @@
 
 Thank you for your interest in contributing!
 
+## ⚠️ CRITICAL: NO SHELL SCRIPTS FOR PRODUCT FEATURES
+
+**READ THIS FIRST:** [NO_SHELL_SCRIPTS.md](./NO_SHELL_SCRIPTS.md)
+
+**This is a Rust project.** Product features MUST be implemented in Rust, not shell scripts. If you're tempted to write a shell script for a product feature, STOP and write Rust code instead. Shell scripts for product features = technical debt = post-mortem.
+
+## Workflow
+
 - This repository follows a contract-first, TDD workflow.
 - Do not implement business logic before contracts, stubs, and tests are in place.
 - Run:
