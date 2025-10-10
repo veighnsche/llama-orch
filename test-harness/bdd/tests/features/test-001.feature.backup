@@ -69,8 +69,8 @@ Feature: Cross-Node Inference Request Flow
       """
     And the exit code is 0
 
-  @setup @error-handling
-  Scenario: EH-001a - SSH connection timeout
+  @setup
+  Scenario: Add node with SSH connection failure
     When I run:
       """
       rbee-keeper setup add-node \
@@ -81,58 +81,13 @@ Feature: Cross-Node Inference Request Flow
         --git-repo https://github.com/user/llama-orch.git \
         --install-path ~/rbee
       """
-    Then queen-rbee attempts SSH connection with 10s timeout
+    Then queen-rbee attempts SSH connection
     And the SSH connection fails with timeout
-    And queen-rbee retries 3 times with exponential backoff
     And queen-rbee does NOT save node to registry
     And rbee-keeper displays:
       """
       [queen-rbee] 🔌 Testing SSH connection to unreachable.home.arpa
-      [queen-rbee] ⏳ Attempt 1/3 failed: Connection timeout
-      [queen-rbee] ⏳ Attempt 2/3 failed: Connection timeout (delay 200ms)
-      [queen-rbee] ⏳ Attempt 3/3 failed: Connection timeout (delay 400ms)
-      [queen-rbee] ❌ SSH connection failed after 3 attempts
-      """
-    And the exit code is 1
-
-  @setup @error-handling
-  Scenario: EH-001b - SSH authentication failure
-    Given SSH key at "~/.ssh/id_ed25519" has wrong permissions
-    When I run:
-      """
-      rbee-keeper setup add-node \
-        --name workstation \
-        --ssh-host workstation.home.arpa \
-        --ssh-user vince \
-        --ssh-key ~/.ssh/id_ed25519 \
-        --git-repo https://github.com/user/llama-orch.git \
-        --install-path ~/rbee
-      """
-    Then queen-rbee attempts SSH connection
-    And the SSH connection fails with "Permission denied (publickey)"
-    And queen-rbee does NOT save node to registry
-    And rbee-keeper displays:
-      """
-      [queen-rbee] 🔌 Testing SSH connection to workstation.home.arpa
-      [queen-rbee] ❌ SSH authentication failed: Permission denied
-      
-      Suggestion: Check SSH key permissions:
-        chmod 600 ~/.ssh/id_ed25519
-      """
-    And the exit code is 1
-
-  @setup @error-handling
-  Scenario: EH-001c - SSH command execution failure
-    Given SSH connection succeeds
-    But rbee-hive binary does not exist on remote node
-    When queen-rbee attempts to start rbee-hive via SSH
-    Then the SSH command fails with "command not found"
-    And rbee-keeper displays:
-      """
-      [queen-rbee] ❌ Failed to start rbee-hive: command not found
-      
-      Suggestion: Install rbee-hive on workstation:
-        rbee-keeper setup install --node workstation
+      [queen-rbee] ❌ SSH connection failed: Connection timeout
       """
     And the exit code is 1
 
@@ -192,55 +147,6 @@ Feature: Cross-Node Inference Request Flow
       [queen-rbee] ✅ Node 'workstation' removed from registry
       """
     And the exit code is 0
-
-  @setup @error-handling
-  Scenario: EH-011a - Invalid SSH key path
-    When I run:
-      """
-      rbee-keeper setup add-node \
-        --name workstation \
-        --ssh-host workstation.home.arpa \
-        --ssh-user vince \
-        --ssh-key /nonexistent/key \
-        --git-repo https://github.com/user/llama-orch.git \
-        --install-path ~/rbee
-      """
-    Then rbee-keeper validates SSH key path before sending to queen-rbee
-    And validation fails with "SSH key not found: /nonexistent/key"
-    And rbee-keeper displays:
-      """
-      [rbee-keeper] ❌ Error: SSH key not found
-        Path: /nonexistent/key
-        
-      Check the key path and try again.
-      """
-    And the exit code is 1
-
-  @setup @error-handling
-  Scenario: EH-011b - Duplicate node name
-    Given node "workstation" already exists in registry
-    When I run:
-      """
-      rbee-keeper setup add-node \
-        --name workstation \
-        --ssh-host workstation2.home.arpa \
-        --ssh-user vince \
-        --ssh-key ~/.ssh/id_ed25519 \
-        --git-repo https://github.com/user/llama-orch.git \
-        --install-path ~/rbee
-      """
-    Then queen-rbee detects duplicate node name
-    And rbee-keeper displays:
-      """
-      [queen-rbee] ❌ Error: Node 'workstation' already exists in registry
-      
-      To update this node, run:
-        rbee-keeper setup update-node --name workstation ...
-      
-      To remove and re-add:
-        rbee-keeper setup remove-node --name workstation
-      """
-    And the exit code is 1
 
   @setup @critical
   Scenario: Inference fails when node not in registry
@@ -382,7 +288,7 @@ Feature: Cross-Node Inference Request Flow
 
   Scenario: Pool preflight health check succeeds
     Given node "workstation" is reachable
-    When rbee-keeper sends GET to "http://workstation.home.arpa:9200/v1/health"
+    When rbee-keeper sends GET to "http://workstation.home.arpa:8080/v1/health"
     Then the response status is 200
     And the response body contains:
       """
@@ -393,40 +299,6 @@ Feature: Cross-Node Inference Request Flow
       }
       """
     And rbee-keeper proceeds to model provisioning
-
-  @error-handling
-  Scenario: EH-002a - rbee-hive HTTP connection timeout
-    Given queen-rbee started rbee-hive via SSH
-    But rbee-hive process crashed immediately
-    When queen-rbee queries worker registry at "http://workstation.home.arpa:9200/v1/workers/list"
-    Then the HTTP request times out after 10s
-    And queen-rbee retries 3 times with exponential backoff
-    And all retries fail
-    And rbee-keeper displays:
-      """
-      [queen-rbee] ❌ Error: Cannot connect to rbee-hive on workstation
-        Attempted 3 times, all failed with timeout
-        
-      Suggestion: Check rbee-hive logs on workstation:
-        ssh workstation journalctl -u rbee-hive -n 50
-      """
-    And the exit code is 1
-
-  @error-handling
-  Scenario: EH-002b - rbee-hive returns malformed JSON
-    Given rbee-hive is running but buggy
-    When queen-rbee queries worker registry
-    And rbee-hive returns invalid JSON: "{ workers: [ incomplete"
-    Then queen-rbee detects JSON parse error
-    And rbee-keeper displays:
-      """
-      [queen-rbee] ❌ Error: Invalid response from rbee-hive
-        Expected valid JSON, got parse error at position 12
-        
-      Suggestion: rbee-hive may be corrupted, try restarting:
-        ssh workstation pkill rbee-hive
-      """
-    And the exit code is 1
 
   Scenario: Pool preflight detects version mismatch
     Given rbee-keeper version is "0.1.0"
@@ -477,85 +349,16 @@ Feature: Cross-Node Inference Request Flow
     And rbee-hive inserts model into SQLite catalog
     And rbee-hive proceeds to worker preflight
 
-  @error-handling
-  Scenario: EH-007a - Model not found on Hugging Face
-    Given model "hf:NonExistent/FakeModel" does not exist
-    When rbee-hive attempts to download model
-    Then Hugging Face returns 404 Not Found
-    And rbee-hive detects 404 status code
-    And rbee-keeper displays:
-      """
-      [rbee-hive] ❌ Error: Model not found
-        Model: hf:NonExistent/FakeModel
-        
-      Suggestion: Check model reference on https://huggingface.co/
-      """
-    And the exit code is 1
-
-  @error-handling
-  Scenario: EH-007b - Model repository is private
-    Given model "hf:PrivateOrg/PrivateModel" requires authentication
-    When rbee-hive attempts to download without credentials
-    Then Hugging Face returns 403 Forbidden
-    And rbee-keeper displays:
-      """
-      [rbee-hive] ❌ Error: Access denied to model
-        Model: hf:PrivateOrg/PrivateModel
-        
-      This model requires authentication. Provide HF token:
-        export HF_TOKEN=your_token_here
-      """
-    And the exit code is 1
-
-  @error-handling
-  Scenario: EH-008a - Model download timeout
-    Given the model is not in the catalog
-    When rbee-hive attempts download
-    And network becomes very slow
-    And no progress for 60 seconds
-    Then rbee-hive detects stall timeout
-    And rbee-hive retries download with exponential backoff
-    And rbee-keeper displays:
-      """
-      [rbee-hive] ⏳ Download stalled, retrying (attempt 2/6)...
-      """
-    And if all 6 attempts fail, error "DOWNLOAD_TIMEOUT" is returned
-    And the exit code is 1
-
-  @error-handling
-  Scenario: EH-008b - Model download fails with retry
+  Scenario: Model download fails with retry
     Given the model is not in the catalog
     When rbee-hive attempts download
     And the download fails with "Connection reset by peer" at 40% progress
     Then rbee-hive retries download with delay 100ms
     And rbee-hive resumes from last checkpoint
-    And rbee-hive retries up to 6 times with exponential backoff
-    And rbee-keeper displays progress:
-      """
-      [rbee-hive] Downloading... [████████------------] 40% (2.0 MB / 5.0 MB)
-      [rbee-hive] ❌ Connection reset by peer
-      [rbee-hive] ⏳ Retrying download (attempt 2/6)... delay 100ms
-      [rbee-hive] Downloading... [████████████--------] 60% (3.0 MB / 5.0 MB)
-      """
+    And rbee-hive retries up to 6 times
     And if all retries fail, rbee-hive returns error "DOWNLOAD_FAILED"
+    And rbee-keeper displays the error to the user
     And the exit code is 1
-
-  @error-handling
-  Scenario: EH-008c - Downloaded model checksum mismatch
-    Given model download completes
-    When rbee-hive verifies checksum
-    And checksum does not match expected value
-    Then rbee-hive deletes corrupted file
-    And rbee-hive retries download
-    And rbee-keeper displays:
-      """
-      [rbee-hive] ✅ Download complete
-      [rbee-hive] 🔍 Verifying checksum...
-      [rbee-hive] ❌ Checksum mismatch: file corrupted
-      [rbee-hive] 🗑️  Deleting corrupted file
-      [rbee-hive] ⏳ Retrying download (attempt 2/6)...
-      """
-    And the exit code is 1 if all retries fail
 
   Scenario: Model catalog registration after download
     Given the model downloaded successfully to "/models/tinyllama-q4.gguf"
@@ -626,42 +429,15 @@ Feature: Cross-Node Inference Request Flow
     And the check passes because 8000 MB >= 6000 MB
     And rbee-hive proceeds to backend check
 
-  @error-handling
-  Scenario: EH-004a - Worker preflight RAM check fails
+  Scenario: Worker preflight RAM check fails
     Given the model size is 5000 MB
     And the node has 4000 MB of available RAM
     When rbee-hive performs RAM check
     Then rbee-hive calculates required RAM as 6000 MB
     And the check fails because 4000 MB < 6000 MB
-    And rbee-hive returns error "INSUFFICIENT_RAM"
-    And rbee-keeper displays:
-      """
-      [rbee-hive] ❌ Error: Insufficient RAM on workstation
-        Required: 6000 MB (model size * 1.2)
-        Available: 4000 MB
-        
-      Suggestions:
-        - Close other applications to free RAM
-        - Use a smaller quantized model (Q4 instead of Q8)
-        - Try CPU backend with smaller context size
-      """
-    And the exit code is 1
-
-  @error-handling
-  Scenario: EH-004b - RAM exhausted during model loading
-    Given model loading has started
-    And worker is loading model to RAM
-    When system RAM is exhausted by another process
-    Then worker detects OOM condition
-    And worker exits with error
-    And rbee-hive detects worker crash
-    And rbee-keeper displays:
-      """
-      [worker] ❌ Out of memory during model loading
-      [rbee-hive] ❌ Worker crashed: OOM killed
-      
-      Suggestion: Free up RAM and try again
-      """
+    And rbee-hive returns error "VRAM_EXHAUSTED"
+    And the error includes required and available amounts
+    And rbee-keeper suggests using a smaller quantized model
     And the exit code is 1
 
   Scenario: Worker preflight backend check passes
@@ -671,93 +447,13 @@ Feature: Cross-Node Inference Request Flow
     Then the check passes
     And rbee-hive proceeds to worker startup
 
-  @error-handling
-  Scenario: EH-005a - VRAM exhausted on CUDA device
-    Given CUDA device 1 has 2000 MB VRAM
-    And model requires 4000 MB VRAM
-    When rbee-hive performs VRAM check
-    Then the check fails
-    And rbee-keeper displays:
-      """
-      [rbee-hive] ❌ Error: Insufficient VRAM on CUDA device 1
-        Required: 4000 MB
-        Available: 2000 MB
-        
-      Suggestions:
-        - Use smaller quantized model (Q4_K_M instead of Q8_0)
-        - Try CPU backend: --backend cpu
-        - Free VRAM by closing other GPU applications
-      """
-    And the exit code is 1
-
-  @error-handling
-  Scenario: EH-009a - Backend not available
+  Scenario: Worker preflight backend check fails
     Given the requested backend is "metal"
     And node "workstation" does not have Metal available
     When rbee-hive performs backend check
     Then the check fails
     And rbee-hive returns error "BACKEND_UNAVAILABLE"
-    And rbee-keeper displays:
-      """
-      [rbee-hive] ❌ Error: Backend not available
-        Requested: metal
-        Available: ["cpu", "cuda"]
-        
-      Metal is only available on macOS.
-      Try: --backend cuda --device 0
-      """
-    And the exit code is 1
-
-  @error-handling
-  Scenario: EH-009b - CUDA not installed
-    Given the requested backend is "cuda"
-    And node "workstation" has no CUDA installed
-    When rbee-hive performs backend check
-    Then the check fails
-    And rbee-keeper displays:
-      """
-      [rbee-hive] ❌ Error: CUDA backend not available
-        CUDA drivers not found on workstation
-        
-      Available backends: ["cpu"]
-      
-      To install CUDA:
-        https://developer.nvidia.com/cuda-downloads
-      """
-    And the exit code is 1
-
-  @error-handling
-  Scenario: EH-006a - Insufficient disk space for model download
-    Given node "workstation" has 1000 MB free disk space
-    And model "TinyLlama" requires 5000 MB
-    When rbee-hive checks disk space before download
-    Then the check fails
-    And rbee-keeper displays:
-      """
-      [rbee-hive] ❌ Error: Insufficient disk space
-        Required: 5000 MB
-        Available: 1000 MB
-        Free up: 4000 MB
-        
-      Suggestion: Remove unused models:
-        rbee-keeper models rm <model_name>
-      """
-    And the exit code is 1
-
-  @error-handling
-  Scenario: EH-006b - Disk fills up during download
-    Given model download has started
-    When disk space is exhausted mid-download
-    Then download fails with "No space left on device"
-    And rbee-hive cleans up partial download
-    And rbee-keeper displays:
-      """
-      [rbee-hive] Downloading... [████████------------] 40% (2.0 MB / 5.0 MB)
-      [rbee-hive] ❌ Error: Disk full during download
-      [rbee-hive] 🗑️  Cleaning up partial download
-      
-      Free up disk space and try again.
-      """
+    And the error message includes the requested backend
     And the exit code is 1
 
   # ============================================================================
@@ -787,7 +483,7 @@ Feature: Cross-Node Inference Request Flow
     When the worker sends ready callback
     Then the request is:
       """
-      POST http://workstation.home.arpa:9200/v1/workers/ready
+      POST http://workstation.home.arpa:8080/v1/workers/ready
       {
         "worker_id": "worker-abc123",
         "url": "http://workstation.home.arpa:8081",
@@ -798,51 +494,6 @@ Feature: Cross-Node Inference Request Flow
       """
     And rbee-hive acknowledges the callback
     And rbee-hive updates the in-memory registry
-
-  @error-handling
-  Scenario: EH-012a - Worker binary not found
-    Given worker preflight checks passed
-    When rbee-hive attempts to spawn worker
-    And worker binary does not exist at expected path
-    Then spawn fails immediately
-    And rbee-keeper displays:
-      """
-      [rbee-hive] ❌ Error: Worker binary not found
-        Expected path: /home/vince/rbee/target/release/llm-worker-rbee
-        
-      Install worker binary:
-        rbee-keeper setup install --node workstation
-      """
-    And the exit code is 1
-
-  @error-handling
-  Scenario: EH-012b - Worker port already in use
-    Given port 8001 is already occupied by another process
-    When rbee-hive spawns worker on port 8001
-    Then worker fails to bind port
-    And rbee-hive detects bind failure
-    And rbee-hive tries next available port 8002
-    And rbee-keeper displays:
-      """
-      [rbee-hive] ⚠️  Port 8001 in use, trying 8002...
-      [worker] 🚀 HTTP server ready on port 8002
-      """
-    And worker successfully starts on port 8002
-
-  @error-handling
-  Scenario: EH-012c - Worker crashes during startup
-    Given rbee-hive spawns worker process
-    When worker crashes during initialization
-    And worker process exits with code 1
-    Then rbee-hive detects startup failure within 30s
-    And rbee-keeper displays:
-      """
-      [worker] ❌ Initialization failed: CUDA device 1 not found
-      [rbee-hive] ❌ Worker startup failed
-      
-      Check worker logs for details.
-      """
-    And the exit code is 1
 
   # ============================================================================
   # PHASE 6: Worker Registration
@@ -906,21 +557,13 @@ Feature: Cross-Node Inference Request Flow
       """
     And rbee-keeper proceeds to inference execution
 
-  @error-handling
-  Scenario: EH-016a - Worker loading timeout
+  Scenario: Worker loading timeout
     Given the worker is loading for 5 minutes
     And the worker is stuck at 28/32 layers
     When rbee-keeper timeout expires
     Then rbee-keeper aborts with error "LOADING_TIMEOUT"
-    And rbee-keeper displays:
-      """
-      [rbee-keeper] ❌ Error: Model loading timeout after 5 minutes
-        Worker state: loading (stuck at 28/32 layers)
-        Elapsed: 5m 0s
-        
-      Suggestion: Check worker logs on workstation:
-        ssh workstation tail -f ~/.rbee/logs/worker-abc123.log
-      """
+    And the error includes current loading state
+    And the error suggests checking worker logs
     And the exit code is 1
 
   # ============================================================================
@@ -958,8 +601,7 @@ Feature: Cross-Node Inference Request Flow
     And the worker transitions from "idle" to "busy" to "idle"
     And the exit code is 0
 
-  @error-handling
-  Scenario: EH-018a - Worker busy with all slots occupied
+  Scenario: Inference request when worker is busy
     Given the worker is in state "busy"
     When rbee-keeper sends inference request
     Then the worker responds with:
@@ -981,70 +623,7 @@ Feature: Cross-Node Inference Request Flow
     And retry 2 has delay 2 seconds
     And retry 3 has delay 4 seconds
     And if still busy after 3 retries, rbee-keeper aborts
-    And rbee-keeper displays:
-      """
-      [worker] ⏳ Worker busy, retrying in 1s...
-      [worker] ⏳ Worker busy, retrying in 2s...
-      [worker] ⏳ Worker busy, retrying in 4s...
-      [rbee-keeper] ❌ Error: Worker still busy after 3 retries
-      
-      Suggestions:
-        - Wait for current request to complete
-        - Use a different node
-        - Spawn additional worker for this model
-      """
-    And the exit code is 1
-
-  @error-handling
-  Scenario: EH-013a - Worker crashes during inference
-    Given inference is streaming tokens
-    When worker process crashes unexpectedly
-    Then rbee-keeper detects SSE stream closed
-    And rbee-keeper saves partial results
-    And rbee-keeper displays:
-      """
-      Once upon a time, in a small village, there lived a curious cat
-      
-      [rbee-keeper] ❌ Error: SSE stream closed unexpectedly
-        Worker may have crashed
-        
-      Partial result saved to: /tmp/rbee-partial-abc123.txt
-      Tokens generated: 12 / 20
-      """
-    And rbee-hive removes worker from registry
-    And the exit code is 1
-
-  @error-handling
-  Scenario: EH-013b - Worker hangs during inference
-    Given inference has started
-    When worker stops responding
-    And no tokens generated for 60 seconds
-    Then rbee-keeper detects stall timeout
-    And rbee-keeper cancels request
-    And rbee-keeper displays:
-      """
-      [rbee-keeper] ❌ Error: Worker timeout - no response for 60s
-        Request may be stuck
-        
-      Canceling request...
-      """
-    And the exit code is 1
-
-  @error-handling
-  Scenario: EH-003a - Worker HTTP connection lost mid-inference
-    Given inference is streaming tokens
-    When network connection drops
-    Then rbee-keeper detects connection loss within 5s
-    And rbee-keeper displays partial results
-    And rbee-keeper displays:
-      """
-      Once upon a time, in a small
-      
-      [rbee-keeper] ❌ Error: Worker connection lost
-        Network may be down
-        
-      Partial result: 8 tokens generated
-      """
+    And the error suggests waiting or using a different node
     And the exit code is 1
 
   # ============================================================================
@@ -1107,8 +686,7 @@ Feature: Cross-Node Inference Request Flow
     And rbee-hive logs crash event
     And the exit code is 1
 
-  @error-handling @cancellation
-  Scenario: Gap-G12a - Client cancellation with Ctrl+C
+  Scenario: EC5 - Client cancellation with Ctrl+C
     Given inference is in progress
     When the user presses Ctrl+C
     Then rbee-keeper sends:
@@ -1116,42 +694,10 @@ Feature: Cross-Node Inference Request Flow
       DELETE http://workstation.home.arpa:8081/v1/inference/<request_id>
       """
     And rbee-keeper waits for acknowledgment with timeout 5s
-    And worker stops token generation immediately
-    And worker releases slot and returns to idle
-    And rbee-keeper displays:
-      """
-      Once upon a time, in a small
-      
-      ^C
-      [rbee-keeper] 🛑 Canceling request...
-      [worker] ✅ Request canceled, slot released
-      """
+    And rbee-keeper displays "\nCanceled."
+    And the worker stops token generation
+    And the worker releases slot and returns to idle
     And the exit code is 130
-
-  @error-handling @cancellation
-  Scenario: Gap-G12b - Client disconnects during inference
-    Given inference is streaming tokens
-    When client closes connection unexpectedly
-    Then worker detects SSE stream closure within 1s
-    And worker stops token generation immediately
-    And worker releases slot
-    And worker logs cancellation event
-    And worker returns to idle state
-
-  @error-handling @cancellation
-  Scenario: Gap-G12c - Explicit cancellation endpoint
-    Given inference is in progress with request_id "req-123"
-    When rbee-keeper sends:
-      """
-      DELETE http://workstation.home.arpa:8081/v1/inference/req-123
-      """
-    Then worker responds with:
-      """
-      HTTP/1.1 204 No Content
-      """
-    And worker stops inference
-    And worker releases slot
-    And subsequent DELETE requests are idempotent (also return 204)
 
   Scenario: EC6 - Queue full with retry
     Given the worker has 1 slot total
@@ -1196,105 +742,7 @@ Feature: Cross-Node Inference Request Flow
       """
     And the exit code is 1
 
-  @error-handling @validation
-  Scenario: EH-015a - Invalid model reference format
-    When I run:
-      """
-      rbee-keeper infer \
-        --node workstation \
-        --model invalid-format \
-        --prompt "test"
-      """
-    Then rbee-keeper validates model reference format
-    And validation fails
-    And rbee-keeper displays:
-      """
-      [rbee-keeper] ❌ Error: Invalid model reference format
-        Got: invalid-format
-        
-      Expected formats:
-        - hf:org/repo (Hugging Face)
-        - file:///path/to/model.gguf (Local file)
-        
-      Example: hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF
-      """
-    And the exit code is 1
-
-  @error-handling @validation
-  Scenario: EH-015b - Invalid backend name
-    When I run:
-      """
-      rbee-keeper infer \
-        --node workstation \
-        --model hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
-        --backend quantum \
-        --prompt "test"
-      """
-    Then rbee-keeper validates backend name
-    And validation fails
-    And rbee-keeper displays:
-      """
-      [rbee-keeper] ❌ Error: Invalid backend
-        Got: quantum
-        
-      Valid backends: ["cpu", "cuda", "metal"]
-      
-      Example: --backend cuda --device 0
-      """
-    And the exit code is 1
-
-  @error-handling @validation
-  Scenario: EH-015c - Device number out of range
-    Given node "workstation" has 2 CUDA devices (0, 1)
-    When I run:
-      """
-      rbee-keeper infer \
-        --node workstation \
-        --model hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF \
-        --backend cuda \
-        --device 5 \
-        --prompt "test"
-      """
-    Then rbee-hive validates device number
-    And validation fails
-    And rbee-keeper displays:
-      """
-      [rbee-hive] ❌ Error: Device 5 not available
-        Requested: cuda device 5
-        Available: [0, 1]
-        
-      Try: --device 0 or --device 1
-      """
-    And the exit code is 1
-
-  @error-handling @authentication
-  Scenario: EH-017a - Missing API key
-    Given rbee-hive requires API key
-    When queen-rbee sends request without Authorization header
-    Then rbee-hive returns:
-      """
-      HTTP/1.1 401 Unauthorized
-      Content-Type: application/json
-
-      {
-        "error": {
-          "code": "MISSING_API_KEY",
-          "message": "Missing API key"
-        }
-      }
-      """
-    And rbee-keeper displays:
-      """
-      [rbee-keeper] ❌ Error: Authentication required
-        Missing API key for workstation.home.arpa
-        
-      Configure API key in:
-        ~/.rbee/config.yaml
-      """
-    And the exit code is 1
-
-  @error-handling @authentication
-  Scenario: EH-017b - Invalid API key
+  Scenario: EC9 - Invalid API key
     Given rbee-keeper uses API key "wrong_key"
     When rbee-keeper sends request with "Authorization: Bearer wrong_key"
     Then rbee-hive returns:
@@ -1311,7 +759,7 @@ Feature: Cross-Node Inference Request Flow
       """
     And rbee-keeper displays:
       """
-      [rbee-keeper] ❌ Error: Authentication failed
+      Error: Authentication failed
         Invalid API key for workstation.home.arpa
         
       Check your configuration:
@@ -1377,31 +825,6 @@ Feature: Cross-Node Inference Request Flow
     And rbee-hive clears in-memory registry
     And rbee-hive exits cleanly
     And model catalog (SQLite) persists on disk
-
-  @lifecycle @error-handling
-  Scenario: EH-014a - Worker ignores shutdown signal
-    Given rbee-hive is running with 1 worker
-    When rbee-hive sends shutdown command to worker
-    And worker does not respond within 30s
-    Then rbee-hive force-kills worker process
-    And rbee-hive logs force-kill event
-    And rbee-hive displays:
-      """
-      [rbee-hive] 🛑 Shutting down worker-abc123...
-      [rbee-hive] ⏳ Waiting for graceful shutdown (30s timeout)...
-      [rbee-hive] ⚠️  Worker did not respond, force-killing
-      [rbee-hive] ✅ Worker terminated
-      """
-
-  @lifecycle @error-handling
-  Scenario: EH-014b - Graceful shutdown with active request
-    Given worker is processing inference request
-    When rbee-hive sends shutdown command
-    Then worker sets state to "draining"
-    And worker rejects new inference requests with 503
-    And worker waits for active request to complete (max 30s)
-    And worker unloads model after request completes
-    And worker exits with code 0
 
   @lifecycle @critical
   Scenario: rbee-keeper exits after inference (CLI dies, daemons live)

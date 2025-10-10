@@ -1,6 +1,7 @@
 //! Mock Worker Binary for BDD Tests
 //!
 //! Created by: TEAM-059
+//! Modified by: TEAM-061 (added ready callback timeout to prevent hangs)
 //!
 //! This is a REAL binary that runs as a separate process to simulate a worker.
 //! It provides HTTP endpoints for inference and sends ready callbacks to queen-rbee.
@@ -77,7 +78,12 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn send_ready_callback(queen_url: &str, worker_id: &str, worker_url: &str) -> anyhow::Result<()> {
-    let client = reqwest::Client::new();
+    // TEAM-061: Create HTTP client with timeouts to prevent hangs
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(5))
+        .connect_timeout(Duration::from_secs(3))
+        .build()?;
+    
     let callback_url = format!("{}/v2/workers/ready", queen_url);
 
     let payload = serde_json::json!({
@@ -91,23 +97,36 @@ async fn send_ready_callback(queen_url: &str, worker_id: &str, worker_url: &str)
         "slots_available": 4,
     });
 
-    match client.post(&callback_url)
-        .json(&payload)
-        .send()
+    // TEAM-061: Wrap callback in timeout with retry logic
+    for attempt in 1..=3 {
+        match tokio::time::timeout(
+            Duration::from_secs(10),
+            client.post(&callback_url).json(&payload).send()
+        )
         .await
-    {
-        Ok(resp) => {
-            if resp.status().is_success() {
-                tracing::info!("✅ Ready callback sent to {}", callback_url);
-            } else {
-                tracing::warn!("⚠️  Ready callback returned status: {}", resp.status());
+        {
+            Ok(Ok(resp)) => {
+                if resp.status().is_success() {
+                    tracing::info!("✅ Ready callback sent to {} (attempt {})", callback_url, attempt);
+                    return Ok(());
+                } else {
+                    tracing::warn!("⚠️  Ready callback returned status: {} (attempt {})", resp.status(), attempt);
+                }
+            }
+            Ok(Err(e)) => {
+                tracing::warn!("⚠️  Ready callback failed: {} (attempt {})", e, attempt);
+            }
+            Err(_) => {
+                tracing::warn!("⚠️  Ready callback timeout after 10s (attempt {})", attempt);
             }
         }
-        Err(e) => {
-            tracing::warn!("⚠️  Failed to send ready callback: {}", e);
+        
+        if attempt < 3 {
+            sleep(Duration::from_millis(500 * attempt as u64)).await;
         }
     }
 
+    tracing::error!("❌ Ready callback failed after 3 attempts");
     Ok(())
 }
 

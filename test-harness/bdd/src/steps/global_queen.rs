@@ -1,5 +1,6 @@
 // Global queen-rbee instance shared across all BDD scenarios
 // Created by: TEAM-051
+// Modified by: TEAM-061 (added startup timeout to prevent hangs)
 //
 // This module manages a single queen-rbee process that is started once
 // before all tests and cleaned up at the end. This prevents port conflicts
@@ -85,9 +86,18 @@ pub async fn start_global_queen_rbee() {
                 .spawn()
                 .expect("Failed to start global queen-rbee");
 
-        // Wait for server to be ready
-        let client = reqwest::Client::new();
-        for i in 0..600 {
+        // TEAM-061: Wait for server to be ready with 30s timeout
+        let client = crate::steps::world::create_http_client();
+        let start = std::time::Instant::now();
+        let timeout = Duration::from_secs(30);
+        
+        for i in 0..300 {
+            // TEAM-061: Check timeout first
+            if start.elapsed() > timeout {
+                let _ = child.start_kill();
+                panic!("❌ Global queen-rbee failed to start within 30s - timeout exceeded");
+            }
+            
             // Check if process is still alive
             match child.try_wait() {
                 Ok(Some(status)) => {
@@ -103,13 +113,13 @@ pub async fn start_global_queen_rbee() {
             
             if let Ok(resp) = client.get("http://localhost:8080/health").send().await {
                 if resp.status().is_success() {
-                    tracing::info!("✅ Global queen-rbee is ready (took {}ms)", i * 100);
+                    tracing::info!("✅ Global queen-rbee is ready (took {:?})", start.elapsed());
                     break;
                 }
             }
             
             if i % 10 == 0 && i > 0 {
-                tracing::info!("⏳ Waiting for global queen-rbee... ({}s)", i / 10);
+                tracing::info!("⏳ Waiting for global queen-rbee... ({:?})", start.elapsed());
             }
             sleep(Duration::from_millis(100)).await;
         }

@@ -3,6 +3,7 @@
 // Modified by: TEAM-042 (implemented step definitions with mock behavior)
 // Modified by: TEAM-043 (replaced mocks with real process execution)
 // Modified by: TEAM-055 (added HTTP retry logic with exponential backoff)
+// Modified by: TEAM-061 (replaced all HTTP clients with timeout client)
 
 use crate::steps::world::World;
 use cucumber::{given, then};
@@ -116,7 +117,8 @@ pub async fn given_node_in_registry(world: &mut World, node: String) {
     }
     
     // TEAM-044: Actually register the node in queen-rbee via HTTP API
-    let client = reqwest::Client::new();
+    // TEAM-061: Use timeout client to prevent hangs
+    let client = crate::steps::world::create_http_client();
     let url = world
         .queen_rbee_url
         .as_ref()

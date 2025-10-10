@@ -36,6 +36,22 @@ rbee-keeper infer --node workstation --model hf:TheBloke/TinyLlama-1.1B-Chat-v1.
 
 **CRITICAL:** Before any inference can happen, the user must configure remote rbee-hive nodes through **rbee-keeper** (configuration mode).
 
+### Error Handling: Configuration Errors
+
+**EH-011a: Invalid SSH Key Path**
+- **Trigger:** User provides non-existent SSH key path
+- **Detection:** rbee-keeper validates file existence before sending to queen-rbee
+- **Response:** Immediate error with clear message
+- **Exit Code:** 1
+- **Message:** "SSH key not found: /path/to/key"
+
+**EH-011b: Duplicate Node Name**
+- **Trigger:** User tries to add node with existing name
+- **Detection:** queen-rbee checks registry for duplicate
+- **Response:** Error with suggestion to update or remove
+- **Exit Code:** 1
+- **Message:** "Node 'name' already exists in registry"
+
 ### rbee-hive Registry Module (queen-rbee)
 
 **queen-rbee** maintains a **rbee-hive Registry** (SQLite at `~/.rbee/beehives.db`):
@@ -114,6 +130,32 @@ narrate("SSH connection successful! Saving to registry")
   → stdout → rbee-keeper shell
   → USER SEES: [queen-rbee] ✅ SSH connection successful! Node 'workstation' saved to registry
 ```
+
+### Error Handling: SSH Connection Failures
+
+**EH-001a: SSH Connection Timeout**
+- **Trigger:** Remote host unreachable or network down
+- **Detection:** SSH connection timeout after 10s
+- **Retry:** 3 attempts with exponential backoff (0ms, 200ms, 400ms)
+- **Response:** Error after all retries fail
+- **Exit Code:** 1
+- **Message:** "SSH connection failed after 3 attempts"
+
+**EH-001b: SSH Authentication Failure**
+- **Trigger:** Wrong SSH key or permissions
+- **Detection:** SSH returns "Permission denied (publickey)"
+- **Response:** Immediate error with suggestion
+- **Exit Code:** 1
+- **Message:** "SSH authentication failed: Permission denied"
+- **Suggestion:** "Check SSH key permissions: chmod 600 ~/.ssh/id_ed25519"
+
+**EH-001c: SSH Command Execution Failure**
+- **Trigger:** rbee-hive binary not found on remote node
+- **Detection:** SSH command returns "command not found"
+- **Response:** Error with installation suggestion
+- **Exit Code:** 1
+- **Message:** "Failed to start rbee-hive: command not found"
+- **Suggestion:** "Install rbee-hive: rbee-keeper setup install --node workstation"
 
 ### Backend Detection (TEAM-052)
 
@@ -225,6 +267,25 @@ POST http://localhost:8080/v2/tasks
 
 ### Phase 2: queen-rbee → rbee-hive (SSH)
 
+**Error Handling: HTTP Connection Failures**
+
+**EH-002a: rbee-hive HTTP Connection Timeout**
+- **Trigger:** rbee-hive process crashed or not responding
+- **Detection:** HTTP request timeout after 10s
+- **Retry:** 3 attempts with exponential backoff
+- **Response:** Error after all retries fail
+- **Exit Code:** 1
+- **Message:** "Cannot connect to rbee-hive on workstation"
+- **Suggestion:** "Check rbee-hive logs: ssh workstation journalctl -u rbee-hive -n 50"
+
+**EH-002b: rbee-hive Returns Malformed JSON**
+- **Trigger:** rbee-hive buggy or corrupted
+- **Detection:** JSON parse error
+- **Response:** Immediate error with suggestion
+- **Exit Code:** 1
+- **Message:** "Invalid response from rbee-hive"
+- **Suggestion:** "rbee-hive may be corrupted, try restarting: ssh workstation pkill rbee-hive"
+
 **queen-rbee** looks up SSH details from rbee-hive registry and starts **rbee-hive** on workstation via SSH:
 ```bash
 # Using registry data: ssh_user@ssh_host with ssh_key_path
@@ -299,6 +360,48 @@ WHERE reference = 'TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF' AND provider = 'hf';
 
 ### Phase 6: rbee-hive downloads model
 
+**Error Handling: Model Download Errors**
+
+**EH-007a: Model Not Found on Hugging Face**
+- **Trigger:** Model doesn't exist (404)
+- **Detection:** HTTP 404 from Hugging Face
+- **Response:** Immediate error
+- **Exit Code:** 1
+- **Message:** "Model not found: hf:NonExistent/FakeModel"
+- **Suggestion:** "Check model reference on https://huggingface.co/"
+
+**EH-007b: Model Repository is Private**
+- **Trigger:** Model requires authentication (403)
+- **Detection:** HTTP 403 from Hugging Face
+- **Response:** Error with auth suggestion
+- **Exit Code:** 1
+- **Message:** "Access denied to model"
+- **Suggestion:** "Provide HF token: export HF_TOKEN=your_token_here"
+
+**EH-008a: Model Download Timeout**
+- **Trigger:** Network very slow, no progress for 60s
+- **Detection:** Stall detection (no bytes received in 60s)
+- **Retry:** Up to 6 attempts with exponential backoff
+- **Response:** Error after all retries fail
+- **Exit Code:** 1
+- **Message:** "Download timeout after 6 attempts"
+
+**EH-008b: Model Download Connection Reset**
+- **Trigger:** Network interruption during download
+- **Detection:** "Connection reset by peer" error
+- **Retry:** Up to 6 attempts with exponential backoff, resume from checkpoint
+- **Response:** Error after all retries fail
+- **Exit Code:** 1
+- **Message:** "Download failed after 6 attempts"
+
+**EH-008c: Downloaded Model Checksum Mismatch**
+- **Trigger:** File corrupted during download
+- **Detection:** SHA256 checksum verification fails
+- **Retry:** Delete corrupted file, retry download
+- **Response:** Error after all retries fail
+- **Exit Code:** 1
+- **Message:** "Checksum mismatch: file corrupted"
+
 **rbee-hive** downloads model from Hugging Face:
 
 **rbee-hive narration:**
@@ -342,6 +445,64 @@ VALUES ('tinyllama-q4', 'hf', 'TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF',
 
 ### Phase 8: rbee-hive worker preflight
 
+**Error Handling: Resource Errors**
+
+**EH-004a: Insufficient RAM**
+- **Trigger:** Available RAM < required RAM (model_size * 1.2)
+- **Detection:** RAM check before worker spawn
+- **Response:** Immediate error with suggestions
+- **Exit Code:** 1
+- **Message:** "Insufficient RAM: need 6000 MB, have 4000 MB"
+- **Suggestions:** "Close other applications, use smaller model (Q4 instead of Q8), try CPU backend"
+
+**EH-004b: RAM Exhausted During Model Loading**
+- **Trigger:** System OOM during model loading
+- **Detection:** Worker process killed by OOM killer
+- **Response:** Error with suggestion
+- **Exit Code:** 1
+- **Message:** "Out of memory during model loading"
+- **Suggestion:** "Free up RAM and try again"
+
+**EH-005a: VRAM Exhausted**
+- **Trigger:** CUDA device VRAM < required VRAM
+- **Detection:** VRAM check before model loading
+- **Response:** Error with suggestions
+- **Exit Code:** 1
+- **Message:** "Insufficient VRAM: need 4000 MB, have 2000 MB"
+- **Suggestions:** "Use smaller quantized model (Q4_K_M instead of Q8_0), try CPU backend, free VRAM"
+
+**EH-006a: Insufficient Disk Space**
+- **Trigger:** Free disk space < model size
+- **Detection:** Disk space check before download
+- **Response:** Immediate error
+- **Exit Code:** 1
+- **Message:** "Insufficient disk space: need 5000 MB, have 1000 MB"
+- **Suggestion:** "Remove unused models: rbee-keeper models rm <model_name>"
+
+**EH-006b: Disk Fills Up During Download**
+- **Trigger:** Disk full mid-download
+- **Detection:** Write error "No space left on device"
+- **Response:** Cleanup partial download, error
+- **Exit Code:** 1
+- **Message:** "Disk full during download"
+- **Suggestion:** "Free up disk space and try again"
+
+**EH-009a: Backend Not Available**
+- **Trigger:** Requested backend not installed
+- **Detection:** Backend check fails
+- **Response:** Error with available backends
+- **Exit Code:** 1
+- **Message:** "Backend not available: metal"
+- **Suggestion:** "Available: [cpu, cuda]. Try: --backend cuda --device 0"
+
+**EH-009b: CUDA Not Installed**
+- **Trigger:** CUDA backend requested but not installed
+- **Detection:** CUDA driver check fails
+- **Response:** Error with installation link
+- **Exit Code:** 1
+- **Message:** "CUDA backend not available"
+- **Suggestion:** "Install CUDA: https://developer.nvidia.com/cuda-downloads"
+
 **rbee-hive** checks RAM:
 ```rust
 let available_ram_mb = get_available_ram();  // 8000 MB
@@ -366,6 +527,31 @@ if !cuda_available() {
 ---
 
 ### Phase 9: rbee-hive spawns worker
+
+**Error Handling: Worker Startup Errors**
+
+**EH-012a: Worker Binary Not Found**
+- **Trigger:** Worker binary doesn't exist at expected path
+- **Detection:** Spawn fails immediately
+- **Response:** Error with installation suggestion
+- **Exit Code:** 1
+- **Message:** "Worker binary not found: /path/to/llm-worker-rbee"
+- **Suggestion:** "Install worker: rbee-keeper setup install --node workstation"
+
+**EH-012b: Worker Port Already in Use**
+- **Trigger:** Port occupied by another process
+- **Detection:** Worker fails to bind port
+- **Response:** Try next available port automatically
+- **Exit Code:** 0 (success on alternate port)
+- **Message:** "Port 8001 in use, trying 8002..."
+
+**EH-012c: Worker Crashes During Startup**
+- **Trigger:** Worker initialization fails (e.g., CUDA device not found)
+- **Detection:** Worker process exits within 30s of spawn
+- **Response:** Error with log suggestion
+- **Exit Code:** 1
+- **Message:** "Worker startup failed"
+- **Suggestion:** "Check worker logs for details"
 
 **rbee-hive** spawns **llm-worker-rbee**:
 ```bash
@@ -495,6 +681,64 @@ registry.register(WorkerInfo {
 
 ### Phase 13: rbee-keeper → worker: Execute inference
 
+**Error Handling: Inference Errors**
+
+**EH-013a: Worker Crashes During Inference**
+- **Trigger:** Worker process crashes unexpectedly
+- **Detection:** SSE stream closes unexpectedly
+- **Response:** Save partial results, error
+- **Exit Code:** 1
+- **Message:** "SSE stream closed unexpectedly - worker may have crashed"
+- **Action:** rbee-hive removes worker from registry
+
+**EH-013b: Worker Hangs During Inference**
+- **Trigger:** Worker stops responding, no tokens for 60s
+- **Detection:** Stall timeout (no tokens in 60s)
+- **Response:** Cancel request, error
+- **Exit Code:** 1
+- **Message:** "Worker timeout - no response for 60s"
+
+**EH-003a: Worker HTTP Connection Lost**
+- **Trigger:** Network connection drops mid-inference
+- **Detection:** Connection loss within 5s
+- **Response:** Display partial results, error
+- **Exit Code:** 1
+- **Message:** "Worker connection lost - network may be down"
+
+**EH-018a: Worker Busy (All Slots Occupied)**
+- **Trigger:** Worker already processing request
+- **Detection:** Worker returns 503 Service Unavailable
+- **Retry:** 3 attempts with exponential backoff (1s, 2s, 4s)
+- **Response:** Error after all retries fail
+- **Exit Code:** 1
+- **Message:** "Worker still busy after 3 retries"
+- **Suggestions:** "Wait for current request, use different node, spawn additional worker"
+
+**EH-016a: Worker Loading Timeout**
+- **Trigger:** Model loading takes > 5 minutes
+- **Detection:** Timeout expires during loading
+- **Response:** Error with log suggestion
+- **Exit Code:** 1
+- **Message:** "Model loading timeout after 5 minutes (stuck at 28/32 layers)"
+- **Suggestion:** "Check worker logs: ssh workstation tail -f ~/.rbee/logs/worker-abc123.log"
+
+**Gap-G12: Request Cancellation**
+- **Trigger:** User presses Ctrl+C or client disconnects
+- **Detection:** SIGINT signal or SSE stream closure
+- **Response:** Send DELETE /v1/inference/<request_id> to worker
+- **Worker Action:** Stop token generation immediately, release slot, return to idle
+- **Exit Code:** 130 (SIGINT)
+- **Message:** "Request canceled, slot released"
+
+**EH-015: Request Validation Errors**
+- **Invalid model reference:** "Invalid model reference format: expected hf:org/repo or file:///path"
+- **Invalid backend:** "Invalid backend: quantum. Valid: [cpu, cuda, metal]"
+- **Device out of range:** "Device 5 not available. Available: [0, 1]"
+
+**EH-017: Authentication Errors**
+- **Missing API key:** "Missing API key for workstation.home.arpa"
+- **Invalid API key:** "Invalid API key for workstation.home.arpa"
+
 **rbee-keeper** sends inference request to **worker** (DIRECT, bypassing rbee-hive):
 ```
 POST http://workstation.home.arpa:8001/execute
@@ -565,6 +809,21 @@ worker narrate("Inference complete! 20 tokens in 150ms (133 tok/s)")
 ---
 
 ### Phase 14: Cascading Shutdown
+
+**Error Handling: Shutdown Errors**
+
+**EH-014a: Worker Ignores Shutdown Signal**
+- **Trigger:** Worker doesn't respond to shutdown within 30s
+- **Detection:** Shutdown timeout expires
+- **Response:** Force-kill worker process
+- **Action:** rbee-hive logs force-kill event
+- **Message:** "Worker did not respond, force-killing"
+
+**EH-014b: Graceful Shutdown with Active Request**
+- **Trigger:** Shutdown command while request in progress
+- **Response:** Worker sets state to "draining"
+- **Action:** Reject new requests (503), wait for active request (max 30s), then exit
+- **Exit Code:** 0
 
 **Worker** transitions to idle state.
 
@@ -680,9 +939,117 @@ worker narrate() → stdout → rbee-hive captures → SSE → queen-rbee → st
 
 ---
 
+## Error Handling Summary
+
+### Error Categories
+
+**1. Network & Connectivity (EH-001, EH-002, EH-003)**
+- SSH connection failures (timeout, auth, command execution)
+- HTTP connection failures (timeout, malformed response)
+- Connection loss during inference
+
+**2. Resource Errors (EH-004, EH-005, EH-006)**
+- Insufficient RAM, VRAM, disk space
+- OOM during model loading
+- Disk full during download
+
+**3. Model & Backend (EH-007, EH-008, EH-009)**
+- Model not found (404), private (403)
+- Download failures (timeout, connection reset, checksum mismatch)
+- Backend not available, CUDA not installed
+
+**4. Configuration (EH-010, EH-011)**
+- Node not in registry
+- Invalid SSH key path, duplicate node name
+
+**5. Process Lifecycle (EH-012, EH-013, EH-014)**
+- Worker binary not found, port in use, startup crash
+- Worker crash/hang during inference
+- Shutdown timeout, force-kill
+
+**6. Request Validation (EH-015)**
+- Invalid model reference, backend, device number
+
+**7. Timeouts (EH-016)**
+- Request timeout, model loading timeout, inference timeout
+
+**8. Authentication (EH-017)**
+- Missing API key, invalid API key
+
+**9. Concurrency (EH-018)**
+- Worker busy, all slots occupied
+
+### Error Response Format
+
+All errors follow standardized format:
+```json
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human-readable message",
+    "details": {
+      "key": "value"
+    }
+  }
+}
+```
+
+### HTTP Status Codes
+
+- **400** Bad Request - Invalid input (EH-015)
+- **401** Unauthorized - Authentication failure (EH-017)
+- **404** Not Found - Model/resource not found (EH-007a, EH-010)
+- **403** Forbidden - Access denied (EH-007b)
+- **408** Request Timeout - Request exceeded timeout (EH-016)
+- **499** Client Closed Request - Cancellation (Gap-G12)
+- **503** Service Unavailable - Worker busy, queue full (EH-018)
+- **507** Insufficient Storage - VRAM/disk exhausted (EH-005, EH-006)
+- **500** Internal Server Error - Unexpected errors
+
+### Retry Strategy
+
+**Exponential Backoff with Jitter:**
+- SSH connections: 3 attempts (0ms, 200ms, 400ms)
+- HTTP connections: 3 attempts (100ms, 200ms, 400ms)
+- Model downloads: 6 attempts (100ms, 200ms, 400ms, 800ms, 1600ms, 3200ms)
+- Worker busy: 3 attempts (1s, 2s, 4s)
+
+**Jitter:** Random factor 0.5-1.5x to avoid thundering herd
+
+### Timeout Values
+
+- **SSH connection:** 10s per attempt
+- **HTTP request:** 10s total, 5s connect
+- **Model download stall:** 60s no progress
+- **Worker startup:** 30s
+- **Model loading:** 5 minutes
+- **Inference stall:** 60s no tokens
+- **Graceful shutdown:** 30s before force-kill
+- **Global test suite:** 5 minutes
+
+### Cancellation (Gap-G12)
+
+**Explicit Cancellation:**
+```
+DELETE /v1/inference/<request_id>
+Response: 204 No Content (idempotent)
+```
+
+**Client Disconnect:**
+- Worker detects SSE stream closure within 1s
+- Stops token generation immediately
+- Releases slot, returns to idle
+- Logs cancellation event
+
+**Ctrl+C:**
+- rbee-keeper sends DELETE to worker
+- Waits for acknowledgment (5s timeout)
+- Exits with code 130 (SIGINT)
+
 ## Revision History
 
 **TEAM-038** (2025-10-10): Corrected orchestration flow, narration architecture, and cascading shutdown  
-**TEAM-041** (2025-10-10): Added rbee-hive Registry module, SSH setup flow, and rbee-keeper configuration mode
+**TEAM-041** (2025-10-10): Added rbee-hive Registry module, SSH setup flow, and rbee-keeper configuration mode  
+**TEAM-061** (2025-10-10): Added comprehensive error handling scenarios and timeout specifications
 
-**Status:** ✅ CORRECTED + ENHANCED
+**Status:** ✅ CORRECTED + ENHANCED + ERROR HANDLING

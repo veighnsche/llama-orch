@@ -1,6 +1,7 @@
 // Happy path scenario step definitions
 // Created by: TEAM-040
 // Modified by: TEAM-042 (implemented step definitions with mock behavior)
+// Modified by: TEAM-061 (replaced all HTTP clients with timeout client)
 
 use crate::steps::world::World;
 use cucumber::{given, then};
@@ -178,7 +179,8 @@ pub async fn then_cuda_check_passes(world: &mut World) {
 #[then(expr = "rbee-hive spawns worker process {string} on port {int}")]
 pub async fn then_spawn_worker(world: &mut World, binary: String, port: u16) {
     // TEAM-059: Call mock rbee-hive to spawn REAL worker process
-    let client = reqwest::Client::new();
+    // TEAM-061: Use timeout client to prevent hangs
+    let client = crate::steps::world::create_http_client();
     let spawn_url = "http://127.0.0.1:9200/v1/workers/spawn";
     
     let payload = serde_json::json!({
@@ -208,7 +210,8 @@ pub async fn then_spawn_worker(world: &mut World, binary: String, port: u16) {
 #[then(expr = "rbee-hive spawns worker process {string} on port {int} with cuda device {int}")]
 pub async fn then_spawn_worker_cuda(world: &mut World, binary: String, port: u16, device: u8) {
     // TEAM-059: Call mock rbee-hive to spawn REAL worker process with CUDA
-    let client = reqwest::Client::new();
+    // TEAM-061: Use timeout client to prevent hangs
+    let client = crate::steps::world::create_http_client();
     let spawn_url = "http://127.0.0.1:9200/v1/workers/spawn";
     
     let payload = serde_json::json!({

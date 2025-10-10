@@ -1,5 +1,6 @@
 // Lifecycle step definitions
 // Created by: TEAM-040
+// Modified by: TEAM-061 (replaced all HTTP clients with timeout client)
 
 use crate::steps::world::World;
 use cucumber::{given, then, when};
@@ -220,7 +221,8 @@ pub async fn then_hive_starts_daemon(world: &mut World) {
 // TEAM-059: Actually spawn worker via mock rbee-hive
 #[then(expr = "rbee-hive spawns worker")]
 pub async fn then_hive_spawns_worker(world: &mut World) {
-    let client = reqwest::Client::new();
+    // TEAM-061: Use timeout client to prevent hangs
+    let client = crate::steps::world::create_http_client();
     let spawn_url = "http://127.0.0.1:9200/v1/workers/spawn";
     
     let payload = serde_json::json!({

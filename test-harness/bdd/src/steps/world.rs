@@ -1,8 +1,10 @@
 // World state for BDD tests
 // Created by: TEAM-040
+// Modified by: TEAM-061 (added HTTP client factory with timeouts)
 
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::time::Duration;
 
 #[derive(Debug, Default, cucumber::World)]
 pub struct World {
@@ -248,6 +250,7 @@ impl Drop for World {
     fn drop(&mut self) {
         // TEAM-051: DON'T kill queen-rbee - it's a shared global instance
         // Only kill scenario-specific processes (rbee-hive, workers)
+        // TEAM-061: Enhanced cleanup with timeout to prevent hangs
         
         if let Some(_proc) = self.queen_rbee_process.take() {
             // Just drop the reference - the global instance will be cleaned up at the end
@@ -262,6 +265,28 @@ impl Drop for World {
             let _ = proc.start_kill();
         }
 
+        // TEAM-061: Give processes time to die, but don't hang forever
+        std::thread::sleep(Duration::from_millis(500));
+
         tracing::debug!("World dropped, cleaning up scenario-specific resources");
     }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// HTTP Client Factory (TEAM-061)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/// TEAM-061: Create HTTP client with aggressive timeouts to prevent hangs
+/// 
+/// All HTTP requests in BDD tests MUST use this client factory.
+/// - Total request timeout: 10 seconds
+/// - Connection timeout: 5 seconds
+/// 
+/// This prevents tests from hanging indefinitely when servers don't respond.
+pub fn create_http_client() -> reqwest::Client {
+    reqwest::Client::builder()
+        .timeout(Duration::from_secs(10))        // Total request timeout
+        .connect_timeout(Duration::from_secs(5)) // Connection timeout
+        .build()
+        .expect("Failed to create HTTP client with timeouts")
 }

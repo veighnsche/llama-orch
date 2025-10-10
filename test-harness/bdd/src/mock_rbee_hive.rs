@@ -3,6 +3,7 @@
 //! Created by: TEAM-054
 //! Modified by: TEAM-055 (added mock worker endpoint)
 //! Modified by: TEAM-059 (real process spawning, not simulated)
+//! Modified by: TEAM-061 (added startup timeout to prevent hangs)
 //!
 //! This module provides a mock rbee-hive server that runs on port 9200
 //! (per the normative spec, NOT 8080 or 8090!) for testing purposes.
@@ -35,7 +36,19 @@ struct WorkerProcess {
 
 /// Start the mock rbee-hive server on port 9200
 /// TEAM-059: Now with real process management
+/// TEAM-061: Added timeout wrapper to prevent hangs
 pub async fn start_mock_rbee_hive() -> Result<()> {
+    // TEAM-061: Wrap startup in timeout to prevent hangs
+    tokio::time::timeout(
+        std::time::Duration::from_secs(10),
+        start_mock_rbee_hive_inner()
+    )
+    .await
+    .map_err(|_| anyhow::anyhow!("Mock rbee-hive startup timeout after 10s"))?
+}
+
+/// Inner startup function (wrapped by timeout)
+async fn start_mock_rbee_hive_inner() -> Result<()> {
     let state = RbeeHiveState {
         workers: Arc::new(Mutex::new(Vec::new())),
     };
