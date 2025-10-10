@@ -27,18 +27,26 @@
 ### How It Works
 
 ```bash
-# 1. Start rbee on your homelab
+# 1. Configuration (optional - has smart defaults)
+export ORCHESTRATORD_BIND_ADDR=0.0.0.0:8080  # Bind address (default: 127.0.0.1:8080)
+export LLORCH_API_TOKEN=$(openssl rand -hex 32)  # Generate secure token (for production)
+
+# 2. Start rbee infrastructure on your homelab
 rbee-keeper daemon start
 rbee-keeper hive start --pool default
 rbee-keeper worker start --gpu 0 --backend cuda
 
-# 2. Configure Zed IDE to use rbee instead of OpenAI
+# 3. Configure Zed IDE to use rbee instead of OpenAI
 export OPENAI_API_BASE=http://localhost:8080/v1
-export OPENAI_API_KEY=your-rbee-token
+export OPENAI_API_KEY=your-rbee-token  # Use your LLORCH_API_TOKEN
 
-# 3. Now Zed's AI agents run on YOUR GPUs!
+# 4. Now Zed's AI agents run on YOUR GPUs!
 # Zero API costs. Full control. Use ALL your computers' GPU power.
 ```
+
+**Quick Setup Variables:**
+- **ORCHESTRATORD_BIND_ADDR** - Default: `127.0.0.1:8080` (local), `0.0.0.0:8080` (network access)
+- **LLORCH_API_TOKEN** - Bearer token for authentication (generate with `openssl rand -hex 32`)
 
 ### Benefits
 

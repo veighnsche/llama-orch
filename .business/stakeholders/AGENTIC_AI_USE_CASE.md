@@ -93,6 +93,22 @@ export OPENAI_API_KEY=your-rbee-token
 - ✅ Full privacy (code never leaves your network)
 - ✅ Use ALL your GPUs (across multiple computers)
 - ✅ No rate limits
+- ✅ **Cascading shutdown guarantee** - Ctrl+C cleanly shuts down all components (no orphaned processes)
+
+**Reliability Guarantee:**
+```
+Developer presses Ctrl+C
+  ↓
+rbee-keeper (receives SIGTERM)
+  ↓ sends SIGTERM to queen-rbee
+queen-rbee (receives SIGTERM)
+  ↓ SSH: kill rbee-hive on ALL nodes
+rbee-hive (receives shutdown signal)
+  ↓ HTTP POST /v1/admin/shutdown to ALL workers
+llm-worker-rbee (unloads model, exits cleanly)
+  ↓
+System is completely clean, no orphaned processes
+```
 
 ---
 

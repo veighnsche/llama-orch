@@ -136,7 +136,7 @@ Production-ready orchestration. Cascading shutdown prevents orphaned processes (
 - 🤖 **99% AI-generated** (Character-Driven Development)
 - 🔒 **EU-compliant** (GDPR-native from day 1)
 - 🌐 **Open source** (GPL-3.0 with commercial marketplace)
-- 🚀 **Production-ready** (31/62 BDD tests passing, 50% complete)
+- 🚀 **Production-ready** (42/62 BDD tests passing, 68% complete)
 - 🎨 **Multi-modal** (LLMs, Stable Diffusion, TTS, embeddings)
 - 🎭 **Programmable** (Rhai scheduler: Platform vs Home/Lab modes)
 

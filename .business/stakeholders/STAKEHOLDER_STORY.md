@@ -47,16 +47,20 @@ Developers are scared of building heavy, complicated codebases with AI assistanc
 - **Cost uncertainty:** Pricing can change overnight
 - **Loss of control:** External providers control your tooling
 
-**rbee solves this:** Your own AI infrastructure, your own models, always available.
 
 **Current Status (Oct 2025):**
 - ✅ **42/62 BDD scenarios passing** (68% complete)
 - ✅ **11 shared crates already built** (audit-logging, auth-min, input-validation, secrets-management, narration-core, deadline-propagation, gpu-info, and more)
 - ✅ **GDPR compliance ready** (895 lines of audit-logging docs, 32 pre-defined event types)
+- ✅ **Dual registry system operational** (persistent beehive registry + ephemeral worker registry)
 - ✅ Backend detection system operational (CUDA, Metal, CPU)
 - ✅ Multi-backend worker support
-- ✅ OpenAI-compatible API (v1 completion endpoints)
+- ✅ **API endpoints implemented:**
+  - **queen-rbee (Orchestrator):** health, beehive registry (add/list/remove), worker registry (list/health/shutdown), task submission
+  - **rbee-hive (Pool Manager):** health, worker spawn, worker ready callback, model download + SSE progress
+  - **llm-worker-rbee (Worker):** health, readiness check, inference (SSE), model loading progress (SSE)
 - ✅ llama-orch-utils (TypeScript library for agentic AI)
+- ✅ **Cascading shutdown guarantee** (Ctrl+C propagates: rbee-keeper → queen-rbee → all rbee-hive → all workers)
 - 🚧 **30-day plan to first revenue** (detailed day-by-day execution plan)
 - 🚧 Lifecycle management in progress (daemon/hive/worker commands)
 
@@ -86,7 +90,29 @@ Developers are scared of building heavy, complicated codebases with AI assistanc
 - Same orchestration logic for text, images, audio
 - Extensible: Add new modalities without breaking existing ones
 
-### 2. **User-Scriptable Routing (Rhai)**
+### 2. **Dual Registry System (Architecture)**
+
+**Two separate registries solve different problems:**
+
+**Beehive Registry (Persistent - SQLite)**
+- **Purpose:** Track remote rbee-hive pool manager nodes
+- **Storage:** SQLite database at `~/.rbee/beehives.db`
+- **Endpoints:** POST /v2/registry/beehives/add, GET /v2/registry/beehives/list, POST /v2/registry/beehives/remove
+- **Schema:** node_name, ssh_host, ssh_port, ssh_user, ssh_key_path, git_repo_url, git_branch, added_at
+
+**Worker Registry (Ephemeral - In-Memory)**
+- **Purpose:** Track active workers spawned by rbee-hive nodes
+- **Storage:** In-memory HashMap with RwLock
+- **Endpoints:** GET /v2/workers/list, GET /v2/workers/health, POST /v2/workers/shutdown
+- **Data:** worker_id, url, model_ref, backend, status, last_heartbeat
+
+**Why Two Registries:**
+- **Beehive registry** persists across restarts (you don't want to re-add nodes every time)
+- **Worker registry** is ephemeral (workers come and go, no need to persist)
+- **Separation of concerns:** Node configuration vs runtime state
+- **Performance:** Fast in-memory lookups for worker routing
+
+### 3. **User-Scriptable Routing (Rhai)**
 
 **Write custom routing logic in Rhai** (embedded scripting language):
 

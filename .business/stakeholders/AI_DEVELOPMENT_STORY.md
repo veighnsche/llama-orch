@@ -1134,9 +1134,17 @@ When you see these signatures, you know:
 **The Fear:** Complex codebases become unmaintainable if provider changes/shuts down  
 **The Solution:** Build your own AI infrastructure using home network hardware  
 **Key Advantage:** 11 shared crates already built (saves 5 days)  
+**Implementation Status:** 42/62 BDD scenarios passing (~68% complete)  
+**Architecture:** Dual registry system (persistent beehive registry + ephemeral worker registry)  
+**Security:** Cascading shutdown guarantee (no orphaned processes)  
 **30-Day Plan:** Detailed execution plan to first customer (€200 MRR)  
 **Year 1 Goal:** 35 customers, €10K MRR, €70K revenue  
 **Pronunciation:** rbee (pronounced "are-bee")
+
+**API Endpoints Implemented:**
+- **queen-rbee (Orchestrator):** health, beehive registry (add/list/remove), worker registry (list/health/shutdown), task submission
+- **rbee-hive (Pool Manager):** health, worker spawn, worker ready callback, model download + SSE progress
+- **llm-worker-rbee (Worker):** health, readiness check, inference (SSE), model loading progress (SSE)
 
 ---
 
