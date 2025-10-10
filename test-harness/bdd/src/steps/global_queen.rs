@@ -13,6 +13,7 @@
 // This module manages a single queen-rbee process that is started once
 // before all tests and cleaned up at the end. This prevents port conflicts
 // and improves test performance.
+use std::sync::OnceLock;
 use std::time::Duration;
 use tokio::process::Child;
 use tokio::time::sleep;

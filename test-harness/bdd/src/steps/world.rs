@@ -16,6 +16,25 @@ use std::path::PathBuf;
 use std::time::Duration;
 use rbee_hive::registry::WorkerRegistry;
 
+// TEAM-064: Wrapper for WorkerRegistry to implement Debug
+pub struct DebugWorkerRegistry(WorkerRegistry);
+
+impl std::fmt::Debug for DebugWorkerRegistry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("WorkerRegistry").finish_non_exhaustive()
+    }
+}
+
+impl DebugWorkerRegistry {
+    pub fn new() -> Self {
+        Self(WorkerRegistry::new())
+    }
+    
+    pub fn inner_mut(&mut self) -> &mut WorkerRegistry {
+        &mut self.0
+    }
+}
+
 #[derive(Debug, cucumber::World)]
 pub struct World {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -139,7 +158,7 @@ pub struct World {
     // Product Integration (TEAM-063)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     /// rbee-hive worker registry (actual product code)
-    pub hive_registry: Option<WorkerRegistry>,
+    pub hive_registry: Option<DebugWorkerRegistry>,
     
     /// Next available port for workers
     pub next_worker_port: u16,
@@ -262,7 +281,7 @@ impl Default for World {
             queen_rbee_process: None,
             rbee_hive_processes: Vec::new(),
             worker_processes: Vec::new(),
-            hive_registry: Some(WorkerRegistry::new()),
+            hive_registry: Some(DebugWorkerRegistry::new()),
             next_worker_port: 8001,
         }
     }
@@ -272,9 +291,9 @@ impl World {
     /// Get or create the hive registry
     pub fn hive_registry(&mut self) -> &mut WorkerRegistry {
         if self.hive_registry.is_none() {
-            self.hive_registry = Some(WorkerRegistry::new());
+            self.hive_registry = Some(DebugWorkerRegistry::new());
         }
-        self.hive_registry.as_mut().unwrap()
+        self.hive_registry.as_mut().unwrap().inner_mut()
     }
 
     /// Clear all state for a fresh scenario
