@@ -34,6 +34,7 @@ pub enum Commands {
     },
     /// Test inference on a worker (TEAM-024)
     /// TEAM-027: Updated for MVP cross-node inference per test-001-mvp.md
+    /// TEAM-055: Added backend and device parameters per test-001 spec
     Infer {
         /// Node name (e.g., "mac", "workstation")
         #[arg(long)]
@@ -50,6 +51,12 @@ pub enum Commands {
         /// Temperature (0.0-2.0)
         #[arg(long, default_value = "0.7")]
         temperature: f32,
+        /// Backend (e.g., "cuda", "cpu", "metal")
+        #[arg(long)]
+        backend: Option<String>,
+        /// Device ID (e.g., 0, 1)
+        #[arg(long)]
+        device: Option<u32>,
     },
     /// Worker management commands (TEAM-046)
     Workers {
@@ -218,8 +225,8 @@ pub async fn handle_command(cli: Cli) -> anyhow::Result<()> {
         Commands::Install { system } => crate::commands::install::handle(system),
         Commands::Setup { action } => crate::commands::setup::handle(action).await,
         Commands::Pool { action } => crate::commands::pool::handle(action),
-        Commands::Infer { node, model, prompt, max_tokens, temperature } => {
-            crate::commands::infer::handle(node, model, prompt, max_tokens, temperature).await
+        Commands::Infer { node, model, prompt, max_tokens, temperature, backend, device } => {
+            crate::commands::infer::handle(node, model, prompt, max_tokens, temperature, backend, device).await
         }
         Commands::Workers { action } => crate::commands::workers::handle(action).await,
         Commands::Logs { node, follow } => crate::commands::logs::handle(node, follow).await,

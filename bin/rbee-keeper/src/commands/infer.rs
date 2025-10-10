@@ -23,6 +23,7 @@ use std::io::Write;
 /// Handle infer command
 ///
 /// TEAM-048: Refactored to use queen-rbee's /v2/tasks endpoint
+/// TEAM-055: Added backend and device parameters per test-001 spec
 /// - All orchestration logic moved to queen-rbee
 /// - rbee-keeper is now a thin client
 /// - Simplifies CLI and centralizes orchestration
@@ -32,6 +33,8 @@ pub async fn handle(
     prompt: String,
     max_tokens: u32,
     temperature: f32,
+    backend: Option<String>,
+    device: Option<u32>,
 ) -> Result<()> {
     println!("{}", "=== Inference via queen-rbee Orchestration ===".cyan().bold());
     println!("Node: {}", node.cyan());
@@ -44,23 +47,66 @@ pub async fn handle(
 
     println!("{}", "[queen-rbee] Submitting inference task...".yellow());
 
-    let request = serde_json::json!({
+    // TEAM-055: Build request with optional backend and device
+    let mut request = serde_json::json!({
         "node": node,
         "model": model,
         "prompt": prompt,
         "max_tokens": max_tokens,
         "temperature": temperature
     });
-
-    let response = client
-        .post(format!("{}/v2/tasks", queen_url))
-        .json(&request)
-        .send()
-        .await?;
-
-    if !response.status().is_success() {
-        anyhow::bail!("Inference request failed: HTTP {}", response.status());
+    
+    if let Some(backend_val) = backend {
+        request["backend"] = serde_json::json!(backend_val);
     }
+    if let Some(device_val) = device {
+        request["device"] = serde_json::json!(device_val);
+    }
+
+    // TEAM-055: Add retry logic with exponential backoff to fix connection issues
+    let mut last_error = None;
+    let mut response = None;
+    
+    for attempt in 0..3 {
+        match client
+            .post(format!("{}/v2/tasks", queen_url))
+            .json(&request)
+            .timeout(std::time::Duration::from_secs(30))
+            .send()
+            .await
+        {
+            Ok(resp) if resp.status().is_success() => {
+                response = Some(resp);
+                break;
+            }
+            Ok(resp) => {
+                let status = resp.status();
+                let body = resp.text().await.unwrap_or_default();
+                anyhow::bail!("Inference request failed: HTTP {} - {}", status, body);
+            }
+            Err(e) if attempt < 2 => {
+                tracing::warn!("⚠️ Attempt {} failed: {}, retrying...", attempt + 1, e);
+                last_error = Some(e);
+                tokio::time::sleep(std::time::Duration::from_millis(100 * 2_u64.pow(attempt))).await;
+                continue;
+            }
+            Err(e) => {
+                last_error = Some(e);
+                break;
+            }
+        }
+    }
+
+    let response = match response {
+        Some(r) => r,
+        None => {
+            if let Some(e) = last_error {
+                anyhow::bail!("Failed to submit inference task after 3 attempts: {}", e);
+            } else {
+                anyhow::bail!("Failed to submit inference task");
+            }
+        }
+    };
 
     println!("{}", "Tokens:".cyan());
 

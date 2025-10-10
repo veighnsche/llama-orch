@@ -1,5 +1,6 @@
 // Background step definitions
 // Created by: TEAM-040
+// Modified by: TEAM-056 (attempted auto-registration, reverted due to timing issues)
 
 use crate::steps::world::{NodeInfo, World};
 use cucumber::given;

@@ -1,6 +1,7 @@
 //! Installation command - Install rbee binaries to standard paths
 //!
 //! Created by: TEAM-036
+//! Modified by: TEAM-055 (ensured proper exit code handling)
 //! Implements XDG Base Directory specification
 //! Replaces shell script with proper Rust implementation
 

@@ -1,11 +1,45 @@
-# llama-orch
-**Reproducible, multi-architecture, multi-node GPU orchestration for LLM inference**
-llama-orch is a three-binary system that provides test reproducibility, flexible memory architectures, and enterprise-grade orchestration across distributed GPU resources. Born from the simple frustration of "why can't I easily choose which GPU runs which model?", it evolved into a reproducible testing platform with a clean intelligence hierarchy.
+# rbee (pronounced "are-bee")
+**Power Zed IDE's AI agents with your homelab GPUs**
+
+rbee (formerly llama-orch) is an OpenAI-compatible AI orchestration platform that lets you use ALL your computers' GPU power for AI coding. Drop-in replacement for OpenAI API.
+
+**🎯 PRIMARY USE CASE:** Run Zed IDE's AI agents on YOUR homelab GPUs instead of paying for cloud APIs.
+
 **Current version**: `0.1.0` (early development)  
 **License**: GPL-3.0-or-later (free and open source, copyleft)  
-**Target platform**: Linux with NVIDIA GPUs
+**Target platform**: Linux with NVIDIA GPUs, Apple Silicon (Metal), CPU fallback
+
 ---
-## What is llama-orch?
+
+## What is rbee?
+
+### The Main Goal
+
+**Use Zed IDE (or any AI coding tool) with your own homelab GPU power:**
+
+```bash
+# Start rbee on your homelab
+rbee-keeper daemon start
+rbee-keeper hive start --pool default
+rbee-keeper worker start --gpu 0 --backend cuda
+
+# Configure Zed IDE to use rbee instead of OpenAI
+export OPENAI_API_BASE=http://localhost:8080/v1
+export OPENAI_API_KEY=your-rbee-token
+
+# Now Zed's AI agents run on YOUR GPUs!
+# Zero API costs. Full control. Use ALL your computers' GPU power.
+```
+
+**OpenAI-compatible API** means drop-in replacement for:
+- Zed IDE's AI agents
+- Cursor IDE
+- Continue.dev
+- Any tool using OpenAI SDK
+
+---
+
+## What is rbee (technical)?
 ### Core Value Propositions
 1. **Test Reproducibility**: Same seed + temp=0 → Same output (for testing validation, not a product promise)
 2. **Temperature Control**: Full temperature range 0.0-2.0 for production use (product feature)
@@ -15,7 +49,7 @@ llama-orch is a three-binary system that provides test reproducibility, flexible
 6. **Process Isolation**: Workers run in separate processes with isolated memory contexts
 **Note**: Determinism is a testing tool, not a product guarantee. LLMs cannot guarantee deterministic behavior due to model architecture and hardware variations.
 ### The Four-Binary System
-llama-orch consists of **4 binaries** (2 daemons + 2 CLIs):
+rbee (pronounced "are-bee") consists of **4 binaries** (2 daemons + 2 CLIs):
 
 **Daemons (HTTP servers, long-running):**
 1. **`queen-rbee`** — The Brain (makes ALL intelligent decisions) [M1 - not built]
@@ -88,7 +122,7 @@ llama-orch consists of **4 binaries** (2 daemons + 2 CLIs):
 ---
 ## VIBE CODED PROJECT
 (THIS PART IS JUST FUTURE COPY PASTA, and something human to read)
-> Hi there, My name is veighnsche (pronounced Vince). This project is nearly 99% AI generated I guess. I mean. I don't even know how to write rust before I began with this project. I would say that I take ownership of the very high level specifications and architecture, the crate structure and the code flow, the programming language choices and what you can see in the this [`git's history`](https://github.com/veighnsche/llama-orch/commit/e32cd7660671a74917e882fdfb89c0b994dd1ced). i WANT to take FULL responsibility of any breaking bugs and security failures. However. I cannot give you that guarantee until I have fully reviewed the code details (and peer reviews would be nice.)
+> Hi there, My name is veighnsche (pronounced Vince). This project is **rbee** (pronounced "are-bee", formerly llama-orch) and it's nearly 99% AI generated I guess. **The main goal:** Power Zed IDE's AI agents with your homelab GPUs via OpenAI-compatible API. I mean. I don't even know how to write rust before I began with this project. I would say that I take ownership of the very high level specifications and architecture, the crate structure and the code flow, the programming language choices and what you can see in the this [`git's history`](https://github.com/veighnsche/llama-orch/commit/e32cd7660671a74917e882fdfb89c0b994dd1ced). i WANT to take FULL responsibility of any breaking bugs and security failures. However. I cannot give you that guarantee until I have fully reviewed the code details (and peer reviews would be nice.)
 >
 > It goes without saying that I WON'T be offended if you REFUSE to use this project due to ALL the concerns surrounding vibe coding. I understand that you're skeptical and tbh I expect that you are. I hope that the product speaks for itself eventually and feel free to audit the code. I encourage you to audit the code. I am in desperate need of human code reviewers 😓. (I have professional programming experience so I know how to handle reviews, PLUS all the code is AI generated so I won't take nits personally. EXCEPT IF YOU BASELESSLY CRITIQUE THE CODE FLOW AND ARCHITECTURE 😡. But if you spot a critical issue. I will be eternally grateful 😇. (Please read [`./SECURITY.md`](SECURITY.md) for the correct handling of critical issues.))
 >

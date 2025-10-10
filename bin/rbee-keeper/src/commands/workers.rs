@@ -1,6 +1,7 @@
 //! Worker management commands
 //!
 //! Created by: TEAM-046
+//! Modified by: TEAM-055 (added retry logic)
 
 use anyhow::Result;
 use colored::Colorize;
@@ -41,14 +42,46 @@ async fn list_workers() -> Result<()> {
     let client = reqwest::Client::new();
     let queen_url = "http://localhost:8080";
 
-    let response = client
-        .get(format!("{}/v2/workers/list", queen_url))
-        .send()
-        .await?;
-
-    if !response.status().is_success() {
-        anyhow::bail!("Failed to list workers: HTTP {}", response.status());
+    // TEAM-055: Add retry logic
+    let mut last_error = None;
+    let mut response = None;
+    
+    for attempt in 0..3 {
+        match client
+            .get(format!("{}/v2/workers/list", queen_url))
+            .timeout(std::time::Duration::from_secs(10))
+            .send()
+            .await
+        {
+            Ok(resp) if resp.status().is_success() => {
+                response = Some(resp);
+                break;
+            }
+            Ok(resp) => {
+                anyhow::bail!("Failed to list workers: HTTP {}", resp.status());
+            }
+            Err(e) if attempt < 2 => {
+                last_error = Some(e);
+                tokio::time::sleep(std::time::Duration::from_millis(100 * 2_u64.pow(attempt))).await;
+                continue;
+            }
+            Err(e) => {
+                last_error = Some(e);
+                break;
+            }
+        }
     }
+
+    let response = match response {
+        Some(r) => r,
+        None => {
+            if let Some(e) = last_error {
+                anyhow::bail!("Failed to list workers after 3 attempts: {}", e);
+            } else {
+                anyhow::bail!("Failed to list workers");
+            }
+        }
+    };
 
     let workers_list: WorkersListResponse = response.json().await?;
 
@@ -92,14 +125,46 @@ async fn check_health(node: String) -> Result<()> {
     let client = reqwest::Client::new();
     let queen_url = "http://localhost:8080";
 
-    let response = client
-        .get(format!("{}/v2/workers/health?node={}", queen_url, node))
-        .send()
-        .await?;
-
-    if !response.status().is_success() {
-        anyhow::bail!("Failed to check health: HTTP {}", response.status());
+    // TEAM-055: Add retry logic
+    let mut last_error = None;
+    let mut response = None;
+    
+    for attempt in 0..3 {
+        match client
+            .get(format!("{}/v2/workers/health?node={}", queen_url, node))
+            .timeout(std::time::Duration::from_secs(10))
+            .send()
+            .await
+        {
+            Ok(resp) if resp.status().is_success() => {
+                response = Some(resp);
+                break;
+            }
+            Ok(resp) => {
+                anyhow::bail!("Failed to check health: HTTP {}", resp.status());
+            }
+            Err(e) if attempt < 2 => {
+                last_error = Some(e);
+                tokio::time::sleep(std::time::Duration::from_millis(100 * 2_u64.pow(attempt))).await;
+                continue;
+            }
+            Err(e) => {
+                last_error = Some(e);
+                break;
+            }
+        }
     }
+
+    let response = match response {
+        Some(r) => r,
+        None => {
+            if let Some(e) = last_error {
+                anyhow::bail!("Failed to check health after 3 attempts: {}", e);
+            } else {
+                anyhow::bail!("Failed to check health");
+            }
+        }
+    };
 
     let health: HealthResponse = response.json().await?;
 
@@ -127,20 +192,44 @@ async fn shutdown_worker(id: String) -> Result<()> {
     let client = reqwest::Client::new();
     let queen_url = "http://localhost:8080";
 
-    let response = client
-        .post(format!("{}/v2/workers/shutdown", queen_url))
-        .json(&serde_json::json!({
-            "worker_id": id
-        }))
-        .send()
-        .await?;
-
-    if !response.status().is_success() {
-        anyhow::bail!("Failed to shutdown worker: HTTP {}", response.status());
+    // TEAM-055: Add retry logic with exponential backoff
+    let mut last_error = None;
+    
+    for attempt in 0..3 {
+        match client
+            .post(format!("{}/v2/workers/shutdown", queen_url))
+            .json(&serde_json::json!({
+                "worker_id": id
+            }))
+            .timeout(std::time::Duration::from_secs(10))
+            .send()
+            .await
+        {
+            Ok(resp) if resp.status().is_success() => {
+                println!("{} Worker shutdown command sent", "✓".green());
+                println!("Worker will unload model and exit gracefully");
+                return Ok(());
+            }
+            Ok(resp) => {
+                let status = resp.status();
+                anyhow::bail!("Failed to shutdown worker: HTTP {}", status);
+            }
+            Err(e) if attempt < 2 => {
+                tracing::warn!("⚠️ Attempt {} failed: {}, retrying...", attempt + 1, e);
+                last_error = Some(e);
+                tokio::time::sleep(std::time::Duration::from_millis(100 * 2_u64.pow(attempt))).await;
+                continue;
+            }
+            Err(e) => {
+                last_error = Some(e);
+                break;
+            }
+        }
     }
 
-    println!("{} Worker shutdown command sent", "✓".green());
-    println!("Worker will unload model and exit gracefully");
-
-    Ok(())
+    if let Some(e) = last_error {
+        anyhow::bail!("Failed to shutdown worker after 3 attempts: {}", e);
+    } else {
+        anyhow::bail!("Failed to shutdown worker");
+    }
 }

@@ -2,6 +2,7 @@
 // Created by: TEAM-041
 // Modified by: TEAM-042 (implemented step definitions with mock behavior)
 // Modified by: TEAM-043 (replaced mocks with real process execution)
+// Modified by: TEAM-055 (added HTTP retry logic with exponential backoff)
 
 use crate::steps::world::World;
 use cucumber::{given, then};
@@ -147,12 +148,37 @@ pub async fn given_node_in_registry(world: &mut World, node: String) {
         "devices": devices,
     });
 
-    let _resp = client
-        .post(&url)
-        .json(&payload)
-        .send()
-        .await
-        .expect("Failed to register node in queen-rbee");
+    // TEAM-055: Add retry logic with exponential backoff to fix IncompleteMessage errors
+    let mut last_error = None;
+    for attempt in 0..3 {
+        match client
+            .post(&url)
+            .json(&payload)
+            .timeout(std::time::Duration::from_secs(5))
+            .send()
+            .await
+        {
+            Ok(resp) => {
+                tracing::info!("✅ Node registered (attempt {})", attempt + 1);
+                last_error = None;
+                break;
+            }
+            Err(e) if attempt < 2 => {
+                tracing::warn!("⚠️ Attempt {} failed: {}, retrying...", attempt + 1, e);
+                last_error = Some(e);
+                tokio::time::sleep(std::time::Duration::from_millis(100 * 2_u64.pow(attempt))).await;
+                continue;
+            }
+            Err(e) => {
+                last_error = Some(e);
+                break;
+            }
+        }
+    }
+
+    if let Some(e) = last_error {
+        panic!("Failed to register node after 3 attempts: {}", e);
+    }
 
     // Also add to mock world state for compatibility
     world.beehive_nodes.insert(
