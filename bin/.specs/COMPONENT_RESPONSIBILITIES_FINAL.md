@@ -1,18 +1,21 @@
 # Component Responsibilities - FINAL CLARIFICATION
 
 **Date:** 2025-10-09T17:34:00+02:00  
-**Updated:** 2025-10-10T14:02 (TEAM-037 - queen-rbee orchestration)  
-**By:** User (Vince) + TEAM-024 + TEAM-037  
+**Updated:** 2025-10-10T19:08 (TEAM-051 - rbee-keeper is the UI)  
+**By:** User (Vince) + TEAM-024 + TEAM-037 + TEAM-051  
 **Status:** NORMATIVE  
 **Priority:** CRITICAL - Read before building anything!
 
 ---
 
-## 🚨 CRITICAL: rbee-keeper is a TESTING TOOL 🚨
+## 🚨 CRITICAL: rbee-keeper is the USER INTERFACE 🚨
 
-**rbee-keeper is NOT for production!**
-- Testing: rbee-keeper spawns queen-rbee, runs test, kills everything
-- Production: llama-orch SDK → queen-rbee directly
+**rbee-keeper is the CLI UI for llama-orch!**
+- **rbee-keeper** manages queen-rbee lifecycle (start/stop)
+- **rbee-keeper** configures SSH for remote machines
+- **rbee-keeper** manages rbee-hive lifecycle (start/stop)
+- **rbee-keeper** manages worker lifecycle (start/stop)
+- **Future:** Web UI will be added alongside CLI
 
 **WHENEVER queen-rbee DIES, ALL hives and workers DIE gracefully!**
 
@@ -24,7 +27,7 @@
 |--------|-------|------|---------|-------------|--------|
 | **queen-rbee** | bin/queen-rbee | Daemon (HTTP) | THE BRAIN - orchestrates, controls hives via SSH | ✅ YES | M1 ❌ |
 | **llm-worker-rbee** | bin/llm-worker-rbee | Daemon (HTTP) | WORKER - loads model, generates tokens | ✅ YES | M0 ✅ |
-| **rbee-keeper** | bin/rbee-keeper | CLI | **TESTING TOOL** - integration tester | ❌ NO | M0 ✅ |
+| **rbee-keeper** | bin/rbee-keeper | CLI | **USER INTERFACE** - manages queen-rbee, hives, workers, SSH config | ✅ YES | M0 ✅ |
 | **rbee-hive** | bin/rbee-hive | Daemon (HTTP) | POOL MANAGER - spawns workers, health monitoring | ✅ YES | M0 ✅ |
 
 ## Component Responsibilities

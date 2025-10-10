@@ -76,24 +76,28 @@ IF operator started queen-rbee:
 
 ## The 4 Components
 
+**Updated by TEAM-051:** rbee-keeper is the USER INTERFACE, not a testing tool.
+
 | Component | Type | Production? | Purpose |
 |-----------|------|-------------|---------|
-| **rbee-keeper** | CLI | ❌ NO | **TESTING TOOL** - Integration tester |
+| **rbee-keeper** | CLI | ✅ YES | **USER INTERFACE** - Manages queen-rbee, hives, workers, SSH config |
 | **queen-rbee** | HTTP Daemon | ✅ YES | Orchestrator, controls all hives |
 | **rbee-hive** | HTTP Daemon | ✅ YES | Pool manager, spawns workers |
 | **llm-worker-rbee** | HTTP Daemon | ✅ YES | Worker, executes inference |
 
+**Future:** Web UI will be added alongside the CLI.
+
 ---
 
-## Complete Flow (Testing Mode)
+## Complete Flow (Production Mode)
 
 ### 1. Startup
 
 ```
-Developer runs: rbee-keeper infer --node mac --model tinyllama --prompt "hello"
+User runs: rbee-keeper infer --node mac --model tinyllama --prompt "hello"
 
-rbee-keeper (spawns)
-    ↓
+rbee-keeper (CLI UI)
+    ↓ manages lifecycle
 queen-rbee (starts HTTP daemon :8080)
     ↓ SSH to mac
 rbee-hive (starts HTTP daemon :9200)

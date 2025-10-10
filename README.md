@@ -25,8 +25,12 @@ llama-orch consists of **4 binaries** (2 daemons + 2 CLIs):
    - Variants: llorch-cpu-candled, llorch-cuda-candled, llorch-metal-candled
 
 **CLI Tools (run on-demand, exit after command):**
-3. **`rbee`** (from rbee-keeper crate) — Remote control via SSH [M0 ✅ DONE]
-   - Operator tool, SSH to pools, precise commands, stateless
+3. **`rbee-keeper`** (from rbee-keeper crate) — **USER INTERFACE** [M0 ✅ DONE]
+   - **Updated by TEAM-051:** This is the CLI UI, not a testing tool
+   - Manages queen-rbee lifecycle (start/stop)
+   - Configures SSH for remote machines
+   - Manages rbee-hive and worker lifecycle
+   - **Future:** Web UI will be added alongside CLI
 4. **`rbee-hive`** (from rbee-hive crate) — Local pool management [M0 ✅ DONE]
    - Model catalog, worker spawning, backend detection, orphan cleanup
 
@@ -54,11 +58,13 @@ llama-orch consists of **4 binaries** (2 daemons + 2 CLIs):
            │ runs
            ↓
 ┌─────────────────────────────────────┐
-│ rbee (REMOTE CLI)                 │
-│ - SSH to pools                      │
-│ - Precise commands                  │
+│ rbee-keeper (USER INTERFACE)      │
+│ - Manages queen-rbee lifecycle      │
+│ - Configures SSH                    │
+│ - Manages hives and workers         │
+│ - Future: Web UI                    │
 └──────────┬──────────────────────────┘
-           │ SSH
+           │ controls
            ↓
 ┌─────────────────────────────────────┐
 │ rbee-hive (LOCAL CLI)             │
@@ -67,9 +73,9 @@ llama-orch consists of **4 binaries** (2 daemons + 2 CLIs):
 │ - Backend detection                 │
 └─────────────────────────────────────┘
 ```
-**4 binaries total:** 2 daemons (queen-rbee, llm-worker-rbee) + 2 CLIs (llorch, rbee-hive)
+**4 binaries total:** 2 daemons (queen-rbee, llm-worker-rbee) + 2 CLIs (rbee-keeper, rbee-hive)
 
-**Decision boundary**: queen-rbee makes ALL intelligent decisions. Workers are dumb executors. CLIs execute precise commands.
+**Decision boundary**: queen-rbee makes ALL intelligent decisions. Workers are dumb executors. rbee-keeper is the UI that manages everything.
 ### Why This Architecture?
 - **4 binaries, clear separation**: 2 daemons (data plane) + 2 CLIs (control plane)
 - **queen-rbee is THE BRAIN**: Rhai scripting for user-defined orchestration logic
