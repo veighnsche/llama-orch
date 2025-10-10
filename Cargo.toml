@@ -103,3 +103,137 @@ ssh2 = "0.9"
 daemonize = "0.5"
 indicatif = "0.17"
 sysinfo = "0.30"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Workspace-wide Lints (TEAM-044)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# Security and correctness focused clippy lints for all crates.
+# These help catch bugs, security issues, and maintain code quality.
+
+[workspace.lints.rust]
+# Security: Deny unsafe code by default (can be overridden per-crate if needed)
+unsafe_code = "warn"
+# Deny missing debug implementations
+missing_debug_implementations = "warn"
+# Warn on missing docs (can upgrade to deny later)
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECURITY CRITICAL - Deny by default
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Arithmetic that can panic or overflow
+integer_arithmetic = "warn"
+# Using unwrap/expect without proper error handling
+unwrap_used = "warn"
+expect_used = "warn"
+# Panicking in production code
+panic = "warn"
+# Using todo!() or unimplemented!() (should be removed before production)
+todo = "warn"
+unimplemented = "warn"
+# Indexing that can panic
+indexing_slicing = "warn"
+# Memory safety issues
+mem_forget = "deny"
+mem_replace_with_uninit = "deny"
+# Potential NULL pointer dereferences  
+not_unsafe_ptr_arg_deref = "deny"
+# Casting that can lose data
+cast_possible_truncation = "warn"
+cast_precision_loss = "warn"
+cast_sign_loss = "warn"
+# Using default for crypto (insecure)
+default_numeric_fallback = "deny"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CORRECTNESS - Deny bugs and errors
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Using clone on copy types
+clone_on_copy = "warn"
+# Cloning references unnecessarily  
+clone_on_ref_ptr = "warn"
+# Redundant clones
+redundant_clone = "warn"
+# Using std::mem::drop on a Copy type
+drop_copy = "deny"
+# Forget on copy types
+forget_copy = "deny"
+# Missing trait implementations
+missing_const_for_fn = "warn"
+# Inefficient string operations
+string_add_assign = "warn"
+string_lit_as_bytes = "warn"
+# Large enum variant sizes (performance)
+large_enum_variant = "warn"
+# Large types passed by value
+large_types_passed_by_value = "warn"
+# Missing trait bound in tests
+missing_trait_methods = "warn"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CODE QUALITY - Warn on style and best practices
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Cognitive complexity
+cognitive_complexity = "warn"
+# Too many arguments
+too_many_arguments = "warn"
+# Too many lines in a function
+too_many_lines = "warn"
+# Verbose error handling
+map_unwrap_or = "warn"
+# Inefficient vector operations
+inefficient_to_string = "warn"
+# Missing error docs
+missing_errors_doc = "warn"
+# Missing panic docs  
+missing_panics_doc = "warn"
+# Unused self in methods
+unused_self = "warn"
+# Async functions that don't await
+unused_async = "warn"
+# Needless borrow
+needless_borrow = "warn"
+# Needless pass by value
+needless_pass_by_value = "warn"
+# Single match that should be if let
+single_match = "warn"
+# Match that should be if let else
+single_match_else = "warn"
+# Using if let instead of match
+if_let_mutex = "warn"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PEDANTIC - High quality code standards (warn level)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Import organization
+items_after_statements = "warn"
+# Verbose boolean expressions
+nonminimal_bool = "warn"
+# Inefficient filter/map
+filter_map_next = "warn"
+flat_map_option = "warn"
+# Manual implementation of standard traits
+manual_ok_or = "warn"
+manual_string_new = "warn"
+# Redundant else
+redundant_else = "warn"
+# Semicolon in return position
+semicolon_if_nothing_returned = "warn"
+# Wildcard imports
+wildcard_imports = "warn"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# NURSERY - Experimental but valuable lints (allow by default, opt-in)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# These are valuable but may have false positives
+# Uncomment to enable on a per-crate basis:
+# use_self = "warn"
+# missing_const_for_fn = "warn"
+# option_if_let_else = "warn"

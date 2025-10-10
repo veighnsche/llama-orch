@@ -1,0 +1,50 @@
+# Clippy Configuration for llama-orch
+# Created by: TEAM-044
+#
+# This file configures clippy behavior across the workspace.
+# Security-focused settings for production-ready code.
+
+# Cognitive complexity threshold (functions should be simple)
+cognitive-complexity-threshold = 15
+
+# Documentation settings
+# missing-docs-in-crate-items = true  # Uncomment when ready to enforce
+
+# Disallow TODO/FIXME in production code (can override with #[allow])
+# This helps ensure issues are tracked properly
+disallowed-macros = []
+
+# Type complexity threshold
+type-complexity-threshold = 250
+
+# Struct excessive bools - too many booleans suggests poor design
+max-struct-bools = 3
+
+# Maximum function arguments
+too-many-arguments-threshold = 7
+
+# Enum variant name threshold
+enum-variant-name-threshold = 3
+
+# Avoid single-character variable names (except common ones like i, j, x, y)
+single-char-binding-names-threshold = 4
+
+# Maximum lines for a single function
+too-many-lines-threshold = 100
+
+# Vec initialization capacity threshold
+vec-box-size-threshold = 4096
+
+# Verbose bit mask threshold
+verbose-bit-mask-threshold = 1
+
+# Cyclomatic complexity threshold
+# cyclomatic-complexity-threshold = 25  # Uncomment if needed
+
+# Standard library suggestions
+standard-macro-braces = [
+    { name = "assert_eq", brace = "[" },
+    { name = "assert_ne", brace = "[" },
+    { name = "debug_assert_eq", brace = "[" },
+    { name = "debug_assert_ne", brace = "[" },
+]
