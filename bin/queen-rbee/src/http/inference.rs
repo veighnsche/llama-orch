@@ -48,11 +48,13 @@ pub async fn handle_create_inference_task(
     };
     
     // Step 2: Determine rbee-hive URL (mock SSH for tests)
+    // TEAM-053: Fixed port - rbee-hive uses 9200, not 8080 (queen-rbee's port)
+    // Architecture: queen-rbee (8080) → rbee-hive (9200) → workers (8001+)
     let mock_ssh = std::env::var("MOCK_SSH").is_ok();
     let rbee_hive_url = if mock_ssh {
-        // For tests, assume rbee-hive is already running on localhost
-        info!("🔌 Mock SSH: Using localhost rbee-hive");
-        "http://127.0.0.1:8080".to_string()
+        // For tests, assume rbee-hive is already running on localhost:9200
+        info!("🔌 Mock SSH: Using localhost rbee-hive at port 9200");
+        "http://127.0.0.1:9200".to_string()
     } else {
         // Real SSH: start rbee-hive daemon on remote node
         info!("🔌 Establishing SSH connection to {}", node.ssh_host);
