@@ -2,14 +2,16 @@
 //!
 //! Modified by: TEAM-017 (updated to use Mutex-wrapped backend)
 //! Modified by: TEAM-035 (renamed to /v1/inference, added [DONE] marker)
+//! Modified by: TEAM-039 (added narration channel for real-time user visibility)
 
 use crate::common::SamplingConfig;
 use crate::http::{
     backend::InferenceBackend,
+    narration_channel,
     sse::InferenceEvent,
     validation::{ExecuteRequest, ValidationErrorResponse},
 };
-use crate::narration::*;
+use crate::narration::{self, *};
 use axum::{
     extract::State,
     response::{sse::Event, Sse},
@@ -17,9 +19,10 @@ use axum::{
 };
 use futures::stream::{self, Stream, StreamExt};
 use futures::future;
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::NarrationFields;
 use std::{convert::Infallible, sync::Arc};
 use tokio::sync::Mutex;
+use tokio_stream::wrappers::UnboundedReceiverStream;
 use tracing::{info, warn};
 
 type EventStream = Box<dyn Stream<Item = Result<Event, Infallible>> + Send + Unpin>;
@@ -30,15 +33,19 @@ type EventStream = Box<dyn Stream<Item = Result<Event, Infallible>> + Send + Unp
 ///
 /// TEAM-017: Updated to use Mutex-wrapped backend for &mut self
 /// TEAM-035: Added [DONE] marker for OpenAI compatibility
+/// TEAM-039: Added narration channel for real-time user visibility
 pub async fn handle_execute<B: InferenceBackend>(
     State(backend): State<Arc<Mutex<B>>>,
     Json(req): Json<ExecuteRequest>,
 ) -> Result<Sse<EventStream>, ValidationErrorResponse> {
+    // TEAM-039: Create narration channel for this request
+    let narration_rx = narration_channel::create_channel();
+    
     // Validate request
     if let Err(validation_errors) = req.validate_all() {
         warn!(job_id = %req.job_id, "Validation failed");
 
-        narrate(NarrationFields {
+        narration::narrate_dual(NarrationFields {
             actor: ACTOR_HTTP_SERVER,
             action: ACTION_ERROR,
             target: req.job_id.clone(),
@@ -54,7 +61,7 @@ pub async fn handle_execute<B: InferenceBackend>(
 
     info!(job_id = %req.job_id, "Inference request validated");
 
-    narrate(NarrationFields {
+    narration::narrate_dual(NarrationFields {
         actor: ACTOR_HTTP_SERVER,
         action: ACTION_EXECUTE_REQUEST,
         target: req.job_id.clone(),
@@ -83,7 +90,7 @@ pub async fn handle_execute<B: InferenceBackend>(
         Err(e) => {
             warn!(job_id = %req.job_id, error = %e, "Inference failed");
 
-            narrate(NarrationFields {
+            narration::narrate_dual(NarrationFields {
                 actor: ACTOR_CANDLE_BACKEND,
                 action: ACTION_ERROR,
                 target: req.job_id.clone(),
@@ -128,12 +135,29 @@ pub async fn handle_execute<B: InferenceBackend>(
         stop_sequence_matched: result.stop_sequence_matched,
     });
 
+    // TEAM-039: Merge narration events with token events
+    // Convert narration receiver to stream
+    let narration_stream = UnboundedReceiverStream::new(narration_rx);
+    
+    // Convert token events to stream
+    let token_stream = stream::iter(events);
+    
+    // Interleave narration and token events
+    // Note: Since inference is synchronous, narration events will be buffered
+    // and emitted before token events. For true real-time streaming, we'd need
+    // a streaming backend.
+    let merged_stream = narration_stream
+        .chain(token_stream)
+        .map(|event| Ok(Event::default().json_data(&event).unwrap()));
+    
     // TEAM-035: Add [DONE] marker after all events (OpenAI compatible)
-    let stream: EventStream = Box::new(
-        stream::iter(events)
-            .map(|event| Ok(Event::default().json_data(&event).unwrap()))
-            .chain(stream::once(future::ready(Ok(Event::default().data("[DONE]")))))
+    let stream_with_done: EventStream = Box::new(
+        merged_stream.chain(stream::once(future::ready(Ok(Event::default().data("[DONE]")))))
     );
 
-    Ok(Sse::new(stream))
+    // TEAM-039: Clean up narration channel when stream is dropped
+    // Note: The channel will be cleaned up when the receiver (narration_rx) is dropped
+    // which happens when the stream completes. No explicit cleanup needed.
+
+    Ok(Sse::new(stream_with_done))
 }

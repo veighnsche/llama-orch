@@ -1,13 +1,15 @@
-# Installation Specification - Rust Binary Distribution
+# Installation Specification (Rust Implementation)
 
 **Status:** Normative  
 **Version:** 1.0  
 **Date:** 2025-10-09  
+**Updated:** 2025-10-10 (TEAM-036 - implemented XDG-compliant installation system)  
 **Architecture:** See CRITICAL_RULES.md for latest architecture (queen-rbee orchestration)
 
 ---
 
 ## Overview
+{{ ... }}
 **Status:** SPECIFICATION ONLY - NOT IMPLEMENTED
 
 ## Problem Statement

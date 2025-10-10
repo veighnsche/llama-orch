@@ -19,6 +19,7 @@
 //!
 //! Created by: TEAM-022
 //! Modified by: TEAM-027
+//! Modified by: TEAM-036 (added config module and install command)
 
 mod cli;
 mod commands;

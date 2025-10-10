@@ -2,6 +2,7 @@
 //!
 //! Created by: TEAM-022
 //! Modified by: TEAM-027
+//! Modified by: TEAM-036 (added Install command)
 
 use clap::{Parser, Subcommand};
 

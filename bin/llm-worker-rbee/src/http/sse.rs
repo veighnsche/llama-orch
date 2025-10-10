@@ -49,6 +49,32 @@ pub enum InferenceEvent {
         vram_bytes: u64,
     },
 
+    /// Narration event for user-facing progress updates
+    /// TEAM-039: Added for real-time visibility in rbee-keeper shell
+    /// Shows what's happening behind the scenes (model loading, tokenization, etc.)
+    Narration {
+        /// Component emitting the narration (e.g., "candle-backend", "model-loader")
+        actor: String,
+        /// Action being performed (e.g., "inference_start", "model_load")
+        action: String,
+        /// Target of the action (e.g., job_id, model_ref)
+        target: String,
+        /// Human-readable message
+        human: String,
+        /// Cute/friendly version of the message (optional)
+        #[serde(skip_serializing_if = "Option::is_none")]
+        cute: Option<String>,
+        /// Story-style narration (optional)
+        #[serde(skip_serializing_if = "Option::is_none")]
+        story: Option<String>,
+        /// Correlation ID for tracing (optional)
+        #[serde(skip_serializing_if = "Option::is_none")]
+        correlation_id: Option<String>,
+        /// Job ID (optional)
+        #[serde(skip_serializing_if = "Option::is_none")]
+        job_id: Option<String>,
+    },
+
     /// Inference completed successfully
     End {
         /// Total tokens generated
@@ -101,6 +127,7 @@ impl InferenceEvent {
             InferenceEvent::Started { .. } => "started",
             InferenceEvent::Token { .. } => "token",
             InferenceEvent::Metrics { .. } => "metrics",
+            InferenceEvent::Narration { .. } => "narration",
             InferenceEvent::End { .. } => "end",
             InferenceEvent::Error { .. } => "error",
         }
@@ -292,7 +319,83 @@ mod tests {
         assert!(json.contains("\"stop_reason\":\"MAX_TOKENS\""));
         assert!(!json.contains("stop_sequence_matched"));
     }
+
+    // TEAM-039: Tests for Narration event
+    #[test]
+    fn test_narration_event_serialization() {
+        let event = InferenceEvent::Narration {
+            actor: "candle-backend".to_string(),
+            action: "inference_start".to_string(),
+            target: "job-123".to_string(),
+            human: "Starting inference (prompt: 15 chars, max_tokens: 50)".to_string(),
+            cute: Some("Time to generate 50 tokens! Let's go! 🚀".to_string()),
+            story: None,
+            correlation_id: Some("req-xyz".to_string()),
+            job_id: Some("job-123".to_string()),
+        };
+
+        let json = serde_json::to_string(&event).unwrap();
+        assert!(json.contains("\"type\":\"narration\""));
+        assert!(json.contains("\"actor\":\"candle-backend\""));
+        assert!(json.contains("\"action\":\"inference_start\""));
+        assert!(json.contains("\"target\":\"job-123\""));
+        assert!(json.contains("Starting inference"));
+        assert!(json.contains("🚀"));
+        assert!(json.contains("\"correlation_id\":\"req-xyz\""));
+    }
+
+    #[test]
+    fn test_narration_event_minimal() {
+        let event = InferenceEvent::Narration {
+            actor: "model-loader".to_string(),
+            action: "model_load".to_string(),
+            target: "tinyllama-q4".to_string(),
+            human: "Loading model from disk".to_string(),
+            cute: None,
+            story: None,
+            correlation_id: None,
+            job_id: None,
+        };
+
+        let json = serde_json::to_string(&event).unwrap();
+        assert!(json.contains("\"type\":\"narration\""));
+        assert!(json.contains("\"actor\":\"model-loader\""));
+        assert!(!json.contains("cute"));
+        assert!(!json.contains("story"));
+        assert!(!json.contains("correlation_id"));
+    }
+
+    #[test]
+    fn test_narration_event_name() {
+        let event = InferenceEvent::Narration {
+            actor: "test".to_string(),
+            action: "test".to_string(),
+            target: "test".to_string(),
+            human: "test".to_string(),
+            cute: None,
+            story: None,
+            correlation_id: None,
+            job_id: None,
+        };
+        assert_eq!(event.event_name(), "narration");
+    }
+
+    #[test]
+    fn test_narration_is_not_terminal() {
+        let event = InferenceEvent::Narration {
+            actor: "test".to_string(),
+            action: "test".to_string(),
+            target: "test".to_string(),
+            human: "test".to_string(),
+            cute: None,
+            story: None,
+            correlation_id: None,
+            job_id: None,
+        };
+        assert!(!event.is_terminal());
+    }
 }
 
 // ---
 // Built by Foundation-Alpha 🏗️
+// Modified by: TEAM-039 (added Narration event type)

@@ -22,6 +22,7 @@ pub mod backend;
 pub mod execute;
 pub mod health;
 pub mod loading;
+pub mod narration_channel; // TEAM-039: Narration SSE channel
 pub mod routes;
 pub mod server;
 pub mod sse;

@@ -289,8 +289,6 @@ macro_rules! trace_state {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_trace_tiny_compiles() {
         trace_tiny!("test", "action", "target", "human message");
@@ -298,8 +296,7 @@ mod tests {
 
     #[test]
     fn test_trace_with_correlation_compiles() {
-        let correlation_id = "req-123";
-        trace_with_correlation!("test", "action", "target", "human message", correlation_id);
+        trace_with_correlation!("test", "action", "target", "human message", "req-123");
     }
 
     #[test]

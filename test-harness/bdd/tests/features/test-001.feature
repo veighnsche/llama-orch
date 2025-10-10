@@ -1,6 +1,7 @@
 # Traceability: TEST-001
-# Architecture: TEAM-030 (in-memory worker registry, SQLite model catalog)
-# Components: rbee-keeper, rbee-hive, llm-worker-rbee, queen-rbee
+# Architecture: TEAM-037 (queen-rbee orchestration, in-memory worker registry, SQLite model catalog)
+# Components: rbee-keeper (testing tool), queen-rbee (orchestrator), rbee-hive (pool manager), llm-worker-rbee (worker)
+# Updated by: TEAM-038 (aligned with queen-rbee orchestration and GGUF support)
 
 Feature: Cross-Node Inference Request Flow
   As a user on the control node
@@ -10,12 +11,13 @@ Feature: Cross-Node Inference Request Flow
   Background:
     Given the following topology:
       | node        | hostname              | components                                      | capabilities           |
-      | blep        | blep.home.arpa        | rbee-keeper, queen-rbee, rbee-hive              | cpu                    |
+      | blep        | blep.home.arpa        | rbee-keeper, queen-rbee                         | cpu                    |
       | workstation | workstation.home.arpa | rbee-hive, llm-worker-rbee                      | cuda:0, cuda:1, cpu    |
       | mac         | mac.home.arpa         | rbee-hive, llm-worker-rbee                      | metal:0                |
     And I am on node "blep"
+    And queen-rbee is running at "http://localhost:8080"
     And the model catalog is SQLite at "~/.rbee/models.db"
-    And the worker registry is in-memory ephemeral
+    And the worker registry is in-memory ephemeral per node
 
   # ============================================================================
   # HAPPY PATH: Full inference flow from cold start
@@ -35,9 +37,11 @@ Feature: Cross-Node Inference Request Flow
         --max-tokens 20 \
         --temperature 0.7
       """
-    Then rbee-keeper queries the worker registry at "http://mac.home.arpa:8080/v1/workers/list"
+    Then rbee-keeper sends request to queen-rbee at "http://localhost:8080/v2/tasks"
+    And queen-rbee queries node "mac" via SSH at "mac.home.arpa"
+    And queen-rbee queries rbee-hive worker registry at "http://mac.home.arpa:9200/v1/workers/list"
     And the worker registry returns an empty list
-    And rbee-keeper performs pool preflight check at "http://mac.home.arpa:8080/v1/health"
+    And queen-rbee performs pool preflight check at "http://mac.home.arpa:9200/v1/health"
     And the health check returns version "0.1.0" and status "alive"
     And rbee-hive checks the model catalog for "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF"
     And the model is not found in the catalog
@@ -49,16 +53,17 @@ Feature: Cross-Node Inference Request Flow
     And rbee-hive performs worker preflight checks
     And RAM check passes with 8000 MB available
     And Metal backend check passes
-    And rbee-hive spawns worker process "llm-worker-rbee" on port 8081
-    And the worker HTTP server starts on port 8081
-    And the worker sends ready callback to "http://mac.home.arpa:8080/v1/workers/ready"
+    And rbee-hive spawns worker process "llm-worker-rbee" on port 8001
+    And the worker HTTP server starts on port 8001
+    And the worker sends ready callback to "http://mac.home.arpa:9200/v1/workers/ready"
     And rbee-hive registers the worker in the in-memory registry
-    And rbee-hive returns worker details to rbee-keeper
-    And rbee-keeper polls worker readiness at "http://mac.home.arpa:8081/v1/ready"
+    And rbee-hive returns worker details to queen-rbee
+    And queen-rbee returns worker URL to rbee-keeper
+    And rbee-keeper polls worker readiness at "http://mac.home.arpa:8001/v1/ready"
     And the worker returns state "loading" with progress_url
     And rbee-keeper streams loading progress showing layers loaded
     And the worker completes loading and returns state "ready"
-    And rbee-keeper sends inference request to "http://mac.home.arpa:8081/v1/inference"
+    And rbee-keeper sends inference request to "http://mac.home.arpa:8001/v1/inference"
     And the worker streams tokens via SSE
     And rbee-keeper displays tokens to stdout in real-time
     And the inference completes with 20 tokens generated
@@ -69,7 +74,7 @@ Feature: Cross-Node Inference Request Flow
     Given a worker is registered with:
       | field      | value                                           |
       | id         | worker-abc123                                   |
-      | url        | http://mac.home.arpa:8081                       |
+      | url        | http://mac.home.arpa:8001                       |
       | model_ref  | hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF       |
       | state      | idle                                            |
       | backend    | metal                                           |
@@ -84,8 +89,8 @@ Feature: Cross-Node Inference Request Flow
       """
     Then rbee-keeper queries the worker registry
     And the registry returns worker "worker-abc123" with state "idle"
-    And rbee-keeper skips pool preflight and model provisioning
-    And rbee-keeper sends inference request directly to "http://mac.home.arpa:8081/v1/inference"
+    And queen-rbee skips pool preflight and model provisioning
+    And rbee-keeper sends inference request directly to "http://mac.home.arpa:8001/v1/inference"
     And the worker streams tokens via SSE
     And the inference completes successfully
     And the total latency is under 5 seconds
@@ -97,7 +102,7 @@ Feature: Cross-Node Inference Request Flow
 
   Scenario: Worker registry returns empty list
     Given no workers are registered
-    When rbee-keeper queries "http://mac.home.arpa:8080/v1/workers/list"
+    When queen-rbee queries "http://mac.home.arpa:9200/v1/workers/list"
     Then the response is:
       """
       {
@@ -205,6 +210,51 @@ Feature: Cross-Node Inference Request Flow
               '/models/tinyllama-q4.gguf', 5242880, 1728508603)
       """
     And the catalog query now returns the model
+
+  # ============================================================================
+  # PHASE 3.5: GGUF Model Support (TEAM-036)
+  # ============================================================================
+
+  @gguf @team-036
+  Scenario: GGUF model detection by file extension
+    Given a model file at "/models/tinyllama-q4.gguf"
+    When llm-worker-rbee loads the model
+    Then the model factory detects ".gguf" extension
+    And the factory creates a QuantizedLlama model variant
+    And the model is loaded using candle's quantized_llama module
+    And GGUF metadata is extracted from the file header
+
+  @gguf @team-036
+  Scenario: GGUF metadata extraction
+    Given a GGUF file at "/models/tinyllama-q4.gguf"
+    When llm-worker-rbee reads the GGUF header
+    Then the following metadata is extracted:
+      | field          | value  |
+      | vocab_size     | 32000  |
+      | eos_token_id   | 2      |
+      | quantization   | Q4_K_M |
+    And the vocab_size is used for model initialization
+    And the eos_token_id is used for generation stopping
+
+  @gguf @team-036
+  Scenario: GGUF quantization formats supported
+    Given the following GGUF models are available:
+      | model                          | quantization | size_mb |
+      | tinyllama-q4_k_m.gguf          | Q4_K_M       | 669     |
+      | tinyllama-q5_k_m.gguf          | Q5_K_M       | 817     |
+      | tinyllama-q8_0.gguf            | Q8_0         | 1260    |
+    When llm-worker-rbee loads each model
+    Then all quantization formats are supported
+    And inference completes successfully for each model
+    And VRAM usage is proportional to quantization level
+
+  @gguf @team-036
+  Scenario: GGUF model size calculation
+    Given a GGUF file at "/models/tinyllama-q4.gguf"
+    When rbee-hive calculates model size
+    Then the file size is read from disk
+    And the size is used for RAM preflight checks
+    And the size is stored in the model catalog
 
   # ============================================================================
   # PHASE 4: Worker Preflight
@@ -676,7 +726,63 @@ Feature: Cross-Node Inference Request Flow
     And the details provide actionable context
 
   # ============================================================================
-  # CLI COMMANDS
+  # CLI COMMANDS (TEAM-036 Installation System)
+  # ============================================================================
+
+  @install @team-036
+  Scenario: CLI command - install to user paths
+    When I run "rbee-keeper install"
+    Then binaries are installed to "~/.local/bin/"
+    And config directory is created at "~/.config/rbee/"
+    And data directory is created at "~/.local/share/rbee/models/"
+    And default config file is generated at "~/.config/rbee/config.toml"
+    And the following binaries are copied:
+      | binary           | source                          | destination                  |
+      | rbee-keeper      | target/release/rbee-keeper      | ~/.local/bin/rbee-keeper     |
+      | rbee-hive        | target/release/rbee-hive        | ~/.local/bin/rbee-hive       |
+      | llm-worker-rbee  | target/release/llm-worker-rbee  | ~/.local/bin/llm-worker-rbee |
+    And installation instructions are displayed
+    And the exit code is 0
+
+  @install @team-036
+  Scenario: CLI command - install to system paths
+    When I run "rbee-keeper install --system"
+    Then binaries are installed to "/usr/local/bin/"
+    And config directory is created at "/etc/rbee/"
+    And data directory is created at "/var/lib/rbee/models/"
+    And default config file is generated at "/etc/rbee/config.toml"
+    And sudo permissions are required
+    And the exit code is 0
+
+  @install @team-036
+  Scenario: Config file loading with XDG priority
+    Given the following config files exist:
+      | path                           | priority |
+      | /tmp/custom.toml               | 1 (RBEE_CONFIG env var) |
+      | ~/.config/rbee/config.toml     | 2 (user config) |
+      | /etc/rbee/config.toml          | 3 (system config) |
+    When RBEE_CONFIG="/tmp/custom.toml" is set
+    Then rbee-keeper loads config from "/tmp/custom.toml"
+    When RBEE_CONFIG is not set
+    And "~/.config/rbee/config.toml" exists
+    Then rbee-keeper loads config from "~/.config/rbee/config.toml"
+    When neither RBEE_CONFIG nor user config exist
+    Then rbee-keeper loads config from "/etc/rbee/config.toml"
+
+  @install @team-036
+  Scenario: Remote binary path configuration
+    Given config file contains:
+      """
+      [remote]
+      binary_path = "/opt/rbee/bin/rbee-hive"
+      git_repo_dir = "/opt/rbee/repo"
+      """
+    When rbee-keeper executes remote command on "mac"
+    Then the command uses "/opt/rbee/bin/rbee-hive" instead of "rbee-hive"
+    And git commands use "/opt/rbee/repo" instead of "~/llama-orch"
+
+  # ============================================================================
+  # CLI COMMANDS (General)
   # ============================================================================
 
   Scenario: CLI command - basic inference
@@ -721,68 +827,91 @@ Feature: Cross-Node Inference Request Flow
   # LIFECYCLE RULES - CRITICAL UNDERSTANDING
   # ============================================================================
   #
-  # RULE 1: rbee-hive is a PERSISTENT HTTP DAEMON
-  #   - Starts: `rbee-hive daemon` or spawned by rbee-keeper
-  #   - Runs: Continuously as HTTP server on port 8080
-  #   - Dies: ONLY when receiving SIGTERM (Ctrl+C) or explicit shutdown
-  #   - Does NOT die: After spawning workers, after inference completes
+  # RULE 1: rbee-keeper is a TESTING TOOL (EPHEMERAL CLI)
+  #   - Starts: User runs command
+  #   - Runs: Only during command execution
+  #   - Dies: After command completes (exit code 0 or 1)
+  #   - Does NOT die: Never stays running
+  #   - Production: Use llama-orch SDK → queen-rbee directly
   #
-  # RULE 2: llm-worker-rbee is a PERSISTENT HTTP DAEMON
+  # RULE 2: queen-rbee is a PERSISTENT HTTP DAEMON (ORCHESTRATOR)
+  #   - Starts: `queen-rbee daemon` or spawned by rbee-keeper
+  #   - Runs: Continuously as HTTP server on port 8080
+  #   - Dies: ONLY when receiving SIGTERM or explicit shutdown
+  #   - Does NOT die: After inference completes
+  #   - Controls: ALL rbee-hive instances via SSH
+  #
+  # RULE 3: rbee-hive is a PERSISTENT HTTP DAEMON (POOL MANAGER)
+  #   - Starts: Spawned by queen-rbee via SSH
+  #   - Runs: Continuously as HTTP server on port 9200
+  #   - Dies: When queen-rbee sends SIGTERM via SSH
+  #   - Does NOT die: After spawning workers, after inference completes
+  #   - Controls: Workers on its node
+  #
+  # RULE 4: llm-worker-rbee is a PERSISTENT HTTP DAEMON (WORKER)
   #   - Starts: Spawned by rbee-hive
   #   - Runs: Continuously as HTTP server on port 8001+
   #   - Dies: When idle timeout (5 min) OR rbee-hive sends shutdown OR SIGTERM
   #   - Does NOT die: After inference completes (stays idle)
   #
-  # RULE 3: rbee-keeper is a CLI (EPHEMERAL)
-  #   - Starts: User runs command
-  #   - Runs: Only during command execution
-  #   - Dies: After command completes (exit code 0 or 1)
-  #   - Does NOT die: Never stays running
-  #
-  # RULE 4: Ephemeral Mode (rbee-keeper spawns rbee-hive)
-  #   - rbee-keeper spawns rbee-hive as child process
+  # RULE 5: Ephemeral Mode (rbee-keeper spawns queen-rbee)
+  #   - rbee-keeper spawns queen-rbee as child process
+  #   - queen-rbee spawns rbee-hive via SSH
   #   - rbee-hive spawns worker
   #   - Inference completes
-  #   - rbee-keeper sends SIGTERM to rbee-hive
-  #   - rbee-hive cascades shutdown to worker
+  #   - rbee-keeper sends SIGTERM to queen-rbee
+  #   - queen-rbee cascades shutdown to all rbee-hive instances via SSH
+  #   - rbee-hive cascades shutdown to workers
   #   - All processes exit
   #
-  # RULE 5: Persistent Mode (rbee-hive pre-started)
-  #   - Operator starts: `rbee-hive daemon &`
-  #   - rbee-hive runs continuously
-  #   - rbee-keeper connects to existing rbee-hive
+  # RULE 6: Persistent Mode (queen-rbee pre-started)
+  #   - Operator starts: `queen-rbee daemon &`
+  #   - queen-rbee runs continuously
+  #   - rbee-keeper connects to existing queen-rbee
   #   - Inference completes
   #   - rbee-keeper exits
+  #   - queen-rbee continues running
   #   - rbee-hive continues running
   #   - Worker continues running (until idle timeout)
   #
-  # RULE 6: Cascading Shutdown
-  #   - SIGTERM → rbee-hive
+  # RULE 7: Cascading Shutdown (CRITICAL)
+  #   - SIGTERM → queen-rbee
+  #   - queen-rbee → SSH SIGTERM → all rbee-hive instances
   #   - rbee-hive → POST /v1/admin/shutdown → all workers
   #   - Workers unload models and exit
   #   - rbee-hive clears registry and exits
+  #   - queen-rbee exits
   #   - Model catalog (SQLite) persists on disk
   #
-  # RULE 7: Worker Idle Timeout
+  # RULE 8: Worker Idle Timeout
   #   - Worker completes inference → idle
   #   - 5 minutes elapse without new requests
   #   - rbee-hive sends shutdown to worker
   #   - Worker exits, VRAM freed
   #   - rbee-hive continues running
+  #   - queen-rbee continues running
   #
-  # RULE 8: Process Ownership
-  #   - IF rbee-keeper spawned rbee-hive → rbee-keeper owns lifecycle
-  #   - IF operator started rbee-hive → operator owns lifecycle
+  # RULE 9: Process Ownership
+  #   - IF rbee-keeper spawned queen-rbee → rbee-keeper owns lifecycle
+  #   - IF operator started queen-rbee → operator owns lifecycle
+  #   - queen-rbee always owns rbee-hive lifecycle (via SSH)
   #   - rbee-hive always owns worker lifecycle
   #   - Workers never own their own lifecycle (managed by rbee-hive)
 
 # Created by: TEAM-037 (Testing Team)
+# Updated by: TEAM-038 (aligned with queen-rbee orchestration)
 # 
 # LIFECYCLE SUMMARY:
-# - rbee-hive: PERSISTENT HTTP DAEMON (dies only on SIGTERM)
-# - llm-worker-rbee: PERSISTENT HTTP DAEMON (dies on idle timeout or shutdown)
-# - rbee-keeper: EPHEMERAL CLI (dies after command completes)
-# - Ephemeral mode: rbee-keeper spawns rbee-hive, controls lifecycle
-# - Persistent mode: rbee-hive pre-started, rbee-keeper just connects
+# - rbee-keeper: EPHEMERAL CLI (testing tool, dies after command completes)
+# - queen-rbee: PERSISTENT HTTP DAEMON (orchestrator, dies only on SIGTERM)
+# - rbee-hive: PERSISTENT HTTP DAEMON (pool manager, dies when queen-rbee sends SIGTERM)
+# - llm-worker-rbee: PERSISTENT HTTP DAEMON (worker, dies on idle timeout or shutdown)
+# - Ephemeral mode: rbee-keeper spawns queen-rbee, controls lifecycle
+# - Persistent mode: queen-rbee pre-started, rbee-keeper just connects
+# - Cascading shutdown: queen-rbee → rbee-hive → workers
+#
+# GGUF Support: TEAM-036 added quantized model support (Q4_K_M, Q5_K_M, etc.)
+# Installation: TEAM-036 added XDG-compliant installation system
 #
 # Verified by Testing Team 🔍
+# Updated by Implementation Team 🛠️

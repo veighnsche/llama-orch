@@ -172,6 +172,7 @@ ndarray = "0.15"
 # TEAM-015: Added signal feature for graceful shutdown
 
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "sync", "time", "signal"] }
+tokio-stream = "0.1"  # TEAM-039: SSE narration channel streaming
 async-trait = "0.1"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

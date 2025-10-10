@@ -1,9 +1,12 @@
-//! Narration constants for llm-worker-rbee
+//! Narration constants and dual-output wrapper for llm-worker-rbee
 //!
 //! Defines all actor and action constants for triple-narration observability.
 //! Following the Narration Core Team's editorial standards.
 //!
+//! TEAM-039: Enhanced with dual-output narration (stdout + SSE)
+//!
 //! Created by: Narration Core Team 🎀
+//! Modified by: TEAM-039 (added SSE channel support)
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ACTORS — Who's doing the work
@@ -78,3 +81,37 @@ pub const ACTION_ERROR: &str = "error";
 
 /// Tokenization
 pub const ACTION_TOKENIZE: &str = "tokenize";
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-039: Dual-output narration wrapper
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+use crate::http::{narration_channel, sse::InferenceEvent};
+use observability_narration_core::NarrationFields;
+
+/// Emit narration to BOTH stdout (tracing) AND SSE stream (if in request context)
+///
+/// This is the worker-specific wrapper that implements dual-output narration:
+/// 1. Always emits to tracing (stdout → logs) for operators/debugging
+/// 2. If in HTTP request context, also emits to SSE stream for users
+///
+/// TEAM-039: This enables real-time visibility in rbee-keeper shell
+pub fn narrate_dual(fields: NarrationFields) {
+    // 1. ALWAYS emit to tracing (for operators/developers)
+    observability_narration_core::narrate(fields.clone());
+    
+    // 2. IF in HTTP request context, ALSO emit to SSE (for users)
+    let sse_event = InferenceEvent::Narration {
+        actor: fields.actor.to_string(),
+        action: fields.action.to_string(),
+        target: fields.target.clone(),
+        human: fields.human.clone(),
+        cute: fields.cute.clone(),
+        story: fields.story.clone(),
+        correlation_id: fields.correlation_id.clone(),
+        job_id: fields.job_id.clone(),
+    };
+    
+    // Send to SSE channel (returns false if no active request)
+    let _ = narration_channel::send_narration(sse_event);
+}
