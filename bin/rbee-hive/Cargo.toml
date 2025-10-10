@@ -9,6 +9,10 @@ license = "GPL-3.0-or-later"
 # Runs ON the pool machine (not remote)
 # Called by `rbee` via SSH for remote operations
 
+[lib]
+name = "rbee_hive"
+path = "src/lib.rs"
+
 [[bin]]
 name = "rbee-hive"
 path = "src/main.rs"

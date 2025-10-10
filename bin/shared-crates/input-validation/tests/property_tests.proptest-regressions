@@ -6,3 +6,4 @@
 # everyone who runs the test benefits from these saved cases.
 cc 3dc62c1b071bb248f3dbef79787a9d79f76a16d85f20b3e72ef1ec691cad4ac7 # shrinks to prefix = "", traversal = "./"
 cc 7e1f0803dc25769905db35459139ec290ac434a55935e193f89748abd5564c66 # shrinks to valid = "-A0-0aa_A00A0aAAA-aa0_aaA_a_aa_-a_-AA_-0aA_Aa_Aa_AaAa_a0-A_0-a0-___0Aa0-aaa00AAA0Aaa-AA-a-0a0AAA-aaa", invalid = ".\0[.¡:[: `¡[:.``{{ ¡\0\0 ¡[. ¡...\0¡    ¡.¡:{`[¡[\0 ¡`.:. ..:\0 .\0:.[\0¡: .` ::\0` .:\0:[. { ¡[\0¡¡ \0.`:{¡ \0:"
+cc e2240123208b9ebcaee9f02d7b487e1dee8aadfcf7722733f128ad291c6af126 # shrinks to min = 0, max = 1639, value = 1639

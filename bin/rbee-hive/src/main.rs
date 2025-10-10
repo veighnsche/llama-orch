@@ -10,16 +10,16 @@
 //! Location: Runs on pool machines
 //!
 //! Created by: TEAM-022
-//! Modified by: TEAM-027, TEAM-029
+//! Modified by: TEAM-027, TEAM-029, TEAM-032
 
 mod cli;
 mod commands;
 mod http;
 mod monitor;
-mod provisioner;  // TEAM-029: Model provisioner
-mod registry;
 mod timeout;
 
+// TEAM-032: Use library modules for testing
+use rbee_hive::{provisioner, registry};
 use anyhow::Result;
 
 #[tokio::main]

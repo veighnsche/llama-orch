@@ -28,6 +28,16 @@ pub struct DownloadProgress {
     pub speed_mbps: f64,
 }
 
+/// Model information (TEAM-032: for `info` command)
+#[derive(Debug, Clone)]
+pub struct ModelInfo {
+    pub reference: String,
+    pub model_dir: PathBuf,
+    pub total_size: i64,
+    pub file_count: usize,
+    pub gguf_files: Vec<PathBuf>,
+}
+
 impl ModelProvisioner {
     /// Create new model provisioner
     ///
@@ -202,6 +212,139 @@ impl ModelProvisioner {
         }
 
         Ok(models)
+    }
+
+    /// Delete a model directory
+    ///
+    /// TEAM-032: Equivalent to `llorch-models delete`
+    ///
+    /// # Arguments
+    /// * `reference` - Model reference (e.g., "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF")
+    ///
+    /// # Returns
+    /// Ok(()) if deleted, error if model doesn't exist
+    pub fn delete_model(&self, reference: &str) -> Result<()> {
+        let model_name = reference.split('/').last().unwrap_or(reference);
+        let model_dir = self.base_dir.join(model_name.to_lowercase());
+
+        if !model_dir.exists() {
+            anyhow::bail!("Model not found: {}", reference);
+        }
+
+        info!("Deleting model directory: {:?}", model_dir);
+        std::fs::remove_dir_all(&model_dir)?;
+        
+        Ok(())
+    }
+
+    /// Get detailed model information
+    ///
+    /// TEAM-032: Equivalent to `llorch-models info`
+    ///
+    /// # Arguments
+    /// * `reference` - Model reference
+    ///
+    /// # Returns
+    /// ModelInfo with path, size, and file count
+    pub fn get_model_info(&self, reference: &str) -> Result<ModelInfo> {
+        let model_name = reference.split('/').last().unwrap_or(reference);
+        let model_dir = self.base_dir.join(model_name.to_lowercase());
+
+        if !model_dir.exists() {
+            anyhow::bail!("Model not found: {}", reference);
+        }
+
+        let mut total_size = 0i64;
+        let mut file_count = 0usize;
+        let mut gguf_files = Vec::new();
+
+        // Scan directory
+        for entry in std::fs::read_dir(&model_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            
+            if path.is_file() {
+                file_count += 1;
+                let metadata = std::fs::metadata(&path)?;
+                total_size += metadata.len() as i64;
+
+                if path.extension().and_then(|e| e.to_str()) == Some("gguf") {
+                    gguf_files.push(path);
+                }
+            }
+        }
+
+        Ok(ModelInfo {
+            reference: reference.to_string(),
+            model_dir,
+            total_size,
+            file_count,
+            gguf_files,
+        })
+    }
+
+    /// Verify model integrity
+    ///
+    /// TEAM-032: Equivalent to `llorch-models verify`
+    ///
+    /// # Arguments
+    /// * `reference` - Model reference
+    ///
+    /// # Returns
+    /// Ok(()) if model files exist and are non-empty
+    pub fn verify_model(&self, reference: &str) -> Result<()> {
+        let info = self.get_model_info(reference)?;
+
+        if info.gguf_files.is_empty() {
+            anyhow::bail!("No .gguf files found in model directory");
+        }
+
+        // Verify each .gguf file is non-empty
+        for gguf_path in &info.gguf_files {
+            let size = self.get_model_size(gguf_path)?;
+            if size == 0 {
+                anyhow::bail!("Empty .gguf file: {:?}", gguf_path);
+            }
+        }
+
+        info!("Model verified: {} .gguf files, {} total bytes", 
+              info.gguf_files.len(), info.total_size);
+        
+        Ok(())
+    }
+
+    /// Get total disk usage for all models
+    ///
+    /// TEAM-032: Equivalent to `llorch-models disk-usage`
+    ///
+    /// # Returns
+    /// Total bytes used by all models
+    pub fn get_total_disk_usage(&self) -> Result<i64> {
+        let mut total = 0i64;
+
+        if !self.base_dir.exists() {
+            return Ok(0);
+        }
+
+        for entry in std::fs::read_dir(&self.base_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+
+            if path.is_dir() {
+                // Sum all files in this model directory
+                if let Ok(files) = std::fs::read_dir(&path) {
+                    for file_entry in files.flatten() {
+                        if let Ok(metadata) = file_entry.metadata() {
+                            if metadata.is_file() {
+                                total += metadata.len() as i64;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(total)
     }
 }
 
