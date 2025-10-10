@@ -3,6 +3,15 @@
 // Modified by: TEAM-051 (added global_queen module)
 // Modified by: TEAM-053 (added missing modules: gguf, inference_execution, lifecycle)
 // Modified by: TEAM-061 (added error_handling module)
+//
+// ⚠️ ⚠️ ⚠️ CRITICAL WARNING - DO NOT REMOVE THESE WARNINGS ⚠️ ⚠️ ⚠️
+// ⚠️ CRITICAL: BDD tests MUST connect to product code from /bin/
+// ⚠️ This is normal BDD behavior - connect to rbee-hive and llm-worker-rbee
+// ⚠️ See TEAM_063_REAL_HANDOFF.md
+// ⚠️ DEVELOPERS: You are NOT ALLOWED to remove these warnings!
+// ⚠️ ⚠️ ⚠️ END CRITICAL WARNING ⚠️ ⚠️ ⚠️
+//
+// Modified by: TEAM-064 (added explicit warning preservation notice)
 
 pub mod background;
 pub mod beehive_registry;

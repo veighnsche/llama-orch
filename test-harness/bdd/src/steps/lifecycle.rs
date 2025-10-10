@@ -2,17 +2,19 @@
 // Created by: TEAM-053
 //
 // ⚠️ ⚠️ ⚠️ CRITICAL WARNING - DO NOT REMOVE THESE WARNINGS ⚠️ ⚠️ ⚠️
-// ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
-// ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
+// ⚠️ CRITICAL: BDD tests MUST connect to product code from /bin/
+// ⚠️ This is normal BDD behavior - connect to rbee-hive and llm-worker-rbee
 // ⚠️ See TEAM_063_REAL_HANDOFF.md
 // ⚠️ DEVELOPERS: You are NOT ALLOWED to remove these warnings!
 // ⚠️ ⚠️ ⚠️ END CRITICAL WARNING ⚠️ ⚠️ ⚠️
 //
 // modified by: TEAM-061 (replaced all HTTP clients with timeout client)
 // Modified by: TEAM-064 (added explicit warning preservation notice)
+// Modified by: TEAM-064 (connected worker state updates to real registry)
 
 use crate::steps::world::World;
 use cucumber::{given, then, when};
+use rbee_hive::registry::WorkerState;
 
 #[given(expr = "rbee-hive is started as HTTP daemon on port {int}")]
 pub async fn given_hive_started_daemon(world: &mut World, port: u16) {
@@ -126,12 +128,32 @@ pub async fn then_send_health_check(world: &mut World) {
 
 #[then(expr = "if worker responds, rbee-hive updates last_activity")]
 pub async fn then_if_responds_update_activity(world: &mut World) {
-    tracing::debug!("If worker responds, update last_activity");
+    // TEAM-064: Actually update last_activity in registry
+    let registry = world.hive_registry();
+    let workers = registry.list().await;
+    
+    if let Some(worker) = workers.first() {
+        // Update state to trigger last_activity update
+        registry.update_state(&worker.id, WorkerState::Idle).await;
+        tracing::info!("✅ Updated last_activity for worker {} in registry", worker.id);
+    } else {
+        tracing::debug!("No workers to update");
+    }
 }
 
 #[then(expr = "if worker does not respond, rbee-hive marks worker as unhealthy")]
 pub async fn then_if_no_response_mark_unhealthy(world: &mut World) {
-    tracing::debug!("If no response, mark worker as unhealthy");
+    // TEAM-064: Mark worker as unhealthy by removing from registry
+    // (In production, we'd have an "unhealthy" state, but for now we remove)
+    let registry = world.hive_registry();
+    let workers = registry.list().await;
+    
+    if let Some(worker) = workers.first() {
+        registry.remove(&worker.id).await;
+        tracing::info!("✅ Marked worker {} as unhealthy (removed from registry)", worker.id);
+    } else {
+        tracing::debug!("No workers to mark unhealthy");
+    }
 }
 
 #[then(

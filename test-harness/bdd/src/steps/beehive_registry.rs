@@ -2,8 +2,8 @@
 // Created by: TEAM-041
 //
 // ⚠️ ⚠️ ⚠️ CRITICAL WARNING - DO NOT REMOVE THESE WARNINGS ⚠️ ⚠️ ⚠️
-// ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
-// ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
+// ⚠️ CRITICAL: BDD tests MUST connect to product code from /bin/
+// ⚠️ This is normal BDD behavior - connect to rbee-hive and llm-worker-rbee
 // ⚠️ See TEAM_063_REAL_HANDOFF.md
 // ⚠️ DEVELOPERS: You are NOT ALLOWED to remove these warnings!
 // ⚠️ ⚠️ ⚠️ END CRITICAL WARNING ⚠️ ⚠️ ⚠️

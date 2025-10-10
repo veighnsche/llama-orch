@@ -1,7 +1,15 @@
 // Error verification helpers
 // Created by: TEAM-062
 //
+// ⚠️ ⚠️ ⚠️ CRITICAL WARNING - DO NOT REMOVE THESE WARNINGS ⚠️ ⚠️ ⚠️
+// ⚠️ CRITICAL: BDD tests MUST connect to product code from /bin/
+// ⚠️ This is normal BDD behavior - connect to rbee-hive and llm-worker-rbee
+// ⚠️ See TEAM_063_REAL_HANDOFF.md
+// ⚠️ DEVELOPERS: You are NOT ALLOWED to remove these warnings!
+// ⚠️ ⚠️ ⚠️ END CRITICAL WARNING ⚠️ ⚠️ ⚠️
+//
 // Provides reusable functions for verifying error conditions in BDD tests
+// Modified by: TEAM-064 (added explicit warning preservation notice)
 
 use crate::steps::world::{World, ErrorResponse};
 use anyhow::{Result, Context};

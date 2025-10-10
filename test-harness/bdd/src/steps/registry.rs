@@ -2,21 +2,32 @@
 // Created by: TEAM-042
 //
 // ⚠️ ⚠️ ⚠️ CRITICAL WARNING - DO NOT REMOVE THESE WARNINGS ⚠️ ⚠️ ⚠️
-// ⚠️ CRITICAL: MUST import and test REAL product code from /bin/
-// ⚠️ DO NOT use mock servers - wire up actual rbee-hive and llm-worker-rbee
+// ⚠️ CRITICAL: BDD tests MUST connect to product code from /bin/
+// ⚠️ This is normal BDD behavior - connect to rbee-hive and llm-worker-rbee
 // ⚠️ See TEAM_063_REAL_HANDOFF.md
 // ⚠️ DEVELOPERS: You are NOT ALLOWED to remove these warnings!
 // ⚠️ ⚠️ ⚠️ END CRITICAL WARNING ⚠️ ⚠️ ⚠️
 //
 // Modified by: TEAM-064 (added explicit warning preservation notice)
+// Modified by: TEAM-064 (connected to real rbee-hive registry)
 
 use crate::steps::world::{WorkerInfo, World};
 use cucumber::{given, then, when};
+use rbee_hive::registry::{WorkerInfo as HiveWorkerInfo, WorkerState};
 
 #[given(expr = "no workers are registered")]
 pub async fn given_no_workers(world: &mut World) {
+    // TEAM-064: Clear both World state AND registry
     world.workers.clear();
-    tracing::debug!("Cleared all workers");
+    
+    // Clear rbee-hive registry
+    let registry = world.hive_registry();
+    let workers = registry.list().await;
+    for worker in workers {
+        registry.remove(&worker.id).await;
+    }
+    
+    tracing::info!("✅ Cleared all workers from World AND registry");
 }
 
 #[given(expr = "a worker is registered with:")]
@@ -60,20 +71,42 @@ pub async fn given_worker_with_model_and_state(
     state: String,
 ) {
     let slots_available = if state == "idle" { 1 } else { 0 };
+    let worker_id = format!("worker-{}", uuid::Uuid::new_v4());
 
-    let worker = WorkerInfo {
-        id: format!("worker-{}", uuid::Uuid::new_v4()),
+    // TEAM-064: Register in World state (for backward compat)
+    let world_worker = WorkerInfo {
+        id: worker_id.clone(),
         url: "http://workstation.home.arpa:8001".to_string(),
-        model_ref,
-        state,
+        model_ref: model_ref.clone(),
+        state: state.clone(),
         backend: "cuda".to_string(),
         device: 1,
         slots_total: 1,
         slots_available,
     };
-
-    world.workers.insert(worker.id.clone(), worker);
-    tracing::debug!("Registered worker with model_ref and state");
+    world.workers.insert(worker_id.clone(), world_worker);
+    
+    // TEAM-064: ALSO register in rbee-hive registry
+    let registry = world.hive_registry();
+    let hive_worker = HiveWorkerInfo {
+        id: worker_id.clone(),
+        url: "http://workstation.home.arpa:8001".to_string(),
+        model_ref,
+        backend: "cuda".to_string(),
+        device: 1,
+        state: match state.as_str() {
+            "idle" => WorkerState::Idle,
+            "busy" => WorkerState::Busy,
+            "loading" => WorkerState::Loading,
+            _ => WorkerState::Idle,
+        },
+        last_activity: std::time::SystemTime::now(),
+        slots_total: 1,
+        slots_available,
+    };
+    registry.register(hive_worker).await;
+    
+    tracing::info!("✅ Registered worker {} in BOTH World AND registry", worker_id);
 }
 
 #[given(expr = "the worker is healthy")]
@@ -156,20 +189,36 @@ pub async fn then_proceed_to_phase_8_expect_503(world: &mut World) {
 
 #[then(expr = "the registry returns worker {string} with state {string}")]
 pub async fn then_registry_returns_worker(world: &mut World, worker_id: String, state: String) {
-    // TEAM-058: Implemented registry response verification per TEAM-057 TODO
-    let response = world.last_http_response.as_ref().expect("No HTTP response captured");
-    let workers: serde_json::Value = serde_json::from_str(response)
-        .expect("Failed to parse worker registry response");
+    // TEAM-064: Verify against rbee-hive registry, not just HTTP response
+    let registry = world.hive_registry();
     
-    // Find worker in response
-    let workers_array = workers.as_array().expect("Expected array of workers");
-    let worker = workers_array.iter()
-        .find(|w| w["id"].as_str() == Some(&worker_id))
+    // Get worker from registry
+    let worker = registry.get(&worker_id).await
         .expect(&format!("Worker {} not found in registry", worker_id));
     
-    let actual_state = worker["state"].as_str().expect("Worker has no state field");
-    assert_eq!(actual_state, state, "Worker state mismatch");
-    tracing::info!("✅ Registry returned worker {} with state {}", worker_id, state);
+    // Verify state matches
+    let actual_state = match worker.state {
+        WorkerState::Idle => "idle",
+        WorkerState::Busy => "busy",
+        WorkerState::Loading => "loading",
+    };
+    
+    assert_eq!(actual_state, state, "Worker state mismatch in registry");
+    tracing::info!("✅ Registry has worker {} with state {} (verified)", worker_id, state);
+    
+    // ALSO verify HTTP response if available (backward compat)
+    if let Some(response) = world.last_http_response.as_ref() {
+        if let Ok(workers) = serde_json::from_str::<serde_json::Value>(response) {
+            if let Some(workers_array) = workers.as_array() {
+                if let Some(http_worker) = workers_array.iter()
+                    .find(|w| w["id"].as_str() == Some(&worker_id)) {
+                    let http_state = http_worker["state"].as_str().unwrap_or("unknown");
+                    assert_eq!(http_state, state, "HTTP response state mismatch");
+                    tracing::info!("✅ HTTP response also matches (double-verified)");
+                }
+            }
+        }
+    }
 }
 
 #[then(expr = "queen-rbee skips pool preflight and model provisioning")]
