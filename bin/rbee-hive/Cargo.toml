@@ -43,3 +43,6 @@ tracing-subscriber = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
 # TEAM-027: HTTP client for health checks and worker shutdown
 reqwest = { workspace = true, features = ["json"] }
+# TEAM-034: SSE streaming support
+async-stream = "0.3"
+futures = { workspace = true }

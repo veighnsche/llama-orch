@@ -4,12 +4,14 @@
 //! Runs persistent HTTP server for worker management
 //!
 //! TEAM-030: Worker registry is ephemeral (in-memory), model catalog is persistent (SQLite)
+//! TEAM-034: Added download tracker for SSE streaming
 //!
 //! Created by: TEAM-027
-//! Modified by: TEAM-029, TEAM-030
+//! Modified by: TEAM-029, TEAM-030, TEAM-034
 
 use anyhow::Result;
 use model_catalog::ModelCatalog;
+use rbee_hive::download_tracker::DownloadTracker;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -56,8 +58,17 @@ pub async fn handle(addr: String) -> Result<()> {
     tracing::info!("Model provisioner initialized (base_dir: {})", model_base_dir);
     let provisioner = Arc::new(ModelProvisioner::new(model_base_dir.into()));
 
+    // TEAM-034: Initialize download tracker for SSE streaming
+    let download_tracker = Arc::new(DownloadTracker::new());
+    tracing::info!("Download tracker initialized");
+
     // Create router
-    let router = create_router(registry.clone(), model_catalog.clone(), provisioner.clone());
+    let router = create_router(
+        registry.clone(),
+        model_catalog.clone(),
+        provisioner.clone(),
+        download_tracker.clone(),
+    );
 
     // Create HTTP server
     let server = HttpServer::new(addr, router).await?;

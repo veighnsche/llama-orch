@@ -5,10 +5,21 @@
 //! - GET /v1/models/download/progress - SSE progress stream
 //!
 //! Created by: TEAM-026
+//! Implemented by: TEAM-033
+//! SSE streaming by: TEAM-034
 
-use axum::{http::StatusCode, Json};
+use rbee_hive::download_tracker::{DownloadEvent, DownloadState};
+use crate::http::routes::AppState;
+use axum::{
+    extract::{Query, State},
+    http::StatusCode,
+    response::sse::{Event, KeepAlive, Sse},
+    Json,
+};
 use serde::{Deserialize, Serialize};
-use tracing::info;
+use std::convert::Infallible;
+use std::time::Duration;
+use tracing::{error, info};
 
 /// Download model request
 #[derive(Debug, Deserialize)]
@@ -28,29 +39,218 @@ pub struct DownloadModelResponse {
 
 /// Handle POST /v1/models/download
 ///
-/// TODO: Implement model download with progress tracking
+/// Per test-001-mvp.md Phase 3: Model Provisioning
+/// 1. Check model catalog (SQLite) if model exists
+/// 2. If not, start download with progress tracking
+/// 3. Register in catalog
+///
+/// TEAM-034: Added SSE progress tracking
 pub async fn handle_download_model(
+    State(state): State<AppState>,
     Json(request): Json<DownloadModelRequest>,
 ) -> Result<Json<DownloadModelResponse>, (StatusCode, String)> {
     info!(model_ref = %request.model_ref, "Model download requested");
 
-    // TODO: Implement actual download logic
-    // For now, return a placeholder response
-    Err((
-        StatusCode::NOT_IMPLEMENTED,
-        "Model download not yet implemented".to_string(),
-    ))
+    // Parse model reference (format: "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF")
+    let parts: Vec<&str> = request.model_ref.split(':').collect();
+    if parts.len() != 2 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            format!("Invalid model reference format: {}", request.model_ref),
+        ));
+    }
+    
+    let provider = parts[0];
+    let reference = parts[1];
+    
+    // TEAM-033: Phase 3.1 - Check model catalog (SQLite)
+    info!(provider = %provider, reference = %reference, "Checking model catalog");
+    match state.model_catalog.find_model(reference, provider).await {
+        Ok(Some(model_info)) => {
+            info!(local_path = %model_info.local_path, "Model already downloaded");
+            return Ok(Json(DownloadModelResponse {
+                download_id: "cached".to_string(),
+                local_path: Some(model_info.local_path),
+            }));
+        }
+        Ok(None) => {
+            info!("Model not in catalog, downloading...");
+        }
+        Err(e) => {
+            error!(error = %e, "Failed to query model catalog");
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Catalog error: {}", e),
+            ));
+        }
+    }
+    
+    // TEAM-034: Start download tracking
+    let download_id = state.download_tracker.start_download().await;
+    info!(download_id = %download_id, "Download tracking started");
+    
+    // Spawn download task with progress updates
+    let state_clone = state.clone();
+    let reference = reference.to_string();
+    let provider = provider.to_string();
+    let download_id_clone = download_id.clone();
+    
+    tokio::spawn(async move {
+        download_with_progress(
+            state_clone,
+            &reference,
+            &provider,
+            &download_id_clone,
+        )
+        .await
+    });
+    
+    // Return immediately with download ID
+    Ok(Json(DownloadModelResponse {
+        download_id,
+        local_path: None,
+    }))
 }
 
-/// Handle GET /v1/models/download/progress
+/// Download model with progress tracking
 ///
-/// TODO: Implement SSE progress stream
-pub async fn handle_download_progress() -> Result<String, (StatusCode, String)> {
-    // TODO: Implement SSE streaming
-    Err((
-        StatusCode::NOT_IMPLEMENTED,
-        "Download progress not yet implemented".to_string(),
-    ))
+/// TEAM-034: Sends progress events to SSE subscribers
+async fn download_with_progress(
+    state: AppState,
+    reference: &str,
+    provider: &str,
+    download_id: &str,
+) {
+    // TODO: Implement actual download with progress callbacks
+    // For now, use existing provisioner
+    match state.provisioner.download_model(reference, provider).await {
+        Ok(local_path) => {
+            info!(local_path = ?local_path, "Model downloaded successfully");
+            
+            // Send complete event
+            let _ = state
+                .download_tracker
+                .send_progress(
+                    download_id,
+                    DownloadEvent::Complete {
+                        local_path: local_path.to_string_lossy().to_string(),
+                    },
+                )
+                .await;
+            
+            // Register in catalog
+            let model_info = model_catalog::ModelInfo {
+                reference: reference.to_string(),
+                provider: provider.to_string(),
+                local_path: local_path.to_string_lossy().to_string(),
+                size_bytes: state
+                    .provisioner
+                    .get_model_size(&local_path)
+                    .unwrap_or(0),
+                downloaded_at: std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs() as i64,
+            };
+            
+            if let Err(e) = state.model_catalog.register_model(&model_info).await {
+                error!(error = %e, "Failed to register model in catalog");
+            }
+            
+            // Cleanup tracker
+            state.download_tracker.complete_download(download_id).await;
+        }
+        Err(e) => {
+            error!(error = %e, "Model download failed");
+            
+            // Send error event
+            let _ = state
+                .download_tracker
+                .send_progress(
+                    download_id,
+                    DownloadEvent::Error {
+                        message: e.to_string(),
+                    },
+                )
+                .await;
+            
+            // Cleanup tracker
+            state.download_tracker.complete_download(download_id).await;
+        }
+    }
+}
+
+/// Query parameters for download progress
+#[derive(Debug, Deserialize)]
+pub struct DownloadProgressQuery {
+    pub id: String,
+}
+
+/// Handle GET /v1/models/download/progress?id=<download_id>
+///
+/// Per test-001-mvp.md Phase 3: Model Download Progress
+/// Industry standard: mistral.rs streaming pattern with keep-alive
+///
+/// TEAM-034: Implements SSE streaming with [DONE] marker
+pub async fn handle_download_progress(
+    State(state): State<AppState>,
+    Query(params): Query<DownloadProgressQuery>,
+) -> Result<Sse<impl futures::Stream<Item = Result<Event, Infallible>>>, (StatusCode, String)> {
+    info!(download_id = %params.id, "Download progress stream requested");
+
+    // Subscribe to download progress
+    let mut rx = state
+        .download_tracker
+        .subscribe(&params.id)
+        .await
+        .ok_or((
+            StatusCode::NOT_FOUND,
+            format!("Download {} not found", params.id),
+        ))?;
+
+    // Create SSE stream with industry-standard pattern (mistral.rs)
+    let stream = async_stream::stream! {
+        let mut done_state = DownloadState::Running;
+
+        loop {
+            match done_state {
+                DownloadState::SendingDone => {
+                    // Industry standard: Send [DONE] marker (OpenAI compatible)
+                    yield Ok(Event::default().data("[DONE]"));
+                    done_state = DownloadState::Done;
+                }
+                DownloadState::Done => {
+                    // Stream complete
+                    break;
+                }
+                DownloadState::Running => {
+                    match rx.recv().await {
+                        Ok(event) => {
+                            // Check if this is terminal event
+                            let is_terminal = matches!(
+                                event,
+                                DownloadEvent::Complete { .. } | DownloadEvent::Error { .. }
+                            );
+
+                            // Send event as JSON
+                            yield Ok(Event::default().json_data(&event).unwrap());
+
+                            if is_terminal {
+                                done_state = DownloadState::SendingDone;
+                            }
+                        }
+                        Err(_) => {
+                            // Channel closed, send [DONE]
+                            done_state = DownloadState::SendingDone;
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    // Industry standard: 10-second keep-alive (mistral.rs pattern)
+    Ok(Sse::new(stream).keep_alive(KeepAlive::new().interval(Duration::from_secs(10))))
 }
 
 // TEAM-031: Unit tests for models module

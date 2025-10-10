@@ -65,11 +65,12 @@ impl ModelCatalog {
         sqlx::query(
             r#"
             CREATE TABLE IF NOT EXISTS models (
-                reference TEXT PRIMARY KEY,
+                reference TEXT NOT NULL,
                 provider TEXT NOT NULL,
                 local_path TEXT NOT NULL,
                 size_bytes INTEGER NOT NULL,
-                downloaded_at INTEGER NOT NULL
+                downloaded_at INTEGER NOT NULL,
+                PRIMARY KEY (reference, provider)
             )
             "#,
         )
@@ -194,6 +195,7 @@ impl ModelCatalog {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use uuid::Uuid;
 
     #[tokio::test]
     async fn test_catalog_init() {
@@ -203,7 +205,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_catalog_register_and_find() {
-        let catalog = ModelCatalog::new(":memory:".to_string());
+        // TEAM-033: Use temp file instead of :memory: to avoid SQLite connection isolation
+        let temp_file = format!("/tmp/test_catalog_{}.db", Uuid::new_v4());
+        let catalog = ModelCatalog::new(temp_file.clone());
         catalog.init().await.unwrap();
 
         let model = ModelInfo {
@@ -225,21 +229,31 @@ mod tests {
             .unwrap();
         assert!(found.is_some());
         assert_eq!(found.unwrap().local_path, "/models/tinyllama.gguf");
+        
+        // TEAM-033: Cleanup temp file
+        let _ = std::fs::remove_file(&temp_file);
     }
 
     // TEAM-031: Additional comprehensive tests
     #[tokio::test]
     async fn test_catalog_find_nonexistent() {
-        let catalog = ModelCatalog::new(":memory:".to_string());
+        // TEAM-033: Use temp file instead of :memory: to avoid SQLite connection isolation
+        let temp_file = format!("/tmp/test_catalog_{}.db", Uuid::new_v4());
+        let catalog = ModelCatalog::new(temp_file.clone());
         catalog.init().await.unwrap();
 
         let found = catalog.find_model("nonexistent/model", "hf").await.unwrap();
         assert!(found.is_none());
+        
+        // TEAM-033: Cleanup temp file
+        let _ = std::fs::remove_file(&temp_file);
     }
 
     #[tokio::test]
     async fn test_catalog_remove_model() {
-        let catalog = ModelCatalog::new(":memory:".to_string());
+        // TEAM-033: Use temp file instead of :memory: to avoid SQLite connection isolation
+        let temp_file = format!("/tmp/test_catalog_{}.db", Uuid::new_v4());
+        let catalog = ModelCatalog::new(temp_file.clone());
         catalog.init().await.unwrap();
 
         let model = ModelInfo {
@@ -255,11 +269,16 @@ mod tests {
 
         catalog.remove_model("test/model", "hf").await.unwrap();
         assert!(catalog.find_model("test/model", "hf").await.unwrap().is_none());
+        
+        // TEAM-033: Cleanup temp file
+        let _ = std::fs::remove_file(&temp_file);
     }
 
     #[tokio::test]
     async fn test_catalog_list_models() {
-        let catalog = ModelCatalog::new(":memory:".to_string());
+        // TEAM-033: Use temp file instead of :memory: to avoid SQLite connection isolation
+        let temp_file = format!("/tmp/test_catalog_{}.db", Uuid::new_v4());
+        let catalog = ModelCatalog::new(temp_file.clone());
         catalog.init().await.unwrap();
 
         let model1 = ModelInfo {
@@ -283,20 +302,30 @@ mod tests {
 
         let models = catalog.list_models().await.unwrap();
         assert_eq!(models.len(), 2);
+        
+        // TEAM-033: Cleanup temp file
+        let _ = std::fs::remove_file(&temp_file);
     }
 
     #[tokio::test]
     async fn test_catalog_list_models_empty() {
-        let catalog = ModelCatalog::new(":memory:".to_string());
+        // TEAM-033: Use temp file instead of :memory: to avoid SQLite connection isolation
+        let temp_file = format!("/tmp/test_catalog_{}.db", Uuid::new_v4());
+        let catalog = ModelCatalog::new(temp_file.clone());
         catalog.init().await.unwrap();
 
         let models = catalog.list_models().await.unwrap();
         assert_eq!(models.len(), 0);
+        
+        // TEAM-033: Cleanup temp file
+        let _ = std::fs::remove_file(&temp_file);
     }
 
     #[tokio::test]
     async fn test_catalog_replace_model() {
-        let catalog = ModelCatalog::new(":memory:".to_string());
+        // TEAM-033: Use temp file instead of :memory: to avoid SQLite connection isolation
+        let temp_file = format!("/tmp/test_catalog_{}.db", Uuid::new_v4());
+        let catalog = ModelCatalog::new(temp_file.clone());
         catalog.init().await.unwrap();
 
         let model1 = ModelInfo {
@@ -324,11 +353,16 @@ mod tests {
 
         let models = catalog.list_models().await.unwrap();
         assert_eq!(models.len(), 1); // Should replace, not duplicate
+        
+        // TEAM-033: Cleanup temp file
+        let _ = std::fs::remove_file(&temp_file);
     }
 
     #[tokio::test]
     async fn test_catalog_different_providers() {
-        let catalog = ModelCatalog::new(":memory:".to_string());
+        // TEAM-033: Use temp file instead of :memory: to avoid SQLite connection isolation
+        let temp_file = format!("/tmp/test_catalog_{}.db", Uuid::new_v4());
+        let catalog = ModelCatalog::new(temp_file.clone());
         catalog.init().await.unwrap();
 
         let model_hf = ModelInfo {
@@ -358,6 +392,9 @@ mod tests {
 
         let models = catalog.list_models().await.unwrap();
         assert_eq!(models.len(), 2);
+        
+        // TEAM-033: Cleanup temp file
+        let _ = std::fs::remove_file(&temp_file);
     }
 
     #[test]
