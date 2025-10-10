@@ -33,6 +33,8 @@ pub enum Commands {
         #[arg(long, default_value = "0.0.0.0:8080")]
         addr: String,
     },
+    /// Detect available compute backends (TEAM-052)
+    Detect,
 }
 
 #[derive(Subcommand)]
@@ -85,5 +87,6 @@ pub async fn handle_command(cli: Cli) -> anyhow::Result<()> {
         Commands::Worker { action } => crate::commands::worker::handle(action),
         Commands::Status => crate::commands::status::handle(),
         Commands::Daemon { addr } => crate::commands::daemon::handle(addr).await,
+        Commands::Detect => crate::commands::detect::handle(),
     }
 }

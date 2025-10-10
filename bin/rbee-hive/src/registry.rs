@@ -32,7 +32,7 @@ pub enum WorkerState {
 pub struct WorkerInfo {
     /// Worker ID (UUID)
     pub id: String,
-    /// Worker URL (e.g., "http://mac.home.arpa:8081")
+    /// Worker URL (e.g., "http://workstation.home.arpa:8081")
     pub url: String,
     /// Model reference (e.g., "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF")
     pub model_ref: String,

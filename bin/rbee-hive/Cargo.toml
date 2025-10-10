@@ -20,6 +20,7 @@ path = "src/main.rs"
 [dependencies]
 hive-core = { path = "../shared-crates/hive-core" }
 model-catalog = { path = "../shared-crates/model-catalog" }  # TEAM-029: Model catalog (SQLite - persistent)
+gpu-info = { path = "../shared-crates/gpu-info" }  # TEAM-052: Backend detection
 clap = { version = "4.5", features = ["derive"] }
 anyhow = "1.0"
 thiserror = { workspace = true }

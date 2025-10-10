@@ -23,6 +23,9 @@ pub struct BeehiveNode {
     pub install_path: String,
     pub last_connected_unix: Option<i64>,
     pub status: String,
+    // TEAM-052: Backend capabilities
+    pub backends: Option<String>,  // JSON array: ["cuda", "metal", "cpu"]
+    pub devices: Option<String>,   // JSON object: {"cuda": 2, "metal": 1, "cpu": 1}
 }
 
 pub struct BeehiveRegistry {
@@ -59,7 +62,9 @@ impl BeehiveRegistry {
                 git_branch TEXT NOT NULL,
                 install_path TEXT NOT NULL,
                 last_connected_unix INTEGER,
-                status TEXT NOT NULL DEFAULT 'unknown'
+                status TEXT NOT NULL DEFAULT 'unknown',
+                backends TEXT,
+                devices TEXT
             )
             "#,
             [],
@@ -75,8 +80,9 @@ impl BeehiveRegistry {
             r#"
             INSERT OR REPLACE INTO beehives (
                 node_name, ssh_host, ssh_port, ssh_user, ssh_key_path,
-                git_repo_url, git_branch, install_path, last_connected_unix, status
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)
+                git_repo_url, git_branch, install_path, last_connected_unix, status,
+                backends, devices
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)
             "#,
             rusqlite::params![
                 node.node_name,
@@ -89,6 +95,8 @@ impl BeehiveRegistry {
                 node.install_path,
                 node.last_connected_unix,
                 node.status,
+                node.backends,
+                node.devices,
             ],
         )?;
         Ok(())
@@ -99,7 +107,8 @@ impl BeehiveRegistry {
         let conn = self.conn.lock().await;
         let mut stmt = conn.prepare(
             "SELECT node_name, ssh_host, ssh_port, ssh_user, ssh_key_path, \
-             git_repo_url, git_branch, install_path, last_connected_unix, status \
+             git_repo_url, git_branch, install_path, last_connected_unix, status, \
+             backends, devices \
              FROM beehives WHERE node_name = ?1",
         )?;
 
@@ -116,6 +125,8 @@ impl BeehiveRegistry {
                     install_path: row.get(7)?,
                     last_connected_unix: row.get(8)?,
                     status: row.get(9)?,
+                    backends: row.get(10)?,
+                    devices: row.get(11)?,
                 })
             })
             .optional()?;
@@ -128,7 +139,8 @@ impl BeehiveRegistry {
         let conn = self.conn.lock().await;
         let mut stmt = conn.prepare(
             "SELECT node_name, ssh_host, ssh_port, ssh_user, ssh_key_path, \
-             git_repo_url, git_branch, install_path, last_connected_unix, status \
+             git_repo_url, git_branch, install_path, last_connected_unix, status, \
+             backends, devices \
              FROM beehives ORDER BY node_name",
         )?;
 
@@ -145,6 +157,8 @@ impl BeehiveRegistry {
                     install_path: row.get(7)?,
                     last_connected_unix: row.get(8)?,
                     status: row.get(9)?,
+                    backends: row.get(10)?,
+                    devices: row.get(11)?,
                 })
             })?
             .collect::<Result<Vec<_>, _>>()?;
@@ -196,8 +210,8 @@ mod tests {
 
         // Add node
         let node = BeehiveNode {
-            node_name: "mac".to_string(),
-            ssh_host: "mac.home.arpa".to_string(),
+            node_name: "workstation".to_string(),
+            ssh_host: "workstation.home.arpa".to_string(),
             ssh_port: 22,
             ssh_user: "vince".to_string(),
             ssh_key_path: Some("/home/vince/.ssh/id_ed25519".to_string()),
@@ -206,28 +220,30 @@ mod tests {
             install_path: "/home/vince/rbee".to_string(),
             last_connected_unix: Some(1728508603),
             status: "reachable".to_string(),
+            backends: Some(r#"["cuda","cpu"]"#.to_string()),
+            devices: Some(r#"{"cuda":2,"cpu":1}"#.to_string()),
         };
 
         registry.add_node(node.clone()).await.unwrap();
 
         // Get node
-        let retrieved = registry.get_node("mac").await.unwrap().unwrap();
-        assert_eq!(retrieved.node_name, "mac");
-        assert_eq!(retrieved.ssh_host, "mac.home.arpa");
+        let retrieved = registry.get_node("workstation").await.unwrap().unwrap();
+        assert_eq!(retrieved.node_name, "workstation");
+        assert_eq!(retrieved.ssh_host, "workstation.home.arpa");
 
         // List nodes
         let nodes = registry.list_nodes().await.unwrap();
         assert_eq!(nodes.len(), 1);
 
         // Update status
-        registry.update_status("mac", "offline", None).await.unwrap();
-        let updated = registry.get_node("mac").await.unwrap().unwrap();
+        registry.update_status("workstation", "offline", None).await.unwrap();
+        let updated = registry.get_node("workstation").await.unwrap().unwrap();
         assert_eq!(updated.status, "offline");
 
         // Remove node
-        let removed = registry.remove_node("mac").await.unwrap();
+        let removed = registry.remove_node("workstation").await.unwrap();
         assert!(removed);
-        let not_found = registry.get_node("mac").await.unwrap();
+        let not_found = registry.get_node("workstation").await.unwrap();
         assert!(not_found.is_none());
     }
 }

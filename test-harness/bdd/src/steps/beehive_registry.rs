@@ -122,6 +122,18 @@ pub async fn given_node_in_registry(world: &mut World, node: String) {
         .map(|u| format!("{}/v2/registry/beehives/add", u))
         .unwrap_or_else(|| "http://localhost:8080/v2/registry/beehives/add".to_string());
 
+    // TEAM-052: Add backend capabilities based on node name
+    let (backends, devices) = match node.as_str() {
+        "workstation" => (
+            Some(r#"["cuda","cpu"]"#.to_string()),
+            Some(r#"{"cuda":2,"cpu":1}"#.to_string()),
+        ),
+        _ => (
+            Some(r#"["cpu"]"#.to_string()),
+            Some(r#"{"cpu":1}"#.to_string()),
+        ),
+    };
+
     let payload = serde_json::json!({
         "node_name": node,
         "ssh_host": format!("{}.home.arpa", node),
@@ -130,7 +142,9 @@ pub async fn given_node_in_registry(world: &mut World, node: String) {
         "ssh_key_path": "/home/vince/.ssh/id_ed25519",
         "git_repo_url": "https://github.com/user/llama-orch.git",
         "git_branch": "main",
-        "install_path": "/home/vince/rbee"
+        "install_path": "/home/vince/rbee",
+        "backends": backends,
+        "devices": devices,
     });
 
     let _resp = client

@@ -29,6 +29,10 @@ pub enum GpuError {
     /// I/O error
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
+
+    /// Other errors (TEAM-052: for backend detection)
+    #[error("{0}")]
+    Other(String),
 }
 
 /// Result type for GPU operations

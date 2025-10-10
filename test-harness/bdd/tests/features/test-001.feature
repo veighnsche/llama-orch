@@ -14,7 +14,6 @@ Feature: Cross-Node Inference Request Flow
       | node        | hostname              | components                                      | capabilities           |
       | blep        | blep.home.arpa        | rbee-keeper, queen-rbee                         | cpu                    |
       | workstation | workstation.home.arpa | rbee-hive, llm-worker-rbee                      | cuda:0, cuda:1, cpu    |
-      | mac         | mac.home.arpa         | rbee-hive, llm-worker-rbee                      | metal:0                |
     # NOTE: This test suite uses workstation node with cuda backend on device 1
     And I am on node "blep"
     And queen-rbee is running at "http://localhost:8080"

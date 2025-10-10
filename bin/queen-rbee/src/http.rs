@@ -39,6 +39,9 @@ pub struct AddNodeRequest {
     pub git_repo_url: String,
     pub git_branch: String,
     pub install_path: String,
+    // TEAM-052: Backend capabilities
+    pub backends: Option<String>,  // JSON array: ["cuda", "metal", "cpu"]
+    pub devices: Option<String>,   // JSON object: {"cuda": 2, "metal": 1, "cpu": 1}
 }
 
 fn default_ssh_port() -> u16 {
@@ -202,6 +205,8 @@ async fn add_node(
         install_path: req.install_path,
         last_connected_unix: Some(chrono::Utc::now().timestamp()),
         status: "reachable".to_string(),
+        backends: req.backends,
+        devices: req.devices,
     };
 
     match state.beehive_registry.add_node(node).await {

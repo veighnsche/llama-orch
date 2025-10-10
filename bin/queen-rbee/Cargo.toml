@@ -21,7 +21,7 @@ tower = "0.5"
 tower-http = { version = "0.6", features = ["trace", "cors"] }
 
 # Async runtime
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "signal", "fs"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "signal", "fs", "process"] }
 futures = "0.3"
 
 # HTTP client (for calling workers)

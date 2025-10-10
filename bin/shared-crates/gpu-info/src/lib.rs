@@ -27,10 +27,12 @@
 #![warn(clippy::arithmetic_side_effects)]
 #![warn(clippy::missing_errors_doc)]
 
+mod backend;
 mod detection;
 mod error;
 mod types;
 
+pub use backend::{detect_backends, Backend, BackendCapabilities};
 pub use detection::{detect_gpus, detect_gpus_or_fail};
 pub use error::{GpuError, Result};
 pub use types::{GpuDevice, GpuInfo};
