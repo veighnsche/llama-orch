@@ -117,6 +117,10 @@ pub async fn handle_execute<B: InferenceBackend>(
 
     info!(job_id = %req.job_id, tokens = result.tokens.len(), "Inference complete");
 
+    // TEAM-089: Clear narration sender to close the channel
+    // This allows the receiver stream to complete instead of waiting forever
+    narration_channel::clear_sender();
+
     // Convert result to SSE events
     let mut events = vec![InferenceEvent::Started {
         job_id: req.job_id.clone(),

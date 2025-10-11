@@ -102,10 +102,40 @@ impl QuantizedLlamaModel {
         });
 
         // Extract metadata
+        // TEAM-089: Make vocab_size optional - derive from tokenizer if missing
         let vocab_size = content
             .metadata
             .get("llama.vocab_size")
             .and_then(|v| v.to_u32().ok())
+            .or_else(|| {
+                // Fallback: count tokens in tokenizer array
+                let derived_size = content.metadata
+                    .get("tokenizer.ggml.tokens")
+                    .and_then(|v| match v {
+                        candle_core::quantized::gguf_file::Value::Array(arr) => Some(arr.len() as u32),
+                        _ => None,
+                    });
+                
+                if let Some(size) = derived_size {
+                    // TEAM-089: Narrate successful vocab_size derivation
+                    narrate(NarrationFields {
+                        actor: "model-loader",
+                        action: "gguf_vocab_size_derived",
+                        target: path.display().to_string(),
+                        human: format!("Derived vocab_size={} from tokenizer.ggml.tokens array", size),
+                        cute: Some(format!("Found vocab_size by counting {} tokens! 🔢✨", size)),
+                        ..Default::default()
+                    });
+                    
+                    tracing::info!(
+                        vocab_size = size,
+                        source = "tokenizer.ggml.tokens",
+                        "Derived vocab_size from tokenizer array"
+                    );
+                }
+                
+                derived_size
+            })
             .with_context(|| {
                 // TEAM-088: Narrate missing vocab_size with helpful context
                 let available_keys: Vec<String> = content.metadata.keys().map(|k| k.to_string()).collect();
@@ -113,21 +143,22 @@ impl QuantizedLlamaModel {
                     actor: "model-loader",
                     action: "gguf_metadata_missing",
                     target: "llama.vocab_size".to_string(),
-                    human: "Missing llama.vocab_size in GGUF metadata".to_string(),
-                    cute: Some("Oh no! The GGUF file is missing vocab_size! 😟🔍".to_string()),
+                    human: "Cannot determine vocab_size from GGUF metadata".to_string(),
+                    cute: Some("Oh no! Can't find vocab_size anywhere! 😟🔍".to_string()),
                     error_kind: Some("missing_metadata_field".to_string()),
                     ..Default::default()
                 });
                 
                 tracing::error!(
-                    required_key = "llama.vocab_size",
+                    required_key = "llama.vocab_size or tokenizer.ggml.tokens",
                     available_keys = ?available_keys,
                     "GGUF metadata missing required field"
                 );
                 
                 format!(
-                    "Missing llama.vocab_size in GGUF metadata. Available keys: [{}]. \
-                     This GGUF file may be incomplete or corrupted. Try downloading a fresh copy from HuggingFace.",
+                    "Cannot determine vocab_size: missing both llama.vocab_size and tokenizer.ggml.tokens. \
+                     Available keys: [{}]. This GGUF file may be incomplete or corrupted. \
+                     Try downloading a fresh copy from HuggingFace.",
                     available_keys.join(", ")
                 )
             })?

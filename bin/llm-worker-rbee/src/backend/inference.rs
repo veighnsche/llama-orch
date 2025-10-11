@@ -329,27 +329,37 @@ impl InferenceBackend for CandleInferenceBackend {
         let tokens_per_sec =
             if duration_ms > 0 { (generated_tokens.len() as u64 * 1000) / duration_ms } else { 0 };
 
+        // TEAM-089: Join generated text for logging
+        let full_text = generated_text.join("");
+        let text_preview = if full_text.len() > 100 {
+            format!("{}...", &full_text[..100])
+        } else {
+            full_text.clone()
+        };
+
         tracing::info!(
             tokens_generated = generated_tokens.len(),
             duration_ms = duration_ms,
             tokens_per_sec = tokens_per_sec,
+            text_preview = %text_preview,
             "Inference completed"
         );
 
+        // TEAM-089: Narrate the actual answer (CRITICAL for debugging)
         narrate(NarrationFields {
             actor: ACTOR_CANDLE_BACKEND,
             action: ACTION_INFERENCE_COMPLETE,
             target: format!("{}-tokens", generated_tokens.len()),
             human: format!(
-                "Inference completed ({} tokens in {} ms, {} tok/s)",
+                "Generated: \"{}\" ({} tokens, {} ms, {} tok/s)",
+                text_preview,
                 generated_tokens.len(),
                 duration_ms,
                 tokens_per_sec
             ),
             cute: Some(format!(
-                "Generated {} tokens in {} ms! {} tok/s! 🎉",
-                generated_tokens.len(),
-                duration_ms,
+                "Answer: \"{}\" 🎉 ({} tok/s)",
+                text_preview,
                 tokens_per_sec
             )),
             tokens_out: Some(generated_tokens.len() as u64),

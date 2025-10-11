@@ -95,6 +95,7 @@ pub const ACTION_GGUF_INSPECT_METADATA: &str = "gguf_inspect_metadata";
 pub const ACTION_GGUF_METADATA_KEYS: &str = "gguf_metadata_keys";
 pub const ACTION_GGUF_METADATA_MISSING: &str = "gguf_metadata_missing";
 pub const ACTION_GGUF_METADATA_LOADED: &str = "gguf_metadata_loaded";
+pub const ACTION_GGUF_VOCAB_SIZE_DERIVED: &str = "gguf_vocab_size_derived"; // TEAM-089
 pub const ACTION_GGUF_LOAD_WEIGHTS: &str = "gguf_load_weights";
 pub const ACTION_GGUF_WEIGHTS_FAILED: &str = "gguf_weights_failed";
 pub const ACTION_GGUF_LOAD_COMPLETE: &str = "gguf_load_complete";
