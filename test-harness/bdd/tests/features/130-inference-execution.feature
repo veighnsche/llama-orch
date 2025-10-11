@@ -231,3 +231,15 @@ Feature: Inference Execution
     And worker stops inference
     And worker releases slot
     And subsequent DELETE requests are idempotent (also return 204)
+
+  @concurrency @p0 @worker-slots
+  Scenario: Gap-C4 - Worker slot allocation race condition (moved from 200-concurrency)
+    Given worker has 4 slots total
+    And 3 slots are currently busy with active requests
+    When 2 inference requests arrive at worker simultaneously
+    Then worker allocates last slot to ONE request atomically (CAS operation)
+    And worker responds 200 OK with SSE stream to allocated request
+    And worker responds 503 "ALL_SLOTS_BUSY" to rejected request
+    And slot count remains consistent (4 total, 4 busy, 0 available)
+    # Note: Slot allocation happens AT WORKER level, not in queen-rbee registry
+    # queen-rbee only caches slot availability (eventually consistent)

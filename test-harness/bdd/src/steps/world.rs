@@ -35,6 +35,25 @@ impl DebugWorkerRegistry {
     }
 }
 
+// TEAM-080: Wrapper for queen_rbee::WorkerRegistry to implement Debug
+pub struct DebugQueenRegistry(queen_rbee::WorkerRegistry);
+
+impl std::fmt::Debug for DebugQueenRegistry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("QueenWorkerRegistry").finish_non_exhaustive()
+    }
+}
+
+impl DebugQueenRegistry {
+    pub fn new() -> Self {
+        Self(queen_rbee::WorkerRegistry::new())
+    }
+    
+    pub fn inner(&self) -> &queen_rbee::WorkerRegistry {
+        &self.0
+    }
+}
+
 #[derive(Debug, cucumber::World)]
 pub struct World {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -168,6 +187,25 @@ pub struct World {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     /// Last action performed (for step tracking)
     pub last_action: Option<String>,
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Concurrency Testing (TEAM-080)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// queen-rbee worker registry for concurrency tests
+    #[allow(dead_code)]
+    pub queen_registry: Option<DebugQueenRegistry>,
+    
+    /// Concurrent operation results
+    pub concurrent_results: Vec<Result<String, String>>,
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Concurrency Testing Extensions (TEAM-081)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// Concurrent task handles for async operations
+    pub concurrent_handles: Vec<tokio::task::JoinHandle<bool>>,
+    
+    /// Active request ID for tracking
+    pub active_request_id: Option<String>,
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -290,6 +328,10 @@ impl Default for World {
             hive_registry: Some(DebugWorkerRegistry::new()),
             next_worker_port: 8001,
             last_action: None, // TEAM-078: Action tracking
+            queen_registry: None, // TEAM-080: Concurrency testing
+            concurrent_results: Vec::new(), // TEAM-080: Concurrent operation results
+            concurrent_handles: Vec::new(), // TEAM-081: Concurrent task handles
+            active_request_id: None, // TEAM-081: Active request tracking
         }
     }
 }
