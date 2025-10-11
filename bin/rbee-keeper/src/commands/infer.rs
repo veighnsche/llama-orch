@@ -11,14 +11,19 @@
 //! TEAM-030: Removed local worker registry - ephemeral mode doesn't need persistence
 //! TEAM-048: Refactored to use queen-rbee orchestration endpoint
 //! TEAM-050: Fixed stream error handling to prevent exit code 1
+//! TEAM-085: CRITICAL FIX - Auto-start queen-rbee if not running (ONE COMMAND INFERENCE)
+//! TEAM-086: Added detailed diagnostic output between submission and error messages
+//! TEAM-088: Added RBEE_NO_RETRY env var to disable retries for faster dev feedback
 //!
 //! Created by: TEAM-024
-//! Modified by: TEAM-027, TEAM-030, TEAM-048, TEAM-050
+//! Modified by: TEAM-027, TEAM-030, TEAM-048, TEAM-050, TEAM-085, TEAM-086, TEAM-088
 
 use anyhow::Result;
 use colored::Colorize;
 use futures::StreamExt;
 use std::io::Write;
+use std::time::Duration;
+use crate::queen_lifecycle::ensure_queen_rbee_running;
 
 /// Handle infer command
 ///
@@ -44,55 +49,107 @@ pub async fn handle(
 
     let client = reqwest::Client::new();
     let queen_url = "http://localhost:8080";
+    // TEAM-085: CRITICAL FIX - Ensure queen-rbee is running
+    ensure_queen_rbee_running(&client, queen_url).await?;
 
     println!("{}", "[queen-rbee] Submitting inference task...".yellow());
 
-    // TEAM-055: Build request with optional backend and device
-    let mut request = serde_json::json!({
+    // Submit inference task to queen-rbee
+    let task_request = serde_json::json!({
         "node": node,
         "model": model,
         "prompt": prompt,
         "max_tokens": max_tokens,
-        "temperature": temperature
+        "temperature": temperature,
+        "backend": backend,
+        "device": device,
     });
-    
-    if let Some(backend_val) = backend {
-        request["backend"] = serde_json::json!(backend_val);
-    }
-    if let Some(device_val) = device {
-        request["device"] = serde_json::json!(device_val);
-    }
 
-    // TEAM-055: Add retry logic with exponential backoff to fix connection issues
+    // TEAM-055: Retry logic with exponential backoff
+    // TEAM-085: Add narration so user sees what's happening during retries
+    // TEAM-086: Added more diagnostic output between submission and error
+    // TEAM-088: RBEE_NO_RETRY=1 to disable retries for faster dev feedback
+    let max_attempts = if std::env::var("RBEE_NO_RETRY").is_ok() {
+        println!("{}", "  🚫 RBEE_NO_RETRY set - will fail fast without retries".yellow());
+        1
+    } else {
+        3
+    };
+    
     let mut last_error = None;
     let mut response = None;
-    
-    for attempt in 0..3 {
+    for attempt in 0..max_attempts {
+        if attempt > 0 {
+            println!("{}", format!("  ⏳ Retry attempt {}/{}...", attempt + 1, max_attempts).dimmed());
+        }
+        
+        println!("{}", format!("  🔌 Connecting to queen-rbee at {}...", queen_url).dimmed());
+        println!("{}", format!("  📤 Sending POST request to {}/v2/tasks", queen_url).dimmed());
+        println!("{}", format!("  📋 Request payload: node={}, model={}", node, model).dimmed());
+        
         match client
             .post(format!("{}/v2/tasks", queen_url))
-            .json(&request)
-            .timeout(std::time::Duration::from_secs(30))
+            .json(&task_request)
+            .timeout(Duration::from_secs(30))
             .send()
             .await
         {
             Ok(resp) if resp.status().is_success() => {
+                println!("{}", format!("  ✅ Request accepted by queen-rbee (HTTP {})", resp.status()).green());
                 response = Some(resp);
                 break;
             }
             Ok(resp) => {
+                // TEAM-086: Non-success HTTP status
                 let status = resp.status();
-                let body = resp.text().await.unwrap_or_default();
-                anyhow::bail!("Inference request failed: HTTP {} - {}", status, body);
-            }
-            Err(e) if attempt < 2 => {
-                tracing::warn!("⚠️ Attempt {} failed: {}, retrying...", attempt + 1, e);
-                last_error = Some(e);
-                tokio::time::sleep(std::time::Duration::from_millis(100 * 2_u64.pow(attempt))).await;
-                continue;
+                println!("{}", format!("  ❌ HTTP error: {}", status).red());
+                
+                // Try to get error body for debugging
+                match resp.text().await {
+                    Ok(body) if !body.is_empty() => {
+                        println!("{}", format!("  📄 Response body: {}", body).dimmed());
+                        last_error = Some(format!("HTTP {} - {}", status, body));
+                    }
+                    Ok(_) => {
+                        last_error = Some(format!("HTTP {} (no body)", status));
+                    }
+                    Err(e) => {
+                        println!("{}", format!("  ⚠️  Could not read response body: {}", e).dimmed());
+                        last_error = Some(format!("HTTP {}", status));
+                    }
+                }
+                
+                if attempt < max_attempts - 1 {
+                    let backoff = 1000 * (attempt + 1) as u64;
+                    println!("{}", format!("  ⏱️  Backing off for {}ms before retry...", backoff).dimmed());
+                    tokio::time::sleep(Duration::from_millis(backoff)).await;
+                }
             }
             Err(e) => {
-                last_error = Some(e);
-                break;
+                // TEAM-086: Connection/network error
+                println!("{}", format!("  ❌ Connection error: {}", e).red());
+                
+                // TEAM-086: More specific diagnostics based on error type
+                let error_str = e.to_string();
+                if error_str.contains("Connection refused") {
+                    println!("{}", format!("  💡 queen-rbee is not responding on port 8080").yellow());
+                    println!("{}", format!("  💡 Verify: curl http://localhost:8080/health").dimmed());
+                } else if error_str.contains("timeout") {
+                    println!("{}", format!("  💡 Request timed out after 30 seconds").yellow());
+                    println!("{}", format!("  💡 queen-rbee may be overloaded or stuck").dimmed());
+                } else if error_str.contains("dns") || error_str.contains("resolve") {
+                    println!("{}", format!("  💡 DNS resolution failed for localhost").yellow());
+                } else {
+                    println!("{}", format!("  💡 Network error occurred").yellow());
+                }
+                
+                last_error = Some(e.to_string());
+                
+                if attempt < max_attempts - 1 {
+                    let backoff = 1000 * (attempt + 1) as u64;
+                    println!("{}", format!("  ⏱️  Backing off for {}ms before retry...", backoff).dimmed());
+                    tokio::time::sleep(Duration::from_millis(backoff)).await;
+                }
             }
         }
     }
@@ -100,10 +157,12 @@ pub async fn handle(
     let response = match response {
         Some(r) => r,
         None => {
+            println!();
+            println!("{}", "❌ All retry attempts exhausted".red().bold());
             if let Some(e) = last_error {
                 anyhow::bail!("Failed to submit inference task after 3 attempts: {}", e);
             } else {
-                anyhow::bail!("Failed to submit inference task");
+                anyhow::bail!("Failed to submit inference task after 3 attempts");
             }
         }
     };
@@ -165,5 +224,8 @@ pub async fn handle(
     println!("\n");
     Ok(())
 }
+
+// TEAM-085: Moved to shared module commands/queen_lifecycle.rs
+// All commands that talk to queen-rbee use the same lifecycle management
 
 // TEAM-048: Removed wait_for_worker_ready and execute_inference - now handled by queen-rbee

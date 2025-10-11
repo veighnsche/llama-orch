@@ -9,6 +9,7 @@
 //!
 //! Created by: TEAM-026
 //! Modified by: TEAM-027, TEAM-029, TEAM-030
+//! TEAM-087: Enhanced spawn diagnostics and error handling
 
 use crate::http::routes::AppState;
 use crate::registry::{WorkerInfo, WorkerState};
@@ -173,7 +174,24 @@ pub async fn handle_spawn_worker(
     // Per test-001-mvp.md lines 136-143
     // TEAM-029: Use model_path from catalog/provisioner instead of request.model_path
     // TEAM-035: Worker only accepts: --worker-id, --model, --port, --callback-url
-    let spawn_result = tokio::process::Command::new(worker_binary)
+    // TEAM-087: Enhanced spawn diagnostics
+    
+    info!("🚀 Spawning worker process:");
+    info!("   Binary: {:?}", worker_binary);
+    info!("   Worker ID: {}", worker_id);
+    info!("   Model: {}", model_path);
+    info!("   Port: {}", port);
+    info!("   Callback: {}", callback_url);
+    
+    // TEAM-088: CRITICAL FIX - Inherit stdout/stderr so we can see worker narration!
+    // Use RBEE_SILENT=1 to suppress logs if needed
+    let (stdout_cfg, stderr_cfg) = if std::env::var("RBEE_SILENT").is_ok() {
+        (std::process::Stdio::piped(), std::process::Stdio::piped())
+    } else {
+        (std::process::Stdio::inherit(), std::process::Stdio::inherit())
+    };
+    
+    let spawn_result = tokio::process::Command::new(&worker_binary)
         .arg("--worker-id")
         .arg(&worker_id)
         .arg("--model")
@@ -182,10 +200,51 @@ pub async fn handle_spawn_worker(
         .arg(port.to_string())
         .arg("--callback-url")
         .arg(&callback_url)
+        .stdout(stdout_cfg)
+        .stderr(stderr_cfg)
         .spawn();
 
     match spawn_result {
-        Ok(_child) => {
+        Ok(mut child) => {
+            // TEAM-087: Check if process started successfully
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+            
+            if let Ok(Some(status)) = child.try_wait() {
+                // TEAM-088: Process exited immediately
+                // If stdout/stderr are inherited, we already saw the output
+                // If piped (RBEE_SILENT=1), capture and display
+                let stdout = if let Some(mut out) = child.stdout.take() {
+                    use tokio::io::AsyncReadExt;
+                    let mut buf = String::new();
+                    let _ = out.read_to_string(&mut buf).await;
+                    if !buf.is_empty() {
+                        error!("   stdout: {}", buf);
+                    }
+                    buf
+                } else {
+                    String::new()
+                };
+                
+                let stderr = if let Some(mut err) = child.stderr.take() {
+                    use tokio::io::AsyncReadExt;
+                    let mut buf = String::new();
+                    let _ = err.read_to_string(&mut buf).await;
+                    if !buf.is_empty() {
+                        error!("   stderr: {}", buf);
+                    }
+                    buf
+                } else {
+                    String::new()
+                };
+                
+                error!("❌ Worker process exited immediately with status: {}", status);
+                
+                return Err((
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Worker process failed to start: exit status {}. Check logs above for details.", status)
+                ));
+            }
+            
             // Register worker in loading state
             let worker = WorkerInfo {
                 id: worker_id.clone(),
@@ -204,14 +263,16 @@ pub async fn handle_spawn_worker(
             info!(
                 worker_id = %worker_id,
                 url = %url,
-                "Worker spawned successfully"
+                "✅ Worker process spawned successfully"
             );
 
             Ok(Json(SpawnWorkerResponse { worker_id, url, state: "loading".to_string() }))
         }
         Err(e) => {
-            error!(error = %e, "Failed to spawn worker");
-            Err((StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to spawn worker: {}", e)))
+            error!("❌ Failed to spawn worker process: {}", e);
+            error!("   Binary path: {:?}", worker_binary);
+            error!("   Does the binary exist? Check: ls -la {:?}", worker_binary);
+            Err((StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to spawn worker: {}. Binary: {:?}", e, worker_binary)))
         }
     }
 }

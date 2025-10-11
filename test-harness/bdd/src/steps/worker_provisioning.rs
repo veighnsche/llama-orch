@@ -119,70 +119,91 @@ pub async fn when_binary_not_executable(world: &mut World) {
 
 #[then(expr = "cargo build command is:")]
 pub async fn then_cargo_build_command(world: &mut World, step: &cucumber::gherkin::Step) {
-    // TEAM-078: Verify cargo build command structure
-    tracing::info!("TEAM-078: Verifying cargo build command");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify cargo build command structure
+    assert!(world.last_action.is_some(), "No action recorded");
+    let action = world.last_action.as_ref().unwrap();
+    assert!(action.contains("build_worker"),
+        "Expected build action, got: {}", action);
+    tracing::info!("TEAM-082: Cargo build command verified");
 }
 
 #[then(expr = "the build succeeds")]
 pub async fn then_build_succeeds(world: &mut World) {
-    // TEAM-078: Verify build success
-    tracing::info!("TEAM-078: Build succeeded");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify build success
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("build_worker") || action.contains("verify_binary_success"),
+        "Expected successful build action, got: {}", action);
+    tracing::info!("TEAM-082: Build succeeded");
 }
 
 #[then(expr = "the binary is registered in catalog at {string}")]
 pub async fn then_binary_registered_at(world: &mut World, path: String) {
-    // TEAM-078: Verify catalog entry
-    tracing::info!("TEAM-078: Binary registered at: {}", path);
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify catalog entry
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("worker_registered") || action.contains("build_worker"),
+        "Expected worker registration, got: {}", action);
+    tracing::info!("TEAM-082: Binary registered at: {}", path);
 }
 
 #[then(expr = "the catalog entry includes features {string}")]
 pub async fn then_catalog_includes_features(world: &mut World, features: String) {
-    // TEAM-078: Verify features in catalog
-    tracing::info!("TEAM-078: Catalog includes features: {}", features);
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify features in catalog
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("build_worker") && action.contains(&features),
+        "Expected build with features '{}', got: {}", features, action);
+    tracing::info!("TEAM-082: Catalog includes features: {}", features);
 }
 
 #[then(expr = "rbee-hive checks the worker catalog")]
 pub async fn then_check_worker_catalog(world: &mut World) {
-    // TEAM-078: Verify catalog was checked
-    tracing::info!("TEAM-078: Worker catalog checked");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify catalog was checked
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("worker_not_in_catalog") || action.contains("spawn_worker"),
+        "Expected catalog check action, got: {}", action);
+    tracing::info!("TEAM-082: Worker catalog checked");
 }
 
 #[then(expr = "rbee-hive triggers worker build with features {string}")]
 pub async fn then_trigger_worker_build(world: &mut World, features: String) {
-    // TEAM-078: Verify build was triggered
-    tracing::info!("TEAM-078: Worker build triggered with features: {}", features);
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify build was triggered
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("build_worker") && action.contains(&features),
+        "Expected build with features '{}', got: {}", features, action);
+    tracing::info!("TEAM-082: Worker build triggered with features: {}", features);
 }
 
 #[then(expr = "after build completes, rbee-hive spawns the worker")]
 pub async fn then_spawn_after_build(world: &mut World) {
-    // TEAM-078: Verify worker spawn after build
-    tracing::info!("TEAM-078: Worker spawned after build");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify worker spawn after build
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("build_worker") || action.contains("verify_binary"),
+        "Expected build/spawn action, got: {}", action);
+    tracing::info!("TEAM-082: Worker spawned after build");
 }
 
 #[then(expr = "rbee-hive captures stderr output")]
 pub async fn then_capture_stderr(world: &mut World) {
-    // TEAM-078: Verify stderr was captured
-    tracing::info!("TEAM-078: Stderr captured");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify stderr was captured
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("build_failed") || action.contains("build_worker"),
+        "Expected build action with stderr, got: {}", action);
+    tracing::info!("TEAM-082: Stderr captured");
 }
 
 #[then(expr = "cargo build fails with linker error")]
 pub async fn then_cargo_build_linker_error(world: &mut World) {
-    // TEAM-078: Verify linker error
-    tracing::info!("TEAM-078: Cargo build linker error");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify linker error
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("build_failed") || action.contains("cuda_missing"),
+        "Expected build failure action, got: {}", action);
+    tracing::info!("TEAM-082: Cargo build linker error");
 }
 
 #[then(expr = "the returned worker has features {string}")]
 pub async fn then_worker_has_features(world: &mut World, features: String) {
-    // TEAM-078: Verify worker features
-    tracing::info!("TEAM-078: Worker has features: {}", features);
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify worker features
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("query_features") && action.contains(&features),
+        "Expected query with features '{}', got: {}", features, action);
+    tracing::info!("TEAM-082: Worker has features: {}", features);
 }

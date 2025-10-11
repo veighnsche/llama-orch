@@ -62,6 +62,26 @@ pub struct HealthResponse {
 // Worker Management Types (TEAM-046)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+// TEAM-084: Worker registration request from rbee-hive
+#[derive(Debug, Deserialize)]
+pub struct RegisterWorkerRequest {
+    pub worker_id: String,
+    pub url: String,
+    pub model_ref: String,
+    pub backend: String,
+    pub device: u32,
+    pub node_name: String,
+    pub slots_total: Option<u32>,
+    pub vram_bytes: Option<u64>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct RegisterWorkerResponse {
+    pub success: bool,
+    pub message: String,
+    pub worker_id: String,
+}
+
 #[derive(Debug, Serialize)]
 pub struct WorkerInfo {
     pub worker_id: String,
@@ -111,6 +131,25 @@ pub struct InferenceTaskRequest {
     pub prompt: String,
     pub max_tokens: u32,
     pub temperature: f32,
+}
+
+// TEAM-084: Simple inference request (OpenAI-compatible)
+#[derive(Debug, Serialize, Deserialize)]
+pub struct InferenceRequest {
+    pub model: Option<String>,
+    pub prompt: String,
+    #[serde(default = "default_max_tokens")]
+    pub max_tokens: u32,
+    #[serde(default = "default_temperature")]
+    pub temperature: f32,
+}
+
+fn default_max_tokens() -> u32 {
+    100
+}
+
+fn default_temperature() -> f32 {
+    0.7
 }
 
 // TEAM-047: Internal types for worker communication

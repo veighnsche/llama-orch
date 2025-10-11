@@ -1,19 +1,22 @@
-//! Pool management commands (via SSH)
+//! Hive management commands (via SSH)
+//!
+//! TEAM-085: Renamed from "pool" to "hive" for consistency with rbee naming
 //!
 //! Created by: TEAM-022
 //! Modified by: TEAM-036 (removed hardcoded paths, use binaries from PATH)
+//! Modified by: TEAM-085 (renamed pool → hive)
 
-use crate::cli::{GitAction, ModelsAction, PoolAction, WorkerAction};
+use crate::cli::{GitAction, HiveAction, ModelsAction, WorkerAction};
 use crate::config::Config;
 use crate::ssh;
 use anyhow::Result;
 
-pub fn handle(action: PoolAction) -> Result<()> {
+pub fn handle(action: HiveAction) -> Result<()> {
     match action {
-        PoolAction::Models { action, host } => handle_models(action, &host),
-        PoolAction::Worker { action, host } => handle_worker(action, &host),
-        PoolAction::Git { action, host } => handle_git(action, &host),
-        PoolAction::Status { host } => handle_status(&host),
+        HiveAction::Models { action, host } => handle_models(action, &host),
+        HiveAction::Worker { action, host } => handle_worker(action, &host),
+        HiveAction::Git { action, host } => handle_git(action, &host),
+        HiveAction::Status { host } => handle_status(&host),
     }
 }
 

@@ -25,6 +25,7 @@ mod cli;
 mod commands;
 mod config;
 mod pool_client;
+mod queen_lifecycle;  // TEAM-085: Utility for queen-rbee lifecycle management
 mod ssh;
 
 use anyhow::Result;

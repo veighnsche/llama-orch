@@ -18,6 +18,15 @@ pub async fn given_rbee_hive_running(world: &mut World) {
     world.last_action = Some("rbee_hive_running".to_string());
 }
 
+// TEAM-085: Added missing step for resource management scenarios
+#[given(expr = "rbee-hive is running at {string}")]
+pub async fn given_rbee_hive_running_at_url(world: &mut World, url: String) {
+    // TEAM-085: Set rbee-hive URL for resource management tests
+    world.rbee_hive_url = Some(url.clone());
+    world.last_action = Some("rbee_hive_running".to_string());
+    tracing::info!("TEAM-085: rbee-hive is running at {}", url);
+}
+
 #[given(expr = "rbee-hive is running with version {string}")]
 pub async fn given_rbee_hive_version(world: &mut World, version: String) {
     // TEAM-078: Set rbee-hive version
@@ -107,49 +116,66 @@ pub async fn when_query_resources(world: &mut World) {
 
 #[then(expr = "health endpoint returns {int} OK")]
 pub async fn then_health_returns_ok(world: &mut World, status: u16) {
-    // TEAM-078: Verify health endpoint status
-    tracing::info!("TEAM-078: Health endpoint returned {} OK", status);
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify health endpoint status
+    assert_eq!(status, 200, "Expected 200 OK status");
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("check_health"),
+        "Expected health check action, got: {}", action);
+    tracing::info!("TEAM-082: Health endpoint returned {} OK", status);
 }
 
 #[then(expr = "response body is:")]
 pub async fn then_response_body_is(world: &mut World, step: &cucumber::gherkin::Step) {
-    // TEAM-078: Verify response body structure
-    tracing::info!("TEAM-078: Verifying response body");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify response body structure
+    assert!(world.last_action.is_some(), "No action recorded");
+    let action = world.last_action.as_ref().unwrap();
+    assert!(action.contains("check_health") || action.contains("query_"),
+        "Expected health/query action, got: {}", action);
+    tracing::info!("TEAM-082: Response body verified");
 }
 
 #[then(expr = "version check passes")]
 pub async fn then_version_check_passes(world: &mut World) {
-    // TEAM-078: Verify version compatibility
-    tracing::info!("TEAM-078: Version check passed");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify version compatibility
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("validate_version"),
+        "Expected version validation action, got: {}", action);
+    tracing::info!("TEAM-082: Version check passed");
 }
 
 #[then(expr = "the response contains detected backends:")]
 pub async fn then_response_contains_backends(world: &mut World, step: &cucumber::gherkin::Step) {
-    // TEAM-078: Verify backends in response
-    tracing::info!("TEAM-078: Verifying detected backends");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify backends in response
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("query_backends"),
+        "Expected backend query action, got: {}", action);
+    tracing::info!("TEAM-082: Detected backends verified");
 }
 
 #[then(expr = "the response contains:")]
 pub async fn then_response_contains(world: &mut World, step: &cucumber::gherkin::Step) {
-    // TEAM-078: Verify response structure
-    tracing::info!("TEAM-078: Verifying response content");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify response structure
+    assert!(world.last_action.is_some(), "No action recorded");
+    let action = world.last_action.as_ref().unwrap();
+    assert!(action.contains("query_") || action.contains("check_"),
+        "Expected query/check action, got: {}", action);
+    tracing::info!("TEAM-082: Response content verified");
 }
 
 #[then(expr = "ram_available_gb >= {int}")]
 pub async fn then_ram_available(world: &mut World, gb: u32) {
-    // TEAM-078: Verify RAM availability
-    tracing::info!("TEAM-078: RAM available >= {} GB", gb);
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify RAM availability
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("query_resources"),
+        "Expected resource query action, got: {}", action);
+    tracing::info!("TEAM-082: RAM available >= {} GB", gb);
 }
 
 #[then(expr = "disk_available_gb >= {int}")]
 pub async fn then_disk_available(world: &mut World, gb: u32) {
-    // TEAM-078: Verify disk availability
-    tracing::info!("TEAM-078: Disk available >= {} GB", gb);
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify disk availability
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("query_resources"),
+        "Expected resource query action, got: {}", action);
+    tracing::info!("TEAM-082: Disk available >= {} GB", gb);
 }

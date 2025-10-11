@@ -1116,10 +1116,9 @@ pub async fn then_logs_cancellation(_world: &mut World) {
     tracing::debug!("Logged cancellation event");
 }
 
-#[then(expr = "worker returns to idle state")]
-pub async fn then_returns_to_idle(_world: &mut World) {
-    tracing::debug!("Worker returned to idle");
-}
+// TEAM-085: Removed duplicate "worker returns to idle state" step
+// This step is already defined in integration.rs with proper implementation
+// Keeping that version to avoid ambiguous step matches
 
 #[given(expr = "inference is in progress with request_id {string}")]
 pub async fn given_inference_with_id(_world: &mut World, _request_id: String) {

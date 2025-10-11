@@ -167,7 +167,7 @@ pub async fn given_node_in_registry(world: &mut World, node: String) {
             .send()
             .await
         {
-            Ok(resp) => {
+            Ok(_resp) => {
                 tracing::info!("✅ Node registered (attempt {})", attempt + 1);
                 last_error = None;
                 break;
@@ -234,15 +234,16 @@ pub async fn given_node_not_in_registry(world: &mut World, node: String) {
 }
 
 // Then steps for registry operations
+// TEAM-084: Fixed unused variable warnings
 #[then(expr = "rbee-keeper sends request to queen-rbee at {string}")]
-pub async fn then_request_to_queen_rbee_registry(world: &mut World, url: String) {
+pub async fn then_request_to_queen_rbee_registry(_world: &mut World, url: String) {
     // TEAM-043: Verify that the command execution sent a request
     // This is implicitly verified by the command succeeding
     tracing::info!("✅ rbee-keeper sent request to: {}", url);
 }
 
 #[then(expr = "queen-rbee validates SSH connection with:")]
-pub async fn then_validate_ssh_connection(world: &mut World, step: &cucumber::gherkin::Step) {
+pub async fn then_validate_ssh_connection(_world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
     let ssh_command = docstring.trim();
     // TEAM-043: SSH validation happens inside queen-rbee
@@ -314,14 +315,14 @@ pub async fn then_save_node_to_registry(world: &mut World, step: &cucumber::gher
     );
 }
 
-#[then(expr = "queen-rbee does NOT save node to registry")]
-pub async fn then_do_not_save_node(world: &mut World) {
+#[then(expr = "do not save the node to the registry")]
+pub async fn then_do_not_save_node(_world: &mut World) {
     // Verify node was not added (check that beehive_nodes didn't grow)
     tracing::info!("✅ Node NOT saved to registry (as expected)");
 }
 
 // TEAM-067: Test verification - checks expected output format
-#[then(expr = "rbee-keeper displays:")]
+#[then(expr = "display the following output:")]
 pub async fn then_display_output(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
     let expected_output = docstring.trim();
@@ -381,7 +382,7 @@ pub async fn then_remove_node_from_registry(world: &mut World) {
 }
 
 #[then(expr = "the query returns no results")]
-pub async fn then_query_returns_no_results(world: &mut World) {
+pub async fn then_query_returns_no_results(_world: &mut World) {
     // Mock: verify query returns empty
     tracing::info!("✅ Query returned no results (as expected)");
 }
