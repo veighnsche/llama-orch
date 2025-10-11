@@ -25,6 +25,7 @@ pub mod error_helpers; // TEAM-062: Error verification helpers
 pub mod error_responses;
 pub mod failure_recovery; // TEAM-079: Failover and recovery scenarios
 pub mod gguf;
+pub mod global_hive;   // TEAM-085: Global rbee-hive lifecycle for localhost tests
 pub mod global_queen;
 pub mod happy_path;
 pub mod inference_execution;
@@ -32,6 +33,7 @@ pub mod integration; // TEAM-083: Integration and E2E tests
 pub mod lifecycle;
 pub mod model_catalog; // TEAM-078: SQLite model catalog queries
 pub mod model_provisioning;
+pub mod narration_verification; // TEAM-085: Verify product code emits narration
 pub mod pool_preflight;
 pub mod queen_rbee_registry; // TEAM-078: Global worker registry (in-memory)
 pub mod rbee_hive_preflight; // TEAM-078: rbee-hive preflight validation

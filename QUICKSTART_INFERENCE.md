@@ -1,42 +1,40 @@
 # 🚀 QUICKSTART: Get LLM Response on Your Shell
 
-**TEAM-035: End-to-End Inference Working!**
+**TEAM-035: End-to-End Inference Working!**  
+**TEAM-085: ONE COMMAND INFERENCE - Auto-starts queen-rbee!**
 
 ## What Works Now
 
 ✅ **Phase 1**: Download Progress SSE (TEAM-034)  
 ✅ **Phase 2**: Loading Progress SSE (TEAM-035)  
 ✅ **Phase 3**: Inference Streaming with [DONE] marker (TEAM-035)  
-✅ **Full Flow**: rbee-keeper → rbee-hive → llm-worker-rbee → **TOKENS ON YOUR SHELL!**
+✅ **ONE COMMAND**: Auto-starts queen-rbee if needed (TEAM-085)  
+✅ **Full Flow**: rbee-keeper → queen-rbee → rbee-hive → llm-worker-rbee → **TOKENS ON YOUR SHELL!**
 
-## Quick Test (Localhost)
+## Quick Test (ONE COMMAND!)
 
-### 1. Start the Pool Manager
-
-```bash
-# Terminal 1: Start rbee-hive
-cargo run -p rbee-hive -- daemon --addr 127.0.0.1:8080
-```
-
-### 2. Run Inference
+### Run Inference - That's It!
 
 ```bash
-# Terminal 2: Run inference command
+# ONE COMMAND - No need to start anything manually!
 cargo run --release -p rbee-keeper -- infer \
     --node localhost \
     --model "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF" \
-    --prompt "Once upon a time" \
-    --max-tokens 20 \
+    --prompt "Why is the sky blue?" \
+    --max-tokens 100 \
     --temperature 0.7
 ```
 
-### 3. Watch the Magic! ✨
+### What Happens Automatically ✨
 
 You'll see:
-1. ✓ Pool health check
-2. ✓ Worker spawning
-3. ✓ Worker ready
-4. **Tokens streaming to your shell in real-time!**
+1. ✓ **queen-rbee auto-starts** (if not already running)
+2. ✓ Pool health check
+3. ✓ Worker spawning
+4. ✓ Worker ready
+5. **Tokens streaming to your shell in real-time!**
+
+**No more manual daemon management! Just run one command!**
 
 ## Full Test Script
 
@@ -138,13 +136,19 @@ cargo run --release -p rbee-keeper -- infer \
 
 ```
 ┌─────────────┐
-│    rbee     │  (CLI on blep)
+│rbee-keeper  │  (CLI - ONE COMMAND!)
 │   (client)  │
+└──────┬──────┘
+       │ auto-starts if needed
+       ↓
+┌─────────────┐
+│ queen-rbee  │  (Orchestrator daemon)
+│  (daemon)   │
 └──────┬──────┘
        │ HTTP
        ↓
 ┌─────────────┐
-│  rbee-hive  │  (Pool manager on mac)
+│  rbee-hive  │  (Pool manager)
 │   (daemon)  │
 └──────┬──────┘
        │ spawn
@@ -160,6 +164,6 @@ cargo run --release -p rbee-keeper -- infer \
 
 ---
 
-**Built by:** TEAM-034 (Download SSE), TEAM-035 (Loading SSE + Inference SSE)  
-**Status:** ✅ All SSE phases complete!  
-**Date:** 2025-10-10
+**Built by:** TEAM-034 (Download SSE), TEAM-035 (Loading SSE + Inference SSE), TEAM-085 (Auto-start fix)  
+**Status:** ✅ All SSE phases complete! ✅ ONE COMMAND INFERENCE!  
+**Date:** 2025-10-11

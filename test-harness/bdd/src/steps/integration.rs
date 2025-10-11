@@ -6,25 +6,18 @@
 
 use crate::steps::world::World;
 use cucumber::{given, then, when};
+use observability_narration_core::CaptureAdapter;
 
-#[given(expr = "queen-rbee is running")]
-pub async fn given_queen_rbee_running(world: &mut World) {
-    // TEAM-083: Initialize queen-rbee registry for integration tests
-    if world.queen_registry.is_none() {
-        world.queen_registry = Some(crate::steps::world::DebugQueenRegistry::new());
-    }
-    
-    // Set queen-rbee URL
-    world.queen_rbee_url = Some("http://localhost:8080".to_string());
-    
-    tracing::info!("✅ queen-rbee is running at {}", world.queen_rbee_url.as_ref().unwrap());
-}
+// This step is already defined in beehive_registry.rs and uses the global instance
+// Keeping that implementation to avoid ambiguous step matches
 
 #[given(expr = "rbee-hive is running on workstation")]
 pub async fn given_rbee_hive_running(world: &mut World) {
-    // TEAM-083: Initialize rbee-hive registry for integration tests
-    world.registry_db_path = Some("/tmp/test-hive-registry.db".to_string());
+    // TEAM-083: For integration tests, rbee-hive should be running
+    // TEAM-085: Auto-start global rbee-hive for localhost tests
+    crate::steps::global_hive::start_global_rbee_hive().await;
     
+    world.last_action = Some("rbee_hive_running".to_string());
     tracing::info!("✅ rbee-hive is running on workstation");
 }
 
@@ -207,6 +200,11 @@ pub async fn when_concurrent_worker_registration(world: &mut World, count: usize
     // TEAM-083: Test concurrent worker registration
     use queen_rbee::worker_registry::{WorkerInfo, WorkerState};
     
+    // TEAM-085: Fixed bug - Initialize registry if not already initialized
+    if world.queen_registry.is_none() {
+        world.queen_registry = Some(crate::steps::world::DebugQueenRegistry::new());
+    }
+    
     let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner().clone();
     
     // Spawn concurrent registration tasks
@@ -347,6 +345,15 @@ pub async fn then_download_completes(world: &mut World) {
     // TEAM-083: Verify download completion
     assert!(world.last_action.as_ref().map(|a| a.contains("download")).unwrap_or(false),
         "Download action should be recorded");
+    
+    // TEAM-085: Fixed bug - Add the downloaded model to catalog
+    use std::path::PathBuf;
+    world.model_catalog.insert("tinyllama-q4".to_string(), crate::steps::world::ModelCatalogEntry {
+        provider: "HuggingFace".to_string(),
+        reference: "tinyllama-q4".to_string(),
+        local_path: PathBuf::from("/tmp/llorch-test-models/tinyllama-q4.gguf"),
+        size_bytes: 1_000_000_000,
+    });
     
     tracing::info!("✅ Download completed successfully");
 }

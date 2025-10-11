@@ -27,10 +27,10 @@ pub enum Commands {
         #[command(subcommand)]
         action: SetupAction,
     },
-    /// Pool management commands
-    Pool {
+    /// Hive management commands (TEAM-085: renamed from "pool")
+    Hive {
         #[command(subcommand)]
-        action: PoolAction,
+        action: HiveAction,
     },
     /// Test inference on a worker (TEAM-024)
     /// TEAM-027: Updated for MVP cross-node inference per test-001-mvp.md
@@ -120,35 +120,34 @@ pub enum SetupAction {
 }
 
 #[derive(Subcommand)]
-pub enum PoolAction {
-    /// Model management on remote pool
+pub enum HiveAction {
+    /// Model management on remote hive
     Models {
         #[command(subcommand)]
         action: ModelsAction,
         #[arg(long)]
         host: String,
     },
-    /// Worker management on remote pool
+    /// Worker management on remote hive
     Worker {
         #[command(subcommand)]
         action: WorkerAction,
         #[arg(long)]
         host: String,
     },
-    /// Git operations on remote pool
+    /// Git operations on remote hive
     Git {
         #[command(subcommand)]
         action: GitAction,
         #[arg(long)]
         host: String,
     },
-    /// Show pool status
+    /// Check hive status
     Status {
         #[arg(long)]
         host: String,
     },
 }
-
 #[derive(Subcommand)]
 pub enum ModelsAction {
     /// Download a model on remote pool
@@ -224,7 +223,7 @@ pub async fn handle_command(cli: Cli) -> anyhow::Result<()> {
     match cli.command {
         Commands::Install { system } => crate::commands::install::handle(system),
         Commands::Setup { action } => crate::commands::setup::handle(action).await,
-        Commands::Pool { action } => crate::commands::pool::handle(action),
+        Commands::Hive { action } => crate::commands::hive::handle(action),
         Commands::Infer { node, model, prompt, max_tokens, temperature, backend, device } => {
             crate::commands::infer::handle(node, model, prompt, max_tokens, temperature, backend, device).await
         }

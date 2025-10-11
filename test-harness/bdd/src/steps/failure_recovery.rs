@@ -37,33 +37,9 @@ pub async fn given_worker_processing_request(world: &mut World, request_id: Stri
     world.last_action = Some(format!("processing_{}", request_id));
 }
 
-#[given(expr = "worker-002 is available with same model")]
-pub async fn given_worker_002_available(world: &mut World) {
-    // TEAM-081: Wire to real WorkerRegistry with backup worker
-    use queen_rbee::worker_registry::{WorkerInfo, WorkerState};
-    
-    if world.queen_registry.is_none() {
-        world.queen_registry = Some(crate::steps::world::DebugQueenRegistry::new());
-    }
-    let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner();
-    
-    let worker = WorkerInfo {
-        id: "worker-002".to_string(),
-        url: "http://localhost:8082".to_string(),
-        model_ref: "test-model".to_string(),
-        backend: "cuda".to_string(),
-        device: 1,
-        state: WorkerState::Idle,
-        slots_total: 4,
-        slots_available: 4,
-        vram_bytes: Some(8_000_000_000),
-        node_name: "test-node".to_string(),
-    };
-    registry.register(worker).await;
-    
-    tracing::info!("TEAM-081: Worker-002 available with same model");
-    world.last_action = Some("worker_002_available".to_string());
-}
+// TEAM-085: Removed duplicate "worker-002 is available with same model" step
+// This step is already defined in integration.rs with proper WorkerRegistry integration
+// Keeping that version to avoid ambiguous step matches
 
 #[given(expr = "the SQLite catalog database is corrupted")]
 pub async fn given_catalog_corrupted(world: &mut World) {
@@ -165,18 +141,13 @@ pub async fn given_catalog_entries(world: &mut World, count: usize) {
     world.last_action = Some(format!("catalog_entries_{}", count));
 }
 
-#[when(expr = "worker-001 crashes unexpectedly")]
-pub async fn when_worker_crashes(world: &mut World) {
-    // TEAM-081: Wire to real WorkerRegistry - remove crashed worker
-    let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner();
-    
-    // Simulate crash by removing worker from registry
-    let removed = registry.remove("worker-001").await;
-    assert!(removed, "Worker-001 should be removed from registry");
-    
-    tracing::info!("TEAM-081: Worker-001 crashed and removed from registry");
-    world.last_action = Some("worker_crashed".to_string());
-}
+// TEAM-085: Removed duplicate "worker-001 crashes unexpectedly" step
+// This step is already defined in integration.rs with proper crash simulation
+// Keeping that version to avoid ambiguous step matches
+
+// TEAM-085: Removed duplicate "queen-rbee detects crash within X seconds" step
+// This step is already defined in integration.rs with proper crash detection logic
+// Keeping that version to avoid ambiguous step matches
 
 #[when(expr = "network partition heals")]
 pub async fn when_partition_heals(world: &mut World) {
@@ -220,32 +191,12 @@ pub async fn when_command_executed(world: &mut World, command: String) {
     world.last_action = Some(format!("execute_{}", command));
 }
 
-#[then(expr = "queen-rbee detects crash within {int} seconds")]
-pub async fn then_detects_crash(world: &mut World, seconds: u32) {
-    // TEAM-081: Verify crash detection via registry state
-    let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner();
-    
-    // Verify worker-001 is no longer in registry
-    let worker = registry.get("worker-001").await;
-    assert!(worker.is_none(), "Worker-001 should be removed after crash");
-    
-    tracing::info!("TEAM-081: Crash detected within {}s (worker removed from registry)", seconds);
-}
+// TEAM-085: Removed duplicate "queen-rbee detects crash within X seconds"
+// See comment above near line 148
 
-#[then(expr = "request {string} is retried on worker-002")]
-pub async fn then_request_retried(world: &mut World, request_id: String) {
-    // TEAM-081: Verify failover to worker-002
-    let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner();
-    
-    // Verify worker-002 exists and is available
-    let worker = registry.get("worker-002").await;
-    assert!(worker.is_some(), "Worker-002 should be available for failover");
-    
-    let worker = worker.unwrap();
-    assert_eq!(worker.model_ref, "test-model", "Worker-002 should have same model");
-    
-    tracing::info!("TEAM-081: Request {} can be retried on worker-002", request_id);
-}
+// TEAM-085: Removed duplicate "request X can be retried on worker-002" step
+// This step is already defined in integration.rs with proper failover logic
+// Keeping that version to avoid ambiguous step matches
 
 #[then(expr = "user receives result without manual intervention")]
 pub async fn then_user_receives_result(world: &mut World) {
@@ -361,13 +312,9 @@ pub async fn then_progress_shows(world: &mut World, message: String) {
     tracing::info!("TEAM-081: Progress message: {}", message);
 }
 
-#[then(expr = "download completes successfully")]
-pub async fn then_download_completes(world: &mut World) {
-    // TEAM-081: Verify completion (Gap-F4)
-    // Download should reach 100%
-    assert!(world.last_action.is_some(), "Download completion should be recorded");
-    tracing::info!("TEAM-081: Download completed successfully");
-}
+// TEAM-085: Removed duplicate "download completes successfully" step
+// This step is already defined in integration.rs
+// Both implementations were identical, keeping integration.rs version to avoid ambiguous matches
 
 // Additional stubs for remaining scenarios...
 // (Abbreviated for brevity - similar pattern continues)

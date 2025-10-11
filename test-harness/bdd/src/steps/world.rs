@@ -68,6 +68,9 @@ pub struct World {
     /// queen-rbee URL
     pub queen_rbee_url: Option<String>,
 
+    /// rbee-hive URL (TEAM-085: Added for resource management tests)
+    pub rbee_hive_url: Option<String>,
+
     /// Model catalog path
     pub model_catalog_path: Option<PathBuf>,
 
@@ -187,6 +190,10 @@ pub struct World {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     /// Last action performed (for step tracking)
     pub last_action: Option<String>,
+    
+    // TEAM-085: Narration capture
+    pub narration_enabled: bool,
+    pub last_narration: Option<Vec<observability_narration_core::CapturedNarration>>,
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Concurrency Testing (TEAM-080)
@@ -301,6 +308,7 @@ impl Default for World {
             topology: HashMap::new(),
             current_node: None,
             queen_rbee_url: None,
+            rbee_hive_url: None, // TEAM-085: Added for resource management tests
             model_catalog_path: None,
             registry_db_path: None,
             beehive_nodes: HashMap::new(),
@@ -327,7 +335,11 @@ impl Default for World {
             worker_processes: Vec::new(),
             hive_registry: Some(DebugWorkerRegistry::new()),
             next_worker_port: 8001,
-            last_action: None, // TEAM-078: Action tracking
+            last_action: None,
+            
+            // TEAM-085: Narration
+            narration_enabled: false,
+            last_narration: None, // TEAM-078: Action tracking
             queen_registry: None, // TEAM-080: Concurrency testing
             concurrent_results: Vec::new(), // TEAM-080: Concurrent operation results
             concurrent_handles: Vec::new(), // TEAM-081: Concurrent task handles
@@ -365,6 +377,7 @@ impl World {
         self.topology.clear();
         self.current_node = None;
         self.queen_rbee_url = None;
+        self.rbee_hive_url = None; // TEAM-085: Clear rbee-hive URL
         self.model_catalog_path = None;
         self.registry_db_path = None;
         self.beehive_nodes.clear();

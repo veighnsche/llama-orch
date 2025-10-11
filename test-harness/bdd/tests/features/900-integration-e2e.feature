@@ -20,6 +20,11 @@ Feature: End-to-End Integration Tests
     And tokens are streamed back to client
     And worker returns to idle state
     And metrics are recorded
+    # TEAM-085: Narration verification (product code MUST emit these)
+    And I should see narration "Starting inference" from "queen-rbee"
+    And I should see narration "Dispatching to worker" from "rbee-hive"
+    And I should see narration "Inference complete" from "worker"
+    And all narration events should have correlation IDs
 
   @integration @e2e
   Scenario: Worker failover
@@ -30,6 +35,10 @@ Feature: End-to-End Integration Tests
     Then queen-rbee detects crash within 5 seconds
     And request "req-001" can be retried on worker-002
     And user receives result without data loss
+    # TEAM-085: Narration verification
+    And I should see narration "Worker crashed" with worker_id "worker-001"
+    And I should see narration "Retrying on worker" with worker_id "worker-002"
+    And narration should include error_kind "worker_crash"
 
   @integration @e2e
   Scenario: Model download and registration
@@ -39,6 +48,10 @@ Feature: End-to-End Integration Tests
     Then download completes successfully
     And model is registered in catalog
     And model is available for worker startup
+    # TEAM-085: Narration verification
+    And I should see narration "Downloading model" with model_ref "tinyllama-q4"
+    And I should see narration "Model provisioned" with duration_ms
+    And narration human field should be under 100 characters
 
   @integration @e2e
   Scenario: Concurrent worker registration

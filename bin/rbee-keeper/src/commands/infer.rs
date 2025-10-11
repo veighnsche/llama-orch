@@ -11,14 +11,16 @@
 //! TEAM-030: Removed local worker registry - ephemeral mode doesn't need persistence
 //! TEAM-048: Refactored to use queen-rbee orchestration endpoint
 //! TEAM-050: Fixed stream error handling to prevent exit code 1
+//! TEAM-085: CRITICAL FIX - Auto-start queen-rbee if not running (ONE COMMAND INFERENCE)
 //!
 //! Created by: TEAM-024
-//! Modified by: TEAM-027, TEAM-030, TEAM-048, TEAM-050
+//! Modified by: TEAM-027, TEAM-030, TEAM-048, TEAM-050, TEAM-085
 
 use anyhow::Result;
 use colored::Colorize;
 use futures::StreamExt;
 use std::io::Write;
+use crate::queen_lifecycle::ensure_queen_rbee_running;
 
 /// Handle infer command
 ///
@@ -44,34 +46,37 @@ pub async fn handle(
 
     let client = reqwest::Client::new();
     let queen_url = "http://localhost:8080";
+    // TEAM-085: CRITICAL FIX - Ensure queen-rbee is running
+    ensure_queen_rbee_running(&client, queen_url).await?;
 
     println!("{}", "[queen-rbee] Submitting inference task...".yellow());
 
-    // TEAM-055: Build request with optional backend and device
-    let mut request = serde_json::json!({
+    // Submit inference task to queen-rbee
+    let task_request = serde_json::json!({
         "node": node,
         "model": model,
         "prompt": prompt,
         "max_tokens": max_tokens,
-        "temperature": temperature
+        "temperature": temperature,
+        "backend": backend,
+        "device": device,
     });
-    
-    if let Some(backend_val) = backend {
-        request["backend"] = serde_json::json!(backend_val);
-    }
-    if let Some(device_val) = device {
-        request["device"] = serde_json::json!(device_val);
-    }
 
-    // TEAM-055: Add retry logic with exponential backoff to fix connection issues
+    // TEAM-055: Retry logic with exponential backoff
+    // TEAM-085: Add narration so user sees what's happening during retries
     let mut last_error = None;
     let mut response = None;
-    
     for attempt in 0..3 {
+        if attempt > 0 {
+            println!("{}", format!("  ⏳ Retry attempt {}/3...", attempt + 1).dimmed());
+        }
+        
+        println!("{}", format!("  🔌 Connecting to queen-rbee at {}...", queen_url).dimmed());
+        
         match client
             .post(format!("{}/v2/tasks", queen_url))
-            .json(&request)
-            .timeout(std::time::Duration::from_secs(30))
+            .json(&task_request)
+            .timeout(Duration::from_secs(30))
             .send()
             .await
         {
@@ -79,23 +84,42 @@ pub async fn handle(
                 response = Some(resp);
                 break;
             }
-            Ok(resp) => {
                 let status = resp.status();
                 let body = resp.text().await.unwrap_or_default();
                 anyhow::bail!("Inference request failed: HTTP {} - {}", status, body);
             }
             Err(e) if attempt < 2 => {
                 tracing::warn!("⚠️ Attempt {} failed: {}, retrying...", attempt + 1, e);
-                last_error = Some(e);
-                tokio::time::sleep(std::time::Duration::from_millis(100 * 2_u64.pow(attempt))).await;
-                continue;
+                let error_msg = format!("HTTP {}", response.status());
+                println!("{}", format!("  ❌ Error: {}", error_msg).red());
+                
+                // Try to get error body for debugging
+                if let Ok(body) = response.text().await {
+                    if !body.is_empty() {
+                        println!("{}", format!("  📄 Response body: {}", body).dimmed());
+                    }
+                }
+                
+                last_error = Some(error_msg);
+                
+                if attempt < 2 {
+                    let backoff = 1000 * (attempt + 1) as u64;
+                    println!("{}", format!("  ⏱️  Backing off for {}ms...", backoff).dimmed());
+                    tokio::time::sleep(Duration::from_millis(backoff)).await;
+                }
             }
             Err(e) => {
-                last_error = Some(e);
-                break;
+                println!("{}", format!("  ❌ Connection error: {}", e).red());
+                println!("{}", format!("  💡 Is queen-rbee actually running? Check: curl http://localhost:8080/health").dimmed());
+                
+                last_error = Some(e.to_string());
+                
+                if attempt < 2 {
+                    let backoff = 1000 * (attempt + 1) as u64;
+                    println!("{}", format!("  ⏱️  Backing off for {}ms...", backoff).dimmed());
+                    tokio::time::sleep(Duration::from_millis(backoff)).await;
+                }
             }
-        }
-    }
 
     let response = match response {
         Some(r) => r,
@@ -165,5 +189,8 @@ pub async fn handle(
     println!("\n");
     Ok(())
 }
+
+// TEAM-085: Moved to shared module commands/queen_lifecycle.rs
+// All commands that talk to queen-rbee use the same lifecycle management
 
 // TEAM-048: Removed wait_for_worker_ready and execute_inference - now handled by queen-rbee

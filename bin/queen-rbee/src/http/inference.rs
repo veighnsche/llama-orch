@@ -34,35 +34,47 @@ pub async fn handle_create_inference_task(
 ) -> impl IntoResponse {
     info!("Received inference task: node={}, model={}", req.node, req.model);
     
-    // Step 1: Query rbee-hive registry for node SSH details
-    let node = match state.beehive_registry.get_node(&req.node).await {
-        Ok(Some(node)) => node,
-        Ok(None) => {
-            error!("Node not found in registry: {}", req.node);
-            return (StatusCode::NOT_FOUND, format!("Node '{}' not registered", req.node)).into_response();
-        }
-        Err(e) => {
-            error!("Failed to query registry: {}", e);
-            return (StatusCode::INTERNAL_SERVER_ERROR, format!("Registry error: {}", e)).into_response();
-        }
-    };
-    
-    // Step 2: Determine rbee-hive URL (mock SSH for tests)
-    // TEAM-053: Fixed port - rbee-hive uses 9200, not 8080 (queen-rbee's port)
-    // Architecture: queen-rbee (8080) → rbee-hive (9200) → workers (8001+)
-    let mock_ssh = std::env::var("MOCK_SSH").is_ok();
-    let rbee_hive_url = if mock_ssh {
-        // For tests, assume rbee-hive is already running on localhost:9200
-        info!("🔌 Mock SSH: Using localhost rbee-hive at port 9200");
-        "http://127.0.0.1:9200".to_string()
-    } else {
-        // Real SSH: start rbee-hive daemon on remote node
-        info!("🔌 Establishing SSH connection to {}", node.ssh_host);
-        match establish_rbee_hive_connection(&node).await {
+    // TEAM-085: Handle localhost specially - no SSH needed!
+    let rbee_hive_url = if req.node == "localhost" {
+        info!("🏠 Localhost inference - starting rbee-hive locally");
+        match ensure_local_rbee_hive_running().await {
             Ok(url) => url,
             Err(e) => {
-                error!("Failed to connect to rbee-hive: {}", e);
-                return (StatusCode::SERVICE_UNAVAILABLE, format!("SSH connection failed: {}", e)).into_response();
+                error!("Failed to start local rbee-hive: {}", e);
+                return (StatusCode::SERVICE_UNAVAILABLE, format!("Failed to start rbee-hive: {}", e)).into_response();
+            }
+        }
+    } else {
+        // Step 1: Query rbee-hive registry for node SSH details
+        let node = match state.beehive_registry.get_node(&req.node).await {
+            Ok(Some(node)) => node,
+            Ok(None) => {
+                error!("Node not found in registry: {}", req.node);
+                return (StatusCode::NOT_FOUND, format!("Node '{}' not registered", req.node)).into_response();
+            }
+            Err(e) => {
+                error!("Failed to query registry: {}", e);
+                return (StatusCode::INTERNAL_SERVER_ERROR, format!("Registry error: {}", e)).into_response();
+            }
+        };
+        
+        // Step 2: Determine rbee-hive URL (mock SSH for tests)
+        // TEAM-053: Fixed port - rbee-hive uses 9200, not 8080 (queen-rbee's port)
+        // Architecture: queen-rbee (8080) → rbee-hive (9200) → workers (8001+)
+        let mock_ssh = std::env::var("MOCK_SSH").is_ok();
+        if mock_ssh {
+            // For tests, assume rbee-hive is already running on localhost:9200
+            info!("🔌 Mock SSH: Using localhost rbee-hive at port 9200");
+            "http://127.0.0.1:9200".to_string()
+        } else {
+            // Real SSH: start rbee-hive daemon on remote node
+            info!("🔌 Establishing SSH connection to {}", node.ssh_host);
+            match establish_rbee_hive_connection(&node).await {
+                Ok(url) => url,
+                Err(e) => {
+                    error!("Failed to connect to rbee-hive: {}", e);
+                    return (StatusCode::SERVICE_UNAVAILABLE, format!("SSH connection failed: {}", e)).into_response();
+                }
             }
         }
     };
@@ -159,6 +171,88 @@ pub async fn handle_create_inference_task(
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Helper Functions
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/// TEAM-085: Start rbee-hive locally (no SSH!)
+async fn ensure_local_rbee_hive_running() -> anyhow::Result<String> {
+    // TEAM-085: Use port 9200 for rbee-hive (queen-rbee uses 8080)
+    let rbee_hive_url = "http://127.0.0.1:9200";
+    let client = reqwest::Client::new();
+    
+    // Check if rbee-hive is already running
+    match client
+        .get(format!("{}/v1/health", rbee_hive_url))
+        .timeout(std::time::Duration::from_millis(500))
+        .send()
+        .await
+    {
+        Ok(resp) if resp.status().is_success() => {
+            info!("✓ rbee-hive already running locally");
+            return Ok(rbee_hive_url.to_string());
+        }
+        _ => {
+            info!("⚠️  rbee-hive not running, starting locally...");
+        }
+    }
+    
+    // Find rbee-hive binary
+    let rbee_hive_binary = std::env::current_exe()?
+        .parent()
+        .ok_or_else(|| anyhow::anyhow!("Cannot find binary directory"))?
+        .join("rbee-hive");
+    
+    if !rbee_hive_binary.exists() {
+        anyhow::bail!(
+            "rbee-hive binary not found at {:?}. Run: cargo build --bin rbee-hive",
+            rbee_hive_binary
+        );
+    }
+    
+    // Start rbee-hive as local background process
+    info!("🚀 Starting rbee-hive daemon locally...");
+    
+    let mut child = tokio::process::Command::new(&rbee_hive_binary)
+        .arg("daemon")
+        .arg("--addr")
+        .arg("127.0.0.1:9200")  // TEAM-085: Different port from queen-rbee (8080)
+        .env("RBEE_WORKER_HOST", "127.0.0.1")
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn()?;
+    
+    // Wait for rbee-hive to be ready (max 10 seconds)
+    for attempt in 0..100 {
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        
+        match client
+            .get(format!("{}/v1/health", rbee_hive_url))
+            .timeout(std::time::Duration::from_millis(500))
+            .send()
+            .await
+        {
+            Ok(resp) if resp.status().is_success() => {
+                info!("✓ rbee-hive started successfully");
+                
+                // Detach the child process so it keeps running
+                let _ = child.id();
+                std::mem::forget(child);
+                
+                return Ok(rbee_hive_url.to_string());
+            }
+            _ => {
+                // Check if process died
+                if let Ok(Some(status)) = child.try_wait() {
+                    anyhow::bail!("rbee-hive exited with status: {}", status);
+                }
+            }
+        }
+        
+        if attempt % 10 == 0 && attempt > 0 {
+            info!("  Waiting for rbee-hive... ({}/10s)", attempt / 10);
+        }
+    }
+    
+    anyhow::bail!("rbee-hive failed to start within 10 seconds")
+}
 
 /// TEAM-047: Establish rbee-hive connection via SSH
 async fn establish_rbee_hive_connection(node: &BeehiveNode) -> anyhow::Result<String> {

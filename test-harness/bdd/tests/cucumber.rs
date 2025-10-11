@@ -37,9 +37,9 @@ async fn run_cucumber_tests() {
             if pb.is_absolute() {
                 pb
             } else {
-                // If relative, resolve from workspace root, not crate root
-                let workspace_root = root.parent().unwrap().parent().unwrap();
-                workspace_root.join(pb)
+                // TEAM-085: Fixed path resolution bug
+                // If relative, resolve from crate root (test-harness/bdd), not workspace root
+                root.join(pb)
             }
         }
         None => root.join("tests/features"),
@@ -82,6 +82,7 @@ async fn run_cucumber_tests() {
     shutdown_flag.store(true, Ordering::Relaxed);
 
     // Explicit cleanup before exit
+    test_harness_bdd::steps::global_hive::cleanup_global_hive();
     test_harness_bdd::steps::global_queen::cleanup_global_queen();
     
     match result {

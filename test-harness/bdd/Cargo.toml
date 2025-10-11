@@ -28,7 +28,6 @@ tracing-subscriber = { workspace = true }
 tempfile = "3"
 async-trait = "0.1"
 uuid = { workspace = true }
-shellexpand = "3"
 shlex = "1.3"  # TEAM-049: Proper shell argument parsing with quote handling
 clap = { version = "4", features = ["derive"] }  # TEAM-059: CLI args for mock-worker
 nix = { version = "0.27", features = ["signal", "process"] }  # TEAM-062: Process management for error handling
@@ -38,7 +37,9 @@ rbee-hive = { path = "../../bin/rbee-hive" }
 llm-worker-rbee = { path = "../../bin/llm-worker-rbee" }
 hive-core = { path = "../../bin/shared-crates/hive-core" }
 # TEAM-079: Added model-catalog for testing
-model-catalog = { path = "../../bin/shared-crates/model-catalog" }
+model-catalog = { path = "../../bin/rbee-hive/model-catalog" }
+# TEAM-085: Narration verification
+observability-narration-core = { path = "../../bin/shared-crates/narration-core", features = ["test-support"] }
 # TEAM-079: queen-rbee temporarily disabled due to SQLite version conflict
 # TEAM-080: Re-enabled after upgrading queen-rbee rusqlite to 0.32 (libsqlite3-sys 0.28)
 queen-rbee = { path = "../../bin/queen-rbee" }
