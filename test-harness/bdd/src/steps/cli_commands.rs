@@ -267,3 +267,86 @@ pub async fn then_exit_code_is(world: &mut World, expected_code: i32) {
     );
     tracing::info!("✅ Exit code is {}", expected_code);
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Priority 14: Additional CLI Command Functions (TEAM-070)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// TEAM-070: Execute CLI command with arguments NICE!
+#[when(expr = "I run the CLI command {string} with args {string}")]
+pub async fn when_run_cli_command(world: &mut World, command: String, args: String) {
+    tracing::info!("🚀 Executing CLI command: {} {}", command, args);
+    
+    // Parse arguments using shell-aware parsing
+    let arg_parts = shlex::split(&args)
+        .unwrap_or_else(|| panic!("Failed to parse args: {}", args));
+    
+    // Map command names to actual binary names
+    let actual_binary = if command == "rbee-keeper" { "rbee" } else { command.as_str() };
+    
+    // Get workspace directory
+    let workspace_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .map(|p| std::path::PathBuf::from(p).parent().unwrap().parent().unwrap().to_path_buf())
+        .unwrap_or_else(|_| std::path::PathBuf::from("/home/vince/Projects/llama-orch"));
+    
+    let binary_path = workspace_dir.join("target/debug").join(actual_binary);
+    
+    // Execute command
+    let result = tokio::process::Command::new(&binary_path)
+        .args(&arg_parts)
+        .current_dir(&workspace_dir)
+        .output()
+        .await;
+    
+    match result {
+        Ok(output) => {
+            world.last_command = Some(format!("{} {}", command, args));
+            world.last_exit_code = output.status.code();
+            world.last_stdout = String::from_utf8_lossy(&output.stdout).to_string();
+            world.last_stderr = String::from_utf8_lossy(&output.stderr).to_string();
+            
+            tracing::info!("✅ Command completed with exit code: {:?} NICE!", world.last_exit_code);
+            if !world.last_stdout.is_empty() {
+                tracing::info!("stdout: {}", world.last_stdout);
+            }
+            if !world.last_stderr.is_empty() {
+                tracing::warn!("stderr: {}", world.last_stderr);
+            }
+        }
+        Err(e) => {
+            world.last_exit_code = Some(127); // Command not found
+            world.last_stderr = format!("Failed to execute command: {}", e);
+            tracing::warn!("⚠️  Command execution failed: {} NICE!", e);
+        }
+    }
+}
+
+// TEAM-070: Verify output contains expected text NICE!
+#[then(expr = "the output contains {string}")]
+pub async fn then_output_contains(world: &mut World, expected: String) {
+    let combined_output = format!("{}\n{}", world.last_stdout, world.last_stderr);
+    
+    assert!(
+        combined_output.contains(&expected),
+        "Expected output to contain '{}', but got:\nstdout: {}\nstderr: {}",
+        expected,
+        world.last_stdout,
+        world.last_stderr
+    );
+    
+    tracing::info!("✅ Output contains '{}' NICE!", expected);
+}
+
+// TEAM-070: Verify exit code matches expected value NICE!
+#[then(expr = "the command exits with code {int}")]
+pub async fn then_command_exit_code(world: &mut World, expected_code: i32) {
+    assert_eq!(
+        world.last_exit_code,
+        Some(expected_code),
+        "Expected exit code {}, got {:?}",
+        expected_code,
+        world.last_exit_code
+    );
+    
+    tracing::info!("✅ Command exited with code {} NICE!", expected_code);
+}
