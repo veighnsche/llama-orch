@@ -3,7 +3,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "rbee-storybook/stories": ["./stories/index.ts"]
     }
   },
   "include": [

@@ -740,14 +740,33 @@ export const Primary: StoryObj<typeof Button> = {
 - Marking component complete without testing
 - "It compiles so it must work"
 - Skipping Histoire testing
+- Starting a new dev server when one is already running
 
 **How to test:**
+
+**IMPORTANT:** The user typically keeps Histoire running at http://localhost:6006/
+
+✅ **CORRECT Approach:**
+1. Check if Histoire is already running by visiting http://localhost:6006/ in browser
+2. If running, just navigate to your component in the existing server
+3. Histoire has Hot Module Replacement (HMR) - your changes appear automatically
+4. No need to restart the server
+
+❌ **WRONG Approach:**
+```bash
+# DON'T DO THIS if server is already running!
+pnpm story:dev  # This will fail with "port already in use"
+```
+
+**Only start the server if:**
+- You verified http://localhost:6006/ is NOT accessible
+- You need to start it for the first time
+
+**To start (only if needed):**
 ```bash
 cd /home/vince/Projects/llama-orch/frontend/libs/storybook
 pnpm story:dev
 # Open http://localhost:6006
-# Navigate to your component
-# Test all variants and states
 ```
 
 ---
