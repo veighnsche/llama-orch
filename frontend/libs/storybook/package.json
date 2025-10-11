@@ -3,6 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "main": "./stories/index.ts",
+  "exports": {
+    "./stories": "./stories/index.ts",
+    "./styles/tokens.css": "./styles/tokens.css",
+    "./styles/tokens-base.css": "./styles/tokens-base.css"
+  },
   "engines": {
     "node": "^20.19.0 || >=22.12.0",
     "pnpm": ">=9"

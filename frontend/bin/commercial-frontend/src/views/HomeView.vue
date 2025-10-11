@@ -1,15 +1,43 @@
 <!-- Created by: TEAM-FE-000 -->
+<!-- TEAM-FE-009: Implemented Home page assembly -->
+<script setup lang="ts">
+import {
+  HeroSection,
+  WhatIsRbee,
+  AudienceSelector,
+  ProblemSection,
+  SolutionSection,
+  HowItWorksSection,
+  FeaturesSection,
+  UseCasesSection,
+  ComparisonSection,
+  PricingSection,
+  SocialProofSection,
+  TechnicalSection,
+  FAQSection,
+  CTASection,
+  EmailCapture,
+  Footer,
+} from 'rbee-storybook/stories'
+</script>
+
 <template>
-  <main>
-    <h1>rbee Commercial Frontend v2</h1>
-    <p>Scaffold ready for development</p>
+  <main class="min-h-screen pt-16">
+    <HeroSection />
+    <WhatIsRbee />
+    <AudienceSelector />
+    <EmailCapture />
+    <ProblemSection />
+    <SolutionSection />
+    <HowItWorksSection />
+    <FeaturesSection />
+    <UseCasesSection />
+    <ComparisonSection />
+    <PricingSection />
+    <SocialProofSection />
+    <TechnicalSection />
+    <FAQSection />
+    <CTASection />
+    <Footer />
   </main>
 </template>
-
-<script setup lang="ts"></script>
-
-<style scoped>
-main {
-  padding: 2rem;
-}
-</style>

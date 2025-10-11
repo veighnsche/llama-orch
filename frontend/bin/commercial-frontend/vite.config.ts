@@ -1,15 +1,15 @@
 // Created by: TEAM-FE-000
-import { fileURLToPath, URL } from 'node:url'
-import { defineConfig } from 'vite'
+// TEAM-FE-009: Official shadcn-vue vite.config.ts (no custom aliases needed)
+import path from 'node:path'
+import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
+import { defineConfig } from 'vite'
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), vueDevTools()],
+  plugins: [vue(), tailwindcss()],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@': path.resolve(__dirname, './src'),
     },
   },
 })

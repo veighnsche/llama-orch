@@ -37,21 +37,21 @@ withDefaults(defineProps<Props>(), {
       name: 'Dr. Klaus M.',
       role: 'CTO, European Bank',
       quote:
-        'We couldn't use external AI providers due to PCI-DSS requirements. rbee gave us complete control with on-premises deployment and immutable audit logs. SOC2 audit passed with zero findings.',
+        'We couldn\'t use external AI providers due to PCI-DSS requirements. rbee gave us complete control with on-premises deployment and immutable audit logs. SOC2 audit passed with zero findings.',
     },
     {
       icon: Heart,
       name: 'Anna S.',
       role: 'DPO, Healthcare Provider',
       quote:
-        'HIPAA and GDPR compliance were non-negotiable. rbee's EU-only deployment and 7-year audit retention gave us the confidence to use AI for patient management systems. Complete data sovereignty.',
+        'HIPAA and GDPR compliance were non-negotiable. rbee\'s EU-only deployment and 7-year audit retention gave us the confidence to use AI for patient management systems. Complete data sovereignty.',
     },
     {
       icon: Scale,
       name: 'Michael R.',
       role: 'Managing Partner, Law Firm',
       quote:
-        'Attorney-client privilege meant we couldn't risk external AI providers. rbee's on-premises deployment and zero external data transfer gave us the security we needed. Client confidentiality protected.',
+        'Attorney-client privilege meant we couldn\'t risk external AI providers. rbee\'s on-premises deployment and zero external data transfer gave us the security we needed. Client confidentiality protected.',
     },
   ],
 })

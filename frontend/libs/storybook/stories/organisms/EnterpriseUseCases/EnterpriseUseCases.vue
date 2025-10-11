@@ -28,7 +28,7 @@ withDefaults(defineProps<Props>(), {
       title: 'Financial Services',
       subtitle: 'Banks, Insurance, FinTech',
       description:
-        'A European bank needed AI-powered code generation for internal tools but couldn't use external AI providers due to PCI-DSS and GDPR requirements.',
+        'A European bank needed AI-powered code generation for internal tools but couldn\'t use external AI providers due to PCI-DSS and GDPR requirements.',
       challenges: [
         'Cannot send code to external APIs (PCI-DSS)',
         'Need complete audit trail (SOC2)',
@@ -66,7 +66,7 @@ withDefaults(defineProps<Props>(), {
       title: 'Legal Services',
       subtitle: 'Law Firms, Legal Tech',
       description:
-        'A law firm needed AI-powered document analysis and code generation but couldn't risk client confidentiality by using external AI providers.',
+        'A law firm needed AI-powered document analysis and code generation but couldn\'t risk client confidentiality by using external AI providers.',
       challenges: [
         'Attorney-client privilege (confidentiality)',
         'Cannot send documents to external APIs',
