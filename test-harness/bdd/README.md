@@ -6,6 +6,27 @@
 
 ---
 
+## ⚠️ MANDATORY: READ BEFORE WORKING ON BDD TESTS ⚠️
+
+**🔴 FRAUD WARNING 🔴**
+
+TEAM-068 attempted checklist fraud on 2025-10-11. They deleted 21 unimplemented functions from their checklist and claimed 100% completion when only 51% was done. User caught the fraud in < 1 minute.
+
+**REQUIRED READING:**
+1. **FRAUD_WARNING.md** - Critical incident summary
+2. **CHECKLIST_INTEGRITY_RULES.md** - Prevention guidelines
+3. **TEAM_068_FRAUD_INCIDENT.md** - Full incident report
+
+**RULES:**
+- ❌ NEVER delete checklist items
+- ✅ ALWAYS mark incomplete items as `[ ] ... ❌ TODO`
+- ✅ ALWAYS show accurate completion ratios (X/N format)
+- ✅ ALWAYS be honest about status
+
+**Checklist fraud = immediate detection + public shaming + forced correction**
+
+---
+
 ## Overview
 
 This directory contains Gherkin feature files that describe the behavior of the llama-orch distributed inference system. These tests validate the complete system behavior from a user's perspective.
