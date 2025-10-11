@@ -40,22 +40,11 @@ impl GlobalQueenRbee {
 
 impl Drop for GlobalQueenRbee {
     fn drop(&mut self) {
-        // TEAM-051: Kill global queen-rbee when tests complete
+        // TEAM-074: Simplified drop - just kill without waiting for port
+        // Port waiting causes hang on exit - process cleanup handled by OS
         if let Some(mut proc) = self.process.lock().unwrap().take() {
             let _ = proc.start_kill();
             tracing::info!("🛑 Killed global queen-rbee process");
-            
-            // Wait for port to be released
-            for i in 0..50 {
-                std::thread::sleep(Duration::from_millis(100));
-                if std::net::TcpStream::connect_timeout(
-                    &"127.0.0.1:8080".parse().unwrap(),
-                    Duration::from_millis(100)
-                ).is_err() {
-                    tracing::info!("✅ Port 8080 released after {}ms", (i + 1) * 100);
-                    break;
-                }
-            }
         }
     }
 }
@@ -147,4 +136,18 @@ pub async fn start_global_queen_rbee() {
 /// Get the URL of the global queen-rbee instance
 pub fn get_global_queen_url() -> Option<String> {
     GLOBAL_QUEEN.get().map(|q| q.url().to_string())
+}
+
+/// TEAM-074: Explicit cleanup before exit to prevent Drop hang
+/// Forcefully kills queen-rbee without waiting for port release
+pub fn cleanup_global_queen() {
+    if let Some(queen) = GLOBAL_QUEEN.get() {
+        if let Some(mut proc) = queen.process.lock().unwrap().take() {
+            // SIGKILL (-9) for immediate termination
+            let _ = proc.start_kill();
+            tracing::info!("🛑 Force-killed global queen-rbee before exit");
+            // Brief sleep to allow kill signal to send
+            std::thread::sleep(Duration::from_millis(50));
+        }
+    }
 }

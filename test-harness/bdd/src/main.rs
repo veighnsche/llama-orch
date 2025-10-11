@@ -4,6 +4,7 @@
 // Modified by: TEAM-054 (added mock rbee-hive on port 9200)
 // Modified by: TEAM-061 (added global timeout wrapper and signal handlers)
 // Modified by: TEAM-063 (removed mock infrastructure)
+// Modified by: TEAM-072 (added per-scenario timeout enforcement) NICE!
 
 mod steps;
 
@@ -11,6 +12,8 @@ use cucumber::World as _;
 use std::path::PathBuf;
 use std::time::Duration;
 use steps::world::World;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
@@ -25,19 +28,23 @@ async fn main() {
         .init();
 
     // TEAM-061: Set up panic handler to cleanup processes
+    // TEAM-074: Added explicit queen cleanup before exit
     let default_panic = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |panic_info| {
         eprintln!("💥 PANIC: {:?}", panic_info);
         eprintln!("🧹 Attempting cleanup before exit...");
+        steps::global_queen::cleanup_global_queen();
         cleanup_all_processes();
         default_panic(panic_info);
     }));
 
     // TEAM-061: Spawn Ctrl+C handler for clean shutdown
+    // TEAM-074: Added explicit queen cleanup before exit
     tokio::spawn(async {
         match tokio::signal::ctrl_c().await {
             Ok(()) => {
                 tracing::warn!("🛑 Ctrl+C received, cleaning up...");
+                steps::global_queen::cleanup_global_queen();
                 cleanup_all_processes();
                 std::process::exit(130); // Standard exit code for SIGINT
             }
@@ -64,13 +71,44 @@ async fn main() {
 
     tracing::info!("Running BDD tests from: {}", features.display());
 
+    // TEAM-072: Create scenario timeout watchdog
+    let timeout_flag = Arc::new(AtomicBool::new(false));
+    let timeout_flag_clone = timeout_flag.clone();
+    let shutdown_flag = Arc::new(AtomicBool::new(false));
+    let shutdown_flag_clone = shutdown_flag.clone();
+    
+    // TEAM-072: Spawn watchdog that kills hung scenarios
+    // TEAM-073: Fixed - watchdog now exits when tests complete
+    tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(Duration::from_secs(1)).await;
+            
+            // Exit watchdog if tests completed
+            if shutdown_flag_clone.load(Ordering::Relaxed) {
+                break;
+            }
+            
+            if timeout_flag_clone.load(Ordering::Relaxed) {
+                tracing::error!("❌ SCENARIO TIMEOUT DETECTED - KILLING PROCESSES");
+                cleanup_all_processes();
+                std::process::exit(124);
+            }
+        }
+    });
+    
     // TEAM-061: Wrap entire test execution in timeout
     let result = tokio::time::timeout(
         Duration::from_secs(300), // 5 minutes for entire suite
-        run_tests(features)
+        run_tests(features, timeout_flag)
     )
     .await;
+    
+    // TEAM-073: Signal watchdog to exit
+    shutdown_flag.store(true, Ordering::Relaxed);
 
+    // TEAM-074: Explicit cleanup before exit to prevent Drop hang
+    steps::global_queen::cleanup_global_queen();
+    
     match result {
         Ok(Ok(())) => {
             tracing::info!("✅ All tests completed successfully");
@@ -91,14 +129,51 @@ async fn main() {
 
 /// TEAM-061: Run the actual test suite
 /// TEAM-063: Removed mock rbee-hive startup - tests must use real products
-async fn run_tests(features: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+/// TEAM-072: Added per-scenario timeout enforcement to prevent hanging NICE!
+async fn run_tests(features: PathBuf, timeout_flag: Arc<AtomicBool>) -> Result<(), Box<dyn std::error::Error>> {
     // TEAM-051: Start global queen-rbee instance before running tests
     steps::global_queen::start_global_queen_rbee().await;
 
     tracing::info!("✅ Real servers ready:");
     tracing::info!("   - queen-rbee: http://127.0.0.1:8080");
 
-    World::cucumber().fail_on_skipped().run(features).await;
+    // TEAM-072: Configure cucumber with per-scenario timeout enforcement NICE!
+    World::cucumber()
+        .fail_on_skipped()
+        .max_concurrent_scenarios(1) // Run scenarios sequentially to avoid port conflicts
+        .before(move |_feature, _rule, scenario, world| {
+            let timeout_flag = timeout_flag.clone();
+            Box::pin(async move {
+                tracing::info!("🎬 Starting scenario: {}", scenario.name);
+                world.start_time = Some(std::time::Instant::now());
+                
+                // TEAM-072: Spawn timeout watchdog for this scenario NICE!
+                let scenario_name = scenario.name.clone();
+                let timeout_flag_clone = timeout_flag.clone();
+                tokio::spawn(async move {
+                    tokio::time::sleep(Duration::from_secs(60)).await;
+                    tracing::error!("❌ SCENARIO TIMEOUT: '{}' exceeded 60 seconds!", scenario_name);
+                    timeout_flag_clone.store(true, Ordering::Relaxed);
+                });
+            })
+        })
+        .after(|_feature, _rule, scenario, _event, world| {
+            Box::pin(async move {
+                if let Some(w) = world {
+                    if let Some(start) = w.start_time {
+                        let elapsed = start.elapsed();
+                        tracing::info!("⏱️  Scenario '{}' completed in {:?}", scenario.name, elapsed);
+                        
+                        // TEAM-072: Warn if scenario took too long NICE!
+                        if elapsed > Duration::from_secs(45) {
+                            tracing::warn!("⚠️  Scenario '{}' took longer than 45s: {:?}", scenario.name, elapsed);
+                        }
+                    }
+                }
+            })
+        })
+        .run(features)
+        .await;
     
     // TEAM-051: Cleanup happens automatically via Drop in global_queen module
     Ok(())

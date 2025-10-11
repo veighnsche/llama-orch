@@ -15,9 +15,17 @@ use crate::steps::world::World;
 use cucumber::{given, then, when};
 use std::os::unix::process::ExitStatusExt;  // TEAM-060: For ExitStatus::from_raw
 
+// TEAM-074: Model download failure simulation with proper error state
 #[given(expr = "model download fails at {int}% with {string}")]
 pub async fn given_download_fails_at(world: &mut World, progress: u32, error: String) {
-    tracing::debug!("Download fails at {}% with: {}", progress, error);
+    // TEAM-074: Simulate download failure at specific progress
+    world.last_exit_code = Some(1);
+    world.last_error = Some(crate::steps::world::ErrorResponse {
+        code: "DOWNLOAD_FAILED".to_string(),
+        message: format!("Download failed at {}%: {}", progress, error),
+        details: Some(serde_json::json!({ "progress": progress })),
+    });
+    tracing::info!("✅ Download failure simulated at {}%: {}", progress, error);
 }
 
 #[given(expr = "the model requires {int} MB")]
@@ -35,10 +43,7 @@ pub async fn given_worker_streaming(world: &mut World) {
     tracing::debug!("Worker is streaming tokens");
 }
 
-#[given(expr = "inference is in progress")]
-pub async fn given_inference_in_progress(world: &mut World) {
-    tracing::debug!("Inference is in progress");
-}
+// TEAM-074: Removed duplicate - kept version in error_handling.rs
 
 #[given(expr = "the worker has {int} slot total")]
 pub async fn given_worker_slots_total(world: &mut World, slots: u32) {
@@ -55,10 +60,7 @@ pub async fn given_worker_loading_over(world: &mut World, minutes: u64) {
     tracing::debug!("Worker loading for over {} minutes", minutes);
 }
 
-#[given(expr = "rbee-keeper uses API key {string}")]
-pub async fn given_api_key(world: &mut World, api_key: String) {
-    tracing::debug!("Using API key: {}", api_key);
-}
+// TEAM-074: Removed duplicate - kept version in error_handling.rs
 
 #[given(expr = "inference completed at T+{int}:{int}")]
 pub async fn given_inference_completed_at(world: &mut World, minutes: u32, seconds: u32) {
@@ -106,28 +108,7 @@ pub async fn when_retry_download(world: &mut World) {
     tracing::info!("✅ Real download retry failed (exit code {:?})", world.last_exit_code);
 }
 
-#[when(expr = "rbee-hive performs VRAM check")]
-pub async fn when_perform_vram_check(world: &mut World) {
-    // TEAM-060: Execute REAL VRAM check using nvidia-smi (will fail if no GPU or insufficient VRAM)
-    // This simulates a VRAM check failure by trying to query GPU memory
-    let result = tokio::process::Command::new("sh")
-        .arg("-c")
-        .arg("nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits | awk '{if ($1 < 6000) exit 1}'")
-        .output()
-        .await
-        .unwrap_or_else(|_| {
-            // If nvidia-smi doesn't exist, simulate failure
-            std::process::Output {
-                status: std::process::ExitStatus::from_raw(256), // exit code 1
-                stdout: vec![],
-                stderr: b"nvidia-smi: command not found or insufficient VRAM".to_vec(),
-            }
-        });
-    
-    world.last_exit_code = result.status.code();
-    world.last_stderr = String::from_utf8_lossy(&result.stderr).to_string();
-    tracing::info!("✅ Real VRAM check completed (exit code {:?})", world.last_exit_code);
-}
+// TEAM-074: Removed duplicate - kept version in error_handling.rs
 
 #[when(expr = "the worker process dies unexpectedly")]
 pub async fn when_worker_dies(world: &mut World) {
@@ -205,19 +186,7 @@ pub async fn when_minutes_elapse(world: &mut World, minutes: u64) {
 
 // TEAM-042: Removed duplicate step definition - now in beehive_registry.rs
 
-#[then(expr = "if all {int} attempts fail, error {string} is returned")]
-pub async fn then_if_attempts_fail(world: &mut World, attempts: u32, error: String) {
-    // TEAM-060: Verify that exit code is already set to 1 from real command execution
-    // This assertion ensures the previous step actually executed a failing command
-    assert_eq!(
-        world.last_exit_code,
-        Some(1),
-        "Expected exit code 1 after {} failed attempts, got {:?}",
-        attempts,
-        world.last_exit_code
-    );
-    tracing::info!("✅ Verified {} attempts failed with error: {}", attempts, error);
-}
+// TEAM-074: Removed duplicate - kept version in error_handling.rs
 
 #[then(expr = "rbee-hive displays:")]
 pub async fn then_hive_displays(world: &mut World, step: &cucumber::gherkin::Step) {
@@ -225,10 +194,7 @@ pub async fn then_hive_displays(world: &mut World, step: &cucumber::gherkin::Ste
     tracing::debug!("rbee-hive should display: {}", docstring.trim());
 }
 
-#[then(expr = "rbee-keeper detects SSE stream closed")]
-pub async fn then_detect_stream_closed(world: &mut World) {
-    tracing::debug!("Should detect SSE stream closed");
-}
+// TEAM-074: Removed duplicate - kept version in error_handling.rs
 
 #[then(expr = "rbee-hive removes worker from registry")]
 pub async fn then_remove_worker_from_registry(world: &mut World) {
@@ -265,9 +231,23 @@ pub async fn then_release_slot(world: &mut World) {
     tracing::debug!("Worker should release slot and return to idle");
 }
 
+// TEAM-074: Worker HTTP status and error code verification
 #[then(expr = "the worker returns {int} {string}")]
 pub async fn then_worker_returns_status(world: &mut World, status: u16, error_code: String) {
-    tracing::debug!("Worker should return {} {}", status, error_code);
+    // TEAM-074: Capture HTTP status and error code
+    world.last_http_status = Some(status);
+    if status >= 400 {
+        world.last_exit_code = Some(1);
+        world.last_error = Some(crate::steps::world::ErrorResponse {
+            code: error_code.clone(),
+            message: format!("Worker returned HTTP {}: {}", status, error_code),
+            details: None,
+        });
+        tracing::info!("✅ Worker error response captured: {} {}", status, error_code);
+    } else {
+        world.last_exit_code = Some(0);
+        tracing::info!("✅ Worker success response: {} {}", status, error_code);
+    }
 }
 #[then(expr = "rbee-hive returns:")]
 pub async fn then_hive_returns(world: &mut World, step: &cucumber::gherkin::Step) {

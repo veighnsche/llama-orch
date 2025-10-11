@@ -302,10 +302,21 @@ pub async fn then_hive_exits(world: &mut World) {
     tracing::debug!("rbee-hive should exit");
 }
 
-#[then(expr = "rbee-keeper exits with code {int}")]
-pub async fn then_keeper_exits(world: &mut World, code: i32) {
-    world.last_exit_code = Some(code);
-    tracing::debug!("rbee-keeper should exit with code {}", code);
+// TEAM-073: Removed duplicate - already defined at line 221
+
+// TEAM-073: Implement missing step function
+#[when(expr = "rbee-hive sends shutdown command")]
+pub async fn when_hive_sends_shutdown(world: &mut World) {
+    // Simulate sending shutdown command to workers
+    let registry = world.hive_registry();
+    let workers = registry.list().await;
+    let worker_count = workers.len();
+    
+    for worker in workers {
+        tracing::info!("  Sending shutdown to worker: {}", worker.id);
+    }
+    
+    tracing::info!("✅ rbee-hive sends shutdown command to {} workers", worker_count);
 }
 
 #[then(expr = "rbee-keeper connects to existing rbee-hive HTTP API")]

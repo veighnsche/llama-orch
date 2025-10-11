@@ -386,8 +386,21 @@ pub async fn then_query_returns_no_results(world: &mut World) {
     tracing::info!("✅ Query returned no results (as expected)");
 }
 
-#[then(expr = "queen-rbee attempts SSH connection")]
-pub async fn then_attempt_ssh_connection(world: &mut World) {
-    // Mock: attempt SSH connection
-    tracing::info!("✅ Attempting SSH connection (mocked)");
+// TEAM-074: Removed duplicate - kept version in error_handling.rs
+
+// TEAM-073: Implement missing step function
+#[given(expr = "node {string} already exists in registry")]
+pub async fn given_node_already_exists(world: &mut World, node_name: String) {
+    // Add node to topology if not present
+    if !world.topology.contains_key(&node_name) {
+        world.topology.insert(
+            node_name.clone(),
+            crate::steps::world::NodeInfo {
+                hostname: format!("{}.home.arpa", node_name),
+                components: vec!["rbee-hive".to_string()],
+                capabilities: vec!["cpu".to_string()],
+            },
+        );
+    }
+    tracing::info!("✅ Node '{}' already exists in registry", node_name);
 }

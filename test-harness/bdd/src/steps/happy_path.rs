@@ -119,19 +119,30 @@ pub async fn then_registry_returns_empty(world: &mut World) {
     tracing::info!("✅ Verified registry is empty");
 }
 
-// TEAM-066: TODO - Make HTTP request to health endpoint
-// For now, this is a test setup step that simulates preflight check
+// TEAM-073: Implement real HTTP health check
 #[then(expr = "queen-rbee performs pool preflight check at {string}")]
 pub async fn then_pool_preflight_check(world: &mut World, url: String) {
-    // TODO: Make HTTP request to rbee-hive health endpoint
-    // For now, store expected response for test assertions
-    world.last_http_response = Some(serde_json::json!({
-            "status": "alive",
-            "version": "0.1.0",
-            "api_version": "v1"
-        }).to_string());
-    world.last_http_status = Some(200);
-    tracing::info!("✅ Test setup: Preflight check at: {}", url);
+    let client = crate::steps::world::create_http_client();
+    let health_url = format!("{}/health", url);
+    
+    match client.get(&health_url).send().await {
+        Ok(response) => {
+            let status = response.status().as_u16();
+            let body = response.text().await.unwrap_or_default();
+            
+            world.last_http_status = Some(status);
+            world.last_http_response = Some(body.clone());
+            tracing::info!("✅ Pool preflight check completed: {} - {}", status, body);
+        }
+        Err(e) => {
+            world.last_error = Some(crate::steps::world::ErrorResponse {
+                code: "PREFLIGHT_FAILED".to_string(),
+                message: format!("Preflight check failed: {}", e),
+                details: None,
+            });
+            tracing::warn!("⚠️  Preflight check failed: {}", e);
+        }
+    }
 }
 
 #[then(expr = "the health check returns version {string} and status {string}")]
@@ -303,20 +314,21 @@ pub async fn then_spawn_worker_cuda(world: &mut World, binary: String, port: u16
     let worker_id = uuid::Uuid::new_v4().to_string();
     let registry = world.hive_registry();
     
+    // TEAM-073: Register worker in Loading state (not Idle)
     let worker = WorkerInfo {
         id: worker_id.clone(),
         url: format!("http://127.0.0.1:{}", port),
         model_ref: "test-model".to_string(),
         backend: "cuda".to_string(),
         device: device as u32,
-        state: WorkerState::Idle,
+        state: WorkerState::Loading,  // TEAM-073: Fixed - workers start in Loading state
         last_activity: std::time::SystemTime::now(),
         slots_total: 1,
         slots_available: 1,
     };
     
     registry.register(worker).await;
-    tracing::info!("✅ Worker spawned: {} on port {} with CUDA device {} (binary: {})", worker_id, port, device, binary);
+    tracing::info!("✅ Worker spawned: {} on port {} with CUDA device {} (binary: {}) - State: Loading", worker_id, port, device, binary);
 }
 
 #[then(expr = "the worker HTTP server starts on port {int}")]
