@@ -18,10 +18,12 @@
 pub mod background;
 pub mod beehive_registry;
 pub mod cli_commands;
+pub mod concurrency; // TEAM-079: Concurrency and race condition testing
 pub mod edge_cases;
 pub mod error_handling;
 pub mod error_helpers; // TEAM-062: Error verification helpers
 pub mod error_responses;
+pub mod failure_recovery; // TEAM-079: Failover and recovery scenarios
 pub mod gguf;
 pub mod global_queen;
 pub mod happy_path;

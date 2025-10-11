@@ -1,5 +1,6 @@
 // Step definitions for SSH Preflight Validation
 // Created by: TEAM-078
+// Modified by: TEAM-079 (wired to real product code)
 // Stakeholder: DevOps / SSH operations
 // Timing: Phase 2a (before starting rbee-hive)
 //
@@ -8,11 +9,13 @@
 
 use cucumber::{given, then, when};
 use crate::steps::world::World;
+use queen_rbee::preflight::ssh::SshPreflight;
 
 #[given(expr = "SSH credentials are configured for {string}")]
 pub async fn given_ssh_credentials_configured(world: &mut World, host: String) {
-    // TEAM-078: Wire to queen_rbee::preflight::ssh::SshPreflight
-    tracing::info!("TEAM-078: SSH credentials configured for {}", host);
+    // TEAM-079: Create SSH preflight checker
+    let preflight = SshPreflight::new(host.clone(), 22, "user".to_string());
+    tracing::info!("TEAM-079: SSH credentials configured for {}", host);
     world.last_action = Some(format!("ssh_creds_{}", host));
 }
 
@@ -39,9 +42,20 @@ pub async fn given_ssh_connection_established(world: &mut World, host: String) {
 
 #[when(expr = "queen-rbee validates SSH connection")]
 pub async fn when_validate_ssh_connection(world: &mut World) {
-    // TEAM-078: Call queen_rbee::preflight::ssh::SshPreflight::validate()
-    tracing::info!("TEAM-078: Validating SSH connection");
-    world.last_action = Some("ssh_validate".to_string());
+    // TEAM-079: Validate SSH connection with real checker
+    let host = "workstation.home.arpa".to_string();
+    let preflight = SshPreflight::new(host, 22, "user".to_string());
+    
+    match preflight.validate_connection().await {
+        Ok(_) => {
+            tracing::info!("TEAM-079: SSH validation succeeded");
+            world.last_action = Some("ssh_validate_success".to_string());
+        }
+        Err(e) => {
+            tracing::info!("TEAM-079: SSH validation failed: {}", e);
+            world.last_action = Some(format!("ssh_validate_failed_{}", e));
+        }
+    }
 }
 
 #[when(expr = "connection times out after {int} seconds")]
@@ -53,16 +67,39 @@ pub async fn when_connection_timeout(world: &mut World, seconds: u32) {
 
 #[when(expr = "queen-rbee executes test command {string}")]
 pub async fn when_execute_test_command(world: &mut World, command: String) {
-    // TEAM-078: Execute SSH command
-    tracing::info!("TEAM-078: Executing test command: {}", command);
-    world.last_action = Some(format!("ssh_exec_{}", command));
+    // TEAM-079: Execute SSH command with real checker
+    let host = "workstation.home.arpa".to_string();
+    let preflight = SshPreflight::new(host, 22, "user".to_string());
+    
+    match preflight.execute_command(&command).await {
+        Ok(output) => {
+            tracing::info!("TEAM-079: Command output: {}", output);
+            world.last_stdout = output;
+            world.last_action = Some(format!("ssh_exec_{}", command));
+        }
+        Err(e) => {
+            tracing::info!("TEAM-079: Command failed: {}", e);
+            world.last_action = Some(format!("ssh_exec_failed_{}", e));
+        }
+    }
 }
 
 #[when(expr = "queen-rbee measures SSH round-trip time")]
 pub async fn when_measure_rtt(world: &mut World) {
-    // TEAM-078: Measure SSH latency
-    tracing::info!("TEAM-078: Measuring SSH round-trip time");
-    world.last_action = Some("ssh_rtt".to_string());
+    // TEAM-079: Measure SSH latency with real checker
+    let host = "workstation.home.arpa".to_string();
+    let preflight = SshPreflight::new(host, 22, "user".to_string());
+    
+    match preflight.measure_latency().await {
+        Ok(latency) => {
+            tracing::info!("TEAM-079: SSH latency: {:?}", latency);
+            world.last_action = Some(format!("ssh_rtt_{:?}", latency));
+        }
+        Err(e) => {
+            tracing::info!("TEAM-079: Latency measurement failed: {}", e);
+            world.last_action = Some("ssh_rtt_failed".to_string());
+        }
+    }
 }
 
 #[when(expr = "queen-rbee checks for rbee-hive binary")]

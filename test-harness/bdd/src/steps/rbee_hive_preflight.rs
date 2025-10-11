@@ -1,5 +1,6 @@
 // Step definitions for rbee-hive Preflight Validation
 // Created by: TEAM-078
+// Modified by: TEAM-079 (wired to real product code)
 // Stakeholder: Platform readiness team
 // Timing: Phase 3a (before spawning workers)
 //
@@ -8,6 +9,7 @@
 
 use cucumber::{given, then, when};
 use crate::steps::world::World;
+use queen_rbee::preflight::rbee_hive::RbeeHivePreflight;
 
 #[given(expr = "rbee-hive is running")]
 pub async fn given_rbee_hive_running(world: &mut World) {
@@ -32,30 +34,75 @@ pub async fn given_queen_requires_version(world: &mut World, version: String) {
 
 #[when(expr = "queen-rbee checks rbee-hive health endpoint")]
 pub async fn when_check_health_endpoint(world: &mut World) {
-    // TEAM-078: Call GET /health on rbee-hive
-    tracing::info!("TEAM-078: Checking rbee-hive health endpoint");
-    world.last_action = Some("check_health".to_string());
+    // TEAM-079: Check health endpoint with real HTTP client
+    let base_url = "http://workstation.home.arpa:8081".to_string();
+    let preflight = RbeeHivePreflight::new(base_url);
+    
+    match preflight.check_health().await {
+        Ok(health) => {
+            tracing::info!("TEAM-079: Health check succeeded: {:?}", health);
+            world.last_action = Some("check_health_success".to_string());
+        }
+        Err(e) => {
+            tracing::info!("TEAM-079: Health check failed: {}", e);
+            world.last_action = Some("check_health_failed".to_string());
+        }
+    }
 }
 
 #[when(expr = "queen-rbee validates version compatibility")]
 pub async fn when_validate_version(world: &mut World) {
-    // TEAM-078: Validate version compatibility
-    tracing::info!("TEAM-078: Validating version compatibility");
-    world.last_action = Some("validate_version".to_string());
+    // TEAM-079: Validate version with real checker
+    let base_url = "http://workstation.home.arpa:8081".to_string();
+    let preflight = RbeeHivePreflight::new(base_url);
+    
+    match preflight.check_version_compatibility(">=0.1.0").await {
+        Ok(compatible) => {
+            tracing::info!("TEAM-079: Version compatible: {}", compatible);
+            world.last_action = Some(format!("validate_version_{}", compatible));
+        }
+        Err(e) => {
+            tracing::info!("TEAM-079: Version check failed: {}", e);
+            world.last_action = Some("validate_version_failed".to_string());
+        }
+    }
 }
 
 #[when(expr = "queen-rbee queries available backends")]
 pub async fn when_query_backends(world: &mut World) {
-    // TEAM-078: Query available backends
-    tracing::info!("TEAM-078: Querying backends");
-    world.last_action = Some("query_backends".to_string());
+    // TEAM-079: Query backends with real HTTP client
+    let base_url = "http://workstation.home.arpa:8081".to_string();
+    let preflight = RbeeHivePreflight::new(base_url);
+    
+    match preflight.query_backends().await {
+        Ok(backends) => {
+            tracing::info!("TEAM-079: Found {} backends", backends.len());
+            world.last_action = Some(format!("query_backends_{}", backends.len()));
+        }
+        Err(e) => {
+            tracing::info!("TEAM-079: Backend query failed: {}", e);
+            world.last_action = Some("query_backends_failed".to_string());
+        }
+    }
 }
 
 #[when(expr = "queen-rbee queries available resources")]
 pub async fn when_query_resources(world: &mut World) {
-    // TEAM-078: Query available resources
-    tracing::info!("TEAM-078: Querying resources");
-    world.last_action = Some("query_resources".to_string());
+    // TEAM-079: Query resources with real HTTP client
+    let base_url = "http://workstation.home.arpa:8081".to_string();
+    let preflight = RbeeHivePreflight::new(base_url);
+    
+    match preflight.query_resources().await {
+        Ok(resources) => {
+            tracing::info!("TEAM-079: Resources - RAM: {}GB, Disk: {}GB", 
+                resources.ram_available_gb, resources.disk_available_gb);
+            world.last_action = Some("query_resources_success".to_string());
+        }
+        Err(e) => {
+            tracing::info!("TEAM-079: Resource query failed: {}", e);
+            world.last_action = Some("query_resources_failed".to_string());
+        }
+    }
 }
 
 #[then(expr = "health endpoint returns {int} OK")]

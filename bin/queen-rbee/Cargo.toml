@@ -10,6 +10,10 @@ license = "GPL-3.0-or-later"
 # Protocol: HTTP (listens on port 8080)
 # Milestone: M1+
 
+[lib]
+name = "queen_rbee"
+path = "src/lib.rs"
+
 [[bin]]
 name = "queen-rbee"
 path = "src/main.rs"
@@ -28,6 +32,8 @@ futures = "0.3"
 reqwest = { version = "0.12", features = ["json", "stream"] }
 
 # TEAM-043: Re-added SQLite for beehive registry persistence
+# TEAM-079: Aligned version with rbee-hive to avoid conflicts
+# TEAM-080: Upgraded to 0.32 to use libsqlite3-sys 0.28 (matches model-catalog/sqlx)
 rusqlite = { version = "0.32", features = ["bundled"] }
 dirs = "5.0"
 

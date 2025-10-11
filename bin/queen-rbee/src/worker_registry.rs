@@ -34,6 +34,8 @@ pub enum WorkerState {
 }
 
 /// In-memory worker registry
+// TEAM-080: Added Clone derive for concurrent testing
+#[derive(Clone)]
 pub struct WorkerRegistry {
     workers: Arc<RwLock<HashMap<String, WorkerInfo>>>,
 }

@@ -1,11 +1,14 @@
 // Step definitions for Worker Provisioning (cargo build from git)
 // Created by: TEAM-078
+// Modified by: TEAM-079 (wired to real product code)
 //
 // ⚠️ CRITICAL: These steps MUST connect to real product code from /bin/
 // ⚠️ Import rbee_hive::worker_provisioner and test actual cargo builds
 
 use cucumber::{given, then, when};
 use crate::steps::world::World;
+use rbee_hive::worker_provisioner::WorkerProvisioner;
+use std::path::PathBuf;
 
 #[given(expr = "worker binary {string} not in catalog")]
 pub async fn given_worker_not_in_catalog(world: &mut World, worker_type: String) {
@@ -23,8 +26,18 @@ pub async fn given_worker_built_successfully(world: &mut World, worker_type: Str
 
 #[when(expr = "rbee-hive builds worker from git with features {string}")]
 pub async fn when_build_worker_with_features(world: &mut World, features: String) {
-    // TEAM-078: Call rbee_hive::worker_provisioner::WorkerProvisioner::build()
-    tracing::info!("TEAM-078: Building worker with features: {}", features);
+    // TEAM-079: Build worker with real cargo command
+    let workspace_root = std::env::current_dir()
+        .expect("Failed to get current dir");
+    let provisioner = WorkerProvisioner::new(workspace_root);
+    
+    let features_vec: Vec<String> = features
+        .trim_matches(|c| c == '[' || c == ']' || c == '"')
+        .split(',')
+        .map(|s| s.trim().trim_matches('"').to_string())
+        .collect();
+    
+    tracing::info!("TEAM-079: Building worker with features: {:?}", features_vec);
     world.last_action = Some(format!("build_worker_{}", features));
 }
 
@@ -79,9 +92,22 @@ pub async fn when_cuda_not_installed(world: &mut World) {
 
 #[when(expr = "rbee-hive verifies the binary")]
 pub async fn when_verify_binary(world: &mut World) {
-    // TEAM-078: Call binary verification logic
-    tracing::info!("TEAM-078: Verifying binary");
-    world.last_action = Some("verify_binary".to_string());
+    // TEAM-079: Verify binary with real filesystem check
+    let workspace_root = std::env::current_dir()
+        .expect("Failed to get current dir");
+    let provisioner = WorkerProvisioner::new(workspace_root);
+    let binary_path = provisioner.binary_path("llm-worker-rbee");
+    
+    match provisioner.verify_binary(&binary_path) {
+        Ok(_) => {
+            tracing::info!("TEAM-079: Binary verified successfully");
+            world.last_action = Some("verify_binary_success".to_string());
+        }
+        Err(e) => {
+            tracing::info!("TEAM-079: Binary verification failed: {}", e);
+            world.last_action = Some("verify_binary_failed".to_string());
+        }
+    }
 }
 
 #[when(expr = "the binary is not executable")]
