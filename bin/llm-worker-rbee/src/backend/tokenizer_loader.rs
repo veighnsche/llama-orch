@@ -1,17 +1,27 @@
 //! Tokenizer loading with auto-detection
 //!
 //! Created by: TEAM-017
+//! Modified by: TEAM-090 (added GGUF tokenizer extraction)
 
 use anyhow::{bail, Result};
 use std::path::Path;
 use tokenizers::Tokenizer;
 
+use super::gguf_tokenizer;
+
 /// Load tokenizer with auto-detection
 ///
 /// TEAM-017: Tries multiple tokenizer formats in order:
-/// 1. tokenizer.json (`HuggingFace` format)
-/// 2. tokenizer.model (`SentencePiece` format - future support)
+/// 1. GGUF embedded tokenizer (for .gguf files) - TEAM-090
+/// 2. tokenizer.json (`HuggingFace` format)
+/// 3. tokenizer.model (`SentencePiece` format - future support)
 pub fn load_tokenizer(model_path: &Path) -> Result<Tokenizer> {
+    // TEAM-090: Check if GGUF file - extract embedded tokenizer
+    if model_path.extension().and_then(|s| s.to_str()) == Some("gguf") {
+        tracing::info!("Detected GGUF file, extracting embedded tokenizer");
+        return gguf_tokenizer::extract_tokenizer_from_gguf(model_path);
+    }
+
     let parent = if model_path.is_dir() {
         model_path
     } else {
@@ -36,7 +46,7 @@ pub fn load_tokenizer(model_path: &Path) -> Result<Tokenizer> {
         bail!("SentencePiece tokenizer support not yet implemented. Please convert to tokenizer.json format.");
     }
 
-    bail!("No tokenizer found at {:?}. Expected tokenizer.json", parent);
+    bail!("No tokenizer found at {:?}. Expected tokenizer.json or .gguf file", parent);
 }
 
 #[cfg(test)]
