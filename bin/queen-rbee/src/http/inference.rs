@@ -23,7 +23,7 @@ use tracing::{error, info};
 
 use crate::beehive_registry::BeehiveNode;
 use crate::http::routes::AppState;
-use crate::http::types::{InferenceTaskRequest, ReadyResponse, WorkerSpawnResponse};
+use crate::http::types::{InferenceRequest, InferenceTaskRequest, ReadyResponse, WorkerSpawnResponse};
 
 /// Handle POST /v2/tasks
 ///
@@ -262,5 +262,57 @@ async fn wait_for_worker_ready(worker_url: &str) -> anyhow::Result<()> {
         }
         
         tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+    }
+}
+
+/// Handle POST /v1/inference
+///
+/// Simple inference endpoint that routes to an available worker
+/// Created by: TEAM-084
+pub async fn handle_inference_request(
+    State(state): State<AppState>,
+    Json(req): Json<InferenceRequest>,
+) -> impl IntoResponse {
+    info!("Received inference request: model={}", req.model.as_deref().unwrap_or("default"));
+    
+    // Find an idle worker
+    let workers = state.worker_registry.list().await;
+    let idle_worker = workers.iter().find(|w| w.state == crate::worker_registry::WorkerState::Idle);
+    
+    if let Some(worker) = idle_worker {
+        info!("Routing request to worker: {} at {}", worker.id, worker.url);
+        
+        // Forward request to worker
+        let client = reqwest::Client::new();
+        match client
+            .post(format!("{}/v1/inference", worker.url))
+            .json(&req)
+            .timeout(std::time::Duration::from_secs(60))
+            .send()
+            .await
+        {
+            Ok(response) => {
+                info!("Worker responded with status: {}", response.status());
+                
+                // Stream the response back
+                let status = response.status();
+                let body = Body::from_stream(response.bytes_stream());
+                
+                (status, [(header::CONTENT_TYPE, "text/event-stream")], body).into_response()
+            }
+            Err(e) => {
+                error!("Failed to forward request to worker: {}", e);
+                (
+                    StatusCode::SERVICE_UNAVAILABLE,
+                    format!("Worker communication failed: {}", e),
+                ).into_response()
+            }
+        }
+    } else {
+        error!("No idle workers available");
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "No idle workers available",
+        ).into_response()
     }
 }

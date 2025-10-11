@@ -31,3 +31,5 @@ dirs = "5.0"
 # TEAM-036: Added for installation system
 toml = "0.8"
 hostname = "0.4"
+# TEAM-084: Added tracing for logging
+tracing = "0.1"
