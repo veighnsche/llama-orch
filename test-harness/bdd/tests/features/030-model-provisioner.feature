@@ -1,15 +1,15 @@
-# Traceability: TEST-001 (split by TEAM-077)
-# Architecture: TEAM-037 (queen-rbee orchestration, SQLite model catalog)
+# Traceability: TEST-001 (split by TEAM-077, TEAM-078)
+# Architecture: TEAM-037 (queen-rbee orchestration, HuggingFace downloads)
 # Components: rbee-hive (pool manager), ModelProvisioner
+# Created by: TEAM-078 (split from 020-model-provisioning.feature)
 # Updated by: TEAM-036 (GGUF support)
-# Refactored by: TEAM-077 (split from test-001.feature into focused feature files)
 #
 # ⚠️ CRITICAL: Step definitions MUST import and test REAL product code from /bin/
 # ⚠️ DO NOT use mock servers - wire up actual rbee-hive and ModelProvisioner libraries
 
-Feature: Model Provisioning
+Feature: Model Provisioner
   As a system provisioning models
-  I want to download and catalog models from Hugging Face
+  I want to download models from Hugging Face with progress tracking
   So that workers can load them for inference
 
   Background:
@@ -21,16 +21,7 @@ Feature: Model Provisioning
     And queen-rbee is running at "http://localhost:8080"
     And the model catalog is SQLite at "~/.rbee/models.db"
 
-  Scenario: Model found in SQLite catalog
-    Given the model catalog contains:
-      | provider | reference                                 | local_path                  |
-      | hf       | TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF    | /models/tinyllama-q4.gguf   |
-    When rbee-hive checks the model catalog
-    Then the query returns local_path "/models/tinyllama-q4.gguf"
-    And rbee-hive skips model download
-    And rbee-hive proceeds to worker preflight
-
-  Scenario: Model not found - download with progress
+  Scenario: Model download with progress tracking
     Given the model is not in the catalog
     When rbee-hive initiates download from Hugging Face
     Then rbee-hive creates SSE endpoint "/v1/models/download/progress"
@@ -126,18 +117,6 @@ Feature: Model Provisioning
       """
     And the exit code is 1 if all retries fail
 
-  Scenario: Model catalog registration after download
-    Given the model downloaded successfully to "/models/tinyllama-q4.gguf"
-    And the model size is 5242880 bytes
-    When rbee-hive registers the model in the catalog
-    Then the SQLite INSERT statement is:
-      """
-      INSERT INTO models (id, provider, reference, local_path, size_bytes, downloaded_at_unix)
-      VALUES ('tinyllama-q4', 'hf', 'TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF', 
-              '/models/tinyllama-q4.gguf', 5242880, 1728508603)
-      """
-    And the catalog query now returns the model
-
   # ============================================================================
   # GGUF Model Support (TEAM-036)
   # ============================================================================
@@ -174,14 +153,6 @@ Feature: Model Provisioning
     Then all quantization formats are supported
     And inference completes successfully for each model
     And VRAM usage is proportional to quantization level
-
-  @gguf @team-036
-  Scenario: GGUF model size calculation
-    Given a GGUF file at "/models/tinyllama-q4.gguf"
-    When rbee-hive calculates model size
-    Then the file size is read from disk
-    And the size is used for RAM preflight checks
-    And the size is stored in the model catalog
 
   @edge-case
   Scenario: EC2 - Model download failure with retry

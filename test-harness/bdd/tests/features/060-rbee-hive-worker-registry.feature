@@ -5,7 +5,7 @@
 #
 # ⚠️ CRITICAL: Step definitions MUST import and test REAL product code from /bin/
 
-Feature: rbee-hive Management
+Feature: rbee-hive Worker Registry
   As a system managing rbee-hive instances
   I want to perform health checks and manage rbee-hive state
   So that I can ensure rbee-hive is ready for worker spawning

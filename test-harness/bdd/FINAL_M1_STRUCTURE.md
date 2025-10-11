@@ -1,8 +1,5 @@
 # Final M1 Structure - CORRECTED
-# Created by: TEAM-077
 # Date: 2025-10-11 14:45
-# Status: ✅ CORRECTED M1/M2 SEPARATION
-
 **I was wrong about M1/M2 separation.**
 
 ### What I Got Wrong:
@@ -15,26 +12,25 @@
 - ✅ **queen-rbee daemon lifecycle** = M1 (standard daemon stuff!)
 - ✅ **Rhai scheduler** = M2 (complex custom scripting)
 
-## Final M1 Structure (14 files)
-
-```
+## Final M1 Structure (15 files)
 010-ssh-registry-management.feature      (10 scenarios)
-020-model-catalog.feature                (13 scenarios)
-025-worker-provisioning.feature          (NEW! Build from git)
-030-queen-rbee-worker-registry.feature   (M1 - Basic registry!)
-040-rbee-hive-worker-registry.feature    (9 scenarios)
-050-ssh-preflight-validation.feature     (NEW! SSH checks)
-060-rbee-hive-preflight-validation.feature (NEW! rbee-hive readiness)
-070-worker-resource-preflight.feature    (10 scenarios)
-080-worker-rbee-lifecycle.feature        (11 scenarios)
-090-rbee-hive-lifecycle.feature          (7 scenarios)
-100-queen-rbee-lifecycle.feature         (M1 - Standard lifecycle!)
-110-inference-execution.feature          (11 scenarios)
-120-input-validation.feature             (6 scenarios)
-130-cli-commands.feature                 (9 scenarios)
-140-end-to-end-flows.feature             (2 scenarios)
+020-model-catalog.feature                (NEW! SPLIT - SQLite queries)
+030-model-provisioner.feature            (NEW! SPLIT - HuggingFace downloads)
+040-worker-provisioning.feature          (NEW! Build from git)
+050-queen-rbee-worker-registry.feature   (M1 - Basic registry!)
+060-rbee-hive-worker-registry.feature    (9 scenarios)
+070-ssh-preflight-validation.feature     (NEW! SSH checks)
+080-rbee-hive-preflight-validation.feature (NEW! rbee-hive readiness)
+090-worker-resource-preflight.feature    (10 scenarios)
+100-worker-rbee-lifecycle.feature        (11 scenarios)
+110-rbee-hive-lifecycle.feature          (7 scenarios)
+120-queen-rbee-lifecycle.feature         (M1 - Standard lifecycle!)
+130-inference-execution.feature          (11 scenarios)
+140-input-validation.feature             (6 scenarios)
+150-cli-commands.feature                 (9 scenarios)
+160-end-to-end-flows.feature             (2 scenarios)
 ```
-**Total M1: 14 files**
+**Total M1: 15 files**
 
 ## M2 (Rhai Scheduler Only - 2 files)
 
@@ -56,7 +52,7 @@
 ```
 **Total M3: 5 files**
 
-## **Grand Total:** 21 files (14 M1 + 2 M2 + 5 M3)
+## **Grand Total:** 22 files (15 M1 + 2 M2 + 5 M3)
 
 ## Why This Separation Makes Sense
 

@@ -162,6 +162,12 @@ pub struct World {
     
     /// Next available port for workers
     pub next_worker_port: u16,
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Test Action Tracking (TEAM-078)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// Last action performed (for step tracking)
+    pub last_action: Option<String>,
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -283,6 +289,7 @@ impl Default for World {
             worker_processes: Vec::new(),
             hive_registry: Some(DebugWorkerRegistry::new()),
             next_worker_port: 8001,
+            last_action: None, // TEAM-078: Action tracking
         }
     }
 }
@@ -325,6 +332,7 @@ impl World {
         self.queen_rbee_process = None;
         self.rbee_hive_processes.clear();
         self.worker_processes.clear();
+        self.last_action = None; // TEAM-078: Clear action tracking
     }
 }
 

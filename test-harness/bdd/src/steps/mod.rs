@@ -13,6 +13,7 @@
 //
 // Modified by: TEAM-064 (added explicit warning preservation notice)
 // Modified by: TEAM-076 (made modules public for library access)
+// Modified by: TEAM-078 (added new step modules for M1 feature reorganization)
 
 pub mod background;
 pub mod beehive_registry;
@@ -26,11 +27,16 @@ pub mod global_queen;
 pub mod happy_path;
 pub mod inference_execution;
 pub mod lifecycle;
+pub mod model_catalog; // TEAM-078: SQLite model catalog queries
 pub mod model_provisioning;
 pub mod pool_preflight;
+pub mod queen_rbee_registry; // TEAM-078: Global worker registry (in-memory)
+pub mod rbee_hive_preflight; // TEAM-078: rbee-hive preflight validation
 pub mod registry;
+pub mod ssh_preflight; // TEAM-078: SSH preflight validation
 pub mod worker_health;
 pub mod worker_preflight;
+pub mod worker_provisioning; // TEAM-078: Worker binary provisioning (cargo build)
 pub mod worker_registration;
 pub mod worker_startup;
 pub mod world;

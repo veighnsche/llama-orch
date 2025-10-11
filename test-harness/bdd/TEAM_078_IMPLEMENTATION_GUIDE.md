@@ -3,24 +3,25 @@
 # Date: 2025-10-11
 # Status: ACTIONABLE PLAN
 
-## Final Structure: 14 M1 Feature Files
+## Final Structure: 15 M1 Feature Files
 
 ```
 010-ssh-registry-management (10) ✅ EXISTS
-020-model-catalog (13) ✅ EXISTS - rename from model-provisioning
-025-worker-provisioning ⚠️ NEW - Build from git + catalog
-030-queen-rbee-worker-registry ⚠️ NEW - Global registry
-040-rbee-hive-worker-registry (9) ✅ EXISTS - rename from 060
-050-ssh-preflight-validation ⚠️ NEW - queen-rbee → rbee-hive SSH checks
-060-rbee-hive-preflight-validation ⚠️ NEW - rbee-hive readiness checks
-070-worker-resource-preflight (10) ✅ EXISTS - rename from 030
-080-worker-rbee-lifecycle (11) ✅ EXISTS - rename from 040
-090-rbee-hive-lifecycle (7) ✅ EXISTS - rename from 070
-100-queen-rbee-lifecycle (3) ✅ EXISTS - rename from 080
-110-inference-execution (11) ✅ EXISTS - rename from 050
-120-input-validation (6) ✅ EXISTS - rename from 090
-130-cli-commands (9) ✅ EXISTS - rename from 100
-140-end-to-end-flows (2) ✅ EXISTS - rename from 110
+020-model-catalog ⚠️ NEW - SPLIT from 020-model-provisioning (SQLite queries only)
+030-model-provisioner ⚠️ NEW - SPLIT from 020-model-provisioning (HuggingFace downloads)
+040-worker-provisioning ⚠️ NEW - Build from git + catalog
+050-queen-rbee-worker-registry ⚠️ NEW - Global registry
+060-rbee-hive-worker-registry (9) ✅ EXISTS - rename from 060
+070-ssh-preflight-validation ⚠️ NEW - queen-rbee → rbee-hive SSH checks
+080-rbee-hive-preflight-validation ⚠️ NEW - rbee-hive readiness checks
+090-worker-resource-preflight (10) ✅ EXISTS - rename from 030
+100-worker-rbee-lifecycle (11) ✅ EXISTS - rename from 040
+110-rbee-hive-lifecycle (7) ✅ EXISTS - rename from 070
+120-queen-rbee-lifecycle (3) ✅ EXISTS - rename from 080
+130-inference-execution (11) ✅ EXISTS - rename from 050
+140-input-validation (6) ✅ EXISTS - rename from 090
+150-cli-commands (9) ✅ EXISTS - rename from 100
+160-end-to-end-flows (2) ✅ EXISTS - rename from 110
 ```
 
 ## ⚠️ ORDER MATTERS - Follow Phases Sequentially!
@@ -44,21 +45,17 @@ mv 050-inference-execution.feature 110-inference-execution.feature
 mv 060-pool-management.feature 040-rbee-hive-worker-registry.feature
 mv 040-worker-lifecycle.feature 080-worker-rbee-lifecycle.feature
 mv 030-worker-preflight-checks.feature 070-worker-resource-preflight.feature
-mv 020-model-provisioning.feature 020-model-catalog.feature
+# DON'T rename yet - we'll SPLIT this file in Phase 2
 ```
 
 **Update feature names inside files:**
-- 020: "Model Catalog"
-- 040: "rbee-hive Worker Registry"
-- 080: "worker-rbee Daemon Lifecycle"
+- 060: "rbee-hive Worker Registry"
+- 100: "worker-rbee Daemon Lifecycle"
 
 **✅ Checkpoint:** `cargo check --bin bdd-runner`
 
 ---
 
-## Phase 2: Create New Features (2 hours)
-
-### 2.1: Create 025-worker-provisioning.feature
 
 **Scenarios (7):**
 1. Build worker from git succeeds
@@ -71,7 +68,7 @@ mv 020-model-provisioning.feature 020-model-catalog.feature
 
 **Reference:** `bin/.specs/.gherkin/test-001.md` Phase 3b
 
-### 2.2: Create 030-queen-rbee-worker-registry.feature
+### 2.3: Create 050-queen-rbee-worker-registry.feature
 
 **Scenarios (6):**
 1. Register worker from rbee-hive
@@ -83,7 +80,7 @@ mv 020-model-provisioning.feature 020-model-catalog.feature
 
 **Key:** In-memory, just HTTP endpoints!
 
-### 2.3: Create 050-ssh-preflight-validation.feature
+### 2.4: Create 070-ssh-preflight-validation.feature
 
 **Scenarios (6):**
 1. SSH connection validation succeeds
@@ -97,7 +94,7 @@ mv 020-model-provisioning.feature 020-model-catalog.feature
 **Component:** queen-rbee
 **Timing:** Phase 2a (before starting rbee-hive)
 
-### 2.4: Create 060-rbee-hive-preflight-validation.feature
+### 2.5: Create 080-rbee-hive-preflight-validation.feature
 
 **Scenarios (4):**
 1. rbee-hive HTTP API health check succeeds
@@ -109,7 +106,7 @@ mv 020-model-provisioning.feature 020-model-catalog.feature
 **Component:** rbee-hive
 **Timing:** Phase 3a (before spawning workers)
 
-### 2.5: Verify 070-worker-resource-preflight.feature
+### 2.6: Verify 090-worker-resource-preflight.feature
 
 **This file already exists!** Just verify scenarios:
 1. EH-004a/b: RAM availability checks
@@ -279,7 +276,7 @@ pub async fn when_rbee_hive_builds_worker(world: &mut World) {
 # TEAM-XXX SUMMARY
 
 **Deliverables:**
-- ✅ 14 M1 feature files (4 new, 10 renamed)
+- ✅ 15 M1 feature files (6 new: 020, 030, 040, 050, 070, 080 | 10 renamed)
 - ✅ XX step functions implemented
 - ✅ Worker provisioning (cargo build from git)
 - ✅ queen-rbee registry (in-memory)
@@ -358,7 +355,7 @@ test-harness/bdd/
 
 ## Summary
 
-**14 M1 Feature Files = Better Stakeholder Clarity!**
+**15 M1 Feature Files = Better Stakeholder Clarity!**
 
 **Each preflight level has:**
 - ✅ Different stakeholder (DevOps, Platform, Resource Mgmt)
@@ -366,11 +363,13 @@ test-harness/bdd/
 - ✅ Different timing in flow (Phase 2a, 3a, 8)
 - ✅ Clear separation of concerns
 
-**New Features (4):**
-1. 025-worker-provisioning
-2. 030-queen-rbee-worker-registry
-3. 050-ssh-preflight-validation
-4. 060-rbee-hive-preflight-validation
+**New Features (6):**
+1. 020-model-catalog (SPLIT from old 020)
+2. 030-model-provisioner (SPLIT from old 020)
+3. 040-worker-provisioning
+4. 050-queen-rbee-worker-registry
+5. 070-ssh-preflight-validation
+6. 080-rbee-hive-preflight-validation
 
 **Total Time:** ~13 hours
 

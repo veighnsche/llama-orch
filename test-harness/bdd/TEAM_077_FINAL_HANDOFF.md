@@ -4,33 +4,34 @@
 
 ## Mission Accomplished
 
-Investigated and designed BDD feature file architecture for M1 (14 files).
+Investigated and designed BDD feature file architecture for M1 (15 files).
 
-## Final M1 Structure: 14 Feature Files
+## Final M1 Structure: 15 Feature Files
 
 ```
 010-ssh-registry-management.feature      (10 scenarios) ✅ EXISTS
-020-model-catalog.feature                (13 scenarios) ✅ EXISTS
-025-worker-provisioning.feature          ⚠️ NEW - Build from git
-030-queen-rbee-worker-registry.feature   ⚠️ NEW - Global registry
-040-rbee-hive-worker-registry.feature    (9 scenarios) ✅ EXISTS
-050-ssh-preflight-validation.feature     ⚠️ NEW - SSH checks
-060-rbee-hive-preflight-validation.feature ⚠️ NEW - rbee-hive readiness
-070-worker-resource-preflight.feature    (10 scenarios) ✅ EXISTS
-080-worker-rbee-lifecycle.feature        (11 scenarios) ✅ EXISTS
-090-rbee-hive-lifecycle.feature          (7 scenarios) ✅ EXISTS
-100-queen-rbee-lifecycle.feature         (3 scenarios) ✅ EXISTS
-110-inference-execution.feature          (11 scenarios) ✅ EXISTS
-120-input-validation.feature             (6 scenarios) ✅ EXISTS
-130-cli-commands.feature                 (9 scenarios) ✅ EXISTS
-140-end-to-end-flows.feature             (2 scenarios) ✅ EXISTS
+020-model-catalog.feature                ⚠️ NEW - SPLIT (SQLite queries)
+030-model-provisioner.feature            ⚠️ NEW - SPLIT (HuggingFace downloads)
+040-worker-provisioning.feature          ⚠️ NEW - Build from git
+050-queen-rbee-worker-registry.feature   ⚠️ NEW - Global registry
+060-rbee-hive-worker-registry.feature    (9 scenarios) ✅ EXISTS
+070-ssh-preflight-validation.feature     ⚠️ NEW - SSH checks
+080-rbee-hive-preflight-validation.feature ⚠️ NEW - rbee-hive readiness
+090-worker-resource-preflight.feature    (10 scenarios) ✅ EXISTS
+100-worker-rbee-lifecycle.feature        (11 scenarios) ✅ EXISTS
+110-rbee-hive-lifecycle.feature          (7 scenarios) ✅ EXISTS
+120-queen-rbee-lifecycle.feature         (3 scenarios) ✅ EXISTS
+130-inference-execution.feature          (11 scenarios) ✅ EXISTS
+140-input-validation.feature             (6 scenarios) ✅ EXISTS
+150-cli-commands.feature                 (9 scenarios) ✅ EXISTS
+160-end-to-end-flows.feature             (2 scenarios) ✅ EXISTS
 ```
 
 ## Key Decisions
 
 ### 1. MORE FILES = BETTER CLARITY ✅
 
-**Why 14 files instead of fewer:**
+**Why 15 files instead of fewer:**
 - Each file = one concern
 - Each file = one stakeholder
 - Each file = one component
@@ -40,24 +41,24 @@ Investigated and designed BDD feature file architecture for M1 (14 files).
 
 ### 2. Separate Preflight Validation (3 files) ✅
 
-**050-ssh-preflight-validation.feature:**
+**070-ssh-preflight-validation.feature:**
 - Stakeholder: DevOps
 - Component: queen-rbee
 - Timing: Phase 2a (before starting rbee-hive)
 
-**060-rbee-hive-preflight-validation.feature:**
+**080-rbee-hive-preflight-validation.feature:**
 - Stakeholder: Platform team
 - Component: rbee-hive
 - Timing: Phase 3a (before spawning workers)
 
-**070-worker-resource-preflight.feature:**
+**090-worker-resource-preflight.feature:**
 - Stakeholder: Resource management
 - Component: rbee-hive
 - Timing: Phase 8 (before spawning specific worker)
 
 ### 3. queen-rbee is M1, NOT M2 ✅
 
-**M1 (14 files):** Basic orchestration
+**M1 (15 files):** Basic orchestration
 - queen-rbee worker registry (just HTTP endpoints!)
 - queen-rbee daemon lifecycle (standard start/stop)
 - Simple routing: "Find worker with model, route there"
