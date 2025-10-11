@@ -1,137 +1,92 @@
+/* Updated by: TEAM-FE-003 - Tailwind v4 @theme pattern */
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 :root {
-    /* Inform the UA we support both schemes; explicit classes/attrs will pin it */
-    color-scheme: light dark;
-    /* === Base neutrals (light) === */
-    --bg-offwhite: #f9fafb;
-    --bg-gray: #e5e7eb;
-    --ink-slate: #1f2937;
-
-    /* === Accents (electrical feel) === */
-    --acc-cyan: #06b6d4;
-    --acc-teal: #14b8a6;
-    --acc-purple: #7c3aed;
-
-    /* === Utility colors === */
-    --ok-green: #16a34a;
-    --err-red: #dc2626;
-    --warn-amber: #d97706;
-
-    /* === Derived tokens === */
-    --surface: var(--bg-offwhite);
-    --surface-alt: #ffffff;
-    --surface-muted: var(--bg-gray);
-    --text: var(--ink-slate);
-    --muted: #6b7280;
-    --ring: color-mix(in srgb, var(--acc-cyan) 65%, var(--acc-purple) 35%);
-    --link: var(--acc-purple);
-    --link-hover: var(--acc-cyan);
-
-    /* === Typography scale === */
-    --font-base: 16px;
-    --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    --font-mono: ui-monospace, 'SFMono-Regular', Menlo, monospace;
-
-    /* === Radii & shadows === */
-    --radius-sm: 4px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
-    --radius-xl: 16px;
-    --radius-pill: 999px;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.1);
+  /* Light mode colors */
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #f59e0b;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f59e0b;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #f59e0b;
+  --radius: 0.5rem;
 }
 
-/* === Dark mode overrides (manual: class or attribute) === */
-:root[data-theme='dark'],
 .dark {
-    color-scheme: dark;
-    /* Base neutrals (dark) */
-    --bg-offwhite: #0b1220;
-    --bg-gray: #1e293b;
-    --ink-slate: #e5e7eb;
-
-    /* Utility colors (dark-friendly variants) */
-    --ok-green: #22c55e;
-    --err-red: #ef4444;
-    --warn-amber: #f59e0b;
-
-    /* Derived tokens */
-    --surface: var(--bg-offwhite);
-    --surface-alt: #0f172a;
-    --surface-muted: #1e293b;
-    --text: var(--ink-slate);
-    --muted: #94a3b8;
-    --ring: color-mix(in srgb, var(--acc-cyan) 60%, var(--acc-purple) 40%);
-    --link: var(--acc-cyan);
-    --link-hover: var(--acc-purple);
-
-    /* Shadows in dark mode should be softer/transparent */
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
-    --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.65);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.7);
+  /* Dark mode colors */
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --card: #1e293b;
+  --card-foreground: #f1f5f9;
+  --popover: #1e293b;
+  --popover-foreground: #f1f5f9;
+  --primary: #f59e0b;
+  --primary-foreground: #0f172a;
+  --secondary: #1e293b;
+  --secondary-foreground: #f1f5f9;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #f59e0b;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
+  --destructive-foreground: #f1f5f9;
+  --border: #334155;
+  --input: #334155;
+  --ring: #f59e0b;
 }
 
-/* === Optional: Force Light (manual) === */
-:root[data-theme='light'],
-.light {
-    color-scheme: light;
-    /* No overrides required: :root already defines the light palette.
-       This selector exists to win over any inherited `.dark` parent. */
+/* Tailwind v4 @theme directive - maps CSS vars to Tailwind utilities */
+@theme inline {
+  /* Colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  
+  /* Border radius */
+  --radius: var(--radius);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 8px);
 }
 
-/* === Global application === */
-html,
+/* Global styles */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
-    background-color: var(--surface);
-    color: var(--text);
-    font-family: var(--font-body);
-    font-size: var(--font-base);
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-}
-
-/* === Links & focus states === */
-a {
-    color: var(--link);
-    text-decoration: none;
-    transition: color 0.15s ease;
-}
-
-a:hover {
-    color: var(--link-hover);
-    text-decoration: underline;
-}
-
-a:focus-visible,
-button:focus-visible,
-[role='button']:focus-visible,
-select:focus-visible,
-input:focus-visible,
-textarea:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 3px;
-    border-radius: var(--radius-sm);
-}
-
-/* === Utility classes === */
-.text-muted {
-    color: var(--muted);
-}
-.bg-surface {
-    background-color: var(--surface);
-}
-.bg-alt {
-    background-color: var(--surface-alt);
-}
-.bg-muted {
-    background-color: var(--surface-muted);
-}
-.rounded {
-    border-radius: var(--radius-md);
-}
-.shadow {
-    box-shadow: var(--shadow-md);
+  @apply bg-background text-foreground;
 }

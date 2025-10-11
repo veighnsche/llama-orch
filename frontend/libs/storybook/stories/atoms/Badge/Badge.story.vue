@@ -22,7 +22,7 @@ import Badge from './Badge.vue'
     </Variant>
 
     <Variant title="Most Popular">
-      <Badge class="bg-amber-500 text-white">Most Popular</Badge>
+      <Badge class="bg-primary text-primary-foreground">Most Popular</Badge>
     </Variant>
   </Story>
 </template>

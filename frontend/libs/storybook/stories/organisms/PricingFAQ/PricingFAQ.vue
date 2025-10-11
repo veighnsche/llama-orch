@@ -49,10 +49,10 @@ const props = withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-  <section class="py-24 bg-white">
+  <section class="py-24 bg-background">
     <div class="container mx-auto px-4">
       <div class="max-w-4xl mx-auto text-center mb-16">
-        <h2 class="text-4xl lg:text-5xl font-bold text-slate-900 mb-6 text-balance">
+        <h2 class="text-4xl lg:text-5xl font-bold text-foreground mb-6 text-balance">
           {{ title }}
         </h2>
       </div>
@@ -61,12 +61,12 @@ const props = withDefaults(defineProps<Props>(), {
         <div
           v-for="faq in faqs"
           :key="faq.question"
-          class="bg-slate-50 border border-slate-200 rounded-lg p-6"
+          class="bg-card border border-border rounded-lg p-6"
         >
-          <h3 class="text-lg font-bold text-slate-900 mb-2">
+          <h3 class="text-lg font-bold text-foreground mb-2">
             {{ faq.question }}
           </h3>
-          <p class="text-slate-600 leading-relaxed">
+          <p class="text-muted-foreground leading-relaxed">
             {{ faq.answer }}
           </p>
         </div>

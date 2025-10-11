@@ -121,6 +121,62 @@ const buttonVariants = cva(
 
 ---
 
+### ⚠️ CRITICAL: TAILWIND CSS V4 HISTOIRE SETUP
+
+**Tailwind v4 requires specific configuration to work in Histoire. Without this, components will have NO styling.**
+
+✅ **REQUIRED Configuration:**
+
+**1. In `styles/tokens.css` (or main CSS file):**
+```css
+@import "tailwindcss";
+
+/* Your custom CSS and design tokens below */
+:root {
+  --color-primary: #0066cc;
+  /* ... other tokens */
+}
+```
+
+**2. In `histoire.config.ts`:**
+```typescript
+import { defineConfig } from 'histoire'
+import { HstVue } from '@histoire/plugin-vue'
+import tailwindcss from '@tailwindcss/postcss'
+
+export default defineConfig({
+  plugins: [HstVue()],
+  vite: {
+    css: {
+      postcss: {
+        plugins: [tailwindcss()],
+      },
+    },
+  },
+})
+```
+
+**3. In `histoire.setup.ts`:**
+```typescript
+import './styles/tokens.css' // This imports Tailwind
+```
+
+❌ **BANNED:**
+- Forgetting `@import "tailwindcss"` in CSS
+- Not configuring PostCSS plugin in histoire.config.ts
+- Assuming Tailwind "just works" without configuration
+
+**Why this matters:** Tailwind v4 uses a new import system. Without proper configuration, all Tailwind classes will be ignored and components will render unstyled.
+
+**Symptoms of misconfiguration:**
+- Components render but have no styling
+- Tailwind classes don't apply colors/spacing
+- Everything looks broken in Histoire
+
+**If you see unstyled components, check these 3 files first!**
+
+---
+
 ### Icons
 
 **Lucide Vue Next 0.454.0** ⭐ CRITICAL
@@ -350,6 +406,42 @@ import Input from '../../../../libs/storybook/stories/atoms/Input/Input.vue'
 
 ---
 
+### ⚠️ CRITICAL: EXPORT ALL COMPONENTS
+
+**Every component MUST be exported in `stories/index.ts` to be usable.**
+
+✅ **REQUIRED:**
+```typescript
+// /frontend/libs/storybook/stories/index.ts
+
+// Atoms
+export { default as Button } from './atoms/Button/Button.vue'
+export { default as Badge } from './atoms/Badge/Badge.vue'
+export { default as Input } from './atoms/Input/Input.vue'
+
+// Molecules
+export { default as PricingCard } from './molecules/PricingCard/PricingCard.vue'
+
+// Organisms
+export { default as Navigation } from './organisms/Navigation/Navigation.vue'
+export { default as PricingHero } from './organisms/PricingHero/PricingHero.vue'
+```
+
+❌ **BANNED:**
+- Creating a component but not exporting it
+- Forgetting to add export after creating component
+- Exporting with wrong name
+
+**Why this matters:** If a component isn't exported in `index.ts`, it cannot be imported using workspace packages. Other developers won't be able to use your component.
+
+**Workflow:**
+1. Create component: `Button.vue`
+2. Create story: `Button.story.vue`
+3. **Export in index.ts** ← Don't forget this step!
+4. Test import: `import { Button } from 'rbee-storybook/stories'`
+
+---
+
 ## 2. Component Implementation Rules
 
 ### ⚠️ NO LOREM IPSUM OR PLACEHOLDER CONTENT
@@ -393,31 +485,88 @@ interface Props {
 
 ---
 
-### ⚠️ USE DESIGN TOKENS, NOT HARDCODED VALUES
+### ⚠️ CRITICAL: USE DESIGN TOKENS, NOT HARDCODED COLORS
 
-**ALL styling must use design tokens from rbee-storybook.**
+**React reference uses hardcoded colors (slate-950, amber-500, etc.). We use design tokens instead.**
 
-✅ **REQUIRED:**
-```css
-.button {
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-primary);
-  border-radius: var(--border-radius-md);
-  font-size: var(--font-size-base);
-}
+✅ **REQUIRED: Use Tailwind v4 @theme tokens**
+```vue
+<template>
+  <!-- ✅ CORRECT: Use design tokens -->
+  <div class="bg-background text-foreground">
+    <h1 class="text-primary">Title</h1>
+    <p class="text-muted-foreground">Description</p>
+    <button class="bg-primary text-primary-foreground">Click</button>
+  </div>
+</template>
 ```
 
-❌ **BANNED:**
-```css
-.button {
-  padding: 8px 16px;
-  background: #0066cc;
-  border-radius: 8px;
-  font-size: 16px;
-}
+❌ **BANNED: Hardcoded Tailwind colors from React reference**
+```vue
+<template>
+  <!-- ❌ WRONG: Don't copy these from React -->
+  <div class="bg-white text-slate-900">
+    <h1 class="text-amber-500">Title</h1>
+    <p class="text-slate-600">Description</p>
+    <button class="bg-amber-500 text-white">Click</button>
+  </div>
+</template>
 ```
 
-**Why this matters:** Design tokens ensure consistency. If we change the primary color, it updates everywhere automatically.
+### Available Design Tokens
+
+**Colors (via `@theme` directive):**
+- `bg-background` / `text-foreground` - Base colors
+- `bg-card` / `text-card-foreground` - Card backgrounds
+- `bg-primary` / `text-primary-foreground` - Primary actions
+- `bg-secondary` / `text-secondary-foreground` - Secondary elements
+- `bg-muted` / `text-muted-foreground` - Muted/subtle elements
+- `bg-accent` / `text-accent-foreground` - Accent highlights
+- `bg-destructive` / `text-destructive-foreground` - Errors/warnings
+- `border-border` - Border colors
+- `ring-ring` - Focus rings
+
+**Border Radius:**
+- `rounded` - Default radius
+- `rounded-sm` - Small radius
+- `rounded-md` - Medium radius
+- `rounded-lg` - Large radius
+- `rounded-xl` - Extra large radius
+
+### Translation Guide: React → Vue
+
+When porting from React reference, translate hardcoded colors to tokens:
+
+| React Reference | Vue Design Token |
+|----------------|------------------|
+| `bg-white` | `bg-background` |
+| `bg-slate-50` | `bg-secondary` |
+| `bg-slate-900` | `bg-background` (dark mode) |
+| `text-slate-900` | `text-foreground` |
+| `text-slate-600` | `text-muted-foreground` |
+| `bg-amber-500` | `bg-primary` or `bg-accent` |
+| `text-amber-500` | `text-primary` or `text-accent` |
+| `border-slate-200` | `border-border` |
+| `bg-red-500` | `bg-destructive` |
+
+### Why This Matters
+
+1. **Dark mode support** - Tokens automatically adapt
+2. **Brand consistency** - Change one value, updates everywhere
+3. **Maintainability** - No magic numbers scattered in code
+4. **Flexibility** - Easy to rebrand or theme
+
+### When Porting Components
+
+**DO NOT** copy Tailwind classes directly from React reference!
+
+**Instead:**
+1. Read React component
+2. Understand the **intent** (primary button, muted text, etc.)
+3. Use appropriate **design token** for that intent
+4. Test in both light and dark modes
+
+**Why this matters:** Design tokens ensure consistency and enable dark mode. Hardcoded colors break theming and create maintenance nightmares.
 
 ---
 
@@ -499,53 +648,78 @@ import {
 
 ## 3. Story Requirements
 
-### ⚠️ EVERY COMPONENT NEEDS A STORY
+### ⚠️ CRITICAL: HISTOIRE STORY FORMAT
 
-**No component is complete without a proper story file.**
+**Histoire requires `.story.vue` files (Vue SFC format), NOT `.story.ts` TypeScript files.**
 
-✅ **REQUIRED Story Structure:**
+✅ **REQUIRED: .story.vue Format**
+```vue
+<!-- Button.story.vue -->
+<script setup lang="ts">
+import Button from './Button.vue'
+</script>
+
+<template>
+  <Story title="atoms/Button">
+    <Variant title="Primary">
+      <Button variant="primary">Primary</Button>
+    </Variant>
+    
+    <Variant title="Secondary">
+      <Button variant="secondary">Secondary</Button>
+    </Variant>
+    
+    <Variant title="Disabled">
+      <Button disabled>Disabled</Button>
+    </Variant>
+    
+    <Variant title="Small">
+      <Button size="sm">Small</Button>
+    </Variant>
+    
+    <Variant title="Large">
+      <Button size="lg">Large</Button>
+    </Variant>
+  </Story>
+</template>
+```
+
+❌ **BANNED: .story.ts Format**
 ```typescript
-// Button.story.ts
+// ❌ DON'T DO THIS - Histoire doesn't support this format!
+import type { Meta, StoryObj } from '@histoire/vue3'
 import Button from './Button.vue'
 
 export default {
   title: 'atoms/Button',
   component: Button,
+} as Meta<typeof Button>
+
+export const Primary: StoryObj<typeof Button> = {
+  // This format DOES NOT WORK with Histoire!
 }
-
-// Show all variants
-export const Primary = () => ({
-  components: { Button },
-  template: '<Button variant="primary">Primary</Button>',
-})
-
-export const Secondary = () => ({
-  components: { Button },
-  template: '<Button variant="secondary">Secondary</Button>',
-})
-
-export const Disabled = () => ({
-  components: { Button },
-  template: '<Button disabled>Disabled</Button>',
-})
-
-// Show all sizes
-export const Small = () => ({
-  components: { Button },
-  template: '<Button size="sm">Small</Button>',
-})
-
-export const Large = () => ({
-  components: { Button },
-  template: '<Button size="lg">Large</Button>',
-})
 ```
+
+**Why this matters:** Histoire is designed for Vue SFC stories. TypeScript story format will not appear in Histoire and will waste hours of debugging.
+
+---
+
+### ⚠️ EVERY COMPONENT NEEDS A STORY
+
+**No component is complete without a proper story file.**
+
+✅ **REQUIRED:**
+- Story file with ALL variants
+- Story shows ALL props
+- Story shows ALL states (default, hover, active, disabled, error)
+- Story uses `.story.vue` format
 
 ❌ **BANNED:**
 - Story with only one variant
 - No story file at all
 - Story that doesn't show all props
 - Story that doesn't show all states
+- Using `.story.ts` format (use `.story.vue` instead)
 
 ---
 
@@ -816,6 +990,102 @@ function getUser(id: any): any {
 
 ## 8. Port Workflow Rules
 
+### ⚠️ CRITICAL: TWO TYPES OF COMPONENTS
+
+**You must understand the difference between porting atoms vs creating organisms.**
+
+#### Type 1: UI Primitives (Atoms) - PORT FROM REACT
+
+**These exist as separate components in React reference.**
+
+**Location:** `/frontend/reference/v0/components/ui/`
+
+**Examples:**
+- badge.tsx
+- button.tsx
+- card.tsx
+- input.tsx
+- accordion.tsx
+- tabs.tsx
+- dialog.tsx
+
+**Workflow:**
+```bash
+# 1. Find the React component
+ls /home/vince/Projects/llama-orch/frontend/reference/v0/components/ui/
+
+# 2. Read it
+cat /home/vince/Projects/llama-orch/frontend/reference/v0/components/ui/badge.tsx
+
+# 3. Port to Vue
+# Create: /frontend/libs/storybook/stories/atoms/Badge/Badge.vue
+# - Same variants (default, secondary, destructive, outline)
+# - Same props
+# - Same Tailwind classes
+# - Use CVA for variants
+# - Use Radix Vue for interactive components
+
+# 4. Create story
+# Create: /frontend/libs/storybook/stories/atoms/Badge/Badge.story.vue
+
+# 5. Test in Histoire
+pnpm --filter rbee-storybook story:dev
+
+# 6. Export in index.ts
+# Add: export { default as Badge } from './atoms/Badge/Badge.vue'
+```
+
+---
+
+#### Type 2: Page Components (Molecules/Organisms) - CREATE NEW
+
+**These DON'T exist as separate components in React. They're embedded in page files.**
+
+**Location:** `/frontend/reference/v0/app/[page-name]/page.tsx` (all in one file)
+
+**Examples:**
+- PricingCard (molecule) - doesn't exist in React, you design it
+- PricingTiers (organism) - doesn't exist in React, you design it
+- PricingHero (organism) - doesn't exist in React, you design it
+- HeroSection (organism) - doesn't exist in React, you design it
+
+**Workflow:**
+```bash
+# 1. Read the page file
+cat /home/vince/Projects/llama-orch/frontend/reference/v0/app/pricing/page.tsx
+
+# 2. Or view in browser
+pnpm --filter frontend/reference/v0 dev
+# Open: http://localhost:3000/pricing
+
+# 3. Identify sections
+# - Hero section (lines 8-23)
+# - Pricing tiers (lines 26-177)
+# - Comparison table (lines 180-end)
+
+# 4. Design reusable components
+# - PricingCard: Reusable for all 3 tiers
+# - PricingTiers: Grid of 3 PricingCards
+# - PricingHero: Hero section
+
+# 5. Create components by composing atoms
+# PricingCard = Card + Button + Badge + Check icons
+
+# 6. Create story
+# Create: PricingCard.story.vue with all variants
+
+# 7. Test in Histoire
+pnpm --filter rbee-storybook story:dev
+
+# 8. Export in index.ts
+```
+
+**Key Difference:**
+- **Atoms:** Port directly from `/components/ui/` - already designed
+- **Molecules/Organisms:** Design yourself by analyzing page structure - you're the architect
+
+---
+
 ### ⚠️ FOLLOW THE PORT PLAN
 
 **The React to Vue port has a specific workflow. Follow it.**
@@ -839,6 +1109,7 @@ function getUser(id: any): any {
 - Guessing how it should work
 - Changing behavior without reason
 - Not testing in Histoire
+- Confusing atoms (port) with organisms (create)
 
 ---
 
@@ -1119,6 +1390,37 @@ import { Button } from 'rbee-storybook/stories'
 
 ---
 
+### Testing Commands Quick Reference
+
+**Test components in Histoire:**
+```bash
+cd /home/vince/Projects/llama-orch/frontend/libs/storybook
+pnpm story:dev
+# Open: http://localhost:6006
+```
+
+**Test full Vue app:**
+```bash
+cd /home/vince/Projects/llama-orch/frontend/bin/commercial-frontend
+pnpm dev
+# Open: http://localhost:5173
+```
+
+**Compare with React reference:**
+```bash
+cd /home/vince/Projects/llama-orch/frontend/reference/v0
+pnpm dev
+# Open: http://localhost:3000
+```
+
+**Run linting:**
+```bash
+pnpm --filter rbee-storybook lint
+pnpm --filter rbee-commercial-frontend lint
+```
+
+---
+
 ## 16. Enforcement
 
 **These rules are MANDATORY. Violations will result in:**
@@ -1152,13 +1454,67 @@ Before submitting ANY work, verify:
 - [ ] Exported in index.ts
 - [ ] Handoff ≤2 pages
 - [ ] Previous team's TODO completed
+- [ ] Story files use `.story.vue` format (NOT `.story.ts`)
+- [ ] Tailwind v4 configured in Histoire (PostCSS + @import)
+- [ ] Component exported in stories/index.ts
 
 **If you can't check ALL boxes, keep working.**
 
 ---
 
-**Version:** 1.0  
+## 17. Critical Lessons from Failed Teams
+
+### ❌ TEAM-FE-002 Lesson: Histoire Story Format
+
+**What happened:**
+- Created `.story.ts` files with TypeScript Meta/StoryObj format
+- Stories didn't appear in Histoire
+- Spent hours debugging
+
+**Root cause:**
+- Histoire requires `.story.vue` Vue SFC files
+- TypeScript story format doesn't work
+
+**Solution:**
+- Always use `.story.vue` format
+- Use `<Story>` and `<Variant>` components
+
+---
+
+### ❌ TEAM-FE-002 Lesson: Tailwind CSS v4 Setup
+
+**What happened:**
+- Components rendered but had no styling
+- All Tailwind classes were ignored
+- Spent hours debugging
+
+**Root cause:**
+- Tailwind v4 requires `@import "tailwindcss"` in CSS
+- Requires PostCSS plugin in `histoire.config.ts`
+- Not configured by default
+
+**Solution:**
+- Add `@import "tailwindcss"` to `styles/tokens.css`
+- Add `@tailwindcss/postcss` plugin to `histoire.config.ts`
+- Import tokens.css in `histoire.setup.ts`
+
+---
+
+### Key Takeaway
+
+**These issues cost TEAM-FE-002 significant time. Learn from their mistakes:**
+1. Always use `.story.vue` format for Histoire
+2. Always configure Tailwind v4 properly
+3. Always export components in index.ts
+4. Always test in Histoire before marking complete
+
+**Don't repeat these mistakes. Read the rules. Follow the rules.**
+
+---
+
+**Version:** 1.1  
 **Last Updated:** 2025-10-11  
+**Updated by:** TEAM-FE-003  
 **Status:** MANDATORY  
 **Applies to:** All frontend teams
 

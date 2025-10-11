@@ -355,9 +355,28 @@ The Pricing page is complete and ready for use. Next team (TEAM-FE-003) can:
 
 ---
 
-## 🔍 Known Issues
+## 🔍 Known Issues & Fixes Applied
 
-None. All components implemented and tested.
+### Issues Discovered and Fixed:
+
+1. **Histoire Story Format Issue** ✅ FIXED
+   - **Problem:** Initially created `.story.ts` files with TypeScript Meta/StoryObj format
+   - **Root Cause:** Histoire requires `.story.vue` Vue SFC files, not TypeScript files
+   - **Solution:** Converted all stories to `.story.vue` format with `<Story>` and `<Variant>` components
+   - **Files Fixed:** All 6 story files converted from `.ts` to `.vue`
+
+2. **Tailwind CSS Not Loading** ✅ FIXED
+   - **Problem:** Components had no styling in Histoire
+   - **Root Cause:** Tailwind CSS v4 was installed but not configured in Histoire
+   - **Solution:** 
+     - Added `@import "tailwindcss";` to `styles/tokens.css`
+     - Added `@tailwindcss/postcss` plugin to `histoire.config.ts`
+   - **Files Modified:**
+     - `/frontend/libs/storybook/styles/tokens.css`
+     - `/frontend/libs/storybook/histoire.config.ts`
+
+### Final Status:
+All issues resolved. Components render correctly with full Tailwind v4 styling in Histoire.
 
 ---
 

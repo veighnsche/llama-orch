@@ -34,21 +34,21 @@ const cardClasses = computed(() =>
   cn(
     'relative p-8 space-y-6',
     props.highlighted
-      ? 'bg-amber-50 border-2 border-amber-500'
-      : 'bg-white border-2 border-slate-200',
+      ? 'bg-primary/10 border-2 border-primary'
+      : 'bg-card border-2 border-border',
     props.class
   )
 )
 
 const buttonClasses = computed(() => {
   if (props.highlighted) {
-    return 'w-full bg-amber-500 hover:bg-amber-600 text-slate-950'
+    return 'w-full bg-primary hover:bg-primary/90 text-primary-foreground'
   }
   return 'w-full bg-transparent'
 })
 
 const firstFeatureClass = computed(() => {
-  return props.highlighted ? 'text-slate-900 font-medium' : 'text-slate-600'
+  return props.highlighted ? 'text-foreground font-medium' : 'text-muted-foreground'
 })
 </script>
 
@@ -59,7 +59,7 @@ const firstFeatureClass = computed(() => {
       v-if="badge"
       class="absolute -top-4 left-1/2 -translate-x-1/2"
     >
-      <span class="bg-amber-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+      <span class="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
         {{ badge }}
       </span>
     </div>
@@ -67,17 +67,17 @@ const firstFeatureClass = computed(() => {
     <!-- Header with title and price -->
     <div>
       <CardHeader class="p-0">
-        <CardTitle class="text-2xl font-bold text-slate-900">
+        <CardTitle class="text-2xl font-bold text-foreground">
           {{ title }}
         </CardTitle>
       </CardHeader>
       <div class="mt-4">
-        <span class="text-4xl font-bold text-slate-900">{{ price }}</span>
-        <span class="text-slate-600 ml-2">{{ priceSubtext }}</span>
+        <span class="text-4xl font-bold text-foreground">{{ price }}</span>
+        <span class="text-muted-foreground ml-2">{{ priceSubtext }}</span>
       </div>
       <p
         v-if="teamSize"
-        class="text-sm text-slate-600 mt-1"
+        class="text-sm text-muted-foreground mt-1"
       >
         {{ teamSize }}
       </p>
@@ -91,8 +91,8 @@ const firstFeatureClass = computed(() => {
           :key="feature"
           class="flex items-start gap-2"
         >
-          <Check class="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-          <span :class="index === 0 ? firstFeatureClass : 'text-slate-600'">
+          <Check class="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+          <span :class="index === 0 ? firstFeatureClass : 'text-muted-foreground'">
             {{ feature }}
           </span>
         </li>
@@ -110,7 +110,7 @@ const firstFeatureClass = computed(() => {
     </CardFooter>
 
     <!-- Description -->
-    <p class="text-sm text-slate-600 text-center">
+    <p class="text-sm text-muted-foreground text-center">
       {{ description }}
     </p>
   </Card>
