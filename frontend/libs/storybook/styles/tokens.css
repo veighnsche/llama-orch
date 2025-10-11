@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
     /* Inform the UA we support both schemes; explicit classes/attrs will pin it */
     color-scheme: light dark;

@@ -1,11 +1,13 @@
 // Created by: TEAM-FE-000
 // TEAM-FE-001: Added Button and Card/Alert subcomponents
+// TEAM-FE-002: Added Badge atom
 // Central export for all storybook components
 // Import like: import { Button, Input, HeroSection } from 'rbee-storybook/stories'
 
 // ============================================================================
 // ATOMS - Priority 1 (Core UI)
 // ============================================================================
+export { default as Badge } from './atoms/Badge/Badge.vue'
 export { default as Button } from './atoms/Button/Button.vue'
 export { default as Input } from './atoms/Input/Input.vue'
 export { default as Textarea } from './atoms/Textarea/Textarea.vue'
