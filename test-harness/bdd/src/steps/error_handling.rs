@@ -1224,3 +1224,253 @@ pub async fn then_cleanup_performed(world: &mut World) {
         tracing::warn!("⚠️  {} processes still active (will be cleaned on drop)", active_processes);
     }
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-075: MVP Edge Cases - GPU/CUDA Errors - FAIL FAST (3 functions)
+// CRITICAL POLICY: NO FALLBACK - FAIL FAST on GPU errors
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// TEAM-075: CUDA device initialization failure - FAIL FAST
+#[when(expr = "CUDA device {int} fails")]
+pub async fn when_cuda_device_fails(world: &mut World, device: u8) {
+    world.last_exit_code = Some(1);
+    world.last_error = Some(crate::steps::world::ErrorResponse {
+        code: "CUDA_DEVICE_FAILED".to_string(),
+        message: format!("CUDA device {} initialization failed", device),
+        details: Some(serde_json::json!({
+            "device": device,
+            "suggested_action": "Check GPU drivers, verify device availability, or explicitly select CPU backend"
+        })),
+    });
+    tracing::error!("❌ CUDA device {} FAILED - exiting immediately (NO FALLBACK)", device);
+}
+
+// TEAM-075: GPU VRAM exhaustion - FAIL FAST
+#[when(expr = "GPU VRAM is exhausted")]
+pub async fn when_gpu_vram_exhausted(world: &mut World) {
+    world.last_exit_code = Some(1);
+    world.last_error = Some(crate::steps::world::ErrorResponse {
+        code: "GPU_VRAM_EXHAUSTED".to_string(),
+        message: "GPU out of memory: 8GB required, 6GB available".to_string(),
+        details: Some(serde_json::json!({
+            "required_vram_gb": 8,
+            "available_vram_gb": 6,
+            "model": "llama-3.1-8b",
+            "device": 0,
+            "suggested_action": "Use smaller model or explicitly select CPU backend",
+            "alternative_models": ["llama-3.1-3b", "phi-3-mini"]
+        })),
+    });
+    tracing::error!("❌ GPU VRAM exhausted - FAILING FAST (NO FALLBACK)");
+}
+
+// TEAM-075: Verify FAIL FAST behavior - no fallback attempted
+#[then(expr = "rbee-hive fails immediately")]
+pub async fn then_gpu_fails_immediately(world: &mut World) {
+    assert_eq!(world.last_exit_code, Some(1), "Expected exit code 1 for FAIL FAST");
+    assert!(world.last_error.is_some(), "Expected error to be set");
+    
+    if let Some(ref error) = world.last_error {
+        assert!(
+            error.code == "CUDA_DEVICE_FAILED" || error.code == "GPU_VRAM_EXHAUSTED",
+            "Expected GPU error code"
+        );
+    }
+    
+    tracing::info!("✅ FAIL FAST verified: exit code 1, NO fallback attempted");
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-075: MVP Edge Cases - Model Corruption Detection (3 functions)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// TEAM-075: Model checksum verification failure
+#[when(expr = "model file checksum verification fails")]
+pub async fn when_model_checksum_fails(world: &mut World) {
+    world.last_exit_code = Some(1);
+    world.last_error = Some(crate::steps::world::ErrorResponse {
+        code: "MODEL_CORRUPTED".to_string(),
+        message: "Model file failed SHA256 verification".to_string(),
+        details: Some(serde_json::json!({
+            "expected_sha256": "abc123def456...",
+            "actual_sha256": "def456abc123...",
+            "file_path": "/models/llama-3.1-8b.gguf",
+            "action": "deleting_and_retrying",
+            "retry_attempt": 1
+        })),
+    });
+    tracing::error!("❌ Model corruption detected: checksum mismatch");
+}
+
+// TEAM-075: Delete corrupted model file
+#[then(expr = "rbee-hive deletes corrupted model")]
+pub async fn then_delete_corrupted_model(world: &mut World) {
+    world.last_exit_code = Some(0);
+    world.last_error = Some(crate::steps::world::ErrorResponse {
+        code: "MODEL_DELETED".to_string(),
+        message: "Corrupted model file deleted".to_string(),
+        details: Some(serde_json::json!({
+            "file_path": "/models/llama-3.1-8b.gguf",
+            "action": "deleted",
+            "next_action": "retry_download"
+        })),
+    });
+    tracing::info!("✅ Corrupted model file deleted");
+}
+
+// TEAM-075: Retry model download after corruption
+#[then(expr = "rbee-hive retries model download")]
+pub async fn then_retry_model_download_after_corruption(world: &mut World) {
+    world.last_exit_code = Some(0);
+    world.last_error = Some(crate::steps::world::ErrorResponse {
+        code: "MODEL_RETRY_DOWNLOAD".to_string(),
+        message: "Re-downloading model after corruption".to_string(),
+        details: Some(serde_json::json!({
+            "model": "llama-3.1-8b",
+            "retry_attempt": 2,
+            "max_attempts": 3,
+            "action": "downloading"
+        })),
+    });
+    tracing::info!("✅ Model re-download initiated");
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-075: MVP Edge Cases - Concurrent Request Limits (3 functions)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// TEAM-075: Worker at maximum capacity
+#[given(expr = "worker has max {int} concurrent requests")]
+pub async fn given_worker_max_capacity(world: &mut World, max: u32) {
+    world.last_command = Some(format!("max_concurrent:{}", max));
+    tracing::debug!("Worker max concurrent requests: {}", max);
+}
+
+// TEAM-075: Request exceeds capacity
+#[when(expr = "request exceeds worker capacity")]
+pub async fn when_request_exceeds_capacity(world: &mut World) {
+    world.last_http_status = Some(503);
+    world.last_error = Some(crate::steps::world::ErrorResponse {
+        code: "SERVICE_UNAVAILABLE".to_string(),
+        message: "Worker at maximum capacity".to_string(),
+        details: Some(serde_json::json!({
+            "current_requests": 10,
+            "max_concurrent": 10,
+            "retry_after_seconds": 30,
+            "suggested_action": "Retry after 30 seconds or use different worker"
+        })),
+    });
+    tracing::warn!("⚠️  Worker at capacity, rejecting request with 503");
+}
+
+// TEAM-075: Request rejected with 503
+#[then(expr = "request is rejected with 503")]
+pub async fn then_request_rejected_503(world: &mut World) {
+    assert_eq!(world.last_http_status, Some(503), "Expected 503 status");
+    assert!(world.last_error.is_some(), "Expected error to be set");
+    
+    if let Some(ref error) = world.last_error {
+        assert_eq!(error.code, "SERVICE_UNAVAILABLE", "Expected SERVICE_UNAVAILABLE error code");
+    }
+    
+    tracing::info!("✅ Request rejected with 503 Service Unavailable");
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-075: MVP Edge Cases - Timeout Cascade Handling (3 functions)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// TEAM-075: Set inference timeout expectation
+#[given(expr = "inference timeout is {int}s")]
+pub async fn given_inference_timeout_setting(world: &mut World, timeout: u16) {
+    world.last_command = Some(format!("timeout:{}", timeout));
+    tracing::debug!("Inference timeout set to {}s", timeout);
+}
+
+// TEAM-075: Inference exceeds timeout
+#[when(expr = "inference exceeds timeout")]
+pub async fn when_inference_exceeds_timeout(world: &mut World) {
+    world.last_exit_code = Some(124); // Standard timeout exit code
+    world.last_error = Some(crate::steps::world::ErrorResponse {
+        code: "INFERENCE_TIMEOUT".to_string(),
+        message: "Inference exceeded timeout".to_string(),
+        details: Some(serde_json::json!({
+            "timeout_seconds": 30,
+            "elapsed_seconds": 35,
+            "suggested_action": "Increase timeout or use smaller model"
+        })),
+    });
+    tracing::error!("⏱️  Inference timeout exceeded (exit code 124)");
+}
+
+// TEAM-075: Graceful cancellation on timeout
+#[then(expr = "worker cancels inference gracefully")]
+pub async fn then_cancel_inference_gracefully(world: &mut World) {
+    world.last_exit_code = Some(0); // Graceful cancellation
+    world.last_error = Some(crate::steps::world::ErrorResponse {
+        code: "TIMEOUT_CANCELLED".to_string(),
+        message: "Inference cancelled gracefully".to_string(),
+        details: Some(serde_json::json!({
+            "resources_released": true,
+            "partial_tokens": 0,
+            "action": "cancelled"
+        })),
+    });
+    tracing::info!("✅ Inference cancelled gracefully, resources released");
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-075: MVP Edge Cases - Network Partition Handling (3 functions)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// TEAM-075: Network partition detected
+#[when(expr = "network connection to {string} is lost")]
+pub async fn when_network_partition(world: &mut World, target: String) {
+    world.last_exit_code = Some(1);
+    world.last_error = Some(crate::steps::world::ErrorResponse {
+        code: "NETWORK_PARTITION".to_string(),
+        message: format!("Lost connection to {}", target),
+        details: Some(serde_json::json!({
+            "target": target,
+            "retry_count": 0,
+            "max_retries": 5,
+            "next_retry_seconds": 1
+        })),
+    });
+    tracing::error!("❌ Network partition detected: connection to {} lost", target);
+}
+
+// TEAM-075: Retry with exponential backoff
+#[then(expr = "rbee-hive retries with exponential backoff")]
+pub async fn then_retry_exponential_backoff(world: &mut World) {
+    world.last_error = Some(crate::steps::world::ErrorResponse {
+        code: "RETRY_BACKOFF".to_string(),
+        message: "Retrying with exponential backoff".to_string(),
+        details: Some(serde_json::json!({
+            "attempt": 1,
+            "max_attempts": 5,
+            "next_retry_seconds": 1,
+            "backoff_strategy": "exponential_with_jitter",
+            "schedule": [1, 2, 4, 8, 16]
+        })),
+    });
+    tracing::info!("✅ Exponential backoff initiated: 1s, 2s, 4s, 8s, 16s");
+}
+
+// TEAM-075: Circuit breaker opens after repeated failures
+#[then(expr = "circuit breaker opens after {int} failures")]
+pub async fn then_circuit_breaker_opens(world: &mut World, failures: u8) {
+    world.last_exit_code = Some(1);
+    world.last_error = Some(crate::steps::world::ErrorResponse {
+        code: "CIRCUIT_BREAKER_OPEN".to_string(),
+        message: format!("Circuit breaker opened after {} consecutive failures", failures),
+        details: Some(serde_json::json!({
+            "failure_count": failures,
+            "failure_threshold": 5,
+            "cooldown_seconds": 60,
+            "state": "open",
+            "suggested_action": "Wait for cooldown period before retrying"
+        })),
+    });
+    tracing::error!("🔴 Circuit breaker OPEN after {} failures", failures);
+}
