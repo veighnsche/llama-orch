@@ -12,6 +12,7 @@
 //!
 //! Created by: TEAM-046, TEAM-047
 //! Refactored by: TEAM-052
+//! TEAM-087: Fixed model_ref validation bug (HTTP 400 from rbee-hive)
 
 use axum::{
     body::Body,
@@ -28,11 +29,22 @@ use crate::http::types::{InferenceRequest, InferenceTaskRequest, ReadyResponse, 
 /// Handle POST /v2/tasks
 ///
 /// Full orchestration: registry lookup -> SSH -> spawn worker -> execute inference
+/// TEAM-087: Added model_ref validation
 pub async fn handle_create_inference_task(
     State(state): State<AppState>,
     Json(req): Json<InferenceTaskRequest>,
 ) -> impl IntoResponse {
     info!("Received inference task: node={}, model={}", req.node, req.model);
+    
+    // TEAM-087: Validate and normalize model reference
+    // rbee-hive requires "provider:reference" format (e.g., "hf:model-name")
+    let model_ref = if req.model.contains(':') {
+        req.model.clone()
+    } else {
+        // Default to "hf:" prefix for convenience
+        format!("hf:{}", req.model)
+    };
+    info!("Using model_ref: {}", model_ref);
     
     // TEAM-085: Handle localhost specially - no SSH needed!
     let rbee_hive_url = if req.node == "localhost" {
@@ -80,10 +92,15 @@ pub async fn handle_create_inference_task(
     };
     
     // Step 3: Spawn worker on rbee-hive
-    info!("Spawning worker on rbee-hive at {}", rbee_hive_url);
+    // TEAM-087: Enhanced spawn diagnostics
+    info!("🚀 Spawning worker on rbee-hive at {}", rbee_hive_url);
+    info!("   Model: {}", model_ref);
+    info!("   Backend: cpu");
+    
     let client = reqwest::Client::new();
+    // TEAM-087: Use normalized model_ref
     let spawn_request = serde_json::json!({
-        "model_ref": req.model,
+        "model_ref": model_ref,
         "backend": "cpu",
         "device": 0,
         "model_path": ""
@@ -99,34 +116,49 @@ pub async fn handle_create_inference_task(
         Ok(resp) if resp.status().is_success() => {
             match resp.json::<WorkerSpawnResponse>().await {
                 Ok(worker) => {
-                    info!("Worker spawned: {} at {}", worker.worker_id, worker.url);
+                    info!("✅ Worker spawned successfully:");
+                    info!("   Worker ID: {}", worker.worker_id);
+                    info!("   URL: {}", worker.url);
+                    info!("   State: {}", worker.state);
                     worker
                 }
                 Err(e) => {
-                    error!("Failed to parse worker response: {}", e);
-                    return (StatusCode::INTERNAL_SERVER_ERROR, format!("Worker spawn parse error: {}", e)).into_response();
+                    error!("❌ Failed to parse worker spawn response: {}", e);
+                    return (StatusCode::INTERNAL_SERVER_ERROR, 
+                            format!("Worker spawn parse error: {}. rbee-hive may have returned invalid JSON.", e)
+                    ).into_response();
                 }
             }
         }
         Ok(resp) => {
             let status = resp.status();
             let body = resp.text().await.unwrap_or_default();
-            error!("Worker spawn failed: HTTP {} - {}", status, body);
-            return (StatusCode::INTERNAL_SERVER_ERROR, format!("Worker spawn failed: HTTP {}", status)).into_response();
+            error!("❌ Worker spawn failed: HTTP {} - {}", status, body);
+            return (StatusCode::INTERNAL_SERVER_ERROR, 
+                    format!("Worker spawn failed: HTTP {} - {}. Check rbee-hive logs for details.", status, body)
+            ).into_response();
         }
         Err(e) => {
-            error!("Failed to spawn worker: {}", e);
-            return (StatusCode::SERVICE_UNAVAILABLE, format!("Worker spawn request failed: {}", e)).into_response();
+            error!("❌ Failed to connect to rbee-hive: {}", e);
+            return (StatusCode::SERVICE_UNAVAILABLE, 
+                    format!("Worker spawn request failed: {}. Is rbee-hive running at {}?", e, rbee_hive_url)
+            ).into_response();
         }
     };
     
     // Step 4: Wait for worker ready
-    info!("Waiting for worker {} to be ready", worker.worker_id);
+    // TEAM-087: Enhanced timeout diagnostics
+    info!("⏳ Waiting for worker {} to be ready at {}", worker.worker_id, worker.url);
     match wait_for_worker_ready(&worker.url).await {
-        Ok(_) => info!("Worker ready: {}", worker.worker_id),
+        Ok(_) => {
+            info!("✅ Worker {} is ready and accepting requests", worker.worker_id);
+        }
         Err(e) => {
-            error!("Worker failed to become ready: {}", e);
-            return (StatusCode::INTERNAL_SERVER_ERROR, format!("Worker ready timeout: {}", e)).into_response();
+            error!("❌ Worker {} failed to become ready: {}", worker.worker_id, e);
+            // TEAM-087: Return detailed error to help diagnose issues
+            return (StatusCode::INTERNAL_SERVER_ERROR, 
+                    format!("Worker ready timeout: {}. Check worker logs for details.", e)
+            ).into_response();
         }
     }
     
@@ -210,13 +242,21 @@ async fn ensure_local_rbee_hive_running() -> anyhow::Result<String> {
     // Start rbee-hive as local background process
     info!("🚀 Starting rbee-hive daemon locally...");
     
+    // TEAM-088: CRITICAL FIX - Don't silence logs! We need to see what's happening!
+    // Use RBEE_SILENT=1 to suppress logs if needed
+    let (stdout_cfg, stderr_cfg) = if std::env::var("RBEE_SILENT").is_ok() {
+        (std::process::Stdio::null(), std::process::Stdio::null())
+    } else {
+        (std::process::Stdio::inherit(), std::process::Stdio::inherit())
+    };
+    
     let mut child = tokio::process::Command::new(&rbee_hive_binary)
         .arg("daemon")
         .arg("--addr")
         .arg("127.0.0.1:9200")  // TEAM-085: Different port from queen-rbee (8080)
         .env("RBEE_WORKER_HOST", "127.0.0.1")
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
+        .stdout(stdout_cfg)
+        .stderr(stderr_cfg)
         .spawn()?;
     
     // Wait for rbee-hive to be ready (max 10 seconds)
@@ -328,12 +368,24 @@ async fn wait_for_rbee_hive_ready(url: &str) -> anyhow::Result<()> {
 }
 
 /// TEAM-047: Wait for worker to be ready
+/// TEAM-087: Enhanced timeout diagnostics
 async fn wait_for_worker_ready(worker_url: &str) -> anyhow::Result<()> {
     let client = reqwest::Client::new();
     let start = std::time::Instant::now();
     let timeout = std::time::Duration::from_secs(300); // 5 minutes
+    let mut attempt = 0;
+    #[allow(unused_assignments)]
+    let mut last_error: Option<String> = None;
     
     loop {
+        attempt += 1;
+        let elapsed = start.elapsed();
+        
+        // Log progress every 10 seconds
+        if attempt % 5 == 0 {
+            info!("Waiting for worker ready... attempt {} ({:.1}s elapsed)", attempt, elapsed.as_secs_f32());
+        }
+        
         match client
             .get(format!("{}/v1/ready", worker_url))
             .timeout(std::time::Duration::from_secs(5))
@@ -341,18 +393,49 @@ async fn wait_for_worker_ready(worker_url: &str) -> anyhow::Result<()> {
             .await
         {
             Ok(response) if response.status().is_success() => {
-                if let Ok(ready) = response.json::<ReadyResponse>().await {
-                    if ready.ready {
-                        info!("Worker ready at {}", worker_url);
-                        return Ok(());
+                match response.json::<ReadyResponse>().await {
+                    Ok(ready) => {
+                        if ready.ready {
+                            info!("✅ Worker ready at {} (took {:.1}s, {} attempts)", 
+                                  worker_url, elapsed.as_secs_f32(), attempt);
+                            return Ok(());
+                        } else {
+                            last_error = Some(format!("Worker not ready yet (state: {})", ready.state));
+                        }
+                    }
+                    Err(e) => {
+                        last_error = Some(format!("Failed to parse ready response: {}", e));
+                        error!("Worker ready check parse error: {}", e);
                     }
                 }
             }
-            _ => {}
+            Ok(response) => {
+                let status = response.status();
+                let body = response.text().await.unwrap_or_default();
+                last_error = Some(format!("HTTP {} - {}", status, body));
+                error!("Worker ready check failed: HTTP {} - {}", status, body);
+            }
+            Err(e) => {
+                last_error = Some(format!("Connection error: {}", e));
+                if attempt <= 3 || attempt % 10 == 0 {
+                    error!("Worker connection error (attempt {}): {}", attempt, e);
+                }
+            }
         }
         
         if start.elapsed() > timeout {
-            anyhow::bail!("Worker ready timeout after 5 minutes");
+            let diagnostic = format!(
+                "Worker ready timeout after {:.1}s ({} attempts). Last error: {}. \
+                 Worker URL: {}. Possible causes: (1) Model download failed, \
+                 (2) Worker crashed during startup, (3) Worker binary missing dependencies, \
+                 (4) Callback URL unreachable",
+                elapsed.as_secs_f32(),
+                attempt,
+                last_error.unwrap_or_else(|| "No response".to_string()),
+                worker_url
+            );
+            error!("{}", diagnostic);
+            anyhow::bail!(diagnostic);
         }
         
         tokio::time::sleep(std::time::Duration::from_secs(2)).await;

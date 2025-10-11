@@ -1,8 +1,10 @@
 //!
 //! Created by: TEAM-046
+//! Modified by: TEAM-086
 
 use anyhow::Result;
 use colored::Colorize;
+use futures::StreamExt;  // TEAM-086: Added missing import for stream.next()
 
 /// Handle logs command
 ///

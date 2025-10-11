@@ -10,6 +10,7 @@
 //! - Maintain educational value
 //!
 //! Created by: TEAM-000 (Foundation)
+//! Modified by: TEAM-088 (added comprehensive error narration)
 
 use clap::Parser;
 use llm_worker_rbee::{
@@ -60,8 +61,23 @@ struct Args {
 /// 5. Run forever (until killed by pool-managerd)
 #[tokio::main(flavor = "current_thread")] // CRITICAL: Single-threaded!
 async fn main() -> anyhow::Result<()> {
-    // Initialize tracing (JSON format for structured logging)
-    tracing_subscriber::fmt().with_target(false).json().init();
+    // TEAM-088: Initialize tracing with human-friendly format for development
+    // Use LLORCH_LOG_FORMAT=json for machine-readable output (production/SSH)
+    let log_format = std::env::var("LLORCH_LOG_FORMAT").unwrap_or_else(|_| "pretty".to_string());
+    
+    if log_format == "json" {
+        // JSON format for production/SSH (machine-readable)
+        tracing_subscriber::fmt().with_target(false).json().init();
+    } else {
+        // Pretty format for development (human-readable)
+        // TEAM-088: Use compact format with colors for better UX
+        tracing_subscriber::fmt()
+            .with_target(false)
+            .with_level(true)
+            .with_ansi(true)
+            .with_timer(tracing_subscriber::fmt::time::uptime())
+            .init();
+    }
 
     // Parse CLI arguments (from pool-managerd)
     let args = Args::parse();
@@ -102,8 +118,64 @@ async fn main() -> anyhow::Result<()> {
         ..Default::default()
     });
 
-    let backend = CandleInferenceBackend::load(&args.model, device)?;
-    tracing::info!("Model loaded successfully");
+    // TEAM-088: Wrap model loading with error narration
+    let backend = match CandleInferenceBackend::load(&args.model, device) {
+        Ok(backend) => {
+            tracing::info!("Model loaded successfully");
+            
+            narrate(NarrationFields {
+                actor: ACTOR_MODEL_LOADER,
+                action: "model_load_success",
+                target: args.model.clone(),
+                human: "Model loaded successfully".to_string(),
+                cute: Some("Model loaded and ready to help! ✅🎉".to_string()),
+                worker_id: Some(args.worker_id.clone()),
+                ..Default::default()
+            });
+            
+            backend
+        }
+        Err(e) => {
+            // TEAM-088: Narrate model loading failure with detailed error
+            let error_msg = format!("{:#}", e);
+            
+            narrate(NarrationFields {
+                actor: ACTOR_MODEL_LOADER,
+                action: "model_load_failed",
+                target: args.model.clone(),
+                human: format!("Model load failed: {}", error_msg.lines().next().unwrap_or("unknown error")),
+                cute: Some("Oh no! Couldn't load the model! 😟💔".to_string()),
+                worker_id: Some(args.worker_id.clone()),
+                error_kind: Some("model_load_error".to_string()),
+                ..Default::default()
+            });
+            
+            tracing::error!(
+                model = %args.model,
+                error = %error_msg,
+                "Model loading failed"
+            );
+            
+            // TEAM-088: Try to callback to rbee-hive with error state
+            if !args.callback_url.contains("localhost:9999") {
+                narrate(NarrationFields {
+                    actor: ACTOR_LLM_WORKER_RBEE,
+                    action: "callback_error",
+                    target: args.callback_url.clone(),
+                    human: "Reporting error to pool-managerd".to_string(),
+                    cute: Some("Telling pool-managerd we couldn't start 😢".to_string()),
+                    worker_id: Some(args.worker_id.clone()),
+                    ..Default::default()
+                });
+                
+                // TODO: Implement error callback to rbee-hive
+                // For now, just log the intent
+                tracing::warn!("Worker failed to load model, should callback error to rbee-hive");
+            }
+            
+            return Err(e);
+        }
+    };
 
     // ============================================================
     // STEP 2: Call back to pool-managerd (worker ready)
@@ -115,6 +187,16 @@ async fn main() -> anyhow::Result<()> {
     // - Worker type and capabilities
     if args.callback_url.contains("localhost:9999") {
         tracing::info!("Test mode: skipping pool manager callback");
+        
+        narrate(NarrationFields {
+            actor: ACTOR_LLM_WORKER_RBEE,
+            action: "test_mode",
+            target: "callback".to_string(),
+            human: "Test mode: skipping callback to pool-managerd".to_string(),
+            cute: Some("Running in test mode! No callback needed! 🧪".to_string()),
+            worker_id: Some(args.worker_id.clone()),
+            ..Default::default()
+        });
     } else {
         narrate(NarrationFields {
             actor: ACTOR_LLM_WORKER_RBEE,

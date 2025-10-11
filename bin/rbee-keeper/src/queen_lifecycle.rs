@@ -72,13 +72,21 @@ pub async fn ensure_queen_rbee_running(client: &reqwest::Client, queen_url: &str
     // TEAM-085: Use temp database for ephemeral mode
     let temp_db = std::env::temp_dir().join("queen-rbee-ephemeral.db");
     
+    // TEAM-088: CRITICAL FIX - Don't silence logs! We need to see what's happening!
+    // Use RBEE_SILENT=1 to suppress logs if needed
+    let (stdout_cfg, stderr_cfg) = if std::env::var("RBEE_SILENT").is_ok() {
+        (std::process::Stdio::null(), std::process::Stdio::null())
+    } else {
+        (std::process::Stdio::inherit(), std::process::Stdio::inherit())
+    };
+    
     let mut child = tokio::process::Command::new(&queen_binary)
         .arg("--port")
         .arg("8080")
         .arg("--database")
         .arg(&temp_db)
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
+        .stdout(stdout_cfg)
+        .stderr(stderr_cfg)
         .spawn()?;
 
     // Wait for queen-rbee to be ready (max 30 seconds)

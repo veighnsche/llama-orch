@@ -82,6 +82,29 @@ pub const ACTION_ERROR: &str = "error";
 /// Tokenization
 pub const ACTION_TOKENIZE: &str = "tokenize";
 
+// TEAM-088: Additional actions for comprehensive debugging
+/// Model load failed
+pub const ACTION_MODEL_LOAD_FAILED: &str = "model_load_failed";
+
+/// GGUF file operations
+pub const ACTION_GGUF_LOAD_START: &str = "gguf_load_start";
+pub const ACTION_GGUF_OPEN_FAILED: &str = "gguf_open_failed";
+pub const ACTION_GGUF_FILE_OPENED: &str = "gguf_file_opened";
+pub const ACTION_GGUF_PARSE_FAILED: &str = "gguf_parse_failed";
+pub const ACTION_GGUF_INSPECT_METADATA: &str = "gguf_inspect_metadata";
+pub const ACTION_GGUF_METADATA_KEYS: &str = "gguf_metadata_keys";
+pub const ACTION_GGUF_METADATA_MISSING: &str = "gguf_metadata_missing";
+pub const ACTION_GGUF_METADATA_LOADED: &str = "gguf_metadata_loaded";
+pub const ACTION_GGUF_LOAD_WEIGHTS: &str = "gguf_load_weights";
+pub const ACTION_GGUF_WEIGHTS_FAILED: &str = "gguf_weights_failed";
+pub const ACTION_GGUF_LOAD_COMPLETE: &str = "gguf_load_complete";
+
+/// Callback error
+pub const ACTION_CALLBACK_ERROR: &str = "callback_error";
+
+/// Test mode
+pub const ACTION_TEST_MODE: &str = "test_mode";
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TEAM-039: Dual-output narration wrapper
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

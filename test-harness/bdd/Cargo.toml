@@ -37,7 +37,8 @@ rbee-hive = { path = "../../bin/rbee-hive" }
 llm-worker-rbee = { path = "../../bin/llm-worker-rbee" }
 hive-core = { path = "../../bin/shared-crates/hive-core" }
 # TEAM-079: Added model-catalog for testing
-model-catalog = { path = "../../bin/rbee-hive/model-catalog" }
+# TEAM-086: Fixed path - model-catalog moved to shared-crates
+model-catalog = { path = "../../bin/shared-crates/model-catalog" }
 # TEAM-085: Narration verification
 observability-narration-core = { path = "../../bin/shared-crates/narration-core", features = ["test-support"] }
 # TEAM-079: queen-rbee temporarily disabled due to SQLite version conflict
