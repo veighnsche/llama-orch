@@ -7,13 +7,64 @@
 // ⚠️ See TEAM_063_REAL_HANDOFF.md
 // ⚠️ DEVELOPERS: You are NOT ALLOWED to remove these warnings!
 // ⚠️ ⚠️ ⚠️ END CRITICAL WARNING ⚠️ ⚠️ ⚠️
-//
 // Modified by: TEAM-064 (added explicit warning preservation notice)
 
-use crate::steps::world::World;
+use crate::steps::world::{World, ErrorResponse, create_http_client};
 use cucumber::{given, then, when};
 
-// TEAM-070: Set worker state using WorkerRegistry NICE!
+// TEAM-076: Query worker health endpoint with proper error handling
+#[given(expr = "the worker is healthy")]
+pub async fn given_worker_is_healthy(world: &mut World) {
+    // TEAM-076: Query first worker in registry with error handling
+    let registry = world.hive_registry();
+    let workers = registry.list().await;
+    
+    if workers.is_empty() {
+        world.last_exit_code = Some(1);
+        world.last_error = Some(ErrorResponse {
+            code: "NO_WORKERS".to_string(),
+            message: "No workers in registry to check health".to_string(),
+            details: None,
+        });
+        tracing::error!("❌ No workers in registry");
+        return;
+    }
+    
+    let worker = &workers[0];
+    
+    // Query health endpoint
+    let health_url = format!("{}/v1/health", worker.url);
+    let client = create_http_client();
+    
+    match client.get(&health_url).send().await {
+        Ok(resp) => {
+            if resp.status().is_success() {
+                world.last_exit_code = Some(0);
+                world.last_http_status = Some(resp.status().as_u16());
+                tracing::info!("✅ Worker {} is healthy", worker.id);
+            } else {
+                world.last_exit_code = Some(1);
+                world.last_http_status = Some(resp.status().as_u16());
+                world.last_error = Some(ErrorResponse {
+                    code: "WORKER_UNHEALTHY".to_string(),
+                    message: format!("Worker health check failed: {}", resp.status()),
+                    details: None,
+                });
+                tracing::error!("❌ Worker health check failed: {}", resp.status());
+            }
+        }
+        Err(e) => {
+            world.last_exit_code = Some(1);
+            world.last_error = Some(ErrorResponse {
+                code: "HEALTH_CHECK_ERROR".to_string(),
+                message: format!("Failed to query worker health: {}", e),
+                details: None,
+            });
+            tracing::error!("❌ Failed to query worker health: {}", e);
+        }
+    }
+}
+
 #[given(expr = "the worker is in state {string}")]
 pub async fn given_worker_in_state(world: &mut World, state: String) {
     use rbee_hive::registry::{WorkerInfo, WorkerState};
@@ -39,7 +90,7 @@ pub async fn given_worker_in_state(world: &mut World, state: String) {
     if let Some(worker_id) = existing_worker_id {
         let registry = world.hive_registry();
         registry.update_state(&worker_id, worker_state.clone()).await;
-        tracing::info!("✅ Worker {} set to state: {:?} NICE!", worker_id, worker_state);
+        tracing::info!("✅ Worker {} set to state: {:?}", worker_id, worker_state);
     } else {
         // Create a test worker in the specified state
         let worker_id = uuid::Uuid::new_v4().to_string();

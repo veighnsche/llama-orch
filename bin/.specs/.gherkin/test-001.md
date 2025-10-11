@@ -2,14 +2,25 @@
 
 **Updated by:** TEAM-038 (aligned with queen-rbee orchestration and narration architecture)  
 **Updated by:** TEAM-052 (added backend detection and registry schema enhancements)  
-**Date:** 2025-10-10
+**Updated by:** TEAM-075 (added GPU FAIL FAST policy and comprehensive error handling)  
+**Updated by:** TEAM-077 (updated naming conventions: rbee-hive, worker-rbee, milestone alignment)  
+**Date:** 2025-10-11
+
+**Milestone:** M0-M1 (Worker standalone + Pool Manager Lifecycle)  
+**Status:** Reference document for BDD test implementation
 
 ---
 
 ## Topology
 
 - **blep** = blep.home.arpa (with rbee-keeper and queen-rbee, can run workers on cpu)
-- **workstation** = workstation.home.arpa (only rbee-hive and llm-worker-rbee, can run workers on cuda device 0, 1 and cpu)
+- **workstation** = workstation.home.arpa (with rbee-hive and llm-worker-rbee, can run workers on cuda device 0, 1 and cpu)
+
+**Component Naming (TEAM-077):**
+- **queen-rbee** - Orchestrator daemon (not "orchestratord")
+- **rbee-hive** - Pool manager daemon (not "pool-managerd")
+- **worker-rbee** - Worker daemon (llm-worker-rbee, sd-worker-rbee, etc.)
+- **rbee-keeper** - CLI/UI tool
 
 **Note:** This test uses **workstation** node with **cuda** backend on **device 1**.
 
@@ -267,6 +278,48 @@ POST http://localhost:8080/v2/tasks
 
 ### Phase 2: queen-rbee → rbee-hive (SSH)
 
+**Phase 2a: SSH Preflight Checks (NEW - M1)**
+
+**Before starting rbee-hive, queen-rbee validates SSH connectivity:**
+
+**SSH Preflight Checks:**
+1. **SSH connection reachable** - Test basic connectivity
+2. **SSH authentication works** - Verify key-based auth
+3. **SSH command execution** - Test `echo 'test'` command
+4. **Network latency acceptable** - Check latency < 100ms
+5. **rbee-hive binary exists** - Verify binary at install_path
+
+**Error Scenarios:**
+- **EH-001a:** SSH connection timeout (covered above)
+- **EH-001b:** SSH authentication failure (covered above)
+- **EH-001c:** SSH command execution failure (covered above)
+
+**Narration:**
+```
+narrate("Running SSH preflight checks for workstation")
+  → stdout → rbee-keeper shell
+  → USER SEES: [queen-rbee] 🔍 Running SSH preflight checks for workstation
+
+narrate("✅ SSH connectivity: OK")
+narrate("✅ SSH authentication: OK")
+narrate("✅ Command execution: OK")
+narrate("✅ Network latency: 15ms")
+narrate("✅ rbee-hive binary: Found at /home/vince/rbee/target/release/rbee-hive")
+  → USER SEES: [queen-rbee] ✅ All SSH preflight checks passed
+```
+
+**If any check fails:**
+```
+narrate("❌ SSH preflight failed: rbee-hive binary not found")
+  → USER SEES: [queen-rbee] ❌ SSH preflight failed: rbee-hive binary not found
+  → USER SEES: Suggestion: Install rbee-hive: rbee-keeper setup install --node workstation
+  → Exit code: 1
+```
+
+---
+
+**Phase 2b: Start rbee-hive via SSH**
+
 **Error Handling: HTTP Connection Failures**
 
 **EH-002a: rbee-hive HTTP Connection Timeout**
@@ -327,6 +380,93 @@ GET http://workstation.home.arpa:9200/v1/workers/list
 **Response:** Empty (no workers yet)
 
 **Narration:** None (just HTTP query)
+
+---
+
+### Phase 3a: rbee-hive Preflight Checks (NEW - M1)
+
+**Before spawning workers, queen-rbee validates rbee-hive readiness:**
+
+**rbee-hive Preflight Checks:**
+1. **HTTP API responding** - GET /v1/health returns 200
+2. **Version compatibility** - rbee-hive version compatible with queen-rbee
+3. **Worker binaries available** - Check worker_binaries catalog
+4. **Backend catalog populated** - CUDA/Metal/CPU detected
+5. **Sufficient resources** - RAM, disk space available
+
+**Worker Binaries Catalog Check (NEW - M1):**
+```
+GET http://workstation.home.arpa:9200/v1/worker-binaries/list
+```
+
+**Response:**
+```json
+{
+  "binaries": [
+    {
+      "worker_type": "llm-worker-rbee",
+      "version": "0.1.0",
+      "binary_path": "/home/vince/rbee/target/release/llm-worker-rbee",
+      "installed_at_unix": 1728508000
+    }
+  ]
+}
+```
+
+**Backend Catalog Check:**
+```
+GET http://workstation.home.arpa:9200/v1/backends/list
+```
+
+**Response:**
+```json
+{
+  "backends": [
+    {"name": "cpu", "available": true, "devices": 1},
+    {"name": "cuda", "available": true, "devices": 2}
+  ]
+}
+```
+
+**Error Scenarios:**
+
+**EH-019a: Worker Binary Not Installed**
+- **Trigger:** Requested worker type not in binaries catalog
+- **Detection:** Worker binary not found in catalog
+- **Response:** FAIL FAST with installation suggestion
+- **Exit Code:** 1
+- **Message:** "Worker binary not found: llm-worker-rbee"
+- **Suggestion:** "Install worker: rbee-keeper setup install --node workstation"
+
+**EH-019b: rbee-hive Version Incompatible**
+- **Trigger:** rbee-hive version too old/new
+- **Detection:** Version check fails
+- **Response:** Error with upgrade suggestion
+- **Exit Code:** 1
+- **Message:** "rbee-hive version incompatible: need >=0.1.0, have 0.0.9"
+- **Suggestion:** "Upgrade rbee-hive: rbee-keeper setup install --node workstation"
+
+**Narration:**
+```
+narrate("Running rbee-hive preflight checks")
+  → stdout → rbee-keeper shell
+  → USER SEES: [queen-rbee] 🔍 Running rbee-hive preflight checks
+
+narrate("✅ HTTP API: Responding")
+narrate("✅ Version: 0.1.0 (compatible)")
+narrate("✅ Worker binaries: llm-worker-rbee found")
+narrate("✅ Backends: cpu, cuda available")
+narrate("✅ Resources: Sufficient")
+  → USER SEES: [queen-rbee] ✅ All rbee-hive preflight checks passed
+```
+
+**If any check fails:**
+```
+narrate("❌ rbee-hive preflight failed: llm-worker-rbee not installed")
+  → USER SEES: [queen-rbee] ❌ rbee-hive preflight failed: llm-worker-rbee not installed
+  → USER SEES: Suggestion: Install worker: rbee-keeper setup install --node workstation
+  → Exit code: 1
+```
 
 ---
 
@@ -445,7 +585,28 @@ VALUES ('tinyllama-q4', 'hf', 'TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF',
 
 ### Phase 8: rbee-hive worker preflight
 
-**Error Handling: Resource Errors**
+**### GPU FAIL FAST Policy (TEAM-075)
+
+**CRITICAL POLICY:** NO FALLBACK - FAIL FAST on GPU errors
+
+**Policy Rules:**
+- ❌ NO automatic backend fallback (GPU → CPU)
+- ❌ NO graceful degradation
+- ❌ NO CPU fallback on GPU failure
+- ✅ FAIL FAST with exit code 1
+- ✅ Clear error message with actionable suggestions
+- ✅ User must explicitly choose backend
+
+**Why:** Clear failure modes prevent silent degradation. User knows exactly what went wrong and how to fix it.
+
+**Error Codes:**
+- `CUDA_DEVICE_FAILED` - CUDA device initialization failed
+- `GPU_VRAM_EXHAUSTED` - VRAM exhaustion
+- `GPU_NOT_AVAILABLE` - GPU not available
+
+**Exit Code:** 1 (FAIL FAST)
+
+### Error Handling: Resource Errors
 
 **EH-004a: Insufficient RAM**
 - **Trigger:** Available RAM < required RAM (model_size * 1.2)
@@ -463,13 +624,14 @@ VALUES ('tinyllama-q4', 'hf', 'TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF',
 - **Message:** "Out of memory during model loading"
 - **Suggestion:** "Free up RAM and try again"
 
-**EH-005a: VRAM Exhausted**
+**EH-005a: VRAM Exhausted (GPU FAIL FAST)**
 - **Trigger:** CUDA device VRAM < required VRAM
 - **Detection:** VRAM check before model loading
-- **Response:** Error with suggestions
+- **Response:** FAIL FAST with exit code 1 (NO CPU fallback)
 - **Exit Code:** 1
 - **Message:** "Insufficient VRAM: need 4000 MB, have 2000 MB"
-- **Suggestions:** "Use smaller quantized model (Q4_K_M instead of Q8_0), try CPU backend, free VRAM"
+- **Suggestions:** "Use smaller quantized model (Q4_K_M instead of Q8_0), try CPU backend explicitly (--backend cpu), free VRAM"
+- **Policy:** User must explicitly choose CPU backend, NO automatic fallback
 
 **EH-006a: Insufficient Disk Space**
 - **Trigger:** Free disk space < model size
@@ -487,21 +649,23 @@ VALUES ('tinyllama-q4', 'hf', 'TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF',
 - **Message:** "Disk full during download"
 - **Suggestion:** "Free up disk space and try again"
 
-**EH-009a: Backend Not Available**
+**EH-009a: Backend Not Available (GPU FAIL FAST)**
 - **Trigger:** Requested backend not installed
 - **Detection:** Backend check fails
-- **Response:** Error with available backends
+- **Response:** FAIL FAST with exit code 1 (NO automatic fallback)
 - **Exit Code:** 1
 - **Message:** "Backend not available: metal"
 - **Suggestion:** "Available: [cpu, cuda]. Try: --backend cuda --device 0"
+- **Policy:** User must explicitly choose available backend, NO automatic selection
 
-**EH-009b: CUDA Not Installed**
+**EH-009b: CUDA Not Installed (GPU FAIL FAST)**
 - **Trigger:** CUDA backend requested but not installed
 - **Detection:** CUDA driver check fails
-- **Response:** Error with installation link
+- **Response:** FAIL FAST with exit code 1 (NO CPU fallback)
 - **Exit Code:** 1
 - **Message:** "CUDA backend not available"
-- **Suggestion:** "Install CUDA: https://developer.nvidia.com/cuda-downloads"
+- **Suggestion:** "Install CUDA: https://developer.nvidia.com/cuda-downloads OR use CPU explicitly: --backend cpu"
+- **Policy:** User must fix CUDA installation or explicitly choose CPU
 
 **rbee-hive** checks RAM:
 ```rust
@@ -553,7 +717,7 @@ if !cuda_available() {
 - **Message:** "Worker startup failed"
 - **Suggestion:** "Check worker logs for details"
 
-**rbee-hive** spawns **llm-worker-rbee**:
+**rbee-hive** spawns **llm-worker-rbee** (worker-rbee daemon):
 ```bash
 llm-worker-rbee \
   --model /models/tinyllama-q4.gguf \
@@ -1046,10 +1210,70 @@ Response: 204 No Content (idempotent)
 - Waits for acknowledgment (5s timeout)
 - Exits with code 130 (SIGINT)
 
+## Milestone Alignment (TEAM-077)
+
+### M0 (v0.1.0) - Worker Haiku Test
+**Goal:** Worker binary runs standalone
+**Components:** worker-rbee only
+**Scenarios:** Worker lifecycle, inference execution
+
+### M1 (v0.2.0) - Pool Manager Lifecycle
+**Goal:** rbee-hive can start/stop workers, hot-load models
+**Components:** rbee-hive + worker-rbee
+**Scenarios:** All scenarios in this document
+**New Components Needed:**
+- Worker binaries catalog (track which workers installed)
+- SSH preflight checks (validate SSH before spawning)
+- rbee-hive preflight checks (validate readiness)
+
+### M2 (v0.3.0) - Orchestrator Scheduling
+**Goal:** queen-rbee with Rhai scheduler
+**Components:** queen-rbee + Rhai scheduler
+**Status:** Documented but deferred
+
+### M3 (v0.4.0) - Security & Platform
+**Goal:** auth, audit logging, multi-tenancy
+**Components:** auth-min, audit-logging, secrets-management
+**Status:** Documented but deferred
+
+## Feature File Mapping (TEAM-077)
+
+This test-001.md document maps to multiple feature files:
+
+**M1 Feature Files (14 files):**
+- 010-ssh-registry-management.feature (Phase 0: SSH setup, node registry)
+- 020-model-catalog.feature (Phase 5-7: Model download, catalog)
+- 025-worker-provisioning.feature (Phase 3b: Build workers + binaries catalog) - NEW!
+- 030-queen-rbee-worker-registry.feature (M1: Global worker registry - just HTTP endpoints!)
+- 040-rbee-hive-worker-registry.feature (Phase 3, 10: Local worker registry)
+- 050-ssh-preflight-validation.feature (Phase 2a: SSH checks) - NEW!
+- 060-rbee-hive-preflight-validation.feature (Phase 3a: rbee-hive readiness) - NEW!
+- 070-worker-resource-preflight.feature (Phase 8: Worker resources - RAM, VRAM, disk)
+- 080-worker-rbee-lifecycle.feature (Phase 9: worker-rbee daemon)
+- 090-rbee-hive-lifecycle.feature (Phase 2b, 14: rbee-hive daemon)
+- 100-queen-rbee-lifecycle.feature (M1: queen-rbee daemon - standard lifecycle!)
+- 110-inference-execution.feature (Phase 13: Inference handling)
+- 120-input-validation.feature (Input validation)
+- 130-cli-commands.feature (CLI commands)
+- 140-end-to-end-flows.feature (All phases: E2E integration)
+
+**M2+ Feature Files (7 files - documented but deferred):**
+- ~~030-queen-rbee-worker-registry.feature~~ (MOVED TO M1)
+- ~~100-queen-rbee-lifecycle.feature~~ (MOVED TO M1)
+- 150-authentication.feature (M3 - auth-min)
+- 160-audit-logging.feature (M3 - audit logging)
+- 170-input-validation.feature (M3 - injection prevention)
+- 180-secrets-management.feature (M3 - secure credentials)
+- 190-deadline-propagation.feature (M3 - resource enforcement)
+- 200-rhai-scheduler.feature (M2 - programmable routing)
+- 210-queue-management.feature (M2 - job queue)
+
 ## Revision History
 
 **TEAM-038** (2025-10-10): Corrected orchestration flow, narration architecture, and cascading shutdown  
 **TEAM-041** (2025-10-10): Added rbee-hive Registry module, SSH setup flow, and rbee-keeper configuration mode  
-**TEAM-061** (2025-10-10): Added comprehensive error handling scenarios and timeout specifications
+**TEAM-061** (2025-10-10): Added comprehensive error handling scenarios and timeout specifications  
+**TEAM-075** (2025-10-10): Added GPU FAIL FAST policy, removed all fallback chains, enforced clear error modes  
+**TEAM-077** (2025-10-11): Updated naming conventions (rbee-hive, worker-rbee), added milestone alignment, mapped to feature files
 
-**Status:** ✅ CORRECTED + ENHANCED + ERROR HANDLING
+**Status:** ✅ CORRECTED + ENHANCED + ERROR HANDLING + GPU FAIL FAST + MILESTONE ALIGNED

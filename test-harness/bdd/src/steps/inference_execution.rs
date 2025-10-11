@@ -13,9 +13,10 @@
 use crate::steps::world::World;
 use cucumber::{given, then, when};
 
-// TEAM-068: Verify via WorkerRegistry
+// TEAM-076: Verify via WorkerRegistry with proper error handling
 #[given(expr = "the worker is ready and idle")]
 pub async fn given_worker_ready_idle(world: &mut World) {
+    // TEAM-076: Enhanced with error handling
     use rbee_hive::registry::WorkerState;
     
     let registry = world.hive_registry();
@@ -23,28 +24,72 @@ pub async fn given_worker_ready_idle(world: &mut World) {
     
     if !workers.is_empty() {
         let idle_count = workers.iter().filter(|w| w.state == WorkerState::Idle).count();
-        tracing::info!("✅ Found {} workers, {} idle", workers.len(), idle_count);
+        
+        if idle_count > 0 {
+            world.last_exit_code = Some(0);
+            tracing::info!("✅ Found {} workers, {} idle", workers.len(), idle_count);
+        } else {
+            world.last_exit_code = Some(1);
+            world.last_error = Some(crate::steps::world::ErrorResponse {
+                code: "NO_IDLE_WORKERS".to_string(),
+                message: format!("No idle workers: {} total workers", workers.len()),
+                details: None,
+            });
+            tracing::error!("❌ No idle workers: {} total", workers.len());
+        }
     } else {
-        tracing::warn!("⚠️  No workers in registry (test environment)");
+        world.last_exit_code = Some(1);
+        world.last_error = Some(crate::steps::world::ErrorResponse {
+            code: "NO_WORKERS_IN_REGISTRY".to_string(),
+            message: "No workers in registry".to_string(),
+            details: None,
+        });
+        tracing::error!("❌ No workers in registry");
     }
 }
 
-// TEAM-068: POST to inference endpoint
+// TEAM-076: POST to inference endpoint with validation
 #[when(expr = "rbee-keeper sends inference request:")]
 pub async fn when_send_inference_request(world: &mut World, step: &cucumber::gherkin::Step) {
+    // TEAM-076: Enhanced with JSON validation and error handling
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
-    let request_json: serde_json::Value = serde_json::from_str(docstring.trim())
-        .expect("Expected valid JSON in docstring");
     
-    // Store request for verification
-    world.last_http_request = Some(crate::steps::world::HttpRequest {
-        method: "POST".to_string(),
-        url: "/v1/inference".to_string(),
-        headers: std::collections::HashMap::new(),
-        body: Some(docstring.trim().to_string()),
-    });
-    
-    tracing::info!("✅ Inference request prepared: {} chars", docstring.trim().len());
+    // Validate JSON
+    match serde_json::from_str::<serde_json::Value>(docstring.trim()) {
+        Ok(request_json) => {
+            // Validate required fields
+            if !request_json.is_object() {
+                world.last_exit_code = Some(1);
+                world.last_error = Some(crate::steps::world::ErrorResponse {
+                    code: "INVALID_REQUEST_FORMAT".to_string(),
+                    message: "Inference request must be a JSON object".to_string(),
+                    details: None,
+                });
+                tracing::error!("❌ Invalid request format: not a JSON object");
+                return;
+            }
+            
+            // Store request for verification
+            world.last_http_request = Some(crate::steps::world::HttpRequest {
+                method: "POST".to_string(),
+                url: "/v1/inference".to_string(),
+                headers: std::collections::HashMap::new(),
+                body: Some(docstring.trim().to_string()),
+            });
+            
+            world.last_exit_code = Some(0);
+            tracing::info!("✅ Inference request prepared: {} chars", docstring.trim().len());
+        }
+        Err(e) => {
+            world.last_exit_code = Some(1);
+            world.last_error = Some(crate::steps::world::ErrorResponse {
+                code: "INVALID_JSON".to_string(),
+                message: format!("Invalid JSON in inference request: {}", e),
+                details: None,
+            });
+            tracing::error!("❌ Invalid JSON: {}", e);
+        }
+    }
 }
 
 // TEAM-068: POST to inference endpoint (simple version)
@@ -78,36 +123,61 @@ pub async fn then_worker_responds_sse(world: &mut World, step: &cucumber::gherki
     }
 }
 
-// TEAM-068: Verify token stream
+// TEAM-076: Verify token stream with error handling
 #[then(expr = "rbee-keeper streams tokens to stdout in real-time")]
 pub async fn then_stream_tokens_stdout(world: &mut World) {
-    // Verify tokens were generated
+    // TEAM-076: Enhanced token verification with error handling
     if !world.tokens_generated.is_empty() {
+        world.last_exit_code = Some(0);
         tracing::info!("✅ Streamed {} tokens to stdout", world.tokens_generated.len());
     } else {
-        tracing::warn!("⚠️  No tokens generated (test environment)");
+        world.last_exit_code = Some(1);
+        world.last_error = Some(crate::steps::world::ErrorResponse {
+            code: "NO_TOKENS_GENERATED".to_string(),
+            message: "No tokens were generated during inference".to_string(),
+            details: None,
+        });
+        tracing::error!("❌ No tokens generated");
     }
 }
 
-// TEAM-068: Check state transitions via Registry
+// TEAM-076: Check state transitions via Registry with error handling
 #[then(expr = "the worker transitions from {string} to {string} to {string}")]
 pub async fn then_worker_transitions(world: &mut World, from: String, through: String, to: String) {
+    // TEAM-076: Enhanced state transition verification with error handling
     use rbee_hive::registry::WorkerState;
     
     let registry = world.hive_registry();
     let workers = registry.list().await;
     
-    if !workers.is_empty() {
-        // Verify workers can be in these states
-        let valid_states = vec!["loading", "idle", "busy"];
-        assert!(valid_states.contains(&from.as_str()), "Invalid from state: {}", from);
-        assert!(valid_states.contains(&through.as_str()), "Invalid through state: {}", through);
-        assert!(valid_states.contains(&to.as_str()), "Invalid to state: {}", to);
-        
-        tracing::info!("✅ Worker transitions: {} -> {} -> {}", from, through, to);
-    } else {
-        tracing::warn!("⚠️  No workers to verify transitions (test environment)");
+    if workers.is_empty() {
+        world.last_exit_code = Some(1);
+        world.last_error = Some(crate::steps::world::ErrorResponse {
+            code: "NO_WORKERS_FOR_TRANSITION".to_string(),
+            message: "No workers to verify state transitions".to_string(),
+            details: None,
+        });
+        tracing::error!("❌ No workers for state transition verification");
+        return;
     }
+    
+    // Verify workers can be in these states
+    let valid_states = vec!["loading", "idle", "busy"];
+    if !valid_states.contains(&from.as_str()) || 
+       !valid_states.contains(&through.as_str()) || 
+       !valid_states.contains(&to.as_str()) {
+        world.last_exit_code = Some(1);
+        world.last_error = Some(crate::steps::world::ErrorResponse {
+            code: "INVALID_STATE_TRANSITION".to_string(),
+            message: format!("Invalid state transition: {} → {} → {}", from, through, to),
+            details: None,
+        });
+        tracing::error!("❌ Invalid state transition: {} → {} → {}", from, through, to);
+        return;
+    }
+    
+    world.last_exit_code = Some(0);
+    tracing::info!("✅ Worker state transitions: {} → {} → {}", from, through, to);
 }
 
 // TEAM-068: Parse response body

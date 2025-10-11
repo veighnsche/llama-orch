@@ -55,9 +55,10 @@ pub async fn given_preflight_passed(world: &mut World) {
     tracing::debug!("Worker preflight checks passed");
 }
 
-// TEAM-068: Verify RAM check logic
+// TEAM-076: Verify RAM check logic with proper error handling
 #[when(expr = "rbee-hive performs RAM check")]
 pub async fn when_perform_ram_check(world: &mut World) {
+    // TEAM-076: Enhanced RAM check with error handling
     let node_name = world.current_node.clone().unwrap_or_else(|| "default-node".to_string());
     let available_ram = world.node_ram.get(&node_name).copied().unwrap_or(0);
     
@@ -68,16 +69,44 @@ pub async fn when_perform_ram_check(world: &mut World) {
         .unwrap_or(0);
     let required_ram = (model_size_mb as f64 * 1.5) as usize;
     
-    tracing::info!("✅ RAM check: {} MB available, {} MB required", available_ram, required_ram);
+    if available_ram >= required_ram {
+        world.last_exit_code = Some(0);
+        tracing::info!("✅ RAM check passed: {} MB available, {} MB required", available_ram, required_ram);
+    } else {
+        world.last_exit_code = Some(1);
+        world.last_error = Some(crate::steps::world::ErrorResponse {
+            code: "INSUFFICIENT_RAM".to_string(),
+            message: format!("Insufficient RAM: {} MB available, {} MB required", available_ram, required_ram),
+            details: Some(serde_json::json!({
+                "available_mb": available_ram,
+                "required_mb": required_ram,
+                "model_size_mb": model_size_mb,
+                "multiplier": 1.5
+            })),
+        });
+        tracing::error!("❌ RAM check failed: {} MB available, {} MB required", available_ram, required_ram);
+    }
 }
 
-// TEAM-068: Verify backend check logic
+// TEAM-076: Verify backend check logic with proper error handling
 #[when(expr = "rbee-hive performs backend check")]
 pub async fn when_perform_backend_check(world: &mut World) {
+    // TEAM-076: Enhanced backend check with error handling
     let node_name = world.current_node.clone().unwrap_or_else(|| "default-node".to_string());
     let available_backends = world.node_backends.get(&node_name).cloned().unwrap_or_default();
     
-    tracing::info!("✅ Backend check: node '{}' has backends: {:?}", node_name, available_backends);
+    if available_backends.is_empty() {
+        world.last_exit_code = Some(1);
+        world.last_error = Some(crate::steps::world::ErrorResponse {
+            code: "NO_BACKENDS_AVAILABLE".to_string(),
+            message: format!("No backends available on node '{}'", node_name),
+            details: None,
+        });
+        tracing::error!("❌ Backend check failed: no backends on node '{}'", node_name);
+    } else {
+        world.last_exit_code = Some(0);
+        tracing::info!("✅ Backend check passed: node '{}' has backends: {:?}", node_name, available_backends);
+    }
 }
 
 // TEAM-073: Fix RAM calculation with proper model size

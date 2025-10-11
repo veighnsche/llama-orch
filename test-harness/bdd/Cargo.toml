@@ -6,9 +6,13 @@ publish = false
 license = "GPL-3.0-or-later"
 authors = ["llama-orch contributors"]
 
-[[bin]]
-name = "bdd-runner"
-path = "src/main.rs"
+# TEAM-076: Converted from binary to library crate
+# BDD tests now run as integration tests via tests/cucumber.rs
+# Run with: cargo test
+
+[lib]
+name = "test_harness_bdd"
+path = "src/lib.rs"
 
 [dependencies]
 cucumber = { version = "0.20", features = ["macros"] }

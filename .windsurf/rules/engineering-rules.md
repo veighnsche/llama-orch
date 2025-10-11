@@ -294,9 +294,5 @@ Violations = **REJECTED work**, **DELETED handoff**, cited in "failed teams" lis
 
 **Read these rules. Follow these rules. Don't be team 68.**
 
----
-
-**Document Version:** 1.0  
-**Last Updated:** 2025-10-11  
-**Source:** Consolidated from `.windsurf/rules/` (bdd-rules.md, destructive-actions.md, dev-bee-rules.md, rust-rules.md, vue-rules.md)  
-**Status:** MANDATORY - All engineers must read before contributing
+DO NOT REMOVE THE OLD TEAM COMMENTS !!! IT'S FOR HISTORICAL CONTEXT!
+ONLY REMOVE THEM IF EVERYTHING AROUND THEM IS ALSO REMOVED AND CONTAINING THEM CAUSE CONFUSION!!!

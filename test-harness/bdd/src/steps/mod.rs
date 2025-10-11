@@ -12,6 +12,7 @@
 // ⚠️ ⚠️ ⚠️ END CRITICAL WARNING ⚠️ ⚠️ ⚠️
 //
 // Modified by: TEAM-064 (added explicit warning preservation notice)
+// Modified by: TEAM-076 (made modules public for library access)
 
 pub mod background;
 pub mod beehive_registry;

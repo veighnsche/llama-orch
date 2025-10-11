@@ -192,21 +192,47 @@ pub async fn when_download_fails(world: &mut World, error: String, progress: u32
     tracing::info!("✅ Download fails with '{}' at {}%", error, progress);
 }
 
-// TEAM-068: Call catalog registration
+// TEAM-076: Call catalog registration with proper error handling
 #[when(expr = "rbee-hive registers the model in the catalog")]
 pub async fn when_register_model(world: &mut World) {
-    // In real implementation, this would call catalog.insert()
-    // For now, add to World state
+    // TEAM-076: Register model with error handling
+    let model_entry = ModelCatalogEntry {
+        provider: "hf".to_string(),
+        reference: "test-model".to_string(),
+        local_path: PathBuf::from("/tmp/models/test-model"),
+        size_bytes: 1_048_576,
+    };
+    
+    // Validate model entry before registration
+    if model_entry.reference.is_empty() {
+        world.last_exit_code = Some(1);
+        world.last_error = Some(crate::steps::world::ErrorResponse {
+            code: "INVALID_MODEL_REFERENCE".to_string(),
+            message: "Model reference cannot be empty".to_string(),
+            details: None,
+        });
+        tracing::error!("❌ Invalid model reference");
+        return;
+    }
+    
+    if !model_entry.local_path.to_string_lossy().starts_with("/") {
+        world.last_exit_code = Some(1);
+        world.last_error = Some(crate::steps::world::ErrorResponse {
+            code: "INVALID_MODEL_PATH".to_string(),
+            message: format!("Model path must be absolute: {:?}", model_entry.local_path),
+            details: None,
+        });
+        tracing::error!("❌ Invalid model path: {:?}", model_entry.local_path);
+        return;
+    }
+    
+    // Register model in catalog
     world.model_catalog.insert(
         "registered-model".to_string(),
-        ModelCatalogEntry {
-            provider: "hf".to_string(),
-            reference: "test-model".to_string(),
-            local_path: PathBuf::from("/tmp/models/test-model"),
-            size_bytes: 1_048_576,
-        },
+        model_entry,
     );
     
+    world.last_exit_code = Some(0);
     tracing::info!("✅ Model registered in catalog");
 }
 
