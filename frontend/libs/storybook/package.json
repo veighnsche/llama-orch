@@ -1,5 +1,5 @@
 {
-    "name": "orchyra-storybook",
+    "name": "rbee-storybook",
     "version": "0.0.0",
     "private": true,
     "type": "module",
@@ -7,9 +7,9 @@
       "node": "^20.19.0 || >=22.12.0",
       "pnpm": ">=9"
     },
-    "prettier": "orchyra-frontend-tooling/prettier.config.cjs",
+    "prettier": "rbee-frontend-tooling/prettier.config.cjs",
     "devDependencies": {
-      "orchyra-frontend-tooling": "workspace:*",
+      "rbee-frontend-tooling": "workspace:*",
       "@histoire/plugin-vue": "1.0.0-alpha.3",
       "@types/node": "^24.5.2",
       "@vitejs/plugin-vue": "^6.0.1",

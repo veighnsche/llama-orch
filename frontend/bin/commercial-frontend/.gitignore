@@ -28,13 +28,3 @@ coverage
 *.sw?
 
 *.tsbuildinfo
-
-# wrangler files
-.wrangler
-.dev.vars*
-!.dev.vars.example
-.env*
-!.env.example
-
-# wrangler files
-worker-configuration.d.ts

@@ -1,98 +1,114 @@
-# Orchyra — Commercial Frontend (NL)
+# rbee Commercial Frontend v2
 
-Status: scaffold stub with all Vue/Vite placeholders removed. Ready for branded content and routes.
+**Created by:** TEAM-FE-000 (Project Manager)  
+**Date:** 2025-10-11  
+**Status:** Scaffold Complete - Ready for Department Workflow
 
-- Brand: Orchyra
-- Tagline: Private LLM Hosting in the Netherlands
-- Locale: nl (Dutch)
-- Tech stack: Vite + Vue 3 + TypeScript + Vue Router + Cloudflare Workers (Wrangler)
+## Project Overview
 
-## What’s in here
+Complete rewrite of the rbee commercial frontend based on stakeholder documentation. This project follows a professional agency workflow with clear department handoffs.
 
-- Minimal Vue app stub at this folder root
-    - Placeholders removed
-    - `index.html` set to lang="nl" and title "Orchyra"
-    - `src/App.vue` only renders `<RouterView />`
-    - `src/router/index.ts` has only the home route
-    - `server/index.ts` returns 404 for all routes (no demo JSON)
-    - Neutral base styles in `src/assets/`
+## Tech Stack
 
-## Develop
+- **Framework:** Vue 3 + TypeScript
+- **Build Tool:** Vite
+- **Router:** Vue Router 4
+- **Component Library:** orchyra-storybook (workspace package)
+- **Design Tokens:** orchyra-storybook/styles/tokens.css
+- **Tooling:** orchyra-frontend-tooling (workspace package)
 
-From this folder:
+## Installation
 
-```bash
-# 1) install deps
-npm install
-
-# 2) run dev server
-npm run dev
-
-# 3) type-check and build
-npm run type-check
-npm run build
-
-# 4) (optional) preview via Cloudflare
-npm run preview    # wrangler dev after a build
-```
-
-Using pnpm (workspace note)
-
-- This frontend lives under the monorepo; its `package.json` is at this folder root.
-- If you prefer pnpm, run commands from this folder (or use `-C` to change cwd):
+From this directory:
 
 ```bash
 pnpm install
-pnpm dev
 ```
 
-If you want pnpm to discover this package via filters, include this path in `pnpm-workspace.yaml` (e.g. `consumers/.business/commercial-frontend_NL_nl`).
+## Development
 
-## Intended site structure (v1)
+```bash
+# Start dev server
+pnpm dev
 
-This frontend will implement the marketing website derived from the entrepreneurs plan (.002-draft). The initial route plan:
+# Type check
+pnpm type-check
 
-- Home (front page)
-- Public Tap (prepaid credits)
-- Private Tap (dedicated GPUs)
-- Pricing
-- Proof (logs, metrics, SSE transcripts)
-- FAQs
-- About (Vince)
-- Contact / Legal
+# Build for production
+pnpm build
 
-SEO/Schema
+# Preview production build
+pnpm preview
 
-- Use Orchyra as the brand and the tagline “Private LLM Hosting in the Netherlands”.
-- Add JSON-LD (ProfessionalService) to the `<head>` when the layout shell is built (see `.002-draft/front-page.md` for an example block).
+# Lint
+pnpm lint
+pnpm lint:fix
 
-## Content sources (business plan)
+# Format
+pnpm format
+pnpm format:fix
+```
 
-Key docs driving copy and structure are under:
+## Project Structure
 
-- `consumers/.business/ondernemersplan_NL_nl/.002-draft/`
-    - `front-page.md` — hero/sections/CTAs + JSON-LD example
-    - `naming.md` — brand picked (Orchyra) and tagline
-    - `USP.md` — four USP pillars
-    - `services.md` — OSS / Public Tap / Private Tap (+ extra toolkit dev)
-    - `ADR-XXX-public-tap-pricing.md` — draft pricing model/credit packs
-    - `ADR-XXX-public-tap-prepaid-credits.md` — non-refundable credits policy
-    - `competitors.md` — competitor map and lessons
-    - `target-audiences.md`, `page-layers.md`, `mesh-site-architecture.md` — IA/routing plan
-    - `brand.md`, `moodboard.md`, `moodboard-extended.md` — tone, visuals, palette
+```
+commercial-frontend-v2/
+├── src/
+│   ├── assets/          # CSS, images, fonts
+│   ├── components/      # Vue components
+│   ├── composables/     # Vue composables
+│   ├── layouts/         # Layout components
+│   ├── router/          # Vue Router configuration
+│   ├── views/           # Page components
+│   ├── App.vue          # Root component
+│   └── main.ts          # Application entry point
+├── public/              # Static assets
+├── index.html           # HTML entry point
+├── package.json         # Dependencies
+├── vite.config.ts       # Vite configuration
+└── tsconfig.*.json      # TypeScript configuration
+```
 
-## Next steps
+## Design System Integration
 
-- Implement a layout shell with header/footer and JSON-LD injection
-- Build Home route using `front-page.md` sections (H1/H2/CTAs, trust badges)
-- Create Public Tap and Private Tap pages with copy from `services.md` and ADRs
-- Add Pricing page (credit packs + GPU-hour snapshot) and FAQs
-- Add Proof page (placeholder slots for logs/metrics/screenshots)
-- Wire basic navigation and set meta tags (title/description/keywords)
-- Replace favicon with a branded icon (optional)
+This project uses the shared `orchyra-storybook` component library:
+
+```vue
+<script setup lang="ts">
+// ✅ CORRECT: Use workspace package
+import { Button } from 'orchyra-storybook/stories'
+
+// ❌ WRONG: Never use relative imports
+// import Button from '../../../libs/storybook/stories/Button/Button.vue'
+</script>
+
+<style>
+/* ✅ CORRECT: Import design tokens */
+@import 'orchyra-storybook/styles/tokens.css';
+</style>
+```
+
+## Stakeholder Documentation
+
+Source material for content and messaging:
+- `/home/vince/Projects/llama-orch/.business/stakeholders/STAKEHOLDER_STORY.md`
+- `/home/vince/Projects/llama-orch/.business/stakeholders/AGENTIC_AI_USE_CASE.md`
+- `/home/vince/Projects/llama-orch/.business/stakeholders/TECHNICAL_DEEP_DIVE.md`
+- `/home/vince/Projects/llama-orch/.business/stakeholders/ENGINEERING_GUIDE.md`
+
+## Department Workflow
+
+See `WORKFLOW.md` for the complete department sequence and handoff process.
+
+## Next Steps
+
+1. Review `WORKFLOW.md` for department sequence
+2. First department: **Content Strategy** (TEAM-FE-001-CONTENT-STRATEGY)
+3. Follow handoff checklist for each department
 
 ## Notes
 
-- No sample UI remains; the app is intentionally minimal and safe to commit.
-- The Cloudflare worker is neutralized (returns 404). Add real endpoints only when needed.
-- Keep branding consistent with Orchyra and the tagline across headings and metadata.
+- All new files include `// Created by: TEAM-FE-000` signature
+- Storybook components are imported via workspace package
+- Design tokens are centralized in orchyra-storybook
+- No placeholder content or lorem ipsum - waiting for real content from Content Strategy team

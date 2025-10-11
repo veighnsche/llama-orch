@@ -1,3 +1,4 @@
+// Created by: TEAM-FE-000
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
