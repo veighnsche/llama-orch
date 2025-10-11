@@ -28,6 +28,7 @@ pub mod gguf;
 pub mod global_queen;
 pub mod happy_path;
 pub mod inference_execution;
+pub mod integration; // TEAM-083: Integration and E2E tests
 pub mod lifecycle;
 pub mod model_catalog; // TEAM-078: SQLite model catalog queries
 pub mod model_provisioning;

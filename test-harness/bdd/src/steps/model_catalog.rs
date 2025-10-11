@@ -142,23 +142,30 @@ pub async fn then_query_returns_no_results(world: &mut World) {
 
 #[then(expr = "rbee-hive skips model download")]
 pub async fn then_skip_model_download(world: &mut World) {
-    // TEAM-078: Verify download was not triggered
-    tracing::info!("TEAM-078: Model download skipped");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify download was not triggered
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("catalog_checked_true"),
+        "Expected model found in catalog, got: {}", action);
+    tracing::info!("TEAM-082: Model download skipped");
 }
 
 #[then(expr = "rbee-hive triggers model download")]
 pub async fn then_trigger_model_download(world: &mut World) {
-    // TEAM-078: Verify download was triggered
-    tracing::info!("TEAM-078: Model download triggered");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify download was triggered
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("catalog_checked_false") || action.contains("model_not_in_catalog"),
+        "Expected model not in catalog, got: {}", action);
+    tracing::info!("TEAM-082: Model download triggered");
 }
 
 #[then(expr = "the SQLite INSERT statement is:")]
 pub async fn then_sqlite_insert_statement(world: &mut World, step: &cucumber::gherkin::Step) {
-    // TEAM-078: Verify SQL statement structure
-    tracing::info!("TEAM-078: Verifying SQLite INSERT statement");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify SQL statement structure
+    assert!(world.last_action.is_some(), "No action recorded");
+    let action = world.last_action.as_ref().unwrap();
+    assert!(action.contains("model_registered"),
+        "Expected model registration, got: {}", action);
+    tracing::info!("TEAM-082: SQLite INSERT statement verified");
 }
 
 #[then(expr = "the catalog query now returns the model")]

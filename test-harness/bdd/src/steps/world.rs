@@ -345,6 +345,21 @@ impl World {
         self.hive_registry.as_mut().unwrap().inner_mut()
     }
 
+    /// TEAM-082: Reset state for a fresh scenario (comprehensive cleanup)
+    pub fn reset_for_scenario(&mut self) {
+        self.concurrent_handles.clear();
+        self.concurrent_results.clear();
+        self.active_request_id = None;
+        self.sse_events.clear();
+        self.tokens_generated.clear();
+        self.last_http_response = None;
+        self.last_http_status = None;
+        self.last_error = None;
+        self.start_time = None;
+        
+        tracing::debug!("TEAM-082: World state reset for new scenario");
+    }
+
     /// Clear all state for a fresh scenario
     pub fn clear(&mut self) {
         self.topology.clear();

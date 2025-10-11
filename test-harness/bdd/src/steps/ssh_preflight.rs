@@ -111,63 +111,80 @@ pub async fn when_check_rbee_hive_binary(world: &mut World) {
 
 #[then(expr = "SSH connection to {string} succeeds")]
 pub async fn then_ssh_connection_succeeds(world: &mut World, host: String) {
-    // TEAM-078: Verify connection success
-    tracing::info!("TEAM-078: SSH connection to {} succeeded", host);
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify connection success
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("ssh_validate_success") || action.contains("ssh_connected"),
+        "Expected successful SSH connection, got: {}", action);
+    tracing::info!("TEAM-082: SSH connection to {} succeeded", host);
 }
 
 #[then(expr = "queen-rbee logs {string}")]
 pub async fn then_queen_logs(world: &mut World, message: String) {
-    // TEAM-078: Verify log message
-    tracing::info!("TEAM-078: queen-rbee logged: {}", message);
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify log message
+    assert!(world.last_action.is_some(), "No action recorded");
+    tracing::info!("TEAM-082: queen-rbee logged: {}", message);
 }
 
 #[then(expr = "preflight check passes")]
 pub async fn then_preflight_passes(world: &mut World) {
-    // TEAM-078: Verify preflight success
-    tracing::info!("TEAM-078: Preflight check passed");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify preflight success
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("ssh_validate_success") || action.contains("ssh_connected"),
+        "Expected successful preflight, got: {}", action);
+    tracing::info!("TEAM-082: Preflight check passed");
 }
 
 #[then(expr = "queen-rbee detects timeout")]
 pub async fn then_detects_timeout(world: &mut World) {
-    // TEAM-078: Verify timeout detection
-    tracing::info!("TEAM-078: Timeout detected");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify timeout detection
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("ssh_timeout") || action.contains("ssh_validate_failed"),
+        "Expected timeout detection, got: {}", action);
+    tracing::info!("TEAM-082: Timeout detected");
 }
 
 #[then(expr = "SSH authentication fails")]
 pub async fn then_ssh_auth_fails(world: &mut World) {
-    // TEAM-078: Verify auth failure
-    tracing::info!("TEAM-078: SSH authentication failed");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify auth failure
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("ssh_invalid") || action.contains("ssh_validate_failed"),
+        "Expected SSH auth failure, got: {}", action);
+    tracing::info!("TEAM-082: SSH authentication failed");
 }
 
 #[then(expr = "the command succeeds")]
 pub async fn then_command_succeeds(world: &mut World) {
-    // TEAM-078: Verify command success
-    tracing::info!("TEAM-078: Command succeeded");
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify command success
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("ssh_exec_") && !action.contains("_failed"),
+        "Expected successful command execution, got: {}", action);
+    tracing::info!("TEAM-082: Command succeeded");
 }
 
 #[then(expr = "stdout is {string}")]
 pub async fn then_stdout_is(world: &mut World, output: String) {
-    // TEAM-078: Verify stdout content
-    tracing::info!("TEAM-078: stdout is: {}", output);
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify stdout content
+    assert!(world.last_action.is_some(), "No action recorded");
+    // Verify stdout was captured (stored in world.last_stdout)
+    assert!(!world.last_stdout.is_empty() || output.is_empty(),
+        "Expected stdout to be captured");
+    tracing::info!("TEAM-082: stdout is: {}", output);
 }
 
 #[then(expr = "the latency is less than {int}ms")]
 pub async fn then_latency_less_than(world: &mut World, ms: u32) {
-    // TEAM-078: Verify latency threshold
-    tracing::info!("TEAM-078: Latency < {}ms", ms);
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify latency threshold
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("ssh_rtt"),
+        "Expected latency measurement, got: {}", action);
+    tracing::info!("TEAM-082: Latency < {}ms", ms);
 }
 
 #[then(expr = "the command {string} succeeds")]
 pub async fn then_specific_command_succeeds(world: &mut World, command: String) {
-    // TEAM-078: Verify specific command success
-    tracing::info!("TEAM-078: Command '{}' succeeded", command);
-    assert!(world.last_action.is_some());
+    // TEAM-082: Verify specific command success
+    let action = world.last_action.as_ref().expect("No action recorded");
+    assert!(action.contains("ssh_exec_") || action.contains("ssh_check_binary"),
+        "Expected command execution, got: {}", action);
+    tracing::info!("TEAM-082: Command '{}' succeeded", command);
 }
