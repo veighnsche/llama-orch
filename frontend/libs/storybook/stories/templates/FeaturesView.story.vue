@@ -5,7 +5,7 @@ import FeaturesView from './FeaturesView.vue'
 </script>
 
 <template>
-  <Story title="Templates/Views/FeaturesView">
+  <Story title="templates/FeaturesView">
     <Variant title="Default">
       <FeaturesView />
     </Variant>

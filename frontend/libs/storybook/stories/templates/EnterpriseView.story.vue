@@ -5,7 +5,7 @@ import EnterpriseView from './EnterpriseView.vue'
 </script>
 
 <template>
-  <Story title="Templates/Views/EnterpriseView">
+  <Story title="templates/EnterpriseView">
     <Variant title="Default">
       <EnterpriseView />
     </Variant>

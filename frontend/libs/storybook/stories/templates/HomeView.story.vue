@@ -5,7 +5,7 @@ import HomeView from './HomeView.vue'
 </script>
 
 <template>
-  <Story title="Templates/Views/HomeView">
+  <Story title="templates/HomeView">
     <Variant title="Default">
       <HomeView />
     </Variant>

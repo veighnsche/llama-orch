@@ -8,7 +8,7 @@
     "./stories": "./stories/index.ts",
     "./styles/tokens.css": "./styles/tokens.css",
     "./styles/tokens-base.css": "./styles/tokens-base.css",
-    "./templates/views/*": "./templates/views/*.vue"
+    "./templates/*": "./stories/templates/*.vue"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0",

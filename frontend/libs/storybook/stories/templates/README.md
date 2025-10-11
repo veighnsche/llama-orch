@@ -7,6 +7,9 @@
 
 This directory contains **pre-built Vue view templates** that assemble components from the storybook into complete pages. All the hard work is done - you just need to wire them up!
 
+**Location:** `/frontend/libs/storybook/stories/templates/`  
+**Stories:** Available in storybook under `templates/` category
+
 ## Available Views
 
 - `HomeView.vue` - Main landing page
@@ -112,7 +115,9 @@ Update `src/assets/main.css`:
 
 ```bash
 # Copy all view templates to your src/views directory
-cp ../../libs/storybook/templates/views/*.vue src/views/
+cp ../../libs/storybook/stories/templates/*.vue src/views/
+# Exclude .story.vue files
+rm src/views/*.story.vue
 ```
 
 ### Step 5: Set Up Router

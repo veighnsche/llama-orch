@@ -5,7 +5,7 @@ import UseCasesView from './UseCasesView.vue'
 </script>
 
 <template>
-  <Story title="Templates/Views/UseCasesView">
+  <Story title="templates/UseCasesView">
     <Variant title="Default">
       <UseCasesView />
     </Variant>

@@ -5,7 +5,7 @@ import ProvidersView from './ProvidersView.vue'
 </script>
 
 <template>
-  <Story title="Templates/Views/ProvidersView">
+  <Story title="templates/ProvidersView">
     <Variant title="Default">
       <ProvidersView />
     </Variant>

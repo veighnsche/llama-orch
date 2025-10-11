@@ -5,7 +5,7 @@ import PricingView from './PricingView.vue'
 </script>
 
 <template>
-  <Story title="Templates/Views/PricingView">
+  <Story title="templates/PricingView">
     <Variant title="Default">
       <PricingView />
     </Variant>

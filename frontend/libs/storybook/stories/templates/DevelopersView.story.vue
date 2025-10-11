@@ -5,7 +5,7 @@ import DevelopersView from './DevelopersView.vue'
 </script>
 
 <template>
-  <Story title="Templates/Views/DevelopersView">
+  <Story title="templates/DevelopersView">
     <Variant title="Default">
       <DevelopersView />
     </Variant>
