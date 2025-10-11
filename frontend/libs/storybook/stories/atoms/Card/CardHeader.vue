@@ -1,5 +1,4 @@
-<!-- Created by: TEAM-FE-000 (Scaffolding) -->
-<!-- TEAM-FE-001: Implemented Card component ported from React reference -->
+<!-- Created by: TEAM-FE-001 -->
 <script setup lang="ts">
 import { computed } from 'vue'
 import { cn } from '../../../lib/utils'
@@ -14,7 +13,7 @@ const props = defineProps<Props>()
 // Compute classes - ported from React reference
 const classes = computed(() =>
   cn(
-    'bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm',
+    '@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6',
     props.class
   )
 )
@@ -23,7 +22,7 @@ const classes = computed(() =>
 <template>
   <div
     :class="classes"
-    data-slot="card"
+    data-slot="card-header"
   >
     <slot />
   </div>

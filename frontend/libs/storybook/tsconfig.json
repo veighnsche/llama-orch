@@ -1,10 +1,17 @@
 {
-  "extends": "orchyra-frontend-tooling/tsconfig.base.json",
+  "extends": "rbee-frontend-tooling/tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
   "include": [
     "env.d.ts",
     "histoire.setup.ts",
     "stories/**/*.ts",
     "stories/**/*.vue",
+    "lib/**/*.ts",
     "*.ts"
   ]
 }

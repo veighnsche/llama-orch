@@ -1,11 +1,17 @@
 import { defineConfig } from 'histoire'
 import { HstVue } from '@histoire/plugin-vue'
 import vue from '@vitejs/plugin-vue'
+import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
   plugins: [HstVue()],
   vite: {
     plugins: [vue()],
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./', import.meta.url)),
+      },
+    },
   },
   setupFile: './histoire.setup.ts',
   theme: {

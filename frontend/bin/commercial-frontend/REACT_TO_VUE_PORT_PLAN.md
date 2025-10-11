@@ -53,40 +53,98 @@
 
 ---
 
-## 🎯 Port Strategy
+## 🎯 Port Strategy (UPDATED - PAGE-FIRST APPROACH)
 
+**OLD STRATEGY (WRONG):**
 ```
-Phase 1: UI Primitives (60 atoms) → orchyra-storybook
-Phase 2: Composite Components (15 molecules) → orchyra-storybook  
-Phase 3: Section Components (50+ organisms) → orchyra-storybook
-Phase 4: Page Assembly (7 pages) → commercial-frontend-v2
-Phase 5: Integration & Polish → commercial-frontend-v2
+Phase 1: Build ALL 60 atoms
+Phase 2: Build ALL 15 molecules
+Phase 3: Build ALL 50+ organisms
+Phase 4: Assemble 7 pages
 ```
+❌ Problem: Builds components that may never be used, no visible progress for weeks
 
-**Key Rule:** Build in **orchyra-storybook FIRST**, then import into site.
+**NEW STRATEGY (CORRECT):**
+```
+1. Pick ONE page (Pricing)
+2. Build ONLY components that page needs
+3. Assemble the page
+4. DONE - one complete page!
+5. Repeat for next page
+```
+✅ Benefit: Build only what's needed, see complete pages quickly, test integration immediately
+
+**Key Rule:** Build in **rbee-storybook FIRST**, then import into site.
+
+**Progress:** Page-by-page, not component-by-component.
 
 ---
 
-## PHASE 1: UI PRIMITIVES (60 Atoms)
+## 📊 PAGE-BY-PAGE IMPLEMENTATION
 
-Location: `/frontend/libs/storybook/stories/atoms/`
+### ✅ TEAM-FE-001 Completed (10 components)
 
-### Priority 1 - Core UI (20 components)
+**Components built:**
+- ✅ Button
+- ✅ Input
+- ✅ Label
+- ✅ Card + CardHeader + CardTitle + CardDescription + CardContent + CardFooter
+- ✅ Alert + AlertTitle + AlertDescription
+- ✅ Textarea
+- ✅ Checkbox
+- ✅ Switch
+- ✅ RadioGroup + RadioGroupItem
+- ✅ Slider
 
-- [ ] Button (variants, sizes, states)
-- [ ] Input (types, validation states)
-- [ ] Textarea (auto-resize)
-- [ ] Label (required indicator)
-- [ ] Checkbox (states)
-- [ ] Radio Group (layouts)
-- [ ] Switch (toggle)
-- [ ] Slider (single/range)
-- [ ] Badge ✅ (review existing)
-- [ ] Avatar (sizes, fallback)
-- [ ] Separator (h/v)
-- [ ] Spinner (sizes)
-- [ ] Skeleton (variants)
-- [ ] Progress (determinate/indeterminate)
+**Note:** Some of these may not be needed for initial pages. That's okay - they're built and tested.
+
+---
+
+## 🎯 PAGE 1: PRICING PAGE (TEAM-FE-002)
+
+**Priority:** CRITICAL - Simplest page, high business value
+
+**Status:** Ready to start
+
+### Components Needed
+
+#### Already Built by TEAM-FE-001:
+- ✅ Button
+
+#### Need to Build (Atoms):
+- [ ] Badge (for "Most Popular" tag)
+
+#### Need to Build (Molecules):
+- [ ] PricingCard (Card + Button + Badge + feature list)
+- [ ] FeatureList (list with Check icons)
+
+#### Need to Build (Organisms):
+- [ ] PricingHero (hero section with title and description)
+- [ ] PricingTiers (grid of 3 PricingCards)
+- [ ] FeatureComparisonTable (comparison table)
+
+#### Need to Build (Page):
+- [ ] PricingView.vue (assembles all organisms)
+
+**Estimated Effort:** 2-3 days
+
+**React Reference:** `/frontend/reference/v0/app/pricing/page.tsx`
+
+---
+
+## 🎯 PAGE 2: HOME PAGE (TEAM-FE-003)
+
+**Priority:** HIGH - Most important page
+
+**Status:** Waiting for Pricing completion
+
+### Components Needed (TBD after Pricing is done)
+
+---
+
+## 🎯 PAGE 3-7: Other Pages (Future Teams)
+
+Will be defined after Home page is complete.
 - [ ] Kbd (keyboard shortcuts)
 - [ ] Card (with subcomponents)
 - [ ] Alert (variants)
