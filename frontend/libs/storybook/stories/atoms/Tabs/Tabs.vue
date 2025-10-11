@@ -1,17 +1,33 @@
 <!-- Created by: TEAM-FE-000 (Scaffolding) -->
-<!-- TODO: Implement this component -->
+<!-- TEAM-FE-004: Implemented Tabs atom - ported from React reference -->
 <script setup lang="ts">
-// TODO: Define props interface
-// TODO: Import dependencies
+import { computed } from 'vue'
+import { TabsRoot } from 'radix-vue'
+import { cn } from '../../../lib/utils'
+
+interface TabsRootProps {
+  defaultValue?: string
+  modelValue?: string
+  orientation?: 'horizontal' | 'vertical'
+  class?: string
+}
+
+const rootProps = withDefaults(defineProps<TabsRootProps>(), {
+  orientation: 'horizontal',
+})
+
+const rootClasses = computed(() =>
+  cn('flex flex-col gap-2', rootProps.class)
+)
 </script>
 
 <template>
-  <div class="tabs">
-    <!-- TODO: Implement component -->
-    <p>TODO: Implement Tabs</p>
-  </div>
+  <TabsRoot
+    :default-value="defaultValue"
+    :model-value="modelValue"
+    :orientation="orientation"
+    :class="rootClasses"
+  >
+    <slot />
+  </TabsRoot>
 </template>
-
-<style scoped>
-/* TODO: Add component styles */
-</style>
