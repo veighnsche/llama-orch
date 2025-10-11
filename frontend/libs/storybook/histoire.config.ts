@@ -1,11 +1,23 @@
 import { defineConfig } from 'histoire'
 import { HstVue } from '@histoire/plugin-vue'
 import vue from '@vitejs/plugin-vue'
+import { fileURLToPath, URL } from 'node:url'
+import tailwindcss from '@tailwindcss/postcss'
 
 export default defineConfig({
   plugins: [HstVue()],
   vite: {
     plugins: [vue()],
+    css: {
+      postcss: {
+        plugins: [tailwindcss()],
+      },
+    },
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./', import.meta.url)),
+      },
+    },
   },
   setupFile: './histoire.setup.ts',
   theme: {

@@ -46,6 +46,7 @@ pub async fn given_worker_slots(world: &mut World, slots: usize) {
 
 #[given(expr = "{int} rbee-hive instances are downloading {string}")]
 pub async fn given_multiple_downloads(world: &mut World, count: usize, model: String) {
+
     // TEAM-083: Wire to real DownloadTracker for concurrent downloads
     use rbee_hive::download_tracker::DownloadTracker;
     
@@ -232,6 +233,7 @@ pub async fn when_request_b_updates(world: &mut World, state: String, time: u32)
 
 #[when(expr = "all {int} complete download simultaneously")]
 pub async fn when_concurrent_download_complete(world: &mut World, count: usize) {
+
     // TEAM-083: Wire to real DownloadTracker completion
     use rbee_hive::download_tracker::DownloadTracker;
     
@@ -259,6 +261,7 @@ pub async fn when_concurrent_download_complete(world: &mut World, count: usize) 
 
 #[when(expr = "all {int} attempt to register in catalog")]
 pub async fn when_concurrent_catalog_register(world: &mut World, count: usize) {
+
     // TEAM-083: Wire to real ModelCatalog for concurrent registration
     use model_catalog::ModelCatalog;
     

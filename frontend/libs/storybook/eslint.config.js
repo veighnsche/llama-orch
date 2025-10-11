@@ -1,3 +1,3 @@
-import shared from 'orchyra-frontend-tooling/eslint.config.js'
+import rbeeConfig from 'rbee-frontend-tooling/eslint.config.js'
 
-export default shared
+export default rbeeConfig

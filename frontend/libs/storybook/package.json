@@ -1,39 +1,60 @@
 {
-    "name": "orchyra-storybook",
-    "version": "0.0.0",
-    "private": true,
-    "type": "module",
-    "engines": {
-      "node": "^20.19.0 || >=22.12.0",
-      "pnpm": ">=9"
-    },
-    "prettier": "orchyra-frontend-tooling/prettier.config.cjs",
-    "devDependencies": {
-      "orchyra-frontend-tooling": "workspace:*",
-      "@histoire/plugin-vue": "1.0.0-alpha.3",
-      "@types/node": "^24.5.2",
-      "@vitejs/plugin-vue": "^6.0.1",
-      "histoire": "1.0.0-alpha.3",
-      "typescript": "^5.9.2",
-      "vite": "^7.0.6",
-      "vitest": "^3.2.4",
-      "vue": "^3.5.21",
-      "vue-router": "^4.5.1",
-      "@eslint/js": "^9.14.0",
-      "eslint": "^9.14.0",
-      "eslint-plugin-vue": "^9.30.0",
-      "eslint-config-prettier": "^9.1.0",
-      "typescript-eslint": "^8.12.2",
-      "prettier": "^3.3.3",
-      "vue-eslint-parser": "^9.4.3"
-    },
-    "scripts": {
-      "story:dev": "histoire dev",
-      "story:build": "histoire build",
-      "story:preview": "histoire preview",
-      "lint": "eslint .",
-      "lint:fix": "eslint . --fix",
-      "format": "prettier --check .",
-      "format:fix": "prettier --write ."
-    }
+  "name": "rbee-storybook",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./stories/index.ts",
+  "exports": {
+    "./stories": "./stories/index.ts",
+    "./styles/tokens.css": "./styles/tokens.css",
+    "./styles/tokens-base.css": "./styles/tokens-base.css",
+    "./templates/*": "./stories/templates/*.vue"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0",
+    "pnpm": ">=9"
+  },
+  "prettier": "rbee-frontend-tooling/prettier.config.cjs",
+  "dependencies": {
+    "vue": "^3.5.21",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.5",
+    "radix-vue": "^1.9.11",
+    "lucide-vue-next": "^0.454.0",
+    "@vueuse/core": "^11.3.0",
+    "embla-carousel-vue": "^8.5.1",
+    "vaul-vue": "^0.2.0",
+    "tailwindcss": "^4.1.9",
+    "@tailwindcss/postcss": "^4.1.9",
+    "postcss": "^8.5.1"
+  },
+  "devDependencies": {
+    "rbee-frontend-tooling": "workspace:*",
+    "@histoire/plugin-vue": "1.0.0-alpha.3",
+    "@types/node": "^24.5.2",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "histoire": "1.0.0-alpha.3",
+    "typescript": "^5.9.2",
+    "vite": "^7.0.6",
+    "vitest": "^3.2.4",
+    "vue-router": "^4.5.1",
+    "vue-tsc": "^3.0.4",
+    "@eslint/js": "^9.14.0",
+    "eslint": "^9.14.0",
+    "eslint-plugin-vue": "^9.30.0",
+    "eslint-config-prettier": "^9.1.0",
+    "typescript-eslint": "^8.12.2",
+    "prettier": "^3.3.3",
+    "vue-eslint-parser": "^9.4.3"
+  },
+  "scripts": {
+    "story:dev": "histoire dev",
+    "story:build": "histoire build",
+    "story:preview": "histoire preview",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write ."
   }
+}
