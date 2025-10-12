@@ -1,0 +1,50 @@
+'use client'
+
+import { cn } from '@/lib/utils'
+import { useEffect, useState } from 'react'
+
+export interface FloatingKPICardProps {
+  /** Additional CSS classes */
+  className?: string
+}
+
+export function FloatingKPICard({ className }: FloatingKPICardProps) {
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    // Respect prefers-reduced-motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    if (prefersReducedMotion) {
+      setIsVisible(true)
+    } else {
+      const timer = setTimeout(() => setIsVisible(true), 150)
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
+  return (
+    <div
+      className={cn(
+        'absolute bottom-8 left-36 rounded-2xl shadow-lg/40 backdrop-blur-md',
+        'bg-secondary/60 dark:bg-secondary/30 p-4 space-y-2',
+        'transition-all duration-300 z-10',
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2',
+        className,
+      )}
+    >
+      <div className="flex items-center justify-between gap-6 text-sm">
+        <span className="text-muted-foreground">GPU Pool</span>
+        <span className="font-semibold text-foreground">5 nodes / 8 GPUs</span>
+      </div>
+      <div className="flex items-center justify-between gap-6 text-sm">
+        <span className="text-muted-foreground">Cost</span>
+        <span className="font-bold text-chart-3">$0.00 / hr</span>
+      </div>
+      <div className="flex items-center justify-between gap-6 text-sm">
+        <span className="text-muted-foreground">Latency</span>
+        <span className="font-semibold text-foreground">~34 ms</span>
+      </div>
+    </div>
+  )
+}
