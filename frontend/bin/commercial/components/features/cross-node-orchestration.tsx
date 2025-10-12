@@ -4,9 +4,9 @@ import { SectionContainer, IconBox } from "@/components/primitives"
 export function CrossNodeOrchestration() {
   return (
     <SectionContainer
-      title="Cross-Node Orchestration"
+      title="Cross-Pool Orchestration"
       bgVariant="background"
-      subtitle="Seamlessly orchestrate AI workloads across your entire network. One command runs inference on any machine in your homelab."
+      subtitle="Seamlessly orchestrate AI workloads across your entire network. One command runs inference on any machine in your pool."
     >
       <div className="max-w-5xl mx-auto space-y-8">
           {/* SSH Registry Management */}
@@ -14,16 +14,16 @@ export function CrossNodeOrchestration() {
             <div className="flex items-start gap-4 mb-6">
               <IconBox icon={Network} color="primary" size="lg" className="flex-shrink-0" />
               <div>
-                <h3 className="text-2xl font-bold text-foreground mb-2">SSH Registry Management</h3>
+                <h3 className="text-2xl font-bold text-foreground mb-2">Pool Registry Management</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Configure remote nodes once, use them forever. rbee-keeper manages SSH connections, validates
-                  connectivity, and maintains a registry of all available nodes.
+                  Configure remote machines once, use them forever. rbee-keeper manages SSH connections, validates
+                  connectivity, and maintains a registry of all available pools.
                 </p>
               </div>
             </div>
 
             <div className="bg-background rounded-lg p-6 font-mono text-sm space-y-2">
-              <div className="text-muted-foreground"># Add a remote node to your cluster</div>
+              <div className="text-muted-foreground"># Add a remote machine to your pool</div>
               <div className="text-chart-3 mt-2">
                 rbee-keeper setup add-node \
                 <br />
@@ -35,7 +35,7 @@ export function CrossNodeOrchestration() {
                 <br />
                 {"  "}--ssh-key ~/.ssh/id_ed25519
               </div>
-              <div className="text-muted-foreground mt-4"># Run inference on that node</div>
+              <div className="text-muted-foreground mt-4"># Run inference on that machine</div>
               <div className="text-chart-3 mt-2">
                 rbee-keeper infer --node workstation \
                 <br />
@@ -52,7 +52,7 @@ export function CrossNodeOrchestration() {
               </div>
               <div className="bg-background rounded-lg p-4">
                 <div className="text-primary font-bold mb-1">SSH Validation</div>
-                <div className="text-muted-foreground text-sm">Tests connectivity before saving to registry</div>
+                <div className="text-muted-foreground text-sm">Tests connectivity before saving to the pool registry</div>
               </div>
               <div className="bg-background rounded-lg p-4">
                 <div className="text-primary font-bold mb-1">Zero Config</div>
@@ -68,7 +68,7 @@ export function CrossNodeOrchestration() {
               <div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">Automatic Worker Provisioning</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  rbee automatically spawns workers on remote nodes via SSH. No manual daemon management. Workers start
+                  rbee automatically spawns workers on remote machines via SSH. No manual daemon management. Workers start
                   on-demand and shut down cleanly.
                 </p>
               </div>
@@ -81,11 +81,11 @@ export function CrossNodeOrchestration() {
               </div>
               <div className="flex items-center gap-3 pl-8">
                 <div className="flex-shrink-0 w-32 text-sm text-muted-foreground">↓ SSH</div>
-                <div className="flex-1 text-muted-foreground/70 text-sm">Connects to remote nodes</div>
+                <div className="flex-1 text-muted-foreground/70 text-sm">Connects to remote pool managers</div>
               </div>
               <div className="flex items-center gap-3 pl-8">
                 <div className="flex-shrink-0 w-40 text-sm text-muted-foreground">rbee-hive</div>
-                <div className="flex-1 text-foreground text-sm">Pool manager (spawned on remote node)</div>
+                <div className="flex-1 text-foreground text-sm">Pool manager (spawned on remote machine)</div>
               </div>
               <div className="flex items-center gap-3 pl-16">
                 <div className="flex-shrink-0 w-32 text-sm text-muted-foreground">↓ Spawns</div>

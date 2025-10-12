@@ -14,7 +14,7 @@ export function FeaturesSection() {
             <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto">
               <TabsTrigger value="api" className="flex items-center gap-2 py-3">
                 <Code className="h-4 w-4" />
-                <span className="hidden sm:inline">OpenAI API</span>
+                <span className="hidden sm:inline">OpenAI-Compatible</span>
                 <span className="sm:hidden">API</span>
               </TabsTrigger>
               <TabsTrigger value="gpu" className="flex items-center gap-2 py-3">
@@ -29,7 +29,7 @@ export function FeaturesSection() {
               </TabsTrigger>
               <TabsTrigger value="sse" className="flex items-center gap-2 py-3">
                 <Zap className="h-4 w-4" />
-                <span className="hidden sm:inline">Real-time</span>
+                <span className="hidden sm:inline">Real‑time</span>
                 <span className="sm:hidden">SSE</span>
               </TabsTrigger>
             </TabsList>
@@ -65,7 +65,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
                 <div>
                   <h3 className="text-2xl font-bold text-card-foreground mb-3">Multi-GPU Orchestration</h3>
                   <p className="text-muted-foreground leading-relaxed">
-                    Automatically distribute workloads across CUDA, Metal, and CPU backends. Use every GPU you own.
+                    Orchestrate across the CUDA, Metal, and CPU backends you configure. Use every GPU you own.
                   </p>
                 </div>
 
@@ -95,7 +95,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-32 text-sm text-muted-foreground">CPU Fallback</div>
+                    <div className="flex-shrink-0 w-32 text-sm text-muted-foreground">CPU Backend</div>
                     <div className="flex-1 h-8 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-chart-2 flex items-center justify-end pr-2" style={{ width: "34%" }}>
                         <span className="text-xs text-white font-medium">34%</span>
@@ -145,7 +145,7 @@ if task.model.contains("70b") {
                 <div>
                   <h3 className="text-2xl font-bold text-card-foreground mb-3">Task-Based API with SSE</h3>
                   <p className="text-muted-foreground leading-relaxed">
-                    Real-time progress updates. See model loading, token generation, and cost tracking as it happens.
+                    Real‑time progress updates. See model loading, token generation, and cost tracking as it happens.
                   </p>
                 </div>
 

@@ -33,7 +33,7 @@ rbee-keeper worker start --gpu 0 --backend metal # Mac
     id: "task-api",
     icon: Terminal,
     title: "Task-Based API with SSE",
-    description: "Real-time progress updates. See model loading, token generation, and cost tracking as it happens.",
+    description: "Real‑time progress updates. See model loading, token generation, and cost tracking as it happens.",
     benefit: "Full visibility into every inference job.",
     code: `event: started
 data: {"queue_position":3}

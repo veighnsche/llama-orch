@@ -10,7 +10,7 @@ export function WhatIsRbee() {
 
       <p className="text-xl text-foreground leading-relaxed text-center">
         <span className="font-semibold text-card-foreground">rbee</span> (pronounced "are-bee") is an{" "}
-        <span className="font-semibold text-primary">open-source AI orchestration platform</span> that turns all
+        <span className="font-semibold text-primary">open source AI orchestration platform</span> that turns all
         the computers in your home or office network into a unified AI infrastructure.
       </p>
 

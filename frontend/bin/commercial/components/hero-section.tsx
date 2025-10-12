@@ -9,7 +9,7 @@ export function HeroSection() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left: Messaging */}
           <div className="space-y-8">
-            <PulseBadge text="100% Open Source • MIT License" />
+            <PulseBadge text="100% Open Source • GPL-3.0-or-later" />
 
             <h1 className="text-5xl lg:text-7xl font-bold text-foreground leading-tight text-balance">
               AI Infrastructure.
@@ -42,7 +42,7 @@ export function HeroSection() {
             {/* Trust Indicators */}
             <div className="flex flex-wrap gap-6 pt-4">
               <TrustIndicator icon={Github} text="Open Source" />
-              <TrustIndicator icon={Star} text="1,200+ Stars" variant="primary" />
+              <TrustIndicator icon={Star} text="On GitHub" variant="primary" />
               <div className="flex items-center gap-2 text-muted-foreground">
                 <div className="h-5 w-5 flex items-center justify-center text-xs font-bold border border-border rounded">
                   API

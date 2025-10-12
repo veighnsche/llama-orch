@@ -11,10 +11,11 @@ export function HowItWorksSection() {
             <StepNumber number={1} />
             <h3 className="text-2xl font-bold text-foreground">Install rbee</h3>
             <p className="text-muted-foreground leading-relaxed">
-              One command to install rbee on your machine. Works on Linux, macOS, and Windows.
+              Get started from source. Works on Linux and macOS. Windows support planned.
             </p>
           </div>
-          <CodeBlock code={`$ curl -sSL https://rbee.dev/install.sh | sh
+          <CodeBlock code={`$ git clone https://github.com/veighnsche/llama-orch
+$ cd llama-orch && cargo build --release
 $ rbee-keeper daemon start
   ✓ rbee daemon started on port 8080`} />
         </div>

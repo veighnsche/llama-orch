@@ -4,7 +4,7 @@ import { SectionContainer, IconBox } from "@/components/primitives"
 export function RealTimeProgress() {
   return (
     <SectionContainer
-      title="Real-time Progress Tracking"
+      title="Real‑time Progress Tracking"
       bgVariant="background"
       subtitle="Live narration of every step. See model loading, token generation, and resource usage as it happens."
     >
@@ -17,7 +17,7 @@ export function RealTimeProgress() {
                 <h3 className="text-2xl font-bold text-foreground mb-2">SSE Narration Architecture</h3>
                 <p className="text-muted-foreground leading-relaxed">
                   Workers narrate their progress via Server-Sent Events. Every action—from model loading to token
-                  generation—streams to your terminal in real-time.
+                  generation—streams to your terminal in real‑time.
                 </p>
               </div>
             </div>
@@ -68,7 +68,7 @@ export function RealTimeProgress() {
                 <CheckCircle2 className="h-5 w-5 text-chart-3 flex-shrink-0 mt-0.5" />
                 <div>
                   <div className="font-bold text-foreground">Explicit Cancellation</div>
-                  <div className="text-muted-foreground text-sm">DELETE /v1/inference/&lt;request_id&gt; (idempotent)</div>
+                  <div className="text-muted-foreground text-sm">POST /v1/cancel (idempotent)</div>
                 </div>
               </div>
               <div className="flex items-start gap-3">

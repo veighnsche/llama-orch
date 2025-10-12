@@ -50,9 +50,9 @@ const features = [
     id: "analytics",
     icon: BarChart3,
     title: "Earnings Dashboard",
-    description: "Track your earnings, utilization, and performance in real-time.",
+    description: "Track your earnings, utilization, and performance in real‑time.",
     details: [
-      "Real-time earnings tracking",
+      "Real‑time earnings tracking",
       "Utilization metrics per GPU",
       "Historical earnings charts",
       "Performance benchmarks",

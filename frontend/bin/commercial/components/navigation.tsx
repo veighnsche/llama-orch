@@ -31,7 +31,7 @@ export function Navigation() {
             <NavLink href="/developers">For Developers</NavLink>
             <NavLink href="/gpu-providers">For Providers</NavLink>
             <NavLink href="/enterprise">For Enterprise</NavLink>
-            <NavLink href="#">Docs</NavLink>
+            <NavLink href="https://github.com/veighnsche/llama-orch/tree/main/docs">Docs</NavLink>
 
             <div className="flex items-center gap-2">
               <a
@@ -117,7 +117,7 @@ export function Navigation() {
               For Enterprise
             </NavLink>
             <NavLink
-              href="#"
+              href="https://github.com/veighnsche/llama-orch/tree/main/docs"
               variant="mobile"
               onClick={() => setMobileMenuOpen(false)}
             >
