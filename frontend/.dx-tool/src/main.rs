@@ -1,9 +1,10 @@
 // Created by: TEAM-DX-001
 // TEAM-DX-002: Added HTML commands and JSON output format
+// TEAM-DX-003: Added story file locator command
 // Frontend DX CLI Tool - Main entry point
 
 use clap::{Parser, Subcommand, ValueEnum};
-use dx::commands::{CssCommand, HtmlCommand};
+use dx::commands::{CssCommand, HtmlCommand, StoryCommand, InspectCommand};
 use dx::config::Config;
 use std::process::ExitCode;
 
@@ -74,6 +75,20 @@ enum Commands {
         /// URL to fetch and analyze (optional if --project is specified)
         url: Option<String>,
     },
+    /// Story file locator
+    #[command(name = "story-file")]
+    StoryFile {
+        /// Storybook URL to locate
+        url: String,
+    },
+    /// Inspect element: get HTML + all related CSS in one command
+    Inspect {
+        /// CSS selector to inspect
+        selector: String,
+        
+        /// URL to fetch and analyze (optional if --project is specified)
+        url: Option<String>,
+    },
 }
 
 #[tokio::main]
@@ -83,6 +98,47 @@ async fn main() -> ExitCode {
     let use_json = matches!(cli.format, OutputFormat::Json);
     
     match cli.command {
+        Commands::Inspect { selector, url } => {
+            let target_url = match resolve_url(url, cli.project.as_deref(), &config) {
+                Ok(url) => url,
+                Err(msg) => {
+                    if use_json {
+                        println!("{{\"error\": \"{}\"}}", msg.replace('"', "\\\""));
+                    } else {
+                        eprintln!("✗ Error: {}", msg);
+                    }
+                    return ExitCode::from(1);
+                }
+            };
+            
+            handle_inspect(&target_url, &selector, use_json).await
+        }
+        Commands::StoryFile { url } => {
+            let cmd = StoryCommand::new();
+            match cmd.locate_story_file(&url) {
+                Ok(info) => {
+                    if use_json {
+                        let component_file_str = info.component_file
+                            .as_ref()
+                            .map(|p| p.display().to_string())
+                            .unwrap_or_else(|| "null".to_string());
+                        println!("{{\"story_file\": \"{}\", \"component_file\": \"{}\", \"story_path\": \"{}\"}}",
+                            info.story_file.display(), component_file_str, info.story_path);
+                    } else {
+                        cmd.print_story_info(&info);
+                    }
+                    ExitCode::SUCCESS
+                }
+                Err(e) => {
+                    if use_json {
+                        println!("{{\"error\": \"{}\"}}", e.to_string().replace('"', "\\\""));
+                    } else {
+                        eprintln!("✗ Error: {}", e);
+                    }
+                    ExitCode::from(1)
+                }
+            }
+        }
         Commands::Css { class_exists, selector, list_classes, list_selector, url } => {
             let target_url = match resolve_url(url, cli.project.as_deref(), &config) {
                 Ok(url) => url,
@@ -316,6 +372,33 @@ async fn handle_tree(url: &str, selector: &str, depth: usize, use_json: bool) ->
                 println!("{{\"selector\": \"{}\", \"tree\": \"(JSON tree not implemented)\"}}", selector);
             } else {
                 cmd.print_tree(selector, &tree);
+            }
+            ExitCode::SUCCESS
+        }
+        Err(e) => {
+            if use_json {
+                println!("{{\"error\": \"{}\"}}", e.to_string().replace('"', "\\\""));
+            } else {
+                eprintln!("✗ Error: {}", e);
+            }
+            ExitCode::from(1)
+        }
+    }
+}
+
+async fn handle_inspect(url: &str, selector: &str, use_json: bool) -> ExitCode {
+    let cmd = InspectCommand::new();
+    
+    match cmd.inspect_element(url, selector).await {
+        Ok(result) => {
+            if use_json {
+                // Build JSON output
+                let classes_json = serde_json::to_string(&result.classes).unwrap_or_else(|_| "[]".to_string());
+                let attrs_json = serde_json::to_string(&result.attributes).unwrap_or_else(|_| "{}".to_string());
+                println!("{{\"selector\": \"{}\", \"tag\": \"{}\", \"classes\": {}, \"attributes\": {}, \"element_count\": {}}}",
+                    selector, result.tag, classes_json, attrs_json, result.element_count);
+            } else {
+                cmd.print_inspect_result(&result);
             }
             ExitCode::SUCCESS
         }

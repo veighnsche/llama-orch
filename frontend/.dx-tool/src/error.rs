@@ -6,7 +6,10 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum DxError {
     #[error("Network error: {0}")]
-    Network(#[from] reqwest::Error),
+    Network(String),
+    
+    #[error("Reqwest error: {0}")]
+    Reqwest(#[from] reqwest::Error),
     
     #[error("Parse error: {0}")]
     Parse(String),
@@ -20,8 +23,8 @@ pub enum DxError {
     #[error("Invalid URL: {0}")]
     InvalidUrl(String),
     
-    #[error("Timeout after {timeout}s")]
-    Timeout { timeout: u64 },
+    #[error("Timeout after {timeout_secs}s for URL: {url}")]
+    Timeout { url: String, timeout_secs: u64 },
     
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
