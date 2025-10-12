@@ -77,8 +77,8 @@ export function FeatureCard({
         className,
       )}
     >
-      <div className={cn('rounded-lg flex items-center justify-center', iconSizeClasses[size], colors.bg)}>
-        <Icon className={cn(iconInnerSizeClasses[size], colors.text)} />
+      <div className={cn('rounded-lg flex items-center justify-center', iconSizeClasses[size], colors.bg)} aria-hidden="true">
+        <Icon aria-hidden="true" focusable="false" className={cn(iconInnerSizeClasses[size], colors.text)} />
       </div>
       <h3 className={cn('font-bold text-card-foreground', titleSizeClasses[size])}>{title}</h3>
       <p className={cn('text-muted-foreground leading-relaxed', descriptionSizeClasses[size])}>{description}</p>
