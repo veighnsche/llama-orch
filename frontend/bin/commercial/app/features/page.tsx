@@ -1,13 +1,13 @@
-import { FeaturesHero } from "@/components/features/features-hero"
-import { CoreFeaturesTabs } from "@/components/features/core-features-tabs"
-import { CrossNodeOrchestration } from "@/components/features/cross-node-orchestration"
-import { IntelligentModelManagement } from "@/components/features/intelligent-model-management"
-import { MultiBackendGpu } from "@/components/features/multi-backend-gpu"
-import { ErrorHandling } from "@/components/features/error-handling"
-import { RealTimeProgress } from "@/components/features/real-time-progress"
-import { SecurityIsolation } from "@/components/features/security-isolation"
-import { AdditionalFeaturesGrid } from "@/components/features/additional-features-grid"
-import { EmailCapture } from "@/components/email-capture"
+import { FeaturesHero } from '@/components/organisms/Features/features-hero'
+import { CoreFeaturesTabs } from '@/components/organisms/Features/core-features-tabs'
+import { CrossNodeOrchestration } from '@/components/organisms/Features/cross-node-orchestration'
+import { IntelligentModelManagement } from '@/components/organisms/Features/intelligent-model-management'
+import { MultiBackendGpu } from '@/components/organisms/Features/multi-backend-gpu'
+import { ErrorHandling } from '@/components/organisms/Features/error-handling'
+import { RealTimeProgress } from '@/components/organisms/Features/real-time-progress'
+import { SecurityIsolation } from '@/components/organisms/Features/security-isolation'
+import { AdditionalFeaturesGrid } from '@/components/organisms/Features/additional-features-grid'
+import { EmailCapture } from '@/components/organisms/EmailCapture/EmailCapture'
 
 export default function FeaturesPage() {
   return (

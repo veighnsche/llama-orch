@@ -32,6 +32,8 @@ Builds and deploys to Cloudflare Workers.
 
 ## 📁 Project Structure
 
+**This project follows Atomic Design methodology** - see [ATOMIC_DESIGN.md](./ATOMIC_DESIGN.md) for details.
+
 ```
 commercial/
 ├── app/                    # Next.js App Router pages
@@ -43,14 +45,12 @@ commercial/
 │   ├── gpu-providers/     # GPU provider marketplace
 │   ├── pricing/           # Pricing tiers
 │   └── use-cases/         # Use case examples
-├── components/            # 150+ React components
-│   ├── ui/               # shadcn/ui components (Radix UI)
-│   ├── primitives/       # Reusable UI primitives
-│   ├── developers/       # Developer-specific sections
-│   ├── enterprise/       # Enterprise-specific sections
-│   ├── features/         # Feature showcase components
-│   ├── pricing/          # Pricing components
-│   └── providers/        # GPU provider components
+├── components/            # 107 React components (Atomic Design)
+│   ├── atoms/            # 57 basic UI elements (Button, Input, etc.)
+│   ├── molecules/        # 26 simple combinations (ThemeToggle, Cards)
+│   ├── organisms/        # 23 complex sections (Navigation, Footer)
+│   ├── templates/        # Page layouts (to be added)
+│   └── providers/        # 1 context provider (ThemeProvider)
 ├── lib/                  # Utility functions
 ├── hooks/                # Custom React hooks
 └── styles/               # Global styles and tokens

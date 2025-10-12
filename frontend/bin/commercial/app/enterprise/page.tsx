@@ -1,16 +1,16 @@
-import { EnterpriseHero } from "@/components/enterprise/enterprise-hero"
-import { EnterpriseProblem } from "@/components/enterprise/enterprise-problem"
-import { EnterpriseSolution } from "@/components/enterprise/enterprise-solution"
-import { EnterpriseCompliance } from "@/components/enterprise/enterprise-compliance"
-import { EnterpriseSecurity } from "@/components/enterprise/enterprise-security"
-import { EnterpriseHowItWorks } from "@/components/enterprise/enterprise-how-it-works"
-import { EnterpriseUseCases } from "@/components/enterprise/enterprise-use-cases"
-import { EnterpriseComparison } from "@/components/enterprise/enterprise-comparison"
-import { EnterpriseFeatures } from "@/components/enterprise/enterprise-features"
-import { EnterpriseTestimonials } from "@/components/enterprise/enterprise-testimonials"
-import { EnterpriseCTA } from "@/components/enterprise/enterprise-cta"
-import { EmailCapture } from "@/components/email-capture"
-import { Footer } from "@/components/footer"
+import { EnterpriseHero } from '@/components/organisms/Enterprise/enterprise-hero'
+import { EnterpriseProblem } from '@/components/organisms/Enterprise/enterprise-problem'
+import { EnterpriseSolution } from '@/components/organisms/Enterprise/enterprise-solution'
+import { EnterpriseCompliance } from '@/components/organisms/Enterprise/enterprise-compliance'
+import { EnterpriseSecurity } from '@/components/organisms/Enterprise/enterprise-security'
+import { EnterpriseHowItWorks } from '@/components/organisms/Enterprise/enterprise-how-it-works'
+import { EnterpriseUseCases } from '@/components/organisms/Enterprise/enterprise-use-cases'
+import { EnterpriseComparison } from '@/components/organisms/Enterprise/enterprise-comparison'
+import { EnterpriseFeatures } from '@/components/organisms/Enterprise/enterprise-features'
+import { EnterpriseTestimonials } from '@/components/organisms/Enterprise/enterprise-testimonials'
+import { EnterpriseCTA } from '@/components/organisms/Enterprise/enterprise-cta'
+import { EmailCapture } from '@/components/organisms/EmailCapture/EmailCapture'
+import { Footer } from '@/components/organisms/Footer/Footer'
 
 export default function EnterprisePage() {
   return (
