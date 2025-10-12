@@ -1,23 +1,18 @@
 import { AlertTriangle, Cpu, CheckCircle2, XCircle } from "lucide-react"
+import { SectionContainer, IconBox } from "@/components/primitives"
 
 export function MultiBackendGpu() {
   return (
-    <section className="py-24 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 text-balance">Multi-Backend GPU Support</h2>
-          <p className="text-xl text-muted-foreground leading-relaxed">
-            CUDA, Metal, and CPU backends with explicit device selection. No silent fallbacks—you control the hardware.
-          </p>
-        </div>
-
-        <div className="max-w-5xl mx-auto space-y-8">
+    <SectionContainer
+      title="Multi-Backend GPU Support"
+      bgVariant="background"
+      subtitle="CUDA, Metal, and CPU backends with explicit device selection. No silent fallbacks—you control the hardware."
+    >
+            <div className="max-w-5xl mx-auto space-y-8">
           {/* GPU FAIL FAST Policy */}
           <div className="bg-card border border-primary/50 rounded-lg p-8">
             <div className="flex items-start gap-4 mb-6">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="h-6 w-6 text-primary" />
-              </div>
+              <IconBox icon={AlertTriangle} color="primary" size="lg" className="flex-shrink-0" />
               <div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">GPU FAIL FAST Policy</h3>
                 <p className="text-muted-foreground leading-relaxed">
@@ -73,9 +68,7 @@ export function MultiBackendGpu() {
           {/* Backend Detection */}
           <div className="bg-card border border-border rounded-lg p-8">
             <div className="flex items-start gap-4 mb-6">
-              <div className="h-12 w-12 rounded-lg bg-chart-2/10 flex items-center justify-center flex-shrink-0">
-                <Cpu className="h-6 w-6 text-chart-2" />
-              </div>
+              <IconBox icon={Cpu} color="chart-2" size="lg" className="flex-shrink-0" />
               <div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">Automatic Backend Detection</h3>
                 <p className="text-muted-foreground leading-relaxed">
@@ -97,7 +90,6 @@ export function MultiBackendGpu() {
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </SectionContainer>
   )
 }

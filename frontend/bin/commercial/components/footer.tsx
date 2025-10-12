@@ -1,157 +1,50 @@
 import { Github, MessageCircle } from "lucide-react"
+import { FooterColumn } from "@/components/primitives"
 
 export function Footer() {
   return (
     <footer className="bg-background text-muted-foreground py-16">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-8 mb-12">
-          {/* Column 1: Product */}
-          <div>
-            <h3 className="text-foreground font-bold mb-4">Product</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a
-                  href="https://github.com/veighnsche/llama-orch/tree/main/docs"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
-                >
-                  Documentation
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/veighnsche/llama-orch"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
-                >
-                  GitHub Repository
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/veighnsche/llama-orch/milestones"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
-                >
-                  Roadmap
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/veighnsche/llama-orch/releases"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
-                >
-                  Changelog
-                </a>
-              </li>
-            </ul>
-          </div>
+          <FooterColumn
+            title="Product"
+            links={[
+              { href: "https://github.com/veighnsche/llama-orch/tree/main/docs", text: "Documentation", external: true },
+              { href: "https://github.com/veighnsche/llama-orch", text: "GitHub Repository", external: true },
+              { href: "https://github.com/veighnsche/llama-orch/milestones", text: "Roadmap", external: true },
+              { href: "https://github.com/veighnsche/llama-orch/releases", text: "Changelog", external: true },
+            ]}
+          />
 
-          {/* Column 2: Community */}
-          <div>
-            <h3 className="text-foreground font-bold mb-4">Community</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Discord
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/veighnsche/llama-orch/discussions"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
-                >
-                  GitHub Discussions
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Twitter/X
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Blog
-                </a>
-              </li>
-            </ul>
-          </div>
+          <FooterColumn
+            title="Community"
+            links={[
+              { href: "#", text: "Discord" },
+              { href: "https://github.com/veighnsche/llama-orch/discussions", text: "GitHub Discussions", external: true },
+              { href: "#", text: "Twitter/X" },
+              { href: "#", text: "Blog" },
+            ]}
+          />
 
-          {/* Column 3: Company */}
-          <div>
-            <h3 className="text-foreground font-bold mb-4">Company</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="#" className="hover:text-primary transition-colors">
-                  About
-                </a>
-              </li>
-              <li>
-                <a href="/#pricing" className="hover:text-primary transition-colors">
-                  Pricing
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Contact Sales
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/veighnsche/llama-orch/issues"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
-                >
-                  Support
-                </a>
-              </li>
-            </ul>
-          </div>
+          <FooterColumn
+            title="Company"
+            links={[
+              { href: "#", text: "About" },
+              { href: "/#pricing", text: "Pricing" },
+              { href: "#", text: "Contact Sales" },
+              { href: "https://github.com/veighnsche/llama-orch/issues", text: "Support", external: true },
+            ]}
+          />
 
-          {/* Column 4: Legal */}
-          <div>
-            <h3 className="text-foreground font-bold mb-4">Legal</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Terms of Service
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/veighnsche/llama-orch/blob/main/LICENSE"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
-                >
-                  License (GPL)
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/veighnsche/llama-orch/security"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
-                >
-                  Security
-                </a>
-              </li>
-            </ul>
-          </div>
+          <FooterColumn
+            title="Legal"
+            links={[
+              { href: "#", text: "Privacy Policy" },
+              { href: "#", text: "Terms of Service" },
+              { href: "https://github.com/veighnsche/llama-orch/blob/main/LICENSE", text: "License (GPL)", external: true },
+              { href: "https://github.com/veighnsche/llama-orch/security", text: "Security", external: true },
+            ]}
+          />
         </div>
 
         {/* Bottom Bar */}

@@ -1,12 +1,12 @@
+import { SectionContainer } from "@/components/primitives"
+
 export function PricingFAQ() {
   return (
-    <section className="py-24 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 text-balance">Pricing FAQs</h2>
-        </div>
-
-        <div className="max-w-3xl mx-auto space-y-6">
+    <SectionContainer
+      title="Pricing FAQs"
+      bgVariant="background"
+    >
+            <div className="max-w-3xl mx-auto space-y-6">
           <div className="bg-card border border-border rounded-lg p-6">
             <h3 className="text-lg font-bold text-foreground mb-2">Is the free tier really free forever?</h3>
             <p className="text-muted-foreground leading-relaxed">
@@ -56,7 +56,6 @@ export function PricingFAQ() {
             </p>
           </div>
         </div>
-      </div>
-    </section>
+      </SectionContainer>
   )
 }

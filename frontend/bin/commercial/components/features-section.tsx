@@ -1,15 +1,13 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Code, Cpu, Gauge, Zap } from "lucide-react"
+import { SectionContainer, CodeBlock, BenefitCallout } from "@/components/primitives"
 
 export function FeaturesSection() {
   return (
-    <section className="py-24 bg-secondary">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 text-balance">
-            Enterprise-Grade Features. Homelab Simplicity.
-          </h2>
-        </div>
+    <SectionContainer
+      title="Enterprise-Grade Features. Homelab Simplicity."
+      bgVariant="secondary"
+    >
 
         <div className="max-w-5xl mx-auto">
           <Tabs defaultValue="api" className="w-full">
@@ -46,16 +44,19 @@ export function FeaturesSection() {
                   </p>
                 </div>
 
-                <div className="bg-card border border-border rounded-lg p-6 font-mono text-sm">
-                  <div className="text-muted-foreground"># Before: Using OpenAI</div>
-                  <div className="text-chart-3 mt-2">export OPENAI_API_KEY=sk-...</div>
-                  <div className="text-muted-foreground mt-4"># After: Using rbee (same code!)</div>
-                  <div className="text-chart-3 mt-2">export OPENAI_API_BASE=http://localhost:8080/v1</div>
-                </div>
+                <CodeBlock
+                  language="bash"
+                  code={`# Before: Using OpenAI
+export OPENAI_API_KEY=sk-...
 
-                <div className="bg-chart-3/10 border border-chart-3/20 rounded-lg p-4">
-                  <p className="text-chart-3 font-medium">✓ No code changes. Just point to localhost.</p>
-                </div>
+# After: Using rbee (same code!)
+export OPENAI_API_BASE=http://localhost:8080/v1`}
+                />
+
+                <BenefitCallout
+                  variant="success"
+                  text="No code changes. Just point to localhost."
+                />
               </div>
             </TabsContent>
 
@@ -103,9 +104,10 @@ export function FeaturesSection() {
                   </div>
                 </div>
 
-                <div className="bg-chart-2/10 border border-chart-2/20 rounded-lg p-4">
-                  <p className="text-chart-2 font-medium">✓ 10x throughput by using all your hardware.</p>
-                </div>
+                <BenefitCallout
+                  variant="info"
+                  text="10x throughput by using all your hardware."
+                />
               </div>
             </TabsContent>
 
@@ -119,31 +121,22 @@ export function FeaturesSection() {
                   </p>
                 </div>
 
-                <div className="bg-card border border-border rounded-lg p-6 font-mono text-sm">
-                  <div className="text-muted-foreground">// Custom routing logic</div>
-                  <div className="text-chart-4 mt-2">if</div>
-                  <div className="text-foreground">{' task.model.contains("70b") {'}</div>
-                  <div className="text-foreground pl-4">
-                    route_to(<span className="text-chart-3">"multi-gpu-cluster"</span>)
-                  </div>
-                  <div className="text-foreground">{"}"}</div>
-                  <div className="text-chart-4 mt-2">else if</div>
-                  <div className="text-foreground">{' task.type == "image" {'}</div>
-                  <div className="text-foreground pl-4">
-                    route_to(<span className="text-chart-3">"cuda-only"</span>)
-                  </div>
-                  <div className="text-foreground">{"}"}</div>
-                  <div className="text-chart-4 mt-2">else</div>
-                  <div className="text-foreground">{" {"}</div>
-                  <div className="text-foreground pl-4">
-                    route_to(<span className="text-chart-3">"cheapest"</span>)
-                  </div>
-                  <div className="text-foreground">{"}"}</div>
-                </div>
+                <CodeBlock
+                  language="rust"
+                  code={`// Custom routing logic
+if task.model.contains("70b") {
+  route_to("multi-gpu-cluster")
+} else if task.type == "image" {
+  route_to("cuda-only")
+} else {
+  route_to("cheapest")
+}`}
+                />
 
-                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-                  <p className="text-primary font-medium">✓ Optimize for cost, latency, or compliance—your rules.</p>
-                </div>
+                <BenefitCallout
+                  variant="primary"
+                  text="Optimize for cost, latency, or compliance—your rules."
+                />
               </div>
             </TabsContent>
 
@@ -156,25 +149,26 @@ export function FeaturesSection() {
                   </p>
                 </div>
 
-                <div className="bg-card border border-border rounded-lg p-6 font-mono text-sm space-y-2">
-                  <div className="text-muted-foreground">→ event: task.created</div>
-                  <div className="text-foreground pl-4">{'{ "id": "task_123", "status": "pending" }'}</div>
-                  <div className="text-muted-foreground mt-2">→ event: model.loading</div>
-                  <div className="text-foreground pl-4">{'{ "progress": 0.45, "eta": "2.1s" }'}</div>
-                  <div className="text-muted-foreground mt-2">→ event: token.generated</div>
-                  <div className="text-foreground pl-4">{'{ "token": "const", "total": 1 }'}</div>
-                  <div className="text-muted-foreground mt-2">→ event: token.generated</div>
-                  <div className="text-foreground pl-4">{'{ "token": " api", "total": 2 }'}</div>
-                </div>
+                <CodeBlock
+                  language="json"
+                  code={`→ event: task.created
+{ "id": "task_123", "status": "pending" }
 
-                <div className="bg-muted border border-border rounded-lg p-4">
-                  <p className="text-card-foreground font-medium">✓ Full visibility into every inference job.</p>
-                </div>
+→ event: model.loading
+{ "progress": 0.45, "eta": "2.1s" }
+
+→ event: token.generated
+{ "token": "const", "total": 1 }
+
+→ event: token.generated
+{ "token": " api", "total": 2 }`}
+                />
+
+                <BenefitCallout text="Full visibility into every inference job." />
               </div>
             </TabsContent>
           </Tabs>
         </div>
-      </div>
-    </section>
+      </SectionContainer>
   )
 }

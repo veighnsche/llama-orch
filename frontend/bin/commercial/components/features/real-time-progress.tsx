@@ -1,23 +1,18 @@
 import { Activity, XCircle, CheckCircle2 } from "lucide-react"
+import { SectionContainer, IconBox } from "@/components/primitives"
 
 export function RealTimeProgress() {
   return (
-    <section className="py-24 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 text-balance">Real-time Progress Tracking</h2>
-          <p className="text-xl text-muted-foreground leading-relaxed">
-            Live narration of every step. See model loading, token generation, and resource usage as it happens.
-          </p>
-        </div>
-
-        <div className="max-w-5xl mx-auto space-y-8">
+    <SectionContainer
+      title="Real-time Progress Tracking"
+      bgVariant="background"
+      subtitle="Live narration of every step. See model loading, token generation, and resource usage as it happens."
+    >
+            <div className="max-w-5xl mx-auto space-y-8">
           {/* SSE Narration */}
           <div className="bg-card border border-border rounded-lg p-8">
             <div className="flex items-start gap-4 mb-6">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Activity className="h-6 w-6 text-primary" />
-              </div>
+              <IconBox icon={Activity} color="primary" size="lg" className="flex-shrink-0" />
               <div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">SSE Narration Architecture</h3>
                 <p className="text-muted-foreground leading-relaxed">
@@ -58,9 +53,7 @@ export function RealTimeProgress() {
           {/* Request Cancellation */}
           <div className="bg-card border border-border rounded-lg p-8">
             <div className="flex items-start gap-4 mb-6">
-              <div className="h-12 w-12 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
-                <XCircle className="h-6 w-6 text-destructive" />
-              </div>
+              <IconBox icon={XCircle} color="destructive" size="lg" className="flex-shrink-0" />
               <div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">Request Cancellation</h3>
                 <p className="text-muted-foreground leading-relaxed">
@@ -95,7 +88,6 @@ export function RealTimeProgress() {
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </SectionContainer>
   )
 }

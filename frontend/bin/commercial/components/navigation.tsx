@@ -1,13 +1,14 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Menu, X, Github } from "lucide-react"
-import { useState } from "react"
-import { ThemeToggle } from "@/components/theme-toggle"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Menu, X, Github } from "lucide-react";
+import { useState } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { NavLink } from "@/components/primitives";
 
 export function Navigation() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -24,37 +25,32 @@ export function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <Link href="/features" className="text-muted-foreground hover:text-foreground transition-colors">
-              Features
-            </Link>
-            <Link href="/use-cases" className="text-muted-foreground hover:text-foreground transition-colors">
-              Use Cases
-            </Link>
-            <Link href="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
-              Pricing
-            </Link>
-            <Link href="/developers" className="text-muted-foreground hover:text-foreground transition-colors">
-              For Developers
-            </Link>
-            <Link href="/gpu-providers" className="text-muted-foreground hover:text-foreground transition-colors">
-              For Providers
-            </Link>
-            <Link href="/enterprise" className="text-muted-foreground hover:text-foreground transition-colors">
-              For Enterprise
-            </Link>
+            <NavLink href="/features">Features</NavLink>
+            <NavLink href="/use-cases">Use Cases</NavLink>
+            <NavLink href="/pricing">Pricing</NavLink>
+            <NavLink href="/developers">For Developers</NavLink>
+            <NavLink href="/gpu-providers">For Providers</NavLink>
+            <NavLink href="/enterprise">For Enterprise</NavLink>
+            <NavLink href="#">Docs</NavLink>
 
-            <a
-              href="https://github.com/veighnsche/llama-orch"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors"
+            <div className="flex items-center gap-2">
+              <a
+                href="https://github.com/veighnsche/llama-orch"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center size-9 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                aria-label="GitHub"
+              >
+                <Github className="w-5 h-5" />
+              </a>
+
+              <ThemeToggle />
+            </div>
+
+            <Button
+              size="sm"
+              className="bg-primary hover:bg-primary/80 text-primary-foreground"
             >
-              <Github className="w-5 h-5" />
-            </a>
-
-            <ThemeToggle />
-
-            <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
               Join Waitlist
             </Button>
           </div>
@@ -66,7 +62,11 @@ export function Navigation() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="text-muted-foreground hover:text-foreground"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
@@ -74,48 +74,55 @@ export function Navigation() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4 space-y-4 border-t border-border">
-            <Link
+            <NavLink
               href="/features"
-              className="block text-muted-foreground hover:text-foreground transition-colors"
+              variant="mobile"
               onClick={() => setMobileMenuOpen(false)}
             >
               Features
-            </Link>
-            <Link
+            </NavLink>
+            <NavLink
               href="/use-cases"
-              className="block text-muted-foreground hover:text-foreground transition-colors"
+              variant="mobile"
               onClick={() => setMobileMenuOpen(false)}
             >
               Use Cases
-            </Link>
-            <Link
+            </NavLink>
+            <NavLink
               href="/pricing"
-              className="block text-muted-foreground hover:text-foreground transition-colors"
+              variant="mobile"
               onClick={() => setMobileMenuOpen(false)}
             >
               Pricing
-            </Link>
-            <Link
+            </NavLink>
+            <NavLink
               href="/developers"
-              className="block text-muted-foreground hover:text-foreground transition-colors"
+              variant="mobile"
               onClick={() => setMobileMenuOpen(false)}
             >
               For Developers
-            </Link>
-            <Link
+            </NavLink>
+            <NavLink
               href="/gpu-providers"
-              className="block text-muted-foreground hover:text-foreground transition-colors"
+              variant="mobile"
               onClick={() => setMobileMenuOpen(false)}
             >
               For Providers
-            </Link>
-            <Link
+            </NavLink>
+            <NavLink
               href="/enterprise"
-              className="block text-muted-foreground hover:text-foreground transition-colors"
+              variant="mobile"
               onClick={() => setMobileMenuOpen(false)}
             >
               For Enterprise
-            </Link>
+            </NavLink>
+            <NavLink
+              href="#"
+              variant="mobile"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Docs
+            </NavLink>
             <a
               href="https://github.com/veighnsche/llama-orch"
               target="_blank"
@@ -124,12 +131,15 @@ export function Navigation() {
             >
               GitHub
             </a>
-            <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button
+              size="sm"
+              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground"
+            >
               Join Waitlist
             </Button>
           </div>
         )}
       </div>
     </nav>
-  )
+  );
 }

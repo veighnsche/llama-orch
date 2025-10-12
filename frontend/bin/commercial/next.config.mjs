@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@rbee/shared-components'],
   eslint: {
     ignoreDuringBuilds: true,
   },

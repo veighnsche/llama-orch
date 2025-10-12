@@ -1,26 +1,19 @@
 import { Network, AlertTriangle, Database, Activity, CheckCircle2 } from "lucide-react"
+import { SectionContainer, IconBox } from "@/components/primitives"
 
 export function ErrorHandling() {
   return (
-    <section className="py-24 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 text-balance">
-            Comprehensive Error Handling
-          </h2>
-          <p className="text-xl text-muted-foreground leading-relaxed">
-            19+ error scenarios with clear messages and actionable suggestions. No cryptic failures.
-          </p>
-        </div>
-
-        <div className="max-w-5xl mx-auto">
+    <SectionContainer
+      title="Comprehensive Error Handling"
+      bgVariant="background"
+      subtitle="19+ error scenarios with clear messages and actionable suggestions. No cryptic failures."
+    >
+            <div className="max-w-5xl mx-auto">
           <div className="grid md:grid-cols-2 gap-6">
             {/* Network & Connectivity */}
             <div className="bg-card border border-border rounded-lg p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-lg bg-destructive/10 flex items-center justify-center">
-                  <Network className="h-5 w-5 text-destructive" />
-                </div>
+                <IconBox icon={Network} color="destructive" size="md" />
                 <h3 className="text-lg font-bold text-foreground">Network & Connectivity</h3>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
@@ -46,9 +39,7 @@ export function ErrorHandling() {
             {/* Resource Errors */}
             <div className="bg-card border border-border rounded-lg p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <AlertTriangle className="h-5 w-5 text-primary" />
-                </div>
+                <IconBox icon={AlertTriangle} color="primary" size="md" />
                 <h3 className="text-lg font-bold text-foreground">Resource Errors</h3>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
@@ -74,9 +65,7 @@ export function ErrorHandling() {
             {/* Model & Backend */}
             <div className="bg-card border border-border rounded-lg p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-lg bg-chart-2/10 flex items-center justify-center">
-                  <Database className="h-5 w-5 text-chart-2" />
-                </div>
+                <IconBox icon={Database} color="chart-2" size="md" />
                 <h3 className="text-lg font-bold text-foreground">Model & Backend</h3>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
@@ -102,9 +91,7 @@ export function ErrorHandling() {
             {/* Process Lifecycle */}
             <div className="bg-card border border-border rounded-lg p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-lg bg-chart-3/10 flex items-center justify-center">
-                  <Activity className="h-5 w-5 text-chart-3" />
-                </div>
+                <IconBox icon={Activity} color="chart-3" size="md" />
                 <h3 className="text-lg font-bold text-foreground">Process Lifecycle</h3>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
@@ -141,7 +128,6 @@ export function ErrorHandling() {
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </SectionContainer>
   )
 }

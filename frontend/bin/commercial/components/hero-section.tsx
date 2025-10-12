@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Github, Star } from "lucide-react"
+import { PulseBadge, TrustIndicator, TerminalWindow, ProgressBar } from "@/components/primitives"
 
 export function HeroSection() {
   return (
@@ -8,13 +9,7 @@ export function HeroSection() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left: Messaging */}
           <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-primary text-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-              </span>
-              100% Open Source • MIT License
-            </div>
+            <PulseBadge text="100% Open Source • MIT License" />
 
             <h1 className="text-5xl lg:text-7xl font-bold text-foreground leading-tight text-balance">
               AI Infrastructure.
@@ -46,14 +41,8 @@ export function HeroSection() {
 
             {/* Trust Indicators */}
             <div className="flex flex-wrap gap-6 pt-4">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Github className="h-5 w-5" />
-                <span className="text-sm">Open Source</span>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Star className="h-5 w-5 fill-primary text-primary" />
-                <span className="text-sm">1,200+ Stars</span>
-              </div>
+              <TrustIndicator icon={Github} text="Open Source" />
+              <TrustIndicator icon={Star} text="1,200+ Stars" variant="primary" />
               <div className="flex items-center gap-2 text-muted-foreground">
                 <div className="h-5 w-5 flex items-center justify-center text-xs font-bold border border-border rounded">
                   API
@@ -71,16 +60,8 @@ export function HeroSection() {
 
           {/* Right: Terminal Visual */}
           <div className="relative">
-            <div className="bg-card border border-border rounded-lg overflow-hidden shadow-2xl">
-              <div className="flex items-center gap-2 px-4 py-3 bg-muted border-b border-border">
-                <div className="flex gap-2">
-                  <div className="h-3 w-3 rounded-full bg-red-500"></div>
-                  <div className="h-3 w-3 rounded-full bg-amber-500"></div>
-                  <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                </div>
-                <span className="text-muted-foreground text-sm ml-2 font-mono">rbee-keeper</span>
-              </div>
-              <div className="p-6 font-mono text-sm space-y-3">
+            <TerminalWindow title="rbee-keeper">
+              <div className="space-y-3">
                 <div className="text-muted-foreground">
                   <span className="text-chart-3">$</span> rbee-keeper infer --model llama-3.1-70b
                 </div>
@@ -101,27 +82,9 @@ export function HeroSection() {
                 <div className="pt-4 space-y-2">
                   <div className="text-muted-foreground text-xs">GPU Utilization:</div>
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground text-xs w-24">workstation</span>
-                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-primary w-[85%]"></div>
-                      </div>
-                      <span className="text-muted-foreground text-xs">85%</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground text-xs w-24">mac-studio</span>
-                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-primary w-[72%]"></div>
-                      </div>
-                      <span className="text-muted-foreground text-xs">72%</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground text-xs w-24">gaming-pc</span>
-                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-primary w-[91%]"></div>
-                      </div>
-                      <span className="text-muted-foreground text-xs">91%</span>
-                    </div>
+                    <ProgressBar label="workstation" percentage={85} />
+                    <ProgressBar label="mac-studio" percentage={72} />
+                    <ProgressBar label="gaming-pc" percentage={91} />
                   </div>
                 </div>
 
@@ -131,7 +94,7 @@ export function HeroSection() {
                   <span className="text-chart-3 font-bold">$0.00</span>
                 </div>
               </div>
-            </div>
+            </TerminalWindow>
           </div>
         </div>
       </div>

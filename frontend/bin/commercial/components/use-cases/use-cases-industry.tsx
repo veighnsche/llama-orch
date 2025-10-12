@@ -1,17 +1,13 @@
+import { SectionContainer } from "@/components/primitives"
+
 export function UseCasesIndustry() {
   return (
-    <section className="py-24 bg-secondary">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 text-balance">
-            Industry-Specific Solutions
-          </h2>
-          <p className="text-xl text-muted-foreground leading-relaxed">
-            rbee adapts to the unique compliance and security requirements of regulated industries.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+    <SectionContainer
+      title="Industry-Specific Solutions"
+      bgVariant="secondary"
+      subtitle="rbee adapts to the unique compliance and security requirements of regulated industries."
+    >
+      <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           <div className="bg-card border border-border rounded-lg p-6 space-y-4">
             <h3 className="text-lg font-bold text-foreground">Financial Services</h3>
             <p className="text-muted-foreground text-sm leading-relaxed">
@@ -60,7 +56,6 @@ export function UseCasesIndustry() {
             </p>
           </div>
         </div>
-      </div>
-    </section>
+      </SectionContainer>
   )
 }

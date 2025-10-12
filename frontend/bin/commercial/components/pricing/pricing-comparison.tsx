@@ -1,16 +1,13 @@
 import { Check, X } from "lucide-react"
+import { SectionContainer } from "@/components/primitives"
 
 export function PricingComparison() {
   return (
-    <section className="py-24 bg-secondary">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 text-balance">
-            Detailed Feature Comparison
-          </h2>
-        </div>
-
-        <div className="max-w-5xl mx-auto overflow-x-auto">
+    <SectionContainer
+      title="Detailed Feature Comparison"
+      bgVariant="secondary"
+    >
+            <div className="max-w-5xl mx-auto overflow-x-auto">
           <table className="w-full bg-card border border-border rounded-lg">
             <thead>
               <tr className="border-b border-border">
@@ -144,7 +141,6 @@ export function PricingComparison() {
             </tbody>
           </table>
         </div>
-      </div>
-    </section>
+      </SectionContainer>
   )
 }

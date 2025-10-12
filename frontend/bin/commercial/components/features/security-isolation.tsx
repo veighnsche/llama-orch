@@ -1,24 +1,19 @@
 import { Shield, Lock, CheckCircle2 } from "lucide-react"
+import { SectionContainer, IconBox } from "@/components/primitives"
 
 export function SecurityIsolation() {
   return (
-    <section className="py-24 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 text-balance">Security & Isolation</h2>
-          <p className="text-xl text-muted-foreground leading-relaxed">
-            Defense-in-depth architecture with five specialized security crates. Enterprise-grade security for your
-            homelab.
-          </p>
-        </div>
-
-        <div className="max-w-5xl mx-auto space-y-8">
+    <SectionContainer
+      title="Security & Isolation"
+      bgVariant="background"
+      subtitle="Defense-in-depth architecture with five specialized security crates. Enterprise-grade security for your
+            homelab."
+    >
+            <div className="max-w-5xl mx-auto space-y-8">
           {/* Five Security Crates */}
           <div className="bg-card border border-border rounded-lg p-8">
             <div className="flex items-start gap-4 mb-6">
-              <div className="h-12 w-12 rounded-lg bg-chart-2/10 flex items-center justify-center flex-shrink-0">
-                <Shield className="h-6 w-6 text-chart-2" />
-              </div>
+              <IconBox icon={Shield} color="chart-2" size="lg" className="flex-shrink-0" />
               <div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">Five Specialized Security Crates</h3>
                 <p className="text-muted-foreground leading-relaxed">
@@ -55,9 +50,7 @@ export function SecurityIsolation() {
           {/* Process Isolation */}
           <div className="bg-card border border-border rounded-lg p-8">
             <div className="flex items-start gap-4 mb-6">
-              <div className="h-12 w-12 rounded-lg bg-chart-3/10 flex items-center justify-center flex-shrink-0">
-                <Lock className="h-6 w-6 text-chart-3" />
-              </div>
+              <IconBox icon={Lock} color="chart-3" size="lg" className="flex-shrink-0" />
               <div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">Process Isolation</h3>
                 <p className="text-muted-foreground leading-relaxed">
@@ -95,7 +88,6 @@ export function SecurityIsolation() {
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </SectionContainer>
   )
 }
