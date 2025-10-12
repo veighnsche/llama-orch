@@ -65,10 +65,10 @@ export function DevelopersFeatures() {
   const activeFeature = features.find((f) => f.id === activeTab)!
 
   return (
-    <section className="border-b border-slate-800 py-24">
+    <section className="border-b border-border py-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="mb-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Enterprise-Grade Features. Homelab Simplicity.
           </h2>
         </div>
@@ -82,8 +82,8 @@ export function DevelopersFeatures() {
                 onClick={() => setActiveTab(feature.id)}
                 className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
                   activeTab === feature.id
-                    ? "border-amber-500 bg-amber-500/10 text-amber-400"
-                    : "border-slate-700 bg-slate-900/50 text-slate-400 hover:border-slate-600 hover:text-slate-300"
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-card text-muted-foreground hover:border-border hover:text-foreground"
                 }`}
               >
                 <feature.icon className="h-4 w-4" />
@@ -95,23 +95,23 @@ export function DevelopersFeatures() {
           {/* Content */}
           <div className="grid gap-8 lg:grid-cols-2">
             <div>
-              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/10">
-                <activeFeature.icon className="h-6 w-6 text-amber-400" />
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                <activeFeature.icon className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="mb-3 text-2xl font-semibold text-white">{activeFeature.title}</h3>
-              <p className="mb-4 leading-relaxed text-slate-300">{activeFeature.description}</p>
-              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
-                <div className="text-sm font-medium text-amber-400">Benefit</div>
-                <div className="mt-1 text-white">{activeFeature.benefit}</div>
+              <h3 className="mb-3 text-2xl font-semibold text-card-foreground">{activeFeature.title}</h3>
+              <p className="mb-4 leading-relaxed text-muted-foreground">{activeFeature.description}</p>
+              <div className="rounded-lg border border-primary/30 bg-primary/10 p-4">
+                <div className="text-sm font-medium text-primary">Benefit</div>
+                <div className="mt-1 text-foreground">{activeFeature.benefit}</div>
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-lg border border-slate-800 bg-slate-900">
-              <div className="border-b border-slate-800 bg-slate-800/50 px-4 py-2">
-                <span className="text-sm text-slate-400">Example</span>
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              <div className="border-b border-border bg-muted px-4 py-2">
+                <span className="text-sm text-muted-foreground">Example</span>
               </div>
               <div className="p-4">
-                <pre className="overflow-x-auto font-mono text-sm text-slate-300">
+                <pre className="overflow-x-auto font-mono text-sm text-foreground">
                   <code>{activeFeature.code}</code>
                 </pre>
               </div>

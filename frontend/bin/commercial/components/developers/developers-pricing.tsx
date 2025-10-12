@@ -54,10 +54,10 @@ const tiers = [
 
 export function DevelopersPricing() {
   return (
-    <section className="border-b border-slate-800 bg-slate-900/30 py-24">
+    <section className="border-b border-border bg-secondary py-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="mb-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Start Free. Scale When Ready.
           </h2>
         </div>
@@ -68,30 +68,30 @@ export function DevelopersPricing() {
               key={tier.name}
               className={`relative rounded-lg border p-8 ${
                 tier.highlighted
-                  ? "border-amber-500 bg-gradient-to-b from-amber-500/10 to-slate-900"
-                  : "border-slate-800 bg-slate-900/50"
+                  ? "border-primary bg-card"
+                  : "border-border bg-card"
               }`}
             >
               {tier.highlighted && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border border-amber-500 bg-amber-500 px-4 py-1 text-sm font-medium text-slate-950">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border border-primary bg-primary px-4 py-1 text-sm font-medium text-primary-foreground">
                   Most Popular
                 </div>
               )}
 
               <div className="mb-6">
-                <h3 className="mb-2 text-xl font-semibold text-white">{tier.name}</h3>
+                <h3 className="mb-2 text-xl font-semibold text-card-foreground">{tier.name}</h3>
                 <div className="mb-2 flex items-baseline gap-1">
-                  <span className="text-4xl font-bold text-white">{tier.price}</span>
-                  <span className="text-slate-400">{tier.period}</span>
+                  <span className="text-4xl font-bold text-card-foreground">{tier.price}</span>
+                  <span className="text-muted-foreground">{tier.period}</span>
                 </div>
-                <p className="text-sm text-slate-400">{tier.description}</p>
+                <p className="text-sm text-muted-foreground">{tier.description}</p>
               </div>
 
               <ul className="mb-8 space-y-3">
                 {tier.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
-                    <Check className="h-5 w-5 flex-shrink-0 text-amber-400" />
-                    <span className="text-sm text-slate-300">{feature}</span>
+                    <Check className="h-5 w-5 flex-shrink-0 text-primary" />
+                    <span className="text-sm text-muted-foreground">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -99,8 +99,8 @@ export function DevelopersPricing() {
               <Button
                 className={`w-full ${
                   tier.highlighted
-                    ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
-                    : "border-slate-700 bg-slate-800 text-white hover:bg-slate-700"
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                    : "border-border bg-card text-foreground hover:bg-muted"
                 }`}
                 variant={tier.highlighted ? "default" : "outline"}
               >
@@ -111,7 +111,7 @@ export function DevelopersPricing() {
         </div>
 
         <div className="mx-auto mt-12 max-w-2xl text-center">
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted-foreground">
             All tiers include the full rbee orchestrator. No feature gates. No artificial limits.
           </p>
         </div>

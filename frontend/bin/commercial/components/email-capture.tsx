@@ -23,19 +23,19 @@ export function EmailCapture() {
   }
 
   return (
-    <section className="py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <section className="py-24 bg-background">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-500 text-sm font-medium mb-6">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-primary text-sm font-medium mb-6">
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
           </span>
           Currently in Development (M0 - 68% Complete)
         </div>
 
-        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Be the First to Know</h2>
+        <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Be the First to Know</h2>
 
-        <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
           rbee is actively being built. Join our waitlist to get early access, updates on development progress, and
           exclusive launch benefits.
         </p>
@@ -43,40 +43,40 @@ export function EmailCapture() {
         {!submitted ? (
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
             <div className="flex-1 relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type="email"
                 placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-slate-400 h-12"
+                className="pl-10 bg-card border-border text-foreground placeholder:text-muted-foreground h-12"
               />
             </div>
             <Button
               type="submit"
               size="lg"
-              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold h-12 px-8"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-12 px-8"
             >
               Join Waitlist
             </Button>
           </form>
         ) : (
-          <div className="flex items-center justify-center gap-2 text-green-500 text-lg">
+          <div className="flex items-center justify-center gap-2 text-chart-3 text-lg">
             <CheckCircle2 className="w-6 h-6" />
             <span>Thanks! We'll keep you updated.</span>
           </div>
         )}
 
-        <p className="text-sm text-slate-400 mt-6">No spam. Unsubscribe anytime. We respect your privacy.</p>
+        <p className="text-sm text-muted-foreground mt-6">No spam. Unsubscribe anytime. We respect your privacy.</p>
 
-        <div className="mt-12 pt-12 border-t border-slate-800">
-          <p className="text-slate-400 mb-4">Want to contribute or follow development?</p>
+        <div className="mt-12 pt-12 border-t border-border">
+          <p className="text-muted-foreground mb-4">Want to contribute or follow development?</p>
           <a
             href="https://github.com/veighnsche/llama-orch"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-amber-500 hover:text-amber-400 transition-colors font-medium"
+            className="inline-flex items-center gap-2 text-primary hover:text-primary/90 transition-colors font-medium"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path

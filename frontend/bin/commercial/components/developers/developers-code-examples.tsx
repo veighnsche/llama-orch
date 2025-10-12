@@ -1,12 +1,12 @@
 export function DevelopersCodeExamples() {
   return (
-    <section className="border-b border-slate-800 py-24">
+    <section className="border-b border-border py-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="mb-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Build AI Agents with llama-orch-utils
           </h2>
-          <p className="text-balance text-lg leading-relaxed text-slate-300">
+          <p className="text-balance text-lg leading-relaxed text-muted-foreground">
             TypeScript utilities for building LLM pipelines and agentic workflows
           </p>
         </div>
@@ -14,13 +14,13 @@ export function DevelopersCodeExamples() {
         <div className="mx-auto mt-16 max-w-5xl space-y-8">
           {/* Example 1 */}
           <div>
-            <h3 className="mb-4 text-xl font-semibold text-white">Simple Code Generation</h3>
-            <div className="overflow-hidden rounded-lg border border-slate-800 bg-slate-900">
-              <div className="border-b border-slate-800 bg-slate-800/50 px-4 py-2">
-                <span className="text-sm text-slate-400">TypeScript</span>
+            <h3 className="mb-4 text-xl font-semibold text-card-foreground">Simple Code Generation</h3>
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              <div className="border-b border-border bg-muted px-4 py-2">
+                <span className="text-sm text-muted-foreground">TypeScript</span>
               </div>
               <div className="p-4 font-mono text-sm">
-                <pre className="overflow-x-auto text-slate-300">
+                <pre className="overflow-x-auto text-foreground">
                   {`import { invoke } from '@llama-orch/utils';
 
 const response = await invoke({
@@ -37,13 +37,13 @@ console.log(response.text);`}
 
           {/* Example 2 */}
           <div>
-            <h3 className="mb-4 text-xl font-semibold text-white">File Operations</h3>
-            <div className="overflow-hidden rounded-lg border border-slate-800 bg-slate-900">
-              <div className="border-b border-slate-800 bg-slate-800/50 px-4 py-2">
-                <span className="text-sm text-slate-400">TypeScript</span>
+            <h3 className="mb-4 text-xl font-semibold text-card-foreground">File Operations</h3>
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              <div className="border-b border-border bg-muted px-4 py-2">
+                <span className="text-sm text-muted-foreground">TypeScript</span>
               </div>
               <div className="p-4 font-mono text-sm">
-                <pre className="overflow-x-auto text-slate-300">
+                <pre className="overflow-x-auto text-foreground">
                   {`import { FileReader, FileWriter, invoke } from '@llama-orch/utils';
 
 // Read schema
@@ -64,13 +64,13 @@ await FileWriter.write('src/api.ts', code.text);`}
 
           {/* Example 3 */}
           <div>
-            <h3 className="mb-4 text-xl font-semibold text-white">Multi-Step Agent</h3>
-            <div className="overflow-hidden rounded-lg border border-slate-800 bg-slate-900">
-              <div className="border-b border-slate-800 bg-slate-800/50 px-4 py-2">
-                <span className="text-sm text-slate-400">TypeScript</span>
+            <h3 className="mb-4 text-xl font-semibold text-card-foreground">Multi-Step Agent</h3>
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              <div className="border-b border-border bg-muted px-4 py-2">
+                <span className="text-sm text-muted-foreground">TypeScript</span>
               </div>
               <div className="p-4 font-mono text-sm">
-                <pre className="overflow-x-auto text-slate-300">
+                <pre className="overflow-x-auto text-foreground">
                   {`import { Thread, invoke, extractCode } from '@llama-orch/utils';
 
 // Build conversation thread

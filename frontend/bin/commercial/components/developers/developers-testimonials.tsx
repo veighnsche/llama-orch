@@ -24,22 +24,22 @@ const testimonials = [
 
 export function DevelopersTestimonials() {
   return (
-    <section className="border-b border-slate-800 py-24">
+    <section className="border-b border-border py-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="mb-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Trusted by Developers Who Value Independence
           </h2>
         </div>
 
         <div className="mx-auto mt-16 grid max-w-6xl gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {testimonials.map((testimonial, index) => (
-            <div key={index} className="rounded-lg border border-slate-800 bg-slate-900/50 p-6">
+            <div key={index} className="rounded-lg border border-border bg-card p-6">
               <div className="mb-4 text-4xl">{testimonial.avatar}</div>
-              <p className="mb-4 text-balance leading-relaxed text-slate-300">&quot;{testimonial.quote}&quot;</p>
+              <p className="mb-4 text-balance leading-relaxed text-muted-foreground">&quot;{testimonial.quote}&quot;</p>
               <div>
-                <div className="font-semibold text-white">{testimonial.author}</div>
-                <div className="text-sm text-slate-400">{testimonial.role}</div>
+                <div className="font-semibold text-card-foreground">{testimonial.author}</div>
+                <div className="text-sm text-muted-foreground">{testimonial.role}</div>
               </div>
             </div>
           ))}
@@ -47,20 +47,20 @@ export function DevelopersTestimonials() {
 
         <div className="mx-auto mt-12 grid max-w-4xl gap-8 sm:grid-cols-4">
           <div className="text-center">
-            <div className="mb-2 text-3xl font-bold text-white">1,200+</div>
-            <div className="text-sm text-slate-400">GitHub Stars</div>
+            <div className="mb-2 text-3xl font-bold text-foreground">1,200+</div>
+            <div className="text-sm text-muted-foreground">GitHub Stars</div>
           </div>
           <div className="text-center">
-            <div className="mb-2 text-3xl font-bold text-white">500+</div>
-            <div className="text-sm text-slate-400">Active Installations</div>
+            <div className="mb-2 text-3xl font-bold text-foreground">500+</div>
+            <div className="text-sm text-muted-foreground">Active Installations</div>
           </div>
           <div className="text-center">
-            <div className="mb-2 text-3xl font-bold text-white">8,000+</div>
-            <div className="text-sm text-slate-400">GPUs Orchestrated</div>
+            <div className="mb-2 text-3xl font-bold text-foreground">8,000+</div>
+            <div className="text-sm text-muted-foreground">GPUs Orchestrated</div>
           </div>
           <div className="text-center">
-            <div className="mb-2 text-3xl font-bold text-amber-400">€0</div>
-            <div className="text-sm text-slate-400">Average Monthly Cost</div>
+            <div className="mb-2 text-3xl font-bold text-primary">€0</div>
+            <div className="text-sm text-muted-foreground">Average Monthly Cost</div>
           </div>
         </div>
       </div>
