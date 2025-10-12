@@ -39,9 +39,6 @@ importers:
 
   frontend/bin/commercial:
     dependencies:
-      '@tailwindcss/postcss':
-        specifier: ^4.1.14
-        version: 4.1.14
       '@tailwindcss/vite':
         specifier: ^4.1.14
         version: 4.1.14(vite@7.1.9(@types/node@24.5.2)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))
@@ -63,9 +60,6 @@ importers:
       nuxt:
         specifier: ^4.1.3
         version: 4.1.3(@parcel/watcher@2.5.1)(@types/node@24.5.2)(@vue/compiler-sfc@3.5.22)(db0@0.3.4)(eslint@9.36.0(jiti@2.6.1))(ioredis@5.8.1)(lightningcss@1.30.1)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.52.4)(terser@5.44.0)(tsx@4.20.5)(typescript@5.9.2)(vite@7.1.9(@types/node@24.5.2)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))(vue-tsc@3.0.8(typescript@5.9.2))(yaml@2.8.1)
-      postcss:
-        specifier: ^8.5.1
-        version: 8.5.6
       radix-vue:
         specifier: ^1.9.11
         version: 1.9.17(vue@3.5.22(typescript@5.9.2))
@@ -194,6 +188,31 @@ importers:
       vue-eslint-parser:
         specifier: ^9.4.3
         version: 9.4.3(eslint@9.36.0(jiti@2.6.1))
+
+  frontend/libs/user-docs:
+    dependencies:
+      nuxt:
+        specifier: ^4.1.3
+        version: 4.1.3(@parcel/watcher@2.5.1)(@types/node@24.5.2)(@vue/compiler-sfc@3.5.22)(db0@0.3.4)(eslint@9.36.0(jiti@2.6.1))(ioredis@5.8.1)(lightningcss@1.30.1)(magicast@0.3.5)(optionator@0.9.4)(rollup@4.52.4)(terser@5.44.0)(tsx@4.20.5)(typescript@5.9.2)(vite@7.1.9(@types/node@24.5.2)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))(vue-tsc@3.0.8(typescript@5.9.2))(yaml@2.8.1)
+      vue:
+        specifier: ^3.5.22
+        version: 3.5.22(typescript@5.9.2)
+      vue-router:
+        specifier: ^4.5.1
+        version: 4.5.1(vue@3.5.22(typescript@5.9.2))
+    devDependencies:
+      h3:
+        specifier: 2.0.1-rc.2
+        version: 2.0.1-rc.2
+      nitro-cloudflare-dev:
+        specifier: ^0.2.2
+        version: 0.2.2
+      nitropack:
+        specifier: ^2.12.7
+        version: 2.12.7
+      wrangler:
+        specifier: ^4.42.2
+        version: 4.42.2
 
   frontend/reference/v0:
     dependencies:
@@ -11572,7 +11591,7 @@ snapshots:
       open: 10.2.0
       perfect-debounce: 2.0.0
       sirv: 3.0.2
-      unplugin-utils: 0.3.0
+      unplugin-utils: 0.3.1
       vite: 7.1.9(@types/node@24.5.2)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1)
       vite-dev-rpc: 1.1.0(vite@7.1.9(@types/node@24.5.2)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))
     optionalDependencies:

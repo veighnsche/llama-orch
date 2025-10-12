@@ -25,14 +25,11 @@ export default defineNuxtConfig({
 
   css: [
     "~/assets/css/main.css",
-    "~/styles/tokens-base.css",
   ],
 
   vite: {
     plugins: [
       tailwindcss(),
-      // ⛔ DO NOT configure content paths here
-      // Tailwind v4 scans imported components automatically
     ],
   },
 });

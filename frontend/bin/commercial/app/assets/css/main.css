@@ -1,2 +1,5 @@
-/* TEAM-FE-011: Import fonts via tokens.css (which already includes fonts) */
+/* Tailwind v4 base import */
+@import "tailwindcss";
+
+/* Custom design tokens and fonts */
 @import "~/styles/tokens.css";
