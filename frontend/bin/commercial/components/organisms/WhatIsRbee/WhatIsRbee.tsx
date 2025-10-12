@@ -35,7 +35,7 @@ export function WhatIsRbee() {
           <div className="space-y-3">
             <h2 className="text-4xl md:text-5xl font-semibold text-foreground">
               <BrandMark size="xl" className="inline-block align-middle mr-3" />
-              <BrandWordmark size="5xl" inline />: your private AI infrastructure
+              <BrandWordmark size="4xl" inline />: your private AI infrastructure
             </h2>
 
             {/* Pronunciation badge */}

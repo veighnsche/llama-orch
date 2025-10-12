@@ -14,6 +14,9 @@ export interface AudienceCardProps {
   ctaText: string
   color: string
   className?: string
+  imageSlot?: React.ReactNode
+  badgeSlot?: React.ReactNode
+  decisionLabel?: string
 }
 
 export function AudienceCard({
@@ -26,6 +29,9 @@ export function AudienceCard({
   ctaText,
   color,
   className,
+  imageSlot,
+  badgeSlot,
+  decisionLabel,
 }: AudienceCardProps) {
   const colorClasses = {
     primary: {
@@ -73,15 +79,24 @@ export function AudienceCard({
   }
 
   const colors = colorClasses[color as keyof typeof colorClasses] || colorClasses.primary
+  const descriptionId = `${title.toLowerCase().replace(/\s+/g, '-')}-description`
 
   return (
-    <div
-      className={cn(
-        'group relative overflow-hidden border-border bg-card p-8 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] rounded-lg border',
-        colors.hoverBorder,
-        className,
+    <div className="flex flex-col">
+      {/* Optional decision label above card */}
+      {decisionLabel && (
+        <div className={cn('mb-3 text-sm font-medium', colors.text)}>
+          {decisionLabel}
+        </div>
       )}
-    >
+
+      <div
+        className={cn(
+          'group relative flex flex-col overflow-hidden border-border bg-card backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] rounded-lg border',
+          colors.hoverBorder,
+          className,
+        )}
+      >
       <div
         className={cn(
           'absolute inset-0 -z-10 bg-gradient-to-br opacity-0 transition-all duration-500 group-hover:to-transparent group-hover:opacity-100',
@@ -89,34 +104,53 @@ export function AudienceCard({
         )}
       />
 
-      <div
-        className={cn(
-          'mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg',
-          colors.iconBg,
+      {/* Icons side-by-side at top */}
+      <div className="mb-6 flex items-center gap-3">
+        <div
+          className={cn(
+            'flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br shadow-lg',
+            colors.iconBg,
+          )}
+        >
+          <Icon className="h-7 w-7 text-primary-foreground" aria-hidden="true" />
+        </div>
+        {imageSlot && (
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-card ring-1 ring-border">
+            {imageSlot}
+          </div>
         )}
-      >
-        <Icon className="h-7 w-7 text-primary-foreground" />
       </div>
 
       <div className={cn('mb-2 text-sm font-medium uppercase tracking-wider', colors.text)}>{category}</div>
       <h3 className="mb-3 text-2xl font-semibold text-card-foreground">{title}</h3>
-      <p className="mb-6 leading-relaxed text-muted-foreground">{description}</p>
+      <p id={descriptionId} className="mb-6 text-sm leading-relaxed text-muted-foreground sm:text-base">
+        {description}
+      </p>
 
-      <ul className="mb-8 space-y-3 text-sm text-muted-foreground">
+      <ul className="mb-8 space-y-3 text-sm text-muted-foreground sm:text-base">
         {features.map((feature, index) => (
           <li key={index} className="flex items-start gap-2">
-            <span className={cn('mt-1', colors.text)}>→</span>
+            <span className={cn('mt-1', colors.text)} aria-hidden="true">
+              →
+            </span>
             <span>{feature}</span>
           </li>
         ))}
       </ul>
 
+      {/* Optional badge slot */}
+      {badgeSlot && <div className="mb-4">{badgeSlot}</div>}
+
+      {/* Spacer to push button to bottom */}
+      <div className="flex-1" />
+
       <Link href={href}>
-        <Button className={cn('w-full', colors.button)}>
+        <Button className={cn('w-full', colors.button)} aria-describedby={descriptionId}>
           {ctaText}
-          <ArrowRight className="ml-2 h-4 w-4" />
+          <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
         </Button>
       </Link>
+      </div>
     </div>
   )
 }
