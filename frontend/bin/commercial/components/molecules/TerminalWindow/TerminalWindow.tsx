@@ -27,9 +27,9 @@ export function TerminalWindow({
     >
       <div className="flex items-center gap-2 px-4 py-3 bg-muted border-b border-border">
         <div className="flex gap-2">
-          <div className="h-3 w-3 rounded-full bg-red-500"></div>
-          <div className="h-3 w-3 rounded-full bg-amber-500"></div>
-          <div className="h-3 w-3 rounded-full bg-green-500"></div>
+          <div className="h-3 w-3 rounded-full bg-terminal-red"></div>
+          <div className="h-3 w-3 rounded-full bg-terminal-amber"></div>
+          <div className="h-3 w-3 rounded-full bg-terminal-green"></div>
         </div>
         {title && (
           <span className="text-muted-foreground text-sm ml-2 font-mono">

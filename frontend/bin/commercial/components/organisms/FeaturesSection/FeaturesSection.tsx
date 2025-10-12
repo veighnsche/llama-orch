@@ -74,7 +74,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
                     <div className="flex-shrink-0 w-32 text-sm text-muted-foreground">RTX 4090 #1</div>
                     <div className="flex-1 h-8 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-primary flex items-center justify-end pr-2" style={{ width: "92%" }}>
-                        <span className="text-xs text-white font-medium">92%</span>
+                        <span className="text-xs text-primary-foreground font-medium">92%</span>
                       </div>
                     </div>
                   </div>
@@ -82,7 +82,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
                     <div className="flex-shrink-0 w-32 text-sm text-muted-foreground">RTX 4090 #2</div>
                     <div className="flex-1 h-8 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-primary flex items-center justify-end pr-2" style={{ width: "88%" }}>
-                        <span className="text-xs text-white font-medium">88%</span>
+                        <span className="text-xs text-primary-foreground font-medium">88%</span>
                       </div>
                     </div>
                   </div>
@@ -90,7 +90,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
                     <div className="flex-shrink-0 w-32 text-sm text-muted-foreground">M2 Ultra</div>
                     <div className="flex-1 h-8 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-primary flex items-center justify-end pr-2" style={{ width: "76%" }}>
-                        <span className="text-xs text-white font-medium">76%</span>
+                        <span className="text-xs text-primary-foreground font-medium">76%</span>
                       </div>
                     </div>
                   </div>
@@ -98,7 +98,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
                     <div className="flex-shrink-0 w-32 text-sm text-muted-foreground">CPU Backend</div>
                     <div className="flex-1 h-8 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-chart-2 flex items-center justify-end pr-2" style={{ width: "34%" }}>
-                        <span className="text-xs text-white font-medium">34%</span>
+                        <span className="text-xs text-primary-foreground font-medium">34%</span>
                       </div>
                     </div>
                   </div>

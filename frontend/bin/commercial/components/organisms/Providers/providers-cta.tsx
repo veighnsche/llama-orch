@@ -19,7 +19,7 @@ export function ProvidersCTA() {
         </p>
 
         <div className="mb-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <Button size="lg" className="bg-primary text-slate-950 hover:bg-primary">
+          <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary">
             Start Earning Now
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>

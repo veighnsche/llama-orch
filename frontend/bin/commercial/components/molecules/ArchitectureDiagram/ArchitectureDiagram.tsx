@@ -51,16 +51,16 @@ export function ArchitectureDiagram({
 
         {/* Workers */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="bg-muted text-muted-foreground px-3 py-2 rounded text-xs font-medium border border-border text-center">
+          <div className="bg-muted text-muted-foreground px-3 py-2 rounded-md text-xs font-medium border border-border text-center">
             🐝 Worker (CUDA)
           </div>
-          <div className="bg-muted text-muted-foreground px-3 py-2 rounded text-xs font-medium border border-border text-center">
+          <div className="bg-muted text-muted-foreground px-3 py-2 rounded-md text-xs font-medium border border-border text-center">
             🐝 Worker (Metal)
           </div>
-          <div className="bg-muted text-muted-foreground px-3 py-2 rounded text-xs font-medium border border-border text-center">
+          <div className="bg-muted text-muted-foreground px-3 py-2 rounded-md text-xs font-medium border border-border text-center">
             🐝 Worker (CPU)
           </div>
-          <div className="bg-muted text-muted-foreground px-3 py-2 rounded text-xs font-medium border border-border text-center">
+          <div className="bg-muted text-muted-foreground px-3 py-2 rounded-md text-xs font-medium border border-border text-center">
             🐝 Worker (CUDA)
           </div>
         </div>

@@ -62,7 +62,7 @@ export function ProvidersSolution() {
               <h3 className="mb-6 text-2xl font-bold text-foreground">How It Works</h3>
               <div className="space-y-6">
                 <div className="flex gap-4">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-slate-950">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
                     1
                   </div>
                   <div>
@@ -74,7 +74,7 @@ export function ProvidersSolution() {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-slate-950">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
                     2
                   </div>
                   <div>
@@ -86,7 +86,7 @@ export function ProvidersSolution() {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-slate-950">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
                     3
                   </div>
                   <div>
@@ -98,7 +98,7 @@ export function ProvidersSolution() {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-slate-950">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
                     4
                   </div>
                   <div>

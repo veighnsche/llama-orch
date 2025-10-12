@@ -5,7 +5,7 @@ import { PulseBadge, TrustIndicator, TerminalWindow, ProgressBar } from '@/compo
 export function HeroSection() {
   return (
     <section className="relative min-h-screen flex items-center bg-background">
-      <div className="container mx-auto px-4 py-20">
+      <div className="container mx-auto px-4 py-24">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left: Messaging */}
           <div className="space-y-8">
@@ -44,13 +44,13 @@ export function HeroSection() {
               <TrustIndicator icon={Github} text="Open Source" />
               <TrustIndicator icon={Star} text="On GitHub" variant="primary" />
               <div className="flex items-center gap-2 text-muted-foreground">
-                <div className="h-5 w-5 flex items-center justify-center text-xs font-bold border border-border rounded">
+                <div className="h-5 w-5 flex items-center justify-center text-xs font-bold border border-border rounded-sm">
                   API
                 </div>
                 <span className="text-sm">OpenAI-Compatible</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
-                <div className="h-5 w-5 flex items-center justify-center text-xs font-bold border border-border rounded">
+                <div className="h-5 w-5 flex items-center justify-center text-xs font-bold border border-border rounded-sm">
                   $0
                 </div>
                 <span className="text-sm">No Cloud Required</span>

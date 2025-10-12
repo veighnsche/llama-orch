@@ -102,10 +102,10 @@ export function EnterpriseHero() {
                       status: "success",
                     },
                   ].map((log, i) => (
-                    <div key={i} className="rounded border border-border bg-background p-3">
+                    <div key={i} className="rounded-lg border border-border bg-background p-3">
                       <div className="mb-1 flex items-center justify-between">
                         <span className="font-mono text-sm text-primary">{log.event}</span>
-                        <span className="rounded bg-chart-3/20 px-2 py-0.5 text-xs text-chart-3">{log.status}</span>
+                        <span className="rounded-md bg-chart-3/20 px-2 py-0.5 text-xs text-chart-3">{log.status}</span>
                       </div>
                       <div className="text-xs text-muted-foreground">
                         <div>{log.user}</div>

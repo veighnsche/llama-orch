@@ -58,7 +58,7 @@ export function FAQSection() {
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
                 Change one environment variable:{" "}
-                <code className="bg-muted px-2 py-1 rounded text-sm font-mono">
+                <code className="bg-muted px-2 py-1 rounded-md text-sm font-mono">
                   export OPENAI_API_BASE=http://localhost:8080/v1
                 </code>
                 . That's it. rbee is OpenAI-compatible.
