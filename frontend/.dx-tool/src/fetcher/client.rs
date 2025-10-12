@@ -69,6 +69,8 @@ impl Default for Fetcher {
 mod tests {
     use super::*;
     
+    // TEAM-DX-002: Additional fetcher tests
+    
     #[tokio::test]
     async fn test_fetcher_creation() {
         let fetcher = Fetcher::new();
@@ -79,5 +81,50 @@ mod tests {
     async fn test_fetcher_with_custom_timeout() {
         let fetcher = Fetcher::with_timeout(Duration::from_secs(5));
         assert_eq!(fetcher.timeout.as_secs(), 5);
+    }
+    
+    #[test]
+    fn test_fetcher_default() {
+        let fetcher = Fetcher::default();
+        assert_eq!(fetcher.timeout.as_secs(), 2);
+    }
+    
+    #[test]
+    fn test_fetcher_timeout_values() {
+        let fetcher_1s = Fetcher::with_timeout(Duration::from_secs(1));
+        let fetcher_10s = Fetcher::with_timeout(Duration::from_secs(10));
+        
+        assert_eq!(fetcher_1s.timeout.as_secs(), 1);
+        assert_eq!(fetcher_10s.timeout.as_secs(), 10);
+    }
+    
+    #[test]
+    fn test_fetcher_timeout_millis() {
+        let fetcher = Fetcher::with_timeout(Duration::from_millis(500));
+        assert_eq!(fetcher.timeout.as_millis(), 500);
+    }
+    
+    // Integration tests require network access
+    #[tokio::test]
+    #[ignore]
+    async fn test_fetch_page_success() {
+        let fetcher = Fetcher::new();
+        let result = fetcher.fetch_page("http://localhost:3000").await;
+        assert!(result.is_ok());
+    }
+    
+    #[tokio::test]
+    #[ignore]
+    async fn test_fetch_stylesheet_success() {
+        let fetcher = Fetcher::new();
+        let result = fetcher.fetch_stylesheet("http://localhost:3000/style.css").await;
+        assert!(result.is_ok());
+    }
+    
+    #[tokio::test]
+    async fn test_fetch_invalid_url() {
+        let fetcher = Fetcher::new();
+        let result = fetcher.fetch_page("not-a-valid-url").await;
+        assert!(result.is_err());
     }
 }

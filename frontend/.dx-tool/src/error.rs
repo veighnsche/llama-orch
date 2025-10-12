@@ -28,3 +28,62 @@ pub enum DxError {
 }
 
 pub type Result<T> = std::result::Result<T, DxError>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    // TEAM-DX-002: Error type tests
+    
+    #[test]
+    fn test_parse_error() {
+        let err = DxError::Parse("test error".to_string());
+        assert!(err.to_string().contains("Parse error"));
+        assert!(err.to_string().contains("test error"));
+    }
+    
+    #[test]
+    fn test_selector_not_found_error() {
+        let err = DxError::SelectorNotFound {
+            selector: ".test".to_string(),
+        };
+        assert!(err.to_string().contains("Selector not found"));
+        assert!(err.to_string().contains(".test"));
+    }
+    
+    #[test]
+    fn test_class_not_found_error() {
+        let err = DxError::ClassNotFound {
+            class: "cursor-pointer".to_string(),
+        };
+        assert!(err.to_string().contains("Class not found"));
+        assert!(err.to_string().contains("cursor-pointer"));
+    }
+    
+    #[test]
+    fn test_invalid_url_error() {
+        let err = DxError::InvalidUrl("not-a-url".to_string());
+        assert!(err.to_string().contains("Invalid URL"));
+        assert!(err.to_string().contains("not-a-url"));
+    }
+    
+    #[test]
+    fn test_timeout_error() {
+        let err = DxError::Timeout { timeout: 5 };
+        assert!(err.to_string().contains("Timeout"));
+        assert!(err.to_string().contains("5"));
+    }
+    
+    #[test]
+    fn test_result_type_ok() {
+        let result: Result<i32> = Ok(42);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 42);
+    }
+    
+    #[test]
+    fn test_result_type_err() {
+        let result: Result<i32> = Err(DxError::Parse("test".to_string()));
+        assert!(result.is_err());
+    }
+}

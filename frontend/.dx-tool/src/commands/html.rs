@@ -134,6 +134,129 @@ pub struct ElementInfo {
 mod tests {
     use super::*;
     
+    // TEAM-DX-002: Unit tests for HTML commands
+    
+    #[test]
+    fn test_html_command_creation() {
+        let _cmd = HtmlCommand::new();
+        assert!(true); // Command created successfully
+    }
+    
+    #[test]
+    fn test_html_command_default() {
+        let _cmd = HtmlCommand::default();
+        assert!(true); // Default trait works
+    }
+    
+    #[test]
+    fn test_element_info_structure() {
+        use std::collections::HashMap;
+        
+        let mut attrs = HashMap::new();
+        attrs.insert("class".to_string(), "test".to_string());
+        
+        let info = ElementInfo {
+            tag: "div".to_string(),
+            classes: vec!["test".to_string()],
+            attributes: attrs,
+            text: "Hello".to_string(),
+            count: 1,
+        };
+        
+        assert_eq!(info.tag, "div");
+        assert_eq!(info.classes.len(), 1);
+        assert_eq!(info.count, 1);
+    }
+    
+    #[test]
+    fn test_print_element_info_single() {
+        use std::collections::HashMap;
+        
+        let cmd = HtmlCommand::new();
+        let info = ElementInfo {
+            tag: "button".to_string(),
+            classes: vec!["btn".to_string()],
+            attributes: HashMap::new(),
+            text: "Click".to_string(),
+            count: 1,
+        };
+        
+        // Should not panic
+        cmd.print_element_info("button", &info);
+    }
+    
+    #[test]
+    fn test_print_element_info_multiple() {
+        use std::collections::HashMap;
+        
+        let cmd = HtmlCommand::new();
+        let info = ElementInfo {
+            tag: "div".to_string(),
+            classes: vec![],
+            attributes: HashMap::new(),
+            text: "".to_string(),
+            count: 5,
+        };
+        
+        // Should not panic
+        cmd.print_element_info("div", &info);
+    }
+    
+    #[test]
+    fn test_print_element_info_long_text() {
+        use std::collections::HashMap;
+        
+        let cmd = HtmlCommand::new();
+        let long_text = "a".repeat(150);
+        let info = ElementInfo {
+            tag: "p".to_string(),
+            classes: vec![],
+            attributes: HashMap::new(),
+            text: long_text,
+            count: 1,
+        };
+        
+        // Should truncate long text
+        cmd.print_element_info("p", &info);
+    }
+    
+    #[test]
+    fn test_print_attributes_empty() {
+        use std::collections::HashMap;
+        
+        let cmd = HtmlCommand::new();
+        let attrs = HashMap::new();
+        
+        // Should not panic
+        cmd.print_attributes("div", &attrs);
+    }
+    
+    #[test]
+    fn test_print_attributes_with_data() {
+        use std::collections::HashMap;
+        
+        let cmd = HtmlCommand::new();
+        let mut attrs = HashMap::new();
+        attrs.insert("id".to_string(), "test".to_string());
+        attrs.insert("class".to_string(), "btn btn-primary".to_string());
+        
+        // Should not panic
+        cmd.print_attributes("button", &attrs);
+    }
+    
+    #[test]
+    fn test_print_attributes_long_value() {
+        use std::collections::HashMap;
+        
+        let cmd = HtmlCommand::new();
+        let mut attrs = HashMap::new();
+        let long_value = "a".repeat(100);
+        attrs.insert("data-value".to_string(), long_value);
+        
+        // Should truncate long values
+        cmd.print_attributes("div", &attrs);
+    }
+    
     // Integration tests require a running server
     #[tokio::test]
     #[ignore]
@@ -141,5 +264,21 @@ mod tests {
         let cmd = HtmlCommand::new();
         let info = cmd.query_selector("http://localhost:3000", "button").await;
         assert!(info.is_ok());
+    }
+    
+    #[tokio::test]
+    #[ignore]
+    async fn test_get_attributes() {
+        let cmd = HtmlCommand::new();
+        let attrs = cmd.get_attributes("http://localhost:3000", "button").await;
+        assert!(attrs.is_ok());
+    }
+    
+    #[tokio::test]
+    #[ignore]
+    async fn test_get_tree() {
+        let cmd = HtmlCommand::new();
+        let tree = cmd.get_tree("http://localhost:3000", "nav", 2).await;
+        assert!(tree.is_ok());
     }
 }

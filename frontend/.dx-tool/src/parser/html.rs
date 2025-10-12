@@ -247,6 +247,25 @@ mod tests {
     }
     
     #[test]
+    fn test_extract_attributes_empty() {
+        let html = r#"<div>No attributes</div>"#;
+        let parser = HtmlParser::parse(html);
+        let elements = parser.select("div").unwrap();
+        let attrs = HtmlParser::extract_attributes(&elements[0]);
+        assert!(attrs.is_empty());
+    }
+    
+    #[test]
+    fn test_extract_attributes_multiple() {
+        let html = r#"<input id="email" type="email" name="email" required placeholder="Enter email">"#;
+        let parser = HtmlParser::parse(html);
+        let elements = parser.select("input").unwrap();
+        let attrs = HtmlParser::extract_attributes(&elements[0]);
+        assert_eq!(attrs.len(), 5);
+        assert_eq!(attrs.get("type"), Some(&"email".to_string()));
+    }
+    
+    #[test]
     fn test_extract_text() {
         let html = r#"<div>Hello World</div>"#;
         let parser = HtmlParser::parse(html);
@@ -256,12 +275,49 @@ mod tests {
     }
     
     #[test]
+    fn test_extract_text_empty() {
+        let html = r#"<div></div>"#;
+        let parser = HtmlParser::parse(html);
+        let elements = parser.select("div").unwrap();
+        let text = HtmlParser::extract_text(&elements[0]);
+        assert_eq!(text, "");
+    }
+    
+    #[test]
+    fn test_extract_text_nested() {
+        let html = r#"<div>Hello <span>World</span>!</div>"#;
+        let parser = HtmlParser::parse(html);
+        let elements = parser.select("div").unwrap();
+        let text = HtmlParser::extract_text(&elements[0]);
+        assert!(text.contains("Hello"));
+        assert!(text.contains("World"));
+    }
+    
+    #[test]
     fn test_extract_classes() {
         let html = r#"<div class="foo bar baz">Test</div>"#;
         let parser = HtmlParser::parse(html);
         let elements = parser.select("div").unwrap();
         let classes = HtmlParser::extract_classes(&elements[0]);
         assert_eq!(classes, vec!["foo", "bar", "baz"]);
+    }
+    
+    #[test]
+    fn test_extract_classes_empty() {
+        let html = r#"<div>No classes</div>"#;
+        let parser = HtmlParser::parse(html);
+        let elements = parser.select("div").unwrap();
+        let classes = HtmlParser::extract_classes(&elements[0]);
+        assert!(classes.is_empty());
+    }
+    
+    #[test]
+    fn test_extract_classes_single() {
+        let html = r#"<div class="single">Test</div>"#;
+        let parser = HtmlParser::parse(html);
+        let elements = parser.select("div").unwrap();
+        let classes = HtmlParser::extract_classes(&elements[0]);
+        assert_eq!(classes, vec!["single"]);
     }
     
     #[test]
@@ -280,5 +336,97 @@ mod tests {
         assert_eq!(tree.id, Some("main-nav".to_string()));
         assert!(tree.classes.contains(&"navbar".to_string()));
         assert_eq!(tree.children.len(), 1);
+    }
+    
+    #[test]
+    fn test_build_tree_depth_zero() {
+        let html = r#"<div><span>Test</span></div>"#;
+        let parser = HtmlParser::parse(html);
+        let tree = parser.build_tree("div", 0).unwrap();
+        assert_eq!(tree.tag, "div");
+        assert_eq!(tree.children.len(), 0); // No children at depth 0
+    }
+    
+    #[test]
+    fn test_build_tree_not_found() {
+        let html = r#"<div>Test</div>"#;
+        let parser = HtmlParser::parse(html);
+        let result = parser.build_tree("nav", 2);
+        assert!(result.is_err());
+    }
+    
+    #[test]
+    fn test_dom_node_repr_simple() {
+        let node = DomNode {
+            tag: "div".to_string(),
+            classes: vec![],
+            id: None,
+            children: vec![],
+        };
+        assert_eq!(node.node_repr(), "div");
+    }
+    
+    #[test]
+    fn test_dom_node_repr_with_id() {
+        let node = DomNode {
+            tag: "div".to_string(),
+            classes: vec![],
+            id: Some("main".to_string()),
+            children: vec![],
+        };
+        assert_eq!(node.node_repr(), "div#main");
+    }
+    
+    #[test]
+    fn test_dom_node_repr_with_classes() {
+        let node = DomNode {
+            tag: "div".to_string(),
+            classes: vec!["foo".to_string(), "bar".to_string()],
+            id: None,
+            children: vec![],
+        };
+        assert_eq!(node.node_repr(), "div.foo.bar");
+    }
+    
+    #[test]
+    fn test_dom_node_repr_full() {
+        let node = DomNode {
+            tag: "nav".to_string(),
+            classes: vec!["navbar".to_string(), "fixed".to_string()],
+            id: Some("main-nav".to_string()),
+            children: vec![],
+        };
+        assert_eq!(node.node_repr(), "nav#main-nav.navbar.fixed");
+    }
+    
+    #[test]
+    fn test_dom_node_format_tree_single() {
+        let node = DomNode {
+            tag: "div".to_string(),
+            classes: vec![],
+            id: None,
+            children: vec![],
+        };
+        let formatted = node.format_tree("", true);
+        assert!(formatted.contains("div"));
+    }
+    
+    #[test]
+    fn test_dom_node_format_tree_with_children() {
+        let child = DomNode {
+            tag: "span".to_string(),
+            classes: vec![],
+            id: None,
+            children: vec![],
+        };
+        let parent = DomNode {
+            tag: "div".to_string(),
+            classes: vec![],
+            id: None,
+            children: vec![child],
+        };
+        let formatted = parent.format_tree("", true);
+        assert!(formatted.contains("div"));
+        assert!(formatted.contains("span"));
     }
 }

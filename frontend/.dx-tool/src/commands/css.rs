@@ -194,13 +194,123 @@ mod tests {
         assert_eq!(base, "http://localhost:3000");
     }
     
-    // TEAM-DX-002: Integration tests would go here
-    // Note: These require a running server, so they're marked as ignored
+    // TEAM-DX-002: Unit tests for CSS commands
+    
+    #[test]
+    fn test_css_command_creation() {
+        let _cmd = CssCommand::new();
+        assert!(true); // Command created successfully
+    }
+    
+    #[test]
+    fn test_css_command_default() {
+        let _cmd = CssCommand::default();
+        assert!(true); // Default trait works
+    }
+    
+    #[test]
+    fn test_print_class_exists_true() {
+        let cmd = CssCommand::new();
+        // Should not panic
+        cmd.print_class_exists_result("cursor-pointer", true);
+    }
+    
+    #[test]
+    fn test_print_class_exists_false() {
+        let cmd = CssCommand::new();
+        // Should not panic
+        cmd.print_class_exists_result("nonexistent-class", false);
+    }
+    
+    #[test]
+    fn test_print_selector_styles_empty() {
+        use std::collections::HashMap;
+        
+        let cmd = CssCommand::new();
+        let styles = HashMap::new();
+        
+        // Should not panic
+        cmd.print_selector_styles(".test", &styles);
+    }
+    
+    #[test]
+    fn test_print_selector_styles_with_data() {
+        use std::collections::HashMap;
+        
+        let cmd = CssCommand::new();
+        let mut styles = HashMap::new();
+        styles.insert("color".to_string(), "red".to_string());
+        styles.insert("display".to_string(), "block".to_string());
+        
+        // Should not panic
+        cmd.print_selector_styles("button", &styles);
+    }
+    
+    #[test]
+    fn test_print_classes_list_empty() {
+        let cmd = CssCommand::new();
+        let classes: Vec<String> = vec![];
+        
+        // Should not panic
+        cmd.print_classes_list(".test", &classes);
+    }
+    
+    #[test]
+    fn test_print_classes_list_with_data() {
+        let cmd = CssCommand::new();
+        let classes = vec![
+            "btn".to_string(),
+            "btn-primary".to_string(),
+            "hover:bg-blue-500".to_string(),
+        ];
+        
+        // Should not panic
+        cmd.print_classes_list("button", &classes);
+    }
+    
+    #[test]
+    fn test_extract_base_url_simple() {
+        let url = "http://example.com/page";
+        let base = CssCommand::extract_base_url(url).unwrap();
+        assert_eq!(base, "http://example.com");
+    }
+    
+    #[test]
+    fn test_extract_base_url_https() {
+        let url = "https://example.com:8080/path/to/page";
+        let base = CssCommand::extract_base_url(url).unwrap();
+        assert_eq!(base, "https://example.com:8080");
+    }
+    
+    #[test]
+    fn test_extract_base_url_invalid() {
+        let url = "not-a-url";
+        let result = CssCommand::extract_base_url(url);
+        assert!(result.is_err());
+    }
+    
+    // Integration tests require a running server
     #[tokio::test]
     #[ignore]
     async fn test_get_selector_styles() {
         let cmd = CssCommand::new();
         let styles = cmd.get_selector_styles("http://localhost:3000", "button").await;
         assert!(styles.is_ok());
+    }
+    
+    #[tokio::test]
+    #[ignore]
+    async fn test_check_class_exists() {
+        let cmd = CssCommand::new();
+        let exists = cmd.check_class_exists("http://localhost:3000", "cursor-pointer").await;
+        assert!(exists.is_ok());
+    }
+    
+    #[tokio::test]
+    #[ignore]
+    async fn test_list_classes() {
+        let cmd = CssCommand::new();
+        let classes = cmd.list_classes("http://localhost:3000", "button").await;
+        assert!(classes.is_ok());
     }
 }
