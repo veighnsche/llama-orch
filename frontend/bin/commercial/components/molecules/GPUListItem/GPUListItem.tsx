@@ -21,7 +21,7 @@ export function GPUListItem({
 }: GPUListItemProps) {
   const statusColors = {
     active: statusColor || 'bg-chart-3',
-    idle: 'bg-amber-500',
+    idle: 'bg-chart-4',
     offline: 'bg-muted-foreground/30',
   }
 

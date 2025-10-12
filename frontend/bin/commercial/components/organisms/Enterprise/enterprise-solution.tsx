@@ -54,7 +54,10 @@ export function EnterpriseSolution() {
             ].map((layer, i) => (
               <div key={i} className="flex items-start gap-4 rounded-lg border border-border bg-background p-4">
                 <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-card ${layer.color}`}
+                  className={cn(
+                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-card',
+                    layer.color
+                  )}
                 >
                   <layer.icon className="h-5 w-5" />
                 </div>

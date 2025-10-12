@@ -22,7 +22,7 @@ export function BenefitCallout({
     success: 'bg-chart-3/10 border-chart-3/20 text-chart-3',
     primary: 'bg-primary/10 border-primary/20 text-primary',
     info: 'bg-chart-2/10 border-chart-2/20 text-chart-2',
-    warning: 'bg-amber-500/10 border-amber-500/20 text-amber-500',
+    warning: 'bg-chart-4/10 border-chart-4/20 text-chart-4',
   }
 
   return (

@@ -46,15 +46,18 @@ export function ProvidersEarnings() {
                 <div>
                   <label className="mb-3 block text-sm font-medium text-muted-foreground">Select Your GPU</label>
                   <div className="grid gap-2">
-                    {gpuModels.map((gpu) => (
+                    {gpuModels.map((gpu) => {
+                      const isSelected = selectedGPU.name === gpu.name
+                      return (
                       <button
                         key={gpu.name}
                         onClick={() => setSelectedGPU(gpu)}
-                        className={`rounded-lg border p-3 text-left transition-all ${
-                          selectedGPU.name === gpu.name
-                            ? "border-primary bg-primary/10"
-                            : "border-border bg-background/50 hover:border-border/70"
-                        }`}
+                        className={cn(
+                          'rounded-lg border p-3 text-left transition-all',
+                          isSelected
+                            ? 'border-primary bg-primary/10'
+                            : 'border-border bg-background/50 hover:border-border/70'
+                        )}
                       >
                         <div className="flex items-center justify-between">
                           <div>

@@ -1,5 +1,6 @@
 import { Button } from '@/components/atoms/Button/Button'
-import { Check } from "lucide-react"
+import { Check } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 const tiers = [
   {
@@ -66,11 +67,10 @@ export function DevelopersPricing() {
           {tiers.map((tier) => (
             <div
               key={tier.name}
-              className={`relative rounded-lg border p-8 ${
-                tier.highlighted
-                  ? "border-primary bg-card"
-                  : "border-border bg-card"
-              }`}
+              className={cn(
+                'relative rounded-lg border p-8 bg-card',
+                tier.highlighted ? 'border-primary' : 'border-border'
+              )}
             >
               {tier.highlighted && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full border border-primary bg-primary px-4 py-1 text-sm font-medium text-primary-foreground">
@@ -97,11 +97,12 @@ export function DevelopersPricing() {
               </ul>
 
               <Button
-                className={`w-full ${
+                className={cn(
+                  'w-full',
                   tier.highlighted
-                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "border-border bg-card text-foreground hover:bg-muted"
-                }`}
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                    : 'border-border bg-card text-foreground hover:bg-muted'
+                )}
                 variant={tier.highlighted ? "default" : "outline"}
               >
                 {tier.cta}

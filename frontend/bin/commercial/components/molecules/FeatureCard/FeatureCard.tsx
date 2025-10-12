@@ -57,6 +57,17 @@ export function FeatureCard({
     lg: 'text-base',
   }
 
+  const colorClasses = {
+    primary: { bg: 'bg-primary/10', text: 'text-primary' },
+    'chart-1': { bg: 'bg-chart-1/10', text: 'text-chart-1' },
+    'chart-2': { bg: 'bg-chart-2/10', text: 'text-chart-2' },
+    'chart-3': { bg: 'bg-chart-3/10', text: 'text-chart-3' },
+    'chart-4': { bg: 'bg-chart-4/10', text: 'text-chart-4' },
+    'chart-5': { bg: 'bg-chart-5/10', text: 'text-chart-5' },
+  }
+
+  const colors = colorClasses[iconColor as keyof typeof colorClasses] || colorClasses.primary
+
   return (
     <div
       className={cn(
@@ -70,11 +81,11 @@ export function FeatureCard({
         className={cn(
           'rounded-lg flex items-center justify-center',
           iconSizeClasses[size],
-          `bg-${iconColor}/10`
+          colors.bg
         )}
       >
         <Icon
-          className={cn(iconInnerSizeClasses[size], `text-${iconColor}`)}
+          className={cn(iconInnerSizeClasses[size], colors.text)}
         />
       </div>
       <h3

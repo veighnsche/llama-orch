@@ -41,17 +41,28 @@ export function IconBox({
     square: 'rounded-none',
   }
 
+  const colorClasses = {
+    primary: { bg: 'bg-primary/10', text: 'text-primary' },
+    'chart-1': { bg: 'bg-chart-1/10', text: 'text-chart-1' },
+    'chart-2': { bg: 'bg-chart-2/10', text: 'text-chart-2' },
+    'chart-3': { bg: 'bg-chart-3/10', text: 'text-chart-3' },
+    'chart-4': { bg: 'bg-chart-4/10', text: 'text-chart-4' },
+    'chart-5': { bg: 'bg-chart-5/10', text: 'text-chart-5' },
+  }
+
+  const colors = colorClasses[color as keyof typeof colorClasses] || colorClasses.primary
+
   return (
     <div
       className={cn(
         'flex items-center justify-center',
         sizeClasses[size],
         variantClasses[variant],
-        `bg-${color}/10`,
+        colors.bg,
         className
       )}
     >
-      <Icon className={cn(iconSizeClasses[size], `text-${color}`)} />
+      <Icon className={cn(iconSizeClasses[size], colors.text)} />
     </div>
   )
 }

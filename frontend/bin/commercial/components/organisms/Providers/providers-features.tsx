@@ -112,24 +112,30 @@ export function ProvidersFeatures() {
           <div className="space-y-2">
             {features.map((feature) => {
               const FeatureIcon = feature.icon
+              const isActive = activeFeature === feature.id
               return (
                 <button
                   key={feature.id}
                   onClick={() => setActiveFeature(feature.id)}
-                  className={`w-full rounded-lg border p-4 text-left transition-all ${
-                    activeFeature === feature.id
-                      ? "border-primary bg-primary/10"
-                      : "border-border bg-card/50 hover:border-border"
-                  }`}
+                  className={cn(
+                    'w-full rounded-lg border p-4 text-left transition-all',
+                    isActive
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border bg-card/50 hover:border-border'
+                  )}
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-                        activeFeature === feature.id ? "bg-primary/20" : "bg-secondary"
-                      }`}
+                      className={cn(
+                        'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
+                        isActive ? 'bg-primary/20' : 'bg-secondary'
+                      )}
                     >
                       <FeatureIcon
-                        className={`h-5 w-5 ${activeFeature === feature.id ? "text-primary" : "text-muted-foreground"}`}
+                        className={cn(
+                          'h-5 w-5',
+                          isActive ? 'text-primary' : 'text-muted-foreground'
+                        )}
                       />
                     </div>
                     <div className="font-medium text-foreground">{feature.title}</div>

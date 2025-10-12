@@ -38,6 +38,17 @@ export function ProgressBar({
     lg: 'w-28',
   }
 
+  const colorClasses = {
+    primary: 'bg-primary',
+    'chart-1': 'bg-chart-1',
+    'chart-2': 'bg-chart-2',
+    'chart-3': 'bg-chart-3',
+    'chart-4': 'bg-chart-4',
+    'chart-5': 'bg-chart-5',
+  }
+
+  const bgColor = colorClasses[color as keyof typeof colorClasses] || colorClasses.primary
+
   return (
     <div className={cn('flex items-center gap-2', className)}>
       {showLabel && (
@@ -57,7 +68,7 @@ export function ProgressBar({
         )}
       >
         <div
-          className={cn('h-full', `bg-${color}`)}
+          className={cn('h-full', bgColor)}
           style={{ width: `${Math.min(100, Math.max(0, percentage))}%` }}
         ></div>
       </div>

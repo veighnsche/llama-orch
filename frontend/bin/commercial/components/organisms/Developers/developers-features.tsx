@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState } from 'react'
+import { cn } from '@/lib/utils'
 import { Code, Cpu, Gauge, Terminal } from "lucide-react"
 
 const features = [
@@ -76,20 +77,23 @@ export function DevelopersFeatures() {
         <div className="mx-auto mt-16 max-w-6xl">
           {/* Tabs */}
           <div className="mb-8 flex flex-wrap gap-2">
-            {features.map((feature) => (
+            {features.map((feature) => {
+              const isActive = activeTab === feature.id
+              return (
               <button
                 key={feature.id}
                 onClick={() => setActiveTab(feature.id)}
-                className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
-                  activeTab === feature.id
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border bg-card text-muted-foreground hover:border-border hover:text-foreground"
-                }`}
+                className={cn(
+                  'flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all',
+                  isActive
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border bg-card text-muted-foreground hover:border-border hover:text-foreground'
+                )}
               >
                 <feature.icon className="h-4 w-4" />
                 {feature.title}
               </button>
-            ))}
+            )})}
           </div>
 
           {/* Content */}
