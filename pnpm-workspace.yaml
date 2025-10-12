@@ -4,6 +4,5 @@ packages:
   - consumers/llama-orch-sdk/ts
   - frontend/bin/commercial
   - frontend/bin/d3-sim-frontend
-  - frontend/libs/storybook
   - frontend/libs/frontend-tooling
   - frontend/reference/v0

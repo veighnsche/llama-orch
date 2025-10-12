@@ -1,10 +1,10 @@
 <!-- Created by: TEAM-FE-000 (Scaffolding) -->
 <!-- TEAM-FE-006: Implemented FAQSection component -->
 <script setup lang="ts">
-import Accordion from 'rbee-storybook/stories/atoms/Accordion/Accordion.vue'
-import AccordionItem from 'rbee-storybook/stories/atoms/Accordion/AccordionItem.vue'
-import AccordionTrigger from 'rbee-storybook/stories/atoms/Accordion/AccordionTrigger.vue'
-import AccordionContent from 'rbee-storybook/stories/atoms/Accordion/AccordionContent.vue'
+import Accordion from '~/stories/atoms/Accordion/Accordion.vue'
+import AccordionItem from '~/stories/atoms/Accordion/AccordionItem.vue'
+import AccordionTrigger from '~/stories/atoms/Accordion/AccordionTrigger.vue'
+import AccordionContent from '~/stories/atoms/Accordion/AccordionContent.vue'
 
 interface FAQ {
   question: string

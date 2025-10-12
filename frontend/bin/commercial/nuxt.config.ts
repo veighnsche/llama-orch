@@ -4,13 +4,8 @@ import tailwindcss from "@tailwindcss/vite";
 
 // ╔══════════════════════════════════════════════════════════════════════════╗
 // ║                                                                          ║
-// ║  ⛔ FORBIDDEN: NO CROSS-PROJECT IMPORTS IN VITE/TAILWIND CONFIG ⛔      ║
-// ║                                                                          ║
-// ║  NEVER use relative paths like "../../libs/storybook/..."               ║
-// ║  ALWAYS use workspace package names like "rbee-storybook/..."           ║
-// ║                                                                          ║
-// ║  If an export is missing, fix it in the package's package.json exports  ║
-// ║  Cross-project imports have NEVER worked and NEVER will work.           ║
+// ║  All UI components are now local to this project in ~/app/stories       ║
+// ║  Design tokens and styles are in ~/app/styles                           ║
 // ║                                                                          ║
 // ╚══════════════════════════════════════════════════════════════════════════╝
 
@@ -30,7 +25,7 @@ export default defineNuxtConfig({
 
   css: [
     "~/assets/css/main.css",
-    "rbee-storybook/styles/tokens-base.css",
+    "~/styles/tokens-base.css",
   ],
 
   vite: {

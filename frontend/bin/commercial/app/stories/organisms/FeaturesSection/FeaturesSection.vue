@@ -3,10 +3,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Code, Cpu, Gauge, Zap } from 'lucide-vue-next'
-import Tabs from 'rbee-storybook/stories/atoms/Tabs/Tabs.vue'
-import TabsList from 'rbee-storybook/stories/atoms/Tabs/TabsList.vue'
-import TabsTrigger from 'rbee-storybook/stories/atoms/Tabs/TabsTrigger.vue'
-import TabsContent from 'rbee-storybook/stories/atoms/Tabs/TabsContent.vue'
+import Tabs from '~/stories/atoms/Tabs/Tabs.vue'
+import TabsList from '~/stories/atoms/Tabs/TabsList.vue'
+import TabsTrigger from '~/stories/atoms/Tabs/TabsTrigger.vue'
+import TabsContent from '~/stories/atoms/Tabs/TabsContent.vue'
 
 interface Props {
   title?: string

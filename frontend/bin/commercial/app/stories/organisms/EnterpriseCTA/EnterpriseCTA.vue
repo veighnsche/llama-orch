@@ -1,7 +1,7 @@
 <!-- Created by: TEAM-FE-000 (Scaffolding) -->
 <!-- TEAM-FE-008: Implemented EnterpriseCTA -->
 <script setup lang="ts">
-import { Button } from 'rbee-storybook/stories'
+import { Button } from '~/stories'
 import { Calendar, FileText, MessageSquare } from 'lucide-vue-next'
 
 interface CtaOption {

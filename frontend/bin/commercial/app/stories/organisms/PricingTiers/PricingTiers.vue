@@ -1,7 +1,7 @@
 <!-- Created by: TEAM-FE-000 (Scaffolding) -->
 <!-- TEAM-FE-002: Implemented PricingTiers organism -->
 <script setup lang="ts">
-import PricingCard from 'rbee-storybook/stories/molecules/PricingCard/PricingCard.vue'
+import PricingCard from '~/stories/molecules/PricingCard/PricingCard.vue'
 
 interface Tier {
   title: string

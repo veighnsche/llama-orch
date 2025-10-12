@@ -3,7 +3,7 @@
 <!-- TEAM-FE-010: Added ThemeToggle button from shared storybook -->
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Button, ThemeToggle } from 'rbee-storybook/stories'
+import { Button, ThemeToggle } from '~/stories'
 import { Menu, X, Github } from 'lucide-vue-next'
 
 const mobileMenuOpen = ref(false)

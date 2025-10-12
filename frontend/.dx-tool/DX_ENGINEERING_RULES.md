@@ -696,6 +696,240 @@ fn check_compatibility(version: &str) -> Result<()> {
 
 ---
 
+## 12. Frontend Verification Rules (MANDATORY)
+
+### ⚠️ CRITICAL: ALWAYS VERIFY WITH DX TOOL
+
+**All frontend changes MUST be verified using the DX tool before handoff.**
+
+### Why This Matters
+
+Frontend engineers without browser access need a reliable way to verify:
+- CSS classes are generated correctly
+- HTML structure is correct
+- Components render properly
+- No regressions introduced
+
+**The DX tool solves this. Use it. Don't guess. Don't skip verification.**
+
+---
+
+### Required Verification Commands
+
+#### 1. Verify CSS Classes Exist
+
+```bash
+# Check if Tailwind generated your class
+dx css --class-exists "cursor-pointer" http://localhost:6007
+
+# Check multiple classes
+dx css --class-exists "h-11" http://localhost:6007
+dx css --class-exists "bg-primary" http://localhost:6007
+```
+
+**When to use:**
+- After adding new Tailwind classes to components
+- When debugging missing styles
+- Before committing CSS changes
+- Before every handoff
+
+#### 2. Inspect Element Styles
+
+```bash
+# Get computed styles for an element
+dx css --selector ".theme-toggle" http://localhost:6007
+
+# List all classes on an element
+dx css --list-classes --selector "button" http://localhost:6007
+```
+
+**When to use:**
+- Debugging style issues
+- Verifying design tokens
+- Checking hover/dark mode styles
+
+#### 3. Query DOM Structure
+
+```bash
+# Check if component renders
+dx html --selector "nav" http://localhost:6007
+
+# Get element tree
+dx html --selector "nav" --tree http://localhost:6007
+
+# Get element attributes
+dx html --attributes "button" http://localhost:6007
+```
+
+**When to use:**
+- After adding new components
+- Verifying conditional rendering
+- Checking component hierarchy
+
+#### 4. Inspect Element (All-in-One)
+
+```bash
+# Get HTML + all CSS in one command
+dx inspect button http://localhost:6007
+```
+
+**When to use:**
+- Quick verification of component rendering
+- Debugging both HTML and CSS issues
+- Before handoff verification
+
+---
+
+### Verification Checklist (MANDATORY BEFORE HANDOFF)
+
+**Before handing off frontend work, you MUST verify:**
+
+- [ ] **CSS classes exist:** `dx css --class-exists "your-class" http://localhost:6007`
+- [ ] **Component renders:** `dx html --selector ".your-component" http://localhost:6007`
+- [ ] **All variants work:** Test each variant with `dx inspect`
+- [ ] **No console errors:** Check terminal output for errors
+- [ ] **Accessibility:** `dx html --selector "button" --a11y http://localhost:6007`
+
+**If ANY check fails, fix it before handoff.**
+
+---
+
+### Handoff Requirements (MANDATORY)
+
+Your handoff MUST include DX tool verification output:
+
+```markdown
+## Verification
+
+✅ CSS classes verified:
+```bash
+dx css --class-exists "cursor-pointer" http://localhost:6007
+# Output: ✓ Class 'cursor-pointer' found in stylesheet
+```
+
+✅ Component rendering verified:
+```bash
+dx html --selector ".theme-toggle" http://localhost:6007
+# Output: ✓ Found 1 element matching '.theme-toggle'
+```
+
+✅ All variants tested:
+```bash
+dx inspect button http://localhost:6007/story/button-primary
+dx inspect button http://localhost:6007/story/button-secondary
+dx inspect button http://localhost:6007/story/button-disabled
+```
+```
+
+**Without DX tool verification, your handoff is INCOMPLETE.**
+
+---
+
+### Common Workflows
+
+#### After Adding New Component
+
+```bash
+# 1. Verify component renders
+dx html --selector ".new-component" http://localhost:6007
+
+# 2. Check CSS classes
+dx css --list-classes --selector ".new-component" http://localhost:6007
+
+# 3. Inspect full output
+dx inspect ".new-component" http://localhost:6007
+```
+
+#### After Changing Styles
+
+```bash
+# 1. Verify class exists
+dx css --class-exists "new-class" http://localhost:6007
+
+# 2. Check computed styles
+dx css --selector ".affected-element" http://localhost:6007
+
+# 3. Verify no regressions
+dx inspect ".affected-element" http://localhost:6007
+```
+
+#### Before Handoff (MANDATORY)
+
+```bash
+# Run full verification suite
+dx css --class-exists "cursor-pointer" http://localhost:6007
+dx html --selector "nav" http://localhost:6007
+dx inspect "button" http://localhost:6007
+```
+
+---
+
+### Troubleshooting
+
+#### "Class not found in stylesheet"
+
+```bash
+dx css --class-exists "cursor-pointer" http://localhost:6007
+# ✗ Error: Class 'cursor-pointer' not found in stylesheet
+```
+
+**Possible causes:**
+1. Tailwind not scanning source files
+2. Class not used in any component
+3. PostCSS not configured in Histoire
+4. Class tree-shaken by build tool
+
+**Solution:** 
+- Check `histoire.config.ts` has PostCSS with `@tailwindcss/postcss`
+- Check `tailwind.config.js` scans the right paths
+- Verify class is actually used in a component
+
+#### "Selector not found"
+
+```bash
+dx html --selector ".nonexistent" http://localhost:6007
+# ✗ Error: Selector '.nonexistent' not found
+```
+
+**Solution:** 
+- Use `dx html --tree` to explore DOM structure
+- Verify component is rendering
+- Check if element is in an iframe (Histoire uses iframes)
+
+#### "Server not responding"
+
+```bash
+dx css --class-exists "test" http://localhost:6007
+# ✗ Error: Failed to fetch page
+```
+
+**Solution:**
+- Verify server is running: `curl http://localhost:6007`
+- Check port number is correct
+- Increase timeout if server is slow to start
+
+---
+
+### ⚠️ BANNED PRACTICES
+
+❌ **DO NOT create ad-hoc scripts** to inspect HTML/CSS
+- Use `dx` commands instead
+- If a feature is missing, document it in `frontend/.dx-tool/FEATURE_REQUESTS.md`
+
+❌ **DO NOT use `curl` + manual parsing**
+- `dx` handles SPA rendering, iframe detection, CSS extraction
+- Manual parsing is error-prone and doesn't handle SPAs
+
+❌ **DO NOT skip verification**
+- Every story variant MUST be verified with `dx inspect`
+- Document verification results in your handoff
+
+❌ **DO NOT guess if something works**
+- Use the DX tool to verify
+- Don't rely on "it compiles so it must work"
+
+---
+
 ## The Bottom Line
 
 **Good DX tools:**
@@ -710,6 +944,7 @@ fn check_compatibility(version: &str) -> Result<()> {
 - Have great docs (examples first)
 - Have clear ownership (team signatures)
 - Follow semver (predictable updates)
+- **Are actually used (mandatory verification)**
 
 **Bad DX tools:**
 - Are slow (developers won't use them)
@@ -722,8 +957,11 @@ fn check_compatibility(version: &str) -> Result<()> {
 - Are hard to install (dependencies)
 - Have poor docs (no examples)
 - Break randomly (no versioning)
+- **Are optional (developers skip them)**
 
 **Build good tools. Follow these rules. Make developers' lives better.**
+
+**ALWAYS verify with the DX tool. No exceptions. No excuses.**
 
 ---
 
@@ -734,6 +972,7 @@ fn check_compatibility(version: &str) -> Result<()> {
 - **exa** - Beautiful output, helpful errors
 - **bat** - Self-documenting, great defaults
 - **hyperfine** - Deterministic, clear benchmarks
+- **dx (this tool)** - Frontend verification without browser access
 
 **Study these tools. Learn from them. Build tools like them.**
 
@@ -742,3 +981,5 @@ fn check_compatibility(version: &str) -> Result<()> {
 **This is not optional. This is mandatory for all DX tool development.**
 
 **Build tools that developers love to use. Not tools they tolerate.**
+
+**Verify your work. Don't guess. Use the DX tool.**

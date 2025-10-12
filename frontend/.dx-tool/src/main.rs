@@ -2,6 +2,7 @@
 // TEAM-DX-002: Added HTML commands and JSON output format
 // TEAM-DX-003: Added story file locator command
 // TEAM-DX-004: Added list-stories and list-variants commands
+// TEAM-DX-007: Added health check command for server verification
 // Frontend DX CLI Tool - Main entry point
 
 use clap::{Parser, Subcommand, ValueEnum};
@@ -120,6 +121,11 @@ async fn main() -> ExitCode {
     
     match cli.command {
         Commands::ListStories { url, component } => {
+            // Preflight health check
+            if let Err(code) = preflight_health_check(&url, use_json).await {
+                return code;
+            }
+            
             let cmd = ListStoriesCommand::new();
             match cmd.list_stories(&url).await {
                 Ok(stories) => {
@@ -175,6 +181,11 @@ async fn main() -> ExitCode {
             }
         }
         Commands::ListVariants { url, copy_pastable } => {
+            // Preflight health check
+            if let Err(code) = preflight_health_check(&url, use_json).await {
+                return code;
+            }
+            
             let cmd = ListVariantsCommand::new();
             match cmd.list_variants(&url).await {
                 Ok(variants) => {
@@ -215,6 +226,11 @@ async fn main() -> ExitCode {
                     return ExitCode::from(1);
                 }
             };
+            
+            // Preflight health check
+            if let Err(code) = preflight_health_check(&target_url, use_json).await {
+                return code;
+            }
             
             handle_inspect(&target_url, &selector, use_json).await
         }
@@ -260,6 +276,11 @@ async fn main() -> ExitCode {
                 }
             };
             
+            // Preflight health check
+            if let Err(code) = preflight_health_check(&target_url, use_json).await {
+                return code;
+            }
+            
             if let Some(class_name) = class_exists {
                 handle_class_exists(&target_url, &class_name, use_json).await
             } else if let Some(sel) = selector {
@@ -291,6 +312,11 @@ async fn main() -> ExitCode {
                     return ExitCode::from(1);
                 }
             };
+            
+            // Preflight health check
+            if let Err(code) = preflight_health_check(&target_url, use_json).await {
+                return code;
+            }
             
             if let Some(sel) = selector {
                 if tree {
@@ -514,6 +540,54 @@ async fn handle_inspect(url: &str, selector: &str, use_json: bool) -> ExitCode {
                 eprintln!("✗ Error: {}", e);
             }
             ExitCode::from(1)
+        }
+    }
+}
+
+// TEAM-DX-007: Preflight health check - runs before every command that needs a server
+// This prevents cryptic errors and gives clear feedback when server is down
+async fn preflight_health_check(url: &str, use_json: bool) -> Result<(), ExitCode> {
+    use std::time::Duration;
+    use reqwest::Client;
+    
+    let client = Client::builder()
+        .timeout(Duration::from_secs(3))
+        .build()
+        .unwrap();
+    
+    match client.get(url).send().await {
+        Ok(response) => {
+            if response.status().is_success() {
+                Ok(())
+            } else {
+                let status = response.status().as_u16();
+                if use_json {
+                    println!("{{\"error\": \"Server returned status {}\"}}", status);
+                } else {
+                    eprintln!("✗ Server returned error status: {}", status);
+                    eprintln!("  URL: {}", url);
+                }
+                Err(ExitCode::from(3))
+            }
+        }
+        Err(e) => {
+            if use_json {
+                println!("{{\"error\": \"Server not responding: {}\"}}", 
+                    e.to_string().replace('"', "\\\""));
+            } else {
+                eprintln!("✗ Server is not responding");
+                eprintln!("  URL: {}", url);
+                eprintln!("  Error: {}", e);
+                eprintln!("\nPossible causes:");
+                eprintln!("  - Server not started");
+                eprintln!("  - Wrong port number (check URL)");
+                eprintln!("  - Server crashed");
+                eprintln!("\nSuggestions:");
+                eprintln!("  - Start Histoire: cd frontend/bin/commercial && pnpm run story:dev");
+                eprintln!("  - Or use correct port: --project commercial-story (port 6007)");
+                eprintln!("  - Check if process is running: ps aux | grep histoire");
+            }
+            Err(ExitCode::from(2))
         }
     }
 }
