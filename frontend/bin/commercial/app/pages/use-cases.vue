@@ -7,7 +7,7 @@ import {
   UseCasesGrid,
   IndustryUseCases,
   EmailCapture,
-} from 'rbee-storybook/stories'
+} from '~/stories'
 </script>
 
 <template>

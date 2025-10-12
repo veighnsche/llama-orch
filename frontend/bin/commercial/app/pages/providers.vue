@@ -16,7 +16,7 @@ import {
   ProvidersCTA,
   EmailCapture,
   Footer,
-} from 'rbee-storybook/stories'
+} from '~/stories'
 </script>
 
 <template>

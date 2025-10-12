@@ -30,7 +30,7 @@ export default defineNuxtConfig({
 
   css: [
     "~/assets/css/main.css",
-    "rbee-storybook/styles/tokens-base.css",
+    "~/assets/css/tokens-base.css",
   ],
 
   vite: {
