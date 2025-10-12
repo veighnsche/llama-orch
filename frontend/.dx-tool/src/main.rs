@@ -1,10 +1,11 @@
 // Created by: TEAM-DX-001
 // TEAM-DX-002: Added HTML commands and JSON output format
 // TEAM-DX-003: Added story file locator command
+// TEAM-DX-004: Added list-stories and list-variants commands
 // Frontend DX CLI Tool - Main entry point
 
 use clap::{Parser, Subcommand, ValueEnum};
-use dx::commands::{CssCommand, HtmlCommand, StoryCommand, InspectCommand};
+use dx::commands::{CssCommand, HtmlCommand, StoryCommand, InspectCommand, ListStoriesCommand, ListVariantsCommand};
 use dx::config::Config;
 use std::process::ExitCode;
 
@@ -89,6 +90,26 @@ enum Commands {
         /// URL to fetch and analyze (optional if --project is specified)
         url: Option<String>,
     },
+    /// List all available stories (components) from Histoire/Storybook
+    #[command(name = "list-stories")]
+    ListStories {
+        /// Base URL of Histoire/Storybook
+        url: String,
+        
+        /// Filter by component name (optional)
+        #[arg(long)]
+        component: Option<String>,
+    },
+    /// List all variants for a specific story
+    #[command(name = "list-variants")]
+    ListVariants {
+        /// Story URL to list variants for
+        url: String,
+        
+        /// Output in copy-pastable format (just URLs with comments)
+        #[arg(long)]
+        copy_pastable: bool,
+    },
 }
 
 #[tokio::main]
@@ -98,6 +119,90 @@ async fn main() -> ExitCode {
     let use_json = matches!(cli.format, OutputFormat::Json);
     
     match cli.command {
+        Commands::ListStories { url, component } => {
+            let cmd = ListStoriesCommand::new();
+            match cmd.list_stories(&url).await {
+                Ok(stories) => {
+                    if let Some(filter) = component {
+                        // Filter stories by component name
+                        let filtered: Vec<_> = stories.iter()
+                            .filter(|s| s.component_name.to_lowercase() == filter.to_lowercase())
+                            .collect();
+                        
+                        if filtered.is_empty() {
+                            if use_json {
+                                println!("{{\"error\": \"Component '{}' not found\"}}",  filter.replace('"', "\\\""));
+                            } else {
+                                eprintln!("✗ Component '{}' not found", filter);
+                            }
+                            return ExitCode::from(1);
+                        }
+                        
+                        if use_json {
+                            println!("{{\"stories\": [");
+                            for (i, story) in filtered.iter().enumerate() {
+                                println!("  {{\"name\": \"{}\", \"category\": \"{}\", \"url\": \"{}\"}}{}",
+                                    story.component_name, story.category, story.url,
+                                    if i < filtered.len() - 1 { "," } else { "" });
+                            }
+                            println!("]}}");
+                        } else {
+                            cmd.print_stories(&filtered.iter().map(|&s| s.clone()).collect::<Vec<_>>());
+                        }
+                    } else {
+                        if use_json {
+                            println!("{{\"stories\": [");
+                            for (i, story) in stories.iter().enumerate() {
+                                println!("  {{\"name\": \"{}\", \"category\": \"{}\", \"url\": \"{}\"}}{}",
+                                    story.component_name, story.category, story.url,
+                                    if i < stories.len() - 1 { "," } else { "" });
+                            }
+                            println!("]}}");
+                        } else {
+                            cmd.print_stories(&stories);
+                        }
+                    }
+                    ExitCode::SUCCESS
+                }
+                Err(e) => {
+                    if use_json {
+                        println!("{{\"error\": \"{}\"}}", e.to_string().replace('"', "\\\""));
+                    } else {
+                        eprintln!("✗ Error: {}", e);
+                    }
+                    ExitCode::from(1)
+                }
+            }
+        }
+        Commands::ListVariants { url, copy_pastable } => {
+            let cmd = ListVariantsCommand::new();
+            match cmd.list_variants(&url).await {
+                Ok(variants) => {
+                    if use_json {
+                        println!("{{\"variants\": [");
+                        for (i, variant) in variants.iter().enumerate() {
+                            println!("  {{\"id\": \"{}\", \"title\": \"{}\", \"url\": \"{}\"}}{}",
+                                variant.variant_id, variant.title, variant.url,
+                                if i < variants.len() - 1 { "," } else { "" });
+                        }
+                        println!("]}}");
+                    } else if copy_pastable {
+                        cmd.print_variants_copy_pastable(&variants);
+                    } else {
+                        cmd.print_variants(&variants, &url);
+                    }
+                    ExitCode::SUCCESS
+                }
+                Err(e) => {
+                    if use_json {
+                        println!("{{\"error\": \"{}\"}}", e.to_string().replace('"', "\\\""));
+                    } else {
+                        eprintln!("✗ Error: {}", e);
+                    }
+                    ExitCode::from(1)
+                }
+            }
+        }
         Commands::Inspect { selector, url } => {
             let target_url = match resolve_url(url, cli.project.as_deref(), &config) {
                 Ok(url) => url,

@@ -17,6 +17,103 @@ Violations result in: **REJECTED work**, **DELETED handoff**, cited in "teams th
 
 ## 0. Required Dependencies & Tools
 
+### ⚠️ CRITICAL: DX CLI TOOL (MANDATORY FOR ALL FRONTEND WORK)
+
+**The `dx` CLI tool is MANDATORY for verifying frontend work without browser access.**
+
+**Location:** `/home/vince/Projects/llama-orch/frontend/.dx-tool/`  
+**Binary:** `./frontend/.dx-tool/target/release/dx`  
+**Docs:** `frontend/.dx-tool/README.md`
+
+**What it does:**
+- Inspects HTML structure from Storybook/Histoire
+- Extracts all Tailwind CSS classes and rules
+- Verifies component rendering via headless Chrome
+- Locates story files from Storybook URLs
+- Works with SPAs (Vue, React) via automatic JavaScript execution
+
+**Commands you MUST use:**
+```bash
+# Locate story file from URL
+dx story-file "http://localhost:6006/story/stories-atoms-button-button-story-vue"
+
+# Inspect element: get HTML + all CSS in one command
+dx inspect button "http://localhost:6006/story/..."
+
+# Check if Tailwind class exists
+dx css --class-exists "h-11" "http://localhost:6006/story/..."
+
+# Get all classes on element
+dx css --list-classes --list-selector button "http://localhost:6006/story/..."
+
+# Query DOM structure
+dx html --selector button "http://localhost:6006/story/..."
+
+# Get element attributes
+dx html --attributes button "http://localhost:6006/story/..."
+```
+
+**Performance:**
+- Tuned for Intel i5-1240P, 62GB RAM, NVMe SSD
+- Typical execution: 6-8 seconds (includes headless Chrome startup + SPA rendering)
+- Default timeout: 3 seconds for page render
+- Maximum timeout: 10 seconds
+
+**When to use:**
+- ✅ Verifying story variants render correctly
+- ✅ Checking Tailwind classes are applied
+- ✅ Validating HTML structure
+- ✅ Finding which file defines a story
+- ✅ Working without browser access (SSH, remote, CI/CD)
+
+**CRITICAL RULES:**
+
+1. **DO NOT create ad-hoc scripts** to inspect HTML/CSS
+   - Use `dx` commands instead
+   - If a feature is missing, document it in `frontend/.dx-tool/FEATURE_REQUESTS.md`
+   - The DX tool team will add the feature
+
+2. **DO NOT use `curl` + manual parsing**
+   - `dx` handles SPA rendering, iframe detection, CSS extraction
+   - Manual parsing is error-prone and doesn't handle SPAs
+
+3. **DO NOT skip verification**
+   - Every story variant MUST be verified with `dx inspect`
+   - Document verification results in your handoff
+
+4. **If you find a bug or missing feature:**
+   - Document it in `frontend/.dx-tool/FEATURE_REQUESTS.md`
+   - Include: use case, expected command, expected output
+   - Notify DX tool team
+   - DO NOT create workarounds
+
+**Example workflow:**
+```bash
+# 1. Find story file
+dx story-file "http://localhost:6006/story/stories-atoms-button-button-story-vue"
+# Output: stories/atoms/Button/Button.story.vue
+
+# 2. Edit story file
+vim stories/atoms/Button/Button.story.vue
+
+# 3. Verify new variant
+dx inspect button "http://localhost:6006/story/stories-atoms-button-button-story-vue?variantId=stories-atoms-button-button-story-vue-3"
+
+# 4. Check specific classes
+dx css --class-exists "h-11" "http://localhost:6006/story/..."
+
+# 5. Validate HTML
+dx html --attributes button "http://localhost:6006/story/..."
+```
+
+**See also:**
+- `frontend/.dx-tool/README.md` - Full documentation
+- `frontend/.dx-tool/PERFORMANCE_SPECS.md` - Performance tuning
+- `frontend/.dx-tool/INSPECT_COMMAND_DEMO.md` - Usage examples
+- `frontend/.dx-tool/TEAM_DX_004_HANDOFF.md` - Workflow guide
+
+---
+
 ### ⚠️ CRITICAL: KNOW YOUR TOOLS
 
 **You MUST understand these dependencies. They are already installed and ready to use.**
