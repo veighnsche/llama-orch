@@ -203,6 +203,80 @@ To inspect all variants:
 
 ---
 
+### 🐛 BUG: CSS Class Detection Not Working
+
+**Reported by:** TEAM-FE-013  
+**Date:** 2025-10-12  
+**Severity:** CRITICAL - Blocks frontend verification workflow
+
+**Problem:** The `dx css --class-exists` command reports that `cursor-pointer` class does NOT exist in the stylesheet, but visual inspection in the browser shows the class IS working and the cursor DOES change to pointer on hover.
+
+**Evidence:**
+1. User confirms `cursor-pointer` works on http://localhost:6006 (storybook) - cursor changes to pointer on button hover
+2. DX tool reports: `✗ Error: Class 'cursor-pointer' not found in stylesheet` for http://localhost:6006
+3. Source code confirms class exists in `libs/storybook/stories/atoms/Button/Button.vue` line 12
+4. This means the DX tool is NOT correctly extracting CSS rules from the compiled stylesheet
+
+**Impact:**
+- Cannot trust `dx css --class-exists` for verification
+- Cannot verify Tailwind CSS is working correctly
+- Blocks the entire frontend verification workflow per FRONTEND_ENGINEERING_RULES.md
+
+**Reproduction:**
+```bash
+# 1. Verify cursor-pointer exists in source
+grep -r "cursor-pointer" frontend/libs/storybook/stories/atoms/Button/Button.vue
+# Output: cursor-pointer IS in the source code
+
+# 2. Check if DX tool finds it
+cd frontend/.dx-tool
+cargo run --release -- css --class-exists "cursor-pointer" "http://localhost:6006"
+# Output: ✗ Error: Class 'cursor-pointer' not found in stylesheet
+
+# 3. Open browser and visually verify
+# Open http://localhost:6006 in browser
+# Hover over button
+# Result: Cursor DOES change to pointer (class IS working)
+```
+
+**Expected Behavior:**
+```bash
+dx css --class-exists "cursor-pointer" "http://localhost:6006"
+# Should output: ✓ Class 'cursor-pointer' found in stylesheet
+```
+
+**Root Cause IDENTIFIED:**
+
+The `check_class_exists` function in `src/commands/css.rs` only checks if a CSS rule exists (e.g., `.cursor-pointer { cursor: pointer; }`), but it does NOT check if the class is actually in the HTML.
+
+**Evidence from HTML inspection:**
+```html
+<!-- Port 6006 (working) -->
+<button class="... cursor-pointer ...">Default Button</button>
+
+<!-- Port 6007 (Navigation bar) -->
+<button class="... cursor-pointer ...">Toggle theme</button>
+```
+
+The class `cursor-pointer` IS in the HTML class attribute on BOTH servers. But the DX tool reports it's not found because it's looking in the wrong place.
+
+**The Problem:**
+- Tailwind v4 may compile `cursor-pointer` into the final CSS differently
+- The CSS parser may not be finding the rule `.cursor-pointer { cursor: pointer; }`
+- But the class IS being applied in the HTML and IS working
+
+**Next Steps for DX Tool Team:**
+1. Update `check_class_exists` to ALSO check if class exists in HTML (not just CSS)
+2. Add `--check-html` flag to verify class is in use
+3. Debug CSS extraction in `src/commands/css.rs` line 24-57
+4. Verify CssParser::class_exists() is correctly parsing Tailwind v4 output
+5. Add test case for Tailwind v4 CSS extraction
+6. Consider: Maybe the tool should check HTML first, then CSS for verification
+
+**Workaround:** NONE - This is a critical bug that blocks verification
+
+---
+
 ## Completed Requests
 
 ### ✅ List Story Variants with URLs

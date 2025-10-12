@@ -1,0 +1,19 @@
+/* Created by: TEAM-DX-006 */
+/* TEAM-DX-006: Histoire-specific CSS that imports pre-compiled Tailwind from storybook
+ *
+ * Bug: Commercial Histoire was missing CSS classes from rbee-storybook workspace dependency
+ *      Example: cursor-pointer class existed in Button.vue but wasn't in compiled CSS
+ *      Root cause: Tailwind v4 PostCSS plugin doesn't scan workspace dependencies properly
+ *
+ * Fix: Import the already-compiled CSS from storybook instead of trying to scan/compile
+ *      Storybook's Tailwind already scans its own files and generates complete CSS
+ *      This approach uses workspace package imports (rbee-storybook/...) not relative paths
+ *
+ * Expected: All Tailwind classes from storybook components now available in Histoire
+ *           No duplicate Tailwind processing (Nuxt still uses @tailwindcss/vite for production)
+ *           Hot reload works automatically when storybook CSS changes
+ */
+
+@import "rbee-storybook/styles/tokens.css";
+
+/* Add any Histoire-specific overrides below if needed */

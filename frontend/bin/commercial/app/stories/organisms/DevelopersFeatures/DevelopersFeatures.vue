@@ -1,7 +1,8 @@
 <!-- Created by: TEAM-FE-000 (Scaffolding) -->
 <!-- TEAM-FE-005: Implemented DevelopersFeatures -->
+<!-- TEAM-DX-006: Added missing 'computed' import to fix undefined reference error -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Code, Cpu, Gauge, Terminal } from 'lucide-vue-next'
 
 interface Feature {
