@@ -514,7 +514,78 @@ Solution: Check Tailwind config...
 
 ---
 
-## 10. Versioning Rules
+## 10. Code Ownership & History Rules
+
+### ⚠️ MANDATORY: Team Signatures
+
+**All code MUST be signed by the team that wrote it.**
+
+✅ **VALID:**
+```rust
+// Created by: TEAM-DX-001
+// TEAM-DX-002: Added timeout handling
+// TEAM-DX-003: Optimized for performance
+
+pub async fn fetch_page(url: &str) -> Result<String> {
+    // Implementation
+}
+```
+
+❌ **INVALID:**
+```rust
+// No signature
+pub async fn fetch_page(url: &str) -> Result<String> {
+    // Implementation
+}
+```
+
+### Signature Format
+
+**New files:**
+```rust
+// Created by: TEAM-DX-XXX
+```
+
+**Modifications:**
+```rust
+// TEAM-DX-XXX: Brief description of change
+```
+
+**Documentation:**
+```markdown
+**Created by:** TEAM-DX-XXX
+**Modified by:** TEAM-DX-YYY (description)
+```
+
+### ⚠️ CRITICAL: Never Remove Historical Signatures
+
+**NEVER remove other teams' signatures. They provide historical context.**
+
+✅ **VALID:**
+- Add your signature when modifying code
+- Keep all previous signatures
+- Add context for why you changed something
+
+❌ **INVALID:**
+- Removing old signatures
+- Replacing signatures with your own
+- Deleting historical context
+
+**Exception:** Only remove signatures if the entire surrounding code is deleted and keeping them would cause confusion.
+
+### Why This Matters
+
+Team signatures provide:
+- **Accountability** - Know who to ask about code
+- **History** - Understand evolution of the codebase
+- **Context** - Why decisions were made
+- **Attribution** - Credit for work done
+
+**Without signatures, the codebase becomes a mystery.**
+
+---
+
+## 11. Versioning Rules
 
 ### ⚠️ MANDATORY: Semantic Versioning
 
@@ -611,6 +682,11 @@ fn check_compatibility(version: &str) -> Result<()> {
 │   ✅ Copy-pastable code                                │
 │   ✅ Troubleshooting guide                             │
 │                                                         │
+│ Code Ownership:                                         │
+│   ✅ Add TEAM-DX-XXX signatures                        │
+│   ✅ Never remove old signatures                       │
+│   ✅ Preserve historical context                       │
+│                                                         │
 │ Versioning:                                             │
 │   ✅ Semantic versioning                               │
 │   ✅ Changelog                                         │
@@ -632,6 +708,7 @@ fn check_compatibility(version: &str) -> Result<()> {
 - Are well-tested (happy path + edge cases)
 - Are easy to distribute (single binary)
 - Have great docs (examples first)
+- Have clear ownership (team signatures)
 - Follow semver (predictable updates)
 
 **Bad DX tools:**

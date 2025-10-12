@@ -5,3 +5,4 @@ pub mod commands;
 pub mod fetcher;
 pub mod parser;
 pub mod error;
+pub mod config;

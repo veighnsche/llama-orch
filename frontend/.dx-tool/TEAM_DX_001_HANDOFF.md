@@ -16,7 +16,42 @@ Built the foundation for the Frontend DX CLI Tool - a working Rust binary that v
 
 ## What We Built
 
-### 1. Project Structure ✅
+### 1. Workspace-Aware Configuration ✅
+
+**The tool is tailored for your Nuxt + Tailwind projects:**
+
+- **Commercial frontend** (`bin/commercial`) - Nuxt app on port 3000
+- **Storybook** (`libs/storybook`) - Component library on port 6006
+
+**Usage:**
+```bash
+# Target commercial (no URL needed!)
+dx --project commercial css --class-exists "cursor-pointer"
+
+# Target storybook
+dx --project storybook css --class-exists "btn-primary"
+
+# Or use explicit URL
+dx css --class-exists "cursor-pointer" http://localhost:3000
+```
+
+**Configuration file** (`.dxrc.json` in `frontend/`):
+```json
+{
+  "workspace": {
+    "commercial": {
+      "url": "http://localhost:3000",
+      "port": 3000
+    },
+    "storybook": {
+      "url": "http://localhost:6006",
+      "port": 6006
+    }
+  }
+}
+```
+
+### 2. Project Structure ✅
 
 ```
 frontend/.dx-tool/
@@ -24,6 +59,7 @@ frontend/.dx-tool/
 │   ├── main.rs              # CLI entry point with clap
 │   ├── lib.rs               # Library exports
 │   ├── error.rs             # Error types with thiserror
+│   ├── config.rs            # Workspace-aware configuration
 │   ├── commands/
 │   │   ├── mod.rs
 │   │   └── css.rs           # CSS verification command
@@ -35,12 +71,22 @@ frontend/.dx-tool/
 │       ├── html.rs          # HTML parsing with scraper
 │       └── css.rs           # CSS analysis
 ├── Cargo.toml               # Dependencies configured
-└── .gitignore
+├── .gitignore
+└── README_USAGE.md          # User guide
+
+frontend/
+└── .dxrc.json               # Workspace configuration
 ```
 
-### 2. Working Command: `dx css --class-exists` ✅
+### 3. Working Command: `dx css --class-exists` ✅
 
-**Usage:**
+**Workspace-aware usage (recommended):**
+```bash
+dx --project commercial css --class-exists "cursor-pointer"
+dx --project storybook css --class-exists "hover:bg-blue-500"
+```
+
+**Explicit URL usage:**
 ```bash
 dx css --class-exists "cursor-pointer" http://localhost:3000
 ```
@@ -66,7 +112,13 @@ dx css --class-exists "cursor-pointer" http://localhost:3000
     - Class tree-shaken by build tool
 ```
 
-### 3. Core Features Implemented ✅
+### 4. Core Features Implemented ✅
+
+**Configuration System (`src/config.rs`):**
+- Load workspace config from `.dxrc.json`
+- Default URLs for commercial (3000) and storybook (6006)
+- Project-aware URL resolution
+- Fallback to sensible defaults if no config file
 
 **HTTP Fetcher (`src/fetcher/client.rs`):**
 - 2-second default timeout (DX rule: <2s response time)
@@ -99,7 +151,7 @@ dx css --class-exists "cursor-pointer" http://localhost:3000
 cargo test
 ```
 
-**Result:** 13 tests passed, 0 failed
+**Result:** 16 tests passed, 0 failed (added 3 config tests)
 
 **Test coverage:**
 - HTTP fetcher creation and timeout configuration
@@ -108,6 +160,8 @@ cargo test
 - Stylesheet URL extraction (relative/absolute)
 - Inline style extraction
 - Base URL extraction with ports
+- **Config loading and project resolution**
+- **Commercial/Storybook default URLs**
 
 ---
 
@@ -132,6 +186,15 @@ cargo build --release
 ---
 
 ## Code Examples
+
+### Using the Config System
+```rust
+use dx::config::Config;
+
+let config = Config::load(); // Loads from .dxrc.json or uses defaults
+let commercial = config.get_project("commercial").unwrap();
+assert_eq!(commercial.url, "http://localhost:3000");
+```
 
 ### Using the HTTP Fetcher
 ```rust
@@ -201,14 +264,23 @@ From `06_IMPLEMENTATION_ROADMAP.md`, Phase 2 tasks:
 ## How to Continue
 
 1. **Read Phase 2 requirements** in `06_IMPLEMENTATION_ROADMAP.md`
-2. **Test the existing command:**
+2. **Test the workspace-aware commands:**
    ```bash
+   # Start commercial dev server
    cd frontend/bin/commercial
-   pnpm dev  # Start server on localhost:3000
+   pnpm dev  # Runs on localhost:3000
+   
+   # In another terminal, test with --project flag
+   cd frontend/.dx-tool
+   cargo run --release -- --project commercial css --class-exists "cursor-pointer"
+   
+   # Or test storybook
+   cd frontend/libs/storybook
+   pnpm story:dev  # Runs on localhost:6006
    
    # In another terminal
    cd frontend/.dx-tool
-   cargo run --release -- css --class-exists "cursor-pointer" http://localhost:3000
+   cargo run --release -- --project storybook css --class-exists "text-foreground"
    ```
 3. **Extend the CLI** with new commands following the same pattern
 4. **Keep tests passing** - run `cargo test` before handoff

@@ -1,0 +1,34 @@
+{
+  "base_url": "http://localhost:3000",
+  "timeout": 2,
+  "workspace": {
+    "commercial": {
+      "dir": "bin/commercial",
+      "url": "http://localhost:3000",
+      "port": 3000,
+      "component_paths": [
+        "app/**/*.vue",
+        "components/**/*.vue",
+        "layouts/**/*.vue",
+        "pages/**/*.vue"
+      ]
+    },
+    "commercial-story": {
+      "dir": "bin/commercial",
+      "url": "http://localhost:6007",
+      "port": 6007,
+      "component_paths": [
+        "components/organisms/**/*.vue",
+        "components/templates/**/*.vue"
+      ]
+    },
+    "storybook": {
+      "dir": "libs/storybook",
+      "url": "http://localhost:6006",
+      "port": 6006,
+      "component_paths": [
+        "stories/**/*.vue"
+      ]
+    }
+  }
+}

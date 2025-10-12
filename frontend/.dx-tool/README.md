@@ -1,31 +1,28 @@
 # Frontend DX Tool - Planning Documents
 
-**Created by:** TEAM-FE-011 (aka TEAM-DX-000)  
-**Status:** Planning Phase
+A Rust-based CLI tool for verifying CSS and HTML changes without browser access.
 
-## Overview
+Tailored for the **Nuxt + Tailwind** setup in `bin/commercial` and `libs/storybook`.
 
-A CLI tool for frontend engineers to verify CSS and HTML changes without browser access.
+## Installation
 
-## Documents
+```bash
+cd frontend/.dx-tool
+cargo build --release
 
-1. **`00_MASTER_PLAN.md`** - Overall vision, technology stack, success criteria
-2. **`01_CLI_DESIGN.md`** - Command structure, UX, examples
-3. **`02_CSS_VERIFICATION.md`** - CSS analysis features
-4. **`03_HTML_QUERIES.md`** - HTML querying features
-5. **`04_VISUAL_REGRESSION.md`** - Snapshot testing
-6. **`05_INTEGRATION.md`** - Workspace integration
-7. **`06_IMPLEMENTATION_ROADMAP.md`** - Development timeline
+# Optional: Add to PATH
+export PATH="$PATH:$(pwd)/target/release"
+```
 
 ## Quick Start
 
-Read documents in order. Start with `00_MASTER_PLAN.md`.
+### Workspace-Aware Commands
 
-## Technology
+The tool knows about your projects! Use `--project` to target commercial or storybook:
 
-- **Language:** Rust
-- **Key Libraries:** reqwest, scraper, lightningcss, clap, insta
-- **Distribution:** Single binary, no runtime dependencies
+```bash
+# Check class in commercial frontend (localhost:3000)
+dx --project commercial css --class-exists "cursor-pointer"
 
 ## Timeline
 
