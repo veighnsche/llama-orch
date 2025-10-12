@@ -1,0 +1,11 @@
+# Created by: TEAM-DX-001
+# Rust build artifacts
+/target/
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+.dx-snapshots/
