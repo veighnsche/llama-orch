@@ -2,7 +2,7 @@ packages:
   - consumers/llama-orch-utils
   - consumers/.examples/*
   - consumers/llama-orch-sdk/ts
-  - frontend/bin/commercial-frontend
+  - frontend/bin/commercial
   - frontend/bin/d3-sim-frontend
   - frontend/libs/storybook
   - frontend/libs/frontend-tooling

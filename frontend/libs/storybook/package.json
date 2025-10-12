@@ -6,6 +6,7 @@
   "main": "./stories/index.ts",
   "exports": {
     "./stories": "./stories/index.ts",
+    "./stories/*": "./stories/*",
     "./styles/tokens.css": "./styles/tokens.css",
     "./styles/tokens-base.css": "./styles/tokens-base.css",
     "./templates/*": "./stories/templates/*.vue"

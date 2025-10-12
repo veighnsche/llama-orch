@@ -1,6 +1,4 @@
+<!-- TEAM-FE-010: Nuxt app root with page routing -->
 <template>
-  <div>
-    <NuxtRouteAnnouncer />
-    <NuxtWelcome />
-  </div>
+  <NuxtPage />
 </template>
