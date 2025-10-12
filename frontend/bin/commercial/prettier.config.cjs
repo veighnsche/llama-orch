@@ -1,4 +1,11 @@
 /** @type {import('prettier').Config} */
 module.exports = {
-  ...require('rbee-frontend-tooling/prettier'),
+  semi: false,
+  singleQuote: true,
+  trailingComma: 'all',
+  arrowParens: 'always',
+  printWidth: 120,
+  tabWidth: 2,
+  useTabs: false,
+  plugins: [],
 }
