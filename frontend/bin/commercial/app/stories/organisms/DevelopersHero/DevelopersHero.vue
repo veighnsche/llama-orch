@@ -1,7 +1,7 @@
 <!-- Created by: TEAM-FE-000 (Scaffolding) -->
 <!-- TEAM-FE-005: Implemented DevelopersHero -->
 <script setup lang="ts">
-import { Button } from '~/stories'
+import { Button } from 'rbee-storybook/stories'
 import { ArrowRight, Github, Check } from 'lucide-vue-next'
 
 interface Props {

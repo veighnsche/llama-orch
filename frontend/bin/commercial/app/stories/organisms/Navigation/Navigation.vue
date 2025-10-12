@@ -2,7 +2,7 @@
 <!-- TEAM-FE-CONSOLIDATE: Ported from reference/v0 navigation component with design tokens -->
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Button } from '~/stories'
+import { Button } from 'rbee-storybook/stories'
 import { Menu, X, Github } from 'lucide-vue-next'
 
 const mobileMenuOpen = ref(false)

@@ -1,7 +1,7 @@
 <!-- Created by: TEAM-FE-000 (Scaffolding) -->
 <!-- TEAM-FE-008: Implemented EnterpriseHero -->
 <script setup lang="ts">
-import { Button } from '~/stories'
+import { Button } from 'rbee-storybook/stories'
 import { Shield, Lock, FileCheck } from 'lucide-vue-next'
 
 interface Props {

@@ -2,7 +2,7 @@
 <!-- TEAM-FE-CONSOLIDATE: Implemented EmailCapture with design tokens -->
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Button, Input } from '~/stories'
+import { Button, Input } from 'rbee-storybook/stories'
 import { Mail, CheckCircle2, Github } from 'lucide-vue-next'
 
 interface Props {

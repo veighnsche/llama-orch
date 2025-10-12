@@ -12,7 +12,7 @@ import {
   SecurityIsolation,
   AdditionalFeaturesGrid,
   EmailCapture,
-} from '~/stories'
+} from 'rbee-storybook/stories'
 </script>
 
 <template>

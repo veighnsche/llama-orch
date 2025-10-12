@@ -2,7 +2,7 @@
 <!-- TEAM-FE-006: Implemented PricingSection component -->
 <script setup lang="ts">
 import { Check } from 'lucide-vue-next'
-import { Button } from '~/stories'
+import { Button } from 'rbee-storybook/stories'
 
 interface PricingTier {
   name: string

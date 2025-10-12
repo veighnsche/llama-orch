@@ -2,7 +2,7 @@
 <!-- TEAM-FE-006: Implemented TechnicalSection component -->
 <script setup lang="ts">
 import { Github } from 'lucide-vue-next'
-import { Button } from '~/stories'
+import { Button } from 'rbee-storybook/stories'
 
 interface ArchitectureItem {
   title: string

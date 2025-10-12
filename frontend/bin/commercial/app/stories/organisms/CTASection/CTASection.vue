@@ -2,7 +2,7 @@
 <!-- TEAM-FE-006: Implemented CTASection component -->
 <script setup lang="ts">
 import { ArrowRight, BookOpen, MessageCircle } from 'lucide-vue-next'
-import { Button } from '~/stories'
+import { Button } from 'rbee-storybook/stories'
 
 interface Props {
   title?: string

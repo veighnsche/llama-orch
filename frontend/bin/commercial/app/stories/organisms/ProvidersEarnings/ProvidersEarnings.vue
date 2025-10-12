@@ -2,7 +2,7 @@
 <!-- TEAM-FE-007: Implemented ProvidersEarnings component -->
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Button } from '~/stories'
+import { Button } from 'rbee-storybook/stories'
 import { SliderRoot, SliderTrack, SliderRange, SliderThumb } from 'radix-vue'
 
 interface GPUModel {

@@ -1,7 +1,7 @@
 <!-- Created by: TEAM-FE-000 (Scaffolding) -->
 <!-- TEAM-FE-008: Implemented CoreFeaturesTabs -->
 <script setup lang="ts">
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '~/stories'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from 'rbee-storybook/stories'
 import { Code, Cpu, Gauge, Zap } from 'lucide-vue-next'
 </script>
 

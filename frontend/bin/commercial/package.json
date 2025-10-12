@@ -9,7 +9,10 @@
 		"preview": "pnpm run build && wrangler dev",
 		"postinstall": "nuxt prepare",
 		"deploy": "pnpm run build && wrangler deploy",
-		"cf-typegen": "wrangler types"
+		"cf-typegen": "wrangler types",
+		"story:dev": "histoire dev --port 6007",
+		"story:build": "histoire build",
+		"story:preview": "histoire preview --port 6007"
 	},
 	"dependencies": {
 		"@tailwindcss/vite": "^4.1.14",
@@ -28,9 +31,15 @@
 		"vue-router": "^4.5.1"
 	},
 	"devDependencies": {
+		"@histoire/plugin-vue": "1.0.0-alpha.3",
+		"@types/node": "^24.5.2",
+		"@vitejs/plugin-vue": "^6.0.1",
 		"h3": "2.0.1-rc.2",
+		"histoire": "1.0.0-alpha.3",
 		"nitro-cloudflare-dev": "^0.2.2",
 		"nitropack": "^2.12.7",
+		"typescript": "^5.9.2",
+		"vite": "^7.0.6",
 		"wrangler": "^4.42.2"
 	}
 }

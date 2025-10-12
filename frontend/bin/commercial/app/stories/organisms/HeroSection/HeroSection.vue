@@ -1,7 +1,7 @@
 <!-- Created by: TEAM-FE-000 (Scaffolding) -->
 <!-- TEAM-FE-003: Implemented HeroSection component -->
 <script setup lang="ts">
-import { Button } from '~/stories'
+import { Button } from 'rbee-storybook/stories'
 import { ArrowRight, Github, Star } from 'lucide-vue-next'
 
 interface Props {

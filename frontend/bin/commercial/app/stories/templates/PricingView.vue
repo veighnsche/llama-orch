@@ -6,7 +6,7 @@ import {
   PricingComparisonTable,
   PricingFAQ,
   EmailCapture,
-} from '~/stories'
+} from 'rbee-storybook/stories'
 </script>
 
 <template>

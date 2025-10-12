@@ -1,7 +1,7 @@
 <!-- Created by: TEAM-FE-000 (Scaffolding) -->
 <!-- TEAM-FE-004: Implemented AudienceSelector organism -->
 <script setup lang="ts">
-import { Card, Button } from '~/stories'
+import { Card, Button } from 'rbee-storybook/stories'
 import { ArrowRight, Code2, Server, Shield } from 'lucide-vue-next'
 
 interface Props {
