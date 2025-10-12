@@ -4,5 +4,4 @@ packages:
   - consumers/llama-orch-sdk/ts
   - frontend/bin/commercial
   - frontend/libs/frontend-tooling
-  - frontend/libs/shared-components
   - frontend/reference/v0
