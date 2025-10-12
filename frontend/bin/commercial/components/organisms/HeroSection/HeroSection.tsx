@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/components/atoms/Button/Button'
-import { ArrowRight, Github, Star, DollarSign } from 'lucide-react'
+import { ArrowRight, Star, DollarSign } from 'lucide-react'
 import { PulseBadge, TrustIndicator, TerminalWindow, ProgressBar, FloatingKPICard } from '@/components/molecules'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'

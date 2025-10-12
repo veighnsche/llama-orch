@@ -1,5 +1,6 @@
 import { Button } from '@/components/atoms/Button/Button'
-import { ArrowRight, Github } from 'lucide-react'
+import { GitHubIcon } from '@/components/atoms/GitHubIcon/GitHubIcon'
+import { ArrowRight } from 'lucide-react'
 
 export function DevelopersCTA() {
   return (
@@ -23,7 +24,7 @@ export function DevelopersCTA() {
               variant="outline"
               className="border-border text-foreground hover:bg-secondary bg-transparent"
             >
-              <Github className="mr-2 h-4 w-4" />
+              <GitHubIcon className="mr-2 h-4 w-4" />
               View Documentation
             </Button>
           </div>

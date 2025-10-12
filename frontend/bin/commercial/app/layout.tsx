@@ -24,7 +24,9 @@ export default function RootLayout({
       <body className="font-sans">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <Navigation />
-          <Suspense fallback={null}>{children}</Suspense>
+          <main id="main">
+            <Suspense fallback={null}>{children}</Suspense>
+          </main>
         </ThemeProvider>
       </body>
     </html>

@@ -1,4 +1,4 @@
-import { Github } from 'lucide-react'
+import { GitHubIcon } from '@/components/atoms/GitHubIcon/GitHubIcon'
 import { Button } from '@/components/atoms/Button/Button'
 import { SectionContainer, BulletListItem } from '@/components/molecules'
 
@@ -56,7 +56,7 @@ export function TechnicalSection() {
               <div className="text-sm text-muted-foreground">MIT License</div>
             </div>
             <Button variant="outline" size="sm" className="border-primary/30 bg-transparent">
-              <Github className="h-4 w-4 mr-2" />
+              <GitHubIcon className="h-4 w-4 mr-2" />
               View Source
             </Button>
           </div>

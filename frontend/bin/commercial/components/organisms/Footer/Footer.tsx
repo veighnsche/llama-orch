@@ -1,10 +1,16 @@
-import { Github, MessageCircle } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
+import { GitHubIcon } from '@/components/atoms/GitHubIcon/GitHubIcon'
+import { BrandLogo } from '@/components/molecules/BrandLogo/BrandLogo'
 import { FooterColumn } from '@/components/molecules'
 
 export function Footer() {
   return (
     <footer className="bg-background text-muted-foreground py-16">
       <div className="container mx-auto px-4">
+        <div className="mb-12">
+          <BrandLogo size="lg" className="mb-8" />
+        </div>
+        
         <div className="grid md:grid-cols-4 gap-8 mb-12">
           <FooterColumn
             title="Product"
@@ -69,7 +75,7 @@ export function Footer() {
               rel="noopener noreferrer"
               className="hover:text-primary transition-colors"
             >
-              <Github className="h-5 w-5" />
+              <GitHubIcon className="h-5 w-5" />
             </a>
             <a href="#" className="hover:text-primary transition-colors">
               <MessageCircle className="h-5 w-5" />

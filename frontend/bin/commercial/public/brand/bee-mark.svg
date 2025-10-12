@@ -1,0 +1,30 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- rbee brand mark: orchestration, efficiency, community -->
+  
+  <!-- Left wing (motion, distributed work) -->
+  <path d="M7 10.5C7 10.5 4 9 3 11C2 13 5 13.5 7 12.5" fill="#f59e0b" opacity="0.8"/>
+  
+  <!-- Right wing (motion, distributed work) -->
+  <path d="M17 10.5C17 10.5 20 9 21 11C22 13 19 13.5 17 12.5" fill="#f59e0b" opacity="0.8"/>
+  
+  <!-- Body (golden, efficient core) -->
+  <ellipse cx="12" cy="13.5" rx="4.5" ry="6" fill="#f59e0b"/>
+  
+  <!-- Stripes (structure, organization) -->
+  <rect x="7.5" y="10.5" width="9" height="1.2" rx="0.6" fill="#18181b" opacity="0.9"/>
+  <rect x="7.5" y="13.5" width="9" height="1.2" rx="0.6" fill="#18181b" opacity="0.9"/>
+  <rect x="7.5" y="16.5" width="9" height="1.2" rx="0.6" fill="#18181b" opacity="0.9"/>
+  
+  <!-- Head (intelligence, orchestration) -->
+  <circle cx="12" cy="7" r="2.8" fill="#18181b"/>
+  
+  <!-- Antennae (connectivity, network) -->
+  <line x1="10.8" y1="5.2" x2="9.5" y2="3" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="13.2" y1="5.2" x2="14.5" y2="3" stroke="#18181b" stroke-width="1.2" stroke-linecap="round"/>
+  <circle cx="9.5" cy="3" r="1" fill="#f59e0b"/>
+  <circle cx="14.5" cy="3" r="1" fill="#f59e0b"/>
+  
+  <!-- Eyes (awareness, monitoring) -->
+  <circle cx="10.5" cy="7" r="0.6" fill="#f59e0b"/>
+  <circle cx="13.5" cy="7" r="0.6" fill="#f59e0b"/>
+</svg>
