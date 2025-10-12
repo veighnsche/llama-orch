@@ -63,6 +63,9 @@ importers:
       radix-vue:
         specifier: ^1.9.11
         version: 1.9.17(vue@3.5.22(typescript@5.9.2))
+      rbee-storybook:
+        specifier: workspace:*
+        version: link:../../libs/storybook
       tailwind-merge:
         specifier: ^2.5.5
         version: 2.6.0
