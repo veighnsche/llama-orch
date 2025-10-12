@@ -3,9 +3,10 @@
 import type React from 'react'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/atoms/Button/Button'
 import { Input } from '@/components/atoms/Input/Input'
-import { Mail, CheckCircle2 } from 'lucide-react'
+import { Mail, CheckCircle2, Lock, GitBranch } from 'lucide-react'
 import { PulseBadge } from '@/components/molecules'
 
 export function EmailCapture() {
@@ -24,66 +25,121 @@ export function EmailCapture() {
   }
 
   return (
-    <section className="py-24 bg-background">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div className="mb-6">
-          <PulseBadge text="Currently in Development (M0 - 68% Complete)" />
+    <section className="relative isolate py-28 bg-background after:absolute after:inset-0 after:bg-[radial-gradient(40rem_40rem_at_50%_-10%,_oklch(0.97_0_0/_0.06),transparent_60%)] after:pointer-events-none">
+      {/* Decorative bee glyphs */}
+      <svg
+        className="absolute top-16 left-[8%] w-16 h-16 opacity-5 pointer-events-none"
+        aria-hidden="true"
+        focusable="false"
+        viewBox="0 0 64 64"
+        fill="currentColor"
+      >
+        <circle cx="32" cy="32" r="24" />
+        <path d="M20 32h24M32 20v24" stroke="white" strokeWidth="4" />
+      </svg>
+      <svg
+        className="absolute bottom-20 right-[10%] w-16 h-16 opacity-5 pointer-events-none"
+        aria-hidden="true"
+        focusable="false"
+        viewBox="0 0 64 64"
+        fill="currentColor"
+      >
+        <circle cx="32" cy="32" r="24" />
+        <path d="M20 32h24M32 20v24" stroke="white" strokeWidth="4" />
+      </svg>
+
+      <div className="relative max-w-3xl mx-auto px-6 text-center">
+        {/* Status badge */}
+        <div className="mb-4 inline-flex animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '100ms' }}>
+          <PulseBadge text="In Development · M0 · 68%" />
         </div>
 
-        <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Be the First to Know</h2>
+        {/* Headline */}
+        <h2 className="text-5xl md:text-6xl font-bold tracking-tight text-foreground mb-5 animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '300ms' }}>
+          Get Updates. Own Your AI.
+        </h2>
 
-        <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-          rbee is actively being built. Join our waitlist to get early access, updates on development progress, and
-          exclusive launch benefits.
+        {/* Subhead */}
+        <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '450ms' }}>
+          Join the rbee waitlist to get early access, build notes, and launch perks for running AI on your own hardware.
         </p>
 
+        {/* Supportive visual - homelab illustration */}
+        <Image
+          src="/illustrations/homelab-bee.svg"
+          width={960}
+          height={140}
+          priority
+          className="mx-auto mb-6 opacity-90"
+          alt="isometric homelab rack connected across small PCs; friendly bee icon hovering above; warm midnight palette; minimal linework; evokes 'run AI on your own hardware'"
+        />
+
+        {/* Form or success state */}
         {!submitted ? (
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-            <div className="flex-1 relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="pl-10 bg-card border-border text-foreground placeholder:text-muted-foreground h-12"
-              />
+          <form onSubmit={handleSubmit} className="mx-auto max-w-xl">
+            <div className="flex flex-col sm:flex-row items-stretch gap-3">
+              <div className="relative flex-1">
+                <label htmlFor="waitlist-email" className="sr-only">
+                  Email address
+                </label>
+                <Mail
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/80"
+                  aria-hidden="true"
+                  focusable="false"
+                />
+                <Input
+                  id="waitlist-email"
+                  type="email"
+                  placeholder="you@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="h-12 pl-10 bg-card/80 border-border/70 text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/40 transition-shadow data-[invalid=true]:border-destructive/60 data-[invalid=true]:bg-destructive/5"
+                />
+              </div>
+              <Button
+                type="submit"
+                className="h-12 px-7 bg-primary text-primary-foreground font-semibold rounded-xl shadow-sm hover:translate-y-[-1px] hover:shadow-md transition-transform"
+              >
+                Join Waitlist
+              </Button>
             </div>
-            <Button
-              type="submit"
-              size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-12 px-8"
-            >
-              Join Waitlist
-            </Button>
+
+            {/* Trust microcopy */}
+            <div className="mt-3 text-sm text-muted-foreground flex items-center justify-center gap-2">
+              <Lock className="w-3.5 h-3.5 text-muted-foreground/70" aria-hidden="true" focusable="false" />
+              <span>No spam. Unsubscribe anytime.</span>
+            </div>
           </form>
         ) : (
-          <div className="flex items-center justify-center gap-2 text-chart-3 text-lg">
-            <CheckCircle2 className="w-6 h-6" />
-            <span>Thanks! We'll keep you updated.</span>
+          <div
+            className="inline-flex items-center gap-2 text-chart-3 text-base md:text-lg font-medium bg-card/60 border border-border/60 rounded-xl px-4 py-3 shadow-xs"
+            role="status"
+            aria-live="polite"
+          >
+            <CheckCircle2 className="w-5 h-5" aria-hidden="true" focusable="false" />
+            <span>Thanks! You're on the list — we'll keep you posted.</span>
           </div>
         )}
 
-        <p className="text-sm text-muted-foreground mt-6">No spam. Unsubscribe anytime. We respect your privacy.</p>
+        {/* Community footer band */}
+        <div className="mt-14 pt-8">
+          {/* Gradient divider */}
+          <div className="h-px w-full mx-auto bg-gradient-to-r from-transparent via-border to-transparent" />
 
-        <div className="mt-12 pt-12 border-t border-border">
-          <p className="text-muted-foreground mb-4">Want to contribute or follow development?</p>
+          <p className="text-sm text-muted-foreground mt-6">Follow progress & contribute on GitHub</p>
+
           <a
             href="https://github.com/veighnsche/llama-orch"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-primary hover:text-primary/90 transition-colors font-medium"
+            className="inline-flex items-center gap-2 mt-3 text-primary font-medium hover:text-primary/90 transition-colors"
           >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path
-                fillRule="evenodd"
-                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Star us on GitHub
+            <GitBranch className="w-5 h-5" aria-hidden="true" focusable="false" />
+            <span>View Repository</span>
           </a>
+
+          <p className="text-xs text-muted-foreground/80 mt-2">Weekly dev notes. Roadmap issues tagged M0–M2.</p>
         </div>
       </div>
     </section>
