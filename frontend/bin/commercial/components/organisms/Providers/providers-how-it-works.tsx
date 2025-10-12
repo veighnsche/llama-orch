@@ -1,4 +1,5 @@
 import { Download, Settings, Globe, Wallet } from "lucide-react"
+import { CodeSnippet } from "@/components/atoms"
 
 export function ProvidersHowItWorks() {
   return (
@@ -23,9 +24,9 @@ export function ProvidersHowItWorks() {
             <p className="mb-4 text-pretty leading-relaxed text-muted-foreground">
               Download and install rbee with one command. Works on Windows, Mac, and Linux.
             </p>
-            <div className="rounded-lg border border-border bg-background p-3">
-              <code className="text-xs text-primary">curl -sSL rbee.dev/install.sh | sh</code>
-            </div>
+            <CodeSnippet variant="block" className="text-xs text-primary">
+              curl -sSL rbee.dev/install.sh | sh
+            </CodeSnippet>
           </div>
 
           <div className="relative">

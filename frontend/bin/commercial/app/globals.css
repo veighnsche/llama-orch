@@ -28,6 +28,9 @@
   --chart-3: #10b981;
   --chart-4: #8b5cf6;
   --chart-5: #ef4444;
+  --terminal-red: #ef4444;
+  --terminal-amber: #f59e0b;
+  --terminal-green: #10b981;
   --radius: 0.5rem;
   --sidebar: #f1f5f9;
   --sidebar-foreground: #0f172a;
@@ -37,8 +40,6 @@
   --sidebar-accent-foreground: #0f172a;
   --sidebar-border: #e2e8f0;
   --sidebar-ring: #f59e0b;
-  --font-sans: "Geist Sans", "Geist Sans Fallback";
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
   --font-serif: "Source Serif 4", "Source Serif 4 Fallback";
 }
 
@@ -67,6 +68,9 @@
   --chart-3: #10b981;
   --chart-4: #8b5cf6;
   --chart-5: #ef4444;
+  --terminal-red: #ef4444;
+  --terminal-amber: #f59e0b;
+  --terminal-green: #10b981;
   --sidebar: #0f172a;
   --sidebar-foreground: #f1f5f9;
   --sidebar-primary: #f59e0b;
@@ -78,8 +82,8 @@
 }
 
 @theme inline {
-  --font-sans: "Geist Sans", "Geist Sans Fallback";
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -104,6 +108,9 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-terminal-red: var(--terminal-red);
+  --color-terminal-amber: var(--terminal-amber);
+  --color-terminal-green: var(--terminal-green);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

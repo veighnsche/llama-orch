@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Button } from '@/components/atoms/Button/Button'
 import { Slider } from '@/components/atoms/Slider/Slider'
+import { cn } from '@/lib/utils'
 
 const gpuModels = [
   { name: "RTX 4090", baseRate: 0.45, vram: 24 },
@@ -49,7 +50,7 @@ export function ProvidersEarnings() {
                     {gpuModels.map((gpu) => {
                       const isSelected = selectedGPU.name === gpu.name
                       return (
-                      <button
+                        <button
                         key={gpu.name}
                         onClick={() => setSelectedGPU(gpu)}
                         className={cn(
@@ -66,8 +67,9 @@ export function ProvidersEarnings() {
                           </div>
                           <div className="text-sm text-primary">€{gpu.baseRate}/hr</div>
                         </div>
-                      </button>
-                    ))}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
 

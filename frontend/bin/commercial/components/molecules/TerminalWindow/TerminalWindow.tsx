@@ -37,7 +37,7 @@ export function TerminalWindow({
           </span>
         )}
       </div>
-      <div className="p-6 font-mono text-sm">{children}</div>
+      <div className="p-6 text-sm font-mono">{children}</div>
     </div>
   )
 }

@@ -25,7 +25,7 @@ export function CodeBlock({
   return (
     <div
       className={cn(
-        'bg-card border border-border rounded-lg p-6 font-mono text-sm',
+        'bg-card border border-border rounded-lg p-6 text-sm font-mono',
         className
       )}
     >

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { DollarSign, Shield, BarChart3, Clock, Sliders, Zap } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 const features = [
   {
