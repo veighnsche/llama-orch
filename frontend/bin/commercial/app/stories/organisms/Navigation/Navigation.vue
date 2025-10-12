@@ -1,8 +1,9 @@
 <!-- Created by: TEAM-FE-000 (Scaffolding) -->
 <!-- TEAM-FE-CONSOLIDATE: Ported from reference/v0 navigation component with design tokens -->
+<!-- TEAM-FE-010: Added ThemeToggle button from shared storybook -->
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Button } from 'rbee-storybook/stories'
+import { Button, ThemeToggle } from 'rbee-storybook/stories'
 import { Menu, X, Github } from 'lucide-vue-next'
 
 const mobileMenuOpen = ref(false)
@@ -58,6 +59,8 @@ const closeMobileMenu = () => {
           >
             <Github :size="20" />
           </a>
+
+          <ThemeToggle />
 
           <Button size="sm" variant="default">
             Join Waitlist
@@ -126,6 +129,10 @@ const closeMobileMenu = () => {
         >
           GitHub
         </a>
+        <div class="flex items-center gap-2">
+          <ThemeToggle />
+          <span class="text-sm text-muted-foreground">Toggle theme</span>
+        </div>
         <Button size="sm" variant="default" class="w-full">
           Join Waitlist
         </Button>

@@ -8,7 +8,8 @@
     "./stories": "./stories/index.ts",
     "./stories/*": "./stories/*",
     "./styles/tokens.css": "./styles/tokens.css",
-    "./styles/tokens-base.css": "./styles/tokens-base.css"
+    "./styles/tokens-base.css": "./styles/tokens-base.css",
+    "./styles/fonts.css": "./styles/fonts.css"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0",

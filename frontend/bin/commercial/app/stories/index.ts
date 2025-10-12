@@ -2,6 +2,7 @@
 // TEAM-FE-001: Added Button and Card/Alert subcomponents
 // TEAM-FE-002: Added Badge atom
 // TEAM-FE-CONSOLIDATE: Re-export atoms and molecules from workspace
+// TEAM-FE-010: Migrated ThemeToggle to shared storybook
 // Central export for all storybook components
 // Import like: import { Button, Input, HeroSection } from '~/stories'
 

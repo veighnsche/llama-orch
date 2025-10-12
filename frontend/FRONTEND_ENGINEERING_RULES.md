@@ -315,26 +315,42 @@ pnpm install
 
 ## 1. Component Development Rules
 
-### ⚠️ CRITICAL: BUILD IN STORYBOOK FIRST
+### ⚠️ CRITICAL: BUILD IN SHARED STORYBOOK FIRST
 
-**ALL components MUST be built in storybook BEFORE being used in the application.**
+**ALL atoms and molecules MUST be built in the SHARED storybook package (`/frontend/libs/storybook/`) because they are reusable across all frontends.**
 
-✅ **REQUIRED Workflow:**
+**Only organisms that are specific to ONE frontend should be built in that frontend's local stories directory.**
+
+✅ **REQUIRED Workflow for Atoms & Molecules (REUSABLE):**
 ```
-1. Create component in /frontend/libs/storybook/stories/[type]/[Name]/
-2. Create story file [Name].story.ts
-3. Test in Histoire (pnpm story:dev)
-4. Export in stories/index.ts
-5. THEN import in application
+1. Create component in /frontend/libs/storybook/stories/[atoms|molecules]/[Name]/
+2. Create story file [Name].story.vue
+3. Test in Histoire (cd /frontend/libs/storybook && pnpm story:dev)
+4. Export in /frontend/libs/storybook/stories/index.ts
+5. THEN import in ANY application via 'rbee-storybook/stories'
+```
+
+✅ **REQUIRED Workflow for Organisms (FRONTEND-SPECIFIC):**
+```
+1. Create component in /frontend/bin/[frontend-name]/app/stories/organisms/[Name]/
+2. Create story file [Name].story.vue
+3. Test in Histoire (cd /frontend/bin/[frontend-name] && pnpm story:dev)
+4. Export in /frontend/bin/[frontend-name]/app/stories/index.ts
+5. THEN import in that specific application via '~/stories'
 ```
 
 ❌ **BANNED:**
-- Creating components directly in `/frontend/bin/commercial-frontend/src/components/`
+- Creating atoms/molecules in frontend-specific directories (they belong in libs/storybook)
+- Creating components directly in `/frontend/bin/commercial/src/components/`
 - Copying components from React reference without testing in Histoire
 - Skipping the story file
 - Not testing in Histoire before using in app
 
-**Why this matters:** Storybook is your single source of truth. If it's not in storybook, it doesn't exist. Building in isolation catches bugs early and ensures reusability.
+**Why this matters:** 
+- **Atoms & Molecules** are reusable primitives (Button, Input, Card, FormField, etc.) that should work across ALL frontends (commercial, admin, dashboard, etc.)
+- **Organisms** are complex, context-specific components (Navigation, HeroSection, PricingTiers) that are usually unique to one frontend
+- Building in the shared storybook ensures consistency and prevents duplication
+- If it's not in the shared storybook, it can't be reused across frontends
 
 ---
 
@@ -518,13 +534,18 @@ interface Props {
 **Colors (via `@theme` directive):**
 - `bg-background` / `text-foreground` - Base colors
 - `bg-card` / `text-card-foreground` - Card backgrounds
-- `bg-primary` / `text-primary-foreground` - Primary actions
+- `bg-primary` / `text-primary-foreground` - Primary actions (buttons, links)
 - `bg-secondary` / `text-secondary-foreground` - Secondary elements
 - `bg-muted` / `text-muted-foreground` - Muted/subtle elements
 - `bg-accent` / `text-accent-foreground` - Accent highlights
+- `bg-highlight` / `text-highlight-foreground` - **NEW (TEAM-FE-010):** Emphasized backgrounds (pricing cards, comparison tables) - muted in dark mode
 - `bg-destructive` / `text-destructive-foreground` - Errors/warnings
 - `border-border` - Border colors
 - `ring-ring` - Focus rings
+
+**⚠️ CRITICAL: Use `bg-highlight` for emphasized backgrounds, NOT `bg-primary`**
+
+`bg-primary` stays bright in dark mode (good for buttons), but `bg-highlight` is muted in dark mode (good for card backgrounds). See `/frontend/libs/storybook/styles/DESIGN_TOKENS_GUIDE.md` for details.
 
 **Border Radius:**
 - `rounded` - Default radius

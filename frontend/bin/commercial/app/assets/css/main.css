@@ -1,2 +1,2 @@
-@import "tailwindcss";
+/* TEAM-FE-011: Import fonts via tokens.css (which already includes fonts) */
 @import "rbee-storybook/styles/tokens.css";

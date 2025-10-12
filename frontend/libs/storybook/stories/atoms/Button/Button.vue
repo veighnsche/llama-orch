@@ -1,5 +1,6 @@
 <!-- Created by: TEAM-FE-001 -->
 <!-- TEAM-FE-001: Updated to use Radix Vue Slot for asChild pattern -->
+<!-- TEAM-FE-011: Added cursor-pointer to base button styles -->
 <script setup lang="ts">
 import { computed } from 'vue'
 import { cva, type VariantProps } from 'class-variance-authority'
@@ -8,7 +9,7 @@ import { cn } from '../../../lib/utils'
 
 // Define variants using CVA - ported from React reference
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 cursor-pointer [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
   {
     variants: {
       variant: {

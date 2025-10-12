@@ -1,4 +1,6 @@
 /* Created by: TEAM-FE-009 - Base tokens without Tailwind import */
+/* TEAM-FE-010: Added highlight token for dark mode backgrounds */
+/* TEAM-FE-011: Added font tokens matching reference/v0 (Geist Sans, Geist Mono, Source Serif 4) */
 /* This file contains only theme variables and can be imported by any app */
 /* Apps must @import "tailwindcss" separately in their entry CSS */
 
@@ -26,6 +28,15 @@
   --input: #e2e8f0;
   --ring: #f59e0b;
   --radius: 0.5rem;
+  
+  /* Highlight token - for prominent backgrounds (pricing cards, CTAs, etc.) */
+  --highlight: #f59e0b;
+  --highlight-foreground: #ffffff;
+  
+  /* Font families - matching reference/v0 */
+  --font-sans: "Geist Sans", "Geist Sans Fallback", system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+  --font-serif: "Source Serif 4", "Source Serif 4 Fallback", Georgia, serif;
 }
 
 .dark {
@@ -49,10 +60,19 @@
   --border: #334155;
   --input: #334155;
   --ring: #f59e0b;
+  
+  /* Highlight colors - muted in dark mode to avoid overwhelming brightness */
+  --highlight: #78350f;
+  --highlight-foreground: #fbbf24;
 }
 
 /* Tailwind v4 @theme directive - maps CSS vars to Tailwind utilities */
 @theme inline {
+  /* Fonts */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+  
   /* Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -73,6 +93,8 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
   
   /* Border radius */
   --radius: var(--radius);
@@ -89,5 +111,5 @@ html {
 }
 
 body {
-  @apply bg-background text-foreground;
+  @apply bg-background text-foreground font-sans;
 }
