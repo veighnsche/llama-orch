@@ -26,7 +26,7 @@ export function FloatingKPICard({ className }: FloatingKPICardProps) {
   return (
     <div
       className={cn(
-        'absolute bottom-8 left-36 rounded-2xl shadow-lg/40 backdrop-blur-md',
+        'absolute -bottom-16 left-[50%] rounded-2xl shadow-lg/40 backdrop-blur-md',
         'bg-secondary/60 dark:bg-secondary/30 p-4 space-y-2',
         'transition-all duration-300 z-10',
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2',

@@ -1,13 +1,19 @@
 # BrandLogo Molecule
 
-Reusable brand logo component with the rbee bee mark and wordmark.
+Reusable brand logo component combining the bee mark and wordmark atoms.
+
+## Architecture
+
+This molecule combines two atoms:
+- **BrandMark** (bee icon)
+- **BrandWordmark** ("rbee" text with Geist Mono font)
 
 ## Usage
 
 ```tsx
-import { BrandLogo } from '@/components/molecules/BrandLogo/BrandLogo'
+import { BrandLogo } from '@/components/molecules'
 
-// Default (medium size, with wordmark, as link)
+// Default (medium size, as link to home)
 <BrandLogo />
 
 // Small size
@@ -15,9 +21,6 @@ import { BrandLogo } from '@/components/molecules/BrandLogo/BrandLogo'
 
 // Large size
 <BrandLogo size="lg" />
-
-// Icon only (no wordmark)
-<BrandLogo showWordmark={false} />
 
 // Without link (static display)
 <BrandLogo href="" />
@@ -29,13 +32,32 @@ import { BrandLogo } from '@/components/molecules/BrandLogo/BrandLogo'
 <BrandLogo priority />
 ```
 
+## Using Atoms Separately
+
+For custom layouts, use the atoms directly:
+
+```tsx
+import { BrandMark, BrandWordmark } from '@/components/atoms'
+
+// Icon only
+<BrandMark size="lg" />
+
+// Wordmark inline with text
+<h1>
+  <BrandMark size="lg" className="inline-block align-middle mr-3" />
+  <BrandWordmark size="5xl" inline />: your private AI
+</h1>
+
+// Wordmark in paragraph
+<p>Welcome to <BrandWordmark inline /> platform</p>
+```
+
 ## Props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `className` | `string` | `undefined` | Additional CSS classes |
 | `href` | `string` | `'/'` | Link destination (empty string disables link) |
-| `showWordmark` | `boolean` | `true` | Whether to show "rbee" text |
 | `priority` | `boolean` | `false` | Next.js Image priority loading |
 | `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Size variant |
 
