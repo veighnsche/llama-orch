@@ -2,11 +2,11 @@ import { Check, X } from "lucide-react"
 
 export function EnterpriseComparison() {
   return (
-    <section className="border-b border-slate-800 bg-slate-950 px-6 py-24">
+    <section className="border-b border-border bg-background px-6 py-24">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
-          <h2 className="mb-4 text-4xl font-bold text-white">Why Enterprises Choose rbee</h2>
-          <p className="mx-auto max-w-3xl text-balance text-xl text-slate-300">
+          <h2 className="mb-4 text-4xl font-bold text-foreground">Why Enterprises Choose rbee</h2>
+          <p className="mx-auto max-w-3xl text-balance text-xl text-muted-foreground">
             Compare rbee's compliance and security features against external AI providers.
           </p>
         </div>
@@ -14,13 +14,13 @@ export function EnterpriseComparison() {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="border-b border-slate-800">
-                <th className="p-4 text-left text-sm font-semibold text-slate-400">Feature</th>
-                <th className="bg-amber-500/5 p-4 text-center text-sm font-semibold text-amber-400">
+              <tr className="border-b border-border">
+                <th className="p-4 text-left text-sm font-semibold text-muted-foreground">Feature</th>
+                <th className="bg-primary/5 p-4 text-center text-sm font-semibold text-primary">
                   rbee (Self-Hosted)
                 </th>
-                <th className="p-4 text-center text-sm font-semibold text-slate-400">OpenAI / Anthropic</th>
-                <th className="p-4 text-center text-sm font-semibold text-slate-400">Azure OpenAI</th>
+                <th className="p-4 text-center text-sm font-semibold text-muted-foreground">OpenAI / Anthropic</th>
+                <th className="p-4 text-center text-sm font-semibold text-muted-foreground">Azure OpenAI</th>
               </tr>
             </thead>
             <tbody>
@@ -98,33 +98,33 @@ export function EnterpriseComparison() {
                   azure: false,
                 },
               ].map((row, i) => (
-                <tr key={i} className="border-b border-slate-800">
-                  <td className="p-4 text-sm text-slate-300">{row.feature}</td>
-                  <td className="bg-amber-500/5 p-4 text-center">
+                <tr key={i} className="border-b border-border">
+                  <td className="p-4 text-sm text-muted-foreground">{row.feature}</td>
+                  <td className="bg-primary/5 p-4 text-center">
                     {row.rbee === true ? (
-                      <Check className="mx-auto h-5 w-5 text-green-400" />
+                      <Check className="mx-auto h-5 w-5 text-chart-3" />
                     ) : row.rbee === false ? (
-                      <X className="mx-auto h-5 w-5 text-red-400" />
+                      <X className="mx-auto h-5 w-5 text-destructive" />
                     ) : (
-                      <span className="text-sm text-amber-400">{row.rbee}</span>
+                      <span className="text-sm text-primary">{row.rbee}</span>
                     )}
                   </td>
                   <td className="p-4 text-center">
                     {row.openai === true ? (
-                      <Check className="mx-auto h-5 w-5 text-green-400" />
+                      <Check className="mx-auto h-5 w-5 text-chart-3" />
                     ) : row.openai === false ? (
-                      <X className="mx-auto h-5 w-5 text-red-400" />
+                      <X className="mx-auto h-5 w-5 text-destructive" />
                     ) : (
-                      <span className="text-sm text-slate-400">{row.openai}</span>
+                      <span className="text-sm text-muted-foreground">{row.openai}</span>
                     )}
                   </td>
                   <td className="p-4 text-center">
                     {row.azure === true ? (
-                      <Check className="mx-auto h-5 w-5 text-green-400" />
+                      <Check className="mx-auto h-5 w-5 text-chart-3" />
                     ) : row.azure === false ? (
-                      <X className="mx-auto h-5 w-5 text-red-400" />
+                      <X className="mx-auto h-5 w-5 text-destructive" />
                     ) : (
-                      <span className="text-sm text-slate-400">{row.azure}</span>
+                      <span className="text-sm text-muted-foreground">{row.azure}</span>
                     )}
                   </td>
                 </tr>
@@ -133,7 +133,7 @@ export function EnterpriseComparison() {
           </table>
         </div>
 
-        <div className="mt-8 text-center text-sm text-slate-400">
+        <div className="mt-8 text-center text-sm text-muted-foreground">
           * Comparison based on publicly available information as of October 2025
         </div>
       </div>

@@ -2,11 +2,11 @@ import { FileCheck, Shield, Lock, Globe } from "lucide-react"
 
 export function EnterpriseCompliance() {
   return (
-    <section id="compliance" className="border-b border-slate-800 bg-slate-950 px-6 py-24">
+    <section id="compliance" className="border-b border-border bg-background px-6 py-24">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
-          <h2 className="mb-4 text-4xl font-bold text-white">Compliance by Design</h2>
-          <p className="mx-auto max-w-3xl text-balance text-xl text-slate-300">
+          <h2 className="mb-4 text-4xl font-bold text-foreground">Compliance by Design</h2>
+          <p className="mx-auto max-w-3xl text-balance text-xl text-muted-foreground">
             rbee is built from the ground up to meet GDPR, SOC2, and ISO 27001 requirements. Not bolted on as an
             afterthought.
           </p>
@@ -14,14 +14,14 @@ export function EnterpriseCompliance() {
 
         <div className="grid gap-8 lg:grid-cols-3">
           {/* GDPR */}
-          <div className="rounded-lg border border-slate-800 bg-slate-900 p-8">
+          <div className="rounded-lg border border-border bg-card p-8">
             <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/10">
-                <Globe className="h-6 w-6 text-amber-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                <Globe className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-white">GDPR</h3>
-                <p className="text-sm text-slate-400">EU Regulation</p>
+                <h3 className="text-2xl font-bold text-foreground">GDPR</h3>
+                <p className="text-sm text-muted-foreground">EU Regulation</p>
               </div>
             </div>
 
@@ -35,15 +35,15 @@ export function EnterpriseCompliance() {
                 "Breach notification (Article 33)",
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2">
-                  <FileCheck className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
-                  <span className="text-sm leading-relaxed text-slate-300">{item}</span>
+                  <FileCheck className="mt-0.5 h-4 w-4 shrink-0 text-chart-3" />
+                  <span className="text-sm leading-relaxed text-muted-foreground">{item}</span>
                 </div>
               ))}
             </div>
 
-            <div className="mt-6 rounded-lg border border-green-900/50 bg-green-950/20 p-4">
-              <div className="mb-1 font-semibold text-green-400">Compliance Endpoints</div>
-              <div className="space-y-1 text-xs text-slate-400">
+            <div className="mt-6 rounded-lg border border-chart-3/50 bg-chart-3/10 p-4">
+              <div className="mb-1 font-semibold text-chart-3">Compliance Endpoints</div>
+              <div className="space-y-1 text-xs text-muted-foreground">
                 <div>GET /v2/compliance/data-access</div>
                 <div>POST /v2/compliance/data-export</div>
                 <div>POST /v2/compliance/data-deletion</div>
@@ -53,14 +53,14 @@ export function EnterpriseCompliance() {
           </div>
 
           {/* SOC2 */}
-          <div className="rounded-lg border border-slate-800 bg-slate-900 p-8">
+          <div className="rounded-lg border border-border bg-card p-8">
             <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/10">
-                <Shield className="h-6 w-6 text-amber-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                <Shield className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-white">SOC2</h3>
-                <p className="text-sm text-slate-400">US Standard</p>
+                <h3 className="text-2xl font-bold text-foreground">SOC2</h3>
+                <p className="text-sm text-muted-foreground">US Standard</p>
               </div>
             </div>
 
@@ -74,15 +74,15 @@ export function EnterpriseCompliance() {
                 "Encryption at rest",
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2">
-                  <FileCheck className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
-                  <span className="text-sm leading-relaxed text-slate-300">{item}</span>
+                  <FileCheck className="mt-0.5 h-4 w-4 shrink-0 text-chart-3" />
+                  <span className="text-sm leading-relaxed text-muted-foreground">{item}</span>
                 </div>
               ))}
             </div>
 
-            <div className="mt-6 rounded-lg border border-green-900/50 bg-green-950/20 p-4">
-              <div className="mb-1 font-semibold text-green-400">Trust Service Criteria</div>
-              <div className="space-y-1 text-xs text-slate-400">
+            <div className="mt-6 rounded-lg border border-chart-3/50 bg-chart-3/10 p-4">
+              <div className="mb-1 font-semibold text-chart-3">Trust Service Criteria</div>
+              <div className="space-y-1 text-xs text-muted-foreground">
                 <div>✓ Security (CC1-CC9)</div>
                 <div>✓ Availability (A1.1-A1.3)</div>
                 <div>✓ Confidentiality (C1.1-C1.2)</div>
@@ -91,14 +91,14 @@ export function EnterpriseCompliance() {
           </div>
 
           {/* ISO 27001 */}
-          <div className="rounded-lg border border-slate-800 bg-slate-900 p-8">
+          <div className="rounded-lg border border-border bg-card p-8">
             <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/10">
-                <Lock className="h-6 w-6 text-amber-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                <Lock className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-white">ISO 27001</h3>
-                <p className="text-sm text-slate-400">International</p>
+                <h3 className="text-2xl font-bold text-foreground">ISO 27001</h3>
+                <p className="text-sm text-muted-foreground">International</p>
               </div>
             </div>
 
@@ -112,15 +112,15 @@ export function EnterpriseCompliance() {
                 "Information security policies (A.5)",
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2">
-                  <FileCheck className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
-                  <span className="text-sm leading-relaxed text-slate-300">{item}</span>
+                  <FileCheck className="mt-0.5 h-4 w-4 shrink-0 text-chart-3" />
+                  <span className="text-sm leading-relaxed text-muted-foreground">{item}</span>
                 </div>
               ))}
             </div>
 
-            <div className="mt-6 rounded-lg border border-green-900/50 bg-green-950/20 p-4">
-              <div className="mb-1 font-semibold text-green-400">ISMS Controls</div>
-              <div className="space-y-1 text-xs text-slate-400">
+            <div className="mt-6 rounded-lg border border-chart-3/50 bg-chart-3/10 p-4">
+              <div className="mb-1 font-semibold text-chart-3">ISMS Controls</div>
+              <div className="space-y-1 text-xs text-muted-foreground">
                 <div>✓ 114 controls implemented</div>
                 <div>✓ Risk assessment framework</div>
                 <div>✓ Continuous monitoring</div>
@@ -130,16 +130,16 @@ export function EnterpriseCompliance() {
         </div>
 
         {/* Bottom CTA */}
-        <div className="mt-12 rounded-lg border border-amber-500/20 bg-amber-500/5 p-8 text-center">
-          <h3 className="mb-2 text-2xl font-semibold text-white">Ready for Your Compliance Audit</h3>
-          <p className="mb-6 text-slate-300">
+        <div className="mt-12 rounded-lg border border-primary/20 bg-primary/5 p-8 text-center">
+          <h3 className="mb-2 text-2xl font-semibold text-foreground">Ready for Your Compliance Audit</h3>
+          <p className="mb-6 text-muted-foreground">
             Download our compliance documentation package or schedule a call with our compliance team.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <button className="rounded-lg bg-amber-500 px-6 py-3 font-semibold text-slate-950 transition-colors hover:bg-amber-400">
+            <button className="rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90">
               Download Compliance Pack
             </button>
-            <button className="rounded-lg border border-slate-700 px-6 py-3 font-semibold text-white transition-colors hover:bg-slate-800">
+            <button className="rounded-lg border border-border px-6 py-3 font-semibold text-foreground transition-colors hover:bg-secondary">
               Talk to Compliance Team
             </button>
           </div>

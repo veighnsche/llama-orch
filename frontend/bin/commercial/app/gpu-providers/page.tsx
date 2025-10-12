@@ -14,7 +14,7 @@ import { Footer } from "@/components/footer"
 
 export default function GPUProvidersPage() {
   return (
-    <main className="min-h-screen bg-slate-950 pt-16">
+    <main className="min-h-screen bg-background pt-16">
       <ProvidersHero />
       <EmailCapture />
       <ProvidersProblem />

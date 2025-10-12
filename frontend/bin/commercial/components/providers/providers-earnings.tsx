@@ -24,13 +24,13 @@ export function ProvidersEarnings() {
   const yearlyEarnings = monthlyEarnings * 12
 
   return (
-    <section id="earnings-calculator" className="border-b border-slate-800 bg-slate-950 px-6 py-24">
+    <section id="earnings-calculator" className="border-b border-border bg-background px-6 py-24">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
-          <h2 className="mb-4 text-balance text-4xl font-bold text-white lg:text-5xl">
+          <h2 className="mb-4 text-balance text-4xl font-bold text-foreground lg:text-5xl">
             Calculate Your Potential Earnings
           </h2>
-          <p className="mx-auto max-w-2xl text-pretty text-xl text-slate-300">
+          <p className="mx-auto max-w-2xl text-pretty text-xl text-muted-foreground">
             See how much you could earn based on your GPU model, availability, and utilization.
           </p>
         </div>
@@ -38,13 +38,13 @@ export function ProvidersEarnings() {
         <div className="mx-auto max-w-4xl">
           <div className="grid gap-8 lg:grid-cols-2">
             {/* Calculator Inputs */}
-            <div className="rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-8">
-              <h3 className="mb-6 text-xl font-bold text-white">Your Configuration</h3>
+            <div className="rounded-2xl border border-border bg-gradient-to-b from-card to-background p-8">
+              <h3 className="mb-6 text-xl font-bold text-foreground">Your Configuration</h3>
 
               <div className="space-y-6">
                 {/* GPU Selection */}
                 <div>
-                  <label className="mb-3 block text-sm font-medium text-slate-300">Select Your GPU</label>
+                  <label className="mb-3 block text-sm font-medium text-muted-foreground">Select Your GPU</label>
                   <div className="grid gap-2">
                     {gpuModels.map((gpu) => (
                       <button
@@ -52,16 +52,16 @@ export function ProvidersEarnings() {
                         onClick={() => setSelectedGPU(gpu)}
                         className={`rounded-lg border p-3 text-left transition-all ${
                           selectedGPU.name === gpu.name
-                            ? "border-amber-500 bg-amber-500/10"
-                            : "border-slate-800 bg-slate-950/50 hover:border-slate-700"
+                            ? "border-primary bg-primary/10"
+                            : "border-border bg-background/50 hover:border-border/70"
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-medium text-white">{gpu.name}</div>
-                            <div className="text-xs text-slate-400">{gpu.vram}GB VRAM</div>
+                            <div className="font-medium text-foreground">{gpu.name}</div>
+                            <div className="text-xs text-muted-foreground">{gpu.vram}GB VRAM</div>
                           </div>
-                          <div className="text-sm text-amber-400">€{gpu.baseRate}/hr</div>
+                          <div className="text-sm text-primary">€{gpu.baseRate}/hr</div>
                         </div>
                       </button>
                     ))}
@@ -71,8 +71,8 @@ export function ProvidersEarnings() {
                 {/* Hours Per Day */}
                 <div>
                   <div className="mb-3 flex items-center justify-between">
-                    <label className="text-sm font-medium text-slate-300">Hours Available Per Day</label>
-                    <span className="text-lg font-bold text-amber-400">{hoursPerDay[0]}h</span>
+                    <label className="text-sm font-medium text-muted-foreground">Hours Available Per Day</label>
+                    <span className="text-lg font-bold text-primary">{hoursPerDay[0]}h</span>
                   </div>
                   <Slider
                     value={hoursPerDay}
@@ -80,9 +80,9 @@ export function ProvidersEarnings() {
                     min={1}
                     max={24}
                     step={1}
-                    className="[&_[role=slider]]:bg-amber-500"
+                    className="[&_[role=slider]]:bg-primary"
                   />
-                  <div className="mt-2 flex justify-between text-xs text-slate-400">
+                  <div className="mt-2 flex justify-between text-xs text-muted-foreground">
                     <span>1h</span>
                     <span>24h</span>
                   </div>
@@ -91,8 +91,8 @@ export function ProvidersEarnings() {
                 {/* Utilization */}
                 <div>
                   <div className="mb-3 flex items-center justify-between">
-                    <label className="text-sm font-medium text-slate-300">Expected Utilization</label>
-                    <span className="text-lg font-bold text-amber-400">{utilization[0]}%</span>
+                    <label className="text-sm font-medium text-muted-foreground">Expected Utilization</label>
+                    <span className="text-lg font-bold text-primary">{utilization[0]}%</span>
                   </div>
                   <Slider
                     value={utilization}
@@ -100,9 +100,9 @@ export function ProvidersEarnings() {
                     min={10}
                     max={100}
                     step={5}
-                    className="[&_[role=slider]]:bg-amber-500"
+                    className="[&_[role=slider]]:bg-primary"
                   />
-                  <div className="mt-2 flex justify-between text-xs text-slate-400">
+                  <div className="mt-2 flex justify-between text-xs text-muted-foreground">
                     <span>10%</span>
                     <span>100%</span>
                   </div>
@@ -111,62 +111,62 @@ export function ProvidersEarnings() {
             </div>
 
             {/* Earnings Display */}
-            <div className="rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-8">
-              <h3 className="mb-6 text-xl font-bold text-white">Your Potential Earnings</h3>
+            <div className="rounded-2xl border border-border bg-gradient-to-b from-card to-background p-8">
+              <h3 className="mb-6 text-xl font-bold text-foreground">Your Potential Earnings</h3>
 
               <div className="space-y-6">
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-6">
-                  <div className="mb-2 text-sm text-amber-400">Monthly Earnings</div>
-                  <div className="text-5xl font-bold text-white">€{monthlyEarnings.toFixed(0)}</div>
-                  <div className="mt-2 text-sm text-slate-400">
+                <div className="rounded-xl border border-primary/20 bg-primary/10 p-6">
+                  <div className="mb-2 text-sm text-primary">Monthly Earnings</div>
+                  <div className="text-5xl font-bold text-foreground">€{monthlyEarnings.toFixed(0)}</div>
+                  <div className="mt-2 text-sm text-muted-foreground">
                     Based on {hoursPerDay[0]}h/day at {utilization[0]}% utilization
                   </div>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-                    <div className="mb-1 text-sm text-slate-400">Daily</div>
-                    <div className="text-2xl font-bold text-white">€{dailyEarnings.toFixed(2)}</div>
+                  <div className="rounded-lg border border-border bg-background/50 p-4">
+                    <div className="mb-1 text-sm text-muted-foreground">Daily</div>
+                    <div className="text-2xl font-bold text-foreground">€{dailyEarnings.toFixed(2)}</div>
                   </div>
-                  <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-                    <div className="mb-1 text-sm text-slate-400">Yearly</div>
-                    <div className="text-2xl font-bold text-white">€{yearlyEarnings.toFixed(0)}</div>
+                  <div className="rounded-lg border border-border bg-background/50 p-4">
+                    <div className="mb-1 text-sm text-muted-foreground">Yearly</div>
+                    <div className="text-2xl font-bold text-foreground">€{yearlyEarnings.toFixed(0)}</div>
                   </div>
                 </div>
 
-                <div className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-                  <div className="text-sm font-medium text-slate-300">Breakdown</div>
+                <div className="space-y-3 rounded-lg border border-border bg-background/50 p-4">
+                  <div className="text-sm font-medium text-muted-foreground">Breakdown</div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Hourly rate:</span>
-                    <span className="text-white">€{hourlyRate.toFixed(2)}/hr</span>
+                    <span className="text-muted-foreground">Hourly rate:</span>
+                    <span className="text-foreground">€{hourlyRate.toFixed(2)}/hr</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Hours per month:</span>
-                    <span className="text-white">{hoursPerDay[0] * 30}h</span>
+                    <span className="text-muted-foreground">Hours per month:</span>
+                    <span className="text-foreground">{hoursPerDay[0] * 30}h</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Utilization:</span>
-                    <span className="text-white">{utilization[0]}%</span>
+                    <span className="text-muted-foreground">Utilization:</span>
+                    <span className="text-foreground">{utilization[0]}%</span>
                   </div>
-                  <div className="border-t border-slate-800 pt-3">
+                  <div className="border-t border-border pt-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">rbee commission (15%):</span>
-                      <span className="text-white">-€{(monthlyEarnings * 0.15).toFixed(0)}</span>
+                      <span className="text-muted-foreground">rbee commission (15%):</span>
+                      <span className="text-foreground">-€{(monthlyEarnings * 0.15).toFixed(0)}</span>
                     </div>
                     <div className="mt-2 flex justify-between font-medium">
-                      <span className="text-white">Your take-home:</span>
-                      <span className="text-amber-400">€{(monthlyEarnings * 0.85).toFixed(0)}</span>
+                      <span className="text-foreground">Your take-home:</span>
+                      <span className="text-primary">€{(monthlyEarnings * 0.85).toFixed(0)}</span>
                     </div>
                   </div>
                 </div>
 
-                <Button className="w-full bg-amber-500 text-slate-950 hover:bg-amber-400">Start Earning Now</Button>
+                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">Start Earning Now</Button>
               </div>
             </div>
           </div>
 
-          <div className="mt-8 rounded-lg border border-slate-800 bg-slate-900/50 p-6 text-center">
-            <p className="text-sm text-slate-400">
+          <div className="mt-8 rounded-lg border border-border bg-card/50 p-6 text-center">
+            <p className="text-sm text-muted-foreground">
               Earnings are estimates based on current market rates and may vary. Actual earnings depend on demand, your
               pricing, and availability.
             </p>

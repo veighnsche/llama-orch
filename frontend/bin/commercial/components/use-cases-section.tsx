@@ -72,8 +72,8 @@ export function UseCasesSection() {
 
           {/* Use Case 4 */}
           <div className="bg-secondary border border-border rounded-lg p-8 space-y-4">
-            <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
-              <Building className="h-6 w-6 text-muted-foreground" />
+            <div className="h-12 w-12 rounded-lg bg-chart-4/10 flex items-center justify-center">
+              <Building className="h-6 w-6 text-chart-4" />
             </div>
             <h3 className="text-xl font-bold text-card-foreground">The Enterprise</h3>
             <div className="space-y-3 text-sm">
