@@ -3,6 +3,6 @@ packages:
   - consumers/.examples/*
   - consumers/llama-orch-sdk/ts
   - frontend/bin/commercial
-  - frontend/bin/d3-sim-frontend
   - frontend/libs/frontend-tooling
+  - frontend/libs/shared-components
   - frontend/reference/v0

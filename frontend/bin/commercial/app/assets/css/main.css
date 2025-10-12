@@ -1,5 +1,0 @@
-/* Tailwind v4 base import */
-@import "tailwindcss";
-
-/* Custom design tokens and fonts */
-@import "~/styles/tokens.css";

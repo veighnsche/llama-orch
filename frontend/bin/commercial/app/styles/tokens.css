@@ -1,7 +1,0 @@
-/* Updated by: TEAM-FE-003 - Tailwind v4 @theme pattern */
-/* TEAM-FE-009: Entry file for storybook - imports tailwindcss + base tokens */
-/* TEAM-FE-011: Added fonts import for Geist Sans, Geist Mono, Source Serif 4 */
-/* This file is for storybook which uses @tailwindcss/postcss */
-@import "./fonts.css";
-@import "tailwindcss";
-@import "./tokens-base.css";
