@@ -1,4 +1,4 @@
-import { ConsoleOutput } from "@/components/atoms"
+import { ConsoleOutput } from '@/components/atoms'
 
 export function DevelopersHowItWorks() {
   return (
@@ -64,13 +64,13 @@ export function DevelopersHowItWorks() {
               <h3 className="mb-3 text-xl font-semibold text-card-foreground">Build AI Agents</h3>
               <ConsoleOutput showChrome title="TypeScript" background="dark" variant="code">
                 <div>
-                  <span className="text-purple-400">import</span> {"{"} invoke {"}"}{" "}
-                  <span className="text-purple-400">from</span>{" "}
+                  <span className="text-purple-400">import</span> {'{'} invoke {'}'}{' '}
+                  <span className="text-purple-400">from</span>{' '}
                   <span className="text-amber-400">&apos;@llama-orch/utils&apos;</span>;
                 </div>
                 <div className="mt-2">
-                  <span className="text-blue-400">const</span> code = <span className="text-blue-400">await</span>{" "}
-                  <span className="text-green-400">invoke</span>({"{"}
+                  <span className="text-blue-400">const</span> code = <span className="text-blue-400">await</span>{' '}
+                  <span className="text-green-400">invoke</span>({'{'}
                 </div>
                 <div className="pl-4">
                   prompt: <span className="text-amber-400">&apos;Generate API from schema&apos;</span>,
@@ -78,7 +78,7 @@ export function DevelopersHowItWorks() {
                 <div className="pl-4">
                   model: <span className="text-amber-400">&apos;llama-3.1-70b&apos;</span>
                 </div>
-                <div>{"});"}</div>
+                <div>{'});'}</div>
               </ConsoleOutput>
             </div>
           </div>

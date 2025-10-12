@@ -1,5 +1,5 @@
 import { Button } from '@/components/atoms/Button/Button'
-import { ArrowRight, Zap } from "lucide-react"
+import { ArrowRight, Zap } from 'lucide-react'
 
 export function ProvidersCTA() {
   return (
@@ -23,7 +23,11 @@ export function ProvidersCTA() {
             Start Earning Now
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
-          <Button size="lg" variant="outline" className="border-border text-foreground hover:bg-secondary bg-transparent">
+          <Button
+            size="lg"
+            variant="outline"
+            className="border-border text-foreground hover:bg-secondary bg-transparent"
+          >
             View Documentation
           </Button>
         </div>

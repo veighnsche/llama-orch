@@ -1,11 +1,13 @@
-import { Star } from "lucide-react"
+import { Star } from 'lucide-react'
 
 export function ProvidersTestimonials() {
   return (
     <section className="border-b border-border bg-gradient-to-b from-background to-card px-6 py-24">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
-          <h2 className="mb-4 text-balance text-4xl font-bold text-foreground lg:text-5xl">What Providers Are Saying</h2>
+          <h2 className="mb-4 text-balance text-4xl font-bold text-foreground lg:text-5xl">
+            What Providers Are Saying
+          </h2>
           <p className="mx-auto max-w-2xl text-pretty text-xl text-muted-foreground">
             Real earnings from real GPU providers on the rbee marketplace.
           </p>

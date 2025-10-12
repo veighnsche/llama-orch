@@ -13,13 +13,7 @@ export interface StatCardProps {
   className?: string
 }
 
-export function StatCard({
-  value,
-  label,
-  variant = 'primary',
-  size = 'md',
-  className,
-}: StatCardProps) {
+export function StatCard({ value, label, variant = 'primary', size = 'md', className }: StatCardProps) {
   const variantClasses = {
     primary: 'text-primary',
     success: 'text-chart-3',
@@ -46,19 +40,10 @@ export function StatCard({
 
   return (
     <div className={cn('text-center', className)}>
-      <div
-        className={cn(
-          'font-bold',
-          valueSizeClasses[size],
-          spacingClasses[size],
-          variantClasses[variant]
-        )}
-      >
+      <div className={cn('font-bold', valueSizeClasses[size], spacingClasses[size], variantClasses[variant])}>
         {value}
       </div>
-      <div className={cn('text-muted-foreground', labelSizeClasses[size])}>
-        {label}
-      </div>
+      <div className={cn('text-muted-foreground', labelSizeClasses[size])}>{label}</div>
     </div>
   )
 }

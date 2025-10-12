@@ -18,19 +18,14 @@ A component for displaying terminal/console output with proper monospace font (G
 ```tsx
 import { ConsoleOutput } from '@/components/atoms'
 
-<ConsoleOutput>
-  $ npm install rbee
-  ✓ Installation complete
-</ConsoleOutput>
+;<ConsoleOutput>$ npm install rbee ✓ Installation complete</ConsoleOutput>
 ```
 
 ### With Terminal Chrome
 
 ```tsx
 <ConsoleOutput showChrome title="bash">
-  $ curl -sSL https://rbee.dev/install.sh | sh
-  Downloading rbee...
-  ✓ Installation complete
+  $ curl -sSL https://rbee.dev/install.sh | sh Downloading rbee... ✓ Installation complete
 </ConsoleOutput>
 ```
 
@@ -48,8 +43,7 @@ import { ConsoleOutput } from '@/components/atoms'
 ```tsx
 <ConsoleOutput showChrome title="TypeScript" background="dark">
   <div>
-    <span className="text-purple-400">import</span>{' '}
-    <span className="text-amber-400">'react'</span>
+    <span className="text-purple-400">import</span> <span className="text-amber-400">'react'</span>
   </div>
   <div>
     <span className="text-blue-400">const</span> App = () =&gt; {'{'}
@@ -59,14 +53,14 @@ import { ConsoleOutput } from '@/components/atoms'
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `children` | `ReactNode` | - | Console content |
-| `showChrome` | `boolean` | `false` | Show terminal window chrome |
-| `title` | `string` | - | Terminal title (shown in chrome) |
-| `variant` | `'terminal' \| 'code' \| 'output'` | `'terminal'` | Visual variant |
-| `background` | `'dark' \| 'light' \| 'card'` | `'dark'` | Background style |
-| `className` | `string` | - | Additional CSS classes |
+| Prop         | Type                               | Default      | Description                      |
+| ------------ | ---------------------------------- | ------------ | -------------------------------- |
+| `children`   | `ReactNode`                        | -            | Console content                  |
+| `showChrome` | `boolean`                          | `false`      | Show terminal window chrome      |
+| `title`      | `string`                           | -            | Terminal title (shown in chrome) |
+| `variant`    | `'terminal' \| 'code' \| 'output'` | `'terminal'` | Visual variant                   |
+| `background` | `'dark' \| 'light' \| 'card'`      | `'dark'`     | Background style                 |
+| `className`  | `string`                           | -            | Additional CSS classes           |
 
 ## Color Palette for Syntax Highlighting
 

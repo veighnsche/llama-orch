@@ -1,10 +1,9 @@
-import { Building, Home, Laptop, Users } from "lucide-react"
+import { Building, Home, Laptop, Users } from 'lucide-react'
 import { SectionContainer, FeatureCard } from '@/components/molecules'
 
 export function UseCasesSection() {
   return (
     <SectionContainer title="Built for Those Who Value Independence">
-
       <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
         <FeatureCard
           icon={Laptop}

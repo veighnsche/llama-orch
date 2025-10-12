@@ -35,12 +35,7 @@ export function BulletListItem({
     switch (variant) {
       case 'dot':
         return (
-          <div
-            className={cn(
-              'h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5',
-              colors.bg
-            )}
-          >
+          <div className={cn('h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5', colors.bg)}>
             <div className={cn('h-2 w-2 rounded-full', colors.bgSolid)}></div>
           </div>
         )
@@ -50,23 +45,14 @@ export function BulletListItem({
             className={cn(
               'h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5',
               colors.bg,
-              colors.text
+              colors.text,
             )}
           >
             ✓
           </div>
         )
       case 'arrow':
-        return (
-          <div
-            className={cn(
-              'h-6 w-6 flex items-center justify-center flex-shrink-0 mt-0.5',
-              colors.text
-            )}
-          >
-            →
-          </div>
-        )
+        return <div className={cn('h-6 w-6 flex items-center justify-center flex-shrink-0 mt-0.5', colors.text)}>→</div>
     }
   }
 
@@ -75,9 +61,7 @@ export function BulletListItem({
       {renderBullet()}
       <div>
         <div className="font-medium text-foreground">{title}</div>
-        {description && (
-          <div className="text-sm text-muted-foreground">{description}</div>
-        )}
+        {description && <div className="text-sm text-muted-foreground">{description}</div>}
       </div>
     </li>
   )

@@ -11,12 +11,7 @@ export interface StepNumberProps {
   className?: string
 }
 
-export function StepNumber({
-  number,
-  size = 'md',
-  variant = 'primary',
-  className,
-}: StepNumberProps) {
+export function StepNumber({ number, size = 'md', variant = 'primary', className }: StepNumberProps) {
   const sizeClasses = {
     sm: 'h-8 w-8 text-sm',
     md: 'h-12 w-12 text-xl',
@@ -36,7 +31,7 @@ export function StepNumber({
         'inline-flex items-center justify-center rounded-full font-bold',
         sizeClasses[size],
         variantClasses[variant],
-        className
+        className,
       )}
     >
       {number}

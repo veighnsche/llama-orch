@@ -30,10 +30,7 @@ export function FooterColumn({ title, links, className }: FooterColumnProps) {
                 {link.text}
               </a>
             ) : (
-              <Link
-                href={link.href}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
+              <Link href={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
                 {link.text}
               </Link>
             )}

@@ -12,30 +12,16 @@ export interface TerminalWindowProps {
   className?: string
 }
 
-export function TerminalWindow({
-  title,
-  children,
-  variant = 'terminal',
-  className,
-}: TerminalWindowProps) {
+export function TerminalWindow({ title, children, variant = 'terminal', className }: TerminalWindowProps) {
   return (
-    <div
-      className={cn(
-        'bg-card border border-border rounded-lg overflow-hidden shadow-2xl',
-        className
-      )}
-    >
+    <div className={cn('bg-card border border-border rounded-lg overflow-hidden shadow-2xl', className)}>
       <div className="flex items-center gap-2 px-4 py-3 bg-muted border-b border-border">
         <div className="flex gap-2">
           <div className="h-3 w-3 rounded-full bg-terminal-red"></div>
           <div className="h-3 w-3 rounded-full bg-terminal-amber"></div>
           <div className="h-3 w-3 rounded-full bg-terminal-green"></div>
         </div>
-        {title && (
-          <span className="text-muted-foreground text-sm ml-2 font-mono">
-            {title}
-          </span>
-        )}
+        {title && <span className="text-muted-foreground text-sm ml-2 font-mono">{title}</span>}
       </div>
       <div className="p-6 text-sm font-mono">{children}</div>
     </div>

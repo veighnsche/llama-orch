@@ -1,92 +1,92 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { DollarSign, Shield, BarChart3, Clock, Sliders, Zap } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { useState } from 'react'
+import { DollarSign, Shield, BarChart3, Clock, Sliders, Zap } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 const features = [
   {
-    id: "pricing",
+    id: 'pricing',
     icon: DollarSign,
-    title: "Flexible Pricing Control",
-    description: "Set your own hourly rates based on GPU model, demand, and your preferences.",
+    title: 'Flexible Pricing Control',
+    description: 'Set your own hourly rates based on GPU model, demand, and your preferences.',
     details: [
-      "Dynamic pricing based on demand",
-      "Set minimum and maximum rates",
-      "Automatic price adjustments",
-      "Competitive rate suggestions",
-      "Seasonal pricing schedules",
-      "Bulk discount options",
+      'Dynamic pricing based on demand',
+      'Set minimum and maximum rates',
+      'Automatic price adjustments',
+      'Competitive rate suggestions',
+      'Seasonal pricing schedules',
+      'Bulk discount options',
     ],
   },
   {
-    id: "availability",
+    id: 'availability',
     icon: Clock,
-    title: "Availability Management",
-    description: "Control exactly when your GPUs are available for rent.",
+    title: 'Availability Management',
+    description: 'Control exactly when your GPUs are available for rent.',
     details: [
-      "Set availability windows (e.g., 9am-5pm)",
-      "Weekend-only or weekday-only modes",
-      "Vacation mode (pause earnings)",
-      "Priority mode (your usage first)",
-      "Auto-pause during gaming",
-      "Calendar integration",
+      'Set availability windows (e.g., 9am-5pm)',
+      'Weekend-only or weekday-only modes',
+      'Vacation mode (pause earnings)',
+      'Priority mode (your usage first)',
+      'Auto-pause during gaming',
+      'Calendar integration',
     ],
   },
   {
-    id: "security",
+    id: 'security',
     icon: Shield,
-    title: "Security & Privacy",
-    description: "Your data and hardware are protected with enterprise-grade security.",
+    title: 'Security & Privacy',
+    description: 'Your data and hardware are protected with enterprise-grade security.',
     details: [
-      "Sandboxed execution (no file access)",
-      "Encrypted communication",
-      "No access to your personal data",
-      "Malware scanning on all jobs",
-      "Automatic security updates",
-      "Insurance coverage included",
+      'Sandboxed execution (no file access)',
+      'Encrypted communication',
+      'No access to your personal data',
+      'Malware scanning on all jobs',
+      'Automatic security updates',
+      'Insurance coverage included',
     ],
   },
   {
-    id: "analytics",
+    id: 'analytics',
     icon: BarChart3,
-    title: "Earnings Dashboard",
-    description: "Track your earnings, utilization, and performance in real‑time.",
+    title: 'Earnings Dashboard',
+    description: 'Track your earnings, utilization, and performance in real‑time.',
     details: [
-      "Real‑time earnings tracking",
-      "Utilization metrics per GPU",
-      "Historical earnings charts",
-      "Performance benchmarks",
-      "Customer ratings and reviews",
-      "Tax reporting exports",
+      'Real‑time earnings tracking',
+      'Utilization metrics per GPU',
+      'Historical earnings charts',
+      'Performance benchmarks',
+      'Customer ratings and reviews',
+      'Tax reporting exports',
     ],
   },
   {
-    id: "limits",
+    id: 'limits',
     icon: Sliders,
-    title: "Usage Limits",
-    description: "Set limits to protect your hardware and control costs.",
+    title: 'Usage Limits',
+    description: 'Set limits to protect your hardware and control costs.',
     details: [
-      "Max hours per day/week/month",
-      "Temperature monitoring and limits",
-      "Power consumption caps",
-      "Automatic cooldown periods",
-      "Hardware health monitoring",
-      "Warranty protection mode",
+      'Max hours per day/week/month',
+      'Temperature monitoring and limits',
+      'Power consumption caps',
+      'Automatic cooldown periods',
+      'Hardware health monitoring',
+      'Warranty protection mode',
     ],
   },
   {
-    id: "performance",
+    id: 'performance',
     icon: Zap,
-    title: "Performance Optimization",
-    description: "Maximize your earnings with automatic optimization.",
+    title: 'Performance Optimization',
+    description: 'Maximize your earnings with automatic optimization.',
     details: [
-      "Automatic model selection",
-      "Load balancing across GPUs",
-      "Priority queue for high-paying jobs",
-      "Idle detection and auto-start",
-      "Performance benchmarking",
-      "Earnings optimization suggestions",
+      'Automatic model selection',
+      'Load balancing across GPUs',
+      'Priority queue for high-paying jobs',
+      'Idle detection and auto-start',
+      'Performance benchmarking',
+      'Earnings optimization suggestions',
     ],
   },
 ]
@@ -120,24 +120,17 @@ export function ProvidersFeatures() {
                   onClick={() => setActiveFeature(feature.id)}
                   className={cn(
                     'w-full rounded-lg border p-4 text-left transition-all',
-                    isActive
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border bg-card/50 hover:border-border'
+                    isActive ? 'border-primary bg-primary/10' : 'border-border bg-card/50 hover:border-border',
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={cn(
                         'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
-                        isActive ? 'bg-primary/20' : 'bg-secondary'
+                        isActive ? 'bg-primary/20' : 'bg-secondary',
                       )}
                     >
-                      <FeatureIcon
-                        className={cn(
-                          'h-5 w-5',
-                          isActive ? 'text-primary' : 'text-muted-foreground'
-                        )}
-                      />
+                      <FeatureIcon className={cn('h-5 w-5', isActive ? 'text-primary' : 'text-muted-foreground')} />
                     </div>
                     <div className="font-medium text-foreground">{feature.title}</div>
                   </div>

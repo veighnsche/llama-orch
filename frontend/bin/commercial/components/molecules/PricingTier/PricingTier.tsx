@@ -30,7 +30,7 @@ export function PricingTier({
       className={cn(
         'bg-card rounded-lg p-8 space-y-6',
         highlighted ? 'border-2 border-primary' : 'border-2 border-border',
-        className
+        className,
       )}
     >
       {badge && (
@@ -43,9 +43,7 @@ export function PricingTier({
         <h3 className="text-2xl font-bold text-foreground">{title}</h3>
         <div className="mt-4">
           <span className="text-4xl font-bold text-foreground">{price}</span>
-          {period && (
-            <span className="text-muted-foreground ml-2">{period}</span>
-          )}
+          {period && <span className="text-muted-foreground ml-2">{period}</span>}
         </div>
       </div>
 

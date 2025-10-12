@@ -2,16 +2,11 @@ import { SectionContainer, StatCard } from '@/components/molecules'
 
 export function WhatIsRbee() {
   return (
-    <SectionContainer 
-      title="What is rbee?"
-      bgVariant="secondary"
-      maxWidth="4xl"
-    >
-
+    <SectionContainer title="What is rbee?" bgVariant="secondary" maxWidth="4xl">
       <p className="text-xl text-foreground leading-relaxed text-center">
-        <span className="font-semibold text-card-foreground">rbee</span> (pronounced "are-bee") is an{" "}
-        <span className="font-semibold text-primary">open source AI orchestration platform</span> that turns all
-        the computers in your home or office network into a unified AI infrastructure.
+        <span className="font-semibold text-card-foreground">rbee</span> (pronounced "are-bee") is an{' '}
+        <span className="font-semibold text-primary">open source AI orchestration platform</span> that turns all the
+        computers in your home or office network into a unified AI infrastructure.
       </p>
 
       <div className="grid md:grid-cols-3 gap-6 pt-8">

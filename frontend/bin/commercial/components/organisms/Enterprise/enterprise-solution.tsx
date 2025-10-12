@@ -1,5 +1,5 @@
-import { Shield, Lock, FileCheck, Server } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Shield, Lock, FileCheck, Server } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export function EnterpriseSolution() {
   return (
@@ -24,41 +24,38 @@ export function EnterpriseSolution() {
             {[
               {
                 icon: Shield,
-                name: "Input Validation",
-                description: "First line of defense - Rejects malicious input, prevents injection attacks",
-                color: "text-chart-2",
+                name: 'Input Validation',
+                description: 'First line of defense - Rejects malicious input, prevents injection attacks',
+                color: 'text-chart-2',
               },
               {
                 icon: Lock,
-                name: "Authentication (auth-min)",
-                description: "Timing-safe token validation, zero-trust principles",
-                color: "text-primary",
+                name: 'Authentication (auth-min)',
+                description: 'Timing-safe token validation, zero-trust principles',
+                color: 'text-primary',
               },
               {
                 icon: FileCheck,
-                name: "Secrets Management",
-                description: "File-based credentials, memory zeroization, no environment leakage",
-                color: "text-chart-3",
+                name: 'Secrets Management',
+                description: 'File-based credentials, memory zeroization, no environment leakage',
+                color: 'text-chart-3',
               },
               {
                 icon: FileCheck,
-                name: "Audit Logging",
-                description: "Immutable audit trail, 7-year retention, tamper-evident",
-                color: "text-chart-4",
+                name: 'Audit Logging',
+                description: 'Immutable audit trail, 7-year retention, tamper-evident',
+                color: 'text-chart-4',
               },
               {
                 icon: Server,
-                name: "Deadline Propagation",
-                description: "Resource enforcement, prevents exhaustion attacks",
-                color: "text-destructive",
+                name: 'Deadline Propagation',
+                description: 'Resource enforcement, prevents exhaustion attacks',
+                color: 'text-destructive',
               },
             ].map((layer, i) => (
               <div key={i} className="flex items-start gap-4 rounded-lg border border-border bg-background p-4">
                 <div
-                  className={cn(
-                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-card',
-                    layer.color
-                  )}
+                  className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-card', layer.color)}
                 >
                   <layer.icon className="h-5 w-5" />
                 </div>

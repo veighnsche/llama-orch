@@ -1,17 +1,17 @@
-"use client"
+'use client'
 
-import { useState } from "react"
+import { useState } from 'react'
 import { Button } from '@/components/atoms/Button/Button'
 import { Slider } from '@/components/atoms/Slider/Slider'
 import { cn } from '@/lib/utils'
 
 const gpuModels = [
-  { name: "RTX 4090", baseRate: 0.45, vram: 24 },
-  { name: "RTX 4080", baseRate: 0.35, vram: 16 },
-  { name: "RTX 4070 Ti", baseRate: 0.28, vram: 12 },
-  { name: "RTX 3090", baseRate: 0.32, vram: 24 },
-  { name: "RTX 3080", baseRate: 0.25, vram: 10 },
-  { name: "RTX 3070", baseRate: 0.18, vram: 8 },
+  { name: 'RTX 4090', baseRate: 0.45, vram: 24 },
+  { name: 'RTX 4080', baseRate: 0.35, vram: 16 },
+  { name: 'RTX 4070 Ti', baseRate: 0.28, vram: 12 },
+  { name: 'RTX 3090', baseRate: 0.32, vram: 24 },
+  { name: 'RTX 3080', baseRate: 0.25, vram: 10 },
+  { name: 'RTX 3070', baseRate: 0.18, vram: 8 },
 ]
 
 export function ProvidersEarnings() {
@@ -51,22 +51,22 @@ export function ProvidersEarnings() {
                       const isSelected = selectedGPU.name === gpu.name
                       return (
                         <button
-                        key={gpu.name}
-                        onClick={() => setSelectedGPU(gpu)}
-                        className={cn(
-                          'rounded-lg border p-3 text-left transition-all',
-                          isSelected
-                            ? 'border-primary bg-primary/10'
-                            : 'border-border bg-background/50 hover:border-border/70'
-                        )}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium text-foreground">{gpu.name}</div>
-                            <div className="text-xs text-muted-foreground">{gpu.vram}GB VRAM</div>
+                          key={gpu.name}
+                          onClick={() => setSelectedGPU(gpu)}
+                          className={cn(
+                            'rounded-lg border p-3 text-left transition-all',
+                            isSelected
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border bg-background/50 hover:border-border/70',
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-medium text-foreground">{gpu.name}</div>
+                              <div className="text-xs text-muted-foreground">{gpu.vram}GB VRAM</div>
+                            </div>
+                            <div className="text-sm text-primary">€{gpu.baseRate}/hr</div>
                           </div>
-                          <div className="text-sm text-primary">€{gpu.baseRate}/hr</div>
-                        </div>
                         </button>
                       )
                     })}
@@ -165,7 +165,9 @@ export function ProvidersEarnings() {
                   </div>
                 </div>
 
-                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">Start Earning Now</Button>
+                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                  Start Earning Now
+                </Button>
               </div>
             </div>
           </div>

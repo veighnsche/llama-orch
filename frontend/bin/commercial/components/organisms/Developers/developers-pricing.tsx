@@ -4,51 +4,51 @@ import { cn } from '@/lib/utils'
 
 const tiers = [
   {
-    name: "Home/Lab",
-    price: "$0",
-    period: "forever",
-    description: "For solo developers and hobbyists",
+    name: 'Home/Lab',
+    price: '$0',
+    period: 'forever',
+    description: 'For solo developers and hobbyists',
     features: [
-      "Unlimited GPUs",
-      "OpenAI-compatible API",
-      "Multi-modal support",
-      "Community support",
-      "100% open source",
-      "llama-orch-utils included",
+      'Unlimited GPUs',
+      'OpenAI-compatible API',
+      'Multi-modal support',
+      'Community support',
+      '100% open source',
+      'llama-orch-utils included',
     ],
-    cta: "Download Now",
+    cta: 'Download Now',
     highlighted: false,
   },
   {
-    name: "Team",
-    price: "€99",
-    period: "/month",
-    description: "For small teams (5-10 devs)",
+    name: 'Team',
+    price: '€99',
+    period: '/month',
+    description: 'For small teams (5-10 devs)',
     features: [
-      "Everything in Home/Lab",
-      "Web UI management",
-      "Team collaboration",
-      "Priority support",
-      "Rhai script templates",
-      "Advanced monitoring",
+      'Everything in Home/Lab',
+      'Web UI management',
+      'Team collaboration',
+      'Priority support',
+      'Rhai script templates',
+      'Advanced monitoring',
     ],
-    cta: "Start 30-Day Trial",
+    cta: 'Start 30-Day Trial',
     highlighted: true,
   },
   {
-    name: "Enterprise",
-    price: "Custom",
-    period: "",
-    description: "For large teams and enterprises",
+    name: 'Enterprise',
+    price: 'Custom',
+    period: '',
+    description: 'For large teams and enterprises',
     features: [
-      "Everything in Team",
-      "Dedicated instances",
-      "Custom SLAs",
-      "White-label option",
-      "Enterprise support",
-      "On-premises deployment",
+      'Everything in Team',
+      'Dedicated instances',
+      'Custom SLAs',
+      'White-label option',
+      'Enterprise support',
+      'On-premises deployment',
     ],
-    cta: "Contact Sales",
+    cta: 'Contact Sales',
     highlighted: false,
   },
 ]
@@ -69,7 +69,7 @@ export function DevelopersPricing() {
               key={tier.name}
               className={cn(
                 'relative rounded-lg border p-8 bg-card',
-                tier.highlighted ? 'border-primary' : 'border-border'
+                tier.highlighted ? 'border-primary' : 'border-border',
               )}
             >
               {tier.highlighted && (
@@ -101,9 +101,9 @@ export function DevelopersPricing() {
                   'w-full',
                   tier.highlighted
                     ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                    : 'border-border bg-card text-foreground hover:bg-muted'
+                    : 'border-border bg-card text-foreground hover:bg-muted',
                 )}
-                variant={tier.highlighted ? "default" : "outline"}
+                variant={tier.highlighted ? 'default' : 'outline'}
               >
                 {tier.cta}
               </Button>

@@ -1,4 +1,4 @@
-import { TrendingUp, Users, Globe, Shield } from "lucide-react"
+import { TrendingUp, Users, Globe, Shield } from 'lucide-react'
 
 export function ProvidersMarketplace() {
   return (

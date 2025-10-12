@@ -1,40 +1,40 @@
-import { Code, FileText, FlaskConical, GitPullRequest, Wrench } from "lucide-react"
+import { Code, FileText, FlaskConical, GitPullRequest, Wrench } from 'lucide-react'
 
 const useCases = [
   {
     icon: Code,
-    title: "Build Your Own AI Coder",
-    scenario: "Building a SaaS with AI features. Uses Claude for coding but fears vendor lock-in.",
-    solution: "Runs rbee on gaming PC + old workstation. Llama 70B for coding, Stable Diffusion for assets.",
-    outcome: "$0/month AI costs. Complete control. Never blocked by rate limits.",
+    title: 'Build Your Own AI Coder',
+    scenario: 'Building a SaaS with AI features. Uses Claude for coding but fears vendor lock-in.',
+    solution: 'Runs rbee on gaming PC + old workstation. Llama 70B for coding, Stable Diffusion for assets.',
+    outcome: '$0/month AI costs. Complete control. Never blocked by rate limits.',
   },
   {
     icon: FileText,
-    title: "Documentation Generators",
-    scenario: "Need to generate comprehensive docs from codebase but API costs are prohibitive.",
-    solution: "Uses rbee to process entire codebase locally. Generates markdown docs with examples.",
-    outcome: "Process unlimited code. Zero API costs. Complete privacy.",
+    title: 'Documentation Generators',
+    scenario: 'Need to generate comprehensive docs from codebase but API costs are prohibitive.',
+    solution: 'Uses rbee to process entire codebase locally. Generates markdown docs with examples.',
+    outcome: 'Process unlimited code. Zero API costs. Complete privacy.',
   },
   {
     icon: FlaskConical,
-    title: "Test Generators",
-    scenario: "Writing tests is time-consuming. Need AI to generate comprehensive test suites.",
-    solution: "Uses rbee + llama-orch-utils to generate Jest/Vitest tests from specifications.",
-    outcome: "10x faster test coverage. No external dependencies.",
+    title: 'Test Generators',
+    scenario: 'Writing tests is time-consuming. Need AI to generate comprehensive test suites.',
+    solution: 'Uses rbee + llama-orch-utils to generate Jest/Vitest tests from specifications.',
+    outcome: '10x faster test coverage. No external dependencies.',
   },
   {
     icon: GitPullRequest,
-    title: "Code Review Agents",
-    scenario: "Small team needs automated code review but can&apos;t afford enterprise tools.",
-    solution: "Builds custom review agent with rbee. Analyzes PRs for issues, security, performance.",
-    outcome: "Automated reviews. Zero ongoing costs. Custom rules.",
+    title: 'Code Review Agents',
+    scenario: 'Small team needs automated code review but can&apos;t afford enterprise tools.',
+    solution: 'Builds custom review agent with rbee. Analyzes PRs for issues, security, performance.',
+    outcome: 'Automated reviews. Zero ongoing costs. Custom rules.',
   },
   {
     icon: Wrench,
-    title: "Refactoring Agents",
-    scenario: "Legacy codebase needs modernization. Manual refactoring would take months.",
-    solution: "Uses rbee to refactor code to modern patterns. TypeScript, async/await, etc.",
-    outcome: "Months of work in days. Complete control over changes.",
+    title: 'Refactoring Agents',
+    scenario: 'Legacy codebase needs modernization. Manual refactoring would take months.',
+    solution: 'Uses rbee to refactor code to modern patterns. TypeScript, async/await, etc.',
+    outcome: 'Months of work in days. Complete control over changes.',
   },
 ]
 

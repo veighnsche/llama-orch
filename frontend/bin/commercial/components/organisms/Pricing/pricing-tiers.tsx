@@ -1,5 +1,5 @@
 import { Button } from '@/components/atoms/Button/Button'
-import { Check } from "lucide-react"
+import { Check } from 'lucide-react'
 
 export function PricingTiers() {
   return (
@@ -51,13 +51,17 @@ export function PricingTiers() {
               Download Now
             </Button>
 
-            <p className="text-sm text-muted-foreground text-center">For solo developers, hobbyists, homelab enthusiasts</p>
+            <p className="text-sm text-muted-foreground text-center">
+              For solo developers, hobbyists, homelab enthusiasts
+            </p>
           </div>
 
           {/* Tier 2: Team (Most Popular) */}
           <div className="bg-primary/5 border-2 border-primary rounded-lg p-8 space-y-6 relative">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
+              <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
+                Most Popular
+              </span>
             </div>
 
             <div>
@@ -100,7 +104,9 @@ export function PricingTiers() {
               </li>
             </ul>
 
-            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">Start 30-Day Trial</Button>
+            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+              Start 30-Day Trial
+            </Button>
 
             <p className="text-sm text-muted-foreground text-center">For small teams, startups</p>
           </div>

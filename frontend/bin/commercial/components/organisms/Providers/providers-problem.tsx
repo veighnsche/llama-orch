@@ -1,4 +1,4 @@
-import { AlertCircle, TrendingDown, Zap } from "lucide-react"
+import { AlertCircle, TrendingDown, Zap } from 'lucide-react'
 
 export function ProvidersProblem() {
   return (

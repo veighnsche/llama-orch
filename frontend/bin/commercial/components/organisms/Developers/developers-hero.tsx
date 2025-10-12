@@ -1,5 +1,5 @@
 import { Button } from '@/components/atoms/Button/Button'
-import { ArrowRight, Github } from "lucide-react"
+import { ArrowRight, Github } from 'lucide-react'
 
 export function DevelopersHero() {
   return (
@@ -25,7 +25,7 @@ export function DevelopersHero() {
           </h1>
 
           <p className="mb-8 text-balance text-xl leading-relaxed text-muted-foreground">
-            Stop depending on AI providers. Use rbee to orchestrate inference across{" "}
+            Stop depending on AI providers. Use rbee to orchestrate inference across{' '}
             <span className="font-semibold text-foreground">ALL your home network hardware</span>—GPUs, Macs,
             workstations—with <span className="font-semibold text-foreground">zero ongoing costs</span>.
           </p>
@@ -100,27 +100,27 @@ export function DevelopersHero() {
             </div>
             <div className="p-6 font-mono text-sm">
               <div className="mb-2 text-muted-foreground">
-                <span className="text-chart-3">$</span> rbee-keeper infer --model llama-3.1-70b --prompt
-                &quot;Generate API&quot;
+                <span className="text-chart-3">$</span> rbee-keeper infer --model llama-3.1-70b --prompt &quot;Generate
+                API&quot;
               </div>
               <div className="mb-4 text-muted-foreground">
                 <span className="animate-pulse">▊</span> Streaming tokens...
               </div>
               <div className="space-y-1 text-foreground">
                 <div className="animate-[fadeIn_0.5s_ease-in]">
-                  <span className="text-chart-2">export</span> <span className="text-primary">async</span>{" "}
+                  <span className="text-chart-2">export</span> <span className="text-primary">async</span>{' '}
                   <span className="text-chart-4">function</span> <span className="text-chart-3">getUsers</span>
-                  () {"{"}
+                  () {'{'}
                 </div>
                 <div className="animate-[fadeIn_0.7s_ease-in] pl-4">
-                  <span className="text-chart-2">const</span> response = <span className="text-chart-2">await</span>{" "}
+                  <span className="text-chart-2">const</span> response = <span className="text-chart-2">await</span>{' '}
                   <span className="text-chart-3">fetch</span>(
                   <span className="text-primary">&apos;/api/users&apos;</span>)
                 </div>
                 <div className="animate-[fadeIn_0.9s_ease-in] pl-4">
                   <span className="text-chart-2">return</span> response.<span className="text-chart-3">json</span>()
                 </div>
-                <div className="animate-[fadeIn_1.1s_ease-in]">{"}"}</div>
+                <div className="animate-[fadeIn_1.1s_ease-in]">{'}'}</div>
               </div>
               <div className="mt-4 flex items-center gap-4 text-muted-foreground">
                 <div>GPU 1: 87%</div>

@@ -46,19 +46,9 @@ export function SectionContainer({
   return (
     <section className={cn('py-24', bgClasses[bgVariant], className)}>
       <div className="container mx-auto px-4">
-        <div
-          className={cn(
-            maxWidthClasses[maxWidth],
-            'mx-auto mb-16',
-            centered && 'text-center'
-          )}
-        >
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 text-balance">
-            {title}
-          </h2>
-          {subtitle && (
-            <p className="text-xl text-muted-foreground">{subtitle}</p>
-          )}
+        <div className={cn(maxWidthClasses[maxWidth], 'mx-auto mb-16', centered && 'text-center')}>
+          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 text-balance">{title}</h2>
+          {subtitle && <p className="text-xl text-muted-foreground">{subtitle}</p>}
         </div>
         {children}
       </div>

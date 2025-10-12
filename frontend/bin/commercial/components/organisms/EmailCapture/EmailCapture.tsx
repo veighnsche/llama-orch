@@ -1,25 +1,25 @@
-"use client"
+'use client'
 
-import type React from "react"
+import type React from 'react'
 
-import { useState } from "react"
+import { useState } from 'react'
 import { Button } from '@/components/atoms/Button/Button'
 import { Input } from '@/components/atoms/Input/Input'
-import { Mail, CheckCircle2 } from "lucide-react"
+import { Mail, CheckCircle2 } from 'lucide-react'
 import { PulseBadge } from '@/components/molecules'
 
 export function EmailCapture() {
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // TODO: Wire up to actual email service
-    console.log("Email submitted:", email)
+    console.log('Email submitted:', email)
     setSubmitted(true)
     setTimeout(() => {
       setSubmitted(false)
-      setEmail("")
+      setEmail('')
     }, 3000)
   }
 

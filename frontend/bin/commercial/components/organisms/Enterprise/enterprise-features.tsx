@@ -1,4 +1,4 @@
-import { Shield, Users, Wrench, Globe } from "lucide-react"
+import { Shield, Users, Wrench, Globe } from 'lucide-react'
 
 export function EnterpriseFeatures() {
   return (

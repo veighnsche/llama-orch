@@ -1,11 +1,13 @@
 import { Button } from '@/components/atoms/Button/Button'
-import { Calendar, FileText, MessageSquare } from "lucide-react"
+import { Calendar, FileText, MessageSquare } from 'lucide-react'
 
 export function EnterpriseCTA() {
   return (
     <section className="border-b border-border bg-gradient-to-b from-background via-primary/5 to-background px-6 py-24">
       <div className="mx-auto max-w-4xl text-center">
-        <h2 className="mb-4 text-4xl font-bold text-foreground lg:text-5xl">Ready to Meet Your Compliance Requirements?</h2>
+        <h2 className="mb-4 text-4xl font-bold text-foreground lg:text-5xl">
+          Ready to Meet Your Compliance Requirements?
+        </h2>
         <p className="mb-12 text-balance text-xl text-muted-foreground">
           Schedule a demo with our compliance team or download our compliance documentation package.
         </p>
@@ -36,7 +38,10 @@ export function EnterpriseCTA() {
             <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
               Download GDPR, SOC2, and ISO 27001 documentation.
             </p>
-            <Button variant="outline" className="w-full border-border text-foreground hover:bg-secondary bg-transparent">
+            <Button
+              variant="outline"
+              className="w-full border-border text-foreground hover:bg-secondary bg-transparent"
+            >
               Download Docs
             </Button>
           </div>
@@ -52,7 +57,10 @@ export function EnterpriseCTA() {
             <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
               Discuss your specific compliance requirements.
             </p>
-            <Button variant="outline" className="w-full border-border text-foreground hover:bg-secondary bg-transparent">
+            <Button
+              variant="outline"
+              className="w-full border-border text-foreground hover:bg-secondary bg-transparent"
+            >
               Contact Sales
             </Button>
           </div>

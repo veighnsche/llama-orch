@@ -1,6 +1,6 @@
 import { Button } from '@/components/atoms/Button/Button'
-import { Shield, Lock, FileCheck } from "lucide-react"
-import Link from "next/link"
+import { Shield, Lock, FileCheck } from 'lucide-react'
+import Link from 'next/link'
 
 export function EnterpriseHero() {
   return (
@@ -87,19 +87,19 @@ export function EnterpriseHero() {
                 {/* Audit Events */}
                 <div className="space-y-3">
                   {[
-                    { event: "auth.success", user: "admin@company.eu", time: "2025-10-11 14:23:15", status: "success" },
+                    { event: 'auth.success', user: 'admin@company.eu', time: '2025-10-11 14:23:15', status: 'success' },
                     {
-                      event: "data.access",
-                      user: "analyst@company.eu",
-                      time: "2025-10-11 14:22:48",
-                      status: "success",
+                      event: 'data.access',
+                      user: 'analyst@company.eu',
+                      time: '2025-10-11 14:22:48',
+                      status: 'success',
                     },
-                    { event: "task.submitted", user: "dev@company.eu", time: "2025-10-11 14:21:33", status: "success" },
+                    { event: 'task.submitted', user: 'dev@company.eu', time: '2025-10-11 14:21:33', status: 'success' },
                     {
-                      event: "compliance.export",
-                      user: "dpo@company.eu",
-                      time: "2025-10-11 14:20:12",
-                      status: "success",
+                      event: 'compliance.export',
+                      user: 'dpo@company.eu',
+                      time: '2025-10-11 14:20:12',
+                      status: 'success',
                     },
                   ].map((log, i) => (
                     <div key={i} className="rounded-lg border border-border bg-background p-3">

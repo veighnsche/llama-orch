@@ -1,10 +1,9 @@
-import { AlertTriangle, DollarSign, Lock } from "lucide-react"
+import { AlertTriangle, DollarSign, Lock } from 'lucide-react'
 import { SectionContainer, FeatureCard } from '@/components/molecules'
 
 export function ProblemSection() {
   return (
     <SectionContainer title="The Hidden Cost of AI Dependency">
-
       <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
         <FeatureCard
           icon={AlertTriangle}
@@ -34,8 +33,8 @@ export function ProblemSection() {
 
       <div className="max-w-3xl mx-auto text-center mt-12">
         <p className="text-xl text-muted-foreground leading-relaxed text-balance">
-          Whether you're building with AI, monetizing hardware, or ensuring compliance—dependency on external
-          providers creates risk you can't afford.
+          Whether you're building with AI, monetizing hardware, or ensuring compliance—dependency on external providers
+          creates risk you can't afford.
         </p>
       </div>
     </SectionContainer>

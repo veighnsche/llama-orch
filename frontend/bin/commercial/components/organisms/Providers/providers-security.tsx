@@ -1,11 +1,13 @@
-import { Shield, Lock, Eye, FileCheck } from "lucide-react"
+import { Shield, Lock, Eye, FileCheck } from 'lucide-react'
 
 export function ProvidersSecurity() {
   return (
     <section className="border-b border-border bg-background px-6 py-24">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
-          <h2 className="mb-4 text-balance text-4xl font-bold text-foreground lg:text-5xl">Your Security Is Our Priority</h2>
+          <h2 className="mb-4 text-balance text-4xl font-bold text-foreground lg:text-5xl">
+            Your Security Is Our Priority
+          </h2>
           <p className="mx-auto max-w-2xl text-pretty text-xl text-muted-foreground">
             Enterprise-grade security protects your hardware, data, and earnings.
           </p>

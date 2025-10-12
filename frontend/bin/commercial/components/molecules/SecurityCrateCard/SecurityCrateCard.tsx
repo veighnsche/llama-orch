@@ -34,10 +34,7 @@ export function SecurityCrateCard({
 
       <div className="space-y-2">
         {features.map((feature, index) => (
-          <div
-            key={index}
-            className="flex items-start gap-2 text-sm text-muted-foreground"
-          >
+          <div key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
             <span className="text-chart-3">✓</span>
             <span>{feature}</span>
           </div>

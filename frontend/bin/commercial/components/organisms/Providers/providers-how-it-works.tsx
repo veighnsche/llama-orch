@@ -1,5 +1,5 @@
-import { Download, Settings, Globe, Wallet } from "lucide-react"
-import { CodeSnippet } from "@/components/atoms"
+import { Download, Settings, Globe, Wallet } from 'lucide-react'
+import { CodeSnippet } from '@/components/atoms'
 
 export function ProvidersHowItWorks() {
   return (

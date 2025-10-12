@@ -12,12 +12,7 @@ export interface TrustIndicatorProps {
   className?: string
 }
 
-export function TrustIndicator({
-  icon: Icon,
-  text,
-  variant = 'default',
-  className,
-}: TrustIndicatorProps) {
+export function TrustIndicator({ icon: Icon, text, variant = 'default', className }: TrustIndicatorProps) {
   const variantClasses = {
     default: 'text-muted-foreground',
     primary: 'text-primary',
@@ -25,13 +20,7 @@ export function TrustIndicator({
   }
 
   return (
-    <div
-      className={cn(
-        'flex items-center gap-2',
-        variantClasses[variant],
-        className
-      )}
-    >
+    <div className={cn('flex items-center gap-2', variantClasses[variant], className)}>
       <Icon className="h-5 w-5" />
       <span className="text-sm">{text}</span>
     </div>

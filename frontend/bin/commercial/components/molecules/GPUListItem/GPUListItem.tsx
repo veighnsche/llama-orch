@@ -29,23 +29,19 @@ export function GPUListItem({
     <div
       className={cn(
         'flex items-center justify-between rounded-lg border border-border bg-background/50 p-3',
-        className
+        className,
       )}
     >
       <div className="flex items-center gap-3">
         <div className={cn('h-2 w-2 rounded-full', statusColors[status])} />
         <div>
           <div className="text-sm font-medium text-foreground">{name}</div>
-          {subtitle && (
-            <div className="text-xs text-muted-foreground">{subtitle}</div>
-          )}
+          {subtitle && <div className="text-xs text-muted-foreground">{subtitle}</div>}
         </div>
       </div>
       <div className="text-right">
         <div className="text-sm font-medium text-foreground">{value}</div>
-        {label && (
-          <div className="text-xs text-muted-foreground">{label}</div>
-        )}
+        {label && <div className="text-xs text-muted-foreground">{label}</div>}
       </div>
     </div>
   )

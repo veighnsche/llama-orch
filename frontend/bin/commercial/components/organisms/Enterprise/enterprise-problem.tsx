@@ -1,4 +1,4 @@
-import { AlertTriangle, Globe, FileX, Scale } from "lucide-react"
+import { AlertTriangle, Globe, FileX, Scale } from 'lucide-react'
 
 export function EnterpriseProblem() {
   return (

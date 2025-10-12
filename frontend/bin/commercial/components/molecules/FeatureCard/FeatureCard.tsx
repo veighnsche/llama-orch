@@ -74,36 +74,14 @@ export function FeatureCard({
         'bg-card border border-border rounded-lg',
         sizeClasses[size],
         hover && 'transition-all hover:border-primary/50 hover:bg-card/80',
-        className
+        className,
       )}
     >
-      <div
-        className={cn(
-          'rounded-lg flex items-center justify-center',
-          iconSizeClasses[size],
-          colors.bg
-        )}
-      >
-        <Icon
-          className={cn(iconInnerSizeClasses[size], colors.text)}
-        />
+      <div className={cn('rounded-lg flex items-center justify-center', iconSizeClasses[size], colors.bg)}>
+        <Icon className={cn(iconInnerSizeClasses[size], colors.text)} />
       </div>
-      <h3
-        className={cn(
-          'font-bold text-card-foreground',
-          titleSizeClasses[size]
-        )}
-      >
-        {title}
-      </h3>
-      <p
-        className={cn(
-          'text-muted-foreground leading-relaxed',
-          descriptionSizeClasses[size]
-        )}
-      >
-        {description}
-      </p>
+      <h3 className={cn('font-bold text-card-foreground', titleSizeClasses[size])}>{title}</h3>
+      <p className={cn('text-muted-foreground leading-relaxed', descriptionSizeClasses[size])}>{description}</p>
     </div>
   )
 }

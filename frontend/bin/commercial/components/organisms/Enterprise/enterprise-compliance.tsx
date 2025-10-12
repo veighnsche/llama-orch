@@ -1,4 +1,4 @@
-import { FileCheck, Shield, Lock, Globe } from "lucide-react"
+import { FileCheck, Shield, Lock, Globe } from 'lucide-react'
 
 export function EnterpriseCompliance() {
   return (
@@ -27,12 +27,12 @@ export function EnterpriseCompliance() {
 
             <div className="space-y-3">
               {[
-                "7-year audit retention (Article 30)",
-                "Data access records (Article 15)",
-                "Right to erasure tracking (Article 17)",
-                "Consent management (Article 7)",
-                "Data residency controls (Article 44)",
-                "Breach notification (Article 33)",
+                '7-year audit retention (Article 30)',
+                'Data access records (Article 15)',
+                'Right to erasure tracking (Article 17)',
+                'Consent management (Article 7)',
+                'Data residency controls (Article 44)',
+                'Breach notification (Article 33)',
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <FileCheck className="mt-0.5 h-4 w-4 shrink-0 text-chart-3" />
@@ -66,12 +66,12 @@ export function EnterpriseCompliance() {
 
             <div className="space-y-3">
               {[
-                "Auditor access (query API)",
-                "Security event logging (32 types)",
-                "7-year retention (Type II)",
-                "Tamper-evident storage (hash chains)",
-                "Access control logging",
-                "Encryption at rest",
+                'Auditor access (query API)',
+                'Security event logging (32 types)',
+                '7-year retention (Type II)',
+                'Tamper-evident storage (hash chains)',
+                'Access control logging',
+                'Encryption at rest',
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <FileCheck className="mt-0.5 h-4 w-4 shrink-0 text-chart-3" />
@@ -104,12 +104,12 @@ export function EnterpriseCompliance() {
 
             <div className="space-y-3">
               {[
-                "Security incident records (A.16)",
-                "3-year retention (minimum)",
-                "Access control logging (A.9)",
-                "Cryptographic controls (A.10)",
-                "Operations security (A.12)",
-                "Information security policies (A.5)",
+                'Security incident records (A.16)',
+                '3-year retention (minimum)',
+                'Access control logging (A.9)',
+                'Cryptographic controls (A.10)',
+                'Operations security (A.12)',
+                'Information security policies (A.5)',
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <FileCheck className="mt-0.5 h-4 w-4 shrink-0 text-chart-3" />

@@ -6,11 +6,7 @@ export interface ArchitectureDiagramProps {
   className?: string
 }
 
-export function ArchitectureDiagram({
-  variant = 'simple',
-  showLabels = true,
-  className,
-}: ArchitectureDiagramProps) {
+export function ArchitectureDiagram({ variant = 'simple', showLabels = true, className }: ArchitectureDiagramProps) {
   return (
     <div className={cn('rounded-lg border border-border bg-card p-8', className)}>
       {showLabels && (

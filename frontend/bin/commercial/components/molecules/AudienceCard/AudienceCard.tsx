@@ -79,39 +79,28 @@ export function AudienceCard({
       className={cn(
         'group relative overflow-hidden border-border bg-card p-8 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] rounded-lg border',
         colors.hoverBorder,
-        className
+        className,
       )}
     >
       <div
         className={cn(
           'absolute inset-0 -z-10 bg-gradient-to-br opacity-0 transition-all duration-500 group-hover:to-transparent group-hover:opacity-100',
-          colors.gradient
+          colors.gradient,
         )}
       />
 
       <div
         className={cn(
           'mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg',
-          colors.iconBg
+          colors.iconBg,
         )}
       >
         <Icon className="h-7 w-7 text-primary-foreground" />
       </div>
 
-      <div
-        className={cn(
-          'mb-2 text-sm font-medium uppercase tracking-wider',
-          colors.text
-        )}
-      >
-        {category}
-      </div>
-      <h3 className="mb-3 text-2xl font-semibold text-card-foreground">
-        {title}
-      </h3>
-      <p className="mb-6 leading-relaxed text-muted-foreground">
-        {description}
-      </p>
+      <div className={cn('mb-2 text-sm font-medium uppercase tracking-wider', colors.text)}>{category}</div>
+      <h3 className="mb-3 text-2xl font-semibold text-card-foreground">{title}</h3>
+      <p className="mb-6 leading-relaxed text-muted-foreground">{description}</p>
 
       <ul className="mb-8 space-y-3 text-sm text-muted-foreground">
         {features.map((feature, index) => (

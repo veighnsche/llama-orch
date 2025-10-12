@@ -7,27 +7,35 @@ This is the production marketing website for rbee - an open-source AI orchestrat
 ## 🚀 Quick Start
 
 ### Development
+
 ```bash
 pnpm dev
 ```
+
 Opens [http://localhost:3000](http://localhost:3000) with Turbopack for instant HMR.
 
 ### Production Build
+
 ```bash
 pnpm run build
 ```
+
 Builds optimized static pages and Cloudflare Workers-compatible output.
 
 ### Preview
+
 ```bash
 pnpm run preview
 ```
+
 Preview the production build locally before deploying.
 
 ### Deploy to Cloudflare
+
 ```bash
 pnpm run deploy
 ```
+
 Builds and deploys to Cloudflare Workers.
 
 ## 📁 Project Structure
@@ -106,15 +114,19 @@ All routes are pre-rendered as static pages:
 ## 🔧 Configuration
 
 ### Cloudflare Workers
+
 Configured via `wrangler.jsonc` and `open-next.config.ts`.
 
 ### ESLint
+
 Custom rules in `eslint.config.mjs` to allow marketing copy with quotes/apostrophes.
 
 ### TypeScript
+
 Path aliases configured: `@/*` maps to project root.
 
 ### Tailwind
+
 Design tokens and theme variables in `app/globals.css`.
 
 ## 📝 Migration Notes
@@ -122,6 +134,7 @@ Design tokens and theme variables in `app/globals.css`.
 This project was migrated from `commercial-old` to remove Vercel-specific dependencies. See `MIGRATION_COMPLETE.md` for full details.
 
 **Key Changes:**
+
 - Removed `@vercel/analytics`
 - Added `@opennextjs/cloudflare` adapter
 - Updated build/deploy scripts for Cloudflare Workers
@@ -130,6 +143,7 @@ This project was migrated from `commercial-old` to remove Vercel-specific depend
 ## 🚢 Deployment
 
 ### Cloudflare Workers
+
 ```bash
 # First time setup
 pnpm run cf-typegen  # Generate Cloudflare types
@@ -139,22 +153,34 @@ pnpm run deploy
 ```
 
 ### Environment Variables
+
 Configure in `.dev.vars` for local development and Cloudflare dashboard for production.
 
 ## 🛠️ Development
 
 ### Adding Components
+
 Uses shadcn/ui CLI:
+
 ```bash
 npx shadcn@latest add [component-name]
 ```
 
 ### Code Style
-- ESLint + TypeScript for linting
-- Prettier-compatible (via ESLint rules)
+
+- **ESLint** + TypeScript for linting
+- **Prettier** for code formatting (via `rbee-frontend-tooling`)
 - Consistent component patterns
 
+Format code:
+
+```bash
+pnpm run format        # Format all files
+pnpm run format:check  # Check formatting without changes
+```
+
 ### Testing
+
 ```bash
 pnpm run lint     # ESLint check
 pnpm run build    # Build verification

@@ -1,4 +1,4 @@
-import { Gamepad2, Server, Cpu, Monitor } from "lucide-react"
+import { Gamepad2, Server, Cpu, Monitor } from 'lucide-react'
 
 export function ProvidersUseCases() {
   return (

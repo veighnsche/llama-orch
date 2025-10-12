@@ -1,4 +1,4 @@
-import { AlertTriangle, DollarSign, Lock } from "lucide-react"
+import { AlertTriangle, DollarSign, Lock } from 'lucide-react'
 
 export function DevelopersProblem() {
   return (

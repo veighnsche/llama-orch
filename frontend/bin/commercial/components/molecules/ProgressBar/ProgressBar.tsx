@@ -51,30 +51,11 @@ export function ProgressBar({
 
   return (
     <div className={cn('flex items-center gap-2', className)}>
-      {showLabel && (
-        <span
-          className={cn(
-            'text-muted-foreground text-xs',
-            labelWidthClasses[size]
-          )}
-        >
-          {label}
-        </span>
-      )}
-      <div
-        className={cn(
-          'flex-1 bg-muted rounded-full overflow-hidden',
-          heightClasses[size]
-        )}
-      >
-        <div
-          className={cn('h-full', bgColor)}
-          style={{ width: `${Math.min(100, Math.max(0, percentage))}%` }}
-        ></div>
+      {showLabel && <span className={cn('text-muted-foreground text-xs', labelWidthClasses[size])}>{label}</span>}
+      <div className={cn('flex-1 bg-muted rounded-full overflow-hidden', heightClasses[size])}>
+        <div className={cn('h-full', bgColor)} style={{ width: `${Math.min(100, Math.max(0, percentage))}%` }}></div>
       </div>
-      {showPercentage && (
-        <span className="text-muted-foreground text-xs">{percentage}%</span>
-      )}
+      {showPercentage && <span className="text-muted-foreground text-xs">{percentage}%</span>}
     </div>
   )
 }

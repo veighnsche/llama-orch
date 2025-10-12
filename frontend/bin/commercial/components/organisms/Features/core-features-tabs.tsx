@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/atoms/Tabs/Tabs'
-import { Code, Cpu, Gauge, Zap } from "lucide-react"
+import { Code, Cpu, Gauge, Zap } from 'lucide-react'
 
 export function CoreFeaturesTabs() {
   return (
@@ -67,7 +67,7 @@ export function CoreFeaturesTabs() {
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0 w-32 text-sm text-muted-foreground">RTX 4090 #1</div>
                     <div className="flex-1 h-8 bg-secondary rounded-full overflow-hidden">
-                      <div className="h-full bg-primary flex items-center justify-end pr-2" style={{ width: "92%" }}>
+                      <div className="h-full bg-primary flex items-center justify-end pr-2" style={{ width: '92%' }}>
                         <span className="text-xs text-primary-foreground font-medium">92%</span>
                       </div>
                     </div>
@@ -75,7 +75,7 @@ export function CoreFeaturesTabs() {
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0 w-32 text-sm text-muted-foreground">RTX 4090 #2</div>
                     <div className="flex-1 h-8 bg-secondary rounded-full overflow-hidden">
-                      <div className="h-full bg-primary flex items-center justify-end pr-2" style={{ width: "88%" }}>
+                      <div className="h-full bg-primary flex items-center justify-end pr-2" style={{ width: '88%' }}>
                         <span className="text-xs text-primary-foreground font-medium">88%</span>
                       </div>
                     </div>
@@ -83,7 +83,7 @@ export function CoreFeaturesTabs() {
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0 w-32 text-sm text-muted-foreground">M2 Ultra</div>
                     <div className="flex-1 h-8 bg-secondary rounded-full overflow-hidden">
-                      <div className="h-full bg-primary flex items-center justify-end pr-2" style={{ width: "76%" }}>
+                      <div className="h-full bg-primary flex items-center justify-end pr-2" style={{ width: '76%' }}>
                         <span className="text-xs text-primary-foreground font-medium">76%</span>
                       </div>
                     </div>
@@ -91,7 +91,7 @@ export function CoreFeaturesTabs() {
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0 w-32 text-sm text-muted-foreground">CPU Backend</div>
                     <div className="flex-1 h-8 bg-secondary rounded-full overflow-hidden">
-                      <div className="h-full bg-chart-2 flex items-center justify-end pr-2" style={{ width: "34%" }}>
+                      <div className="h-full bg-chart-2 flex items-center justify-end pr-2" style={{ width: '34%' }}>
                         <span className="text-xs text-primary-foreground font-medium">34%</span>
                       </div>
                     </div>
@@ -121,19 +121,19 @@ export function CoreFeaturesTabs() {
                   <div className="text-foreground pl-4">
                     route_to(<span className="text-chart-3">"multi-gpu-cluster"</span>)
                   </div>
-                  <div className="text-foreground">{"}"}</div>
+                  <div className="text-foreground">{'}'}</div>
                   <div className="text-chart-4 mt-2">else if</div>
                   <div className="text-foreground">{' task.type == "image" {'}</div>
                   <div className="text-foreground pl-4">
                     route_to(<span className="text-chart-3">"cuda-only"</span>)
                   </div>
-                  <div className="text-foreground">{"}"}</div>
+                  <div className="text-foreground">{'}'}</div>
                   <div className="text-chart-4 mt-2">else</div>
-                  <div className="text-foreground">{" {"}</div>
+                  <div className="text-foreground">{' {'}</div>
                   <div className="text-foreground pl-4">
                     route_to(<span className="text-chart-3">"cheapest"</span>)
                   </div>
-                  <div className="text-foreground">{"}"}</div>
+                  <div className="text-foreground">{'}'}</div>
                 </div>
 
                 <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">

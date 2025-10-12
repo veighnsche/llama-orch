@@ -13,13 +13,7 @@ export interface TestimonialCardProps {
   className?: string
 }
 
-export function TestimonialCard({
-  name,
-  role,
-  quote,
-  avatar,
-  className,
-}: TestimonialCardProps) {
+export function TestimonialCard({ name, role, quote, avatar, className }: TestimonialCardProps) {
   const gradientClasses = {
     primary: 'from-primary to-primary',
     'chart-1': 'from-chart-1 to-chart-1',
@@ -34,41 +28,21 @@ export function TestimonialCard({
 
   const renderAvatar = () => {
     if (!avatar) {
-      return (
-        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-chart-2"></div>
-      )
+      return <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-chart-2"></div>
     }
 
     if (typeof avatar === 'string') {
-      return (
-        <img
-          src={avatar}
-          alt={name}
-          className="h-12 w-12 rounded-full object-cover"
-        />
-      )
+      return <img src={avatar} alt={name} className="h-12 w-12 rounded-full object-cover" />
     }
 
     const gradientKey = `${avatar.from}-${avatar.to}` as keyof typeof gradientClasses
     const gradient = gradientClasses[gradientKey] || gradientClasses.primary
 
-    return (
-      <div
-        className={cn(
-          'h-12 w-12 rounded-full bg-gradient-to-br',
-          gradient
-        )}
-      ></div>
-    )
+    return <div className={cn('h-12 w-12 rounded-full bg-gradient-to-br', gradient)}></div>
   }
 
   return (
-    <div
-      className={cn(
-        'bg-card border border-border rounded-lg p-6 space-y-4',
-        className
-      )}
-    >
+    <div className={cn('bg-card border border-border rounded-lg p-6 space-y-4', className)}>
       <div className="flex items-center gap-3">
         {renderAvatar()}
         <div>

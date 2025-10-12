@@ -1,24 +1,24 @@
 const testimonials = [
   {
     quote:
-      "I was spending $80/month on Claude for coding. Now I run Llama 70B on my gaming PC and old workstation. Same quality, $0 cost. Never going back.",
-    author: "Alex K.",
-    role: "Solo Developer",
-    avatar: "👨‍💻",
+      'I was spending $80/month on Claude for coding. Now I run Llama 70B on my gaming PC and old workstation. Same quality, $0 cost. Never going back.',
+    author: 'Alex K.',
+    role: 'Solo Developer',
+    avatar: '👨‍💻',
   },
   {
     quote:
-      "We cut our AI costs from $500/month to zero by pooling our team&apos;s hardware. rbee just works. OpenAI-compatible API means no code changes.",
-    author: "Sarah M.",
-    role: "CTO at StartupCo",
-    avatar: "👩‍💼",
+      'We cut our AI costs from $500/month to zero by pooling our team&apos;s hardware. rbee just works. OpenAI-compatible API means no code changes.',
+    author: 'Sarah M.',
+    role: 'CTO at StartupCo',
+    avatar: '👩‍💼',
   },
   {
     quote:
-      "The cascading shutdown guarantee is a game-changer. No more orphaned processes eating VRAM. Press Ctrl+C and everything shuts down cleanly.",
-    author: "Marcus T.",
-    role: "DevOps Engineer",
-    avatar: "👨‍🔧",
+      'The cascading shutdown guarantee is a game-changer. No more orphaned processes eating VRAM. Press Ctrl+C and everything shuts down cleanly.',
+    author: 'Marcus T.',
+    role: 'DevOps Engineer',
+    avatar: '👨‍🔧',
   },
 ]
 

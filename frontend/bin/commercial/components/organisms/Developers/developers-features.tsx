@@ -1,17 +1,17 @@
-"use client"
+'use client'
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { Code, Cpu, Gauge, Terminal } from "lucide-react"
+import { Code, Cpu, Gauge, Terminal } from 'lucide-react'
 
 const features = [
   {
-    id: "openai-api",
+    id: 'openai-api',
     icon: Code,
-    title: "OpenAI-Compatible API",
+    title: 'OpenAI-Compatible API',
     description:
-      "Drop-in replacement for OpenAI API. Works with Zed, Cursor, Continue, and any tool that supports OpenAI.",
-    benefit: "No code changes. Just point to localhost.",
+      'Drop-in replacement for OpenAI API. Works with Zed, Cursor, Continue, and any tool that supports OpenAI.',
+    benefit: 'No code changes. Just point to localhost.',
     code: `export OPENAI_API_BASE=http://localhost:8080/v1
 export OPENAI_API_KEY=your-rbee-token
 
@@ -19,11 +19,11 @@ export OPENAI_API_KEY=your-rbee-token
 zed .`,
   },
   {
-    id: "multi-gpu",
+    id: 'multi-gpu',
     icon: Cpu,
-    title: "Multi-GPU Orchestration",
-    description: "Automatically distribute workloads across CUDA, Metal, and CPU backends. Use every GPU you own.",
-    benefit: "10x throughput by using all your hardware.",
+    title: 'Multi-GPU Orchestration',
+    description: 'Automatically distribute workloads across CUDA, Metal, and CPU backends. Use every GPU you own.',
+    benefit: '10x throughput by using all your hardware.',
     code: `rbee-keeper worker start --gpu 0 --backend cuda  # PC
 rbee-keeper worker start --gpu 1 --backend cuda  # PC
 rbee-keeper worker start --gpu 0 --backend metal # Mac
@@ -31,11 +31,11 @@ rbee-keeper worker start --gpu 0 --backend metal # Mac
 # All GPUs work together automatically`,
   },
   {
-    id: "task-api",
+    id: 'task-api',
     icon: Terminal,
-    title: "Task-Based API with SSE",
-    description: "Real‑time progress updates. See model loading, token generation, and cost tracking as it happens.",
-    benefit: "Full visibility into every inference job.",
+    title: 'Task-Based API with SSE',
+    description: 'Real‑time progress updates. See model loading, token generation, and cost tracking as it happens.',
+    benefit: 'Full visibility into every inference job.',
     code: `event: started
 data: {"queue_position":3}
 
@@ -46,11 +46,11 @@ event: metrics
 data: {"tokens_remaining":98}`,
   },
   {
-    id: "shutdown",
+    id: 'shutdown',
     icon: Gauge,
-    title: "Cascading Shutdown",
-    description: "Press Ctrl+C once. Everything shuts down cleanly. No orphaned processes. No leaked VRAM.",
-    benefit: "Reliable cleanup. Safe for development.",
+    title: 'Cascading Shutdown',
+    description: 'Press Ctrl+C once. Everything shuts down cleanly. No orphaned processes. No leaked VRAM.',
+    benefit: 'Reliable cleanup. Safe for development.',
     code: `# Press Ctrl+C
 ^C
 Shutting down queen-rbee...
@@ -61,7 +61,7 @@ Terminating workers...
 ]
 
 export function DevelopersFeatures() {
-  const [activeTab, setActiveTab] = useState("openai-api")
+  const [activeTab, setActiveTab] = useState('openai-api')
 
   const activeFeature = features.find((f) => f.id === activeTab)!
 
@@ -80,20 +80,21 @@ export function DevelopersFeatures() {
             {features.map((feature) => {
               const isActive = activeTab === feature.id
               return (
-              <button
-                key={feature.id}
-                onClick={() => setActiveTab(feature.id)}
-                className={cn(
-                  'flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all',
-                  isActive
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-border bg-card text-muted-foreground hover:border-border hover:text-foreground'
-                )}
-              >
-                <feature.icon className="h-4 w-4" />
-                {feature.title}
-              </button>
-            )})}
+                <button
+                  key={feature.id}
+                  onClick={() => setActiveTab(feature.id)}
+                  className={cn(
+                    'flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all',
+                    isActive
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border bg-card text-muted-foreground hover:border-border hover:text-foreground',
+                  )}
+                >
+                  <feature.icon className="h-4 w-4" />
+                  {feature.title}
+                </button>
+              )
+            })}
           </div>
 
           {/* Content */}

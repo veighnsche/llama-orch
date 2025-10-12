@@ -9,12 +9,7 @@ export interface ComparisonTableRowProps {
   className?: string
 }
 
-export function ComparisonTableRow({
-  feature,
-  values,
-  highlightColumn,
-  className,
-}: ComparisonTableRowProps) {
+export function ComparisonTableRow({ feature, values, highlightColumn, className }: ComparisonTableRowProps) {
   const renderValue = (value: boolean | string | ReactNode, index: number) => {
     if (typeof value === 'boolean') {
       return value ? (
@@ -30,13 +25,7 @@ export function ComparisonTableRow({
     <tr className={cn('border-b border-border', className)}>
       <td className="p-4 text-muted-foreground">{feature}</td>
       {values.map((value, index) => (
-        <td
-          key={index}
-          className={cn(
-            'text-center p-4',
-            highlightColumn === index && 'bg-primary/5'
-          )}
-        >
+        <td key={index} className={cn('text-center p-4', highlightColumn === index && 'bg-primary/5')}>
           {renderValue(value, index)}
         </td>
       ))}

@@ -3,7 +3,6 @@ import { SectionContainer, StepNumber, CodeBlock } from '@/components/molecules'
 export function HowItWorksSection() {
   return (
     <SectionContainer title="From Zero to AI Infrastructure in 15 Minutes">
-
       <div className="max-w-5xl mx-auto space-y-16">
         {/* Step 1 */}
         <div className="grid lg:grid-cols-2 gap-8 items-center">
@@ -14,10 +13,12 @@ export function HowItWorksSection() {
               Get started from source. Works on Linux and macOS. Windows support planned.
             </p>
           </div>
-          <CodeBlock code={`$ git clone https://github.com/veighnsche/llama-orch
+          <CodeBlock
+            code={`$ git clone https://github.com/veighnsche/llama-orch
 $ cd llama-orch && cargo build --release
 $ rbee-keeper daemon start
-  ✓ rbee daemon started on port 8080`} />
+  ✓ rbee daemon started on port 8080`}
+          />
         </div>
 
         {/* Step 2 */}
@@ -29,7 +30,7 @@ $ rbee-keeper daemon start
               Connect all your GPUs across your network. rbee automatically detects CUDA, Metal, and CPU backends.
             </p>
           </div>
-          <CodeBlock 
+          <CodeBlock
             code={`$ rbee-keeper setup add-node \
   --name workstation \
   --ssh-host 192.168.1.10
@@ -52,10 +53,12 @@ $ rbee-keeper setup add-node \
               Point your tools to localhost. Zed, Cursor, or any OpenAI-compatible tool works instantly.
             </p>
           </div>
-          <CodeBlock code={`$ export OPENAI_API_BASE=http://localhost:8080/v1
+          <CodeBlock
+            code={`$ export OPENAI_API_BASE=http://localhost:8080/v1
 
 # Now Zed, Cursor, or any OpenAI-compatible
-# tool works with your local infrastructure!`} />
+# tool works with your local infrastructure!`}
+          />
         </div>
 
         {/* Step 4 */}
@@ -67,7 +70,7 @@ $ rbee-keeper setup add-node \
               Use the TypeScript SDK to build custom AI agents, tools, and workflows.
             </p>
           </div>
-          <CodeBlock 
+          <CodeBlock
             code={`import { invoke } from '@llama-orch/utils'
 
 const code = await invoke({

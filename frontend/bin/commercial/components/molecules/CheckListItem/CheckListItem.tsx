@@ -12,12 +12,7 @@ export interface CheckListItemProps {
   className?: string
 }
 
-export function CheckListItem({
-  text,
-  variant = 'success',
-  size = 'md',
-  className,
-}: CheckListItemProps) {
+export function CheckListItem({ text, variant = 'success', size = 'md', className }: CheckListItemProps) {
   const variantClasses = {
     success: 'text-chart-3',
     primary: 'text-primary',
@@ -38,16 +33,8 @@ export function CheckListItem({
 
   return (
     <li className={cn('flex items-start gap-2', className)}>
-      <Check
-        className={cn(
-          'flex-shrink-0 mt-0.5',
-          sizeClasses[size],
-          variantClasses[variant]
-        )}
-      />
-      <span className={cn('text-muted-foreground', textSizeClasses[size])}>
-        {text}
-      </span>
+      <Check className={cn('flex-shrink-0 mt-0.5', sizeClasses[size], variantClasses[variant])} />
+      <span className={cn('text-muted-foreground', textSizeClasses[size])}>{text}</span>
     </li>
   )
 }

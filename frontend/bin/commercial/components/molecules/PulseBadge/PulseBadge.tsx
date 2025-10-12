@@ -13,13 +13,7 @@ export interface PulseBadgeProps {
   className?: string
 }
 
-export function PulseBadge({
-  text,
-  variant = 'primary',
-  size = 'md',
-  animated = true,
-  className,
-}: PulseBadgeProps) {
+export function PulseBadge({ text, variant = 'primary', size = 'md', animated = true, className }: PulseBadgeProps) {
   const variantClasses = {
     primary: 'bg-primary/10 border-primary/20 text-primary',
     success: 'bg-chart-3/10 border-chart-3/20 text-chart-3',
@@ -52,7 +46,7 @@ export function PulseBadge({
         'inline-flex items-center gap-2 border rounded-full',
         variantClasses[variant],
         sizeClasses[size],
-        className
+        className,
       )}
     >
       <span className={cn('relative flex', dotSizeClasses[size])}>
@@ -60,16 +54,12 @@ export function PulseBadge({
           <span
             className={cn(
               'animate-ping absolute inline-flex h-full w-full rounded-full opacity-75',
-              variantDotClasses[variant]
+              variantDotClasses[variant],
             )}
           ></span>
         )}
         <span
-          className={cn(
-            'relative inline-flex rounded-full',
-            dotSizeClasses[size],
-            variantDotClasses[variant]
-          )}
+          className={cn('relative inline-flex rounded-full', dotSizeClasses[size], variantDotClasses[variant])}
         ></span>
       </span>
       {text}

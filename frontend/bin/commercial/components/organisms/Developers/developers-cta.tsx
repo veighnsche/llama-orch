@@ -1,5 +1,5 @@
 import { Button } from '@/components/atoms/Button/Button'
-import { ArrowRight, Github } from "lucide-react"
+import { ArrowRight, Github } from 'lucide-react'
 
 export function DevelopersCTA() {
   return (

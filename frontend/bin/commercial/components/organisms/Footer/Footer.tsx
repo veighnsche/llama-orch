@@ -1,4 +1,4 @@
-import { Github, MessageCircle } from "lucide-react"
+import { Github, MessageCircle } from 'lucide-react'
 import { FooterColumn } from '@/components/molecules'
 
 export function Footer() {
@@ -9,40 +9,52 @@ export function Footer() {
           <FooterColumn
             title="Product"
             links={[
-              { href: "https://github.com/veighnsche/llama-orch/tree/main/docs", text: "Documentation", external: true },
-              { href: "https://github.com/veighnsche/llama-orch", text: "GitHub Repository", external: true },
-              { href: "https://github.com/veighnsche/llama-orch/milestones", text: "Roadmap", external: true },
-              { href: "https://github.com/veighnsche/llama-orch/releases", text: "Changelog", external: true },
+              {
+                href: 'https://github.com/veighnsche/llama-orch/tree/main/docs',
+                text: 'Documentation',
+                external: true,
+              },
+              { href: 'https://github.com/veighnsche/llama-orch', text: 'GitHub Repository', external: true },
+              { href: 'https://github.com/veighnsche/llama-orch/milestones', text: 'Roadmap', external: true },
+              { href: 'https://github.com/veighnsche/llama-orch/releases', text: 'Changelog', external: true },
             ]}
           />
 
           <FooterColumn
             title="Community"
             links={[
-              { href: "#", text: "Discord" },
-              { href: "https://github.com/veighnsche/llama-orch/discussions", text: "GitHub Discussions", external: true },
-              { href: "#", text: "Twitter/X" },
-              { href: "#", text: "Blog" },
+              { href: '#', text: 'Discord' },
+              {
+                href: 'https://github.com/veighnsche/llama-orch/discussions',
+                text: 'GitHub Discussions',
+                external: true,
+              },
+              { href: '#', text: 'Twitter/X' },
+              { href: '#', text: 'Blog' },
             ]}
           />
 
           <FooterColumn
             title="Company"
             links={[
-              { href: "#", text: "About" },
-              { href: "/#pricing", text: "Pricing" },
-              { href: "#", text: "Contact Sales" },
-              { href: "https://github.com/veighnsche/llama-orch/issues", text: "Support", external: true },
+              { href: '#', text: 'About' },
+              { href: '/#pricing', text: 'Pricing' },
+              { href: '#', text: 'Contact Sales' },
+              { href: 'https://github.com/veighnsche/llama-orch/issues', text: 'Support', external: true },
             ]}
           />
 
           <FooterColumn
             title="Legal"
             links={[
-              { href: "#", text: "Privacy Policy" },
-              { href: "#", text: "Terms of Service" },
-              { href: "https://github.com/veighnsche/llama-orch/blob/main/LICENSE", text: "License (GPL)", external: true },
-              { href: "https://github.com/veighnsche/llama-orch/security", text: "Security", external: true },
+              { href: '#', text: 'Privacy Policy' },
+              { href: '#', text: 'Terms of Service' },
+              {
+                href: 'https://github.com/veighnsche/llama-orch/blob/main/LICENSE',
+                text: 'License (GPL)',
+                external: true,
+              },
+              { href: 'https://github.com/veighnsche/llama-orch/security', text: 'Security', external: true },
             ]}
           />
         </div>

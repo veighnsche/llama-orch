@@ -17,7 +17,7 @@ A component for displaying inline or small block code snippets with proper monos
 ```tsx
 import { CodeSnippet } from '@/components/atoms'
 
-<p>
+;<p>
   Run <CodeSnippet>npm install</CodeSnippet> to get started.
 </p>
 ```
@@ -25,9 +25,7 @@ import { CodeSnippet } from '@/components/atoms'
 ### Block Code
 
 ```tsx
-<CodeSnippet variant="block">
-  curl -sSL rbee.dev/install.sh | sh
-</CodeSnippet>
+<CodeSnippet variant="block">curl -sSL rbee.dev/install.sh | sh</CodeSnippet>
 ```
 
 ### Custom Styling
@@ -40,11 +38,11 @@ import { CodeSnippet } from '@/components/atoms'
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `children` | `ReactNode` | - | Code content |
-| `variant` | `'inline' \| 'block'` | `'inline'` | Display variant |
-| `className` | `string` | - | Additional CSS classes |
+| Prop        | Type                  | Default    | Description            |
+| ----------- | --------------------- | ---------- | ---------------------- |
+| `children`  | `ReactNode`           | -          | Code content           |
+| `variant`   | `'inline' \| 'block'` | `'inline'` | Display variant        |
+| `className` | `string`              | -          | Additional CSS classes |
 
 ## When to Use
 
@@ -59,12 +57,8 @@ import { CodeSnippet } from '@/components/atoms'
 
 ```tsx
 <div className="space-y-2">
-  <p className="text-muted-foreground">
-    Install rbee with a single command:
-  </p>
-  <CodeSnippet variant="block">
-    curl -sSL rbee.dev/install.sh | sh
-  </CodeSnippet>
+  <p className="text-muted-foreground">Install rbee with a single command:</p>
+  <CodeSnippet variant="block">curl -sSL rbee.dev/install.sh | sh</CodeSnippet>
 </div>
 ```
 

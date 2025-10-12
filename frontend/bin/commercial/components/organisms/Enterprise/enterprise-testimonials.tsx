@@ -1,4 +1,4 @@
-import { Building2, Heart, Scale } from "lucide-react"
+import { Building2, Heart, Scale } from 'lucide-react'
 
 export function EnterpriseTestimonials() {
   return (

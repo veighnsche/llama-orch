@@ -1,4 +1,4 @@
-import { Building2, Heart, Scale, Shield } from "lucide-react"
+import { Building2, Heart, Scale, Shield } from 'lucide-react'
 
 export function EnterpriseUseCases() {
   return (

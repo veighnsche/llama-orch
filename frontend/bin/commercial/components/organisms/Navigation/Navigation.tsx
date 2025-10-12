@@ -1,14 +1,14 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { Button } from '@/components/atoms/Button/Button';
-import { Menu, X, Github } from "lucide-react";
-import { useState } from "react";
-import { ThemeToggle } from '@/components/molecules/ThemeToggle/ThemeToggle';
-import { NavLink } from '@/components/molecules';
+import Link from 'next/link'
+import { Button } from '@/components/atoms/Button/Button'
+import { Menu, X, Github } from 'lucide-react'
+import { useState } from 'react'
+import { ThemeToggle } from '@/components/molecules/ThemeToggle/ThemeToggle'
+import { NavLink } from '@/components/molecules'
 
 export function Navigation() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -47,10 +47,7 @@ export function Navigation() {
               <ThemeToggle />
             </div>
 
-            <Button
-              size="sm"
-              className="bg-primary hover:bg-primary/80 text-primary-foreground"
-            >
+            <Button size="sm" className="bg-primary hover:bg-primary/80 text-primary-foreground">
               Join Waitlist
             </Button>
           </div>
@@ -62,11 +59,7 @@ export function Navigation() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="text-muted-foreground hover:text-foreground"
             >
-              {mobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
@@ -74,46 +67,22 @@ export function Navigation() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4 space-y-4 border-t border-border">
-            <NavLink
-              href="/features"
-              variant="mobile"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <NavLink href="/features" variant="mobile" onClick={() => setMobileMenuOpen(false)}>
               Features
             </NavLink>
-            <NavLink
-              href="/use-cases"
-              variant="mobile"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <NavLink href="/use-cases" variant="mobile" onClick={() => setMobileMenuOpen(false)}>
               Use Cases
             </NavLink>
-            <NavLink
-              href="/pricing"
-              variant="mobile"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <NavLink href="/pricing" variant="mobile" onClick={() => setMobileMenuOpen(false)}>
               Pricing
             </NavLink>
-            <NavLink
-              href="/developers"
-              variant="mobile"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <NavLink href="/developers" variant="mobile" onClick={() => setMobileMenuOpen(false)}>
               For Developers
             </NavLink>
-            <NavLink
-              href="/gpu-providers"
-              variant="mobile"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <NavLink href="/gpu-providers" variant="mobile" onClick={() => setMobileMenuOpen(false)}>
               For Providers
             </NavLink>
-            <NavLink
-              href="/enterprise"
-              variant="mobile"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <NavLink href="/enterprise" variant="mobile" onClick={() => setMobileMenuOpen(false)}>
               For Enterprise
             </NavLink>
             <NavLink
@@ -131,15 +100,12 @@ export function Navigation() {
             >
               GitHub
             </a>
-            <Button
-              size="sm"
-              className="w-full bg-primary hover:bg-primary/80 text-primary-foreground"
-            >
+            <Button size="sm" className="w-full bg-primary hover:bg-primary/80 text-primary-foreground">
               Join Waitlist
             </Button>
           </div>
         )}
       </div>
     </nav>
-  );
+  )
 }

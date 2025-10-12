@@ -1,4 +1,4 @@
-import { Check, X } from "lucide-react"
+import { Check, X } from 'lucide-react'
 
 export function EnterpriseComparison() {
   return (
@@ -16,9 +16,7 @@ export function EnterpriseComparison() {
             <thead>
               <tr className="border-b border-border">
                 <th className="p-4 text-left text-sm font-semibold text-muted-foreground">Feature</th>
-                <th className="bg-primary/5 p-4 text-center text-sm font-semibold text-primary">
-                  rbee (Self-Hosted)
-                </th>
+                <th className="bg-primary/5 p-4 text-center text-sm font-semibold text-primary">rbee (Self-Hosted)</th>
                 <th className="p-4 text-center text-sm font-semibold text-muted-foreground">OpenAI / Anthropic</th>
                 <th className="p-4 text-center text-sm font-semibold text-muted-foreground">Azure OpenAI</th>
               </tr>
@@ -26,73 +24,73 @@ export function EnterpriseComparison() {
             <tbody>
               {[
                 {
-                  feature: "Data Sovereignty",
+                  feature: 'Data Sovereignty',
                   rbee: true,
                   openai: false,
-                  azure: "Partial",
+                  azure: 'Partial',
                 },
                 {
-                  feature: "EU-Only Deployment",
+                  feature: 'EU-Only Deployment',
                   rbee: true,
                   openai: false,
-                  azure: "Partial",
+                  azure: 'Partial',
                 },
                 {
-                  feature: "GDPR Compliant",
+                  feature: 'GDPR Compliant',
                   rbee: true,
-                  openai: "Partial",
-                  azure: "Partial",
+                  openai: 'Partial',
+                  azure: 'Partial',
                 },
                 {
-                  feature: "Immutable Audit Logs",
-                  rbee: true,
-                  openai: false,
-                  azure: false,
-                },
-                {
-                  feature: "7-Year Audit Retention",
+                  feature: 'Immutable Audit Logs',
                   rbee: true,
                   openai: false,
                   azure: false,
                 },
                 {
-                  feature: "SOC2 Type II Ready",
+                  feature: '7-Year Audit Retention',
+                  rbee: true,
+                  openai: false,
+                  azure: false,
+                },
+                {
+                  feature: 'SOC2 Type II Ready',
                   rbee: true,
                   openai: true,
                   azure: true,
                 },
                 {
-                  feature: "ISO 27001 Aligned",
+                  feature: 'ISO 27001 Aligned',
                   rbee: true,
                   openai: true,
                   azure: true,
                 },
                 {
-                  feature: "Zero US Cloud Dependencies",
+                  feature: 'Zero US Cloud Dependencies',
                   rbee: true,
                   openai: false,
                   azure: false,
                 },
                 {
-                  feature: "On-Premises Deployment",
+                  feature: 'On-Premises Deployment',
                   rbee: true,
                   openai: false,
                   azure: false,
                 },
                 {
-                  feature: "Complete Control",
+                  feature: 'Complete Control',
                   rbee: true,
                   openai: false,
-                  azure: "Partial",
+                  azure: 'Partial',
                 },
                 {
-                  feature: "Custom SLAs",
+                  feature: 'Custom SLAs',
                   rbee: true,
                   openai: false,
                   azure: true,
                 },
                 {
-                  feature: "White-Label Option",
+                  feature: 'White-Label Option',
                   rbee: true,
                   openai: false,
                   azure: false,

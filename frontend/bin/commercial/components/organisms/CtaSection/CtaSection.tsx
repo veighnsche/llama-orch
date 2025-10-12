@@ -1,19 +1,19 @@
 import { Button } from '@/components/atoms/Button/Button'
-import { ArrowRight, BookOpen, MessageCircle } from "lucide-react"
+import { ArrowRight, BookOpen, MessageCircle } from 'lucide-react'
 import { SectionContainer } from '@/components/molecules'
 
 export function CTASection() {
   return (
-    <SectionContainer 
+    <SectionContainer
       title={
         <>
-          Take Control of Your<br />
+          Take Control of Your
+          <br />
           <span className="text-primary">AI Infrastructure Today.</span>
         </>
       }
       maxWidth="4xl"
     >
-
       <p className="text-xl text-muted-foreground leading-relaxed text-center">
         Join hundreds of users, providers, and enterprises who've chosen independence.
       </p>
@@ -44,7 +44,9 @@ export function CTASection() {
         </Button>
       </div>
 
-      <p className="text-muted-foreground pt-4 text-center">100% open source. No credit card required. Install in 15 minutes.</p>
+      <p className="text-muted-foreground pt-4 text-center">
+        100% open source. No credit card required. Install in 15 minutes.
+      </p>
     </SectionContainer>
   )
 }

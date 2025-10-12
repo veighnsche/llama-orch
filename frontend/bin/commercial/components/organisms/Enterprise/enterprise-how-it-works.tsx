@@ -1,4 +1,4 @@
-import { Server, Shield, CheckCircle, Rocket } from "lucide-react"
+import { Server, Shield, CheckCircle, Rocket } from 'lucide-react'
 
 export function EnterpriseHowItWorks() {
   return (

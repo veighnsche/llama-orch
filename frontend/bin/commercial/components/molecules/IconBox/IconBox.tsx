@@ -14,13 +14,7 @@ export interface IconBoxProps {
   className?: string
 }
 
-export function IconBox({
-  icon: Icon,
-  color = 'primary',
-  size = 'md',
-  variant = 'rounded',
-  className,
-}: IconBoxProps) {
+export function IconBox({ icon: Icon, color = 'primary', size = 'md', variant = 'rounded', className }: IconBoxProps) {
   const sizeClasses = {
     sm: 'h-8 w-8',
     md: 'h-10 w-10',
@@ -59,7 +53,7 @@ export function IconBox({
         sizeClasses[size],
         variantClasses[variant],
         colors.bg,
-        className
+        className,
       )}
     >
       <Icon className={cn(iconSizeClasses[size], colors.text)} />

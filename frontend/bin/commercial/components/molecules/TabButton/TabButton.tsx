@@ -10,14 +10,7 @@ export interface TabButtonProps {
   className?: string
 }
 
-export function TabButton({
-  id,
-  label,
-  icon: Icon,
-  active,
-  onClick,
-  className,
-}: TabButtonProps) {
+export function TabButton({ id, label, icon: Icon, active, onClick, className }: TabButtonProps) {
   return (
     <button
       onClick={onClick}
@@ -26,7 +19,7 @@ export function TabButton({
         active
           ? 'border-primary bg-primary/10 text-primary'
           : 'border-border bg-card text-muted-foreground hover:border-border hover:text-foreground',
-        className
+        className,
       )}
     >
       <Icon className="h-4 w-4" />

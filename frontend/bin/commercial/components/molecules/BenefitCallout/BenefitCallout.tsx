@@ -12,12 +12,7 @@ export interface BenefitCalloutProps {
   className?: string
 }
 
-export function BenefitCallout({
-  text,
-  variant = 'success',
-  icon,
-  className,
-}: BenefitCalloutProps) {
+export function BenefitCallout({ text, variant = 'success', icon, className }: BenefitCalloutProps) {
   const variantClasses = {
     success: 'bg-chart-3/10 border-chart-3/20 text-chart-3',
     primary: 'bg-primary/10 border-primary/20 text-primary',
@@ -26,13 +21,7 @@ export function BenefitCallout({
   }
 
   return (
-    <div
-      className={cn(
-        'border rounded-lg p-4',
-        variantClasses[variant],
-        className
-      )}
-    >
+    <div className={cn('border rounded-lg p-4', variantClasses[variant], className)}>
       <p className="font-medium flex items-center gap-2">
         {icon || '✓'} {text}
       </p>

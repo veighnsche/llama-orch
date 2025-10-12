@@ -1,5 +1,5 @@
 import { Button } from '@/components/atoms/Button/Button'
-import { ArrowRight, Github, Star } from "lucide-react"
+import { ArrowRight, Github, Star } from 'lucide-react'
 import { PulseBadge, TrustIndicator, TerminalWindow, ProgressBar } from '@/components/molecules'
 
 export function HeroSection() {

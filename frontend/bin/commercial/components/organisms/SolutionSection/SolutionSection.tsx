@@ -1,4 +1,4 @@
-import { Anchor, DollarSign, Laptop, Shield } from "lucide-react"
+import { Anchor, DollarSign, Laptop, Shield } from 'lucide-react'
 import { SectionContainer, FeatureCard, ArchitectureDiagram } from '@/components/molecules'
 
 export function SolutionSection() {
@@ -12,7 +12,6 @@ export function SolutionSection() {
       subtitle="rbee orchestrates AI inference across every GPU in your home network—workstations, gaming PCs, Macs—turning idle hardware into a private AI infrastructure."
       bgVariant="secondary"
     >
-
       {/* Architecture Diagram */}
       <div className="max-w-4xl mx-auto mb-16">
         <ArchitectureDiagram className="shadow-lg" />

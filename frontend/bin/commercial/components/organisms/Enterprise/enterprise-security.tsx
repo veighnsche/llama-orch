@@ -1,4 +1,4 @@
-import { Shield, Lock, Eye, Server, Clock } from "lucide-react"
+import { Shield, Lock, Eye, Server, Clock } from 'lucide-react'
 
 export function EnterpriseSecurity() {
   return (
@@ -31,10 +31,10 @@ export function EnterpriseSecurity() {
 
             <div className="space-y-2">
               {[
-                "Timing-safe comparison (constant-time)",
-                "Token fingerprinting (SHA-256)",
-                "Bearer token parsing (RFC 6750)",
-                "Bind policy enforcement",
+                'Timing-safe comparison (constant-time)',
+                'Token fingerprinting (SHA-256)',
+                'Bearer token parsing (RFC 6750)',
+                'Bind policy enforcement',
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                   <span className="text-chart-3">✓</span>
@@ -63,10 +63,10 @@ export function EnterpriseSecurity() {
 
             <div className="space-y-2">
               {[
-                "Immutable audit trail (append-only)",
-                "32 event types across 7 categories",
-                "Tamper detection (hash chains)",
-                "7-year retention (GDPR)",
+                'Immutable audit trail (append-only)',
+                '32 event types across 7 categories',
+                'Tamper detection (hash chains)',
+                '7-year retention (GDPR)',
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                   <span className="text-chart-3">✓</span>
@@ -95,10 +95,10 @@ export function EnterpriseSecurity() {
 
             <div className="space-y-2">
               {[
-                "SQL injection prevention",
-                "Command injection prevention",
-                "Path traversal prevention",
-                "Resource exhaustion prevention",
+                'SQL injection prevention',
+                'Command injection prevention',
+                'Path traversal prevention',
+                'Resource exhaustion prevention',
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                   <span className="text-chart-3">✓</span>
@@ -127,10 +127,10 @@ export function EnterpriseSecurity() {
 
             <div className="space-y-2">
               {[
-                "File-based loading (not env vars)",
-                "Memory zeroization on drop",
-                "Permission validation (0600)",
-                "Timing-safe verification",
+                'File-based loading (not env vars)',
+                'Memory zeroization on drop',
+                'Permission validation (0600)',
+                'Timing-safe verification',
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                   <span className="text-chart-3">✓</span>
@@ -159,7 +159,7 @@ export function EnterpriseSecurity() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                {["Deadline propagation (client → worker)", "Remaining time calculation"].map((item, i) => (
+                {['Deadline propagation (client → worker)', 'Remaining time calculation'].map((item, i) => (
                   <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                     <span className="text-chart-3">✓</span>
                     <span>{item}</span>
@@ -167,7 +167,7 @@ export function EnterpriseSecurity() {
                 ))}
               </div>
               <div className="space-y-2">
-                {["Deadline enforcement (abort if insufficient)", "Timeout responses (504 Gateway Timeout)"].map(
+                {['Deadline enforcement (abort if insufficient)', 'Timeout responses (504 Gateway Timeout)'].map(
                   (item, i) => (
                     <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                       <span className="text-chart-3">✓</span>

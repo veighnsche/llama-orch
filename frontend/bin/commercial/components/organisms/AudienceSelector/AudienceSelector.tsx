@@ -1,4 +1,4 @@
-import { Code2, Server, Shield } from "lucide-react"
+import { Code2, Server, Shield } from 'lucide-react'
 import { AudienceCard } from '@/components/molecules'
 
 export function AudienceSelector() {
@@ -25,9 +25,9 @@ export function AudienceSelector() {
             title="Build on Your Hardware"
             description="Use your homelab GPUs to power AI coding tools. OpenAI-compatible API works with Zed, Cursor, and any tool you already use."
             features={[
-              "Zero API costs, unlimited usage",
-              "Complete privacy, no data leaves your network",
-              "Build custom AI agents with TypeScript"
+              'Zero API costs, unlimited usage',
+              'Complete privacy, no data leaves your network',
+              'Build custom AI agents with TypeScript',
             ]}
             href="/developers"
             ctaText="Explore Developer Path"
@@ -40,9 +40,9 @@ export function AudienceSelector() {
             title="Monetize Your Hardware"
             description="Turn idle GPUs into revenue. Join the rbee marketplace and earn from your gaming PC, workstation, or server farm."
             features={[
-              "Set your own pricing and availability",
-              "Secure platform with audit trails",
-              "Passive income from existing hardware"
+              'Set your own pricing and availability',
+              'Secure platform with audit trails',
+              'Passive income from existing hardware',
             ]}
             href="/gpu-providers"
             ctaText="Become a Provider"
@@ -55,9 +55,9 @@ export function AudienceSelector() {
             title="Compliance & Security"
             description="Deploy AI infrastructure with EU compliance, comprehensive audit trails, and enterprise-grade security built-in from day one."
             features={[
-              "GDPR-compliant with 7-year audit retention",
-              "SOC2 and ISO 27001 aligned",
-              "On-premises or private cloud deployment"
+              'GDPR-compliant with 7-year audit retention',
+              'SOC2 and ISO 27001 aligned',
+              'On-premises or private cloud deployment',
             ]}
             href="/enterprise"
             ctaText="Enterprise Solutions"

@@ -1,4 +1,4 @@
-import { Cpu, DollarSign, Lock, Zap } from "lucide-react"
+import { Cpu, DollarSign, Lock, Zap } from 'lucide-react'
 
 export function DevelopersSolution() {
   return (

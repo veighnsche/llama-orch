@@ -1,4 +1,4 @@
-import { DollarSign, Shield, Sliders, Zap } from "lucide-react"
+import { DollarSign, Shield, Sliders, Zap } from 'lucide-react'
 
 export function ProvidersSolution() {
   return (

@@ -19,14 +19,14 @@ export interface ConsoleOutputProps {
 
 /**
  * ConsoleOutput - A component for displaying terminal/console output with proper monospace font
- * 
+ *
  * Features:
  * - Uses Geist Mono font for authentic console appearance
  * - Optional terminal window chrome (macOS-style traffic lights)
  * - Multiple variants for different use cases
  * - Dark/light background options
  * - Proper text selection and overflow handling
- * 
+ *
  * @example
  * ```tsx
  * <ConsoleOutput showChrome title="bash">
@@ -49,12 +49,7 @@ export function ConsoleOutput({
   }
 
   return (
-    <div
-      className={cn(
-        'overflow-hidden rounded-lg border border-border shadow-sm',
-        className
-      )}
-    >
+    <div className={cn('overflow-hidden rounded-lg border border-border shadow-sm', className)}>
       {showChrome && (
         <div className="flex items-center gap-2 border-b border-border bg-muted px-4 py-3">
           <div className="flex gap-2">
@@ -62,19 +57,10 @@ export function ConsoleOutput({
             <div className="h-3 w-3 rounded-full bg-terminal-amber" />
             <div className="h-3 w-3 rounded-full bg-terminal-green" />
           </div>
-          {title && (
-            <span className="ml-2 font-mono text-sm text-muted-foreground">
-              {title}
-            </span>
-          )}
+          {title && <span className="ml-2 font-mono text-sm text-muted-foreground">{title}</span>}
         </div>
       )}
-      <div
-        className={cn(
-          'overflow-x-auto p-4 text-sm leading-relaxed font-mono',
-          bgStyles[background]
-        )}
-      >
+      <div className={cn('overflow-x-auto p-4 text-sm leading-relaxed font-mono', bgStyles[background])}>
         {children}
       </div>
     </div>

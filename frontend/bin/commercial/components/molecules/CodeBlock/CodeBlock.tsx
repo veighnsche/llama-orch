@@ -13,42 +13,21 @@ export interface CodeBlockProps {
   className?: string
 }
 
-export function CodeBlock({
-  code,
-  language,
-  showLineNumbers = false,
-  highlight = [],
-  className,
-}: CodeBlockProps) {
+export function CodeBlock({ code, language, showLineNumbers = false, highlight = [], className }: CodeBlockProps) {
   const lines = code.split('\n')
 
   return (
-    <div
-      className={cn(
-        'bg-card border border-border rounded-lg p-6 text-sm font-mono',
-        className
-      )}
-    >
+    <div className={cn('bg-card border border-border rounded-lg p-6 text-sm font-mono', className)}>
       <pre className="overflow-x-auto">
         <code>
-          {showLineNumbers ? (
-            lines.map((line, index) => (
-              <div
-                key={index}
-                className={cn(
-                  'flex gap-4',
-                  highlight.includes(index + 1) && 'bg-primary/10'
-                )}
-              >
-                <span className="text-muted-foreground select-none">
-                  {(index + 1).toString().padStart(2, ' ')}
-                </span>
-                <span>{line}</span>
-              </div>
-            ))
-          ) : (
-            code
-          )}
+          {showLineNumbers
+            ? lines.map((line, index) => (
+                <div key={index} className={cn('flex gap-4', highlight.includes(index + 1) && 'bg-primary/10')}>
+                  <span className="text-muted-foreground select-none">{(index + 1).toString().padStart(2, ' ')}</span>
+                  <span>{line}</span>
+                </div>
+              ))
+            : code}
         </code>
       </pre>
     </div>

@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
 import { Button } from '@/components/atoms/Button/Button'
-import { ArrowRight, Zap, DollarSign, Shield } from "lucide-react"
-import Link from "next/link"
+import { ArrowRight, Zap, DollarSign, Shield } from 'lucide-react'
+import Link from 'next/link'
 
 export function ProvidersHero() {
   return (
@@ -86,9 +86,7 @@ export function ProvidersHero() {
               <div className="relative rounded-2xl border border-border bg-card/50 p-8 backdrop-blur-sm">
                 <div className="mb-6 flex items-center justify-between">
                   <div className="text-sm font-medium text-muted-foreground">Your Earnings Dashboard</div>
-                  <div className="rounded-full bg-chart-3/10 px-3 py-1 text-xs font-medium text-chart-3">
-                    Active
-                  </div>
+                  <div className="rounded-full bg-chart-3/10 px-3 py-1 text-xs font-medium text-chart-3">Active</div>
                 </div>
 
                 <div className="mb-8 space-y-4">
