@@ -16,6 +16,8 @@ export interface FeatureCardProps {
   size?: 'sm' | 'md' | 'lg'
   /** Additional CSS classes */
   className?: string
+  /** Optional footer content (e.g., micro-metrics) */
+  children?: React.ReactNode
 }
 
 export function FeatureCard({
@@ -26,6 +28,7 @@ export function FeatureCard({
   hover = false,
   size = 'md',
   className,
+  children,
 }: FeatureCardProps) {
   const sizeClasses = {
     sm: 'p-4 space-y-2',
@@ -46,9 +49,9 @@ export function FeatureCard({
   }
 
   const titleSizeClasses = {
-    sm: 'text-base',
-    md: 'text-lg',
-    lg: 'text-xl',
+    sm: 'text-sm',
+    md: 'text-base',
+    lg: 'text-lg',
   }
 
   const descriptionSizeClasses = {
@@ -71,7 +74,7 @@ export function FeatureCard({
   return (
     <div
       className={cn(
-        'bg-card border border-border rounded-lg',
+        'bg-card border border-border rounded-lg flex flex-col',
         sizeClasses[size],
         hover && 'transition-all hover:border-primary/50 hover:bg-card/80',
         className,
@@ -80,8 +83,9 @@ export function FeatureCard({
       <div className={cn('rounded-lg flex items-center justify-center', iconSizeClasses[size], colors.bg)} aria-hidden="true">
         <Icon aria-hidden="true" focusable="false" className={cn(iconInnerSizeClasses[size], colors.text)} />
       </div>
-      <h3 className={cn('font-bold text-card-foreground', titleSizeClasses[size])}>{title}</h3>
-      <p className={cn('text-muted-foreground leading-relaxed', descriptionSizeClasses[size])}>{description}</p>
+      <h3 className={cn('font-semibold text-card-foreground', titleSizeClasses[size])}>{title}</h3>
+      <p className={cn('text-muted-foreground leading-6', descriptionSizeClasses[size])}>{description}</p>
+      {children && <div className="mt-auto pt-2">{children}</div>}
     </div>
   )
 }

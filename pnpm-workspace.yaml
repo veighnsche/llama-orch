@@ -5,3 +5,7 @@ packages:
   - frontend/bin/commercial
   - frontend/libs/frontend-tooling
   - frontend/reference/v0
+
+onlyBuiltDependencies:
+  - esbuild
+  - workerd
