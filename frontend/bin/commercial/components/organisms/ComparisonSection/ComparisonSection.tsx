@@ -91,7 +91,7 @@ export function ComparisonSection() {
   return (
     <SectionContainer
       title="Why Developers Choose rbee"
-      subtitle="Local-first AI that's faster, private, and costs $0 on your hardware."
+      description="Local-first AI that's faster, private, and costs $0 on your hardware."
       bgVariant="secondary"
     >
       <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in-50 duration-500">

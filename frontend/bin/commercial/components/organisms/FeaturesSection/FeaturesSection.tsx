@@ -8,7 +8,7 @@ export function FeaturesSection() {
   return (
     <SectionContainer
       title="Enterprise-Grade Features. Homelab Simplicity."
-      subtitle="Pick a lane—API, GPUs, Scheduler, or Real-time—and see exactly how rbee fits your stack."
+      description="Pick a lane—API, GPUs, Scheduler, or Real-time—and see exactly how rbee fits your stack."
       bgVariant="secondary"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 md:space-y-14">

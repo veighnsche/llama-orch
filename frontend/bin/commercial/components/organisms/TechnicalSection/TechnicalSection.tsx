@@ -8,9 +8,9 @@ export function TechnicalSection() {
   return (
     <SectionContainer
       title="Built by Engineers, for Engineers"
-      subtitle="Rust-native orchestrator with process isolation, protocol awareness, and policy routing via Rhai."
+      description="Rust-native orchestrator with process isolation, protocol awareness, and policy routing via Rhai."
       headingId="tech-title"
-      centered={true}
+      align="center"
     >
       <div className="grid grid-cols-12 gap-6 lg:gap-10 max-w-6xl mx-auto motion-safe:animate-in motion-safe:fade-in-50 motion-safe:duration-500">
         {/* Left Column: Architecture Highlights + Diagram */}

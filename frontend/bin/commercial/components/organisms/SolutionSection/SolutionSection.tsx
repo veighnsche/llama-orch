@@ -27,7 +27,7 @@ export function SolutionSection() {
           Your Hardware. Your Models. <span className="text-primary">Your Control.</span>
         </>
       }
-      subtitle="rbee orchestrates inference across every GPU in your home network—workstations, gaming rigs, and Macs—turning idle hardware into a private, OpenAI-compatible AI platform."
+      description="rbee orchestrates inference across every GPU in your home network—workstations, gaming rigs, and Macs—turning idle hardware into a private, OpenAI-compatible AI platform."
       bgVariant="secondary"
       maxWidth="7xl"
     >

@@ -10,13 +10,11 @@ export function PricingSection() {
   const [isYearly, setIsYearly] = useState(false)
 
   return (
-    <SectionContainer title="Start Free. Scale When Ready.">
-      {/* Header with subtitle and trust badges */}
-      <div className="motion-safe:animate-in motion-safe:fade-in-50 motion-safe:duration-500 max-w-3xl mx-auto text-center mb-8">
-        <p className="text-lg text-muted-foreground mb-3">
-          Run rbee free at home. Add collaboration and governance when your team grows.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground justify-center">
+    <SectionContainer
+      title="Start Free. Scale When Ready."
+      description="Run rbee free at home. Add collaboration and governance when your team grows."
+      kicker={
+        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground justify-center">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/50">
             <Unlock className="h-3.5 w-3.5" aria-hidden="true" />
             Open source
@@ -34,8 +32,8 @@ export function PricingSection() {
             No feature gates
           </span>
         </div>
-      </div>
-
+      }
+    >
       {/* Billing toggle */}
       <div className="flex justify-center mb-6">
         <div className="inline-flex items-center gap-2 text-sm bg-muted p-1 rounded-lg">

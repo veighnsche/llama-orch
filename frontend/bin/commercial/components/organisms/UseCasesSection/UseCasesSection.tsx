@@ -8,7 +8,7 @@ export function UseCasesSection() {
   return (
     <SectionContainer
       title="Built for Those Who Value Independence"
-      subtitle="Run serious AI on your own hardware. Keep costs at zero, keep control at 100%."
+      description="Run serious AI on your own hardware. Keep costs at zero, keep control at 100%."
       bgVariant="secondary"
     >
       <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in-50 duration-500">
