@@ -1,5 +1,6 @@
 export * from './ArchitectureDiagram/ArchitectureDiagram'
 export * from './AudienceCard/AudienceCard'
+export * from './BeeArchitecture/BeeArchitecture'
 export * from './BenefitCallout/BenefitCallout'
 export * from './BrandLogo/BrandLogo'
 export * from './BulletListItem/BulletListItem'

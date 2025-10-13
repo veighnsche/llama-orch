@@ -1,34 +1,45 @@
 # rbee (pronounced "are-bee")
-**Power Zed IDE's AI agents with your homelab GPUs**
+**Escape dependency on big AI providers. Build your own AI infrastructure.**
 
-rbee (formerly llama-orch) is an OpenAI-compatible AI orchestration platform that lets you use ALL your computers' GPU power for AI coding. Drop-in replacement for OpenAI API.
+rbee (formerly llama-orch) is an OpenAI-compatible AI orchestration platform that lets you build your own AI infrastructure using ALL your home network hardware. Never depend on external AI providers again.
 
-**🎯 PRIMARY USE CASE:** Run Zed IDE's AI agents on YOUR homelab GPUs instead of paying for cloud APIs.
+**🎯 PRIMARY TARGET AUDIENCE:** Developers who build with AI but don't want to depend on big AI providers.
 
-**Current version**: `0.1.0` (early development)  
+**THE FEAR:** You're building complex codebases with AI assistance (Claude, GPT-4). What happens when the AI provider changes their models, shuts down, or changes pricing? Your codebase becomes unmaintainable without AI. You've created a dependency you can't control.
+
+**THE SOLUTION:** Build AI coders from scratch using YOUR hardware. Agentic API with task-based streaming. llama-orch-utils: TypeScript library for building AI agents. OpenAI-compatible = drop-in replacement. Independence from external providers.
+
+**Current version**: `0.1.0` (68% complete - 42/62 BDD scenarios passing)  
 **License**: GPL-3.0-or-later (free and open source, copyleft)  
-**Target platform**: Linux with NVIDIA GPUs, Apple Silicon (Metal), CPU fallback
+**Target platform**: Linux with NVIDIA GPUs, Apple Silicon (Metal), CPU fallback  
+**Development**: 99% AI-generated code via Character-Driven Development
 
 ---
 
 ## What is rbee?
 
-### The Main Goal
+### The Main Goal: Independence from Big AI Providers
 
-**Use Zed IDE (or any AI coding tool) with your own homelab GPU power:**
+**Build your own AI infrastructure using ALL your home network hardware:**
 
 ```bash
-# Start rbee on your homelab
+# 1. Start rbee infrastructure on your homelab
 rbee-keeper daemon start
 rbee-keeper hive start --pool default
-rbee-keeper worker start --gpu 0 --backend cuda
+rbee-keeper worker start --gpu 0 --backend cuda  # Computer 1
+rbee-keeper worker start --gpu 1 --backend cuda  # Computer 2
+rbee-keeper worker start --gpu 0 --backend metal # Mac
 
-# Configure Zed IDE to use rbee instead of OpenAI
+# 2. Configure Zed IDE (or build your own AI coder)
 export OPENAI_API_BASE=http://localhost:8080/v1
 export OPENAI_API_KEY=your-rbee-token
 
-# Now Zed's AI agents run on YOUR GPUs!
-# Zero API costs. Full control. Use ALL your computers' GPU power.
+# 3. Now your AI tooling runs on YOUR infrastructure!
+# ✅ Zero external dependencies
+# ✅ Models never change without your permission
+# ✅ Always available (your hardware, your uptime)
+# ✅ Zero ongoing costs (electricity only)
+# ✅ Complete control over your AI tooling
 ```
 
 **OpenAI-compatible API** means drop-in replacement for:
@@ -36,6 +47,11 @@ export OPENAI_API_KEY=your-rbee-token
 - Cursor IDE
 - Continue.dev
 - Any tool using OpenAI SDK
+
+**Build your own AI agents with llama-orch-utils** (TypeScript library):
+- File operations, LLM invocation, prompt management
+- Response extraction, model definitions
+- Composable utilities for agentic workflows
 
 ---
 
@@ -135,29 +151,91 @@ rbee (pronounced "are-bee") consists of **4 binaries** (2 daemons + 2 CLIs):
 > Byyeee <3
 ---
 ## Current Status
-**Development Progress**: ~40% complete toward v0.2.0
-### ✅ Implemented
-- HTTP API (`queen-rbee`) with Axum server on port 8080
-- Task admission, queueing, and placement (round-robin, least-loaded)
-- SSE streaming: `started` → `token` → `metrics` → `end` frames
-- Session service with TTL, budget tracking, KV warmth metadata
-- Model catalog with filesystem storage and verification
-- Pool management daemon (`pool-managerd`) with readiness tracking
-- Worker adapters: llamacpp, vllm, tgi, openai-http (scaffolds), mock
-- Prometheus metrics aligned to `.specs/metrics/otel-prom.md`
--  infrastructure (`libs/`) for test artifacts
-- Service registry for multi-node deployments (bearer auth, node heartbeats)
-- BDD test harness with Cucumber + 13 integration tests
+
+**Development Progress**: 68% complete (42/62 BDD scenarios passing)
+
+### ✅ What's Working
+
+**Infrastructure:**
+- ✅ Backend detection (CUDA, Metal, CPU)
+- ✅ Registry schema with backend capabilities
+- ✅ Model catalog (SQLite)
+- ✅ Model provisioning (Hugging Face download)
+- ✅ Worker spawning (llm-cuda-worker-rbee, llm-metal-worker-rbee, llm-cpu-worker-rbee)
+- ✅ SSE streaming (token-by-token)
+- ✅ HTTP APIs (queen-rbee, rbee-hive, worker)
+- ✅ OpenAI-compatible API (v1 completion endpoints)
+
+**CLI Commands:**
+- ✅ `rbee-keeper setup add-node`
+- ✅ `rbee-keeper setup install`
+- ✅ `rbee-keeper setup list-nodes`
+- ✅ `rbee-keeper infer` (basic inference)
+- ✅ `rbee-hive detect` (backend detection)
+
+**Testing:**
+- ✅ 42/62 BDD scenarios passing (68% complete)
+- ✅ Unit tests passing (queen-rbee, rbee-hive, gpu-info)
+- ✅ Proof bundle system operational
+
+**Security & Compliance:**
+- ✅ **11 shared crates already built** (saves 5 days of development):
+  - audit-logging (895 lines of docs, 32 GDPR event types)
+  - auth-min (timing-safe token comparison, fingerprinting)
+  - input-validation (injection prevention)
+  - secrets-management (file-based, zeroization)
+  - narration-core (observability, secret redaction)
+  - deadline-propagation (timeout handling)
+  - gpu-info (backend detection)
+  - Plus 4 more crates
+
 ### 🚧 In Progress
-- Full adapter implementations (llamacpp integration, vllm completion)
-- Production hardening and performance optimization
-- Load testing on real GPU hardware
-- Documentation refinements based on real-world usage
-### 📋 Not Yet Implemented
-- Policy engine for outbound HTTP allow/deny rules
-- Advanced placement heuristics (VRAM-aware, session affinity)
-- Callback webhooks for pool readiness
-- Multi-region support
+
+**Current Sprint:**
+- 🚧 Lifecycle management (daemon start/stop/status)
+- 🚧 Cascading shutdown (queen-rbee → hives → workers)
+- 🚧 SSH configuration management
+- 🚧 Worker cancellation endpoint
+
+**Expected:** 54+ scenarios passing by end of M0
+
+### 📋 Roadmap
+
+**M1 (Q1 2026):** Production-ready pool management
+- rbee-hive as HTTP daemon
+- Worker health monitoring (30s heartbeat)
+- Idle timeout enforcement (5 minutes)
+
+**M2 (Q2 2026):** Intelligent orchestration
+- queen-rbee HTTP daemon (orchestrator)
+- Rhai scripting engine (user-defined routing)
+- Web UI (visual management)
+
+**M3 (Q3 2026):** Multi-modal support
+- Image generation (Stable Diffusion)
+- Audio generation (TTS)
+- Embeddings
+- Multi-modal routing
+
+### 🎯 30-Day Plan to First Customer
+
+**Week 1 (Days 1-7):** Working end-to-end system  
+**Week 2 (Days 8-14):** EU compliance (GDPR endpoints, audit logs, basic web UI)  
+**Week 3 (Days 15-21):** Marketing (landing page, outreach, 10 qualified leads)  
+**Week 4 (Days 22-30):** Revenue (demos, close deal, onboard customer, €200 MRR)
+
+**Key Advantage:** 11 shared crates already built (audit-logging, auth-min, etc.) saves 5 days of development time!
+
+### 💰 Conservative Financial Projections
+
+**Year 1 (2026):** 35 customers, €10K MRR, €70K revenue  
+**Year 2 (2027):** 100 customers, €30K MRR, €360K revenue  
+**Year 3 (2028):** 200+ customers, €83K+ MRR, €1M+ revenue
+
+**Pricing Tiers:**
+- Starter: €99/mo
+- Professional: €299/mo (most popular)
+- Enterprise: Custom (€2K+/mo)
 ---
 ## Documentation
 ### Core Specifications

@@ -1,147 +1,126 @@
-import { Building, Home, Laptop, Users } from 'lucide-react'
+import { type ComponentType } from 'react'
 import Link from 'next/link'
-import { SectionContainer, FeatureCard } from '@/components/molecules'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/atoms/Badge/Badge'
-import { Button } from '@/components/atoms/Button/Button'
 
-export function UseCasesSection() {
+export type UseCase = {
+  icon: ComponentType<{ className?: string }>
+  title: string
+  scenario: string
+  solution: string
+  outcome: string
+  tags?: string[]
+  cta?: { label: string; href: string }
+  illustrationSrc?: string
+}
+
+export type UseCasesSectionProps = {
+  title: string
+  subtitle?: string
+  items: UseCase[]
+  columns?: 2 | 3
+  id?: string
+  className?: string
+}
+
+export function UseCasesSection({
+  title,
+  subtitle,
+  items,
+  columns = 3,
+  id,
+  className,
+}: UseCasesSectionProps) {
+  const gridCols = columns === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3'
+
   return (
-    <SectionContainer
-      title="Built for Those Who Value Independence"
-      description="Run serious AI on your own hardware. Keep costs at zero, keep control at 100%."
-      bgVariant="secondary"
-    >
-      <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in-50 duration-500">
-        {/* Audience key strip */}
-        <div className="flex flex-wrap gap-2 text-sm text-muted-foreground justify-center">
-          <Badge variant="outline" asChild>
-            <a href="#usecase-solo" className="hover:bg-accent transition-colors">
-              Solo
-            </a>
-          </Badge>
-          <Badge variant="outline" asChild>
-            <a href="#usecase-team" className="hover:bg-accent transition-colors">
-              Small Team
-            </a>
-          </Badge>
-          <Badge variant="outline" asChild>
-            <a href="#usecase-homelab" className="hover:bg-accent transition-colors">
-              Homelab
-            </a>
-          </Badge>
-          <Badge variant="outline" asChild>
-            <a href="#usecase-enterprise" className="hover:bg-accent transition-colors">
-              Enterprise
-            </a>
-          </Badge>
+    <section id={id} className={cn('border-b border-border bg-secondary py-24', className)}>
+      <div className="container mx-auto px-4 animate-in fade-in-50 duration-400">
+        {/* Heading block */}
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{title}</h2>
+          {subtitle && <p className="text-balance text-lg leading-relaxed text-muted-foreground">{subtitle}</p>}
         </div>
 
         {/* Cards grid */}
-        <div className="grid grid-cols-12 gap-6 lg:gap-8">
-          <div className="col-span-12 md:col-span-6 animate-in slide-in-from-bottom-2 duration-500">
-            <FeatureCard
-              id="usecase-solo"
-              icon={Laptop}
-              title="The Solo Developer"
-              description="Shipping a SaaS with AI help but allergic to lock-in."
-              iconColor="chart-2"
-              size="lg"
-              className="bg-secondary/60 hover:bg-secondary transition-colors border-border/60 h-full"
-              stat={{ label: 'Monthly AI cost', value: '$0' }}
-              bullets={[
-                'Run rbee on your gaming PC + spare workstation.',
-                'Llama 70B for coding, SD for assets—local & fast.',
-                'No rate limits. Your tools, your rules.',
-              ]}
-            />
-          </div>
+        <div className={cn('mx-auto mt-16 grid max-w-6xl gap-6', gridCols)}>
+          {items.map((item, i) => {
+            const Icon = item.icon
+            return (
+              <div
+                key={i}
+                tabIndex={0}
+                style={{ animationDelay: `${i * 80}ms` }}
+                className={cn(
+                  'group rounded-xl border border-border/80 bg-card p-6 transition-all',
+                  'hover:border-primary/40 hover:bg-card/80',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                  'animate-in fade-in slide-in-from-bottom-2 duration-400'
+                )}
+              >
+                {/* Header row */}
+                <div className="mb-4 flex items-center gap-3">
+                  <div
+                    className="grid h-9 w-9 place-content-center rounded-md bg-primary/10 text-primary"
+                    aria-hidden="true"
+                  >
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-base font-semibold tracking-tight text-card-foreground">{item.title}</h3>
+                </div>
 
-          <div className="col-span-12 md:col-span-6 animate-in slide-in-from-bottom-2 duration-500 delay-100">
-            <FeatureCard
-              id="usecase-team"
-              icon={Users}
-              title="The Small Team"
-              description="5-person startup burning $500/mo on APIs."
-              iconColor="primary"
-              size="lg"
-              className="bg-secondary/60 hover:bg-secondary transition-colors border-border/60 h-full"
-              stat={{ label: 'Savings/yr', value: '$6,000+' }}
-              bullets={[
-                'Pool 3 workstations + 2 Macs into one rbee cluster.',
-                'Shared models, faster inference, fewer blockers.',
-                'GDPR-friendly by design.',
-              ]}
-            />
-          </div>
+                {/* Body blocks */}
+                <div className="space-y-4">
+                  {/* Scenario */}
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Scenario</div>
+                    <div className="mt-1 h-[3.5rem] text-sm leading-relaxed text-muted-foreground">{item.scenario}</div>
+                  </div>
 
-          <div className="col-span-12 md:col-span-6 animate-in slide-in-from-bottom-2 duration-500 delay-200">
-            <FeatureCard
-              id="usecase-homelab"
-              icon={Home}
-              title="The Homelab Enthusiast"
-              description="Four GPUs gathering dust."
-              iconColor="chart-3"
-              size="lg"
-              className="bg-secondary/60 hover:bg-secondary transition-colors border-border/60 h-full"
-              stat={{ label: 'Idle GPUs', value: '→ Productive' }}
-              bullets={[
-                'Spread workers across your LAN in minutes.',
-                'Build agents: coder, doc generator, code reviewer.',
-                'Auto-download models, clean shutdowns, no mess.',
-              ]}
-            />
-          </div>
+                  <div className="h-px bg-border/60" />
 
-          <div className="col-span-12 md:col-span-6 animate-in slide-in-from-bottom-2 duration-500 delay-300">
-            <FeatureCard
-              id="usecase-enterprise"
-              icon={Building}
-              title="The Enterprise"
-              description="50-dev org. Code can't leave the premises."
-              iconColor="chart-4"
-              size="lg"
-              className="bg-secondary/60 hover:bg-secondary transition-colors border-border/60 h-full"
-              stat={{ label: 'Compliance', value: 'EU-only' }}
-              bullets={[
-                'On-prem rbee with audit trails and policy routing.',
-                'Rhai-based rules for data residency & access.',
-                'Zero external dependencies.',
-              ]}
-            />
-          </div>
+                  {/* Solution */}
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Solution</div>
+                    <div className="mt-1 h-[3.5rem] text-sm leading-relaxed text-muted-foreground">{item.solution}</div>
+                  </div>
+
+                  <div className="h-px bg-border/60" />
+
+                  {/* Outcome callout */}
+                  <div className="rounded-lg border border-primary/30 bg-primary/10 p-3">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-primary">Outcome</div>
+                    <div className="mt-1 min-h-[2.5rem] text-sm text-foreground">{item.outcome}</div>
+                  </div>
+                </div>
+
+                {/* Optional footer */}
+                {(item.tags || item.cta) && (
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    {item.tags?.map((tag, idx) => (
+                      <Badge
+                        key={idx}
+                        variant="outline"
+                        className="rounded-full border px-2 py-0.5 text-[11px] text-muted-foreground"
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                    {item.cta && (
+                      <Link
+                        href={item.cta.href}
+                        className="ml-auto text-sm font-medium text-primary hover:underline"
+                      >
+                        {item.cta.label}
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
-
-        {/* CTA and reassurance footer */}
-        <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-center">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <Button asChild size="lg">
-              <Link href="/docs/quickstart">See Quickstart</Link>
-            </Button>
-            <Button asChild variant="ghost" size="lg">
-              <Link href="/docs/architecture">
-                Architecture →
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Micro badges */}
-        <div className="flex flex-wrap gap-2 justify-center">
-          <Badge variant="secondary" className="text-xs">
-            OpenAI-compatible
-          </Badge>
-          <Badge variant="secondary" className="text-xs">
-            Multi-backend (CUDA/Metal/CPU)
-          </Badge>
-          <Badge variant="secondary" className="text-xs">
-            Audit-ready
-          </Badge>
-        </div>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Works with Zed, Cursor, and any OpenAI-compatible tool.
-        </p>
       </div>
-    </SectionContainer>
+    </section>
   )
 }

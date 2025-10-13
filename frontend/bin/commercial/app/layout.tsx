@@ -6,6 +6,7 @@ import './globals.css'
 import { Suspense } from 'react'
 import { Navigation } from '@/components/organisms/Navigation/Navigation'
 import { ThemeProvider } from '@/components/providers/ThemeProvider/ThemeProvider'
+import { Footer } from '@/components/organisms'
 
 export const metadata: Metadata = {
   title: 'rbee - Build with AI. Own Your Infrastructure.',
@@ -27,6 +28,7 @@ export default function RootLayout({
           <main id="main">
             <Suspense fallback={null}>{children}</Suspense>
           </main>
+          <Footer />
         </ThemeProvider>
       </body>
     </html>

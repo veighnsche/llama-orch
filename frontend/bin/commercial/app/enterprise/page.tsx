@@ -27,7 +27,6 @@ export default function EnterprisePage() {
       <EnterpriseFeatures />
       <EnterpriseTestimonials />
       <EnterpriseCTA />
-      <Footer />
     </main>
   )
 }

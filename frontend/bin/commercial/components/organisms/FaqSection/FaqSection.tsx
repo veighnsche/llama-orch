@@ -8,17 +8,35 @@ import { Badge } from '@/components/atoms/Badge/Badge'
 import { Button } from '@/components/atoms/Button/Button'
 import { Input } from '@/components/atoms/Input/Input'
 import { Separator } from '@/components/atoms/Separator/Separator'
+import { cn } from '@/lib/utils'
 
-const categories = ['Setup', 'Models', 'Performance', 'Marketplace', 'Security', 'Production']
+// Created by: TEAM-086
 
-interface FAQItem {
+export interface FAQItem {
   value: string
   question: string
   answer: React.ReactNode
   category: string
 }
 
-const faqItems: FAQItem[] = [
+interface FAQSectionProps {
+  title?: string
+  subtitle?: string
+  badgeText?: string
+  categories?: string[]
+  faqItems?: FAQItem[]
+  showSupportCard?: boolean
+  supportCardImage?: string
+  supportCardImageAlt?: string
+  supportCardTitle?: string
+  supportCardLinks?: Array<{ label: string; href: string }>
+  supportCardCTA?: { label: string; href: string }
+  jsonLdEnabled?: boolean
+}
+
+const defaultCategories = ['Setup', 'Models', 'Performance', 'Marketplace', 'Security', 'Production']
+
+const defaultFaqItems: FAQItem[] = [
   {
     value: 'item-1',
     question: 'How is this different from Ollama?',
@@ -121,14 +139,31 @@ const faqItems: FAQItem[] = [
   },
 ]
 
-export function FAQSection() {
+export function FAQSection({
+  title = 'rbee FAQ',
+  subtitle = 'Quick answers about setup, models, orchestration, and security.',
+  badgeText = 'Support • Self-hosted AI',
+  categories = defaultCategories,
+  faqItems = defaultFaqItems,
+  showSupportCard = true,
+  supportCardImage = '/images/faq-beehive.png',
+  supportCardImageAlt = 'Isometric illustration of a vibrant community hub: hexagonal beehive structure with worker bees collaborating around glowing question mark icons, speech bubbles floating between honeycomb cells containing miniature server racks, warm amber and honey-gold palette with soft cyan accents, friendly bees wearing tiny headsets offering support, knowledge base documents scattered on wooden surface, gentle directional lighting creating welcoming atmosphere, detailed technical diagrams visible through translucent honeycomb walls, community-driven support concept, approachable and helpful mood',
+  supportCardTitle = 'Still stuck?',
+  supportCardLinks = [
+    { label: 'Join Discussions', href: 'https://github.com/yourusername/rbee/discussions' },
+    { label: 'Read Setup Guide', href: '/docs/setup' },
+    { label: 'Email support', href: 'mailto:support@example.com' },
+  ],
+  supportCardCTA = { label: 'Open Discussions', href: 'https://github.com/yourusername/rbee/discussions' },
+  jsonLdEnabled = true,
+}: FAQSectionProps = {}) {
   const [searchQuery, setSearchQuery] = React.useState('')
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
   const [accordionValue, setAccordionValue] = React.useState<string | undefined>(undefined)
 
   // Filter FAQs based on search and category
   const filteredFAQs = React.useMemo(() => {
-    return faqItems.filter((item) => {
+    return faqItems.filter((item: FAQItem) => {
       const matchesSearch =
         searchQuery === '' ||
         item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -143,7 +178,7 @@ export function FAQSection() {
   // Group FAQs by category for display
   const groupedFAQs = React.useMemo(() => {
     const groups: Record<string, FAQItem[]> = {}
-    filteredFAQs.forEach((item) => {
+    filteredFAQs.forEach((item: FAQItem) => {
       if (!groups[item.category]) {
         groups[item.category] = []
       }
@@ -151,6 +186,22 @@ export function FAQSection() {
     })
     return groups
   }, [filteredFAQs])
+
+  // JSON-LD Schema
+  const jsonLd = jsonLdEnabled
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqItems.map((item: FAQItem) => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: typeof item.answer === 'string' ? item.answer : item.question,
+          },
+        })),
+      }
+    : null
 
   const handleExpandAll = () => {
     // Radix Accordion with type="single" doesn't support multiple open items
@@ -165,21 +216,27 @@ export function FAQSection() {
   }
 
   return (
-    <section className="py-24 bg-secondary" aria-label="Frequently asked questions">
-      <div className="container mx-auto px-4">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-3">
-        {/* Left Column: Content */}
-        <div className="md:col-span-2 space-y-6">
-          {/* Header */}
-          <div className="space-y-3 animate-fade-in-up">
-            <Badge variant="secondary" className="animate-fade-in-up">
-              Support • Self-hosted AI
-            </Badge>
-            <h2 className="text-3xl font-semibold tracking-tight text-card-foreground">rbee FAQ</h2>
-            <p className="text-muted-foreground">
-              Quick answers about setup, models, orchestration, and security.
-            </p>
-          </div>
+    <>
+      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
+
+      <section className="py-24 bg-secondary" aria-label="Frequently asked questions">
+        <div className="container mx-auto px-4">
+          <div className={cn(
+            "mx-auto grid max-w-6xl grid-cols-1 gap-8",
+            showSupportCard ? "md:grid-cols-3" : ""
+          )}>
+            {/* Left Column: Content */}
+            <div className={cn("space-y-6", showSupportCard && "md:col-span-2")}>
+              {/* Header */}
+              <div className="space-y-3 animate-fade-in-up">
+                {badgeText && (
+                  <Badge variant="secondary" className="animate-fade-in-up">
+                    {badgeText}
+                  </Badge>
+                )}
+                <h2 className="text-3xl font-semibold tracking-tight text-card-foreground">{title}</h2>
+                <p className="text-muted-foreground">{subtitle}</p>
+              </div>
 
           {/* Toolbar */}
           <div className="space-y-4 rounded-lg border border-border bg-card/60 backdrop-blur-sm p-4 shadow-sm animate-fade-in">
@@ -204,21 +261,21 @@ export function FAQSection() {
               </div>
             </div>
 
-            {/* Category Filters */}
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <Button
-                  key={cat}
-                  variant={selectedCategory === cat ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
-                  className="rounded-full"
-                >
-                  {cat}
-                </Button>
-              ))}
+              {/* Category Filters */}
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat: string) => (
+                  <Button
+                    key={cat}
+                    variant={selectedCategory === cat ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+                    className="rounded-full"
+                  >
+                    {cat}
+                  </Button>
+                ))}
+              </div>
             </div>
-          </div>
 
           {/* FAQ List */}
           {filteredFAQs.length === 0 ? (
@@ -263,51 +320,52 @@ export function FAQSection() {
           )}
         </div>
 
-        {/* Right Column: Support Card */}
-        <aside className="hidden md:block md:col-span-1">
-          <div className="sticky top-24 rounded-xl border border-border bg-card p-5 shadow-sm animate-fade-in space-y-4">
-            <Image
-              src="/images/faq-beehive.png"
-              width={320}
-              height={180}
-              priority
-              className="rounded-lg shadow-sm ring-1 ring-border object-cover w-full"
-              alt="Isometric illustration of a vibrant community hub: hexagonal beehive structure with worker bees collaborating around glowing question mark icons, speech bubbles floating between honeycomb cells containing miniature server racks, warm amber and honey-gold palette with soft cyan accents, friendly bees wearing tiny headsets offering support, knowledge base documents scattered on wooden surface, gentle directional lighting creating welcoming atmosphere, detailed technical diagrams visible through translucent honeycomb walls, community-driven support concept, approachable and helpful mood"
-            />
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-card-foreground">Still stuck?</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary">•</span>
-                  <span>Join Discussions</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary">•</span>
-                  <span>Read Setup Guide</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary">•</span>
-                  <span>Email support</span>
-                </li>
-              </ul>
-              <div className="space-y-2 pt-2">
-                <Button className="w-full" asChild>
-                  <a href="https://github.com/yourusername/rbee/discussions" target="_blank" rel="noopener noreferrer">
-                    Open Discussions
-                  </a>
-                </Button>
-                <a
-                  href="/docs/setup"
-                  className="block text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  View documentation →
-                </a>
-              </div>
-            </div>
+            {/* Right Column: Support Card */}
+            {showSupportCard && (
+              <aside className="hidden md:block md:col-span-1">
+                <div className="sticky top-24 rounded-xl border border-border bg-card p-5 shadow-sm animate-fade-in space-y-4">
+                  {supportCardImage && (
+                    <Image
+                      src={supportCardImage}
+                      width={320}
+                      height={180}
+                      priority
+                      className="rounded-lg shadow-sm ring-1 ring-border object-cover w-full"
+                      alt={supportCardImageAlt}
+                    />
+                  )}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-card-foreground">{supportCardTitle}</h3>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      {supportCardLinks.map((link, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="text-primary">•</span>
+                          <span>{link.label}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="space-y-2 pt-2">
+                      <Button className="w-full" asChild>
+                        <a href={supportCardCTA.href} target="_blank" rel="noopener noreferrer">
+                          {supportCardCTA.label}
+                        </a>
+                      </Button>
+                      {supportCardLinks[1] && (
+                        <a
+                          href={supportCardLinks[1].href}
+                          className="block text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          View documentation →
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </aside>
+            )}
           </div>
-        </aside>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   )
 }

@@ -27,7 +27,6 @@ export default function GPUProvidersPage() {
       <ProvidersSecurity />
       <ProvidersTestimonials />
       <ProvidersCTA />
-      <Footer />
     </main>
   )
 }
