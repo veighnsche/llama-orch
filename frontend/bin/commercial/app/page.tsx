@@ -2,7 +2,7 @@ import { HeroSection } from '@/components/organisms/HeroSection/HeroSection'
 import { WhatIsRbee } from '@/components/organisms/WhatIsRbee/WhatIsRbee'
 import { AudienceSelector } from '@/components/organisms/AudienceSelector/AudienceSelector'
 import { ProblemSection } from '@/components/organisms/ProblemSection/ProblemSection'
-import { SolutionSection } from '@/components/organisms/SolutionSection/SolutionSection'
+import { HomeSolutionSection } from '@/components/organisms/SolutionSection/HomeSolutionSection'
 import { HowItWorksSection } from '@/components/organisms/HowItWorksSection/HowItWorksSection'
 import { FeaturesSection } from '@/components/organisms/FeaturesSection/FeaturesSection'
 import { UseCasesSection } from '@/components/organisms/UseCasesSection/UseCasesSection'
@@ -24,7 +24,7 @@ export default function Home() {
       <AudienceSelector />
       <EmailCapture />
       <ProblemSection />
-      <SolutionSection
+      <HomeSolutionSection
         title="Your hardware. Your models. Your control."
         subtitle="rbee orchestrates inference across every GPU in your home network—workstations, gaming rigs, and Macs—turning idle hardware into a private, OpenAI-compatible AI platform."
         benefits={[

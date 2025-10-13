@@ -64,6 +64,50 @@ export OPENAI_API_KEY=your-rbee-token
 5. **Smart/Dumb Architecture**: Clean separation between decisions and execution
 6. **Process Isolation**: Workers run in separate processes with isolated memory contexts
 **Note**: Determinism is a testing tool, not a product guarantee. LLMs cannot guarantee deterministic behavior due to model architecture and hardware variations.
+
+---
+
+## Why rbee? Competitive Advantages
+
+### vs. Cloud APIs (OpenAI, Anthropic)
+
+**We win on:**
+- ✅ **Independence** - Never depend on external providers again
+- ✅ **Control** - Your models, your rules, never change without permission
+- ✅ **Privacy** - Code never leaves your network
+- ✅ **Cost** - Zero ongoing costs (electricity only)
+- ✅ **Availability** - Your hardware, your uptime
+
+**They win on:**
+- ✅ Ease of use (no infrastructure management)
+- ✅ Model selection (access to latest models)
+
+### vs. Self-Hosted (Ollama, llama.cpp)
+
+**We win on:**
+- ✅ **Multi-node orchestration** - Use ALL your computers' GPU power
+- ✅ **Agentic API** - Task-based streaming for building AI agents
+- ✅ **llama-orch-utils** - TypeScript library for AI agent development
+- ✅ **EU compliance** - GDPR built-in (7-year audit retention)
+- ✅ **Security-first** - 5 specialized security crates
+- ✅ **Test reproducibility** - Proof bundles for CI/CD
+
+**They win on:**
+- ✅ Simplicity (single binary)
+- ✅ Maturity (battle-tested)
+
+### Unique Features
+
+**No one else has:**
+- 🐝 **Character-Driven Development** - 99% AI-generated code with 6 specialized teams
+- 🐝 **Home Network Power** - Use GPUs across ALL your computers
+- 🐝 **Agentic API** - Task-based streaming designed for AI agents
+- 🐝 **llama-orch-utils** - TypeScript library for building LLM pipelines
+- 🐝 **Security-First** - 5 security crates (auth-min, audit-logging, input-validation, secrets-management, deadline-propagation)
+- 🐝 **EU-Native** - GDPR compliance from day 1
+
+---
+
 ### The Four-Binary System
 rbee (pronounced "are-bee") consists of **4 binaries** (2 daemons + 2 CLIs):
 
@@ -236,6 +280,87 @@ rbee (pronounced "are-bee") consists of **4 binaries** (2 daemons + 2 CLIs):
 - Starter: €99/mo
 - Professional: €299/mo (most popular)
 - Enterprise: Custom (€2K+/mo)
+
+---
+
+## Character-Driven Development (99% AI-Generated)
+
+**rbee is built BY AI, not just WITH AI.**
+
+### The Innovation: 6 AI Teams with Distinct Personalities
+
+Instead of one AI doing everything, we created **6 specialized AI teams** that debate design decisions from their perspectives:
+
+1. **Testing Team 🔍** - Obsessively paranoid, zero tolerance for false positives
+2. **Security Team (auth-min) 🎭** - Trickster guardians, timing-safe everything
+3. **Performance Team ⏱️** - Obsessive timekeepers, every millisecond counts
+4. **Audit Logging Team 🔒** - The compliance engine, immutable trails
+5. **Narration Core Team 🎀** - Observability artists, secret redaction experts
+6. **Developer Experience Team 🎨** - Readability minimalists, policy hunters
+
+**The Magic:** When teams with different priorities review the same code, they catch issues others miss. Security team catches timing attacks. Performance team catches waste. Testing team catches false positives.
+
+**The Result:** Well-thought-out solutions examined from multiple angles.
+
+### How It Works: TEAM-XXX Pattern
+
+**Development workflow:**
+1. Write Gherkin feature (define behavior)
+2. Implement step definitions (Rust code)
+3. Run BDD tests (`bdd-runner`)
+4. Iterate until green
+5. Handoff to next team with summary
+
+**50+ TEAM handoffs** maintain continuity across development sessions. Each team builds on previous work. No context loss, no rework.
+
+### What We've Proven
+
+**Thesis:** AI can build production software if properly orchestrated
+
+**Evidence:**
+- 99% AI-generated code
+- 42/62 BDD scenarios passing (68% complete)
+- Clean architecture (4 binaries, clear separation)
+- Multi-backend support (CUDA, Metal, CPU)
+- Comprehensive testing (unit, integration, BDD, property)
+
+**This is the future of software development.** 🐝
+
+---
+
+## Security Architecture: Defense in Depth
+
+**rbee is built with security-first principles from day one.**
+
+### The Five Security Crates
+
+rbee's security is built on **five specialized security crates** that work together to create defense-in-depth:
+
+| Crate | Purpose | Key Features |
+|-------|---------|--------------|
+| **auth-min** 🎭 | Authentication primitives | Timing-safe comparison, token fingerprinting, bind policy enforcement |
+| **audit-logging** 🔒 | Compliance & forensics | Immutable audit trail, tamper detection, GDPR compliance (7-year retention) |
+| **input-validation** 🛡️ | Injection prevention | Path traversal, SQL injection, log injection prevention |
+| **secrets-management** 🔑 | Credential handling | File-based secrets (not env vars), zeroization, timing-safe verification |
+| **deadline-propagation** ⏱️ | Resource protection | Deadline enforcement, timeout handling, prevents resource exhaustion |
+
+**Together, they create defense-in-depth:** Multiple layers of security, each catching what others might miss.
+
+### EU-Native Compliance (GDPR)
+
+**Built-in compliance features:**
+- ✅ **Immutable audit logging** - 32 event types across 7 categories
+- ✅ **7-year retention** - GDPR, SOC2, ISO 27001 compliant
+- ✅ **Tamper detection** - Blockchain-style hash chains
+- ✅ **Data residency** - EU-only worker filtering
+- ✅ **GDPR endpoints** - Data export, deletion, consent tracking
+
+**Why This Matters:**
+- Pass SOC2 audits
+- Legally defensible proof of actions
+- Customer trust (prove correct data handling)
+- EU market advantage (GDPR compliance moat)
+
 ---
 ## Documentation
 ### Core Specifications
@@ -257,6 +382,14 @@ rbee (pronounced "are-bee") consists of **4 binaries** (2 daemons + 2 CLIs):
 - [`bin/shared-crates/audit-logging/`](bin/shared-crates/audit-logging/) — **Tamper-evident audit logging** (Security Rating: A-)
 - [`bin/shared-crates/AUDIT_LOGGING_REMINDER.md`](bin/shared-crates/AUDIT_LOGGING_REMINDER.md) — **⚠️ Required reading for all engineers**
 - Use `audit-logging` crate for all security events (auth, authz, resource ops, GDPR compliance)
+### Stakeholder Documents
+- [`.business/stakeholders/AGENTIC_AI_USE_CASE.md`](.business/stakeholders/AGENTIC_AI_USE_CASE.md) — Primary use case and value proposition
+- [`.business/stakeholders/AI_DEVELOPMENT_STORY.md`](.business/stakeholders/AI_DEVELOPMENT_STORY.md) — Character-Driven Development methodology
+- [`.business/stakeholders/ENGINEERING_GUIDE.md`](.business/stakeholders/ENGINEERING_GUIDE.md) — Engineering practices and patterns
+- [`.business/stakeholders/FINANCIAL_PROJECTIONS_UPDATE.md`](.business/stakeholders/FINANCIAL_PROJECTIONS_UPDATE.md) — Conservative financial projections
+- [`.business/stakeholders/SECURITY_ARCHITECTURE.md`](.business/stakeholders/SECURITY_ARCHITECTURE.md) — Defense-in-depth security design
+- [`.business/stakeholders/STAKEHOLDER_STORY.md`](.business/stakeholders/STAKEHOLDER_STORY.md) — Complete story for all stakeholders
+- [`.business/stakeholders/TECHNICAL_DEEP_DIVE.md`](.business/stakeholders/TECHNICAL_DEEP_DIVE.md) — Technical architecture deep dive
 ---
 ## Architecture (SIMPLIFIED 2025-10-09)
 
@@ -843,3 +976,46 @@ OpenAPI | trybuild, ui | — |
 - Contracts: see `contracts/*`.
 - Core scheduling: see `libs/orchestrator-core/` and `bin/queen-rbee/`.
 <!-- END WORKSPACE MAP (AUTO-GENERATED) -->
+
+---
+
+## Quick Reference
+
+**Pronunciation:** rbee (pronounced "are-bee")  
+**Tagline:** Escape dependency on big AI providers. Build your own AI infrastructure.
+
+**Target Audience:** Developers who build with AI but fear provider dependency  
+**The Fear:** Complex codebases become unmaintainable if provider changes/shuts down  
+**The Solution:** Build your own AI infrastructure using ALL your home network hardware
+
+**Key Features:**
+- 🐝 OpenAI-compatible API (drop-in replacement)
+- 🐝 Agentic API (task-based streaming for building AI agents)
+- 🐝 llama-orch-utils (TypeScript library for AI agent development)
+- 🐝 Multi-backend support (CUDA, Metal, CPU)
+- 🐝 Home network power (use GPUs across ALL your computers)
+- 🐝 EU-native compliance (GDPR from day 1)
+- 🐝 Security-first (5 specialized security crates)
+- 🐝 99% AI-generated code (Character-Driven Development)
+
+**Current Status:**
+- Version: 0.1.0 (68% complete - 42/62 BDD scenarios passing)
+- 11 shared crates already built (saves 5 days of development)
+- 30-day plan to first customer
+
+**Conservative Projections:**
+- Year 1: 35 customers, €10K MRR, €70K revenue
+- Year 2: 100 customers, €30K MRR, €360K revenue
+- Year 3: 200+ customers, €83K+ MRR, €1M+ revenue
+
+**Pricing:**
+- Starter: €99/mo
+- Professional: €299/mo (most popular)
+- Enterprise: Custom (€2K+/mo)
+
+**Links:**
+- Website: https://rbee.dev
+- GitHub: https://github.com/veighnsche/llama-orch
+- Stakeholder docs: `.business/stakeholders/`
+
+**The Bottom Line:** Build AI coders from scratch. Never depend on external providers again. 🐝

@@ -1,102 +1,47 @@
 import { Download, Settings, Globe, Wallet } from 'lucide-react'
-import { CodeSnippet } from '@/components/atoms'
+import { StepsSection } from '@/components/organisms/StepsSection/StepsSection'
 
 export function ProvidersHowItWorks() {
   return (
-    <section className="border-b border-border bg-gradient-to-b from-background to-card px-6 py-24">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-balance text-4xl font-bold text-foreground lg:text-5xl">
-            Start Earning in 4 Simple Steps
-          </h2>
-          <p className="mx-auto max-w-2xl text-pretty text-xl text-muted-foreground">
-            No technical expertise required. Get your GPUs earning in less than 15 minutes.
-          </p>
-        </div>
-
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-          <div className="relative">
-            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500">
-              <Download className="h-8 w-8 text-foreground" />
-            </div>
-            <div className="mb-2 text-sm font-medium text-primary">Step 1</div>
-            <h3 className="mb-3 text-xl font-bold text-foreground">Install rbee</h3>
-            <p className="mb-4 text-pretty leading-relaxed text-muted-foreground">
-              Download and install rbee with one command. Works on Windows, Mac, and Linux.
-            </p>
-            <CodeSnippet variant="block" className="text-xs text-primary">
-              curl -sSL rbee.dev/install.sh | sh
-            </CodeSnippet>
-          </div>
-
-          <div className="relative">
-            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500">
-              <Settings className="h-8 w-8 text-foreground" />
-            </div>
-            <div className="mb-2 text-sm font-medium text-primary">Step 2</div>
-            <h3 className="mb-3 text-xl font-bold text-foreground">Configure Settings</h3>
-            <p className="mb-4 text-pretty leading-relaxed text-muted-foreground">
-              Set your pricing, availability windows, and usage limits through the intuitive web dashboard.
-            </p>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Set hourly rate
-              </li>
-              <li className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Define availability
-              </li>
-              <li className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Set usage limits
-              </li>
-            </ul>
-          </div>
-
-          <div className="relative">
-            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500">
-              <Globe className="h-8 w-8 text-foreground" />
-            </div>
-            <div className="mb-2 text-sm font-medium text-primary">Step 3</div>
-            <h3 className="mb-3 text-xl font-bold text-foreground">Join Marketplace</h3>
-            <p className="mb-4 text-pretty leading-relaxed text-muted-foreground">
-              Your GPUs automatically appear in the rbee marketplace. Developers can discover and rent your compute
-              power.
-            </p>
-            <div className="rounded-lg border border-chart-3/50 bg-chart-3/20 p-3">
-              <div className="text-xs font-medium text-chart-3">Your GPUs are now live and earning!</div>
-            </div>
-          </div>
-
-          <div className="relative">
-            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500">
-              <Wallet className="h-8 w-8 text-foreground" />
-            </div>
-            <div className="mb-2 text-sm font-medium text-primary">Step 4</div>
-            <h3 className="mb-3 text-xl font-bold text-foreground">Get Paid</h3>
-            <p className="mb-4 text-pretty leading-relaxed text-muted-foreground">
-              Track earnings in real-time. Automatic payouts. Withdraw to your bank account or crypto wallet anytime.
-            </p>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <div className="flex justify-between">
-                <span>Payout frequency:</span>
-                <span className="text-foreground">Weekly</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Minimum payout:</span>
-                <span className="text-foreground">€25</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-12 text-center">
-          <p className="text-lg text-muted-foreground">
-            Average setup time: <span className="font-bold text-primary">12 minutes</span>
-          </p>
-        </div>
-      </div>
-    </section>
+    <StepsSection
+      id="how-it-works"
+      kicker="How rbee Works"
+      title="Start Earning in 4 Simple Steps"
+      subtitle="No technical expertise required. Most providers finish in ~15 minutes."
+      steps={[
+        {
+          icon: <Download className="h-8 w-8" aria-hidden="true" />,
+          step: 'Step 1',
+          title: 'Install rbee',
+          body: 'Download and install with one command. Works on Windows, macOS, and Linux.',
+          snippet: 'curl -sSL rbee.dev/install.sh | sh',
+        },
+        {
+          icon: <Settings className="h-8 w-8" aria-hidden="true" />,
+          step: 'Step 2',
+          title: 'Configure Settings',
+          body: 'Set your pricing, availability windows, and usage limits through the intuitive web dashboard.',
+          checklist: ['Set hourly rate', 'Define availability', 'Set usage limits'],
+        },
+        {
+          icon: <Globe className="h-8 w-8" aria-hidden="true" />,
+          step: 'Step 3',
+          title: 'Join Marketplace',
+          body: 'Your GPUs automatically appear in the rbee marketplace. Developers can discover and rent your compute power.',
+          successNote: 'Your GPUs are now live and earning.',
+        },
+        {
+          icon: <Wallet className="h-8 w-8" aria-hidden="true" />,
+          step: 'Step 4',
+          title: 'Get Paid',
+          body: 'Track earnings in real time. Automatic payouts to your bank or crypto wallet.',
+          stats: [
+            { label: 'Payout frequency', value: 'Weekly' },
+            { label: 'Minimum payout', value: '€25' },
+          ],
+        },
+      ]}
+      avgTime="12 minutes"
+    />
   )
 }
