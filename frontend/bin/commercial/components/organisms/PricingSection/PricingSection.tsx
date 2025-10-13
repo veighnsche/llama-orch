@@ -6,32 +6,70 @@ import { SectionContainer, PricingTier } from '@/components/molecules'
 import { cn } from '@/lib/utils'
 import { Shield, Zap, Layers, Unlock } from 'lucide-react'
 
-export function PricingSection() {
+export interface PricingSectionProps {
+  /** Variant for different page contexts */
+  variant?: 'home' | 'pricing'
+  /** Override section title */
+  title?: string
+  /** Override section description */
+  description?: string
+  /** Show kicker badges */
+  showKicker?: boolean
+  /** Show editorial image below cards */
+  showEditorialImage?: boolean
+  /** Show footer reassurance text */
+  showFooter?: boolean
+  /** Custom class name */
+  className?: string
+}
+
+export function PricingSection({
+  variant = 'home',
+  title,
+  description,
+  showKicker = true,
+  showEditorialImage = true,
+  showFooter = true,
+  className,
+}: PricingSectionProps) {
   const [isYearly, setIsYearly] = useState(false)
+
+  // Variant-specific defaults
+  const defaultTitle = variant === 'pricing' ? 'Simple, honest pricing.' : 'Start Free. Scale When Ready.'
+  const defaultDescription =
+    variant === 'pricing'
+      ? "Every plan includes the full rbee orchestrator—no feature gates, no artificial limits. Start free and grow when you're ready."
+      : 'Run rbee free at home. Add collaboration and governance when your team grows.'
+
+  const finalTitle = title ?? defaultTitle
+  const finalDescription = description ?? defaultDescription
 
   return (
     <SectionContainer
-      title="Start Free. Scale When Ready."
-      description="Run rbee free at home. Add collaboration and governance when your team grows."
+      title={finalTitle}
+      description={finalDescription}
+      className={className}
       kicker={
-        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground justify-center">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/50">
-            <Unlock className="h-3.5 w-3.5" aria-hidden="true" />
-            Open source
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/50">
-            <Zap className="h-3.5 w-3.5" aria-hidden="true" />
-            OpenAI-compatible
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/50">
-            <Layers className="h-3.5 w-3.5" aria-hidden="true" />
-            Multi-GPU
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/50">
-            <Shield className="h-3.5 w-3.5" aria-hidden="true" />
-            No feature gates
-          </span>
-        </div>
+        showKicker ? (
+          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground justify-center">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/50">
+              <Unlock className="h-3.5 w-3.5" aria-hidden="true" />
+              Open source
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/50">
+              <Zap className="h-3.5 w-3.5" aria-hidden="true" />
+              OpenAI-compatible
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/50">
+              <Layers className="h-3.5 w-3.5" aria-hidden="true" />
+              Multi-GPU
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/50">
+              <Shield className="h-3.5 w-3.5" aria-hidden="true" />
+              No feature gates
+            </span>
+          </div>
+        ) : undefined
       }
     >
       {/* Billing toggle */}
@@ -124,26 +162,32 @@ export function PricingSection() {
       </div>
 
       {/* Editorial visual (desktop only) */}
-      <div className="hidden lg:block mt-10">
-        <Image
-          src="/images/pricing-hero.png"
-          width={1100}
-          height={620}
-          className="rounded-2xl ring-1 ring-border/60 shadow-sm mx-auto"
-          alt="Detailed isometric 3D illustration in dark mode showing a progression from left to right: a compact single-GPU homelab server rack (glowing neon teal accents) seamlessly transforming into a large-scale multi-node GPU cluster with interconnected nodes (amber and teal lighting). Clean editorial photography style with dramatic cinematic lighting, sharp focus on hardware details, floating UI panels showing metrics, dark navy background with subtle grid, professional tech marketing aesthetic, 4K quality, Octane render look"
-          priority
-        />
-      </div>
+      {showEditorialImage && (
+        <div className="hidden lg:block mt-10">
+          <Image
+            src="/images/pricing-hero.png"
+            width={1100}
+            height={620}
+            className="rounded-2xl ring-1 ring-border/60 shadow-sm mx-auto"
+            alt="Detailed isometric 3D illustration in dark mode showing a progression from left to right: a compact single-GPU homelab server rack (glowing neon teal accents) seamlessly transforming into a large-scale multi-node GPU cluster with interconnected nodes (amber and teal lighting). Clean editorial photography style with dramatic cinematic lighting, sharp focus on hardware details, floating UI panels showing metrics, dark navy background with subtle grid, professional tech marketing aesthetic, 4K quality, Octane render look"
+            priority
+          />
+        </div>
+      )}
 
       {/* Footer reassurance */}
-      <div className="text-center mt-12 max-w-2xl mx-auto">
-        <p className="text-muted-foreground">
-          Every plan includes the full rbee orchestrator. No feature gates. No artificial limits.
-        </p>
-        <p className="text-[12px] text-muted-foreground/80 mt-2">
-          Prices exclude VAT. OSS license applies to Home/Lab.
-        </p>
-      </div>
+      {showFooter && (
+        <div className="text-center mt-12 max-w-2xl mx-auto">
+          <p className="text-muted-foreground">
+            {variant === 'pricing'
+              ? 'Cancel anytime • No feature gates • Full orchestrator on every tier.'
+              : 'Every plan includes the full rbee orchestrator. No feature gates. No artificial limits.'}
+          </p>
+          <p className="text-[12px] text-muted-foreground/80 mt-2">
+            Prices exclude {variant === 'pricing' ? 'taxes' : 'VAT'}. OSS license applies to Home/Lab.
+          </p>
+        </div>
+      )}
     </SectionContainer>
   )
 }
