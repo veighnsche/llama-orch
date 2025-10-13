@@ -5,6 +5,8 @@ export interface BulletListItemProps {
   title: string
   /** Optional description */
   description?: string
+  /** Optional meta text (right-aligned) */
+  meta?: string
   /** Bullet color (Tailwind class) */
   color?: string
   /** Bullet variant */
@@ -16,6 +18,7 @@ export interface BulletListItemProps {
 export function BulletListItem({
   title,
   description,
+  meta,
   color = 'chart-3',
   variant = 'dot',
   className,
@@ -59,8 +62,11 @@ export function BulletListItem({
   return (
     <li className={cn('flex items-start gap-3', className)}>
       {renderBullet()}
-      <div>
-        <div className="font-medium text-foreground">{title}</div>
+      <div className="flex-1">
+        <div className="flex items-start justify-between gap-2">
+          <div className="font-medium text-foreground">{title}</div>
+          {meta && <div className="text-xs text-muted-foreground whitespace-nowrap">{meta}</div>}
+        </div>
         {description && <div className="text-sm text-muted-foreground">{description}</div>}
       </div>
     </li>

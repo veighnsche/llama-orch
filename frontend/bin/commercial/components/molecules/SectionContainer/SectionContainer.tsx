@@ -2,12 +2,12 @@ import { cn } from '@/lib/utils'
 import type { ReactNode } from 'react'
 
 export interface SectionContainerProps {
-  /** Section title */
-  title: string | ReactNode
+  /** Section title (null to skip rendering) */
+  title: string | ReactNode | null
   /** Optional subtitle */
-  subtitle?: string
+  subtitle?: string | ReactNode
   /** Background variant */
-  bgVariant?: 'background' | 'secondary' | 'card'
+  bgVariant?: 'background' | 'secondary' | 'card' | 'default'
   /** Center the content */
   centered?: boolean
   /** Maximum width of content */
@@ -16,6 +16,8 @@ export interface SectionContainerProps {
   children: ReactNode
   /** Additional CSS classes */
   className?: string
+  /** Optional ID for the heading (for aria-labelledby) */
+  headingId?: string
 }
 
 export function SectionContainer({
@@ -26,11 +28,13 @@ export function SectionContainer({
   maxWidth = '4xl',
   children,
   className,
+  headingId,
 }: SectionContainerProps) {
   const bgClasses = {
     background: 'bg-background',
     secondary: 'bg-secondary',
     card: 'bg-card',
+    default: 'bg-background',
   }
 
   const maxWidthClasses = {
@@ -44,12 +48,14 @@ export function SectionContainer({
   }
 
   return (
-    <section className={cn('py-24', bgClasses[bgVariant], className)}>
+    <section className={cn('py-24', bgClasses[bgVariant], className)} aria-labelledby={title ? headingId : undefined}>
       <div className="container mx-auto px-4">
-        <div className={cn(maxWidthClasses[maxWidth], 'mx-auto mb-16', centered && 'text-center')}>
-          <h2 className="text-4xl md:text-5xl font-semibold tracking-tight text-foreground mb-6 text-balance leading-tight">{title}</h2>
-          {subtitle && <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">{subtitle}</p>}
-        </div>
+        {title && (
+          <div className={cn(maxWidthClasses[maxWidth], 'mx-auto mb-16', centered && 'text-center')}>
+            <h2 id={headingId} className="text-4xl md:text-5xl font-semibold tracking-tight text-foreground mb-6 text-balance leading-tight">{title}</h2>
+            {subtitle && <div className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">{subtitle}</div>}
+          </div>
+        )}
         {children}
       </div>
     </section>
