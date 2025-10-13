@@ -133,9 +133,9 @@ export function SectionContainer({
               )}
               
               {kicker && (
-                <p className="text-sm text-muted-foreground animate-fade-in">
+                <div className="text-sm text-muted-foreground animate-fade-in">
                   {kicker}
-                </p>
+                </div>
               )}
               
               <HTag

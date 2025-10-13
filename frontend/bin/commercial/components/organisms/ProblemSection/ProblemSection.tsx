@@ -7,7 +7,6 @@ export function ProblemSection() {
     <SectionContainer 
       title="The Hidden Cost of AI Dependency"
       subtitle="When vendors change the rules, your roadmap pays the price."
-      className="relative isolate after:absolute after:inset-0 after:pointer-events-none after:bg-[radial-gradient(40rem_24rem_at_50%_-6rem,oklch(0.98_0_0/.06),transparent_60%)]"
     >
       {/* Vendor lock-in illustration */}
       <Image

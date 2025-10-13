@@ -25,7 +25,7 @@ export function EmailCapture() {
   }
 
   return (
-    <section className="relative isolate py-28 bg-background after:absolute after:inset-0 after:bg-[radial-gradient(40rem_40rem_at_50%_-10%,_oklch(0.97_0_0/_0.06),transparent_60%)] after:pointer-events-none">
+    <section className="relative isolate py-28 bg-background">
       {/* Decorative bee glyphs */}
       <svg
         className="absolute top-16 left-[8%] w-16 h-16 opacity-5 pointer-events-none"

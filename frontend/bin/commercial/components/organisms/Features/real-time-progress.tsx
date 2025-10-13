@@ -1,4 +1,4 @@
-import { Activity, XCircle, CheckCircle2 } from 'lucide-react'
+import { Activity, XCircle } from 'lucide-react'
 import { SectionContainer, IconBox } from '@/components/molecules'
 
 export function RealTimeProgress() {
@@ -6,90 +6,137 @@ export function RealTimeProgress() {
     <SectionContainer
       title="Real‑time Progress Tracking"
       bgVariant="background"
-      subtitle="Live narration of every step. See model loading, token generation, and resource usage as it happens."
+      subtitle="Live narration of each step—model loading, token generation, resource usage—as it happens."
     >
-      <div className="max-w-5xl mx-auto space-y-8">
-        {/* SSE Narration */}
-        <div className="bg-card border border-border rounded-lg p-8">
-          <div className="flex items-start gap-4 mb-6">
-            <IconBox icon={Activity} color="primary" size="lg" className="flex-shrink-0" />
+      <div className="max-w-6xl mx-auto space-y-10">
+        {/* Block 1: Live Terminal Timeline */}
+        <div>
+          <div className="flex items-start gap-3 mb-4">
+            <IconBox icon={Activity} color="primary" size="md" />
             <div>
-              <h3 className="text-2xl font-bold text-foreground mb-2">SSE Narration Architecture</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Workers narrate their progress via Server-Sent Events. Every action—from model loading to token
-                generation—streams to your terminal in real‑time.
+              <h3 className="text-2xl font-bold tracking-tight text-foreground">SSE Narration Architecture</h3>
+              <p className="text-muted-foreground">
+                Workers stream every step as Server-Sent Events—from model load to token generation.
               </p>
             </div>
           </div>
 
-          <div className="bg-background rounded-lg p-6 font-mono text-sm space-y-2">
-            <div className="text-muted-foreground">→ [llm-worker-rbee] 🌅 Worker starting on port 8001</div>
-            <div className="text-muted-foreground">→ [device-manager] 🖥️ Initialized CUDA device 1</div>
-            <div className="text-muted-foreground">
-              → [model-loader] 📦 Loading model from /models/tinyllama-q4.gguf
+          <div className="rounded-2xl border border-border bg-card overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+            {/* Terminal bar */}
+            <div className="flex items-center gap-1 bg-muted/60 px-4 py-2">
+              <span className="size-2 rounded-full bg-red-500/70" aria-hidden="true" />
+              <span className="size-2 rounded-full bg-yellow-500/70" aria-hidden="true" />
+              <span className="size-2 rounded-full bg-green-500/70" aria-hidden="true" />
+              <span className="ml-3 font-mono text-xs text-muted-foreground">SSE narration — worker 8001</span>
+              <div className="ml-auto hidden sm:flex items-center gap-2 text-[10px]">
+                <span className="rounded px-1.5 py-0.5 bg-chart-3/15 text-chart-3">OK</span>
+                <span className="rounded px-1.5 py-0.5 bg-primary/15 text-primary">IO</span>
+                <span className="rounded px-1.5 py-0.5 bg-destructive/15 text-destructive">ERR</span>
+              </div>
             </div>
-            <div className="text-chart-3">→ [model-loader] 🛏️ Model loaded! 669 MB cozy in VRAM!</div>
-            <div className="text-muted-foreground">→ [http-server] 🚀 HTTP server ready on port 8001</div>
-            <div className="text-muted-foreground mt-4">
-              → [candle-backend] 🚀 Starting inference (prompt: 18 chars)
-            </div>
-            <div className="text-muted-foreground">→ [tokenizer] 🍰 Tokenized prompt (4 tokens)</div>
-            <div className="text-muted-foreground">→ [candle-backend] 🧹 Reset KV cache for fresh start</div>
-            <div className="text-foreground mt-2">Once upon a time...</div>
-            <div className="text-muted-foreground">→ [candle-backend] 🎯 Generated 10 tokens</div>
-            <div className="text-chart-3 mt-2">
-              → [candle-backend] 🎉 Inference complete! 20 tokens in 150ms (133 tok/s)
-            </div>
-          </div>
 
-          <div className="mt-6 grid md:grid-cols-2 gap-4">
-            <div className="bg-background rounded-lg p-4">
-              <div className="text-primary font-bold mb-1">Tokens → stdout</div>
-              <div className="text-muted-foreground text-sm">Generated text streams directly to your terminal</div>
+            {/* Scrollable log */}
+            <div
+              className="bg-background p-6 font-mono text-sm leading-relaxed max-h-[340px] overflow-auto"
+              role="log"
+              aria-live="polite"
+            >
+              <div className="text-muted-foreground animate-in fade-in duration-300">[00:00.00] [worker] start :8001</div>
+              <div className="text-muted-foreground animate-in fade-in duration-300 delay-75">
+                [00:00.03] [device] CUDA#1 initialized
+              </div>
+              <div className="text-primary animate-in fade-in duration-300 delay-150">
+                [00:00.12] [loader] /models/tinyllama-q4.gguf → loading…
+              </div>
+              <div className="text-chart-3 animate-in fade-in duration-300 delay-200">
+                [00:01.02] [loader] loaded 669MB in VRAM ✓
+              </div>
+              <div className="text-muted-foreground animate-in fade-in duration-300 delay-300">
+                [00:01.05] [http] server ready :8001
+              </div>
+
+              <div className="mt-2 text-muted-foreground animate-in fade-in duration-300 delay-400">
+                [00:01.10] [candle] inference start (18 chars)
+              </div>
+              <div className="text-muted-foreground animate-in fade-in duration-300 delay-500">
+                [00:01.11] [tokenizer] prompt → 4 tokens
+              </div>
+              <div className="text-foreground animate-in fade-in duration-300 delay-600">Once upon a time…</div>
+              <div className="text-chart-3 animate-in fade-in duration-300 delay-700">
+                [00:01.26] [candle] generated 20 tokens (133 tok/s) ✓
+              </div>
             </div>
-            <div className="bg-background rounded-lg p-4">
-              <div className="text-primary font-bold mb-1">Narration → stderr</div>
-              <div className="text-muted-foreground text-sm">Progress updates go to stderr for clean separation</div>
+
+            {/* Footer hint */}
+            <div className="border-t border-border px-6 py-3 text-xs text-muted-foreground">
+              Narration → <code className="bg-muted px-1 rounded">stderr</code> · Tokens →{' '}
+              <code className="bg-muted px-1 rounded">stdout</code>
             </div>
           </div>
         </div>
 
-        {/* Request Cancellation */}
-        <div className="bg-card border border-border rounded-lg p-8">
-          <div className="flex items-start gap-4 mb-6">
-            <IconBox icon={XCircle} color="destructive" size="lg" className="flex-shrink-0" />
+        {/* Block 2: Stream Meter Row */}
+        <div className="grid sm:grid-cols-3 gap-3 animate-in fade-in slide-in-from-bottom-2 delay-100">
+          <div className="bg-card border border-border rounded-xl p-4 hover:-translate-y-0.5 transition-transform">
+            <div className="text-xs text-muted-foreground">Throughput</div>
+            <div className="mt-1 text-lg font-semibold text-foreground">133 tok/s</div>
+            <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
+              <div className="h-full w-[80%] bg-chart-3" />
+            </div>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-4 hover:-translate-y-0.5 transition-transform">
+            <div className="text-xs text-muted-foreground">First token latency</div>
+            <div className="mt-1 text-lg font-semibold text-foreground">150 ms</div>
+            <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
+              <div className="h-full w-[60%] bg-primary" />
+            </div>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-4 hover:-translate-y-0.5 transition-transform">
+            <div className="text-xs text-muted-foreground">VRAM used</div>
+            <div className="mt-1 text-lg font-semibold text-foreground">669 MB</div>
+            <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
+              <div className="h-full w-[45%] bg-emerald-500/80" />
+            </div>
+          </div>
+        </div>
+
+        {/* Block 3: Cancellation Sequence Card */}
+        <div className="rounded-2xl border border-border bg-card p-6 animate-in fade-in slide-in-from-bottom-2 delay-150">
+          <div className="flex items-start gap-3 mb-4">
+            <IconBox icon={XCircle} color="destructive" size="md" />
             <div>
-              <h3 className="text-2xl font-bold text-foreground mb-2">Request Cancellation</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Press Ctrl+C to cancel any request. Worker stops immediately, releases resources, and returns to idle
-                state. No orphaned processes.
+              <h3 className="text-2xl font-bold tracking-tight text-foreground">Request Cancellation</h3>
+              <p className="text-muted-foreground">
+                Ctrl+C or API cancel stops the job, frees resources, and leaves no orphaned processes.
               </p>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="h-5 w-5 text-chart-3 flex-shrink-0 mt-0.5" />
-              <div>
-                <div className="font-bold text-foreground">Explicit Cancellation</div>
-                <div className="text-muted-foreground text-sm">POST /v1/cancel (idempotent)</div>
+          {/* Sequence */}
+          <ol className="grid gap-3 sm:grid-cols-4 text-sm" aria-label="Cancellation sequence">
+            <li className="bg-background border border-border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
+              <div className="text-xs text-muted-foreground">t+0ms</div>
+              <div className="font-semibold text-foreground">
+                Client sends <code className="bg-muted px-1 rounded text-xs">POST /v1/cancel</code>
               </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="h-5 w-5 text-chart-3 flex-shrink-0 mt-0.5" />
-              <div>
-                <div className="font-bold text-foreground">Client Disconnect</div>
-                <div className="text-muted-foreground text-sm">Worker detects SSE stream closure within 1s</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="h-5 w-5 text-chart-3 flex-shrink-0 mt-0.5" />
-              <div>
-                <div className="font-bold text-foreground">Immediate Cleanup</div>
-                <div className="text-muted-foreground text-sm">Stops token generation, releases slot, logs event</div>
-              </div>
-            </div>
-          </div>
+              <p className="mt-1 text-muted-foreground">Idempotent request.</p>
+            </li>
+            <li className="bg-background border border-border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
+              <div className="text-xs text-muted-foreground">t+50ms</div>
+              <div className="font-semibold text-foreground">SSE disconnect detected</div>
+              <p className="mt-1 text-muted-foreground">Stream closes ≤ 1s.</p>
+            </li>
+            <li className="bg-background border border-border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
+              <div className="text-xs text-muted-foreground">t+80ms</div>
+              <div className="font-semibold text-foreground">Immediate cleanup</div>
+              <p className="mt-1 text-muted-foreground">Stop tokens, release slot, log event.</p>
+            </li>
+            <li className="bg-background border border-border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
+              <div className="text-xs text-muted-foreground">t+120ms</div>
+              <div className="font-semibold text-chart-3">Worker idle ✓</div>
+              <p className="mt-1 text-muted-foreground">Ready for next task.</p>
+            </li>
+          </ol>
         </div>
       </div>
     </SectionContainer>

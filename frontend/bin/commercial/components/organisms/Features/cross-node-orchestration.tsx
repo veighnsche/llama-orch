@@ -1,5 +1,7 @@
-import { Network, GitBranch } from 'lucide-react'
+import { Network, GitBranch, ArrowDown, Badge as BadgeIcon } from 'lucide-react'
 import { SectionContainer, IconBox } from '@/components/molecules'
+import { Badge } from '@/components/atoms/Badge/Badge'
+import { Separator } from '@/components/atoms/Separator/Separator'
 
 export function CrossNodeOrchestration() {
   return (
@@ -8,92 +10,140 @@ export function CrossNodeOrchestration() {
       bgVariant="background"
       subtitle="Seamlessly orchestrate AI workloads across your entire network. One command runs inference on any machine in your pool."
     >
-      <div className="max-w-5xl mx-auto space-y-8">
-        {/* SSH Registry Management */}
-        <div className="bg-card border border-border rounded-lg p-8">
-          <div className="flex items-start gap-4 mb-6">
-            <IconBox icon={Network} color="primary" size="lg" className="flex-shrink-0" />
-            <div>
-              <h3 className="text-2xl font-bold text-foreground mb-2">Pool Registry Management</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Configure remote machines once, use them forever. rbee-keeper manages SSH connections, validates
-                connectivity, and maintains a registry of all available pools.
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-background rounded-lg p-6 font-mono text-sm space-y-2">
-            <div className="text-muted-foreground"># Add a remote machine to your pool</div>
-            <div className="text-chart-3 mt-2">
-              rbee-keeper setup add-node \
-              <br />
-              {'  '}--name workstation \
-              <br />
-              {'  '}--ssh-host workstation.home.arpa \
-              <br />
-              {'  '}--ssh-user vince \
-              <br />
-              {'  '}--ssh-key ~/.ssh/id_ed25519
-            </div>
-            <div className="text-muted-foreground mt-4"># Run inference on that machine</div>
-            <div className="text-chart-3 mt-2">
-              rbee-keeper infer --node workstation \
-              <br />
-              {'  '}--model hf:meta-llama/Llama-3.1-8B \
-              <br />
-              {'  '}--prompt "write a short story"
-            </div>
-          </div>
-
-          <div className="mt-6 grid md:grid-cols-3 gap-4">
-            <div className="bg-background rounded-lg p-4">
-              <div className="text-primary font-bold mb-1">Automatic Detection</div>
-              <div className="text-muted-foreground text-sm">Detects CUDA, Metal, CPU backends and device counts</div>
-            </div>
-            <div className="bg-background rounded-lg p-4">
-              <div className="text-primary font-bold mb-1">SSH Validation</div>
-              <div className="text-muted-foreground text-sm">Tests connectivity before saving to the pool registry</div>
-            </div>
-            <div className="bg-background rounded-lg p-4">
-              <div className="text-primary font-bold mb-1">Zero Config</div>
-              <div className="text-muted-foreground text-sm">No manual setup on remote nodes required</div>
-            </div>
-          </div>
+      <div className="max-w-6xl mx-auto">
+        {/* Overline badge */}
+        <div className="flex justify-center mb-8">
+          <Badge variant="secondary">Distributed execution</Badge>
         </div>
 
-        {/* Automatic Worker Provisioning */}
-        <div className="bg-card border border-border rounded-lg p-8">
-          <div className="flex items-start gap-4 mb-6">
-            <IconBox icon={GitBranch} color="chart-2" size="lg" className="flex-shrink-0" />
-            <div>
-              <h3 className="text-2xl font-bold text-foreground mb-2">Automatic Worker Provisioning</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                rbee automatically spawns workers on remote machines via SSH. No manual daemon management. Workers start
-                on-demand and shut down cleanly.
-              </p>
+        <div className="grid gap-8 lg:grid-cols-2 items-start">
+          {/* Pool Registry Management Card */}
+          <div className="bg-card border border-border rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-left-4 duration-500">
+            <div className="flex items-start gap-4">
+              <IconBox icon={Network} color="primary" size="md" className="flex-shrink-0" />
+              <div>
+                <h3 className="text-2xl font-bold tracking-tight text-foreground mb-2">Pool Registry Management</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Configure remote machines once. rbee-keeper handles SSH, validates connectivity, and keeps your pool
+                  registry synced.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-background rounded-lg p-6 font-mono text-sm leading-relaxed" aria-label="Pool registry CLI example">
+              <div className="text-muted-foreground"># Add a remote machine to your pool</div>
+              <div className="text-chart-3 mt-2">
+                $ rbee-keeper setup add-node \
+                <br />
+                {'  '}--name workstation \
+                <br />
+                {'  '}--ssh-host workstation.home.arpa \
+                <br />
+                {'  '}--ssh-user vince \
+                <br />
+                {'  '}--ssh-key ~/.ssh/id_ed25519
+              </div>
+              <div className="text-muted-foreground mt-4"># Run inference on that machine</div>
+              <div className="text-chart-3 mt-2">
+                $ rbee-keeper infer --node workstation \
+                <br />
+                {'  '}--model hf:meta-llama/Llama-3.1-8B \
+                <br />
+                {'  '}--prompt &quot;write a short story&quot;
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-3">
+              <div className="bg-background rounded-lg p-4 transition-transform hover:-translate-y-0.5">
+                <div className="text-sm font-semibold text-foreground mb-1">Automatic Detection</div>
+                <div className="text-xs text-muted-foreground">Detects CUDA, Metal, CPU & device counts.</div>
+              </div>
+              <div className="bg-background rounded-lg p-4 transition-transform hover:-translate-y-0.5">
+                <div className="text-sm font-semibold text-foreground mb-1">SSH Validation</div>
+                <div className="text-xs text-muted-foreground">Connectivity tested before save.</div>
+              </div>
+              <div className="bg-background rounded-lg p-4 transition-transform hover:-translate-y-0.5">
+                <div className="text-sm font-semibold text-foreground mb-1">Zero Config</div>
+                <div className="text-xs text-muted-foreground">No manual setup on remote nodes.</div>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0 w-40 text-sm text-muted-foreground">queen-rbee</div>
-              <div className="flex-1 text-foreground text-sm">Orchestrator (runs on your main machine)</div>
+          <Separator className="lg:hidden my-2 opacity-40" />
+
+          {/* Automatic Worker Provisioning Card */}
+          <div className="bg-card border border-border rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 delay-100">
+            <div className="flex items-start gap-4">
+              <IconBox icon={GitBranch} color="chart-2" size="md" className="flex-shrink-0" />
+              <div>
+                <h3 className="text-2xl font-bold tracking-tight text-foreground mb-2">Automatic Worker Provisioning</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  rbee spawns workers via SSH on demand and shuts them down cleanly. No manual daemons.
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-3 pl-8">
-              <div className="flex-shrink-0 w-32 text-sm text-muted-foreground">↓ SSH</div>
-              <div className="flex-1 text-muted-foreground/70 text-sm">Connects to remote pool managers</div>
+
+            {/* Diagram */}
+            <div className="relative bg-background rounded-xl p-6 overflow-hidden">
+              <div className="space-y-4">
+                {/* Row 1: queen-rbee */}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-lg px-4 py-2">
+                      <span className="font-mono text-sm font-semibold text-foreground">queen-rbee</span>
+                      <Badge variant="secondary" className="text-xs">Orchestrator</Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Arrow SSH */}
+                <div className="flex items-center gap-2 pl-8">
+                  <ArrowDown className="size-4 text-muted-foreground" aria-hidden="true" />
+                  <span className="text-xs text-muted-foreground font-medium">SSH</span>
+                </div>
+
+                {/* Row 2: rbee-hive */}
+                <div className="flex items-center gap-3 pl-8">
+                  <div className="flex-1">
+                    <div className="inline-flex items-center gap-2 bg-chart-2/10 border border-chart-2/20 rounded-lg px-4 py-2">
+                      <span className="font-mono text-sm font-semibold text-foreground">rbee-hive</span>
+                      <Badge variant="secondary" className="text-xs">Pool manager</Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Arrow Spawns */}
+                <div className="flex items-center gap-2 pl-16">
+                  <ArrowDown className="size-4 text-muted-foreground" aria-hidden="true" />
+                  <span className="text-xs text-muted-foreground font-medium">Spawns</span>
+                </div>
+
+                {/* Row 3: worker-rbee */}
+                <div className="flex items-center gap-3 pl-16">
+                  <div className="flex-1">
+                    <div className="inline-flex items-center gap-2 bg-chart-3/10 border border-chart-3/20 rounded-lg px-4 py-2">
+                      <span className="font-mono text-sm font-semibold text-foreground">worker-rbee</span>
+                      <Badge variant="secondary" className="text-xs">Inference worker</Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-3 pl-8">
-              <div className="flex-shrink-0 w-40 text-sm text-muted-foreground">rbee-hive</div>
-              <div className="flex-1 text-foreground text-sm">Pool manager (spawned on remote machine)</div>
-            </div>
-            <div className="flex items-center gap-3 pl-16">
-              <div className="flex-shrink-0 w-32 text-sm text-muted-foreground">↓ Spawns</div>
-              <div className="flex-1 text-muted-foreground/70 text-sm">Creates workers as needed</div>
-            </div>
-            <div className="flex items-center gap-3 pl-16">
-              <div className="flex-shrink-0 w-40 text-sm text-muted-foreground">worker-rbee</div>
-              <div className="flex-1 text-foreground text-sm">Worker daemon (handles inference)</div>
+
+            {/* Legend */}
+            <div className="grid sm:grid-cols-3 gap-3 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <div className="size-2 rounded-full bg-chart-3 shrink-0" aria-hidden="true" />
+                <span>On-demand start</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="size-2 rounded-full bg-chart-3 shrink-0" aria-hidden="true" />
+                <span>Clean shutdown</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="size-2 rounded-full bg-chart-3 shrink-0" aria-hidden="true" />
+                <span>No daemon drift</span>
+              </div>
             </div>
           </div>
         </div>
