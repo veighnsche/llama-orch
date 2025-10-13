@@ -18,6 +18,12 @@ export interface FeatureCardProps {
   className?: string
   /** Optional footer content (e.g., micro-metrics) */
   children?: React.ReactNode
+  /** Optional bullet points list */
+  bullets?: string[]
+  /** Optional mini-stat for header */
+  stat?: { label: string; value: string }
+  /** Optional ID for anchor linking */
+  id?: string
 }
 
 export function FeatureCard({
@@ -29,6 +35,9 @@ export function FeatureCard({
   size = 'md',
   className,
   children,
+  bullets,
+  stat,
+  id,
 }: FeatureCardProps) {
   const sizeClasses = {
     sm: 'p-4 space-y-2',
@@ -71,20 +80,55 @@ export function FeatureCard({
 
   const colors = colorClasses[iconColor as keyof typeof colorClasses] || colorClasses.primary
 
+  // Map iconColor to border accent color
+  const borderAccentClasses = {
+    primary: 'border-t-primary',
+    'chart-1': 'border-t-chart-1',
+    'chart-2': 'border-t-chart-2',
+    'chart-3': 'border-t-chart-3',
+    'chart-4': 'border-t-chart-4',
+    'chart-5': 'border-t-chart-5',
+  }
+  const borderAccent = borderAccentClasses[iconColor as keyof typeof borderAccentClasses] || borderAccentClasses.primary
+
   return (
     <div
+      id={id}
       className={cn(
-        'bg-card border border-border rounded-lg flex flex-col',
+        'bg-card border border-border rounded-lg flex flex-col border-t-2',
+        borderAccent,
         sizeClasses[size],
         hover && 'transition-all hover:border-primary/50 hover:bg-card/80',
         className,
       )}
     >
-      <div className={cn('rounded-lg flex items-center justify-center', iconSizeClasses[size], colors.bg)} aria-hidden="true">
-        <Icon aria-hidden="true" focusable="false" className={cn(iconInnerSizeClasses[size], colors.text)} />
+      <div className="flex items-start justify-between gap-4">
+        <div className={cn('rounded-lg flex items-center justify-center shrink-0', iconSizeClasses[size], colors.bg)} aria-hidden="true">
+          <Icon aria-hidden="true" focusable="false" className={cn(iconInnerSizeClasses[size], colors.text)} />
+        </div>
+        {stat && (
+          <div className="text-right">
+            <div className="text-xs text-muted-foreground">{stat.label}</div>
+            <div className="text-sm font-semibold text-foreground">{stat.value}</div>
+          </div>
+        )}
       </div>
-      <h3 className={cn('font-semibold text-card-foreground', titleSizeClasses[size])}>{title}</h3>
-      <p className={cn('text-muted-foreground leading-6', descriptionSizeClasses[size])}>{description}</p>
+      <h3 id={id ? `${id}-title` : undefined} className={cn('font-semibold text-card-foreground', titleSizeClasses[size])}>
+        {title}
+      </h3>
+      <p className={cn('text-muted-foreground leading-6', descriptionSizeClasses[size])} aria-describedby={id ? `${id}-title` : undefined}>
+        {description}
+      </p>
+      {bullets && bullets.length > 0 && (
+        <ul role="list" className="mt-4 space-y-2 text-sm">
+          {bullets.map((bullet, index) => (
+            <li key={index} className="flex items-start gap-2">
+              <span className="text-ring/60 mt-1.5 block h-1 w-1 rounded-full bg-current shrink-0" aria-hidden="true" />
+              <span className="text-muted-foreground">{bullet}</span>
+            </li>
+          ))}
+        </ul>
+      )}
       {children && <div className="mt-auto pt-2">{children}</div>}
     </div>
   )
