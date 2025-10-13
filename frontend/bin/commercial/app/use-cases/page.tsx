@@ -7,8 +7,12 @@ export default function UseCasesPage() {
   return (
     <div className="pt-16">
       <UseCasesHero />
-      <UseCasesPrimary />
-      <UseCasesIndustry />
+      <div id="use-cases">
+        <UseCasesPrimary />
+      </div>
+      <div id="architecture">
+        <UseCasesIndustry />
+      </div>
       <EmailCapture />
     </div>
   )
