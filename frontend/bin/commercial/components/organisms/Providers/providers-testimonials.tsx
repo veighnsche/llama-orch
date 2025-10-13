@@ -1,34 +1,6 @@
 import { Users, Cpu, TrendingUp, Star } from 'lucide-react'
-import { TestimonialCard } from '@/components/molecules/TestimonialCard/TestimonialCard'
+import { TestimonialsRail } from '@/components/organisms/TestimonialsRail/TestimonialsRail'
 import { StatCard } from '@/components/molecules/StatCard/StatCard'
-
-// Data layer for easy content management
-const PROVIDER_TESTIMONIALS = [
-  {
-    name: 'Marcus T.',
-    role: 'Gaming PC Owner',
-    payout: '€160/mo',
-    rating: 5 as const,
-    quote: 'My RTX 4090 used to sit idle. Now it brings in €160/mo—set up in under 10 minutes.',
-    avatar: { from: 'primary', to: 'chart-2' },
-  },
-  {
-    name: 'Sarah K.',
-    role: 'Homelab Enthusiast',
-    payout: '€420/mo',
-    rating: 5 as const,
-    quote: 'Four homelab GPUs now cover my electricity plus profit—€420/mo combined.',
-    avatar: { from: 'chart-1', to: 'chart-3' },
-  },
-  {
-    name: 'David L.',
-    role: 'Former Miner',
-    payout: '€780/mo',
-    rating: 5 as const,
-    quote: 'After ETH went PoS, my rig gathered dust. With rbee I average €780/mo—better than mining.',
-    avatar: { from: 'chart-2', to: 'chart-4' },
-  },
-]
 
 const PROVIDER_STATS = [
   { value: '500+', label: 'Active Providers', icon: Users },
@@ -64,30 +36,12 @@ export function SocialProofSection() {
         </header>
 
         {/* Testimonials Rail */}
-        <div
-          className="-mx-6 mb-12 flex snap-x snap-mandatory gap-6 overflow-x-auto px-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:mx-0 md:grid md:grid-cols-3 md:snap-none md:overflow-visible md:px-0"
-          tabIndex={0}
-        >
-          {PROVIDER_TESTIMONIALS.map((testimonial, idx) => {
-            const delays = ['delay-100', 'delay-200', 'delay-300']
-            return (
-              <div
-                key={testimonial.name}
-                className={`animate-in fade-in-50 slide-in-from-bottom-2 min-w-[85%] snap-center motion-reduce:animate-none md:min-w-0 ${delays[idx]}`}
-              >
-                <TestimonialCard
-                  name={testimonial.name}
-                  role={`${testimonial.role} • ${testimonial.payout}`}
-                  quote={testimonial.quote}
-                  avatar={testimonial.avatar}
-                  rating={testimonial.rating}
-                  verified
-                  highlight="Verified payout"
-                  className="h-full shadow-sm transition-shadow hover:shadow-md"
-                />
-              </div>
-            )
-          })}
+        <div className="mb-12">
+          <TestimonialsRail
+            sectorFilter="provider"
+            layout="carousel"
+            headingId="providers-h2"
+          />
         </div>
 
         {/* Stats Strip */}

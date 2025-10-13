@@ -7,6 +7,7 @@ export type Feature = {
   icon: ReactNode
   title: string
   body: string
+  badge?: string | ReactNode
 }
 
 export type Step = {
@@ -30,151 +31,176 @@ export type Earnings = {
 
 export interface SolutionSectionProps {
   kicker?: string
+  eyebrowIcon?: ReactNode
   title: string
   subtitle?: string
   features: Feature[]
   steps: Step[]
   earnings?: Earnings
+  aside?: ReactNode
+  illustration?: ReactNode
   ctaPrimary?: { label: string; href: string; ariaLabel?: string }
   ctaSecondary?: { label: string; href: string; ariaLabel?: string }
+  ctaCaption?: string
   id?: string
   className?: string
 }
 
 export function SolutionSection({
   kicker,
+  eyebrowIcon,
   title,
   subtitle,
   features,
   steps,
   earnings,
+  aside,
+  illustration,
   ctaPrimary,
   ctaSecondary,
+  ctaCaption,
   id,
   className,
 }: SolutionSectionProps) {
   return (
     <section
       id={id}
+      aria-labelledby={id ? `${id}-h2` : undefined}
       className={cn(
-        'border-b border-border bg-[radial-gradient(60rem_40rem_at_10%_-20%,theme(colors.primary/10),transparent)] px-6 py-20 lg:py-28',
+        'relative border-b border-border bg-[radial-gradient(60rem_40rem_at_50%_-10%,theme(colors.primary/7),transparent)] px-6 py-24 lg:py-28',
         className,
       )}
     >
-      <div className="mx-auto max-w-7xl">
+      {/* Decorative illustration */}
+      {illustration}
+
+      <div className="relative z-10 mx-auto max-w-7xl">
         {/* Header */}
-        <div className="mb-12 text-center animate-in fade-in slide-in-from-bottom-2 duration-500 motion-reduce:animate-none">
-          {kicker && <p className="mb-2 text-sm font-medium text-primary/80">{kicker}</p>}
-          <h2 className="text-balance text-4xl font-extrabold tracking-tight lg:text-5xl">{title}</h2>
+        <div className="mb-12 text-center animate-in fade-in-50 slide-in-from-bottom-2 duration-500 motion-reduce:animate-none">
+          {kicker && (
+            <p className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-primary/80">
+              {eyebrowIcon}
+              <span>{kicker}</span>
+            </p>
+          )}
+          <h2 id={id ? `${id}-h2` : undefined} className="text-balance text-4xl font-extrabold tracking-tight lg:text-5xl">
+            {title}
+          </h2>
           {subtitle && (
-            <p className="mx-auto mt-4 max-w-2xl text-pretty text-lg leading-snug text-muted-foreground lg:text-xl">
+            <p className="mx-auto mt-4 max-w-2xl text-pretty text-lg leading-snug text-foreground/85 lg:text-xl">
               {subtitle}
             </p>
           )}
         </div>
 
         {/* Feature Tiles */}
-        <div className="mb-12 mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="animate-in fade-in-50 mb-12 mt-12 grid gap-6 [animation-delay:100ms] md:grid-cols-2 lg:grid-cols-4">
           {features.map((feature, idx) => (
             <div
               key={idx}
-              className={cn(
-                'animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none',
-                'rounded-2xl border border-border/60 bg-card/60 p-6 text-center backdrop-blur supports-[backdrop-filter]:bg-background/60',
-                idx === 0 && 'delay-75',
-                idx === 1 && 'delay-150',
-                idx === 2 && 'delay-200',
-                idx === 3 && 'delay-300',
-              )}
+              className="flex h-full items-start gap-4 rounded-2xl border border-border bg-card/50 p-6"
             >
-              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                {feature.icon}
+              <div className="flex-shrink-0 rounded-xl bg-primary/10 p-3 text-primary">{feature.icon}</div>
+              <div className="flex-1">
+                <div className="mb-1 flex items-start justify-between gap-2">
+                  <h3 className="text-base font-semibold text-foreground">{feature.title}</h3>
+                  {feature.badge && (
+                    <span className="flex-shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                      {feature.badge}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm leading-relaxed text-muted-foreground">{feature.body}</p>
               </div>
-              <h3 className="text-base font-semibold">{feature.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{feature.body}</p>
             </div>
           ))}
         </div>
 
-        {/* Timeline + Earnings */}
-        <div className="rounded-2xl border border-border bg-gradient-to-b from-card to-background p-8 sm:p-10">
-          <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr]">
-            {/* Timeline */}
-            <div>
-              <h3 className="mb-6 text-2xl font-bold">How It Works</h3>
-              <div className="relative">
-                {/* Vertical line */}
-                <div className="absolute bottom-0 left-4 top-0 w-px bg-border" aria-hidden="true" />
-
-                {steps.map((step, idx) => (
-                  <div key={idx} className={cn('relative mb-6 space-y-1 pl-12 last:mb-0')}>
-                    <div className="absolute left-0 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                      {idx + 1}
-                    </div>
-                    <div className="font-medium">{step.title}</div>
+        {/* Timeline + Aside */}
+        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:gap-12">
+          {/* Steps Card */}
+          <div className="animate-in fade-in-50 rounded-2xl border border-border bg-card/40 p-6 [animation-delay:150ms] md:p-8">
+            <h3 className="mb-6 text-2xl font-bold">How It Works</h3>
+            <ol className="space-y-6" role="list">
+              {steps.map((step, idx) => (
+                <li
+                  key={idx}
+                  className="grid grid-cols-[auto_1fr] items-start gap-4"
+                  aria-label={`Step ${idx + 1}: ${step.title}`}
+                >
+                  <div className="grid h-8 w-8 shrink-0 place-content-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                    {idx + 1}
+                  </div>
+                  <div>
+                    <div className="mb-1 font-semibold text-foreground">{step.title}</div>
                     <div className="text-sm leading-relaxed text-muted-foreground">{step.body}</div>
                   </div>
-                ))}
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* Aside (custom or earnings) */}
+          {aside ? (
+            aside
+          ) : earnings ? (
+            <div className="animate-in fade-in-50 slide-in-from-right-2 [animation-delay:200ms] lg:sticky lg:top-24 lg:self-start">
+              <div className="rounded-2xl border border-border bg-card p-6">
+                <div className="mb-4 text-sm font-semibold text-foreground">
+                  {earnings.title || 'Compliance Metrics'}
+                </div>
+                <div className="mb-6 space-y-4">
+                  {earnings.rows.map((row, idx) => (
+                    <div key={idx} className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="text-sm text-muted-foreground">{row.model}</div>
+                        <div className="text-xs text-muted-foreground/70">{row.meta}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-primary tabular-nums">{row.value}</div>
+                        {row.note && <div className="text-xs text-muted-foreground/70 tabular-nums">{row.note}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {earnings.disclaimer && (
+                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-foreground/90">
+                    {earnings.disclaimer}
+                  </div>
+                )}
               </div>
             </div>
-
-            {/* Earnings Card */}
-            {earnings && (
-              <div className="animate-in fade-in slide-in-from-bottom-2 delay-150 motion-reduce:animate-none lg:ml-auto">
-                <div className="w-full max-w-md rounded-2xl border border-border bg-background p-6">
-                  <div className="mb-4 text-sm font-medium text-muted-foreground">
-                    {earnings.title || 'Example Earnings'}
-                  </div>
-                  <div className="mb-6 space-y-4">
-                    {earnings.rows.map((row, idx) => (
-                      <div key={idx} className="flex items-center justify-between">
-                        <div>
-                          <div className="text-sm font-medium">{row.model}</div>
-                          <div className="text-xs text-muted-foreground">{row.meta}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="tabular-nums text-lg font-bold text-primary">{row.value}</div>
-                          {row.note && (
-                            <div className="text-[11px] text-muted-foreground tabular-nums">{row.note}</div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {earnings.disclaimer && (
-                    <div className="rounded-lg border border-primary/20 bg-primary/10 p-4">
-                      <div className="text-xs text-primary">{earnings.disclaimer}</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          ) : null}
         </div>
 
         {/* CTA Bar */}
         {(ctaPrimary || ctaSecondary) && (
-          <div className="mt-10 text-center animate-in fade-in slide-in-from-bottom-2 delay-200 motion-reduce:animate-none">
-            {ctaPrimary && (
-              <Button
-                asChild
-                className="transition-transform active:scale-[0.98]"
-                aria-label={ctaPrimary.ariaLabel || ctaPrimary.label}
-              >
-                <Link href={ctaPrimary.href}>{ctaPrimary.label}</Link>
-              </Button>
-            )}
-            {ctaSecondary && (
-              <Button
-                asChild
-                variant="outline"
-                className="ml-0 mt-3 transition-transform active:scale-[0.98] sm:ml-3 sm:mt-0"
-                aria-label={ctaSecondary.ariaLabel || ctaSecondary.label}
-              >
-                <Link href={ctaSecondary.href}>{ctaSecondary.label}</Link>
-              </Button>
-            )}
+          <div className="mt-12 text-center">
+            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+              {ctaPrimary && (
+                <Button
+                  asChild
+                  size="lg"
+                  className="transition-transform active:scale-[0.98]"
+                  aria-label={ctaPrimary.ariaLabel || ctaPrimary.label}
+                >
+                  <Link href={ctaPrimary.href}>{ctaPrimary.label}</Link>
+                </Button>
+              )}
+              {ctaSecondary && (
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="transition-transform active:scale-[0.98]"
+                  aria-label={ctaSecondary.ariaLabel || ctaSecondary.label}
+                >
+                  <Link href={ctaSecondary.href}>{ctaSecondary.label}</Link>
+                </Button>
+              )}
+            </div>
+            {ctaCaption && <p className="mt-4 text-xs text-muted-foreground">{ctaCaption}</p>}
           </div>
         )}
       </div>

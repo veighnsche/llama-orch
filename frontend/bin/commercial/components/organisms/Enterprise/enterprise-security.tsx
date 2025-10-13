@@ -1,202 +1,136 @@
 import { Shield, Lock, Eye, Server, Clock } from 'lucide-react'
+import Image from 'next/image'
+import { SecurityCrate } from '@/components/molecules/SecurityCrate/SecurityCrate'
 
 export function EnterpriseSecurity() {
   return (
-    <section className="border-b border-border bg-background px-6 py-24">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-4xl font-bold text-foreground">Enterprise-Grade Security</h2>
-          <p className="mx-auto max-w-3xl text-balance text-xl text-muted-foreground">
-            Five specialized security crates provide defense-in-depth protection against the most sophisticated attacks.
+    <section
+      aria-labelledby="security-h2"
+      className="relative border-b border-border bg-[radial-gradient(60rem_40rem_at_50%_-10%,theme(colors.primary/7),transparent)] px-6 py-24"
+    >
+      {/* Decorative background illustration */}
+      <Image
+        src="/decor/security-mesh.webp"
+        width={1200}
+        height={640}
+        className="pointer-events-none absolute left-1/2 top-8 -z-10 hidden w-[52rem] -translate-x-1/2 opacity-15 blur-[0.5px] md:block"
+        alt="Abstract dark security mesh with linked nodes and amber highlights, suggesting hash-chains, zero-trust, and time-bounded execution"
+        aria-hidden="true"
+      />
+
+      <div className="relative z-10 mx-auto max-w-7xl">
+        {/* Header */}
+        <div className="animate-in fade-in-50 slide-in-from-bottom-2 mb-16 text-center duration-500">
+          <p className="mb-2 text-sm font-medium text-primary/70">Defense-in-Depth</p>
+          <h2 id="security-h2" className="mb-4 text-4xl font-bold text-foreground">
+            Enterprise-Grade Security
+          </h2>
+          <p className="mx-auto max-w-3xl text-balance text-xl text-foreground/85">
+            Five specialized security crates harden every layer—from auth and inputs to secrets, auditing, and
+            time-bounded execution.
           </p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2">
-          {/* Security Crate 1 */}
-          <div className="rounded-lg border border-border bg-card p-8">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                <Lock className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-foreground">auth-min: Zero-Trust Authentication</h3>
-                <p className="text-sm text-muted-foreground">The Trickster Guardians</p>
-              </div>
-            </div>
+        {/* Security Crates Grid */}
+        <div className="animate-in fade-in-50 mb-12 grid gap-8 [animation-delay:120ms] lg:grid-cols-2">
+          <SecurityCrate
+            icon={<Lock className="h-6 w-6" aria-hidden="true" />}
+            title="auth-min: Zero-Trust Authentication"
+            subtitle="The Trickster Guardians"
+            intro="Constant-time token checks stop CWE-208 leaks. Fingerprints let you log safely. Bind policies block accidental exposure."
+            bullets={[
+              'Timing-safe comparison (constant-time)',
+              'Token fingerprinting (SHA-256)',
+              'Bearer token parsing (RFC 6750)',
+              'Bind policy enforcement',
+            ]}
+            docsHref="/docs/security/auth-min"
+          />
 
-            <p className="mb-4 leading-relaxed text-muted-foreground">
-              Timing-safe token comparison prevents CWE-208 attacks. Token fingerprinting for safe logging. Bind policy
-              enforcement prevents accidental exposure.
-            </p>
+          <SecurityCrate
+            icon={<Eye className="h-6 w-6" aria-hidden="true" />}
+            title="audit-logging: Compliance Engine"
+            subtitle="Legally Defensible Proof"
+            intro="Append-only audit trail with 32 event types. Hash-chain tamper detection. 7-year retention for GDPR."
+            bullets={[
+              'Immutable audit trail (append-only)',
+              '32 event types across 7 categories',
+              'Tamper detection (hash chains)',
+              '7-year retention (GDPR)',
+            ]}
+            docsHref="/docs/security/audit-logging"
+          />
 
-            <div className="space-y-2">
-              {[
-                'Timing-safe comparison (constant-time)',
-                'Token fingerprinting (SHA-256)',
-                'Bearer token parsing (RFC 6750)',
-                'Bind policy enforcement',
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <span className="text-chart-3">✓</span>
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <SecurityCrate
+            icon={<Shield className="h-6 w-6" aria-hidden="true" />}
+            title="input-validation: First Line of Defense"
+            subtitle="Trust No Input"
+            intro="Prevents injection and exhaustion. Validates identifiers, prompts, paths—before execution."
+            bullets={[
+              'SQL injection prevention',
+              'Command injection prevention',
+              'Path traversal prevention',
+              'Resource exhaustion prevention',
+            ]}
+            docsHref="/docs/security/input-validation"
+          />
 
-          {/* Security Crate 2 */}
-          <div className="rounded-lg border border-border bg-card p-8">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                <Eye className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-foreground">audit-logging: Compliance Engine</h3>
-                <p className="text-sm text-muted-foreground">Legally Defensible Proof</p>
-              </div>
-            </div>
+          <SecurityCrate
+            icon={<Server className="h-6 w-6" aria-hidden="true" />}
+            title="secrets-management: Credential Guardian"
+            subtitle="Never in Environment"
+            intro="File-scoped secrets with zeroization and systemd credentials. Timing-safe verification."
+            bullets={[
+              'File-based loading (not env vars)',
+              'Memory zeroization on drop',
+              'Permission validation (0600)',
+              'Timing-safe verification',
+            ]}
+            docsHref="/docs/security/secrets-management"
+          />
 
-            <p className="mb-4 leading-relaxed text-muted-foreground">
-              Immutable audit trail with 32 event types. Tamper detection via blockchain-style hash chains. 7-year
-              retention for GDPR compliance.
-            </p>
-
-            <div className="space-y-2">
-              {[
-                'Immutable audit trail (append-only)',
-                '32 event types across 7 categories',
-                'Tamper detection (hash chains)',
-                '7-year retention (GDPR)',
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <span className="text-chart-3">✓</span>
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Security Crate 3 */}
-          <div className="rounded-lg border border-border bg-card p-8">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                <Shield className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-foreground">input-validation: First Line of Defense</h3>
-                <p className="text-sm text-muted-foreground">Trust No Input</p>
-              </div>
-            </div>
-
-            <p className="mb-4 leading-relaxed text-muted-foreground">
-              Prevents injection attacks and resource exhaustion. Validates identifiers, model references, prompts, and
-              paths before processing.
-            </p>
-
-            <div className="space-y-2">
-              {[
-                'SQL injection prevention',
-                'Command injection prevention',
-                'Path traversal prevention',
-                'Resource exhaustion prevention',
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <span className="text-chart-3">✓</span>
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Security Crate 4 */}
-          <div className="rounded-lg border border-border bg-card p-8">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                <Server className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-foreground">secrets-management: Credential Guardian</h3>
-                <p className="text-sm text-muted-foreground">Never in Environment</p>
-              </div>
-            </div>
-
-            <p className="mb-4 leading-relaxed text-muted-foreground">
-              File-based secrets with memory zeroization. Systemd credentials support. Timing-safe verification prevents
-              memory dump attacks.
-            </p>
-
-            <div className="space-y-2">
-              {[
-                'File-based loading (not env vars)',
-                'Memory zeroization on drop',
-                'Permission validation (0600)',
-                'Timing-safe verification',
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <span className="text-chart-3">✓</span>
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Security Crate 5 */}
-          <div className="rounded-lg border border-border bg-card p-8 lg:col-span-2">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                <Clock className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-foreground">deadline-propagation: Performance Enforcer</h3>
-                <p className="text-sm text-muted-foreground">Every Millisecond Counts</p>
-              </div>
-            </div>
-
-            <p className="mb-4 leading-relaxed text-muted-foreground">
-              Ensures rbee never wastes cycles on doomed work. Deadline propagation from client to worker. Aborts
-              immediately when deadline exceeded.
-            </p>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                {['Deadline propagation (client → worker)', 'Remaining time calculation'].map((item, i) => (
-                  <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <span className="text-chart-3">✓</span>
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="space-y-2">
-                {['Deadline enforcement (abort if insufficient)', 'Timeout responses (504 Gateway Timeout)'].map(
-                  (item, i) => (
-                    <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <span className="text-chart-3">✓</span>
-                      <span>{item}</span>
-                    </div>
-                  ),
-                )}
-              </div>
-            </div>
-          </div>
+          <SecurityCrate
+            icon={<Clock className="h-6 w-6" aria-hidden="true" />}
+            title="deadline-propagation: Performance Enforcer"
+            subtitle="Every Millisecond Counts"
+            intro="Propagates time budgets end-to-end. Aborts doomed work to protect SLOs."
+            bullets={[
+              'Deadline propagation (client → worker)',
+              'Remaining time calculation',
+              'Deadline enforcement (abort if insufficient)',
+              'Timeout responses (504 Gateway Timeout)',
+            ]}
+            docsHref="/docs/security/deadline-propagation"
+            className="lg:col-span-2"
+          />
         </div>
 
         {/* Security Guarantees */}
-        <div className="mt-12 rounded-lg border border-primary/20 bg-primary/5 p-8">
+        <div className="animate-in fade-in-50 rounded-2xl border border-primary/20 bg-primary/5 p-8 [animation-delay:200ms]">
           <h3 className="mb-6 text-center text-2xl font-semibold text-foreground">Security Guarantees</h3>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-3">
             <div className="text-center">
-              <div className="mb-2 text-3xl font-bold text-primary">&lt; 10%</div>
-              <div className="text-sm text-muted-foreground">Timing variance (constant-time)</div>
+              <div className="mb-2 text-3xl font-bold text-primary" aria-label="Less than 10 percent timing variance">
+                &lt; 10%
+              </div>
+              <div className="text-sm text-foreground/85">Timing variance (constant-time)</div>
             </div>
             <div className="text-center">
-              <div className="mb-2 text-3xl font-bold text-primary">100%</div>
-              <div className="text-sm text-muted-foreground">Token fingerprinting (no raw tokens)</div>
+              <div className="mb-2 text-3xl font-bold text-primary" aria-label="100 percent token fingerprinting">
+                100%
+              </div>
+              <div className="text-sm text-foreground/85">Token fingerprinting (no raw tokens)</div>
             </div>
             <div className="text-center">
-              <div className="mb-2 text-3xl font-bold text-primary">Zero</div>
-              <div className="text-sm text-muted-foreground">Memory leaks (zeroization on drop)</div>
+              <div className="mb-2 text-3xl font-bold text-primary" aria-label="Zero memory leaks">
+                Zero
+              </div>
+              <div className="text-sm text-foreground/85">Memory leaks (zeroization on drop)</div>
             </div>
           </div>
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            Figures represent default crate configurations; tune in policy for your environment.
+          </p>
         </div>
       </div>
     </section>

@@ -1,13 +1,19 @@
 import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { CheckItem } from '@/components/atoms/CheckItem/CheckItem'
 
 export interface FeatureCardProps {
   /** Lucide icon component */
-  icon: LucideIcon
+  icon: LucideIcon | ReactNode
   /** Card title */
   title: string
-  /** Card description */
-  description: string
+  /** Card intro/description */
+  intro: string
+  /** Bullet points list */
+  bullets: string[]
+  /** Optional footer link */
+  href?: string
   /** Icon background color (Tailwind class) */
   iconColor?: string
   /** Enable hover effect */
@@ -18,27 +24,32 @@ export interface FeatureCardProps {
   className?: string
   /** Optional footer content (e.g., micro-metrics) */
   children?: React.ReactNode
-  /** Optional bullet points list */
-  bullets?: string[]
   /** Optional mini-stat for header */
   stat?: { label: string; value: string }
   /** Optional ID for anchor linking */
   id?: string
+  // Legacy props for backward compatibility
+  /** @deprecated Use intro instead */
+  description?: string
 }
 
 export function FeatureCard({
-  icon: Icon,
+  icon,
   title,
-  description,
+  intro,
+  bullets,
+  href,
   iconColor = 'primary',
   hover = false,
   size = 'md',
   className,
   children,
-  bullets,
   stat,
   id,
+  description, // Legacy support
 }: FeatureCardProps) {
+  const IconComponent = typeof icon === 'function' ? (icon as LucideIcon) : null
+  const displayIntro = intro || description || ''
   const sizeClasses = {
     sm: 'p-4 space-y-2',
     md: 'p-6 space-y-3',
@@ -91,44 +102,58 @@ export function FeatureCard({
   }
   const borderAccent = borderAccentClasses[iconColor as keyof typeof borderAccentClasses] || borderAccentClasses.primary
 
+  const titleId = id ? `${id}-title` : undefined
+
   return (
     <div
       id={id}
+      role="group"
+      aria-labelledby={titleId}
       className={cn(
-        'bg-card border border-border rounded-lg flex flex-col border-t-2',
-        borderAccent,
-        sizeClasses[size],
+        'h-full flex flex-col rounded-2xl border border-border bg-card/60 p-6 md:p-8',
         hover && 'transition-all hover:border-primary/50 hover:bg-card/80',
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className={cn('rounded-lg flex items-center justify-center shrink-0', iconSizeClasses[size], colors.bg)} aria-hidden="true">
-          <Icon aria-hidden="true" focusable="false" className={cn(iconInnerSizeClasses[size], colors.text)} />
+      {/* Header Row */}
+      <div className="mb-4 flex items-center gap-3">
+        <div className={cn('rounded-xl flex items-center justify-center shrink-0 p-3', colors.bg)} aria-hidden="true">
+          {IconComponent ? (
+            <IconComponent aria-hidden="true" focusable="false" className={cn('h-6 w-6', colors.text)} />
+          ) : (
+            typeof icon === 'object' && icon
+          )}
         </div>
-        {stat && (
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground">{stat.label}</div>
-            <div className="text-sm font-semibold text-foreground">{stat.value}</div>
-          </div>
-        )}
+        <h3 id={titleId} className="text-xl font-semibold text-foreground">
+          {title}
+        </h3>
       </div>
-      <h3 id={id ? `${id}-title` : undefined} className={cn('font-semibold text-card-foreground', titleSizeClasses[size])}>
-        {title}
-      </h3>
-      <p className={cn('text-muted-foreground leading-6', descriptionSizeClasses[size])} aria-describedby={id ? `${id}-title` : undefined}>
-        {description}
+
+      {/* Intro Paragraph */}
+      <p className="text-sm text-muted-foreground mb-3">
+        {displayIntro}
       </p>
+
+      {/* Bullet List */}
       {bullets && bullets.length > 0 && (
-        <ul role="list" className="mt-4 space-y-2 text-sm">
+        <ul className="mt-3 space-y-2">
           {bullets.map((bullet, index) => (
-            <li key={index} className="flex items-start gap-2">
-              <span className="text-ring/60 mt-1.5 block h-1 w-1 rounded-full bg-current shrink-0" aria-hidden="true" />
-              <span className="text-muted-foreground">{bullet}</span>
-            </li>
+            <CheckItem key={index}>{bullet}</CheckItem>
           ))}
         </ul>
       )}
+
+      {/* Optional Footer Link */}
+      {href && (
+        <a
+          href={href}
+          className="mt-4 inline-flex items-center gap-1 text-sm text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none rounded"
+        >
+          Learn more →
+        </a>
+      )}
+
+      {/* Optional Children */}
       {children && <div className="mt-auto pt-2">{children}</div>}
     </div>
   )

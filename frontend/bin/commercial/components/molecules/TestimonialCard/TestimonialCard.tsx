@@ -1,7 +1,22 @@
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
+import { RatingStars } from '@/components/atoms/RatingStars/RatingStars'
+import type { Testimonial, Sector } from '@/data/testimonials'
+import { Building2, Heart, Scale, Cpu } from 'lucide-react'
 
 export interface TestimonialCardProps {
+  /** Testimonial data */
+  t: Testimonial
+  /** Additional CSS classes */
+  className?: string
+  /** Show verified badge */
+  showVerified?: boolean
+  /** Animation delay index */
+  delayIndex?: number
+}
+
+// Legacy props for backward compatibility
+export interface LegacyTestimonialCardProps {
   /** Person's name */
   name: string
   /** Person's role */
@@ -26,7 +41,90 @@ export interface TestimonialCardProps {
   className?: string
 }
 
-export function TestimonialCard({
+const SECTOR_ICONS: Record<Sector, typeof Building2> = {
+  finance: Building2,
+  healthcare: Heart,
+  legal: Scale,
+  government: Building2,
+  provider: Cpu,
+}
+
+export function TestimonialCard(props: TestimonialCardProps | LegacyTestimonialCardProps) {
+  // Check if using new API or legacy API
+  const isNewAPI = 't' in props
+  
+  if (isNewAPI) {
+    return <NewTestimonialCard {...props} />
+  }
+  
+  return <LegacyTestimonialCard {...props} />
+}
+
+function NewTestimonialCard({ t, className, showVerified = true, delayIndex = 0 }: TestimonialCardProps) {
+  const SectorIcon = SECTOR_ICONS[t.sector]
+  const authorId = `testimonial-${t.id}-author`
+  const roleId = `testimonial-${t.id}-role`
+
+  return (
+    <article
+      className={cn(
+        'h-full flex flex-col rounded-2xl border border-border bg-gradient-to-b from-card to-background p-6',
+        'hover:shadow-md transition-shadow',
+        className
+      )}
+      style={{ animationDelay: `${delayIndex * 60}ms` }}
+    >
+      {/* Sector Chip */}
+      <div className="mb-4 flex items-center gap-2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+          <SectorIcon className="h-5 w-5 text-primary" aria-hidden="true" />
+        </div>
+        {t.payout && showVerified && (
+          <span className="ml-auto text-[11px] bg-secondary rounded-full px-2 py-0.5 font-medium text-foreground">
+            Verified payout
+          </span>
+        )}
+        {!t.payout && showVerified && (
+          <span className="ml-auto text-[11px] bg-secondary rounded-full px-2 py-0.5 font-medium text-foreground">
+            Verified customer
+          </span>
+        )}
+      </div>
+
+      {/* Author/Role/Org */}
+      <div className="mb-3">
+        <div className="font-semibold text-foreground" id={authorId}>
+          {t.name}
+        </div>
+        <div className="text-sm text-muted-foreground" id={roleId}>
+          {t.role}
+          {t.org && ` • ${t.org}`}
+          {t.payout && ` • ${t.payout}`}
+        </div>
+      </div>
+
+      {/* Rating */}
+      {t.rating && (
+        <div className="mb-3">
+          <RatingStars rating={t.rating} size="sm" />
+        </div>
+      )}
+
+      {/* Quote */}
+      <blockquote className="flex-1 mb-4" aria-describedby={`${authorId} ${roleId}`}>
+        <p className="text-sm leading-6 text-muted-foreground">
+          <cite className="not-italic">
+            <span className="text-primary mr-1">&ldquo;</span>
+            {t.quote}
+            <span className="text-primary ml-1">&rdquo;</span>
+          </cite>
+        </p>
+      </blockquote>
+    </article>
+  )
+}
+
+function LegacyTestimonialCard({
   name,
   role,
   quote,
@@ -38,7 +136,7 @@ export function TestimonialCard({
   rating,
   highlight,
   className,
-}: TestimonialCardProps) {
+}: LegacyTestimonialCardProps) {
   const gradientClasses = {
     primary: 'from-primary to-primary',
     'chart-1': 'from-chart-1 to-chart-1',

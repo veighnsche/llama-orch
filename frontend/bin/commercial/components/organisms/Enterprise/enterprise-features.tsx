@@ -1,142 +1,111 @@
 import { Shield, Users, Wrench, Globe } from 'lucide-react'
+import { FeatureCard } from '@/components/molecules/FeatureCard/FeatureCard'
+
+const FEATURES = [
+  {
+    icon: Shield,
+    title: 'Enterprise SLAs',
+    intro: '99.9% uptime with 24/7 support and 1-hour response. Dedicated manager and quarterly reviews.',
+    bullets: [
+      '99.9% SLA',
+      '24/7 support (1-hour)',
+      'Dedicated account manager',
+      'Quarterly reviews',
+    ],
+  },
+  {
+    icon: Users,
+    title: 'White-Label Option',
+    intro: 'Run rbee as your brand—custom domain, UI, and endpoints.',
+    bullets: [
+      'Custom branding/logo',
+      'Custom domain (ai.yourcompany.com)',
+      'UI customization',
+      'API endpoint customization',
+    ],
+  },
+  {
+    icon: Wrench,
+    title: 'Professional Services',
+    intro: 'Deployment, integration, optimization, and training from our team.',
+    bullets: [
+      'Deployment consulting',
+      'Integration support',
+      'Custom development',
+      'Team training',
+    ],
+  },
+  {
+    icon: Globe,
+    title: 'Multi-Region Support',
+    intro: 'EU multi-region for redundancy and compliance: failover + load balancing.',
+    bullets: [
+      'EU multi-region',
+      'Automatic failover',
+      'Load balancing',
+      'Geo-redundancy',
+    ],
+  },
+]
 
 export function EnterpriseFeatures() {
   return (
-    <section className="border-b border-border bg-background px-6 py-24">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-4xl font-bold text-foreground">Enterprise Features</h2>
+    <section
+      aria-labelledby="enterprise-features-h2"
+      className="relative border-b border-border bg-background px-6 py-24 overflow-hidden"
+    >
+      {/* Decorative Gradient */}
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(60rem_40rem_at_50%_-10%,theme(colors.primary/7),transparent)]"
+        aria-hidden="true"
+      />
+
+      <div className="relative mx-auto max-w-7xl">
+        {/* Header Block */}
+        <div className="mb-12 text-center animate-in fade-in-50 slide-in-from-bottom-2">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-primary">Enterprise Capabilities</p>
+          <h2 id="enterprise-features-h2" className="mb-4 text-4xl font-bold text-foreground">
+            Enterprise Features
+          </h2>
           <p className="mx-auto max-w-3xl text-balance text-xl text-muted-foreground">
-            Everything you need for enterprise-grade AI infrastructure deployment and management.
+            Everything you need for compliant, resilient, EU-resident AI infrastructure.
           </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2">
-          {/* Feature 1 */}
-          <div className="rounded-lg border border-border bg-card p-8">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                <Shield className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground">Enterprise SLAs</h3>
-            </div>
-            <p className="mb-4 leading-relaxed text-muted-foreground">
-              99.9% uptime guarantee with 24/7 support and 1-hour response time. Dedicated account manager and quarterly
-              business reviews.
-            </p>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>99.9% uptime SLA</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>24/7 support (1-hour response)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>Dedicated account manager</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>Quarterly business reviews</span>
-              </li>
-            </ul>
-          </div>
+        {/* Feature Grid */}
+        <div className="grid gap-8 md:grid-cols-2 animate-in fade-in-50" style={{ animationDelay: '120ms' }}>
+          {FEATURES.map((feature, index) => (
+            <FeatureCard key={index} {...feature} />
+          ))}
+        </div>
 
-          {/* Feature 2 */}
-          <div className="rounded-lg border border-border bg-card p-8">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground">White-Label Option</h3>
+        {/* Outcomes Band */}
+        <div
+          className="mt-10 rounded-2xl border border-primary/20 bg-primary/5 p-6 md:p-8 animate-in fade-in-50"
+          style={{ animationDelay: '200ms' }}
+        >
+          <h3 className="mb-6 text-lg font-semibold text-foreground">What you get</h3>
+          <div className="grid gap-6 sm:grid-cols-3">
+            <div className="text-center">
+              <div className="mb-1 text-3xl font-bold text-foreground">99.9%</div>
+              <div className="text-sm text-muted-foreground">Uptime SLA</div>
             </div>
-            <p className="mb-4 leading-relaxed text-muted-foreground">
-              Rebrand rbee as your own AI infrastructure platform. Custom branding, domain, and UI customization
-              available.
-            </p>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>Custom branding and logo</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>Custom domain (ai.yourcompany.com)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>UI customization</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>API endpoint customization</span>
-              </li>
-            </ul>
+            <div className="text-center">
+              <div className="mb-1 text-3xl font-bold text-foreground">&lt; 1 hr</div>
+              <div className="text-sm text-muted-foreground">Support response</div>
+            </div>
+            <div className="text-center">
+              <div className="mb-1 text-3xl font-bold text-foreground">EU-only</div>
+              <div className="text-sm text-muted-foreground">Data residency</div>
+            </div>
           </div>
-
-          {/* Feature 3 */}
-          <div className="rounded-lg border border-border bg-card p-8">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                <Wrench className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground">Professional Services</h3>
-            </div>
-            <p className="mb-4 leading-relaxed text-muted-foreground">
-              Expert consulting for deployment, integration, and optimization. Custom development and training
-              available.
-            </p>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>Deployment consulting</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>Integration support</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>Custom development</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>Team training</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Feature 4 */}
-          <div className="rounded-lg border border-border bg-card p-8">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                <Globe className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground">Multi-Region Support</h3>
-            </div>
-            <p className="mb-4 leading-relaxed text-muted-foreground">
-              Deploy across multiple EU regions for redundancy and compliance. Automatic failover and load balancing.
-            </p>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>Multi-region deployment (EU)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>Automatic failover</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>Load balancing</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-chart-3">✓</span>
-                <span>Geo-redundancy</span>
-              </li>
-            </ul>
+          <div className="mt-6 text-center">
+            <a
+              href="#compliance"
+              className="inline-flex items-center gap-1 text-sm text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none rounded"
+            >
+              See compliance details →
+            </a>
           </div>
         </div>
       </div>
