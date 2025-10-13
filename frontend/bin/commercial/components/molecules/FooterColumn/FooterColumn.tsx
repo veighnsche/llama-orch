@@ -14,23 +14,32 @@ export interface FooterColumnProps {
 }
 
 export function FooterColumn({ title, links, className }: FooterColumnProps) {
+  const headingId = `footer-${title.toLowerCase().replace(/\s+/g, '-')}`
+  
   return (
     <div className={className}>
-      <h3 className="text-foreground font-bold mb-4">{title}</h3>
-      <ul className="space-y-2 text-sm">
+      <h3 id={headingId} className="text-sm font-semibold text-foreground mb-4">
+        {title}
+      </h3>
+      <ul className="space-y-2" aria-labelledby={headingId}>
         {links.map((link, index) => (
           <li key={index}>
             {link.external ? (
               <a
                 href={link.href}
                 target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                rel="noreferrer"
+                title="Opens in a new tab"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 {link.text}
               </a>
             ) : (
-              <Link href={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link 
+                href={link.href} 
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                {...(link.href === '#' ? { 'aria-disabled': 'true', onClick: (e: React.MouseEvent) => e.preventDefault() } : {})}
+              >
                 {link.text}
               </Link>
             )}
