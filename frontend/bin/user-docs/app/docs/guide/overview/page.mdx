@@ -1,0 +1,83 @@
+# API Overview
+
+rbee provides a REST API compatible with the OpenAI API specification, making it easy to integrate with existing tools and libraries.
+
+## Base URL
+
+```
+http://localhost:8080/v1
+```
+
+## Authentication
+
+API requests require a bearer token:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  http://localhost:8080/v1/models
+```
+
+## Core Endpoints
+
+### List Models
+
+```http
+GET /v1/models
+```
+
+Returns all available models in your rbee instance.
+
+### Chat Completions
+
+```http
+POST /v1/chat/completions
+```
+
+Generate chat completions using a specified model.
+
+**Request body:**
+
+```json
+{
+  "model": "llama-3.1-8b",
+  "messages": [
+    {"role": "system", "content": "You are a helpful assistant."},
+    {"role": "user", "content": "What is the capital of France?"}
+  ],
+  "temperature": 0.7,
+  "max_tokens": 150
+}
+```
+
+### Streaming Responses
+
+Enable streaming by setting `stream: true`:
+
+```json
+{
+  "model": "llama-3.1-8b",
+  "messages": [...],
+  "stream": true
+}
+```
+
+## Rate Limits
+
+Default rate limits:
+
+- 100 requests per minute per API key
+- 1000 tokens per second per model
+
+## Error Handling
+
+All errors follow the standard format:
+
+```json
+{
+  "error": {
+    "message": "Model not found",
+    "type": "invalid_request_error",
+    "code": "model_not_found"
+  }
+}
+```

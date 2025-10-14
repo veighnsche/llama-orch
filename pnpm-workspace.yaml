@@ -3,7 +3,9 @@ packages:
   - consumers/.examples/*
   - consumers/llama-orch-sdk/ts
   - frontend/bin/commercial
+  - frontend/bin/user-docs
   - frontend/libs/frontend-tooling
+  - frontend/libs/rbee-ui
   - frontend/reference/v0
 
 onlyBuiltDependencies:

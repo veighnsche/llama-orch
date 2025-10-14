@@ -1,0 +1,105 @@
+# Shared Components
+
+This page demonstrates the shared UI components from `@rbee/ui` that maintain design consistency across the rbee platform.
+
+## Design Tokens
+
+All components use the rbee design system with:
+- **Primary Color**: Honeycomb Yellow/Gold (#f59e0b)
+- **Dark Mode**: Automatic theme switching
+- **Consistent Spacing**: 4px base unit
+
+## Buttons
+
+import { Button } from '@rbee/ui/atoms';
+
+<div className="flex gap-4 flex-wrap my-6">
+  <Button variant="default">Primary Button</Button>
+  <Button variant="secondary">Secondary</Button>
+  <Button variant="outline">Outline</Button>
+  <Button variant="ghost">Ghost</Button>
+  <Button variant="destructive">Destructive</Button>
+</div>
+
+### Button Sizes
+
+<div className="flex gap-4 items-center flex-wrap my-6">
+  <Button size="sm">Small</Button>
+  <Button size="md">Medium</Button>
+  <Button size="lg">Large</Button>
+</div>
+
+## Badges
+
+import { Badge } from '@rbee/ui/atoms';
+
+<div className="flex gap-3 flex-wrap my-6">
+  <Badge>Default</Badge>
+  <Badge variant="secondary">Beta</Badge>
+  <Badge variant="outline">New</Badge>
+  <Badge variant="destructive">Deprecated</Badge>
+</div>
+
+## Cards
+
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@rbee/ui/molecules';
+
+<Card className="my-6">
+  <CardHeader>
+    <CardTitle>Example Card</CardTitle>
+    <CardDescription>This card uses shared components from @rbee/ui</CardDescription>
+  </CardHeader>
+  <CardContent>
+    <p>Card content goes here. This maintains the same design language as the commercial site.</p>
+  </CardContent>
+  <CardFooter className="gap-2">
+    <Button size="sm">Action</Button>
+    <Button size="sm" variant="outline">Cancel</Button>
+  </CardFooter>
+</Card>
+
+## Usage in Documentation
+
+These components can be used throughout the documentation to:
+- Highlight important actions with **Buttons**
+- Mark status or categories with **Badges**
+- Group related content with **Cards**
+
+### Example: Feature Overview
+
+<div className="grid gap-6 md:grid-cols-2 my-6">
+  <Card>
+    <CardHeader>
+      <div className="flex items-center gap-2">
+        <CardTitle>Private Infrastructure</CardTitle>
+        <Badge>Secure</Badge>
+      </div>
+      <CardDescription>Your data never leaves your infrastructure</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <p>Deploy models on your own hardware or use our managed service.</p>
+    </CardContent>
+  </Card>
+
+  <Card>
+    <CardHeader>
+      <div className="flex items-center gap-2">
+        <CardTitle>GDPR Compliant</CardTitle>
+        <Badge variant="secondary">EU</Badge>
+      </div>
+      <CardDescription>Built for European data regulations</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <p>Full compliance with Dutch and European privacy laws.</p>
+    </CardContent>
+  </Card>
+</div>
+
+## Design Consistency
+
+Using `@rbee/ui` ensures:
+- ✅ Consistent colors across all rbee applications
+- ✅ Unified component behavior
+- ✅ Shared design tokens
+- ✅ Automatic dark mode support
+- ✅ Single source of truth for styling

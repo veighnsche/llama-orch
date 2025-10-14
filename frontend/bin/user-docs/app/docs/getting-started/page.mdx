@@ -1,0 +1,69 @@
+# Getting Started
+
+This guide will help you set up rbee and run your first LLM inference.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- A Linux system with CUDA-capable GPU (NVIDIA)
+- Docker installed (optional, for containerized deployment)
+- At least 16GB of RAM
+- 50GB+ of free disk space for models
+
+## Installation
+
+### Using the CLI
+
+```bash
+# Install rbee CLI
+curl -sSL https://install.rbee.dev | sh
+
+# Verify installation
+rbee --version
+```
+
+### Using Docker
+
+```bash
+# Pull the latest image
+docker pull rbee/orchestrator:latest
+
+# Run the orchestrator
+docker run -d --gpus all -p 8080:8080 rbee/orchestrator:latest
+```
+
+## Configuration
+
+Create a configuration file at `~/.rbee/config.yaml`:
+
+```yaml
+orchestrator:
+  host: 0.0.0.0
+  port: 8080
+
+models:
+  - name: llama-3.1-8b
+    source: huggingface
+    repo: meta-llama/Llama-3.1-8B
+```
+
+## Running Your First Inference
+
+```bash
+# Start the orchestrator
+rbee start
+
+# Send a test request
+curl -X POST http://localhost:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "llama-3.1-8b",
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'
+```
+
+## Next Steps
+
+- Learn about [deployment options](/guide/deployment)
+- Explore the [API overview](/guide/overview)

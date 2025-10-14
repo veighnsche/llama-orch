@@ -1,0 +1,96 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Introduction" />
+
+# rbee UI Component Library
+
+Welcome to the **rbee UI** component library! This is the shared design system for all rbee applications, ensuring consistent user experience across the platform.
+
+## Design Philosophy
+
+The rbee design system is built around:
+
+- **Honeycomb Yellow/Gold** (#f59e0b) - Our primary brand color inspired by bees
+- **Professional yet approachable** - Enterprise-grade but not corporate
+- **Data-focused** - Clear information hierarchy
+- **Privacy-first** - Security and trust communicated through design
+
+## Primary Color
+
+<div style={{ 
+  display: 'flex', 
+  alignItems: 'center', 
+  gap: '1rem', 
+  padding: '1rem', 
+  marginTop: '1rem',
+  border: '1px solid var(--rbee-border)',
+  borderRadius: '0.5rem'
+}}>
+  <div style={{ 
+    width: '100px', 
+    height: '100px', 
+    backgroundColor: '#f59e0b',
+    borderRadius: '0.5rem',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+  }} />
+  <div>
+    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f59e0b' }}>
+      Honeycomb Yellow
+    </div>
+    <div style={{ fontSize: '0.875rem', color: 'var(--rbee-muted-foreground)', marginTop: '0.25rem' }}>
+      Hex: #f59e0b
+    </div>
+    <div style={{ fontSize: '0.875rem', color: 'var(--rbee-muted-foreground)' }}>
+      HSL: hsl(45, 96%, 53%)
+    </div>
+  </div>
+</div>
+
+## Component Categories
+
+### Atoms
+Small, single-purpose components:
+- **Button** - Primary interactive elements
+- **Badge** - Status and category indicators
+
+### Molecules
+Composed components with specific functions:
+- **Card** - Content grouping with header, content, and footer
+
+### Coming Soon
+More components will be added as they're extracted from the commercial site or needed by user-docs.
+
+## Usage
+
+Import components from their respective categories:
+
+```tsx
+import { Button, Badge } from '@rbee/ui/atoms';
+import { Card, CardHeader, CardTitle, CardContent } from '@rbee/ui/molecules';
+```
+
+Import design tokens:
+
+```tsx
+import { colors, spacing, radius } from '@rbee/ui/tokens';
+```
+
+Import shared styles:
+
+```tsx
+import '@rbee/ui/styles';
+```
+
+## Dark Mode
+
+All components support dark mode automatically. Toggle the theme using the toolbar above to see how components adapt.
+
+## Resources
+
+- **Repository**: [github.com/veighnsche/llama-orch](https://github.com/veighnsche/llama-orch)
+- **Package Location**: `frontend/libs/rbee-ui`
+- **Documentation**: See the README files in the package
+
+## Explore Components
+
+Navigate through the sidebar to explore all available components, their variants, and usage examples.

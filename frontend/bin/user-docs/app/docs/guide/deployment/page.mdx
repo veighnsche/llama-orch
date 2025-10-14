@@ -1,0 +1,151 @@
+# Deployment Guide
+
+Learn how to deploy rbee to production environments.
+
+## Deployment Options
+
+rbee supports multiple deployment strategies:
+
+1. **Bare Metal** - Direct installation on GPU servers
+2. **Docker** - Containerized deployment
+3. **Kubernetes** - Orchestrated cluster deployment
+4. **Managed Service** - Fully managed by rbee (coming soon)
+
+## Production Checklist
+
+Before deploying to production:
+
+- [ ] Configure SSL/TLS certificates
+- [ ] Set up authentication and API keys
+- [ ] Configure monitoring and logging
+- [ ] Set resource limits (GPU memory, CPU, RAM)
+- [ ] Enable backup and disaster recovery
+- [ ] Review security settings
+
+## Bare Metal Deployment
+
+### System Requirements
+
+- Ubuntu 22.04 LTS or later
+- NVIDIA GPU with CUDA 12.0+
+- 32GB+ RAM recommended
+- 100GB+ SSD storage
+
+### Installation Steps
+
+```bash
+# 1. Install CUDA drivers
+sudo apt update
+sudo apt install nvidia-driver-535 nvidia-cuda-toolkit
+
+# 2. Install rbee
+curl -sSL https://install.rbee.dev | sh
+
+# 3. Configure systemd service
+sudo systemctl enable rbee-orchestrator
+sudo systemctl start rbee-orchestrator
+```
+
+## Docker Deployment
+
+### Using Docker Compose
+
+Create `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+services:
+  orchestrator:
+    image: rbee/orchestrator:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config:/etc/rbee
+      - ./models:/var/lib/rbee/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+```
+
+Start the service:
+
+```bash
+docker-compose up -d
+```
+
+## Kubernetes Deployment
+
+Example manifest for Kubernetes with GPU support:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rbee-orchestrator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rbee
+  template:
+    metadata:
+      labels:
+        app: rbee
+    spec:
+      containers:
+      - name: orchestrator
+        image: rbee/orchestrator:latest
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        ports:
+        - containerPort: 8080
+```
+
+## Monitoring
+
+rbee exposes Prometheus metrics at `/metrics`:
+
+```bash
+curl http://localhost:8080/metrics
+```
+
+Key metrics to monitor:
+
+- `rbee_inference_duration_seconds` - Inference latency
+- `rbee_gpu_memory_usage_bytes` - GPU memory consumption
+- `rbee_requests_total` - Total API requests
+
+## Security
+
+### Enable TLS
+
+Configure TLS in `config.yaml`:
+
+```yaml
+server:
+  tls:
+    enabled: true
+    cert_file: /etc/rbee/tls/cert.pem
+    key_file: /etc/rbee/tls/key.pem
+```
+
+### API Key Management
+
+Generate API keys:
+
+```bash
+rbee api-key create --name production-key
+```
+
+## Troubleshooting
+
+Common issues and solutions:
+
+- **GPU not detected**: Verify NVIDIA drivers with `nvidia-smi`
+- **Out of memory**: Reduce batch size or model size
+- **Slow inference**: Check GPU utilization and model quantization settings
