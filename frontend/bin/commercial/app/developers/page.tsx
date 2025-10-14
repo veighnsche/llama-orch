@@ -1,15 +1,19 @@
-import { DevelopersHero } from '@/components/organisms/Developers/developers-hero'
-import { DevelopersProblem } from '@/components/organisms/Developers/developers-problem'
-import { DevelopersSolution } from '@/components/organisms/Developers/developers-solution'
-import { DevelopersHowItWorks } from '@/components/organisms/Developers/developers-how-it-works'
-import { DevelopersFeatures } from '@/components/organisms/Developers/developers-features'
-import { DevelopersUseCases } from '@/components/organisms/Developers/developers-use-cases'
-import { DevelopersCodeExamples } from '@/components/organisms/Developers/developers-code-examples'
-import { EmailCapture } from '@/components/organisms/EmailCapture/EmailCapture'
-import { Footer } from '@/components/organisms/Footer/Footer'
-import { PricingSection, TestimonialsSection, CTASection } from '@/components/organisms'
+import {
+  DevelopersHero,
+  DevelopersProblem,
+  DevelopersSolution,
+  DevelopersHowItWorks,
+  DevelopersFeatures,
+  DevelopersUseCases,
+  DevelopersCodeExamples,
+} from '@rbee/ui/organisms/Developers'
+import { EmailCapture } from '@rbee/ui/organisms/EmailCapture'
+import { Footer } from '@rbee/ui/organisms/Footer'
+import { PricingSection } from '@rbee/ui/organisms/PricingSection'
+import { TestimonialsSection } from '@rbee/ui/organisms/SocialProofSection'
+import { CTASection } from '@rbee/ui/organisms/CtaSection'
 import { ArrowRight } from 'lucide-react'
-import { GitHubIcon } from '@/components/atoms/GitHubIcon/GitHubIcon'
+import { GitHubIcon } from '@rbee/ui/atoms/GitHubIcon'
 
 export default function DevelopersPage() {
   return (

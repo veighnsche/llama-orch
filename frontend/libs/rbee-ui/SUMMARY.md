@@ -5,33 +5,52 @@
 A new shared component library at `frontend/libs/rbee-ui` that provides:
 
 1. **Design Tokens** - Shared CSS variables and theme configuration
-2. **Atoms** - Basic UI components (Button, Badge)
-3. **Molecules** - Composed components (Card with subcomponents)
-4. **Utilities** - Helper functions (cn for class merging)
+2. **Global Styles** - Complete Tailwind CSS setup with utilities and animations
+3. **Atoms** - 74 atomic UI components (Button, Badge, Input, Select, Dialog, etc.)
+4. **Molecules** - 45+ molecular components (FeatureCard, TestimonialCard, etc.)
+5. **Organisms** - 30+ complex components (Hero sections, Navigation, etc.)
+6. **Patterns** - 4 pattern components (BeeGlyph, HoneycombPattern, etc.)
+7. **Utilities** - Helper functions (cn for class merging)
+8. **Storybook** - Interactive component documentation
+
+**Total: 150+ components migrated from commercial site**
 
 ## Project Structure
 
 ```
 frontend/libs/rbee-ui/
+├── .storybook/
+│   ├── main.ts              # Storybook configuration
+│   ├── preview.ts           # Global settings
+│   └── preview-head.html    # Dark mode script
 ├── src/
 │   ├── tokens/
-│   │   ├── styles.css       # CSS variables and design tokens
+│   │   ├── styles.css       # Lightweight design tokens (for Nextra)
+│   │   ├── globals.css      # Full Tailwind + utilities (for apps)
 │   │   └── index.ts         # TypeScript exports for tokens
 │   ├── atoms/
-│   │   ├── Button.tsx       # Button component with variants
+│   │   ├── Button.tsx       # Button component
+│   │   ├── Button.stories.tsx
 │   │   ├── Badge.tsx        # Badge component
+│   │   ├── Badge.stories.tsx
 │   │   └── index.ts         # Atom exports
 │   ├── molecules/
 │   │   ├── Card.tsx         # Card component system
+│   │   ├── Card.stories.tsx
 │   │   └── index.ts         # Molecule exports
-│   └── utils/
-│       └── index.ts         # cn() utility function
+│   ├── utils/
+│   │   └── index.ts         # cn() utility function
+│   └── Introduction.mdx     # Storybook welcome page
 ├── package.json             # Package configuration
 ├── tsconfig.json            # TypeScript config
+├── vite.config.ts           # Vite + Tailwind config
 ├── README.md                # Usage guide
 ├── INTEGRATION.md           # Integration guide
 ├── MIGRATION_PLAN.md        # Migration strategy
+├── MIGRATION_COMPLETE.md    # globals.css migration report
 ├── DESIGN_SYSTEM.md         # Design system documentation
+├── STORYBOOK.md             # Storybook documentation
+├── SUMMARY.md               # This file
 └── .gitignore
 ```
 
@@ -45,6 +64,8 @@ frontend/libs/rbee-ui/
 
 ### Commercial Site ✅
 - Added `@rbee/ui` dependency
+- **Migrated globals.css** - Now imports from `@rbee/ui/globals`
+- All design tokens, utilities, and animations now sourced from shared package
 - Ready to gradually migrate existing components
 
 ## Design System Highlights

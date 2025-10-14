@@ -1,9 +1,8 @@
-import { PricingHero } from '@/components/organisms/Pricing/pricing-hero'
-import { PricingSection } from '@/components/organisms/PricingSection/PricingSection'
-import { PricingComparison } from '@/components/organisms/Pricing/pricing-comparison'
-import { FAQSection } from '@/components/organisms/FaqSection/FaqSection'
-import { pricingFaqItems, pricingCategories } from '@/components/organisms/FaqSection/pricing-faqs'
-import { EmailCapture } from '@/components/organisms/EmailCapture/EmailCapture'
+import { PricingHero, PricingComparison } from '@rbee/ui/organisms/Pricing'
+import { PricingSection } from '@rbee/ui/organisms/PricingSection'
+import { FAQSection } from '@rbee/ui/organisms/FaqSection'
+import { pricingFaqItems, pricingCategories } from '@rbee/ui/organisms/FaqSection'
+import { EmailCapture } from '@rbee/ui/organisms/EmailCapture'
 
 export default function PricingPage() {
   return (

@@ -1,7 +1,5 @@
-import { UseCasesHero } from '@/components/organisms/UseCases/use-cases-hero'
-import { UseCasesPrimary } from '@/components/organisms/UseCases/use-cases-primary'
-import { UseCasesIndustry } from '@/components/organisms/UseCases/use-cases-industry'
-import { EmailCapture } from '@/components/organisms/EmailCapture/EmailCapture'
+import { UseCasesHero, UseCasesPrimary, UseCasesIndustry } from '@rbee/ui/organisms/UseCases'
+import { EmailCapture } from '@rbee/ui/organisms/EmailCapture'
 
 export default function UseCasesPage() {
   return (

@@ -35,10 +35,27 @@ This package is part of the rbee monorepo and uses pnpm workspaces.
 
 ### Importing Styles
 
-Import the design tokens CSS in your app's root layout:
+**Option 1: Import globals.css (recommended for full apps)**
+
+The `globals.css` file includes Tailwind CSS, design tokens, utilities, and animations:
 
 ```tsx
-// app/layout.tsx or app/globals.css
+// app/layout.tsx
+import '@rbee/ui/globals';
+```
+
+Or in your CSS file:
+```css
+/* app/globals.css */
+@import '@rbee/ui/globals';
+```
+
+**Option 2: Import styles.css (lightweight, for Nextra/docs)**
+
+The `styles.css` file includes only design tokens without Tailwind:
+
+```tsx
+// app/layout.tsx
 import '@rbee/ui/styles';
 ```
 

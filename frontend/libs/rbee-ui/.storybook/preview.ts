@@ -1,5 +1,10 @@
 import type { Preview } from "@storybook/react";
-import "../src/tokens/styles.css";
+import "../src/tokens/globals.css";
+
+// Mock Next.js globals for Storybook
+if (typeof window !== 'undefined') {
+  (window as any).process = { env: {} };
+}
 
 const preview: Preview = {
   parameters: {
