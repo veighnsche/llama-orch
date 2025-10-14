@@ -5,7 +5,7 @@ import { EmailCapture } from '@/components/organisms/EmailCapture/EmailCapture'
 
 export default function UseCasesPage() {
   return (
-    <div className="pt-16">
+    <>
       <UseCasesHero />
       <div id="use-cases">
         <UseCasesPrimary />
@@ -14,6 +14,6 @@ export default function UseCasesPage() {
         <UseCasesIndustry />
       </div>
       <EmailCapture />
-    </div>
+    </>
   )
 }

@@ -11,7 +11,7 @@ import { EmailCapture } from '@/components/organisms/EmailCapture/EmailCapture'
 
 export default function FeaturesPage() {
   return (
-    <div className="pt-16">
+    <>
       <FeaturesHero />
       <CoreFeaturesTabs />
       <CrossNodeOrchestration />
@@ -22,6 +22,6 @@ export default function FeaturesPage() {
       <SecurityIsolation />
       <AdditionalFeaturesGrid />
       <EmailCapture />
-    </div>
+    </>
   )
 }

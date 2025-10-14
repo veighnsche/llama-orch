@@ -3,6 +3,7 @@
 import { Button } from '@/components/atoms/Button/Button'
 import { ArrowRight, Star, DollarSign } from 'lucide-react'
 import { PulseBadge, TrustIndicator, TerminalWindow, ProgressBar, FloatingKPICard } from '@/components/molecules'
+import { HoneycombPattern } from '@/components/patterns/HoneycombPattern'
 import { useState, useEffect } from 'react'
 
 export function HeroSection() {
@@ -19,8 +20,10 @@ export function HeroSection() {
   }, [])
 
   return (
-    <section aria-labelledby="hero-title" className="relative isolate min-h-[calc(100svh-3.5rem)] flex items-center bg-background">
-      <div className="container mx-auto px-4 py-24">
+    <section aria-labelledby="hero-title" className="relative isolate min-h-[calc(100svh-3.5rem)] flex items-center overflow-hidden bg-gradient-to-b from-background to-card">
+      <HoneycombPattern id="hero" size="large" fadeDirection="radial" />
+
+      <div className="container mx-auto px-4 py-24 relative z-10">
         <div className="grid lg:grid-cols-12 gap-12 items-center">
           {/* Cols 1–6: Messaging Stack */}
           <div className="lg:col-span-6 space-y-8">

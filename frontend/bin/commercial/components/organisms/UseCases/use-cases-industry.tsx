@@ -87,7 +87,7 @@ export function UseCasesIndustry() {
         {/* Hero banner */}
         <div className="overflow-hidden rounded-lg border border-border/60 mb-8">
           <Image
-            src="/images/industries-hero.svg"
+            src="/illustrations/industries-hero.svg"
             width={1920}
             height={600}
             priority

@@ -63,7 +63,7 @@ export function TechnicalSection() {
 
           {/* Architecture Diagram (Desktop Only) */}
           <Image
-            src="/images/rbee-arch.svg"
+            src="/illustrations/rbee-arch.svg"
             width={920}
             height={560}
             className="hidden md:block rounded-2xl ring-1 ring-border/60 shadow-sm"

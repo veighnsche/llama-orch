@@ -2,6 +2,7 @@ import { Button } from '@/components/atoms/Button/Button'
 import { Badge } from '@/components/atoms/Badge/Badge'
 import { Card } from '@/components/atoms/Card/Card'
 import { Separator } from '@/components/atoms/Separator/Separator'
+import { HoneycombPattern } from '@/components/patterns/HoneycombPattern'
 import { Cpu, Download, Power } from 'lucide-react'
 
 // Feature flags for quick toggles
@@ -12,38 +13,7 @@ const SHOW_STAT_STRIP = true
 export function FeaturesHero() {
   return (
     <section className="py-24 bg-gradient-to-b from-background to-card relative overflow-hidden">
-      {/* Honeycomb backdrop */}
-      {SHOW_HONEYCOMB_BG && (
-        <div className="absolute inset-0 pointer-events-none select-none opacity-10">
-          <svg
-            className="w-full h-full text-muted-foreground"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <defs>
-              <pattern id="honeycomb" x="0" y="0" width="56" height="100" patternUnits="userSpaceOnUse">
-                <path
-                  d="M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="0.5"
-                />
-                <path d="M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34" fill="none" stroke="currentColor" strokeWidth="0.5" />
-              </pattern>
-              <mask id="fade-mask">
-                <radialGradient id="fade-gradient">
-                  <stop offset="0%" stopColor="white" />
-                  <stop offset="70%" stopColor="white" />
-                  <stop offset="100%" stopColor="black" />
-                </radialGradient>
-                <rect width="100%" height="100%" fill="url(#fade-gradient)" />
-              </mask>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#honeycomb)" mask="url(#fade-mask)" />
-          </svg>
-        </div>
-      )}
+      {SHOW_HONEYCOMB_BG && <HoneycombPattern id="features" size="small" fadeDirection="bottom" />}
 
       <div className="container mx-auto px-4 grid gap-10 lg:grid-cols-2 items-center relative z-10">
         {/* Left column: Copy */}

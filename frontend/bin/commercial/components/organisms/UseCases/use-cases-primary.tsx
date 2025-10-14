@@ -104,7 +104,7 @@ export function UseCasesPrimary() {
         {/* Hero strip image */}
         <div className="relative overflow-hidden rounded-lg border border-border/60 mb-8">
           <Image
-            src="/images/usecases-grid-dark.svg"
+            src="/illustrations/usecases-grid-dark.svg"
             width={1920}
             height={640}
             priority

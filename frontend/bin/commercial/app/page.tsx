@@ -18,7 +18,7 @@ import { Anchor, DollarSign, Laptop, Shield, Building, Home as HomeIcon, Users, 
 
 export default function Home() {
   return (
-    <main className="min-h-screen pt-16">
+    <main className="min-h-screen">
       <HeroSection />
       <WhatIsRbee />
       <AudienceSelector />

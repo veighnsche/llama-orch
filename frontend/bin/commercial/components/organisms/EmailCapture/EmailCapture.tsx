@@ -8,6 +8,7 @@ import { Button } from '@/components/atoms/Button/Button'
 import { Input } from '@/components/atoms/Input/Input'
 import { Mail, CheckCircle2, Lock, GitBranch } from 'lucide-react'
 import { PulseBadge } from '@/components/molecules'
+import { BeeGlyph } from '@/components/patterns/BeeGlyph'
 
 export function EmailCapture() {
   const [email, setEmail] = useState('')
@@ -27,26 +28,8 @@ export function EmailCapture() {
   return (
     <section className="relative isolate py-28 bg-background">
       {/* Decorative bee glyphs */}
-      <svg
-        className="absolute top-16 left-[8%] w-16 h-16 opacity-5 pointer-events-none"
-        aria-hidden="true"
-        focusable="false"
-        viewBox="0 0 64 64"
-        fill="currentColor"
-      >
-        <circle cx="32" cy="32" r="24" />
-        <path d="M20 32h24M32 20v24" stroke="white" strokeWidth="4" />
-      </svg>
-      <svg
-        className="absolute bottom-20 right-[10%] w-16 h-16 opacity-5 pointer-events-none"
-        aria-hidden="true"
-        focusable="false"
-        viewBox="0 0 64 64"
-        fill="currentColor"
-      >
-        <circle cx="32" cy="32" r="24" />
-        <path d="M20 32h24M32 20v24" stroke="white" strokeWidth="4" />
-      </svg>
+      <BeeGlyph className="absolute top-16 left-[8%] opacity-5 pointer-events-none" />
+      <BeeGlyph className="absolute bottom-20 right-[10%] opacity-5 pointer-events-none" />
 
       <div className="relative max-w-3xl mx-auto px-6 text-center">
         {/* Status badge */}

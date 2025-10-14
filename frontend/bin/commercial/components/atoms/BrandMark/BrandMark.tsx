@@ -22,7 +22,7 @@ export function BrandMark({ size = 'md', className, priority = false }: BrandMar
 
   return (
     <Image
-      src="/brand/bee-mark.svg"
+      src="/illustrations/bee-mark.svg"
       width={pixels}
       height={pixels}
       priority={priority}

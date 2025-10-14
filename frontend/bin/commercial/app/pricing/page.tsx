@@ -7,7 +7,7 @@ import { EmailCapture } from '@/components/organisms/EmailCapture/EmailCapture'
 
 export default function PricingPage() {
   return (
-    <div className="pt-16">
+    <>
       <PricingHero />
       <PricingSection variant="pricing" showKicker={false} showEditorialImage={false} />
       <PricingComparison />
@@ -21,6 +21,6 @@ export default function PricingPage() {
         jsonLdEnabled={true}
       />
       <EmailCapture />
-    </div>
+    </>
   )
 }
