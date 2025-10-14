@@ -14,7 +14,7 @@ import { Footer } from '@/components/organisms/Footer/Footer'
 
 export default function EnterprisePage() {
   return (
-    <main className="min-h-screen bg-slate-950 pt-16">
+    <main className="min-h-screen bg-slate-950">
       <EnterpriseHero />
       <EmailCapture />
       <EnterpriseProblem />

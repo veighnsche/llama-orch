@@ -1,4 +1,4 @@
-import { Shield, Lock, Eye, Server, Clock } from 'lucide-react'
+import { Shield, Lock, Eye, Server, Clock, KeyRound } from 'lucide-react'
 import Image from 'next/image'
 import { SecurityCrate } from '@/components/molecules/SecurityCrate/SecurityCrate'
 
@@ -26,8 +26,8 @@ export function EnterpriseSecurity() {
             Enterprise-Grade Security
           </h2>
           <p className="mx-auto max-w-3xl text-balance text-xl text-foreground/85">
-            Five specialized security crates harden every layer—from auth and inputs to secrets, auditing, and
-            time-bounded execution.
+            Six specialized security crates harden every layer—from auth and inputs to secrets, auditing,
+            JWT lifecycle, and time-bounded execution.
           </p>
         </div>
 
@@ -90,6 +90,20 @@ export function EnterpriseSecurity() {
           />
 
           <SecurityCrate
+            icon={<KeyRound className="h-6 w-6" aria-hidden="true" />}
+            title="jwt-guardian: Token Lifecycle Manager"
+            subtitle="Stateless Yet Secure"
+            intro="RS256 signature validation with clock-skew tolerance. Revocation lists and short-lived refresh tokens."
+            bullets={[
+              'RS256/ES256 signature validation',
+              'Clock-skew tolerance (±5 min)',
+              'Revocation list (Redis-backed)',
+              'Short-lived refresh tokens (15 min)',
+            ]}
+            docsHref="/docs/security/jwt-guardian"
+          />
+
+          <SecurityCrate
             icon={<Clock className="h-6 w-6" aria-hidden="true" />}
             title="deadline-propagation: Performance Enforcer"
             subtitle="Every Millisecond Counts"
@@ -101,7 +115,6 @@ export function EnterpriseSecurity() {
               'Timeout responses (504 Gateway Timeout)',
             ]}
             docsHref="/docs/security/deadline-propagation"
-            className="lg:col-span-2"
           />
         </div>
 

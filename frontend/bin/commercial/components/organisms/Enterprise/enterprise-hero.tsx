@@ -146,7 +146,7 @@ export function EnterpriseHero() {
           </div>
 
           {/* Right: Audit Console Visual */}
-          <div className="animate-in fade-in-50 slide-in-from-right-2 flex items-center justify-center [animation-delay:150ms]">
+          <div className="animate-in fade-in-50 slide-in-from-right-2 flex items-center justify-center pb-12 [animation-delay:150ms]">
             <div className="relative w-full max-w-lg lg:sticky lg:top-24">
               {/* Immutable Audit Trail Console */}
               <div className="rounded-xl border border-border bg-card p-6 shadow-2xl">

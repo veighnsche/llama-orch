@@ -24,6 +24,7 @@ members = [
     "bin/shared-crates/gpu-info",
     "bin/shared-crates/input-validation",
     "bin/shared-crates/input-validation/bdd",
+    "bin/shared-crates/jwt-guardian",
     "bin/shared-crates/narration-core",
     "bin/shared-crates/narration-core/bdd",
     "bin/shared-crates/narration-macros",
