@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 import { TestimonialCard } from '@/components/molecules/TestimonialCard/TestimonialCard'
-import { StatTile } from '@/components/molecules/StatTile/StatTile'
+import { StatsGrid } from '@/components/molecules/StatsGrid/StatsGrid'
 import { TESTIMONIALS, TESTIMONIAL_STATS, type Sector } from '@/data/testimonials'
 
 export interface TestimonialsRailProps {
@@ -60,10 +60,15 @@ export function TestimonialsRail({
 
       {/* Stats */}
       {showStats && (
-        <div className="mt-12 grid gap-6 md:grid-cols-4 animate-in fade-in-50" style={{ animationDelay: '200ms' }}>
-          {TESTIMONIAL_STATS.map((stat) => (
-            <StatTile key={stat.id} value={stat.value} label={stat.label} />
-          ))}
+        <div className="mt-12 animate-in fade-in-50" style={{ animationDelay: '200ms' }}>
+          <StatsGrid
+            variant="tiles"
+            columns={4}
+            stats={TESTIMONIAL_STATS.map((stat) => ({
+              value: stat.value,
+              label: stat.label,
+            }))}
+          />
         </div>
       )}
     </section>

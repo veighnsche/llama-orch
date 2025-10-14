@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { ArrowRight, Shield, Zap, Cpu } from 'lucide-react'
-import { SectionContainer, StatCard, IconBox } from '@/components/molecules'
+import { SectionContainer, StatsGrid, IconBox } from '@/components/molecules'
 import {
   Badge,
   Button,
@@ -82,17 +82,16 @@ export function WhatIsRbee() {
           </ul>
 
           {/* Stat cards grid */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 pt-4">
-            <Card className="p-4 motion-safe:transition motion-safe:shadow-sm motion-safe:hover:shadow-md motion-safe:hover:-translate-y-0.5">
-              <StatCard value="$0" label="No API fees (electricity only)" size="lg" />
-            </Card>
-            <Card className="p-4 motion-safe:transition motion-safe:shadow-sm motion-safe:hover:shadow-md motion-safe:hover:-translate-y-0.5">
-              <StatCard value="100%" label="Your code never leaves your network" size="lg" />
-            </Card>
-            <Card className="p-4 motion-safe:transition motion-safe:shadow-sm motion-safe:hover:shadow-md motion-safe:hover:-translate-y-0.5">
-              <StatCard value="All" label="CUDA · Metal · CPU — orchestrated" size="lg" />
-            </Card>
-          </div>
+          <StatsGrid
+            variant="cards"
+            columns={3}
+            className="pt-4"
+            stats={[
+              { value: '$0', label: 'No API fees (electricity only)' },
+              { value: '100%', label: 'Your code never leaves your network' },
+              { value: 'All', label: 'CUDA · Metal · CPU — orchestrated' },
+            ]}
+          />
 
           {/* Closing micro-copy */}
           <p className="text-base text-muted-foreground leading-relaxed max-w-prose">

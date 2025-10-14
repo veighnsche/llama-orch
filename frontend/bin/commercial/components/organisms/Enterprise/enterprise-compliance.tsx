@@ -10,7 +10,7 @@ export function EnterpriseCompliance() {
       id="compliance"
       aria-labelledby="compliance-h2"
       role="region"
-      className="relative border-b border-border bg-[radial-gradient(60rem_40rem_at_50%_-10%,theme(colors.primary/7),transparent)] px-6 py-24"
+      className="relative border-b border-border bg-radial-glow px-6 py-24"
     >
       {/* Decorative background illustration */}
       <Image

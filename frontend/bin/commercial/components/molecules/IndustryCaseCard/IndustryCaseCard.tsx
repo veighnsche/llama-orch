@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { IconPlate } from '@/components/molecules/IconPlate/IconPlate'
 
 export interface IndustryCaseCardProps {
   /** Icon element (e.g., Building2, Heart, Scale, Shield) */
@@ -52,9 +53,7 @@ export function IndustryCaseCard({
     >
       {/* Header */}
       <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 p-3 text-primary">
-          {icon}
-        </div>
+        <IconPlate icon={icon} size="lg" tone="primary" className="shrink-0" />
         <div className="flex-1">
           <h3 id={industryId} className="text-xl font-bold text-foreground">
             {industry}

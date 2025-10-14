@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import Link from 'next/link'
 import { CheckItem } from '@/components/atoms/CheckItem/CheckItem'
+import { IconPlate } from '@/components/molecules/IconPlate/IconPlate'
 import { cn } from '@/lib/utils'
 
 export interface SecurityCrateProps {
@@ -49,14 +50,12 @@ export function SecurityCrate({
     >
       {/* Header */}
       <div className="mb-4 flex items-center gap-3">
-        <div
-          className={cn(
-            'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl p-3',
-            tone === 'primary' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
-          )}
-        >
-          {icon}
-        </div>
+        <IconPlate
+          icon={icon}
+          size="lg"
+          tone={tone === 'neutral' ? 'muted' : 'primary'}
+          className="shrink-0"
+        />
         <div className="flex-1">
           <h3 id={titleId} className="text-xl font-bold text-foreground">
             {title}

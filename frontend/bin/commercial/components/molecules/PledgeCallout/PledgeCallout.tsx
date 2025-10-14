@@ -3,6 +3,7 @@
 import { Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { IconPlate } from '@/components/molecules/IconPlate/IconPlate'
 
 export interface PledgeCalloutProps {
   /** Additional CSS classes */
@@ -14,9 +15,12 @@ export function PledgeCallout({ className }: PledgeCalloutProps) {
     <div className={cn('rounded-2xl border bg-card p-6 md:p-7 shadow-sm', className)}>
       <div className="flex gap-4 items-start">
         {/* Icon */}
-        <div className="h-9 w-9 rounded-full bg-accent/20 flex items-center justify-center shrink-0" aria-hidden="true">
-          <Shield className="size-5 text-chart-2" aria-hidden="true" />
-        </div>
+        <IconPlate
+          icon={<Shield className="size-5" aria-hidden="true" />}
+          size="md"
+          shape="circle"
+          className="shrink-0 bg-accent/20 text-chart-2"
+        />
         
         {/* Content */}
         <div className="flex-1 space-y-1">

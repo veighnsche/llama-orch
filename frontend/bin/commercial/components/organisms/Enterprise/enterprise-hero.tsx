@@ -1,6 +1,6 @@
 import { Button } from '@/components/atoms/Button/Button'
 import { Badge } from '@/components/atoms/Badge/Badge'
-import { StatTile } from '@/components/molecules/StatTile/StatTile'
+import { StatsGrid } from '@/components/molecules/StatsGrid/StatsGrid'
 import { ComplianceChip } from '@/components/molecules/ComplianceChip/ComplianceChip'
 import { Shield, Lock, FileCheck, Filter } from 'lucide-react'
 import Link from 'next/link'
@@ -82,23 +82,28 @@ export function EnterpriseHero() {
             </p>
 
             {/* Proof Tiles */}
-            <div className="animate-in fade-in-50 mb-8 grid grid-cols-3 gap-4 [animation-delay:120ms]">
-              <StatTile
-                value="100%"
-                label="GDPR Compliant"
-                helpText="Full compliance with EU General Data Protection Regulation"
-              />
-              <StatTile
-                value="7 Years"
-                label="Audit Retention"
-                helpText="Immutable audit logs retained for 7 years per GDPR requirements"
-              />
-              <StatTile
-                value="Zero"
-                label="US Cloud Deps"
-                helpText="No dependencies on US cloud providers; EU-native infrastructure"
-              />
-            </div>
+            <StatsGrid
+              variant="tiles"
+              columns={3}
+              className="animate-in fade-in-50 mb-8 [animation-delay:120ms]"
+              stats={[
+                {
+                  value: '100%',
+                  label: 'GDPR Compliant',
+                  helpText: 'Full compliance with EU General Data Protection Regulation',
+                },
+                {
+                  value: '7 Years',
+                  label: 'Audit Retention',
+                  helpText: 'Immutable audit logs retained for 7 years per GDPR requirements',
+                },
+                {
+                  value: 'Zero',
+                  label: 'US Cloud Deps',
+                  helpText: 'No dependencies on US cloud providers; EU-native infrastructure',
+                },
+              ]}
+            />
 
             {/* Primary CTAs */}
             <div className="mb-6 flex flex-wrap gap-4">

@@ -1,4 +1,5 @@
 import { Button } from '@/components/atoms/Button/Button'
+import { StatsGrid } from '@/components/molecules/StatsGrid/StatsGrid'
 import { ArrowRight, Zap, Clock, Shield, Wallet } from 'lucide-react'
 import Image from 'next/image'
 
@@ -70,37 +71,29 @@ export function CTASectionProviders() {
         {/* Reassurance Bar */}
         <div
           id="providers-cta-reassurance"
-          className="animate-in fade-in-50 [animation-delay:200ms] mt-10 grid gap-5 text-sm text-muted-foreground motion-reduce:animate-none sm:grid-cols-3"
+          className="animate-in fade-in-50 [animation-delay:200ms] mt-10 text-sm text-muted-foreground motion-reduce:animate-none"
         >
-          <div className="rounded-xl border border-border/60 bg-card/40 p-4">
-            <div className="mb-2 flex justify-center">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
-              </div>
-            </div>
-            <div className="font-medium text-foreground">&lt; 15 minutes</div>
-            <div className="text-xs">Setup time</div>
-          </div>
-
-          <div className="rounded-xl border border-border/60 bg-card/40 p-4">
-            <div className="mb-2 flex justify-center">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                <Shield className="h-4 w-4 text-primary" aria-hidden="true" />
-              </div>
-            </div>
-            <div className="font-medium text-foreground">15% platform fee</div>
-            <div className="text-xs">You keep 85%</div>
-          </div>
-
-          <div className="rounded-xl border border-border/60 bg-card/40 p-4">
-            <div className="mb-2 flex justify-center">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                <Wallet className="h-4 w-4 text-primary" aria-hidden="true" />
-              </div>
-            </div>
-            <div className="font-medium text-foreground">€25 minimum</div>
-            <div className="text-xs">Weekly payouts</div>
-          </div>
+          <StatsGrid
+            variant="inline"
+            columns={3}
+            stats={[
+              {
+                icon: <Clock className="h-4 w-4 text-primary" aria-hidden="true" />,
+                value: '< 15 minutes',
+                label: 'Setup time',
+              },
+              {
+                icon: <Shield className="h-4 w-4 text-primary" aria-hidden="true" />,
+                value: '15% platform fee',
+                label: 'You keep 85%',
+              },
+              {
+                icon: <Wallet className="h-4 w-4 text-primary" aria-hidden="true" />,
+                value: '€25 minimum',
+                label: 'Weekly payouts',
+              },
+            ]}
+          />
         </div>
       </div>
     </section>

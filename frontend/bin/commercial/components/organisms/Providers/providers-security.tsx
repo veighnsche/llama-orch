@@ -1,5 +1,6 @@
 import { Shield, Lock, Eye, FileCheck, LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { IconPlate } from '@/components/molecules/IconPlate/IconPlate'
 
 type SecurityPoint = string
 
@@ -50,9 +51,11 @@ export function SecuritySection({ kicker, title, subtitle, items, ribbon }: Secu
                 )}
               >
                 <div className="mb-5 flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-400/10">
-                    <Icon className="h-6 w-6 text-emerald-400" aria-hidden="true" />
-                  </div>
+                  <IconPlate
+                    icon={<Icon className="h-6 w-6" aria-hidden="true" />}
+                    size="lg"
+                    className="bg-emerald-400/10 text-emerald-400"
+                  />
                   <div>
                     <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
                     {item.subtitle && <div className="text-xs text-muted-foreground">{item.subtitle}</div>}

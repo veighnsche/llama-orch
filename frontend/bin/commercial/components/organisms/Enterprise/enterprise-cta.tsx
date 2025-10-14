@@ -12,7 +12,7 @@ export function EnterpriseCTA() {
     >
       {/* Decorative Gradient */}
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(60rem_40rem_at_50%_-10%,theme(colors.primary/6),transparent)]"
+        className="pointer-events-none absolute inset-0 bg-radial-glow"
         aria-hidden="true"
       />
 

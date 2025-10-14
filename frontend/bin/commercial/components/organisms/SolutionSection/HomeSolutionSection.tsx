@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
-import { BeeArchitecture, type BeeTopology } from '@/components/molecules'
+import { BeeArchitecture, type BeeTopology, IconPlate } from '@/components/molecules'
 
 export type Benefit = {
   icon: ReactNode
@@ -39,9 +39,7 @@ export function HomeSolutionSection({ title, subtitle, benefits, topology, id, c
               key={idx}
               className="group rounded-lg border border-border bg-card p-6 transition-all hover:border-primary/50 hover:bg-card/80"
             >
-              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                {benefit.icon}
-              </div>
+              <IconPlate icon={benefit.icon} size="lg" tone="primary" className="mb-4" />
               <h3 className="mb-2 text-lg font-semibold text-card-foreground">{benefit.title}</h3>
               <p className="text-balance text-sm leading-relaxed text-muted-foreground">{benefit.body}</p>
             </div>

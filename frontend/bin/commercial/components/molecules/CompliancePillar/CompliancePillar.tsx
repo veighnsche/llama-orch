@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { IconPlate } from '@/components/molecules/IconPlate/IconPlate'
 
 export interface CompliancePillarProps {
   /** Icon element (e.g., Globe, Shield, Lock) */
@@ -42,9 +43,7 @@ export function CompliancePillar({
     >
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 p-3 text-primary">
-          {icon}
-        </div>
+        <IconPlate icon={icon} size="lg" tone="primary" className="shrink-0" />
         <div>
           <h3 id={titleId} className="text-2xl font-bold text-foreground">
             {title}

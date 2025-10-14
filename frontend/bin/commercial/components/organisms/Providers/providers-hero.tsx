@@ -3,6 +3,7 @@
 import { Button } from '@/components/atoms/Button/Button'
 import { Badge } from '@/components/atoms/Badge/Badge'
 import { ProgressBar } from '@/components/molecules/ProgressBar/ProgressBar'
+import { StatsGrid } from '@/components/molecules/StatsGrid/StatsGrid'
 import { ArrowRight, Zap, DollarSign, Shield, Clock } from 'lucide-react'
 import Link from 'next/link'
 
@@ -41,43 +42,28 @@ export function ProvidersHero() {
             </p>
 
             {/* Value bullets (stat pills) */}
-            <div className="mb-6 grid gap-3 sm:grid-cols-3">
-              <div className="group rounded-lg border border-border/70 bg-background/60 p-4 backdrop-blur transition-all supports-[backdrop-filter]:bg-background/50 hover:border-primary/40 hover:bg-background/80">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/20">
-                    <DollarSign className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <div className="tabular-nums text-xl font-bold text-foreground">€50–200</div>
-                    <div className="text-xs text-muted-foreground">per GPU / month</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="group rounded-lg border border-border/70 bg-background/60 p-4 backdrop-blur transition-all supports-[backdrop-filter]:bg-background/50 hover:border-primary/40 hover:bg-background/80">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/20">
-                    <Clock className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <div className="tabular-nums text-xl font-bold text-foreground">24/7</div>
-                    <div className="text-xs text-muted-foreground">Passive income</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="group rounded-lg border border-border/70 bg-background/60 p-4 backdrop-blur transition-all supports-[backdrop-filter]:bg-background/50 hover:border-primary/40 hover:bg-background/80">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/20">
-                    <Shield className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <div className="tabular-nums text-xl font-bold text-foreground">100%</div>
-                    <div className="text-xs text-muted-foreground">Secure payouts</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <StatsGrid
+              variant="pills"
+              columns={3}
+              className="mb-6"
+              stats={[
+                {
+                  icon: <DollarSign className="h-4 w-4 text-primary" />,
+                  value: '€50–200',
+                  label: 'per GPU / month',
+                },
+                {
+                  icon: <Clock className="h-4 w-4 text-primary" />,
+                  value: '24/7',
+                  label: 'Passive income',
+                },
+                {
+                  icon: <Shield className="h-4 w-4 text-primary" />,
+                  value: '100%',
+                  label: 'Secure payouts',
+                },
+              ]}
+            />
 
             {/* Primary CTAs */}
             <div className="mb-5 flex flex-col gap-3 sm:flex-row">

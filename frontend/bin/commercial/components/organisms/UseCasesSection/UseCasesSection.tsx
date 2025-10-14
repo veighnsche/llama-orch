@@ -2,6 +2,7 @@ import { type ComponentType } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/atoms/Badge/Badge'
+import { IconPlate } from '@/components/molecules/IconPlate/IconPlate'
 
 export type UseCase = {
   icon: ComponentType<{ className?: string }>
@@ -60,12 +61,7 @@ export function UseCasesSection({
               >
                 {/* Header row */}
                 <div className="mb-4 flex items-center gap-3">
-                  <div
-                    className="grid h-9 w-9 place-content-center rounded-md bg-primary/10 text-primary"
-                    aria-hidden="true"
-                  >
-                    <Icon className="h-5 w-5" />
-                  </div>
+                  <IconPlate icon={<Icon className="h-5 w-5" />} size="md" tone="primary" />
                   <h3 className="text-base font-semibold tracking-tight text-card-foreground">{item.title}</h3>
                 </div>
 

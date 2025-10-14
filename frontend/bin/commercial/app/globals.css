@@ -135,6 +135,26 @@
   }
 }
 
+@layer utilities {
+  /* Gradient utilities for consistent backgrounds */
+  .bg-radial-glow {
+    background: radial-gradient(60rem 40rem at 50% -10%, hsl(var(--primary) / 0.07) 0%, transparent 100%);
+  }
+
+  .bg-section-gradient {
+    background: linear-gradient(to bottom, hsl(var(--background)), hsl(var(--card)));
+  }
+
+  .bg-section-gradient-primary {
+    background: linear-gradient(
+      to bottom,
+      hsl(var(--background)),
+      hsl(var(--primary) / 0.05),
+      hsl(var(--card))
+    );
+  }
+}
+
 @keyframes td-dash {
   to {
     stroke-dashoffset: -100;

@@ -1,13 +1,6 @@
 import { Users, Cpu, TrendingUp, Star } from 'lucide-react'
 import { TestimonialsRail } from '@/components/organisms/TestimonialsRail/TestimonialsRail'
-import { StatCard } from '@/components/molecules/StatCard/StatCard'
-
-const PROVIDER_STATS = [
-  { value: '500+', label: 'Active Providers', icon: Users },
-  { value: '2,000+', label: 'GPUs Earning', icon: Cpu },
-  { value: '€180K+', label: 'Paid to Providers', icon: TrendingUp },
-  { value: '4.8/5', label: 'Average Rating', icon: Star },
-]
+import { StatsGrid } from '@/components/molecules/StatsGrid/StatsGrid'
 
 export function SocialProofSection() {
   return (
@@ -45,24 +38,33 @@ export function SocialProofSection() {
         </div>
 
         {/* Stats Strip */}
-        <div className="animate-in fade-in-50 slide-in-from-bottom-2 delay-300 grid gap-6 motion-reduce:animate-none md:grid-cols-4">
-          {PROVIDER_STATS.map((stat) => {
-            const Icon = stat.icon
-            return (
-              <div
-                key={stat.label}
-                className="group rounded-xl border border-border bg-gradient-to-b from-card to-background p-4 text-center transition-all hover:border-primary/30 hover:shadow-sm md:p-5"
-              >
-                <div className="mb-3 flex justify-center">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
-                  </div>
-                </div>
-                <StatCard value={stat.value} label={stat.label} size="md" />
-              </div>
-            )
-          })}
-        </div>
+        <StatsGrid
+          variant="cards"
+          columns={4}
+          className="animate-in fade-in-50 slide-in-from-bottom-2 delay-300 motion-reduce:animate-none"
+          stats={[
+            {
+              icon: <Users className="h-5 w-5 text-primary" aria-hidden="true" />,
+              value: '500+',
+              label: 'Active Providers',
+            },
+            {
+              icon: <Cpu className="h-5 w-5 text-primary" aria-hidden="true" />,
+              value: '2,000+',
+              label: 'GPUs Earning',
+            },
+            {
+              icon: <TrendingUp className="h-5 w-5 text-primary" aria-hidden="true" />,
+              value: '€180K+',
+              label: 'Paid to Providers',
+            },
+            {
+              icon: <Star className="h-5 w-5 text-primary" aria-hidden="true" />,
+              value: '4.8/5',
+              label: 'Average Rating',
+            },
+          ]}
+        />
       </div>
     </section>
   )

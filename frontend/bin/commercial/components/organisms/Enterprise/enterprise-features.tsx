@@ -3,7 +3,7 @@ import { FeatureCard } from '@/components/molecules/FeatureCard/FeatureCard'
 
 const FEATURES = [
   {
-    icon: Shield,
+    icon: <Shield />,
     title: 'Enterprise SLAs',
     intro: '99.9% uptime with 24/7 support and 1-hour response. Dedicated manager and quarterly reviews.',
     bullets: [
@@ -14,7 +14,7 @@ const FEATURES = [
     ],
   },
   {
-    icon: Users,
+    icon: <Users />,
     title: 'White-Label Option',
     intro: 'Run rbee as your brand—custom domain, UI, and endpoints.',
     bullets: [
@@ -25,7 +25,7 @@ const FEATURES = [
     ],
   },
   {
-    icon: Wrench,
+    icon: <Wrench />,
     title: 'Professional Services',
     intro: 'Deployment, integration, optimization, and training from our team.',
     bullets: [
@@ -36,7 +36,7 @@ const FEATURES = [
     ],
   },
   {
-    icon: Globe,
+    icon: <Globe />,
     title: 'Multi-Region Support',
     intro: 'EU multi-region for redundancy and compliance: failover + load balancing.',
     bullets: [
@@ -56,7 +56,7 @@ export function EnterpriseFeatures() {
     >
       {/* Decorative Gradient */}
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(60rem_40rem_at_50%_-10%,theme(colors.primary/7),transparent)]"
+        className="pointer-events-none absolute inset-0 bg-radial-glow"
         aria-hidden="true"
       />
 
