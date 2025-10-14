@@ -1,14 +1,14 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { Navigation } from './Navigation';
+import type { Meta, StoryObj } from '@storybook/react'
+import { Navigation } from './Navigation'
 
 const meta = {
-  title: 'Organisms/Navigation',
-  component: Navigation,
-  parameters: {
-    layout: 'fullscreen',
-    docs: {
-      description: {
-        component: `
+	title: 'Organisms/Navigation',
+	component: Navigation,
+	parameters: {
+		layout: 'fullscreen',
+		docs: {
+			description: {
+				component: `
 ## Overview
 The Navigation component is the primary navigation bar for the rbee application. It provides a fixed header with logo, navigation links, theme toggle, and call-to-action button. On mobile devices, it transforms into a hamburger menu with a slide-out drawer.
 
@@ -63,95 +63,103 @@ import { Navigation } from '@rbee/ui/organisms/Navigation'
 - **Screen Readers**: All interactive elements properly labeled
 - **Color Contrast**: Meets WCAG AA standards in both light and dark modes
         `,
-      },
-    },
-  },
-  tags: ['autodocs'],
-} satisfies Meta<typeof Navigation>;
+			},
+		},
+	},
+	tags: ['autodocs'],
+} satisfies Meta<typeof Navigation>
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: 'Default desktop navigation with all links and actions visible.',
-      },
-    },
-  },
-};
+	parameters: {
+		docs: {
+			description: {
+				story: 'Default desktop navigation with all links and actions visible.',
+			},
+		},
+	},
+}
 
 export const MobileView: Story = {
-  parameters: {
-    viewport: {
-      defaultViewport: 'mobile1',
-    },
-    docs: {
-      description: {
-        story: 'Mobile view with hamburger menu. Click the menu icon to see the slide-out drawer.',
-      },
-    },
-  },
-};
+	parameters: {
+		viewport: {
+			defaultViewport: 'mobile1',
+		},
+		docs: {
+			description: {
+				story: 'Mobile view with hamburger menu. Click the menu icon to see the slide-out drawer.',
+			},
+		},
+	},
+}
 
 export const TabletView: Story = {
-  parameters: {
-    viewport: {
-      defaultViewport: 'tablet',
-    },
-    docs: {
-      description: {
-        story: 'Tablet view showing responsive breakpoint behavior.',
-      },
-    },
-  },
-};
+	parameters: {
+		viewport: {
+			defaultViewport: 'tablet',
+		},
+		docs: {
+			description: {
+				story: 'Tablet view showing responsive breakpoint behavior.',
+			},
+		},
+	},
+}
 
 export const WithScrolledPage: Story = {
-  render: () => (
-    <div>
-      <Navigation />
-      <div style={{ height: '200vh', padding: '5rem 2rem', background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.05))' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Page Content</h1>
-        <p style={{ marginBottom: '1rem' }}>Scroll down to see the navigation bar remain fixed at the top with backdrop blur effect.</p>
-        <p>The navigation uses a semi-transparent background with backdrop blur for a modern glass-morphism effect.</p>
-      </div>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Navigation with page content to demonstrate fixed positioning and backdrop blur effect.',
-      },
-    },
-  },
-};
+	render: () => (
+		<div>
+			<Navigation />
+			<div
+				style={{
+					height: '200vh',
+					padding: '5rem 2rem',
+					background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.05))',
+				}}
+			>
+				<h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Page Content</h1>
+				<p style={{ marginBottom: '1rem' }}>
+					Scroll down to see the navigation bar remain fixed at the top with backdrop blur effect.
+				</p>
+				<p>The navigation uses a semi-transparent background with backdrop blur for a modern glass-morphism effect.</p>
+			</div>
+		</div>
+	),
+	parameters: {
+		docs: {
+			description: {
+				story: 'Navigation with page content to demonstrate fixed positioning and backdrop blur effect.',
+			},
+		},
+	},
+}
 
 export const FocusStates: Story = {
-  render: () => (
-    <div>
-      <Navigation />
-      <div style={{ padding: '5rem 2rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Keyboard Navigation Test</h2>
-        <p style={{ marginBottom: '1rem' }}>Press Tab to navigate through the navigation elements:</p>
-        <ol style={{ listStyle: 'decimal', paddingLeft: '2rem', lineHeight: '1.8' }}>
-          <li>Skip to content link (appears on focus)</li>
-          <li>Brand logo</li>
-          <li>Navigation links (Features, Use Cases, etc.)</li>
-          <li>GitHub icon button</li>
-          <li>Theme toggle</li>
-          <li>Join Waitlist button</li>
-        </ol>
-        <p style={{ marginTop: '1rem', color: '#666' }}>All elements should have visible focus indicators.</p>
-      </div>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Test keyboard navigation and focus states. Use Tab key to navigate through all interactive elements.',
-      },
-    },
-  },
-};
+	render: () => (
+		<div>
+			<Navigation />
+			<div style={{ padding: '5rem 2rem' }}>
+				<h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Keyboard Navigation Test</h2>
+				<p style={{ marginBottom: '1rem' }}>Press Tab to navigate through the navigation elements:</p>
+				<ol style={{ listStyle: 'decimal', paddingLeft: '2rem', lineHeight: '1.8' }}>
+					<li>Skip to content link (appears on focus)</li>
+					<li>Brand logo</li>
+					<li>Navigation links (Features, Use Cases, etc.)</li>
+					<li>GitHub icon button</li>
+					<li>Theme toggle</li>
+					<li>Join Waitlist button</li>
+				</ol>
+				<p style={{ marginTop: '1rem', color: '#666' }}>All elements should have visible focus indicators.</p>
+			</div>
+		</div>
+	),
+	parameters: {
+		docs: {
+			description: {
+				story: 'Test keyboard navigation and focus states. Use Tab key to navigate through all interactive elements.',
+			},
+		},
+	},
+}

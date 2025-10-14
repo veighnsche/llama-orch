@@ -1,15 +1,15 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { ProblemSection } from './ProblemSection';
-import { AlertTriangle, DollarSign, Lock, Cloud, TrendingDown, Shield } from 'lucide-react';
+import type { Meta, StoryObj } from '@storybook/react'
+import { AlertTriangle, Cloud, DollarSign, Lock, Shield, TrendingDown } from 'lucide-react'
+import { ProblemSection } from './ProblemSection'
 
 const meta = {
-  title: 'Organisms/ProblemSection',
-  component: ProblemSection,
-  parameters: {
-    layout: 'fullscreen',
-    docs: {
-      description: {
-        component: `
+	title: 'Organisms/ProblemSection',
+	component: ProblemSection,
+	parameters: {
+		layout: 'fullscreen',
+		docs: {
+			description: {
+				component: `
 ## Overview
 The ProblemSection displays a grid of problem cards to highlight pain points and challenges. It uses visual hierarchy with icons, tone-based styling, optional loss tags, and a CTA banner to drive action.
 
@@ -100,164 +100,165 @@ import { AlertTriangle, DollarSign, Lock } from 'lucide-react'
 - **Color Contrast**: Meets WCAG AA standards in both themes
 - **ARIA**: Icons marked as aria-hidden
         `,
-      },
-    },
-  },
-  tags: ['autodocs'],
-  argTypes: {
-    title: {
-      control: 'text',
-      description: 'Section title',
-      table: {
-        type: { summary: 'string' },
-        category: 'Content',
-      },
-    },
-    subtitle: {
-      control: 'text',
-      description: 'Section subtitle',
-      table: {
-        type: { summary: 'string' },
-        category: 'Content',
-      },
-    },
-    kicker: {
-      control: 'text',
-      description: 'Small text above title',
-      table: {
-        type: { summary: 'string' },
-        category: 'Content',
-      },
-    },
-  },
-} satisfies Meta<typeof ProblemSection>;
+			},
+		},
+	},
+	tags: ['autodocs'],
+	argTypes: {
+		title: {
+			control: 'text',
+			description: 'Section title',
+			table: {
+				type: { summary: 'string' },
+				category: 'Content',
+			},
+		},
+		subtitle: {
+			control: 'text',
+			description: 'Section subtitle',
+			table: {
+				type: { summary: 'string' },
+				category: 'Content',
+			},
+		},
+		kicker: {
+			control: 'text',
+			description: 'Small text above title',
+			table: {
+				type: { summary: 'string' },
+				category: 'Content',
+			},
+		},
+	},
+} satisfies Meta<typeof ProblemSection>
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: 'Default problem section with three problems and CTA banner. Use the theme toggle in the toolbar to switch between light and dark modes.',
-      },
-    },
-  },
-};
+	parameters: {
+		docs: {
+			description: {
+				story:
+					'Default problem section with three problems and CTA banner. Use the theme toggle in the toolbar to switch between light and dark modes.',
+			},
+		},
+	},
+}
 
 export const WithoutCTA: Story = {
-  args: {
-    ctaPrimary: undefined,
-    ctaSecondary: undefined,
-    ctaCopy: undefined,
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Problem section without CTA banner, showing only the problem cards.',
-      },
-    },
-  },
-};
+	args: {
+		ctaPrimary: undefined,
+		ctaSecondary: undefined,
+		ctaCopy: undefined,
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'Problem section without CTA banner, showing only the problem cards.',
+			},
+		},
+	},
+}
 
 export const CustomProblems: Story = {
-  args: {
-    kicker: 'Common Challenges',
-    title: 'Why cloud AI is risky',
-    subtitle: 'Relying on external providers creates dependencies you can\'t control',
-    items: [
-      {
-        title: 'Vendor lock-in',
-        body: 'Your entire codebase depends on proprietary APIs. Switching providers means rewriting everything.',
-        icon: Lock,
-        tone: 'destructive' as const,
-        tag: 'High risk',
-      },
-      {
-        title: 'Unpredictable costs',
-        body: 'Usage-based pricing scales exponentially. What starts at $20/month becomes $2000/month.',
-        icon: TrendingDown,
-        tone: 'primary' as const,
-        tag: 'Loss €180/mo',
-      },
-      {
-        title: 'Data privacy concerns',
-        body: 'Your code and prompts are sent to external servers. Compliance becomes a nightmare.',
-        icon: Shield,
-        tone: 'destructive' as const,
-      },
-    ],
-    ctaPrimary: { label: 'Host Your Own', href: '/signup' },
-    ctaSecondary: { label: 'Compare Options', href: '/pricing' },
-    ctaCopy: 'Run AI on your own infrastructure and eliminate these risks',
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Custom problem items with different icons, tones, and tags.',
-      },
-    },
-  },
-};
+	args: {
+		kicker: 'Common Challenges',
+		title: 'Why cloud AI is risky',
+		subtitle: "Relying on external providers creates dependencies you can't control",
+		items: [
+			{
+				title: 'Vendor lock-in',
+				body: 'Your entire codebase depends on proprietary APIs. Switching providers means rewriting everything.',
+				icon: Lock,
+				tone: 'destructive' as const,
+				tag: 'High risk',
+			},
+			{
+				title: 'Unpredictable costs',
+				body: 'Usage-based pricing scales exponentially. What starts at $20/month becomes $2000/month.',
+				icon: TrendingDown,
+				tone: 'primary' as const,
+				tag: 'Loss €180/mo',
+			},
+			{
+				title: 'Data privacy concerns',
+				body: 'Your code and prompts are sent to external servers. Compliance becomes a nightmare.',
+				icon: Shield,
+				tone: 'destructive' as const,
+			},
+		],
+		ctaPrimary: { label: 'Host Your Own', href: '/signup' },
+		ctaSecondary: { label: 'Compare Options', href: '/pricing' },
+		ctaCopy: 'Run AI on your own infrastructure and eliminate these risks',
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'Custom problem items with different icons, tones, and tags.',
+			},
+		},
+	},
+}
 
 export const MobileView: Story = {
-  parameters: {
-    viewport: {
-      defaultViewport: 'mobile1',
-    },
-    docs: {
-      description: {
-        story: 'Mobile view with stacked single-column layout.',
-      },
-    },
-  },
-};
+	parameters: {
+		viewport: {
+			defaultViewport: 'mobile1',
+		},
+		docs: {
+			description: {
+				story: 'Mobile view with stacked single-column layout.',
+			},
+		},
+	},
+}
 
 export const TabletView: Story = {
-  parameters: {
-    viewport: {
-      defaultViewport: 'tablet',
-    },
-    docs: {
-      description: {
-        story: 'Tablet view showing responsive grid behavior.',
-      },
-    },
-  },
-};
+	parameters: {
+		viewport: {
+			defaultViewport: 'tablet',
+		},
+		docs: {
+			description: {
+				story: 'Tablet view showing responsive grid behavior.',
+			},
+		},
+	},
+}
 
 export const ToneVariations: Story = {
-  args: {
-    title: 'Problem tone variations',
-    subtitle: 'Different visual treatments for different problem types',
-    items: [
-      {
-        title: 'Destructive tone',
-        body: 'Used for critical problems and risks. Red/destructive color scheme.',
-        icon: AlertTriangle,
-        tone: 'destructive' as const,
-        tag: 'Critical',
-      },
-      {
-        title: 'Primary tone',
-        body: 'Used for important problems related to cost or efficiency. Primary color scheme.',
-        icon: DollarSign,
-        tone: 'primary' as const,
-        tag: 'Important',
-      },
-      {
-        title: 'Muted tone',
-        body: 'Used for less urgent problems or informational items. Neutral color scheme.',
-        icon: Cloud,
-        tone: 'muted' as const,
-      },
-    ],
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Demonstrates the three tone options: destructive, primary, and muted.',
-      },
-    },
-  },
-};
+	args: {
+		title: 'Problem tone variations',
+		subtitle: 'Different visual treatments for different problem types',
+		items: [
+			{
+				title: 'Destructive tone',
+				body: 'Used for critical problems and risks. Red/destructive color scheme.',
+				icon: AlertTriangle,
+				tone: 'destructive' as const,
+				tag: 'Critical',
+			},
+			{
+				title: 'Primary tone',
+				body: 'Used for important problems related to cost or efficiency. Primary color scheme.',
+				icon: DollarSign,
+				tone: 'primary' as const,
+				tag: 'Important',
+			},
+			{
+				title: 'Muted tone',
+				body: 'Used for less urgent problems or informational items. Neutral color scheme.',
+				icon: Cloud,
+				tone: 'muted' as const,
+			},
+		],
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'Demonstrates the three tone options: destructive, primary, and muted.',
+			},
+		},
+	},
+}

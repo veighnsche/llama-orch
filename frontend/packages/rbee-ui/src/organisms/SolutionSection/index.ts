@@ -1,2 +1,2 @@
-export * from './SolutionSection'
 export * from './HomeSolutionSection'
+export * from './SolutionSection'

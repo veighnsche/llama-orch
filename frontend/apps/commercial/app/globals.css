@@ -1,6 +1,15 @@
 /**
- * Commercial site global styles
- * Following Turborepo pattern: import pre-built CSS from UI package
+ * 🚨 TURBOREPO GUARDRAILS - DO NOT BREAK THESE RULES 🚨
+ * 
+ * ✅ Imports Tailwind + shared config for app-specific utility classes
+ * ✅ UI package utilities are prefixed with ui: to avoid conflicts
+ * ✅ App utilities are unprefixed for direct use
+ * 
+ * See layout.tsx: import '@rbee/ui/styles.css' comes BEFORE this file
+ * See: https://github.com/vercel/turborepo/tree/main/examples/with-tailwind
  */
+
 @import 'tailwindcss';
-@import 'tw-animate-css';
+@import '@repo/tailwind-config';
+
+/* App-specific styles only - Tailwind utilities come from @rbee/ui */

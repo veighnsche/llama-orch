@@ -1,1 +1,1 @@
-export * from './AudienceSelector';
+export * from './AudienceSelector'

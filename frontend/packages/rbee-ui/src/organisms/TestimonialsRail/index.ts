@@ -1,1 +1,1 @@
-export * from './TestimonialsRail';
+export * from './TestimonialsRail'

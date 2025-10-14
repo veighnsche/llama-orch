@@ -1,2 +1,2 @@
-export * from './PricingHero'
 export * from './PricingComparison'
+export * from './PricingHero'

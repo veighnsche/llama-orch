@@ -1,1 +1,1 @@
-export * from './ComparisonTableRow';
+export * from './ComparisonTableRow'

@@ -1,1 +1,1 @@
-export * from './FooterColumn';
+export * from './FooterColumn'

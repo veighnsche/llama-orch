@@ -1,0 +1,56 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"ignoreUnknown": false
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 120,
+		"indentWidth": 2,
+		"attributePosition": "auto",
+		"bracketSameLine": false,
+		"bracketSpacing": true,
+		"expand": "auto",
+		"useEditorconfig": true,
+		"includes": [
+			"**",
+			"!**/node_modules/",
+			"!**/pnpm-lock.yaml",
+			"!**/.next/",
+			"!**/.wrangler/",
+			"!**/dist/",
+			"!**/build/",
+			"!**/cloudflare-env.d.ts",
+			"!**/next-env.d.ts",
+			"!**/*.log",
+			"!**/dev-server.log",
+			"!**/wrangler.jsonc",
+			"!**/components.json"
+		]
+	},
+	"linter": { "enabled": true, "rules": { "recommended": true } },
+	"javascript": {
+		"formatter": {
+			"jsxQuoteStyle": "double",
+			"quoteProperties": "asNeeded",
+			"trailingCommas": "all",
+			"semicolons": "asNeeded",
+			"arrowParentheses": "always",
+			"bracketSameLine": false,
+			"quoteStyle": "single",
+			"attributePosition": "auto",
+			"bracketSpacing": true
+		}
+	},
+	"html": { "formatter": { "selfCloseVoidElements": "always" } },
+	"assist": {
+		"enabled": true,
+		"actions": { "source": { "organizeImports": "on" } }
+	}
+}

@@ -1,1 +1,1 @@
-export * from './GPUListItem';
+export * from './GPUListItem'

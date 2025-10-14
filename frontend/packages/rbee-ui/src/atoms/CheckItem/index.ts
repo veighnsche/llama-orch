@@ -1,1 +1,1 @@
-export * from './CheckItem';
+export * from './CheckItem'

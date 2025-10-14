@@ -1,1 +1,1 @@
-export * from './BrandWordmark';
+export * from './BrandWordmark'

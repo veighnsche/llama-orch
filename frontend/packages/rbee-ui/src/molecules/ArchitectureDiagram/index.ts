@@ -1,1 +1,1 @@
-export * from './ArchitectureDiagram';
+export * from './ArchitectureDiagram'

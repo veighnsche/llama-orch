@@ -1,550 +1,410 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Config",
-  "type": "object",
-  "required": [
-    "pools"
-  ],
-  "properties": {
-    "catalog": {
-      "default": {},
-      "allOf": [
-        {
-          "$ref": "#/definitions/CatalogConfig"
-        }
-      ]
-    },
-    "pools": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/PoolConfig"
-      }
-    }
-  },
-  "definitions": {
-    "AdmissionConfig": {
-      "type": "object",
-      "properties": {
-        "priorities": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "$ref": "#/definitions/PriorityClass"
-          }
-        }
-      }
-    },
-    "BinaryConfig": {
-      "type": "object",
-      "properties": {
-        "checksum": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "install_dir": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "url": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
-    "CatalogConfig": {
-      "type": "object",
-      "properties": {
-        "trust_policy": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/TrustPolicyConfig"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "ContainerConfig": {
-      "type": "object",
-      "properties": {
-        "image": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "tag": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
-    "Engine": {
-      "type": "string",
-      "enum": [
-        "llamacpp",
-        "vllm",
-        "tgi",
-        "triton"
-      ]
-    },
-    "ModelConfig": {
-      "type": "object",
-      "properties": {
-        "cache_dir": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "checksum": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "ref": {
-          "description": "Model reference (e.g., HF repo/file, local path, or digest)",
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
-    "PackageConfig": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "repo": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "version": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
-    "PoolConfig": {
-      "type": "object",
-      "required": [
-        "devices",
-        "engine",
-        "id",
-        "model"
-      ],
-      "properties": {
-        "admission": {
-          "default": {
-            "priorities": null
-          },
-          "allOf": [
-            {
-              "$ref": "#/definitions/AdmissionConfig"
-            }
-          ]
-        },
-        "ctx": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "devices": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "uint32",
-            "minimum": 0.0
-          }
-        },
-        "engine": {
-          "$ref": "#/definitions/Engine"
-        },
-        "id": {
-          "type": "string"
-        },
-        "model": {
-          "type": "string"
-        },
-        "preload": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "provisioning": {
-          "default": {
-            "model": {}
-          },
-          "allOf": [
-            {
-              "$ref": "#/definitions/ProvisioningConfig"
-            }
-          ]
-        },
-        "quant": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "queue": {
-          "default": {
-            "capacity": null,
-            "full_policy": null
-          },
-          "allOf": [
-            {
-              "$ref": "#/definitions/QueueConfig"
-            }
-          ]
-        },
-        "require_same_engine_version": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "sampler_profile_version": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "tensor_split": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "number",
-            "format": "float"
-          }
-        },
-        "timeouts": {
-          "default": {
-            "idle_ms": null,
-            "wall_ms": null
-          },
-          "allOf": [
-            {
-              "$ref": "#/definitions/Timeouts"
-            }
-          ]
-        }
-      }
-    },
-    "PriorityClass": {
-      "type": "object",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "queue_capacity": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "rate_limit_rps": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "weight": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        }
-      }
-    },
-    "ProvisioningConfig": {
-      "type": "object",
-      "properties": {
-        "allow_binary_downloads": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "allow_package_installs": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "binary": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/BinaryConfig"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "container": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/ContainerConfig"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "env": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "flags": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          }
-        },
-        "mode": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/ProvisioningMode"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "model": {
-          "default": {},
-          "allOf": [
-            {
-              "$ref": "#/definitions/ModelConfig"
-            }
-          ]
-        },
-        "package": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/PackageConfig"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "ports": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "integer",
-            "format": "uint16",
-            "minimum": 0.0
-          }
-        },
-        "source": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/SourceConfig"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "ProvisioningMode": {
-      "type": "string",
-      "enum": [
-        "external",
-        "source",
-        "container",
-        "package",
-        "binary"
-      ]
-    },
-    "QueueConfig": {
-      "type": "object",
-      "properties": {
-        "capacity": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "full_policy": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
-    "SourceBuildConfig": {
-      "type": "object",
-      "properties": {
-        "cache_dir": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "cmake_flags": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          }
-        },
-        "generator": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
-    "SourceConfig": {
-      "type": "object",
-      "required": [
-        "ref",
-        "repo"
-      ],
-      "properties": {
-        "build": {
-          "default": {},
-          "allOf": [
-            {
-              "$ref": "#/definitions/SourceBuildConfig"
-            }
-          ]
-        },
-        "ref": {
-          "description": "Tag/branch/commit SHA",
-          "type": "string"
-        },
-        "repo": {
-          "description": "Git URL for the engine source (e.g., https://github.com/ggml-org/llama.cpp.git)",
-          "type": "string"
-        },
-        "submodules": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        }
-      }
-    },
-    "Timeouts": {
-      "type": "object",
-      "properties": {
-        "idle_ms": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint64",
-          "minimum": 0.0
-        },
-        "wall_ms": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint64",
-          "minimum": 0.0
-        }
-      }
-    },
-    "TrustPolicyConfig": {
-      "type": "object",
-      "properties": {
-        "allowed_registries": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          }
-        },
-        "ca_roots": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          }
-        },
-        "mode": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "require_sbom": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "require_signature": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        }
-      }
-    }
-  }
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Config",
+	"type": "object",
+	"required": ["pools"],
+	"properties": {
+		"catalog": {
+			"default": {},
+			"allOf": [
+				{
+					"$ref": "#/definitions/CatalogConfig"
+				}
+			]
+		},
+		"pools": {
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/PoolConfig"
+			}
+		}
+	},
+	"definitions": {
+		"AdmissionConfig": {
+			"type": "object",
+			"properties": {
+				"priorities": {
+					"type": ["array", "null"],
+					"items": {
+						"$ref": "#/definitions/PriorityClass"
+					}
+				}
+			}
+		},
+		"BinaryConfig": {
+			"type": "object",
+			"properties": {
+				"checksum": {
+					"type": ["string", "null"]
+				},
+				"install_dir": {
+					"type": ["string", "null"]
+				},
+				"url": {
+					"type": ["string", "null"]
+				}
+			}
+		},
+		"CatalogConfig": {
+			"type": "object",
+			"properties": {
+				"trust_policy": {
+					"anyOf": [
+						{
+							"$ref": "#/definitions/TrustPolicyConfig"
+						},
+						{
+							"type": "null"
+						}
+					]
+				}
+			}
+		},
+		"ContainerConfig": {
+			"type": "object",
+			"properties": {
+				"image": {
+					"type": ["string", "null"]
+				},
+				"tag": {
+					"type": ["string", "null"]
+				}
+			}
+		},
+		"Engine": {
+			"type": "string",
+			"enum": ["llamacpp", "vllm", "tgi", "triton"]
+		},
+		"ModelConfig": {
+			"type": "object",
+			"properties": {
+				"cache_dir": {
+					"type": ["string", "null"]
+				},
+				"checksum": {
+					"type": ["string", "null"]
+				},
+				"ref": {
+					"description": "Model reference (e.g., HF repo/file, local path, or digest)",
+					"type": ["string", "null"]
+				}
+			}
+		},
+		"PackageConfig": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": ["string", "null"]
+				},
+				"repo": {
+					"type": ["string", "null"]
+				},
+				"version": {
+					"type": ["string", "null"]
+				}
+			}
+		},
+		"PoolConfig": {
+			"type": "object",
+			"required": ["devices", "engine", "id", "model"],
+			"properties": {
+				"admission": {
+					"default": {
+						"priorities": null
+					},
+					"allOf": [
+						{
+							"$ref": "#/definitions/AdmissionConfig"
+						}
+					]
+				},
+				"ctx": {
+					"type": ["integer", "null"],
+					"format": "uint32",
+					"minimum": 0.0
+				},
+				"devices": {
+					"type": "array",
+					"items": {
+						"type": "integer",
+						"format": "uint32",
+						"minimum": 0.0
+					}
+				},
+				"engine": {
+					"$ref": "#/definitions/Engine"
+				},
+				"id": {
+					"type": "string"
+				},
+				"model": {
+					"type": "string"
+				},
+				"preload": {
+					"type": ["boolean", "null"]
+				},
+				"provisioning": {
+					"default": {
+						"model": {}
+					},
+					"allOf": [
+						{
+							"$ref": "#/definitions/ProvisioningConfig"
+						}
+					]
+				},
+				"quant": {
+					"type": ["string", "null"]
+				},
+				"queue": {
+					"default": {
+						"capacity": null,
+						"full_policy": null
+					},
+					"allOf": [
+						{
+							"$ref": "#/definitions/QueueConfig"
+						}
+					]
+				},
+				"require_same_engine_version": {
+					"type": ["boolean", "null"]
+				},
+				"sampler_profile_version": {
+					"type": ["string", "null"]
+				},
+				"tensor_split": {
+					"type": ["array", "null"],
+					"items": {
+						"type": "number",
+						"format": "float"
+					}
+				},
+				"timeouts": {
+					"default": {
+						"idle_ms": null,
+						"wall_ms": null
+					},
+					"allOf": [
+						{
+							"$ref": "#/definitions/Timeouts"
+						}
+					]
+				}
+			}
+		},
+		"PriorityClass": {
+			"type": "object",
+			"required": ["name"],
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"queue_capacity": {
+					"type": ["integer", "null"],
+					"format": "uint32",
+					"minimum": 0.0
+				},
+				"rate_limit_rps": {
+					"type": ["integer", "null"],
+					"format": "uint32",
+					"minimum": 0.0
+				},
+				"weight": {
+					"type": ["integer", "null"],
+					"format": "uint32",
+					"minimum": 0.0
+				}
+			}
+		},
+		"ProvisioningConfig": {
+			"type": "object",
+			"properties": {
+				"allow_binary_downloads": {
+					"type": ["boolean", "null"]
+				},
+				"allow_package_installs": {
+					"type": ["boolean", "null"]
+				},
+				"binary": {
+					"anyOf": [
+						{
+							"$ref": "#/definitions/BinaryConfig"
+						},
+						{
+							"type": "null"
+						}
+					]
+				},
+				"container": {
+					"anyOf": [
+						{
+							"$ref": "#/definitions/ContainerConfig"
+						},
+						{
+							"type": "null"
+						}
+					]
+				},
+				"env": {
+					"type": ["object", "null"],
+					"additionalProperties": {
+						"type": "string"
+					}
+				},
+				"flags": {
+					"type": ["array", "null"],
+					"items": {
+						"type": "string"
+					}
+				},
+				"mode": {
+					"anyOf": [
+						{
+							"$ref": "#/definitions/ProvisioningMode"
+						},
+						{
+							"type": "null"
+						}
+					]
+				},
+				"model": {
+					"default": {},
+					"allOf": [
+						{
+							"$ref": "#/definitions/ModelConfig"
+						}
+					]
+				},
+				"package": {
+					"anyOf": [
+						{
+							"$ref": "#/definitions/PackageConfig"
+						},
+						{
+							"type": "null"
+						}
+					]
+				},
+				"ports": {
+					"type": ["array", "null"],
+					"items": {
+						"type": "integer",
+						"format": "uint16",
+						"minimum": 0.0
+					}
+				},
+				"source": {
+					"anyOf": [
+						{
+							"$ref": "#/definitions/SourceConfig"
+						},
+						{
+							"type": "null"
+						}
+					]
+				}
+			}
+		},
+		"ProvisioningMode": {
+			"type": "string",
+			"enum": ["external", "source", "container", "package", "binary"]
+		},
+		"QueueConfig": {
+			"type": "object",
+			"properties": {
+				"capacity": {
+					"type": ["integer", "null"],
+					"format": "uint32",
+					"minimum": 0.0
+				},
+				"full_policy": {
+					"type": ["string", "null"]
+				}
+			}
+		},
+		"SourceBuildConfig": {
+			"type": "object",
+			"properties": {
+				"cache_dir": {
+					"type": ["string", "null"]
+				},
+				"cmake_flags": {
+					"type": ["array", "null"],
+					"items": {
+						"type": "string"
+					}
+				},
+				"generator": {
+					"type": ["string", "null"]
+				}
+			}
+		},
+		"SourceConfig": {
+			"type": "object",
+			"required": ["ref", "repo"],
+			"properties": {
+				"build": {
+					"default": {},
+					"allOf": [
+						{
+							"$ref": "#/definitions/SourceBuildConfig"
+						}
+					]
+				},
+				"ref": {
+					"description": "Tag/branch/commit SHA",
+					"type": "string"
+				},
+				"repo": {
+					"description": "Git URL for the engine source (e.g., https://github.com/ggml-org/llama.cpp.git)",
+					"type": "string"
+				},
+				"submodules": {
+					"type": ["boolean", "null"]
+				}
+			}
+		},
+		"Timeouts": {
+			"type": "object",
+			"properties": {
+				"idle_ms": {
+					"type": ["integer", "null"],
+					"format": "uint64",
+					"minimum": 0.0
+				},
+				"wall_ms": {
+					"type": ["integer", "null"],
+					"format": "uint64",
+					"minimum": 0.0
+				}
+			}
+		},
+		"TrustPolicyConfig": {
+			"type": "object",
+			"properties": {
+				"allowed_registries": {
+					"type": ["array", "null"],
+					"items": {
+						"type": "string"
+					}
+				},
+				"ca_roots": {
+					"type": ["array", "null"],
+					"items": {
+						"type": "string"
+					}
+				},
+				"mode": {
+					"type": ["string", "null"]
+				},
+				"require_sbom": {
+					"type": ["boolean", "null"]
+				},
+				"require_signature": {
+					"type": ["boolean", "null"]
+				}
+			}
+		}
+	}
 }

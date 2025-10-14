@@ -1,1 +1,1 @@
-export * from './MatrixTable';
+export * from './MatrixTable'

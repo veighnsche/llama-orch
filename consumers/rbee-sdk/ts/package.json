@@ -1,26 +1,26 @@
 {
-  "name": "@rbee/sdk",
-  "version": "0.0.0",
-  "private": true,
-  "description": "WASM bindings for rbee-sdk (generated via wasm-pack)",
-  "type": "module",
-  "main": "./pkg/rbee_sdk.js",
-  "module": "./pkg/rbee_sdk.js",
-  "types": "./pkg/rbee_sdk.d.ts",
-  "exports": {
-    ".": {
-      "import": "./pkg/rbee_sdk.js",
-      "types": "./pkg/rbee_sdk.d.ts"
-    }
-  },
-  "files": [
-    "pkg",
-    "index.ts"
-  ],
-  "scripts": {
-    "build": "wasm-pack build --target bundler --release --out-dir ./pkg .."
-  },
-  "devDependencies": {
-    "typescript": "^5.0.0"
-  }
+	"name": "@rbee/sdk",
+	"version": "0.0.0",
+	"private": true,
+	"description": "WASM bindings for rbee-sdk (generated via wasm-pack)",
+	"type": "module",
+	"main": "./pkg/rbee_sdk.js",
+	"module": "./pkg/rbee_sdk.js",
+	"types": "./pkg/rbee_sdk.d.ts",
+	"exports": {
+		".": {
+			"import": "./pkg/rbee_sdk.js",
+			"types": "./pkg/rbee_sdk.d.ts"
+		}
+	},
+	"files": [
+		"pkg",
+		"index.ts"
+	],
+	"scripts": {
+		"build": "wasm-pack build --target bundler --release --out-dir ./pkg .."
+	},
+	"devDependencies": {
+		"typescript": "^5.9.3"
+	}
 }

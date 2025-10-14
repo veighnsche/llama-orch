@@ -1,14 +1,14 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { AudienceSelector } from './AudienceSelector';
+import type { Meta, StoryObj } from '@storybook/react'
+import { AudienceSelector } from './AudienceSelector'
 
 const meta = {
-  title: 'Organisms/AudienceSelector',
-  component: AudienceSelector,
-  parameters: {
-    layout: 'fullscreen',
-    docs: {
-      description: {
-        component: `
+	title: 'Organisms/AudienceSelector',
+	component: AudienceSelector,
+	parameters: {
+		layout: 'fullscreen',
+		docs: {
+			description: {
+				component: `
 ## Overview
 The AudienceSelector presents three distinct user paths (Developers, GPU Owners, Enterprise) in an interactive card grid. Each card highlights specific benefits, features, and calls-to-action tailored to that audience segment.
 
@@ -64,47 +64,48 @@ import { AudienceSelector } from '@rbee/ui/organisms/AudienceSelector'
 - **Hover Effects**: Transform animations respect prefers-reduced-motion
 - **Color Contrast**: Meets WCAG AA standards in both themes
         `,
-      },
-    },
-  },
-  tags: ['autodocs'],
-} satisfies Meta<typeof AudienceSelector>;
+			},
+		},
+	},
+	tags: ['autodocs'],
+} satisfies Meta<typeof AudienceSelector>
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: 'Default audience selector with three cards. Use the theme toggle in the toolbar to switch between light and dark modes.',
-      },
-    },
-  },
-};
+	parameters: {
+		docs: {
+			description: {
+				story:
+					'Default audience selector with three cards. Use the theme toggle in the toolbar to switch between light and dark modes.',
+			},
+		},
+	},
+}
 
 export const MobileView: Story = {
-  parameters: {
-    viewport: {
-      defaultViewport: 'mobile1',
-    },
-    docs: {
-      description: {
-        story: 'Mobile view with stacked single-column layout.',
-      },
-    },
-  },
-};
+	parameters: {
+		viewport: {
+			defaultViewport: 'mobile1',
+		},
+		docs: {
+			description: {
+				story: 'Mobile view with stacked single-column layout.',
+			},
+		},
+	},
+}
 
 export const TabletView: Story = {
-  parameters: {
-    viewport: {
-      defaultViewport: 'tablet',
-    },
-    docs: {
-      description: {
-        story: 'Tablet view with two-column grid layout.',
-      },
-    },
-  },
-};
+	parameters: {
+		viewport: {
+			defaultViewport: 'tablet',
+		},
+		docs: {
+			description: {
+				story: 'Tablet view with two-column grid layout.',
+			},
+		},
+	},
+}

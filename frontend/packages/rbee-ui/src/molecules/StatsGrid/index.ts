@@ -1,1 +1,1 @@
-export * from './StatsGrid';
+export * from './StatsGrid'

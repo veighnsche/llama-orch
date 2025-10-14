@@ -1,0 +1,33 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs
+dist
+.next
+build
+.turbo
+*.min.js
+**/.vite
+
+# Generated files
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+**/cloudflare-env.d.ts
+**/next-env.d.ts
+
+# Logs
+*.log
+**/dev-server.log
+
+# Config files (generated)
+**/wrangler.jsonc
+**/components.json
+
+# Reference directories (external)
+reference/
+
+# Test coverage
+coverage
+.nyc_output

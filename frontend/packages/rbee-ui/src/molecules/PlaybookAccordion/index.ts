@@ -1,1 +1,1 @@
-export * from './PlaybookAccordion';
+export * from './PlaybookAccordion'

@@ -1,1 +1,1 @@
-export * from './IconPlate';
+export * from './IconPlate'

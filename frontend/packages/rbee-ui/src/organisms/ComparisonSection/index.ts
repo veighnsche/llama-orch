@@ -1,1 +1,1 @@
-export * from './ComparisonSection';
+export * from './ComparisonSection'

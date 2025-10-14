@@ -1,1 +1,1 @@
-export * from './ComplianceChip';
+export * from './ComplianceChip'

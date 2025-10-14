@@ -1,17 +1,17 @@
 {
-  "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": ".",
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "lib": ["ES2022"],
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmitOnError": true,
-    "sourceMap": false,
-    "declaration": false
-  },
-  "include": ["index.ts"],
-  "exclude": ["dist", "node_modules"]
+	"compilerOptions": {
+		"outDir": "./dist",
+		"rootDir": ".",
+		"target": "ES2022",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"lib": ["ES2022"],
+		"skipLibCheck": true,
+		"strict": true,
+		"noEmitOnError": true,
+		"sourceMap": false,
+		"declaration": false
+	},
+	"include": ["index.ts"],
+	"exclude": ["dist", "node_modules"]
 }

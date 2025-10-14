@@ -1,1 +1,1 @@
-export * from './TerminalConsole';
+export * from './TerminalConsole'

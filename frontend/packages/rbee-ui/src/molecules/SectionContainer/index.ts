@@ -1,1 +1,1 @@
-export * from './SectionContainer';
+export * from './SectionContainer'

@@ -1,1 +1,1 @@
-export * from './SecurityCrateCard';
+export * from './SecurityCrateCard'

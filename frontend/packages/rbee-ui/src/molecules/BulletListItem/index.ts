@@ -1,1 +1,1 @@
-export * from './BulletListItem';
+export * from './BulletListItem'

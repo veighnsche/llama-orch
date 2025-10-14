@@ -1,1 +1,1 @@
-export * from './UseMobile';
+export * from './UseMobile'

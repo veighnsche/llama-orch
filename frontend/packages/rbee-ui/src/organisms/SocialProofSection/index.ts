@@ -1,1 +1,1 @@
-export * from './SocialProofSection';
+export * from './SocialProofSection'

@@ -1,1 +1,1 @@
-export * from './EmailCapture';
+export * from './EmailCapture'

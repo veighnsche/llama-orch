@@ -4,8 +4,8 @@ packages:
   - consumers/rbee-sdk/ts
   - frontend/apps/commercial
   - frontend/apps/user-docs
-  - frontend/packages/frontend-tooling
   - frontend/packages/rbee-ui
+  - frontend/packages/tailwind-config
   - frontend/reference/v0
 
 onlyBuiltDependencies:

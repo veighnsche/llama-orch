@@ -1,1 +1,1 @@
-export * from './PricingTier';
+export * from './PricingTier'

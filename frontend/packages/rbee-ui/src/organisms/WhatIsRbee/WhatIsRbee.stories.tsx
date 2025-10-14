@@ -1,14 +1,14 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { WhatIsRbee } from './WhatIsRbee';
+import type { Meta, StoryObj } from '@storybook/react'
+import { WhatIsRbee } from './WhatIsRbee'
 
 const meta = {
-  title: 'Organisms/WhatIsRbee',
-  component: WhatIsRbee,
-  parameters: {
-    layout: 'fullscreen',
-    docs: {
-      description: {
-        component: `
+	title: 'Organisms/WhatIsRbee',
+	component: WhatIsRbee,
+	parameters: {
+		layout: 'fullscreen',
+		docs: {
+			description: {
+				component: `
 ## Overview
 The WhatIsRbee section provides a comprehensive introduction to the rbee platform. It combines brand identity, value propositions, feature highlights, statistics, and a visual network diagram to communicate what rbee is and why it matters.
 
@@ -70,47 +70,48 @@ import { WhatIsRbee } from '@rbee/ui/organisms/WhatIsRbee'
 - **Focus States**: Visible focus indicators on all interactive elements
 - **Color Contrast**: Meets WCAG AA standards in both themes
         `,
-      },
-    },
-  },
-  tags: ['autodocs'],
-} satisfies Meta<typeof WhatIsRbee>;
+			},
+		},
+	},
+	tags: ['autodocs'],
+} satisfies Meta<typeof WhatIsRbee>
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: 'Default WhatIsRbee section with all elements. Use the theme toggle in the toolbar to switch between light and dark modes.',
-      },
-    },
-  },
-};
+	parameters: {
+		docs: {
+			description: {
+				story:
+					'Default WhatIsRbee section with all elements. Use the theme toggle in the toolbar to switch between light and dark modes.',
+			},
+		},
+	},
+}
 
 export const MobileView: Story = {
-  parameters: {
-    viewport: {
-      defaultViewport: 'mobile1',
-    },
-    docs: {
-      description: {
-        story: 'Mobile view with stacked layout. Image appears below content on small screens.',
-      },
-    },
-  },
-};
+	parameters: {
+		viewport: {
+			defaultViewport: 'mobile1',
+		},
+		docs: {
+			description: {
+				story: 'Mobile view with stacked layout. Image appears below content on small screens.',
+			},
+		},
+	},
+}
 
 export const TabletView: Story = {
-  parameters: {
-    viewport: {
-      defaultViewport: 'tablet',
-    },
-    docs: {
-      description: {
-        story: 'Tablet view showing responsive grid behavior.',
-      },
-    },
-  },
-};
+	parameters: {
+		viewport: {
+			defaultViewport: 'tablet',
+		},
+		docs: {
+			description: {
+				story: 'Tablet view showing responsive grid behavior.',
+			},
+		},
+	},
+}

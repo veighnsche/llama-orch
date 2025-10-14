@@ -1,230 +1,212 @@
 {
-  "dashboard": {
-    "title": "Cloud Profile Overview",
-    "tags": ["cloud-profile", "orchestration", "gpu-nodes"],
-    "timezone": "browser",
-    "schemaVersion": 16,
-    "version": 1,
-    "refresh": "10s",
-    "panels": [
-      {
-        "id": 1,
-        "title": "Node Status",
-        "type": "stat",
-        "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
-        "targets": [
-          {
-            "expr": "sum(orchd_nodes_online)",
-            "legendFormat": "Online Nodes",
-            "refId": "A"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "color": {"mode": "thresholds"},
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {"value": 0, "color": "red"},
-                {"value": 1, "color": "yellow"},
-                {"value": 2, "color": "green"}
-              ]
-            },
-            "unit": "short"
-          }
-        }
-      },
-      {
-        "id": 2,
-        "title": "Pool Availability",
-        "type": "stat",
-        "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
-        "targets": [
-          {
-            "expr": "sum(orchd_pools_available)",
-            "legendFormat": "Available Pools",
-            "refId": "A"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "color": {"mode": "thresholds"},
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {"value": 0, "color": "red"},
-                {"value": 1, "color": "yellow"},
-                {"value": 3, "color": "green"}
-              ]
-            },
-            "unit": "short"
-          }
-        }
-      },
-      {
-        "id": 3,
-        "title": "Node Registrations (Rate)",
-        "type": "graph",
-        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 4},
-        "targets": [
-          {
-            "expr": "rate(orchd_node_registrations_total{outcome=\"success\"}[5m])",
-            "legendFormat": "Success",
-            "refId": "A"
-          },
-          {
-            "expr": "rate(orchd_node_registrations_total{outcome=\"error\"}[5m])",
-            "legendFormat": "Error",
-            "refId": "B"
-          }
-        ],
-        "yaxes": [
-          {"format": "ops", "label": "Registrations/sec"},
-          {"format": "short"}
-        ]
-      },
-      {
-        "id": 4,
-        "title": "Heartbeat Success Rate",
-        "type": "graph",
-        "gridPos": {"x": 0, "y": 4, "w": 12, "h": 6},
-        "targets": [
-          {
-            "expr": "rate(orchd_node_heartbeats_total{outcome=\"success\"}[5m])",
-            "legendFormat": "{{node_id}} - Success",
-            "refId": "A"
-          },
-          {
-            "expr": "rate(orchd_node_heartbeats_total{outcome!=\"success\"}[5m])",
-            "legendFormat": "{{node_id}} - {{outcome}}",
-            "refId": "B"
-          }
-        ],
-        "yaxes": [
-          {"format": "ops", "label": "Heartbeats/sec"},
-          {"format": "short"}
-        ],
-        "legend": {"show": true, "alignAsTable": true, "rightSide": false}
-      },
-      {
-        "id": 5,
-        "title": "Pool Health Check Latency (P95)",
-        "type": "graph",
-        "gridPos": {"x": 12, "y": 4, "w": 12, "h": 6},
-        "targets": [
-          {
-            "expr": "histogram_quantile(0.95, rate(orchd_pool_health_check_duration_ms_bucket[5m]))",
-            "legendFormat": "{{pool_id}} - P95",
-            "refId": "A"
-          },
-          {
-            "expr": "histogram_quantile(0.50, rate(orchd_pool_health_check_duration_ms_bucket[5m]))",
-            "legendFormat": "{{pool_id}} - P50",
-            "refId": "B"
-          }
-        ],
-        "yaxes": [
-          {"format": "ms", "label": "Latency"},
-          {"format": "short"}
-        ],
-        "alert": {
-          "name": "High Health Check Latency",
-          "conditions": [
-            {
-              "evaluator": {"type": "gt", "params": [100]},
-              "query": {"params": ["A", "5m", "now"]},
-              "reducer": {"type": "avg"}
-            }
-          ],
-          "frequency": "60s",
-          "handler": 1,
-          "message": "Pool health check P95 latency exceeds 100ms"
-        }
-      },
-      {
-        "id": 6,
-        "title": "Pool Health Checks (Rate)",
-        "type": "graph",
-        "gridPos": {"x": 0, "y": 10, "w": 12, "h": 6},
-        "targets": [
-          {
-            "expr": "rate(orchd_pool_health_checks_total{outcome=\"success\"}[5m])",
-            "legendFormat": "{{pool_id}} - Success",
-            "refId": "A"
-          },
-          {
-            "expr": "rate(orchd_pool_health_checks_total{outcome=\"error\"}[5m])",
-            "legendFormat": "{{pool_id}} - Error",
-            "refId": "B"
-          }
-        ],
-        "yaxes": [
-          {"format": "ops", "label": "Checks/sec"},
-          {"format": "short"}
-        ]
-      },
-      {
-        "id": 7,
-        "title": "Node Deregistrations",
-        "type": "graph",
-        "gridPos": {"x": 12, "y": 10, "w": 12, "h": 6},
-        "targets": [
-          {
-            "expr": "rate(orchd_node_deregistrations_total{outcome=\"success\"}[5m])",
-            "legendFormat": "Graceful Shutdown",
-            "refId": "A"
-          },
-          {
-            "expr": "rate(orchd_node_deregistrations_total{outcome=\"error\"}[5m])",
-            "legendFormat": "Error",
-            "refId": "B"
-          }
-        ],
-        "yaxes": [
-          {"format": "ops", "label": "Deregistrations/sec"},
-          {"format": "short"}
-        ]
-      },
-      {
-        "id": 8,
-        "title": "Task Placement by Node",
-        "type": "graph",
-        "gridPos": {"x": 0, "y": 16, "w": 24, "h": 6},
-        "targets": [
-          {
-            "expr": "rate(tasks_started_total[5m])",
-            "legendFormat": "{{pool_id}} - {{engine}}",
-            "refId": "A"
-          }
-        ],
-        "yaxes": [
-          {"format": "ops", "label": "Tasks/sec"},
-          {"format": "short"}
-        ],
-        "legend": {"show": true, "alignAsTable": true, "rightSide": true}
-      }
-    ],
-    "time": {
-      "from": "now-1h",
-      "to": "now"
-    },
-    "timepicker": {
-      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
-    },
-    "annotations": {
-      "list": [
-        {
-          "datasource": "Prometheus",
-          "enable": true,
-          "expr": "ALERTS{alertname=~\"Pool.*|Node.*\"}",
-          "iconColor": "red",
-          "name": "Cloud Profile Alerts",
-          "step": "60s",
-          "tagKeys": "alertname,severity",
-          "textFormat": "{{alertname}}: {{summary}}",
-          "titleFormat": "Alert"
-        }
-      ]
-    }
-  }
+	"dashboard": {
+		"title": "Cloud Profile Overview",
+		"tags": ["cloud-profile", "orchestration", "gpu-nodes"],
+		"timezone": "browser",
+		"schemaVersion": 16,
+		"version": 1,
+		"refresh": "10s",
+		"panels": [
+			{
+				"id": 1,
+				"title": "Node Status",
+				"type": "stat",
+				"gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+				"targets": [
+					{
+						"expr": "sum(orchd_nodes_online)",
+						"legendFormat": "Online Nodes",
+						"refId": "A"
+					}
+				],
+				"fieldConfig": {
+					"defaults": {
+						"color": { "mode": "thresholds" },
+						"thresholds": {
+							"mode": "absolute",
+							"steps": [
+								{ "value": 0, "color": "red" },
+								{ "value": 1, "color": "yellow" },
+								{ "value": 2, "color": "green" }
+							]
+						},
+						"unit": "short"
+					}
+				}
+			},
+			{
+				"id": 2,
+				"title": "Pool Availability",
+				"type": "stat",
+				"gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+				"targets": [
+					{
+						"expr": "sum(orchd_pools_available)",
+						"legendFormat": "Available Pools",
+						"refId": "A"
+					}
+				],
+				"fieldConfig": {
+					"defaults": {
+						"color": { "mode": "thresholds" },
+						"thresholds": {
+							"mode": "absolute",
+							"steps": [
+								{ "value": 0, "color": "red" },
+								{ "value": 1, "color": "yellow" },
+								{ "value": 3, "color": "green" }
+							]
+						},
+						"unit": "short"
+					}
+				}
+			},
+			{
+				"id": 3,
+				"title": "Node Registrations (Rate)",
+				"type": "graph",
+				"gridPos": { "x": 12, "y": 0, "w": 12, "h": 4 },
+				"targets": [
+					{
+						"expr": "rate(orchd_node_registrations_total{outcome=\"success\"}[5m])",
+						"legendFormat": "Success",
+						"refId": "A"
+					},
+					{
+						"expr": "rate(orchd_node_registrations_total{outcome=\"error\"}[5m])",
+						"legendFormat": "Error",
+						"refId": "B"
+					}
+				],
+				"yaxes": [{ "format": "ops", "label": "Registrations/sec" }, { "format": "short" }]
+			},
+			{
+				"id": 4,
+				"title": "Heartbeat Success Rate",
+				"type": "graph",
+				"gridPos": { "x": 0, "y": 4, "w": 12, "h": 6 },
+				"targets": [
+					{
+						"expr": "rate(orchd_node_heartbeats_total{outcome=\"success\"}[5m])",
+						"legendFormat": "{{node_id}} - Success",
+						"refId": "A"
+					},
+					{
+						"expr": "rate(orchd_node_heartbeats_total{outcome!=\"success\"}[5m])",
+						"legendFormat": "{{node_id}} - {{outcome}}",
+						"refId": "B"
+					}
+				],
+				"yaxes": [{ "format": "ops", "label": "Heartbeats/sec" }, { "format": "short" }],
+				"legend": { "show": true, "alignAsTable": true, "rightSide": false }
+			},
+			{
+				"id": 5,
+				"title": "Pool Health Check Latency (P95)",
+				"type": "graph",
+				"gridPos": { "x": 12, "y": 4, "w": 12, "h": 6 },
+				"targets": [
+					{
+						"expr": "histogram_quantile(0.95, rate(orchd_pool_health_check_duration_ms_bucket[5m]))",
+						"legendFormat": "{{pool_id}} - P95",
+						"refId": "A"
+					},
+					{
+						"expr": "histogram_quantile(0.50, rate(orchd_pool_health_check_duration_ms_bucket[5m]))",
+						"legendFormat": "{{pool_id}} - P50",
+						"refId": "B"
+					}
+				],
+				"yaxes": [{ "format": "ms", "label": "Latency" }, { "format": "short" }],
+				"alert": {
+					"name": "High Health Check Latency",
+					"conditions": [
+						{
+							"evaluator": { "type": "gt", "params": [100] },
+							"query": { "params": ["A", "5m", "now"] },
+							"reducer": { "type": "avg" }
+						}
+					],
+					"frequency": "60s",
+					"handler": 1,
+					"message": "Pool health check P95 latency exceeds 100ms"
+				}
+			},
+			{
+				"id": 6,
+				"title": "Pool Health Checks (Rate)",
+				"type": "graph",
+				"gridPos": { "x": 0, "y": 10, "w": 12, "h": 6 },
+				"targets": [
+					{
+						"expr": "rate(orchd_pool_health_checks_total{outcome=\"success\"}[5m])",
+						"legendFormat": "{{pool_id}} - Success",
+						"refId": "A"
+					},
+					{
+						"expr": "rate(orchd_pool_health_checks_total{outcome=\"error\"}[5m])",
+						"legendFormat": "{{pool_id}} - Error",
+						"refId": "B"
+					}
+				],
+				"yaxes": [{ "format": "ops", "label": "Checks/sec" }, { "format": "short" }]
+			},
+			{
+				"id": 7,
+				"title": "Node Deregistrations",
+				"type": "graph",
+				"gridPos": { "x": 12, "y": 10, "w": 12, "h": 6 },
+				"targets": [
+					{
+						"expr": "rate(orchd_node_deregistrations_total{outcome=\"success\"}[5m])",
+						"legendFormat": "Graceful Shutdown",
+						"refId": "A"
+					},
+					{
+						"expr": "rate(orchd_node_deregistrations_total{outcome=\"error\"}[5m])",
+						"legendFormat": "Error",
+						"refId": "B"
+					}
+				],
+				"yaxes": [{ "format": "ops", "label": "Deregistrations/sec" }, { "format": "short" }]
+			},
+			{
+				"id": 8,
+				"title": "Task Placement by Node",
+				"type": "graph",
+				"gridPos": { "x": 0, "y": 16, "w": 24, "h": 6 },
+				"targets": [
+					{
+						"expr": "rate(tasks_started_total[5m])",
+						"legendFormat": "{{pool_id}} - {{engine}}",
+						"refId": "A"
+					}
+				],
+				"yaxes": [{ "format": "ops", "label": "Tasks/sec" }, { "format": "short" }],
+				"legend": { "show": true, "alignAsTable": true, "rightSide": true }
+			}
+		],
+		"time": {
+			"from": "now-1h",
+			"to": "now"
+		},
+		"timepicker": {
+			"refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
+		},
+		"annotations": {
+			"list": [
+				{
+					"datasource": "Prometheus",
+					"enable": true,
+					"expr": "ALERTS{alertname=~\"Pool.*|Node.*\"}",
+					"iconColor": "red",
+					"name": "Cloud Profile Alerts",
+					"step": "60s",
+					"tagKeys": "alertname,severity",
+					"textFormat": "{{alertname}}: {{summary}}",
+					"titleFormat": "Alert"
+				}
+			]
+		}
+	}
 }

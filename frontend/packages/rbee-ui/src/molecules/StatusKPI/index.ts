@@ -1,1 +1,1 @@
-export * from './StatusKPI';
+export * from './StatusKPI'

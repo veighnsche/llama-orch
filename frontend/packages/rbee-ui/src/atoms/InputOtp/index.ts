@@ -1,1 +1,1 @@
-export * from './InputOtp';
+export * from './InputOtp'

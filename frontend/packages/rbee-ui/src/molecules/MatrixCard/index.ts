@@ -1,1 +1,1 @@
-export * from './MatrixCard';
+export * from './MatrixCard'

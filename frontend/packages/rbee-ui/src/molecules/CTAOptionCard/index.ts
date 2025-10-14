@@ -1,1 +1,1 @@
-export * from './CTAOptionCard';
+export * from './CTAOptionCard'

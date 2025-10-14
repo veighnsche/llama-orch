@@ -1,1 +1,1 @@
-export * from './TechnicalSection';
+export * from './TechnicalSection'

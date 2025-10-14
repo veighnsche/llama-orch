@@ -1,1 +1,1 @@
-export * from './UseCaseCard';
+export * from './UseCaseCard'

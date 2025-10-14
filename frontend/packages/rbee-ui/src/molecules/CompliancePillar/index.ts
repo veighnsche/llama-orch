@@ -1,1 +1,1 @@
-export * from './CompliancePillar';
+export * from './CompliancePillar'

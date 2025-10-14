@@ -1,14 +1,14 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { HeroSection } from './HeroSection';
+import type { Meta, StoryObj } from '@storybook/react'
+import { HeroSection } from './HeroSection'
 
 const meta = {
-  title: 'Organisms/HeroSection',
-  component: HeroSection,
-  parameters: {
-    layout: 'fullscreen',
-    docs: {
-      description: {
-        component: `
+	title: 'Organisms/HeroSection',
+	component: HeroSection,
+	parameters: {
+		layout: 'fullscreen',
+		docs: {
+			description: {
+				component: `
 ## Overview
 The HeroSection is the primary landing section of the rbee application. It features a compelling headline, value proposition, interactive terminal demo, and clear call-to-action buttons. The section uses a full-viewport height with animated elements and a honeycomb background pattern.
 
@@ -72,66 +72,68 @@ import { HeroSection } from '@rbee/ui/organisms/HeroSection'
 - **Live Regions**: Terminal output uses aria-live for screen readers
 - **Color Contrast**: Meets WCAG AA standards in both themes
         `,
-      },
-    },
-  },
-  tags: ['autodocs'],
-} satisfies Meta<typeof HeroSection>;
+			},
+		},
+	},
+	tags: ['autodocs'],
+} satisfies Meta<typeof HeroSection>
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story: 'Default hero section with all elements. Use the theme toggle in the toolbar to switch between light and dark modes.',
-      },
-    },
-  },
-};
+	parameters: {
+		docs: {
+			description: {
+				story:
+					'Default hero section with all elements. Use the theme toggle in the toolbar to switch between light and dark modes.',
+			},
+		},
+	},
+}
 
 export const MobileView: Story = {
-  parameters: {
-    viewport: {
-      defaultViewport: 'mobile1',
-    },
-    docs: {
-      description: {
-        story: 'Mobile view with stacked layout. Content and terminal demo stack vertically for optimal mobile experience.',
-      },
-    },
-  },
-};
+	parameters: {
+		viewport: {
+			defaultViewport: 'mobile1',
+		},
+		docs: {
+			description: {
+				story:
+					'Mobile view with stacked layout. Content and terminal demo stack vertically for optimal mobile experience.',
+			},
+		},
+	},
+}
 
 export const TabletView: Story = {
-  parameters: {
-    viewport: {
-      defaultViewport: 'tablet',
-    },
-    docs: {
-      description: {
-        story: 'Tablet view showing responsive breakpoint behavior.',
-      },
-    },
-  },
-};
+	parameters: {
+		viewport: {
+			defaultViewport: 'tablet',
+		},
+		docs: {
+			description: {
+				story: 'Tablet view showing responsive breakpoint behavior.',
+			},
+		},
+	},
+}
 
 export const WithScrollIndicator: Story = {
-  render: () => (
-    <div>
-      <HeroSection />
-      <div style={{ padding: '4rem 2rem', textAlign: 'center', background: 'rgba(0,0,0,0.02)' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Next Section</h2>
-        <p>Scroll up to see the hero section with its full-viewport height and animations.</p>
-      </div>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Hero section with additional content below to demonstrate full-viewport height and scroll behavior.',
-      },
-    },
-  },
-};
+	render: () => (
+		<div>
+			<HeroSection />
+			<div style={{ padding: '4rem 2rem', textAlign: 'center', background: 'rgba(0,0,0,0.02)' }}>
+				<h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Next Section</h2>
+				<p>Scroll up to see the hero section with its full-viewport height and animations.</p>
+			</div>
+		</div>
+	),
+	parameters: {
+		docs: {
+			description: {
+				story: 'Hero section with additional content below to demonstrate full-viewport height and scroll behavior.',
+			},
+		},
+	},
+}

@@ -1,1 +1,1 @@
-export * from './FloatingKPICard';
+export * from './FloatingKPICard'

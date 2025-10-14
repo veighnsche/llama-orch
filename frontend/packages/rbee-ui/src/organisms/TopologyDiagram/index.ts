@@ -1,2 +1,2 @@
+export type { TDEdge, TDNode, TopologyDiagramProps } from './TopologyDiagram'
 export { TopologyDiagram } from './TopologyDiagram'
-export type { TopologyDiagramProps, TDNode, TDEdge } from './TopologyDiagram'

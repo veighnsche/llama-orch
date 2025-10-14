@@ -1,1 +1,1 @@
-export * from './TrustIndicator';
+export * from './TrustIndicator'
