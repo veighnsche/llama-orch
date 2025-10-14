@@ -36,10 +36,10 @@
   ],
   "scripts": {
     "build": "pnpm run build:styles && pnpm run build:components",
-    "build:styles": "tailwindcss -i ./src/tokens/globals.css -o ./dist/index.css",
+    "build:styles": "postcss ./src/tokens/globals.css -o ./dist/index.css",
     "build:components": "tsc",
     "dev": "pnpm run dev:styles & pnpm run dev:components & storybook dev -p 6006 --no-open",
-    "dev:styles": "tailwindcss -i ./src/tokens/globals.css -o ./dist/index.css --watch",
+    "dev:styles": "postcss ./src/tokens/globals.css -o ./dist/index.css --watch",
     "dev:components": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006 --no-open",
@@ -50,7 +50,10 @@
     "react-dom": ">=18"
   },
   "devDependencies": {
+    "@chromatic-com/storybook": "^4.1.1",
     "@repo/tailwind-config": "workspace:*",
+    "@storybook/addon-docs": "^9.1.10",
+    "@storybook/nextjs": "^9.1.10",
     "@storybook/react": "^9.1.10",
     "@storybook/react-vite": "^9.1.10",
     "@tailwindcss/cli": "^4.1.14",
@@ -61,18 +64,15 @@
     "@types/react-dom": "^19.2.2",
     "next": "^15.5.5",
     "postcss-cli": "^11.0.1",
+    "postcss-nesting": "^13.0.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "storybook": "^9.1.10",
     "tailwindcss": "^4.1.14",
     "typescript": "^5.9.3",
-    "vite": "^7.1.10",
-    "@storybook/nextjs": "^9.1.10",
-    "@chromatic-com/storybook": "^4.1.1",
-    "@storybook/addon-docs": "^9.1.10"
+    "vite": "^7.1.10"
   },
   "dependencies": {
-    "lucide-react": "^0.545.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -105,6 +105,7 @@
     "cmdk": "^1.1.1",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
+    "lucide-react": "^0.545.0",
     "next-themes": "^0.4.6",
     "react-day-picker": "^9.11.1",
     "react-hook-form": "^7.65.0",

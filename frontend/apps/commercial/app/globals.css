@@ -1,16 +1,14 @@
 /**
  * 🚨 TURBOREPO IDIOMATIC PATTERN 🚨
  * 
- * ✅ Imports Tailwind + shared config for app-specific utility classes
- * ✅ UI package utilities are prefixed with ui: to avoid conflicts
- * ✅ App utilities are unprefixed for direct use
+ * ✅ App-specific CSS only (theme variables + custom utilities)
+ * ✅ UI package provides all Tailwind utilities via @rbee/ui/styles.css
+ * ✅ DO NOT import 'tailwindcss' here - it duplicates utilities and breaks specificity
  * 
  * See layout.tsx: import '@rbee/ui/styles.css' comes BEFORE this file
  * See: https://turborepo.com/docs/guides/tools/tailwind
  */
 
-@import 'tailwindcss';
-@import '@repo/tailwind-config';
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
@@ -95,10 +93,12 @@
 
 @layer base {
 	* {
-		@apply border-border outline-ring/50;
+		border-color: hsl(var(--border));
+		outline-color: hsl(var(--ring) / 0.5);
 	}
 	body {
-		@apply bg-background text-foreground;
+		background-color: hsl(var(--background));
+		color: hsl(var(--foreground));
 	}
 }
 
