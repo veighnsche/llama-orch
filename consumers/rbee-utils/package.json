@@ -15,7 +15,7 @@
   "scripts": {
     "build:wasm": "node ./scripts/build-wasm.mjs",
     "build:ts": "tsc -p .",
-    "gen:types": "cargo run -q -p llama-orch-utils --features ts-types --bin export-ts",
+    "gen:types": "cargo run -q -p rbee-utils --features ts-types --bin export-ts",
     "compose:dts": "node ./scripts/compose-dts.mjs",
     "build": "pnpm run build:wasm && pnpm run build:ts && pnpm run gen:types && pnpm run compose:dts",
     "dev:watch": "node ./scripts/dev-watch.mjs",

@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "start": "tsx index.ts",
-    "dev": "tsx watch index.ts"
+    "dev": "echo 'Skipping m002-pnpm dev - requires @rbee/utils to be built first. Run: pnpm --filter @rbee/utils build'"
   },
   "devDependencies": {
     "tsx": "^4.19.1",

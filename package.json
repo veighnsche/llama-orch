@@ -13,7 +13,8 @@
     "build:frontend": "pnpm run build:ui && pnpm --filter @rbee/commercial run build && pnpm --filter @rbee/user-docs run build"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "turbo": "^2.5.8"
   },
   "packageManager": "pnpm@9.15.0",
   "engines": {

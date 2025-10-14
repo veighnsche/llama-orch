@@ -119,3 +119,7 @@ __pycache__
 
 # Team message archives (copies)
 /.team-messages/
+
+# Turborepo
+.turbo
+.turbo/
