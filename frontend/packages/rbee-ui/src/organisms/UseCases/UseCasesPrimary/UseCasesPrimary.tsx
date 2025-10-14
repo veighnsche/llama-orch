@@ -1,11 +1,13 @@
 'use client'
 
 import { SectionContainer } from '@rbee/ui/molecules'
-import { UseCaseCard, type UseCaseCardProps } from '@rbee/ui/molecules/UseCaseCard'
+import { Badge } from '@rbee/ui/atoms/Badge'
+import { Button } from '@rbee/ui/atoms/Button'
+import { Card } from '@rbee/ui/atoms/Card'
+import { UsecasesGridDark } from '@rbee/ui/icons'
 import { Briefcase, Building, Code, GraduationCap, Home, Laptop, Server, Users } from 'lucide-react'
-import Image from 'next/image'
 
-const useCases: UseCaseCardProps[] = [
+const useCases: any[] = [
 	{
 		icon: Laptop,
 		color: 'chart-2',
@@ -101,13 +103,10 @@ export function UseCasesPrimary() {
 
 				{/* Hero strip image */}
 				<div className="relative overflow-hidden rounded-lg border border-border/60 mb-8">
-					<Image
-						src="/illustrations/usecases-grid-dark.svg"
-						width={1920}
-						height={640}
-						priority
-						alt="cinematic ultra-wide banner 16:5 showing three developer workstations in modern dark office connected by private AI network, shot from elevated 30-degree angle looking down at desk setup, LEFT THIRD: large gaming PC tower case with tempered glass side panel revealing two NVIDIA RTX 4090 graphics cards with visible PCB green circuit boards and silver heatsink fins, amber LED strips #f59e0b glowing along GPU edges, black case with subtle RGB accent lighting in teal, tower is approximately 20 inches tall sitting on dark wood desk, CENTER THIRD: professional workstation setup with dual 27-inch monitors in landscape orientation showing split screen, left monitor displays code editor with syntax highlighting in blue/green/yellow, right monitor shows terminal with streaming green text output, sleek aluminum monitor arms, black mechanical keyboard and mouse on desk, modern office chair partially visible, workstation has clean cable management, RIGHT THIRD: compact Mac Studio in silver aluminum finish approximately 4 inches tall, single 24-inch display showing design software interface, minimalist setup with wireless keyboard and trackpad, small desk plant in white ceramic pot, NETWORK VISUALIZATION: glowing neon teal #14b8a6 network lines connecting all three machines floating 6 inches above desk surface, lines form mesh topology with nodes at each machine, data packets visualized as small glowing dots traveling along the lines from left to right, network lines have soft glow effect with slight blur, lines are 2-3 pixels thick with brighter core and softer outer glow, FLOATING UI OVERLAYS: semi-transparent dark panels with rounded corners floating above the setup showing 'Private AI Cluster' in white text, '8 GPUs' with small GPU icon, '3 nodes' with network icon, '$0/mo API costs' in emerald green #10b981, panels have subtle drop shadow and 10% opacity dark background, BACKGROUND: deep navy blue #0f172a office wall with subtle texture, professional studio lighting with key light from upper left creating soft shadows, teal accent strip lighting along wall edges, background has subtle radial gradient getting darker toward edges, shallow depth of field with background softly blurred while workstations are tack sharp, DESK SURFACE: dark walnut wood finish with matte texture, clean and organized with minimal cable clutter, soft reflections of monitor glow and GPU lighting on glossy surface, LIGHTING: each workstation has its own lighting character - gaming PC has warm amber glow from GPUs, center workstation has cool blue-white monitor glow, Mac Studio has neutral white light, overall scene has cool color temperature with warm accents, professional photography aesthetic similar to tech company marketing materials or Verge hardware reviews, shot with wide-angle lens 24mm equivalent creating slight perspective distortion, f/4 aperture for good depth while keeping all machines sharp, cinematic color grading with lifted blacks, teal and amber color palette, slight vignette darkening edges, conveys professional distributed on-premises AI infrastructure, private network without cloud dependencies, developer-focused setup, enterprise-grade but accessible, mood is productive and empowering, 1920x640 pixels 16:5 aspect ratio, high detail on hardware showing logos and model numbers, network lines should have realistic glow with falloff, UI overlays should be legible but not distracting"
-						className="w-full h-32 md:h-40 object-cover"
+					<UsecasesGridDark
+						size="100%"
+						className="w-full h-auto"
+						aria-label="Dark themed grid visualization showing various LLM use cases including code generation, documentation writing, and chat interactions"
 					/>
 				</div>
 

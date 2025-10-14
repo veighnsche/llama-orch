@@ -1,5 +1,5 @@
 import { cn } from '@rbee/ui/utils'
-import Image from 'next/image'
+import { BeeMark } from '@rbee/ui/icons'
 
 export interface BrandMarkProps {
 	/** Size variant */
@@ -17,18 +17,16 @@ const sizeMap = {
 	xl: 48,
 }
 
-export function BrandMark({ size = 'md', className, priority = false }: BrandMarkProps) {
+export function BrandMark({ size = 'md', className, priority = false, ...rest }: BrandMarkProps) {
 	const pixels = sizeMap[size]
+	const alt = 'rbee orchestration platform'
 
 	return (
-		<Image
-			src="/illustrations/bee-mark.svg"
-			width={pixels}
-			height={pixels}
-			priority={priority}
-			alt="rbee orchestration platform"
+		<BeeMark
+			size={pixels}
+			aria-label={alt}
 			className={cn('rounded-sm', className)}
-			style={{ width: pixels, height: pixels }}
+			{...rest}
 		/>
 	)
 }

@@ -1,6 +1,6 @@
 import { Badge, Button } from '@rbee/ui/atoms'
-import { Check } from 'lucide-react'
-import Image from 'next/image'
+import { PricingScaleVisual } from '@rbee/ui/icons'
+import { Sparkles } from 'lucide-react'
 
 export function PricingHero() {
 	return (
@@ -49,7 +49,7 @@ export function PricingHero() {
 								'Cancel anytime',
 							].map((item) => (
 								<li key={item} className="flex items-center gap-2">
-									<Check className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+									<Sparkles className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
 									<span>{item}</span>
 								</li>
 							))}
@@ -58,13 +58,10 @@ export function PricingHero() {
 
 					{/* Right: Visual illustration */}
 					<div className="relative">
-						<Image
-							src="/illustrations/pricing-scale-visual.svg"
-							width={1400}
-							height={500}
-							priority
-							className="w-full h-auto"
-							alt=""
+						<PricingScaleVisual
+							size="100%"
+							className="rounded-xl opacity-70"
+							aria-label="Illustration showing rbee pricing scales from single-GPU homelab to multi-node server setups with progressive cost tiers"
 						/>
 					</div>
 				</div>

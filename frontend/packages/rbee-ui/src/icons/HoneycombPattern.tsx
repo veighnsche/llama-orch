@@ -20,9 +20,9 @@ export function HoneycombPattern({ size = 56, className, ...props }: HoneycombPa
         d="M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100"
         fill="none"
         stroke="currentColor"
-        stroke-width="0.5"
+        strokeWidth="0.5"
       />
-      <path d="M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34" fill="none" stroke="currentColor" stroke-width="0.5" />
+      <path d="M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34" fill="none" stroke="currentColor" strokeWidth="0.5" />
     </pattern>
     <mask id="fade-mask">
       <radialGradient id="fade-gradient">

@@ -2,8 +2,8 @@
 
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { AudienceCard } from '@rbee/ui/molecules'
+import { DevGrid, GpuMarket, ComplianceShield } from '@rbee/ui/icons'
 import { ChevronRight, Code2, Server, Shield } from 'lucide-react'
-import Image from 'next/image'
 import Link from 'next/link'
 
 export function AudienceSelector() {
@@ -57,13 +57,9 @@ export function AudienceSelector() {
 							color="chart-2"
 							className="h-full min-h-[22rem] p-6 transition-transform duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-primary/40 sm:p-7 md:min-h-[22rem] lg:p-8"
 							imageSlot={
-								<Image
-									src="/illustrations/dev-grid.svg"
-									width={96}
-									height={96}
-									className="h-14 w-14"
-									alt="Code brackets icon with grid background representing developer tools"
-									priority
+								<DevGrid
+									size={56}
+									aria-hidden
 								/>
 							}
 							badgeSlot={
@@ -88,12 +84,9 @@ export function AudienceSelector() {
 							color="chart-3"
 							className="h-full min-h-[22rem] p-6 transition-transform duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-primary/40 sm:p-7 md:min-h-[22rem] lg:p-8"
 							imageSlot={
-								<Image
-									src="/illustrations/gpu-market.svg"
-									width={96}
-									height={96}
-									className="h-14 w-14"
-									alt="Stacked GPU server cards representing hardware marketplace"
+								<GpuMarket
+									size={56}
+									aria-hidden
 								/>
 							}
 							decisionLabel="Earn from idle GPUs"
@@ -113,12 +106,9 @@ export function AudienceSelector() {
 							color="primary"
 							className="h-full min-h-[22rem] p-6 transition-transform duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-primary/40 sm:p-7 md:min-h-[22rem] lg:p-8"
 							imageSlot={
-								<Image
-									src="/illustrations/compliance-shield.svg"
-									width={96}
-									height={96}
-									className="h-14 w-14"
-									alt="Shield with checkmark and EU stars representing compliance and security"
+								<ComplianceShield
+									size={56}
+									aria-hidden
 								/>
 							}
 							decisionLabel="Deploy with compliance"

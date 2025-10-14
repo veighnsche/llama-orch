@@ -1,7 +1,9 @@
+import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
-import { cn } from '@rbee/ui/utils'
-import { Cpu, Gamepad2, Monitor, Server } from 'lucide-react'
-import Image from 'next/image'
+import { Card } from '@rbee/ui/atoms/Card'
+import { Separator } from '@rbee/ui/atoms/Separator'
+import { GamingPcOwner, HomelabEnthusiast, FormerCryptoMiner, WorkstationOwner } from '@rbee/ui/icons'
+import { ArrowRight, Check, Cpu, Gamepad2, Monitor, Server } from 'lucide-react'
 import * as React from 'react'
 
 // ============================================================================
@@ -58,13 +60,11 @@ function CaseCard({ caseData, index }: { caseData: Case; index: number }) {
 					<h3 className="text-lg font-semibold text-foreground">{caseData.title}</h3>
 					{caseData.subtitle && <div className="text-xs text-muted-foreground">{caseData.subtitle}</div>}
 				</div>
-				{caseData.image && (
-					<Image
-						src={caseData.image.src}
-						width={48}
-						height={48}
-						className="hidden rounded-full border border-border/70 sm:block"
-						alt={caseData.image.alt}
+				{caseData.image && caseData.image.Component && (
+					<caseData.image.Component
+						size={48}
+						aria-label={caseData.image.alt}
+						className="rounded-lg"
 					/>
 				)}
 			</div>
@@ -173,7 +173,7 @@ export function ProvidersUseCases() {
 				{ label: 'Monthly:', value: '€120–180' },
 			],
 			image: {
-				src: '/illustrations/gaming-pc-owner.svg',
+				Component: GamingPcOwner,
 				alt: 'illustration of a modern gaming PC setup with RGB-lit tower showing GPU fans through tempered glass panel, dual monitors, and mechanical keyboard with colorful backlighting',
 			},
 		},
@@ -188,7 +188,7 @@ export function ProvidersUseCases() {
 				{ label: 'Monthly:', value: '€300–600' },
 			],
 			image: {
-				src: '/illustrations/homelab-enthusiast.svg',
+				Component: HomelabEnthusiast,
 				alt: 'illustration of a professional server rack with 19-inch rails, 4U chassis showing multiple GPUs through ventilated panel, blue LED status indicators, and color-coded ethernet cables with cable management',
 			},
 		},
@@ -203,7 +203,7 @@ export function ProvidersUseCases() {
 				{ label: 'Monthly:', value: '€600–1,200' },
 			],
 			image: {
-				src: '/illustrations/former-crypto-miner.svg',
+				Component: FormerCryptoMiner,
 				alt: 'illustration of a repurposed open-air mining frame with aluminum rails, 8 GPUs mounted horizontally with PCIe risers, clean cable management with zip ties, LED strip lighting, and industrial power supply',
 			},
 		},
@@ -218,7 +218,7 @@ export function ProvidersUseCases() {
 				{ label: 'Monthly:', value: '€80–140' },
 			],
 			image: {
-				src: '/illustrations/workstation-owner.svg',
+				Component: WorkstationOwner,
 				alt: 'illustration of a creative workstation with 34-inch ultrawide curved monitor displaying 3D modeling software, graphics tablet with stylus, and powerful tower with mesh front panel and white LED accents',
 			},
 		},

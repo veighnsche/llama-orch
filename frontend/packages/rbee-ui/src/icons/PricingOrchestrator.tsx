@@ -69,50 +69,50 @@ export function PricingOrchestrator({ size = 600, className, ...props }: Pricing
   {/* Connection lines (data streams) - hexagonal pattern */}
   {/* Ring 1 to center */}
   <g opacity="0.6" filter="url(#glow)">
-    <line x1="300" y1="180" x2="300" y2="280" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 4">
+    <line x1="300" y1="180" x2="300" y2="280" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 4">
       <animate attributeName="stroke-dashoffset" from="0" to="8" dur="1s" repeatCount="indefinite"/>
     </line>
-    <line x1="404" y1="240" x2="330" y2="285" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 4">
+    <line x1="404" y1="240" x2="330" y2="285" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 4">
       <animate attributeName="stroke-dashoffset" from="0" to="8" dur="1.2s" repeatCount="indefinite"/>
     </line>
-    <line x1="404" y1="360" x2="330" y2="315" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 4">
+    <line x1="404" y1="360" x2="330" y2="315" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 4">
       <animate attributeName="stroke-dashoffset" from="0" to="8" dur="0.9s" repeatCount="indefinite"/>
     </line>
-    <line x1="300" y1="420" x2="300" y2="320" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 4">
+    <line x1="300" y1="420" x2="300" y2="320" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 4">
       <animate attributeName="stroke-dashoffset" from="0" to="8" dur="1.1s" repeatCount="indefinite"/>
     </line>
-    <line x1="196" y1="360" x2="270" y2="315" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 4">
+    <line x1="196" y1="360" x2="270" y2="315" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 4">
       <animate attributeName="stroke-dashoffset" from="0" to="8" dur="1.3s" repeatCount="indefinite"/>
     </line>
-    <line x1="196" y1="240" x2="270" y2="285" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 4">
+    <line x1="196" y1="240" x2="270" y2="285" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 4">
       <animate attributeName="stroke-dashoffset" from="0" to="8" dur="0.95s" repeatCount="indefinite"/>
     </line>
   </g>
   
   {/* Ring 2 to Ring 1 connections */}
   <g opacity="0.4" filter="url(#glow)">
-    <line x1="300" y1="100" x2="300" y2="180" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3 3">
+    <line x1="300" y1="100" x2="300" y2="180" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 3">
       <animate attributeName="stroke-dashoffset" from="0" to="6" dur="1.5s" repeatCount="indefinite"/>
     </line>
-    <line x1="450" y1="150" x2="404" y2="240" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3 3">
+    <line x1="450" y1="150" x2="404" y2="240" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 3">
       <animate attributeName="stroke-dashoffset" from="0" to="6" dur="1.4s" repeatCount="indefinite"/>
     </line>
-    <line x1="508" y1="300" x2="404" y2="300" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3 3">
+    <line x1="508" y1="300" x2="404" y2="300" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 3">
       <animate attributeName="stroke-dashoffset" from="0" to="6" dur="1.6s" repeatCount="indefinite"/>
     </line>
-    <line x1="450" y1="450" x2="404" y2="360" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3 3">
+    <line x1="450" y1="450" x2="404" y2="360" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 3">
       <animate attributeName="stroke-dashoffset" from="0" to="6" dur="1.3s" repeatCount="indefinite"/>
     </line>
-    <line x1="300" y1="500" x2="300" y2="420" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3 3">
+    <line x1="300" y1="500" x2="300" y2="420" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 3">
       <animate attributeName="stroke-dashoffset" from="0" to="6" dur="1.7s" repeatCount="indefinite"/>
     </line>
-    <line x1="150" y1="450" x2="196" y2="360" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3 3">
+    <line x1="150" y1="450" x2="196" y2="360" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 3">
       <animate attributeName="stroke-dashoffset" from="0" to="6" dur="1.2s" repeatCount="indefinite"/>
     </line>
-    <line x1="92" y1="300" x2="196" y2="300" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3 3">
+    <line x1="92" y1="300" x2="196" y2="300" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 3">
       <animate attributeName="stroke-dashoffset" from="0" to="6" dur="1.8s" repeatCount="indefinite"/>
     </line>
-    <line x1="150" y1="150" x2="196" y2="240" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3 3">
+    <line x1="150" y1="150" x2="196" y2="240" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 3">
       <animate attributeName="stroke-dashoffset" from="0" to="6" dur="1.35s" repeatCount="indefinite"/>
     </line>
   </g>
@@ -121,57 +121,57 @@ export function PricingOrchestrator({ size = 600, className, ...props }: Pricing
   <g className="worker-nodes-outer">
     {/* Top */}
     <g transform="translate(300, 100)">
-      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" stroke-width="1" opacity="0.9"/>
-      <circle r="16" fill="none" stroke="url(#rimLight)" stroke-width="2" opacity="0.6"/>
+      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" strokeWidth="1" opacity="0.9"/>
+      <circle r="16" fill="none" stroke="url(#rimLight)" strokeWidth="2" opacity="0.6"/>
       <circle r="8" fill="#1e293b" opacity="0.8"/>
     </g>
     
     {/* Top-right */}
     <g transform="translate(450, 150)">
-      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" stroke-width="1" opacity="0.9"/>
-      <circle r="16" fill="none" stroke="url(#rimLight)" stroke-width="2" opacity="0.6"/>
+      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" strokeWidth="1" opacity="0.9"/>
+      <circle r="16" fill="none" stroke="url(#rimLight)" strokeWidth="2" opacity="0.6"/>
       <circle r="8" fill="#1e293b" opacity="0.8"/>
     </g>
     
     {/* Right */}
     <g transform="translate(508, 300)">
-      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" stroke-width="1" opacity="0.9"/>
-      <circle r="16" fill="none" stroke="url(#rimLight)" stroke-width="2" opacity="0.6"/>
+      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" strokeWidth="1" opacity="0.9"/>
+      <circle r="16" fill="none" stroke="url(#rimLight)" strokeWidth="2" opacity="0.6"/>
       <circle r="8" fill="#1e293b" opacity="0.8"/>
     </g>
     
     {/* Bottom-right */}
     <g transform="translate(450, 450)">
-      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" stroke-width="1" opacity="0.9"/>
-      <circle r="16" fill="none" stroke="url(#rimLight)" stroke-width="2" opacity="0.6"/>
+      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" strokeWidth="1" opacity="0.9"/>
+      <circle r="16" fill="none" stroke="url(#rimLight)" strokeWidth="2" opacity="0.6"/>
       <circle r="8" fill="#1e293b" opacity="0.8"/>
     </g>
     
     {/* Bottom */}
     <g transform="translate(300, 500)">
-      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" stroke-width="1" opacity="0.9"/>
-      <circle r="16" fill="none" stroke="url(#rimLight)" stroke-width="2" opacity="0.6"/>
+      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" strokeWidth="1" opacity="0.9"/>
+      <circle r="16" fill="none" stroke="url(#rimLight)" strokeWidth="2" opacity="0.6"/>
       <circle r="8" fill="#1e293b" opacity="0.8"/>
     </g>
     
     {/* Bottom-left */}
     <g transform="translate(150, 450)">
-      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" stroke-width="1" opacity="0.9"/>
-      <circle r="16" fill="none" stroke="url(#rimLight)" stroke-width="2" opacity="0.6"/>
+      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" strokeWidth="1" opacity="0.9"/>
+      <circle r="16" fill="none" stroke="url(#rimLight)" strokeWidth="2" opacity="0.6"/>
       <circle r="8" fill="#1e293b" opacity="0.8"/>
     </g>
     
     {/* Left */}
     <g transform="translate(92, 300)">
-      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" stroke-width="1" opacity="0.9"/>
-      <circle r="16" fill="none" stroke="url(#rimLight)" stroke-width="2" opacity="0.6"/>
+      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" strokeWidth="1" opacity="0.9"/>
+      <circle r="16" fill="none" stroke="url(#rimLight)" strokeWidth="2" opacity="0.6"/>
       <circle r="8" fill="#1e293b" opacity="0.8"/>
     </g>
     
     {/* Top-left */}
     <g transform="translate(150, 150)">
-      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" stroke-width="1" opacity="0.9"/>
-      <circle r="16" fill="none" stroke="url(#rimLight)" stroke-width="2" opacity="0.6"/>
+      <circle r="16" fill="url(#nodeGradient)" stroke="#f59e0b" strokeWidth="1" opacity="0.9"/>
+      <circle r="16" fill="none" stroke="url(#rimLight)" strokeWidth="2" opacity="0.6"/>
       <circle r="8" fill="#1e293b" opacity="0.8"/>
     </g>
   </g>
@@ -180,43 +180,43 @@ export function PricingOrchestrator({ size = 600, className, ...props }: Pricing
   <g className="worker-nodes-inner">
     {/* Top */}
     <g transform="translate(300, 180)">
-      <circle r="20" fill="url(#nodeGradient)" stroke="#f59e0b" stroke-width="1.5" opacity="0.95"/>
-      <circle r="20" fill="none" stroke="url(#rimLight)" stroke-width="2.5" opacity="0.7"/>
+      <circle r="20" fill="url(#nodeGradient)" stroke="#f59e0b" strokeWidth="1.5" opacity="0.95"/>
+      <circle r="20" fill="none" stroke="url(#rimLight)" strokeWidth="2.5" opacity="0.7"/>
       <circle r="10" fill="#1e293b" opacity="0.9"/>
     </g>
     
     {/* Top-right */}
     <g transform="translate(404, 240)">
-      <circle r="20" fill="url(#nodeGradient)" stroke="#f59e0b" stroke-width="1.5" opacity="0.95"/>
-      <circle r="20" fill="none" stroke="url(#rimLight)" stroke-width="2.5" opacity="0.7"/>
+      <circle r="20" fill="url(#nodeGradient)" stroke="#f59e0b" strokeWidth="1.5" opacity="0.95"/>
+      <circle r="20" fill="none" stroke="url(#rimLight)" strokeWidth="2.5" opacity="0.7"/>
       <circle r="10" fill="#1e293b" opacity="0.9"/>
     </g>
     
     {/* Bottom-right */}
     <g transform="translate(404, 360)">
-      <circle r="20" fill="url(#nodeGradient)" stroke="#f59e0b" stroke-width="1.5" opacity="0.95"/>
-      <circle r="20" fill="none" stroke="url(#rimLight)" stroke-width="2.5" opacity="0.7"/>
+      <circle r="20" fill="url(#nodeGradient)" stroke="#f59e0b" strokeWidth="1.5" opacity="0.95"/>
+      <circle r="20" fill="none" stroke="url(#rimLight)" strokeWidth="2.5" opacity="0.7"/>
       <circle r="10" fill="#1e293b" opacity="0.9"/>
     </g>
     
     {/* Bottom */}
     <g transform="translate(300, 420)">
-      <circle r="20" fill="url(#nodeGradient)" stroke="#f59e0b" stroke-width="1.5" opacity="0.95"/>
-      <circle r="20" fill="none" stroke="url(#rimLight)" stroke-width="2.5" opacity="0.7"/>
+      <circle r="20" fill="url(#nodeGradient)" stroke="#f59e0b" strokeWidth="1.5" opacity="0.95"/>
+      <circle r="20" fill="none" stroke="url(#rimLight)" strokeWidth="2.5" opacity="0.7"/>
       <circle r="10" fill="#1e293b" opacity="0.9"/>
     </g>
     
     {/* Bottom-left */}
     <g transform="translate(196, 360)">
-      <circle r="20" fill="url(#nodeGradient)" stroke="#f59e0b" stroke-width="1.5" opacity="0.95"/>
-      <circle r="20" fill="none" stroke="url(#rimLight)" stroke-width="2.5" opacity="0.7"/>
+      <circle r="20" fill="url(#nodeGradient)" stroke="#f59e0b" strokeWidth="1.5" opacity="0.95"/>
+      <circle r="20" fill="none" stroke="url(#rimLight)" strokeWidth="2.5" opacity="0.7"/>
       <circle r="10" fill="#1e293b" opacity="0.9"/>
     </g>
     
     {/* Top-left */}
     <g transform="translate(196, 240)">
-      <circle r="20" fill="url(#nodeGradient)" stroke="#f59e0b" stroke-width="1.5" opacity="0.95"/>
-      <circle r="20" fill="none" stroke="url(#rimLight)" stroke-width="2.5" opacity="0.7"/>
+      <circle r="20" fill="url(#nodeGradient)" stroke="#f59e0b" strokeWidth="1.5" opacity="0.95"/>
+      <circle r="20" fill="none" stroke="url(#rimLight)" strokeWidth="2.5" opacity="0.7"/>
       <circle r="10" fill="#1e293b" opacity="0.9"/>
     </g>
   </g>
@@ -230,14 +230,14 @@ export function PricingOrchestrator({ size = 600, className, ...props }: Pricing
     </circle>
     
     {/* Main node body */}
-    <circle r="45" fill="url(#queenGradient)" stroke="#f59e0b" stroke-width="2.5" opacity="1"/>
+    <circle r="45" fill="url(#queenGradient)" stroke="#f59e0b" strokeWidth="2.5" opacity="1"/>
     
     {/* Rim lighting effect */}
-    <circle r="45" fill="none" stroke="url(#rimLight)" stroke-width="4" opacity="0.8"/>
+    <circle r="45" fill="none" stroke="url(#rimLight)" strokeWidth="4" opacity="0.8"/>
     
     {/* Inner hexagon detail */}
     <path d="M 0,-25 L 21.65,-12.5 L 21.65,12.5 L 0,25 L -21.65,12.5 L -21.65,-12.5 Z" 
-          fill="none" stroke="#f59e0b" stroke-width="2" opacity="0.6"/>
+          fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.6"/>
     
     {/* Center core */}
     <circle r="15" fill="#0f172a" opacity="0.9"/>

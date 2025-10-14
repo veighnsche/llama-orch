@@ -29,7 +29,7 @@ export function WorkstationOwner({ size = 96, className, ...props }: Workstation
     
     {/* Monitor bezel (thin bezels, dark) */}
     <path d="M 20 32 Q 20 30 22 30 L 74 30 Q 76 30 76 32 L 76 54 Q 76 56 74 56 L 22 56 Q 20 56 20 54 Z" 
-          fill="#2d3548" stroke="#3d4556" stroke-width="0.5"/>
+          fill="#2d3548" stroke="#3d4556" strokeWidth="0.5"/>
     
     {/* Curved screen with gradient (active display) */}
     <defs>
@@ -57,14 +57,14 @@ export function WorkstationOwner({ size = 96, className, ...props }: Workstation
     <rect x="24" y="36" width="48" height="16" rx="0.5" fill="#343a40" opacity="0.1"/>
     
     {/* 3D wireframe mesh (abstract geometric shape with orange) */}
-    <path d="M 40 42 L 48 38 L 56 42 L 48 46 Z" stroke="#ff9500" stroke-width="0.5" fill="none" opacity="0.7"/>
-    <path d="M 40 42 L 40 48 L 48 52 L 48 46 Z" stroke="#ff9500" stroke-width="0.5" fill="none" opacity="0.6"/>
-    <path d="M 56 42 L 56 48 L 48 52 L 48 46 Z" stroke="#ff9500" stroke-width="0.5" fill="none" opacity="0.6"/>
-    <path d="M 40 48 L 48 52 L 56 48" stroke="#ff9500" stroke-width="0.5" fill="none" opacity="0.7"/>
+    <path d="M 40 42 L 48 38 L 56 42 L 48 46 Z" stroke="#ff9500" strokeWidth="0.5" fill="none" opacity="0.7"/>
+    <path d="M 40 42 L 40 48 L 48 52 L 48 46 Z" stroke="#ff9500" strokeWidth="0.5" fill="none" opacity="0.6"/>
+    <path d="M 56 42 L 56 48 L 48 52 L 48 46 Z" stroke="#ff9500" strokeWidth="0.5" fill="none" opacity="0.6"/>
+    <path d="M 40 48 L 48 52 L 56 48" stroke="#ff9500" strokeWidth="0.5" fill="none" opacity="0.7"/>
     
     {/* Grid lines (3D viewport) */}
-    <line x1="30" y1="50" x2="66" y2="50" stroke="#4a5568" stroke-width="0.2" opacity="0.3"/>
-    <line x1="48" y1="38" x2="48" y2="50" stroke="#4a5568" stroke-width="0.2" opacity="0.3"/>
+    <line x1="30" y1="50" x2="66" y2="50" stroke="#4a5568" strokeWidth="0.2" opacity="0.3"/>
+    <line x1="48" y1="38" x2="48" y2="50" stroke="#4a5568" strokeWidth="0.2" opacity="0.3"/>
     
     {/* Properties panel */}
     <rect x="58" y="36" width="14" height="16" rx="0.5" fill="#3d4556" opacity="0.3"/>
@@ -82,7 +82,7 @@ export function WorkstationOwner({ size = 96, className, ...props }: Workstation
   {/* Graphics tablet with stylus */}
   <g id="tablet">
     {/* Tablet body */}
-    <rect x="52" y="70" width="20" height="14" rx="1" fill="#2d3548" stroke="#3d4556" stroke-width="0.5"/>
+    <rect x="52" y="70" width="20" height="14" rx="1" fill="#2d3548" stroke="#3d4556" strokeWidth="0.5"/>
     <rect x="53" y="71" width="18" height="12" rx="0.5" fill="#1f2533"/>
     
     {/* Active area */}
@@ -102,22 +102,22 @@ export function WorkstationOwner({ size = 96, className, ...props }: Workstation
   {/* Workstation tower (under desk, visible) */}
   <g id="workstation">
     {/* Tower body (mesh front panel, dark) */}
-    <rect x="14" y="48" width="14" height="20" rx="1.5" fill="#2d3548" stroke="#3d4556" stroke-width="0.5"/>
+    <rect x="14" y="48" width="14" height="20" rx="1.5" fill="#2d3548" stroke="#3d4556" strokeWidth="0.5"/>
     
     {/* Mesh front panel pattern */}
     <rect x="16" y="50" width="10" height="16" rx="0.5" fill="#1f2533" opacity="0.6"/>
-    <line x1="17" y1="51" x2="17" y2="65" stroke="#4a5568" stroke-width="0.3" opacity="0.4"/>
-    <line x1="18.5" y1="51" x2="18.5" y2="65" stroke="#4a5568" stroke-width="0.3" opacity="0.4"/>
-    <line x1="20" y1="51" x2="20" y2="65" stroke="#4a5568" stroke-width="0.3" opacity="0.4"/>
-    <line x1="21.5" y1="51" x2="21.5" y2="65" stroke="#4a5568" stroke-width="0.3" opacity="0.4"/>
-    <line x1="23" y1="51" x2="23" y2="65" stroke="#4a5568" stroke-width="0.3" opacity="0.4"/>
-    <line x1="24.5" y1="51" x2="24.5" y2="65" stroke="#4a5568" stroke-width="0.3" opacity="0.4"/>
+    <line x1="17" y1="51" x2="17" y2="65" stroke="#4a5568" strokeWidth="0.3" opacity="0.4"/>
+    <line x1="18.5" y1="51" x2="18.5" y2="65" stroke="#4a5568" strokeWidth="0.3" opacity="0.4"/>
+    <line x1="20" y1="51" x2="20" y2="65" stroke="#4a5568" strokeWidth="0.3" opacity="0.4"/>
+    <line x1="21.5" y1="51" x2="21.5" y2="65" stroke="#4a5568" strokeWidth="0.3" opacity="0.4"/>
+    <line x1="23" y1="51" x2="23" y2="65" stroke="#4a5568" strokeWidth="0.3" opacity="0.4"/>
+    <line x1="24.5" y1="51" x2="24.5" y2="65" stroke="#4a5568" strokeWidth="0.3" opacity="0.4"/>
     
     {/* Horizontal mesh lines */}
-    <line x1="16" y1="53" x2="26" y2="53" stroke="#4a5568" stroke-width="0.2" opacity="0.3"/>
-    <line x1="16" y1="56" x2="26" y2="56" stroke="#4a5568" stroke-width="0.2" opacity="0.3"/>
-    <line x1="16" y1="59" x2="26" y2="59" stroke="#4a5568" stroke-width="0.2" opacity="0.3"/>
-    <line x1="16" y1="62" x2="26" y2="62" stroke="#4a5568" stroke-width="0.2" opacity="0.3"/>
+    <line x1="16" y1="53" x2="26" y2="53" stroke="#4a5568" strokeWidth="0.2" opacity="0.3"/>
+    <line x1="16" y1="56" x2="26" y2="56" stroke="#4a5568" strokeWidth="0.2" opacity="0.3"/>
+    <line x1="16" y1="59" x2="26" y2="59" stroke="#4a5568" strokeWidth="0.2" opacity="0.3"/>
+    <line x1="16" y1="62" x2="26" y2="62" stroke="#4a5568" strokeWidth="0.2" opacity="0.3"/>
     
     {/* Orange LED accent */}
     <rect x="16" y="66" width="10" height="0.5" fill="#ff9500" opacity="0.8"/>

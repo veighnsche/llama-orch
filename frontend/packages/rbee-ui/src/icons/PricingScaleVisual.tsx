@@ -64,32 +64,32 @@ export function PricingScaleVisual({ size = 1400, className, ...props }: Pricing
   <g id="singleServer">
     {/* Label with background */}
     <g transform="translate(180, 30)">
-      <rect x="-70" y="0" width="140" height="35" rx="6" fill="#0f172a" opacity="0.9" stroke="#64748b" stroke-width="1.5"/>
-      <text x="0" y="23" font-family="sans-serif" font-size="16" fill="#cbd5e1" text-anchor="middle" font-weight="700" letter-spacing="2">START FREE</text>
+      <rect x="-70" y="0" width="140" height="35" rx="6" fill="#0f172a" opacity="0.9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="0" y="23" fontFamily="sans-serif" fontSize="16" fill="#cbd5e1" textAnchor="middle" fontWeight="700" letterSpacing="2">START FREE</text>
     </g>
     
     {/* Server tower */}
     <g transform="translate(100, 120)">
-      <rect x="0" y="0" width="160" height="220" rx="8" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="3"/>
+      <rect x="0" y="0" width="160" height="220" rx="8" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="3"/>
       
       {/* Front panel */}
       <rect x="10" y="10" width="140" height="200" rx="4" fill="#1e293b"/>
       
       {/* GPU slot (single) */}
       <g transform="translate(25, 80)">
-        <rect width="110" height="60" rx="3" fill="#2d5016" stroke="#3d6b1f" stroke-width="1.5"/>
+        <rect width="110" height="60" rx="3" fill="#2d5016" stroke="#3d6b1f" strokeWidth="1.5"/>
         {/* Heatsink */}
         <rect x="10" y="10" width="90" height="40" fill="#94a3b8" opacity="0.6"/>
         {/* Fins */}
-        <line x1="15" y1="10" x2="15" y2="50" stroke="#cbd5e1" stroke-width="1.5"/>
-        <line x1="25" y1="10" x2="25" y2="50" stroke="#cbd5e1" stroke-width="1.5"/>
-        <line x1="35" y1="10" x2="35" y2="50" stroke="#cbd5e1" stroke-width="1.5"/>
-        <line x1="45" y1="10" x2="45" y2="50" stroke="#cbd5e1" stroke-width="1.5"/>
-        <line x1="55" y1="10" x2="55" y2="50" stroke="#cbd5e1" stroke-width="1.5"/>
-        <line x1="65" y1="10" x2="65" y2="50" stroke="#cbd5e1" stroke-width="1.5"/>
-        <line x1="75" y1="10" x2="75" y2="50" stroke="#cbd5e1" stroke-width="1.5"/>
-        <line x1="85" y1="10" x2="85" y2="50" stroke="#cbd5e1" stroke-width="1.5"/>
-        <line x1="95" y1="10" x2="95" y2="50" stroke="#cbd5e1" stroke-width="1.5"/>
+        <line x1="15" y1="10" x2="15" y2="50" stroke="#cbd5e1" strokeWidth="1.5"/>
+        <line x1="25" y1="10" x2="25" y2="50" stroke="#cbd5e1" strokeWidth="1.5"/>
+        <line x1="35" y1="10" x2="35" y2="50" stroke="#cbd5e1" strokeWidth="1.5"/>
+        <line x1="45" y1="10" x2="45" y2="50" stroke="#cbd5e1" strokeWidth="1.5"/>
+        <line x1="55" y1="10" x2="55" y2="50" stroke="#cbd5e1" strokeWidth="1.5"/>
+        <line x1="65" y1="10" x2="65" y2="50" stroke="#cbd5e1" strokeWidth="1.5"/>
+        <line x1="75" y1="10" x2="75" y2="50" stroke="#cbd5e1" strokeWidth="1.5"/>
+        <line x1="85" y1="10" x2="85" y2="50" stroke="#cbd5e1" strokeWidth="1.5"/>
+        <line x1="95" y1="10" x2="95" y2="50" stroke="#cbd5e1" strokeWidth="1.5"/>
         {/* LED */}
         <rect x="0" y="60" width="110" height="6" fill="#f59e0b" opacity="0.8" rx="1">
           <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite"/>
@@ -108,30 +108,30 @@ export function PricingScaleVisual({ size = 1400, className, ...props }: Pricing
     
     {/* Stats */}
     <g transform="translate(80, 380)">
-      <rect width="200" height="70" rx="8" fill="#0f172a" opacity="0.9" stroke="#f59e0b" stroke-width="2"/>
-      <text x="100" y="25" font-family="sans-serif" font-size="15" fill="#cbd5e1" text-anchor="middle" font-weight="600">1 Worker</text>
-      <text x="100" y="52" font-family="sans-serif" font-size="24" fill="#f59e0b" text-anchor="middle" font-weight="800">$0/mo</text>
+      <rect width="200" height="70" rx="8" fill="#0f172a" opacity="0.9" stroke="#f59e0b" strokeWidth="2"/>
+      <text x="100" y="25" fontFamily="sans-serif" fontSize="15" fill="#cbd5e1" textAnchor="middle" fontWeight="600">1 Worker</text>
+      <text x="100" y="52" fontFamily="sans-serif" fontSize="24" fill="#f59e0b" textAnchor="middle" fontWeight="800">$0/mo</text>
     </g>
   </g>
   
   {/* ARROW */}
   <g transform="translate(400, 250)">
-    <path d="M 0,0 L 180,0 L 165,-15 M 180,0 L 165,15" stroke="#14b8a6" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.9"/>
-    <text x="90" y="-20" font-family="sans-serif" font-size="16" fill="#14b8a6" text-anchor="middle" font-weight="700" letter-spacing="1">SCALE</text>
+    <path d="M 0,0 L 180,0 L 165,-15 M 180,0 L 165,15" stroke="#14b8a6" strokeWidth="3.5" fill="none" strokeLinecap="round" opacity="0.9"/>
+    <text x="90" y="-20" fontFamily="sans-serif" fontSize="16" fill="#14b8a6" textAnchor="middle" fontWeight="700" letterSpacing="1">SCALE</text>
   </g>
   
   {/* CENTER: Small Cluster (Growth) */}
   <g id="smallCluster">
     {/* Label with background */}
     <g transform="translate(700, 30)">
-      <rect x="-60" y="0" width="120" height="35" rx="6" fill="#0f172a" opacity="0.9" stroke="#64748b" stroke-width="1.5"/>
-      <text x="0" y="23" font-family="sans-serif" font-size="16" fill="#cbd5e1" text-anchor="middle" font-weight="700" letter-spacing="2">SCALING</text>
+      <rect x="-60" y="0" width="120" height="35" rx="6" fill="#0f172a" opacity="0.9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="0" y="23" fontFamily="sans-serif" fontSize="16" fill="#cbd5e1" textAnchor="middle" fontWeight="700" letterSpacing="2">SCALING</text>
     </g>
     
     {/* Three servers in rack formation */}
     {/* Server 1 */}
     <g transform="translate(600, 150)">
-      <rect width="80" height="90" rx="6" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="2"/>
+      <rect width="80" height="90" rx="6" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="2"/>
       <rect x="5" y="5" width="70" height="80" rx="3" fill="#1e293b"/>
       {/* Mini GPU */}
       <rect x="15" y="30" width="50" height="30" rx="2" fill="#2d5016"/>
@@ -142,7 +142,7 @@ export function PricingScaleVisual({ size = 1400, className, ...props }: Pricing
     
     {/* Server 2 */}
     <g transform="translate(600, 260)">
-      <rect width="80" height="90" rx="6" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="2"/>
+      <rect width="80" height="90" rx="6" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="2"/>
       <rect x="5" y="5" width="70" height="80" rx="3" fill="#1e293b"/>
       <rect x="15" y="30" width="50" height="30" rx="2" fill="#2d5016"/>
       <rect x="20" y="35" width="40" height="20" fill="#94a3b8" opacity="0.6"/>
@@ -152,7 +152,7 @@ export function PricingScaleVisual({ size = 1400, className, ...props }: Pricing
     
     {/* Server 3 */}
     <g transform="translate(720, 150)">
-      <rect width="80" height="90" rx="6" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="2"/>
+      <rect width="80" height="90" rx="6" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="2"/>
       <rect x="5" y="5" width="70" height="80" rx="3" fill="#1e293b"/>
       <rect x="15" y="30" width="50" height="30" rx="2" fill="#2d5016"/>
       <rect x="20" y="35" width="40" height="20" fill="#94a3b8" opacity="0.6"/>
@@ -162,7 +162,7 @@ export function PricingScaleVisual({ size = 1400, className, ...props }: Pricing
     
     {/* Server 4 */}
     <g transform="translate(720, 260)">
-      <rect width="80" height="90" rx="6" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="2"/>
+      <rect width="80" height="90" rx="6" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="2"/>
       <rect x="5" y="5" width="70" height="80" rx="3" fill="#1e293b"/>
       <rect x="15" y="30" width="50" height="30" rx="2" fill="#2d5016"/>
       <rect x="20" y="35" width="40" height="20" fill="#94a3b8" opacity="0.6"/>
@@ -172,10 +172,10 @@ export function PricingScaleVisual({ size = 1400, className, ...props }: Pricing
     
     {/* Network lines */}
     <g opacity="0.7" filter="url(#glow)">
-      <line x1="640" y1="240" x2="640" y2="260" stroke="#14b8a6" stroke-width="2"/>
-      <line x1="760" y1="240" x2="760" y2="260" stroke="#14b8a6" stroke-width="2"/>
-      <line x1="680" y1="195" x2="720" y2="195" stroke="#14b8a6" stroke-width="2"/>
-      <line x1="680" y1="305" x2="720" y2="305" stroke="#14b8a6" stroke-width="2"/>
+      <line x1="640" y1="240" x2="640" y2="260" stroke="#14b8a6" strokeWidth="2"/>
+      <line x1="760" y1="240" x2="760" y2="260" stroke="#14b8a6" strokeWidth="2"/>
+      <line x1="680" y1="195" x2="720" y2="195" stroke="#14b8a6" strokeWidth="2"/>
+      <line x1="680" y1="305" x2="720" y2="305" stroke="#14b8a6" strokeWidth="2"/>
     </g>
     
     {/* Glow */}
@@ -183,44 +183,44 @@ export function PricingScaleVisual({ size = 1400, className, ...props }: Pricing
     
     {/* Stats */}
     <g transform="translate(600, 380)">
-      <rect width="200" height="70" rx="8" fill="#0f172a" opacity="0.9" stroke="#f59e0b" stroke-width="2"/>
-      <text x="100" y="25" font-family="sans-serif" font-size="15" fill="#cbd5e1" text-anchor="middle" font-weight="600">4 Workers</text>
-      <text x="100" y="52" font-family="sans-serif" font-size="24" fill="#f59e0b" text-anchor="middle" font-weight="800">$49/mo</text>
+      <rect width="200" height="70" rx="8" fill="#0f172a" opacity="0.9" stroke="#f59e0b" strokeWidth="2"/>
+      <text x="100" y="25" fontFamily="sans-serif" fontSize="15" fill="#cbd5e1" textAnchor="middle" fontWeight="600">4 Workers</text>
+      <text x="100" y="52" fontFamily="sans-serif" fontSize="24" fill="#f59e0b" textAnchor="middle" fontWeight="800">$49/mo</text>
     </g>
   </g>
   
   {/* ARROW */}
   <g transform="translate(920, 250)">
-    <path d="M 0,0 L 180,0 L 165,-15 M 180,0 L 165,15" stroke="#14b8a6" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.9"/>
-    <text x="90" y="-20" font-family="sans-serif" font-size="16" fill="#14b8a6" text-anchor="middle" font-weight="700" letter-spacing="1">GROW</text>
+    <path d="M 0,0 L 180,0 L 165,-15 M 180,0 L 165,15" stroke="#14b8a6" strokeWidth="3.5" fill="none" strokeLinecap="round" opacity="0.9"/>
+    <text x="90" y="-20" fontFamily="sans-serif" fontSize="16" fill="#14b8a6" textAnchor="middle" fontWeight="700" letterSpacing="1">GROW</text>
   </g>
   
   {/* RIGHT: Large Cluster (Enterprise) */}
   <g id="largeCluster">
     {/* Label with background */}
     <g transform="translate(1240, 30)">
-      <rect x="-70" y="0" width="140" height="35" rx="6" fill="#0f172a" opacity="0.9" stroke="#64748b" stroke-width="1.5"/>
-      <text x="0" y="23" font-family="sans-serif" font-size="16" fill="#cbd5e1" text-anchor="middle" font-weight="700" letter-spacing="2">ENTERPRISE</text>
+      <rect x="-70" y="0" width="140" height="35" rx="6" fill="#0f172a" opacity="0.9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="0" y="23" fontFamily="sans-serif" fontSize="16" fill="#cbd5e1" textAnchor="middle" fontWeight="700" letterSpacing="2">ENTERPRISE</text>
     </g>
     
     {/* Rack of servers (grid) */}
     {/* Row 1 */}
-    <rect x="1140" y="140" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="1.5"/>
-    <rect x="1195" y="140" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="1.5"/>
-    <rect x="1250" y="140" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="1.5"/>
-    <rect x="1305" y="140" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="1.5"/>
+    <rect x="1140" y="140" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="1.5"/>
+    <rect x="1195" y="140" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="1.5"/>
+    <rect x="1250" y="140" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="1.5"/>
+    <rect x="1305" y="140" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="1.5"/>
     
     {/* Row 2 */}
-    <rect x="1140" y="200" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="1.5"/>
-    <rect x="1195" y="200" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="1.5"/>
-    <rect x="1250" y="200" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="1.5"/>
-    <rect x="1305" y="200" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="1.5"/>
+    <rect x="1140" y="200" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="1.5"/>
+    <rect x="1195" y="200" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="1.5"/>
+    <rect x="1250" y="200" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="1.5"/>
+    <rect x="1305" y="200" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="1.5"/>
     
     {/* Row 3 */}
-    <rect x="1140" y="260" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="1.5"/>
-    <rect x="1195" y="260" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="1.5"/>
-    <rect x="1250" y="260" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="1.5"/>
-    <rect x="1305" y="260" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" stroke-width="1.5"/>
+    <rect x="1140" y="260" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="1.5"/>
+    <rect x="1195" y="260" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="1.5"/>
+    <rect x="1250" y="260" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="1.5"/>
+    <rect x="1305" y="260" width="45" height="50" rx="4" fill="url(#serverGradient)" stroke="#1e293b" strokeWidth="1.5"/>
     
     {/* Add LEDs and GPU indicators */}
     <g opacity="0.8">
@@ -242,18 +242,18 @@ export function PricingScaleVisual({ size = 1400, className, ...props }: Pricing
     
     {/* Network mesh overlay */}
     <g opacity="0.6" filter="url(#glow)">
-      <line x1="1162" y1="190" x2="1217" y2="190" stroke="#14b8a6" stroke-width="1.5"/>
-      <line x1="1217" y1="190" x2="1272" y2="190" stroke="#14b8a6" stroke-width="1.5"/>
-      <line x1="1272" y1="190" x2="1327" y2="190" stroke="#14b8a6" stroke-width="1.5"/>
+      <line x1="1162" y1="190" x2="1217" y2="190" stroke="#14b8a6" strokeWidth="1.5"/>
+      <line x1="1217" y1="190" x2="1272" y2="190" stroke="#14b8a6" strokeWidth="1.5"/>
+      <line x1="1272" y1="190" x2="1327" y2="190" stroke="#14b8a6" strokeWidth="1.5"/>
       
-      <line x1="1162" y1="250" x2="1217" y2="250" stroke="#14b8a6" stroke-width="1.5"/>
-      <line x1="1217" y1="250" x2="1272" y2="250" stroke="#14b8a6" stroke-width="1.5"/>
-      <line x1="1272" y1="250" x2="1327" y2="250" stroke="#14b8a6" stroke-width="1.5"/>
+      <line x1="1162" y1="250" x2="1217" y2="250" stroke="#14b8a6" strokeWidth="1.5"/>
+      <line x1="1217" y1="250" x2="1272" y2="250" stroke="#14b8a6" strokeWidth="1.5"/>
+      <line x1="1272" y1="250" x2="1327" y2="250" stroke="#14b8a6" strokeWidth="1.5"/>
       
-      <line x1="1162" y1="165" x2="1162" y2="285" stroke="#14b8a6" stroke-width="1.5"/>
-      <line x1="1217" y1="165" x2="1217" y2="285" stroke="#14b8a6" stroke-width="1.5"/>
-      <line x1="1272" y1="165" x2="1272" y2="285" stroke="#14b8a6" stroke-width="1.5"/>
-      <line x1="1327" y1="165" x2="1327" y2="285" stroke="#14b8a6" stroke-width="1.5"/>
+      <line x1="1162" y1="165" x2="1162" y2="285" stroke="#14b8a6" strokeWidth="1.5"/>
+      <line x1="1217" y1="165" x2="1217" y2="285" stroke="#14b8a6" strokeWidth="1.5"/>
+      <line x1="1272" y1="165" x2="1272" y2="285" stroke="#14b8a6" strokeWidth="1.5"/>
+      <line x1="1327" y1="165" x2="1327" y2="285" stroke="#14b8a6" strokeWidth="1.5"/>
     </g>
     
     {/* Intense glow */}
@@ -261,9 +261,9 @@ export function PricingScaleVisual({ size = 1400, className, ...props }: Pricing
     
     {/* Stats */}
     <g transform="translate(1140, 380)">
-      <rect width="210" height="70" rx="8" fill="#0f172a" opacity="0.9" stroke="#f59e0b" stroke-width="2"/>
-      <text x="105" y="25" font-family="sans-serif" font-size="15" fill="#cbd5e1" text-anchor="middle" font-weight="600">12+ Workers</text>
-      <text x="105" y="52" font-family="sans-serif" font-size="24" fill="#f59e0b" text-anchor="middle" font-weight="800">Custom</text>
+      <rect width="210" height="70" rx="8" fill="#0f172a" opacity="0.9" stroke="#f59e0b" strokeWidth="2"/>
+      <text x="105" y="25" fontFamily="sans-serif" fontSize="15" fill="#cbd5e1" textAnchor="middle" fontWeight="600">12+ Workers</text>
+      <text x="105" y="52" fontFamily="sans-serif" fontSize="24" fill="#f59e0b" textAnchor="middle" fontWeight="800">Custom</text>
     </g>
   </g>
   

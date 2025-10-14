@@ -1,11 +1,10 @@
 'use client'
 
+import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
 import { Input } from '@rbee/ui/atoms/Input'
-import { PulseBadge } from '@rbee/ui/molecules'
-import { BeeGlyph } from '@rbee/ui/patterns/BeeGlyph'
-import { CheckCircle2, GitBranch, Lock, Mail } from 'lucide-react'
-import Image from 'next/image'
+import { BeeGlyph, HomelabBee } from '@rbee/ui/icons'
+import { ArrowRight, CheckCircle2, GitBranch, Lock, Mail } from 'lucide-react'
 import type React from 'react'
 import { useState } from 'react'
 
@@ -32,12 +31,17 @@ export function EmailCapture() {
 
 			<div className="relative max-w-3xl mx-auto px-6 text-center">
 				{/* Status badge */}
-				<div
-					className="mb-4 inline-flex animate-in fade-in slide-in-from-bottom-2 duration-500"
+				<Badge 
+					variant="outline" 
+					className="mb-4 inline-flex items-center gap-2 border-primary/20 bg-primary/10 px-3 py-1 animate-in fade-in slide-in-from-bottom-2 duration-500"
 					style={{ animationDelay: '100ms' }}
 				>
-					<PulseBadge text="In Development · M0 · 68%" />
-				</div>
+					<span className="relative flex h-2 w-2">
+						<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
+						<span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
+					</span>
+					<span className="text-xs font-medium uppercase tracking-wider text-primary">In Development · M0 · 68%</span>
+				</Badge>
 
 				{/* Headline */}
 				<h2
@@ -56,13 +60,10 @@ export function EmailCapture() {
 				</p>
 
 				{/* Supportive visual - homelab illustration */}
-				<Image
-					src="/illustrations/homelab-bee.svg"
-					width={960}
-					height={140}
-					priority
-					className="mx-auto mb-6 opacity-90"
-					alt="isometric homelab rack connected across small PCs; friendly bee icon hovering above; warm midnight palette; minimal linework; evokes 'run AI on your own hardware'"
+				<HomelabBee
+					size={960}
+					className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20"
+					aria-hidden="true"
 				/>
 
 				{/* Form or success state */}

@@ -15,7 +15,7 @@ export function BeeGlyph({ size = 4, className, ...props }: BeeGlyphProps) {
       {...props}
     >
       <circle cx="32" cy="32" r="24" />
-  <path d="M20 32h24M32 20v24" stroke="white" stroke-width="4" />
+  <path d="M20 32h24M32 20v24" stroke="white" strokeWidth="4" />
     </svg>
   )
 }

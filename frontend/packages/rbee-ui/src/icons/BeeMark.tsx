@@ -32,8 +32,8 @@ export function BeeMark({ size = 24, className, ...props }: BeeMarkProps) {
   <ellipse cx="16" cy="11" rx="3" ry="4" fill="#f59e0b" opacity="0.7" transform="rotate(25 16 11)"/>
   
   {/* Antennae (charcoal) - clean lines with geometric tips */}
-  <line x1="10.5" y1="5.5" x2="9" y2="3" stroke="#18181b" stroke-width="1" stroke-linecap="round"/>
-  <line x1="13.5" y1="5.5" x2="15" y2="3" stroke="#18181b" stroke-width="1" stroke-linecap="round"/>
+  <line x1="10.5" y1="5.5" x2="9" y2="3" stroke="#18181b" strokeWidth="1" strokeLinecap="round"/>
+  <line x1="13.5" y1="5.5" x2="15" y2="3" stroke="#18181b" strokeWidth="1" strokeLinecap="round"/>
   <polygon points="9,2.2 8.5,3.5 9.5,3.5" fill="#18181b"/>
   <polygon points="15,2.2 14.5,3.5 15.5,3.5" fill="#18181b"/>
     </svg>

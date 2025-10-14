@@ -19,14 +19,14 @@ export function HomelabBee({ size = 960, className, ...props }: HomelabBeeProps)
   
   {/* Grid pattern background */}
   <g opacity="0.08">
-    <line x1="0" y1="35" x2="960" y2="35" stroke="#3b82f6" stroke-width="0.5"/>
-    <line x1="0" y1="70" x2="960" y2="70" stroke="#3b82f6" stroke-width="0.5"/>
-    <line x1="0" y1="105" x2="960" y2="105" stroke="#3b82f6" stroke-width="0.5"/>
+    <line x1="0" y1="35" x2="960" y2="35" stroke="#3b82f6" strokeWidth="0.5"/>
+    <line x1="0" y1="70" x2="960" y2="70" stroke="#3b82f6" strokeWidth="0.5"/>
+    <line x1="0" y1="105" x2="960" y2="105" stroke="#3b82f6" strokeWidth="0.5"/>
   </g>
   
   {/* Left: Mini PC / Home server */}
   <g transform="translate(200, 40)">
-    <rect x="0" y="0" width="60" height="60" rx="4" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+    <rect x="0" y="0" width="60" height="60" rx="4" fill="#1e293b" stroke="#3b82f6" strokeWidth="2"/>
     <circle cx="12" cy="12" r="3" fill="#10b981" opacity="0.8"/>
     <rect x="8" y="24" width="44" height="3" rx="1.5" fill="#3b82f6" opacity="0.4"/>
     <rect x="8" y="32" width="44" height="3" rx="1.5" fill="#3b82f6" opacity="0.6"/>
@@ -36,22 +36,22 @@ export function HomelabBee({ size = 960, className, ...props }: HomelabBeeProps)
   
   {/* Center: GPU Server rack */}
   <g transform="translate(420, 25)">
-    <rect x="0" y="0" width="120" height="90" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="2.5"/>
+    <rect x="0" y="0" width="120" height="90" rx="6" fill="#1e293b" stroke="#10b981" strokeWidth="2.5"/>
     {/* Rack slots */}
-    <rect x="10" y="12" width="100" height="18" rx="2" fill="#10b981" fill-opacity="0.15" stroke="#10b981" stroke-width="1.5"/>
-    <rect x="10" y="36" width="100" height="18" rx="2" fill="#10b981" fill-opacity="0.25" stroke="#10b981" stroke-width="1.5"/>
-    <rect x="10" y="60" width="100" height="18" rx="2" fill="#10b981" fill-opacity="0.2" stroke="#10b981" stroke-width="1.5"/>
+    <rect x="10" y="12" width="100" height="18" rx="2" fill="#10b981" fillOpacity="0.15" stroke="#10b981" strokeWidth="1.5"/>
+    <rect x="10" y="36" width="100" height="18" rx="2" fill="#10b981" fillOpacity="0.25" stroke="#10b981" strokeWidth="1.5"/>
+    <rect x="10" y="60" width="100" height="18" rx="2" fill="#10b981" fillOpacity="0.2" stroke="#10b981" strokeWidth="1.5"/>
     {/* LED indicators */}
     <circle cx="20" cy="21" r="2.5" fill="#10b981"/>
     <circle cx="20" cy="45" r="2.5" fill="#10b981"/>
     <circle cx="20" cy="69" r="2.5" fill="#3b82f6"/>
     {/* GPU label hint */}
-    <text x="35" y="25" fill="#10b981" font-size="8" opacity="0.6">GPU</text>
+    <text x="35" y="25" fill="#10b981" fontSize="8" opacity="0.6">GPU</text>
   </g>
   
   {/* Right: Another mini PC */}
   <g transform="translate(700, 40)">
-    <rect x="0" y="0" width="60" height="60" rx="4" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+    <rect x="0" y="0" width="60" height="60" rx="4" fill="#1e293b" stroke="#3b82f6" strokeWidth="2"/>
     <circle cx="12" cy="12" r="3" fill="#10b981" opacity="0.8"/>
     <rect x="8" y="24" width="44" height="3" rx="1.5" fill="#3b82f6" opacity="0.5"/>
     <rect x="8" y="32" width="44" height="3" rx="1.5" fill="#3b82f6" opacity="0.4"/>
@@ -60,8 +60,8 @@ export function HomelabBee({ size = 960, className, ...props }: HomelabBeeProps)
   </g>
   
   {/* Connection lines (network) */}
-  <line x1="260" y1="70" x2="420" y2="70" stroke="#3b82f6" stroke-width="2" opacity="0.4" stroke-dasharray="4 4"/>
-  <line x1="540" y1="70" x2="700" y2="70" stroke="#3b82f6" stroke-width="2" opacity="0.4" stroke-dasharray="4 4"/>
+  <line x1="260" y1="70" x2="420" y2="70" stroke="#3b82f6" strokeWidth="2" opacity="0.4" strokeDasharray="4 4"/>
+  <line x1="540" y1="70" x2="700" y2="70" stroke="#3b82f6" strokeWidth="2" opacity="0.4" strokeDasharray="4 4"/>
   
   {/* Data flow indicators */}
   <circle cx="340" cy="70" r="3" fill="#3b82f6" opacity="0.8">
@@ -79,11 +79,11 @@ export function HomelabBee({ size = 960, className, ...props }: HomelabBeeProps)
     <rect x="14" y="8" width="3" height="8" fill="#0f172a" opacity="0.6"/>
     <rect x="20" y="8" width="3" height="8" fill="#0f172a" opacity="0.6"/>
     {/* Wings */}
-    <ellipse cx="12" cy="8" rx="8" ry="6" fill="#3b82f6" opacity="0.3" stroke="#3b82f6" stroke-width="1"/>
-    <ellipse cx="28" cy="8" rx="8" ry="6" fill="#3b82f6" opacity="0.3" stroke="#3b82f6" stroke-width="1"/>
+    <ellipse cx="12" cy="8" rx="8" ry="6" fill="#3b82f6" opacity="0.3" stroke="#3b82f6" strokeWidth="1"/>
+    <ellipse cx="28" cy="8" rx="8" ry="6" fill="#3b82f6" opacity="0.3" stroke="#3b82f6" strokeWidth="1"/>
     {/* Antenna */}
-    <line x1="18" y1="4" x2="16" y2="0" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="22" y1="4" x2="24" y2="0" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="18" y1="4" x2="16" y2="0" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="22" y1="4" x2="24" y2="0" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round"/>
     <circle cx="16" cy="0" r="1.5" fill="#10b981"/>
     <circle cx="24" cy="0" r="1.5" fill="#10b981"/>
   </g>

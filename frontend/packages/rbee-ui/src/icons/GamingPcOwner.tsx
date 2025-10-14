@@ -24,7 +24,7 @@ export function GamingPcOwner({ size = 96, className, ...props }: GamingPcOwnerP
   {/* PC Tower (left side) */}
   <g id="pc-tower">
     {/* Tower body */}
-    <rect x="16" y="38" width="18" height="30" rx="2" fill="#2d3548" stroke="#3d4556" stroke-width="1"/>
+    <rect x="16" y="38" width="18" height="30" rx="2" fill="#2d3548" stroke="#3d4556" strokeWidth="1"/>
     
     {/* Tempered glass panel with gradient */}
     <defs>
@@ -42,9 +42,9 @@ export function GamingPcOwner({ size = 96, className, ...props }: GamingPcOwnerP
     <rect x="18" y="40" width="14" height="26" rx="1" fill="url(#glassGradient)" opacity="0.6"/>
     
     {/* GPU fans visible through glass (RGB lit) */}
-    <circle cx="25" cy="50" r="3" fill="none" stroke="url(#rgbGlow)" stroke-width="0.8" opacity="0.9"/>
+    <circle cx="25" cy="50" r="3" fill="none" stroke="url(#rgbGlow)" strokeWidth="0.8" opacity="0.9"/>
     <circle cx="25" cy="50" r="1.5" fill="url(#rgbGlow)" opacity="0.7"/>
-    <circle cx="25" cy="58" r="3" fill="none" stroke="url(#rgbGlow)" stroke-width="0.8" opacity="0.9"/>
+    <circle cx="25" cy="58" r="3" fill="none" stroke="url(#rgbGlow)" strokeWidth="0.8" opacity="0.9"/>
     <circle cx="25" cy="58" r="1.5" fill="url(#rgbGlow)" opacity="0.7"/>
     
     {/* Power button */}
@@ -62,7 +62,7 @@ export function GamingPcOwner({ size = 96, className, ...props }: GamingPcOwnerP
     <rect x="42" y="68" width="12" height="2" rx="1" fill="#3d4556"/>
     
     {/* Monitor bezel */}
-    <rect x="38" y="32" width="28" height="20" rx="1.5" fill="#1f2533" stroke="#2d3548" stroke-width="1"/>
+    <rect x="38" y="32" width="28" height="20" rx="1.5" fill="#1f2533" stroke="#2d3548" strokeWidth="1"/>
     
     {/* Screen with gradient (active) */}
     <defs>
@@ -84,7 +84,7 @@ export function GamingPcOwner({ size = 96, className, ...props }: GamingPcOwnerP
   {/* Keyboard (right side) */}
   <g id="keyboard">
     {/* Keyboard body */}
-    <rect x="46" y="70" width="32" height="8" rx="1" fill="#2d3548" stroke="#3d4556" stroke-width="0.5"/>
+    <rect x="46" y="70" width="32" height="8" rx="1" fill="#2d3548" stroke="#3d4556" strokeWidth="0.5"/>
     
     {/* Key rows with RGB backlight glow */}
     <rect x="48" y="71.5" width="28" height="1.2" rx="0.3" fill="#4a5568" opacity="0.8"/>
@@ -99,8 +99,8 @@ export function GamingPcOwner({ size = 96, className, ...props }: GamingPcOwnerP
   </g>
   
   {/* Mouse (small detail) */}
-  <ellipse cx="80" cy="72" rx="2.5" ry="3" fill="#2d3548" stroke="#3d4556" stroke-width="0.5"/>
-  <line x1="80" y1="70" x2="80" y2="73" stroke="#4a5568" stroke-width="0.3"/>
+  <ellipse cx="80" cy="72" rx="2.5" ry="3" fill="#2d3548" stroke="#3d4556" strokeWidth="0.5"/>
+  <line x1="80" y1="70" x2="80" y2="73" stroke="#4a5568" strokeWidth="0.3"/>
   
   {/* Ambient lighting effects */}
   <defs>
@@ -112,8 +112,8 @@ export function GamingPcOwner({ size = 96, className, ...props }: GamingPcOwnerP
   <ellipse cx="48" cy="75" rx="35" ry="8" fill="url(#ambientGlow)"/>
   
   {/* Subtle highlights for depth */}
-  <line x1="18" y1="40" x2="18" y2="50" stroke="#4a5568" stroke-width="0.5" opacity="0.5"/>
-  <line x1="40" y1="34" x2="50" y2="34" stroke="#3d4556" stroke-width="0.3" opacity="0.6"/>
+  <line x1="18" y1="40" x2="18" y2="50" stroke="#4a5568" strokeWidth="0.5" opacity="0.5"/>
+  <line x1="40" y1="34" x2="50" y2="34" stroke="#3d4556" strokeWidth="0.3" opacity="0.6"/>
     </svg>
   )
 }

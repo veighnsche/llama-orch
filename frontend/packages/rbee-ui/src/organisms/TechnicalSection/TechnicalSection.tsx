@@ -1,7 +1,9 @@
+import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
-import { GitHubIcon } from '@rbee/ui/atoms/GitHubIcon'
-import { BulletListItem, SectionContainer } from '@rbee/ui/molecules'
-import Image from 'next/image'
+import { Card } from '@rbee/ui/atoms/Card'
+import { SectionContainer } from '@rbee/ui/molecules/SectionContainer'
+import { RbeeArch, GithubIcon } from '@rbee/ui/icons'
+import { Terminal } from 'lucide-react'
 import Link from 'next/link'
 
 export function TechnicalSection() {
@@ -20,32 +22,27 @@ export function TechnicalSection() {
 						<div className="text-xs tracking-wide uppercase text-muted-foreground mb-3">Core Principles</div>
 						<h3 className="text-2xl font-bold text-foreground mb-4">Architecture Highlights</h3>
 						<ul className="space-y-3">
-							<BulletListItem
-								title="BDD-Driven Development"
-								description="42/62 scenarios passing (68% complete)"
-								meta="Live CI coverage"
-								variant="check"
-							/>
-							<BulletListItem
-								title="Cascading Shutdown Guarantee"
-								description="No orphaned processes. Clean VRAM lifecycle."
-								variant="check"
-							/>
-							<BulletListItem
-								title="Process Isolation"
-								description="Worker-level sandboxes. Zero cross-leak."
-								variant="check"
-							/>
-							<BulletListItem
-								title="Protocol-Aware Orchestration"
-								description="SSE, JSON, binary protocols."
-								variant="check"
-							/>
-							<BulletListItem
-								title="Smart/Dumb Separation"
-								description="Central brain, distributed execution."
-								variant="check"
-							/>
+							<li>
+								<div className="text-sm font-medium text-foreground">BDD-Driven Development</div>
+								<div className="text-xs text-muted-foreground">42/62 scenarios passing (68% complete)</div>
+								<div className="text-xs text-muted-foreground">Live CI coverage</div>
+							</li>
+							<li>
+								<div className="text-sm font-medium text-foreground">Cascading Shutdown Guarantee</div>
+								<div className="text-xs text-muted-foreground">No orphaned processes. Clean VRAM lifecycle.</div>
+							</li>
+							<li>
+								<div className="text-sm font-medium text-foreground">Process Isolation</div>
+								<div className="text-xs text-muted-foreground">Worker-level sandboxes. Zero cross-leak.</div>
+							</li>
+							<li>
+								<div className="text-sm font-medium text-foreground">Protocol-Aware Orchestration</div>
+								<div className="text-xs text-muted-foreground">SSE, JSON, binary protocols.</div>
+							</li>
+							<li>
+								<div className="text-sm font-medium text-foreground">Smart/Dumb Separation</div>
+								<div className="text-xs text-muted-foreground">Central brain, distributed execution.</div>
+							</li>
 						</ul>
 
 						{/* BDD Coverage Progress Bar */}
@@ -62,13 +59,9 @@ export function TechnicalSection() {
 					</div>
 
 					{/* Architecture Diagram (Desktop Only) */}
-					<Image
-						src="/illustrations/rbee-arch.svg"
-						width={920}
-						height={560}
+					<RbeeArch
 						className="hidden md:block rounded-2xl ring-1 ring-border/60 shadow-sm"
-						alt="Professional systems architecture diagram of rbee orchestrator in dark theme (#0a0a0a background): Top section shows control plane with three interconnected hexagonal nodes - left hexagon labeled 'Rhai Policy Engine' (amber #f59e0b glow), center hexagon 'Request Scheduler' (teal #14b8a6 glow), right hexagon 'Health Monitor' (emerald #10b981 glow). Hexagons connected by bidirectional arrows with subtle pulse animation indicators. Middle section displays horizontal separator line with 'Protocol Layer' label, showing three protocol badges: 'SSE' (Server-Sent Events), 'JSON-RPC', and 'Binary' with corresponding icons. Bottom section illustrates worker pool: 4-6 rectangular worker nodes arranged in two rows, each labeled 'Worker Process' with GPU icon, VRAM gauge (showing 80-95% utilization in gradient fill), and model name tag (e.g., 'Llama-3-70B', 'Mistral-7B'). Each worker enclosed in dashed border indicating process isolation sandbox. Vertical arrows flow from protocol layer down to workers (request routing) and back up (response streaming). Right side shows cascading shutdown sequence: numbered steps (1→2→3) with graceful termination icons and 'Clean VRAM Release' annotation. Color scheme: dark charcoal background (#0a0a0a), white text (#fafafa), teal accent lines (#14b8a6) for active paths, amber (#f59e0b) for policy routing, muted gray (#71717a) for inactive elements. Typography: sans-serif (Inter or similar), medium weight for labels, semibold for component names. Subtle drop shadows on nodes for depth, minimal gradient overlays on worker gauges. Clean, technical aesthetic similar to AWS architecture diagrams or Kubernetes cluster visualizations. Landscape orientation optimized for desktop display, 16:10 aspect ratio, high contrast for readability, suitable for both light and dark UI contexts."
-						priority
+						aria-label="rbee architecture diagram showing orchestrator, policy engine, and worker pools"
 					/>
 				</div>
 
@@ -142,7 +135,7 @@ export function TechnicalSection() {
 									asChild
 								>
 									<a href="https://github.com/yourusername/rbee" target="_blank" rel="noopener noreferrer">
-										<GitHubIcon className="h-4 w-4" />
+										<GithubIcon size={16} />
 										View Source
 									</a>
 								</Button>

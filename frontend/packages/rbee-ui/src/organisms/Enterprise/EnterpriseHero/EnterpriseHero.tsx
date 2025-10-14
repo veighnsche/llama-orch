@@ -1,9 +1,8 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
-import { ComplianceChip } from '@rbee/ui/molecules/ComplianceChip'
-import { StatsGrid } from '@rbee/ui/molecules/StatsGrid'
-import { FileCheck, Filter, Lock, Shield } from 'lucide-react'
-import Image from 'next/image'
+import { Card } from '@rbee/ui/atoms/Card'
+import { Separator } from '@rbee/ui/atoms/Separator'
+import { Building2, Check, Lock, Shield } from 'lucide-react'
 import Link from 'next/link'
 
 const auditEvents = [
@@ -44,15 +43,7 @@ export function EnterpriseHero() {
 			aria-labelledby="enterprise-hero-h1"
 			role="region"
 		>
-			{/* Decorative background illustration */}
-			<Image
-				src="/illustrations/audit-ledger.webp"
-				width={1200}
-				height={640}
-				className="pointer-events-none absolute left-[-10%] top-[-15%] z-0 hidden w-[52rem] opacity-15 blur-[0.5px] md:block"
-				alt="Abstract EU-blue ledger lines forming an immutable audit trail; soft amber highlights; premium dark UI aesthetic"
-				aria-hidden="true"
-			/>
+			{/* Decorative background illustration - removed, file doesn't exist */}
 
 			<div className="relative z-10 mx-auto max-w-7xl">
 				<div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
