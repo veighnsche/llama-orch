@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: llama-orch Control Plane API (v2)
+  title: rbee Control Plane API (v2)
   version: 2.0.0
   description: |
     Pool lifecycle and provisioning controls (drain, reload, purge) and worker registration.

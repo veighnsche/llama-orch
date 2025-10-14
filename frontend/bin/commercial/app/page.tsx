@@ -1,19 +1,21 @@
-import { HeroSection } from '@rbee/ui/organisms/HeroSection'
-import { WhatIsRbee } from '@rbee/ui/organisms/WhatIsRbee'
-import { AudienceSelector } from '@rbee/ui/organisms/AudienceSelector'
-import { ProblemSection } from '@rbee/ui/organisms/ProblemSection'
-import { HomeSolutionSection } from '@rbee/ui/organisms/SolutionSection'
-import { HowItWorksSection } from '@rbee/ui/organisms/HowItWorksSection'
-import { FeaturesSection } from '@rbee/ui/organisms/FeaturesSection'
-import { UseCasesSection } from '@rbee/ui/organisms/UseCasesSection'
-import { ComparisonSection } from '@rbee/ui/organisms/ComparisonSection'
-import { PricingSection } from '@rbee/ui/organisms/PricingSection'
-import { SocialProofSection } from '@rbee/ui/organisms/SocialProofSection'
-import { TechnicalSection } from '@rbee/ui/organisms/TechnicalSection'
-import { FAQSection } from '@rbee/ui/organisms/FaqSection'
-import { CTASection } from '@rbee/ui/organisms/CtaSection'
-import { EmailCapture } from '@rbee/ui/organisms/EmailCapture'
-import { Footer } from '@rbee/ui/organisms/Footer'
+import {
+  HeroSection,
+  WhatIsRbee,
+  AudienceSelector,
+  ProblemSection,
+  HomeSolutionSection,
+  HowItWorksSection,
+  FeaturesSection,
+  UseCasesSection,
+  ComparisonSection,
+  PricingSection,
+  SocialProofSection,
+  TechnicalSection,
+  FAQSection,
+  CTASection,
+  EmailCapture,
+  Footer,
+} from '@rbee/ui/organisms'
 import { Anchor, DollarSign, Laptop, Shield, Building, Home as HomeIcon, Users, ArrowRight, BookOpen } from 'lucide-react'
 
 export default function Home() {

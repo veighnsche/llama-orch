@@ -1,0 +1,30 @@
+[package]
+name = "rbee-utils"
+version = "0.0.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/veighnsche/rbee"
+description = "Utils applets for composing Blueprint pipelines for rbee (M2)."
+
+[features]
+# When enabled, derive TypeScript bindings using ts-rs and expose a binary to export declarations.
+ts-types = ["dep:ts-rs"]
+
+[dependencies]
+anyhow = "1"
+rbee-sdk = { path = "../rbee-sdk" }
+serde = { workspace = true }
+serde_json = "1"
+ts-rs = { version = "10", optional = true }
+
+[lib]
+name = "rbee_utils"
+path = "src/lib.rs"
+crate-type = ["rlib", "cdylib"]
+
+[[bin]]
+name = "export-ts"
+path = "src/bin/export_ts.rs"
+
+[dev-dependencies]
+tempfile = "3"

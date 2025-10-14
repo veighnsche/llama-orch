@@ -1,8 +1,12 @@
-import { PricingHero, PricingComparison } from '@rbee/ui/organisms/Pricing'
-import { PricingSection } from '@rbee/ui/organisms/PricingSection'
-import { FAQSection } from '@rbee/ui/organisms/FaqSection'
-import { pricingFaqItems, pricingCategories } from '@rbee/ui/organisms/FaqSection'
-import { EmailCapture } from '@rbee/ui/organisms/EmailCapture'
+import {
+  PricingHero,
+  PricingComparison,
+  PricingSection,
+  FAQSection,
+  pricingFaqItems,
+  pricingCategories,
+  EmailCapture,
+} from '@rbee/ui/organisms'
 
 export default function PricingPage() {
   return (

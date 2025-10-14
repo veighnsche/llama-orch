@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: llama-orch Sessions API (v2)
+  title: rbee Sessions API (v2)
   version: 2.0.0
   description: |
     Manage conversational sessions. Sessions are created lazily on first use and expire by TTL.

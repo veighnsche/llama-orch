@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: llama-orch Catalog API (v2)
+  title: rbee Catalog API (v2)
   version: 2.0.0
   description: |
     Model registry: manifests, signatures, lifecycle state, and verification triggers.

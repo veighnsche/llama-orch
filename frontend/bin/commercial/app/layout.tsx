@@ -5,9 +5,8 @@ import { GeistMono } from 'geist/font/mono'
 import '@rbee/ui/styles.css'
 import './globals.css'
 import { Suspense } from 'react'
-import { Navigation } from '@rbee/ui/organisms/Navigation'
+import { Navigation, Footer } from '@rbee/ui/organisms'
 import { ThemeProvider } from '@/components/providers/ThemeProvider/ThemeProvider'
-import { Footer } from '@rbee/ui/organisms/Footer'
 
 export const metadata: Metadata = {
   title: 'rbee - Build with AI. Own Your Infrastructure.',

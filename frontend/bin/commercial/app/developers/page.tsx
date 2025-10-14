@@ -6,14 +6,14 @@ import {
   DevelopersFeatures,
   DevelopersUseCases,
   DevelopersCodeExamples,
-} from '@rbee/ui/organisms/Developers'
-import { EmailCapture } from '@rbee/ui/organisms/EmailCapture'
-import { Footer } from '@rbee/ui/organisms/Footer'
-import { PricingSection } from '@rbee/ui/organisms/PricingSection'
-import { TestimonialsSection } from '@rbee/ui/organisms/SocialProofSection'
-import { CTASection } from '@rbee/ui/organisms/CtaSection'
+  EmailCapture,
+  Footer,
+  PricingSection,
+  TestimonialsSection,
+  CTASection,
+} from '@rbee/ui/organisms'
+import { GitHubIcon } from '@rbee/ui/atoms'
 import { ArrowRight } from 'lucide-react'
-import { GitHubIcon } from '@rbee/ui/atoms/GitHubIcon'
 
 export default function DevelopersPage() {
   return (

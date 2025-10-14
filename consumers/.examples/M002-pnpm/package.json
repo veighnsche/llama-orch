@@ -12,7 +12,7 @@
     "@types/node": "^20"
   },
   "dependencies": {
-    "@llama-orch/utils": "workspace:*"
+    "@rbee/utils": "workspace:*"
   },
   "peerDependencies": {
     "typescript": "^5"

@@ -10,9 +10,9 @@ import {
   EnterpriseFeatures,
   EnterpriseTestimonials,
   EnterpriseCTA,
-} from '@rbee/ui/organisms/Enterprise'
-import { EmailCapture } from '@rbee/ui/organisms/EmailCapture'
-import { Footer } from '@rbee/ui/organisms/Footer'
+  EmailCapture,
+  Footer,
+} from '@rbee/ui/organisms'
 
 export default function EnterprisePage() {
   return (

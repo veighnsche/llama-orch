@@ -8,8 +8,8 @@ import {
   RealTimeProgress,
   SecurityIsolation,
   AdditionalFeaturesGrid,
-} from '@rbee/ui/organisms/Features'
-import { EmailCapture } from '@rbee/ui/organisms/EmailCapture'
+  EmailCapture,
+} from '@rbee/ui/organisms'
 
 export default function FeaturesPage() {
   return (

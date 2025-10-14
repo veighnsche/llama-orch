@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: llama-orch Meta API (v2)
+  title: rbee Meta API (v2)
   version: 2.0.0
   description: |
     Discovery endpoints for capabilities and versions. Clients can use this plane to gate features.

@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: llama-orch Data Plane API (v2)
+  title: rbee Data Plane API (v2)
   version: 2.0.0
   description: |
     Ergonomic data plane for enqueue → stream → cancel with verbose progress.

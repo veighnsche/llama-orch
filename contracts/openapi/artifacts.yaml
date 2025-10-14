@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: llama-orch Artifacts API (v2)
+  title: rbee Artifacts API (v2)
   version: 2.0.0
   description: |
     Store and retrieve artifacts (plans, transcripts, logs, traces) used by .

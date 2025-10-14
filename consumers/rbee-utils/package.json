@@ -1,0 +1,34 @@
+{
+  "name": "@rbee/utils",
+  "version": "0.0.0-draft",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist/*"],
+  "scripts": {
+    "build:wasm": "node ./scripts/build-wasm.mjs",
+    "build:ts": "tsc -p .",
+    "gen:types": "cargo run -q -p llama-orch-utils --features ts-types --bin export-ts",
+    "compose:dts": "node ./scripts/compose-dts.mjs",
+    "build": "pnpm run build:wasm && pnpm run build:ts && pnpm run gen:types && pnpm run compose:dts",
+    "dev:watch": "node ./scripts/dev-watch.mjs",
+    "smoke:node": "node ./.smoke/node.mjs",
+    "smoke:bun": "bun ./.smoke/bun.ts",
+    "check": "pnpm run build && pnpm run smoke:node && pnpm run smoke:bun"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

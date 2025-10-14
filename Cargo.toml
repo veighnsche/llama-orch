@@ -1,6 +1,6 @@
-# llama-orch Workspace
+# rbee Workspace
 #
-# This workspace contains all crates that make up the llama-orch distributed inference system.
+# This workspace contains all crates that make up the rbee distributed inference system.
 
 [workspace]
 members = [
@@ -39,8 +39,8 @@ members = [
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # Client libraries and utilities for external developers.
     
-    "consumers/llama-orch-sdk",    # Rust SDK for llama-orch
-    "consumers/llama-orch-utils",  # CLI utilities & helpers
+    "consumers/rbee-sdk",    # Rust SDK for rbee
+    "consumers/rbee-utils",  # CLI utilities & helpers
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # DEVELOPER TOOLS — Build & Maintenance
@@ -67,7 +67,7 @@ resolver = "2"
 version = "0.0.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
-authors = ["llama-orch contributors"]
+authors = ["rbee contributors"]
 
 [workspace.dependencies]
 anyhow = "1"

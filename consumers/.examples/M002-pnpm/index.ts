@@ -1,7 +1,7 @@
-import utils from '@llama-orch/utils';
+import utils from '@rbee/utils';
 
 // Use a path relative to cwd. The WASI loader preopens cwd as '/'.
-const seedPath = './.llama-orch/seed.md';
+const seedPath = './.rbee/seed.md';
 
 // fs.readFile (text)
 const rText = utils.fs.readFile({ paths: [seedPath], as_text: true, encoding: 'utf-8' });
@@ -17,7 +17,7 @@ const firstBin = rBin.files[0];
 console.log('[fs.readFile:bin] bytes:', firstBin && firstBin.bytes ? firstBin.bytes.length : 0);
 
 // fs.writeFile
-const out = utils.fs.writeFile({ path: './.llama-orch/out.txt', text: 'hello from utils\n', create_dirs: true });
+const out = utils.fs.writeFile({ path: './.rbee/out.txt', text: 'hello from utils\n', create_dirs: true });
 console.log('[fs.writeFile] wrote:', out.bytes_written, 'bytes to', out.path);
 
 // prompt.message
