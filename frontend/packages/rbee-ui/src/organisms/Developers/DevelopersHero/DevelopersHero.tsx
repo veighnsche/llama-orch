@@ -6,6 +6,7 @@ import { TerminalWindow } from '@rbee/ui/molecules/TerminalWindow'
 import { ArrowRight, Check } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { homelabHardwareMontage } from '@rbee/ui/assets'
 
 export function DevelopersHero() {
 	return (
@@ -135,7 +136,7 @@ export function DevelopersHero() {
 						<div className="animate-in fade-in duration-500 delay-400 relative">
 							<Card className="relative overflow-hidden ring-1 ring-border/50 p-0">
 								<Image
-									src="/images/homelab-hardware-montage.png"
+									src={homelabHardwareMontage}
 									alt="Professional product photography of a modern homelab setup on a dark wooden desk with warm ambient lighting: foreground shows a matte black GPU tower PC with subtle RGB accents and visible PCIe slots, mid-ground features a silver M-series MacBook Pro with glowing Apple logo, background includes a compact mini-ITX workstation with exposed heatsinks and a consumer-grade WiFi router with antenna array. Shallow depth of field creates bokeh effect on background elements. Organized cable management with braided black cables. Dark navy gradient backdrop (hex #0f172a to #1e293b). Matte finishes throughout, no glossy surfaces. Studio lighting creates soft highlights on metal chassis. Conveys distributed computing across ALL your home network hardware working in harmony."
 									width={840}
 									height={525}

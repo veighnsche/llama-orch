@@ -19,7 +19,7 @@ export function Navigation() {
 			{/* Skip to content link */}
 			<a
 				href="#main"
-				className="ui:sr-only ui:focus:not-sr-only ui:focus:fixed ui:focus:top-2 ui:focus:left-2 ui:focus:z-[60] ui:rounded-md ui:bg-primary ui:px-3 ui:py-2 ui:text-primary-foreground ui:shadow"
+				className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] rounded-md bg-primary px-3 py-2 text-primary-foreground shadow"
 			>
 				Skip to content
 			</a>
@@ -27,16 +27,16 @@ export function Navigation() {
 			<nav
 				role="navigation"
 				aria-label="Primary"
-				className="ui:fixed ui:top-0 ui:inset-x-0 ui:z-50 ui:bg-background/95 ui:backdrop-blur-sm ui:border-b ui:border-border/60"
+				className="fixed top-0 inset-x-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/60"
 			>
-				<div className="ui:relative ui:before:absolute ui:before:inset-x-0 ui:before:top-0 ui:before:h-px ui:before:bg-gradient-to-r ui:before:from-transparent ui:before:via-primary/20 ui:before:to-transparent">
-					<div className="ui:px-4 ui:sm:px-6 ui:lg:px-8">
-						<div className="ui:grid ui:grid-cols-[auto_1fr_auto] ui:items-center ui:h-14">
+				<div className="relative before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary/20 before:to-transparent">
+					<div className="px-4 sm:px-6 lg:px-8">
+						<div className="grid grid-cols-[auto_1fr_auto] items-center h-14">
 							{/* Zone A: Logo + Brand */}
 							<BrandLogo priority />
 
 							{/* Zone B: Primary Links (Desktop) */}
-							<div className="ui:hidden ui:md:flex ui:items-center ui:justify-center ui:gap-6 ui:xl:gap-8">
+							<div className="hidden md:flex items-center justify-center gap-6 xl:gap-8">
 								<NavLink href="/features">Features</NavLink>
 								<NavLink href="/use-cases">Use Cases</NavLink>
 								<NavLink href="/pricing">Pricing</NavLink>
@@ -49,11 +49,11 @@ export function Navigation() {
 							</div>
 
 							{/* Zone C: Actions (Desktop) */}
-							<div className="ui:hidden ui:md:flex ui:items-center ui:gap-2 ui:justify-self-end">
-								<div className="ui:flex ui:items-center ui:gap-1 ui:rounded-xl ui:p-0.5 ui:bg-muted/30 ui:ring-1 ui:ring-border/60">
+							<div className="hidden md:flex items-center gap-2 justify-self-end">
+								<div className="flex items-center gap-1 rounded-xl p-0.5 bg-muted/30 ring-1 ring-border/60">
 									<IconButton asChild aria-label="Open rbee on GitHub" title="GitHub">
 										<a href="https://github.com/veighnsche/llama-orch" target="_blank" rel="noopener noreferrer">
-											<GitHubIcon className="ui:size-5" />
+											<GitHubIcon className="size-5" />
 										</a>
 									</IconButton>
 
@@ -61,7 +61,7 @@ export function Navigation() {
 								</div>
 
 								<Button
-									className="ui:bg-primary ui:hover:bg-primary/85 ui:text-primary-foreground ui:h-9"
+									className="bg-primary hover:bg-primary/85 text-primary-foreground h-9"
 									data-umami-event="cta:join-waitlist"
 									aria-label="Join the rbee waitlist"
 								>
@@ -72,13 +72,13 @@ export function Navigation() {
 							{/* Mobile Menu Toggle */}
 							<Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
 								<SheetTrigger asChild>
-									<IconButton className="ui:md:hidden" aria-label="Toggle menu">
-										{mobileMenuOpen ? <X className="ui:size-6" aria-hidden /> : <Menu className="ui:size-6" aria-hidden />}
+									<IconButton className="md:hidden" aria-label="Toggle menu">
+										{mobileMenuOpen ? <X className="size-6" aria-hidden /> : <Menu className="size-6" aria-hidden />}
 									</IconButton>
 								</SheetTrigger>
-								<SheetContent side="top" className="ui:top-14 ui:border-t-0 ui:pt-4 ui:pb-[calc(env(safe-area-inset-bottom)+1rem)]">
-									<SheetTitle className="ui:sr-only">Navigation Menu</SheetTitle>
-									<div className="ui:space-y-3">
+								<SheetContent side="top" className="top-14 border-t-0 pt-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+									<SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+									<div className="space-y-3">
 										<NavLink href="/features" variant="mobile" onClick={() => setMobileMenuOpen(false)}>
 											Features
 										</NavLink>
@@ -107,20 +107,20 @@ export function Navigation() {
 											Docs
 										</NavLink>
 
-										<Separator className="ui:my-2 ui:opacity-60" />
+										<Separator className="my-2 opacity-60" />
 
 										<a
 											href="https://github.com/veighnsche/llama-orch"
 											target="_blank"
 											rel="noopener noreferrer"
-											className="ui:flex ui:items-center ui:gap-2 ui:py-2 ui:text-muted-foreground ui:hover:text-foreground ui:transition-colors"
+											className="flex items-center gap-2 py-2 text-muted-foreground hover:text-foreground transition-colors"
 										>
-											<GitHubIcon className="ui:size-5" />
+											<GitHubIcon className="size-5" />
 											<span>GitHub</span>
 										</a>
 
 										<Button
-											className="ui:w-full ui:bg-primary ui:hover:bg-primary/85 ui:text-primary-foreground ui:h-9 ui:mt-2"
+											className="w-full bg-primary hover:bg-primary/85 text-primary-foreground h-9 mt-2"
 											data-umami-event="cta:join-waitlist"
 											aria-label="Join the rbee waitlist"
 										>

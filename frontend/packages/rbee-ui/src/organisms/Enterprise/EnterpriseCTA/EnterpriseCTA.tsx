@@ -27,7 +27,7 @@ export function EnterpriseCTA() {
 
 				{/* Trust Strip */}
 				<div className="mb-12 grid gap-6 sm:grid-cols-4 text-center">
-					{TESTIMONIAL_STATS.map((stat) => (
+					{TESTIMONIAL_STATS.map((stat: any) => (
 						<div key={stat.id} className="text-sm">
 							<div className="font-semibold text-foreground">{stat.value}</div>
 							<div className="text-muted-foreground">{stat.label}</div>

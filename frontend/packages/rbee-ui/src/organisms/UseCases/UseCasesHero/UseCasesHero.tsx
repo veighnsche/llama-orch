@@ -1,5 +1,6 @@
 import { Button } from '@rbee/ui/atoms/Button'
 import Image from 'next/image'
+import { useCasesHero } from '@rbee/ui/assets'
 
 export function UseCasesHero() {
 	return (
@@ -78,7 +79,7 @@ export function UseCasesHero() {
 					<div className="relative max-lg:order-first animate-in fade-in-50 slide-in-from-right-4">
 						<div className="rounded-2xl border border-border/60 bg-card/70 p-3 backdrop-blur">
 							<Image
-								src="/images/use-cases-hero.png"
+								src={useCasesHero}
 								width={1080}
 								height={760}
 								priority

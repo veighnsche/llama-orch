@@ -6,7 +6,8 @@ import { Button } from '@rbee/ui/atoms/Button'
 import { Input } from '@rbee/ui/atoms/Input'
 import { Separator } from '@rbee/ui/atoms/Separator'
 import { cn } from '@rbee/ui/utils'
-import { SearchIcon } from 'lucide-react'
+import { ChevronDown, ExternalLink, Mail } from 'lucide-react'
+import { faqBeehive } from '@rbee/ui/assets'
 import Image from 'next/image'
 import * as React from 'react'
 
@@ -140,7 +141,7 @@ export function FAQSection({
 	categories = defaultCategories,
 	faqItems = defaultFaqItems,
 	showSupportCard = true,
-	supportCardImage = '/images/faq-beehive.png',
+	supportCardImage = faqBeehive,
 	supportCardImageAlt = 'Isometric illustration of a vibrant community hub: hexagonal beehive structure with worker bees collaborating around glowing question mark icons, speech bubbles floating between honeycomb cells containing miniature server racks, warm amber and honey-gold palette with soft cyan accents, friendly bees wearing tiny headsets offering support, knowledge base documents scattered on wooden surface, gentle directional lighting creating welcoming atmosphere, detailed technical diagrams visible through translucent honeycomb walls, community-driven support concept, approachable and helpful mood',
 	supportCardTitle = 'Still stuck?',
 	supportCardLinks = [

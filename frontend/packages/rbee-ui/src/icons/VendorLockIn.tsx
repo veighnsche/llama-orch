@@ -1,0 +1,191 @@
+import type { SVGProps } from 'react'
+
+export interface VendorLockInProps extends SVGProps<SVGSVGElement> {
+  size?: number | string
+}
+
+export function VendorLockIn({ size = 1200, className, ...props }: VendorLockInProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 1200 180"
+      className={className}
+      {...props}
+    >
+      {/* Background gradient */}
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:oklch(0.25 0.02 240);stop-opacity:0.3" />
+      <stop offset="50%" style="stop-color:oklch(0.22 0.03 260);stop-opacity:0.5" />
+      <stop offset="100%" style="stop-color:oklch(0.25 0.02 240);stop-opacity:0.3" />
+    </linearGradient>
+    
+    {/* Glow effects */}
+    <filter id="glow-red">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="glow-amber">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  {/* Background */}
+  <rect width="1200" height="180" fill="url(#bg-gradient)" opacity="0.4"/>
+  
+  {/* Left island (Your Infrastructure) */}
+  <g opacity="0.9">
+    {/* Island base */}
+    <ellipse cx="200" cy="140" rx="120" ry="25" fill="oklch(0.35 0.03 240)" opacity="0.6"/>
+    <path d="M 80 140 Q 80 120 100 110 L 300 110 Q 320 120 320 140 Z" 
+          fill="oklch(0.32 0.04 245)" stroke="oklch(0.45 0.05 250)" stroke-width="1.5"/>
+    
+    {/* Server racks */}
+    <rect x="150" y="85" width="25" height="40" rx="2" 
+          fill="oklch(0.28 0.04 250)" stroke="oklch(0.5 0.08 260)" stroke-width="1.5"/>
+    <rect x="185" y="75" width="25" height="50" rx="2" 
+          fill="oklch(0.28 0.04 250)" stroke="oklch(0.5 0.08 260)" stroke-width="1.5"/>
+    <rect x="220" y="80" width="25" height="45" rx="2" 
+          fill="oklch(0.28 0.04 250)" stroke="oklch(0.5 0.08 260)" stroke-width="1.5"/>
+    
+    {/* Server lights */}
+    <circle cx="162.5" cy="95" r="2" fill="oklch(0.65 0.15 145)" opacity="0.8"/>
+    <circle cx="162.5" cy="105" r="2" fill="oklch(0.65 0.15 145)" opacity="0.8"/>
+    <circle cx="197.5" cy="90" r="2" fill="oklch(0.65 0.15 145)" opacity="0.8"/>
+    <circle cx="197.5" cy="100" r="2" fill="oklch(0.65 0.15 145)" opacity="0.8"/>
+    <circle cx="232.5" cy="95" r="2" fill="oklch(0.65 0.15 145)" opacity="0.8"/>
+    <circle cx="232.5" cy="105" r="2" fill="oklch(0.65 0.15 145)" opacity="0.8"/>
+  </g>
+  
+  {/* Right island (Vendor Cloud) */}
+  <g opacity="0.9">
+    {/* Island base */}
+    <ellipse cx="1000" cy="140" rx="120" ry="25" fill="oklch(0.35 0.03 240)" opacity="0.6"/>
+    <path d="M 880 140 Q 880 120 900 110 L 1100 110 Q 1120 120 1120 140 Z" 
+          fill="oklch(0.32 0.04 245)" stroke="oklch(0.45 0.05 250)" stroke-width="1.5"/>
+    
+    {/* Cloud infrastructure */}
+    <g transform="translate(950, 70)">
+      {/* Main cloud */}
+      <ellipse cx="0" cy="20" rx="35" ry="20" fill="oklch(0.38 0.05 260)" opacity="0.7"/>
+      <ellipse cx="-20" cy="25" rx="25" ry="15" fill="oklch(0.38 0.05 260)" opacity="0.7"/>
+      <ellipse cx="20" cy="25" rx="25" ry="15" fill="oklch(0.38 0.05 260)" opacity="0.7"/>
+      <rect x="-35" y="20" width="70" height="20" fill="oklch(0.38 0.05 260)" opacity="0.7"/>
+      
+      {/* Dollar sign */}
+      <text x="0" y="30" font-family="monospace" font-size="20" font-weight="bold" 
+            fill="oklch(0.75 0.15 85)" text-anchor="middle" opacity="0.9">$</text>
+    </g>
+  </g>
+  
+  {/* Cables (broken/rerouted) */}
+  <g opacity="0.7">
+    {/* Left cable segment */}
+    <path d="M 320 120 Q 400 115 450 90" 
+          stroke="oklch(0.55 0.08 260)" stroke-width="2.5" stroke-dasharray="8,4" fill="none"/>
+    <path d="M 320 130 Q 400 128 450 110" 
+          stroke="oklch(0.55 0.08 260)" stroke-width="2.5" stroke-dasharray="8,4" fill="none"/>
+    
+    {/* Right cable segment */}
+    <path d="M 750 90 Q 820 115 880 120" 
+          stroke="oklch(0.55 0.08 260)" stroke-width="2.5" stroke-dasharray="8,4" fill="none"/>
+    <path d="M 750 110 Q 820 128 880 130" 
+          stroke="oklch(0.55 0.08 260)" stroke-width="2.5" stroke-dasharray="8,4" fill="none"/>
+    
+    {/* Disconnection sparks */}
+    <circle cx="450" cy="90" r="4" fill="oklch(0.7 0.2 85)" opacity="0.6"/>
+    <circle cx="450" cy="110" r="4" fill="oklch(0.7 0.2 85)" opacity="0.6"/>
+    <circle cx="750" cy="90" r="4" fill="oklch(0.7 0.2 85)" opacity="0.6"/>
+    <circle cx="750" cy="110" r="4" fill="oklch(0.7 0.2 85)" opacity="0.6"/>
+  </g>
+  
+  {/* Paywall gate (center) */}
+  <g transform="translate(600, 50)">
+    {/* Gate structure */}
+    <rect x="-50" y="0" width="100" height="90" rx="4" 
+          fill="oklch(0.25 0.04 260)" stroke="oklch(0.5 0.1 30)" stroke-width="2.5" opacity="0.95"/>
+    
+    {/* Lock icon */}
+    <rect x="-15" y="35" width="30" height="25" rx="3" 
+          fill="oklch(0.45 0.12 30)" stroke="oklch(0.65 0.15 30)" stroke-width="2"/>
+    <path d="M -10 35 L -10 25 Q -10 18 0 18 Q 10 18 10 25 L 10 35" 
+          fill="none" stroke="oklch(0.65 0.15 30)" stroke-width="2.5"/>
+    
+    {/* Price tag */}
+    <rect x="-35" y="65" width="70" height="18" rx="2" 
+          fill="oklch(0.65 0.15 30)" opacity="0.9"/>
+    <text x="0" y="77" font-family="monospace" font-size="11" font-weight="bold" 
+          fill="oklch(0.15 0.02 260)" text-anchor="middle">RATE LIMIT</text>
+    
+    {/* Warning stripes */}
+    <rect x="-50" y="-5" width="100" height="5" 
+          fill="repeating-linear-gradient(45deg, oklch(0.65 0.15 30), oklch(0.65 0.15 30) 10px, oklch(0.25 0.04 260) 10px, oklch(0.25 0.04 260) 20px)"/>
+  </g>
+  
+  {/* Caution beacons */}
+  <g>
+    {/* Left beacon */}
+    <g transform="translate(450, 70)">
+      <rect x="-8" y="0" width="16" height="35" rx="2" 
+            fill="oklch(0.3 0.04 250)" stroke="oklch(0.5 0.08 260)" stroke-width="1.5"/>
+      <circle cx="0" cy="-8" r="10" fill="oklch(0.65 0.2 30)" filter="url(#glow-amber)" opacity="0.9"/>
+      <circle cx="0" cy="-8" r="6" fill="oklch(0.8 0.2 85)" opacity="0.8"/>
+      {/* Light rays */}
+      <path d="M 0 -18 L -3 -25 L 3 -25 Z" fill="oklch(0.75 0.2 85)" opacity="0.4"/>
+      <path d="M -10 -12 L -17 -15 L -14 -9 Z" fill="oklch(0.75 0.2 85)" opacity="0.4"/>
+      <path d="M 10 -12 L 17 -15 L 14 -9 Z" fill="oklch(0.75 0.2 85)" opacity="0.4"/>
+    </g>
+    
+    {/* Right beacon */}
+    <g transform="translate(750, 70)">
+      <rect x="-8" y="0" width="16" height="35" rx="2" 
+            fill="oklch(0.3 0.04 250)" stroke="oklch(0.5 0.08 260)" stroke-width="1.5"/>
+      <circle cx="0" cy="-8" r="10" fill="oklch(0.65 0.2 30)" filter="url(#glow-amber)" opacity="0.9"/>
+      <circle cx="0" cy="-8" r="6" fill="oklch(0.8 0.2 85)" opacity="0.8"/>
+      {/* Light rays */}
+      <path d="M 0 -18 L -3 -25 L 3 -25 Z" fill="oklch(0.75 0.2 85)" opacity="0.4"/>
+      <path d="M -10 -12 L -17 -15 L -14 -9 Z" fill="oklch(0.75 0.2 85)" opacity="0.4"/>
+      <path d="M 10 -12 L 17 -15 L 14 -9 Z" fill="oklch(0.75 0.2 85)" opacity="0.4"/>
+    </g>
+  </g>
+  
+  {/* Danger indicators */}
+  <g opacity="0.8">
+    {/* Left warning */}
+    <g transform="translate(380, 45)">
+      <path d="M 0 -10 L 8 6 L -8 6 Z" 
+            fill="none" stroke="oklch(0.6 0.25 25)" stroke-width="2" filter="url(#glow-red)"/>
+      <text x="0" y="4" font-family="monospace" font-size="10" font-weight="bold" 
+            fill="oklch(0.7 0.25 25)" text-anchor="middle">!</text>
+    </g>
+    
+    {/* Right warning */}
+    <g transform="translate(820, 45)">
+      <path d="M 0 -10 L 8 6 L -8 6 Z" 
+            fill="none" stroke="oklch(0.6 0.25 25)" stroke-width="2" filter="url(#glow-red)"/>
+      <text x="0" y="4" font-family="monospace" font-size="10" font-weight="bold" 
+            fill="oklch(0.7 0.25 25)" text-anchor="middle">!</text>
+    </g>
+  </g>
+  
+  {/* Subtle grid overlay */}
+  <g opacity="0.08" stroke="oklch(0.6 0.05 260)" stroke-width="0.5">
+    <line x1="0" y1="60" x2="1200" y2="60"/>
+    <line x1="0" y1="120" x2="1200" y2="120"/>
+    <line x1="300" y1="0" x2="300" y2="180"/>
+    <line x1="600" y1="0" x2="600" y2="180"/>
+    <line x1="900" y1="0" x2="900" y2="180"/>
+  </g>
+    </svg>
+  )
+}

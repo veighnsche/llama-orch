@@ -1,0 +1,162 @@
+import type { SVGProps } from 'react'
+
+export interface HomelabEnthusiastProps extends SVGProps<SVGSVGElement> {
+  size?: number | string
+}
+
+export function HomelabEnthusiast({ size = 96, className, ...props }: HomelabEnthusiastProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 96 96"
+      className={className}
+      {...props}
+    >
+      {/* Background circle */}
+  <circle cx="48" cy="48" r="48" fill="#1a1f2e"/>
+  
+  {/* Server rack frame */}
+  <g id="server-rack">
+    {/* Rack rails (19-inch standard) */}
+    <rect x="20" y="24" width="3" height="48" rx="0.5" fill="#2d3548" stroke="#3d4556" stroke-width="0.5"/>
+    <rect x="73" y="24" width="3" height="48" rx="0.5" fill="#2d3548" stroke="#3d4556" stroke-width="0.5"/>
+    
+    {/* Rack holes pattern (left rail) */}
+    <circle cx="21.5" cy="28" r="0.5" fill="#1f2533"/>
+    <circle cx="21.5" cy="32" r="0.5" fill="#1f2533"/>
+    <circle cx="21.5" cy="36" r="0.5" fill="#1f2533"/>
+    <circle cx="21.5" cy="40" r="0.5" fill="#1f2533"/>
+    <circle cx="21.5" cy="44" r="0.5" fill="#1f2533"/>
+    <circle cx="21.5" cy="48" r="0.5" fill="#1f2533"/>
+    <circle cx="21.5" cy="52" r="0.5" fill="#1f2533"/>
+    <circle cx="21.5" cy="56" r="0.5" fill="#1f2533"/>
+    <circle cx="21.5" cy="60" r="0.5" fill="#1f2533"/>
+    <circle cx="21.5" cy="64" r="0.5" fill="#1f2533"/>
+    <circle cx="21.5" cy="68" r="0.5" fill="#1f2533"/>
+    
+    {/* Rack holes pattern (right rail) */}
+    <circle cx="74.5" cy="28" r="0.5" fill="#1f2533"/>
+    <circle cx="74.5" cy="32" r="0.5" fill="#1f2533"/>
+    <circle cx="74.5" cy="36" r="0.5" fill="#1f2533"/>
+    <circle cx="74.5" cy="40" r="0.5" fill="#1f2533"/>
+    <circle cx="74.5" cy="44" r="0.5" fill="#1f2533"/>
+    <circle cx="74.5" cy="48" r="0.5" fill="#1f2533"/>
+    <circle cx="74.5" cy="52" r="0.5" fill="#1f2533"/>
+    <circle cx="74.5" cy="56" r="0.5" fill="#1f2533"/>
+    <circle cx="74.5" cy="60" r="0.5" fill="#1f2533"/>
+    <circle cx="74.5" cy="64" r="0.5" fill="#1f2533"/>
+    <circle cx="74.5" cy="68" r="0.5" fill="#1f2533"/>
+  </g>
+  
+  {/* 4U Server chassis with GPUs */}
+  <g id="server-chassis">
+    {/* Chassis body */}
+    <rect x="24" y="36" width="48" height="16" rx="1" fill="#2d3548" stroke="#3d4556" stroke-width="1"/>
+    
+    {/* Front panel with ventilation */}
+    <rect x="26" y="38" width="44" height="12" rx="0.5" fill="#1f2533"/>
+    
+    {/* Ventilation slots pattern */}
+    <line x1="28" y1="40" x2="28" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="30" y1="40" x2="30" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="32" y1="40" x2="32" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="34" y1="40" x2="34" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="36" y1="40" x2="36" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="38" y1="40" x2="38" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="40" y1="40" x2="40" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="42" y1="40" x2="42" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="44" y1="40" x2="44" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="46" y1="40" x2="46" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="48" y1="40" x2="48" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="50" y1="40" x2="50" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="52" y1="40" x2="52" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="54" y1="40" x2="54" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="56" y1="40" x2="56" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="58" y1="40" x2="58" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="60" y1="40" x2="60" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="62" y1="40" x2="62" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="64" y1="40" x2="64" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="66" y1="40" x2="66" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    <line x1="68" y1="40" x2="68" y2="48" stroke="#2d3548" stroke-width="0.5" opacity="0.6"/>
+    
+    {/* GPU indicators visible through ventilation */}
+    <rect x="29" y="42" width="8" height="4" rx="0.5" fill="#3d4556" opacity="0.8"/>
+    <rect x="39" y="42" width="8" height="4" rx="0.5" fill="#3d4556" opacity="0.8"/>
+    <rect x="49" y="42" width="8" height="4" rx="0.5" fill="#3d4556" opacity="0.8"/>
+    <rect x="59" y="42" width="8" height="4" rx="0.5" fill="#3d4556" opacity="0.8"/>
+    
+    {/* GPU fan outlines */}
+    <circle cx="33" cy="44" r="1.5" fill="none" stroke="#4a5568" stroke-width="0.5"/>
+    <circle cx="43" cy="44" r="1.5" fill="none" stroke="#4a5568" stroke-width="0.5"/>
+    <circle cx="53" cy="44" r="1.5" fill="none" stroke="#4a5568" stroke-width="0.5"/>
+    <circle cx="63" cy="44" r="1.5" fill="none" stroke="#4a5568" stroke-width="0.5"/>
+  </g>
+  
+  {/* Status LEDs (orange and green) */}
+  <defs>
+    <radialGradient id="orangeLED">
+      <stop offset="0%" style="stop-color:#ff9500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff9500;stop-opacity:0.3" />
+    </radialGradient>
+  </defs>
+  <circle cx="28" cy="50" r="1" fill="url(#orangeLED)"/>
+  <circle cx="28" cy="50" r="1.5" fill="#ff9500" opacity="0.3"/>
+  
+  <circle cx="32" cy="50" r="1" fill="url(#orangeLED)"/>
+  <circle cx="32" cy="50" r="1.5" fill="#ff9500" opacity="0.3"/>
+  
+  <circle cx="36" cy="50" r="1" fill="#00ff00" opacity="0.8"/>
+  <circle cx="36" cy="50" r="1.5" fill="#00ff00" opacity="0.2"/>
+  
+  {/* Cable management */}
+  <g id="cables">
+    {/* Velcro strap */}
+    <rect x="70" y="54" width="2" height="8" rx="0.5" fill="#4a5568"/>
+    
+    {/* Ethernet cables (color-coded with orange) */}
+    <path d="M 72 56 Q 78 56 78 60" stroke="#ff9500" stroke-width="1" fill="none" opacity="0.8"/>
+    <path d="M 72 58 Q 80 58 80 62" stroke="#ff6b00" stroke-width="1" fill="none" opacity="0.8"/>
+    <path d="M 72 60 Q 82 60 82 64" stroke="#00ff00" stroke-width="1" fill="none" opacity="0.8"/>
+    
+    {/* Cable labels (small rectangles) */}
+    <rect x="78" y="59" width="3" height="1.5" rx="0.2" fill="#2d3548" stroke="#4a5568" stroke-width="0.3"/>
+    <rect x="80" y="61" width="3" height="1.5" rx="0.2" fill="#2d3548" stroke="#4a5568" stroke-width="0.3"/>
+    <rect x="82" y="63" width="3" height="1.5" rx="0.2" fill="#2d3548" stroke="#4a5568" stroke-width="0.3"/>
+  </g>
+  
+  {/* Additional server units (1U) */}
+  <g id="additional-servers">
+    {/* Top 1U server */}
+    <rect x="24" y="28" width="48" height="6" rx="0.5" fill="#2d3548" stroke="#3d4556" stroke-width="0.5"/>
+    <rect x="26" y="29.5" width="44" height="3" rx="0.3" fill="#1f2533"/>
+    <circle cx="28" cy="31" r="0.5" fill="#00ff00" opacity="0.8"/>
+    <circle cx="30" cy="31" r="0.5" fill="#ff9500" opacity="0.8"/>
+    <line x1="34" y1="30" x2="66" y2="30" stroke="#2d3548" stroke-width="0.3"/>
+    <line x1="34" y1="32" x2="66" y2="32" stroke="#2d3548" stroke-width="0.3"/>
+    
+    {/* Bottom 1U server */}
+    <rect x="24" y="54" width="48" height="6" rx="0.5" fill="#2d3548" stroke="#3d4556" stroke-width="0.5"/>
+    <rect x="26" y="55.5" width="44" height="3" rx="0.3" fill="#1f2533"/>
+    <circle cx="28" cy="57" r="0.5" fill="#00ff00" opacity="0.8"/>
+    <circle cx="30" cy="57" r="0.5" fill="#ff9500" opacity="0.8"/>
+    <line x1="34" y1="56" x2="66" y2="56" stroke="#2d3548" stroke-width="0.3"/>
+    <line x1="34" y1="58" x2="66" y2="58" stroke="#2d3548" stroke-width="0.3"/>
+  </g>
+  
+  {/* Ambient glow from LEDs */}
+  <defs>
+    <radialGradient id="serverGlow">
+      <stop offset="0%" style="stop-color:#0070f3;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#0070f3;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  <ellipse cx="48" cy="44" rx="30" ry="20" fill="url(#serverGlow)"/>
+  
+  {/* Depth highlights */}
+  <line x1="24" y1="36" x2="24" y2="52" stroke="#4a5568" stroke-width="0.3" opacity="0.5"/>
+  <line x1="72" y1="36" x2="72" y2="52" stroke="#1f2533" stroke-width="0.3" opacity="0.5"/>
+    </svg>
+  )
+}

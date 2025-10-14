@@ -2,6 +2,7 @@ import { Button } from '@rbee/ui/atoms/Button'
 import { StatsGrid } from '@rbee/ui/molecules/StatsGrid'
 import { ArrowRight, Clock, Shield, Wallet, Zap } from 'lucide-react'
 import Image from 'next/image'
+import { gpuEarnings } from '@rbee/ui/assets'
 
 export function CTASectionProviders() {
 	return (
@@ -11,7 +12,7 @@ export function CTASectionProviders() {
 		>
 			{/* Decorative Background Image - Repositioned to right edge */}
 			<Image
-				src="/images/gpu-earnings.png"
+				src={gpuEarnings}
 				width={960}
 				height={540}
 				className="pointer-events-none absolute -right-32 top-1/2 hidden -translate-y-1/2 opacity-[0.08] lg:block"

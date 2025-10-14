@@ -14,8 +14,14 @@
 		"declaration": true,
 		"declarationMap": true,
 		"sourceMap": true,
+		"rootDir": "src",
 		"outDir": "dist",
-		"noEmit": true
+		"noEmit": true,
+		"baseUrl": ".",
+		"paths": {
+			"@rbee/ui/*": ["./src/*"],
+			"@rbee/ui": ["./src/index.ts"]
+		}
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "dist"]

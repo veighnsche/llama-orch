@@ -4,6 +4,7 @@ import { PricingTier, SectionContainer } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import { Layers, Shield, Unlock, Zap } from 'lucide-react'
 import Image from 'next/image'
+import { pricingHero } from '@rbee/ui/assets'
 import { useState } from 'react'
 
 export interface PricingSectionProps {
@@ -165,7 +166,7 @@ export function PricingSection({
 			{showEditorialImage && (
 				<div className="hidden lg:block mt-10">
 					<Image
-						src="/images/pricing-hero.png"
+						src={pricingHero}
 						width={1100}
 						height={620}
 						className="rounded-2xl ring-1 ring-border/60 shadow-sm mx-auto"

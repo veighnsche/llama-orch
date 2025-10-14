@@ -288,6 +288,10 @@ export const MobileView: Story = {
 }
 
 export const AllVariants: Story = {
+	args: {
+		title: 'All Variants',
+		primary: { label: 'Primary', href: '#' },
+	},
 	render: () => (
 		<div>
 			<CTASection

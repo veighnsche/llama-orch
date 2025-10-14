@@ -3,3 +3,6 @@ dist
 .turbo
 *.log
 .watchmanconfig
+
+*storybook.log
+storybook-static

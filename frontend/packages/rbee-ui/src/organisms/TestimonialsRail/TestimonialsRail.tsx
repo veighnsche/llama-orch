@@ -21,7 +21,7 @@ export function TestimonialsRail({
 	headingId = 'testimonials-h2',
 }: TestimonialsRailProps) {
 	// Filter testimonials by sector
-	const filteredTestimonials = TESTIMONIALS.filter((t) => {
+	const filteredTestimonials = TESTIMONIALS.filter((t: any) => {
 		if (!sectorFilter) return true
 		if (Array.isArray(sectorFilter)) {
 			return sectorFilter.includes(t.sector)
@@ -44,7 +44,7 @@ export function TestimonialsRail({
 				aria-label={layout === 'carousel' ? 'Testimonials carousel (scroll horizontally)' : undefined}
 			>
 				{layout === 'carousel' && <span className="sr-only">Use arrow keys or swipe to navigate testimonials</span>}
-				{filteredTestimonials.map((testimonial, index) => (
+				{filteredTestimonials.map((testimonial: any, index: number) => (
 					<div key={testimonial.id} className={cn(layout === 'carousel' && 'min-w-[85%] snap-center md:min-w-0')}>
 						<TestimonialCard t={testimonial} delayIndex={index} />
 					</div>
@@ -57,7 +57,7 @@ export function TestimonialsRail({
 					<StatsGrid
 						variant="tiles"
 						columns={4}
-						stats={TESTIMONIAL_STATS.map((stat) => ({
+						stats={TESTIMONIAL_STATS.map((stat: any) => ({
 							value: stat.value,
 							label: stat.label,
 						}))}

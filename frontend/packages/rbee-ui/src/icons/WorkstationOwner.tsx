@@ -1,0 +1,155 @@
+import type { SVGProps } from 'react'
+
+export interface WorkstationOwnerProps extends SVGProps<SVGSVGElement> {
+  size?: number | string
+}
+
+export function WorkstationOwner({ size = 96, className, ...props }: WorkstationOwnerProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 96 96"
+      className={className}
+      {...props}
+    >
+      {/* Background circle */}
+  <circle cx="48" cy="48" r="48" fill="#1a1f2e"/>
+  
+  {/* Desk surface (dark) */}
+  <rect x="10" y="68" width="76" height="3" rx="1" fill="#2d3548"/>
+  <rect x="10" y="71" width="76" height="1" fill="#1f2533"/>
+  
+  {/* Ultrawide curved monitor (34-inch) */}
+  <g id="monitor">
+    {/* Monitor stand (dark) */}
+    <rect x="44" y="62" width="8" height="6" rx="1" fill="#3d4556"/>
+    <rect x="40" y="68" width="16" height="2" rx="1" fill="#2d3548"/>
+    
+    {/* Monitor bezel (thin bezels, dark) */}
+    <path d="M 20 32 Q 20 30 22 30 L 74 30 Q 76 30 76 32 L 76 54 Q 76 56 74 56 L 22 56 Q 20 56 20 54 Z" 
+          fill="#2d3548" stroke="#3d4556" stroke-width="0.5"/>
+    
+    {/* Curved screen with gradient (active display) */}
+    <defs>
+      <linearGradient id="screenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.15" />
+        <stop offset="50%" style="stop-color:#764ba2;stop-opacity:0.1" />
+        <stop offset="100%" style="stop-color:#f093fb;stop-opacity:0.15" />
+      </linearGradient>
+      <radialGradient id="screenGlow">
+        <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3" />
+        <stop offset="100%" style="stop-color:#e9ecef;stop-opacity:0" />
+      </radialGradient>
+    </defs>
+    <path d="M 22 32 Q 22 31 23 31 L 73 31 Q 74 31 74 32 L 74 54 Q 74 55 73 55 L 23 55 Q 22 55 22 54 Z" 
+          fill="url(#screenGradient)"/>
+    
+    {/* 3D modeling software UI */}
+    {/* Toolbar */}
+    <rect x="24" y="33" width="48" height="2" rx="0.5" fill="#3d4556" opacity="0.5"/>
+    <rect x="25" y="33.5" width="1.5" height="1" rx="0.2" fill="#ff9500" opacity="0.8"/>
+    <rect x="27" y="33.5" width="1.5" height="1" rx="0.2" fill="#4a5568" opacity="0.6"/>
+    <rect x="29" y="33.5" width="1.5" height="1" rx="0.2" fill="#4a5568" opacity="0.6"/>
+    
+    {/* Viewport with 3D model wireframe */}
+    <rect x="24" y="36" width="48" height="16" rx="0.5" fill="#343a40" opacity="0.1"/>
+    
+    {/* 3D wireframe mesh (abstract geometric shape with orange) */}
+    <path d="M 40 42 L 48 38 L 56 42 L 48 46 Z" stroke="#ff9500" stroke-width="0.5" fill="none" opacity="0.7"/>
+    <path d="M 40 42 L 40 48 L 48 52 L 48 46 Z" stroke="#ff9500" stroke-width="0.5" fill="none" opacity="0.6"/>
+    <path d="M 56 42 L 56 48 L 48 52 L 48 46 Z" stroke="#ff9500" stroke-width="0.5" fill="none" opacity="0.6"/>
+    <path d="M 40 48 L 48 52 L 56 48" stroke="#ff9500" stroke-width="0.5" fill="none" opacity="0.7"/>
+    
+    {/* Grid lines (3D viewport) */}
+    <line x1="30" y1="50" x2="66" y2="50" stroke="#4a5568" stroke-width="0.2" opacity="0.3"/>
+    <line x1="48" y1="38" x2="48" y2="50" stroke="#4a5568" stroke-width="0.2" opacity="0.3"/>
+    
+    {/* Properties panel */}
+    <rect x="58" y="36" width="14" height="16" rx="0.5" fill="#3d4556" opacity="0.3"/>
+    <rect x="59" y="37" width="12" height="1" rx="0.2" fill="#4a5568" opacity="0.5"/>
+    <rect x="59" y="39" width="8" height="0.8" rx="0.2" fill="#4a5568" opacity="0.3"/>
+    <rect x="59" y="41" width="10" height="0.8" rx="0.2" fill="#4a5568" opacity="0.3"/>
+    <rect x="59" y="43" width="6" height="0.8" rx="0.2" fill="#4a5568" opacity="0.3"/>
+    
+    {/* Timeline/scrubber */}
+    <rect x="24" y="53" width="48" height="1.5" rx="0.3" fill="#3d4556" opacity="0.4"/>
+    <rect x="24" y="53" width="20" height="1.5" rx="0.3" fill="#ff9500" opacity="0.6"/>
+    <circle cx="44" cy="53.75" r="1" fill="#ff9500" opacity="0.9"/>
+  </g>
+  
+  {/* Graphics tablet with stylus */}
+  <g id="tablet">
+    {/* Tablet body */}
+    <rect x="52" y="70" width="20" height="14" rx="1" fill="#2d3548" stroke="#3d4556" stroke-width="0.5"/>
+    <rect x="53" y="71" width="18" height="12" rx="0.5" fill="#1f2533"/>
+    
+    {/* Active area */}
+    <rect x="54" y="72" width="16" height="9" rx="0.3" fill="#2d3548" opacity="0.5"/>
+    
+    {/* Express keys */}
+    <circle cx="55" cy="82" r="0.5" fill="#ff9500" opacity="0.8"/>
+    <circle cx="57" cy="82" r="0.5" fill="#4a5568" opacity="0.6"/>
+    <circle cx="59" cy="82" r="0.5" fill="#4a5568" opacity="0.6"/>
+    
+    {/* Stylus */}
+    <rect x="66" y="74" width="1" height="8" rx="0.5" fill="#4a5568"/>
+    <rect x="66" y="74" width="1" height="2" rx="0.5" fill="#3d4556"/>
+    <circle cx="66.5" cy="82.5" r="0.4" fill="#ff9500" opacity="0.9"/>
+  </g>
+  
+  {/* Workstation tower (under desk, visible) */}
+  <g id="workstation">
+    {/* Tower body (mesh front panel, dark) */}
+    <rect x="14" y="48" width="14" height="20" rx="1.5" fill="#2d3548" stroke="#3d4556" stroke-width="0.5"/>
+    
+    {/* Mesh front panel pattern */}
+    <rect x="16" y="50" width="10" height="16" rx="0.5" fill="#1f2533" opacity="0.6"/>
+    <line x1="17" y1="51" x2="17" y2="65" stroke="#4a5568" stroke-width="0.3" opacity="0.4"/>
+    <line x1="18.5" y1="51" x2="18.5" y2="65" stroke="#4a5568" stroke-width="0.3" opacity="0.4"/>
+    <line x1="20" y1="51" x2="20" y2="65" stroke="#4a5568" stroke-width="0.3" opacity="0.4"/>
+    <line x1="21.5" y1="51" x2="21.5" y2="65" stroke="#4a5568" stroke-width="0.3" opacity="0.4"/>
+    <line x1="23" y1="51" x2="23" y2="65" stroke="#4a5568" stroke-width="0.3" opacity="0.4"/>
+    <line x1="24.5" y1="51" x2="24.5" y2="65" stroke="#4a5568" stroke-width="0.3" opacity="0.4"/>
+    
+    {/* Horizontal mesh lines */}
+    <line x1="16" y1="53" x2="26" y2="53" stroke="#4a5568" stroke-width="0.2" opacity="0.3"/>
+    <line x1="16" y1="56" x2="26" y2="56" stroke="#4a5568" stroke-width="0.2" opacity="0.3"/>
+    <line x1="16" y1="59" x2="26" y2="59" stroke="#4a5568" stroke-width="0.2" opacity="0.3"/>
+    <line x1="16" y1="62" x2="26" y2="62" stroke="#4a5568" stroke-width="0.2" opacity="0.3"/>
+    
+    {/* Orange LED accent */}
+    <rect x="16" y="66" width="10" height="0.5" fill="#ff9500" opacity="0.8"/>
+    <defs>
+      <radialGradient id="orangeLEDGlow">
+        <stop offset="0%" style="stop-color:#ff9500;stop-opacity:0.4" />
+        <stop offset="100%" style="stop-color:#ff9500;stop-opacity:0" />
+      </radialGradient>
+    </defs>
+    <ellipse cx="21" cy="66.25" rx="6" ry="2" fill="url(#orangeLEDGlow)"/>
+    
+    {/* Power button */}
+    <circle cx="21" cy="52" r="0.8" fill="#ff9500" opacity="0.9"/>
+    <circle cx="21" cy="52" r="1.2" fill="#ff9500" opacity="0.3"/>
+    
+    {/* I/O ports (top) */}
+    <rect x="17" y="50.5" width="1.5" height="0.5" rx="0.1" fill="#3d4556" opacity="0.7"/>
+    <rect x="19" y="50.5" width="1.5" height="0.5" rx="0.1" fill="#3d4556" opacity="0.7"/>
+  </g>
+  
+  {/* Ambient lighting effects (dark theme) */}
+  <defs>
+    <radialGradient id="ambientOrange">
+      <stop offset="0%" style="stop-color:#ff9500;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#ff9500;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  <ellipse cx="48" cy="70" rx="30" ry="8" fill="url(#ambientOrange)"/>
+  
+  {/* Subtle shadows for depth */}
+  <ellipse cx="21" cy="68.5" rx="7" ry="1" fill="#000000" opacity="0.2"/>
+  <ellipse cx="62" cy="84.5" rx="10" ry="1" fill="#000000" opacity="0.15"/>
+    </svg>
+  )
+}

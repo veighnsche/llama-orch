@@ -49,48 +49,53 @@ The rbee design system is built around:
 ## Component Categories
 
 ### Atoms
-Small, single-purpose components:
-- **Button** - Primary interactive elements
-- **Badge** - Status and category indicators
+Basic building blocks like buttons, inputs, and labels.
 
 ### Molecules
-Composed components with specific functions:
-- **Card** - Content grouping with header, content, and footer
+Simple combinations of atoms like form fields with labels.
 
-### Coming Soon
-More components will be added as they're extracted from the commercial site or needed by user-docs.
+### Organisms
+Complex UI components like navigation bars and cards.
+
+### Patterns
+Complete page layouts and templates.
+
+## Getting Started
+
+Browse the components in the sidebar to see examples, documentation, and interactive demos.
+
+Each component includes:
+- **Props documentation** - All available props and their types
+- **Interactive controls** - Test different prop combinations
+- **Code examples** - Copy-paste ready code snippets
+- **Accessibility notes** - ARIA labels and keyboard navigation
+
+## Design Tokens
+
+All components use design tokens for consistent theming. Key token categories:
+
+- **Colors** - Primary, secondary, background, foreground
+- **Spacing** - Consistent padding and margins
+- **Typography** - Font sizes, weights, and line heights
+- **Borders** - Radius and widths
+- **Shadows** - Elevation levels
 
 ## Usage
 
-Import components from their respective categories:
-
 ```tsx
-import { Button, Badge } from '@rbee/ui/atoms';
-import { Card, CardHeader, CardTitle, CardContent } from '@rbee/ui/molecules';
+import { Button } from '@rbee/ui/atoms';
+
+function MyComponent() {
+  return <Button variant="primary">Click me</Button>;
+}
 ```
 
-Import design tokens:
+## Contributing
 
-```tsx
-import { colors, spacing, radius } from '@rbee/ui/tokens';
-```
+When adding new components:
 
-Import shared styles:
-
-```tsx
-import '@rbee/ui/styles';
-```
-
-## Dark Mode
-
-All components support dark mode automatically. Toggle the theme using the toolbar above to see how components adapt.
-
-## Resources
-
-- **Repository**: [github.com/veighnsche/llama-orch](https://github.com/veighnsche/llama-orch)
-- **Package Location**: `frontend/libs/rbee-ui`
-- **Documentation**: See the README files in the package
-
-## Explore Components
-
-Navigate through the sidebar to explore all available components, their variants, and usage examples.
+1. Follow the atomic design structure
+2. Use design tokens for all styling
+3. Include comprehensive prop documentation
+4. Add interactive Storybook stories
+5. Ensure accessibility compliance

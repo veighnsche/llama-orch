@@ -14,6 +14,7 @@ import {
 import { IconBox, SectionContainer, StatsGrid } from '@rbee/ui/molecules'
 import { ArrowRight, Cpu, Shield, Zap } from 'lucide-react'
 import Image from 'next/image'
+import { homelabNetwork } from '@rbee/ui/assets'
 
 export function WhatIsRbee() {
 	return (
@@ -127,7 +128,7 @@ export function WhatIsRbee() {
 							</Badge>
 						</div>
 						<Image
-							src="/images/homelab-network.png"
+							src={homelabNetwork}
 							width={1280}
 							height={720}
 							priority
