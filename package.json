@@ -1,0 +1,22 @@
+{
+  "name": "llama-orch-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev:commercial": "concurrently --names \"UI,APP\" -c \"cyan,green\" \"pnpm --filter @rbee/ui run dev\" \"pnpm --filter @rbee/commercial run dev\"",
+    "dev:docs": "concurrently --names \"UI,DOCS\" -c \"cyan,blue\" \"pnpm --filter @rbee/ui run dev\" \"pnpm --filter @rbee/user-docs run dev\"",
+    "dev:frontend": "concurrently --names \"UI,COMM,DOCS\" -c \"cyan,green,blue\" \"pnpm --filter @rbee/ui run dev\" \"pnpm --filter @rbee/commercial run dev\" \"pnpm --filter @rbee/user-docs run dev\"",
+    "dev:ui": "pnpm --filter @rbee/ui run dev",
+    "build:ui": "pnpm --filter @rbee/ui run build",
+    "build:commercial": "pnpm run build:ui && pnpm --filter @rbee/commercial run build",
+    "build:docs": "pnpm run build:ui && pnpm --filter @rbee/user-docs run build",
+    "build:frontend": "pnpm run build:ui && pnpm --filter @rbee/commercial run build && pnpm --filter @rbee/user-docs run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=18"
+  }
+}

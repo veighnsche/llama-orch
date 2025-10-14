@@ -1,5 +1,6 @@
 /**
  * Commercial site global styles
- * Now imports from shared @rbee/ui package
+ * Following Turborepo pattern: import pre-built CSS from UI package
  */
-@import '@rbee/ui/globals';
+@import 'tailwindcss';
+@import 'tw-animate-css';

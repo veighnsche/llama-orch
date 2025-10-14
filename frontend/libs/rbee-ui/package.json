@@ -3,8 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "exports": {
-    "./styles": "./src/tokens/styles.css",
+    "./styles.css": "./dist/index.css",
     "./globals": "./src/tokens/globals.css",
     "./tokens": "./src/tokens/index.ts",
     "./atoms": "./src/atoms/index.ts",
@@ -19,9 +22,12 @@
     "./hooks/*": "./src/hooks/*"
   },
   "files": [
-    "src"
+    "src",
+    "dist"
   ],
   "scripts": {
+    "dev": "tailwindcss -i ./src/tokens/globals.css -o ./dist/index.css --watch",
+    "build": "tailwindcss -i ./src/tokens/globals.css -o ./dist/index.css",
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
@@ -39,6 +45,7 @@
     "@storybook/react": "^8.5.0",
     "@storybook/react-vite": "^8.5.0",
     "@storybook/test": "^8.5.0",
+    "@tailwindcss/cli": "^4",
     "@tailwindcss/vite": "^4.1.10",
     "@types/node": "^20",
     "@types/react": "^19",
