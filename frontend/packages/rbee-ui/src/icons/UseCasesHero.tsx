@@ -20,8 +20,8 @@ export function UseCasesHero({ size = 1080, className, ...props }: UseCasesHeroP
   {/* Radial gradient for depth */}
   <defs>
     <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:0.15" />
-      <stop offset="100%" style="stop-color:#0f172a;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#f59e0b', stopOpacity: 0.15 }} />
+      <stop offset="100%" style={{ stopColor: '#0f172a', stopOpacity: 0 }} />
     </radialGradient>
   </defs>
   <circle cx="540" cy="380" r="300" fill="url(#glow)"/>

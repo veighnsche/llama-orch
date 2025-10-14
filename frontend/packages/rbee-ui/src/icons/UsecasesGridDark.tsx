@@ -17,52 +17,52 @@ export function UsecasesGridDark({ size = 1920, className, ...props }: UsecasesG
       <defs>
     {/* Background gradients */}
     <radialGradient id="bgRadial" cx="50%" cy="40%">
-      <stop offset="0%" style="stop-color:#1e293b;stop-opacity:0.6" />
-      <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="0%" style={{ stopColor: '#1e293b', stopOpacity: 0.6 }} />
+      <stop offset="100%" style={{ stopColor: '#0f172a', stopOpacity: 1 }} />
     </radialGradient>
     
     <radialGradient id="vignette" cx="50%" cy="50%">
-      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:0" />
-      <stop offset="100%" style="stop-color:#000000;stop-opacity:0.7" />
+      <stop offset="0%" style={{ stopColor: '#0f172a', stopOpacity: 0 }} />
+      <stop offset="100%" style={{ stopColor: '#000000', stopOpacity: 0.7 }} />
     </radialGradient>
     
     {/* Lighting effects */}
     <radialGradient id="amberGlow" cx="50%" cy="50%">
-      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:0.8" />
-      <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:0.3" />
-      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#f59e0b', stopOpacity: 0.8 }} />
+      <stop offset="50%" style={{ stopColor: '#f59e0b', stopOpacity: 0.3 }} />
+      <stop offset="100%" style={{ stopColor: '#f59e0b', stopOpacity: 0 }} />
     </radialGradient>
     
     <radialGradient id="blueGlow" cx="50%" cy="50%">
-      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.6" />
-      <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:0.2" />
-      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#3b82f6', stopOpacity: 0.6 }} />
+      <stop offset="50%" style={{ stopColor: '#3b82f6', stopOpacity: 0.2 }} />
+      <stop offset="100%" style={{ stopColor: '#3b82f6', stopOpacity: 0 }} />
     </radialGradient>
     
     <radialGradient id="tealGlow" cx="50%" cy="50%">
-      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:0.8" />
-      <stop offset="50%" style="stop-color:#14b8a6;stop-opacity:0.3" />
-      <stop offset="100%" style="stop-color:#14b8a6;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#14b8a6', stopOpacity: 0.8 }} />
+      <stop offset="50%" style={{ stopColor: '#14b8a6', stopOpacity: 0.3 }} />
+      <stop offset="100%" style={{ stopColor: '#14b8a6', stopOpacity: 0 }} />
     </radialGradient>
     
     {/* Network line gradient */}
     <linearGradient id="networkLine" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:0.2" />
-      <stop offset="50%" style="stop-color:#14b8a6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#14b8a6;stop-opacity:0.2" />
+      <stop offset="0%" style={{ stopColor: '#14b8a6', stopOpacity: 0.2 }} />
+      <stop offset="50%" style={{ stopColor: '#14b8a6', stopOpacity: 1 }} />
+      <stop offset="100%" style={{ stopColor: '#14b8a6', stopOpacity: 0.2 }} />
     </linearGradient>
     
     {/* Wood texture gradient */}
     <linearGradient id="woodGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#3e2723" />
-      <stop offset="50%" style="stop-color:#4e342e" />
-      <stop offset="100%" style="stop-color:#3e2723" />
+      <stop offset="0%" style={{ stopColor: '#3e2723' }} />
+      <stop offset="50%" style={{ stopColor: '#4e342e' }} />
+      <stop offset="100%" style={{ stopColor: '#3e2723' }} />
     </linearGradient>
     
     {/* Monitor glow */}
     <radialGradient id="monitorGlow" cx="50%" cy="50%">
-      <stop offset="0%" style="stop-color:#64748b;stop-opacity:0.4" />
-      <stop offset="100%" style="stop-color:#64748b;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#64748b', stopOpacity: 0.4 }} />
+      <stop offset="100%" style={{ stopColor: '#64748b', stopOpacity: 0 }} />
     </radialGradient>
     
     {/* Blur filters */}
@@ -549,8 +549,8 @@ export function UsecasesGridDark({ size = 1920, className, ...props }: UsecasesG
     {/* Key light from upper left */}
     <defs>
       <radialGradient id="keyLight" cx="30%" cy="30%">
-        <stop offset="0%" style="stop-color:#f8fafc;stop-opacity:0.3" />
-        <stop offset="100%" style="stop-color:#f8fafc;stop-opacity:0" />
+        <stop offset="0%" style={{ stopColor: '#f8fafc', stopOpacity: 0.3 }} />
+        <stop offset="100%" style={{ stopColor: '#f8fafc', stopOpacity: 0 }} />
       </radialGradient>
     </defs>
     <ellipse cx="400" cy="150" rx="600" ry="400" fill="url(#keyLight)"/>

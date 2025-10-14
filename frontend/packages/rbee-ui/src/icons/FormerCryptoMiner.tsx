@@ -151,13 +151,13 @@ export function FormerCryptoMiner({ size = 96, className, ...props }: FormerCryp
   {/* LED strip lighting (orange) */}
   <defs>
     <linearGradient id="ledStrip" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#ff9500;stop-opacity:0.6" />
-      <stop offset="50%" style="stop-color:#ff6b00;stop-opacity:0.8" />
-      <stop offset="100%" style="stop-color:#ff9500;stop-opacity:0.6" />
+      <stop offset="0%" style={{ stopColor: '#ff9500', stopOpacity: 0.6 }} />
+      <stop offset="50%" style={{ stopColor: '#ff6b00', stopOpacity: 0.8 }} />
+      <stop offset="100%" style={{ stopColor: '#ff9500', stopOpacity: 0.6 }} />
     </linearGradient>
     <radialGradient id="ledGlow">
-      <stop offset="0%" style="stop-color:#ff9500;stop-opacity:0.3" />
-      <stop offset="100%" style="stop-color:#ff9500;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#ff9500', stopOpacity: 0.3 }} />
+      <stop offset="100%" style={{ stopColor: '#ff9500', stopOpacity: 0 }} />
     </radialGradient>
   </defs>
   <rect x="20" y="30" width="56" height="1" fill="url(#ledStrip)"/>

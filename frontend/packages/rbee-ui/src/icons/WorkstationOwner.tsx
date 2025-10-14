@@ -34,13 +34,13 @@ export function WorkstationOwner({ size = 96, className, ...props }: Workstation
     {/* Curved screen with gradient (active display) */}
     <defs>
       <linearGradient id="screenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.15" />
-        <stop offset="50%" style="stop-color:#764ba2;stop-opacity:0.1" />
-        <stop offset="100%" style="stop-color:#f093fb;stop-opacity:0.15" />
+        <stop offset="0%" style={{ stopColor: '#667eea', stopOpacity: 0.15 }} />
+        <stop offset="50%" style={{ stopColor: '#764ba2', stopOpacity: 0.1 }} />
+        <stop offset="100%" style={{ stopColor: '#f093fb', stopOpacity: 0.15 }} />
       </linearGradient>
       <radialGradient id="screenGlow">
-        <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3" />
-        <stop offset="100%" style="stop-color:#e9ecef;stop-opacity:0" />
+        <stop offset="0%" style={{ stopColor: '#ffffff', stopOpacity: 0.3 }} />
+        <stop offset="100%" style={{ stopColor: '#e9ecef', stopOpacity: 0 }} />
       </radialGradient>
     </defs>
     <path d="M 22 32 Q 22 31 23 31 L 73 31 Q 74 31 74 32 L 74 54 Q 74 55 73 55 L 23 55 Q 22 55 22 54 Z" 
@@ -123,8 +123,8 @@ export function WorkstationOwner({ size = 96, className, ...props }: Workstation
     <rect x="16" y="66" width="10" height="0.5" fill="#ff9500" opacity="0.8"/>
     <defs>
       <radialGradient id="orangeLEDGlow">
-        <stop offset="0%" style="stop-color:#ff9500;stop-opacity:0.4" />
-        <stop offset="100%" style="stop-color:#ff9500;stop-opacity:0" />
+        <stop offset="0%" style={{ stopColor: '#ff9500', stopOpacity: 0.4 }} />
+        <stop offset="100%" style={{ stopColor: '#ff9500', stopOpacity: 0 }} />
       </radialGradient>
     </defs>
     <ellipse cx="21" cy="66.25" rx="6" ry="2" fill="url(#orangeLEDGlow)"/>
@@ -141,8 +141,8 @@ export function WorkstationOwner({ size = 96, className, ...props }: Workstation
   {/* Ambient lighting effects (dark theme) */}
   <defs>
     <radialGradient id="ambientOrange">
-      <stop offset="0%" style="stop-color:#ff9500;stop-opacity:0.15" />
-      <stop offset="100%" style="stop-color:#ff9500;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#ff9500', stopOpacity: 0.15 }} />
+      <stop offset="100%" style={{ stopColor: '#ff9500', stopOpacity: 0 }} />
     </radialGradient>
   </defs>
   <ellipse cx="48" cy="70" rx="30" ry="8" fill="url(#ambientOrange)"/>

@@ -17,65 +17,65 @@ export function IndustriesHero({ size = 1920, className, ...props }: IndustriesH
       <defs>
     {/* Seamless transition gradients */}
     <linearGradient id="transition1" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
-      <stop offset="80%" style="stop-color:#0f172a;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#0f172a', stopOpacity: 1 }} />
+      <stop offset="80%" style={{ stopColor: '#0f172a', stopOpacity: 0 }} />
     </linearGradient>
     <linearGradient id="transition2" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="20%" style="stop-color:#0f172a;stop-opacity:0" />
-      <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="20%" style={{ stopColor: '#0f172a', stopOpacity: 0 }} />
+      <stop offset="100%" style={{ stopColor: '#0f172a', stopOpacity: 1 }} />
     </linearGradient>
     
     {/* Teal accent lighting system */}
     <linearGradient id="tealAccent" x1="0%" y1="100%" x2="0%" y2="0%">
-      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:0.4" />
-      <stop offset="100%" style="stop-color:#14b8a6;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#14b8a6', stopOpacity: 0.4 }} />
+      <stop offset="100%" style={{ stopColor: '#14b8a6', stopOpacity: 0 }} />
     </linearGradient>
     
     <radialGradient id="tealGlow" cx="50%" cy="50%">
-      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:0.6" />
-      <stop offset="100%" style="stop-color:#14b8a6;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#14b8a6', stopOpacity: 0.6 }} />
+      <stop offset="100%" style={{ stopColor: '#14b8a6', stopOpacity: 0 }} />
     </radialGradient>
     
     {/* Rim lighting effects */}
     <linearGradient id="rimLight" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:0" />
-      <stop offset="50%" style="stop-color:#14b8a6;stop-opacity:0.3" />
-      <stop offset="100%" style="stop-color:#14b8a6;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#14b8a6', stopOpacity: 0 }} />
+      <stop offset="50%" style={{ stopColor: '#14b8a6', stopOpacity: 0.3 }} />
+      <stop offset="100%" style={{ stopColor: '#14b8a6', stopOpacity: 0 }} />
     </linearGradient>
     
     {/* Vignette */}
     <radialGradient id="vignette" cx="50%" cy="50%">
-      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:0" />
-      <stop offset="100%" style="stop-color:#000000;stop-opacity:0.5" />
+      <stop offset="0%" style={{ stopColor: '#0f172a', stopOpacity: 0 }} />
+      <stop offset="100%" style={{ stopColor: '#000000', stopOpacity: 0.5 }} />
     </radialGradient>
     
     {/* Metal gradient for vault */}
     <linearGradient id="metalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#475569" />
-      <stop offset="25%" style="stop-color:#cbd5e1" />
-      <stop offset="50%" style="stop-color:#f1f5f9" />
-      <stop offset="75%" style="stop-color:#cbd5e1" />
-      <stop offset="100%" style="stop-color:#475569" />
+      <stop offset="0%" style={{ stopColor: '#475569' }} />
+      <stop offset="25%" style={{ stopColor: '#cbd5e1' }} />
+      <stop offset="50%" style={{ stopColor: '#f1f5f9' }} />
+      <stop offset="75%" style={{ stopColor: '#cbd5e1' }} />
+      <stop offset="100%" style={{ stopColor: '#475569' }} />
     </linearGradient>
     
     {/* Marble gradient */}
     <linearGradient id="marbleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#f8fafc" />
-      <stop offset="50%" style="stop-color:#e2e8f0" />
-      <stop offset="100%" style="stop-color:#cbd5e1" />
+      <stop offset="0%" style={{ stopColor: '#f8fafc' }} />
+      <stop offset="50%" style={{ stopColor: '#e2e8f0' }} />
+      <stop offset="100%" style={{ stopColor: '#cbd5e1' }} />
     </linearGradient>
     
     {/* LED glows */}
     <radialGradient id="ledGreen" cx="50%" cy="50%">
-      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#10b981;stop-opacity:0.4" />
-      <stop offset="100%" style="stop-color:#10b981;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#10b981', stopOpacity: 1 }} />
+      <stop offset="50%" style={{ stopColor: '#10b981', stopOpacity: 0.4 }} />
+      <stop offset="100%" style={{ stopColor: '#10b981', stopOpacity: 0 }} />
     </radialGradient>
     
     <radialGradient id="ledAmber" cx="50%" cy="50%">
-      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:0.4" />
-      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#f59e0b', stopOpacity: 1 }} />
+      <stop offset="50%" style={{ stopColor: '#f59e0b', stopOpacity: 0.4 }} />
+      <stop offset="100%" style={{ stopColor: '#f59e0b', stopOpacity: 0 }} />
     </radialGradient>
   </defs>
   

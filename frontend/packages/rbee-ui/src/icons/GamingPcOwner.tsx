@@ -29,14 +29,14 @@ export function GamingPcOwner({ size = 96, className, ...props }: GamingPcOwnerP
     {/* Tempered glass panel with gradient */}
     <defs>
       <linearGradient id="glassGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#4a5568;stop-opacity:0.3" />
-        <stop offset="100%" style="stop-color:#2d3748;stop-opacity:0.6" />
+        <stop offset="0%" style={{ stopColor: '#4a5568', stopOpacity: 0.3 }} />
+        <stop offset="100%" style={{ stopColor: '#2d3748', stopOpacity: 0.6 }} />
       </linearGradient>
       <linearGradient id="rgbGlow" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" style="stop-color:#ff0080;stop-opacity:0.8" />
-        <stop offset="33%" style="stop-color:#7928ca;stop-opacity:0.8" />
-        <stop offset="66%" style="stop-color:#0070f3;stop-opacity:0.8" />
-        <stop offset="100%" style="stop-color:#00dfd8;stop-opacity:0.8" />
+        <stop offset="0%" style={{ stopColor: '#ff0080', stopOpacity: 0.8 }} />
+        <stop offset="33%" style={{ stopColor: '#7928ca', stopOpacity: 0.8 }} />
+        <stop offset="66%" style={{ stopColor: '#0070f3', stopOpacity: 0.8 }} />
+        <stop offset="100%" style={{ stopColor: '#00dfd8', stopOpacity: 0.8 }} />
       </linearGradient>
     </defs>
     <rect x="18" y="40" width="14" height="26" rx="1" fill="url(#glassGradient)" opacity="0.6"/>
@@ -67,8 +67,8 @@ export function GamingPcOwner({ size = 96, className, ...props }: GamingPcOwnerP
     {/* Screen with gradient (active) */}
     <defs>
       <linearGradient id="screenGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.4" />
-        <stop offset="100%" style="stop-color:#764ba2;stop-opacity:0.3" />
+        <stop offset="0%" style={{ stopColor: '#667eea', stopOpacity: 0.4 }} />
+        <stop offset="100%" style={{ stopColor: '#764ba2', stopOpacity: 0.3 }} />
       </linearGradient>
     </defs>
     <rect x="40" y="34" width="24" height="16" rx="0.5" fill="url(#screenGlow)"/>
@@ -105,8 +105,8 @@ export function GamingPcOwner({ size = 96, className, ...props }: GamingPcOwnerP
   {/* Ambient lighting effects */}
   <defs>
     <radialGradient id="ambientGlow">
-      <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.2" />
-      <stop offset="100%" style="stop-color:#667eea;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#667eea', stopOpacity: 0.2 }} />
+      <stop offset="100%" style={{ stopColor: '#667eea', stopOpacity: 0 }} />
     </radialGradient>
   </defs>
   <ellipse cx="48" cy="75" rx="35" ry="8" fill="url(#ambientGlow)"/>

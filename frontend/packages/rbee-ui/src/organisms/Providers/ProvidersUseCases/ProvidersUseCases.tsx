@@ -3,6 +3,7 @@ import { Button } from '@rbee/ui/atoms/Button'
 import { Card } from '@rbee/ui/atoms/Card'
 import { Separator } from '@rbee/ui/atoms/Separator'
 import { GamingPcOwner, HomelabEnthusiast, FormerCryptoMiner, WorkstationOwner } from '@rbee/ui/icons'
+import { cn } from '@rbee/ui/utils'
 import { ArrowRight, Check, Cpu, Gamepad2, Monitor, Server } from 'lucide-react'
 import * as React from 'react'
 
@@ -16,7 +17,7 @@ export type Case = {
 	subtitle?: string
 	quote: string
 	facts: { label: string; value: string }[]
-	image?: { src: string; alt: string }
+	image?: { Component: React.ComponentType<any>; alt: string }
 	highlight?: string
 }
 

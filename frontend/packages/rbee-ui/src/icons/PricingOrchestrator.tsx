@@ -17,35 +17,35 @@ export function PricingOrchestrator({ size = 600, className, ...props }: Pricing
       <defs>
     {/* Background gradient */}
     <radialGradient id="bgGradient" cx="50%" cy="50%">
-      <stop offset="0%" style="stop-color:#1e293b;stop-opacity:0.8" />
-      <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="0%" style={{ stopColor: '#1e293b', stopOpacity: 0.8 }} />
+      <stop offset="100%" style={{ stopColor: '#0f172a', stopOpacity: 1 }} />
     </radialGradient>
     
     {/* Amber glow for connections */}
     <radialGradient id="amberGlow" cx="50%" cy="50%">
-      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:0.6" />
-      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#f59e0b', stopOpacity: 0.6 }} />
+      <stop offset="100%" style={{ stopColor: '#f59e0b', stopOpacity: 0 }} />
     </radialGradient>
     
     {/* Node gradient (navy with rim lighting) */}
     <linearGradient id="nodeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#334155;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#1e293b;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="0%" style={{ stopColor: '#334155', stopOpacity: 1 }} />
+      <stop offset="50%" style={{ stopColor: '#1e293b', stopOpacity: 1 }} />
+      <stop offset="100%" style={{ stopColor: '#0f172a', stopOpacity: 1 }} />
     </linearGradient>
     
     {/* Queen node gradient (larger, brighter) */}
     <radialGradient id="queenGradient" cx="30%" cy="30%">
-      <stop offset="0%" style="stop-color:#475569;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#334155;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1e293b;stop-opacity:1" />
+      <stop offset="0%" style={{ stopColor: '#475569', stopOpacity: 1 }} />
+      <stop offset="50%" style={{ stopColor: '#334155', stopOpacity: 1 }} />
+      <stop offset="100%" style={{ stopColor: '#1e293b', stopOpacity: 1 }} />
     </radialGradient>
     
     {/* Amber rim light */}
     <linearGradient id="rimLight" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:0" />
-      <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:0.4" />
-      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#f59e0b', stopOpacity: 0 }} />
+      <stop offset="50%" style={{ stopColor: '#f59e0b', stopOpacity: 0.4 }} />
+      <stop offset="100%" style={{ stopColor: '#f59e0b', stopOpacity: 0 }} />
     </linearGradient>
     
     {/* Glow filter */}

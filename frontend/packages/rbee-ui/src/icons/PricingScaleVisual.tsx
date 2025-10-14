@@ -17,26 +17,26 @@ export function PricingScaleVisual({ size = 1400, className, ...props }: Pricing
       <defs>
     {/* Background gradients */}
     <radialGradient id="bgRadial" cx="50%" cy="50%">
-      <stop offset="0%" style="stop-color:#1e293b;stop-opacity:0.6" />
-      <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="0%" style={{ stopColor: '#1e293b', stopOpacity: 0.6 }} />
+      <stop offset="100%" style={{ stopColor: '#0f172a', stopOpacity: 1 }} />
     </radialGradient>
     
     <radialGradient id="amberGlow" cx="50%" cy="50%">
-      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:0.7" />
-      <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:0.3" />
-      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#f59e0b', stopOpacity: 0.7 }} />
+      <stop offset="50%" style={{ stopColor: '#f59e0b', stopOpacity: 0.3 }} />
+      <stop offset="100%" style={{ stopColor: '#f59e0b', stopOpacity: 0 }} />
     </radialGradient>
     
     <radialGradient id="tealGlow" cx="50%" cy="50%">
-      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:0.7" />
-      <stop offset="50%" style="stop-color:#14b8a6;stop-opacity:0.3" />
-      <stop offset="100%" style="stop-color:#14b8a6;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#14b8a6', stopOpacity: 0.7 }} />
+      <stop offset="50%" style={{ stopColor: '#14b8a6', stopOpacity: 0.3 }} />
+      <stop offset="100%" style={{ stopColor: '#14b8a6', stopOpacity: 0 }} />
     </radialGradient>
     
     <linearGradient id="serverGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#475569" />
-      <stop offset="50%" style="stop-color:#334155" />
-      <stop offset="100%" style="stop-color:#1e293b" />
+      <stop offset="0%" style={{ stopColor: '#475569' }} />
+      <stop offset="50%" style={{ stopColor: '#334155' }} />
+      <stop offset="100%" style={{ stopColor: '#1e293b' }} />
     </linearGradient>
     
     <filter id="glow">

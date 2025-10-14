@@ -97,8 +97,8 @@ export function HomelabEnthusiast({ size = 96, className, ...props }: HomelabEnt
   {/* Status LEDs (orange and green) */}
   <defs>
     <radialGradient id="orangeLED">
-      <stop offset="0%" style="stop-color:#ff9500;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#ff9500;stop-opacity:0.3" />
+      <stop offset="0%" style={{ stopColor: '#ff9500', stopOpacity: 1 }} />
+      <stop offset="100%" style={{ stopColor: '#ff9500', stopOpacity: 0.3 }} />
     </radialGradient>
   </defs>
   <circle cx="28" cy="50" r="1" fill="url(#orangeLED)"/>
@@ -148,8 +148,8 @@ export function HomelabEnthusiast({ size = 96, className, ...props }: HomelabEnt
   {/* Ambient glow from LEDs */}
   <defs>
     <radialGradient id="serverGlow">
-      <stop offset="0%" style="stop-color:#0070f3;stop-opacity:0.15" />
-      <stop offset="100%" style="stop-color:#0070f3;stop-opacity:0" />
+      <stop offset="0%" style={{ stopColor: '#0070f3', stopOpacity: 0.15 }} />
+      <stop offset="100%" style={{ stopColor: '#0070f3', stopOpacity: 0 }} />
     </radialGradient>
   </defs>
   <ellipse cx="48" cy="44" rx="30" ry="20" fill="url(#serverGlow)"/>

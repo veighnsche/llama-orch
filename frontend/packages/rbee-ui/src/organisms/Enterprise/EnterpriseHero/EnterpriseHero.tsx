@@ -2,7 +2,9 @@ import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
 import { Card } from '@rbee/ui/atoms/Card'
 import { Separator } from '@rbee/ui/atoms/Separator'
-import { Building2, Check, Lock, Shield } from 'lucide-react'
+import { ComplianceChip } from '@rbee/ui/molecules/ComplianceChip'
+import { StatsGrid } from '@rbee/ui/molecules/StatsGrid'
+import { Building2, Check, FileCheck, Filter, Lock, Shield } from 'lucide-react'
 import Link from 'next/link'
 
 const auditEvents = [

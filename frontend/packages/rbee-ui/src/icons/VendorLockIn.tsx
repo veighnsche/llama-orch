@@ -17,9 +17,9 @@ export function VendorLockIn({ size = 1200, className, ...props }: VendorLockInP
       {/* Background gradient */}
   <defs>
     <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:oklch(0.25 0.02 240);stop-opacity:0.3" />
-      <stop offset="50%" style="stop-color:oklch(0.22 0.03 260);stop-opacity:0.5" />
-      <stop offset="100%" style="stop-color:oklch(0.25 0.02 240);stop-opacity:0.3" />
+      <stop offset="0%" style={{ stopColor: 'oklch(0.25 0.02 240)', stopOpacity: 0.3 }} />
+      <stop offset="50%" style={{ stopColor: 'oklch(0.22 0.03 260)', stopOpacity: 0.5 }} />
+      <stop offset="100%" style={{ stopColor: 'oklch(0.25 0.02 240)', stopOpacity: 0.3 }} />
     </linearGradient>
     
     {/* Glow effects */}
