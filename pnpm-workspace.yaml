@@ -2,10 +2,10 @@ packages:
   - consumers/rbee-utils
   - consumers/.examples/*
   - consumers/rbee-sdk/ts
-  - frontend/bin/commercial
-  - frontend/bin/user-docs
-  - frontend/libs/frontend-tooling
-  - frontend/libs/rbee-ui
+  - frontend/apps/commercial
+  - frontend/apps/user-docs
+  - frontend/packages/frontend-tooling
+  - frontend/packages/rbee-ui
   - frontend/reference/v0
 
 onlyBuiltDependencies:

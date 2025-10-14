@@ -29,7 +29,7 @@ Each command automatically:
 ## What You Get
 
 ### Automatic Hot Reload
-1. Edit `frontend/libs/rbee-ui/src/organisms/HeroSection/HeroSection.tsx`
+1. Edit `frontend/packages/rbee-ui/src/organisms/HeroSection/HeroSection.tsx`
 2. CSS rebuilds automatically (watch the [UI] output)
 3. Next.js hot-reloads the page
 4. See changes instantly at http://localhost:3000

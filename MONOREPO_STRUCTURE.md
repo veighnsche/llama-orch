@@ -14,10 +14,10 @@ llama-orch/
 │   └── llama-orch-sdk/ts     # TypeScript SDK
 │
 └── frontend/                 # ✅ Orchestrated workspaces
-    ├── bin/
+    ├── apps/
     │   ├── commercial        # Marketing site (@rbee/commercial)
     │   └── user-docs         # Documentation (@rbee/user-docs)
-    └── libs/
+    └── packages/
         ├── rbee-ui           # Shared UI components (@rbee/ui)
         └── frontend-tooling  # Shared tooling
 ```

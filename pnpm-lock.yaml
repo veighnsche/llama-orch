@@ -46,7 +46,7 @@ importers:
         specifier: ^5
         version: 5.9.2
 
-  frontend/bin/commercial:
+  frontend/apps/commercial:
     dependencies:
       '@hookform/resolvers':
         specifier: ^3.10.0
@@ -137,7 +137,7 @@ importers:
         version: 1.1.6(@types/react-dom@19.2.1(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@rbee/ui':
         specifier: workspace:*
-        version: link:../../libs/rbee-ui
+        version: link:../../packages/rbee-ui
       '@xyflow/react':
         specifier: ^12.8.6
         version: 12.8.6(@types/react@19.2.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -216,7 +216,7 @@ importers:
         version: 3.3.1
       '@rbee/frontend-tooling':
         specifier: workspace:*
-        version: link:../../libs/frontend-tooling
+        version: link:../../packages/frontend-tooling
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.1.14
@@ -248,14 +248,14 @@ importers:
         specifier: ^4.42.2
         version: 4.42.2
 
-  frontend/bin/user-docs:
+  frontend/apps/user-docs:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: ^1.10.1
         version: 1.10.1(wrangler@4.42.2)
       '@rbee/ui':
         specifier: workspace:*
-        version: link:../../libs/rbee-ui
+        version: link:../../packages/rbee-ui
       next:
         specifier: 15.4.6
         version: 15.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -303,7 +303,7 @@ importers:
         specifier: ^4.42.2
         version: 4.42.2
 
-  frontend/libs/frontend-tooling:
+  frontend/packages/frontend-tooling:
     dependencies:
       '@eslint/js':
         specifier: ^9.14.0
@@ -333,7 +333,7 @@ importers:
         specifier: ^9.4.3
         version: 9.4.3(eslint@9.36.0(jiti@2.6.1))
 
-  frontend/libs/rbee-ui:
+  frontend/packages/rbee-ui:
     dependencies:
       '@radix-ui/react-accordion':
         specifier: ^1.2.2
@@ -4172,9 +4172,6 @@ packages:
   callsites@3.1.0:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
     engines: {node: '>=6'}
-
-  caniuse-lite@1.0.30001745:
-    resolution: {integrity: sha512-ywt6i8FzvdgrrrGbr1jZVObnVv6adj+0if2/omv9cmR2oiZs30zL4DIyaptKcbOrBdOIc74QTMoJvSE2QHh5UQ==}
 
   caniuse-lite@1.0.30001750:
     resolution: {integrity: sha512-cuom0g5sdX6rw00qOoLNSFCJ9/mYIsuSOA+yzpDw8eopiFqcVwQvZHqov0vmEighRxX++cfC0Vg1G+1Iy/mSpQ==}
@@ -12160,8 +12157,6 @@ snapshots:
 
   callsites@3.1.0: {}
 
-  caniuse-lite@1.0.30001745: {}
-
   caniuse-lite@1.0.30001750: {}
 
   ccount@2.0.1: {}
@@ -14677,7 +14672,7 @@ snapshots:
     dependencies:
       '@next/env': 15.4.6
       '@swc/helpers': 0.5.15
-      caniuse-lite: 1.0.30001745
+      caniuse-lite: 1.0.30001750
       postcss: 8.4.31
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
@@ -14700,7 +14695,7 @@ snapshots:
     dependencies:
       '@next/env': 15.5.4
       '@swc/helpers': 0.5.15
-      caniuse-lite: 1.0.30001745
+      caniuse-lite: 1.0.30001750
       postcss: 8.4.31
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)

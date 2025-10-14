@@ -12,10 +12,10 @@ llama-orch/
 │   └── llama-orch-sdk/ts
 │
 └── frontend/              # ✅ Orchestrated together
-    ├── bin/
+    ├── apps/
     │   ├── commercial     # Marketing site
     │   └── user-docs      # Documentation site
-    └── libs/
+    └── packages/
         ├── rbee-ui        # Shared UI components
         └── frontend-tooling
 ```
