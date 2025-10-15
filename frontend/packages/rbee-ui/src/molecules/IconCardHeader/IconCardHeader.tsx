@@ -15,7 +15,7 @@ export interface IconCardHeaderProps {
 	/** Icon size */
 	iconSize?: 'sm' | 'md' | 'lg'
 	/** Icon tone */
-	iconTone?: 'primary' | 'secondary' | 'accent' | 'muted'
+	iconTone?: 'primary' | 'muted' | 'success' | 'warning'
 	/** Title size class */
 	titleClassName?: string
 	/** Additional CSS classes for the header wrapper */

@@ -1,5 +1,5 @@
-import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@rbee/ui/atoms'
-import { IconPlate, BulletListItem } from '@rbee/ui/molecules'
+import { Button, Card, CardContent } from '@rbee/ui/atoms'
+import { IconCardHeader, BulletListItem } from '@rbee/ui/molecules'
 import { Globe, Lock, Shield } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -42,17 +42,12 @@ export function EnterpriseCompliance() {
 						className="h-full rounded-2xl border-border bg-card/60 p-8 transition-shadow hover:shadow-lg"
 						aria-labelledby="compliance-gdpr"
 					>
-						<CardHeader className="mb-6 p-0">
-							<div className="flex items-center gap-3">
-								<IconPlate icon={<Globe className="h-6 w-6" />} size="lg" tone="primary" className="shrink-0" />
-								<div>
-									<CardTitle id="compliance-gdpr" className="text-2xl">
-										GDPR
-									</CardTitle>
-									<CardDescription>EU Regulation</CardDescription>
-								</div>
-							</div>
-						</CardHeader>
+						<IconCardHeader
+							icon={<Globe className="h-6 w-6" />}
+							title="GDPR"
+							subtitle="EU Regulation"
+							titleId="compliance-gdpr"
+						/>
 						<CardContent className="p-0">
 							<ul className="space-y-3" role="list">
 								<BulletListItem variant="check" title="7-year audit retention (Art. 30)" />
@@ -81,17 +76,12 @@ export function EnterpriseCompliance() {
 						className="h-full rounded-2xl border-border bg-card/60 p-8 transition-shadow hover:shadow-lg"
 						aria-labelledby="compliance-soc2"
 					>
-						<CardHeader className="mb-6 p-0">
-							<div className="flex items-center gap-3">
-								<IconPlate icon={<Shield className="h-6 w-6" />} size="lg" tone="primary" className="shrink-0" />
-								<div>
-									<CardTitle id="compliance-soc2" className="text-2xl">
-										SOC2
-									</CardTitle>
-									<CardDescription>US Standard</CardDescription>
-								</div>
-							</div>
-						</CardHeader>
+						<IconCardHeader
+							icon={<Shield className="h-6 w-6" />}
+							title="SOC2"
+							subtitle="US Standard"
+							titleId="compliance-soc2"
+						/>
 						<CardContent className="p-0">
 							<ul className="space-y-3" role="list">
 								<BulletListItem variant="check" title="Auditor query API" />
@@ -119,17 +109,12 @@ export function EnterpriseCompliance() {
 						className="h-full rounded-2xl border-border bg-card/60 p-8 transition-shadow hover:shadow-lg"
 						aria-labelledby="compliance-iso27001"
 					>
-						<CardHeader className="mb-6 p-0">
-							<div className="flex items-center gap-3">
-								<IconPlate icon={<Lock className="h-6 w-6" />} size="lg" tone="primary" className="shrink-0" />
-								<div>
-									<CardTitle id="compliance-iso27001" className="text-2xl">
-										ISO 27001
-									</CardTitle>
-									<CardDescription>International Standard</CardDescription>
-								</div>
-							</div>
-						</CardHeader>
+						<IconCardHeader
+							icon={<Lock className="h-6 w-6" />}
+							title="ISO 27001"
+							subtitle="International Standard"
+							titleId="compliance-iso27001"
+						/>
 						<CardContent className="p-0">
 							<ul className="space-y-3" role="list">
 								<BulletListItem variant="check" title="Incident records (A.16)" />

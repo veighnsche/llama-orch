@@ -24,6 +24,7 @@ export * from "./FloatingKPICard/FloatingKPICard";
 export * from "./FooterColumn/FooterColumn";
 export * from "./GPUListItem/GPUListItem";
 export * from "./IconBox/IconBox";
+export * from "./IconCardHeader/IconCardHeader";
 export * from "./IconPlate/IconPlate";
 export * from "./IndustryCard/IndustryCard";
 export * from "./IndustryCaseCard/IndustryCaseCard";
