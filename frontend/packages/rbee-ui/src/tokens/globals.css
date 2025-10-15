@@ -1,13 +1,13 @@
 /**
  * 🚨 TAILWIND V4 SOURCE CSS 🚨
- * 
+ *
  * This is the SOURCE file for Tailwind compilation.
- * 
+ *
  * ✅ Storybook imports THIS file directly (enables JIT for arbitrary values)
  * ✅ Apps import the pre-built CSS: import '@rbee/ui/styles.css'
  * ✅ @source directive scans UI package files for Tailwind classes
  * ✅ Vite plugin (@tailwindcss/vite) handles JIT compilation
- * 
+ *
  * IMPORTANT: For arbitrary values to work in Storybook, you MUST import
  * this source file, not the pre-built dist/index.css
  */

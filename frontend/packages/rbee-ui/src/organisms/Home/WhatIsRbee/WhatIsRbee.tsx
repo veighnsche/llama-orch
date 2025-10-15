@@ -1,5 +1,6 @@
-"use client";
+'use client'
 
+import { homelabNetwork } from '@rbee/ui/assets'
 import {
   Badge,
   BrandMark,
@@ -10,15 +11,10 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@rbee/ui/atoms";
-import {
-  FeatureListItem,
-  SectionContainer,
-  StatsGrid,
-} from "@rbee/ui/molecules";
-import { ArrowRight, Cpu, Shield, Zap } from "lucide-react";
-import Image from "next/image";
-import { homelabNetwork } from "@rbee/ui/assets";
+} from '@rbee/ui/atoms'
+import { FeatureListItem, SectionContainer, StatsGrid } from '@rbee/ui/molecules'
+import { ArrowRight, Cpu, Shield, Zap } from 'lucide-react'
+import Image from 'next/image'
 
 export function WhatIsRbee() {
   return (
@@ -41,18 +37,13 @@ export function WhatIsRbee() {
             {/* Headline with brand */}
             <h3 className="text-4xl md:text-5xl font-semibold text-foreground">
               <BrandMark size="xl" className="inline-block align-middle mr-3" />
-              <BrandWordmark size="4xl" inline />: your private AI
-              infrastructure
+              <BrandWordmark size="4xl" inline />: your private AI infrastructure
             </h3>
 
             {/* Pronunciation badge */}
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge
-                  variant="outline"
-                  className="text-xs cursor-help w-fit"
-                  aria-label="rbee is pronounced are-bee"
-                >
+                <Badge variant="outline" className="text-xs cursor-help w-fit" aria-label="rbee is pronounced are-bee">
                   pronounced "are-bee"
                 </Badge>
               </TooltipTrigger>
@@ -61,10 +52,9 @@ export function WhatIsRbee() {
 
             {/* Please put rbee description here, muted font color */}
             <p className="text-lg text-muted-foreground">
-              <BrandWordmark className="text-muted-foreground" /> is an
-              open-source AI orchestration platform that unifies every computer
-              in your home or office into a single, OpenAI-compatible AI
-              cluster—private, controllable, and yours forever.
+              <BrandWordmark className="text-muted-foreground" /> is an open-source AI orchestration platform that
+              unifies every computer in your home or office into a single, OpenAI-compatible AI cluster—private,
+              controllable, and yours forever.
             </p>
 
             {/* Value bullets */}
@@ -101,9 +91,9 @@ export function WhatIsRbee() {
               columns={3}
               className="pt-4"
               stats={[
-                { value: "$0", label: "No API fees" },
-                { value: "100%", label: "Private" },
-                { value: "All", label: "CUDA · Metal · CPU" },
+                { value: '$0', label: 'No API fees' },
+                { value: '100%', label: 'Private' },
+                { value: 'All', label: 'CUDA · Metal · CPU' },
               ]}
             />
 
@@ -113,10 +103,7 @@ export function WhatIsRbee() {
                 <a href="#get-started">Get Started Free</a>
               </Button>
               <Button variant="ghost" size="lg" asChild>
-                <a
-                  href="/technical-deep-dive"
-                  className="flex items-center gap-2"
-                >
+                <a href="/technical-deep-dive" className="flex items-center gap-2">
                   See Architecture
                   <ArrowRight className="size-4" />
                 </a>
@@ -153,5 +140,5 @@ export function WhatIsRbee() {
         </div>
       </div>
     </SectionContainer>
-  );
+  )
 }

@@ -1,9 +1,9 @@
 /**
  * Font Loading - Single Source of Truth
- * 
+ *
  * All fonts are loaded here and available globally.
  * Works in Next.js, Storybook, and any other context.
- * 
+ *
  * Using CDN for Geist fonts to avoid bundler path resolution issues.
  * The geist package is kept as a dependency for version locking.
  */
@@ -32,13 +32,13 @@
 
 /* CSS Variables for font families */
 :root {
-    --font-geist-sans: "Geist Sans", -apple-system, BlinkMacSystemFont,
-        "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
-        "Droid Sans", "Helvetica Neue", sans-serif;
-    --font-geist-mono: "Geist Mono", ui-monospace, "SF Mono", Monaco,
+    --font-geist-sans:
+        "Geist Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell",
+        "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    --font-geist-mono:
+        "Geist Mono", ui-monospace, "SF Mono", Monaco,
         "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono",
         "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono",
         "Courier New", monospace;
-    --font-ibm-plex-serif: "IBM Plex Serif", ui-serif, Georgia, Cambria,
-        "Times New Roman", Times, serif;
+    --font-ibm-plex-serif: "IBM Plex Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 }

@@ -2,17 +2,17 @@ import type { NextConfig } from 'next'
 import nextra from 'nextra'
 
 const nextConfig: NextConfig = {
-	images: {
-		unoptimized: true, // Cloudflare Workers compatibility
-	},
+  images: {
+    unoptimized: true, // Cloudflare Workers compatibility
+  },
 }
 
 const withNextra = nextra({
-	// Nextra configuration options
-	defaultShowCopyCode: true,
-	search: {
-		codeblocks: false,
-	},
+  // Nextra configuration options
+  defaultShowCopyCode: true,
+  search: {
+    codeblocks: false,
+  },
 })
 
 export default withNextra(nextConfig)

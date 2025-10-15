@@ -3,13 +3,13 @@ import { Anchor, DollarSign, Laptop, Shield } from 'lucide-react'
 import { SolutionSection } from './SolutionSection'
 
 const meta = {
-	title: 'Organisms/Home/SolutionSection',
-	component: SolutionSection,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Home/SolutionSection',
+  component: SolutionSection,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The SolutionSection presents the core value proposition through a combination of feature tiles, step-by-step process, and optional earnings/compliance metrics. Used across multiple pages with different contexts.
 
@@ -131,87 +131,87 @@ import { DollarSign, Shield } from 'lucide-react'
 - **Color Contrast**: Meets WCAG AA standards in both themes
 - **ARIA**: Steps use aria-label for screen readers
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
-	argTypes: {
-		title: {
-			control: 'text',
-			description: 'Section title',
-			table: {
-				type: { summary: 'string' },
-				category: 'Content',
-			},
-		},
-		subtitle: {
-			control: 'text',
-			description: 'Section subtitle',
-			table: {
-				type: { summary: 'string' },
-				category: 'Content',
-			},
-		},
-		kicker: {
-			control: 'text',
-			description: 'Small text above title',
-			table: {
-				type: { summary: 'string' },
-				category: 'Content',
-			},
-		},
-	},
+      },
+    },
+  },
+  tags: ['autodocs'],
+  argTypes: {
+    title: {
+      control: 'text',
+      description: 'Section title',
+      table: {
+        type: { summary: 'string' },
+        category: 'Content',
+      },
+    },
+    subtitle: {
+      control: 'text',
+      description: 'Section subtitle',
+      table: {
+        type: { summary: 'string' },
+        category: 'Content',
+      },
+    },
+    kicker: {
+      control: 'text',
+      description: 'Small text above title',
+      table: {
+        type: { summary: 'string' },
+        category: 'Content',
+      },
+    },
+  },
 } satisfies Meta<typeof SolutionSection>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const HomePageDefault: Story = {
-	args: {
-		title: 'Your hardware. Your models. Your control.',
-		subtitle:
-			'rbee orchestrates inference across every GPU in your home network—workstations, gaming rigs, and Macs—turning idle hardware into a private, OpenAI-compatible AI platform.',
-		features: [
-			{
-				icon: <DollarSign className="h-6 w-6 text-primary" aria-hidden="true" />,
-				title: 'Zero ongoing costs',
-				body: 'Pay only for electricity. No API bills, no per-token surprises.',
-			},
-			{
-				icon: <Shield className="h-6 w-6 text-primary" aria-hidden="true" />,
-				title: 'Complete privacy',
-				body: 'Code and data never leave your network. Audit-ready by design.',
-			},
-			{
-				icon: <Anchor className="h-6 w-6 text-primary" aria-hidden="true" />,
-				title: 'Locked to your rules',
-				body: 'Models update only when you approve. No breaking changes.',
-			},
-			{
-				icon: <Laptop className="h-6 w-6 text-primary" aria-hidden="true" />,
-				title: 'Use all your hardware',
-				body: 'CUDA, Metal, and CPU orchestrated as one pool.',
-			},
-		],
-		steps: [
-			{
-				title: 'Install rbee-keeper',
-				body: 'One command installs the orchestrator daemon on your primary machine.',
-			},
-			{
-				title: 'Add your machines',
-				body: 'Point rbee to other GPUs on your network via SSH or local discovery.',
-			},
-			{
-				title: 'Start inferencing',
-				body: 'Use the OpenAI-compatible API. rbee routes requests across your pool.',
-			},
-		],
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: `**Home page context** — Exact implementation from \`/\` route as HomeSolutionSection.
+  args: {
+    title: 'Your hardware. Your models. Your control.',
+    subtitle:
+      'rbee orchestrates inference across every GPU in your home network—workstations, gaming rigs, and Macs—turning idle hardware into a private, OpenAI-compatible AI platform.',
+    features: [
+      {
+        icon: <DollarSign className="h-6 w-6 text-primary" aria-hidden="true" />,
+        title: 'Zero ongoing costs',
+        body: 'Pay only for electricity. No API bills, no per-token surprises.',
+      },
+      {
+        icon: <Shield className="h-6 w-6 text-primary" aria-hidden="true" />,
+        title: 'Complete privacy',
+        body: 'Code and data never leave your network. Audit-ready by design.',
+      },
+      {
+        icon: <Anchor className="h-6 w-6 text-primary" aria-hidden="true" />,
+        title: 'Locked to your rules',
+        body: 'Models update only when you approve. No breaking changes.',
+      },
+      {
+        icon: <Laptop className="h-6 w-6 text-primary" aria-hidden="true" />,
+        title: 'Use all your hardware',
+        body: 'CUDA, Metal, and CPU orchestrated as one pool.',
+      },
+    ],
+    steps: [
+      {
+        title: 'Install rbee-keeper',
+        body: 'One command installs the orchestrator daemon on your primary machine.',
+      },
+      {
+        title: 'Add your machines',
+        body: 'Point rbee to other GPUs on your network via SSH or local discovery.',
+      },
+      {
+        title: 'Start inferencing',
+        body: 'Use the OpenAI-compatible API. rbee routes requests across your pool.',
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: `**Home page context** — Exact implementation from \`/\` route as HomeSolutionSection.
 
 **Marketing Notes:**
 - **Headline**: "Your hardware. Your models. Your control." — Triple ownership emphasis
@@ -230,107 +230,108 @@ export const HomePageDefault: Story = {
 - No CTA at this level (appears later in flow)
 
 **Tone**: Declarative, confident, technical but accessible`,
-			},
-		},
-	},
+      },
+    },
+  },
 }
 
 export const WithoutTopology: Story = {
-	args: {
-		title: 'Your hardware. Your models. Your control.',
-		subtitle: 'rbee orchestrates inference across every GPU in your home network.',
-		features: [
-			{
-				icon: <DollarSign className="h-6 w-6 text-primary" aria-hidden="true" />,
-				title: 'Zero ongoing costs',
-				body: 'Pay only for electricity. No API bills, no per-token surprises.',
-			},
-			{
-				icon: <Shield className="h-6 w-6 text-primary" aria-hidden="true" />,
-				title: 'Complete privacy',
-				body: 'Code and data never leave your network. Audit-ready by design.',
-			},
-			{
-				icon: <Anchor className="h-6 w-6 text-primary" aria-hidden="true" />,
-				title: 'Locked to your rules',
-				body: 'Models update only when you approve. No breaking changes.',
-			},
-			{
-				icon: <Laptop className="h-6 w-6 text-primary" aria-hidden="true" />,
-				title: 'Use all your hardware',
-				body: 'CUDA, Metal, and CPU orchestrated as one pool.',
-			},
-		],
-		steps: [
-			{
-				title: 'Install rbee-keeper',
-				body: 'One command installs the orchestrator daemon on your primary machine.',
-			},
-			{
-				title: 'Add your machines',
-				body: 'Point rbee to other GPUs on your network via SSH or local discovery.',
-			},
-			{
-				title: 'Start inferencing',
-				body: 'Use the OpenAI-compatible API. rbee routes requests across your pool.',
-			},
-		],
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Benefits and steps only, without topology diagram. Useful for tighter layouts or when visual proof is not needed.',
-			},
-		},
-	},
+  args: {
+    title: 'Your hardware. Your models. Your control.',
+    subtitle: 'rbee orchestrates inference across every GPU in your home network.',
+    features: [
+      {
+        icon: <DollarSign className="h-6 w-6 text-primary" aria-hidden="true" />,
+        title: 'Zero ongoing costs',
+        body: 'Pay only for electricity. No API bills, no per-token surprises.',
+      },
+      {
+        icon: <Shield className="h-6 w-6 text-primary" aria-hidden="true" />,
+        title: 'Complete privacy',
+        body: 'Code and data never leave your network. Audit-ready by design.',
+      },
+      {
+        icon: <Anchor className="h-6 w-6 text-primary" aria-hidden="true" />,
+        title: 'Locked to your rules',
+        body: 'Models update only when you approve. No breaking changes.',
+      },
+      {
+        icon: <Laptop className="h-6 w-6 text-primary" aria-hidden="true" />,
+        title: 'Use all your hardware',
+        body: 'CUDA, Metal, and CPU orchestrated as one pool.',
+      },
+    ],
+    steps: [
+      {
+        title: 'Install rbee-keeper',
+        body: 'One command installs the orchestrator daemon on your primary machine.',
+      },
+      {
+        title: 'Add your machines',
+        body: 'Point rbee to other GPUs on your network via SSH or local discovery.',
+      },
+      {
+        title: 'Start inferencing',
+        body: 'Use the OpenAI-compatible API. rbee routes requests across your pool.',
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Benefits and steps only, without topology diagram. Useful for tighter layouts or when visual proof is not needed.',
+      },
+    },
+  },
 }
 
 export const AlternativeBenefits: Story = {
-	args: {
-		title: 'Stop paying for AI. Start owning it.',
-		subtitle: 'Run LLMs on hardware you already own. No monthly fees, no vendor lock-in, no rate limits.',
-		features: [
-			{
-				icon: <DollarSign className="h-6 w-6 text-primary" aria-hidden="true" />,
-				title: '$0 per month',
-				body: 'Use hardware you already own. Electricity is your only cost.',
-				badge: 'Lowest',
-			},
-			{
-				icon: <Shield className="h-6 w-6 text-primary" aria-hidden="true" />,
-				title: 'Private by default',
-				body: 'Your code and prompts never leave your network. GDPR-ready.',
-			},
-			{
-				icon: <Anchor className="h-6 w-6 text-primary" aria-hidden="true" />,
-				title: 'No rate limits',
-				body: 'Inference speed limited only by your hardware, not arbitrary quotas.',
-			},
-			{
-				icon: <Laptop className="h-6 w-6 text-primary" aria-hidden="true" />,
-				title: 'Works with your tools',
-				body: 'OpenAI-compatible API. Zed, Cursor, Continue—all work out of the box.',
-			},
-		],
-		steps: [
-			{
-				title: 'Install in 15 minutes',
-				body: 'Single command installs rbee-keeper. No complex configuration.',
-			},
-			{
-				title: 'Add your GPUs',
-				body: 'Point to machines on your network. rbee discovers and pools them.',
-			},
-			{
-				title: 'Use your existing code',
-				body: 'Change OPENAI_API_BASE to localhost. Everything else stays the same.',
-			},
-		],
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: `Alternative benefit messaging for A/B testing. This variant:
+  args: {
+    title: 'Stop paying for AI. Start owning it.',
+    subtitle: 'Run LLMs on hardware you already own. No monthly fees, no vendor lock-in, no rate limits.',
+    features: [
+      {
+        icon: <DollarSign className="h-6 w-6 text-primary" aria-hidden="true" />,
+        title: '$0 per month',
+        body: 'Use hardware you already own. Electricity is your only cost.',
+        badge: 'Lowest',
+      },
+      {
+        icon: <Shield className="h-6 w-6 text-primary" aria-hidden="true" />,
+        title: 'Private by default',
+        body: 'Your code and prompts never leave your network. GDPR-ready.',
+      },
+      {
+        icon: <Anchor className="h-6 w-6 text-primary" aria-hidden="true" />,
+        title: 'No rate limits',
+        body: 'Inference speed limited only by your hardware, not arbitrary quotas.',
+      },
+      {
+        icon: <Laptop className="h-6 w-6 text-primary" aria-hidden="true" />,
+        title: 'Works with your tools',
+        body: 'OpenAI-compatible API. Zed, Cursor, Continue—all work out of the box.',
+      },
+    ],
+    steps: [
+      {
+        title: 'Install in 15 minutes',
+        body: 'Single command installs rbee-keeper. No complex configuration.',
+      },
+      {
+        title: 'Add your GPUs',
+        body: 'Point to machines on your network. rbee discovers and pools them.',
+      },
+      {
+        title: 'Use your existing code',
+        body: 'Change OPENAI_API_BASE to localhost. Everything else stays the same.',
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: `Alternative benefit messaging for A/B testing. This variant:
 - Leads with cost savings ("$0 per month" vs. "Zero ongoing costs")
 - Emphasizes "No rate limits" instead of "Locked to your rules"
 - Highlights tool compatibility more explicitly
@@ -338,7 +339,7 @@ export const AlternativeBenefits: Story = {
 - Steps emphasize speed ("15 minutes") and simplicity
 
 **Use case**: Test with cost-conscious audience or developers frustrated with API rate limits.`,
-			},
-		},
-	},
+      },
+    },
+  },
 }

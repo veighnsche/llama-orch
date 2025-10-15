@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { UseCasesHero } from './UseCasesHero'
 
 const meta = {
-	title: 'Organisms/UseCases/UseCasesHero',
-	component: UseCasesHero,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/UseCases/UseCasesHero',
+  component: UseCasesHero,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The UseCasesHero is the hero section for the Use Cases page, featuring a headline focused on independence and control, audience chips for quick navigation (Developers, Enterprise, Homelab), and a visual showcasing a homelab setup. It emphasizes the "your hardware, your rules" value proposition.
 
@@ -90,10 +90,10 @@ import { UseCasesHero } from '@rbee/ui/organisms/UseCases/UseCasesHero'
 - **ARIA Labels**: Image has descriptive alt text
 - **Screen Readers**: Proof points are properly announced
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof UseCasesHero>
 
 export default meta

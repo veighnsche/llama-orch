@@ -4,13 +4,13 @@ import { EnterpriseHero } from './EnterpriseHero'
 // Created by: TEAM-004
 
 const meta = {
-	title: 'Organisms/Enterprise/EnterpriseHero',
-	component: EnterpriseHero,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Enterprise/EnterpriseHero',
+  component: EnterpriseHero,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The EnterpriseHero is the primary landing section for the Enterprise page, emphasizing compliance, security, and EU data residency. It features a split layout with messaging on the left and an interactive audit trail console on the right, demonstrating enterprise-grade compliance features.
 
@@ -99,55 +99,55 @@ import { EnterpriseHero } from '@rbee/ui/organisms/Enterprise/EnterpriseHero'
 - **Compliance by Design**: GDPR, SOC2, ISO 27001 aligned from day one
 - **Zero Data Sovereignty Risk**: All data stays in EU, no cross-border transfers
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof EnterpriseHero>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const EnterprisePageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default enterprise hero as seen on /enterprise page. Emphasizes compliance (GDPR, SOC2, ISO 27001), EU data residency, and immutable audit trails. The audit console visual demonstrates real-time compliance monitoring. Use the theme toggle to test light/dark modes.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default enterprise hero as seen on /enterprise page. Emphasizes compliance (GDPR, SOC2, ISO 27001), EU data residency, and immutable audit trails. The audit console visual demonstrates real-time compliance monitoring. Use the theme toggle to test light/dark modes.',
+      },
+    },
+  },
 }
 
 export const GDPRFocus: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant emphasizing GDPR compliance and EU data residency. This version would highlight: GDPR Article 44 compliance (no US cloud dependencies), Schrems II compliance, Data Protection Authority approval, and EU-only data processing. Ideal for EU-based enterprises with strict data sovereignty requirements.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant emphasizing GDPR compliance and EU data residency. This version would highlight: GDPR Article 44 compliance (no US cloud dependencies), Schrems II compliance, Data Protection Authority approval, and EU-only data processing. Ideal for EU-based enterprises with strict data sovereignty requirements.',
+      },
+    },
+  },
 }
 
 export const SecurityAuditFocus: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant leading with security and audit trail capabilities. This version would emphasize: Immutable audit logs (tamper-evident, 7-year retention), SOC2 and ISO 27001 alignment, zero-trust architecture, and comprehensive event tracking (32 audit event types). Ideal for enterprises with strong security/audit requirements (financial services, healthcare).',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant leading with security and audit trail capabilities. This version would emphasize: Immutable audit logs (tamper-evident, 7-year retention), SOC2 and ISO 27001 alignment, zero-trust architecture, and comprehensive event tracking (32 audit event types). Ideal for enterprises with strong security/audit requirements (financial services, healthcare).',
+      },
+    },
+  },
 }
 
 export const ROIFocus: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant emphasizing cost savings and ROI. This version would lead with: Avoid GDPR fines (up to €20M or 4% of revenue), eliminate unpredictable cloud API costs, reduce vendor dependency risk, and faster compliance certification. Includes cost comparison vs. cloud APIs and DIY approaches. Ideal for cost-conscious enterprises or those burned by cloud API bills.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant emphasizing cost savings and ROI. This version would lead with: Avoid GDPR fines (up to €20M or 4% of revenue), eliminate unpredictable cloud API costs, reduce vendor dependency risk, and faster compliance certification. Includes cost comparison vs. cloud APIs and DIY approaches. Ideal for cost-conscious enterprises or those burned by cloud API bills.',
+      },
+    },
+  },
 }

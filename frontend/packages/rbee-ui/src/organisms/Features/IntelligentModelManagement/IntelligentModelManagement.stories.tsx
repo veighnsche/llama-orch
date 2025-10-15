@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { IntelligentModelManagement } from './IntelligentModelManagement'
 
 const meta = {
-	title: 'Organisms/Features/IntelligentModelManagement',
-	component: IntelligentModelManagement,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Features/IntelligentModelManagement',
+  component: IntelligentModelManagement,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The IntelligentModelManagement section explains rbee's automatic model provisioning, caching, and validation capabilities. It shows how rbee downloads models from Hugging Face, verifies checksums, caches locally, and validates resources before loading to prevent failures.
 
@@ -95,118 +95,112 @@ import { IntelligentModelManagement } from '@rbee/ui/organisms/Features/Intellig
 - **Semantic HTML**: Uses proper heading hierarchy
 - **Progress Bars**: Visual progress bars for download status
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof IntelligentModelManagement>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const FeaturesPageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default intelligent model management section for the Features page. Shows automatic model catalog (download progress, checksum verification) and resource preflight checks (RAM, VRAM, disk, backend validation). Demonstrates reliability and automation.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default intelligent model management section for the Features page. Shows automatic model catalog (download progress, checksum verification) and resource preflight checks (RAM, VRAM, disk, backend validation). Demonstrates reliability and automation.',
+      },
+    },
+  },
 }
 
 export const AutoDownloadFocus: Story = {
-	render: () => (
-		<div className="space-y-8">
-			<div className="bg-primary/10 p-6 text-center">
-				<h3 className="text-xl font-bold">Automatic Download Focus</h3>
-				<p className="text-muted-foreground">
-					Request any model from Hugging Face. rbee downloads, verifies, and caches automatically.
-				</p>
-			</div>
-			<IntelligentModelManagement />
-			<div className="bg-muted p-8">
-				<h3 className="text-xl font-bold mb-4 text-center">Pain Point Addressed</h3>
-				<div className="max-w-2xl mx-auto space-y-4 text-sm">
-					<div className="bg-background p-4 rounded-lg">
-						<strong className="block mb-2">Without rbee:</strong>
-						<ul className="space-y-1 text-muted-foreground">
-							<li>• Manually download models from Hugging Face</li>
-							<li>• Verify checksums manually (or skip and risk corruption)</li>
-							<li>• Manage local cache manually</li>
-							<li>• Re-download if interrupted</li>
-						</ul>
-					</div>
-					<div className="bg-background p-4 rounded-lg">
-						<strong className="block mb-2">With rbee:</strong>
-						<ul className="space-y-1 text-muted-foreground">
-							<li>• Request model by name</li>
-							<li>• rbee handles download, verification, caching</li>
-							<li>• Resume support for interrupted downloads</li>
-							<li>• Never download the same model twice</li>
-						</ul>
-					</div>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Focus on automatic download capabilities. Compares manual workflow (without rbee) vs. automated workflow (with rbee).',
-			},
-		},
-	},
+  render: () => (
+    <div className="space-y-8">
+      <div className="bg-primary/10 p-6 text-center">
+        <h3 className="text-xl font-bold">Automatic Download Focus</h3>
+        <p className="text-muted-foreground">
+          Request any model from Hugging Face. rbee downloads, verifies, and caches automatically.
+        </p>
+      </div>
+      <IntelligentModelManagement />
+      <div className="bg-muted p-8">
+        <h3 className="text-xl font-bold mb-4 text-center">Pain Point Addressed</h3>
+        <div className="max-w-2xl mx-auto space-y-4 text-sm">
+          <div className="bg-background p-4 rounded-lg">
+            <strong className="block mb-2">Without rbee:</strong>
+            <ul className="space-y-1 text-muted-foreground">
+              <li>• Manually download models from Hugging Face</li>
+              <li>• Verify checksums manually (or skip and risk corruption)</li>
+              <li>• Manage local cache manually</li>
+              <li>• Re-download if interrupted</li>
+            </ul>
+          </div>
+          <div className="bg-background p-4 rounded-lg">
+            <strong className="block mb-2">With rbee:</strong>
+            <ul className="space-y-1 text-muted-foreground">
+              <li>• Request model by name</li>
+              <li>• rbee handles download, verification, caching</li>
+              <li>• Resume support for interrupted downloads</li>
+              <li>• Never download the same model twice</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Focus on automatic download capabilities. Compares manual workflow (without rbee) vs. automated workflow (with rbee).',
+      },
+    },
+  },
 }
 
 export const CachingFocus: Story = {
-	render: () => (
-		<div className="space-y-8">
-			<IntelligentModelManagement />
-			<div className="bg-muted p-8">
-				<h3 className="text-xl font-bold mb-4 text-center">Caching Benefits</h3>
-				<div className="max-w-3xl mx-auto space-y-4 text-sm">
-					<p className="text-muted-foreground">
-						The SQLite catalog and local caching provide significant benefits:
-					</p>
-					<div className="grid md:grid-cols-3 gap-4">
-						<div className="bg-background p-4 rounded-lg">
-							<strong className="block mb-2">Speed</strong>
-							<p className="text-muted-foreground">
-								Fast lookups. No need to re-download models you already have.
-							</p>
-						</div>
-						<div className="bg-background p-4 rounded-lg">
-							<strong className="block mb-2">Bandwidth</strong>
-							<p className="text-muted-foreground">
-								Save bandwidth. Download once, use everywhere across your network.
-							</p>
-						</div>
-						<div className="bg-background p-4 rounded-lg">
-							<strong className="block mb-2">Reliability</strong>
-							<p className="text-muted-foreground">
-								No duplicates. Checksum verification ensures integrity.
-							</p>
-						</div>
-					</div>
-					<div className="bg-background p-4 rounded-lg">
-						<strong className="block mb-2">Key Differentiator:</strong>
-						<p className="text-muted-foreground">
-							"Download once; use everywhere" means you can share models across all machines in your pool without
-							re-downloading. The SQLite catalog tracks what's available where.
-						</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Focus on caching benefits: speed, bandwidth savings, reliability. Emphasizes "download once; use everywhere" value proposition.',
-			},
-		},
-	},
+  render: () => (
+    <div className="space-y-8">
+      <IntelligentModelManagement />
+      <div className="bg-muted p-8">
+        <h3 className="text-xl font-bold mb-4 text-center">Caching Benefits</h3>
+        <div className="max-w-3xl mx-auto space-y-4 text-sm">
+          <p className="text-muted-foreground">The SQLite catalog and local caching provide significant benefits:</p>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="bg-background p-4 rounded-lg">
+              <strong className="block mb-2">Speed</strong>
+              <p className="text-muted-foreground">Fast lookups. No need to re-download models you already have.</p>
+            </div>
+            <div className="bg-background p-4 rounded-lg">
+              <strong className="block mb-2">Bandwidth</strong>
+              <p className="text-muted-foreground">
+                Save bandwidth. Download once, use everywhere across your network.
+              </p>
+            </div>
+            <div className="bg-background p-4 rounded-lg">
+              <strong className="block mb-2">Reliability</strong>
+              <p className="text-muted-foreground">No duplicates. Checksum verification ensures integrity.</p>
+            </div>
+          </div>
+          <div className="bg-background p-4 rounded-lg">
+            <strong className="block mb-2">Key Differentiator:</strong>
+            <p className="text-muted-foreground">
+              "Download once; use everywhere" means you can share models across all machines in your pool without
+              re-downloading. The SQLite catalog tracks what's available where.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Focus on caching benefits: speed, bandwidth savings, reliability. Emphasizes "download once; use everywhere" value proposition.',
+      },
+    },
+  },
 }

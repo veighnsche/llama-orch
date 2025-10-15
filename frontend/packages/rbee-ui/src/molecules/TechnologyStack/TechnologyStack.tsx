@@ -1,76 +1,72 @@
-import { Button } from "@rbee/ui/atoms/Button";
-import { GitHubIcon } from "@rbee/ui/icons";
-import Link from "next/link";
+import { Button } from '@rbee/ui/atoms/Button'
+import { GitHubIcon } from '@rbee/ui/icons'
+import Link from 'next/link'
 
 export interface TechItem {
-  name: string;
-  description: string;
-  ariaLabel: string;
-  delay?: number;
+  name: string
+  description: string
+  ariaLabel: string
+  delay?: number
 }
 
 export interface TechnologyStackProps {
   /**
    * Array of technology items to display
    */
-  technologies: TechItem[];
+  technologies: TechItem[]
   /**
    * Whether to show the open source CTA card
    * @default true
    */
-  showOpenSourceCTA?: boolean;
+  showOpenSourceCTA?: boolean
   /**
    * GitHub repository URL
    * @default "https://github.com/yourusername/rbee"
    */
-  githubUrl?: string;
+  githubUrl?: string
   /**
    * License type to display
    * @default "MIT License"
    */
-  license?: string;
+  license?: string
   /**
    * Whether to show the architecture docs link
    * @default true
    */
-  showArchitectureLink?: boolean;
+  showArchitectureLink?: boolean
   /**
    * Architecture docs URL
    * @default "/docs/architecture"
    */
-  architectureUrl?: string;
+  architectureUrl?: string
   /**
    * Optional className for the container
    */
-  className?: string;
+  className?: string
 }
 
 const delayClasses = [
-  "motion-safe:delay-0",
-  "motion-safe:delay-100",
-  "motion-safe:delay-200",
-  "motion-safe:delay-300",
-  "motion-safe:delay-400",
-  "motion-safe:delay-500",
-];
+  'motion-safe:delay-0',
+  'motion-safe:delay-100',
+  'motion-safe:delay-200',
+  'motion-safe:delay-300',
+  'motion-safe:delay-400',
+  'motion-safe:delay-500',
+]
 
 export function TechnologyStack({
   technologies,
   showOpenSourceCTA = true,
-  githubUrl = "https://github.com/yourusername/rbee",
-  license = "MIT License",
+  githubUrl = 'https://github.com/yourusername/rbee',
+  license = 'MIT License',
   showArchitectureLink = true,
-  architectureUrl = "/docs/architecture",
-  className = "",
+  architectureUrl = '/docs/architecture',
+  className = '',
 }: TechnologyStackProps) {
   return (
     <div className={className}>
-      <div className="text-xs tracking-wide uppercase text-muted-foreground mb-3 font-sans">
-        Stack
-      </div>
-      <h3 className="text-2xl font-bold text-foreground mb-4">
-        Technology Stack
-      </h3>
+      <div className="text-xs tracking-wide uppercase text-muted-foreground mb-3 font-sans">Stack</div>
+      <h3 className="text-2xl font-bold text-foreground mb-4">Technology Stack</h3>
       <div className="space-y-3">
         {/* Technology Cards */}
         {technologies.map((tech, index) => (
@@ -83,9 +79,7 @@ export function TechnologyStack({
             }`}
           >
             <div className="font-semibold text-foreground">{tech.name}</div>
-            <div className="text-sm text-muted-foreground">
-              {tech.description}
-            </div>
+            <div className="text-sm text-muted-foreground">{tech.description}</div>
           </article>
         ))}
 
@@ -126,5 +120,5 @@ export function TechnologyStack({
         )}
       </div>
     </div>
-  );
+  )
 }

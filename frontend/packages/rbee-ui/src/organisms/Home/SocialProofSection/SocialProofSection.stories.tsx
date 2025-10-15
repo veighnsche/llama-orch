@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { TestimonialsSection } from './SocialProofSection'
 
 const meta = {
-	title: 'Organisms/Home/SocialProofSection',
-	component: TestimonialsSection,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Home/SocialProofSection',
+  component: TestimonialsSection,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The SocialProofSection displays testimonials from users in a card grid format, along with key statistics showing adoption and impact. Uses persona-based testimonials (solo dev, CTO, DevOps) to build credibility across audience segments.
 
@@ -128,49 +128,50 @@ import { TestimonialsSection } from '@rbee/ui/organisms/SocialProofSection'
 - **Color Contrast**: Meets WCAG AA standards in both themes
 - **Avatar Alt Text**: Descriptive alt text for image avatars
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof TestimonialsSection>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const HomePageDefault: Story = {
-	args: {
-		title: 'Trusted by developers who value independence',
-		testimonials: [
-			{
-				avatar: '👨‍💻',
-				author: 'Alex K.',
-				role: 'Solo Developer',
-				quote: 'Spent $80/mo on Claude. Now I run Llama-70B on my gaming PC + old workstation. Same quality, $0 cost.',
-			},
-			{
-				avatar: '👩‍💼',
-				author: 'Sarah M.',
-				role: 'CTO',
-				quote: "We pooled our team's hardware and cut AI spend from $500/mo to zero. OpenAI-compatible API—no code changes.",
-			},
-			{
-				avatar: '👨‍🔧',
-				author: 'Marcus T.',
-				role: 'DevOps',
-				quote: 'Cascading shutdown ends orphaned processes and VRAM leaks. Ctrl+C and everything cleans up.',
-			},
-		],
-		stats: [
-			{ value: '1,200+', label: 'GitHub stars', valueTone: 'foreground' },
-			{ value: '500+', label: 'Active installations', valueTone: 'foreground' },
-			{ value: '8,000+', label: 'GPUs orchestrated', valueTone: 'foreground' },
-			{ value: '€0', label: 'Avg. monthly cost', valueTone: 'primary' },
-		],
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: `**Home page context** — Exact implementation from \`/\` route.
+  args: {
+    title: 'Trusted by developers who value independence',
+    testimonials: [
+      {
+        avatar: '👨‍💻',
+        author: 'Alex K.',
+        role: 'Solo Developer',
+        quote: 'Spent $80/mo on Claude. Now I run Llama-70B on my gaming PC + old workstation. Same quality, $0 cost.',
+      },
+      {
+        avatar: '👩‍💼',
+        author: 'Sarah M.',
+        role: 'CTO',
+        quote:
+          "We pooled our team's hardware and cut AI spend from $500/mo to zero. OpenAI-compatible API—no code changes.",
+      },
+      {
+        avatar: '👨‍🔧',
+        author: 'Marcus T.',
+        role: 'DevOps',
+        quote: 'Cascading shutdown ends orphaned processes and VRAM leaks. Ctrl+C and everything cleans up.',
+      },
+    ],
+    stats: [
+      { value: '1,200+', label: 'GitHub stars', valueTone: 'foreground' },
+      { value: '500+', label: 'Active installations', valueTone: 'foreground' },
+      { value: '8,000+', label: 'GPUs orchestrated', valueTone: 'foreground' },
+      { value: '€0', label: 'Avg. monthly cost', valueTone: 'primary' },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: `**Home page context** — Exact implementation from \`/\` route.
 
 **Marketing Notes:**
 - **Headline**: "Trusted by developers who value independence" — Values-driven trust
@@ -211,127 +212,129 @@ export const HomePageDefault: Story = {
 - Emoji avatars humanize without requiring real photos
 
 **Tone**: Authentic, specific, outcome-focused`,
-			},
-		},
-	},
+      },
+    },
+  },
 }
 
 export const WithoutLogos: Story = {
-	args: {
-		title: 'Trusted by developers who value independence',
-		testimonials: [
-			{
-				avatar: '👨‍💻',
-				author: 'Alex K.',
-				role: 'Solo Developer',
-				quote: 'Spent $80/mo on Claude. Now I run Llama-70B on my gaming PC + old workstation. Same quality, $0 cost.',
-			},
-			{
-				avatar: '👩‍💼',
-				author: 'Sarah M.',
-				role: 'CTO',
-				quote: "We pooled our team's hardware and cut AI spend from $500/mo to zero. OpenAI-compatible API—no code changes.",
-			},
-			{
-				avatar: '👨‍🔧',
-				author: 'Marcus T.',
-				role: 'DevOps',
-				quote: 'Cascading shutdown ends orphaned processes and VRAM leaks. Ctrl+C and everything cleans up.',
-			},
-		],
-		stats: [
-			{ value: '1,200+', label: 'GitHub stars', valueTone: 'foreground' },
-			{ value: '500+', label: 'Active installations', valueTone: 'foreground' },
-			{ value: '8,000+', label: 'GPUs orchestrated', valueTone: 'foreground' },
-			{ value: '€0', label: 'Avg. monthly cost', valueTone: 'primary' },
-		],
-	},
-	render: (args) => (
-		<div>
-			<TestimonialsSection {...args} />
-			<div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
-				<h3 style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Testimonial Variations</h3>
-				<div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', lineHeight: '1.8' }}>
-					<p>
-						<strong>Current:</strong> Emoji avatars (👨‍💻, 👩‍💼, 👨‍🔧)
-					</p>
-					<p>
-						<strong>Alt 1:</strong> Real photos (requires permission, higher trust)
-					</p>
-					<p>
-						<strong>Alt 2:</strong> Initials (AK, SM, MT) (more professional)
-					</p>
-					<p>
-						<strong>Alt 3:</strong> No avatars (cleaner, focus on quote)
-					</p>
-					<p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
-						<strong>Recommendation:</strong> Emoji avatars work well for developer audience. Consider real photos if
-						you can get permission from actual users.
-					</p>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story: 'Current implementation uses emoji avatars. No company logos in default version.',
-			},
-		},
-	},
+  args: {
+    title: 'Trusted by developers who value independence',
+    testimonials: [
+      {
+        avatar: '👨‍💻',
+        author: 'Alex K.',
+        role: 'Solo Developer',
+        quote: 'Spent $80/mo on Claude. Now I run Llama-70B on my gaming PC + old workstation. Same quality, $0 cost.',
+      },
+      {
+        avatar: '👩‍💼',
+        author: 'Sarah M.',
+        role: 'CTO',
+        quote:
+          "We pooled our team's hardware and cut AI spend from $500/mo to zero. OpenAI-compatible API—no code changes.",
+      },
+      {
+        avatar: '👨‍🔧',
+        author: 'Marcus T.',
+        role: 'DevOps',
+        quote: 'Cascading shutdown ends orphaned processes and VRAM leaks. Ctrl+C and everything cleans up.',
+      },
+    ],
+    stats: [
+      { value: '1,200+', label: 'GitHub stars', valueTone: 'foreground' },
+      { value: '500+', label: 'Active installations', valueTone: 'foreground' },
+      { value: '8,000+', label: 'GPUs orchestrated', valueTone: 'foreground' },
+      { value: '€0', label: 'Avg. monthly cost', valueTone: 'primary' },
+    ],
+  },
+  render: (args) => (
+    <div>
+      <TestimonialsSection {...args} />
+      <div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
+        <h3 style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Testimonial Variations</h3>
+        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', lineHeight: '1.8' }}>
+          <p>
+            <strong>Current:</strong> Emoji avatars (👨‍💻, 👩‍💼, 👨‍🔧)
+          </p>
+          <p>
+            <strong>Alt 1:</strong> Real photos (requires permission, higher trust)
+          </p>
+          <p>
+            <strong>Alt 2:</strong> Initials (AK, SM, MT) (more professional)
+          </p>
+          <p>
+            <strong>Alt 3:</strong> No avatars (cleaner, focus on quote)
+          </p>
+          <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
+            <strong>Recommendation:</strong> Emoji avatars work well for developer audience. Consider real photos if you
+            can get permission from actual users.
+          </p>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Current implementation uses emoji avatars. No company logos in default version.',
+      },
+    },
+  },
 }
 
 export const MetricsOnly: Story = {
-	args: {
-		title: 'Trusted by developers who value independence',
-		testimonials: [],
-		stats: [
-			{ value: '1,200+', label: 'GitHub stars', valueTone: 'foreground' },
-			{ value: '500+', label: 'Active installations', valueTone: 'foreground' },
-			{ value: '8,000+', label: 'GPUs orchestrated', valueTone: 'foreground' },
-			{ value: '€0', label: 'Avg. monthly cost', valueTone: 'primary' },
-		],
-	},
-	render: (args) => (
-		<div>
-			<div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
-				<h2 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-					Trusted by developers who value independence
-				</h2>
-				<div
-					style={{
-						maxWidth: '800px',
-						margin: '2rem auto',
-						display: 'grid',
-						gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-						gap: '2rem',
-					}}
-				>
-					<div>
-						<div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--primary)' }}>1,200+</div>
-						<div style={{ fontSize: '0.875rem', color: '#666' }}>GitHub stars</div>
-					</div>
-					<div>
-						<div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>500+</div>
-						<div style={{ fontSize: '0.875rem', color: '#666' }}>Active installations</div>
-					</div>
-					<div>
-						<div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>8,000+</div>
-						<div style={{ fontSize: '0.875rem', color: '#666' }}>GPUs orchestrated</div>
-					</div>
-					<div>
-						<div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--primary)' }}>€0</div>
-						<div style={{ fontSize: '0.875rem', color: '#666' }}>Avg. monthly cost</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story: 'Stats-only variant without testimonials. Useful for tighter layouts or when testimonials are shown elsewhere.',
-			},
-		},
-	},
+  args: {
+    title: 'Trusted by developers who value independence',
+    testimonials: [],
+    stats: [
+      { value: '1,200+', label: 'GitHub stars', valueTone: 'foreground' },
+      { value: '500+', label: 'Active installations', valueTone: 'foreground' },
+      { value: '8,000+', label: 'GPUs orchestrated', valueTone: 'foreground' },
+      { value: '€0', label: 'Avg. monthly cost', valueTone: 'primary' },
+    ],
+  },
+  render: (args) => (
+    <div>
+      <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+          Trusted by developers who value independence
+        </h2>
+        <div
+          style={{
+            maxWidth: '800px',
+            margin: '2rem auto',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: '2rem',
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--primary)' }}>1,200+</div>
+            <div style={{ fontSize: '0.875rem', color: '#666' }}>GitHub stars</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>500+</div>
+            <div style={{ fontSize: '0.875rem', color: '#666' }}>Active installations</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>8,000+</div>
+            <div style={{ fontSize: '0.875rem', color: '#666' }}>GPUs orchestrated</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--primary)' }}>€0</div>
+            <div style={{ fontSize: '0.875rem', color: '#666' }}>Avg. monthly cost</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Stats-only variant without testimonials. Useful for tighter layouts or when testimonials are shown elsewhere.',
+      },
+    },
+  },
 }

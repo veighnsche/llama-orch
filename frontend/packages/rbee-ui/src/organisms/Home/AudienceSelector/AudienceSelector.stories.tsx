@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from "@storybook/react";
-import { AudienceSelector } from "./AudienceSelector";
+import type { Meta, StoryObj } from '@storybook/react'
+import { AudienceSelector } from './AudienceSelector'
 
 const meta = {
-  title: "Organisms/Home/AudienceSelector",
+  title: 'Organisms/Home/AudienceSelector',
   component: AudienceSelector,
   parameters: {
-    layout: "fullscreen",
+    layout: 'fullscreen',
     docs: {
       description: {
         component: `
@@ -67,19 +67,19 @@ import { AudienceSelector } from '@rbee/ui/organisms/AudienceSelector'
       },
     },
   },
-  tags: ["autodocs"],
-} satisfies Meta<typeof AudienceSelector>;
+  tags: ['autodocs'],
+} satisfies Meta<typeof AudienceSelector>
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          "Default audience selector with three cards. Use the theme toggle in the toolbar to switch between light and dark modes. Use the viewport toolbar to test responsive behavior.",
+          'Default audience selector with three cards. Use the theme toggle in the toolbar to switch between light and dark modes. Use the viewport toolbar to test responsive behavior.',
       },
     },
   },
-};
+}

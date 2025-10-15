@@ -1,51 +1,39 @@
-import { cn } from "@rbee/ui/utils";
-import { IconPlate } from "@rbee/ui/molecules";
-import type { LucideIcon } from "lucide-react";
+import { IconPlate } from '@rbee/ui/molecules'
+import { cn } from '@rbee/ui/utils'
+import type { LucideIcon } from 'lucide-react'
 
 export interface FeatureListItemProps {
   /** Lucide icon component */
-  icon: LucideIcon;
+  icon: LucideIcon
   /** Feature title (bold part) */
-  title: string;
+  title: string
   /** Feature description */
-  description: string;
+  description: string
   /** Icon color variant */
-  iconColor?:
-    | "primary"
-    | "chart-1"
-    | "chart-2"
-    | "chart-3"
-    | "chart-4"
-    | "chart-5";
+  iconColor?: 'primary' | 'chart-1' | 'chart-2' | 'chart-3' | 'chart-4' | 'chart-5'
   /** Icon variant */
-  iconVariant?: "rounded" | "square" | "circle";
+  iconVariant?: 'rounded' | 'square' | 'circle'
   /** Icon size */
-  iconSize?: "sm" | "md" | "lg";
+  iconSize?: 'sm' | 'md' | 'lg'
   /** Additional CSS classes */
-  className?: string;
+  className?: string
 }
 
 export function FeatureListItem({
   icon,
   title,
   description,
-  iconColor = "primary",
-  iconVariant = "rounded",
-  iconSize = "sm",
+  iconColor = 'primary',
+  iconVariant = 'rounded',
+  iconSize = 'sm',
   className,
 }: FeatureListItemProps) {
   return (
-    <li className={cn("flex items-center gap-3", className)}>
-      <IconPlate
-        icon={icon}
-        size={iconSize}
-        shape={iconVariant}
-        tone={iconColor}
-        className="flex-shrink-0"
-      />
+    <li className={cn('flex items-center gap-3', className)}>
+      <IconPlate icon={icon} size={iconSize} shape={iconVariant} tone={iconColor} className="flex-shrink-0" />
       <div className="text-base text-foreground">
         <strong className="font-semibold">{title}:</strong> {description}
       </div>
     </li>
-  );
+  )
 }

@@ -27,10 +27,10 @@ export type ThreadOut = { messages: Array<Message> }
 export type ModelRef = { model_id: string; engine_id: string | null; pool_hint: string | null }
 
 export type Params = {
-	temperature: number | null
-	top_p: number | null
-	max_tokens: number | null
-	seed: bigint | null
+  temperature: number | null
+  top_p: number | null
+  max_tokens: number | null
+  seed: bigint | null
 }
 
 export type SdkMsg = { role: string; content: string }
@@ -49,26 +49,26 @@ export type ModelDefineIn = { model_id: string; engine_id: string | null; pool_h
 
 // Default-exported API object (categories -> methods), routed via invoke_json.
 export type Api = {
-	fs: {
-		readFile(input: ReadRequest): ReadResponse
-		writeFile(input: WriteIn): WriteOut
-	}
-	prompt: {
-		message(input: MessageIn): Message
-		thread(input: ThreadIn): ThreadOut
-	}
-	model: {
-		define(input: ModelDefineIn): ModelRef
-	}
-	params: {
-		define(p: Params): Params
-	}
-	llm: {
-		invoke(input: InvokeIn): InvokeOut
-	}
-	orch: {
-		responseExtractor(result: InvokeResult): string
-	}
+  fs: {
+    readFile(input: ReadRequest): ReadResponse
+    writeFile(input: WriteIn): WriteOut
+  }
+  prompt: {
+    message(input: MessageIn): Message
+    thread(input: ThreadIn): ThreadOut
+  }
+  model: {
+    define(input: ModelDefineIn): ModelRef
+  }
+  params: {
+    define(p: Params): Params
+  }
+  llm: {
+    invoke(input: InvokeIn): InvokeOut
+  }
+  orch: {
+    responseExtractor(result: InvokeResult): string
+  }
 }
 
 declare const _default: Api

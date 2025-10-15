@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { DevelopersSolution } from './DevelopersSolution'
 
 const meta = {
-	title: 'Organisms/Developers/DevelopersSolution',
-	component: DevelopersSolution,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Developers/DevelopersSolution',
+  component: DevelopersSolution,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The DevelopersSolution section presents the rbee solution specifically for developers. It wraps the shared SolutionSection component with developer-focused messaging that emphasizes hardware ownership, OpenAI compatibility, and the 4-step getting started process.
 
@@ -97,106 +97,104 @@ This component wraps the shared \`SolutionSection\` component with developer-spe
 - **Semantic HTML**: Uses \`<section>\` with proper heading hierarchy
 - **Focus States**: Visible focus indicators on CTAs
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof DevelopersSolution>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const DevelopersPageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default solution section for the Developers page. Shows 4 key benefits (cost, privacy, control, hardware) and 4-step getting started process. Emphasizes ownership: "Your Hardware. Your Models. Your Control."',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default solution section for the Developers page. Shows 4 key benefits (cost, privacy, control, hardware) and 4-step getting started process. Emphasizes ownership: "Your Hardware. Your Models. Your Control."',
+      },
+    },
+  },
 }
 
 export const AlternativeBenefits: Story = {
-	render: () => (
-		<div className="space-y-8">
-			<DevelopersSolution />
-			<div className="bg-muted p-8">
-				<h3 className="text-xl font-bold mb-4 text-center">Alternative Benefit Emphasis</h3>
-				<div className="max-w-3xl mx-auto space-y-4 text-sm">
-					<div>
-						<strong>Current Order:</strong> Cost → Privacy → Control → Hardware
-						<br />
-						<span className="text-muted-foreground">
-							→ Leads with economic benefit (appeals to budget-conscious developers)
-						</span>
-					</div>
-					<div>
-						<strong>Alternative A:</strong> Privacy → Control → Cost → Hardware
-						<br />
-						<span className="text-muted-foreground">
-							→ Leads with privacy (appeals to security-conscious developers)
-						</span>
-					</div>
-					<div>
-						<strong>Alternative B:</strong> Control → Hardware → Cost → Privacy
-						<br />
-						<span className="text-muted-foreground">
-							→ Leads with control (appeals to autonomy-focused developers)
-						</span>
-					</div>
-					<div className="pt-2">
-						<strong>Testing Recommendation:</strong> A/B test the order. Cost-first likely converts best for
-						indie developers, privacy-first for enterprise developers.
-					</div>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Alternative benefit ordering for A/B testing. Current order leads with cost (economic benefit), but privacy-first or control-first may convert better for specific developer segments.',
-			},
-		},
-	},
+  render: () => (
+    <div className="space-y-8">
+      <DevelopersSolution />
+      <div className="bg-muted p-8">
+        <h3 className="text-xl font-bold mb-4 text-center">Alternative Benefit Emphasis</h3>
+        <div className="max-w-3xl mx-auto space-y-4 text-sm">
+          <div>
+            <strong>Current Order:</strong> Cost → Privacy → Control → Hardware
+            <br />
+            <span className="text-muted-foreground">
+              → Leads with economic benefit (appeals to budget-conscious developers)
+            </span>
+          </div>
+          <div>
+            <strong>Alternative A:</strong> Privacy → Control → Cost → Hardware
+            <br />
+            <span className="text-muted-foreground">
+              → Leads with privacy (appeals to security-conscious developers)
+            </span>
+          </div>
+          <div>
+            <strong>Alternative B:</strong> Control → Hardware → Cost → Privacy
+            <br />
+            <span className="text-muted-foreground">→ Leads with control (appeals to autonomy-focused developers)</span>
+          </div>
+          <div className="pt-2">
+            <strong>Testing Recommendation:</strong> A/B test the order. Cost-first likely converts best for indie
+            developers, privacy-first for enterprise developers.
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Alternative benefit ordering for A/B testing. Current order leads with cost (economic benefit), but privacy-first or control-first may convert better for specific developer segments.',
+      },
+    },
+  },
 }
 
 export const SimplifiedSteps: Story = {
-	render: () => (
-		<div className="space-y-8">
-			<DevelopersSolution />
-			<div className="bg-muted p-8">
-				<h3 className="text-xl font-bold mb-4 text-center">Alternative: 2-Step Simplified Process</h3>
-				<div className="max-w-2xl mx-auto space-y-4">
-					<div className="bg-background p-4 rounded-lg">
-						<strong>Step 1:</strong> Install rbee
-						<br />
-						<span className="text-sm text-muted-foreground">
-							One command. Auto-detects all hardware. Downloads models.
-						</span>
-					</div>
-					<div className="bg-background p-4 rounded-lg">
-						<strong>Step 2:</strong> Point your code to localhost
-						<br />
-						<span className="text-sm text-muted-foreground">
-							Change OPENAI_API_BASE. Everything else stays the same.
-						</span>
-					</div>
-					<p className="text-sm text-muted-foreground text-center pt-2">
-						For landing pages or ads, a 2-step process may feel more achievable and reduce friction.
-					</p>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Alternative simplified 2-step process for landing pages or ads. Reduces perceived complexity and friction.',
-			},
-		},
-	},
+  render: () => (
+    <div className="space-y-8">
+      <DevelopersSolution />
+      <div className="bg-muted p-8">
+        <h3 className="text-xl font-bold mb-4 text-center">Alternative: 2-Step Simplified Process</h3>
+        <div className="max-w-2xl mx-auto space-y-4">
+          <div className="bg-background p-4 rounded-lg">
+            <strong>Step 1:</strong> Install rbee
+            <br />
+            <span className="text-sm text-muted-foreground">
+              One command. Auto-detects all hardware. Downloads models.
+            </span>
+          </div>
+          <div className="bg-background p-4 rounded-lg">
+            <strong>Step 2:</strong> Point your code to localhost
+            <br />
+            <span className="text-sm text-muted-foreground">
+              Change OPENAI_API_BASE. Everything else stays the same.
+            </span>
+          </div>
+          <p className="text-sm text-muted-foreground text-center pt-2">
+            For landing pages or ads, a 2-step process may feel more achievable and reduce friction.
+          </p>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Alternative simplified 2-step process for landing pages or ads. Reduces perceived complexity and friction.',
+      },
+    },
+  },
 }

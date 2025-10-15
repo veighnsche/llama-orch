@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { FeaturesSection } from './FeaturesSection'
 
 const meta = {
-	title: 'Organisms/Home/FeaturesSection',
-	component: FeaturesSection,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Home/FeaturesSection',
+  component: FeaturesSection,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The FeaturesSection uses a tabbed interface to showcase four key technical capabilities: OpenAI-Compatible API, Multi-GPU Orchestration, Programmable Rhai Scheduler, and Real-time SSE streaming. Each tab includes code examples, visual demonstrations, and benefit callouts.
 
@@ -107,20 +107,20 @@ import { FeaturesSection } from '@rbee/ui/organisms/FeaturesSection'
 - **Color Contrast**: Meets WCAG AA standards in both themes
 - **Live Regions**: Tab content uses aria-live="polite"
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof FeaturesSection>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const HomePageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story: `**Home page context** — Exact implementation from \`/\` route.
+  parameters: {
+    docs: {
+      description: {
+        story: `**Home page context** — Exact implementation from \`/\` route.
 
 **Marketing Notes:**
 - **Headline**: "Enterprise-Grade Features. Homelab Simplicity." — Contrast positioning
@@ -161,95 +161,95 @@ export const HomePageDefault: Story = {
 - Benefit callouts summarize key advantage
 
 **Tone**: Technical, confident, feature-focused`,
-			},
-		},
-	},
+      },
+    },
+  },
 }
 
 export const CoreFeatures: Story = {
-	render: () => (
-		<div>
-			<FeaturesSection />
-			<div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
-				<h3 style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Feature Prioritization</h3>
-				<div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', lineHeight: '1.8' }}>
-					<p>
-						<strong>Most compelling for solo developers:</strong> OpenAI-Compatible API (no code changes)
-					</p>
-					<p>
-						<strong>Most compelling for multi-GPU users:</strong> Multi-GPU Orchestration (10× throughput)
-					</p>
-					<p>
-						<strong>Most compelling for enterprise:</strong> Programmable Rhai Scheduler (compliance routing)
-					</p>
-					<p>
-						<strong>Most compelling for UI developers:</strong> Real-time SSE (live job updates)
-					</p>
-					<p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
-						<strong>A/B Test Recommendation:</strong> Reorder tabs based on audience segment. Solo devs see API
-						first, enterprise sees Scheduler first.
-					</p>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story: 'Feature prioritization analysis. Different audience segments value different features.',
-			},
-		},
-	},
+  render: () => (
+    <div>
+      <FeaturesSection />
+      <div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
+        <h3 style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Feature Prioritization</h3>
+        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', lineHeight: '1.8' }}>
+          <p>
+            <strong>Most compelling for solo developers:</strong> OpenAI-Compatible API (no code changes)
+          </p>
+          <p>
+            <strong>Most compelling for multi-GPU users:</strong> Multi-GPU Orchestration (10× throughput)
+          </p>
+          <p>
+            <strong>Most compelling for enterprise:</strong> Programmable Rhai Scheduler (compliance routing)
+          </p>
+          <p>
+            <strong>Most compelling for UI developers:</strong> Real-time SSE (live job updates)
+          </p>
+          <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
+            <strong>A/B Test Recommendation:</strong> Reorder tabs based on audience segment. Solo devs see API first,
+            enterprise sees Scheduler first.
+          </p>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Feature prioritization analysis. Different audience segments value different features.',
+      },
+    },
+  },
 }
 
 export const AllFeatures: Story = {
-	render: () => (
-		<div>
-			<FeaturesSection />
-			<div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)' }}>
-				<h3 style={{ fontWeight: 'bold', marginBottom: '1rem', textAlign: 'center' }}>Feature Highlights</h3>
-				<div
-					style={{
-						maxWidth: '800px',
-						margin: '0 auto',
-						display: 'grid',
-						gap: '1rem',
-						gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-					}}
-				>
-					<div>
-						<h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>OpenAI-Compatible API</h4>
-						<p style={{ fontSize: '0.875rem', color: '#666' }}>
-							Drop-in replacement for OpenAI. Change base URL, keep your code. Works with Zed, Cursor, Continue.
-						</p>
-					</div>
-					<div>
-						<h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Multi-GPU Orchestration</h4>
-						<p style={{ fontSize: '0.875rem', color: '#666' }}>
-							Pool CUDA, Metal, and CPU backends. Mixed nodes act as one. 10× throughput by using all hardware.
-						</p>
-					</div>
-					<div>
-						<h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Programmable Rhai Scheduler</h4>
-						<p style={{ fontSize: '0.875rem', color: '#666' }}>
-							Route by model size, task type, labels, or compliance rules. Your policy, your trade-offs.
-						</p>
-					</div>
-					<div>
-						<h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Real-time SSE</h4>
-						<p style={{ fontSize: '0.875rem', color: '#666' }}>
-							Stream job lifecycle events—model loads, token output, cost—right into your UI.
-						</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story: 'Overview of all four features with summaries. Useful for quick reference or comparison.',
-			},
-		},
-	},
+  render: () => (
+    <div>
+      <FeaturesSection />
+      <div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)' }}>
+        <h3 style={{ fontWeight: 'bold', marginBottom: '1rem', textAlign: 'center' }}>Feature Highlights</h3>
+        <div
+          style={{
+            maxWidth: '800px',
+            margin: '0 auto',
+            display: 'grid',
+            gap: '1rem',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          }}
+        >
+          <div>
+            <h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>OpenAI-Compatible API</h4>
+            <p style={{ fontSize: '0.875rem', color: '#666' }}>
+              Drop-in replacement for OpenAI. Change base URL, keep your code. Works with Zed, Cursor, Continue.
+            </p>
+          </div>
+          <div>
+            <h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Multi-GPU Orchestration</h4>
+            <p style={{ fontSize: '0.875rem', color: '#666' }}>
+              Pool CUDA, Metal, and CPU backends. Mixed nodes act as one. 10× throughput by using all hardware.
+            </p>
+          </div>
+          <div>
+            <h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Programmable Rhai Scheduler</h4>
+            <p style={{ fontSize: '0.875rem', color: '#666' }}>
+              Route by model size, task type, labels, or compliance rules. Your policy, your trade-offs.
+            </p>
+          </div>
+          <div>
+            <h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Real-time SSE</h4>
+            <p style={{ fontSize: '0.875rem', color: '#666' }}>
+              Stream job lifecycle events—model loads, token output, cost—right into your UI.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Overview of all four features with summaries. Useful for quick reference or comparison.',
+      },
+    },
+  },
 }

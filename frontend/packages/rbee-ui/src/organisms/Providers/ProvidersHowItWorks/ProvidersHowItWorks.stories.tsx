@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { ProvidersHowItWorks } from './ProvidersHowItWorks'
 
 const meta = {
-	title: 'Organisms/Providers/ProvidersHowItWorks',
-	component: ProvidersHowItWorks,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Providers/ProvidersHowItWorks',
+  component: ProvidersHowItWorks,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The ProvidersHowItWorks section breaks down the provider onboarding flow into 4 simple steps. It uses the shared StepsSection component with provider-specific content focused on ease of setup and quick time-to-earnings.
 
@@ -85,10 +85,10 @@ import { ProvidersHowItWorks } from '@rbee/ui/organisms/Providers/ProvidersHowIt
 - **Keyboard Navigation**: All interactive elements are keyboard accessible
 - **Screen Readers**: Step numbers and titles are properly announced
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof ProvidersHowItWorks>
 
 export default meta

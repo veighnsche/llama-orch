@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { HowItWorksSection } from './HowItWorksSection'
 
 const meta = {
-	title: 'Organisms/HowItWorksSection',
-	component: HowItWorksSection,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/HowItWorksSection',
+  component: HowItWorksSection,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The HowItWorksSection breaks down the setup process into digestible steps with code examples. Each step includes a terminal or code block showing actual commands, making the process tangible and achievable.
 
@@ -116,119 +116,122 @@ import { HowItWorksSection } from '@rbee/ui/organisms'
 - **Color Contrast**: Meets WCAG AA standards in both themes
 - **Code Blocks**: Copyable for assistive technology users
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
-	argTypes: {
-		title: {
-			control: 'text',
-			description: 'Section title (required)',
-			table: {
-				type: { summary: 'string' },
-				category: 'Content',
-			},
-		},
-		subtitle: {
-			control: 'text',
-			description: 'Optional subtitle',
-			table: {
-				type: { summary: 'string' },
-				category: 'Content',
-			},
-		},
-	},
+      },
+    },
+  },
+  tags: ['autodocs'],
+  argTypes: {
+    title: {
+      control: 'text',
+      description: 'Section title (required)',
+      table: {
+        type: { summary: 'string' },
+        category: 'Content',
+      },
+    },
+    subtitle: {
+      control: 'text',
+      description: 'Optional subtitle',
+      table: {
+        type: { summary: 'string' },
+        category: 'Content',
+      },
+    },
+  },
 } satisfies Meta<typeof HowItWorksSection>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const HomePageDefault: Story = {
-	args: {
-		title: 'From zero to AI infrastructure in 15 minutes',
-		steps: [
-			{
-				label: 'Install rbee',
-				block: {
-					kind: 'terminal',
-					title: 'terminal',
-					lines: (
-						<>
-							<div>curl -sSL https://rbee.dev/install.sh | sh</div>
-							<div className="text-[var(--syntax-comment)]">rbee-keeper daemon start</div>
-						</>
-					),
-					copyText: 'curl -sSL https://rbee.dev/install.sh | sh\nrbee-keeper daemon start',
-				},
-			},
-			{
-				label: 'Add your machines',
-				block: {
-					kind: 'terminal',
-					title: 'terminal',
-					lines: (
-						<>
-							<div>rbee-keeper setup add-node --name workstation --ssh-host 192.168.1.10</div>
-							<div className="text-[var(--syntax-comment)]">rbee-keeper setup add-node --name mac --ssh-host 192.168.1.20</div>
-						</>
-					),
-					copyText:
-						'rbee-keeper setup add-node --name workstation --ssh-host 192.168.1.10\nrbee-keeper setup add-node --name mac --ssh-host 192.168.1.20',
-				},
-			},
-			{
-				label: 'Configure your IDE',
-				block: {
-					kind: 'terminal',
-					title: 'terminal',
-					lines: (
-						<>
-							<div>
-								<span className="text-[var(--syntax-keyword)]">export</span> OPENAI_API_BASE=http://localhost:8080/v1
-							</div>
-							<div className="text-[var(--syntax-comment)]"># OpenAI-compatible endpoint — works with Zed & Cursor</div>
-						</>
-					),
-					copyText: 'export OPENAI_API_BASE=http://localhost:8080/v1',
-				},
-			},
-			{
-				label: 'Build AI agents',
-				block: {
-					kind: 'code',
-					title: 'TypeScript',
-					language: 'ts',
-					lines: (
-						<>
-							<div>
-								<span className="text-[var(--syntax-import)]">import</span> {'{'} invoke {'}'}{' '}
-								<span className="text-[var(--syntax-import)]">from</span>{' '}
-								<span className="text-[var(--syntax-string)]">&apos;@rbee/utils&apos;</span>;
-							</div>
-							<div className="mt-2">
-								<span className="text-[var(--syntax-keyword)]">const</span> code = <span className="text-[var(--syntax-keyword)]">await</span>{' '}
-								<span className="text-[var(--syntax-function)]">invoke</span>
-								{'({'}
-							</div>
-							<div className="pl-4">
-								prompt: <span className="text-[var(--syntax-string)]">&apos;Generate API from schema&apos;</span>,
-							</div>
-							<div className="pl-4">
-								model: <span className="text-[var(--syntax-string)]">&apos;llama-3.1-70b&apos;</span>
-							</div>
-							<div>{'});'}</div>
-						</>
-					),
-					copyText:
-						"import { invoke } from '@rbee/utils';\n\nconst code = await invoke({\n  prompt: 'Generate API from schema',\n  model: 'llama-3.1-70b'\n});",
-				},
-			},
-		],
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: `**Home page context** — Exact implementation from \`/\` route.
+  args: {
+    title: 'From zero to AI infrastructure in 15 minutes',
+    steps: [
+      {
+        label: 'Install rbee',
+        block: {
+          kind: 'terminal',
+          title: 'terminal',
+          lines: (
+            <>
+              <div>curl -sSL https://rbee.dev/install.sh | sh</div>
+              <div className="text-[var(--syntax-comment)]">rbee-keeper daemon start</div>
+            </>
+          ),
+          copyText: 'curl -sSL https://rbee.dev/install.sh | sh\nrbee-keeper daemon start',
+        },
+      },
+      {
+        label: 'Add your machines',
+        block: {
+          kind: 'terminal',
+          title: 'terminal',
+          lines: (
+            <>
+              <div>rbee-keeper setup add-node --name workstation --ssh-host 192.168.1.10</div>
+              <div className="text-[var(--syntax-comment)]">
+                rbee-keeper setup add-node --name mac --ssh-host 192.168.1.20
+              </div>
+            </>
+          ),
+          copyText:
+            'rbee-keeper setup add-node --name workstation --ssh-host 192.168.1.10\nrbee-keeper setup add-node --name mac --ssh-host 192.168.1.20',
+        },
+      },
+      {
+        label: 'Configure your IDE',
+        block: {
+          kind: 'terminal',
+          title: 'terminal',
+          lines: (
+            <>
+              <div>
+                <span className="text-[var(--syntax-keyword)]">export</span> OPENAI_API_BASE=http://localhost:8080/v1
+              </div>
+              <div className="text-[var(--syntax-comment)]"># OpenAI-compatible endpoint — works with Zed & Cursor</div>
+            </>
+          ),
+          copyText: 'export OPENAI_API_BASE=http://localhost:8080/v1',
+        },
+      },
+      {
+        label: 'Build AI agents',
+        block: {
+          kind: 'code',
+          title: 'TypeScript',
+          language: 'ts',
+          lines: (
+            <>
+              <div>
+                <span className="text-[var(--syntax-import)]">import</span> {'{'} invoke {'}'}{' '}
+                <span className="text-[var(--syntax-import)]">from</span>{' '}
+                <span className="text-[var(--syntax-string)]">&apos;@rbee/utils&apos;</span>;
+              </div>
+              <div className="mt-2">
+                <span className="text-[var(--syntax-keyword)]">const</span> code ={' '}
+                <span className="text-[var(--syntax-keyword)]">await</span>{' '}
+                <span className="text-[var(--syntax-function)]">invoke</span>
+                {'({'}
+              </div>
+              <div className="pl-4">
+                prompt: <span className="text-[var(--syntax-string)]">&apos;Generate API from schema&apos;</span>,
+              </div>
+              <div className="pl-4">
+                model: <span className="text-[var(--syntax-string)]">&apos;llama-3.1-70b&apos;</span>
+              </div>
+              <div>{'});'}</div>
+            </>
+          ),
+          copyText:
+            "import { invoke } from '@rbee/utils';\n\nconst code = await invoke({\n  prompt: 'Generate API from schema',\n  model: 'llama-3.1-70b'\n});",
+        },
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: `**Home page context** — Exact implementation from \`/\` route.
 
 **Marketing Notes:**
 - **Headline**: "From zero to AI infrastructure in 15 minutes" — Time-specific reduces fear
@@ -251,91 +254,91 @@ export const HomePageDefault: Story = {
 - No CTA (continues to features section)
 
 **Tone**: Confident, technical, step-by-step guidance`,
-			},
-		},
-	},
+      },
+    },
+  },
 }
 
 export const AlternativeSteps: Story = {
-	args: {
-		title: 'Four commands to your own AI infrastructure',
-		subtitle: 'No complex configuration. No cloud accounts. Just your hardware.',
-		steps: [
-			{
-				label: 'Install rbee-keeper',
-				block: {
-					kind: 'terminal',
-					title: 'terminal',
-					lines: (
-						<>
-							<div>curl -sSL https://rbee.dev/install.sh | sh</div>
-							<div className="text-slate-400"># Installs orchestrator + worker daemon</div>
-						</>
-					),
-					copyText: 'curl -sSL https://rbee.dev/install.sh | sh',
-				},
-			},
-			{
-				label: 'Start the daemon',
-				block: {
-					kind: 'terminal',
-					title: 'terminal',
-					lines: (
-						<>
-							<div>rbee-keeper daemon start</div>
-							<div className="text-slate-400"># Starts orchestrator on localhost:8080</div>
-						</>
-					),
-					copyText: 'rbee-keeper daemon start',
-				},
-			},
-			{
-				label: 'Test with curl',
-				block: {
-					kind: 'terminal',
-					title: 'terminal',
-					lines: (
-						<>
-							<div>curl http://localhost:8080/v1/models</div>
-							<div className="text-slate-400"># Lists available models</div>
-						</>
-					),
-					copyText: 'curl http://localhost:8080/v1/models',
-				},
-			},
-			{
-				label: 'Use in your code',
-				block: {
-					kind: 'code',
-					title: 'TypeScript',
-					language: 'ts',
-					lines: (
-						<>
-							<div>
-								<span className="text-purple-400">import</span> OpenAI{' '}
-								<span className="text-purple-400">from</span>{' '}
-								<span className="text-amber-400">'openai'</span>;
-							</div>
-							<div className="mt-2">
-								<span className="text-blue-400">const</span> client = <span className="text-blue-400">new</span>{' '}
-								<span className="text-green-400">OpenAI</span>
-								{'({'}
-							</div>
-							<div className="pl-4">
-								baseURL: <span className="text-amber-400">'http://localhost:8080/v1'</span>
-							</div>
-							<div>{'});'}</div>
-						</>
-					),
-					copyText: "import OpenAI from 'openai';\n\nconst client = new OpenAI({\n  baseURL: 'http://localhost:8080/v1'\n});",
-				},
-			},
-		],
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: `Alternative step sequence for A/B testing. This variant:
+  args: {
+    title: 'Four commands to your own AI infrastructure',
+    subtitle: 'No complex configuration. No cloud accounts. Just your hardware.',
+    steps: [
+      {
+        label: 'Install rbee-keeper',
+        block: {
+          kind: 'terminal',
+          title: 'terminal',
+          lines: (
+            <>
+              <div>curl -sSL https://rbee.dev/install.sh | sh</div>
+              <div className="text-slate-400"># Installs orchestrator + worker daemon</div>
+            </>
+          ),
+          copyText: 'curl -sSL https://rbee.dev/install.sh | sh',
+        },
+      },
+      {
+        label: 'Start the daemon',
+        block: {
+          kind: 'terminal',
+          title: 'terminal',
+          lines: (
+            <>
+              <div>rbee-keeper daemon start</div>
+              <div className="text-slate-400"># Starts orchestrator on localhost:8080</div>
+            </>
+          ),
+          copyText: 'rbee-keeper daemon start',
+        },
+      },
+      {
+        label: 'Test with curl',
+        block: {
+          kind: 'terminal',
+          title: 'terminal',
+          lines: (
+            <>
+              <div>curl http://localhost:8080/v1/models</div>
+              <div className="text-slate-400"># Lists available models</div>
+            </>
+          ),
+          copyText: 'curl http://localhost:8080/v1/models',
+        },
+      },
+      {
+        label: 'Use in your code',
+        block: {
+          kind: 'code',
+          title: 'TypeScript',
+          language: 'ts',
+          lines: (
+            <>
+              <div>
+                <span className="text-purple-400">import</span> OpenAI <span className="text-purple-400">from</span>{' '}
+                <span className="text-amber-400">'openai'</span>;
+              </div>
+              <div className="mt-2">
+                <span className="text-blue-400">const</span> client = <span className="text-blue-400">new</span>{' '}
+                <span className="text-green-400">OpenAI</span>
+                {'({'}
+              </div>
+              <div className="pl-4">
+                baseURL: <span className="text-amber-400">'http://localhost:8080/v1'</span>
+              </div>
+              <div>{'});'}</div>
+            </>
+          ),
+          copyText:
+            "import OpenAI from 'openai';\n\nconst client = new OpenAI({\n  baseURL: 'http://localhost:8080/v1'\n});",
+        },
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: `Alternative step sequence for A/B testing. This variant:
 - Emphasizes "Four commands" (concrete, countable)
 - Focuses on single-machine setup first (simpler)
 - Includes explicit "Test with curl" step (validation)
@@ -343,70 +346,71 @@ export const AlternativeSteps: Story = {
 - Removes multi-machine complexity from initial flow
 
 **Use case**: Test with developers who want fastest path to validation, not full multi-GPU setup.`,
-			},
-		},
-	},
+      },
+    },
+  },
 }
 
 export const WithoutVisuals: Story = {
-	args: {
-		title: 'Three steps to private AI',
-		steps: [
-			{
-				label: 'Install rbee-keeper',
-				block: {
-					kind: 'note',
-					content: (
-						<>
-							<p>
-								Run the install script on your primary machine. This installs the orchestrator daemon and worker
-								process.
-							</p>
-							<p className="mt-2">
-								<strong>Time:</strong> ~2 minutes
-							</p>
-						</>
-					),
-				},
-			},
-			{
-				label: 'Add your GPUs',
-				block: {
-					kind: 'note',
-					content: (
-						<>
-							<p>Point rbee to other machines on your network via SSH or local discovery.</p>
-							<p className="mt-2">
-								<strong>Time:</strong> ~5 minutes
-							</p>
-						</>
-					),
-				},
-			},
-			{
-				label: 'Start building',
-				block: {
-					kind: 'note',
-					content: (
-						<>
-							<p>
-								Use the OpenAI-compatible API at <code>localhost:8080/v1</code>. Works with Zed, Cursor, Continue, and
-								any OpenAI SDK.
-							</p>
-							<p className="mt-2">
-								<strong>Time:</strong> Immediate
-							</p>
-						</>
-					),
-				},
-			},
-		],
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Text-only variant without code blocks. Useful for high-level overview or when code examples might overwhelm.',
-			},
-		},
-	},
+  args: {
+    title: 'Three steps to private AI',
+    steps: [
+      {
+        label: 'Install rbee-keeper',
+        block: {
+          kind: 'note',
+          content: (
+            <>
+              <p>
+                Run the install script on your primary machine. This installs the orchestrator daemon and worker
+                process.
+              </p>
+              <p className="mt-2">
+                <strong>Time:</strong> ~2 minutes
+              </p>
+            </>
+          ),
+        },
+      },
+      {
+        label: 'Add your GPUs',
+        block: {
+          kind: 'note',
+          content: (
+            <>
+              <p>Point rbee to other machines on your network via SSH or local discovery.</p>
+              <p className="mt-2">
+                <strong>Time:</strong> ~5 minutes
+              </p>
+            </>
+          ),
+        },
+      },
+      {
+        label: 'Start building',
+        block: {
+          kind: 'note',
+          content: (
+            <>
+              <p>
+                Use the OpenAI-compatible API at <code>localhost:8080/v1</code>. Works with Zed, Cursor, Continue, and
+                any OpenAI SDK.
+              </p>
+              <p className="mt-2">
+                <strong>Time:</strong> Immediate
+              </p>
+            </>
+          ),
+        },
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Text-only variant without code blocks. Useful for high-level overview or when code examples might overwhelm.',
+      },
+    },
+  },
 }

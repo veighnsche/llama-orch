@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { ComparisonSection } from './ComparisonSection'
 
 const meta = {
-	title: 'Organisms/Home/ComparisonSection',
-	component: ComparisonSection,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Home/ComparisonSection',
+  component: ComparisonSection,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The ComparisonSection presents a feature comparison table showing rbee vs. cloud APIs (OpenAI/Anthropic), Ollama, and cloud GPU providers (Runpod/Vast.ai). Uses visual indicators (checkmarks, X marks) and detailed notes to communicate differentiation.
 
@@ -110,20 +110,20 @@ import { ComparisonSection } from '@rbee/ui/organisms/ComparisonSection'
 - **Color Contrast**: Meets WCAG AA standards in both themes
 - **Responsive**: Mobile cards maintain information hierarchy
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof ComparisonSection>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const HomePageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story: `**Home page context** — Exact implementation from \`/\` route.
+  parameters: {
+    docs: {
+      description: {
+        story: `**Home page context** — Exact implementation from \`/\` route.
 
 **Marketing Notes:**
 - **Headline**: "Why Developers Choose rbee" — Social proof positioning
@@ -185,76 +185,76 @@ export const HomePageDefault: Story = {
 - **vs. Runpod**: Cost, privacy, API, routing
 
 **Tone**: Objective, fact-based, confident`,
-			},
-		},
-	},
+      },
+    },
+  },
 }
 
 export const TwoWayComparison: Story = {
-	render: () => (
-		<div>
-			<ComparisonSection />
-			<div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
-				<h3 style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Two-Way Comparison Variants</h3>
-				<div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', lineHeight: '1.8' }}>
-					<p>
-						<strong>rbee vs. OpenAI:</strong> Emphasize cost savings, privacy, rate limits
-					</p>
-					<p>
-						<strong>rbee vs. Ollama:</strong> Emphasize multi-GPU orchestration, API compatibility, routing policies
-					</p>
-					<p>
-						<strong>rbee vs. Runpod:</strong> Emphasize cost (ongoing), privacy, API compatibility, routing
-					</p>
-					<p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
-						<strong>A/B Test Recommendation:</strong> Test two-way comparison (rbee vs. one competitor) for landing
-						pages targeting specific audiences.
-					</p>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story: 'Analysis of two-way comparison variants. Useful for targeted landing pages.',
-			},
-		},
-	},
+  render: () => (
+    <div>
+      <ComparisonSection />
+      <div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
+        <h3 style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Two-Way Comparison Variants</h3>
+        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', lineHeight: '1.8' }}>
+          <p>
+            <strong>rbee vs. OpenAI:</strong> Emphasize cost savings, privacy, rate limits
+          </p>
+          <p>
+            <strong>rbee vs. Ollama:</strong> Emphasize multi-GPU orchestration, API compatibility, routing policies
+          </p>
+          <p>
+            <strong>rbee vs. Runpod:</strong> Emphasize cost (ongoing), privacy, API compatibility, routing
+          </p>
+          <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
+            <strong>A/B Test Recommendation:</strong> Test two-way comparison (rbee vs. one competitor) for landing
+            pages targeting specific audiences.
+          </p>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Analysis of two-way comparison variants. Useful for targeted landing pages.',
+      },
+    },
+  },
 }
 
 export const AlternativeCompetitors: Story = {
-	render: () => (
-		<div>
-			<ComparisonSection />
-			<div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
-				<h3 style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Alternative Competitor Sets</h3>
-				<div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', lineHeight: '1.8' }}>
-					<p>
-						<strong>Current:</strong> OpenAI/Anthropic, Ollama, Runpod/Vast.ai
-					</p>
-					<p>
-						<strong>Alt 1:</strong> Add Together.ai, Replicate (more API providers)
-					</p>
-					<p>
-						<strong>Alt 2:</strong> Add LocalAI, LM Studio (more local alternatives)
-					</p>
-					<p>
-						<strong>Alt 3:</strong> Add Ray, Kubernetes (more orchestration alternatives)
-					</p>
-					<p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
-						<strong>Recommendation:</strong> Current set covers main categories (cloud APIs, local inference, cloud
-						GPUs). Add competitors based on audience feedback.
-					</p>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story: 'Alternative competitor sets for different positioning strategies.',
-			},
-		},
-	},
+  render: () => (
+    <div>
+      <ComparisonSection />
+      <div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
+        <h3 style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Alternative Competitor Sets</h3>
+        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', lineHeight: '1.8' }}>
+          <p>
+            <strong>Current:</strong> OpenAI/Anthropic, Ollama, Runpod/Vast.ai
+          </p>
+          <p>
+            <strong>Alt 1:</strong> Add Together.ai, Replicate (more API providers)
+          </p>
+          <p>
+            <strong>Alt 2:</strong> Add LocalAI, LM Studio (more local alternatives)
+          </p>
+          <p>
+            <strong>Alt 3:</strong> Add Ray, Kubernetes (more orchestration alternatives)
+          </p>
+          <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
+            <strong>Recommendation:</strong> Current set covers main categories (cloud APIs, local inference, cloud
+            GPUs). Add competitors based on audience feedback.
+          </p>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Alternative competitor sets for different positioning strategies.',
+      },
+    },
+  },
 }

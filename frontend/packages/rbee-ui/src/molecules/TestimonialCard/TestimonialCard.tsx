@@ -1,40 +1,31 @@
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  Badge,
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@rbee/ui/atoms";
-import { RatingStars } from "@rbee/ui/atoms/RatingStars";
-import { cn } from "@rbee/ui/utils";
-import Image from "next/image";
+import { Avatar, AvatarFallback, AvatarImage, Badge, Card, CardContent, CardFooter, CardHeader } from '@rbee/ui/atoms'
+import { RatingStars } from '@rbee/ui/atoms/RatingStars'
+import { cn } from '@rbee/ui/utils'
+import Image from 'next/image'
 
 export interface TestimonialCardProps {
   /** Person's name */
-  name: string;
+  name: string
   /** Person's role */
-  role: string;
+  role: string
   /** Testimonial quote */
-  quote: string;
+  quote: string
   /** Avatar (image URL, emoji, or initials) */
-  avatar?: string;
+  avatar?: string
   /** Company information */
-  company?: { name: string; logo?: string };
+  company?: { name: string; logo?: string }
   /** Verified badge */
-  verified?: boolean;
+  verified?: boolean
   /** Source link (tweet, GH issue, blog) */
-  link?: string;
+  link?: string
   /** Date of testimonial (ISO or human string) */
-  date?: string;
+  date?: string
   /** Rating (1-5 stars) */
-  rating?: 1 | 2 | 3 | 4 | 5;
+  rating?: 1 | 2 | 3 | 4 | 5
   /** Highlight badge (e.g., "$500/mo → $0") */
-  highlight?: string;
+  highlight?: string
   /** Additional CSS classes */
-  className?: string;
+  className?: string
 }
 
 export function TestimonialCard({
@@ -51,16 +42,13 @@ export function TestimonialCard({
   className,
 }: TestimonialCardProps) {
   // Check if avatar is emoji or initials
-  const isEmoji = avatar && /^[\p{Emoji}\u200d]+$/u.test(avatar);
-  const isInitials = avatar && /^[A-Z]{1,2}$/.test(avatar);
-  const isImageUrl = avatar && !isEmoji && !isInitials;
+  const isEmoji = avatar && /^[\p{Emoji}\u200d]+$/u.test(avatar)
+  const isInitials = avatar && /^[A-Z]{1,2}$/.test(avatar)
+  const isImageUrl = avatar && !isEmoji && !isInitials
 
   return (
     <Card
-      className={cn(
-        "hover:border-primary/40 hover:shadow-lg transition-all duration-200",
-        className
-      )}
+      className={cn('hover:border-primary/40 hover:shadow-lg transition-all duration-200', className)}
       itemScope
       itemType="https://schema.org/Review"
     >
@@ -72,8 +60,8 @@ export function TestimonialCard({
               <AvatarFallback
                 className={cn(
                   isEmoji || isInitials
-                    ? "bg-gradient-to-br from-primary/10 to-chart-2/10 text-2xl"
-                    : "bg-gradient-to-br from-primary to-chart-2"
+                    ? 'bg-gradient-to-br from-primary/10 to-chart-2/10 text-2xl'
+                    : 'bg-gradient-to-br from-primary to-chart-2',
                 )}
               >
                 {isEmoji || isInitials ? avatar : name.slice(0, 2).toUpperCase()}
@@ -81,28 +69,15 @@ export function TestimonialCard({
             </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span
-                  className="font-bold text-card-foreground"
-                  itemProp="author"
-                >
+                <span className="font-bold text-card-foreground" itemProp="author">
                   {name}
                 </span>
                 {company?.logo && (
-                  <Image
-                    src={company.logo}
-                    alt={company.name}
-                    width={24}
-                    height={24}
-                    className="object-contain"
-                  />
+                  <Image src={company.logo} alt={company.name} width={24} height={24} className="object-contain" />
                 )}
               </div>
               <div className="text-sm text-muted-foreground">{role}</div>
-              {company?.name && !company.logo && (
-                <div className="text-xs text-muted-foreground/80">
-                  {company.name}
-                </div>
-              )}
+              {company?.name && !company.logo && <div className="text-xs text-muted-foreground/80">{company.name}</div>}
             </div>
           </div>
           {verified && (
@@ -119,10 +94,7 @@ export function TestimonialCard({
 
         {/* Quote block */}
         <blockquote>
-          <p
-            className="text-sm leading-6 text-muted-foreground"
-            itemProp="reviewBody"
-          >
+          <p className="text-sm leading-6 text-muted-foreground" itemProp="reviewBody">
             <span className="text-primary mr-1">&ldquo;</span>
             {quote}
             <span className="text-primary ml-1">&rdquo;</span>
@@ -154,5 +126,5 @@ export function TestimonialCard({
         </CardFooter>
       )}
     </Card>
-  );
+  )
 }

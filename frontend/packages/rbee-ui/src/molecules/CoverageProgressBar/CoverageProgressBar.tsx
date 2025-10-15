@@ -3,28 +3,28 @@ export interface CoverageProgressBarProps {
    * Label for the progress bar
    * @default "BDD Coverage"
    */
-  label?: string;
+  label?: string
   /**
    * Number of passing scenarios
    */
-  passing: number;
+  passing: number
   /**
    * Total number of scenarios
    */
-  total: number;
+  total: number
   /**
    * Optional className for the container
    */
-  className?: string;
+  className?: string
 }
 
 export function CoverageProgressBar({
-  label = "BDD Coverage",
+  label = 'BDD Coverage',
   passing,
   total,
-  className = "",
+  className = '',
 }: CoverageProgressBarProps) {
-  const percentage = Math.round((passing / total) * 100);
+  const percentage = Math.round((passing / total) * 100)
 
   return (
     <div className={className}>
@@ -35,12 +35,9 @@ export function CoverageProgressBar({
         </span>
       </div>
       <div className="relative h-2 rounded bg-muted">
-        <div
-          className="absolute inset-y-0 left-0 bg-chart-3 rounded"
-          style={{ width: `${percentage}%` }}
-        />
+        <div className="absolute inset-y-0 left-0 bg-chart-3 rounded" style={{ width: `${percentage}%` }} />
       </div>
       <p className="text-xs text-muted-foreground mt-1">{percentage}% complete</p>
     </div>
-  );
+  )
 }

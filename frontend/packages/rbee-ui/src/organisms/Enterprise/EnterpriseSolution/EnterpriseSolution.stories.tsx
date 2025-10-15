@@ -4,13 +4,13 @@ import { EnterpriseSolution } from './EnterpriseSolution'
 // Created by: TEAM-004
 
 const meta = {
-	title: 'Organisms/Enterprise/EnterpriseSolution',
-	component: EnterpriseSolution,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Enterprise/EnterpriseSolution',
+  component: EnterpriseSolution,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The EnterpriseSolution section presents the rbee solution to enterprise compliance challenges. It uses a wrapper around SolutionSection with enterprise-specific features, deployment steps, and compliance metrics. Emphasizes EU data sovereignty, audit retention, and zero US cloud dependencies.
 
@@ -94,44 +94,44 @@ import { EnterpriseSolution } from '@rbee/ui/organisms/Enterprise/EnterpriseSolu
 - **Secondary CTA**: "View Compliance Docs" (self-serve education)
 - **Lead qualification**: Capture compliance requirements, deployment timeline, infrastructure details
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof EnterpriseSolution>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const EnterprisePageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default enterprise solution section showing the full compliance workflow: Deploy On-Premises, Configure Compliance Policies, Enable Audit Logging, Run Compliant AI. Includes compliance metrics table with Data Sovereignty (100% EU-only), Audit Retention (7 years immutable), and Security Layers (5 layers zero-trust).',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default enterprise solution section showing the full compliance workflow: Deploy On-Premises, Configure Compliance Policies, Enable Audit Logging, Run Compliant AI. Includes compliance metrics table with Data Sovereignty (100% EU-only), Audit Retention (7 years immutable), and Security Layers (5 layers zero-trust).',
+      },
+    },
+  },
 }
 
 export const SecurityFirst: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant leading with security and audit capabilities. This version would emphasize: Immutable audit trails (7-year retention, tamper-evident), 32 audit event types (auth, data access, policy changes), zero-trust architecture (5 security layers), and defense-in-depth approach. Ideal for security-conscious enterprises (financial services, healthcare, government).',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant leading with security and audit capabilities. This version would emphasize: Immutable audit trails (7-year retention, tamper-evident), 32 audit event types (auth, data access, policy changes), zero-trust architecture (5 security layers), and defense-in-depth approach. Ideal for security-conscious enterprises (financial services, healthcare, government).',
+      },
+    },
+  },
 }
 
 export const ROIFirst: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant emphasizing cost savings and ROI. This version would lead with: Avoid GDPR fines (€20M or 4% of revenue), eliminate unpredictable cloud API costs, reduce vendor dependency risk, and faster compliance certification. Includes cost comparison vs. cloud APIs showing 60-80% cost savings at scale. Ideal for CFOs or cost-conscious enterprises.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant emphasizing cost savings and ROI. This version would lead with: Avoid GDPR fines (€20M or 4% of revenue), eliminate unpredictable cloud API costs, reduce vendor dependency risk, and faster compliance certification. Includes cost comparison vs. cloud APIs showing 60-80% cost savings at scale. Ideal for CFOs or cost-conscious enterprises.',
+      },
+    },
+  },
 }

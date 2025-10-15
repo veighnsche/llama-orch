@@ -4,13 +4,13 @@ import { EnterpriseHowItWorks } from './EnterpriseHowItWorks'
 // Created by: TEAM-004
 
 const meta = {
-	title: 'Organisms/Enterprise/EnterpriseHowItWorks',
-	component: EnterpriseHowItWorks,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Enterprise/EnterpriseHowItWorks',
+  component: EnterpriseHowItWorks,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The EnterpriseHowItWorks section presents the enterprise deployment process in four stages: Compliance Assessment, On-Premises Deployment, Compliance Validation, and Production Launch. Includes a sticky timeline panel showing typical deployment duration (7 weeks).
 
@@ -116,44 +116,44 @@ import { EnterpriseHowItWorks } from '@rbee/ui/organisms/Enterprise/EnterpriseHo
 - **Lead qualification**: Capture deployment timeline, infrastructure details, compliance requirements
 - **Proof points**: 7-week timeline, 99.9% uptime SLA, 24/7 support, dedicated account manager
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof EnterpriseHowItWorks>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const EnterprisePageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default enterprise deployment process showing all four stages: Compliance Assessment (Week 1-2: gap analysis, data flow mapping, risk assessment, architecture proposal), On-Premises Deployment (Week 3-4: EU data centers, on-premises, private cloud, hybrid), Compliance Validation (Week 5-6: documentation package, auditor access, security review, penetration testing), and Production Launch (Week 7: 99.9% uptime SLA, 24/7 support, dedicated account manager, quarterly compliance reviews). Includes sticky timeline panel showing 7-week deployment duration.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default enterprise deployment process showing all four stages: Compliance Assessment (Week 1-2: gap analysis, data flow mapping, risk assessment, architecture proposal), On-Premises Deployment (Week 3-4: EU data centers, on-premises, private cloud, hybrid), Compliance Validation (Week 5-6: documentation package, auditor access, security review, penetration testing), and Production Launch (Week 7: 99.9% uptime SLA, 24/7 support, dedicated account manager, quarterly compliance reviews). Includes sticky timeline panel showing 7-week deployment duration.',
+      },
+    },
+  },
 }
 
 export const OnPremDeployment: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant focusing on on-premises deployment options. This version would emphasize: Deploy on your own servers (full control, air-gap support, no external dependencies), EU data center options (Frankfurt, Amsterdam, Paris), private cloud options (AWS EU, Azure EU, GCP EU with VPC isolation), and hybrid deployment (on-prem for sensitive workloads, marketplace for burst capacity). Ideal for government, defense, or highly regulated industries requiring full control.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant focusing on on-premises deployment options. This version would emphasize: Deploy on your own servers (full control, air-gap support, no external dependencies), EU data center options (Frankfurt, Amsterdam, Paris), private cloud options (AWS EU, Azure EU, GCP EU with VPC isolation), and hybrid deployment (on-prem for sensitive workloads, marketplace for burst capacity). Ideal for government, defense, or highly regulated industries requiring full control.',
+      },
+    },
+  },
 }
 
 export const CloudDeployment: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant focusing on private cloud deployment options. This version would emphasize: AWS EU (Frankfurt, Ireland regions with VPC isolation), Azure EU (Netherlands, Germany regions with private endpoints), GCP EU (Belgium, Finland regions with private service connect), and EU data residency guarantees (no US parent company access, GDPR Article 44 compliant). Ideal for cloud-first enterprises with EU compliance requirements.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant focusing on private cloud deployment options. This version would emphasize: AWS EU (Frankfurt, Ireland regions with VPC isolation), Azure EU (Netherlands, Germany regions with private endpoints), GCP EU (Belgium, Finland regions with private service connect), and EU data residency guarantees (no US parent company access, GDPR Article 44 compliant). Ideal for cloud-first enterprises with EU compliance requirements.',
+      },
+    },
+  },
 }

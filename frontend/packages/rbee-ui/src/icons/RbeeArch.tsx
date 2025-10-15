@@ -4,18 +4,12 @@ export interface RbeeArchProps extends SVGProps<SVGSVGElement> {
   size?: number | string
 }
 
-export function RbeeArch({ size = "100%", className, ...props }: RbeeArchProps) {
+export function RbeeArch({ size = '100%', className, ...props }: RbeeArchProps) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      viewBox="0 0 920 560"
-      className={className}
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} viewBox="0 0 920 560" className={className} {...props}>
       <defs>
-    {/* Color Palette */}
-    <style>{`
+        {/* Color Palette */}
+        <style>{`
       @keyframes pulse {
         0%, 100% { opacity: 0.4; }
         50% { opacity: 1; }
@@ -31,370 +25,732 @@ export function RbeeArch({ size = "100%", className, ...props }: RbeeArchProps) 
         .pulse-line { animation: none; opacity: 0.6; }
       }
     `}</style>
-    
-    {/* Gradients */}
-    <radialGradient id="amberGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.3" />
-      <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
-    </radialGradient>
-    
-    <radialGradient id="tealGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.3" />
-      <stop offset="100%" stopColor="#14b8a6" stopOpacity="0" />
-    </radialGradient>
-    
-    <radialGradient id="emeraldGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
-      <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-    </radialGradient>
-    
-    <linearGradient id="vramGradient80" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stopColor="#14b8a6" stopOpacity="1" />
-      <stop offset="80%" stopColor="#14b8a6" stopOpacity="0.8" />
-      <stop offset="100%" stopColor="#71717a" stopOpacity="0.2" />
-    </linearGradient>
-    
-    <linearGradient id="vramGradient85" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stopColor="#14b8a6" stopOpacity="1" />
-      <stop offset="85%" stopColor="#14b8a6" stopOpacity="0.8" />
-      <stop offset="100%" stopColor="#71717a" stopOpacity="0.2" />
-    </linearGradient>
-    
-    <linearGradient id="vramGradient90" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stopColor="#f59e0b" stopOpacity="1" />
-      <stop offset="90%" stopColor="#f59e0b" stopOpacity="0.8" />
-      <stop offset="100%" stopColor="#71717a" stopOpacity="0.2" />
-    </linearGradient>
-    
-    <linearGradient id="vramGradient95" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stopColor="#ef4444" stopOpacity="1" />
-      <stop offset="95%" stopColor="#ef4444" stopOpacity="0.8" />
-      <stop offset="100%" stopColor="#71717a" stopOpacity="0.2" />
-    </linearGradient>
-    
-    {/* Drop Shadow Filter */}
-    <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
-      <feOffset dx="0" dy="2" result="offsetblur"/>
-      <feComponentTransfer>
-        <feFuncA type="linear" slope="0.3"/>
-      </feComponentTransfer>
-      <feMerge>
-        <feMergeNode/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-    
-    {/* Arrow Markers */}
-    <marker id="arrowTeal" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L0,6 L6,3 z" fill="#14b8a6" />
-    </marker>
-    
-    <marker id="arrowAmber" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L0,6 L6,3 z" fill="#f59e0b" />
-    </marker>
-    
-    <marker id="arrowGray" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L0,6 L6,3 z" fill="#71717a" />
-    </marker>
-  </defs>
-  
-  {/* Background */}
-  <rect width="920" height="560" fill="#0a0a0a"/>
-  
-  {/* PHASE 2: CONTROL PLANE HEXAGONS */}
-  {/* Left Hexagon: Rhai Policy Engine */}
-  <g transform="translate(150, 100)" filter="url(#dropShadow)">
-    <circle cx="0" cy="0" r="55" fill="url(#amberGlow)" />
-    <path d="M 0,-45 L 39,-22.5 L 39,22.5 L 0,45 L -39,22.5 L -39,-22.5 Z" 
-          fill="#18181b" stroke="#f59e0b" strokeWidth="2"/>
-    <text x="0" y="-5" textAnchor="middle" fill="#fafafa" fontSize="13" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Rhai Policy
-    </text>
-    <text x="0" y="10" textAnchor="middle" fill="#fafafa" fontSize="13" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Engine
-    </text>
-    <text x="0" y="30" textAnchor="middle" fill="#a1a1aa" fontSize="10" fontWeight="500" fontFamily="system-ui, -apple-system, sans-serif">
-      Routing Logic
-    </text>
-  </g>
-  
-  {/* Center Hexagon: Request Scheduler */}
-  <g transform="translate(460, 100)" filter="url(#dropShadow)">
-    <circle cx="0" cy="0" r="55" fill="url(#tealGlow)" />
-    <path d="M 0,-45 L 39,-22.5 L 39,22.5 L 0,45 L -39,22.5 L -39,-22.5 Z" 
-          fill="#18181b" stroke="#14b8a6" strokeWidth="2"/>
-    <text x="0" y="-5" textAnchor="middle" fill="#fafafa" fontSize="13" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Request
-    </text>
-    <text x="0" y="10" textAnchor="middle" fill="#fafafa" fontSize="13" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Scheduler
-    </text>
-    <text x="0" y="30" textAnchor="middle" fill="#a1a1aa" fontSize="10" fontWeight="500" fontFamily="system-ui, -apple-system, sans-serif">
-      Queue Manager
-    </text>
-  </g>
-  
-  {/* Right Hexagon: Health Monitor */}
-  <g transform="translate(770, 100)" filter="url(#dropShadow)">
-    <circle cx="0" cy="0" r="55" fill="url(#emeraldGlow)" />
-    <path d="M 0,-45 L 39,-22.5 L 39,22.5 L 0,45 L -39,22.5 L -39,-22.5 Z" 
-          fill="#18181b" stroke="#10b981" strokeWidth="2"/>
-    <text x="0" y="-5" textAnchor="middle" fill="#fafafa" fontSize="13" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Health
-    </text>
-    <text x="0" y="10" textAnchor="middle" fill="#fafafa" fontSize="13" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Monitor
-    </text>
-    <text x="0" y="30" textAnchor="middle" fill="#a1a1aa" fontSize="10" fontWeight="500" fontFamily="system-ui, -apple-system, sans-serif">
-      Heartbeat Check
-    </text>
-  </g>
-  
-  {/* Bidirectional Arrows between Hexagons */}
-  <path d="M 189,100 Q 305,80 421,100" fill="none" stroke="#f59e0b" strokeWidth="2" 
-        markerEnd="url(#arrowAmber)" className="pulse-line"/>
-  <path d="M 421,100 Q 305,120 189,100" fill="none" stroke="#f59e0b" strokeWidth="2" 
-        markerEnd="url(#arrowAmber)" className="pulse-line" style={{ animationDelay: "1s" }}/>
-  
-  <path d="M 499,100 Q 590,80 731,100" fill="none" stroke="#14b8a6" strokeWidth="2" 
-        markerEnd="url(#arrowTeal)" className="pulse-line" style={{ animationDelay: "0.5s" }}/>
-  <path d="M 731,100 Q 590,120 499,100" fill="none" stroke="#14b8a6" strokeWidth="2" 
-        markerEnd="url(#arrowTeal)" className="pulse-line" style={{ animationDelay: "1.5s" }}/>
-  
-  {/* PHASE 3: PROTOCOL LAYER */}
-  <line x1="60" y1="220" x2="860" y2="220" stroke="#27272a" strokeWidth="2"/>
-  <text x="460" y="210" textAnchor="middle" fill="#71717a" fontSize="12" fontWeight="600" 
-        fontFamily="system-ui, -apple-system, sans-serif" letterSpacing="0.05em">
-    PROTOCOL LAYER
-  </text>
-  
-  {/* Protocol Badges */}
-  <g transform="translate(260, 235)">
-    <rect width="90" height="32" rx="6" fill="#18181b" stroke="#27272a" strokeWidth="1.5"/>
-    <text x="45" y="20" textAnchor="middle" fill="#fafafa" fontSize="12" fontWeight="600" 
-          fontFamily="system-ui, -apple-system, sans-serif">
-      SSE
-    </text>
-  </g>
-  
-  <g transform="translate(415, 235)">
-    <rect width="90" height="32" rx="6" fill="#18181b" stroke="#27272a" strokeWidth="1.5"/>
-    <text x="45" y="20" textAnchor="middle" fill="#fafafa" fontSize="12" fontWeight="600" 
-          fontFamily="system-ui, -apple-system, sans-serif">
-      JSON-RPC
-    </text>
-  </g>
-  
-  <g transform="translate(570, 235)">
-    <rect width="90" height="32" rx="6" fill="#18181b" stroke="#27272a" strokeWidth="1.5"/>
-    <text x="45" y="20" textAnchor="middle" fill="#fafafa" fontSize="12" fontWeight="600" 
-          fontFamily="system-ui, -apple-system, sans-serif">
-      Binary
-    </text>
-  </g>
-  
-  {/* PHASE 4: WORKER POOL GRID */}
-  {/* Worker 1: Llama-3-70B (80% VRAM) */}
-  <g transform="translate(70, 320)" filter="url(#dropShadow)">
-    <rect width="140" height="95" rx="8" fill="#18181b" stroke="#27272a" strokeWidth="2" strokeDasharray="4,4"/>
-    <text x="10" y="18" fill="#fafafa" fontSize="11" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Worker Process
-    </text>
-    {/* GPU Icon */}
-    <rect x="10" y="28" width="20" height="12" rx="2" fill="#14b8a6" opacity="0.3"/>
-    <rect x="12" y="30" width="4" height="8" rx="1" fill="#14b8a6"/>
-    <rect x="18" y="30" width="4" height="8" rx="1" fill="#14b8a6"/>
-    <rect x="24" y="30" width="4" height="8" rx="1" fill="#14b8a6"/>
-    
-    {/* VRAM Gauge */}
-    <rect x="10" y="48" width="120" height="12" rx="2" fill="#27272a"/>
-    <rect x="10" y="48" width="96" height="12" rx="2" fill="url(#vramGradient80)"/>
-    <text x="70" y="57" textAnchor="middle" fill="#fafafa" fontSize="9" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      80% VRAM
-    </text>
-    
-    {/* Model Tag */}
-    <rect x="10" y="70" width="120" height="18" rx="4" fill="#14b8a6" opacity="0.15"/>
-    <text x="70" y="81" textAnchor="middle" fill="#14b8a6" fontSize="10" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Llama-3-70B
-    </text>
-  </g>
-  
-  {/* Worker 2: Mistral-7B (85% VRAM) */}
-  <g transform="translate(240, 320)" filter="url(#dropShadow)">
-    <rect width="140" height="95" rx="8" fill="#18181b" stroke="#27272a" strokeWidth="2" strokeDasharray="4,4"/>
-    <text x="10" y="18" fill="#fafafa" fontSize="11" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Worker Process
-    </text>
-    <rect x="10" y="28" width="20" height="12" rx="2" fill="#14b8a6" opacity="0.3"/>
-    <rect x="12" y="30" width="4" height="8" rx="1" fill="#14b8a6"/>
-    <rect x="18" y="30" width="4" height="8" rx="1" fill="#14b8a6"/>
-    <rect x="24" y="30" width="4" height="8" rx="1" fill="#14b8a6"/>
-    
-    <rect x="10" y="48" width="120" height="12" rx="2" fill="#27272a"/>
-    <rect x="10" y="48" width="102" height="12" rx="2" fill="url(#vramGradient85)"/>
-    <text x="70" y="57" textAnchor="middle" fill="#fafafa" fontSize="9" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      85% VRAM
-    </text>
-    
-    <rect x="10" y="70" width="120" height="18" rx="4" fill="#14b8a6" opacity="0.15"/>
-    <text x="70" y="81" textAnchor="middle" fill="#14b8a6" fontSize="10" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Mistral-7B
-    </text>
-  </g>
-  
-  {/* Worker 3: Gemma-2-9B (90% VRAM) */}
-  <g transform="translate(410, 320)" filter="url(#dropShadow)">
-    <rect width="140" height="95" rx="8" fill="#18181b" stroke="#27272a" strokeWidth="2" strokeDasharray="4,4"/>
-    <text x="10" y="18" fill="#fafafa" fontSize="11" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Worker Process
-    </text>
-    <rect x="10" y="28" width="20" height="12" rx="2" fill="#f59e0b" opacity="0.3"/>
-    <rect x="12" y="30" width="4" height="8" rx="1" fill="#f59e0b"/>
-    <rect x="18" y="30" width="4" height="8" rx="1" fill="#f59e0b"/>
-    <rect x="24" y="30" width="4" height="8" rx="1" fill="#f59e0b"/>
-    
-    <rect x="10" y="48" width="120" height="12" rx="2" fill="#27272a"/>
-    <rect x="10" y="48" width="108" height="12" rx="2" fill="url(#vramGradient90)"/>
-    <text x="70" y="57" textAnchor="middle" fill="#fafafa" fontSize="9" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      90% VRAM
-    </text>
-    
-    <rect x="10" y="70" width="120" height="18" rx="4" fill="#f59e0b" opacity="0.15"/>
-    <text x="70" y="81" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Gemma-2-9B
-    </text>
-  </g>
-  
-  {/* Worker 4: Qwen-14B (95% VRAM) */}
-  <g transform="translate(70, 440)" filter="url(#dropShadow)">
-    <rect width="140" height="95" rx="8" fill="#18181b" stroke="#27272a" strokeWidth="2" strokeDasharray="4,4"/>
-    <text x="10" y="18" fill="#fafafa" fontSize="11" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Worker Process
-    </text>
-    <rect x="10" y="28" width="20" height="12" rx="2" fill="#ef4444" opacity="0.3"/>
-    <rect x="12" y="30" width="4" height="8" rx="1" fill="#ef4444"/>
-    <rect x="18" y="30" width="4" height="8" rx="1" fill="#ef4444"/>
-    <rect x="24" y="30" width="4" height="8" rx="1" fill="#ef4444"/>
-    
-    <rect x="10" y="48" width="120" height="12" rx="2" fill="#27272a"/>
-    <rect x="10" y="48" width="114" height="12" rx="2" fill="url(#vramGradient95)"/>
-    <text x="70" y="57" textAnchor="middle" fill="#fafafa" fontSize="9" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      95% VRAM
-    </text>
-    
-    <rect x="10" y="70" width="120" height="18" rx="4" fill="#ef4444" opacity="0.15"/>
-    <text x="70" y="81" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Qwen-14B
-    </text>
-  </g>
-  
-  {/* Worker 5: CodeLlama-13B (82% VRAM) */}
-  <g transform="translate(240, 440)" filter="url(#dropShadow)">
-    <rect width="140" height="95" rx="8" fill="#18181b" stroke="#27272a" strokeWidth="2" strokeDasharray="4,4"/>
-    <text x="10" y="18" fill="#fafafa" fontSize="11" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Worker Process
-    </text>
-    <rect x="10" y="28" width="20" height="12" rx="2" fill="#14b8a6" opacity="0.3"/>
-    <rect x="12" y="30" width="4" height="8" rx="1" fill="#14b8a6"/>
-    <rect x="18" y="30" width="4" height="8" rx="1" fill="#14b8a6"/>
-    <rect x="24" y="30" width="4" height="8" rx="1" fill="#14b8a6"/>
-    
-    <rect x="10" y="48" width="120" height="12" rx="2" fill="#27272a"/>
-    <rect x="10" y="48" width="98" height="12" rx="2" fill="url(#vramGradient80)"/>
-    <text x="70" y="57" textAnchor="middle" fill="#fafafa" fontSize="9" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      82% VRAM
-    </text>
-    
-    <rect x="10" y="70" width="120" height="18" rx="4" fill="#14b8a6" opacity="0.15"/>
-    <text x="70" y="81" textAnchor="middle" fill="#14b8a6" fontSize="10" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      CodeLlama-13B
-    </text>
-  </g>
-  
-  {/* Worker 6: Phi-3-Mini (78% VRAM) */}
-  <g transform="translate(410, 440)" filter="url(#dropShadow)">
-    <rect width="140" height="95" rx="8" fill="#18181b" stroke="#27272a" strokeWidth="2" strokeDasharray="4,4"/>
-    <text x="10" y="18" fill="#fafafa" fontSize="11" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Worker Process
-    </text>
-    <rect x="10" y="28" width="20" height="12" rx="2" fill="#14b8a6" opacity="0.3"/>
-    <rect x="12" y="30" width="4" height="8" rx="1" fill="#14b8a6"/>
-    <rect x="18" y="30" width="4" height="8" rx="1" fill="#14b8a6"/>
-    <rect x="24" y="30" width="4" height="8" rx="1" fill="#14b8a6"/>
-    
-    <rect x="10" y="48" width="120" height="12" rx="2" fill="#27272a"/>
-    <rect x="10" y="48" width="94" height="12" rx="2" fill="url(#vramGradient80)"/>
-    <text x="70" y="57" textAnchor="middle" fill="#fafafa" fontSize="9" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      78% VRAM
-    </text>
-    
-    <rect x="10" y="70" width="120" height="18" rx="4" fill="#14b8a6" opacity="0.15"/>
-    <text x="70" y="81" textAnchor="middle" fill="#14b8a6" fontSize="10" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif">
-      Phi-3-Mini
-    </text>
-  </g>
-  
-  {/* PHASE 5: VERTICAL ROUTING ARROWS */}
-  {/* Down arrows from protocol layer to workers */}
-  <path d="M 305,267 L 140,315" stroke="#14b8a6" strokeWidth="2" markerEnd="url(#arrowTeal)" opacity="0.6"/>
-  <path d="M 460,267 L 310,315" stroke="#14b8a6" strokeWidth="2" markerEnd="url(#arrowTeal)" opacity="0.6"/>
-  <path d="M 615,267 L 480,315" stroke="#14b8a6" strokeWidth="2" markerEnd="url(#arrowTeal)" opacity="0.6"/>
-  
-  {/* Up arrows from workers back to protocol layer */}
-  <path d="M 140,315 L 275,267" stroke="#71717a" strokeWidth="1.5" markerEnd="url(#arrowGray)" opacity="0.4"/>
-  <path d="M 310,315 L 430,267" stroke="#71717a" strokeWidth="1.5" markerEnd="url(#arrowGray)" opacity="0.4"/>
-  <path d="M 480,315 L 585,267" stroke="#71717a" strokeWidth="1.5" markerEnd="url(#arrowGray)" opacity="0.4"/>
-  
-  {/* PHASE 6: SHUTDOWN SEQUENCE */}
-  <g transform="translate(650, 340)">
-    <text x="0" y="0" fill="#71717a" fontSize="11" fontWeight="600" fontFamily="system-ui, -apple-system, sans-serif" letterSpacing="0.05em">
-      GRACEFUL SHUTDOWN
-    </text>
-    
-    {/* Step 1 */}
-    <g transform="translate(0, 20)">
-      <circle cx="12" cy="12" r="12" fill="#14b8a6" opacity="0.2" stroke="#14b8a6" strokeWidth="2"/>
-      <text x="12" y="17" textAnchor="middle" fill="#14b8a6" fontSize="12" fontWeight="700" fontFamily="system-ui, -apple-system, sans-serif">
-        1
+
+        {/* Gradients */}
+        <radialGradient id="amberGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+        </radialGradient>
+
+        <radialGradient id="tealGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#14b8a6" stopOpacity="0" />
+        </radialGradient>
+
+        <radialGradient id="emeraldGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+        </radialGradient>
+
+        <linearGradient id="vramGradient80" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#14b8a6" stopOpacity="1" />
+          <stop offset="80%" stopColor="#14b8a6" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#71717a" stopOpacity="0.2" />
+        </linearGradient>
+
+        <linearGradient id="vramGradient85" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#14b8a6" stopOpacity="1" />
+          <stop offset="85%" stopColor="#14b8a6" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#71717a" stopOpacity="0.2" />
+        </linearGradient>
+
+        <linearGradient id="vramGradient90" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#f59e0b" stopOpacity="1" />
+          <stop offset="90%" stopColor="#f59e0b" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#71717a" stopOpacity="0.2" />
+        </linearGradient>
+
+        <linearGradient id="vramGradient95" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#ef4444" stopOpacity="1" />
+          <stop offset="95%" stopColor="#ef4444" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#71717a" stopOpacity="0.2" />
+        </linearGradient>
+
+        {/* Drop Shadow Filter */}
+        <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+          <feOffset dx="0" dy="2" result="offsetblur" />
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="0.3" />
+          </feComponentTransfer>
+          <feMerge>
+            <feMergeNode />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+
+        {/* Arrow Markers */}
+        <marker
+          id="arrowTeal"
+          markerWidth="6"
+          markerHeight="6"
+          refX="5"
+          refY="3"
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <path d="M0,0 L0,6 L6,3 z" fill="#14b8a6" />
+        </marker>
+
+        <marker
+          id="arrowAmber"
+          markerWidth="6"
+          markerHeight="6"
+          refX="5"
+          refY="3"
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <path d="M0,0 L0,6 L6,3 z" fill="#f59e0b" />
+        </marker>
+
+        <marker
+          id="arrowGray"
+          markerWidth="6"
+          markerHeight="6"
+          refX="5"
+          refY="3"
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <path d="M0,0 L0,6 L6,3 z" fill="#71717a" />
+        </marker>
+      </defs>
+
+      {/* Background */}
+      <rect width="920" height="560" fill="#0a0a0a" />
+
+      {/* PHASE 2: CONTROL PLANE HEXAGONS */}
+      {/* Left Hexagon: Rhai Policy Engine */}
+      <g transform="translate(150, 100)" filter="url(#dropShadow)">
+        <circle cx="0" cy="0" r="55" fill="url(#amberGlow)" />
+        <path
+          d="M 0,-45 L 39,-22.5 L 39,22.5 L 0,45 L -39,22.5 L -39,-22.5 Z"
+          fill="#18181b"
+          stroke="#f59e0b"
+          strokeWidth="2"
+        />
+        <text
+          x="0"
+          y="-5"
+          textAnchor="middle"
+          fill="#fafafa"
+          fontSize="13"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Rhai Policy
+        </text>
+        <text
+          x="0"
+          y="10"
+          textAnchor="middle"
+          fill="#fafafa"
+          fontSize="13"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Engine
+        </text>
+        <text
+          x="0"
+          y="30"
+          textAnchor="middle"
+          fill="#a1a1aa"
+          fontSize="10"
+          fontWeight="500"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Routing Logic
+        </text>
+      </g>
+
+      {/* Center Hexagon: Request Scheduler */}
+      <g transform="translate(460, 100)" filter="url(#dropShadow)">
+        <circle cx="0" cy="0" r="55" fill="url(#tealGlow)" />
+        <path
+          d="M 0,-45 L 39,-22.5 L 39,22.5 L 0,45 L -39,22.5 L -39,-22.5 Z"
+          fill="#18181b"
+          stroke="#14b8a6"
+          strokeWidth="2"
+        />
+        <text
+          x="0"
+          y="-5"
+          textAnchor="middle"
+          fill="#fafafa"
+          fontSize="13"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Request
+        </text>
+        <text
+          x="0"
+          y="10"
+          textAnchor="middle"
+          fill="#fafafa"
+          fontSize="13"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Scheduler
+        </text>
+        <text
+          x="0"
+          y="30"
+          textAnchor="middle"
+          fill="#a1a1aa"
+          fontSize="10"
+          fontWeight="500"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Queue Manager
+        </text>
+      </g>
+
+      {/* Right Hexagon: Health Monitor */}
+      <g transform="translate(770, 100)" filter="url(#dropShadow)">
+        <circle cx="0" cy="0" r="55" fill="url(#emeraldGlow)" />
+        <path
+          d="M 0,-45 L 39,-22.5 L 39,22.5 L 0,45 L -39,22.5 L -39,-22.5 Z"
+          fill="#18181b"
+          stroke="#10b981"
+          strokeWidth="2"
+        />
+        <text
+          x="0"
+          y="-5"
+          textAnchor="middle"
+          fill="#fafafa"
+          fontSize="13"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Health
+        </text>
+        <text
+          x="0"
+          y="10"
+          textAnchor="middle"
+          fill="#fafafa"
+          fontSize="13"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Monitor
+        </text>
+        <text
+          x="0"
+          y="30"
+          textAnchor="middle"
+          fill="#a1a1aa"
+          fontSize="10"
+          fontWeight="500"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Heartbeat Check
+        </text>
+      </g>
+
+      {/* Bidirectional Arrows between Hexagons */}
+      <path
+        d="M 189,100 Q 305,80 421,100"
+        fill="none"
+        stroke="#f59e0b"
+        strokeWidth="2"
+        markerEnd="url(#arrowAmber)"
+        className="pulse-line"
+      />
+      <path
+        d="M 421,100 Q 305,120 189,100"
+        fill="none"
+        stroke="#f59e0b"
+        strokeWidth="2"
+        markerEnd="url(#arrowAmber)"
+        className="pulse-line"
+        style={{ animationDelay: '1s' }}
+      />
+
+      <path
+        d="M 499,100 Q 590,80 731,100"
+        fill="none"
+        stroke="#14b8a6"
+        strokeWidth="2"
+        markerEnd="url(#arrowTeal)"
+        className="pulse-line"
+        style={{ animationDelay: '0.5s' }}
+      />
+      <path
+        d="M 731,100 Q 590,120 499,100"
+        fill="none"
+        stroke="#14b8a6"
+        strokeWidth="2"
+        markerEnd="url(#arrowTeal)"
+        className="pulse-line"
+        style={{ animationDelay: '1.5s' }}
+      />
+
+      {/* PHASE 3: PROTOCOL LAYER */}
+      <line x1="60" y1="220" x2="860" y2="220" stroke="#27272a" strokeWidth="2" />
+      <text
+        x="460"
+        y="210"
+        textAnchor="middle"
+        fill="#71717a"
+        fontSize="12"
+        fontWeight="600"
+        fontFamily="system-ui, -apple-system, sans-serif"
+        letterSpacing="0.05em"
+      >
+        PROTOCOL LAYER
       </text>
-      <text x="32" y="17" fill="#fafafa" fontSize="11" fontWeight="500" fontFamily="system-ui, -apple-system, sans-serif">
-        Stop new requests
-      </text>
-    </g>
-    
-    <line x1="12" y1="44" x2="12" y2="60" stroke="#14b8a6" strokeWidth="2" markerEnd="url(#arrowTeal)"/>
-    
-    {/* Step 2 */}
-    <g transform="translate(0, 60)">
-      <circle cx="12" cy="12" r="12" fill="#f59e0b" opacity="0.2" stroke="#f59e0b" strokeWidth="2"/>
-      <text x="12" y="17" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="700" fontFamily="system-ui, -apple-system, sans-serif">
-        2
-      </text>
-      <text x="32" y="17" fill="#fafafa" fontSize="11" fontWeight="500" fontFamily="system-ui, -apple-system, sans-serif">
-        Drain active tasks
-      </text>
-    </g>
-    
-    <line x1="12" y1="84" x2="12" y2="100" stroke="#f59e0b" strokeWidth="2" markerEnd="url(#arrowAmber)"/>
-    
-    {/* Step 3 */}
-    <g transform="translate(0, 100)">
-      <circle cx="12" cy="12" r="12" fill="#10b981" opacity="0.2" stroke="#10b981" strokeWidth="2"/>
-      <text x="12" y="17" textAnchor="middle" fill="#10b981" fontSize="12" fontWeight="700" fontFamily="system-ui, -apple-system, sans-serif">
-        3
-      </text>
-      <text x="32" y="17" fill="#fafafa" fontSize="11" fontWeight="500" fontFamily="system-ui, -apple-system, sans-serif">
-        Release VRAM
-      </text>
-    </g>
-    
-    {/* Annotation */}
-    <text x="0" y="140" fill="#71717a" fontSize="10" fontStyle="italic" fontFamily="system-ui, -apple-system, sans-serif">
-      Clean VRAM Release
-    </text>
-  </g>
+
+      {/* Protocol Badges */}
+      <g transform="translate(260, 235)">
+        <rect width="90" height="32" rx="6" fill="#18181b" stroke="#27272a" strokeWidth="1.5" />
+        <text
+          x="45"
+          y="20"
+          textAnchor="middle"
+          fill="#fafafa"
+          fontSize="12"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          SSE
+        </text>
+      </g>
+
+      <g transform="translate(415, 235)">
+        <rect width="90" height="32" rx="6" fill="#18181b" stroke="#27272a" strokeWidth="1.5" />
+        <text
+          x="45"
+          y="20"
+          textAnchor="middle"
+          fill="#fafafa"
+          fontSize="12"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          JSON-RPC
+        </text>
+      </g>
+
+      <g transform="translate(570, 235)">
+        <rect width="90" height="32" rx="6" fill="#18181b" stroke="#27272a" strokeWidth="1.5" />
+        <text
+          x="45"
+          y="20"
+          textAnchor="middle"
+          fill="#fafafa"
+          fontSize="12"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Binary
+        </text>
+      </g>
+
+      {/* PHASE 4: WORKER POOL GRID */}
+      {/* Worker 1: Llama-3-70B (80% VRAM) */}
+      <g transform="translate(70, 320)" filter="url(#dropShadow)">
+        <rect width="140" height="95" rx="8" fill="#18181b" stroke="#27272a" strokeWidth="2" strokeDasharray="4,4" />
+        <text
+          x="10"
+          y="18"
+          fill="#fafafa"
+          fontSize="11"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Worker Process
+        </text>
+        {/* GPU Icon */}
+        <rect x="10" y="28" width="20" height="12" rx="2" fill="#14b8a6" opacity="0.3" />
+        <rect x="12" y="30" width="4" height="8" rx="1" fill="#14b8a6" />
+        <rect x="18" y="30" width="4" height="8" rx="1" fill="#14b8a6" />
+        <rect x="24" y="30" width="4" height="8" rx="1" fill="#14b8a6" />
+
+        {/* VRAM Gauge */}
+        <rect x="10" y="48" width="120" height="12" rx="2" fill="#27272a" />
+        <rect x="10" y="48" width="96" height="12" rx="2" fill="url(#vramGradient80)" />
+        <text
+          x="70"
+          y="57"
+          textAnchor="middle"
+          fill="#fafafa"
+          fontSize="9"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          80% VRAM
+        </text>
+
+        {/* Model Tag */}
+        <rect x="10" y="70" width="120" height="18" rx="4" fill="#14b8a6" opacity="0.15" />
+        <text
+          x="70"
+          y="81"
+          textAnchor="middle"
+          fill="#14b8a6"
+          fontSize="10"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Llama-3-70B
+        </text>
+      </g>
+
+      {/* Worker 2: Mistral-7B (85% VRAM) */}
+      <g transform="translate(240, 320)" filter="url(#dropShadow)">
+        <rect width="140" height="95" rx="8" fill="#18181b" stroke="#27272a" strokeWidth="2" strokeDasharray="4,4" />
+        <text
+          x="10"
+          y="18"
+          fill="#fafafa"
+          fontSize="11"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Worker Process
+        </text>
+        <rect x="10" y="28" width="20" height="12" rx="2" fill="#14b8a6" opacity="0.3" />
+        <rect x="12" y="30" width="4" height="8" rx="1" fill="#14b8a6" />
+        <rect x="18" y="30" width="4" height="8" rx="1" fill="#14b8a6" />
+        <rect x="24" y="30" width="4" height="8" rx="1" fill="#14b8a6" />
+
+        <rect x="10" y="48" width="120" height="12" rx="2" fill="#27272a" />
+        <rect x="10" y="48" width="102" height="12" rx="2" fill="url(#vramGradient85)" />
+        <text
+          x="70"
+          y="57"
+          textAnchor="middle"
+          fill="#fafafa"
+          fontSize="9"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          85% VRAM
+        </text>
+
+        <rect x="10" y="70" width="120" height="18" rx="4" fill="#14b8a6" opacity="0.15" />
+        <text
+          x="70"
+          y="81"
+          textAnchor="middle"
+          fill="#14b8a6"
+          fontSize="10"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Mistral-7B
+        </text>
+      </g>
+
+      {/* Worker 3: Gemma-2-9B (90% VRAM) */}
+      <g transform="translate(410, 320)" filter="url(#dropShadow)">
+        <rect width="140" height="95" rx="8" fill="#18181b" stroke="#27272a" strokeWidth="2" strokeDasharray="4,4" />
+        <text
+          x="10"
+          y="18"
+          fill="#fafafa"
+          fontSize="11"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Worker Process
+        </text>
+        <rect x="10" y="28" width="20" height="12" rx="2" fill="#f59e0b" opacity="0.3" />
+        <rect x="12" y="30" width="4" height="8" rx="1" fill="#f59e0b" />
+        <rect x="18" y="30" width="4" height="8" rx="1" fill="#f59e0b" />
+        <rect x="24" y="30" width="4" height="8" rx="1" fill="#f59e0b" />
+
+        <rect x="10" y="48" width="120" height="12" rx="2" fill="#27272a" />
+        <rect x="10" y="48" width="108" height="12" rx="2" fill="url(#vramGradient90)" />
+        <text
+          x="70"
+          y="57"
+          textAnchor="middle"
+          fill="#fafafa"
+          fontSize="9"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          90% VRAM
+        </text>
+
+        <rect x="10" y="70" width="120" height="18" rx="4" fill="#f59e0b" opacity="0.15" />
+        <text
+          x="70"
+          y="81"
+          textAnchor="middle"
+          fill="#f59e0b"
+          fontSize="10"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Gemma-2-9B
+        </text>
+      </g>
+
+      {/* Worker 4: Qwen-14B (95% VRAM) */}
+      <g transform="translate(70, 440)" filter="url(#dropShadow)">
+        <rect width="140" height="95" rx="8" fill="#18181b" stroke="#27272a" strokeWidth="2" strokeDasharray="4,4" />
+        <text
+          x="10"
+          y="18"
+          fill="#fafafa"
+          fontSize="11"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Worker Process
+        </text>
+        <rect x="10" y="28" width="20" height="12" rx="2" fill="#ef4444" opacity="0.3" />
+        <rect x="12" y="30" width="4" height="8" rx="1" fill="#ef4444" />
+        <rect x="18" y="30" width="4" height="8" rx="1" fill="#ef4444" />
+        <rect x="24" y="30" width="4" height="8" rx="1" fill="#ef4444" />
+
+        <rect x="10" y="48" width="120" height="12" rx="2" fill="#27272a" />
+        <rect x="10" y="48" width="114" height="12" rx="2" fill="url(#vramGradient95)" />
+        <text
+          x="70"
+          y="57"
+          textAnchor="middle"
+          fill="#fafafa"
+          fontSize="9"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          95% VRAM
+        </text>
+
+        <rect x="10" y="70" width="120" height="18" rx="4" fill="#ef4444" opacity="0.15" />
+        <text
+          x="70"
+          y="81"
+          textAnchor="middle"
+          fill="#ef4444"
+          fontSize="10"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Qwen-14B
+        </text>
+      </g>
+
+      {/* Worker 5: CodeLlama-13B (82% VRAM) */}
+      <g transform="translate(240, 440)" filter="url(#dropShadow)">
+        <rect width="140" height="95" rx="8" fill="#18181b" stroke="#27272a" strokeWidth="2" strokeDasharray="4,4" />
+        <text
+          x="10"
+          y="18"
+          fill="#fafafa"
+          fontSize="11"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Worker Process
+        </text>
+        <rect x="10" y="28" width="20" height="12" rx="2" fill="#14b8a6" opacity="0.3" />
+        <rect x="12" y="30" width="4" height="8" rx="1" fill="#14b8a6" />
+        <rect x="18" y="30" width="4" height="8" rx="1" fill="#14b8a6" />
+        <rect x="24" y="30" width="4" height="8" rx="1" fill="#14b8a6" />
+
+        <rect x="10" y="48" width="120" height="12" rx="2" fill="#27272a" />
+        <rect x="10" y="48" width="98" height="12" rx="2" fill="url(#vramGradient80)" />
+        <text
+          x="70"
+          y="57"
+          textAnchor="middle"
+          fill="#fafafa"
+          fontSize="9"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          82% VRAM
+        </text>
+
+        <rect x="10" y="70" width="120" height="18" rx="4" fill="#14b8a6" opacity="0.15" />
+        <text
+          x="70"
+          y="81"
+          textAnchor="middle"
+          fill="#14b8a6"
+          fontSize="10"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          CodeLlama-13B
+        </text>
+      </g>
+
+      {/* Worker 6: Phi-3-Mini (78% VRAM) */}
+      <g transform="translate(410, 440)" filter="url(#dropShadow)">
+        <rect width="140" height="95" rx="8" fill="#18181b" stroke="#27272a" strokeWidth="2" strokeDasharray="4,4" />
+        <text
+          x="10"
+          y="18"
+          fill="#fafafa"
+          fontSize="11"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Worker Process
+        </text>
+        <rect x="10" y="28" width="20" height="12" rx="2" fill="#14b8a6" opacity="0.3" />
+        <rect x="12" y="30" width="4" height="8" rx="1" fill="#14b8a6" />
+        <rect x="18" y="30" width="4" height="8" rx="1" fill="#14b8a6" />
+        <rect x="24" y="30" width="4" height="8" rx="1" fill="#14b8a6" />
+
+        <rect x="10" y="48" width="120" height="12" rx="2" fill="#27272a" />
+        <rect x="10" y="48" width="94" height="12" rx="2" fill="url(#vramGradient80)" />
+        <text
+          x="70"
+          y="57"
+          textAnchor="middle"
+          fill="#fafafa"
+          fontSize="9"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          78% VRAM
+        </text>
+
+        <rect x="10" y="70" width="120" height="18" rx="4" fill="#14b8a6" opacity="0.15" />
+        <text
+          x="70"
+          y="81"
+          textAnchor="middle"
+          fill="#14b8a6"
+          fontSize="10"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Phi-3-Mini
+        </text>
+      </g>
+
+      {/* PHASE 5: VERTICAL ROUTING ARROWS */}
+      {/* Down arrows from protocol layer to workers */}
+      <path d="M 305,267 L 140,315" stroke="#14b8a6" strokeWidth="2" markerEnd="url(#arrowTeal)" opacity="0.6" />
+      <path d="M 460,267 L 310,315" stroke="#14b8a6" strokeWidth="2" markerEnd="url(#arrowTeal)" opacity="0.6" />
+      <path d="M 615,267 L 480,315" stroke="#14b8a6" strokeWidth="2" markerEnd="url(#arrowTeal)" opacity="0.6" />
+
+      {/* Up arrows from workers back to protocol layer */}
+      <path d="M 140,315 L 275,267" stroke="#71717a" strokeWidth="1.5" markerEnd="url(#arrowGray)" opacity="0.4" />
+      <path d="M 310,315 L 430,267" stroke="#71717a" strokeWidth="1.5" markerEnd="url(#arrowGray)" opacity="0.4" />
+      <path d="M 480,315 L 585,267" stroke="#71717a" strokeWidth="1.5" markerEnd="url(#arrowGray)" opacity="0.4" />
+
+      {/* PHASE 6: SHUTDOWN SEQUENCE */}
+      <g transform="translate(650, 340)">
+        <text
+          x="0"
+          y="0"
+          fill="#71717a"
+          fontSize="11"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+          letterSpacing="0.05em"
+        >
+          GRACEFUL SHUTDOWN
+        </text>
+
+        {/* Step 1 */}
+        <g transform="translate(0, 20)">
+          <circle cx="12" cy="12" r="12" fill="#14b8a6" opacity="0.2" stroke="#14b8a6" strokeWidth="2" />
+          <text
+            x="12"
+            y="17"
+            textAnchor="middle"
+            fill="#14b8a6"
+            fontSize="12"
+            fontWeight="700"
+            fontFamily="system-ui, -apple-system, sans-serif"
+          >
+            1
+          </text>
+          <text
+            x="32"
+            y="17"
+            fill="#fafafa"
+            fontSize="11"
+            fontWeight="500"
+            fontFamily="system-ui, -apple-system, sans-serif"
+          >
+            Stop new requests
+          </text>
+        </g>
+
+        <line x1="12" y1="44" x2="12" y2="60" stroke="#14b8a6" strokeWidth="2" markerEnd="url(#arrowTeal)" />
+
+        {/* Step 2 */}
+        <g transform="translate(0, 60)">
+          <circle cx="12" cy="12" r="12" fill="#f59e0b" opacity="0.2" stroke="#f59e0b" strokeWidth="2" />
+          <text
+            x="12"
+            y="17"
+            textAnchor="middle"
+            fill="#f59e0b"
+            fontSize="12"
+            fontWeight="700"
+            fontFamily="system-ui, -apple-system, sans-serif"
+          >
+            2
+          </text>
+          <text
+            x="32"
+            y="17"
+            fill="#fafafa"
+            fontSize="11"
+            fontWeight="500"
+            fontFamily="system-ui, -apple-system, sans-serif"
+          >
+            Drain active tasks
+          </text>
+        </g>
+
+        <line x1="12" y1="84" x2="12" y2="100" stroke="#f59e0b" strokeWidth="2" markerEnd="url(#arrowAmber)" />
+
+        {/* Step 3 */}
+        <g transform="translate(0, 100)">
+          <circle cx="12" cy="12" r="12" fill="#10b981" opacity="0.2" stroke="#10b981" strokeWidth="2" />
+          <text
+            x="12"
+            y="17"
+            textAnchor="middle"
+            fill="#10b981"
+            fontSize="12"
+            fontWeight="700"
+            fontFamily="system-ui, -apple-system, sans-serif"
+          >
+            3
+          </text>
+          <text
+            x="32"
+            y="17"
+            fill="#fafafa"
+            fontSize="11"
+            fontWeight="500"
+            fontFamily="system-ui, -apple-system, sans-serif"
+          >
+            Release VRAM
+          </text>
+        </g>
+
+        {/* Annotation */}
+        <text
+          x="0"
+          y="140"
+          fill="#71717a"
+          fontSize="10"
+          fontStyle="italic"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          Clean VRAM Release
+        </text>
+      </g>
     </svg>
   )
 }

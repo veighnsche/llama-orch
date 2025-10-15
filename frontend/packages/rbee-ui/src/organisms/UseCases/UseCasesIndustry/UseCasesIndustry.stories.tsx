@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { UseCasesIndustry } from './UseCasesIndustry'
 
 const meta = {
-	title: 'Organisms/UseCases/UseCasesIndustry',
-	component: UseCasesIndustry,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/UseCases/UseCasesIndustry',
+  component: UseCasesIndustry,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The UseCasesIndustry section showcases 6 industry-specific use cases (Financial Services, Healthcare, Legal, Government, Education, Manufacturing) in a 3-column grid layout. Each industry card highlights compliance requirements (GDPR, HIPAA, ITAR, FERPA) and specific use cases for that sector. Includes filter navigation and hero visual.
 
@@ -89,10 +89,10 @@ import { UseCasesIndustry } from '@rbee/ui/organisms/UseCases/UseCasesIndustry'
 - **Screen Readers**: Industry details and compliance badges are properly announced
 - **Focus States**: Visible focus indicators on interactive elements
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof UseCasesIndustry>
 
 export default meta

@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { ProvidersMarketplace } from './ProvidersMarketplace'
 
 const meta = {
-	title: 'Organisms/Providers/ProvidersMarketplace',
-	component: ProvidersMarketplace,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Providers/ProvidersMarketplace',
+  component: ProvidersMarketplace,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The ProvidersMarketplace section explains how the rbee marketplace works from the provider perspective. It features four key marketplace benefits (Dynamic Pricing, Growing Demand, Global Reach, Fair Commission) and detailed marketplace features with commission structure breakdown.
 
@@ -87,10 +87,10 @@ import { ProvidersMarketplace } from '@rbee/ui/organisms/Providers/ProvidersMark
 - **Keyboard Navigation**: All interactive elements are keyboard accessible
 - **Color Contrast**: Meets WCAG AA standards
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof ProvidersMarketplace>
 
 export default meta

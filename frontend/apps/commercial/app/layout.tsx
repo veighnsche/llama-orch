@@ -11,28 +11,28 @@ import { Suspense } from 'react'
 import { ThemeProvider } from '@/components/providers/ThemeProvider/ThemeProvider'
 
 export const metadata: Metadata = {
-	title: 'rbee - Build with AI. Own Your Infrastructure.',
-	description:
-		'Open-source AI orchestration platform. Orchestrate inference across your home network hardware with zero ongoing costs. OpenAI-compatible API.',
-	generator: 'v0.app',
+  title: 'rbee - Build with AI. Own Your Infrastructure.',
+  description:
+    'Open-source AI orchestration platform. Orchestrate inference across your home network hardware with zero ongoing costs. OpenAI-compatible API.',
+  generator: 'v0.app',
 }
 
 export default function RootLayout({
-	children,
+  children,
 }: Readonly<{
-	children: React.ReactNode
+  children: React.ReactNode
 }>) {
-	return (
-		<html lang="en" suppressHydrationWarning>
-			<body className="font-serif">
-				<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-					<Navigation />
-					<main id="main">
-						<Suspense fallback={null}>{children}</Suspense>
-					</main>
-					<Footer />
-				</ThemeProvider>
-			</body>
-		</html>
-	)
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body className="font-serif">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <Navigation />
+          <main id="main">
+            <Suspense fallback={null}>{children}</Suspense>
+          </main>
+          <Footer />
+        </ThemeProvider>
+      </body>
+    </html>
+  )
 }

@@ -1,4 +1,4 @@
 export default {
-	overview: 'Overview',
-	deployment: 'Deployment',
+  overview: 'Overview',
+  deployment: 'Deployment',
 }

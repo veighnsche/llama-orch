@@ -1,2 +1,2 @@
-export { KeyValuePair } from './KeyValuePair'
 export type { KeyValuePairProps } from './KeyValuePair'
+export { KeyValuePair } from './KeyValuePair'

@@ -4,13 +4,13 @@ import { PricingHero } from './PricingHero'
 // Created by: TEAM-004
 
 const meta = {
-	title: 'Organisms/Pricing/PricingHero',
-	component: PricingHero,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Pricing/PricingHero',
+  component: PricingHero,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The PricingHero is the primary landing section for the Pricing page, emphasizing transparent pricing, no feature gates, and "Start Free, Scale When Ready" messaging. Features a split layout with messaging on the left and a pricing scale visual on the right.
 
@@ -118,44 +118,44 @@ import { PricingHero } from '@rbee/ui/organisms/Pricing/PricingHero'
 - **Lead qualification**: Capture use case, team size, infrastructure details
 - **Proof points**: No feature gates, full orchestrator on every tier, OpenAI-compatible API, cancel anytime
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof PricingHero>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const PricingPageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default pricing hero as seen on /pricing page. Emphasizes "Start Free. Scale When Ready." messaging with transparent pricing philosophy: full orchestrator on every tier, no feature gates, no artificial limits, OpenAI-compatible API, and cancel anytime. Includes PricingScaleVisual illustration showing pricing scales from single-GPU homelab to multi-node server setups.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default pricing hero as seen on /pricing page. Emphasizes "Start Free. Scale When Ready." messaging with transparent pricing philosophy: full orchestrator on every tier, no feature gates, no artificial limits, OpenAI-compatible API, and cancel anytime. Includes PricingScaleVisual illustration showing pricing scales from single-GPU homelab to multi-node server setups.',
+      },
+    },
+  },
 }
 
 export const ValueFirst: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant emphasizing value over price. This version would lead with: "Save 60-80% at scale vs. cloud APIs", "Predictable costs (no surprise bills)", "Full orchestrator on every tier (no feature gates)", and "OpenAI-compatible API (drop-in replacement)". Includes cost comparison calculator showing savings vs. OpenAI/Anthropic at different usage levels. Ideal for cost-conscious buyers or those burned by cloud API bills.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant emphasizing value over price. This version would lead with: "Save 60-80% at scale vs. cloud APIs", "Predictable costs (no surprise bills)", "Full orchestrator on every tier (no feature gates)", and "OpenAI-compatible API (drop-in replacement)". Includes cost comparison calculator showing savings vs. OpenAI/Anthropic at different usage levels. Ideal for cost-conscious buyers or those burned by cloud API bills.',
+      },
+    },
+  },
 }
 
 export const TransparencyFirst: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant emphasizing pricing transparency. This version would lead with: "No hidden fees", "No surprise charges", "No feature gates (full orchestrator on every tier)", "No long-term contracts (cancel anytime)", and "Open-source foundation (no vendor lock-in)". Includes detailed pricing breakdown showing all costs upfront (infrastructure, support, licenses). Ideal for buyers skeptical of SaaS pricing or those burned by hidden fees.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant emphasizing pricing transparency. This version would lead with: "No hidden fees", "No surprise charges", "No feature gates (full orchestrator on every tier)", "No long-term contracts (cancel anytime)", and "Open-source foundation (no vendor lock-in)". Includes detailed pricing breakdown showing all costs upfront (infrastructure, support, licenses). Ideal for buyers skeptical of SaaS pricing or those burned by hidden fees.',
+      },
+    },
+  },
 }

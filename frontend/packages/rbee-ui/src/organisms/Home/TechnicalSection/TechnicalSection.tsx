@@ -1,67 +1,62 @@
-import { Badge } from "@rbee/ui/atoms/Badge";
-import { Button } from "@rbee/ui/atoms/Button";
-import { Card } from "@rbee/ui/atoms/Card";
-import {
-  SectionContainer,
-  TechnologyStack,
-  ArchitectureHighlights,
-  CoverageProgressBar,
-} from "@rbee/ui/molecules";
-import type { TechItem, ArchitectureHighlight } from "@rbee/ui/molecules";
-import { RbeeArch, GitHubIcon } from "@rbee/ui/icons";
-import { Terminal } from "lucide-react";
-import Link from "next/link";
+import { Badge } from '@rbee/ui/atoms/Badge'
+import { Button } from '@rbee/ui/atoms/Button'
+import { Card } from '@rbee/ui/atoms/Card'
+import { GitHubIcon, RbeeArch } from '@rbee/ui/icons'
+import type { ArchitectureHighlight, TechItem } from '@rbee/ui/molecules'
+import { ArchitectureHighlights, CoverageProgressBar, SectionContainer, TechnologyStack } from '@rbee/ui/molecules'
+import { Terminal } from 'lucide-react'
+import Link from 'next/link'
 
 const techStack: TechItem[] = [
   {
-    name: "Rust",
-    description: "Performance + memory safety.",
-    ariaLabel: "Tech: Rust",
+    name: 'Rust',
+    description: 'Performance + memory safety.',
+    ariaLabel: 'Tech: Rust',
   },
   {
-    name: "Candle ML",
-    description: "Rust-native inference.",
-    ariaLabel: "Tech: Candle ML",
+    name: 'Candle ML',
+    description: 'Rust-native inference.',
+    ariaLabel: 'Tech: Candle ML',
   },
   {
-    name: "Rhai Scripting",
-    description: "Embedded, sandboxed policies.",
-    ariaLabel: "Tech: Rhai Scripting",
+    name: 'Rhai Scripting',
+    description: 'Embedded, sandboxed policies.',
+    ariaLabel: 'Tech: Rhai Scripting',
   },
   {
-    name: "SQLite",
-    description: "Embedded, zero-ops DB.",
-    ariaLabel: "Tech: SQLite",
+    name: 'SQLite',
+    description: 'Embedded, zero-ops DB.',
+    ariaLabel: 'Tech: SQLite',
   },
   {
-    name: "Axum + Vue.js",
-    description: "Async backend + modern UI.",
-    ariaLabel: "Tech: Axum + Vue.js",
+    name: 'Axum + Vue.js',
+    description: 'Async backend + modern UI.',
+    ariaLabel: 'Tech: Axum + Vue.js',
   },
-];
+]
 
 const architectureHighlights: ArchitectureHighlight[] = [
   {
-    title: "BDD-Driven Development",
-    details: ["42/62 scenarios passing (68% complete)", "Live CI coverage"],
+    title: 'BDD-Driven Development',
+    details: ['42/62 scenarios passing (68% complete)', 'Live CI coverage'],
   },
   {
-    title: "Cascading Shutdown Guarantee",
-    details: ["No orphaned processes. Clean VRAM lifecycle."],
+    title: 'Cascading Shutdown Guarantee',
+    details: ['No orphaned processes. Clean VRAM lifecycle.'],
   },
   {
-    title: "Process Isolation",
-    details: ["Worker-level sandboxes. Zero cross-leak."],
+    title: 'Process Isolation',
+    details: ['Worker-level sandboxes. Zero cross-leak.'],
   },
   {
-    title: "Protocol-Aware Orchestration",
-    details: ["SSE, JSON, binary protocols."],
+    title: 'Protocol-Aware Orchestration',
+    details: ['SSE, JSON, binary protocols.'],
   },
   {
-    title: "Smart/Dumb Separation",
-    details: ["Central brain, distributed execution."],
+    title: 'Smart/Dumb Separation',
+    details: ['Central brain, distributed execution.'],
   },
-];
+]
 
 export function TechnicalSection() {
   return (
@@ -78,12 +73,7 @@ export function TechnicalSection() {
           <ArchitectureHighlights highlights={architectureHighlights} />
 
           {/* BDD Coverage Progress Bar */}
-          <CoverageProgressBar
-            label="BDD Coverage"
-            passing={42}
-            total={62}
-            className="mt-6"
-          />
+          <CoverageProgressBar label="BDD Coverage" passing={42} total={62} className="mt-6" />
 
           {/* Architecture Diagram (Desktop Only) */}
           <RbeeArch
@@ -103,5 +93,5 @@ export function TechnicalSection() {
         </div>
       </div>
     </SectionContainer>
-  );
+  )
 }

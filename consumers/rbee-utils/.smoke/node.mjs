@@ -2,7 +2,7 @@
 import utils from '../dist/index.js'
 
 function assert(cond, msg) {
-	if (!cond) throw new Error(msg || 'assertion failed')
+  if (!cond) throw new Error(msg || 'assertion failed')
 }
 
 // fs.read_file_json canonical request
@@ -20,10 +20,10 @@ assert(pm.role === 'user' && pm.content === 'hello', 'prompt.message basic')
 
 // prompt.thread_json
 const pt = utils.prompt.thread_json({
-	items: [
-		{ role: 'system', source: { Text: 'a' }, dedent: false },
-		{ role: 'user', source: { Lines: ['b', 'c'] }, dedent: true },
-	],
+  items: [
+    { role: 'system', source: { Text: 'a' }, dedent: false },
+    { role: 'user', source: { Lines: ['b', 'c'] }, dedent: true },
+  ],
 })
 assert(pt.messages.length === 2, 'prompt.thread size')
 
@@ -38,9 +38,9 @@ assert(typeof p.temperature === 'number', 'params.define out')
 // llm.invoke — should throw typed unimplemented
 let threw = false
 try {
-	utils.llm.invoke_json({ messages: [{ role: 'user', content: 'hi' }], model: m, params: p })
+  utils.llm.invoke_json({ messages: [{ role: 'user', content: 'hi' }], model: m, params: p })
 } catch (e) {
-	threw = /unimplemented: llm\.invoke requires SDK wiring/.test(String(e && e.message))
+  threw = /unimplemented: llm\.invoke requires SDK wiring/.test(String(e && e.message))
 }
 assert(threw, 'llm.invoke should throw typed unimplemented')
 

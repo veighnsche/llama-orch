@@ -1,14 +1,14 @@
-import { defineConfig, devices } from '@playwright/experimental-ct-react';
+import { defineConfig, devices } from '@playwright/experimental-ct-react'
 
 /**
  * CRITICAL: DO NOT run `pnpm test:ct` with blocking=true!
  * It opens an interactive HTML report server that hangs.
- * 
+ *
  * CORRECT usage:
  * 1. Run in background: `pnpm test:ct &` (capture PID)
  * 2. Or run to file: `pnpm test:ct > test.log 2>&1`
  * 3. Then check results: `cat test-results/.last-run.json`
- * 
+ *
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
@@ -41,4 +41,4 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-});
+})

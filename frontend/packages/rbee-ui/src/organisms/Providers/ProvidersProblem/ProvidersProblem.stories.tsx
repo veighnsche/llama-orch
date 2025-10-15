@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { ProvidersProblem } from './ProvidersProblem'
 
 const meta = {
-	title: 'Organisms/Providers/ProvidersProblem',
-	component: ProvidersProblem,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Providers/ProvidersProblem',
+  component: ProvidersProblem,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The ProvidersProblem section articulates the pain points of GPU owners with idle hardware. It uses the shared ProblemSection component with provider-specific messaging focused on wasted investment, electricity costs, and missed earning opportunities.
 
@@ -86,10 +86,10 @@ import { ProvidersProblem } from '@rbee/ui/organisms/Providers/ProvidersProblem'
 - **Color Contrast**: Destructive tone meets WCAG AA standards
 - **Keyboard Navigation**: All CTAs are keyboard accessible
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof ProvidersProblem>
 
 export default meta
@@ -100,10 +100,10 @@ type Story = StoryObj<typeof meta>
  * Shows all three provider pain points with financial impact tags.
  */
 export const ProvidersPageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story: `Default ProvidersProblem as used on /gpu-providers page. Shows all three provider pain points with financial impact tags.
+  parameters: {
+    docs: {
+      description: {
+        story: `Default ProvidersProblem as used on /gpu-providers page. Shows all three provider pain points with financial impact tags.
 
 **Problem 1: Wasted Investment**
 - **Icon**: TrendingDown (red/destructive)
@@ -128,9 +128,9 @@ export const ProvidersPageDefault: Story = {
 - **Tag**: "Unrealized €50-200/mo"
 - **Target**: GPU owners who don't know about GPU rental marketplaces
 - **Why this pain point**: This addresses the opportunity cost of not participating in the GPU rental market. Developers rent GPU power every day (RunPod, Vast.ai, Lambda Labs). Your idle GPU could be earning €50-200/month. The copywriter chose "get paid automatically" to emphasize the passive income aspect—you don't have to do anything, the marketplace handles it. The tag "Unrealized €50-200/mo" quantifies the opportunity. This pain point was chosen last because it presents the solution—join the marketplace and start earning.`,
-			},
-		},
-	},
+      },
+    },
+  },
 }
 
 /**

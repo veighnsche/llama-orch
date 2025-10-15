@@ -5,18 +5,18 @@ import '@rbee/ui/styles.css'
 import 'nextra-theme-docs/style.css'
 
 export const metadata: Metadata = {
-	title: 'rbee Documentation',
-	description: 'Documentation for rbee - Private LLM Hosting in the Netherlands',
+  title: 'rbee Documentation',
+  description: 'Documentation for rbee - Private LLM Hosting in the Netherlands',
 }
 
 export default function RootLayout({
-	children,
+  children,
 }: Readonly<{
-	children: React.ReactNode
+  children: React.ReactNode
 }>) {
-	return (
-		<html lang="en" suppressHydrationWarning>
-			<body>{children}</body>
-		</html>
-	)
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body>{children}</body>
+    </html>
+  )
 }

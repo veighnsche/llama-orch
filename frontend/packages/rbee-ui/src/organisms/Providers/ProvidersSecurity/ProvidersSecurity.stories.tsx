@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { ProvidersSecurity } from './ProvidersSecurity'
 
 const meta = {
-	title: 'Organisms/Providers/ProvidersSecurity',
-	component: ProvidersSecurity,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Providers/ProvidersSecurity',
+  component: ProvidersSecurity,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The ProvidersSecurity section addresses provider security concerns with four key security features (Sandboxed Execution, Encrypted Communication, Malware Scanning, Hardware Protection) and a €1M insurance coverage ribbon. It uses a 2-column grid layout with emerald accent colors for trust signaling.
 
@@ -88,10 +88,10 @@ import { ProvidersSecurity } from '@rbee/ui/organisms/Providers/ProvidersSecurit
 - **Keyboard Navigation**: All interactive elements are keyboard accessible
 - **Color Contrast**: Emerald accent colors meet WCAG AA standards
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof ProvidersSecurity>
 
 export default meta

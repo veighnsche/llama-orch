@@ -3,14 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "sideEffects": [
-    "**/*.css",
-    "**/*.png",
-    "**/*.jpg",
-    "**/*.jpeg",
-    "**/*.webp",
-    "**/*.svg"
-  ],
+  "sideEffects": ["**/*.css", "**/*.png", "**/*.jpg", "**/*.jpeg", "**/*.webp", "**/*.svg"],
   "exports": {
     "./styles.css": "./dist/index.css",
     "./globals": "./src/tokens/globals.css",
@@ -30,10 +23,7 @@
     "./icons": "./src/icons/index.ts",
     "./icons/*": "./src/icons/*"
   },
-  "files": [
-    "src",
-    "dist"
-  ],
+  "files": ["src", "dist"],
   "scripts": {
     "build": "pnpm run build:styles && pnpm run build:components",
     "build:styles": "postcss ./src/tokens/globals.css -o ./dist/index.css",

@@ -1,103 +1,103 @@
 {
-	"required_metrics": [
-		{
-			"name": "tasks_enqueued_total",
-			"type": "counter",
-			"labels": ["engine", "engine_version", "pool_id", "replica_id", "priority"]
-		},
-		{
-			"name": "tasks_started_total",
-			"type": "counter",
-			"labels": ["engine", "engine_version", "pool_id", "replica_id", "priority"]
-		},
-		{
-			"name": "tasks_canceled_total",
-			"type": "counter",
-			"labels": ["engine", "engine_version", "pool_id", "replica_id", "reason"]
-		},
-		{
-			"name": "tasks_rejected_total",
-			"type": "counter",
-			"labels": ["engine", "reason"]
-		},
-		{
-			"name": "queue_depth",
-			"type": "gauge",
-			"labels": ["engine", "engine_version", "pool_id", "priority"]
-		},
-		{
-			"name": "kv_cache_usage_ratio",
-			"type": "gauge",
-			"labels": ["engine", "engine_version", "pool_id", "replica_id"]
-		},
-		{
-			"name": "gpu_utilization",
-			"type": "gauge",
-			"labels": ["engine", "engine_version", "pool_id", "replica_id", "device"]
-		},
-		{
-			"name": "vram_used_bytes",
-			"type": "gauge",
-			"labels": ["engine", "engine_version", "pool_id", "replica_id", "device"]
-		},
-		{
-			"name": "latency_first_token_ms",
-			"type": "histogram",
-			"labels": ["engine", "engine_version", "pool_id", "priority"]
-		},
-		{
-			"name": "latency_decode_ms",
-			"type": "histogram",
-			"labels": ["engine", "engine_version", "pool_id", "priority"]
-		},
-		{
-			"name": "tokens_in_total",
-			"type": "counter",
-			"labels": ["engine", "engine_version", "pool_id", "replica_id"]
-		},
-		{
-			"name": "tokens_out_total",
-			"type": "counter",
-			"labels": ["engine", "engine_version", "pool_id", "replica_id"]
-		},
-		{
-			"name": "admission_backpressure_events_total",
-			"type": "counter",
-			"labels": ["engine", "policy"]
-		},
-		{
-			"name": "catalog_verifications_total",
-			"type": "counter",
-			"labels": ["result", "reason", "engine"]
-		},
-		{
-			"name": "model_state",
-			"type": "gauge",
-			"labels": ["model_id", "state"]
-		},
-		{
-			"name": "placement_decisions_total",
-			"type": "counter",
-			"labels": ["outcome", "pinned", "fallback"]
-		},
-		{
-			"name": "placement_candidates_considered",
-			"type": "gauge",
-			"labels": []
-		}
-	],
-	"label_cardinality_budget": {
-		"engine": 4,
-		"engine_version": 64,
-		"pool_id": 256,
-		"replica_id": 1024,
-		"priority": 8,
-		"reason": 16,
-		"result": 4,
-		"state": 8,
-		"model_id": 1024,
-		"outcome": 4,
-		"pinned": 2,
-		"fallback": 2
-	}
+  "required_metrics": [
+    {
+      "name": "tasks_enqueued_total",
+      "type": "counter",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id", "priority"]
+    },
+    {
+      "name": "tasks_started_total",
+      "type": "counter",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id", "priority"]
+    },
+    {
+      "name": "tasks_canceled_total",
+      "type": "counter",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id", "reason"]
+    },
+    {
+      "name": "tasks_rejected_total",
+      "type": "counter",
+      "labels": ["engine", "reason"]
+    },
+    {
+      "name": "queue_depth",
+      "type": "gauge",
+      "labels": ["engine", "engine_version", "pool_id", "priority"]
+    },
+    {
+      "name": "kv_cache_usage_ratio",
+      "type": "gauge",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id"]
+    },
+    {
+      "name": "gpu_utilization",
+      "type": "gauge",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id", "device"]
+    },
+    {
+      "name": "vram_used_bytes",
+      "type": "gauge",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id", "device"]
+    },
+    {
+      "name": "latency_first_token_ms",
+      "type": "histogram",
+      "labels": ["engine", "engine_version", "pool_id", "priority"]
+    },
+    {
+      "name": "latency_decode_ms",
+      "type": "histogram",
+      "labels": ["engine", "engine_version", "pool_id", "priority"]
+    },
+    {
+      "name": "tokens_in_total",
+      "type": "counter",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id"]
+    },
+    {
+      "name": "tokens_out_total",
+      "type": "counter",
+      "labels": ["engine", "engine_version", "pool_id", "replica_id"]
+    },
+    {
+      "name": "admission_backpressure_events_total",
+      "type": "counter",
+      "labels": ["engine", "policy"]
+    },
+    {
+      "name": "catalog_verifications_total",
+      "type": "counter",
+      "labels": ["result", "reason", "engine"]
+    },
+    {
+      "name": "model_state",
+      "type": "gauge",
+      "labels": ["model_id", "state"]
+    },
+    {
+      "name": "placement_decisions_total",
+      "type": "counter",
+      "labels": ["outcome", "pinned", "fallback"]
+    },
+    {
+      "name": "placement_candidates_considered",
+      "type": "gauge",
+      "labels": []
+    }
+  ],
+  "label_cardinality_budget": {
+    "engine": 4,
+    "engine_version": 64,
+    "pool_id": 256,
+    "replica_id": 1024,
+    "priority": 8,
+    "reason": 16,
+    "result": 4,
+    "state": 8,
+    "model_id": 1024,
+    "outcome": 4,
+    "pinned": 2,
+    "fallback": 2
+  }
 }

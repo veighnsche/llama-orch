@@ -1,35 +1,35 @@
 {
-	"name": "@rbee/user-docs",
-	"version": "0.1.0",
-	"private": true,
-	"scripts": {
-		"dev": "next dev -p 3100",
-		"build": "next build",
-		"start": "next start",
-		"lint": "next lint",
-		"deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-		"preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-		"cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts"
-	},
-	"dependencies": {
-		"@opennextjs/cloudflare": "^1.10.1",
-		"@rbee/ui": "workspace:*",
-		"next": "15.5.5",
-		"nextra": "^4.6.0",
-		"nextra-theme-docs": "^4.6.0",
-		"react": "19.2.0",
-		"react-dom": "19.2.0"
-	},
-	"devDependencies": {
-		"@eslint/eslintrc": "^3.3.1",
-		"@tailwindcss/postcss": "^4.1.14",
-		"@types/node": "^24.7.2",
-		"@types/react": "^19.2.2",
-		"@types/react-dom": "^19.2.2",
-		"eslint": "^9.37.0",
-		"eslint-config-next": "15.5.5",
-		"tailwindcss": "^4.1.14",
-		"typescript": "^5.9.3",
-		"wrangler": "^4.43.0"
-	}
+  "name": "@rbee/user-docs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3100",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts"
+  },
+  "dependencies": {
+    "@opennextjs/cloudflare": "^1.10.1",
+    "@rbee/ui": "workspace:*",
+    "next": "15.5.5",
+    "nextra": "^4.6.0",
+    "nextra-theme-docs": "^4.6.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@tailwindcss/postcss": "^4.1.14",
+    "@types/node": "^24.7.2",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "eslint": "^9.37.0",
+    "eslint-config-next": "15.5.5",
+    "tailwindcss": "^4.1.14",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.43.0"
+  }
 }

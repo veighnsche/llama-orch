@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { ProvidersFeatures } from './ProvidersFeatures'
 
 const meta = {
-	title: 'Organisms/Providers/ProvidersFeatures',
-	component: ProvidersFeatures,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Providers/ProvidersFeatures',
+  component: ProvidersFeatures,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The ProvidersFeatures section showcases the professional-grade tools available to GPU providers for managing their fleet and maximizing earnings. It uses a tabbed interface with 6 feature categories, each with code examples and benefits.
 
@@ -89,10 +89,10 @@ import { ProvidersFeatures } from '@rbee/ui/organisms/Providers/ProvidersFeature
 - **Focus Management**: Focus moves to selected tab panel
 - **Screen Readers**: Tab labels and content are properly announced
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof ProvidersFeatures>
 
 export default meta

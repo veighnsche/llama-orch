@@ -4,13 +4,13 @@ import { EnterpriseSecurity } from './EnterpriseSecurity'
 // Created by: TEAM-004
 
 const meta = {
-	title: 'Organisms/Enterprise/EnterpriseSecurity',
-	component: EnterpriseSecurity,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Enterprise/EnterpriseSecurity',
+  component: EnterpriseSecurity,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The EnterpriseSecurity section presents six specialized security crates that harden every layer of the rbee platform. Uses a defense-in-depth approach with detailed security guarantees and quantifiable metrics.
 
@@ -122,44 +122,44 @@ import { EnterpriseSecurity } from '@rbee/ui/organisms/Enterprise/EnterpriseSecu
 - **Lead qualification**: Capture security requirements, threat model, compliance needs
 - **Proof points**: Quantifiable guarantees, specific threat prevention, compliance alignment
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof EnterpriseSecurity>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const EnterprisePageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default enterprise security section showing all six security crates: auth-min (Zero-Trust Authentication), audit-logging (Compliance Engine), input-validation (First Line of Defense), secrets-management (Credential Guardian), jwt-guardian (Token Lifecycle Manager), and deadline-propagation (Performance Enforcer). Includes security guarantees: <10% timing variance, 100% token fingerprinting, Zero memory leaks.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default enterprise security section showing all six security crates: auth-min (Zero-Trust Authentication), audit-logging (Compliance Engine), input-validation (First Line of Defense), secrets-management (Credential Guardian), jwt-guardian (Token Lifecycle Manager), and deadline-propagation (Performance Enforcer). Includes security guarantees: <10% timing variance, 100% token fingerprinting, Zero memory leaks.',
+      },
+    },
+  },
 }
 
 export const ZeroTrustFocus: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant emphasizing zero-trust architecture and authentication. This version would focus on: auth-min (constant-time comparison, token fingerprinting, bearer token parsing, bind policy enforcement), jwt-guardian (RS256/ES256 validation, clock-skew tolerance, revocation list, short-lived refresh tokens), and secrets-management (file-based loading, memory zeroization, permission validation). Ideal for enterprises with strong authentication requirements or zero-trust mandates.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant emphasizing zero-trust architecture and authentication. This version would focus on: auth-min (constant-time comparison, token fingerprinting, bearer token parsing, bind policy enforcement), jwt-guardian (RS256/ES256 validation, clock-skew tolerance, revocation list, short-lived refresh tokens), and secrets-management (file-based loading, memory zeroization, permission validation). Ideal for enterprises with strong authentication requirements or zero-trust mandates.',
+      },
+    },
+  },
 }
 
 export const IsolationFocus: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant emphasizing input validation and isolation. This version would focus on: input-validation (SQL injection prevention, command injection prevention, path traversal prevention, resource exhaustion prevention), secrets-management (credential isolation, memory zeroization), and deadline-propagation (resource exhaustion prevention, SLO protection). Ideal for enterprises with strong isolation requirements or those concerned about injection attacks.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant emphasizing input validation and isolation. This version would focus on: input-validation (SQL injection prevention, command injection prevention, path traversal prevention, resource exhaustion prevention), secrets-management (credential isolation, memory zeroization), and deadline-propagation (resource exhaustion prevention, SLO protection). Ideal for enterprises with strong isolation requirements or those concerned about injection attacks.',
+      },
+    },
+  },
 }

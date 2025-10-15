@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { ProvidersHero } from './ProvidersHero'
 
 const meta = {
-	title: 'Organisms/Providers/ProvidersHero',
-	component: ProvidersHero,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Providers/ProvidersHero',
+  component: ProvidersHero,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The ProvidersHero is the primary hero section for the GPU Providers page, targeting GPU owners who want to monetize their idle hardware. It features an earnings-focused value proposition, income statistics, and an interactive earnings dashboard visualization.
 
@@ -90,10 +90,10 @@ import { ProvidersHero } from '@rbee/ui/organisms/Providers/ProvidersHero'
 - **Color Contrast**: Meets WCAG AA standards in both themes
 - **Focus States**: Visible focus indicators on interactive elements
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof ProvidersHero>
 
 export default meta

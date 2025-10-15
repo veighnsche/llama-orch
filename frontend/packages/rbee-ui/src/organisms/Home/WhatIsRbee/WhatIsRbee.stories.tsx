@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { WhatIsRbee } from './WhatIsRbee'
 
 const meta = {
-	title: 'Organisms/Home/WhatIsRbee',
-	component: WhatIsRbee,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Home/WhatIsRbee',
+  component: WhatIsRbee,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The WhatIsRbee section provides a comprehensive introduction to the rbee platform. It combines brand identity, value propositions, feature highlights, statistics, and a visual network diagram to communicate what rbee is and why it matters.
 
@@ -107,31 +107,31 @@ import { WhatIsRbee } from '@rbee/ui/organisms/WhatIsRbee'
 - **Focus States**: Visible focus indicators on all interactive elements
 - **Color Contrast**: Meets WCAG AA standards in both themes
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof WhatIsRbee>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default WhatIsRbee section with all elements. Use the theme toggle in the toolbar to switch between light and dark modes. Use the viewport toolbar to test responsive behavior.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default WhatIsRbee section with all elements. Use the theme toggle in the toolbar to switch between light and dark modes. Use the viewport toolbar to test responsive behavior.',
+      },
+    },
+  },
 }
 
 export const HomePageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story: `**Home page context** — Appears immediately after HeroSection on \`/\` route.
+  parameters: {
+    docs: {
+      description: {
+        story: `**Home page context** — Appears immediately after HeroSection on \`/\` route.
 
 **Marketing Notes:**
 - **Brand introduction**: Logo + wordmark with pronunciation tooltip ("are-bee") removes confusion
@@ -150,34 +150,43 @@ export const HomePageDefault: Story = {
 - Visual diagram makes complex concept tangible
 
 **Tone**: Educational but accessible — "for the rest of us" positioning`,
-			},
-		},
-	},
+      },
+    },
+  },
 }
 
 export const AlternativePositioning: Story = {
-	render: () => (
-		<div>
-			<WhatIsRbee />
-			<div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
-				<h3 style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Alternative Positioning Options</h3>
-				<div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', lineHeight: '1.8' }}>
-					<p><strong>Current:</strong> "Self-hosted LLM orchestration for the rest of us"</p>
-					<p><strong>Alt 1:</strong> "Enterprise-grade orchestration. Homelab simplicity." (Contrast positioning)</p>
-					<p><strong>Alt 2:</strong> "The open-source alternative to OpenAI and Anthropic" (Competitive positioning)</p>
-					<p><strong>Alt 3:</strong> "Multi-GPU orchestration that just works" (Simplicity angle)</p>
-					<p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
-						<strong>Recommendation:</strong> Test Alt 1 for enterprise audience, Alt 2 for cloud-frustrated developers.
-					</p>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story: 'Alternative positioning statements for A/B testing. Each targets different audience segments and pain points.',
-			},
-		},
-	},
+  render: () => (
+    <div>
+      <WhatIsRbee />
+      <div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
+        <h3 style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Alternative Positioning Options</h3>
+        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', lineHeight: '1.8' }}>
+          <p>
+            <strong>Current:</strong> "Self-hosted LLM orchestration for the rest of us"
+          </p>
+          <p>
+            <strong>Alt 1:</strong> "Enterprise-grade orchestration. Homelab simplicity." (Contrast positioning)
+          </p>
+          <p>
+            <strong>Alt 2:</strong> "The open-source alternative to OpenAI and Anthropic" (Competitive positioning)
+          </p>
+          <p>
+            <strong>Alt 3:</strong> "Multi-GPU orchestration that just works" (Simplicity angle)
+          </p>
+          <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
+            <strong>Recommendation:</strong> Test Alt 1 for enterprise audience, Alt 2 for cloud-frustrated developers.
+          </p>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Alternative positioning statements for A/B testing. Each targets different audience segments and pain points.',
+      },
+    },
+  },
 }

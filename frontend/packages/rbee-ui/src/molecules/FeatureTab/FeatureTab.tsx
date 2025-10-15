@@ -1,23 +1,18 @@
-import { TabsTrigger } from "@rbee/ui/atoms/Tabs";
-import { LucideIcon } from "lucide-react";
+import { TabsTrigger } from '@rbee/ui/atoms/Tabs'
+import type { LucideIcon } from 'lucide-react'
 
 export interface FeatureTabProps {
-  value: string;
-  icon: LucideIcon;
-  label: string;
-  mobileLabel?: string;
+  value: string
+  icon: LucideIcon
+  label: string
+  mobileLabel?: string
 }
 
 /**
  * A feature tab trigger with icon and responsive text labels.
  * Used in tabbed feature sections to switch between different feature categories.
  */
-export function FeatureTab({
-  value,
-  icon: Icon,
-  label,
-  mobileLabel,
-}: FeatureTabProps) {
+export function FeatureTab({ value, icon: Icon, label, mobileLabel }: FeatureTabProps) {
   return (
     <TabsTrigger
       value={value}
@@ -25,11 +20,7 @@ export function FeatureTab({
     >
       <Icon className="h-4 w-4" aria-hidden="true" />
       <span className="hidden sm:inline">{label}</span>
-      {mobileLabel && (
-        <span className="text-xs text-muted-foreground block leading-none sm:hidden">
-          {mobileLabel}
-        </span>
-      )}
+      {mobileLabel && <span className="text-xs text-muted-foreground block leading-none sm:hidden">{mobileLabel}</span>}
     </TabsTrigger>
-  );
+  )
 }

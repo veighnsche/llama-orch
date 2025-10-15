@@ -3,13 +3,13 @@ import { AlertTriangle, Cloud, DollarSign, Lock, Shield, TrendingDown } from 'lu
 import { ProblemSection } from './ProblemSection'
 
 const meta = {
-	title: 'Organisms/ProblemSection',
-	component: ProblemSection,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/ProblemSection',
+  component: ProblemSection,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The ProblemSection displays a grid of problem cards to highlight pain points and challenges. It uses visual hierarchy with icons, tone-based styling, optional loss tags, and a CTA banner to drive action.
 
@@ -122,78 +122,78 @@ import { AlertTriangle, DollarSign, Lock } from 'lucide-react'
 - **Color Contrast**: Meets WCAG AA standards in both themes
 - **ARIA**: Icons marked as aria-hidden
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
-	argTypes: {
-		title: {
-			control: 'text',
-			description: 'Section title (REQUIRED)',
-			table: {
-				type: { summary: 'string' },
-				category: 'Content',
-			},
-		},
-		subtitle: {
-			control: 'text',
-			description: 'Section subtitle',
-			table: {
-				type: { summary: 'string' },
-				category: 'Content',
-			},
-		},
-		kicker: {
-			control: 'text',
-			description: 'Small text above title',
-			table: {
-				type: { summary: 'string' },
-				category: 'Content',
-			},
-		},
-		items: {
-			control: 'object',
-			description: 'Array of problem items (REQUIRED)',
-			table: {
-				type: { summary: 'ProblemItem[]' },
-				category: 'Content',
-			},
-		},
-	},
+      },
+    },
+  },
+  tags: ['autodocs'],
+  argTypes: {
+    title: {
+      control: 'text',
+      description: 'Section title (REQUIRED)',
+      table: {
+        type: { summary: 'string' },
+        category: 'Content',
+      },
+    },
+    subtitle: {
+      control: 'text',
+      description: 'Section subtitle',
+      table: {
+        type: { summary: 'string' },
+        category: 'Content',
+      },
+    },
+    kicker: {
+      control: 'text',
+      description: 'Small text above title',
+      table: {
+        type: { summary: 'string' },
+        category: 'Content',
+      },
+    },
+    items: {
+      control: 'object',
+      description: 'Array of problem items (REQUIRED)',
+      table: {
+        type: { summary: 'ProblemItem[]' },
+        category: 'Content',
+      },
+    },
+  },
 } satisfies Meta<typeof ProblemSection>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const HomePageContext: Story = {
-	args: {
-		title: 'The hidden risk of AI-assisted development',
-		subtitle: "You're building complex codebases with AI assistance. What happens when the provider changes the rules?",
-		items: [
-			{
-				title: 'The model changes',
-				body: 'Your assistant updates overnight. Code generation breaks; workflows stall; your team is blocked.',
-				icon: <AlertTriangle className="h-6 w-6" />,
-				tone: 'destructive' as const,
-			},
-			{
-				title: 'The price increases',
-				body: '$20/month becomes $200/month—multiplied by your team. Infrastructure costs spiral.',
-				icon: <DollarSign className="h-6 w-6" />,
-				tone: 'primary' as const,
-			},
-			{
-				title: 'The provider shuts down',
-				body: 'APIs get deprecated. Your AI-built code becomes unmaintainable overnight.',
-				icon: <Lock className="h-6 w-6" />,
-				tone: 'destructive' as const,
-			},
-		],
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: `**Home page context** — Exact implementation from \`/\` route.
+  args: {
+    title: 'The hidden risk of AI-assisted development',
+    subtitle: "You're building complex codebases with AI assistance. What happens when the provider changes the rules?",
+    items: [
+      {
+        title: 'The model changes',
+        body: 'Your assistant updates overnight. Code generation breaks; workflows stall; your team is blocked.',
+        icon: <AlertTriangle className="h-6 w-6" />,
+        tone: 'destructive' as const,
+      },
+      {
+        title: 'The price increases',
+        body: '$20/month becomes $200/month—multiplied by your team. Infrastructure costs spiral.',
+        icon: <DollarSign className="h-6 w-6" />,
+        tone: 'primary' as const,
+      },
+      {
+        title: 'The provider shuts down',
+        body: 'APIs get deprecated. Your AI-built code becomes unmaintainable overnight.',
+        icon: <Lock className="h-6 w-6" />,
+        tone: 'destructive' as const,
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: `**Home page context** — Exact implementation from \`/\` route.
 
 **Marketing Notes:**
 - **Three problems**: Unpredictable costs, Vendor lock-in, Privacy concerns
@@ -231,119 +231,119 @@ export const HomePageContext: Story = {
 - Copy is developer-focused but accessible to non-technical decision-makers
 
 **Tone**: Empathetic, urgent, problem-focused. Not fear-mongering, but realistic about the risks of AI dependency.`,
-			},
-		},
-	},
+      },
+    },
+  },
 }
 
 export const WithoutCTA: Story = {
-	args: {
-		title: 'Why cloud AI is risky',
-		subtitle: "Relying on external providers creates dependencies you can't control",
-		items: [
-			{
-				title: 'Vendor lock-in',
-				body: 'Your entire codebase depends on proprietary APIs. Switching providers means rewriting everything.',
-				icon: <Lock className="h-6 w-6" />,
-				tone: 'destructive' as const,
-				tag: 'High risk',
-			},
-			{
-				title: 'Unpredictable costs',
-				body: 'Usage-based pricing scales exponentially. What starts at $20/month becomes $2000/month.',
-				icon: <TrendingDown className="h-6 w-6" />,
-				tone: 'primary' as const,
-				tag: 'Loss €180/mo',
-			},
-			{
-				title: 'Data privacy concerns',
-				body: 'Your code and prompts are sent to external servers. Compliance becomes a nightmare.',
-				icon: <Shield className="h-6 w-6" />,
-				tone: 'destructive' as const,
-			},
-		],
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Problem section without CTA banner, showing only the problem cards.',
-			},
-		},
-	},
+  args: {
+    title: 'Why cloud AI is risky',
+    subtitle: "Relying on external providers creates dependencies you can't control",
+    items: [
+      {
+        title: 'Vendor lock-in',
+        body: 'Your entire codebase depends on proprietary APIs. Switching providers means rewriting everything.',
+        icon: <Lock className="h-6 w-6" />,
+        tone: 'destructive' as const,
+        tag: 'High risk',
+      },
+      {
+        title: 'Unpredictable costs',
+        body: 'Usage-based pricing scales exponentially. What starts at $20/month becomes $2000/month.',
+        icon: <TrendingDown className="h-6 w-6" />,
+        tone: 'primary' as const,
+        tag: 'Loss €180/mo',
+      },
+      {
+        title: 'Data privacy concerns',
+        body: 'Your code and prompts are sent to external servers. Compliance becomes a nightmare.',
+        icon: <Shield className="h-6 w-6" />,
+        tone: 'destructive' as const,
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Problem section without CTA banner, showing only the problem cards.',
+      },
+    },
+  },
 }
 
 export const CustomProblems: Story = {
-	args: {
-		kicker: 'Common Challenges',
-		title: 'Why cloud AI is risky',
-		subtitle: "Relying on external providers creates dependencies you can't control",
-		items: [
-			{
-				title: 'Vendor lock-in',
-				body: 'Your entire codebase depends on proprietary APIs. Switching providers means rewriting everything.',
-				icon: <Lock className="h-6 w-6" />,
-				tone: 'destructive' as const,
-				tag: 'High risk',
-			},
-			{
-				title: 'Unpredictable costs',
-				body: 'Usage-based pricing scales exponentially. What starts at $20/month becomes $2000/month.',
-				icon: <TrendingDown className="h-6 w-6" />,
-				tone: 'primary' as const,
-				tag: 'Loss €180/mo',
-			},
-			{
-				title: 'Data privacy concerns',
-				body: 'Your code and prompts are sent to external servers. Compliance becomes a nightmare.',
-				icon: <Shield className="h-6 w-6" />,
-				tone: 'destructive' as const,
-			},
-		],
-		ctaPrimary: { label: 'Host Your Own', href: '/signup' },
-		ctaSecondary: { label: 'Compare Options', href: '/pricing' },
-		ctaCopy: 'Run AI on your own infrastructure and eliminate these risks',
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Custom problem items with different icons, tones, and tags.',
-			},
-		},
-	},
+  args: {
+    kicker: 'Common Challenges',
+    title: 'Why cloud AI is risky',
+    subtitle: "Relying on external providers creates dependencies you can't control",
+    items: [
+      {
+        title: 'Vendor lock-in',
+        body: 'Your entire codebase depends on proprietary APIs. Switching providers means rewriting everything.',
+        icon: <Lock className="h-6 w-6" />,
+        tone: 'destructive' as const,
+        tag: 'High risk',
+      },
+      {
+        title: 'Unpredictable costs',
+        body: 'Usage-based pricing scales exponentially. What starts at $20/month becomes $2000/month.',
+        icon: <TrendingDown className="h-6 w-6" />,
+        tone: 'primary' as const,
+        tag: 'Loss €180/mo',
+      },
+      {
+        title: 'Data privacy concerns',
+        body: 'Your code and prompts are sent to external servers. Compliance becomes a nightmare.',
+        icon: <Shield className="h-6 w-6" />,
+        tone: 'destructive' as const,
+      },
+    ],
+    ctaPrimary: { label: 'Host Your Own', href: '/signup' },
+    ctaSecondary: { label: 'Compare Options', href: '/pricing' },
+    ctaCopy: 'Run AI on your own infrastructure and eliminate these risks',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Custom problem items with different icons, tones, and tags.',
+      },
+    },
+  },
 }
 
 export const ToneVariations: Story = {
-	args: {
-		title: 'Problem tone variations',
-		subtitle: 'Different visual treatments for different problem types',
-		items: [
-			{
-				title: 'Destructive tone',
-				body: 'Used for critical problems and risks. Red/destructive color scheme.',
-				icon: <AlertTriangle className="h-6 w-6" />,
-				tone: 'destructive' as const,
-				tag: 'Critical',
-			},
-			{
-				title: 'Primary tone',
-				body: 'Used for important problems related to cost or efficiency. Primary color scheme.',
-				icon: <DollarSign className="h-6 w-6" />,
-				tone: 'primary' as const,
-				tag: 'Important',
-			},
-			{
-				title: 'Muted tone',
-				body: 'Used for less urgent problems or informational items. Neutral color scheme.',
-				icon: <Cloud className="h-6 w-6" />,
-				tone: 'muted' as const,
-			},
-		],
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'Demonstrates the three tone options: destructive, primary, and muted.',
-			},
-		},
-	},
+  args: {
+    title: 'Problem tone variations',
+    subtitle: 'Different visual treatments for different problem types',
+    items: [
+      {
+        title: 'Destructive tone',
+        body: 'Used for critical problems and risks. Red/destructive color scheme.',
+        icon: <AlertTriangle className="h-6 w-6" />,
+        tone: 'destructive' as const,
+        tag: 'Critical',
+      },
+      {
+        title: 'Primary tone',
+        body: 'Used for important problems related to cost or efficiency. Primary color scheme.',
+        icon: <DollarSign className="h-6 w-6" />,
+        tone: 'primary' as const,
+        tag: 'Important',
+      },
+      {
+        title: 'Muted tone',
+        body: 'Used for less urgent problems or informational items. Neutral color scheme.',
+        icon: <Cloud className="h-6 w-6" />,
+        tone: 'muted' as const,
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Demonstrates the three tone options: destructive, primary, and muted.',
+      },
+    },
+  },
 }

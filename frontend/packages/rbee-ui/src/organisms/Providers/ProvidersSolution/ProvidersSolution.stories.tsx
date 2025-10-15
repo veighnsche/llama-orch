@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { ProvidersSolution } from './ProvidersSolution'
 
 const meta = {
-	title: 'Organisms/Providers/ProvidersSolution',
-	component: ProvidersSolution,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Providers/ProvidersSolution',
+  component: ProvidersSolution,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The ProvidersSolution section presents the rbee marketplace as the solution to idle GPU problems. It features four key benefits, a 4-step onboarding flow, and an earnings table showing realistic monthly income by GPU model.
 
@@ -91,10 +91,10 @@ import { ProvidersSolution } from '@rbee/ui/organisms/Providers/ProvidersSolutio
 - **Keyboard Navigation**: All interactive elements are keyboard accessible
 - **Color Contrast**: Meets WCAG AA standards
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof ProvidersSolution>
 
 export default meta

@@ -7,7 +7,7 @@ const seedPath = './.rbee/seed.md'
 const rText = utils.fs.readFile({ paths: [seedPath], as_text: true, encoding: 'utf-8' })
 const firstText = rText.files[0]
 if (!firstText || firstText.content == null) {
-	throw new Error(`Failed to read ${seedPath}`)
+  throw new Error(`Failed to read ${seedPath}`)
 }
 console.log('[fs.readFile:text] chars:', firstText.content.length)
 
@@ -26,10 +26,10 @@ console.log('[prompt.message] role:', pm.role, 'content:', pm.content)
 
 // prompt.thread
 const pt = utils.prompt.thread({
-	items: [
-		{ role: 'system', source: { Text: 'You are a helpful assistant.' }, dedent: false },
-		{ role: 'user', source: { Lines: ['How are you?', 'Answer briefly.'] }, dedent: true },
-	],
+  items: [
+    { role: 'system', source: { Text: 'You are a helpful assistant.' }, dedent: false },
+    { role: 'user', source: { Lines: ['How are you?', 'Answer briefly.'] }, dedent: true },
+  ],
 })
 console.log('[prompt.thread] messages:', pt.messages.length)
 
@@ -44,13 +44,13 @@ console.log('[params.define] temperature:', params.temperature)
 // llm.invoke (expected to throw typed 'unimplemented')
 let threw = false
 try {
-	utils.llm.invoke({ messages: [{ role: 'user', content: 'hi' }], model, params })
+  utils.llm.invoke({ messages: [{ role: 'user', content: 'hi' }], model, params })
 } catch (e) {
-	threw = true
-	console.log('[llm.invoke] threw as expected:', String((e as any)?.message || e))
+  threw = true
+  console.log('[llm.invoke] threw as expected:', String((e as any)?.message || e))
 }
 if (!threw) {
-	throw new Error('llm.invoke should throw typed unimplemented in M2')
+  throw new Error('llm.invoke should throw typed unimplemented in M2')
 }
 
 // orch.responseExtractor

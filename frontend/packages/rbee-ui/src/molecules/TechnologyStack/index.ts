@@ -1,2 +1,2 @@
-export { TechnologyStack } from "./TechnologyStack";
-export type { TechnologyStackProps, TechItem } from "./TechnologyStack";
+export type { TechItem, TechnologyStackProps } from './TechnologyStack'
+export { TechnologyStack } from './TechnologyStack'

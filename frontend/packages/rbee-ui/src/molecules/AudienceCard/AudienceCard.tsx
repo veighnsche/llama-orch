@@ -1,118 +1,111 @@
-import { Card, CardContent } from "@rbee/ui/atoms/Card";
-import { BulletListItem } from "@rbee/ui/molecules/BulletListItem";
-import { ButtonCardFooter } from "@rbee/ui/molecules/ButtonCardFooter";
-import { cn } from "@rbee/ui/utils";
-import { cva, type VariantProps } from "class-variance-authority";
-import type { LucideIcon } from "lucide-react";
+import { Card, CardContent } from '@rbee/ui/atoms/Card'
+import { BulletListItem } from '@rbee/ui/molecules/BulletListItem'
+import { ButtonCardFooter } from '@rbee/ui/molecules/ButtonCardFooter'
+import { cn } from '@rbee/ui/utils'
+import { cva, type VariantProps } from 'class-variance-authority'
+import type { LucideIcon } from 'lucide-react'
 
-const audienceCardVariants = cva("", {
+const audienceCardVariants = cva('', {
   variants: {
     color: {
-      primary: "",
-      "chart-1": "",
-      "chart-2": "",
-      "chart-3": "",
-      "chart-4": "",
-      "chart-5": "",
+      primary: '',
+      'chart-1': '',
+      'chart-2': '',
+      'chart-3': '',
+      'chart-4': '',
+      'chart-5': '',
     },
   },
   defaultVariants: {
-    color: "primary",
+    color: 'primary',
   },
-});
+})
 
 const cardContainerVariants = cva(
-  "border border-border group relative overflow-hidden transition-all duration-300 hover:scale-[1.02]",
+  'border border-border group relative overflow-hidden transition-all duration-300 hover:scale-[1.02]',
   {
     variants: {
       color: {
-        primary: "hover:border-primary/50",
-        "chart-1": "hover:border-chart-1/50",
-        "chart-2": "hover:border-chart-2/50",
-        "chart-3": "hover:border-chart-3/50",
-        "chart-4": "hover:border-chart-4/50",
-        "chart-5": "hover:border-chart-5/50",
+        primary: 'hover:border-primary/50',
+        'chart-1': 'hover:border-chart-1/50',
+        'chart-2': 'hover:border-chart-2/50',
+        'chart-3': 'hover:border-chart-3/50',
+        'chart-4': 'hover:border-chart-4/50',
+        'chart-5': 'hover:border-chart-5/50',
       },
     },
     defaultVariants: {
-      color: "primary",
+      color: 'primary',
     },
-  }
-);
+  },
+)
 
 const gradientVariants = cva(
-  "absolute inset-0 -z-10 bg-gradient-to-br opacity-0 transition-all duration-500 group-hover:to-transparent group-hover:opacity-100",
+  'absolute inset-0 -z-10 bg-gradient-to-br opacity-0 transition-all duration-500 group-hover:to-transparent group-hover:opacity-100',
   {
     variants: {
       color: {
-        primary:
-          "from-primary/0 via-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:via-primary/10",
-        "chart-1":
-          "from-chart-1/0 via-chart-1/0 to-chart-1/0 group-hover:from-chart-1/5 group-hover:via-chart-1/10",
-        "chart-2":
-          "from-chart-2/0 via-chart-2/0 to-chart-2/0 group-hover:from-chart-2/5 group-hover:via-chart-2/10",
-        "chart-3":
-          "from-chart-3/0 via-chart-3/0 to-chart-3/0 group-hover:from-chart-3/5 group-hover:via-chart-3/10",
-        "chart-4":
-          "from-chart-4/0 via-chart-4/0 to-chart-4/0 group-hover:from-chart-4/5 group-hover:via-chart-4/10",
-        "chart-5":
-          "from-chart-5/0 via-chart-5/0 to-chart-5/0 group-hover:from-chart-5/5 group-hover:via-chart-5/10",
+        primary: 'from-primary/0 via-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:via-primary/10',
+        'chart-1': 'from-chart-1/0 via-chart-1/0 to-chart-1/0 group-hover:from-chart-1/5 group-hover:via-chart-1/10',
+        'chart-2': 'from-chart-2/0 via-chart-2/0 to-chart-2/0 group-hover:from-chart-2/5 group-hover:via-chart-2/10',
+        'chart-3': 'from-chart-3/0 via-chart-3/0 to-chart-3/0 group-hover:from-chart-3/5 group-hover:via-chart-3/10',
+        'chart-4': 'from-chart-4/0 via-chart-4/0 to-chart-4/0 group-hover:from-chart-4/5 group-hover:via-chart-4/10',
+        'chart-5': 'from-chart-5/0 via-chart-5/0 to-chart-5/0 group-hover:from-chart-5/5 group-hover:via-chart-5/10',
       },
     },
     defaultVariants: {
-      color: "primary",
+      color: 'primary',
     },
-  }
-);
+  },
+)
 
 const iconBgVariants = cva(
-  "flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br shadow-lg",
+  'flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br shadow-lg',
   {
     variants: {
       color: {
-        primary: "from-primary to-primary",
-        "chart-1": "from-chart-1 to-chart-1",
-        "chart-2": "from-chart-2 to-chart-2",
-        "chart-3": "from-chart-3 to-chart-3",
-        "chart-4": "from-chart-4 to-chart-4",
-        "chart-5": "from-chart-5 to-chart-5",
+        primary: 'from-primary to-primary',
+        'chart-1': 'from-chart-1 to-chart-1',
+        'chart-2': 'from-chart-2 to-chart-2',
+        'chart-3': 'from-chart-3 to-chart-3',
+        'chart-4': 'from-chart-4 to-chart-4',
+        'chart-5': 'from-chart-5 to-chart-5',
       },
     },
     defaultVariants: {
-      color: "primary",
+      color: 'primary',
     },
-  }
-);
+  },
+)
 
-const textVariants = cva("", {
+const textVariants = cva('', {
   variants: {
     color: {
-      primary: "text-primary",
-      "chart-1": "text-chart-1",
-      "chart-2": "text-chart-2",
-      "chart-3": "text-chart-3",
-      "chart-4": "text-chart-4",
-      "chart-5": "text-chart-5",
+      primary: 'text-primary',
+      'chart-1': 'text-chart-1',
+      'chart-2': 'text-chart-2',
+      'chart-3': 'text-chart-3',
+      'chart-4': 'text-chart-4',
+      'chart-5': 'text-chart-5',
     },
   },
   defaultVariants: {
-    color: "primary",
+    color: 'primary',
   },
-});
+})
 
-export interface AudienceCardProps
-  extends VariantProps<typeof audienceCardVariants> {
-  icon: LucideIcon;
-  category: string;
-  title: string;
-  description: string;
-  features: string[];
-  href: string;
-  ctaText: string;
-  className?: string;
-  imageSlot?: React.ReactNode;
-  badgeSlot?: React.ReactNode;
-  decisionLabel?: string;
+export interface AudienceCardProps extends VariantProps<typeof audienceCardVariants> {
+  icon: LucideIcon
+  category: string
+  title: string
+  description: string
+  features: string[]
+  href: string
+  ctaText: string
+  className?: string
+  imageSlot?: React.ReactNode
+  badgeSlot?: React.ReactNode
+  decisionLabel?: string
 }
 
 export function AudienceCard({
@@ -129,41 +122,23 @@ export function AudienceCard({
   badgeSlot,
   decisionLabel,
 }: AudienceCardProps) {
-  const descriptionId = `${title
-    .toLowerCase()
-    .replace(/\s+/g, "-")}-description`;
+  const descriptionId = `${title.toLowerCase().replace(/\s+/g, '-')}-description`
 
   return (
     <div className="flex h-full flex-col">
       {/* Optional decision label above card */}
       {decisionLabel && (
-        <div
-          className={cn(
-            "mb-3 text-sm font-medium font-sans",
-            textVariants({ color })
-          )}
-        >
-          {decisionLabel}
-        </div>
+        <div className={cn('mb-3 text-sm font-medium font-sans', textVariants({ color }))}>{decisionLabel}</div>
       )}
 
-      <Card
-        className={cn(
-          cardContainerVariants({ color }),
-          "flex flex-1 flex-col",
-          className
-        )}
-      >
+      <Card className={cn(cardContainerVariants({ color }), 'flex flex-1 flex-col', className)}>
         <div className={gradientVariants({ color })} />
 
         <CardContent className="flex flex-1 flex-col gap-0 p-6 pb-0">
           {/* Icons side-by-side at top */}
           <div className="mb-6 flex items-top gap-3 min-h-[64px]">
             <div className={iconBgVariants({ color })}>
-              <Icon
-                className="h-7 w-7 text-primary-foreground"
-                aria-hidden="true"
-              />
+              <Icon className="h-7 w-7 text-primary-foreground" aria-hidden="true" />
             </div>
             {imageSlot && (
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-card ring-1 ring-border">
@@ -172,17 +147,10 @@ export function AudienceCard({
             )}
           </div>
 
-          <div
-            className={cn(
-              "mb-2 text-sm font-medium uppercase tracking-wider font-sans",
-              textVariants({ color })
-            )}
-          >
+          <div className={cn('mb-2 text-sm font-medium uppercase tracking-wider font-sans', textVariants({ color }))}>
             {category}
           </div>
-          <h3 className="mb-3 min-h-[64px] text-2xl font-semibold text-card-foreground">
-            {title}
-          </h3>
+          <h3 className="mb-3 min-h-[64px] text-2xl font-semibold text-card-foreground">{title}</h3>
           <p
             id={descriptionId}
             className="mb-6 min-h-[72px] text-sm leading-relaxed text-muted-foreground sm:text-base"
@@ -192,12 +160,7 @@ export function AudienceCard({
 
           <ul className="mb-8 h-[120px] space-y-3">
             {features.map((feature, index) => (
-              <BulletListItem
-                key={index}
-                title={feature}
-                variant="arrow"
-                color={color || "primary"}
-              />
+              <BulletListItem key={index} title={feature} variant="arrow" color={color || 'primary'} />
             ))}
           </ul>
 
@@ -216,5 +179,5 @@ export function AudienceCard({
         />
       </Card>
     </div>
-  );
+  )
 }

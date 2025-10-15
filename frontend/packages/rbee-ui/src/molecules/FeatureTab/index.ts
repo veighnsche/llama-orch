@@ -1,2 +1,2 @@
-export { FeatureTab } from './FeatureTab'
 export type { FeatureTabProps } from './FeatureTab'
+export { FeatureTab } from './FeatureTab'

@@ -4,13 +4,13 @@ import { EnterpriseCompliance } from './EnterpriseCompliance'
 // Created by: TEAM-004
 
 const meta = {
-	title: 'Organisms/Enterprise/EnterpriseCompliance',
-	component: EnterpriseCompliance,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Enterprise/EnterpriseCompliance',
+  component: EnterpriseCompliance,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The EnterpriseCompliance section presents three compliance pillars (GDPR, SOC2, ISO 27001) with detailed checklists, compliance endpoints, and audit readiness messaging. Each pillar includes specific regulatory requirements, implementation details, and proof points.
 
@@ -109,44 +109,44 @@ import { EnterpriseCompliance } from '@rbee/ui/organisms/Enterprise/EnterpriseCo
 - **Lead qualification**: Capture industry (healthcare, finance, government), compliance requirements, audit timeline
 - **Proof points**: Compliance pack includes endpoints, retention policy, audit-logging design
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof EnterpriseCompliance>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const EnterprisePageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default enterprise compliance section showing all three compliance pillars: GDPR (EU Regulation with 6 requirements + compliance endpoints), SOC2 (US Standard with 6 requirements + Trust Service Criteria), and ISO 27001 (International Standard with 6 requirements + ISMS controls). Includes audit readiness band with CTAs to download compliance pack or talk to compliance team.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default enterprise compliance section showing all three compliance pillars: GDPR (EU Regulation with 6 requirements + compliance endpoints), SOC2 (US Standard with 6 requirements + Trust Service Criteria), and ISO 27001 (International Standard with 6 requirements + ISMS controls). Includes audit readiness band with CTAs to download compliance pack or talk to compliance team.',
+      },
+    },
+  },
 }
 
 export const GDPRFocus: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant emphasizing GDPR compliance only. This version would focus exclusively on EU regulations: Article 30 (7-year audit retention), Article 15 (data access records), Article 17 (erasure tracking), Article 7 (consent management), Article 44 (data residency controls), and Article 33 (breach notification). Includes detailed compliance endpoints (GET /v2/compliance/data-access, POST /v2/compliance/data-export, POST /v2/compliance/data-deletion, GET /v2/compliance/audit-trail). Ideal for EU-based enterprises or those with strict GDPR requirements.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant emphasizing GDPR compliance only. This version would focus exclusively on EU regulations: Article 30 (7-year audit retention), Article 15 (data access records), Article 17 (erasure tracking), Article 7 (consent management), Article 44 (data residency controls), and Article 33 (breach notification). Includes detailed compliance endpoints (GET /v2/compliance/data-access, POST /v2/compliance/data-export, POST /v2/compliance/data-deletion, GET /v2/compliance/audit-trail). Ideal for EU-based enterprises or those with strict GDPR requirements.',
+      },
+    },
+  },
 }
 
 export const AuditTrailFocus: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant emphasizing audit trail and logging capabilities across all three standards. This version would highlight: 7-year retention (GDPR Article 30, SOC2 Type II), 32 audit event types (SOC2), tamper-evident hash chains (SOC2), immutable audit trail (GDPR), and incident records (ISO 27001 A.16). Includes detailed audit logging design and cryptographic proof of integrity. Ideal for enterprises with strong audit requirements (financial services, healthcare, government).',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant emphasizing audit trail and logging capabilities across all three standards. This version would highlight: 7-year retention (GDPR Article 30, SOC2 Type II), 32 audit event types (SOC2), tamper-evident hash chains (SOC2), immutable audit trail (GDPR), and incident records (ISO 27001 A.16). Includes detailed audit logging design and cryptographic proof of integrity. Ideal for enterprises with strong audit requirements (financial services, healthcare, government).',
+      },
+    },
+  },
 }

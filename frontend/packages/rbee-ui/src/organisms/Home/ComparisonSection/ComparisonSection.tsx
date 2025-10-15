@@ -1,57 +1,57 @@
-import { Button } from "@rbee/ui/atoms/Button";
-import { MatrixTable } from "@rbee/ui/molecules/Tables/MatrixTable";
-import { SectionContainer } from "@rbee/ui/molecules";
-import { Check, X } from "lucide-react";
-import Link from "next/link";
-import type { Provider, Row } from "@rbee/ui/molecules/Tables/MatrixTable";
+import { Button } from '@rbee/ui/atoms/Button'
+import { SectionContainer } from '@rbee/ui/molecules'
+import type { Provider, Row } from '@rbee/ui/molecules/Tables/MatrixTable'
+import { MatrixTable } from '@rbee/ui/molecules/Tables/MatrixTable'
+import { Check, X } from 'lucide-react'
+import Link from 'next/link'
 
 const columns: Provider[] = [
-  { key: "rbee", label: "rbee", accent: true },
-  { key: "openai", label: "OpenAI & Anthropic" },
-  { key: "ollama", label: "Ollama" },
-  { key: "runpod", label: "Runpod & Vast.ai" },
-];
+  { key: 'rbee', label: 'rbee', accent: true },
+  { key: 'openai', label: 'OpenAI & Anthropic' },
+  { key: 'ollama', label: 'Ollama' },
+  { key: 'runpod', label: 'Runpod & Vast.ai' },
+]
 
 const rows: Row[] = [
   {
-    feature: "Total Cost",
+    feature: 'Total Cost',
     values: {
-      rbee: "$0 (runs on your hardware)",
-      openai: "$20–100/mo per dev",
-      ollama: "$0",
-      runpod: "$0.50–2/hr",
+      rbee: '$0 (runs on your hardware)',
+      openai: '$20–100/mo per dev',
+      ollama: '$0',
+      runpod: '$0.50–2/hr',
     },
   },
   {
-    feature: "Privacy / Data Residency",
+    feature: 'Privacy / Data Residency',
     values: {
       rbee: true,
       openai: false,
       ollama: true,
       runpod: false,
     },
-    note: "Complete data control vs. limited",
+    note: 'Complete data control vs. limited',
   },
   {
-    feature: "Multi-GPU Utilization",
+    feature: 'Multi-GPU Utilization',
     values: {
       rbee: true,
-      openai: "N/A",
-      ollama: "Limited",
+      openai: 'N/A',
+      ollama: 'Limited',
       runpod: true,
     },
   },
   {
-    feature: "OpenAI-Compatible API",
+    feature: 'OpenAI-Compatible API',
     values: {
       rbee: true,
       openai: true,
-      ollama: "Partial",
+      ollama: 'Partial',
       runpod: false,
     },
   },
   {
-    feature: "Custom Routing Policies",
+    feature: 'Custom Routing Policies',
     values: {
       rbee: true,
       openai: false,
@@ -60,15 +60,15 @@ const rows: Row[] = [
     },
   },
   {
-    feature: "Rate Limits / Quotas",
+    feature: 'Rate Limits / Quotas',
     values: {
-      rbee: "None",
-      openai: "Yes",
-      ollama: "None",
-      runpod: "Yes",
+      rbee: 'None',
+      openai: 'Yes',
+      ollama: 'None',
+      runpod: 'Yes',
     },
   },
-];
+]
 
 export function ComparisonSection() {
   return (
@@ -112,5 +112,5 @@ export function ComparisonSection() {
         </div>
       </div>
     </SectionContainer>
-  );
+  )
 }

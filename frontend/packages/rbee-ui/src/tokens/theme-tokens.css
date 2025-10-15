@@ -1,11 +1,11 @@
 /**
  * 🎨 rbee Design System - Comprehensive Token System
- * 
+ *
  * Restored from apps/commercial/app/globals.css (HEX values)
- * 
+ *
  * IMPORTANT: These use HEX colors, NOT OKLCH.
  * Brand color: #f59e0b (amber/gold)
- * 
+ *
  * Includes:
  * - Semantic color tokens (HEX format)
  * - Spacing scale
@@ -20,192 +20,192 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-	/* ========================================
+    /* ========================================
    * SEMANTIC COLOR TOKENS (HEX)
    * ======================================== */
 
-	/* Base colors */
-	--background: #ffffff;
-	--foreground: #0f172a;
-	--card: #ffffff;
-	--card-foreground: #0f172a;
-	--popover: #ffffff;
-	--popover-foreground: #0f172a;
-	--primary: #f59e0b;
-	--primary-foreground: #ffffff;
-	--secondary: #f1f5f9;
-	--secondary-foreground: #0f172a;
-	--muted: #f1f5f9;
-	--muted-foreground: #5a6b7f; /* Darkened from #64748b for WCAG AA compliance (4.5:1 on secondary) */
-	--accent: #f59e0b;
-	--accent-foreground: #0f172a;
-	--destructive: #ef4444;
-	--destructive-foreground: #ffffff;
-	--border: #e2e8f0;
-	--input: #e2e8f0;
-	--ring: #f59e0b;
+    /* Base colors */
+    --background: #ffffff;
+    --foreground: #0f172a;
+    --card: #ffffff;
+    --card-foreground: #0f172a;
+    --popover: #ffffff;
+    --popover-foreground: #0f172a;
+    --primary: #f59e0b;
+    --primary-foreground: #ffffff;
+    --secondary: #f1f5f9;
+    --secondary-foreground: #0f172a;
+    --muted: #f1f5f9;
+    --muted-foreground: #5a6b7f; /* Darkened from #64748b for WCAG AA compliance (4.5:1 on secondary) */
+    --accent: #f59e0b;
+    --accent-foreground: #0f172a;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --border: #e2e8f0;
+    --input: #e2e8f0;
+    --ring: #f59e0b;
 
-	/* Chart colors */
-	--chart-1: #f59e0b;
-	--chart-2: #3b82f6;
-	--chart-3: #10b981;
-	--chart-4: #8b5cf6;
-	--chart-5: #ef4444;
+    /* Chart colors */
+    --chart-1: #f59e0b;
+    --chart-2: #3b82f6;
+    --chart-3: #10b981;
+    --chart-4: #8b5cf6;
+    --chart-5: #ef4444;
 
-	/* Terminal colors (for TerminalWindow component) */
-	--terminal-red: #ef4444;
-	--terminal-amber: #f59e0b;
-	--terminal-green: #10b981;
+    /* Terminal colors (for TerminalWindow component) */
+    --terminal-red: #ef4444;
+    --terminal-amber: #f59e0b;
+    --terminal-green: #10b981;
 
-	/* Code/Console backgrounds */
-	--console-bg: #0f172a;
-	--console-fg: #f1f5f9;
+    /* Code/Console backgrounds */
+    --console-bg: #0f172a;
+    --console-fg: #f1f5f9;
 
-	/* Syntax highlighting colors */
-	--syntax-keyword: #3b82f6; /* blue - for keywords like const, await, export */
-	--syntax-import: #8b5cf6; /* purple - for import/from statements */
-	--syntax-string: #f59e0b; /* amber - for string literals */
-	--syntax-function: #10b981; /* green - for function names */
-	--syntax-comment: #64748b; /* muted - for comments and secondary text */
+    /* Syntax highlighting colors */
+    --syntax-keyword: #3b82f6; /* blue - for keywords like const, await, export */
+    --syntax-import: #8b5cf6; /* purple - for import/from statements */
+    --syntax-string: #f59e0b; /* amber - for string literals */
+    --syntax-function: #10b981; /* green - for function names */
+    --syntax-comment: #64748b; /* muted - for comments and secondary text */
 
-	/* Error state colors */
-	--error-light: #ef4444;
-	--error-dark: #b91c1c;
+    /* Error state colors */
+    --error-light: #ef4444;
+    --error-dark: #b91c1c;
 
-	/* Sidebar colors */
-	--sidebar: #f1f5f9;
-	--sidebar-foreground: #0f172a;
-	--sidebar-primary: #f59e0b;
-	--sidebar-primary-foreground: #ffffff;
-	--sidebar-accent: #f59e0b;
-	--sidebar-accent-foreground: #0f172a;
-	--sidebar-border: #e2e8f0;
-	--sidebar-ring: #f59e0b;
+    /* Sidebar colors */
+    --sidebar: #f1f5f9;
+    --sidebar-foreground: #0f172a;
+    --sidebar-primary: #f59e0b;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #f59e0b;
+    --sidebar-accent-foreground: #0f172a;
+    --sidebar-border: #e2e8f0;
+    --sidebar-ring: #f59e0b;
 
-	/* ========================================
+    /* ========================================
    * SPACING SCALE
    * Standard spacing values used throughout
    * ======================================== */
-	--spacing-0: 0;
-	--spacing-1: 0.25rem; /* 4px */
-	--spacing-2: 0.5rem; /* 8px */
-	--spacing-3: 0.75rem; /* 12px */
-	--spacing-4: 1rem; /* 16px */
-	--spacing-6: 1.5rem; /* 24px */
-	--spacing-8: 2rem; /* 32px */
-	--spacing-12: 3rem; /* 48px */
-	--spacing-16: 4rem; /* 64px */
-	--spacing-20: 5rem; /* 80px */
-	--spacing-24: 6rem; /* 96px */
-	--spacing-32: 8rem; /* 128px */
+    --spacing-0: 0;
+    --spacing-1: 0.25rem; /* 4px */
+    --spacing-2: 0.5rem; /* 8px */
+    --spacing-3: 0.75rem; /* 12px */
+    --spacing-4: 1rem; /* 16px */
+    --spacing-6: 1.5rem; /* 24px */
+    --spacing-8: 2rem; /* 32px */
+    --spacing-12: 3rem; /* 48px */
+    --spacing-16: 4rem; /* 64px */
+    --spacing-20: 5rem; /* 80px */
+    --spacing-24: 6rem; /* 96px */
+    --spacing-32: 8rem; /* 128px */
 
-	/* ========================================
+    /* ========================================
    * TYPOGRAPHY SCALE
    * Font sizes for text hierarchy
    * ======================================== */
-	--text-xs: 0.75rem; /* 12px */
-	--text-sm: 0.875rem; /* 14px */
-	--text-base: 1rem; /* 16px */
-	--text-lg: 1.125rem; /* 18px */
-	--text-xl: 1.25rem; /* 20px */
-	--text-2xl: 1.5rem; /* 24px */
-	--text-3xl: 1.875rem; /* 30px */
-	--text-4xl: 2.25rem; /* 36px */
-	--text-5xl: 3rem; /* 48px */
-	--text-6xl: 3.75rem; /* 60px */
-	--text-7xl: 4.5rem; /* 72px */
+    --text-xs: 0.75rem; /* 12px */
+    --text-sm: 0.875rem; /* 14px */
+    --text-base: 1rem; /* 16px */
+    --text-lg: 1.125rem; /* 18px */
+    --text-xl: 1.25rem; /* 20px */
+    --text-2xl: 1.5rem; /* 24px */
+    --text-3xl: 1.875rem; /* 30px */
+    --text-4xl: 2.25rem; /* 36px */
+    --text-5xl: 3rem; /* 48px */
+    --text-6xl: 3.75rem; /* 60px */
+    --text-7xl: 4.5rem; /* 72px */
 
-	/* ========================================
+    /* ========================================
    * ICON SIZES
    * Standard sizes for icons and small UI elements
    * ======================================== */
-	--icon-xs: 1rem; /* 16px - h-4, w-4 */
-	--icon-sm: 1.25rem; /* 20px - h-5, w-5 */
-	--icon-md: 1.5rem; /* 24px - h-6, w-6 */
-	--icon-lg: 2rem; /* 32px - h-8, w-8 */
-	--icon-xl: 3rem; /* 48px - h-12, w-12 */
+    --icon-xs: 1rem; /* 16px - h-4, w-4 */
+    --icon-sm: 1.25rem; /* 20px - h-5, w-5 */
+    --icon-md: 1.5rem; /* 24px - h-6, w-6 */
+    --icon-lg: 2rem; /* 32px - h-8, w-8 */
+    --icon-xl: 3rem; /* 48px - h-12, w-12 */
 
-	/* ========================================
+    /* ========================================
    * BORDER RADIUS
    * Rounded corner values
    * ======================================== */
-	--radius: 0.625rem; /* 10px - base radius */
-	--radius-xs: calc(var(--radius) - 6px); /* ~4px */
-	--radius-sm: calc(var(--radius) - 4px); /* ~6px */
-	--radius-md: calc(var(--radius) - 2px); /* ~8px */
-	--radius-lg: var(--radius); /* 10px */
-	--radius-xl: calc(var(--radius) + 4px); /* ~14px */
+    --radius: 0.625rem; /* 10px - base radius */
+    --radius-xs: calc(var(--radius) - 6px); /* ~4px */
+    --radius-sm: calc(var(--radius) - 4px); /* ~6px */
+    --radius-md: calc(var(--radius) - 2px); /* ~8px */
+    --radius-lg: var(--radius); /* 10px */
+    --radius-xl: calc(var(--radius) + 4px); /* ~14px */
 
-	/* ========================================
+    /* ========================================
    * ELEVATION SHADOWS
    * Box shadows for depth and elevation
    * ======================================== */
-	--shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-	--shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-	--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-	--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-	--shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-	--shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
 }
 
 .dark {
-	/* Base colors - dark mode overrides */
-	--background: #020617;
-	--foreground: #f1f5f9;
-	--card: #1e293b;
-	--card-foreground: #f1f5f9;
-	--popover: #1e293b;
-	--popover-foreground: #f1f5f9;
-	--primary: #f59e0b;
-	--primary-foreground: #0f172a;
-	--secondary: #0f172a;
-	--secondary-foreground: #f1f5f9;
-	--muted: #0f172a;
-	--muted-foreground: #94a3b8;
-	--accent: #f59e0b;
-	--accent-foreground: #0f172a;
-	--destructive: #ef4444;
-	--destructive-foreground: #0f172a;
-	--border: #334155;
-	--input: #334155;
-	--ring: #f59e0b;
+    /* Base colors - dark mode overrides */
+    --background: #020617;
+    --foreground: #f1f5f9;
+    --card: #1e293b;
+    --card-foreground: #f1f5f9;
+    --popover: #1e293b;
+    --popover-foreground: #f1f5f9;
+    --primary: #f59e0b;
+    --primary-foreground: #0f172a;
+    --secondary: #0f172a;
+    --secondary-foreground: #f1f5f9;
+    --muted: #0f172a;
+    --muted-foreground: #94a3b8;
+    --accent: #f59e0b;
+    --accent-foreground: #0f172a;
+    --destructive: #ef4444;
+    --destructive-foreground: #0f172a;
+    --border: #334155;
+    --input: #334155;
+    --ring: #f59e0b;
 
-	/* Chart colors - dark mode */
-	--chart-1: #f59e0b;
-	--chart-2: #3b82f6;
-	--chart-3: #10b981;
-	--chart-4: #8b5cf6;
-	--chart-5: #ef4444;
+    /* Chart colors - dark mode */
+    --chart-1: #f59e0b;
+    --chart-2: #3b82f6;
+    --chart-3: #10b981;
+    --chart-4: #8b5cf6;
+    --chart-5: #ef4444;
 
-	/* Terminal colors - dark mode (same as light) */
-	--terminal-red: #ef4444;
-	--terminal-amber: #f59e0b;
-	--terminal-green: #10b981;
+    /* Terminal colors - dark mode (same as light) */
+    --terminal-red: #ef4444;
+    --terminal-amber: #f59e0b;
+    --terminal-green: #10b981;
 
-	/* Code/Console backgrounds - dark mode */
-	--console-bg: #020617;
-	--console-fg: #f1f5f9;
+    /* Code/Console backgrounds - dark mode */
+    --console-bg: #020617;
+    --console-fg: #f1f5f9;
 
-	/* Syntax highlighting colors - dark mode */
-	--syntax-keyword: #60a5fa; /* lighter blue for better contrast */
-	--syntax-import: #a78bfa; /* lighter purple for better contrast */
-	--syntax-string: #fbbf24; /* lighter amber for better contrast */
-	--syntax-function: #34d399; /* lighter green for better contrast */
-	--syntax-comment: #94a3b8; /* lighter muted for better contrast */
+    /* Syntax highlighting colors - dark mode */
+    --syntax-keyword: #60a5fa; /* lighter blue for better contrast */
+    --syntax-import: #a78bfa; /* lighter purple for better contrast */
+    --syntax-string: #fbbf24; /* lighter amber for better contrast */
+    --syntax-function: #34d399; /* lighter green for better contrast */
+    --syntax-comment: #94a3b8; /* lighter muted for better contrast */
 
-	/* Error state colors - dark mode */
-	--error-light: #b91c1c;
-	--error-dark: #ef4444;
+    /* Error state colors - dark mode */
+    --error-light: #b91c1c;
+    --error-dark: #ef4444;
 
-	/* Sidebar colors - dark mode */
-	--sidebar: #020617;
-	--sidebar-foreground: #f1f5f9;
-	--sidebar-primary: #f59e0b;
-	--sidebar-primary-foreground: #0f172a;
-	--sidebar-accent: #f59e0b;
-	--sidebar-accent-foreground: #0f172a;
-	--sidebar-border: #334155;
-	--sidebar-ring: #f59e0b;
+    /* Sidebar colors - dark mode */
+    --sidebar: #020617;
+    --sidebar-foreground: #f1f5f9;
+    --sidebar-primary: #f59e0b;
+    --sidebar-primary-foreground: #0f172a;
+    --sidebar-accent: #f59e0b;
+    --sidebar-accent-foreground: #0f172a;
+    --sidebar-border: #334155;
+    --sidebar-ring: #f59e0b;
 }
 
 /* ========================================
@@ -214,15 +214,24 @@
  * ======================================== */
 
 .bg-radial-glow {
-	background: radial-gradient(60rem 40rem at 50% -10%, color-mix(in srgb, var(--primary) 7%, transparent) 0%, transparent 100%);
+    background: radial-gradient(
+        60rem 40rem at 50% -10%,
+        color-mix(in srgb, var(--primary) 7%, transparent) 0%,
+        transparent 100%
+    );
 }
 
 .bg-section-gradient {
-	background: linear-gradient(to bottom, var(--background), var(--card));
+    background: linear-gradient(to bottom, var(--background), var(--card));
 }
 
 .bg-section-gradient-primary {
-	background: linear-gradient(to bottom, var(--background), color-mix(in srgb, var(--primary) 5%, transparent), var(--card));
+    background: linear-gradient(
+        to bottom,
+        var(--background),
+        color-mix(in srgb, var(--primary) 5%, transparent),
+        var(--card)
+    );
 }
 
 /* ========================================
@@ -231,22 +240,22 @@
  * ======================================== */
 
 @keyframes fade-in-up {
-	from {
-		opacity: 0;
-		transform: translateY(8px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .animate-fade-in-up {
-	animation: fade-in-up 0.4s ease-out forwards;
+    animation: fade-in-up 0.4s ease-out forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.animate-fade-in-up {
-		animation: none !important;
-	}
+    .animate-fade-in-up {
+        animation: none !important;
+    }
 }

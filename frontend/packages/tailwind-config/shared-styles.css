@@ -1,100 +1,100 @@
 /**
  * Shared Tailwind v4 Theme Configuration
- * 
+ *
  * This @theme block maps CSS custom properties to Tailwind utilities.
  * The actual values are defined in theme-tokens.css and inherited by all consumers.
- * 
+ *
  * Migrated from apps/commercial/styles/globals.css @theme inline block.
  */
 
 @theme inline {
-	/* ========================================
+    /* ========================================
    * TAILWIND THEME INTEGRATION
    * Maps CSS custom properties to Tailwind utilities
    * ======================================== */
 
-	/* Breakpoints - Tailwind v4 defaults (required when using @theme) */
-	--breakpoint-sm: 40rem; /* 640px */
-	--breakpoint-md: 48rem; /* 768px */
-	--breakpoint-lg: 64rem; /* 1024px */
-	--breakpoint-xl: 80rem; /* 1280px */
-	--breakpoint-2xl: 96rem; /* 1536px */
+    /* Breakpoints - Tailwind v4 defaults (required when using @theme) */
+    --breakpoint-sm: 40rem; /* 640px */
+    --breakpoint-md: 48rem; /* 768px */
+    --breakpoint-lg: 64rem; /* 1024px */
+    --breakpoint-xl: 80rem; /* 1280px */
+    --breakpoint-2xl: 96rem; /* 1536px */
 
-	/* Semantic colors */
-	--color-background: var(--background);
-	--color-foreground: var(--foreground);
-	--color-card: var(--card);
-	--color-card-foreground: var(--card-foreground);
-	--color-popover: var(--popover);
-	--color-popover-foreground: var(--popover-foreground);
-	--color-primary: var(--primary);
-	--color-primary-foreground: var(--primary-foreground);
-	--color-secondary: var(--secondary);
-	--color-secondary-foreground: var(--secondary-foreground);
-	--color-muted: var(--muted);
-	--color-muted-foreground: var(--muted-foreground);
-	--color-accent: var(--accent);
-	--color-accent-foreground: var(--accent-foreground);
-	--color-destructive: var(--destructive);
-	--color-destructive-foreground: var(--destructive-foreground);
-	--color-border: var(--border);
-	--color-input: var(--input);
-	--color-ring: var(--ring);
+    /* Semantic colors */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
 
-	/* Fonts - Keep utilities working correctly */
-	--font-sans: var(--font-geist-sans);
-	--font-serif: var(--font-ibm-plex-serif);
-	--font-mono: var(--font-geist-mono);
-	
-	/* Override default to serif (but utilities still work) */
-	--default-font-family: var(--font-ibm-plex-serif);
+    /* Fonts - Keep utilities working correctly */
+    --font-sans: var(--font-geist-sans);
+    --font-serif: var(--font-ibm-plex-serif);
+    --font-mono: var(--font-geist-mono);
 
-	/* Chart colors */
-	--color-chart-1: var(--chart-1);
-	--color-chart-2: var(--chart-2);
-	--color-chart-3: var(--chart-3);
-	--color-chart-4: var(--chart-4);
-	--color-chart-5: var(--chart-5);
+    /* Override default to serif (but utilities still work) */
+    --default-font-family: var(--font-ibm-plex-serif);
 
-	/* Terminal colors */
-	--color-terminal-red: var(--terminal-red);
-	--color-terminal-amber: var(--terminal-amber);
-	--color-terminal-green: var(--terminal-green);
+    /* Chart colors */
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
 
-	/* Error states */
-	--color-error-light: var(--error-light);
-	--color-error-dark: var(--error-dark);
+    /* Terminal colors */
+    --color-terminal-red: var(--terminal-red);
+    --color-terminal-amber: var(--terminal-amber);
+    --color-terminal-green: var(--terminal-green);
 
-	/* Sidebar colors */
-	--color-sidebar: var(--sidebar);
-	--color-sidebar-foreground: var(--sidebar-foreground);
-	--color-sidebar-primary: var(--sidebar-primary);
-	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-	--color-sidebar-accent: var(--sidebar-accent);
-	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-	--color-sidebar-border: var(--sidebar-border);
-	--color-sidebar-ring: var(--sidebar-ring);
+    /* Error states */
+    --color-error-light: var(--error-light);
+    --color-error-dark: var(--error-dark);
 
-	/* Spacing scale (for reference, Tailwind handles these natively) */
-	/* Use: p-4, m-8, gap-2, etc. */
+    /* Sidebar colors */
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
 
-	/* Typography scale (for reference, Tailwind handles these natively) */
-	/* Use: text-sm, text-xl, text-4xl, etc. */
+    /* Spacing scale (for reference, Tailwind handles these natively) */
+    /* Use: p-4, m-8, gap-2, etc. */
 
-	/* Icon sizes (custom utilities) */
-	/* Use: w-icon-sm h-icon-sm, etc. */
+    /* Typography scale (for reference, Tailwind handles these natively) */
+    /* Use: text-sm, text-xl, text-4xl, etc. */
 
-	/* Border radius */
-	--radius-xs: calc(var(--radius) - 6px);
-	--radius-sm: calc(var(--radius) - 4px);
-	--radius-md: calc(var(--radius) - 2px);
-	--radius-lg: var(--radius);
-	--radius-xl: calc(var(--radius) + 4px);
+    /* Icon sizes (custom utilities) */
+    /* Use: w-icon-sm h-icon-sm, etc. */
 
-	/* Border defaults - naked 'border' utility uses design system color */
-	--default-border-width: 1px;
-	--default-border-color: var(--border);
+    /* Border radius */
+    --radius-xs: calc(var(--radius) - 6px);
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
 
-	/* Shadows (for reference, Tailwind handles these natively) */
-	/* Use: shadow-xs, shadow-sm, shadow-md, shadow-lg, shadow-xl, shadow-2xl */
+    /* Border defaults - naked 'border' utility uses design system color */
+    --default-border-width: 1px;
+    --default-border-color: var(--border);
+
+    /* Shadows (for reference, Tailwind handles these natively) */
+    /* Use: shadow-xs, shadow-sm, shadow-md, shadow-lg, shadow-xl, shadow-2xl */
 }

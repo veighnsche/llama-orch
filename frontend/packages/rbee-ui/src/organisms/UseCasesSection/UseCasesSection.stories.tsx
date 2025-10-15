@@ -3,13 +3,13 @@ import { Building, Home as HomeIcon, Laptop, Users } from 'lucide-react'
 import { UseCasesSection } from './UseCasesSection'
 
 const meta = {
-	title: 'Organisms/UseCasesSection',
-	component: UseCasesSection,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/UseCasesSection',
+  component: UseCasesSection,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The UseCasesSection presents persona-based use cases in a card grid format. Each card follows a Scenario → Solution → Outcome structure, making the value proposition concrete for different audience segments.
 
@@ -129,85 +129,83 @@ import { Laptop, Users } from 'lucide-react'
 - **Color Contrast**: Meets WCAG AA standards in both themes
 - **Outcome Highlighting**: Color-coded for emphasis but not sole indicator
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
-	argTypes: {
-		title: {
-			control: 'text',
-			description: 'Section title',
-			table: {
-				type: { summary: 'string' },
-				category: 'Content',
-			},
-		},
-		subtitle: {
-			control: 'text',
-			description: 'Section subtitle',
-			table: {
-				type: { summary: 'string' },
-				category: 'Content',
-			},
-		},
-		columns: {
-			control: 'select',
-			options: [2, 3],
-			description: 'Number of columns in grid',
-			table: {
-				type: { summary: 'number' },
-				defaultValue: { summary: '3' },
-				category: 'Layout',
-			},
-		},
-	},
+      },
+    },
+  },
+  tags: ['autodocs'],
+  argTypes: {
+    title: {
+      control: 'text',
+      description: 'Section title',
+      table: {
+        type: { summary: 'string' },
+        category: 'Content',
+      },
+    },
+    subtitle: {
+      control: 'text',
+      description: 'Section subtitle',
+      table: {
+        type: { summary: 'string' },
+        category: 'Content',
+      },
+    },
+    columns: {
+      control: 'select',
+      options: [2, 3],
+      description: 'Number of columns in grid',
+      table: {
+        type: { summary: 'number' },
+        defaultValue: { summary: '3' },
+        category: 'Layout',
+      },
+    },
+  },
 } satisfies Meta<typeof UseCasesSection>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const HomePageDefault: Story = {
-	args: {
-		title: 'Built for those who value independence',
-		subtitle: 'Run serious AI on your own hardware. Keep costs at zero, keep control at 100%.',
-		items: [
-			{
-				icon: Laptop,
-				title: 'The solo developer',
-				scenario: 'Shipping a SaaS with AI features; wants control without vendor lock-in.',
-				solution:
-					'Run rbee on your gaming PC + spare workstation. Llama 70B for coding, SD for assets—local & fast.',
-				outcome: '$0/month AI costs. Full control. No rate limits.',
-			},
-			{
-				icon: Users,
-				title: 'The small team',
-				scenario: '5-person startup burning $500/mo on APIs.',
-				solution:
-					'Pool 3 workstations + 2 Macs into one rbee cluster. Shared models, faster inference, fewer blockers.',
-				outcome: '$6,000+ saved per year. GDPR-friendly by design.',
-			},
-			{
-				icon: HomeIcon,
-				title: 'The homelab enthusiast',
-				scenario: 'Four GPUs gathering dust.',
-				solution: 'Spread workers across your LAN in minutes. Build agents: coder, doc generator, code reviewer.',
-				outcome: 'Idle GPUs → productive. Auto-download models, clean shutdowns.',
-			},
-			{
-				icon: Building,
-				title: 'The enterprise',
-				scenario: '50-dev org. Code cannot leave the premises.',
-				solution:
-					'On-prem rbee with audit trails and policy routing. Rhai-based rules for data residency & access.',
-				outcome: 'EU-only compliance. Zero external dependencies.',
-			},
-		],
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: `**Home page context** — Exact implementation from \`/\` route.
+  args: {
+    title: 'Built for those who value independence',
+    subtitle: 'Run serious AI on your own hardware. Keep costs at zero, keep control at 100%.',
+    items: [
+      {
+        icon: Laptop,
+        title: 'The solo developer',
+        scenario: 'Shipping a SaaS with AI features; wants control without vendor lock-in.',
+        solution: 'Run rbee on your gaming PC + spare workstation. Llama 70B for coding, SD for assets—local & fast.',
+        outcome: '$0/month AI costs. Full control. No rate limits.',
+      },
+      {
+        icon: Users,
+        title: 'The small team',
+        scenario: '5-person startup burning $500/mo on APIs.',
+        solution:
+          'Pool 3 workstations + 2 Macs into one rbee cluster. Shared models, faster inference, fewer blockers.',
+        outcome: '$6,000+ saved per year. GDPR-friendly by design.',
+      },
+      {
+        icon: HomeIcon,
+        title: 'The homelab enthusiast',
+        scenario: 'Four GPUs gathering dust.',
+        solution: 'Spread workers across your LAN in minutes. Build agents: coder, doc generator, code reviewer.',
+        outcome: 'Idle GPUs → productive. Auto-download models, clean shutdowns.',
+      },
+      {
+        icon: Building,
+        title: 'The enterprise',
+        scenario: '50-dev org. Code cannot leave the premises.',
+        solution: 'On-prem rbee with audit trails and policy routing. Rhai-based rules for data residency & access.',
+        outcome: 'EU-only compliance. Zero external dependencies.',
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: `**Home page context** — Exact implementation from \`/\` route.
 
 **Marketing Notes:**
 - **Headline**: "Built for those who value independence" — Values-driven positioning
@@ -248,80 +246,79 @@ export const HomePageDefault: Story = {
 - Highlighted outcomes draw attention to results
 
 **Tone**: Relatable, specific, outcome-focused`,
-			},
-		},
-	},
+      },
+    },
+  },
 }
 
 export const SoloDeveloperOnly: Story = {
-	args: {
-		title: 'For developers who ship',
-		subtitle: 'Build AI features without burning cash on APIs.',
-		items: [
-			{
-				icon: Laptop,
-				title: 'The solo developer',
-				scenario: 'Shipping a SaaS with AI features; wants control without vendor lock-in.',
-				solution:
-					'Run rbee on your gaming PC + spare workstation. Llama 70B for coding, SD for assets—local & fast.',
-				outcome: '$0/month AI costs. Full control. No rate limits.',
-			},
-		],
-		columns: 2,
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: `Single persona deep dive. This variant:
+  args: {
+    title: 'For developers who ship',
+    subtitle: 'Build AI features without burning cash on APIs.',
+    items: [
+      {
+        icon: Laptop,
+        title: 'The solo developer',
+        scenario: 'Shipping a SaaS with AI features; wants control without vendor lock-in.',
+        solution: 'Run rbee on your gaming PC + spare workstation. Llama 70B for coding, SD for assets—local & fast.',
+        outcome: '$0/month AI costs. Full control. No rate limits.',
+      },
+    ],
+    columns: 2,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: `Single persona deep dive. This variant:
 - Focuses on solo developer (most common persona)
 - Removes other personas to reduce cognitive load
 - Uses 2-column layout for larger card
 - Headline targets "developers who ship" (action-oriented)
 
 **Use case**: Landing page targeting solo developers, or A/B test against multi-persona version.`,
-			},
-		},
-	},
+      },
+    },
+  },
 }
 
 export const AlternativePersonas: Story = {
-	args: {
-		title: 'Who uses rbee?',
-		subtitle: 'From indie hackers to Fortune 500s.',
-		items: [
-			{
-				icon: Laptop,
-				title: 'Indie hacker',
-				scenario: 'Building AI-powered SaaS on nights and weekends.',
-				solution: 'Use your gaming rig. No cloud bills, no rate limits, no vendor lock-in.',
-				outcome: 'Ship faster. Keep 100% of revenue.',
-			},
-			{
-				icon: Users,
-				title: 'Agency',
-				scenario: 'Building AI features for clients. API costs eat margins.',
-				solution: 'Pool agency hardware. Bill clients for AI features, keep costs at zero.',
-				outcome: '80% margin improvement on AI projects.',
-			},
-			{
-				icon: Building,
-				title: 'Regulated industry',
-				scenario: 'Healthcare/finance. Data cannot leave premises.',
-				solution: 'On-prem rbee. Audit trails. Policy routing by data classification.',
-				outcome: 'HIPAA/SOC2 compliant. Zero external dependencies.',
-			},
-		],
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: `Alternative persona set for A/B testing. This variant:
+  args: {
+    title: 'Who uses rbee?',
+    subtitle: 'From indie hackers to Fortune 500s.',
+    items: [
+      {
+        icon: Laptop,
+        title: 'Indie hacker',
+        scenario: 'Building AI-powered SaaS on nights and weekends.',
+        solution: 'Use your gaming rig. No cloud bills, no rate limits, no vendor lock-in.',
+        outcome: 'Ship faster. Keep 100% of revenue.',
+      },
+      {
+        icon: Users,
+        title: 'Agency',
+        scenario: 'Building AI features for clients. API costs eat margins.',
+        solution: 'Pool agency hardware. Bill clients for AI features, keep costs at zero.',
+        outcome: '80% margin improvement on AI projects.',
+      },
+      {
+        icon: Building,
+        title: 'Regulated industry',
+        scenario: 'Healthcare/finance. Data cannot leave premises.',
+        solution: 'On-prem rbee. Audit trails. Policy routing by data classification.',
+        outcome: 'HIPAA/SOC2 compliant. Zero external dependencies.',
+      },
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: `Alternative persona set for A/B testing. This variant:
 - **Indie hacker**: Emphasizes speed and revenue retention
 - **Agency**: Highlights margin improvement (B2B angle)
 - **Regulated industry**: Focuses on compliance (healthcare/finance)
 
 **Use case**: Test with different audience segments. Agency persona may resonate with B2B visitors.`,
-			},
-		},
-	},
+      },
+    },
+  },
 }

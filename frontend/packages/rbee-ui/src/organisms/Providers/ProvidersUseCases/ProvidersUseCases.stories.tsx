@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { ProvidersUseCases } from './ProvidersUseCases'
 
 const meta = {
-	title: 'Organisms/Providers/ProvidersUseCases',
-	component: ProvidersUseCases,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Providers/ProvidersUseCases',
+  component: ProvidersUseCases,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The ProvidersUseCases section showcases four provider personas (Gaming PC Owners, Homelab Enthusiasts, Former Crypto Miners, Workstation Owners) with real earnings data and testimonials. It uses a 2-column grid layout with case cards featuring icons, quotes, and earnings breakdowns.
 
@@ -90,10 +90,10 @@ import { ProvidersUseCases } from '@rbee/ui/organisms/Providers/ProvidersUseCase
 - **Keyboard Navigation**: All interactive elements are keyboard accessible
 - **Screen Readers**: Testimonial quotes and earnings are properly announced
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof ProvidersUseCases>
 
 export default meta

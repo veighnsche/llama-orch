@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { ProvidersTestimonials } from './ProvidersTestimonials'
 
 const meta = {
-	title: 'Organisms/Providers/ProvidersTestimonials',
-	component: ProvidersTestimonials,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Providers/ProvidersTestimonials',
+  component: ProvidersTestimonials,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The ProvidersTestimonials section (also exported as SocialProofSection) showcases provider testimonials via a carousel rail and displays marketplace statistics (500+ Active Providers, 2,000+ GPUs Earning, €180K+ Paid to Providers, 4.8/5 Average Rating). It provides social proof and credibility for the provider marketplace.
 
@@ -89,10 +89,10 @@ import { ProvidersTestimonials } from '@rbee/ui/organisms/Providers/ProvidersTes
 - **Carousel**: TestimonialsRail has proper ARIA roles
 - **Screen Readers**: Stats and testimonials are properly announced
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof ProvidersTestimonials>
 
 export default meta

@@ -4,13 +4,13 @@ import { PricingComparison } from './PricingComparison'
 // Created by: TEAM-004
 
 const meta = {
-	title: 'Organisms/Pricing/PricingComparison',
-	component: PricingComparison,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Pricing/PricingComparison',
+  component: PricingComparison,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The PricingComparison section presents a detailed feature comparison table across three pricing tiers: Home/Lab (free/OSS), Team (paid), and Enterprise (custom pricing). Features are grouped by Core Platform, Productivity, and Support & Services categories.
 
@@ -156,55 +156,55 @@ import { PricingComparison } from '@rbee/ui/organisms/Pricing/PricingComparison'
 - **Lead qualification**: Capture team size, use case, infrastructure details
 - **Proof points**: Unlimited GPUs on all tiers, no feature gates on core platform, OpenAI-compatible API
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
-	argTypes: {
-		lastUpdated: {
-			control: 'text',
-			description: 'Last updated date for the comparison table',
-			table: {
-				type: { summary: 'string' },
-				defaultValue: { summary: 'This month' },
-				category: 'Content',
-			},
-		},
-	},
+      },
+    },
+  },
+  tags: ['autodocs'],
+  argTypes: {
+    lastUpdated: {
+      control: 'text',
+      description: 'Last updated date for the comparison table',
+      table: {
+        type: { summary: 'string' },
+        defaultValue: { summary: 'This month' },
+        category: 'Content',
+      },
+    },
+  },
 } satisfies Meta<typeof PricingComparison>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const PricingPageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default pricing comparison table showing all three tiers: Home/Lab (free/OSS with unlimited GPUs, API, orchestration, CLI), Team (paid with Web UI, team collaboration, priority email support), and Enterprise (custom pricing with SLA, 24/7 support, white-label, professional services, multi-region). Features are grouped by Core Platform, Productivity, and Support & Services. Desktop shows full table, mobile shows card list.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default pricing comparison table showing all three tiers: Home/Lab (free/OSS with unlimited GPUs, API, orchestration, CLI), Team (paid with Web UI, team collaboration, priority email support), and Enterprise (custom pricing with SLA, 24/7 support, white-label, professional services, multi-region). Features are grouped by Core Platform, Productivity, and Support & Services. Desktop shows full table, mobile shows card list.',
+      },
+    },
+  },
 }
 
 export const FreeVsPro: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant comparing two tiers: Home/Lab (free) vs. Team (paid). This version would emphasize the key differences: Web UI (Team only - manage nodes, models, jobs visually), Team collaboration (Team only - multiple users, shared resources), and Priority email support (Team only - business hours response vs. community support). Ideal for solo developers or small teams evaluating whether to upgrade from free tier.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant comparing two tiers: Home/Lab (free) vs. Team (paid). This version would emphasize the key differences: Web UI (Team only - manage nodes, models, jobs visually), Team collaboration (Team only - multiple users, shared resources), and Priority email support (Team only - business hours response vs. community support). Ideal for solo developers or small teams evaluating whether to upgrade from free tier.',
+      },
+    },
+  },
 }
 
 export const ProVsEnterprise: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant comparing two tiers: Team (paid) vs. Enterprise (custom). This version would emphasize the key differences: SLA (Enterprise only - 99.9% uptime, 1-hour response), 24/7 support (Enterprise only - critical issues outside business hours), White-label (Enterprise only - custom branding, custom domain), Professional services (Enterprise only - deployment consulting, custom development, team training), and Multi-region support (Enterprise only - EU multi-region, automatic failover, load balancing). Ideal for teams evaluating whether to upgrade to enterprise tier.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant comparing two tiers: Team (paid) vs. Enterprise (custom). This version would emphasize the key differences: SLA (Enterprise only - 99.9% uptime, 1-hour response), 24/7 support (Enterprise only - critical issues outside business hours), White-label (Enterprise only - custom branding, custom domain), Professional services (Enterprise only - deployment consulting, custom development, team training), and Multi-region support (Enterprise only - EU multi-region, automatic failover, load balancing). Ideal for teams evaluating whether to upgrade to enterprise tier.',
+      },
+    },
+  },
 }

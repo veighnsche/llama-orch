@@ -4,13 +4,13 @@ import { EnterpriseCTA } from './EnterpriseCTA'
 // Created by: TEAM-004
 
 const meta = {
-	title: 'Organisms/Enterprise/EnterpriseCTA',
-	component: EnterpriseCTA,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Enterprise/EnterpriseCTA',
+  component: EnterpriseCTA,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The EnterpriseCTA section presents three conversion options for enterprise buyers: Schedule Demo (primary), Compliance Pack (secondary), and Talk to Sales (tertiary). Includes trust strip with testimonial stats and deployment timeline information.
 
@@ -158,44 +158,44 @@ import { EnterpriseCTA } from '@rbee/ui/organisms/Enterprise/EnterpriseCTA'
 - Follow-up: Sales team qualification call
 - Outcome: Custom proposal, specific questions answered, demo scheduled
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof EnterpriseCTA>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const EnterprisePageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default enterprise CTA section showing all three conversion options: Schedule Demo (primary CTA with Calendar icon, 30-minute demo with compliance team), Compliance Pack (secondary CTA with FileText icon, download GDPR/SOC2/ISO 27001 documentation), and Talk to Sales (tertiary CTA with MessageSquare icon, discuss specific compliance requirements). Includes trust strip with testimonial stats and footer caption showing deployment timeline (6-8 weeks from consultation to production).',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default enterprise CTA section showing all three conversion options: Schedule Demo (primary CTA with Calendar icon, 30-minute demo with compliance team), Compliance Pack (secondary CTA with FileText icon, download GDPR/SOC2/ISO 27001 documentation), and Talk to Sales (tertiary CTA with MessageSquare icon, discuss specific compliance requirements). Includes trust strip with testimonial stats and footer caption showing deployment timeline (6-8 weeks from consultation to production).',
+      },
+    },
+  },
 }
 
 export const DemoFocus: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant emphasizing "Schedule Demo" as the primary CTA. This version would make the demo option more prominent: Larger card, more compelling copy ("See compliance in action - live demo with our team"), additional trust signals ("Join 50+ enterprises using rbee"), and stronger call-to-action ("Book Your Demo Now"). Ideal for high-intent enterprise buyers ready to evaluate or those responding to outbound sales campaigns.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant emphasizing "Schedule Demo" as the primary CTA. This version would make the demo option more prominent: Larger card, more compelling copy ("See compliance in action - live demo with our team"), additional trust signals ("Join 50+ enterprises using rbee"), and stronger call-to-action ("Book Your Demo Now"). Ideal for high-intent enterprise buyers ready to evaluate or those responding to outbound sales campaigns.',
+      },
+    },
+  },
 }
 
 export const ContactSalesFocus: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant emphasizing "Talk to Sales" as the primary CTA. This version would make the sales option more prominent: Larger card, more compelling copy ("Custom proposal for your compliance requirements"), additional trust signals ("Trusted by 50+ regulated enterprises"), and stronger call-to-action ("Contact Sales Now"). Ideal for enterprise buyers with specific questions, custom requirements, or those needing custom proposals (RFP responses, custom pricing, etc.).',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant emphasizing "Talk to Sales" as the primary CTA. This version would make the sales option more prominent: Larger card, more compelling copy ("Custom proposal for your compliance requirements"), additional trust signals ("Trusted by 50+ regulated enterprises"), and stronger call-to-action ("Contact Sales Now"). Ideal for enterprise buyers with specific questions, custom requirements, or those needing custom proposals (RFP responses, custom pricing, etc.).',
+      },
+    },
+  },
 }

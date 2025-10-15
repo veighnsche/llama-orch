@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { DevelopersCodeExamples } from './DevelopersCodeExamples'
 
 const meta = {
-	title: 'Organisms/Developers/DevelopersCodeExamples',
-	component: DevelopersCodeExamples,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Developers/DevelopersCodeExamples',
+  component: DevelopersCodeExamples,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The DevelopersCodeExamples section showcases TypeScript code examples using the \`@llama-orch/utils\` SDK. It demonstrates practical code patterns for developers building AI agents and LLM pipelines. This section treats code examples as marketing tools, showing developers exactly how to use rbee.
 
@@ -118,147 +118,147 @@ import { DevelopersCodeExamples } from '@rbee/ui/organisms/Developers/Developers
 - **Semantic HTML**: Uses \`<pre>\` and \`<code>\` elements
 - **Color Contrast**: Syntax highlighting meets WCAG AA standards
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof DevelopersCodeExamples>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const DevelopersPageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default code examples section for the Developers page. Shows 3 TypeScript examples: simple code generation, file operations, and multi-step agent. Code examples are marketing tools that demonstrate simplicity, power, and SDK quality.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default code examples section for the Developers page. Shows 3 TypeScript examples: simple code generation, file operations, and multi-step agent. Code examples are marketing tools that demonstrate simplicity, power, and SDK quality.',
+      },
+    },
+  },
 }
 
 export const TypeScriptOnly: Story = {
-	render: () => (
-		<div className="space-y-8">
-			<DevelopersCodeExamples />
-			<div className="bg-muted p-8">
-				<h3 className="text-xl font-bold mb-4 text-center">Why TypeScript Only?</h3>
-				<div className="max-w-2xl mx-auto space-y-4 text-sm">
-					<div className="bg-background p-4 rounded-lg">
-						<strong>Strategic Decision:</strong> Show TypeScript examples only on the Developers page
-						<ul className="mt-2 space-y-1 text-muted-foreground">
-							<li>• TypeScript is the dominant language for modern web development</li>
-							<li>• Shows the SDK has first-class TypeScript support</li>
-							<li>• Reduces cognitive load (one language, clear examples)</li>
-							<li>• Python examples can be on a separate SDK docs page</li>
-						</ul>
-					</div>
-					<div className="bg-background p-4 rounded-lg">
-						<strong>Alternative:</strong> If targeting Python developers, create a separate section or page with
-						Python examples
-					</div>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Strategic decision to show TypeScript only. Reduces cognitive load and demonstrates first-class TypeScript support.',
-			},
-		},
-	},
+  render: () => (
+    <div className="space-y-8">
+      <DevelopersCodeExamples />
+      <div className="bg-muted p-8">
+        <h3 className="text-xl font-bold mb-4 text-center">Why TypeScript Only?</h3>
+        <div className="max-w-2xl mx-auto space-y-4 text-sm">
+          <div className="bg-background p-4 rounded-lg">
+            <strong>Strategic Decision:</strong> Show TypeScript examples only on the Developers page
+            <ul className="mt-2 space-y-1 text-muted-foreground">
+              <li>• TypeScript is the dominant language for modern web development</li>
+              <li>• Shows the SDK has first-class TypeScript support</li>
+              <li>• Reduces cognitive load (one language, clear examples)</li>
+              <li>• Python examples can be on a separate SDK docs page</li>
+            </ul>
+          </div>
+          <div className="bg-background p-4 rounded-lg">
+            <strong>Alternative:</strong> If targeting Python developers, create a separate section or page with Python
+            examples
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Strategic decision to show TypeScript only. Reduces cognitive load and demonstrates first-class TypeScript support.',
+      },
+    },
+  },
 }
 
 export const PythonExamplesAlternative: Story = {
-	render: () => (
-		<div className="space-y-8">
-			<DevelopersCodeExamples />
-			<div className="bg-muted p-8">
-				<h3 className="text-xl font-bold mb-4 text-center">Alternative: Python Examples</h3>
-				<div className="max-w-2xl mx-auto">
-					<p className="text-sm text-muted-foreground mb-4">
-						If targeting Python developers (data scientists, ML engineers), consider showing Python examples
-						instead or in addition to TypeScript:
-					</p>
-					<div className="bg-background p-4 rounded-lg font-mono text-xs">
-						<div className="text-muted-foreground"># Python example</div>
-						<div className="mt-2">from llama_orch import invoke</div>
-						<div className="mt-2">response = invoke(</div>
-						<div className="pl-4">prompt="Generate a Python function",</div>
-						<div className="pl-4">model="llama-3.1-70b"</div>
-						<div>)</div>
-					</div>
-					<p className="text-xs text-muted-foreground mt-3">
-						<strong>Recommendation:</strong> Create a separate page or section for Python examples rather than
-						mixing languages on the same page.
-					</p>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Alternative approach: Show Python examples for data scientists and ML engineers. Recommend separate page to avoid mixing languages.',
-			},
-		},
-	},
+  render: () => (
+    <div className="space-y-8">
+      <DevelopersCodeExamples />
+      <div className="bg-muted p-8">
+        <h3 className="text-xl font-bold mb-4 text-center">Alternative: Python Examples</h3>
+        <div className="max-w-2xl mx-auto">
+          <p className="text-sm text-muted-foreground mb-4">
+            If targeting Python developers (data scientists, ML engineers), consider showing Python examples instead or
+            in addition to TypeScript:
+          </p>
+          <div className="bg-background p-4 rounded-lg font-mono text-xs">
+            <div className="text-muted-foreground"># Python example</div>
+            <div className="mt-2">from llama_orch import invoke</div>
+            <div className="mt-2">response = invoke(</div>
+            <div className="pl-4">prompt="Generate a Python function",</div>
+            <div className="pl-4">model="llama-3.1-70b"</div>
+            <div>)</div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            <strong>Recommendation:</strong> Create a separate page or section for Python examples rather than mixing
+            languages on the same page.
+          </p>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Alternative approach: Show Python examples for data scientists and ML engineers. Recommend separate page to avoid mixing languages.',
+      },
+    },
+  },
 }
 
 export const CodeAsMarketing: Story = {
-	render: () => (
-		<div className="space-y-8">
-			<DevelopersCodeExamples />
-			<div className="bg-muted p-8">
-				<h3 className="text-xl font-bold mb-4 text-center">Code Examples as Marketing Tools</h3>
-				<div className="max-w-3xl mx-auto space-y-4 text-sm">
-					<p className="text-muted-foreground">
-						<strong>CRITICAL:</strong> Code examples are not just documentation—they are marketing materials.
-						Each example should demonstrate:
-					</p>
-					<div className="grid md:grid-cols-3 gap-4">
-						<div className="bg-background p-4 rounded-lg">
-							<strong className="block mb-2">Simplicity</strong>
-							<p className="text-muted-foreground">
-								Example 1 shows you can get started in 5 lines. No complex setup, no boilerplate.
-							</p>
-						</div>
-						<div className="bg-background p-4 rounded-lg">
-							<strong className="block mb-2">Power</strong>
-							<p className="text-muted-foreground">
-								Example 2 shows real workflow automation. Example 3 shows complex multi-step agents.
-							</p>
-						</div>
-						<div className="bg-background p-4 rounded-lg">
-							<strong className="block mb-2">Quality</strong>
-							<p className="text-muted-foreground">
-								Clean API design, composable utilities, TypeScript support. This is production-ready.
-							</p>
-						</div>
-					</div>
-					<div className="bg-background p-4 rounded-lg">
-						<strong className="block mb-2">Marketing Strategy in Code Comments:</strong>
-						<ul className="space-y-1 text-muted-foreground">
-							<li>• Minimal comments (code should be self-documenting)</li>
-							<li>• No tutorial comments (this is marketing, not a tutorial)</li>
-							<li>• Variable names are descriptive (schema, code, review, suggestions)</li>
-							<li>• Function names are clear (invoke, FileReader.read, Thread.create)</li>
-						</ul>
-					</div>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Analysis of code examples as marketing tools. Each example demonstrates simplicity, power, and quality to convert developers.',
-			},
-		},
-	},
+  render: () => (
+    <div className="space-y-8">
+      <DevelopersCodeExamples />
+      <div className="bg-muted p-8">
+        <h3 className="text-xl font-bold mb-4 text-center">Code Examples as Marketing Tools</h3>
+        <div className="max-w-3xl mx-auto space-y-4 text-sm">
+          <p className="text-muted-foreground">
+            <strong>CRITICAL:</strong> Code examples are not just documentation—they are marketing materials. Each
+            example should demonstrate:
+          </p>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="bg-background p-4 rounded-lg">
+              <strong className="block mb-2">Simplicity</strong>
+              <p className="text-muted-foreground">
+                Example 1 shows you can get started in 5 lines. No complex setup, no boilerplate.
+              </p>
+            </div>
+            <div className="bg-background p-4 rounded-lg">
+              <strong className="block mb-2">Power</strong>
+              <p className="text-muted-foreground">
+                Example 2 shows real workflow automation. Example 3 shows complex multi-step agents.
+              </p>
+            </div>
+            <div className="bg-background p-4 rounded-lg">
+              <strong className="block mb-2">Quality</strong>
+              <p className="text-muted-foreground">
+                Clean API design, composable utilities, TypeScript support. This is production-ready.
+              </p>
+            </div>
+          </div>
+          <div className="bg-background p-4 rounded-lg">
+            <strong className="block mb-2">Marketing Strategy in Code Comments:</strong>
+            <ul className="space-y-1 text-muted-foreground">
+              <li>• Minimal comments (code should be self-documenting)</li>
+              <li>• No tutorial comments (this is marketing, not a tutorial)</li>
+              <li>• Variable names are descriptive (schema, code, review, suggestions)</li>
+              <li>• Function names are clear (invoke, FileReader.read, Thread.create)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Analysis of code examples as marketing tools. Each example demonstrates simplicity, power, and quality to convert developers.',
+      },
+    },
+  },
 }

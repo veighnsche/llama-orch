@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { MultiBackendGpu } from './MultiBackendGpu'
 
 const meta = {
-	title: 'Organisms/Features/MultiBackendGpu',
-	component: MultiBackendGpu,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Features/MultiBackendGpu',
+  component: MultiBackendGpu,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The MultiBackendGpu section explains rbee's multi-backend GPU support (CUDA, Metal, CPU) and the "GPU FAIL FAST" policy—no silent fallbacks, clear errors with suggestions, explicit backend selection. It demonstrates rbee's philosophy of failing fast with helpful errors rather than silently degrading performance.
 
@@ -108,106 +108,108 @@ import { MultiBackendGpu } from '@rbee/ui/organisms/Features/MultiBackendGpu'
 - **Semantic HTML**: Uses proper heading hierarchy
 - **Error Messages**: Error example has role="alert"
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof MultiBackendGpu>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const FeaturesPageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default multi-backend GPU support section for the Features page. Shows GPU FAIL FAST policy (no silent fallbacks), backend detection console (CUDA, Metal, CPU), and key features (detection, explicit selection, helpful suggestions). Demonstrates fail-fast philosophy.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default multi-backend GPU support section for the Features page. Shows GPU FAIL FAST policy (no silent fallbacks), backend detection console (CUDA, Metal, CPU), and key features (detection, explicit selection, helpful suggestions). Demonstrates fail-fast philosophy.',
+      },
+    },
+  },
 }
 
 export const CudaFocus: Story = {
-	render: () => (
-		<div className="space-y-8">
-			<div className="bg-primary/10 p-6 text-center">
-				<h3 className="text-xl font-bold">CUDA Support Focus</h3>
-				<p className="text-muted-foreground">
-					For Linux users with NVIDIA GPUs. Full CUDA support with explicit device selection.
-				</p>
-			</div>
-			<MultiBackendGpu />
-			<div className="bg-muted p-8">
-				<h3 className="text-xl font-bold mb-4 text-center">CUDA Messaging for Linux Users</h3>
-				<div className="max-w-2xl mx-auto space-y-4 text-sm">
-					<div className="bg-background p-4 rounded-lg">
-						<strong className="block mb-2">Key Benefits for NVIDIA GPU Users:</strong>
-						<ul className="space-y-2 text-muted-foreground">
-							<li>• Full CUDA support (no compromises)</li>
-							<li>• Multi-GPU orchestration (use all your GPUs)</li>
-							<li>• Explicit device selection (--device cuda:0, cuda:1)</li>
-							<li>• VRAM validation before loading (no crashes)</li>
-						</ul>
-					</div>
-					<div className="bg-background p-4 rounded-lg">
-						<strong className="block mb-2">Differentiator:</strong>
-						<p className="text-muted-foreground">
-							Unlike other systems that silently fall back to CPU when VRAM is insufficient, rbee fails fast with
-							clear errors and actionable suggestions.
-						</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story: 'Focus on CUDA support for Linux users with NVIDIA GPUs. Emphasizes full CUDA support and fail-fast design.',
-			},
-		},
-	},
+  render: () => (
+    <div className="space-y-8">
+      <div className="bg-primary/10 p-6 text-center">
+        <h3 className="text-xl font-bold">CUDA Support Focus</h3>
+        <p className="text-muted-foreground">
+          For Linux users with NVIDIA GPUs. Full CUDA support with explicit device selection.
+        </p>
+      </div>
+      <MultiBackendGpu />
+      <div className="bg-muted p-8">
+        <h3 className="text-xl font-bold mb-4 text-center">CUDA Messaging for Linux Users</h3>
+        <div className="max-w-2xl mx-auto space-y-4 text-sm">
+          <div className="bg-background p-4 rounded-lg">
+            <strong className="block mb-2">Key Benefits for NVIDIA GPU Users:</strong>
+            <ul className="space-y-2 text-muted-foreground">
+              <li>• Full CUDA support (no compromises)</li>
+              <li>• Multi-GPU orchestration (use all your GPUs)</li>
+              <li>• Explicit device selection (--device cuda:0, cuda:1)</li>
+              <li>• VRAM validation before loading (no crashes)</li>
+            </ul>
+          </div>
+          <div className="bg-background p-4 rounded-lg">
+            <strong className="block mb-2">Differentiator:</strong>
+            <p className="text-muted-foreground">
+              Unlike other systems that silently fall back to CPU when VRAM is insufficient, rbee fails fast with clear
+              errors and actionable suggestions.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Focus on CUDA support for Linux users with NVIDIA GPUs. Emphasizes full CUDA support and fail-fast design.',
+      },
+    },
+  },
 }
 
 export const MetalFocus: Story = {
-	render: () => (
-		<div className="space-y-8">
-			<div className="bg-primary/10 p-6 text-center">
-				<h3 className="text-xl font-bold">Metal Support Focus</h3>
-				<p className="text-muted-foreground">
-					For Mac users with M-series chips. Native Metal support for optimal performance.
-				</p>
-			</div>
-			<MultiBackendGpu />
-			<div className="bg-muted p-8">
-				<h3 className="text-xl font-bold mb-4 text-center">Metal Messaging for Mac Users</h3>
-				<div className="max-w-2xl mx-auto space-y-4 text-sm">
-					<div className="bg-background p-4 rounded-lg">
-						<strong className="block mb-2">Key Benefits for Mac Users:</strong>
-						<ul className="space-y-2 text-muted-foreground">
-							<li>• Native Metal support (optimized for M-series chips)</li>
-							<li>• Unified memory architecture (efficient memory usage)</li>
-							<li>• Explicit backend selection (--backend metal)</li>
-							<li>• Works alongside CUDA machines in your pool</li>
-						</ul>
-					</div>
-					<div className="bg-background p-4 rounded-lg">
-						<strong className="block mb-2">Differentiator:</strong>
-						<p className="text-muted-foreground">
-							rbee treats Metal as a first-class backend, not an afterthought. Your Mac can work alongside your
-							Linux machines seamlessly.
-						</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story: 'Focus on Metal support for Mac users with M-series chips. Emphasizes native Metal support and cross-platform orchestration.',
-			},
-		},
-	},
+  render: () => (
+    <div className="space-y-8">
+      <div className="bg-primary/10 p-6 text-center">
+        <h3 className="text-xl font-bold">Metal Support Focus</h3>
+        <p className="text-muted-foreground">
+          For Mac users with M-series chips. Native Metal support for optimal performance.
+        </p>
+      </div>
+      <MultiBackendGpu />
+      <div className="bg-muted p-8">
+        <h3 className="text-xl font-bold mb-4 text-center">Metal Messaging for Mac Users</h3>
+        <div className="max-w-2xl mx-auto space-y-4 text-sm">
+          <div className="bg-background p-4 rounded-lg">
+            <strong className="block mb-2">Key Benefits for Mac Users:</strong>
+            <ul className="space-y-2 text-muted-foreground">
+              <li>• Native Metal support (optimized for M-series chips)</li>
+              <li>• Unified memory architecture (efficient memory usage)</li>
+              <li>• Explicit backend selection (--backend metal)</li>
+              <li>• Works alongside CUDA machines in your pool</li>
+            </ul>
+          </div>
+          <div className="bg-background p-4 rounded-lg">
+            <strong className="block mb-2">Differentiator:</strong>
+            <p className="text-muted-foreground">
+              rbee treats Metal as a first-class backend, not an afterthought. Your Mac can work alongside your Linux
+              machines seamlessly.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Focus on Metal support for Mac users with M-series chips. Emphasizes native Metal support and cross-platform orchestration.',
+      },
+    },
+  },
 }

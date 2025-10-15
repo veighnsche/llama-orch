@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { UseCasesPrimary } from './UseCasesPrimary'
 
 const meta = {
-	title: 'Organisms/UseCases/UseCasesPrimary',
-	component: UseCasesPrimary,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/UseCases/UseCasesPrimary',
+  component: UseCasesPrimary,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The UseCasesPrimary section showcases 8 primary use case scenarios in a 2-column grid layout. Each use case follows a problem-solution-outcome format with persona-specific details (Solo Developer, Small Team, Homelab Enthusiast, Enterprise, Freelance Developer, Research Lab, Open Source Maintainer, GPU Provider). Includes filter navigation and hero visual.
 
@@ -91,10 +91,10 @@ import { UseCasesPrimary } from '@rbee/ui/organisms/UseCases/UseCasesPrimary'
 - **Screen Readers**: Use case details are properly announced
 - **Focus States**: Visible focus indicators on interactive elements
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof UseCasesPrimary>
 
 export default meta

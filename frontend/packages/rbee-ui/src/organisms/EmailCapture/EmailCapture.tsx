@@ -1,27 +1,27 @@
-"use client";
+'use client'
 
-import { Badge } from "@rbee/ui/atoms/Badge";
-import { Button } from "@rbee/ui/atoms/Button";
-import { Input } from "@rbee/ui/atoms/Input";
-import { BeeGlyph, HomelabBee } from "@rbee/ui/icons";
-import { CheckCircle2, GitBranch, Lock, Mail } from "lucide-react";
-import type React from "react";
-import { useState } from "react";
+import { Badge } from '@rbee/ui/atoms/Badge'
+import { Button } from '@rbee/ui/atoms/Button'
+import { Input } from '@rbee/ui/atoms/Input'
+import { BeeGlyph, HomelabBee } from '@rbee/ui/icons'
+import { CheckCircle2, GitBranch, Lock, Mail } from 'lucide-react'
+import type React from 'react'
+import { useState } from 'react'
 
 export function EmailCapture() {
-  const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [email, setEmail] = useState('')
+  const [submitted, setSubmitted] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     // TODO: Wire up to actual email service
-    console.log("Email submitted:", email);
-    setSubmitted(true);
+    console.log('Email submitted:', email)
+    setSubmitted(true)
     setTimeout(() => {
-      setSubmitted(false);
-      setEmail("");
-    }, 3000);
-  };
+      setSubmitted(false)
+      setEmail('')
+    }, 3000)
+  }
 
   return (
     <section className="relative isolate py-28 bg-background">
@@ -34,21 +34,19 @@ export function EmailCapture() {
         <Badge
           variant="outline"
           className="mb-4 inline-flex items-center gap-2 border-primary/20 bg-primary/10 px-3 py-1 animate-in fade-in slide-in-from-bottom-2 duration-500"
-          style={{ animationDelay: "100ms" }}
+          style={{ animationDelay: '100ms' }}
         >
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
             <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
           </span>
-          <span className="text-xs font-medium uppercase tracking-wider text-primary">
-            In Development · M0 · 68%
-          </span>
+          <span className="text-xs font-medium uppercase tracking-wider text-primary">In Development · M0 · 68%</span>
         </Badge>
 
         {/* Headline */}
         <h2
           className="text-5xl md:text-6xl font-bold tracking-tight text-foreground mb-5 animate-in fade-in slide-in-from-bottom-2 duration-500"
-          style={{ animationDelay: "300ms" }}
+          style={{ animationDelay: '300ms' }}
         >
           Get Updates. Own Your AI.
         </h2>
@@ -56,10 +54,9 @@ export function EmailCapture() {
         {/* Subhead */}
         <p
           className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500"
-          style={{ animationDelay: "450ms" }}
+          style={{ animationDelay: '450ms' }}
         >
-          Join the rbee waitlist to get early access, build notes, and launch
-          perks for running AI on your own hardware.
+          Join the rbee waitlist to get early access, build notes, and launch perks for running AI on your own hardware.
         </p>
 
         {/* Supportive visual - homelab illustration */}
@@ -102,11 +99,7 @@ export function EmailCapture() {
 
             {/* Trust microcopy */}
             <div className="mt-3 text-sm text-muted-foreground flex items-center justify-center gap-2">
-              <Lock
-                className="w-3.5 h-3.5 text-muted-foreground/70"
-                aria-hidden="true"
-                focusable="false"
-              />
+              <Lock className="w-3.5 h-3.5 text-muted-foreground/70" aria-hidden="true" focusable="false" />
               <span>No spam. Unsubscribe anytime.</span>
             </div>
           </form>
@@ -116,11 +109,7 @@ export function EmailCapture() {
             role="status"
             aria-live="polite"
           >
-            <CheckCircle2
-              className="w-5 h-5"
-              aria-hidden="true"
-              focusable="false"
-            />
+            <CheckCircle2 className="w-5 h-5" aria-hidden="true" focusable="false" />
             <span>Thanks! You're on the list — we'll keep you posted.</span>
           </div>
         )}
@@ -130,9 +119,7 @@ export function EmailCapture() {
           {/* Gradient divider */}
           <div className="h-px w-full mx-auto bg-gradient-to-r from-transparent via-border to-transparent" />
 
-          <p className="text-sm text-muted-foreground mt-6">
-            Follow progress & contribute on GitHub
-          </p>
+          <p className="text-sm text-muted-foreground mt-6">Follow progress & contribute on GitHub</p>
 
           <a
             href="https://github.com/veighnsche/llama-orch"
@@ -140,19 +127,13 @@ export function EmailCapture() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 mt-3 text-primary font-medium hover:text-primary/90 transition-colors"
           >
-            <GitBranch
-              className="w-5 h-5"
-              aria-hidden="true"
-              focusable="false"
-            />
+            <GitBranch className="w-5 h-5" aria-hidden="true" focusable="false" />
             <span>View Repository</span>
           </a>
 
-          <p className="text-xs text-muted-foreground/80 mt-2">
-            Weekly dev notes. Roadmap issues tagged M0–M2.
-          </p>
+          <p className="text-xs text-muted-foreground/80 mt-2">Weekly dev notes. Roadmap issues tagged M0–M2.</p>
         </div>
       </div>
     </section>
-  );
+  )
 }

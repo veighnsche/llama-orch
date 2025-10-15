@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { ProvidersEarnings } from './ProvidersEarnings'
 
 const meta = {
-	title: 'Organisms/Providers/ProvidersEarnings',
-	component: ProvidersEarnings,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Providers/ProvidersEarnings',
+  component: ProvidersEarnings,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The ProvidersEarnings section is an interactive earnings calculator that allows potential providers to estimate their monthly income based on GPU model, hours available per day, and expected utilization. It features a 2-column layout with configuration inputs on the left and earnings display on the right.
 
@@ -95,10 +95,10 @@ import { ProvidersEarnings } from '@rbee/ui/organisms/Providers/ProvidersEarning
 - **Focus Management**: Proper focus indicators on all interactive elements
 - **Screen Readers**: All values and labels are properly announced
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof ProvidersEarnings>
 
 export default meta

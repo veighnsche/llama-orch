@@ -1,8 +1,8 @@
-import { Button } from "@rbee/ui/atoms/Button";
-import { TESTIMONIAL_STATS } from "@rbee/ui/data/testimonials";
-import { CTAOptionCard } from "@rbee/ui/molecules";
-import { Calendar, FileText, MessageSquare } from "lucide-react";
-import Link from "next/link";
+import { Button } from '@rbee/ui/atoms/Button'
+import { TESTIMONIAL_STATS } from '@rbee/ui/data/testimonials'
+import { CTAOptionCard } from '@rbee/ui/molecules'
+import { Calendar, FileText, MessageSquare } from 'lucide-react'
+import Link from 'next/link'
 
 export function EnterpriseCTA() {
   return (
@@ -11,26 +11,17 @@ export function EnterpriseCTA() {
       className="relative border-b border-border bg-gradient-to-b from-background via-primary/5 to-background px-6 py-24 overflow-hidden"
     >
       {/* Decorative Gradient */}
-      <div
-        className="pointer-events-none absolute inset-0 bg-radial-glow"
-        aria-hidden="true"
-      />
+      <div className="pointer-events-none absolute inset-0 bg-radial-glow" aria-hidden="true" />
 
       <div className="relative mx-auto max-w-5xl">
         {/* Header Block */}
         <div className="mb-12 text-center animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
-          <p className="mb-2 text-sm font-sans font-semibold uppercase tracking-wide text-primary">
-            Get Audit-Ready
-          </p>
-          <h2
-            id="cta-h2"
-            className="mb-4 text-4xl font-bold text-foreground lg:text-5xl"
-          >
+          <p className="mb-2 text-sm font-sans font-semibold uppercase tracking-wide text-primary">Get Audit-Ready</p>
+          <h2 id="cta-h2" className="mb-4 text-4xl font-bold text-foreground lg:text-5xl">
             Ready to Meet Your Compliance Requirements?
           </h2>
           <p className="mx-auto max-w-3xl text-balance text-xl text-muted-foreground">
-            Book a demo with our compliance team, or download the documentation
-            pack.
+            Book a demo with our compliance team, or download the documentation pack.
           </p>
         </div>
 
@@ -45,10 +36,7 @@ export function EnterpriseCTA() {
         </div>
 
         {/* CTA Options Grid */}
-        <div
-          className="mb-12 grid gap-6 md:grid-cols-3 animate-in fade-in-50"
-          style={{ animationDelay: "120ms" }}
-        >
+        <div className="mb-12 grid gap-6 md:grid-cols-3 animate-in fade-in-50" style={{ animationDelay: '120ms' }}>
           {/* Primary: Schedule Demo */}
           <CTAOptionCard
             icon={<Calendar className="h-6 w-6" />}
@@ -112,10 +100,9 @@ export function EnterpriseCTA() {
 
         {/* Footer Caption */}
         <p className="text-center text-sm text-muted-foreground">
-          Enterprise support 24/7 • Typical deployment: 6–8 weeks from
-          consultation to production.
+          Enterprise support 24/7 • Typical deployment: 6–8 weeks from consultation to production.
         </p>
       </div>
     </section>
-  );
+  )
 }

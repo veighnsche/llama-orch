@@ -1,37 +1,29 @@
-import { SectionContainer, UseCaseCard } from "@rbee/ui/molecules";
-import { cn } from "@rbee/ui/utils";
-import type { LucideIcon } from "lucide-react";
+import { SectionContainer, UseCaseCard } from '@rbee/ui/molecules'
+import { cn } from '@rbee/ui/utils'
+import type { LucideIcon } from 'lucide-react'
 
 export type UseCase = {
-  icon: LucideIcon;
-  title: string;
-  scenario: string;
-  solution: string;
-  outcome: string;
-  tags?: string[];
-  cta?: { label: string; href: string };
-  illustrationSrc?: string;
-};
+  icon: LucideIcon
+  title: string
+  scenario: string
+  solution: string
+  outcome: string
+  tags?: string[]
+  cta?: { label: string; href: string }
+  illustrationSrc?: string
+}
 
 export type UseCasesSectionProps = {
-  title: string;
-  subtitle?: string;
-  items: UseCase[];
-  columns?: 2 | 3;
-  id?: string;
-  className?: string;
-};
+  title: string
+  subtitle?: string
+  items: UseCase[]
+  columns?: 2 | 3
+  id?: string
+  className?: string
+}
 
-export function UseCasesSection({
-  title,
-  subtitle,
-  items,
-  columns = 3,
-  id,
-  className,
-}: UseCasesSectionProps) {
-  const gridCols =
-    columns === 2 ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3";
+export function UseCasesSection({ title, subtitle, items, columns = 3, id, className }: UseCasesSectionProps) {
+  const gridCols = columns === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3'
 
   return (
     <SectionContainer
@@ -41,16 +33,11 @@ export function UseCasesSection({
       paddingY="2xl"
       maxWidth="6xl"
       align="center"
-      className={cn("border-b border-border", className)}
+      className={cn('border-b border-border', className)}
       headingId={id}
     >
       {/* Cards grid */}
-      <div
-        className={cn(
-          "mx-auto grid max-w-6xl gap-6 animate-in fade-in-50 duration-400",
-          gridCols
-        )}
-      >
+      <div className={cn('mx-auto grid max-w-6xl gap-6 animate-in fade-in-50 duration-400', gridCols)}>
         {items.map((item, i) => (
           <UseCaseCard
             key={i}
@@ -69,5 +56,5 @@ export function UseCasesSection({
         ))}
       </div>
     </SectionContainer>
-  );
+  )
 }

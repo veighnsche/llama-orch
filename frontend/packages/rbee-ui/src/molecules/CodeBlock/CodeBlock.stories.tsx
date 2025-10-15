@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { CodeBlock } from './CodeBlock'
 
 const meta: Meta<typeof CodeBlock> = {
-	title: 'Molecules/CodeBlock',
-	component: CodeBlock,
-	parameters: {
-		layout: 'centered',
-		docs: {
-			description: {
-				component: `
+  title: 'Molecules/CodeBlock',
+  component: CodeBlock,
+  parameters: {
+    layout: 'centered',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The CodeBlock molecule displays code with **Prism-powered syntax highlighting**, adaptive dark/light themes, copy button, optional title, line numbers, and line highlighting.
 
@@ -41,62 +41,62 @@ This molecule is composed of:
 ## Dependencies
 Requires \`prism-react-renderer\` for syntax highlighting. Colors defined via CSS custom properties in \`globals.css\` (\`--code-string\`, \`--code-variable\`, etc.) for automatic light/dark theme adaptation.
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
-	argTypes: {
-		code: {
-			control: 'text',
-			description: 'Code content',
-			table: {
-				type: { summary: 'string' },
-				category: 'Content',
-			},
-		},
-		language: {
-			control: 'text',
-			description: 'Programming language',
-			table: {
-				type: { summary: 'string' },
-				category: 'Content',
-			},
-		},
-		title: {
-			control: 'text',
-			description: 'Optional title',
-			table: {
-				type: { summary: 'string' },
-				category: 'Content',
-			},
-		},
-		copyable: {
-			control: 'boolean',
-			description: 'Show copy button',
-			table: {
-				type: { summary: 'boolean' },
-				defaultValue: { summary: 'true' },
-				category: 'Behavior',
-			},
-		},
-		showLineNumbers: {
-			control: 'boolean',
-			description: 'Show line numbers',
-			table: {
-				type: { summary: 'boolean' },
-				defaultValue: { summary: 'false' },
-				category: 'Appearance',
-			},
-		},
-		highlight: {
-			control: 'object',
-			description: 'Line numbers to highlight',
-			table: {
-				type: { summary: 'number[]' },
-				category: 'Appearance',
-			},
-		},
-	},
+      },
+    },
+  },
+  tags: ['autodocs'],
+  argTypes: {
+    code: {
+      control: 'text',
+      description: 'Code content',
+      table: {
+        type: { summary: 'string' },
+        category: 'Content',
+      },
+    },
+    language: {
+      control: 'text',
+      description: 'Programming language',
+      table: {
+        type: { summary: 'string' },
+        category: 'Content',
+      },
+    },
+    title: {
+      control: 'text',
+      description: 'Optional title',
+      table: {
+        type: { summary: 'string' },
+        category: 'Content',
+      },
+    },
+    copyable: {
+      control: 'boolean',
+      description: 'Show copy button',
+      table: {
+        type: { summary: 'boolean' },
+        defaultValue: { summary: 'true' },
+        category: 'Behavior',
+      },
+    },
+    showLineNumbers: {
+      control: 'boolean',
+      description: 'Show line numbers',
+      table: {
+        type: { summary: 'boolean' },
+        defaultValue: { summary: 'false' },
+        category: 'Appearance',
+      },
+    },
+    highlight: {
+      control: 'object',
+      description: 'Line numbers to highlight',
+      table: {
+        type: { summary: 'number[]' },
+        category: 'Appearance',
+      },
+    },
+  },
 }
 
 export default meta
@@ -139,117 +139,96 @@ const response = await client.inference({
 })`
 
 export const Default: Story = {
-	args: {
-		code: pythonCode,
-		language: 'python',
-		title: 'example.py',
-	},
+  args: {
+    code: pythonCode,
+    language: 'python',
+    title: 'example.py',
+  },
 }
 
 export const AllLanguages: Story = {
-	render: () => (
-		<div className="flex flex-col gap-6 p-8 max-w-3xl">
-			<h3 className="text-lg font-semibold text-foreground">All Languages</h3>
-			<CodeBlock
-				code={pythonCode}
-				language="python"
-				title="example.py"
-			/>
-			<CodeBlock
-				code={bashCode}
-				language="bash"
-				title="curl-example.sh"
-			/>
-			<CodeBlock
-				code={typescriptCode}
-				language="typescript"
-				title="example.ts"
-			/>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story: 'CodeBlock with different programming languages.',
-			},
-		},
-	},
+  render: () => (
+    <div className="flex flex-col gap-6 p-8 max-w-3xl">
+      <h3 className="text-lg font-semibold text-foreground">All Languages</h3>
+      <CodeBlock code={pythonCode} language="python" title="example.py" />
+      <CodeBlock code={bashCode} language="bash" title="curl-example.sh" />
+      <CodeBlock code={typescriptCode} language="typescript" title="example.ts" />
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'CodeBlock with different programming languages.',
+      },
+    },
+  },
 }
 
 export const WithLineNumbers: Story = {
-	args: {
-		code: typescriptCode,
-		language: 'typescript',
-		title: 'Quick Start',
-		copyable: true,
-		showLineNumbers: true,
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'CodeBlock with line numbers enabled. Uses a 2-column grid layout for perfect alignment.',
-			},
-		},
-	},
+  args: {
+    code: typescriptCode,
+    language: 'typescript',
+    title: 'Quick Start',
+    copyable: true,
+    showLineNumbers: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'CodeBlock with line numbers enabled. Uses a 2-column grid layout for perfect alignment.',
+      },
+    },
+  },
 }
 
 export const WithHighlighting: Story = {
-	args: {
-		code: typescriptCode,
-		language: 'typescript',
-		title: 'Quick Start',
-		copyable: true,
-		showLineNumbers: true,
-		highlight: [3, 4, 5],
-	},
-	parameters: {
-		docs: {
-			description: {
-				story: 'CodeBlock with line highlighting. Highlighted lines get bg-primary/10 background and a left border accent for emphasis.',
-			},
-		},
-	},
+  args: {
+    code: typescriptCode,
+    language: 'typescript',
+    title: 'Quick Start',
+    copyable: true,
+    showLineNumbers: true,
+    highlight: [3, 4, 5],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'CodeBlock with line highlighting. Highlighted lines get bg-primary/10 background and a left border accent for emphasis.',
+      },
+    },
+  },
 }
 
 export const InFeaturesContext: Story = {
-	render: () => (
-		<div className="w-full max-w-5xl">
-			<div className="mb-4 text-sm text-muted-foreground">
-				Example: CodeBlock in FeaturesSection organism
-			</div>
-			<div className="rounded-2xl border bg-card p-8">
-				<div className="mb-6">
-					<h2 className="text-2xl font-bold text-foreground mb-2">Simple API Integration</h2>
-					<p className="text-muted-foreground">
-						Get started in minutes with our developer-friendly API. Works with any language.
-					</p>
-				</div>
-				<div className="grid gap-6 lg:grid-cols-2">
-					<div>
-						<h3 className="text-sm font-semibold text-foreground mb-3">Python</h3>
-						<CodeBlock
-							code={pythonCode}
-							language="python"
-							title="example.py"
-						/>
-					</div>
-					<div>
-						<h3 className="text-sm font-semibold text-foreground mb-3">cURL</h3>
-						<CodeBlock
-							code={bashCode}
-							language="bash"
-							title="curl-example.sh"
-						/>
-					</div>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story: 'CodeBlock as used in the FeaturesSection organism, showing API examples in multiple languages.',
-			},
-		},
-	},
+  render: () => (
+    <div className="w-full max-w-5xl">
+      <div className="mb-4 text-sm text-muted-foreground">Example: CodeBlock in FeaturesSection organism</div>
+      <div className="rounded-2xl border bg-card p-8">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Simple API Integration</h2>
+          <p className="text-muted-foreground">
+            Get started in minutes with our developer-friendly API. Works with any language.
+          </p>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Python</h3>
+            <CodeBlock code={pythonCode} language="python" title="example.py" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">cURL</h3>
+            <CodeBlock code={bashCode} language="bash" title="curl-example.sh" />
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'CodeBlock as used in the FeaturesSection organism, showing API examples in multiple languages.',
+      },
+    },
+  },
 }

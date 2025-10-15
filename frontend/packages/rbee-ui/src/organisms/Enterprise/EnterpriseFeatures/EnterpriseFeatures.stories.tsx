@@ -4,13 +4,13 @@ import { EnterpriseFeatures } from './EnterpriseFeatures'
 // Created by: TEAM-004
 
 const meta = {
-	title: 'Organisms/Enterprise/EnterpriseFeatures',
-	component: EnterpriseFeatures,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Enterprise/EnterpriseFeatures',
+  component: EnterpriseFeatures,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The EnterpriseFeatures section presents four enterprise-specific capabilities: Enterprise SLAs, White-Label Option, Professional Services, and Multi-Region Support. Includes an outcomes band showing key metrics (99.9% uptime SLA, <1 hour support response, EU-only data residency).
 
@@ -118,44 +118,44 @@ import { EnterpriseFeatures } from '@rbee/ui/organisms/Enterprise/EnterpriseFeat
 - **Lead qualification**: Capture SLA requirements, support needs, customization needs, multi-region requirements
 - **Proof points**: 99.9% uptime SLA, <1 hour support response, EU-only data residency
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof EnterpriseFeatures>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const EnterprisePageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default enterprise features section showing all four enterprise capabilities: Enterprise SLAs (99.9% uptime, 24/7 support with 1-hour response, dedicated account manager, quarterly reviews), White-Label Option (custom branding/logo, custom domain, UI customization, API endpoint customization), Professional Services (deployment consulting, integration support, custom development, team training), and Multi-Region Support (EU multi-region, automatic failover, load balancing, geo-redundancy). Includes outcomes band showing 99.9% uptime SLA, <1 hour support response, and EU-only data residency.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default enterprise features section showing all four enterprise capabilities: Enterprise SLAs (99.9% uptime, 24/7 support with 1-hour response, dedicated account manager, quarterly reviews), White-Label Option (custom branding/logo, custom domain, UI customization, API endpoint customization), Professional Services (deployment consulting, integration support, custom development, team training), and Multi-Region Support (EU multi-region, automatic failover, load balancing, geo-redundancy). Includes outcomes band showing 99.9% uptime SLA, <1 hour support response, and EU-only data residency.',
+      },
+    },
+  },
 }
 
 export const AuthenticationFocus: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant emphasizing authentication and access control features. This version would focus on: SSO/SAML integration (Okta, Azure AD, Google Workspace), advanced RBAC (role-based access control with fine-grained permissions), audit logging (all authentication and access attempts logged), and JWT lifecycle management (RS256/ES256 validation, revocation lists, short-lived refresh tokens). Ideal for enterprises with strong authentication requirements or those using SSO providers.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant emphasizing authentication and access control features. This version would focus on: SSO/SAML integration (Okta, Azure AD, Google Workspace), advanced RBAC (role-based access control with fine-grained permissions), audit logging (all authentication and access attempts logged), and JWT lifecycle management (RS256/ES256 validation, revocation lists, short-lived refresh tokens). Ideal for enterprises with strong authentication requirements or those using SSO providers.',
+      },
+    },
+  },
 }
 
 export const GovernanceFocus: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant emphasizing governance and policy features. This version would focus on: Custom policies (Rhai-based programmable routing and access control), audit logging (32 event types with 7-year retention), compliance reporting (automated compliance reports for GDPR, SOC2, ISO 27001), and data residency controls (enforce EU-only data processing). Ideal for enterprises with strong governance requirements or those in highly regulated industries.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant emphasizing governance and policy features. This version would focus on: Custom policies (Rhai-based programmable routing and access control), audit logging (32 event types with 7-year retention), compliance reporting (automated compliance reports for GDPR, SOC2, ISO 27001), and data residency controls (enforce EU-only data processing). Ideal for enterprises with strong governance requirements or those in highly regulated industries.',
+      },
+    },
+  },
 }

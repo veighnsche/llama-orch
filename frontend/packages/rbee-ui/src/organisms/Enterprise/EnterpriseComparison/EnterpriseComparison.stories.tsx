@@ -4,13 +4,13 @@ import { EnterpriseComparison } from './EnterpriseComparison'
 // Created by: TEAM-004
 
 const meta = {
-	title: 'Organisms/Enterprise/EnterpriseComparison',
-	component: EnterpriseComparison,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Enterprise/EnterpriseComparison',
+  component: EnterpriseComparison,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The EnterpriseComparison section presents a feature matrix comparing rbee to external AI providers (OpenAI, Anthropic, Azure OpenAI, AWS Bedrock) across compliance and security dimensions. Uses a responsive table (desktop) and card switcher (mobile).
 
@@ -128,44 +128,44 @@ import { EnterpriseComparison } from '@rbee/ui/organisms/Enterprise/EnterpriseCo
 - **Verification**: "Verify requirements with your legal team"
 - **No Liability**: Comparison is for informational purposes only
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof EnterpriseComparison>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const EnterprisePageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default enterprise comparison section showing full feature matrix comparing rbee to OpenAI, Anthropic, Azure OpenAI, and AWS Bedrock. Features are grouped by compliance (GDPR, SOC2, ISO 27001, audit trails), security (zero-trust, encryption, isolation), and control (data residency, no vendor lock-in). Desktop shows full table, mobile shows provider switcher with single-provider card view.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default enterprise comparison section showing full feature matrix comparing rbee to OpenAI, Anthropic, Azure OpenAI, and AWS Bedrock. Features are grouped by compliance (GDPR, SOC2, ISO 27001, audit trails), security (zero-trust, encryption, isolation), and control (data residency, no vendor lock-in). Desktop shows full table, mobile shows provider switcher with single-provider card view.',
+      },
+    },
+  },
 }
 
 export const VsAzureOpenAI: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant focusing on direct comparison with Azure OpenAI. This version would emphasize key differentiators: True EU Residency (rbee = EU-only with no US parent company access vs. Azure = "EU region" but Microsoft is US company with Schrems II risk), Immutable Audit Trails (rbee = 32 event types with 7-year retention vs. Azure = limited audit logs), No Vendor Lock-in (rbee = open-source foundation vs. Azure = Microsoft ecosystem lock-in), and GDPR Article 44 Compliance (rbee = no US dependencies vs. Azure = US parent company risk). Ideal for enterprises currently using or evaluating Azure OpenAI.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant focusing on direct comparison with Azure OpenAI. This version would emphasize key differentiators: True EU Residency (rbee = EU-only with no US parent company access vs. Azure = "EU region" but Microsoft is US company with Schrems II risk), Immutable Audit Trails (rbee = 32 event types with 7-year retention vs. Azure = limited audit logs), No Vendor Lock-in (rbee = open-source foundation vs. Azure = Microsoft ecosystem lock-in), and GDPR Article 44 Compliance (rbee = no US dependencies vs. Azure = US parent company risk). Ideal for enterprises currently using or evaluating Azure OpenAI.',
+      },
+    },
+  },
 }
 
 export const VsAWSBedrock: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant focusing on direct comparison with AWS Bedrock. This version would emphasize key differentiators: True EU Residency (rbee = EU-only with no US parent company access vs. Bedrock = "EU region" but AWS is US company with Schrems II risk), Immutable Audit Trails (rbee = tamper-evident hash chains with 7-year retention vs. Bedrock = CloudTrail with limited retention), No Vendor Lock-in (rbee = open-source foundation vs. Bedrock = AWS ecosystem lock-in), and GDPR Article 44 Compliance (rbee = no US dependencies vs. Bedrock = US parent company risk). Ideal for enterprises currently using or evaluating AWS Bedrock.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant focusing on direct comparison with AWS Bedrock. This version would emphasize key differentiators: True EU Residency (rbee = EU-only with no US parent company access vs. Bedrock = "EU region" but AWS is US company with Schrems II risk), Immutable Audit Trails (rbee = tamper-evident hash chains with 7-year retention vs. Bedrock = CloudTrail with limited retention), No Vendor Lock-in (rbee = open-source foundation vs. Bedrock = AWS ecosystem lock-in), and GDPR Article 44 Compliance (rbee = no US dependencies vs. Bedrock = US parent company risk). Ideal for enterprises currently using or evaluating AWS Bedrock.',
+      },
+    },
+  },
 }

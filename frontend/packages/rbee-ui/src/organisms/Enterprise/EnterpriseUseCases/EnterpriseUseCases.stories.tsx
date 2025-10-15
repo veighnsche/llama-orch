@@ -4,13 +4,13 @@ import { EnterpriseUseCases } from './EnterpriseUseCases'
 // Created by: TEAM-004
 
 const meta = {
-	title: 'Organisms/Enterprise/EnterpriseUseCases',
-	component: EnterpriseUseCases,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Enterprise/EnterpriseUseCases',
+  component: EnterpriseUseCases,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The EnterpriseUseCases section presents industry-specific use cases for rbee in highly regulated sectors: Financial Services, Healthcare, Legal Services, and Government. Each use case includes compliance badges, challenges, and solutions tailored to that industry.
 
@@ -113,44 +113,44 @@ import { EnterpriseUseCases } from '@rbee/ui/organisms/Enterprise/EnterpriseUseC
 - **Legal**: Attorney-client privilege protection, legal-hold audit trail, zero data transfer
 - **Government**: Data sovereignty guide, ISO 27001 alignment, transparent audit trail
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof EnterpriseUseCases>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const EnterprisePageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default enterprise use cases section showing all four regulated industries: Financial Services (PCI-DSS, GDPR, SOC2 - banks, insurance, fintech), Healthcare (HIPAA, GDPR Art. 9 - hospitals, medtech, pharma), Legal Services (GDPR, Legal Hold - law firms, legaltech), and Government (ISO 27001, Sovereignty - public sector, defense). Each case includes industry-specific challenges and solutions.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default enterprise use cases section showing all four regulated industries: Financial Services (PCI-DSS, GDPR, SOC2 - banks, insurance, fintech), Healthcare (HIPAA, GDPR Art. 9 - hospitals, medtech, pharma), Legal Services (GDPR, Legal Hold - law firms, legaltech), and Government (ISO 27001, Sovereignty - public sector, defense). Each case includes industry-specific challenges and solutions.',
+      },
+    },
+  },
 }
 
 export const FinancialServices: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant focusing on financial services use case. This version would emphasize: PCI-DSS compliance (no external APIs allowed), SOC2 Type II readiness (complete audit trail with 7-year retention), GDPR compliance (EU data residency), and zero external dependencies. Use case: EU bank needed internal code-gen for developer productivity but PCI-DSS and GDPR blocked external AI providers. Solution: On-prem deployment in EU data center with immutable audit logs and SOC2 Type II ready architecture. Ideal for banks, insurance companies, and fintech startups.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant focusing on financial services use case. This version would emphasize: PCI-DSS compliance (no external APIs allowed), SOC2 Type II readiness (complete audit trail with 7-year retention), GDPR compliance (EU data residency), and zero external dependencies. Use case: EU bank needed internal code-gen for developer productivity but PCI-DSS and GDPR blocked external AI providers. Solution: On-prem deployment in EU data center with immutable audit logs and SOC2 Type II ready architecture. Ideal for banks, insurance companies, and fintech startups.',
+      },
+    },
+  },
 }
 
 export const Healthcare: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant focusing on healthcare use case. This version would emphasize: HIPAA compliance (PHI protection, breach notifications), GDPR Article 9 compliance (special category health data), no US cloud dependencies, and full audit trail for breach detection. Use case: AI-assisted patient tooling (clinical decision support, medical coding, patient communication) with HIPAA + GDPR Article 9 constraints. Solution: Self-hosted in hospital data center with EU-only deployment and HIPAA-aligned architecture. Ideal for hospitals, medtech companies, and pharmaceutical companies.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant focusing on healthcare use case. This version would emphasize: HIPAA compliance (PHI protection, breach notifications), GDPR Article 9 compliance (special category health data), no US cloud dependencies, and full audit trail for breach detection. Use case: AI-assisted patient tooling (clinical decision support, medical coding, patient communication) with HIPAA + GDPR Article 9 constraints. Solution: Self-hosted in hospital data center with EU-only deployment and HIPAA-aligned architecture. Ideal for hospitals, medtech companies, and pharmaceutical companies.',
+      },
+    },
+  },
 }

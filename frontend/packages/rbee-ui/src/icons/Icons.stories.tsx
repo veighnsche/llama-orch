@@ -15,7 +15,7 @@ type Story = StoryObj<typeof meta>
 export const AllIcons: Story = {
   render: () => {
     const iconEntries = Object.entries(Icons)
-    
+
     return (
       <div className="space-y-8">
         <div>
@@ -37,9 +37,7 @@ export const AllIcons: Story = {
                   className="flex flex-col items-center gap-3 p-4 rounded-lg border hover:bg-accent transition-colors"
                 >
                   <IconComponent size={48} className="text-foreground" />
-                  <span className="text-xs text-center font-mono text-muted-foreground">
-                    {name}
-                  </span>
+                  <span className="text-xs text-center font-mono text-muted-foreground">{name}</span>
                 </div>
               )
             })}
@@ -63,7 +61,7 @@ export const AllIcons: Story = {
 export const Sizes: Story = {
   render: () => {
     const sizes = [16, 24, 32, 48, 64, 96]
-    
+
     return (
       <div className="space-y-8">
         <div>
@@ -96,7 +94,7 @@ export const Colors: Story = {
       { name: 'Blue 600', class: 'text-blue-600' },
       { name: 'Red 500', class: 'text-red-500' },
     ]
-    
+
     return (
       <div className="space-y-8">
         <div>

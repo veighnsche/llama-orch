@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { TechnicalSection } from './TechnicalSection'
 
 const meta = {
-	title: 'Organisms/Home/TechnicalSection',
-	component: TechnicalSection,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Home/TechnicalSection',
+  component: TechnicalSection,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The TechnicalSection showcases the engineering principles and technology stack behind rbee. Uses a two-column layout with architecture highlights on the left and technology stack on the right, plus an optional architecture diagram.
 
@@ -121,20 +121,20 @@ import { TechnicalSection } from '@rbee/ui/organisms/TechnicalSection'
 - **Color Contrast**: Meets WCAG AA standards in both themes
 - **Progress Bar**: Includes text label for screen readers
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof TechnicalSection>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const HomePageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story: `**Home page context** — Exact implementation from \`/\` route.
+  parameters: {
+    docs: {
+      description: {
+        story: `**Home page context** — Exact implementation from \`/\` route.
 
 **Marketing Notes:**
 - **Headline**: "Built by Engineers, for Engineers" — Peer credibility
@@ -209,100 +209,98 @@ export const HomePageDefault: Story = {
 - Architecture diagram makes abstract concrete
 
 **Tone**: Technical, transparent, peer-to-peer`,
-			},
-		},
-	},
+      },
+    },
+  },
 }
 
 export const SimplifiedTech: Story = {
-	render: () => (
-		<div>
-			<TechnicalSection />
-			<div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
-				<h3 style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Simplified Technical Messaging</h3>
-				<div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', lineHeight: '1.8' }}>
-					<p>
-						<strong>Current:</strong> "Rust-native orchestrator with process isolation, protocol awareness, and policy
-						routing via Rhai."
-					</p>
-					<p>
-						<strong>Alt 1:</strong> "Built with Rust for speed and reliability. No Python overhead." (Simpler, focuses
-						on Rust)
-					</p>
-					<p>
-						<strong>Alt 2:</strong> "Production-grade orchestration. Test-driven development. Clean shutdowns."
-						(Focuses on outcomes)
-					</p>
-					<p>
-						<strong>Alt 3:</strong> "Enterprise architecture. Homelab simplicity." (Contrast positioning)
-					</p>
-					<p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
-						<strong>Recommendation:</strong> Current messaging works for technical audience. Use Alt 2 for less
-						technical visitors.
-					</p>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story: 'Alternative technical messaging for different audience segments.',
-			},
-		},
-	},
+  render: () => (
+    <div>
+      <TechnicalSection />
+      <div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
+        <h3 style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Simplified Technical Messaging</h3>
+        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', lineHeight: '1.8' }}>
+          <p>
+            <strong>Current:</strong> "Rust-native orchestrator with process isolation, protocol awareness, and policy
+            routing via Rhai."
+          </p>
+          <p>
+            <strong>Alt 1:</strong> "Built with Rust for speed and reliability. No Python overhead." (Simpler, focuses
+            on Rust)
+          </p>
+          <p>
+            <strong>Alt 2:</strong> "Production-grade orchestration. Test-driven development. Clean shutdowns." (Focuses
+            on outcomes)
+          </p>
+          <p>
+            <strong>Alt 3:</strong> "Enterprise architecture. Homelab simplicity." (Contrast positioning)
+          </p>
+          <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
+            <strong>Recommendation:</strong> Current messaging works for technical audience. Use Alt 2 for less
+            technical visitors.
+          </p>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Alternative technical messaging for different audience segments.',
+      },
+    },
+  },
 }
 
 export const DeepDive: Story = {
-	render: () => (
-		<div>
-			<TechnicalSection />
-			<div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)' }}>
-				<h3 style={{ fontWeight: 'bold', marginBottom: '1rem', textAlign: 'center' }}>
-					Technical Deep Dive Topics
-				</h3>
-				<div
-					style={{
-						maxWidth: '800px',
-						margin: '0 auto',
-						display: 'grid',
-						gap: '1rem',
-						gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-					}}
-				>
-					<div>
-						<h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>BDD Testing</h4>
-						<p style={{ fontSize: '0.875rem', color: '#666' }}>
-							Cucumber-based scenarios. 42/62 passing. Live CI. Spec-driven development.
-						</p>
-					</div>
-					<div>
-						<h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Cascading Shutdown</h4>
-						<p style={{ fontSize: '0.875rem', color: '#666' }}>
-							SIGTERM propagation. VRAM cleanup. No orphaned processes. Ctrl+C just works.
-						</p>
-					</div>
-					<div>
-						<h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Process Isolation</h4>
-						<p style={{ fontSize: '0.875rem', color: '#666' }}>
-							Worker-level sandboxes. Memory boundaries. Zero cross-contamination.
-						</p>
-					</div>
-					<div>
-						<h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Rhai Policies</h4>
-						<p style={{ fontSize: '0.875rem', color: '#666' }}>
-							Embedded scripting. Route by model, region, cost. No recompilation needed.
-						</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story: 'Deep dive into technical topics. Useful for documentation or technical blog posts.',
-			},
-		},
-	},
+  render: () => (
+    <div>
+      <TechnicalSection />
+      <div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)' }}>
+        <h3 style={{ fontWeight: 'bold', marginBottom: '1rem', textAlign: 'center' }}>Technical Deep Dive Topics</h3>
+        <div
+          style={{
+            maxWidth: '800px',
+            margin: '0 auto',
+            display: 'grid',
+            gap: '1rem',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          }}
+        >
+          <div>
+            <h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>BDD Testing</h4>
+            <p style={{ fontSize: '0.875rem', color: '#666' }}>
+              Cucumber-based scenarios. 42/62 passing. Live CI. Spec-driven development.
+            </p>
+          </div>
+          <div>
+            <h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Cascading Shutdown</h4>
+            <p style={{ fontSize: '0.875rem', color: '#666' }}>
+              SIGTERM propagation. VRAM cleanup. No orphaned processes. Ctrl+C just works.
+            </p>
+          </div>
+          <div>
+            <h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Process Isolation</h4>
+            <p style={{ fontSize: '0.875rem', color: '#666' }}>
+              Worker-level sandboxes. Memory boundaries. Zero cross-contamination.
+            </p>
+          </div>
+          <div>
+            <h4 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Rhai Policies</h4>
+            <p style={{ fontSize: '0.875rem', color: '#666' }}>
+              Embedded scripting. Route by model, region, cost. No recompilation needed.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Deep dive into technical topics. Useful for documentation or technical blog posts.',
+      },
+    },
+  },
 }

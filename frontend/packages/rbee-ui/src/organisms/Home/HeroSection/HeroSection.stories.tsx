@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { HeroSection } from './HeroSection'
 
 const meta = {
-	title: 'Organisms/Home/HeroSection',
-	component: HeroSection,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Home/HeroSection',
+  component: HeroSection,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The HeroSection is the primary landing section of the rbee application. It features a compelling headline, value proposition, interactive terminal demo, and clear call-to-action buttons. The section uses a full-viewport height with animated elements and a honeycomb background pattern.
 
@@ -118,31 +118,31 @@ import { HeroSection } from '@rbee/ui/organisms/HeroSection'
 - **Live Regions**: Terminal output uses aria-live for screen readers
 - **Color Contrast**: Meets WCAG AA standards in both themes
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof HeroSection>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default hero section with all elements. Use the theme toggle in the toolbar to switch between light and dark modes. Use the viewport toolbar to test responsive behavior.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default hero section with all elements. Use the theme toggle in the toolbar to switch between light and dark modes. Use the viewport toolbar to test responsive behavior.',
+      },
+    },
+  },
 }
 
 export const HomePageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story: `**Home page context** — Exact implementation from \`/\` route.
+  parameters: {
+    docs: {
+      description: {
+        story: `**Home page context** — Exact implementation from \`/\` route.
 
 **Marketing Notes:**
 - Headline "AI Infrastructure. On Your Terms." establishes ownership/control theme
@@ -158,53 +158,64 @@ export const HomePageDefault: Story = {
 - Secondary CTA "View Docs" serves technical validators
 - No email capture at hero level (reduces friction)
 - Open source badge builds trust with developer audience`,
-			},
-		},
-	},
+      },
+    },
+  },
 }
 
 export const AlternativeHeadline: Story = {
-	render: () => (
-		<div>
-			<HeroSection />
-			<div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
-				<h3 style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Alternative Headline Options</h3>
-				<div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', lineHeight: '1.8' }}>
-					<p><strong>Current:</strong> "AI Infrastructure. On Your Terms."</p>
-					<p><strong>Alt 1:</strong> "Run AI on Your Hardware. Keep 100% Control." (More explicit about hardware ownership)</p>
-					<p><strong>Alt 2:</strong> "Zero-Cost AI Infrastructure. No Vendor Lock-In." (Leads with cost savings)</p>
-					<p><strong>Alt 3:</strong> "Private LLMs. Your Network. Your Rules." (Privacy-first angle)</p>
-					<p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
-						<strong>A/B Test Recommendation:</strong> Test Alt 2 for cost-conscious audience, Alt 3 for enterprise/privacy-focused.
-					</p>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story: 'Alternative headline variations for A/B testing. Each emphasizes different value propositions: control, cost, or privacy.',
-			},
-		},
-	},
+  render: () => (
+    <div>
+      <HeroSection />
+      <div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
+        <h3 style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Alternative Headline Options</h3>
+        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', lineHeight: '1.8' }}>
+          <p>
+            <strong>Current:</strong> "AI Infrastructure. On Your Terms."
+          </p>
+          <p>
+            <strong>Alt 1:</strong> "Run AI on Your Hardware. Keep 100% Control." (More explicit about hardware
+            ownership)
+          </p>
+          <p>
+            <strong>Alt 2:</strong> "Zero-Cost AI Infrastructure. No Vendor Lock-In." (Leads with cost savings)
+          </p>
+          <p>
+            <strong>Alt 3:</strong> "Private LLMs. Your Network. Your Rules." (Privacy-first angle)
+          </p>
+          <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
+            <strong>A/B Test Recommendation:</strong> Test Alt 2 for cost-conscious audience, Alt 3 for
+            enterprise/privacy-focused.
+          </p>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Alternative headline variations for A/B testing. Each emphasizes different value propositions: control, cost, or privacy.',
+      },
+    },
+  },
 }
 
 export const WithScrollIndicator: Story = {
-	render: () => (
-		<div>
-			<HeroSection />
-			<div style={{ padding: '4rem 2rem', textAlign: 'center', background: 'rgba(0,0,0,0.02)' }}>
-				<h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Next Section</h2>
-				<p>Scroll up to see the hero section with its full-viewport height and animations.</p>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story: 'Hero section with additional content below to demonstrate full-viewport height and scroll behavior.',
-			},
-		},
-	},
+  render: () => (
+    <div>
+      <HeroSection />
+      <div style={{ padding: '4rem 2rem', textAlign: 'center', background: 'rgba(0,0,0,0.02)' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Next Section</h2>
+        <p>Scroll up to see the hero section with its full-viewport height and animations.</p>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Hero section with additional content below to demonstrate full-viewport height and scroll behavior.',
+      },
+    },
+  },
 }

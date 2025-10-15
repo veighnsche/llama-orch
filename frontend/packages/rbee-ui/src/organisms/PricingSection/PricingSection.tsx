@@ -1,31 +1,31 @@
-"use client";
+'use client'
 
-import { PricingTier, SectionContainer } from "@rbee/ui/molecules";
-import { cn } from "@rbee/ui/utils";
-import { Layers, Shield, Unlock, Zap } from "lucide-react";
-import Image from "next/image";
-import { pricingHero } from "@rbee/ui/assets";
-import { useState } from "react";
+import { pricingHero } from '@rbee/ui/assets'
+import { PricingTier, SectionContainer } from '@rbee/ui/molecules'
+import { cn } from '@rbee/ui/utils'
+import { Layers, Shield, Unlock, Zap } from 'lucide-react'
+import Image from 'next/image'
+import { useState } from 'react'
 
 export interface PricingSectionProps {
   /** Variant for different page contexts */
-  variant?: "home" | "pricing";
+  variant?: 'home' | 'pricing'
   /** Override section title */
-  title?: string;
+  title?: string
   /** Override section description */
-  description?: string;
+  description?: string
   /** Show kicker badges */
-  showKicker?: boolean;
+  showKicker?: boolean
   /** Show editorial image below cards */
-  showEditorialImage?: boolean;
+  showEditorialImage?: boolean
   /** Show footer reassurance text */
-  showFooter?: boolean;
+  showFooter?: boolean
   /** Custom class name */
-  className?: string;
+  className?: string
 }
 
 export function PricingSection({
-  variant = "home",
+  variant = 'home',
   title,
   description,
   showKicker = true,
@@ -33,20 +33,17 @@ export function PricingSection({
   showFooter = true,
   className,
 }: PricingSectionProps) {
-  const [isYearly, setIsYearly] = useState(false);
+  const [isYearly, setIsYearly] = useState(false)
 
   // Variant-specific defaults
-  const defaultTitle =
-    variant === "pricing"
-      ? "Simple, honest pricing."
-      : "Start Free. Scale When Ready.";
+  const defaultTitle = variant === 'pricing' ? 'Simple, honest pricing.' : 'Start Free. Scale When Ready.'
   const defaultDescription =
-    variant === "pricing"
+    variant === 'pricing'
       ? "Every plan includes the full rbee orchestrator—no feature gates, no artificial limits. Start free and grow when you're ready."
-      : "Run rbee free at home. Add collaboration and governance when your team grows.";
+      : 'Run rbee free at home. Add collaboration and governance when your team grows.'
 
-  const finalTitle = title ?? defaultTitle;
-  const finalDescription = description ?? defaultDescription;
+  const finalTitle = title ?? defaultTitle
+  const finalDescription = description ?? defaultDescription
 
   return (
     <SectionContainer
@@ -82,10 +79,8 @@ export function PricingSection({
           <button
             onClick={() => setIsYearly(false)}
             className={cn(
-              "px-4 py-2 rounded-md font-medium transition-all",
-              !isYearly
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+              'px-4 py-2 rounded-md font-medium transition-all',
+              !isYearly ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
             )}
             aria-pressed={!isYearly}
           >
@@ -94,10 +89,8 @@ export function PricingSection({
           <button
             onClick={() => setIsYearly(true)}
             className={cn(
-              "px-4 py-2 rounded-md font-medium transition-all inline-flex items-center gap-1.5",
-              isYearly
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+              'px-4 py-2 rounded-md font-medium transition-all inline-flex items-center gap-1.5',
+              isYearly ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
             )}
             aria-pressed={isYearly}
           >
@@ -116,11 +109,11 @@ export function PricingSection({
           price="€0"
           period="forever"
           features={[
-            "Unlimited GPUs on your hardware",
-            "OpenAI-compatible API",
-            "Multi-modal models",
-            "Active community support",
-            "Open source core",
+            'Unlimited GPUs on your hardware',
+            'OpenAI-compatible API',
+            'Multi-modal models',
+            'Active community support',
+            'Open source core',
           ]}
           ctaText="Download rbee"
           ctaHref="/download"
@@ -135,11 +128,11 @@ export function PricingSection({
           priceYearly="€990"
           period="/month"
           features={[
-            "Everything in Home/Lab",
-            "Web UI for cluster & models",
-            "Shared workspaces & quotas",
-            "Priority support (business hours)",
-            "Rhai policy templates (rate/data)",
+            'Everything in Home/Lab',
+            'Web UI for cluster & models',
+            'Shared workspaces & quotas',
+            'Priority support (business hours)',
+            'Rhai policy templates (rate/data)',
           ]}
           ctaText="Start 30-Day Trial"
           ctaHref="/signup?plan=team"
@@ -155,11 +148,11 @@ export function PricingSection({
           title="Enterprise"
           price="Custom"
           features={[
-            "Everything in Team",
-            "Dedicated, isolated instances",
-            "Custom SLAs & onboarding",
-            "White-label & SSO options",
-            "Enterprise security & support",
+            'Everything in Team',
+            'Dedicated, isolated instances',
+            'Custom SLAs & onboarding',
+            'White-label & SSO options',
+            'Enterprise security & support',
           ]}
           ctaText="Contact Sales"
           ctaHref="/contact?type=enterprise"
@@ -187,16 +180,15 @@ export function PricingSection({
       {showFooter && (
         <div className="text-center mt-12 max-w-2xl mx-auto">
           <p className="text-muted-foreground font-sans">
-            {variant === "pricing"
-              ? "Cancel anytime • No feature gates • Full orchestrator on every tier."
-              : "Every plan includes the full rbee orchestrator. No feature gates. No artificial limits."}
+            {variant === 'pricing'
+              ? 'Cancel anytime • No feature gates • Full orchestrator on every tier.'
+              : 'Every plan includes the full rbee orchestrator. No feature gates. No artificial limits.'}
           </p>
           <p className="text-[12px] text-muted-foreground/80 mt-2 font-sans">
-            Prices exclude {variant === "pricing" ? "taxes" : "VAT"}. OSS
-            license applies to Home/Lab.
+            Prices exclude {variant === 'pricing' ? 'taxes' : 'VAT'}. OSS license applies to Home/Lab.
           </p>
         </div>
       )}
     </SectionContainer>
-  );
+  )
 }

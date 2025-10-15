@@ -4,13 +4,13 @@ import { EnterpriseTestimonials } from './EnterpriseTestimonials'
 // Created by: TEAM-004
 
 const meta = {
-	title: 'Organisms/Enterprise/EnterpriseTestimonials',
-	component: EnterpriseTestimonials,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Enterprise/EnterpriseTestimonials',
+  component: EnterpriseTestimonials,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The EnterpriseTestimonials section presents testimonials from regulated industries (finance, healthcare, legal) using the TestimonialsRail component. Filtered to show only enterprise-relevant testimonials with a grid layout and stats.
 
@@ -125,44 +125,44 @@ import { EnterpriseTestimonials } from '@rbee/ui/organisms/Enterprise/Enterprise
 - **Lead qualification**: Capture industry, company size, compliance requirements
 - **Proof points**: Industry-specific testimonials, quantifiable outcomes, credibility signals
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof EnterpriseTestimonials>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const EnterprisePageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default enterprise testimonials section showing testimonials from regulated industries: finance (banks, insurance, fintech), healthcare (hospitals, medtech, pharma), and legal (law firms, legaltech). Uses grid layout with stats. Testimonials are filtered to show only enterprise-relevant quotes from CTOs, CIOs, Compliance Officers, and DPOs.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default enterprise testimonials section showing testimonials from regulated industries: finance (banks, insurance, fintech), healthcare (hospitals, medtech, pharma), and legal (law firms, legaltech). Uses grid layout with stats. Testimonials are filtered to show only enterprise-relevant quotes from CTOs, CIOs, Compliance Officers, and DPOs.',
+      },
+    },
+  },
 }
 
 export const ComplianceTestimonials: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant focusing on compliance-focused testimonials. This version would emphasize quotes about: GDPR compliance achieved ("We achieved GDPR compliance in 6 weeks"), SOC2 Type II readiness ("Passed SOC2 Type II audit on first try"), HIPAA compliance ("HIPAA-aligned architecture made compliance straightforward"), and audit trail success ("Immutable audit logs saved us during compliance audit"). Ideal for compliance officers, DPOs, and legal counsel.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant focusing on compliance-focused testimonials. This version would emphasize quotes about: GDPR compliance achieved ("We achieved GDPR compliance in 6 weeks"), SOC2 Type II readiness ("Passed SOC2 Type II audit on first try"), HIPAA compliance ("HIPAA-aligned architecture made compliance straightforward"), and audit trail success ("Immutable audit logs saved us during compliance audit"). Ideal for compliance officers, DPOs, and legal counsel.',
+      },
+    },
+  },
 }
 
 export const ROITestimonials: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Variant focusing on cost savings and ROI testimonials. This version would emphasize quotes about: Cost savings vs. cloud APIs ("We saved €200K/year vs. OpenAI"), budget predictability ("No more surprise API bills"), faster time-to-value ("Deployed in 3 weeks with full support"), and compliance cost avoidance ("Avoided €20M GDPR fine risk"). Ideal for CFOs, procurement managers, and budget-conscious buyers.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Variant focusing on cost savings and ROI testimonials. This version would emphasize quotes about: Cost savings vs. cloud APIs ("We saved €200K/year vs. OpenAI"), budget predictability ("No more surprise API bills"), faster time-to-value ("Deployed in 3 weeks with full support"), and compliance cost avoidance ("Avoided €20M GDPR fine risk"). Ideal for CFOs, procurement managers, and budget-conscious buyers.',
+      },
+    },
+  },
 }

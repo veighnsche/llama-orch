@@ -1,28 +1,28 @@
 // Created by: TEAM-AI-ASSISTANT
-"use client";
+'use client'
 
-import { cn } from "@rbee/ui/utils";
-import { Check, Copy } from "lucide-react";
-import type { ReactNode } from "react";
-import { useState } from "react";
+import { cn } from '@rbee/ui/utils'
+import { Check, Copy } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { useState } from 'react'
 
 export interface ConsoleOutputProps {
   /** Console content - can be string or ReactNode for syntax highlighting */
-  children: ReactNode;
+  children: ReactNode
   /** Show terminal window chrome (traffic lights, title bar) */
-  showChrome?: boolean;
+  showChrome?: boolean
   /** Terminal title */
-  title?: string;
+  title?: string
   /** Terminal variant */
-  variant?: "terminal" | "code" | "output";
+  variant?: 'terminal' | 'code' | 'output'
   /** Additional CSS classes */
-  className?: string;
+  className?: string
   /** Background style */
-  background?: "dark" | "light" | "card";
+  background?: 'dark' | 'light' | 'card'
   /** Show copy button */
-  copyable?: boolean;
+  copyable?: boolean
   /** Raw text to copy (if different from rendered children) */
-  copyText?: string;
+  copyText?: string
 }
 
 /**
@@ -46,37 +46,31 @@ export function ConsoleOutput({
   children,
   showChrome = false,
   title,
-  variant = "terminal",
+  variant = 'terminal',
   className,
-  background = "dark",
+  background = 'dark',
   copyable = false,
   copyText,
 }: ConsoleOutputProps) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState(false)
 
   const bgStyles = {
-    dark: "bg-[var(--console-bg)] text-[var(--console-fg)]",
-    light: "bg-background text-foreground",
-    card: "bg-card text-card-foreground",
-  };
+    dark: 'bg-[var(--console-bg)] text-[var(--console-fg)]',
+    light: 'bg-background text-foreground',
+    card: 'bg-card text-card-foreground',
+  }
 
   const handleCopy = async () => {
-    const textToCopy =
-      copyText || (typeof children === "string" ? children : "");
+    const textToCopy = copyText || (typeof children === 'string' ? children : '')
     if (textToCopy) {
-      await navigator.clipboard.writeText(textToCopy);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(textToCopy)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     }
-  };
+  }
 
   return (
-    <div
-      className={cn(
-        "overflow-hidden rounded-lg border border-border shadow-sm",
-        className
-      )}
-    >
+    <div className={cn('overflow-hidden rounded-lg border border-border shadow-sm', className)}>
       {showChrome && (
         <div className="flex items-center justify-between border-b border-border bg-muted px-4 py-3">
           <div className="flex items-center gap-2">
@@ -85,11 +79,7 @@ export function ConsoleOutput({
               <div className="h-3 w-3 rounded-full bg-terminal-amber" />
               <div className="h-3 w-3 rounded-full bg-terminal-green" />
             </div>
-            {title && (
-              <span className="ml-2 font-mono text-sm text-muted-foreground">
-                {title}
-              </span>
-            )}
+            {title && <span className="ml-2 font-mono text-sm text-muted-foreground">{title}</span>}
           </div>
           {copyable && (
             <button
@@ -112,14 +102,9 @@ export function ConsoleOutput({
           )}
         </div>
       )}
-      <div
-        className={cn(
-          "overflow-x-auto p-4 text-sm leading-relaxed font-mono",
-          bgStyles[background]
-        )}
-      >
+      <div className={cn('overflow-x-auto p-4 text-sm leading-relaxed font-mono', bgStyles[background])}>
         {children}
       </div>
     </div>
-  );
+  )
 }

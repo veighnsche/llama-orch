@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { DevelopersHero } from './DevelopersHero'
 
 const meta = {
-	title: 'Organisms/Developers/DevelopersHero',
-	component: DevelopersHero,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Developers/DevelopersHero',
+  component: DevelopersHero,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The DevelopersHero is the primary hero section for the Developers page (\`/developers\`). It targets developers specifically with technical messaging, code examples, and developer-focused value propositions. Unlike the home page hero, this version emphasizes technical control, OpenAI compatibility, and zero ongoing costs for developers building with AI.
 
@@ -116,114 +116,110 @@ import { DevelopersHero } from '@rbee/ui/organisms/Developers/DevelopersHero'
 - **Focus States**: Visible focus indicators
 - **Color Contrast**: Meets WCAG AA standards
         `,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof DevelopersHero>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const DevelopersPageDefault: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default hero section for the Developers page with exact copy from `/developers`. Shows terminal demo with code generation and GPU metrics. Use theme toggle to test dark mode.',
-			},
-		},
-	},
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default hero section for the Developers page with exact copy from `/developers`. Shows terminal demo with code generation and GPU metrics. Use theme toggle to test dark mode.',
+      },
+    },
+  },
 }
 
 export const AlternativeHeadlines: Story = {
-	render: () => (
-		<div className="space-y-8">
-			<DevelopersHero />
-			<div className="bg-muted p-8 text-center">
-				<h3 className="text-xl font-bold mb-4">Alternative Headline Options (A/B Test)</h3>
-				<div className="space-y-4 text-left max-w-2xl mx-auto">
-					<div>
-						<strong>Current:</strong> "Build with AI. Own your infrastructure."
-						<br />
-						<span className="text-muted-foreground">
-							→ Emphasizes ownership and control (appeals to independence)
-						</span>
-					</div>
-					<div>
-						<strong>Alternative A:</strong> "Stop paying for AI. Start building."
-						<br />
-						<span className="text-muted-foreground">→ Emphasizes cost savings (appeals to budget-conscious)</span>
-					</div>
-					<div>
-						<strong>Alternative B:</strong> "Your code. Your models. Your GPUs."
-						<br />
-						<span className="text-muted-foreground">→ Emphasizes complete ownership (appeals to privacy-focused)</span>
-					</div>
-					<div>
-						<strong>Alternative C:</strong> "OpenAI-compatible. Zero vendor lock-in."
-						<br />
-						<span className="text-muted-foreground">→ Emphasizes compatibility (appeals to pragmatic developers)</span>
-					</div>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Comparison of current headline with A/B test alternatives. Each headline emphasizes different value propositions: ownership, cost, privacy, or compatibility.',
-			},
-		},
-	},
+  render: () => (
+    <div className="space-y-8">
+      <DevelopersHero />
+      <div className="bg-muted p-8 text-center">
+        <h3 className="text-xl font-bold mb-4">Alternative Headline Options (A/B Test)</h3>
+        <div className="space-y-4 text-left max-w-2xl mx-auto">
+          <div>
+            <strong>Current:</strong> "Build with AI. Own your infrastructure."
+            <br />
+            <span className="text-muted-foreground">→ Emphasizes ownership and control (appeals to independence)</span>
+          </div>
+          <div>
+            <strong>Alternative A:</strong> "Stop paying for AI. Start building."
+            <br />
+            <span className="text-muted-foreground">→ Emphasizes cost savings (appeals to budget-conscious)</span>
+          </div>
+          <div>
+            <strong>Alternative B:</strong> "Your code. Your models. Your GPUs."
+            <br />
+            <span className="text-muted-foreground">→ Emphasizes complete ownership (appeals to privacy-focused)</span>
+          </div>
+          <div>
+            <strong>Alternative C:</strong> "OpenAI-compatible. Zero vendor lock-in."
+            <br />
+            <span className="text-muted-foreground">→ Emphasizes compatibility (appeals to pragmatic developers)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Comparison of current headline with A/B test alternatives. Each headline emphasizes different value propositions: ownership, cost, privacy, or compatibility.',
+      },
+    },
+  },
 }
 
 export const ComparisonToHomePage: Story = {
-	render: () => (
-		<div className="space-y-8">
-			<div className="bg-primary/10 p-6 text-center">
-				<h3 className="text-xl font-bold">Developers Page Hero (Below)</h3>
-				<p className="text-muted-foreground">
-					Technical focus: "Build with AI. Own your infrastructure." + GitHub CTA
-				</p>
-			</div>
-			<DevelopersHero />
-			<div className="bg-muted p-8 text-center">
-				<h3 className="text-xl font-bold mb-4">Key Differences from Home Page</h3>
-				<div className="grid md:grid-cols-2 gap-6 text-left max-w-4xl mx-auto">
-					<div>
-						<h4 className="font-semibold mb-2">Home Page Hero</h4>
-						<ul className="space-y-2 text-sm text-muted-foreground">
-							<li>• Headline: "Run LLMs on Your Hardware. Pay Nothing."</li>
-							<li>• Audience: General (all personas)</li>
-							<li>• Badge: "Open source GPU orchestration"</li>
-							<li>• CTAs: "Get Started" + "View Documentation"</li>
-							<li>• Terminal: Shows GPU orchestration</li>
-							<li>• Tone: Accessible, broad appeal</li>
-						</ul>
-					</div>
-					<div>
-						<h4 className="font-semibold mb-2">Developers Page Hero</h4>
-						<ul className="space-y-2 text-sm text-muted-foreground">
-							<li>• Headline: "Build with AI. Own your infrastructure."</li>
-							<li>• Audience: Developers specifically</li>
-							<li>• Badge: "For developers who build with AI"</li>
-							<li>• CTAs: "Get started free" + "View on GitHub"</li>
-							<li>• Terminal: Shows code generation (developer use case)</li>
-							<li>• Tone: Technical, assumes AI coding familiarity</li>
-						</ul>
-					</div>
-				</div>
-			</div>
-		</div>
-	),
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Side-by-side comparison of Developers hero vs. Home hero. Developers version is more technical, shows code generation instead of orchestration, and uses GitHub CTA instead of Documentation.',
-			},
-		},
-	},
+  render: () => (
+    <div className="space-y-8">
+      <div className="bg-primary/10 p-6 text-center">
+        <h3 className="text-xl font-bold">Developers Page Hero (Below)</h3>
+        <p className="text-muted-foreground">Technical focus: "Build with AI. Own your infrastructure." + GitHub CTA</p>
+      </div>
+      <DevelopersHero />
+      <div className="bg-muted p-8 text-center">
+        <h3 className="text-xl font-bold mb-4">Key Differences from Home Page</h3>
+        <div className="grid md:grid-cols-2 gap-6 text-left max-w-4xl mx-auto">
+          <div>
+            <h4 className="font-semibold mb-2">Home Page Hero</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>• Headline: "Run LLMs on Your Hardware. Pay Nothing."</li>
+              <li>• Audience: General (all personas)</li>
+              <li>• Badge: "Open source GPU orchestration"</li>
+              <li>• CTAs: "Get Started" + "View Documentation"</li>
+              <li>• Terminal: Shows GPU orchestration</li>
+              <li>• Tone: Accessible, broad appeal</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-2">Developers Page Hero</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>• Headline: "Build with AI. Own your infrastructure."</li>
+              <li>• Audience: Developers specifically</li>
+              <li>• Badge: "For developers who build with AI"</li>
+              <li>• CTAs: "Get started free" + "View on GitHub"</li>
+              <li>• Terminal: Shows code generation (developer use case)</li>
+              <li>• Tone: Technical, assumes AI coding familiarity</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Side-by-side comparison of Developers hero vs. Home hero. Developers version is more technical, shows code generation instead of orchestration, and uses GitHub CTA instead of Documentation.',
+      },
+    },
+  },
 }

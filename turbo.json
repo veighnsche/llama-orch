@@ -1,22 +1,22 @@
 {
-	"$schema": "https://turbo.build/schema.json",
-	"globalPassThroughEnv": ["PLAYWRIGHT_*"],
-	"tasks": {
-		"build": {
-			"dependsOn": ["^build"],
-			"outputs": ["dist/**", ".next/**", "!.next/cache/**", "storybook-static/**"]
-		},
-		"dev": {
-			"cache": false,
-			"persistent": true
-		},
-		"test:ct": {
-			"dependsOn": ["^build"],
-			"outputs": ["playwright-report/**", "test-results/**"]
-		},
-		"//#format-and-lint": {},
-		"//#format-and-lint:fix": {
-			"cache": false
-		}
-	}
+  "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": ["PLAYWRIGHT_*"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "storybook-static/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "test:ct": {
+      "dependsOn": ["^build"],
+      "outputs": ["playwright-report/**", "test-results/**"]
+    },
+    "//#format-and-lint": {},
+    "//#format-and-lint:fix": {
+      "cache": false
+    }
+  }
 }

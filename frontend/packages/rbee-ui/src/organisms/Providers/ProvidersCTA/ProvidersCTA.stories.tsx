@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { ProvidersCTA } from './ProvidersCTA'
 
 const meta = {
-	title: 'Organisms/Providers/ProvidersCTA',
-	component: ProvidersCTA,
-	parameters: {
-		layout: 'fullscreen',
-		docs: {
-			description: {
-				component: `
+  title: 'Organisms/Providers/ProvidersCTA',
+  component: ProvidersCTA,
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
 ## Overview
 The ProvidersCTA section (also exported as CTASectionProviders) is the final call-to-action on the GPU Providers page. It features a centered layout with headline, CTAs, and reassurance stats (<15 minutes setup, 15% platform fee, €25 minimum weekly payouts). Background includes decorative GPU earnings image.
 
@@ -90,10 +90,10 @@ import { ProvidersCTA } from '@rbee/ui/organisms/Providers/ProvidersCTA'
 - **Keyboard Navigation**: All CTAs are keyboard accessible
 - **Focus States**: Visible focus indicators on interactive elements
 				`,
-			},
-		},
-	},
-	tags: ['autodocs'],
+      },
+    },
+  },
+  tags: ['autodocs'],
 } satisfies Meta<typeof ProvidersCTA>
 
 export default meta

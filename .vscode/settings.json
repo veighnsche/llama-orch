@@ -1,74 +1,74 @@
 {
-	// Respect repo conventions: default 4 spaces (Rust etc.), with JS/TS/Vue at 2 spaces
-	"editor.detectIndentation": false,
-	"editor.insertSpaces": true,
-	"editor.tabSize": 4,
-	"editor.formatOnSave": true,
-	"editor.codeActionsOnSave": {
-		"source.fixAll.eslint": "explicit"
-	},
-	// Let Prettier handle formatting; ESLint applies fixes via codeActionsOnSave
-	"eslint.format.enable": false,
+  // Respect repo conventions: default 4 spaces (Rust etc.), with JS/TS/Vue at 2 spaces
+  "editor.detectIndentation": false,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 4,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  // Let Prettier handle formatting; ESLint applies fixes via codeActionsOnSave
+  "eslint.format.enable": false,
 
-	// Make sure Prettier reads .editorconfig for tab width rules
-	"prettier.useEditorConfig": true,
+  // Make sure Prettier reads .editorconfig for tab width rules
+  "prettier.useEditorConfig": true,
 
-	// Rust: 4 spaces via rust-analyzer / rustfmt
-	"[rust]": {
-		"editor.defaultFormatter": "rust-lang.rust-analyzer",
-		"editor.insertSpaces": true,
-		"editor.tabSize": 4
-	},
+  // Rust: 4 spaces via rust-analyzer / rustfmt
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4
+  },
 
-	// JavaScript family: 2 spaces via Prettier
-	"[javascript]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode",
-		"editor.insertSpaces": true,
-		"editor.tabSize": 2,
-		"editor.formatOnSave": true
-	},
-	"[javascriptreact]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode",
-		"editor.insertSpaces": true,
-		"editor.tabSize": 2,
-		"editor.formatOnSave": true
-	},
-	"[typescript]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode",
-		"editor.insertSpaces": true,
-		"editor.tabSize": 2,
-		"editor.formatOnSave": true
-	},
-	"[typescriptreact]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode",
-		"editor.insertSpaces": true,
-		"editor.tabSize": 2,
-		"editor.formatOnSave": true
-	},
-	"[vue]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode",
-		"editor.insertSpaces": true,
-		"editor.tabSize": 2,
-		"editor.formatOnSave": true
-	},
-	// Stylesheets: 4 spaces and Prettier formatting
-	"[css]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode",
-		"editor.insertSpaces": true,
-		"editor.tabSize": 4,
-		"editor.formatOnSave": true
-	},
-	"[scss]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode",
-		"editor.insertSpaces": true,
-		"editor.tabSize": 4,
-		"editor.formatOnSave": true
-	},
-	"[less]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode",
-		"editor.insertSpaces": true,
-		"editor.tabSize": 4,
-		"editor.formatOnSave": true
-	},
-	"cmake.sourceDirectory": "/home/vince/Projects/llama-orch/reference/llama.cpp"
+  // JavaScript family: 2 spaces via Prettier
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true
+  },
+  // Stylesheets: 4 spaces and Prettier formatting
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4,
+    "editor.formatOnSave": true
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4,
+    "editor.formatOnSave": true
+  },
+  "[less]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4,
+    "editor.formatOnSave": true
+  },
+  "cmake.sourceDirectory": "/home/vince/Projects/llama-orch/reference/llama.cpp"
 }

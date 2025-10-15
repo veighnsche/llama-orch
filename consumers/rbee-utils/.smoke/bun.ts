@@ -3,7 +3,7 @@
 import utils from '../dist/index.js'
 
 function assert(cond: any, msg?: string) {
-	if (!cond) throw new Error(msg || 'assertion failed')
+  if (!cond) throw new Error(msg || 'assertion failed')
 }
 
 const r1 = utils.fs.readFile({ paths: ['README.md'], as_text: true, encoding: 'utf-8' })
@@ -16,10 +16,10 @@ const pm = utils.prompt.message({ role: 'user', source: { Text: 'hello' }, deden
 assert(pm.role === 'user' && pm.content === 'hello', 'prompt.message basic')
 
 const pt = utils.prompt.thread({
-	items: [
-		{ role: 'system', source: { Text: 'a' }, dedent: false },
-		{ role: 'user', source: { Lines: ['b', 'c'] }, dedent: true },
-	],
+  items: [
+    { role: 'system', source: { Text: 'a' }, dedent: false },
+    { role: 'user', source: { Lines: ['b', 'c'] }, dedent: true },
+  ],
 })
 assert(pt.messages.length === 2, 'prompt.thread size')
 
@@ -31,9 +31,9 @@ assert(typeof p.temperature === 'number', 'params.define out')
 
 let threw = false
 try {
-	utils.llm.invoke({ messages: [{ role: 'user', content: 'hi' }], model: m, params: p })
+  utils.llm.invoke({ messages: [{ role: 'user', content: 'hi' }], model: m, params: p })
 } catch (e: any) {
-	threw = /unimplemented: llm\.invoke requires SDK wiring/.test(String(e && e.message))
+  threw = /unimplemented: llm\.invoke requires SDK wiring/.test(String(e && e.message))
 }
 assert(threw, 'llm.invoke should throw typed unimplemented')
 
