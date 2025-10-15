@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { SocialProofSection } from './SocialProofSection'
+import { TestimonialsSection } from './SocialProofSection'
 
 const meta = {
 	title: 'Organisms/Home/SocialProofSection',
-	component: SocialProofSection,
+	component: TestimonialsSection,
 	parameters: {
 		layout: 'fullscreen',
 		docs: {
@@ -132,12 +132,41 @@ import { TestimonialsSection } from '@rbee/ui/organisms/SocialProofSection'
 		},
 	},
 	tags: ['autodocs'],
-} satisfies Meta<typeof SocialProofSection>
+} satisfies Meta<typeof TestimonialsSection>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const HomePageDefault: Story = {
+	args: {
+		title: 'Trusted by developers who value independence',
+		testimonials: [
+			{
+				avatar: '👨‍💻',
+				author: 'Alex K.',
+				role: 'Solo Developer',
+				quote: 'Spent $80/mo on Claude. Now I run Llama-70B on my gaming PC + old workstation. Same quality, $0 cost.',
+			},
+			{
+				avatar: '👩‍💼',
+				author: 'Sarah M.',
+				role: 'CTO',
+				quote: "We pooled our team's hardware and cut AI spend from $500/mo to zero. OpenAI-compatible API—no code changes.",
+			},
+			{
+				avatar: '👨‍🔧',
+				author: 'Marcus T.',
+				role: 'DevOps',
+				quote: 'Cascading shutdown ends orphaned processes and VRAM leaks. Ctrl+C and everything cleans up.',
+			},
+		],
+		stats: [
+			{ value: '1,200+', label: 'GitHub stars', valueTone: 'foreground' },
+			{ value: '500+', label: 'Active installations', valueTone: 'foreground' },
+			{ value: '8,000+', label: 'GPUs orchestrated', valueTone: 'foreground' },
+			{ value: '€0', label: 'Avg. monthly cost', valueTone: 'primary' },
+		],
+	},
 	parameters: {
 		docs: {
 			description: {
@@ -188,9 +217,38 @@ export const HomePageDefault: Story = {
 }
 
 export const WithoutLogos: Story = {
-	render: () => (
+	args: {
+		title: 'Trusted by developers who value independence',
+		testimonials: [
+			{
+				avatar: '👨‍💻',
+				author: 'Alex K.',
+				role: 'Solo Developer',
+				quote: 'Spent $80/mo on Claude. Now I run Llama-70B on my gaming PC + old workstation. Same quality, $0 cost.',
+			},
+			{
+				avatar: '👩‍💼',
+				author: 'Sarah M.',
+				role: 'CTO',
+				quote: "We pooled our team's hardware and cut AI spend from $500/mo to zero. OpenAI-compatible API—no code changes.",
+			},
+			{
+				avatar: '👨‍🔧',
+				author: 'Marcus T.',
+				role: 'DevOps',
+				quote: 'Cascading shutdown ends orphaned processes and VRAM leaks. Ctrl+C and everything cleans up.',
+			},
+		],
+		stats: [
+			{ value: '1,200+', label: 'GitHub stars', valueTone: 'foreground' },
+			{ value: '500+', label: 'Active installations', valueTone: 'foreground' },
+			{ value: '8,000+', label: 'GPUs orchestrated', valueTone: 'foreground' },
+			{ value: '€0', label: 'Avg. monthly cost', valueTone: 'primary' },
+		],
+	},
+	render: (args) => (
 		<div>
-			<SocialProofSection />
+			<TestimonialsSection {...args} />
 			<div style={{ padding: '2rem', background: 'rgba(0,0,0,0.02)', textAlign: 'center' }}>
 				<h3 style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Testimonial Variations</h3>
 				<div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'left', lineHeight: '1.8' }}>
@@ -224,7 +282,17 @@ export const WithoutLogos: Story = {
 }
 
 export const MetricsOnly: Story = {
-	render: () => (
+	args: {
+		title: 'Trusted by developers who value independence',
+		testimonials: [],
+		stats: [
+			{ value: '1,200+', label: 'GitHub stars', valueTone: 'foreground' },
+			{ value: '500+', label: 'Active installations', valueTone: 'foreground' },
+			{ value: '8,000+', label: 'GPUs orchestrated', valueTone: 'foreground' },
+			{ value: '€0', label: 'Avg. monthly cost', valueTone: 'primary' },
+		],
+	},
+	render: (args) => (
 		<div>
 			<div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
 				<h2 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem' }}>

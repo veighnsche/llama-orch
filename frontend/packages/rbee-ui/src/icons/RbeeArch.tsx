@@ -9,7 +9,6 @@ export function RbeeArch({ size = "100%", className, ...props }: RbeeArchProps) 
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width={size}
-      height={size}
       viewBox="0 0 920 560"
       className={className}
       {...props}

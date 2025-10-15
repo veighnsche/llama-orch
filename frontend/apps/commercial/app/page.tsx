@@ -10,8 +10,8 @@ import {
   HowItWorksSection,
   PricingSection,
   ProblemSection,
-  SocialProofSection,
   TechnicalSection,
+  TestimonialsSection,
   UseCasesSection,
   WhatIsRbee,
 } from "@rbee/ui/organisms";
@@ -123,75 +123,102 @@ export default function Home() {
         title="From zero to AI infrastructure in 15 minutes"
         steps={[
           {
-            label: 'Install rbee',
+            label: "Install rbee",
             block: {
-              kind: 'terminal',
-              title: 'terminal',
+              kind: "terminal",
+              title: "terminal",
               lines: (
                 <>
                   <div>curl -sSL https://rbee.dev/install.sh | sh</div>
-                  <div className="text-[var(--syntax-comment)]">rbee-keeper daemon start</div>
-                </>
-              ),
-              copyText: 'curl -sSL https://rbee.dev/install.sh | sh\nrbee-keeper daemon start',
-            },
-          },
-          {
-            label: 'Add your machines',
-            block: {
-              kind: 'terminal',
-              title: 'terminal',
-              lines: (
-                <>
-                  <div>rbee-keeper setup add-node --name workstation --ssh-host 192.168.1.10</div>
-                  <div className="text-[var(--syntax-comment)]">rbee-keeper setup add-node --name mac --ssh-host 192.168.1.20</div>
+                  <div className="text-[var(--syntax-comment)]">
+                    rbee-keeper daemon start
+                  </div>
                 </>
               ),
               copyText:
-                'rbee-keeper setup add-node --name workstation --ssh-host 192.168.1.10\nrbee-keeper setup add-node --name mac --ssh-host 192.168.1.20',
+                "curl -sSL https://rbee.dev/install.sh | sh\nrbee-keeper daemon start",
             },
           },
           {
-            label: 'Configure your IDE',
+            label: "Add your machines",
             block: {
-              kind: 'terminal',
-              title: 'terminal',
+              kind: "terminal",
+              title: "terminal",
               lines: (
                 <>
                   <div>
-                    <span className="text-[var(--syntax-keyword)]">export</span> OPENAI_API_BASE=http://localhost:8080/v1
+                    rbee-keeper setup add-node --name workstation --ssh-host
+                    192.168.1.10
                   </div>
-                  <div className="text-[var(--syntax-comment)]"># OpenAI-compatible endpoint — works with Zed & Cursor</div>
+                  <div className="text-[var(--syntax-comment)]">
+                    rbee-keeper setup add-node --name mac --ssh-host
+                    192.168.1.20
+                  </div>
                 </>
               ),
-              copyText: 'export OPENAI_API_BASE=http://localhost:8080/v1',
+              copyText:
+                "rbee-keeper setup add-node --name workstation --ssh-host 192.168.1.10\nrbee-keeper setup add-node --name mac --ssh-host 192.168.1.20",
             },
           },
           {
-            label: 'Build AI agents',
+            label: "Configure your IDE",
             block: {
-              kind: 'code',
-              title: 'TypeScript',
-              language: 'ts',
+              kind: "terminal",
+              title: "terminal",
               lines: (
                 <>
                   <div>
-                    <span className="text-[var(--syntax-import)]">import</span> {'{'} invoke {'}'}{' '}
-                    <span className="text-[var(--syntax-import)]">from</span>{' '}
-                    <span className="text-[var(--syntax-string)]">&apos;@rbee/utils&apos;</span>;
+                    <span className="text-[var(--syntax-keyword)]">export</span>{" "}
+                    OPENAI_API_BASE=http://localhost:8080/v1
+                  </div>
+                  <div className="text-[var(--syntax-comment)]">
+                    # OpenAI-compatible endpoint — works with Zed & Cursor
+                  </div>
+                </>
+              ),
+              copyText: "export OPENAI_API_BASE=http://localhost:8080/v1",
+            },
+          },
+          {
+            label: "Build AI agents",
+            block: {
+              kind: "code",
+              title: "TypeScript",
+              language: "ts",
+              lines: (
+                <>
+                  <div>
+                    <span className="text-[var(--syntax-import)]">import</span>{" "}
+                    {"{"} invoke {"}"}{" "}
+                    <span className="text-[var(--syntax-import)]">from</span>{" "}
+                    <span className="text-[var(--syntax-string)]">
+                      &apos;@rbee/utils&apos;
+                    </span>
+                    ;
                   </div>
                   <div className="mt-2">
-                    <span className="text-[var(--syntax-keyword)]">const</span> code = <span className="text-[var(--syntax-keyword)]">await</span>{' '}
-                    <span className="text-[var(--syntax-function)]">invoke</span>
-                    {'({'}
+                    <span className="text-[var(--syntax-keyword)]">const</span>{" "}
+                    code ={" "}
+                    <span className="text-[var(--syntax-keyword)]">await</span>{" "}
+                    <span className="text-[var(--syntax-function)]">
+                      invoke
+                    </span>
+                    {"({"}
                   </div>
                   <div className="pl-4">
-                    prompt: <span className="text-[var(--syntax-string)]">&apos;Generate API from schema&apos;</span>,
+                    prompt:{" "}
+                    <span className="text-[var(--syntax-string)]">
+                      &apos;Generate API from schema&apos;
+                    </span>
+                    ,
                   </div>
                   <div className="pl-4">
-                    model: <span className="text-[var(--syntax-string)]">&apos;llama-3.1-70b&apos;</span>
+                    model:{" "}
+                    <span className="text-[var(--syntax-string)]">
+                      &apos;llama-3.1-70b&apos;
+                    </span>
                   </div>
-                  <div>{'});'}</div>
+                  <div>{"});"}</div>
                 </>
               ),
               copyText:
@@ -263,7 +290,46 @@ export default function Home() {
       />
       <ComparisonSection />
       <PricingSection />
-      <SocialProofSection />
+      <TestimonialsSection
+        title="Trusted by developers who value independence"
+        testimonials={[
+          {
+            avatar: "👨‍💻",
+            author: "Alex K.",
+            role: "Solo Developer",
+            quote:
+              "Spent $80/mo on Claude. Now I run Llama-70B on my gaming PC + old workstation. Same quality, $0 cost.",
+          },
+          {
+            avatar: "👩‍💼",
+            author: "Sarah M.",
+            role: "CTO",
+            quote:
+              "We pooled our team's hardware and cut AI spend from $500/mo to zero. OpenAI-compatible API—no code changes.",
+          },
+          {
+            avatar: "👨‍🔧",
+            author: "Marcus T.",
+            role: "DevOps",
+            quote:
+              "Cascading shutdown ends orphaned processes and VRAM leaks. Ctrl+C and everything cleans up.",
+          },
+        ]}
+        stats={[
+          { value: "1,200+", label: "GitHub stars", valueTone: "foreground" },
+          {
+            value: "500+",
+            label: "Active installations",
+            valueTone: "foreground",
+          },
+          {
+            value: "8,000+",
+            label: "GPUs orchestrated",
+            valueTone: "foreground",
+          },
+          { value: "€0", label: "Avg. monthly cost", valueTone: "primary" },
+        ]}
+      />
       <TechnicalSection />
       <FAQSection />
       <CTASection

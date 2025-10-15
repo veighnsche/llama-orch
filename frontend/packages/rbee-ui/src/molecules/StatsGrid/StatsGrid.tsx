@@ -11,6 +11,8 @@ export interface StatItem {
 	icon?: LucideIcon
 	/** Optional help text for accessibility */
 	helpText?: string
+	/** Optional color tone for the value */
+	valueTone?: 'default' | 'primary' | 'foreground'
 }
 
 export interface StatsGridProps {
@@ -54,7 +56,7 @@ export function StatsGrid({ stats, variant = 'cards', columns = 3, className }: 
 								/>
 							)}
 							<div>
-								<div className="tabular-nums text-xl font-bold text-foreground">{stat.value}</div>
+								<div className={cn('tabular-nums text-xl font-bold', stat.valueTone === 'primary' ? 'text-primary' : 'text-foreground')}>{stat.value}</div>
 								<div className="text-xs text-muted-foreground">{stat.label}</div>
 							</div>
 						</div>
@@ -80,7 +82,7 @@ export function StatsGrid({ stats, variant = 'cards', columns = 3, className }: 
 								<stat.icon className="h-8 w-8 text-primary" aria-hidden="true" />
 							</div>
 						)}
-						<div className="mb-2 text-3xl font-bold text-primary">{stat.value}</div>
+						<div className={cn('mb-2 text-3xl font-bold', stat.valueTone === 'foreground' ? 'text-foreground' : 'text-primary')}>{stat.value}</div>
 						<div className="text-sm leading-snug text-muted-foreground">{stat.label}</div>
 						{stat.helpText && <span className="sr-only">{stat.helpText}</span>}
 					</div>
@@ -99,7 +101,7 @@ export function StatsGrid({ stats, variant = 'cards', columns = 3, className }: 
 								<IconPlate icon={stat.icon} size="sm" tone="primary" />
 							</div>
 						)}
-						<div className="font-medium text-foreground">{stat.value}</div>
+						<div className={cn('font-medium', stat.valueTone === 'primary' ? 'text-primary' : 'text-foreground')}>{stat.value}</div>
 						<div className="text-xs">{stat.label}</div>
 						{stat.helpText && <span className="sr-only">{stat.helpText}</span>}
 					</div>
@@ -118,7 +120,7 @@ export function StatsGrid({ stats, variant = 'cards', columns = 3, className }: 
 							<stat.icon className="h-10 w-10 text-primary" aria-hidden="true" />
 						</div>
 					)}
-					<div className="mb-2 text-4xl font-bold text-primary">{stat.value}</div>
+					<div className={cn('mb-2 text-4xl font-bold', stat.valueTone === 'foreground' ? 'text-foreground' : 'text-primary')}>{stat.value}</div>
 					<div className="text-sm text-muted-foreground">{stat.label}</div>
 					{stat.helpText && <span className="sr-only">{stat.helpText}</span>}
 				</div>

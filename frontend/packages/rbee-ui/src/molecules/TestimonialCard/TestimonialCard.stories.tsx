@@ -43,30 +43,44 @@ Used in:
 	},
 	tags: ['autodocs'],
 	argTypes: {
-		t: {
-			control: 'object',
-			description: 'Testimonial data (new API)',
+		name: {
+			control: 'text',
+			description: "Person's name",
 			table: {
-				type: { summary: 'Testimonial' },
+				type: { summary: 'string' },
 				category: 'Content',
 			},
 		},
-		showVerified: {
+		role: {
+			control: 'text',
+			description: "Person's role",
+			table: {
+				type: { summary: 'string' },
+				category: 'Content',
+			},
+		},
+		quote: {
+			control: 'text',
+			description: 'Testimonial quote',
+			table: {
+				type: { summary: 'string' },
+				category: 'Content',
+			},
+		},
+		verified: {
 			control: 'boolean',
 			description: 'Show verified badge',
 			table: {
 				type: { summary: 'boolean' },
-				defaultValue: { summary: 'true' },
 				category: 'Appearance',
 			},
 		},
-		delayIndex: {
-			control: 'number',
-			description: 'Animation delay index',
+		rating: {
+			control: { type: 'select', options: [1, 2, 3, 4, 5] },
+			description: 'Star rating (1-5)',
 			table: {
-				type: { summary: 'number' },
-				defaultValue: { summary: '0' },
-				category: 'Animation',
+				type: { summary: '1 | 2 | 3 | 4 | 5' },
+				category: 'Content',
 			},
 		},
 	},
@@ -75,33 +89,15 @@ Used in:
 export default meta
 type Story = StoryObj<typeof TestimonialCard>
 
-const sampleTestimonial = {
-	id: 'sample-1',
-	name: 'Dr. Sarah van den Berg',
-	role: 'Chief Data Officer',
-	org: 'Amsterdam Medical Center',
-	sector: 'healthcare' as const,
-	quote:
-		'rbee allows us to process patient data with complete GDPR compliance. The Dutch data sovereignty gives us peace of mind that no patient information ever leaves the Netherlands.',
-	rating: 5 as const,
-}
-
-const providerTestimonial = {
-	id: 'sample-2',
-	name: 'Mark de Vries',
-	role: 'GPU Provider',
-	org: 'Rotterdam',
-	sector: 'provider' as const,
-	quote:
-		'I earn €150-200/month by sharing my gaming PC when I\'m not using it. Setup took 10 minutes, and payments are automatic.',
-	payout: '€150-200/mo',
-	rating: 5 as const,
-}
 
 export const Default: Story = {
 	args: {
-		t: sampleTestimonial,
-		showVerified: true,
+		name: 'Dr. Sarah van den Berg',
+		role: 'Chief Data Officer',
+		quote:
+			'rbee allows us to process patient data with complete GDPR compliance. The Dutch data sovereignty gives us peace of mind that no patient information ever leaves the Netherlands.',
+		verified: true,
+		rating: 5,
 	},
 }
 
@@ -111,7 +107,7 @@ export const WithAvatar: Story = {
 		role: 'Legal Counsel',
 		quote:
 			'The GDPR compliance documentation is thorough and well-maintained. We can confidently use rbee for processing sensitive legal documents.',
-		avatar: { from: 'primary', to: 'chart-2' },
+		avatar: '👩‍⚖️',
 		company: { name: 'Jansen & Partners Advocaten' },
 		verified: true,
 		rating: 5,
@@ -122,26 +118,18 @@ export const WithRating: Story = {
 	render: () => (
 		<div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
 			<TestimonialCard
-				t={{
-					id: 'rating-5',
-					name: 'Jan Bakker',
-					role: 'CTO',
-					org: 'FinTech Startup',
-					sector: 'finance',
-					quote: 'Outstanding service. The performance is incredible and the support team is very responsive.',
-					rating: 5,
-				}}
+				name="Jan Bakker"
+				role="CTO"
+				quote="Outstanding service. The performance is incredible and the support team is very responsive."
+				company={{ name: 'FinTech Startup' }}
+				rating={5}
 			/>
 			<TestimonialCard
-				t={{
-					id: 'rating-4',
-					name: 'Lisa Vermeer',
-					role: 'DevOps Engineer',
-					org: 'Tech Company',
-					sector: 'provider',
-					quote: 'Great platform overall. Setup was straightforward and documentation is clear.',
-					rating: 4,
-				}}
+				name="Lisa Vermeer"
+				role="DevOps Engineer"
+				quote="Great platform overall. Setup was straightforward and documentation is clear."
+				company={{ name: 'Tech Company' }}
+				rating={4}
 			/>
 		</div>
 	),
@@ -162,19 +150,27 @@ export const InRailContext: Story = {
 				<p className="text-muted-foreground">Trusted by enterprises and developers across the Netherlands</p>
 			</div>
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-				<TestimonialCard t={sampleTestimonial} delayIndex={0} />
-				<TestimonialCard t={providerTestimonial} delayIndex={1} />
 				<TestimonialCard
-					t={{
-						id: 'sample-3',
-						name: 'Peter Smit',
-						role: 'Senior Developer',
-						org: 'Government Agency',
-						sector: 'government',
-						quote: 'The API is well-designed and the SDK makes integration easy. Excellent developer experience.',
-						rating: 5,
-					}}
-					delayIndex={2}
+					name="Dr. Sarah van den Berg"
+					role="Chief Data Officer"
+					quote="rbee allows us to process patient data with complete GDPR compliance. The Dutch data sovereignty gives us peace of mind that no patient information ever leaves the Netherlands."
+					verified
+					rating={5}
+				/>
+				<TestimonialCard
+					name="Mark de Vries"
+					role="GPU Provider"
+					quote="I earn €150-200/month by sharing my gaming PC when I'm not using it. Setup took 10 minutes, and payments are automatic."
+					highlight="€150-200/mo"
+					verified
+					rating={5}
+				/>
+				<TestimonialCard
+					name="Peter Smit"
+					role="Senior Developer"
+					quote="The API is well-designed and the SDK makes integration easy. Excellent developer experience."
+					company={{ name: 'Government Agency' }}
+					rating={5}
 				/>
 			</div>
 		</div>

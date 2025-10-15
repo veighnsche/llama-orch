@@ -11,6 +11,7 @@
 
 // Individual molecules (alphabetical)
 export * from "./ArchitectureDiagram/ArchitectureDiagram";
+export * from "./ArchitectureHighlights/ArchitectureHighlights";
 export * from "./AudienceCard/AudienceCard";
 export * from "./BeeArchitecture/BeeArchitecture";
 export * from "./BrandLogo/BrandLogo";
@@ -19,6 +20,7 @@ export * from "./ButtonCardFooter/ButtonCardFooter";
 export * from "./CTAOptionCard/CTAOptionCard";
 export * from "./CodeBlock/CodeBlock";
 export * from "./ComplianceChip/ComplianceChip";
+export * from "./CoverageProgressBar/CoverageProgressBar";
 export * from "./FeatureBadge/FeatureBadge";
 export * from "./FeatureCard/FeatureCard";
 export * from "./FeatureHeader/FeatureHeader";
@@ -48,6 +50,7 @@ export * from "./StatusKPI/StatusKPI";
 export * from "./StepCard/StepCard";
 export * from "./StepNumber/StepNumber";
 export * from "./TabButton/TabButton";
+export * from "./TechnologyStack/TechnologyStack";
 export * from "./TerminalConsole/TerminalConsole";
 export * from "./TerminalWindow/TerminalWindow";
 export * from "./TestimonialCard/TestimonialCard";

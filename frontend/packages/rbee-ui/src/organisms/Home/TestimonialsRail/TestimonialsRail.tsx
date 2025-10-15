@@ -46,7 +46,16 @@ export function TestimonialsRail({
 				{layout === 'carousel' && <span className="sr-only">Use arrow keys or swipe to navigate testimonials</span>}
 				{filteredTestimonials.map((testimonial: any, index: number) => (
 					<div key={testimonial.id} className={cn(layout === 'carousel' && 'min-w-[85%] snap-center md:min-w-0')}>
-						<TestimonialCard t={testimonial} delayIndex={index} />
+						<TestimonialCard
+							name={testimonial.name}
+							role={testimonial.role}
+							quote={testimonial.quote}
+							avatar={testimonial.avatar}
+							company={testimonial.org ? { name: testimonial.org } : undefined}
+							rating={testimonial.rating}
+							highlight={testimonial.payout}
+							verified={!!testimonial.payout}
+						/>
 					</div>
 				))}
 			</div>
