@@ -13,6 +13,49 @@ const meta = {
 ## Overview
 The ProblemSection displays a grid of problem cards to highlight pain points and challenges. It uses visual hierarchy with icons, tone-based styling, optional loss tags, and a CTA banner to drive action.
 
+## Marketing Strategy
+
+### Target Audience
+Visitors who landed on the homepage and need to understand the problem before evaluating the solution. They need:
+- Clear articulation of pain points
+- Validation that their problems are understood
+- Urgency to act (quantified losses)
+- Emotional connection to frustrations
+
+### Primary Message
+Implicit: **"We understand your pain"** — Empathy-driven problem framing.
+
+### Copy Analysis
+- **Headline tone**: Problem-focused, empathetic
+- **Emotional appeal**: Frustration with status quo, urgency to change
+- **Power words**: "Unpredictable", "lock-in", "risk", "concerns", "Loss"
+- **Social proof**: Loss tags quantify impact ("Loss €50/mo")
+
+### Conversion Elements
+- **Three problem cards**: Cost, vendor lock-in, privacy
+- **Icons**: Visual differentiation (DollarSign, Lock, Shield)
+- **Tone-based styling**: Destructive (red) for critical, primary (blue) for important
+- **Loss tags**: Quantify monthly cost impact
+- **Optional CTA banner**: Drive to solution after problem framing
+
+### Problem Framing
+1. **Unpredictable API costs**: Usage-based pricing scales unpredictably
+2. **Vendor lock-in risk**: Proprietary APIs create dependencies
+3. **Privacy & compliance concerns**: Data leaves your network
+
+### Objection Handling
+- **"Is this really a problem?"** → Loss tags quantify impact
+- **"Can't I just use free tier?"** → Unpredictable costs, rate limits
+- **"Is vendor lock-in that bad?"** → Risk framing, dependency concerns
+- **"Do I need to worry about privacy?"** → Compliance concerns, audit requirements
+
+### Variations to Test
+- Alternative problem order: Lead with cost vs. privacy vs. lock-in
+- Alternative tone: More aggressive (fear) vs. neutral (facts)
+- Alternative loss tags: Monthly vs. annual vs. percentage
+
+## Composition
+
 ## Composition
 This organism contains:
 - **Header**: Optional kicker, title, and subtitle
@@ -140,7 +183,51 @@ export const Default: Story = {
 		docs: {
 			description: {
 				story:
-					'Default problem section with three problems and CTA banner. Use the theme toggle in the toolbar to switch between light and dark modes.',
+					'Default problem section with three problems and CTA banner. Use the theme toggle in the toolbar to switch between light and dark modes. Use the viewport toolbar to test responsive behavior.',
+			},
+		},
+	},
+}
+
+export const HomePageContext: Story = {
+	parameters: {
+		docs: {
+			description: {
+				story: `**Home page context** — Exact implementation from \`/\` route.
+
+**Marketing Notes:**
+- **Three problems**: Unpredictable costs, Vendor lock-in, Privacy concerns
+- **Visual hierarchy**: Icons + tone-based styling
+- **Optional CTA**: Drives to solution after problem framing
+
+**Problem 1: Unpredictable API costs**
+- **Icon**: DollarSign (red/destructive)
+- **Tone**: Destructive (critical problem)
+- **Copy**: "Usage-based pricing scales unpredictably. What starts at $20/month becomes $2000/month."
+- **Tag**: "Loss €50/mo" (quantified impact)
+- **Target**: Cost-conscious developers, startups with budget pressure
+
+**Problem 2: Vendor lock-in risk**
+- **Icon**: Lock (red/destructive)
+- **Tone**: Destructive (critical problem)
+- **Copy**: "Your entire codebase depends on proprietary APIs. Switching providers means rewriting everything."
+- **Tag**: "High risk" (qualitative impact)
+- **Target**: Developers concerned about dependencies, long-term maintainability
+
+**Problem 3: Privacy & compliance concerns**
+- **Icon**: Shield (red/destructive)
+- **Tone**: Destructive (critical problem)
+- **Copy**: "Your code and prompts are sent to external servers. Compliance becomes a nightmare."
+- **No tag**: (impact is qualitative)
+- **Target**: Enterprise, regulated industries, privacy-conscious developers
+
+**Conversion Strategy:**
+- Three problems cover main pain points (cost, lock-in, privacy)
+- Tone-based styling creates urgency (red = critical)
+- Loss tags quantify impact (not abstract)
+- Optional CTA drives to solution section
+
+**Tone**: Empathetic, urgent, problem-focused`,
 			},
 		},
 	},

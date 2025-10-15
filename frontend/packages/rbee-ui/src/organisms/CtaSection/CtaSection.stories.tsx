@@ -13,6 +13,52 @@ const meta = {
 ## Overview
 The CTASection is a flexible call-to-action component designed to drive user engagement at key points in the user journey. It features a headline, optional subtitle, primary and secondary action buttons, and optional trust messaging.
 
+## Marketing Strategy
+
+### Target Audience
+Visitors at decision points throughout the site. They need:
+- Clear next action (no ambiguity)
+- Removal of friction ("No credit card required")
+- Urgency or motivation to act now
+- Alternative path if not ready for primary action
+
+### Primary Message
+Context-dependent, but generally: **"Take action now"** — Direct, action-oriented.
+
+### Copy Analysis
+- **Headline tone**: Action-oriented, urgent
+- **Emotional appeal**: FOMO (don't miss out), empowerment (take control)
+- **Power words**: "Stop", "Start", "Free", "Today", "Join"
+- **Social proof**: "Join 500+ developers" (implicit validation)
+
+### Conversion Elements
+- **Headline**: Action-oriented statement
+- **Subtitle**: Supporting context or benefit
+- **Primary CTA**: Main action (Get Started, Download, etc.)
+- **Secondary CTA**: Alternative path (View Docs, See Pricing, etc.)
+- **Trust note**: Friction removal ("No credit card required", "Cancel anytime")
+- **Optional eyebrow**: Urgency indicator ("Limited Time Offer")
+- **Optional gradient**: Visual emphasis
+
+### CTA Strategy by Context
+- **Home page**: "Get Started Free" + "View Documentation"
+- **Developers page**: "Install in 15 Minutes" + "See Examples"
+- **Pricing page**: "Start Free Trial" + "Contact Sales"
+- **Features page**: "Try It Now" + "Read Architecture"
+
+### Objection Handling
+- **"What's the commitment?"** → "No credit card required"
+- **"Can I cancel?"** → "Cancel anytime"
+- **"Is it really free?"** → "100% open source"
+- **"What if I need help?"** → Secondary CTA to docs/support
+
+### Variations to Test
+- Alternative headlines: Action-oriented vs. benefit-oriented
+- Alternative primary CTA: "Get Started" vs. "Install Now" vs. "Try Free"
+- Alternative trust notes: Emphasize free vs. no commitment vs. open source
+
+## Composition
+
 ## Composition
 This organism contains:
 - **Eyebrow**: Optional small badge/label above title
@@ -170,6 +216,87 @@ export const Default: Story = {
 			href: '/docs',
 		},
 		note: 'No credit card required • Cancel anytime',
+	},
+}
+
+export const HomePageContext: Story = {
+	args: {
+		title: 'Stop depending on AI providers. Start building today.',
+		subtitle: "Join 500+ developers who've taken control of their AI infrastructure.",
+		primary: {
+			label: 'Get started free',
+			href: '/getting-started',
+			iconRight: ArrowRight,
+		},
+		secondary: {
+			label: 'View documentation',
+			href: '/docs',
+			variant: 'outline' as const,
+		},
+		note: '100% open source. No credit card required. Install in 15 minutes.',
+		emphasis: 'gradient' as const,
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: `**Home page context** — Exact implementation from \`/\` route.
+
+**Marketing Notes:**
+- **Headline**: "Stop depending on AI providers. Start building today." — Action-oriented, contrasting verbs
+- **Subtitle**: "Join 500+ developers who've taken control..." — Social proof
+- **Primary CTA**: "Get started free" — Action + friction removal
+- **Secondary CTA**: "View documentation" — Alternative path for validators
+- **Trust note**: Three friction removers:
+  1. "100% open source" (transparency)
+  2. "No credit card required" (no commitment)
+  3. "Install in 15 minutes" (time-specific)
+- **Emphasis**: Gradient background for visual impact
+
+**Conversion Strategy:**
+- Positioned at end of homepage (final conversion point)
+- Headline uses "Stop/Start" contrast (action-oriented)
+- Social proof ("500+ developers") builds confidence
+- Primary CTA removes friction ("free", "no credit card")
+- Secondary CTA serves technical validators
+- Trust note stacks three friction removers
+- Gradient emphasis draws attention
+
+**Tone**: Urgent, action-oriented, empowering`,
+			},
+		},
+	},
+}
+
+export const DevelopersPageContext: Story = {
+	args: {
+		title: 'Start building with rbee',
+		subtitle: 'Install in 15 minutes. Use with your existing tools.',
+		primary: {
+			label: 'Get Started',
+			href: '/getting-started',
+			iconRight: ArrowRight,
+		},
+		secondary: {
+			label: 'View Examples',
+			href: '/docs/examples',
+		},
+		note: 'OpenAI-compatible API. Works with Zed, Cursor, Continue.',
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: `**Developers page context** — Variant used on \`/developers\` page.
+
+**Differences from home page:**
+- Simpler headline ("Start building with rbee")
+- Time-specific subtitle ("Install in 15 minutes")
+- Tool compatibility in trust note
+- No gradient emphasis (cleaner)
+- Secondary CTA to examples (more technical)
+
+**Use case**: Developers page where visitors are already technical and need practical next steps.`,
+			},
+		},
 	},
 }
 

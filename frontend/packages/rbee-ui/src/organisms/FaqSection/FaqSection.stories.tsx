@@ -347,3 +347,22 @@ export const SEOFeatures: Story = {
 		},
 	},
 }
+
+// Created by: TEAM-004
+export const PricingPageVariant: Story = {
+	args: {
+		title: 'Pricing FAQs',
+		subtitle: 'Answers on licensing, upgrades, trials, and payments.',
+		badgeText: 'Pricing • Plans & Billing',
+		showSupportCard: false,
+		jsonLdEnabled: true,
+	},
+	parameters: {
+		docs: {
+			description: {
+				story:
+					'Pricing page variant of FAQ section with custom title, subtitle, and badge. This variant is used on /pricing page with pricing-specific FAQs addressing: "Is it really free?", "What\'s included in Pro vs. Enterprise?", "Can I upgrade/downgrade?", "What payment methods?", "Refund policy?". Support card is hidden (showSupportCard={false}) as pricing page has its own CTAs. Custom categories would include: Licensing, Plans & Tiers, Billing & Payments, Upgrades & Downgrades.',
+			},
+		},
+	},
+}

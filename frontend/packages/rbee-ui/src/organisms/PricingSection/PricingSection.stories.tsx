@@ -12,6 +12,50 @@ const meta = {
 ## Overview
 The PricingSection displays pricing tiers for the rbee platform with a monthly/yearly toggle, feature lists, and call-to-action buttons. It includes trust badges, an optional editorial image, and footer reassurance text.
 
+## Marketing Strategy
+
+### Target Audience
+Visitors ready to evaluate pricing and make a decision. They need:
+- Clear pricing tiers (no hidden costs)
+- Understanding of what's included in each tier
+- Confidence that free tier is truly free (no bait-and-switch)
+- Path to upgrade when needed
+
+### Primary Message
+**"Simple, honest pricing"** — Transparency and trust positioning.
+
+### Copy Analysis
+- **Headline tone**: Straightforward, honest
+- **Emotional appeal**: Trust (no hidden costs), fairness (no feature gates)
+- **Power words**: "Free", "No credit card", "Unlimited", "Open source"
+- **Social proof**: "Most popular" badge on Team tier
+
+### Conversion Elements
+- **Three tiers**: Home/Lab (Free), Team (€99/mo), Enterprise (Custom)
+- **Billing toggle**: Monthly/yearly with savings badge
+- **Feature lists**: Clear differentiation between tiers
+- **Trust badges**: Open source, OpenAI-compatible, No feature gates
+- **Footer reassurance**: "No credit card required", "Cancel anytime"
+- **Editorial image**: Shows product progression (optional)
+
+### Pricing Strategy
+- **Free tier**: Unlimited GPUs, no feature gates (builds trust)
+- **Team tier**: €99/mo (€990/yr with 2 months free) — Web UI, shared workspaces, priority support
+- **Enterprise tier**: Custom pricing — Dedicated instances, SLAs, white-label
+
+### Objection Handling
+- **"Is free really free?"** → "Unlimited GPUs on your hardware. No feature gates."
+- **"What's the catch?"** → "100% open source. No credit card required."
+- **"When should I upgrade?"** → Team tier adds web UI and collaboration
+- **"What about enterprise?"** → Custom SLAs, dedicated instances, white-label
+
+### Variations to Test
+- Alternative free tier name: "Home/Lab" vs. "Community" vs. "Self-Hosted"
+- Alternative Team tier price: €99 vs. €79 vs. €119
+- Alternative Enterprise positioning: "Contact Sales" vs. "Custom Pricing" vs. "Let's Talk"
+
+## Composition
+
 ## Composition
 This organism contains:
 - **SectionContainer**: Wrapper with title and description
@@ -157,6 +201,56 @@ export const Default: Story = {
 	},
 }
 
+export const HomePageContext: Story = {
+	args: {
+		variant: 'home',
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: `**Home page context** — Exact implementation from \`/\` route.
+
+**Marketing Notes:**
+- **Variant**: "home" — Condensed version for homepage
+- **Three tiers**: Home/Lab (Free), Team (€99/mo), Enterprise (Custom)
+- **Billing toggle**: Monthly/yearly with "Save 2 months" badge
+- **Trust badges**: "100% Open Source", "OpenAI-Compatible", "No Feature Gates"
+- **Footer reassurance**: "No credit card required. Cancel anytime."
+
+**Tier 1: Home/Lab (Free)**
+- **Price**: €0 forever
+- **Target**: Solo developers, homelab enthusiasts
+- **Features**: Unlimited GPUs, CLI, API, All models, Community support
+- **CTA**: "Get Started"
+- **Message**: "Truly free. No feature gates."
+
+**Tier 2: Team (€99/mo)**
+- **Price**: €99/mo or €990/yr (save €198)
+- **Target**: Small teams, startups
+- **Features**: Everything in Free + Web UI, Shared workspaces, Priority support, Usage analytics
+- **CTA**: "Start Free Trial"
+- **Badge**: "Most Popular"
+- **Message**: "Collaboration features for growing teams"
+
+**Tier 3: Enterprise (Custom)**
+- **Price**: Custom pricing
+- **Target**: Large organizations, regulated industries
+- **Features**: Everything in Team + Dedicated instances, Custom SLAs, White-label options, Audit logs, SSO/SAML
+- **CTA**: "Contact Sales"
+- **Message**: "For organizations with specific requirements"
+
+**Conversion Strategy:**
+- Free tier removes friction (no credit card)
+- Team tier shows clear upgrade path (web UI, collaboration)
+- Enterprise tier signals capability for large orgs
+- Billing toggle shows savings (2 months free on yearly)
+
+**Tone**: Transparent, honest, no-pressure`,
+			},
+		},
+	},
+}
+
 export const PricingPage: Story = {
 	args: {
 		variant: 'pricing',
@@ -164,7 +258,37 @@ export const PricingPage: Story = {
 	parameters: {
 		docs: {
 			description: {
-				story: 'Full pricing section variant for dedicated pricing page with different copy.',
+				story: `**Pricing page context** — Full variant for dedicated \`/pricing\` page.
+
+**Differences from home page variant:**
+- More detailed feature lists
+- Expanded tier descriptions
+- Additional trust messaging
+- Optional editorial image showing product progression
+
+**Use case**: Dedicated pricing page where visitors are specifically evaluating cost.`,
+			},
+		},
+	},
+}
+
+export const DevelopersPageContext: Story = {
+	args: {
+		variant: 'home',
+		showKicker: false,
+		showEditorialImage: false,
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: `**Developers page context** — Variant used on \`/developers\` page.
+
+**Differences from home page:**
+- No kicker badges (cleaner layout)
+- No editorial image (tighter integration)
+- Same pricing tiers and features
+
+**Use case**: Developers page where pricing is secondary to technical features.`,
 			},
 		},
 	},
