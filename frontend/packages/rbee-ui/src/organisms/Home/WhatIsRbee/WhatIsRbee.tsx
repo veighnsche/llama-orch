@@ -1,17 +1,7 @@
 'use client'
 
 import { homelabNetwork } from '@rbee/ui/assets'
-import {
-  Badge,
-  BrandMark,
-  BrandWordmark,
-  Button,
-  Card,
-  Separator,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@rbee/ui/atoms'
+import { Badge, BrandMark, BrandWordmark, Button, Tooltip, TooltipContent, TooltipTrigger } from '@rbee/ui/atoms'
 import { FeatureListItem, SectionContainer, StatsGrid } from '@rbee/ui/molecules'
 import { ArrowRight, Cpu, Shield, Zap } from 'lucide-react'
 import Image from 'next/image'

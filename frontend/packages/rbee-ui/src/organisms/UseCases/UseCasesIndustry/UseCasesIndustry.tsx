@@ -1,22 +1,8 @@
 'use client'
 
-import { Badge } from '@rbee/ui/atoms/Badge'
-import { Button } from '@rbee/ui/atoms/Button'
-import { Card } from '@rbee/ui/atoms/Card'
-import { Separator } from '@rbee/ui/atoms/Separator'
 import { IndustriesHero } from '@rbee/ui/icons'
 import { IndustryCard, type IndustryCardProps, SectionContainer } from '@rbee/ui/molecules'
-import {
-  Banknote,
-  Building2,
-  Factory,
-  FlaskConical,
-  GraduationCap,
-  Heart,
-  Landmark,
-  Scale,
-  ShieldCheck,
-} from 'lucide-react'
+import { Banknote, Factory, GraduationCap, Heart, Landmark, Scale } from 'lucide-react'
 
 const industries: IndustryCardProps[] = [
   {

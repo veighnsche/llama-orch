@@ -79,7 +79,7 @@ export function PricingTier({
         </div>
       </div>
 
-      <ul className="mt-5 space-y-2 text-sm" role="list" aria-label={`${title} features`}>
+      <ul className="mt-5 space-y-2 text-sm" aria-label={`${title} features`}>
         {features.map((feature, index) => (
           <BulletListItem key={index} title={feature} variant="check" color="chart-3" showPlate={false} />
         ))}

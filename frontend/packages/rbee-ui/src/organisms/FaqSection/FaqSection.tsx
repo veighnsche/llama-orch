@@ -7,7 +7,7 @@ import { Button } from '@rbee/ui/atoms/Button'
 import { Input } from '@rbee/ui/atoms/Input'
 import { Separator } from '@rbee/ui/atoms/Separator'
 import { cn } from '@rbee/ui/utils'
-import { ChevronDown, ExternalLink, Mail, Search as SearchIcon } from 'lucide-react'
+import { Search as SearchIcon } from 'lucide-react'
 import Image from 'next/image'
 import * as React from 'react'
 
@@ -168,7 +168,7 @@ export function FAQSection({
 
       return matchesSearch && matchesCategory
     })
-  }, [searchQuery, selectedCategory])
+  }, [searchQuery, selectedCategory, faqItems])
 
   // Group FAQs by category for display
   const groupedFAQs = React.useMemo(() => {

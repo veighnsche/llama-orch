@@ -79,7 +79,7 @@ export function IndustryCaseCard({
       {/* Challenge panel */}
       <div className="mb-4 rounded-xl border bg-background p-4">
         <div className="mb-2 font-semibold text-foreground">Challenge</div>
-        <ul className="space-y-1.5 text-sm text-muted-foreground" role="list">
+        <ul className="space-y-1.5 text-sm text-muted-foreground">
           {challenges.map((challenge) => (
             <li key={challenge} className="flex gap-2">
               <span className="sr-only">Challenge:</span>
@@ -95,7 +95,7 @@ export function IndustryCaseCard({
       {/* Solution panel */}
       <div className="rounded-xl border border-chart-3/50 bg-chart-3/10 p-4">
         <div className="mb-2 font-semibold text-chart-3">Solution with rbee</div>
-        <ul className="space-y-1.5 text-sm text-foreground/85" role="list">
+        <ul className="space-y-1.5 text-sm text-foreground/85">
           {solutions.map((solution) => (
             <li key={solution} className="flex gap-2">
               <span className="sr-only">Solution:</span>

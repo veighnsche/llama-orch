@@ -1,6 +1,6 @@
 import { Button } from '@rbee/ui/atoms/Button'
 import type { Meta, StoryObj } from '@storybook/react'
-import { ChevronDownIcon, LogOutIcon, PlusIcon, SettingsIcon, UserIcon } from 'lucide-react'
+import { ChevronDownIcon, LogOutIcon, SettingsIcon, UserIcon } from 'lucide-react'
 import { useState } from 'react'
 import {
   DropdownMenu,
@@ -12,9 +12,6 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from './DropdownMenu'
 

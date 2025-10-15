@@ -30,7 +30,7 @@ const outPath = resolve(outDir, 'index.d.ts')
     for (const [cat, info] of Object.entries(manifest)) {
       apiDecl += `  ${cat}: {\n`
       for (const [name, m] of Object.entries(info.methods || {})) {
-        apiDecl += methodSig(name, m) + '\n'
+        apiDecl += `${methodSig(name, m)}\n`
       }
       apiDecl += '  };\n'
     }
@@ -38,7 +38,7 @@ const outPath = resolve(outDir, 'index.d.ts')
     apiDecl += 'declare const _default: Api;\nexport default _default;\n'
 
     await fsp.mkdir(outDir, { recursive: true })
-    await fsp.writeFile(outPath, header + '\n\n' + types + '\n' + apiDecl)
+    await fsp.writeFile(outPath, `${header}\n\n${types}\n${apiDecl}`)
     console.log('Wrote', outPath)
   } catch (err) {
     console.error('compose-dts failed:', err.message || err)

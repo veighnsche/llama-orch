@@ -2,7 +2,7 @@
 
 import { Button } from '@rbee/ui/atoms/Button'
 import type { Meta, StoryObj } from '@storybook/react'
-import { AlignCenter, AlignLeft, AlignRight, Bold, Italic, Underline } from 'lucide-react'
+import { Bold, Italic, Underline } from 'lucide-react'
 
 const meta: Meta = {
   title: 'Atoms/ButtonGroup',

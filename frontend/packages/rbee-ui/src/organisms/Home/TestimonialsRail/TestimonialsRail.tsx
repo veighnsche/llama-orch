@@ -43,7 +43,7 @@ export function TestimonialsRail({
         aria-label={layout === 'carousel' ? 'Testimonials carousel (scroll horizontally)' : undefined}
       >
         {layout === 'carousel' && <span className="sr-only">Use arrow keys or swipe to navigate testimonials</span>}
-        {filteredTestimonials.map((testimonial: any, index: number) => (
+        {filteredTestimonials.map((testimonial: any, _index: number) => (
           <div key={testimonial.id} className={cn(layout === 'carousel' && 'min-w-[85%] snap-center md:min-w-0')}>
             <TestimonialCard
               name={testimonial.name}

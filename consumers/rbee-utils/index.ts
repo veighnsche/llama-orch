@@ -60,7 +60,7 @@ async function init() {
   const wasiImports: any =
     typeof wasi.getImportObject === 'function'
       ? wasi.getImportObject()
-      : wasi && wasi.wasiImport
+      : wasi?.wasiImport
         ? { wasi_snapshot_preview1: wasi.wasiImport }
         : {}
 
@@ -86,7 +86,7 @@ async function init() {
     // First try a generous default; if too large, we'll parse the module's declared max from the error and retry
     ;({ inst: (instance as any), mem: memory } = await instantiateWith(256))
   } catch (e: any) {
-    const msg = String((e && e.message) || e)
+    const msg = String(e?.message || e)
     // Try to parse a numeric maximum (Node usually reports it)
     const m = msg.match(/module's declared maximum\s+(\d+)/i)
     if (m) {
@@ -112,10 +112,7 @@ async function init() {
   if (typeof (wasi as any).initialize === 'function') (wasi as any).initialize(instance)
 
   _exports = (instance as any).exports
-  _memory =
-    (instance as any).exports && (instance as any).exports.memory
-      ? (instance as any).exports.memory
-      : (memory as WebAssembly.Memory)
+  _memory = (instance as any).exports?.memory ? (instance as any).exports.memory : (memory as WebAssembly.Memory)
 }
 
 function ensureInitSyncGuard() {

@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { CommandIcon } from 'lucide-react'
 import { Kbd, KbdGroup } from './Kbd'
 
 const meta: Meta<typeof Kbd> = {

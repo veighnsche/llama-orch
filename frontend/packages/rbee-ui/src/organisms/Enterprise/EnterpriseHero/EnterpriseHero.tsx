@@ -1,9 +1,7 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
-import { Card } from '@rbee/ui/atoms/Card'
-import { Separator } from '@rbee/ui/atoms/Separator'
 import { ComplianceChip, StatsGrid } from '@rbee/ui/molecules'
-import { Building2, Check, FileCheck, Filter, Lock, Shield } from 'lucide-react'
+import { FileCheck, Filter, Lock, Shield } from 'lucide-react'
 import Link from 'next/link'
 
 const auditEvents = [
@@ -42,7 +40,6 @@ export function EnterpriseHero() {
     <section
       className="relative z-0 overflow-hidden border-b border-border bg-gradient-to-b from-background via-card to-background bg-[radial-gradient(60rem_40rem_at_20%_-10%,theme(colors.primary/8),transparent)] px-6 py-24 lg:py-32"
       aria-labelledby="enterprise-hero-h1"
-      role="region"
     >
       {/* Decorative background illustration - removed, file doesn't exist */}
 
@@ -175,7 +172,7 @@ export function EnterpriseHero() {
                 </div>
 
                 {/* Audit Events List */}
-                <ul className="space-y-3" role="list" aria-label="Recent audit events">
+                <ul className="space-y-3" aria-label="Recent audit events">
                   {auditEvents.map((log, i) => (
                     <li
                       key={i}

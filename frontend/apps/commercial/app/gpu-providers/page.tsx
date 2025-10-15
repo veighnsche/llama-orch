@@ -1,6 +1,4 @@
 import {
-  EmailCapture,
-  Footer,
   ProvidersCTA,
   ProvidersEarnings,
   ProvidersFeatures,

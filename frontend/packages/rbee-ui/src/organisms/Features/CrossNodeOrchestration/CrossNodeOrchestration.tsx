@@ -1,7 +1,7 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Separator } from '@rbee/ui/atoms/Separator'
 import { IconPlate, SectionContainer } from '@rbee/ui/molecules'
-import { ArrowDown, Badge as BadgeIcon, GitBranch, Network } from 'lucide-react'
+import { ArrowDown, GitBranch, Network } from 'lucide-react'
 
 export function CrossNodeOrchestration() {
   return (

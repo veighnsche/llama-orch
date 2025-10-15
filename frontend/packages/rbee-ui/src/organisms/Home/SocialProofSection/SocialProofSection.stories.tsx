@@ -294,7 +294,7 @@ export const MetricsOnly: Story = {
       { value: '€0', label: 'Avg. monthly cost', valueTone: 'primary' },
     ],
   },
-  render: (args) => (
+  render: (_args) => (
     <div>
       <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
         <h2 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem' }}>

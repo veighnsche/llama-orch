@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { Building2, Heart, Scale, Shield } from 'lucide-react'
+import { Building2, Heart, Scale } from 'lucide-react'
 import { IndustryCaseCard } from './IndustryCaseCard'
 
 const meta: Meta<typeof IndustryCaseCard> = {

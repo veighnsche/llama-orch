@@ -23,7 +23,6 @@ export function Navigation() {
       </a>
 
       <nav
-        role="navigation"
         aria-label="Primary"
         className="fixed top-0 inset-x-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/60"
       >

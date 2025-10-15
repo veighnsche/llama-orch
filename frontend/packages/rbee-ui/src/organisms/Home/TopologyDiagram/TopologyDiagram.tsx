@@ -58,7 +58,7 @@ export function TopologyDiagram({
     nodes.filter((n) => n.tier === tier).sort((a, b) => (a.laneIndex ?? 0) - (b.laneIndex ?? 0))
 
   // Helper to compute Bézier path
-  const bez = (sx: string, sy: string, tx: string, ty: string, cy: string) =>
+  const _bez = (sx: string, sy: string, tx: string, ty: string, cy: string) =>
     `M ${sx} ${sy} C ${sx} ${cy}, ${tx} ${cy}, ${tx} ${ty}`
 
   // Compute node positions
@@ -90,7 +90,6 @@ export function TopologyDiagram({
       )}
       aria-labelledby="topology-title"
       aria-describedby="topology-desc"
-      role="figure"
     >
       {/* Spotlight background */}
       <div

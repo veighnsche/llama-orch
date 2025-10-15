@@ -38,7 +38,6 @@ export function FeatureTabsSection({ title, subtitle, items, defaultId, id, clas
         return 'border-primary/30 bg-primary/10 text-primary'
       case 'destructive':
         return 'border-destructive/30 bg-destructive/10 text-destructive'
-      case 'muted':
       default:
         return 'border-border bg-card/60 text-foreground'
     }

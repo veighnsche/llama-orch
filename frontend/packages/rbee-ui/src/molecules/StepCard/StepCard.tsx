@@ -58,7 +58,7 @@ export function StepCard({ index, icon, title, intro, items, footnote, isLast, c
         <p className="mb-4 text-sm leading-relaxed text-foreground/85">{intro}</p>
 
         {/* Deliverables list */}
-        <ul className="space-y-1.5 text-sm text-muted-foreground" role="list">
+        <ul className="space-y-1.5 text-sm text-muted-foreground">
           {items.map((item) => (
             <li key={item} className="flex gap-2" aria-label={`Deliverable: ${item}`}>
               <span className="mt-0.5 h-4 w-4 shrink-0 text-chart-3" aria-hidden="true">

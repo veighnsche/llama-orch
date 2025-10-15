@@ -1,5 +1,5 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
-import { FeatureCard, SectionContainer } from '@rbee/ui/molecules'
+import { SectionContainer } from '@rbee/ui/molecules'
 import { ChevronRight, Code, Database, Network, Shield, Terminal } from 'lucide-react'
 
 export function AdditionalFeaturesGrid() {

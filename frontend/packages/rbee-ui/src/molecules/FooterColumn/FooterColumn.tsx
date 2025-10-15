@@ -1,4 +1,3 @@
-import { cn } from '@rbee/ui/utils'
 import Link from 'next/link'
 
 export interface FooterLink {

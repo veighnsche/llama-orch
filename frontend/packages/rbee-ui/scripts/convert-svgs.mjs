@@ -4,9 +4,9 @@
  * Reads all SVG files from src/assets/illustrations and creates TSX components
  */
 
-import { readdirSync, readFileSync, writeFileSync } from 'fs'
-import { basename, dirname, join } from 'path'
-import { fileURLToPath } from 'url'
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { basename, dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -29,7 +29,7 @@ function extractSvgContent(svgString) {
 
   let content = match[1].trim()
   // Convert HTML comments to JSX comments
-  content = content.replace(/<!--([\s\S]*?)-->/g, (match, comment) => {
+  content = content.replace(/<!--([\s\S]*?)-->/g, (_match, comment) => {
     return `{/* ${comment.trim()} */}`
   })
 
@@ -106,7 +106,7 @@ function convertSvgs() {
   }
 
   // Create index.ts
-  const indexContent = exports.join('\n') + '\n'
+  const indexContent = `${exports.join('\n')}\n`
   writeFileSync(join(OUTPUT_DIR, 'index.ts'), indexContent)
 
   console.log(`\n✨ Converted ${files.length} SVG files to React components`)

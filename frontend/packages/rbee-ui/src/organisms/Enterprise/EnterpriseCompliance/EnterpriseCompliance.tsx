@@ -9,7 +9,6 @@ export function EnterpriseCompliance() {
     <section
       id="compliance"
       aria-labelledby="compliance-h2"
-      role="region"
       className="relative border-b border-border bg-radial-glow px-6 py-24"
     >
       {/* Decorative background illustration */}
@@ -44,7 +43,7 @@ export function EnterpriseCompliance() {
           >
             <IconCardHeader icon={Globe} title="GDPR" subtitle="EU Regulation" titleId="compliance-gdpr" />
             <CardContent className="p-0">
-              <ul className="space-y-3" role="list">
+              <ul className="space-y-3">
                 <BulletListItem variant="check" title="7-year audit retention (Art. 30)" />
                 <BulletListItem variant="check" title="Data access records (Art. 15)" />
                 <BulletListItem variant="check" title="Erasure tracking (Art. 17)" />
@@ -73,7 +72,7 @@ export function EnterpriseCompliance() {
           >
             <IconCardHeader icon={Shield} title="SOC2" subtitle="US Standard" titleId="compliance-soc2" />
             <CardContent className="p-0">
-              <ul className="space-y-3" role="list">
+              <ul className="space-y-3">
                 <BulletListItem variant="check" title="Auditor query API" />
                 <BulletListItem variant="check" title="32 audit event types" />
                 <BulletListItem variant="check" title="7-year retention (Type II)" />
@@ -106,7 +105,7 @@ export function EnterpriseCompliance() {
               titleId="compliance-iso27001"
             />
             <CardContent className="p-0">
-              <ul className="space-y-3" role="list">
+              <ul className="space-y-3">
                 <BulletListItem variant="check" title="Incident records (A.16)" />
                 <BulletListItem variant="check" title="3-year minimum retention" />
                 <BulletListItem variant="check" title="Access logging (A.9)" />

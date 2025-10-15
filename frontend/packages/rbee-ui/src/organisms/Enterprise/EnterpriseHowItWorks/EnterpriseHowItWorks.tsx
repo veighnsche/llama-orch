@@ -114,7 +114,7 @@ export function EnterpriseHowItWorks() {
               </div>
 
               {/* Week chips */}
-              <ol className="space-y-3" role="list">
+              <ol className="space-y-3">
                 <li className="rounded-xl border bg-background px-3 py-2 transition-colors hover:bg-secondary">
                   <div className="text-sm font-semibold text-primary">Week 1-2</div>
                   <div className="text-xs text-muted-foreground">Compliance Assessment</div>

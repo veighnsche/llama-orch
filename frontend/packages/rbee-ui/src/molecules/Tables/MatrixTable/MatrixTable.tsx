@@ -21,7 +21,7 @@ export interface MatrixTableProps {
 }
 
 export function MatrixTable({ columns, rows, className }: MatrixTableProps) {
-  const renderCell = (value: boolean | 'Partial' | string, providerKey: string) => {
+  const renderCell = (value: boolean | 'Partial' | string, _providerKey: string) => {
     if (value === true) {
       return <Check className="mx-auto h-5 w-5 text-chart-3" aria-label="Included" />
     }

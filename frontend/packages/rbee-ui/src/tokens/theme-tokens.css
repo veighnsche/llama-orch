@@ -256,6 +256,6 @@
 
 @media (prefers-reduced-motion: reduce) {
     .animate-fade-in-up {
-        animation: none !important;
+        animation: none;
     }
 }

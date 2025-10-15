@@ -1,6 +1,6 @@
 import { Tabs, TabsList } from '@rbee/ui/atoms/Tabs'
 import type { Meta, StoryObj } from '@storybook/react'
-import { Code, Cpu, Database, Gauge, Sparkles, Zap } from 'lucide-react'
+import { Code, Cpu, Gauge, Sparkles, Zap } from 'lucide-react'
 import { FeatureTab } from './FeatureTab'
 
 const meta: Meta<typeof FeatureTab> = {

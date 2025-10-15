@@ -10,7 +10,7 @@ export interface ComparisonTableRowProps {
 }
 
 export function ComparisonTableRow({ feature, values, highlightColumn, className }: ComparisonTableRowProps) {
-  const renderValue = (value: boolean | string | ReactNode, index: number) => {
+  const renderValue = (value: boolean | string | ReactNode, _index: number) => {
     if (typeof value === 'boolean') {
       return value ? (
         <Check className="h-5 w-5 text-chart-3 mx-auto" />

@@ -18,7 +18,6 @@ export function IndustryCard({ title, copy, icon, color, badge, anchor, classNam
   return (
     <article
       id={anchor}
-      role="article"
       aria-labelledby={anchor ? `${anchor}-title` : undefined}
       tabIndex={-1}
       className={cn(

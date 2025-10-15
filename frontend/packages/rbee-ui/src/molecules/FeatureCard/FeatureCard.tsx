@@ -50,31 +50,31 @@ export function FeatureCard({
 }: FeatureCardProps) {
   const IconComponent = typeof icon === 'function' ? (icon as LucideIcon) : null
   const displayIntro = intro || description || ''
-  const sizeClasses = {
+  const _sizeClasses = {
     sm: 'p-4 space-y-2',
     md: 'p-6 space-y-3',
     lg: 'p-8 space-y-4',
   }
 
-  const iconSizeClasses = {
+  const _iconSizeClasses = {
     sm: 'h-8 w-8',
     md: 'h-10 w-10',
     lg: 'h-12 w-12',
   }
 
-  const iconInnerSizeClasses = {
+  const _iconInnerSizeClasses = {
     sm: 'h-4 w-4',
     md: 'h-5 w-5',
     lg: 'h-6 w-6',
   }
 
-  const titleSizeClasses = {
+  const _titleSizeClasses = {
     sm: 'text-sm',
     md: 'text-base',
     lg: 'text-lg',
   }
 
-  const descriptionSizeClasses = {
+  const _descriptionSizeClasses = {
     sm: 'text-xs',
     md: 'text-sm',
     lg: 'text-base',
@@ -100,7 +100,8 @@ export function FeatureCard({
     'chart-4': 'border-t-chart-4',
     'chart-5': 'border-t-chart-5',
   }
-  const borderAccent = borderAccentClasses[iconColor as keyof typeof borderAccentClasses] || borderAccentClasses.primary
+  const _borderAccent =
+    borderAccentClasses[iconColor as keyof typeof borderAccentClasses] || borderAccentClasses.primary
 
   const titleId = id ? `${id}-title` : undefined
 

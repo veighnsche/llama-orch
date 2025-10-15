@@ -1,6 +1,5 @@
-import { Badge } from '@rbee/ui/atoms/Badge'
 import { IconPlate, SectionContainer } from '@rbee/ui/molecules'
-import { CheckCircle2, Lock, Shield } from 'lucide-react'
+import { Lock, Shield } from 'lucide-react'
 
 export function SecurityIsolation() {
   return (

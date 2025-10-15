@@ -80,7 +80,7 @@ export function HeroSection() {
             </div>
 
             {/* Bottom Support Row: Trust Badges */}
-            <ul className="flex flex-wrap gap-6 pt-4" role="list">
+            <ul className="flex flex-wrap gap-6 pt-4">
               <li>
                 <a
                   href="https://github.com/veighnsche/llama-orch"

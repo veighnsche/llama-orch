@@ -63,7 +63,7 @@ export function SecurityCrate({
       <p className="mb-4 text-sm leading-relaxed text-foreground/85">{intro}</p>
 
       {/* Bullets */}
-      <ul className="mt-2 space-y-2" role="list">
+      <ul className="mt-2 space-y-2">
         {bullets.map((bullet, idx) => (
           <CheckItem key={idx}>{bullet}</CheckItem>
         ))}

@@ -1,10 +1,7 @@
-import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
-import { Card } from '@rbee/ui/atoms/Card'
-import { Separator } from '@rbee/ui/atoms/Separator'
 import { FormerCryptoMiner, GamingPcOwner, HomelabEnthusiast, WorkstationOwner } from '@rbee/ui/icons'
 import { cn } from '@rbee/ui/utils'
-import { ArrowRight, Check, Cpu, Gamepad2, Monitor, Server } from 'lucide-react'
+import { Cpu, Gamepad2, Monitor, Server } from 'lucide-react'
 import * as React from 'react'
 
 // ============================================================================
@@ -61,7 +58,7 @@ function CaseCard({ caseData, index }: { caseData: Case; index: number }) {
           <h3 className="text-lg font-semibold text-foreground">{caseData.title}</h3>
           {caseData.subtitle && <div className="text-xs text-muted-foreground">{caseData.subtitle}</div>}
         </div>
-        {caseData.image && caseData.image.Component && (
+        {caseData.image?.Component && (
           <caseData.image.Component size={48} aria-label={caseData.image.alt} className="rounded-lg" />
         )}
       </div>

@@ -22,7 +22,7 @@ async function init() {
     ;({ WASI: WASIClass } = await import('node:wasi'))
   } catch {
     try {
-      ;({ WASI: WASIClass } = await import('wasi'))
+      ;({ WASI: WASIClass } = await import('node:wasi'))
     } catch {
       try {
         ;({ WASI: WASIClass } = await import('bun:ffi'))
@@ -59,7 +59,7 @@ async function init() {
   const wasiImports =
     typeof wasi.getImportObject === 'function'
       ? wasi.getImportObject()
-      : wasi && wasi.wasiImport
+      : wasi?.wasiImport
         ? { wasi_snapshot_preview1: wasi.wasiImport }
         : {}
 
@@ -85,7 +85,7 @@ async function init() {
     // First try a generous default; if too large, we'll parse the module's declared max from the error and retry
     ;({ inst: instance, mem: memory } = await instantiateWith(256))
   } catch (e) {
-    const msg = String((e && e.message) || e)
+    const msg = String(e?.message || e)
     // Try to parse a numeric maximum (Node usually reports it)
     const m = msg.match(/module's declared maximum\s+(\d+)/i)
     if (m) {
@@ -111,7 +111,7 @@ async function init() {
   if (typeof wasi.initialize === 'function') wasi.initialize(instance)
 
   _exports = instance.exports
-  _memory = instance.exports && instance.exports.memory ? instance.exports.memory : memory
+  _memory = instance.exports?.memory ? instance.exports.memory : memory
 }
 
 function ensureInitSyncGuard() {

@@ -1,11 +1,6 @@
-import { Badge } from '@rbee/ui/atoms/Badge'
-import { Button } from '@rbee/ui/atoms/Button'
-import { Card } from '@rbee/ui/atoms/Card'
-import { GitHubIcon, RbeeArch } from '@rbee/ui/icons'
+import { RbeeArch } from '@rbee/ui/icons'
 import type { ArchitectureHighlight, TechItem } from '@rbee/ui/molecules'
 import { ArchitectureHighlights, CoverageProgressBar, SectionContainer, TechnologyStack } from '@rbee/ui/molecules'
-import { Terminal } from 'lucide-react'
-import Link from 'next/link'
 
 const techStack: TechItem[] = [
   {

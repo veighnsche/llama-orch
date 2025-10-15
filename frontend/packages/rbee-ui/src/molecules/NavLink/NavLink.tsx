@@ -18,7 +18,7 @@ export interface NavLinkProps {
 export function NavLink({ href, children, variant = 'default', onClick, className, target, rel }: NavLinkProps) {
   const pathname = usePathname()
   const isActive = pathname === href || (href !== '/' && pathname.startsWith(href))
-  const isExternal = href.startsWith('http')
+  const _isExternal = href.startsWith('http')
 
   const variantClasses = {
     default: cn(

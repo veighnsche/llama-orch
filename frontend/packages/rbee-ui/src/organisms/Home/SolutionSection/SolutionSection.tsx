@@ -118,7 +118,7 @@ export function SolutionSection({
           {/* Steps Card */}
           <div className="animate-in fade-in-50 rounded-2xl border bg-card/40 p-6 [animation-delay:150ms] md:p-8">
             <h3 className="mb-6 text-2xl font-bold">How It Works</h3>
-            <ol className="space-y-6" role="list">
+            <ol className="space-y-6">
               {steps.map((step, idx) => (
                 <li
                   key={idx}

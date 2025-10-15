@@ -1,8 +1,5 @@
 'use client'
 
-import { Badge } from '@rbee/ui/atoms/Badge'
-import { Button } from '@rbee/ui/atoms/Button'
-import { Card } from '@rbee/ui/atoms/Card'
 import { UsecasesGridDark } from '@rbee/ui/icons'
 import { SectionContainer, UseCaseCard } from '@rbee/ui/molecules'
 import { Briefcase, Building, Code, GraduationCap, Home, Laptop, Server, Users } from 'lucide-react'

@@ -1,7 +1,6 @@
 import { Input } from '@rbee/ui/atoms/Input'
-import { Label } from '@rbee/ui/atoms/Label'
 import type { Meta, StoryObj } from '@storybook/react'
-import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldTitle } from './Field'
+import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from './Field'
 
 const meta: Meta<typeof Field> = {
   title: 'Atoms/Field',

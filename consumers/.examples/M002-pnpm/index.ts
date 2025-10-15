@@ -14,7 +14,7 @@ console.log('[fs.readFile:text] chars:', firstText.content.length)
 // fs.readFile (binary)
 const rBin = utils.fs.readFile({ paths: [seedPath], as_text: false, encoding: null })
 const firstBin = rBin.files[0]
-console.log('[fs.readFile:bin] bytes:', firstBin && firstBin.bytes ? firstBin.bytes.length : 0)
+console.log('[fs.readFile:bin] bytes:', firstBin?.bytes ? firstBin.bytes.length : 0)
 
 // fs.writeFile
 const out = utils.fs.writeFile({ path: './.rbee/out.txt', text: 'hello from utils\n', create_dirs: true })

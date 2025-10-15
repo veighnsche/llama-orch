@@ -40,7 +40,7 @@ let threw = false
 try {
   utils.llm.invoke_json({ messages: [{ role: 'user', content: 'hi' }], model: m, params: p })
 } catch (e) {
-  threw = /unimplemented: llm\.invoke requires SDK wiring/.test(String(e && e.message))
+  threw = /unimplemented: llm\.invoke requires SDK wiring/.test(String(e?.message))
 }
 assert(threw, 'llm.invoke should throw typed unimplemented')
 
