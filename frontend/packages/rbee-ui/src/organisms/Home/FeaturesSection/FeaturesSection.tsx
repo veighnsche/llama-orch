@@ -1,8 +1,16 @@
 'use client'
 
 import { Alert, AlertDescription } from '@rbee/ui/atoms/Alert'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@rbee/ui/atoms/Tabs'
-import { CodeBlock, SectionContainer } from '@rbee/ui/molecules'
+import { Tabs, TabsContent, TabsList } from '@rbee/ui/atoms/Tabs'
+import {
+	CodeBlock,
+	FeatureBadge,
+	FeatureHeader,
+	FeatureTab,
+	FeatureTabContent,
+	GPUUtilizationBar,
+	SectionContainer,
+} from '@rbee/ui/molecules'
 import { Code, Cpu, Gauge, Zap } from 'lucide-react'
 
 export function FeaturesSection() {
@@ -18,49 +26,19 @@ export function FeaturesSection() {
 						className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto rounded-xl border bg-card/60 p-1 gap-1"
 						aria-label="Feature categories"
 					>
-						<TabsTrigger
-							value="api"
-							className="flex flex-col sm:flex-row items-center gap-2 py-3 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground rounded-lg px-3 text-sm font-medium transition-colors"
-						>
-							<Code className="h-4 w-4" aria-hidden="true" />
-							<span className="hidden sm:inline">OpenAI-Compatible</span>
-							<span className="text-xs text-muted-foreground block leading-none sm:hidden">OpenAI</span>
-						</TabsTrigger>
-						<TabsTrigger
-							value="gpu"
-							className="flex flex-col sm:flex-row items-center gap-2 py-3 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground rounded-lg px-3 text-sm font-medium transition-colors"
-						>
-							<Cpu className="h-4 w-4" aria-hidden="true" />
-							<span className="hidden sm:inline">Multi-GPU</span>
-							<span className="text-xs text-muted-foreground block leading-none sm:hidden">GPU</span>
-						</TabsTrigger>
-						<TabsTrigger
-							value="scheduler"
-							className="flex flex-col sm:flex-row items-center gap-2 py-3 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground rounded-lg px-3 text-sm font-medium transition-colors"
-						>
-							<Gauge className="h-4 w-4" aria-hidden="true" />
-							<span className="hidden sm:inline">Scheduler</span>
-							<span className="text-xs text-muted-foreground block leading-none sm:hidden">Rhai</span>
-						</TabsTrigger>
-						<TabsTrigger
-							value="sse"
-							className="flex flex-col sm:flex-row items-center gap-2 py-3 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground rounded-lg px-3 text-sm font-medium transition-colors"
-						>
-							<Zap className="h-4 w-4" aria-hidden="true" />
-							<span className="hidden sm:inline">Real‑time</span>
-							<span className="text-xs text-muted-foreground block leading-none sm:hidden">SSE</span>
-						</TabsTrigger>
+						<FeatureTab value="api" icon={Code} label="OpenAI-Compatible" mobileLabel="OpenAI" />
+						<FeatureTab value="gpu" icon={Cpu} label="Multi-GPU" mobileLabel="GPU" />
+						<FeatureTab value="scheduler" icon={Gauge} label="Scheduler" mobileLabel="Rhai" />
+						<FeatureTab value="sse" icon={Zap} label="Real‑time" mobileLabel="SSE" />
 					</TabsList>
 
 					<div aria-live="polite">
 						<TabsContent value="api" className="mt-8">
-							<div className="rounded-2xl border bg-card p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none">
-								<div className="space-y-2">
-									<h3 className="text-2xl md:text-3xl font-semibold tracking-tight text-card-foreground">
-										OpenAI-Compatible API
-									</h3>
-									<p className="text-xs text-muted-foreground">Drop-in replacement for your existing tools</p>
-								</div>
+							<FeatureTabContent>
+								<FeatureHeader
+									title="OpenAI-Compatible API"
+									subtitle="Drop-in replacement for your existing tools"
+								/>
 
 								<p className="text-base md:text-lg text-muted-foreground">
 									Drop-in for Zed, Cursor, Continue, or any OpenAI client. Keep your SDKs and prompts—just change the
@@ -68,15 +46,9 @@ export function FeaturesSection() {
 								</p>
 
 								<div className="flex flex-wrap gap-2">
-									<span className="text-[11px] font-medium rounded-full bg-accent/60 text-foreground/90 px-2.5 py-1">
-										No API fees
-									</span>
-									<span className="text-[11px] font-medium rounded-full bg-accent/60 text-foreground/90 px-2.5 py-1">
-										Local tokens
-									</span>
-									<span className="text-[11px] font-medium rounded-full bg-accent/60 text-foreground/90 px-2.5 py-1">
-										Secure by default
-									</span>
+									<FeatureBadge label="No API fees" />
+									<FeatureBadge label="Local tokens" />
+									<FeatureBadge label="Secure by default" />
 								</div>
 
 								<CodeBlock
@@ -93,81 +65,33 @@ echo "→ Clients now talk to rbee at http://localhost:8080/v1"`}
 								/>
 
 								<Alert variant="success">
-								<AlertDescription>No code changes. Just point to localhost.</AlertDescription>
-							</Alert>
-							</div>
+									<AlertDescription>No code changes. Just point to localhost.</AlertDescription>
+								</Alert>
+							</FeatureTabContent>
 						</TabsContent>
 
 						<TabsContent value="gpu" className="mt-8">
-							<div className="rounded-2xl border bg-card p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none">
-								<div className="space-y-2">
-									<h3 className="text-2xl md:text-3xl font-semibold tracking-tight text-card-foreground">
-										Multi-GPU Orchestration
-									</h3>
-									<p className="text-xs text-muted-foreground">Unified pool across all your hardware</p>
-								</div>
+							<FeatureTabContent>
+								<FeatureHeader
+									title="Multi-GPU Orchestration"
+									subtitle="Unified pool across all your hardware"
+								/>
 
 								<p className="text-base md:text-lg text-muted-foreground">
 									Pool CUDA, Metal, and CPU backends. Mixed nodes act as one.
 								</p>
 
 								<div className="flex flex-wrap gap-2">
-									<span className="text-[11px] font-medium rounded-full bg-accent/60 text-foreground/90 px-2.5 py-1">
-										Multi-node
-									</span>
-									<span className="text-[11px] font-medium rounded-full bg-accent/60 text-foreground/90 px-2.5 py-1">
-										Backend-aware
-									</span>
-									<span className="text-[11px] font-medium rounded-full bg-accent/60 text-foreground/90 px-2.5 py-1">
-										Auto discovery
-									</span>
+									<FeatureBadge label="Multi-node" />
+									<FeatureBadge label="Backend-aware" />
+									<FeatureBadge label="Auto discovery" />
 								</div>
 
 								<div className="space-y-3">
-									<div className="flex items-center gap-3">
-										<div className="flex-shrink-0 w-32 text-sm text-muted-foreground">RTX 4090 #1</div>
-										<div className="flex-1 h-8 bg-muted rounded-full overflow-hidden">
-											<div
-												className="h-full bg-primary flex items-center justify-end pr-2 transition-[width] duration-700 ease-out motion-reduce:transition-none"
-												style={{ width: '92%' }}
-											>
-												<span className="text-xs text-primary-foreground font-medium">92%</span>
-											</div>
-										</div>
-									</div>
-									<div className="flex items-center gap-3">
-										<div className="flex-shrink-0 w-32 text-sm text-muted-foreground">RTX 4090 #2</div>
-										<div className="flex-1 h-8 bg-muted rounded-full overflow-hidden">
-											<div
-												className="h-full bg-primary flex items-center justify-end pr-2 transition-[width] duration-700 ease-out motion-reduce:transition-none"
-												style={{ width: '88%' }}
-											>
-												<span className="text-xs text-primary-foreground font-medium">88%</span>
-											</div>
-										</div>
-									</div>
-									<div className="flex items-center gap-3">
-										<div className="flex-shrink-0 w-32 text-sm text-muted-foreground">M2 Ultra</div>
-										<div className="flex-1 h-8 bg-muted rounded-full overflow-hidden">
-											<div
-												className="h-full bg-primary flex items-center justify-end pr-2 transition-[width] duration-700 ease-out motion-reduce:transition-none"
-												style={{ width: '76%' }}
-											>
-												<span className="text-xs text-primary-foreground font-medium">76%</span>
-											</div>
-										</div>
-									</div>
-									<div className="flex items-center gap-3">
-										<div className="flex-shrink-0 w-32 text-sm text-muted-foreground">CPU Backend</div>
-										<div className="flex-1 h-8 bg-muted rounded-full overflow-hidden">
-											<div
-												className="h-full bg-chart-2 flex items-center justify-end pr-2 transition-[width] duration-700 ease-out motion-reduce:transition-none"
-												style={{ width: '34%' }}
-											>
-												<span className="text-xs text-primary-foreground font-medium">34%</span>
-											</div>
-										</div>
-									</div>
+									<GPUUtilizationBar label="RTX 4090 #1" percentage={92} />
+									<GPUUtilizationBar label="RTX 4090 #2" percentage={88} />
+									<GPUUtilizationBar label="M2 Ultra" percentage={76} />
+									<GPUUtilizationBar label="CPU Backend" percentage={34} variant="secondary" />
 								</div>
 
 								<p className="text-xs text-muted-foreground">
@@ -175,34 +99,26 @@ echo "→ Clients now talk to rbee at http://localhost:8080/v1"`}
 								</p>
 
 								<Alert variant="info">
-								<AlertDescription>10× throughput by using all your hardware.</AlertDescription>
-							</Alert>
-							</div>
+									<AlertDescription>10× throughput by using all your hardware.</AlertDescription>
+								</Alert>
+							</FeatureTabContent>
 						</TabsContent>
 
 						<TabsContent value="scheduler" className="mt-8">
-							<div className="rounded-2xl border bg-card p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none">
-								<div className="space-y-2">
-									<h3 className="text-2xl md:text-3xl font-semibold tracking-tight text-card-foreground">
-										Programmable Rhai Scheduler
-									</h3>
-									<p className="text-xs text-muted-foreground">Custom routing logic for your workloads</p>
-								</div>
+							<FeatureTabContent>
+								<FeatureHeader
+									title="Programmable Rhai Scheduler"
+									subtitle="Custom routing logic for your workloads"
+								/>
 
 								<p className="text-base md:text-lg text-muted-foreground">
 									Route by model size, task type, labels, or compliance rules—your policy, your trade-offs.
 								</p>
 
 								<div className="flex flex-wrap gap-2">
-									<span className="text-[11px] font-medium rounded-full bg-accent/60 text-foreground/90 px-2.5 py-1">
-										Latency-aware
-									</span>
-									<span className="text-[11px] font-medium rounded-full bg-accent/60 text-foreground/90 px-2.5 py-1">
-										Cost caps
-									</span>
-									<span className="text-[11px] font-medium rounded-full bg-accent/60 text-foreground/90 px-2.5 py-1">
-										Compliance routes
-									</span>
+									<FeatureBadge label="Latency-aware" />
+									<FeatureBadge label="Cost caps" />
+									<FeatureBadge label="Compliance routes" />
 								</div>
 
 								<CodeBlock
@@ -217,34 +133,23 @@ else { route_to("cheapest") }`}
 								/>
 
 								<Alert variant="primary">
-								<AlertDescription>Optimize for cost, latency, or compliance—your rules.</AlertDescription>
-							</Alert>
-							</div>
+									<AlertDescription>Optimize for cost, latency, or compliance—your rules.</AlertDescription>
+								</Alert>
+							</FeatureTabContent>
 						</TabsContent>
 
 						<TabsContent value="sse" className="mt-8">
-							<div className="rounded-2xl border bg-card p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none">
-								<div className="space-y-2">
-									<h3 className="text-2xl md:text-3xl font-semibold tracking-tight text-card-foreground">
-										Task-Based API with SSE
-									</h3>
-									<p className="text-xs text-muted-foreground">Stream job lifecycle into your UI</p>
-								</div>
+							<FeatureTabContent>
+								<FeatureHeader title="Task-Based API with SSE" subtitle="Stream job lifecycle into your UI" />
 
 								<p className="text-base md:text-lg text-muted-foreground">
 									Stream job lifecycle events—model loads, token output, cost—right into your UI.
 								</p>
 
 								<div className="flex flex-wrap gap-2">
-									<span className="text-[11px] font-medium rounded-full bg-accent/60 text-foreground/90 px-2.5 py-1">
-										Real-time
-									</span>
-									<span className="text-[11px] font-medium rounded-full bg-accent/60 text-foreground/90 px-2.5 py-1">
-										Back-pressure safe
-									</span>
-									<span className="text-[11px] font-medium rounded-full bg-accent/60 text-foreground/90 px-2.5 py-1">
-										Cost visible
-									</span>
+									<FeatureBadge label="Real-time" />
+									<FeatureBadge label="Back-pressure safe" />
+									<FeatureBadge label="Cost visible" />
 								</div>
 
 								<CodeBlock
@@ -268,9 +173,9 @@ else { route_to("cheapest") }`}
 								/>
 
 								<Alert variant="success">
-								<AlertDescription>Full visibility into every inference job.</AlertDescription>
-							</Alert>
-							</div>
+									<AlertDescription>Full visibility into every inference job.</AlertDescription>
+								</Alert>
+							</FeatureTabContent>
 						</TabsContent>
 					</div>
 				</Tabs>

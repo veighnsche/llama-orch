@@ -20,6 +20,8 @@ const featureInfoCardVariants = cva(
 					'border-destructive/40 bg-gradient-to-b from-destructive/15 to-background backdrop-blur supports-[backdrop-filter]:bg-background/60 hover:border-primary/50',
 				muted:
 					'border-border bg-gradient-to-b from-muted/50 to-background backdrop-blur supports-[backdrop-filter]:bg-background/60 hover:border-primary/50',
+				chart2: 'border-border bg-card hover:bg-card/80 hover:border-primary/50',
+				chart3: 'border-border bg-card hover:bg-card/80 hover:border-primary/50',
 			},
 		},
 		defaultVariants: {
@@ -36,6 +38,8 @@ const iconContainerVariants = cva('mb-4 flex h-11 w-11 items-center justify-cent
 			primary: 'bg-primary/10',
 			destructive: 'bg-destructive/10',
 			muted: 'bg-muted',
+			chart2: 'bg-chart-2/10',
+			chart3: 'bg-chart-3/10',
 		},
 	},
 	defaultVariants: {
@@ -51,6 +55,8 @@ const iconVariants = cva('h-6 w-6', {
 			primary: 'text-primary',
 			destructive: 'text-destructive',
 			muted: 'text-muted-foreground',
+			chart2: 'text-chart-2',
+			chart3: 'text-chart-3',
 		},
 	},
 	defaultVariants: {
@@ -66,6 +72,8 @@ const tagVariants = cva('mt-3 inline-flex rounded-full px-2.5 py-1 text-xs tabul
 			primary: 'bg-primary/10 text-primary',
 			destructive: 'bg-destructive/10 text-destructive',
 			muted: 'bg-muted text-muted-foreground',
+			chart2: 'bg-chart-2/10 text-chart-2',
+			chart3: 'bg-chart-3/10 text-chart-3',
 		},
 	},
 	defaultVariants: {
@@ -127,19 +135,10 @@ export interface FeatureInfoCardProps
 
 export function FeatureInfoCard({ icon, title, body, tag, tone, size, className, delay }: FeatureInfoCardProps) {
 	// Handle both icon types (Component or ReactNode)
-	let iconElement: React.ReactNode
-
+	let IconComponent: React.ComponentType<{ className?: string }> | null = null
+	
 	if (typeof icon === 'function') {
-		iconElement = React.createElement(icon as React.ComponentType<{ className?: string }>, {
-			className: iconVariants({ tone }),
-		})
-	} else if (React.isValidElement(icon)) {
-		iconElement = React.cloneElement(icon, {
-			// @ts-expect-error - icon className merging
-			className: cn(icon.props.className, iconVariants({ tone })),
-		} as any)
-	} else {
-		iconElement = icon
+		IconComponent = icon as React.ComponentType<{ className?: string }>
 	}
 
 	return (
@@ -147,7 +146,14 @@ export function FeatureInfoCard({ icon, title, body, tag, tone, size, className,
 			<CardContent className="p-6 sm:p-7">
 				{/* Icon */}
 				<div className={iconContainerVariants({ tone })} aria-hidden="true">
-					{iconElement}
+					{IconComponent ? (
+						<IconComponent className={iconVariants({ tone })} />
+					) : React.isValidElement(icon) ? (
+						React.cloneElement(icon, {
+							// @ts-expect-error - icon className merging
+							className: cn(icon.props.className, iconVariants({ tone })),
+						})
+					) : null}
 				</div>
 
 				{/* Title */}

@@ -1,8 +1,8 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
-import { Card } from '@rbee/ui/atoms/Card'
 import { Separator } from '@rbee/ui/atoms/Separator'
 import { HoneycombPattern } from '@rbee/ui/icons'
+import { FeatureInfoCard } from '@rbee/ui/molecules'
 import { Cpu, Download, Power } from 'lucide-react'
 
 // Feature flags for quick toggles
@@ -53,45 +53,37 @@ export function FeaturesHero() {
 				<div className="relative order-last lg:order-none">
 					<div className="grid grid-cols-2 gap-4 lg:max-w-md mx-auto lg:mx-0">
 						{/* Card 1: Programmable Scheduler (tall) */}
-						<Card className="row-span-2 p-4 gap-3 animate-in zoom-in-95 fade-in duration-700 delay-200 transition-transform will-change-transform hover:-translate-y-0.5">
-							<div className="rounded-lg bg-primary/10 p-2.5 w-fit">
-								<Cpu className="h-5 w-5 text-primary" aria-hidden="true" focusable="false" />
-							</div>
-							<div>
-								<h3 className="font-semibold text-card-foreground text-sm mb-1">Programmable Scheduler</h3>
-								<p className="text-xs text-muted-foreground leading-relaxed">
-									Write custom routing logic in Rhai scripts. Route by cost, latency, GPU type, or compliance
-									requirements. Update policies without recompiling. 40+ built-in helpers for worker selection, VRAM
-									queries, and smart eviction.
-								</p>
-							</div>
-						</Card>
+						<FeatureInfoCard
+							icon={<Cpu className="h-5 w-5 text-primary" aria-hidden="true" focusable="false" />}
+							title="Programmable Scheduler"
+							body="Write custom routing logic in Rhai scripts. Route by cost, latency, GPU type, or compliance requirements. Update policies without recompiling. 40+ built-in helpers for worker selection, VRAM queries, and smart eviction."
+							tone="primary"
+							size="sm"
+							delay="duration-700 delay-200"
+							className="row-span-2 transition-transform will-change-transform hover:-translate-y-0.5"
+						/>
 
 						{/* Card 2: Model Catalog */}
-						<Card className="p-4 gap-3 animate-in zoom-in-95 fade-in duration-700 delay-300 transition-transform will-change-transform hover:-translate-y-0.5">
-							<div className="rounded-lg bg-chart-2/10 p-2.5 w-fit">
-								<Download className="h-5 w-5 text-chart-2" aria-hidden="true" focusable="false" />
-							</div>
-							<div>
-								<h3 className="font-semibold text-card-foreground text-sm mb-1">Model Catalog</h3>
-								<p className="text-xs text-muted-foreground leading-relaxed">
-									One click to load models. Watch download and loading progress.
-								</p>
-							</div>
-						</Card>
+						<FeatureInfoCard
+							icon={<Download className="h-5 w-5 text-chart-2" aria-hidden="true" focusable="false" />}
+							title="Model Catalog"
+							body="One click to load models. Watch download and loading progress."
+							tone="chart2"
+							size="sm"
+							delay="duration-700 delay-300"
+							className="transition-transform will-change-transform hover:-translate-y-0.5"
+						/>
 
 						{/* Card 3: Cascading Shutdown */}
-						<Card className="p-4 gap-3 animate-in zoom-in-95 fade-in duration-700 delay-400 transition-transform will-change-transform hover:-translate-y-0.5">
-							<div className="rounded-lg bg-chart-3/10 p-2.5 w-fit">
-								<Power className="h-5 w-5 text-chart-3" aria-hidden="true" focusable="false" />
-							</div>
-							<div>
-								<h3 className="font-semibold text-card-foreground text-sm mb-1">Cascading Shutdown</h3>
-								<p className="text-xs text-muted-foreground leading-relaxed">
-									Ctrl+C cleanly tears down hives and workers. No leftovers.
-								</p>
-							</div>
-						</Card>
+						<FeatureInfoCard
+							icon={<Power className="h-5 w-5 text-chart-3" aria-hidden="true" focusable="false" />}
+							title="Cascading Shutdown"
+							body="Ctrl+C cleanly tears down hives and workers. No leftovers."
+							tone="chart3"
+							size="sm"
+							delay="duration-700 delay-400"
+							className="transition-transform will-change-transform hover:-translate-y-0.5"
+						/>
 					</div>
 
 					{/* Optional background image (gated by flag) */}
