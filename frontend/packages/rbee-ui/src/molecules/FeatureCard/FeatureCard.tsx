@@ -121,7 +121,7 @@ export function FeatureCard({
 					{IconComponent ? (
 						<IconComponent aria-hidden="true" focusable="false" className={cn('h-6 w-6', colors.text)} />
 					) : (
-						typeof icon === 'object' && icon
+						icon as ReactNode
 					)}
 				</div>
 				<h3 id={titleId} className="text-xl font-semibold text-foreground">

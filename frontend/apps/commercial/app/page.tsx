@@ -21,12 +21,14 @@ import {
   ArrowRight,
   BookOpen,
   Building,
+  Code,
   DollarSign,
   Home as HomeIcon,
   Laptop,
   Lock,
   Shield,
   Users,
+  Workflow,
 } from "lucide-react";
 
 export default function Home() {
@@ -236,6 +238,26 @@ export default function Home() {
             solution:
               "On-prem rbee with audit trails and policy routing. Rhai-based rules for data residency & access.",
             outcome: "EU-only compliance. Zero external dependencies.",
+          },
+          {
+            icon: Code,
+            title: "The AI-dependent coder",
+            scenario:
+              "Building complex codebases with Claude/GPT-4. Fears provider changes, shutdowns, or price hikes.",
+            solution:
+              "Build your own AI coders with rbee + llama-orch-utils. OpenAI-compatible API runs on YOUR hardware.",
+            outcome:
+              "Complete independence. Models never change without permission. $0/month forever.",
+          },
+          {
+            icon: Workflow,
+            title: "The agentic AI builder",
+            scenario:
+              "Needs to build custom AI agents: code generators, doc writers, test creators, code reviewers.",
+            solution:
+              "Use llama-orch-utils TypeScript library: file ops, LLM invocation, prompt management, response extraction.",
+            outcome:
+              "Build production AI agents in hours. Full control. No rate limits. Test reproducibility built-in.",
           },
         ]}
       />

@@ -1,11 +1,11 @@
 import { CardHeader, CardTitle, CardDescription } from '@rbee/ui/atoms'
 import { IconPlate } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { ReactNode } from 'react'
+import type { LucideIcon } from 'lucide-react'
 
 export interface IconCardHeaderProps {
-	/** Icon element */
-	icon: ReactNode
+	/** Lucide icon component */
+	icon: LucideIcon
 	/** Card title */
 	title: string
 	/** Optional subtitle/description */

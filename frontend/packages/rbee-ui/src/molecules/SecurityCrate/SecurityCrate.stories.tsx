@@ -38,9 +38,9 @@ This molecule is composed of:
 	argTypes: {
 		icon: {
 			control: false,
-			description: 'Icon element (e.g., Lock, Shield, Eye)',
+			description: 'Lucide icon component (e.g., Lock, Shield, Eye)',
 			table: {
-				type: { summary: 'ReactNode' },
+				type: { summary: 'LucideIcon' },
 				category: 'Content',
 			},
 		},
@@ -102,7 +102,7 @@ type Story = StoryObj<typeof SecurityCrate>
 
 export const Default: Story = {
 	args: {
-		icon: <Lock className="h-6 w-6" />,
+		icon: Lock,
 		title: 'auth-min: Zero-Trust Authentication',
 		subtitle: 'The Trickster Guardians',
 		intro: 'Minimal authentication with maximum security. Every request is verified, every token is short-lived.',
@@ -118,7 +118,7 @@ export const Default: Story = {
 
 export const WithIcon: Story = {
 	args: {
-		icon: <Shield className="h-6 w-6" />,
+		icon: Shield,
 		title: 'audit-core: Compliance Logging',
 		subtitle: 'The Watchers',
 		intro: 'Every action is logged, every change is tracked. Immutable audit trails for compliance.',
@@ -134,7 +134,7 @@ export const WithIcon: Story = {
 
 export const WithDetails: Story = {
 	args: {
-		icon: <Eye className="h-6 w-6" />,
+		icon: Eye,
 		title: 'secrets-vault: Encrypted Secrets',
 		subtitle: 'The Keepers',
 		intro: 'Secrets are encrypted at rest and in transit. Access is logged and audited.',
@@ -159,7 +159,7 @@ export const InSecurityContext: Story = {
 			</div>
 			<div className="grid gap-6 md:grid-cols-3">
 				<SecurityCrate
-					icon={<Lock className="h-6 w-6" />}
+					icon={Lock}
 					title="auth-min"
 					subtitle="Zero-Trust Authentication"
 					intro="Minimal authentication with maximum security. Every request is verified."
@@ -172,7 +172,7 @@ export const InSecurityContext: Story = {
 					docsHref="/docs/security/auth-min"
 				/>
 				<SecurityCrate
-					icon={<Shield className="h-6 w-6" />}
+					icon={Shield}
 					title="audit-core"
 					subtitle="Compliance Logging"
 					intro="Every action is logged, every change is tracked. Immutable audit trails."
@@ -185,7 +185,7 @@ export const InSecurityContext: Story = {
 					docsHref="/docs/security/audit-core"
 				/>
 				<SecurityCrate
-					icon={<Eye className="h-6 w-6" />}
+					icon={Eye}
 					title="secrets-vault"
 					subtitle="Encrypted Secrets"
 					intro="Secrets are encrypted at rest and in transit. Access is logged and audited."

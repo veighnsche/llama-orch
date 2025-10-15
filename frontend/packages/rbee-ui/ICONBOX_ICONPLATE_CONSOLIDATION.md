@@ -5,7 +5,7 @@
 
 ## Summary
 
-Consolidated `IconBox` and `IconPlate` molecules into a single unified `IconPlate` component. All usages throughout the frontend have been migrated, and `IconBox` has been removed.
+Consolidated `IconBox` and `IconPlate` molecules into a single unified `IconPlate` component. All usages throughout the frontend have been migrated, `IconBox` has been removed, and all former IconBox implementers now use correct `LucideIcon` types and pass component references instead of JSX elements.
 
 ## Changes Made
 
@@ -68,6 +68,26 @@ Consolidated `IconBox` and `IconPlate` molecules into a single unified `IconPlat
 **ErrorHandling Component:**
 - Changed `color="destructive"` to `color="warning"` (destructive not supported in IconPlate)
 
+**LucideIcon Rendering (2025-01-15):**
+- Fixed critical bug where `LucideIcon` components were not properly instantiated
+- `IconPlate`: Improved type checking to detect function components and render as `<IconComponent />`
+- `SecurityCrateCard`: Fixed passing JSX element instead of component to `IconPlate`
+- `FeatureCard`: Fixed fallback rendering from `typeof icon === 'object' && icon` to proper `ReactNode` cast
+- Added proper type narrowing with `Exclude<ReactNode, LucideIcon>` to prevent TypeScript errors
+- Error: "Objects are not valid as a React child (found: object with keys {$$typeof, render})" - RESOLVED
+
+**IconPlate Story & Type Fixes (2025-01-15):**
+- Fixed `IconPlate.stories.tsx` to pass component references (`Zap`) instead of JSX (`<Zap />`)
+- Added `xl` size and `rounded` shape to story controls
+- Added chart color examples to AllVariants story
+- Updated all component types from `ReactNode` to `LucideIcon` where appropriate:
+  - `SecurityCrate` + stories
+  - `IndustryCaseCard` + stories
+  - `IconCardHeader` + stories
+  - `PledgeCallout` (also fixed to use `tone` prop instead of className overrides)
+- `UseCasesSection`: Fixed to pass `Icon` component reference instead of JSX
+- All stories now consistently pass component references for type safety
+
 ## Verification
 
 ✅ **Build:** `pnpm --filter @rbee/ui build` - SUCCESS  
@@ -114,23 +134,34 @@ import { IconPlate } from '@rbee/ui/molecules'
 
 ## Files Changed
 
-**Total:** 13 files modified, 3 files deleted
+**Total:** 25 files modified, 3 files deleted
 
 **Modified:**
-1. `src/molecules/IconPlate/IconPlate.tsx`
-2. `src/molecules/FeatureListItem/FeatureListItem.tsx`
-3. `src/molecules/PlaybookAccordion/PlaybookAccordion.tsx`
-4. `src/molecules/IndustryCard/IndustryCard.tsx`
-5. `src/molecules/UseCaseCard/UseCaseCard.tsx`
-6. `src/molecules/StatusKPI/StatusKPI.tsx`
-7. `src/molecules/FeatureTab/FeatureTab.stories.tsx`
-8. `src/molecules/index.ts`
-9. `src/organisms/Features/MultiBackendGpu/MultiBackendGpu.tsx`
-10. `src/organisms/Features/RealTimeProgress/RealTimeProgress.tsx`
-11. `src/organisms/Features/IntelligentModelManagement/IntelligentModelManagement.tsx`
-12. `src/organisms/Features/SecurityIsolation/SecurityIsolation.tsx`
-13. `src/organisms/Features/CrossNodeOrchestration/CrossNodeOrchestration.tsx`
-14. `src/organisms/Features/ErrorHandling/ErrorHandling.tsx`
+1. `src/molecules/IconPlate/IconPlate.tsx` (+ LucideIcon rendering fix)
+2. `src/molecules/IconPlate/IconPlate.stories.tsx` (✅ Fixed JSX → component refs, added xl/rounded/chart variants)
+3. `src/molecules/FeatureListItem/FeatureListItem.tsx`
+4. `src/molecules/PlaybookAccordion/PlaybookAccordion.tsx`
+5. `src/molecules/IndustryCard/IndustryCard.tsx`
+6. `src/molecules/UseCaseCard/UseCaseCard.tsx`
+7. `src/molecules/StatusKPI/StatusKPI.tsx`
+8. `src/molecules/FeatureTab/FeatureTab.stories.tsx`
+9. `src/molecules/SecurityCrateCard/SecurityCrateCard.tsx` (LucideIcon fix)
+10. `src/molecules/SecurityCrate/SecurityCrate.tsx` (✅ ReactNode → LucideIcon)
+11. `src/molecules/SecurityCrate/SecurityCrate.stories.tsx` (✅ Fixed JSX → component refs)
+12. `src/molecules/IndustryCaseCard/IndustryCaseCard.tsx` (✅ ReactNode → LucideIcon)
+13. `src/molecules/IndustryCaseCard/IndustryCaseCard.stories.tsx` (✅ Fixed JSX → component refs)
+14. `src/molecules/IconCardHeader/IconCardHeader.tsx` (✅ ReactNode → LucideIcon)
+15. `src/molecules/IconCardHeader/IconCardHeader.stories.tsx` (✅ Fixed JSX → component refs)
+16. `src/molecules/PledgeCallout/PledgeCallout.tsx` (✅ Fixed JSX → component refs, use tone prop)
+17. `src/molecules/FeatureCard/FeatureCard.tsx` (LucideIcon fix)
+18. `src/molecules/index.ts`
+19. `src/organisms/Features/MultiBackendGpu/MultiBackendGpu.tsx`
+20. `src/organisms/Features/RealTimeProgress/RealTimeProgress.tsx`
+21. `src/organisms/Features/IntelligentModelManagement/IntelligentModelManagement.tsx`
+22. `src/organisms/Features/SecurityIsolation/SecurityIsolation.tsx`
+23. `src/organisms/Features/CrossNodeOrchestration/CrossNodeOrchestration.tsx`
+24. `src/organisms/Features/ErrorHandling/ErrorHandling.tsx`
+25. `src/organisms/UseCasesSection/UseCasesSection.tsx` (✅ Fixed JSX → component refs, ReactNode → LucideIcon)
 
 **Deleted:**
 - `src/molecules/IconBox/` (entire directory)

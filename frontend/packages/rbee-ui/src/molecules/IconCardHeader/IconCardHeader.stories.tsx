@@ -103,7 +103,7 @@ type Story = StoryObj<typeof IconCardHeader>
 
 export const Default: Story = {
 	args: {
-		icon: <Globe className="h-6 w-6" />,
+		icon: Globe,
 		title: 'GDPR',
 		subtitle: 'EU Regulation',
 		titleId: 'example-gdpr',
@@ -112,7 +112,7 @@ export const Default: Story = {
 
 export const WithoutSubtitle: Story = {
 	args: {
-		icon: <Zap className="h-6 w-6" />,
+		icon: Zap,
 		title: 'Performance',
 		titleId: 'example-performance',
 	},
@@ -120,7 +120,7 @@ export const WithoutSubtitle: Story = {
 
 export const SmallIcon: Story = {
 	args: {
-		icon: <Shield className="h-4 w-4" />,
+		icon: Shield,
 		title: 'Security',
 		subtitle: 'Enterprise Grade',
 		iconSize: 'sm',
@@ -130,7 +130,7 @@ export const SmallIcon: Story = {
 
 export const MutedTone: Story = {
 	args: {
-		icon: <Database className="h-6 w-6" />,
+		icon: Database,
 		title: 'Storage',
 		subtitle: 'Encrypted at Rest',
 		iconTone: 'muted',
@@ -140,7 +140,7 @@ export const MutedTone: Story = {
 
 export const CustomTitleSize: Story = {
 	args: {
-		icon: <Lock className="h-6 w-6" />,
+		icon: Lock,
 		title: 'ISO 27001',
 		subtitle: 'International Standard',
 		titleClassName: 'text-xl',
@@ -153,7 +153,7 @@ export const InCard: Story = {
 		<div className="w-96">
 			<Card className="rounded-2xl border-border bg-card/60 p-8">
 				<IconCardHeader
-					icon={<Globe className="h-6 w-6" />}
+					icon={Globe}
 					title="GDPR"
 					subtitle="EU Regulation"
 					titleId="card-example-gdpr"
@@ -181,7 +181,7 @@ export const MultipleCards: Story = {
 		<div className="grid max-w-4xl gap-6 md:grid-cols-3">
 			<Card className="rounded-2xl border-border bg-card/60 p-6">
 				<IconCardHeader
-					icon={<Globe className="h-6 w-6" />}
+					icon={Globe}
 					title="GDPR"
 					subtitle="EU Regulation"
 					titleId="multi-gdpr"
@@ -193,7 +193,7 @@ export const MultipleCards: Story = {
 
 			<Card className="rounded-2xl border-border bg-card/60 p-6">
 				<IconCardHeader
-					icon={<Shield className="h-6 w-6" />}
+					icon={Shield}
 					title="SOC2"
 					subtitle="US Standard"
 					titleId="multi-soc2"
@@ -205,7 +205,7 @@ export const MultipleCards: Story = {
 
 			<Card className="rounded-2xl border-border bg-card/60 p-6">
 				<IconCardHeader
-					icon={<Lock className="h-6 w-6" />}
+					icon={Lock}
 					title="ISO 27001"
 					subtitle="International"
 					titleId="multi-iso"

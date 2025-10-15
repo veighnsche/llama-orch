@@ -1,5 +1,5 @@
 export interface FeatureBadgeProps {
-	label: string
+  label: string;
 }
 
 /**
@@ -7,9 +7,9 @@ export interface FeatureBadgeProps {
  * Commonly used in groups to show multiple feature attributes.
  */
 export function FeatureBadge({ label }: FeatureBadgeProps) {
-	return (
-		<span className="text-[11px] font-medium rounded-full bg-accent/60 text-foreground/90 px-2.5 py-1">
-			{label}
-		</span>
-	)
+  return (
+    <span className="text-[11px] font-medium rounded-full bg-accent/60 text-foreground/90 px-2.5 py-1 font-sans">
+      {label}
+    </span>
+  );
 }

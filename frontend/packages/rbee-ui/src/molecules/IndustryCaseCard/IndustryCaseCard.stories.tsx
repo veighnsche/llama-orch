@@ -40,9 +40,9 @@ This molecule is composed of:
 	argTypes: {
 		icon: {
 			control: false,
-			description: 'Icon element (e.g., Building2, Heart, Scale, Shield)',
+			description: 'Lucide icon component (e.g., Building2, Heart, Scale, Shield)',
 			table: {
-				type: { summary: 'ReactNode' },
+				type: { summary: 'LucideIcon' },
 				category: 'Content',
 			},
 		},
@@ -110,7 +110,7 @@ type Story = StoryObj<typeof IndustryCaseCard>
 
 export const Default: Story = {
 	args: {
-		icon: <Building2 className="h-6 w-6" />,
+		icon: Building2,
 		industry: 'Financial Services',
 		segments: 'Banks, Insurance, FinTech',
 		summary: 'Process sensitive financial data while maintaining strict regulatory compliance.',
@@ -129,7 +129,7 @@ export const Default: Story = {
 
 export const WithIcon: Story = {
 	args: {
-		icon: <Heart className="h-6 w-6" />,
+		icon: Heart,
 		industry: 'Healthcare',
 		segments: 'Hospitals, Clinics, Research',
 		summary: 'Analyze patient data and medical records with HIPAA and GDPR compliance.',
@@ -149,7 +149,7 @@ export const WithIcon: Story = {
 
 export const WithMetrics: Story = {
 	args: {
-		icon: <Scale className="h-6 w-6" />,
+		icon: Scale,
 		industry: 'Legal Services',
 		segments: 'Law Firms, Courts, Compliance',
 		summary: 'Analyze legal documents and contracts while maintaining attorney-client privilege.',
@@ -178,7 +178,7 @@ export const InUseCasesContext: Story = {
 			</div>
 			<div className="grid gap-6 md:grid-cols-2">
 				<IndustryCaseCard
-					icon={<Building2 className="h-6 w-6" />}
+					icon={Building2}
 					industry="Financial Services"
 					segments="Banks, Insurance, FinTech"
 					summary="Process sensitive financial data while maintaining strict regulatory compliance."
@@ -196,7 +196,7 @@ export const InUseCasesContext: Story = {
 					href="/industries/financial"
 				/>
 				<IndustryCaseCard
-					icon={<Heart className="h-6 w-6" />}
+					icon={Heart}
 					industry="Healthcare"
 					segments="Hospitals, Clinics, Research"
 					summary="Analyze patient data and medical records with HIPAA and GDPR compliance."

@@ -53,30 +53,30 @@ Used in 3+ organisms including:
 		},
 		size: {
 			control: 'select',
-			options: ['sm', 'md', 'lg'],
+			options: ['sm', 'md', 'lg', 'xl'],
 			description: 'Size variant',
 			table: {
-				type: { summary: "'sm' | 'md' | 'lg'" },
+				type: { summary: "'sm' | 'md' | 'lg' | 'xl'" },
 				defaultValue: { summary: 'md' },
 				category: 'Appearance',
 			},
 		},
 		tone: {
 			control: 'select',
-			options: ['primary', 'muted', 'success', 'warning'],
+			options: ['primary', 'muted', 'success', 'warning', 'chart-1', 'chart-2', 'chart-3', 'chart-4', 'chart-5'],
 			description: 'Color tone',
 			table: {
-				type: { summary: "'primary' | 'muted' | 'success' | 'warning'" },
+				type: { summary: "'primary' | 'muted' | 'success' | 'warning' | 'chart-1' | 'chart-2' | 'chart-3' | 'chart-4' | 'chart-5'" },
 				defaultValue: { summary: 'primary' },
 				category: 'Appearance',
 			},
 		},
 		shape: {
 			control: 'select',
-			options: ['square', 'circle'],
+			options: ['square', 'rounded', 'circle'],
 			description: 'Shape variant',
 			table: {
-				type: { summary: "'square' | 'circle'" },
+				type: { summary: "'square' | 'rounded' | 'circle'" },
 				defaultValue: { summary: 'square' },
 				category: 'Appearance',
 			},
@@ -89,7 +89,7 @@ type Story = StoryObj<typeof IconPlate>
 
 export const Default: Story = {
 	args: {
-		icon: <Zap />,
+		icon: Zap,
 		size: 'md',
 		tone: 'primary',
 		shape: 'square',
@@ -103,20 +103,24 @@ export const AllVariants: Story = {
 				<h3 className="text-sm font-semibold mb-3">Tones</h3>
 				<div className="flex items-center gap-4">
 					<div className="flex flex-col items-center gap-2">
-						<IconPlate icon={<Zap />} tone="primary" />
+						<IconPlate icon={Zap} tone="primary" />
 						<span className="text-xs text-muted-foreground">Primary</span>
 					</div>
 					<div className="flex flex-col items-center gap-2">
-						<IconPlate icon={<Shield />} tone="muted" />
+						<IconPlate icon={Shield} tone="muted" />
 						<span className="text-xs text-muted-foreground">Muted</span>
 					</div>
 					<div className="flex flex-col items-center gap-2">
-						<IconPlate icon={<Check />} tone="success" />
+						<IconPlate icon={Check} tone="success" />
 						<span className="text-xs text-muted-foreground">Success</span>
 					</div>
 					<div className="flex flex-col items-center gap-2">
-						<IconPlate icon={<AlertCircle />} tone="warning" />
+						<IconPlate icon={AlertCircle} tone="warning" />
 						<span className="text-xs text-muted-foreground">Warning</span>
+					</div>
+					<div className="flex flex-col items-center gap-2">
+						<IconPlate icon={Zap} tone="chart-1" />
+						<span className="text-xs text-muted-foreground">Chart-1</span>
 					</div>
 				</div>
 			</div>
@@ -124,11 +128,15 @@ export const AllVariants: Story = {
 				<h3 className="text-sm font-semibold mb-3">Shapes</h3>
 				<div className="flex items-center gap-4">
 					<div className="flex flex-col items-center gap-2">
-						<IconPlate icon={<Zap />} shape="square" />
+						<IconPlate icon={Zap} shape="square" />
 						<span className="text-xs text-muted-foreground">Square</span>
 					</div>
 					<div className="flex flex-col items-center gap-2">
-						<IconPlate icon={<Zap />} shape="circle" />
+						<IconPlate icon={Zap} shape="rounded" />
+						<span className="text-xs text-muted-foreground">Rounded</span>
+					</div>
+					<div className="flex flex-col items-center gap-2">
+						<IconPlate icon={Zap} shape="circle" />
 						<span className="text-xs text-muted-foreground">Circle</span>
 					</div>
 				</div>
@@ -148,16 +156,20 @@ export const AllSizes: Story = {
 	render: () => (
 		<div className="flex items-end gap-6">
 			<div className="flex flex-col items-center gap-2">
-				<IconPlate icon={<Zap />} size="sm" />
+				<IconPlate icon={Zap} size="sm" />
 				<span className="text-xs text-muted-foreground">Small</span>
 			</div>
 			<div className="flex flex-col items-center gap-2">
-				<IconPlate icon={<Zap />} size="md" />
+				<IconPlate icon={Zap} size="md" />
 				<span className="text-xs text-muted-foreground">Medium</span>
 			</div>
 			<div className="flex flex-col items-center gap-2">
-				<IconPlate icon={<Zap />} size="lg" />
+				<IconPlate icon={Zap} size="lg" />
 				<span className="text-xs text-muted-foreground">Large</span>
+			</div>
+			<div className="flex flex-col items-center gap-2">
+				<IconPlate icon={Zap} size="xl" />
+				<span className="text-xs text-muted-foreground">X-Large</span>
 			</div>
 		</div>
 	),
@@ -179,7 +191,7 @@ export const InUseCaseContext: Story = {
 			</div>
 			<div className="space-y-4">
 				<div className="flex items-start gap-4 p-4 rounded-lg border border-border bg-card">
-					<IconPlate icon={<Shield />} tone="primary" size="md" />
+					<IconPlate icon={Shield} tone="primary" size="md" />
 					<div>
 						<h3 className="font-semibold mb-1">Healthcare Data Processing</h3>
 						<p className="text-sm text-muted-foreground">
@@ -188,7 +200,7 @@ export const InUseCaseContext: Story = {
 					</div>
 				</div>
 				<div className="flex items-start gap-4 p-4 rounded-lg border border-border bg-card">
-					<IconPlate icon={<Check />} tone="success" size="md" />
+					<IconPlate icon={Check} tone="success" size="md" />
 					<div>
 						<h3 className="font-semibold mb-1">Legal Document Analysis</h3>
 						<p className="text-sm text-muted-foreground">
@@ -197,7 +209,7 @@ export const InUseCaseContext: Story = {
 					</div>
 				</div>
 				<div className="flex items-start gap-4 p-4 rounded-lg border border-border bg-card">
-					<IconPlate icon={<Zap />} tone="primary" size="md" />
+					<IconPlate icon={Zap} tone="primary" size="md" />
 					<div>
 						<h3 className="font-semibold mb-1">Real-Time Customer Support</h3>
 						<p className="text-sm text-muted-foreground">

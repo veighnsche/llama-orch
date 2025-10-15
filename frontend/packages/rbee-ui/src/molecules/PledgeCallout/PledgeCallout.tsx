@@ -16,10 +16,11 @@ export function PledgeCallout({ className }: PledgeCalloutProps) {
 			<div className="flex gap-4 items-start">
 				{/* Icon */}
 				<IconPlate
-					icon={<Shield className="size-5" aria-hidden="true" />}
+					icon={Shield}
 					size="md"
 					shape="circle"
-					className="shrink-0 bg-accent/20 text-chart-2"
+					tone="chart-2"
+					className="shrink-0"
 				/>
 
 				{/* Content */}

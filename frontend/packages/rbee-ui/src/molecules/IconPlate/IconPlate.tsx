@@ -1,10 +1,9 @@
 import { cn } from '@rbee/ui/utils'
 import type { LucideIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
 
 export interface IconPlateProps {
-	/** Icon element to display - can be ReactNode or LucideIcon component */
-	icon: ReactNode | LucideIcon
+	/** Lucide icon component to display */
+	icon: LucideIcon
 	/** Size variant */
 	size?: 'sm' | 'md' | 'lg' | 'xl'
 	/** Color tone - supports both tone names and chart colors */
@@ -20,9 +19,9 @@ export interface IconPlateProps {
  * Consolidates IconBox and 15+ instances of icon wrapper patterns
  * Used across features, stats, cards, and list items
  * 
- * @deprecated Use `tone` prop instead of `color` for consistency
+ * Only accepts LucideIcon components for consistency and type safety.
  */
-export function IconPlate({ icon, size = 'md', tone = 'primary', shape = 'square', className }: IconPlateProps) {
+export function IconPlate({ icon: Icon, size = 'md', tone = 'primary', shape = 'square', className }: IconPlateProps) {
 	const sizeClasses = {
 		sm: 'h-8 w-8',
 		md: 'h-10 w-10',
@@ -55,10 +54,6 @@ export function IconPlate({ icon, size = 'md', tone = 'primary', shape = 'square
 		circle: 'rounded-full',
 	}
 
-	// Check if icon is a LucideIcon component (function) or ReactNode
-	const isLucideIcon = typeof icon === 'function'
-	const Icon = isLucideIcon ? (icon as LucideIcon) : null
-
 	return (
 		<div
 			className={cn(
@@ -70,7 +65,7 @@ export function IconPlate({ icon, size = 'md', tone = 'primary', shape = 'square
 				className,
 			)}
 		>
-			{Icon ? <Icon /> : (icon as ReactNode)}
+			<Icon aria-hidden="true" />
 		</div>
 	)
 }
