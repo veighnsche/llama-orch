@@ -1,12 +1,29 @@
 # Storybook Stories Progress Report
 
-**Date:** 2025-10-14  
-**Status:** Week 1 Complete (11/41 stories)  
-**Next:** Week 2 P2 Marketing Sections
+**Date:** 2025-10-15  
+**Status:** TEAM ASSIGNMENTS CREATED - Ready for Execution  
+**Approach:** 6 specialized teams, balanced workload  
+**Total Scope:** 73 components (organisms + atoms/molecules)
 
 ---
 
-## ✅ Completed Stories (11/41)
+## 🚀 NEW APPROACH: 6 SPECIALIZED TEAMS
+
+**See:** `STORYBOOK_TEAM_MASTER_PLAN.md` for complete plan  
+**See:** `TEAM_ASSIGNMENTS_SUMMARY.md` for quick reference  
+**See:** Individual `TEAM_00X_*.md` files for detailed instructions
+
+### Team Structure:
+1. **TEAM-001:** Cleanup viewport stories (10 components, 3-4 hours) - **MUST RUN FIRST**
+2. **TEAM-002:** Home page core (12 components, 16-20 hours) - HIGH PRIORITY
+3. **TEAM-003:** Developers + Features pages (16 components, 20-24 hours)
+4. **TEAM-004:** Enterprise + Pricing pages (14 components, 18-22 hours)
+5. **TEAM-005:** Providers + Use Cases pages (13 components, 16-20 hours)
+6. **TEAM-006:** Atoms & molecules (8 components, 8-12 hours)
+
+---
+
+## ✅ Completed Stories (11/73) - LEGACY COUNT
 
 ### Week 1: Foundation + P0 + P1
 
@@ -82,7 +99,18 @@
 
 ---
 
-## 📋 Remaining Work (30 stories)
+## 📋 NEW WORK BREAKDOWN (62 new stories + cleanup)
+
+**Total components needing work: 62**
+- 52 organisms without stories
+- 10 organisms needing viewport cleanup
+- Multiple organisms needing marketing docs enhancement
+
+**See team documents for complete breakdown.**
+
+---
+
+## 📋 OLD Remaining Work (DEPRECATED - See Team Documents Instead)
 
 ### Week 2: P2 Marketing Sections (11 stories)
 
