@@ -1,5 +1,5 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
-import { IconBox } from '@rbee/ui/molecules'
+import { IconPlate } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import type { LucideIcon } from 'lucide-react'
 
@@ -32,7 +32,7 @@ export function IndustryCard({ title, copy, icon, color, badge, anchor, classNam
 		>
 			{/* Top row: Icon + Badge */}
 			<div className="flex items-start justify-between mb-4">
-				<IconBox icon={icon} color={color} size="lg" aria-hidden="true" />
+				<IconPlate icon={icon} size="lg" tone={color} shape="rounded" />
 				{badge && (
 					<Badge variant="outline" className="text-xs font-semibold">
 						{badge}

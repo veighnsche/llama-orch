@@ -73,7 +73,7 @@ export function ErrorHandling() {
 
 					<PlaybookItem
 						icon={Network}
-						color="destructive"
+						color="warning"
 						title="Network & Connectivity"
 						checkCount={4}
 						severityDots={['destructive', 'primary', 'chart-3']}

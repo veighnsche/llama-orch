@@ -3,7 +3,7 @@ import { FeatureTab } from './FeatureTab'
 import { Tabs, TabsList } from '@rbee/ui/atoms/Tabs'
 import { Code, Cpu, Gauge, Zap, Sparkles, Database } from 'lucide-react'
 
-const meta = {
+const meta: Meta<typeof FeatureTab> = {
 	title: 'Molecules/FeatureTab',
 	component: FeatureTab,
 	parameters: {
@@ -19,7 +19,7 @@ const meta = {
 			</Tabs>
 		),
 	],
-} satisfies Meta<typeof FeatureTab>
+}
 
 export default meta
 type Story = StoryObj<typeof meta>
@@ -69,6 +69,11 @@ export const WithoutMobileLabel: Story = {
 }
 
 export const AllTabs: Story = {
+	args: {
+		value: 'api',
+		icon: Code,
+		label: 'OpenAI-Compatible',
+	},
 	decorators: [
 		() => (
 			<Tabs defaultValue="api" className="w-full max-w-4xl">

@@ -1,10 +1,10 @@
-import { IconBox } from '@rbee/ui/molecules'
-import type { IconBoxProps } from '@rbee/ui/molecules'
+import { IconPlate } from '@rbee/ui/molecules'
+import type { IconPlateProps } from '@rbee/ui/molecules'
 import type { LucideIcon } from 'lucide-react'
 
 interface PlaybookItemProps {
 	icon: LucideIcon
-	color: IconBoxProps['color']
+	color: IconPlateProps['tone']
 	title: string
 	checkCount: number
 	severityDots: Array<'destructive' | 'primary' | 'chart-2' | 'chart-3'>
@@ -31,7 +31,7 @@ export function PlaybookItem({
 		<details className="group border-b border-border last:border-b-0">
 			<summary className="flex items-center justify-between gap-3 cursor-pointer px-5 py-4 hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
 				<span className="flex items-center gap-3">
-					<IconBox icon={icon} color={color} size="sm" />
+					<IconPlate icon={icon} tone={color} size="sm" shape="rounded" />
 					<span className="font-semibold text-foreground">{title}</span>
 					<span className="ml-2 text-xs text-muted-foreground">{checkCount} checks</span>
 				</span>

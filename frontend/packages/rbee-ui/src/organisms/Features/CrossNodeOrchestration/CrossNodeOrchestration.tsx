@@ -1,6 +1,6 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Separator } from '@rbee/ui/atoms/Separator'
-import { IconBox, SectionContainer } from '@rbee/ui/molecules'
+import { IconPlate, SectionContainer } from '@rbee/ui/molecules'
 import { ArrowDown, Badge as BadgeIcon, GitBranch, Network } from 'lucide-react'
 
 export function CrossNodeOrchestration() {
@@ -20,7 +20,7 @@ export function CrossNodeOrchestration() {
 					{/* Pool Registry Management Card */}
 					<div className="bg-card border border-border rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-left-4 duration-500">
 						<div className="flex items-start gap-4">
-							<IconBox icon={Network} color="primary" size="md" className="flex-shrink-0" />
+							<IconPlate icon={Network} tone="primary" size="md" shape="rounded" className="flex-shrink-0" />
 							<div>
 								<h3 className="text-2xl font-bold tracking-tight text-foreground mb-2">Pool Registry Management</h3>
 								<p className="text-muted-foreground leading-relaxed">
@@ -77,7 +77,7 @@ export function CrossNodeOrchestration() {
 					{/* Automatic Worker Provisioning Card */}
 					<div className="bg-card border border-border rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 delay-100">
 						<div className="flex items-start gap-4">
-							<IconBox icon={GitBranch} color="chart-2" size="md" className="flex-shrink-0" />
+							<IconPlate icon={GitBranch} tone="chart-2" size="md" shape="rounded" className="flex-shrink-0" />
 							<div>
 								<h3 className="text-2xl font-bold tracking-tight text-foreground mb-2">
 									Automatic Worker Provisioning

@@ -1,5 +1,5 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
-import { IconBox, SectionContainer } from '@rbee/ui/molecules'
+import { IconPlate, SectionContainer } from '@rbee/ui/molecules'
 import { CheckCircle2, Lock, Shield } from 'lucide-react'
 
 export function SecurityIsolation() {
@@ -13,7 +13,7 @@ export function SecurityIsolation() {
 				{/* Block 1: Crate Lattice */}
 				<div className="rounded-2xl border border-border bg-card p-6 md:p-8 animate-in fade-in slide-in-from-bottom-2">
 					<div className="flex items-start gap-3 mb-6">
-						<IconBox icon={Shield} color="chart-2" size="md" />
+						<IconPlate icon={Shield} tone="chart-2" size="md" shape="rounded" />
 						<div>
 							<h3 className="text-2xl font-bold tracking-tight text-foreground">Five Specialized Security Crates</h3>
 							<p className="text-muted-foreground">
@@ -55,7 +55,7 @@ export function SecurityIsolation() {
 				<div className="grid md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-2 delay-100">
 					<div className="rounded-2xl border border-border bg-card p-6">
 						<div className="flex items-start gap-3 mb-4">
-							<IconBox icon={Lock} color="chart-3" size="sm" />
+							<IconPlate icon={Lock} tone="chart-3" size="sm" shape="rounded" />
 							<div>
 								<h3 className="text-lg font-bold text-foreground">Process Isolation</h3>
 								<p className="text-sm text-muted-foreground mt-1">
@@ -81,7 +81,7 @@ export function SecurityIsolation() {
 
 					<div className="rounded-2xl border border-border bg-card p-6">
 						<div className="flex items-start gap-3 mb-4">
-							<IconBox icon={Shield} color="chart-2" size="sm" />
+							<IconPlate icon={Shield} tone="chart-2" size="sm" shape="rounded" />
 							<div>
 								<h3 className="text-lg font-bold text-foreground">Zero-Trust Architecture</h3>
 								<p className="text-sm text-muted-foreground mt-1">

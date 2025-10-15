@@ -1,5 +1,5 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
-import { IconBox, SectionContainer } from '@rbee/ui/molecules'
+import { IconPlate, SectionContainer } from '@rbee/ui/molecules'
 import { CheckCircle2, Database } from 'lucide-react'
 
 export function IntelligentModelManagement() {
@@ -18,7 +18,7 @@ export function IntelligentModelManagement() {
 				{/* Automatic Model Catalog - Full width */}
 				<div className="bg-card border border-border rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
 					<div className="flex items-start gap-4">
-						<IconBox icon={Database} color="chart-3" size="md" className="flex-shrink-0" />
+						<IconPlate icon={Database} tone="chart-3" size="md" shape="rounded" className="flex-shrink-0" />
 						<div>
 							<h3 className="text-2xl font-bold tracking-tight text-foreground mb-2">Automatic Model Catalog</h3>
 							<p className="text-muted-foreground leading-relaxed">
@@ -89,7 +89,7 @@ export function IntelligentModelManagement() {
 				{/* Resource Preflight Checks - Full width */}
 				<div className="bg-card border border-border rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
 					<div className="flex items-start gap-4">
-						<IconBox icon={CheckCircle2} color="chart-2" size="md" className="flex-shrink-0" />
+						<IconPlate icon={CheckCircle2} tone="chart-2" size="md" shape="rounded" className="flex-shrink-0" />
 						<div>
 							<h3 className="text-2xl font-bold tracking-tight text-foreground mb-2">Resource Preflight Checks</h3>
 							<p className="text-muted-foreground leading-relaxed">

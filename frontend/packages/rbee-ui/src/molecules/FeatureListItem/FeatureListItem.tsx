@@ -1,5 +1,5 @@
 import { cn } from "@rbee/ui/utils";
-import { IconBox } from "@rbee/ui/molecules";
+import { IconPlate } from "@rbee/ui/molecules";
 import type { LucideIcon } from "lucide-react";
 
 export interface FeatureListItemProps {
@@ -18,7 +18,7 @@ export interface FeatureListItemProps {
     | "chart-4"
     | "chart-5";
   /** Icon variant */
-  iconVariant?: "rounded" | "square";
+  iconVariant?: "rounded" | "square" | "circle";
   /** Icon size */
   iconSize?: "sm" | "md" | "lg";
   /** Additional CSS classes */
@@ -36,11 +36,11 @@ export function FeatureListItem({
 }: FeatureListItemProps) {
   return (
     <li className={cn("flex items-center gap-3", className)}>
-      <IconBox
+      <IconPlate
         icon={icon}
         size={iconSize}
-        variant={iconVariant}
-        color={iconColor}
+        shape={iconVariant}
+        tone={iconColor}
       />
       <div className="text-base text-foreground">
         <strong className="font-semibold">{title}:</strong> {description}

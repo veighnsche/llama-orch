@@ -1,4 +1,4 @@
-import { IconBox, SectionContainer } from '@rbee/ui/molecules'
+import { IconPlate, SectionContainer } from '@rbee/ui/molecules'
 import { AlertTriangle, CheckCircle2, Cpu } from 'lucide-react'
 
 export function MultiBackendGpu() {
@@ -12,7 +12,7 @@ export function MultiBackendGpu() {
 				{/* 1. Policy Poster (full-bleed branded banner) */}
 				<div className="relative overflow-hidden rounded-2xl border border-primary/40 bg-gradient-to-b from-primary/10 to-background p-8 md:p-10 animate-in fade-in slide-in-from-bottom-2">
 					<div className="flex items-start gap-4 mb-6">
-						<IconBox icon={AlertTriangle} color="primary" size="md" className="flex-shrink-0" />
+						<IconPlate icon={AlertTriangle} tone="primary" size="md" shape="rounded" className="flex-shrink-0" />
 						<div>
 							<h3 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-2">
 								GPU FAIL FAST policy

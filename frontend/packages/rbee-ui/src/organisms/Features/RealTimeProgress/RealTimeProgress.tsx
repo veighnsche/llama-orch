@@ -1,4 +1,4 @@
-import { IconBox, SectionContainer } from '@rbee/ui/molecules'
+import { IconPlate, SectionContainer } from '@rbee/ui/molecules'
 import { Activity, XCircle } from 'lucide-react'
 
 export function RealTimeProgress() {
@@ -12,7 +12,7 @@ export function RealTimeProgress() {
 				{/* Block 1: Live Terminal Timeline */}
 				<div>
 					<div className="flex items-start gap-3 mb-4">
-						<IconBox icon={Activity} color="primary" size="md" />
+						<IconPlate icon={Activity} tone="primary" size="md" shape="rounded" />
 						<div>
 							<h3 className="text-2xl font-bold tracking-tight text-foreground">SSE Narration Architecture</h3>
 							<p className="text-muted-foreground">
@@ -105,7 +105,7 @@ export function RealTimeProgress() {
 				{/* Block 3: Cancellation Sequence Card */}
 				<div className="rounded-2xl border border-border bg-card p-6 animate-in fade-in slide-in-from-bottom-2 delay-150">
 					<div className="flex items-start gap-3 mb-4">
-						<IconBox icon={XCircle} color="destructive" size="md" />
+						<IconPlate icon={XCircle} tone="warning" size="md" shape="rounded" />
 						<div>
 							<h3 className="text-2xl font-bold tracking-tight text-foreground">Request Cancellation</h3>
 							<p className="text-muted-foreground">

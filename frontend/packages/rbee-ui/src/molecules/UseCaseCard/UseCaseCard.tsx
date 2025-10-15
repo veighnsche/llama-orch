@@ -1,5 +1,5 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
-import { IconBox } from '@rbee/ui/molecules'
+import { IconPlate } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import type { LucideIcon } from 'lucide-react'
 
@@ -44,7 +44,7 @@ export function UseCaseCard({
 		>
 			{/* Top row: Icon + Badge */}
 			<div className="flex items-start justify-between mb-4">
-				<IconBox icon={icon} color={color} size="lg" />
+				<IconPlate icon={icon} tone={color} size="lg" shape="rounded" />
 				{badge && (
 					<Badge variant="secondary" className="text-xs">
 						{badge}
