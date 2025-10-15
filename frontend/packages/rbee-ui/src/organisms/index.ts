@@ -4,7 +4,7 @@
 export * from './Home/CodeExamplesSection'
 export * from './Home/ComparisonSection'
 export * from './Home/CtaSection'
-export * from './Home/EmailCapture'
+export * from './EmailCapture'
 export * from './Home/FaqSection'
 export * from './Home/FeaturesSection'
 export * from './Home/FeatureTabsSection'
@@ -18,7 +18,7 @@ export * from './Home/TopologyDiagram'
 export * from './Home/WhatIsRbee'
 
 // Shared organisms
-export * from './Shared/AudienceSelector'
+export * from './Home/AudienceSelector'
 export * from './Shared/Footer'
 export * from './Shared/Navigation'
 
